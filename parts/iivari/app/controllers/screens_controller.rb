@@ -40,6 +40,7 @@ class ScreensController < ApplicationController
   # POST /screens.xml
   def create
     @screen = Screen.new(params[:screen])
+    @screen.image = ImageFile.save(params[:screen][:image]) if params[:screen][:image]
     @screen.save
     respond_with(@screen)
   end
@@ -48,9 +49,9 @@ class ScreensController < ApplicationController
   # PUT /screens/1.xml
   def update
     @screen = Screen.find(params[:id])
+    @screen.image = ImageFile.save(params[:screen][:image]) if params[:screen][:image]
+    params[:screen].delete(:image)
     @screen.update_attributes(params[:screen])
-
-    ImageFile.save(params[:id], params[:screen][:image]) if params[:screen][:image]
     respond_with(@screen)
   end
 
@@ -99,7 +100,8 @@ class ScreensController < ApplicationController
 
   def image
     expires_in 15.minutes, :public => true
-    data_string = ImageFile.find(params[:id]).readlines
+    data_string = ImageFile.find(params[:image]).readlines
+    # FIXME image_name?
     send_data data_string, :filename => params[:image_name], :type => 'image/png', :disposition => 'inline'
   end
 

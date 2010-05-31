@@ -1,12 +1,17 @@
+require "digest/sha2"
+
 class ImageFile
 
-  def self.save(screen_id, data)
-    File.open( self.path(screen_id), "wb") { |f| f.write(data.read) }
+  def self.save(data)
+    image = data.read
+    image_name = Digest::SHA2.hexdigest(image)
+    File.open( self.path(image_name), "wb") { |f| f.write(image) }
+    return image_name
   end
 
-  def self.find(screen_id)
+  def self.find(image_name)
     begin
-      return File.open( self.path(screen_id) )
+      return File.open( self.path(image_name) )
     rescue
       return false
     end
@@ -14,16 +19,15 @@ class ImageFile
 
   def self.urls
     Dir[ "#{self.path}/*"].map do |file|
-      "screens/" +
-        Pathname(file).relative_path_from( Pathname(self.path) ).to_s +
-        "/image"
+      "screens/image/" +
+        Pathname(file).relative_path_from( Pathname(self.path) ).to_s
     end
   end
 
   private
 
-  def self.path(screen_id = nil)
+  def self.path(image_name = nil)
     Rails.root + "screen_images" +
-      ( screen_id ? screen_id.to_s : "" )
+      ( image_name ? image_name : "" )
   end
 end
