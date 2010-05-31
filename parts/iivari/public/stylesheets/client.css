@@ -1,0 +1,23 @@
+body { background-color: #fff; color: #333; }
+
+body, p, ol, ul, td {
+  font-family: verdana, arial, helvetica, sans-serif;
+  font-size:   29px;
+}
+
+
+div.field, div.actions {
+  margin-bottom: 10px;
+}
+
+h1 {
+  text-align: center;
+}
+
+#image.screen {
+    float: left;
+}
+
+#text.screen {
+    float: left;
+}

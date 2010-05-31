@@ -1,0 +1,16 @@
+<%= form_for(@screen, :html => { :multipart => true } ) do |f| %>
+
+<div id="title" class="screen_field">
+<%= f.label :title %><br />
+<%= f.text_field :title %>
+</div>
+
+<% form_parts.each do |form_part| %>
+<%= render :partial => form_part, :locals => { :f => f } %>
+<% end %>
+
+<%= f.hidden_field :template, :value => params[:template] %>
+<div class="actions">
+  <%= f.submit %>
+</div>
+<% end %>

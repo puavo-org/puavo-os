@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html manifest="<%= "/" + params[:client_key].to_s %>/client.manifest">
+<head>
+  <meta charset=utf-8 />
+  <title>Iivari</title>
+
+  <link href="/stylesheets/client.css" media="screen" rel="stylesheet" type="text/css" /> 
+  <script src="/javascripts/jquery-1.4.2.min.js" type="text/javascript"></script> 
+  <script src="/javascripts/jquery-ujs/src/rails.js" type="text/javascript"></script> 
+  <%= csrf_meta_tag %>
+</head>
+<body>
+
+  <%= yield %>
+
+</body>
+</html>
