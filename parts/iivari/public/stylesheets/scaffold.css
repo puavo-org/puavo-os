@@ -59,7 +59,7 @@ div.field, div.actions {
   list-style: square;
 }
 
-#screen_editor {
+#slide_editor {
     border: 3px solid red;
     width: 800px;
     height: 450px;
@@ -95,10 +95,10 @@ div.field, div.actions {
 .title {
 }
 
-#image.screen_field {
+#image.slide_field {
     float: left;
 }
 
-#text.screen_field {
+#text.slide_field {
     float: left;
 }

@@ -11,7 +11,7 @@
 
 ActiveRecord::Schema.define(:version => 20100528104905) do
 
-  create_table "screens", :force => true do |t|
+  create_table "slides", :force => true do |t|
     t.string   "title"
     t.text     "body"
     t.datetime "created_at"

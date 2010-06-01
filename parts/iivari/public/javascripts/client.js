@@ -1,37 +1,37 @@
-var screenNumber = 0;
+var slideNumber = 0;
 
-screenData = new Object();
+slideData = new Object();
 
-updateScreenData();
+updateSlideData();
 
-$(document).ready(function() { showNextScreen(); });
+$(document).ready(function() { showNextSlide(); });
 
-setInterval( "updateScreenData()", 7000);
+setInterval( "updateSlideData()", 7000);
 
-function updateScreenData() {
-    $.retrieveJSON("/screens.json", function(json, status) {
+function updateSlideData() {
+    $.retrieveJSON("/slides.json", function(json, status) {
 	if (status != "notmodified") {
-	    console.log("Update screen data");
-	    screenData.json = json;
+	    console.log("Update slide data");
+	    slideData.json = json;
 	}
     });
 }
     
-function showNextScreen() {
-    // wait one second if screenData.json is not defined yet
-    if ( typeof(screenData.json) == "undefined" ) {
-	//console.log("screenData.json is undfined");
-	setTimeout("showNextScreen()", 1000);
+function showNextSlide() {
+    // wait one second if slideData.json is not defined yet
+    if ( typeof(slideData.json) == "undefined" ) {
+	//console.log("slideData.json is undfined");
+	setTimeout("showNextSlide()", 1000);
     }
     else {
-	if ( screenNumber > screenData.json.length - 1 ) {
-	    screenNumber = 0;
+	if ( slideNumber > slideData.json.length - 1 ) {
+	    slideNumber = 0;
 	}
-	console.log("Changed to the next screen");
-	console.log("screen_data: " + screenData.json[screenNumber] )
-	console.log("screen_data: " + screenData.json[screenNumber]["screen_html"] )
-	$("#content").empty().append(screenData.json[screenNumber]["screen_html"]);
-	screenNumber = screenNumber + 1
-	setTimeout("showNextScreen()", 5000);
+	console.log("Changed to the next slide");
+	console.log("slide_data: " + slideData.json[slideNumber] )
+	console.log("slide_data: " + slideData.json[slideNumber]["slide_html"] )
+	$("#content").empty().append(slideData.json[slideNumber]["slide_html"]);
+	slideNumber = slideNumber + 1
+	setTimeout("showNextSlide()", 5000);
     }
 }

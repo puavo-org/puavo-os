@@ -1,6 +1,6 @@
-class CreateScreens < ActiveRecord::Migration
+class CreateSlides < ActiveRecord::Migration
   def self.up
-    create_table :screens do |t|
+    create_table :slides do |t|
       t.string :title
       t.text :body
 
@@ -9,6 +9,6 @@ class CreateScreens < ActiveRecord::Migration
   end
 
   def self.down
-    drop_table :screens
+    drop_table :slides
   end
 end

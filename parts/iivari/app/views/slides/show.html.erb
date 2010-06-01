@@ -1,0 +1,20 @@
+<p class="notice"><%= notice %></p>
+
+<p>
+  <b>Title:</b>
+  <%= @slide.title %>
+</p>
+
+<p>
+  <b>Body:</b>
+  <%= @slide.body %>
+</p>
+
+<% if ImageFile.find(@slide.id) %>
+<p>
+<img src="<%= image_slide_url(@slide) %>">
+</p>
+<% end %>
+
+<%= link_to 'Edit', edit_slide_path(@slide) %> |
+<%= link_to 'Back', slides_path %>

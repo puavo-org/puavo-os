@@ -1,69 +1,69 @@
-class ScreensController < ApplicationController
+class SlidesController < ApplicationController
   layout :determine_layout
   respond_to :html, :json
   uses_tiny_mce
 
-  # GET /screens
-  # GET /screens.xml
+  # GET /slides
+  # GET /slides.xml
   def index
-    @screens = Screen.all
-    respond_with(@screens) do |format|
+    @slides = Slide.all
+    respond_with(@slides) do |format|
       format.json do
-        render :json => @screens.to_json(:only => [:id], :methods => :screen_html)
+        render :json => @slides.to_json(:only => [:id], :methods => :slide_html)
       end
     end
   end
 
-  # GET /screens/1
-  # GET /screens/1.xml
+  # GET /slides/1
+  # GET /slides/1.xml
   def show
-    @screen = Screen.find(params[:id])
-    respond_with(@screen)
+    @slide = Slide.find(params[:id])
+    respond_with(@slide)
   end
 
-  # GET /screens/new
-  # GET /screens/new.xml
+  # GET /slides/new
+  # GET /slides/new.xml
   def new
-    @screen = Screen.new
+    @slide = Slide.new
 
     @partial = params[:template] ? "template_" + params[:template] : 'template'
 
-    respond_with(@screen)
+    respond_with(@slide)
   end
 
-  # GET /screens/1/edit
+  # GET /slides/1/edit
   def edit
-    @screen = Screen.find(params[:id])
+    @slide = Slide.find(params[:id])
   end
 
-  # POST /screens
-  # POST /screens.xml
+  # POST /slides
+  # POST /slides.xml
   def create
-    @screen = Screen.new(params[:screen])
-    @screen.image = ImageFile.save(params[:screen][:image]) if params[:screen][:image]
-    @screen.save
-    respond_with(@screen)
+    @slide = Slide.new(params[:slide])
+    @slide.image = ImageFile.save(params[:slide][:image]) if params[:slide][:image]
+    @slide.save
+    respond_with(@slide)
   end
 
-  # PUT /screens/1
-  # PUT /screens/1.xml
+  # PUT /slides/1
+  # PUT /slides/1.xml
   def update
-    @screen = Screen.find(params[:id])
-    @screen.image = ImageFile.save(params[:screen][:image]) if params[:screen][:image]
-    params[:screen].delete(:image)
-    @screen.update_attributes(params[:screen])
-    respond_with(@screen)
+    @slide = Slide.find(params[:id])
+    @slide.image = ImageFile.save(params[:slide][:image]) if params[:slide][:image]
+    params[:slide].delete(:image)
+    @slide.update_attributes(params[:slide])
+    respond_with(@slide)
   end
 
-  # DELETE /screens/1
-  # DELETE /screens/1.xml
+  # DELETE /slides/1
+  # DELETE /slides/1.xml
   def destroy
-    @screen = Screen.find(params[:id])
-    @screen.destroy
-    respond_with(@screen)
+    @slide = Slide.find(params[:id])
+    @slide.destroy
+    respond_with(@slide)
   end
 
-  # GET /:client_key/screens
+  # GET /:client_key/slides
   def client
   end
 
@@ -85,7 +85,7 @@ class ScreensController < ApplicationController
       body << "/" +  Pathname(file).relative_path_from( Pathname(root) ).to_s
     end
 
-    body << "screens"
+    body << "slides"
     ImageFile.urls.each do |url|
       body << url
     end

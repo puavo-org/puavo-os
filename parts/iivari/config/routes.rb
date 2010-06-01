@@ -1,11 +1,11 @@
 Iivari::Application.routes.draw do |map|
-  resources :screens
-  match '/screens/new/:template', :to => "screens#new", :as => 'template_new_screen'
+  resources :slides
+  match '/slides/new/:template', :to => "slides#new", :as => 'template_new_slide'
 
-  match ':client_key/screens', :to => "screens#client", :as => "client_screens"
-  match ':client_key/screens/image/:image', :to => "screens#image", :as => "image_screen"
+  match ':client_key/slides', :to => "slides#client", :as => "client_slides"
+  match ':client_key/slides/image/:image', :to => "slides#image", :as => "image_slide"
 
-  match ":client_key/client.manifest" =>  "screens#manifest", :as => "manifest_screens"
+  match ":client_key/client.manifest" =>  "slides#manifest", :as => "manifest_slides"
 
   # The priority is based upon order of creation:
   # first created -> highest priority.
@@ -56,7 +56,7 @@ Iivari::Application.routes.draw do |map|
 
   # You can have the root of your site routed with "root"
   # just remember to delete public/index.html.
-  root :to => "screens#index"
+  root :to => "slides#index"
 
   # See how all your routes lay out with "rake routes"
 
