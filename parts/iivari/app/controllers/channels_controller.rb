@@ -1,4 +1,6 @@
 class ChannelsController < ApplicationController
+#  respond_to :html
+
   # GET /channels
   # GET /channels.xml
   def index
