@@ -1,6 +1,6 @@
 <h1>Editing slide</h1>
 
-<%= render "template_" + @slide.template %>
+<%= render :partial => "template_" + @slide.template %>
 
-<%= link_to 'Show', @slide %> |
-<%= link_to 'Back', slides_path %>
+<%= link_to 'Show', channel_slide_path(@channel, @slide) %> |
+<%= link_to 'Back', channel_slides_path %>

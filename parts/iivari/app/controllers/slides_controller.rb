@@ -3,6 +3,8 @@ class SlidesController < ApplicationController
   respond_to :html, :json
   uses_tiny_mce
 
+  before_filter :find_channel
+
   # GET /slides
   # GET /slides.xml
   def index
@@ -42,7 +44,7 @@ class SlidesController < ApplicationController
     @slide = Slide.new(params[:slide])
     @slide.image = ImageFile.save(params[:slide][:image]) if params[:slide][:image]
     @slide.save
-    respond_with(@slide)
+    respond_with([@channel, @slide])
   end
 
   # PUT /slides/1
@@ -51,8 +53,9 @@ class SlidesController < ApplicationController
     @slide = Slide.find(params[:id])
     @slide.image = ImageFile.save(params[:slide][:image]) if params[:slide][:image]
     params[:slide].delete(:image)
+
     @slide.update_attributes(params[:slide])
-    respond_with(@slide)
+    respond_with([@channel, @slide])
   end
 
   # DELETE /slides/1
@@ -60,7 +63,7 @@ class SlidesController < ApplicationController
   def destroy
     @slide = Slide.find(params[:id])
     @slide.destroy
-    respond_with(@slide)
+    respond_with([@channel, @slide])
   end
 
   # GET /:client_key/slides
@@ -109,5 +112,9 @@ class SlidesController < ApplicationController
 
   def determine_layout
     action_name == "client" ? "client" : "application"
+  end
+
+  def find_channel
+    @channel = Channel.find(params[:channel_id])
   end
 end

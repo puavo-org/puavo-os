@@ -13,13 +13,13 @@
   <tr>
     <td><%= slide.title %></td>
     <td><%= slide.body %></td>
-    <td><%= link_to 'Show', slide %></td>
-    <td><%= link_to 'Edit', edit_slide_path(slide) %></td>
-    <td><%= link_to 'Destroy', slide, :confirm => 'Are you sure?', :method => :delete %></td>
+    <td><%= link_to 'Show', channel_slide_path(@channel, slide) %></td>
+    <td><%= link_to 'Edit', edit_channel_slide_path(@channel, slide) %></td>
+    <td><%= link_to 'Destroy', channel_slide_path(@channel, slide), :confirm => 'Are you sure?', :method => :delete %></td>
   </tr>
 <% end %>
 </table>
 
 <br />
 
-<%= link_to 'New Slide', new_slide_path %>
+<%= link_to 'New Slide', new_channel_slide_path %>

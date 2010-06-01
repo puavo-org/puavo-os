@@ -1,4 +1,4 @@
-<%= form_for(@slide, :html => { :multipart => true } ) do |f| %>
+<%= form_for([@channel, @slide], :html => { :multipart => true } ) do |f| %>
 
 <div id="title" class="slide_field">
 <%= f.label :title %><br />
