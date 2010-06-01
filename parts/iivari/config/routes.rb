@@ -1,4 +1,6 @@
 Iivari::Application.routes.draw do |map|
+  resources :channels
+
   resources :slides
   match '/slides/new/:template', :to => "slides#new", :as => 'template_new_slide'
 
