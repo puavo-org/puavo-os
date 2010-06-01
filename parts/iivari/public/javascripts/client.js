@@ -9,7 +9,7 @@ $(document).ready(function() { showNextSlide(); });
 setInterval( "updateSlideData()", 7000);
 
 function updateSlideData() {
-    $.retrieveJSON("/slides.json", function(json, status) {
+    $.retrieveJSON("slides.json", function(json, status) {
 	if (status != "notmodified") {
 	    console.log("Update slide data");
 	    slideData.json = json;

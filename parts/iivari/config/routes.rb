@@ -6,6 +6,7 @@ Iivari::Application.routes.draw do |map|
   match '/slides/new/:template', :to => "slides#new", :as => 'template_new_slide'
 
   match ':client_key/slides', :to => "slides#client", :as => "client_slides"
+  match ':client_key/slides.json', :to => "slides#index", :format => :json
   match ':client_key/slides/image/:image', :to => "slides#image", :as => "image_slide"
 
   match ":client_key/client.manifest" =>  "slides#manifest", :as => "manifest_slides"
