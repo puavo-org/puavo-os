@@ -2,11 +2,16 @@ class ScreenController < ApplicationController
   respond_to :html, :json
   layout "screen"
 
-  # GET /slides
-  # GET /slides.xml
+  # GET /:screen_key/slides.json
   def slides
+    # FIXME, @channel will be set by screen_key value
     @channel = Channel.first
-    @slides = @channel.slides
+
+    if params[:slide_id]
+      @slides = Array(Slide.find(params[:slide_id]))
+    else
+      @slides = @channel.slides
+    end
     respond_with(@slides) do |format|
       format.json do
         render :json => @slides.to_json(:only => [:id], :methods => :slide_html)
@@ -14,12 +19,22 @@ class ScreenController < ApplicationController
     end
   end
 
-  # GET /:screen_key/slides
+  # GET /:screen_key/conductor
+  # GET /:screen_key/conductor?cache=false&slide_id=40
   # Main page for Iivari client
   def conductor
+    @cache = "true"
+
+    if params[:slide_id]
+      # FIXME, slid_id security check?!
+      @slide_id = params[:slide_id]
+    end
+    if params[:cache] && params[:cache] == "false"
+      @cache = "false"
+    end
   end
 
-  # GET /:screen_key/client.manifest
+  # GET /:screen_key/screen.manifest
   def manifest
     body = ["CACHE MANIFEST"]
     
@@ -50,6 +65,7 @@ class ScreenController < ApplicationController
     render :text => body.join("\n"), :content_type => "text/cache-manifest"
   end
 
+  # GET /:screen_key/image/:image
   def image
     expires_in 15.minutes, :public => true
     data_string = ImageFile.find(params[:image]).readlines

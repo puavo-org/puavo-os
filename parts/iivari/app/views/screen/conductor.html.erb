@@ -1,4 +1,11 @@
 <script src="/javascripts/jquery.offline.js" type="text/javascript"></script> 
-<script src="/javascripts/client.js" type="text/javascript"></script> 
-<span id="content"></span>
+<script src="/javascripts/slideshow.js" type="text/javascript"></script> 
+<script type="text/javascript">
+    var slideNumber = 0;
+    slideData = new Object();
+    updateSlideData('slides.json<%= @slide_id ? "?slide_id=#{@slide_id}" : "" %>', <%= @cache %>);
+    $(document).ready(function() { showNextSlide(); });
+    setInterval( "updateSlideData('slides.json<%= @slide_id ? "?slide_id=#{@slide_id}" : "" %>', <%= @cache %>)", 7000);
+</script> 
 
+<span id="content"></span>
