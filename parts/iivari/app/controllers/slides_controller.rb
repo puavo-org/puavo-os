@@ -1,6 +1,5 @@
 class SlidesController < ApplicationController
-  layout :determine_layout
-  respond_to :html, :json
+  respond_to :html
   uses_tiny_mce
 
   before_filter :find_channel
@@ -9,11 +8,7 @@ class SlidesController < ApplicationController
   # GET /slides.xml
   def index
     @slides = @channel.slides
-    respond_with(@slides) do |format|
-      format.json do
-        render :json => @slides.to_json(:only => [:id], :methods => :slide_html)
-      end
-    end
+    respond_with(@slides)
   end
 
   # GET /slides/1
@@ -67,56 +62,10 @@ class SlidesController < ApplicationController
     respond_with([@channel, @slide])
   end
 
-  # GET /:client_key/slides
-  def client
-  end
-
-  # GET /:client_key/client.manifest
-  def manifest
-    body = ["CACHE MANIFEST"]
-    
-    # FIXME
-    body << "# zo36ld9k4ajd2io20dmzsdds"
-
-    root = Rails.public_path
-    # FIXME, adds only the necessary files
-    files = Dir[
-                "#{root}/stylesheets/**/*.css",
-                "#{root}/javascripts/**/*.js",
-                "#{root}/images/**"]
-    
-    files.each do |file|
-      body << "/" +  Pathname(file).relative_path_from( Pathname(root) ).to_s
-    end
-
-    body << "slides"
-    ImageFile.urls.each do |url|
-      body << url
-    end
-
-    body << ""
-    body << "NETWORK:"
-    body << "/"
-    body << ""
-
-    render :text => body.join("\n"), :content_type => "text/cache-manifest"
-  end
-
-  def image
-    expires_in 15.minutes, :public => true
-    data_string = ImageFile.find(params[:image]).readlines
-    # FIXME image_name?
-    send_data data_string, :filename => params[:image_name], :type => 'image/png', :disposition => 'inline'
-  end
-
   private
 
-  def determine_layout
-    action_name == "client" ? "client" : "application"
-  end
-
   def find_channel
-    # FIXME, find channel by client_key
+    # FIXME, find channel by screen_key
     if params[:channel_id]
       @channel = Channel.find(params[:channel_id])
     else

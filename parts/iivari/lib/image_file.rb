@@ -19,7 +19,7 @@ class ImageFile
 
   def self.urls
     Dir[ "#{self.path}/*"].map do |file|
-      "slides/image/" +
+      "image/" +
         Pathname(file).relative_path_from( Pathname(self.path) ).to_s
     end
   end
