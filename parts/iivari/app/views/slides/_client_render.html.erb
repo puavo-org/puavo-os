@@ -1,5 +1,0 @@
-<h1><%= slide.title %></h1>
-
-<% slide_parts.each do |slide_part| %>
-<%= render :partial => "slides/client_" + slide_part, :locals => { :slide => slide } %>
-<% end %>
