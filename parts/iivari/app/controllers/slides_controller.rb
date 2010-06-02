@@ -8,7 +8,7 @@ class SlidesController < ApplicationController
   # GET /slides
   # GET /slides.xml
   def index
-    @slides = Slide.all
+    @slides = @channel.slides
     respond_with(@slides) do |format|
       format.json do
         render :json => @slides.to_json(:only => [:id], :methods => :slide_html)
@@ -43,6 +43,7 @@ class SlidesController < ApplicationController
   def create
     @slide = Slide.new(params[:slide])
     @slide.image = ImageFile.save(params[:slide][:image]) if params[:slide][:image]
+    @slide.channel_id = @channel.id
     @slide.save
     respond_with([@channel, @slide])
   end
