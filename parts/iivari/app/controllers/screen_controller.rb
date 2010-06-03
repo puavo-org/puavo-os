@@ -92,7 +92,7 @@ class ScreenController < ApplicationController
   def image
     expires_in 15.minutes, :public => true
     if image = Image.find_by_key(params[:image])
-      data_string = image.data_by_resolution(params[:resolution])
+      data_string = image.data_by_resolution(params[:template], params[:resolution])
       # FIXME image name?
       send_data data_string, :filename => image.key, :type => image.content_type, :disposition => 'inline'
     else

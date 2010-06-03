@@ -6,7 +6,7 @@
 <% @slides.each do |slide| %>
   <li id="slide_<%= slide.id %>">
     <span>[Drag]</span>
-    <iframe style="z-index: -1;" scrolling="no" height="150" width="250" src="/asdfdsasdfsadfasdf/conductor?cache=false&slide_id=<%= slide.id %>">
+    <iframe style="z-index: -1;" scrolling="no" height="150" width="250" src="/asdfdsasdfsadfasdf/conductor?cache=false&slide_id=<%= slide.id %>&resolution=250x150">
     </iframe>
     <%= slide.title %>
     <%= link_to 'Show', channel_slide_path(@channel, slide) %>

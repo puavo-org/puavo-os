@@ -9,7 +9,7 @@ Iivari::Application.routes.draw do |map|
 
   match ':screen_key/conductor', :to => "screen#conductor", :as => "conductor_screen"
   match ':screen_key/slides.json', :to => "screen#slides", :format => :json
-  match ':screen_key/image/:image', :to => "screen#image", :as => "image_screen"
+  match ':screen_key/image/:template/:image', :to => "screen#image", :as => "image_screen"
 
   match ":screen_key/screen.manifest" =>  "screen#manifest", :as => "manifest_screen"
 

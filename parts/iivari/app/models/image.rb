@@ -12,9 +12,13 @@ class Image < ActiveRecord::Base
     return image
   end
 
-  def data_by_resolution(resolution)
+  def data_by_resolution(template, resolution)
     (screen_width, screen_height) = resolution.split("x")
-    max_width = (screen_width.to_f * 2.0 / 5.0).to_i
+    if template == "only_image"
+      max_width = (screen_width.to_f * 8.0 / 9.0).to_i
+    else
+      max_width = (screen_width.to_f * 2.0 / 5.0).to_i
+    end
     max_height = (screen_height.to_f * 4.0 / 5.0).to_i
 
     filename = "#{Image.path}/#{self.key}_#{max_width}x#{max_height}"
