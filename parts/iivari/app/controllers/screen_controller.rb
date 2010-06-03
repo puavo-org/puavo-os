@@ -76,7 +76,8 @@ class ScreenController < ApplicationController
     end
 
     body << "slides"
-    ImageFile.urls(params[:resolution]).each do |url|
+    # FIXME, only allowed channels
+    Slide.image_urls(Channel.first, params[:resolution]).each do |url|
       body << url
     end
 
