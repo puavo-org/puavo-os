@@ -9,7 +9,7 @@ class ImageFile
     return image_name
   end
 
-  def self.find(image_name)
+  def self.find(image_name, resolution)
     begin
       return File.open( self.path(image_name) )
     rescue
@@ -17,10 +17,10 @@ class ImageFile
     end
   end
 
-  def self.urls
+  def self.urls(resolution)
     Dir[ "#{self.path}/*"].map do |file|
       "image/" +
-        Pathname(file).relative_path_from( Pathname(self.path) ).to_s
+        Pathname(file).relative_path_from( Pathname(self.path) ).to_s + "?resolution=#{resolution}"
     end
   end
 

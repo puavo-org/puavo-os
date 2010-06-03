@@ -3,10 +3,10 @@
 <script type="text/javascript">
     var slideNumber = 0;
     slideData = new Object();
-    updateSlideData('slides.json<%= @slide_id ? "?slide_id=#{@slide_id}" : "" %>', <%= @cache %>);
+    updateSlideData('<%= @json_url.html_safe %>', <%= @cache %>);
     $(document).ready(function() { showNextSlide(); });
-    <% if @slide_id.nil? %>
-    setInterval( "updateSlideData('slides.json', <%= @cache %>)", 7000);
+    <% if params[:slide_id].nil? %>
+    setInterval( "updateSlideData('<%= @url %>', <%= @cache %>)", 7000);
     <% end %>
 </script> 
 

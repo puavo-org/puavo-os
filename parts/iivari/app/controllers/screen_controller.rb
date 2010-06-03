@@ -12,6 +12,11 @@ class ScreenController < ApplicationController
     else
       @slides = @channel.slides
     end
+
+    @slides.each do |slide|
+      slide.slide_html = slide_to_screen_html(params[:resolution], slide)
+    end
+
     respond_with(@slides) do |format|
       format.json do
         render :json => @slides.to_json(:only => [:id], :methods => :slide_html)
@@ -24,13 +29,26 @@ class ScreenController < ApplicationController
   # Main page for Iivari client
   def conductor
     @cache = "true"
+    url_params = []
 
     if params[:slide_id]
       # FIXME, slid_id security check?!
-      @slide_id = params[:slide_id]
+      url_params.push "slide_id=#{params[:slide_id]}"
+    end
+    if params[:resolution]
+      url_params.push "resolution=#{params[:resolution]}"
     end
     if params[:cache] && params[:cache] == "false"
       @cache = "false"
+    end
+
+    @json_url = "slides.json"
+    unless url_params.empty?
+      @json_url += "?" + url_params.join("&")
+    end
+
+    respond_to do |format|
+      format.html
     end
   end
 
@@ -53,7 +71,7 @@ class ScreenController < ApplicationController
     end
 
     body << "slides"
-    ImageFile.urls.each do |url|
+    ImageFile.urls(params[:resolution]).each do |url|
       body << url
     end
 
@@ -68,9 +86,16 @@ class ScreenController < ApplicationController
   # GET /:screen_key/image/:image
   def image
     expires_in 15.minutes, :public => true
-    data_string = ImageFile.find(params[:image]).readlines
+    data_string = ImageFile.find(params[:image], params[:resolution]).readlines
     # FIXME image_name?
     send_data data_string, :filename => params[:image_name], :type => 'image/png', :disposition => 'inline'
   end
 
+  private
+
+  def slide_to_screen_html(resolution, slide)
+    @resolution = resolution
+    @slide = slide
+    render_to_string( :partial => "client_" + slide.template + ".html.erb" )
+  end
 end
