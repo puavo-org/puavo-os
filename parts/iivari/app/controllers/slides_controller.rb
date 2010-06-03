@@ -37,7 +37,10 @@ class SlidesController < ApplicationController
   # POST /slides.xml
   def create
     @slide = Slide.new(params[:slide])
-    @slide.image = ImageFile.save(params[:slide][:image]) if params[:slide][:image]
+    if params[:slide][:image]
+      image = Image.find_or_create(params[:slide][:image])
+      @slide.image = image.key
+    end
     @slide.channel_id = @channel.id
     @slide.save
     respond_with([@channel, @slide])
@@ -47,9 +50,12 @@ class SlidesController < ApplicationController
   # PUT /slides/1.xml
   def update
     @slide = Slide.find(params[:id])
-    @slide.image = ImageFile.save(params[:slide][:image]) if params[:slide][:image]
-    params[:slide].delete(:image)
+    if params[:slide][:image]
+      image = Image.find_or_create(params[:slide][:image])
+      @slide.image = image.key
+    end
 
+    params[:slide].delete(:image)
     @slide.update_attributes(params[:slide])
     respond_with([@channel, @slide])
   end

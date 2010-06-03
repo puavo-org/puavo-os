@@ -10,11 +10,6 @@
   <%= @slide.body %>
 </p>
 
-<% if ImageFile.find(@slide.id) %>
-<p>
-<img src="<%= image_slide_url(@slide) %>">
-</p>
-<% end %>
 
 <%= link_to 'Edit', edit_channel_slide_path(@slide) %> |
 <%= link_to 'Back', channel_slides_path %>

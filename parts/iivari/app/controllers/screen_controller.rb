@@ -91,9 +91,13 @@ class ScreenController < ApplicationController
   # GET /:screen_key/image/:image
   def image
     expires_in 15.minutes, :public => true
-    data_string = ImageFile.find(params[:image], params[:resolution]).readlines
-    # FIXME image_name?
-    send_data data_string, :filename => params[:image_name], :type => 'image/png', :disposition => 'inline'
+    if image = Image.find_by_key(params[:image])
+      data_string = image.data_by_resolution(params[:resolution])
+      # FIXME image name?
+      send_data data_string, :filename => image.key, :type => image.content_type, :disposition => 'inline'
+    else
+      render :nothing => true
+    end
   end
 
   private
