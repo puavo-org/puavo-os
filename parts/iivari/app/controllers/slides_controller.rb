@@ -7,7 +7,7 @@ class SlidesController < ApplicationController
   # GET /slides
   # GET /slides.xml
   def index
-    @slides = Slide.where(:channel_id => @channel.id).order("position")
+    @slides = @channel.slides.order("position")
     respond_with(@slides)
   end
 
