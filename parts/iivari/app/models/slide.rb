@@ -1,5 +1,7 @@
 class Slide < ActiveRecord::Base
   belongs_to :channel
+  
+  acts_as_list
 
   def slide_html
     view = ActionView::Base.new(ActionController::Base.view_paths, {})

@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100601093930) do
+ActiveRecord::Schema.define(:version => 20100602122317) do
 
   create_table "channels", :force => true do |t|
     t.string   "name"
@@ -25,6 +25,7 @@ ActiveRecord::Schema.define(:version => 20100601093930) do
     t.string   "image"
     t.string   "template"
     t.integer  "channel_id"
+    t.integer  "position"
   end
 
 end

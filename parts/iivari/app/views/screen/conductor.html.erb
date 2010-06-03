@@ -5,7 +5,9 @@
     slideData = new Object();
     updateSlideData('slides.json<%= @slide_id ? "?slide_id=#{@slide_id}" : "" %>', <%= @cache %>);
     $(document).ready(function() { showNextSlide(); });
-    setInterval( "updateSlideData('slides.json<%= @slide_id ? "?slide_id=#{@slide_id}" : "" %>', <%= @cache %>)", 7000);
+    <% if @slide_id.nil? %>
+    setInterval( "updateSlideData('slides.json', <%= @cache %>)", 7000);
+    <% end %>
 </script> 
 
 <span id="content"></span>

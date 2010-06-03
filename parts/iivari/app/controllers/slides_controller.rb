@@ -7,7 +7,7 @@ class SlidesController < ApplicationController
   # GET /slides
   # GET /slides.xml
   def index
-    @slides = @channel.slides
+    @slides = Slide.where(:channel_id => @channel.id).order("position")
     respond_with(@slides)
   end
 
@@ -60,6 +60,17 @@ class SlidesController < ApplicationController
     @slide = Slide.find(params[:id])
     @slide.destroy
     respond_with([@channel, @slide])
+  end
+
+  def sort
+    @slides = @channel.slides
+
+    @slides.each do |slide|
+      slide.position = params['slide'].index(slide.id.to_s) + 1
+      slide.save
+    end
+    
+    render :nothing => true
   end
 
   private

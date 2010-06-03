@@ -28,3 +28,4 @@ gem "simple_form"
 gem "responders"
 gem "ruby-debug"
 gem 'tiny_mce'
+gem 'acts_as_list'

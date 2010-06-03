@@ -1,6 +1,8 @@
 Iivari::Application.routes.draw do |map|
   resources :channels do
-    resources :slides
+    resources :slides do
+      post :sort, :on => :collection
+    end
   end
 
   match '/slides/new/:template', :to => "slides#new", :as => 'template_new_slide'
