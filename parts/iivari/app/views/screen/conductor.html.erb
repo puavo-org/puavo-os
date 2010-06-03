@@ -6,7 +6,7 @@
     updateSlideData('<%= @json_url.html_safe %>', <%= @cache %>);
     $(document).ready(function() { showNextSlide(); });
     <% if params[:slide_id].nil? %>
-    setInterval( "updateSlideData('<%= @url %>', <%= @cache %>)", 7000);
+    setInterval( "updateSlideData('<%= @json_url.html_safe %>', <%= @cache %>)", 7000);
     <% end %>
 </script> 
 
