@@ -75,7 +75,7 @@ class ScreenController < ApplicationController
       body << "/" +  Pathname(file).relative_path_from( Pathname(root) ).to_s
     end
 
-    body << "slides"
+    body << "conductor?resolution=#{params[:resolution]}"
     # FIXME, only allowed channels
     Slide.image_urls(Channel.first, params[:resolution]).each do |url|
       body << url
