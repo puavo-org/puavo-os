@@ -1,4 +1,3 @@
-
 function updateSlideData(url, cache) {
     if(cache == true) {
 	$.retrieveJSON(url, function(json, status) {
@@ -23,8 +22,42 @@ function showNextSlide() {
 	if ( slideNumber > slideData.json.length - 1 ) {
 	    slideNumber = 0;
 	}
-	$("#content").empty().append(slideData.json[slideNumber]["slide_html"]);
-	slideNumber = slideNumber + 1
+	//	$("#content").empty().append(slideData.json[slideNumber]["slide_html"]);
+
+        var today=new Date();
+
+	var d=today.getDate();
+	var mo=today.getMonth()+1;
+	var y=today.getYear() + 1900;
+	var h=today.getHours();
+	var m=today.getMinutes();
+	var s=today.getSeconds();
+
+	h=checkTime(h);
+	m=checkTime(m);
+	s=checkTime(s);
+
+	var newtime = d+"."+mo+"."+y+"  "+h+":"+m;
+
+	oldslide = $('.slide');
+
+	var newslide = document.createElement('div');
+	$(newslide).addClass('slide');
+	$(newslide).append(slideData.json[slideNumber]["slide_html"] + "<div class=\"footer\">" + newtime + "</div>");
+	$(newslide).appendTo('body');
+	
+	$(oldslide).hide();
+	$(newslide).show();
+	$(oldslide).remove();
+
+	slideNumber = slideNumber + 1;
 	setTimeout("showNextSlide()", 5000);
     }
+}
+
+function checkTime(i)
+{
+    if (i<10) 
+	{i="0" + i}
+    return i;
 }

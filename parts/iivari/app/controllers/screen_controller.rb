@@ -106,6 +106,6 @@ class ScreenController < ApplicationController
   def slide_to_screen_html(resolution, slide)
     @resolution = resolution
     @slide = slide
-    render_to_string( :partial => "client_" + slide.template + ".html.erb" )
+    render_to_string( "client_" + slide.template + ".html.erb", :layout => "slide" )
   end
 end
