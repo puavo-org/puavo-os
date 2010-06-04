@@ -1,0 +1,7 @@
+# Default organisation configurations.
+# This is used to if browser request host not matched with other settings.
+default:
+  name: Default organisation
+  host: *
+  ldap_host: localhost
+  ldap_base: dc=edu,dc=example,dc=com
