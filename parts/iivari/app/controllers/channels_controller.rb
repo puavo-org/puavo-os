@@ -1,4 +1,5 @@
 class ChannelsController < ApplicationController
+  before_filter :require_user
   respond_to :html
 
   # GET /channels

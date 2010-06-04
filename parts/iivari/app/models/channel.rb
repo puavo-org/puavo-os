@@ -1,3 +1,4 @@
-class Channel < ActiveRecord::Base
+class Channel < OrganisationData
   has_many :slides
+
 end

@@ -1,4 +1,4 @@
-class Slide < ActiveRecord::Base
+class Slide < OrganisationData
   belongs_to :channel
   
   acts_as_list

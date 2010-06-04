@@ -9,12 +9,13 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100603120238) do
+ActiveRecord::Schema.define(:version => 20100604144737) do
 
   create_table "channels", :force => true do |t|
     t.string   "name"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "organisation"
   end
 
   create_table "images", :force => true do |t|
@@ -33,6 +34,21 @@ ActiveRecord::Schema.define(:version => 20100603120238) do
     t.string   "template"
     t.integer  "channel_id"
     t.integer  "position"
+    t.string   "organisation"
+  end
+
+  create_table "users", :force => true do |t|
+    t.string   "login"
+    t.string   "persistence_token"
+    t.integer  "login_count"
+    t.datetime "last_request_at"
+    t.datetime "last_login_at"
+    t.datetime "current_login_at"
+    t.string   "last_login_ip"
+    t.string   "current_login_ip"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.string   "organisation"
   end
 
 end

@@ -3,6 +3,15 @@ class Organisation
   cattr_accessor :configurations, :configurations_by_host
   attr_accessor :organisation_key
 
+  def self.current
+    Thread.current['organisation']
+
+  end
+
+  def self.current=(organisation)
+    Thread.current['organisation'] = organisation
+  end
+
   def schools
     School.all
   end
@@ -21,6 +30,18 @@ class Organisation
 
   def ldap_base
     value_by_key("ldap_base")
+  end
+
+  def uid_search_dn
+    value_by_key("uid_search_dn")
+  end
+
+  def uid_search_password
+    value_by_key("uid_search_password")
+  end
+
+  def key
+    self.organisation_key
   end
 
   def value_by_key(key)
@@ -69,7 +90,7 @@ class Organisation
 
     def load_configurations
       logger.debug "Load ldap configurations from file"
-      configuration_file = File.join(RAILS_ROOT, 'config', 'organisations.yml')
+      configuration_file = File.join(Rails.root, 'config', 'organisations.yml')
       if File.exist?(configuration_file)
         self.configurations = YAML.load(ERB.new(IO.read(configuration_file)).result)
         self.configurations_by_host = {}
@@ -80,7 +101,7 @@ class Organisation
     end
 
     def logger
-      RAILS_DEFAULT_LOGGER
+      Rails.logger
     end
   end
 end

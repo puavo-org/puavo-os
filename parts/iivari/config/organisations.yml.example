@@ -5,3 +5,6 @@ default:
   host: *
   ldap_host: localhost
   ldap_base: dc=edu,dc=example,dc=com
+  uid_search_dn: uid=puavo,o=puavo
+  uid_search_password: xxxxxxxx
+  locale: fi
