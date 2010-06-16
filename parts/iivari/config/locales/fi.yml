@@ -1,5 +1,50 @@
 fi:
+  activerecord:
+    models:
+      channel: Kanava
+      slide: Ruutu
+    attributes:
+      channel:
+        name: Nimi
+      slide:
+        title: Otsikko
+        body: Teksti
+  helpers:
+    submit:
+      create: "Lisää {{model}}"
+      update: "Tallenna muutokset"
+      slide:
+        create: Lisää uusi ruutu
+      channel:
+        create: Lisää uusi kanava
+      user_session:
+        create: Kirjaudu
+  links:
+    edit: Muokkaa
+    back: Takaisin
+    show: Näytä
+    slides: Ruudut
+    destroy: Poista
+    new_channel: Uusi kanava
+    new_slides: Uusi ruutu
+    logout: Kirjaudu ulos
+  channels:
+    show:
+      name: Nimi
+    new:
+      title: Uusi kanava
+    index:
+      title: Lista kanavista
+      confirm: Haluatko varmasti poistaa kanavan?
+    edit:
+      title: Kanavan tietojen muokkaus
   slides:
+    index:
+      title: Lista ruuduista
+      confirm: Haluatko varmasti poistaa ruudun?
+      drag: Raahaa
+    new:
+      title: Uusi ruutu
     template:
       select_slide_template: Valitse ruututyyppi
       link_text: Vain teksti
@@ -7,3 +52,25 @@ fi:
       link_left_image: Kuva vasemmalla
       link_only_image: Vain kuva
       link_web_page: Web-sivu
+    edit:
+      title: Ruudun muokkaus
+  user_sessions:
+    new:
+      error_title: Kirjautuminen epäonnistui
+  authlogic:
+    error_messages:
+      login_blank: ei voi olla tyhjä
+      login_not_found: on virheellinen
+      # login_invalid: should use only letters, numbers, spaces, and .-_@ please.
+      # consecutive_failed_logins_limit_exceeded: Consecutive failed logins limit exceeded, account is disabled.
+      # email_invalid: should look like an email address.
+      password_blank: ei voi olla tyhjä
+      password_invalid: on virheellinen
+      # not_active: Your account is not active
+      # not_confirmed: Your account is not confirmed
+      # not_approved: Your account is not approved
+      no_authentication_details: Kirjautumiseen tarvitaan käyttäjätunnus ja salasana
+    attributes:
+      user_session:
+        login: Käyttäjätunnus
+        password: Salasana

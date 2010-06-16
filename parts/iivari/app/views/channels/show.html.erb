@@ -1,10 +1,10 @@
 <p class="notice"><%= notice %></p>
 
 <p>
-  <b>Name:</b>
+  <b><%= t('.name') %>:</b>
   <%= @channel.name %>
 </p>
 
 
-<%= link_to 'Edit', edit_channel_path(@channel) %> |
-<%= link_to 'Back', channels_path %>
+<%= link_to t('links.edit'), edit_channel_path(@channel) %> |
+<%= link_to t('links.back'), channels_path %>

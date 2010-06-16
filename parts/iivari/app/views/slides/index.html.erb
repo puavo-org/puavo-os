@@ -1,17 +1,17 @@
 <%= javascript_include_tag "slides/sortable.js" %>
 
-<h1>Listing slides</h1>
+<h1><%= t('.title') %></h1>
 
 <ul id="slides" style="list-style: none;", >
 <% @slides.each do |slide| %>
   <li id="slide_<%= slide.id %>">
-    <span>[Drag]</span>
+    <span><%= t('.drag') %></span>
     <iframe style="z-index: -1;" scrolling="no" height="150" width="250" src="/asdfdsasdfsadfasdf/conductor?cache=false&slide_id=<%= slide.id %>&resolution=250x150">
     </iframe>
     <%= slide.title %>
-    <%= link_to 'Show', channel_slide_path(@channel, slide) %>
-    <%= link_to 'Edit', edit_channel_slide_path(@channel, slide) %>
-    <%= link_to 'Destroy', channel_slide_path(@channel, slide), :confirm => 'Are you sure?', :method => :delete %>
+    <%= link_to t('links.show'), channel_slide_path(@channel, slide) %>
+    <%= link_to t('links.edit'), edit_channel_slide_path(@channel, slide) %>
+    <%= link_to t('links.destroy'), channel_slide_path(@channel, slide), :confirm => t('.confirm'), :method => :delete %>
   </li>
 <% end %>
 
@@ -19,4 +19,4 @@
 
 <br />
 
-<%= link_to 'New Slide', new_channel_slide_path %>
+<%= link_to t('links.new_slides'), new_channel_slide_path %>

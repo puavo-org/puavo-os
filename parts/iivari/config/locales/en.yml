@@ -3,3 +3,62 @@
 
 en:
   hello: "Hello world"
+
+  helpers:
+    submit:
+      create: "Create a {{model}}"
+      update: "Confirm changes to {{model}}"
+      user_session:
+        create: Kirjaudu
+  links:
+    edit: Edit
+    back: Back
+    show: Show
+    slides: Slides
+    destroy: Destory
+    new_channel: New Channel
+    new_slides: New Slide
+    logout: Logout
+  channels:
+    show:
+      name: Name
+    new:
+      title: New channel
+    index:
+      title: Listing channels
+      confirm: Are you sure?
+    edit:
+      title: Editing channel
+  slides:
+    index:
+      title: Listing slides
+      confirm: Are you sure?
+      drag: [Drag]
+    new:
+      title: New slide
+    template:
+      select_slide_template: Select slide type
+      link_text: Text only
+      link_right_image: Image on right
+      link_left_image: Image on left
+      link_only_image: Image only
+      link_web_page: Web page
+    edit:
+      title: Editing slide
+  authlogic:
+    error_messages:
+      login_blank: can not be blank
+      login_not_found: is not valid
+      login_invalid: should use only letters, numbers, spaces, and .-_@ please.
+      consecutive_failed_logins_limit_exceeded: Consecutive failed logins limit exceeded, account is disabled.
+      email_invalid: should look like an email address.
+      password_blank: can not be blank
+      password_invalid: is not valid
+      not_active: Your account is not active
+      not_confirmed: Your account is not confirmed
+      not_approved: Your account is not approved
+      no_authentication_details: You did not provide any details for authentication.
+    attributes:
+      user_session:
+        login: Login
+        password: password

@@ -10,6 +10,10 @@
   <%= include_tiny_mce_if_needed %>
 </head>
 <body>
+<% if current_user %>
+<%= link_to t('links.logout'), user_session_path(current_user), :method => :delete %>
+<% end %>
+
 
 <%= yield %>
 
