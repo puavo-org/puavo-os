@@ -1,0 +1,7 @@
+<ul>
+  <% Channel.all.each do |channel| %>
+  <li <%= params[:channel_id].to_i == channel.id ? "class='current'" : "" %>>
+    <%= link_to channel.name, channel_slides_path(channel) %>
+  </li>
+  <% end %>
+</ul>

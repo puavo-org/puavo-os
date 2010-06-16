@@ -19,6 +19,8 @@ en:
     new_channel: New Channel
     new_slides: New Slide
     logout: Logout
+    channels: Channels
+    devices: Devices
   channels:
     show:
       name: Name
@@ -62,3 +64,6 @@ en:
       user_session:
         login: Login
         password: password
+  layouts:
+    application:
+      logged_in_as: Logged in as

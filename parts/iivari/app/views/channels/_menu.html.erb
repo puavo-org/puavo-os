@@ -1,0 +1,6 @@
+<ul>
+  <li <%= controller_name.match(/channels/) ? "class='current'" : "" %>>
+  <%= link_to t('links.channels'), channels_path %>
+  </li>
+  <li><%= t('links.devices')%></li>
+</ul>

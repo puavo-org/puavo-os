@@ -28,6 +28,8 @@ fi:
     new_channel: Uusi kanava
     new_slides: Uusi ruutu
     logout: Kirjaudu ulos
+    channels: Kanavat
+    devices: Näytöt
   channels:
     show:
       name: Nimi
@@ -74,3 +76,6 @@ fi:
       user_session:
         login: Käyttäjätunnus
         password: Salasana
+  layouts:
+    application:
+      logged_in_as: Kirjauduttu sisään käyttäjänä
