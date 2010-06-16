@@ -33,3 +33,4 @@ gem 'rmagick', :require => 'RMagick'
 gem 'net-ldap'
 gem "authlogic", :git => 
   "git://github.com/odorcicd/authlogic.git", :branch => "rails3"
+gem 'mongrel'
