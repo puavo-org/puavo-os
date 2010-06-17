@@ -1,4 +1,5 @@
 Iivari::Application.routes.draw do |map|
+  match '/channels/wellcome', :to => "channels#wellcome"
   resources :channels do
     resources :slides do
       post :sort, :on => :collection
@@ -64,7 +65,7 @@ Iivari::Application.routes.draw do |map|
 
   # You can have the root of your site routed with "root"
   # just remember to delete public/index.html.
-  root :to => "channels#index"
+  root :to => "channels#wellcome"
 
   # See how all your routes lay out with "rake routes"
 

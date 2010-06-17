@@ -2,6 +2,11 @@ class ChannelsController < ApplicationController
   before_filter :require_user
   respond_to :html
 
+  def wellcome
+    @channel = Channel.first
+    redirect_to channel_slides_path(@channel)
+  end
+
   # GET /channels
   # GET /channels.xml
   def index
