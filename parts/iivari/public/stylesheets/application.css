@@ -16,6 +16,8 @@ a { color: #000; }
 a:visited { color: #666; }
 a:hover { color: #fff; background-color:#000; }
 
+a:hover img { color: #fff; background-color: #fff; }
+
 div.field, div.actions {
   margin-bottom: 10px;
 }

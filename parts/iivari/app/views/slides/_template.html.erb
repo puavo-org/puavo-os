@@ -1,8 +1,7 @@
 <p><%= t('.select_slide_template') %></p>
 
-
-<%= link_to t('.link_text'), new_channel_slide_url(:template => "only_text") %>
-<%= link_to t('.link_right_image'), new_channel_slide_url(:template => "right_image") %>
-<%= link_to t('.link_left_image'), new_channel_slide_url(:template => "left_image") %>
-<%= link_to t('.link_only_image'), new_channel_slide_url(:template => "only_image") %>
+<%= link_to image_tag("only_text.png", :title => t('.link_text')), new_channel_slide_url(:template => "only_text") %>
+<%= link_to image_tag("right_image.png", :title => t('.link_right_image')), new_channel_slide_url(:template => "right_image") %>
+<%= link_to image_tag("left_image.png", :title => t('.link_left_image')), new_channel_slide_url(:template => "left_image") %>
+<%= link_to image_tag("only_image.png", :title => t('.link_only_image')), new_channel_slide_url(:template => "only_image") %>
 <%= link_to t('.link_web_page'), new_channel_slide_url(:template => "web_page") %>
