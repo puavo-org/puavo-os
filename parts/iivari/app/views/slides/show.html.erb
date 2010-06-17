@@ -1,15 +1,7 @@
-<p class="notice"><%= notice %></p>
-
-<p>
-  <b><%= Slide.human_attribute_name(:title)%>:</b>
-  <%= @slide.title %>
-</p>
-
-<p>
-  <b><%= Slide.human_attribute_name(:body)%>:</b>
-  <%= @slide.body %>
-</p>
-
+<div>
+<iframe style="z-index: -1;" scrolling="no" height="400" width="640" src="/asdfdsasdfsadfasdf/conductor?cache=false&slide_id=<%= @slide.id %>&resolution=640x400">
+</iframe>
+</div>
 
 <%= link_to t('links.edit'), edit_channel_slide_path(@channel, @slide) %> |
 <%= link_to t('links.back'), channel_slides_path %>
