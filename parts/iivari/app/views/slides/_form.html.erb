@@ -1,17 +1,9 @@
 <%= form_for([@channel, @slide], :html => { :multipart => true } ) do |f| %>
 
-<div id="title" class="slide_field">
-<%= f.label :title %><br />
-<%= f.text_field :title %>
-</div>
+<%= render :partial => "template_" + @slide.template, :locals => { :f => f } %>
 
-<% form_parts.each do |form_part| %>
-<%= render :partial => form_part, :locals => { :f => f } %>
-<% end %>
+<%= f.hidden_field :template, :value => @slide.template %>
 
-<%= f.hidden_field :template, :value => params[:template] %>
+<%= f.submit %>
 
-<div class="actions">
-  <%= f.submit %>
-</div>
 <% end %>

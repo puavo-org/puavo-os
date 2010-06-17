@@ -1,1 +1,8 @@
-<%= render :partial => 'form', :locals => { :form_parts => ['image'] } %>
+<div class="slide_title">
+  <%= f.label :title %><br />
+  <%= f.text_field :title %>
+</div>
+
+<div class="full">
+  <%= f.file_field :image %>
+</div>

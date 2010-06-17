@@ -1,6 +1,8 @@
 <h1><%= t('.title') %></h1>
 
-<%= render :partial => "template_" + @slide.template %>
+<div class="slide">
+<%= render :partial => 'form' %>
+</div>
 
 <%= link_to t('links.show'), channel_slide_path(@channel, @slide) %> |
 <%= link_to t('links.back'), channel_slides_path %>

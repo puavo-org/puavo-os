@@ -23,8 +23,9 @@ class SlidesController < ApplicationController
   # GET /slides/new.xml
   def new
     @slide = Slide.new
+    @slide.template = params[:template] if params.has_key?(:template)
 
-    @partial = params[:template] ? "template_" + params[:template] : 'template'
+    @partial = params[:template] ? "form" : 'template'
 
     respond_with(@slide)
   end
