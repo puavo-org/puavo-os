@@ -1,4 +1,10 @@
 $(document).ready(function(){
+    $('#previewSlides').click(function (event){
+        var url = $(this).attr("href");
+        window.open(url, "iivariPreview", "width=720,height=550");
+        event.preventDefault();
+    });
+
     $('#slides').sortable({
         axis: 'y',
         dropOnEmpty: false,

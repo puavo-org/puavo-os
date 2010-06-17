@@ -1,6 +1,11 @@
-<%= javascript_include_tag "slides/sortable.js" %>
+<% content_for :javascript do %>
+  <%= javascript_include_tag "slides/index" %>
+<% end %>
+
+<a href="/asdfdsasdfsadfasdf/conductor?cache=false&resolution=720x450" id="previewSlides" ><%= t('links.preview_channel_slides') %></a>
 
 <h1><%= t('.title') %></h1>
+
 
 <ul id="slides" style="list-style: none;", >
 <% @slides.each do |slide| %>

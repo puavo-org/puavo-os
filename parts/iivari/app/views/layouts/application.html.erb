@@ -13,6 +13,7 @@
   <%= javascript_include_tag "jquery-ui.min.js" %>
   <%= csrf_meta_tag %>
   <%= include_tiny_mce_if_needed %>
+  <%= yield :javascript %>
 </head>
 <body>
 
