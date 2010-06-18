@@ -43,7 +43,7 @@ function showNextSlide() {
 
 	var newslide = document.createElement('div');
 	$(newslide).addClass('slide');
-	$(newslide).append(slideData.json[slideNumber]["slide_html"] + "<div class=\"footer\">" + newtime + "</div>");
+	$(newslide).append(slideData.json[slideNumber]["slide_html"] + "<h3 class=\"footer\">" + newtime + "</h3>");
 	$(newslide).appendTo('body');
 	
 	$(oldslide).hide();
