@@ -19,7 +19,7 @@ class Image < ActiveRecord::Base
     else
       max_width = (screen_width.to_f * 2.0 / 5.0).to_i
     end
-    max_height = (screen_height.to_f * 4.0 / 5.0).to_i
+    max_height = (screen_height.to_f * 6.0 / 8.0).to_i
 
     filename = "#{Image.path}/#{self.key}_#{max_width}x#{max_height}"
 
@@ -27,7 +27,7 @@ class Image < ActiveRecord::Base
       # Create new scale image
       scale_new_image_file(max_width, max_height)
     end
-    return File.open( filename ).readlines
+    return File.readlines( filename )
   end
 
   def self.path
