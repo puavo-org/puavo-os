@@ -7,17 +7,31 @@
 <h1><%= t('.title') %></h1>
 
 
-<ul id="slides" style="list-style: none;", >
+<ul id="slides">
 <% @slides.each do |slide| %>
   <li id="slide_<%= slide.id %>">
-    <span><%= t('.drag') %></span>
-    <iframe style="z-index: -1;" scrolling="no" height="150" width="250" src="/asdfdsasdfsadfasdf/conductor?cache=false&slide_id=<%= slide.id %>&resolution=250x150">
-    </iframe>
-    <%= slide.title %>
-    <%= link_to t('links.show'), channel_slide_path(@channel, slide) %>
-    <%= link_to t('links.edit'), edit_channel_slide_path(@channel, slide) %>
-    <%= link_to t('links.destroy'), channel_slide_path(@channel, slide), :confirm => t('.confirm'), :method => :delete %>
+    <table>
+      <tr>
+	<td rowspan="2"><span><%= image_tag('transform-move.png', :title => t('.drag') ) %></span></td>
+	<td rowspan="2">
+	  <iframe style="z-index: -1;" scrolling="no" height="150" width="250" src="/asdfdsasdfsadfasdf/conductor?cache=false&slide_id=<%= slide.id %>&resolution=250x150">
+	  </iframe>
+	</td>
+      
+	<td class="title">
+	  <%= slide.title %>
+	</td>
+      </tr>
+      <tr>
+	<td class="action">
+	  <%= link_to image_tag( 'video-display.png', :title => t('links.show') ), channel_slide_path(@channel, slide) %>
+	  <%= link_to image_tag('preferences-system.png', :title => t('links.edit') ), edit_channel_slide_path(@channel, slide) %>
+	  <%= link_to image_tag('edit-delete.png', :title => t('links.destroy') ), channel_slide_path(@channel, slide), :confirm => t('.confirm'), :method => :delete %>
+	</td>
+      </tr>
+    </table>
   </li>
+      <hr />
 <% end %>
 
 </ul>

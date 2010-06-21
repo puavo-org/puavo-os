@@ -82,5 +82,26 @@ div.field, div.actions {
     height: 350px;
 }
 
-.slide_title {
+#slides * {
+    vertical-align: middle;
+    list-style: none;
+}
+
+#slides li {
+    margin: 10px;
+}
+
+#slides iframe {
+    border: 5px inset;
+}
+
+#slides td.title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#slides .action img{
+    padding-right: 15px;
+    vertical-align: top;
+    padding-bottom: 28px;
 }
