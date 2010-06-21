@@ -6,21 +6,29 @@ class User < OrganisationData
   def ldap_entry
     LdapUser.find(self.login)
   end
-  
+
   def self.find_or_create_from_ldap(login)
     find_by_login(login) || create_from_ldap_if_valid(login)
   end
-  
+
   def self.create_from_ldap_if_valid(login)
-    User.create(:login => login) if LdapUser.find(login)
+    begin
+      User.create(:login => login) if LdapUser.find(login)
+    rescue
+      nil
+    end
   end
-  
+
   protected
 
   def valid_ldap_credentials?(password_plaintext)
-    if ldap_entry.bind(password_plaintext)
-      return true
+    begin 
+      if ldap_entry.bind(password_plaintext)
+        true
+      end
+    rescue Exception => e
+      logger.info "Authentication error: " + e.to_s
+      false
     end
-    return false
   end
 end
