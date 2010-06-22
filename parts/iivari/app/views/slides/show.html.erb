@@ -1,3 +1,15 @@
+<div class="slide_navigation">
+<% unless @previous.nil? %>
+<%= link_to t('links.previous'), channel_slide_path(@channel, @previous) %>
+<% end %>
+
+<%= unless @previous.nil? || @next.nil? then " - " end %> 
+
+<% unless @next.nil? %>
+<%= link_to t('links.next'), channel_slide_path(@channel, @next) %>
+<% end %>
+</div>
+
 <div>
 <iframe style="z-index: -1;" scrolling="no" height="450" width="720" src="/asdfdsasdfsadfasdf/conductor?cache=false&slide_id=<%= @slide.id %>&resolution=720x450">
 </iframe>

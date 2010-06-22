@@ -16,6 +16,10 @@ class SlidesController < ApplicationController
   # GET /slides/1.xml
   def show
     @slide = Slide.find(params[:id])
+
+    @next = @channel.slides.where( :position => @slide.position + 1 ).first
+    @previous = @channel.slides.where( :position => @slide.position - 1 ).first
+
     respond_with(@slide)
   end
 
