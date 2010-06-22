@@ -3,5 +3,8 @@
 </iframe>
 </div>
 
-<%= link_to t('links.edit'), edit_channel_slide_path(@channel, @slide) %> |
-<%= link_to t('links.back'), channel_slides_path %>
+<%= link_to t('links.back_to_slides'), channel_slides_path(@channel) %>
+
+<% content_for :tools do %>
+<div><%= link_to t('links.edit'), edit_channel_slide_path(@channel, @slide) %></div>
+<% end %>

@@ -12,9 +12,9 @@ fi:
   helpers:
     submit:
       create: "Lisää {{model}}"
-      update: "Tallenna muutokset"
+      update: "Tallenna"
       slide:
-        create: Lisää uusi ruutu
+        create: Tallenna
       channel:
         create: Lisää uusi kanava
       user_session:
@@ -30,7 +30,11 @@ fi:
     logout: Kirjaudu ulos
     channels: Kanavat
     devices: Näytöt
-    preview_channel_slides: Esikatselu
+    preview_channel_slides: Ruutujen esikatselu
+    or_cancel: tai
+    cancel: Peruuta
+    back_to_slides: Takaisin ruutulistaan
+    back_to_channels: Takaisin kanavalistaan
   channels:
     show:
       name: Nimi
@@ -43,7 +47,7 @@ fi:
       title: Kanavan tietojen muokkaus
   slides:
     index:
-      title: Lista ruuduista
+      title: "<b>{{name}}</b> kanavan ruudut"
       confirm: Haluatko varmasti poistaa ruudun?
       drag: Raahaa
     new:
@@ -80,5 +84,6 @@ fi:
   layouts:
     application:
       logged_in_as: Kirjauduttu sisään käyttäjänä
+      tools: Työkalut
   notices:
     login_required: Sinun täytyy kirjautua päästäksesi tälle sivulle

@@ -2,9 +2,7 @@
   <%= javascript_include_tag "slides/index" %>
 <% end %>
 
-<a href="/asdfdsasdfsadfasdf/conductor?cache=false&resolution=720x405" id="previewSlides" ><%= t('links.preview_channel_slides') %></a>
-
-<h1><%= t('.title') %></h1>
+<h1><%= t('.title', :name => @channel.name) %></h1>
 
 
 <ul id="slides">
@@ -38,4 +36,7 @@
 
 <br />
 
-<%= link_to t('links.new_slides'), new_channel_slide_path %>
+<% content_for :tools do %>
+<div><a href="/asdfdsasdfsadfasdf/conductor?cache=false&resolution=720x405" id="previewSlides" ><%= t('links.preview_channel_slides') %></a></div>
+<div><%= link_to t('links.new_slides'), new_channel_slide_path %></div>
+<% end %>

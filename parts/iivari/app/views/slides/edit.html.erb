@@ -8,5 +8,6 @@
 <%= render :partial => 'form' %>
 </div>
 
-<%= link_to t('links.show'), channel_slide_path(@channel, @slide) %> |
-<%= link_to t('links.back'), channel_slides_path %>
+<% content_for :tools do %>
+<div><%= link_to t('links.show'), channel_slide_path(@channel, @slide) %></div>
+<% end %>

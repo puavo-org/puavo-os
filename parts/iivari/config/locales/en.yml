@@ -22,6 +22,11 @@ en:
     channels: Channels
     devices: Devices
     preview_channel_slides: Preview
+    or_cancel: or
+    cancel: Cancel
+    back_to_slides: Back
+    back_to_channels: Back
+
   channels:
     show:
       name: Name
@@ -68,5 +73,6 @@ en:
   layouts:
     application:
       logged_in_as: Logged in as
+      tools: Tools
   notices:
     login_required: You must be logged in to access this page

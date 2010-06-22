@@ -21,4 +21,6 @@
 
 <br />
 
-<%= link_to t('links.new_channel'), new_channel_path %>
+<% content_for :tools do %>
+<div><%= link_to t('links.new_channel'), new_channel_path %></div>
+<% end %>

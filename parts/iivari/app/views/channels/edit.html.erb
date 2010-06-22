@@ -2,5 +2,6 @@
 
 <%= render 'form' %>
 
-<%= link_to t('links.show'), @channel %> |
-<%= link_to t('links.back'), channels_path %>
+<% content_for :tools do %>
+<div><%= link_to t('links.show'), @channel %></div>
+<% end %>

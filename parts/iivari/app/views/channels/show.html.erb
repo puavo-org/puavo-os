@@ -1,10 +1,10 @@
-<p class="notice"><%= notice %></p>
-
 <p>
   <b><%= t('.name') %>:</b>
   <%= @channel.name %>
 </p>
+<div><%= link_to t('links.back_to_channels'), channels_path %></div>
 
 
-<%= link_to t('links.edit'), edit_channel_path(@channel) %> |
-<%= link_to t('links.back'), channels_path %>
+<% content_for :tools do %>
+<div><%= link_to t('links.edit'), edit_channel_path(@channel) %></div>
+<% end %>

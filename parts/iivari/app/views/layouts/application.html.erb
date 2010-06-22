@@ -36,6 +36,7 @@
     <div id="navbar_first_level">
       <div id="nav1">
 	<ul>
+	  <% if Channel.first %>
 	  <li class="<%= controller_name.match(/slides/) \
 		     ? "page_item current_page_item" \
 						    : "page_item" %>">
@@ -48,6 +49,7 @@
 	    <span>Hallinta</span>
 	    <% end %>
 	  </li>
+	  <% end %>
 	</ul>
       </div><!-- nav1 -->
     </div><!-- navbar_first_level -->
@@ -71,10 +73,10 @@
       <%= yield %>
     </div>
 
-    <% if current_user && false %>
+    <% if current_user %>
     <div class="tools">
       <h1><%= t('.tools') %></h1>
-      <%= yield :right %>
+      <%= yield :tools %>
     </div>
     <% end %>
       
