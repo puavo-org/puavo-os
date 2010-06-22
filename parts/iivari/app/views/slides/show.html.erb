@@ -7,4 +7,11 @@
 
 <% content_for :tools do %>
 <div><%= link_to t('links.edit'), edit_channel_slide_path(@channel, @slide) %></div>
+<div>
+<%= link_to( t('links.destroy'),
+ channel_slide_path(@channel, @slide),
+ :confirm => t('.confirm'),
+ :method => :delete ) %>
+</div>
+<div><%= link_to t('links.new_slides'), new_channel_slide_path %></div>
 <% end %>

@@ -23,10 +23,10 @@ fi:
     edit: Muokkaa
     back: Takaisin
     show: Näytä
-    slides: Ruudut
+    slides: Ruutulista
     destroy: Poista
     new_channel: Uusi kanava
-    new_slides: Uusi ruutu
+    new_slides: Lisää uusi ruutu
     logout: Kirjaudu ulos
     channels: Kanavat
     devices: Näytöt
@@ -46,6 +46,8 @@ fi:
     edit:
       title: Kanavan tietojen muokkaus
   slides:
+    show:
+      confirm: Haluatko varmasti poistaa ruudun?
     index:
       title: "<b>{{name}}</b> kanavan ruudut"
       confirm: Haluatko varmasti poistaa ruudun?
