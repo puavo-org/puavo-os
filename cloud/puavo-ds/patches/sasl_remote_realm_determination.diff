@@ -1,0 +1,209 @@
+--- cyrus-sasl2-2.1.23.dfsg1.orig/plugins/gssapi.c	2009-04-28 18:09:17.000000000 +0300
++++ cyrus-sasl2-2.1.23.dfsg1.patched/plugins/gssapi.c	2010-07-05 09:42:48.000000000 +0300
+@@ -51,6 +51,8 @@
+ #include <gssapi/gssapi.h>
+ #endif
+ 
++#include <gssapi/gssapi_krb5.h>
++
+ #ifdef WIN32
+ #  include <winsock2.h>
+ 
+@@ -625,6 +627,117 @@
+     return SASL_OK;
+ }
+ 
++char *determine_remote_realm(const sasl_utils_t *utils,
++                             char *service,
++                             char *ipport_input)
++{
++  char *tmp_princ, *remote_ip, *result, *tmp_realm;
++  gss_buffer_desc buf;
++  OM_uint32 minor, major;
++  gss_name_t imported_name, imported_canon;
++
++  utils->log(NULL, SASL_LOG_DEBUG,
++             "determine_remote_realm(): from ipport=%s\n", ipport_input);
++
++  if (!ipport_input) {
++    utils->log(NULL, SASL_LOG_DEBUG,
++               "determine_remote_realm(): Skipping NULL\n");
++    return NULL;
++  }
++
++  remote_ip = strdup(ipport_input);
++
++  if (!remote_ip) {
++    return NULL;
++  }
++
++  if (strchr(remote_ip, ';')) {
++    (strchr(remote_ip, ';'))[0] = '\0';
++  } else {
++    utils->log(NULL, SASL_LOG_ERR,
++               "Expected remote address format ip;port: %s does not contain ;\n", ipport_input);
++  }
++
++  asprintf(&tmp_princ, "%s@%s", service, remote_ip);
++  free(remote_ip);
++  remote_ip=NULL;
++
++  buf.value = tmp_princ;
++  buf.length = strlen(tmp_princ);
++
++  GSS_LOCK_MUTEX(utils);
++  major = gss_import_name(&minor, &buf,
++                          (gss_OID)GSS_C_NT_HOSTBASED_SERVICE,
++                          &imported_name);
++  GSS_UNLOCK_MUTEX(utils);
++
++  utils->free(buf.value);
++  buf.value = NULL;
++
++  if (GSS_ERROR(major)) {
++    utils->log(NULL, SASL_LOG_WARN,
++               "determine_remote_realm(): Failed to import name %s\n", tmp_princ);
++
++    GSS_LOCK_MUTEX(utils);
++    gss_release_buffer(&minor, &buf);
++    GSS_LOCK_MUTEX(utils);
++
++    return NULL;
++  }
++
++  // Release the buffer so that it can be reused to for display name
++  GSS_LOCK_MUTEX(utils);
++  gss_release_buffer(&minor, &buf);
++  GSS_UNLOCK_MUTEX(utils);
++
++  GSS_LOCK_MUTEX(utils);
++  major = gss_canonicalize_name(&minor, imported_name,
++                                (gss_OID)gss_mech_krb5, &imported_canon);
++  GSS_UNLOCK_MUTEX(utils);
++
++  if (GSS_ERROR(major)) {
++    utils->log(NULL, SASL_LOG_WARN,
++               "determine_remote_realm(): gss_canonicalize_name() failed\n");
++
++    return NULL;
++  }
++
++  GSS_LOCK_MUTEX(utils);
++  major = gss_display_name(&minor, imported_canon, &buf, NULL);
++  GSS_UNLOCK_MUTEX(utils);
++
++  if (GSS_ERROR(major)) {
++    utils->log(NULL, SASL_LOG_WARN,
++               "determine_remote_realm(): gss_display_name() failed\n");
++
++    return NULL;
++  }
++
++  GSS_LOCK_MUTEX(utils);
++  gss_release_name(&minor, &imported_canon);
++  gss_release_name(&minor, &imported_name);
++  GSS_UNLOCK_MUTEX(utils);
++
++  // buf should now contain the principal name in format
++  // ldap/ip@REALM where everything after @ is the realm.
++  // If there's no @ character or there's nothing after it,
++  // lookup didn't work and a NULL is returned.
++
++  if (strchr((char *)buf.value, '@')) {
++    tmp_realm = strchr((char *)buf.value, '@') + 1;
++
++    if (strlen(tmp_realm) > 0) {
++      result = strdup(tmp_realm);
++    }
++  }
++
++  GSS_LOCK_MUTEX(utils);
++  gss_release_buffer(&minor, &buf);
++  GSS_UNLOCK_MUTEX(utils);
++
++  return result;
++}
++
+ static int 
+ gssapi_server_mech_step(void *conn_context,
+ 			sasl_server_params_t *params,
+@@ -641,6 +754,7 @@
+     OM_uint32 max_input;
+     gss_buffer_desc name_token;
+     int ret, out_flags = 0 ;
++    char *realm;
+     
+     input_token = &real_input_token;
+     output_token = &real_output_token;
+@@ -659,22 +773,57 @@
+ 
+     case SASL_GSSAPI_STATE_AUTHNEG:
+ 	if (text->server_name == GSS_C_NO_NAME) { /* only once */
+-	    name_token.length = strlen(params->service) + 1 + strlen(params->serverFQDN);
+-	    name_token.value = (char *)params->utils->malloc((name_token.length + 1) * sizeof(char));
+-	    if (name_token.value == NULL) {
+-		MEMERROR(text->utils);
+-		sasl_gss_free_context_contents(text);
+-		return SASL_NOMEM;
++	  
++
++  	    if (params->user_realm) {
++	        realm = params->user_realm;
++	    } else {
++  	        realm = determine_remote_realm(params->utils,
++					       params->service,
++					       params->ipremoteport);
++
++		if (realm) {
++ 		    GSS_LOCK_MUTEX(params->utils);
++  		    params->utils->setprop(params->utils->conn, SASL_DEFUSERREALM, realm);
++		    params->user_realm = realm;
++		    GSS_UNLOCK_MUTEX(params->utils);
++		}
+ 	    }
+-	    sprintf(name_token.value,"%s@%s", params->service, params->serverFQDN);
+-	    
+-	    GSS_LOCK_MUTEX(params->utils);
+-	    maj_stat = gss_import_name (&min_stat,
+-					&name_token,
+-					GSS_C_NT_HOSTBASED_SERVICE,
++
++	    if (realm) {
++	        name_token.length = strlen(params->service) + strlen(params->serverFQDN) + strlen(realm) + 2;
++		name_token.value = (char *)params->utils->malloc((name_token.length + 1) * sizeof(char));
++		if (name_token.value == NULL) {
++		    MEMERROR(text->utils);
++		    sasl_gss_free_context_contents(text);
++		    return SASL_NOMEM;
++		}
++		sprintf(name_token.value,"%s/%s@%s", params->service, params->serverFQDN, realm);
++
++		GSS_LOCK_MUTEX(params->utils);
++		maj_stat = gss_import_name (&min_stat,
++					    &name_token,
++					    GSS_C_NT_USER_NAME,
++					    &text->server_name);
++		GSS_UNLOCK_MUTEX(params->utils);
++	    } else {
++	        name_token.length = strlen(params->service) + 1 + strlen(params->serverFQDN);
++		name_token.value = (char *)params->utils->malloc((name_token.length + 1) * sizeof(char));
++		if (name_token.value == NULL) {
++		    MEMERROR(text->utils);
++		    sasl_gss_free_context_contents(text);
++		    return SASL_NOMEM;
++		}
++		sprintf(name_token.value,"%s@%s", params->service, params->serverFQDN);
++		
++		GSS_LOCK_MUTEX(params->utils);
++		maj_stat = gss_import_name (&min_stat,
++					    &name_token,
++					    GSS_C_NT_HOSTBASED_SERVICE,
+ 					&text->server_name);
+-	    GSS_UNLOCK_MUTEX(params->utils);
+-	    
++		GSS_UNLOCK_MUTEX(params->utils);
++	    }
++
+ 	    params->utils->free(name_token.value);
+ 	    name_token.value = NULL;
+ 	    
