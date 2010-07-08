@@ -414,9 +414,19 @@ EOF
                ]
         
         add_entry_if_missing(dbsettings, "ou=#{ou},#{dbsettings.suffix}", ldif)
+
+        ['Servers',
+         'Devices'].each do |ou|
+
+        ldif = [
+                LDAP.mod(LDAP::LDAP_MOD_ADD, 'objectclass', ['top', 'organizationalUnit']),
+                LDAP.mod(LDAP::LDAP_MOD_ADD, 'ou', [ou]),
+               ]
+
+        add_entry_if_missing(dbsettings, "ou=#{ou},ou=Hosts,#{dbsettings.suffix}", ldif)
       end
     end
-    
+
     def self.configure_db_overlays(dbsettings)
       # http://www.openldap.org/doc/admin24/overlays.html
       # http://www.openldap.org/lists/openldap-technical/200912/msg00005.html
