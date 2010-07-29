@@ -34,3 +34,10 @@ gem 'net-ldap'
 gem "authlogic", :git => 
   "git://github.com/odorcicd/authlogic.git", :branch => "rails3"
 gem 'mongrel'
+group :cucumber do
+  gem 'rspec-rails' #, '>= 2.0.0.beta.10'
+  gem 'cucumber' #, '0.7.3'
+  gem 'cucumber-rails'
+  gem 'database_cleaner'
+  gem 'webrat' #, '0.7.0'
+end
