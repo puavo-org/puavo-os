@@ -14,6 +14,7 @@ module Iivari
 
     # Add additional load paths for your own custom dirs
     # config.load_paths += %W( #{config.root}/extras )
+    config.autoload_paths += %W(#{config.root}/lib) 
 
     # Only load the plugins named here, in the order given (default is alphabetical).
     # :all can be used as a placeholder for all plugins not explicitly named
@@ -42,5 +43,14 @@ module Iivari
 
     # Configure sensitive parameters which will be filtered from the log file.
     config.filter_parameters += [:password]
+
+    # Switch the javascript_include_tag :defaults to use jquery instead of
+    # the default prototype helpers.
+    config.action_view.javascript_expansions[:defaults] = ["jquery-1.4.2.min", "jquery-ujs/src/rails"]
+
+    # Print deprecation notices to the Rails logger
+    config.active_support.deprecation = :log
+
+    config.active_record.include_root_in_json = false
   end
 end

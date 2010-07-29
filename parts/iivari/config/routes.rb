@@ -14,7 +14,7 @@ Iivari::Application.routes.draw do |map|
 
   match ":screen_key/screen.manifest" =>  "screen#manifest", :as => "manifest_screen"
 
-  resources :user_session
+  resources :user_sessions
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

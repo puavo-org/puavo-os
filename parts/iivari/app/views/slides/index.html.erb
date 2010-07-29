@@ -2,7 +2,7 @@
   <%= javascript_include_tag "slides/index" %>
 <% end %>
 
-<h1><%= t('.title', :name => @channel.name) %></h1>
+<h1><%= t('.title', :name => h(@channel.name)).html_safe %></h1>
 
 
 <ul id="slides">

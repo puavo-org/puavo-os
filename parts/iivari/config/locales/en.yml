@@ -6,8 +6,8 @@ en:
 
   helpers:
     submit:
-      create: "Create a {{model}}"
-      update: "Confirm changes to {{model}}"
+      create: "Create a %{model}"
+      update: "Confirm changes to %{model}"
       user_session:
         create: Kirjaudu
   links:

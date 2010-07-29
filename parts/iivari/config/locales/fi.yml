@@ -11,7 +11,7 @@ fi:
         body: Teksti
   helpers:
     submit:
-      create: "Lisää {{model}}"
+      create: "Lisää %{model}"
       update: "Tallenna"
       slide:
         create: Tallenna
@@ -51,7 +51,7 @@ fi:
     show:
       confirm: Haluatko varmasti poistaa ruudun?
     index:
-      title: "<b>{{name}}</b> kanavan ruudut"
+      title: "<b>%{name}</b> kanavan ruudut"
       confirm: Haluatko varmasti poistaa ruudun?
       drag: Raahaa
     new:
