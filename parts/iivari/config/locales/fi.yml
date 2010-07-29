@@ -26,6 +26,9 @@ fi:
       slide:
         title: Otsikko
         body: Teksti
+    errors:
+      messages:
+        blank: Ei voi olla tyhjä!
   helpers:
     submit:
       create: "Lisää %{model}"

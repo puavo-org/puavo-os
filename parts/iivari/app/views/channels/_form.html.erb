@@ -1,22 +1,6 @@
-<%= form_for(@channel) do |f| %>
-  <% if @channel.errors.any? %>
-  <div id="errorExplanation">
-    <h2><%= pluralize(@channel.errors.count, "error") %> prohibited this channel from being saved:</h2>
-    <ul>
-    <% @channel.errors.full_messages.each do |msg| %>
-      <li><%= msg %></li>
-    <% end %>
-    </ul>
-  </div>
-  <% end %>
 
-  <div class="field">
-    <%= f.label :name %><br />
-    <%= f.text_field :name %>
-  </div>
-  <div class="actions">
-    <%= f.submit %>
-<%= t('links.or_cancel') %> <%= link_to t('links.cancel'), channels_path %>
-
-  </div>
+<%= simple_form_for @channel do |f| %>
+<%= f.input :name, :required => false %>
+<%= f.button :submit %>
+-<%= t('links.or_cancel') %> <%= link_to t('links.cancel'), channels_path %>
 <% end %>
