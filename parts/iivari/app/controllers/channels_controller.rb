@@ -1,6 +1,5 @@
 class ChannelsController < ApplicationController
   before_filter :require_user
-  respond_to :html
 
   def wellcome
     @channel = Channel.first
@@ -46,6 +45,7 @@ class ChannelsController < ApplicationController
   def update
     @channel = Channel.find(params[:id])
     @channel.update_attributes(params[:channel])
+
     respond_with(@channel)
   end
 

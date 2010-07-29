@@ -1,6 +1,5 @@
 class SlidesController < ApplicationController
   before_filter :require_user
-  respond_to :html
   uses_tiny_mce
 
   before_filter :find_channel

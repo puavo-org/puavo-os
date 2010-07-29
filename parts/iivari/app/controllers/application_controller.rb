@@ -1,4 +1,8 @@
+require "app_responder"
+
 class ApplicationController < ActionController::Base
+  self.responder = AppResponder
+  respond_to :html
   protect_from_forgery
   layout 'application'
   before_filter :set_organisation_to_session, :set_locale
@@ -53,7 +57,7 @@ class ApplicationController < ActionController::Base
   def require_user
     unless current_user
       store_location
-      flash[:notice] = t('notices.login_required')
+      flash[:error] = t('notices.login_required')
       redirect_to new_user_session_url
       return false
     end

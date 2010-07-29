@@ -1,4 +1,21 @@
 fi:
+  flash:
+    actions:
+      create:
+        success: "Uusi %{resource_name} on luotu onnistuneesti."
+      update:
+        success: "%{resource_name}tietojen päivitys onnistui."
+      destroy:
+        success: "%{resource_name} poistettiin."
+        error: "%{resource_name}n poistaminen epäonnistui."
+    user_sessions:
+      create:
+        success: Kirjautuminen onnistui
+    slides:
+      create:
+        success: Uuden ruudun lisäys onnistui!
+      update:
+        success: Ruuduntietojen päivitys onnistui
   activerecord:
     models:
       channel: Kanava

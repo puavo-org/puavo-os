@@ -2,8 +2,18 @@
 # See http://github.com/svenfuchs/rails-i18n/tree/master/rails%2Flocale for starting points.
 
 en:
-  hello: "Hello world"
-
+  flash:
+    actions:
+      create:
+        success: "%{resource_name} was successfully created."
+      update:
+        success: "%{resource_name} was successfully updated."
+      destroy:
+        success: "%{resource_name} was successfully destroyed."
+        error: "%{resource_name} could not be destroyed."
+    user_sessions:
+      create:
+        success: Login successful!
   helpers:
     submit:
       create: "Create a %{model}"

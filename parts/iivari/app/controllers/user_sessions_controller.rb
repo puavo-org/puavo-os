@@ -1,4 +1,5 @@
 class UserSessionsController < ApplicationController
+
   def new
     @user_session = UserSession.new
   end
@@ -6,10 +7,13 @@ class UserSessionsController < ApplicationController
   def create
     @user_session = UserSession.new(params[:user_session])
 
-    if @user_session.save
-      redirect_to channels_url
-    else
-      render :action => :new
+    @user_session.save
+    respond_with(@user_session) do |format|
+      if @user_session.errors.any?
+        format.html { render :action => :new }
+      else
+        format.html { redirect_to channels_url }
+      end
     end
   end
 
