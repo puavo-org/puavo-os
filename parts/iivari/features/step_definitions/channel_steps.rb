@@ -19,3 +19,10 @@ When /^I choose "([^\"]*)" link for the (\d+)(?:st|nd|rd|th) channel$/ do |link_
     click_link link_name
   end
 end
+
+Given /^I am logged in as "([^\"]*)" with password "([^\"]*)"$/ do |login, password|
+  visit new_user_session_path
+  fill_in("user_session_login", :with => login)
+  fill_in("user_session_password", :with => password)
+  click_button("Login")
+end

@@ -2,7 +2,10 @@ Feature: Manage channels
   In order to [goal]
   [stakeholder]
   wants [behaviour]
-  
+
+  Background:
+    Given I am logged in as "testuser1" with password "test"
+
   Scenario: Create new channel
     Given I am on the new channel page
     When I fill in "Name" with "name 88"
