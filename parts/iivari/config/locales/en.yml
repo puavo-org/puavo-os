@@ -17,15 +17,15 @@ en:
   helpers:
     submit:
       create: "Create a %{model}"
-      update: "Confirm changes to %{model}"
+      update: "Save"
       user_session:
-        create: Kirjaudu
+        create: Login
   links:
     edit: Edit
     back: Back
     show: Show
     slides: Slides
-    destroy: Destory
+    destroy: Destroy
     new_channel: New Channel
     new_slides: New Slide
     logout: Logout

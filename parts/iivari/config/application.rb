@@ -54,5 +54,9 @@ module Iivari
     config.active_record.include_root_in_json = false
 
     config.responders.flash_keys = [ :success, :error ]
+
+    config.generators do |g|
+      g.test_framework :rspec
+    end
   end
 end
