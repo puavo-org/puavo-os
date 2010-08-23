@@ -1,0 +1,29 @@
+<%
+  samba_domain = suffix.to_s.match(/^dc=([^,]+)/)[1]
+  puavo_user_dn = "uid=puavo,o=puavo"
+  admin_set = "set=\"this/puavoSchool/puavoSchoolAdmin* | [#{suffix}]/owner* & user\""
+  all_admins_set = "set=\"[ldap:///ou=Groups,#{suffix}??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [#{suffix}]/owner* & user\""
+  super_acl = "by dn=\"uid=admin,o=puavo\" manage"
+%>
+{0}to dn.exact="ou=Roles,<%= suffix %>" attrs="entry,ou" <%= super_acl %> by <%= all_admins_set%> read
+{1}to dn.exact="ou=Roles,<%= suffix %>" attrs="children" <%= super_acl %> by <%= all_admins_set%> write
+{2}to dn.subtree="ou=Roles,<%= suffix %>" <%= super_acl %> by <%= admin_set %> write
+{3}to dn.subtree="ou=Automount,<%= suffix %>" <%= super_acl %> by * +rscxd
+{4}to dn.subtree="ou=Kerberos Realms,<%= suffix %>" <%= super_acl %> by dn="uid=kadmin,ou=System Accounts,<%= suffix %>" write by dn="uid=kdc,ou=System Accounts,<%= suffix %>" read
+{5}to dn.subtree="ou=Hosts,<%= suffix %>" <%= super_acl %> by dn="uid=samba,ou=System Accounts,<%= suffix %>" +wrscxd
+{6}to dn.exact="ou=People,<%= suffix %>" attrs="entry,ou" <%= super_acl %> by users read
+{7}to dn.exact="ou=People,<%= suffix %>" attrs="children" <%= super_acl %> by <%= all_admins_set%> write by dn.exact="<%= puavo_user_dn %>" read
+{8}to dn.subtree="ou=People,<%= suffix %>" attrs="userPassword,shadowLastChange" <%= super_acl %> by <%= admin_set %> write by self write by anonymous auth
+{9}to dn.subtree="ou=People,<%= suffix %>" attrs="entry,uid,puavoId,eduPersonPrincipalName,objectClass" <%= super_acl %> by <%= admin_set %> write by dn="<%= puavo_user_dn %>" read
+{10}to dn.subtree="ou=People,<%= suffix %>" <%= super_acl %> by <%= admin_set %> write by dn.subtree="ou=Hosts,<%= suffix %>" read
+{11}to dn.exact="ou=Groups,<%= suffix %>" attrs="entry,ou" <%= super_acl %> by <%= all_admins_set%> read by dn.subtree="ou=System Accounts,<%= suffix %>" read by dn.subtree="ou=Hosts,<%= suffix %>" read
+{12}to dn.exact="ou=Groups,<%= suffix %>" attrs="children" <%= super_acl %> by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* & user | [<%= suffix %>]/owner* & user" write by dn.subtree="ou=System Accounts,<%= suffix %>" read by dn.subtree="ou=Hosts,<%= suffix %>" read
+{13}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoEduGroup) attrs="gidNumber,cn,puavoId,objectClass" <%= super_acl %> by <%= admin_set %> write by dn.subtree="ou=Hosts,<%= suffix %>" +rscxd
+{14}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) attrs="gidNumber,cn,puavoId,objectClass" <%= super_acl %> by set="[<%= suffix %>]/owner* & user" +azrwsc by set="this/puavoSchoolAdmin* & user" +rwsc by dn.subtree="ou=Hosts,<%= suffix %>" +rscd break
+{15}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoEduGroup) <%= super_acl %> by <%= admin_set %> write
+{16}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) attrs="member,memberUid" <%= super_acl %> by set="this/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" write break
+{17}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) <%= super_acl %> by set="[<%= suffix %>]/owner* & user" write by set="this/puavoSchoolAdmin* & user" +rscxd
+{18}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" attrs="sambaSID,sambaDomainName,sambaNextUserRid" <%= super_acl %> by dn="uid=samba,ou=System Accounts,<%= suffix %>" write by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" write
+{19}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" <%= super_acl %> by <%= admin_set %> write by dn="uid=samba,ou=System Accounts,<%= suffix %>" write by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" read
+{20}to dn.subtree="ou=System Accounts,<%= suffix %>" attrs="userPassword" <%= super_acl %> by anonymous auth
+{21}to dn="<%= suffix %>" <%= super_acl %> by dn.subtree="ou=System Accounts,<%= suffix %>" +rscxd by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" read by dn.exact="<%= puavo_user_dn %>" read by * +xd
