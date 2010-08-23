@@ -40,10 +40,10 @@ ActiveLdap::Base.setup_connection( :host => LDAP_CONFIG["host"],
                                    :base => "dc=#{organisation_name},dc=fi",
                                    :bind_dn => LDAP_CONFIG["bind_dn"],
                                    :password => LDAP_CONFIG["password"] )
-Organisation.create( :owner => LDAP_CONFIG["bind_dn"] )
+organisation = Organisation.create( :owner => LDAP_CONFIG["bind_dn"] )
 
 puts "* Add organizational units: People, Groups, Hosts, Automount, etc..."
-OrganizationalUnit.create_units
+OrganizationalUnit.create_units(organisation)
 
 puts "* Setting up Autofs configuration"
 Automount.create_automount_configuration

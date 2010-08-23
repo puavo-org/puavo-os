@@ -3,7 +3,7 @@ class OrganizationalUnit < ActiveLdap::Base
                 :prefix => "dc=edu",
                 :classes => ['top', 'organizationalUnit'] )
 
-  def self.create_units
+  def self.create_units(organisation)
     ['People',
      'Groups',
      'Hosts',
@@ -20,10 +20,11 @@ class OrganizationalUnit < ActiveLdap::Base
       
     self.ldap_mapping( :dn_attribute => "ou",
                        :prefix => "ou=Hosts,dc=edu",
-                       :classes => ['top', 'organizationalUnit'] )
+                       :classes => ['top', 'organizationalUnit', 'puppetClient'] )
     ['Servers',
      'Devices'].each do |ou|
-      OrganizationalUnit.create( "ou" => ou )
+      OrganizationalUnit.create( "ou" => ou,
+                                 "parentNode" =>  organisation.puavoDomain )
     end
   end
 end
