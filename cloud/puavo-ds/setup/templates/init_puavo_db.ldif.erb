@@ -1,0 +1,38 @@
+dn: o=puavo
+objectClass: dcObject
+objectClass: organization
+o: puavo
+dc: puavo
+description: LDAP root
+
+dn: cn=IdPool,o=puavo
+objectClass: top
+objectClass: puavoIdPool
+cn: IdPool
+puavoNextGidNumber: 10000
+puavoNextUidNumber: 10000
+puavoNextId: 1
+puavoNextRid: <%= @servers.length * 2 + 1 %>
+puavoNextDatabaseId: 1
+
+dn: uid=admin,o=puavo
+objectClass: account
+objectClass: simpleSecurityObject
+uid: admin
+description: Root account with access to everything in LDAP. Used to create ne
+ w databases and manage database ownership information.
+userPassword: <%= @rootpw_hash %>
+
+dn: uid=puavo,o=puavo
+objectClass: account
+objectClass: simpleSecurityObject
+uid: puavo
+description: Account for Puavo to search user DNs
+userPassword: <%= @puavopw_hash %>
+
+dn: uid=puppet,o=puavo
+objectClass: account
+objectClass: simpleSecurityObject
+uid: puppet
+description: Account for Puppet to find host information
+userPassword: <%= @puppetpw_hash %>

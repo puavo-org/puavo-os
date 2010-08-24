@@ -85,6 +85,12 @@ olcAttributeTypes: {25}( 1.3.6.1.4.1.27208.1.1.1.26 NAME 'puavoDeviceStatus' D
 olcAttributeTypes: {26}( 1.3.6.1.4.1.27208.1.1.1.27 NAME 'puavoLocationName' D
  ESC 'Manufacturer’s model name for the device' EQUALITY caseIgnoreMatch SUBST
  R caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {27}( 1.3.6.1.4.1.27208.1.1.1.28 NAME 'puavoNextRid' DESC '
+ Next rid to be given in syncrepl settings' EQUALITY integerMatch SYNTAX 1.3.6
+ .1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+olcAttributeTypes: {28}( 1.3.6.1.4.1.27208.1.1.1.29 NAME 'puavoNextDatabaseId'
+ DESC 'Next directory path id number to be given for a new database' EQUALITY 
+ integerMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
 olcObjectClasses: {0}( 1.3.6.1.4.1.27208.1.1.2.1 NAME 'puavoSchool' AUXILIARY 
  MUST ( puavoId ) MAY ( puavoSchoolHomePageURL $ puavoSchoolAdmin $ displayNam
  e $ telephoneNumber $ facsimileTelephoneNumber $ l $ street $ postOfficeBox $
@@ -99,7 +105,8 @@ olcObjectClasses: {3}( 1.3.6.1.4.1.27208.1.1.2.4 NAME 'puavoUserRole' STRUCTUR
  AL MUST ( puavoId $ puavoSchool ) MAY ( cn $ displayName $ memberUid $ member
   $ puavoMemberGroup ) )
 olcObjectClasses: {4}( 1.3.6.1.4.1.27208.1.1.2.5 NAME 'puavoIdPool' STRUCTURAL
-  SUP top MUST ( cn $ puavoNextUidNumber $ puavoNextGidNumber $ puavoNextId ))
+  SUP top MUST ( cn $ puavoNextUidNumber $ puavoNextGidNumber $ puavoNextId $ 
+ puavoNextRid $ puavoNextDatabaseId ))
 olcObjectClasses: {5}( 1.3.6.1.4.1.27208.1.1.2.6 NAME 'puavoEduOrg' AUXILIARY 
  MAY ( owner $ puavoKerberosRealm $ puavoDomain ) )
 olcObjectClasses: {6}( 1.3.6.1.4.1.27208.1.1.2.7 NAME 'puavoShare' AUXILIARY M
