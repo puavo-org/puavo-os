@@ -3,10 +3,18 @@
 # Usage: ruby add_new_organisation.rb <organisation name>
 #
 
+$LOAD_PATH.unshift( File.join( File.dirname(__FILE__), 'lib' ) )
+
 require 'rubygems'
 require 'active_ldap'
-
-Dir["lib/*.rb"].each do |f| require f end
+require 'admin_user'
+require 'automount'
+require 'database'
+require 'group'
+require 'organisation'
+require 'organizational_unit'
+require 'samba'
+require 'overlay'
 
 LDAP_CONFIG = YAML.load_file("./config/ldap.yml")
 

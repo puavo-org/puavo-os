@@ -1,4 +1,7 @@
 class Overlay < ActiveLdap::Base
+  # Load subclasses
+  Dir["lib/overlay/*.rb"].each do |f| require f end
+
   def self.ldap_mapping(args)
     super( :dn_attribute => "olcOverlay",
            :prefix => args[:prefix] )
@@ -6,6 +9,8 @@ class Overlay < ActiveLdap::Base
 
   def self.create_overlays(db_configuration)
     self.ldap_mapping( :prefix => "olcDatabase=#{db_configuration.olcDatabase}" )
+    # Find classes for overlay configurations. If you like to add new overlay configuration
+    # you have to only create new child class for Overlay.
     self.subclasses_order_by_index.each do |_subclass|
       Class.class_eval(_subclass).add_overlay_config(db_configuration)
     end
