@@ -1,3 +1,5 @@
+require 'id_pool'
+
 class Database < ActiveLdap::Base
   ldap_mapping( :dn_attribute => "olcDatabase",
                 :prefix => "",
@@ -32,11 +34,10 @@ class Database < ActiveLdap::Base
   end
 
   def next_directory_id
-    # FIXME, using IdPool (o=Puavo)
-    last_database = Database.all.sort do |a,b|
-      a.olcDatabase.match(/\{([0-9]+)\}/)[1].to_i <=> b.olcDatabase.match(/\{([0-9]+)\}/)[1].to_i
-    end.last
-    new_id = (last_database.olcDbDirectory.match(/[0-9]+$/)[0].to_i + 1).to_s
-    "0" * (3 - new_id.length) + new_id
+    id_pool = IdPool.find('IdPool')
+    next_id = id_pool.puavoNextDatabaseId
+    id_pool.puavoNextDatabaseId = next_id + 1
+    id_pool.save
+    return "%03d" % next_id
   end
 end

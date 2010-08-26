@@ -7,6 +7,14 @@ $LOAD_PATH.unshift( File.join( File.dirname(__FILE__), 'lib' ) )
 
 require 'rubygems'
 require 'active_ldap'
+# LDAP configuration
+if configurations = YAML.load_file("config/ldap.yml") rescue nil
+  ActiveLdap::Base.configurations = configurations
+else
+  puts "Not found LDAP configuration file (config/ldap.yml)"
+  exit
+end
+
 require 'ldap_organisation_base'
 require 'admin_user'
 require 'automount'
@@ -20,14 +28,6 @@ require 'overlay'
 # FIXME: puavo configuration?
 organisation_base_template = "dc=edu,dc=%s,dc=fi"
 
-# LDAP configuration
-if configurations = YAML.load_file("config/ldap.yml") rescue nil
-  ActiveLdap::Base.configurations = configurations
-else
-  puts "Not found LDAP configuration file (config/ldap.yml)"
-  exit
-end
-
 organisation_name = ARGV.first
 puts "******************************************************"
 puts "  Initialising organisation: #{organisation_name}"
@@ -38,7 +38,6 @@ suffix = organisation_base_template % organisation_name
 rootDN = configurations["puavo"]["bind_dn"]
 
 puts "* Creating database for suffix: #{suffix}"
-
 new_db = Database.new( "olcSuffix" => suffix,
                        "olcRootDN" => rootDN )
 # Save without validation
