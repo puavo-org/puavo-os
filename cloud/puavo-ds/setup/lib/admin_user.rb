@@ -1,6 +1,6 @@
-class AdminUser < ActiveLdap::Base
+class AdminUser < LdapOrganisationBase
   ldap_mapping( :dn_attribute => "uid",
-                :prefix => "ou=System Accounts,dc=edu",
+                :prefix => "ou=System Accounts",
                 :classes => ['account', 'simpleSecurityObject'] )
 
   def self.create_admin_user

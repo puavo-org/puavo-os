@@ -1,6 +1,6 @@
-class OrganizationalUnit < ActiveLdap::Base  
+class OrganizationalUnit < LdapOrganisationBase
   ldap_mapping( :dn_attribute => "ou",
-                :prefix => "dc=edu",
+                :prefix => "",
                 :classes => ['top', 'organizationalUnit'] )
 
   def self.create_units(organisation)
@@ -22,7 +22,7 @@ class OrganizationalUnit < ActiveLdap::Base
                                "parentNode" =>  organisation.puavoDomain )
       
     self.ldap_mapping( :dn_attribute => "ou",
-                       :prefix => "ou=Hosts,dc=edu",
+                       :prefix => "ou=Hosts",
                        :classes => ['top', 'organizationalUnit'] )
     ['Servers',
      'Devices'].each do |ou|

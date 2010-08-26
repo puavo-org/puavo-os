@@ -1,7 +1,7 @@
-class Samba < ActiveLdap::Base
+class Samba < LdapOrganisationBase
   ldap_mapping( :dn_attribute => "sambaDomainName",
-                :prefix => "dc=edu",
-                :classes => ['sambaDomain'] )
+                :prefix => "",
+                :classes => ['top', 'sambaDomain'] )
 
   def self.create_samba_configuration(organisation_name)
     sid1 = rand(100000000)

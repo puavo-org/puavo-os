@@ -7,6 +7,11 @@ class Database < ActiveLdap::Base
 
   private
 
+  def initialize(args)
+    ActiveLdap::Base.setup_connection( configurations["puavo"].merge( "base" => "cn=config" ) )
+    super
+  end
+
   def set_attribute_values
     self.olcDatabase = 'hdb'
     self.olcDbConfig = ['set_cachesize 0 2097152 0',
