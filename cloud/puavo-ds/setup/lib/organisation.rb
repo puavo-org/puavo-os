@@ -28,5 +28,6 @@ class Organisation < ActiveLdap::Base
 
   def set_base_connection
     LdapOrganisationBase.setup_connection( configurations["puavo"].merge( "base" => self.suffix ) )
+    LdapBase.setup_connection( configurations["puavo"].merge( "base" => self.suffix ) )
   end
 end
