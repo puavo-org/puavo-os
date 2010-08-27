@@ -40,12 +40,12 @@ class Samba < LdapOrganisationBase
      [548, 'Account Operators', 'Netbios Domain Users to manipulate users accounts'],
      [549, 'Server Operators', 'Netbios Domain Server Operators']
     ].each do |group_id, group_name, group_description|
-      Group.create( 'sambaSID' => samba_sid + "-" + group_id.to_s,
-                    'sambaGroupType' => "2",
-                    'displayName' => group_name,
-                    'description' => group_description,
-                    'gidNumber' => group_id,
-                    'cn' => group_name )
+      SambaGroup.create( 'sambaSID' => samba_sid + "-" + group_id.to_s,
+                         'sambaGroupType' => "2",
+                         'displayName' => group_name,
+                         'description' => group_description,
+                         'gidNumber' => group_id,
+                         'cn' => group_name )
     end
   end
 end
