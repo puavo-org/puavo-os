@@ -9,7 +9,7 @@ require 'tempfile'
 
 `/etc/init.d/slapd stop`
 `killall -9 slapd`
-`rm -rf /var/lib/ldap/*`
+`rm -rf /etc/ldap/slapd.d/* /var/lib/ldap/*`
 `mkdir -p /var/lib/ldap/o=puavo`
 
 (1..300).each do |num|
@@ -21,8 +21,8 @@ end
 tempfile = Tempfile.open("ldif")
 tempfile.close
 
-print `ldapsearch -x -H #{@master_server} -D #{@rootdn} -w #{@rootpw} > #{tempfile.path}`
-print `slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b "cn=config"`
+print `ldapsearch -x -H #{@master_server} -D #{@rootdn} -w #{@rootpw} -b cn=config > #{tempfile.path}`
+print `slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b cn=config`
 
 tempfile.delete
 
