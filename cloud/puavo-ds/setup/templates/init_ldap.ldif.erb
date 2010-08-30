@@ -18,6 +18,11 @@ olcServerId: <%= index+1 %> <%= @servers[index] %>
 olcTLSCACertificateFile: /etc/ssl/certs/slapd-ca.crt
 olcTLSCertificateFile: /etc/ssl/certs/slapd-server.crt
 olcTLSCertificateKeyFile: /etc/ssl/certs/slapd-server.key
+olcLocalSSF: 128
+olcSecurity: ssf=128
+olcSecurity: update_ssf=128
+olcSecurity: update_tls=128
+olcSecurity: simple_bind=128
 
 dn: olcDatabase={-1}frontend,cn=config
 objectClass: olcDatabaseConfig
