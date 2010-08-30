@@ -76,6 +76,11 @@ olcModuleLoad: {9}constraint
 olcModuleLoad: {10}smbkrb5pwd
 olcModuleLoad: {11}collect
 
+dn: olcOverlay={0}syncprov,olcDatabase={0}config,cn=config
+objectClass: olcSyncProvConfig
+objectClass: olcOverlayConfig
+olcOverlay: {0}syncprov
+
 dn: olcDatabase={1}hdb,cn=config
 objectClass: olcDatabaseConfig
 objectClass: olcHdbConfig
