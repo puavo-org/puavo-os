@@ -24,14 +24,15 @@ require 'organisation'
 require 'organizational_unit'
 require 'samba'
 require 'overlay'
-require 'users/ldap_base.rb'
-require 'users/base_group.rb'
-require 'users/school.rb'
-require 'users/role.rb'
-require 'users/group.rb'
-require 'users/user_error.rb'
-require 'users/user.rb'
-require 'users/samba_domain.rb'
+require 'users/ldap_base'
+require 'users/base_group'
+require 'users/school'
+require 'users/role'
+require 'users/group'
+require 'users/user_error'
+require 'users/user'
+require 'users/samba_domain'
+require 'users/ldap_organisation'
 
 # FIXME: puavo configuration?
 organisation_base_template = "dc=edu,dc=%s,dc=fi"
@@ -133,3 +134,7 @@ user.save!
 
 puts
 puts "User was successfully created."
+puts "\nSets the user (#{user.uid}) as the owner of the organisation"
+ldap_organisation = LdapOrganisation.first
+ldap_organisation.owner = Array(ldap_organisation.owner).push user.dn
+ldap_organisation.save
