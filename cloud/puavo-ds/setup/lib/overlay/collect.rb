@@ -8,6 +8,6 @@ class Collect < Overlay
   end
 
   def self.index
-    5
+    6
   end
 end

@@ -29,6 +29,6 @@ class Memberof < Overlay
   end
 
   def self.index
-    1
+    2
   end
 end

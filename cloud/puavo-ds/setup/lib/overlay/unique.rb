@@ -11,6 +11,6 @@ class Unique < Overlay
   end
 
   def self.index
-    0
+    1
   end
 end

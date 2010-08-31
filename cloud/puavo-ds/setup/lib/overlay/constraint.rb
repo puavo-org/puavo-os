@@ -7,6 +7,6 @@ class Constraint < Overlay
   end
 
   def self.index
-    4
+    5
   end
 end
