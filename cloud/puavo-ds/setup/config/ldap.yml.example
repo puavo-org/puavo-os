@@ -1,4 +1,8 @@
-puavo:
-  host: localhost
+first_node:
+  host: ldap1.example.org
   bind_dn: uid=admin,o=puavo
   password: secret
+other_nodes:
+  hosts:
+  - ldap2.example.org
+  - ldap3.example.org

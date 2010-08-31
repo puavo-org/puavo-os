@@ -44,7 +44,7 @@ puts "******************************************************"
 
 
 suffix = organisation_base_template % organisation_name
-rootDN = configurations["puavo"]["bind_dn"]
+rootDN = configurations["first_node"]["bind_dn"]
 
 puts "* Creating database for suffix: #{suffix}"
 begin
@@ -64,7 +64,7 @@ Overlay.create_overlays(new_db)
 
 # Create organisation and set LdapOrganisationBase LDAP connection
 puts "* Create organisation root"
-organisation = Organisation.create( :owner => configurations["puavo"]["bind_dn"],
+organisation = Organisation.create( :owner => configurations["first_node"]["bind_dn"],
                                     :suffix => suffix )
 
 puts "* Add organizational units: People, Groups, Hosts, Automount, etc..."

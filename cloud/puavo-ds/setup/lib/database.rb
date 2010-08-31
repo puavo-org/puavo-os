@@ -7,10 +7,8 @@ class Database < ActiveLdap::Base
 
   before_save :set_attribute_values
 
-  private
-
   def initialize(args)
-    ActiveLdap::Base.setup_connection( configurations["puavo"].merge( "base" => "cn=config" ) )
+    ActiveLdap::Base.setup_connection( configurations["first_node"].merge( "base" => "cn=config" ) )
     super
   end
 
@@ -26,11 +24,26 @@ class Database < ActiveLdap::Base
                        'cn,sn,mail pres,eq,approx,sub',
                        'objectClass eq' ]
     self.olcDbDirectory = "/var/lib/ldap/db#{next_directory_id}"
+    self.olcMirrorMode = 'TRUE'
 
     # Database ACLs
     suffix = self.olcSuffix
     template = File.read("templates/database_acl.erb")
     self.olcAccess = ERB.new(template, 0, "%<>").result(binding).split("\n")
+
+    # Replication settings
+    rootdn = ActiveLdap::Base.configurations["first_node"]["bind_dn"]
+    rootpw = ActiveLdap::Base.configurations["first_node"]["password"]
+    servers = Array.new
+    servers.push ActiveLdap::Base.configurations["first_node"]["host"]
+    servers += ActiveLdap::Base.configurations["other_nodes"]["hosts"] if ActiveLdap::Base.configurations["other_nodes"]
+    _olcSyncRepl = Array.new
+    servers.each_index do |index|
+      _olcSyncRepl.push "{#{index}}rid=#{ "%03d" % IdPool.next_id('puavoNextRid') } provider=ldap://#{ servers[index] } " +
+        "bindmethod=simple binddn=#{ rootdn } credentials=#{ rootpw } " +
+        "searchbase=#{self.olcSuffix} type=refreshAndPersist retry=\"15 +\""
+    end
+    self.olcSyncRepl = _olcSyncRepl
   end
 
   def next_directory_id
