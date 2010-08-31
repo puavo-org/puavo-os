@@ -41,7 +41,7 @@ class Database < ActiveLdap::Base
     servers.each_index do |index|
       _olcSyncRepl.push "{#{index}}rid=#{ "%03d" % IdPool.next_id('puavoNextRid') } provider=ldap://#{ servers[index] } " +
         "bindmethod=simple binddn=#{ rootdn } credentials=#{ rootpw } " +
-        "searchbase=#{self.olcSuffix} type=refreshAndPersist retry=\"15 +\""
+        "searchbase=#{self.olcSuffix} type=refreshAndPersist retry=\"15 +\" starttls=yes"
     end
     self.olcSyncRepl = _olcSyncRepl
   end
