@@ -62,6 +62,11 @@ new_db = Database.find(:first, :attribute => 'olcSuffix', :value => suffix)
 puts "* Setting up overlay configuration to database"
 Overlay.create_overlays(new_db)
 
+if ActiveLdap::Base.configurations["other_nodes"]
+  puts "* Setting up replication configuration"
+  new_db.set_replication_settings
+end
+
 # Create organisation and set LdapOrganisationBase LDAP connection
 puts "* Create organisation root"
 organisation = Organisation.create( :owner => configurations["first_node"]["bind_dn"],
