@@ -113,7 +113,7 @@ class User < LdapBase
   def change_ldap_password
     unless new_password.nil? || new_password.empty?
       ldap_conf = User.configuration
-      system( 'ldappasswd',
+      system( 'ldappasswd', '-Z',
               '-h', ldap_conf[:host],
               '-D', ldap_conf[:bind_dn],
               '-w', ldap_conf[:password],
