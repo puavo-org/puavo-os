@@ -48,7 +48,7 @@ class Database < ActiveLdap::Base
     tempfile.puts ldif.result(binding)
     tempfile.close
 
-    print `ldapmodify -x -D #{ @rootdn } -w #{@rootpw} -H ldap://#{ @servers.first } -f #{tempfile.path}`
+    print `ldapmodify -x -D #{ @rootdn } -w #{@rootpw} -ZZ -H ldap://#{ @servers.first } -f #{tempfile.path}`
     tempfile.delete
   end
 
