@@ -70,17 +70,17 @@ class User < LdapBase
       end
     end
 
-    # eduPersonAffiliation validation
-    unless self.class.eduPersonAffiliation_list.include?(eduPersonAffiliation.to_s)
+    # puavoEduPersonAffiliation validation
+    unless self.class.puavoEduPersonAffiliation_list.include?(puavoEduPersonAffiliation.to_s)
       # User type of user can be set by locale type value.
       # Find locale value and set correct key value to attribute.
-      self.class.eduPersonAffiliation_list.each do |value|
-        if I18n.t( 'eduPersonAffiliation_' + value ).downcase == eduPersonAffiliation.to_s.downcase
-          self.eduPersonAffiliation = value
+      self.class.puavoEduPersonAffiliation_list.each do |value|
+        if I18n.t( 'puavoEduPersonAffiliation_' + value ).downcase == puavoEduPersonAffiliation.to_s.downcase
+          self.puavoEduPersonAffiliation = value
           break
         end
       end
-      unless self.class.eduPersonAffiliation_list.include?(eduPersonAffiliation.to_s)
+      unless self.class.puavoEduPersonAffiliation_list.include?(puavoEduPersonAffiliation.to_s)
         errors.add "User type"
       end
     end
@@ -126,7 +126,7 @@ class User < LdapBase
   end
 
   def self.import_columns
-    ["givenName", "sn", "uid", "new_password", "role_name", "eduPersonAffiliation"]
+    ["givenName", "sn", "uid", "new_password", "role_name", "puavoEduPersonAffiliation"]
   end
 
   # FIXME, where is better location on this method? Using same code also on other model?
@@ -190,8 +190,8 @@ class User < LdapBase
     self.new_password = Array.new(8) { characters[rand(characters.size)] }.join
   end
 
-  def self.eduPersonAffiliation_list
-    ["faculty", "student", "staff", "alum", "member", "affiliate", "employee", "library-walk-in"]
+  def self.puavoEduPersonAffiliation_list
+    ["teacher", "staff", "student", "visitor", "parent", "admin"]
   end
 
   def id
@@ -259,9 +259,9 @@ class User < LdapBase
       self.send(attribute).map do |id|
         Role.find(id).displayName
       end
-    when "eduPersonAffiliation"
-      if self.class.eduPersonAffiliation_list.include?(self.send(attribute).to_s)
-        I18n.t( 'eduPersonAffiliation_' + self.send(attribute) )
+    when "puavoEduPersonAffiliation"
+      if self.class.puavoEduPersonAffiliation_list.include?(self.send(attribute).to_s)
+        I18n.t( 'puavoEduPersonAffiliation_' + self.send(attribute) )
       else
         self.send(attribute).to_s
       end

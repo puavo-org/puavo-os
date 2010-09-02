@@ -136,7 +136,7 @@ user.new_password = password
 user.new_password_confirmation = password_confirmation
 user.role_name = role.displayName
 user.puavoSchool = school.dn
-user.eduPersonAffiliation = "admin"
+user.puavoEduPersonAffiliation = "admin"
 user.save!
 
 puts
