@@ -20,6 +20,7 @@ olcTLSCertificateFile: /etc/ssl/certs/slapd-server.crt
 olcTLSCertificateKeyFile: /etc/ssl/certs/slapd-server.key
 olcLocalSSF: 128
 olcSecurity: ssf=128
+olcSizeLimit: unlimited
 
 dn: olcDatabase={-1}frontend,cn=config
 objectClass: olcDatabaseConfig
@@ -75,8 +76,8 @@ olcModuleLoad: {6}valsort
 olcModuleLoad: {7}auditlog
 olcModuleLoad: {8}refint
 olcModuleLoad: {9}constraint
-olcModuleLoad: {10}smbkrb5pwd
-olcModuleLoad: {11}collect
+olcModuleLoad: {10}accesslog
+olcModuleLoad: {11}smbkrb5pwd
 
 dn: olcOverlay={0}syncprov,olcDatabase={0}config,cn=config
 objectClass: olcSyncProvConfig
@@ -91,12 +92,18 @@ olcDbDirectory: /var/lib/ldap/o=puavo
 olcSuffix: o=puavo
 olcLastMod: TRUE
 olcRootDN: uid=admin,o=puavo
-olcRootPW:: e1NTSEF9WitvOXpYZXRlSkhpbVBYQ0pPZXdud2ZvdXdmY3Q1Tzg=
+olcRootPW: <%= @rootpw_hash %>
 olcDbCheckpoint: 512 30
-olcDbConfig: {0}set_cachesize 0 2097152 0
+olcDbConfig: {0}set_cachesize 0 20971520 0
 olcDbConfig: {1}set_lk_max_objects 1500
 olcDbConfig: {2}set_lk_max_locks 1500
 olcDbConfig: {3}set_lk_max_lockers 1500
+olcDbConfig: {4}set_lk_detect DB_LOCK_OLDEST
+olcDbConfig: {5}set_log_config DB_LOG_AUTO_REMOVE
+olcDbConfig: {6}set_lg_max 5242880
+olcDbConfig: {7}set_lg_bsize 2097512
+olcDbConfig: {8}set_tx_max 100
+
 olcDbIndex: uid pres,eq
 olcDbIndex: cn,sn,mail pres,eq,approx,sub
 olcDbIndex: objectClass eq

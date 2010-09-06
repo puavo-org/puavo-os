@@ -15,15 +15,25 @@ class Database < ActiveLdap::Base
 
   def set_attribute_values
     self.olcDatabase = 'hdb'
-    self.olcDbConfig = ['set_cachesize 0 2097152 0',
+    self.olcDbConfig = ['set_cachesize 0 20971520 0',
                         'set_lk_max_objects 1500',
                         'set_lk_max_locks 1500',
-                        'set_lk_max_lockers 1500' ]
+                        'set_lk_max_lockers 1500',
+                        'set_lk_detect DB_LOCK_OLDEST',
+                        'set_log_config DB_LOG_AUTO_REMOVE',
+                        'set_lg_max 5242880',
+                        'set_lg_bsize 2097512',
+                        'set_tx_max 100']
+    self.olcDbCheckpoint = '64 5'
+    self.olcDbCachesize = '10000'
     self.olcLastMod = 'TRUE'
     self.olcDbCheckpoint = '512 30'
     self.olcDbIndex = ['uid pres,eq',
                        'cn,sn,mail pres,eq,approx,sub',
-                       'objectClass eq' ]
+                       'objectClass eq',
+                       'entryUUID eq',
+                       'entryCSN eq'
+                       ]
     self.olcDbDirectory = "/var/lib/ldap/db#{next_directory_id}"
 
     # Database ACLs

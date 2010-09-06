@@ -52,11 +52,11 @@ end
 `chown root.openldap /etc/ssl/certs/slapd-ca.crt`
 
 tempfile = parse_erb("init_ldap")
-print `slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b "cn=config"`
+puts `slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b "cn=config"`
 tempfile.delete
 
 tempfile = parse_erb("init_puavo_db")
-print `slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b "o=Puavo"`
+puts `slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b "o=Puavo"`
 tempfile.delete
 
 `chown -R openldap.openldap /etc/ldap/slapd.d`
@@ -86,6 +86,7 @@ tempfile.delete
 `chmod 0750 /var/lib/ldap/o=puavo`
 
 `/etc/init.d/slapd start`
+`sleep 5`
 
 ["set_global_acl",
  "set_syncrepl_settings",
@@ -98,8 +99,8 @@ tempfile.delete
   tempfile.puts ldif.result
   tempfile.close
 
-  print `cat #{tempfile.path}`
-  `ldapmodify -Y EXTERNAL -H ldapi:/// -f #{tempfile.path} 2> /dev/null`
+  puts `cat #{tempfile.path}`
+  puts `ldapmodify -Y EXTERNAL -H ldapi:/// -f #{tempfile.path} 2>&1`
 
   tempfile.delete
 
