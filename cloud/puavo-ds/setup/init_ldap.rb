@@ -14,7 +14,11 @@ def parse_erb(basename)
   return tempfile
 end
 
+# rootdn is configured as the rootdn for o=Puavo and given manage
+# access in cn=config
 @rootdn = "uid=admin,o=Puavo"
+
+# TODO: These passwords need to be moved out
 @rootpw = "password"
 @puppetpw = "password"
 @puavopw = "password"
@@ -23,9 +27,21 @@ end
 @puavopw_hash=`slappasswd -h "{SSHA}" -s "#{@puavopw}"`.gsub(/\n/,"")
 @puppetpw_hash=`slappasswd -h "{SSHA}" -s "#{@puppetpw}"`.gsub(/\n/,"")
 
+# First whole slapd configuration and all data is wiped out
+
 `/etc/init.d/slapd stop`
 `killall -9 slapd`
 `rm -rf /var/lib/ldap/*`
+
+# AppArmor rules allow slapd to access files under /var/lib/ldap so
+# we'll just create new directories under it for different databases:
+#
+# /var/lib/ldap/o=puavo
+# /var/lib/ldap/db001
+# /var/lib/ldap/db002
+# /var/lib/ldap/db003
+# ...
+
 `mkdir -p /var/lib/ldap/o=puavo`
 
 (1..300).each do |num|
@@ -39,6 +55,8 @@ end
 `cp schema/*.ldif /etc/ldap/schema/`
 `rm -rf /etc/ldap/slapd.d/*`
 
+# TODO: move these to the config file
+
 @servers = ["ldap://ldap1.opinsys.fi",
             "ldap://ldap2.opinsys.fi",
             "ldap://ldap3.opinsys.fi"]
@@ -51,42 +69,33 @@ end
 `chown root.openldap /etc/ssl/certs/slapd-server.crt`
 `chown root.openldap /etc/ssl/certs/slapd-ca.crt`
 
+# As /etc/ldap/slapd.d is now totally empty, slapd won't start before
+# initial config is added with slapadd.
+#
+# Initialize cn=config from a template ldif file
+
 tempfile = parse_erb("init_ldap")
 puts `slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b "cn=config"`
 tempfile.delete
+
+# Initialize o=puavo from a template ldif file
 
 tempfile = parse_erb("init_puavo_db")
 puts `slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b "o=Puavo"`
 tempfile.delete
 
+# slapdadd leaves the files owner by root, so let's fix those
+
 `chown -R openldap.openldap /etc/ldap/slapd.d`
-
-#["init_ldap",
-# "init_puavo_db"].each do |basename|
-#  ldif_template = File.read("templates/#{basename}.ldif.erb")
-#  ldif = ERB.new(ldif_template, 0, "%<>")
-
-#  tempfile = Tempfile.open(basename)
-#  tempfile.puts ldif.result
-#  tempfile.close
-#end
-
-#ldif_template = File.read("templates/init_puavo_db.ldif.erb")
-#ldif = ERB.new(ldif_template, 0, "%<>")
-
-#tempfile = Tempfile.open("init_ldap")
-#tempfile.puts ldif.result
-#tempfile.close
-
-#print `slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b "o=puavo"`
-
-#tempfile.delete
-
 `chown -R openldap.openldap /var/lib/ldap/o=puavo`
 `chmod 0750 /var/lib/ldap/o=puavo`
 
 `/etc/init.d/slapd start`
 `sleep 5`
+
+# slapd should be running now and the rest of the modifications
+# can be done with ldapmodify. This includes settings ACLs and
+# syncrepl replication.
 
 ["set_global_acl",
  "set_syncrepl_settings",
@@ -103,6 +112,4 @@ tempfile.delete
   puts `ldapmodify -Y EXTERNAL -H ldapi:/// -f #{tempfile.path} 2>&1`
 
   tempfile.delete
-
-#  `/etc/init.d/slapd restart`
 end
