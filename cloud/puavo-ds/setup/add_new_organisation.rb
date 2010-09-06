@@ -107,6 +107,9 @@ group = Group.create!( :displayName => group_name,
                       :cn => group_name.downcase.gsub(/[^a-z0-9]/, ""),
                       :puavoSchool => school.dn )
 
+# Added association
+role.groups << group
+
 # User
 puts "Create organisation owner:"
 
@@ -131,10 +134,9 @@ user.sn = surname
 user.uid = username
 user.new_password = password
 user.new_password_confirmation = password_confirmation
-user.gidNumber = group.id
 user.role_name = role.displayName
 user.puavoSchool = school.dn
-user.eduPersonAffiliation = "staff"
+user.puavoEduPersonAffiliation = "admin"
 user.save!
 
 puts

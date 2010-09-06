@@ -21,7 +21,7 @@ end
 tempfile = Tempfile.open("ldif")
 tempfile.close
 
-print `ldapsearch -x -H #{@master_server} -D #{@rootdn} -w #{@rootpw} -b cn=config > #{tempfile.path}`
+print `ldapsearch -x -H #{@master_server} -D #{@rootdn} -w #{@rootpw} -b cn=config > #{tempfile.path} -Z`
 print `slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b cn=config`
 
 tempfile.delete
