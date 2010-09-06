@@ -9,7 +9,7 @@ class Database < ActiveLdap::Base
   before_save :set_attribute_values
 
   def initialize(args)
-    ActiveLdap::Base.setup_connection( configurations["first_node"].merge( "base" => "cn=config" ) )
+    ActiveLdap::Base.setup_connection( configurations["settings"]["ldap_server"].merge( "base" => "cn=config" ) )
     super
   end
 
@@ -43,11 +43,10 @@ class Database < ActiveLdap::Base
   end
 
   def set_replication_settings
-    @rootdn = ActiveLdap::Base.configurations["first_node"]["bind_dn"]
-    @rootpw = ActiveLdap::Base.configurations["first_node"]["password"]
+    @rootdn = ActiveLdap::Base.configurations["settings"]["ldap_server"]["bind_dn"]
+    @rootpw = ActiveLdap::Base.configurations["settings"]["ldap_server"]["password"]
     @servers = Array.new
-    @servers.push ActiveLdap::Base.configurations["first_node"]["host"]
-    @servers += ActiveLdap::Base.configurations["other_nodes"]["hosts"] if ActiveLdap::Base.configurations["other_nodes"]
+    @servers += ActiveLdap::Base.configurations["settings"]["syncrepl"]["urls"] if ActiveLdap::Base.configurations["settings"]["syncrepl"]["hosts"]
     @suffix = self.olcSuffix
     @database_dn = self.dn.to_s
 

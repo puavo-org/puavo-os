@@ -36,3 +36,18 @@ objectClass: simpleSecurityObject
 uid: puppet
 description: Account for Puppet to find host information
 userPassword: <%= @puppetpw_hash %>
+
+dn: <%= @kdcdn %>
+objectClass: account
+objectClass: simpleSecurityObject
+uid: puppet
+description: Account for KDC to read kerberos entries
+userPassword: <%= @kdcpw_hash %>
+
+dn: <%= @kadmindn %>
+objectClass: account
+objectClass: simpleSecurityObject
+uid: puppet
+description: Account for kadmin to modify kerberos entries
+userPassword: <%= @kadminpw_hash %>
+

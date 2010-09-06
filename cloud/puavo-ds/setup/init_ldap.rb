@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 
 require "erb"
+require "yaml"
 require 'tempfile'
 
 def parse_erb(basename)
@@ -16,16 +17,32 @@ end
 
 # rootdn is configured as the rootdn for o=Puavo and given manage
 # access in cn=config
-@rootdn = "uid=admin,o=Puavo"
 
-# TODO: These passwords need to be moved out
-@rootpw = "password"
-@puppetpw = "password"
-@puavopw = "password"
+if configuration = YAML.load_file("config/ldap.yml") rescue nil
+  @rootdn = configuration["settings"]["ldap_server"]["bind_dn"]
+  @rootpw = configuration["settings"]["ldap_server"]["password"]
+  @puavodn = configuration["settings"]["puavo"]["bind_dn"]
+  @puavopw = configuration["settings"]["puavo"]["password"]
+  @puppetdn = configuration["settings"]["puppet"]["bind_dn"]
+  @puppetpw = configuration["settings"]["puppet"]["password"]
+  @kdcdn = configuration["settings"]["kdc"]["bind_dn"]
+  @kdcpw = configuration["settings"]["kdc"]["password"]
+  @kadmindn = configuration["settings"]["kadmin"]["bind_dn"]
+  @kadminpw = configuration["settings"]["kadmin"]["password"]
+
+  @servers = configuration["settings"]["syncrepl"]["urls"]
+else
+  puts "LDAP configuration file (config/ldap.yml) not found!"
+  exit
+end
+
+puts "Using #{@rootdn} as rootdn"
 
 @rootpw_hash=`slappasswd -h "{SSHA}" -s "#{@rootpw}"`.gsub(/\n/,"")
 @puavopw_hash=`slappasswd -h "{SSHA}" -s "#{@puavopw}"`.gsub(/\n/,"")
 @puppetpw_hash=`slappasswd -h "{SSHA}" -s "#{@puppetpw}"`.gsub(/\n/,"")
+@kdcpw_hash=`slappasswd -h "{SSHA}" -s "#{@kdcpw}"`.gsub(/\n/,"")
+@kadminpw_hash=`slappasswd -h "{SSHA}" -s "#{@kadminpw}"`.gsub(/\n/,"")
 
 # First whole slapd configuration and all data is wiped out
 
@@ -54,12 +71,6 @@ end
 
 `cp schema/*.ldif /etc/ldap/schema/`
 `rm -rf /etc/ldap/slapd.d/*`
-
-# TODO: move these to the config file
-
-@servers = ["ldap://ldap1.opinsys.fi",
-            "ldap://ldap2.opinsys.fi",
-            "ldap://ldap3.opinsys.fi"]
 
 `cp certs/slapd-ca.crt /etc/ssl/certs/slapd-ca.crt`
 `cp certs/slapd-server.crt /etc/ssl/certs/slapd-server.crt`

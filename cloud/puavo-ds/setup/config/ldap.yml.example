@@ -1,8 +1,27 @@
-first_node:
-  host: ldap1.example.org
-  bind_dn: uid=admin,o=puavo
-  password: secret
-other_nodes:
-  hosts:
-  - ldap2.example.org
-  - ldap3.example.org
+settings:
+  ldap_server:
+    host: ldap1.example.edu
+    bind_dn: uid=admin,o=puavo
+    password: password
+
+  puavo:
+    bind_dn: uid=puavo,o=puavo
+    password: password
+
+  puppet:
+    bind_dn: uid=puppet,o=puavo
+    password: password
+
+  kdc:
+    bind_dn: uid=kdc,o=puavo
+    password: password
+
+  kadmin:
+    bind_dn: uid=kadmin,o=puavo
+    password: password
+
+  syncrepl:
+    urls:
+    - ldap://ldap1.example.edu
+    - ldap://ldap2.example.edu
+    - ldap://ldap3.example.edu

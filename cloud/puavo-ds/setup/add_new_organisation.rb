@@ -44,7 +44,7 @@ puts "******************************************************"
 
 
 suffix = organisation_base_template % organisation_name
-rootDN = configurations["first_node"]["bind_dn"]
+rootDN = configurations["settings"]["ldap_server"]["bind_dn"]
 
 puts "* Creating database for suffix: #{suffix}"
 begin
@@ -62,14 +62,14 @@ new_db = Database.find(:first, :attribute => 'olcSuffix', :value => suffix)
 puts "* Setting up overlay configuration to database"
 Overlay.create_overlays(new_db)
 
-if ActiveLdap::Base.configurations["other_nodes"]
+if ActiveLdap::Base.configurations["settings"]["syncrepl"]["nodes"]
   puts "* Setting up replication configuration"
   new_db.set_replication_settings
 end
 
 # Create organisation and set LdapOrganisationBase LDAP connection
 puts "* Create organisation root"
-organisation = Organisation.create( :owner => configurations["first_node"]["bind_dn"],
+organisation = Organisation.create( :owner => configurations["settings"]["ldap_server"]["bind_dn"],
                                     :suffix => suffix )
 
 puts "* Add organizational units: People, Groups, Hosts, Automount, etc..."

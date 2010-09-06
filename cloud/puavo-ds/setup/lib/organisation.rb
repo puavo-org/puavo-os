@@ -11,7 +11,7 @@ class Organisation < ActiveLdap::Base
   def initialize(args)
     # Create new LDAP connection with organisation's base: dc=example,dc=org
     base = args[:suffix].match(/,(.+)$/)[1]
-    ActiveLdap::Base.setup_connection( configurations["first_node"].merge( "base" => base ) )
+    ActiveLdap::Base.setup_connection( configurations["settings"]["ldap_server"].merge( "base" => base ) )
     super
   end
 
@@ -27,7 +27,7 @@ class Organisation < ActiveLdap::Base
   end
 
   def set_base_connection
-    LdapOrganisationBase.setup_connection( configurations["first_node"].merge( "base" => self.suffix ) )
-    LdapBase.setup_connection( configurations["first_node"].merge( "base" => self.suffix ) )
+    LdapOrganisationBase.setup_connection( configurations["settings"]["ldap_server"].merge( "base" => self.suffix ) )
+    LdapBase.setup_connection( configurations["settings"]["ldap_server"].merge( "base" => self.suffix ) )
   end
 end
