@@ -3,6 +3,7 @@ settings:
     host: ldap1.example.edu
     bind_dn: uid=admin,o=puavo
     password: password
+    method: tls
 
   puavo:
     bind_dn: uid=puavo,o=puavo
