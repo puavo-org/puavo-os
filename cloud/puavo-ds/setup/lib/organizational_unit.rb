@@ -6,6 +6,7 @@ class OrganizationalUnit < LdapOrganisationBase
   def self.create_units(organisation)
     ['People',
      'Groups',
+     'Hosts',
      'Automount',
      'Roles',
      'Services',
@@ -16,10 +17,6 @@ class OrganizationalUnit < LdapOrganisationBase
      'Kerberos Realms'].each do |ou|
       OrganizationalUnit.create( "ou" => ou )
     end
-    
-    OrganizationalUnit.create( "ou" => 'Hosts',
-                               "objectClass" => ['top', 'organizationalUnit', 'puppetClient'],
-                               "parentNode" =>  organisation.puavoDomain )
       
     self.ldap_mapping( :dn_attribute => "ou",
                        :prefix => "ou=Hosts",
