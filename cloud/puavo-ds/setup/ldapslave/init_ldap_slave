@@ -1,15 +1,23 @@
 #!/usr/bin/ruby
 
-require "erb"
+require 'erb'
+require 'fileutils'
 require 'tempfile'
 
-@master_server = "ldap://ldap1.example.org"
-@binddn = "uid=admin,o=Puavo"
-@bindpw = "password"
-@suffix = "dc=example,dc=edu"
+Sentinel_file = '/var/lib/ldap/init_ldap_slave_done'
+
+if File.exist?(Sentinel_file) and not ARGV[0] == '--force'
+  puts "#{ Sentinel_file } exists, use the --force, Mikko!"
+  exit 1
+end
+
+@binddn        = File.read('/etc/puavo/ldap/dn'      ).chomp
+@bindpw        = File.read('/etc/puavo/ldap/password').chomp
+@master_server = File.read('/etc/puavo/ldap/master'  ).chomp
+@suffix        = File.read('/etc/puavo/ldap/base'    ).chomp
 
 def parse_erb(basename)
-  ldif_template = File.read("templates/#{basename}.ldif.erb")
+  ldif_template = File.read("/usr/share/puavotools/#{basename}.ldif.erb")
   ldif = ERB.new(ldif_template, 0, "%<>")
 
   tempfile = Tempfile.open(basename)
@@ -20,16 +28,30 @@ def parse_erb(basename)
 end
 
 `/etc/init.d/slapd stop`
+sleep 3
 `killall -9 slapd`
-`rm -rf /etc/ldap/slapd.d/* /var/lib/ldap/*`
 
-@acls =  `ldapsearch -LLL -x -H #{@master_server} -D #{@binddn} -w #{@bindpw} -Z -b cn=config "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{@suffix}))" olcAccess|grep -v dn:`
-@schemas = `ldapsearch -LLL -x -H #{@master_server} -D #{@binddn} -w #{@bindpw} -Z -b cn=schema,cn=config`
+unless system('rm -rf /etc/ldap/slapd.d/* /var/lib/ldap/*')
+  raise 'could not remove old ldap configuration and database'
+end
+
+@acls = `ldapsearch -LLL -x -H ldap://#{@master_server} -D #{@binddn} -w #{@bindpw} -Z -b cn=config "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{@suffix}))" olcAccess|grep -v dn:`
+raise 'Problem in getting acls from master server' if $?.exitstatus != 0
+
+@schemas = `ldapsearch -LLL -x -H ldap://#{@master_server} -D #{@binddn} -w #{@bindpw} -Z -b cn=schema,cn=config`
+raise 'Problem in getting schemas from master server' if $?.exitstatus != 0
 
 tempfile = parse_erb("init_ldap_slave")
 puts `slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b "cn=config"`
+raise 'Problem in making ldap configuration' if $?.exitstatus != 0
 
-`chown -R openldap.openldap /etc/ldap/slapd.d /var/lib/ldap`
-`chmod -R 0750 /var/lib/ldap`
+unless system('chown -R openldap.openldap /etc/ldap/slapd.d /var/lib/ldap')
+  raise 'could not chown /etc/ldap/slapd.d /var/lib/ldap to openldap user'
+end
+unless system('chmod -R 0750 /var/lib/ldap')
+  raise 'could not chmod /var/lib/ldap'
+end
 
 `/etc/init.d/slapd start`
+
+FileUtils.touch(Sentinel_file)
