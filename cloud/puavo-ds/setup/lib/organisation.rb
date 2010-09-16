@@ -24,6 +24,7 @@ class Organisation < ActiveLdap::Base
     self.o = self.puavoDomain
     self.description = self.cn
     self.eduOrgLegalName = self.cn
+    self.puavoKadminPort = IdPool.next_id('puavoNextKadminPort')
   end
 
   def set_base_connection

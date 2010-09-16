@@ -62,10 +62,6 @@ class Database < ActiveLdap::Base
   end
 
   def next_directory_id
-    id_pool = IdPool.find('IdPool')
-    next_id = id_pool.puavoNextDatabaseId
-    id_pool.puavoNextDatabaseId = next_id + 1
-    id_pool.save
-    return "%03d" % next_id
+    "%03d" % IdPool.next_id('puavoNextDatabaseId')
   end
 end
