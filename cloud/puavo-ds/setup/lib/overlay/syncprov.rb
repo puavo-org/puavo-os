@@ -1,6 +1,6 @@
 class Syncprov < Overlay
   
-  def self.add_overlay_config(db_configuration)
+  def self.add_overlay_config(args)
     # Save without validation
     self.new( "olcOverlay" => "{#{self.index}}syncprov",
               "objectClass" => ['olcSyncProvConfig', 'olcOverlayConfig'],

@@ -3,7 +3,7 @@ class Organisation < ActiveLdap::Base
                 :prefix => "",
                 :classes => ['dcObject', 'organization', 'puavoEduOrg', 'eduOrg'] )
 
-  attr_accessor :suffix
+  attr_accessor :suffix, :domain, :realm, :name, :legal_name, :puppet_host
 
   before_validation :set_values
   after_create :set_base_connection
@@ -16,14 +16,16 @@ class Organisation < ActiveLdap::Base
   end
 
   def set_values
-    organisation_name = self.base.to_s.match(/dc=([^,]+),/)[1]
-    self.dc = "edu"
-    self.cn = organisation_name.capitalize
-    self.puavoDomain = "#{organisation_name}.opinsys.fi"
-    self.puavoKerberosRealm = self.puavoDomain.upcase
-    self.o = self.puavoDomain
-    self.description = self.cn
-    self.eduOrgLegalName = self.cn
+    /(.*?)=(.*?)[$,]/.match(self.suffix.to_s)
+#    tmp_dc = self.suffix.to_s.match(/dc=([^,]+),/)[0]
+    self.send("#{$1}=", $2)
+#    self.dc = $1
+#    self.cn = self.name
+#    self.puavoDomain = self.domain
+#    self.puavoKerberosRealm = self.kerberos_realm
+#    self.o = self.name
+#    self.description = self.name
+#    self.eduOrgLegalName = self.legal_name
     self.puavoKadminPort = IdPool.next_id('puavoNextKadminPort')
   end
 

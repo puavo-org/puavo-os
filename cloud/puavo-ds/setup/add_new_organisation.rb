@@ -42,6 +42,10 @@ puts "******************************************************"
 puts "  Initialising organisation: #{organisation_name}"
 puts "******************************************************"
 
+domain = "#{organisation_name}.opinsys.fi"
+kerberos_realm = domain.upcase
+legal_name = organisation_name
+puppet_host = "#{organisation_name}.puppet.opinsys.fi"
 
 suffix = organisation_base_template % organisation_name
 rootDN = configurations["settings"]["ldap_server"]["bind_dn"]
@@ -60,7 +64,8 @@ end
 new_db = Database.find(:first, :attribute => 'olcSuffix', :value => suffix)
 
 puts "* Setting up overlay configuration to database"
-Overlay.create_overlays(new_db)
+Overlay.create_overlays(:database => new_db,
+                        :kerberos_realm => kerberos_realm)
 
 if ActiveLdap::Base.configurations["settings"]["syncrepl"]["nodes"]
   puts "* Setting up replication configuration"
@@ -70,7 +75,14 @@ end
 # Create organisation and set LdapOrganisationBase LDAP connection
 puts "* Create organisation root"
 organisation = Organisation.create( :owner => configurations["settings"]["ldap_server"]["bind_dn"],
-                                    :suffix => suffix )
+                                    :suffix => suffix,
+                                    :puavoDomain => domain,
+                                    :puavoKerberosRealm => kerberos_realm,
+                                    :o => organisation_name,
+                                    :cn => organisation_name,
+                                    :description => organisation_name,
+                                    :eduOrgLegalName => legal_name,
+                                    :puavoPuppetHost => puppet_host )
 
 puts "* Add organizational units: People, Groups, Hosts, Automount, etc..."
 OrganizationalUnit.create_units(organisation)

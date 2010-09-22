@@ -1,12 +1,12 @@
 class Unique < Overlay
   
-  def self.add_overlay_config(db_configuration)
+  def self.add_overlay_config(args)
     # Save without validation
     self.new( "olcOverlay" => "{#{self.index}}unique",
               "objectClass" => ['olcUniqueConfig', 'olcOverlayConfig'],
-              "olcUniqueURI" => ["ldap:///ou=People,#{db_configuration.olcSuffix}?uid?sub",
-                                 "ldap:///ou=People,#{db_configuration.olcSuffix}?mail?sub",
-                                 "ldap:///ou=People,#{db_configuration.olcSuffix}?homeDirectory?sub",
+              "olcUniqueURI" => ["ldap:///ou=People,#{args[:database].olcSuffix}?uid?sub",
+                                 "ldap:///ou=People,#{args[:database].olcSuffix}?mail?sub",
+                                 "ldap:///ou=People,#{args[:database].olcSuffix}?homeDirectory?sub",
                                  "ldap:///?sambaSID?sub"] ).save(false)
   end
 
