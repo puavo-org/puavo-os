@@ -17,41 +17,44 @@ end
 @suffix        = File.read('/etc/puavo/ldap/base'    ).chomp
 
 def parse_erb(basename)
-  ldif_template = File.read("/usr/share/puavotools/#{basename}.ldif.erb")
+  ldif_template = File.read("/usr/share/puavotools/#{ basename }.ldif.erb")
   ldif = ERB.new(ldif_template, 0, "%<>")
 
   tempfile = Tempfile.open(basename)
   tempfile.puts ldif.result
   tempfile.close
   
-  return tempfile
+  tempfile
 end
 
-`/etc/init.d/slapd stop`
+system('service slapd stop')
 sleep 3
-`killall -9 slapd`
+system('pkill -9 -x slapd')
 
-unless system('rm -rf /etc/ldap/slapd.d/* /var/lib/ldap/*')
-  raise 'could not remove old ldap configuration and database'
+system('rm -rf /etc/ldap/slapd.d/* /var/lib/ldap/*') \
+  or raise 'could not remove old ldap configuration and database'
+
+@acls = `ldapsearch -LLL -x -H ldap://#{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b cn=config "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{ @suffix }))" olcAccess | grep -v dn:`
+if $?.exitstatus != 0
+  raise 'Problem in getting acls from master server'
 end
 
-@acls = `ldapsearch -LLL -x -H ldap://#{@master_server} -D #{@binddn} -w #{@bindpw} -Z -b cn=config "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{@suffix}))" olcAccess|grep -v dn:`
-raise 'Problem in getting acls from master server' if $?.exitstatus != 0
-
-@schemas = `ldapsearch -LLL -x -H ldap://#{@master_server} -D #{@binddn} -w #{@bindpw} -Z -b cn=schema,cn=config`
-raise 'Problem in getting schemas from master server' if $?.exitstatus != 0
-
-tempfile = parse_erb("init_ldap_slave")
-puts `slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b "cn=config"`
-raise 'Problem in making ldap configuration' if $?.exitstatus != 0
-
-unless system('chown -R openldap.openldap /etc/ldap/slapd.d /var/lib/ldap')
-  raise 'could not chown /etc/ldap/slapd.d /var/lib/ldap to openldap user'
-end
-unless system('chmod -R 0750 /var/lib/ldap')
-  raise 'could not chmod /var/lib/ldap'
+@schemas = `ldapsearch -LLL -x -H ldap://#{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b cn=schema,cn=config`
+if $?.exitstatus != 0
+  raise 'Problem in getting schemas from master server'
 end
 
-`/etc/init.d/slapd start`
+tempfile = parse_erb('init_ldap_slave')
+system("slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b 'cn=config'") \
+  or raise 'Problem in making ldap configuration'
+
+system('chown -R openldap.openldap /etc/ldap/slapd.d /var/lib/ldap') \
+  or raise 'could not chown /etc/ldap/slapd.d /var/lib/ldap to openldap user'
+
+system('chmod -R 0750 /var/lib/ldap') \
+  or raise 'could not chmod /var/lib/ldap'
+
+system('service slapd start') \
+  or raise 'slapd start failed'
 
 FileUtils.touch(Sentinel_file)
