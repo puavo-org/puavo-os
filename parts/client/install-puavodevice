@@ -1,0 +1,181 @@
+#!/usr/bin/ruby
+
+require 'fileutils'
+require 'highline/import'
+require 'openssl'
+require 'yaml'
+
+HostCrtPath = '/etc/puavo/certs/host.crt'
+HostKeyPath = '/etc/puavo/certs/host.key'
+RootCAPath  = '/etc/puavo/certs/rootca.pem'
+
+# XXX repetition elsewhere
+def colormsg(msg, tag, color)
+  HighLine.say(HighLine.new.color("*** #{ tag }: #{ msg }", color))
+end
+
+def errmsg(msg) ; colormsg(msg, 'ERROR', HighLine::RED)  ; end
+def goodmsg(msg); colormsg(msg, 'OK',    HighLine::GREEN); end
+
+def fqdn
+  cert = OpenSSL::X509::Certificate.new(IO.read('/etc/puavo/certs/host.crt'))
+  ((/^.*CN=(.*?)(\/|$)/.match(cert.subject.to_s))[1])
+end
+
+def mkdir(path, mode=0755)
+  begin
+    FileUtils.mkdir(path, :mode => mode)
+    rescue Errno::EEXIST
+  end
+end
+
+def setup_kerberos(principals)
+  # XXX
+  p principals
+  return
+  begin
+    error = false
+    principal = HighLine.ask("\nKerberos principal: ")
+    password  = HighLine.ask('Password: ') { |q| q.echo = '*' }
+
+    principals.each do |princ|
+      goodmsg, errmsg = [], []
+      Open3.popen3('kadmin', '-p', principal, '-w', password, '-q',
+		   "add_principal #{ princ }") do |stdin, stdout, stderr|
+	goodmsg = stdout.readlines
+	errmsg  = stderr.readlines
+      end
+      # XXX use some criteria to figure out if operation was ok
+      status = $?.exitstatus
+      errmsg("exit status is #{ status }")
+      goodmsg.each { |l| goodmsg(l.chomp) }
+      errmsg .each { |l| errmsg(l.chomp)  }
+      error = true
+      break
+    end
+  end while error
+end
+
+def setup_openvpn
+  begin
+    mkdir('/etc/openvpn/keys')
+
+    ovpn_crt    = '/etc/openvpn/keys/host.crt'
+    ovpn_key    = '/etc/openvpn/keys/host.key'
+    ovpn_rootca = '/etc/openvpn/keys/rootca.pem'
+
+    FileUtils.cp(HostCrtPath, ovpn_crt)
+    FileUtils.cp(HostKeyPath, ovpn_key)
+    FileUtils.cp(RootCAPath,  ovpn_rootca)
+
+    File.open('/etc/openvpn/puavoclient.conf', 'w', 0600) do |f|
+      f.print <<-EOF.gsub(/^\s+/, '')
+	client
+	dev tun
+	proto tcp-client
+	remote 217.112.254.13 443
+	ca #{ ovpn_rootca }
+	cert #{ ovpn_crt }
+	key #{ ovpn_key }
+	ns-cert-type server
+	verb 3
+	comp-lzo
+	keepalive 10 60
+	persist-tun
+	persist-key
+	ipchange /etc/openvpn/runme
+	EOF
+    end
+    unless system('service openvpn restart')
+      raise 'problem restarting openvpn'
+    end
+  rescue => msg
+    errmsg(msg)
+    exit 1
+  end
+  goodmsg('OpenVPN setup is done.')
+end
+
+def setup_puppet(puppet_server, fqdn)
+  begin
+    # needed by some facter rules
+    FileUtils.rmtree('/etc/puppet/ssl')
+    mkdir('/etc/puppet/ssl',              0771)
+    mkdir('/etc/puppet/ssl/certs')
+    mkdir('/etc/puppet/ssl/private_keys', 0750)
+    FileUtils.chown('puppet', 'root', [ '/etc/puppet/ssl',
+					'/etc/puppet/ssl/certs',
+					'/etc/puppet/ssl/private_keys', ])
+
+    FileUtils.cp(HostCrtPath, "/etc/puppet/ssl/certs/#{ fqdn }.pem")
+    FileUtils.cp(HostKeyPath, "/etc/puppet/ssl/private_keys/#{ fqdn }.pem")
+    FileUtils.cp(RootCAPath,  '/etc/puppet/ssl/certs/ca.pem')
+
+    File.open('/etc/default/puppet', 'w') do |f|
+      f.print <<-EOF.gsub(/^\s+/, '')
+	START=yes
+	DAEMON_OPTS=""
+	EOF
+    end
+
+    File.open('/etc/puppet/puppet.conf', 'w') do |f|
+      f.print <<-EOF.gsub(/^\s+/, '')
+	[main]
+	certname=#{ fqdn }
+	factpath=/var/lib/puppet/lib/facter
+	logdir=/var/log/puppet
+	pluginsync=true
+	postrun_command=/etc/puppet/etckeeper-commit-post
+	prerun_command=/etc/puppet/etckeeper-commit-pre
+	rundir=/var/run/puppet
+	server=#{ puppet_server }
+	templatedir=$confdir/templates
+	vardir=/var/lib/puppet
+	EOF
+    end
+
+    goodmsg('Puppet setup is done, running puppet once...')
+    unless system('puppetd --no-daemonize --onetime --logdest console' +
+		  ' --logdest /var/log/puppet/install.log')
+      # XXX this will not be triggered even if there would be a reason to
+      raise 'problem running puppetd'
+    end
+    goodmsg('Puppet run is done.')
+    unless system('service puppet restart')
+      raise 'problem restarting puppet'
+    end
+    goodmsg('Puppet daemon is started.')
+  rescue => msg
+    errmsg(msg)
+    exit 1
+  end
+end
+
+#
+# main
+#
+
+raise 'run me as root' unless Process.uid == 0
+
+begin
+  conf = YAML.load_file('/etc/puavo/host_configuration')
+rescue Errno::ENOENT
+  system('/usr/sbin/register-puavodevice', *ARGV) \
+    or raise 'failure in running register-puavodevice'
+  conf = YAML.load_file('/etc/puavo/host_configuration')
+end
+
+fqdn = fqdn()
+
+case conf['devicetype']
+  when 'ltspserver'
+    kerberos_principals = %w(host ldap cifs IPP nfs).map do |p| 
+			    "#{ p }/#{ fqdn }@#{ conf['kerberos_realm'] }"
+			  end
+  else
+    kerberos_principals = false
+end
+
+setup_openvpn()
+setup_kerberos(kerberos_principals) if kerberos_principals
+setup_puppet(conf['puppet_server'], fqdn) if conf['puppet_server']
