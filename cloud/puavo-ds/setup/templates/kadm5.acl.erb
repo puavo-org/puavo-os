@@ -1,0 +1,3 @@
+<% @organisations.each do |organisation| %>
+smbkrb5pwd/*@<%= organisation['realm'] %>	*	*@<%= organisation['realm'] %>
+<% end %>
