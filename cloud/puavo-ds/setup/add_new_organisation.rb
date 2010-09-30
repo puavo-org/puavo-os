@@ -165,6 +165,19 @@ File.open("/etc/default/krb5-kdc", "w") {|file|
 
 realm.create_ldap_tree
 
+puts configurations["settings"]["puppet"]["enable"]
+
+if configurations["settings"]["puppet"]["enable"]
+  `cp /etc/krb5kdc/* #{configurations["settings"]["puppet"]["file_dir"]}/etc/krb5kdc/`
+  `cp /etc/krb5.conf #{configurations["settings"]["puppet"]["file_dir"]}/etc/`
+  `cp /etc/default/krb5-kdc #{configurations["settings"]["puppet"]["file_dir"]}/etc/default/krb5-kdc`
+  `chown -R puppet #{configurations["settings"]["puppet"]["file_dir"]}/*`
+
+  puts "Puppet kerberos files updated"
+else
+  puts "Puppet configuration disabled"
+end
+
 # User
 puts "Create organisation owner:"
 
