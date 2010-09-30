@@ -1,12 +1,12 @@
 <%
   samba_domain = "EDU" + suffix.to_s.match(/^dc=edu,dc=([^,]+)/)[1].upcase
   puavo_user_dn = "uid=puavo,o=puavo"
-  kdc_user_dn = "uid=puavo,o=puavo"
-  kadmin_user_dn = "uid=puavo,o=puavo"
+  kdc_user_dn = "uid=kdc,o=puavo"
+  kadmin_user_dn = "uid=kadmin,o=puavo"
   admin_set = "set=\"this/puavoSchool/puavoSchoolAdmin* | [#{suffix}]/owner* & user\""
   all_admins_set = "set=\"[ldap:///ou=Groups,#{suffix}??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [#{suffix}]/owner* & user\""
   super_acl = "by dn=\"uid=admin,o=puavo\" manage"
-  syncrepl_acl = "by set=\"[ldap:///ou=Servers,ou=Hosts,#{suffix}??one?] read"
+  syncrepl_acl = "by dn.children=\"ou=Servers,ou=Hosts,#{suffix}\" read"
 %>
 {0}to dn.subtree="<%= suffix %>" <%= syncrepl_acl %> by * none break
 {1}to dn.exact="ou=Roles,<%= suffix %>" attrs="entry,ou" <%= super_acl %> by <%= all_admins_set%> read
