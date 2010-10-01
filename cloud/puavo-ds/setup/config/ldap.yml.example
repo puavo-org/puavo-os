@@ -27,6 +27,6 @@ settings:
     - ldap://ldap2.example.edu
     - ldap://ldap3.example.edu
 
-  puppet:
+  puppetmaster:
     enable: true
     file_dir: /etc/puppet/files
