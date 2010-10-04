@@ -211,7 +211,18 @@ user.new_password_confirmation = password_confirmation
 user.role_name = role.displayName
 user.puavoSchool = school.dn
 user.puavoEduPersonAffiliation = "admin"
-user.save!
+user_save = false
+while user_save != true
+  begin
+    user.save!
+    user_save = true
+  rescue Exception => e
+    puts
+    puts e
+    puts "Cannot save user, press enter to try again"
+    STDIN.gets
+  end
+end
 
 puts
 puts "User was successfully created."
