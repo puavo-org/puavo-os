@@ -216,8 +216,10 @@ while user_save != true
   begin
     user.save!
     user_save = true
-  rescue
-    puts "Cannot save user, press enter"
+  rescue Exception => e
+    puts
+    puts e
+    puts "Cannot save user, press enter to try again"
     STDIN.gets
   end
 end
