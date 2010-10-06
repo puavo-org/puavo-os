@@ -14,8 +14,8 @@
 {3}to dn.subtree="ou=Roles,<%= suffix %>" <%= super_acl %> by <%= admin_set %> write
 {4}to dn.subtree="ou=Automount,<%= suffix %>" <%= super_acl %> by * +rscxd
 {5}to dn.subtree="ou=Kerberos Realms,<%= suffix %>" <%= super_acl %> by dn="<%= kadmin_user_dn %>" write by dn="<%= kdc_user_dn %>" read
-{6}to dn.subtree="ou=Devices,ou=Hosts,<%= suffix %>" by dn="uid=admin,o=puavo" manage by dn="uid=samba,ou=System Accounts,<%= suffix %>" +wrscxd by set="this/puavoSchool/puavoSchoolAdmin*  | [<%= suffix %>]/owner* & user" write
-{7}to dn.subtree="ou=Servers,ou=Hosts,<%= suffix %>" by dn="uid=admin,o=puavo" manage by set="[<%= suffix %>]/owner* & user" write by anonymous auth
+{6}to dn.subtree="ou=Devices,ou=Hosts,<%= suffix %>" by dn="uid=admin,o=puavo" manage by dn="uid=samba,ou=System Accounts,<%= suffix %>" +wrscxd by set="this/puavoSchool/puavoSchoolAdmin*  | [<%= suffix %>]/owner* & user" write by dn="uid=puppet,o=puavo" read
+{7}to dn.subtree="ou=Servers,ou=Hosts,<%= suffix %>" by dn="uid=admin,o=puavo" manage by set="[<%= suffix %>]/owner* & user" write by dn="uid=puppet,o=puavo" read by anonymous auth
 {8}to dn.exact="ou=People,<%= suffix %>" attrs="entry,ou" <%= super_acl %> by users read
 {9}to dn.exact="ou=People,<%= suffix %>" attrs="children" <%= super_acl %> by <%= all_admins_set%> write by dn.exact="<%= puavo_user_dn %>" read
 {10}to dn.subtree="ou=People,<%= suffix %>" attrs="userPassword,shadowLastChange" <%= super_acl %> by <%= admin_set %> write by self write by anonymous auth
@@ -31,4 +31,4 @@
 {20}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" attrs="sambaSID,sambaDomainName,sambaNextUserRid" <%= super_acl %> by dn="uid=samba,ou=System Accounts,<%= suffix %>" write by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" write
 {21}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" <%= super_acl %> by <%= admin_set %> write by dn="uid=samba,ou=System Accounts,<%= suffix %>" write by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" read
 {22}to dn.subtree="ou=System Accounts,<%= suffix %>" attrs="userPassword" <%= super_acl %> by anonymous auth
-{23}to dn="<%= suffix %>" <%= super_acl %> by dn.subtree="ou=System Accounts,<%= suffix %>" +rscxd by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" read by dn.exact="<%= puavo_user_dn %>" read by dn.exact="<%= kdc_user_dn %>" read by dn.exact="<%= kadmin_user_dn %>" read by * +xd
+{23}to dn="<%= suffix %>" <%= super_acl %> by dn.subtree="ou=System Accounts,<%= suffix %>" +rscxd by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" read by dn.exact="<%= puavo_user_dn %>" read by dn.exact="<%= kdc_user_dn %>" read by dn.exact="<%= kadmin_user_dn %>" read by dn="uid=puppet,o=puavo" read by * +xd
