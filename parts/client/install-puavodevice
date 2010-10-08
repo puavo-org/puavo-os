@@ -5,9 +5,10 @@ require 'highline/import'
 require 'openssl'
 require 'yaml'
 
-HostCrtPath = '/etc/puavo/certs/host.crt'
-HostKeyPath = '/etc/puavo/certs/host.key'
-RootCAPath  = '/etc/puavo/certs/rootca.pem'
+HostCrtPath     = '/etc/puavo/certs/host.crt'
+HostKeyPath     = '/etc/puavo/certs/host.key'
+OrgCABundlePath = '/etc/puavo/certs/orgcabundle.pem'
+RootCAPath      = '/etc/puavo/certs/rootca.pem'
 
 # XXX repetition elsewhere
 def colormsg(msg, tag, color)
@@ -60,13 +61,13 @@ def setup_openvpn
   begin
     mkdir('/etc/openvpn/keys')
 
-    ovpn_crt    = '/etc/openvpn/keys/host.crt'
-    ovpn_key    = '/etc/openvpn/keys/host.key'
-    ovpn_rootca = '/etc/openvpn/keys/rootca.pem'
+    ovpn_crt         = '/etc/openvpn/keys/host.crt'
+    ovpn_key         = '/etc/openvpn/keys/host.key'
+    ovpn_orgcabundle = '/etc/openvpn/keys/orgcabundle.pem'
 
-    FileUtils.cp(HostCrtPath, ovpn_crt)
-    FileUtils.cp(HostKeyPath, ovpn_key)
-    FileUtils.cp(RootCAPath,  ovpn_rootca)
+    FileUtils.cp(HostCrtPath,     ovpn_crt)
+    FileUtils.cp(HostKeyPath,     ovpn_key)
+    FileUtils.cp(OrgCABundlePath, ovpn_orgcabundle)
 
     File.open('/etc/openvpn/puavoclient.conf', 'w', 0600) do |f|
       f.print <<-EOF.gsub(/^\s+/, '')
@@ -74,7 +75,7 @@ def setup_openvpn
 	dev tun
 	proto tcp-client
 	remote 217.112.254.13 443
-	ca #{ ovpn_rootca }
+	ca #{ ovpn_orgcabundle }
 	cert #{ ovpn_crt }
 	key #{ ovpn_key }
 	ns-cert-type server
