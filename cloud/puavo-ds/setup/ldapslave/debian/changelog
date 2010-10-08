@@ -1,3 +1,10 @@
+puavotools-ldapslave (0.1.1) lucid; urgency=low
+
+  * Introduce init_kdc_slave for initializing kerberos slave.
+    Code actually written by Veli-Matti Lintu.
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Fri, 08 Oct 2010 14:39:47 +0300
+
 puavotools-ldapslave (0.1) unstable; urgency=low
 
   * Initial Release.
