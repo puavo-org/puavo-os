@@ -1,5 +1,4 @@
 <%
-  samba_domain = "EDU" + suffix.to_s.match(/^dc=edu,dc=([^,]+)/)[1].upcase
   puavo_user_dn = "uid=puavo,o=puavo"
   kdc_user_dn = "uid=kdc,o=puavo"
   kadmin_user_dn = "uid=kadmin,o=puavo"
@@ -7,6 +6,7 @@
   all_admins_set = "set=\"[ldap:///ou=Groups,#{suffix}??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [#{suffix}]/owner* & user\""
   super_acl = "by dn=\"uid=admin,o=puavo\" manage"
   syncrepl_acl = "by dn.children=\"ou=Servers,ou=Hosts,#{suffix}\" read"
+  getent_read_acl = "by dn.children=\"ou=People,#{suffix}\" read by dn.subtree=\"ou=Hosts,#{suffix}\" read"
 %>
 {0}to dn.subtree="<%= suffix %>" <%= syncrepl_acl %> by * none break
 {1}to dn.exact="ou=Roles,<%= suffix %>" attrs="entry,ou" <%= super_acl %> by <%= all_admins_set%> read
@@ -16,19 +16,20 @@
 {5}to dn.subtree="ou=Kerberos Realms,<%= suffix %>" <%= super_acl %> by dn="<%= kadmin_user_dn %>" write by dn="<%= kdc_user_dn %>" read
 {6}to dn.subtree="ou=Devices,ou=Hosts,<%= suffix %>" by dn="uid=admin,o=puavo" manage by dn="uid=samba,ou=System Accounts,<%= suffix %>" +wrscxd by set="this/puavoSchool/puavoSchoolAdmin*  | [<%= suffix %>]/owner* & user" write by dn="uid=puppet,o=puavo" read
 {7}to dn.subtree="ou=Servers,ou=Hosts,<%= suffix %>" by dn="uid=admin,o=puavo" manage by set="[<%= suffix %>]/owner* & user" write by dn="uid=puppet,o=puavo" read by anonymous auth
-{8}to dn.exact="ou=People,<%= suffix %>" attrs="entry,ou" <%= super_acl %> by users read
+{8}to dn.exact="ou=People,<%= suffix %>" attrs="entry,ou" <%= super_acl %> <%= getent_read_acl %> by anonymous auth
 {9}to dn.exact="ou=People,<%= suffix %>" attrs="children" <%= super_acl %> by <%= all_admins_set%> write by dn.exact="<%= puavo_user_dn %>" read
 {10}to dn.subtree="ou=People,<%= suffix %>" attrs="userPassword,shadowLastChange" <%= super_acl %> by <%= admin_set %> write by self write by anonymous auth
-{11}to dn.subtree="ou=People,<%= suffix %>" attrs="entry,uid,puavoId,eduPersonPrincipalName,objectClass" <%= super_acl %> by <%= admin_set %> write by dn="<%= puavo_user_dn %>" read
-{12}to dn.subtree="ou=People,<%= suffix %>" <%= super_acl %> by <%= admin_set %> write by dn.subtree="ou=Hosts,<%= suffix %>" read
-{13}to dn.exact="ou=Groups,<%= suffix %>" attrs="entry,ou" <%= super_acl %> by <%= all_admins_set%> read by dn.subtree="ou=System Accounts,<%= suffix %>" read by dn.subtree="ou=Hosts,<%= suffix %>" read
-{14}to dn.exact="ou=Groups,<%= suffix %>" attrs="children" <%= super_acl %> by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* & user | [<%= suffix %>]/owner* & user" write by dn.subtree="ou=System Accounts,<%= suffix %>" read by dn.subtree="ou=Hosts,<%= suffix %>" read
-{15}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoEduGroup) attrs="gidNumber,cn,puavoId,objectClass" <%= super_acl %> by <%= admin_set %> write by dn.subtree="ou=Hosts,<%= suffix %>" +rscxd
-{16}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) attrs="gidNumber,cn,puavoId,objectClass" <%= super_acl %> by set="[<%= suffix %>]/owner* & user" +azrwsc by set="this/puavoSchoolAdmin* & user" +rwsc by dn.subtree="ou=Hosts,<%= suffix %>" +rscd break
-{17}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoEduGroup) <%= super_acl %> by <%= admin_set %> write
-{18}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) attrs="member,memberUid" <%= super_acl %> by set="this/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" write break
-{19}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) <%= super_acl %> by set="[<%= suffix %>]/owner* & user" write by set="this/puavoSchoolAdmin* & user" +rscxd
-{20}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" attrs="sambaSID,sambaDomainName,sambaNextUserRid" <%= super_acl %> by dn="uid=samba,ou=System Accounts,<%= suffix %>" write by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" write
-{21}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" <%= super_acl %> by <%= admin_set %> write by dn="uid=samba,ou=System Accounts,<%= suffix %>" write by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" read
-{22}to dn.subtree="ou=System Accounts,<%= suffix %>" attrs="userPassword" <%= super_acl %> by anonymous auth
-{23}to dn="<%= suffix %>" <%= super_acl %> by dn.subtree="ou=System Accounts,<%= suffix %>" +rscxd by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" read by dn.exact="<%= puavo_user_dn %>" read by dn.exact="<%= kdc_user_dn %>" read by dn.exact="<%= kadmin_user_dn %>" read by dn="uid=puppet,o=puavo" read by * +xd
+{11}to dn.subtree="ou=People,<%= suffix %>" attrs="entry,uid,puavoId,eduPersonPrincipalName,objectClass" <%= super_acl %> by <%= admin_set %> write by dn="<%= puavo_user_dn %>" read <%= getent_read_acl %> by anonymous auth
+{12}to dn.subtree="ou=People,<%= suffix %>" attrs="uidNumber,gidNumber,homeDirectory,givenName,sn,telephoneNumber,mail" <%= super_acl %> by <%= admin_set %> write <%= getent_read_acl %>
+{13}to dn.subtree="ou=People,<%= suffix %>" <%= super_acl %> by <%= admin_set %> write by dn.subtree="ou=Hosts,<%= suffix %>" read
+{14}to dn.exact="ou=Groups,<%= suffix %>" attrs="entry,ou" <%= super_acl %> by <%= all_admins_set%> read <%= getent_read_acl %>
+{15}to dn.exact="ou=Groups,<%= suffix %>" attrs="children" <%= super_acl %> by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* & user | [<%= suffix %>]/owner* & user" write <%= getent_read_acl %>
+{16}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoEduGroup) attrs="gidNumber,cn,puavoId,objectClass" <%= super_acl %> by <%= admin_set %> write <%= getent_read_acl %>
+{17}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) attrs="gidNumber,cn,puavoId,objectClass" <%= super_acl %> by set="[<%= suffix %>]/owner* & user" +azrwsc by set="this/puavoSchoolAdmin* & user" +rwsc <%= getent_read_acl %> break
+{18}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoEduGroup) <%= super_acl %> by <%= admin_set %> write
+{19}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) attrs="member,memberUid" <%= super_acl %> by set="this/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" write break
+{20}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) <%= super_acl %> by set="[<%= suffix %>]/owner* & user" write by set="this/puavoSchoolAdmin* & user" +rscxd
+{21}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" attrs="sambaSID,sambaDomainName,sambaNextUserRid" <%= super_acl %> by dn="uid=samba,o=puavo" write by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" write
+{22}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" <%= super_acl %> by <%= admin_set %> write by dn="uid=samba,o=puavo" write by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" read
+{23}to dn.subtree="ou=System Accounts,<%= suffix %>" attrs="userPassword" <%= super_acl %> by anonymous auth
+{24}to dn="<%= suffix %>" <%= super_acl %> by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" read by dn.exact="<%= puavo_user_dn %>" read by dn.exact="<%= kdc_user_dn %>" read by dn.exact="<%= kadmin_user_dn %>" read by dn="uid=puppet,o=puavo" read by * +sxd
