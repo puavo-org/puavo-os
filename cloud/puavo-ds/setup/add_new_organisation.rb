@@ -55,6 +55,7 @@ domain = "#{organisation_name}.opinsys.fi"
 kerberos_realm = domain.upcase
 legal_name = organisation_name
 puppet_host = "#{organisation_name}.puppet.opinsys.fi"
+samba_domain ="EDU#{organisation_name.upcase}"
 
 suffix = organisation_base_template % organisation_name
 rootDN = configurations["settings"]["ldap_server"]["bind_dn"]
@@ -62,7 +63,8 @@ rootDN = configurations["settings"]["ldap_server"]["bind_dn"]
 puts "* Creating database for suffix: #{suffix}"
 begin
   new_db = Database.new( "olcSuffix" => suffix,
-                       "olcRootDN" => rootDN )
+                         "olcRootDN" => rootDN,
+                         :samba_domain => samba_domain )
   # Save without validation
   new_db.save(false)
 rescue => e
@@ -91,7 +93,8 @@ organisation = Organisation.create( :owner => configurations["settings"]["ldap_s
                                     :cn => organisation_name,
                                     :description => organisation_name,
                                     :eduOrgLegalName => legal_name,
-                                    :puavoPuppetHost => puppet_host )
+                                    :puavoPuppetHost => puppet_host,
+                                    :sambaDomainName => samba_domain )
 
 puts "* Add organizational units: People, Groups, Hosts, Automount, etc..."
 OrganizationalUnit.create_units(organisation)
