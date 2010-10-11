@@ -6,6 +6,7 @@ class Database < ActiveLdap::Base
                 :prefix => "",
                 :classes => ['olcDatabaseConfig', 'olcHdbConfig'] )
 
+  attr_accessor :samba_domain
   before_save :set_attribute_values
 
   def initialize(args)
@@ -38,6 +39,8 @@ class Database < ActiveLdap::Base
 
     # Database ACLs
     suffix = self.olcSuffix
+    samba_domain = self.samba_domain
+
     template = File.read("templates/database_acl.erb")
     self.olcAccess = ERB.new(template, 0, "%<>").result(binding).split("\n")
   end
