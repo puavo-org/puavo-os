@@ -17,15 +17,7 @@ class Organisation < ActiveLdap::Base
 
   def set_values
     /(.*?)=(.*?)[$,]/.match(self.suffix.to_s)
-#    tmp_dc = self.suffix.to_s.match(/dc=([^,]+),/)[0]
     self.send("#{$1}=", $2)
-#    self.dc = $1
-#    self.cn = self.name
-#    self.puavoDomain = self.domain
-#    self.puavoKerberosRealm = self.kerberos_realm
-#    self.o = self.name
-#    self.description = self.name
-#    self.eduOrgLegalName = self.legal_name
     self.puavoKadminPort = IdPool.next_id('puavoNextKadminPort')
   end
 
