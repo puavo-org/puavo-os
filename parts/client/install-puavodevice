@@ -30,6 +30,14 @@ def mkdir(path, mode=0755)
   end
 end
 
+def run_puppet(opts='')
+  unless system('puppetd --test --logdest console' +
+		" --logdest /var/log/puppet/install.log #{ opts }")
+    # XXX this will not be triggered even if there is a reason to
+    raise 'problem running puppetd'
+  end
+end
+
 def setup_kerberos(principals)
   # XXX
   p principals
@@ -136,11 +144,8 @@ def setup_puppet(puppet_server, fqdn)
     end
 
     goodmsg('Puppet setup is done, running puppet once...')
-    unless system('puppetd --no-daemonize --onetime --logdest console' +
-		  ' --logdest /var/log/puppet/install.log')
-      # XXX this will not be triggered even if there would be a reason to
-      raise 'problem running puppetd'
-    end
+    run_puppet('--tags service::apt::client')
+    run_puppet()
     goodmsg('Puppet run is done.')
     unless system('service puppet restart')
       raise 'problem restarting puppet'

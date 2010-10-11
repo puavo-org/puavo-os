@@ -1,3 +1,10 @@
+puavodevices-client-install (0.1.2) lucid; urgency=low
+
+  * Run puppetd twice, first with --tags service::apt::client,
+    so that apt-settings will be done before other configurations.
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Mon, 11 Oct 2010 10:10:34 +0300
+
 puavodevices-client-install (0.1.1) lucid; urgency=low
 
   * For openvpn configuration, use orgcabundle, fixes openvpn.
