@@ -16,7 +16,7 @@
 {5}to dn.subtree="ou=Kerberos Realms,<%= suffix %>" <%= super_acl %> by dn="<%= kadmin_user_dn %>" write by dn="<%= kdc_user_dn %>" read
 {6}to dn.subtree="ou=Devices,ou=Hosts,<%= suffix %>" by dn="uid=admin,o=puavo" manage by dn="uid=samba,ou=System Accounts,<%= suffix %>" +wrscxd by set="this/puavoSchool/puavoSchoolAdmin*  | [<%= suffix %>]/owner* & user" write by dn="uid=puppet,o=puavo" read
 {7}to dn.subtree="ou=Servers,ou=Hosts,<%= suffix %>" by dn="uid=admin,o=puavo" manage by set="[<%= suffix %>]/owner* & user" write by dn="uid=puppet,o=puavo" read by anonymous auth
-{8}to dn.exact="ou=People,<%= suffix %>" attrs="entry,ou" <%= super_acl %> <%= getent_read_acl %> by anonymous auth
+{8}to dn.exact="ou=People,<%= suffix %>" attrs="entry,ou" <%= super_acl %> <%= getent_read_acl %> by dn.exact="<%= puavo_user_dn %>" read by anonymous auth
 {9}to dn.exact="ou=People,<%= suffix %>" attrs="children" <%= super_acl %> by <%= all_admins_set%> write by dn.exact="<%= puavo_user_dn %>" read
 {10}to dn.subtree="ou=People,<%= suffix %>" attrs="userPassword,shadowLastChange" <%= super_acl %> by <%= admin_set %> write by self write by anonymous auth
 {11}to dn.subtree="ou=People,<%= suffix %>" attrs="entry,uid,puavoId,eduPersonPrincipalName,objectClass" <%= super_acl %> by <%= admin_set %> write by dn="<%= puavo_user_dn %>" read <%= getent_read_acl %> by anonymous auth
