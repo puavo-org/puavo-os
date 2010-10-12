@@ -26,9 +26,9 @@
 {15}to dn.exact="ou=Groups,<%= suffix %>" attrs="children" <%= super_acl %> by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* & user | [<%= suffix %>]/owner* & user" write <%= getent_read_acl %>
 {16}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoEduGroup) attrs="gidNumber,cn,puavoId,objectClass" <%= super_acl %> by <%= admin_set %> write <%= getent_read_acl %>
 {17}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) attrs="gidNumber,cn,puavoId,objectClass" <%= super_acl %> by set="[<%= suffix %>]/owner* & user" +azrwsc by set="this/puavoSchoolAdmin* & user" +rwsc <%= getent_read_acl %> break
-{18}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoEduGroup) <%= super_acl %> by <%= admin_set %> write
-{19}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) attrs="member,memberUid" <%= super_acl %> by set="this/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" write break
-{20}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) <%= super_acl %> by set="[<%= suffix %>]/owner* & user" write by set="this/puavoSchoolAdmin* & user" +rscxd
+{18}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoEduGroup) <%= super_acl %> by <%= admin_set %> write <%= getent_read_acl %>
+{19}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) attrs="member,memberUid" <%= super_acl %> by set="this/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" write <%= getent_read_acl %> break
+{20}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) <%= super_acl %> by set="[<%= suffix %>]/owner* & user" write by set="this/puavoSchoolAdmin* & user" +rscxd <%= getent_read_acl %>
 {21}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" attrs="sambaSID,sambaDomainName,sambaNextUserRid" <%= super_acl %> by dn="uid=samba,o=puavo" write by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" write
 {22}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" <%= super_acl %> by <%= admin_set %> write by dn="uid=samba,o=puavo" write by set="[ldap:///ou=Groups,<%= suffix %>??one?(objectClass=puavoSchool)]/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" read
 {23}to dn.subtree="ou=System Accounts,<%= suffix %>" attrs="userPassword" <%= super_acl %> by anonymous auth
