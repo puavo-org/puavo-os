@@ -1,3 +1,9 @@
+puavotools-ldapslave (0.1.2) lucid; urgency=low
+
+  * Add missing olcAuthzRegexp to convert gssapi DNs to real user DNs
+
+ -- Veli-Matti Lintu <veli-matti.lintu@opinsys.fi>  Tue, 12 Oct 2010 16:04:53 +0300
+
 puavotools-ldapslave (0.1.1) lucid; urgency=low
 
   * Introduce init_kdc_slave for initializing kerberos slave.

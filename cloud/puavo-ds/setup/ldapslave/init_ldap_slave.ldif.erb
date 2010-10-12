@@ -18,6 +18,7 @@ olcTLSCertificateKeyFile: /etc/ssl/certs/slapd-server.key
 olcLocalSSF: 128
 olcSecurity: ssf=128
 olcSizeLimit: unlimited
+olcAuthzRegexp: uid=([^,]*),cn=gssapi,cn=auth ldap:///ou=People,<%= @suffix %>??one?(uid=$1)
 
 dn: olcDatabase={-1}frontend,cn=config
 objectClass: olcDatabaseConfig
@@ -67,7 +68,6 @@ olcDatabase: {1}hdb
 olcDbDirectory: /var/lib/ldap
 olcSuffix: <%= @suffix %>
 olcRootDN: uid=admin,<%= @suffix %>
-olcRootPw: jep
 olcDbConfig: {0}set_cachesize 0 20971520 0
 olcDbConfig: {1}set_lk_max_objects 1500
 olcDbConfig: {2}set_lk_max_locks 1500
