@@ -22,7 +22,8 @@ class OrganizationalUnit < LdapOrganisationBase
                        :prefix => "ou=Hosts",
                        :classes => ['top', 'organizationalUnit'] )
     ['Servers',
-     'Devices'].each do |ou|
+     'Devices',
+     'Samba'].each do |ou|
       OrganizationalUnit.create( "ou" => ou )
     end
   end
