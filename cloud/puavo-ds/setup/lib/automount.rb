@@ -15,6 +15,6 @@ class Automount < LdapOrganisationBase
     # Save without validation
     self.new( "cn" => "/-",
               "objectClass" => 'automount',
-              "automountInformation" => "ldap:ou=auto.direct,ou=Automount,#{self.base}" ).save(false)
+              "automountInformation" => "ldap:#{self.base}" ).save(false)
   end
 end
