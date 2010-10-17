@@ -82,6 +82,7 @@ olcDbCheckpoint: 512 30
 olcDbIndex: uid pres,eq
 olcDbIndex: cn,sn,mail pres,eq,approx,sub
 olcDbIndex: objectClass eq
+olcDbIndex: puavoId eq
 olcSyncRepl: rid=001 provider="ldap://<%= @master_server %>" binddn="<%= @binddn %>" bindmethod=simple credentials="<%= @bindpw %>" searchbase="<%= @suffix %>" type=refreshAndPersist interval=00:00:00:05 retry="15 +" timeout=30 starttls=critical schemachecking=off scope=sub
 olcUpdateRef: ldap://<%= @master_server %>
 <%= @acls %>
