@@ -1,3 +1,9 @@
+puavotools-ldapslave (0.1.3) lucid; urgency=low
+
+  * Kerberos initialisation and authentication works now against kdc slave
+
+ -- Veli-Matti Lintu <veli-matti.lintu@opinsys.fi>  Tue, 18 Oct 2010 12:59:49 +0300
+
 puavotools-ldapslave (0.1.2) lucid; urgency=low
 
   * Add missing olcAuthzRegexp to convert gssapi DNs to real user DNs
