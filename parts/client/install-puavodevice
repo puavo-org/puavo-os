@@ -116,9 +116,9 @@ def setup_puppet(puppet_server, fqdn)
 					'/etc/puppet/ssl/certs',
 					'/etc/puppet/ssl/private_keys', ])
 
-    FileUtils.cp(HostCrtPath, "/etc/puppet/ssl/certs/#{ fqdn }.pem")
-    FileUtils.cp(HostKeyPath, "/etc/puppet/ssl/private_keys/#{ fqdn }.pem")
-    FileUtils.cp(RootCAPath,  '/etc/puppet/ssl/certs/ca.pem')
+    FileUtils.cp(HostCrtPath,     "/etc/puppet/ssl/certs/#{ fqdn }.pem")
+    FileUtils.cp(HostKeyPath,     "/etc/puppet/ssl/private_keys/#{ fqdn }.pem")
+    FileUtils.cp(OrgCABundlePath, '/etc/puppet/ssl/certs/ca.pem')
 
     File.open('/etc/default/puppet', 'w') do |f|
       f.print <<-EOF.gsub(/^\s+/, '')
