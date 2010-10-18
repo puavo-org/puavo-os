@@ -144,7 +144,7 @@ def setup_puppet(puppet_server, fqdn)
     end
 
     goodmsg('Puppet setup is done, running puppet once...')
-    run_puppet('--tags service::apt::client')
+    run_puppet('--tags debian::apt::client')
     run_puppet()
     goodmsg('Puppet run is done.')
     unless system('service puppet restart')
