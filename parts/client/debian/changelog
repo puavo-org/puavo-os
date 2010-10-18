@@ -1,3 +1,9 @@
+puavodevices-client-install (0.1.4) lucid; urgency=low
+
+  * Copy organisation CA-bundle to use for puppet instead of root-CA
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Mon, 18 Oct 2010 16:31:19 +0300
+
 puavodevices-client-install (0.1.3) lucid; urgency=low
 
   * service::apt::client puppet class has been renamed to
