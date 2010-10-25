@@ -47,5 +47,16 @@ class Samba < LdapOrganisationBase
                          'gidNumber' => group_id,
                          'cn' => group_name )
     end
+
+    [
+     [544, 'Administrators', 512],
+     [545, 'Users', 513]
+    ].each do |group_id, group_name, sid_list_group|
+      SambaSidGroup.create( 'sambaSID' => "S-1-5-32-" + group_id.to_s,
+                            'sambaGroupType' => "4",
+                            'displayName' => group_name,
+                            'gidNumber' => group_id,
+                            'sambaSIDList' => "#{samba_sid}-#{sid_list_group}" )
+    end
   end
 end
