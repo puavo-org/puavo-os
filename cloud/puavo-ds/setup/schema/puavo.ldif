@@ -127,7 +127,7 @@ olcAttributeTypes: {38}( 1.3.6.1.4.1.27208.1.1.1.39 NAME 'puavoPuppetHost' DES
  .15 SINGLE-VALUE )
 olcAttributeTypes: {39}( 1.3.6.1.4.1.27208.1.1.1.40 NAME 'puavoDeviceBootMode'
   DESC 'Boot mode for devices that have multiple boot options - localboot/netb
- boot/dualboot/etc' EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch
+ boot/dualboot/etc' EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch 
  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
 olcObjectClasses: {0}( 1.3.6.1.4.1.27208.1.1.2.1 NAME 'puavoSchool' AUXILIARY 
  MUST ( puavoId ) MAY ( puavoSchoolHomePageURL $ puavoSchoolAdmin $ displayNam
