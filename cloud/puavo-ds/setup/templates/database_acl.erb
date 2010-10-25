@@ -15,6 +15,9 @@
     @index += 1
   end
 %>
+{<%= get_index %>}to dn.subtree="ou=Samba,ou=Hosts,<%= suffix %>" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write by * none break
+{<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="userPassword,sambaAcctFlags" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write by * none break
+{<%= get_index %>}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write by * none break
 {<%= get_index %>}to dn.subtree="<%= suffix %>" <%= syncrepl_acl %> by * none break
 {<%= get_index %>}to dn.exact="ou=Roles,<%= suffix %>" attrs="entry,ou,objectClass" by <%= all_admins_set%> read
 {<%= get_index %>}to dn.exact="ou=Roles,<%= suffix %>" attrs="children" by <%= all_admins_set%> write
