@@ -77,22 +77,44 @@ def setup_openvpn
     FileUtils.cp(HostKeyPath,     ovpn_key)
     FileUtils.cp(OrgCABundlePath, ovpn_orgcabundle)
 
-    File.open('/etc/openvpn/puavoclient.conf', 'w', 0600) do |f|
-      f.print <<-EOF.gsub(/^\s+/, '')
+    File.open('/etc/openvpn/runme', 'w', 0755) do |f|
+      f.print <<-EOF.gsub(/^\t+/, '')
+	#!/bin/sh
+
+	SCRIPTSUBDIR=$1
+
+	for script in /etc/openvpn/scripts/$SCRIPTSUBDIR/*; do
+	  test -x $script && timeout 30 $script "$@"
+	done
+
+	exit 0
+	EOF
+    end
+    File.open('/etc/openvpn/puavoclient.conf', 'w', 0644) do |f|
+      f.print <<-EOF.gsub(/^\t+/, '')
 	client
 	dev tun
 	proto tcp-client
 	remote 217.112.254.13 443
+
 	ca #{ ovpn_orgcabundle }
 	cert #{ ovpn_crt }
 	key #{ ovpn_key }
 	ns-cert-type server
+
 	verb 3
+
 	comp-lzo
 	keepalive 10 60
 	persist-tun
 	persist-key
-	ipchange /etc/openvpn/runme
+	up-delay
+
+	down "/etc/openvpn/runme down"
+	ipchange "/etc/openvpn/runme ipchange"
+	route-up "/etc/openvpn/runme route-up"
+	tls-verify "/etc/openvpn/runme tls-verify"
+	up "/etc/openvpn/runme up"
 	EOF
     end
     unless system('service openvpn restart')
@@ -121,14 +143,14 @@ def setup_puppet(puppet_server, fqdn)
     FileUtils.cp(OrgCABundlePath, '/etc/puppet/ssl/certs/ca.pem')
 
     File.open('/etc/default/puppet', 'w') do |f|
-      f.print <<-EOF.gsub(/^\s+/, '')
+      f.print <<-EOF.gsub(/^\t+/, '')
 	START=yes
 	DAEMON_OPTS=""
 	EOF
     end
 
     File.open('/etc/puppet/puppet.conf', 'w') do |f|
-      f.print <<-EOF.gsub(/^\s+/, '')
+      f.print <<-EOF.gsub(/^\t+/, '')
 	[main]
 	certname=#{ fqdn }
 	factpath=/var/lib/puppet/lib/facter

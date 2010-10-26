@@ -1,3 +1,10 @@
+puavodevices-client-install (0.1.5) lucid; urgency=low
+
+  * Install /etc/openvpn/runme script to automatically run things
+    based on host configurations.
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Tue, 26 Oct 2010 12:02:26 +0300
+
 puavodevices-client-install (0.1.4) lucid; urgency=low
 
   * Copy organisation CA-bundle to use for puppet instead of root-CA

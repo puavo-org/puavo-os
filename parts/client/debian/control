@@ -8,7 +8,7 @@ Homepage: https://launchpad.net/~opinsys
 
 Package: puavodevices-client-install
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, libfilesystem-ruby1.8, openvpn, puppet, puavodevices-client-register
+Depends: ${shlibs:Depends}, ${misc:Depends}, libfilesystem-ruby1.8, openvpn, puppet, puavodevices-client-register, timeout
 Description: Machine administration tool
  puavodevices-client handles registration and installation of
  various networked computers, with assistance of puavodevices-server.
