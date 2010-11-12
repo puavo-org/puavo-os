@@ -30,7 +30,7 @@ gem "ruby-debug"
 gem 'tiny_mce'
 gem 'acts_as_list'
 gem 'rmagick', :require => 'RMagick'
-gem 'net-ldap'
+gem 'ruby-ldap', :require => 'ldap'
 gem "authlogic", :git => 
   "git://github.com/odorcicd/authlogic.git", :branch => "rails3"
 gem 'mongrel'

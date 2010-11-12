@@ -3,16 +3,16 @@ class LdapUser
   attr_accessor :dn, :ldap
 
   def self.find(uid)
-    ldap = Net::LDAP.new
-    ldap.host = Organisation.current.ldap_host
-    ldap.auth(Organisation.current.uid_search_dn, Organisation.current.uid_search_password)
+    ldap = LDAP::Conn.new( Organisation.current.ldap_host )
+    ldap.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+    ldap.start_tls
 
-    if ldap.bind
-      filter = Net::LDAP::Filter.eq( "uid", uid )
+    if ldap.bound? || ldap.bind(Organisation.current.uid_search_dn, Organisation.current.uid_search_password)
+      filter = "(uid=#{uid})"
       treebase = Organisation.current.ldap_base
       
       ldap_user = LdapUser.new
-      ldap.search( :base => treebase, :filter => filter ) do |entry|
+      ldap.search(treebase, LDAP::LDAP_SCOPE_SUBTREE, filter) do |entry|
         ldap_user.dn = entry.dn
         ldap_user.ldap = ldap
         return ldap_user
@@ -22,7 +22,10 @@ class LdapUser
   end
 
   def bind(password)
-    self.ldap.auth(self.dn, password)
-    self.ldap.bind
+    ldap = LDAP::Conn.new( Organisation.current.ldap_host )
+    ldap.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+    ldap.start_tls
+
+    ldap.bind(self.dn, password)
   end
 end

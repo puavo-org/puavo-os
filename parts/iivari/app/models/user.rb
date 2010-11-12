@@ -14,7 +14,8 @@ class User < OrganisationData
   def self.create_from_ldap_if_valid(login)
     begin
       User.create(:login => login) if LdapUser.find(login)
-    rescue
+    rescue Exception => e
+      logger.info "Execption: " + e
       nil
     end
   end
