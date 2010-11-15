@@ -1,6 +1,6 @@
 source 'http://rubygems.org'
 
-gem 'rails', '3.0.0.rc'
+gem 'rails', '3.0.1'
 
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
@@ -31,8 +31,7 @@ gem 'tiny_mce'
 gem 'acts_as_list'
 gem 'rmagick', :require => 'RMagick'
 gem 'ruby-ldap', :require => 'ldap'
-gem "authlogic", :git => 
-  "git://github.com/odorcicd/authlogic.git", :branch => "rails3"
+gem "authlogic"
 gem 'mongrel'
 group :cucumber do
   gem 'rspec-rails', '>= 2.0.0.beta.10'
