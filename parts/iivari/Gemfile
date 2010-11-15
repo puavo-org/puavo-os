@@ -24,6 +24,7 @@ gem 'sqlite3-ruby', :require => 'sqlite3'
 # group :test do
 #   gem 'webrat'
 # end
+
 gem "simple_form"
 gem "responders"
 gem "ruby-debug"
@@ -34,10 +35,9 @@ gem 'ruby-ldap', :require => 'ldap'
 gem "authlogic"
 gem 'mongrel'
 group :cucumber do
-  gem 'rspec-rails', '>= 2.0.0.beta.10'
-  gem 'cucumber' #, '0.7.3'
+  gem 'rspec-rails'
+  gem 'cucumber'
   gem 'cucumber-rails'
   gem 'database_cleaner'
   gem 'capybara'
-  #gem 'webrat' #, '0.7.0'
 end
