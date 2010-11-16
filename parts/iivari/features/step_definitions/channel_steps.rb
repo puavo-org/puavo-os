@@ -25,4 +25,5 @@ Given /^I am logged in as "([^\"]*)" with password "([^\"]*)"$/ do |login, passw
   fill_in("user_session_login", :with => login)
   fill_in("user_session_password", :with => password)
   click_button("Login")
+  page.should have_content("Login successful!")
 end

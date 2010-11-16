@@ -48,7 +48,10 @@ class SlidesController < ApplicationController
     end
     @slide.channel_id = @channel.id
     @slide.save
-    respond_with([@channel, @slide])
+
+    respond_with(@slide) do |format|
+      format.html { redirect_to channel_slide_path(@channel, @slide) }
+    end
   end
 
   # PUT /slides/1
@@ -62,7 +65,10 @@ class SlidesController < ApplicationController
 
     params[:slide].delete(:image)
     @slide.update_attributes(params[:slide])
-    respond_with([@channel, @slide])
+
+    respond_with(@slide) do |format|
+      format.html { redirect_to channel_slide_path(@channel, @slide) }
+    end
   end
 
   # DELETE /slides/1
@@ -70,7 +76,9 @@ class SlidesController < ApplicationController
   def destroy
     @slide = Slide.find(params[:id])
     @slide.destroy
-    respond_with([@channel, @slide])
+    respond_with(@slide) do |format|
+      format.html { redirect_to channel_slides_path(@channel) }
+    end
   end
 
   def sort
