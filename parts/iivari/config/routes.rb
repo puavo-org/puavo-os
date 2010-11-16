@@ -1,4 +1,4 @@
-Iivari::Application.routes.draw do |map|
+Iivari::Application.routes.draw do
   match '/channels/wellcome', :to => "channels#wellcome"
   resources :channels do
     resources :slides do
@@ -8,11 +8,11 @@ Iivari::Application.routes.draw do |map|
 
   match '/slides/new/:template', :to => "slides#new", :as => 'template_new_slide'
 
-  match ':screen_key/conductor', :to => "screen#conductor", :as => "conductor_screen"
-  match ':screen_key/slides.json', :to => "screen#slides", :format => :json
-  match ':screen_key/image/:template/:image', :to => "screen#image", :as => "image_screen"
+  match 'conductor', :to => "screen#conductor", :as => "conductor_screen"
+  match 'slides.json', :to => "screen#slides", :format => :json
+  match 'image/:template/:image', :to => "screen#image", :as => "image_screen"
 
-  match ":screen_key/screen.manifest" =>  "screen#manifest", :as => "manifest_screen"
+  match "screen.manifest", :to => "screen#manifest", :as => "manifest_screen"
 
   resources :user_sessions
 

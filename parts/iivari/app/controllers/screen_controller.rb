@@ -2,9 +2,9 @@ class ScreenController < ApplicationController
   respond_to :html, :json
   layout "screen"
 
-  # GET /:screen_key/slides.json
+  # GET /slides.json
   def slides
-    # FIXME, @channel will be set by screen_key value
+    # FIXME, @channel will be set by hostname
     @channel = Channel.first
 
     if params[:slide_id]
@@ -29,8 +29,8 @@ class ScreenController < ApplicationController
     end
   end
 
-  # GET /:screen_key/conductor
-  # GET /:screen_key/conductor?cache=false&slide_id=40
+  # GET /conductor
+  # GET /conductor?cache=false&slide_id=40
   # Main page for Iivari client
   def conductor
     @cache = "true"
@@ -46,6 +46,9 @@ class ScreenController < ApplicationController
     if params[:cache] && params[:cache] == "false"
       @cache = "false"
     end
+    if params[:hostname]
+      url_params.push "hostname=#{params[:hostname]}"
+    end
 
     @json_url = "slides.json"
     unless url_params.empty?
@@ -57,7 +60,7 @@ class ScreenController < ApplicationController
     end
   end
 
-  # GET /:screen_key/screen.manifest
+  # GET /screen.manifest
   def manifest
     body = ["CACHE MANIFEST"]
     
@@ -89,7 +92,7 @@ class ScreenController < ApplicationController
     render :text => body.join("\n"), :content_type => "text/cache-manifest"
   end
 
-  # GET /:screen_key/image/:image
+  # GET /image/:image
   def image
     expires_in 15.minutes, :public => true
     if image = Image.find_by_key(params[:image])
