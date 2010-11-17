@@ -3,6 +3,7 @@
 
 en:
   display_non_active_body: To activate the display and select a channel
+  confirm: Are you sure?
   flash:
     actions:
       create:
@@ -39,6 +40,7 @@ en:
     back_to_channels: Back
     next: Next
     previous: Previous
+    new_display: New Display
   channels:
     show:
       name: Name
@@ -72,6 +74,13 @@ en:
       active_true: Active
       active_false: Non active
       channel_not_selected: Not selected
+      title_of_active: Status
+    edit:
+      title: Editing display
+    new:
+      title: New display
+    index:
+      title: Listing displays
   authlogic:
     error_messages:
       login_blank: can not be blank

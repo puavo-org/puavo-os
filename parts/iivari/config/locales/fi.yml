@@ -1,5 +1,6 @@
 fi:
   display_non_active_body: To activate the display and select a channel
+  confirm: Oletko varma?
   flash:
     actions:
       create:
@@ -62,6 +63,7 @@ fi:
     back_to_channels: Takaisin kanavalistaan
     next: Seuraava
     previous: Edellinen
+    new_display: Uusi näyttö
   channels:
     show:
       name: Nimi
@@ -98,6 +100,13 @@ fi:
       active_true: Aktiivinen
       active_false: Ei aktviinen
       channel_not_selected: Ei valittu
+      title_of_active: Tila
+    edit:
+      title: Näytön tietojen muokkaus
+    new:
+      title: Uus näyttö
+    index:
+      title: Lista näytöistä
   authlogic:
     error_messages:
       login_blank: ei voi olla tyhjä
