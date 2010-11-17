@@ -20,7 +20,7 @@ Feature: Manage displays
     When I am on the displays page
     Then I should see "test1"
     When I follow "test1"
-    Then I should see "Status: Non active"
+    Then I should see "Active: false"
     And I should see "Channel: Not selected"
     And I should see "Hostname: test1"
     When I follow "Edit"
