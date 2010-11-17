@@ -1,4 +1,6 @@
 fi:
+  value_true: Kyllä
+  value_false: Ei
   display_non_active_body: To activate the display and select a channel
   confirm: Oletko varma?
   flash:
@@ -97,10 +99,7 @@ fi:
       error_title: Kirjautuminen epäonnistui
   displays:
     show:
-      active_true: Aktiivinen
-      active_false: Ei aktviinen
       channel_not_selected: Ei valittu
-      title_of_active: Tila
     edit:
       title: Näytön tietojen muokkaus
     new:

@@ -1,8 +1,8 @@
 <p id="notice"><%= notice %></p>
 
 <p>
-  <b><%= t('.title_of_active') %>:</b>
-  <%= @display.active ? t(".active_true") : t(".active_false") %>
+  <b><%= Display.human_attribute_name :active %>:</b>
+  <%= t("value_#{@display.active}") %>
 </p>
 
 <p>

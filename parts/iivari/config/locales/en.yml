@@ -2,6 +2,8 @@
 # See http://github.com/svenfuchs/rails-i18n/tree/master/rails%2Flocale for starting points.
 
 en:
+  value_true: true
+  value_false: false
   display_non_active_body: To activate the display and select a channel
   confirm: Are you sure?
   flash:
@@ -71,10 +73,7 @@ en:
       title: Editing slide
   displays:
     show:
-      active_true: Active
-      active_false: Non active
       channel_not_selected: Not selected
-      title_of_active: Status
     edit:
       title: Editing display
     new:
