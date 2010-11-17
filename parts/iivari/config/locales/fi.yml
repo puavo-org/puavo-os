@@ -1,4 +1,5 @@
 fi:
+  display_non_active_body: To activate the display and select a channel
   flash:
     actions:
       create:
@@ -26,6 +27,10 @@ fi:
       slide:
         title: Otsikko
         body: Teksti
+      display:
+        hostname: Nimi
+        active: Aktiivinen
+        channel: Kanava
     errors:
       messages:
         blank: Ei voi olla tyhjä!
@@ -88,6 +93,11 @@ fi:
   user_sessions:
     new:
       error_title: Kirjautuminen epäonnistui
+  displays:
+    show:
+      active_true: Aktiivinen
+      active_false: Ei aktviinen
+      channel_not_selected: Ei valittu
   authlogic:
     error_messages:
       login_blank: ei voi olla tyhjä

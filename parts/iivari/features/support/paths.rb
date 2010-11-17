@@ -10,8 +10,17 @@ module NavigationHelpers
 
     when /the home\s?page/
       '/'
+    when /the new display page/
+      new_display_path
+
     when /the new channel page/
       new_channel_path
+
+    when /the conductor page/
+      conductor_screen_path
+
+    when /the conductor slides page/
+      conductor_slides_path
 
     # Add more mappings here.
     # Here is an example that pulls values out of the Regexp:

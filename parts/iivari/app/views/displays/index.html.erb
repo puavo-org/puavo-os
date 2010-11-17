@@ -1,0 +1,25 @@
+<h1>Listing displays</h1>
+
+<table>
+  <tr>
+    <th>Hostname</th>
+    <th>Active</th>
+    <th>Channel</th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @displays.each do |display| %>
+  <tr>
+    <td><%= link_to display.hostname, display %></td>
+    <td><%= display.active ? t(".active_true") : t(".active_false") %></td>
+    <td><%= display.channel %></td>
+    <td><%= link_to 'Edit', edit_display_path(display) %></td>
+    <td><%= link_to 'Destroy', display, :confirm => 'Are you sure?', :method => :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New Display', new_display_path %>

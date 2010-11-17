@@ -1,0 +1,20 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Status:</b>
+  <%= @display.active ? t(".active_true") : t(".active_false") %>
+</p>
+
+<p>
+  <b>Channel:</b>
+  <%= @display.channel.nil? ? t(".channel_not_selected") : @display.channel.name %>
+</p>
+
+<p>
+  <b>Hostname:</b>
+  <%= @display.hostname %>
+</p>
+
+
+<%= link_to 'Edit', edit_display_path(@display) %> |
+<%= link_to 'Back', displays_path %>

@@ -4,18 +4,27 @@ class ScreenController < ApplicationController
 
   # GET /slides.json
   def slides
-    # FIXME, @channel will be set by hostname
-    @channel = Channel.first
+    @display = Display.find_or_create_by_hostname(@client)
+    
+    @channel = @display.active ? @display.channel : nil
 
-    if params[:slide_id]
-      @slides = Array(Slide.find(params[:slide_id]))
+    if @display.active && !@channel.nil?
+      if params[:slide_id]
+        @slides = Array(Slide.find(params[:slide_id]))
+      else
+        # FIXME
+        # Right Way:
+        # @slides = @channel.slides.order("position")
+        # Bug! This does not work. Gives the following error:
+        # ActiveSupport::JSON::Encoding::CircularReferenceError (object references itself)
+        @slides = Slide.find(:all, :conditions => ["channel_id = ?", @channel.id], :order => "position")
+      end
     else
-      # FIXME
-      # Right Way:
-      # @slides = @channel.slides.order("position")
-      # Bug! This does not work. Gives the following error:
-      # ActiveSupport::JSON::Encoding::CircularReferenceError (object references itself)
-       @slides = Slide.find(:all, :conditions => ["channel_id = ?", @channel.id], :order => "position")
+      @slides = Array.new
+      slide = Slide.new
+      slide.body = t('display_non_active_body')
+      slide.template = "only_text"
+      @slides.push slide
     end
 
     @slides.each do |slide|

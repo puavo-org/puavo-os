@@ -2,6 +2,7 @@
 # See http://github.com/svenfuchs/rails-i18n/tree/master/rails%2Flocale for starting points.
 
 en:
+  display_non_active_body: To activate the display and select a channel
   flash:
     actions:
       create:
@@ -66,6 +67,11 @@ en:
       link_web_page: Web page
     edit:
       title: Editing slide
+  displays:
+    show:
+      active_true: Active
+      active_false: Non active
+      channel_not_selected: Not selected
   authlogic:
     error_messages:
       login_blank: can not be blank
