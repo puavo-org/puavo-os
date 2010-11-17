@@ -5,7 +5,7 @@ class ApplicationController < ActionController::Base
   respond_to :html
   protect_from_forgery
   layout 'application'
-  before_filter :set_organisation_to_session, :set_locale, :find_client_hostname
+  before_filter :set_organisation_to_session, :set_locale
   helper_method :current_user_session, :current_user
 
   private
@@ -79,9 +79,5 @@ class ApplicationController < ActionController::Base
   def redirect_back_or_default(default)
     redirect_to(session[:return_to] || default)
     session[:return_to] = nil
-  end
-
-  def find_client_hostname
-    @client = params[:hostname]
   end
 end

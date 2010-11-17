@@ -1,11 +1,10 @@
 class ScreenController < ApplicationController
   respond_to :html, :json
   layout "screen"
+  before_filter :find_client
 
   # GET /slides.json
   def slides
-    @display = Display.find_or_create_by_hostname(@client)
-    
     @channel = @display.active ? @display.channel : nil
 
     if @display.active && !@channel.nil?
@@ -119,5 +118,9 @@ class ScreenController < ApplicationController
     @resolution = resolution
     @slide = slide
     render_to_string( "client_" + slide.template + ".html.erb", :layout => "slide" )
+  end
+
+  def find_client
+    @display = Display.find_or_create_by_hostname(params[:hostname])
   end
 end
