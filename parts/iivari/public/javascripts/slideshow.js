@@ -24,6 +24,7 @@ function showNextSlide() {
 	}
 	//	$("#content").empty().append(slideData.json[slideNumber]["slide_html"]);
 
+
         var today=new Date();
 
 	var d=today.getDate();
@@ -45,10 +46,12 @@ function showNextSlide() {
 	$(newslide).addClass('slide');
 	$(newslide).append(slideData.json[slideNumber]["slide_html"] + "<h3 class=\"footer\">" + newtime + "</h3>");
 	$(newslide).appendTo('body');
-	
-	$(oldslide).hide();
-	$(newslide).show();
-	$(oldslide).remove();
+
+	if( slideData.json.length > 1 )  {
+	    $(oldslide).hide();
+	    $(newslide).show();
+	    $(oldslide).remove();
+	}
 
 	slideNumber = slideNumber + 1;
 	setTimeout("showNextSlide()", 5000);
