@@ -49,6 +49,7 @@
 <%= link_to( t('links.preview_channel_slides'),
              conductor_screen_path( :preview => "true",
                                     :cache => "false",
+                                    :channel_id => @channel.id,
                                     :resolution => "720x405" ),
              :id => "previewSlides" )  %>
 </div>

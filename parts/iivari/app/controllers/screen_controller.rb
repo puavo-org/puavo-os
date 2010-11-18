@@ -5,7 +5,7 @@ class ScreenController < ApplicationController
 
   # GET /slides.json
   def slides
-    if (@display && @display.active) || @preview
+    if (@display && @display.active && @channel) || @preview
       if params[:slide_id]
         @slides = Array(Slide.find(params[:slide_id]))
       else
@@ -52,11 +52,12 @@ class ScreenController < ApplicationController
     if params[:cache] && params[:cache] == "false"
       @cache = "false"
     end
-    if params[:hostname]
-      url_params.push "hostname=#{params[:hostname]}"
-    end
     if params[:preview]
       url_params.push "preview=#{params[:preview]}"
+
+      if params[:channel_id]
+        url_params.push "channel_id=#{params[:channel_id]}"
+      end
     end
 
     @json_url = "slides.json"
@@ -115,10 +116,10 @@ class ScreenController < ApplicationController
 
   def authentication
     session[:display_authentication] = true
+    session[:hostname] = params[:hostname] if params[:hostname]
 
     respond_to do |format|
-      format.html { redirect_to conductor_screen_path( :hostname => params[:hostname],
-                                                       :resolution => params[:resolution] ) }
+      format.html { redirect_to conductor_screen_path( :resolution => params[:resolution] ) }
     end
   end
 
@@ -138,7 +139,7 @@ class ScreenController < ApplicationController
       end
     else
       if session[:display_authentication]
-        @display = Display.find_or_create_by_hostname(params[:hostname])
+        @display = Display.find_or_create_by_hostname(session[:hostname])
         @channel = @display.active ? @display.channel : nil
       else
         render :json => "Unauthorized", :status => :unauthorized
