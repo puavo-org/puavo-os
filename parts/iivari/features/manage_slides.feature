@@ -27,6 +27,19 @@ Feature: Manage slides
     | title 1 |
     | body 1  |
 
+  Scenario: Create new slide with external web page
+    Given I follow "New Slide"
+    Then I should see "Select slide type"
+    When I follow "Web page"
+    Then I should see "New slide"
+    When I fill in "Title" with "Example Web page"
+    And I fill in "External Web page URL" with "http://www.opinsys.fi"
+    And I press "Create"
+    Then I should see "Slide was successfully created."
+    And Slide "Example Web page" include following information:
+    |                       |
+    | http://www.opinsys.fi |
+
   Scenario: Delete slide
     Given the following slides:
       | title   | body   | template  | channel |

@@ -123,7 +123,8 @@ class ScreenController < ApplicationController
   def slide_to_screen_html(resolution, slide)
     @resolution = resolution
     @slide = slide
-    render_to_string( "client_" + slide.template + ".html.erb", :layout => "slide" )
+    layout = slide.template == "web_page" ? "web_page_slide" : "slide"
+    render_to_string( "client_" + slide.template + ".html.erb", :layout => layout )
   end
 
   def auth_recuire
