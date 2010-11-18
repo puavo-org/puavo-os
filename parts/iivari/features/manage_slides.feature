@@ -22,11 +22,10 @@ Feature: Manage slides
     And I fill in "slide_body" with "body 1"
     And I press "Create"
     Then I should see "Slide was successfully created."
-    #And Slide include following information:
-    #| title | title 1 |
-    #| body  | body 1  |
-    #Then I should see "title 1"
-    #And I should see "body 1"
+    And Slide "title 1" include following information:
+    |         |
+    | title 1 |
+    | body 1  |
 
   Scenario: Delete slide
     Given the following slides:

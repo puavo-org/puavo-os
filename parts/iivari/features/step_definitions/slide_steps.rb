@@ -29,7 +29,16 @@ Then /^I should see the following slides:$/ do |expected_slides_table|
   expected_slides_table.diff!( tableish('ul#slides li table', 'td.title') )
 end
 
-Then /^Slide include following information:$/ do |table|
-  # table is a Cucumber::Ast::Table
-  pending # express the regexp above with the code you wish you had
+Then /^Slide "([^\"]*)" include following information:$/ do |slide_title, table|
+  require 'json'
+  slide = Slide.find_by_title(slide_title)
+  visit path_to("the conductor slides page") +
+    "?preview=true&" + 
+    "cache=false&" +
+    "slide_id=#{slide.id}&" +
+    "resolution=250x150"
+
+  table.rows.each do |text|
+    assert page.body.match(text.to_s)
+  end
 end

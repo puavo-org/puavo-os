@@ -14,9 +14,10 @@ Feature: Manage displays
     And I am logged in as "cucumber" with password "cucumber"
 
   Scenario: Register new display
-    #When display go to the conductor page with "hostname=test1&resolution=800x600" params
-    When display go to the conductor slides page with "hostname=test1&resolution=800x600" params
-    Then I should see "To activate the display and select a channel"
+    When display go to the display authentication page with "hostname=test1&resolution=800x600" params
+    #And display go to the conductor page with "hostname=test1&resolution=800x600" params
+    And display go to the conductor slides page with "hostname=test1&resolution=800x600" params
+    Then display should see "To activate the display and select a channel"
     When I am on the displays page
     Then I should see "test1"
     When I follow "test1"
@@ -27,10 +28,18 @@ Feature: Manage displays
     And I select "Main channel" from "Channel"
     And I check "Active"
     And I press "Save"
+    #When display go to the conductor page with "hostname=test1&resolution=800x600" params
     When display go to the conductor slides page with "hostname=test1&resolution=800x600" params
-    #And I go to the conductor page with "hostname=test1&resolution=800x600" params
-    Then I should see "title 1"
-    And I should see "body 1"
+    Then display should see "title 1"
+    And display should see "body 1"
+
+  Scenario: Display authentication
+    When display go to the conductor slides page with "hostname=test1&resolution=800x600" params
+    Then display should see "Unauthorized"
+    When display go to the display authentication page with "hostname=test1&resolution=800x600" params
+    Then display should be on the conductor screen page
+    When display go to the conductor slides page with "hostname=test1&resolution=800x600" params
+    Then display should see "To activate the display and select a channel"
 
   # Rails generates Delete links that use Javascript to pop up a confirmation
   # dialog and then do a HTTP POST request (emulated DELETE request).

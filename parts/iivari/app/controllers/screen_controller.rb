@@ -1,13 +1,11 @@
 class ScreenController < ApplicationController
   respond_to :html, :json
   layout "screen"
-  before_filter :find_client
+  before_filter :auth_recuire, :except => :authentication
 
   # GET /slides.json
   def slides
-    @channel = @display.active ? @display.channel : nil
-
-    if @display.active && !@channel.nil?
+    if (@display && @display.active) || @preview
       if params[:slide_id]
         @slides = Array(Slide.find(params[:slide_id]))
       else
@@ -56,6 +54,9 @@ class ScreenController < ApplicationController
     end
     if params[:hostname]
       url_params.push "hostname=#{params[:hostname]}"
+    end
+    if params[:preview]
+      url_params.push "preview=#{params[:preview]}"
     end
 
     @json_url = "slides.json"
@@ -112,6 +113,15 @@ class ScreenController < ApplicationController
     end
   end
 
+  def authentication
+    session[:display_authentication] = true
+
+    respond_to do |format|
+      format.html { redirect_to conductor_screen_path( :hostname => params[:hostname],
+                                                       :resolution => params[:resolution] ) }
+    end
+  end
+
   private
 
   def slide_to_screen_html(resolution, slide)
@@ -120,7 +130,19 @@ class ScreenController < ApplicationController
     render_to_string( "client_" + slide.template + ".html.erb", :layout => "slide" )
   end
 
-  def find_client
-    @display = Display.find_or_create_by_hostname(params[:hostname])
+  def auth_recuire
+    if params[:preview]
+      if require_user != false
+        @preview = true
+        @channel = Channel.find(params[:channel_id]) if params[:channel_id]
+      end
+    else
+      if session[:display_authentication]
+        @display = Display.find_or_create_by_hostname(params[:hostname])
+        @channel = @display.active ? @display.channel : nil
+      else
+        render :json => "Unauthorized", :status => :unauthorized
+      end
+    end
   end
 end
