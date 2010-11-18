@@ -9,12 +9,7 @@ class ScreenController < ApplicationController
       if params[:slide_id]
         @slides = Array(Slide.find(params[:slide_id]))
       else
-        # FIXME
-        # Right Way:
-        # @slides = @channel.slides.order("position")
-        # Bug! This does not work. Gives the following error:
-        # ActiveSupport::JSON::Encoding::CircularReferenceError (object references itself)
-        @slides = Slide.find(:all, :conditions => ["channel_id = ?", @channel.id], :order => "position")
+        @slides = @channel.slides.order("position")
       end
     else
       @slides = Array.new
