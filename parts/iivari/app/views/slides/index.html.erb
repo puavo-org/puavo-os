@@ -12,8 +12,16 @@
       <tr>
 	<td rowspan="2"><span><%= image_tag('transform-move.png', :title => t('.drag') ) %></span></td>
 	<td rowspan="2">
-	  <iframe style="z-index: -1;" scrolling="no" height="150" width="250" src="/conductor?preview=true&cache=false&slide_id=<%= slide.id %>&resolution=250x150">
-	  </iframe>
+	  <% content_tag("iframe",
+                  { :style => "z-index: -1;",
+                    :scrolling => "no",
+                    :height => "150",
+                    :width => "250",
+                    :src => conductor_screen_path( :preview => "true",
+                                                   :cache => "false",
+                                                   :slide_id => slide.id,
+                                                   :resolution => "250x150" ) } ) do %>
+          <% end %>
 	</td>
       
 	<td class="title">
@@ -37,6 +45,12 @@
 <br />
 
 <% content_for :tools do %>
-<div><a href="/conductor?preview=true&cache=false&resolution=720x405" id="previewSlides" ><%= t('links.preview_channel_slides') %></a></div>
+<div>
+<%= link_to( t('links.preview_channel_slides'),
+             conductor_screen_path( :preview => "true",
+                                    :cache => "false",
+                                    :resolution => "720x405" ),
+             :id => "previewSlides" )  %>
+</div>
 <div><%= link_to t('links.new_slides'), new_channel_slide_path %></div>
 <% end %>

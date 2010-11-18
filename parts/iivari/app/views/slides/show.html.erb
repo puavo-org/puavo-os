@@ -11,8 +11,16 @@
 </div>
 
 <div>
-<iframe style="z-index: -1;" scrolling="no" height="450" width="720" src="/conductor?preview=true&cache=false&slide_id=<%= @slide.id %>&resolution=720x450">
-</iframe>
+<% content_tag("iframe",
+               { :style => "z-index: -1;",
+                 :scrolling => "no",
+                 :height => "450",
+                 :width => "720",
+                 :src => conductor_screen_path( :preview => "true",
+                                                :cache => "false",
+                                                :slide_id => @slide.id,
+                                                :resolution => "720x450" ) } ) do %>
+<% end %>
 </div>
 
 <%= link_to t('links.back_to_slides'), channel_slides_path(@channel) %>
