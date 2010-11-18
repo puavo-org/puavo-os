@@ -2,5 +2,7 @@
   <li <%= controller_name.match(/channels/) ? "class='current'" : "" %>>
   <%= link_to t('links.channels'), channels_path %>
   </li>
-  <li><%= t('links.devices')%></li>
+  <li <%= controller_name.match(/displays/) ? "class='current'" : "" %>>
+  <%= link_to t('links.displays'), displays_path %>
+  </li>
 </ul>

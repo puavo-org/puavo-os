@@ -44,9 +44,9 @@
 	    <span><%= t('links.channels') %></span>
 	    <% end %>
 	  </li>
-	  <li class="<%= controller_name.match(/channels/) ? "page_item current_page_item" : "page_item" %>">
+	  <li class="<%= ["channels", "displays"].include?(controller_name) ? "page_item current_page_item" : "page_item" %>">
 	    <%= link_to channels_path do %>
-	    <span>Hallinta</span>
+	    <span><%= t('links.management') %></span>
 	    <% end %>
 	  </li>
 	  <% end %>
