@@ -13,10 +13,10 @@ function updateSlideData(url, cache) {
     }
 }
 
-function showNextSlide() {
+function showNextSlide(repeat) {
     // wait one second if slideData.json is not defined yet
     if ( typeof(slideData.json) == "undefined" ) {
-	setTimeout("showNextSlide()", 1000);
+	setTimeout(showNextSlide, 1000,repeat);
     }
     else {
 	if ( slideNumber > slideData.json.length - 1 ) {
@@ -47,14 +47,14 @@ function showNextSlide() {
 	$(newslide).append(slideData.json[slideNumber]["slide_html"] + "<h3 class=\"footer\">" + newtime + "</h3>");
 	$(newslide).appendTo('body');
 
-	if( slideData.json.length > 1 )  {
-	    $(oldslide).hide();
-	    $(newslide).show();
-	    $(oldslide).remove();
-	}
+	$(oldslide).hide();
+	$(newslide).show();
+	$(oldslide).remove();
 
 	slideNumber = slideNumber + 1;
-	setTimeout("showNextSlide()", 5000);
+	if (repeat == true) {
+	    setTimeout(showNextSlide, 5000, repeat);
+	}
     }
 }
 
