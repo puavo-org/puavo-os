@@ -1,4 +1,5 @@
 Iivari::Application.routes.draw do
+
   resources :displays
 
   match '/channels/wellcome', :to => "channels#wellcome"
@@ -6,6 +7,10 @@ Iivari::Application.routes.draw do
     resources :slides do
       post :sort, :on => :collection
     end
+  end
+
+  resources :slides, :only => [] do
+    resources :slide_timers
   end
 
   match '/slides/new/:template', :to => "slides#new", :as => 'template_new_slide'

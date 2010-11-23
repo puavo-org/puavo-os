@@ -24,7 +24,11 @@ function showNextSlide(repeat) {
 	}
 	//	$("#content").empty().append(slideData.json[slideNumber]["slide_html"]);
 
-
+	if ( !checkSlideTimer(slideData.json[slideNumber].timers) && repeat ) {
+	    slideNumber = slideNumber + 1;
+	    return showNextSlide(repeat);
+	}
+	
         var today=new Date();
 
 	var d=today.getDate();
@@ -64,3 +68,41 @@ function checkTime(i)
 	{i="0" + i}
     return i;
 }
+
+function checkSlideTimer(timers) {
+    if (timers.length == 0) {
+	console.log("return true");
+	return true;
+    }
+    else {
+	var now = new Date();
+	for ( i = 0; i < timers.length; i++ ) {
+	    var start_datetime = new Date(timers[i].start_datetime);
+	    var end_datetime = new Date(timers[i].end_datetime);
+	    var raw_start_time = new Date(timers[i].start_time);
+	    var raw_end_time = new Date(timers[i].end_time);
+	    var start_time = new Date( now.getFullYear(),
+		now.getMonth(),
+		now.getDate(),
+		raw_start_time.getHours(),
+		raw_start_time.getMinutes() );
+	    var end_time = new Date( now.getFullYear(),
+		now.getMonth(),
+		now.getDate(),
+		raw_end_time.getHours(),
+		raw_end_time.getMinutes() );
+	    
+	    if ( (start_datetime.toString() == "Invalid Date" || now > start_datetime ) &&
+		 ( end_datetime.toString() == "Invalid Date" || now < end_datetime) ) {
+
+		if ( now > start_time && now < end_time ) {
+		    console.log("return true");
+		    return true;
+		}
+	    }
+	}
+    }
+    console.log("return false");
+    return false;
+}
+    

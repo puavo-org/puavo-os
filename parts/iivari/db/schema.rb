@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20101116124937) do
+ActiveRecord::Schema.define(:version => 20101119140138) do
 
   create_table "channels", :force => true do |t|
     t.string   "name"
@@ -31,6 +31,16 @@ ActiveRecord::Schema.define(:version => 20101116124937) do
   create_table "images", :force => true do |t|
     t.string   "key"
     t.string   "content_type"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "slide_timers", :force => true do |t|
+    t.datetime "start_datetime"
+    t.datetime "end_datetime"
+    t.datetime "start_time"
+    t.datetime "end_time"
+    t.integer  "slide_id"
     t.datetime "created_at"
     t.datetime "updated_at"
   end

@@ -25,7 +25,8 @@ class ScreenController < ApplicationController
 
     respond_with(@slides) do |format|
       format.json do
-        render :json => @slides.to_json(:only => [:id], :methods => :slide_html)
+        render :json => @slides.to_json( :only => [:id],
+                                         :methods => [:slide_html, :timers])
       end
     end
   end
