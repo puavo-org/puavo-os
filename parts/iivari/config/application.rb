@@ -47,7 +47,7 @@ module Iivari
 
     # Switch the javascript_include_tag :defaults to use jquery instead of
     # the default prototype helpers.
-    config.action_view.javascript_expansions[:defaults] = ["jquery-1.4.2.min", "jquery-ujs/src/rails"]
+    config.action_view.javascript_expansions[:defaults] = ["jquery-1.4.4.min", "jquery-ujs/src/rails"]
 
     # Print deprecation notices to the Rails logger
     config.active_support.deprecation = :log

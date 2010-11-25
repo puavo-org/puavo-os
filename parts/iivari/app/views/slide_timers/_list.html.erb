@@ -1,0 +1,51 @@
+<%= form_for([@slide, @slide_timer], :remote => true) do |f| %>
+<table class="table_slide_timers">
+  <tr>
+    <th><%= SlideTimer.human_attribute_name :start_datetime %></th>
+    <th><%= SlideTimer.human_attribute_name :end_datetime %></th>
+    <th><%= SlideTimer.human_attribute_name :start_time %></th>
+    <th><%= SlideTimer.human_attribute_name :end_time %></th>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @slide_timers.each do |slide_timer| %>
+<tr class="timer">
+  <td>
+      <%= l(slide_timer.start_datetime, :format => :datetime) rescue t('.empty') %><br />
+  </td>
+  
+  <td><%= l(slide_timer.start_datetime, :format => :datetime) rescue t('.empty') %></td>
+  <td><%= l(slide_timer.start_time) %></td>
+  <td><%= l(slide_timer.end_time) %></td>
+</tr>
+<tr class="weekday_and_action"><td colspan="4">
+  <table>
+    <tr>
+      <th>Ma</th>
+      <th>Ti</th>
+      <th>Ke</th>
+      <th>To</th>
+      <th>Pe</th>
+      <th>La</th>
+      <th>Su</th>
+    </tr>
+    <tr>
+      <td>X</td>
+      <td>X</td>
+      <td>X</td>
+      <td>X</td>
+      <td>X</td>
+      <td>X</td>
+      <td>X</td>
+      <td><%= link_to 'Destroy', slide_slide_timer_path(@slide, slide_timer), :confirm => 'Are you sure?', :method => :delete, :remote => true, :class => "delete_timer" %></td>
+    </tr>
+  </table>
+</td></tr>
+
+<% end %>
+
+<%= render :partial => 'form', :locals => { :f => f } %>
+</table>
+<% end %>

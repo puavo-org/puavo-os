@@ -18,6 +18,13 @@ en:
     user_sessions:
       create:
         success: Login successful!
+  activerecord:
+    attributes:
+      slide_timer:
+        start_datetime: Start date and time
+        end_datetime: End date and time
+        start_time: Start showing at
+        end_time: Stop showing at
   helpers:
     submit:
       create: "Create a %{model}"
@@ -44,6 +51,7 @@ en:
     previous: Previous
     new_display: New Display
     management: Management
+    slide_timers: Slide timers
   channels:
     show:
       name: Name
@@ -83,6 +91,9 @@ en:
       title: New display
     index:
       title: Listing displays
+  slide_timers:
+    list:
+      empty: not defined
   authlogic:
     error_messages:
       login_blank: can not be blank

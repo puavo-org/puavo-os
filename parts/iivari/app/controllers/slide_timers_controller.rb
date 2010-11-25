@@ -1,11 +1,17 @@
 class SlideTimersController < ApplicationController
   before_filter :find_slide
+  respond_to :html, :json
 
   # GET /slide_timers
   # GET /slide_timers.xml
   def index
     @slide_timers = SlideTimer.where(:slide_id => @slide.id)
-    respond_with(@slide_timers)
+    @slide_timer = SlideTimer.new
+
+    respond_with(@slide_timers) do |format|
+      format.html 
+      format.js
+    end
   end
 
   # GET /slide_timers/1
@@ -37,7 +43,9 @@ class SlideTimersController < ApplicationController
     @slide_timer = SlideTimer.new(params[:slide_timer])
     @slide_timer.slide_id = @slide.id
     @slide_timer.save
-    respond_with([@slide, @slide_timer])
+    respond_with([@slide, @slide_timer]) do |format|
+      format.js { redirect_to slide_slide_timers_path(@slide, :format => :js) }
+    end
   end
 
   # PUT /slide_timers/1
@@ -53,7 +61,9 @@ class SlideTimersController < ApplicationController
   def destroy
     @slide_timer = SlideTimer.find(params[:id])
     @slide_timer.destroy
-    respond_with([@slide, @slide_timer])
+    respond_with([@slide, @slide_timer]) do |format|
+      format.js { render :nothing => true }  
+    end
   end
 
   private

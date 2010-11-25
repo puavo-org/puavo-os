@@ -1,4 +1,8 @@
 fi:
+  time:
+    formats:
+      default: "%H:%M"
+      datetime: "%d.%m.%Y %H:%M"
   value_true: Kyllä
   value_false: Ei
   display_non_active_body: To activate the display and select a channel
@@ -24,6 +28,7 @@ fi:
     models:
       channel: Kanava
       slide: Ruutu
+      slide_timer: Ajastus
     attributes:
       channel:
         name: Nimi
@@ -34,6 +39,11 @@ fi:
         hostname: Nimi
         active: Aktiivinen
         channel: Kanava
+      slide_timer:
+        start_datetime: Alkupäivä ja -aika
+        end_datetime: Loppupäivä ja -aika
+        start_time: Näytä alkaen
+        end_time: Lopeta näyttäminen
     errors:
       messages:
         blank: Ei voi olla tyhjä!
@@ -67,6 +77,7 @@ fi:
     previous: Edellinen
     new_display: Uusi näyttö
     management: Hallinta
+    slide_timers: Ajastukset
   channels:
     show:
       name: Nimi
@@ -109,6 +120,9 @@ fi:
       title: Uus näyttö
     index:
       title: Lista näytöistä
+  slide_timers:
+    list:
+      empty: Ei määritetty
   authlogic:
     error_messages:
       login_blank: ei voi olla tyhjä

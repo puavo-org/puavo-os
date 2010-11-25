@@ -1,3 +1,11 @@
+<% content_for :javascript do %>
+  <%= javascript_include_tag "slides/show" %>
+  <%= javascript_tag "var slide_id = #{@slide.id}"%>
+  <%= javascript_tag "var application_locale = '#{I18n.locale}'"%>
+  <%= javascript_include_tag "datetimepicker/jquery-ui-timepicker-addon.js" %>
+  <%= javascript_include_tag "datetimepicker/jquery.ui.datepicker-fi.js" %>
+<% end %>
+
 <div class="slide_navigation">
 <% unless @previous.nil? %>
 <%= link_to t('links.previous'), channel_slide_path(@channel, @previous) %>
@@ -23,7 +31,14 @@
 <% end %>
 </div>
 
-<%= link_to t('links.back_to_slides'), channel_slides_path(@channel) %>
+<% if @slide.slide_timers.empty? %>
+<h2><%= link_to t('links.slide_timers'), slide_slide_timers_path(@slide), :remote => true, :class => 'link_slide_timers' %></h2>
+<% else %>
+<h2><%= t('links.slide_timers') %></h2>
+<% end %>
+<div class="slide_timers">
+
+</div>
 
 <% content_for :tools do %>
 <div><%= link_to t('links.edit'), edit_channel_slide_path(@channel, @slide) %></div>

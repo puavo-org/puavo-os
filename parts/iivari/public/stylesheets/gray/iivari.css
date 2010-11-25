@@ -141,3 +141,36 @@ label {
     background: #94aa29;
     color: white;
 }
+
+.slide_timers {
+    display: none;
+}
+
+.timer_over td {
+    background: #e5e2de;
+}
+
+.timer_over th {
+    background: #e5e2de;
+}
+
+.table_slide_timers tr.timer td {
+    border-top: 2px solid #94AA29;
+    border-bottom: 1px solid #94AA29;
+}
+
+.table_slide_timers tr.form td {
+    border-top: 2px solid #94AA29;
+}
+
+.delete_timer {
+    display: none;
+}
+
+.weekday_and_action th {
+    font-size: 75%;
+    font-weight:bold;
+}
+
+.weekday_and_action th {
+}

@@ -1,24 +1,9 @@
-<%= simple_form_for([@slide, @slide_timer]) do |f| %>
-  <% if @slide_timer.errors.any? %>
-    <div id="error_explanation">
-      <h2><%= pluralize(@slide_timer.errors.count, "error") %> prohibited this slide_timer from being saved:</h2>
-
-      <ul>
-      <% @slide_timer.errors.full_messages.each do |msg| %>
-        <li><%= msg %></li>
-      <% end %>
-      </ul>
-    </div>
-  <% end %>
-
-  <div class="inputs">
-    <%= f.input :start_datetime %>
-    <%= f.input :end_datetime %>
-    <%= f.input :start_time, :as => :time %>
-    <%= f.input :end_time, :as => :time %>
-  </div>
-
-  <div class="actions">
-    <%= f.button :submit %>
-  </div>
-<% end %>
+<tr class="form">
+  <td><%= f.text_field :start_datetime, :size => '15' %></td>
+  <td><%= f.text_field :end_datetime, :size => '15' %></td>
+  <td><%= f.text_field :start_time, :size => '8', :value => '00:00' %></td>
+  <td><%= f.text_field :end_time, :size => '8', :value => '23:59' %></td>
+</tr>
+<tr>
+    <td colspan="7"><%= f.submit %></td>
+</tr>
