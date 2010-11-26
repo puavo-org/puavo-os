@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20101119140138) do
+ActiveRecord::Schema.define(:version => 20101125133459) do
 
   create_table "channels", :force => true do |t|
     t.string   "name"
@@ -43,6 +43,13 @@ ActiveRecord::Schema.define(:version => 20101119140138) do
     t.integer  "slide_id"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.boolean  "weekday_0",      :default => true
+    t.boolean  "weekday_1",      :default => true
+    t.boolean  "weekday_2",      :default => true
+    t.boolean  "weekday_3",      :default => true
+    t.boolean  "weekday_4",      :default => true
+    t.boolean  "weekday_5",      :default => true
+    t.boolean  "weekday_6",      :default => true
   end
 
   create_table "slides", :force => true do |t|

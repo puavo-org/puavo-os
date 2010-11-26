@@ -157,6 +157,7 @@ label {
 .table_slide_timers tr.timer td {
     border-top: 2px solid #94AA29;
     border-bottom: 1px solid #94AA29;
+    font-size: 1.2em;
 }
 
 .table_slide_timers tr.form td {
@@ -167,10 +168,13 @@ label {
     display: none;
 }
 
-.weekday_and_action th {
-    font-size: 75%;
-    font-weight:bold;
+.table_slide_timers tr.timer td.td_delete_timer {
+    width: 48px;
+    border: 0px;
+    background: #FFFFFF;
 }
 
 .weekday_and_action th {
+    font-size: 75%;
+    font-weight: bold;
 }

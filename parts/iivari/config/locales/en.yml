@@ -25,6 +25,13 @@ en:
         end_datetime: End date and time
         start_time: Start showing at
         end_time: Stop showing at
+        weekday_0: Su
+        weekday_1: Ma
+        weekday_2: Tu
+        weekday_3: We
+        weekday_4: Th
+        weekday_5: Fr
+        weekday_6: Sa
   helpers:
     submit:
       create: "Create a %{model}"

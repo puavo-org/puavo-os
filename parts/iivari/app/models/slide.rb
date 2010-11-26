@@ -30,7 +30,14 @@ class Slide < OrganisationData
       { "start_datetime" => (timer.start_datetime.getutc rescue ""),
         "end_datetime" => (timer.end_datetime.getutc rescue ""),
         "start_time" => (timer.start_time.getutc rescue ""),
-        "end_time" => (timer.end_time.getutc rescue "") }
+        "end_time" => (timer.end_time.getutc rescue ""),
+        "weekday_0" => timer.weekday_0,
+        "weekday_1" => timer.weekday_1,
+        "weekday_2" => timer.weekday_2,
+        "weekday_3" => timer.weekday_3,
+        "weekday_4" => timer.weekday_4,
+        "weekday_5" => timer.weekday_5,
+        "weekday_6" => timer.weekday_6 }
     end
   end
 

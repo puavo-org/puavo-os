@@ -77,6 +77,10 @@ function checkSlideTimer(timers) {
     else {
 	var now = new Date();
 	for ( i = 0; i < timers.length; i++ ) {
+	    if ( ! timers[i]["weekday_" + now.getDay()] ) {
+		continue;
+	    }
+
 	    var start_datetime = new Date(timers[i].start_datetime);
 	    var end_datetime = new Date(timers[i].end_datetime);
 	    var raw_start_time = new Date(timers[i].start_time);

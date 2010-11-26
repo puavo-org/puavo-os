@@ -44,6 +44,13 @@ fi:
         end_datetime: Loppupäivä ja -aika
         start_time: Näytä alkaen
         end_time: Lopeta näyttäminen
+        weekday_0: Su
+        weekday_1: Ma
+        weekday_2: Ti
+        weekday_3: Ke
+        weekday_4: To
+        weekday_5: Pe
+        weekday_6: La
     errors:
       messages:
         blank: Ei voi olla tyhjä!
