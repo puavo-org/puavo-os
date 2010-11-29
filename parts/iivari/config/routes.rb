@@ -8,7 +8,7 @@ Iivari::Application.routes.draw do
       post :sort, :on => :collection
       member do
         put :toggle_status
-        get :status
+        get :slide_status
       end
     end
   end

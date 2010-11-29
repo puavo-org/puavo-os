@@ -1,6 +1,6 @@
 $(document).ready(function(){
     $.ajax({
-	url: '/channels/' + channel_id + '/slides/' + slide_id + '/status',
+	url: '/channels/' + channel_id + '/slides/' + slide_id + '/slide_status',
 	dataType: "jsonp"
     });
 

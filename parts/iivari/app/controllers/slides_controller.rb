@@ -1,6 +1,6 @@
 class SlidesController < ApplicationController
-  respond_to :html, :js
   before_filter :require_user
+  respond_to :html, :js
   uses_tiny_mce
 
   before_filter :find_channel
@@ -93,8 +93,8 @@ class SlidesController < ApplicationController
     render :nothing => true
   end
 
-  # GET /channels/1/slides/1/status.js
-  def status
+  # GET /channels/1/slides/1/slide_status.js
+  def slide_status
     @slide = Slide.find(params[:id])
 
     respond_with([@channel, @slide])
@@ -107,7 +107,7 @@ class SlidesController < ApplicationController
     @slide.save
     
     respond_with([@channel, @slide]) do |format|
-        format.js { render :action => :status }
+        format.js { render :action => :slide_status }
     end
   end
 
