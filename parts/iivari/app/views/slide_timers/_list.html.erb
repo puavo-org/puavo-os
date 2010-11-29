@@ -16,7 +16,7 @@
   <td rowspan="2" class="td_delete_timer" width="48">
     <%= link_to image_tag( 'edit-delete.png', :title => t('links.destroy') ),
                            slide_slide_timer_path(@slide, slide_timer),
-                           :confirm => 'Are you sure?',
+                           :confirm => t('confirm'),
                            :method => :delete,
                            :remote => true,
                            :class => "delete_timer" %>
