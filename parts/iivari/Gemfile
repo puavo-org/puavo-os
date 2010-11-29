@@ -25,6 +25,7 @@ gem 'sqlite3-ruby', :require => 'sqlite3'
 #   gem 'webrat'
 # end
 
+gem 'jquery-rails'
 gem "simple_form"
 gem "responders"
 gem "ruby-debug"
