@@ -33,14 +33,14 @@ function setTimerListEvent() {
 
     $.datepicker.setDefaults($.datepicker.regional[application_locale]);
     $.timepicker.setDefaults($.timepicker.regional[application_locale]);
-    $('#slide_timer_start_datetime').datetimepicker({
+    $('#slide_timer_start_datetime').datetimepicker($.extend($.timepicker.regional[application_locale], {
 	ampm: ampm
-    });
-    $('#slide_timer_end_datetime').datetimepicker({
+    }) );
+    $('#slide_timer_end_datetime').datetimepicker($.extend($.timepicker.regional[application_locale], {
 	hour: 23,
 	minute: 59,
 	ampm: ampm
-    });
+    }) );
 
     $('#slide_timer_end_datetime').datepicker("getDate");
 
