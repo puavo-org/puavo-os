@@ -22,11 +22,15 @@ function showNextSlide(repeat) {
 	if ( slideNumber > slideData.json.length - 1 ) {
 	    slideNumber = 0;
 	}
-	//	$("#content").empty().append(slideData.json[slideNumber]["slide_html"]);
 
-	if ( !checkSlideTimer(slideData.json[slideNumber].timers) && repeat ) {
-	    slideNumber = slideNumber + 1;
-	    return showNextSlide(repeat);
+	// When repeat value is false then request is come from Iivari management user interface.
+	// Check slide's timer configuration and status only if repeat is true
+	if (repeat == true) {
+	    // If slide status is not active or time of show not match, continue to next slide
+	    if ( checkSlideTimerAndStatus(slideData.json[slideNumber]) == false ) {
+		slideNumber = slideNumber + 1;
+		return showNextSlide(repeat);
+	    }
 	}
 	
         var today=new Date();
@@ -69,9 +73,14 @@ function checkTime(i)
     return i;
 }
 
-function checkSlideTimer(timers) {
+function checkSlideTimerAndStatus(slide) {
+    if (slide.status == false) {
+	return false
+    }
+
+    var timers = slide.timers
+
     if (timers.length == 0) {
-	console.log("return true");
 	return true;
     }
     else {
@@ -100,13 +109,11 @@ function checkSlideTimer(timers) {
 		 ( end_datetime.toString() == "Invalid Date" || now < end_datetime) ) {
 
 		if ( now > start_time && now < end_time ) {
-		    console.log("return true");
 		    return true;
 		}
 	    }
 	}
     }
-    console.log("return false");
     return false;
 }
     

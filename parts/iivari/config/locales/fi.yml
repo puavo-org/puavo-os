@@ -85,6 +85,8 @@ fi:
     new_display: Uusi näyttö
     management: Hallinta
     slide_timers: Ajastukset
+    active: Aktivoi ruutu
+    deactive: Poista ruutu käytöstä
   channels:
     show:
       name: Nimi
@@ -115,6 +117,9 @@ fi:
       title: Ruudun muokkaus
     template_web_page:
       label_of_body: Ulkoisen Web-sivun osoite
+    status:
+      slide_is_active: Ruutu on aktiivisena
+      slide_is_not_active: Ruutu ei ole aktiivisena, eikä sitä näytetä esityksissä
   user_sessions:
     new:
       error_title: Kirjautuminen epäonnistui

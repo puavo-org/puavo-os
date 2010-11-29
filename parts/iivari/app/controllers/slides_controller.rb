@@ -1,4 +1,5 @@
 class SlidesController < ApplicationController
+  respond_to :html, :js
   before_filter :require_user
   uses_tiny_mce
 
@@ -90,6 +91,24 @@ class SlidesController < ApplicationController
     end
     
     render :nothing => true
+  end
+
+  # GET /channels/1/slides/1/status.js
+  def status
+    @slide = Slide.find(params[:id])
+
+    respond_with([@channel, @slide])
+  end
+
+  # PUT /channels/1/slides/1/toggle_status.js
+  def toggle_status
+    @slide = Slide.find(params[:id])
+    @slide.toggle(:status)
+    @slide.save
+    
+    respond_with([@channel, @slide]) do |format|
+        format.js { render :action => :status }
+    end
   end
 
   private

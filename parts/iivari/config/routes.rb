@@ -6,6 +6,10 @@ Iivari::Application.routes.draw do
   resources :channels do
     resources :slides do
       post :sort, :on => :collection
+      member do
+        put :toggle_status
+        get :status
+      end
     end
   end
 

@@ -2,6 +2,10 @@
 # See http://github.com/svenfuchs/rails-i18n/tree/master/rails%2Flocale for starting points.
 
 en:
+  time:
+    formats:
+      default: "%I:%M %p"
+      datetime: "%m/%d/%Y %I:%M %p"
   value_true: true
   value_false: false
   display_non_active_body: To activate the display and select a channel
@@ -26,7 +30,7 @@ en:
         start_time: Start showing at
         end_time: Stop showing at
         weekday_0: Su
-        weekday_1: Ma
+        weekday_1: Mo
         weekday_2: Tu
         weekday_3: We
         weekday_4: Th
@@ -59,6 +63,8 @@ en:
     new_display: New Display
     management: Management
     slide_timers: Slide timers
+    active: Activate slide
+    deactive: Make slide inactive
   channels:
     show:
       name: Name
@@ -89,6 +95,9 @@ en:
       title: Editing slide
     template_web_page:
       label_of_body: External Web page URL
+    status:
+      slide_is_active: Slide is currently active
+      slide_is_not_active: Slide is currently inactive and it is not shown in the presentations
   displays:
     show:
       channel_not_selected: Not selected

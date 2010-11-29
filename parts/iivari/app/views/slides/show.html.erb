@@ -1,6 +1,7 @@
 <% content_for :javascript do %>
   <%= javascript_include_tag "slides/show" %>
   <%= javascript_tag "var slide_id = #{@slide.id}"%>
+  <%= javascript_tag "var channel_id = #{@channel.id}"%>
   <%= javascript_tag "var application_locale = '#{I18n.locale}'"%>
   <%= javascript_include_tag "datetimepicker/jquery-ui-timepicker-addon.js" %>
   <%= javascript_include_tag "datetimepicker/jquery.ui.datepicker-fi.js" %>
@@ -30,6 +31,9 @@
                                                 :resolution => "720x450" ) } ) do %>
 <% end %>
 </div>
+
+<p id="slide_status">
+</p>
 
 <% if @slide.slide_timers.empty? %>
 <h2><%= link_to t('links.slide_timers'), slide_slide_timers_path(@slide), :remote => true, :class => 'link_slide_timers' %></h2>

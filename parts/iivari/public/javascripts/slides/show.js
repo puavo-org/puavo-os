@@ -1,4 +1,9 @@
 $(document).ready(function(){
+    $.ajax({
+	url: '/channels/' + channel_id + '/slides/' + slide_id + '/status',
+	dataType: "jsonp"
+    });
+
 
     if( $(".link_slide_timers").length == 0 ) {
 	$.ajax({
