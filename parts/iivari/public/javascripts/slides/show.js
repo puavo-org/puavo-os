@@ -20,6 +20,12 @@ $(document).ready(function(){
 });
 
 function setTimerListEvent() {
+    if (application_locale == 'en') {
+	var ampm = true
+    } else {
+	var ampm = false
+    }
+
     $(".delete_timer").bind("ajax:success", function() {
 	$(this).closest("tr").next().fadeOut();
 	$(this).closest("tr").fadeOut();
@@ -27,16 +33,23 @@ function setTimerListEvent() {
 
     $.datepicker.setDefaults($.datepicker.regional[application_locale]);
     $.timepicker.setDefaults($.timepicker.regional[application_locale]);
-    $('#slide_timer_start_datetime').datetimepicker();
+    $('#slide_timer_start_datetime').datetimepicker({
+	ampm: ampm
+    });
     $('#slide_timer_end_datetime').datetimepicker({
 	hour: 23,
-	minute: 59
+	minute: 59,
+	ampm: ampm
     });
 
     $('#slide_timer_end_datetime').datepicker("getDate");
 
-    $('#slide_timer_start_time').timepicker($.timepicker.regional[application_locale]);
-    $('#slide_timer_end_time').timepicker($.timepicker.regional[application_locale]);
+    $('#slide_timer_start_time').timepicker($.extend( $.timepicker.regional[application_locale], {
+	ampm: ampm
+    }) );
+    $('#slide_timer_end_time').timepicker($.extend( $.timepicker.regional[application_locale], {
+	ampm: ampm
+    }) );
 
     $(".weekday_and_action").mouseover(function() {
 	$(this).addClass('timer_over');

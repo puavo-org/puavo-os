@@ -1,8 +1,8 @@
 <tr class="form">
   <td><%= f.text_field :start_datetime, :size => '15' %></td>
   <td><%= f.text_field :end_datetime, :size => '15' %></td>
-  <td><%= f.text_field :start_time, :size => '4', :value => '00:00' %></td>
-  <td><%= f.text_field :end_time, :size => '4', :value => '23:59' %></td>
+  <td><%= f.text_field :start_time, :size => '6', :value => I18n.l(Time.local(0)) %></td>
+  <td><%= f.text_field :end_time, :size => '6', :value => I18n.l(Time.local(0) + 23.hours + 59.minutes) %></td>
 </tr>
 <tr><td colspan="4">
 <table align="right">

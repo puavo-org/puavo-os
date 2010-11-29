@@ -25,9 +25,6 @@ class SlideTimersController < ApplicationController
   # GET /slide_timers/new.xml
   def new
     @slide_timer = SlideTimer.new
-    
-    @slide_timer.start_time = Time.local(0)
-    @slide_timer.end_time = Time.local(0) + 23.hours + 59.minutes
 
     respond_with(@slide_timer)
   end
