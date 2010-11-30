@@ -1,8 +1,9 @@
-<link rel="stylesheet" href="/stylesheets/jqs5.opinsys.css" type="text/css" />
-<script src="/javascripts/jquery.offline.js" type="text/javascript"></script> 
-<script src="/javascripts/jqs5.opinsys.js" type="text/javascript"></script> 
-<script src="/javascripts/slideshow.js" type="text/javascript"></script> 
-<script type="text/javascript">
+<%= stylesheet_link_tag "jqs5.opinsys" %>
+<%= javascript_include_tag "jquery.offline" %>
+<%= javascript_include_tag "jqs5.opinsys" %>
+<%= javascript_include_tag "slideshow" %>
+
+<%= javascript_tag do %>
     var slideNumber = 0;
     $(document).ready(jqs5_init);
 
@@ -12,4 +13,4 @@
     <% if params[:slide_id].nil? %>
     setInterval( "updateSlideData('<%= @json_url.html_safe %>', <%= @cache %>)", 7000);
     <% end %>
-</script> 
+<% end %>
