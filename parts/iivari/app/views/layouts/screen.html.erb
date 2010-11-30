@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <% if @cache == "true" %>
-<html manifest="/screen.manifest<%= params[:resolution] ? "?resolution=" + params[:resolution].to_s : "" %>">
+<html manifest="<%= manifest_screen_path( :resolution => ( params.has_key?(:resolution) ?
+                                                           params[:resolution].to_s :
+                                                           "") ) %>">
 <% else %>
 <html>
 <% end %>
