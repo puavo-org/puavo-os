@@ -22,7 +22,7 @@ class Slide < OrganisationData
   end
 
   def updated_at
-    self.channel.updated_at
+    self.channel.updated_at unless self.channel.nil?
   end
 
   def timers
