@@ -5,7 +5,7 @@ fi:
       datetime: "%d.%m.%Y %H:%M"
   value_true: Kyllä
   value_false: Ei
-  display_non_active_body: To activate the display and select a channel
+  display_non_active_body: Aktivoi näyttö hallintaliittymästä ja aseta näytettävä kanava
   confirm: Oletko varma?
   flash:
     actions:
@@ -29,6 +29,7 @@ fi:
       channel: Kanava
       slide: Ruutu
       slide_timer: Ajastus
+      display: Näyttö
     attributes:
       channel:
         name: Nimi
