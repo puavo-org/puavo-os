@@ -1,9 +1,9 @@
 class ScreenController < ApplicationController
   respond_to :html, :json
   layout "screen"
-  before_filter :auth_recuire, :except => :authentication
+  before_filter :auth_require, :except => :displayauth
 
-  # GET /slides.json
+  # GET /slides.json?resolution=800x600
   def slides
     if (@display && @display.active && @channel) || @preview
       if params[:slide_id]
@@ -31,7 +31,7 @@ class ScreenController < ApplicationController
     end
   end
 
-  # GET /conductor
+  # GET /conductor?resolution=800x600&hostname=examplehost
   # GET /conductor?cache=false&slide_id=40
   # Main page for Iivari client
   def conductor
@@ -66,7 +66,7 @@ class ScreenController < ApplicationController
     end
   end
 
-  # GET /screen.manifest
+  # GET /screen.manifest?resolution=800x600
   def manifest
     body = ["CACHE MANIFEST"]
     
@@ -81,10 +81,11 @@ class ScreenController < ApplicationController
                 "#{root}/images/**"]
     
     files.each do |file|
-      body << "/" +  Pathname(file).relative_path_from( Pathname(root) ).to_s
+      body << root_path +  Pathname(file).relative_path_from( Pathname(root) ).to_s
     end
 
-    body << "conductor?resolution=#{params[:resolution]}"
+    body << root_path + "conductor?resolution=#{params[:resolution]}&hostname=#{session[:hostname]}"
+
     # FIXME, only allowed channels
     Slide.image_urls(Channel.first, params[:resolution]).each do |url|
       body << url
@@ -98,7 +99,7 @@ class ScreenController < ApplicationController
     render :text => body.join("\n"), :content_type => "text/cache-manifest"
   end
 
-  # GET /image/:image
+  # GET /image/only_image/e59e7f6a488088e675b3736681abf2ef55ce69d28360903cb56fa8cfb69c9155?resolution=800x600
   def image
     expires_in 15.minutes, :public => true
     if image = Image.find_by_key(params[:image])
@@ -110,12 +111,16 @@ class ScreenController < ApplicationController
     end
   end
 
-  def authentication
-    session[:display_authentication] = true
-    session[:hostname] = params[:hostname] if params[:hostname]
-
+  # GET /displayauth?resolution=1366x768&hostname=infotv-01
+  def displayauth
     respond_to do |format|
-      format.html { redirect_to conductor_screen_path( :resolution => params[:resolution] ) }
+      if params[:hostname]
+        session[:display_authentication] = true 
+        session[:hostname] = params[:hostname] if params[:hostname]
+        format.html { redirect_to conductor_screen_path( :resolution => params[:resolution] ) }
+      else
+        format.html { render :inline => "Unauthorized", :status => :unauthorized }
+      end
     end
   end
 
@@ -128,7 +133,7 @@ class ScreenController < ApplicationController
     render_to_string( "client_" + slide.template + ".html.erb", :layout => layout )
   end
 
-  def auth_recuire
+  def auth_require
     if params[:preview]
       if require_user != false
         @preview = true
@@ -139,7 +144,11 @@ class ScreenController < ApplicationController
         @display = Display.find_or_create_by_hostname(session[:hostname])
         @channel = @display.active ? @display.channel : nil
       else
-        render :json => "Unauthorized", :status => :unauthorized
+        respond_to do |format|
+          format.html { redirect_to display_authentication_path( :resolution => params[:resolution],
+                                                                 :hostname => params[:hostname] ) }
+          format.json { render :json => "Unauthorized", :status => :unauthorized }
+        end
       end
     end
   end
