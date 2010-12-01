@@ -7,7 +7,7 @@ $(document).ready(function(){
 
     if( $(".link_slide_timers").length == 0 ) {
 	$.ajax({
-	    url: '/slides/' + slide_id + '/slide_timers',
+	    url: root_path + 'slides/' + slide_id + '/slide_timers',
 	    dataType: "jsonp"
 	});
 
