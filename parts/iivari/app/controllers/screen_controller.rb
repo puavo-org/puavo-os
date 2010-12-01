@@ -86,9 +86,8 @@ class ScreenController < ApplicationController
 
     body << root_path + "conductor?resolution=#{params[:resolution]}&hostname=#{session[:hostname]}"
 
-    # FIXME, only allowed channels
-    Slide.image_urls(Channel.first, params[:resolution]).each do |url|
-      body << url
+    Slide.image_urls(@channel, params[:resolution]).each do |url|
+      body << root_path + url
     end
 
     body << ""
