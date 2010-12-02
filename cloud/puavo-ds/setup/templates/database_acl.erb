@@ -26,7 +26,7 @@
 {<%= get_index %>}to dn.exact="ou=Automount,<%= suffix %>" attrs="children" by <%= owners_set %> write by * read
 {<%= get_index %>}to dn.children="ou=Automount,<%= suffix %>" by <%= owners_set %> write by * read
 {<%= get_index %>}to dn.subtree="ou=Kerberos Realms,<%= suffix %>" by dn="<%= kadmin_user_dn %>" write by dn="<%= kdc_user_dn %>" read
-{<%= get_index %>}to dn.exact="ou=Hosts,<%= suffix %>" by <%= admin_set %> read by dn="uid=puppet,o=puavo" read
+{<%= get_index %>}to dn.exact="ou=Hosts,<%= suffix %>" by <%= all_admins_set %> read by dn="uid=puppet,o=puavo" read
 {<%= get_index %>}to dn.exact="ou=Devices,ou=Hosts,<%= suffix %>" attrs="entry,ou,objectClass" by <%= all_admins_set %> read by dn="uid=puppet,o=puavo" read by anonymous auth
 {<%= get_index %>}to dn.exact="ou=Devices,ou=Hosts,<%= suffix %>" attrs="children" by <%= all_admins_set %> write by dn="uid=puppet,o=puavo" read
 {<%= get_index %>}to dn.children="ou=Devices,ou=Hosts,<%= suffix %>" by <%= admin_set %> write by dn="uid=puppet,o=puavo" read by anonymous auth
