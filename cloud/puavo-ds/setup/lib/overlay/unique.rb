@@ -7,6 +7,7 @@ class Unique < Overlay
               "olcUniqueURI" => ["ldap:///ou=People,#{args[:database].olcSuffix}?uid?sub",
                                  "ldap:///ou=People,#{args[:database].olcSuffix}?mail?sub",
                                  "ldap:///ou=People,#{args[:database].olcSuffix}?homeDirectory?sub",
+                                 "ldap:///ou=Hosts,#{args[:database].olcSuffix}?puavoHostname?sub",
                                  "ldap:///?sambaSID?sub"] ).save(false)
   end
 
