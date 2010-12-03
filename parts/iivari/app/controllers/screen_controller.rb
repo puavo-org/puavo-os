@@ -9,7 +9,7 @@ class ScreenController < ApplicationController
       if params[:slide_id]
         @slides = Array(Slide.find(params[:slide_id]))
       else
-        @slides = @channel.slides.order("position")
+        @slides = @channel.slides
       end
     else
       @slides = Array.new

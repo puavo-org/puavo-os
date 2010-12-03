@@ -2,7 +2,7 @@ class Slide < OrganisationData
   belongs_to :channel
   has_many :slide_timers
   
-  acts_as_list
+  acts_as_list :scope => :channel
 
   after_update :set_channel_updated_at
   after_create :set_channel_updated_at

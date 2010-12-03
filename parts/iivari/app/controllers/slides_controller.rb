@@ -8,7 +8,7 @@ class SlidesController < ApplicationController
   # GET /slides
   # GET /slides.xml
   def index
-    @slides = @channel.slides.order("position")
+    @slides = @channel.slides
     respond_with(@slides)
   end
 
@@ -17,8 +17,8 @@ class SlidesController < ApplicationController
   def show
     @slide = Slide.find(params[:id])
 
-    @next = @channel.slides.where( :position => @slide.position + 1 ).first
-    @previous = @channel.slides.where( :position => @slide.position - 1 ).first
+    @next = @slide.lower_item
+    @previous = @slide.higher_item
 
     respond_with(@slide)
   end
