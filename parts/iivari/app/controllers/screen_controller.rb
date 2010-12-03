@@ -2,7 +2,8 @@ class ScreenController < ApplicationController
   respond_to :html, :json
   layout "screen"
   before_filter :auth_require, :except => :displayauth
-
+  after_filter :persist_session
+  
   # GET /slides.json?resolution=800x600
   def slides
     if (@display && @display.active && @channel) || preview?
@@ -148,5 +149,9 @@ class ScreenController < ApplicationController
 
   def preview?
     session.has_key?(:user_credentials) ? true : false
+  end
+
+  def persist_session
+    env["rack.session.options"][:expire_after] = 20.years if session[:display_authentication]
   end
 end
