@@ -17,8 +17,7 @@
                     :scrolling => "no",
                     :height => "150",
                     :width => "250",
-                    :src => conductor_screen_path( :preview => "true",
-                                                   :cache => "false",
+                    :src => conductor_screen_path( :cache => "false",
                                                    :slide_id => slide.id,
                                                    :resolution => "250x150" ) } ) do %>
           <% end %>
@@ -47,8 +46,7 @@
 <% content_for :tools do %>
 <div>
 <%= link_to( t('links.preview_channel_slides'),
-             conductor_screen_path( :preview => "true",
-                                    :cache => "false",
+             conductor_screen_path( :cache => "false",
                                     :channel_id => @channel.id,
                                     :resolution => "720x405" ),
              :id => "previewSlides" )  %>

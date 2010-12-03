@@ -5,8 +5,9 @@ class ScreenController < ApplicationController
 
   # GET /slides.json?resolution=800x600
   def slides
-    if (@display && @display.active && @channel) || @preview
+    if (@display && @display.active && @channel) || preview?
       if params[:slide_id]
+        # FIXME, slid_id security check?!
         @slides = Array(Slide.find(params[:slide_id]))
       else
         @slides = @channel.slides
@@ -39,7 +40,6 @@ class ScreenController < ApplicationController
     url_params = []
 
     if params[:slide_id]
-      # FIXME, slid_id security check?!
       url_params.push "slide_id=#{params[:slide_id]}"
     end
     if params[:resolution]
@@ -48,12 +48,8 @@ class ScreenController < ApplicationController
     if params[:cache] && params[:cache] == "false"
       @cache = "false"
     end
-    if params[:preview]
-      url_params.push "preview=#{params[:preview]}"
-
-      if params[:channel_id]
-        url_params.push "channel_id=#{params[:channel_id]}"
-      end
+    if params[:channel_id]
+      url_params.push "channel_id=#{params[:channel_id]}"
     end
 
     @json_url = "slides.json"
@@ -133,11 +129,9 @@ class ScreenController < ApplicationController
   end
 
   def auth_require
-    if params[:preview]
-      if require_user != false
-        @preview = true
-        @channel = Channel.find(params[:channel_id]) if params[:channel_id]
-      end
+    if preview?
+      require_user
+      @channel = Channel.find(params[:channel_id]) if params[:channel_id]
     else
       if session[:display_authentication]
         @display = Display.find_or_create_by_hostname(session[:hostname])
@@ -150,5 +144,9 @@ class ScreenController < ApplicationController
         end
       end
     end
+  end
+
+  def preview?
+    session.has_key?(:user_credentials) ? true : false
   end
 end
