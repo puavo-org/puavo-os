@@ -11,3 +11,5 @@ default:
   locale: fi
   # none/tls
   ldap_method: none
+  # The number of seconds between update checks (data of slides)
+  data_update_interval: 60

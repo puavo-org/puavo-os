@@ -11,6 +11,6 @@
     updateSlideData('<%= @json_url.html_safe %>', <%= @cache %>);
     $(document).ready(function() { showNextSlide(<%= params[:slide_id] ? false : true %>); });
     <% if params[:slide_id].nil? %>
-    setInterval( "updateSlideData('<%= @json_url.html_safe %>', <%= @cache %>)", 7000);
+    setInterval( "updateSlideData('<%= @json_url.html_safe %>', <%= @cache %>)", <%= ( Organisation.current.value_by_key('data_update_interval') || 60 * 60 * 24 ) * 1000 %>);
     <% end %>
 <% end %>
