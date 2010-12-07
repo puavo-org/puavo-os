@@ -24,6 +24,8 @@ en:
         success: Login successful!
   activerecord:
     attributes:
+      channel:
+        slide_delay: Slide delay (seconds)
       slide_timer:
         start_datetime: Start date and time
         end_datetime: End date and time

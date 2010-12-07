@@ -1,6 +1,10 @@
 <p>
-  <b><%= t('.name') %>:</b>
+  <b><%= Channel.human_attribute_name(:name) %>:</b>
   <%= @channel.name %>
+</p>
+<p>
+  <b><%= Channel.human_attribute_name(:slide_delay) %>:</b>
+  <%= @channel.slide_delay %>
 </p>
 <div><%= link_to t('links.back_to_channels'), channels_path %></div>
 

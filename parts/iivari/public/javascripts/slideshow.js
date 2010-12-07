@@ -59,9 +59,10 @@ function showNextSlide(repeat) {
 	$(newslide).show();
 	$(oldslide).remove();
 
+	slide_delay = slideData.json[slideNumber]["slide_delay"] * 1000;
 	slideNumber = slideNumber + 1;
 	if (repeat == true) {
-	    setTimeout(showNextSlide, 5000, repeat);
+	    setTimeout(showNextSlide, slide_delay, repeat);
 	}
     }
 }
@@ -116,4 +117,3 @@ function checkSlideTimerAndStatus(slide) {
     }
     return false;
 }
-    

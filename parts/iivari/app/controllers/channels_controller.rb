@@ -24,6 +24,8 @@ class ChannelsController < ApplicationController
   # GET /channels/new.xml
   def new
     @channel = Channel.new
+    @channel.slide_delay = 15
+
     respond_with(@channel)
   end
 

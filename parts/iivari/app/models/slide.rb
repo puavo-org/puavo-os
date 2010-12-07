@@ -41,6 +41,10 @@ class Slide < OrganisationData
     end
   end
 
+  def slide_delay
+    self.channel && self.channel.slide_delay ? self.channel.slide_delay : 15
+  end
+
   protected
 
   def set_channel_updated_at
