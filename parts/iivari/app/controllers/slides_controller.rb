@@ -17,9 +17,6 @@ class SlidesController < ApplicationController
   def show
     @slide = Slide.find(params[:id])
 
-    @next = @slide.lower_item
-    @previous = @slide.higher_item
-
     respond_with(@slide)
   end
 

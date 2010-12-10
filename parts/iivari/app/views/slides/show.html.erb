@@ -9,15 +9,16 @@
 <% end %>
 
 <div class="slide_navigation">
-<% unless @previous.nil? %>
-<%= link_to t('links.previous'), channel_slide_path(@channel, @previous) %>
+<% if @slide.first? == false %>
+<%= link_to t('links.previous'), channel_slide_path(@channel, @slide.higher_item) %>
 <% end %>
 
-<%= unless @previous.nil? || @next.nil? then " - " end %> 
+<%= if @slide.first? == false && @slide.last? == false then " - " end %> 
 
-<% unless @next.nil? %>
-<%= link_to t('links.next'), channel_slide_path(@channel, @next) %>
+<% if @slide.last? == false %>
+       <%= link_to t('links.next'), channel_slide_path(@channel, @slide.lower_item) %>
 <% end %>
+<%= "(#{@slide.position}/#{@channel.slides.count})" %>
 </div>
 
 <div>
