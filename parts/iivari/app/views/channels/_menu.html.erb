@@ -1,8 +1,13 @@
-<ul>
-  <li <%= controller_name.match(/channels/) ? "class='current'" : "" %>>
+<ul id="jsddm">
+  <li <%= controller_name.match(/channels|slides/) ? "class='current'" : "" %>>
   <%= link_to t('links.channels'), channels_path %>
+  <ul>
+    <% Channel.all.each do |channel| %>
+    <li><%= link_to channel.name, channel_slides_path(channel) %></li>
+    <% end %>
+  </ul>
   </li>
   <li <%= controller_name.match(/displays/) ? "class='current'" : "" %>>
-  <%= link_to t('links.displays'), displays_path %>
+    <%= link_to t('links.displays'), displays_path %>
   </li>
 </ul>
