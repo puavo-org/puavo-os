@@ -94,3 +94,8 @@ div.field, div.actions {
 label.string {
     margin-right: 5px;
 }
+
+iframe.slide_show {
+    z-index: -1;
+    border: 10px ridge #94AA29;
+}

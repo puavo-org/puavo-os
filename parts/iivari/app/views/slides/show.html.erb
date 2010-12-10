@@ -22,13 +22,13 @@
 
 <div>
 <% content_tag("iframe",
-               { :style => "z-index: -1;",
+               { :class => "slide_show",
                  :scrolling => "no",
-                 :height => "450",
-                 :width => "720",
+                 :height => "440",
+                 :width => "704",
                  :src => conductor_screen_path( :cache => "false",
                                                 :slide_id => @slide.id,
-                                                :resolution => "720x450" ) } ) do %>
+                                                :resolution => "704x440" ) } ) do %>
 <% end %>
 </div>
 
