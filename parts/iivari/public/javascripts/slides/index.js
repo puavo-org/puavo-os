@@ -21,4 +21,11 @@ $(document).ready(function(){
 		url: 'slides/sort'})
         }
     });
+
+    $(".slide_item").mouseover(function() {
+	$(this).find('.action').toggle();
+    });
+    $(".slide_item").mouseout(function() {
+	$(this).find('.action').toggle();
+    });
 });

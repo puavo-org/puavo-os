@@ -87,6 +87,14 @@ div.field, div.actions {
     padding-bottom: 28px;
 }
 
+#slides .action {
+    display: none;
+}
+
+#slides td.transform_move {
+    width: 48px;
+}
+
 .slide_navigation {
     text-align: center;
 }
