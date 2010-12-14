@@ -1,0 +1,24 @@
+<% if @slide.template != "web_page" %>
+<div class="title_container">
+<h1 class="title"><%= @slide.title %></h1>
+</div>
+<div class="tgradient0"></div>
+<div class="tgradient1"></div>
+<div class="tgradient2"></div>
+<div class="tgradient3"></div>
+<div class="tgradient4"></div>
+<div class="tgradient5"></div>
+<% end %>
+
+<div class="content">
+<%= yield %>
+</div>
+
+<div class="footer_container">
+<div class="bgradient5"></div> 
+<div class="bgradient4"></div> 
+<div class="bgradient3"></div> 
+<div class="bgradient2"></div> 
+<div class="bgradient1"></div> 
+<div class="bgradient0"></div>
+</div>

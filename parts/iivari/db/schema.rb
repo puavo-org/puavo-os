@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20101203132316) do
+ActiveRecord::Schema.define(:version => 20101213095631) do
 
   create_table "channels", :force => true do |t|
     t.string   "name"
@@ -18,6 +18,7 @@ ActiveRecord::Schema.define(:version => 20101203132316) do
     t.datetime "updated_at"
     t.string   "organisation"
     t.integer  "slide_delay"
+    t.string   "theme"
   end
 
   create_table "displays", :force => true do |t|

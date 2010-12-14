@@ -58,7 +58,7 @@ class ScreenController < ApplicationController
     unless url_params.empty?
       @json_url += "?" + url_params.join("&")
     end
-
+    
     respond_to do |format|
       format.html
     end
@@ -126,11 +126,8 @@ class ScreenController < ApplicationController
   def slide_to_screen_html(resolution, slide)
     @resolution = resolution
     @slide = slide
-    if @channel && @channel.theme
-      layout = "slide_#{@channel.theme}"
-    else
-      layout = slide.template == "web_page" ? "web_page_slide" : "slide"
-    end
+    layout = (@channel && @channel.theme?) ? "slide_#{@channel.theme}" : "slide_default"
+
     render_to_string( "client_" + slide.template + ".html.erb", :layout => layout )
   end
 
@@ -138,6 +135,7 @@ class ScreenController < ApplicationController
     if preview?
       require_user
       @channel = Channel.find(params[:channel_id]) if params[:channel_id]
+      @channel = Slide.find(params[:slide_id]).channel if params[:slide_id]
     else
       if session[:display_authentication]
         @display = Display.find_or_create_by_hostname(session[:hostname])

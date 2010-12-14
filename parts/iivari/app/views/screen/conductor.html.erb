@@ -1,4 +1,8 @@
-<%= stylesheet_link_tag "jqs5.opinsys" %>
+<% if @channel && @channel.theme? %>
+<%= stylesheet_link_tag "client/slide_theme_#{@channel.theme}" %>
+<% else %>
+<%= stylesheet_link_tag "client/slide_theme_default" %>
+<% end %>
 <%= javascript_include_tag "jquery.offline" %>
 <%= javascript_include_tag "jqs5.opinsys" %>
 <%= javascript_include_tag "slideshow" %>

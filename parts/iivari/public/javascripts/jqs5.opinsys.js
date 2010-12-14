@@ -14,9 +14,6 @@ var slideCount;
 function jqs5_init(){
 	/* inject some elements to stylize each slide */
 	var footer = document.createElement('div');
-	$(footer).addClass('footer');
-	$(footer).append('<h1>Loading...</h1>');
-	$(footer).prependTo('body');
 
 	// a slide container that we'll be putting the content into
 	var s = document.createElement('div');
