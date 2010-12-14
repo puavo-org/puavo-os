@@ -25,7 +25,7 @@
 
       <div id="top-menu-right">
 	<li><span><%= t('.logged_in_as') %></span></li>
-      <li><a href="#"><%= current_user.login %></li>
+      <li><a href="#"><%= current_user.login %></a></li>
       <li><%= link_to t('links.logout'), user_session_path(current_user), :method => :delete %></li>
       </div>
       <% end %>
