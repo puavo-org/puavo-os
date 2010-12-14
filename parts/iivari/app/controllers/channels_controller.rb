@@ -1,6 +1,4 @@
 class ChannelsController < ApplicationController
-  before_filter :require_user
-
   def wellcome
     @channel = Channel.first
     redirect_to channel_slides_path(@channel)

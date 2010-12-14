@@ -1,5 +1,4 @@
 class SlidesController < ApplicationController
-  before_filter :require_user
   respond_to :html, :js
   uses_tiny_mce
 

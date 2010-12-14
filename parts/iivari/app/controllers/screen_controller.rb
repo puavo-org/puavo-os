@@ -1,4 +1,5 @@
 class ScreenController < ApplicationController
+  skip_before_filter :require_user
   respond_to :html, :json
   layout "screen"
   before_filter :auth_require, :except => :displayauth
@@ -125,7 +126,11 @@ class ScreenController < ApplicationController
   def slide_to_screen_html(resolution, slide)
     @resolution = resolution
     @slide = slide
-    layout = slide.template == "web_page" ? "web_page_slide" : "slide"
+    if @channel && @channel.theme
+      layout = "slide_#{@channel.theme}"
+    else
+      layout = slide.template == "web_page" ? "web_page_slide" : "slide"
+    end
     render_to_string( "client_" + slide.template + ".html.erb", :layout => layout )
   end
 

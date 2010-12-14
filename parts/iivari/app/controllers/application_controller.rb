@@ -5,7 +5,7 @@ class ApplicationController < ActionController::Base
   respond_to :html
   protect_from_forgery
   layout 'application'
-  before_filter :set_organisation_to_session, :set_locale
+  before_filter :set_organisation_to_session, :set_locale, :require_user
   helper_method :current_user_session, :current_user
 
   private
