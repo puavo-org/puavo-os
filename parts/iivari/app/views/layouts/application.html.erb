@@ -65,11 +65,24 @@
     </div>
 
     <% if current_user %>
-    <div class="tools">
+    <div class="sidebar">
       <h1><%= t('.tools') %></h1>
       <%= yield :tools %>
     </div>
     <% end %>
+
+    <% unless yield(:sidebar_2).empty? %>
+    <div class="sidebar">
+      <%= yield :sidebar_2 %>
+    </div>
+    <% end %>
+
+    <% unless yield(:sidebar_3).empty? %>
+    <div class="sidebar">
+      <%= yield :sidebar_3 %>
+    </div>
+    <% end %>
+
   </div> <!-- container -->
 </body>
 </html>

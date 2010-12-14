@@ -33,9 +33,6 @@
 <% end %>
 </div>
 
-<p id="slide_status">
-</p>
-
 <% if @slide.slide_timers.empty? %>
 <h2><%= link_to t('links.slide_timers'), slide_slide_timers_path(@slide), :remote => true, :class => 'link_slide_timers' %></h2>
 <% else %>
@@ -53,5 +50,12 @@
  :confirm => t('.confirm'),
  :method => :delete ) %>
 </div>
-<div><%= link_to t('links.new_slides'), new_channel_slide_path %></div>
+<div><%= link_to t('links.slides'), channel_slides_path %></div>
+<% end %>
+
+<% content_for :sidebar_2 do %>
+<h1><%= t('.status_title') %></h1>
+<p id="slide_status">
+</p>
+
 <% end %>
