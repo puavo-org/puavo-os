@@ -1,9 +1,4 @@
 class ChannelsController < ApplicationController
-  def wellcome
-    @channel = Channel.first
-    redirect_to channel_slides_path(@channel)
-  end
-
   # GET /channels
   # GET /channels.xml
   def index
