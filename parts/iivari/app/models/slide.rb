@@ -4,6 +4,8 @@ class Slide < OrganisationData
   
   acts_as_list :scope => :channel
 
+  before_save :fix_http_url
+
   after_update :set_channel_updated_at
   after_create :set_channel_updated_at
 
@@ -50,5 +52,15 @@ class Slide < OrganisationData
   def set_channel_updated_at
     self.channel.updated_at = Time.now
     self.channel.save
+  end
+
+  private
+
+  def fix_http_url
+    if self.template == "web_page"
+      if self.body.match(/http[s]{0,1}:\/\//).nil?
+        self.body = "http://#{self.body}"
+      end
+    end
   end
 end
