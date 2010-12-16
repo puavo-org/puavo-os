@@ -31,6 +31,7 @@ class ChannelsController < ApplicationController
   # POST /channels.xml
   def create
     @channel = Channel.new(params[:channel])
+    @channel.theme = "gold"
     @channel.save
     respond_with(@channel)
   end

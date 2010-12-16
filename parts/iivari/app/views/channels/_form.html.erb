@@ -2,7 +2,6 @@
 <%= simple_form_for @channel do |f| %>
 <%= f.input :name, :required => false %>
 <%= f.input :slide_delay %>
-<%= f.input :theme, :as => :select, :collection => themes %>
 <%= f.button :submit %>
 -<%= t('links.or_cancel') %> <%= link_to t('links.cancel'), channels_path %>
 <% end %>
