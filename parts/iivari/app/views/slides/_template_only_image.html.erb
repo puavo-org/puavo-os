@@ -6,6 +6,6 @@
 <div class="full">
   <%= f.file_field :image %>
   <% if @slide.image %>
-  <img src="/image/<%= @slide.template %>/<%= @slide.image %>?resolution=720x350" />
+  <img src="<%= root_path %>image/<%= @slide.template %>/<%= @slide.image %>?resolution=720x350" />
   <% end %>
 </div>
