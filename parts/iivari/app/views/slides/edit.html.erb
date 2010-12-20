@@ -1,5 +1,5 @@
 <% content_for :javascript do %>
-  <%= include_tiny_mce_if_needed %>
+  <%= include_tiny_mce_if_needed :content_css => stylesheet_path("slides/editor_content") %>
 <% end %>
 
 <h1><%= t('.title') %></h1>
