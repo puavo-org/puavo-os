@@ -5,38 +5,44 @@ class ApplicationController < ActionController::Base
   respond_to :html
   protect_from_forgery
   layout 'application'
-  before_filter :set_organisation_to_session, :set_locale, :require_user
+  before_filter :set_organisation, :set_locale, :require_user
   helper_method :current_user_session, :current_user
 
   private
 
-  def set_organisation_to_session
-    if Organisation.current.nil?
+  def set_organisation
+    logger.info "Request host: #{request.host}"
+
+    if session[:organisation].nil?
       # Find organisation by request.host.
       # If you don't need multiple organisations you have to only set organisation with:
       # config/organisations.yml
       # default
       #   name: Default organisation
       #   host: *
-      Organisation.current = Organisation.find_by_host(request.host)
+      session[:organisation] = Organisation.find_by_host(request.host)
       # Find default organisation (host == "*") if request host not found from configurations.
-      Organisation.current = Organisation.find_by_host("*") unless Organisation.current
-      unless Organisation.current
+      session[:organisation] = Organisation.find_by_host("*") unless session[:organisation]
+      unless session[:organisation]
         # FATAL error
         # FIXME, redirect to login page?
-        render :text => "Can't find organisation."
+        logger.info "Organisation does not exist and default organisation is not set."
+        render :text => "Organisation does not exist!"
         return false
       end
     else
       # Compare session host to client host. This is important security check.
-      unless Organisation.current.host == request.host || Organisation.current.host == "*"
+      unless session[:organisation].host == request.host || session[:organisation].host == "*"
         # This is a serious problem. Some one trying to hack this system.
         # FIXME, redirect to login page?
-        logger.info "Default organisation not found!"
+        logger.info "request.host doesn't not match to session organisation"
         render :text => "Session error"
         return false
       end
     end
+
+    # Use user's organisation on this request (thread), see lib/organisation.rb
+    Organisation.current = session[:organisation]
   end
 
   def set_locale
