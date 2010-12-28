@@ -1,4 +1,9 @@
-<% if @slide.template != "web_page" %>
+<% if @slide.template == "web_page" %>
+
+<%= yield %>
+
+<% else %>
+
 <div class="title_container">
 <h1 class="title"><%= @slide.title %></h1>
 </div>
@@ -7,11 +12,12 @@
 <div class="tgradient2"></div>
 <div class="tgradient3"></div>
 <div class="tgradient4"></div>
-<% end %>
 
 <div class="content">
 <%= yield %>
 </div>
+
+<% end %>
 
 <div class="footer_container">
 <div class="bgradient4"></div> 
