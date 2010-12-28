@@ -137,9 +137,11 @@ class ScreenController < ApplicationController
       @channel = Channel.find(params[:channel_id]) if params[:channel_id]
       @channel = Slide.find(params[:slide_id]).channel if params[:slide_id]
     else
+      logger.info "Display request"
       if session[:display_authentication]
         @display = Display.find_or_create_by_hostname(session[:hostname])
         @channel = @display.active ? @display.channel : nil
+        logger.info "Client hostname: #{@display.hostname}"
       else
         respond_to do |format|
           format.html { redirect_to display_authentication_path( :resolution => params[:resolution],
