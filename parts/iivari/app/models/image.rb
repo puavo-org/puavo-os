@@ -1,5 +1,7 @@
 class Image < ActiveRecord::Base
 
+  after_destroy :remove_image_file
+
   def self.find_or_create(data)
     image_data = data.read
     key = Digest::SHA2.hexdigest(image_data)
@@ -41,5 +43,15 @@ class Image < ActiveRecord::Base
     image_scale = image_orig.resize_to_fit(max_width,max_height)
     filename = "#{Image.path}/#{self.key}_#{max_width}x#{max_height}"
     File.open( filename, "wb") { |f| f.write(image_scale.to_blob) }
+  end
+
+  def remove_image_file
+    if !self.key.nil? && !self.key.empty?
+      Dir.new( Image.path + "/").each  do |file|
+        if file.match(/^#{self.key}/)
+          File.delete( Image.path + "/" + file )
+        end
+      end
+    end
   end
 end

@@ -9,6 +9,8 @@ class Slide < OrganisationData
   after_update :set_channel_updated_at
   after_create :set_channel_updated_at
 
+  after_destroy :remove_image
+
   attr_accessor :slide_html
 
   def image_url(resolution)
@@ -60,6 +62,17 @@ class Slide < OrganisationData
     if self.template == "web_page"
       if self.body.match(/http[s]{0,1}:\/\//).nil?
         self.body = "http://#{self.body}"
+      end
+    end
+  end
+
+  def remove_image
+    if Slide.where(:image => self.image).empty?
+      unless self.image.nil?
+        image = Image.find_by_key(self.image)
+        unless image.nil?
+          image.destroy
+        end
       end
     end
   end
