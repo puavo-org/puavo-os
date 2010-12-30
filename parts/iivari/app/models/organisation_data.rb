@@ -33,4 +33,10 @@ class OrganisationData < ActiveRecord::Base
       super
     end
   end
+
+  def self.method_missing(*args)
+    with_scope( conditions ) do
+      super
+    end
+  end
 end
