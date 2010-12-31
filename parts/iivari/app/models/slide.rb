@@ -4,7 +4,7 @@ class Slide < OrganisationData
   
   acts_as_list :scope => :channel
 
-  before_save :fix_http_url
+  before_save :fix_http_url, :remove_image_if_needed
 
   after_update :set_channel_updated_at
   after_create :set_channel_updated_at
@@ -66,9 +66,25 @@ class Slide < OrganisationData
     end
   end
 
+  # before_save
+  def remove_image_if_needed
+    if self.created_at? && self.image.nil? == false
+      # Remove image if it is not used anywhere
+      old_image_key = Slide.find(self.id).image
+      if self.image != old_image_key && Slide.where(:image => old_image_key).count == 1
+        image = Image.find_by_key(old_image_key)
+        unless image.nil?
+          image.destroy
+        end
+      end
+    end
+  end
+
+  # after_destroy
   def remove_image
-    if Slide.where(:image => self.image).empty?
-      unless self.image.nil?
+    unless self.image.nil?
+      # Remove image if it is not used anywhere
+      if Slide.where(:image => self.image).empty?
         image = Image.find_by_key(self.image)
         unless image.nil?
           image.destroy
