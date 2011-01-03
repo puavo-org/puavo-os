@@ -126,7 +126,7 @@ class ScreenController < ApplicationController
   def slide_to_screen_html(resolution, slide)
     @resolution = resolution
     @slide = slide
-    layout = (@channel && @channel.theme?) ? "slide_#{@channel.theme}" : "slide_default"
+    layout = (@channel && @channel.theme?) ? "slide_#{@channel.theme}" : "slide_gold"
 
     render_to_string( "client_" + slide.template + ".html.erb", :layout => layout )
   end
