@@ -57,6 +57,11 @@ fi:
     errors:
       messages:
         blank: Ei voi olla tyhjä!
+      models:
+        channel:
+          attributes:
+            slide_delay:
+              inclusion: Virheellinen ruudunnäyttöaika. Arvon pitää olla välillä 2-600 sekuntia.
   helpers:
     submit:
       create: "Lisää %{model}"

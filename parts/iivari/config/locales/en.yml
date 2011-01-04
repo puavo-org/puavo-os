@@ -38,6 +38,12 @@ en:
         weekday_4: Th
         weekday_5: Fr
         weekday_6: Sa
+    errors:
+      models:
+        channel:
+          attributes:
+            slide_delay:
+              inclusion: Incorrect slide delay. The value should be between 2-600 seconds.
   helpers:
     submit:
       create: "Create a %{model}"
