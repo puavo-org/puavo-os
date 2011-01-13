@@ -157,6 +157,9 @@ olcAttributeTypes: {45}( 1.3.6.1.4.1.27208.1.1.1.46 NAME 'puavoSupportContract
 olcAttributeTypes: {46}( 1.3.6.1.4.1.27208.1.1.1.47 NAME 'puavoDefaultPrinter'
   DESC 'Default printer for users using device' EQUALITY caseIgnoreMatch SUBST
  R caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {47}( 1.3.6.1.4.1.27208.1.1.1.48 NAME 'puavoPreferredDeskto
+ p' DESC 'Preferred desktop for user' EQUALITY caseIgnoreMatch SYNTAX 1.3.6.1.
+ 4.1.1466.115.121.1.15 )
 olcObjectClasses: {0}( 1.3.6.1.4.1.27208.1.1.2.1 NAME 'puavoSchool' AUXILIARY 
  MUST ( puavoId ) MAY ( puavoSchoolHomePageURL $ puavoSchoolAdmin $ displayNam
  e $ telephoneNumber $ facsimileTelephoneNumber $ l $ street $ postOfficeBox $
@@ -168,7 +171,7 @@ olcObjectClasses: {1}( 1.3.6.1.4.1.27208.1.1.2.2 NAME 'puavoEduGroup' AUXILIAR
 olcObjectClasses: {2}( 1.3.6.1.4.1.27208.1.1.2.3 NAME 'puavoEduPerson' AUXILIA
  RY MUST ( puavoId $ puavoSchool ) MAY ( puavoEduPersonEntryYear $ puavoEduPer
  sonEmailEnabled $ puavoUserRole $ puavoEduPersonLastFirstName $ puavoEduPerso
- nAffiliation ) )
+ nAffiliation $ puavoPreferredDesktop ) )
 olcObjectClasses: {3}( 1.3.6.1.4.1.27208.1.1.2.4 NAME 'puavoUserRole' STRUCTUR
  AL MUST ( puavoId $ puavoSchool ) MAY ( cn $ displayName $ memberUid $ member
   $ puavoMemberGroup ) )
