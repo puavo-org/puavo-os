@@ -26,13 +26,13 @@
 {<%= get_index %>}to dn.exact="ou=Automount,<%= suffix %>" attrs="children" by <%= owners_set %> write by * read
 {<%= get_index %>}to dn.children="ou=Automount,<%= suffix %>" by <%= owners_set %> write by * read
 {<%= get_index %>}to dn.subtree="ou=Kerberos Realms,<%= suffix %>" by dn="<%= kadmin_user_dn %>" write by dn="<%= kdc_user_dn %>" read
-{<%= get_index %>}to dn.exact="ou=Hosts,<%= suffix %>" by <%= all_admins_set %> read by dn="uid=puppet,o=puavo" read
-{<%= get_index %>}to dn.exact="ou=Devices,ou=Hosts,<%= suffix %>" attrs="entry,ou,objectClass" by <%= all_admins_set %> read by dn="uid=puppet,o=puavo" read by anonymous auth
-{<%= get_index %>}to dn.exact="ou=Devices,ou=Hosts,<%= suffix %>" attrs="children" by <%= all_admins_set %> write by dn="uid=puppet,o=puavo" read
-{<%= get_index %>}to dn.children="ou=Devices,ou=Hosts,<%= suffix %>" by <%= admin_set %> write by dn="uid=puppet,o=puavo" read by anonymous auth
-{<%= get_index %>}to dn.exact="ou=Servers,ou=Hosts,<%= suffix %>" attrs="entry,ou,objectClass" by <%= owners_set %> read by dn="uid=puppet,o=puavo" read by anonymous auth
-{<%= get_index %>}to dn.exact="ou=Servers,ou=Hosts,<%= suffix %>" attrs="children" by <%= owners_set %> write by dn="uid=puppet,o=puavo" read
-{<%= get_index %>}to dn.children="ou=Servers,ou=Hosts,<%= suffix %>" by <%= owners_set %> write by dn="uid=puppet,o=puavo" read by anonymous auth
+{<%= get_index %>}to dn.exact="ou=Hosts,<%= suffix %>" by <%= all_admins_set %> read by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read
+{<%= get_index %>}to dn.exact="ou=Devices,ou=Hosts,<%= suffix %>" attrs="entry,ou,objectClass" by <%= all_admins_set %> read by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read by anonymous auth
+{<%= get_index %>}to dn.exact="ou=Devices,ou=Hosts,<%= suffix %>" attrs="children" by <%= all_admins_set %> write by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read
+{<%= get_index %>}to dn.children="ou=Devices,ou=Hosts,<%= suffix %>" by <%= admin_set %> write by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read by anonymous auth
+{<%= get_index %>}to dn.exact="ou=Servers,ou=Hosts,<%= suffix %>" attrs="entry,ou,objectClass" by <%= owners_set %> read by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read by anonymous auth
+{<%= get_index %>}to dn.exact="ou=Servers,ou=Hosts,<%= suffix %>" attrs="children" by <%= owners_set %> write by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read
+{<%= get_index %>}to dn.children="ou=Servers,ou=Hosts,<%= suffix %>" by <%= owners_set %> write by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read by anonymous auth
 {<%= get_index %>}to dn.exact="ou=Samba,ou=Hosts,<%= suffix %>" attrs="entry,ou,objectClass" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" read
 {<%= get_index %>}to dn.exact="ou=Samba,ou=Hosts,<%= suffix %>" attrs="children" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write
 {<%= get_index %>}to dn.children="ou=Samba,ou=Hosts,<%= suffix %>" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write
@@ -57,4 +57,4 @@
 {<%= get_index %>}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" attrs="sambaSID,sambaDomainName,sambaNextUserRid,sambaNextRid" by dn="uid=samba,o=puavo" write by <%= all_admins_set %> write
 {<%= get_index %>}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" by <%= admin_set %> write by dn="uid=samba,o=puavo" write by <%= all_admins_set %> read
 {<%= get_index %>}to dn.subtree="ou=System Accounts,<%= suffix %>" attrs="userPassword" by anonymous auth
-{<%= get_index %>}to dn="<%= suffix %>" by <%= all_admins_set %> read by dn.exact="<%= puavo_user_dn %>" read by dn.exact="<%= kdc_user_dn %>" read by dn.exact="<%= kadmin_user_dn %>" read by dn="uid=puppet,o=puavo" read by * +sxd
+{<%= get_index %>}to dn="<%= suffix %>" by <%= all_admins_set %> read by dn.exact="<%= puavo_user_dn %>" read by dn.exact="<%= kdc_user_dn %>" read by dn.exact="<%= kadmin_user_dn %>" read by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read by * +sxd

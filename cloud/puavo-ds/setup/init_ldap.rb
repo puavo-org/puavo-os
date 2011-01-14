@@ -29,6 +29,8 @@ if configuration = YAML.load_file("config/ldap.yml") rescue nil
   @kdcpw = configuration["settings"]["kdc"]["password"]
   @kadmindn = configuration["settings"]["kadmin"]["bind_dn"]
   @kadminpw = configuration["settings"]["kadmin"]["password"]
+  @monitordn = configuration["settings"]["monitor"]["bind_dn"]
+  @monitorpw = configuration["settings"]["monitor"]["password"]
 
   @servers = configuration["settings"]["syncrepl"]["urls"]
 else

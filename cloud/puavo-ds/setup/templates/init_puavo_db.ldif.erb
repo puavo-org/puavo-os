@@ -41,14 +41,21 @@ userPassword: <%= @puppetpw_hash %>
 dn: <%= @kdcdn %>
 objectClass: account
 objectClass: simpleSecurityObject
-uid: puppet
+uid: kdc
 description: Account for KDC to read kerberos entries
 userPassword: <%= @kdcpw_hash %>
 
 dn: <%= @kadmindn %>
 objectClass: account
 objectClass: simpleSecurityObject
-uid: puppet
+uid: kadmin
 description: Account for kadmin to modify kerberos entries
 userPassword: <%= @kadminpw_hash %>
+
+dn: <%= @monitordn %>
+objectClass: account
+objectClass: simpleSecurityObject
+uid: monitor
+description: Monitoring tool account to read host information
+userPassword: <%= @monitorpw_hash %>
 
