@@ -58,4 +58,5 @@
 {<%= get_index %>}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" by <%= admin_set %> write by dn="uid=samba,o=puavo" write by <%= all_admins_set %> read
 {<%= get_index %>}to dn.subtree="ou=System Accounts,<%= suffix %>" attrs="userPassword" by anonymous auth
 {<%= get_index %>}to dn.subtree="ou=Desktops,<%= suffix %>" by set="[<%= suffix %>]/owner* & user" write
+{<%= get_index %>}to dn="<%= suffix %>" attrs="entry,preferredLanguage" by <%= all_admins_set %> read by dn.exact="<%= puavo_user_dn %>" read by dn.exact="<%= kdc_user_dn %>" read by dn.exact="<%= kadmin_user_dn %>" read by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read <%= getent_read_acl %> by * +sxd
 {<%= get_index %>}to dn="<%= suffix %>" by <%= all_admins_set %> read by dn.exact="<%= puavo_user_dn %>" read by dn.exact="<%= kdc_user_dn %>" read by dn.exact="<%= kadmin_user_dn %>" read by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read by * +sxd
