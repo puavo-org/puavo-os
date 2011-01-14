@@ -26,6 +26,7 @@ class OrganizationalUnit < LdapOrganisationBase
      'Devices',
      'Samba'].each do |ou|
       OrganizationalUnit.create( "ou" => ou )
+    end
 
     self.ldap_mapping( :dn_attribute => "ou",
                        :prefix => "ou=Desktops",
