@@ -38,7 +38,7 @@
 {<%= get_index %>}to dn.children="ou=Samba,ou=Hosts,<%= suffix %>" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write
 {<%= get_index %>}to dn.exact="ou=People,<%= suffix %>" attrs="entry,ou,objectClass" <%= getent_read_acl %> by dn.exact="<%= puavo_user_dn %>" read by anonymous auth
 {<%= get_index %>}to dn.exact="ou=People,<%= suffix %>" attrs="children" by <%= all_admins_set %> write by dn.exact="<%= puavo_user_dn %>" read
-{<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="userPassword,shadowLastChange" filter="(puavoEduPersonAffiliation=student)" by set="this/puavoSchool/member* & [ldap:///ou=People,<%= suffix %>??one?(puavoEduPersonAffiliation=teacher)]/entryDN & user" write by * none break
+{<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="userPassword,shadowLastChange" filter="(puavoEduPersonAffiliation=student)" by <%= all_admins_set %> write by * none break
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="userPassword,shadowLastChange" by <%= admin_set %> write by self write by anonymous auth
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="entry,uid,puavoId,eduPersonPrincipalName,objectClass,givenName,sn" by <%= admin_set %> write by dn="<%= puavo_user_dn %>" read <%= getent_read_acl %> by anonymous auth
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="uidNumber,gidNumber,homeDirectory,givenName,sn,telephoneNumber,mail,preferredLanguage,puavoPreferredDesktop" by <%= admin_set %> write <%= getent_read_acl %>
