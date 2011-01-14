@@ -160,6 +160,18 @@ olcAttributeTypes: {46}( 1.3.6.1.4.1.27208.1.1.1.47 NAME 'puavoDefaultPrinter'
 olcAttributeTypes: {47}( 1.3.6.1.4.1.27208.1.1.1.48 NAME 'puavoPreferredDeskto
  p' DESC 'Preferred desktop for user' EQUALITY caseIgnoreMatch SYNTAX 1.3.6.1.
  4.1.1466.115.121.1.15 )
+olcAttributeTypes: {48}( 1.3.6.1.4.1.27208.1.1.1.49 NAME 'puavoBookmarkURL' DE
+ SC 'Bookmark URL' EQUALITY caseExactIA5Match SYNTAX 1.3.6.1.4.1.1466.115.121.
+ 1.26 )
+olcAttributeTypes: {49}( 1.3.6.1.4.1.27208.1.1.1.50 NAME 'puavoDesktopItem' DE
+ SC 'Application or bookmark that the rule refers to' EQUALITY distinguishedNa
+ meMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 )
+olcAttributeTypes: {50}( 1.3.6.1.4.1.27208.1.1.1.51 NAME 'puavoRule' DESC 'Act
+ ual rule for puavoDesktopRule' EQUALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.14
+ 66.115.121.1.15 )
+olcAttributeTypes: {1}( 1.3.6.1.4.1.27208.1.1.1.2 NAME 'puavoSchoolHomePageURL
+ ' DESC 'URL of the school home page' EQUALITY caseExactIA5Match SYNTAX 1.3.6.
+ 1.4.1.1466.115.121.1.26 )
 olcObjectClasses: {0}( 1.3.6.1.4.1.27208.1.1.2.1 NAME 'puavoSchool' AUXILIARY 
  MUST ( puavoId ) MAY ( puavoSchoolHomePageURL $ puavoSchoolAdmin $ displayNam
  e $ telephoneNumber $ facsimileTelephoneNumber $ l $ street $ postOfficeBox $
@@ -200,3 +212,9 @@ olcObjectClasses: {10}( 1.3.6.1.4.1.27208.1.1.2.11 NAME 'puavoLocalbootDevice'
   AUXILIARY SUP puavoDevice MUST ( puavoSchool ) )
 olcObjectClasses: {11}( 1.3.6.1.4.1.27208.1.1.2.12 NAME 'puavoPrinter' AUXILIA
  RY SUP puavoDevice MUST ( puavoSchool ) )
+olcObjectClasses: {12}( 1.3.6.1.4.1.27208.1.1.2.13 NAME 'puavoApplication' STR
+ UCTURAL SUP top MUST ( cn $ displayName ) )
+olcObjectClasses: {13}( 1.3.6.1.4.1.27208.1.1.2.14 NAME 'puavoBookmark' STRUCT
+ URAL SUP top MUST ( displayName $ puavoBookmarkURL ) MAY ( puavoSchool ) )
+olcObjectClasses: {14}( 1.3.6.1.4.1.27208.1.1.2.15 NAME 'puavoDesktopRule' STR
+ UCTURAL SUP top MUST ( puavoDesktopItem $ puavoRule ) MAY ( puavoSchool ) )
