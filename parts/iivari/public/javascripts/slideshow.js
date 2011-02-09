@@ -15,7 +15,7 @@ function updateSlideData(url, cache) {
 
 function showNextSlide(repeat) {
     // wait one second if slideData.json is not defined yet
-    if ( typeof(slideData.json) == "undefined" ) {
+    if ( slideData.json == null ) {
 	setTimeout(showNextSlide, 1000,repeat);
     }
     else {
