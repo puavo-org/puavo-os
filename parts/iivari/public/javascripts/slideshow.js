@@ -17,10 +17,17 @@ function showNextSlide(repeat) {
     // wait one second if slideData.json is not defined yet
     if ( slideData.json == null ) {
 	setTimeout(showNextSlide, 1000,repeat);
+	return;
     }
-    else {
+
+    var counter = 0;
+    var newSlideFound = 0;
+
+    while (!newSlideFound && counter < slideData.json.length) {
+	counter = counter + 1;
+	
 	if ( slideNumber > slideData.json.length - 1 ) {
-	    slideNumber = 0;
+  	    slideNumber = 0;	
 	}
 
 	// When repeat value is false then request is come from Iivari management user interface.
@@ -29,11 +36,17 @@ function showNextSlide(repeat) {
 	    // If slide status is not active or time of show not match, continue to next slide
 	    if ( checkSlideTimerAndStatus(slideData.json[slideNumber]) == false ) {
 		slideNumber = slideNumber + 1;
-		return showNextSlide(repeat);
-	    }
+	    } else {
+		newSlideFound = 1;
+            }
 	}
+    }
+    
+    if (newSlideFound == 0) {
+	setTimeout(showNextSlide, 5000, repeat);
+    } else { 
 	
-        var today=new Date();
+	var today=new Date();
 
 	var d=today.getDate();
 	var mo=today.getMonth()+1;
