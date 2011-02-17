@@ -39,6 +39,8 @@ function showNextSlide(repeat) {
 	    } else {
 		newSlideFound = 1;
             }
+	} else {
+	    newSlideFound = 1;
 	}
     }
     
