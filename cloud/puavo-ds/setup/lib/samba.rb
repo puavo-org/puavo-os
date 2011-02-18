@@ -3,14 +3,14 @@ class Samba < LdapOrganisationBase
                 :prefix => "",
                 :classes => ['top', 'sambaDomain'] )
 
-  def self.create_samba_configuration(organisation_name)
+  def self.create_samba_configuration(organisation_name, samba_domain, suffix_start)
     sid1 = rand(100000000)
     sid2 = rand(100000000)
     sid3 = rand(100000000)
     
     samba_sid = "S-1-5-21-#{sid1}-#{sid2}-#{sid3}"
 
-    self.create( "sambaDomainName" =>  "EDU" + organisation_name.upcase,
+    self.create( "sambaDomainName" =>  samba_domain,
                  'sambaSID' => samba_sid,
                  'sambaAlgorithmicRidBase' => "1000",
                  'sambaNextUserRid' => "1000",
@@ -40,6 +40,10 @@ class Samba < LdapOrganisationBase
      [548, 'Account Operators', 'Netbios Domain Users to manipulate users accounts'],
      [549, 'Server Operators', 'Netbios Domain Server Operators']
     ].each do |group_id, group_name, group_description|
+      SambaGroup::ldap_mapping( :dn_attribute => "cn",
+                                :prefix => "ou=Groups,#{suffix_start}",
+                                :classes => ["top","posixGroup", "sambaGroupMapping"] )
+
       SambaGroup.create( 'sambaSID' => samba_sid + "-" + group_id.to_s,
                          'sambaGroupType' => "2",
                          'displayName' => group_name,
@@ -52,6 +56,10 @@ class Samba < LdapOrganisationBase
      [544, 'Administrators', 512],
      [545, 'Users', 513]
     ].each do |group_id, group_name, sid_list_group|
+      SambaSidGroup::ldap_mapping( :dn_attribute => "cn",
+                                :prefix => "ou=Groups,#{suffix_start}",
+                                :classes => ["top","posixGroup", "sambaGroupMapping"] )
+
       SambaSidGroup.create( 'sambaSID' => "S-1-5-32-" + group_id.to_s,
                             'sambaGroupType' => "4",
                             'displayName' => group_name,

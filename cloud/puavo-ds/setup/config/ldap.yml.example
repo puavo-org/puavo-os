@@ -1,4 +1,10 @@
 settings:
+  templates:
+    domain: "%s.example.edu"
+    suffix: "dc=%s,dc=example,dc=edu"
+    puppet_host: "%s.puppet.example.edu"
+    samba_domain: "EDU%s"
+
   ldap_server:
     host: ldap1.example.edu
     bind_dn: uid=admin,o=puavo

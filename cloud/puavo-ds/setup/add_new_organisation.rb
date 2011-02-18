@@ -35,6 +35,7 @@ require 'users/user'
 require 'users/samba_domain'
 require 'users/ldap_organisation'
 require 'kerberos'
+require 'readline'
 
 def newpass( len )
   chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a
@@ -43,25 +44,98 @@ def newpass( len )
   return newpass
 end
 
+puppet_host_template = configurations["settings"]["templates"]["puppet_host"]
+samba_domain_template = configurations["settings"]["templates"]["samba_domain"]
+suffix_template = configurations["settings"]["templates"]["suffix"]
+domain_template = configurations["settings"]["templates"]["domain"]
 
-# FIXME: puavo configuration?
-organisation_base_template = "dc=edu,dc=%s,dc=fi"
+# This needs to be cleaned up once the actual settings and needs
+# have been figured out
 
-organisation_name = ARGV.first
+case ARGV.length
+        when 1
+		orgname = ARGV.first
+		domain = domain_template % orgname.downcase
+
+		suffix = suffix_template % orgname.downcase
+		suffix_start = suffix.split(',')[0]
+		organisation_name = orgname
+		legal_name = organisation_name
+
+		puppet_host = puppet_host_template % orgname.downcase
+		samba_domain = samba_domain_template % orgname.upcase
+        when 2
+		orgname = ARGV.first
+		domain = ARGV[1]
+		
+		suffix = suffix_template % orgname.downcase
+		suffix_start = suffix.split(',')[0]
+		organisation_name = orgname
+		legal_name = organisation_name
+
+		puppet_host = puppet_host_template % orgname.downcase
+		samba_domain = samba_domain_template % orgname.upcase
+        when 3
+		orgname = ARGV.first
+		domain = ARGV[1]
+
+		suffix = suffix_template % orgname.downcase
+		suffix_start = suffix.split(',')[0]
+		organisation_name = ARGV[2]
+		legal_name = organisation_name
+		puppet_host = puppet_host_template % orgname.downcase
+		samba_domain = samba_domain_template % orgname.upcase
+        when 4
+		orgname = ARGV.first
+		domain = ARGV[1]
+
+		suffix = suffix_template % orgname.downcase
+		suffix_start = suffix.split(',')[0]
+		organisation_name = ARGV[2]
+		legal_name = ARGV[3]
+		puppet_host = puppet_host_template % orgname.downcase
+		samba_domain = samba_domain_template % orgname.upcase
+        when 5
+		orgname = ARGV.first
+		domain = ARGV[1]
+
+		suffix = suffix_template % orgname.downcase
+		suffix_start = suffix.split(',')[0]
+		organisation_name = ARGV[2]
+		legal_name = ARGV[3]
+		samba_domain = ARGV[4]
+		puppet_host = puppet_host_template % orgname.downcase
+        when 6
+		orgname = ARGV.first
+		domain = ARGV[1]
+
+		suffix = suffix_template % orgname.downcase
+		suffix_start = suffix.split(',')[0]
+		organisation_name = ARGV[2]
+		legal_name = ARGV[3]
+		samba_domain = ARGV[4]
+		puppet_host = ARGV[5]
+	else
+                puts "Usage: $0 orgname [domain_name] [Organisation name] [Legal name] [samba domain] [puppet host]"
+		exit
+end
+
 puts "******************************************************"
 puts "  Initialising organisation: #{organisation_name}"
 puts "******************************************************"
 
-domain = "#{organisation_name}.opinsys.fi"
 kerberos_realm = domain.upcase
-legal_name = organisation_name
-puppet_host = "#{organisation_name}.puppet.opinsys.fi"
-samba_domain ="EDU#{organisation_name.upcase}"
-
-suffix = organisation_base_template % organisation_name
 rootDN = configurations["settings"]["ldap_server"]["bind_dn"]
 
 puts "* Creating database for suffix: #{suffix}"
+puts "* Kerberos realm: #{kerberos_realm}"
+puts "* Legal name: #{legal_name}"
+puts "* Samba: #{samba_domain}"
+puts "* Domain: #{domain}"
+puts "* Puppet host: #{puppet_host}"
+puts "* Suffix start: #{suffix_start}"
+
+Readline.readline('OK?', true)
 begin
   new_db = Database.new( "olcSuffix" => suffix,
                          "olcRootDN" => rootDN,
@@ -104,7 +178,7 @@ puts "* Setting up Autofs configuration"
 Automount.create_automount_configuration
 
 puts "* Setting up Samba configuration"
-Samba.create_samba_configuration(organisation_name)
+Samba.create_samba_configuration(organisation_name, samba_domain, suffix_start)
 
 puts "* Add admin users: kdc, kadmin, samba"
 AdminUser.create_admin_user
