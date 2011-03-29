@@ -169,6 +169,16 @@ olcAttributeTypes: {49}( 1.3.6.1.4.1.27208.1.1.1.50 NAME 'puavoDesktopItem' DE
 olcAttributeTypes: {50}( 1.3.6.1.4.1.27208.1.1.1.51 NAME 'puavoRule' DESC 'Act
  ual rule for puavoDesktopRule' EQUALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.14
  66.115.121.1.15 )
+olcAttributeTypes: {51}( 1.3.6.1.4.1.27208.1.1.1.52 NAME 'puavoDeviceResolutio
+ n' DESC 'Monitor resolution for non-xrandr devices' EQUALITY caseIgnoreIA5Mat
+ ch SUBSTR caseIgnoreIA5SubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+olcAttributeTypes: {52}( 1.3.6.1.4.1.27208.1.1.1.53 NAME 'puavoDeviceHorzSync'
+  DESC 'Monitor horiz sync for non-xrandr devices' EQUALITY caseIgnoreIA5Match
+  SUBSTR caseIgnoreIA5SubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+olcAttributeTypes: {53}( 1.3.6.1.4.1.27208.1.1.1.54 NAME 'puavoDeviceVertRefre
+ sh' DESC 'Monitor vertical refresh rate for non-xrandr devices' EQUALITY case
+ IgnoreIA5Match SUBSTR caseIgnoreIA5SubstringsMatch SYNTAX 1.3.6.1.4.1.1466.11
+ 5.121.1.26 )
 olcObjectClasses: {0}( 1.3.6.1.4.1.27208.1.1.2.1 NAME 'puavoSchool' AUXILIARY 
  MUST ( puavoId ) MAY ( puavoSchoolHomePageURL $ puavoSchoolAdmin $ displayNam
  e $ telephoneNumber $ facsimileTelephoneNumber $ l $ street $ postOfficeBox $
@@ -200,7 +210,7 @@ olcObjectClasses: {7}( 1.3.6.1.4.1.27208.1.1.2.8 NAME 'puavoDevice' AUXILIARY
  viceKernelArguments $ puavoDeviceXrandr $ puavoDeviceXrandrDisable $ puavoDev
  iceBootMode $ puavoTag $ puavoPurchaseDate $ puavoWarrantyEndDate $ puavoPurc
  haseLocation $ puavoPurchaseURL $ puavoSupportContract $ puavoDefaultPrinter 
- ) )
+ $ puavoDeviceResolution $ puavoDeviceHorzSync $ puavoDeviceVertRefresh ) )
 olcObjectClasses: {8}( 1.3.6.1.4.1.27208.1.1.2.9 NAME 'puavoServer' AUXILIARY 
  SUP puavoDevice )
 olcObjectClasses: {9}( 1.3.6.1.4.1.27208.1.1.2.10 NAME 'puavoNetbootDevice' AU
