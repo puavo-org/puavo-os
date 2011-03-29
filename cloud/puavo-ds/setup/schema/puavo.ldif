@@ -179,6 +179,12 @@ olcAttributeTypes: {53}( 1.3.6.1.4.1.27208.1.1.1.54 NAME 'puavoDeviceVertRefre
  sh' DESC 'Monitor vertical refresh rate for non-xrandr devices' EQUALITY case
  IgnoreIA5Match SUBSTR caseIgnoreIA5SubstringsMatch SYNTAX 1.3.6.1.4.1.1466.11
  5.121.1.26 )
+olcAttributeTypes: {54}( 1.3.6.1.4.1.27208.1.1.1.55 NAME 'puavoAllowRemoteAcce
+ ss' DESC 'Allow remote access to systems by the object. E.g. users having the
+  attribute set to false can use the system on locally inside of the organisat
+ ion boundaries. Users having value set to true can access Puavo and other too
+ ls also from public internet.' EQUALITY booleanMatch SYNTAX 1.3.6.1.4.1.1466.
+ 115.121.1.7 )
 olcObjectClasses: {0}( 1.3.6.1.4.1.27208.1.1.2.1 NAME 'puavoSchool' AUXILIARY 
  MUST ( puavoId ) MAY ( puavoSchoolHomePageURL $ puavoSchoolAdmin $ displayNam
  e $ telephoneNumber $ facsimileTelephoneNumber $ l $ street $ postOfficeBox $
@@ -190,7 +196,7 @@ olcObjectClasses: {1}( 1.3.6.1.4.1.27208.1.1.2.2 NAME 'puavoEduGroup' AUXILIAR
 olcObjectClasses: {2}( 1.3.6.1.4.1.27208.1.1.2.3 NAME 'puavoEduPerson' AUXILIA
  RY MUST ( puavoId $ puavoSchool ) MAY ( puavoEduPersonEntryYear $ puavoEduPer
  sonEmailEnabled $ puavoUserRole $ puavoEduPersonLastFirstName $ puavoEduPerso
- nAffiliation $ puavoPreferredDesktop ) )
+ nAffiliation $ puavoPreferredDesktop $ puavoAllowRemoteAccess ) )
 olcObjectClasses: {3}( 1.3.6.1.4.1.27208.1.1.2.4 NAME 'puavoUserRole' STRUCTUR
  AL MUST ( puavoId $ puavoSchool ) MAY ( cn $ displayName $ memberUid $ member
   $ puavoMemberGroup ) )
