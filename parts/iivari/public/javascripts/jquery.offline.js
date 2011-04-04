@@ -1,3 +1,32 @@
+/*!
+ * jQuery Offline
+ * Version 1.0.0
+ *
+ * http://github.com/wycats/jquery-offline
+ *
+ * Copyright 2010, Yehuda Katz
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * Date: Fri Jul 9 10:20:00 2010 -0800
+ */
+
 (function($) {
 
   var prefix = "offline.jquery:",
@@ -17,8 +46,8 @@
       data = null;
     }
 
-    requestingKey = url + "?" + data;
-    if (requestingKey[requestingKey]) {
+    var requestingKey = url + "?" + $.param(data || {});
+    if (requesting[requestingKey]) {
       return false;
     }
 
@@ -28,9 +57,24 @@
       type: "GET",
       url: url,
       data: data,
-      success: function(data, text) {
-        requesting[requestingKey] = false;
-        fn(data, text);
+      success: function(responseData, text) {
+        delete requesting[requestingKey];
+
+        // handle lack of response (error callback isn't called in this case)
+        if (undefined === responseData) {
+          if (!window.navigator.onLine) {
+            // requeue the request for the next time we come online
+            mostRecent = function() {
+              getJSON(url, data, fn);
+            };
+          }
+          return;
+        }
+
+        fn(responseData, text);
+      },
+      error: function() {
+        delete requesting[requestingKey];
       },
       dataType: "json",
       ifModified: true
@@ -72,22 +116,54 @@
 
       // get a String value for the data passed in, and then
       // use it to calculate a cache key
-      var param = $.param(data),
-          key   = prefix + url + ":" + param,
-          text  = localStorage[key],
-          date  = localStorage[key + ":date"];
+      var param       = $.param(data),
+          key         = prefix + url + ":" + param,
+          text        = localStorage[key],
+          dateString  = localStorage[key + ":date"],
+          date        = new Date(Date.parse(dateString));
 
-      date = new Date( Date.parse(date) );
+      function cleanupLocalStorage() {
+        // take all date keys and remove the oldest half
+        var dateKeys = [];
+        for (var i = 0; i < localStorage.length; ++i) {
+          var key = localStorage.key(i);
+          if (/:date$/.test(key)) {
+            dateKeys.push(key);
+          }
+        }
+        dateKeys.sort(function(a, b) {
+          var date_a = localStorage[a], date_b = localStorage[b];
+          return date_a < date_b ? -1 : (date_a > date_b ? +1 : 0);
+        });
+        for (var i = 0; i < dateKeys.length / 2; ++i) {
+          var key = dateKeys[i];
+          delete localStorage[key];
+          delete localStorage[key.substr(0, key.length - 5)]; // :date
+        }
+      }
 
       // create a function that will make an Ajax request and
       // store the result in the cache. This function will be
       // deferred until later if the user is offline
       function getData() {
-        getJSON(url, param, function(json, status) {
-            if (status != "notmodified") {
-		localStorage[key] = JSON.stringify(json);
-		localStorage[key + ":date"] = new Date;
-	    }
+        getJSON(url, data, function(json, status) {
+          if ( status == 'notmodified' ) {
+            // Just return if the response has a 304 status code
+            return false;
+          }
+
+          while (true) {
+            try {
+              localStorage[key] = JSON.stringify(json);
+              localStorage[key + ":date"] = new Date;
+              break;
+            } catch (e) {
+                if (e.name == "QUOTA_EXCEEDED_ERR" || e.name ==
+                    "NS_ERROR_DOM_QUOTA_REACHED") {
+                  cleanupLocalStorage();
+                }
+            }
+          }
 
           // If this is a follow-up request, create an object
           // containing both the original time of the cached
@@ -95,12 +171,7 @@
           // retrieved from the cache. With this information,
           // users of jQuery Offline can provide the user
           // with improved feedback if the lag is large
-
-            if (status == "notmodified" && json == "undefined") {
-		//json = localStorage[key]
-	    }
-	    var data = text && { cachedAt: date, retrievedAt: retrieveDate };
-
+          var data = text && { cachedAt: date, retrievedAt: retrieveDate };
           fn(json, status, data);
         });
       }
@@ -129,7 +200,7 @@
     $.clearJSON = function(url, data) {
       var param = $.param(data || {});
       delete localStorage[prefix + url + ":" + param];
-      delete localStorage[prefix + url + ":" + param + "date"];
+      delete localStorage[prefix + url + ":" + param + ":date"];
     };
   } else {
     // If localStorage is unavailable, just make all requests
