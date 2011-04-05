@@ -302,6 +302,10 @@ while user_save != true
   end
 end
 
+domain_admin = SambaGroup.find("Domain Admins")
+domain_admin.memberUid = user.uid
+domain_admin.save!
+
 puts
 puts "User was successfully created."
 puts "\nSets the user (#{user.uid}) as the owner of the organisation"
