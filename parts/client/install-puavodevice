@@ -33,14 +33,14 @@ end
 def run_puppet(opts='')
   unless system('puppetd --test --logdest console' +
 		" --logdest /var/log/puppet/install.log #{ opts }")
-    # XXX this will not be triggered even if there is a reason to
+    # XXX puppetd will not returned error codes even if errors occur,
+    # XXX so this will not be triggered.  This is apparently fixed in 2.6.0 ?
     raise 'problem running puppetd'
   end
 end
 
 def setup_kerberos(principals)
-  # XXX
-  p principals
+  # XXX not used yet
   return
   begin
     error = false
@@ -120,6 +120,14 @@ def setup_openvpn
     unless system('service openvpn restart')
       raise 'problem restarting openvpn'
     end
+
+    sleep 2
+    until system('ifconfig tun0 >/dev/null 2>&1')
+      errmsg('waiting for tun0 to come up...')
+      sleep 2
+    end
+    sleep 2
+
   rescue => msg
     errmsg(msg)
     exit 1
@@ -169,10 +177,7 @@ def setup_puppet(puppet_server, fqdn)
     run_puppet('--tags debian::apt::client')
     run_puppet()
     goodmsg('Puppet run is done.')
-    unless system('service puppet restart')
-      raise 'problem restarting puppet'
-    end
-    goodmsg('Puppet daemon is started.')
+    goodmsg('Check that all is okay, and re-execute this if in doubt.')
   rescue => msg
     errmsg(msg)
     exit 1
