@@ -23,8 +23,8 @@
   write_by_owners_set = "by set=\"[#{suffix}]/owner* & user\" write"
   super_acl = "by dn=\"uid=admin,o=puavo\" manage"
   syncrepl_acl = "by dn.children=\"ou=Servers,ou=Hosts,#{suffix}\" read"
-  getent_read_acl = "by dn.children=\"ou=People,#{suffix}\" read by dn.subtree=\"ou=Hosts,#{suffix}\" read by group=\"cn=getent,ou=System Groups,dc=edu,dc=juankoski,dc=fi\" read"
-  uid_find_acl = "by group=\"cn=auth,ou=System Groups,dc=edu,dc=juankoski,dc=fi\" read"
+  getent_read_acl = "by dn.children=\"ou=People,#{suffix}\" read by dn.subtree=\"ou=Hosts,#{suffix}\" read by group=\"cn=getent,ou=System Groups,#{suffix}\" read"
+  uid_find_acl = "by group=\"cn=auth,ou=System Groups,#{suffix}\" read"
 
   @index = -1
   def get_index
