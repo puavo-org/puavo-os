@@ -205,11 +205,21 @@ olcAttributeTypes: {59}( 1.3.6.1.4.1.27208.1.1.1.60 NAME 'puavoAdminOfSchool'
 olcAttributeTypes: {60}( 1.3.6.1.4.1.27208.1.1.1.61 NAME 'puavoPrinterPPD' DES
  C 'PPD file for the printer if there is no PPD file available on the print se
  rvers' SYNTAX 1.3.6.1.4.1.1466.115.121.1.28 )
-olcAttributeTypes: {61}( 1.3.6.1.4.1.27208.1.1.1.62 NAME 'puavoCreateTimestamp
- ' DESC 'Time when the entry was created. Differs from createTimestamp so that
-  in mass operations all created entries share the same timestamp.' EQUALITY g
- eneralizedTimeMatch ORDERING generalizedTimeOrderingMatch SYNTAX 1.3.6.1.4.1.
- 1466.115.121.1.24 SINGLE-VALUE )
+olcAttributeTypes: {61}( 1.3.6.1.4.1.27208.1.1.1.62 NAME 'puavoTimestamp' DESC
+  'Time when certain operation was done. Format: operation:dn:timestamp. Diffe
+ rs from createTimestamp so that in mass operations all entries share the same
+ timestamp.' EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch SYNTAX 
+ 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {62}( 1.3.6.1.4.1.27208.1.1.1.63 NAME 'puavoLocked' DESC 'U
+ ser account is locked temporarily from use.' EQUALITY booleanMatch SYNTAX 1.3
+ .6.1.4.1.1466.115.121.1.7 SINGLE-VALUE )
+olcAttributeTypes: {63}( 1.3.6.1.4.1.27208.1.1.1.64 NAME 'puavoPasswordMissing
+ ' DESC 'User does not have password set and cannot login to the system.' EQUA
+ LITY booleanMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 SINGLE-VALUE )
+olcAttributeTypes: {64}( 1.3.6.1.4.1.27208.1.1.1.65 NAME 'puavoBillingInfo' DE
+ SC 'base:0:*:1 device:laptop:0:*:2 device:infotv:0:*:3 device:netboot:0:25:4 
+ school:0:5:10' EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch SYNT
+ AX 1.3.6.1.4.1.1466.115.121.1.15 )
 olcObjectClasses: {0}( 1.3.6.1.4.1.27208.1.1.2.1 NAME 'puavoSchool' AUXILIARY 
  MUST ( puavoId ) MAY ( puavoSchoolHomePageURL $ puavoSchoolAdmin $ displayNam
  e $ telephoneNumber $ facsimileTelephoneNumber $ l $ street $ postOfficeBox $
@@ -223,7 +233,7 @@ olcObjectClasses: {2}( 1.3.6.1.4.1.27208.1.1.2.3 NAME 'puavoEduPerson' AUXILIA
  sonEmailEnabled $ puavoUserRole $ puavoEduPersonLastFirstName $ puavoEduPerso
  nAffiliation $ puavoPreferredDesktop $ puavoAllowRemoteAccess $ puavoEduPerso
  nReverseDisplayName $ puavoEduPersonPersonnelNumber $ puavoAdminOfSchool $ pu
- avoCreateTimestamp ) )
+ avoTimestamp ) )
 olcObjectClasses: {3}( 1.3.6.1.4.1.27208.1.1.2.4 NAME 'puavoUserRole' STRUCTUR
  AL MUST ( puavoId $ puavoSchool ) MAY ( cn $ displayName $ memberUid $ member
   $ puavoMemberGroup ) )
@@ -232,7 +242,7 @@ olcObjectClasses: {4}( 1.3.6.1.4.1.27208.1.1.2.5 NAME 'puavoIdPool' STRUCTURAL
  puavoNextRid $ puavoNextDatabaseId $ puavoNextKadminPort ))
 olcObjectClasses: {5}( 1.3.6.1.4.1.27208.1.1.2.6 NAME 'puavoEduOrg' AUXILIARY 
  MAY ( owner $ puavoKerberosRealm $ puavoDomain $ puavoKadminPort $ puavoPuppe
- tHost $ sambaDomainName $ preferredLanguage ) )
+ tHost $ sambaDomainName $ preferredLanguage $ puavoBillingInfo ) )
 olcObjectClasses: {6}( 1.3.6.1.4.1.27208.1.1.2.7 NAME 'puavoShare' AUXILIARY M
  UST ( puavoId $ puavoServer ) )
 olcObjectClasses: {7}( 1.3.6.1.4.1.27208.1.1.2.8 NAME 'puavoDevice' AUXILIARY 
