@@ -26,6 +26,7 @@
   read_by_servers = "by dn.children=\"ou=Servers,ou=Hosts,#{suffix}\" read"
   write_by_servers = "by dn.children=\"ou=Servers,ou=Hosts,#{suffix}\" write"
   syncrepl_acl = "by dn.children=\"ou=Servers,ou=Hosts,#{suffix}\" read by dn.exact=\"uid=slave,o=puavo\" read"
+  read_by_slave = "by dn.exact=\"uid=slave,o=puavo\" read"
   getent_read_acl = "by dn.children=\"ou=People,#{suffix}\" read by dn.subtree=\"ou=Hosts,#{suffix}\" read by group=\"cn=getent,ou=System Groups,#{suffix}\" read"
   uid_find_acl = "by group=\"cn=auth,ou=System Groups,#{suffix}\" read"
 
@@ -37,9 +38,9 @@
 {<%= get_index %>}to dn.subtree="ou=Samba,ou=Hosts,<%= suffix %>" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write by * none break
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="sambaNTPassword,userPassword,sambaAcctFlags" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write by * none break
 {<%= get_index %>}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write by * none break
-{<%= get_index %>}to dn.exact="ou=Printers,<%= suffix %>" attrs="ou,entry" by <%= syncrepl_acl %> <%= read_by_owners_set %> by dn.children="ou=People,<%= suffix %>" read
-{<%= get_index %>}to dn.exact="ou=Printers,<%= suffix %>" attrs="children" by <%= write_by_owners_set %> <%= write_by_servers %> by dn.children="ou=People,<%= suffix %>" read
-{<%= get_index %>}to dn.children="ou=Printers,<%= suffix %>" by <%= write_by_owners_set %> <%= write_by_servers %> by dn.children="ou=People,<%= suffix %>" read
+{<%= get_index %>}to dn.exact="ou=Printers,<%= suffix %>" attrs="ou,entry" <%= syncrepl_acl %> <%= read_by_owners_set %> by dn.children="ou=People,<%= suffix %>" read
+{<%= get_index %>}to dn.exact="ou=Printers,<%= suffix %>" attrs="children" <%= write_by_owners_set %> <%= write_by_servers %> by dn.children="ou=People,<%= suffix %>" read <%= read_by_slave %>
+{<%= get_index %>}to dn.children="ou=Printers,<%= suffix %>" <%= write_by_owners_set %> <%= write_by_servers %> by dn.children="ou=People,<%= suffix %>" read <%= read_by_slave %>
 {<%= get_index %>}to dn.subtree="<%= suffix %>" <%= syncrepl_acl %> by * none break
 {<%= get_index %>}to dn.exact="ou=People,<%= suffix %>" attrs="entry,ou,objectClass" <%= getent_read_acl %> <%= uid_find_acl %> by dn.exact="<%= puavo_user_dn %>" read by anonymous auth
 {<%= get_index %>}to dn.exact="ou=People,<%= suffix %>" attrs="children" <%= write_by_all_admins_set %> by dn.exact="<%= puavo_user_dn %>" read
