@@ -188,7 +188,8 @@ end
 # main
 #
 
-raise 'run me as root' unless Process.uid == 0
+raise 'run me as root'		    unless Process.uid == 0
+raise 'root password is not usable' unless %x(passwd -S root).split[1] == 'P'
 
 begin
   conf = YAML.load_file('/etc/puavo/host_configuration')
