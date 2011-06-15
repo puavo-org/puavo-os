@@ -35,6 +35,7 @@ gem 'rmagick', :require => 'RMagick'
 gem 'ruby-ldap', :require => 'ldap'
 gem "authlogic"
 gem 'mongrel'
+gem 'require_relative'
 group :cucumber do
   gem 'rspec-rails'
   gem 'cucumber'
