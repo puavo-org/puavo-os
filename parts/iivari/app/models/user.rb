@@ -27,6 +27,10 @@ class User < OrganisationData
       if ldap_entry.bind(password_plaintext)
         true
       end
+    rescue LDAP::ResultError
+      # LDAP server is down
+      logger.error e
+      false
     rescue Exception => e
       logger.info "Authentication error: " + e.to_s
       false
