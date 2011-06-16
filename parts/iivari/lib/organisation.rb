@@ -87,16 +87,21 @@ class Organisation
       self.load_configurations if @@configurations_by_host.nil?
       return @@configurations_by_host
     end
+    
+    def configuration_file
+      File.join(Rails.root, 'config', 'organisations.yml')
+    end
 
     def load_configurations
       logger.debug "Load ldap configurations from file"
-      configuration_file = File.join(Rails.root, 'config', 'organisations.yml')
-      if File.exist?(configuration_file)
+      if File.exist?(self.configuration_file)
         self.configurations = YAML.load(ERB.new(IO.read(configuration_file)).result)
         self.configurations_by_host = {}
         self.configurations.each do |key, value|
           self.configurations_by_host[ value["host"] ] = key
         end
+      else
+        logger.warn 'LDAP organisations configuration file "%s" does not exist' % self.configuration_file 
       end
     end
 
