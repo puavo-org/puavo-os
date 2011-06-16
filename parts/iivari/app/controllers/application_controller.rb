@@ -14,23 +14,28 @@ class ApplicationController < ActionController::Base
     logger.info "Request host: #{request.host}"
 
     if session[:organisation].nil?
-      # Find organisation by request.host.
-      # If you don't need multiple organisations you have to only set organisation with:
-      # config/organisations.yml
-      # default
-      #   name: Default organisation
-      #   host: *
-      session[:organisation] = Organisation.find_by_host(request.host)
-      # Find default organisation (host == "*") if request host not found from configurations.
-      session[:organisation] = Organisation.find_by_host("*") unless session[:organisation]
-      unless session[:organisation]
-        # FATAL error
+      begin
+        # Find organisation by request.host.
+        # If you don't need multiple organisations you have to only set organisation with:
+        # config/organisations.yml
+        # default
+        #   name: Default organisation
+        #   host: *
+        session[:organisation] = Organisation.find_by_host(request.host)
+        # Find default organisation (host == "*") if request host not found from configurations.
+        session[:organisation] = Organisation.find_by_host("*") unless session[:organisation]
+        unless session[:organisation]
+          # FATAL error
+          raise "Organisation does not exist and default organisation is not set."
+        end
+      rescue
         # FIXME, redirect to login page?
-        logger.info "Organisation does not exist and default organisation is not set."
-        render :text => "Organisation does not exist!"
+        logger.error $!
+        render :text => 'Fatal error while detecting organisation.'
         return false
       end
     else
+      logger.info "Organisation in session: %s" % session[:organisation].inspect
       # Compare session host to client host. This is important security check.
       unless session[:organisation].host == request.host || session[:organisation].host == "*"
         # This is a serious problem. Some one trying to hack this system.
