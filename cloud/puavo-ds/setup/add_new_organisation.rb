@@ -139,7 +139,8 @@ Readline.readline('OK?', true)
 begin
   new_db = Database.new( "olcSuffix" => suffix,
                          "olcRootDN" => rootDN,
-                         :samba_domain => samba_domain )
+                         :samba_domain => samba_domain,
+                         :kerberos_realm => kerberos_realm )
   # Save without validation
   new_db.save(false)
 rescue => e
