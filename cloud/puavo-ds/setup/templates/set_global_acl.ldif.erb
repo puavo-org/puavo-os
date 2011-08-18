@@ -3,7 +3,8 @@ changetype: modify
 replace: olcAccess
 olcAccess: {0}to * by dn.exact=cn=localroot,cn=config manage by dn.exact=uid=admin,o=puavo manage by * break
 olcAccess: {1}to dn.base="cn=subschema" by * read
-olcAccess: {2}to dn.base="" by * read
+olcAccess: {2}to dn.base="" attrs="namingContexts" by dn.children="o=puavo" read
+olcAccess: {3}to dn.base="" by * read
 
 dn: olcDatabase={0}config,cn=config
 changetype: modify

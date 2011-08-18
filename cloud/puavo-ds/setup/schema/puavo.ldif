@@ -204,7 +204,7 @@ olcAttributeTypes: {59}( 1.3.6.1.4.1.27208.1.1.1.60 NAME 'puavoAdminOfSchool'
  Match SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 )
 olcAttributeTypes: {60}( 1.3.6.1.4.1.27208.1.1.1.61 NAME 'puavoPrinterPPD' DES
  C 'PPD file for the printer if there is no PPD file available on the print se
- rvers' SYNTAX 1.3.6.1.4.1.1466.115.121.1.28 )
+ rvers' SYNTAX 1.3.6.1.4.1.1466.115.121.1.5 )
 olcAttributeTypes: {61}( 1.3.6.1.4.1.27208.1.1.1.62 NAME 'puavoTimestamp' DESC
   'Time when certain operation was done. Format: operation:dn:timestamp. Diffe
  rs from createTimestamp so that in mass operations all entries share the same
@@ -220,11 +220,20 @@ olcAttributeTypes: {64}( 1.3.6.1.4.1.27208.1.1.1.65 NAME 'puavoBillingInfo' DE
  SC 'base:0:*:1 device:laptop:0:*:2 device:infotv:0:*:3 device:netboot:0:25:4 
  school:0:5:10' EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch SYNT
  AX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {65}( 1.3.6.1.4.1.27208.1.1.1.66 NAME 'puavoSettingName' DE
+ SC 'Sub-component specific name for the setting' EQUALITY caseExactMatch SYNT
+ AX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {66}( 1.3.6.1.4.1.27208.1.1.1.67 NAME 'puavoSettingType' DE
+ SC 'Sub-component specific type for the setting' EQUALITY caseExactMatch SYNT
+ AX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {67}( 1.3.6.1.4.1.27208.1.1.1.68 NAME 'puavoSettingValue' D
+ ESC 'Sub-component specific value for the setting' SYNTAX 1.3.6.1.4.1.1466.11
+ 5.121.1.15 SINGLE-VALUE )
 olcObjectClasses: {0}( 1.3.6.1.4.1.27208.1.1.2.1 NAME 'puavoSchool' AUXILIARY 
  MUST ( puavoId ) MAY ( puavoSchoolHomePageURL $ puavoSchoolAdmin $ displayNam
  e $ telephoneNumber $ facsimileTelephoneNumber $ l $ street $ postOfficeBox $
   postalAddress $ postalCode $ st $ description $ member $ puavoNamePrefix $ p
- referredLanguage ) )
+ referredLanguage $ jpegPhoto ) )
 olcObjectClasses: {1}( 1.3.6.1.4.1.27208.1.1.2.2 NAME 'puavoEduGroup' AUXILIAR
  Y MUST ( puavoId $ puavoSchool ) MAY ( displayName $ puavoEduGroupType $ memb
  er $ puavoUserRole ) )
@@ -261,10 +270,16 @@ olcObjectClasses: {9}( 1.3.6.1.4.1.27208.1.1.2.10 NAME 'puavoNetbootDevice' AU
 olcObjectClasses: {10}( 1.3.6.1.4.1.27208.1.1.2.11 NAME 'puavoLocalbootDevice'
   AUXILIARY SUP puavoDevice MUST ( puavoSchool ) )
 olcObjectClasses: {11}( 1.3.6.1.4.1.27208.1.1.2.12 NAME 'puavoPrinter' AUXILIA
- RY SUP puavoDevice MUST ( puavoSchool ) MAY ( puavoPrinterCartridge $ puavoPr
- interPPD ) )
+ RY SUP puavoDevice MUST ( puavoSchool ) MAY ( puavoPrinterCartridge ) )
 olcObjectClasses: {12}( 1.3.6.1.4.1.27208.1.1.2.13 NAME 'puavoApplication' STR
  UCTURAL SUP top MUST ( cn $ puavoSchool $ puavoRule $ puavoId ) )
 olcObjectClasses: {13}( 1.3.6.1.4.1.27208.1.1.2.14 NAME 'puavoBookmark' STRUCT
  URAL SUP top MUST ( displayName $ puavoBookmarkURL $ puavoSchool $ puavoRule 
  $ puavoId ) )
+olcObjectClasses: {14}( 1.3.6.1.4.1.27208.1.1.2.15 NAME 'puavoPrinterQueue' ST
+ RUCTURAL MUST ( puavoId $ puavoServer ) MAY ( puavoRule $ puavoPrinterPPD ) )
+olcObjectClasses: {15}( 1.3.6.1.4.1.27208.1.1.2.16 NAME 'puavoSystemGroup' STR
+ UCTURAL MUST ( cn $ description ) MAY ( member ) )
+olcObjectClasses: {16}( 1.3.6.1.4.1.27208.1.1.2.17 NAME 'puavoSetting' STRUCTU
+ RAL MUST ( puavoId $ puavoSchool $ puavoSettingName ) MAY ( puavoSettingType 
+ $ puavoSettingValue $ puavoRule ) )

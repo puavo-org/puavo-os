@@ -7,6 +7,7 @@ class Database < ActiveLdap::Base
                 :classes => ['olcDatabaseConfig', 'olcHdbConfig'] )
 
   attr_accessor :samba_domain
+  attr_accessor :kerberos_realm
   before_save :set_attribute_values
 
   def initialize(args)

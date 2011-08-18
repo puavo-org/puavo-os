@@ -59,3 +59,9 @@ uid: monitor
 description: Monitoring tool account to read host information
 userPassword: <%= @monitorpw_hash %>
 
+dn: <%= @slavedn %>
+objectClass: account
+objectClass: simpleSecurityObject
+uid: slave
+description: Account for slave servers to read information from databases, no write access
+userPassword: <%= @slavepw_hash %>

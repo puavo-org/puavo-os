@@ -6,6 +6,7 @@
 #  read_by_admin_set = "by set=\"this/puavoSchool/puavoSchoolAdmin* | [#{suffix}]/owner* & user\" read"
 #  write_by_admin_set = "by set=\"this/puavoSchool/puavoSchoolAdmin* | [#{suffix}]/owner* & user\" write"
 #  write_by_admin_set = "by group/puavoEduOrg/owner=#{suffix} write by set=\"this/puavoSchool/puavoSchoolAdmin* & user\" write"
+  read_by_admin_set = "by group/puavoEduOrg/owner=#{suffix} read by set=\"this/puavoSchool & user/puavoAdminOfSchool*\" read"
   write_by_admin_set = "by group/puavoEduOrg/owner=#{suffix} write by set=\"this/puavoSchool & user/puavoAdminOfSchool*\" write"
   azx_by_admin_set = "by group/puavoEduOrg/owner=#{suffix} =azx by set=\"this/puavoSchool & user/puavoAdminOfSchool*\" =azx"
   az_by_admin_set = "by group/puavoEduOrg/owner=#{suffix} =az by set=\"this/puavoSchool & user/puavoAdminOfSchool*\" =az"
@@ -22,9 +23,17 @@
   read_by_owners_set = "by set=\"[#{suffix}]/owner* & user\" read"
   write_by_owners_set = "by set=\"[#{suffix}]/owner* & user\" write"
   super_acl = "by dn=\"uid=admin,o=puavo\" manage"
-  syncrepl_acl = "by dn.children=\"ou=Servers,ou=Hosts,#{suffix}\" read"
-  getent_read_acl = "by dn.children=\"ou=People,#{suffix}\" read by dn.subtree=\"ou=Hosts,#{suffix}\" read by group=\"cn=getent,ou=System Groups,#{suffix}\" read"
-  uid_find_acl = "by group=\"cn=auth,ou=System Groups,#{suffix}\" read"
+  read_by_servers = "by dn.children=\"ou=Servers,ou=Hosts,#{suffix}\" read"
+  write_by_servers = "by dn.children=\"ou=Servers,ou=Hosts,#{suffix}\" write"
+  syncrepl_acl = "by dn.children=\"ou=Servers,ou=Hosts,#{suffix}\" read by dn.exact=\"uid=slave,o=puavo\" read"
+  read_by_slave = "by dn.exact=\"uid=slave,o=puavo\" read"
+  getent_read_acl = "by dn.children=\"ou=People,#{suffix}\" read by dn.subtree=\"ou=Hosts,#{suffix}\" read by group/puavoSystemGroup/member=\"cn=getent,ou=System Groups,#{suffix}\" read"
+  uid_find_acl = "by group/puavoSystemGroup/member=\"cn=auth,ou=System Groups,#{suffix}\" read"
+  printers_read_acl = "by group/puavoSystemGroup/member=\"cn=printerqueues,ou=System Groups,#{suffix}\" read"
+  servers_read_acl = "by group/puavoSystemGroup/member=\"cn=servers,ou=System Groups,#{suffix}\" read"
+  devices_read_acl = "by group/puavoSystemGroup/member=\"cn=devices,ou=System Groups,#{suffix}\" read"
+  bookmarks_read_acl = "by group/puavoSystemGroup/member=\"cn=bookmarks,ou=System Groups,#{suffix}\" read"
+  orginfo_read_acl = "by group/puavoSystemGroup/member=\"cn=orginfo,ou=System Groups,#{suffix}\" read"
 
   @index = -1
   def get_index
@@ -34,8 +43,11 @@
 {<%= get_index %>}to dn.subtree="ou=Samba,ou=Hosts,<%= suffix %>" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write by * none break
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="sambaNTPassword,userPassword,sambaAcctFlags" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write by * none break
 {<%= get_index %>}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write by * none break
+{<%= get_index %>}to dn.exact="ou=Printers,<%= suffix %>" attrs="ou,entry,objectClass" <%= syncrepl_acl %> <%= read_by_owners_set %> by dn.children="ou=People,<%= suffix %>" read <%= printers_read_acl %>
+{<%= get_index %>}to dn.exact="ou=Printers,<%= suffix %>" attrs="children" <%= write_by_owners_set %> <%= write_by_servers %> by dn.children="ou=People,<%= suffix %>" read <%= read_by_slave %> <%= printers_read_acl %>
+{<%= get_index %>}to dn.children="ou=Printers,<%= suffix %>" <%= write_by_owners_set %> <%= write_by_servers %> by dn.children="ou=People,<%= suffix %>" read <%= read_by_slave %> <%= printers_read_acl %>
 {<%= get_index %>}to dn.subtree="<%= suffix %>" <%= syncrepl_acl %> by * none break
-{<%= get_index %>}to dn.exact="ou=People,<%= suffix %>" attrs="entry,ou,objectClass" <%= getent_read_acl %> by dn.exact="<%= puavo_user_dn %>" read by anonymous auth
+{<%= get_index %>}to dn.exact="ou=People,<%= suffix %>" attrs="entry,ou,objectClass" <%= getent_read_acl %> <%= uid_find_acl %> by dn.exact="<%= puavo_user_dn %>" read by anonymous auth
 {<%= get_index %>}to dn.exact="ou=People,<%= suffix %>" attrs="children" <%= write_by_all_admins_set %> by dn.exact="<%= puavo_user_dn %>" read
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="puavoAdminOfSchool" <%= write_by_owners_set %> by users read
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="userPassword" filter="(puavoEduPersonAffiliation=student)" <%= azx_by_all_admins_set %> by * none break
@@ -53,13 +65,13 @@
 {<%= get_index %>}to dn.exact="ou=Automount,<%= suffix %>" attrs="children" <%= write_by_owners_set %> by * read
 {<%= get_index %>}to dn.children="ou=Automount,<%= suffix %>" <%= write_by_owners_set %> by * read
 {<%= get_index %>}to dn.subtree="ou=Kerberos Realms,<%= suffix %>" by dn="<%= kadmin_user_dn %>" write by dn="<%= kdc_user_dn %>" read
-{<%= get_index %>}to dn.exact="ou=Hosts,<%= suffix %>" <%= read_by_all_admins_set %> by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read
-{<%= get_index %>}to dn.exact="ou=Devices,ou=Hosts,<%= suffix %>" attrs="entry,ou,objectClass" <%= read_by_all_admins_set %> by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read by anonymous auth
-{<%= get_index %>}to dn.exact="ou=Devices,ou=Hosts,<%= suffix %>" attrs="children" <%= write_by_all_admins_set %> by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read
-{<%= get_index %>}to dn.children="ou=Devices,ou=Hosts,<%= suffix %>" <%= write_by_admin_set %> by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read by anonymous auth
-{<%= get_index %>}to dn.exact="ou=Servers,ou=Hosts,<%= suffix %>" attrs="entry,ou,objectClass" <%= read_by_owners_set %> by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read by anonymous auth
-{<%= get_index %>}to dn.exact="ou=Servers,ou=Hosts,<%= suffix %>" attrs="children" <%= write_by_owners_set %> by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read
-{<%= get_index %>}to dn.children="ou=Servers,ou=Hosts,<%= suffix %>" <%= write_by_owners_set %> by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read by anonymous auth
+{<%= get_index %>}to dn.exact="ou=Hosts,<%= suffix %>" <%= read_by_all_admins_set %> by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read by <%= devices_read_acl %> <%= servers_read_acl %>
+{<%= get_index %>}to dn.exact="ou=Devices,ou=Hosts,<%= suffix %>" attrs="entry,ou,objectClass" <%= read_by_all_admins_set %> by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read <%= devices_read_acl %> by anonymous auth
+{<%= get_index %>}to dn.exact="ou=Devices,ou=Hosts,<%= suffix %>" attrs="children" <%= write_by_all_admins_set %> by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read <%= devices_read_acl %>
+{<%= get_index %>}to dn.children="ou=Devices,ou=Hosts,<%= suffix %>" <%= write_by_admin_set %> by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read <%= devices_read_acl %> by anonymous auth
+{<%= get_index %>}to dn.exact="ou=Servers,ou=Hosts,<%= suffix %>" attrs="entry,ou,objectClass" <%= read_by_owners_set %> by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read <%= servers_read_acl %> by anonymous auth
+{<%= get_index %>}to dn.exact="ou=Servers,ou=Hosts,<%= suffix %>" attrs="children" <%= write_by_owners_set %> by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read <%= servers_read_acl %>
+{<%= get_index %>}to dn.children="ou=Servers,ou=Hosts,<%= suffix %>" <%= write_by_owners_set %> by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read <%= servers_read_acl %> by anonymous auth
 {<%= get_index %>}to dn.exact="ou=Samba,ou=Hosts,<%= suffix %>" attrs="entry,ou,objectClass" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" read
 {<%= get_index %>}to dn.exact="ou=Samba,ou=Hosts,<%= suffix %>" attrs="children" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write
 {<%= get_index %>}to dn.children="ou=Samba,ou=Hosts,<%= suffix %>" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write
@@ -76,7 +88,12 @@
 {<%= get_index %>}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) by set="[<%= suffix %>]/owner* & user" write by set="this/puavoSchoolAdmin* & user" +rscxd <%= getent_read_acl %>
 {<%= get_index %>}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" attrs="sambaSID,sambaDomainName,sambaNextUserRid,sambaNextRid" by dn="uid=samba,o=puavo" write <%= write_by_all_admins_set %>
 {<%= get_index %>}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" <%= write_by_admin_set %> by dn="uid=samba,o=puavo" write <%= read_by_all_admins_set %>
-{<%= get_index %>}to dn.subtree="ou=System Accounts,<%= suffix %>" attrs="userPassword" by anonymous auth
-{<%= get_index %>}to dn.subtree="ou=Desktops,<%= suffix %>" by set="[<%= suffix %>]/owner* & user" write
-{<%= get_index %>}to dn="<%= suffix %>" attrs="entry,preferredLanguage" <%= read_by_all_admins_set %> by dn.exact="<%= puavo_user_dn %>" read by dn.exact="<%= kdc_user_dn %>" read by dn.exact="<%= kadmin_user_dn %>" read by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read <%= getent_read_acl %> by * +sxd
+{<%= get_index %>}to dn.subtree="ou=System Accounts,<%= suffix %>" attrs="userPassword" <%= write_by_admin_set %> by anonymous auth
+{<%= get_index %>}to dn.subtree="ou=System Accounts,<%= suffix %>" <%= write_by_admin_set %>
+{<%= get_index %>}to dn.subtree="ou=System Groups,<%= suffix %>" attrs="member" <%= write_by_admin_set %>
+{<%= get_index %>}to dn.subtree="ou=System Groups,<%= suffix %>" <%= read_by_admin_set %>
+{<%= get_index %>}to dn.subtree="ou=Desktops,<%= suffix %>" by set="[<%= suffix %>]/owner* & user" write by dn.children="ou=People,<%= suffix %>" read
+{<%= get_index %>}to dn="<%= suffix %>" attrs="entry" <%= read_by_all_admins_set %> by dn.exact="<%= puavo_user_dn %>" read by dn.exact="<%= kdc_user_dn %>" read by dn.exact="<%= kadmin_user_dn %>" read by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read <%= getent_read_acl %> by * +sxd
+{<%= get_index %>}to dn="<%= suffix %>" attrs="preferredLanguage" <%= write_by_owners_set %> <%= read_by_all_admins_set %> by dn.exact="<%= puavo_user_dn %>" read by dn.exact="<%= kdc_user_dn %>" read by dn.exact="<%= kadmin_user_dn %>" read by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read <%= getent_read_acl %> <%= orginfo_read_acl %> by * +sxd
+{<%= get_index %>}to dn="<%= suffix %>" attrs="eduOrgLegalName,puavoDomain,puavoPuppetHost,o" <%= write_by_owners_set %> <%= read_by_all_admins_set %> by dn.exact="<%= puavo_user_dn %>" read by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read <%= orginfo_read_acl %>
 {<%= get_index %>}to dn="<%= suffix %>" <%= read_by_all_admins_set %> by dn.exact="<%= puavo_user_dn %>" read by dn.exact="<%= kdc_user_dn %>" read by dn.exact="<%= kadmin_user_dn %>" read by dn="uid=puppet,o=puavo" read by dn="uid=monitor,o=puavo" read by * +sxd
