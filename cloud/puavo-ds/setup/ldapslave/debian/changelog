@@ -1,3 +1,9 @@
+puavotools-ldapslave (0.1.4) lucid; urgency=low
+
+  * add olcDbIndexes for memberUid, macAddress, uidNumber and gidNumber
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Thu, 17 Mar 2011 10:24:20 +0200
+
 puavotools-ldapslave (0.1.3) lucid; urgency=low
 
   * Kerberos initialisation and authentication works now against kdc slave
