@@ -18,6 +18,10 @@ module Puavo
       def devices
         Puavo::Client::API::Devices.new(subdomain, username, password, ssl)
       end
+
+      def users
+        Puavo::Client::API::Users.new(subdomain, username, password, ssl)
+      end
     end
   end
 end
