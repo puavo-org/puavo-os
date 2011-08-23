@@ -4,14 +4,14 @@ Simple ruby wrapper for the {Puavo API}[https://github.com/opinsys/puavo-user]
 
 == Examples
 
-<pre>
+(({
 puavo = Puavo::Client::Base.new('yourhostname', 'yourusername', 'yourpassword')
 
 schools = puavo.schools.all
 school = schools.first
 puavo.groups.find_by_school_id(school.puavoId)
 puavo.devices.find_by_school_id(school.puavoId)
-</pre>
+}))
 
 == Copyright
 
