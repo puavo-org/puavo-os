@@ -3,5 +3,5 @@
 <%= render 'form' %>
 
 <% content_for :tools do %>
-<div><%= link_to t('links.show'), @channel %></div>
+<div><%= link_to t('links.show'), @channel, :class => "show" %></div>
 <% end %>
