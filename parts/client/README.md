@@ -2,7 +2,16 @@
 
 Simple ruby wrapper for the [Puavo API](https://github.com/opinsys/puavo-user])
 
+## Installation
+
+    sudo gem install httparty gemcutter jeweler
+    git clone https://<username>@github.com/opinsys/puavo-client.git
+    cd puavo-client
+    sudo rake install
+
 ## Examples
+
+    require 'puavo-client'
 
     puavo = Puavo::Client::Base.new('yourhostname', 'yourusername', 'yourpassword')
     
