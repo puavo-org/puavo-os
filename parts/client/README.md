@@ -1,6 +1,6 @@
 ## Overview
 
-Simple ruby wrapper for the [Puavo API](https://github.com/opinsys/puavo-user])
+Simple ruby wrapper for the [Puavo API](https://github.com/opinsys/puavo-user)
 
 ## Installation
 
