@@ -1,0 +1,15 @@
+require 'httparty'
+require 'json'
+
+require 'puavo/client/base'
+require 'puavo/client/api/base'
+require 'puavo/client/api/schools'
+require 'puavo/client/api/groups'
+require 'puavo/client/api/devices'
+require 'puavo/client/api/users'
+
+require 'puavo/client/model'
+require 'puavo/client/school'
+require 'puavo/client/group'
+require 'puavo/client/device'
+require 'puavo/client/user'
