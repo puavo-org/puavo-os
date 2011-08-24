@@ -1,8 +1,10 @@
 class ChannelsController < ApplicationController
+  before_filter :find_school
+
   # GET /channels
   # GET /channels.xml
   def index
-    @channels = Channel.all
+    @channels = Channel.find_all_by_school_id(@school.puavoId)
     respond_with(@channels)
   end
 
@@ -32,8 +34,11 @@ class ChannelsController < ApplicationController
   def create
     @channel = Channel.new(params[:channel])
     @channel.theme = "gold"
+    @channel.school_id = @school.puavoId
     @channel.save
-    respond_with(@channel)
+    respond_with(@channel) do |format|
+      format.html{ redirect_to( channel_path(@school.puavoId, @channel) ) }
+    end
   end
 
   # PUT /channels/1
@@ -42,7 +47,9 @@ class ChannelsController < ApplicationController
     @channel = Channel.find(params[:id])
     @channel.update_attributes(params[:channel])
 
-    respond_with(@channel)
+    respond_with(@channel) do |format|
+      format.html{ redirect_to( channel_path(@school.puavoId, @channel) ) }
+    end
   end
 
   # DELETE /channels/1

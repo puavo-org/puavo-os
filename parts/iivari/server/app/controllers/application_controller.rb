@@ -6,9 +6,28 @@ class ApplicationController < ActionController::Base
   protect_from_forgery
   layout 'application'
   before_filter :set_organisation, :set_locale, :require_user
-  helper_method :current_user_session, :current_user
+  helper_method :current_user_session, :current_user, :puavo_api
 
   private
+
+  def puavo_api
+    if @puavo_api.nil?
+      server = session[:organisation].value_by_key('puavo_api_server')
+      username = session[:organisation].value_by_key('puavo_api_username')
+      password = session[:organisation].value_by_key('puavo_api_password')
+      ssl = ( session[:organisation].value_by_key('puavo_api_ssl') == false ? false : true )
+
+      @puavo_api = Puavo::Client::Base.new( server, username, password, ssl )
+    end
+    return @puavo_api
+  end
+
+  def find_school
+    if @schools.nil?
+      @schools = puavo_api.schools.all
+    end
+    @school = @schools.select{ |s| s.puavoId.to_s == params[:school_id].to_s }.first
+  end
 
   def set_organisation
     logger.info "Request host: #{request.host}"

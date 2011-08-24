@@ -1,5 +1,5 @@
 
-<%= simple_form_for @channel do |f| %>
+<%= simple_form_for @channel, :url => url do |f| %>
 <%= f.input :name, :required => false %>
 <%= f.input :slide_delay %>
 <%= f.button :submit %>

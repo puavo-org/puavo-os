@@ -11,10 +11,10 @@
 <% @channels.each do |channel| %>
   <tr>
     <td><%= channel.name %></td>
-    <td><%= link_to t('links.slides'), channel_slides_path(channel) %></td>
-    <td><%= link_to t('links.show'), channel %></td>
-    <td><%= link_to t('links.edit'), edit_channel_path(channel) %></td>
-    <td><%= link_to t('links.destroy'), channel, :confirm => t('.confirm'), :method => :delete %></td>
+    <td><%= link_to t('links.slides'), channel_slides_path(@school.puavoId, channel) %></td>
+    <td><%= link_to t('links.show'), channel_path(@school.puavoId, channel) %></td>
+    <td><%= link_to t('links.edit'), edit_channel_path(@school.puavoId, channel) %></td>
+    <td><%= link_to t('links.destroy'), channel_path(@school.puavoId, channel), :confirm => t('.confirm'), :method => :delete %></td>
   </tr>
 <% end %>
 </table>

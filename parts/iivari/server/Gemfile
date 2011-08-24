@@ -36,6 +36,8 @@ gem 'ruby-ldap', :require => 'ldap'
 gem "authlogic"
 gem 'mongrel'
 gem 'require_relative'
+gem 'httparty'
+gem 'puavo-client'
 group :cucumber do
   gem 'rspec-rails'
   gem 'cucumber'
