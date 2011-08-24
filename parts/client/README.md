@@ -11,6 +11,7 @@ Simple ruby wrapper for the [Puavo API](https://github.com/opinsys/puavo-user])
 
 ## Examples
 
+    require 'rybugems'
     require 'puavo-client'
 
     puavo = Puavo::Client::Base.new('yourhostname', 'yourusername', 'yourpassword')
