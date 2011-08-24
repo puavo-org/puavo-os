@@ -14,12 +14,21 @@ Simple ruby wrapper for the [Puavo API](https://github.com/opinsys/puavo-user])
     require 'rubygems'
     require 'puavo-client'
 
-    puavo = Puavo::Client::Base.new('yourhostname', 'yourusername', 'yourpassword')
+    puavo = Puavo::Client::Base.new('yourpuavoserver', 'yourusername', 'yourpassword')
     
     schools = puavo.schools.all
-    school = schools.first
-    puavo.groups.find_by_school_id(school.puavoId)
-    puavo.devices.find_by_school_id(school.puavoId)
+
+    puts "Devices by school"
+    schools.each do |s|
+      puts s.displayName
+      puts puavo.devices.find_by_school_id(s.puavoId).map{ |d| "\t#{d.puavoHostname}" }
+    end
+
+    puts "Groups by school"
+    schools.each do |s|
+      puts s.displayName
+      puts puavo.groups.find_by_school_id(s.puavoId).map{ |g| "\t#{g.cn}" }
+    end
 
 
 ## Copyright
