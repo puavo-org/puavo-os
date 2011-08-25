@@ -33,9 +33,9 @@
       </tr>
       <tr>
 	<td class="action">
-	  <%= link_to image_tag( 'video-display.png', :title => t('links.show') ), channel_slide_path(@channel, slide), :title => t('links.show') %>
-	  <%= link_to image_tag('preferences-system.png', :title => t('links.edit') ), edit_channel_slide_path(@channel, slide), :title => t('links.edit') %>
-	  <%= link_to image_tag('edit-delete.png', :title => t('links.destroy') ), channel_slide_path(@channel, slide), :confirm => t('.confirm'), :method => :delete, :title => t('links.destroy') %>
+	  <%= link_to image_tag( 'video-display.png', :title => t('links.show') ), channel_slide_path(@school.puavoId, @channel, slide), :title => t('links.show') %>
+	  <%= link_to image_tag('preferences-system.png', :title => t('links.edit') ), edit_channel_slide_path(@school.puavoId, @channel, slide), :title => t('links.edit') %>
+	  <%= link_to image_tag('edit-delete.png', :title => t('links.destroy') ), channel_slide_path(@school.puavoId, @channel, slide), :confirm => t('.confirm'), :method => :delete, :title => t('links.destroy') %>
 	</td>
       </tr>
     </table>

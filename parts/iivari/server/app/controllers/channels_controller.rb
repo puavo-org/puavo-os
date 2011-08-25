@@ -1,6 +1,13 @@
 class ChannelsController < ApplicationController
   before_filter :find_school
 
+  def wellcome
+    @school = @schools.first
+    respond_to do |format|
+      format.html { redirect_to channels_path(@school.puavoId) }
+    end
+  end
+
   # GET /channels
   # GET /channels.xml
   def index

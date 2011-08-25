@@ -2,7 +2,7 @@ class SlidesController < ApplicationController
   respond_to :html, :js
   uses_tiny_mce
 
-  before_filter :find_channel
+  before_filter :find_school, :find_channel
 
   # GET /slides
   # GET /slides.xml
@@ -47,7 +47,7 @@ class SlidesController < ApplicationController
     @slide.save
 
     respond_with(@slide) do |format|
-      format.html { redirect_to channel_slide_path(@channel, @slide) }
+      format.html { redirect_to channel_slide_path(@school.puavoId, @channel, @slide) }
     end
   end
 
@@ -64,7 +64,7 @@ class SlidesController < ApplicationController
     @slide.update_attributes(params[:slide])
 
     respond_with(@slide) do |format|
-      format.html { redirect_to channel_slide_path(@channel, @slide) }
+      format.html { redirect_to channel_slide_path(@school.puavoId, @channel, @slide) }
     end
   end
 
@@ -74,7 +74,7 @@ class SlidesController < ApplicationController
     @slide = Slide.find(params[:id])
     @slide.destroy
     respond_with(@slide) do |format|
-      format.html { redirect_to channel_slides_path(@channel) }
+      format.html { redirect_to channel_slides_path(@school.puavoId, @channel) }
     end
   end
 

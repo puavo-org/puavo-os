@@ -1,4 +1,4 @@
-<%= simple_form_for(@display) do |f| %>
+<%= simple_form_for(@display, :url => url) do |f| %>
   <div class="inputs">
     <%= f.input :active %>
     <%= f.association :channel %>

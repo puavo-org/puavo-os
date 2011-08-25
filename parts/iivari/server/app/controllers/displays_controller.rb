@@ -1,8 +1,10 @@
 class DisplaysController < ApplicationController
+  before_filter :find_school
+
   # GET /displays
   # GET /displays.xml
   def index
-    @displays = Display.all
+    @displays = Display.find_all_by_school_id(@school.puavoId, puavo_api)
     respond_with(@displays)
   end
 
@@ -38,7 +40,9 @@ class DisplaysController < ApplicationController
   def update
     @display = Display.find(params[:id])
     @display.update_attributes(params[:display])
-    respond_with(@display)
+    respond_with(@display) do |format|
+      format.html { redirect_to display_path(@school.puavoId, @display) }
+    end
   end
 
   # DELETE /displays/1

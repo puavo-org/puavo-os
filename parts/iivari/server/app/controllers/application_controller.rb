@@ -24,6 +24,7 @@ class ApplicationController < ActionController::Base
 
   def find_school
     if @schools.nil?
+      # FIXME: filter list of schools by access rights
       @schools = puavo_api.schools.all
     end
     @school = @schools.select{ |s| s.puavoId.to_s == params[:school_id].to_s }.first
