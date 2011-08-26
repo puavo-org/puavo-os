@@ -3,6 +3,11 @@ class SlidesController < ApplicationController
   uses_tiny_mce
 
   before_filter :find_school, :find_channel
+  filter_access_to( :index, :create, :new,
+                    :attribute_check => true,
+                    :load_method => lambda { Channel.find(params[:channel_id]) } )
+  filter_access_to( :show, :update, :destroy,
+                    :attribute_check => true )
 
   # GET /slides
   # GET /slides.xml

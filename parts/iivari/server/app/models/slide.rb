@@ -13,6 +13,10 @@ class Slide < OrganisationData
 
   attr_accessor :slide_html
 
+  def school_id
+    channel.school_id
+  end
+
   def image_url(resolution)
     unless self.image.nil?
       "image/#{self.template}/#{self.image}?resolution=#{resolution}"

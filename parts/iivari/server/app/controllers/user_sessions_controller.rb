@@ -14,7 +14,7 @@ class UserSessionsController < ApplicationController
         logger.info "Authlogic errors: %s" % @user_session.errors.inspect
         format.html { render :action => :new }
       else
-        format.html { redirect_to channels_url }
+        format.html { redirect_to wellcome_url }
       end
     end
   end

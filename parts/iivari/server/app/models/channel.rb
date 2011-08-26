@@ -5,6 +5,8 @@ class Channel < OrganisationData
   validates_presence_of :name
   validates_inclusion_of :slide_delay, :in => 2..600
 
+  using_access_control
+
   def theme?
     (self.theme.nil? || self.theme.empty?) ? false : true
   end

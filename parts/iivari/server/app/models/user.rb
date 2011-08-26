@@ -1,4 +1,6 @@
 class User < OrganisationData
+  attr_accessor :admin_of_schools, :role_symbols
+
   acts_as_authentic do |c| 
     c.validate_password_field false 
   end 

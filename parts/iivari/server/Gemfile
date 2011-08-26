@@ -38,6 +38,7 @@ gem 'mongrel'
 gem 'require_relative'
 gem 'httparty'
 gem 'puavo-client'
+gem 'declarative_authorization'
 group :cucumber do
   gem 'rspec-rails'
   gem 'cucumber'

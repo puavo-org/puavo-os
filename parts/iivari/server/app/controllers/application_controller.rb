@@ -24,8 +24,16 @@ class ApplicationController < ActionController::Base
 
   def find_school
     if @schools.nil?
-      # FIXME: filter list of schools by access rights
+      user_groups = puavo_api.groups.find_all_by_memberUid(current_user.login)
+      admin_of_schools = SchoolAdminGroup.where( :group_id => user_groups.map{
+                                                   |g| g.puavoId }).map do
+        |sm| sm.school_id
+      end
       @schools = puavo_api.schools.all
+      unless admin_of_schools.empty?
+        current_user.role_symbols = [:school_admin]
+        current_user.admin_of_schools = admin_of_schools
+      end
     end
     @school = @schools.select{ |s| s.puavoId.to_s == params[:school_id].to_s }.first
   end
@@ -91,6 +99,9 @@ class ApplicationController < ActionController::Base
       flash[:error] = t('notices.login_required')
       redirect_to new_user_session_url
       return false
+    else
+      Authorization.current_user = current_user
+      current_user.role_symbols = []
     end
   end
 

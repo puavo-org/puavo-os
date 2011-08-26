@@ -2,7 +2,7 @@ Iivari::Application.routes.draw do
 
   resources :displays, :path => ':school_id/displays'
 
-  match '/channels/wellcome', :to => "channels#wellcome"
+  match '/channels/wellcome', :to => "channels#wellcome", :as => 'wellcome'
   resources :channels, :path => ':school_id/channels' do
     resources :slides do
       post :sort, :on => :collection

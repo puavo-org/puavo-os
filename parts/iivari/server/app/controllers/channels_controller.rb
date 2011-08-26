@@ -2,16 +2,16 @@ class ChannelsController < ApplicationController
   before_filter :find_school
 
   def wellcome
-    @school = @schools.first
+    path = channels_path(current_user.admin_of_schools.first)
     respond_to do |format|
-      format.html { redirect_to channels_path(@school.puavoId) }
+      format.html { redirect_to path }
     end
   end
 
   # GET /channels
   # GET /channels.xml
   def index
-    @channels = Channel.find_all_by_school_id(@school.puavoId)
+    @channels = Channel.with_permissions_to(:manage).find_all_by_school_id(@school.puavoId)
     respond_with(@channels)
   end
 
