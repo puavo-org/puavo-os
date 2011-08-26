@@ -9,5 +9,5 @@
 </div>
 
 <% content_for :tools do %>
-<div><%= link_to t('links.show'), channel_slide_path(@school.puavoId, @channel, @slide) %></div>
+<div><%= link_to t('links.show'), channel_slide_path(@school.puavoId, @channel, @slide), :class => "show"  %></div>
 <% end %>

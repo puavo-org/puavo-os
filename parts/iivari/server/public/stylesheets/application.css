@@ -1,3 +1,6 @@
+.delete_timer {
+display:none;
+}
 
 div.field, div.actions {
   margin-bottom: 10px;
@@ -47,8 +50,6 @@ div.field, div.actions {
 
 .full {
     width: 100%;
-    height: 350px;
-
 }
 
 .lefthalf {
@@ -100,6 +101,7 @@ div.field, div.actions {
 }
 
 label.string {
+display:block;
     margin-right: 5px;
 }
 

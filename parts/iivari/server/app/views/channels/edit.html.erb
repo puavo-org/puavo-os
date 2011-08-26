@@ -3,5 +3,5 @@
 <%= render( :partial => 'form', :locals => { :url => channel_path(@school.puavoId, @channel) } ) %>
 
 <% content_for :tools do %>
-<div><%= link_to t('links.show'), @channel %></div>
+<div><%= link_to t('links.show'), @channel, :class => "show" %></div>
 <% end %>
