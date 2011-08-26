@@ -18,7 +18,7 @@ class ChannelsController < ApplicationController
   # GET /channels/1
   # GET /channels/1.xml
   def show
-    @channel = Channel.find(params[:id])
+    @channel = Channel.with_permissions_to(:manage).find(params[:id])
     respond_with(@channel)
   end
 
@@ -33,7 +33,7 @@ class ChannelsController < ApplicationController
 
   # GET /channels/1/edit
   def edit
-    @channel = Channel.find(params[:id])
+    @channel = Channel.with_permissions_to(:manage).find(params[:id])
   end
 
   # POST /channels
@@ -51,7 +51,7 @@ class ChannelsController < ApplicationController
   # PUT /channels/1
   # PUT /channels/1.xml
   def update
-    @channel = Channel.find(params[:id])
+    @channel = Channel.with_permissions_to(:manage).find(params[:id])
     @channel.update_attributes(params[:channel])
 
     respond_with(@channel) do |format|
@@ -62,7 +62,7 @@ class ChannelsController < ApplicationController
   # DELETE /channels/1
   # DELETE /channels/1.xml
   def destroy
-    @channel = Channel.find(params[:id])
+    @channel = Channel.with_permissions_to(:manage).find(params[:id])
     @channel.destroy
     respond_with(@channel)
   end

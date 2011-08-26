@@ -2,7 +2,7 @@
   <li <%= controller_name.match(/channels|slides/) ? "class='current'" : "" %>>
   <%= link_to t('links.channels'), channels_path(@school.puavoId) %>
   <ul class="submenu">
-    <% Channel.all.each do |channel| %>
+    <% channels.each do |channel| %>
     <li><%= link_to channel.name, channel_slides_path(@school.puavoId, channel) %></li>
     <% end %>
   </ul>
