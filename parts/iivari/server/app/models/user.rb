@@ -27,11 +27,12 @@ class User < OrganisationData
   def valid_ldap_credentials?(password_plaintext)
     begin 
       if ldap_entry.bind(password_plaintext)
+        self.dn = ldap_entry.dn
         true
       end
-    rescue LDAP::ResultError
+    rescue LDAP::ResultError => e
       # LDAP server is down
-      logger.error e
+      logger.error "LDAP error: " + e.to_s
       false
     rescue Exception => e
       logger.info "Authentication error: " + e.to_s
