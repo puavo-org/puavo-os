@@ -4,6 +4,6 @@ module ChannelsHelper
   end
 
   def channels
-    Channel.with_permissions_to(:manage).all
+    Channel.with_permissions_to(:manage).find_all_by_school_id(@school.puavoId)
   end
 end
