@@ -1,6 +1,10 @@
 
 authorization do
-  # FIXME: organisation owner?
+  role :organisation_owner do
+    has_permission_on :channels, :to => :manage
+    has_permission_on :slides, :to => :manage
+  end
+
   role :school_admin do
     has_permission_on :channels, :to => :manage do
       if_attribute :school_id => is_in {user.admin_of_schools}

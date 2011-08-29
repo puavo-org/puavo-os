@@ -24,15 +24,24 @@ class ApplicationController < ActionController::Base
 
   def find_school
     if @schools.nil?
-      user_groups = puavo_api.groups.find_all_by_memberUid(current_user.login)
-      admin_of_schools = SchoolAdminGroup.where( :group_id => user_groups.map{
-                                                   |g| g.puavoId }).map do
-        |sm| sm.school_id
-      end
       @schools = puavo_api.schools.all
-      unless admin_of_schools.empty?
-        current_user.role_symbols = [:school_admin]
-        current_user.admin_of_schools = admin_of_schools
+      # Convert rdns entry to string
+      owners = puavo_api.organisation.find.owner.map{ |o|
+        o["rdns"]}.map{ |g| 
+        g.map{|c| 
+          c.to_a.join("=")}.join(",") }
+      if owners.include?(current_user.dn)
+        current_user.role_symbols = [:organisation_owner]
+      else
+        user_groups = puavo_api.groups.find_all_by_memberUid(current_user.login)
+        admin_of_schools = SchoolAdminGroup.where( :group_id => user_groups.map{ |g|
+                                                     g.puavoId }).map do |sag|
+          sag.school_id
+        end
+        unless admin_of_schools.empty?
+          current_user.role_symbols = [:school_admin]
+          current_user.admin_of_schools = admin_of_schools
+        end
       end
     end
     @school = @schools.select{ |s| s.puavoId.to_s == params[:school_id].to_s }.first
