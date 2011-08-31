@@ -7,6 +7,10 @@ module Puavo
         @subdomain, @username, @password, @ssl = subdomain, username, password, ssl
       end
 
+      def organisation
+        Puavo::Client::API::Organisation.new(subdomain, username, password, ssl)
+      end
+
       def schools
         Puavo::Client::API::Schools.new(subdomain, username, password, ssl)
       end
