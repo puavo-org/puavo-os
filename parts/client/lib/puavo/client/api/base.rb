@@ -25,17 +25,15 @@ module Puavo
         end
 
         def all
-          self.model_name.parse( rest("#{url_prefix}#{self.model_name.model_path}").parsed_response )
+          self.model_name.parse( self, rest("#{url_prefix}#{self.model_name.model_path}").parsed_response )
         end
         def find_by_school_id(id)
-          self.model_name.parse( rest("#{url_prefix}#{self.model_name.model_path(:school_id => id)}").parsed_response )
+          self.model_name.parse( self, rest("#{url_prefix}#{self.model_name.model_path(:school_id => id)}").parsed_response )
         end
 
         def find_all_by_memberUid(uid)
-          self.model_name.parse( rest("#{url_prefix}#{self.model_name.model_path}?memberUid=#{uid}").parsed_response )
+          self.model_name.parse( self, rest("#{url_prefix}#{self.model_name.model_path}?memberUid=#{uid}").parsed_response )
         end
-
-        private
 
         def rest(url)
           self.class.get(url,

@@ -1,8 +1,13 @@
 module Puavo
   module Client
     class Model
-      def initialize(data)
+      def initialize(api, data)
         @data = data
+        @api = api
+      end
+
+      def api
+        @api
       end
 
       def method_missing(method, *args, &block)
@@ -13,9 +18,9 @@ module Puavo
         end
       end
 
-      def self.parse(data)
+      def self.parse(api, data)
         data.map do |d|
-          new(d)
+          new(api, d)
         end
       end
 
