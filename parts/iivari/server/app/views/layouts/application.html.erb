@@ -36,6 +36,10 @@
   <% if theme !="sun_olive" %>
   <ul id="top-menu" class="menu">
     <% if current_user %>
+    <li><span class="sub"><%= session[:organisation].name %></span></li>
+    <li><%= content_tag(:span, t('.schools'), :class => "sub") %>
+    <%= schools_menu %>
+    </li>
       <div id="top-menu-right">
 	    <li><span><%= t('.logged_in_as') %></span></li>
       <li><a href="#"><%= current_user.login %></a></li>
@@ -46,7 +50,7 @@
   <% end %>
     <hr class="space" />
 
-    <h1><%= @school.displayName %></h1>
+    <h1><%= @school.name %></h1>
 
     <div id="navbar_first_level">
       <div id="nav1">

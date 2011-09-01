@@ -55,6 +55,13 @@ ul.menu li a.sub {
         text-transform:uppercase;
 }
 
+ul.menu li span.sub {
+    padding-right: 10px;
+    text-transform:uppercase;
+    color: gray;
+    font-weight: bolder;
+}
+
 ul.menu li:hover,
 ul.menu li.hover /* protofish */ {
 //        background: #b6e3ec;
