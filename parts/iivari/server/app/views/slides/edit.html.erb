@@ -5,9 +5,9 @@
 <h1><%= t('.title') %></h1>
 
 <div class="slide">
-<%= render :partial => 'form', :locals => { :url => channel_slide_path(@school.puavoId, @channel, @slide)} %>
+<%= render :partial => 'form', :locals => { :url => channel_slide_path(@school.puavo_id, @channel, @slide)} %>
 </div>
 
 <% content_for :tools do %>
-<div><%= link_to t('links.show'), channel_slide_path(@school.puavoId, @channel, @slide), :class => "show"  %></div>
+<div><%= link_to t('links.show'), channel_slide_path(@school.puavo_id, @channel, @slide), :class => "show"  %></div>
 <% end %>

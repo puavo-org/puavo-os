@@ -52,7 +52,7 @@ class SlidesController < ApplicationController
     @slide.save
 
     respond_with(@slide) do |format|
-      format.html { redirect_to channel_slide_path(@school.puavoId, @channel, @slide) }
+      format.html { redirect_to channel_slide_path(@school.puavo_id, @channel, @slide) }
     end
   end
 
@@ -69,7 +69,7 @@ class SlidesController < ApplicationController
     @slide.update_attributes(params[:slide])
 
     respond_with(@slide) do |format|
-      format.html { redirect_to channel_slide_path(@school.puavoId, @channel, @slide) }
+      format.html { redirect_to channel_slide_path(@school.puavo_id, @channel, @slide) }
     end
   end
 
@@ -79,7 +79,7 @@ class SlidesController < ApplicationController
     @slide = Slide.find(params[:id])
     @slide.destroy
     respond_with(@slide) do |format|
-      format.html { redirect_to channel_slides_path(@school.puavoId, @channel) }
+      format.html { redirect_to channel_slides_path(@school.puavo_id, @channel) }
     end
   end
 

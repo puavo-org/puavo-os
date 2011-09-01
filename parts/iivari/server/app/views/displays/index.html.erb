@@ -11,11 +11,11 @@
 
 <% @displays.each do |display| %>
   <tr>
-    <td><%= link_to display.hostname, display_path(@school.puavoId, display) %></td>
+    <td><%= link_to display.hostname, display_path(@school.puavo_id, display) %></td>
     <td><%= display.active ? "X" : "" %></td>
     <td><%= display.channel.name rescue "" %></td>
-    <td><%= link_to t('links.edit'), edit_display_path(@school.puavoId, display) %></td>
-    <td><%= link_to t('links.destroy'), display_path(@school.puavoId, display), :confirm => t('confirm'), :method => :delete %></td>
+    <td><%= link_to t('links.edit'), edit_display_path(@school.puavo_id, display) %></td>
+    <td><%= link_to t('links.destroy'), display_path(@school.puavo_id, display), :confirm => t('confirm'), :method => :delete %></td>
   </tr>
 <% end %>
 </table>

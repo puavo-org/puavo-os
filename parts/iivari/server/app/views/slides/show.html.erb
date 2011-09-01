@@ -10,13 +10,13 @@
 
 <div class="slide_navigation">
 <% if @slide.first? == false %>
-<%= link_to t('links.previous'), channel_slide_path(@school.puavoId, @channel, @slide.higher_item) %>
+<%= link_to t('links.previous'), channel_slide_path(@school.puavo_id, @channel, @slide.higher_item) %>
 <% end %>
 
 <%= if @slide.first? == false && @slide.last? == false then " - " end %> 
 
 <% if @slide.last? == false %>
-       <%= link_to t('links.next'), channel_slide_path(@school.puavoId, @channel, @slide.lower_item) %>
+       <%= link_to t('links.next'), channel_slide_path(@school.puavo_id, @channel, @slide.lower_item) %>
 <% end %>
 <%= "(#{@slide.position}/#{@channel.slides.count})" %>
 </div>
@@ -43,10 +43,10 @@
 </div>
 
 <% content_for :tools do %>
-<div><%= link_to t('links.edit'), edit_channel_slide_path(@school.puavoId, @channel, @slide) %></div>
+<div><%= link_to t('links.edit'), edit_channel_slide_path(@school.puavo_id, @channel, @slide) %></div>
 <div>
 <%= link_to( t('links.destroy'),
- channel_slide_path(@school.puavoId, @channel, @slide),
+ channel_slide_path(@school.puavo_id, @channel, @slide),
  :confirm => t('.confirm'),
  :method => :delete ) %>
 </div>
