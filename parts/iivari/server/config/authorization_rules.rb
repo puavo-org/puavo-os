@@ -3,7 +3,8 @@ authorization do
   role :organisation_owner do
     has_permission_on :school_admin_groups, :to => [:index, :add_group, :delete_group]
     has_permission_on :channels, :to => [:manage, :welcome]
-    has_permission_on :slides, :to => :manage
+    has_permission_on :slides, :to => [:manage, :sort, :slide_status, :toggle_status]
+    has_permission_on :slide_timers, :to => :manage
     has_permission_on :displays, :to => :manage
   end
 
@@ -11,7 +12,10 @@ authorization do
     has_permission_on :channels, :to => [:manage, :welcome] do
       if_attribute :school_id => is_in {user.admin_of_schools}
     end
-    has_permission_on :slides, :to => [:manage, :welcome] do
+    has_permission_on :slides, :to => [:manage, :sort, :slide_status, :toggle_status] do
+      if_attribute :school_id => is_in {user.admin_of_schools}
+    end
+    has_permission_on :slide_timers, :to => [:manage] do
       if_attribute :school_id => is_in {user.admin_of_schools}
     end
     has_permission_on :displays, :to => :manage do

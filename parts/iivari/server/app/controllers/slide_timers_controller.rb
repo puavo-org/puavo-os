@@ -1,6 +1,11 @@
 class SlideTimersController < ApplicationController
-  before_filter :find_slide
+  before_filter :find_school, :find_slide
   respond_to :html, :json
+  filter_access_to( :index, :create, :new,
+                    :attribute_check => true,
+                    :load_method => lambda { @slide.channel } )
+  filter_access_to( :show, :update, :edit, :destroy,
+                    :attribute_check => true )
 
   # GET /slide_timers
   # GET /slide_timers.xml

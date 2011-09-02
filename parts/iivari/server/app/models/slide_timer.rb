@@ -6,6 +6,10 @@ class SlideTimer < ActiveRecord::Base
   after_update :set_channel_updated_at
   before_destroy :set_channel_updated_at
 
+  def school_id
+    slide.channel.school_id
+  end
+
   private
 
   def set_channel_updated_at
