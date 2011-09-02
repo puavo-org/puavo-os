@@ -1,9 +1,9 @@
 <ul id="jsddm">
   <li <%= controller_name.match(/channels|slides/) ? "class='current'" : "" %>>
-  <%= link_to t('links.channels'), channels_path(@school.puavoId) %>
+  <%= link_to t('links.channels'), channels_path(@school.puavo_id) %>
   <ul class="submenu">
     <% channels.each do |channel| %>
-    <li><%= link_to channel.name, channel_slides_path(@school.puavoId, channel) %></li>
+    <li><%= link_to channel.name, channel_slides_path(@school.puavo_id, channel) %></li>
     <% end %>
   </ul>
   </li>

@@ -1,8 +1,13 @@
 class ChannelsController < ApplicationController
   before_filter :find_school
 
-  def wellcome
-    path = channels_path(current_user.admin_of_schools.first)
+  def welcome
+    if current_user.role_symbols.include?(:organisation_owner)
+      path = channels_path(@schools.first.puavo_id)
+    else
+      path = channels_path(current_user.admin_of_schools.first)
+    end
+
     respond_to do |format|
       format.html { redirect_to path }
     end
@@ -11,7 +16,7 @@ class ChannelsController < ApplicationController
   # GET /channels
   # GET /channels.xml
   def index
-    @channels = Channel.with_permissions_to(:manage).find_all_by_school_id(@school.puavoId)
+    @channels = Channel.with_permissions_to(:manage).find_all_by_school_id(@school.puavo_id)
     respond_with(@channels)
   end
 
@@ -41,10 +46,10 @@ class ChannelsController < ApplicationController
   def create
     @channel = Channel.new(params[:channel])
     @channel.theme = "gold"
-    @channel.school_id = @school.puavoId
+    @channel.school_id = @school.puavo_id
     @channel.save
     respond_with(@channel) do |format|
-      format.html{ redirect_to( channel_path(@school.puavoId, @channel) ) }
+      format.html{ redirect_to( channel_path(@school.puavo_id, @channel) ) }
     end
   end
 
@@ -55,7 +60,7 @@ class ChannelsController < ApplicationController
     @channel.update_attributes(params[:channel])
 
     respond_with(@channel) do |format|
-      format.html{ redirect_to( channel_path(@school.puavoId, @channel) ) }
+      format.html{ redirect_to( channel_path(@school.puavo_id, @channel) ) }
     end
   end
 

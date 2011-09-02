@@ -4,7 +4,7 @@ class DisplaysController < ApplicationController
   # GET /displays
   # GET /displays.xml
   def index
-    @displays = Display.find_all_by_school_id(@school.puavoId, puavo_api)
+    @displays = Display.find_all_by_school_id(@school.puavo_id, puavo_api)
     respond_with(@displays)
   end
 
@@ -41,7 +41,7 @@ class DisplaysController < ApplicationController
     @display = Display.find(params[:id])
     @display.update_attributes(params[:display])
     respond_with(@display) do |format|
-      format.html { redirect_to display_path(@school.puavoId, @display) }
+      format.html { redirect_to display_path(@school.puavo_id, @display) }
     end
   end
 

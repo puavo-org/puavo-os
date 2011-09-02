@@ -35,7 +35,7 @@ class ApplicationController < ActionController::Base
       else
         user_groups = puavo_api.groups.find_all_by_memberUid(current_user.login)
         admin_of_schools = SchoolAdminGroup.where( :group_id => user_groups.map{ |g|
-                                                     g.puavoId }).map do |sag|
+                                                     g.puavo_id }).map do |sag|
           sag.school_id
         end
         unless admin_of_schools.empty?
@@ -44,7 +44,7 @@ class ApplicationController < ActionController::Base
         end
       end
     end
-    @school = @schools.select{ |s| s.puavoId.to_s == params[:school_id].to_s }.first
+    @school = @schools.select{ |s| s.puavo_id.to_s == params[:school_id].to_s }.first
   end
 
   def set_organisation
