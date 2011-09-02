@@ -1,5 +1,6 @@
 class ChannelsController < ApplicationController
   before_filter :find_school
+  filter_access_to :all
 
   def welcome
     if current_user.role_symbols.include?(:organisation_owner)
