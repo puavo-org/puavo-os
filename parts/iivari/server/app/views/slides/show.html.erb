@@ -1,6 +1,6 @@
 <% content_for :javascript do %>
   <%= javascript_include_tag "slides/show" %>
-  <%= javascript_tag "var root_path = '#{root_path}'"%>
+  <%= javascript_tag "var root_path = '#{root_path}#{@school.puavo_id}/'"%>
   <%= javascript_tag "var slide_id = #{@slide.id}"%>
   <%= javascript_tag "var channel_id = #{@channel.id}"%>
   <%= javascript_tag "var application_locale = '#{I18n.locale}'"%>

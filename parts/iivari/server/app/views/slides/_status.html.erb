@@ -8,7 +8,7 @@
 <% end %>
 </div>
 <%= link_to( @slide.status ? t('links.deactive') : t('links.active'),
-             toggle_status_channel_slide_path(@channel, @slide),
+             toggle_status_channel_slide_path(@school.puavo_id, @channel, @slide),
 	     :method => :put,
 	     :remote => true,
 	     :id => 'slide_status_button' ) %>
