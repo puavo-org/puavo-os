@@ -1,0 +1,34 @@
+<h2><%= t('.access_group_title') %></h2>
+<p><%= t('.access_group_description') %></p>
+<table>
+<th><%= t('.group_name') %></th>
+<th><%= t('.group_abbreviation') %></th>
+<th><%= t('.school') %></th>
+<% @current_admin_groups.each do |group| %>
+<tr>
+<td><%= group.name %></td>
+<td><%= group.abbreviation %></td>
+<td><%= @schools_by_id[ group.school_id ].name %></td>
+<td><%= link_to( t('.delete'),
+                 delete_group_school_admin_groups_path(@school.puavo_id, group.puavo_id),
+                 :method => :delete ) %></td>
+</tr>
+<% end %>
+</table>
+
+<h2><%= t('.other_group_title') %></h2>
+<table>
+<th><%= t('.group_name') %></th>
+<th><%= t('.group_abbreviation') %></th>
+<th><%= t('.school') %></th>
+<% @available_groups.each do |group| %>
+<tr>
+<td><%= group.name %></td>
+<td><%= group.abbreviation %></td>
+<td><%= @schools_by_id[ group.school_id ].name %></td>
+<td><%= link_to( t('.add'),
+                 add_group_school_admin_groups_path(@school.puavo_id, group.puavo_id),
+                 :method => :put ) %></td>
+</tr>
+<% end %>
+</table>

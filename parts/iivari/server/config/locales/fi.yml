@@ -150,6 +150,16 @@ fi:
   slide_timers:
     list:
       empty: Ei määritetty
+  school_admin_groups:
+    index:
+      access_group_title: Ylläpitoryhmät
+      access_group_description: Ryhmien käyttäjät ovat info-järjestelmän ylläpitäjänä tässä koulussa
+      group_name: Ryhmän nimi
+      group_abbreviation: Ryhmän lyhenne
+      school: Koulu
+      add: Lisää
+      delete: Poista
+      other_group_title: Muut organisaation ryhmät
   authlogic:
     error_messages:
       login_blank: ei voi olla tyhjä

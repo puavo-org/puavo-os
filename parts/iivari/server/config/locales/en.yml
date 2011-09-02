@@ -125,6 +125,16 @@ en:
   slide_timers:
     list:
       empty: not defined
+  school_admin_groups:
+    index:
+      access_group_title: Administration groups
+      access_group_description: Users in the following groups is administrator on this school
+      group_name: Group name
+      group_abbreviation: Group abbreviation
+      school: School
+      add: Add
+      delete: Delete
+      other_group_title: Other groups of organisation
   authlogic:
     error_messages:
       login_blank: can not be blank

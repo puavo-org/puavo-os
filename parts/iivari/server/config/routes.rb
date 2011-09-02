@@ -1,4 +1,14 @@
 Iivari::Application.routes.draw do
+  resources :school_admin_groups, :path => ':school_id/admins' do
+    collection do
+      put(':group_id',
+          :to => 'school_admin_groups#add_group',
+          :as => 'add_group' )
+      delete(':group_id',
+          :to => 'school_admin_groups#delete_group',
+          :as => 'delete_group' )
+    end
+  end
   resources :displays, :path => ':school_id/displays'
 
   match '/channels/welcome', :to => "channels#welcome", :as => 'welcome'

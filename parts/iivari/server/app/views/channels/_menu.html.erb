@@ -10,4 +10,9 @@
   <li <%= controller_name.match(/displays/) ? "class='current'" : "" %>>
     <%= link_to t('links.displays'), displays_path %>
   </li>
+  <% permitted_to? :index, :school_admin_groups do %>
+  <li <%= controller_name.match(/school_admin_groups/) ? "class='current'" : "" %>>
+    <%= link_to t('links.admins'), school_admin_groups_path %>
+  </li>
+  <% end %>
 </ul>
