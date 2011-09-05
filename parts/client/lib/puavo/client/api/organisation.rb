@@ -5,7 +5,7 @@ module Puavo
         model_name 'Puavo::Client::Organisation'
 
         def find
-          Puavo::Client::Organisation.new( rest("#{url_prefix}#{self.model_name.model_path}").parsed_response )
+          Puavo::Client::Organisation.new( self, rest("#{url_prefix}#{self.model_name.model_path}").parsed_response )
         end
       end
     end
