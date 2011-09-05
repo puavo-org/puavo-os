@@ -4,7 +4,9 @@ module ApplicationHelper
     content_tag :ul do
       @schools.map do |school|
         content_tag :li do
-          link_to( school.name,  channels_path(school.puavo_id) )
+          if permitted_to? :create, Channel.new(:school_id => school.puavo_id)
+            link_to( school.name,  channels_path(school.puavo_id) )
+          end
         end
       end.join.html_safe
     end.html_safe
