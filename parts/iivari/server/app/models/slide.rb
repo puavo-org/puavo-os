@@ -13,6 +13,8 @@ class Slide < OrganisationData
 
   attr_accessor :slide_html
 
+  using_access_control
+
   def school_id
     channel.school_id
   end
