@@ -8,6 +8,11 @@ class ApplicationController < ActionController::Base
   before_filter :set_organisation, :set_locale, :require_user
   helper_method :current_user_session, :current_user, :puavo_api
 
+  def permission_denied
+    flash[:error] = t('notices.not_access')
+    redirect_to new_user_session_url
+  end
+
   private
 
   def puavo_api
@@ -131,4 +136,5 @@ class ApplicationController < ActionController::Base
     redirect_to(session[:return_to] || default)
     session[:return_to] = nil
   end
+
 end
