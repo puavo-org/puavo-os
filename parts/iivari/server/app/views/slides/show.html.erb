@@ -34,7 +34,7 @@
 </div>
 
 <% if @slide.slide_timers.empty? %>
-<h2><%= link_to t('links.slide_timers'), slide_slide_timers_path(@slide), :remote => true, :class => 'link_slide_timers' %></h2>
+<h2><%= link_to t('links.slide_timers'), slide_slide_timers_path(@school.puavo_id, @slide), :remote => true, :class => 'link_slide_timers' %></h2>
 <% else %>
 <h2><%= t('links.slide_timers') %></h2>
 <% end %>

@@ -46,7 +46,7 @@ class SlideTimersController < ApplicationController
     @slide_timer.slide_id = @slide.id
     @slide_timer.save
     respond_with([@slide, @slide_timer]) do |format|
-      format.js { redirect_to slide_slide_timers_path(@slide, :format => :js) }
+      format.js { redirect_to slide_slide_timers_path(@school.puavo_id, @slide, :format => :js) }
     end
   end
 

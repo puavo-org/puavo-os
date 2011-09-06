@@ -22,7 +22,7 @@ Iivari::Application.routes.draw do
     end
   end
 
-  resources :slides, :only => [] do
+  resources :slides, :path => ':school_id/slides' do
     resources :slide_timers
   end
 
