@@ -8,6 +8,7 @@ class UserSessionsController < ApplicationController
   def create
     @user_session = UserSession.new(params[:user_session])
     @user_session.save
+    session[:schools] = nil
     #logger.debug "User session: %s" % @user_session.inspect
     respond_with(@user_session) do |format|
       if @user_session.errors.any?

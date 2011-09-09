@@ -28,15 +28,17 @@ class ApplicationController < ActionController::Base
   end
 
   def find_school
-    if @schools.nil?
-      @schools = puavo_api.schools.all
+    if session[:schools].nil?
+      session[:schools] = puavo_api.schools.all
+      # FIXME: puavo must be return string?
       # Convert rdns entry to string
       owners = puavo_api.organisation.find.owner.map{ |o|
         o["rdns"]}.map{ |g| 
         g.map{|c| 
           c.to_a.join("=")}.join(",") }
       if owners.include?(current_user.dn)
-        current_user.role_symbols = [:organisation_owner]
+        logger.info "Logged in user is organisation owner!"
+        session[:role_symbols] = [:organisation_owner]
       else
         user_groups = puavo_api.groups.find_all_by_memberUid(current_user.login)
         admin_of_schools = SchoolAdminGroup.where( :group_id => user_groups.map{ |g|
@@ -44,12 +46,18 @@ class ApplicationController < ActionController::Base
           sag.school_id
         end
         unless admin_of_schools.empty?
-          current_user.role_symbols = [:school_admin]
-          current_user.admin_of_schools = admin_of_schools
+          logger.info "Logged in users is administrator in following schools: " + 
+            admin_of_schools.join(",")
+          session[:role_symbols] = [:school_admin]
+          session[:admin_of_schools] = admin_of_schools
         end
       end
     end
+    current_user.role_symbols = session[:role_symbols]
+    current_user.admin_of_schools = session[:admin_of_schools]
+    @schools = session[:schools]
     @school = @schools.select{ |s| s.puavo_id.to_s == params[:school_id].to_s }.first
+    logger.info "Authorization: role_symbols: " + current_user.role_symbols.inspect
   end
 
   def set_organisation
