@@ -116,6 +116,9 @@ class ApplicationController < ActionController::Base
   end
 
   def require_user
+    logger.info "current_user: login: #{current_user.login}, " +
+      "organisation: #{current_user.organisation}, " +
+      "dn: #{current_user.dn}" if current_user
     unless current_user
       store_location
       flash[:error] = t('notices.login_required')
