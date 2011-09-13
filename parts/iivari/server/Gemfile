@@ -13,6 +13,7 @@ gem "authlogic"
 gem 'httparty'
 gem 'puavo-client'
 gem 'declarative_authorization'
+gem 'json'
 
 group :development do
   gem 'sqlite3-ruby', :require => 'sqlite3'
