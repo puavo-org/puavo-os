@@ -5,7 +5,7 @@ class ApplicationController < ActionController::Base
   respond_to :html
   protect_from_forgery
   layout 'application'
-  before_filter :set_organisation, :set_locale, :require_user
+  before_filter :set_organisation, :set_locale, :require_user, :find_school
   helper_method :current_user_session, :current_user, :puavo_api
 
   def permission_denied
@@ -28,36 +28,8 @@ class ApplicationController < ActionController::Base
   end
 
   def find_school
-    if session[:schools].nil?
-      session[:schools] = puavo_api.schools.all
-      # FIXME: puavo must be return string?
-      # Convert rdns entry to string
-      owners = puavo_api.organisation.find.owner.map{ |o|
-        o["rdns"]}.map{ |g| 
-        g.map{|c| 
-          c.to_a.join("=")}.join(",") }
-      if owners.include?(current_user.dn)
-        logger.info "Logged in user is organisation owner!"
-        session[:role_symbols] = [:organisation_owner]
-      else
-        user_groups = puavo_api.groups.find_all_by_memberUid(current_user.login)
-        admin_of_schools = SchoolAdminGroup.where( :group_id => user_groups.map{ |g|
-                                                     g.puavo_id }).map do |sag|
-          sag.school_id
-        end
-        unless admin_of_schools.empty?
-          logger.info "Logged in users is administrator in following schools: " + 
-            admin_of_schools.join(",")
-          session[:role_symbols] = [:school_admin]
-          session[:admin_of_schools] = admin_of_schools
-        end
-      end
-    end
-    current_user.role_symbols = session[:role_symbols]
-    current_user.admin_of_schools = session[:admin_of_schools]
     @schools = session[:schools]
     @school = @schools.select{ |s| s.puavo_id.to_s == params[:school_id].to_s }.first
-    logger.info "Authorization: role_symbols: " + current_user.role_symbols.inspect
   end
 
   def set_organisation
@@ -116,7 +88,7 @@ class ApplicationController < ActionController::Base
   end
 
   def require_user
-    logger.info "current_user: login: #{current_user.login}, " +
+    logger.info "Logged in user: login: #{current_user.login}, " +
       "organisation: #{current_user.organisation}, " +
       "dn: #{current_user.dn}" if current_user
     unless current_user
@@ -125,8 +97,24 @@ class ApplicationController < ActionController::Base
       redirect_to new_user_session_url
       return false
     else
-      Authorization.current_user = current_user
       current_user.role_symbols = []
+      if session[:owners].include?(current_user.puavo_id)
+        logger.debug "Logged in user is organisation owner!"
+        current_user.role_symbols = [:organisation_owner]
+      else
+        admin_of_schools = SchoolAdminGroup.where( :group_id => session[:user_groups].map{ |g|
+                                                     g.puavo_id }).map do |sag|
+          sag.school_id
+        end
+        unless admin_of_schools.empty?
+          logger.debug "Logged in users is administrator in following schools: " + 
+            admin_of_schools.join(",")
+          current_user.role_symbols = [:school_admin]
+          current_user.admin_of_schools = admin_of_schools
+        end
+      end
+      Authorization.current_user = current_user
+      logger.info "Authorization, logged in user's role_symbols: " + current_user.role_symbols.inspect
     end
   end
 

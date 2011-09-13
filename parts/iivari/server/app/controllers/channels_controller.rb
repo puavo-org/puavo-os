@@ -1,6 +1,4 @@
 class ChannelsController < ApplicationController
-  before_filter :find_school
-
   filter_access_to :welcome, :attribute_check => false
   filter_access_to( :index, :new, :create,
                     :attribute_check => true,

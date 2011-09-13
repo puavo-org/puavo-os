@@ -1,5 +1,5 @@
 class ScreenController < ApplicationController
-  skip_before_filter :require_user
+  skip_before_filter :require_user, :find_school
   respond_to :html, :json
   layout "screen"
   before_filter :auth_require, :except => :displayauth

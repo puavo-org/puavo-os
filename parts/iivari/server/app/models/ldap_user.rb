@@ -1,6 +1,6 @@
 class LdapUser
 
-  attr_accessor :dn, :ldap
+  attr_accessor :dn, :ldap, :puavo_id
 
   def self.find(uid)
     host = Organisation.current.ldap_host
@@ -16,6 +16,7 @@ class LdapUser
       ldap_user = LdapUser.new
       logger.debug "Searching tree at base %s with filter %s and SCOPE_SUBTREE" % [treebase, filter]
       ldap.search(treebase, LDAP::LDAP_SCOPE_SUBTREE, filter) do |entry|
+        ldap_user.puavo_id = entry["puavoId"].first.to_i
         ldap_user.dn = entry.dn
         ldap_user.ldap = ldap
         logger.debug "Found user: " % ldap_user.inspect

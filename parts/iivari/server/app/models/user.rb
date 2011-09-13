@@ -28,6 +28,7 @@ class User < OrganisationData
     begin 
       if ldap_entry.bind(password_plaintext)
         self.dn = ldap_entry.dn
+        self.puavo_id = ldap_entry.puavo_id
         true
       end
     rescue LDAP::ResultError => e

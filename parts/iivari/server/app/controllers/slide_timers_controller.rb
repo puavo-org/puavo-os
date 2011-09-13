@@ -1,5 +1,5 @@
 class SlideTimersController < ApplicationController
-  before_filter :find_school, :find_slide
+  before_filter :find_slide
   respond_to :html, :json
   filter_access_to( :index, :create, :new,
                     :attribute_check => true,

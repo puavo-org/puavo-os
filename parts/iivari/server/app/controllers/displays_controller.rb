@@ -1,5 +1,4 @@
 class DisplaysController < ApplicationController
-  before_filter :find_school
   filter_access_to( :all,
                     :attribute_check => true,
                     :load_method => lambda { @school } )

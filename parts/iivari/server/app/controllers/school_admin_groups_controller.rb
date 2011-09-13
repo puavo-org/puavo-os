@@ -1,5 +1,4 @@
 class SchoolAdminGroupsController < ApplicationController
-  before_filter :find_school
   filter_access_to :all, :attribute_check => false
 
   # GET /:school_id/admins
