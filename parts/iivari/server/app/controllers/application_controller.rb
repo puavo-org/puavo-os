@@ -98,6 +98,10 @@ class ApplicationController < ActionController::Base
       return false
     else
       current_user.role_symbols = []
+      if session[:owners].nil?
+        redirect_to new_user_session_url
+        return false
+      end
       if session[:owners].include?(current_user.puavo_id)
         logger.debug "Logged in user is organisation owner!"
         current_user.role_symbols = [:organisation_owner]
