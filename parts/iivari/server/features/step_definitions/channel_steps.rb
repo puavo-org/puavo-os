@@ -3,7 +3,6 @@ Given /^the following channels:$/ do |channels|
 end
 
 When /^I delete the (\d+)(?:st|nd|rd|th) channel$/ do |pos|
-  visit channels_path
   within("table tr:nth-child(#{pos.to_i+1})") do
     click_link "Destroy"
   end
@@ -14,7 +13,6 @@ Then /^I should see the following channels:$/ do |expected_channels_table|
 end
 
 When /^I choose "([^\"]*)" link for the (\d+)(?:st|nd|rd|th) channel$/ do |link_name, pos|
-  visit channels_path
   within("table tr:nth-child(#{pos.to_i+1})") do
     click_link link_name
   end
@@ -25,5 +23,5 @@ Given /^I am logged in as "([^\"]*)" with password "([^\"]*)"$/ do |login, passw
   fill_in("user_session_login", :with => login)
   fill_in("user_session_password", :with => password)
   click_button("Login")
-  page.should have_content("Login successful!")
+  page.should have_content("Logged in as " + login)
 end
