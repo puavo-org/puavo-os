@@ -115,8 +115,18 @@ case ARGV.length
 		legal_name = ARGV[3]
 		samba_domain = ARGV[4]
 		puppet_host = ARGV[5]
+        when 7
+		orgname = ARGV.first
+		domain = ARGV[1]
+
+		suffix = ARGV[6]
+		suffix_start = suffix.split(',')[0]
+		organisation_name = ARGV[2]
+		legal_name = ARGV[3]
+		samba_domain = ARGV[4]
+		puppet_host = ARGV[5]
 	else
-                puts "Usage: $0 orgname [domain_name] [Organisation name] [Legal name] [samba domain] [puppet host]"
+                puts "Usage: $0 orgname [domain_name] [Organisation name] [Legal name] [samba domain] [puppet host] [suffix]"
 		exit
 end
 
