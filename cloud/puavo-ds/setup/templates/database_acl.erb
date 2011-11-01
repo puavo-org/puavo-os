@@ -54,8 +54,8 @@
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="userPassword" <%= azx_by_admin_set %> by self =azx by anonymous auth
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="shadowLastChange" filter="(puavoEduPersonAffiliation=student)" <%= write_by_all_admins_set %> by * none break
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="shadowLastChange" <%= write_by_admin_set %> by self write by anonymous auth
-{<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="entry,uid,puavoId,eduPersonPrincipalName,objectClass,givenName,sn" <%= write_by_admin_set %> by dn="<%= puavo_user_dn %>" read <%= getent_read_acl %> <%= uid_find_acl %> by anonymous auth
-{<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="uidNumber,gidNumber,homeDirectory,givenName,sn,telephoneNumber,mail,puavoEduPersonAffiliation,preferredLanguage,puavoPreferredDesktop" <%= write_by_admin_set %> <%= getent_read_acl %>
+{<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="entry,uid,puavoId,eduPersonPrincipalName,objectClass,givenName,sn,puavoEduPersonAffiliation" <%= write_by_admin_set %> by dn="<%= puavo_user_dn %>" read <%= getent_read_acl %> <%= uid_find_acl %> by anonymous auth
+{<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="uidNumber,gidNumber,homeDirectory,givenName,sn,telephoneNumber,mail,preferredLanguage,puavoPreferredDesktop" <%= write_by_admin_set %> <%= getent_read_acl %>
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="puavoSchool" <%= write_by_admin_set %> by self read
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="sambaNTPassword,sambaLMPassword" <%= az_by_admin_set %>
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" <%= write_by_admin_set %> by dn.subtree="ou=Hosts,<%= suffix %>" read
