@@ -27,7 +27,11 @@ Run the tests with nose (contains integration tests so ensure the iivari server 
       sudo pip install nose
       nosetests
 
-Start the kiosk:
+Test the display hardware in offline mode:
+
+      bin/display-test-pattern.py
+
+Start the kiosk slideshow:
 
       bin/iivari-kiosk.py
 
