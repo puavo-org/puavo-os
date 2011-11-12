@@ -73,7 +73,7 @@ if __name__ == "__main__":
         # (eg. "800x600")
         (width, height) = [int(d) for d in opts.size.split('x')]
     else:
-        size = app.desktop().size()
+        size = app.desktop().availableGeometry().size()
         width = size.width()
         height = size.height()
 

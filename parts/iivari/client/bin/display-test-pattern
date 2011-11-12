@@ -47,7 +47,7 @@ if __name__ == "__main__":
     # create the main window
     window = iivari.MainWindow(url=url, use_repl=True)
 
-    size = QT_APP.desktop().size()
+    size = QT_APP.desktop().availableGeometry().size()
     width = size.width()
     height = size.height()
 
