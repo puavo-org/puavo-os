@@ -58,7 +58,7 @@
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="shadowLastChange" filter="(puavoEduPersonAffiliation=student)" <%= write_by_all_admins_set %> by * none break
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="shadowLastChange" <%= write_by_admin_set %> by self write by anonymous auth
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="entry,uid,puavoId,eduPersonPrincipalName,objectClass,puavoEduPersonAffiliation" <%= write_by_admin_set %> by dn="<%= puavo_user_dn %>" read <%= getent_read_acl %> <%= uid_find_acl %> by anonymous auth
-{<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="uidNumber,gidNumber,homeDirectory,givenName,sn,telephoneNumber,preferredLanguage,puavoPreferredDesktop" <%= write_by_admin_set %> <%= getent_read_acl %>
+{<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="uidNumber,gidNumber,homeDirectory,givenName,sn,telephoneNumber,preferredLanguage,puavoPreferredDesktop" <%= write_by_admin_set %> <%= getent_read_acl %> by dn="<%= puavo_user_dn %>" read
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="givenName,sn,displayName,puavoEduPersonReverseDisplayName" <%= write_by_admin_set %> <%= getent_read_acl %> <%= addressbook_read_acl %>
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="telephoneNumber,mail,puavoEduPersonPersonnelNumber" <%= write_by_admin_set %> <%= addressbook_read_acl %>
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="puavoSchool" <%= write_by_admin_set %> by self read
