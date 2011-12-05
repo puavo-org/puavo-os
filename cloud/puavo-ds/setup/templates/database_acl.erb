@@ -54,6 +54,7 @@
 {<%= get_index %>}to dn.exact="ou=People,<%= suffix %>" attrs="children" <%= write_by_all_admins_set %> by dn.exact="<%= puavo_user_dn %>" read
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="puavoAdminOfSchool" <%= write_by_owners_set %> by users read
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="userPassword" filter="(puavoEduPersonAffiliation=student)" <%= azx_by_all_admins_set %> by set="user/puavoEduPersonAffiliation & [teacher]" =azx by * none break
+{<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="userPassword" filter="(puavoLocked=TRUE)" <%= azx_by_admin_set %> by self =azx
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="userPassword" <%= azx_by_admin_set %> by self =azx by anonymous auth
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="shadowLastChange" filter="(puavoEduPersonAffiliation=student)" <%= write_by_all_admins_set %> by * none break
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="shadowLastChange" <%= write_by_admin_set %> by self write by anonymous auth
