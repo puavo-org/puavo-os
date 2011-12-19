@@ -37,12 +37,18 @@
   orginfo_read_acl = "by group/puavoSystemGroup/member=\"cn=orginfo,ou=System Groups,#{suffix}\" read"
   addressbook_read_acl = "by group/puavoSystemGroup/member=\"cn=addressbook,ou=System Groups,#{suffix}\" read"
   users_read_acl = "by dn.children=\"ou=People,#{suffix}\" read"
+  check_puavo_version_2 = "by set=\"[#{suffix}]/puavoVersion & [2]\" none"
 
   @index = -1
   def get_index
     @index += 1
   end
 %>
+{<%= get_index %>}to dn.onelevel="ou=Groups,<%= suffix %>" filter="(objectClass=posixGroup)" <%= check_puavo_version_2 %> stop by * none break
+{<%= get_index %>}to dn.subtree="ou=Schools,ou=Groups,<%= suffix %>" <%= check_puavo_version_2 %> break
+{<%= get_index %>}to dn.subtree="ou=Roles,ou=Groups,<%= suffix %>" <%= check_puavo_version_2 %> break
+{<%= get_index %>}to dn.subtree="ou=SchoolRoles,ou=Groups,<%= suffix %>" <%= check_puavo_version_2 %> break
+{<%= get_index %>}to dn.subtree="ou=Classes,ou=Groups,<%= suffix %>" <%= check_puavo_version_2 %> break
 {<%= get_index %>}to dn.subtree="ou=Samba,ou=Hosts,<%= suffix %>" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write by * none break
 {<%= get_index %>}to dn.subtree="ou=People,<%= suffix %>" attrs="sambaNTPassword,userPassword,sambaAcctFlags" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write by * none break
 {<%= get_index %>}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" by dn.children="ou=Servers,ou=Hosts,<%= suffix %>" write by * none break
@@ -90,7 +96,7 @@
 {<%= get_index %>}to dn.exact="cn=Domain Admins,ou=Groups,<%= suffix %>" <%= read_by_owners_set %>
 {<%= get_index %>}to dn.exact="cn=Domain Users,ou=Groups,<%= suffix %>" <%= read_by_all_admins_set %>
 {<%= get_index %>}to dn.exact="ou=Groups,<%= suffix %>" attrs="entry,ou,objectClass" <%= read_by_all_admins_set %> <%= getent_read_acl %>
-{<%= get_index %>}to dn.exact="ou=Groups,<%= suffix %>" attrs="children" <%= read_by_all_admins_set %> <%= getent_read_acl %>
+{<%= get_index %>}to dn.exact="ou=Groups,<%= suffix %>" attrs="children" <%= write_by_all_admins_set %> <%= getent_read_acl %>
 {<%= get_index %>}to dn.exact="ou=Schools,ou=Groups,<%= suffix %>" attrs="entry,ou,objectClass" <%= read_by_all_admins_set %> <%= getent_read_acl %>
 {<%= get_index %>}to dn.exact="ou=Schools,ou=Groups,<%= suffix %>" attrs="children" <%= write_by_all_admins_set %> <%= getent_read_acl %>
 {<%= get_index %>}to dn.subtree="ou=Schools,ou=Groups,<%= suffix %>" <%= write_by_owners_set %> <%= getent_read_acl %>
@@ -106,6 +112,11 @@
 {<%= get_index %>}to dn.exact="ou=Classes,ou=Groups,<%= suffix %>" attrs="children" <%= write_by_all_admins_set %> <%= getent_read_acl %>
 {<%= get_index %>}to dn.subtree="ou=Classes,ou=Groups,<%= suffix %>" attrs="member,memberUid" <%= write_by_admin_set %> <%= getent_read_acl %>
 {<%= get_index %>}to dn.subtree="ou=Classes,ou=Groups,<%= suffix %>" <%= write_by_admin_set %> <%= getent_read_acl %>
+{<%= get_index %>}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoEduGroup) attrs="gidNumber,cn,puavoId,objectClass" <%= write_by_admin_set %> <%= getent_read_acl %>
+{<%= get_index %>}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) attrs="gidNumber,cn,puavoId,objectClass" by set="[<%= suffix %>]/owner* & user" +azrwsc by set="this/puavoSchoolAdmin* & user" +rwsc <%= getent_read_acl %> break
+{<%= get_index %>}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoEduGroup) <%= write_by_admin_set %> <%= getent_read_acl %>
+{<%= get_index %>}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) attrs="member,memberUid" by set="this/puavoSchoolAdmin* | [<%= suffix %>]/owner* & user" write <%= getent_read_acl %> break
+{<%= get_index %>}to dn.subtree="ou=Groups,<%= suffix %>" filter=(objectClass=puavoSchool) by set="[<%= suffix %>]/owner* & user" write by set="this/puavoSchoolAdmin* & user" +rscxd <%= getent_read_acl %>
 {<%= get_index %>}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" attrs="sambaSID,sambaDomainName,sambaNextUserRid,sambaNextRid" by dn="uid=samba,o=puavo" write <%= write_by_all_admins_set %>
 {<%= get_index %>}to dn.exact="sambaDomainName=<%= samba_domain %>,<%= suffix %>" <%= write_by_admin_set %> by dn="uid=samba,o=puavo" write <%= read_by_all_admins_set %>
 {<%= get_index %>}to dn.subtree="ou=System Accounts,<%= suffix %>" attrs="userPassword" <%= write_by_admin_set %> by anonymous auth
