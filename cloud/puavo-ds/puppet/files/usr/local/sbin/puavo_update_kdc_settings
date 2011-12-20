@@ -1,13 +1,16 @@
 #!/usr/bin/ruby
 
-databases = `ldapsearch -Q -Y EXTERNAL -H ldapi:/// -s base -b "" "(objectClass=*)" namingContexts 2>/dev/null | grep namingContexts:`
+#databases = `ldapsearch -Q -Y EXTERNAL -H ldapi:/// -s base -b "" "(objectClass=*)" namingContexts 2>/dev/null | grep namingContexts:`
+databases = `slapcat -b cn=config | grep olcSuffix 2>/dev/null`
+
+puts databases.inspect
 
 hostname = `hostname -f`.chomp
 
 @organisations = []
 
 databases.split("\n").each do |line|
-  if /namingContexts: (.*)/.match(line)
+  if /olcSuffix: (.*)/.match(line)
     suffix = $1
     organisation = {}
 
@@ -27,6 +30,8 @@ databases.split("\n").each do |line|
       if /puavoKadminPort: (.*)/.match(tmp_dbinfo)
         organisation['kadmin_port'] = $1
       end
+
+      puts "ORG: #{organisation['realm']} #{organisation['kadmin_port']}"
 
       @organisations.push organisation
 
