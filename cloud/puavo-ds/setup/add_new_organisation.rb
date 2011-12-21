@@ -25,6 +25,7 @@ require 'organisation'
 require 'organizational_unit'
 require 'samba'
 require 'overlay'
+require 'system_group'
 require 'users/ldap_base'
 require 'users/base_group'
 require 'users/school'
@@ -190,6 +191,9 @@ Automount.create_automount_configuration
 
 puts "* Setting up Samba configuration"
 Samba.create_samba_configuration(organisation_name, samba_domain, suffix_start)
+
+puts "* Create System Groups"
+SystemGroup.create_system_groups
 
 puts "* Add admin users: kdc, kadmin, samba"
 AdminUser.create_admin_user
