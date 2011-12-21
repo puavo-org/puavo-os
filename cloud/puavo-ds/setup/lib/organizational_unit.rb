@@ -15,7 +15,8 @@ class OrganizationalUnit < LdapOrganisationBase
      'Password Policies',
      'Idmap',
      'Kerberos Realms',
-     'Desktops'].each do |ou|
+     'Desktops',
+     'Printers'].each do |ou|
       OrganizationalUnit.create( "ou" => ou )
     end
       
@@ -34,7 +35,19 @@ class OrganizationalUnit < LdapOrganisationBase
 
     ['Applications',
      'Bookmarks',
-     'Services'].each do |ou|
+     'Services',
+     'Firefox'].each do |ou|
+      OrganizationalUnit.create( "ou" => ou )
+    end
+
+    self.ldap_mapping( :dn_attribute => "ou",
+                       :prefix => "ou=Groups",
+                       :classes => ['top', 'organizationalUnit'] )
+
+    ['Roles',
+     'Classes',
+     'SchoolRoles',
+     'Schools'].each do |ou|
       OrganizationalUnit.create( "ou" => ou )
     end
   end
