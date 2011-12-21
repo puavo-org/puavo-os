@@ -9,6 +9,11 @@ require 'tempfile'
 require 'fileutils'
 require 'readline'
 
+unless organisation_name = ARGV.first
+  puts "Set organisation (clone_master.rb example) or use --all arguments (clone_master.rb --all)"
+  exit
+end
+
 @binddn = "uid=admin,o=Puavo"
 
 puts "Master server:"
@@ -44,17 +49,23 @@ contexts = `ldapsearch -LLL -x -H #{@master_server} -D #{@binddn} -w #{@bindpw} 
 @counter = 1;
 
 contexts.split("\n").each do |line|
-	if (line =~ /namingContexts: (.*)/)
-		puts "suffix: #{$1}"
-                data = `ldapsearch -LLL -x -H #{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b #{$1}`
+  if (line =~ /namingContexts: (.*)/)
+    suffix = $1.to_s
+    if organisation_name == "--all" ||
+        suffix[/dc=edu,dc=#{organisation_name},dc=fi/] ||
+        suffix== "o=puavo"
 
-                tempfile = Tempfile.open("data")
-                tempfile.puts data
-                tempfile.close
+      puts "suffix: #{suffix}"
+      data = `ldapsearch -LLL -x -H #{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b #{$suffix}`
 
-                system("slapadd -q -l #{tempfile.path} -F /etc/ldap/slapd.d -b '#{$1}'") \
-                  or raise 'Problem in importing data'
-	end
+      tempfile = Tempfile.open("data")
+      tempfile.puts data
+      #tempfile.close
+      
+      system("slapadd -q -l #{tempfile.path} -F /etc/ldap/slapd.d -b '#{$suffix}'") \
+      or raise 'Problem in importing data'
+    end
+  end
 end
 
 `chown -R openldap.openldap /etc/ldap/slapd.d /var/lib/ldap`
