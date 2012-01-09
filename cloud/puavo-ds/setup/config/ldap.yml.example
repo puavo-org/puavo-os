@@ -27,6 +27,14 @@ settings:
     bind_dn: uid=kadmin,o=puavo
     password: password
 
+  monitor:
+    bind_dn: uid=monitor,o=puavo
+    password: password
+
+  slave:
+    bind_dn: uid=slave,o=puavo
+    password: password
+
   syncrepl:
     urls:
     - ldap://ldap1.example.edu
