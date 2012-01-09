@@ -80,9 +80,9 @@ end
 `cp certs/slapd-server.crt /etc/ssl/certs/slapd-server.crt`
 `cp certs/slapd-server.key /etc/ssl/certs/slapd-server.key`
 
-`chown root.openldap /etc/ssl/certs/slapd-server.key`
-`chown root.openldap /etc/ssl/certs/slapd-server.crt`
-`chown root.openldap /etc/ssl/certs/slapd-ca.crt`
+`chown openldap.openldap /etc/ssl/certs/slapd-server.key`
+`chown openldap.openldap /etc/ssl/certs/slapd-server.crt`
+`chown openldap.openldap /etc/ssl/certs/slapd-ca.crt`
 
 # As /etc/ldap/slapd.d is now totally empty, slapd won't start before
 # initial config is added with slapadd.
