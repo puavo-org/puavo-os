@@ -1,0 +1,40 @@
+#!/bin/bash
+# USAGE:
+#   start HOSTNAME [--repl]
+#
+# Set HOSTNAME as first parameter. Defaults to current hostname.
+# Add --repl as second parameter to enter interactive JavaScript console.
+
+export DISPLAY=:0.0
+xset s reset
+xset s 0 0
+xset s off
+xset s noblank
+xset dpms 0 0 0
+xset -dpms
+xset dpms force on
+
+metacity &
+unclutter -idle 1 -root &
+
+# FIXME: xdpyinfo gives too wide dimension with more than
+# one display attached.
+SIZE=$(xdpyinfo | grep 'dimensions:' | awk '{ print $2 }')
+if [ ! $SIZE ]; then
+  SIZE="800x600"
+  echo " !! unable to autodetect resolution"
+fi
+
+if [ $1 ]; then
+  HOSTNAME=$1
+  shift
+else
+  HOSTNAME=$(hostname)
+fi
+echo "hostname: $HOSTNAME"
+echo "resolution: $SIZE"
+
+# open url to conductor
+#URL="http://localhost:3000/conductor?resolution=$SIZE&hostname=$HOSTNAME"
+URL="http://localhost:3000/displayauth?resolution=$SIZE&hostname=$HOSTNAME"
+bin/iivari-kiosk.py "$URL" "$HOSTNAME" "$SIZE" $*
