@@ -20,12 +20,12 @@ unclutter -idle 1 -root &
 # FIXME: xdpyinfo gives too wide dimension with more than
 # one display attached.
 SIZE=$(xdpyinfo | grep 'dimensions:' | awk '{ print $2 }')
-if [ ! $SIZE ]; then
+if [ -z "$SIZE" ]; then
   SIZE="800x600"
   echo " !! unable to autodetect resolution"
 fi
 
-if [ $1 ]; then
+if [ -n "$1" ]; then
   HOSTNAME=$1
   shift
 else
@@ -35,6 +35,7 @@ echo "hostname: $HOSTNAME"
 echo "resolution: $SIZE"
 
 # open url to conductor
-#URL="http://localhost:3000/conductor?resolution=$SIZE&hostname=$HOSTNAME"
-URL="http://localhost:3000/displayauth?resolution=$SIZE&hostname=$HOSTNAME"
-bin/iivari-kiosk.py "$URL" "$HOSTNAME" "$SIZE" $*
+URL="http://localhost:3000/conductor?resolution=$SIZE&hostname=$HOSTNAME"
+# URL="http://localhost:3000/displayauth?resolution=$SIZE&hostname=$HOSTNAME"
+
+/usr/bin/iivari-kiosk.py "$URL" "$HOSTNAME" "$SIZE" $*
