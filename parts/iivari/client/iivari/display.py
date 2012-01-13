@@ -101,12 +101,12 @@ class Display(QtCore.QObject):
     @QtCore.Slot()
     def powerOn(self):
         """Power on the display."""
-        self._runscript("display_on.sh")
+        self._runscript("iivari-display_on")
 
     @QtCore.Slot()
     def powerOff(self):
         """Power off the display."""
-        self._runscript("display_off.sh")
+        self._runscript("iivari-display_off")
 
 
     def _runscript(self, name):

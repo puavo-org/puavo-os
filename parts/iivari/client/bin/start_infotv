@@ -1,6 +1,6 @@
 #!/bin/bash
 # USAGE:
-#   start HOSTNAME [--repl]
+#   start_infotv HOSTNAME [--repl]
 #
 # Set HOSTNAME as first parameter. Defaults to current hostname.
 # Add --repl as second parameter to enter interactive JavaScript console.
@@ -38,4 +38,4 @@ echo "resolution: $SIZE"
 URL="http://localhost:3000/conductor?resolution=$SIZE&hostname=$HOSTNAME"
 # URL="http://localhost:3000/displayauth?resolution=$SIZE&hostname=$HOSTNAME"
 
-/usr/bin/iivari-kiosk.py "$URL" "$HOSTNAME" "$SIZE" $*
+/usr/bin/iivari-kiosk "$URL" "$HOSTNAME" "$SIZE" $*
