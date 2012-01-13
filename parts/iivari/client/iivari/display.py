@@ -32,7 +32,6 @@ class Display(QtCore.QObject):
     
     page = None
     hostname = None
-    bin_dir = None
     # save startup time to check later when refresh signal is called.
     startup_time = time()
     
@@ -108,17 +107,16 @@ class Display(QtCore.QObject):
         """Power off the display."""
         self._runscript("iivari-display_off")
 
-
-    def _runscript(self, name):
+    def _runscript(self, scriptname):
         """Execute a shell script from bin_dir
         """
-        if not self.bin_dir:
-            logger.error("bin dir is not set")
-            return
-        script = os.path.join(self.bin_dir, name)
-        logger.debug("executing script %s" % script)
+        logger.debug("executing script %s" % scriptname)
         try:
-            p = Popen(script, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            p = Popen(scriptname,
+		      shell=False,
+		      stdin=PIPE,
+		      stdout=PIPE,
+		      stderr=PIPE)
             stdout, stderr = p.communicate()
             if len(stdout) > 0:
                 logger.debug(stdout)
@@ -129,4 +127,3 @@ class Display(QtCore.QObject):
                 logger.warn(stderr[0:36])
         except Exception, e:
             logger.error(e)
-
