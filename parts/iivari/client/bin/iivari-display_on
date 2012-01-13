@@ -11,4 +11,5 @@ xset -dpms
 xset dpms force on
 
 # write status to hidden text file (for tests)
-echo on > ~/.iivari-power-status
+mkdir -p ~/.iivari
+echo on > ~/.iivari/power-status

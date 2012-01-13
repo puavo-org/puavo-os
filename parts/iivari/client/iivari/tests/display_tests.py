@@ -10,9 +10,8 @@ from iivari import Display
 
 class DisplayTests(unittest.TestCase):
     
-    bin_dir = os.path.join(os.path.dirname(__file__),'..','bin')
-    # status file location depends on the pwd where the tests are executed
-    status_file = os.path.join(bin_dir,'..','..','.iivari-power-status')
+    bin_dir = os.path.join(os.path.dirname(__file__),'..','..','bin')
+    status_file = os.path.join(os.environ['HOME'], '.iivari', 'power-status')
 
     def setUp(self):
         # Ctrl-C halts the test suite
