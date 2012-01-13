@@ -198,8 +198,11 @@ class MainNetworkAccessManager(QtNetwork.QNetworkAccessManager):
     """Logs possible network errors and handles the cookie jar."""
 
     def __init__(self, cache_path, jar_name="cookiejar.txt"):
-        cookiejar_file = os.path.join(cache_path,jar_name)
         QtNetwork.QNetworkAccessManager.__init__(self)
+
+        if not cookiejar_file:
+          cookiejar_file = os.path.join(cache_path, 'cookiejar.txt')
+
         # set custom cookie jar for persistance
         self.setCookieJar(CookieJar(cookiejar_file))
         self.finished[QtNetwork.QNetworkReply].connect(self._finished)
