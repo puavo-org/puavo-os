@@ -1,11 +1,12 @@
 #!/bin/bash
 # USAGE:
-#   start_infotv HOSTNAME [--repl]
+#   start_infotv URLBASE [--repl]
 #
-# Set HOSTNAME as first parameter. Defaults to current hostname.
+# Set URLBASE as the first parameter.
 # Add --repl as second parameter to enter interactive JavaScript console.
 
 export DISPLAY=:0.0
+
 xset s reset
 xset s 0 0
 xset s off
@@ -17,25 +18,21 @@ xset dpms force on
 metacity &
 unclutter -idle 1 -root &
 
+URLBASE=$1
+shift
+
+HOSTNAME=$(hostname)
+
 # FIXME: xdpyinfo gives too wide dimension with more than
 # one display attached.
 SIZE=$(xdpyinfo | grep 'dimensions:' | awk '{ print $2 }')
 if [ -z "$SIZE" ]; then
   SIZE="800x600"
-  echo " !! unable to autodetect resolution"
+  echo "!! Unable to autodetect resolution" > /dev/stderr
 fi
-
-if [ -n "$1" ]; then
-  HOSTNAME=$1
-  shift
-else
-  HOSTNAME=$(hostname)
-fi
-echo "hostname: $HOSTNAME"
-echo "resolution: $SIZE"
 
 # open url to conductor
-URL="http://localhost:3000/conductor?resolution=$SIZE&hostname=$HOSTNAME"
-# URL="http://localhost:3000/displayauth?resolution=$SIZE&hostname=$HOSTNAME"
+URL="$URLBASE/conductor?resolution=$SIZE&hostname=$HOSTNAME"
+# URL="$URLBASE/displayauth?resolution=$SIZE&hostname=$HOSTNAME"
 
-/usr/bin/iivari-kiosk "$URL" "$HOSTNAME" "$SIZE" $*
+iivari-kiosk "$URL" "$HOSTNAME" "$SIZE" "$@"
