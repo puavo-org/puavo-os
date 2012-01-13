@@ -8,7 +8,7 @@ Homepage: https://github.com/opinsys/iivari/
 
 Package: iivari-client
 Architecture: all
-Depends: ${misc:Depends}
+Depends: ${misc:Depends}, metacity, python-pyside, unclutter
 Description: Webbrowser for iivari info screens
  iivari-client is a webbrowser designed to fetch and show pages
  from iivari-server.  Iivari is a kind of a digital signage system.
