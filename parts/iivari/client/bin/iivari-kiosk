@@ -22,15 +22,6 @@ import os, sys
 import urlparse
 from logging import getLogger
 import PySide
-
-# locate iivary library dir relative to this file
-if os.path.islink(__file__):
-    this_file = os.readlink(__file__)
-else:
-    this_file = __file__
-HOME = os.path.abspath(os.path.dirname(this_file)+'/..')
-# add iivari to system path
-sys.path.insert(0,HOME)
 import iivari
 
 
