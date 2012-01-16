@@ -29,17 +29,17 @@ Run the tests with nose (contains integration tests so ensure the iivari server 
 
 Test the display hardware in offline mode:
 
-      bin/display-test-pattern.py
+      bin/display-test-pattern
 
 Start the kiosk slideshow:
 
-      bin/iivari-kiosk.py
+      bin/iivari-kiosk
 
-You may optionally specify kiosk hostname and screen resolution as input parameters. An interactive JavaScript console is also available in the REPL mode. See "`iivari-kiosk.py --help`" for usage.
+You may optionally specify kiosk hostname and screen resolution as input parameters. An interactive JavaScript console is also available in the REPL mode. See "`iivari-kiosk --help`" for usage.
 
 For example:
 
-      bin/iivari-kiosk.py -n kiosk1
+      bin/iivari-kiosk -n kiosk1
 
 Starts with the hostname "kiosk1".
 
@@ -51,7 +51,7 @@ This is for the OS to prevent possible memory leaks from happening if QWebView w
 
 Such as
 
-      while (true); do bin/iivari-kiosk.py; done
+      while (true); do bin/iivari-kiosk; done
 
 
 Copyright
