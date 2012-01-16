@@ -34,6 +34,9 @@ def process_args():
         "-s", "--size", action="store", dest="size",help="kiosk screen resolution (overrides autodetect)")
     parser.add_option(
         "-r", "--repl", action="store_true", dest="use_repl",help="launch JavaScript REPL for debugging")
+    parser.add_option("-u", "--urlbase", action="store", dest="urlbase",
+                      help="base for url to fetch screen contents")
+
     return parser.parse_args()
 
 
@@ -75,11 +78,14 @@ if __name__ == "__main__":
         height = size.height()
 
     # format start url
-    x = urlparse.urlsplit(iivari.settings.SERVER_URL)
-    path = '/displayauth'
+    x = urlparse.urlsplit(opts.urlbase or iivari.settings.SERVER_URL)
     resolution = "%dx%d" % (width, height)
     params = 'resolution=%s&hostname=%s' % (resolution, hostname)
-    url = urlparse.urlunsplit(urlparse.SplitResult(x.scheme,x.netloc,path,params,''))
+    url = urlparse.urlunsplit(urlparse.SplitResult(x.scheme,
+                                                   x.netloc,
+                                                   x.path,
+                                                   params,
+                                                   ''))
 
     # create the main window
     window = iivari.MainWindow(
