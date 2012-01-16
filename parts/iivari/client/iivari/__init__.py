@@ -27,7 +27,7 @@ import os, __builtin__
 import iivari.settings
 
 # base log and cache default root to repository main directory
-HOME = os.path.abspath(os.path.join(os.path.dirname(__file__),'..'))
+IIVARIDIR = os.path.join(os.environ['HOME'], '.iivari')
 
 # decide which log file to use and setup the log directory
 try:
@@ -35,7 +35,7 @@ try:
     log_file = settings.LOG_FILE
     log_dir = os.path.dirname(log_file)
 except AttributeError:
-    log_dir = os.path.join(HOME,'log')
+    log_dir = os.path.join(IIVARIDIR, 'log')
     log_file = os.path.join(log_dir, 'iivari-infotv.log')
 if log_dir and not os.path.exists(log_dir):
     os.makedirs(log_dir)
@@ -45,7 +45,7 @@ __builtin__.LOG_FILE = log_file
 try:
     cache_path = settings.CACHE_PATH
 except AttributeError:
-    cache_path = os.path.join(HOME,'cache')
+    cache_path = os.path.join(IIVARIDIR, 'cache')
 if not os.path.exists(cache_path):
     os.makedirs(cache_path)
 __builtin__.IIVARI_CACHE_PATH = cache_path
