@@ -197,7 +197,7 @@ class MainWebPage(QtWebKit.QWebPage):
 class MainNetworkAccessManager(QtNetwork.QNetworkAccessManager):
     """Logs possible network errors and handles the cookie jar."""
 
-    def __init__(self, cache_path, jar_name="cookiejar.txt"):
+    def __init__(self, cache_path, cookiejar_file=None):
         QtNetwork.QNetworkAccessManager.__init__(self)
 
         if not cookiejar_file:
