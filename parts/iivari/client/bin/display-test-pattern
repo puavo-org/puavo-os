@@ -23,15 +23,6 @@ import urlparse
 import time
 from logging import getLogger
 import PySide
-
-# locate iivary library dir relative to this file
-if os.path.islink(__file__):
-    this_file = os.readlink(__file__)
-else:
-    this_file = __file__
-HOME = os.path.abspath(os.path.dirname(this_file)+'/..')
-# add iivari to system path
-sys.path.insert(0,HOME)
 import iivari
 
 if __name__ == "__main__":
@@ -49,7 +40,7 @@ if __name__ == "__main__":
     QT_APP = PySide.QtGui.QApplication(sys.argv)
 
     # start with the test pattern
-    assets_path = os.path.join(HOME,'iivari','assets')
+    assets_path = os.path.join(os.environ['HOME'], '.iivari', 'assets')
 
     url = os.path.join(assets_path,'standby.html')
 
