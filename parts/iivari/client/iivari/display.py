@@ -55,8 +55,7 @@ class Display(QtCore.QObject):
             }
             """ % self.hostname)
 
-        # power on the display (at startup)
-        self._runscript("display_on.sh")
+        self.powerOn()
         logger.debug("Initialised Display %s" % self.hostname)
 
 
