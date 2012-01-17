@@ -7,10 +7,11 @@ logger = getLogger(__name__)
 
 from PySide import QtCore, QtWebKit, QtNetwork
 from iivari import Display
+from iivari.settings import DISPLAYSTATUS_PATH
 
 class DisplayTests(unittest.TestCase):
     
-    status_file = settings.DISPLAYSTATUS_PATH
+    status_file = DISPLAYSTATUS_PATH
 
     def setUp(self):
         # Ctrl-C halts the test suite
