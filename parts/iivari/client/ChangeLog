@@ -1,3 +1,25 @@
+= 1.2.3
+Added settings flexibility and leaner start script.
+
+ * Moved start script into kiosk module.
+
+ * Offline cache and cookie jar are initialised only if
+   settings.CACHE_PATH and COOKIE_PATH are set.
+
+ * Fixed desktop geometry detection to use availableGeometry.
+   Multiple display setups should report only one display geometry.
+
+ * Removed cache_path argument from MainNetworkAccessManager.
+
+ * Less verbose logging without any cookies.
+
+= 1.2.2
+Fixed minor test regressions.
+
+= 1.2.1
+Debian packaging proper, including numerous fixes to library loading
+and settings.
+
 = 1.2.0
 Initial import of iivari-client into master branch.
 
