@@ -69,6 +69,8 @@ class MainWebView(QtWebKit.QWebView):
         self.options = kwargs
 
         use_repl = self.options.get('use_repl')
+
+        # if IIVARI_CACHE_PATH is None, caching is disabled
         cache_path = __builtin__.IIVARI_CACHE_PATH
 
         # set custom WebPage to log JavaScript messages
@@ -98,11 +100,12 @@ class MainWebView(QtWebKit.QWebView):
         
         @see http://diveintohtml5.info/offline.html
         """
-        settings.enablePersistentStorage(cache_path)
-        # uncertain whether LocalContentCanAccessRemoteUrls is needed even when using offline cache
-        # FIXME: check, and disable this if unneeded.
-        settings.setAttribute(QWebSettings.LocalContentCanAccessRemoteUrls, True)
-        
+        if cache_path is not None:
+            settings.enablePersistentStorage(cache_path)
+            # uncertain whether LocalContentCanAccessRemoteUrls is needed even when using offline cache
+            # FIXME: check, and disable this if unneeded.
+            settings.setAttribute(QWebSettings.LocalContentCanAccessRemoteUrls, True)
+
         #settings.setAttribute(
         #    QtWebKit.QWebSettings.DeveloperExtrasEnabled, True)
         
@@ -197,17 +200,20 @@ class MainWebPage(QtWebKit.QWebPage):
 
 
 class MainNetworkAccessManager(QtNetwork.QNetworkAccessManager):
-    """Logs possible network errors and handles the cookie jar."""
+    """NetworkAccessManager interface. 
 
-    def __init__(self, cache_path, cookiejar_file=None):
+    Logs possible network errors.
+    Handles the cookie jar, when caching is enabled.
+
+    """
+    def __init__(self, cache_path=None, cookiejar_file=None):
         QtNetwork.QNetworkAccessManager.__init__(self)
-
-        if not cookiejar_file:
-          cookiejar_file = settings.COOKIE_PATH
-
-        # set custom cookie jar for persistance
-        self.setCookieJar(CookieJar(cookiejar_file))
         self.finished[QtNetwork.QNetworkReply].connect(self._finished)
+        if cache_path is not None:
+            if not cookiejar_file:
+                cookiejar_file = settings.COOKIE_PATH
+            # set custom cookie jar for persistance
+            self.setCookieJar(CookieJar(cookiejar_file))
 
     @QtCore.Slot()
     def _finished(self, reply):

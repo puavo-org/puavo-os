@@ -26,16 +26,27 @@ __all__ = [
 import os, __builtin__
 import iivari.settings
 
-# setup log directory
-log_dir = os.path.dirname(settings.LOG_FILE)
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
-__builtin__.LOG_FILE = settings.LOG_FILE
+if 'LOG_FILE' in settings.__dict__:
+    # setup log directory
+    log_file = settings.LOG_FILE
+    if log_file is not None:
+        log_dir = os.path.dirname(log_file)
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+    __builtin__.LOG_FILE = log_file
+else:
+    # when LOG_FILE is undefined, log to console
+    __builtin__.LOG_FILE = None
 
-# setup cache directory for offline resources
-if not os.path.exists(settings.CACHE_PATH):
-    os.makedirs(settings.CACHE_PATH)
-__builtin__.IIVARI_CACHE_PATH = settings.CACHE_PATH
+if 'CACHE_PATH' in settings.__dict__:
+    # setup cache directory for offline resources
+    cache_path = settings.CACHE_PATH
+    if cache_path is not None:
+        if not os.path.exists(cache_path):
+            os.makedirs(cache_path)
+    __builtin__.IIVARI_CACHE_PATH = cache_path
+else:
+    __builtin__.IIVARI_CACHE_PATH = None
 
 import logger
 from display import Display
