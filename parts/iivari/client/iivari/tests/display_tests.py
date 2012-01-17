@@ -9,6 +9,11 @@ from PySide import QtCore, QtWebKit, QtNetwork
 from iivari import Display
 from iivari.settings import DISPLAYSTATUS_PATH
 
+# add iivari bin directory into PATH
+iivari_bin = os.path.abspath(os.path.join(os.path.dirname(__file__),'..','..','bin'))
+os.environ['PATH'] = "%s:%s" % (iivari_bin, os.environ['PATH'])
+
+
 class DisplayTests(unittest.TestCase):
     
     status_file = DISPLAYSTATUS_PATH
