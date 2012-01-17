@@ -81,7 +81,7 @@ class MainWebView(QtWebKit.QWebView):
             self.repl = Repl(page=self.page())
 
         # set custom NetworkAccessManager for cookie management and network error logging
-        self.page().setNetworkAccessManager(MainNetworkAccessManager(cache_path))
+        self.page().setNetworkAccessManager(MainNetworkAccessManager())
 
         # attach a Display object to JavaScript window.display after page has loaded
         self.page().loadFinished[bool].connect(self.create_display)
@@ -206,14 +206,15 @@ class MainNetworkAccessManager(QtNetwork.QNetworkAccessManager):
     Handles the cookie jar, when caching is enabled.
 
     """
-    def __init__(self, cache_path=None, cookiejar_file=None):
+
+    def __init__(self, cookie_path=None):
         QtNetwork.QNetworkAccessManager.__init__(self)
         self.finished[QtNetwork.QNetworkReply].connect(self._finished)
-        if cache_path is not None:
-            if not cookiejar_file:
-                cookiejar_file = settings.COOKIE_PATH
+        if cookie_path is None and 'COOKIE_PATH' in settings.__dict__:
+            cookie_path = settings.COOKIE_PATH
+        if cookie_path is not None:
             # set custom cookie jar for persistance
-            self.setCookieJar(CookieJar(cookiejar_file))
+            self.setCookieJar(CookieJar(cookie_path))
 
     @QtCore.Slot()
     def _finished(self, reply):

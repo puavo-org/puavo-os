@@ -40,7 +40,7 @@ class CookieJarTests(unittest.TestCase):
     
     def _exec_request__return_cookies(self, url):
         # use test txt file to store cookies
-        nm = MainNetworkAccessManager(cache_path='.',jar_name=self.cookiejar_file)
+        nm = MainNetworkAccessManager(cookie_path=self.cookiejar_file)
         self.assert_(nm)
         request = QtNetwork.QNetworkRequest(url=QtCore.QUrl(url))
         # execute an actual request to the server
