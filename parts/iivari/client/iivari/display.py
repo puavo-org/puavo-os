@@ -39,7 +39,6 @@ class Display(QtCore.QObject):
         QtCore.QObject.__init__(self)
         self.page = page
         self.hostname = kwargs.get('hostname')
-        self.bin_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)),'bin')
 
         # add the proxy object "display" to window
         self.page.mainFrame().addToJavaScriptWindowObject("display", self)
@@ -108,7 +107,7 @@ class Display(QtCore.QObject):
         self._runscript("iivari-display_off")
 
     def _runscript(self, scriptname):
-        """Execute a shell script from bin_dir
+        """Execute a shell script
         """
         logger.debug("executing script %s" % scriptname)
         try:

@@ -10,8 +10,7 @@ from iivari import Display
 
 class DisplayTests(unittest.TestCase):
     
-    bin_dir = os.path.join(os.path.dirname(__file__),'..','..','bin')
-    status_file = os.path.join(os.environ['HOME'], '.iivari', 'power-status')
+    status_file = settings.DISPLAYSTATUS_PATH
 
     def setUp(self):
         # Ctrl-C halts the test suite
@@ -21,7 +20,6 @@ class DisplayTests(unittest.TestCase):
         if os.path.exists(self.status_file):
             os.remove(self.status_file)
 
-
     def test_display(self):
         page = QtWebKit.QWebPage()
         display = Display(page, hostname="kiosk-01")
@@ -29,7 +27,7 @@ class DisplayTests(unittest.TestCase):
 
     def test_power_off(self):
         page = QtWebKit.QWebPage()
-        display = Display(page, hostname="kiosk-01", bin_dir=self.bin_dir)
+        display = Display(page, hostname="kiosk-01")
         if os.path.exists(self.status_file):
             os.remove(self.status_file)
 
@@ -46,7 +44,7 @@ class DisplayTests(unittest.TestCase):
 
     def test_power_on(self):
         page = QtWebKit.QWebPage()
-        display = Display(page, hostname="kiosk-01", bin_dir=self.bin_dir)
+        display = Display(page, hostname="kiosk-01")
         if os.path.exists(self.status_file):
             os.remove(self.status_file)
 

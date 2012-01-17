@@ -28,6 +28,8 @@ logger = getLogger(__name__)
 from iivari import Display, Repl
 from iivari.cookiejar import CookieJar
 
+import settings
+
 
 class MainWindow(QtGui.QMainWindow):
     """The main window consists of a single web view with JavaScript, HTML5 offline cache manifest and localStorage support.
@@ -201,7 +203,7 @@ class MainNetworkAccessManager(QtNetwork.QNetworkAccessManager):
         QtNetwork.QNetworkAccessManager.__init__(self)
 
         if not cookiejar_file:
-          cookiejar_file = os.path.join(cache_path, 'cookiejar.txt')
+          cookiejar_file = settings.COOKIE_PATH
 
         # set custom cookie jar for persistance
         self.setCookieJar(CookieJar(cookiejar_file))

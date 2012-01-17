@@ -26,33 +26,18 @@ __all__ = [
 import os, __builtin__
 import iivari.settings
 
-# base log and cache default root to repository main directory
-IIVARIDIR = os.path.join(os.environ['HOME'], '.iivari')
-
-# decide which log file to use and setup the log directory
-try:
-    # settings overrides
-    log_file = settings.LOG_FILE
-    log_dir = os.path.dirname(log_file)
-except AttributeError:
-    log_dir = os.path.join(IIVARIDIR, 'log')
-    log_file = os.path.join(log_dir, 'iivari-infotv.log')
-if log_dir and not os.path.exists(log_dir):
+# setup log directory
+log_dir = os.path.dirname(settings.LOG_FILE)
+if not os.path.exists(log_dir):
     os.makedirs(log_dir)
-__builtin__.LOG_FILE = log_file
+__builtin__.LOG_FILE = settings.LOG_FILE
 
 # setup cache directory for offline resources
-try:
-    cache_path = settings.CACHE_PATH
-except AttributeError:
-    cache_path = os.path.join(IIVARIDIR, 'cache')
-if not os.path.exists(cache_path):
-    os.makedirs(cache_path)
-__builtin__.IIVARI_CACHE_PATH = cache_path
+if not os.path.exists(settings.CACHE_PATH):
+    os.makedirs(settings.CACHE_PATH)
+__builtin__.IIVARI_CACHE_PATH = settings.CACHE_PATH
 
 import logger
 from display import Display
 from repl import Repl
 from main import MainWindow
-
-
