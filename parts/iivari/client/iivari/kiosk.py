@@ -83,12 +83,13 @@ if __name__ == "__main__":
         height = size.height()
 
     # format start url
-    x = urlparse.urlsplit(opts.urlbase or iivari.settings.SERVER_URL)
+    base = urlparse.urlsplit(opts.urlbase or iivari.settings.SERVER_BASE)
+    path = "displayauth"
     resolution = "%dx%d" % (width, height)
     params = 'resolution=%s&hostname=%s' % (resolution, hostname)
-    url = urlparse.urlunsplit(urlparse.SplitResult(x.scheme,
-                                                   x.netloc,
-                                                   x.path,
+    url = urlparse.urlunsplit(urlparse.SplitResult(base.scheme,
+                                                   base.netloc,
+                                                   path,
                                                    params,
                                                    ''))
 

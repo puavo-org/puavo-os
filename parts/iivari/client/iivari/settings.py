@@ -5,8 +5,8 @@
 from logging import FATAL, WARN, INFO, DEBUG
 import os
 
-# server URL
-SERVER_URL = "http://localhost:3000"
+# iivari server base URL
+SERVER_BASE = "http://localhost:3000"
 
 # base log and cache default root to repository main directory
 IIVARIDIR = os.path.join(os.environ['HOME'], '.iivari')

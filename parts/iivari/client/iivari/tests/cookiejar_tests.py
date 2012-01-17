@@ -11,7 +11,7 @@ logger = getLogger(__name__)
 from PySide import QtCore, QtNetwork
 from iivari.main import MainNetworkAccessManager
 from iivari.cookiejar import CookieJar
-from iivari.settings import SERVER_URL
+from iivari.settings import SERVER_BASE
 
 from iivari.tests import QT_APP
 
@@ -24,7 +24,7 @@ class CookieJarTests(unittest.TestCase):
         # Ctrl-C halts the test suite
         signal.signal( signal.SIGINT, signal.SIG_DFL )
         # server should be online for these (integration) tests
-        _url = urlsplit(SERVER_URL)
+        _url = urlsplit(SERVER_BASE)
         self.server = "%s://%s" % (_url.scheme, _url.netloc)
         url = self.server+'/'
         request = urllib2.Request(url)
