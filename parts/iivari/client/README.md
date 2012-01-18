@@ -29,7 +29,7 @@ Run the tests with nose (contains integration tests so ensure the iivari server 
 
 Test the display hardware in offline mode:
 
-      bin/display-test-pattern
+      bin/iivari-display_test_pattern
 
 Start the kiosk slideshow:
 
