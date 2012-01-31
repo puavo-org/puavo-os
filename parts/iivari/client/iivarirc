@@ -1,0 +1,14 @@
+#
+# Iivari settings.
+# Place this file to either ~/.iivarirc or /etc/iivarirc.
+#
+{
+	# server base URL
+	"SERVER_BASE" : "http://localhost:3000",
+
+	# logger level -- FATAL, WARN, INFO, DEBUG
+	"LOG_LEVEL"   : "DEBUG",
+	
+	# use fancy shell coloring in log?
+	"LOG_COLORS"  : "True"
+}
