@@ -3,12 +3,12 @@
 # Place this file to either ~/.iivarirc or /etc/iivarirc.
 #
 {
-	# server base URL
+	# Server base URL
 	"SERVER_BASE" : "http://localhost:3000",
 
-	# logger level -- FATAL, WARN, INFO, DEBUG
+	# Logger level -- FATAL, WARN, INFO, DEBUG
 	"LOG_LEVEL"   : "DEBUG",
 	
-	# use fancy shell coloring in log?
+	# Use shell color codes in log files? -- True, False
 	"LOG_COLORS"  : "True"
 }
