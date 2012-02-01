@@ -30,7 +30,7 @@ class SlideTimer < ActiveRecord::Base
   
   # formats the datetime for WebKit JavaScriptCore
   def json_datetime(datetime)
-    datetime.getutc.strftime('%Y/%m/%d %H:%M') rescue ""
+    datetime.getutc.strftime('%Y/%m/%d %H:%M GMT+0000') rescue ""
   end
 
   def set_channel_updated_at
