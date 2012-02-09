@@ -75,6 +75,18 @@ def update_acls(suffix)
     acls.gsub!(/\{/, 'olcAccess: {')
 
     f.write acls
+
+    f.write "\n\n"
+    f.write "dn: cn=config\n"
+    f.write "changetype: modify\n"
+    f.write "delete: olcAuthzRegexp\n"
+    f.write "olcAuthzRegexp: uid=([^,]*)@#{kerberos_realm.downcase},cn=gssapi,cn=auth ldap:///ou=People,#{suffix}??one?(uid=$1)\n"
+
+    f.write "\n\n"
+    f.write "dn: cn=config\n"
+    f.write "changetype: modify\n"
+    f.write "add: olcAuthzRegexp\n"
+    f.write "olcAuthzRegexp: uid=([^,]*)@#{kerberos_realm.downcase},cn=gssapi,cn=auth ldap:///ou=People,#{suffix}??one?(uid=$1)\n"
   }
 
   puts `ldapmodify -c -h #{@ldaphost} -x -D #{@binddn} -Z -w #{@bindpw} -f /tmp/acl.ldif`
