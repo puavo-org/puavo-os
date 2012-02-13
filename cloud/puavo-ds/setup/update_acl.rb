@@ -65,7 +65,7 @@ def update_acls(suffix)
 
   Readline.readline('OK?', true)
 
-  File.open('/tmp/acl.ldif', 'w') {|f|
+  File.open('new_acl_for_kehitys.ldif', 'w') {|f|
     f.write "dn: #{dn}\n"
     f.write "changetype: modify\n"
     f.write "replace: olcAccess"
@@ -89,8 +89,12 @@ def update_acls(suffix)
     f.write "olcAuthzRegexp: uid=([^,]*)@#{kerberos_realm.downcase},cn=gssapi,cn=auth ldap:///ou=People,#{suffix}??one?(uid=$1)\n"
   }
 
-  puts `ldapmodify -c -h #{@ldaphost} -x -D #{@binddn} -Z -w #{@bindpw} -f /tmp/acl.ldif`
+  exit 0
+  # puts `ldapmodify -c -h #{@ldaphost} -x -D #{@binddn} -Z -w #{@bindpw} -f /tmp/acl.ldif`
 end
+
+update_acls('dc=edu,dc=kehitys,dc=fi')
+exit 0
 
 if organisation_name.eql?("--all")
   conn = LDAP::SSLConn.new(host=@ldaphost, port=636)
