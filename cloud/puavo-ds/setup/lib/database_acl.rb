@@ -1,184 +1,201 @@
-<%
-  @@suffix = suffix
-
-  class LdapDn
-    def initialize(dn_name=nil)
-      tmp_dn_name = (dn_name ? "#{ dn_name }," : '')
-      @dn_name    = "#{ tmp_dn_name }#{ @@suffix }"
-    end
-
-    def dn(type=nil)
-      typestring = (type ? ".#{ type }" : '')
-      %Q|dn#{ typestring }="#{ @dn_name }"|
-    end
-
-    def children; dn('children'); end
-    def exact   ; dn('exact')   ; end
-    def onelevel; dn('onelevel'); end
-    def subtree ; dn('subtree') ; end
-
-    def self.children; new.children; end
-    def self.exact   ; new.exact   ; end
-    def self.onelevel; new.onelevel; end
-    def self.subtree ; new.subtree ; end
+class LdapDn
+  def initialize(dn_name=nil)
+    tmp_dn_name = (dn_name ? "#{ dn_name }," : '')
+    @dn_name    = "#{ tmp_dn_name }#{ $suffix }"
   end
 
-  class Automount < LdapDn
-    def initialize
-      @dn_name = "ou=Automount,#{ @@suffix }"
-    end
+  def dn(type=nil)
+    typestring = (type ? ".#{ type }" : '')
+    %Q|dn#{ typestring }="#{ @dn_name }"|
   end
 
-  class Groups < LdapDn
-    def initialize(subou='')
-      @dn_name = "#{ subou }ou=Groups,#{ @@suffix }"
-    end
+  def children; dn('children'); end
+  def exact   ; dn('exact')   ; end
+  def onelevel; dn('onelevel'); end
+  def subtree ; dn('subtree') ; end
 
-    def self.classes    ; new('ou=Classes,'    ); end
-    def self.roles      ; new('ou=Roles,'      ); end
-    def self.schoolroles; new('ou=SchoolRoles,'); end
-    def self.schools    ; new('ou=Schools,'    ); end
+  def self.children; new.children; end
+  def self.exact   ; new.exact   ; end
+  def self.onelevel; new.onelevel; end
+  def self.subtree ; new.subtree ; end
+end
+
+class Automount < LdapDn
+  def initialize
+    @dn_name = "ou=Automount,#{ $suffix }"
+  end
+end
+
+class Groups < LdapDn
+  def initialize(subou='')
+    @dn_name = "#{ subou }ou=Groups,#{ $suffix }"
   end
 
-  class Hosts < LdapDn
-    def initialize(subou='')
-      @dn_name = "#{ subou }ou=Hosts,#{ @@suffix }"
-    end
+  def self.classes    ; new('ou=Classes,'    ); end
+  def self.roles      ; new('ou=Roles,'      ); end
+  def self.schoolroles; new('ou=SchoolRoles,'); end
+  def self.schools    ; new('ou=Schools,'    ); end
+end
 
-    def self.devices; new('ou=Devices,'); end
-    def self.samba  ; new('ou=Samba,'  ); end
-    def self.servers; new('ou=Servers,'); end
+class Hosts < LdapDn
+  def initialize(subou='')
+    @dn_name = "#{ subou }ou=Hosts,#{ $suffix }"
   end
 
-  class People < LdapDn
-    def initialize
-      @dn_name = "ou=People,#{ @@suffix }"
-    end
+  def self.devices; new('ou=Devices,'); end
+  def self.samba  ; new('ou=Samba,'  ); end
+  def self.servers; new('ou=Servers,'); end
+end
+
+class People < LdapDn
+  def initialize
+    @dn_name = "ou=People,#{ $suffix }"
+  end
+end
+
+class Printers < LdapDn
+  def initialize
+    @dn_name = "ou=Printers,#{ $suffix }"
+  end
+end
+
+class PuavoUid < LdapDn
+  def initialize(uid)
+    @dn_name = "uid=#{ uid },o=puavo"
   end
 
-  class Printers < LdapDn
-    def initialize
-      @dn_name = "ou=Printers,#{ @@suffix }"
-    end
+  # XXX why some are exact and some are not?
+  def self.kadmin(method='exact'); new('kadmin' ).send(method); end	# XXX why sometimes .dn, sometimes .exact ?
+  def self.kdc(method='exact')   ; new('kdc'    ).send(method); end	# XXX why sometimes .dn, sometimes .exact ?
+  def self.monitor               ; new('monitor').dn          ; end
+  def self.puavo(method='exact') ; new('puavo'  ).send(method); end	# XXX why sometimes .dn, sometimes .exact ?
+  def self.puppet                ; new('puppet' ).dn          ; end
+  def self.samba                 ; new('samba'  ).dn          ; end
+  def self.slave                 ; new('slave'  ).exact       ; end
+end
+
+class Rule
+  def self.anonymous_auth
+    perms('auth', 'anonymous')
   end
 
-  class PuavoUid < LdapDn
-    def initialize(uid)
-      @dn_name = "uid=#{ uid },o=puavo"
-    end
-
-    # XXX why some are exact and some are not?
-    def self.kadmin ; new('kadmin' ).exact; end
-    def self.kdc    ; new('kdc'    ).exact; end
-    def self.monitor; new('monitor').dn   ; end
-    def self.puavo  ; new('puavo'  ).exact; end
-    def self.puppet ; new('puppet' ).dn   ; end
-    def self.samba  ; new('samba'  ).dn   ; end
-    def self.slave  ; new('slave'  ).exact; end
+  def self.none
+    perms('none', '*')
   end
 
-  class Rule
-    def self.anonymous_auth
-      perms('auth', 'anonymous')
-    end
-
-    def self.none
-      perms('none', '*')
-    end
-
-    def self.perms(mode, *dn_list)
-      dn_list.flatten.map { |dn|   %Q|by #{ dn } #{ mode }|   }
-    end
-
-    def self.read(*dn_list)
-      perms('read', *dn_list)
-    end
-
-    def self.write(*dn_list)
-      perms('write', *dn_list)
-    end
+  def self.perms(mode, *dn_list)
+    dn_list.flatten.map { |dn|   %Q|by #{ dn } #{ mode }|   }
   end
 
-  class Roles < LdapDn
-    def initialize
-      @dn_name = "ou=Roles,#{ @@suffix }"
-    end
+  def self.read(*dn_list)
+    perms('read', *dn_list)
   end
 
-  class Set
-    def self.admin
-      [ org_owner, this_school_admin, ]
-    end
+  def self.write(*dn_list)
+    perms('write', *dn_list)
+  end
+end
 
-    def self.all_admins
-      [ school_admin, owner_and_user, ]
-    end
+class Roles < LdapDn
+  def initialize
+    @dn_name = "ou=Roles,#{ $suffix }"
+  end
+end
 
-    def self.getent
-      [ People.children, Hosts.subtree, sysgroup('getent'), ]
-    end
+class Samba < LdapDn
+  def initialize
+    @dn_name = "sambaDomainName=#{ $samba_domain },#{ $suffix }"
+  end
+end
 
-    def self.org_owner
-      %Q|group/puavoEduOrg/owner=#{ @@suffix }|
-    end
-
-    def self.owner_and_user
-      %Q|set="[#{ @@suffix }]/owner* & user"|
-    end
-
-    def self.school_admin
-      %Q|set="user/puavoAdminOfSchool*"|
-    end
-
-    def self.school_admin_and_user
-      %Q|set="this/puavoSchoolAdmin* & user"|
-    end
- 
-    def self.school_admin_or_owner_and_user
-      %Q(set="this/puavoSchoolAdmin* | [#{ @@suffix }]/owner* & user")
-    end
-
-    def self.syncrepl
-      [ Hosts.servers.children, PuavoUid.slave, ]
-    end
-
-    def self.sysgroup(groupname)
-      %Q|group/puavoSystemGroup/member="cn=#{ groupname },ou=System Groups,#{ @@suffix }"|
-    end
-
-    def self.this_school_admin
-      %Q|set="this/puavoSchool & user/puavoAdminOfSchool*"|
-    end
-
-    def self.teacher
-      %Q|set="user/puavoEduPersonAffiliation & [teacher]"|
-    end
-
-    # self.sysgroups
-    def self.addressbook  ; sysgroup('addressbook')  ; end
-    def self.auth         ; sysgroup('auth')         ; end
-    def self.devices      ; sysgroup('devices')      ; end
-    def self.orginfo      ; sysgroup('orginfo')      ; end
-    def self.printerqueues; sysgroup('printerqueues'); end
-    def self.printers     ; sysgroup('printers')     ; end
-    def self.servers      ; sysgroup('servers')      ; end
+class Set
+  def self.admin
+    [ org_owner, this_school_admin, ]
   end
 
-  check_puavo_version_2 = Rule.perms('none', %Q|set="[#{ @@suffix }]/puavoVersion & [2]"|)
-
-  def lines_with_index(lines)
-    new_lines = []
-    lines.each_with_index do |line, i|
-      new_lines << "{#{ i }}to #{ line }\n"
-    end
-    new_lines
+  def self.all_admins
+    [ school_admin, owner_and_user, ]
   end
 
-  def attrs(attr_list)
-    %Q|attrs="#{ Array(attr_list).join(',') }"|
+  def self.getent
+    [ People.children, Hosts.subtree, sysgroup('getent'), ]
   end
 
-  rules = [
+  def self.org_owner
+    %Q|group/puavoEduOrg/owner=#{ $suffix }|
+  end
+
+  def self.owner_and_user
+    %Q|set="[#{ $suffix }]/owner* & user"|
+  end
+
+  def self.school_admin
+    %Q|set="user/puavoAdminOfSchool*"|
+  end
+
+  def self.school_admin_and_user
+    %Q|set="this/puavoSchoolAdmin* & user"|
+  end
+
+  def self.school_admin_or_owner_and_user
+    %Q(set="this/puavoSchoolAdmin* | [#{ $suffix }]/owner* & user")
+  end
+
+  def self.syncrepl
+    [ Hosts.servers.children, PuavoUid.slave, ]
+  end
+
+  def self.sysgroup(groupname)
+    %Q|group/puavoSystemGroup/member="cn=#{ groupname },ou=System Groups,#{ $suffix }"|
+  end
+
+  def self.this_school_admin
+    %Q|set="this/puavoSchool & user/puavoAdminOfSchool*"|
+  end
+
+  def self.teacher
+    %Q|set="user/puavoEduPersonAffiliation & [teacher]"|
+  end
+
+  # self.sysgroups
+  def self.addressbook  ; sysgroup('addressbook')  ; end
+  def self.auth         ; sysgroup('auth')         ; end
+  def self.devices      ; sysgroup('devices')      ; end
+  def self.orginfo      ; sysgroup('orginfo')      ; end
+  def self.printerqueues; sysgroup('printerqueues'); end
+  def self.printers     ; sysgroup('printers')     ; end
+  def self.servers      ; sysgroup('servers')      ; end
+end
+
+def attrs(attr_list)
+  %Q|attrs="#{ Array(attr_list).join(',') }"|
+end
+
+def check_puavo_version_2
+  Rule.perms('none', %Q|set="[#{ $suffix }]/puavoVersion & [2]"|)
+end
+
+def lines_with_index(lines)
+  new_lines = []
+  lines.each_with_index do |line, i|
+    new_lines << "olcAccess: {#{ i }}to #{ line }\n"
+  end
+  new_lines
+end
+
+class LdapAcl
+  def self.generate_acls(suffix, samba_domain)
+    $samba_domain = samba_domain
+    $suffix       = suffix
+
+    lines_with_index(rules.map { |r| r.first.class == Array ? r : [ r ] } \
+			  .flatten(1) \
+			  .map { |a| a.join(' ') }) \
+      .join('')
+  end
+
+  def self.rules
+    [
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Groups.onelevel,
 	  'filter="(objectClass=posixGroup)"',									check_puavo_version_2,		'stop',	Rule.none,
@@ -201,7 +218,7 @@
 					 sambaAcctFlags)),		Rule.write(Hosts.servers.children),						Rule.none,
 																			'break',				],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ Hosts.samba.subtree,						Rule.write(Hosts.servers.children),						Rule.none,
+      [ Samba.exact,							Rule.write(Hosts.servers.children),						Rule.none,
 																			'break',				],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Printers.exact,		attrs(%w(ou
@@ -232,7 +249,7 @@
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.exact,		attrs(%w(children)),			Rule.write(Set.all_admins),		Rule.read(PuavoUid.puavo),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ People.subtree,		attrs(%w(puavoAdminOfSchool)),		Rule.write(Set.all_admins),		Rule.read('users'),								],
+      [ People.subtree,		attrs(%w(puavoAdminOfSchool)),		Rule.write(Set.owner_and_user),		Rule.read('users'),								],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(userPassword)),
 	  'filter="(puavoEduPersonAffiliation=student)"',												Rule.perms('=azx', Set.all_admins,
@@ -260,9 +277,9 @@
 					 puavoId
 					 eduPersonPrincipalName
 					 objectClass
-					 puavoEduPersonAffiliation)),	Rule.write(Set.admin),			Rule.read(PuavoUid.puavo,
+					 puavoEduPersonAffiliation)),	Rule.write(Set.admin),			Rule.read(PuavoUid.puavo('dn'),
 															  Set.getent,
-															  PuavoUid.puavo),		Rule.anonymous_auth,			],
+															  Set.auth),			Rule.anonymous_auth,			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(uidNumber
 					 gidNumber
@@ -271,13 +288,16 @@
 					 sn
 					 preferredLanguage
 					 puavoPreferredDesktop)),	Rule.write(Set.admin),			Rule.read(Set.getent,
-															  PuavoUid.puavo),							],
+															  PuavoUid.puavo('dn')),						],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(givenName
 					 sn
 					 displayName
 					 puavoEduPersonReverseDisplayName)),
-									Rule.write(Set.admin),			Rule.read(Set.addressbook),							],
+									Rule.write(Set.admin),			Rule.read(People.children,
+															  Hosts.subtree,
+															  Set.sysgroup('getent'),
+															  Set.addressbook),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(puavoEduPersonPersonnelNumber)),
 									Rule.write(Set.admin),			Rule.read(Set.addressbook),							],
@@ -286,7 +306,8 @@
 					 telephoneNumber)),		Rule.write(Set.admin,
 										   'self'),			Rule.read(Set.addressbook),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ People.subtree,		attrs(%w(puavoAcceptedTerms)),		Rule.write(Set.admin),			Rule.read(PuavoUid.puavo),							],
+																			# XXX odd
+      [ People.subtree,		attrs(%w(puavoAcceptedTerms)),		Rule.write(Set.admin),			Rule.read(PuavoUid.puavo),		Rule.write('self'),			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(puavoSchool)),			Rule.write(Set.admin),			Rule.read('self'),								],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -311,12 +332,13 @@
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Automount.children,						Rule.write(Set.owner_and_user),		Rule.read('*'),									],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ LdapDn.new('KerberoRealms').subtree,				Rule.write(PuavoUid.kadmin),		Rule.read(PuavoUid.kdc),							],
+      [ LdapDn.new('ou=Kerberos Realms').subtree,			Rule.write(PuavoUid.kadmin('dn')),	Rule.read(PuavoUid.kdc('dn')),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.exact,												Rule.read(Set.all_admins,
 															  PuavoUid.puppet,
-															  PuavoUid.monitor,
-															  Set.devices,
+															  PuavoUid.monitor),
+														'by',				# XXX this is most probably a bug, does it have any implications?
+														Rule.read(Set.devices,
 															  Set.servers,
 															  People.children),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -347,7 +369,8 @@
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.servers.exact,	attrs(%w(entry
 					 ou
-					 objectClass)),			Rule.write(Set.owner_and_user),		Rule.read(PuavoUid.puppet,
+					 objectClass)),								Rule.read(Set.owner_and_user,
+															  PuavoUid.puppet,
 															  PuavoUid.monitor,
 															  Set.servers),			Rule.anonymous_auth,			],
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -361,21 +384,21 @@
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.samba.exact,	attrs(%w(entry
 					 ou
-					 objectClass)),			Rule.read(Hosts.servers.children),											],
+					 objectClass)),								Rule.read(Hosts.servers.children),						],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.samba.exact,	attrs(%w(children)),			Rule.write(Hosts.servers.children),											],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.samba.children,						Rule.write(Hosts.servers.children),											],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ Groups.new('cn=Domain Admins'),
+      [ Groups.new('cn=Domain Admins,').exact,
 				attrs(%w(memberUid)),			Rule.write(Set.owner_and_user),												],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ Groups.new('cn=Domain Users'),
+      [ Groups.new('cn=Domain Users,').exact,
 				attrs(%w(memberUid)),			Rule.write(Set.all_admins),												],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ Groups.new('cn=Domain Admins'),										Rule.read(Set.owner_and_user),							],
+      [ Groups.new('cn=Domain Admins,').exact,									Rule.read(Set.owner_and_user),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ Groups.new('cn=Domain Users'),										Rule.read(Set.all_admins),							],
+      [ Groups.new('cn=Domain Users,').exact,									Rule.read(Set.all_admins),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Groups.exact,		attrs(%w(entry
 					 ou
@@ -385,20 +408,29 @@
       [ Groups.exact,		attrs(%w(children)),			Rule.write(Set.all_admins),		Rule.read(Set.getent),								],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    [ Groups.schools, Groups.roles, Groups.schoolroles, Groups.classes, ].map do |subgroup|
+    %w(schools roles schoolroles classes).map do |subgroup_method|
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      [[ subgroup,		attrs(%w(entry
+      subgroup = Groups.send(subgroup_method)
+
+      [[ subgroup.exact,	attrs(%w(entry
 					 ou
 					 objectClass)),								Rule.read(Set.all_admins,
 															  Set.getent),								],
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-       [ subgroup,		attrs(%w(children)),			Rule.write(Set.all_admins),		Rule.read(Set.getent),								],
+       [ subgroup.exact,	attrs(%w(children)),			Rule.write(Set.all_admins),		Rule.read(Set.getent),								],
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-       [ subgroup,		attrs(%w(member
-					 memberUid)),			Rule.write(Set.admin),			Rule.read(Set.getent),								],
+       # XXX is this a bug?  why are 'Schools' an exception?
+       (subgroup_method == 'schools' \
+          ? nil \
+          : [ subgroup.subtree,	attrs(%w(member
+					 memberUid)),			Rule.write(Set.admin),			Rule.read(Set.getent),								]),
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-       [ subgroup,							Rule.write(Set.owner_and_user),		Rule.read(Set.getent),								]]
-    end,
+       [ subgroup.subtree,						Rule.write(
+									  subgroup_method == 'classes' \
+									    ? Set.admin \
+									    : Set.owner_and_user),		Rule.read(Set.getent),								]]
+
+    end.flatten(1).compact,
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Groups.subtree,
@@ -432,27 +464,26 @@
 	  'filter=(objectClass=puavoSchool)',				Rule.write(Set.owner_and_user),							Rule.perms('+rscxd', Set.school_admin_and_user),
 																			Rule.read(Set.getent),			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ %Q|to dn.exact="sambaDomainName=#{ samba_domain }"|,
-				attrs(%w(sambaSID
+      [ Samba.exact,		attrs(%w(sambaSID
 					 sambaDomainName
 					 sambaNextUserRid
 					 sambaNextRid)),		Rule.write(PuavoUid.samba,
 										   Set.all_admins),												],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ %Q|to dn.exact="sambaDomainName=#{ samba_domain }"|,		Rule.write(Set.admin,
+      [ Samba.exact,							Rule.write(Set.admin,
 										   PuavoUid.samba),		Rule.read(Set.all_admins),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ LdapDn.new('System Accounts').subtree,
+      [ LdapDn.new('ou=System Accounts').subtree,
 				attrs(%w(userPassword)),		Rule.write(Set.admin),								Rule.anonymous_auth,			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ LdapDn.new('System Accounts').subtree,				Rule.write(Set.admin),			Rule.read(PuavoUid.puavo),							],
+      [ LdapDn.new('ou=System Accounts').subtree,			Rule.write(Set.admin),			Rule.read(PuavoUid.puavo),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ LdapDn.new('System Groups'  ).subtree,
+      [ LdapDn.new('ou=System Groups'  ).subtree,
 				attrs(%w(member)),			Rule.write(Set.admin),													],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ LdapDn.new('System Groups'  ).subtree,									Rule.read(Set.admin),								],
+      [ LdapDn.new('ou=System Groups'  ).subtree,								Rule.read(Set.admin),								],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ LdapDn.new('Desktops'       ).subtree,				Rule.write(Set.owner_and_user),		Rule.read(People.children),							],
+      [ LdapDn.new('ou=Desktops'       ).subtree,			Rule.write(Set.owner_and_user),		Rule.read(People.children),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ LdapDn.new.dn,		attrs(%w(entry)),								Rule.read(Set.all_admins,
 															  PuavoUid.puavo,
@@ -513,10 +544,6 @@
 															  PuavoUid.puppet,
 															  PuavoUid.monitor),		Rule.perms('+sxd', '*'),		],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  ]
-%>
-<%=
-  lines_with_index(rules.map { |r| r.first.class == Array ? r : [ r ] } \
-			.flatten(1).map { |a| a.join(' ') }) \
-			.join('')
-%>
+    ]
+  end
+end

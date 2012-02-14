@@ -4,6 +4,7 @@ require 'rubygems'
 require "erb"
 require 'readline'
 require 'ldap'
+require 'lib/database_acl'
 require 'yaml'
 
 if configuration = YAML.load_file("config/ldap.yml") rescue nil
@@ -65,16 +66,12 @@ def update_acls(suffix)
 
   Readline.readline('OK?', true)
 
-  File.open('new_acl_for_kehitys.ldif', 'w') {|f|
+  File.open('/tmp/acl.ldif', 'w') {|f|
     f.write "dn: #{dn}\n"
     f.write "changetype: modify\n"
-    f.write "replace: olcAccess"
+    f.write "replace: olcAccess\n"
 
-    template = File.read("templates/database_acl.erb")
-    acls = ERB.new(template, 0, "%<>").result(binding)
-    acls.gsub!(/\{/, 'olcAccess: {')
-
-    f.write acls
+    f.write LdapAcl.generate_acls(suffix, samba_domain)
 
     f.write "\n\n"
     f.write "dn: cn=config\n"
@@ -89,12 +86,8 @@ def update_acls(suffix)
     f.write "olcAuthzRegexp: uid=([^,]*)@#{kerberos_realm.downcase},cn=gssapi,cn=auth ldap:///ou=People,#{suffix}??one?(uid=$1)\n"
   }
 
-  exit 0
-  # puts `ldapmodify -c -h #{@ldaphost} -x -D #{@binddn} -Z -w #{@bindpw} -f /tmp/acl.ldif`
+  puts `ldapmodify -c -h #{@ldaphost} -x -D #{@binddn} -Z -w #{@bindpw} -f /tmp/acl.ldif`
 end
-
-update_acls('dc=edu,dc=kehitys,dc=fi')
-exit 0
 
 if organisation_name.eql?("--all")
   conn = LDAP::SSLConn.new(host=@ldaphost, port=636)
