@@ -75,25 +75,37 @@ class PuavoUid < LdapDn
 end
 
 class Rule
-  def self.anonymous_auth
-    perms('auth', 'anonymous')
-  end
-
   def self.none
     perms('none', '*')
   end
 
   def self.perms(mode, *dn_list)
-    dn_list.flatten.map { |dn|   %Q|by #{ dn } #{ mode }|   }
+    dn_list.flatten.map { |dn| self.string(dn, mode) }
   end
 
   def self.read(*dn_list)
     perms('read', *dn_list)
   end
 
+  def self.string(dn, mode)
+    %Q|by #{ dn } #{ mode }|
+  end
+
   def self.write(*dn_list)
     perms('write', *dn_list)
   end
+end
+
+class RuleBreak < Rule
+  def self.string(dn, mode); "#{ super } break"; end
+end
+
+class RuleContinue < Rule
+  def self.string(dn, mode); "#{ super } continue"; end
+end
+
+class RuleStop < Rule
+  def self.string(dn, mode); "#{ super } stop"; end
 end
 
 class Roles < LdapDn
@@ -127,6 +139,10 @@ class Set
 
   def self.owner_and_user
     %Q|set="[#{ $suffix }]/owner* & user"|
+  end
+
+  def self.puavoversion_2
+    %Q|set="[#{ $suffix }]/puavoVersion & [2]"|
   end
 
   def self.school_admin
@@ -171,10 +187,6 @@ def attrs(attr_list)
   %Q|attrs="#{ Array(attr_list).join(',') }"|
 end
 
-def check_puavo_version_2
-  Rule.perms('none', %Q|set="[#{ $suffix }]/puavoVersion & [2]"|)
-end
-
 def lines_with_index(lines)
   new_lines = []
   lines.each_with_index do |line, i|
@@ -198,28 +210,25 @@ class LdapAcl
     [
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Groups.onelevel,
-	  'filter="(objectClass=posixGroup)"',									check_puavo_version_2,		'stop',	Rule.none,
-																			'break',				],
+	  'filter="(objectClass=posixGroup)"',														RuleStop.perms('none', Set.puavoversion_2),
+																			RuleBreak.none,				],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     [ Groups.schools, Groups.roles, Groups.schoolroles, Groups.classes, ].map do |subgroup|
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      [ subgroup.subtree,											check_puavo_version_2,                   
-																			'break',				]
+      [ subgroup.subtree,																RuleBreak.perms('none', Set.puavoversion_2),
+																								]
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     end,
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ Hosts.samba.subtree,						Rule.write(Hosts.servers.children),						Rule.none,
-																			'break',				],
+      [ Hosts.samba.subtree,						Rule.write(Hosts.servers.children),						RuleBreak.none,				],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(sambaNTPassword
 					 userPassword
-					 sambaAcctFlags)),		Rule.write(Hosts.servers.children),						Rule.none,
-																			'break',				],
+					 sambaAcctFlags)),		Rule.write(Hosts.servers.children),						RuleBreak.none, 			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ Samba.exact,							Rule.write(Hosts.servers.children),						Rule.none,
-																			'break',				],
+      [ Samba.exact,							Rule.write(Hosts.servers.children),						RuleBreak.none, 			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Printers.exact,		attrs(%w(ou
 					 entry
@@ -238,14 +247,13 @@ class LdapAcl
 															  PuavoUid.slave,
 															  Set.printerqueues),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ LdapDn.new.subtree,											Rule.read(Set.syncrepl),		Rule.none,
-																			'break',				],
+      [ LdapDn.new.subtree,											Rule.read(Set.syncrepl),		RuleBreak.none,				],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.exact,		attrs(%w(entry
 				      ou
 				      objectClass)),								Rule.read(Set.getent,
 															  Set.auth,
-															  PuavoUid.puavo),		Rule.anonymous_auth,			],
+															  PuavoUid.puavo),		Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.exact,		attrs(%w(children)),			Rule.write(Set.all_admins),		Rule.read(PuavoUid.puavo),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -254,8 +262,7 @@ class LdapAcl
       [ People.subtree,		attrs(%w(userPassword)),
 	  'filter="(puavoEduPersonAffiliation=student)"',												Rule.perms('=azx', Set.all_admins,
 																					   Set.teacher),
-																			Rule.none,
-																			'break',				],
+																			RuleBreak.none,				],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(userPassword)),
 	  'filter="(puavoLocked=TRUE)"',														Rule.perms('=azx', Set.admin,
@@ -263,14 +270,13 @@ class LdapAcl
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(userPassword)),												Rule.perms('=azx', Set.admin,
 																					   'self'),
-																			Rule.anonymous_auth,			],
+																			Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(shadowLastChange)),
-	  'filter="(puavoEduPersonAffiliation=student)"',		Rule.write(Set.all_admins),							Rule.none,
-																			'break',				],
+	  'filter="(puavoEduPersonAffiliation=student)"',		Rule.write(Set.all_admins),							RuleBreak.none,				],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(shadowLastChange)),		Rule.write(Set.admin,
-										   'self'),								Rule.anonymous_auth,			],
+										   'self'),								Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(entry
 					 uid
@@ -279,7 +285,7 @@ class LdapAcl
 					 objectClass
 					 puavoEduPersonAffiliation)),	Rule.write(Set.admin),			Rule.read(PuavoUid.puavo('dn'),
 															  Set.getent,
-															  Set.auth),			Rule.anonymous_auth,			],
+															  Set.auth),			Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(uidNumber
 					 gidNumber
@@ -348,7 +354,7 @@ class LdapAcl
 															  PuavoUid.puppet,
 															  PuavoUid.monitor,
 															  Set.devices,
-															  People.children),       	Rule.anonymous_auth,			],
+															  People.children),       	Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.devices.exact,	attrs(%w(children)),			Rule.write(Set.all_admins),		Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
@@ -361,26 +367,33 @@ class LdapAcl
 					 puavoTag)),			Rule.write(Set.admin),			Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
 															  Set.devices,
-															  People.children),		Rule.anonymous_auth,			],
+															  People.children),		Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.devices.children,						Rule.write(Set.admin),			Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
-															  Set.devices),			Rule.anonymous_auth,			],
+															  Set.devices),			Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.servers.exact,	attrs(%w(entry
 					 ou
 					 objectClass)),								Rule.read(Set.owner_and_user,
 															  PuavoUid.puppet,
 															  PuavoUid.monitor,
-															  Set.servers),			Rule.anonymous_auth,			],
+															  Set.servers),			Rule.perms('auth', 'anonymous'),	],
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.servers.exact,	attrs(%w(children)),			Rule.write(Set.owner_and_user),		Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
 															  Set.servers),								],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# XXX
       [ Hosts.servers.children,						Rule.write(Set.owner_and_user),		Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
-															  Set.servers),			Rule.anonymous_auth,			],
+															  Set.servers), 		Rule.perms('auth', 'anonymous'),	],
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#     [ Hosts.servers.children,	attrs(%w(entry
+#				 ou
+#				 objectClass
+#				 puavoExport
+#				 puavoHostname)),							Rule.read(Hosts.devices.children),						],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.samba.exact,	attrs(%w(entry
 					 ou
@@ -447,8 +460,8 @@ class LdapAcl
 					 puavoId
 					 objectClass)),													Rule.perms('+azrwsc', Set.owner_and_user),
 																			Rule.perms('+rwsc',   Set.school_admin_and_user),
-																			Rule.read(Set.getent),
-																		 	'break',				],
+																			Rule.read(People.children, Hosts.subtree),
+																			RuleBreak.read(Set.sysgroup('getent')), ],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Groups.subtree,
 	  'filter=(objectClass=puavoEduGroup)',				Rule.write(Set.admin),			Rule.read(Set.getent),								],
@@ -457,8 +470,8 @@ class LdapAcl
 	  'filter=(objectClass=puavoSchool)',
 				attrs(%w(member
 					 memberUid)),			Rule.write(Set.school_admin_or_owner_and_user),
-														Rule.read(Set.getent),
-																		 	'break',				],
+														Rule.read(People.children, Hosts.subtree),
+														RuleBreak.read(Set.sysgroup('getent')),						],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Groups.subtree,
 	  'filter=(objectClass=puavoSchool)',				Rule.write(Set.owner_and_user),							Rule.perms('+rscxd', Set.school_admin_and_user),
@@ -474,7 +487,7 @@ class LdapAcl
 										   PuavoUid.samba),		Rule.read(Set.all_admins),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ LdapDn.new('ou=System Accounts').subtree,
-				attrs(%w(userPassword)),		Rule.write(Set.admin),								Rule.anonymous_auth,			],
+				attrs(%w(userPassword)),		Rule.write(Set.admin),								Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ LdapDn.new('ou=System Accounts').subtree,			Rule.write(Set.admin),			Rule.read(PuavoUid.puavo),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
