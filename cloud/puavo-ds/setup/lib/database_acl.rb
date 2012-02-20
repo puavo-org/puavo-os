@@ -133,6 +133,11 @@ class Set
     [ People.children, Hosts.subtree, sysgroup('getent'), ]
   end
 
+  def self.laptops
+    # XXX should this be restricted to Devices-subtree?
+    %Q|set="user/puavoDeviceType & [laptop]"|
+  end
+
   def self.org_owner
     %Q|group/puavoEduOrg/owner=#{ $suffix }|
   end
@@ -141,8 +146,8 @@ class Set
     %Q|set="[#{ $suffix }]/owner* & user"|
   end
 
-  def self.puavoversion_2
-    %Q|set="[#{ $suffix }]/puavoVersion & [2]"|
+  def self.puavoversion(number)
+    %Q|set="[#{ $suffix }]/puavoVersion & [#{ number }]"|
   end
 
   def self.school_admin
@@ -210,13 +215,13 @@ class LdapAcl
     [
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Groups.onelevel,
-	  'filter="(objectClass=posixGroup)"',														RuleStop.perms('none', Set.puavoversion_2),
+	  'filter="(objectClass=posixGroup)"',														RuleStop.perms('none', Set.puavoversion(2)),
 																			RuleBreak.none,				],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     [ Groups.schools, Groups.roles, Groups.schoolroles, Groups.classes, ].map do |subgroup|
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      [ subgroup.subtree,																RuleBreak.perms('none', Set.puavoversion_2),
+      [ subgroup.subtree,																RuleBreak.perms('none', Set.puavoversion(2)),
 																								]
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     end,
@@ -384,16 +389,17 @@ class LdapAcl
 															  PuavoUid.monitor,
 															  Set.servers),								],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# XXX
       [ Hosts.servers.children,						Rule.write(Set.owner_and_user),		Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
-															  Set.servers), 		Rule.perms('auth', 'anonymous'),	],
+															  Set.servers),
+														RuleBreak.read(Hosts.devices.children),	# <-- I do not understand why that is needed XXX
+																			Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#     [ Hosts.servers.children,	attrs(%w(entry
-#				 ou
-#				 objectClass
-#				 puavoExport
-#				 puavoHostname)),							Rule.read(Hosts.devices.children),						],
+      [ Hosts.servers.children,	attrs(%w(entry
+					 ou
+					 objectClass
+					 puavoExport
+					 puavoHostname)),							Rule.read(Set.laptops),								],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.samba.exact,	attrs(%w(entry
 					 ou
