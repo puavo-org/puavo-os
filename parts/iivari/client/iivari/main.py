@@ -228,10 +228,11 @@ class MainNetworkAccessManager(QtNetwork.QNetworkAccessManager):
         @see http://doc.qt.nokia.com/latest/qnetworkaccessmanager.html#details
         """
         try:
-            #logger.debug("GET %s finished" % reply.request().url().toString())
-            if not reply.error() == QtNetwork.QNetworkReply.NoError:
+            code = reply.attribute(QtNetwork.QNetworkRequest.HttpStatusCodeAttribute)
+            if code >= 400:
+                reason = reply.attribute(QtNetwork.QNetworkRequest.HttpReasonPhraseAttribute)
                 logger.warn('Failed to GET "%s": %s' % (
-                    reply.request().url().toString(), reply.error()))
+                    reply.request().url().toString(), reason))
             # NOTE: calling deleteLater() on the reply object
             # causes segmentation fault on Linux with Qt4.6 (and PySide 1.0.6).
             # Leaving the object to remain in memory may
