@@ -1,3 +1,13 @@
+= 1.2.5
+Maintenance release.
+
+ * Set SERVER_BASE to "http://localhost:3000/conductor" by default.
+
+ * Read global iivarirc configuration first, override from user config.
+
+ * Fixed log WARNINGs because of status 304: Not Modified
+
+
 = 1.2.3
 Added settings flexibility and leaner start script.
 
