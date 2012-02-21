@@ -47,7 +47,7 @@ except Exception, e:
 if 'SERVER_BASE' in rc_config:
     SERVER_BASE = rc_config['SERVER_BASE']
 else:
-    SERVER_BASE = "http://localhost:3000"
+    SERVER_BASE = "http://localhost:3000/conductor"
 
 # logger level -- FATAL, WARN, INFO, DEBUG
 if 'LOG_LEVEL' in rc_config:
