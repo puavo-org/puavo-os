@@ -16,6 +16,9 @@ CACHE_PATH = os.path.join(IIVARIDIR, 'cache')
 # cookiejar file path. must be defined when cache is enabled.
 COOKIE_PATH = os.path.join(CACHE_PATH, 'cookiejar.txt')
 
+# authentication key file.
+AUTHKEY_FILE = os.path.join(IIVARIDIR, 'auth')
+
 # log file location. leave undefined for console output.
 LOG_FILE = os.path.join(IIVARIDIR, 'log', 'iivari.log')
 

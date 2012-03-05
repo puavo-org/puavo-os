@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright © 2011 Opinsys Oy
+Copyright © 2011 - 2012 Opinsys Oy
 
 This program is free software; you can redistribute it and/or modify it 
 under the terms of the GNU General Public License as published by the 
@@ -18,6 +18,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 """
 import os, sys
 import re
+import hashlib
 import __builtin__
 from PySide import QtGui, QtCore, QtWebKit, QtNetwork
 from PySide.QtWebKit import QWebSettings
@@ -80,8 +81,12 @@ class MainWebView(QtWebKit.QWebView):
         if use_repl is True:
             self.repl = Repl(page=self.page())
 
+        # get token for network request authentication
+        hostname = self.options.get('hostname')
+        token = self.get_token(hostname)
+
         # set custom NetworkAccessManager for cookie management and network error logging
-        self.page().setNetworkAccessManager(MainNetworkAccessManager())
+        self.page().setNetworkAccessManager(MainNetworkAccessManager(token=token))
 
         # attach a Display object to JavaScript window.display after page has loaded
         self.page().loadFinished[bool].connect(self.create_display)
@@ -155,6 +160,20 @@ class MainWebView(QtWebKit.QWebView):
             self.repl.run()
 
 
+    def get_token(self, hostname):
+        """Reads authentication key and calculates token."""
+        try:
+            keyfile = settings.AUTHKEY_FILE
+            f = open(keyfile, 'r')
+            key = f.read().strip()
+            f.close()
+            token = hostname+":"+hashlib.sha1(hostname+":"+key).hexdigest()
+            return token
+        except Exception, e:
+            logger.warn("Failed to read authentication key: "+str(e))
+            return None
+
+
 class MainWebPage(QtWebKit.QWebPage):
 
     def javaScriptConsoleMessage(self, message, lineNumber, sourceID):
@@ -204,10 +223,13 @@ class MainNetworkAccessManager(QtNetwork.QNetworkAccessManager):
 
     Logs possible network errors.
     Handles the cookie jar, when caching is enabled.
+    Inserts authentication token to requests.
 
     """
 
-    def __init__(self, cookie_path=None):
+    token = None
+
+    def __init__(self, cookie_path=None, token=None):
         QtNetwork.QNetworkAccessManager.__init__(self)
         self.finished[QtNetwork.QNetworkReply].connect(self._finished)
         if cookie_path is None and 'COOKIE_PATH' in settings.__dict__:
@@ -215,6 +237,15 @@ class MainNetworkAccessManager(QtNetwork.QNetworkAccessManager):
         if cookie_path is not None:
             # set custom cookie jar for persistance
             self.setCookieJar(CookieJar(cookie_path))
+        self.token = token
+
+    def createRequest(self, op, request, outgoingData):
+        """Inserts X-Iivari-Auth header to request."""
+        if self.token:
+            #logger.debug("X-Iivari-Auth: "+self.token)
+            request.setRawHeader("X-Iivari-Auth", self.token)
+        return QtNetwork.QNetworkAccessManager.createRequest(
+            self, op, request, outgoingData)
 
     @QtCore.Slot()
     def _finished(self, reply):
