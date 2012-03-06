@@ -73,17 +73,23 @@ def update_acls(suffix)
 
     f.write LdapAcl.generate_acls(suffix, samba_domain)
 
-    f.write "\n\n"
-    f.write "dn: cn=config\n"
-    f.write "changetype: modify\n"
-    f.write "delete: olcAuthzRegexp\n"
-    f.write "olcAuthzRegexp: uid=([^,]*)@#{kerberos_realm.downcase},cn=gssapi,cn=auth ldap:///ou=People,#{suffix}??one?(uid=$1)\n"
-
-    f.write "\n\n"
-    f.write "dn: cn=config\n"
-    f.write "changetype: modify\n"
-    f.write "add: olcAuthzRegexp\n"
-    f.write "olcAuthzRegexp: uid=([^,]*)@#{kerberos_realm.downcase},cn=gssapi,cn=auth ldap:///ou=People,#{suffix}??one?(uid=$1)\n"
+### XXX This might trigger some bug in slapd... olcAuthzRegexp does appear to
+### XXX work after add, but after delete+add afterwards AND slapd restart
+### XXX it no longer does (?!?).  Delete is pointless anyway, and this ends up
+### XXX changing the rule order, but of course slapd should not behave that
+### XXX way.  The possible slapd bug should be confirmed in some proper test
+### XXX environment.
+#   f.write "\n\n"
+#   f.write "dn: cn=config\n"
+#   f.write "changetype: modify\n"
+#   f.write "delete: olcAuthzRegexp\n"
+#   f.write "olcAuthzRegexp: uid=([^,]*)@#{kerberos_realm.downcase},cn=gssapi,cn=auth ldap:///ou=People,#{suffix}??one?(uid=$1)\n"
+#
+#   f.write "\n\n"
+#   f.write "dn: cn=config\n"
+#   f.write "changetype: modify\n"
+#   f.write "add: olcAuthzRegexp\n"
+#   f.write "olcAuthzRegexp: uid=([^,]*)@#{kerberos_realm.downcase},cn=gssapi,cn=auth ldap:///ou=People,#{suffix}??one?(uid=$1)\n"
   }
 
   puts `ldapmodify -c -h #{@ldaphost} -x -D #{@binddn} -Z -w #{@bindpw} -f /tmp/acl.ldif`
