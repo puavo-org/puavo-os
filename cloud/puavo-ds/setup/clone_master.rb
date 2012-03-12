@@ -56,13 +56,13 @@ contexts.split("\n").each do |line|
         suffix== "o=puavo"
 
       puts "suffix: #{suffix}"
-      data = `ldapsearch -LLL -x -H #{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b #{$suffix}`
+      data = `ldapsearch -LLL -x -H #{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b #{suffix}`
 
       tempfile = Tempfile.open("data")
       tempfile.puts data
-      #tempfile.close
+      tempfile.close
       
-      system("slapadd -q -l #{tempfile.path} -F /etc/ldap/slapd.d -b '#{$suffix}'") \
+      system("slapadd -q -l #{tempfile.path} -F /etc/ldap/slapd.d -b '#{suffix}'") \
       or raise 'Problem in importing data'
     end
   end
