@@ -20,7 +20,7 @@ class LdapDn
   def self.subtree ; new.subtree ; end
 end
 
-class Automount < LdapDn
+class AclAutomount < LdapDn
   def initialize
     @dn_name = "ou=Automount,#{ $suffix }"
   end
@@ -114,7 +114,7 @@ class Roles < LdapDn
   end
 end
 
-class Samba < LdapDn
+class AclSamba < LdapDn
   def initialize
     @dn_name = "sambaDomainName=#{ $samba_domain },#{ $suffix }"
   end
@@ -195,7 +195,7 @@ end
 def lines_with_index(lines)
   new_lines = []
   lines.each_with_index do |line, i|
-    new_lines << "olcAccess: {#{ i }}to #{ line }\n"
+    new_lines << "{#{ i }}to #{ line }\n"
   end
   new_lines
 end
@@ -207,8 +207,7 @@ class LdapAcl
 
     lines_with_index(rules.map { |r| r.first.class == Array ? r : [ r ] } \
 			  .flatten(1) \
-			  .map { |a| a.join(' ') }) \
-      .join('')
+			  .map { |a| a.join(' ') })
   end
 
   def self.rules
@@ -232,7 +231,7 @@ class LdapAcl
 					 userPassword
 					 sambaAcctFlags)),		Rule.write(Hosts.servers.children),						RuleBreak.none('*'), 			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ Samba.exact,							Rule.write(Hosts.servers.children),						RuleBreak.none('*'), 			],
+      [ AclSamba.exact,							Rule.write(Hosts.servers.children),						RuleBreak.none('*'), 			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Printers.exact,		attrs(%w(ou
 					 entry
@@ -334,13 +333,13 @@ class LdapAcl
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Roles.children,							Rule.write(Set.admin),													],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ Automount.exact,	attrs(%w(entry
+      [ AclAutomount.exact,	attrs(%w(entry
 					 ou
 					 objectClass)),								Rule.read('*'),									],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ Automount.exact,	attrs(%w(children)),			Rule.write(Set.owner_and_user),		Rule.read('*'),									],
+      [ AclAutomount.exact,	attrs(%w(children)),			Rule.write(Set.owner_and_user),		Rule.read('*'),									],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ Automount.children,						Rule.write(Set.owner_and_user),		Rule.read('*'),									],
+      [ AclAutomount.children,						Rule.write(Set.owner_and_user),		Rule.read('*'),									],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ LdapDn.new('ou=Kerberos Realms').subtree,			Rule.write(PuavoUid.kadmin('dn')),	Rule.read(PuavoUid.kdc('dn')),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -481,13 +480,13 @@ class LdapAcl
 	  'filter=(objectClass=puavoSchool)',				Rule.write(Set.owner_and_user),							Rule.perms('+rscxd', Set.school_admin_and_user),
 																			Rule.read(Set.getent),			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ Samba.exact,		attrs(%w(sambaSID
+      [ AclSamba.exact,		attrs(%w(sambaSID
 					 sambaDomainName
 					 sambaNextUserRid
 					 sambaNextRid)),		Rule.write(PuavoUid.samba,
 										   Set.all_admins),												],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ Samba.exact,							Rule.write(Set.admin,
+      [ AclSamba.exact,							Rule.write(Set.admin,
 										   PuavoUid.samba),		Rule.read(Set.all_admins),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ LdapDn.new('ou=System Accounts').subtree,

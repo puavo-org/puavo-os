@@ -71,7 +71,9 @@ def update_acls(suffix)
     f.write "changetype: modify\n"
     f.write "replace: olcAccess\n"
 
-    f.write LdapAcl.generate_acls(suffix, samba_domain)
+    acls = LdapAcl.generate_acls(suffix, samba_domain)
+    acls_with_olcAccess = acls.map { |s| s.sub(/^/, 'olcAccess: ') }
+    f.write acls_with_olcAccess.join('')
 
 ### XXX This might trigger some bug in slapd... olcAuthzRegexp does appear to
 ### XXX work after add, but after delete+add afterwards AND slapd restart

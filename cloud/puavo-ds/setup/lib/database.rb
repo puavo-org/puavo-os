@@ -1,4 +1,5 @@
 require 'id_pool'
+require 'lib/database_acl'
 require 'tempfile'
 
 class Database < ActiveLdap::Base
@@ -42,8 +43,7 @@ class Database < ActiveLdap::Base
     suffix = self.olcSuffix
     samba_domain = self.samba_domain
 
-    template = File.read("templates/database_acl.erb")
-    self.olcAccess = ERB.new(template, 0, "%<>").result(binding).split("\n")
+    self.olcAccess = LdapAcl.generate_acls(suffix, samba_domain)
   end
 
   def set_replication_settings
