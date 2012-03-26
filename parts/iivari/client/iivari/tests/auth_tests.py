@@ -62,9 +62,11 @@ class AuthenticationTests(unittest.TestCase):
             key = response.read()
 
             # Verify
+            payload = {"username": username, "password": password}
+            data = urllib.urlencode(payload)
             url = self.urlbase + "authkey/verify"
             token = hostname+":"+hashlib.sha1(hostname+":"+key).hexdigest()
-            request = urllib2.Request(url, "", {'X-Iivari-Auth': token})
+            request = urllib2.Request(url, data, {'X-Iivari-Auth': token})
             response = urllib2.urlopen(request)
             self.assertEquals(response.read(), "ok")
             return key
@@ -74,27 +76,70 @@ class AuthenticationTests(unittest.TestCase):
 
     def test_unauthorized(self):
         """Should unauthorize without proper session key."""
-        url = self.urlbase + "authkey/verify"
+        url = self.urlbase + "conductor"
         # corrupt key
         f = open(self.authkey_file, 'w')
         f.write("XXXXXXXX")
         f.close()
         view = MainWebView(None, url=url, hostname=self.hostname)
+
         def callback(reply):
             status = reply.attribute(QtNetwork.QNetworkRequest.HttpStatusCodeAttribute)
-            QT_APP.quit()
             self.assertEquals(status, 401)
+            QT_APP.quit()
+
         nm = view.page().networkAccessManager()
         nm.finished[QtNetwork.QNetworkReply].connect(callback)
         QT_APP.exec_()
 
-    def test_verify(self):
-        url = self.urlbase + "authkey/verify"
+
+    def test_authenticate_conductor(self):
+        url = self.urlbase + "conductor"
         view = MainWebView(None, url=url, hostname=self.hostname)
+
         def callback(reply):
+            nm.finished[QtNetwork.QNetworkReply].disconnect(callback)
             status = reply.attribute(QtNetwork.QNetworkRequest.HttpStatusCodeAttribute)
-            QT_APP.quit()
             self.assertEquals(status, 200)
+            QT_APP.quit()
+
+        nm = view.page().networkAccessManager()
+        nm.finished[QtNetwork.QNetworkReply].connect(callback)
+        QT_APP.exec_()
+
+
+    def test_authenticate_slides_ajax(self):
+        """Test AJAX authentication."""
+        url = self.urlbase + "ping" # regular GET
+        view = MainWebView(None, url=url, hostname=self.hostname)
+
+        class Finish(QtCore.QObject, unittest.TestCase):
+            """Ajax ready callback"""
+            @QtCore.Slot()
+            def finish(self):
+                status = view.page().mainFrame().toPlainText()
+                self.assertEquals(status, '200')
+                QT_APP.quit()
+
+        def callback(reply):
+            """HTML callback"""
+            nm.finished[QtNetwork.QNetworkReply].disconnect(callback)
+            view.page().mainFrame().addToJavaScriptWindowObject("finish", Finish())
+            view.page().mainFrame().evaluateJavaScript("""
+                var url = "%s";
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", url, false);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState == 4) {
+                        console.log("READY");
+                        document.body.innerHTML = xhr.status;
+                        finish.finish();
+                    }
+                };
+                console.log("send ajax");
+                xhr.send("");
+                """ % (self.urlbase + "slides.json")) # ajax url
+
         nm = view.page().networkAccessManager()
         nm.finished[QtNetwork.QNetworkReply].connect(callback)
         QT_APP.exec_()
