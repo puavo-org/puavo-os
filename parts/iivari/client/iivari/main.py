@@ -87,11 +87,11 @@ class MainWebView(QtWebKit.QWebView):
         self.page().loadFinished[bool].connect(self.create_display)
 
         # use QWebSettings for this webView
-        settings = self.settings()
-        #settings = QWebSettings.globalSettings()
+        qsettings = self.settings()
+        #qsettings = QWebSettings.globalSettings()
 
         # enable Javascript
-        settings.setAttribute(QWebSettings.JavascriptEnabled, True)
+        qsettings.setAttribute(QWebSettings.JavascriptEnabled, True)
 
         """
         Enable application to work in offline mode.
@@ -101,29 +101,29 @@ class MainWebView(QtWebKit.QWebView):
         @see http://diveintohtml5.info/offline.html
         """
         if cache_path is not None:
-            settings.enablePersistentStorage(cache_path)
+            qsettings.enablePersistentStorage(cache_path)
             # uncertain whether LocalContentCanAccessRemoteUrls is needed even when using offline cache
             # FIXME: check, and disable this if unneeded.
-            settings.setAttribute(QWebSettings.LocalContentCanAccessRemoteUrls, True)
+            qsettings.setAttribute(QWebSettings.LocalContentCanAccessRemoteUrls, True)
 
-        #settings.setAttribute(
+        #qsettings.setAttribute(
         #    QtWebKit.QWebSettings.DeveloperExtrasEnabled, True)
         
-        # write settings to log
+        # write qsettings to log
         logger.debug("\n * ".join([
             ' --- QWebSettings ---',
             'OfflineWebApplicationCache: %s' % (
-                settings.testAttribute(
+                qsettings.testAttribute(
                     QWebSettings.OfflineWebApplicationCacheEnabled)),
             'LocalStorage: %s' % (
-                settings.testAttribute(
+                qsettings.testAttribute(
                     QWebSettings.LocalStorageEnabled)),
             'offlineWebApplicationCachePath: %s' % (
-                settings.offlineWebApplicationCachePath()),
+                qsettings.offlineWebApplicationCachePath()),
             'offlineWebApplicationCacheQuota: %i' % (
-                settings.offlineWebApplicationCacheQuota()),
+                qsettings.offlineWebApplicationCacheQuota()),
             'LocalContentCanAccessRemoteUrls: %s' % (
-                settings.testAttribute(
+                qsettings.testAttribute(
                     QWebSettings.LocalContentCanAccessRemoteUrls)),
             
             ]))
