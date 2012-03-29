@@ -1,3 +1,10 @@
+= 1.3.0
+Authentication.
+
+ * Authentication key is read from $HOME/.iivari/auth
+   and added to request header X-Iivari-Auth.
+
+
 = 1.2.5
 Maintenance release.
 
