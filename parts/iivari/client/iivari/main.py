@@ -47,6 +47,12 @@ class MainWindow(QtGui.QMainWindow):
         self.webView = MainWebView(centralwidget, **kwargs)
 
 
+    def resizeEvent(self, e):
+        """Adjust WebView when screen is rotated or resized by other means."""
+        if self.webView:
+            self.webView.setGeometry(self.frameGeometry())
+
+
 class MainWebView(QtWebKit.QWebView):
     
     display = None
