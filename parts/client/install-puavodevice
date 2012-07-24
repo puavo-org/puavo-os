@@ -459,7 +459,7 @@ class PostRegisterConfiguration
   end
 
   def setup
-    Tools.mkdir(PuavoDir)
+    Tools.mkdir(Puavodir)
 
     if @register_info['userCertificate']
       raise 'Root CA missing' \
@@ -501,34 +501,40 @@ class Installation
   end
 
   def self.install
-    # XXX an issue only on servers ?
-    # XXX one could also ask user here to set it?
-    raise 'root password is not usable' \
-      unless %x(passwd -S root).split[1] == 'P'
-
     conf = YAML.load_file(Host_configuration_path)
 
     fqdn = fqdn()
 
-    case conf['devicetype']
-      when 'ltspserver'
-	kerberos_principals = %w(host ldap cifs IPP nfs).map do |p| 
-				"#{ p }/#{ fqdn }@#{ conf['kerberos_realm'] }"
-			      end
-      else
-	kerberos_principals = false
-    end
+    todo_lists = {
+      'fatclient'  => %w(),
+      'infotv'     => %w(check_root_password hostname openvpn puppet),
+      'laptop'     => %w(),
+      'ltspserver' => %w(check_root_password hostname openvpn puppet),
+      'thinclient' => %w(),
+    }
 
-    Setup.hostname(fqdn)
-    Setup.openvpn()
+    tasks = {
+      'check_root_password' => lambda { make_sure_root_password_is_set()    },
+      'hostname'            => lambda { Setup.hostname(fqdn)                },
+      'openvpn'             => lambda { Setup.openvpn()                     },
+      'puppet'              => lambda { Setup.puppet(conf['puppet_server'],
+						     fqdn)                  },
+    }
 
-    if kerberos_principals then
-      Setup.kerberos(kerberos_principals)
-    end
+    my_todo_list = todo_lists[ conf['devicetype'] ]
+    raise 'No installation todo-list for device type ' \
+	  + "'#{ conf['devicetype'] }'" \
+      unless my_todo_list
 
-    if conf['puppet_server']
-      Setup.puppet(conf['puppet_server'], fqdn)
-    end
+    my_todo_list.each { |taskname| tasks[taskname].call() }
+  end
+
+  def self.make_sure_root_password_is_set
+     unless %x(passwd -S root).split[1] == 'P' then
+       Tools.errmsg('root password is not usable.')
+       Tools.errmsg('Please set it and run this again.')
+       raise 'root password is not usable'
+     end
   end
 
   def self.run_puppet(opts='')
@@ -537,7 +543,6 @@ class Installation
       raise 'problem running puppetd'
     end
   end
-
 end
 
 class Setup
@@ -664,6 +669,11 @@ class Setup
   end
 
   def self.puppet(puppet_server, fqdn)
+    raise 'Puppet server is not known' \
+      unless puppet_server && !puppet_server.empty?
+
+    raise 'FQDN is not known' unless fqdn && !fqdn.empty?
+
     begin
       # needed by some facter rules
       FileUtils.rmtree('/etc/puppet/ssl')
@@ -706,16 +716,16 @@ class Setup
       run_puppet()
       Tools.goodmsg('Puppet run is done.')
       Tools.goodmsg('Check that all is ok, and re-execute this if in doubt.')
-    rescue => msg
-      Tools.errmsg(msg)
-      exit 1
+    rescue Exception => e
+      Tools.errmsg(e.message)
+      raise e
     end
   end
 end
 
 class Registration
   def self.register(cmdline_params)
-    if File.exists?(YAML.load_file(Host_configuration_path)) \
+    if File.exists?(Host_configuration_path) \
 	 && !cmdline_params['force_register']
       Tools.goodmsg('Registration done and not forced with --force-register')
       return
