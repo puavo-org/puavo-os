@@ -476,36 +476,13 @@ class PostRegisterConfiguration
 				"#{ Puavodir }/certs/host.key",
 				"#{ Puavodir }/certs/rootca.pem",
 				"#{ Puavodir }/certs/orgcabundle.pem")
-      set_hostname()
     end
 
-    set_ldap_password() if @register_info['ldap_password']
+    if @register_info['ldap_password'] then
+      Setup.ldap_password(@register_info['ldap_password'])
+    end
+
     write_host_configuration() if @register_info['host_configuration']
-  end
-
-  # XXX is this really needed? (perhaps belongs to installation phase)
-  def set_hostname
-    hostname = @cert.fqdn.split('.')[0]
-    begin
-      File.open('/etc/hostname', 'w') do |f|
-	f.print "#{ hostname }\n"
-      end
-      unless system('hostname --file /etc/hostname')
-	raise 'could not set hostname'
-      end
-    rescue => msg
-      Tools.errmsg(msg)
-      exit 1
-    end
-    Tools.goodmsg("System hostname is now set to #{ hostname }.")
-  end
-
-  def set_ldap_password
-    Tools.mkdir("#{ Puavodir }/ldap")
-    File.open("#{ Puavodir }/ldap/password", 'w', 0600) do |f|
-      f.print "#{ @register_info['ldap_password'] }\n"
-    end
-    Tools.goodmsg('LDAP password is now set.')
   end
 
   def write_host_configuration
@@ -542,9 +519,16 @@ class Installation
 	kerberos_principals = false
     end
 
-    setup_openvpn()
-    setup_kerberos(kerberos_principals) if kerberos_principals
-    setup_puppet(conf['puppet_server'], fqdn) if conf['puppet_server']
+    Setup.hostname(fqdn)
+    Setup.openvpn()
+
+    if kerberos_principals then
+      Setup.kerberos(kerberos_principals)
+    end
+
+    if conf['puppet_server']
+      Setup.puppet(conf['puppet_server'], fqdn)
+    end
   end
 
   def self.run_puppet(opts='')
@@ -554,9 +538,30 @@ class Installation
     end
   end
 
-  def self.setup_kerberos(principals)
-    # XXX not used yet
-    return
+end
+
+class Setup
+  def self.hostname(fqdn)
+    hostname = fqdn.split('.')[0]
+
+    begin
+      File.open('/etc/hostname', 'w') do |f|
+	f.print "#{ hostname }\n"
+      end
+      unless system('hostname --file /etc/hostname')
+	raise 'could not set hostname'
+      end
+    rescue Exception => e
+      Tools.errmsg(e.message)
+      raise e
+    end
+
+    Tools.goodmsg("System hostname is now set to #{ hostname }.")
+  end
+
+  def self.kerberos(principals)
+    return	# XXX this method is not used yet
+
     begin
       error = false
       principal = HighLine.ask("\nKerberos principal: ")
@@ -580,7 +585,15 @@ class Installation
     end while error
   end
 
-  def self.setup_openvpn
+  def self.ldap_password(ldap_password)
+    Tools.mkdir("#{ Puavodir }/ldap")
+    File.open("#{ Puavodir }/ldap/password", 'w', 0600) do |f|
+      f.print "#{ ldap_password }\n"
+    end
+    Tools.goodmsg('LDAP password is now set.')
+  end
+
+  def self.openvpn
     begin
       Tools.mkdir('/etc/openvpn/keys')
 
@@ -643,14 +656,14 @@ class Installation
       end
       sleep 2
 
-    rescue => msg
-      Tools.errmsg(msg)
-      exit 1
+    rescue Exception => e
+      Tools.errmsg(e.message)
+      raise e
     end
     Tools.goodmsg('OpenVPN setup is done.')
   end
 
-  def self.setup_puppet(puppet_server, fqdn)
+  def self.puppet(puppet_server, fqdn)
     begin
       # needed by some facter rules
       FileUtils.rmtree('/etc/puppet/ssl')
