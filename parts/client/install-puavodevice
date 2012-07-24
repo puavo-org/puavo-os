@@ -22,12 +22,14 @@ require 'resolv'
 require 'socket'
 require 'yaml'
 
-HostCrtPath     = '/etc/puavo/certs/host.crt'
-HostKeyPath     = '/etc/puavo/certs/host.key'
-OrgCABundlePath = '/etc/puavo/certs/orgcabundle.pem'
-RootCAPath      = '/etc/puavo/certs/rootca.pem'
+Puavodir = '/etc/puavo'
 
-Host_configuration_path = '/etc/puavo/host_configuration'
+HostCrtPath     = "#{ Puavodir }/certs/host.crt"
+HostKeyPath     = "#{ Puavodir }/certs/host.key"
+OrgCABundlePath = "#{ Puavodir }/certs/orgcabundle.pem"
+RootCAPath      = "#{ Puavodir }/certs/rootca.pem"
+
+Host_configuration_path = "#{ Puavodir }/host_configuration"
 
 class Tools
   def self.colormsg(msg, tag, color)
@@ -87,7 +89,11 @@ class HostCertificate
   end
 
   def fqdn
-    ((/^.*CN=(.*?)(\/|$)/.match(@crt.subject.to_s))[1])
+    self.class.fqdn_from_cert(@crt)
+  end
+
+  def self.fqdn_from_cert(cert)
+    ((/^.*CN=(.*?)(\/|$)/.match(cert.subject.to_s))[1])
   end
 
   def request
@@ -99,6 +105,7 @@ class HostCertificate
     File.open(keypath,         'w', 0400) { |f| f.print @key.to_pem  }
     File.open(rootcapath,      'w', 0444) { |f| f.print @rootca      }
     File.open(orgcabundlepath, 'w', 0444) { |f| f.print @orgcabundle }
+
     Tools.goodmsg('Certificates have been written to filesystem.')
   end
 end
@@ -112,11 +119,13 @@ class RegisterUserInterface
       'boottype'  => @cmdline_params['netboot'] ? 'net' : 'local',
       'noconfirm' => @cmdline_params['noconfirm']
     }
+
     @puavoserver     = @cmdline_params['puavoserver'] || default_puavoserver()
     @username        = @cmdline_params['username']
     @password        = @cmdline_params['password']
 
     facts = Facter.to_hash
+
     @system_defaults = {
       'host_certificate_request' => cert.request,
       'macAddress'               => lookup_macaddresses(facts),
@@ -135,16 +144,20 @@ class RegisterUserInterface
 		 'devicetype',
 		 @connection.devicetypes['title'],
 		 @connection.devicetypes['question'])
+
     @attributes = request_attributes(@responses['devicetype'])
+
     set_host_attributes()
   end
 
   def ask_machine_info(errors={}, ask_all=true)
     unhandled = errors.clone
+
     if ask_all
       ask_devicetype()
       ask_school() if school_required?
     end
+
     @attributes.each do |attr|
       field = attr['id']
 
@@ -161,6 +174,7 @@ class RegisterUserInterface
       @responses[field] = ask_with_default(question, @host[field])
       set_host_attributes()
     end
+
     unhandled.each do |field, errmsg|
       Tools.errmsg("Server reported unhandled error for #{ field }: " \
 		   + errmsg)
@@ -169,21 +183,24 @@ class RegisterUserInterface
 
   def ask_school()
     list = @connection.schools['list']
+
     @responses['school'] \
       = list.size == 1 ? list.keys[0] \
       : choicelist(@connection.schools['list'],
 		   'school',
 		   @connection.schools['title'],
 		   @connection.schools['question'])
+
     @attributes = request_attributes(@responses['devicetype'],
 				     @responses['school'])
+
     set_host_attributes()
   end
 
   def ask_with_default(question, default)
-    answer = HighLine.ask("#{ question } [#{ default }] ") do |q|
-							     q.whitespace = nil
-							   end
+    prompt = "#{ question } [#{ default }] "
+    answer = HighLine.ask(prompt) { |q| q.whitespace = nil }
+
     return answer.match(/^\n$/)  ? default \
 	 : answer.match(/^\s+$/) ? ''      \
 	 : answer.strip
@@ -192,6 +209,7 @@ class RegisterUserInterface
   def choicelist(items, field, header, prompt)
     selected = nil
     itemkeys = items.keys.sort_by { |i| items[i]['order'] }
+
     choose do |menu|
       itemkeys.each do |id|
 	menu.choice(items[id]['label']) { selected = id }
@@ -204,7 +222,9 @@ class RegisterUserInterface
       end
       menu.header = header
     end
+
     HighLine.say "===> selected [#{ items[selected]['label'] }]"
+
     selected
   end
 
@@ -253,6 +273,7 @@ class RegisterUserInterface
   def print_machine_info
     set_host_attributes()
     HighLine.say "\nHOST INFORMATION:"
+
     @attributes.each do |attr|
       next if attr['label'].empty?
       field = attr['id']
@@ -268,6 +289,7 @@ class RegisterUserInterface
 	end
       printf("%-24s%s\n", attr['label'] + ': ', value)
     end
+
     print "\n"
   end
 
@@ -283,6 +305,7 @@ class RegisterUserInterface
 
     @attributes = request_attributes(@cmdline_params['devicetype'],
 				     @cmdline_params['school'])
+
     loop do
       print_machine_info()
       until @mode['noconfirm'] or agree('Is this information correct? (y/n) ')
@@ -337,12 +360,14 @@ class PuavoDevicesConnection
     @username = username
     @password = password
 
-    @http = Net::HTTP.new(server, '443')
-    @http.use_ssl = true
-    @http.ca_path = '/etc/ssl/certs'
-    @http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+    devicetypes_url = "/devices/hosts/types.json?boottype=#{ boottype }"
+
+    @http              = Net::HTTP.new(server, '443')
+    @http.use_ssl      = true
+    @http.ca_path      = '/etc/ssl/certs'
+    @http.verify_mode  = OpenSSL::SSL::VERIFY_PEER
     @http.verify_depth = 5
-    @devicetypes = get("/devices/hosts/types.json?boottype=#{ boottype }")
+    @devicetypes       = get(devicetypes_url)
 
     userinfo = get('/devices/sessions/show.json')
     @schools = userinfo['managed_schools'].clone
@@ -370,6 +395,7 @@ class PuavoDevicesConnection
       'object_key' => form['object_key'],
       'url'        => form['url'] % school,
     }
+
     [
       {
 	'default' => @devicetypes['default'].to_s,
@@ -432,30 +458,24 @@ class PostRegisterConfiguration
     @register_info = register_info
   end
 
-  def apt_get_install(package)
-    unless system("apt-get --assume-yes -qq install #{ package }")
-      raise "could not install #{ package }"
-    end
-    Tools.goodmsg("Package #{ package } is now installed.")
-  end
-
   def setup
-    Tools.mkdir('/etc/puavo')
+    Tools.mkdir(PuavoDir)
 
     if @register_info['userCertificate']
-      unless @register_info['rootca']   then raise 'Root CA missing' end
-      unless @register_info['orgcabundle'] then
-        raise 'Organisation CA bundle missing'
-      end
+      raise 'Root CA missing' \
+	unless @register_info['rootca']
+      raise 'Organisation CA bundle missing' \
+	unless @register_info['orgcabundle']
 
       @cert.accept_signed_certificate(@register_info['userCertificate'],
 				      @register_info['rootca'],
 				      @register_info['orgcabundle'])
-      Tools.mkdir('/etc/puavo/certs')
-      @cert.write_to_filesystem('/etc/puavo/certs/host.crt',
-				'/etc/puavo/certs/host.key',
-				'/etc/puavo/certs/rootca.pem',
-				'/etc/puavo/certs/orgcabundle.pem')
+
+      Tools.mkdir("#{ Puavodir }/certs")
+      @cert.write_to_filesystem("#{ Puavodir }/certs/host.crt",
+				"#{ Puavodir }/certs/host.key",
+				"#{ Puavodir }/certs/rootca.pem",
+				"#{ Puavodir }/certs/orgcabundle.pem")
       set_hostname()
     end
 
@@ -463,7 +483,7 @@ class PostRegisterConfiguration
     write_host_configuration() if @register_info['host_configuration']
   end
 
-  # XXX is this really needed?
+  # XXX is this really needed? (perhaps belongs to installation phase)
   def set_hostname
     hostname = @cert.fqdn.split('.')[0]
     begin
@@ -481,8 +501,8 @@ class PostRegisterConfiguration
   end
 
   def set_ldap_password
-    Tools.mkdir('/etc/puavo/ldap')
-    File.open('/etc/puavo/ldap/password', 'w', 0600) do |f|
+    Tools.mkdir("#{ Puavodir }/ldap")
+    File.open("#{ Puavodir }/ldap/password", 'w', 0600) do |f|
       f.print "#{ @register_info['ldap_password'] }\n"
     end
     Tools.goodmsg('LDAP password is now set.')
@@ -498,9 +518,9 @@ end
 
 class Installation
   def self.fqdn
-    hostcrt = IO.read('/etc/puavo/certs/host.crt')
+    hostcrt = IO.read("#{ Puavodir }/certs/host.crt")
     cert = OpenSSL::X509::Certificate.new(hostcrt)
-    ((/^.*CN=(.*?)(\/|$)/.match(cert.subject.to_s))[1])
+    HostCertificate.fqdn_from_cert(cert)
   end
 
   def self.install
