@@ -1,3 +1,9 @@
+puavodevices-client-install (0.1.8) precise; urgency=low
+
+  * timeout-script is now in "coreutils"-package.
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Tue, 03 Apr 2012 12:37:29 +0300
+
 puavodevices-client-install (0.1.7) lucid; urgency=low
 
   * Refuse to run install-puavodevice unless root password is set and
