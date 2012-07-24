@@ -1,0 +1,51 @@
+#!/usr/bin/ruby
+
+require 'csv'
+
+filename, puavoserver, password, school = *ARGV
+
+terminals = CSV.readlines(filename).
+		select { |terminal| terminal[0] != 'description' }
+
+terminals[0..-1].each do |row|
+  next if row[0] == 'description'
+  z, z, hostname, z, location, macaddress, z, serial_number, z, model = *row
+
+  devicetype       = 'thinclient'
+  manufacturer     = ''
+  puavodevicemodel = ''
+  serial_number    ||= ''	# serial number may be missing from db dump
+
+  case model
+    when /etc3800/i,/etc-3800/i
+      manufacturer     = 'Epatec'
+      puavodevicemodel = 'ETC-3800'
+    when /etc2500/i,/etc-2500/i
+      manufacturer     = 'Epatec'
+      puavodevicemodel = 'ETC-2500'
+    when /optiplaex GX520/i,/verkkopc/i,/verkko-pc/i,/tykki/,/Toshiba-Satellite-Pro/,/fujitsu siemens scenic/
+      devicetype = 'fatclient'
+  end
+
+  cmd = [
+    'fakeroot',
+    '/usr/sbin/register-puavodevice',
+    '--netboot',
+    '--noconfirm',
+    '--puavoserver',			puavoserver,
+    '--username',			'admin',
+    '--password',			password,
+    '--school',				school,
+    '--devicetype',			devicetype,
+    '--puavoHostname',			hostname,
+    '--puavoLocationName',		location,
+    '--macAddress',			macaddress.downcase,
+    '--serialNumber',			serial_number,
+    '--puavoDeviceManufacturer',	manufacturer,
+    '--puavoDeviceModel',		puavodevicemodel,
+  ]
+
+  puts "registering terminal with info: #{ row.inspect }"
+  puts "the command is #{ cmd.join(' ') }"
+  system(*cmd)
+end

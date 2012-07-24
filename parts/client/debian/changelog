@@ -1,3 +1,10 @@
+puavodevices-client-install (0.1.9) precise; urgency=low
+
+  * Merge puavodevice-client-register package to puavodevices-client-install
+    package.
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Tue, 24 Jul 2012 13:33:44 +0300
+
 puavodevices-client-install (0.1.8) precise; urgency=low
 
   * timeout-script is now in "coreutils"-package.
