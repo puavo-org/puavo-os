@@ -1,8 +1,25 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
+#
+# Puavo Devices Client Install
+# * simple command-line script for registering devices
+#   to the Puavo Devices Server and installing them
+#
+# TODO
+# * localization by user settings and by operating system default locale?
+# * how to ask device information that is not required
+#   (latitude, longitude, description etc.)?
+#
+# suggestion: run this as:
+#   script -qc ./puavo-client-register /root/register.log
 
+require 'facter'
 require 'fileutils'
 require 'highline/import'
+require 'json'
+require 'net/https'
 require 'openssl'
+require 'resolv'
+require 'socket'
 require 'yaml'
 
 HostCrtPath     = '/etc/puavo/certs/host.crt'
@@ -10,206 +27,682 @@ HostKeyPath     = '/etc/puavo/certs/host.key'
 OrgCABundlePath = '/etc/puavo/certs/orgcabundle.pem'
 RootCAPath      = '/etc/puavo/certs/rootca.pem'
 
-# XXX repetition elsewhere
-def colormsg(msg, tag, color)
-  HighLine.say(HighLine.new.color("*** #{ tag }: #{ msg }", color))
-end
+Host_configuration_path = '/etc/puavo/host_configuration'
 
-def errmsg(msg) ; colormsg(msg, 'ERROR', HighLine::RED)  ; end
-def goodmsg(msg); colormsg(msg, 'OK',    HighLine::GREEN); end
+class Tools
+  def self.colormsg(msg, tag, color)
+    HighLine.say(HighLine.new.color("*** #{ tag }: #{ msg }", color))
+  end
 
-def fqdn
-  cert = OpenSSL::X509::Certificate.new(IO.read('/etc/puavo/certs/host.crt'))
-  ((/^.*CN=(.*?)(\/|$)/.match(cert.subject.to_s))[1])
-end
+  def self.errmsg(msg) ; colormsg(msg, 'ERROR', HighLine::RED)  ; end
+  def self.goodmsg(msg); colormsg(msg, 'OK',    HighLine::GREEN); end
 
-def mkdir(path, mode=0755)
-  begin
-    FileUtils.mkdir(path, :mode => mode)
-    rescue Errno::EEXIST
+  def self.mkdir(path, mode=0755)
+    begin
+      FileUtils.mkdir(path, :mode => mode)
+      rescue Errno::EEXIST
+    end
   end
 end
 
-def run_puppet(opts='')
-  unless system('puppetd --test --logdest console' +
-		" --logdest /var/log/puppet/install.log #{ opts }")
-    # XXX puppetd will not returned error codes even if errors occur,
-    # XXX so this will not be triggered.  This is apparently fixed in 2.6.0 ?
-    raise 'problem running puppetd'
-  end
-end
-
-def setup_kerberos(principals)
-  # XXX not used yet
-  return
-  begin
-    error = false
-    principal = HighLine.ask("\nKerberos principal: ")
-    password  = HighLine.ask('Password: ') { |q| q.echo = '*' }
-
-    principals.each do |princ|
-      goodmsg, errmsg = [], []
-      Open3.popen3('kadmin', '-p', principal, '-w', password, '-q',
-		   "add_principal #{ princ }") do |stdin, stdout, stderr|
-	goodmsg = stdout.readlines
-	errmsg  = stderr.readlines
+class CmdLine
+  def self.params(cmd_args)
+    params = {}
+    new_arg = nil
+    cmd_args.each do |i|
+      case i
+	when '--force-register'
+	  params['force_register'] = true
+	when '--netboot'
+	  params['netboot'] = true
+	when '--noconfirm'
+	  params['noconfirm'] = true
+	else
+	  if new_arg.nil?
+	    new_arg = i
+	  else
+	    params[ new_arg.match(/^--(.*)$/)[1] ] = i
+            new_arg = nil
+          end
       end
-      # XXX use some criteria to figure out if operation was ok
-      status = $?.exitstatus
-      errmsg("exit status is #{ status }")
-      goodmsg.each { |l| goodmsg(l.chomp) }
-      errmsg .each { |l| errmsg(l.chomp)  }
-      error = true
-      break
     end
-  end while error
+    params
+  end
 end
 
-def setup_openvpn
-  begin
-    mkdir('/etc/openvpn/keys')
+class HttpAuthError < Exception; end
 
-    ovpn_crt         = '/etc/openvpn/keys/host.crt'
-    ovpn_key         = '/etc/openvpn/keys/host.key'
-    ovpn_orgcabundle = '/etc/openvpn/keys/orgcabundle.pem'
+class HostCertificate
+  def initialize
+    @key = OpenSSL::PKey::RSA.new(1024)
+    @csr = OpenSSL::X509::Request.new
+    @csr.version = 0
+    @csr.public_key = @key.public_key
+  end
 
-    FileUtils.cp(HostCrtPath,     ovpn_crt)
-    FileUtils.cp(HostKeyPath,     ovpn_key)
-    FileUtils.cp(OrgCABundlePath, ovpn_orgcabundle)
+  def accept_signed_certificate(certificate, rootca, orgcabundle)
+    @crt         = OpenSSL::X509::Certificate.new(certificate)
+    @rootca      = rootca
+    @orgcabundle = orgcabundle
+  end
 
-    File.open('/etc/openvpn/runme', 'w', 0755) do |f|
-      f.print <<-EOF.gsub(/^\t+/, '')
-	#!/bin/sh
+  def fqdn
+    ((/^.*CN=(.*?)(\/|$)/.match(@crt.subject.to_s))[1])
+  end
 
-	SCRIPTSUBDIR=$1
+  def request
+    @csr.to_pem
+  end
 
-	for script in /etc/openvpn/scripts/$SCRIPTSUBDIR/*; do
-	  test -x $script && timeout 30 $script "$@"
-	done
+  def write_to_filesystem(certpath, keypath, rootcapath, orgcabundlepath)
+    File.open(certpath,        'w', 0444) { |f| f.print @crt.to_pem  }
+    File.open(keypath,         'w', 0400) { |f| f.print @key.to_pem  }
+    File.open(rootcapath,      'w', 0444) { |f| f.print @rootca      }
+    File.open(orgcabundlepath, 'w', 0444) { |f| f.print @orgcabundle }
+    Tools.goodmsg('Certificates have been written to filesystem.')
+  end
+end
 
-	exit 0
-	EOF
+class RegisterUserInterface
+  def initialize(cmdline_params, cert)
+    @responses       = {}
+    @cmdline_params  = cmdline_params
+
+    @mode = {
+      'boottype'  => @cmdline_params['netboot'] ? 'net' : 'local',
+      'noconfirm' => @cmdline_params['noconfirm']
+    }
+    @puavoserver     = @cmdline_params['puavoserver'] || default_puavoserver()
+    @username        = @cmdline_params['username']
+    @password        = @cmdline_params['password']
+
+    facts = Facter.to_hash
+    @system_defaults = {
+      'host_certificate_request' => cert.request,
+      'macAddress'               => lookup_macaddresses(facts),
+      'puavoDeviceManufacturer'  => facts['manufacturer'],
+      'puavoDeviceModel'         => facts['productname'],
+      'puavoHostname'            => facts['hostname'],
+      'serialNumber'             => facts['serialnumber'],
+    }
+
+    @host = {}
+  end
+
+  def ask_devicetype()
+    @responses['devicetype'] =
+      choicelist(@connection.devicetypes['list'],
+		 'devicetype',
+		 @connection.devicetypes['title'],
+		 @connection.devicetypes['question'])
+    @attributes = request_attributes(@responses['devicetype'])
+    set_host_attributes()
+  end
+
+  def ask_machine_info(errors={}, ask_all=true)
+    unhandled = errors.clone
+    if ask_all
+      ask_devicetype()
+      ask_school() if school_required?
     end
-    File.open('/etc/openvpn/puavoclient.conf', 'w', 0644) do |f|
-      f.print <<-EOF.gsub(/^\t+/, '')
-	client
-	dev tun
-	proto tcp-client
-	remote 217.112.254.13 443
+    @attributes.each do |attr|
+      field = attr['id']
 
-	ca #{ ovpn_orgcabundle }
-	cert #{ ovpn_crt }
-	key #{ ovpn_key }
-	ns-cert-type server
+      next unless ask_all or unhandled[field]
+      next if attr['label'].empty?
+      next if %(devicetype school).include?(field)
 
-	verb 3
+      if unhandled[field] and not ask_all
+	Tools.errmsg(unhandled[field])
+	unhandled.delete(field)
+      end
 
-	comp-lzo
-	keepalive 10 60
-	persist-tun
-	persist-key
-	up-delay
-
-	down "/etc/openvpn/runme down"
-	ipchange "/etc/openvpn/runme ipchange"
-	route-up "/etc/openvpn/runme route-up"
-	tls-verify "/etc/openvpn/runme tls-verify"
-	up "/etc/openvpn/runme up"
-	EOF
+      question = attr['label'] + ':'
+      @responses[field] = ask_with_default(question, @host[field])
+      set_host_attributes()
     end
-    unless system('service openvpn restart')
-      raise 'problem restarting openvpn'
+    unhandled.each do |field, errmsg|
+      Tools.errmsg("Server reported unhandled error for #{ field }: " \
+		   + errmsg)
+    end
+  end
+
+  def ask_school()
+    list = @connection.schools['list']
+    @responses['school'] \
+      = list.size == 1 ? list.keys[0] \
+      : choicelist(@connection.schools['list'],
+		   'school',
+		   @connection.schools['title'],
+		   @connection.schools['question'])
+    @attributes = request_attributes(@responses['devicetype'],
+				     @responses['school'])
+    set_host_attributes()
+  end
+
+  def ask_with_default(question, default)
+    answer = HighLine.ask("#{ question } [#{ default }] ") do |q|
+							     q.whitespace = nil
+							   end
+    return answer.match(/^\n$/)  ? default \
+	 : answer.match(/^\s+$/) ? ''      \
+	 : answer.strip
+  end
+
+  def choicelist(items, field, header, prompt)
+    selected = nil
+    itemkeys = items.keys.sort_by { |i| items[i]['order'] }
+    choose do |menu|
+      itemkeys.each do |id|
+	menu.choice(items[id]['label']) { selected = id }
+      end
+      if @host.has_key?(field)
+        menu.prompt = prompt + "[#{ items[ @host[field] ]['label'] }] "
+	menu.hidden('') { selected = @host[field] }
+      else
+	menu.prompt = prompt
+      end
+      menu.header = header
+    end
+    HighLine.say "===> selected [#{ items[selected]['label'] }]"
+    selected
+  end
+
+  def connect_to_puavo()
+    if (@puavoserver and @username and @password)
+      @connection = puavo_connection_request()
+    else
+      until (@connection)
+	begin
+	  begin
+	    @puavoserver = ask_with_default('Puavo server name:', @puavoserver)
+	    @connection  = PuavoDevicesConnection.new(@puavoserver, '', '', '')
+	  rescue HttpAuthError
+	  end
+	  @username   = ask_with_default('Username:', @username)
+	  @password   = HighLine.ask('Password: ') { |q| q.echo = '*' }
+	  @connection = puavo_connection_request()
+	rescue HttpAuthError
+	  Tools.errmsg('Wrong username and/or password.')
+	  @http = nil
+	rescue SocketError => e
+	  Tools.errmsg(e)
+	  @http = nil
+	end
+      end
+    end
+  end
+
+  def default_puavoserver
+    begin
+      Resolv::DNS.open do |dns|
+	r = dns.getresources('_puavo._tcp', Resolv::DNS::Resource::IN::SRV)
+	r[0].target.to_s
+      end
+    rescue
+      Tools.errmsg('Could not lookup default puavoserver.')
+    end
+  end
+
+  def lookup_macaddresses(facts)
+    facts['interfaces'].split(',').
+			map { |intf| facts["macaddress_#{intf}"] }.
+			compact.sort.uniq.join(' ')
+  end
+
+  def print_machine_info
+    set_host_attributes()
+    HighLine.say "\nHOST INFORMATION:"
+    @attributes.each do |attr|
+      next if attr['label'].empty?
+      field = attr['id']
+      value =
+	case field
+	  when 'devicetype'
+	    @connection.devicetypes['list'][ @host[field] ]['label']
+	  when 'school'
+	    next unless school_required?
+	    @connection.schools['list'][ @host[field] ]['label']
+	  else
+	    @host[field]
+	end
+      printf("%-24s%s\n", attr['label'] + ': ', value)
+    end
+    print "\n"
+  end
+
+  def puavo_connection_request()
+    PuavoDevicesConnection.new(@puavoserver,
+			       @username,
+			       @password,
+			       @mode['boottype'])
+  end
+
+  def register_to_server
+    connect_to_puavo()
+
+    @attributes = request_attributes(@cmdline_params['devicetype'],
+				     @cmdline_params['school'])
+    loop do
+      print_machine_info()
+      until @mode['noconfirm'] or agree('Is this information correct? (y/n) ')
+	ask_machine_info()
+	print_machine_info()
+      end
+
+      HighLine.say 'Sending host information to puavo server...'
+      response_data = @connection.post_host(@host)
+      if response_data['register_info']
+	if @host['host_certificate_request'] \
+	  and not response_data['register_info']['userCertificate']
+	    Tools.errmsg('Server did not send a signed certificate.')
+        else
+	  Tools.goodmsg('This machine is now successfully registered.')
+	  return response_data['register_info']
+	end
+      else
+	ask_machine_info(response_data['errors'], false)
+      end
+    end
+  end
+
+  def request_attributes(devicetype=nil, school=nil)
+    devicetype ||= @host['devicetype']
+    school     ||= @host['school']
+    @connection.request_object_info(devicetype, school)
+  end
+
+  def school_required?
+    @connection.devicetypes['list'][ @host['devicetype'] ]['school_required']
+  end
+
+  def set_host_attributes
+    @host = {}
+    @attributes.each do |attr|
+      next if attr['id'] == 'school' and not school_required?
+      @host[ attr['id'] ] = @responses[       attr['id'] ] ||
+			    @cmdline_params[  attr['id'] ] ||
+			    attr['default']                ||
+			    @system_defaults[ attr['id'] ] ||
+			    ''
+    end
+  end
+end
+
+class PuavoDevicesConnection
+  attr_accessor :devicetypes, :schools
+
+  def initialize(server, username, password, boottype)
+    @server   = server
+    @username = username
+    @password = password
+
+    @http = Net::HTTP.new(server, '443')
+    @http.use_ssl = true
+    @http.ca_path = '/etc/ssl/certs'
+    @http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+    @http.verify_depth = 5
+    @devicetypes = get("/devices/hosts/types.json?boottype=#{ boottype }")
+
+    userinfo = get('/devices/sessions/show.json')
+    @schools = userinfo['managed_schools'].clone
+    @schools['list'] = Hash[
+      userinfo['managed_schools']['list'].map do |school|
+	[
+	  school['puavoId'].to_s,
+	  {
+	    'label' => school['displayName'],
+	    'order' => school['puavoId'],
+	  },
+	]
+      end
+    ]
+  end
+
+  def request_object_info(devicetype, school)
+    devicetype = devicetype || @devicetypes['default'].to_s
+    school     = school     || @schools['default'].to_s
+    # put school id into url if %s exists in url string
+    question_url = @devicetypes['list'][ devicetype ]['url'] % school
+
+    form = get(question_url)
+    @post_info = {
+      'object_key' => form['object_key'],
+      'url'        => form['url'] % school,
+    }
+    [
+      {
+	'default' => @devicetypes['default'].to_s,
+	'id'      => 'devicetype',
+	'label'   => @devicetypes['label'],
+      },
+      {
+	'default' => @schools['default'].to_s,
+	'id'      => 'school',
+	'label'   => @schools['label'] },
+    ] + form['attributes'] 
+  end
+
+  def get(url)
+    @http.start do |http|
+      request = Net::HTTP::Get.new(url)
+      request.basic_auth(@username, @password)
+      response = http.request(request)
+      if response.class == Net::HTTPUnauthorized
+	raise HttpAuthError
+      end
+      JSON.parse(response.body)
+    end
+  end
+
+  def host_to_json(host)
+    {
+      @post_info['object_key'] => Hash[
+	host.map do |key, value|
+	  [
+	    key,
+	    (key == 'macAddress' ? value.split(' ') : value)
+	  ]
+	end
+      ]
+    }.to_json
+  end
+
+  def post_host(host)
+    request = Net::HTTP::Post.new(@post_info['url'],
+				  { 'Content-Type' => 'application/json' })
+    request.basic_auth(@username, @password)
+    response = @http.request(request, host_to_json(host))
+    case response.code
+      when /^2/
+	# successful request
+        Hash[ 'errors' => {}, 'register_info' => JSON.parse(response.body), ]
+      when /^5/
+	Tools.errmsg("Server response is #{ response.code }: #{ response.message }")
+	Hash[ 'errors' => {} ]
+      else
+	Hash[ 'errors' => Hash[ JSON.parse(response.body) ] ]
+    end
+  end
+end
+
+class PostRegisterConfiguration
+  def initialize(cert, register_info)
+    @cert = cert
+    @register_info = register_info
+  end
+
+  def apt_get_install(package)
+    unless system("apt-get --assume-yes -qq install #{ package }")
+      raise "could not install #{ package }"
+    end
+    Tools.goodmsg("Package #{ package } is now installed.")
+  end
+
+  def setup
+    Tools.mkdir('/etc/puavo')
+
+    if @register_info['userCertificate']
+      unless @register_info['rootca']   then raise 'Root CA missing' end
+      unless @register_info['orgcabundle'] then
+        raise 'Organisation CA bundle missing'
+      end
+
+      @cert.accept_signed_certificate(@register_info['userCertificate'],
+				      @register_info['rootca'],
+				      @register_info['orgcabundle'])
+      Tools.mkdir('/etc/puavo/certs')
+      @cert.write_to_filesystem('/etc/puavo/certs/host.crt',
+				'/etc/puavo/certs/host.key',
+				'/etc/puavo/certs/rootca.pem',
+				'/etc/puavo/certs/orgcabundle.pem')
+      set_hostname()
     end
 
-    sleep 2
-    until system('ifconfig tun0 >/dev/null 2>&1')
-      errmsg('waiting for tun0 to come up...')
+    set_ldap_password() if @register_info['ldap_password']
+    write_host_configuration() if @register_info['host_configuration']
+  end
+
+  # XXX is this really needed?
+  def set_hostname
+    hostname = @cert.fqdn.split('.')[0]
+    begin
+      File.open('/etc/hostname', 'w') do |f|
+	f.print "#{ hostname }\n"
+      end
+      unless system('hostname --file /etc/hostname')
+	raise 'could not set hostname'
+      end
+    rescue => msg
+      Tools.errmsg(msg)
+      exit 1
+    end
+    Tools.goodmsg("System hostname is now set to #{ hostname }.")
+  end
+
+  def set_ldap_password
+    Tools.mkdir('/etc/puavo/ldap')
+    File.open('/etc/puavo/ldap/password', 'w', 0600) do |f|
+      f.print "#{ @register_info['ldap_password'] }\n"
+    end
+    Tools.goodmsg('LDAP password is now set.')
+  end
+
+  def write_host_configuration
+    File.open(Host_configuration_path, 'w') do |f|
+      f.print @register_info['host_configuration'].to_yaml
+    end
+    Tools.goodmsg('Host configuration file is written.')
+  end
+end
+
+class Installation
+  def self.fqdn
+    hostcrt = IO.read('/etc/puavo/certs/host.crt')
+    cert = OpenSSL::X509::Certificate.new(hostcrt)
+    ((/^.*CN=(.*?)(\/|$)/.match(cert.subject.to_s))[1])
+  end
+
+  def self.install
+    # XXX an issue only on servers ?
+    # XXX one could also ask user here to set it?
+    raise 'root password is not usable' \
+      unless %x(passwd -S root).split[1] == 'P'
+
+    conf = YAML.load_file(Host_configuration_path)
+
+    fqdn = fqdn()
+
+    case conf['devicetype']
+      when 'ltspserver'
+	kerberos_principals = %w(host ldap cifs IPP nfs).map do |p| 
+				"#{ p }/#{ fqdn }@#{ conf['kerberos_realm'] }"
+			      end
+      else
+	kerberos_principals = false
+    end
+
+    setup_openvpn()
+    setup_kerberos(kerberos_principals) if kerberos_principals
+    setup_puppet(conf['puppet_server'], fqdn) if conf['puppet_server']
+  end
+
+  def self.run_puppet(opts='')
+    unless system('puppetd --test --logdest console' +
+		  " --logdest /var/log/puppet/install.log #{ opts }")
+      raise 'problem running puppetd'
+    end
+  end
+
+  def self.setup_kerberos(principals)
+    # XXX not used yet
+    return
+    begin
+      error = false
+      principal = HighLine.ask("\nKerberos principal: ")
+      password  = HighLine.ask('Password: ') { |q| q.echo = '*' }
+
+      principals.each do |princ|
+	goodmsg, errmsg = [], []
+	Open3.popen3('kadmin', '-p', principal, '-w', password, '-q',
+		     "add_principal #{ princ }") do |stdin, stdout, stderr|
+	  goodmsg = stdout.readlines
+	  errmsg  = stderr.readlines
+	end
+	# XXX use some criteria to figure out if operation was ok
+	status = $?.exitstatus
+	Tools.errmsg("exit status is #{ status }")
+	goodmsg.each { |l| Tools.goodmsg(l.chomp) }
+	errmsg .each { |l| Tools.errmsg(l.chomp)  }
+	error = true
+	break
+      end
+    end while error
+  end
+
+  def self.setup_openvpn
+    begin
+      Tools.mkdir('/etc/openvpn/keys')
+
+      ovpn_crt         = '/etc/openvpn/keys/host.crt'
+      ovpn_key         = '/etc/openvpn/keys/host.key'
+      ovpn_orgcabundle = '/etc/openvpn/keys/orgcabundle.pem'
+
+      FileUtils.cp(HostCrtPath,     ovpn_crt)
+      FileUtils.cp(HostKeyPath,     ovpn_key)
+      FileUtils.cp(OrgCABundlePath, ovpn_orgcabundle)
+
+      File.open('/etc/openvpn/runme', 'w', 0755) do |f|
+	f.print <<-EOF.gsub(/^\t+/, '')
+	  #!/bin/sh
+
+	  SCRIPTSUBDIR=$1
+
+	  for script in /etc/openvpn/scripts/$SCRIPTSUBDIR/*; do
+	    test -x $script && timeout 30 $script "$@"
+	  done
+
+	  exit 0
+	  EOF
+      end
+      File.open('/etc/openvpn/puavoclient.conf', 'w', 0644) do |f|
+	f.print <<-EOF.gsub(/^\t+/, '')
+	  client
+	  dev tun
+	  proto tcp-client
+	  remote 217.112.254.13 443
+
+	  ca #{ ovpn_orgcabundle }
+	  cert #{ ovpn_crt }
+	  key #{ ovpn_key }
+	  ns-cert-type server
+
+	  verb 3
+
+	  comp-lzo
+	  keepalive 10 60
+	  persist-tun
+	  persist-key
+	  up-delay
+
+	  down "/etc/openvpn/runme down"
+	  ipchange "/etc/openvpn/runme ipchange"
+	  route-up "/etc/openvpn/runme route-up"
+	  tls-verify "/etc/openvpn/runme tls-verify"
+	  up "/etc/openvpn/runme up"
+	  EOF
+      end
+      unless system('service openvpn restart')
+	raise 'problem restarting openvpn'
+      end
+
       sleep 2
-    end
-    sleep 2
+      until system('ifconfig tun0 >/dev/null 2>&1')
+	Tools.errmsg('waiting for tun0 to come up...')
+	sleep 2
+      end
+      sleep 2
 
-  rescue => msg
-    errmsg(msg)
-    exit 1
+    rescue => msg
+      Tools.errmsg(msg)
+      exit 1
+    end
+    Tools.goodmsg('OpenVPN setup is done.')
   end
-  goodmsg('OpenVPN setup is done.')
-end
 
-def setup_puppet(puppet_server, fqdn)
-  begin
-    # needed by some facter rules
-    FileUtils.rmtree('/etc/puppet/ssl')
-    mkdir('/etc/puppet/ssl',              0771)
-    mkdir('/etc/puppet/ssl/certs')
-    mkdir('/etc/puppet/ssl/private_keys', 0750)
-    FileUtils.chown('puppet', 'root', [ '/etc/puppet/ssl',
-					'/etc/puppet/ssl/certs',
-					'/etc/puppet/ssl/private_keys', ])
+  def self.setup_puppet(puppet_server, fqdn)
+    begin
+      # needed by some facter rules
+      FileUtils.rmtree('/etc/puppet/ssl')
+      Tools.mkdir('/etc/puppet/ssl',              0771)
+      Tools.mkdir('/etc/puppet/ssl/certs')
+      Tools.mkdir('/etc/puppet/ssl/private_keys', 0750)
+      FileUtils.chown('puppet', 'root', [ '/etc/puppet/ssl',
+					  '/etc/puppet/ssl/certs',
+					  '/etc/puppet/ssl/private_keys', ])
 
-    FileUtils.cp(HostCrtPath,     "/etc/puppet/ssl/certs/#{ fqdn }.pem")
-    FileUtils.cp(HostKeyPath,     "/etc/puppet/ssl/private_keys/#{ fqdn }.pem")
-    FileUtils.cp(OrgCABundlePath, '/etc/puppet/ssl/certs/ca.pem')
+      FileUtils.cp(HostCrtPath, "/etc/puppet/ssl/certs/#{ fqdn }.pem")
+      FileUtils.cp(HostKeyPath, "/etc/puppet/ssl/private_keys/#{ fqdn }.pem")
+      FileUtils.cp(OrgCABundlePath, '/etc/puppet/ssl/certs/ca.pem')
 
-    File.open('/etc/default/puppet', 'w') do |f|
-      f.print <<-EOF.gsub(/^\t+/, '')
-	START=yes
-	DAEMON_OPTS=""
-	EOF
+      File.open('/etc/default/puppet', 'w') do |f|
+	f.print <<-EOF.gsub(/^\t+/, '')
+	  START=yes
+	  DAEMON_OPTS=""
+	  EOF
+      end
+
+      File.open('/etc/puppet/puppet.conf', 'w') do |f|
+	f.print <<-EOF.gsub(/^\t+/, '')
+	  [main]
+	  certname=#{ fqdn }
+	  factpath=/var/lib/puppet/lib/facter
+	  logdir=/var/log/puppet
+	  pluginsync=true
+	  postrun_command=/etc/puppet/etckeeper-commit-post
+	  prerun_command=/etc/puppet/etckeeper-commit-pre
+	  rundir=/var/run/puppet
+	  server=#{ puppet_server }
+	  templatedir=$confdir/templates
+	  vardir=/var/lib/puppet
+	  EOF
+      end
+
+      Tools.goodmsg('Puppet setup is done, running puppet once...')
+      run_puppet('--tags debian::apt::client')
+      run_puppet()
+      Tools.goodmsg('Puppet run is done.')
+      Tools.goodmsg('Check that all is ok, and re-execute this if in doubt.')
+    rescue => msg
+      Tools.errmsg(msg)
+      exit 1
     end
-
-    File.open('/etc/puppet/puppet.conf', 'w') do |f|
-      f.print <<-EOF.gsub(/^\t+/, '')
-	[main]
-	certname=#{ fqdn }
-	factpath=/var/lib/puppet/lib/facter
-	logdir=/var/log/puppet
-	pluginsync=true
-	postrun_command=/etc/puppet/etckeeper-commit-post
-	prerun_command=/etc/puppet/etckeeper-commit-pre
-	rundir=/var/run/puppet
-	server=#{ puppet_server }
-	templatedir=$confdir/templates
-	vardir=/var/lib/puppet
-	EOF
-    end
-
-    goodmsg('Puppet setup is done, running puppet once...')
-    run_puppet('--tags debian::apt::client')
-    run_puppet()
-    goodmsg('Puppet run is done.')
-    goodmsg('Check that all is okay, and re-execute this if in doubt.')
-  rescue => msg
-    errmsg(msg)
-    exit 1
   end
 end
 
-#
-# main
-#
+class Registration
+  def self.register(cmdline_params)
+    if File.exists?(YAML.load_file(Host_configuration_path)) \
+	 && !cmdline_params['force_register']
+      Tools.goodmsg('Registration done and not forced with --force-register')
+      return
+    end
 
-raise 'run me as root'		    unless Process.uid == 0
-raise 'root password is not usable' unless %x(passwd -S root).split[1] == 'P'
+    cert = HostCertificate.new
 
-begin
-  conf = YAML.load_file('/etc/puavo/host_configuration')
-rescue Errno::ENOENT
-  system('/usr/sbin/register-puavodevice', *ARGV) \
-    or raise 'failure in running register-puavodevice'
-  conf = YAML.load_file('/etc/puavo/host_configuration')
+    rui = RegisterUserInterface.new(cmdline_params, cert)
+    register_info = rui.register_to_server()
+
+    PostRegisterConfiguration.new(cert, register_info).setup
+  end
 end
 
-fqdn = fqdn()
 
-case conf['devicetype']
-  when 'ltspserver'
-    kerberos_principals = %w(host ldap cifs IPP nfs).map do |p| 
-			    "#{ p }/#{ fqdn }@#{ conf['kerberos_realm'] }"
-			  end
-  else
-    kerberos_principals = false
-end
+raise 'run me as root' unless Process.uid == 0
 
-setup_openvpn()
-setup_kerberos(kerberos_principals) if kerberos_principals
-setup_puppet(conf['puppet_server'], fqdn) if conf['puppet_server']
+cmdline_params = CmdLine.params(ARGV)
+
+HighLine.say "\n\t-=< Puavo Devices Client >=-\n\n"
+
+Registration.register(cmdline_params)
+Installation.install
