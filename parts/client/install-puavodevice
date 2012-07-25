@@ -117,7 +117,8 @@ class RegisterUserInterface
 
     @mode = {
       'boottype'  => @cmdline_params['netboot'] ? 'net' : 'local',
-      'noconfirm' => @cmdline_params['noconfirm']
+      'noconfirm' => @cmdline_params['noconfirm'],
+      'noinstall' => @cmdline_params['noinstall'],
     }
 
     @puavoserver     = @cmdline_params['puavoserver'] || default_puavoserver()
@@ -150,6 +151,83 @@ class RegisterUserInterface
     set_host_attributes()
   end
 
+  def show_disk_devices(disk_devices)
+    sleep(1.5)
+    disk_devices.each do |device|
+      system("fdisk -l /dev/#{ device } | more") \
+	or raise "Error running fdisk for device '#{ device }'"
+    end
+  end
+
+  def ask_installation_info()
+    info = {}
+
+    if @host['devicetype'] == 'laptop'
+      info['device']    = ask_device()
+      info['partition'] = ask_partition(info['device'])
+    end
+
+    info
+  end
+
+  def ask_device()
+    disk_devices = []
+
+    chosen_disk_device = nil
+    until disk_devices.include?(chosen_disk_device) do
+      disk_devices = %x(partprobe -ds) \
+		     .split("\n") \
+		     .map { |s| s.split(":")[0] } \
+		     .map { |s| (s.match(%r{^/dev/(.*)}))[1] } \
+		     .compact
+
+      puts '-----'
+      puts "This machine has the following disk devices:\n"
+      show_disk_devices(disk_devices)
+
+      if chosen_disk_device.nil?
+        chosen_disk_device = disk_devices[0]
+      end
+
+      puts "\nPossible disk devices are: #{ disk_devices.join(' ') }"
+      chosen_disk_device = ask_with_default('Choose a disk device:',
+  					    chosen_disk_device)
+    end
+
+    chosen_disk_device
+  end
+
+  def ask_partition(disk_device)
+    partitions = []
+
+    chosen_partition = 'whole'
+    until partitions.include?(chosen_partition) do
+      if chosen_partition == 'cfdisk'
+        system('cfdisk', "/dev/#{ disk_device }")
+        chosen_partition = 'whole'
+      end
+
+      puts '-----'
+      puts "The disk /dev/#{ disk_device } has the following partitions:\n"
+      show_disk_devices(disk_device)
+
+      partitions \
+	= %w(whole) \
+	  + IO.readlines('/proc/partitions') \
+	      .map { |line| (line.split)[3] } \
+	      .compact \
+	      .select { |part| part.match(/^#{ disk_device }[0-9]/) } \
+
+      puts "\nPossible partitions are: #{ partitions.join(' ') }"
+      puts "You may choose 'cfdisk' to partition this disk,"
+      puts "or choose 'whole' to use the whole disk."
+      chosen_partition = ask_with_default('Choose a partition:',
+					  chosen_partition)
+    end
+
+    chosen_partition
+  end
+
   def ask_machine_info(errors={}, ask_all=true)
     unhandled = errors.clone
 
@@ -172,6 +250,7 @@ class RegisterUserInterface
 
       question = attr['label'] + ':'
       @responses[field] = ask_with_default(question, @host[field])
+
       set_host_attributes()
     end
 
@@ -306,11 +385,20 @@ class RegisterUserInterface
     @attributes = request_attributes(@cmdline_params['devicetype'],
 				     @cmdline_params['school'])
 
+    info = {
+      'noinstall' => @mode['noinstall'],
+    }
+
     loop do
       print_machine_info()
+
       until @mode['noconfirm'] or agree('Is this information correct? (y/n) ')
 	ask_machine_info()
 	print_machine_info()
+      end
+
+      unless info['noinstall'] then
+	info['installation'] = ask_installation_info()
       end
 
       HighLine.say 'Sending host information to puavo server...'
@@ -319,14 +407,18 @@ class RegisterUserInterface
 	if @host['host_certificate_request'] \
 	  and not response_data['register_info']['userCertificate']
 	    Tools.errmsg('Server did not send a signed certificate.')
-        else
+	else
+	  info['registration'] = response_data['register_info']
 	  Tools.goodmsg('This machine is now successfully registered.')
-	  return response_data['register_info']
+
+	  break
 	end
       else
 	ask_machine_info(response_data['errors'], false)
       end
     end
+
+    info
   end
 
   def request_attributes(devicetype=nil, school=nil)
@@ -444,7 +536,8 @@ class PuavoDevicesConnection
 	# successful request
         Hash[ 'errors' => {}, 'register_info' => JSON.parse(response.body), ]
       when /^5/
-	Tools.errmsg("Server response is #{ response.code }: #{ response.message }")
+	Tools.errmsg("Server response is #{ response.code }: " \
+		     + response.message)
 	Hash[ 'errors' => {} ]
       else
 	Hash[ 'errors' => Hash[ JSON.parse(response.body) ] ]
@@ -453,9 +546,10 @@ class PuavoDevicesConnection
 end
 
 class PostRegisterConfiguration
-  def initialize(cert, register_info)
-    @cert = cert
-    @register_info = register_info
+  def initialize(cert, installation_info, register_info)
+    @cert              = cert
+    @installation_info = installation_info
+    @register_info     = register_info
   end
 
   def setup
@@ -723,29 +817,35 @@ class Setup
   end
 end
 
-class Registration
-  def self.register(cmdline_params)
+class Control
+  def self.register_and_install(cmdline_params)
     if File.exists?(Host_configuration_path) \
 	 && !cmdline_params['force_register']
-      Tools.goodmsg('Registration done and not forced with --force-register')
-      return
+      Tools.errmsg('Registration is already done and is not forced with ' \
+		   + '--force-register')
+      # XXX should also allow going to setup/installation phase
+      # XXX without forcing re-registration
+      exit 1
     end
 
     cert = HostCertificate.new
 
-    rui = RegisterUserInterface.new(cmdline_params, cert)
-    register_info = rui.register_to_server()
+    rui  = RegisterUserInterface.new(cmdline_params, cert)
+    info = rui.register_to_server()
 
-    PostRegisterConfiguration.new(cert, register_info).setup
+    unless info['noinstall'] then
+      PostRegisterConfiguration.new(cert,
+				    info['installation'],
+				    info['registration']) \
+			       .setup
+
+      Installation.install
+    end
   end
 end
 
-
 raise 'run me as root' unless Process.uid == 0
-
-cmdline_params = CmdLine.params(ARGV)
 
 HighLine.say "\n\t-=< Puavo Devices Client >=-\n\n"
 
-Registration.register(cmdline_params)
-Installation.install
+Control.register_and_install( CmdLine.params(ARGV) )
