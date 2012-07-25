@@ -796,12 +796,12 @@ class Setup
       manage_local(diskdevice, partition, opmode)
     end
 
-    mkdir_p('/disk')
-    system('mount', '/dev/mapper/liitu-state', '/disk') \
-      or raise 'Could not mount /dev/mapper/liitu-state'
-    mkdir_p('/disk/etc/puavo')
+    FileUtils.mkdir_p('/disk')
+    system('mount', '/dev/mapper/liito-state', '/disk') \
+      or raise 'Could not mount /dev/mapper/liito-state'
+    FileUtils.mkdir_p('/disk/etc/puavo')
     system('mount', '-o', 'bind', '/disk/etc/puavo', '/etc/puavo') \
-      or raise 'Could not mount /dev/mapper/liitu-state'
+      or raise 'Could not mount /dev/mapper/liito-state'
   end
 
   def self.puppet(puppet_server, fqdn)
