@@ -560,8 +560,7 @@ class PostRegisterConfiguration
 
   def setup
     if laptop_install?
-      Setup.prepare_laptop_disk(@installation_info['diskdevice'],
-				@installation_info['partition'])
+      Setup.prepare_laptop_disk(@installation_info)
     end
 
     Tools.mkdir(Puavodir)
@@ -605,7 +604,7 @@ class Installation
     HostCertificate.fqdn_from_cert(cert)
   end
 
-  def self.install
+  def self.install(installation_info)
     conf = YAML.load_file(Host_configuration_path)
 
     fqdn = fqdn()
@@ -613,18 +612,18 @@ class Installation
     todo_lists = {
       'fatclient'  => %w(),
       'infotv'     => %w(check_root_password hostname openvpn puppet),
-      'laptop'     => %w(rename_volume_group                        ),
+      'laptop'     => %w(setup_grub                                 ),
       'ltspserver' => %w(check_root_password hostname openvpn puppet),
       'thinclient' => %w(),
     }
 
     tasks = {
       'check_root_password' => lambda { make_sure_root_password_is_set()    },
+      'setup_grub'          => lambda { Setup.setup_grub(installation_info) },
       'hostname'            => lambda { Setup.hostname(fqdn)                },
       'openvpn'             => lambda { Setup.openvpn()                     },
       'puppet'              => lambda { Setup.puppet(conf['puppet_server'],
 						     fqdn)                  },
-      'rename_volume_group' => lambda { Setup.rename_lvm_vg                 },
     }
 
     my_todo_list = todo_lists[ conf['devicetype'] ]
@@ -782,14 +781,17 @@ class Setup
       or raise "Error doing install operation #{ opmode }"
   end
 
-  def self.prepare_laptop_disk(diskdevice, partition)
+  def self.prepare_laptop_disk(installation_info)
+    diskdevice = installation_info['diskdevice']
+    partition  = installation_info['partition']
+
     install_phases = []
 
     if partition == 'whole'
-      install_phases = %w(lvm_partition liitu_partitions grubinstall install)
+      install_phases = %w(lvm_partition liitu_partitions install)
       partition      = "#{ diskdevice }1"
     else
-      install_phases = %w(liitu_partitions grubinstall install)
+      install_phases = %w(liitu_partitions install)
     end
 
     install_phases.each do |opmode|
@@ -802,6 +804,17 @@ class Setup
     FileUtils.mkdir_p('/disk/etc/puavo')
     system('mount', '-o', 'bind', '/disk/etc/puavo', '/etc/puavo') \
       or raise 'Could not mount /dev/mapper/liito-state'
+  end
+
+  def self.setup_grub(installation_info)
+    raise 'Grub install is supported only on laptops' \
+      if installation_info['devicetype'] != 'laptop'
+
+    system('vgrename', 'liito', 'liitu') \
+      or raise 'Could not rename the lvm volume group'
+    manage_local(installation_info['diskdevice'],
+		 installation_info['partition'],
+		 'grubinstall')
   end
 
   def self.puppet(puppet_server, fqdn)
@@ -857,11 +870,6 @@ class Setup
       raise e
     end
   end
-
-  def self.rename_lvm_vg
-    system('vgrename', 'liito', 'liitu') \
-      or raise 'Could not rename the lvm volume group'
-  end
 end
 
 class Control
@@ -886,7 +894,7 @@ class Control
 				    info['registration']) \
 			       .setup
 
-      Installation.install
+      Installation.install(info['installation'])
     end
   end
 end
