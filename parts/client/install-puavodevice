@@ -51,14 +51,17 @@ class CmdLine
   def self.params(cmd_args)
     params = {}
     new_arg = nil
+
     cmd_args.each do |i|
       case i
-	when '--force-register'
-	  params['force_register'] = true
-	when '--netboot'
-	  params['netboot'] = true
-	when '--noconfirm'
-	  params['noconfirm'] = true
+        when /^--(   force
+		   | install
+		   | netboot
+		   | noconfirm
+		   | noinstall
+		   | register
+		   | setup-openvpn )$/x
+	  params[$1] = true
 	else
 	  if new_arg.nil?
 	    new_arg = i
@@ -68,6 +71,7 @@ class CmdLine
           end
       end
     end
+
     params
   end
 end
@@ -163,7 +167,6 @@ class RegisterUserInterface
     info = {}
 
     if @host['devicetype'] == 'laptop'
-      info['devicetype'] = @host['devicetype']
       info['diskdevice'] = ask_diskdevice()
       info['partition']  = ask_partition(info['diskdevice'])
     end
@@ -386,9 +389,7 @@ class RegisterUserInterface
     @attributes = request_attributes(@cmdline_params['devicetype'],
 				     @cmdline_params['school'])
 
-    info = {
-      'noinstall' => @mode['noinstall'],
-    }
+    info = {}
 
     loop do
       print_machine_info()
@@ -398,7 +399,7 @@ class RegisterUserInterface
 	print_machine_info()
       end
 
-      unless info['noinstall'] then
+      unless @mode['noinstall']
 	info['installation'] = ask_installation_info()
       end
 
@@ -554,8 +555,8 @@ class PostRegisterConfiguration
   end
 
   def laptop_install?
-    @installation_info['devicetype'] \
-      && @installation_info['devicetype'] == 'laptop'
+    @register_info['host_configuration']['devicetype'] \
+      && @register_info['host_configuration']['devicetype'] == 'laptop'
   end
 
   def setup
@@ -586,12 +587,17 @@ class PostRegisterConfiguration
       Setup.ldap_password(@register_info['ldap_password'])
     end
 
-    write_host_configuration() if @register_info['host_configuration']
+    write_host_configuration()
   end
 
   def write_host_configuration
+    raise 'Did not receive host configuration from Puavo' \
+      unless @register_info['host_configuration']
+
+    conf = @register_info['host_configuration'].merge(@installation_info)
+
     File.open(Host_configuration_path, 'w') do |f|
-      f.print @register_info['host_configuration'].to_yaml
+      f.print conf.to_yaml
     end
     Tools.goodmsg('Host configuration file is written.')
   end
@@ -604,7 +610,7 @@ class Installation
     HostCertificate.fqdn_from_cert(cert)
   end
 
-  def self.install(installation_info)
+  def self.install
     conf = YAML.load_file(Host_configuration_path)
 
     fqdn = fqdn()
@@ -619,7 +625,7 @@ class Installation
 
     tasks = {
       'check_root_password' => lambda { make_sure_root_password_is_set()    },
-      'setup_grub'          => lambda { Setup.setup_grub(installation_info) },
+      'setup_grub'          => lambda { Setup.setup_grub(conf)              },
       'hostname'            => lambda { Setup.hostname(fqdn)                },
       'openvpn'             => lambda { Setup.openvpn()                     },
       'puppet'              => lambda { Setup.puppet(conf['puppet_server'],
@@ -703,7 +709,7 @@ class Setup
     Tools.goodmsg('LDAP password is now set.')
   end
 
-  def self.openvpn
+  def self.openvpn(restart_and_wait=true)
     begin
       Tools.mkdir('/etc/openvpn/keys')
 
@@ -755,16 +761,19 @@ class Setup
 	  up "/etc/openvpn/runme up"
 	  EOF
       end
-      unless system('service openvpn restart')
-	raise 'problem restarting openvpn'
-      end
 
-      sleep 2
-      until system('ifconfig tun0 >/dev/null 2>&1')
-	Tools.errmsg('waiting for tun0 to come up...')
-	sleep 2
+      if restart_and_wait
+        unless system('service openvpn restart')
+	  raise 'problem restarting openvpn'
+        end
+
+        sleep 2
+        until system('ifconfig tun0 >/dev/null 2>&1')
+	  Tools.errmsg('waiting for tun0 to come up...')
+	  sleep 2
+        end
+        sleep 2
       end
-      sleep 2
 
     rescue Exception => e
       Tools.errmsg(e.message)
@@ -806,15 +815,13 @@ class Setup
       or raise 'Could not mount /dev/mapper/liito-state'
   end
 
-  def self.setup_grub(installation_info)
+  def self.setup_grub(conf)
     raise 'Grub install is supported only on laptops' \
-      if installation_info['devicetype'] != 'laptop'
+      if conf['devicetype'] != 'laptop'
 
     system('vgrename', 'liito', 'liitu') \
       or raise 'Could not rename the lvm volume group'
-    manage_local(installation_info['diskdevice'],
-		 installation_info['partition'],
-		 'grubinstall')
+    manage_local(conf['diskdevice'], conf['partition'], 'grubinstall')
   end
 
   def self.puppet(puppet_server, fqdn)
@@ -873,13 +880,9 @@ class Setup
 end
 
 class Control
-  def self.register_and_install(cmdline_params)
-    if File.exists?(Host_configuration_path) \
-	 && !cmdline_params['force_register']
-      Tools.errmsg('Registration is already done and is not forced with ' \
-		   + '--force-register')
-      # XXX should also allow going to setup/installation phase
-      # XXX without forcing re-registration
+  def self.register(cmdline_params)
+    if File.exists?(Host_configuration_path) && !cmdline_params['force']
+      Tools.errmsg('Registration is already done and --force is not applied.')
       exit 1
     end
 
@@ -888,14 +891,25 @@ class Control
     rui  = RegisterUserInterface.new(cmdline_params, cert)
     info = rui.register_to_server()
 
-    unless info['noinstall'] then
-      PostRegisterConfiguration.new(cert,
-				    info['installation'],
-				    info['registration']) \
-			       .setup
-
-      Installation.install(info['installation'])
+    if cmdline_params['noinstall']
+      Tools.goodmsg('Not doing post-registration configuration ' \
+		    + '(--noinstall is set)')
+      return
     end
+
+    PostRegisterConfiguration.new(cert,
+				  info['installation'],
+				  info['registration']) \
+			     .setup
+  end
+
+  def self.install(cmdline_params)
+    if cmdline_params['noinstall']
+      Tools.goodmsg('Not doing the installation (--noinstall is set)')
+      return
+    end
+
+    Installation.install
   end
 end
 
@@ -903,4 +917,15 @@ raise 'run me as root' unless Process.uid == 0
 
 HighLine.say "\n\t-=< Puavo Devices Client >=-\n\n"
 
-Control.register_and_install( CmdLine.params(ARGV) )
+cmdline_params = CmdLine.params(ARGV)
+
+if cmdline_params['setup-openvpn']
+  Setup.openvpn(false)
+elsif cmdline_params['register']
+  Control.register(cmdline_params)
+elsif cmdline_params['install']
+  Control.install(cmdline_params)
+else
+  Control.register(cmdline_params)
+  Control.install(cmdline_params)
+end
