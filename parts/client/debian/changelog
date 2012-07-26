@@ -1,3 +1,11 @@
+puavodevices-client-install (0.1.12) precise; urgency=low
+
+  * Restructure install-puavodevice so that registration and installation
+    phases can be run separately, and that with "--setup-openvpn"-parameter
+    one can trigger the openvpn-setup separately.
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Thu, 26 Jul 2012 15:09:53 +0300
+
 puavodevices-client-install (0.1.11) precise; urgency=low
 
   * Grub installation should now work.
