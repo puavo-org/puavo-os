@@ -618,18 +618,19 @@ class Installation
     todo_lists = {
       'fatclient'  => %w(),
       'infotv'     => %w(check_root_password hostname openvpn puppet),
-      'laptop'     => %w(setup_grub                                 ),
+      'laptop'     => %w(install_ltspimages setup_grub              ),
       'ltspserver' => %w(check_root_password hostname openvpn puppet),
       'thinclient' => %w(),
     }
 
     tasks = {
       'check_root_password' => lambda { make_sure_root_password_is_set()    },
-      'setup_grub'          => lambda { Setup.setup_grub(conf)              },
       'hostname'            => lambda { Setup.hostname(fqdn)                },
+      'install_ltspimages'  => lambda { Setup.install_ltspimages(conf)  },
       'openvpn'             => lambda { Setup.openvpn()                     },
       'puppet'              => lambda { Setup.puppet(conf['puppet_server'],
 						     fqdn)                  },
+      'setup_grub'          => lambda { Setup.setup_grub(conf)              },
     }
 
     my_todo_list = todo_lists[ conf['devicetype'] ]
@@ -790,28 +791,32 @@ class Setup
       or raise "Error doing install operation #{ opmode }"
   end
 
-  def self.prepare_laptop_disk(installation_info)
-    diskdevice = installation_info['diskdevice']
-    partition  = installation_info['partition']
+  def self.install_ltspimages(conf)
+    manage_local(conf['diskdevice'], conf['partition'], 'install')
+  end
+
+  def self.prepare_laptop_disk(conf)
+    diskdevice = conf['diskdevice']
+    partition  = conf['partition']
 
     install_phases = []
 
     if partition == 'whole'
-      install_phases = %w(lvm_partition liitu_partitions install)
+      install_phases = %w(lvm_partition liitu_partitions)
       partition      = "#{ diskdevice }1"
     else
-      install_phases = %w(liitu_partitions install)
+      install_phases = %w(liitu_partitions)
     end
 
     install_phases.each do |opmode|
       manage_local(diskdevice, partition, opmode)
     end
 
-    FileUtils.mkdir_p('/disk')
-    system('mount', '/dev/mapper/liito-state', '/disk') \
+    FileUtils.mkdir_p('/disk/state')
+    system('mount', '/dev/mapper/liito-state', '/disk/state') \
       or raise 'Could not mount /dev/mapper/liito-state'
-    FileUtils.mkdir_p('/disk/etc/puavo')
-    system('mount', '-o', 'bind', '/disk/etc/puavo', '/etc/puavo') \
+    FileUtils.mkdir_p("/disk/state#{ Puavodir }")
+    system('mount', '-o', 'bind', "/disk/state#{ Puavodir }", Puavodir) \
       or raise 'Could not mount /dev/mapper/liito-state'
   end
 
