@@ -1,3 +1,10 @@
+puavodevices-client-install (0.1.15) precise; urgency=low
+
+  * "script-security 2" is needed for openvpn-scripts (and, in fact,
+    for openvpn tunnel interface to work with the version in Precise)
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Mon, 30 Jul 2012 13:59:04 +0300
+
 puavodevices-client-install (0.1.14) precise; urgency=low
 
   * Fix indentation for inline configuration files and scripts.
