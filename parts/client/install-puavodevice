@@ -724,43 +724,43 @@ class Setup
 
       File.open('/etc/openvpn/runme', 'w', 0755) do |f|
 	f.print <<-EOF.gsub(/^\t+/, '')
-	  #!/bin/sh
+		#!/bin/sh
 
-	  SCRIPTSUBDIR=$1
+		SCRIPTSUBDIR=$1
 
-	  for script in /etc/openvpn/scripts/$SCRIPTSUBDIR/*; do
-	    test -x $script && timeout 30 $script "$@"
-	  done
+		for script in /etc/openvpn/scripts/$SCRIPTSUBDIR/*; do
+		  test -x $script && timeout 30 $script "$@"
+		done
 
-	  exit 0
-	  EOF
+		exit 0
+		EOF
       end
       File.open('/etc/openvpn/puavoclient.conf', 'w', 0644) do |f|
 	f.print <<-EOF.gsub(/^\t+/, '')
-	  client
-	  dev tun
-	  proto tcp-client
-	  remote 217.112.254.13 443
+		client
+		dev tun
+		proto tcp-client
+		remote 217.112.254.13 443
 
-	  ca #{ ovpn_orgcabundle }
-	  cert #{ ovpn_crt }
-	  key #{ ovpn_key }
-	  ns-cert-type server
+		ca #{ ovpn_orgcabundle }
+		cert #{ ovpn_crt }
+		key #{ ovpn_key }
+		ns-cert-type server
 
-	  verb 3
+		verb 3
 
-	  comp-lzo
-	  keepalive 10 60
-	  persist-tun
-	  persist-key
-	  up-delay
+		comp-lzo
+		keepalive 10 60
+		persist-tun
+		persist-key
+		up-delay
 
-	  down "/etc/openvpn/runme down"
-	  ipchange "/etc/openvpn/runme ipchange"
-	  route-up "/etc/openvpn/runme route-up"
-	  tls-verify "/etc/openvpn/runme tls-verify"
-	  up "/etc/openvpn/runme up"
-	  EOF
+		down "/etc/openvpn/runme down"
+		ipchange "/etc/openvpn/runme ipchange"
+		route-up "/etc/openvpn/runme route-up"
+		tls-verify "/etc/openvpn/runme tls-verify"
+		up "/etc/openvpn/runme up"
+		EOF
       end
 
       if restart_and_wait
@@ -851,25 +851,25 @@ class Setup
 
       File.open('/etc/default/puppet', 'w') do |f|
 	f.print <<-EOF.gsub(/^\t+/, '')
-	  START=yes
-	  DAEMON_OPTS=""
-	  EOF
+		START=yes
+		DAEMON_OPTS=""
+		EOF
       end
 
       File.open('/etc/puppet/puppet.conf', 'w') do |f|
 	f.print <<-EOF.gsub(/^\t+/, '')
-	  [main]
-	  certname=#{ fqdn }
-	  factpath=/var/lib/puppet/lib/facter
-	  logdir=/var/log/puppet
-	  pluginsync=true
-	  postrun_command=/etc/puppet/etckeeper-commit-post
-	  prerun_command=/etc/puppet/etckeeper-commit-pre
-	  rundir=/var/run/puppet
-	  server=#{ puppet_server }
-	  templatedir=$confdir/templates
-	  vardir=/var/lib/puppet
-	  EOF
+		[main]
+		certname=#{ fqdn }
+		factpath=/var/lib/puppet/lib/facter
+		logdir=/var/log/puppet
+		pluginsync=true
+		postrun_command=/etc/puppet/etckeeper-commit-post
+		prerun_command=/etc/puppet/etckeeper-commit-pre
+		rundir=/var/run/puppet
+		server=#{ puppet_server }
+		templatedir=$confdir/templates
+		vardir=/var/lib/puppet
+		EOF
       end
 
       Tools.goodmsg('Puppet setup is done, running puppet once...')
