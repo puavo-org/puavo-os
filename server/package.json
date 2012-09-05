@@ -1,0 +1,14 @@
+{
+    "name": "ltsp-events"
+  , "version": "0.0.1"
+  , "private": true
+  , "scripts": {
+     "start": "node_modules/.bin/coffee server.coffee"
+    }
+  , "dependencies": {
+      "coffee-script": ""
+      , "express": ""
+      , "underscore": ""
+      , "supervisor": ""
+  }
+}
