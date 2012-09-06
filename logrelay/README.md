@@ -1,9 +1,8 @@
 
-
 # Logrelay
 
 Buffering log relay from UPD to HTTP.
 
-Ubuntu Lucid packages:
+Required Ubuntu Lucid packages:
 
-   ruby libeventmachine-ruby
+    ruby libeventmachine-ruby
