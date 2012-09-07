@@ -2,7 +2,7 @@ require 'eventmachine'
 require 'json'
 require "pp"
 
-pp EventMachine::Protocols::HttpClient
+UDP_PORT=3858
 
 def log(*args)
   STDERR.puts(*args)
@@ -11,8 +11,9 @@ end
 module PacketRelay
 
   DEFAULT_INTERVAL = 2
-  HOST = "10.246.131.169"
-  PORT = 8081
+  # HOST = "10.246.131.169"
+  HOST = "localhost"
+  PORT = 8080
   PATH = "/log"
 
   def post_init
@@ -23,31 +24,31 @@ module PacketRelay
   def receive_data(data)
     return if data.nil?
 
-    packet = {}
+    message = {}
 
     data.split("\n").each do |item|
       next if item.empty?
       values = item.split ":"
-      packet[values[0]] = values[1..-1].join(":")
+      message[values[0]] = values[1..-1].join(":")
     end
 
     send_packet({
-      :packet => packet,
+      :message => message,
       :count => 0,
       :queue_date => Time.now
     })
 
   end
 
-  def send_packet(next_packet)
+  def send_packet(packet)
 
     if @error_state || @sending
-      log "Queueing packet #{ next_packet.to_json }"
-      @queue.push next_packet
+      log "Queueing packet #{ packet.to_json }"
+      @queue.push packet
       return
     end
 
-    log "Sending #{ next_packet[:packet].to_json }"
+    log "Sending #{ packet[:message].to_json }"
 
     @sending = true
     http = EventMachine::Protocols::HttpClient.request(
@@ -56,52 +57,56 @@ module PacketRelay
      :port => PacketRelay::PORT,
      :request => PacketRelay::PATH,
      :contenttype => "application/json",
-     :content => next_packet[:packet].to_json
+     :content => packet[:message].to_json
     )
 
-    http.comm_inactivity_timeout = 5
-
-    # EventMachine::Timer.new(4) do
-    #   log "Closing connection"
-    #   http.close_connection
-    # end
-
-
     http.errback do |*args|
-      pp "ERR", args
+      log "Sent failed. Response object: #{ args.pretty_inspect }"
+      handle_error(packet)
     end
 
     http.callback do |res|
-      log "RES:#{ res[:status] }"
-      @sending = false
-
       if res[:status] == 200
-        @interval = DEFAULT_INTERVAL
-        next_packet = @queue.shift
-        if not next_packet.nil?
-          log "Sending from queue #{ next_packet.to_json }"
-          send_packet(next_packet)
-        end
+        log "Packet sent ok"
+        handle_ok
       else
-        @error_state = true
-
-        if @interval < 60*10
-          @interval = @interval*2
-          log "Interval is now #{ @interval }"
-        end
-
-        EventMachine::Timer.new(@interval) do
-          log "Resending from timer #{ next_packet.to_json }"
-          @error_state = false
-          send_packet(next_packet)
-        end
+        log "Sent failed. Status code #{ res[:status] }"
+        handle_error(packet)
       end
+    end
 
+  end
+
+  def handle_error(packet)
+    @sending = false
+    @error_state = true
+
+    if @interval < 60*10
+      @interval = @interval*2
+      log "Sleeping #{ @interval } seconds until resend"
+    end
+
+    EventMachine::Timer.new(@interval) do
+      log "Resending from timer #{ packet.to_json }"
+      @error_state = false
+      send_packet(packet)
     end
   end
+
+  def handle_ok
+    @sending = false
+    @interval = DEFAULT_INTERVAL
+    next_packet = @queue.shift
+    if not next_packet.nil?
+      log "Sending from queue #{ next_packet.to_json }"
+      send_packet(next_packet)
+    end
+  end
+
 end
 
 EventMachine::run do
- EventMachine::open_datagram_socket "0.0.0.0", 1234, PacketRelay
+ EventMachine::open_datagram_socket "0.0.0.0", UDP_PORT, PacketRelay
+ log "Now listening on UDP port #{ UDP_PORT }"
 end
 
