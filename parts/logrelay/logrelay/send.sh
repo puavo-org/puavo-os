@@ -2,7 +2,7 @@
 
 # Example log client
 
-cat << EOF | nc -u localhost 1234
+cat << EOF | nc -u _eventlog 3858
 hostname:$(hostname)
 date:$(date +%s)
 EOF
