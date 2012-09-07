@@ -15,7 +15,18 @@ PATH = "/log"
 
 
 def log(*args)
-  STDERR.puts(*args)
+
+  args = args.map do |a|
+    if a.class != String
+      a.pretty_inspect.strip
+    else
+      a
+    end
+  end
+
+  args.unshift Time.now.to_s
+  msg = args.join(" ")
+  STDERR.puts(msg)
 end
 
 module PacketRelay
@@ -47,12 +58,12 @@ module PacketRelay
   def send_packet(packet)
 
     if @error_state || @sending
-      log "Queueing packet #{ packet.to_json }"
+      log "Queueing packet", packet
       @queue.push packet
       return
     end
 
-    log "Sending #{ packet[:message].to_json }"
+    log "Sending", packet[:message]
 
     @sending = true
     http = EventMachine::Protocols::HttpClient.request(
@@ -92,7 +103,7 @@ module PacketRelay
     log "Sleeping #{ @interval } seconds until resend"
 
     EventMachine::Timer.new(@interval) do
-      log "Resending from timer #{ packet.to_json }"
+      log "Resending from timer", packet
       @error_state = false
       send_packet(packet)
     end
@@ -103,7 +114,7 @@ module PacketRelay
     @interval = INITIAL_INTERVAL
     next_packet = @queue.shift
     if not next_packet.nil?
-      log "Sending from queue #{ next_packet.to_json }"
+      log "Sending from queue", next_packet
       send_packet(next_packet)
     end
   end
