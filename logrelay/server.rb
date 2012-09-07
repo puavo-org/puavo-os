@@ -3,10 +3,10 @@ require 'json'
 require "pp"
 
 
-UDP_PORT=3858
+UDP_PORT = 3858
 
-INITIAL_INTERVAL=2 # Time to wait in case of error (seconds)
-MAX_INTERVAL=60*10
+INITIAL_INTERVAL = 2 # Time to wait in case of error (seconds)
+MAX_INTERVAL = 60*10
 
 # HTTP POST target
 HOST = "localhost"
@@ -96,7 +96,7 @@ module PacketRelay
     @sending = false
     @error_state = true
 
-    if @interval < 60*10
+    if @interval < MAX_INTERVAL
       @interval = @interval*2
     end
 
