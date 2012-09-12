@@ -28,13 +28,16 @@ openDb = (orgName, cb) ->
 # /log/<database name>/<MongoDB collection name>
 # Logs any given POST data to given MongoDB collection.
 app.post "/log/:org/:coll", (req, res) ->
-
-  # Just respond immediately to sender. We will just log database errors.
-  res.json message: "thanks"
-
   data = req.body
   org = req.params.org
   collName = req.params.coll
+
+  # Just respond immediately to sender. We will just log database errors.
+  res.json
+    message: "thanks"
+    organisation: org
+    collection: collName
+
 
   d = domain.create()
   d.on "error", (err) ->
