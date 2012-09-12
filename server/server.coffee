@@ -2,7 +2,7 @@
 
 domain = require "domain"
 express = require "express"
-{Db, Connection, Server} = require("mongodb")
+{Db, Connection, Server} = require "mongodb"
 
 app = express()
 app.use express.bodyParser()
