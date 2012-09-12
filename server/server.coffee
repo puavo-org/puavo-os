@@ -4,6 +4,10 @@ domain = require "domain"
 express = require "express"
 {Db, Connection, Server} = require "mongodb"
 
+
+console.info "starting"
+console.error "error testi!"
+
 app = express()
 app.use express.bodyParser()
 
