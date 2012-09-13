@@ -59,6 +59,7 @@ app.post "/log/:org/:coll", (req, res) ->
     organisation: org
     collection: collName
 
+  console.info "Emiting ltsp:#{ org }:#{ collName }"
   sio.sockets.emit "ltsp:#{ org }:#{ collName }", data
 
   d = domain.create()
