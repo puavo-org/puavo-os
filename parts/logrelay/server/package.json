@@ -8,9 +8,15 @@
   , "dependencies": {
       "coffee-script": ""
       , "express": ""
+      , "stylus": ""
+      , "hbs": ""
       , "underscore": ""
       , "supervisor": ""
       , "mongodb": ""
+      , "socket.io": ""
 
+      , "grunt": ""
+      , "grunt-coffee": ""
+      , "grunt-contrib": ""
   }
 }

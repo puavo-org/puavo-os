@@ -1,8 +1,9 @@
 
 
 domain = require "domain"
+http = require "http"
 express = require "express"
-stylus = require "stylus"
+sio = require "socket.io"
 {Db, Connection, Server} = require "mongodb"
 
 
@@ -12,15 +13,15 @@ console.error "error testi!"
 app = express()
 
 app.configure ->
+
+  httpServer = http.createServer(app)
+  sio.listen httpServer
+  httpServer.listen 8080, ->
+    console.info "Server is listening on 8080"
+
   app.set "view engine", "hbs"
   app.use express.bodyParser()
   app.use express.static __dirname + "/public"
-  app.use stylus.middleware
-    src: __dirname + "/styles"
-    dest: __dirname + "/public"
-    compile: (str, path) ->
-      stylus(str)
-      .set("filename", path)
 
 
 dbCache = {}
@@ -69,5 +70,3 @@ app.post "/log/:org/:coll", (req, res) ->
           console.info "Log saved for #{ org }/#{ collName }", docs
 
 
-app.listen 8080, ->
-  console.info "Server listening on 8080"
