@@ -1,5 +1,6 @@
 
 
+fs = require "fs"
 domain = require "domain"
 http = require "http"
 express = require "express"
@@ -13,15 +14,12 @@ console.error "error testi!"
 app = express()
 httpServer = http.createServer(app)
 sio = io.listen httpServer
-console.info "sio", sio
-console.info "io", io
 
 app.configure ->
 
   httpServer.listen 8080, ->
     console.info "Server is listening on 8080"
 
-  app.set "view engine", "hbs"
   app.use express.bodyParser()
   app.use express.static __dirname + "/public"
 
@@ -40,8 +38,12 @@ openDb = (orgName, cb) ->
   db.open cb
 
 
-app.get "/", (req, res) ->
-  res.render "index", layout: false
+app.get "/:org/wlan", (req, res) ->
+  fs.readFile __dirname + "/views/wlan.html", (err, data) ->
+    if err
+      res.send err
+    else
+      res.send data.toString()
 
 
 # /log/<database name>/<MongoDB collection name>
