@@ -2,6 +2,7 @@
 
 domain = require "domain"
 express = require "express"
+stylus = require "stylus"
 {Db, Connection, Server} = require "mongodb"
 
 
@@ -9,7 +10,18 @@ console.info "starting"
 console.error "error testi!"
 
 app = express()
-app.use express.bodyParser()
+
+app.configure ->
+  app.set "view engine", "hbs"
+  app.use express.bodyParser()
+  app.use express.static __dirname + "/public"
+  app.use stylus.middleware
+    src: __dirname + "/styles"
+    dest: __dirname + "/public"
+    compile: (str, path) ->
+      stylus(str)
+      .set("filename", path)
+
 
 dbCache = {}
 
@@ -23,6 +35,10 @@ openDb = (orgName, cb) ->
     { native_parser:true }
   )
   db.open cb
+
+
+app.get "/", (req, res) ->
+  res.render "index", layout: false
 
 
 # /log/<database name>/<MongoDB collection name>
