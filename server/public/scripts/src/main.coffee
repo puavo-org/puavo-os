@@ -17,5 +17,7 @@ require.config
 
 
 require ["jquery", "underscore", "backbone", "socket.io"], ($, _, Backbone, io) ->
-  debugger
+  socket = io.connect()
+  socket.on "packet", (packet) ->
+    console.info "got packet", packet
 

@@ -3,7 +3,7 @@
 domain = require "domain"
 http = require "http"
 express = require "express"
-sio = require "socket.io"
+io = require "socket.io"
 {Db, Connection, Server} = require "mongodb"
 
 
@@ -11,11 +11,13 @@ console.info "starting"
 console.error "error testi!"
 
 app = express()
+httpServer = http.createServer(app)
+sio = io.listen httpServer
+console.info "sio", sio
+console.info "io", io
 
 app.configure ->
 
-  httpServer = http.createServer(app)
-  sio.listen httpServer
   httpServer.listen 8080, ->
     console.info "Server is listening on 8080"
 
@@ -55,6 +57,7 @@ app.post "/log/:org/:coll", (req, res) ->
     organisation: org
     collection: collName
 
+  sio.sockets.emit "ltsp:#{ org }:#{ collName }", data
 
   d = domain.create()
   d.on "error", (err) ->
