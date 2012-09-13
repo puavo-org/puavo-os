@@ -13,12 +13,6 @@ module.exports = function(grunt) {
         '* Copyright (c) <%= grunt.template.today("yyyy") %> ' +
         'Opinsys Oy; GPLv2 */'
     },
-    coffee: {
-      app: {
-        src:  "public/scripts/src/*",
-        dest: "public/scripts/app/"
-      }
-    },
     stylus: {
       compile: {
         files: {
@@ -29,20 +23,20 @@ module.exports = function(grunt) {
     requirejs: {
       compile: {
         options: {
-          baseUrl : "public/scripts",
-          mainConfigFile: "public/scripts/app/main.js",
-          name: "app/main",
-          out: "public/scripts/app/bundle.js"
+          baseUrl: "public/scripts",
+          name: "config",
+          mainConfigFile: "public/scripts/config.js",
+          out: "public/scripts/bundle.js"
         }
       }
     },
     watch: {
-      files: ["public/scripts/src/*", "styles/*"],
-      tasks: "coffee stylus"
+      files: ["public/scripts/src/**", "styles/*"],
+      tasks: "stylus"
     }
   });
 
   // Default task.
-  grunt.registerTask("default", "coffee stylus requirejs");
+  grunt.registerTask("default", "stylus requirejs");
 
 };
