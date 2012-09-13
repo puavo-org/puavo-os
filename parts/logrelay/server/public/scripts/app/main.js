@@ -23,5 +23,9 @@ require.config({
 });
 
 require(["jquery", "underscore", "backbone", "socket.io"], function($, _, Backbone, io) {
-  debugger;
+  var socket;
+  socket = io.connect();
+  return socket.on("packet", function(packet) {
+    return console.info("got packet", packet);
+  });
 });
