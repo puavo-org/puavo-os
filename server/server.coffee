@@ -5,15 +5,17 @@ domain = require "domain"
 http = require "http"
 express = require "express"
 io = require "socket.io"
-{Db, Connection, Server} = require "mongodb"
+Mongolian = require("mongolian")
 
 
 console.info "starting"
 console.error "error testi!"
 
+mongo = new Mongolian
 app = express()
 httpServer = http.createServer(app)
 sio = io.listen httpServer
+sio.set('log level', 1)
 
 app.configure ->
 
@@ -24,18 +26,6 @@ app.configure ->
   app.use express.static __dirname + "/public"
 
 
-dbCache = {}
-
-openDb = (orgName, cb) ->
-
-  if db = dbCache[orgName]
-    return cb null, db
-
-  db = dbCache[orgName] = new Db( orgName,
-    new Server("localhost", Connection.DEFAULT_PORT, {}),
-    { native_parser:true }
-  )
-  db.open cb
 
 
 app.get "/:org/wlan", (req, res) ->
@@ -59,20 +49,19 @@ app.post "/log/:org/:coll", (req, res) ->
     organisation: org
     collection: collName
 
-  console.info "Emiting ltsp:#{ org }:#{ collName }"
   sio.sockets.emit "ltsp:#{ org }:#{ collName }", data
 
   d = domain.create()
   d.on "error", (err) ->
-    console.info "Failed to save log data to #{ org }/#{ collName }", err
+    console.error "Failed to save log data to #{ org }/#{ collName }"
+    console.error err.stack
 
   d.run -> process.nextTick ->
-    openDb org, (err, db) ->
+
+    db = mongo.db org
+    coll = db.collection collName
+    coll.insert data, (err, docs) ->
       throw err if err
-      db.createCollection collName, (err, coll) ->
-        throw err if err
-        coll.insert data, (err, docs) ->
-          throw err if err
-          console.info "Log saved for #{ org }/#{ collName }", docs
+      console.info "Log saved to #{ org }/#{ collName }"
 
 
