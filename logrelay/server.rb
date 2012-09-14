@@ -1,6 +1,12 @@
 require 'eventmachine'
+require 'socket'
 require 'json'
 require "pp"
+
+
+RELAY_HOSTNAME = Socket.gethostname
+PUAVO_DOMAIN = File.open("/etc/opinsys/desktop/puavodomain", "r").read.strip
+DB_NAME = PUAVO_DOMAIN.gsub(/[^a-z0-9]/, "-")
 
 
 UDP_PORT = 3858
@@ -9,9 +15,9 @@ INITIAL_INTERVAL = 2 # Time to wait in case of error (seconds)
 MAX_INTERVAL = 60*10
 
 # HTTP POST target
-HOST = "localhost"
+HOST = "10.246.133.138"
 PORT = 8080
-PATH = "/log"
+PATH = "/log/#{ DB_NAME }/wlan"
 
 
 def log(*args)
@@ -39,19 +45,24 @@ module PacketRelay
   def receive_data(data)
     return if data.nil?
 
-    message = {}
+    packet = {
+      :relay_hostname => RELAY_HOSTNAME,
+      :relay_puavo_domain => PUAVO_DOMAIN,
+      :relay_timestamp => Time.now.to_i
+    }
 
     data.split("\n").each do |item|
       next if item.empty?
       values = item.split ":"
-      message[values[0]] = values[1..-1].join(":")
+      packet[values[0].to_sym] = values[1..-1].join(":")
     end
 
-    send_packet({
-      :message => message,
-      :count => 0,
-      :queue_date => Time.now
-    })
+    if packet[:type].nil?
+      log "WARNING: Packet has no type field", packet
+      packet[:type] = "unknown"
+    end
+
+    send_packet packet
 
   end
 
@@ -63,7 +74,7 @@ module PacketRelay
       return
     end
 
-    log "Sending", packet[:message]
+    log "Sending", packet
 
     @sending = true
     http = EventMachine::Protocols::HttpClient.request(
@@ -72,7 +83,7 @@ module PacketRelay
      :port => PORT,
      :request => PATH,
      :contenttype => "application/json",
-     :content => packet[:message].to_json
+     :content => packet.to_json
     )
 
     http.errback do |*args|
