@@ -29,9 +29,18 @@ define [
   layout.render()
   $("body").append layout.el
 
-  socket = io.connect()
-  socket.on "ltsp:#{ ORG }-opinsys-fi:wlan", (packet) ->
-    clients.update packet
+  $.get "/log/#{ ORG }/wlan?limit=1000", (logArr, status, res) ->
+    if status isnt "success"
+      console.info res
+      throw new Error "failed to fetch previous log data"
+
+    console.info "Loaded #{ logArr.length } entries from history"
+    for packet in logArr
+      clients.update packet
+
+    socket = io.connect()
+    socket.on "ltsp:#{ ORG }-opinsys-fi:wlan", (packet) ->
+      clients.update packet
 
 
 
