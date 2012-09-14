@@ -5,6 +5,7 @@ define [
   "underscore"
 ], (Backbone, Handlebars, _) ->
 
+  # Abstract view class
   class View extends Backbone.View
 
     constructor: (opts) ->
