@@ -3,7 +3,6 @@ define [
   "underscore"
 ], (View, _) ->
 
-  # Abstract view class
   class WlanStats extends View
 
     className: "bb-wlan-stats"
