@@ -6,15 +6,32 @@
     <link type="text/css" rel="stylesheet" media="all" href="/style.css">
     <script type="x-template-handlebars" id="wlan-view">
         <h2>{{name}}</h2>
-        <ul>
-        {{#each clients}}
-        <li>
-        {{mac}}
-        joined on {{time}}
-        </li>
-        {{/each}}
-        <p>
-        Totalling {{count}} clients
+
+        <div class=connected>
+            <h2>Connected</h2>
+            <ul>
+            {{#each connected}}
+                <li>
+                {{mac}}
+                joined on {{time}}
+                </li>
+            {{/each}}
+            <p>
+            Totalling {{count}} clients
+        </div>
+
+        <div class=seen>
+            <h2>Seen clients</h2>
+            <ul>
+            {{#each seen}}
+                <li>
+                {{mac}}
+                left on {{time}}
+                </li>
+            {{/each}}
+            <p>
+        </div>
+
         </p>
     </script>
     <script data-main="/scripts/config" src="/scripts/require.js"></script>

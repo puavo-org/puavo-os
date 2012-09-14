@@ -21,7 +21,10 @@ define [
           count += 1
       return count
 
-    mapActiveClients: (fn) ->
+    connectedClients: (fn) ->
+      @clients.filter (m) -> m.isConnected()
+
+    seenClients: (fn) ->
       array = []
       @clients.each (m) ->
         if m.isConnected()
