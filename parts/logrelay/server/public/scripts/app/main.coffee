@@ -5,8 +5,8 @@ define [
   "backbone"
   "socket.io"
   "cs!app/models/wlanhost"
-  "cs!app/views/wlan"
-], ($, _, Backbone, io, WlanHost, WlanView) ->
+  "cs!app/views/wlanstats"
+], ($, _, Backbone, io, WlanHost, WlanStats) ->
 
   ORG = window.location.pathname.split("/")[1]
   $(".organisation").text ORG
@@ -21,7 +21,7 @@ define [
     host = wlanHosts[packet.hostname]
     if not host
       host = wlanHosts[packet.hostname] = new WlanHost id: packet.hostname
-      view = new WlanView
+      view = new WlanStats
         model: host
       view.render()
       $("body").append view.el
