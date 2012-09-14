@@ -5,7 +5,7 @@ define [
 
   class WlanClient extends Backbone.Model
 
-    isConnected: -> true
+    isConnected: -> @get("event") is "AP-STA-CONNECTED"
 
 
   class WlanHost extends Backbone.Model
