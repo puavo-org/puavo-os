@@ -41,5 +41,15 @@ define [
         @$el.find(".wlan-hosts").append view.el
 
     viewJSON: ->
+      connectedCount = 0
+      seenCount = 0
+      @clients.each (m) ->
+        if m.isConnected()
+          connectedCount =+ 1
+        else
+          seenCount =+ 1
+
       name: @name
+      connectedCount: connectedCount
+      seenCount: seenCount
 
