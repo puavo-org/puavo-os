@@ -1,7 +1,8 @@
 define [
   "cs!app/view"
+  "moment"
   "underscore"
-], (View, _) ->
+], (View, moment, _) ->
 
   class WlanStats extends View
 
@@ -15,8 +16,10 @@ define [
 
 
     formatClient: (m) ->
+      time = moment.unix(m.get "relay_timestamp")
       mac: m.get "mac"
-      time: m.get "relay_timestamp"
+      ago: time.fromNow()
+      time: time.format "YYYY-MM-DD HH:mm:ss"
 
     viewJSON: ->
       connected = []
