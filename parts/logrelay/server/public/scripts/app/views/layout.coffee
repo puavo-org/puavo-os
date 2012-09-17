@@ -2,12 +2,14 @@ define [
   "cs!app/models/wlanhostmodel"
   "cs!app/view"
   "cs!app/views/wlanstats"
+  "cs!app/views/totalstats"
   "backbone"
   "underscore"
 ], (
   WlanHostModel,
   View,
   WlanStats,
+  TotalStats,
   Backbone,
   _
 ) ->
@@ -23,6 +25,10 @@ define [
       @clients = opts.clients
       @hosts = new Backbone.Collection
 
+      @totalStats = new TotalStats
+        clients: @clients
+        hosts: @hosts
+
       @clients.on "add", (model) =>
 
         # Create new WlanHostModel if this client introduces new Wlan Host
@@ -32,24 +38,19 @@ define [
             allClients: @clients
             firstClient: model
 
+
       # Create stats view for every WlanHostModel
       @hosts.on "add", (model) =>
         view = new WlanStats
           model: model
-
         view.render()
         @$el.find(".wlan-hosts").append view.el
 
     viewJSON: ->
-      connectedCount = 0
-      seenCount = 0
-      @clients.each (m) ->
-        if m.isConnected()
-          connectedCount =+ 1
-        else
-          seenCount =+ 1
-
       name: @name
-      connectedCount: connectedCount
-      seenCount: seenCount
+
+    render: ->
+      super
+      @totalStats.render()
+      @$(".header").append @totalStats.el
 
