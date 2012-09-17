@@ -6,17 +6,13 @@
     <link type="text/css" rel="stylesheet" media="all" href="/style.css">
 
     <script type="x-template-handlebars" id="total-stats">
-        <table>
-        <tr>
-            <td>Total connected clients</td>
-            <td>{{connectedCount}}</td>
-        </tr>
-
-        <tr>
-            <td>Total unique clients</td>
-            <td>{{seenCount}}</td>
-        </tr>
-        </table>
+      <p>
+        There are {{connectedCount}} connected wlan clients in {{hostCount}}
+        wlan hotspots. We've seen {{seenCount}} unique clients since {{logStart}}.
+      </p>
+      <p>
+      Last client connected <span class="lastJoin">0</span>.
+      </p>
     </script>
 
     <script type="x-template-handlebars" id="wlan-layout">
@@ -44,7 +40,7 @@
           {{#each connected}}
           <tr>
             <td>{{mac}}</td>
-            <td>{{time}}</td>
+            <td title="{{time}}" >{{ago}}</td>
           </tr>
           {{/each}}
 
@@ -62,7 +58,7 @@
           {{#each seen}}
           <tr>
             <td>{{mac}}</td>
-            <td>{{time}}</td>
+            <td title="{{time}}" >{{ago}}</td>
           </tr>
           {{/each}}
 
