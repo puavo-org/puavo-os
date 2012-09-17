@@ -12,16 +12,16 @@ define [
   Backbone,
   io,
   WlanHostModel,
-  ClientCollection,
+  WlanClientCollection,
   Layout
 ) ->
 
   ORG = window.location.pathname.split("/")[1]
   $(".organisation").text ORG
 
-  clients = new ClientCollection
+  clients = new WlanClientCollection
 
-  $.get "/log/#{ ORG }/wlan?limit=2000", (logArr, status, res) ->
+  $.get "/log/#{ ORG }/wlan?limit=200", (logArr, status, res) ->
 
     if status isnt "success"
       console.info res
@@ -43,6 +43,7 @@ define [
 
     socket = io.connect()
     socket.on "ltsp:#{ ORG }-opinsys-fi:wlan", (packet) ->
+      console.info "#{ packet.mac } #{ packet.event } to/from #{ packet.hostname }"
       clients.update packet
     socket.on "connect", ->
       console.info "Connected to websocket server"
