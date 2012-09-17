@@ -50,14 +50,10 @@ define [
       @renderTimer()
 
     viewJSON: ->
-      connectedCount = @clients.reduce (memo, m) ->
-        if m.isConnected() then memo+1 else memo
-      , 0
 
       firstEntry = @clients.min (m) -> m.get("relay_timestamp")
 
-
-      connectedCount: connectedCount
+      connectedCount: @clients.activeClientCount()
       seenCount: @clients.size()
       hostCount: @hosts.size()
       logStart: moment.unix(firstEntry.get("relay_timestamp")).fromNow()

@@ -22,3 +22,7 @@ define [
         @add client
 
 
+    activeClientCount: ->
+      connectedCount = @reduce (memo, m) ->
+        if m.isConnected() then memo+1 else memo
+      , 0

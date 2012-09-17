@@ -24,18 +24,23 @@ define [
       @allClients.on "add change", (model, e) =>
         @handleClient model
 
+    # Returns relative user count from 0-10
+    # Used for animations
+    relativeSize: ->
+      count = @clients.activeClientCount()
+      if count is 0
+        0
+      else
+        Math.round count / @allClients.activeClientCount() * 10, 1
+
+
     handleClient: (model) ->
       if model.get("hostname") is @id
         @clients.add model
       else
         @clients.remove model
 
-    activeClientCount: ->
-      count = 0
-      @clients.each (m) ->
-        if m.isConnected()
-          count += 1
-      return count
+    activeClientCount: -> @clients.activeClientCount()
 
     connectedClients: (fn) ->
       @clients.filter (m) -> m.isConnected()
