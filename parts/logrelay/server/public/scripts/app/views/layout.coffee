@@ -3,6 +3,7 @@ define [
   "cs!app/view"
   "cs!app/views/wlanstats"
   "cs!app/views/totalstats"
+  "cs!app/views/wlanhostdetails"
   "backbone"
   "underscore"
 ], (
@@ -10,6 +11,7 @@ define [
   View,
   WlanStats,
   TotalStats,
+  WlanHostDetails,
   Backbone,
   _
 ) ->
