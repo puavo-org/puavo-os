@@ -1,16 +1,23 @@
-h1 {
-  color: #008000;
-}
 body {
   font-family: arial;
 }
 .bb-wlan-stats {
-  border: 1px solid #000;
   float: left;
-  padding: 1em;
-  margin: 5px;
-}
-.bb-wlan-stats ul {
+  border: 1px solid #000;
   padding-left: 5px;
+  margin: 5px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 200px;
+  height: 400px;
+}
+.bb-wlan-stats h3 {
+  font-size: 12pt;
+}
+.bb-wlan-stats table {
+  text-align: left;
   font-size: 8pt;
+}
+.bb-wlan-layout .wlan-hosts {
+  width: 900px;
 }

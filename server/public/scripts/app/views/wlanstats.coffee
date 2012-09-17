@@ -23,6 +23,7 @@ define [
       seen = []
 
       @model.clients.each (m) =>
+
         if m.isConnected()
           connected.push @formatClient m
         else
