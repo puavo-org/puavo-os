@@ -25,32 +25,35 @@ define [
       @clients = opts.clients
       @hosts = new Backbone.Collection
 
-      @totalStats = new TotalStats
+      @statView = new TotalStats
         clients: @clients
         hosts: @hosts
+      @wlanHostViews = []
 
-      @clients.on "add", (model) =>
-
-        # Create new WlanHostModel if this client introduces new Wlan Host
-        if not @hosts.get(model.get("hostname"))
-          @hosts.add new WlanHostModel
-            id: model.get("hostname")
-            allClients: @clients
-            firstClient: model
+      @clients.on "add", (model) => @hostFromClient model
+      @clients.each (model) => @hostFromClient model
 
 
-      # Create stats view for every WlanHostModel
-      @hosts.on "add", (model) =>
-        view = new WlanStats
-          model: model
-        view.render()
-        @$el.find(".wlan-hosts").append view.el
+    hostFromClient: (model) ->
+
+      # Create new WlanHostModel if this client introduces new Wlan Host
+      if not @hosts.get(model.get("hostname"))
+        hostModel = new WlanHostModel
+          id: model.get("hostname")
+          allClients: @clients
+
+        @hosts.add  hostModel
+        view = new WlanStats model: hostModel
+        @wlanHostViews.push view
 
     viewJSON: ->
       name: @name
 
     render: ->
       super
-      @totalStats.render()
-      @$(".header").append @totalStats.el
+      @statView.render()
+      @$(".header").append @statView.el
+      for view in @wlanHostViews
+        view.render()
+        @$(".wlan-hosts").append view.el
 
