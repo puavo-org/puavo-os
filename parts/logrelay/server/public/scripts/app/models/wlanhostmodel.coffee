@@ -19,14 +19,16 @@ define [
       @allClients = opts.allClients
 
       @clients = new WlanClientCollection
-      @clients.add opts.firstClient
 
+      @allClients.each (model) => @handleClient model
       @allClients.on "add change", (model, e) =>
-        if model.get("hostname") is @id
-          @clients.add model
-        else
-          @clients.remove model
+        @handleClient model
 
+    handleClient: (model) ->
+      if model.get("hostname") is @id
+        @clients.add model
+      else
+        @clients.remove model
 
     activeClientCount: ->
       count = 0
