@@ -28,10 +28,17 @@ define [
     # Used for animations
     relativeSize: ->
       count = @clients.activeClientCount()
+
+      # No bars if no clients
       if count is 0
-        0
-      else
-        Math.round count / @allClients.activeClientCount() * 10, 1
+        return 0
+
+      # One bar if there is one client
+      if count is 1
+        return 1
+
+      # Otherwise just scale clients compared to all connected clients
+      Math.round count / @allClients.activeClientCount() * 10, 1
 
 
     handleClient: (model) ->
