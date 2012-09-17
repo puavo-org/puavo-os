@@ -5,8 +5,7 @@
     <title>LTSP Events</title>
     <link type="text/css" rel="stylesheet" media="all" href="/style.css">
 
-    <script type="x-template-handlebars" id="wlan-layout">
-        <h1>Wlan usage on {{name}}</h1>
+    <script type="x-template-handlebars" id="total-stats">
         <table>
         <tr>
             <td>Total connected clients</td>
@@ -14,16 +13,22 @@
         </tr>
 
         <tr>
-            <td>Total seend clients</td>
+            <td>Total unique clients</td>
             <td>{{seenCount}}</td>
         </tr>
         </table>
+    </script>
+
+    <script type="x-template-handlebars" id="wlan-layout">
+        <h1>Wlan usage on {{name}}</h1>
+        <div class="header">
+        </div>
 
         <div class="wlan-hosts">
         </div>
     </script>
 
-    <script type="x-template-handlebars" id="wlan-view">
+    <script type="x-template-handlebars" id="wlan-stats">
         <h2>{{name}}</h2>
 
         <div class=connected>

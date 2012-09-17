@@ -1,4 +1,3 @@
-
 define [
   "jquery"
   "underscore"
@@ -37,6 +36,7 @@ define [
     console.info "Loaded #{ logArr.length } entries from history"
     for packet in logArr
       clients.update packet
+    console.info "Render complete. Waiting for websocket events now."
 
     socket = io.connect()
     socket.on "ltsp:#{ ORG }-opinsys-fi:wlan", (packet) ->

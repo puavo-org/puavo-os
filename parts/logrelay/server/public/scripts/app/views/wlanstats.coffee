@@ -6,12 +6,11 @@ define [
   class WlanStats extends View
 
     className: "bb-wlan-stats"
-    templateQuery: "#wlan-view"
+    templateQuery: "#wlan-stats"
 
     constructor: (opts) ->
       super
       @model.clients.on "add remove change", =>
-        console.info "A Client changed"
         @render()
 
 
