@@ -21,6 +21,7 @@ require.config({
     handlebars: "vendor/handlebars",
     underscore: "vendor/underscore",
     backbone: "vendor/backbone",
+    moment: "vendor/moment",
     "socket.io": "vendor/socket.io",
     "coffee-script": "vendor/coffee-script"
   }
