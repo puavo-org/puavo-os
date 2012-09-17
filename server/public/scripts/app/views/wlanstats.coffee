@@ -4,37 +4,76 @@ define [
   "underscore"
 ], (View, moment, _) ->
 
+  padZero = (num, size) ->
+    s = num + ""
+    while s.length < size
+      s = "0" + s
+    s
+
   class WlanStats extends View
 
     className: "bb-wlan-stats"
     templateQuery: "#wlan-stats"
 
+    events:
+      "click": (e) ->
+        @model.trigger "select", @model
+        @animate()
+
     constructor: (opts) ->
       super
+      @previousCount = 0
       @model.clients.on "add remove change", =>
         @render()
 
+      @model.collection.on "select", (model) =>
+        @disableAnimation = true
+        @selected = model.id is @model.id
+        @render()
 
-    formatClient: (m) ->
-      time = moment.unix(m.get "relay_timestamp")
-      mac: m.get "mac"
-      ago: time.fromNow()
-      time: time.format "YYYY-MM-DD HH:mm:ss"
+    animate: ->
+
+      console.info "ANIM", @model.clients.activeClientCount(), @previousCount
+
+      if @disableAnimation
+        @disableAnimation = false
+        return
+
+      if @model.clients.activeClientCount() is @previousCount
+        return
+
+      if @model.clients.activeClientCount() > @previousCount
+        @animateClientConnected()
+      else
+        @animateClientLeft()
+
+      @animTimer = setTimeout =>
+        @clearAnimation()
+      , 1300
+
+      @previousCount = @model.clients.activeClientCount()
+
+    animateClientConnected: -> @$el.addClass "animated tada"
+    animateClientLeft: -> @$el.addClass "animated wobble"
+
+    clearAnimation: ->
+      clearTimeout @animTimer if @animTimer
+      @$el.removeClass "animated wobble tada"
 
     viewJSON: ->
-      connected = []
-      seen = []
-
-      @model.clients.each (m) =>
-
-        if m.isConnected()
-          connected.push @formatClient m
-        else
-          seen.push @formatClient m
-
       count: @model.activeClientCount()
       name: @model.id
-      connected: connected
-      seen: seen.slice(0,10)
 
+    render: ->
+      @clearAnimation()
+      console.info "render", @model.id
+      super
+      imgId = padZero  @model.relativeSize(), 2
+      url = "/img/wlan/wlan#{ imgId }.png"
+      @$el.css "background-image", "url(#{ url })"
+      if @selected
+        @$el.addClass "selected"
+      else
+        @$el.removeClass "selected"
+      @animate()
 
