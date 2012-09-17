@@ -1,23 +1,51 @@
 body {
   font-family: arial;
+  background-color: #e7e4d0;
+}
+.bb-wlan-stats.selected {
+  border: 1px solid #000;
+  margin: 0px;
 }
 .bb-wlan-stats {
   float: left;
+  margin: 1px;
+  background-image: url("/img/wlan/wlan00.png");
+  background-position: top left;
+  background-repeat: no-repeat;
+  font-size: 8pt;
+  margin: 1px;
+  width: 170px;
+  height: 170px;
+  cursor: pointer;
+}
+.bb-wlan-stats .content {
+  color: #fff;
+  font-weight: bold;
+  margin-top: 60px;
+  margin-left: 50px;
+}
+.bb-wlan-host-details {
+  position: absolute;
+  width: 40%;
+  right: 0px;
   border: 1px solid #000;
-  padding-left: 5px;
-  margin: 5px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  width: 250px;
-  height: 400px;
 }
-.bb-wlan-stats h3 {
-  font-size: 12pt;
+.bb-wlan-host-details .history,
+.bb-wlan-host-details .connected {
+  float: left;
+  margin-left: 5px;
 }
-.bb-wlan-stats table {
+.bb-wlan-host-details table {
   text-align: left;
   font-size: 8pt;
 }
+.bb-wlan-layout {
+  width: 90%;
+}
 .bb-wlan-layout .wlan-hosts {
-  width: 900px;
+  padding-left: 3em;
+  padding-right: 3em;
+  position: absolute;
+  left: 0px;
+  width: 40%;
 }
