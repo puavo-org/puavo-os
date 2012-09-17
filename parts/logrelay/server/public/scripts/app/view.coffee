@@ -15,5 +15,6 @@ define [
     viewJSON: -> {}
 
     render: ->
+      # console.info "rendering #{ @templateQuery } #{ @model?.id }"
       @$el.html @template(@viewJSON())
 
