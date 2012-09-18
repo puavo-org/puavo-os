@@ -16,6 +16,49 @@
       </p>
     </script>
 
+    <script type="x-template-handlebars" id="wlan-host-details">
+        <h2>{{name}}</h2>
+
+        <div class="connected">
+          <h3>
+          {{count}} connected clients
+          </h3>
+
+          <table>
+            <tr>
+              <th>mac address</th>
+              <th>joined</th>
+            </tr>
+
+            {{#each connected}}
+            <tr>
+              <td>{{mac}}</td>
+              <td title="{{time}}" >{{ago}}</td>
+            </tr>
+            {{/each}}
+          </table>
+        </div>
+
+        <div class="history">
+          <h3>History</h3>
+
+          <table class="left">
+            <tr>
+              <th>mac address</th>
+              <th>left</th>
+            </tr>
+
+            {{#each seen}}
+            <tr>
+              <td>{{mac}}</td>
+              <td title="{{time}}" >{{ago}}</td>
+            </tr>
+            {{/each}}
+
+          </table>
+        </div>
+    </script>
+
     <script type="x-template-handlebars" id="wlan-layout">
         <h1>Wlan usage on {{name}}</h1>
         <div class="header">
