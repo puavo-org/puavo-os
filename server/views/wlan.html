@@ -15,7 +15,7 @@
     </script>
 
     <script type="x-template-handlebars" id="wlan-client-details">
-      <h1>Client details</h1>
+      <h1>Client {{mac}}</h1>
     </script>
 
     <script type="x-template-handlebars" id="wlan-host-details">
@@ -52,7 +52,7 @@
 
             {{#each seen}}
             <tr>
-              <td>{{mac}}</td>
+              <td><a href="#" class="client" data-mac="{{mac}}" >{{mac}}</a></td>
               <td title="{{time}}" >{{ago}}</td>
             </tr>
             {{/each}}
