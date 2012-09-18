@@ -21,8 +21,10 @@ define [
       @clients = opts.clients
       @hosts = opts.hosts
 
-      @clients.on "client-details", (model) ->
-        debugger
+      @clients.on "client-details", (model) =>
+        @setView ".client-details-container", new WlanClientDetails
+          model: model
+        @render()
 
     renderHost: (model) ->
       @setView ".host-details-container", new WlanHostDetails

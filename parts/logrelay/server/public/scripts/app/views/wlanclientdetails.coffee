@@ -7,3 +7,6 @@ define [
 
     className: "bb-wlan-client-details"
     templateQuery: "#wlan-client-details"
+
+    viewJSON: ->
+      mac: @model.id
