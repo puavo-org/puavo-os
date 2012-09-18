@@ -102,7 +102,7 @@ app.post "/log/:org/:coll", (req, res) ->
       console.info "Log saved to #{ org }/#{ collName }"
 
 
-getSchoolAndDevices = ->
+getSchoolAndDevices = (cb) ->
   console.log("Get schools and devices")
   for key, value of config["organisations"]
     console.log("Organisation: ")
@@ -110,6 +110,14 @@ getSchoolAndDevices = ->
     console.log(value)
     console.log(value["username"])
     auth = "Basic " + new Buffer(value["username"] + ":" + value["password"]).toString("base64");
+
+    requestCount = 2
+    done = (args...) ->
+      requestCount -= 1
+      if requestCount is 0
+        cb args...
+        done = ->
+
     # Get schools
     request {
       url: "http://" + value["puavoDomain"] + "/users/schools.json",
@@ -121,7 +129,8 @@ getSchoolAndDevices = ->
         for school in schools
           console.log("\t" + school["name"])
       else
-        console.log(res.statusCode)
+        console.log("Can't connect to puavo server: ", error)
+      done error
 
     # Get devices
     console.log("http://" + value["puavoDomain"] + "/devices/devices.json")
@@ -140,11 +149,16 @@ getSchoolAndDevices = ->
           if device["macAddress"]
             organisationDevicesByMac[key][ device["macAddress"][0] ] = {}
             organisationDevicesByMac[key][ device["macAddress"][0] ]["hostname"] = device["puavoHostname"][0]
-       else
-         console.log(res.statusCode)
+      else
+        console.log("Can't connect to puavo server: ", error)
+  
+      done error
+  
 
-setTimeout((->
-  getSchoolAndDevices()
-  setTimeout arguments.callee, config["refreshDelay"]
-  ), 3000)
+
+do timeOutLoop = ->
+  getSchoolAndDevices ->
+    setTimeout ->
+      timeOutLoop()
+    , config.refreshDelay
 
