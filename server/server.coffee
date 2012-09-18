@@ -11,9 +11,6 @@ request = require("request")
 
 config = require "./config.json"
 
-console.info "starting"
-console.error "error testi!"
-
 mongo = new Mongolian
 app = express()
 httpServer = http.createServer(app)
