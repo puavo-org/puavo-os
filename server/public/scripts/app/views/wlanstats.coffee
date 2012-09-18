@@ -43,20 +43,20 @@ define [
       else
         @_animateDisconnect()
 
+      @_previousCount = @model.clients.activeClientCount()
+
       @_animationTimer = setTimeout =>
-        @_animationTimer = null
         @_clearAnimation()
         # Render content after animation so it will be clear to user what changed.
         @render()
       , 1300 # is the default animation duration in animate.css
 
-      @_previousCount = @model.clients.activeClientCount()
 
     _animateConnect: -> @$el.addClass "animated tada"
     _animateDisconnect: -> @$el.addClass "animated wobble"
-
     _clearAnimation: ->
       clearTimeout @_animationTimer if @_animationTimer
+      @_animationTimer = null
       @$el.removeClass "animated wobble tada"
 
     viewJSON: ->
