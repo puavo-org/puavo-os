@@ -22,37 +22,41 @@ define [
 
     constructor: (opts) ->
       super
-      @previousCount = 0
+      @_previousCount = 0
       @model.clients.on "add remove change", =>
-        @render()
+        @animate()
 
 
     animate: ->
 
-
-      if @disableAnimation
-        @disableAnimation = false
+      # Do not interrupt animations since it looks ugly. Just render the
+      # content in that case.
+      if @_animationTimer
+        @render()
         return
 
-      if @model.clients.activeClientCount() is @previousCount
+      if @model.clients.activeClientCount() is @_previousCount
         return
 
-      if @model.clients.activeClientCount() > @previousCount
-        @animateClientConnected()
+      if @model.clients.activeClientCount() > @_previousCount
+        @_animateConnect()
       else
-        @animateClientLeft()
+        @_animateDisconnect()
 
-      @animTimer = setTimeout =>
-        @clearAnimation()
-      , 1300
+      @_animationTimer = setTimeout =>
+        @_animationTimer = null
+        @_clearAnimation()
+        # Render content after animation so it will be clear to user what changed.
+        @render()
+      , 1300 # is the default animation duration in animate.css
 
-      @previousCount = @model.clients.activeClientCount()
+      @_previousCount = @model.clients.activeClientCount()
 
-    animateClientConnected: -> @$el.addClass "animated tada"
-    animateClientLeft: -> @$el.addClass "animated wobble"
+    _animateConnect: -> @$el.addClass "animated tada"
+    _animateDisconnect: -> @$el.addClass "animated wobble"
 
-    clearAnimation: ->
-      clearTimeout @animTimer if @animTimer
+    _clearAnimation: ->
+      clearTimeout @_animationTimer if @_animationTimer
       @$el.removeClass "animated wobble tada"
 
     viewJSON: ->
@@ -86,10 +90,8 @@ define [
       @previousSpriteClass = wlanSpriteClass
 
     render: ->
-      @clearAnimation()
       super
       @setSprite()
-      @animate()
 
 
 
