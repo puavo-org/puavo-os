@@ -7,7 +7,9 @@ express = require "express"
 io = require "socket.io"
 stylus = require "stylus"
 Mongolian = require("mongolian")
+request = require("request")
 
+config = JSON.parse fs.readFileSync __dirname + "/config.json"
 
 console.info "starting"
 console.error "error testi!"
@@ -93,4 +95,47 @@ app.post "/log/:org/:coll", (req, res) ->
       throw err if err
       console.info "Log saved to #{ org }/#{ collName }"
 
+
+getSchoolAndDevices = ->
+  console.log("Get schools and devices")
+  for key, value of config["organisations"]
+    console.log("Organisation: ")
+    console.log(value)
+    console.log(value["username"])
+    auth = "Basic " + new Buffer(value["username"] + ":" + value["password"]).toString("base64");
+    # Get schools
+    request {
+      url: "http://" + value["puavoDomain"] + "/users/schools.json",
+      headers:  {"Authorization" : auth}
+    }, (error, res, body) ->
+      if !error && res.statusCode == 200
+        schools = JSON.parse(body)
+        console.log("Schools:")
+        for school in schools
+          console.log("\t" + school["name"])
+      else
+        console.log(res.statusCode)
+
+    # Get devices
+    console.log("http://" + value["puavoDomain"] + "/devices/devices.json")
+    console.log auth
+    request {
+      method: 'GET',
+      url: "http://" + value["puavoDomain"] + "/devices/devices.json",
+      headers:  {"Authorization" : auth}
+    }, (error, res, body) ->
+      if !error && res.statusCode == 200
+        devices = JSON.parse(body)
+        console.log("Devices:")
+        for device in devices
+          console.log("\t" + device["puavoHostname"] )
+       else
+         console.log(res.statusCode)
+
+delay = 30000
+
+setTimeout((->
+  getSchoolAndDevices()
+  setTimeout arguments.callee, delay
+  ), 3000)
 
