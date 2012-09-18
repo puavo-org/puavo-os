@@ -122,14 +122,13 @@ body {
   width: 90%;
 }
 .bb-wlan-layout .wlan-hosts-wrap {
-  border: 5px solid #008000;
   padding-left: 3em;
   padding-right: 3em;
   position: absolute;
   left: 0px;
 }
 .bb-lightbox .background,
-.bb-lightbox .content {
+.bb-lightbox .wrap {
   position: fixed;
 }
 .bb-lightbox .background {
@@ -141,7 +140,7 @@ body {
   background-color: #000;
   opacity: 0.2;
 }
-.bb-lightbox .content {
+.bb-lightbox .wrap {
   z-index: 100;
   background-color: #fff;
   color: #000;
@@ -150,6 +149,9 @@ body {
   left: 0px;
   right: 0px;
   margin: 0 auto;
+}
+.bb-lightbox .wrap .close {
+  float: right;
 }
 .clearfix:after {
   content: ".";
