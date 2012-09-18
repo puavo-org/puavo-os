@@ -5,7 +5,8 @@ define [
   "socket.io"
   "cs!app/models/wlanhostmodel"
   "cs!app/models/wlanclientcollection"
-  "cs!app/views/layout"
+  "cs!app/views/lightbox"
+  "cs!app/views/mainlayout"
 ], (
   $,
   _,
@@ -13,7 +14,8 @@ define [
   io,
   WlanHostModel,
   WlanClientCollection,
-  Layout
+  Lightbox,
+  MainLayout
 ) ->
 
   ORG = window.location.pathname.split("/")[1]
@@ -21,7 +23,10 @@ define [
 
   clients = new WlanClientCollection
 
-  $.get "/log/#{ ORG }/wlan?limit=200", (logArr, status, res) ->
+  lb = new Lightbox
+  lb.renderToBody()
+
+  $.get "/log/#{ ORG }/wlan?limit=2000", (logArr, status, res) ->
 
     if status isnt "success"
       console.info res
@@ -32,7 +37,7 @@ define [
     for packet in logArr
       clients.update packet
 
-    layout = new Layout
+    layout = new MainLayout
       clients: clients
       name: ORG
 
