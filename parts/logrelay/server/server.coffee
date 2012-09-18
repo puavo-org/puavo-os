@@ -19,6 +19,7 @@ sio.set('log level', 1)
 
 organisationDevicesByMac = {}
 organisationSchoolsById = {}
+organisationDevicesByHostname = {}
 
 app.configure ->
 
@@ -76,7 +77,7 @@ app.post "/log/:org/:coll", (req, res) ->
 
   if data["mac"] && organisationDevicesByMac[org]?[data["mac"]]?["hostname"]
     data["client_hostname"] = organisationDevicesByMac[org][data["mac"]]["hostname"]
-    school_id = organisationDevicesByMac[org][data["mac"]]["school_id"]
+    school_id = organisationDevicesByHostname[org][data["hostname"]]["school_id"]
     data["school_id"] = school_id
     data["school_name"] = organisationSchoolsById[org][school_id]["name"]
 
@@ -142,13 +143,15 @@ getSchoolAndDevices = (cb) ->
         devices = JSON.parse(body)
         organisationDevicesByMac[key] = {}
         console.info "Fetched #{ devices.length } devices from #{ value["puavoDomain"] }"
+        organisationDevicesByHostname[key] = {}
         for device in devices
+          if device["puavoSchool"]
+            school_id = device.puavoSchool[0].rdns[0].puavoId
+            organisationDevicesByHostname[key][ device["puavoHostname"][0] ] = {}
+            organisationDevicesByHostname[key][ device["puavoHostname"][0] ]["school_id"] = school_id
           if device["macAddress"]
             organisationDevicesByMac[key][ device["macAddress"][0] ] = {}
             organisationDevicesByMac[key][ device["macAddress"][0] ]["hostname"] = device["puavoHostname"][0]
-            if device["puavoSchool"]
-              school_id = device.puavoSchool[0].rdns[0].puavoId
-              organisationDevicesByMac[key][ device["macAddress"][0] ]["school_id"] = school_id
       else
         console.log("Can't connect to puavo server: ", error)
 
