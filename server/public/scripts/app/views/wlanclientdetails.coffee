@@ -9,4 +9,16 @@ define [
     templateQuery: "#wlan-client-details"
 
     viewJSON: ->
-      mac: @model.id
+      history = @model.history.map (e) ->
+        time = moment.unix(e.timestamp)
+        return (
+          hostname: e.hostname
+          event: e.event
+          ago: time.fromNow()
+          time: time.format "YYYY-MM-DD HH:mm:ss"
+        )
+
+      return {
+        mac: @model.id
+        history: history
+      }
