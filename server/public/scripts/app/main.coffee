@@ -16,14 +16,18 @@ define [
   WlanClientCollection,
   Lightbox,
   MainLayout
-) ->
+) -> $ ->
 
   ORG = window.location.pathname.split("/")[1]
   $(".organisation").text ORG
 
+  loading = $(".loading")
+
   clients = new WlanClientCollection
 
+  historySize = 2000
 
+  loading.text "Loading #{ historySize } entries from history..."
   $.get "/log/#{ ORG }/wlan?limit=2000", (logArr, status, res) ->
 
     if status isnt "success"
@@ -32,6 +36,7 @@ define [
 
     console.info "Loaded #{ logArr.length } entries from db"
 
+    loading.text "Updating models..."
     for packet in logArr
       clients.update packet
 
@@ -44,11 +49,15 @@ define [
 
     console.info "Render complete"
 
+    loading.text "Connecting to real time events..."
+
     socket = io.connect()
     socket.on "ltsp:#{ ORG }-opinsys-fi:wlan", (packet) ->
       console.info "#{ packet.mac } #{ packet.event } to/from #{ packet.hostname }"
       clients.update packet
+
     socket.on "connect", ->
+      loading.remove()
       console.info "Connected to websocket server"
 
 
