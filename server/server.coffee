@@ -132,10 +132,8 @@ getSchoolAndDevices = ->
        else
          console.log(res.statusCode)
 
-delay = 30000
-
 setTimeout((->
   getSchoolAndDevices()
-  setTimeout arguments.callee, delay
+  setTimeout arguments.callee, config["refreshDelay"]
   ), 3000)
 
