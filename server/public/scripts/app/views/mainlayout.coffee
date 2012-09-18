@@ -4,15 +4,17 @@ define [
   "cs!app/views/wlanstats"
   "cs!app/views/totalstats"
   "cs!app/views/wlanhostdetails"
+  "cs!app/views/lightbox"
   "backbone"
   "underscore"
 ], (
-  WlanHostModel,
-  Layout,
-  WlanStats,
-  TotalStats,
-  WlanHostDetails,
-  Backbone,
+  WlanHostModel
+  Layout
+  WlanStats
+  TotalStats
+  WlanHostDetails
+  Lightbox
+  Backbone
   _
 ) ->
 
@@ -39,10 +41,11 @@ define [
       @hosts.on "select", (model) =>
         console.info "select", model.id
 
-        @subViews[".wlan-host-details"]?.remove()
-        @subViews[".wlan-host-details"] = new WlanHostDetails
-          model: model
-        @render()
+        lb = new Lightbox
+          subViews:
+            ".content":
+              new WlanHostDetails model: model
+        lb.renderToBody()
 
 
       @clients.on "add", (model) => @hostFromClient model

@@ -23,8 +23,6 @@ define [
 
   clients = new WlanClientCollection
 
-  lb = new Lightbox
-  lb.renderToBody()
 
   $.get "/log/#{ ORG }/wlan?limit=2000", (logArr, status, res) ->
 
