@@ -133,6 +133,11 @@ body {
 .bb-wlan-layout h1 {
   color: #000;
 }
+.loading {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
 .bb-total-stats {
   width: 400px;
 }
