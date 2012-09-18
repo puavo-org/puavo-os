@@ -103,7 +103,6 @@ app.post "/log/:org/:coll", (req, res) ->
 
 
 getSchoolAndDevices = (cb) ->
-  console.log("Get schools and devices")
 
   for key, value of config["organisations"] then do (key, value) ->
     console.log("Organisation: ", key)
@@ -125,6 +124,7 @@ getSchoolAndDevices = (cb) ->
       if !error && res.statusCode == 200
         schools = JSON.parse(body)
         organisationSchoolsById[key] = {}
+        console.info "Fetched #{ schools.length } schools from #{ value["puavoDomain"] }"
         for school in schools
           organisationSchoolsById[key][school.puavo_id] = {}
           organisationSchoolsById[key][school.puavo_id]["name"] = school.name
@@ -141,6 +141,7 @@ getSchoolAndDevices = (cb) ->
       if !error && res.statusCode == 200
         devices = JSON.parse(body)
         organisationDevicesByMac[key] = {}
+        console.info "Fetched #{ devices.length } devices from #{ value["puavoDomain"] }"
         for device in devices
           if device["macAddress"]
             organisationDevicesByMac[key][ device["macAddress"][0] ] = {}
@@ -150,9 +151,9 @@ getSchoolAndDevices = (cb) ->
               organisationDevicesByMac[key][ device["macAddress"][0] ]["school_id"] = school_id
       else
         console.log("Can't connect to puavo server: ", error)
-  
+
       done error
-  
+
 
 
 do timeOutLoop = ->
