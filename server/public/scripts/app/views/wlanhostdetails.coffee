@@ -1,8 +1,15 @@
 define [
   "cs!app/view"
+  "cs!app/views/wlanclientdetails"
+  "jquery"
   "moment"
   "underscore"
-], (View, moment, _) ->
+], (
+  View
+  WlanClientDetails
+  $
+  moment
+  _) ->
   class WlanHostDetails extends View
 
     className: "bb-wlan-host-details"
@@ -12,6 +19,14 @@ define [
       super
       @model.clients.on "add remove change", =>
         @render()
+
+    events:
+      "click a.client": (e) ->
+        e.preventDefault()
+        mac = $(e.target).data("mac")
+        model = @model.allClients.get(mac)
+        @model.allClients.trigger "client-details", model
+
 
     formatClient: (m) ->
       time = moment.unix(m.get "relay_timestamp")
