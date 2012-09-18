@@ -77,7 +77,6 @@ app.post "/log/:org/:coll", (req, res) ->
   collName = req.params.coll
 
   if data["mac"] && organisationDevicesByMac[org]?[data["mac"]]?["hostname"]
-    console.log("Save hostname")
     data["client_hostname"] = organisationDevicesByMac[org][data["mac"]]["hostname"]
 
   # Just respond immediately to sender. We will just log database errors.
@@ -106,10 +105,8 @@ getSchoolAndDevices = (cb) ->
   console.log("Get schools and devices")
 
   for key, value of config["organisations"] then do (key, value) ->
-    console.log("Organisation: ")
-    console.log(key)
-    console.log(value)
-    console.log(value["username"])
+    console.log("Organisation: ", key)
+
     auth = "Basic " + new Buffer(value["username"] + ":" + value["password"]).toString("base64");
 
     requestCount = 2
@@ -126,16 +123,11 @@ getSchoolAndDevices = (cb) ->
     }, (error, res, body) ->
       if !error && res.statusCode == 200
         schools = JSON.parse(body)
-        console.log("Schools:")
-        for school in schools
-          console.log("\t" + school["name"])
       else
         console.log("Can't connect to puavo server: ", error)
       done error
 
     # Get devices
-    console.log("http://" + value["puavoDomain"] + "/devices/devices.json")
-    console.log auth
     request {
       method: 'GET',
       url: "http://" + value["puavoDomain"] + "/devices/devices.json",
@@ -143,10 +135,8 @@ getSchoolAndDevices = (cb) ->
     }, (error, res, body) ->
       if !error && res.statusCode == 200
         devices = JSON.parse(body)
-        console.log("Devices:")
         organisationDevicesByMac[key] = {}
         for device in devices
-          console.log("\t" + device["puavoHostname"] )
           if device["macAddress"]
             organisationDevicesByMac[key][ device["macAddress"][0] ] = {}
             organisationDevicesByMac[key][ device["macAddress"][0] ]["hostname"] = device["puavoHostname"][0]
