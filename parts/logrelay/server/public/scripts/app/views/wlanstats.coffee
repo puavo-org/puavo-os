@@ -17,7 +17,7 @@ define [
 
     events:
       "click": (e) ->
-        @model.trigger "select", @model
+        @model.trigger "host-details", @model
         @animate()
 
     constructor: (opts) ->
