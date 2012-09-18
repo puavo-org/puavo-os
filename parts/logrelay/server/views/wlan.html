@@ -75,24 +75,11 @@
     </script>
 
     <script type="x-template-handlebars" id="wlan-stats">
-        <h2>{{name}}</h2>
-
-        <h3>
-        {{count}} connected clients
-        </h3>
-
-        <table class="connected">
-          <tr>
-            <th>mac address</th>
-            <th>joined</th>
-          </tr>
-
-          {{#each connected}}
-          <tr>
-            <td>{{mac}}</td>
-            <td title="{{time}}" >{{ago}}</td>
-          </tr>
-          {{/each}}
+      <div class="content">
+        <p>{{name}}</p>
+        <p>{{count}} clients</p>
+      </div>
+    </script>
 
 
         </table>
