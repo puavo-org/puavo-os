@@ -84,10 +84,7 @@
 }
 body {
   font-family: "Trebuchet MS", Arial, Helvetica;
-  background-color: #e7e4d0;
-}
-.bb-wlan-stats.selected {
-  border: 1px solid #000;
+  background-color: #f0eee1;
 }
 .bb-wlan-stats {
   float: left;
@@ -99,12 +96,16 @@ body {
   cursor: pointer;
 }
 .bb-wlan-stats .content {
+  text-align: center;
   color: #fff;
   font-weight: bold;
   margin-top: 55px;
-  margin-left: 50px;
+  margin-left: 45px;
   width: 75px;
   word-wrap: break-word;
+}
+.bb-wlan-stats .content .count {
+  font-size: 18pt;
 }
 .bb-wlan-host-details {
   border: 1px solid #000;
@@ -125,6 +126,8 @@ body {
 }
 .bb-wlan-layout .header {
   margin-left: 44px;
+  border-top: 1px solid #fff;
+  border-bottom: 1px solid #c5be8c;
 }
 .bb-wlan-layout .wlan-hosts-wrap {
   margin-top: 1em;
@@ -143,7 +146,7 @@ body {
 }
 .opinsys-logo {
   position: absolute;
-  right: 1em;
+  right: 10%;
   top: 0em;
 }
 .bb-lightbox .background,
@@ -157,7 +160,7 @@ body {
   left: 0px;
   bottom: 0px;
   background-color: #000;
-  opacity: 0.2;
+  opacity: 0.3;
 }
 .bb-lightbox .wrap {
   z-index: 100;
@@ -167,6 +170,7 @@ body {
   height: 70%;
   left: 0px;
   right: 0px;
+  top: 5%;
   margin: 0 auto;
 }
 .bb-lightbox .wrap .close {

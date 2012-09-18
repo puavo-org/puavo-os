@@ -59,7 +59,7 @@
 
     <script type="x-template-handlebars" id="wlan-layout">
         <div class="header">
-          <h1>Wlan usage on {{name}}</h1>
+          <h1>Wlan usage in {{name}}</h1>
           <div class="total-stats-container"></div>
         </div>
 
@@ -74,9 +74,9 @@
     </script>
 
     <script type="x-template-handlebars" id="wlan-stats">
-      <div class="content">
-        <p>{{name}}</p>
-        <p>{{count}} clients</p>
+      <div class="content" title="{{count}} connected clients">
+        <div class="name" >{{name}}</p>
+        <div class="count" >{{count}}</div>
       </div>
     </script>
 
