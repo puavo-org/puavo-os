@@ -73,13 +73,18 @@ app.get "/log/:org/:coll", (req, res) ->
 app.post "/log/:org/:coll", (req, res) ->
   data = req.body
   org = req.params.org
+  fullOrg = org + "-opinsys-fi"
   collName = req.params.coll
 
-  if data["mac"] && organisationDevicesByMac[org]?[data["mac"]]?["hostname"]
+  if data["mac"] && organisationDevicesByMac[fullOrg]?[data["mac"]]?["hostname"]
     data["client_hostname"] = organisationDevicesByMac[org][data["mac"]]["hostname"]
-    school_id = organisationDevicesByHostname[org][data["hostname"]]["school_id"]
+
+
+  if school_id = organisationDevicesByHostname[fullOrg]?[data.hostname]?.school_id
     data["school_id"] = school_id
-    data["school_name"] = organisationSchoolsById[org][school_id]["name"]
+    data["school_name"] = organisationSchoolsById[fullOrg][school_id].name
+  else
+    console.info "Cannot find school id for #{ fullOrg }/#{ data.hostname }"
 
   # Just respond immediately to sender. We will just log database errors.
   res.json
@@ -87,7 +92,7 @@ app.post "/log/:org/:coll", (req, res) ->
     organisation: org
     collection: collName
 
-  sio.sockets.emit "ltsp:#{ org }:#{ collName }", data
+  sio.sockets.emit "ltsp:#{ fullOrg }:#{ collName }", data
 
   d = domain.create()
   d.on "error", (err) ->
