@@ -8,8 +8,8 @@
 
     <script type="x-template-handlebars" id="total-stats">
       <p>
-        There are {{connectedCount}} connected wlan clients in {{hostCount}}
-        wlan hotspots. We've seen {{seenCount}} unique clients since {{logStart}}.
+        There are {{connectedCount}} connected clients in {{hostCount}}
+        Wlan Hotspots. We've seen {{seenCount}} unique clients since {{logStart}}.
         Last client connected <span class="lastJoin">0</span>.
       </p>
     </script>
@@ -19,13 +19,13 @@
 
         <div class="connected">
           <h3>
-          {{count}} connected clients
+          {{count}} clients
           </h3>
 
           <table>
             <tr>
               <th>mac address</th>
-              <th>joined</th>
+              <th>connected</th>
             </tr>
 
             {{#each connected}}
@@ -43,7 +43,7 @@
           <table class="left">
             <tr>
               <th>mac address</th>
-              <th>left</th>
+              <th>disconnected</th>
             </tr>
 
             {{#each seen}}

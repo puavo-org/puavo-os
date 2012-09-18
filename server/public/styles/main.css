@@ -107,18 +107,6 @@ body {
 .bb-wlan-stats .content .count {
   font-size: 18pt;
 }
-.bb-wlan-host-details {
-  border: 1px solid #000;
-}
-.bb-wlan-host-details .history,
-.bb-wlan-host-details .connected {
-  float: left;
-  margin-left: 5px;
-}
-.bb-wlan-host-details table {
-  text-align: left;
-  font-size: 8pt;
-}
 .bb-wlan-layout {
   color: #aaa;
   width: 90%;
@@ -175,6 +163,31 @@ body {
 }
 .bb-lightbox .wrap .close {
   float: right;
+}
+.bb-lightbox .wrap {
+  background-color: #f0eee1;
+}
+.bb-lightbox .content {
+  padding: 3em;
+}
+.bb-lightbox .close {
+  background-color: transparent;
+  border: 0px;
+  cursor: pointer;
+}
+.bb-wlan-host-details .history,
+.bb-wlan-host-details .connected {
+  float: left;
+  margin-left: 5px;
+}
+.bb-wlan-host-details table {
+  color: #aaa;
+  text-align: left;
+  font-size: 8pt;
+  margin-right: 1em;
+}
+.bb-wlan-host-details table td {
+  margin-right: 5px;
 }
 .clearfix:after {
   content: ".";

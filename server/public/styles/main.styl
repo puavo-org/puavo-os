@@ -1,8 +1,11 @@
 @import "wlan-sprite.styl"
 
+bg_color = #F0EEE1
+text_color = #AAA
+
 body
   font-family: "Trebuchet MS",Arial,Helvetica;
-  background-color #F0EEE1
+  background-color bg_color
 
 .bb-wlan-stats
   float left
@@ -25,17 +28,9 @@ body
       font-size 18pt
 
 
-.bb-wlan-host-details
-  border 1px solid black
-  .history, .connected
-    float left
-    margin-left 5px
-  table
-    text-align left
-    font-size 8pt
 
 .bb-wlan-layout
-  color #AAA
+  color text_color
   width 90%
   margin 0 auto
   .header
@@ -62,11 +57,14 @@ body
   right 10%
   top 0em
 
+
+
+
 .bb-lightbox
 
+  // Structure
   .background, .wrap
     position fixed
-
   .background
     z-index 99
     top 0px
@@ -75,7 +73,6 @@ body
     bottom 0px
     background-color black
     opacity 0.3
-
   .wrap
     z-index 100
     background-color white
@@ -88,6 +85,29 @@ body
     margin 0 auto
     .close
       float right
+
+  // Styles
+  .wrap
+    background-color bg_color
+  .content
+    padding 3em
+  .close
+    background-color transparent
+    border 0px
+    cursor pointer
+
+
+.bb-wlan-host-details
+  .history, .connected
+    float left
+    margin-left 5px
+  table
+    color text_color
+    text-align left
+    font-size 8pt
+    margin-right 1em
+    td
+      margin-right 5px
 
 
 
