@@ -121,13 +121,21 @@ body {
 .bb-wlan-layout {
   width: 90%;
 }
-.bb-wlan-layout .wlan-hosts {
+.bb-wlan-layout .wlan-hosts-wrap {
+  border: 5px solid #008000;
   padding-left: 3em;
   padding-right: 3em;
   position: absolute;
   left: 0px;
 }
-.clearfix {
+.clearfix:after {
+  content: ".";
+  display: block;
+  height: 0;
   clear: both;
-  float: none;
+  visibility: hidden;
 }
+.clearfix {
+  display: inline-block;
+}
+/* for IE/Mac */
