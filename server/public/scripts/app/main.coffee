@@ -53,7 +53,7 @@ define [
 
     socket = io.connect()
     socket.on "ltsp:#{ ORG }-opinsys-fi:wlan", (packet) ->
-      console.info "#{ packet.mac } #{ packet.event } to/from #{ packet.hostname }"
+      console.info "#{ packet.mac } #{ packet.event } to/from #{ packet.hostname }", packet
       clients.update packet
 
     socket.on "connect", ->
