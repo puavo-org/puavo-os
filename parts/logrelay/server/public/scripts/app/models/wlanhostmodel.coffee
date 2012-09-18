@@ -24,21 +24,6 @@ define [
       @allClients.on "add change", (model, e) =>
         @handleClient model
 
-    # Returns relative user count from 0-10
-    # Used for animations
-    relativeSize: ->
-      count = @clients.activeClientCount()
-
-      # No bars if no clients
-      if count is 0
-        return 0
-
-      # One bar if there is one client
-      if count is 1
-        return 1
-
-      # Otherwise just scale clients compared to all connected clients
-      Math.round count / @allClients.activeClientCount() * 10, 1
 
 
     handleClient: (model) ->

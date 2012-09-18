@@ -64,11 +64,29 @@ define [
       count: @model.activeClientCount()
       name: @model.id
 
+    # Visual presentation of a wlan host compared to others in scale of 0-10
+    wlanBarCount: ->
+      count = @model.clients.activeClientCount()
+
+      # No bars if no clients
+      if count is 0
+        return 0
+
+      # One bar if there is one client
+      if count is 1
+        return 1
+
+      largestHost = _.max @model.collection.map (m) ->
+        m.clients.activeClientCount()
+
+      # Otherwise just scale bars to largest host
+      return Math.round count / largestHost * 10, 1
+
     render: ->
       @clearAnimation()
       console.info "render", @model.id
       super
-      imgId = padZero  @model.relativeSize(), 2
+      imgId = padZero  @wlanBarCount(), 2
       url = "/img/wlan/wlan#{ imgId }.png"
       @$el.css "background-image", "url(#{ url })"
       if @selected
