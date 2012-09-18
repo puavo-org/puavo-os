@@ -1,4 +1,4 @@
-
+@import "wlan-sprite.styl"
 
 body
   font-family arial
@@ -7,15 +7,10 @@ body
 
 .bb-wlan-stats.selected
   border 1px solid black
-  margin 0px
 
 .bb-wlan-stats
   float left
-  margin 1px
-
-  background-image url(/img/wlan/wlan00.png)
-  background-position top left
-  background-repeat no-repeat
+  margin 2px
 
   .content
     color white
@@ -32,9 +27,6 @@ body
   cursor pointer
 
 .bb-wlan-host-details
-  position absolute
-  width 40%
-  right 0px
   border 1px solid black
   .history, .connected
     float left
@@ -50,7 +42,10 @@ body
     padding-right 3em
     position absolute
     left 0px
-    width 40%
 
+
+.clearfix
+  clear both
+  float none
 
 
