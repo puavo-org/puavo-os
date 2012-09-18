@@ -76,7 +76,7 @@ app.post "/log/:org/:coll", (req, res) ->
   org = req.params.org
   collName = req.params.coll
 
-  if data["mac"] && organisationDevicesByMac[org][data["mac"]]["hostname"]
+  if data["mac"] && organisationDevicesByMac[org]?[data["mac"]]?["hostname"]
     console.log("Save hostname")
     data["client_hostname"] = organisationDevicesByMac[org][data["mac"]]["hostname"]
 
