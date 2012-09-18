@@ -9,7 +9,7 @@ stylus = require "stylus"
 Mongolian = require("mongolian")
 request = require("request")
 
-config = JSON.parse fs.readFileSync __dirname + "/config.json"
+config = require "./config.json"
 
 console.info "starting"
 console.error "error testi!"
