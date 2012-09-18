@@ -160,6 +160,7 @@ body {
   right: 0px;
   top: 5%;
   margin: 0 auto;
+  overflow-y: auto;
 }
 .bb-details-lightbox .wrap .close {
   float: right;
@@ -175,19 +176,19 @@ body {
   border: 0px;
   cursor: pointer;
 }
-.bb-wlan-host-details .history,
-.bb-wlan-host-details .connected {
-  float: left;
-  margin-left: 5px;
-}
-.bb-wlan-host-details table {
+.bb-details-lightbox table {
   color: #aaa;
   text-align: left;
   font-size: 8pt;
   margin-right: 1em;
 }
-.bb-wlan-host-details table td {
+.bb-details-lightbox table td {
   margin-right: 5px;
+}
+.bb-wlan-host-details .history,
+.bb-wlan-host-details .connected {
+  float: left;
+  margin-left: 5px;
 }
 .clearfix:after {
   content: ".";

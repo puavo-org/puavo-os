@@ -15,7 +15,24 @@
     </script>
 
     <script type="x-template-handlebars" id="wlan-client-details">
-      <h1>Client {{mac}}</h1>
+      <h2>Client details</h2>
+
+      <table>
+        <tr>
+          <th>MAC</th>
+          <td>{{mac}}</td>
+        </tr>
+        <tr>
+          <th>Manufacturer</th>
+          <td>Unknown</td>
+        </tr>
+        <tr>
+          <th>Opinsys device</th>
+          <td>No</td>
+        </tr>
+      </table>
+
+      <h3>History</h3>
       <table>
         <tr>
           <th>Wlan Hotspot</th>
@@ -55,7 +72,7 @@
         </div>
 
         <div class="history">
-          <h3>History</h3>
+          <h3>Host History</h3>
 
           <table class="left">
             <tr>
