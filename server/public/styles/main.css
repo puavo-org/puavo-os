@@ -128,6 +128,29 @@ body {
   position: absolute;
   left: 0px;
 }
+.bb-lightbox .background,
+.bb-lightbox .content {
+  position: fixed;
+}
+.bb-lightbox .background {
+  z-index: 99;
+  top: 0px;
+  right: 0px;
+  left: 0px;
+  bottom: 0px;
+  background-color: #000;
+  opacity: 0.2;
+}
+.bb-lightbox .content {
+  z-index: 100;
+  background-color: #fff;
+  color: #000;
+  width: 80%;
+  height: 70%;
+  left: 0px;
+  right: 0px;
+  margin: 0 auto;
+}
 .clearfix:after {
   content: ".";
   display: block;
