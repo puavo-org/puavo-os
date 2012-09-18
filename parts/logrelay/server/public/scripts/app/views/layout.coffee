@@ -25,3 +25,6 @@ define [
       @eachSubView (container, view) ->
         view.render()
         container.append view.el
+
+    setView: (selector, view) ->
+      @subViews[selector] = view

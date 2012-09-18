@@ -3,8 +3,7 @@ define [
   "cs!app/views/layout"
   "cs!app/views/wlanstats"
   "cs!app/views/totalstats"
-  "cs!app/views/wlanhostdetails"
-  "cs!app/views/lightbox"
+  "cs!app/views/detailslightbox"
   "backbone"
   "underscore"
 ], (
@@ -12,8 +11,7 @@ define [
   Layout
   WlanStats
   TotalStats
-  WlanHostDetails
-  Lightbox
+  DetailsLightbox
   Backbone
   _
 ) ->
@@ -38,14 +36,13 @@ define [
         ".wlan-hosts": []
 
 
-      @hosts.on "select", (model) =>
-        console.info "select", model.id
+      @details = new DetailsLightbox
+        hosts: @hosts
+        clients: @clients
 
-        lb = new Lightbox
-          subViews:
-            ".content":
-              new WlanHostDetails model: model
-        lb.renderToBody()
+      @hosts.on "host-details", (model) =>
+        console.info "selecting host", model.id
+        @details.renderHost model
 
 
       @clients.on "add", (model) => @hostFromClient model
