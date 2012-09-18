@@ -32,7 +32,7 @@ define [
       @hosts = new Backbone.Collection
 
       @subViews =
-        ".header": new TotalStats
+        ".total-stats-container": new TotalStats
           clients: @clients
           hosts: @hosts
         ".wlan-hosts": []

@@ -83,7 +83,7 @@
   background-position: -2040px 0px;
 }
 body {
-  font-family: arial;
+  font-family: "Trebuchet MS", Arial, Helvetica;
   background-color: #e7e4d0;
 }
 .bb-wlan-stats.selected {
@@ -119,13 +119,27 @@ body {
   font-size: 8pt;
 }
 .bb-wlan-layout {
+  color: #aaa;
   width: 90%;
+  margin: 0 auto;
+}
+.bb-wlan-layout .header {
+  margin-left: 44px;
 }
 .bb-wlan-layout .wlan-hosts-wrap {
-  padding-left: 3em;
-  padding-right: 3em;
-  position: absolute;
+  margin-top: 1em;
   left: 0px;
+}
+.bb-wlan-layout h1 {
+  color: #000;
+}
+.bb-total-stats {
+  width: 400px;
+}
+.opinsys-logo {
+  position: absolute;
+  right: 1em;
+  top: 0em;
 }
 .bb-lightbox .background,
 .bb-lightbox .wrap {
