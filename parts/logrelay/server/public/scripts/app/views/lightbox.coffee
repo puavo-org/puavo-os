@@ -8,6 +8,9 @@ define [
     className: "bb-lightbox"
     templateQuery: "#lightbox"
 
+    events:
+      "click .background": -> @remove()
+
     constructor: (opts) ->
       super
 
