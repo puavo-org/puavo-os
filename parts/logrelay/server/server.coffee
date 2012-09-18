@@ -5,6 +5,7 @@ domain = require "domain"
 http = require "http"
 express = require "express"
 io = require "socket.io"
+stylus = require "stylus"
 Mongolian = require("mongolian")
 
 
@@ -23,6 +24,7 @@ app.configure ->
     console.info "Server is listening on 8080"
 
   app.use express.bodyParser()
+  app.use stylus.middleware __dirname + "/public"
   app.use express.static __dirname + "/public"
 
 
