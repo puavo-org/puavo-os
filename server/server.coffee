@@ -20,6 +20,8 @@ httpServer = http.createServer(app)
 sio = io.listen httpServer
 sio.set('log level', 1)
 
+organisationDevicesByMac = {}
+
 app.configure ->
 
   httpServer.listen 8080, ->
@@ -74,6 +76,10 @@ app.post "/log/:org/:coll", (req, res) ->
   org = req.params.org
   collName = req.params.coll
 
+  if data["mac"] && organisationDevicesByMac[org][data["mac"]]["hostname"]
+    console.log("Save hostname")
+    data["client_hostname"] = organisationDevicesByMac[org][data["mac"]]["hostname"]
+
   # Just respond immediately to sender. We will just log database errors.
   res.json
     message: "thanks"
@@ -100,6 +106,7 @@ getSchoolAndDevices = ->
   console.log("Get schools and devices")
   for key, value of config["organisations"]
     console.log("Organisation: ")
+    console.log(key)
     console.log(value)
     console.log(value["username"])
     auth = "Basic " + new Buffer(value["username"] + ":" + value["password"]).toString("base64");
@@ -127,8 +134,12 @@ getSchoolAndDevices = ->
       if !error && res.statusCode == 200
         devices = JSON.parse(body)
         console.log("Devices:")
+        organisationDevicesByMac[key] = {}
         for device in devices
           console.log("\t" + device["puavoHostname"] )
+          if device["macAddress"]
+            organisationDevicesByMac[key][ device["macAddress"][0] ] = {}
+            organisationDevicesByMac[key][ device["macAddress"][0] ]["hostname"] = device["puavoHostname"][0]
        else
          console.log(res.statusCode)
 
