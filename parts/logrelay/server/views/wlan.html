@@ -16,7 +16,20 @@
 
     <script type="x-template-handlebars" id="wlan-client-details">
       <h1>Client {{mac}}</h1>
+      <table>
+        <tr>
+          <th>Wlan Hotspot</th>
+          <th>Event</th>
+        </tr>
+        {{#each history}}
+        <tr>
+        <td>{{hostname}}</td>
+        <td title="{{time}}" >{{event}} {{ago}}</td>
+        </tr>
+        {{/each}}
+      </table>
     </script>
+
 
     <script type="x-template-handlebars" id="wlan-host-details">
         <h2>{{name}}</h2>
