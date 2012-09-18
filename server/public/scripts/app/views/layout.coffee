@@ -8,7 +8,7 @@ define [
 
     constructor: (opts) ->
       super
-      @subViews = opts.subViews or {}
+      @subViews = opts?.subViews or {}
 
     eachSubView: (fn) ->
       for container, views of @subViews

@@ -1,18 +1,16 @@
 define [
-  "cs!app/view"
+  "cs!app/views/layout"
   "underscore"
-], (View, _) ->
+], (Layout, _) ->
 
-  class Lightbox extends View
+  class Lightbox extends Layout
 
     className: "bb-lightbox"
     templateQuery: "#lightbox"
 
     events:
       "click .background": -> @remove()
-
-    constructor: (opts) ->
-      super
+      "click .close": -> @remove()
 
     renderToBody: ->
       @render()
