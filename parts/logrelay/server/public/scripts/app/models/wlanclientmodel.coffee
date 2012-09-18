@@ -13,7 +13,7 @@ define [
       @history = []
 
       @on "change add", (model) =>
-        @history.push
+        @history.unshift
           event: model.get("event")
           hostname: model.get("hostname")
           timestamp: model.get("relay_timestamp")
