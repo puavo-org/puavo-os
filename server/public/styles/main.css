@@ -1,0 +1,133 @@
+.wlansprite,
+.wlanwlan00,
+.wlanwlan01,
+.wlanwlan02,
+.wlanwlan03,
+.wlanwlan04,
+.wlanwlan05,
+.wlanwlan06,
+.wlanwlan07,
+.wlanwlan08,
+.wlanwlan09,
+.wlanwlan10,
+.wlanwlan11,
+.wlanwlan12 {
+  background: transparent url("/img/wlan-sprite.png") no-repeat;
+  background-color: transparent;
+  border: 0;
+  display: block;
+}
+.wlanwlan00 {
+  width: 170px;
+  height: 170px;
+  background-position: 0px 0px;
+}
+.wlanwlan01 {
+  width: 170px;
+  height: 170px;
+  background-position: -170px 0px;
+}
+.wlanwlan02 {
+  width: 170px;
+  height: 170px;
+  background-position: -340px 0px;
+}
+.wlanwlan03 {
+  width: 170px;
+  height: 170px;
+  background-position: -510px 0px;
+}
+.wlanwlan04 {
+  width: 170px;
+  height: 170px;
+  background-position: -680px 0px;
+}
+.wlanwlan05 {
+  width: 170px;
+  height: 170px;
+  background-position: -850px 0px;
+}
+.wlanwlan06 {
+  width: 170px;
+  height: 170px;
+  background-position: -1020px 0px;
+}
+.wlanwlan07 {
+  width: 170px;
+  height: 170px;
+  background-position: -1190px 0px;
+}
+.wlanwlan08 {
+  width: 170px;
+  height: 170px;
+  background-position: -1360px 0px;
+}
+.wlanwlan09 {
+  width: 170px;
+  height: 170px;
+  background-position: -1530px 0px;
+}
+.wlanwlan10 {
+  width: 170px;
+  height: 170px;
+  background-position: -1700px 0px;
+}
+.wlanwlan11 {
+  width: 170px;
+  height: 170px;
+  background-position: -1870px 0px;
+}
+.wlanwlan12 {
+  width: 170px;
+  height: 170px;
+  background-position: -2040px 0px;
+}
+body {
+  font-family: arial;
+  background-color: #e7e4d0;
+}
+.bb-wlan-stats.selected {
+  border: 1px solid #000;
+}
+.bb-wlan-stats {
+  float: left;
+  margin: 2px;
+  font-size: 8pt;
+  margin: 1px;
+  width: 170px;
+  height: 170px;
+  cursor: pointer;
+}
+.bb-wlan-stats .content {
+  color: #fff;
+  font-weight: bold;
+  margin-top: 55px;
+  margin-left: 50px;
+  width: 75px;
+  word-wrap: break-word;
+}
+.bb-wlan-host-details {
+  border: 1px solid #000;
+}
+.bb-wlan-host-details .history,
+.bb-wlan-host-details .connected {
+  float: left;
+  margin-left: 5px;
+}
+.bb-wlan-host-details table {
+  text-align: left;
+  font-size: 8pt;
+}
+.bb-wlan-layout {
+  width: 90%;
+}
+.bb-wlan-layout .wlan-hosts {
+  padding-left: 3em;
+  padding-right: 3em;
+  position: absolute;
+  left: 0px;
+}
+.clearfix {
+  clear: both;
+  float: none;
+}

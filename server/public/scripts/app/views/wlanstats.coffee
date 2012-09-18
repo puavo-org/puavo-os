@@ -33,7 +33,6 @@ define [
 
     animate: ->
 
-      console.info "ANIM", @model.clients.activeClientCount(), @previousCount
 
       if @disableAnimation
         @disableAnimation = false
@@ -80,18 +79,29 @@ define [
         m.clients.activeClientCount()
 
       # Otherwise just scale bars to largest host
-      return Math.round count / largestHost * 10, 1
+      return Math.round count / largestHost * 12, 1
+
+    setSprite: ->
+      wlanSpriteClass = "wlanwlan#{ padZero  @wlanBarCount(), 2 }"
+
+      return if @$el.hasClass wlanSpriteClass
+      @$el.addClass wlanSpriteClass
+      @$el.removeClass @previousSpriteClass if @previousSpriteClass
+      @previousSpriteClass = wlanSpriteClass
 
     render: ->
       @clearAnimation()
-      console.info "render", @model.id
       super
-      imgId = padZero  @wlanBarCount(), 2
-      url = "/img/wlan/wlan#{ imgId }.png"
-      @$el.css "background-image", "url(#{ url })"
+
+      @setSprite()
+
       if @selected
         @$el.addClass "selected"
       else
         @$el.removeClass "selected"
+
       @animate()
+
+
+
 
