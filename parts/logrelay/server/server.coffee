@@ -104,7 +104,8 @@ app.post "/log/:org/:coll", (req, res) ->
 
 getSchoolAndDevices = (cb) ->
   console.log("Get schools and devices")
-  for key, value of config["organisations"]
+
+  for key, value of config["organisations"] then do (key, value) ->
     console.log("Organisation: ")
     console.log(key)
     console.log(value)
