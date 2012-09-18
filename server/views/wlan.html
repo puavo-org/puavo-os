@@ -10,9 +10,7 @@
       <p>
         There are {{connectedCount}} connected wlan clients in {{hostCount}}
         wlan hotspots. We've seen {{seenCount}} unique clients since {{logStart}}.
-      </p>
-      <p>
-      Last client connected <span class="lastJoin">0</span>.
+        Last client connected <span class="lastJoin">0</span>.
       </p>
     </script>
 
@@ -60,8 +58,9 @@
     </script>
 
     <script type="x-template-handlebars" id="wlan-layout">
-        <h1>Wlan usage on {{name}}</h1>
         <div class="header">
+          <h1>Wlan usage on {{name}}</h1>
+          <div class="total-stats-container"></div>
         </div>
 
         <div class="wlan-hosts-wrap">
@@ -91,7 +90,6 @@
         <button class="close">X</button>
 
         <div class="content">
-          <h1>sdaf</h1>
         </div>
 
       </div>
@@ -102,9 +100,7 @@
 </head>
 
 <body>
-<h1><a href="http://opinsys.fi/"><img src="/img/opinsys-logo.png"></a></h1>
-
-
+  <h1 class="opinsys-logo" ><a href="http://opinsys.fi/"><img src="/img/opinsys-logo.png"></a></h1>
 </body>
 
 </html>
