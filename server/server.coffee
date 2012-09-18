@@ -118,7 +118,7 @@ getSchoolAndDevices = (cb) ->
 
     # Get schools
     request {
-      url: "http://" + value["puavoDomain"] + "/users/schools.json",
+      url: value["puavoDomain"] + "/users/schools.json",
       headers:  {"Authorization" : auth}
     }, (error, res, body) ->
       if !error && res.statusCode == 200
@@ -130,7 +130,7 @@ getSchoolAndDevices = (cb) ->
     # Get devices
     request {
       method: 'GET',
-      url: "http://" + value["puavoDomain"] + "/devices/devices.json",
+      url: value["puavoDomain"] + "/devices/devices.json",
       headers:  {"Authorization" : auth}
     }, (error, res, body) ->
       if !error && res.statusCode == 200
