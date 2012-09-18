@@ -13,10 +13,10 @@ define [
       @history = []
 
       @on "change add", (model) =>
-        if @isConnected()
-          @history.push
-            hostname: model.changed.hostname
-            timestamp: model.changed.relay_timestamp
+        @history.push
+          event: model.get("event")
+          hostname: model.get("hostname")
+          timestamp: model.get("relay_timestamp")
 
 
     isConnected: ->
