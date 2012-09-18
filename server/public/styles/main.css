@@ -137,11 +137,11 @@ body {
   right: 10%;
   top: 0em;
 }
-.bb-lightbox .background,
-.bb-lightbox .wrap {
+.bb-details-lightbox .background,
+.bb-details-lightbox .wrap {
   position: fixed;
 }
-.bb-lightbox .background {
+.bb-details-lightbox .background {
   z-index: 99;
   top: 0px;
   right: 0px;
@@ -150,7 +150,7 @@ body {
   background-color: #000;
   opacity: 0.3;
 }
-.bb-lightbox .wrap {
+.bb-details-lightbox .wrap {
   z-index: 100;
   background-color: #fff;
   color: #000;
@@ -161,16 +161,16 @@ body {
   top: 5%;
   margin: 0 auto;
 }
-.bb-lightbox .wrap .close {
+.bb-details-lightbox .wrap .close {
   float: right;
 }
-.bb-lightbox .wrap {
+.bb-details-lightbox .wrap {
   background-color: #f0eee1;
 }
-.bb-lightbox .content {
+.bb-details-lightbox .content {
   padding: 3em;
 }
-.bb-lightbox .close {
+.bb-details-lightbox .close {
   background-color: transparent;
   border: 0px;
   cursor: pointer;

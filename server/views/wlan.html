@@ -14,6 +14,10 @@
       </p>
     </script>
 
+    <script type="x-template-handlebars" id="wlan-client-details">
+      <h1>Client details</h1>
+    </script>
+
     <script type="x-template-handlebars" id="wlan-host-details">
         <h2>{{name}}</h2>
 
@@ -30,8 +34,8 @@
 
             {{#each connected}}
             <tr>
-              <td>{{mac}}</td>
-              <td title="{{time}}" >{{ago}}</td>
+            <td><a href="#" class="client" data-mac="{{mac}}" >{{mac}}</a></td>
+            <td title="{{time}}" >{{ago}}</td>
             </tr>
             {{/each}}
           </table>
@@ -81,7 +85,7 @@
     </script>
 
 
-    <script type="x-template-handlebars" id="lightbox">
+    <script type="x-template-handlebars" id="details-lightbox">
 
       <div class="background">
       </div>
@@ -90,6 +94,8 @@
         <button class="close">X</button>
 
         <div class="content">
+          <div class="host-details-container"></div>
+          <div class="client-details-container"></div>
         </div>
 
       </div>
