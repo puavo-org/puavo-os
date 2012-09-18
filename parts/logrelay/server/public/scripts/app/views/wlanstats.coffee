@@ -26,10 +26,6 @@ define [
       @model.clients.on "add remove change", =>
         @render()
 
-      @model.collection.on "select", (model) =>
-        @disableAnimation = true
-        @selected = model.id is @model.id
-        @render()
 
     animate: ->
 
@@ -92,14 +88,7 @@ define [
     render: ->
       @clearAnimation()
       super
-
       @setSprite()
-
-      if @selected
-        @$el.addClass "selected"
-      else
-        @$el.removeClass "selected"
-
       @animate()
 
 
