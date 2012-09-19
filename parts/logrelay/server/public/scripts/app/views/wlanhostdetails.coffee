@@ -1,12 +1,10 @@
 define [
   "cs!app/view"
-  "cs!app/views/wlanclientdetails"
   "jquery"
   "moment"
   "underscore"
 ], (
   View
-  WlanClientDetails
   $
   moment
   _) ->
