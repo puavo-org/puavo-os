@@ -197,10 +197,14 @@ body a:hover {
   color: #000;
 }
 .bb-lightbox table td {
-  margin-right: 5px;
+  vertical-align: top;
 }
-.bb-wlan-host-details .history,
-.bb-wlan-client-details .history,
+.bb-lightbox table .manufacturer {
+  width: 100px;
+  overflow: hidden;
+}
+.bb-wlan-host-details .previous-clients,
+.bb-wlan-client-details .previous-clients,
 .bb-wlan-host-details .connected,
 .bb-wlan-client-details .connected {
   float: left;

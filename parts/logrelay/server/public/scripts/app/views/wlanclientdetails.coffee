@@ -33,4 +33,5 @@ define [
         mac: @model.id
         manufacturer: @model.get "client_manufacturer"
         history: history
+        clientHostname: @model.get "client_hostname"
       }

@@ -28,8 +28,8 @@
           <td>{{manufacturer}}</td>
         </tr>
         <tr>
-          <th>Opinsys device</th>
-          <td>No</td>
+          <th>Client Hostname</th>
+          <td>{{clientHostname}}</td>
         </tr>
       </table>
 
@@ -64,33 +64,37 @@
             <tr>
               <th>mac address</th>
               <th>Manufacturer</th>
+              <th>client hostname</th>
               <th>connected</th>
             </tr>
 
             {{#each connected}}
             <tr>
             <td><a href="#" class="client" data-mac="{{mac}}" >{{mac}}</a></td>
-            <td>{{manufacturer}}</td>
+            <td class="manufacturer" title="{{manufacturer}}">{{manufacturer}}</td>
+            <td>{{clientHostname}}</td>
             <td title="{{time}}" >{{ago}}</td>
             </tr>
             {{/each}}
           </table>
         </div>
 
-        <div class="history">
-          <h3>History</h3>
+        <div class="previous-clients">
+          <h3>Previous clients</h3>
 
           <table class="left">
             <tr>
               <th>mac address</th>
               <th>Manufacturer</th>
+              <th>client hostname</th>
               <th>disconnected</th>
             </tr>
 
             {{#each seen}}
             <tr>
               <td><a href="#" class="client" data-mac="{{mac}}" >{{mac}}</a></td>
-              <td>{{manufacturer}}</td>
+              <td class="manufacturer" title="{{manufacturer}}" >{{manufacturer}}</td>
+              <td>{{clientHostname}}</td>
               <td title="{{time}}" >{{ago}}</td>
             </tr>
             {{/each}}
