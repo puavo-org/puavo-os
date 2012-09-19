@@ -13,8 +13,8 @@ define [
       @clients = opts.clients
       @hosts = opts.hosts
 
-      [@clients, @hosts].forEach (coll) =>
-        coll.on "add change remove", =>
+      [@model, @clients, @hosts].forEach (eventEmitter) =>
+        eventEmitter.on "add change remove", =>
           @render()
 
 
@@ -51,10 +51,13 @@ define [
 
     viewJSON: ->
 
+      # FIXME: will fail with zero events
       firstEntry = @clients.min (m) -> m.get("relay_timestamp")
 
       connectedCount: @clients.activeClientCount()
       seenCount: @clients.size()
       hostCount: @hosts.size()
+      eventCount: @model.get("eventCount")
+      name: @model.get("name")
       logStart: moment.unix(firstEntry.get("relay_timestamp")).fromNow()
 
