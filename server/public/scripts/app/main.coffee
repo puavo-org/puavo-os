@@ -52,6 +52,9 @@ define [
     loading.text "Connecting to real time events..."
 
     socket = io.connect()
+
+    console.info "Listening ltsp:#{ ORG }-opinsys-fi:wlan"
+
     socket.on "ltsp:#{ ORG }-opinsys-fi:wlan", (packet) ->
       console.info "#{ packet.mac } #{ packet.event } to/from #{ packet.hostname }", packet
       clients.update packet
