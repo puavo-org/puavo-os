@@ -23,10 +23,23 @@ define [
 ) -> $ ->
 
 
-  $(".organisation").text url.currentOrg
 
   schoolModel = new SchoolModel
     name: url.currentOrg
+
+  $.get "/schools/#{ url.currentOrg }", (schools, status, res) =>
+    if status isnt "success"
+      console.info res
+      throw new Error "failed to fetch school list"
+
+    schoolName = schools[url.currentSchoolId]
+    title = "Wlan usage in #{ schoolName } of #{ url.currentOrg }"
+    $("title").text title
+
+    schoolModel.set
+      otherSchools: schools
+      schoolName: schoolName
+      title: title
 
   loading = $(".loading")
 

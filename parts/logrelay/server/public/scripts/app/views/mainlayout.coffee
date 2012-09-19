@@ -59,7 +59,8 @@ define [
         @subViews[".wlan-hosts"].push view
 
     viewJSON: ->
-      name: @model.get "name"
+      schoolName: @model.get "schoolName"
+      title: @model.get "title"
 
 
 

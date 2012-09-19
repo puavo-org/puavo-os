@@ -58,6 +58,6 @@ define [
       seenCount: @clients.size()
       hostCount: @hosts.size()
       eventCount: @model.get("eventCount")
-      name: @model.get("name")
+      schoolName: @model.get("schoolName")
       logStart: moment.unix(firstEntry.get("relay_timestamp")).fromNow()
 

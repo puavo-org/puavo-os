@@ -9,7 +9,7 @@
 
     <script type="x-template-handlebars" id="total-stats">
       <p>
-        This an approximate of the current wlan usage in {{name}} based on
+      This an approximate of the current wlan usage in {{schoolName}} based on
         {{eventCount}} last wlan events.
       </p>
 
@@ -110,8 +110,9 @@
 
     <script type="x-template-handlebars" id="wlan-layout">
         <div class="header">
-          <h1>Wlan usage in {{name}}</h1>
+        <h1>{{title}}</h1>
           <div class="total-stats-container"></div>
+          <div class="school-select-container"></div>
         </div>
 
         <div class="wlan-hosts-wrap">
