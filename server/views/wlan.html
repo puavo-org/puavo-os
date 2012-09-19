@@ -51,20 +51,24 @@
 
     <script type="x-template-handlebars" id="wlan-host-details">
 
+        <h2>{{name}}</h2>
+
         <div class="connected">
           <h3>
-          {{count}} clients
+          {{count}} connected clients
           </h3>
 
           <table>
             <tr>
               <th>mac address</th>
+              <th>Manufacturer</th>
               <th>connected</th>
             </tr>
 
             {{#each connected}}
             <tr>
-            <td><a href="#" class="client" data-mac="{{mac}}" >{{mac}} ({{manufacturer}})</a></td>
+            <td><a href="#" class="client" data-mac="{{mac}}" >{{mac}}</a></td>
+            <td>{{manufacturer}}</td>
             <td title="{{time}}" >{{ago}}</td>
             </tr>
             {{/each}}
@@ -72,17 +76,19 @@
         </div>
 
         <div class="history">
-          <h3>Host History</h3>
+          <h3>History</h3>
 
           <table class="left">
             <tr>
               <th>mac address</th>
+              <th>Manufacturer</th>
               <th>disconnected</th>
             </tr>
 
             {{#each seen}}
             <tr>
               <td><a href="#" class="client" data-mac="{{mac}}" >{{mac}}</a></td>
+              <td>{{manufacturer}}</td>
               <td title="{{time}}" >{{ago}}</td>
             </tr>
             {{/each}}
