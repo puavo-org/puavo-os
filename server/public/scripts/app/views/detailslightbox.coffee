@@ -11,26 +11,24 @@ define [
   Backbone
   _
 ) ->
-  class DetailsLightbox extends Lightbox
+  # class DetailsLightbox extends Lightbox
 
-    className: "bb-details-lightbox"
-    templateQuery: "#details-lightbox"
 
-    constructor: (opts) ->
-      super
-      @clients = opts.clients
-      @hosts = opts.hosts
+  #   constructor: (opts) ->
+  #     super
+  #     @clients = opts.clients
+  #     @hosts = opts.hosts
 
-      @setView ".host-details-container", new WlanHostDetails
-        model: @model
+  #     @setView ".host-details-container", new WlanHostDetails
+  #       model: @model
 
-      @clients.on "client-details", (model) =>
-        @setView ".client-details-container", new WlanClientDetails
-          model: model
-        @render()
+  #     @clients.on "client-details", (model) =>
+  #       @setView ".client-details-container", new WlanClientDetails
+  #         model: model
+  #       @render()
 
-    viewJSON: ->
-      host: @model.id
+  #   viewJSON: ->
+  #     host: @model.id
 
 
 

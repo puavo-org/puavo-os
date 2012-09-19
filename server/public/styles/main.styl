@@ -60,10 +60,10 @@ body
 
 
 
-.bb-details-lightbox
+.bb-lightbox
 
   // Structure
-  .background, .wrap
+  .background, .wrap, .content
     position fixed
   .background
     z-index 99
@@ -77,22 +77,27 @@ body
     z-index 100
     background-color white
     color black
-    width 80%
-    height 70%
-    left 0px
-    right 0px
+    left 5%
+    right 5%
     top 5%
+    bottom 5%
     margin 0 auto
-    overflow-y auto
     .close
       float right
 
 
   // Styles
   .wrap
-    background-color bg_color
+    background-color darken(bg_color, 5)
+    border-radius 10px
   .content
-    padding 3em
+    padding 1em
+    background-color bg_color
+    left 10%
+    right 10%
+    top 10%
+    bottom 10%
+    overflow-y auto
   .close
     background-color transparent
     border 0px
@@ -106,10 +111,11 @@ body
     td
       margin-right 5px
 
-.bb-wlan-host-details
+.bb-wlan-host-details, .bb-wlan-client-details
   .history, .connected
     float left
     margin-left 5px
+
 
 
 
