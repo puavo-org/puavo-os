@@ -18,7 +18,6 @@ define [
     events:
       "click": (e) ->
         @model.trigger "host-details", @model
-        @animate()
 
     constructor: (opts) ->
       super
