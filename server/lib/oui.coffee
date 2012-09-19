@@ -16,12 +16,11 @@ for line in data.toString().split("\n")
     macAddressMap[m[1]] = m[2].trim()
 
 
-module.export =
+module.exports =
   lookup: (mac) ->
     vendorPrefix = mac.slice(0,8).replace(/:/g, "-").toUpperCase()
-    console.info vendorPrefix
     return macAddressMap[vendorPrefix]
 
 
 if require.main is module
-  console.info module.export.lookup "00:25:22:80:f6:e5"
+  console.info module.exports.lookup "00:25:22:80:f6:e5"
