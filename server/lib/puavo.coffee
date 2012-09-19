@@ -4,6 +4,8 @@ request = require("request")
 class Puavo extends EventEmitter
 
   constructor: (config) ->
+    @config = config
+
     @organisations = config.organisations
     console.log @organisationsorganisationDevicesByMac
     @organisationDevicesByMac = {}
@@ -15,7 +17,7 @@ class Puavo extends EventEmitter
     do timeoutLoop = =>
       @poll (err) =>
         @handleStart err
-        setTimeout timeoutLoop, 3000
+        setTimeout timeoutLoop, @config.refreshDelay
 
 
   handleStart: (err) ->
@@ -52,7 +54,6 @@ class Puavo extends EventEmitter
       }, (error, res, body) =>
         if !error && res.statusCode == 200
           schools = JSON.parse(body)
-          debugger
           @organisationSchoolsById[key] = {}
           console.info "Fetched #{ schools.length } schools from #{ value["puavoDomain"] }"
           for school in schools
@@ -63,6 +64,7 @@ class Puavo extends EventEmitter
         done error
 
       # Get devices
+      console.info "Fetcing device list from Puavo #{ value["puavoDomain"] }. This may take some time..."
       request {
         method: 'GET',
         url: value["puavoDomain"] + "/devices/devices.json",
@@ -71,7 +73,7 @@ class Puavo extends EventEmitter
         if !error && res.statusCode == 200
           devices = JSON.parse(body)
           @organisationDevicesByMac[key] = {}
-          console.info "Fetched #{ devices.length } devices from #{ value["puavoDomain"] }"
+          console.info "Cached #{ devices.length } devices from #{ value["puavoDomain"] }"
           @organisationDevicesByHostname[key] = {}
           for device in devices
             if device["puavoSchool"]
