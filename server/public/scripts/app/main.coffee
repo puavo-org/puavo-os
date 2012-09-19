@@ -28,7 +28,7 @@ define [
   historySize = 2000
 
   loading.text "Loading #{ historySize } entries from history..."
-  $.get "/log/#{ org }/wlan?limit=2000", (logArr, status, res) ->
+  $.get "/log/#{ org }/wlan?limit=#{ historySize }", (logArr, status, res) ->
 
     if status isnt "success"
       console.info res
