@@ -8,6 +8,7 @@ define [
   "cs!app/models/wlanclientcollection"
   "cs!app/views/lightbox"
   "cs!app/views/mainlayout"
+  "cs!app/url"
 ], (
   $
   _
@@ -18,14 +19,14 @@ define [
   WlanClientCollection
   Lightbox
   MainLayout
+  url
 ) -> $ ->
 
-  [__, org, schoolId] = window.location.pathname.split("/")
 
-  $(".organisation").text org
+  $(".organisation").text url.currentOrg
 
   schoolModel = new SchoolModel
-    name: org
+    name: url.currentOrg
 
   loading = $(".loading")
 
@@ -34,7 +35,7 @@ define [
   historySize = 2000
 
   loading.text "Loading #{ historySize } entries from history..."
-  $.get "/log/#{ org }/#{ schoolId }/wlan?limit=#{ historySize }", (logArr, status, res) ->
+  $.get "/log/#{ url.currentOrg }/#{ url.currentSchoolId }/wlan?limit=#{ historySize }", (logArr, status, res) ->
 
     if status isnt "success"
       console.info res
@@ -60,11 +61,11 @@ define [
 
     Backbone.history.start
       pushState: true
-      root: "/#{ org }/#{ schoolId }/wlan/"
+      root: url.appRoot
 
     socket = io.connect()
 
-    collName = "log:#{ org }:wlan"
+    collName = "log:#{ url.currentOrg }:wlan"
     console.info "Listening #{ collName }"
 
     socket.on collName, (packet) ->
