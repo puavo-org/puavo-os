@@ -42,6 +42,7 @@ define [
     showClient: (id) ->
       model = @clients.get id
       @_lightboxView new WlanClientDetails
+        hosts: @hosts
         model: model
 
     showHost: (id) ->

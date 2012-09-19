@@ -8,6 +8,16 @@ define [
     className: "bb-wlan-client-details"
     templateQuery: "#wlan-client-details"
 
+    constructor: (opts) ->
+      super
+      @hosts = opts.hosts
+
+    events: ->
+      "click a.host": (e) ->
+        e.preventDefault()
+        model = @hosts.get $(e.target).data("host")
+        @hosts.trigger "host-details", model
+
     viewJSON: ->
       history = @model.history.map (e) ->
         time = moment.unix(e.timestamp)
