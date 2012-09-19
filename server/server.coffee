@@ -39,7 +39,7 @@ app.configure ->
 
 
 
-app.get "/:org/wlan", (req, res) ->
+app.get "/:org/wlan*", (req, res) ->
   fs.readFile __dirname + "/views/wlan.html", (err, data) ->
     if err
       res.send err

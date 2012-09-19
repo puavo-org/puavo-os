@@ -51,6 +51,10 @@ define [
 
     loading.text "Connecting to real time events..."
 
+    Backbone.history.start
+      pushState: true
+      root: "/#{ org }/wlan/"
+
     socket = io.connect()
 
     collName = "log:#{ org }:wlan"
