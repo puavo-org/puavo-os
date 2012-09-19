@@ -33,6 +33,7 @@ define [
       mac: m.get "mac"
       ago: time.fromNow()
       time: time.format "YYYY-MM-DD HH:mm:ss"
+      manufacturer: m.get "client_manufacturer"
 
     viewJSON: ->
       connected = []

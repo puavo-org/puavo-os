@@ -9,6 +9,10 @@ stylus = require "stylus"
 Mongolian = require("mongolian")
 request = require("request")
 
+oui = require "./lib/oui"
+console.info oui
+
+
 config = require "./config.json"
 
 mongo = new Mongolian
@@ -93,6 +97,8 @@ app.post "/log", (req, res) ->
 
   collName = "log:#{ org }:#{ data.type }"
   coll = db.collection collName
+
+  data.client_manufacturer = oui.lookup data.mac
 
   if data["mac"] && organisationDevicesByMac[fullOrg]?[data["mac"]]?["hostname"]
     data["client_hostname"] = organisationDevicesByMac[org][data["mac"]]["hostname"]
