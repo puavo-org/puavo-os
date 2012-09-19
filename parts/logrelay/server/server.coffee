@@ -7,13 +7,14 @@ express = require "express"
 io = require "socket.io"
 stylus = require "stylus"
 Mongolian = require("mongolian")
-request = require("request")
 
 oui = require "./lib/oui"
 console.info oui
 
 
 config = require "./config.json"
+
+Puavo = require "./lib/puavo"
 
 mongo = new Mongolian
 app = express()
@@ -23,18 +24,6 @@ sio.set('log level', 1)
 
 db = mongo.db "ltsplog"
 
-organisationDevicesByMac = {}
-organisationSchoolsById = {}
-organisationDevicesByHostname = {}
-
-app.configure ->
-
-  httpServer.listen 8080, ->
-    console.info "Server is listening on 8080"
-
-  app.use express.bodyParser()
-  app.use stylus.middleware __dirname + "/public"
-  app.use express.static __dirname + "/public"
 
 
 
@@ -100,15 +89,14 @@ app.post "/log", (req, res) ->
 
   data.client_manufacturer = oui.lookup data.mac
 
-  if data["mac"] && organisationDevicesByMac[fullOrg]?[data["mac"]]?["hostname"]
-    data["client_hostname"] = organisationDevicesByMac[org][data["mac"]]["hostname"]
+  if data.mac
+    data["client_hostname"] = puavo.lookupDeviceName(org, data.mac)
 
-
-  if school_id = organisationDevicesByHostname[fullOrg]?[data.hostname]?.school_id
-    data["school_id"] = school_id
-    data["school_name"] = organisationSchoolsById[fullOrg][school_id].name
-  else
-    console.info "Cannot find school id for #{ fullOrg }/#{ data.hostname }"
+  if data.hostname
+    if data["school_id"] = puavo.lookupSchoolId(org, data.hostname)
+      data["school_name"] = puavo.lookupSchoolName(org, data.school_id)
+    else
+      console.info "Cannot find school id for #{ fullOrg }/#{ data.hostname }"
 
 
   console.info "emit #{ collName }"
@@ -126,65 +114,16 @@ app.post "/log", (req, res) ->
       console.info "Log saved to #{ org }/#{ collName }"
 
 
-getSchoolAndDevices = (cb) ->
+puavo = new Puavo config
 
-  for key, value of config["organisations"] then do (key, value) ->
-    console.log("Organisation: ", key)
+puavo.on "ready", ->
+  app.configure ->
 
-    auth = "Basic " + new Buffer(value["username"] + ":" + value["password"]).toString("base64");
+    httpServer.listen 8080, ->
+      console.info "Server is listening on 8080"
+  
+    app.use express.bodyParser()
+    app.use stylus.middleware __dirname + "/public"
+    app.use express.static __dirname + "/public"
 
-    requestCount = 2
-    done = (args...) ->
-      requestCount -= 1
-      if requestCount is 0
-        cb args...
-        done = ->
-
-    # Get schools
-    request {
-      url: value["puavoDomain"] + "/users/schools.json",
-      headers:  {"Authorization" : auth}
-    }, (error, res, body) ->
-      if !error && res.statusCode == 200
-        schools = JSON.parse(body)
-        organisationSchoolsById[key] = {}
-        console.info "Fetched #{ schools.length } schools from #{ value["puavoDomain"] }"
-        for school in schools
-          organisationSchoolsById[key][school.puavo_id] = {}
-          organisationSchoolsById[key][school.puavo_id]["name"] = school.name
-      else
-        console.log("Can't connect to puavo server: ", error)
-      done error
-
-    # Get devices
-    request {
-      method: 'GET',
-      url: value["puavoDomain"] + "/devices/devices.json",
-      headers:  {"Authorization" : auth}
-    }, (error, res, body) ->
-      if !error && res.statusCode == 200
-        devices = JSON.parse(body)
-        organisationDevicesByMac[key] = {}
-        console.info "Fetched #{ devices.length } devices from #{ value["puavoDomain"] }"
-        organisationDevicesByHostname[key] = {}
-        for device in devices
-          if device["puavoSchool"]
-            school_id = device.puavoSchool[0].rdns[0].puavoId
-            organisationDevicesByHostname[key][ device["puavoHostname"][0] ] = {}
-            organisationDevicesByHostname[key][ device["puavoHostname"][0] ]["school_id"] = school_id
-          if device["macAddress"]
-            organisationDevicesByMac[key][ device["macAddress"][0] ] = {}
-            organisationDevicesByMac[key][ device["macAddress"][0] ]["hostname"] = device["puavoHostname"][0]
-      else
-        console.log("Can't connect to puavo server: ", error)
-
-      done error
-
-
-
-do timeOutLoop = ->
-  getSchoolAndDevices ->
-    setTimeout ->
-      timeOutLoop()
-    , config.refreshDelay
-
+puavo.pollStart()
