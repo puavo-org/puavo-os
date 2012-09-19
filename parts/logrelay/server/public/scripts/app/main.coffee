@@ -20,7 +20,8 @@ define [
   MainLayout
 ) -> $ ->
 
-  org = window.location.pathname.split("/")[1]
+  [__, org, schoolId] = window.location.pathname.split("/")
+
   $(".organisation").text org
 
   schoolModel = new SchoolModel
@@ -33,7 +34,7 @@ define [
   historySize = 2000
 
   loading.text "Loading #{ historySize } entries from history..."
-  $.get "/log/#{ org }/wlan?limit=#{ historySize }", (logArr, status, res) ->
+  $.get "/log/#{ org }/#{ schoolId }/wlan?limit=#{ historySize }", (logArr, status, res) ->
 
     if status isnt "success"
       console.info res
@@ -59,7 +60,7 @@ define [
 
     Backbone.history.start
       pushState: true
-      root: "/#{ org }/wlan/"
+      root: "/#{ org }/#{ schoolId }/wlan/"
 
     socket = io.connect()
 

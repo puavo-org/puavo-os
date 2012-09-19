@@ -31,7 +31,7 @@ app.configure ->
   app.use express.static __dirname + "/public"
 
 
-app.get "/:org/wlan*", (req, res) ->
+app.get "/:org/:schoolId/wlan*", (req, res) ->
   fs.readFile __dirname + "/views/wlan.html", (err, data) ->
     if err
       res.send err
@@ -64,17 +64,18 @@ app.get "/schools/:org", (req, res) ->
     res.json schools
 
 
-app.get "/log/:org/:type", (req, res) ->
+app.get "/log/:org/:schoolId/:type", (req, res) ->
 
   org = req.params.org
   type = req.params.type
+  schoolId = req.params.schoolId
   limit = req.query.limit or 10
 
   collName = "log:#{ org }:#{ type }"
   coll = db.collection collName
 
   # Find latest entries
-  coll.find().sort({ relay_timestamp: -1 }).limit(limit).toArray (err, arr) ->
+  coll.find( school_id: schoolId).sort({ relay_timestamp: -1 }).limit(limit).toArray (err, arr) ->
 
     # Send latest event as last
     arr.reverse()
