@@ -5,29 +5,40 @@ define [
 
   class Lightbox extends Layout
 
-    constructor: ->
+    className: "bb-lightbox"
+    templateQuery: "#lightbox"
+
+    constructor: (opts) ->
       super
-      @_visible = false
+      @subViews[".content"] = opts.view
 
     events:
       "click .background": -> @remove()
       "click .close": -> @remove()
 
-    remove: ->
+    remove: (opts)->
       super
       $("body").css "overflow", "auto"
+      Lightbox.current = null
 
-    detach: ->
+      if not opts?.silent
+        @trigger "close"
+
+
+
+    renderToBody: -> @render()
+
+    render: ->
+      # Only one Lightbox can be active at once
+      Lightbox.current?.remove(silent: true)
+
       @$el.detach()
-      @_visible = false
-
-    isVisible: -> @_visible
-
-    renderToBody: ->
-      @detach()
-      @render()
+      super
       $("body").css "overflow", "hidden"
       $("body").append @el
-      @_visible = true
+
+      Lightbox.current = this
+
       # Restore event binding. Why needed?
       @delegateEvents()
+

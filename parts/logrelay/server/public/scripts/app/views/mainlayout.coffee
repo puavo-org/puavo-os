@@ -3,7 +3,7 @@ define [
   "cs!app/views/layout"
   "cs!app/views/wlanstats"
   "cs!app/views/totalstats"
-  "cs!app/views/detailslightbox"
+  "cs!app/router"
   "backbone"
   "underscore"
 ], (
@@ -11,7 +11,7 @@ define [
   Layout
   WlanStats
   TotalStats
-  DetailsLightbox
+  Router
   Backbone
   _
 ) ->
@@ -29,21 +29,15 @@ define [
       @clients = opts.clients
       @hosts = new Backbone.Collection
 
+      @router = new Router
+        clients: @clients
+        hosts: @hosts
+
       @subViews =
         ".total-stats-container": new TotalStats
           clients: @clients
           hosts: @hosts
         ".wlan-hosts": []
-
-
-
-      @hosts.on "host-details", (model) =>
-        console.info "selecting host", model.id
-        details = new DetailsLightbox
-          model: model
-          hosts: @hosts
-          clients: @clients
-        details.renderToBody()
 
 
       @clients.on "add", (model) => @hostFromClient model
