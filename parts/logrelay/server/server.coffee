@@ -93,7 +93,7 @@ app.get "/log/:org/:schoolId/:type", (req, res) ->
 
 # Custom log type handlers based on the type attribute
 logHandlers =
-  wlan: (data) ->
+  wlan: (org, data) ->
 
     if data.mac
       data.client_hostname = puavo.lookupDeviceName(org, data.mac)
@@ -126,7 +126,7 @@ app.post "/log", (req, res) ->
   if data.type is "unknown"
     data.type = "wlan"
 
-  logHandlers[data.type](data)
+  logHandlers[data.type](org, data)
 
   collName = "log:#{ org }:#{ data.type }"
   coll = db.collection collName
