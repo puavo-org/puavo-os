@@ -17,6 +17,8 @@ httpServer = http.createServer(app)
 sio = io.listen httpServer
 sio.set('log level', 1)
 
+db = mongo.db "ltsplog"
+
 organisationDevicesByMac = {}
 organisationSchoolsById = {}
 organisationDevicesByHostname = {}
@@ -41,13 +43,13 @@ app.get "/:org/wlan", (req, res) ->
       res.send data.toString()
 
 
-app.get "/log/:org/:coll", (req, res) ->
+app.get "/log/:org/:type", (req, res) ->
 
-  org = req.params.org + "-opinsys-fi"
-  collName = req.params.coll
+  org = req.params.org
+  type = req.params.type
   limit = req.query.limit or 10
 
-  db = mongo.db org
+  collName = "log:#{ org }:#{ type }"
   coll = db.collection collName
 
   # Find latest entries
@@ -70,11 +72,27 @@ app.get "/log/:org/:coll", (req, res) ->
 
 # /log/<database name>/<MongoDB collection name>
 # Logs any given POST data to given MongoDB collection.
-app.post "/log/:org/:coll", (req, res) ->
+app.post "/log", (req, res) ->
+
+  # Just respond immediately to sender. We will just log database errors.
+  res.json message: "thanks"
+
   data = req.body
-  org = req.params.org
-  fullOrg = org + "-opinsys-fi"
-  collName = req.params.coll
+  fullOrg = data.relay_puavo_domain
+
+  if match = data.relay_puavo_domain.match(/^([^\.]+)/)
+    org = match[1]
+  else
+    console.error "Failed to parse organisation key from '#{ data.relay_puavo_domain }'"
+    return
+
+
+  # TODO: remove when fixed!
+  if data.type is "unknown"
+    data.type = "wlan"
+
+  collName = "log:#{ org }:#{ data.type }"
+  coll = db.collection collName
 
   if data["mac"] && organisationDevicesByMac[fullOrg]?[data["mac"]]?["hostname"]
     data["client_hostname"] = organisationDevicesByMac[org][data["mac"]]["hostname"]
@@ -86,14 +104,9 @@ app.post "/log/:org/:coll", (req, res) ->
   else
     console.info "Cannot find school id for #{ fullOrg }/#{ data.hostname }"
 
-  # Just respond immediately to sender. We will just log database errors.
-  res.json
-    message: "thanks"
-    organisation: org
-    collection: collName
 
-  console.info "emit ltsp:#{ fullOrg }:#{ collName }"
-  sio.sockets.emit "ltsp:#{ fullOrg }:#{ collName }", data
+  console.info "emit #{ collName }"
+  sio.sockets.emit collName, data
 
   d = domain.create()
   d.on "error", (err) ->
@@ -102,8 +115,6 @@ app.post "/log/:org/:coll", (req, res) ->
 
   d.run -> process.nextTick ->
 
-    db = mongo.db org
-    coll = db.collection collName
     coll.insert data, (err, docs) ->
       throw err if err
       console.info "Log saved to #{ org }/#{ collName }"

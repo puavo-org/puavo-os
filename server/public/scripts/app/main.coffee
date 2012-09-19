@@ -18,8 +18,8 @@ define [
   MainLayout
 ) -> $ ->
 
-  ORG = window.location.pathname.split("/")[1]
-  $(".organisation").text ORG
+  org = window.location.pathname.split("/")[1]
+  $(".organisation").text org
 
   loading = $(".loading")
 
@@ -28,7 +28,7 @@ define [
   historySize = 2000
 
   loading.text "Loading #{ historySize } entries from history..."
-  $.get "/log/#{ ORG }/wlan?limit=2000", (logArr, status, res) ->
+  $.get "/log/#{ org }/wlan?limit=2000", (logArr, status, res) ->
 
     if status isnt "success"
       console.info res
@@ -42,7 +42,7 @@ define [
 
     layout = new MainLayout
       clients: clients
-      name: ORG
+      name: org
 
     layout.render()
     $("body").append layout.el
@@ -53,9 +53,10 @@ define [
 
     socket = io.connect()
 
-    console.info "Listening ltsp:#{ ORG }-opinsys-fi:wlan"
+    collName = "log:#{ org }:wlan"
+    console.info "Listening #{ collName }"
 
-    socket.on "ltsp:#{ ORG }-opinsys-fi:wlan", (packet) ->
+    socket.on collName, (packet) ->
       console.info "#{ packet.mac } #{ packet.event } to/from #{ packet.hostname }", packet
       clients.update packet
 
