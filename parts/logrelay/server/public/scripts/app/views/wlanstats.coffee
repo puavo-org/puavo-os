@@ -29,10 +29,8 @@ define [
 
     animate: ->
 
-      # Do not interrupt animations since it looks ugly. Just render the
-      # content in that case.
+      # Do not interrupt animations since it looks ugly.
       if @_animationTimer
-        @render()
         return
 
       if @model.clients.activeClientCount() is @_previousCount
