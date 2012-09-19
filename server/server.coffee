@@ -24,14 +24,6 @@ sio.set('log level', 1)
 
 db = mongo.db "ltsplog"
 
-app.configure ->
-
-  httpServer.listen 8080, ->
-    console.info "Server is listening on 8080"
-
-  app.use express.bodyParser()
-  app.use stylus.middleware __dirname + "/public"
-  app.use express.static __dirname + "/public"
 
 
 
@@ -125,6 +117,13 @@ app.post "/log", (req, res) ->
 puavo = new Puavo config
 
 puavo.on "ready", ->
-  console.log "pollStart: READY"
+  app.configure ->
+
+    httpServer.listen 8080, ->
+      console.info "Server is listening on 8080"
+  
+    app.use express.bodyParser()
+    app.use stylus.middleware __dirname + "/public"
+    app.use express.static __dirname + "/public"
 
 puavo.pollStart()
