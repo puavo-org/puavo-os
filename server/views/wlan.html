@@ -38,11 +38,13 @@
         <tr>
           <th>Wlan Hotspot</th>
           <th>Event</th>
+          <th>date</th>
         </tr>
         {{#each history}}
         <tr>
-        <td>{{hostname}}</td>
-        <td title="{{time}}" >{{event}} {{ago}}</td>
+        <td><a href="#" class="host" data-host="{{hostname}}">{{hostname}}</a></td>
+        <td>{{event}}</td>
+        <td title="{{time}}" >{{ago}}</td>
         </tr>
         {{/each}}
       </table>
