@@ -86,6 +86,9 @@ body {
   font-family: "Trebuchet MS", Arial, Helvetica;
   background-color: #f0eee1;
 }
+body a:hover {
+  text-decoration: none;
+}
 .bb-wlan-stats {
   float: left;
   margin: 2px;
@@ -187,6 +190,11 @@ body {
   text-align: left;
   font-size: 8pt;
   margin-right: 1em;
+}
+.bb-lightbox table a,
+.bb-lightbox table a:visited,
+.bb-lightbox table a:active {
+  color: #000;
 }
 .bb-lightbox table td {
   margin-right: 5px;
