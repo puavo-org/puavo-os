@@ -21,14 +21,16 @@ define [
       @clients = opts.clients
       @hosts = opts.hosts
 
+      @setView ".host-details-container", new WlanHostDetails
+        model: @model
+
       @clients.on "client-details", (model) =>
         @setView ".client-details-container", new WlanClientDetails
           model: model
         @render()
 
-    renderHost: (model) ->
-      @setView ".host-details-container", new WlanHostDetails
-        model: model
-      @renderToBody()
+    viewJSON: ->
+      host: @model.id
+
 
 
