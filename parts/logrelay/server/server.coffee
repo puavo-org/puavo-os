@@ -17,14 +17,15 @@ config = require "./config.json"
 Puavo = require "./lib/puavo"
 
 mongo = new Mongolian
+puavo = new Puavo config
 app = express()
 httpServer = http.createServer(app)
-sio = io.listen httpServer
-sio.set('log level', 1)
-
 db = mongo.db "ltsplog"
+sio = io.listen httpServer
+
 
 app.configure ->
+  sio.set('log level', 1)
   app.use express.bodyParser()
   app.use stylus.middleware __dirname + "/public"
   app.use express.static __dirname + "/public"
@@ -121,7 +122,6 @@ app.post "/log", (req, res) ->
       console.info "Log saved to #{ org }/#{ collName }"
 
 
-puavo = new Puavo config
 
 puavo.on "ready", ->
   httpServer.listen 8080, ->
