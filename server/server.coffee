@@ -64,6 +64,20 @@ app.get "/log/:org/:type", (req, res) ->
       res.json arr
 
 
+# Custom log type handlers based on the type attribute
+logHandlers =
+  wlan: (data) ->
+
+    if data.mac
+      data.client_hostname = puavo.lookupDeviceName(org, data.mac)
+      data.client_manufacturer = oui.lookup data.mac
+
+    if data.hostname
+      if data.school_id = puavo.lookupSchoolId(org, data.hostname)
+        data.school_name = puavo.lookupSchoolName(org, data.school_id)
+      else
+        console.info "Cannot find school id for #{ fullOrg }/#{ data.hostname }"
+
 
 # /log/<database name>/<MongoDB collection name>
 # Logs any given POST data to given MongoDB collection.
@@ -81,24 +95,15 @@ app.post "/log", (req, res) ->
     console.error "Failed to parse organisation key from '#{ data.relay_puavo_domain }'"
     return
 
-
   # TODO: remove when fixed!
   if data.type is "unknown"
     data.type = "wlan"
 
+  logHandlers[data.type](data)
+
   collName = "log:#{ org }:#{ data.type }"
   coll = db.collection collName
 
-  data.client_manufacturer = oui.lookup data.mac
-
-  if data.mac
-    data["client_hostname"] = puavo.lookupDeviceName(org, data.mac)
-
-  if data.hostname
-    if data["school_id"] = puavo.lookupSchoolId(org, data.hostname)
-      data["school_name"] = puavo.lookupSchoolName(org, data.school_id)
-    else
-      console.info "Cannot find school id for #{ fullOrg }/#{ data.hostname }"
 
 
   console.info "emit #{ collName }"
