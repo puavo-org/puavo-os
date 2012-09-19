@@ -32,6 +32,7 @@ define [
       ago: time.fromNow()
       time: time.format "YYYY-MM-DD HH:mm:ss"
       manufacturer: m.get "client_manufacturer"
+      clientHostname: m.get "client_hostname"
 
     viewJSON: ->
       connected = []
