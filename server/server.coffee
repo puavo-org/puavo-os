@@ -103,7 +103,7 @@ logHandlers =
       if data.school_id = puavo.lookupSchoolId(org, data.hostname)
         data.school_name = puavo.lookupSchoolName(org, data.school_id)
       else
-        console.info "Cannot find school id for #{ fullOrg }/#{ data.hostname }"
+        console.error "Cannot find school id for #{ org }/#{ data.hostname }"
 
 
 # /log/<database name>/<MongoDB collection name>
