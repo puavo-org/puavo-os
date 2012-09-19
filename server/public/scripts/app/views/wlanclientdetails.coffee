@@ -11,6 +11,7 @@ define [
     constructor: (opts) ->
       super
       @hosts = opts.hosts
+      @model.on "change", => @render()
 
     events: ->
       "click a.host": (e) ->
