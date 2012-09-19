@@ -30,5 +30,6 @@ define [
 
       return {
         mac: @model.id
+        manufacturer: @model.get "client_manufacturer"
         history: history
       }
