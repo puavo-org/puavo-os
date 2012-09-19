@@ -181,8 +181,16 @@ body a:hover {
   overflow-y: auto;
 }
 .bb-lightbox .close {
-  background-color: transparent;
-  border: 0px;
+  position: relative;
+  right: -25px;
+  top: -25px;
+  background-color: #f0eee1;
+  border: 5px solid #cec79d;
+  color: #000;
+  font-size: 25pt;
+  width: 80px;
+  height: 80px;
+  border-radius: 50px;
   cursor: pointer;
 }
 .bb-lightbox table {
