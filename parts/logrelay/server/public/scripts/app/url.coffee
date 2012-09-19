@@ -5,5 +5,5 @@ define [], ->
     currentOrg: org
     currentSchoolId: schoolId
     appRoot: "/#{ org }/#{ schoolId }/wlan/"
-    newPath: (org, id) -> "/#{ org }/#{ schoolId }/wlan/"
+    newPath: (org, id) -> "/#{ org }/#{ id }/wlan/"
   }
