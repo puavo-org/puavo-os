@@ -3,6 +3,7 @@ define [
   "cs!app/views/layout"
   "cs!app/views/wlanstats"
   "cs!app/views/totalstats"
+  "cs!app/views/schoolselect"
   "cs!app/router"
   "backbone"
   "underscore"
@@ -11,6 +12,7 @@ define [
   Layout
   WlanStats
   TotalStats
+  SchoolSelect
   Router
   Backbone
   _
@@ -37,6 +39,8 @@ define [
           model: @model
           clients: @clients
           hosts: @hosts
+        ".school-select-container": new SchoolSelect
+          model: @model
         ".wlan-hosts": []
 
 
