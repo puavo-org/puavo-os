@@ -13,6 +13,10 @@ define [
       "click .background": -> @remove()
       "click .close": -> @remove()
 
+    remove: ->
+      super
+      $("body").css "overflow", "auto"
+
     detach: ->
       @$el.detach()
       @_visible = false
@@ -22,6 +26,7 @@ define [
     renderToBody: ->
       @detach()
       @render()
+      $("body").css "overflow", "hidden"
       $("body").append @el
       @_visible = true
       # Restore event binding. Why needed?
