@@ -97,15 +97,14 @@ app.post "/log", (req, res) ->
 
   data.client_manufacturer = oui.lookup data.mac
 
-  if data["mac"] && organisationDevicesByMac[fullOrg]?[data["mac"]]?["hostname"]
-    data["client_hostname"] = organisationDevicesByMac[org][data["mac"]]["hostname"]
+  if data.mac
+    data["client_hostname"] = puavo.lookupDeviceName(org, data.mac)
 
-
-  if school_id = organisationDevicesByHostname[fullOrg]?[data.hostname]?.school_id
-    data["school_id"] = school_id
-    data["school_name"] = organisationSchoolsById[fullOrg][school_id].name
-  else
-    console.info "Cannot find school id for #{ fullOrg }/#{ data.hostname }"
+  if data.hostname
+    if data["school_id"] = puavo.lookupSchoolId(org, data.hostname)
+      data["school_name"] = puavo.lookupSchoolName(org, data.school_id)
+    else
+      console.info "Cannot find school id for #{ fullOrg }/#{ data.hostname }"
 
 
   console.info "emit #{ collName }"

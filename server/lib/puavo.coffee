@@ -67,8 +67,13 @@ class Puavo extends EventEmitter
         done error
   
   lookupDeviceName: (org, mac) ->
+    @organisationDevicesByMac[org]?[mac]?.hostname
 
-  lookupSchoolName: (org, deviceHostname) ->
+  lookupSchoolName: (org, schoolId) ->
+    @organisationSchoolsById[org]?[schoolId]?.name
+
+  lookupSchoolId: (org, deviceHostname) ->
+    @organisationDevicesByHostname[org]?[deviceHostname]?.school_id
 
 
 module.exports = Puavo
