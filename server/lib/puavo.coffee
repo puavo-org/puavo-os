@@ -10,7 +10,23 @@ class Puavo extends EventEmitter
     @organisationSchoolsById = {}
     @organisationDevicesByHostname = {}
 
+
   pollStart: ->
+    do timeoutLoop = =>
+      @poll (err) =>
+        @handleStart err
+        setTimeout timeoutLoop, 3000
+
+
+  handleStart: (err) ->
+    return if @started
+    if not err
+      @emit "ready"
+    else
+      @emit "error", err
+    @started = true
+
+  poll: (cb) ->
     console.log("pollStart")
 
     for key, value of @organisations then do (key, value) =>
@@ -19,10 +35,14 @@ class Puavo extends EventEmitter
       auth = "Basic " + new Buffer(value["username"] + ":" + value["password"]).toString("base64");
   
       requestCount = 2
-      done = (args...) =>
+      done = (err) =>
+        if err
+          done = ->
+          return cb err
+
         requestCount -= 1
         if requestCount is 0
-          @emit "ready"
+          cb()
           done = ->
   
       # Get schools
