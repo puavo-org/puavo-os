@@ -31,12 +31,14 @@ class Puavo extends EventEmitter
   poll: (cb) ->
     console.log("pollStart")
 
+    requestCount = 0
+
     for key, value of @organisations then do (key, value) =>
       console.log("Organisation: ", key)
   
       auth = "Basic " + new Buffer(value["username"] + ":" + value["password"]).toString("base64");
   
-      requestCount = 2
+      requestCount += 2
       done = (err) =>
         if err
           done = ->
