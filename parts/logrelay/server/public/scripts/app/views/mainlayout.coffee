@@ -36,13 +36,14 @@ define [
         ".wlan-hosts": []
 
 
-      @details = new DetailsLightbox
-        hosts: @hosts
-        clients: @clients
 
       @hosts.on "host-details", (model) =>
         console.info "selecting host", model.id
-        @details.renderHost model
+        details = new DetailsLightbox
+          model: model
+          hosts: @hosts
+          clients: @clients
+        details.renderToBody()
 
 
       @clients.on "add", (model) => @hostFromClient model
