@@ -24,7 +24,6 @@ define [
 
     constructor: (opts) ->
       super
-      @name = opts.name
 
       @clients = opts.clients
       @hosts = new Backbone.Collection
@@ -35,6 +34,7 @@ define [
 
       @subViews =
         ".total-stats-container": new TotalStats
+          model: @model
           clients: @clients
           hosts: @hosts
         ".wlan-hosts": []
@@ -59,7 +59,7 @@ define [
         @subViews[".wlan-hosts"].push view
 
     viewJSON: ->
-      name: @name
+      name: @model.get "name"
 
 
 

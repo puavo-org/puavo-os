@@ -9,8 +9,13 @@
 
     <script type="x-template-handlebars" id="total-stats">
       <p>
-        There are {{connectedCount}} connected clients in {{hostCount}}
-        Wlan Hotspots. We've seen {{seenCount}} unique clients since {{logStart}}.
+        This an approximate of the current wlan usage in {{name}} based on
+        {{eventCount}} last wlan events.
+      </p>
+
+      <p>
+        We see {{connectedCount}} connected clients in {{hostCount}}
+        wlan hotspots. Also We've seen {{seenCount}} unique clients since {{logStart}}.
         Last client connected <span class="lastJoin">0</span>.
       </p>
     </script>

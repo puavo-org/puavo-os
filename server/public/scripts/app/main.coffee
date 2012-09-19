@@ -4,22 +4,27 @@ define [
   "backbone"
   "socket.io"
   "cs!app/models/wlanhostmodel"
+  "cs!app/models/schoolmodel"
   "cs!app/models/wlanclientcollection"
   "cs!app/views/lightbox"
   "cs!app/views/mainlayout"
 ], (
-  $,
-  _,
-  Backbone,
-  io,
-  WlanHostModel,
-  WlanClientCollection,
-  Lightbox,
+  $
+  _
+  Backbone
+  io
+  WlanHostModel
+  SchoolModel
+  WlanClientCollection
+  Lightbox
   MainLayout
 ) -> $ ->
 
   org = window.location.pathname.split("/")[1]
   $(".organisation").text org
+
+  schoolModel = new SchoolModel
+    name: org
 
   loading = $(".loading")
 
@@ -38,11 +43,12 @@ define [
 
     loading.text "Updating models..."
     for packet in logArr
+      schoolModel.logEvent()
       clients.update packet
 
     layout = new MainLayout
       clients: clients
-      name: org
+      model: schoolModel
 
     layout.render()
     $("body").append layout.el
@@ -62,6 +68,7 @@ define [
 
     socket.on collName, (packet) ->
       console.info "#{ packet.mac } #{ packet.event } to/from #{ packet.hostname }", packet
+      schoolModel.logEvent()
       clients.update packet
 
     socket.on "connect", ->
