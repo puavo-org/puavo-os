@@ -43,6 +43,8 @@ define [
           model: @model
         ".wlan-hosts": []
 
+      @model.on "change:title", =>
+        @render()
 
       @clients.on "add", (model) => @hostFromClient model
       @clients.each (model) => @hostFromClient model
