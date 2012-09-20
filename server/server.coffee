@@ -55,22 +55,25 @@ app.get "/schools/:org", (req, res) ->
 
   schools = {}
 
+  # XXX: This will go through almost all entries in given organisation. We
+  # might want to optimize this with distinct&find combo
   coll.find({
     school_id: { $exists: true }
     }, {
       school_id: 1
       school_name: 1
-    }
-  ).forEach (doc) ->
+    }).forEach (doc) ->
 
-    if doc.school_id
-      schools[doc.school_id] = doc.school_name
+      if doc.school_id
+        schools[doc.school_id] = doc.school_name
 
-  , (err) ->
-    return res.send err, 501 if err
-    res.json schools
+    , (err) ->
+      return res.send err, 501 if err
+      res.json schools
 
 
+# GET log history
+# @query {Integer} limit
 app.get "/log/:org/:schoolId/:type", (req, res) ->
 
   org = req.params.org
@@ -113,7 +116,6 @@ logHandlers =
         console.error "Cannot find school id for #{ org }/#{ data.hostname }"
 
 
-# /log/<database name>/<MongoDB collection name>
 # Logs any given POST data to given MongoDB collection.
 app.post "/log", (req, res) ->
 
