@@ -1,8 +1,9 @@
 define [
   "cs!app/view"
+  "jquery"
   "moment"
   "underscore"
-], (View, moment, _) ->
+], (View, $, moment, _) ->
   class WlanClientDetails extends View
 
     className: "bb-wlan-client-details"
@@ -18,6 +19,7 @@ define [
         e.preventDefault()
         model = @hosts.get $(e.target).data("host")
         @hosts.trigger "host-details", model
+
 
     viewJSON: ->
       history = @model.history.map (e) ->

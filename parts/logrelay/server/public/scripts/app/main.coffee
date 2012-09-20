@@ -31,7 +31,7 @@ define [
 
   $.get "/schools/#{ url.currentOrg }", (schools, status, res) =>
     if status isnt "success"
-      console.info res
+      console.error res
       throw new Error "failed to fetch school list"
 
     schoolName = schools[url.currentSchoolId]
