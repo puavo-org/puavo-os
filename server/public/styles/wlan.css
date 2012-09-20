@@ -93,6 +93,12 @@ body a:visited {
 body a:hover {
   text-decoration: none;
 }
+.opinsys-logo {
+  position: absolute;
+  right: 10%;
+  top: 0em;
+  z-index: -1;
+}
 .bb-wlan-stats {
   float: left;
   margin: 2px;
@@ -147,12 +153,6 @@ body a:hover {
 }
 .bb-total-stats {
   width: 50%;
-}
-.opinsys-logo {
-  position: absolute;
-  right: 10%;
-  top: 0em;
-  z-index: -1;
 }
 .bb-lightbox .background,
 .bb-lightbox .wrap,
