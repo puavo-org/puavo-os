@@ -6,7 +6,9 @@ http = require "http"
 express = require "express"
 io = require "socket.io"
 stylus = require "stylus"
-Mongolian = require("mongolian")
+Mongolian = require "mongolian"
+engines = require "consolidate"
+_  = require "underscore"
 
 oui = require "./lib/oui"
 console.info oui
@@ -23,6 +25,10 @@ httpServer = http.createServer(app)
 db = mongo.db "ltsplog"
 sio = io.listen httpServer
 
+appName = "config"
+app.configure "production", ->
+  appName = "bundle"
+
 
 app.configure ->
   sio.set('log level', 1)
@@ -30,13 +36,14 @@ app.configure ->
   app.use stylus.middleware __dirname + "/public"
   app.use express.static __dirname + "/public"
 
+  app.engine "html", engines.underscore
+  app.set "views", __dirname + "/views"
+  app.set "view engine", "html"
+
+
 
 app.get "/:org/:schoolId/wlan*", (req, res) ->
-  fs.readFile __dirname + "/views/wlan.html", (err, data) ->
-    if err
-      res.send err
-    else
-      res.send data.toString()
+  res.render "wlan", appName: appName
 
 # Return all schools in given organisation
 app.get "/schools/:org", (req, res) ->
