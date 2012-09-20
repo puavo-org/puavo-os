@@ -1,6 +1,4 @@
-
 require.config({
-  baseUrl: "/scripts",
   shim: {
     underscore: {
       exports: "_"
@@ -25,8 +23,4 @@ require.config({
     "socket.io": "vendor/socket.io",
     "coffee-script": "vendor/coffee-script"
   }
-});
-
-require(["cs!app/main"], function() {
-  console.log("main app loaded");
 });

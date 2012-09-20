@@ -157,7 +157,11 @@
 
     </script>
 
-    <script data-main="/scripts/<%= appName %>" src="/scripts/require.js"></script>
+    <script>var require = { baseUrl: "/scripts/" };</script>
+    <script src="/scripts/require.js"></script>
+    <script src="/scripts/config.js"></script>
+    <script src="/scripts/wlan-<%= appLoad %>.js"></script>
+
 </head>
 
 <body>
