@@ -53,11 +53,13 @@ define [
 
       # FIXME: will fail with zero events
       firstEntry = @clients.min (m) -> m.get("relay_timestamp")
+      time = moment.unix(firstEntry.get("relay_timestamp"))
 
       connectedCount: @clients.activeClientCount()
       seenCount: @clients.size()
       hostCount: @hosts.size()
       eventCount: @model.get("eventCount")
       schoolName: @model.get("schoolName")
-      logStart: moment.unix(firstEntry.get("relay_timestamp")).fromNow()
+      logStart: time.format "YYYY-MM-DD HH:mm:ss"
+      logStartAgo: time.fromNow()
 

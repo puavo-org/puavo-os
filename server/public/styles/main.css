@@ -127,7 +127,7 @@ body a:hover {
 .bb-wlan-layout h1 {
   color: #000;
   font-size: 18pt;
-  width: 400px;
+  width: 50%;
 }
 .loading {
   position: absolute;
@@ -135,12 +135,13 @@ body a:hover {
   left: 0px;
 }
 .bb-total-stats {
-  width: 400px;
+  width: 50%;
 }
 .opinsys-logo {
   position: absolute;
   right: 10%;
   top: 0em;
+  z-index: -1;
 }
 .bb-lightbox .background,
 .bb-lightbox .wrap,
