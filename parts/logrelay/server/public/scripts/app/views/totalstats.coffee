@@ -58,7 +58,9 @@ define [
       time = moment.unix(firstEntry.get("relay_timestamp"))
 
       eventCount = @model.get("eventCount")
-      moreUrl =  URI(window.location.href).addQuery("events", eventCount + 1000)
+      url = URI(window.location.href)
+      moreUrl =  url.query(events: eventCount + 1000).toString()
+      lessUrl =  url.query(events: Math.max(eventCount - 1000, 1000)).toString()
 
       connectedCount: @clients.activeClientCount()
       seenCount: @clients.size()
@@ -67,5 +69,6 @@ define [
       schoolName: @model.get("schoolName")
       logStart: time.format "YYYY-MM-DD HH:mm:ss"
       logStartAgo: time.fromNow()
-      moreUrl:  moreUrl.toString()
+      moreUrl:  moreUrl
+      lessUrl: lessUrl
 
