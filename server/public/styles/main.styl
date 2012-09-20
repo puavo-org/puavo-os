@@ -107,7 +107,6 @@ body
     position relative
     right -25px
     top -25px
-    background-color bg_color
     border 5px solid darken(bg_color, 20)
     color black
     font-size 25pt
@@ -115,6 +114,9 @@ body
     height 80px
     border-radius 50px
     cursor pointer
+    background-color bg_color
+    &:hover
+      background-color darken(bg_color, 40)
 
 
   table
