@@ -10,8 +10,8 @@ class Puavo extends EventEmitter
     console.log @organisationsorganisationDevicesByMac
     @organisationDevicesByMac = {}
     @organisationSchoolsById = {}
-    @organisationDevicesByHostname = {}
-
+    @organisationDevicesByHostname = {} 
+  
 
   pollStart: ->
     do timeoutLoop = =>
@@ -69,7 +69,7 @@ class Puavo extends EventEmitter
       console.info "Fetcing device list from Puavo #{ value["puavoDomain"] }. This may take some time..."
       request {
         method: 'GET',
-        url: value["puavoDomain"] + "/devices/devices.json",
+        url: value["puavoDomain"] + "/devices/api/v2/devices.json",
         headers:  {"Authorization" : auth}
       }, (error, res, body) =>
         if !error && res.statusCode == 200
@@ -78,13 +78,12 @@ class Puavo extends EventEmitter
           console.info "Cached #{ devices.length } devices from #{ value["puavoDomain"] }"
           @organisationDevicesByHostname[key] = {}
           for device in devices
-            if device["puavoSchool"]
-              school_id = device.puavoSchool[0].rdns[0].puavoId
-              @organisationDevicesByHostname[key][ device["puavoHostname"][0] ] = {}
-              @organisationDevicesByHostname[key][ device["puavoHostname"][0] ]["school_id"] = school_id
-            if device["macAddress"]
-              @organisationDevicesByMac[key][ device["macAddress"][0] ] = {}
-              @organisationDevicesByMac[key][ device["macAddress"][0] ]["hostname"] = device["puavoHostname"][0]
+            if device.school_id
+              @organisationDevicesByHostname[key][ device.hostname ] = {}
+              @organisationDevicesByHostname[key][ device.hostname ]["school_id"] = device.school_id
+            if device.mac_address
+              @organisationDevicesByMac[key][ device.mac_address ] = {}
+              @organisationDevicesByMac[key][ device.mac_address ]["hostname"] = device.hostname
         else
           console.log("Can't connect to puavo server: ", error)
   
