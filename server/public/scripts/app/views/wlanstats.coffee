@@ -51,6 +51,7 @@ define [
 
     _animateConnect: -> @$el.addClass "animated tada"
     _animateDisconnect: -> @$el.addClass "animated wobble"
+
     _clearAnimation: ->
       clearTimeout @_animationTimer if @_animationTimer
       @_animationTimer = null
