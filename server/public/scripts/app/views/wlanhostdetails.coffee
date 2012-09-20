@@ -33,19 +33,27 @@ define [
       time: time.format "YYYY-MM-DD HH:mm:ss"
       manufacturer: m.get "client_manufacturer"
       clientHostname: m.get "client_hostname"
+      timestamp: parseInt(m.get "relay_timestamp")
+
+    _shortFormated: (a, b) ->
+      b.timestamp - a.timestamp
 
     viewJSON: ->
       connected = []
       seen = []
 
       @model.clients.each (m) =>
-
         if m.isConnected()
           connected.push @formatClient m
         else
           seen.push @formatClient m
 
-      count: @model.activeClientCount()
-      name: @model.id
-      connected: connected
-      seen: seen.slice(0,10)
+      connected.sort @_shortFormated
+      seen.sort @_shortFormated
+
+      return {
+        count: @model.activeClientCount()
+        name: @model.id
+        connected: connected
+        seen: seen.slice(0,10)
+      }
