@@ -29,11 +29,12 @@ appLoad = "start"
 app.configure "production", ->
   appLoad = "bundle"
 
+app.configure "development", ->
+  app.use stylus.middleware __dirname + "/public"
 
 app.configure ->
   sio.set('log level', 1)
   app.use express.bodyParser()
-  app.use stylus.middleware __dirname + "/public"
   app.use express.static __dirname + "/public"
 
   app.engine "html", engines.underscore
