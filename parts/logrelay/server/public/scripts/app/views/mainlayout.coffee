@@ -46,14 +46,14 @@ define [
       @model.on "change:title", =>
         @render()
 
-      @clients.on "add", (model) => @hostFromClient model
-      @clients.each (model) => @hostFromClient model
+      @clients.on "add change", (model) => @createHostFromClient model
+      @clients.each (model) => @createHostFromClient model
 
     animateAll: ->
       for view in @subViews[".wlan-hosts"]
         view.animate()
 
-    hostFromClient: (model) ->
+    createHostFromClient: (model) ->
 
       # Create new WlanHostModel if this client introduces new Wlan Host
       if not @hosts.get(model.get("hostname"))
@@ -66,6 +66,7 @@ define [
           model: hostModel
           collection: @clients
         @subViews[".wlan-hosts"].push view
+        @render()
 
     viewJSON: ->
       schoolName: @model.get "schoolName"
