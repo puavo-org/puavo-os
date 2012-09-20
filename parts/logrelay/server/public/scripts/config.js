@@ -10,6 +10,9 @@ require.config({
     "socket.io": {
       exports: "io"
     },
+    "uri": {
+      exports: "URI"
+    },
     "handlebars": {
       exports: "Handlebars"
     }
@@ -20,6 +23,7 @@ require.config({
     underscore: "vendor/underscore",
     backbone: "vendor/backbone",
     moment: "vendor/moment",
+    uri: "vendor/URI",
     "socket.io": "vendor/socket.io",
     "coffee-script": "vendor/coffee-script"
   }
