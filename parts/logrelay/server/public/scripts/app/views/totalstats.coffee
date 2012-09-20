@@ -41,6 +41,7 @@ define [
         msg = lastJoinSec + " seconds ago"
 
       @$(".lastJoin").text msg
+      @$(".now").text moment().format "YYYY-MM-DD HH:mm:ss"
 
       @timer = setTimeout =>
         @timer = null
