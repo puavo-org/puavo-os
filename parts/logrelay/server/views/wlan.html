@@ -52,13 +52,13 @@
         <tr>
           <th>Wlan Hotspot</th>
           <th>Event</th>
-          <th>date</th>
+          <th>Timestamp</th>
         </tr>
         {{#each history}}
         <tr>
         <td><a href="#" class="host" data-host="{{hostname}}">{{hostname}}</a></td>
         <td>{{event}}</td>
-        <td title="{{time}}" >{{ago}}</td>
+        <td title="{{ago}}" >{{time}}</td>
         </tr>
         {{/each}}
       </table>
@@ -87,7 +87,7 @@
             <td><a href="#" class="client" data-mac="{{mac}}" >{{mac}}</a></td>
             <td class="manufacturer" title="{{manufacturer}}">{{manufacturer}}</td>
             <td>{{clientHostname}}</td>
-            <td title="{{time}}" >{{ago}}</td>
+            <td title="{{ago}}" >{{time}}</td>
             </tr>
             {{/each}}
           </table>
@@ -109,7 +109,7 @@
               <td><a href="#" class="client" data-mac="{{mac}}" >{{mac}}</a></td>
               <td class="manufacturer" title="{{manufacturer}}" >{{manufacturer}}</td>
               <td>{{clientHostname}}</td>
-              <td title="{{time}}" >{{ago}}</td>
+              <td title="{{ago}}" >{{time}}</td>
             </tr>
             {{/each}}
 
