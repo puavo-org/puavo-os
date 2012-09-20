@@ -86,6 +86,10 @@ body {
   font-family: "Trebuchet MS", Arial, Helvetica;
   background-color: #f0eee1;
 }
+body a,
+body a:visited {
+  color: #5d5d5d;
+}
 body a:hover {
   text-decoration: none;
 }
