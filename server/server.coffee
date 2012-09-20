@@ -130,7 +130,8 @@ app.post "/log", (req, res) ->
     return
 
   # TODO: remove when fixed!
-  if data.type is "unknown"
+  if not data.type or data.type is "unknown"
+    console.info "Unknown type or missing! #{ data.type }"
     data.type = "wlan"
 
   logHandlers[data.type](org, data)
