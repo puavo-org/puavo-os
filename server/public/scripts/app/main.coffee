@@ -2,6 +2,7 @@ define [
   "jquery"
   "underscore"
   "backbone"
+  "uri"
   "socket.io"
   "cs!app/models/wlanhostmodel"
   "cs!app/models/schoolmodel"
@@ -13,6 +14,7 @@ define [
   $
   _
   Backbone
+  URI
   io
   WlanHostModel
   SchoolModel
@@ -45,7 +47,7 @@ define [
 
   clients = new WlanClientCollection
 
-  historySize = 2000
+  historySize = URI(window.location.href).query(true)?.events || 2000
 
   loading.text "Loading #{ historySize } entries from history..."
   $.get "/log/#{ url.currentOrg }/#{ url.currentSchoolId }/wlan?limit=#{ historySize }", (logArr, status, res) ->

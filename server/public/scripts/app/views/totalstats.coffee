@@ -1,7 +1,9 @@
 define [
   "cs!app/view"
   "moment"
-], (View, moment, _) ->
+  "uri"
+  "underscore"
+], (View, moment, URI, _) ->
 
   class TotalStats extends View
 
@@ -55,11 +57,15 @@ define [
       firstEntry = @clients.min (m) -> m.get("relay_timestamp")
       time = moment.unix(firstEntry.get("relay_timestamp"))
 
+      eventCount = @model.get("eventCount")
+      moreUrl =  URI(window.location.href).addQuery("events", eventCount + 1000)
+
       connectedCount: @clients.activeClientCount()
       seenCount: @clients.size()
       hostCount: @hosts.size()
-      eventCount: @model.get("eventCount")
+      eventCount: eventCount
       schoolName: @model.get("schoolName")
       logStart: time.format "YYYY-MM-DD HH:mm:ss"
       logStartAgo: time.fromNow()
+      moreUrl:  moreUrl.toString()
 
