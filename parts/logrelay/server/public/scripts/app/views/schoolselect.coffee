@@ -46,6 +46,7 @@ define [
 
       return {
         currentSchool: currentSchool
+        org: url.currentOrg
         schools: schools
       }
 
