@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <title>Statistics - Opinsys Oy</title>
+
+  <script type="x-template-handlebars" id="school-list">
+    <ul>
+      {{#each schools}}
+      <li>
+        <a href="{{url}}">{{name}}</a>
+      </li>
+      {{/each}}
+    </ul>
+  </script>
+
+  <script>var require = { baseUrl: "/scripts/" };</script>
+  <script src="/scripts/require.js"></script>
+  <script src="/scripts/config.js"></script>
+  <script src="/scripts/orgindex-<%= appLoad %>.js"></script>
+
+</head>
+<body>
+  <h1>Statistics for <span class="org-title">...</span></h1>
+  <div class="content">Loading...</div>
+</body>
+</html>
