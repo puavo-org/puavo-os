@@ -11,9 +11,9 @@ Get Node.js 0.8.x
 
 http://nodejs.org/download/
 
-Install dependencies
+Install and build production scripts
 
-    npm install
+    make
 
 Start it
 
