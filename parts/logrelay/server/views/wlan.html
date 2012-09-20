@@ -76,18 +76,18 @@
 
           <table>
             <tr>
-              <th>mac address</th>
+              <th>Mac address</th>
+              <th>Connected</th>
               <th>Manufacturer</th>
-              <th>client hostname</th>
-              <th>connected</th>
+              <th>Client hostname</th>
             </tr>
 
             {{#each connected}}
             <tr>
             <td><a href="#" class="client" data-mac="{{mac}}" >{{mac}}</a></td>
+            <td title="{{ago}}" >{{time}}</td>
             <td class="manufacturer" title="{{manufacturer}}">{{manufacturer}}</td>
             <td>{{clientHostname}}</td>
-            <td title="{{ago}}" >{{time}}</td>
             </tr>
             {{/each}}
           </table>
@@ -99,17 +99,17 @@
           <table class="left">
             <tr>
               <th>mac address</th>
+              <th>Disconnected</th>
               <th>Manufacturer</th>
-              <th>client hostname</th>
-              <th>disconnected</th>
+              <th>Client hostname</th>
             </tr>
 
             {{#each seen}}
             <tr>
               <td><a href="#" class="client" data-mac="{{mac}}" >{{mac}}</a></td>
+              <td title="{{ago}}" >{{time}}</td>
               <td class="manufacturer" title="{{manufacturer}}" >{{manufacturer}}</td>
               <td>{{clientHostname}}</td>
-              <td title="{{ago}}" >{{time}}</td>
             </tr>
             {{/each}}
 
