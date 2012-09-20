@@ -186,7 +186,6 @@ body a:hover {
   position: relative;
   right: -25px;
   top: -25px;
-  background-color: #f0eee1;
   border: 5px solid #cec79d;
   color: #000;
   font-size: 25pt;
@@ -194,6 +193,10 @@ body a:hover {
   height: 80px;
   border-radius: 50px;
   cursor: pointer;
+  background-color: #f0eee1;
+}
+.bb-lightbox .close:hover {
+  background-color: #aca159;
 }
 .bb-lightbox table {
   color: #444;
