@@ -25,9 +25,9 @@ httpServer = http.createServer(app)
 db = mongo.db "ltsplog"
 sio = io.listen httpServer
 
-appName = "config"
+appLoad = "start"
 app.configure "production", ->
-  appName = "bundle"
+  appLoad = "bundle"
 
 
 app.configure ->
@@ -43,7 +43,11 @@ app.configure ->
 
 
 app.get "/:org/:schoolId/wlan*", (req, res) ->
-  res.render "wlan", appName: appName
+  res.render "wlan", appLoad: appLoad
+
+
+app.get "/:org", (req, res) ->
+  res.render "orgindex", appLoad: appLoad
 
 # Return all schools in given organisation
 app.get "/schools/:org", (req, res) ->
