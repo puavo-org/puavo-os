@@ -66,6 +66,9 @@ define [
       model: schoolModel
 
     layout.render()
+    # Cool startup animation
+    layout.animateAll()
+
     $("body").append layout.el
 
     console.info "Render complete"

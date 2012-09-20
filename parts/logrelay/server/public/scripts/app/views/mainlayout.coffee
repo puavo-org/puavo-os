@@ -49,6 +49,9 @@ define [
       @clients.on "add", (model) => @hostFromClient model
       @clients.each (model) => @hostFromClient model
 
+    animateAll: ->
+      for view in @subViews[".wlan-hosts"]
+        view.animate()
 
     hostFromClient: (model) ->
 
