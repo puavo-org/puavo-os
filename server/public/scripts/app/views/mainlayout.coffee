@@ -53,12 +53,12 @@ define [
       for view in @subViews[".wlan-hosts"]
         view.animate()
 
-    createHostFromClient: (model) ->
+    createHostFromClient: (client) ->
 
       # Create new WlanHostModel if this client introduces new Wlan Host
-      if not @hosts.get(model.get("hostname"))
+      if not @hosts.get(client.get("hostname"))
         hostModel = new WlanHostModel
-          id: model.get("hostname")
+          id: client.get("hostname")
           allClients: @clients
 
         @hosts.add  hostModel
