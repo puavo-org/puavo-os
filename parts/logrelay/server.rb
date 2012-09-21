@@ -40,6 +40,7 @@ HOST = "10.246.133.138" # prod
 PORT = 8080 # prod
 PATH = "/log"
 
+HTTP_REQUEST_TIMEOUT = 10
 
 # Collect rest of the configuration from the server
 
@@ -113,15 +114,31 @@ module PacketRelay
       :password => PASSWORD
      }
     )
+    timeout = false
+
+    # XXX: Fuck. Manually implement timeout for http request.
+    timeout_timer = EventMachine::Timer.new(HTTP_REQUEST_TIMEOUT) do
+      timeout = true
+      log "WARNING: Request timeout for packet", packet[:relay_timestamp]
+
+      # XXX: How to actually cancel the request?
+      http.close_connection
+
+      handle_error(packet)
+    end
 
     http.errback do |*args|
+      next if timeout
+      timeout_timer.cancel()
       log "Sent failed. Response object: #{ args.pretty_inspect }"
       handle_error(packet)
     end
 
     http.callback do |res|
+      next if timeout
+      timeout_timer.cancel()
       if res[:status] == 200
-        log "Packet sent ok"
+        log "Packet sent ok", packet[:relay_timestamp]
         handle_ok
       else
         log "Sent failed. Status code #{ res[:status] }"
