@@ -96,7 +96,11 @@ module PacketRelay
      :port => PORT,
      :request => PATH,
      :contenttype => "application/json",
-     :content => packet.to_json
+     :content => packet.to_json,
+     :basic_auth => {
+      :username => USERNAME,
+      :password => PASSWORD
+     }
     )
 
     http.errback do |*args|
