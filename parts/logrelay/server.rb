@@ -4,6 +4,9 @@ require "socket"
 require "json"
 require "pp"
 
+# Poor man's configuration file
+require "/etc/logrelay.rb"
+
 def log(*args)
 
   args = args.map do |a|
@@ -19,31 +22,6 @@ def log(*args)
   STDERR.puts(msg)
 end
 
-
-## Configuration
-
-# User name and group this process should run as
-USER = "epeli"
-GROUP = "nogroup"
-
-# UDP port this process listens to
-UDP_PORT = 3858
-
-# Time to wait in case of error (seconds)
-INITIAL_INTERVAL = 2
-
-# Interval increases until this point
-MAX_INTERVAL = 60*10
-
-# HTTP POST target for log data
-HOST = "10.246.133.138" # prod
-PORT = 8080 # prod
-PATH = "/log"
-
-HTTP_REQUEST_TIMEOUT = 10
-
-# Collect rest of the configuration from the server
-
 log "Starting with uid #{ Process.uid } and gid #{ Process.gid }"
 
 USERNAME = File.open("/etc/puavo/ldap/dn", "r").read.strip
@@ -56,9 +34,6 @@ log "Dropped to uid #{ Process.uid } and gid #{ Process.gid }"
 
 PUAVO_DOMAIN = File.open("/etc/opinsys/desktop/puavodomain", "r").read.strip
 RELAY_HOSTNAME = Socket.gethostname
-
-
-
 
 
 module PacketRelay
