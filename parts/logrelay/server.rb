@@ -1,23 +1,8 @@
-require 'eventmachine'
-require 'socket'
-require 'json'
+require "eventmachine"
+require "etc"
+require "socket"
+require "json"
 require "pp"
-
-
-RELAY_HOSTNAME = Socket.gethostname
-PUAVO_DOMAIN = File.open("/etc/opinsys/desktop/puavodomain", "r").read.strip
-DB_NAME = PUAVO_DOMAIN.gsub(/[^a-z0-9]/, "-")
-
-UDP_PORT = 3858
-
-INITIAL_INTERVAL = 2 # Time to wait in case of error (seconds)
-MAX_INTERVAL = 60*10
-
-# HTTP POST target
-HOST = "10.246.133.138"
-PORT = 8080
-PATH = "/log"
-
 
 def log(*args)
 
@@ -33,6 +18,35 @@ def log(*args)
   msg = args.join(" ")
   STDERR.puts(msg)
 end
+
+USER = "epeli"
+GROUP = "nogroup"
+
+log "Reading as user #{ Process.uid } and group #{ Process::Sys.getgid }"
+
+USERNAME = File.open("/etc/puavo/ldap/dn", "r").read.strip
+PASSWORD = File.open("/etc/puavo/ldap/password", "r").read.strip
+
+Process::Sys.setgid Etc.getgrnam(GROUP).gid
+Process::Sys.setuid Etc.getpwnam(USER).uid
+
+log "Running as user #{ Process.uid } and group #{ Process::Sys.getgid }"
+
+PUAVO_DOMAIN = File.open("/etc/opinsys/desktop/puavodomain", "r").read.strip
+
+RELAY_HOSTNAME = Socket.gethostname
+
+UDP_PORT = 3858
+
+INITIAL_INTERVAL = 2 # Time to wait in case of error (seconds)
+MAX_INTERVAL = 60*10
+
+# HTTP POST target
+HOST = "10.246.133.138"
+PORT = 8080
+PATH = "/log"
+
+
 
 module PacketRelay
 
