@@ -137,7 +137,7 @@ module PacketRelay
     log "Sleeping #{ @interval } seconds until resend"
 
     EventMachine::Timer.new(@interval) do
-      log "Resending from timer"
+      log "Resending from timer", packet[:relay_timestamp]
       @error_state = false
       send_packet(packet)
     end
