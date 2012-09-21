@@ -74,7 +74,7 @@ module PacketRelay
       return
     end
 
-    log "Sending packet", packet[:relay_timestamp]
+    log "Sending packet #{ packet[:relay_timestamp] } to #{ HOST }:#{ PORT }#{ PATH }"
 
     @sending = true
     http = EventMachine::Protocols::HttpClient.request(
