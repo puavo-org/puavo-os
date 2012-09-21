@@ -19,32 +19,44 @@ def log(*args)
   STDERR.puts(msg)
 end
 
+
+## Configuration
+
+# User name and group this process should run as
 USER = "epeli"
 GROUP = "nogroup"
 
-log "Reading as user #{ Process.uid } and group #{ Process::Sys.getgid }"
+# UDP port this process listens to
+UDP_PORT = 3858
+
+# Time to wait in case of error (seconds)
+INITIAL_INTERVAL = 2
+
+# Interval increases until this point
+MAX_INTERVAL = 60*10
+
+# HTTP POST target for log data
+HOST = "10.246.133.138" # prod
+PORT = 8080 # prod
+PATH = "/log"
+
+
+# Collect rest of the configuration from the server
+
+log "Starting with uid #{ Process.uid } and gid #{ Process.gid }"
 
 USERNAME = File.open("/etc/puavo/ldap/dn", "r").read.strip
 PASSWORD = File.open("/etc/puavo/ldap/password", "r").read.strip
 
-Process::Sys.setgid Etc.getgrnam(GROUP).gid
-Process::Sys.setuid Etc.getpwnam(USER).uid
+Process::Sys.setgid(Etc.getgrnam(GROUP).gid)
+Process::Sys.setuid(Etc.getpwnam(USER).uid)
 
-log "Running as user #{ Process.uid } and group #{ Process::Sys.getgid }"
+log "Dropped to uid #{ Process.uid } and gid #{ Process.gid }"
 
 PUAVO_DOMAIN = File.open("/etc/opinsys/desktop/puavodomain", "r").read.strip
-
 RELAY_HOSTNAME = Socket.gethostname
 
-UDP_PORT = 3858
 
-INITIAL_INTERVAL = 2 # Time to wait in case of error (seconds)
-MAX_INTERVAL = 60*10
-
-# HTTP POST target
-HOST = "10.246.133.138"
-PORT = 8080
-PATH = "/log"
 
 
 
