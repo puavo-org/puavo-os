@@ -64,7 +64,6 @@ module PacketRelay
 
   def post_init
     @queue = []
-    @interval = INITIAL_INTERVAL
   end
 
   def receive_data(data)
@@ -83,7 +82,7 @@ module PacketRelay
     end
 
     if packet[:type].nil?
-      log "WARNING: Packet has no type field"
+      log "WARNING: Packet has no type field", packet[:relay_timestamp]
       packet[:type] = "unknown"
     end
 
@@ -95,11 +94,11 @@ module PacketRelay
 
     if @error_state || @sending
       @queue.push packet
-      log "Queueing packet. Queue size #{ @queue.size }. Interval is now #{ @interval }"
+      log "Queueing packet. Queue size #{ @queue.size }. Interval is now #{ @interval }s.", "Packet:",  packet[:relay_timestamp]
       return
     end
 
-    log "Sending packet"
+    log "Sending packet", packet[:relay_timestamp]
 
     @sending = true
     http = EventMachine::Protocols::HttpClient.request(
@@ -130,13 +129,16 @@ module PacketRelay
       end
     end
 
+
   end
 
   def handle_error(packet)
     @sending = false
     @error_state = true
 
-    if @interval < MAX_INTERVAL
+    if @interval.nil?
+      @interval = INITIAL_INTERVAL
+    elsif @interval < MAX_INTERVAL
       @interval = @interval*2
     end
 
@@ -151,7 +153,7 @@ module PacketRelay
 
   def handle_ok
     @sending = false
-    @interval = INITIAL_INTERVAL
+    @interval = nil
     next_packet = @queue.shift
     if not next_packet.nil?
       log "Sending from queue"
