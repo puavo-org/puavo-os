@@ -14,6 +14,8 @@ the UDP packets to given target as JSON HTTP POST. See `config.rb-example`.
 
 ## Packet format
 
+The packet is constructed from multiple key-value pairs separated by line breaks:
+
     <key>:<value | [comma separated list of values]>
 
 Key `type` is required for every packet. If it is defined as `log` Logrelay
