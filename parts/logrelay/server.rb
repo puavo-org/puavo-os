@@ -65,6 +65,10 @@ module PacketRelay
       end
     end
 
+    if packet[:type] == "log"
+      log "Just log", packet
+      return
+    end
 
     if packet[:type].nil?
       log "WARNING: Packet has no type field", packet[:relay_timestamp]
