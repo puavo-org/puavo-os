@@ -16,8 +16,12 @@ the UDP packets to given target as JSON HTTP POST. See `config.rb-example`.
 
     <key>:<value | [comma separated list of values]>
 
+Key `type` is required for every packet. If it is defined as `log` Logrelay
+will just log it and won't relay it. Usefull for debugging.
+
 Example
 
+    type:example
     key1:foo
     key2:[foo,bar]
 
