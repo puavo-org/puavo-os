@@ -29,6 +29,6 @@ Example
 
 See `stream_test_packets.sh` for netcat based examples
 
-For Ruby based example see [wlan-state]() script.
+For Ruby based example see [wlan-state][] script.
 
 [wlan-state]: https://github.com/opinsys/wlan-state
