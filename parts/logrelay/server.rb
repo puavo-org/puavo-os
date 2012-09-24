@@ -57,6 +57,15 @@ module PacketRelay
       packet[values[0].to_sym] = values[1..-1].join(":")
     end
 
+    # Turn values inside brackets [foo,bar] to arrays
+    packet.each do |k, v|
+      next if v.class != String
+      if match = v.match(/\[(.*)\]/)
+        packet[k] = match[1].split(",")
+      end
+    end
+
+
     if packet[:type].nil?
       log "WARNING: Packet has no type field", packet[:relay_timestamp]
       packet[:type] = "unknown"
