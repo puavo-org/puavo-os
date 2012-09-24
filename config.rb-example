@@ -15,8 +15,8 @@ INITIAL_INTERVAL = 2
 MAX_INTERVAL = 60*10
 
 # HTTP POST target for log data
-HOST = "10.246.133.138" # prod
-PORT = 8080 # prod
+HOST = "10.246.133.138"
+PORT = 8080
 PATH = "/log"
 
 HTTP_REQUEST_TIMEOUT = 10
