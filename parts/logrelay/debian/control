@@ -9,5 +9,5 @@ Homepage: https://github.com/opinsys/logrelay
 Package: logrelay
 Architecture: all
 Depends: ${misc:Depends}, ruby, libeventmachine-ruby, libjson-ruby
-Description: Logrelay
+Description: Buffering log relay
  Buffering log relay from UPD to HTTP
