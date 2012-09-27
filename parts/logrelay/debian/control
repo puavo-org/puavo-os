@@ -1,13 +1,13 @@
 Source: logrelay
-Section: unknown
+Section: misc
 Priority: extra
 Maintainer: Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>
 Build-Depends: debhelper (>= 7)
 Standards-Version: 3.8.3
-Homepage: <insert the upstream URL, if relevant>
+Homepage: https://github.com/opinsys/logrelay
 
 Package: logrelay
 Architecture: all
-Depends: ${misc:Depends}
-Description: <insert up to 60 chars description>
- <insert long description, indented with spaces>
+Depends: ${misc:Depends}, ruby, libeventmachine-ruby, libjson-ruby
+Description: Logrelay
+ Buffering log relay from UPD to HTTP
