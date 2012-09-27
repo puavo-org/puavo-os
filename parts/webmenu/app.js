@@ -1,5 +1,6 @@
 var app = module.exports = require('appjs');
 var http = require("http");
+var spawn = require('child_process').spawn;
 
 app.serveFilesFrom(__dirname + '/content');
 
@@ -24,9 +25,13 @@ window.on('create', function(){
 
 function showAgain(){
   console.log("show again");
+  window.frame.topmost = true;
   window.frame.hide();
   window.frame.show();
-  window.frame.topmost = true;
+  window.frame.focus();
+  title = "Opinsys Web Menu";
+  window.frame.title = title;
+  spawn("wmctrl", ["-a", title]);
 }
 
 function hideApp(){
