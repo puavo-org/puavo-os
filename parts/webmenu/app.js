@@ -1,4 +1,5 @@
 var app = module.exports = require('appjs');
+var http = require("http");
 
 app.serveFilesFrom(__dirname + '/content');
 
@@ -20,6 +21,7 @@ window.on('create', function(){
 });
 
 
+
 function showAgain(){
   console.log("show again");
   window.frame.hide();
@@ -27,19 +29,31 @@ function showAgain(){
   window.frame.topmost = true;
 }
 
+function hideApp(){
+  window.frame.hide();
+}
+
+httpServer = http.createServer(function (req, res) {
+    res.writeHead(200, {'Content-Type': 'text/plain'});
+    res.end('Showing window');
+    showAgain();
+}).listen(1337, '127.0.0.1');
+
 window.on('ready', function(){
   console.log("Window Ready");
   window.require = require;
   window.process = process;
   window.module = module;
 
-  window.addEventListener('focusout', function(){
-    console.info("focusout");
-    window.frame.hide();
+  window.addEventListener('log', function(e, a){
+    console.log("LOG", e.msg);
   });
 
-  function F12(e){ return e.keyIdentifier === 'F12' }
-  function Command_Option_J(e){ return e.keyCode === 74 && e.metaKey && e.altKey }
+  window.addEventListener('hide', hideApp);
+  window.addEventListener('focusout', hideApp);
+
+  function F12(e){ return e.keyIdentifier === 'F12'; }
+  function Command_Option_J(e){ return e.keyCode === 74 && e.metaKey && e.altKey; }
 
   window.addEventListener('keydown', function(e){
     if (F12(e) || Command_Option_J(e)) {
