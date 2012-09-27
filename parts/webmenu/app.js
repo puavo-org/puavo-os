@@ -4,7 +4,7 @@ app.serveFilesFrom(__dirname + '/content');
 
 var window = app.createWindow({
   width  : 1000,
-  height : 500,
+  height : 480,
   top : 200,
   showChrome: false,
   opacity : 0.5,
