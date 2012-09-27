@@ -1,8 +1,8 @@
 
-# Put to /etc/logrelay.rb
+# /etc/logrelay.rb
 
 # User name and group this process should run as
-USER = "epeli"
+USER = "logrelay"
 GROUP = "nogroup"
 
 # UDP port this process listens to
@@ -15,8 +15,8 @@ INITIAL_INTERVAL = 2
 MAX_INTERVAL = 60*10
 
 # HTTP POST target for log data
-HOST = "10.246.133.138"
-PORT = 8080
+HOST = "10.246.133.138" # prod
+PORT = 8080 # prod
 PATH = "/log"
 
 HTTP_REQUEST_TIMEOUT = 10
