@@ -1,0 +1,12 @@
+description "logrelay"
+
+start on runlevel [23]
+stop on shutdown
+
+script
+    exec 2>>/var/log/logrelay.log
+    exec 1>&2
+    logrelay
+end script
+
+respawn
