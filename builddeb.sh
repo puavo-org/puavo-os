@@ -2,7 +2,7 @@
 
 # Run from parent directory!
 
-FILES="logrelay/Makefile logrelay/README.md logrelay/server.rb logrelay/debian/"
+FILES="logrelay/Makefile logrelay/README.md logrelay/server.rb logrelay/config.rb-dist logrelay/debian/"
 
 set -eu
 
