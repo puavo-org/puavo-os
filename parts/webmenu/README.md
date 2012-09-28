@@ -4,7 +4,9 @@
 
 ## Installing
 
-Install Node.js 0.8.x and run `make`
+Install Node.js 0.8.x and wmctrl
+
+Build with `make`
 
 ## Usage
 

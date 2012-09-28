@@ -31,7 +31,10 @@ function showAgain(){
   window.frame.focus();
   title = "Opinsys Web Menu";
   window.frame.title = title;
-  spawn("wmctrl", ["-a", title]);
+  w = spawn("wmctrl", ["-a", title]);
+  w.on("error", function(err){
+    console.log("erhe", err);
+  });
 }
 
 function hideApp(){
