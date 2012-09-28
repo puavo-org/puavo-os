@@ -6,17 +6,16 @@ function log(msg) {
 }
 
 window.onblur = function() {
-  log("blur!!");
+  log("blur!!2");
   window.dispatchEvent(new Event("focusout"));
 };
 
-window.onmouseout = function() {
-  log("mouseout!");
-};
 
 window.onload = function() {
+
   var close = document.querySelectorAll(".close")[0];
   close.addEventListener("click", function(){
     window.dispatchEvent(new Event("hide"));
   }, false);
+
 };

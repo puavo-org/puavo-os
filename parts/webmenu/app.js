@@ -42,6 +42,7 @@ function showAgain(){
 }
 
 function hideApp(){
+  console.log("hide");
   window.frame.hide();
 }
 
