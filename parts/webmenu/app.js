@@ -1,6 +1,7 @@
 var app = module.exports = require('appjs');
 var http = require("http");
 var spawn = require('child_process').spawn;
+var exec = require('child_process').exec;
 
 app.serveFilesFrom(__dirname + '/content');
 
@@ -52,6 +53,18 @@ httpServer = http.createServer(function (req, res) {
 
 window.on('ready', function(){
   console.log("Window Ready");
+
+  var $ = window.$
+  $("[data-exec]").each(function (e) {
+    var that = this;
+    $(that).click(function(){
+      var app = $(that).data("exec");
+      console.log("node " + app);
+      exec(app);
+    });
+  });
+
+
   window.require = require;
   window.process = process;
   window.module = module;
