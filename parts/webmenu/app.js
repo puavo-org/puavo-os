@@ -31,10 +31,13 @@ function showAgain(){
   window.frame.focus();
   title = "Opinsys Web Menu";
   window.frame.title = title;
-  w = spawn("wmctrl", ["-a", title]);
-  w.on("error", function(err){
-    console.log("erhe", err);
-  });
+  setTimeout(function(){
+    wmctrl = spawn("wmctrl", ["-a", title]);
+    wmctrl.on('exit', function (code) {
+      console.log('wmctrl exited with code ' + code);
+    });
+  }, 200);
+
 }
 
 function hideApp(){
