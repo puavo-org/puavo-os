@@ -62,6 +62,7 @@ window.on('ready', function(){
       var app = $(that).data("exec");
       console.log("node " + app);
       exec(app);
+      hideApp()
     });
   });
 
