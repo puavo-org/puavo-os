@@ -41,7 +41,12 @@ function showAgain(){
 
 }
 
+disableHide = false;
 function hideApp(){
+  if (disableHide) {
+    console.log("Hiding is disabled. Restart to restore.");
+    return;
+  }
   console.log("hide");
   window.frame.hide();
 }
@@ -83,6 +88,7 @@ window.on('ready', function(){
 
   window.addEventListener('keydown', function(e){
     if (F12(e) || Command_Option_J(e)) {
+      disableHide = true;
       window.frame.openDevTools();
     }
   });
