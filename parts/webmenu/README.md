@@ -1,16 +1,20 @@
-
 # Web Menu
 
 
 ## Installing
 
-Install Node.js 0.8.x and wmctrl
+Install Node.js 0.8.x, wmctrl and git
 
-Build with `make`
+```
+sudo add-apt-repository ppa:chris-lea/node.js
+sudo apt-get update
+sudo apt-get install nodejs npm nodejs-dev wmctrl git-core
 
-## Usage
-
-Start with `npm start`
+git clone https://github.com/opinsys/webmenu.git
+cd webmenu/
+make
+npm start
+```
 
 ## Menu
 
