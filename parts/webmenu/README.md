@@ -16,7 +16,7 @@ make
 npm start
 ```
 
-## Menu
+## Menu item
 
 Add launcher with
 
