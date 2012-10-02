@@ -10,8 +10,6 @@ var window = app.createWindow({
   height : 480,
   top : 200,
   showChrome: false,
-  opacity : 0.5,
-  alpha : true,
   icons  : __dirname + '/content/icons'
 });
 
