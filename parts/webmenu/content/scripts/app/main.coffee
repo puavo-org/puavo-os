@@ -1,28 +1,21 @@
-origLog = console.log
-
-window.log = (msg...) ->
-  # origLog.apply console, msg
-  e = new Event("log")
-  e.msg = msg
-  window.dispatchEvent(e)
-
-# console.log = log
-# console.info = log
-
-
 define [
   "cs!app/desktopbridge"
-  "hbs!app/templates/hello"
+  "cs!app/views/menulayout_view"
   "jquery"
   "backbone"
 ],
 (
   DesktopBridge
-  hello
+  MenuLayout
   $
   Backbone
 )->
-  debugger
+
+  layout = new MenuLayout
+  layout.render()
+  $("body").append layout.el
+
+
   console.info "main here"
   bridge = new DesktopBridge
   bridge.connect()
