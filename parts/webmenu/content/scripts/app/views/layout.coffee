@@ -5,20 +5,17 @@ define [
   View
   _
 ) ->
-  class Layout extends View
 
+  class Layout extends View
 
     constructor: (opts) ->
       super
       @subViews = opts?.subViews or {}
 
     eachSubView: (fn) ->
-      for container, views of @subViews
-        container = @$(container)
-        if not _.isArray(views)
-          fn container, views
-        else
-          fn(container, view) for view in views
+      for selector, views of @subViews
+        container = @$(selector)
+        fn(container, view) for view in views
 
     render: ->
       @eachSubView (container, view) ->
@@ -29,5 +26,10 @@ define [
         container.append view.el
 
     setView: (selector, view) ->
-      @subViews[selector] = view
+      @subViews[selector] = [view]
+
+    addView: (selector, view) ->
+      a = @subViews[selector] ?= []
+      a.push view
+
 
