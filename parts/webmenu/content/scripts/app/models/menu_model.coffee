@@ -21,7 +21,7 @@ define [
     constructor: (opts) ->
       super
 
-  # Only export CategoryModel. It can build other models for us
+  # Only export Recursive MenuModel. It can build other models for us
   return class MenuModel extends AbstractItemModel
 
     typemap =
@@ -36,6 +36,9 @@ define [
       @items = new Backbone.Collection
 
       for item in opts.items
-        @items.add new typemap[item.type](item, allItems)
+        model = new typemap[item.type](item, allItems)
+        model.parent = this
+        @items.add model
+
 
 
