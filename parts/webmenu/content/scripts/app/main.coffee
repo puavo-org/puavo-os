@@ -15,37 +15,41 @@ define [
 
   data =
     type: "menu"
-    name: "Graphics"
-    description: "Graphics programs"
+    name: "Top"
     items: [
       type: "menu"
-      name: "Raster"
-      description: "Rarter apps"
+      name: "Graphics"
+      description: "Graphics programs"
       items: [
-        type: "desktop"
-        name: "Gimp"
-        command: "gimp"
-        description: "A drawing program"
+        type: "menu"
+        name: "Raster"
+        description: "Rarter apps"
+        items: [
+          type: "desktop"
+          name: "Gimp"
+          command: "gimp"
+          description: "A drawing program"
+        ,
+          type: "desktop"
+          name: "Shotwell"
+          command: "shotwell"
+          description: "Viewing program"
+        ,
+          type: "web"
+          name: "Flickr"
+          url: "http://www.flickr.com/"
+          description: "Share your life in photos"
+        ]
       ,
-        type: "desktop"
-        name: "Shotwell"
-        command: "shotwell"
-        description: "Viewing program"
-      ,
-        type: "web"
-        name: "Flickr"
-        url: "http://www.flickr.com/"
-        description: "Share your life in photos"
-      ]
-    ,
-      type: "menu"
-      name: "Vector"
-      description: "Vector apps"
-      items: [
-        type: "desktop"
-        name: "Inkscape"
-        command: "inkscape"
-        description: "A vector drawing program"
+        type: "menu"
+        name: "Vector"
+        description: "Vector apps"
+        items: [
+          type: "desktop"
+          name: "Inkscape"
+          command: "inkscape"
+          description: "A vector drawing program"
+        ]
       ]
     ]
 
