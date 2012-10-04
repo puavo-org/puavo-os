@@ -7,9 +7,10 @@ define [
   # Abstract view class
   class View extends Backbone.View
 
-    viewJSON: -> {}
+    viewJSON: ->
+      return @model.toJSON() if @model
+      return {}
 
     render: ->
-      # console.info "rendering #{ @templateQuery } #{ @model?.id }"
       @$el.html @template(@viewJSON())
 
