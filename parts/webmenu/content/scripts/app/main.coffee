@@ -72,7 +72,9 @@ define [
   allItems.on "select", (model) ->
     bridge.open model
 
-
+  bridge.on "show", ->
+    layout.reset()
+    layout.render()
 
   bridge.connect()
   $(window).blur ->

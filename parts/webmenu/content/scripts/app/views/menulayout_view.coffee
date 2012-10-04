@@ -30,6 +30,9 @@ define [
           @setMenu model
           @render()
 
+    reset: ->
+      @setMenu(@initialMenu)
+
     setMenu: (model) ->
       @_setView ".menu-app-list-container", new MenuListView
         model: model

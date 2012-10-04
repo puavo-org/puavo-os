@@ -27,6 +27,7 @@ window = app.createWindow
 displayMenu = ->
   console.log "showing"
   title = "Opinsys Web Menu"
+  bridge.emit "show"
   window.frame.title = title
   window.frame.show()
   window.frame.focus()

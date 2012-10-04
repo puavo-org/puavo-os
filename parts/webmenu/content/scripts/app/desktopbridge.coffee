@@ -10,13 +10,16 @@ define [
 
   class DesktopBridge
 
+    constructor: ->
+      _.extend this, Backbone.Events
+
     connect: ->
       @io = io.connect()
       @io.on "connect", ->
         console.log "Socket.IO connected"
 
-    hideWindow: -> @io.emit "hideWindow"
+      @io.on "show", => @trigger "show"
 
-    open: (model) ->
-      @io.emit "open", model.toJSON()
+    hideWindow: -> @io.emit "hideWindow"
+    open: (model) -> @io.emit "open", model.toJSON()
 
