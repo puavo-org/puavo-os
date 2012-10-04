@@ -7,7 +7,11 @@
     }
   , "dependencies": {
       "appjs": ""
-      , "coffee-script": ""
-      , "requirejs": ""
+      , "coffee-script": "1.3.x"
+      , "requirejs": "2.0.x"
+      , "express": "3.0.x"
+      , "stylus": "0.29.x"
+      , "nib": "0.8.x"
+      , "socket.io": "0.9.x"
   }
 }
