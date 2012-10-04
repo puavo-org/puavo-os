@@ -13,72 +13,37 @@ define [
   Backbone
 )->
 
-  data =
-    type: "menu"
-    name: "Top"
-    items: [
-      type: "menu"
-      name: "Graphics"
-      description: "Graphics programs"
-      items: [
-        type: "menu"
-        name: "Raster"
-        description: "Rarter apps"
-        items: [
-          type: "desktop"
-          name: "Gimp"
-          command: "gimp"
-          description: "A drawing program"
-        ,
-          type: "desktop"
-          name: "Shotwell"
-          command: "shotwell"
-          description: "Viewing program"
-        ,
-          type: "web"
-          name: "Flickr"
-          url: "http://www.flickr.com/"
-          description: "Share your life in photos"
-        ]
-      ,
-        type: "menu"
-        name: "Vector"
-        description: "Vector apps"
-        items: [
-          type: "desktop"
-          name: "Inkscape"
-          command: "inkscape"
-          description: "A vector drawing program"
-        ]
-      ]
-    ]
+
+ $.get "/menu.json", (data, status, res) =>
+   if status isnt "success"
+     throw new Error "failed to load menu"
 
 
-  allItems = new Backbone.Collection
-  menuModel = new MenuModel data, allItems
+    allItems = new Backbone.Collection
+    menuModel = new MenuModel data, allItems
 
-  layout = new MenuLayout
-    initialMenu: menuModel
-    allItems: allItems
-
-
-  layout.render()
-  $("body").append layout.el
+    layout = new MenuLayout
+      initialMenu: menuModel
+      allItems: allItems
 
 
-  console.info "main here"
-  bridge = new DesktopBridge
-
-  allItems.on "select", (model) ->
-    bridge.open model
-
-  bridge.on "show", ->
-    layout.reset()
     layout.render()
+    $("body").append layout.el
 
-  bridge.connect()
-  $(window).blur ->
-    console.log "brul"
-    bridge.hideWindow()
+
+    console.info "main here"
+    bridge = new DesktopBridge
+
+    allItems.on "select", (model) ->
+      bridge.open model
+
+    bridge.on "show", ->
+      layout.reset()
+      layout.render()
+
+    bridge.connect()
+    $(window).blur ->
+      console.log "brul"
+      bridge.hideWindow()
 
 

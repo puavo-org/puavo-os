@@ -13,6 +13,8 @@ bridge = require("./siobridge")(server)
 handler.use stylus.middleware __dirname + "/content"
 handler.use express.static __dirname + "/content"
 
+handler.get "/menu.json", (req, res) ->
+  res.sendfile __dirname + "/menu.json"
 
 window = app.createWindow
   width  : 1000
