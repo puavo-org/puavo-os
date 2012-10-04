@@ -15,7 +15,7 @@ define [
 
     template: template
 
-    constructor: ->
+    constructor: (opts) ->
       super
 
       @subViews[".menu-app-list"] = [
@@ -23,3 +23,7 @@ define [
         new MenuItem
         new MenuItem
       ]
+
+    viewJSON: ->
+      categoryName: "My Category"
+
