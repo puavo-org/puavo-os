@@ -14,24 +14,39 @@ define [
 )->
 
   data =
-    name: "Graphics"
-    description: "pl aa pla a"
     type: "menu"
+    name: "Graphics"
+    description: "Graphics programs"
     items: [
-      name: "Gimp"
-      type: "desktop"
-      command: "gimp"
-      description: "A drawing program"
+      type: "menu"
+      name: "Raster"
+      description: "Rarter apps"
+      items: [
+        type: "desktop"
+        name: "Gimp"
+        command: "gimp"
+        description: "A drawing program"
+      ,
+        type: "desktop"
+        name: "Shotwell"
+        command: "shotwell"
+        description: "Viewing program"
+      ,
+        type: "web"
+        name: "Flickr"
+        url: "http://www.flickr.com/"
+        description: "Share your life in photos"
+      ]
     ,
-      name: "Shotwell"
-      type: "desktop"
-      command: "shotwell"
-      description: "Viewing program"
-    ,
-      name: "Flickr"
-      type: "web"
-      url: "http://www.flickr.com/"
-      description: "Share your life in photos"
+      type: "menu"
+      name: "Vector"
+      description: "Vector apps"
+      items: [
+        type: "desktop"
+        name: "Inkscape"
+        command: "inkscape"
+        description: "A vector drawing program"
+      ]
     ]
 
 
