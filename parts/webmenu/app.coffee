@@ -8,7 +8,7 @@ stylus = require "stylus"
 handler = express()
 
 server = http.createServer(handler).listen 1337
-bridge = require("./siohack")(server)
+bridge = require("./siobridge")(server)
 
 handler.use stylus.middleware __dirname + "/content"
 handler.use express.static __dirname + "/content"
@@ -52,25 +52,21 @@ handler.get "/show", (req, res) ->
   displayMenu()
 
 
-io = require("socket.io").listen(server)
-io.set "log level", 1
-io.sockets.on "connection", (socket) ->
-  console.info "socket connection"
+bridge.on "open", (msg) ->
+  if msg.type is "desktop"
+    command = msg.command
+  else if msg.type is "web"
+    command = "xdg-open #{ msg.url }"
+  else
+    return
 
-  socket.on "hideWindow", (msg) ->
-    console.log "Hiding window"
-    window.frame.hide()
+  console.log "Executing '#{ command }'"
+  exec command, (err) ->
+    if err
+      console.error "Failed to execute", command, err
 
-  socket.on "open", (msg) ->
-    if msg.type is "desktop"
-      command = msg.command
-    else if msg.type is "web"
-      command = "xdg-open #{ msg.url }"
-    else
-      return
+bridge.on "hideWindow", ->
+  console.log "Hiding window"
+  window.frame.hide()
 
-    console.log "Executing '#{ command }'"
-    exec command, (err) ->
-      if err
-        console.error "Failed to execute", command, err
 
