@@ -1,8 +1,6 @@
-
 # Cannot get Appjs to work with requirejs without disabling the
 # Node.js<->Browser bridge. Use Socket.IO as the bridge for now.
 
-{EventEmitter} = require "events"
 sio = require "socket.io"
 
 module.exports = (server) ->
