@@ -12,12 +12,14 @@ define [
       super
       @subViews = opts?.subViews or {}
 
+
+
     eachSubView: (fn) ->
       for selector, views of @subViews
         container = @$(selector)
         fn(container, view) for view in views
 
-    render: ->
+    render: (opts) ->
       # Remove subviews with detach. This way they don't lose event handlers
       @eachSubView (container, view) -> view.$el.detach()
 
@@ -26,11 +28,11 @@ define [
 
       # Render subviews and put them back to their containers
       @eachSubView (container, view) ->
-        view.render()
+        view.render() if not opts?.skipSubviews
         container.append view.el
 
-    # Methods for setting views. Private because the selectors are internal to
-    # a layout always. Add setMenu(view) method if you need public access.
+    # Methods for setting views. Private because the selectors are always
+    # internal to a layout. Add setMenu(view) method if you need public access.
 
     _setView: (selector, view) ->
       @subViews[selector] = [view]
