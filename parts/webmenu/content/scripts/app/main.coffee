@@ -54,7 +54,7 @@ define [
   menuModel = new MenuModel data, allItems
 
   layout = new MenuLayout
-    model: menuModel
+    initialMenu: menuModel
     allItems: allItems
 
 

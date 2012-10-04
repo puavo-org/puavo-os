@@ -17,7 +17,8 @@ define [
 
     constructor: (opts) ->
       super
-      @setMenu(@model)
+      @initialMenu = opts.initialMenu
+      @setMenu(@initialMenu)
 
       opts.allItems.on "select", (model) =>
         console.log "Selecting", JSON.stringify(model.toJSON())
