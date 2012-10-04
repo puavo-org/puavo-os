@@ -1,11 +1,11 @@
 define [
   "cs!app/views/layout"
-  "cs!app/views/menuitem_view"
+  "cs!app/views/menulist_view"
   "hbs!app/templates/menulayout"
   "backbone"
 ], (
   Layout
-  MenuItem
+  MenuListView
   template
   Backbone
 ) ->
@@ -17,13 +17,18 @@ define [
 
     constructor: (opts) ->
       super
+      @setMenu(@model)
 
-      @subViews[".menu-app-list"] = [
-        new MenuItem
-        new MenuItem
-        new MenuItem
-      ]
+      opts.allItems.on "select", (model) =>
+        console.log "Selecting", JSON.stringify(model.toJSON())
 
-    viewJSON: ->
-      categoryName: "My Category"
+        if model.get("type") is "menu"
+          @setMenu model
+          @render()
+
+
+    setMenu: (model) ->
+      @_setView ".menu-app-list-container", new MenuListView
+        model: model
+
 

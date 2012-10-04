@@ -55,6 +55,7 @@ define [
 
   layout = new MenuLayout
     model: menuModel
+    allItems: allItems
 
 
   layout.render()

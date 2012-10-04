@@ -1,15 +1,15 @@
 define [
   "cs!app/views/layout"
   "cs!app/views/menuitem_view"
-  "hbs!app/templates/menuitemlist"
+  "hbs!app/templates/menulist"
   "backbone"
 ], (
   Layout
-  MenuItem
+  MenuItemView
   template
   Backbone
 ) ->
-  class MenuList extends Layout
+  class MenuListView extends Layout
 
     className: "bb-menu"
 
@@ -18,6 +18,10 @@ define [
     constructor: ->
       super
 
-    viewJSON: ->
-      return name: @model.get "name"
+      if @model.get("type") isnt "menu"
+        throw new Error "Bad menu list model type: #{ @model.get("type") }"
+
+      @model.items.each (model) =>
+        @_addView ".menu-app-list", new MenuItemView
+          model: model
 

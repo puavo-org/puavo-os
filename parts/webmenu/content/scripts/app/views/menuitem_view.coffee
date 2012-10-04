@@ -6,10 +6,12 @@ define [
   template
 ) ->
 
-  class Item extends View
+  class MenuItemView extends View
 
     className: "bb-menu-item"
 
     template: template
 
-    viewJSON: -> name: "lol"
+    events:
+      "click": (e) ->
+        @model.trigger "select", @model
