@@ -7,7 +7,8 @@ stylus = require "stylus"
 
 handler = express()
 
-server = http.createServer(handler).listen 1234
+server = http.createServer(handler).listen 1337
+bridge = require("./siohack")(server)
 
 handler.use stylus.middleware __dirname + "/content"
 handler.use express.static __dirname + "/content"
@@ -20,7 +21,8 @@ window = app.createWindow
   showChrome: false
   disableSecurity: true
   icons  : __dirname + '/content/icons'
-  url: "http://localhost:1234"
+  url: "http://localhost:1337"
+
 
 displayMenu = ->
   console.log "showing"
