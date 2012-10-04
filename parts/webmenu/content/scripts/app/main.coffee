@@ -68,6 +68,12 @@ define [
 
   console.info "main here"
   bridge = new DesktopBridge
+
+  allItems.on "select", (model) ->
+    bridge.open model
+
+
+
   bridge.connect()
   $(window).blur ->
     console.log "brul"

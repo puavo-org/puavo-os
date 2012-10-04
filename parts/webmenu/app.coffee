@@ -1,5 +1,6 @@
 
 http = require "http"
+{exec} = require "child_process"
 app = require "appjs"
 express = require "express"
 stylus = require "stylus"
@@ -18,6 +19,21 @@ io.sockets.on "connection", (socket) ->
 
   socket.on "hideWindow", (msg) ->
     console.info "gotta hide this window"
+
+  socket.on "open", (msg) ->
+    if msg.type is "desktop"
+      command = msg.command
+    else if msg.type is "web"
+      command = "xdg-open #{ msg.url }"
+    else
+      return
+
+    console.log "Executing '#{ command }'"
+    exec command, (err) ->
+      if err
+        console.error "Failed to execute", command, err
+
+
 
 # app.serveFilesFrom(__dirname + '/content');
 
