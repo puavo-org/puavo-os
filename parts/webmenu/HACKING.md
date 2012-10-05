@@ -1,5 +1,4 @@
 
-
 # Hacking
 
 Current Web Menu devepment requires Ubuntu Precise Pangolin or later and a fork
@@ -14,7 +13,7 @@ Ubuntu dependecies
     sudo apt-get update
     sudo apt-get install nodejs npm nodejs-dev wmctrl git-core build-essential libgtk2.0-dev
 
-Fetch and build the fork (bit complicated sorry)
+Fetch and build the fork for 32 bit machines (bit complicated sorry)
 
     git clone git://github.com/opinsys/appjs.git appjs
     cd appjs/
