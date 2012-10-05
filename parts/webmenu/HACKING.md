@@ -18,6 +18,7 @@ Fetch and build the fork (bit complicated sorry)
 
     git clone git://github.com/opinsys/appjs.git appjs
     cd appjs/
+    git checkout origin/epeli
     mkdir deps
     cd deps/
     wget https://github.com/downloads/appjs/appjs/cef_binary_1.1180.724_linux_ia32.tar.gz
@@ -27,7 +28,7 @@ Fetch and build the fork (bit complicated sorry)
     tar xzvf appjs-0.0.19-linux-ia32.tar.gz
     cp app/data/bin/libffmpegsumo.so cef/Release/lib.target/
     cd ..
-    cp /usr/local/bin/node data/linux/ia32/node-bin/
+    cp $(which node) data/linux/ia32/node-bin/
     sudo apt-get install libgtk2.0-dev
     npm install
 
@@ -38,7 +39,7 @@ Fetch and build Web Menu inside our fork
     cd webmenu
     npm install
     # Make sure to use our fork of appjs
-    rm node_modules/appjs*
+    rm -rf node_modules/appjs*
 
 Start it `npm start`
 
