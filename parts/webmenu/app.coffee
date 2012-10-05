@@ -23,6 +23,7 @@ window = app.createWindow
   showChrome: false
   disableSecurity: true
   icons  : __dirname + '/content/icons'
+  disableBrowserRequire: true
   url: "http://localhost:1337"
 
 
