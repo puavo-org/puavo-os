@@ -1,26 +1,33 @@
-<div class="menu-left">
-
-  <div class="breadcrums-container">
-    breadcrums
+<div class="span12 navigation">
+  <ul class="span9 nav nav-pills">
+    <li class="span5 justify active"><a href="#">Kategoriat</a></li>
+    <li class="span5 justify"><a href="#">Oppiaineet</a></li>
+  </ul>
+  <!-- Search form -->
+  <div class="span3">
+    <form class="form-inline clearfix">
+        <input type="text" class="input-small search span10" placeholder="Hae">
+    </form> 
   </div>
+</div> <!-- navigation -->
+<div class="span12 main margin20">
 
-  <div class="menu-content">
-    <h1>{{categoryName}}</h1>
-
-    <div class="menu-app-list-container">
+    <div class="breadcrums-container span8">
+      breadcrums
     </div>
 
+    <div class="menu-content span8">
+      <h1>{{categoryName}}</h1>
+
+      <div class="menu-app-list-container">
+      </div>
+
+    </div>   
+
+</div> <!-- main -->
+<div class="bb-recently-used span12 favorites margin0">
+  <h1>Most Used</h1>
+  <div class="menu-item">
+    todo
   </div>
-
-  <div class="clearfix"></div>
-  <div class="bb-recently-used">
-    <h1>Most Used</h1>
-    <div class="menu-item">
-      todo
-    </div>
-  </div>
-
-</div>
-
-<div class="menu-right">
-</div>
+</div>  <!-- favorites -->
