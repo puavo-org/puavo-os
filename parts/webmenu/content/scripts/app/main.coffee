@@ -28,8 +28,7 @@ define [
 
 
     layout.render()
-    $("body").append layout.el
-
+    $(".content-container").append layout.el
 
     console.info "main here"
     bridge = new DesktopBridge
