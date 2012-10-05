@@ -57,16 +57,18 @@ handler.get "/show", (req, res) ->
 
 bridge.on "open", (msg) ->
   if msg.type is "desktop"
-    command = msg.command
+    command = msg.command.shift()
+    args = msg.command
   else if msg.type is "web"
-    command = "xdg-open #{ msg.url }"
+    command = "xdg-open"
+    args = [msg.url]
   else
     return
 
   console.log "Executing '#{ command }'"
-  exec command, (err) ->
-    if err
-      console.error "Failed to execute", command, err
+  cmd = spawn command, args, { detached: true }
+  cmd.on "exit", (code) ->
+    console.log "Command '#{ command } #{ args.join " " } exited with #{ code }"
 
 bridge.on "hideWindow", ->
   console.log "Hiding window"

@@ -15,13 +15,13 @@
             {
               "type": "desktop",
               "name": "Gimp",
-              "command": "gimp",
+              "command": ["gimp"],
               "description": "A drawing program"
             },
             {
               "type": "desktop",
               "name": "Shotwell",
-              "command": "shotwell",
+              "command": ["shotwell"],
               "description": "Viewing program"
             },
             {
@@ -40,7 +40,7 @@
             {
               "type": "desktop",
               "name": "Inkscape",
-              "command": "inkscape",
+              "command": ["inkscape"],
               "description": "A vector drawing program"
             }
           ]
