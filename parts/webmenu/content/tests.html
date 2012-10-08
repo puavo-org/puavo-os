@@ -21,7 +21,8 @@
     window.expect = chai.expect;
     mocha.setup('bdd');
     require([
-        "cs!tests/view.test"
+        "cs!tests/view.test",
+        "cs!tests/menumodel.test"
     ], function() {
         var runner = mocha.run();
         BUNYIP.hookup(runner);

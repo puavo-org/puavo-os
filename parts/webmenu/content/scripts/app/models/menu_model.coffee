@@ -13,13 +13,19 @@ define [
       @allItems.add this
 
 
-  class WebItemModel extends AbstractItemModel
+  class LauncherModel extends AbstractItemModel
+    defaults:
+      "clicks": 0
+
     constructor: (opts) ->
       super
 
-  class DesktopItemModel extends AbstractItemModel
-    constructor: (opts) ->
-      super
+      @on "select", =>
+        @set "clicks", @get("clicks") + 1
+        console.log "Click count for #{ @get "name" } is #{ @get "clicks" }"
+
+  class WebItemModel extends LauncherModel
+  class DesktopItemModel extends LauncherModel
 
   # Only export Recursive MenuModel. It can build other models for us
   return class MenuModel extends AbstractItemModel
@@ -39,6 +45,8 @@ define [
         model = new typemap[item.type](item, allItems)
         model.parent = this
         @items.add model
+
+
 
 
 
