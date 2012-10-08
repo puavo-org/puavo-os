@@ -21,7 +21,7 @@ define [
     it "has html", ->
       expect(view.$("h2")).to.have.text("Foo")
 
-    it "will emit select event on model on click", (done) ->
+    it "will emit select event on the model on click", (done) ->
       view.model.on "select", -> done()
       view.$("h2").trigger "click"
 
