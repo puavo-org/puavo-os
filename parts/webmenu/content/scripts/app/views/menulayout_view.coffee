@@ -3,6 +3,7 @@ define [
   "cs!app/views/menulist_view"
   "cs!app/views/breadcrumbs_view"
   "cs!app/views/sidebar_view"
+  "cs!app/views/favorites_view"
   "hbs!app/templates/menulayout"
   "backbone"
 ], (
@@ -10,6 +11,7 @@ define [
   MenuListView
   Breadcrumbs
   SidebarView
+  Favorites
   template
   Backbone
 ) ->
@@ -34,6 +36,9 @@ define [
           @renderSubviews()
 
       @_setView ".sidebar", new SidebarView
+
+      @_setView ".favorites", new Favorites
+        collection: @allItems
 
     reset: ->
       @setMenu(@initialMenu)

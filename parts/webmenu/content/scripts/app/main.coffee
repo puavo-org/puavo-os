@@ -2,6 +2,7 @@ define [
   "cs!app/desktopbridge"
   "cs!app/views/menulayout_view"
   "cs!app/models/menu_model"
+  "cs!app/models/allitems_collection"
   "jquery"
   "backbone"
 ],
@@ -9,6 +10,7 @@ define [
   DesktopBridge
   MenuLayout
   MenuModel
+  AllItems
   $
   Backbone
 )->
@@ -19,7 +21,7 @@ define [
      throw new Error "failed to load menu"
 
 
-    allItems = new Backbone.Collection
+    allItems = new AllItems
     menuModel = new MenuModel data, allItems
 
     layout = new MenuLayout
