@@ -1,7 +1,7 @@
 
-<ul>
+<ul class="breadcrumb">
   {{#each crumbs}}
-  <li data-cid="{{cid}}">{{name}}</li>
+  <li><a data-cid="{{cid}}" href="#">{{name}}</a><span class="divider">/</span></li>
   {{/each}}
 </ul>
 

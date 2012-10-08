@@ -2,12 +2,14 @@ define [
   "cs!app/views/layout"
   "cs!app/views/menulist_view"
   "cs!app/views/breadcrumbs_view"
+  "cs!app/views/sidebar_view"
   "hbs!app/templates/menulayout"
   "backbone"
 ], (
   Layout
   MenuListView
   Breadcrumbs
+  SidebarView
   template
   Backbone
 ) ->
@@ -29,6 +31,7 @@ define [
         if model.get("type") is "menu"
           @setMenu model
           @render()
+      @_setView ".sidebar", new SidebarView
 
     reset: ->
       @setMenu(@initialMenu)
