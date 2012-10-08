@@ -12,7 +12,8 @@ define [
     template: template
 
     events:
-      "click li": (e) ->
+      "click a": (e) ->
+        e.preventDefault()
         cid = $(e.target).data("cid")
         selected = @model.allItems.getByCid(cid)
         selected.trigger "select", selected
