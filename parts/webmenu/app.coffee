@@ -26,6 +26,21 @@ window = app.createWindow
   disableBrowserRequire: true
   url: "http://localhost:1337"
 
+myProfileWindow = app.createWindow
+  width  : 800
+  height : 530
+  top : 200
+  showChrome: true
+  disableSecurity: true
+  icons  : __dirname + '/content/icons'
+  url: "http://puavo:3002/users/profile/edit"
+
+
+displayMyProfile = ->
+  title = "Opinsys - My Profile"
+  myProfileWindow.frame.title = title
+  myProfileWindow.frame.show()
+  myProfileWindow.frame.focus()
 
 displayMenu = ->
   console.log "showing"
@@ -43,6 +58,11 @@ displayMenu = ->
     wmctrl.on 'exit', (code) ->
       console.log('wmctrl exited with code ' + code)
   , 200
+
+myProfileWindow.on 'create', ->
+  console.log "Create My Profile window"
+  displayMyProfile()
+
 
 window.on 'create', ->
   console.log("Window Created")
