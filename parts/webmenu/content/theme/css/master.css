@@ -59,7 +59,7 @@ img{
   background-color:rgba(207, 226, 222, 0.8);
   cursor: pointer;
 }
-.desktop_link:hover > div i{
+.desktop-link:hover > div i{
   color:rgb(237,113,19);
 }
 ul.thumbnails{
@@ -79,7 +79,7 @@ ul li ul.submenu{
   width: 100%;
   z-index: 999;
 }
-ul li.desktop_link:hover ul.submenu{
+ul li.desktop-link:hover ul.submenu{
   display: block;
 }
 img.avatar{
@@ -93,7 +93,9 @@ button.close{
 .logout a{
   color:#AD0000;
   font-size: 150%;
-  padding: 3px;
+  display: block;
+  line-height: 1;
+  padding: 5px;
 }
 .logout a:hover{
   background-color: #AD0000;
@@ -105,8 +107,6 @@ button.close{
   border-radius: 4px;
   -webkit-border-radius: 4px;
   color: #FFF;
-  transform: rotate(90 deg);
-  -webkit-transform: rotate(90 deg);
 }
 .logout a i{
   margin-left: 2px;
@@ -118,8 +118,11 @@ button.close{
 .row-fluid [class*="span"] .margin03, .margin03{
   margin:0 3%;
 }
-.row-fluid [class*="span"] .smooth_margin, .smooth_margin{
+.row-fluid [class*="span"] .smooth-margin, .smooth-margin{
   margin:0 1% 2%;
+}
+.row-fluid [class*="span"] .normal-margin{
+  margin-left: 2.7624309392265194%;
 }
 .row-fluid .margin20, .margin20{
   margin: 2% 0;
@@ -162,7 +165,7 @@ button.close{
     border-top: 2px solid rgba(90,90,90,0.7);
     padding-top: 1em;
   }
-  ul.thumbnails li.desktop_link{
+  ul.thumbnails li.desktop-link{
     float:left;
     width: 20%;
   }
