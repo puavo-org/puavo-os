@@ -13,3 +13,8 @@ define [
     className: "sidebar-container"
 
     template: template
+
+    events:
+      "click .myProfileButton": (e) ->
+        Application.trigger "showMyProfileWindow"
+        

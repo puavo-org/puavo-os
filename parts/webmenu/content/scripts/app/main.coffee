@@ -49,4 +49,7 @@ define [
       console.log "brul"
       bridge.hideWindow()
 
+    Application.on "showMyProfileWindow", ->
+      bridge.showMyProfileWindow()
+
 

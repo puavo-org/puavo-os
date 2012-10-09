@@ -26,17 +26,7 @@ window = app.createWindow
   disableBrowserRequire: true
   url: "http://localhost:1337"
 
-myProfileWindow = app.createWindow
-  width  : 800
-  height : 530
-  top : 200
-  showChrome: true
-  disableSecurity: true
-  icons  : __dirname + '/content/icons'
-  url: "http://puavo:3002/users/profile/edit"
-
-
-displayMyProfile = ->
+displayMyProfileWindow = (myProfileWindow) ->
   title = "Opinsys - My Profile"
   myProfileWindow.frame.title = title
   myProfileWindow.frame.show()
@@ -59,9 +49,6 @@ displayMenu = ->
       console.log('wmctrl exited with code ' + code)
   , 200
 
-myProfileWindow.on 'create', ->
-  console.log "Create My Profile window"
-  displayMyProfile()
 
 
 window.on 'create', ->
@@ -95,4 +82,20 @@ bridge.on "hideWindow", ->
   console.log "Hiding window"
   window.frame.hide()
 
+bridge.on "showMyProfileWindow", ->
+  myProfileWindow = createMyProfileWindow()
 
+  myProfileWindow.on 'create', ->
+    displayMyProfileWindow(this)
+
+createMyProfileWindow = () ->
+  console.log "Create My Profile window"
+  return app.createWindow
+    width  : 800
+    height : 530
+    top : 200
+    showChrome: true
+    disableSecurity: true
+    icons  : __dirname + '/content/icons'
+    url: "http://puavo:3002/users/profile/edit?data-remote=true"
+  

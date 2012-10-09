@@ -23,3 +23,5 @@ define [
     hideWindow: -> @io.emit "hideWindow"
     open: (model) -> @io.emit "open", model.toJSON()
 
+    showMyProfileWindow: -> @io.emit "showMyProfileWindow"
+
