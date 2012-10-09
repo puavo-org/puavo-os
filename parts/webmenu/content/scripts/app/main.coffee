@@ -3,6 +3,7 @@ define [
   "cs!app/views/menulayout_view"
   "cs!app/models/menu_model"
   "cs!app/models/allitems_collection"
+  "cs!app/application"
   "jquery"
   "backbone"
 ],
@@ -11,6 +12,7 @@ define [
   MenuLayout
   MenuModel
   AllItems
+  Application
   $
   Backbone
 )->
