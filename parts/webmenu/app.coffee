@@ -4,6 +4,7 @@ http = require "http"
 app = require "appjs"
 express = require "express"
 stylus = require "stylus"
+{argv} = require "optimist"
 
 handler = express()
 
@@ -55,7 +56,9 @@ window.on 'create', ->
   console.log("Window Created")
   displayMenu()
   window.frame.center()
-  # window.frame.openDevTools()
+  if argv["dev-tools"]
+    console.log "Opening devtools"
+    window.frame.openDevTools()
 
 
 handler.get "/show", (req, res) ->
@@ -80,7 +83,7 @@ bridge.on "open", (msg) ->
 
 bridge.on "hideWindow", ->
   console.log "Hiding window"
-  window.frame.hide()
+  window.frame.hide() if not argv["dev-tools"]
 
 bridge.on "showMyProfileWindow", ->
   myProfileWindow = createMyProfileWindow()
