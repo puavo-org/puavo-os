@@ -18,13 +18,13 @@ handler.get "/menu.json", (req, res) ->
   res.sendfile __dirname + "/menu.json"
 
 window = app.createWindow
-  width  : 1000
-  height : 480
-  top : 200
+  width: 1000
+  height: 480
+  top: 200
   showChrome: false
   disableSecurity: true
-  showOnTaskbar : false
-  icons  : __dirname + '/content/icons'
+  showOnTaskbar: false
+  icons: __dirname + '/content/icons'
   disableBrowserRequire: true
   url: "http://localhost:1337"
 
