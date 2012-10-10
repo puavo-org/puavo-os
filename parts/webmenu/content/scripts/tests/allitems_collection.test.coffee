@@ -24,6 +24,10 @@ define [
       type: "web"
       name: "Flickr"
       url: "http://flickr.com"
+    ,
+      type: "web"
+      name: "Picasa"
+      url: "http://picasa.com"
     ]
 
   describe "AllItems Collection", ->
