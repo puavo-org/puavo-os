@@ -9,7 +9,7 @@ stylus = require "stylus"
 handler = express()
 
 server = http.createServer(handler).listen 1337
-bridge = require("./siobridge")(server)
+bridge = require("./lib/siobridge")(server)
 
 handler.use stylus.middleware __dirname + "/content"
 handler.use express.static __dirname + "/content"
