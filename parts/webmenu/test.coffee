@@ -8,8 +8,8 @@ createTestWindow = (url) ->
   console.log "Creating window with #{ url }"
 
   window = app.createWindow
-    width  : 1000
-    height : 480
+    width  : 800
+    height : 640
     top : 200
     disableSecurity: true
     disableBrowserRequire: true
