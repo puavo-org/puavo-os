@@ -29,7 +29,6 @@ define [
       @setMenu(@initialMenu)
 
       @allItems.on "select", (model) =>
-        console.log "Selecting", JSON.stringify(model.toJSON())
 
         if model.get("type") is "menu"
           @setMenu model

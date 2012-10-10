@@ -34,7 +34,6 @@ define [
     layout.render()
     $(".content-container").append layout.el
 
-    console.info "main here"
     bridge = new DesktopBridge
 
     allItems.on "select", (model) ->
@@ -46,7 +45,6 @@ define [
 
     bridge.connect()
     $(window).blur ->
-      console.log "brul"
       bridge.hideWindow()
 
     Application.on "showMyProfileWindow", ->

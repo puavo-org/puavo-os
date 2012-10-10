@@ -31,7 +31,6 @@ define [
 
     renderSubviews: (opts) ->
       while oldView = @_remove.shift()
-        console.log "Removing #{ oldView.constructor.name }"
         oldView.remove()
 
       for selector, views of @subViews
@@ -51,7 +50,6 @@ define [
       else
         newViews = [view]
 
-      console.log selector
       if current = @subViews[selector]
         for old in _.difference(current, newViews)
           @_remove.push old

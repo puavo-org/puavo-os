@@ -25,6 +25,7 @@ define [
         console.log "Click count for #{ @get "name" } is #{ @get "clicks" }"
 
   class WebItemModel extends LauncherModel
+
   class DesktopItemModel extends LauncherModel
 
   # Only export Recursive MenuModel. It can build other models for us
@@ -45,8 +46,4 @@ define [
         model = new typemap[item.type](item, allItems)
         model.parent = this
         @items.add model
-
-
-
-
 
