@@ -11,6 +11,7 @@ define [
     constructor: (opts) ->
       super
       @subViews = opts?.subViews or {}
+      @_remove = []
 
 
     render: (opts) ->
@@ -29,7 +30,11 @@ define [
       @renderSubviews(opts)
 
     renderSubviews: (opts) ->
-      for selector, views of @subViews when views.dirty
+      while oldView = @_remove.shift()
+        console.log "Removing #{ oldView.constructor.name }"
+        oldView.remove()
+
+      for selector, views of @subViews
         container = @$(selector)
         container.children().detach() if not opts?._noDetach
         for view in views
@@ -40,12 +45,17 @@ define [
     # Methods for setting views. Private because the selectors are always
     # internal to a layout. Add setMenu(view) method if you need public access.
 
-    _setView: (selector, view, render) ->
-      views = @subViews[selector] = [view]
-      views.dirty = true
+    _setView: (selector, view) ->
+      if _.isArray(view)
+        newViews = view
+      else
+        newViews = [view]
 
-    _addView: (selector, view) ->
-      a = @subViews[selector] ?= []
-      a.push view
-      a.dirty = true
+      console.log selector
+      if current = @subViews[selector]
+        for old in _.difference(current, newViews)
+          @_remove.push old
+
+      @subViews[selector] = newViews
+
 
