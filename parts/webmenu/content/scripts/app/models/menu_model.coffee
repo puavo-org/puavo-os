@@ -18,11 +18,18 @@ define [
       "clicks": 0
 
     constructor: (opts) ->
+      opts.id = opts.name
       super
+      if clicks = localStorage[@_lsID()]
+        @set "clicks", parseInt(clicks, 10)
 
       @on "select", =>
         @set "clicks", @get("clicks") + 1
+        localStorage[@_lsID()] = @get "clicks"
         console.log "Click count for #{ @get "name" } is #{ @get "clicks" }"
+
+    _lsID: -> "clicks-#{ @id }"
+
 
   class WebItemModel extends LauncherModel
 
