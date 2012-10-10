@@ -25,6 +25,7 @@ define [
     beforeEach ->
       allItems = new Backbone.Collection
       model = new MenuModel data, allItems
+      allItems.each (m) -> m.resetClicks?()
 
     it "will add items to the collection", ->
       expect(allItems.size()).to.eq 2

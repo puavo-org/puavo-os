@@ -29,6 +29,8 @@ define [
         console.log "Click count for #{ @get "name" } is #{ @get "clicks" }"
 
     _lsID: -> "clicks-#{ @id }"
+    resetClicks: ->
+      delete localStorage[@_lsID()]
 
 
   class WebItemModel extends LauncherModel
