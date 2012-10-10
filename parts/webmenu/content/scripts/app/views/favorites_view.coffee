@@ -13,9 +13,7 @@ define [
 
     constructor: ->
       super
-
-      @collection.on "select", =>
-        @render()
+      @bindTo @collection, "select", @render
 
     render: ->
       views = @collection.favorites(3).map (model) =>
