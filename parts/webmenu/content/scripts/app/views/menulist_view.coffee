@@ -21,7 +21,7 @@ define [
       if @model.get("type") isnt "menu"
         throw new Error "Bad menu list model type: #{ @model.get("type") }"
 
-      @model.items.each (model) =>
-        @_addView ".menu-app-list", new MenuItemView
+      @_setView ".menu-app-list", @model.items.map (model) ->
+        new MenuItemView
           model: model
 

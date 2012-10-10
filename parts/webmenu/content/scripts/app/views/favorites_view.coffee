@@ -14,10 +14,14 @@ define [
     constructor: ->
       super
 
-      @collection.favorites(3).forEach (model) =>
-        @_addView ".most-used-list", new MenuItemView
-          model: model
+      @collection.on "select", =>
+        @render()
 
+    render: ->
+      views = @collection.favorites(3).map (model) =>
+        new MenuItemView model: model
+      @_setView ".most-used-list", views
 
+      super
 
 
