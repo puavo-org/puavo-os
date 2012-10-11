@@ -3,6 +3,7 @@
 require "ldap"
 require 'rubygems'
 require 'yaml'
+require 'json'
 
 if configurations = YAML.load_file("/etc/puavo/ldap.yml") rescue nil
 #  puts "Using config/ldap.yml"
@@ -24,6 +25,10 @@ puts "Saving tag files to #{target_dir}"
 @tags = Hash.new
 @tags['all_servers'] = Array.new
 
+@users = Hash.new
+
+@mounts = Hash.new
+
 def get_servers(suffix)
   serverlist = ""
 
@@ -38,28 +43,49 @@ def get_servers(suffix)
       conn.search(suffix, LDAP::LDAP_SCOPE_BASE, "(objectClass=eduOrg)") {|e|
         name = e.get_values('puavoDomain')[0]
       }
-
-      puts "NAME: #{name}"
+      
       conn.search(suffix, LDAP::LDAP_SCOPE_SUBTREE, "(objectClass=posixAccount)") {|e|
-	user_name = "username: #{e.get_values('cn')} organization: #{name}"
-        puts user_name
+        user_name = e.get_values('cn')
+        @users[user_name] = Hash.new
+        @users[user_name][:organization] = name
         if e.get_values('homeDirectory')
           e.get_values('homeDirectory').each {|homedir|
-            puts homedir
-##            if @tags.has_key?(tag)
-#              server_list = @tags[tag]
-#            else
-#              server_list = Array.new
-#              @tags[tag] = server_list
-#            end
-#
-#            if !server_list.include?(server_name)
-#              server_list << server_name
-#            end
+            homedir.slice!("/home/")
+            ( mount, user_home ) = homedir.split("/")
+            #puts "mount: #{mount} home dir: #{user_home}"
+            @users[user_name][:mount] = mount
+            @users[user_name][:homedirsuffix] = user_home
           }
          end
-
-       # @tags['all_servers'] << server_name
+        if e.get_values('givenName')
+          givenname = e.get_values('givenName')[0]
+          @users[user_name][:givenname] = givenname
+          @users[user_name][:fullname] = ( givenname || "" )
+          
+        end
+        if e.get_values('sn')
+          surname = e.get_values('sn')[0]
+          @users[user_name][:surname] = surname
+          @users[user_name][:fullname] = "#{@users[user_name][:fullname]} #{surname}"
+        end
+      }
+      conn.search(suffix, LDAP::LDAP_SCOPE_SUBTREE, "(objectClass=puavoServer)") {|e|
+        ltsp_name = e.get_values('cn')[0]
+        if e.get_values('puavoExport')
+#          @mounts[name] = Hash.new
+#          @mounts[name][:ltspname] = ltsp_name
+#          @mounts[name][:exports] = Array.new
+          e.get_values('puavoExport').each {|puavoExport|
+            puavoExport.slice!("/home/")
+            if ! puavoExport.include?("administration")
+               @mounts[puavoExport] = Array.new unless @mounts[puavoExport]
+               exportServer = Hash.new
+               exportServer[:ltsp] = ltsp_name
+               exportServer[:organization] = name
+               @mounts[puavoExport].push(exportServer)
+            end
+            }
+        end
       }
     rescue LDAP::ResultError
       conn.perror("Virhe")
@@ -88,12 +114,14 @@ conn.bind(@binddn, @bindpw) do
     end  
 end
 
-puts @tags.inspect
+# puts @tags.inspect
 
-@tags.keys.sort.each do |tag|
-  File.open("#{target_dir}/#{tag}", "w") {|f|
-    @tags[tag].each {|server|
-      f.write("#{server}\n")
-    }
+#puts @users.inspect
+#puts @mounts.inspect
+## @tags.keys.sort.each do |tag|
+File.open("#{target_dir}/mounts", "w") {|f|
+     f.write(@mounts.to_json)
   }
-end
+File.open("#{target_dir}/users", "w") {|f|
+     f.write(@users.to_json)
+  }
