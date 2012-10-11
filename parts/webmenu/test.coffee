@@ -20,14 +20,18 @@ createTestWindow = (url) ->
     if argv["dev-tools"]
       window.frame.openDevTools()
 
+call = (cmd) ->
+  child = exec cmd
+  child.stdout.pipe process.stdout
+  child.stderr.pipe process.stderr
 
 if argv.yeti
-  yeti = spawn "yeti", ["--server"]
-  yeti.stdout.pipe process.stdout
-  yeti.stderr.pipe process.stderr
+  call "yeti --server"
   setTimeout ->
     createTestWindow "http://localhost:9000"
   , 1000
+else if argv.node
+  call "node_modules/.bin/mocha --compilers coffee:coffee-script tests/**"
 else
   express = require "express"
   server = express()
