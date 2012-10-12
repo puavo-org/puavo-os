@@ -5,6 +5,7 @@ app = require "appjs"
 express = require "express"
 stylus = require "stylus"
 {argv} = require "optimist"
+menutools = require "./lib/menutools"
 
 handler = express()
 
@@ -14,8 +15,14 @@ bridge = require("./lib/siobridge")(server)
 handler.use stylus.middleware __dirname + "/content"
 handler.use express.static __dirname + "/content"
 
+
+locale = process.env.LANG
+locale = "fi_FI.UTF-8"
+menuJSON = require "./menu.json"
+menutools.injectDesktopData(menuJSON, "/usr/share/applications", locale)
 handler.get "/menu.json", (req, res) ->
-  res.sendfile __dirname + "/menu.json"
+  console.log menuJSON
+  res.json menuJSON
 
 window = app.createWindow
   width: 1000
