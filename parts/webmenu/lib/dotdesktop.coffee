@@ -59,7 +59,7 @@ parseFileSync = (filePath, locale) ->
       [desktopEntry, "GenericName", locale],
       [desktopEntry, "Name", locale],
     )
-    description: findTranslated(data, "Comment", locale)
+    description: findTranslated(desktopEntry, "Comment", locale)
   }
 
 module.exports =

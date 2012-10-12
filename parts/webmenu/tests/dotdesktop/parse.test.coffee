@@ -29,14 +29,15 @@ describe "desktop file with embedded translations", ->
 
     it "has finnish translation", ->
       expect(thunderbird.name).to.eq "Sähköpostiohjelma"
+      expect(thunderbird.description).to.eq "Lue ja kirjoita sähköposteja"
 
   describe "with unknown translation", ->
 
     thunderbird = dotdesktop.parseFileSync __dirname + "/thunderbird.desktop", "xx_XX.UTF-8"
 
-    it "gets english name", ->
-
+    it "gets english", ->
       expect(thunderbird.name).to.eq "Mail Client"
+      expect(thunderbird.description).to.eq "Send and receive mail with Thunderbird"
 
 
 
