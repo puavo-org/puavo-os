@@ -50,6 +50,14 @@ _findEmbedded = (desktopEntry, attr, lang) ->
   attr += "[#{ lang }]"
   return desktopEntry[attr]
 
+findCommand = (desktopEntry) ->
+  cmd = desktopEntry["Exec"]
+  if not cmd
+    err = new Error "Exec is missing for #{ desktopEntry["Name"] }"
+    err.desktopEntry = desktopEntry
+    throw err
+  # Remove arguments
+  cmd.replace(/\ *%[A-Z-a-z]/, "")
 
 parseFileSync = (filePath, locale) ->
   data = ini.parse fs.readFileSync(filePath).toString()
@@ -65,6 +73,7 @@ parseFileSync = (filePath, locale) ->
       [desktopEntry, "Name", locale],
     )
     description: findTranslated(desktopEntry, "Comment", locale)
+    command: findCommand(desktopEntry)
   }
 
 module.exports =
