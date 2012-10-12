@@ -31,7 +31,7 @@ if argv.yeti
     createTestWindow "http://localhost:9000"
   , 1000
 else if argv.node
-  call "node_modules/.bin/mocha --compilers coffee:coffee-script tests/**"
+  call "node_modules/.bin/mocha --compilers coffee:coffee-script tests/*test*"
 else
   express = require "express"
   server = express()
