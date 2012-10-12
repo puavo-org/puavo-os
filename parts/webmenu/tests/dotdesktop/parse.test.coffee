@@ -56,3 +56,11 @@ describe "desktop file with missing generic name", ->
 
       expect(thunderbird.name).to.eq "Thunderbird-sähköposti"
 
+
+describe "desktop file without any translations", ->
+
+  thunderbird = dotdesktop.parseFileSync __dirname + "/thunderbird_no_translations.desktop", "fi_FI.UTF-8"
+
+  it "return the original", ->
+
+      expect(thunderbird.name).to.eq "Mail Client"
