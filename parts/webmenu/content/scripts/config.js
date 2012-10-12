@@ -26,6 +26,7 @@ require.config({
     json2: "vendor/json2",
     i18nprecompile: "vendor/i18nprecompile",
     underscore: "vendor/underscore",
+    "underscore.string": "vendor/underscore.string",
     backbone: "vendor/backbone",
     moment: "vendor/moment",
     uri: "vendor/URI",
