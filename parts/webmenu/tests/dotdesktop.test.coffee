@@ -1,6 +1,8 @@
 
 {expect} = require "chai"
-dotdesktop = require "../../lib/dotdesktop"
+dotdesktop = require "../lib/dotdesktop"
+
+dir = __dirname + "/dotdesktop"
 
 
 describe "locale parser", ->
@@ -25,7 +27,7 @@ describe "desktop file with embedded translations", ->
 
   describe "with existing translation", ->
 
-    thunderbird = dotdesktop.parseFileSync __dirname + "/thunderbird.desktop", "fi_FI.UTF-8"
+    thunderbird = dotdesktop.parseFileSync dir + "/thunderbird.desktop", "fi_FI.UTF-8"
 
     it "has finnish translation", ->
       expect(thunderbird.name).to.eq "Sähköpostiohjelma"
@@ -33,7 +35,7 @@ describe "desktop file with embedded translations", ->
 
   describe "with unknown translation", ->
 
-    thunderbird = dotdesktop.parseFileSync __dirname + "/thunderbird.desktop", "xx_XX.UTF-8"
+    thunderbird = dotdesktop.parseFileSync dir + "/thunderbird.desktop", "xx_XX.UTF-8"
 
     it "gets english", ->
       expect(thunderbird.name).to.eq "Mail Client"
@@ -43,7 +45,7 @@ describe "desktop file with embedded translations", ->
 
 describe "desktop file with embedded translations", ->
 
-  gedit = dotdesktop.parseFileSync __dirname + "/gedit.desktop", "fi_FI.UTF-8"
+  gedit = dotdesktop.parseFileSync dir + "/gedit.desktop", "fi_FI.UTF-8"
 
   it "has finnish translation", ->
     expect(gedit.name).to.eq "Tekstimuokkain"
@@ -51,7 +53,7 @@ describe "desktop file with embedded translations", ->
 
 describe "desktop file with missing generic name", ->
 
-    thunderbird = dotdesktop.parseFileSync __dirname + "/thunderbird_no_generic_name.desktop", "fi_FI.UTF-8"
+    thunderbird = dotdesktop.parseFileSync dir + "/thunderbird_no_generic_name.desktop", "fi_FI.UTF-8"
 
     it "falls back to normal name", ->
 
@@ -60,7 +62,7 @@ describe "desktop file with missing generic name", ->
 
 describe "desktop file without any translations", ->
 
-  thunderbird = dotdesktop.parseFileSync __dirname + "/thunderbird_no_translations.desktop", "fi_FI.UTF-8"
+  thunderbird = dotdesktop.parseFileSync dir + "/thunderbird_no_translations.desktop", "fi_FI.UTF-8"
 
   it "return the original", ->
 
