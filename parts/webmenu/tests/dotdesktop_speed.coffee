@@ -14,9 +14,12 @@ for file in files
 
   file = "/usr/share/applications/" + file
   console.log "\nParsing", file
-  console.log dotdesktop.parseFileSync file, "fi_FI.UTF-8"
+  try
+    console.log dotdesktop.parseFileSync file, "fi_FI.UTF-8"
+    count += 1
+  catch e
+    console.error "Failed to parse", file
 
-  count += 1
 
 diff = (Date.now() - start) / 1000
 
