@@ -54,6 +54,10 @@ _findEmbedded = (desktopEntry, attr, lang) ->
 parseFileSync = (filePath, locale) ->
   data = ini.parse fs.readFileSync(filePath).toString()
   desktopEntry = data["Desktop Entry"]
+
+  if not desktopEntry
+    throw new Error "Desktop Entry is missing for " + filePath
+
   return {
     name: callUntilOk(findTranslated,
       [desktopEntry, "GenericName", locale],
