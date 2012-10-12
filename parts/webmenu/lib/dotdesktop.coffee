@@ -59,6 +59,7 @@ parseFileSync = (filePath, locale) ->
     throw new Error "Desktop Entry is missing for " + filePath
 
   return {
+    lang: parseLocale(locale).lang
     name: callUntilOk(findTranslated,
       [desktopEntry, "GenericName", locale],
       [desktopEntry, "Name", locale],

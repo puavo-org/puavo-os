@@ -32,6 +32,7 @@ describe "desktop file with embedded translations", ->
     it "has finnish translation", ->
       expect(thunderbird.name).to.eq "Sähköpostiohjelma"
       expect(thunderbird.description).to.eq "Lue ja kirjoita sähköposteja"
+      expect(thunderbird.lang).to.eq "fi"
 
   describe "with unknown translation", ->
 
