@@ -15,6 +15,7 @@ injectDesktopData = (menu, desktopDir, locale) ->
     menu.name ?= desktopEntry.name
     menu.description ?= desktopEntry.description
     menu.command ?= desktopEntry.command
+    menu.osIcon ?= desktopEntry.osIcon
   else if menu.type is "menu"
     for menu_ in menu.items
       injectDesktopData(menu_, desktopDir, locale)

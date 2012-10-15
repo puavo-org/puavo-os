@@ -2,17 +2,13 @@
 
 	<li class="span3 smooth-margin desktop-link">
     <div class="thumbnail">
-      <i class="{{icon}}"></i>
+      <i {{#if cssIcon}}class="{{cssIcon}}"{{/if}}></i>
+      {{#if osIcon}}
+      <img src="/osicon/{{osIcon}}.png">
+      {{/if}}
 	     <p class="item-name" >{{name}}</p>
     </div>
 	</li>
-
-
-
-
-
-
-
 
 
 
