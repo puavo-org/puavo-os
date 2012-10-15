@@ -1,22 +1,35 @@
 html,body{
   height: 100%;
 }
-
 body{
   font-size: 100%;
 }
 img{
-  width: 100%;
+  max-width: 100%;
   height: auto;
 }
 .thumbnail i{
   font-size: 300%;
 }
+.nav-pills > .active > a, .nav-pills > .active > a:hover {
+  background-color: #B0C730;
+  color: #333;
+}
+.breadcrumb{
+  background-color:rgba(213, 205, 186, 0.25);
+  border-radius:3px;
+} 
+.breadcrumb li {
+  text-shadow: 0 1px 0 #E4DFD2;
+}
+.breadcrumb .divider {
+  color: #444;
+}
 .container-fluid{
-  margin: 1em auto;
+  margin: 0.25em auto;
   padding: 2%;
   position: relative;
-  width: 93.333%;
+  width: 95.333%;
 }
 .main{
   margin: 5% 0 0;
@@ -28,7 +41,8 @@ img{
   margin-left: 2.127659574468085%;
 }
 .well{
-  background-color:rgba(245, 245, 245, 0.8);
+  background-color:#F0EEE1;
+  background-color:rgba(240, 238, 225, 0.8);
 }
 .form-search{
   margin-bottom: 2%;
@@ -55,12 +69,28 @@ img{
   -o-transition: all 0.1s ease-in-out;
   transition: all 0.1s ease-in-out;
 }
-.thumbnail:hover{
-  background-color:rgba(207, 226, 222, 0.8);
+.thumbnail:hover:not(.user-img-name){
+  background-color:rgba(237,113,19, 0.8);
   cursor: pointer;
 }
+.user-img-name{
+  background-color: #E6E6DC;
+  border: 5px solid rgba(240, 238, 228, 0.8);
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  padding: 1em 0;
+}
+.user-img-name p{
+  font-size: 115%;
+  font-weight: 700;
+  margin: 0.25em 0 0;
+}
 .desktop-link:hover > div i{
-  color:rgb(237,113,19);
+  color:rgb(65,120,107);
+}
+.desktop-link img{
+  width: 30%;
 }
 ul.thumbnails{
   position: relative;
@@ -70,6 +100,9 @@ ul.thumbnails{
 }
 .popover.bottom .arrow{
   left:37%;
+}
+ul.nav{
+  margin-bottom: 5px;
 }
 ul li ul.submenu{
   display: none;
@@ -82,7 +115,11 @@ ul li ul.submenu{
 ul li.desktop-link:hover ul.submenu{
   display: block;
 }
-img.avatar{
+.menu-item-header{
+  font-size: 170%;
+  margin-top: 0;
+}
+img.avatar, .logo img{
   max-width: 160px;
 }
 button.close{
@@ -90,26 +127,24 @@ button.close{
   right: 10px;
   top: 5px;
 }
-.logout a{
+.logout i{
   color:#AD0000;
-  font-size: 150%;
-  display: block;
-  line-height: 1;
-  padding: 5px;
 }
-.logout a:hover{
+.logout div:hover{
   background-color: #AD0000;
   background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#BC1111), to(#AD0000));
   background-image: -webkit-linear-gradient(top, #BC1111, #AD0000);
   background-image: linear-gradient(to bottom, #BC1111, #AD0000);
   box-shadow: inset 0 0 5px #555;
+  -moz-box-shadow: inset 0 0 5px #555;
   -webkit-box-shadow: inset 0 0 5px #555;
   border-radius: 4px;
+  -moz-border-radius: 4px;
   -webkit-border-radius: 4px;
   color: #FFF;
 }
-.logout a i{
-  margin-left: 2px;
+.logout div:hover i{
+  color:#FFF;
 }
 /* Do one thing*/
 .justify{
@@ -124,8 +159,11 @@ button.close{
 .row-fluid [class*="span"] .normal-margin{
   margin-left: 2.7624309392265194%;
 }
-.row-fluid .margin20, .margin20{
+.row-fluid [class*="span"] .margin20, .margin20{
   margin: 2% 0;
+}
+.row-fluid [class*="span"] .margin200, .margin200{
+  margin: 2% 0 0;
 }
 .row-fluid .margin0, .margin0{
   margin: 0;
@@ -145,12 +183,15 @@ button.close{
 /* End of: Do one thing*/
 
 /* Custom Media Queries*/
-@media (max-width: 979px) and (min-width: 768px){
+@media (max-width: 979px){
   body{
     font-size: 95%;
   }
   .row-fluid .span2 {
     margin-left: 5%;
+  }
+  .row-fluid [class*="span"] .normal-margin{
+    margin-left: 0;
   }
 }
 @media (max-width: 768px){

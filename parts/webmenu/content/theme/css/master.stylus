@@ -1,3 +1,5 @@
+@import 'nib'
+
 html,body
   height 100%
 
@@ -5,11 +7,19 @@ body
   font-size 100%
 
 img
-  width 100%
+  max-width 100%
   height auto
 
 .thumbnail i
   font-size 300%
+
+.nav-pills > .active > a, .nav-pills > .active > a:hover
+  background-color #B0C730
+  color #333
+
+.breadcrumb
+  background-color rgba(213, 205, 186, 0.25)
+  border-radius 3px
 
 .container-fluid
   margin 1em auto
@@ -27,7 +37,8 @@ img
   margin-left 2.127659574468085%
 
 .well
-  background-color rgba(245, 245, 245, 0.8)
+  background-color #F0EEE1
+  background-color rgba(240, 238, 225, 0.8)
 
 .form-search
   margin-bottom 2%
@@ -43,21 +54,30 @@ img
 .thumbnail
   border medium none
   box-shadow none
-  -moz-box-shadow none
-  -webkit-box-shadow none
   font-size 80%
   word-wrap break-word
-  -webkit-transition all 0.1s ease-in-out
-  -moz-transition all 0.1s ease-in-out
-  -o-transition all 0.1s ease-in-out
   transition all 0.1s ease-in-out
 
-.thumbnailhover
-  background-color rgba(207, 226, 222, 0.8)
+.thumbnail:hover:not(.user-img-name)
+  background-color rgba(237,113,19, 0.8)
   cursor pointer
 
-.desktop-linkhover > div i
-  color rgb(237,113,19)
+.user-img-name
+  background-color #E6E6DC
+  border 5px solid rgba(240, 238, 228, 0.8)
+  box-sizing border-box
+  padding 1em 0
+
+.user-img-name p
+  font-size 115%
+  font-weight 700
+  margin 0.25em 0 0
+
+.desktop-link:hover > div i
+  color rgb(65,120,107)
+
+.desktop-link img
+  width 30%
 
 ul.thumbnails
   position relative
@@ -67,6 +87,9 @@ ul.thumbnails
 
 .popover.bottom .arrow
   left 37%
+
+ul.nav
+  margin-bottom 5px
 
 ul li ul.submenu
   display none
@@ -87,22 +110,18 @@ button.close
   right 10px
   top 5px
 
-.logout a
+.logout i
   color #AD0000
-  display block
-  font-size 150%
-  line-height 1
-  padding 5px
 
-.logout a:hover
+.logout div:hover
   background-color #AD0000
-  background-image linear-gradient(top, #BC1111, #AD0000)
+  background-image linear-gradient(to bottom, #BC1111, #AD0000)
   box-shadow inset 0 0 5px #555
   border-radius 4px
   color #FFF
 
-.logout a i
-  margin-left 2px
+.logout div:hover i
+  color #FFF
 
 .justify
   text-align center
@@ -118,6 +137,9 @@ button.close
 
 .row-fluid .margin20, .margin20
   margin 2% 0
+
+.row-fluid [class*="span"] .margin200, .margin200
+  margin 2% 0 0
 
 .row-fluid .margin0, .margin0
   margin 0
