@@ -5,6 +5,7 @@ app = require "appjs"
 express = require "express"
 stylus = require "stylus"
 {argv} = require "optimist"
+mkdirp = require "mkdirp"
 menutools = require "./lib/menutools"
 
 handler = express()
@@ -15,6 +16,9 @@ bridge = require("./lib/siobridge")(server)
 handler.use stylus.middleware __dirname + "/content"
 handler.use express.static __dirname + "/content"
 
+cachePath = process.env.HOME + "/.webmenu/cache"
+mkdirp.sync cachePath
+app.init CachePath: cachePath
 
 locale = process.env.LANG
 locale = "fi_FI.UTF-8"
