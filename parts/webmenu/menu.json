@@ -24,6 +24,21 @@
     },
     {
       "type": "menu",
+      "name": "Internet",
+      "description": "Internet programs",
+      "cssIcon":"icon-globe",
+      "items": [
+        {
+          "type": "desktop",
+          "name": "Firefox",
+          "command": ["firefox"],
+          "description": "Internet Browser",
+          "id": "firefox"
+        }
+      ]
+    },
+    {
+      "type": "menu",
       "name": "Graphics",
       "description": "Graphics programs",
       "cssIcon":"icon-pencil",
