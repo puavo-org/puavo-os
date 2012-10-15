@@ -21,6 +21,7 @@ createTestWindow = (url) ->
       window.frame.openDevTools()
 
 call = (cmd) ->
+  process.stderr.write "Executing: '#{ cmd }'\n"
   child = exec cmd
   child.stdout.pipe process.stdout
   child.stderr.pipe process.stderr
