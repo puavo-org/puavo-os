@@ -24,6 +24,13 @@ handler.get "/menu.json", (req, res) ->
   console.log menuJSON
   res.json menuJSON
 
+
+handler.get "/osicon/:icon.png", require("./routes/osicon")([
+  "/usr/share/app-install/icons"
+  "/usr/share/pixmaps"
+  "/usr/share/icons/hicolor/128x128/apps"
+])
+
 window = app.createWindow
   width: 1000
   height: 480
