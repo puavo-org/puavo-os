@@ -1,14 +1,14 @@
-
-
-<li class="span3 smooth-margin desktop-link">
-  <div class="thumbnail" title="{{description}}">
-    <i {{#if cssIcon}}class="{{cssIcon}}"{{/if}}></i>
-    {{#if osIcon}}
-    <img src="/osicon/{{osIcon}}.png">
-    {{/if}}
-    <p class="item-name" >{{name}}</p>
-  </div>
-</li>
+	<li class="span3 smooth-margin desktop-link">
+    <div class="thumbnail">
+      {{#if cssIcon}}
+        <i class="{{cssIcon}}"></i>
+      {{/if}} 
+      {{#if osIcon}}
+      <img src="/osicon/{{osIcon}}.png">
+      {{/if}}
+	     <p class="item-name" >{{name}}</p>
+    </div>
+	</li>
 
 
 
