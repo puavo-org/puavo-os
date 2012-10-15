@@ -7,37 +7,55 @@
       "id": "gedit"
     },
     {
+      "type": "desktop",
+      "id": "thunderbird"
+    },
+    {
+      "type": "desktop",
+      "id": "gwibber"
+    },
+    {
+      "type": "desktop",
+      "id": "rhythmbox"
+    },
+    {
+      "type": "desktop",
+      "id": "libreoffice-draw"
+    },
+    {
       "type": "menu",
       "name": "Graphics",
       "description": "Graphics programs",
-      "icon":"icon-pencil",
+      "cssIcon":"icon-pencil",
       "items": [
         {
           "type": "menu",
           "name": "Raster",
           "description": "Rarter apps",
-          "icon":"icon-pencil",
+          "cssIcon":"icon-pencil",
           "items": [
             {
               "type": "desktop",
               "name": "Gimp",
               "command": ["gimp"],
               "description": "A drawing program",
-              "icon":"icon-pencil"
+              "cssIcon":"icon-pencil"
             },
             {
               "type": "desktop",
               "name": "Shotwell",
               "command": ["shotwell"],
+
+
               "description": "Viewing program",
-              "icon":"icon-pencil"
+              "cssIcon":"icon-pencil"
             },
             {
               "type": "web",
               "name": "Flickr",
               "url": "http://www.flickr.com/",
               "description": "Share your life in photos",
-              "icon":"icon-pencil"
+              "cssIcon":"icon-pencil"
             }
           ]
         },
@@ -45,14 +63,14 @@
           "type": "menu",
           "name": "Vector",
           "description": "Vector apps",
-          "icon":"icon-pencil",
+          "cssIcon":"icon-pencil",
           "items": [
             {
               "type": "desktop",
               "name": "Inkscape",
               "command": ["inkscape"],
               "description": "A vector drawing program",
-              "icon":"icon-pencil"
+              "cssIcon":"icon-pencil"
             }
           ]
         }
