@@ -15,6 +15,6 @@ define [
     template: template
 
     events:
-      "click .myProfileButton": (e) ->
+      "click .bb-profile": (e) ->
         Application.trigger "showMyProfileWindow"
-        
+
