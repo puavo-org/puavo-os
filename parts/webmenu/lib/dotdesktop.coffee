@@ -75,7 +75,7 @@ parseFileSync = (filePath, locale) ->
     )
     description: findTranslated(desktopEntry, "Comment", locale)
     command: findCommand(desktopEntry)
-    icon: desktopEntry["Icon"]
+    osIcon: desktopEntry["Icon"]
   }
 
 module.exports =
