@@ -57,7 +57,8 @@ findCommand = (desktopEntry) ->
     err.desktopEntry = desktopEntry
     throw err
   # Remove arguments
-  cmd.replace(/\ *%[A-Z-a-z]/, "")
+  cmd = cmd.replace(/\ *%[A-Z-a-z]/, "")
+  return [cmd]
 
 parseFileSync = (filePath, locale) ->
   data = ini.parse fs.readFileSync(filePath).toString()
