@@ -22,4 +22,3 @@ injectDesktopData = (menu, desktopDir, locale) ->
 
 module.exports =
   injectDesktopData: injectDesktopData
-  pickTranslations: pickTranslations
