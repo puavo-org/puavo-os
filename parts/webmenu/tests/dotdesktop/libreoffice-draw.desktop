@@ -1,0 +1,20 @@
+[Desktop Entry]
+Version=1.0
+Terminal=false
+Icon=libreoffice-draw
+Type=Application
+Categories=Office;Graphics;FlowChart;Graphics;2DGraphics;VectorGraphics;
+Exec=libreoffice --draw %U
+MimeType=application/vnd.oasis.opendocument.graphics;application/vnd.oasis.opendocument.graphics-template;application/vnd.sun.xml.draw;application/vnd.sun.xml.draw.template;application/vnd.visio;application/x-wpg;
+Name=LibreOffice Draw
+GenericName=Drawing Program
+GenericName[zu]=Drawing Program
+Comment=Create and edit drawings, flow charts, and logos by using Draw.
+Comment[zu]=Yenza futhi ulungise imidwebo, amaflowchadi, namalogo ngokusebenzisa into yokuDweba.
+InitialPreference=5
+X-Ayatana-Desktop-Shortcuts=X-New
+[X-New Shortcut Group]
+Name=New Drawing
+Name[zu]=New Drawing
+Exec=libreoffice --draw %U
+TargetEnvironment=Unity

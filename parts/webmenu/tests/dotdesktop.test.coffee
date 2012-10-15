@@ -70,3 +70,11 @@ describe "desktop file without any translations", ->
   it "return the original", ->
 
       expect(thunderbird.name).to.eq "Mail Client"
+
+
+describe "desktop file with commmand arguments ", ->
+
+    draw = dotdesktop.parseFileSync dir + "/libreoffice-draw.desktop", "fi_FI.UTF-8"
+
+    it "has finnish translation", ->
+      expect(draw.command).to.deep.eq ["libreoffice", "--draw"]

@@ -58,7 +58,7 @@ findCommand = (desktopEntry) ->
     throw err
   # Remove arguments
   cmd = cmd.replace(/\ *%[A-Z-a-z]/, "")
-  return [cmd]
+  return cmd.split(" ")
 
 parseFileSync = (filePath, locale) ->
   data = ini.parse fs.readFileSync(filePath).toString()
