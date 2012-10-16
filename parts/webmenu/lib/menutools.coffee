@@ -12,6 +12,7 @@ injectDesktopData = (menu, desktopDir, locale) ->
       desktopEntry = dotdesktop.parseFileSync(filePath, locale)
     catch err
       console.error "Failed to parse #{ filePath }", err
+      return
     menu.name ?= desktopEntry.name
     menu.description ?= desktopEntry.description
     menu.command ?= desktopEntry.command
