@@ -35,19 +35,16 @@ define [
     $(".content-container").append layout.el
 
     bridge = new DesktopBridge
+    bridge.connect(Application)
 
     allItems.on "select", (model) ->
-      bridge.open model
+      Application.trigger "open", model.toJSON()
 
-    bridge.on "show", ->
+    Application.on "show", ->
       layout.reset()
       layout.render()
 
-    bridge.connect()
     $(window).blur ->
-      bridge.hideWindow()
-
-    Application.on "showMyProfileWindow", ->
-      bridge.showMyProfileWindow()
+      Application.trigger "hideWindow"
 
 
