@@ -1,6 +1,8 @@
-<button class="btn bb-logout">Kirjaudu Ulos</button>
-
-{{#if fatClient}}
-<button class="btn bb-shutdown">Sammuta</button>
-<button class="btn bb-reboot">Käynnistä uudelleen</button>
-{{/if}}
+<h1 class="shut-down-header"><i class="icon-logout"></i>Shut down this system now?</h1>
+<div class="logout-btn-container">
+  <button class="btn bb-logout">Kirjaudu Ulos</button>
+  {{#if fatClient}}
+  <button class="btn bb-shutdown">Sammuta</button>
+  <button class="btn bb-reboot">Käynnistä uudelleen</button>
+  {{/if}}
+</div>
