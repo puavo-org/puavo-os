@@ -7,6 +7,7 @@ stylus = require "stylus"
 {argv} = require "optimist"
 mkdirp = require "mkdirp"
 menutools = require "./lib/menutools"
+powermanager = require "./lib/powermanager"
 
 handler = express()
 
@@ -109,6 +110,10 @@ bridge.on "showMyProfileWindow", ->
 
   myProfileWindow.on 'create', ->
     displayMyProfileWindow(this)
+
+bridge.on "shutdown", -> powermanager.shutdown()
+bridge.on "reboot", -> powermanager.reboot()
+bridge.on "logout", -> powermanager.logout()
 
 createMyProfileWindow = () ->
   console.log "Create My Profile window"
