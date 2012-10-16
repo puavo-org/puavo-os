@@ -1,6 +1,7 @@
 @import 'nib'
 
 html,body
+  background-color transparent
   height 100%
 
 body
@@ -23,7 +24,7 @@ img
 
 .container-fluid
   margin 1em auto
-  padding 2%
+  padding 0.5em 1em
   position relative
   width 93.333%
 
@@ -55,8 +56,9 @@ img
   border medium none
   box-shadow none
   font-size 80%
+  line-height 1.25
   word-wrap break-word
-  transition all 0.1s ease-in-out
+  transition background-color 0.1s ease-in-out
 
 .thumbnail:hover:not(.user-img-name)
   background-color rgba(237,113,19, 0.8)
@@ -113,14 +115,14 @@ button.close
 .logout i
   color #AD0000
 
-.logout div:hover
+.logout:hover
   background-color #AD0000
   background-image linear-gradient(to bottom, #BC1111, #AD0000)
   box-shadow inset 0 0 5px #555
   border-radius 4px
   color #FFF
 
-.logout div:hover i
+.logout:hover i
   color #FFF
 
 .justify

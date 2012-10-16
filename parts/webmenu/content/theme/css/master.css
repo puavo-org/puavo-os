@@ -1,4 +1,5 @@
 html,body{
+  background-color: transparent;
   height: 100%;
 }
 body{
@@ -27,7 +28,7 @@ img{
 }
 .container-fluid{
   margin: 0.25em auto;
-  padding: 2%;
+  padding: 0.5em 1em;
   position: relative;
   width: 95.333%;
 }
@@ -63,13 +64,14 @@ img{
   -moz-box-shadow: none;
   -webkit-box-shadow: none;
   font-size: 80%;
+  line-height: 1.25;
   word-wrap: break-word;
-  -webkit-transition: all 0.1s ease-in-out;
-  -moz-transition: all 0.1s ease-in-out;
-  -o-transition: all 0.1s ease-in-out;
-  transition: all 0.1s ease-in-out;
+  -webkit-transition: background-color 0.1s ease-in-out;
+  -moz-transition: background-color 0.1s ease-in-out;
+  -o-transition: background-color 0.1s ease-in-out;
+  transition: background-color 0.1s ease-in-out;
 }
-.thumbnail:hover:not(.user-img-name){
+.thumbnail:hover:not(.ignore-thumbnail-hover){
   background-color:rgba(237,113,19, 0.8);
   cursor: pointer;
 }
@@ -130,7 +132,7 @@ button.close{
 .logout i{
   color:#AD0000;
 }
-.logout div:hover{
+.logout:hover{
   background-color: #AD0000;
   background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#BC1111), to(#AD0000));
   background-image: -webkit-linear-gradient(top, #BC1111, #AD0000);
@@ -142,8 +144,9 @@ button.close{
   -moz-border-radius: 4px;
   -webkit-border-radius: 4px;
   color: #FFF;
+  cursor: pointer;
 }
-.logout div:hover i{
+.logout:hover i{
   color:#FFF;
 }
 /* Do one thing*/
