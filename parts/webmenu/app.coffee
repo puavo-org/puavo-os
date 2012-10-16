@@ -101,6 +101,9 @@ bridge.on "open", (msg) ->
   cmd.on "exit", (code) ->
     console.log "Command '#{ command } #{ args.join " " } exited with #{ code }"
 
+bridge.on "openSettings", ->
+  cmd = spawn "gnome-control-center", [], { detached: true }
+
 bridge.on "hideWindow", ->
   console.log "Hiding window"
   window.frame.hide() if not argv["dev-tools"]
