@@ -28,8 +28,7 @@ define [
 
       @setMenu(@initialMenu)
 
-      @allItems.on "select", (model) =>
-
+      @bindTo @allItems, "select", (model) =>
         if model.get("type") is "menu"
           @setMenu model
           @renderSubviews()
