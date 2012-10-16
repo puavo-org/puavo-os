@@ -22,4 +22,8 @@
       , "mocha": ""
       , "chai": ""
   }
+  , "preferGlobal" : true
+, "bin" :
+  { "webmenu" : "bin/webmenu"
+  }
 }
