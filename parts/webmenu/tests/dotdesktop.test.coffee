@@ -23,12 +23,9 @@ describe "locale parser", ->
     )
 
 
-describe "desktop file with embedded translations", ->
-
+describe ".desktop file", ->
   describe "with existing translation", ->
-
     thunderbird = dotdesktop.parseFileSync dir + "/thunderbird.desktop", "fi_FI.UTF-8"
-
     it "has finnish translation", ->
       expect(thunderbird.name).to.eq "Sähköpostiohjelma"
       expect(thunderbird.description).to.eq "Lue ja kirjoita sähköposteja"
@@ -37,53 +34,37 @@ describe "desktop file with embedded translations", ->
       expect(thunderbird.osIcon).to.eq "thunderbird"
 
   describe "with unknown translation", ->
-
     thunderbird = dotdesktop.parseFileSync dir + "/thunderbird.desktop", "xx_XX.UTF-8"
-
     it "gets english", ->
       expect(thunderbird.name).to.eq "Mail Client"
       expect(thunderbird.description).to.eq "Send and receive mail with Thunderbird"
 
 
-
-describe "desktop file with embedded translations", ->
-
-  gedit = dotdesktop.parseFileSync dir + "/gedit.desktop", "fi_FI.UTF-8"
-
-  it "has finnish translation", ->
-    expect(gedit.name).to.eq "Tekstimuokkain"
+  describe "with embedded translations", ->
+    gedit = dotdesktop.parseFileSync dir + "/gedit.desktop", "fi_FI.UTF-8"
+    it "has finnish translation", ->
+      expect(gedit.name).to.eq "Tekstimuokkain"
 
 
-describe "desktop file with missing generic name", ->
-
+  describe "with missing generic name", ->
     thunderbird = dotdesktop.parseFileSync dir + "/thunderbird_no_generic_name.desktop", "fi_FI.UTF-8"
-
     it "falls back to normal name", ->
-
       expect(thunderbird.name).to.eq "Thunderbird-sähköposti"
 
 
-describe "desktop file without any translations", ->
+  describe "without any translations", ->
+    thunderbird = dotdesktop.parseFileSync dir + "/thunderbird_no_translations.desktop", "fi_FI.UTF-8"
+    it "return the original", ->
+        expect(thunderbird.name).to.eq "Mail Client"
 
-  thunderbird = dotdesktop.parseFileSync dir + "/thunderbird_no_translations.desktop", "fi_FI.UTF-8"
-
-  it "return the original", ->
-
-      expect(thunderbird.name).to.eq "Mail Client"
-
-
-describe "desktop file with commmand arguments ", ->
-
+  describe "with commmand arguments ", ->
     draw = dotdesktop.parseFileSync dir + "/libreoffice-draw.desktop", "fi_FI.UTF-8"
-
     it "has finnish translation", ->
       expect(draw.command).to.deep.eq ["libreoffice", "--draw"]
 
-describe "desktop file with X-GNOME-FullName only translation", ->
-
-  gwibber = dotdesktop.parseFileSync dir + "/gwibber.desktop", "fi_FI.UTF-8"
-
-  it "has finnish translation", ->
-    expect(gwibber.name).to.eq "Gwibber – sosiaaliset mediat"
+  describe "with X-GNOME-FullName only translation", ->
+    gwibber = dotdesktop.parseFileSync dir + "/gwibber.desktop", "fi_FI.UTF-8"
+    it "has finnish translation", ->
+      expect(gwibber.name).to.eq "Gwibber – sosiaaliset mediat"
 
 
