@@ -14,7 +14,8 @@ handler = express()
 server = http.createServer(handler).listen 1337
 bridge = require("./lib/siobridge")(server)
 
-handler.use stylus.middleware __dirname + "/content"
+handler.configure "development", ->
+  handler.use stylus.middleware __dirname + "/content"
 handler.use express.static __dirname + "/content"
 
 cachePath = process.env.HOME + "/.webmenu/cache"
