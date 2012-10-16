@@ -1,9 +1,11 @@
 define [
   "cs!app/views/layout"
+  "hbs!app/templates/lightbox"
   "underscore"
   "backbone"
 ], (
   Layout
+  template
   Backbone
   _
 ) ->
@@ -11,7 +13,8 @@ define [
   class Lightbox extends Layout
 
     className: "bb-lightbox"
-    templateQuery: "#lightbox"
+
+    template: template
 
     constructor: (opts) ->
       super
