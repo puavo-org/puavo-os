@@ -1,4 +1,3 @@
-
 # Hacking
 
 Current Web Menu devepment requires Ubuntu Precise Pangolin or later and a fork
@@ -28,8 +27,22 @@ Fetch and build the fork for 32 bit machines (bit complicated sorry)
     cp app/data/bin/libffmpegsumo.so cef/Release/lib.target/
     cd ..
     cp $(which node) data/linux/ia32/node-bin/
-    sudo apt-get install libgtk2.0-dev
     npm install
+
+64bit
+
+    git clone git://github.com/opinsys/appjs.git appjs
+    cd appjs/
+    git checkout origin/epeli
+    mkdir deps
+    cd deps/
+    wget https://github.com/downloads/appjs/appjs/cef_binary_1.1180.724_linux_x64.tar.gz
+    tar xzvf cef_binary_1.1180.724_linux_x64.tar.gz 
+    mv cef_binary_1.1180.724_linux_x64 cef
+    cd ..
+    cp $(which node) data/linux/x64/node-bin/
+    npm install
+
 
 Fetch and build Web Menu inside our fork
 
