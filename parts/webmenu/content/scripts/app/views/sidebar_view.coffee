@@ -22,8 +22,10 @@ define [
       "click .bb-profile": (e) ->
         Application.trigger "showMyProfileWindow"
       "click .bb-logout": (e) ->
-        lb = new Lightbox
+        @lb = new Lightbox
           view: new LogoutView
-        lb.render()
+        @lb.render()
 
-
+    remove: ->
+      @lb?.remove()
+      super
