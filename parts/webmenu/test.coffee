@@ -26,16 +26,18 @@ call = (cmd) ->
   child.stdout.pipe process.stdout
   child.stderr.pipe process.stderr
 
-if argv.yeti
+if argv["yeti-server"]
   call "yeti --server"
   setTimeout ->
     createTestWindow "http://localhost:9000"
   , 1000
+else if argv.yeti
+  call "yeti content/tests.html"
 else if argv.node
   call "node_modules/.bin/mocha --compilers coffee:coffee-script tests/*test*"
 else
   express = require "express"
   server = express()
   server.use express.static __dirname + "/content"
-  server.listen 9000, ->
-    createTestWindow "http://localhost:9000/tests.html"
+  server.listen 9001, ->
+    createTestWindow "http://localhost:9001/tests.html"
