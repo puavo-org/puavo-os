@@ -24,4 +24,8 @@ define [
         Application.on "showMyProfileWindow", -> done()
         view.$(".bb-profile").click()
 
+    describe "settings button", ->
+      it "emits 'openSettings'", (done) ->
+        Application.on "openSettings", -> done()
+        view.$(".bb-settings").click()
 

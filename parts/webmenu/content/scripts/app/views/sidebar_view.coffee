@@ -21,6 +21,8 @@ define [
     events:
       "click .bb-profile": (e) ->
         Application.trigger "showMyProfileWindow"
+      "click .bb-settings": (e) ->
+        Application.trigger "openSettings"
       "click .bb-logout": (e) ->
         @lb = new Lightbox
           view: new LogoutView
