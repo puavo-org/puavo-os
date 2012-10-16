@@ -28,9 +28,12 @@ parseLocale = (systemLocale) ->
 
 # Find translated version of an attribute from desktopEntry object
 findTranslated = (desktopEntry, attr, systemLocale) ->
-  {lang, locale} = parseLocale(systemLocale)
   original = desktopEntry[attr]
 
+  if not systemLocale
+    return original
+
+  {lang, locale} = parseLocale(systemLocale)
   embedded = callUntilOk(_findEmbedded,
     [desktopEntry, attr, locale],
     [desktopEntry, attr, lang],
@@ -42,9 +45,10 @@ findTranslated = (desktopEntry, attr, systemLocale) ->
   if domain = desktopEntry["X-Ubuntu-Gettext-Domain"]
 
     gettext.setLocale("LC_ALL", systemLocale)
-    return gettext.dgettext(domain, original)
+    translated = gettext.dgettext(domain, original)
+    if translated isnt original
+      return translated
 
-  return original
 
 _findEmbedded = (desktopEntry, attr, lang) ->
   attr += "[#{ lang }]"
@@ -71,9 +75,15 @@ parseFileSync = (filePath, locale) ->
     lang: parseLocale(locale).lang
     name: callUntilOk(findTranslated,
       [desktopEntry, "GenericName", locale],
+      [desktopEntry, "X-GNOME-FullName", locale],
       [desktopEntry, "Name", locale],
+      [desktopEntry, "GenericName"],
+      [desktopEntry, "Name"],
     )
-    description: findTranslated(desktopEntry, "Comment", locale)
+    description: callUntilOk(findTranslated,
+      [desktopEntry, "Comment", locale],
+      [desktopEntry, "Comment"],
+    )
     command: findCommand(desktopEntry)
     osIcon: desktopEntry["Icon"]
   }
