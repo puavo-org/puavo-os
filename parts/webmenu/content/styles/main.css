@@ -1,10 +1,5 @@
-.bb-lightbox .background,
-.bb-lightbox .wrap,
-.bb-lightbox .content {
-  position: fixed;
-}
 .bb-lightbox .background {
-  background-color: rgba(20,20,20,0.5);
+  background-color: rgba(20,20,20,0.7);
   bottom: 0px;
   left: 0px;
   position: absolute;
@@ -13,14 +8,14 @@
   z-index: 99;
 }
 .bb-lightbox .wrap {
-  z-index: 100;
-  background-color: #fff;
+  background-color: rgba(230,230,220,0.9);
+  border: 5px solid #ad0000;
+  border-radius: 5px;
+  box-sizing: border-box;
   color: #000;
-  left: 5%;
-  right: 5%;
-  top: 5%;
-  bottom: 5%;
-}
-.bb-lightbox .wrap .close {
-  float: right;
+  display: table;
+  margin: 5% auto;
+  padding: 1.5em;
+  position: relative;
+  z-index: 100;
 }

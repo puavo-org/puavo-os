@@ -2,10 +2,8 @@
 .bb-lightbox
 
   // Structure
-  .background, .wrap, .content
-    position fixed
   .background
-    background-color rgba(20, 20, 20, 0.5)
+    background-color rgba(20, 20, 20, 0.7)
     bottom 0px
     left 0px
     position absolute
@@ -14,12 +12,14 @@
     z-index 99
     
   .wrap
-    z-index 100
-    background-color white
+    background-color rgba(230,230,220,0.9)
+    border 5px solid #ad0000
+    border-radius 5px
+    box-sizing border-box
     color black
-    left 5%
-    right 5%
-    top 5%
-    bottom 5%
-    .close
-      float right
+    display table
+    margin 5% auto
+    padding 1.5em
+    position relative
+    z-index 100
+
