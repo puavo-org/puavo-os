@@ -3,91 +3,606 @@
   "name": "Kategoriat",
   "items": [
     {
-      "type": "desktop",
-      "id": "gedit"
+      "type": "menu",
+      "name": "Apuohjelmat",
+      "description": "Apuohjelmia",
+      "cssIcon":"icon-pencil",
+      "items": [
+        {
+          "type": "desktop",
+          "name": "Laskin",
+          "command": ["gcalctool"],
+          "description": "Monipuolinen piirto- ja kuvankäsittelyohjelma",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Gedit-tekstieditori",
+          "command": ["gedit"],
+          "description": "Tekstieditori",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Merkkikartta",
+          "command": ["gucharmap"],
+          "description": "Monipuolinen piirto- ja kuvankäsittelyohjelma",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "CD/DVD-luontityökalu",
+          "command": ["nautilus --no-default-window --no-desktop burn:/// "],
+          "description": "Luo CD:itä ja DVD:itä",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Brasero-levynkirjoittaja",
+          "command": ["brasero %U"],
+          "description": "CD- ja DVD-kirjoitusohjelma",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "CD-levyjen kopiointi",
+          "command": ["sound-juicer %u"],
+          "description": "Ohjelma CD- ja DVD-levyjen kopiointiin",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Etsi tiedostoja",
+          "command": ["gnome-search-tool"],
+          "description": "Työkalu tiedostojen etsimiseen",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Pakettienkäsittelyohjelma",
+          "command": ["file-roller %U"],
+          "description": "Pakettienkäsittelyohjelma",
+          "cssIcon":"icon-pencil"
+        },
+                {
+          "type": "desktop",
+          "name": "Pääte",
+          "command": ["gnome-terminal"],
+          "description": "Käytä komentoriviä",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Salasanat ja salausavaimet",
+          "command": ["seahorse"],
+          "description": "Sovellusten salasanojen hallinta",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Hallitse tulostustöitä",
+          "command": ["system-config-printer-applet --no-tray-icon"],
+          "description": "Tulostustöiden hallintaohjelma",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Ota kuvakaappaus",
+          "command": ["gnome-screenshot --interactive"],
+          "description": "Ota kuvakaappaus ruudusta",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "web",
+          "name": "Flickr",
+          "url": "http://www.flickr.com/",
+          "description": "Share your life in photos",
+          "cssIcon":"icon-pencil"
+        }
+          ]
     },
     {
-      "type": "desktop",
-      "id": "thunderbird"
-    },
-    {
-      "type": "desktop",
-      "id": "gwibber"
-    },
-    {
-      "type": "desktop",
-      "id": "rhythmbox"
-    },
-    {
-      "type": "desktop",
-      "id": "libreoffice-draw"
+      "type": "menu",
+      "name": "Grafiikka",
+      "description": "Graafiset sovellukset",
+      "cssIcon":"icon-pencil",
+      "items": [
+        {
+          "type": "desktop",
+          "name": "KolourPaint",
+          "command": ["kolourpaint"],
+          "description": "Yksinkertainen piirto-ohjelma",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Tux Taiteilija",
+          "command": ["tuxpaint"],
+          "description": "Hauska piirto-ohjelma lapsille!",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "MyPaint",
+          "command": ["mypaint"],
+          "description": "Piirtopöydän kanssa toimiva piirto-ohjelma",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Gimp-kuvankäsittely",
+          "command": ["gimp"],
+          "description": "Monipuolinen piirto- ja kuvankäsittelyohjelma",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "GThumb-kuvakatselin",
+          "command": ["gthumb"],
+          "description": "Katsele ja järjestä kuviasi",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Inkscape",
+          "command": ["inkscape"],
+          "description": "Vektorigrafiikkaohjelma",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Kuvakatselin",
+          "command": ["eog"],
+          "description": "Selaa ja kierrä kuvia",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Picasa",
+          "command": ["inkscape"],
+          "description": "Googlen Picasa-verkkoalbumi",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Kuvanluku",
+          "command": ["simple-scan"],
+          "description": "Yksinkertainen skanneriohjelma",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Xsane-skanneriohjelma",
+          "command": ["xsane"],
+          "description": "Skannaa kuviasi monipuolisilla asetuksilla",
+          "cssIcon":"icon-pencil"
+        }
+          ]
     },
     {
       "type": "menu",
       "name": "Internet",
-      "description": "Internet programs",
-      "cssIcon":"icon-globe",
-      "items": [
-        {
-          "type": "desktop",
-          "name": "Firefox",
-          "command": ["firefox"],
-          "description": "Internet Browser",
-          "id": "firefox"
-        }
-      ]
-    },
-    {
-      "type": "menu",
-      "name": "Graphics",
-      "description": "Graphics programs",
+      "description": "Internet-sovellukset",
       "cssIcon":"icon-pencil",
       "items": [
         {
-          "type": "menu",
-          "name": "Raster",
-          "description": "Rarter apps",
-          "cssIcon":"icon-pencil",
-          "items": [
-            {
-              "type": "desktop",
-              "name": "Gimp",
-              "command": ["gimp"],
-              "description": "A drawing program",
-              "cssIcon":"icon-pencil"
-            },
-            {
-              "type": "desktop",
-              "name": "Shotwell",
-              "command": ["shotwell"],
-
-
-              "description": "Viewing program",
-              "cssIcon":"icon-pencil"
-            },
-            {
-              "type": "web",
-              "name": "Flickr",
-              "url": "http://www.flickr.com/",
-              "description": "Share your life in photos",
-              "cssIcon":"icon-pencil"
-            }
-          ]
+          "type": "desktop",
+          "id": "firefox"
         },
         {
-          "type": "menu",
-          "name": "Vector",
-          "description": "Vector apps",
-          "cssIcon":"icon-pencil",
-          "items": [
-            {
-              "type": "desktop",
-              "name": "Inkscape",
-              "command": ["inkscape"],
-              "description": "A vector drawing program",
-              "cssIcon":"icon-pencil"
-            }
+          "type": "desktop",
+          "id": "chromium-browser"
+        },
+        {
+          "type": "desktop",
+          "id": "thunderbird"
+        },
+        {
+          "type": "desktop",
+          "id": "evolution"
+        },
+        {
+          "type": "desktop",
+          "id": "pidgin"
+        },
+        {
+          "type": "desktop",
+          "id": "gftp"
+        },
+        {
+          "type": "desktop",
+          "id": "liferea"
+        },
+        {
+          "type": "desktop",
+          "id": "googleearth"
+        },
+        {
+          "type": "desktop",
+          "id": "skype"
+        },
+        {
+          "type": "desktop",
+          "id": "empathy"
+        },
+        {
+          "type": "desktop",
+          "id": "vinagre"
+        },
+        {
+          "type": "desktop",
+          "id": "dropbox"
+        },
+        {
+          "type": "desktop",
+          "id": "tsclient"
+        },
+        {
+          "type": "desktop",
+          "id": "vmware-view-client"
+        }
           ]
+    },
+    {
+      "type": "menu",
+      "name": "Ohjelmointi",
+      "description": "IDE-sovelluksia ohjelmointiin",
+      "cssIcon":"icon-pencil",
+      "items": [
+        {
+          "type": "desktop",
+          "id": "netbeans"
+        },
+        {
+          "type": "desktop",
+          "id": "eclipse"
+        },
+        {
+          "type": "desktop",
+          "id": "eric"
+        },
+        {
+          "type": "desktop",
+          "id": "spe"
+        },
+        {
+          "type": "desktop",
+          "id": "idle-python2.6"
+        },
+        {
+          "type": "desktop",
+          "id": "geany"
+        },
+        {
+          "type": "desktop",
+          "name": "Kturtle",
+          "command": ["kturtle"],
+          "description": "Opettavainen ohjelmointiympäristö",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "id": "scratch"
+        },
+        {
+          "type": "desktop",
+          "name": "Quanta Plus",
+          "command": ["quanta"],
+          "description": "WWW:n kehitysympäristö",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "id": "kompozer"
+        },
+        {
+          "type": "desktop",
+          "id": "designer-qt4"
+        }
+          ]
+    },
+    {
+      "type": "menu",
+      "name": "Opetusohjelmat",
+      "description": "Sovelluksia oppimisen tueksi",
+      "cssIcon":"icon-pencil",
+      "items": [
+        {
+          "type": "desktop",
+          "id": "gcompris"
+        },
+        {
+          "type": "desktop",
+          "id": "tuxmath"
+        },
+        {
+          "type": "desktop",
+          "name": "Kbruch",
+          "command": ["kbruch"],
+          "description": "Murtolukujen laskupeli",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Kig",
+          "command": ["kig"],
+          "description": "Geometriaohjelma",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "id": "drgeo"
+        },
+        {
+          "type": "desktop",
+          "id": "geogebra"
+        },
+        {
+          "type": "desktop",
+          "name": "Kmplot",
+          "command": ["kmplot"],
+          "description": "Muodosta kuvaajia",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Marble",
+          "command": ["marble"],
+          "description": "Maapallo työpöydällä",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "KGeography",
+          "command": ["kgeography"],
+          "description": "Maantietopeli",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "KAnagram",
+          "command": ["kanagram"],
+          "description": "Anagrammipeli",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "KWordQuiz",
+          "command": ["kwordquiz"],
+          "description": "Ohjelma sanaston opettelua varten",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "KHangman",
+          "command": ["khangman"],
+          "description": "Hirsipuupeli",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "KTouch",
+          "command": ["ktouch"],
+          "description": "Ohjelma kymmensormijärjestelmän opetteluun",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "id": "vym"
+        },
+        {
+          "type": "desktop",
+          "id": "cmaptools"
+        },
+        {
+          "type": "desktop",
+          "id": "celestia"
+        },
+        {
+          "type": "desktop",
+          "id": "stellarium"
+        },
+        {
+          "type": "desktop",
+          "name": "KStars",
+          "command": ["kstars"],
+          "description": "Katsele tähtiä!",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "name": "Step",
+          "command": ["step"],
+          "description": "Fysiikan mallinnusohjelma",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "id": "ghemical"
+        },
+        {
+          "type": "desktop",
+          "id": "gchempaint-0.10"
+        },
+        {
+          "type": "desktop",
+          "name": "Kalzuim",
+          "command": ["kalzium"],
+          "description": "Jaksollinen järjestelmä",
+          "cssIcon":"icon-pencil"
+        }
+          ]
+    },
+    {
+      "type": "menu",
+      "name": "Toimisto",
+      "description": "Toimisto-ohjelmat",
+      "cssIcon":"icon-pencil",
+      "items": [
+        {
+          "type": "desktop",
+          "id": "librewrite"
+        },
+        {
+          "type": "desktop",
+          "id": "liblecalc"
+        },
+        {
+          "type": "desktop",
+          "id": "libre esitys"
+        },
+        {
+          "type": "desktop",
+          "id": "libre tietokanta"
+        },
+        {
+          "type": "desktop",
+          "id": "libre piirros"
+        },
+        {
+          "type": "desktop",
+          "id": "libre kaava"
+        },
+        {
+          "type": "desktop",
+          "id": "scribus"
+        },
+        {
+          "type": "desktop",
+          "id": "acroread"
+        },
+        {
+          "type": "desktop",
+          "id": "evince"
+        },
+        {
+          "type": "desktop",
+          "id": "primusclient"
+        },
+        {
+          "type": "desktop",
+          "id": "PAHVI!?"
+        }
+          ]
+    },
+    {
+      "type": "menu",
+      "name": "Ääni ja video",
+      "description": "Internet-sovellukset",
+      "cssIcon":"icon-pencil",
+      "items": [
+        {
+          "type": "desktop",
+          "id": "audacity"
+        },
+        {
+          "type": "desktop",
+          "id": "gnome-sound-recorder"
+        },
+        {
+          "type": "desktop",
+          "id": "solfege"
+        },
+        {
+          "type": "desktop",
+          "id": "mscore"
+        },
+        {
+          "type": "desktop",
+          "id": "denemo"
+        },
+        {
+          "type": "desktop",
+          "id": "hydrogen"
+        },
+        {
+          "type": "desktop",
+          "id": "rosegarden"
+        },
+        {
+          "type": "desktop",
+          "id": "tuxguitar"
+        },
+        {
+          "type": "desktop",
+          "id": "fmit"
+        },
+        {
+          "type": "desktop",
+          "name": "Kino",
+          "command": ["kino"],
+          "description": "Muokkaa videoita",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "id": "openshot"
+        },
+        {
+          "type": "desktop",
+          "id": "pitivi"
+        },
+        {
+          "type": "desktop",
+          "name": "Kdenlive",
+          "command": ["kdenlive"],
+          "description": "Epälineaarinen videoeditori",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "id": "cheese"
+        },
+        {
+          "type": "desktop",
+          "id": "luciole"
+        },
+        {
+          "type": "desktop",
+          "id": "vlc"
+        },
+        {
+          "type": "desktop",
+          "id": "gnome-mplayer"
+        },
+        {
+          "type": "desktop",
+          "name": "Kaffeine",
+          "command": ["kaffeine"],
+          "description": "Katso elokuvia",
+          "cssIcon":"icon-pencil"
+        },
+        {
+          "type": "desktop",
+          "id": "rhythmbox"
+        },
+        {
+          "type": "desktop",
+          "id": "spotify"
+        }
+          ]
+    },
+    {
+      "type": "menu",
+      "name": "Smartboard",
+      "description": "Internet-sovellukset",
+      "cssIcon":"icon-pencil",
+      "items": [
+        {
+          "type": "desktop",
+          "id": "smarttech-notebook"
+        }
+          ]
+    },
+    {
+      "type": "menu",
+      "name": "Webbisovellukset",
+      "description": "Web-sovellukset",
+      "cssIcon":"icon-pencil",
+      "items": [
+        {
+          "type": "desktop",
+          "id": "walma-screenshot"
         }
       ]
     }
