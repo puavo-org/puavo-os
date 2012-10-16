@@ -19,14 +19,30 @@ img
   color #333
 
 .breadcrumb
-  background-color rgba(213, 205, 186, 0.25)
-  border-radius 3px
+  background-color transparent
+
+  li
+    margin-right 1%
+    text-shadow 0 1px 0 #E4DFD2
+
+    a
+      background-color rgb(213, 205, 186)
+      background-color rgba(213, 205, 186, 0.5)
+      border-radius 3px
+      padding 0.5em
+
+    &:hover, &.current
+      background-color rgb(208, 200, 186)
+      text-decoration none
 
 .container-fluid
-  margin 1em auto
+  border-radius 0
+  box-sizing border-box
+  height 100%
+  margin 0
   padding 0.5em 1em
   position relative
-  width 93.333%
+  width 100%
 
 .main
   margin 5% 0 0
@@ -56,9 +72,9 @@ img
   border medium none
   box-shadow none
   font-size 80%
-  line-height 1.25
+  line-height 1.5
   word-wrap break-word
-  transition background-color 0.1s ease-in-out
+  transition none
 
 .thumbnail:hover:not(.user-img-name)
   background-color rgba(237,113,19, 0.8)
@@ -79,7 +95,11 @@ img
   color rgb(65,120,107)
 
 .desktop-link img
+  max-width 64px
   width 30%
+
+.desktop-link img ~ p 
+  padding-top 0.65em
 
 ul.thumbnails
   position relative
@@ -92,17 +112,6 @@ ul.thumbnails
 
 ul.nav
   margin-bottom 5px
-
-ul li ul.submenu
-  display none
-  left 0
-  margin 0
-  position absolute
-  width 100%
-  z-index 999
-
-ul li.desktop-linkhover ul.submenu
-  display block
 
 img.avatar
   max-width 160px
@@ -125,6 +134,24 @@ button.close
 .logout:hover i
   color #FFF
 
+.shut-down-header
+  font-size 170%
+  i
+    background-color #AD0000
+    border-radius 3px
+    color #FFF
+    margin-right 0.25em
+    padding 0.15em 0.05em 0.15em 0.25em
+  &:hover
+    color #fff
+
+.logout-btn-container
+  margin 1.5em 0 0 2.8em
+  button
+    margin-right 0.35em
+    padding 4px 8px
+
+// Do one thing
 .justify
   text-align center
 
