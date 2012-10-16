@@ -4,7 +4,7 @@ require "ldap"
 require 'rubygems'
 require 'yaml'
 
-if configurations = YAML.load_file("config/ldap.yml") rescue nil
+if configurations = YAML.load_file("/etc/puavo/ldap.yml") rescue nil
 #  puts "Using config/ldap.yml"
 else
   puts "Not found LDAP configuration file (config/ldap.yml)"
