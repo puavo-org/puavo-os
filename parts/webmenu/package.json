@@ -23,7 +23,8 @@
       , "chai": ""
   }
   , "preferGlobal" : true
-, "bin" :
-  { "webmenu" : "bin/webmenu"
-  }
+  , "bin" :
+      {   "webmenu" : "bin/webmenu"
+        , "_webmenu": "app.js"
+      }
 }
