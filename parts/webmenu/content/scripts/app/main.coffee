@@ -40,9 +40,6 @@ define [
     allItems.on "select", (model) ->
       Application.trigger "open", model.toJSON()
 
-    Application.on "show", ->
-      layout.reset()
-      layout.render()
 
     $(window).blur ->
       Application.trigger "hideWindow"

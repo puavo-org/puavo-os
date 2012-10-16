@@ -4,6 +4,7 @@ define [
   "cs!app/views/breadcrumbs_view"
   "cs!app/views/sidebar_view"
   "cs!app/views/favorites_view"
+  "cs!app/application"
   "hbs!app/templates/menulayout"
   "backbone"
 ], (
@@ -12,6 +13,7 @@ define [
   Breadcrumbs
   SidebarView
   Favorites
+  Application
   template
   Backbone
 ) ->
@@ -27,6 +29,10 @@ define [
       @allItems = opts.allItems
 
       @setMenu(@initialMenu)
+
+      @bindTo Application, "show", =>
+        @reset()
+        @render()
 
       @bindTo @allItems, "select", (model) =>
         if model.get("type") is "menu"
