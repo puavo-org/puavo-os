@@ -4,13 +4,13 @@
   position: fixed;
 }
 .bb-lightbox .background {
-  z-index: 99;
-  top: 0px;
-  right: 0px;
-  left: 0px;
+  background-color: rgba(20,20,20,0.5);
   bottom: 0px;
-  background-color: #000;
-  opacity: 0.3;
+  left: 0px;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  z-index: 99;
 }
 .bb-lightbox .wrap {
   z-index: 100;
@@ -20,7 +20,6 @@
   right: 5%;
   top: 5%;
   bottom: 5%;
-  margin: 0 auto;
 }
 .bb-lightbox .wrap .close {
   float: right;
