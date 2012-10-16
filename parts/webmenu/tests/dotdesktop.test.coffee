@@ -78,3 +78,12 @@ describe "desktop file with commmand arguments ", ->
 
     it "has finnish translation", ->
       expect(draw.command).to.deep.eq ["libreoffice", "--draw"]
+
+describe "desktop file with X-GNOME-FullName only translation", ->
+
+  gwibber = dotdesktop.parseFileSync dir + "/gwibber.desktop", "fi_FI.UTF-8"
+
+  it "has finnish translation", ->
+    expect(gwibber.name).to.eq "Gwibber – sosiaaliset mediat"
+
+
