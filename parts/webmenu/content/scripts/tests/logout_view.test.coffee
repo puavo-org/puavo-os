@@ -13,6 +13,8 @@ define [
     beforeEach ->
       view = new LogoutView
       view.render()
+    afterEach ->
+      view.remove()
 
     describe "logout button", ->
       it "emits logout event", (done) ->
@@ -28,3 +30,4 @@ define [
       it "emits reboot event", (done) ->
         Application.on "reboot", -> done()
         view.$(".bb-reboot").click()
+
