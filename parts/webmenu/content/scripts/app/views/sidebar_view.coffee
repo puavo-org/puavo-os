@@ -26,6 +26,11 @@ define [
           view: new LogoutView
         @lb.render()
 
+    constructor: ->
+      super
+      @bindTo Application, "show", =>
+        @lb?.remove()
+
     remove: ->
       @lb?.remove()
       super
