@@ -1,0 +1,27 @@
+.bb-lightbox .background,
+.bb-lightbox .wrap,
+.bb-lightbox .content {
+  position: fixed;
+}
+.bb-lightbox .background {
+  z-index: 99;
+  top: 0px;
+  right: 0px;
+  left: 0px;
+  bottom: 0px;
+  background-color: #000;
+  opacity: 0.3;
+}
+.bb-lightbox .wrap {
+  z-index: 100;
+  background-color: #fff;
+  color: #000;
+  left: 5%;
+  right: 5%;
+  top: 5%;
+  bottom: 5%;
+  margin: 0 auto;
+}
+.bb-lightbox .wrap .close {
+  float: right;
+}
