@@ -112,7 +112,7 @@ bridge.on "showMyProfileWindow", ->
   myProfileWindow = createMyProfileWindow()
 
   myProfileWindow.on 'create', ->
-    displayMyProfileWindow(this)
+    displayMyProfileWindow(myProfileWindow)
 
 bridge.on "shutdown", -> powermanager.shutdown()
 bridge.on "reboot", -> powermanager.reboot()
