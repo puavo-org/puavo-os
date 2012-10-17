@@ -1,6 +1,7 @@
 html,body{
   background-color: transparent;
   height: 100%;
+  overflow: hidden;
 }
 body{
   font-size: 100%;
@@ -9,8 +10,12 @@ img{
   max-width: 100%;
   height: auto;
 }
+h2{
+  font-size: 120%;
+}
 .thumbnail i{
   font-size: 300%;
+  line-height: 0;
 }
 .nav-pills > .active > a, .nav-pills > .active > a:hover {
   background-color: #B0C730;
@@ -48,6 +53,10 @@ img{
 }
 .main{
   margin: 5% 0 0;
+}
+.menu-content{
+  max-height: 310px;
+  overflow: auto;
 }
 .sidebar{
   border-left: 2px solid rgba(90,90,90,0.7);
@@ -112,6 +121,10 @@ img{
 .desktop-link img ~ p {
   padding-top: 0.65em;
 }
+.desktop-link i ~ p{
+  line-height: 3;
+  margin: 0;
+}
 ul.thumbnails{
   position: relative;
 }
@@ -131,6 +144,7 @@ ul.nav{
 img.avatar, .logo img{
   max-width: 160px;
 }
+
 button.close{
   position: absolute;
   right: 10px;
