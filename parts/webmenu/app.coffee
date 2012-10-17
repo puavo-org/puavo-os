@@ -39,7 +39,7 @@ handler.get "/osicon/:icon.png", require("./routes/osicon")([
 
 window = app.createWindow
   width: 1000
-  height: 480
+  height: 550
   top: 200
   showChrome: false
   disableSecurity: true
