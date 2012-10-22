@@ -47,8 +47,7 @@ class LocateUser
           end
   
         }
-  
-        conn.search(suffix, LDAP::LDAP_SCOPE_SUBTREE, "(&(objectClass=posixAccount)(|(displayName=#{search_str}*)(puavoReverseDisplayName=#{search_str}*)(mail=#{search_str}*)(phoneNumber=#{search_str})(homeDirectory=#{search_str})(uid=#{search_str}*)))") {|e|
+        conn.search(suffix, LDAP::LDAP_SCOPE_SUBTREE, "(&(objectClass=posixAccount)(|(displayName=#{search_str}*)(puavoReverseDisplayName=#{search_str}*)(mail=#{search_str}*)(phoneNumber=#{search_str})(uid=#{search_str}*)))") {|e|
   	name = "#{e.get_values('cn')}"
           home = "#{e.get_values('homeDirectory')}"
   
@@ -106,7 +105,8 @@ class LocateUser
           e.get_values("namingContexts").each {|suffix|
             if (! @exclude.include?(suffix))
               if /#{org}/.match(suffix)
-                allresults.push get_servers(suffix, search_str)
+                result = get_servers(suffix, search_str)
+                allresults.push result if result.length > 0
               end
             end
           }
@@ -116,6 +116,7 @@ class LocateUser
           puts "LDAP connection failed"
         end  
     end
+    allresults.push "\n"
     return allresults
   end
 end
