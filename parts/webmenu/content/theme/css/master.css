@@ -37,7 +37,14 @@ h2{
   padding: 0.5em;
 }
 .breadcrumb li a:hover, .breadcrumb li a.current{
-  background-color: rgb(208, 200, 186);
+  background-color: #B0C730;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#B0C730), to(#BBD433));
+  background-image: -webkit-linear-gradient(top, #B0C730, #BBD433);
+  background-image: -moz-linear-gradient(top, #B0C730, #BBD433);
+  background-image: -ms-linear-gradient(top, #B0C730, #BBD433);
+  background-image: -o-linear-gradient(top, #B0C730, #BBD433);
+  background-image: linear-gradient(top, #B0C730, #BBD433);
+  color: #222;
   text-decoration: none;
 }
 .container-fluid{
@@ -47,6 +54,7 @@ h2{
   -webkit-box-sizing: border-box;
   min-height: 100%;
   margin: 0;
+  overflow: hidden;
   padding: 0.5em 1em;
   position: relative;
   width: 100%;
@@ -81,6 +89,18 @@ h2{
 }
 .user-info-details{
 
+}
+.sidebar-menu-ul{
+
+}
+.sidebar-menu-ul li {
+  width: 50%;
+}
+.sidebar-menu-ul li > div {
+  padding: 10px;
+}
+.desktop-link .thumbnail{
+  height: 85px;
 }
 .thumbnail{
   border: medium none;
@@ -123,8 +143,8 @@ h2{
   padding-top: 0.65em;
 }
 .desktop-link i ~ p{
-  line-height: 3;
   margin: 0;
+  padding: 1em 0 0;
 }
 ul.thumbnails{
   position: relative;
@@ -142,6 +162,11 @@ ul.nav{
   font-size: 170%;
   margin-top: 0;
 }
+.logo{
+  bottom: 10px;
+  position: absolute;
+  right: 10px;
+}
 img.avatar, .logo img{
   max-width: 160px;
 }
@@ -153,6 +178,7 @@ button.close{
 }
 .logout i{
   color:#AD0000;
+  line-height: 1;
 }
 .logout:hover{
   background-color: #AD0000;
