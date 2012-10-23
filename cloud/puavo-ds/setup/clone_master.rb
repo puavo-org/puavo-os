@@ -29,7 +29,29 @@ puts "uid=admin,o=puavo password:"
 tempfile = Tempfile.open("ldif")
 
 config = `ldapsearch -LLL -x -H #{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b cn=config`
-tempfile.puts config
+config.each_line {|line|
+  if !/olcDbConfig\:/.match(line) and !/olcDbIndex:/.match(line)
+    tempfile.puts line
+  end
+
+  if /objectClass: olcHdbConfig/.match(line)
+    tempfile.puts "olcDbConfig: {0}set_cachesize 0 10485760 0"
+    tempfile.puts "olcDbConfig: {1}set_lg_bsize 2097512"
+    tempfile.puts "olcDbConfig: {2}set_flags DB_LOG_AUTOREMOVE"
+    tempfile.puts "olcDbIndex: sambaSID pres,eq"
+    tempfile.puts "olcDbIndex: sambaSIDList pres,eq"
+    tempfile.puts "olcDbIndex: sambaGroupType pres,eq"
+    tempfile.puts "olcDbIndex: uniqueMember pres,eq"
+    tempfile.puts "olcDbIndex: puavoTag pres,eq"
+    tempfile.puts "olcDbIndex: puavoDeviceType pres,eq"
+    tempfile.puts "olcDbIndex: puavoHostname pres,eq"
+    tempfile.puts "olcDbIndex: uid pres,eq"
+    tempfile.puts "olcDbIndex: cn,sn,mail pres,eq,approx,sub"
+    tempfile.puts "olcDbIndex: objectClass eq"
+    tempfile.puts "olcDbIndex: entryUUID eq"
+    tempfile.puts "olcDbIndex: entryCSN eq"
+  end
+}
 tempfile.close
 
 config.split("\n").each do |line|
@@ -64,6 +86,8 @@ contexts.split("\n").each do |line|
       
       system("slapadd -q -l #{tempfile.path} -F /etc/ldap/slapd.d -b '#{suffix}'") \
       or raise 'Problem in importing data'
+
+      system("slapindex -b #{suffix}")
     end
   end
 end
