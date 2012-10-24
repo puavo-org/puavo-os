@@ -71,3 +71,6 @@ define [
         if model.isValid()
           @items.add model
 
+    validate: ->
+      if @items.size() is 0
+        return "empty menu"

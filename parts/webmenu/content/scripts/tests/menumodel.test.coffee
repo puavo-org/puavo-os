@@ -28,6 +28,10 @@ define [
         name: "Firefox"
         command: ["firefox"]
       ]
+    ,
+      type: "menu"
+      name: "emptymenu"
+      items: []
     ]
 
 
@@ -70,5 +74,11 @@ define [
 
       expect(
         model.items.find (item) -> item.get("id") is "bad"
+      ).to.not.be.ok
+
+
+    it "ignores empty menus", ->
+      expect(
+        model.items.find (item) -> item.get("name") is "emptymenu"
       ).to.not.be.ok
 
