@@ -6,14 +6,14 @@
       "type": "menu",
       "name": "Apuohjelmat",
       "description": "Apuohjelmia",
-      "cssIcon":"icon-pencil",
+      "cssIcon": "icon-folder",
       "items": [
         {
           "type": "desktop",
           "name": "Laskin",
           "command": ["gcalctool"],
           "description": "Monipuolinen piirto- ja kuvankäsittelyohjelma",
-          "cssIcon":"icon-pencil"
+          "cssIcon":"icon-folder"
         },
         {
           "type": "desktop",
@@ -105,7 +105,7 @@
       "type": "menu",
       "name": "Grafiikka",
       "description": "Graafiset sovellukset",
-      "cssIcon":"icon-pencil",
+      "cssIcon":"icon-folder",
       "items": [
         {
           "type": "desktop",
@@ -183,7 +183,7 @@
       "type": "menu",
       "name": "Internet",
       "description": "Internet-sovellukset",
-      "cssIcon":"icon-pencil",
+      "cssIcon":"icon-folder",
       "items": [
         {
           "type": "desktop",
@@ -247,7 +247,7 @@
       "type": "menu",
       "name": "Ohjelmointi",
       "description": "IDE-sovelluksia ohjelmointiin",
-      "cssIcon":"icon-pencil",
+      "cssIcon":"icon-folder",
       "items": [
         {
           "type": "desktop",
@@ -305,7 +305,7 @@
       "type": "menu",
       "name": "Opetusohjelmat",
       "description": "Sovelluksia oppimisen tueksi",
-      "cssIcon":"icon-pencil",
+      "cssIcon":"icon-folder",
       "items": [
         {
           "type": "desktop",
@@ -437,7 +437,7 @@
       "type": "menu",
       "name": "Toimisto",
       "description": "Toimisto-ohjelmat",
-      "cssIcon":"icon-pencil",
+      "cssIcon":"icon-folder",
       "items": [
         {
           "type": "desktop",
@@ -489,7 +489,7 @@
       "type": "menu",
       "name": "Ääni ja video",
       "description": "Internet-sovellukset",
-      "cssIcon":"icon-pencil",
+      "cssIcon":"icon-folder",
       "items": [
         {
           "type": "desktop",
@@ -586,7 +586,7 @@
       "type": "menu",
       "name": "Smartboard",
       "description": "Internet-sovellukset",
-      "cssIcon":"icon-pencil",
+      "cssIcon":"icon-folder",
       "items": [
         {
           "type": "desktop",
@@ -598,7 +598,7 @@
       "type": "menu",
       "name": "Webbisovellukset",
       "description": "Web-sovellukset",
-      "cssIcon":"icon-pencil",
+      "cssIcon":"icon-folder",
       "items": [
         {
           "type": "desktop",
