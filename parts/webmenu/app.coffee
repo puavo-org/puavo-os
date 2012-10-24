@@ -25,11 +25,15 @@ app.init CachePath: cachePath
 locale = process.env.LANG
 locale = "fi_FI.UTF-8"
 menuJSON = require "./menu.json"
-menutools.injectDesktopData(menuJSON, "/usr/share/applications", locale)
-handler.get "/menu.json", (req, res) ->
-  console.log menuJSON
-  res.json menuJSON
 
+menutools.injectDesktopData(menuJSON, [
+  "/usr/share/applications",
+  "/usr/share/applications/kde4"],
+  locale
+)
+
+handler.get "/menu.json", (req, res) ->
+  res.json menuJSON
 
 handler.get "/osicon/:icon.png", require("./routes/osicon")([
   "/usr/share/app-install/icons"
