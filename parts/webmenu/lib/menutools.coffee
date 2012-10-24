@@ -5,7 +5,6 @@ path = require "path"
 dotdesktop = require "./dotdesktop"
 
 injectDesktopData = (menu, sources, locale) ->
-  console.log "FOO", sources, sources.forEach
   sources.forEach (desktopDir) ->
     if menu.type is "desktop" and menu.id
       filePath = desktopDir + "/#{ menu.id }.desktop"
