@@ -87,16 +87,26 @@ handler.get "/show", (req, res) ->
   displayMenu()
 
 
-bridge.on "open", (msg) ->
-  if msg.type is "desktop"
+commandBuilders =
+  desktop: (msg) ->
+    if not msg.command
+      console.error "Missing command from", msg
+      return
     command = msg.command.shift()
     args = msg.command
-  else if msg.type is "web"
-    command = "xdg-open"
+    return [command, args]
+  web: (msg) ->
     args = [msg.url]
-  else
+    return ["xdg-open", args]
+
+bridge.on "open", (msg) ->
+  command = commandBuilders[msg.type]?(msg)
+
+  if not command
+    console.error "Cannot find command from", msg
     return
 
+  [command, args] = command
   console.log "Executing '#{ command }'"
   cmd = spawn command, args, { detached: true }
   cmd.on "exit", (code) ->
