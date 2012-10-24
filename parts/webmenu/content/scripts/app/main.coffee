@@ -22,26 +22,25 @@ define [
    if status isnt "success"
      throw new Error "failed to load menu"
 
+   allItems = new AllItems
+   menuModel = new MenuModel data, allItems
 
-    allItems = new AllItems
-    menuModel = new MenuModel data, allItems
-
-    layout = new MenuLayout
-      initialMenu: menuModel
-      allItems: allItems
-
-
-    layout.render()
-    $(".content-container").append layout.el
-
-    bridge = new DesktopBridge
-    bridge.connect(Application)
-
-    allItems.on "select", (model) ->
-      Application.trigger "open", model.toJSON()
+   layout = new MenuLayout
+     initialMenu: menuModel
+     allItems: allItems
 
 
-    $(window).blur ->
-      Application.trigger "hideWindow"
+   layout.render()
+   $(".content-container").append layout.el
+
+   bridge = new DesktopBridge
+   bridge.connect(Application)
+
+   allItems.on "select", (model) ->
+     Application.trigger "open", model.toJSON()
+
+
+   $(window).blur ->
+     Application.trigger "hideWindow"
 
 
