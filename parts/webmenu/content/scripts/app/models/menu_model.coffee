@@ -18,7 +18,8 @@ define [
       "clicks": 0
 
     constructor: (opts) ->
-      opts.id = opts.name
+      if not opts.id
+        opts.id = opts.name
       super
       if clicks = localStorage[@_lsID()]
         @set "clicks", parseInt(clicks, 10)
