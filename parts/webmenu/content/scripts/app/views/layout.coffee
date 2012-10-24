@@ -30,16 +30,22 @@ define [
       @renderSubviews(opts)
 
     renderSubviews: (opts) ->
+      opts ?= {}
+
       while oldView = @_remove.shift()
         oldView.remove()
 
       for selector, views of @subViews
+        if opts.newOnly and not views._new
+          continue
+
         container = @$(selector)
-        container.children().detach() if not opts?._noDetach
+        container.children().detach() if not opts._noDetach
+
         for view in views
           view.render()
           container.append view.el
-        views.dirty = false
+        views._new = false
 
     # Methods for setting views. Private because the selectors are always
     # internal to a layout. Add setMenu(view) method if you need public access.
@@ -49,6 +55,8 @@ define [
         newViews = view
       else
         newViews = [view]
+
+      newViews._new = true
 
       if current = @subViews[selector]
         for old in _.difference(current, newViews)
