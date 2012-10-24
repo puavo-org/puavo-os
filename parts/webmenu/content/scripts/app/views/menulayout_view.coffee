@@ -37,7 +37,7 @@ define [
       @bindTo @allItems, "select", (model) =>
         if model.get("type") is "menu"
           @setMenu model
-          @renderSubviews()
+          @renderSubviews(newOnly: true)
 
       @_setView ".sidebar", new SidebarView
 
