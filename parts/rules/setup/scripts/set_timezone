@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+rootdir=$1
+
+echo "Setting timezone"
+
+cp $rootdir/usr/share/zoneinfo/Europe/Helsinki $rootdir/etc/localtime

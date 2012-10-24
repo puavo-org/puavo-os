@@ -26,37 +26,40 @@ fi
 
 test -z "$hosttype" -o -z "$targethostname" && usage
 
+srcdir=$(dirname $0)
+srccopydir=$(mktemp -d /tmp/ltsp-build-$USER-$$.XXXXXXXXXXX)
+cp -a $srcdir $srccopydir
+
 case "$hosttype" in
   boot)
     extraopts="--addpkg   bridge-utils \
-	       --addpkg   isc-dhcp-server \
-	       --addpkg   nfs-kernel-server \
-	       --addpkg   tshark \
-	       --addpkg   vlan \
-	       --arch     amd64 \
-    	       --dest     /images/$targethostname \
-    	       --flavour  server \
-    	       --hostname $targethostname \
-    	       --suite    precise \
-	      "
+               --addpkg   isc-dhcp-server \
+               --addpkg   nfs-kernel-server \
+               --addpkg   tshark \
+               --addpkg   vlan \
+               --arch     amd64 \
+               --dest     /virtual/$targethostname \
+               --exec     $srccopydir/setup/boot \
+               --flavour  server \
+               --hostname $targethostname \
+               --suite    precise \
+              "
     ;;
   ltsp)
     extraopts="--addpkg   ltsp-client-core \
-	       --arch     i386 \
-    	       --dest     /images/$targethostname \
-    	       --flavour  generic \
-    	       --hostname $targethostname \
-    	       --suite    quantal \
-	      "
+               --arch     i386 \
+               --dest     /images/$targethostname \
+               --exec     $srccopydir/setup/ltsp \
+               --flavour  generic \
+               --hostname $targethostname \
+               --suite    quantal \
+               --tmp      /virtualtmp \
+              "
     ;;
   *)
     usage
     ;;
 esac
-
-srcdir=$(dirname $0)
-srccopydir=$(mktemp -d /tmp/ltsp-build-$USER-$$.XXXXXXXXXXX)
-cp -a $srcdir $srccopydir
 
 build_version=$targethostname-$hosttype-$(date +%Y-%m-%d-%H%M%S)
 buildlogfile=$srcdir/log/$build_version.log
@@ -74,8 +77,6 @@ sudo \
     --mirror     http://10.246.131.53:9999/fi.archive.ubuntu.com/ubuntu \
     --debug      \
     -v           \
-    --exec       $srccopydir/setup.sh \
     --rootsize   20480 \
-    --tmp        /virtualtmp \
     $extraopts   \
   2>&1 | tee $buildlogfile
