@@ -2,13 +2,11 @@
 
 set -eu
 
-rootdir=$1
-
 echo "Configuring dhcpd"
 
-chroot $rootdir apt-get install -y isc-dhcp-server
+apt-get -y install isc-dhcp-server
 
-cat <<'EOF' > $rootdir/etc/dhcpd/dhcpd.conf
+cat <<'EOF' > /etc/dhcpd/dhcpd.conf
 default-lease-time 7200;
 get-lease-hostnames true;
 max-lease-time 14400;

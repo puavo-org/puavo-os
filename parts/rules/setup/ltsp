@@ -3,12 +3,15 @@
 set -eu
 
 rootdir=$1
-mydir=$(dirname $0)
+srcdir=$(dirname $0)
 
-. $mydir/common.sh
+. $srcdir/common.sh
 
 ltsp_scripts="
   $server_scripts
+  ltsp/network_interfaces
+  ltsp/client
 "
 
-run_scripts $rootdir $mydir/scripts $ltsp_scripts
+setup_buildsrc $srcdir $rootdir
+run_scripts $rootdir $ltsp_scripts

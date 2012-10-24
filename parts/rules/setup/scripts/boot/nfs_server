@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -eu
+
+echo "Configuring NFS server"
+
+apt-get -y install nfs-kernel-server
