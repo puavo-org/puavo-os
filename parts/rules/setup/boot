@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -eu
+
+rootdir=$1
+mydir=$(dirname $0)
+
+. $mydir/common.sh
+
+boot_scripts="
+  $server_scripts
+"
+
+run_scripts $rootdir $mydir/scripts $boot_scripts

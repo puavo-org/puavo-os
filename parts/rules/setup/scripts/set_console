@@ -18,5 +18,3 @@ stop on runlevel [!2345]
 respawn
 exec /sbin/getty -L 115200 ttyS0 xterm
 EOF
-
-cp $rootdir/usr/share/zoneinfo/Europe/Helsinki $rootdir/etc/localtime
