@@ -112,7 +112,10 @@ bridge.on "open", (msg) ->
 
   [command, args] = command
   console.log "Executing '#{ command }'"
-  cmd = spawn command, args, { detached: true }
+  cmd = spawn command, args,
+    detached: true
+    cwd: process.env.HOME
+
   cmd.on "exit", (code) ->
     console.log "Command '#{ command } #{ args.join " " } exited with #{ code }"
 
