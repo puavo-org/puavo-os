@@ -35,17 +35,11 @@
         },
         {
           "type": "desktop",
-          "name": "Brasero-levynkirjoittaja",
-          "command": ["brasero %U"],
-          "description": "CD- ja DVD-kirjoitusohjelma",
-          "cssIcon":"icon-pencil"
+          "id": "brasero"
         },
         {
           "type": "desktop",
-          "name": "CD-levyjen kopiointi",
-          "command": ["sound-juicer %u"],
-          "description": "Ohjelma CD- ja DVD-levyjen kopiointiin",
-          "cssIcon":"icon-pencil"
+          "id": "sound-juicer"
         },
         {
           "type": "desktop",
@@ -56,17 +50,11 @@
         },
         {
           "type": "desktop",
-          "name": "Pakettienkäsittelyohjelma",
-          "command": ["file-roller %U"],
-          "description": "Pakettienkäsittelyohjelma",
-          "cssIcon":"icon-pencil"
+          "id": "file-roller"
         },
-                {
+        {
           "type": "desktop",
-          "name": "Pääte",
-          "command": ["gnome-terminal"],
-          "description": "Käytä komentoriviä",
-          "cssIcon":"icon-pencil"
+          "id": "gnome-terminal"
         },
         {
           "type": "desktop",
@@ -538,10 +526,7 @@
         },
         {
           "type": "desktop",
-          "name": "Kdenlive",
-          "command": ["kdenlive"],
-          "description": "Epälineaarinen videoeditori",
-          "cssIcon":"icon-pencil"
+          "id": "kdenlive"
         },
         {
           "type": "desktop",
