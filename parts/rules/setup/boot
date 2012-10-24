@@ -3,12 +3,16 @@
 set -eu
 
 rootdir=$1
-mydir=$(dirname $0)
+srcdir=$(dirname $0)
 
-. $mydir/common.sh
+. $srcdir/common.sh
 
 boot_scripts="
   $server_scripts
+  boot/network_interfaces
+  boot/dhcpd_configuration
+  boot/nfs_server
 "
 
-run_scripts $rootdir $mydir/scripts $boot_scripts
+setup_buildsrc $srcdir $rootdir
+run_scripts $rootdir $boot_scripts

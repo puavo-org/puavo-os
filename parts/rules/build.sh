@@ -2,16 +2,10 @@
 
 set -eu
 
-cleanup() {
-  test -n "$srccopydir" && rm -rf $srccopydir
-}
-
 usage() {
   echo "Usage: $(basename $0) boot|ltsp hostname" > /dev/stderr
   exit 1
 }
-
-trap cleanup EXIT
 
 if [ "$(id -u)" = "0" ]; then
   echo "Do not run me as root" > /dev/stderr
@@ -27,29 +21,21 @@ fi
 test -z "$hosttype" -o -z "$targethostname" && usage
 
 srcdir=$(dirname $0)
-srccopydir=$(mktemp -d /tmp/ltsp-build-$USER-$$.XXXXXXXXXXX)
-cp -a $srcdir $srccopydir
 
 case "$hosttype" in
   boot)
-    extraopts="--addpkg   bridge-utils \
-               --addpkg   isc-dhcp-server \
-               --addpkg   nfs-kernel-server \
-               --addpkg   tshark \
-               --addpkg   vlan \
-               --arch     amd64 \
+    extraopts="--arch     amd64 \
                --dest     /virtual/$targethostname \
-               --exec     $srccopydir/setup/boot \
+               --exec     $srcdir/setup/boot \
                --flavour  server \
                --hostname $targethostname \
                --suite    precise \
               "
     ;;
   ltsp)
-    extraopts="--addpkg   ltsp-client-core \
-               --arch     i386 \
+    extraopts="--arch     i386 \
                --dest     /images/$targethostname \
-               --exec     $srccopydir/setup/ltsp \
+               --exec     $srcdir/setup/ltsp \
                --flavour  generic \
                --hostname $targethostname \
                --suite    quantal \

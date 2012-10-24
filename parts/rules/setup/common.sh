@@ -1,16 +1,21 @@
 # /bin/sh fragment
 
 run_scripts() {
-  rootdir=$1  ; shift
-  scriptdir=$1; shift
+  rootdir=$1; shift
   for script in $*; do
-    $scriptdir/$script $rootdir
+    chroot $rootdir /etc/build/scripts/$script
   done
+}
+
+setup_buildsrc() {
+  srcdir=$1
+  rootdir=$2
+  mkdir -p $rootdir/etc/build
+  tar -C $srcdir -c . | chroot $rootdir tar -C /etc/build -x
 }
 
 server_scripts="
   timezone
   console
-  network_interfaces
-  dhcpd_configuration
+  admin_tools
 "

@@ -2,11 +2,11 @@
 
 set -eu
 
-rootdir=$1
+echo "Configuring bootserver network interfaces"
 
-echo "Configuring network interfaces"
+apt-get -y install bridge-utils vlan
 
-cat <<'EOF' > $rootdir/etc/network/interfaces
+cat <<'EOF' > /etc/network/interfaces
 # This file describes the network interfaces available on your system
 # and how to activate them. For more information, see interfaces(5).
 

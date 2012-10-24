@@ -1,0 +1,36 @@
+#!/bin/sh
+
+set -eu
+
+echo "Configuring LTSP network interfaces"
+
+apt-get -y install bridge-utils
+
+cat <<'EOF' > /etc/network/interfaces
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet manual
+ 
+auto eth1
+iface eth1 inet manual
+
+auto int0
+iface int0 inet dhcp
+        bridge_ports eth0
+        bridge_stp off
+        bridge_fd 0
+        bridge_maxwait 0
+
+auto ltsp0
+iface ltsp0 inet dhcp
+	bridge_ports eth1
+	bridge_stp off
+	bridge_fd 0
+	bridge_maxwait 0
+EOF
