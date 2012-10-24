@@ -12,6 +12,8 @@ define [
       @allItems = allItems
       @allItems.add this
 
+    validate: ->
+
 
   class LauncherModel extends AbstractItemModel
     defaults:
@@ -29,12 +31,23 @@ define [
         localStorage[@_lsID()] = @get "clicks"
         console.log "Click count for #{ @get "name" } is #{ @get "clicks" }"
 
+      if not @get("name")
+        console.log "creating crappy", JSON.stringify(@toJSON()), opts
+
     _lsID: -> "clicks-#{ @id }"
+
     resetClicks: ->
       delete localStorage[@_lsID()]
 
+    validate: ->
+      if not @get("command")
+        return "Command is missing"
 
   class WebItemModel extends LauncherModel
+
+    validate: ->
+      if not @get("url")
+        return "Url is missing"
 
   class DesktopItemModel extends LauncherModel
 
@@ -55,5 +68,6 @@ define [
       for item in opts.items
         model = new typemap[item.type](item, allItems)
         model.parent = this
-        @items.add model
+        if model.isValid()
+          @items.add model
 
