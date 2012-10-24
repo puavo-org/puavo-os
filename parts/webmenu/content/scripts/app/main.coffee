@@ -37,7 +37,8 @@ define [
    bridge.connect(Application)
 
    allItems.on "select", (model) ->
-     Application.trigger "open", model.toJSON()
+     if model.get("type") isnt "menu"
+       Application.trigger "open", model.toJSON()
 
 
    $(window).blur ->

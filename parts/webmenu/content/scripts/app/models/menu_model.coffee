@@ -29,10 +29,7 @@ define [
       @on "select", =>
         @set "clicks", @get("clicks") + 1
         localStorage[@_lsID()] = @get "clicks"
-        console.log "Click count for #{ @get "name" } is #{ @get "clicks" }"
 
-      if not @get("name")
-        console.log "creating crappy", JSON.stringify(@toJSON()), opts
 
     _lsID: -> "clicks-#{ @id }"
 

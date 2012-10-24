@@ -59,7 +59,6 @@ displayMyProfileWindow = (myProfileWindow) ->
   myProfileWindow.frame.focus()
 
 displayMenu = ->
-  console.log "showing"
   title = "Opinsys Web Menu"
   bridge.emit "show"
   window.frame.title = title
@@ -72,7 +71,8 @@ displayMenu = ->
   setTimeout ->
     wmctrl = spawn("wmctrl", ["-a", title])
     wmctrl.on 'exit', (code) ->
-      console.log('wmctrl exited with code ' + code)
+      if code isnt 0
+        console.log('wmctrl exited with code ' + code)
   , 200
 
 
