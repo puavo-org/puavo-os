@@ -14,6 +14,14 @@ define [
       type: "desktop"
       name: "gimp"
       command: ["gimp"]
+    ,
+      type: "menu"
+      name: "submenu"
+      items: [
+        type: "desktop"
+        name: "Firefox"
+        command: ["firefox"]
+      ]
     ]
 
 
@@ -28,7 +36,10 @@ define [
       allItems.each (m) -> m.resetClicks?()
 
     it "will add items to the collection", ->
-      expect(allItems.size()).to.eq 2
+      expect(allItems.size()).to.eq 4
+
+    it "creates nested menus", ->
+      expect(model.items.find((item) -> item.get("type") is "menu")).to.be.ok
 
     it "will adds items as collection", ->
       expect(model).to.have.property "items"
