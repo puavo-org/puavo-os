@@ -1,0 +1,86 @@
+#!/bin/sh
+
+set -eu
+
+rootdir=$1
+
+echo "Configuring dhcpd"
+
+chroot $rootdir apt-get install -y isc-dhcp-server
+
+cat <<'EOF' > $rootdir/etc/dhcpd/dhcpd.conf
+default-lease-time 7200;
+get-lease-hostnames true;
+max-lease-time 14400;
+option domain-name "kehitys.opinsys.fi";
+
+authoritative;
+
+subnet 10.249.0.0 netmask 255.255.252.0 {
+  pool {
+    range 10.249.1.1 10.249.1.254;
+    range 10.249.2.1 10.249.2.254;
+    range 10.249.3.1 10.249.3.199;
+
+    option domain-name-servers 10.249.0.240;
+    option netbios-name-servers 10.249.0.240;
+    option ntp-servers 10.249.0.240;
+    option routers 10.249.0.240;
+
+    if substring( option vendor-class-identifier, 0, 9 ) = "PXEClient" {
+      filename "/pxelinux.0";
+    }
+
+    next-server 10.249.0.240;
+
+    on commit {
+      set ClientIP  = binary-to-ascii(10, 8, ".", leased-address);
+      set ClientMac = binary-to-ascii(16, 8, ":", substring(hardware, 1, 6));
+
+      log(concat("Commit: IP: ", ClientIP,
+                 " Mac: ",       ClientMac,
+                 " Subdomain: ", "ltsp0"));
+
+      execute("/usr/local/sbin/puavo_dhcpd_event", ClientMac, ClientIP, "ltsp0");
+    }
+  }
+}
+
+subnet 10.249.224.0 netmask 255.255.240.0 {
+  pool {
+    range 10.249.225.1 10.249.225.254;
+    range 10.249.226.1 10.249.226.254;
+    range 10.249.227.1 10.249.227.254;
+    range 10.249.228.1 10.249.228.254;
+    range 10.249.229.1 10.249.229.254;
+    range 10.249.230.1 10.249.230.254;
+    range 10.249.231.1 10.249.231.254;
+    range 10.249.232.1 10.249.232.254;
+    range 10.249.233.1 10.249.233.254;
+    range 10.249.234.1 10.249.234.254;
+    range 10.249.235.1 10.249.235.254;
+    range 10.249.236.1 10.249.236.254;
+    range 10.249.237.1 10.249.237.254;
+    range 10.249.238.1 10.249.238.254;
+    range 10.249.239.1 10.249.239.199;
+
+    option domain-name-servers 10.249.239.254;
+    option netbios-name-servers 10.249.239.254;
+    option ntp-servers 10.249.239.254;
+    option routers 10.249.239.254;
+
+    next-server 10.249.239.254;
+
+    on commit {
+      set ClientIP  = binary-to-ascii(10, 8, ".", leased-address);
+      set ClientMac = binary-to-ascii(16, 8, ":", substring(hardware, 1, 6));
+
+      log(concat("Commit: IP: ", ClientIP,
+                 " Mac: ",       ClientMac,
+                 " Subdomain: ", "wlan0"));
+
+      execute("/usr/local/sbin/puavo_dhcpd_event", ClientMac, ClientIP, "wlan0");
+    }
+  }
+}
+EOF

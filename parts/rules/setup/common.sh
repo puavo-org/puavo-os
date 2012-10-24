@@ -9,6 +9,8 @@ run_scripts() {
 }
 
 server_scripts="
-  set_timezone
-  set_console
+  timezone
+  console
+  network_interfaces
+  dhcpd_configuration
 "
