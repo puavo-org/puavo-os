@@ -31,6 +31,7 @@ require.config({
     moment: "vendor/moment",
     uri: "vendor/URI",
     "socket.io": "vendor/socket.io",
-    "coffee-script": "vendor/coffee-script"
+    "coffee-script": "vendor/coffee-script",
+    "spin": "vendor/spin"
   }
 });
