@@ -31,6 +31,12 @@ define [
           @spinner = true
           @render()
 
+      "mouseenter .thumbnail": (e) ->
+        Application.trigger "showDescription", @model
+      "mouseleave .thumbnail": (e) ->
+        Application.trigger "hideDescription", @model
+
+
     render: ->
       super
       # Disabled until https://github.com/appjs/appjs/issues/223 gets fixed

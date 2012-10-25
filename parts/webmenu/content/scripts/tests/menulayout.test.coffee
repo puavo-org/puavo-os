@@ -66,4 +66,15 @@ define [
       it "it has one favorite", ->
         expect(layout.$(".favorites .bb-menu-item").size()).to.be 1
 
+    describe "after mouse entering item", ->
+
+      beforeEach ->
+        layout.$(".bb-menu-item .thumbnail").filter(
+          (i, e) -> $(e).text().trim() is "Gimp"
+        ).mouseenter()
+
+      it "displays the item description", ->
+        expect(layout.$el).to.have(".bb-item-description")
+        expect(layout.$el).to.not.have(".bb-profile")
+
 

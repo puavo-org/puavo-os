@@ -1,22 +1,27 @@
 define [
   "cs!app/views/layout"
+  "cs!app/views/itemdescription_view"
   "cs!app/views/menulist_view"
   "cs!app/views/breadcrumbs_view"
   "cs!app/views/profile_view"
   "cs!app/views/favorites_view"
   "cs!app/application"
   "hbs!app/templates/menulayout"
+  "app/utils/debounce"
   "backbone"
 ], (
   Layout
+  ItemDescriptionView
   MenuListView
   Breadcrumbs
   ProfileView
   Favorites
   Application
   template
+  debounce
   Backbone
 ) ->
+
   class MenuLayout extends Layout
 
     className: "bb-menu"
@@ -39,10 +44,26 @@ define [
           @setMenu model
           @renderSubviews(newOnly: true)
 
-      @_setView ".sidebar", new ProfileView
+      delayedShowProfile = debounce =>
+        @showProfile()
+        @renderSubviews(newOnly: true)
+      , 200
+
+      @bindTo Application, "showDescription", (model) =>
+        delayedShowProfile.cancel()
+        @_setView ".sidebar", new ItemDescriptionView
+          model: model
+        @renderSubviews(newOnly: true)
+
+      @bindTo Application, "hideDescription", => delayedShowProfile()
+
+      @showProfile()
 
       @_setView ".favorites", new Favorites
         collection: @allItems
+
+    showProfile: ->
+      @_setView ".sidebar", new ProfileView
 
     reset: ->
       @setMenu(@initialMenu)
