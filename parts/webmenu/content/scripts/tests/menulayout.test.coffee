@@ -49,11 +49,14 @@ define [
         allItems: allItems
       layout.render()
 
-    it "has rendered items", ->
+    it "has menu item(s)", ->
       expect(layout.$(".bb-menu .item-name")).to.contain('Gimp')
+    it "has profile view", ->
       expect(layout.$el).to.have(".bb-profile")
+    it "has favorites view", ->
+      expect(layout.$el).to.have(".most-used-list")
 
-    it "has no favorites on start", ->
+    it "has empty favorites view", ->
       expect(layout.$(".favorites .bb-menu-item").size()).to.be 0
 
     describe "after clicking one item", ->
