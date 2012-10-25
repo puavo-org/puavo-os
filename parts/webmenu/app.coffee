@@ -22,25 +22,24 @@ cachePath = process.env.HOME + "/.webmenu/cache"
 mkdirp.sync cachePath
 app.init CachePath: cachePath
 
+config = require "./config.json"
 locale = process.env.LANG
 locale = "fi_FI.UTF-8"
 menuJSON = require "./menu.json"
 
-menutools.injectDesktopData(menuJSON, [
-  "/usr/share/applications",
-  "/usr/share/applications/kde4"],
+menutools.injectDesktopData(
+  menuJSON,
+  config.dotDesktopSearchPaths,
   locale
 )
 
 handler.get "/menu.json", (req, res) ->
   res.json menuJSON
 
-handler.get "/osicon/:icon.png", require("./routes/osicon")([
-  "/usr/share/app-install/icons"
-  "/usr/share/pixmaps"
-  "/usr/share/icons/hicolor/128x128/apps"
-  "/usr/share/icons/Neu/128x128/categories"
-], "/usr/share/icons/Gion/128x128/apps/gnome-terminal.png")
+handler.get "/osicon/:icon.png", require("./routes/osicon")(
+  config.iconSearchPaths,
+  config.fallbackIcon
+)
 
 window = app.createWindow
   width: 1000
