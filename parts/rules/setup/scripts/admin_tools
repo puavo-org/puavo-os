@@ -2,6 +2,6 @@
 
 set -eu
 
-echo "Installing admin tools"
+echo ">>>>> Installing admin tools"
 
 apt-get -y install tshark

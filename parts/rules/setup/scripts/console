@@ -2,7 +2,7 @@
 
 set -eu
 
-echo "Configuring ttyS0.conf"
+echo ">>>>> Configuring ttyS0.conf"
 
 cat <<'EOF' > /etc/init/ttyS0.conf
 # ttyS0 - getty

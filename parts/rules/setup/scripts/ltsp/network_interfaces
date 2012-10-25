@@ -2,7 +2,7 @@
 
 set -eu
 
-echo "Configuring LTSP network interfaces"
+echo ">>>>> Configuring LTSP network interfaces"
 
 apt-get -y install bridge-utils
 

@@ -2,6 +2,6 @@
 
 set -eu
 
-echo "Setting timezone"
+echo ">>>>> Setting timezone"
 
 cp /usr/share/zoneinfo/Europe/Helsinki /etc/localtime

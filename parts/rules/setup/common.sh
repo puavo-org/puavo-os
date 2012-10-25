@@ -1,5 +1,17 @@
 # /bin/sh fragment
 
+setup() {
+  rootdir=$1; shift
+  srcdir=$2 ; shift
+
+  mount -t proc proc $rootdir/proc
+
+  setup_buildsrc $srcdir $rootdir
+  run_scripts $rootdir $*
+
+  umount $rootdir/proc
+}
+
 run_scripts() {
   rootdir=$1; shift
   for script in $*; do

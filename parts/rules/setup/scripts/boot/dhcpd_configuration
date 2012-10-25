@@ -2,7 +2,7 @@
 
 set -eu
 
-echo "Configuring dhcpd"
+echo ">>>>> Configuring dhcpd"
 
 apt-get -y install isc-dhcp-server
 

@@ -14,5 +14,4 @@ boot_scripts="
   boot/nfs_server
 "
 
-setup_buildsrc $srcdir $rootdir
-run_scripts $rootdir $boot_scripts
+setup $rootdir $srcdir $boot_scripts
