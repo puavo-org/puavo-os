@@ -4,12 +4,8 @@ setup() {
   rootdir=$1; shift
   srcdir=$1 ; shift
 
-  mount -t proc proc $rootdir/proc
-
   setup_buildsrc $srcdir $rootdir
   run_scripts $rootdir $*
-
-  umount $rootdir/proc
 }
 
 run_scripts() {
