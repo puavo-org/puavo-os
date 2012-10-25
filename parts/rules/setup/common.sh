@@ -2,7 +2,7 @@
 
 setup() {
   rootdir=$1; shift
-  srcdir=$2 ; shift
+  srcdir=$1 ; shift
 
   mount -t proc proc $rootdir/proc
 
