@@ -13,5 +13,4 @@ ltsp_scripts="
   ltsp/client
 "
 
-setup_buildsrc $srcdir $rootdir
-run_scripts $rootdir $ltsp_scripts
+setup $rootdir $srcdir $ltsp_scripts
