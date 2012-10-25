@@ -4,7 +4,7 @@ set -eu
 
 echo ">>>>> Configuring dhcpd"
 
-apt-get -y install isc-dhcp-server
+# apt-get -y install isc-dhcp-server
 
 cat <<'EOF' > /etc/dhcp/dhcpd.conf
 default-lease-time 7200;

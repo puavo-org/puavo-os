@@ -4,4 +4,4 @@ set -eu
 
 echo ">>>>> Configuring LTSP client"
 
-apt-get -y install ltsp-client-core
+# apt-get -y install ltsp-client-core
