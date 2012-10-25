@@ -34,8 +34,14 @@ case "$hosttype" in
   boot)
     extraopts="--addpkg   bridge-utils \
 	       --addpkg   isc-dhcp-server \
+	       --addpkg   kvm \
+	       --addpkg   nbd-server \
 	       --addpkg   nfs-kernel-server \
+	       --addpkg   rsync \
+	       --addpkg   tftpd-hpa \
+	       --addpkg   tmux \
 	       --addpkg   tshark \
+	       --addpkg   ubuntu-standard \
 	       --addpkg   vlan \
 	       --arch     amd64 \
                --dest     /virtual/$targethostname \
@@ -48,7 +54,9 @@ case "$hosttype" in
   ltsp)
     extraopts="--addpkg   bridge-utils \
 	       --addpkg   ltsp-client-core \
+	       --addpkg   tmux \
 	       --addpkg   tshark \
+	       --addpkg   ubuntu-standard \
 	       --addpkg   vlan \
 	       --arch     i386 \
                --dest     /images/$targethostname \
