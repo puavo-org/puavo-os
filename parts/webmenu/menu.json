@@ -6,32 +6,26 @@
       "type": "menu",
       "name": "Apuohjelmat",
       "description": "Apuohjelmia",
-      "cssIcon": "icon-folder",
+      "osIcon": "applications-accessories",
       "items": [
         {
           "type": "desktop",
-          "name": "Laskin",
-          "command": ["gcalctool"],
-          "description": "Monipuolinen piirto- ja kuvankäsittelyohjelma",
-          "cssIcon":"icon-folder"
-        },
+          "id": "gcalctool"
+        }, 
         {
           "type": "desktop",
           "id": "gedit"
         },
         {
           "type": "desktop",
-          "name": "Merkkikartta",
-          "command": ["gucharmap"],
-          "description": "Monipuolinen piirto- ja kuvankäsittelyohjelma",
-          "cssIcon":"icon-pencil"
-        },
+          "id": "gucharmap"
+        }, 
         {
           "type": "desktop",
           "name": "CD/DVD-luontityökalu",
           "command": ["nautilus --no-default-window --no-desktop burn:/// "],
           "description": "Luo CD:itä ja DVD:itä",
-          "cssIcon":"icon-pencil"
+          "osIcon":"media-cdrom"
         },
         {
           "type": "desktop",
@@ -43,10 +37,7 @@
         },
         {
           "type": "desktop",
-          "name": "Etsi tiedostoja",
-          "command": ["gnome-search-tool"],
-          "description": "Työkalu tiedostojen etsimiseen",
-          "cssIcon":"icon-pencil"
+          "id": "gnome-search-tool"
         },
         {
           "type": "desktop",
@@ -58,31 +49,15 @@
         },
         {
           "type": "desktop",
-          "name": "Salasanat ja salausavaimet",
-          "command": ["seahorse"],
-          "description": "Sovellusten salasanojen hallinta",
-          "cssIcon":"icon-pencil"
-        },
+          "id": "seahorse"
+        }, 
         {
           "type": "desktop",
-          "name": "Hallitse tulostustöitä",
-          "command": ["system-config-printer-applet --no-tray-icon"],
-          "description": "Tulostustöiden hallintaohjelma",
-          "cssIcon":"icon-pencil"
-        },
+          "id": "system-config-printer"
+        }, 
         {
           "type": "desktop",
-          "name": "Ota kuvakaappaus",
-          "command": ["gnome-screenshot --interactive"],
-          "description": "Ota kuvakaappaus ruudusta",
-          "cssIcon":"icon-pencil"
-        },
-        {
-          "type": "web",
-          "name": "Flickr",
-          "url": "http://www.flickr.com/",
-          "description": "Share your life in photos",
-          "cssIcon":"icon-pencil"
+          "id": "gnome-screenshot"
         }
           ]
     },
@@ -94,73 +69,43 @@
       "items": [
         {
           "type": "desktop",
-          "name": "KolourPaint",
-          "command": ["kolourpaint"],
-          "description": "Yksinkertainen piirto-ohjelma",
-          "cssIcon":"icon-pencil"
+          "id": "kolourpaint"
         },
         {
           "type": "desktop",
-          "name": "Tux Taiteilija",
-          "command": ["tuxpaint"],
-          "description": "Hauska piirto-ohjelma lapsille!",
-          "cssIcon":"icon-pencil"
+          "id": "tuxpaint"
         },
         {
           "type": "desktop",
-          "name": "MyPaint",
-          "command": ["mypaint"],
-          "description": "Piirtopöydän kanssa toimiva piirto-ohjelma",
-          "cssIcon":"icon-pencil"
+          "id": "mypaint"
+        }, 
+        {
+          "type": "desktop",
+          "id": "gimp"
+        }, 
+        {
+          "type": "desktop",
+          "id": "gthumb"
         },
         {
           "type": "desktop",
-          "name": "Gimp-kuvankäsittely",
-          "command": ["gimp"],
-          "description": "Monipuolinen piirto- ja kuvankäsittelyohjelma",
-          "cssIcon":"icon-pencil"
-        },
+          "id": "inkscape"
+        }, 
         {
           "type": "desktop",
-          "name": "GThumb-kuvakatselin",
-          "command": ["gthumb"],
-          "description": "Katsele ja järjestä kuviasi",
-          "cssIcon":"icon-pencil"
-        },
+          "id": "eog"
+        }, 
         {
           "type": "desktop",
-          "name": "Inkscape",
-          "command": ["inkscape"],
-          "description": "Vektorigrafiikkaohjelma",
-          "cssIcon":"icon-pencil"
-        },
+          "id": "picasa"
+        },    
         {
           "type": "desktop",
-          "name": "Kuvakatselin",
-          "command": ["eog"],
-          "description": "Selaa ja kierrä kuvia",
-          "cssIcon":"icon-pencil"
-        },
+          "id": "simple-scan"
+        }, 
         {
           "type": "desktop",
-          "name": "Picasa",
-          "command": ["inkscape"],
-          "description": "Googlen Picasa-verkkoalbumi",
-          "cssIcon":"icon-pencil"
-        },
-        {
-          "type": "desktop",
-          "name": "Kuvanluku",
-          "command": ["simple-scan"],
-          "description": "Yksinkertainen skanneriohjelma",
-          "cssIcon":"icon-pencil"
-        },
-        {
-          "type": "desktop",
-          "name": "Xsane-skanneriohjelma",
-          "command": ["xsane"],
-          "description": "Skannaa kuviasi monipuolisilla asetuksilla",
-          "cssIcon":"icon-pencil"
+          "id": "xsane"
         }
           ]
     },
@@ -168,7 +113,7 @@
       "type": "menu",
       "name": "Internet",
       "description": "Internet-sovellukset",
-      "cssIcon":"icon-folder",
+      "osIcon":"applications-internet",
       "items": [
         {
           "type": "desktop",
@@ -232,7 +177,7 @@
       "type": "menu",
       "name": "Ohjelmointi",
       "description": "IDE-sovelluksia ohjelmointiin",
-      "cssIcon":"icon-folder",
+      "osIcon":"gnome-devel",
       "items": [
         {
           "type": "desktop",
@@ -268,13 +213,6 @@
         },
         {
           "type": "desktop",
-          "name": "Quanta Plus",
-          "command": ["quanta"],
-          "description": "WWW:n kehitysympäristö",
-          "cssIcon":"icon-pencil"
-        },
-        {
-          "type": "desktop",
           "id": "kompozer"
         },
         {
@@ -287,7 +225,7 @@
       "type": "menu",
       "name": "Opetusohjelmat",
       "description": "Sovelluksia oppimisen tueksi",
-      "cssIcon":"icon-folder",
+      "osIcon":"gnome-joystick",
       "items": [
         {
           "type": "desktop",
@@ -299,17 +237,11 @@
         },
         {
           "type": "desktop",
-          "name": "Kbruch",
-          "command": ["kbruch"],
-          "description": "Murtolukujen laskupeli",
-          "cssIcon":"icon-pencil"
+          "id": "kbruch"
         },
         {
           "type": "desktop",
-          "name": "Kig",
-          "command": ["kig"],
-          "description": "Geometriaohjelma",
-          "cssIcon":"icon-pencil"
+          "id": "kig"
         },
         {
           "type": "desktop",
@@ -321,52 +253,31 @@
         },
         {
           "type": "desktop",
-          "name": "Kmplot",
-          "command": ["kmplot"],
-          "description": "Muodosta kuvaajia",
-          "cssIcon":"icon-pencil"
+          "id": "kmplot"
         },
         {
           "type": "desktop",
-          "name": "Marble",
-          "command": ["marble"],
-          "description": "Maapallo työpöydällä",
-          "cssIcon":"icon-pencil"
+          "id": "marble"
+        },          
+        {
+          "type": "desktop",
+          "id": "kgeography"
         },
         {
           "type": "desktop",
-          "name": "KGeography",
-          "command": ["kgeography"],
-          "description": "Maantietopeli",
-          "cssIcon":"icon-pencil"
+          "id": "kanagram"
         },
         {
           "type": "desktop",
-          "name": "KAnagram",
-          "command": ["kanagram"],
-          "description": "Anagrammipeli",
-          "cssIcon":"icon-pencil"
+          "id": "kwordquiz"
         },
         {
           "type": "desktop",
-          "name": "KWordQuiz",
-          "command": ["kwordquiz"],
-          "description": "Ohjelma sanaston opettelua varten",
-          "cssIcon":"icon-pencil"
+          "id": "khangman"
         },
         {
           "type": "desktop",
-          "name": "KHangman",
-          "command": ["khangman"],
-          "description": "Hirsipuupeli",
-          "cssIcon":"icon-pencil"
-        },
-        {
-          "type": "desktop",
-          "name": "KTouch",
-          "command": ["ktouch"],
-          "description": "Ohjelma kymmensormijärjestelmän opetteluun",
-          "cssIcon":"icon-pencil"
+          "id": "ktouch"
         },
         {
           "type": "desktop",
@@ -386,17 +297,11 @@
         },
         {
           "type": "desktop",
-          "name": "KStars",
-          "command": ["kstars"],
-          "description": "Katsele tähtiä!",
-          "cssIcon":"icon-pencil"
+          "id": "kstars"
         },
         {
           "type": "desktop",
-          "name": "Step",
-          "command": ["step"],
-          "description": "Fysiikan mallinnusohjelma",
-          "cssIcon":"icon-pencil"
+          "id": "step"
         },
         {
           "type": "desktop",
@@ -408,10 +313,7 @@
         },
         {
           "type": "desktop",
-          "name": "Kalzuim",
-          "command": ["kalzium"],
-          "description": "Jaksollinen järjestelmä",
-          "cssIcon":"icon-pencil"
+          "id": "kalzium"
         }
           ]
     },
@@ -419,7 +321,7 @@
       "type": "menu",
       "name": "Toimisto",
       "description": "Toimisto-ohjelmat",
-      "cssIcon":"icon-folder",
+      "osIcon":"applications-office",
       "items": [
         {
           "type": "desktop",
@@ -467,7 +369,7 @@
       "type": "menu",
       "name": "Ääni ja video",
       "description": "Internet-sovellukset",
-      "cssIcon":"icon-folder",
+      "osIcon":"applications-multimedia",
       "items": [
         {
           "type": "desktop",
@@ -510,7 +412,7 @@
           "name": "Kino",
           "command": ["kino"],
           "description": "Muokkaa videoita",
-          "cssIcon":"icon-pencil"
+          "osIcon":"kino"
         },
         {
           "type": "desktop",
@@ -542,10 +444,7 @@
         },
         {
           "type": "desktop",
-          "name": "Kaffeine",
-          "command": ["kaffeine"],
-          "description": "Katso elokuvia",
-          "cssIcon":"icon-pencil"
+          "id": "kaffeine"
         },
         {
           "type": "desktop",
@@ -581,7 +480,15 @@
         },
         {
           "type": "web",
+          "name": "Walma",
+          "url": "http://walmademo.opinsys.fi",
+          "description": "Yhteistoiminnallinen piirtotaulu",
+          "osIcon":"emblem-pictures"
+        },         
+        {
+          "type": "web",
           "url": "http://pahvidemo.opinsys.fi/"
+          "osIcon":"deb"
         }
       ]
     }
