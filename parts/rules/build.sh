@@ -2,10 +2,16 @@
 
 set -eu
 
+cleanup() {
+  test -n "$srccopydir" && rm -rf $srccopydir
+}
+
 usage() {
   echo "Usage: $(basename $0) boot|ltsp hostname" > /dev/stderr
   exit 1
 }
+
+trap cleanup EXIT
 
 if [ "$(id -u)" = "0" ]; then
   echo "Do not run me as root" > /dev/stderr
@@ -21,13 +27,15 @@ fi
 test -z "$hosttype" -o -z "$targethostname" && usage
 
 srcdir=$(dirname $0)
+srccopydir=$(mktemp -d /tmp/build-$hosttype-$USER-$$.XXXXXXXXXXX)
+cp -a $srcdir $srccopydir
 
 case "$hosttype" in
   boot)
     extraopts="--addpkg   nfs-kernel-server \
 	       --arch     amd64 \
                --dest     /virtual/$targethostname \
-               --exec     $srcdir/setup/boot \
+               --exec     $srccopydir/setup/boot \
                --flavour  server \
                --hostname $targethostname \
                --suite    precise \
@@ -36,7 +44,7 @@ case "$hosttype" in
   ltsp)
     extraopts="--arch     i386 \
                --dest     /images/$targethostname \
-               --exec     $srcdir/setup/ltsp \
+               --exec     $srccopydir/setup/ltsp \
                --flavour  generic \
                --hostname $targethostname \
                --suite    quantal \
