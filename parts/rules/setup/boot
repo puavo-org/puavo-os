@@ -11,7 +11,9 @@ boot_scripts="
   $server_scripts
   boot/network_interfaces
   boot/dhcpd_configuration
+  boot/nbd_server
   boot/nfs_server
+  boot/pxeboot_for_ltspclients
 "
 
 setup $rootdir $srcdir $boot_scripts
