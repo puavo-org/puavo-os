@@ -2,7 +2,7 @@ define [
   "cs!app/views/layout"
   "cs!app/views/menulist_view"
   "cs!app/views/breadcrumbs_view"
-  "cs!app/views/sidebar_view"
+  "cs!app/views/profile_view"
   "cs!app/views/favorites_view"
   "cs!app/application"
   "hbs!app/templates/menulayout"
@@ -11,7 +11,7 @@ define [
   Layout
   MenuListView
   Breadcrumbs
-  SidebarView
+  ProfileView
   Favorites
   Application
   template
@@ -39,7 +39,7 @@ define [
           @setMenu model
           @renderSubviews(newOnly: true)
 
-      @_setView ".sidebar", new SidebarView
+      @_setView ".sidebar", new ProfileView
 
       @_setView ".favorites", new Favorites
         collection: @allItems

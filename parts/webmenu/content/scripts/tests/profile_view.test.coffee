@@ -1,6 +1,6 @@
 define [
   "cs!app/application"
-  "cs!app/views/sidebar_view"
+  "cs!app/views/profile_view"
 ], (
   Application
   SideBarView
@@ -22,7 +22,7 @@ define [
     describe "my profile button", ->
       it "emits 'showMyProfileWindow'", (done) ->
         Application.on "showMyProfileWindow", -> done()
-        view.$(".bb-profile").click()
+        view.$(".bb-profile-settings").click()
 
     describe "settings button", ->
       it "emits 'openSettings'", (done) ->

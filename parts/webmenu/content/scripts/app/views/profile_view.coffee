@@ -1,6 +1,6 @@
 define [
   "cs!app/view"
-  "hbs!app/templates/sidebar"
+  "hbs!app/templates/profile"
   "cs!app/application"
   "cs!app/views/logout_view"
   "cs!app/views/lightbox_view"
@@ -12,18 +12,19 @@ define [
   Lightbox
 ) ->
 
-  class SidebarView extends View
+  class ProfileView extends View
 
-    className: "sidebar-container"
+    className: "bb-profile"
 
     template: template
 
     events:
-      "click .bb-profile": (e) ->
+      "click .bb-profile-settings": (e) ->
         Application.trigger "showMyProfileWindow"
       "click .bb-settings": (e) ->
         Application.trigger "openSettings"
       "click .bb-logout": (e) ->
+
         @lb = new Lightbox
           view: new LogoutView
         @lb.render()

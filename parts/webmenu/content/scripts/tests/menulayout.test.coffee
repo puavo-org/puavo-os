@@ -50,7 +50,8 @@ define [
       layout.render()
 
     it "has rendered items", ->
-      expect(layout.$(".bb-menu .item-name")).to.contain('Gimp');
+      expect(layout.$(".bb-menu .item-name")).to.contain('Gimp')
+      expect(layout.$el).to.have(".bb-profile")
 
     it "has no favorites on start", ->
       expect(layout.$(".favorites .bb-menu-item").size()).to.be 0
