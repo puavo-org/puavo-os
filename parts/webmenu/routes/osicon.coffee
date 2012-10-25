@@ -21,7 +21,7 @@ module.exports = (searchPaths) -> (req, res) ->
   readFirst filePaths, (err, data) ->
     if err
       res.send 404, "fail"
-      console.error "Failed to read image from", paths
+      console.error "Failed to read image from", searchPaths
     else
       res.setHeader "Content-type", "image/png"
       res.send data
