@@ -40,7 +40,7 @@ handler.get "/osicon/:icon.png", require("./routes/osicon")([
   "/usr/share/pixmaps"
   "/usr/share/icons/hicolor/128x128/apps"
   "/usr/share/icons/Neu/128x128/categories"
-])
+], "/usr/share/icons/Gion/128x128/apps/gnome-terminal.png")
 
 window = app.createWindow
   width: 1000

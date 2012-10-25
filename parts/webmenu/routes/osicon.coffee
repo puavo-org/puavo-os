@@ -13,10 +13,12 @@ readFirst = (paths, cb) ->
       console.log "read file from #{ head }"
       cb null, data
 
-module.exports = (searchPaths) -> (req, res) ->
+
+module.exports = (searchPaths, fallback) -> (req, res) ->
 
   filePaths = searchPaths.map (p) ->
     "#{ p }/#{ req.params.icon }.png"
+  filePaths.push(fallback)
 
   readFirst filePaths, (err, data) ->
     if err
