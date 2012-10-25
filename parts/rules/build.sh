@@ -24,7 +24,8 @@ srcdir=$(dirname $0)
 
 case "$hosttype" in
   boot)
-    extraopts="--arch     amd64 \
+    extraopts="--addpkg   nfs-kernel-server \
+	       --arch     amd64 \
                --dest     /virtual/$targethostname \
                --exec     $srcdir/setup/boot \
                --flavour  server \
