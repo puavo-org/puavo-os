@@ -4,5 +4,4 @@ set -eu
 
 echo ">>>>> Configuring NFS server"
 
-# XXX this cannot be installed here, because it will end up reserving /proc
 # apt-get -y install nfs-kernel-server

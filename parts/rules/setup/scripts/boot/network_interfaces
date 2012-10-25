@@ -4,7 +4,7 @@ set -eu
 
 echo ">>>>> Configuring bootserver network interfaces"
 
-apt-get -y install bridge-utils vlan
+# apt-get -y install bridge-utils vlan
 
 cat <<'EOF' > /etc/network/interfaces
 # This file describes the network interfaces available on your system

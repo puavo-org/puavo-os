@@ -32,7 +32,11 @@ cp -a $srcdir $srccopydir
 
 case "$hosttype" in
   boot)
-    extraopts="--addpkg   nfs-kernel-server \
+    extraopts="--addpkg   bridge-utils \
+	       --addpkg   isc-dhcp-server \
+	       --addpkg   nfs-kernel-server \
+	       --addpkg   tshark \
+	       --addpkg   vlan \
 	       --arch     amd64 \
                --dest     /virtual/$targethostname \
                --exec     $srccopydir/setup/boot \
@@ -42,7 +46,11 @@ case "$hosttype" in
               "
     ;;
   ltsp)
-    extraopts="--arch     i386 \
+    extraopts="--addpkg   bridge-utils \
+	       --addpkg   ltsp-client-core \
+	       --addpkg   tshark \
+	       --addpkg   vlan \
+	       --arch     i386 \
                --dest     /images/$targethostname \
                --exec     $srccopydir/setup/ltsp \
                --flavour  generic \
