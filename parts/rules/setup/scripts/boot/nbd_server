@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -eu
+
+echo ">>>>> NBD server configuration"
+
+# apt-get -y install nbd-server
+
+cat <<-'EOF' > /etc/nbd-server/conf.d/ltsp_i386.conf
+	[ltsp_i386]
+	exportname = /opt/ltsp/images/i386.img
+	readonly = true
+	EOF
