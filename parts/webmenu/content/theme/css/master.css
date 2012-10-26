@@ -114,6 +114,15 @@ h2{
   -moz-transition: none;
   -o-transition: none;
   transition: none;
+  -moz-user-select: -moz-none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  /*
+   Introduced in IE 10.
+   See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/
+  */
+  -ms-user-select: none;
+  user-select: none;
 }
 .thumbnail:hover:not(.ignore-thumbnail-hover){
   background-color:rgba(237,113,19, 0.8);
