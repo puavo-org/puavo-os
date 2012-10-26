@@ -8,7 +8,7 @@ echo ">>>>> Configuring dhcpd"
 
 cat <<'EOF' > /etc/dhcp/dhcpd.conf
 default-lease-time 7200;
-get-lease-hostnames true;
+# get-lease-hostnames true;
 max-lease-time 14400;
 option domain-name "kehitys.opinsys.fi";
 
@@ -39,7 +39,9 @@ subnet 10.249.0.0 netmask 255.255.252.0 {
                  " Mac: ",       ClientMac,
                  " Subdomain: ", "ltsp0"));
 
-      execute("/usr/local/sbin/puavo_dhcpd_event", ClientMac, ClientIP, "ltsp0");
+      # XXX
+      # execute("/usr/local/sbin/puavo_dhcpd_event", ClientMac, ClientIP, "ltsp0");
+      execute("/bin/true", ClientMac, ClientIP, "ltsp0");
     }
   }
 }
@@ -77,7 +79,9 @@ subnet 10.249.224.0 netmask 255.255.240.0 {
                  " Mac: ",       ClientMac,
                  " Subdomain: ", "wlan0"));
 
-      execute("/usr/local/sbin/puavo_dhcpd_event", ClientMac, ClientIP, "wlan0");
+      # XXX
+      # execute("/usr/local/sbin/puavo_dhcpd_event", ClientMac, ClientIP, "ltsp0");
+      execute("/bin/true", ClientMac, ClientIP, "ltsp0");
     }
   }
 }
