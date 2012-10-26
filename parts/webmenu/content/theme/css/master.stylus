@@ -144,6 +144,13 @@ ul.nav
   bottom 10px
   position absolute
   right 10px
+  img
+    box-shadow none
+    padding 0
+    transition all ease-in-out 500ms
+    &:hover
+      box-shadow inset -75px -75px 400px rgba(230,230,220,0.8)
+      padding 1em
 
 img.avatar, .logo img
   max-width 160px
