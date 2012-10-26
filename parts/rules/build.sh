@@ -56,7 +56,7 @@ case "$hosttype" in
     ;;
   ltsp)
     extraopts="--addpkg   bridge-utils \
-	       --addpkg   ltsp-client-core \
+	       --addpkg   ltsp-client \
 	       --addpkg   ltsp-server \
 	       --addpkg   tmux \
 	       --addpkg   tshark \
