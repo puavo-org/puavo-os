@@ -60,6 +60,7 @@ case "$hosttype" in
 	       --addpkg   ltsp-server \
 	       --addpkg   tmux \
 	       --addpkg   tshark \
+	       --addpkg   ubuntu-gnome-desktop \
 	       --addpkg   ubuntu-standard \
 	       --addpkg   vlan \
 	       --arch     i386 \
