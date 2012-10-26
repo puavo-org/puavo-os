@@ -42,4 +42,3 @@ define [
       # Disabled until https://github.com/appjs/appjs/issues/223 gets fixed
       # if @spinner
       #   spin @$(".thumbnail").get(0)
-

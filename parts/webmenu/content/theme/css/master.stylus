@@ -94,9 +94,13 @@ h2
   word-wrap break-word
   transition none
 
-.thumbnail:hover:not(.user-img-name)
+.thumbnail:hover:not(.ignore-thumbnail-hover)
   background-color rgba(237,113,19, 0.8)
   cursor pointer
+
+.thumbnail:active:not(.ignore-thumbnail-hover)
+  background-color:rgba(237,113,19, 0.5)
+  box-shadow inset 0 0 10px #EDEADA
 
 .user-img-name
   background-color #E6E6DC
@@ -116,7 +120,7 @@ h2
   max-width 64px
   width 30%
 
-.desktop-link img ~ p 
+.desktop-link img ~ p
   padding-top 0.65em
 
 .desktop-link i ~ p
