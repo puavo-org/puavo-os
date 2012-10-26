@@ -16,5 +16,5 @@ cat <<-'EOF' > /var/lib/tftpboot/pxelinux.cfg/default
 	DEFAULT ltsp
 	LABEL ltsp
 	KERNEL ltsp/i386/vmlinuz
-	APPEND ro initrd=ltsp/i386/initrd.img root=/dev/nbd0 init=/sbin/init-ltsp quiet splash plymouth:force-splash vt.handoff=7
+	APPEND ro initrd=ltsp/i386/initrd.img init=/sbin/init-ltsp quiet splash plymouth:force-splash vt.handoff=7 nbdroot=:ltsp_i386 root=/dev/nbd0p1
 	EOF
