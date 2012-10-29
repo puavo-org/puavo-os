@@ -64,6 +64,7 @@ define [
 
     showProfile: ->
       @_setView ".sidebar", new ProfileView
+        model: @model
 
     reset: ->
       @setMenu(@initialMenu)

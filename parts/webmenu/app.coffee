@@ -37,7 +37,7 @@ menutools.injectDesktopData(
 
 username = posix.getpwnam(posix.geteuid()).name
 userData = posix.getpwnam(username)
-userData.gecos = userData.gecos.split(",")
+userData.fullName = userData.gecos.split(",")[0]
 handler.get "/user.json", (req, res) -> res.json(userData)
 
 handler.get "/menu.json", (req, res) ->

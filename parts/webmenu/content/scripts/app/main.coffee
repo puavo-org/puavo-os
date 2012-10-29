@@ -17,31 +17,39 @@ define [
   Backbone
 )->
 
+  $.when(
+    $.get("/menu.json")
+    $.get("/user.json")
+  ).fail( (res, status) ->
+    console.log status, res
+    throw new Error "Failed to boot up app"
+  ).then (menuRes, userRes) ->
 
- $.get "/menu.json", (data, status, res) =>
-   if status isnt "success"
-     throw new Error "failed to load menu"
+    user = new Backbone.Model userRes[0]
 
-   allItems = new AllItems
-   menuModel = new MenuModel data, allItems
+    allItems = new AllItems
+    menuModel = new MenuModel menuRes[0], allItems
 
-   layout = new MenuLayout
-     initialMenu: menuModel
-     allItems: allItems
+    layout = new MenuLayout
+      model: user
+      initialMenu: menuModel
+      allItems: allItems
 
 
-   layout.render()
-   $(".content-container").append layout.el
+    layout.render()
+    $(".content-container").append layout.el
 
-   bridge = new DesktopBridge
-   bridge.connect(Application)
+    bridge = new DesktopBridge
+    bridge.connect(Application)
 
-   allItems.on "select", (model) ->
+    allItems.on "select", (model) ->
      if model.get("type") isnt "menu"
        Application.trigger "open", model.toJSON()
 
 
-   $(window).blur ->
+    $(window).blur ->
      Application.trigger "hideWindow"
 
+    Application.on "reboot", ->
+      alert "reboot!"
 
