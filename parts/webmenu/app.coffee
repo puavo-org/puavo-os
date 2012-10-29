@@ -4,6 +4,7 @@ http = require "http"
 app = require "appjs"
 express = require "express"
 stylus = require "stylus"
+nib = require "nib"
 {argv} = require "optimist"
 posix = require "posix"
 mkdirp = require "mkdirp"
@@ -18,7 +19,13 @@ server = http.createServer(handler).listen 1337
 bridge = require("./lib/siobridge")(server)
 
 handler.configure "development", ->
-  handler.use stylus.middleware __dirname + "/content"
+
+  compile = (str, path) -> stylus(str).use(nib())
+
+  handler.use stylus.middleware
+    src: __dirname + "/content"
+    compile: compile
+
 handler.use express.static __dirname + "/content"
 
 cachePath = process.env.HOME + "/.webmenu/cache"
