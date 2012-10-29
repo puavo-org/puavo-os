@@ -21,6 +21,13 @@ define [
 
     bindTo: (emitter, event, callback, context) ->
       context = context or this
+
+      if typeof(callback) is "string"
+        callback = this[callback]
+
+      if not emitter or not event or not callback
+        throw new Error "Bad arguments. The signature is <emitter>, <event>, <callback / callback name>, [context]"
+
       emitter.on event, callback, context
       binding =
         emitter: emitter
