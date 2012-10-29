@@ -41,22 +41,25 @@ config.each_line {|line|
     tempfile.puts "olcDbIndex: sambaSID pres,eq"
     tempfile.puts "olcDbIndex: sambaSIDList pres,eq"
     tempfile.puts "olcDbIndex: sambaGroupType pres,eq"
-    tempfile.puts "olcDbIndex: uniqueMember pres,eq"
+    tempfile.puts "olcDbIndex: member,memberUid pres,eq"
+    tempfile.puts "olcDbIndex: puavoSchool pres,eq"
+    tempfile.puts "olcDbIndex: puavoId pres,eq"
     tempfile.puts "olcDbIndex: puavoTag pres,eq"
     tempfile.puts "olcDbIndex: puavoDeviceType pres,eq"
-    tempfile.puts "olcDbIndex: puavoHostname pres,eq"
+    tempfile.puts "olcDbIndex: puavoHostname pres,eq,sub"
+    tempfile.puts "olcDbIndex: displayName,puavoEduPersonReverseDisplayName pres,eq,sub"
     tempfile.puts "olcDbIndex: uid pres,eq"
-    tempfile.puts "olcDbIndex: cn,sn,mail pres,eq,approx,sub"
+    tempfile.puts "olcDbIndex: cn,sn,mail,givenName pres,eq,approx,sub"
     tempfile.puts "olcDbIndex: objectClass eq"
     tempfile.puts "olcDbIndex: entryUUID eq"
     tempfile.puts "olcDbIndex: entryCSN eq"
   end
 }
+#tempfile.puts config
 tempfile.close
 
 config.split("\n").each do |line|
   if line =~ /olcDbDirectory: (.*)/
-#    puts "DIR: #{$1}"
     `mkdir #{$1}`
   end
 end
@@ -83,7 +86,7 @@ contexts.split("\n").each do |line|
       tempfile = Tempfile.open("data")
       tempfile.puts data
       tempfile.close
-      
+
       system("slapadd -q -l #{tempfile.path} -F /etc/ldap/slapd.d -b '#{suffix}'") \
       or raise 'Problem in importing data'
 
