@@ -10,5 +10,9 @@
     "/usr/share/icons/Neu/128x128/categories"
   ],
   "fallbackIcon":  "/usr/share/icons/Gion/128x128/apps/gnome-terminal.png",
-  "profileUrl": "http://puavo:3002/users/profile/edit?data-remote=true"
+  "profileUrl": "http://puavo:3002/users/profile/edit?data-remote=true",
+  "settingsCMD": {
+    "type": "desktop",
+    "command": ["gnome-control-center"]
+  }
 }
