@@ -1,6 +1,6 @@
 
 http = require "http"
-{exec, spawn} = require "child_process"
+{exec, spawn, fork} = require "child_process"
 app = require "appjs"
 express = require "express"
 stylus = require "stylus"
@@ -58,12 +58,6 @@ window = app.createWindow
   icons: __dirname + '/content/icons'
   disableBrowserRequire: true
   url: "http://localhost:1337"
-
-displayMyProfileWindow = (myProfileWindow) ->
-  title = "Opinsys - My Profile"
-  myProfileWindow.frame.title = title
-  myProfileWindow.frame.show()
-  myProfileWindow.frame.focus()
 
 displayMenu = ->
   title = "Opinsys Web Menu"
@@ -127,30 +121,16 @@ bridge.on "open", (msg) ->
     console.log "Command '#{ command } #{ args.join " " } exited with #{ code }"
 
 bridge.on "openSettings", ->
-  cmd = spawn "gnome-control-center", [], { detached: true }
+  spawn "gnome-control-center", [], (detached: true)
 
 bridge.on "hideWindow", ->
   console.log "Hiding window"
   window.frame.hide() if not argv["dev-tools"]
 
 bridge.on "showMyProfileWindow", ->
-  myProfileWindow = createMyProfileWindow()
-
-  myProfileWindow.on 'create', ->
-    displayMyProfileWindow(myProfileWindow)
+  fork __dirname + "/profile.js", [], (detached: true)
 
 bridge.on "shutdown", -> powermanager.shutdown()
 bridge.on "reboot", -> powermanager.reboot()
 bridge.on "logout", -> powermanager.logout()
 
-createMyProfileWindow = () ->
-  console.log "Create My Profile window"
-  return app.createWindow
-    width  : 800
-    height : 530
-    top : 200
-    showChrome: true
-    disableSecurity: true
-    icons  : __dirname + '/content/icons'
-    url: "http://puavo:3002/users/profile/edit?data-remote=true"
-  
