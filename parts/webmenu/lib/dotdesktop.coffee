@@ -80,6 +80,7 @@ parseFileSync = (filePath, locale) ->
       [desktopEntry, "GenericName"],
       [desktopEntry, "Name"],
     )
+    upstreamName: desktopEntry["Name"],
     description: callUntilOk(findTranslated,
       [desktopEntry, "Comment", locale],
       [desktopEntry, "Comment"],

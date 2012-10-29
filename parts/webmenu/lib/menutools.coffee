@@ -18,6 +18,7 @@ injectDesktopData = (menu, sources, locale) ->
       menu.description ?= desktopEntry.description
       menu.command ?= desktopEntry.command
       menu.osIcon ?= desktopEntry.osIcon
+      menu.upstreamName ?= desktopEntry.upstreamName
 
 
     else if menu.type is "menu"
