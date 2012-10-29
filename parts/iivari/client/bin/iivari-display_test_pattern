@@ -40,9 +40,9 @@ if __name__ == "__main__":
     QT_APP = PySide.QtGui.QApplication(sys.argv)
 
     # start with the test pattern
-    assets_path = os.path.join(os.environ['HOME'], '.iivari', 'assets')
+    assets_path = "/usr/share/iivari/assets"
 
-    url = os.path.join(assets_path,'standby.html')
+    url = os.path.join(assets_path, 'standby.html')
 
     # create the main window
     window = iivari.MainWindow(url=url, use_repl=True)
