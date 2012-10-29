@@ -11,6 +11,7 @@ ltsp_scripts="
   $server_scripts
   ltsp/network_interfaces
   ltsp/client
+  ltsp/ssh_config
 "
 
 setup $rootdir $srcdir $ltsp_scripts
