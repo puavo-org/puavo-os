@@ -5,7 +5,9 @@ app = require "appjs"
 express = require "express"
 stylus = require "stylus"
 {argv} = require "optimist"
+posix = require "posix"
 mkdirp = require "mkdirp"
+
 menutools = require "./lib/menutools"
 powermanager = require "./lib/powermanager"
 
@@ -32,6 +34,11 @@ menutools.injectDesktopData(
   config.dotDesktopSearchPaths,
   locale
 )
+
+username = posix.getpwnam(posix.geteuid()).name
+userData = posix.getpwnam(username)
+userData.gecos = userData.gecos.split(",")
+handler.get "/user.json", (req, res) -> res.json(userData)
 
 handler.get "/menu.json", (req, res) ->
   res.json menuJSON
