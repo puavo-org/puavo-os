@@ -3,13 +3,13 @@ define [
   "cs!app/views/profile_view"
 ], (
   Application
-  SideBarView
+  ProfileView
 ) ->
 
-  describe "SideBarView", ->
+  describe "ProfileView", ->
     view = null
     beforeEach ->
-      view = new SideBarView
+      view = new ProfileView
       view.render()
     afterEach ->
       view.remove()
