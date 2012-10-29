@@ -20,11 +20,16 @@ bridge = require("./lib/siobridge")(server)
 
 handler.configure "development", ->
 
-  compile = (str, path) -> stylus(str).use(nib())
+  compile = (str, path) ->
+    stylus(str)
+      .set("paths", [
+        __dirname + "/content/styles"
+      ])
+      .use(nib())
 
   handler.use stylus.middleware
-    src: __dirname + "/content"
     compile: compile
+    src: __dirname + "/content"
 
 handler.use express.static __dirname + "/content"
 
@@ -97,6 +102,7 @@ window.on 'create', ->
 handler.get "/show", (req, res) ->
   res.send "ok"
   displayMenu()
+
 
 bridge.on "open", (msg) ->
   launchCommand(msg)
