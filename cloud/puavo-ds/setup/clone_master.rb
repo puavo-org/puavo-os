@@ -60,8 +60,16 @@ tempfile.close
 
 config.split("\n").each do |line|
   if line =~ /olcDbDirectory: (.*)/
-    `mkdir #{$1}`
+    `mkdir -p #{$1}`
   end
+end
+
+(1..300).each do |num|
+  dir = "/var/lib/ldap/db%03d" % num
+
+  `mkdir -p #{dir}`
+  `chown openldap.openldap #{dir}`
+  `chmod 0750 #{dir}`
 end
 
 puts "Importing cn=config"
