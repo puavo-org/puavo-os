@@ -1,10 +1,9 @@
-# Hacking
+# Installation
+
+Webmenu runs on relatively new Ubuntu releases such as Precise Pangolin and Quantal Quetzal.
+
 
 ## Source installation
-
-Current Web Menu devepment requires Ubuntu Precise Pangolin or later and a fork
-of Appjs.
-
 
 Here's how to setup the development environment for now:
 
@@ -57,15 +56,15 @@ Fetch and build Web Menu inside our fork
 
 ## Binary installation
 
+Binary tarballs contains everything needed for Webmenu to run expect Node.js npm & wmctrl.
 
-Get Node.js npm & wmctrl
+Get them using apt-get:
 
     sudo add-apt-repository ppa:chris-lea/node.js
     sudo apt-get update
     sudo apt-get install nodejs npm nodejs-dev wmctrl
 
-Get binary tar ball from [downloads](https://github.com/opinsys/webmenu/downloads)
-
+Get binary tarball from [downloads](https://github.com/opinsys/webmenu/downloads)
 
 ## Usage
 
