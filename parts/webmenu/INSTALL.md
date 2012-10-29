@@ -1,5 +1,7 @@
 # Hacking
 
+## Source installation
+
 Current Web Menu devepment requires Ubuntu Precise Pangolin or later and a fork
 of Appjs.
 
@@ -53,10 +55,27 @@ Fetch and build Web Menu inside our fork
     # Make sure to use our fork of appjs
     rm -rf node_modules/appjs*
 
-Start it `npm start`
+## Binary installation
+
+
+Get Node.js npm & wmctrl
+
+    sudo add-apt-repository ppa:chris-lea/node.js
+    sudo apt-get update
+    sudo apt-get install nodejs npm nodejs-dev wmctrl
+
+Get binary tar ball from [downloads](https://github.com/opinsys/webmenu/downloads)
+
+
+## Usage
+
+
+Go in to the webmenu directory and start it `npm start`
 
 You can also view it from http://localhost:1337 using a browser
 
 You can create menu launcher with this command
 
     wget http://localhost:1337/show/ -q -O -
+
+
