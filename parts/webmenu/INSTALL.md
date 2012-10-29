@@ -56,7 +56,7 @@ Fetch and build Web Menu inside our fork
 
 ## Binary installation
 
-Binary tarballs contains everything needed for Webmenu to run expect Node.js npm & wmctrl.
+Binary tarballs contains everything needed for Webmenu to run except Node.js npm & wmctrl.
 
 Get them using apt-get:
 
