@@ -74,21 +74,20 @@ menuJSON = requirefallback(
 )
 
 menutools.injectDesktopData(
-  menuJSON,
-  config.dotDesktopSearchPaths,
+  menuJSON
+  config.dotDesktopSearchPaths
   locale
 )
 
 username = posix.getpwnam(posix.geteuid()).name
 userData = posix.getpwnam(username)
 userData.fullName = userData.gecos.split(",")[0]
-handler.get "/user.json", (req, res) -> res.json(userData)
 
-handler.get "/menu.json", (req, res) ->
-  res.json menuJSON
+handler.get "/user.json", (req, res) -> res.json(userData)
+handler.get "/menu.json", (req, res) -> res.json(menuJSON)
 
 handler.get "/osicon/:icon.png", require("./routes/osicon")(
-  config.iconSearchPaths,
+  config.iconSearchPaths
   config.fallbackIcon
 )
 
