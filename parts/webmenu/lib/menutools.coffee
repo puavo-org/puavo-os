@@ -4,14 +4,14 @@
 path = require "path"
 dotdesktop = require "./dotdesktop"
 
-injectDesktopData = (menu, sources, locale) ->
+injectDesktopData = (menu, sources, locale, verbose) ->
   sources.forEach (desktopDir) ->
     if menu.type is "desktop" and menu.id
       filePath = desktopDir + "/#{ menu.id }.desktop"
       try
         desktopEntry = dotdesktop.parseFileSync(filePath, locale)
       catch err
-        console.error "Failed to parse #{ filePath }", err
+        console.log "Failed to parse #{ filePath }", err
         return
 
       menu.name ?= desktopEntry.name

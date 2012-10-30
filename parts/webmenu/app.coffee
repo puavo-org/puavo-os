@@ -11,9 +11,19 @@ mkdirp = require "mkdirp"
 optimist = require("optimist")
   .usage("Usage: webmenu [options]")
   .alias("h", "help")
+  .alias("v", "verbose")
   .describe("dev-tools", "Open Webkit inspector")
-
 argv = optimist.argv
+
+clim = require "clim"
+clim(console, true)
+_logWrite = clim.logWrite
+clim.logWrite = (level, prefixes, msg) ->
+  if level is "LOG" and not argv.verbose
+    return
+  _logWrite(level, prefixes, msg)
+
+
 
 if argv.help
   optimist.showHelp()
@@ -107,16 +117,15 @@ displayMenu = ->
     wmctrl = spawn("wmctrl", ["-a", title])
     wmctrl.on 'exit', (code) ->
       if code isnt 0
-        console.log('wmctrl exited with code ' + code)
+        console.info('wmctrl exited with code ' + code)
   , 200
 
 
 window.on 'create', ->
-  console.log("Window Created")
   displayMenu()
   window.frame.center()
   if argv["dev-tools"]
-    console.log "Opening devtools"
+    console.info "Opening devtools"
     window.frame.openDevTools()
 
 
@@ -134,7 +143,6 @@ bridge.on "openSettings", ->
   window.frame.hide()
 
 bridge.on "hideWindow", ->
-  console.log "Hiding window"
   window.frame.hide() if not argv["dev-tools"]
 
 bridge.on "showMyProfileWindow", ->
