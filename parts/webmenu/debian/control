@@ -7,7 +7,7 @@ Standards-Version: 3.8.4
 Homepage: http://github.com/opinsys/webmenu
 
 Package: webmenu
-Architecture: i386
+Architecture: any
 Depends: ${misc:Depends}, nodejs, wmctrl, gnome-themes-extras
 Description: Web Menu
  Opinsys menu
