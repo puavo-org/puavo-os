@@ -1,0 +1,13 @@
+Source: webmenu
+Section: utils
+Priority: extra
+Maintainer: Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>
+Build-Depends: debhelper (>= 7)
+Standards-Version: 3.8.4
+Homepage: http://github.com/opinsys/webmenu
+
+Package: webmenu
+Architecture: i386
+Depends: ${misc:Depends}, nodejs, wmctrl
+Description: Web Menu
+ Opinsys menu
