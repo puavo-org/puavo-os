@@ -63,6 +63,7 @@ define [
 
       @_setView ".favorites", new Favorites
         collection: @allItems
+        config: @config
 
     showProfile: ->
       @_setView ".sidebar", new ProfileView

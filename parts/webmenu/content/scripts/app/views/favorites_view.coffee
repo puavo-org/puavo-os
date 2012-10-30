@@ -11,12 +11,13 @@ define [
 
     template: template
 
-    constructor: ->
+    constructor: (opts) ->
       super
+      @config = opts.config
       @bindTo @collection, "select", @render
 
     render: ->
-      views = @collection.favorites(3).map (model) =>
+      views = @collection.favorites(@config.get "maxFavorites").map (model) =>
         new MenuItemView model: model
       @_setView ".most-used-list", views
 
