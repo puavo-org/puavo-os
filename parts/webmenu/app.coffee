@@ -147,7 +147,11 @@ bridge.on "hideWindow", ->
   window.frame.hide() if not argv["dev-tools"]
 
 bridge.on "showMyProfileWindow", ->
-  fork __dirname + "/profile.js", [], (detached: true)
+  fork(
+    __dirname + "/webwindow.js",
+    [ config.profileUrl ],
+    { detached: true }
+  )
 
 bridge.on "shutdown", -> powermanager.shutdown()
 bridge.on "reboot", -> powermanager.reboot()
