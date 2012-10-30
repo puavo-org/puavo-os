@@ -58,6 +58,7 @@ case "$hosttype" in
     extraopts="--addpkg   bridge-utils \
 	       --addpkg   ltsp-client \
 	       --addpkg   ltsp-server \
+	       --addpkg   lvm2 \
 	       --addpkg   tmux \
 	       --addpkg   tshark \
 	       --addpkg   ubuntu-gnome-desktop \
