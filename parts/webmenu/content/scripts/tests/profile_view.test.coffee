@@ -31,6 +31,11 @@ define [
         Application.on "showMyProfileWindow", -> done()
         view.$(".bb-profile-settings").click()
 
+    describe "password button", ->
+      it "emits 'showChangePasswordWindow'", (done) ->
+        Application.on "showChangePasswordWindow", -> done()
+        view.$(".bb-change-password").click()
+
     describe "settings button", ->
       it "emits 'openSettings'", (done) ->
         Application.on "openSettings", -> done()

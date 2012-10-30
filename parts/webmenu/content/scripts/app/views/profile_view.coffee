@@ -21,6 +21,8 @@ define [
     events:
       "click .bb-profile-settings": (e) ->
         Application.trigger "showMyProfileWindow"
+      "click .bb-change-password": (e) ->
+        Application.trigger "showChangePasswordWindow"
       "click .bb-settings": (e) ->
         Application.trigger "openSettings"
       "click .bb-logout": (e) ->

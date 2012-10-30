@@ -153,6 +153,13 @@ bridge.on "showMyProfileWindow", ->
     { detached: true }
   )
 
+bridge.on "showChangePasswordWindow", ->
+  fork(
+    __dirname + "/webwindow.js",
+    [ config.changePasswordUrl ],
+    { detached: true }
+  )
+
 bridge.on "shutdown", -> powermanager.shutdown()
 bridge.on "reboot", -> powermanager.reboot()
 bridge.on "logout", -> powermanager.logout()
