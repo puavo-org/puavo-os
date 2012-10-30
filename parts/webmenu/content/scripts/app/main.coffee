@@ -20,18 +20,21 @@ define [
   $.when(
     $.get("/menu.json")
     $.get("/user.json")
+    $.get("/config.json")
   ).fail( (res, status) ->
     console.log status, res
     throw new Error "Failed to boot up app"
-  ).then (menuRes, userRes) ->
+  ).then (menuRes, userRes, configRes) ->
 
     user = new Backbone.Model userRes[0]
+    config = new Backbone.Model configRes[0]
 
     allItems = new AllItems
     menuModel = new MenuModel menuRes[0], allItems
 
     layout = new MenuLayout
-      model: user
+      user: user
+      config: config
       initialMenu: menuModel
       allItems: allItems
 

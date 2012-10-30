@@ -47,6 +47,8 @@ define [
       layout = new MenuLayout
         initialMenu: menuModel
         allItems: allItems
+        config: new Backbone.Model
+        user: new Backbone.Model
       layout.render()
 
     it "has menu item(s)", ->

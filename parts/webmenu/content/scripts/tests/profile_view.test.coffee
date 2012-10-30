@@ -13,6 +13,10 @@ define [
     beforeEach ->
       view = new ProfileView
         model: new Backbone.Model(fullName: "John Doe")
+        config: new Backbone.Model
+          profileUrl: "http://profile.example.com"
+          changePasswordUrl: "http://password.example.com"
+
       view.render()
 
     afterEach ->
@@ -20,6 +24,12 @@ define [
 
     it "should display user's fullname", ->
       expect(view.$el).to.contain("John Doe")
+
+    it "should have profile settings button", ->
+      expect(view.$el).to.have(".bb-profile-settings")
+
+    it "should have change password button", ->
+      expect(view.$el).to.have(".bb-change-password")
 
     describe "logout button", ->
       it "opens logout menu", ->
@@ -41,5 +51,18 @@ define [
         Application.on "openSettings", -> done()
         view.$(".bb-settings").click()
 
+    describe "with missing changePasswordUrl&profileUrl", ->
+
+      beforeEach ->
+        view.config.set
+          changePasswordUrl: null
+          profileUrl: null
+        view.render()
+
+      it "should not have profile settings button", ->
+        expect(view.$el).to.not.have(".bb-profile-settings")
+
+      it "should not have change password button", ->
+        expect(view.$el).to.not.have(".bb-change-password")
 
 

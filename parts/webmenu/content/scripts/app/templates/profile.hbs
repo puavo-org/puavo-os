@@ -4,7 +4,7 @@
     <li class="span12 smooth-margin">
       <div class="thumbnail user-img-name ignore-thumbnail-hover">
         <img class="avatar img-polaroid" src="theme/img/anonymous.png">
-        <p>{{fullName}}</p>
+        <p>{{user.fullName}}</p>
       </div>
     </li>
   </ul>
@@ -18,18 +18,22 @@
           <p>Laiteasetukset</p>
         </div>
       </li>
+      {{#if config.changePasswordUrl}}
       <li class="margin0 bb-change-password">
         <div class="thumbnail">
           <i class="icon-cw"></i>
           <p>Vaihda salasana</p>
         </div>
       </li>
+      {{/if}}
+      {{#if config.profileUrl}}
       <li class="margin0 bb-profile-settings">
         <div class="thumbnail">
           <i class="icon-vcard"></i>
           <p>Omat tiedot</p>
         </div>
       </li>
+      {{/if}}
       <li class="margin0">
         <div class="thumbnail ignore-thumbnail-hover bb-logout logout">
           <i class="icon-logout"></i>

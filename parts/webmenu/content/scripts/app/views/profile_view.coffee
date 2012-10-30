@@ -31,10 +31,16 @@ define [
           view: new LogoutView
         @lb.render()
 
-    constructor: ->
+    constructor: (opts) ->
       super
+      @config = opts.config
       @bindTo Application, "show", =>
         @lb?.remove()
+
+    viewJSON: -> {
+      user: @model.toJSON()
+      config: @config.toJSON()
+    }
 
     remove: ->
       @lb?.remove()

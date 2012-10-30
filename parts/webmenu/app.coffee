@@ -87,6 +87,7 @@ userData.fullName = userData.gecos.split(",")[0]
 
 handler.get "/user.json", (req, res) -> res.json(userData)
 handler.get "/menu.json", (req, res) -> res.json(menuJSON)
+handler.get "/config.json", (req, res) -> res.json(config)
 
 handler.get "/osicon/:icon.png", require("./routes/osicon")(
   config.iconSearchPaths

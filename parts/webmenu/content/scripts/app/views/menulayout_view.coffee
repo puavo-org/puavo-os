@@ -32,6 +32,8 @@ define [
       super
       @initialMenu = opts.initialMenu
       @allItems = opts.allItems
+      @user = opts.user
+      @config = opts.config
 
       @setMenu(@initialMenu)
 
@@ -64,7 +66,8 @@ define [
 
     showProfile: ->
       @_setView ".sidebar", new ProfileView
-        model: @model
+        model: @user
+        config: @config
 
     reset: ->
       @setMenu(@initialMenu)
