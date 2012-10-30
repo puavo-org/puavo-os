@@ -1,6 +1,7 @@
 
 http = require "http"
 {exec, spawn, fork} = require "child_process"
+
 app = require "appjs"
 express = require "express"
 stylus = require "stylus"
@@ -12,6 +13,7 @@ mkdirp = require "mkdirp"
 launchCommand = require "./lib/launchcommand"
 menutools = require "./lib/menutools"
 powermanager = require "./lib/powermanager"
+requirefallback = require "./lib/requirefallback"
 
 handler = express()
 
@@ -33,14 +35,24 @@ handler.configure "development", ->
 
 handler.use express.static __dirname + "/content"
 
-cachePath = process.env.HOME + "/.webmenu/cache"
-mkdirp.sync cachePath
-app.init CachePath: cachePath
+webmenuHome = process.env.HOME + "/.config/webmenu"
+cachePath = webmenuHome + "/cache"
+mkdirp.sync(cachePath)
+app.init(CachePath: cachePath)
 
-config = require "./config.json"
+config = requirefallback(
+  webmenuHome + "/config.json"
+  "/etc/webmenu/config.json"
+  __dirname + "/config.json"
+)
+
 locale = process.env.LANG
 locale = "fi_FI.UTF-8"
-menuJSON = require "./menu.json"
+menuJSON = requirefallback(
+  webmenuHome + "/menu.json"
+  "/etc/webmenu/menu.json"
+  __dirname + "/menu.json"
+)
 
 menutools.injectDesktopData(
   menuJSON,
