@@ -1,6 +1,8 @@
 
 prefix ?= /usr/local
 
+all:
+
 install:
 	mkdir -p $(DESTDIR)$(prefix)/bin
 	mkdir -p $(DESTDIR)/opt/webmenu
