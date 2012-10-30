@@ -1,9 +1,5 @@
 
-
 prefix ?= /usr/local
-
-all:
-	@echo Read INSTALL.md for build instructions and install with `make install`
 
 install:
 	mkdir -p $(DESTDIR)$(prefix)/bin
