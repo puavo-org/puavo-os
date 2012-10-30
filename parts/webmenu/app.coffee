@@ -36,7 +36,9 @@ requirefallback = require "./lib/requirefallback"
 
 handler = express()
 
-server = http.createServer(handler).listen 1337
+server = http.createServer(handler).listen 1337, ->
+  console.warn "HTTP server listening on port 1337."
+  console.warn "Yes, this sucks and it will be fixed on a later release. https://github.com/opinsys/webmenu/issues/2"
 bridge = require("./lib/siobridge")(server)
 
 handler.configure "development", ->
