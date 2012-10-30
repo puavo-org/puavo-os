@@ -12,3 +12,5 @@ export prefix=/usr
 
 %:
 	dh  $@
+
+override_dh_shlibdeps:
