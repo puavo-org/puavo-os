@@ -8,12 +8,15 @@ stylus = require "stylus"
 nib = require "nib"
 posix = require "posix"
 mkdirp = require "mkdirp"
+rimraf = require "rimraf"
 optimist = require("optimist")
   .usage("Usage: webmenu [options]")
   .alias("h", "help")
   .alias("v", "verbose")
   .describe("dev-tools", "Open Webkit inspector")
+  .describe("reset-favorites", "Reset favorites list")
 argv = optimist.argv
+
 
 clim = require "clim"
 clim(console, true)
@@ -25,14 +28,23 @@ clim.logWrite = (level, prefixes, msg) ->
 
 
 
-if argv.help
-  optimist.showHelp()
-  process.exit(0)
-
 launchCommand = require "./lib/launchcommand"
 menutools = require "./lib/menutools"
 powermanager = require "./lib/powermanager"
 requirefallback = require "./lib/requirefallback"
+
+webmenuHome = process.env.HOME + "/.config/webmenu"
+cachePath = webmenuHome + "/cache"
+
+
+if argv.help
+  optimist.showHelp()
+  process.exit(0)
+
+if argv["reset-favorites"]
+  rimraf.sync(cachePath)
+  process.exit(0)
+
 
 handler = express()
 
@@ -56,8 +68,6 @@ handler.configure "development", ->
 
 handler.use express.static __dirname + "/content"
 
-webmenuHome = process.env.HOME + "/.config/webmenu"
-cachePath = webmenuHome + "/cache"
 mkdirp.sync(cachePath)
 app.init(CachePath: cachePath)
 
