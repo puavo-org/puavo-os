@@ -123,13 +123,18 @@ displayMenu = ->
   , 200
 
 
-window.on 'create', ->
+window.on "create", ->
   displayMenu()
   window.frame.center()
   if argv["dev-tools"]
     console.info "Opening devtools"
     window.frame.openDevTools()
 
+window.on "ready", ->
+  window.addEventListener "keydown", (e) ->
+    if e.keyIdentifier is "F12"
+      argv["dev-tools"] = true
+      window.frame.openDevTools()
 
 handler.get "/show", (req, res) ->
   res.send "ok"
