@@ -6,9 +6,18 @@ app = require "appjs"
 express = require "express"
 stylus = require "stylus"
 nib = require "nib"
-{argv} = require "optimist"
 posix = require "posix"
 mkdirp = require "mkdirp"
+optimist = require("optimist")
+  .usage("Usage: webmenu [options]")
+  .alias("h", "help")
+  .describe("dev-tools", "Open Webkit inspector")
+
+argv = optimist.argv
+
+if argv.help
+  optimist.showHelp()
+  process.exit(0)
 
 launchCommand = require "./lib/launchcommand"
 menutools = require "./lib/menutools"
