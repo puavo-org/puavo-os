@@ -34,9 +34,7 @@ case "$hosttype" in
   boot)
     extraopts="--addpkg   bridge-utils \
 	       --addpkg   isc-dhcp-server \
-	       --addpkg   kpartx \
 	       --addpkg   kvm \
-	       --addpkg   ltsp-server \
 	       --addpkg   nbd-server \
 	       --addpkg   nfs-kernel-server \
 	       --addpkg   rsync \
