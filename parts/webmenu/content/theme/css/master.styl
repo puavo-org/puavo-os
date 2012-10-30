@@ -1,5 +1,6 @@
 @import 'nib'
 
+// Basic HTML-elements
 html,body
   background-color transparent
   height 100%
@@ -14,10 +15,48 @@ img
 
 h2
   font-size 120%
+  margin 1% 0
 
-.thumbnail i
-  font-size 300%
-  line-height 0
+// End of basic HTML-elements
+
+// twitter bootstrap related overrides
+.container-fluid
+  border-radius 0
+  box-sizing border-box
+  height 100%
+  margin 0
+  overflow hidden
+  padding 0.5em 1em
+  position relative
+  width 100%
+
+.well
+  background-color #F0EEE1
+  background-color rgba(240, 238, 225, 0.8)
+
+.desktop-link .thumbnail
+  height 85px
+
+.thumbnail
+  border medium none
+  box-shadow none
+  font-size 80%
+  line-height 1.5
+  transition none
+  user-select none
+  word-wrap break-word
+
+  &:hover:not(.ignore-thumbnail-hover)
+    background-color rgba(237,113,19, 0.8)
+    cursor pointer
+
+  &:active:not(.ignore-thumbnail-hover)
+    background-color:rgba(237,113,19, 0.5)
+    box-shadow inset 0 0 10px #EDEADA
+
+  i
+    font-size 300%
+    line-height 0
 
 .nav-pills > .active > a, .nav-pills > .active > a:hover
   background-color #B0C730
@@ -34,46 +73,35 @@ h2
       background-color rgb(213, 205, 186)
       background-color rgba(213, 205, 186, 0.5)
       border-radius 3px
+      color #555
+      font-weight 700
       padding 0.5em
 
-    &:hover, &.current
-      background-color #B0C730
-      background-image -webkit-gradient(linear, left top, left bottom, from(#B0C730), to(#BBD433))
-      background-image -webkit-linear-gradient(top, #B0C730, #BBD433)
-      background-image -moz-linear-gradient(top, #B0C730, #BBD433)
-      background-image -ms-linear-gradient(top, #B0C730, #BBD433)
-      background-image -o-linear-gradient(top, #B0C730, #BBD433)
-      background-image linear-gradient(top, #B0C730, #BBD433)
-      color #222
-      text-decoration none
-
-.container-fluid
-  border-radius 0
-  box-sizing border-box
-  height 100%
-  margin 0
-  overflow hidden
-  padding 0.5em 1em
-  position relative
-  width 100%
-
-.main
-  margin 5% 0 0
-
-.menu-content
-  height 310px
-  max-height 310px
-  overflow auto
-
-.sidebar
-  border-left 2px solid rgba(90,90,90,0.7)
+      &:hover, &.current
+        background-color #B0C730
+        background-image linear-gradient(top, #B0C730, #BBD433)
+        color #222
+        text-decoration none
 
 .row-fluid [class*="span"] .navigation
   margin-left 2.127659574468085%
 
-.well
-  background-color #F0EEE1
-  background-color rgba(240, 238, 225, 0.8)
+// End of twitter bootstrap related overrides
+
+.main
+  margin 5% 0 0
+
+  .menu-content
+    height 310px
+    max-height 310px
+    overflow auto
+    background-color white
+    border 1px solid #ddd
+    border-radius 3px
+    padding 0.5em
+
+.sidebar
+  border-left 2px solid rgba(90,90,90,0.7)
 
 .form-search
   margin-bottom 2%
@@ -84,58 +112,36 @@ h2
 .profile-details
   margin-bottom 2%
 
-.user-info-details
-
-.thumbnail
-  border medium none
-  box-shadow none
-  font-size 80%
-  line-height 1.5
-  transition none
-  user-select none
-  word-wrap break-word
-
-.thumbnail:hover:not(.ignore-thumbnail-hover)
-  background-color rgba(237,113,19, 0.8)
-  cursor pointer
-
-.thumbnail:active:not(.ignore-thumbnail-hover)
-  background-color:rgba(237,113,19, 0.5)
-  box-shadow inset 0 0 10px #EDEADA
+.sidebar-menu-ul li
+  width 50%
+  > div
+    padding 10px
 
 .user-img-name
   background-color #E6E6DC
   border 5px solid rgba(240, 238, 228, 0.8)
   box-sizing border-box
   padding 1em 0
+  p
+    font-size 115%
+    font-weight 700
+    margin 0.25em 0 0
 
-.user-img-name p
-  font-size 115%
-  font-weight 700
-  margin 0.25em 0 0
+.desktop-link
+  &:hover > div i
+    color rgb(65,120,107)
+  img
+    max-width 64px
+    width 30%
+    ~ p
+      padding-top 0.65em
 
-.desktop-link:hover > div i
-  color rgb(65,120,107)
-
-.desktop-link img
-  max-width 64px
-  width 30%
-
-.desktop-link img ~ p
-  padding-top 0.65em
-
-.desktop-link i ~ p
-  margin 0
-  padding 1em 0 0
+  i ~ p
+    margin 0
+    padding 1em 0 0
 
 ul.thumbnails
   position relative
-
-.popover.bottom
-  margin 0
-
-.popover.bottom .arrow
-  left 37%
 
 ul.nav
   margin-bottom 5px
@@ -166,11 +172,11 @@ button.close
 
 .logout:hover
   background-color #AD0000
-  // XXX: Broken!
-  // background-image linear-gradient(to bottom, #BC1111, #AD0000)
+  background-image linear-gradient(top, #BC1111, #AD0000)
   box-shadow inset 0 0 5px #555
   border-radius 4px
   color #FFF
+  cursor pointer
 
 .logout:hover i
   color #FFF
@@ -183,8 +189,8 @@ button.close
     color #FFF
     margin-right 0.25em
     padding 0.15em 0.05em 0.15em 0.25em
-  &:hover
-    color #fff
+    &:hover
+      color #fff
 
 .logout-btn-container
   margin 1.5em 0 0 2.8em
@@ -225,6 +231,22 @@ button.close
 
 .w70
   width 70%
+
+// End of do one thing
+
+// Custom scrollbar (webkit only)
+::-webkit-scrollbar
+    width 12px
+
+::-webkit-scrollbar-track
+  box-shadow inset 0 0 6px rgba(65,120,107,0.3)
+  border-radius 5px
+
+::-webkit-scrollbar-thumb
+  background-color rgba(237,113,19,0.35)
+  border-radius 5px
+  box-shadow inset 0 0 6px rgba(237,113,19,0.5)
+
 
 @media (max-width 979px) and (min-width 768px)
   body
