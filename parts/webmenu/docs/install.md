@@ -19,3 +19,6 @@ the default Ubuntu repositories.
 
 See hacking.md
 
+## Usage
+
+See `docs/usage.md`
