@@ -20,11 +20,27 @@ case "$MODE" in
         debs="$(find "$INSTALL_DEBS_DIR" -iname '*.deb' -printf '/var/cache/apt/gdebi/%f\n')"
         test -n "$debs" || return 0
 
+        # To get proper dependencies installed with gdebi, let's assemble
+        # a local repository from the files in debs directory. If gdebi
+        # requires dependencies, it can then find them using apt.
+
+        echo "#/bin/sh" > $ROOT/usr/sbin/update-grub
+
+        TMP_APTDIR="/var/cache/apt/gdebi"
+        TMP_CHROOT_APTDIR="$ROOT/var/cache/apt/gdebi"
+
         echo "Installing deb files from $INSTALL_DEBS_DIR"
-        mkdir -p "$ROOT/var/cache/apt/gdebi"
-        mount "$INSTALL_DEBS_DIR" "$ROOT/var/cache/apt/gdebi" --bind
-        echo "$debs" | xargs -d '\n' chroot "$ROOT" gdebi --non-interactive
-        umount "$ROOT/var/cache/apt/gdebi"
-        rmdir --ignore-fail-on-non-empty "$ROOT/var/cache/apt/gdebi"
+        mkdir -p "$TMP_CHROOT_APTDIR"
+        echo -e "$debs"
+
+        cp "$INSTALL_DEBS_DIR"/*.deb "$TMP_CHROOT_APTDIR/"
+        apt-ftparchive packages "$TMP_CHROOT_APTDIR" | sed -e "s!$TMP_CHROOT_APTDIR!!g" > "$TMP_CHROOT_APTDIR/Packages"
+
+        echo "deb file:$TMP_APTDIR/ /" > "$ROOT/etc/apt/sources.list.d/local.list"
+        chroot "$ROOT" apt-get update
+
+        find "$TMP_CHROOT_APTDIR" -iname '*.deb' -printf "$TMP_APTDIR/%f\n" | xargs -I {} -d '\n' chroot "$ROOT" gdebi --non-interactive {}
+        rm -f $TMP_CHROOT_APTDIR/*.deb "$TMP_CHROOT_APTDIR/Packages"
+        rmdir --ignore-fail-on-non-empty "$TMP_CHROOT_APTDIR"
         ;;
 esac
