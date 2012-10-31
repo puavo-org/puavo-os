@@ -22,7 +22,7 @@ case "$MODE" in
             mv -vf "$sources_list" "$sources_list".old
         fi
         add_mirrors "$EARLY_MIRROR"
-        add_mirrors "$MIRROR" 
+        add_mirrors "$MIRROR"
         add_mirrors "$EXTRA_MIRROR"
         ;;
 esac

@@ -8,5 +8,5 @@ case "$MODE" in
         else
             CHROOT="$ARCH"
         fi
-        ;; 
+        ;;
 esac
