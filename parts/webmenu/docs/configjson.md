@@ -18,7 +18,7 @@ Array of file system paths where to look for .desktop files
 
 ### `iconSearchPaths`
 
-Array of file system paths where to look for icons for `osIcon` attributes for
+Array of file system paths where to look for icons for `osIcon` attributes in
 menu.json.
 
 ### `fallbackIcon`
