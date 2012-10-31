@@ -1,5 +1,0 @@
-#!/bin/sh
-# Shell wrapper for --harmony switch
-cd /opt/webmenu
-export NODE_ENV=production
-node --harmony app.js $@
