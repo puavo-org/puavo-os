@@ -1,11 +1,19 @@
-PWD=`pwd`
+DEBCONF_SEEDS="$LTSP_BUILD_CLIENT_DIR/debconf.seeds"
+INSTALL_DEBS_DIR="$LTSP_BUILD_CLIENT_DIR/debs"
+LTSP_CUSTOM_PLUGINS="$LTSP_BUILD_CLIENT_DIR/plugins"
 
-DEBCONF_SEEDS="$PWD/debconf.seeds"
-LTSP_CUSTOM_PLUGINS="$PWD/plugins"
-INSTALL_DEBS_DIR="$PWD/debs"
-
-#LATE_PACKAGES="
-#    ubuntu-restricted-extras
-#    gimp
-#    nfs-client
-#"
+LATE_PACKAGES="
+  bridge-utils
+  btrfs-tools
+  gimp
+  ltsp-client
+  ltsp-server
+  lvm2
+  nfs-common
+  tmux
+  tshark
+  ubuntu-gnome-desktop
+  ubuntu-restricted-extras
+  ubuntu-standard
+  vlan
+"

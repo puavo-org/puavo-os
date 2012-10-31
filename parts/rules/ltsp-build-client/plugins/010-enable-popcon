@@ -13,7 +13,7 @@ case "$MODE" in
             # enable popularity-contest reporting
             # TODO: handle when PARTICIPATE is not set
             sed -i -e 's,PARTICIPATE=.*,PARTICIPATE="yes",g' $ROOT/etc/popularity-contest.conf
-           
+
             if [ ! -f /etc/cron.daily/popularity-contest-ltsp ]; then
                 ln -s /usr/share/ltsp/scripts/popularity-contest-ltsp /etc/cron.daily/
             fi
