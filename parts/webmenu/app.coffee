@@ -118,8 +118,16 @@ window = app.createWindow
   disableSecurity: true
   showOnTaskbar: false
   icons: __dirname + '/content/icons'
-  disableBrowserRequire: true
   url: "http://localhost:#{ config.port }"
+
+  # Node require in the browser breaks RequireJS. So disable it.
+  # https://github.com/opinsys/appjs/commit/74a1b2deba49a3abb65f51a27a8871f8aee7dcf1
+  disableBrowserRequire: true
+
+  # Set appjs window as modal.
+  # TODO: Why this does not float the window on Awesome wm?
+  # https://github.com/opinsys/appjs/commit/15dfc63031126d5aab54fcf544891c5c9edf6a84
+  modal: true
 
 displayMenu = ->
   title = "Opinsys Web Menu"
