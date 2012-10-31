@@ -2,7 +2,7 @@
 
 # Run from parent directory!
 
-FILES="webmenu/Makefile webmenu/lib/ webmenu/content/ webmenu/*.coffee webmenu/*.js webmenu/*.json webmenu/bin/ webmenu/routes/ webmenu/docs/ webmenu/*.md webmenu/node_modules/ webmenu/debian/"
+FILES="webmenu/Makefile webmenu/lib/ webmenu/content/ webmenu/*.coffee webmenu/*.js webmenu/*.json webmenu/bin/ webmenu/routes/ webmenu/docs/ webmenu/*.md webmenu/node_modules/ webmenu/debian/ webmenu/nodejs/"
 
 set -eu
 
