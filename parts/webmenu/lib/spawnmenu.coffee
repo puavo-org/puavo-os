@@ -21,7 +21,8 @@ module.exports = (pipePath) ->
       throw err
 
   server = net.createServer (socket) ->
-    events.emit "spawn"
+    events.emit("spawn")
+    socket.end("Spawning a menu for you!")
 
   server.listen(pipePath)
 

@@ -7,7 +7,7 @@ manually to what ever panel you are using.
 
 The launcher command is following:
 
-    wget http://localhost:1337/show/ -q -O -
+    nc -U ~/.config/webmenu/spawnmenu
 
 Just create Unity, gnome-panel, whatever entry for it.
 

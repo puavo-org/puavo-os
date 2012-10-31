@@ -36,7 +36,7 @@ requirefallback = require "./lib/requirefallback"
 
 webmenuHome = process.env.HOME + "/.config/webmenu"
 cachePath = webmenuHome + "/cache"
-spawnPipePath = webmenuHome + "/spawnpipe"
+spawnPipePath = webmenuHome + "/spawnmenu"
 
 mkdirp.sync(cachePath)
 
@@ -56,7 +56,7 @@ config = requirefallback(
 )
 
 handler = express()
-spawnEmitter = require("./lib/spawnevents")(spawnPipePath)
+spawnEmitter = require("./lib/spawnmenu")(spawnPipePath)
 
 config.port ?= 1337
 server = http.createServer(handler).listen config.port or 1337, ->
