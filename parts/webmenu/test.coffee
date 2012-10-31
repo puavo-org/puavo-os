@@ -17,8 +17,7 @@ createTestWindow = (url) ->
 
   window.on "create", ->
     window.frame.show()
-    if argv["dev-tools"]
-      window.frame.openDevTools()
+    window.frame.openDevTools()
 
 call = (cmd) ->
   process.stderr.write "Executing: '#{ cmd }'\n"
