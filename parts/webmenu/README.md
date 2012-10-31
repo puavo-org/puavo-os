@@ -1,5 +1,5 @@
-# Web Menu
+# Webmenu
 
 Our next generation desktop menu
 
-See `docs/install.md` and `doc/usage.md`.
+See `docs/install.md` and `doc/usage.md`
