@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eu
 
 # Run from parent directory!
 
@@ -16,8 +17,6 @@ FILES=" \
     webmenu/node_modules/ \
     webmenu/debian/ \
     webmenu/nodejs/"
-
-set -eu
 
 # Remove previous build
 rm -rf webmenu_build/ || true
