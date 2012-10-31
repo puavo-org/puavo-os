@@ -1,6 +1,6 @@
 {
     "name": "webmenu"
-  , "version": "0.0.1"
+  , "version": "0.1.0"
   , "private": true
   , "scripts": {
      "start": "node --harmony app.js"
@@ -26,9 +26,4 @@
       , "chai": ""
       , "yeti": ""
   }
-  , "preferGlobal" : true
-  , "bin" :
-      {   "webmenu" : "bin/webmenu"
-        , "_webmenu": "app.js"
-      }
 }
