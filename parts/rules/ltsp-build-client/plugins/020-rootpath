@@ -17,7 +17,7 @@ case "$MODE" in
                 echo "NOTE: Root directory $ROOT already exists, this will lead to problems, please remove it before trying again. Exiting."
                 exit 0
             fi
-        fi 
+        fi
         mkdir -p "$ROOT"
         ;;
 esac

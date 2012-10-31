@@ -7,7 +7,7 @@ case "$MODE" in
         if [ -n "$option_debootstrap_keyring_value" ]; then
             DEBOOTSTRAP_KEYRING="$option_debootstrap_keyring_value"
         fi
-        ;;    
+        ;;
     install)
         if [ -n "$EXCLUDE" ] ; then
             DEBOOTSTRAPOPTS="$DEBOOTSTRAPOPTS --exclude=$EXCLUDE"

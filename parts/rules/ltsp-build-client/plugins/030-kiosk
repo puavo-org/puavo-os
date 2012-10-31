@@ -1,6 +1,6 @@
 case "$MODE" in
     commandline)
-        # add a commandline switch to ltsp-build-client (advanced "false" means 
+        # add a commandline switch to ltsp-build-client (advanced "false" means
         # we dont expect any value, callig --kiosk is enough, we could enhance
         # the plugin to use --kiosk kde for example to install kdm and konqueror
         # instead if we'd set it to true
@@ -23,7 +23,7 @@ case "$MODE" in
             mkdir -p $ROOT/usr/local/share/ltspkiosk/home
 
             if [ "${THEME}" = "human-gtk-theme" ]; then
-                # switch to the proper theme 
+                # switch to the proper theme
                 echo "include \"/usr/share/themes/Human/gtk-2.0/gtkrc\"" >$ROOT/usr/local/share/ltspkiosk/home/.gtkrc-2.0
             fi
 
