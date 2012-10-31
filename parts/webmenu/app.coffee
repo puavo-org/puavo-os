@@ -48,11 +48,17 @@ if argv["reset-favorites"]
   rimraf.sync(cachePath)
   process.exit(0)
 
+config = requirefallback(
+  webmenuHome + "/config.json"
+  "/etc/webmenu/config.json"
+  __dirname + "/config.json"
+)
 
 handler = express()
 
-server = http.createServer(handler).listen 1337, ->
-  console.warn "HTTP server listening on port 1337."
+config.port ?= 1337
+server = http.createServer(handler).listen config.port or 1337, ->
+  console.warn "HTTP server listening on port #{ config.port }."
   console.warn "Yes, this sucks and it will be fixed on a later release. https://github.com/opinsys/webmenu/issues/2"
 bridge = require("./lib/siobridge")(server)
 
@@ -74,11 +80,6 @@ handler.use express.static __dirname + "/content"
 mkdirp.sync(cachePath)
 app.init(CachePath: cachePath)
 
-config = requirefallback(
-  webmenuHome + "/config.json"
-  "/etc/webmenu/config.json"
-  __dirname + "/config.json"
-)
 
 locale = process.env.LANG
 locale = "fi_FI.UTF-8"
@@ -116,7 +117,7 @@ window = app.createWindow
   showOnTaskbar: false
   icons: __dirname + '/content/icons'
   disableBrowserRequire: true
-  url: "http://localhost:1337"
+  url: "http://localhost:#{ config.port }"
 
 displayMenu = ->
   title = "Opinsys Web Menu"
