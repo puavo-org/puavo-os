@@ -38,6 +38,7 @@ webmenuHome = process.env.HOME + "/.config/webmenu"
 cachePath = webmenuHome + "/cache"
 spawnPipePath = webmenuHome + "/spawnpipe"
 
+mkdirp.sync(cachePath)
 
 if argv.help
   optimist.showHelp (msg) ->
@@ -79,7 +80,6 @@ handler.configure "development", ->
 
 handler.use express.static __dirname + "/content"
 
-mkdirp.sync(cachePath)
 app.init(CachePath: cachePath)
 
 
