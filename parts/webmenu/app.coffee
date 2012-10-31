@@ -38,7 +38,8 @@ cachePath = webmenuHome + "/cache"
 
 
 if argv.help
-  optimist.showHelp()
+  optimist.showHelp (msg) ->
+    process.stderr.write(msg + "\n")
   process.exit(0)
 
 if argv["reset-favorites"]
