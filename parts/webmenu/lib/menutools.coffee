@@ -4,7 +4,7 @@
 path = require "path"
 dotdesktop = require "./dotdesktop"
 
-injectDesktopData = (menu, sources, locale, verbose) ->
+injectDesktopData = (menu, sources, locale) ->
   sources.forEach (desktopDir) ->
     if menu.type is "desktop" and menu.id
       filePath = desktopDir + "/#{ menu.id }.desktop"
@@ -19,7 +19,6 @@ injectDesktopData = (menu, sources, locale, verbose) ->
       menu.command ?= desktopEntry.command
       menu.osIcon ?= desktopEntry.osIcon
       menu.upstreamName ?= desktopEntry.upstreamName
-
 
     else if menu.type is "menu"
       for menu_ in menu.items
