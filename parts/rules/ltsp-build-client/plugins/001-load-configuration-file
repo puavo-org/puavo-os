@@ -8,7 +8,7 @@ case "$MODE" in
         elif [ -z "$CONFIG" ] && [ -f "/etc/ltsp/ltsp-build-client.conf" ]; then
             CONFIG="/etc/ltsp/ltsp-build-client.conf"
         fi
-        
+
         if [ -n "$CONFIG" ]; then
             if [ -f "$CONFIG" ]; then
                 debug "Loading configuration file '$CONFIG'."

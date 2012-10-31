@@ -13,7 +13,7 @@ case "$MODE" in
                 failed_dirs="$failed_dirs $dir"
             fi
         done
-        # Those will be taken care of in ltsp-build-client's on_exit() 
+        # Those will be taken care of in ltsp-build-client's on_exit()
         CHROOT_MOUNTED="$failed_dirs"
         ;;
 esac
