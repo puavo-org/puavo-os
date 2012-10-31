@@ -21,6 +21,7 @@ argv = optimist.argv
 clim = require "clim"
 clim(console, true)
 _logWrite = clim.logWrite
+# Show console.log only with --vervose
 clim.logWrite = (level, prefixes, msg) ->
   if level is "LOG" and not argv.verbose
     return
@@ -37,7 +38,6 @@ webmenuHome = process.env.HOME + "/.config/webmenu"
 cachePath = webmenuHome + "/cache"
 spawnPipePath = webmenuHome + "/spawnpipe"
 
-spawnEmitter = require("./lib/spawnevents")(spawnPipePath)
 
 if argv.help
   optimist.showHelp (msg) ->
@@ -55,11 +55,13 @@ config = requirefallback(
 )
 
 handler = express()
+spawnEmitter = require("./lib/spawnevents")(spawnPipePath)
 
 config.port ?= 1337
 server = http.createServer(handler).listen config.port or 1337, ->
   console.warn "HTTP server listening on port #{ config.port }."
   console.warn "Yes, this sucks and it will be fixed on a later release. https://github.com/opinsys/webmenu/issues/2"
+
 bridge = require("./lib/siobridge")(server)
 
 handler.configure "development", ->
