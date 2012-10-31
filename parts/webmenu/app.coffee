@@ -1,6 +1,6 @@
 
 http = require "http"
-{exec, spawn, fork} = require "child_process"
+{spawn} = require "child_process"
 
 app = require "appjs"
 express = require "express"
@@ -163,18 +163,10 @@ bridge.on "hideWindow", ->
   window.frame.hide() if not argv["dev-tools"]
 
 bridge.on "showMyProfileWindow", ->
-  fork(
-    __dirname + "/webwindow.js",
-    [ config.profileUrl ],
-    { detached: true }
-  )
+  launchCommand(config.profileCMD)
 
 bridge.on "showChangePasswordWindow", ->
-  fork(
-    __dirname + "/webwindow.js",
-    [ config.changePasswordUrl ],
-    { detached: true }
-  )
+  launchCommand(config.passwordCMD)
 
 bridge.on "shutdown", -> powermanager.shutdown()
 bridge.on "reboot", -> powermanager.reboot()

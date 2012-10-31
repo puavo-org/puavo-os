@@ -1,5 +1,5 @@
 
-{spawn} = require "child_process"
+{spawn, fork} = require "child_process"
 
 commandBuilders =
   desktop: (msg) ->
@@ -9,6 +9,13 @@ commandBuilders =
     command = msg.command.shift()
     args = msg.command
     return [command, args]
+  custom: (msg) -> this.desktop(msg)
+  webWindow: (msg) ->
+    fork(
+      __dirname + "/webwindow.js",
+      [ msg.url ],
+      { detached: true }
+    )
   web: (msg) ->
     args = [msg.url]
     return ["xdg-open", args]

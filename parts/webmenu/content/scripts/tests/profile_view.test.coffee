@@ -14,8 +14,8 @@ define [
       view = new ProfileView
         model: new Backbone.Model(fullName: "John Doe")
         config: new Backbone.Model
-          profileUrl: "http://profile.example.com"
-          changePasswordUrl: "http://password.example.com"
+          profileCMD: "http://profile.example.com"
+          passwordCMD: "http://password.example.com"
 
       view.render()
 
@@ -55,8 +55,8 @@ define [
 
       beforeEach ->
         view.config.set
-          changePasswordUrl: null
-          profileUrl: null
+          passwordCMD: null
+          profileCMD: null
         view.render()
 
       it "should not have profile settings button", ->
