@@ -20,6 +20,7 @@ window = app.createWindow
   url: url
 
 window.on "create", ->
+  window.frame.title = "loading..."
   window.frame.show()
   window.frame.focus()
 
