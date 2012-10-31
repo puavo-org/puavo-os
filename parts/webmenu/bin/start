@@ -2,4 +2,4 @@
 # Startup script for installed Webmenu
 cd /opt/webmenu
 export NODE_ENV=production
-/opt/webmenu/nodejs/bin/node --harmony app.js $@
+./nodejs/bin/node --harmony app.js $@
