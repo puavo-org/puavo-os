@@ -21,7 +21,7 @@
           "id": "gucharmap"
         },
         {
-          "type": "desktop",
+          "type": "custom",
           "name": "CD/DVD-luontityökalu",
           "command": ["nautilus --no-default-window --no-desktop burn:/// "],
           "description": "Luo CD:itä ja DVD:itä",
@@ -408,7 +408,7 @@
           "id": "fmit"
         },
         {
-          "type": "desktop",
+          "type": "custom",
           "name": "Kino",
           "command": ["kino"],
           "description": "Muokkaa videoita",
