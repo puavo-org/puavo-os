@@ -1,4 +1,3 @@
-
 ## Source installation
 
 Here's how to setup the development environment for now:
@@ -48,6 +47,6 @@ Fetch and build Web Menu inside our fork
     cd webmenu
     npm install
     # Make sure to use our fork of appjs
-    rm -rf node_modules/appjs*
+    cp -a ../node_modules/appjs* node_modules/
 
 The app can be started with `npm start` in the webmenu directory.
