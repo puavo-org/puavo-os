@@ -1,4 +1,3 @@
-
 # Usage
 
 Start it with `webmenu` command. It should be kept running always.
@@ -8,7 +7,7 @@ manually to what ever panel you are using.
 
 The launcher command is following:
 
-    nc -w 1 -U ~/.config/webmenu/spawnpipe
+    wget http://localhost:1337/show/ -q -O -
 
 Just create Unity, gnome-panel, whatever entry for it.
 
