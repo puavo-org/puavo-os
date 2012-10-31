@@ -15,6 +15,10 @@ define [
       name: "gimp"
       command: ["gimp"]
     ,
+      type: "custom"
+      name: "gimp2"
+      command: ["gimp"]
+    ,
       type: "desktop"
       id: "bad"
     ,

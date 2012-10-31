@@ -54,6 +54,7 @@ define [
     typemap =
       web: WebItemModel
       desktop: DesktopItemModel
+      custom: DesktopItemModel
       menu: MenuModel
 
     constructor: (opts, allItems) ->
