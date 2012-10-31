@@ -1,0 +1,11 @@
+PWD=`pwd`
+
+DEBCONF_SEEDS="$PWD/debconf.seeds"
+LTSP_CUSTOM_PLUGINS="$PWD/plugins"
+INSTALL_DEBS_DIR="$PWD/debs"
+
+#LATE_PACKAGES="
+#    ubuntu-restricted-extras
+#    gimp
+#    nfs-client
+#"

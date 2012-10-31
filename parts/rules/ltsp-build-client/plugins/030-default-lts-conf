@@ -1,0 +1,26 @@
+case "$MODE" in
+    finalization)
+	    # create default lts.conf
+        cat <<EOF > $ROOT/etc/lts.conf
+# This is the default lts.conf file for ltsp 5.
+# For more information about valid options please see:
+# /usr/share/doc/ltsp-client/examples/lts-parameters.txt.gz
+# in the client environment.
+#
+# Note that things like sound and local device support are
+# auto-enabled if the corresponding packages are installed,
+# there is no need to manually set these options anymore.
+#
+# **** THIS FILE SHOULD NO LONGER BE USED FROM HERE !!! ****
+#
+# With the introduction of the nbd/unionfs/squashfs structure
+# the lts.conf file moved to the tftp root please create:
+# /var/lib/tftpboot/ltsp/i386/lts.conf instead for your changes
+#
+# In case you want to use the lts.conf here, this still works,
+# but you need to run ltsp-update-image after every change.
+[example]
+key=value
+EOF
+        ;;
+esac

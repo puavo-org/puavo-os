@@ -1,0 +1,8 @@
+case "$MODE" in
+    after-install)
+        if [ ! -d /dev/pts ]; then
+            mkdir -p /dev/pts
+        fi
+        chroot_mount devpts /dev/pts "-t devpts -o rw,noexec,nosuid,gid=5,mode=620"
+        ;;
+esac

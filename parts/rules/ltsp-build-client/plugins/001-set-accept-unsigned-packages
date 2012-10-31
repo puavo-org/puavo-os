@@ -1,0 +1,13 @@
+case "$MODE" in
+    commandline)
+        add_option "accept-unsigned-packages" "`eval_gettext "allow unsigned packages during install"`" "advanced" "false"
+        ;;
+    configure)
+        if [ -n "$option_accept_unsigned_packages_value" ]; then
+            # FIXME: handle if APT_GET_OPTS has other values set.
+            APT_GET_OPTS="$APT_GET_OPTS --force-yes"
+            # requires debootstrap 1.0.30
+            DEBOOTSTRAPOPTS="$DEBOOTSTRAPOPTS --no-check-gpg"
+        fi
+        ;;
+esac

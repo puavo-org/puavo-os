@@ -1,0 +1,14 @@
+case "$MODE" in
+    configure)
+        KERNEL_IMG_OPTS="warn_initrd=no do_symlinks=yes relative_links=yes link_in_boot=yes do_bootloader=no"
+        ;;
+    after-install)
+        if [ -f "$ROOT/etc/kernel-img.conf" ]; then
+            mv -f "$ROOT/etc/kernel-img.conf" "$ROOT/etc/kernel-img.conf.orig"
+        fi
+        # Setup for kernel install
+        for opt in $KERNEL_IMG_OPTS; do
+            echo $opt >> "$ROOT/etc/kernel-img.conf"
+        done
+        ;;
+esac

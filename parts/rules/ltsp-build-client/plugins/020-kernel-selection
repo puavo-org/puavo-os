@@ -1,0 +1,29 @@
+case "$MODE" in
+    finalization)
+        case $ARCH in
+            amd64)
+                KERNEL_ARCH="generic"
+            ;;
+
+            i386)
+                # We ideally want non-PAE but install media
+                # doesn't have it, so use PAE in that case
+                chroot $ROOT apt-cache show linux-image-generic 2> /dev/null > /dev/null && \
+                    KERNEL_ARCH="generic" || KERNEL_ARCH="generic-pae"
+            ;;
+
+            sparc)
+                KERNEL_ARCH="$(uname -m)"
+            ;;
+
+            armel|armhf)
+                KERNEL_ARCH="omap4"
+            ;;
+
+            *)
+                KERNEL_ARCH="$ARCH"
+            ;;
+        esac
+        LATE_PACKAGES="$LATE_PACKAGES linux-image-$KERNEL_ARCH"
+    ;;
+esac

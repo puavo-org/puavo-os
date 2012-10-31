@@ -1,0 +1,19 @@
+case "$MODE" in
+    configure)
+        # Provide an environment variable for ltsp-client-builder to select the
+        # passthrough frontend, without making it an official ltsp-build-client
+        # option, so that DEBIAN_FRONTEND defaults to noninteractive.
+        if [ -n "$LTSP_CLIENT_BUILDER" ]; then
+            unset DEBIAN_HAS_FRONTEND
+            unset DEBCONF_FRONTEND
+            unset DEBCONF_REDIR
+            # Avoid debconf mailing notes.
+            export DEBCONF_ADMIN_EMAIL=""
+            export DEBCONF_READFD=0
+            export DEBCONF_WRITEFD=3
+            export DEBIAN_FRONTEND=passthrough
+        else
+            export DEBIAN_FRONTEND=noninteractive
+        fi
+        ;;
+esac

@@ -1,0 +1,12 @@
+case "$MODE" in
+    commandline)
+        add_option "chroot" "`eval_gettext "set the name of the chroot"`" "advanced" "true"
+        ;;
+    configure)
+        if [ -n "$option_chroot_value" ]; then
+            CHROOT="$option_chroot_value"
+        else
+            CHROOT="$ARCH"
+        fi
+        ;; 
+esac

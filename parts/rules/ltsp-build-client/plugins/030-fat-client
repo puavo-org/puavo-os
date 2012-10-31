@@ -1,0 +1,43 @@
+case "$MODE" in
+    commandline)
+        # Add a command line switch to ltsp-build-client that installs desktop
+        # meta-packages so that diskless workstations can everything locally
+        add_option "fat-client" "`eval_gettext "run most or all applications locally"`" "advanced" "false"
+        add_option "fat-client-desktop" "`eval_gettext "run most or all applications locally"`" "advanced" "true"
+    ;;
+
+    configure)
+        # Check what the sysadmin chose to install. If (s)he is lazy and didn't
+        # specify one, then we install the desktop meta-packages that are
+        # already installed on the server.
+
+        if [ -n "$option_fat_client_desktop_value" ]; then
+            FAT_CLIENT_DESKTOPS="$(echo $option_fat_client_desktop_value | tr ',' ' ')"
+        elif [ -n "$option_fat_client_value" ]; then
+            FAT_CLIENT_DESKTOPS="$(dpkg -l | sed -n 's/^ii.*\<\(.*buntu-desktop\)\>.*/\1/p')"
+        else
+            # If fat client isn't enabled, just continue
+            return 0
+        fi
+
+        FAT_CLIENT_DESKTOPS=${FAT_CLIENT_DESKTOPS:-ubuntu-desktop}
+        ;;
+
+    before-install)
+        if [ -z "$FAT_CLIENT_DESKTOPS" ]; then
+            return 0
+        fi
+    ;;
+
+    after-install)
+        if [ -z "$FAT_CLIENT_DESKTOPS" ]; then
+            return 0
+        fi
+
+        # Install the packages
+        for package in ubuntu-standard $FAT_CLIENT_DESKTOPS; do
+            echo "Installing $package"
+            chroot $ROOT apt-get $APT_GET_OPTS install $package
+        done
+    ;;
+esac

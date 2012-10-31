@@ -1,0 +1,8 @@
+case "$MODE" in
+    after-install)
+        # divert /etc/mtab and point it to /proc/mounts
+        chroot $ROOT dpkg-divert --package ltsp-client --add --rename \
+                                 --divert /etc/mtab.real /etc/mtab
+        chroot $ROOT ln -sf /proc/mounts /etc/mtab
+        ;;
+esac

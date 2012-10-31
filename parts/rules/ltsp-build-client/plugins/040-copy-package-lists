@@ -1,0 +1,16 @@
+case "$MODE" in
+    commandline)
+        add_option "copy-package-lists" "`eval_gettext "copy apt Packages files from server"`" "advanced" "false"
+        ;;
+    configure)
+        if [ -n "$option_copy_package_lists_value" ]; then
+            COPY_PACKAGE_LISTS=true
+        fi
+        ;;
+    before-install)
+        if [ "true" = "$COPY_PACKAGE_LISTS" ]; then
+            mkdir -p $ROOT/var/lib/apt/lists/
+            cp -p /var/lib/apt/lists/*Packages $ROOT/var/lib/apt/lists/
+        fi
+        ;;
+esac

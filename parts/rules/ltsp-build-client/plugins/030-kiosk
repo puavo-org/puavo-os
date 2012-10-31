@@ -1,0 +1,38 @@
+case "$MODE" in
+    commandline)
+        # add a commandline switch to ltsp-build-client (advanced "false" means 
+        # we dont expect any value, callig --kiosk is enough, we could enhance
+        # the plugin to use --kiosk kde for example to install kdm and konqueror
+        # instead if we'd set it to true
+        add_option "kiosk" "`eval_gettext "a simple webkiosk mode"`" "advanced" "false"
+        ;;
+    configure)
+        if [ -n "$option_kiosk_value" ]; then
+            # set an environment variable we can pick up later
+            KIOSK="True"
+            COMPONENTS="main restricted universe multiverse"
+        fi
+        ;;
+    after-install)
+        if [ -n "$KIOSK" ]; then
+            BROWSER=${BROWSER:-"firefox"}
+            WM=${WM:-"metacity"}
+            THEME=${THEME:-"human-gtk-theme"}
+
+            # create ltspkiosk directories
+            mkdir -p $ROOT/usr/local/share/ltspkiosk/home
+
+            if [ "${THEME}" = "human-gtk-theme" ]; then
+                # switch to the proper theme 
+                echo "include \"/usr/share/themes/Human/gtk-2.0/gtkrc\"" >$ROOT/usr/local/share/ltspkiosk/home/.gtkrc-2.0
+            fi
+
+            # install the webbrowser, window manager, and theme
+            chroot $ROOT apt-get $APT_GET_OPTS install ${WM} ${BROWSER} ${THEME} ${KIOSK_PACKAGES}
+
+            # Friendly message
+            echo "To put the client in kiosk mode, set SCREEN_07=kiosk in lts.conf."
+        fi
+        ;;
+esac
+

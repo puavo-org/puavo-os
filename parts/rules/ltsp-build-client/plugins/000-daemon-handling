@@ -1,0 +1,18 @@
+case "$MODE" in
+    after-install)
+        # Install start-stop-daemon wrapper
+        chroot $ROOT dpkg-divert --package ltsp-client --add --rename \
+                                 --divert /sbin/start-stop-daemon.real \
+                                          /sbin/start-stop-daemon
+        cp /usr/share/ltsp/scripts/start-stop-daemon $ROOT/sbin/
+
+        # Install policy-rc.d wrapper
+        cp /usr/share/ltsp/scripts/policy-rc.d.ltsp  $ROOT/usr/sbin/
+        chroot $ROOT update-alternatives --install /usr/sbin/policy-rc.d policy-rc.d \
+                                                   /usr/sbin/policy-rc.d.ltsp 100
+
+        # Export LTSP_HANDLE_DAEMONS to avoid running daemons while
+        # creating the chroot.
+        export LTSP_HANDLE_DAEMONS="false"
+        ;;
+esac

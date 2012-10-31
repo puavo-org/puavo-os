@@ -1,0 +1,13 @@
+case "$MODE" in
+    commandline)
+        add_option "early-packages" "`eval_gettext "set the list of packages to install after base-install is completed"`" "advanced" "true"
+        ;;
+    configure)
+        if [ -n "$option_early_packages_value" ]; then
+            EARLY_PACKAGES="$(echo $option_early_packages_value | tr ',' ' ')"
+        fi
+        ;;
+    after-install)
+        chroot $ROOT apt-get $APT_GET_OPTS install $EARLY_PACKAGES
+        ;;
+esac

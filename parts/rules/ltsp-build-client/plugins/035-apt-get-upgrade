@@ -1,0 +1,15 @@
+case "$MODE" in
+    commandline)
+        add_option "skip-upgrade" "`eval_gettext "skip upgrade of installed packages"`" "advanced" "false"
+        ;;
+    configure)
+        if [ -n "$option_skip_upgrade_value" ]; then
+            SKIP_UPGRADE=true
+        fi
+        ;;
+    after-install)
+        if [ "true" != "$SKIP_UPGRADE" ]; then
+            chroot $ROOT apt-get $APT_GET_OPTS dist-upgrade
+        fi
+        ;;
+esac

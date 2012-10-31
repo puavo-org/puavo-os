@@ -1,0 +1,28 @@
+case "$MODE" in
+    commandline)
+        add_option "security-mirror" "`eval_gettext "set the security mirror location"`" "advanced" "true"
+        add_option "updates-mirror" "`eval_gettext "set the update mirror location"`" "advanced" "true"
+        ;;
+    before-install)
+        if [ "$ARCH" = "i386" ] || [ "$ARCH" = "amd64" ]; then
+            MIRROR=${MIRROR:-"http://archive.ubuntu.com/ubuntu"}
+            SECURITY_MIRROR=${SECURITY_MIRROR:-"http://security.ubuntu.com/ubuntu"}
+        else
+            MIRROR=${MIRROR:-"http://ports.ubuntu.com/ubuntu-ports"}
+            SECURITY_MIRROR=${SECURITY_MIRROR:-"http://ports.ubuntu.com/ubuntu-ports"}
+        fi
+        UPDATES_MIRROR=${UPDATES_MIRROR:-"$MIRROR"}
+        ;;
+    configure)
+        if [ -n "$option_security_mirror_value" ]; then
+            SECURITY_MIRROR="$option_security_mirror_value"
+        fi
+        if [ -n "$option_updates_mirror_value" ]; then
+            UPDATES_MIRROR="$option_updates_mirror_value"
+        fi
+        ;;
+    after-install)
+        add_mirrors "$UPDATES_MIRROR $DIST-updates $COMPONENTS"
+        add_mirrors "$SECURITY_MIRROR $DIST-security $COMPONENTS"
+        ;;
+esac

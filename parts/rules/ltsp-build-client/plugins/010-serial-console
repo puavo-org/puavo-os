@@ -1,0 +1,16 @@
+case "$MODE" in
+    commandline)
+        add_option "serial-console" "`eval_gettext "enable serial console"`" "advanced" "false"
+        ;;
+    configure)
+        if [ -n "$option_serial_console_value" ]; then
+            SERIAL_CONSOLE=true
+        fi
+        ;;
+    after-install)
+        if [ "true" = "$SERIAL_CONSOLE" ] && [ -z "$(egrep ^T0 $ROOT/etc/inittab)" ]; then
+            echo "`eval_gettext "Enabling serial console..."`"
+            echo "T0:2345:respawn:/sbin/getty -L ttyS0 38400 screen" >> "$ROOT/etc/inittab"
+        fi
+        ;;
+esac

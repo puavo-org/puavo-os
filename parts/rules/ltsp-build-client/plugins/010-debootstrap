@@ -1,0 +1,46 @@
+if [ "$BOOTSTRAP" = "debootstrap" ]; then
+case "$MODE" in
+    commandline)
+        add_option "debootstrap-keyring" "`eval_gettext "use the specified keyring for debootstrap gpg verification"`" "advanced" "true"
+        ;;
+    configure)
+        if [ -n "$option_debootstrap_keyring_value" ]; then
+            DEBOOTSTRAP_KEYRING="$option_debootstrap_keyring_value"
+        fi
+        ;;    
+    install)
+        if [ -n "$EXCLUDE" ] ; then
+            DEBOOTSTRAPOPTS="$DEBOOTSTRAPOPTS --exclude=$EXCLUDE"
+        fi
+        if [ -n "$INCLUDE" ] ; then
+            DEBOOTSTRAPOPTS="$DEBOOTSTRAPOPTS --include=$INCLUDE"
+        fi
+        if [ -n "$DEBOOTSTRAP_KEYRING" ]; then
+            DEBOOTSTRAPOPTS="$DEBOOTSTRAPOPTS --keyring=$DEBOOTSTRAP_KEYRING"
+        fi
+        if [ -x "$CROSS_ARCH_EMULATOR" ]; then
+            DEBOOTSTRAPOPTS="$DEBOOTSTRAPOPTS --foreign"
+        fi
+        if [ ! -f "/usr/lib/debootstrap/scripts/$DIST" ] && [ ! -f "/usr/share/debootstrap/scripts/$DIST" ]; then
+            echo "ERROR: invalid distribution: $DIST"
+            echo "you may need to specify the distribution with the --dist argument:"
+            echo "  $0 --dist etch"
+            exit 1
+        fi
+        # Install base packages
+        LC_ALL=C ${DEBOOTSTRAP:-"debootstrap"} $DEBOOTSTRAPOPTS --arch $ARCH $DIST $ROOT $MIRROR
+        if [ -x "$CROSS_ARCH_EMULATOR" ]; then
+            # configured for cross architecture install.  this requires a
+            # statically built emulator such as qemu, and binfmt_misc
+            # configured to use the emulator for binaries of that architecture.
+
+            # copy the binary, as it need to be present inside the chroot
+            cp "$CROSS_ARCH_EMULATOR" $ROOT/$(dirname $CROSS_ARCH_EMULATOR)
+
+            # finish up last steps of debootstrap now that the emulator is
+            # available inside the chroot
+            LC_ALL=C chroot $ROOT debootstrap/debootstrap --second-stage
+        fi
+        ;;
+esac
+fi

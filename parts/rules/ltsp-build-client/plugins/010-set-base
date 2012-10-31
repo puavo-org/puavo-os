@@ -1,0 +1,10 @@
+case "$MODE" in
+    commandline)
+        add_option "base" "`eval_gettext "set the default base install directory"`" "advanced" "true"
+        ;;
+    configure)
+        if [ -n "$option_base_value" ]; then
+            BASE="$option_base_value"
+        fi
+        ;;
+esac

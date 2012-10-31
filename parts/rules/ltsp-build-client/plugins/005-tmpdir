@@ -1,0 +1,14 @@
+case $MODE in
+    # handle when TMP and TMPDIR are defined, but not present in the chroot
+    # http://bugs.debian.org/451878
+    install)
+        for dir in $TMP $TMPDIR ; do
+            if [ ! -d "$ROOT/$dir" ]; then
+                mkdir -p "$ROOT/$dir"
+                # set permissions of dir
+                # FIXME: handle permissions of intermediate dirs, too
+                chmod --reference $dir "$ROOT/$dir"
+            fi
+        done
+        ;;
+esac

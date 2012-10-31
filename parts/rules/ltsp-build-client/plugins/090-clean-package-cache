@@ -1,0 +1,15 @@
+case "$MODE" in
+    commandline)
+        add_option "keep-packages" "`eval_gettext "keep cache of downloaded package files"`" "advanced" "false"
+        ;;
+    configure)
+        if [ -n "$option_keep_packages_value" ]; then
+            KEEP_PACKAGES=true
+        fi
+        ;;
+    finalization)
+        if [ "true" != "$KEEP_PACKAGES" ]; then
+            chroot $ROOT apt-get clean
+        fi
+        ;;
+esac

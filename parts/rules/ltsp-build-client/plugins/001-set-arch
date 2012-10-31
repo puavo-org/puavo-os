@@ -1,0 +1,11 @@
+case "$MODE" in
+    commandline)
+        add_option "arch" "`eval_gettext "set the target architecture"`" "advanced" "true"
+        ;;
+    configure)
+        HOST_ARCH="$ARCH"
+        if [ -n "$option_arch_value" ]; then
+            ARCH="$option_arch_value"
+        fi
+        ;;
+esac
