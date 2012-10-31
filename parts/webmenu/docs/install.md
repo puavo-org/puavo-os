@@ -17,7 +17,7 @@ the default Ubuntu repositories.
 
 ## Source installation
 
-See hacking.md
+See `docs/hacking.md`
 
 ## Usage
 
