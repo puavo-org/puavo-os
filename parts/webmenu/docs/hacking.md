@@ -6,7 +6,8 @@ Ubuntu dependecies
 
     sudo add-apt-repository ppa:chris-lea/node.js
     sudo apt-get update
-    sudo apt-get install nodejs npm nodejs-dev wmctrl git-core build-essential libgtk2.0-dev
+    sudo apt-get install nodejs npm nodejs-dev wmctrl git-core build-essential libgtk2.0-dev gnome-themes-extras
+
 
 Fetch and build the fork for 32 bit machines (bit complicated sorry)
 
