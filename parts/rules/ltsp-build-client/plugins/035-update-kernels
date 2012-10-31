@@ -1,5 +1,5 @@
 case "$MODE" in
     finalization)
-        /usr/sbin/ltsp-update-kernels
+#        /usr/sbin/ltsp-update-kernels
         ;;
 esac
