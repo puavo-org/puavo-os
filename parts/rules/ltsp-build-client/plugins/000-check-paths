@@ -1,0 +1,17 @@
+case "$MODE" in
+    configure)
+        if [ -z "$CHROOTEXEC" ]; then
+            for c in $(which chroot 2> /dev/null) /usr/sbin/chroot /usr/bin/chroot; do
+                if [ -f "$c" ] && [ -x "$c" ]; then
+                    CHROOTEXEC="$c"
+                    break
+                fi
+            done
+        fi
+        if [ -z "$CHROOTEXEC" ]; then
+            echo "ERROR: chroot command not found!"
+            exit 1
+        fi
+        ;;
+esac
+

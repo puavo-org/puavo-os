@@ -1,0 +1,23 @@
+case "$MODE" in
+    commandline)
+        add_option "purge-chroot" "`eval_gettext "purge existing LTSP chroot if present"`" "advanced" "false"
+        ;;
+    configure)
+        if [ "true" = "$option_purge_chroot_value" ]; then
+            PURGE_CHROOT="true"
+        fi
+        ;;
+    before-install)
+        export ROOT=$BASE/$CHROOT
+        if [ -d $ROOT ] ; then
+            if [ "true" = "$PURGE_CHROOT" ]; then
+                # wipe it out, so we can try again
+                rm --force --recursive --one-file-system "$ROOT"
+            else
+                echo "NOTE: Root directory $ROOT already exists, this will lead to problems, please remove it before trying again. Exiting."
+                exit 0
+            fi
+        fi 
+        mkdir -p "$ROOT"
+        ;;
+esac

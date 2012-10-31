@@ -1,0 +1,257 @@
+#!/bin/bash
+#
+#  Copyright (c) 2005 Canonical LTD
+#
+#  Author: Matt Zimmerman <mdz@canonical.com>
+#
+#  2005, Vagrant Cascadian <vagrant@freegeek.org>
+#  2006, Oliver Grawert <ogra@canonical.com>
+#        Vagrant Cascadian <vagrant@freegeek.org>
+#        Otavio Salvador <otavio@debian.org>
+#        Petter Reinholdtsen <pere@hungry.com>
+#  2007, Oliver Grawert <ogra@canonical.com>
+#  2008, Vagrant Cascadian <vagrant@freegeek.org>
+#        Warren Togami <wtogami@redhat.com>
+#        Jigish Gohil <jigish.gohil@gmail.com>
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License as
+#  published by the Free Software Foundation; either version 2 of the
+#  License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, you can find it on the World Wide
+#  Web at http://www.gnu.org/copyleft/gpl.html, or write to the Free
+#  Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+#  MA 02110-1301, USA.
+#
+
+set -e
+
+# Source the ltsp server functions for vendor detect
+. /usr/share/ltsp/ltsp-server-functions
+
+export TERM=linux							  # make sure we're using a known terminal type
+export TEXTDOMAIN=ltsp                        # gettext domain (.mo file name)
+export TEXTDOMAINDIR=/usr/share/locale        # locale dir for gettext codes
+VENDOR=${VENDOR:-"$(detect_vendor)"}          # Linux distribution
+export BASE=${BASE:-/opt/ltsp}                # LTSP base directory
+MODULES_BASE=${MODULES_BASE:-.} # our modules place
+PLUGINS_BASE=$MODULES_BASE/plugins            # base plugin repository
+SCRIPT=ltsp-build-client
+PLUGIN_DIRS="/etc/ltsp/plugins/$SCRIPT $PLUGINS_BASE/$SCRIPT/$VENDOR-custom $PLUGINS_BASE/$SCRIPT/$VENDOR $PLUGINS_BASE/$SCRIPT/common $LTSP_CUSTOM_PLUGINS"
+
+PARAMS="config:"                              # store commandline params for getopt
+HELP_MESSAGE=""                               # store regular help messages
+ADVANCED_HELP_MESSAGE=""                      # store advanced help messages
+
+. gettext.sh
+
+
+##################################
+### Methods to be called by plugins
+##################################
+
+# Add an option for commandline parser
+#
+# Params:
+# $1 - param name
+# $2 - help message
+# $3 - regular|advanced
+# $4 - has a value? (true or false)
+add_option () {
+    case $4 in
+    true)
+        NAME="opt_with_param_$(echo $1 | tr '-' '_')"
+        eval "$NAME"=true
+        PARAMS="$PARAMS,$1:"
+        ;;
+    false)
+        PARAMS="$PARAMS,$1"
+        ;;
+    *)
+        echo "`eval_gettext "API ERROR: you need to provide true or false."`"
+        ;;
+    esac
+
+    MESSAGE=$(printf "   --%-24s %s" "$1" "$2")
+    if [ $3 = regular ]; then
+        HELP_MESSAGE="$HELP_MESSAGE $MESSAGE\n"
+    else
+        ADVANCED_HELP_MESSAGE="$ADVANCED_HELP_MESSAGE $MESSAGE\n"
+    fi
+}
+
+# Print if using debug.
+#
+# Params:
+# $* - message to be print
+debug() {
+    if [ -n "$DEBUG" ]; then
+        echo "DEBUG: $@" > /dev/stderr
+    fi
+    if [ -n "$DEBUG_FILE" ]; then
+        echo "DEBUG: $@" >> $DEBUG_FILE
+    fi
+}
+
+# Use it to mount thing on chroot and those will be automaticaly
+# unmounted when exit.
+#
+# Params:
+# $1 - what to mount
+# $2 - where to mount (skip the chroot path)
+# $3 - mount extra params
+chroot_mount() {
+    if mount $3 $1 $ROOT/${2##/}; then
+        CHROOT_MOUNTED="$CHROOT_MOUNTED $ROOT/${2##/}"
+    fi
+}
+
+# Load plugins.
+#
+# Params:
+# $1 - mode (configure|run)
+# needs variable PLUGIN_DIRS defined
+load_plugins() {
+    set -- "$@"
+    MODE=$1
+    debug "Loading plugins in MODE=$MODE:"
+    FILENAMES=""
+    NAMES=""
+    for dir in $PLUGIN_DIRS ; do
+        if [ -d "$dir" ]; then
+            FILENAMES="$FILENAMES $(run_parts_list $dir)"
+        fi
+    done
+    for file in $FILENAMES ; do
+        NAMES="$NAMES $(basename $file)"
+    done
+    NAMES="$(echo $NAMES | tr "\t " "\n" | sort -u)"
+    for name in $NAMES ; do
+        for dir in $PLUGIN_DIRS ; do
+            filename="$dir/$name"
+            if [ -f "$filename" ]; then 
+                debug "Loading plugin: $MODE: $filename"
+                . "$filename"
+                break
+            fi
+        done
+    done
+}
+
+# Confirms that ROOT is a chroot
+# Success: return 0
+# Failure: exit 1
+#          return 1 if --return-on-fail
+confirm_chroot() {
+    if [ -z $ROOT ]; then
+        echo "ERROR: ROOT is not defined."
+        exit 1
+    fi
+    if [ ! -e $ROOT/bin/true ]; then
+        [ "$1" = "--return-on-fail" ] && return 1
+        echo "ERROR: $ROOT is not a valid chroot."
+        exit 1
+    fi
+    return 0
+}
+
+# Detect latest installed kernel
+# Outputs version to $kernelversion
+detect_latest_kernel() {
+    confirm_chroot
+
+    # If /dev/null does not exist, create it (basename needs it)
+    [   ! -e /dev/null ] && /sbin/MAKEDEV null
+
+    # If not already specified by the command line, try to find the latest kernel automatically
+    unset kernelversion
+    kernelversion="`ls -d $ROOT/lib/modules/2* | sort -nr | head -n1 | xargs basename`"
+    if [ ! -d $ROOT/lib/modules/$kernelversion ]; then
+        echo "ERROR: $0: Unable to detect installed kernel version."
+        exit 1
+    fi
+    return 0
+}
+
+####################################
+### End of plugins public methods
+####################################
+
+# Add commandline option to handle --help
+add_option "help" "`eval_gettext "display this help message"`" "regular" "false"
+add_option "extra-help" "`eval_gettext "display help for all available commandline options"`" "regular" "false"
+
+# Print usage information.
+usage() {
+    echo `eval_gettext "LTSP Build Client usage:"`
+    echo
+    echo "  ltsp-build-client <options>"
+    echo
+    echo -n `eval_gettext "  Regular options:"`
+    echo -e "$HELP_MESSAGE" | sort
+    if [ "$ADVANCED_HELP" = "true" ]; then
+        echo
+        echo -n `eval_gettext "  Advanced options:"`
+        echo -e "$ADVANCED_HELP_MESSAGE" | sort
+    fi
+}
+
+# Clean up the chroot and exit.
+on_exit() {
+    for dir in $CHROOT_MOUNTED ; do
+        umount $dir
+    done
+
+    if [ true = "$run_successfull" ] ; then
+        echo "`eval_gettext "info: LTSP client installation completed successfully"`"
+    else
+        echo "`eval_gettext "error: LTSP client installation ended abnormally"`"
+        exit 1
+    fi
+}
+
+load_plugins 'commandline'
+
+# Parse the commandline options
+if ! TEMP=`getopt -o '' --long $PARAMS -n "$0" -- "$@"`; then
+    usage >&2; exit 1; 
+fi
+eval set -- "$TEMP"
+
+while [ ! -z "$1" ] && [ "$1" != "--" ]; do
+    OPTION=$(echo ${1:2} | tr "-" "_") # remove -- from variable name
+    shift
+    NAME="opt_with_param_$OPTION"
+    VARIABLE=option_${OPTION}_value
+    if [ "${!NAME}" = true ]; then
+        eval $VARIABLE=\"$1\"
+        shift
+    else
+        eval $VARIABLE=true
+    fi
+done
+
+if [ -n "$option_help_value" ] || [ -n "$option_extra_help_value" ]; then
+    if [ -n "$option_extra_help_value" ]; then
+        ADVANCED_HELP="true"
+    fi
+    usage
+    exit 0
+fi
+
+trap on_exit EXIT
+
+for hook in configure before-install install after-install finalization; do
+    load_plugins "$hook"
+done
+
+run_successfull=true # report success to on_exit()
+
+exit 0

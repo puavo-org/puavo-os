@@ -1,0 +1,6 @@
+case "$MODE" in
+    after-install)
+        export APT_GET_OPTS="$APT_GET_OPTS -o Acquire::gpgv::Options::=--ignore-time-conflict"
+        chroot $ROOT apt-get $APT_GET_OPTS update
+        ;;
+esac

@@ -1,0 +1,19 @@
+# At the finalization MODE, all plugins after 091- should assume that
+# the CHROOT_MOUNTED dirs (e.g. $ROOT/proc) are no longer mounted.
+case "$MODE" in
+    finalization)
+        # binfmt_misc might need to be unmounted manually, see LP #534211
+        if [ -e $ROOT/proc/mounts ] && grep -q "^binfmt_misc $ROOT/proc/sys/fs/binfmt_misc" $ROOT/proc/mounts; then
+            umount $ROOT/proc/sys/fs/binfmt_misc || true
+        fi
+
+        failed_dirs=""
+        for dir in $CHROOT_MOUNTED; do
+            if ! umount $dir; then
+                failed_dirs="$failed_dirs $dir"
+            fi
+        done
+        # Those will be taken care of in ltsp-build-client's on_exit() 
+        CHROOT_MOUNTED="$failed_dirs"
+        ;;
+esac

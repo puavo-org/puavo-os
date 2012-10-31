@@ -1,0 +1,48 @@
+case "$MODE" in
+    commandline)
+        add_option "ltsp-cluster" "`eval_gettext "enable LTSP-Cluster"`" "advanced" "false"
+        ;;
+    configure)
+        if [ -n "$option_ltsp_cluster_value" ]; then
+            CLUSTER="True"
+        fi
+        ;;
+    finalization)
+        if [ -n "$CLUSTER" ]; then
+            mkdir -p $ROOT/etc/ltsp/
+            echo Configuration of LTSP-Cluster
+            while :; do
+                [ -n "$NOTFIRST" ] && echo Invalid input, please try again
+                echo NOTE: booleans must be answered as uppercase Y or N
+                NOTFIRST=true
+                echo -n "Server name: "
+                read CC_SERVER
+                echo -n "Port (default: 80): "
+                read PORT
+                [ -z "$PORT" ] && PORT="80"
+                echo -n "Use SSL [y/N]: "
+                read ENABLE_SSL
+                [ -z "$ENABLE_SSL" ] && ENABLE_SSL="N"
+                echo -n "Enable hardware inventory [Y/n]: "
+                read INVENTORY
+                [ -z "$INVENTORY" ] && INVENTORY="Y"
+                echo -n "Request timeout (default: 2): "
+                read TIMEOUT
+                [ -z "$TIMEOUT" ] && TIMEOUT="2"
+
+                [ -z "$CC_SERVER" ] && continue
+                [ -z "$(echo ${PORT} | grep '^[0-9]*$')" ] && continue
+                [ "$PORT" -gt "65535" ] || [ "$PORT" -lt "0" ] && continue
+                [ "$ENABLE_SSL" != "Y" ] && [ "$ENABLE_SSL" != "N" ] && continue
+                [ "$INVENTORY" != "Y" ] && [ "$INVENTORY" != "N" ] && continue
+                [ -z "$(echo ${TIMEOUT} | grep '^[0-9]*$')" ] && continue
+                break
+            done
+            echo CC_SERVER=$CC_SERVER > $ROOT/etc/ltsp/getltscfg-cluster.conf
+            echo PORT=$PORT >> $ROOT/etc/ltsp/getltscfg-cluster.conf
+            echo ENABLE_SSL=$ENABLE_SSL >> $ROOT/etc/ltsp/getltscfg-cluster.conf
+            echo INVENTORY=$INVENTORY >> $ROOT/etc/ltsp/getltscfg-cluster.conf
+            echo TIMEOUT=$TIMEOUT >> $ROOT/etc/ltsp/getltscfg-cluster.conf
+        fi
+        ;;
+esac

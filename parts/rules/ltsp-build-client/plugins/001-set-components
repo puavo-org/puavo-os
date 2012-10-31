@@ -1,0 +1,10 @@
+case "$MODE" in
+    commandline)
+            add_option "components" "`eval_gettext "set the components to be used in mirror"`" "advanced" "true"
+            ;;
+    configure)
+            if [ -n "$option_components_value" ]; then
+                COMPONENTS="$(echo $option_components_value | tr ',' ' ')"
+            fi
+            ;;
+esac

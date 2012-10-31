@@ -1,0 +1,17 @@
+case "$MODE" in
+    finalization)
+        if [ -n "$FAT_CLIENT_DESKTOPS" ]; then
+            desktops="$FAT_CLIENT_DESKTOPS"
+        else
+            desktops=$(dpkg -l | sed -n 's/^ii.*\<\(.*buntu-desktop\)\>.*/\1/p')
+        fi
+        # Prefer artwork for desktops other than then default ubuntu one
+        desktops=$(echo $desktops | sed 's/\<ubuntu-desktop\>//')
+        for d in $desktops ubuntu-desktop; do
+            name=${d%-desktop}
+            if chroot $ROOT apt-get $APT_GET_OPTS install ldm-$name-theme; then
+                break
+            fi
+        done
+    ;;
+esac

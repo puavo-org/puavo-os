@@ -1,0 +1,8 @@
+case "$MODE" in
+    after-install)
+        # make sure we use a proper nameserver (LP: #72482)
+        if [ -e /etc/resolv.conf ]; then
+            cp /etc/resolv.conf $ROOT/etc/resolv.conf
+        fi
+        ;;
+esac

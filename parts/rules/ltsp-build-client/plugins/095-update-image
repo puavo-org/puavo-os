@@ -1,0 +1,32 @@
+case "$MODE" in
+    commandline)
+        add_option "skipimage" "`eval_gettext "force to skip the squashfs build (for debian-installer)"`" "advanced" "false"
+        ;;
+    configure)
+        if [ -z "$option_skipimage_value" ]; then
+            # set an environment variable we can pick up later
+            BUILD_IMAGE="True"
+        fi
+        ;;
+    finalization)
+        if [ -n "$BUILD_IMAGE" ]; then
+            DEBIAN_OLD_FRONTEND=$DEBIAN_FRONTEND
+
+            if [ -n "$CHROOT" ]; then
+                UPDATE_IMAGE_OPTIONS="${CHROOT}"
+            fi
+
+            DEBIAN_FRONTEND=noninteractive
+            export DEBIAN_FRONTEND
+
+            chroot $ROOT /etc/kernel/postinst.d/ltsp-update-kernels
+
+            /usr/sbin/ltsp-update-image ${UPDATE_IMAGE_OPTIONS}
+
+            DEBIAN_FRONTEND=$DEBIAN_OLD_FRONTEND
+            export DEBIAN_FRONTEND
+        else
+            echo "Warning: --skipimage set, not building squashfs image, run ltsp-update-image later"
+        fi
+        ;;
+esac

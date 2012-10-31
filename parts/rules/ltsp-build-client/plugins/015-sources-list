@@ -1,0 +1,15 @@
+case "$MODE" in
+    commandline)
+        add_option "copy-sourceslist" "`eval_gettext "use the servers sources.list instead of generating one"`" "advanced" "false"
+        ;;
+    configure)
+        if [ -n "$option_copy_sourceslist_value" ]; then
+            COPY_SOURCES_LIST="True"
+        fi
+        ;;
+    after-install)
+        if [ -n "$COPY_SOURCES_LIST" ]; then
+            cp /etc/apt/sources.list $ROOT/etc/apt/sources.list
+            cp /etc/apt/sources.list.d/*.list $ROOT/etc/apt/sources.list.d/ || true
+        fi
+esac

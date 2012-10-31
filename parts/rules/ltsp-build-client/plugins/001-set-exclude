@@ -1,0 +1,10 @@
+case "$MODE" in
+    commandline)
+        add_option "exclude" "`eval_gettext "exclude packages from the initial chroot"`" "advanced" "true"
+        ;;
+    configure)
+        if [ -n "$option_exclude_value" ]; then
+            EXCLUDE="$option_exclude_value"
+        fi
+        ;;
+esac

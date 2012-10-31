@@ -1,0 +1,26 @@
+case "$MODE" in
+    commandline)
+        add_option "http-proxy" "`eval_gettext "use specified http proxy"`" "advanced" "true"
+        add_option "no-guess-proxy" "`eval_gettext "do not autodetect apt proxy configuration"`" "advanced" "false"
+        ;;
+    configure)
+        if [ -n "$option_http_proxy_value" ]; then
+		export http_proxy="$option_http_proxy_value"
+        fi
+	if [ -z "$option_no_guess_proxy_value" ]; then
+ 		if [ -z "$http_proxy" ]; then
+			eval $(apt-config shell http_proxy acquire::http::proxy)
+			[ "$http_proxy" = "false" ] && http_proxy=""
+			export http_proxy
+		fi
+	fi
+        ;;
+    after-install)
+	if [ -n "$http_proxy" ]; then
+		mkdir -p $ROOT/etc/apt/apt.conf.d
+		cat << EOF > $ROOT/etc/apt/apt.conf.d/00proxy-guess
+acquire::http::proxy "$http_proxy";
+EOF
+	fi
+        ;;
+esac

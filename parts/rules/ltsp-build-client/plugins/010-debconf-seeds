@@ -1,0 +1,18 @@
+case "$MODE" in
+    commandline)
+        add_option "debconf-seeds" "`eval_gettext "load debconf seeding in the chroot after install"`" "advanced" "true"
+        ;;
+    configure)
+        if [ -n "$option_debconf_seeds_value" ]; then
+            DEBCONF_SEEDS="$(echo $option_debconf_seeds_value | tr ',' ' ')"
+        fi
+        ;;
+    after-install)
+        if [ -n "$DEBCONF_SEEDS" ]; then
+            # load debconf preseeding files
+            for seed in $DEBCONF_SEEDS; do
+                cat $seed | chroot $ROOT debconf-set-selections
+            done
+        fi
+        ;;
+esac

@@ -1,0 +1,22 @@
+case "$MODE" in
+    commandline)
+        add_option "enable-popcon" "`eval_gettext "enable popularity-contest in the chroot"`" "advanced" "false"
+        ;;
+    configure)
+        if [ -n "$option_enable_popcon_value" ]; then
+            EARLY_PACKAGES="$EARLY_PACKAGES popularity-contest"
+        fi
+        ;;
+    finalization)
+        if [ -n "$option_enable_popcon_value" ] && [ -f "$ROOT/etc/popularity-contest.conf" ]; then
+            echo "`eval_gettext "Enabling popularity contest..."`"
+            # enable popularity-contest reporting
+            # TODO: handle when PARTICIPATE is not set
+            sed -i -e 's,PARTICIPATE=.*,PARTICIPATE="yes",g' $ROOT/etc/popularity-contest.conf
+           
+            if [ ! -f /etc/cron.daily/popularity-contest-ltsp ]; then
+                ln -s /usr/share/ltsp/scripts/popularity-contest-ltsp /etc/cron.daily/
+            fi
+        fi
+        ;;
+esac

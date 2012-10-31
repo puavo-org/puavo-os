@@ -1,0 +1,10 @@
+case "$MODE" in
+    commandline)
+            add_option "debug" "`eval_gettext "enable debug support"`" "advanced" "false"
+            ;;
+    configure)
+            if [ -n "$option_debug_value" ]; then
+                DEBUG=true # Set on configure to have it set for all plugins
+            fi
+            ;;
+esac

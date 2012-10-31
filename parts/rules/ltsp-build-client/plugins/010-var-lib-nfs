@@ -1,0 +1,6 @@
+case "$MODE" in
+    after-install)
+	    # make sure this is really existing before bind mounting it
+        mkdir $ROOT/var/lib/nfs
+        ;;
+esac

@@ -1,0 +1,16 @@
+case "$MODE" in
+    commandline)
+            add_option "apt-keys" "`eval_gettext "include the listed keys in the apt keyring"`" "advanced" "true"
+            ;;
+    configure)
+            if [ -n "$option_apt_keys_value" ]; then
+                APT_KEYS="$(echo $option_apt_keys_value | tr ',' ' ')"
+            fi
+            ;;
+    after-install)
+            # add keys to the apt keyring
+            for key in $APT_KEYS ; do
+                cat $key | chroot $ROOT apt-key add -
+            done
+            ;;
+esac

@@ -1,0 +1,32 @@
+case "$MODE" in
+    commandline)
+        add_option "pin-dist" "`eval_gettext "distribution to set up apt pinning"`" "advanced" "true"
+        add_option "pin-packages" "`eval_gettext "list of packages to install from the pinned distribution"`" "advanced" "true"
+        ;;
+    configure)
+        if [ -n "$option_pin_dist_value" ]; then
+        	PIN_DIST="$option_pin_dist_value"
+        fi
+        if [ -n "$option_pin_packages_value" ]; then
+		if [ -z "$PIN_DIST" ]; then
+			echo require --pin-dist when using --pin-packages
+			exit 1
+		fi
+        	PIN_PACKAGES="$option_pin_packages_value"
+        fi
+        ;;
+    after-install)
+	if [ -n "$PIN_DIST" ]; then
+		cat << EOF > $ROOT/etc/apt/preferences
+Package: *
+Pin: release a=$PIN_DIST
+Pin-Priority: 101
+EOF
+	        if [ -n "$PIN_PACKAGES" ]; then
+		    for p in $PIN_PACKAGES ; do
+			EARLY_PACKAGES="$EARLY_PACKAGES $p/$PIN_DIST"
+		    done
+        	fi
+	fi
+        ;;
+esac

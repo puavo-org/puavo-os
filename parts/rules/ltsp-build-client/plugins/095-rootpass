@@ -1,0 +1,31 @@
+case "$MODE" in
+    commandline)
+        add_option "prompt-rootpass" "`eval_gettext "prompt to set the root password, defaults to disabled"`" "advanced" "false"
+        ;;
+    configure)
+        if [ -n "$option_prompt_rootpass_value" ]; then
+            ROOTPASS=prompt
+        fi
+        ;;
+    after-install)
+        # Root password is empty by default, lock it
+        # but make sure to not do that if the user requested prompting
+        if [ "$ROOTPASS" != "prompt" ]; then
+            $CHROOTEXEC $ROOT passwd -l root
+        fi
+        ;;
+    finalization)
+        if [ "$ROOTPASS" = "prompt" ]; then
+            # prompt for root password, give at least 3 tries.
+            count=0
+            while [ "$count" -lt "3" ]; do
+                count=$(($count+1))
+                $CHROOTEXEC $ROOT passwd root && break || true
+                if [ "$count" = "3" ]; then
+                    echo "ERROR: failed to set password"
+                    exit 1
+                fi
+            done
+        fi
+        ;;
+esac

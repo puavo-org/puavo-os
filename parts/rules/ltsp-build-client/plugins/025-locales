@@ -1,0 +1,39 @@
+case $MODE in
+    commandline)
+        add_option "locale" "`eval_gettext "set the default locale"`" "advanced" "true"
+        ;;
+    configure)
+        if [ -n "$option_locale_value" ]; then
+            LOCALE="$option_locale_value"
+        fi
+        ;;
+    install)
+        if [ -z "$LOCALE" ]; then
+            LOCALE="$LANG"
+        fi
+
+        # locale-gen can't handle LANG.utf8 locales, it needs LANG.UTF-8
+        if [ "$LOCALE" != "${LOCALE%utf8}" ]; then
+            LOCALE="${LOCALE%utf8}UTF-8"
+        fi
+
+        if [ "$LOCALE" = "C" ]; then
+            chroot $ROOT locale-gen en_GB
+        else
+            chroot $ROOT locale-gen $LOCALE
+        fi
+
+        if [ "$LOCALE" = "C" ] && [ -f /etc/default/locale ]; then
+            cp /etc/default/locale $ROOT/etc/default/
+        else
+            echo "LANG=$LOCALE" >> $ROOT/etc/default/locale
+        fi
+        export LANG="$LOCALE"
+
+        for f in /etc/default/console-setup /etc/default/keyboard; do
+            if [ -f "$f" ]; then
+                cp "$f" "$ROOT/$f"
+            fi
+        done
+        ;;
+esac

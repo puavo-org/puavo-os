@@ -1,0 +1,30 @@
+case "$MODE" in
+    commandline)
+        add_option "install-debs-dir" "`eval_gettext "install to the chroot all the .deb files contained in the provided directory"`" "advanced" "true"
+        ;;
+
+    configure)
+        if [ -n "$option_install_debs_dir_value" ]; then
+            INSTALL_DEBS_DIR="$option_install_debs_dir_value"
+        fi
+        if [ -d "$INSTALL_DEBS_DIR" ]; then
+            # gdebi-core is *required* for dependency resolution.
+            LATE_PACKAGES="$LATE_PACKAGES gdebi-core"
+        fi
+        ;;
+
+    finalization)
+        test -d "$INSTALL_DEBS_DIR" || return 0
+
+        # Use \n to separate the filenames, in case they contain spaces
+        debs="$(find "$INSTALL_DEBS_DIR" -iname '*.deb' -printf '/var/cache/apt/gdebi/%f\n')"
+        test -n "$debs" || return 0
+
+        echo "Installing deb files from $INSTALL_DEBS_DIR"
+        mkdir -p "$ROOT/var/cache/apt/gdebi"
+        mount "$INSTALL_DEBS_DIR" "$ROOT/var/cache/apt/gdebi" --bind
+        echo "$debs" | xargs -d '\n' chroot "$ROOT" gdebi --non-interactive
+        umount "$ROOT/var/cache/apt/gdebi"
+        rmdir --ignore-fail-on-non-empty "$ROOT/var/cache/apt/gdebi"
+        ;;
+esac

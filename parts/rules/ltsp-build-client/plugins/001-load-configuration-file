@@ -1,0 +1,22 @@
+case "$MODE" in
+    commandline)
+        add_option "config" "`eval_gettext "load a user specific configuration file"`" "advanced" "true"
+        ;;
+    configure)
+        if [ -n "$option_config_value" ]; then
+            CONFIG="$option_config_value"
+        elif [ -z "$CONFIG" ] && [ -f "/etc/ltsp/ltsp-build-client.conf" ]; then
+            CONFIG="/etc/ltsp/ltsp-build-client.conf"
+        fi
+        
+        if [ -n "$CONFIG" ]; then
+            if [ -f "$CONFIG" ]; then
+                debug "Loading configuration file '$CONFIG'."
+                . $CONFIG
+            else
+                echo "Failed to read file. '$CONFIG' cannot be found."
+                exit 1
+            fi
+        fi
+        ;;
+esac

@@ -1,0 +1,10 @@
+case "$MODE" in
+    commandline)
+        add_option "dist" "`eval_gettext "set the distribution to be used for install, defaults to running distribution"`" "regular" "true"
+        ;;
+    configure)
+        if [ -n "$option_dist_value" ]; then
+            DIST="$option_dist_value"
+        fi
+        ;;
+esac
