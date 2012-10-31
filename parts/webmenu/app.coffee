@@ -35,7 +35,9 @@ requirefallback = require "./lib/requirefallback"
 
 webmenuHome = process.env.HOME + "/.config/webmenu"
 cachePath = webmenuHome + "/cache"
+spawnPipePath = webmenuHome + "/spawnpipe"
 
+spawnEmitter = require("./lib/spawnevents")(spawnPipePath)
 
 if argv.help
   optimist.showHelp (msg) ->
@@ -147,10 +149,14 @@ window.on "ready", ->
       argv["dev-tools"] = true
       window.frame.openDevTools()
 
+
+# TODO: legacy. remove
 handler.get "/show", (req, res) ->
   res.send "ok"
+  console.warn "Called legacy http /show Use nc -w 1 -U #{ spawnPipePath }"
   displayMenu()
 
+spawnEmitter.on "spawn", displayMenu
 
 bridge.on "open", (msg) ->
   launchCommand(msg)

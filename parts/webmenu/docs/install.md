@@ -18,6 +18,6 @@ the default Ubuntu repositories.
 Start it with `webmenu` command. It should be kept running always and a
 launcher can be created like with this command:
 
-    wget http://localhost:1337/show/ -q -O -
+    nc -w 1 -U ~/.config/webmenu/spawnpipe
 
 
