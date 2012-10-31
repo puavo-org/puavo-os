@@ -10,14 +10,8 @@
     "/usr/share/icons/Neu/128x128/categories"
   ],
   "fallbackIcon":  "/usr/share/icons/Gion/128x128/apps/gnome-terminal.png",
-  "profileCMD": {
-    "type": "webWindow",
-    "url": "http://pahvidemo.opinsys.fi"
-  },
-  "passwordCMD": {
-    "type": "webWindow",
-    "url": "https://toimisto.opinsys.fi/users/password/own"
-  },
+  "profileCMD": null,
+  "passwordCMD": null,
   "settingsCMD": {
     "type": "desktop",
     "command": ["gnome-control-center"]
