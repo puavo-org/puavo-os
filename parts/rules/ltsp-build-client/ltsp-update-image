@@ -1,0 +1,281 @@
+#!/bin/sh
+#
+#  Copyright (c) 2007 Canonical LTD
+#
+#  Author: Oliver Grawert <ogra@canonical.com>
+#
+#  2007, Scott Balneaves <sbalneav@ltsp.org>
+#        Warren Togami <wtogami@redhat.com>
+#  2008, Vagrant Cascadian <vagrant@freegeek.org>
+#  2010, Gideon Romm <gadi@ltsp.org>
+#  2012, Alkis Georgopoulos <alkisg@gmail.com>
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License as
+#  published by the Free Software Foundation; either version 2 of the
+#  License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, you can find it on the World Wide
+#  Web at http://www.gnu.org/copyleft/gpl.html, or write to the Free
+#  Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+#  MA 02110-1301, USA.
+#
+
+usage() {
+    cat <<EOF
+Usage: $0 [OPTION] [CHROOT...]
+Generates an NBD image from an LTSP chroot, to be served by nbd-server.
+Chroot can be a full path or a subdirectory of the LTSP base directory,
+and it defaults to the host architecture if unset.
+
+Options:
+  -b, --base=          The LTSP base directory. Defaults to "/opt/ltsp".
+  -c, --cleanup        Temporarily remove user accounts, logs, caches etc from
+                       the chroot before exporting the image. The chroot arch
+                       is required to be compatible with the server arch.
+  -e, --exclude=       List of dirs/files to exclude from the image.
+                       This is in addition to /etc/ltsp/ltsp-update-image.excludes.
+  -f, --config-nbd     Generate appropriate nbd-server configuration files.
+                       It's automatically set if NFS isn't used or if other LTSP
+                       generated nbd-server configuration files already exist.
+  -h, --help           This message.
+  -m, --no-compress    Don't compress the generated image.
+  -n, --no-backup      Don't backup chroot.img to chroot.img.old.
+  -r, --revert         Swap chroot.img with chroot.img.old and update kernels.
+EOF
+}
+
+trap_cleanup() {
+    # Don't stop on errors within this function.
+    # local - means "restore flags on function exit".
+    local -
+    set +e
+
+    # Stop trapping
+    trap - 0 HUP INT QUIT KILL SEGV PIPE TERM
+    umount_marked
+    rmdir "$cu_chroot"
+    rmdir "$cu_cow"
+    rmdir "$cu_rofs"
+    rmdir "$cu_base"
+    unlock_package_management
+}
+
+# Get a sorted list of all "real" mount points under $chroot,
+# with $chroot included, even if it's not a mount point.
+get_mounts() {
+    local chroot mounts src system point type rest excluded found_chroot
+    chroot=$1
+
+    excluded=",${EXCLUDED_MOUNTS:-/home},"
+    echo "$chroot"
+    while read system point type rest; do
+        case "$excluded" in
+            ,$point,) continue ;;
+        esac
+        # Avoid CDs, USB sticks, virtual file systems etc.
+        case "$type" in
+            btrfs|ext*) true ;;
+            *) continue ;;
+        esac
+        case "$point/" in
+            $chroot/|/dev/*|/proc/*|/run/*|/sys/*) continue ;;
+            ${chroot%/}/*) echo "$point" ;;
+        esac
+    done < /proc/mounts | sort -u
+}
+
+# Create a temporary copy of the chroot and run ltsp-cleanup in it.
+run_cleanup() {
+    local chroot name point
+    chroot=$1
+    name=$2
+
+    if [ ! -x "$chroot/usr/share/ltsp/ltsp-cleanup" ]; then
+        warn "Script $chroot/usr/share/ltsp/ltsp-cleanup does not exist, cannot cleanup the chroot."
+        return 0
+    fi
+    lock_package_management
+    cu_base=$(mktemp -d)
+    cu_rofs="$cu_base/rofs"
+    cu_cow="$cu_base/cow"
+    cu_chroot="$cu_base/$name"
+    mkdir "$cu_rofs"
+    mkdir "$cu_cow"
+    mkdir "$cu_chroot"
+    trap "trap_cleanup" 0 HUP INT QUIT KILL SEGV PIPE TERM
+    while IFS= read -r point; do
+        mark_mount --bind "$chroot${point%/}" "$cu_rofs${point%/}"
+    done <<EOF
+$(get_mounts "$chroot")
+EOF
+    mark_mount -t tmpfs -o mode=0755 tmpfs "$cu_cow"
+
+    # If this is the first time that run_cleanup() is called,
+    # ensure that the overlayfs or aufs module are loaded.
+    if [ -z "$union_type" ]; then
+        # '' is to check if some of them is already loaded
+        for module in '' overlayfs aufs; do
+            if [ -n "$module" ]; then
+                modprobe "$module" || true
+            fi
+            # detect which unionfs to use
+            while read nodev filesystem; do
+                filesystem=${filesystem:-$nodev}
+                case "$filesystem" in
+                    overlayfs) 
+                        union_type=overlayfs
+                        union_opts="upperdir=$cu_cow,lowerdir=$cu_rofs"
+                        # We prefer overlayfs to aufs, so break when found
+                        break
+                        ;;
+                    aufs) 
+                        union_type=aufs
+                        union_opts="dirs=$cu_cow=rw:$cu_rofs=ro"
+                        ;;
+                esac
+            done < /proc/filesystems
+            test -n "$union_type" && break
+        done
+        test -n "$union_type" || die "No overlayfs or aufs support detected"
+        mark_mount -t "$union_type" -o "$union_opts" "$union_type" "$cu_chroot"
+    fi
+    chroot "$cu_chroot" /usr/share/ltsp/ltsp-cleanup --yes
+}
+
+generate_image() {
+    local chroot name imgdir nice ionice
+    chroot=$1
+
+    # If the chroot is a subdir of $BASE, make it an absolute path
+    if [ "$chroot" != "/" ]; then
+        chroot=${chroot%/}
+        test -d "$BASE/$chroot" && chroot="$BASE/$chroot"
+    fi
+    test -d "$chroot" || die "Chroot $chroot does not exist."
+    name=${chroot##*/}
+    name=${name%.*}
+    # If the chroot has no name part, e.g. /, name it after the host arch
+    name=${name:-$(detect_arch)}
+    imgdir=$BASE/images
+    mkdir -p "$imgdir"
+
+    if [ "$REVERT" = true ]; then
+        test -f "$imgdir/$name.img.old" ||
+            die "$imgdir/$name.img.old is missing, cannot revert to it"
+        if [ -f "$imgdir/$name.img" ]; then
+            # Swap old with new file
+            mv "$imgdir/$name.img" "$imgdir/$name.img.tmp"
+            mv "$imgdir/$name.img.old" "$imgdir/$name.img"
+            mv "$imgdir/$name.img.tmp" "$imgdir/$name.img.old"
+        else
+            mv "$imgdir/$name.img.old" "$imgdir/$name.img"
+        fi
+        echo "Reverted to $imgdir/$name.img.old, please reboot your clients."
+    else
+        cu_chroot=$chroot
+        if [ "$CLEANUP" = true ]; then
+            # run_cleanup sets cu_chroot=$cu_base/$name for mksquashfs
+            run_cleanup "$chroot" "$name"
+        fi
+
+        test -f /etc/ltsp/ltsp-update-image.excludes && EXCLUDE_FILE="/etc/ltsp/ltsp-update-image.excludes"
+        test -x /usr/bin/nice && nice=nice || unset nice
+        test -x /usr/bin/ionice && /usr/bin/ionice -c3 true 2>/dev/null && ionice=ionice || unset ionice
+        if ! $nice $ionice mksquashfs "$cu_chroot" "$imgdir/$name.img.tmp" \
+            -no-recovery -noappend -wildcards ${EXCLUDE_FILE:+-ef "$EXCLUDE_FILE"} \
+            ${EXCLUDE:+-e "$EXCLUDE"} ${NO_COMPRESS:+-noF -noD -noI -no-exports}
+        then
+            rm -f "$imgdir/$name.img.tmp"
+            die "mksquashfs failed to build the LTSP image, exiting"
+        fi
+        if [ -f "$imgdir/$name.img" ] && [ "$NO_BACKUP" != true ]; then
+            mv "$imgdir/$name.img" "$imgdir/$name.img.old"
+        fi
+        mv "$imgdir/$name.img.tmp" "$imgdir/$name.img"
+    fi
+
+    PREFER_NBD_IMAGE="$REVERT" ltsp-update-kernels ${BASE:+-b "$BASE"} "$name"
+
+    if [ "$cu_chroot" != "$chroot" ] && [ "$REVERT" != true ]; then
+        trap_cleanup
+    fi
+}
+
+
+# Distro specific functions
+
+lock_package_management() {
+    warn "Your distro doesn't support package management locking, continuing without locking..."
+}
+
+unlock_package_management() {
+    if [ -n "$lockpid" ]; then
+        kill "$lockpid" || true
+        unset lockpid
+    fi
+}
+
+
+# This also sources vendor functions and .conf file settings
+. /usr/share/ltsp/ltsp-server-functions
+
+if ! args=$(getopt -n "$0" -o "b:ce:fhmnr" \
+    -l "base:,cleanup,exclude:,config-nbd,help,no-compress,no-backup,revert" -- "$@")
+then
+    exit 1
+fi
+eval "set -- $args"
+while true ; do
+    case "$1" in
+        -b|--base) shift; BASE=$1 ;;
+        -c|--cleanup) CLEANUP=true ;;
+        -e|--exclude) shift; EXCLUDE=$1 ;;
+        -f|--config-nbd) CONFIG_NBD=true ;;
+        -h|--help) usage; exit 0 ;;
+        -m|--no-compress) NO_COMPRESS=true ;;
+        -n|--no-backup) NO_BACKUP=true ;;
+        -r|--revert) REVERT=$1 ;;
+        --) shift ; break ;;
+        *) die "$0: Internal error!" ;;
+    esac
+    shift
+done
+require_root
+
+BASE=${BASE:-/opt/ltsp}
+# Remove trailing /, if present
+BASE=${BASE%/}
+if [ -z "$CONFIG_NBD" ]; then
+    if [ -d /etc/nbd-server/conf.d ] &&
+        [ -n "$(find /etc/nbd-server/conf.d/ -type f -name 'ltsp_*.conf' ! -name ltsp_swap.conf)" ]
+    then
+        CONFIG_NBD=true
+    fi
+    if [ -z "$CONFIG_NBD" ]; then
+        if grep -qsr ^/opt/ltsp /etc/exports /etc/exports.d/; then
+            die "Your system seems to be using NFS to serve LTSP chroots.
+If you're absolutely certain you want to switch to NBD, run:
+    $0 --config-nbd $*"
+        fi
+    fi
+fi
+
+# Chroots can be specified in the command line. If not, update all of them.
+if [ $# -eq 0 ]; then
+    set -- $(find "$BASE/" -mindepth 1 -maxdepth 1 -type d ! -name images \
+        -printf "%f\n")
+fi
+test $# -gt 0 || die "No chroots found in $BASE"
+
+for chroot in "$@"; do
+    generate_image "$chroot"
+done
+
+ltsp-config nbd-server
