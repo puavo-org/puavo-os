@@ -1,0 +1,42 @@
+case "$MODE" in
+    commandline)
+        add_option "initramfs-ssh" "`eval_gettext "install dropbear ssh server in initramfs"`" "advanced" "false"
+        ;;
+
+    configure)
+        if [ -n "$option_initramfs_ssh_value" ]; then
+            LATE_PACKAGES="$LATE_PACKAGES dropbear"
+            INSTALL_DROPBEAR=true
+        fi
+        ;;
+
+    finalization)
+        if [ "true" = "$INSTALL_DROPBEAR" ]; then
+          cat <<'EOF' >$ROOT/etc/default/dropbear
+# disabled because OpenSSH is installed
+# change to NO_START=0 to enable Dropbear
+NO_START=0
+
+# the TCP port that Dropbear listens on
+DROPBEAR_PORT=1022
+
+# any additional arguments for Dropbear
+DROPBEAR_EXTRA_ARGS=
+
+# specify an optional banner file containing a message to be
+# sent to clients before they connect, such as "/etc/issue.net"
+DROPBEAR_BANNER=""
+
+# RSA hostkey file (default: /etc/dropbear/dropbear_rsa_host_key)
+#DROPBEAR_RSAKEY="/etc/dropbear/dropbear_rsa_host_key"
+
+# DSS hostkey file (default: /etc/dropbear/dropbear_dss_host_key)
+#DROPBEAR_DSSKEY="/etc/dropbear/dropbear_dss_host_key"
+
+# Receive window size - this is a tradeoff between memory and
+# network performance
+DROPBEAR_RECEIVE_WINDOW=65536
+EOF
+        fi
+        ;;
+esac
