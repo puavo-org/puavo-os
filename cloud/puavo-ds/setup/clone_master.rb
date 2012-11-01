@@ -49,6 +49,7 @@ config.each_line {|line|
     tempfile.puts "olcDbIndex: puavoHostname pres,eq,sub"
     tempfile.puts "olcDbIndex: displayName,puavoEduPersonReverseDisplayName pres,eq,sub"
     tempfile.puts "olcDbIndex: uid pres,eq"
+    tempfile.puts "olcDbIndex: krbPrincipalName pres,eq"
     tempfile.puts "olcDbIndex: cn,sn,mail,givenName pres,eq,approx,sub"
     tempfile.puts "olcDbIndex: objectClass eq"
     tempfile.puts "olcDbIndex: entryUUID eq"
