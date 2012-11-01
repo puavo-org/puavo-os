@@ -1,11 +1,17 @@
 case "$MODE" in
     commandline)
         add_option "skipimage" "`eval_gettext "force to skip the squashfs build (for debian-installer)"`" "advanced" "false"
+        add_option "onlyimage" "`eval_gettext "create only the image and skip all configurations"`" "advanced" "false"
         ;;
     configure)
         if [ -z "$option_skipimage_value" ]; then
             # set an environment variable we can pick up later
             BUILD_IMAGE="True"
+        fi
+
+        if [ -z "$option_onlyimage_value" ]; then
+            # set an environment variable we can pick up later
+            MODIFY_HOST_SETTINGS="True"
         fi
         ;;
     finalization)
@@ -21,7 +27,12 @@ case "$MODE" in
 
             chroot $ROOT /etc/kernel/postinst.d/ltsp-update-kernels
 
-            /usr/sbin/ltsp-update-image ${UPDATE_IMAGE_OPTIONS}
+            if [ -n "$MODIFY_HOST_SETTINGS" ]; then
+                ./ltsp-update-image ${UPDATE_IMAGE_OPTIONS}
+            else
+                ./ltsp-update-image --onlyimage ${UPDATE_IMAGE_OPTIONS}
+                echo "Info: --onlyimage set, not doing any configurations for the host system"
+            fi
 
             DEBIAN_FRONTEND=$DEBIAN_OLD_FRONTEND
             export DEBIAN_FRONTEND
