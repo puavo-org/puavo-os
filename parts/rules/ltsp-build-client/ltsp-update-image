@@ -48,6 +48,7 @@ Options:
   -m, --no-compress    Don't compress the generated image.
   -n, --no-backup      Don't backup chroot.img to chroot.img.old.
   -r, --revert         Swap chroot.img with chroot.img.old and update kernels.
+  -o, --onlyimage      Skip all configurations and just create the image
 EOF
 }
 
@@ -201,7 +202,9 @@ generate_image() {
         mv "$imgdir/$name.img.tmp" "$imgdir/$name.img"
     fi
 
-    PREFER_NBD_IMAGE="$REVERT" ltsp-update-kernels ${BASE:+-b "$BASE"} "$name"
+    if [ "$ONLYIMAGE" != true ]; then
+      PREFER_NBD_IMAGE="$REVERT" ltsp-update-kernels ${BASE:+-b "$BASE"} "$name"
+    fi
 
     if [ "$cu_chroot" != "$chroot" ] && [ "$REVERT" != true ]; then
         trap_cleanup
@@ -227,7 +230,7 @@ unlock_package_management() {
 . /usr/share/ltsp/ltsp-server-functions
 
 if ! args=$(getopt -n "$0" -o "b:ce:fhmnr" \
-    -l "base:,cleanup,exclude:,config-nbd,help,no-compress,no-backup,revert" -- "$@")
+    -l "base:,cleanup,exclude:,config-nbd,help,no-compress,no-backup,revert,onlyimage" -- "$@")
 then
     exit 1
 fi
@@ -242,6 +245,7 @@ while true ; do
         -m|--no-compress) NO_COMPRESS=true ;;
         -n|--no-backup) NO_BACKUP=true ;;
         -r|--revert) REVERT=$1 ;;
+        -o|--onlyimage) ONLYIMAGE=true ;;
         --) shift ; break ;;
         *) die "$0: Internal error!" ;;
     esac
@@ -278,4 +282,6 @@ for chroot in "$@"; do
     generate_image "$chroot"
 done
 
-ltsp-config nbd-server
+if [ "$ONLYIMAGE" != true ]; then
+  ltsp-config nbd-server
+fi
