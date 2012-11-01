@@ -25,16 +25,17 @@ cp -a $srcdir $srccopydir
 {
   sudo env LTSP_BUILD_CLIENT_DIR=$srccopydir/ltsp-build-client \
 	 $srccopydir/ltsp-build-client/ltsp-build-client \
-	 --arch           $arch \
-	 --base           $basedir \
-	 --config         $srccopydir/ltsp-build-client/config \
-	 --mirror         $mirror \
-	 --purge-chroot   \
-	 --serial-console \
+	 --arch            $arch \
+	 --base            $basedir \
+	 --config          $srccopydir/ltsp-build-client/config \
+	 --mirror          $mirror \
+	 --purge-chroot    \
+	 --prompt-rootpass \
+	 --serial-console  \
 	 --skipimage
 
   sudo mksquashfs \
 	 $basedir/$arch /images/$build_version-$arch.img \
-	 -noappend -no-progress -no-recovery \
-	 -wildcards -ef /etc/ltsp/ltsp-update-image.excludes
+	 -noappend -no-progress -no-recovery -wildcards \
+	 -ef $srccopydir/ltsp-build-client/ltsp-update-image.excludes
 } 2>&1 | tee $build_logfile
