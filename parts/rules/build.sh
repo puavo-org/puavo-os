@@ -23,16 +23,18 @@ build_logfile=$srcdir/log/$build_version.log
 cp -a $srcdir $srccopydir
 
 {
-  sudo env LTSP_BUILD_CLIENT_DIR=$srccopydir/ltsp-build-client \
-	 $srccopydir/ltsp-build-client/ltsp-build-client \
-	 --arch            $arch \
-	 --base            $basedir \
-	 --config          $srccopydir/ltsp-build-client/config \
-	 --mirror          $mirror \
-	 --purge-chroot    \
-	 --prompt-rootpass \
-	 --serial-console  \
-	 --skipimage
+  sudo env LTSP_CUSTOM_PLUGINS="$srccopydir/ltsp-build-client/plugins" \
+    $srccopydir/ltsp-build-client/ltsp-build-client \
+      --arch               $arch \
+      --base               $basedir \
+      --config             $srccopydir/ltsp-build-client/config \
+      --debconf-seeds      $srccopydir/ltsp-build-client/debconf.seeds \
+      --install-debs-dir   $srccopydir/ltsp-build-client/debs \
+      --mirror             $mirror \
+      --purge-chroot       \
+      --puppet-sources-dir $srccopydir/ltsp-build-client/puppet \
+      --serial-console     \
+      --skipimage
 
   sudo mksquashfs \
 	 $basedir/$arch /images/$build_version-$arch.img \
