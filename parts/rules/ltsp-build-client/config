@@ -1,7 +1,3 @@
-DEBCONF_SEEDS="$LTSP_BUILD_CLIENT_DIR/debconf.seeds"
-INSTALL_DEBS_DIR="$LTSP_BUILD_CLIENT_DIR/debs"
-LTSP_CUSTOM_PLUGINS="$LTSP_BUILD_CLIENT_DIR/plugins"
-
 LATE_PACKAGES="
   bridge-utils
   btrfs-tools
@@ -17,4 +13,9 @@ LATE_PACKAGES="
   ubuntu-restricted-extras
   ubuntu-standard
   vlan
+"
+
+PUPPET_USE_CLASSES="
+  adm_users
+  testmod
 "
