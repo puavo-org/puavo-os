@@ -18,6 +18,8 @@ $0 [OPTION] command
   -m, --mount-all           Mount all server dirs mentioned in this message.
   -p, --mount-proc          Mount /proc from server.
   -r, --copy-resolv-conf    Copy /etc/resolv.conf from server.
+  --puppet-sources-dir      Copy puppet sources from server dir to chroot's /etc/puppet/ltsp-build-client
+  --puppet-use-classes      Run puppet with the specified from chroot's /etc/puppet/ltsp-build-client
 EOF
 }
 
@@ -86,7 +88,7 @@ mount_package_cache() {
 
 # The command line parameters override the configuration file settings
 if ! args=$(getopt -n "$0" -o +a:b:cdhmpr -l \
-    'arch:,base:,mount-package-cache,mount-dev,help,mount-all,mount-proc,copy-resolv-conf' -- "$@"); then
+    'arch:,base:,mount-package-cache,mount-dev,help,mount-all,mount-proc,copy-resolv-conf,puppet-sources-dir:,puppet-use-classes:' -- "$@"); then
     exit 1
 fi
 eval "set -- $args"
@@ -100,6 +102,8 @@ while true; do
         -m|--mount-all) MOUNT_ALL=true ;;
         -p|--mount-proc) MOUNT_PROC=true ;;
         -r|--copy-resolv-conf) COPY_RESOLV_CONF=true ;;
+        --puppet-sources-dir) shift; PUPPET_SOURCES_DIR=$1 ;;
+        --puppet-use-classes) shift; PUPPET_USE_CLASSES=$1 ;;
         --) shift; break ;;
         *) die "$0: Internal error!" ;;
     esac
@@ -113,4 +117,16 @@ require_root
 
 trap "post_chroot" 0 HUP INT QUIT KILL SEGV PIPE TERM
 pre_chroot
-LTSP_HANDLE_DAEMONS=false chroot "$ROOT" "$@"
+
+if [ -n "$PUPPET_SOURCES_DIR" ]; then
+  rm -rf "$ROOT/etc/puppet/ltsp-build-client/"
+  cp -a $PUPPET_SOURCES_DIR "$ROOT/etc/puppet/ltsp-build-client/"
+fi
+
+if [ -n "$PUPPET_USE_CLASSES" ]; then
+  LTSP_HANDLE_DAEMONS=false chroot "$ROOT" puppet apply \
+    --modulepath=/etc/puppet/ltsp-build-client \
+    --execute "include $(echo $PUPPET_USE_CLASSES | tr ' ' ',')"
+else
+  LTSP_HANDLE_DAEMONS=false chroot "$ROOT" "$@"
+fi
