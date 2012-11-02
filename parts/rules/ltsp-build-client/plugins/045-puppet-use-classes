@@ -1,0 +1,35 @@
+case "$MODE" in
+    commandline)
+        add_option "puppet-sources-dir" \
+          "`eval_gettext "a directory of puppet sources"`" "advanced" "true"
+        add_option "puppet-use-classes" \
+          "`eval_gettext "a comma-separated list of puppet classes to use"`" \
+          "advanced" "true"
+        ;;
+    configure)
+        if [ -n "$option_puppet_sources_dir_value" ]; then
+            PUPPET_SOURCES_DIR=$option_puppet_sources_dir_value
+        fi
+        if [ -n "$option_puppet_use_classes_value" ]; then
+            PUPPET_USE_CLASSES=$(echo $option_puppet_use_classes_value \
+                                   | tr ',' ' ')
+        fi
+        if [ -n "$PUPPET_SOURCES_DIR" -a -n "$PUPPET_USE_CLASSES" ]; then
+            # we need a puppet interpreter to use puppet classes
+            LATE_PACKAGES="$LATE_PACKAGES puppet-common"
+        fi
+        ;;
+    finalization)
+        if [ -n "$PUPPET_SOURCES_DIR" -a -n "$PUPPET_USE_CLASSES" ]; then
+            cp -a $PUPPET_SOURCES_DIR $ROOT/etc/puppet/ltsp-build-client
+
+            # should also use --detailed-exitcodes and behave accordingly
+            chroot $ROOT puppet apply \
+              --modulepath=/etc/puppet/ltsp-build-client \
+              --execute "include $(echo $PUPPET_USE_CLASSES | tr ' ' ',')"
+
+            # XXX we might want to do this:
+            # rm -rf $ROOT/etc/puppet/ltsp-build-client
+        fi
+        ;;
+esac
