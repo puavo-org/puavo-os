@@ -10,26 +10,44 @@ Software requirements
 *   PySide >= 1.0.0 (>= 1.0.7 preferred)
 *   Qt >= 4.6
 
-To install PySide on Ubuntu, enable the community repository and install the `python-pyside` meta-package. This will also pull all required Qt packages.
+The `python-pyside` meta-package will pull all required Qt packages.
+
+      sudo apt-get install python-pyside
+
+PySide has been included to mainstream Ubuntu repositiories, but pre-2012 releases, you need to enable the PySide community repository.
 
       sudo add-apt-repository ppa:pyside
       sudo apt-get update
-      sudo apt-get install python-pyside
+
+Build and install the debian package. It is architecture independent.
+
+      sudo apt-get install python-stdeb debhelper
+      cd iivari/client
+      make deb
+      sudo dpkg -i deb_dist/iivari-client_<version>.deb
+
 
 Setup
 -----
 
-Insert the server url into `iivari/settings.py`.
+Iivari client can be configured via JSON formatted rc file.
+Configure the proper server address.
 
-Run the tests with nose (contains integration tests so ensure the iivari server is running):
+    #
+    # Iivari client settings
+    # Place this file to either ~/.iivarirc or /etc/iivarirc
+    #
+    {
+            # Server base URL
+            "SERVER_BASE" : "http://localhost:3000/conductor",
 
-      sudo apt-get install python-pip
-      sudo pip install nose
-      nosetests
+            # Logger level -- FATAL, WARN, INFO, DEBUG
+            "LOG_LEVEL"   : "INFO",
 
-Test the display hardware in offline mode:
+            # Use shell color codes in log files? -- True, False
+            "LOG_COLORS"  : "True"
+    }
 
-      bin/iivari-display_test_pattern
 
 Start the kiosk slideshow:
 
@@ -54,22 +72,36 @@ Such as
       while (true); do bin/iivari-kiosk; done
 
 
+Test Suite
+----------
+
+Run the tests with nose (contains integration tests so ensure the iivari server is running):
+
+      sudo apt-get install python-pip
+      sudo pip install nose
+      nosetests
+
+Test the display hardware in offline mode:
+
+      bin/iivari-display_test_pattern
+
+
 Copyright
----------
+=========
 
-Copyright © 2011 Opinsys Oy
+Copyright © 2011-2012 Opinsys Oy
 
-This program is free software; you can redistribute it and/or modify it 
-under the terms of the GNU General Public License as published by the 
-Free Software Foundation; either version 2 of the License, or (at your 
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or (at your
 option) any later version.
 
-This program is distributed in the hope that it will be useful, but 
-WITHOUT ANY WARRANTY; without even the implied warranty of 
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General 
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
 Public License for more details.
 
-You should have received a copy of the GNU General Public License along 
-with this program; if not, write to the Free Software Foundation, Inc., 
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
