@@ -51,13 +51,13 @@ Configure the proper server address.
 
 Start the kiosk slideshow:
 
-      bin/iivari-kiosk
+      iivari-kiosk
 
 You may optionally specify kiosk hostname and screen resolution as input parameters. An interactive JavaScript console is also available in the REPL mode. See "`iivari-kiosk --help`" for usage.
 
 For example:
 
-      bin/iivari-kiosk -n kiosk1
+      iivari-kiosk -n kiosk1
 
 Starts with the hostname "kiosk1".
 
@@ -69,7 +69,7 @@ This is for the OS to prevent possible memory leaks from happening if QWebView w
 
 Such as
 
-      while (true); do bin/iivari-kiosk; done
+      while (true); do iivari-kiosk; done
 
 
 Test Suite
@@ -83,7 +83,7 @@ Run the tests with nose (contains integration tests so ensure the iivari server 
 
 Test the display hardware in offline mode:
 
-      bin/iivari-display_test_pattern
+      iivari-display_test_pattern
 
 
 Copyright
