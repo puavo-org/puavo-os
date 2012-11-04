@@ -181,21 +181,22 @@ class ConcurrentRotatingFileHandler(BaseRotatingHandler):
         lock(self.stream_lock, LOCK_EX)
         if self.stream.closed:
             self._openFile(self.mode)
-    
+
     def release(self):
         """ Release file and thread locks. Flush stream and take care of closing
         stream in 'degraded' mode. """
         try:
-            self.stream.flush()
-            if self._rotateFailed:
-                self.stream.close()
+            if not self.stream.closed:
+                self.stream.flush()
+                if self._rotateFailed:
+                    self.stream.close()
         finally:
             try:
                 unlock(self.stream_lock)
             finally:
                 # release thread lock
                 Handler.release(self)
-    
+
     def close(self):
         """
         Closes the stream.
