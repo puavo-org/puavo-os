@@ -6,7 +6,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(name="iivari-client",
-      version="1.3.1",
+      version="1.3.2",
       maintainer="Juha Erkkilä",
       maintainer_email="Juha.Erkkila@opinsys.fi",
       url="https://github.com/opinsys/iivari/",
