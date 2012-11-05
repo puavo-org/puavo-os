@@ -19,10 +19,7 @@ COOKIE_PATH = os.path.join(CACHE_PATH, 'cookiejar.txt')
 # authentication key file.
 AUTHKEY_FILE = os.path.join(IIVARIDIR, 'auth')
 
-# log file location. leave undefined for console output.
-LOG_FILE = os.path.join(IIVARIDIR, 'log', 'iivari.log')
-
-# Rest of the settings may be configured from iivarirc file.
+# SERVER_BASE and logging can be configured in iivarirc file.
 # /etc/iivarirc is global and individual settings may be overridden
 # from ~/.iivarirc
 global_rc = "/etc/iivarirc"
@@ -65,3 +62,12 @@ if 'LOG_COLORS' in rc_config:
     LOG_COLORS = (colors == "True")
 else:
     LOG_COLORS = True
+
+# use alternative log file
+if 'LOG_FILE' in rc_config:
+    log_file = rc_config['LOG_FILE']
+    if log_file != "None":
+        LOG_FILE = rc_config['LOG_FILE']
+else:
+    LOG_FILE = os.path.join(IIVARIDIR, 'log', 'iivari.log')
+

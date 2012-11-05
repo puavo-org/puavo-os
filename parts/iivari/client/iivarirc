@@ -1,5 +1,5 @@
 #
-# Iivari settings.
+# Iivari client settings.
 # Place this file to either ~/.iivarirc or /etc/iivarirc.
 #
 {
@@ -7,8 +7,12 @@
 	"SERVER_BASE" : "http://localhost:3000/conductor",
 
 	# Logger level -- FATAL, WARN, INFO, DEBUG
-	"LOG_LEVEL"   : "DEBUG",
-	
+	"LOG_LEVEL"   : "INFO",
+
 	# Use shell color codes in log files? -- True, False
-	"LOG_COLORS"  : "True"
+	"LOG_COLORS"  : "True",
+
+	# Log file location, set to "None" for stdout.
+	# The default is ~/.iivari/log/iivari.log
+	"LOG_FILE"  : "/home/infotv/iivari.log"
 }
