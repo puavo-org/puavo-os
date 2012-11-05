@@ -6,7 +6,7 @@
   1. Rebase to master
   1. Extract node.js binary tarball to `./nodejs`
   7. Update `debian/changelog` with `dch -i`
-  8. Go to the parent dir and execute `./webmenu/builddeb.sh`
+  8. Execute `debuild -us -uc`
   9. Hope for the best
 
 
