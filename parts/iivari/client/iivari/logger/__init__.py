@@ -15,8 +15,8 @@ try:
     LOG_FILE = __builtin__.LOG_FILE
 except AttributeError:
     pass
-if LOG_FILE is not None:
-    print "Logging to %s" % LOG_FILE
+# if LOG_FILE is not None:
+#     print "Logging to %s" % LOG_FILE
 
 ConcurrentRotatingColoredLogger.filename = LOG_FILE
 
