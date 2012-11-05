@@ -176,7 +176,8 @@ class MainWebView(QtWebKit.QWebView):
             token = hostname+":"+hashlib.sha1(hostname+":"+key).hexdigest()
             return token
         except Exception, e:
-            logger.warn("Failed to read authentication key: "+str(e))
+            # suppress warning to debug level, as this feature is not yet used
+            logger.debug("Failed to read authentication key: " + str(e))
             return None
 
 
