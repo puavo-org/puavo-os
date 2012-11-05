@@ -5,8 +5,12 @@ import os, glob
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+# Import package version. Relative path is searched
+# before system python packages.
+from iivari import __version__
+
 setup(name="iivari-client",
-      version="1.3.2",
+      version=__version__,
       maintainer="Juha Erkkilä",
       maintainer_email="Juha.Erkkila@opinsys.fi",
       url="https://github.com/opinsys/iivari/",
