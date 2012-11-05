@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Turn screen on and disable screensaver
+iivari-display_on
+
+# Disable the mouse cursor (unclutter)
+unclutter -idle 1 -root &
+
+# Start iivari-infotv
+python -m iivari.kiosk "$@"
