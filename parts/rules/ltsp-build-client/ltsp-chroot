@@ -102,8 +102,8 @@ while true; do
         -m|--mount-all) MOUNT_ALL=true ;;
         -p|--mount-proc) MOUNT_PROC=true ;;
         -r|--copy-resolv-conf) COPY_RESOLV_CONF=true ;;
-        --puppet-sources-dir) shift; PUPPET_SOURCES_DIR=$1 ;;
-        --puppet-use-classes) shift; PUPPET_USE_CLASSES=$1 ;;
+           --puppet-module-dirs) shift; PUPPET_MODULE_DIRS=$1 ;;
+           --puppet-use-classes) shift; PUPPET_USE_CLASSES=$1 ;;
         --) shift; break ;;
         *) die "$0: Internal error!" ;;
     esac

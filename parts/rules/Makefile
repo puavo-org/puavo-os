@@ -3,7 +3,7 @@ TARGETS = all build configure image
 default:
 	@echo "Available targets are: ${TARGETS}"
 
-all: build configure image
+all: build image
 
 build configure image:
 	./build.sh $@
