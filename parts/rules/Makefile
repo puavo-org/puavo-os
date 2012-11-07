@@ -5,5 +5,5 @@ default:
 
 all: build image
 
-build configure image:
+build configure chroot image:
 	./build.sh $@
