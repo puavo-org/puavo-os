@@ -1,0 +1,16 @@
+Short explanations for puppet modules listed here (to know exactly what
+they do, you need to look inside):
+
+adm_users
+    a helper module for creating administrative user accounts and setting up
+    their public ssh-keys for authentication
+
+app_bash
+    special bash-configurations for administrative user accounts
+
+config
+    set organisation name and other widely applied parameters
+
+organisation_adm_users
+    list actual, real-life people here to create actual administrative user
+    accounts
