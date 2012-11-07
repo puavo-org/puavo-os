@@ -14,3 +14,6 @@ config
 organisation_adm_users
     list actual, real-life people here to create actual administrative user
     accounts
+
+packages
+    lists packages that are to be installed to ltsp images
