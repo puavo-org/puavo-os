@@ -25,7 +25,9 @@ build_name=$(git branch | awk '$1 == "*" { print $2 }')
 build_version=ltsp-$build_name-$build_date
 build_logfile=$srcdir/log/$build_version-$mode.log
 
-cp -a $srcdir $srccopydir
+cp -pLR $srcdir $srccopydir
+
+puppet_module_dirs=$srccopydir/ltsp-build-client/puppet/opinsys:$srccopydir/ltsp-build-client/puppet/ltsp
 
 {
   case "$mode" in
@@ -38,8 +40,8 @@ cp -a $srcdir $srccopydir
           --debconf-seeds      $srccopydir/ltsp-build-client/debconf.seeds \
           --install-debs-dir   $srccopydir/ltsp-build-client/debs \
           --mirror             $mirror \
+          --puppet-module-dirs $puppet_module_dirs \
           --purge-chroot       \
-          --puppet-sources-dir $srccopydir/ltsp-build-client/puppet \
           --serial-console     \
           --skipimage
       ;;
@@ -48,10 +50,10 @@ cp -a $srcdir $srccopydir
         $srccopydir/ltsp-build-client/ltsp-chroot \
           --base $basedir \
           --mount-all \
-          --puppet-sources-dir $srccopydir/ltsp-build-client/puppet \
-          --puppet-use-classes "organisation_adm_users"
+          --puppet-module-dirs $puppet_module_dirs
       ;;
     image)
+      # XXX ltsp-build-client --onlyimage ?
       sudo mksquashfs \
              $basedir/$arch /images/$build_version-$arch.img \
              -noappend -no-progress -no-recovery -wildcards \
