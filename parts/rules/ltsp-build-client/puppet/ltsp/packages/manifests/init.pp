@@ -6,6 +6,7 @@ class packages {
               , 'ltsp-server'
               , 'lvm2'
               , 'nfs-common'
+              , 'openssh-client'
               , 'openssh-server'
               , 'tmux'
               , 'tshark'
