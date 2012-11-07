@@ -1,9 +1,9 @@
-TARGETS = all build configure image
+TARGETS = all build configure chroot image
 
 default:
 	@echo "Available targets are: ${TARGETS}"
 
 all: build image
 
-build configure chroot image:
+${TARGETS}:
 	./build.sh $@
