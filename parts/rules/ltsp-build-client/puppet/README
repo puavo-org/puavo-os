@@ -1,0 +1,49 @@
+Here are some puppet modules and classes for configuring ltsp images.
+They should be included in directories, and puppet will use puppet modules
+in these directories, if:
+
+  a module directory path is included as a parameter for
+  --puppet-module-dirs command line switch given to ltsp-build-image,
+  or in a PUPPET_MODULE_DIRS-variable to its config-file
+
+and if,
+
+  a class name within a module (may typically be simply a module name) is
+  included as a parameter for --puppet-use-classes switch to ltsp-build-image,
+  or in a PUPPET_USE_CLASSES-variable to its config-file
+
+There may be several of both.  PUPPET_MODULE_DIRS and PUPPET_USE_CLASSES use
+whitespace as separators, whereas --puppet-module-dirs uses colon (:) as
+path separator, and --puppet-use-classes uses comma (,) as a separator.
+
+For each module to be used, module directories are searched in the order
+that module directory paths are given, and only the first path where a module
+is found is used.
+
+Examples:
+
+In case we have puppet modules and corresponding classes defined in paths:
+
+  /home/user/puppet/foo/manifests/init.pp
+  /home/user/puppet/quux/manifests/init.pp
+  /etc/puppet/modules/foo/manifests/init.pp
+  /etc/puppet/modules/bar/manifests/init.pp
+
+and we run:
+
+  ltsp-build-image --puppet-module-dirs /etc/puppet/modules:/home/user/puppet \
+                   --puppet-use-classes foo,bar,quux
+
+This will use puppet classes defined in:
+
+  /home/user/puppet/foo/manifests/init.pp
+  /etc/puppet/modules/bar/manifests/init.pp
+  /home/user/puppet/quux/manifests/init.pp
+
+It will *not* use /etc/puppet/modules/foo/manifests/init.pp, because
+/home/user/puppet/foo/manifests/init.pp overrides it.
+
+The equivalent configuration for ltsp-build-image is:
+
+PUPPET_MODULE_DIRS="/etc/puppet/modules /home/user/puppet"
+PUPPET_USE_CLASSES="foo bar quux"
