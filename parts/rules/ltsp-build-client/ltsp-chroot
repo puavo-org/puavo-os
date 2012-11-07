@@ -143,14 +143,23 @@ if [ -n "$PUPPET_MODULE_DIRS" ]; then
   done
 
   if [ -n "$PUPPET_USE_CLASSES" ]; then
-    # should also use --detailed-exitcodes and behave accordingly
-    LTSP_HANDLE_DAEMONS=false \
-      chroot "$ROOT" puppet apply \
-        --modulepath="$(echo $PUPPET_MODULE_DIRS \
-                         | xargs -n1 basename \
-                         | awk '{ printf "/etc/puppet/ltsp-build-client/%s:", $1 }' \
-                         | sed 's/:$//')" \
-        --execute "include $(echo $PUPPET_USE_CLASSES | tr ' ' ',')"
+    PUPPET_LOGFILE_PATH="/var/log/puppet/ltsp-chroot-$(date +%Y-%m-%d-%H%M%S).log"
+    # another script for this (could be in chroot) ?
+    if LTSP_HANDLE_DAEMONS=false \
+         chroot "$ROOT" puppet apply \
+           --detailed-exitcodes \
+           --logdest console \
+           --logdest "$PUPPET_LOGFILE_PATH" \
+           --modulepath="$(echo $PUPPET_MODULE_DIRS \
+                            | xargs -n1 basename \
+                            | awk '{ printf "/etc/puppet/ltsp-build-client/%s:", $1 }' \
+                            | sed 's/:$//')" \
+           --execute "include $(echo $PUPPET_USE_CLASSES | tr ' ' ',')" \
+         || [ $? -eq 2 ]; then
+      rm -f "$ROOT/puppet-error.log"
+    else
+      ln -fns "$PUPPET_LOGFILE_PATH" "$ROOT/puppet-error.log"
+    fi
   fi
 fi
 
