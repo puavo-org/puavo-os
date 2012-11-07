@@ -1,20 +1,4 @@
-LATE_PACKAGES="
-  bridge-utils
-  btrfs-tools
-  gimp
-  ltsp-client
-  ltsp-server
-  lvm2
-  nfs-common
-  openssh-server
-  tmux
-  tshark
-  ubuntu-gnome-desktop
-  ubuntu-restricted-extras
-  ubuntu-standard
-  vlan
-"
-
 PUPPET_USE_CLASSES="
   organisation_adm_users
+  packages
 "
