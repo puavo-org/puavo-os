@@ -22,21 +22,9 @@ case "$MODE" in
         ;;
     finalization)
         if [ -n "$PUPPET_MODULE_DIRS" -a -n "$PUPPET_USE_CLASSES" ]; then
-            # XXX use ltsp-apply-puppet-modules instead of this?
-            # XXX (write that script first)
-
-            mkdir -p $ROOT/etc/puppet/ltsp-build-client
-            for puppet_src_dir in $PUPPET_MODULE_DIRS; do
-              cp -pHR $puppet_src_dir $ROOT/etc/puppet/ltsp-build-client
-            done
-
-            # should also use --detailed-exitcodes and behave accordingly
-            chroot $ROOT puppet apply \
-              --modulepath="$(echo $PUPPET_MODULE_DIRS \
-                               | xargs -n1 basename \
-                               | awk '{ printf "/etc/puppet/ltsp-build-client/%s:", $1 }' \
-                               | sed 's/:$//')" \
-              --execute "include $(echo $PUPPET_USE_CLASSES | tr ' ' ',')"
+            ltsp-chroot --puppet-module-dirs "$PUPPET_MODULE_DIRS" \
+                        --puppet-use-classes "$PUPPET_USE_CLASSES" \
+                        true
         fi
         ;;
 esac

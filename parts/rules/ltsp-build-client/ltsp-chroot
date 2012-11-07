@@ -1,4 +1,4 @@
-#!/bin/sh
+##!/bin/sh
 
 # copyright 2009 Vagrant Cascadian <vagrant@freegeek.org>,
 # 2010 Alkis Georgopoulos <alkisg@gmail.com>,
@@ -13,13 +13,16 @@ $0 [OPTION] command
   -a, --arch                Architecture of the chroot.  Default is arch of the host.
   -b, --base                Base of ltsp chroot.  Default is /opt/ltsp if unspecified.
   -c, --mount-package-cache Mount package cache dir from server.
+      --config              Load a user specific configuration file
+                              (command line parameters may override these).
   -d, --mount-dev           Mount /dev from server.
   -h, --help                This message.
   -m, --mount-all           Mount all server dirs mentioned in this message.
   -p, --mount-proc          Mount /proc from server.
   -r, --copy-resolv-conf    Copy /etc/resolv.conf from server.
-  --puppet-sources-dir      Copy puppet sources from server dir to chroot's /etc/puppet/ltsp-build-client
-  --puppet-use-classes      Run puppet with the specified from chroot's /etc/puppet/ltsp-build-client
+      --puppet-module-dirs  Copy puppet modules from server dirs to chroot's /etc/puppet/ltsp-build-client
+      --puppet-use-classes  Run puppet with the specified classes from chroot's /etc/puppet/ltsp-build-client,
+                              before executing command (or dropping to chroot shell)
 EOF
 }
 
@@ -88,27 +91,42 @@ mount_package_cache() {
 
 # The command line parameters override the configuration file settings
 if ! args=$(getopt -n "$0" -o +a:b:cdhmpr -l \
-    'arch:,base:,mount-package-cache,mount-dev,help,mount-all,mount-proc,copy-resolv-conf,puppet-sources-dir:,puppet-use-classes:' -- "$@"); then
+    'arch:,base:,mount-package-cache,config:,mount-dev,help,mount-all,mount-proc,copy-resolv-conf,puppet-module-dirs:,puppet-use-classes:' -- "$@"); then
     exit 1
 fi
 eval "set -- $args"
 while true; do
     case "$1" in
-        -a|--arch) shift; ARCH=$1 ;;
-        -b|--base) shift; BASE=$1 ;;
-        -c|--mount-package-cache) MOUNT_PACKAGE_CACHE=true ;;
-        -d|--mount-dev) MOUNT_DEV=true ;;
+        -a|--arch) shift; ARG_ARCH=$1 ;;
+        -b|--base) shift; ARG_BASE=$1 ;;
+        -c|--mount-package-cache) ARG_MOUNT_PACKAGE_CACHE=true ;;
+           --config) shift; CONFIG_FILE=$1 ;;
+        -d|--mount-dev) ARG_MOUNT_DEV=true ;;
         -h|--help) usage; exit 0 ;;
-        -m|--mount-all) MOUNT_ALL=true ;;
-        -p|--mount-proc) MOUNT_PROC=true ;;
-        -r|--copy-resolv-conf) COPY_RESOLV_CONF=true ;;
-           --puppet-module-dirs) shift; PUPPET_MODULE_DIRS=$1 ;;
-           --puppet-use-classes) shift; PUPPET_USE_CLASSES=$1 ;;
+        -m|--mount-all) ARG_MOUNT_ALL=true ;;
+        -p|--mount-proc) ARG_MOUNT_PROC=true ;;
+        -r|--copy-resolv-conf) ARG_COPY_RESOLV_CONF=true ;;
+           --puppet-module-dirs) shift; ARG_PUPPET_MODULE_DIRS="$(echo $1 | tr ':' ' ')";;
+           --puppet-use-classes) shift; ARG_PUPPET_USE_CLASSES="$(echo $1 | tr ',' ' ')";;
         --) shift; break ;;
         *) die "$0: Internal error!" ;;
     esac
     shift
 done
+
+test -n "$CONFIG_FILE" && . $CONFIG_FILE
+
+# XXX its ugly, but we want that command-line arguments can override
+# XXX config defaults
+test -n "$ARG_ARCH"                && ARCH=$ARG_ARCH
+test -n "$ARG_BASE"                && BASE=$ARG_BASE
+test -n "$ARG_MOUNT_PACKAGE_CACHE" && MOUNT_PACKAGE_CACHE=$ARG_MOUNT_PACKAGE_CACHE
+test -n "$ARG_MOUNT_DEV"           && MOUNT_DEV=$ARG_MOUNT_DEV
+test -n "$ARG_MOUNT_ALL"           && MOUNT_ALL=$ARG_MOUNT_ALL
+test -n "$ARG_MOUNT_PROC"          && MOUNT_PROC=$ARG_MOUNT_PROC
+test -n "$ARG_COPY_RESOLV_CONF"    && COPY_RESOLV_CONF=$ARG_COPY_RESOLV_CONF
+test -n "$ARG_PUPPET_MODULE_DIRS"  && PUPPET_MODULE_DIRS=$ARG_PUPPET_MODULE_DIRS
+test -n "$ARG_PUPPET_USE_CLASSES"  && PUPPET_USE_CLASSES=$ARG_PUPPET_USE_CLASSES
 
 # Finally, fall back to using default values for any unset options
 default_options
@@ -118,15 +136,22 @@ require_root
 trap "post_chroot" 0 HUP INT QUIT KILL SEGV PIPE TERM
 pre_chroot
 
-if [ -n "$PUPPET_SOURCES_DIR" ]; then
-  rm -rf "$ROOT/etc/puppet/ltsp-build-client/"
-  cp -a $PUPPET_SOURCES_DIR "$ROOT/etc/puppet/ltsp-build-client/"
+if [ -n "$PUPPET_MODULE_DIRS" ]; then
+  mkdir -p $ROOT/etc/puppet/ltsp-build-client
+  for puppet_src_dir in $PUPPET_MODULE_DIRS; do
+    cp -pHR $puppet_src_dir $ROOT/etc/puppet/ltsp-build-client
+  done
+
+  if [ -n "$PUPPET_USE_CLASSES" ]; then
+    # should also use --detailed-exitcodes and behave accordingly
+    LTSP_HANDLE_DAEMONS=false \
+      chroot "$ROOT" puppet apply \
+        --modulepath="$(echo $PUPPET_MODULE_DIRS \
+                         | xargs -n1 basename \
+                         | awk '{ printf "/etc/puppet/ltsp-build-client/%s:", $1 }' \
+                         | sed 's/:$//')" \
+        --execute "include $(echo $PUPPET_USE_CLASSES | tr ' ' ',')"
+  fi
 fi
 
-if [ -n "$PUPPET_USE_CLASSES" ]; then
-  LTSP_HANDLE_DAEMONS=false chroot "$ROOT" puppet apply \
-    --modulepath=/etc/puppet/ltsp-build-client \
-    --execute "include $(echo $PUPPET_USE_CLASSES | tr ' ' ',')"
-else
-  LTSP_HANDLE_DAEMONS=false chroot "$ROOT" "$@"
-fi
+LTSP_HANDLE_DAEMONS=false chroot "$ROOT" "$@"

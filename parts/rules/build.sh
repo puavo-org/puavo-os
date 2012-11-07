@@ -6,6 +6,12 @@ cleanup() {
   test -n "$srccopydir" && rm -rf $srccopydir
 }
 
+run_sudo() {
+  sudo env LTSP_CUSTOM_PLUGINS="$srccopydir/ltsp-build-client/plugins" \
+           PATH="$srccopydir/ltsp-build-client:$PATH" \
+           "$@"
+}
+
 trap cleanup EXIT
 
 {
@@ -32,8 +38,7 @@ puppet_module_dirs=$srccopydir/ltsp-build-client/puppet/opinsys:$srccopydir/ltsp
 {
   case "$mode" in
     build)
-      sudo env LTSP_CUSTOM_PLUGINS="$srccopydir/ltsp-build-client/plugins" \
-        $srccopydir/ltsp-build-client/ltsp-build-client \
+      run_sudo $srccopydir/ltsp-build-client/ltsp-build-client \
           --arch               $arch \
           --base               $basedir \
           --config             $srccopydir/ltsp-build-client/config \
@@ -46,11 +51,18 @@ puppet_module_dirs=$srccopydir/ltsp-build-client/puppet/opinsys:$srccopydir/ltsp
           --skipimage
       ;;
     configure)
-      sudo env LTSP_CUSTOM_PLUGINS="$srccopydir/ltsp-build-client/plugins" \
-        $srccopydir/ltsp-build-client/ltsp-chroot \
-          --base $basedir \
+      run_sudo $srccopydir/ltsp-build-client/ltsp-chroot \
+          --arch               $arch \
+          --base               $basedir \
+          --config             $srccopydir/ltsp-build-client/config \
           --mount-all \
-          --puppet-module-dirs $puppet_module_dirs
+          --puppet-module-dirs $puppet_module_dirs \
+          true
+      ;;
+    chroot)
+      run_sudo $srccopydir/ltsp-build-client/ltsp-chroot \
+          --base $basedir \
+          --mount-all
       ;;
     image)
       # XXX ltsp-build-client --onlyimage ?
