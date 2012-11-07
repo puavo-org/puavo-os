@@ -1,7 +1,0 @@
-#!/bin/sh
-
-set -eu
-
-echo ">>>>> Setting timezone"
-
-cp /usr/share/zoneinfo/Europe/Helsinki /etc/localtime
