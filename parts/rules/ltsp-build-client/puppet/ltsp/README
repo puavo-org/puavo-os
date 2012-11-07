@@ -2,24 +2,28 @@ Short explanations for puppet modules listed here (to know exactly what
 they do, you need to look inside):
 
 adm_users
-    a helper module for creating administrative user accounts and setting up
-    their public ssh-keys for authentication
+    A helper module for creating administrative user accounts and setting up
+    their public ssh-keys for authentication.
 
 app_bash
-    special bash-configurations for administrative user accounts
+    Special bash-configurations for administrative user accounts.
 
 config
-    set organisation name and other widely applied parameters
+    Set organisation name and other widely applied parameters.
 
 console
-    startup getty on a console device
+    Startup getty on a console device.
 
 network_interfaces
-    network interfaces configuration
+    Network interfaces configuration.
 
 organisation_adm_users
-    list actual, real-life people here to create actual administrative user
-    accounts
+    List actual, real-life people here to create actual administrative user
+    accounts.
 
 packages
-    lists packages that are to be installed to ltsp images
+    Lists packages that are to be installed to ltsp images.
+
+ssh_client
+    Settings for openssh client.  XXX these actually weaken security from
+    default, should find a way to do this in a smarter way.
