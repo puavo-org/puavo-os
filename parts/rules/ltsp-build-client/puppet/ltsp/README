@@ -11,6 +11,9 @@ app_bash
 config
     set organisation name and other widely applied parameters
 
+console
+    startup getty on a console device
+
 organisation_adm_users
     list actual, real-life people here to create actual administrative user
     accounts
