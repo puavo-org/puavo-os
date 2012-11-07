@@ -11,8 +11,8 @@ class adm_users {
     $adm_user   = $title
     $ssh_subdir = "$user_homedir/.ssh"
 
-    if ($uid < $config::logins::admin_min_uid) or ($config::logins::admin_min_uid < $uid) {
-      fail("admin-user uid parameter must be between $config::logins::admin_min_uid and $config::logins::admin_min_uid (was $uid)")
+    if ($uid < $config::logins::admin_min_uid) or ($config::logins::admin_max_uid < $uid) {
+      fail("admin-user uid parameter must be between $config::logins::admin_min_uid and $config::logins::admin_max_uid (was $uid)")
     }
 
     file {
