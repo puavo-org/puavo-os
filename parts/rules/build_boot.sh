@@ -7,7 +7,7 @@ cleanup() {
 }
 
 usage() {
-  echo "Usage: $(basename $0) boot|ltsp hostname" > /dev/stderr
+  echo "Usage: $(basename $0) boot hostname" > /dev/stderr
   exit 1
 }
 
@@ -51,27 +51,6 @@ case "$hosttype" in
                --flavour  server \
                --hostname $targethostname \
                --suite    precise \
-              "
-    ;;
-  ltsp)
-    extraopts="--addpkg      bridge-utils \
-	       --addpkg      btrfs-tools \
-	       --addpkg      ltsp-client \
-	       --addpkg      ltsp-server \
-	       --addpkg      lvm2 \
-	       --addpkg      tmux \
-	       --addpkg      tshark \
-	       --addpkg      ubuntu-gnome-desktop \
-	       --addpkg      ubuntu-standard \
-	       --addpkg      vlan \
-	       --arch        i386 \
-               --dest        /images/$targethostname \
-               --exec        $srccopydir/setup/ltsp \
-               --flavour     generic \
-               --hostname    $targethostname \
-	       --only-chroot \
-               --suite       quantal \
-               --tmp         /virtualtmp \
               "
     ;;
   *)
