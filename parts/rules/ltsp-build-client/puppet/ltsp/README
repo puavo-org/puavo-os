@@ -14,9 +14,6 @@ config
 console
     Startup getty on a console device.
 
-network_interfaces
-    Network interfaces configuration.
-
 organisation_adm_users
     List actual, real-life people here to create actual administrative user
     accounts.
