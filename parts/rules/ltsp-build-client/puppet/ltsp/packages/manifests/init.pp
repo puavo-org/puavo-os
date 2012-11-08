@@ -15,7 +15,7 @@ class packages {
               , 'ubuntu-standard'
               , 'vlan' ]
 
-  package {
+  @package {
     $packages:
       ensure => present;
   }
