@@ -60,7 +60,11 @@ class TFTPRead
 
           if !ack_options.empty?
             return send_oack(@blocknum, ack_options)
+          else
+            send_more_data
           end
+        else
+          send_more_data
         end
       end
     when TFTPOpCode::ACK
@@ -69,11 +73,16 @@ class TFTPRead
         return
       end
 
-      @blocknum += 1
-      packet = [ TFTPOpCode::DATA, @blocknum % 65536, @data.byteslice(@sent_bytes, @blocksize) ].pack("nna*")
-      @sent_bytes += @blocksize
-      return packet
+      send_more_data
     end
+  end
+
+  def send_more_data
+    @blocknum += 1
+    packet = [ TFTPOpCode::DATA, @blocknum % 65536, @data.byteslice(@sent_bytes, @blocksize) ].pack("nna*")
+    @sent_bytes += @blocksize
+
+    return packet
   end
 
   def send_oack(blocknum, options)
