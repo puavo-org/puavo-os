@@ -8,6 +8,7 @@ class packages {
               , 'nfs-common'
               , 'openssh-client'
               , 'openssh-server'
+              , 'sudo'
               , 'tmux'
               , 'tshark'
               , 'ubuntu-gnome-desktop'
