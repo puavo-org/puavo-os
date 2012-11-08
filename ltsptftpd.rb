@@ -1,6 +1,5 @@
-#!/usr/bin/ruby1.8
+#!/usr/bin/ruby
 
-require 'rubygems'
 require 'socket'
 require 'eventmachine'
 
@@ -33,8 +32,6 @@ class TFTPRead
   end
 
   def process(request)
-    puts "JEPU"
-
     filename = request['filename']
 
     case request['opcode']
@@ -45,7 +42,6 @@ class TFTPRead
 
         if options
           options.each_pair do |key, value|
-            puts "CHECK: #{key} = #{value}"
             case key.downcase
               when "blksize"
                 ack_options[key] = value
@@ -57,12 +53,10 @@ class TFTPRead
                 ack_options[key] = @data.size
             end
           end
+        end
 
-          if !ack_options.empty?
-            return send_oack(@blocknum, ack_options)
-          else
-            send_more_data
-          end
+        if !ack_options.empty?
+          return send_oack(@blocknum, ack_options)
         else
           send_more_data
         end
@@ -153,11 +147,7 @@ class TFTPServer < EventMachine::Connection
   end
 
   def receive_data(data)
-    p "Receive_data"
-    p data
-
     request = parse_request(data)
-    puts "receive_data: request: #{request.inspect}"
 
     if !request
       puts "Parsing request failed, not responding"
@@ -169,7 +159,6 @@ class TFTPServer < EventMachine::Connection
 
     case request['opcode']
     when TFTPOpCode::READ
-      puts "READ"
       filename = request['filename']
       contents = ""
 
@@ -190,14 +179,10 @@ class TFTPServer < EventMachine::Connection
 
       response = client.process(request)
 
-      puts "RESPONSE: #{response.inspect}"
-
       if response and response.size > 0
         send_data response
       end
     when TFTPOpCode::ACK
-      puts "ACK!!!"
-
       client = @clients[client_key]
 
       if client
