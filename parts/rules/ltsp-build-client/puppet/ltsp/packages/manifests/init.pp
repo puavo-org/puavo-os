@@ -2,6 +2,7 @@ class packages {
   $packages = [ 'bridge-utils'
               , 'btrfs-tools'
               , 'gimp'
+              , 'git'
               , 'ltsp-client'
               , 'ltsp-server'
               , 'lvm2'
