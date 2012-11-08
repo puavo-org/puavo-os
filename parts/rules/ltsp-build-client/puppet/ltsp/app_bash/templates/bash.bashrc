@@ -63,6 +63,8 @@ if [ -x /usr/lib/command-not-found -o -x /usr/share/command-not-found ]; then
 fi
 
 if [ "$(id -u)" = 0 ] || (groups | fgrep -qw "<%= scope.lookupvar('config::logins::admin_user_groupname') %>"); then
+  PATH="$PATH:<%= scope.lookupvar('config::logins::admin_homedir') %>/code/bin"
+  export PATH
 
   if [ "$(id -u)" = 0 ]; then
     # red prompt for root
