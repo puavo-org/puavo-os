@@ -2,6 +2,6 @@ PUPPET_USE_CLASSES="
   console
   network_interfaces
   organisation_adm_users
-  packages
+  packages::all
   ssh_client
 "

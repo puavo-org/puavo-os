@@ -6,4 +6,6 @@ class ssh_client {
       content => template('ssh_client/ssh_config'),
       require => Package['openssh-client'];
   }
+
+  Package <| title == "openssh-client" |>
 }
