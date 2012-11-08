@@ -62,7 +62,9 @@ class adm_users {
   }
 
   file {
-    $config::logins::admin_homedir:
+    [ "${config::logins::admin_homedir}"
+    , "${config::logins::admin_homedir}/code"
+    , "${config::logins::admin_homedir}/code/bin" ]:
       ensure  => directory,
       owner   => 'root',
       group   => $config::logins::admin_user_groupname,
