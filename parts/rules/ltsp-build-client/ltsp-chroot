@@ -20,9 +20,11 @@ $0 [OPTION] command
   -m, --mount-all           Mount all server dirs mentioned in this message.
   -p, --mount-proc          Mount /proc from server.
   -r, --copy-resolv-conf    Copy /etc/resolv.conf from server.
-      --puppet-module-dirs  Copy puppet modules from server dirs to chroot's /etc/puppet/ltsp-build-client
-      --puppet-use-classes  Run puppet with the specified classes from chroot's /etc/puppet/ltsp-build-client,
-                              before executing command (or dropping to chroot shell)
+      --puppet-module-dirs  Copy puppet modules from server dirs to chroot's
+                              /etc/puppet/ltsp-build-client
+      --puppet-use-classes  Run puppet with the specified classes from chroot's
+                              /etc/puppet/ltsp-build-client, before executing
+                              command (or dropping to chroot shell)
 EOF
 }
 
@@ -137,29 +139,19 @@ trap "post_chroot" 0 HUP INT QUIT KILL SEGV PIPE TERM
 pre_chroot
 
 if [ -n "$PUPPET_MODULE_DIRS" ]; then
+  rm -rf $ROOT/etc/puppet/ltsp-build-client
   mkdir -p $ROOT/etc/puppet/ltsp-build-client
   for puppet_src_dir in $PUPPET_MODULE_DIRS; do
-    cp -pHR $puppet_src_dir $ROOT/etc/puppet/ltsp-build-client
+    cp -HR $puppet_src_dir $ROOT/etc/puppet/ltsp-build-client
   done
 
   if [ -n "$PUPPET_USE_CLASSES" ]; then
-    PUPPET_LOGFILE_PATH="/var/log/puppet/ltsp-chroot-$(date +%Y-%m-%d-%H%M%S).log"
-    # another script for this (could be in chroot) ?
-    if LTSP_HANDLE_DAEMONS=false \
-         chroot "$ROOT" puppet apply \
-           --detailed-exitcodes \
-           --logdest console \
-           --logdest "$PUPPET_LOGFILE_PATH" \
-           --modulepath="$(echo $PUPPET_MODULE_DIRS \
-                            | xargs -n1 basename \
-                            | awk '{ printf "/etc/puppet/ltsp-build-client/%s:", $1 }' \
-                            | sed 's/:$//')" \
-           --execute "include $(echo $PUPPET_USE_CLASSES | tr ' ' ',')" \
-         || [ $? -eq 2 ]; then
-      rm -f "$ROOT/puppet-error.log"
-    else
-      ln -fns "$PUPPET_LOGFILE_PATH" "$ROOT/puppet-error.log"
-    fi
+    chroot "$ROOT" \
+      ltsp-apply-puppet \
+        --puppet-module-dirs="$(echo $PUPPET_MODULE_DIRS \
+                                  | xargs -n 1 basename \
+                                  | awk '{ print "/etc/puppet/ltsp-build-client/" $1 }')" \
+        --puppet-use-classes="$(echo $PUPPET_USE_CLASSES | xargs -n 1)"
   fi
 fi
 
