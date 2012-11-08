@@ -9,6 +9,7 @@ class packages {
               , 'nfs-common'
               , 'openssh-client'
               , 'openssh-server'
+              , 'sl'
               , 'sudo'
               , 'tmux'
               , 'tshark'

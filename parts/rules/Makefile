@@ -6,4 +6,4 @@ default:
 all: build image
 
 ${TARGETS}:
-	./build.sh $@
+	@./build.sh $@
