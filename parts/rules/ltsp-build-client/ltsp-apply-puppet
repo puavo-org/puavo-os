@@ -2,20 +2,32 @@
 
 set -e
 
-if ! args=$(getopt -n "$0" -o +c:d:t:u: -l \
-  'config:,puppet-module-dirs:,targetroot:,puppet-use-classes:' -- "$@"); then
+if ! args=$(getopt -n "$0" -o +c:d:h:t:u: -l \
+  'config:,puppet-module-dirs:,ltsp-chroot-opts:,targetroot:,puppet-use-classes:' -- "$@"); then
   exit 1
 fi
 
+ltsp_chroot_opts=
 targetroot=
 
 eval "set -- $args"
 while true; do
   case "$1" in
-    -c|--config            ) shift; config=$1                ;;
-    -d|--puppet-module-dirs) shift; arg_puppet_module_dirs=$1;;
-    -r|--targetroot        ) shift; targetroot=$1            ;;
-    -u|--puppet-use-classes) shift; arg_puppet_use_classes=$1;;
+    -c|--config)
+      shift; config=$1
+      ;;
+    -d|--puppet-module-dirs)
+      shift; arg_puppet_module_dirs=$(echo $1 | tr ':' ' ')
+      ;;
+    -h|--ltsp-chroot-opts)
+      shift; ltsp_chroot_opts=$1
+      ;;
+    -r|--targetroot)
+      shift; targetroot=$1
+      ;;
+    -u|--puppet-use-classes)
+      shift; arg_puppet_use_classes=$(echo $1 | tr ',' ' ')
+      ;;
     --) shift; break ;;
      *) die "$0: Internal error!" ;;
   esac
@@ -70,9 +82,7 @@ puppet_logfile_path="/var/log/puppet/ltsp-$(date +%Y-%m-%d-%H%M%S).log"
       --modulepath "$(echo $moduledirs_no_rootpath | xargs | tr ' ' ':')" \
     || [ $? -eq 2 ]
   else
-    # XXX on server, this should use ltsp-chroot ?
-    # XXX (sometimes with --mount-all option)
-    env LTSP_HANDLE_DAEMONS=false chroot "$targetroot" \
+    env ROOT=$targetroot ltsp-chroot $ltsp_chroot_opts \
       puppet apply \
         --detailed-exitcodes \
         --logdest console \
