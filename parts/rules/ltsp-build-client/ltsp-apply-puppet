@@ -1,0 +1,92 @@
+#!/bin/sh
+
+set -e
+
+if ! args=$(getopt -n "$0" -o +c:d:t:u: -l \
+  'config:,puppet-module-dirs:,targetroot:,puppet-use-classes:' -- "$@"); then
+  exit 1
+fi
+
+targetroot=
+
+eval "set -- $args"
+while true; do
+  case "$1" in
+    -c|--config            ) shift; config=$1                ;;
+    -d|--puppet-module-dirs) shift; arg_puppet_module_dirs=$1;;
+    -r|--targetroot        ) shift; targetroot=$1            ;;
+    -u|--puppet-use-classes) shift; arg_puppet_use_classes=$1;;
+    --) shift; break ;;
+     *) die "$0: Internal error!" ;;
+  esac
+  shift
+done
+
+test -n "$config" && . $config
+
+mkdir -p $targetroot/etc/puppet/ltsp
+
+if [ -n "$arg_puppet_use_classes" ]; then
+  PUPPET_USE_CLASSES=$arg_puppet_use_classes
+fi
+if [ -n "$PUPPET_USE_CLASSES" ]; then
+  echo "$PUPPET_USE_CLASSES" | xargs -n 1 \
+    > $targetroot/etc/puppet/ltsp/.classes
+else
+  PUPPET_USE_CLASSES="$(cat $targetroot/etc/puppet/ltsp/.classes)"
+fi
+
+if [ -n "$arg_puppet_module_dirs" ]; then
+  PUPPET_MODULE_DIRS=$arg_puppet_module_dirs
+fi
+if [ -n "$PUPPET_MODULE_DIRS" ]; then
+  mkdir -p $targetroot/etc/puppet/ltsp
+  rm -rf $targetroot/etc/puppet/ltsp/*
+  for puppet_src_dir in $PUPPET_MODULE_DIRS; do
+    cp -HR $puppet_src_dir $targetroot/etc/puppet/ltsp
+  done
+
+  moduledirs_no_rootpath="$(echo $PUPPET_MODULE_DIRS \
+                             | xargs -n 1 basename \
+                             | awk '{ print "/etc/puppet/ltsp/" $1 }')"
+  echo $moduledirs_no_rootpath | xargs -n 1 \
+    > $targetroot/etc/puppet/ltsp/.module_dirs
+else
+  moduledirs_no_rootpath="$(cat $targetroot/etc/puppet/ltsp/.module_dirs)"
+fi
+
+puppet_logfile_path="/var/log/puppet/ltsp-$(date +%Y-%m-%d-%H%M%S).log"
+
+(
+  set +e
+
+  if [ -z "$targetroot" ]; then
+    # XXX copy-paste
+    puppet apply \
+      --detailed-exitcodes \
+      --logdest console \
+      --logdest $puppet_logfile_path \
+      --execute "include $(echo $PUPPET_USE_CLASSES | xargs | tr ' ' ',')" \
+      --modulepath "$(echo $moduledirs_no_rootpath | xargs | tr ' ' ':')" \
+    || [ $? -eq 2 ]
+  else
+    # XXX on server, this should use ltsp-chroot ?
+    # XXX (sometimes with --mount-all option)
+    env LTSP_HANDLE_DAEMONS=false chroot "$targetroot" \
+      puppet apply \
+        --detailed-exitcodes \
+        --logdest console \
+        --logdest $puppet_logfile_path \
+        --execute "include $(echo $PUPPET_USE_CLASSES | xargs | tr ' ' ',')" \
+        --modulepath "$(echo $moduledirs_no_rootpath | xargs | tr ' ' ':')" \
+    || [ $? -eq 2 ]
+  fi
+
+  if [ $? -eq 0 ]; then
+    rm -f $targetroot/puppet-error.log
+  else
+    ln -fns "$puppet_logfile_path" $targetroot/puppet-error.log
+  fi
+)
+
+exit 0
