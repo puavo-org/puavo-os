@@ -22,6 +22,7 @@ case "$MODE" in
         ;;
     finalization)
         if [ -n "$PUPPET_MODULE_DIRS" -a -n "$PUPPET_USE_CLASSES" ]; then
+            mkdir -p $ROOT/etc/puppet/ltsp
             ltsp-apply-puppet --puppet-module-dirs "$PUPPET_MODULE_DIRS" \
                               --puppet-use-classes "$PUPPET_USE_CLASSES" \
                               --targetroot $ROOT
