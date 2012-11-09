@@ -62,8 +62,7 @@ class packages {
     [ 'wine' ]:
       tag => [ 'emulation', 'ubuntu', ];
 
-    [ 'latex-xft-fonts'
-    , 'ttf-dejavu-core'
+    [ 'ttf-dejavu-core'
     , 'ttf-freefont'
     , 'ttf-mscorefonts-installer'
     , 'x-ttcidfont-conf' ]:
@@ -112,7 +111,6 @@ class packages {
 
     [ 'consolekit'
     , 'dbus-x11'
-    , 'gnome-about'
     , 'gnome-applets'
     , 'gnome-control-center'
     , 'gnome-media'
@@ -127,7 +125,7 @@ class packages {
     , 'libgnomevfs2-bin'
     , 'libgnomevfs2-extra'
     , 'libpam-gnome-keyring'
-    , 'libreoffice.org-gnome'
+    , 'libreoffice-gnome'
     , 'metacity'
     , 'network-manager-gnome'
     , 'notification-daemon'
@@ -176,13 +174,15 @@ class packages {
     , 'xsane' ]:
       tag => [ 'graphics', 'ubuntu', ];
 
+    [ 'skype' ]:
+      tag => [ 'instant_messaging', ];
+
     [ 'emesene'
     , 'empathy'
     , 'gobby'
     , 'pidgin'
     , 'pidgin-libnotify'
-    , 'pidgin-plugin-pack'
-    , 'skype' ]:
+    , 'pidgin-plugin-pack' ]:
       tag => [ 'instant_messaging', 'ubuntu', ];
 
     [ 'gucharmap'
@@ -190,48 +190,39 @@ class packages {
       tag => [ 'languages', 'ubuntu', ];
 
     [ 'firefox-locale-en'
+    , 'hyphen-en-us'
     , 'kde-l10n-engb'
     , 'language-pack-en'
     , 'language-pack-gnome-en'
     , 'language-pack-kde-en'
-    , 'language-support-en'
-    , 'language-support-writing-en'
-    , 'libreoffice.org-help-en-gb'
-    , 'libreoffice.org-hyphenation-en-us'
-    , 'libreoffice.org-l10n-en-gb'
-    , 'libreoffice.org-l10n-en-za'
-    , 'libreoffice.org-thesaurus-en-au'
-    , 'libreoffice.org-thesaurus-en-us'
+    , 'libreoffice-help-en-gb'
+    , 'libreoffice-l10n-en-gb'
+    , 'libreoffice-l10n-en-za'
     , 'myspell-en-gb'
+    , 'mythes-en-us'
     , 'thunderbird-locale-en-gb' ]:
       tag => [ 'language-en', 'ubuntu', ];
 
     [ 'firefox-locale-fi'
-    , 'gnome-user-guide-fi'
     , 'kde-l10n-fi'
     , 'language-pack-fi'
     , 'language-pack-gnome-fi'
     , 'language-pack-kde-fi'
-    , 'language-support-fi'
-    , 'language-support-writing-fi'
-    , 'libreoffice.org-help-fi'
-    , 'libreoffice.org-l10n-fi'
-    , 'libreoffice.org-voikko'
+    , 'libreoffice-help-fi'
+    , 'libreoffice-l10n-fi'
+    , 'libreoffice-voikko'
     , 'myspell-fi'
     , 'thunderbird-locale-fi' ]:
       tag => [ 'language-fi', 'ubuntu', ];
 
     [ 'firefox-locale-sv'
     , 'gimp-help-sv'
-    , 'gnome-user-guide-sv'
     , 'kde-l10n-sv'
     , 'language-pack-gnome-sv'
     , 'language-pack-kde-sv'
     , 'language-pack-sv'
-    , 'language-support-sv'
-    , 'language-support-writing-sv'
-    , 'libreoffice.org-help-sv'
-    , 'libreoffice.org-l10n-sv'
+    , 'libreoffice-help-sv'
+    , 'libreoffice-l10n-sv'
     , 'myspell-sv-se'
     , 'thunderbird-locale-sv-se' ]:
       tag => [ 'language-sv', 'ubuntu', ];
@@ -240,34 +231,39 @@ class packages {
     , 'ltsp-server' ]:
       tag => [ 'ltsp', 'ubuntu', ];
 
+    [ 'libdvdcss2' ]:
+      tag => [ 'mediaplayer', ];
+
+    [ 'spotify-client-qt' ]:
+      tag => [ 'mediaplayer', ];
+
     [ 'banshee'
     , 'gnome-mplayer'
-    , 'gstreamer0.10-alsa'
-    , 'gstreamer0.10-ffmpeg'
-    , 'gstreamer0.10-fluendo-mp3'
-    , 'gstreamer0.10-fluendo-mpegdemux'
-    , 'gstreamer0.10-plugins-bad-multiverse'
-    , 'gstreamer0.10-plugins-base-apps'
-    , 'gstreamer0.10-plugins-ugly'
-    , 'gstreamer0.10-plugins-ugly-multiverse'
-    , 'gstreamer0.10-pulseaudio'
+    , 'gstreamer1.0-alsa'
+    , 'gstreamer1.0-clutter'
+    , 'gstreamer1.0-libav'
+    , 'gstreamer1.0-plugins-bad'
+    , 'gstreamer1.0-plugins-base'
+    , 'gstreamer1.0-plugins-good'
+    , 'gstreamer1.0-plugins-ugly'
+    , 'gstreamer1.0-pulseaudio'
+    , 'gstreamer1.0-tools'
     , 'kaffeine'
-    , 'libdvdcss2'
     , 'libdvdread4'
     , 'me-tv'
     , 'python-gst0.10'
-    , 'spotify-client-qt'
     , 'totem'
     , 'vlc'
     , 'vlc-plugin-pulse' ]:
       tag => [ 'mediaplayer', 'ubuntu', ];
 
-    [ 'nagios-nrpe-plugin'
-    , 'nagios-nrpe-server'
-    , 'nagios-plugins-basic'
-    , 'nagios-plugins-extra'
-    , 'nagios-plugins-standard' ]:
-      tag => [ 'monitoring', 'ubuntu', ];
+# XXX problems with these beasts
+#    [ 'nagios-nrpe-plugin'
+#    , 'nagios-nrpe-server'
+#    , 'nagios-plugins-basic'
+#    , 'nagios-plugins-extra'
+#    , 'nagios-plugins-standard' ]:
+#      tag => [ 'monitoring', 'ubuntu', ];
 
     [ 'ardour'
     , 'audacity'
@@ -282,21 +278,22 @@ class packages {
     , 'qsynth'
     , 'rosegarden'
     , 'solfege'
-    , 'soundconvert'
+    , 'soundconverter'
     , 'sweep'
     , 'tuxguitar' ]:
       tag => [ 'music_making', 'ubuntu', ];
 
     [ 'acroread'
-    , 'cmaptools'
-    , 'evince'
+    , 'cmaptools' ]:
+      tag => [ 'office', ];
+
+    [ 'evince'
     , 'ghostscript-x'
-    , 'libreoffice.org'
-    , 'libreoffice.org-base'
-    , 'libreoffice.org-calc'
-    , 'libreoffice.org-hyphenation'
-    , 'libreoffice.org-impress'
-    , 'libreoffice.org-writer'
+    , 'libreoffice'
+    , 'libreoffice-base'
+    , 'libreoffice-calc'
+    , 'libreoffice-impress'
+    , 'libreoffice-writer'
     , 'scribus'
     , 'scribus-doc'
     , 'tellico'
@@ -322,30 +319,31 @@ class packages {
     , 'gcc-avr'
     , 'geany'
     , 'idle'
-    , 'kdewebdev-doc-html'
     , 'kompare'
-    , 'kompozer'
     , 'kturtle'
     , 'netbeans'
     , 'pyqt4-dev-tools'
     , 'python-doc'
-    , 'python-profiler'
     , 'python-pygame'
+    , 'pythontracer'
     , 'qt4-designer'
     , 'qt4-doc'
-    , 'quanta'
     , 'scratch'
     , 'spe' ]:
       tag => [ 'programming', 'ubuntu', ];
 
+    [ 'vmware-view-client' ]:
+      tag => [ 'remote_access', ];
+
     [ 'gftp-gtk'
     , 'lftp'
     , 'smbclient'
-    , 'tsclient'
     , 'ubuntuone-client'
-    , 'wget'
-    , 'vmware-view-client' ]:
+    , 'wget' ]:
       tag => [ 'remote_access', 'ubuntu', ];
+
+    [ 'googleearth' ]:
+      tag => [ 'science', ];
 
     [ 'atomix'
     , 'celestia'
@@ -360,7 +358,6 @@ class packages {
     , 'gnucap'
     , 'gnuplot'
     , 'gnuplot-x11'
-    , 'googleearth'
     , 'gretl'
     , 'kalzium'
     , 'kbruch'
@@ -380,16 +377,12 @@ class packages {
 
     [ 'breathe-icon-theme'
     , 'gnome-icon-theme'
-    , 'gnome-theme-almond'
-    , 'gnome-themes'
     , 'gnome-themes-extras'
-    , 'gnome-themes-more'
-    , 'gnome-themes-selected'
+    , 'gnome-themes-standard'
     , 'gnome-themes-ubuntu'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
     , 'human-theme'
-    , 'kdelibs-data'
     , 'light-themes'
     , 'openclipart'
     , 'pidgin-themes'
@@ -405,7 +398,6 @@ class packages {
 
     [ 'alsa-utils'
     , 'bc'
-    , 'deskbar-applet'
     , 'desktop-file-utils'
     , 'file-roller'
     , 'fuse-utils'
@@ -413,7 +405,7 @@ class packages {
     , 'gedit'
     , 'gkbd-capplet'
     , 'kdepasswd'
-    , 'khelpcenter'
+    , 'khelpcenter4'
     , 'onboard'
     , 'rarian-compat'
     , 'screenlets'
@@ -428,17 +420,16 @@ class packages {
       tag => [ 'utils', 'ubuntu', ];
 
     [ 'adobe-flashplugin'
-    , 'chromium-browser'
-    , 'emilda-print'
+    , 'google-talkplugin' ]:
+      tag => [ 'web', ];
+
+    [ 'chromium-browser'
     , 'firefox'
     , 'gecko-mediaplayer'
-    , 'google-talkplugin'
+    , 'icedtea-7-plugin'
     , 'liferea'
-    , 'prism'
-    , 'sun-java6-bin'
-    , 'sun-java6-jre'
-    , 'sun-java6-plugin'
-    , 'xul-ext-flashblock' ]:
+    , 'openjdk-6-jdk'
+    , 'openjdk-6-jre' ]:
       tag => [ 'web', 'ubuntu', ];
 
     [ 'walma-screenshot' ]:
