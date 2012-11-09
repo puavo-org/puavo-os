@@ -36,7 +36,10 @@ done
 
 test -n "$config" && . $config
 
-mkdir -p $targetroot/etc/puppet/ltsp
+if ! [ -d $targetroot/etc/puppet/ltsp ]; then
+  echo 'Target system is not configured for ltsp/puppet!' > /dev/stderr
+  exit 1
+fi
 
 if [ -n "$arg_puppet_use_classes" ]; then
   PUPPET_USE_CLASSES=$arg_puppet_use_classes
