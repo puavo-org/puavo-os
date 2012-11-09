@@ -50,22 +50,27 @@ puppet_module_dirs=$srccopydir/ltsp-build-client/puppet/opinsys:$srccopydir/ltsp
           --serial-console     \
           --skipimage
       ;;
-    configure)
-      run_sudo ltsp-apply-puppet \
-          --config $srccopydir/ltsp-build-client/config \
-          --puppet-module-dirs $puppet_module_dirs
-      ;;
     chroot)
-      run_sudo $srccopydir/ltsp-build-client/ltsp-chroot \
-          --base $basedir \
-          --mount-all
+      run_sudo ltsp-chroot --base $basedir --mount-all
       ;;
     image)
       # XXX ltsp-build-client --onlyimage ?
       sudo mksquashfs \
-             $basedir/$arch /images/$build_version-$arch.img \
+             $basedir/$arch /opt/ltsp/images/$build_version-$arch.img \
              -noappend -no-progress -no-recovery -wildcards \
              -ef $srccopydir/ltsp-build-client/ltsp-update-image.excludes
+      ;;
+    update-chroot)
+      run_sudo ltsp-apply-puppet \
+          --config             $srccopydir/ltsp-build-client/config \
+          --ltsp-chroot-opts   "--mount-all" \
+          --puppet-module-dirs $puppet_module_dirs \
+          --targetroot         "$basedir/$arch"
+      ;;
+    update-local)
+      sudo ltsp-apply-puppet \
+          --config             $srccopydir/ltsp-build-client/config \
+          --puppet-module-dirs $puppet_module_dirs
       ;;
   esac
 } 2>&1 | tee $build_logfile

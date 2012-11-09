@@ -1,4 +1,4 @@
-TARGETS = all build configure chroot image
+TARGETS = all build chroot image update-chroot update-local
 
 default:
 	@echo "Available targets are: ${TARGETS}"
