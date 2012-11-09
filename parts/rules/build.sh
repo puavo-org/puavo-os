@@ -51,13 +51,9 @@ puppet_module_dirs=$srccopydir/ltsp-build-client/puppet/opinsys:$srccopydir/ltsp
           --skipimage
       ;;
     configure)
-      run_sudo $srccopydir/ltsp-build-client/ltsp-chroot \
-          --arch               $arch \
-          --base               $basedir \
-          --config             $srccopydir/ltsp-build-client/config \
-          --mount-all \
-          --puppet-module-dirs $puppet_module_dirs \
-          true
+      run_sudo ltsp-apply-puppet \
+          --config $srccopydir/ltsp-build-client/config \
+          --puppet-module-dirs $puppet_module_dirs
       ;;
     chroot)
       run_sudo $srccopydir/ltsp-build-client/ltsp-chroot \
