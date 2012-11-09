@@ -68,7 +68,7 @@ puppet_module_dirs=$srccopydir/ltsp-build-client/puppet/opinsys:$srccopydir/ltsp
           --targetroot         "$basedir/$arch"
       ;;
     update-local)
-      sudo ltsp-apply-puppet \
+      run_sudo ltsp-apply-puppet \
           --config             $srccopydir/ltsp-build-client/config \
           --puppet-module-dirs $puppet_module_dirs
       ;;
