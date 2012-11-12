@@ -1,5 +1,6 @@
 case "$MODE" in
     finalization)
-#        /usr/sbin/ltsp-update-kernels
+        # XXX disable this, we do not want this on builder machine
+        # /usr/sbin/ltsp-update-kernels
         ;;
 esac
