@@ -68,25 +68,24 @@ olcDatabase: {1}hdb
 olcDbDirectory: /var/lib/ldap
 olcSuffix: <%= @suffix %>
 olcRootDN: uid=admin,<%= @suffix %>
-olcDbConfig: {0}set_cachesize 0 20971520 0
-olcDbConfig: {1}set_lk_max_objects 1500
-olcDbConfig: {2}set_lk_max_locks 1500
-olcDbConfig: {3}set_lk_max_lockers 1500
-olcDbConfig: {4}set_lk_detect DB_LOCK_OLDEST
-olcDbConfig: {5}set_log_config DB_LOG_AUTO_REMOVE
-olcDbConfig: {6}set_lg_max 5242880
-olcDbConfig: {7}set_lg_bsize 2097512
-olcDbConfig: {8}set_tx_max 100
 olcLastMod: TRUE
 olcDbCheckpoint: 512 30
-olcDbIndex: uid pres,eq
-olcDbIndex: cn,sn,mail pres,eq,approx,sub
-olcDbIndex: objectClass eq
-olcDbIndex: puavoId eq
-olcDbIndex: memberUid eq
-olcDbIndex: macAddress eq
-olcDbIndex: uidNumber eq
-olcDbIndex: gidNumber eq
 olcSyncRepl: rid=001 provider="ldap://<%= @master_server %>" binddn="<%= @binddn %>" bindmethod=simple credentials="<%= @bindpw %>" searchbase="<%= @suffix %>" type=refreshAndPersist interval=00:00:00:05 retry="15 +" timeout=30 starttls=critical schemachecking=off scope=sub
 olcUpdateRef: ldap://<%= @master_server %>
+olcDbConfig: {0}set_cachesize 0 10485760 0
+olcDbConfig: {1}set_lg_bsize 2097512
+olcDbConfig: {2}set_flags DB_LOG_AUTOREMOVE
+olcDbIndex: sambaSID pres,eq
+olcDbIndex: sambaSIDList pres,eq
+olcDbIndex: sambaGroupType pres,eq
+olcDbIndex: uniqueMember pres,eq
+olcDbIndex: puavoTag pres,eq
+olcDbIndex: puavoDeviceType pres,eq
+olcDbIndex: puavoHostname pres,eq
+olcDbIndex: uid pres,eq
+olcDbIndex: krbPrincipalName pres,eq
+olcDbIndex: cn,sn,mail pres,eq,approx,sub
+olcDbIndex: objectClass eq
+olcDbIndex: entryUUID eq
+olcDbIndex: entryCSN eq
 <%= @acls %>
