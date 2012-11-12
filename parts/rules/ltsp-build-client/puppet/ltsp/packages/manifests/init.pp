@@ -2,6 +2,7 @@ class packages {
   @package {
     [ 'gawk'
     , 'git'
+    , 'lynx'
     , 'sl'
     , 'sudo'
     , 'tmux'
