@@ -28,14 +28,14 @@ end
 
 @kerberos_masterpw = get_password()
 
-conf_template = File.read("krb5.conf.erb")
+conf_template = File.read("/usr/share/puavotools/krb5.conf.erb")
 conf = ERB.new(conf_template, 0, "%<>")
 
 File.open("/etc/krb5.conf", "w") do |f|
   f.write conf.result
 end
 
-conf_template = File.read("kdc.conf.erb")
+conf_template = File.read("/usr/share/puavotools/kdc.conf.erb")
 conf = ERB.new(conf_template, 0, "%<>")
 
 File.open("/etc/krb5kdc/kdc.conf", "w") do |f|
