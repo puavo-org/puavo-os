@@ -1,5 +1,7 @@
 case "$MODE" in
     finalization)
-        /usr/sbin/ltsp-update-sshkeys
+        # XXX disable this, makes /etc/ssh/ssh_known_hosts that causes login
+        # XXX failures
+        # /usr/sbin/ltsp-update-sshkeys
         ;;
 esac
