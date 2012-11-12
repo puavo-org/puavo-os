@@ -51,6 +51,15 @@ system("slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b 'cn=config'") \
 system('chown -R openldap.openldap /etc/ldap/slapd.d /var/lib/ldap') \
   or raise 'could not chown /etc/ldap/slapd.d /var/lib/ldap to openldap user'
 
+system('install -m 0644 -g openldap /etc/puavo/certs/host.crt /etc/ssl/certs/slapd-server.crt') \
+  or raise "could not install /etc/puavo/certs/host.crt to /etc/ssl/certs/slapd-server.crt"
+
+system('install -m 0640 -g openldap /etc/puavo/certs/host.key /etc/ssl/certs/slapd-server.key') \
+  or raise "could not copy /etc/puavo/certs/host.key to /etc/ssl/certs/slapd-server.key"
+
+system('install -m 0644 -g openldap /etc/puavo/certs/orgcabundle.pem /etc/ssl/certs/slapd-ca.crt') \
+  or raise "could not copy /etc/puavo/certs/orgcabundle.pem to /etc/ssl/certs/slapd-ca.crt"
+
 system('chmod -R 0750 /var/lib/ldap') \
   or raise 'could not chmod /var/lib/ldap'
 
