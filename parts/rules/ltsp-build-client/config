@@ -1,6 +1,7 @@
 PUPPET_USE_CLASSES="
   console
   organisation_adm_users
+  packages::partner
   packages::ubuntu
   ssh_client
   sudo

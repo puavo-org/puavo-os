@@ -176,7 +176,7 @@ class packages {
       tag => [ 'graphics', 'ubuntu', ];
 
     [ 'skype' ]:
-      tag => [ 'instant_messaging', ];
+      tag => [ 'instant_messaging', 'partner', ];
 
     [ 'emesene'
     , 'empathy'
@@ -334,7 +334,7 @@ class packages {
       tag => [ 'programming', 'ubuntu', ];
 
     [ 'vmware-view-client' ]:
-      tag => [ 'remote_access', ];
+      tag => [ 'remote_access', 'vmware-view-client', ];
 
     [ 'gftp-gtk'
     , 'lftp'
@@ -420,9 +420,11 @@ class packages {
     , 'zip' ]:
       tag => [ 'utils', 'ubuntu', ];
 
-    [ 'adobe-flashplugin'
-    , 'google-talkplugin' ]:
+    [ 'google-talkplugin' ]:
       tag => [ 'web', ];
+
+    [ 'adobe-flashplugin' ]:
+      tag => [ 'web', 'partner', ];
 
     [ 'chromium-browser'
     , 'firefox'
