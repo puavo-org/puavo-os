@@ -296,7 +296,8 @@ class LdapAcl
 					 givenName
 					 sn
 					 preferredLanguage
-					 puavoPreferredDesktop)),	Rule.write(Set.admin),			Rule.read(Set.getent,
+					 puavoPreferredDesktop
+					 loginShell)),	Rule.write(Set.admin),			Rule.read(Set.getent,
 															  PuavoUid.puavo('dn')),						],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(givenName
