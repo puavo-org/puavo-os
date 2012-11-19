@@ -1,0 +1,17 @@
+#!/bin/sh
+
+on_exit()
+{
+    service openvpn stop puavo-wlanap
+    exit 0
+}
+
+trap on_exit TERM INT HUP
+
+service openvpn start puavo-wlanap
+
+while true
+do
+    sleep 300
+    puavo-wlanap-send-status
+done
