@@ -2,8 +2,6 @@
 
 tapif=$1
 
-. /usr/share/puavo-wlanap/common.sh
-
 ifconfig $tapif up
 
 echo 1 > /proc/sys/net/ipv4/ip_forward
@@ -16,8 +14,6 @@ brctl addif br.$tapif $tapif
 killall -9 hostapd
 killall -9 hostapd_cli
 sleep 2
-
-puavo_wlanap_write_hostapd_conf $tapif
 
 hostapd -B /etc/puavo-wlanap/hostapd.conf
 sleep 2

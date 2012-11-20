@@ -24,7 +24,6 @@ install : installdirs sbin share
 	$(INSTALL_PROGRAM) sbin/puavo-wlanap-configure $(DESTDIR)$(sbindir)/
 	$(INSTALL_PROGRAM) sbin/puavo-wlanap-send-event $(DESTDIR)$(sbindir)/
 	$(INSTALL_PROGRAM) sbin/puavo-wlanap-send-status $(DESTDIR)$(sbindir)/
-	$(INSTALL_PROGRAM) share/common.sh $(DESTDIR)$(datadir)/puavo-wlanap
 	$(INSTALL_PROGRAM) share/openvpn-up.sh $(DESTDIR)$(datadir)/puavo-wlanap
 	$(INSTALL_PROGRAM) share/openvpn-down.sh $(DESTDIR)$(datadir)/puavo-wlanap
 

@@ -24,13 +24,13 @@ Syslog.open(File.basename($0), Syslog::LOG_PID)
 
 Syslog.info('%s', 'Checking wlan configuration')
 
-server_ip   = get_serverip()
+auth_server_addr   = get_serverip()
 server_fqdn = nil
 
 # recover even if DNS is down
 until server_fqdn do
   begin
-    server_fqdn = Resolv.getname(server_ip)
+    server_fqdn = Resolv.getname(auth_server_addr)
   rescue
     Syslog.warn('%s', 'Problem reaching DNS server')
     sleep 10
@@ -43,14 +43,14 @@ end
 
 conf = (YAML::load_file("/etc/puavo-wlanap/init.conf") || {}) rescue {}
 
-wlanif    = conf['wlanif']
-wlantype  = conf['wlantype']
-password  = conf['password']
-ssid      = conf['ssid']
-puavoroot = conf['puavoroot']
-wlan_ca   = conf['wlan-ca']
-wlan_key  = conf['wlan-key']
-wlan_cert = conf['wlan-cert']
+wlanif         = conf['wlanif']
+wlantype       = conf['wlantype']
+wpa_passphrase = conf['password']
+ssid           = conf['ssid']
+puavoroot      = conf['puavoroot']
+wlan_ca        = conf['wlan-ca']
+wlan_key       = conf['wlan-key']
+wlan_cert      = conf['wlan-cert']
 
 File.open("/etc/puavo-wlanap/wlan-ca.crt", "w") do |file|
   file.puts(wlan_ca)
@@ -98,8 +98,8 @@ wlanch = nil           # mandatory parameter to be set with host tag
       wlanif = "wlan#{$1}"
       Syslog.info('%s', "From host tags set wlanif=#{ wlanif }")
     when /^psk:(.*)$/
-      password = $1
-      Syslog.info('%s', "From host tags set password")
+      wpa_passphrase = $1
+      Syslog.info('%s', "From host tags set wpa_passphrase")
     when /^ssid:(.*)$/
       ssid = $1
       Syslog.info('%s', "From host tags set ssid=#{ ssid }")
@@ -122,25 +122,76 @@ if not %w(open eap psk).include?(wlantype)
 end
 
 if wlantype == 'psk'
-  if password.nil? || password.empty?
+  if wpa_passphrase.nil? || wpa_passphrase.empty?
     Syslog.info('%s', "Password is not set, yet wlan type is 'psk', aborting")
     exit(1)
   end
-  if password.length < 8 || 63 < password.length
+  if wpa_passphrase.length < 8 || 63 < wpa_passphrase.length
     Syslog.info('%s',
                 "Password must be between 8-63 characters long, aborting")
     exit(1)
   end
 end
 
-File.open("/etc/puavo-wlanap/run.conf", "w") do |config|
-  config.puts "wlanif=#{wlanif}"
-  config.puts "wlantype=#{wlantype}"
-  config.puts "wlanch=#{wlanch}"
-  config.puts "serverip=#{server_ip}"
-  config.puts "password=#{password}"
+File.open("/etc/puavo-wlanap/hostapd.conf", "w") do |config|
+  config.puts "interface=#{wlanif}"
+  config.puts "bridge=br.tap0"
+  config.puts "driver=nl80211"
   config.puts "ssid=#{ssid}"
+  config.puts "country_code=FI"
+  config.puts "hw_mode=g"
+  config.puts "#channel=#{wlanch}"
+  config.puts "channel=6"
+  config.puts "max_num_sta=1000"
+  config.puts "wmm_enabled=1"
+  config.puts "ctrl_interface=/var/run/hostapd"
+  config.puts "ieee80211n=1"
+  config.puts "ht_capab=[HT40-]"
+  config.puts "#rsn_preauth_interfaces=eth0 br.tap0"
+  config.puts "wds_sta=1"
+  config.puts "#peerkey=1"
+
+  case wlantype
+  when 'open'
+    config.puts "wpa=0"
+  when 'eap'
+    config.puts "ieee8021x=1"
+    config.puts "auth_server_addr=#{eap_auth_server_addr}"
+    config.puts "auth_server_port=#{eap_auth_server_port}"
+    config.puts "auth_server_shared_secret=#{eap_auth_server_shared_secret}"
+    config.puts "acct_server_addr=#{eap_acct_server_addr}"
+    config.puts "acct_server_port=#{eap_acct_server_port}"
+    config.puts "acct_server_shared_secret=#{eap_acct_server_shared_secret}"
+    config.puts "wpa=2"
+    config.puts "auth_algs=3"
+    config.puts "#wpa_pairwise=TKIP CCMP"
+    config.puts "rsn_pairwise=CCMP"
+    config.puts "wpa_key_mgmt=WPA-EAP"
+    config.puts "eapol_version=1"
+    config.puts "eapol_key_index_workaround=1"
+    config.puts "eap_reauth_period=0"
+    config.puts "wpa_strict_rekey=0"
+    config.puts "wpa_group_rekey=0"
+    config.puts "rsn_preauth=1"
+    config.puts "wpa_gmk_rekey=0"
+  when 'psk'
+    config.puts "wpa=2"
+    config.puts "auth_algs=3"
+    config.puts "wpa_passphrase=#{wpa_passphrase}"
+    config.puts "#wpa_pairwise=TKIP CCMP"
+    config.puts "rsn_pairwise=CCMP"
+    config.puts "wpa_key_mgmt=WPA-PSK"
+    config.puts "eapol_version=1"
+    config.puts "eapol_key_index_workaround=1"
+    config.puts "eap_reauth_period=0"
+    config.puts "wpa_strict_rekey=0"
+    config.puts "wpa_group_rekey=0"
+    config.puts "#rsn_preauth=1"
+    config.puts "wpa_gmk_rekey=0"
+  end
 end
+
+Syslog.info('%s', 'Wrote hostapd configurations')
 
 File.open("/etc/openvpn/puavo-wlanap.conf", "w") do |config|
   config.puts "client"
