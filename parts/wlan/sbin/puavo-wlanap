@@ -3,15 +3,25 @@
 on_exit()
 {
     service openvpn stop puavo-wlanap
-    exit 0
+    exit $?
+}
+
+mainloop()
+{
+    while true
+    do
+	sleep 300
+	puavo-wlanap-send-status
+    done
 }
 
 trap on_exit TERM INT HUP
-
 service openvpn start puavo-wlanap
 
-while true
-do
-    sleep 300
-    puavo-wlanap-send-status
-done
+if [ $? -ne 0 ]
+then
+    echo "error: failed to initialize tunnels" >&2
+    exit 1
+fi
+
+mainloop
