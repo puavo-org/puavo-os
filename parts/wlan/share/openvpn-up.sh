@@ -22,12 +22,6 @@ puavo_wlanap_write_hostapd_conf $tapif
 hostapd -B /etc/puavo-wlanap/hostapd.conf
 sleep 2
 
-wlanif=$(puavo_wlanap_get_conf wlanif)
-while [ ! -S /var/run/hostapd/$wlanif ]
-do
-    sleep 1
-done
-
 while true
 do
     hostapd_cli -B -a puavo-wlanap-send-event
