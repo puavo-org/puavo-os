@@ -55,18 +55,18 @@ class CmdLine
     cmd_args.each do |i|
       case i
         when /^--(   force
-		   | install
-		   | netboot
-		   | noconfirm
-		   | noinstall
-		   | register
-		   | setup-openvpn )$/x
-	  params[$1] = true
-	else
-	  if new_arg.nil?
-	    new_arg = i
-	  else
-	    params[ new_arg.match(/^--(.*)$/)[1] ] = i
+                   | install
+                   | netboot
+                   | noconfirm
+                   | noinstall
+                   | register
+                   | setup-openvpn )$/x
+          params[$1] = true
+        else
+          if new_arg.nil?
+            new_arg = i
+          else
+            params[ new_arg.match(/^--(.*)$/)[1] ] = i
             new_arg = nil
           end
       end
@@ -146,9 +146,9 @@ class RegisterUserInterface
   def ask_devicetype()
     @responses['devicetype'] =
       choicelist(@connection.devicetypes['list'],
-		 'devicetype',
-		 @connection.devicetypes['title'],
-		 @connection.devicetypes['question'])
+                 'devicetype',
+                 @connection.devicetypes['title'],
+                 @connection.devicetypes['question'])
 
     @attributes = request_attributes(@responses['devicetype'])
 
@@ -159,7 +159,7 @@ class RegisterUserInterface
     sleep(1.5)
     disk_devices.each do |device|
       system("fdisk -l /dev/#{ device } | more") \
-	or raise "Error running fdisk for device '#{ device }'"
+        or raise "Error running fdisk for device '#{ device }'"
     end
   end
 
@@ -180,10 +180,10 @@ class RegisterUserInterface
     chosen_disk_device = nil
     until disk_devices.include?(chosen_disk_device) do
       disk_devices = %x(partprobe -ds) \
-		     .split("\n") \
-		     .map { |s| s.split(":")[0] } \
-		     .map { |s| (s.match(%r{^/dev/(.*)}))[1] } \
-		     .compact
+                     .split("\n") \
+                     .map { |s| s.split(":")[0] } \
+                     .map { |s| (s.match(%r{^/dev/(.*)}))[1] } \
+                     .compact
 
       puts '-----'
       puts "This machine has the following disk devices:\n"
@@ -195,7 +195,7 @@ class RegisterUserInterface
 
       puts "\nPossible disk devices are: #{ disk_devices.join(' ') }"
       chosen_disk_device = ask_with_default('Choose a disk device:',
-  					    chosen_disk_device)
+                                    chosen_disk_device)
     end
 
     chosen_disk_device
@@ -216,17 +216,17 @@ class RegisterUserInterface
       show_disk_devices(disk_device)
 
       partitions \
-	= %w(whole) \
-	  + IO.readlines('/proc/partitions') \
-	      .map { |line| (line.split)[3] } \
-	      .compact \
-	      .select { |part| part.match(/^#{ disk_device }[0-9]/) } \
+        = %w(whole) \
+          + IO.readlines('/proc/partitions') \
+              .map { |line| (line.split)[3] } \
+              .compact \
+              .select { |part| part.match(/^#{ disk_device }[0-9]/) } \
 
       puts "\nPossible partitions are: #{ partitions.join(' ') }"
       puts "You may choose 'cfdisk' to partition this disk,"
       puts "or choose 'whole' to use the whole disk."
       chosen_partition = ask_with_default('Choose a partition:',
-					  chosen_partition)
+                                          chosen_partition)
     end
 
     chosen_partition
@@ -248,8 +248,8 @@ class RegisterUserInterface
       next if %(devicetype school).include?(field)
 
       if unhandled[field] and not ask_all
-	Tools.errmsg(unhandled[field])
-	unhandled.delete(field)
+        Tools.errmsg(unhandled[field])
+        unhandled.delete(field)
       end
 
       question = attr['label'] + ':'
@@ -260,7 +260,7 @@ class RegisterUserInterface
 
     unhandled.each do |field, errmsg|
       Tools.errmsg("Server reported unhandled error for #{ field }: " \
-		   + errmsg)
+                   + errmsg)
     end
   end
 
@@ -270,12 +270,12 @@ class RegisterUserInterface
     @responses['school'] \
       = list.size == 1 ? list.keys[0] \
       : choicelist(@connection.schools['list'],
-		   'school',
-		   @connection.schools['title'],
-		   @connection.schools['question'])
+                   'school',
+                   @connection.schools['title'],
+                   @connection.schools['question'])
 
     @attributes = request_attributes(@responses['devicetype'],
-				     @responses['school'])
+                             @responses['school'])
 
     set_host_attributes()
   end
@@ -285,8 +285,8 @@ class RegisterUserInterface
     answer = HighLine.ask(prompt) { |q| q.whitespace = nil }
 
     return answer.match(/^\n$/)  ? default \
-	 : answer.match(/^\s+$/) ? ''      \
-	 : answer.strip
+         : answer.match(/^\s+$/) ? ''      \
+         : answer.strip
   end
 
   def choicelist(items, field, header, prompt)
@@ -295,13 +295,13 @@ class RegisterUserInterface
 
     choose do |menu|
       itemkeys.each do |id|
-	menu.choice(items[id]['label']) { selected = id }
+        menu.choice(items[id]['label']) { selected = id }
       end
       if @host.has_key?(field)
         menu.prompt = prompt + "[#{ items[ @host[field] ]['label'] }] "
-	menu.hidden('') { selected = @host[field] }
+        menu.hidden('') { selected = @host[field] }
       else
-	menu.prompt = prompt
+        menu.prompt = prompt
       end
       menu.header = header
     end
@@ -316,22 +316,22 @@ class RegisterUserInterface
       @connection = puavo_connection_request()
     else
       until (@connection)
-	begin
-	  begin
-	    @puavoserver = ask_with_default('Puavo server name:', @puavoserver)
-	    @connection  = PuavoDevicesConnection.new(@puavoserver, '', '', '')
-	  rescue HttpAuthError
-	  end
-	  @username   = ask_with_default('Username:', @username)
-	  @password   = HighLine.ask('Password: ') { |q| q.echo = '*' }
-	  @connection = puavo_connection_request()
-	rescue HttpAuthError
-	  Tools.errmsg('Wrong username and/or password.')
-	  @http = nil
-	rescue SocketError => e
-	  Tools.errmsg(e)
-	  @http = nil
-	end
+        begin
+          begin
+            @puavoserver = ask_with_default('Puavo server name:', @puavoserver)
+            @connection  = PuavoDevicesConnection.new(@puavoserver, '', '', '')
+          rescue HttpAuthError
+          end
+          @username   = ask_with_default('Username:', @username)
+          @password   = HighLine.ask('Password: ') { |q| q.echo = '*' }
+          @connection = puavo_connection_request()
+        rescue HttpAuthError
+          Tools.errmsg('Wrong username and/or password.')
+          @http = nil
+        rescue SocketError => e
+          Tools.errmsg(e)
+          @http = nil
+        end
       end
     end
   end
@@ -339,8 +339,8 @@ class RegisterUserInterface
   def default_puavoserver
     begin
       Resolv::DNS.open do |dns|
-	r = dns.getresources('_puavo._tcp', Resolv::DNS::Resource::IN::SRV)
-	r[0].target.to_s
+        r = dns.getresources('_puavo._tcp', Resolv::DNS::Resource::IN::SRV)
+        r[0].target.to_s
       end
     rescue
       Tools.errmsg('Could not lookup default puavoserver.')
@@ -349,8 +349,8 @@ class RegisterUserInterface
 
   def lookup_macaddresses(facts)
     facts['interfaces'].split(',').
-			map { |intf| facts["macaddress_#{intf}"] }.
-			compact.sort.uniq.join(' ')
+                        map { |intf| facts["macaddress_#{intf}"] }.
+                        compact.sort.uniq.join(' ')
   end
 
   def print_machine_info
@@ -361,15 +361,15 @@ class RegisterUserInterface
       next if attr['label'].empty?
       field = attr['id']
       value =
-	case field
-	  when 'devicetype'
-	    @connection.devicetypes['list'][ @host[field] ]['label']
-	  when 'school'
-	    next unless school_required?
-	    @connection.schools['list'][ @host[field] ]['label']
-	  else
-	    @host[field]
-	end
+        case field
+          when 'devicetype'
+            @connection.devicetypes['list'][ @host[field] ]['label']
+          when 'school'
+            next unless school_required?
+            @connection.schools['list'][ @host[field] ]['label']
+          else
+            @host[field]
+        end
       printf("%-24s%s\n", attr['label'] + ': ', value)
     end
 
@@ -378,16 +378,16 @@ class RegisterUserInterface
 
   def puavo_connection_request()
     PuavoDevicesConnection.new(@puavoserver,
-			       @username,
-			       @password,
-			       @mode['boottype'])
+                               @username,
+                               @password,
+                               @mode['boottype'])
   end
 
   def register_to_server
     connect_to_puavo()
 
     @attributes = request_attributes(@cmdline_params['devicetype'],
-				     @cmdline_params['school'])
+                                     @cmdline_params['school'])
 
     info = {}
 
@@ -395,28 +395,28 @@ class RegisterUserInterface
       print_machine_info()
 
       until @mode['noconfirm'] or agree('Is this information correct? (y/n) ')
-	ask_machine_info()
-	print_machine_info()
+        ask_machine_info()
+        print_machine_info()
       end
 
       unless @mode['noinstall']
-	info['installation'] = ask_installation_info()
+        info['installation'] = ask_installation_info()
       end
 
       HighLine.say 'Sending host information to puavo server...'
       response_data = @connection.post_host(@host)
       if response_data['register_info']
-	if @host['host_certificate_request'] \
-	  and not response_data['register_info']['userCertificate']
-	    Tools.errmsg('Server did not send a signed certificate.')
-	else
-	  info['registration'] = response_data['register_info']
-	  Tools.goodmsg('This machine is now successfully registered.')
+        if @host['host_certificate_request'] \
+          and not response_data['register_info']['userCertificate']
+            Tools.errmsg('Server did not send a signed certificate.')
+        else
+          info['registration'] = response_data['register_info']
+          Tools.goodmsg('This machine is now successfully registered.')
 
-	  break
-	end
+          break
+        end
       else
-	ask_machine_info(response_data['errors'], false)
+        ask_machine_info(response_data['errors'], false)
       end
     end
 
@@ -438,10 +438,10 @@ class RegisterUserInterface
     @attributes.each do |attr|
       next if attr['id'] == 'school' and not school_required?
       @host[ attr['id'] ] = @responses[       attr['id'] ] ||
-			    @cmdline_params[  attr['id'] ] ||
-			    attr['default']                ||
-			    @system_defaults[ attr['id'] ] ||
-			    ''
+                            @cmdline_params[  attr['id'] ] ||
+                            attr['default']                ||
+                            @system_defaults[ attr['id'] ] ||
+                            ''
     end
   end
 end
@@ -467,13 +467,13 @@ class PuavoDevicesConnection
     @schools = userinfo['managed_schools'].clone
     @schools['list'] = Hash[
       userinfo['managed_schools']['list'].map do |school|
-	[
-	  school['puavoId'].to_s,
-	  {
-	    'label' => school['displayName'],
-	    'order' => school['puavoId'],
-	  },
-	]
+        [
+          school['puavoId'].to_s,
+          {
+            'label' => school['displayName'],
+            'order' => school['puavoId'],
+          },
+        ]
       end
     ]
   end
@@ -492,14 +492,14 @@ class PuavoDevicesConnection
 
     [
       {
-	'default' => @devicetypes['default'].to_s,
-	'id'      => 'devicetype',
-	'label'   => @devicetypes['label'],
+        'default' => @devicetypes['default'].to_s,
+        'id'      => 'devicetype',
+        'label'   => @devicetypes['label'],
       },
       {
-	'default' => @schools['default'].to_s,
-	'id'      => 'school',
-	'label'   => @schools['label'] },
+        'default' => @schools['default'].to_s,
+        'id'      => 'school',
+        'label'   => @schools['label'] },
     ] + form['attributes'] 
   end
 
@@ -509,7 +509,7 @@ class PuavoDevicesConnection
       request.basic_auth(@username, @password)
       response = http.request(request)
       if response.class == Net::HTTPUnauthorized
-	raise HttpAuthError
+        raise HttpAuthError
       end
       JSON.parse(response.body)
     end
@@ -518,31 +518,31 @@ class PuavoDevicesConnection
   def host_to_json(host)
     {
       @post_info['object_key'] => Hash[
-	host.map do |key, value|
-	  [
-	    key,
-	    (key == 'macAddress' ? value.split(' ') : value)
-	  ]
-	end
+        host.map do |key, value|
+          [
+            key,
+            (key == 'macAddress' ? value.split(' ') : value)
+          ]
+        end
       ]
     }.to_json
   end
 
   def post_host(host)
     request = Net::HTTP::Post.new(@post_info['url'],
-				  { 'Content-Type' => 'application/json' })
+                                  { 'Content-Type' => 'application/json' })
     request.basic_auth(@username, @password)
     response = @http.request(request, host_to_json(host))
     case response.code
       when /^2/
-	# successful request
+        # successful request
         Hash[ 'errors' => {}, 'register_info' => JSON.parse(response.body), ]
       when /^5/
-	Tools.errmsg("Server response is #{ response.code }: " \
-		     + response.message)
-	Hash[ 'errors' => {} ]
+        Tools.errmsg("Server response is #{ response.code }: " \
+                     + response.message)
+        Hash[ 'errors' => {} ]
       else
-	Hash[ 'errors' => Hash[ JSON.parse(response.body) ] ]
+        Hash[ 'errors' => Hash[ JSON.parse(response.body) ] ]
     end
   end
 end
@@ -568,19 +568,19 @@ class PostRegisterConfiguration
 
     if @register_info['userCertificate']
       raise 'Root CA missing' \
-	unless @register_info['rootca']
+        unless @register_info['rootca']
       raise 'Organisation CA bundle missing' \
-	unless @register_info['orgcabundle']
+        unless @register_info['orgcabundle']
 
       @cert.accept_signed_certificate(@register_info['userCertificate'],
-				      @register_info['rootca'],
-				      @register_info['orgcabundle'])
+                                      @register_info['rootca'],
+                                      @register_info['orgcabundle'])
 
       Tools.mkdir("#{ Puavodir }/certs")
       @cert.write_to_filesystem("#{ Puavodir }/certs/host.crt",
-				"#{ Puavodir }/certs/host.key",
-				"#{ Puavodir }/certs/rootca.pem",
-				"#{ Puavodir }/certs/orgcabundle.pem")
+                                "#{ Puavodir }/certs/host.key",
+                                "#{ Puavodir }/certs/rootca.pem",
+                                "#{ Puavodir }/certs/orgcabundle.pem")
     end
 
     if @register_info['ldap_password'] then
@@ -629,13 +629,13 @@ class Installation
       'install_ltspimages'  => lambda { Setup.install_ltspimages(conf)  },
       'openvpn'             => lambda { Setup.openvpn()                     },
       'puppet'              => lambda { Setup.puppet(conf['puppet_server'],
-						     fqdn)                  },
+                                                     fqdn)                  },
       'setup_grub'          => lambda { Setup.setup_grub(conf)              },
     }
 
     my_todo_list = todo_lists[ conf['devicetype'] ]
     raise 'No installation todo-list for device type ' \
-	  + "'#{ conf['devicetype'] }'" \
+          + "'#{ conf['devicetype'] }'" \
       unless my_todo_list
 
     my_todo_list.each { |taskname| tasks[taskname].call() }
@@ -651,7 +651,7 @@ class Installation
 
   def self.run_puppet(opts='')
     unless system('puppetd --test --logdest console' +
-		  " --logdest /var/log/puppet/install.log #{ opts }")
+                  " --logdest /var/log/puppet/install.log #{ opts }")
       raise 'problem running puppetd'
     end
   end
@@ -663,10 +663,10 @@ class Setup
 
     begin
       File.open('/etc/hostname', 'w') do |f|
-	f.print "#{ hostname }\n"
+        f.print "#{ hostname }\n"
       end
       unless system('hostname --file /etc/hostname')
-	raise 'could not set hostname'
+        raise 'could not set hostname'
       end
     rescue Exception => e
       Tools.errmsg(e.message)
@@ -677,7 +677,7 @@ class Setup
   end
 
   def self.kerberos(principals)
-    return	# XXX this method is not used yet
+    return # XXX this method is not used yet
 
     begin
       error = false
@@ -685,19 +685,19 @@ class Setup
       password  = HighLine.ask('Password: ') { |q| q.echo = '*' }
 
       principals.each do |princ|
-	goodmsg, errmsg = [], []
-	Open3.popen3('kadmin', '-p', principal, '-w', password, '-q',
-		     "add_principal #{ princ }") do |stdin, stdout, stderr|
-	  goodmsg = stdout.readlines
-	  errmsg  = stderr.readlines
-	end
-	# XXX use some criteria to figure out if operation was ok
-	status = $?.exitstatus
-	Tools.errmsg("exit status is #{ status }")
-	goodmsg.each { |l| Tools.goodmsg(l.chomp) }
-	errmsg .each { |l| Tools.errmsg(l.chomp)  }
-	error = true
-	break
+        goodmsg, errmsg = [], []
+        Open3.popen3('kadmin', '-p', principal, '-w', password, '-q',
+                     "add_principal #{ princ }") do |stdin, stdout, stderr|
+          goodmsg = stdout.readlines
+          errmsg  = stderr.readlines
+        end
+        # XXX use some criteria to figure out if operation was ok
+        status = $?.exitstatus
+        Tools.errmsg("exit status is #{ status }")
+        goodmsg.each { |l| Tools.goodmsg(l.chomp) }
+        errmsg .each { |l| Tools.errmsg(l.chomp)  }
+        error = true
+        break
       end
     end while error
   end
@@ -723,7 +723,7 @@ class Setup
       FileUtils.cp(OrgCABundlePath, ovpn_orgcabundle)
 
       File.open('/etc/openvpn/runme', 'w', 0755) do |f|
-	f.print <<-EOF.gsub(/^\t+/, '')
+        f.print <<-EOF.gsub(/^\t+/, '')
 		#!/bin/sh
 
 		SCRIPTSUBDIR=$1
@@ -736,7 +736,7 @@ class Setup
 		EOF
       end
       File.open('/etc/openvpn/puavoclient.conf', 'w', 0644) do |f|
-	f.print <<-EOF.gsub(/^\t+/, '')
+        f.print <<-EOF.gsub(/^\t+/, '')
 		client
 		dev tun
 		proto tcp-client
@@ -767,13 +767,13 @@ class Setup
 
       if restart_and_wait
         unless system('service openvpn restart')
-	  raise 'problem restarting openvpn'
+          raise 'problem restarting openvpn'
         end
 
         sleep 2
         until system('ifconfig tun0 >/dev/null 2>&1')
-	  Tools.errmsg('waiting for tun0 to come up...')
-	  sleep 2
+          Tools.errmsg('waiting for tun0 to come up...')
+          sleep 2
         end
         sleep 2
       end
@@ -787,9 +787,9 @@ class Setup
 
   def self.manage_local(diskdevice, partition, opmode)
     system('manage_local_ltspclient_installation',
-	   opmode,
-	   diskdevice,
-	   partition) \
+           opmode,
+           diskdevice,
+           partition) \
       or raise "Error doing install operation #{ opmode }"
   end
 
@@ -844,22 +844,22 @@ class Setup
       Tools.mkdir('/etc/puppet/ssl/certs')
       Tools.mkdir('/etc/puppet/ssl/private_keys', 0750)
       FileUtils.chown('puppet', 'root', [ '/etc/puppet/ssl',
-					  '/etc/puppet/ssl/certs',
-					  '/etc/puppet/ssl/private_keys', ])
+                                          '/etc/puppet/ssl/certs',
+                                          '/etc/puppet/ssl/private_keys', ])
 
       FileUtils.cp(HostCrtPath, "/etc/puppet/ssl/certs/#{ fqdn }.pem")
       FileUtils.cp(HostKeyPath, "/etc/puppet/ssl/private_keys/#{ fqdn }.pem")
       FileUtils.cp(OrgCABundlePath, '/etc/puppet/ssl/certs/ca.pem')
 
       File.open('/etc/default/puppet', 'w') do |f|
-	f.print <<-EOF.gsub(/^\t+/, '')
+        f.print <<-EOF.gsub(/^\t+/, '')
 		START=yes
 		DAEMON_OPTS=""
 		EOF
       end
 
       File.open('/etc/puppet/puppet.conf', 'w') do |f|
-	f.print <<-EOF.gsub(/^\t+/, '')
+        f.print <<-EOF.gsub(/^\t+/, '')
 		[main]
 		certname=#{ fqdn }
 		factpath=/var/lib/puppet/lib/facter
@@ -900,14 +900,14 @@ class Control
 
     if cmdline_params['noinstall']
       Tools.goodmsg('Not doing post-registration configuration ' \
-		    + '(--noinstall is set)')
+                    + '(--noinstall is set)')
       return
     end
 
     PostRegisterConfiguration.new(cert,
-				  info['installation'],
-				  info['registration']) \
-			     .setup
+                                  info['installation'],
+                                  info['registration']) \
+                             .setup
   end
 
   def self.install(cmdline_params)
