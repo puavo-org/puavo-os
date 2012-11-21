@@ -1,0 +1,24 @@
+options {
+    port   5000;
+    syslog daemon;
+}
+ 
+wlan {
+    passwd    wlan;
+    type      ether;
+    proto     udp;
+ 
+    up {
+        program "ifconfig %% up";
+	program "brctl addbr br.#{wlanif}";
+	program "ifconfig br.#{wlanif} up";
+	program "brctl addif br.#{wlanif} %%";
+    };
+ 
+    down {
+    	program "brctl delif br.#{wlanif} %%";
+	program "ifconfig br.#{wlanif} down";
+	program "brctl delbr br.#{wlanif}";
+    	program "ifconfig %% down";
+    };
+}

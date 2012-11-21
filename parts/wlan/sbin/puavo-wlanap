@@ -1,8 +1,14 @@
 #!/bin/sh
 
+. /etc/puavo-wlanap.conf
+
+puavo-wlanap-configure
+
 on_exit()
 {
-    service openvpn stop puavo-wlanap
+    kill $(cat /var/tmp/puavo-wlanap/hostapd.pid)
+    rm /var/tmp/puavo-wlanap/hostapd.pid
+    killall vtund
     exit $?
 }
 
@@ -16,7 +22,9 @@ mainloop()
 }
 
 trap on_exit TERM INT HUP
-service openvpn start puavo-wlanap
+
+vtund -n -f /var/tmp/puavo-wlanap/vtund.conf wlan $server_ip&
+hostapd -P /var/tmp/puavo-wlanap/hostapd.pid /var/tmp/puavo-wlanap/hostapd.conf&
 
 if [ $? -ne 0 ]
 then
