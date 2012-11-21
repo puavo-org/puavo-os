@@ -584,7 +584,11 @@ class PostRegisterConfiguration
     end
 
     if @register_info['ldap_password'] then
-      Setup.ldap_password(@register_info['ldap_password'])
+      pp "ladap paASS", @register_info
+      Setup.ldap(
+        @register_info['dn'],
+        @register_info['ldap_password']
+      )
     end
 
     write_host_configuration()
@@ -702,11 +706,17 @@ class Setup
     end while error
   end
 
-  def self.ldap_password(ldap_password)
+  def self.ldap(dn, password)
     Tools.mkdir("#{ Puavodir }/ldap")
+
     File.open("#{ Puavodir }/ldap/password", 'w', 0600) do |f|
-      f.print "#{ ldap_password }\n"
+      f.print "#{ password }\n"
     end
+
+    File.open("#{ Puavodir }/ldap/dn", 'w', 0600) do |f|
+      f.print "#{ dn }\n"
+    end
+
     Tools.goodmsg('LDAP password is now set.')
   end
 
