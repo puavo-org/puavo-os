@@ -4,6 +4,7 @@ sbindir = $(exec_prefix)/sbin
 datarootdir = $(prefix)/share
 datadir = $(datarootdir)
 sysconfdir = $(prefix)/etc
+localstatedir = $(prefix)/var
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -17,6 +18,7 @@ installdirs : build-aux/mkinstalldirs
 	build-aux/mkinstalldirs $(DESTDIR)$(sbindir)
 	build-aux/mkinstalldirs $(DESTDIR)$(sysconfdir)/puavo-wlanap
 	build-aux/mkinstalldirs $(DESTDIR)$(datadir)/puavo-wlanap
+	build-aux/mkinstalldirs $(DESTDIR)$(localstatedir)/tmp/puavo-wlanap
 
 .PHONY : install
 install : installdirs sbin share
