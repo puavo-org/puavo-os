@@ -27,6 +27,7 @@ install : installdirs sbin share
 	$(INSTALL_DATA) etc/puavo-wlanap/eap_hostapd.conf.template $(DESTDIR)$(sysconfdir)/puavo-wlanap
 	$(INSTALL_DATA) etc/puavo-wlanap/psk_hostapd.conf.template $(DESTDIR)$(sysconfdir)/puavo-wlanap
 	$(INSTALL_DATA) etc/puavo-wlanap/vtund.conf.template $(DESTDIR)$(sysconfdir)/puavo-wlanap
+	$(INSTALL_DATA) etc/puavo-wlanap/config $(DESTDIR)$(sysconfdir)/puavo-wlanap
 
 .PHONY : clean
 clean :

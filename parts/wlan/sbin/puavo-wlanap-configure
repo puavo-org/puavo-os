@@ -2,7 +2,7 @@
 
 set -u
 
-. /etc/puavo-wlanap.conf
+. /etc/puavo-wlanap/config
 
 while read line
 do

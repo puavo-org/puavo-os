@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. /etc/puavo-wlanap.conf
+. /etc/puavo-wlanap/config
 
 puavo-wlanap-configure
 
