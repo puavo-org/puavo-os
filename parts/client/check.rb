@@ -6,6 +6,7 @@ end
 
 [
   "/etc/puavo/hostname",
+  "/etc/puavo/domain",
   "/etc/puavo/host_configuration",
   "/etc/puavo/certs/host.key",
   "/etc/puavo/certs/rootca.pem",

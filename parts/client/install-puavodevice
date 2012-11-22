@@ -566,6 +566,14 @@ module PostRegister
     end
   end
 
+  def self.write_domain(domain)
+    ensure_puavodir
+
+    File.open("#{ Puavodir }/domain", 'w', 0644) do |f|
+      f.print "#{ domain }\n"
+    end
+  end
+
   def self.write_ldap_info(dn, password, base)
     ensure_puavodir
     Tools.mkdir(Puavodir + "/ldap")
@@ -937,6 +945,8 @@ class Control
     )
 
     PostRegister.write_hostname(rui.responses["puavoHostname"])
+
+    PostRegister.write_domain(organisation_info["domain"])
 
     PostRegister.write_host_configuration(
       info['registration']['host_configuration'].merge(info['installation'])
