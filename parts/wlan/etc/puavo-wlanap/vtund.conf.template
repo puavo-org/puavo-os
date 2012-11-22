@@ -7,6 +7,10 @@ wlan {
     passwd    wlan;
     type      ether;
     proto     udp;
+    speed     0;     # Full speed ahead! Aye aye, captain!
+    encrypt   no;
+    compress  no;
+    multi     yes;
  
     up {
         program "ifconfig %% up";
