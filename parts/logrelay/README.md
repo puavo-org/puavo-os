@@ -1,6 +1,7 @@
 # Logrelay
 
-Buffering log relay from UPD to HTTP. Used by [school-status](https://github.com/opinsys/school-status).
+Buffering log relay from UDP to HTTP.  Used by
+[school-status](https://github.com/opinsys/school-status).
 
 Required Ubuntu Lucid packages:
 
@@ -9,17 +10,19 @@ Required Ubuntu Lucid packages:
 
 ## Usage
 
-Logrelay will listen to the UDP port specified in /etc/logrelay.rb and will relay
-the UDP packets to given target as JSON HTTP POST. See `config.rb-example`.
+Logrelay will listen to the UDP port specified in /etc/logrelay.rb
+and will relay the UDP packets to given target as JSON HTTP POST.  See
+`config.rb-example`.
 
 ## Packet format
 
-The packet is constructed from multiple key-value pairs separated by line breaks:
+The packet is constructed from multiple key-value pairs separated by line
+breaks:
 
     <key>:<value | [comma separated list of values]>
 
-Key `type` is required for every packet. If it is defined as `log` Logrelay
-will just log it and won't relay it. Usefull for debugging.
+Key `type` is required for every packet.  If it is defined as `log` Logrelay
+will just log it and won't relay it.  Useful for debugging.
 
 Example
 
