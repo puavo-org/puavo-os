@@ -115,6 +115,9 @@ class HostCertificate
 end
 
 class RegisterUserInterface
+
+  attr_accessor :responses
+
   def initialize(cmdline_params, cert)
     @responses       = {}
     @cmdline_params  = cmdline_params
@@ -548,10 +551,11 @@ class PuavoDevicesConnection
 end
 
 class PostRegisterConfiguration
-  def initialize(cert, installation_info, register_info)
+  def initialize(cert, installation_info, register_info, responses)
     @cert              = cert
     @installation_info = installation_info
     @register_info     = register_info
+    @responses         = responses
   end
 
   def laptop_install?
@@ -565,6 +569,10 @@ class PostRegisterConfiguration
     end
 
     Tools.mkdir(Puavodir)
+
+    File.open("#{ Puavodir }/hostname", 'w', 0644) do |f|
+      f.print "#{ @responses["puavoHostname"] }\n"
+    end
 
     if @register_info['userCertificate']
       raise 'Root CA missing' \
@@ -919,8 +927,9 @@ class Control
 
     PostRegisterConfiguration.new(cert,
                                   info['installation'],
-                                  info['registration']) \
-                             .setup
+                                  info['registration'],
+                                  rui.responses).setup
+
   end
 
   def self.install(cmdline_params)
