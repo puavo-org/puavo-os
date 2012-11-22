@@ -563,16 +563,18 @@ class PostRegisterConfiguration
       && @register_info['host_configuration']['devicetype'] == 'laptop'
   end
 
+  def write_domains
+    File.open("#{ Puavodir }/hostname", 'w', 0644) do |f|
+      f.print "#{ @responses["puavoHostname"] }\n"
+    end
+  end
+
   def setup
     if laptop_install?
       Setup.prepare_laptop_disk(@installation_info)
     end
 
     Tools.mkdir(Puavodir)
-
-    File.open("#{ Puavodir }/hostname", 'w', 0644) do |f|
-      f.print "#{ @responses["puavoHostname"] }\n"
-    end
 
     if @register_info['userCertificate']
       raise 'Root CA missing' \
@@ -592,6 +594,7 @@ class PostRegisterConfiguration
     end
 
     write_ldap_info()
+    write_domains()
     write_host_configuration()
   end
 
