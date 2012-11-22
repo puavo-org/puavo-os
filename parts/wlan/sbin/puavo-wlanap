@@ -1,5 +1,14 @@
 #!/bin/sh
 
+on_exit()
+{
+    kill $(cat /var/tmp/puavo-wlanap/hostapd.pid)
+    rm /var/tmp/puavo-wlanap/hostapd.pid
+    kill $(cat /var/run/vtund.wlan-$server_ip.pid)
+    rm /var/run/vtund.wlan-$server_ip.pid
+    exit 0
+}
+
 . /etc/puavo-wlanap/config
 
 puavo-wlanap-update-configs
@@ -14,12 +23,19 @@ then
     exit $?
 fi
 
-vtund -n -f /var/tmp/puavo-wlanap/vtund.conf wlan $server_ip&
-hostapd -P /var/tmp/puavo-wlanap/hostapd.pid /var/tmp/puavo-wlanap/hostapd.conf&
+trap on_exit INT TERM HUP
 
+vtund -f /var/tmp/puavo-wlanap/vtund.conf wlan $server_ip
 if [ $? -ne 0 ]
 then
-    echo "error: failed to initialize tunnels" >&2
+    echo "error: failed to start vtun" | logger -p user.err
+    exit 1
+fi
+
+hostapd -B -P /var/tmp/puavo-wlanap/hostapd.pid /var/tmp/puavo-wlanap/hostapd.conf
+if [ $? -ne 0 ]
+then
+    echo "error: failed to start hostapd" | logger -p user.err
     exit 1
 fi
 
@@ -28,4 +44,3 @@ do
     sleep 300
     puavo-wlanap-send-status
 done
-
