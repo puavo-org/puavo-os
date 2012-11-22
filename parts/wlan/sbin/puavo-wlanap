@@ -2,26 +2,17 @@
 
 . /etc/puavo-wlanap/config
 
-puavo-wlanap-configure
+puavo-wlanap-update-configs
 
-on_exit()
-{
-    kill $(cat /var/tmp/puavo-wlanap/hostapd.pid)
-    rm /var/tmp/puavo-wlanap/hostapd.pid
-    killall vtund
+if [ $? -eq 1 ]
+then
+    exit 0
+fi
+
+if [ $? -gt 1 ]
+then
     exit $?
-}
-
-mainloop()
-{
-    while true
-    do
-	sleep 300
-	puavo-wlanap-send-status
-    done
-}
-
-trap on_exit TERM INT HUP
+fi
 
 vtund -n -f /var/tmp/puavo-wlanap/vtund.conf wlan $server_ip&
 hostapd -P /var/tmp/puavo-wlanap/hostapd.pid /var/tmp/puavo-wlanap/hostapd.conf&
@@ -32,4 +23,9 @@ then
     exit 1
 fi
 
-mainloop
+while true
+do
+    sleep 300
+    puavo-wlanap-send-status
+done
+

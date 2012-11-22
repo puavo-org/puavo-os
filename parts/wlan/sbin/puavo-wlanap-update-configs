@@ -49,19 +49,19 @@ done < $puavoroot/hosttags
 if [ -z "$wlanch" ]
 then
     logger -p user.info "wlan channel is not set, exiting"
-    exit 0
+    exit 1
 fi
 
 if [ -z "$ssid" ]
 then
     logger -p user.err "wlan ssid is not set, aborting"
-    exit 1
+    exit 2
 fi
 
 if [ -z "$wlantype" ]
 then
     logger -p user.err "wlan type is not set, aborting"
-    exit 1
+    exit 3
 fi
 
 if [ "$wlantype" = "psk" ]
@@ -69,7 +69,7 @@ then
     if [ ${#password} -lt 8 -o ${#password} -gt 63 ]
     then
 	logger -p user.err "password must be 8-63 characters long, aborting"
-	exit 1
+	exit 4
     fi
 fi
 
