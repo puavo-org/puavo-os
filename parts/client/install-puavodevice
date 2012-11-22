@@ -116,7 +116,7 @@ end
 
 class RegisterUserInterface
 
-  attr_accessor :responses
+  attr_accessor :responses, :connection
 
   def initialize(cmdline_params, cert)
     @responses       = {}
@@ -574,7 +574,7 @@ module PostRegister
     end
   end
 
-  def self.write_ldap_info(dn, password, base)
+  def self.write_ldap_info(dn, password, base, master)
     ensure_puavodir
     Tools.mkdir(Puavodir + "/ldap")
 
@@ -584,6 +584,10 @@ module PostRegister
 
     File.open("#{ Puavodir }/ldap/base", 'w', 0644) do |f|
       f.print "#{ base }\n"
+    end
+
+    File.open("#{ Puavodir }/ldap/master", 'w', 0644) do |f|
+      f.print "#{ master }\n"
     end
 
     File.open("#{ Puavodir }/ldap/password", 'w', 0600) do |f|
@@ -936,8 +940,8 @@ class Control
     PostRegister.write_ldap_info(
       info['registration']['dn'],
       info['registration']['ldap_password'],
-      info['registration']['base']
-      # organisation_info['ldap_host']
+      info['registration']['base'],
+      organisation_info['ldap_host']
     )
 
     PostRegister.write_kerberos_info(
