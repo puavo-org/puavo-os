@@ -594,6 +594,7 @@ class PostRegisterConfiguration
     end
 
     write_ldap_info()
+    write_kerberos_info()
     write_domains()
     write_host_configuration()
   end
@@ -615,6 +616,14 @@ class PostRegisterConfiguration
     end
 
     Tools.goodmsg('LDAP information is now set.')
+  end
+
+  def write_kerberos_info
+    Tools.mkdir(Puavodir + "/kerberos")
+    File.open("#{ Puavodir }/kerberos/realm", 'w', 0644) do |f|
+      f.print "#{ @register_info["host_configuration"]["kerberos_realm"] }\n"
+    end
+    Tools.goodmsg('Kerberos information is now set.')
   end
 
   def write_host_configuration
