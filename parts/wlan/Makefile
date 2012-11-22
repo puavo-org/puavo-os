@@ -18,7 +18,7 @@ installdirs : build-aux/mkinstalldirs
 	build-aux/mkinstalldirs $(DESTDIR)$(localstatedir)/tmp/puavo-wlanap
 
 .PHONY : install
-install : installdirs sbin share
+install : installdirs sbin
 	$(INSTALL_PROGRAM) sbin/* $(DESTDIR)$(sbindir)/
 	$(INSTALL_DATA) etc/puavo-wlanap/* $(DESTDIR)$(sysconfdir)/puavo-wlanap
 
