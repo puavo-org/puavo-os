@@ -29,6 +29,7 @@ log "Starting with uid #{ Process.uid } and gid #{ Process.gid }"
 USERNAME = File.open("/etc/puavo/ldap/dn", "r").read.strip
 PASSWORD = File.open("/etc/puavo/ldap/password", "r").read.strip
 
+Process.initgroups(GROUP, Etc.getgrnam(GROUP).gid)
 Process::Sys.setgid(Etc.getgrnam(GROUP).gid)
 Process::Sys.setuid(Etc.getpwnam(USER).uid)
 
