@@ -591,16 +591,27 @@ class PostRegisterConfiguration
                                 "#{ Puavodir }/certs/orgcabundle.pem")
     end
 
-    if @register_info['ldap_password'] then
-      pp "ladap paASS", @register_info
-      Setup.ldap(
-        @register_info['dn'],
-        @register_info['ldap_password'],
-        @register_info['base']
-      )
+    write_ldap_info()
+    write_host_configuration()
+  end
+
+  def write_ldap_info
+
+    Tools.mkdir(Puavodir + "/ldap")
+
+    File.open("#{ Puavodir }/ldap/dn", 'w', 0644) do |f|
+      f.print "#{ @register_info['dn'] }\n"
     end
 
-    write_host_configuration()
+    File.open("#{ Puavodir }/ldap/base", 'w', 0644) do |f|
+      f.print "#{ @register_info['base'] }\n"
+    end
+
+    File.open("#{ Puavodir }/ldap/password", 'w', 0600) do |f|
+      f.print "#{ @register_info['ldap_password'] }\n"
+    end
+
+    Tools.goodmsg('LDAP information is now set.')
   end
 
   def write_host_configuration
@@ -715,21 +726,6 @@ class Setup
     end while error
   end
 
-  def self.ldap(dn, password, base)
-    Tools.mkdir("#{ Puavodir }/ldap")
-
-    {
-      "dn" => dn,
-      "password" => password,
-      "base" => base
-    }.each do |filename, value|
-      File.open("#{ Puavodir }/ldap/#{ filename }", 'w', 0600) do |f|
-        f.print "#{ value }\n"
-      end
-    end
-
-    Tools.goodmsg('LDAP password is now set.')
-  end
 
   def self.openvpn(restart_and_wait=true)
     begin
