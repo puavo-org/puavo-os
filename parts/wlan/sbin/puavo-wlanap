@@ -1,11 +1,21 @@
 #!/bin/sh
 
-on_exit()
+stop_hostapd()
 {
     kill $(cat /var/tmp/puavo-wlanap/hostapd.pid)
     rm /var/tmp/puavo-wlanap/hostapd.pid
+}
+
+stop_vtund()
+{
     kill $(cat /var/run/vtund.wlan-$server_ip.pid)
     rm /var/run/vtund.wlan-$server_ip.pid
+}
+
+on_exit()
+{
+    stop_hostapd
+    stop_vtund
     exit 0
 }
 
@@ -36,8 +46,7 @@ hostapd -B -P /var/tmp/puavo-wlanap/hostapd.pid /var/tmp/puavo-wlanap/hostapd.co
 if [ $? -ne 0 ]
 then
     echo "error: failed to start hostapd" | logger -p user.err
-    kill $(cat /var/run/vtund.wlan-$server_ip.pid)
-    rm /var/run/vtund.wlan-$server_ip.pid
+    stop_vtund
     exit 1
 fi
 
