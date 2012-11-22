@@ -36,6 +36,8 @@ hostapd -B -P /var/tmp/puavo-wlanap/hostapd.pid /var/tmp/puavo-wlanap/hostapd.co
 if [ $? -ne 0 ]
 then
     echo "error: failed to start hostapd" | logger -p user.err
+    kill $(cat /var/run/vtund.wlan-$server_ip.pid)
+    rm /var/run/vtund.wlan-$server_ip.pid
     exit 1
 fi
 
