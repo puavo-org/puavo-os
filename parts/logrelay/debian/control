@@ -10,4 +10,4 @@ Package: logrelay
 Architecture: all
 Depends: ${misc:Depends}, ruby, libeventmachine-ruby (>= 0.12.10-1), libjson-ruby, adduser
 Description: Buffering log relay
- Buffering log relay from UPD to HTTP
+ Buffering log relay from UDP to HTTP
