@@ -73,6 +73,8 @@ then
     fi
 fi
 
+mkdir -p /var/tmp/puavo-wlanap
+
 sed -e "s/#{wlanif}/$wlanif/g" \
     -e "s/#{ssid}/$ssid/g" \
     -e "s/#{password}/$password/g" \
