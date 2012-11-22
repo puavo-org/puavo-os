@@ -1,8 +1,8 @@
 prefix = /usr/local
 exec_prefix = $(prefix)
 sbindir = $(exec_prefix)/sbin
-sysconfdir = $(prefix)/etc
-localstatedir = $(prefix)/var
+sysconfdir = /etc
+localstatedir = /var
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
