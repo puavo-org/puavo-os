@@ -15,6 +15,7 @@ end
   "/etc/puavo/ldap/password",
   "/etc/puavo/ldap/base",
   "/etc/puavo/ldap/dn",
+  "/etc/puavo/ldap/master",
   "/etc/puavo/kerberos/realm",
   "/etc/puavo/kerberos/master",
 ].each do |path|
