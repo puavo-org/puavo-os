@@ -597,13 +597,18 @@ module PostRegister
     Tools.goodmsg('LDAP information is now set.')
   end
 
-  def self.write_kerberos_info(realm)
+  def self.write_kerberos_info(realm, master)
     ensure_puavodir
     Tools.mkdir(Puavodir + "/kerberos")
 
     File.open("#{ Puavodir }/kerberos/realm", 'w', 0644) do |f|
       f.print "#{ realm }\n"
     end
+
+    File.open("#{ Puavodir }/kerberos/master", 'w', 0644) do |f|
+      f.print "#{ master }\n"
+    end
+
     Tools.goodmsg('Kerberos information is now set.')
   end
 
@@ -945,7 +950,9 @@ class Control
     )
 
     PostRegister.write_kerberos_info(
-      info['registration']["host_configuration"]["kerberos_realm"]
+      info['registration']["host_configuration"]["kerberos_realm"],
+      # In our architecture kerberos master is always the same as ldap master
+      organisation_info['ldap_host']
     )
 
     PostRegister.write_hostname(rui.responses["puavoHostname"])
@@ -955,8 +962,6 @@ class Control
     PostRegister.write_host_configuration(
       info['registration']['host_configuration'].merge(info['installation'])
     )
-
-
 
   end
 

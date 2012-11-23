@@ -16,6 +16,7 @@ end
   "/etc/puavo/ldap/base",
   "/etc/puavo/ldap/dn",
   "/etc/puavo/kerberos/realm",
+  "/etc/puavo/kerberos/master",
 ].each do |path|
 
   if not has_content(path)
