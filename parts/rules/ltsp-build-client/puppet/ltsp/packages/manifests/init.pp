@@ -172,7 +172,8 @@ class packages {
     , 'stopmotion'
     , 'synfig'
     , 'synfigstudio'
-    , 'xsane' ]:
+    , 'xsane'
+    , 'xzoom' ]:
       tag => [ 'graphics', 'ubuntu', ];
 
     [ 'skype' ]:
