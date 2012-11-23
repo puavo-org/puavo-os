@@ -18,6 +18,8 @@ end
   "/etc/puavo/ldap/master",
   "/etc/puavo/kerberos/realm",
   "/etc/puavo/kerberos/master",
+  "/etc/puavo/kerberos/toprealm",
+  "/etc/puavo/topdomain",
 ].each do |path|
 
   if not has_content(path)

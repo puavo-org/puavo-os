@@ -45,6 +45,11 @@ class Tools
       rescue Errno::EEXIST
     end
   end
+
+  def self.topdomain(domain)
+    domain.match(/[^\.]+\.[^\.]+$/).to_s
+  end
+
 end
 
 class CmdLine
@@ -572,6 +577,11 @@ module PostRegister
     File.open("#{ Puavodir }/domain", 'w', 0644) do |f|
       f.print "#{ domain }\n"
     end
+
+    File.open("#{ Puavodir }/topdomain", 'w', 0644) do |f|
+      f.print "#{ Tools.topdomain(domain) }\n"
+    end
+
   end
 
   def self.write_ldap_info(dn, password, base, master)
@@ -603,6 +613,10 @@ module PostRegister
 
     File.open("#{ Puavodir }/kerberos/realm", 'w', 0644) do |f|
       f.print "#{ realm }\n"
+    end
+
+    File.open("#{ Puavodir }/kerberos/toprealm", 'w', 0644) do |f|
+      f.print "#{ Tools.topdomain(realm) }\n"
     end
 
     File.open("#{ Puavodir }/kerberos/master", 'w', 0644) do |f|
