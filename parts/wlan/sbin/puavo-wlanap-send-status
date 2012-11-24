@@ -1,29 +1,30 @@
-#!/usr/bin/env ruby
+#!/bin/sh
 
-require "pp"
-require "socket"
+set -u
 
-sock = UDPSocket.new
-sock.connect "eventlog", 3858
+logerr()
+{
+    logger -t puavo-wlanap-send-status -p local7.err "error: $1"
+}
 
-output =  `hostapd_cli all_sta`
-if not $?.success?
-  STDERR.puts "failed to execute 'hostapd_cli all_sta'"
-  exit 1
-end
+output=$(hostapd_cli all_sta)
+if [ $? -ne 0 ]
+then
+    logerr "failed to execute 'hostapd_cli all_sta'"
+    exit 1
+fi
 
-devices = output.split("\n").select do |line|
-  line.start_with? "dot11RSNAStatsSTAAddress"
-end.map do |line|
-  line.split("=")[1]
-end.join(",")
+devices=$(echo -n $output | sed -n 's/^dot11RSNAStatsSTAAddress=//p' | tr '\n' ',')
 
-packet = <<EOF
+nc -w 1 -u eventlog 3858 << EOF
 type:wlan
 wlan_event:hotspot_state
-connected_devices:[#{ devices }]
-hostname:#{ Socket.gethostname }
+connected_devices:[$devices]
+hostname:$(hostname)
 EOF
 
-sock.send packet, 0
-
+if [ $? -ne 0 ]
+then
+    logerr "failed to send the event"
+    exit 2
+fi
