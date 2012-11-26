@@ -8,3 +8,5 @@ all: build image
 
 ${TARGETS}:
 	@./build.sh $@
+
+.PHONY: ${TARGETS}
