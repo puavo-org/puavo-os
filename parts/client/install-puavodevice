@@ -45,6 +45,11 @@ class Tools
       rescue Errno::EEXIST
     end
   end
+
+  def self.topdomain(domain)
+    domain.match(/[^\.]+\.[^\.]+$/).to_s
+  end
+
 end
 
 class CmdLine
@@ -115,6 +120,9 @@ class HostCertificate
 end
 
 class RegisterUserInterface
+
+  attr_accessor :responses, :connection
+
   def initialize(cmdline_params, cert)
     @responses       = {}
     @cmdline_params  = cmdline_params
@@ -547,55 +555,79 @@ class PuavoDevicesConnection
   end
 end
 
-class PostRegisterConfiguration
-  def initialize(cert, installation_info, register_info)
-    @cert              = cert
-    @installation_info = installation_info
-    @register_info     = register_info
-  end
 
-  def laptop_install?
-    @register_info['host_configuration']['devicetype'] \
-      && @register_info['host_configuration']['devicetype'] == 'laptop'
-  end
+# Post Registration operations. Writes registration information to /etc/puavo
+module PostRegister
 
-  def setup
-    if laptop_install?
-      Setup.prepare_laptop_disk(@installation_info)
-    end
-
+  def self.ensure_puavodir
     Tools.mkdir(Puavodir)
-
-    if @register_info['userCertificate']
-      raise 'Root CA missing' \
-        unless @register_info['rootca']
-      raise 'Organisation CA bundle missing' \
-        unless @register_info['orgcabundle']
-
-      @cert.accept_signed_certificate(@register_info['userCertificate'],
-                                      @register_info['rootca'],
-                                      @register_info['orgcabundle'])
-
-      Tools.mkdir("#{ Puavodir }/certs")
-      @cert.write_to_filesystem("#{ Puavodir }/certs/host.crt",
-                                "#{ Puavodir }/certs/host.key",
-                                "#{ Puavodir }/certs/rootca.pem",
-                                "#{ Puavodir }/certs/orgcabundle.pem")
-    end
-
-    if @register_info['ldap_password'] then
-      Setup.ldap_password(@register_info['ldap_password'])
-    end
-
-    write_host_configuration()
   end
 
-  def write_host_configuration
-    raise 'Did not receive host configuration from Puavo' \
-      unless @register_info['host_configuration']
+  def self.write_hostname(hostname)
+    ensure_puavodir
 
-    conf = @register_info['host_configuration'].merge(@installation_info)
+    File.open("#{ Puavodir }/hostname", 'w', 0644) do |f|
+      f.print "#{ hostname }\n"
+    end
+  end
 
+  def self.write_domain(domain)
+    ensure_puavodir
+
+    File.open("#{ Puavodir }/domain", 'w', 0644) do |f|
+      f.print "#{ domain }\n"
+    end
+
+    File.open("#{ Puavodir }/topdomain", 'w', 0644) do |f|
+      f.print "#{ Tools.topdomain(domain) }\n"
+    end
+
+  end
+
+  def self.write_ldap_info(dn, password, base, master)
+    ensure_puavodir
+    Tools.mkdir(Puavodir + "/ldap")
+
+    File.open("#{ Puavodir }/ldap/dn", 'w', 0644) do |f|
+      f.print "#{ dn }\n"
+    end
+
+    File.open("#{ Puavodir }/ldap/base", 'w', 0644) do |f|
+      f.print "#{ base }\n"
+    end
+
+    File.open("#{ Puavodir }/ldap/master", 'w', 0644) do |f|
+      f.print "#{ master }\n"
+    end
+
+    File.open("#{ Puavodir }/ldap/password", 'w', 0600) do |f|
+      f.print "#{ password }\n"
+    end
+
+    Tools.goodmsg('LDAP information is now set.')
+  end
+
+  def self.write_kerberos_info(realm, master)
+    ensure_puavodir
+    Tools.mkdir(Puavodir + "/kerberos")
+
+    File.open("#{ Puavodir }/kerberos/realm", 'w', 0644) do |f|
+      f.print "#{ realm }\n"
+    end
+
+    File.open("#{ Puavodir }/kerberos/toprealm", 'w', 0644) do |f|
+      f.print "#{ Tools.topdomain(realm) }\n"
+    end
+
+    File.open("#{ Puavodir }/kerberos/master", 'w', 0644) do |f|
+      f.print "#{ master }\n"
+    end
+
+    Tools.goodmsg('Kerberos information is now set.')
+  end
+
+  def self.write_host_configuration(conf)
+    ensure_puavodir
     File.open(Host_configuration_path, 'w') do |f|
       f.print conf.to_yaml
     end
@@ -702,13 +734,6 @@ class Setup
     end while error
   end
 
-  def self.ldap_password(ldap_password)
-    Tools.mkdir("#{ Puavodir }/ldap")
-    File.open("#{ Puavodir }/ldap/password", 'w', 0600) do |f|
-      f.print "#{ ldap_password }\n"
-    end
-    Tools.goodmsg('LDAP password is now set.')
-  end
 
   def self.openvpn(restart_and_wait=true)
     begin
@@ -898,16 +923,60 @@ class Control
     rui  = RegisterUserInterface.new(cmdline_params, cert)
     info = rui.register_to_server()
 
+    organisation_info = rui.connection.get("/users/organisation.json")
+    # org["ldap_host"], org["domain"]
+
     if cmdline_params['noinstall']
       Tools.goodmsg('Not doing post-registration configuration ' \
                     + '(--noinstall is set)')
       return
     end
 
-    PostRegisterConfiguration.new(cert,
-                                  info['installation'],
-                                  info['registration']) \
-                             .setup
+    raise 'Did not receive host configuration from Puavo' \
+        unless info['registration']['host_configuration']
+
+
+   if info['registration']['userCertificate']
+      raise 'Root CA missing' \
+        unless info['registration']['rootca']
+      raise 'Organisation CA bundle missing' \
+        unless info['registration']['orgcabundle']
+
+      cert.accept_signed_certificate(info['registration']['userCertificate'],
+                                      info['registration']['rootca'],
+                                      info['registration']['orgcabundle'])
+
+      Tools.mkdir("#{ Puavodir }")
+      Tools.mkdir("#{ Puavodir }/certs")
+      cert.write_to_filesystem("#{ Puavodir }/certs/host.crt",
+                                "#{ Puavodir }/certs/host.key",
+                                "#{ Puavodir }/certs/rootca.pem",
+                                "#{ Puavodir }/certs/orgcabundle.pem")
+    end
+
+
+
+    PostRegister.write_ldap_info(
+      info['registration']['dn'],
+      info['registration']['ldap_password'],
+      info['registration']['base'],
+      organisation_info['ldap_host']
+    )
+
+    PostRegister.write_kerberos_info(
+      info['registration']["host_configuration"]["kerberos_realm"],
+      # In our architecture kerberos master is always the same as ldap master
+      organisation_info['ldap_host']
+    )
+
+    PostRegister.write_hostname(rui.responses["puavoHostname"])
+
+    PostRegister.write_domain(organisation_info["domain"])
+
+    PostRegister.write_host_configuration(
+      info['registration']['host_configuration'].merge(info['installation'])
+    )
+
   end
 
   def self.install(cmdline_params)
