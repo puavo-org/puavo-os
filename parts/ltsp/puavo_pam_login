@@ -1,0 +1,51 @@
+#!/usr/bin/ruby
+
+require 'ldap'
+require 'etc'
+
+uid = ARGV[0] ? ARGV[0] : (ENV['PAM_USER'] ? ENV['PAM_USER'] : Etc.getlogin)
+
+puts uid
+
+suffix = File.read('/etc/puavo/ldap/base'    ).chomp
+hostname = `hostname -f`.chomp
+
+conn = LDAP::SSLConn.new(host=hostname, port=636)
+conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+
+conn.sasl_bind("", "GSSAPI") do
+  begin
+    File.open("/var/lib/extrausers/passwd", "w") do |passwd|
+      conn.search("ou=People,#{suffix}", LDAP::LDAP_SCOPE_SUBTREE, "(&(objectClass=posixAccount)(uid=#{uid}))", ["uid", "uidNumber", "gidNumber", "homeDirectory", "cn"]) {|e|
+        begin
+          uid = e.get_values('uid')[0]
+          uidNumber = e.get_values('uidNumber')[0]
+          gidNumber = e.get_values('gidNumber')[0]
+          homeDirectory = e.get_values('homeDirectory')[0]
+          cn = e.get_values('cn')[0]
+
+          passwd.puts "#{uid}:x:#{uidNumber}:#{gidNumber}:#{cn}:#{homeDirectory}:/bin/bash"
+        rescue
+        end
+      }
+    end
+
+    File.open("/var/lib/extrausers/group", "w") do |group|
+      conn.search("ou=Groups,#{suffix}", LDAP::LDAP_SCOPE_SUBTREE, "(&(objectClass=posixGroup)(memberUid=#{uid}))", ["gidNumber", "cn"]) {|e|
+        begin
+          gidNumber = e.get_values('gidNumber')[0]
+          cn = e.get_values('cn')[0]
+
+          group.puts "#{cn}:x:#{gidNumber}:#{uid}"
+        rescue
+        end
+      }
+    end
+
+    rescue LDAP::ResultError
+      conn.perror("LDAP connection failed")
+      puts "LDAP connection failed"
+    end  
+end
+
+exit(0)
