@@ -53,6 +53,7 @@ class TFTPServer < EventMachine::Connection
 
 end
 
+# One shot TFTP file sender server listening on ephemeral port
 class TFTPFileSender < EventMachine::Connection
 
   BLOCK_SIZE = 512
