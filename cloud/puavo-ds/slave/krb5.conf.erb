@@ -1,0 +1,53 @@
+<%-
+  kerberos_server = scope.lookupvar('service::kerberos::client::serverhost')
+  ldap_base       = scope.lookupvar('service::ldap::base')
+  ldap_module     = "ldap_#{ puavoDomain }"
+-%>
+[libdefaults]
+	default_realm = <%= puavoKerberosRealm %>
+	default_tgs_enctypes = des3-hmac-sha1 des-cbc-crc
+	default_tkt_enctypes = des3-hmac-sha1 des-cbc-crc
+	dns_lookup_kdc = true
+	dns_lookup_realm = true
+	allow_weak_crypto = true
+
+[realms]
+	<%= puavoKerberosRealm %> = {
+		kdc = <%= kerberos_server %>
+		admin_server = <%= scope.lookupvar('service::kerberos::masterhost') %>
+		default_domain = <%= puavoDomain %>
+		database_module = <%= ldap_module %>
+	}
+	<%= scope.lookupvar('service::kerberos::toprealm') %> = {
+		kdc = <%= scope.lookupvar('service::kerberos::masterhost') %>
+		admin_server = <%= scope.lookupvar('service::kerberos::masterhost') %>
+		default_domain = <%= scope.lookupvar('service::kerberos::topdomain') %>
+	}
+
+[domain_realm]
+	.<%= puavoDomain %> = <%= puavoKerberosRealm %>
+	<%= puavoDomain %> = <%= puavoKerberosRealm %>
+	.<%= scope.lookupvar('service::kerberos::topdomain') %> = <%= scope.lookupvar('service::kerberos::toprealm') %>
+	<%= scope.lookupvar('service::kerberos::topdomain') %> = <%= scope.lookupvar('service::kerberos::toprealm') %>
+
+[logging]
+	kdc = FILE:/var/log/kdc.log
+
+[dbmodules]
+	<%= ldap_module %> = {
+		db_library = kldap
+		ldap_kadmind_dn = <%= dn %>
+		ldap_kdc_dn = <%= dn %>
+		ldap_kerberos_container_dn = ou=Kerberos Realms,<%= ldap_base %>
+		ldap_servers = ldapi:///
+		ldap_service_password_file = /etc/krb5.secrets
+	}
+
+[appdefaults]
+	pam = {
+		debug = false
+		ticket_lifetime = 604800
+		renew_lifetime = 604800
+		forwardable = true
+		krb4_convert = false
+	}

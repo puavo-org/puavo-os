@@ -1,0 +1,69 @@
+#!/usr/bin/ruby
+
+require 'erb'
+require 'fileutils'
+require 'tempfile'
+
+Sentinel_file = '/var/lib/ldap/init_ldap_slave_done'
+
+if File.exist?(Sentinel_file) and not ARGV[0] == '--force'
+  puts "#{ Sentinel_file } exists, use the --force, Mikko!"
+  exit 1
+end
+
+@binddn        = File.read('/etc/puavo/ldap/dn'      ).chomp
+@bindpw        = File.read('/etc/puavo/ldap/password').chomp
+@master_server = File.read('/etc/puavo/ldap/master'  ).chomp
+@suffix        = File.read('/etc/puavo/ldap/base'    ).chomp
+
+def parse_erb(basename)
+  ldif_template = File.read("/usr/share/puavotools/#{ basename }.ldif.erb")
+  ldif = ERB.new(ldif_template, 0, "%<>")
+
+  tempfile = Tempfile.open(basename)
+  tempfile.puts ldif.result
+  tempfile.close
+  
+  tempfile
+end
+
+system('service slapd stop')
+sleep 3
+system('pkill -9 -x slapd')
+
+system('rm -rf /etc/ldap/slapd.d/* /var/lib/ldap/*') \
+  or raise 'could not remove old ldap configuration and database'
+
+@acls = `ldapsearch -LLL -x -H ldap://#{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b cn=config "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{ @suffix }))" olcAccess | grep -v dn:`
+if $?.exitstatus != 0
+  raise 'Problem in getting acls from master server'
+end
+
+@schemas = `ldapsearch -LLL -x -H ldap://#{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b cn=schema,cn=config`
+if $?.exitstatus != 0
+  raise 'Problem in getting schemas from master server'
+end
+
+tempfile = parse_erb('init_ldap_slave')
+system("slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b 'cn=config'") \
+  or raise 'Problem in making ldap configuration'
+
+system('chown -R openldap.openldap /etc/ldap/slapd.d /var/lib/ldap') \
+  or raise 'could not chown /etc/ldap/slapd.d /var/lib/ldap to openldap user'
+
+system('install -m 0644 -g openldap /etc/puavo/certs/host.crt /etc/ssl/certs/slapd-server.crt') \
+  or raise "could not install /etc/puavo/certs/host.crt to /etc/ssl/certs/slapd-server.crt"
+
+system('install -m 0640 -g openldap /etc/puavo/certs/host.key /etc/ssl/certs/slapd-server.key') \
+  or raise "could not copy /etc/puavo/certs/host.key to /etc/ssl/certs/slapd-server.key"
+
+system('install -m 0644 -g openldap /etc/puavo/certs/orgcabundle.pem /etc/ssl/certs/slapd-ca.crt') \
+  or raise "could not copy /etc/puavo/certs/orgcabundle.pem to /etc/ssl/certs/slapd-ca.crt"
+
+system('chmod -R 0750 /var/lib/ldap') \
+  or raise 'could not chmod /var/lib/ldap'
+
+system('service slapd start') \
+  or raise 'slapd start failed'
+
+FileUtils.touch(Sentinel_file)

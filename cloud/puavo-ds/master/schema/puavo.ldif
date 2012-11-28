@@ -1,0 +1,354 @@
+dn: cn=puavo,cn=schema,cn=config
+objectClass: olcSchemaConfig
+cn: puavo
+olcAttributeTypes: {0}( 1.3.6.1.4.1.27208.1.1.1.1 NAME 'puavoId' DESC 'Unique 
+ id for every object held in puavo classes. Used to get real modifiable user d
+ ata out of DNs' EQUALITY integerMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 )
+olcAttributeTypes: {1}( 1.3.6.1.4.1.27208.1.1.1.2 NAME 'puavoSchoolHomePageURL
+ ' DESC 'URL of the school home page' EQUALITY caseExactIA5Match SYNTAX 1.3.6.
+ 1.4.1.1466.115.121.1.26 )
+olcAttributeTypes: {2}( 1.3.6.1.4.1.27208.1.1.1.3 NAME 'puavoSchoolAdmin' DESC
+  'URL of the school directory' EQUALITY distinguishedNameMatch SYNTAX 1.3.6.1
+ .4.1.1466.115.121.1.12 )
+olcAttributeTypes: {3}( 1.3.6.1.4.1.27208.1.1.1.4 NAME 'puavoSchool' DESC 'Sch
+ ool where the object is located' EQUALITY distinguishedNameMatch SYNTAX 1.3.6
+ .1.4.1.1466.115.121.1.12 )
+olcAttributeTypes: {4}( 1.3.6.1.4.1.27208.1.1.1.5 NAME 'puavoEduGroupName' DES
+ C 'Name of the student/pupil group in the school' EQUALITY caseIgnoreMatch SU
+ BSTR caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {5}( 1.3.6.1.4.1.27208.1.1.1.6 NAME 'puavoEduGroupType' DES
+ C 'Type of the group: year class, teaching group, course' EQUALITY caseIgnore
+ Match SUBSTR caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {6}( 1.3.6.1.4.1.27208.1.1.1.7 NAME 'puavoEduPersonEntryYea
+ r' DESC 'Year when the pupil / student entered the school' EQUALITY integerMa
+ tch SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 )
+olcAttributeTypes: {7}( 1.3.6.1.4.1.27208.1.1.1.8 NAME 'puavoEduPersonPrimaryG
+ roup' DESC 'Primary group in the school where this person is located, usually
+  the basic teaching group' EQUALITY distinguishedNameMatch SYNTAX 1.3.6.1.4.1
+ .1466.115.121.1.12 SINGLE-VALUE )
+olcAttributeTypes: {8}( 1.3.6.1.4.1.27208.1.1.1.9 NAME 'puavoEduPersonEmailEna
+ bled' DESC 'A boolen value indicating if email is enabled for the user' EQUAL
+ ITY booleanMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 SINGLE-VALUE )
+olcAttributeTypes: {9}( 1.3.6.1.4.1.27208.1.1.1.10 NAME 'puavoEduPersonLastFir
+ stName' DESC 'Name of the user in lastname firstname format, used as inverted
+  displayName' EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch SYNTA
+ X 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {10}( 1.3.6.1.4.1.27208.1.1.1.11 NAME 'puavoNextUidNumber' 
+ DESC 'Next uidNumber to be given for a new user' EQUALITY integerMatch SYNTAX
+  1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+olcAttributeTypes: {11}( 1.3.6.1.4.1.27208.1.1.1.12 NAME 'puavoNextGidNumber' 
+ DESC 'Next gidNumber to be given for a new group' EQUALITY integerMatch SYNTA
+ X 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+olcAttributeTypes: {12}( 1.3.6.1.4.1.27208.1.1.1.13 NAME 'puavoNextId' DESC 'N
+ ext puavoId to be given for a new object' EQUALITY integerMatch SYNTAX 1.3.6.
+ 1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+olcAttributeTypes: {13}( 1.3.6.1.4.1.27208.1.1.1.14 NAME 'puavoMemberGroup' DE
+ SC 'DN of a group that is member of the object' EQUALITY distinguishedNameMat
+ ch SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 )
+olcAttributeTypes: {14}( 1.3.6.1.4.1.27208.1.1.1.15 NAME 'puavoUserRole' DESC 
+ 'DN of a user role that this object belongs to' EQUALITY distinguishedNameMat
+ ch SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 )
+olcAttributeTypes: {15}( 1.3.6.1.4.1.27208.1.1.1.16 NAME 'puavoKerberosRealm' 
+ DESC 'Kerberos realm used for the organisation' EQUALITY caseIgnoreMatch SUBS
+ TR caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {16}( 1.3.6.1.4.1.27208.1.1.1.17 NAME 'puavoDomain' DESC 'D
+ domain used for the organisation / school' EQUALITY caseIgnoreMatch SUBSTR ca
+ seIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {17}( 1.3.6.1.4.1.27208.1.1.1.18 NAME 'puavoNamePrefix' DES
+ C 'Prefix used for names created logically under the entry (org -> schools ->
+ groups)' EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch SYNTAX 1.3
+ .6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {18}( 1.3.6.1.4.1.27208.1.1.1.19 NAME 'puavoServer' DESC 'S 
+ erver that owns the object' EQUALITY distinguishedNameMatch SYNTAX 1.3.6.1.4.
+ 1.1466.115.121.1.12 )
+olcAttributeTypes: {19}( 1.3.6.1.4.1.27208.1.1.1.20 NAME 'puavoHostname' DESC 
+ 'Hostname of the device described in the entry' EQUALITY caseIgnoreIA5Match S
+ UBSTR caseIgnoreIA5SubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+olcAttributeTypes: {20}( 1.3.6.1.4.1.27208.1.1.1.21 NAME 'puavoDeviceManufactu
+ rer' DESC 'Manufacturer of the device' EQUALITY caseIgnoreMatch SUBSTR caseIg
+ noreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {21}( 1.3.6.1.4.1.27208.1.1.1.22 NAME 'puavoDeviceModel' DE
+ SC 'Manufacturer model name for the device' EQUALITY caseIgnoreMatch SUBSTR c
+ aseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {22}( 1.3.6.1.4.1.27208.1.1.1.23 NAME 'puavoDevicePrimaryUs
+ er' DESC 'DN of the user who mainly uses the device or is responsible for it'
+  EQUALITY distinguishedNameMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 )
+olcAttributeTypes: {23}( 1.3.6.1.4.1.27208.1.1.1.24 NAME 'puavoLatitude' DESC 
+ 'Location of the device' EQUALITY caseExactIA5Match SUBSTR caseExactIA5Substr
+ ingsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+olcAttributeTypes: {24}( 1.3.6.1.4.1.27208.1.1.1.25 NAME 'puavoLongitude' DESC 
+ 'Location of the device' EQUALITY caseExactIA5Match SUBSTR caseExactIA5Substr
+ ingsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+olcAttributeTypes: {25}( 1.3.6.1.4.1.27208.1.1.1.26 NAME 'puavoDeviceStatus' D
+ ESC 'Device status - enabled/active/disabled/xxx?' EQUALITY caseExactIA5Match
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+olcAttributeTypes: {26}( 1.3.6.1.4.1.27208.1.1.1.27 NAME 'puavoLocationName' D
+ ESC 'Manufacturer’s model name for the device' EQUALITY caseIgnoreMatch SUBST
+ R caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {27}( 1.3.6.1.4.1.27208.1.1.1.28 NAME 'puavoNextRid' DESC '
+ Next rid to be given in syncrepl settings' EQUALITY integerMatch SYNTAX 1.3.6
+ .1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+olcAttributeTypes: {28}( 1.3.6.1.4.1.27208.1.1.1.29 NAME 'puavoNextDatabaseId'
+ DESC 'Next directory path id number to be given for a new database' EQUALITY 
+ integerMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+olcAttributeTypes: {29}( 1.3.6.1.4.1.27208.1.1.1.30 NAME 'puavoEduPersonAffili
+ ation' DESC 'Specifies the relationship of the person to the school. Similar 
+ to eduPersonAffiliation in eduPerson schema, but tailored for lower level ins
+ titutions.' EQUALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {30}( 1.3.6.1.4.1.27208.1.1.1.31 NAME 'puavoDeviceType' DE
+ SC 'Type for the device' EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstrings
+ Match SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {31}( 1.3.6.1.4.1.27208.1.1.1.32 NAME 'puavoDeviceXserver' 
+ DESC 'Xserver driver name for the device' EQUALITY caseIgnoreMatch SUBSTR ca
+ seIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {32}( 1.3.6.1.4.1.27208.1.1.1.33 NAME 'puavoDeviceKernelVer
+ sion' DESC 'Kernel version for the device' EQUALITY caseIgnoreMatch SUBSTR ca
+ seIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {33}( 1.3.6.1.4.1.27208.1.1.1.34 NAME 'puavoDeviceKernelArg
+ uments' DESC 'Kernel arguments for the device' EQUALITY caseIgnoreMatch SUBST
+ R caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {34}( 1.3.6.1.4.1.27208.1.1.1.35 NAME 'puavoDeviceXrandr' D
+ ESC 'Xrandr options for the device' EQUALITY caseIgnoreMatch SUBSTR caseIgnor
+ eSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {35}( 1.3.6.1.4.1.27208.1.1.1.36 NAME 'puavoDeviceXrandrDis
+ able' DESC 'A boolen value indicating if xrandr is enabled for the device' EQ
+ UALITY booleanMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 SINGLE-VALUE )
+olcAttributeTypes: {36}( 1.3.6.1.4.1.27208.1.1.1.37 NAME 'puavoKadminPort' DES
+ C 'Port number used by kadmin to administer kerberos realm defined in puavoKe
+ rberosRealm' EQUALITY integerMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGL
+ E-VALUE )
+olcAttributeTypes: {37}( 1.3.6.1.4.1.27208.1.1.1.38 NAME 'puavoNextKadminPort'
+  DESC 'Next kadmin port number to be used' EQUALITY integerMatch SYNTAX 1.3.6
+ .1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+olcAttributeTypes: {38}( 1.3.6.1.4.1.27208.1.1.1.39 NAME 'puavoPuppetHost' DES
+ C 'Puppet host that manages the hosts in current organisation' EQUALITY caseI
+ gnoreMatch SUBSTR caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1
+ .15 SINGLE-VALUE )
+olcAttributeTypes: {39}( 1.3.6.1.4.1.27208.1.1.1.40 NAME 'puavoDeviceBootMode'
+  DESC 'Boot mode for devices that have multiple boot options - localboot/netb
+ boot/dualboot/etc' EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch 
+ SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {40}( 1.3.6.1.4.1.27208.1.1.1.41 NAME 'puavoTag' DESC 'Tag
+ (s) categorise objects in groups and describe them. Tags can be used in diff
+ erent parts of the system to filter or detect wanted objects. Multiple tags 
+ are allowed.' EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch SYNT
+ AX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {41}( 1.3.6.1.4.1.27208.1.1.1.42 NAME 'puavoPurchaseDate' D
+ ESC 'Purchase date of the device or peripheral' EQUALITY generalizedTimeMatch
+  ORDERING generalizedTimeOrderingMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.24 S
+ INGLE-VALUE )
+olcAttributeTypes: {42}( 1.3.6.1.4.1.27208.1.1.1.43 NAME 'puavoWarrantyEndDate
+ ' DESC 'Final date of the warranty or support contract for the device or peri
+ pheral' EQUALITY generalizedTimeMatch ORDERING generalizedTimeOrderingMatch S
+ YNTAX 1.3.6.1.4.1.1466.115.121.1.24 SINGLE-VALUE )
+olcAttributeTypes: {43}( 1.3.6.1.4.1.27208.1.1.1.44 NAME 'puavoPurchaseLocatio
+ n' DESC 'Where the device was purchased, e.g. name of the dealer' EQUALITY ca
+ seIgnoreMatch SUBSTR caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.12
+ 1.1.15 SINGLE-VALUE )
+olcAttributeTypes: {44}( 1.3.6.1.4.1.27208.1.1.1.45 NAME 'puavoPurchaseURL' DE
+ SC 'URL for more information about the purchase - can be a link to an externa
+ l system that stores receipts, support tickets etc.' EQUALITY caseIgnoreMatch
+  SUBSTR caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {45}( 1.3.6.1.4.1.27208.1.1.1.46 NAME 'puavoSupportContract
+ ' DESC 'Identifier for support contract attached to the device' EQUALITY case
+ IgnoreMatch SUBSTR caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.
+ 1.15 )
+olcAttributeTypes: {46}( 1.3.6.1.4.1.27208.1.1.1.47 NAME 'puavoDefaultPrinter'
+  DESC 'Default printer for users using device' EQUALITY caseIgnoreMatch SUBST
+ R caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {47}( 1.3.6.1.4.1.27208.1.1.1.48 NAME 'puavoPreferredDeskto
+ p' DESC 'Preferred desktop for user' EQUALITY caseIgnoreMatch SYNTAX 1.3.6.1.
+ 4.1.1466.115.121.1.15 )
+olcAttributeTypes: {48}( 1.3.6.1.4.1.27208.1.1.1.49 NAME 'puavoBookmarkURL' DE
+ SC 'Bookmark URL' EQUALITY caseExactIA5Match SYNTAX 1.3.6.1.4.1.1466.115.121.
+ 1.26 )
+olcAttributeTypes: {49}( 1.3.6.1.4.1.27208.1.1.1.50 NAME 'puavoDesktopItem' DE
+ SC 'Application or bookmark that the rule refers to' EQUALITY distinguishedNa
+ meMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 )
+olcAttributeTypes: {50}( 1.3.6.1.4.1.27208.1.1.1.51 NAME 'puavoRule' DESC 'Act
+ ual rule for puavoDesktopRule' EQUALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.14
+ 66.115.121.1.15 )
+olcAttributeTypes: {51}( 1.3.6.1.4.1.27208.1.1.1.52 NAME 'puavoDeviceResolutio
+ n' DESC 'Monitor resolution for non-xrandr devices' EQUALITY caseIgnoreIA5Mat
+ ch SUBSTR caseIgnoreIA5SubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+olcAttributeTypes: {52}( 1.3.6.1.4.1.27208.1.1.1.53 NAME 'puavoDeviceHorzSync'
+  DESC 'Monitor horiz sync for non-xrandr devices' EQUALITY caseIgnoreIA5Match
+  SUBSTR caseIgnoreIA5SubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+olcAttributeTypes: {53}( 1.3.6.1.4.1.27208.1.1.1.54 NAME 'puavoDeviceVertRefre
+ sh' DESC 'Monitor vertical refresh rate for non-xrandr devices' EQUALITY case
+ IgnoreIA5Match SUBSTR caseIgnoreIA5SubstringsMatch SYNTAX 1.3.6.1.4.1.1466.11
+ 5.121.1.26 )
+olcAttributeTypes: {54}( 1.3.6.1.4.1.27208.1.1.1.55 NAME 'puavoAllowRemoteAcce
+ ss' DESC 'Allow remote access to systems by the object. E.g. users having the
+  attribute set to false can use the system on locally inside of the organisat
+ ion boundaries. Users having value set to true can access Puavo and other too
+ ls also from public internet.' EQUALITY booleanMatch SYNTAX 1.3.6.1.4.1.1466.
+ 115.121.1.7 )
+olcAttributeTypes: {55}( 1.3.6.1.4.1.27208.1.1.1.56 NAME 'puavoExport' DESC 'P
+ ath of a directory that is exported by the device.' EQUALITY caseExactMatch S
+ YNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {56}( 1.3.6.1.4.1.27208.1.1.1.57 NAME 'puavoPrinterCartridg
+ e' DESC 'Cartridge model(s) used by the printer' EQUALITY caseIgnoreMatch SUB
+ STR caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {57}( 1.3.6.1.4.1.27208.1.1.1.58 NAME 'puavoEduPersonRevers
+ eDisplayName' DESC 'Display name for user reversed (lastname firstname) to be
+ used by applications that need lastname as first.' EQUALITY caseIgnoreMatch S
+ UBSTR caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {58}( 1.3.6.1.4.1.27208.1.1.1.59 NAME 'puavoEduPersonPerson
+ nelNumber' DESC 'Personnel number that identifies the person within the organ
+ isation.' EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch SYNTAX 1.
+ 3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {59}( 1.3.6.1.4.1.27208.1.1.1.60 NAME 'puavoAdminOfSchool' 
+ DESC 'School that the user is an administrator of' EQUALITY distinguishedName
+ Match SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 )
+olcAttributeTypes: {60}( 1.3.6.1.4.1.27208.1.1.1.61 NAME 'puavoPrinterPPD' DES
+ C 'PPD file for the printer if there is no PPD file available on the print se
+ rvers' SYNTAX 1.3.6.1.4.1.1466.115.121.1.5 )
+olcAttributeTypes: {61}( 1.3.6.1.4.1.27208.1.1.1.62 NAME 'puavoTimestamp' DESC
+  'Time when certain operation was done. Format: operation:dn:timestamp. Diffe
+ rs from createTimestamp so that in mass operations all entries share the same
+ timestamp.' EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch SYNTAX 
+ 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {62}( 1.3.6.1.4.1.27208.1.1.1.63 NAME 'puavoLocked' DESC 'U
+ ser account is locked temporarily from use.' EQUALITY booleanMatch SYNTAX 1.3
+ .6.1.4.1.1466.115.121.1.7 SINGLE-VALUE )
+olcAttributeTypes: {63}( 1.3.6.1.4.1.27208.1.1.1.64 NAME 'puavoPasswordMissing
+ ' DESC 'User does not have password set and cannot login to the system.' EQUA
+ LITY booleanMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 SINGLE-VALUE )
+olcAttributeTypes: {64}( 1.3.6.1.4.1.27208.1.1.1.65 NAME 'puavoBillingInfo' DE
+ SC 'base:0:*:1 device:laptop:0:*:2 device:infotv:0:*:3 device:netboot:0:25:4 
+ school:0:5:10' EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch SYNT
+ AX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {65}( 1.3.6.1.4.1.27208.1.1.1.66 NAME 'puavoSettingName' DE
+ SC 'Sub-component specific name for the setting' EQUALITY caseExactMatch SYNT
+ AX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {66}( 1.3.6.1.4.1.27208.1.1.1.67 NAME 'puavoSettingType' DE
+ SC 'Sub-component specific type for the setting' EQUALITY caseExactMatch SYNT
+ AX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {67}( 1.3.6.1.4.1.27208.1.1.1.68 NAME 'puavoSettingValue' D
+ ESC 'Sub-component specific value for the setting' SYNTAX 1.3.6.1.4.1.1466.11
+ 5.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {68}( 1.3.6.1.4.1.27208.1.1.1.69 NAME 'puavoDeviceOnHour' D
+ ESC 'Time when devices are turned on - either manually or automatically' SYNT
+ AX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {69}( 1.3.6.1.4.1.27208.1.1.1.70 NAME 'puavoDeviceOffHour' 
+ DESC 'Time when devices are turned off - either manually or automatically' SY
+ NTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {70}( 1.3.6.1.4.1.27208.1.1.1.71 NAME 'puavoRemoteDesktopPu
+ blicKey' DESC 'The public key for the remote desktop login - placed on the se
+ rvers' SYNTAX 1.3.6.1.4.1.1466.115.121.1.5 SINGLE-VALUE )
+olcAttributeTypes: {71}( 1.3.6.1.4.1.27208.1.1.1.72 NAME 'puavoRemoteDesktopPr
+ ivateKey' DESC 'The private key for the remote desktop login - placed on the 
+ client computers' SYNTAX 1.3.6.1.4.1.1466.115.121.1.5 SINGLE-VALUE )
+olcAttributeTypes: {72}( 1.3.6.1.4.1.27208.1.1.1.73 NAME 'puavoDeviceAutoPower
+ OffMode' DESC 'Setting for automatically powering off devices. Available valu
+ es: default/custom/off. When attribute value is set to custom, the automatic 
+ shutdown time is taken from attribute puavoDeviceOffHour. Setting can be adde
+ d to organisation, school or individual device. When setting is set to defaul
+ t, the value is taken from level above.' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+  SINGLE-VALUE )
+olcAttributeTypes: {73}( 1.3.6.1.4.1.27208.1.1.1.74 NAME 'puavoAcceptedTerms' 
+ DESC 'User accepted terms of service. Attribute includes freeform keywords th
+ at applications can interpret as needed.' SYNTAX 1.3.6.1.4.1.1466.115.121.1.1
+ 5 )
+olcAttributeTypes: {74}( 1.3.6.1.4.1.27208.1.1.1.75 NAME 'puavoSchoolStartYear
+ ' DESC 'School start year' EQUALITY integerMatch SYNTAX 1.3.6.1.4.1.1466.115.
+ 121.1.27 )
+olcAttributeTypes: {75}( 1.3.6.1.4.1.27208.1.1.1.76 NAME 'puavoClassId' DESC '
+ Identifier for the class - parallel class name, special groups, etc.' EQUALIT
+ Y caseIgnoreIA5Match SUBSTR caseIgnoreIA5SubstringsMatch SYNTAX 1.3.6.1.4.1.1
+ 466.115.121.1.26 )
+olcAttributeTypes: {76}( 1.3.6.1.4.1.27208.1.1.1.77 NAME 'puavoClassNamingSche
+ me' DESC 'Naming scheme for year class displayNames' EQUALITY caseIgnoreMatch
+  SUBSTR caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {77}( 1.3.6.1.4.1.27208.1.1.1.78 NAME 'puavoYearClass' DESC
+ 'Link to class level where the groups belongs' EQUALITY distinguishedNameMatc
+ h SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 )
+olcAttributeTypes: {78}( 1.3.6.1.4.1.27208.1.1.1.79 NAME 'puavoRole' DESC 'DN 
+ of a role that this object belongs to' EQUALITY distinguishedNameMatch SYNTAX
+  1.3.6.1.4.1.1466.115.121.1.12 )
+olcAttributeTypes: {79}( 1.3.6.1.4.1.27208.1.1.1.80 NAME 'puavoVersion' DESC '
+ Version of the database' EQUALITY integerMatch SYNTAX 1.3.6.1.4.1.1466.115.12
+ 1.1.27 )
+olcAttributeTypes: {80}( 1.3.6.1.4.1.27208.1.1.1.81 NAME 'puavoEduOrgAbbreviat
+ ion' DESC 'Abbreviation of the organisation name.' SYNTAX 1.3.6.1.4.1.1466.11
+ 5.121.1.15 )
+olcAttributeTypes: {81}( 1.3.6.1.4.1.27208.1.1.1.82 NAME 'puavoDeviceImage' DE
+ SC 'Client image used by the client.' EQUALITY caseIgnoreMatch SUBSTR caseIgn
+ oreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcObjectClasses: {0}( 1.3.6.1.4.1.27208.1.1.2.1 NAME 'puavoSchool' AUXILIARY 
+ MUST ( puavoId ) MAY ( puavoSchoolHomePageURL $ puavoSchoolAdmin $ displayNam
+ e $ telephoneNumber $ facsimileTelephoneNumber $ l $ street $ postOfficeBox $
+  postalAddress $ postalCode $ st $ description $ member $ puavoNamePrefix $ p
+ referredLanguage $ jpegPhoto $ puavoDeviceOnHour $ puavoDeviceOffHour $ puavo
+ DeviceAutoPowerOffMode $ puavoClassNamingScheme $ puavoBillingInfo $ puavoDev
+ iceImage ) )
+olcObjectClasses: {1}( 1.3.6.1.4.1.27208.1.1.2.2 NAME 'puavoEduGroup' AUXILIAR
+ Y MUST ( puavoId $ puavoSchool ) MAY ( displayName $ puavoEduGroupType $ memb
+ er $ puavoUserRole ) )
+olcObjectClasses: {2}( 1.3.6.1.4.1.27208.1.1.2.3 NAME 'puavoEduPerson' AUXILIA
+ RY MUST ( puavoId $ puavoSchool ) MAY ( puavoEduPersonEntryYear $ puavoEduPer
+ sonEmailEnabled $ puavoUserRole $ puavoEduPersonLastFirstName $ puavoEduPerso
+ nAffiliation $ puavoPreferredDesktop $ puavoAllowRemoteAccess $ puavoEduPerso
+ nReverseDisplayName $ puavoEduPersonPersonnelNumber $ puavoAdminOfSchool $ pu
+ avoTimestamp $ puavoLocked $ puavoAcceptedTerms ) )
+olcObjectClasses: {3}( 1.3.6.1.4.1.27208.1.1.2.4 NAME 'puavoUserRole' STRUCTUR
+ AL MUST ( puavoId $ puavoSchool ) MAY ( cn $ displayName $ memberUid $ member
+  $ puavoMemberGroup ) )
+olcObjectClasses: {4}( 1.3.6.1.4.1.27208.1.1.2.5 NAME 'puavoIdPool' STRUCTURAL
+  SUP top MUST ( cn $ puavoNextUidNumber $ puavoNextGidNumber $ puavoNextId $ 
+ puavoNextRid $ puavoNextDatabaseId $ puavoNextKadminPort ))
+olcObjectClasses: {5}( 1.3.6.1.4.1.27208.1.1.2.6 NAME 'puavoEduOrg' AUXILIARY 
+ MAY ( owner $ puavoKerberosRealm $ puavoDomain $ puavoKadminPort $ puavoPuppe
+ tHost $ sambaDomainName $ preferredLanguage $ puavoBillingInfo $ puavoRemoteD
+ esktopPublicKey $ puavoRemoteDesktopPrivateKey $ puavoDeviceAutoPowerOffMode 
+ $ puavoDeviceOnHour $ puavoDeviceOffHour $ puavoClassNamingScheme $ puavoVers
+ ion $ puavoEduOrgAbbreviation $ puavoDeviceImage ) )
+olcObjectClasses: {6}( 1.3.6.1.4.1.27208.1.1.2.7 NAME 'puavoShare' AUXILIARY M
+ UST ( puavoId $ puavoServer ) )
+olcObjectClasses: {7}( 1.3.6.1.4.1.27208.1.1.2.8 NAME 'puavoDevice' AUXILIARY 
+ MUST ( puavoId $ puavoHostname $ puavoDeviceType ) MAY ( serialNumber $ puavo
+ DeviceManufacturer $ puavoDeviceModel $ puavoDevicePrimaryUser $ jpegPhoto $ 
+ puavoLatitude $ puavoLongitude $ puavoLocationName $ puavoDeviceStatus $ desc
+ ription $ puavoDeviceKernelVersion $ puavoDeviceXserver $ puavoDeviceKernelAr
+ guments $ puavoDeviceXrandr $ puavoDeviceXrandrDisable $ puavoDeviceBootMode 
+ $ puavoTag $ puavoPurchaseDate $ puavoWarrantyEndDate $ puavoPurchaseLocation
+  $ puavoPurchaseURL $ puavoSupportContract $ puavoDefaultPrinter $ puavoDevic
+ eResolution $ puavoDeviceHorzSync $ puavoDeviceVertRefresh $ puavoDeviceOnHou
+ r $ puavoDeviceOffHour $ puavoDeviceAutoPowerOffMode $ puavoBillingInfo $ pua
+ voDeviceImage ) )
+olcObjectClasses: {8}( 1.3.6.1.4.1.27208.1.1.2.9 NAME 'puavoServer' AUXILIARY 
+ SUP puavoDevice MUST ( macAddress ) MAY ( puavoExport ) )
+olcObjectClasses: {9}( 1.3.6.1.4.1.27208.1.1.2.10 NAME 'puavoNetbootDevice' AU
+ XILIARY SUP puavoDevice MUST ( puavoSchool $ macAddress ) )
+olcObjectClasses: {10}( 1.3.6.1.4.1.27208.1.1.2.11 NAME 'puavoLocalbootDevice'
+  AUXILIARY SUP puavoDevice MUST ( puavoSchool $ macAddress ) )
+olcObjectClasses: {11}( 1.3.6.1.4.1.27208.1.1.2.12 NAME 'puavoPrinter' AUXILIA
+ RY SUP puavoDevice MUST ( puavoSchool ) MAY ( puavoPrinterCartridge $ macAddr
+ ess $ ipHostNumber ) )
+olcObjectClasses: {12}( 1.3.6.1.4.1.27208.1.1.2.13 NAME 'puavoApplication' STR
+ UCTURAL SUP top MUST ( cn $ puavoSchool $ puavoRule $ puavoId ) )
+olcObjectClasses: {13}( 1.3.6.1.4.1.27208.1.1.2.14 NAME 'puavoBookmark' STRUCT
+ URAL SUP top MUST ( displayName $ puavoBookmarkURL $ puavoSchool $ puavoRule 
+ $ puavoId ) )
+olcObjectClasses: {14}( 1.3.6.1.4.1.27208.1.1.2.15 NAME 'puavoPrinterQueue' ST
+ RUCTURAL MUST ( puavoId $ puavoServer ) MAY ( puavoRule $ puavoPrinterPPD ) )
+olcObjectClasses: {15}( 1.3.6.1.4.1.27208.1.1.2.16 NAME 'puavoSystemGroup' STR
+ UCTURAL MUST ( cn $ description ) MAY ( member ) )
+olcObjectClasses: {16}( 1.3.6.1.4.1.27208.1.1.2.17 NAME 'puavoSetting' STRUCTU
+ RAL MUST ( puavoId $ puavoSchool $ puavoSettingName ) MAY ( puavoSettingType 
+ $ puavoSettingValue $ puavoRule ) )
+olcObjectClasses: {17}( 1.3.6.1.4.1.27208.1.1.2.18 NAME 'puavoRole' AUXILIARY 
+ MUST ( puavoId ) MAY ( displayName $ puavoEduPersonAffiliation $ member ) )
+olcObjectClasses: {18}( 1.3.6.1.4.1.27208.1.1.2.19 NAME 'puavoSchoolRole' AUXI
+ LIARY MUST ( puavoId $ puavoSchool $ puavoRole ) MAY ( displayName $ member )
+  )
+olcObjectClasses: {19}( 1.3.6.1.4.1.27208.1.1.2.20 NAME 'puavoYearClass' AUXIL
+ IARY MUST ( puavoId $ puavoSchool ) MAY ( displayName $ puavoSchoolStartYear 
+ $ member ) )
+olcObjectClasses: {20}( 1.3.6.1.4.1.27208.1.1.2.21 NAME 'puavoClass' AUXILIARY
+  MUST ( puavoId $ puavoSchool $ puavoClassId $ puavoYearClass ) MAY ( display
+ Name $ member ) )
+olcObjectClasses: {21}( 1.3.6.1.4.1.27208.1.1.2.22 NAME 'puavoOtherDevice' AUX
+ ILIARY SUP puavoDevice MUST ( puavoSchool ) MAY ( macAddress $ ipHostNumber )
+  )
