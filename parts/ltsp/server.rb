@@ -18,8 +18,6 @@ def debug(*args)
   puts(*args)
 end
 
-log "Starting"
-
 module TFTPOpCode
   READ = 1
   WRITE = 2
@@ -163,8 +161,7 @@ class TFTPFileSender < EventMachine::Connection
 
     elsif block_num == @block_num-1
       debug "ACK for previous block #{ block_num }. Resending."
-      debug "timeout is #{ @timeout.inspect }"
-      # send
+      send
     else
       log "BAD ACK #{ block_num }, was waiting for #{ @block_num }"
     end
