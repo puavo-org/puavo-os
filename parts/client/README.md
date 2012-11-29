@@ -9,5 +9,5 @@ Puavo device registration CLI tool.
 
 ## Usage
 
-    [sudo] install-puavodevice
+    [sudo] puavo-register
 
