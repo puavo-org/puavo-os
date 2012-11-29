@@ -34,10 +34,6 @@ class packages {
     , 'vlan' ]:
       tag => [ 'basic', 'ubuntu', ];
 
-    [ 'ca-certificates'
-    , 'ssl-cert' ]:
-      tag => [ 'certificates', 'ubuntu', ];
-
     [ 'nautilus'
     , 'nautilus-dropbox'
     , 'ubuntu-gnome-desktop'
