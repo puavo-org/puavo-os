@@ -3,20 +3,15 @@ require "eventmachine"
 require "socket"
 require "pp"
 
+require "./lib/log"
+
 PORT = 69
 
 DATA = File.open("./test/tftpboot/kuva.jpg", "rb") { |f| f.read }
 # DATA = "x"*1000
 DATA = "x"*512*12
 
-def log(*args)
-  puts(*args)
-end
 
-def debug(*args)
-  args[0] = "DEBUG: " + args[0]
-  puts(*args)
-end
 
 module TFTPOpCode
   READ = 1
