@@ -1,4 +1,4 @@
-Source: puavotools-ldapslave
+Source: puavo-ds-slave
 Section: admin
 Priority: extra
 Maintainer: Juha Erkkilä <Juha.Erkkila@opinsys.fi>
@@ -6,9 +6,9 @@ Build-Depends: debhelper (>= 7)
 Standards-Version: 3.8.3
 Homepage: https://launchpad.net/~opinsys
 
-Package: puavotools-ldapslave
+Package: puavo-ds-slave
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: LDAP slave replication tool
- puavotools-ldapslave handles LDAP slave replication from master
+ puavo-ds-slave handles LDAP slave replication from master
  server.
