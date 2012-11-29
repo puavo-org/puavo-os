@@ -27,7 +27,7 @@ describe "Test TFTP::Server with tftp-hpa client" do
     FileUtils.rm_r(TMP)
   end
 
-  ["small", "kuva.jpg", "mod512"].each do |name|
+  ["small", "kuva.jpg", "mod512", "under512"].each do |name|
     it "fetch small file" do
       tftp_hpa_fetch(name)
       sha1sum(File.join(ROOT, name)).must_equal(
