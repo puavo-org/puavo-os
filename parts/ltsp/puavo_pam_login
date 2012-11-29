@@ -70,8 +70,9 @@ suffix = File.read('/etc/puavo/ldap/base'    ).chomp
 ldap_master = File.read('/etc/puavo/ldap/master').chomp
 ldap_slave = File.read('/etc/puavo/ldap/slave').chomp
 
-conn = LDAP::SSLConn.new(host=ldap_slave, port=636)
+conn = LDAP::Conn.new(host=ldap_slave, port=389)
 conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+conn.start_tls
 
 conn.sasl_bind("", "GSSAPI") do
   begin
