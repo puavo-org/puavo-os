@@ -14,7 +14,11 @@ OptionParser.new do |opts|
   opts.banner = "Usage: example.rb [options]"
 
   opts.on("-m", "--mount PATH", String, "Server files from directory") do |v|
-    options[:root] = v
+    if v[0] == "/"
+      options[:root] = v
+    else
+      options[:root] = File.join(Dir.pwd, v)
+    end
   end
 
   opts.on("-p", "--porti PORT", "Listen on port") do |v|
