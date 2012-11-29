@@ -1,4 +1,10 @@
 
+require "eventmachine"
+require "socket"
+
+require "./lib/cachedfilereader"
+require "./lib/log"
+
 # http://tools.ietf.org/html/rfc1350
 
 module TFTP
@@ -158,7 +164,6 @@ module TFTP
         "(#{ @current_block_size }) of #{ @data.size }"
       )
 
-      log "sending #{ @current_block_size }"
       @current = [Opcode::DATA, @block_num, block].pack("nna*")
     end
 
