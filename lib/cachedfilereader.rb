@@ -15,7 +15,7 @@ class CachedFileReader
       return data
     end
 
-
+    log "Synchronously reading #{ name }"
     return @cache[name] = File.open(name, "rb").read
   end
 

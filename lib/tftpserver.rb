@@ -38,13 +38,13 @@ module TFTP
 
     def receive_data(data)
 
-      log "Server got data #{ data.inspect }"
+      debug "Server got data #{ data.inspect }"
 
       req = data.unpack("nZ*Z*")
       if handler = OPCODE_HANDLERS[req[0]]
         send(handler, req[1], req[2])
       else
-        error "Unknown opcode #{ req[0].inspect }"
+        log "Server: Unknown opcode #{ req[0] } #{ data.inspect }"
       end
 
     end
@@ -54,26 +54,20 @@ module TFTP
       # Faster?
       # get_peername[2,6].unpack("nC4")
       port, ip = Socket.unpack_sockaddr_in(get_peername)
-      log "GET #{ name } as #{ mode } from #{ ip }:#{ port }"
 
       if mode != "octet"
-        error "Mode #{ mode } is not implemented"
+        warn "Mode #{ mode } is not implemented"
         return
       end
 
       # Create dedicated TFTP file sender server for this client on a ephemeral
       # (random) port
       sender = EventMachine::open_datagram_socket(
-        "0.0.0.0", 0, FileSender, ip, port
+        "0.0.0.0", 0, FileSender, ip, port, @filereader
       )
 
-      # TODO: parse file&type name from `data` and send contents of it. For now
-      # we just send a random image
-      begin
-        sender.tftp_send(@filereader.read(name))
-      rescue Errno::ENOENT
-        sender.error(ErrorCode::NOT_FOUND, "No found :(")
-      end
+      sender.tftp_send(name)
+
     end
 
   end
@@ -85,25 +79,49 @@ module TFTP
 
     BLOCK_SIZE = 512
     TIMEOUT = 1
+    RETRY_COUNT = 5
 
     # @param {String} client ip
     # @param {Fixnum} client port
-    def initialize(ip, port)
+    def initialize(ip, port, filereader)
+      @filereader = filereader
       @ip = ip
       @port = port
+
       @block_num = 0
       @data = nil
+      @name = nil
       @current = nil
       @current_block_size = nil
     end
 
     def to_s
-      "<FileSender to #{ @ip }:#{ @port }>"
+      "<FileSender #{ @ip }:#{ @port } #{ @name }>"
+    end
+
+    def l(*args)
+      args[0] = "#{ to_s } #{ args[0] }"
+      log(*args)
+    end
+
+    def d(*args)
+      args[0] = "#{ to_s } #{ args[0] }"
+      debug(*args)
     end
 
     # @param {String} data octet string
-    def tftp_send(data)
-      log "Sending #{ data.size } bytes to #{ self }"
+    def tftp_send(name)
+      @name = name
+
+      begin
+        data = @filereader.read(name)
+      rescue Errno::ENOENT
+        l "Cannot find file #{ name }"
+        error(ErrorCode::NOT_FOUND, "No found :(")
+        return
+      end
+
+      l "Sending #{ data.size } bytes"
       @data = data
       next_block
       send
@@ -113,8 +131,18 @@ module TFTP
     def set_timeout
       saved = @block_num
 
+      if @retry_count == 0
+        l "Tried resending #{ RETRY_COUNT } times. Giving up."
+        return
+      end
+
+      if @retry_count.nil?
+        @retry_count = RETRY_COUNT
+      end
+
+      @retry_count -= 1
       @timeout = EventMachine::Timer.new(TIMEOUT) do
-        debug "Resending from timeout #{ @block_num }. Was #{ saved }"
+        d "Resending packet from timeout. Retry #{ @retry_count }/#{ RETRY_COUNT }"
         send
       end
     end
@@ -122,19 +150,21 @@ module TFTP
     # Clear timeout for the current block
     def clear_timeout
       if @timeout
-        debug "clearing #{ @block_num }"
         @timeout.cancel()
         @timeout = nil
       end
     end
 
+    def reset_retries
+      @retry_count = nil
+    end
 
     def error(code, msg)
     # http://tools.ietf.org/html/rfc1350#page-8
-    log "Error #{ code }: #{ msg }"
     @error = true
     @block_num = 1
     @current = [Opcode::ERROR, code, msg].pack("nna*x")
+    l "Sending error #{ code }: #{ msg }"
     send
     end
 
@@ -142,7 +172,7 @@ module TFTP
     def send
       # Bad internet simulator
       # if Random.rand(400) == 0
-      #   debug "skipping #{ @block_num }"
+      #   d "skipping #{ @block_num }"
       #   return
       # end
 
@@ -158,7 +188,7 @@ module TFTP
       block = @data.byteslice( (@block_num-1) * BLOCK_SIZE, BLOCK_SIZE)
       @current_block_size = block.size
 
-      debug(
+      d(
         "Sending block #{ @block_num }. " +
         "#{ @block_num*BLOCK_SIZE }...#{ @block_num*BLOCK_SIZE+BLOCK_SIZE }" +
         "(#{ @current_block_size }) of #{ @data.size }"
@@ -176,14 +206,14 @@ module TFTP
 
     def receive_data(data)
       # port, ip = Socket.unpack_sockaddr_in(get_peername)
-      # debug "Sender got data from #{ ip }:#{ port } #{ data.inspect }"
+      # d "Sender got data from #{ ip }:#{ port } #{ data.inspect }"
 
       req = data.unpack("nn")
 
       if req[0] == Opcode::ACK
         handle_ack(req[1])
       else
-        log "Unknown opcode #{ req }"
+        l "Unknown opcode #{ req[0] } #{ data.inspect }"
       end
 
     end
@@ -191,23 +221,25 @@ module TFTP
     def handle_ack(block_num)
 
       if @error
+        l "ACK #{ block_num } for error. Stopping."
         clear_timeout
         return
       end
 
       if block_num == @block_num
-        debug "ACK for #{ block_num } ok."
+        d "ACK for block #{ block_num } ok."
+        reset_retries
 
         if not last_block?
           next_block
           send
         else
-          log "ALL DONE"
+          l "File sent ok!"
           clear_timeout
         end
 
       elsif block_num == @block_num-1
-        debug "ACK for previous block #{ block_num }. Resending."
+        d "ACK for previous block #{ block_num }. Resending."
         send
       else
         raise "BAD ACK #{ block_num }, was waiting for #{ @block_num }"

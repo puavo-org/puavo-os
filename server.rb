@@ -21,7 +21,11 @@ OptionParser.new do |opts|
     end
   end
 
-  opts.on("-p", "--porti PORT", "Listen on port") do |v|
+  opts.on("--verbose", "Print more debugging stuff") do |v|
+    $tftp_debug = true
+  end
+
+  opts.on("-p", "--port PORT", "Listen on port") do |v|
     options[:port] = v.to_i
   end
 
