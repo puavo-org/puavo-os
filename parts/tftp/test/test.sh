@@ -2,7 +2,9 @@
 
 set -eu
 
+FILE=mod512
 FILE=kuva.jpg
+FILE=$1
 
 [ -f $FILE ] && rm $FILE
 
