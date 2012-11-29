@@ -649,9 +649,9 @@ class Installation
 
     todo_lists = {
       'fatclient'  => %w(),
-      'infotv'     => %w(check_root_password hostname openvpn puppet),
+      'infotv'     => %w(check_root_password hostname openvpn),
       'laptop'     => %w(install_ltspimages setup_grub              ),
-      'ltspserver' => %w(check_root_password hostname openvpn puppet),
+      'ltspserver' => %w(check_root_password hostname openvpn),
       'thinclient' => %w(),
     }
 
@@ -660,8 +660,6 @@ class Installation
       'hostname'            => lambda { Setup.hostname(fqdn)                },
       'install_ltspimages'  => lambda { Setup.install_ltspimages(conf)  },
       'openvpn'             => lambda { Setup.openvpn()                     },
-      'puppet'              => lambda { Setup.puppet(conf['puppet_server'],
-                                                     fqdn)                  },
       'setup_grub'          => lambda { Setup.setup_grub(conf)              },
     }
 
@@ -681,12 +679,6 @@ class Installation
      end
   end
 
-  def self.run_puppet(opts='')
-    unless system('puppetd --test --logdest console' +
-                  " --logdest /var/log/puppet/install.log #{ opts }")
-      raise 'problem running puppetd'
-    end
-  end
 end
 
 class Setup
