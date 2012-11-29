@@ -24,7 +24,6 @@ module TFTP
   # http://tools.ietf.org/html/rfc1350#page-10
   module ErrorCode
     NOT_FOUND = 1
-
   end
 
   OPCODE_HANDLERS = {
@@ -77,7 +76,7 @@ module TFTP
       begin
         sender.tftp_send(@filereader.read(name))
       rescue Errno::ENOENT
-
+        sender.error(ErrorCode::NOT_FOUND, "No found :(")
       end
     end
 
@@ -98,7 +97,8 @@ module TFTP
       @port = port
       @block_num = 0
       @data = nil
-      @block = nil
+      @current = nil
+      @current_block_size = nil
     end
 
     def to_s
@@ -133,16 +133,14 @@ module TFTP
     end
 
 
-    def send_error(code, msg)
+    def error(code, msg)
     # http://tools.ietf.org/html/rfc1350#page-8
-    send_datagram(
-      [Opcode::ERROR, @block_num, @block].pack("nna*"),
-      @ip,
-      @port
-    )
-
+    log "Error #{ code }: #{ msg }"
+    @error = true
+    @block_num = 1
+    @current = [Opcode::ERROR, code, msg].pack("nna*x")
+    send
     end
-
 
     # Send current block to the client
     def send
@@ -152,32 +150,33 @@ module TFTP
       #   return
       # end
 
-      # debug "sending block #{ @block_num } with #{ (@block || []).size } bytes"
       clear_timeout
-
-      send_datagram(
-        [Opcode::DATA, @block_num, @block].pack("nna*"),
-        @ip,
-        @port
-      )
-
+      send_datagram(@current, @ip, @port)
       set_timeout
     end
 
     # Move to sending next block
     def next_block
-      @block = @data.byteslice(@block_num*BLOCK_SIZE, BLOCK_SIZE)
       @block_num += 1
-    end
 
-    # Bytes we are sure the client hase received
-    def bytes_sent
-      (@block_num-1) * BLOCK_SIZE + @block.size
+      block = @data.byteslice( (@block_num-1) * BLOCK_SIZE, BLOCK_SIZE)
+      @current_block_size = block.size
+
+      debug(
+        "Sending block #{ @block_num }. " +
+        "#{ @block_num*BLOCK_SIZE }...#{ @block_num*BLOCK_SIZE+BLOCK_SIZE }" +
+        "(#{ @current_block_size }) of #{ @data.size }"
+      )
+
+      log "sending #{ @current_block_size }"
+      @current = [Opcode::DATA, @block_num, block].pack("nna*")
     end
 
     # Is the current block last block client needs
     def last_block?
-      @block && @block.size != BLOCK_SIZE
+      # If we have current block and its size is under BLOCK_SIZE it means in
+      # tftp spec that it's the last block.
+      @current_block_size && @current_block_size < BLOCK_SIZE
     end
 
     def receive_data(data)
@@ -196,8 +195,13 @@ module TFTP
 
     def handle_ack(block_num)
 
+      if @error
+        clear_timeout
+        return
+      end
+
       if block_num == @block_num
-        debug "ACK for #{ block_num } ok. #{ bytes_sent }/#{ @data.size }, block size was #{ @block.size }"
+        debug "ACK for #{ block_num } ok."
 
         if not last_block?
           next_block
@@ -211,7 +215,7 @@ module TFTP
         debug "ACK for previous block #{ block_num }. Resending."
         send
       else
-        log "BAD ACK #{ block_num }, was waiting for #{ @block_num }"
+        raise "BAD ACK #{ block_num }, was waiting for #{ @block_num }"
       end
 
     end
