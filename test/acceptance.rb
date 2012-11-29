@@ -36,7 +36,4 @@ describe "Test TFTP::Server with tftp-hpa client" do
     end
   end
 
-
 end
-
-
