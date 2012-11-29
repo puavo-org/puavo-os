@@ -2,7 +2,7 @@
 #
 # Puavo Devices Client Install
 # * simple command-line script for registering devices
-#   to the Puavo Devices Server and installing them
+#   to the Puavo Devices Server
 #
 # TODO
 # * localization by user settings and by operating system default locale?
@@ -10,7 +10,7 @@
 #   (latitude, longitude, description etc.)?
 #
 # suggestion: run this as:
-#   script -qc ./puavo-client-register /root/register.log
+#  sudo ruby puavo-register
 
 require 'facter'
 require 'fileutils'
@@ -63,9 +63,7 @@ class CmdLine
                    | install
                    | netboot
                    | noconfirm
-                   | noinstall
-                   | register
-                   | setup-openvpn )$/x
+                   | noinstall )$/x
           params[$1] = true
         else
           if new_arg.nil?
@@ -635,281 +633,7 @@ module PostRegister
   end
 end
 
-class Installation
-  def self.fqdn
-    hostcrt = IO.read("#{ Puavodir }/certs/host.crt")
-    cert = OpenSSL::X509::Certificate.new(hostcrt)
-    HostCertificate.fqdn_from_cert(cert)
-  end
 
-  def self.install
-    conf = YAML.load_file(Host_configuration_path)
-
-    fqdn = fqdn()
-
-    todo_lists = {
-      'fatclient'  => %w(),
-      'infotv'     => %w(check_root_password hostname openvpn puppet),
-      'laptop'     => %w(install_ltspimages setup_grub              ),
-      'ltspserver' => %w(check_root_password hostname openvpn puppet),
-      'thinclient' => %w(),
-    }
-
-    tasks = {
-      'check_root_password' => lambda { make_sure_root_password_is_set()    },
-      'hostname'            => lambda { Setup.hostname(fqdn)                },
-      'install_ltspimages'  => lambda { Setup.install_ltspimages(conf)  },
-      'openvpn'             => lambda { Setup.openvpn()                     },
-      'puppet'              => lambda { Setup.puppet(conf['puppet_server'],
-                                                     fqdn)                  },
-      'setup_grub'          => lambda { Setup.setup_grub(conf)              },
-    }
-
-    my_todo_list = todo_lists[ conf['devicetype'] ]
-    raise 'No installation todo-list for device type ' \
-          + "'#{ conf['devicetype'] }'" \
-      unless my_todo_list
-
-    my_todo_list.each { |taskname| tasks[taskname].call() }
-  end
-
-  def self.make_sure_root_password_is_set
-     unless %x(passwd -S root).split[1] == 'P' then
-       Tools.errmsg('root password is not usable.')
-       Tools.errmsg('Please set it and run this again.')
-       raise 'root password is not usable'
-     end
-  end
-
-  def self.run_puppet(opts='')
-    unless system('puppetd --test --logdest console' +
-                  " --logdest /var/log/puppet/install.log #{ opts }")
-      raise 'problem running puppetd'
-    end
-  end
-end
-
-class Setup
-  def self.hostname(fqdn)
-    hostname = fqdn.split('.')[0]
-
-    begin
-      File.open('/etc/hostname', 'w') do |f|
-        f.print "#{ hostname }\n"
-      end
-      unless system('hostname --file /etc/hostname')
-        raise 'could not set hostname'
-      end
-    rescue Exception => e
-      Tools.errmsg(e.message)
-      raise e
-    end
-
-    Tools.goodmsg("System hostname is now set to #{ hostname }.")
-  end
-
-  def self.kerberos(principals)
-    return # XXX this method is not used yet
-
-    begin
-      error = false
-      principal = HighLine.ask("\nKerberos principal: ")
-      password  = HighLine.ask('Password: ') { |q| q.echo = '*' }
-
-      principals.each do |princ|
-        goodmsg, errmsg = [], []
-        Open3.popen3('kadmin', '-p', principal, '-w', password, '-q',
-                     "add_principal #{ princ }") do |stdin, stdout, stderr|
-          goodmsg = stdout.readlines
-          errmsg  = stderr.readlines
-        end
-        # XXX use some criteria to figure out if operation was ok
-        status = $?.exitstatus
-        Tools.errmsg("exit status is #{ status }")
-        goodmsg.each { |l| Tools.goodmsg(l.chomp) }
-        errmsg .each { |l| Tools.errmsg(l.chomp)  }
-        error = true
-        break
-      end
-    end while error
-  end
-
-
-  def self.openvpn(restart_and_wait=true)
-    begin
-      Tools.mkdir('/etc/openvpn/keys')
-
-      ovpn_crt         = '/etc/openvpn/keys/host.crt'
-      ovpn_key         = '/etc/openvpn/keys/host.key'
-      ovpn_orgcabundle = '/etc/openvpn/keys/orgcabundle.pem'
-
-      FileUtils.cp(HostCrtPath,     ovpn_crt)
-      FileUtils.cp(HostKeyPath,     ovpn_key)
-      FileUtils.cp(OrgCABundlePath, ovpn_orgcabundle)
-
-      File.open('/etc/openvpn/runme', 'w', 0755) do |f|
-        f.print <<-EOF.gsub(/^\t+/, '')
-		#!/bin/sh
-
-		SCRIPTSUBDIR=$1
-
-		for script in /etc/openvpn/scripts/$SCRIPTSUBDIR/*; do
-		  test -x $script && timeout 30 $script "$@"
-		done
-
-		exit 0
-		EOF
-      end
-      File.open('/etc/openvpn/puavoclient.conf', 'w', 0644) do |f|
-        f.print <<-EOF.gsub(/^\t+/, '')
-		client
-		dev tun
-		proto tcp-client
-		remote 217.112.254.13 443
-
-		ca #{ ovpn_orgcabundle }
-		cert #{ ovpn_crt }
-		key #{ ovpn_key }
-		ns-cert-type server
-
-		verb 3
-
-		comp-lzo
-		keepalive 10 60
-		persist-tun
-		persist-key
-
-		up-delay
-		script-security 2
-
-		down "/etc/openvpn/runme down"
-		ipchange "/etc/openvpn/runme ipchange"
-		route-up "/etc/openvpn/runme route-up"
-		tls-verify "/etc/openvpn/runme tls-verify"
-		up "/etc/openvpn/runme up"
-		EOF
-      end
-
-      if restart_and_wait
-        unless system('service openvpn restart')
-          raise 'problem restarting openvpn'
-        end
-
-        sleep 2
-        until system('ifconfig tun0 >/dev/null 2>&1')
-          Tools.errmsg('waiting for tun0 to come up...')
-          sleep 2
-        end
-        sleep 2
-      end
-
-    rescue Exception => e
-      Tools.errmsg(e.message)
-      raise e
-    end
-    Tools.goodmsg('OpenVPN setup is done.')
-  end
-
-  def self.manage_local(diskdevice, partition, opmode)
-    system('manage_local_ltspclient_installation',
-           opmode,
-           diskdevice,
-           partition) \
-      or raise "Error doing install operation #{ opmode }"
-  end
-
-  def self.install_ltspimages(conf)
-    manage_local(conf['diskdevice'], conf['partition'], 'install')
-  end
-
-  def self.prepare_laptop_disk(conf)
-    diskdevice = conf['diskdevice']
-    partition  = conf['partition']
-
-    install_phases = []
-
-    if partition == 'whole'
-      install_phases = %w(lvm_partition liitu_partitions)
-      partition      = "#{ diskdevice }1"
-    else
-      install_phases = %w(liitu_partitions)
-    end
-
-    install_phases.each do |opmode|
-      manage_local(diskdevice, partition, opmode)
-    end
-
-    FileUtils.mkdir_p('/disk/state')
-    system('mount', '/dev/mapper/liito-state', '/disk/state') \
-      or raise 'Could not mount /dev/mapper/liito-state'
-    FileUtils.mkdir_p("/disk/state#{ Puavodir }")
-    system('mount', '-o', 'bind', "/disk/state#{ Puavodir }", Puavodir) \
-      or raise 'Could not mount /dev/mapper/liito-state'
-  end
-
-  def self.setup_grub(conf)
-    raise 'Grub install is supported only on laptops' \
-      if conf['devicetype'] != 'laptop'
-
-    system('vgrename', 'liito', 'liitu') \
-      or raise 'Could not rename the lvm volume group'
-    manage_local(conf['diskdevice'], conf['partition'], 'grubinstall')
-  end
-
-  def self.puppet(puppet_server, fqdn)
-    raise 'Puppet server is not known' \
-      unless puppet_server && !puppet_server.empty?
-
-    raise 'FQDN is not known' unless fqdn && !fqdn.empty?
-
-    begin
-      # needed by some facter rules
-      FileUtils.rmtree('/etc/puppet/ssl')
-      Tools.mkdir('/etc/puppet/ssl',              0771)
-      Tools.mkdir('/etc/puppet/ssl/certs')
-      Tools.mkdir('/etc/puppet/ssl/private_keys', 0750)
-      FileUtils.chown('puppet', 'root', [ '/etc/puppet/ssl',
-                                          '/etc/puppet/ssl/certs',
-                                          '/etc/puppet/ssl/private_keys', ])
-
-      FileUtils.cp(HostCrtPath, "/etc/puppet/ssl/certs/#{ fqdn }.pem")
-      FileUtils.cp(HostKeyPath, "/etc/puppet/ssl/private_keys/#{ fqdn }.pem")
-      FileUtils.cp(OrgCABundlePath, '/etc/puppet/ssl/certs/ca.pem')
-
-      File.open('/etc/default/puppet', 'w') do |f|
-        f.print <<-EOF.gsub(/^\t+/, '')
-		START=yes
-		DAEMON_OPTS=""
-		EOF
-      end
-
-      File.open('/etc/puppet/puppet.conf', 'w') do |f|
-        f.print <<-EOF.gsub(/^\t+/, '')
-		[main]
-		certname=#{ fqdn }
-		factpath=/var/lib/puppet/lib/facter
-		logdir=/var/log/puppet
-		pluginsync=true
-		postrun_command=/etc/puppet/etckeeper-commit-post
-		prerun_command=/etc/puppet/etckeeper-commit-pre
-		rundir=/var/run/puppet
-		server=#{ puppet_server }
-		templatedir=$confdir/templates
-		vardir=/var/lib/puppet
-		EOF
-      end
-
-      Tools.goodmsg('Puppet setup is done, running puppet once...')
-      run_puppet('--tags debian::apt::client')
-      run_puppet()
-      Tools.goodmsg('Puppet run is done.')
-      Tools.goodmsg('Check that all is ok, and re-execute this if in doubt.')
-    rescue Exception => e
-      Tools.errmsg(e.message)
-      raise e
-    end
-  end
-end
 
 class Control
   def self.register(cmdline_params)
@@ -979,29 +703,11 @@ class Control
 
   end
 
-  def self.install(cmdline_params)
-    if cmdline_params['noinstall']
-      Tools.goodmsg('Not doing the installation (--noinstall is set)')
-      return
-    end
-
-    Installation.install
-  end
-end
-
 raise 'run me as root' unless Process.uid == 0
 
 HighLine.say "\n\t-=< Puavo Devices Client >=-\n\n"
 
 cmdline_params = CmdLine.params(ARGV)
 
-if cmdline_params['setup-openvpn']
-  Setup.openvpn(false)
-elsif cmdline_params['register']
-  Control.register(cmdline_params)
-elsif cmdline_params['install']
-  Control.install(cmdline_params)
-else
-  Control.register(cmdline_params)
-  Control.install(cmdline_params)
+Control.register(cmdline_params)
 end
