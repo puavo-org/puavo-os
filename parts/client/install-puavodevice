@@ -651,7 +651,7 @@ class Installation
       'fatclient'  => %w(),
       'infotv'     => %w(check_root_password hostname openvpn),
       'laptop'     => %w(install_ltspimages setup_grub              ),
-      'ltspserver' => %w(check_root_password hostname openvpn),
+      'ltspserver' => %w(check_root_password hostname openvpn ldap),
       'thinclient' => %w(),
     }
 
@@ -661,6 +661,7 @@ class Installation
       'install_ltspimages'  => lambda { Setup.install_ltspimages(conf)  },
       'openvpn'             => lambda { Setup.openvpn()                     },
       'setup_grub'          => lambda { Setup.setup_grub(conf)              },
+      'ldap'                => lambda { Setup.ldap()                        },
     }
 
     my_todo_list = todo_lists[ conf['devicetype'] ]
@@ -682,6 +683,22 @@ class Installation
 end
 
 class Setup
+
+  def self.ldap
+    ldap_rootca = '/etc/ssl/certs/puavo-ca.crt'
+
+    FileUtils.cp(RootCAPath, ldap_rootca)
+
+    File.open('/etc/ldap/ldap.conf', 'w', 0644) do |f|
+      f.print <<-EOF.gsub(/^\t+/, '')
+		TLS_CACERT /etc/ssl/certs/puavo-ca.crt
+		TLS_REQCERT demand
+		EOF
+    end
+
+    Tools.goodmsg('LDAP-client setup is done.')
+  end
+
   def self.hostname(fqdn)
     hostname = fqdn.split('.')[0]
 
