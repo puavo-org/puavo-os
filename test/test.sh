@@ -1,12 +1,13 @@
 #!/bin/sh
 
-set -e
+set -eu
 
-[ -f kuva.jpg ] && rm kuva.jpg
+FILE=kuva.jpg
 
-# tftp-hpa client
-tftp -m octet localhost -c get kuva.jpg
+[ -f $FILE ] && rm $FILE
 
+# dep: sudo apt-get install tftp-hpa
+tftp -m octet localhost -c get $FILE
 
-ls -l kuva.jpg tftpboot/kuva.jpg
-sha1sum kuva.jpg tftpboot/kuva.jpg
+ls -l $FILE tftpboot/$FILE
+sha1sum $FILE tftpboot/$FILE
