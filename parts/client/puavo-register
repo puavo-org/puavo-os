@@ -683,7 +683,7 @@ class Control
     PostRegister.write_ldap_info(
       info['registration']['dn'],
       info['registration']['ldap_password'],
-      info['registration']['base'],
+      organisation_info['base'],
       organisation_info['ldap_host']
     )
 
