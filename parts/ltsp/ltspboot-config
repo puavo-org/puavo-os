@@ -1,0 +1,56 @@
+#!/usr/bin/ruby
+
+require 'ldap'
+
+class PuavoLdap
+  attr_reader :base, :dn, :password
+
+  def initialize(ldapserver='localhost')
+    @base       = File.read('/etc/puavo/ldap/base'    ).chomp
+    @dn         = File.read('/etc/puavo/ldap/dn'      ).chomp
+    @password   = File.read('/etc/puavo/ldap/password').chomp
+    ldapserver  = File.read('/etc/puavo/ldap/master'  ).chomp
+
+    if ldapserver
+      @conn = LDAP::Conn.new(ldapserver)
+      @conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+      @conn.start_tls
+      @conn.bind(@dn, @password)
+
+    else
+      @conn = nil
+    end
+  end
+  def search(filter, &block)
+    search_with_base(@base, filter, &block)
+  end
+
+  def search_with_base(base, filter, &block)
+    return [] unless @conn
+    @conn.search(base, LDAP::LDAP_SCOPE_SUBTREE, filter, &block)
+  end
+
+end
+
+client_mac = ARGV[0].to_s.gsub('-', ':').downcase
+
+filter = "(&(|(objectClass=puavoNetbootDevice)(objectClass=puavoLocalbootDevice))(macAddress=#{client_mac}))"
+ltsp_client = {}
+PuavoLdap.new.search(filter) do |entry|
+  ltsp_client = entry.to_hash
+end
+
+kernel_version = ltsp_client['puavoDeviceKernelVersion'].to_s
+kernel_version = "-" + kernel_version if not kernel_version.empty?
+
+kernel_args = ltsp_client['puavoDeviceKernelArguments'].to_s
+kernel_args = "quiet splash" if kernel_args.empty?
+
+image = ltsp_client['puavoDeviceImage'].to_s
+image = "default" if image.empty?
+
+puts <<EOF
+kernel vmlinuz#{kernel_version}
+append ro initrd=initrd.img#{kernel_version} init=/sbin/init-ltsp plymouth:force-splash vt.handoff=7 root=/dev/nbd0 nbdroot=:#{image} #{kernel_args}"
+ipappend 2
+EOF
