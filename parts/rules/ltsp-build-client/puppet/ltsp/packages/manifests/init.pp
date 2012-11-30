@@ -390,6 +390,7 @@ class packages {
     , 'pidgin-themes'
     , 'tangerine-icon-theme'
     , 'screensaver-default-images'
+    , 'ubuntu-mono'
     , 'ubuntu-wallpapers'
     , 'ubuntu-wallpapers-extra'
     , 'xcursor-themes'
