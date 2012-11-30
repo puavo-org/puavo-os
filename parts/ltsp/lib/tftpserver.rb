@@ -47,16 +47,23 @@ module TFTP
 
   class TFTPConnection < EventMachine::Connection
 
-    def handle_opcode(code, *args)
+    def receive_data(data)
+      # debug "Server got data #{ data.inspect }"
+      code = data.unpack("n").first
+      handle_opcode(code, data)
+    end
+
+    def handle_opcode(code, data)
       if handler = OPCODE_HANDLERS[code]
-        send(handler, *args)
+        send(handler, data)
       else
-        log "Unknown opcode #{ req[0] } #{ data.inspect }"
+        log "Unknown opcode #{ code }: #{ data.inspect }"
       end
     end
 
-    def handle_error(num, *args)
-      l "ERROR: #{ ERROR_DESCRIPTIONS[num] }"
+    def handle_error(data)
+      code, err_code = data.unpack("nn")
+      l "Client sent an error: #{ ERROR_DESCRIPTIONS[err_code].inspect } data: #{ data.inspect }"
     end
 
     def l(*args)
@@ -78,17 +85,12 @@ module TFTP
       @filereader = CachedFileReader.new(root)
     end
 
-    def receive_data(data)
-      debug "Server got data #{ data.inspect }"
-      req = data.unpack("nZ*Z*")
-      handle_opcode(req[0], req[1], req[2])
-    end
-
     def to_s
       "<Server fixed>"
     end
 
-    def handle_get(name, mode)
+    def handle_get(data)
+      _, name, mode = data.unpack("nZ*Z*")
 
       # Faster?
       # get_peername[2,6].unpack("nC4")
@@ -146,7 +148,7 @@ module TFTP
         data = @filereader.read(name)
       rescue Errno::ENOENT
         l "Cannot find file #{ name }"
-        error(ErrorCode::NOT_FOUND, "No found :(")
+        send_error_packet(ErrorCode::NOT_FOUND, "No found :(")
         return
       end
 
@@ -161,7 +163,7 @@ module TFTP
       saved = @block_num
 
       if @retry_count == 0
-        l "Tried resending #{ RETRY_COUNT } times. Giving up."
+        l "Tried resending #{ RETRY_COUNT } times. Giving up. #{ @current.inspect }"
         return
       end
 
@@ -188,20 +190,18 @@ module TFTP
       @retry_count = nil
     end
 
-    def error(code, msg)
+    def send_error_packet(code, msg)
     # http://tools.ietf.org/html/rfc1350#page-8
-    @error = true
-    @block_num = 1
-    @current = [Opcode::ERROR, code, msg].pack("nna*x")
+    @error = [Opcode::ERROR, code, msg].pack("nna*x")
     l "Sending error #{ code }: #{ msg }"
-    send_packet
+    send_datagram(@error, @ip, @port)
     end
 
     # Send current block to the client
     def send_packet
       # Bad internet simulator
-      # if Random.rand(400) == 0
-      #   d "skipping #{ @block_num }"
+      # if Random.rand(100) == 0
+      #   puts "skipping #{ @block_num }"
       #   return
       # end
 
@@ -214,7 +214,7 @@ module TFTP
     def next_block
       @block_num += 1
 
-      block = @data.byteslice( (@block_num-1) * BLOCK_SIZE, BLOCK_SIZE)
+      block = @data.byteslice((@block_num-1) * BLOCK_SIZE, BLOCK_SIZE)
       @current_block_size = block.size
 
       d(
@@ -233,14 +233,9 @@ module TFTP
       @current_block_size && @current_block_size < BLOCK_SIZE
     end
 
-    def receive_data(data)
-      # port, ip = Socket.unpack_sockaddr_in(get_peername)
-      # d "Sender got data from #{ ip }:#{ port } #{ data.inspect }"
-      req = data.unpack("nn")
-      handle_opcode(req[0], req[1])
-    end
 
-    def handle_ack(block_num)
+    def handle_ack(data)
+      _, block_num = data.unpack("nn")
 
       if @error
         l "ACK #{ block_num } for error. Stopping."
