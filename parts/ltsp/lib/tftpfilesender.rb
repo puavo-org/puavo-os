@@ -69,6 +69,7 @@ module TFTP
 
     end
 
+    # Set OACK packet to be sent on next send_packet call
     def set_oack_packet(options)
       # http://tools.ietf.org/html/rfc2347#page-3
       oack = [Opcode::OACK].pack("n")
@@ -97,7 +98,7 @@ module TFTP
       end
 
       # If no extensions detected start sending data
-      next_block
+      set_next_data_packet
       send_packet
     end
 
@@ -164,8 +165,8 @@ module TFTP
       set_timeout
     end
 
-    # Move to sending next block
-    def next_block
+    # Set DATA packet to be sent on next send_packet call
+    def set_next_data_packet
       @block_num += 1
 
       block = @data.byteslice((@block_num-1) * BLOCK_SIZE, BLOCK_SIZE)
@@ -208,7 +209,7 @@ module TFTP
         reset_retries
 
         if not last_block?
-          next_block
+          set_next_data_packet
           send_packet
         else
           finish

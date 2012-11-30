@@ -20,7 +20,7 @@ module TFTP
       if handler = OPCODE_HANDLERS[code]
         send(handler, data)
       else
-        log "Unknown opcode #{ code }: #{ data.inspect }"
+        l "ERROR: Unknown opcode #{ code }: #{ data.inspect }"
       end
     end
 
