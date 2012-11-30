@@ -10,8 +10,8 @@ SRV record _ldap._tcp.#{puavo_domain} and connects the first LDAP
 server returned. If it does not respond, LDAP master server is
 contacted (TBD).
 
-NOTE: The script always uses ldaps to connect and CA certificates
-need to be configured properly in /etc/ldap/ldap.conf
+NOTE: The script always uses ldap+start_tls to connect and CA
+certificates need to be configured properly in /etc/ldap/ldap.conf
 
 The script checks for the following env variables:
 
