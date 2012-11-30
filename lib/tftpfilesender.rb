@@ -30,7 +30,11 @@ module TFTP
     # @param {String} data octet string
     def handle_get(data)
       _, name, mode, *opts = data.unpack("nZ*Z*Z*Z*Z*Z*")
-      l "GET(#{ mode }) #{ name } options: #{ opts }"
+      # http://tools.ietf.org/html/rfc2347
+      @extensions = Hash[*opts]
+      @name = name
+
+      l "GET(#{ mode }) options: #{ opts }"
 
       if mode != "octet"
         l "FATAL ERROR ERROR: mode '#{ mode }' is not implemented. Abort."
@@ -41,9 +45,6 @@ module TFTP
         return
       end
 
-      # http://tools.ietf.org/html/rfc2347
-      @extensions = Hash[*opts]
-      @name = name
 
       # Handle pxelinux.cfg with a custom script
       if name.start_with?("pxelinux.cfg", "/pxelinux.cfg")
@@ -225,7 +226,6 @@ module TFTP
     end
 
     def finish
-      # TODO: close connection?
       l "File sent OK! Sending took #{ Time.now - @started }s"
       clear_timeout
       close_connection
