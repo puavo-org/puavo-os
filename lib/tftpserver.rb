@@ -269,6 +269,4 @@ module TFTP
     end
 
   end
-
->>>>>>> Fix start_with? matching
 end
