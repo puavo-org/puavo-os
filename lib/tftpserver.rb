@@ -63,7 +63,7 @@ module TFTP
 
     def handle_error(data)
       code, err_code = data.unpack("nn")
-      l "Client sent an error: #{ ERROR_DESCRIPTIONS[err_code].inspect } data: #{ data.inspect }"
+      l "CLIENT ERROR: #{ ERROR_DESCRIPTIONS[err_code].inspect } data: #{ data.inspect }"
     end
 
     def l(*args)
@@ -95,6 +95,8 @@ module TFTP
       # Faster?
       # get_peername[2,6].unpack("nC4")
       port, ip = Socket.unpack_sockaddr_in(get_peername)
+
+      l "GET #{ name } for #{ ip }:#{ port }"
 
       if mode != "octet"
         warn "Mode #{ mode } is not implemented"
@@ -146,12 +148,11 @@ module TFTP
       begin
         data = @filereader.read(name)
       rescue Errno::ENOENT
-        l "Cannot find file #{ name }"
+        l "ERROR: cannot find #{ name }"
         send_error_packet(ErrorCode::NOT_FOUND, "No found :(")
         return
       end
 
-      l "Sending #{ name } #{ data.size } bytes"
       @data = data
       next_block
       send_packet
@@ -232,6 +233,12 @@ module TFTP
       @current_block_size && @current_block_size < BLOCK_SIZE
     end
 
+    def handle_error(data)
+      super
+      l "ABORT"
+      clear_timeout
+      reset_retries
+    end
 
     def handle_ack(data)
       _, block_num = data.unpack("nn")
