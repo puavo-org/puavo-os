@@ -88,10 +88,15 @@ kernel_args = ltsp_client['puavoDeviceKernelArguments'].to_s
 kernel_args = "quiet splash" if kernel_args.empty?
 
 image = ltsp_client['puavoDeviceImage'].to_s
-image = "default" if image.empty?
+image = "ltsp_i386" if image.empty?
 
 puts <<EOF
+default ltsp-NBD
+ontimeout ltsp-NBD
+
+label ltsp-NBD
+menu label LTSP, using NBD
 kernel vmlinuz#{kernel_version}
-append ro initrd=initrd.img#{kernel_version} init=/sbin/init-ltsp plymouth:force-splash vt.handoff=7 root=/dev/nbd0 nbdroot=:#{image} #{kernel_args}"
+append ro initrd=initrd.img#{kernel_version} init=/sbin/init-ltsp plymouth:force-splash vt.handoff=7 root=/dev/nbd0 nbdroot=:#{image} #{kernel_args}
 ipappend 2
 EOF
