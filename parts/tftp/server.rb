@@ -2,6 +2,7 @@
 
 require "./lib/log"
 require "./lib/tftpserver"
+require "./lib/cachedfilereader"
 
 require 'optparse'
 
@@ -39,6 +40,6 @@ EventMachine::run do
     "0.0.0.0",
     options[:port],
     TFTP::Server,
-    options[:root]
+    CachedFileReader.new(options[:root])
   )
 end

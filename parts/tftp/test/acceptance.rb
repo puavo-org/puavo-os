@@ -4,6 +4,7 @@ require "fileutils"
 require "digest/sha1"
 
 require "./lib/tftpserver"
+require "./lib/cachedfilereader"
 
 DIR = File.dirname File.expand_path __FILE__
 TMP = File.join(DIR, "tmp")
@@ -24,7 +25,12 @@ class ServerThread < Thread
   def initialize
     super do
       EventMachine::run do
-        EventMachine::open_datagram_socket("0.0.0.0", PORT, TFTP::Server, ROOT)
+        EventMachine::open_datagram_socket(
+          "0.0.0.0",
+          PORT,
+          TFTP::Server,
+          CachedFileReader.new(ROOT)
+        )
       end
     end
   end
