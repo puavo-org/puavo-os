@@ -141,7 +141,7 @@ module TFTP
       l "GET #{ name } options: #{ opts }"
 
       if mode != "octet"
-        warn "Mode #{ mode } is not implemented"
+        l "FATAL ERROR ERROR: mode '#{ mode }' is not implemented. Abort."
         send_error_packet(
           ErrorCode::NOT_DEFINED,
           "Mode #{ mode } is not implemented"
@@ -186,13 +186,14 @@ module TFTP
       end
       @current = oack
 
-      l "OACK #{ oack.inspect }"
+      l "Sending OACK #{ oack.inspect }"
       send_packet
     end
 
     def init_sending(data)
       @started = Time.now
       @data = data
+      l "Going to send #{ @data.size } bytes"
 
       # Detect extensions and send oack
       if @extensions["tsize"] == "0"
