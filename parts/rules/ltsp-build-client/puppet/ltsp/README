@@ -20,6 +20,11 @@ organisation_adm_users
 
 packages
     Lists packages that are to be installed to ltsp images.
+      packages::all     - install all (defined) packages
+      packages::partner - install all (defined) packages that are in Canonical
+                          partner repository
+      packages::ubuntu  - install all (defined) packages that are in Ubuntu
+                          repositories
 
 ssh_client
     Settings for openssh client.  XXX these actually weaken security from
