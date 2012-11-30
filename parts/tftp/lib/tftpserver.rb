@@ -16,10 +16,12 @@ module TFTP
     DATA = 3
     ACK = 4
     ERROR = 5
+    OACK = 6
   end
 
   # http://tools.ietf.org/html/rfc1350#page-10
   module ErrorCode
+    NOT_DEFINED = 0
     NOT_FOUND = 1
     ACCESS_VIOLATION = 2
     DISK_FULL = 3
@@ -90,18 +92,9 @@ module TFTP
     end
 
     def handle_get(data)
-      _, name, mode = data.unpack("nZ*Z*")
 
-      # Faster?
-      # get_peername[2,6].unpack("nC4")
       port, ip = Socket.unpack_sockaddr_in(get_peername)
 
-      l "GET #{ name } for #{ ip }:#{ port }"
-
-      if mode != "octet"
-        warn "Mode #{ mode } is not implemented"
-        return
-      end
 
       # Create dedicated TFTP file sender server for this client on a ephemeral
       # (random) port
@@ -109,7 +102,7 @@ module TFTP
         "0.0.0.0", 0, FileSender, ip, port, @filereader
       )
 
-      sender.tftp_send(name)
+      sender.handle_get(data)
     end
 
   end
@@ -141,51 +134,86 @@ module TFTP
       "<FileSender #{ @ip }:#{ @port } #{ @name }>"
     end
 
+
     # @param {String} data octet string
-    def tftp_send(name)
+    def handle_get(data)
+      _, name, mode, *opts = data.unpack("nZ*Z*Z*Z*Z*Z*")
+      l "GET #{ name } options: #{ opts }"
+
+      if mode != "octet"
+        warn "Mode #{ mode } is not implemented"
+        send_error_packet(
+          ErrorCode::NOT_DEFINED,
+          "Mode #{ mode } is not implemented"
+        )
+        return
+      end
+
+      # http://tools.ietf.org/html/rfc2347
+      @extensions = Hash[*opts]
       @name = name
 
+      # Handle pxelinux.cfg with a custom script
       if name.start_with?("pxelinux.cfg")
-        
-        debug("Try to get following pxelinux.cfg configurations: #{ name }")
-        
+
+        # We support only mac based configuration
         if match_mac = name.downcase.match(/pxelinux.cfg\/01-(([0-9a-f]{2}[:-]){5}[0-9a-f]{2})/)
-          send_ltspboot_config( match_mac[1] )
-        else
-          l "ERROR: cannot find #{ name }"
-          send_error_packet(ErrorCode::NOT_FOUND, "No found :(")
-          return
+          return exec_script( match_mac[1] )
         end
-      else
 
-        begin
-          data = @filereader.read(name)
-
-          @data = data
-          next_block
-          send_packet
-
-        rescue Errno::ENOENT
-          l "ERROR: cannot find #{ name }"
-          send_error_packet(ErrorCode::NOT_FOUND, "No found :(")
-          return
-        end
+        # If not mac just ignore
+        l "ERROR: cannot find #{ name }"
+        send_error_packet(ErrorCode::NOT_FOUND, "No found :(")
+        return
       end
+
+      begin
+        init_sending @filereader.read(name)
+      rescue Errno::ENOENT
+        l "ERROR: cannot find #{ name }"
+        send_error_packet(ErrorCode::NOT_FOUND, "No found :(")
+        return
+      end
+
     end
 
-    def send_ltspboot_config(mac = nil)
+    def set_oack_packet(options)
+      # http://tools.ietf.org/html/rfc2347#page-3
+      oack = [Opcode::OACK].pack("n")
+      d "Packing #{ options.inspect }"
+      options.each do |k,v|
+        oack += [k,v.to_s].pack("a*xa*x") if not k.empty?
+      end
+      @current = oack
+
+      l "OACK #{ oack.inspect }"
+      send_packet
+    end
+
+    def init_sending(data)
+      @data = data
+
+      # Detect extensions and send oack
+      if @extensions["tsize"] == "0"
+        set_oack_packet({
+          "tsize" => @data.size
+        })
+        send_packet
+        return
+      end
+
+      # If no extensions detected start sending data
+      next_block
+      send_packet
+    end
+
+    def exec_script(mac = nil)
       command = "./ltspboot-config"
       if mac
         command += " --mac #{mac}"
       end
-
-      ltspboot_config = EM::DeferrableChildProcess.open(command)
-
-      ltspboot_config.callback do |response|
-        @data = response
-        next_block
-        send_packet
-      end
+      child = EM::DeferrableChildProcess.open(command)
+      child.callback { |stdout| init_sending stdout }
     end
 
     # set timeout for the current block
@@ -221,11 +249,12 @@ module TFTP
     end
 
     def send_error_packet(code, msg)
-    # http://tools.ietf.org/html/rfc1350#page-8
-    @error = [Opcode::ERROR, code, msg].pack("nna*x")
-    l "Sending error #{ code }: #{ msg }"
-    send_datagram(@error, @ip, @port)
+      # http://tools.ietf.org/html/rfc1350#page-8
+      @error = [Opcode::ERROR, code, msg].pack("nna*x")
+      l "Sending error #{ code }: #{ msg }"
+      send_datagram(@error, @ip, @port)
     end
+
 
     # Send current block to the client
     def send_packet
@@ -287,6 +316,7 @@ module TFTP
           next_block
           send_packet
         else
+          # TODO: close connection?
           l "File sent ok!"
           clear_timeout
         end
