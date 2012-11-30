@@ -50,7 +50,7 @@ describe "TFTP::Server with tftp-hpa client" do
   after do
     puts "TFTP Server stopping..."
     @ev.stop
-    @ev.join()
+    @ev.join
     puts "Stopped."
     FileUtils.rm_r(TMP)
   end
