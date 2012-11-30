@@ -191,6 +191,7 @@ module TFTP
     end
 
     def init_sending(data)
+      @started = Time.now
       @data = data
 
       # Detect extensions and send oack
@@ -317,9 +318,7 @@ module TFTP
           next_block
           send_packet
         else
-          # TODO: close connection?
-          l "File sent ok!"
-          clear_timeout
+          finish
         end
 
       elsif block_num == @block_num-1
@@ -331,5 +330,12 @@ module TFTP
 
     end
 
+    def finish
+      # TODO: close connection?
+      l "File sent OK! Sending took #{ Time.now - @started }s"
+      clear_timeout
+    end
+
   end
+
 end
