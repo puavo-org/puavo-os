@@ -147,13 +147,9 @@ module TFTP
 
       if name.start_with?("pxelinux.cfg")
         
-        debug("GET 1 #{ name }")
+        debug("Try to get following pxelinux.cfg configurations: #{ name }")
         
-        if name == "pxelinux.cfg/default"
-          debug("GET 2 #{ name }")
-          get_ltspboot_config()
-        elsif match_mac = name.downcase.match(/pxelinux.cfg\/01-(([0-9a-f]{2}[:-]){5}[0-9a-f]{2})/)
-          debug("GET 3 #{ name }")
+        if match_mac = name.downcase.match(/pxelinux.cfg\/01-(([0-9a-f]{2}[:-]){5}[0-9a-f]{2})/)
           data = get_ltspboot_config( match_mac[1] )
         else
           l "ERROR: cannot find #{ name }"
