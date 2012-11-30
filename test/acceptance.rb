@@ -34,7 +34,7 @@ class ServerThread < Thread
 end
 
 
-describe "Test TFTP::Server with tftp-hpa client" do
+describe "TFTP::Server with tftp-hpa client" do
 
   before do
     @ev = ServerThread.new
@@ -61,12 +61,18 @@ describe "Test TFTP::Server with tftp-hpa client" do
    "mod512",
    "under512"
   ].each do |name|
-    it "fetch small file" do
+    it "fetches file #{ name }" do
       tftp_hpa_fetch(name)
       sha1sum(File.join(ROOT, name)).must_equal(
         sha1sum(File.join(TMP, name))
       )
     end
+  end
+
+  it "does not get anything on nonexistent file" do
+    name = "nonexistent"
+    tftp_hpa_fetch(name)
+    File.exists?(File.join(TMP, name)).must_equal false
   end
 
 end
