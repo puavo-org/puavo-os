@@ -228,6 +228,7 @@ module TFTP
       # TODO: close connection?
       l "File sent OK! Sending took #{ Time.now - @started }s"
       clear_timeout
+      close_connection
     end
 
   end
