@@ -1,3 +1,13 @@
+puavo-ds-slave (0.1.7) precise; urgency=low
+
+  * New release
+    - depend on slapd, ldap-utils, krb5-kdc-ldap and krb5-admin-server
+    - fix variable names to match puavo configuration variable names
+    - move files from /usr/shave/puavotools to /usr/share/puavo-ds-slave
+    - pass fqdn to ktadd
+
+ -- Tuomas Jorma Juhani Räsänen <tuomasjjrasanen@opinsys.fi>  Fri, 30 Nov 2012 11:20:04 +0200
+
 puavo-ds-slave (0.1.6) precise; urgency=low
 
   * New release
