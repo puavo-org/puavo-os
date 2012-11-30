@@ -1,91 +1,45 @@
-ca.desrt.dconf-editor.Settings height 649
-ca.desrt.dconf-editor.Settings width 911
-com.canonical.desktop.interface scrollbar-mode 'normal'
-com.canonical.indicator.messages applications ['thunderbird.desktop']
-com.canonical.indicator.session show-real-name-on-panel true
-com.ubuntu.update-notifier auto-launch false
-com.ubuntu.update-notifier release-check-time uint32 1354087772
-org.compiz existing-profiles ['Default', 'unity']
-org.gnome.Charmap.WindowState size (768, 415)
-org.gnome.DejaDup backend 'u1'
-org.gnome.DejaDup prompt-check 'disabled'
-org.gnome.DejaDup.S3 folder '$HOSTNAME'
-org.gnome.DejaDup.S3 folder '$HOSTNAME'
-org.gnome.desktop.background picture-uri 'file:///home/gnome/opinsys-quantal-bg.png'
-org.gnome.desktop.background primary-color '#000000'
-org.gnome.desktop.background secondary-color '#000000'
-org.gnome.desktop.interface gtk-theme 'Radiance'
-org.gnome.desktop.interface icon-theme 'ubuntu-mono-light'
-org.gnome.desktop.interface ubuntu-overlay-scrollbars false
-org.gnome.desktop.lockdown disable-user-switching true
-org.gnome.desktop.screensaver user-switch-enabled false
-org.gnome.desktop.wm.keybindings lower ['disabled']
-org.gnome.desktop.wm.keybindings maximize ['<Control><Primary><Super>Up']
-org.gnome.desktop.wm.keybindings maximize-horizontally ['disabled']
-org.gnome.desktop.wm.keybindings maximize-vertically ['disabled']
-org.gnome.desktop.wm.keybindings minimize ['<Control><Primary><Alt>KP_0']
-org.gnome.desktop.wm.keybindings raise ['disabled']
-org.gnome.desktop.wm.keybindings show-desktop ['<Control><Primary><Super>d']
-org.gnome.desktop.wm.keybindings switch-to-workspace-10 ['disabled']
-org.gnome.desktop.wm.keybindings switch-to-workspace-11 ['disabled']
-org.gnome.desktop.wm.keybindings switch-to-workspace-12 ['disabled']
-org.gnome.desktop.wm.keybindings switch-to-workspace-1 ['disabled']
-org.gnome.desktop.wm.keybindings switch-to-workspace-2 ['disabled']
-org.gnome.desktop.wm.keybindings switch-to-workspace-3 ['disabled']
-org.gnome.desktop.wm.keybindings switch-to-workspace-4 ['disabled']
-org.gnome.desktop.wm.keybindings switch-to-workspace-5 ['disabled']
-org.gnome.desktop.wm.keybindings switch-to-workspace-6 ['disabled']
-org.gnome.desktop.wm.keybindings switch-to-workspace-7 ['disabled']
-org.gnome.desktop.wm.keybindings switch-to-workspace-8 ['disabled']
-org.gnome.desktop.wm.keybindings switch-to-workspace-9 ['disabled']
-org.gnome.desktop.wm.keybindings toggle-maximized ['<Control><Primary><Alt>KP_5']
-org.gnome.desktop.wm.keybindings toggle-shaded ['<Control><Primary><Alt>s']
-org.gnome.desktop.wm.keybindings unmaximize ['<Control><Primary><Super>Down']
-org.gnome.desktop.wm.preferences button-layout 'menu:minimize,maximize,close'
-org.gnome.desktop.wm.preferences num-workspaces 2
-org.gnome.desktop.wm.preferences theme 'Radiance'
-org.gnome.Empathy.conversation room-last-account objectpath '/org/freedesktop/Telepathy/Account/gabble/jabber/tuomasjjrasanen_40toimisto_2eopinsys_2efi0'
-org.gnome.Empathy.conversation room-last-account objectpath '/org/freedesktop/Telepathy/Account/gabble/jabber/tuomasjjrasanen_40toimisto_2eopinsys_2efi0'
-org.gnome.Empathy.conversation theme 'ubuntu'
-org.gnome.Empathy.conversation theme 'ubuntu'
-org.gnome.Empathy.conversation theme-variant ''
-org.gnome.Empathy.conversation theme-variant ''
-org.gnome.Empathy sanity-cleaning-number uint32 4
-org.gnome.Empathy.ui chat-window-paned-pos 560
-org.gnome.Empathy.ui chat-window-paned-pos 560
-org.gnome.FileRoller.Listing show-path false
-org.gnome.FileRoller.Listing show-path false
-org.gnome.gedit.plugins active-plugins ['filebrowser', 'time', 'spell', 'modelines', 'docinfo', 'zeitgeistplugin']
-org.gnome.gedit.plugins active-plugins ['filebrowser', 'time', 'spell', 'modelines', 'docinfo', 'zeitgeistplugin']
-org.gnome.gedit.plugins.filebrowser root 'file:///'
-org.gnome.gedit.plugins.filebrowser virtual-root 'file:///home/gnome/Ty%C3%B6p%C3%B6yt%C3%A4'
-org.gnome.gedit.state.window side-panel-active-page 228660812
-org.gnome.gedit.state.window side-panel-active-page 228660812
-org.gnome.gedit.state.window side-panel-active-page 228660812
-org.gnome.gedit.state.window size (1209, 617)
-org.gnome.gedit.state.window size (1209, 617)
-org.gnome.gedit.state.window size (1209, 617)
-org.gnome.gedit.state.window state 128
-org.gnome.gedit.state.window state 128
-org.gnome.gedit.state.window state 128
-org.gnome.gnome-panel.layout object-id-list ['indicators', 'show-desktop', 'window-list', 'workspace-switcher', 'object-0', 'object-1', 'object-3', 'object-2', 'object-4']
-org.gnome.gnome-panel.layout object-id-list ['indicators', 'show-desktop', 'window-list', 'workspace-switcher', 'object-0', 'object-1', 'object-3', 'object-2', 'object-4']
-org.gnome.gnome-panel.layout toplevel-id-list ['bottom-panel']
-org.gnome.gnome-panel.layout toplevel-id-list ['bottom-panel']
-org.gnome.gnome-panel.run-dialog history ['gconf-editor', 'dconf-editor', 'webmenu', 'dconf-editor', 'gnome-terminal', 'dconf-editor', 'gnome-terminal', 'gnome-panel', 'webmenu', 'dconf-editor', 'empathy', 'dconf-editor', 'webmenu', 'remmina', 'bluefish', 'toonloop', 'gnome-terminal', 'dconf-editor', 'webmenu', 'dconf-editor']
-org.gnome.gnome-panel.run-dialog history ['gconf-editor', 'dconf-editor', 'webmenu', 'dconf-editor', 'gnome-terminal', 'dconf-editor', 'gnome-terminal', 'gnome-panel', 'webmenu', 'dconf-editor', 'empathy', 'dconf-editor', 'webmenu', 'remmina', 'bluefish', 'toonloop', 'gnome-terminal', 'dconf-editor', 'webmenu', 'dconf-editor']
-org.gnome.libgnomekbd.keyboard layouts ['fi', 'ru', 'ru\tphonetic']
-org.gnome.libgnomekbd.keyboard options ['grp\tgrp:shift_caps_toggle']
-org.gnome.nautilus.desktop home-icon-visible true
-org.gnome.nautilus.desktop home-icon-visible true
-org.gnome.nautilus.desktop trash-icon-visible true
-org.gnome.nautilus.desktop trash-icon-visible true
-org.gnome.nautilus.desktop volumes-visible true
-org.gnome.nautilus.desktop volumes-visible true
-org.gnome.nautilus.window-state geometry '806x444+0+34'
-org.gnome.nautilus.window-state geometry '806x444+0+34'
-org.gnome.rhythmbox.plugins active-plugins ['mtpdevice', 'ubuntuone', 'daap', 'rb', 'artsearch', 'audiocd', 'mpris', 'generic-player', 'mmkeys', 'audioscrobbler', 'iradio', 'notification', 'ipod', 'dbus-media-server', 'cd-recorder', 'power-manager']
-org.gnome.rhythmbox.plugins.iradio initial-stations-loaded true
-org.gnome.rhythmbox.plugins seen-plugins ['mtpdevice', 'pythonconsole', 'ubuntuone', 'daap', 'rb', 'artsearch', 'sendto', 'replaygain', 'mpris', 'audioscrobbler', 'notification', 'magnatune', 'lyrics', 'fmradio', 'ipod', 'rbzeitgeist', 'context', 'rblirc', 'dbus-media-server', 'cd-recorder', 'im-status']
-org.gnome.rhythmbox.rhythmdb locations ['file:///home/gnome/Musiikki', 'file:///home/gnome/.ubuntuone/Purchased%20from%20Ubuntu%20One']
-org.gnome.settings-daemon.plugins.ubuntuone active false
+[com.canonical.desktop.interface]
+scrollbar-mode='normal'
+
+[com.ubuntu.update-notifier]
+auto-launch=false
+
+[org.gnome.desktop.background]
+picture-uri='file:///home/gnome/opinsys-quantal-bg.png'
+
+[org.gnome.desktop.interface]
+gtk-theme='Radiance'
+icon-theme='ubuntu-mono-light'
+
+[org.gnome.desktop.lockdown]
+disable-user-switching=true
+
+[org.gnome.desktop.screensaver]
+user-switch-enabled=false
+
+[org.gnome.desktop.wm.preferences]
+button-layout='menu:minimize,maximize,close'
+num-workspaces=2
+theme='Radiance'
+
+[org.gnome.gnome-panel.layout]
+object-id-list=['indicators', 'show-desktop', 'window-list', 'workspace-switcher', 'object-0', 'object-1', 'object-3', 'object-2', 'object-4']
+toplevel-id-list=['bottom-panel']
+
+[org.gnome.gnome-panel.lockdown]
+locked_down=true
+
+[org.gnome.gnome-panel.run-dialog]
+history=['webmenu', 'firefox', 'chromium-browser']
+
+[org.gnome.libgnomekbd.keyboard]
+layouts=['fi', 'ru', 'ru\tphonetic']
+options=['grp\tgrp:shift_caps_toggle']
+
+[org.gnome.nautilus.desktop]
+home-icon-visible=true
+trash-icon-visible=true
+volumes-visible=true
+
+[org.gnome.settings-daemon.plugins.ubuntuone]
+active=false
