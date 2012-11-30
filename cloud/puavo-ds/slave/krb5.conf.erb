@@ -1,10 +1,5 @@
-<%-
-  kerberos_server = scope.lookupvar('service::kerberos::client::serverhost')
-  ldap_base       = scope.lookupvar('service::ldap::base')
-  ldap_module     = "ldap_#{ puavoDomain }"
--%>
 [libdefaults]
-	default_realm = <%= puavoKerberosRealm %>
+	default_realm = <%= @kerberos_realm %>
 	default_tgs_enctypes = des3-hmac-sha1 des-cbc-crc
 	default_tkt_enctypes = des3-hmac-sha1 des-cbc-crc
 	dns_lookup_kdc = true
@@ -12,33 +7,33 @@
 	allow_weak_crypto = true
 
 [realms]
-	<%= puavoKerberosRealm %> = {
-		kdc = <%= kerberos_server %>
-		admin_server = <%= scope.lookupvar('service::kerberos::masterhost') %>
-		default_domain = <%= puavoDomain %>
-		database_module = <%= ldap_module %>
+	<%= @kerberos_realm %> = {
+		kdc = <%= @puavo_hostname %>
+		admin_server = <%= @kerberos_master %>
+		default_domain = <%= @puavo_domain %>
+		database_module = ldap_<%= @puavo_domain %>
 	}
-	<%= scope.lookupvar('service::kerberos::toprealm') %> = {
-		kdc = <%= scope.lookupvar('service::kerberos::masterhost') %>
-		admin_server = <%= scope.lookupvar('service::kerberos::masterhost') %>
-		default_domain = <%= scope.lookupvar('service::kerberos::topdomain') %>
+	<%= @kerberos_toprealm %> = {
+		kdc = <%= @kerberos_master %>
+		admin_server = <%= @kerberos_master %>
+		default_domain = <%= @puavo_topdomain %>
 	}
 
 [domain_realm]
-	.<%= puavoDomain %> = <%= puavoKerberosRealm %>
-	<%= puavoDomain %> = <%= puavoKerberosRealm %>
-	.<%= scope.lookupvar('service::kerberos::topdomain') %> = <%= scope.lookupvar('service::kerberos::toprealm') %>
-	<%= scope.lookupvar('service::kerberos::topdomain') %> = <%= scope.lookupvar('service::kerberos::toprealm') %>
+	.<%= @puavo_domain %> = <%= @kerberos_realm %>
+	<%= @puavo_domain %> = <%= @kerberos_realm %>
+	.<%= @puavo_topdomain %> = <%= @kerberos_toprealm %>
+	<%= @puavo_topdomain %> = <%= @kerberos_toprealm %>
 
 [logging]
 	kdc = FILE:/var/log/kdc.log
 
 [dbmodules]
-	<%= ldap_module %> = {
+	ldap_<%= @puavo_domain %> = {
 		db_library = kldap
-		ldap_kadmind_dn = <%= dn %>
-		ldap_kdc_dn = <%= dn %>
-		ldap_kerberos_container_dn = ou=Kerberos Realms,<%= ldap_base %>
+		ldap_kadmind_dn = <%= @ldap_binddn %>
+		ldap_kdc_dn = <%= @ldap_binddn %>
+		ldap_kerberos_container_dn = ou=Kerberos Realms,<%= @ldap_base %>
 		ldap_servers = ldapi:///
 		ldap_service_password_file = /etc/krb5.secrets
 	}
@@ -51,3 +46,4 @@
 		forwardable = true
 		krb4_convert = false
 	}
+
