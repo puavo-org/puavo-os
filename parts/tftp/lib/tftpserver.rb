@@ -8,6 +8,7 @@ require "./lib/log"
 # http://tools.ietf.org/html/rfc1350
 
 module TFTP
+
   # http://tools.ietf.org/html/rfc1350#section-5
   module Opcode
     RRQ = 1
@@ -20,33 +21,71 @@ module TFTP
   # http://tools.ietf.org/html/rfc1350#page-10
   module ErrorCode
     NOT_FOUND = 1
+    ACCESS_VIOLATION = 2
+    DISK_FULL = 3
+    ILLEGAL_TFTP_OPERATION = 4
+    UNKNOWN_TRANSFER_ID = 5
+    FILE_ALREADY_EXISTS = 6
+    NO_SUCH_USER = 7
   end
+
+  ERROR_DESCRIPTIONS = {
+    ErrorCode::NOT_FOUND => "File not found.",
+    ErrorCode::ACCESS_VIOLATION => "Access violation.",
+    ErrorCode::DISK_FULL => "Disk full or allocation exceeded.",
+    ErrorCode::ILLEGAL_TFTP_OPERATION => "Illegal TFTP operation.",
+    ErrorCode::UNKNOWN_TRANSFER_ID => "Unknown transfer ID.",
+    ErrorCode::FILE_ALREADY_EXISTS => "File already exists.",
+    ErrorCode::NO_SUCH_USER => "No such user."
+  }
 
   OPCODE_HANDLERS = {
     Opcode::RRQ => :handle_get,
-    Opcode::ACK => :handle_ack
+    Opcode::ACK => :handle_ack,
+    Opcode::ERROR => :handle_error
   }
 
+  class TFTPConnection < EventMachine::Connection
+
+    def handle_opcode(code, *args)
+      if handler = OPCODE_HANDLERS[code]
+        send(handler, *args)
+      else
+        log "Unknown opcode #{ req[0] } #{ data.inspect }"
+      end
+    end
+
+    def handle_error(num, msg)
+      l "ERROR: #{ ERROR_DESCRIPTIONS[num] }"
+    end
+
+    def l(*args)
+      args[0] = "#{ to_s } #{ args[0] }"
+      log(*args)
+    end
+
+    def d(*args)
+      args[0] = "#{ to_s } #{ args[0] }"
+      debug(*args)
+    end
+
+  end
 
   # TFTP server listening on a fixed port (default 69)
-  class Server < EventMachine::Connection
-
+  class Server < TFTPConnection
 
     def initialize(root)
       @filereader = CachedFileReader.new(root)
     end
 
     def receive_data(data)
-
       debug "Server got data #{ data.inspect }"
-
       req = data.unpack("nZ*Z*")
-      if handler = OPCODE_HANDLERS[req[0]]
-        send(handler, req[1], req[2])
-      else
-        log "Server: Unknown opcode #{ req[0] } #{ data.inspect }"
-      end
+      handle_opcode(req[0], req[1], req[2])
+    end
 
+    def to_s
+      "<Server fixed>"
     end
 
     def handle_get(name, mode)
@@ -75,7 +114,7 @@ module TFTP
   #TODO http://eventmachine.rubyforge.org/EventMachine/Connection.html#close_connection-instance_method
 
   # One shot TFTP file sender server listening on ephemeral port
-  class FileSender < EventMachine::Connection
+  class FileSender < TFTPConnection
 
     BLOCK_SIZE = 512
     TIMEOUT = 1
@@ -99,16 +138,6 @@ module TFTP
       "<FileSender #{ @ip }:#{ @port } #{ @name }>"
     end
 
-    def l(*args)
-      args[0] = "#{ to_s } #{ args[0] }"
-      log(*args)
-    end
-
-    def d(*args)
-      args[0] = "#{ to_s } #{ args[0] }"
-      debug(*args)
-    end
-
     # @param {String} data octet string
     def tftp_send(name)
       @name = name
@@ -124,7 +153,7 @@ module TFTP
       l "Sending #{ data.size } bytes"
       @data = data
       next_block
-      send
+      send_packet
     end
 
     # set timeout for the current block
@@ -143,7 +172,7 @@ module TFTP
       @retry_count -= 1
       @timeout = EventMachine::Timer.new(TIMEOUT) do
         d "Resending packet from timeout. Retry #{ @retry_count }/#{ RETRY_COUNT }"
-        send
+        send_packet
       end
     end
 
@@ -165,11 +194,11 @@ module TFTP
     @block_num = 1
     @current = [Opcode::ERROR, code, msg].pack("nna*x")
     l "Sending error #{ code }: #{ msg }"
-    send
+    send_packet
     end
 
     # Send current block to the client
-    def send
+    def send_packet
       # Bad internet simulator
       # if Random.rand(400) == 0
       #   d "skipping #{ @block_num }"
@@ -207,15 +236,8 @@ module TFTP
     def receive_data(data)
       # port, ip = Socket.unpack_sockaddr_in(get_peername)
       # d "Sender got data from #{ ip }:#{ port } #{ data.inspect }"
-
       req = data.unpack("nn")
-
-      if req[0] == Opcode::ACK
-        handle_ack(req[1])
-      else
-        l "Unknown opcode #{ req[0] } #{ data.inspect }"
-      end
-
+      handle_opcode(req[0], req[1])
     end
 
     def handle_ack(block_num)
@@ -232,7 +254,7 @@ module TFTP
 
         if not last_block?
           next_block
-          send
+          send_packet
         else
           l "File sent ok!"
           clear_timeout
@@ -240,7 +262,7 @@ module TFTP
 
       elsif block_num == @block_num-1
         d "ACK for previous block #{ block_num }. Resending."
-        send
+        send_packet
       else
         raise "BAD ACK #{ block_num }, was waiting for #{ @block_num }"
       end
