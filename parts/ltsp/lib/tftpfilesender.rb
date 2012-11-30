@@ -30,7 +30,7 @@ module TFTP
     # @param {String} data octet string
     def handle_get(data)
       _, name, mode, *opts = data.unpack("nZ*Z*Z*Z*Z*Z*")
-      l "GET #{ name } options: #{ opts }"
+      l "GET(#{ mode }) #{ name } options: #{ opts }"
 
       if mode != "octet"
         l "FATAL ERROR ERROR: mode '#{ mode }' is not implemented. Abort."
