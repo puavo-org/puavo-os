@@ -1,6 +1,7 @@
 class packages {
   @package {
-    [ 'gawk'
+    [ 'dconf-tools'
+    , 'gawk'
     , 'git'
     , 'lynx'
     , 'sl'
