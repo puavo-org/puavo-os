@@ -17,7 +17,7 @@ end
 @suffix        = File.read('/etc/puavo/ldap/base'    ).chomp
 
 def parse_erb(basename)
-  ldif_template = File.read("/usr/share/puavotools/#{ basename }.ldif.erb")
+  ldif_template = File.read("/usr/share/puavo-ds-slave/#{ basename }.ldif.erb")
   ldif = ERB.new(ldif_template, 0, "%<>")
 
   tempfile = Tempfile.open(basename)
