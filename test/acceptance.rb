@@ -75,10 +75,4 @@ describe "TFTP::Server with tftp-hpa client" do
     end
   end
 
-  it "does not get anything on nonexistent file" do
-    name = "nonexistent"
-    tftp_hpa_fetch(name)
-    File.exists?(File.join(TMP, name)).must_equal false
-  end
-
 end
