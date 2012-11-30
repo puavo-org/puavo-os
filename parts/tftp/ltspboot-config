@@ -11,6 +11,15 @@ require 'optparse'
 class PuavoLdap
   attr_reader :base, :dn, :password
 
+  ESCAPES = {
+    "\0" => '00',
+    '*'  => '2A',
+    '('  => '28',
+    ')'  => '29',
+    '\\' => '5C' }
+
+  ESCAPES_RE = Regexp.new("[#{ ESCAPES.keys.map { |e| Regexp.escape(e) }.join }]")
+
   def initialize(ldapserver='localhost')
     @base       = File.read('/etc/puavo/ldap/base'    ).chomp
     @dn         = File.read('/etc/puavo/ldap/dn'      ).chomp
@@ -34,6 +43,10 @@ class PuavoLdap
   def search_with_base(base, filter, &block)
     return [] unless @conn
     @conn.search(base, LDAP::LDAP_SCOPE_SUBTREE, filter, &block)
+  end
+
+  def self.escape(filter)
+    filter.gsub(ESCAPES_RE) { |char| "\\" + ESCAPES[char] }
   end
 
 end
@@ -60,6 +73,7 @@ end
 
 
 client_mac = options[:mac].to_s.gsub('-', ':').downcase
+client_mac = PuavoLdap.escape( client_mac )
 
 filter = "(&(|(objectClass=puavoNetbootDevice)(objectClass=puavoLocalbootDevice))(macAddress=#{client_mac}))"
 ltsp_client = {}
