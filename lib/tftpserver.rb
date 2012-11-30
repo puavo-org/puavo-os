@@ -62,8 +62,8 @@ module TFTP
     end
 
     def handle_error(data)
-      code, err_code = data.unpack("nn")
-      l "CLIENT ERROR: #{ ERROR_DESCRIPTIONS[err_code].inspect } data: #{ data.inspect }"
+      code, err_code, msg = data.unpack("nnZ*")
+      l "CLIENT ERROR: #{ ERROR_DESCRIPTIONS[err_code].inspect } msg: #{ msg }"
     end
 
     def l(*args)
