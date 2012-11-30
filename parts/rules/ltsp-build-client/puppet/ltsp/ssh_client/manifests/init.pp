@@ -12,5 +12,5 @@ class ssh_client {
       ensure => absent;
   }
 
-  Package <| title == "openssh-client" |>
+  Package <| title == openssh-client |>
 }
