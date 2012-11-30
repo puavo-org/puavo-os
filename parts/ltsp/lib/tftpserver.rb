@@ -55,7 +55,7 @@ module TFTP
       end
     end
 
-    def handle_error(num, msg)
+    def handle_error(num, *args)
       l "ERROR: #{ ERROR_DESCRIPTIONS[num] }"
     end
 
