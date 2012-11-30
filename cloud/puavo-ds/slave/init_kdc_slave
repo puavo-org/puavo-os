@@ -57,10 +57,10 @@ puts `echo "#{@kerberos_masterpw}" | kadmin.local -m -q "ktadd -norandkey -k /et
 Dir.mktmpdir do |dir|
   puts "DIR: #{dir}"
 
-  system("kadmin.local -q \"ktadd -norandkey -k #{dir}/cups.keytab IPP/#{ @puavo_hostname }\"")
-  system("kadmin.local -q \"ktadd -norandkey -k #{dir}/system.keytab host/#{ @puavo_hostname }\"")
-  system("kadmin.local -q \"ktadd -norandkey -k #{dir}/system.keytab nfs/#{ @puavo_hostname }\"")
-  system("kadmin.local -q \"ktadd -norandkey -k #{dir}/ldap.keytab ldap/#{ @puavo_hostname }\"")
+  system("kadmin.local -q \"ktadd -norandkey -k #{dir}/cups.keytab IPP/#{ @puavo_hostname }.#{ @puavo_domain }\"")
+  system("kadmin.local -q \"ktadd -norandkey -k #{dir}/system.keytab host/#{ @puavo_hostname }.#{ @puavo_domain }\"")
+  system("kadmin.local -q \"ktadd -norandkey -k #{dir}/system.keytab nfs/#{ @puavo_hostname }.#{ @puavo_domain }\"")
+  system("kadmin.local -q \"ktadd -norandkey -k #{dir}/ldap.keytab ldap/#{ @puavo_hostname }.#{ @puavo_domain }\"")
 
   system("install -m 0600 #{dir}/cups.keytab /etc/cups/krb5.keytab")
   system("install -m 0600 #{dir}/system.keytab /etc/krb5.keytab")
