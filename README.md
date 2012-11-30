@@ -1,6 +1,4 @@
-# puavo-ltsp
-
-## TFTP server
+# TFTP server
 
 ### Dependencies
 
