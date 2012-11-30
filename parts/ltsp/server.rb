@@ -11,9 +11,9 @@ options = {
 }
 
 OptionParser.new do |opts|
-  opts.banner = "Usage: server.rb [options]"
+  opts.banner = "Usage: [sudo] ./server.rb [options]"
 
-  opts.on("-m", "--mount PATH", String, "Server files from directory") do |v|
+  opts.on("-r", "--root PATH", String, "Serve files from directory") do |v|
     if v[0] == "/"
       options[:root] = v
     else
