@@ -10,10 +10,10 @@ On Precise Pangolin
 
 ### Usage
 
-    Usage: [sudo] ./server.rb [options]
-        -m, --mount PATH                 Server files from directory
-            --verbose                    Print more debugging stuff
-        -p, --port PORT                  Listen on port
+Usage: [sudo] ./server.rb [options]
+    -r, --root PATH                  Serve files from directory
+        --verbose                    Print more debugging stuff
+    -p, --port PORT                  Listen on port
 
 
 ### Tests
