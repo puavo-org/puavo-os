@@ -13,7 +13,7 @@ require "./lib/log"
 module TFTP
 
   # TFTP server listening on a fixed port (default 69)
-  class Server < TFTPConnection
+  class Server < Connection
 
     def initialize(root)
       @filereader = CachedFileReader.new(root)
@@ -30,7 +30,7 @@ module TFTP
       # Create dedicated TFTP file sender server for this client on a ephemeral
       # (random) port.
       sender = EventMachine::open_datagram_socket(
-        "0.0.0.0", 0, TFTPFileSender, ip, port, @filereader
+        "0.0.0.0", 0, FileSender, ip, port, @filereader
       )
 
       sender.handle_get(data)

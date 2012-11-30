@@ -2,7 +2,7 @@
 module TFTP
 
   # One shot TFTP file sender server
-  class TFTPFileSender < TFTPConnection
+  class FileSender < Connection
 
     BLOCK_SIZE = 512
     TIMEOUT = 1

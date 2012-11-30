@@ -1,7 +1,8 @@
 
 module TFTP
 
-  class TFTPConnection < EventMachine::Connection
+  # Abstract class for TFTP::Server and TFTPFileSender
+  class Connection < EventMachine::Connection
 
     OPCODE_HANDLERS = {
       Opcode::RRQ => :handle_get,
