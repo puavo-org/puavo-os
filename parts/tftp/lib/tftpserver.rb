@@ -108,7 +108,6 @@ module TFTP
       )
 
       sender.tftp_send(name)
-
     end
 
   end
@@ -152,7 +151,7 @@ module TFTP
         return
       end
 
-      l "Sending #{ data.size } bytes"
+      l "Sending #{ name } #{ data.size } bytes"
       @data = data
       next_block
       send_packet
