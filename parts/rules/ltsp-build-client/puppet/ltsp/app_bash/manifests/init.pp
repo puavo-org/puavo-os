@@ -13,5 +13,5 @@ class app_bash {
       require => Package['bash'];
   }
 
-  Package <| title == "bash" |>
+  Package <| title == bash |>
 }

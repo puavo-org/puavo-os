@@ -2,7 +2,7 @@ class packages::partner {
   include packages
 
   # install all ubuntu packages listed in packages
-  Package <| tag == "partner" |> {
+  Package <| tag == partner |> {
     ensure  => present,
     require => [ Exec['apt update'],
                  File['/etc/apt/sources.list.d/partner.list'], ],

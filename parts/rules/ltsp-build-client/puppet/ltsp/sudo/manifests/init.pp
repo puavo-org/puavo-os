@@ -14,5 +14,5 @@ class sudo {
       require => File['/etc/sudoers'];
   }
 
-  Package <| title == "sudo" |>
+  Package <| title == sudo |>
 }
