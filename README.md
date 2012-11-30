@@ -6,7 +6,7 @@
 
 On Precise Pangolin
 
-    sudo apt-get install ruby1.9.3 ruby-eventmachine
+    sudo apt-get install ruby1.9.3 ruby-eventmachine libldap-ruby1.8
 
 ### Usage
 
