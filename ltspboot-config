@@ -81,13 +81,13 @@ PuavoLdap.new.search(filter) do |entry|
   ltsp_client = entry.to_hash
 end
 
-kernel_version = ltsp_client['puavoDeviceKernelVersion'].to_s
+kernel_version = Array(ltsp_client['puavoDeviceKernelVersion']).first.to_s
 kernel_version = "-" + kernel_version if not kernel_version.empty?
 
-kernel_args = ltsp_client['puavoDeviceKernelArguments'].to_s
+kernel_args = Array(ltsp_client['puavoDeviceKernelArguments']).first.to_s
 kernel_args = "quiet splash" if kernel_args.empty?
 
-image = ltsp_client['puavoDeviceImage'].to_s
+image = Array(ltsp_client['puavoDeviceImage']).first.to_s
 image = "ltsp_i386" if image.empty?
 
 puts <<EOF
