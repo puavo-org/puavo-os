@@ -219,7 +219,7 @@ module TFTP
         d "ACK for previous block #{ block_num }. Resending."
         send_packet
       else
-        raise "BAD ACK #{ block_num }, was waiting for #{ @block_num }"
+        l "BAD ACK #{ block_num }, was waiting for #{ @block_num }"
       end
 
     end
