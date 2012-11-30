@@ -1,6 +1,12 @@
-#!/usr/bin/ruby
+#!/usr/bin/ruby1.9.3
+#
+# Get device settings from the LDAP-server (Puavo) and generate pxelinux.cfg data for terminal.
+# 
+# Usage: [sudo] ltspboot-config [options]
+#
 
 require 'ldap'
+require 'optparse'
 
 class PuavoLdap
   attr_reader :base, :dn, :password
@@ -32,7 +38,28 @@ class PuavoLdap
 
 end
 
-client_mac = ARGV[0].to_s.gsub('-', ':').downcase
+options = {}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: [sudo] ltspboot-config [options]"
+
+  opts.on("-m", "--mac", "MAC address") do |m|
+    options[:mac] = m
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+end.parse!
+
+unless options.has_key?(:mac)
+  puts "Required option --mac missing"
+  exit
+end
+
+
+client_mac = options[:mac].to_s.gsub('-', ':').downcase
 
 filter = "(&(|(objectClass=puavoNetbootDevice)(objectClass=puavoLocalbootDevice))(macAddress=#{client_mac}))"
 ltsp_client = {}
