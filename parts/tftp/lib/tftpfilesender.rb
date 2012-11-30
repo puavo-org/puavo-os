@@ -46,7 +46,7 @@ module TFTP
       @name = name
 
       # Handle pxelinux.cfg with a custom script
-      if name.start_with?("pxelinux.cfg")
+      if name.start_with?("pxelinux.cfg", "/pxelinux.cfg")
 
         # We support only mac based configuration
         if match_mac = name.downcase.match(/pxelinux.cfg\/01-(([0-9a-f]{2}[:-]){5}[0-9a-f]{2})/)
