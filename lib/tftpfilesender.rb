@@ -1,4 +1,10 @@
 
+require "eventmachine"
+
+require "./lib/constants"
+require "./lib/tftpconnection"
+require "./lib/log"
+
 module TFTP
 
   # One shot TFTP file sender server
@@ -26,6 +32,13 @@ module TFTP
       "<FileSender #{ @ip }:#{ @port } #{ @name }>"
     end
 
+    def on_end(&cb)
+      @on_end = cb
+    end
+
+    def on_data(&cb)
+      @on_data = cb
+    end
 
     # @param {String} data octet string
     def handle_get(data)
@@ -163,6 +176,7 @@ module TFTP
 
       clear_timeout
       send_datagram(@current, @ip, @port)
+      @on_data.call(@current, @ip, @port) if not @on_data.nil?
       set_timeout
     end
 
@@ -229,6 +243,7 @@ module TFTP
       l "File sent OK! Sending took #{ Time.now - @started }s"
       clear_timeout
       close_connection
+      @on_end.call() if not @on_end.nil?
     end
 
   end

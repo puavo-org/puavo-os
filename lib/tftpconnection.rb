@@ -1,4 +1,6 @@
 
+require "eventmachine"
+
 module TFTP
 
   # Abstract class for TFTP::Server and TFTPFileSender
