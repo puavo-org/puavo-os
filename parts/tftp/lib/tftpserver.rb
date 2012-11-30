@@ -212,6 +212,7 @@ module TFTP
       if mac
         command += " --mac #{mac}"
       end
+      l "Executing script #{ command }"
       child = EM::DeferrableChildProcess.open(command)
       child.callback { |stdout| init_sending stdout }
     end
