@@ -41,7 +41,7 @@ module TFTP
   #TODO http://eventmachine.rubyforge.org/EventMachine/Connection.html#close_connection-instance_method
 
   # One shot TFTP file sender server listening on ephemeral port
-  class FileSender < TFTPConnection
+  class FileSender < Connection
 
     BLOCK_SIZE = 512
     TIMEOUT = 1
