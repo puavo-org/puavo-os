@@ -145,17 +145,46 @@ module TFTP
     def tftp_send(name)
       @name = name
 
-      begin
-        data = @filereader.read(name)
-      rescue Errno::ENOENT
-        l "ERROR: cannot find #{ name }"
-        send_error_packet(ErrorCode::NOT_FOUND, "No found :(")
-        return
+      if name.start_with?("pxelinux.cfg")
+
+        debug("GET 1 #{ name }")
+
+        if name == "pxelinux.cfg/default"
+          debug("GET 2 #{ name }")
+          get_ltspboot_config()
+        elsif match_mac = name.downcase.match(/pxelinux.cfg\/01-(([0-9a-f]{2}[:-]){5}[0-9a-f]{2})/)
+          debug("GET 3 #{ name }")
+          data = get_ltspboot_config( match_mac[1] )
+        end
+
+        if not data
+          l "ERROR: cannot find #{ name }"
+          send_error_packet(ErrorCode::NOT_FOUND, "No found :(")
+          return
+        end
+        debug(data.inspect)
+      else
+
+        begin
+          data = @filereader.read(name)
+        rescue Errno::ENOENT
+          l "ERROR: cannot find #{ name }"
+          send_error_packet(ErrorCode::NOT_FOUND, "No found :(")
+          return
+        end
       end
 
       @data = data
       next_block
       send_packet
+    end
+
+    def get_ltspboot_config(mac = nil)
+      command = "./ltspboot-config"
+      if mac
+        command += " --mac #{mac}"
+      end
+      `#{command}`
     end
 
     # set timeout for the current block
