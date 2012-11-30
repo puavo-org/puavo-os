@@ -150,7 +150,7 @@ module TFTP
         debug("Try to get following pxelinux.cfg configurations: #{ name }")
         
         if match_mac = name.downcase.match(/pxelinux.cfg\/01-(([0-9a-f]{2}[:-]){5}[0-9a-f]{2})/)
-          data = send_ltspboot_config( match_mac[1] )
+          send_ltspboot_config( match_mac[1] )
         else
           l "ERROR: cannot find #{ name }"
           send_error_packet(ErrorCode::NOT_FOUND, "No found :(")
