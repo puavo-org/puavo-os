@@ -21,6 +21,9 @@ class desktop::dconf {
       content => template('desktop/dconf_puavodesktop_profile'),
       notify  => Exec['update dconf'],
       require => Package['ubuntu-mono'];
+
+    '/etc/dconf/profile/user':
+      content => template('desktop/dconf_profile_user');
   }
 
   Package <| (title == ubuntu-mono) or (title == dconf-tools) |>
