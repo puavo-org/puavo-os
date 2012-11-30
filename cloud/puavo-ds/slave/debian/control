@@ -8,7 +8,7 @@ Homepage: https://github.com/opinsys/puavo-tools
 
 Package: puavo-ds-slave
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, ruby
+Depends: ${shlibs:Depends}, ${misc:Depends}, ruby, slapd, ldap-utils, krb5-admin-server, krb5-kdc-ldap
 Description: LDAP slave replication tool
  puavo-ds-slave handles LDAP slave replication from master
  server.
