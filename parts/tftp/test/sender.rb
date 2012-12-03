@@ -50,12 +50,13 @@ describe TFTP::FileSender do
     fs = DummyReader.new
     ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
       sender.on_data do |data, ip, port|
-          assert_equal(
-            data,
-            "\x00\x03\x00\x01small content"
-          )
+        assert_equal(
+          data,
+          "\x00\x03\x00\x01small content"
+        )
         EM::stop_event_loop
       end
+
 
       fs.files["small"] = "small content"
       sender.handle_get([
@@ -133,25 +134,123 @@ describe TFTP::FileSender do
     end
   end
 
-  it "sents oack for tsize extension" do
-    fs = DummyReader.new
-    ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
 
-      sender.on_data do |data, ip, port|
-        assert_equal(data, "\x00\x06tsize\x00700\x00")
-        EM::stop_event_loop
+  describe "extension" do
+
+    describe "tsize" do
+      it "sents oack for tsize extension" do
+        fs = DummyReader.new
+        ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
+
+          sender.on_data do |data, ip, port|
+            assert_equal(data, "\x00\x06tsize\x00700\x00")
+            EM::stop_event_loop
+          end
+
+          fs.files["somefile"] = "X"*700
+          sender.handle_get([
+            TFTP::Opcode::RRQ,
+            "somefile",
+            "octet",
+            "tsize",
+            "0"
+          ].pack("na*xa*xa*xa*x"))
+
+        end
+      end
+    end
+
+
+    describe "blksize" do
+      it "sents oack for block extension" do
+        fs = DummyReader.new
+        ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
+
+          sender.on_data do |data, ip, port|
+            assert_equal(data, "\x00\x06blksize\x0010\x00")
+            EM::stop_event_loop
+          end
+
+          fs.files["somefile"] = "X"*700
+          sender.handle_get([
+            TFTP::Opcode::RRQ,
+            "somefile",
+            "octet",
+            "blksize",
+            "10",
+            "0"
+          ].pack("na*xa*xa*xa*x"))
+
+        end
       end
 
-      fs.files["somefile"] = "X"*700
-      sender.handle_get([
-        TFTP::Opcode::RRQ,
-        "somefile",
-        "octet",
-        "tsize",
-        "0"
-      ].pack("na*xa*xa*xa*x"))
+      it "sents blksize sized packages" do
+        fs = DummyReader.new
+        ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
+
+          handlers = [
+            lambda do |data|
+              sender.handle_ack([
+                TFTP::Opcode::ACK, 0
+              ].pack("nn"))
+            end,
+
+            lambda do |data|
+              assert_equal(
+                "\x00\x03\x00\x01XXXXXXXXXX",
+               data
+              )
+              _, num = data.unpack("nn")
+              puts "SENDING ACK TO SERVER #{ num }"
+              sender.handle_ack([
+                TFTP::Opcode::ACK,
+                num
+              ].pack("nn"))
+            end,
+
+            lambda do |data|
+              assert_equal(
+                "\x00\x03\x00\x02XX",
+               data
+              )
+              _, num = data.unpack("nn")
+              puts "SENDING ACK TO SERVER #{ num }"
+              sender.handle_ack([
+                TFTP::Opcode::ACK,
+                num
+              ].pack("nn"))
+            end,
+          ]
+
+          sender.on_end do
+            EM::stop_event_loop
+          end
+
+          count = -1
+
+          sender.on_data do |data, ip, port|
+            count += 1
+            if h = handlers[count]
+              h.call data
+            end
+          end
+
+          fs.files["blksizetest"] = "X"*12
+          sender.handle_get([
+            TFTP::Opcode::RRQ,
+            "blksizetest",
+            "octet",
+            "blksize",
+            "10",
+            "0"
+          ].pack("na*xa*xa*xa*x"))
+
+        end
+      end
 
     end
+
+
   end
 
   it "resends package if I send ack for previous package" do
