@@ -35,6 +35,9 @@ class packages {
     , 'vlan' ]:
       tag => [ 'basic', 'ubuntu', ];
 
+    [ 'webmenu' ]:
+      tag => [ 'desktop', 'opinsys', ];
+
     [ 'nautilus'
     , 'nautilus-dropbox'
     , 'ubuntu-gnome-desktop'
