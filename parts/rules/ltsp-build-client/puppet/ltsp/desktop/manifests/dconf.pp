@@ -12,7 +12,8 @@ class desktop::dconf {
     [ '/etc/dconf'
     , '/etc/dconf/db'
     , '/etc/dconf/db/puavodesktop.d'
-    , '/etc/dconf/db/puavodesktop.d/locks' ]:
+    , '/etc/dconf/db/puavodesktop.d/locks'
+    , '/etc/dconf/profile' ]:
       ensure => directory;
 
     '/etc/dconf/db/puavodesktop.d/locks/lockprofile':
