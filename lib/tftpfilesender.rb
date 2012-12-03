@@ -29,7 +29,7 @@ module TFTP
     end
 
     def to_s
-      "<FileSender #{ @ip }:#{ @port } #{ @name }>"
+      "<FileSender:#{ __id__ } #{ @ip }:#{ @port } #{ @name }>"
     end
 
     def on_end(&cb)
