@@ -122,8 +122,12 @@ module TFTP
         command += " --mac #{mac}"
       end
       l "Executing script #{ command }"
+      started = Time.now
       child = EM::DeferrableChildProcess.open(command)
-      child.callback { |stdout| init_sending stdout }
+      child.callback do |stdout|
+        l "Script execution took #{ Time.now - started } sec"
+        init_sending stdout
+      end
     end
 
     # set timeout for the current block
