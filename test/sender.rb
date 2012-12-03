@@ -14,7 +14,11 @@ class DummyReader
   end
 
   def read(name)
-    @files[name]
+    if f =@files[name]
+      return f
+    else
+      raise Errno::ENOENT
+    end
   end
 
 end
@@ -128,6 +132,35 @@ describe TFTP::FileSender do
       sender.handle_get([
         TFTP::Opcode::RRQ,
         "mod512",
+        "octet"
+      ].pack("na*xa*x"))
+
+    end
+  end
+
+  it "calls on_end on nonexistent files" do
+    fs = DummyReader.new
+    ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
+
+      sender.on_data do |data, ip, port|
+        _, num = data.unpack("nn")
+        sender.handle_ack([
+          TFTP::Opcode::ACK,
+          num
+        ].pack("nn"))
+      end
+
+      sender.on_end do
+        assert_equal(
+          ["\x00\x05\x00\x01No found :(\x00", "127.0.0.1", 1234],
+          sender.sent_packets.last
+        )
+        EM::stop_event_loop
+      end
+
+      sender.handle_get([
+        TFTP::Opcode::RRQ,
+        "notfound",
         "octet"
       ].pack("na*xa*x"))
 
