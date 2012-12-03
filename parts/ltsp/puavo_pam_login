@@ -64,6 +64,10 @@ require 'dnsruby'
 
 uid = ENV['PAM_USER'] ? ENV['PAM_USER'] : Etc.getlogin
 
+if !uid or uid.eql?("root")  
+  exit(0)
+end
+
 suffix = File.read('/etc/puavo/ldap/base').chomp
 ldap_master = File.read('/etc/puavo/ldap/master').chomp
 puavo_domain = File.read('/etc/puavo/domain').chomp
