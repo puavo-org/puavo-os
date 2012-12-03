@@ -16,6 +16,7 @@ module TFTP
 
     def initialize(filereader)
       @filereader = filereader
+      @clients = {}
     end
 
     def to_s
@@ -24,6 +25,12 @@ module TFTP
 
     def handle_get(data)
       port, ip = Socket.unpack_sockaddr_in(get_peername)
+      key = "#{ ip }:#{ port }:#{ data }"
+
+      if @clients[key]
+        l "Warning: We already have a sender for #{ ip }:#{ port } GET: #{ data }"
+        return
+      end
 
       # Create dedicated TFTP file sender server for this client
       sender = EventMachine::open_datagram_socket(
@@ -35,8 +42,13 @@ module TFTP
         @filereader
       )
 
+      @clients[key] = sender
+
       # Pass get handling to this one shot server
       sender.handle_get(data)
+      sender.on_end do
+        @clients[key] = nil
+      end
     end
 
   end
