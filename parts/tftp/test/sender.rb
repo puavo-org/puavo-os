@@ -3,7 +3,6 @@ require "minitest/autorun"
 
 require "./lib/tftpfilesender"
 
-EV = EventMachine
 
 
 class DummyReader
@@ -55,7 +54,7 @@ describe TFTP::FileSender do
             data,
             "\x00\x03\x00\x01small content"
           )
-        EV::stop_event_loop
+        EM::stop_event_loop
       end
 
       fs.files["small"] = "small content"
@@ -91,7 +90,7 @@ describe TFTP::FileSender do
           sender.sent_packets[1][0]
         )
 
-        EV::stop_event_loop
+        EM::stop_event_loop
       end
 
       fs.files["larger"] = "X"*600
@@ -121,7 +120,7 @@ describe TFTP::FileSender do
           ["\x00\x03\x00\x05", "127.0.0.1", 1234],
           sender.sent_packets.last
         )
-        EV::stop_event_loop
+        EM::stop_event_loop
       end
 
       fs.files["mod512"] = "X"*512*4
