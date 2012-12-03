@@ -187,7 +187,6 @@ describe TFTP::FileSender do
       count = -1
       sender.on_data do |data, ip, port|
         count += 1
-        puts "CALLAING #{ count }"
         handlers[count].call data
       end
 
