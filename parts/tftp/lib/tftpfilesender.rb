@@ -70,7 +70,7 @@ module TFTP
         end
 
         # If not mac just ignore
-        l "ERROR: cannot find #{ name }"
+        l "ERROR: ignoring #{ name }"
         send_error_packet(ErrorCode::NOT_FOUND, "No found :(")
         return
       end
