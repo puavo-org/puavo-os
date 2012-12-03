@@ -132,6 +132,7 @@ module TFTP
 
       if @retry_count == 0
         l "Tried resending #{ RETRY_COUNT } times. Giving up. #{ @current.inspect }"
+        finish
         return
       end
 
@@ -227,6 +228,7 @@ module TFTP
           set_next_data_packet
           send_packet
         else
+        l "File sent OK! Sending took #{ Time.now - @started }s"
           finish
         end
 
@@ -240,7 +242,6 @@ module TFTP
     end
 
     def finish
-      l "File sent OK! Sending took #{ Time.now - @started }s"
       clear_timeout
       close_connection
       @on_end.call() if not @on_end.nil?
