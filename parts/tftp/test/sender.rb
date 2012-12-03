@@ -133,5 +133,25 @@ describe TFTP::FileSender do
     end
   end
 
+  it "sents oack for tsize extension" do
+    fs = DummyReader.new
+    ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
+
+      sender.on_data do |data, ip, port|
+        assert_equal(data, "\x00\x06tsize\x00700\x00")
+        EM::stop_event_loop
+      end
+
+      fs.files["somefile"] = "X"*700
+      sender.handle_get([
+        TFTP::Opcode::RRQ,
+        "somefile",
+        "octet",
+        "tsize",
+        "0"
+      ].pack("na*xa*xa*xa*x"))
+
+    end
+  end
 end
 
