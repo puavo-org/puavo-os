@@ -125,7 +125,7 @@ module TFTP
       started = Time.now
       child = EM::DeferrableChildProcess.open(command)
       child.callback do |stdout|
-        l "Script execution took #{ Time.now - started } sec"
+        l "Script execution took #{ Time.now - started }s"
         init_sending stdout
       end
     end
@@ -235,7 +235,9 @@ module TFTP
           set_next_data_packet
           send_packet
         else
-        l "File sent OK! Sending took #{ Time.now - @started }s"
+          took =  Time.now - @started
+          speed =  (@data.size / took / 1024 / 1024).round 2
+          l "File sent OK! Sent #{ @data.size } bytes in #{ took } seconds (#{speed}MB/s)"
           finish
         end
 

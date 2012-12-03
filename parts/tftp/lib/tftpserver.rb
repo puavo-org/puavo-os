@@ -27,8 +27,10 @@ module TFTP
       port, ip = Socket.unpack_sockaddr_in(get_peername)
       key = "#{ ip }:#{ port }:#{ data }"
 
+      # If we are slow the client might timeout and resend the GET packet. We
+      # must just ignore it and continue.
       if @clients[key]
-        l "Warning: We already have a sender for #{ ip }:#{ port } GET: #{ data }"
+        d "Ignoring duplicate RRQ #{ ip }:#{ port } GET: #{ data.inspect }"
         return
       end
 
@@ -46,9 +48,7 @@ module TFTP
 
       # Pass get handling to this one shot server
       sender.handle_get(data)
-      sender.on_end do
-        @clients[key] = nil
-      end
+      sender.on_end { @clients.delete(key) }
     end
 
   end
