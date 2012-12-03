@@ -30,7 +30,7 @@ module TFTP
       # If we are slow the client might timeout and resend the GET packet. We
       # must just ignore it and continue.
       if @clients[key]
-        d "Ignoring duplicate RRQ #{ ip }:#{ port } GET: #{ data.inspect }"
+        l "Ignoring duplicate RRQ #{ ip }:#{ port } GET: #{ data.inspect }"
         return
       end
 
@@ -45,10 +45,10 @@ module TFTP
       )
 
       @clients[key] = sender
+      sender.on_end { @clients.delete(key) }
 
       # Pass get handling to this one shot server
       sender.handle_get(data)
-      sender.on_end { @clients.delete(key) }
     end
 
   end
