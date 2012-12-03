@@ -23,11 +23,14 @@ class desktop::dconf {
     '/etc/dconf/db/puavodesktop.d/profile':
       content => template('desktop/dconf_puavodesktop_profile'),
       notify  => Exec['update dconf'],
-      require => Package['ubuntu-mono'];
+      require => [ Package['ubuntu-mono']
+                 , Package['webmenu'    ] ];
 
     '/etc/dconf/profile/user':
       content => template('desktop/dconf_profile_user');
   }
 
-  Package <| (title == ubuntu-mono) or (title == dconf-tools) |>
+  Package <| (title == dconf-tools)
+          or (title == ubuntu-mono)
+          or (title == webmenu)     |>
 }
