@@ -62,7 +62,7 @@ require 'ldap'
 require 'etc'
 require 'dnsruby'
 
-uid = ARGV[0] ? ARGV[0] : (ENV['PAM_USER'] ? ENV['PAM_USER'] : Etc.getlogin)
+uid = ENV['PAM_USER'] ? ENV['PAM_USER'] : Etc.getlogin
 
 suffix = File.read('/etc/puavo/ldap/base').chomp
 ldap_master = File.read('/etc/puavo/ldap/master').chomp
