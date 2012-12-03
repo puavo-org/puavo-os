@@ -9,7 +9,9 @@ class desktop::dconf {
   }
 
   file {
-    [ '/etc/dconf/db/puavodesktop.d'
+    [ '/etc/dconf'
+    , '/etc/dconf/db'
+    , '/etc/dconf/db/puavodesktop.d'
     , '/etc/dconf/db/puavodesktop.d/locks' ]:
       ensure => directory;
 
