@@ -90,13 +90,37 @@ kernel_args = "quiet splash" if kernel_args.empty?
 image = Array(ltsp_client['puavoDeviceImage']).first.to_s
 image = "ltsp_i386" if image.empty?
 
-puts <<EOF
+bootmode = Array(ltsp_client['puavoDeviceBootMode']).first.to_s
+bootmode = "netboot" if bootmode.empty?
+
+header = ""
+# Show menu to user if device's boot mode is dualboot
+if bootmode == "dualboot"
+  header =<<EOF
+default menu.c32
+menu title Choose a system
+prompt 0
+timeout 100
+
+label local
+  menu label Local OS
+  localboot 0
+EOF
+else
+  header =<<EOF
 default ltsp-NBD
 ontimeout ltsp-NBD
 
+EOF
+end
+
+puts <<EOF
+#{header}
+
 label ltsp-NBD
-menu label LTSP, using NBD
-kernel vmlinuz#{kernel_version}
-append ro initrd=initrd.img#{kernel_version} init=/sbin/init-ltsp plymouth:force-splash vt.handoff=7 root=/dev/nbd0 nbdroot=:#{image} #{kernel_args}
-ipappend 2
+  menu label LTSP, using NBD
+  menu default
+  kernel vmlinuz#{kernel_version}
+  append ro initrd=initrd.img#{kernel_version} init=/sbin/init-ltsp plymouth:force-splash vt.handoff=7 root=/dev/nbd0 nbdroot=:#{image} #{kernel_args}
+  ipappend 2
 EOF
