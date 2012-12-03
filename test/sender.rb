@@ -153,5 +153,52 @@ describe TFTP::FileSender do
 
     end
   end
+
+  it "resends package if I send ack for previous package" do
+    fs = DummyReader.new
+    ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
+
+      handlers = [
+        lambda do |data|
+          sender.handle_ack([
+            TFTP::Opcode::ACK, 1
+          ].pack("nn"))
+        end,
+
+        lambda do |data|
+          assert_equal(
+            "\x00\x03\x00\x02" + "Y"*(512),
+            data
+          )
+          sender.handle_ack([
+            TFTP::Opcode::ACK, 1
+          ].pack("nn"))
+        end,
+
+        lambda do |data|
+          assert_equal(
+            "\x00\x03\x00\x02" + "Y"*(512),
+            data
+          )
+          EM::stop_event_loop
+        end
+      ]
+
+      count = -1
+      sender.on_data do |data, ip, port|
+        count += 1
+        puts "CALLAING #{ count }"
+        handlers[count].call data
+      end
+
+      fs.files["file"] = "X"*512 + "Y"*520
+      sender.handle_get([
+        TFTP::Opcode::RRQ,
+        "file",
+        "octet"
+      ].pack("na*xa*x"))
+
+    end
+  end
 end
 
