@@ -8,14 +8,14 @@ EV = EventMachine
 
 class DummyReader
 
-  FILES = {
-    "small" => "small content",
-    "larger" => "X"*600,
-    "mod512" => "X"*512*4
-  }
+  attr_accessor :files
+
+  def initialize
+    @files = {}
+  end
 
   def read(name)
-    FILES[name]
+    @files[name]
   end
 
 end
@@ -24,8 +24,8 @@ class DummyFileSender < TFTP::FileSender
 
   attr_reader :sent_packets
 
-  def initialize
-    super("127.0.0.1", 1234, DummyReader.new())
+  def initialize(*args)
+    super(*args)
     @sent_packets = []
   end
 
@@ -35,20 +35,21 @@ class DummyFileSender < TFTP::FileSender
 
 end
 
+def ev_run(*args)
+  EventMachine::run do
+    yield EventMachine::open_datagram_socket(
+      "127.0.0.1",
+      0,
+      *args
+    )
+  end
+end
+
 describe TFTP::FileSender do
 
-  def ev_run(klass)
-    EventMachine::run do
-      yield EventMachine::open_datagram_socket(
-        "127.0.0.1",
-        0,
-        klass
-      )
-    end
-  end
-
   it "sends small file in one package" do
-    ev_run DummyFileSender do |sender|
+    fs = DummyReader.new
+    ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
       sender.on_data do |data, ip, port|
           assert_equal(
             data,
@@ -57,6 +58,7 @@ describe TFTP::FileSender do
         EV::stop_event_loop
       end
 
+      fs.files["small"] = "small content"
       sender.handle_get([
         TFTP::Opcode::RRQ,
         "small",
@@ -66,7 +68,8 @@ describe TFTP::FileSender do
   end
 
   it "sends larger file in two packages" do
-    ev_run DummyFileSender do |sender|
+    fs = DummyReader.new
+    ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
 
       sender.on_data do |data, ip, port|
         _, num = data.unpack("nn")
@@ -91,6 +94,7 @@ describe TFTP::FileSender do
         EV::stop_event_loop
       end
 
+      fs.files["larger"] = "X"*600
       sender.handle_get([
         TFTP::Opcode::RRQ,
         "larger",
@@ -101,7 +105,8 @@ describe TFTP::FileSender do
   end
 
   it "sends an empty packge as last packet when sending mod 512 file" do
-    ev_run DummyFileSender do |sender|
+    fs = DummyReader.new
+    ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
 
       sender.on_data do |data, ip, port|
         _, num = data.unpack("nn")
@@ -119,6 +124,7 @@ describe TFTP::FileSender do
         EV::stop_event_loop
       end
 
+      fs.files["mod512"] = "X"*512*4
       sender.handle_get([
         TFTP::Opcode::RRQ,
         "mod512",
