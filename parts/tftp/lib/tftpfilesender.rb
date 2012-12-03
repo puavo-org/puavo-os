@@ -221,6 +221,9 @@ module TFTP
       end
 
       if block_num == @block_num
+        if block_num == 0
+          l "ACK for OACK: #{ @extensions }"
+        end
         d "ACK for block #{ block_num } ok."
         reset_retries
 
