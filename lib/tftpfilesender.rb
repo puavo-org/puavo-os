@@ -24,6 +24,8 @@ module TFTP
       @block_num = 0
       @data = nil
       @name = nil
+
+      @block_size = BLOCK_SIZE
       @current = nil
       @current_block_size = nil
     end
@@ -97,16 +99,26 @@ module TFTP
       send_packet
     end
 
+
     def init_sending(data)
       @started = Time.now
       @data = data
       l "Going to send #{ @data.size } bytes"
 
       # Detect extensions and send oack
+      options = {}
+
       if @extensions["tsize"] == "0"
-        set_oack_packet({
-          "tsize" => @data.size
-        })
+        options["tsize"] = @data.size
+      end
+
+      if @extensions["blksize"]
+        options["blksize"] = @extensions["blksize"]
+        @block_size = @extensions["blksize"].to_i
+      end
+
+      if options.keys.size > 0
+        set_oack_packet(options)
         send_packet
         return
       end
@@ -189,12 +201,13 @@ module TFTP
     def set_next_data_packet
       @block_num += 1
 
-      block = @data.byteslice((@block_num-1) * BLOCK_SIZE, BLOCK_SIZE)
+      block = @data.byteslice((@block_num-1) * @block_size, @block_size)
       @current_block_size = block.size
 
+      start = (@block_num-1)*@block_size
+      to = (@block_num-1)*@block_size+@current_block_size
       d(
-        "Sending block #{ @block_num }. " +
-        "#{ @block_num*BLOCK_SIZE }...#{ @block_num*BLOCK_SIZE+BLOCK_SIZE }" +
+        "Sending block #{ @block_num }. #{ start }...#{ to }" +
         "(#{ @current_block_size }) of #{ @data.size }"
       )
 
@@ -203,9 +216,9 @@ module TFTP
 
     # Is the current block last block client needs
     def last_block?
-      # If we have current block and its size is under BLOCK_SIZE it means in
+      # If we have current block and its size is under @block_size it means in
       # tftp spec that it's the last block.
-      @current_block_size && @current_block_size < BLOCK_SIZE
+      @current_block_size && @current_block_size < @block_size
     end
 
     def handle_error(data)
