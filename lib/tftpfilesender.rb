@@ -180,6 +180,7 @@ module TFTP
       @error = [Opcode::ERROR, code, msg].pack("nna*x")
       l "Sending error #{ code }: #{ msg }"
       send_datagram(@error, @ip, @port)
+      finish
     end
 
 
