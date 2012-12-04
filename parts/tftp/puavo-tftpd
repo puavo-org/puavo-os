@@ -15,7 +15,7 @@ require 'optparse'
 options_defaults = {
   :port => 69,
   :group => "nogroup",
-  :root => Dir.pwd
+  :root => "/var/lib/tftpboot/"
 }
 
 CONF_FILES = [ File.join(ENV["HOME"] + ".config/puavo-tftp.yml"),
