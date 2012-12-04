@@ -1,7 +1,7 @@
 [sssd]
 config_file_version = 2
-debug_level = 6128
-pam_verbosity = 3
+#debug_level = 6128
+#pam_verbosity = 3
 
 # Number of times services should attempt to reconnect in the
 # event of a crash or restart before they give up
@@ -36,10 +36,10 @@ entry_cache_nowait_timeout = 300
 
 [pam]
 reconnection_retries = 1
-debug_level = 0xfff0
+#debug_level = 0xfff0
 
 [domain/KRBLDAP.<%= @kerberos_realm %>]
-debug_level = 0xfff0
+#debug_level = 0xfff0
 auth_provider = krb5
 cache_credentials = true
 id_provider = ldap
