@@ -1,0 +1,27 @@
+#!/usr/bin/ruby
+
+# apt-get install ruby-uuidtools
+
+require 'erb'
+require 'fileutils'
+require 'tempfile'
+require 'uuidtools'
+
+@kvm_name = ARGV[0]
+@kvm_uuid = UUIDTools::UUID.random_create.to_s
+@kvm_memory = 2097152
+@kvm_mac = "aa:cc:" + (1..4).map{"%0.2x"%rand(256)}.join(":")
+
+conf_template = File.read("templates/ltsp-server.xml.erb")
+conf = ERB.new(conf_template, 0, "%<>")
+
+xml = Tempfile.open("puavo-ltsp-kvm")
+xml.write conf.result
+xml.close
+
+puts `cat #{xml.path}`
+
+puts `qemu-img create -f raw /virtual/#{@kvm_name}.raw 2G`
+puts `virsh define #{xml.path}`
+
+xml.unlink
