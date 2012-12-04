@@ -2,8 +2,9 @@
 #
 # Get device settings from the LDAP-server (Puavo) and generate pxelinux.cfg data for terminal.
 # 
-# Usage: [sudo] ltspboot-config [MAC ADDRESS]
+# Usage: [sudo] ltspboot-config [PXE GET URL]
 #
+# eg. sudo ltspboot-config pxelinux.cfg/01-78-e7-d1-d4-0f-5f
 
 require 'ldap'
 
@@ -50,17 +51,26 @@ class PuavoLdap
 
 end
 
+def help
+  "Usage: [sudo] ltspboot-config [PXE GET URL]\n" +
+  "\t-h, --help\tShow this message\n"
+end
+
 option = ARGV[0]
 
 if option == "-h" || option == "--help"
-  puts "Usage: [sudo] ltspboot-config [MAC ADDRESS]"
-  puts "\t-h, --help\tShow this message"
+  puts help
   exit
 end
-mac = option
 
-client_mac = mac.to_s.gsub('-', ':').downcase
-client_mac = PuavoLdap.escape( client_mac )
+if match_option = option.match(/01-(([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})/)
+  client_mac = match_option[1].to_s.gsub('-', ':').downcase
+  client_mac = PuavoLdap.escape( client_mac )
+else
+  puts "Invalid options\n\n"
+  puts help
+  exit
+end
 
 filter = "(&(|(objectClass=puavoNetbootDevice)(objectClass=puavoLocalbootDevice))(macAddress=#{client_mac}))"
 ltsp_client = {}
