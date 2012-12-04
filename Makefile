@@ -19,5 +19,5 @@ install-dirs:
 install: install-dirs
 	install -o root -g root -m 755 puavo-tftpd \
 	  $(DESTDIR)$(prefix)/sbin/puavo-tftpd
-	install -o root -g root -m 755 puavo-tftp/* $(DESTDIR)$(prefix)/lib/ruby/vendor_ruby/puavo-tftp
+	install -o root -g root -m 644 puavo-tftp/* $(DESTDIR)$(prefix)/lib/ruby/vendor_ruby/puavo-tftp
 	install -o root -g root -m 755 puavo-tftp.yml $(DESTDIR)$(sysconfdir)/puavo-tftp.yml
