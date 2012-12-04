@@ -5,8 +5,8 @@ sysconfdir ?= $(prefix)/etc
 build:
 	@echo :\)
 
-.PHONY: run-tests
-run-tests:
+.PHONY: test
+test:
 	ruby1.9.3 test/run.rb
 
 .PHONY: install-dirs

@@ -25,4 +25,4 @@ Install minitest
 
 Run
 
-    make run-tests
+    make test
