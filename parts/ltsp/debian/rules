@@ -1,0 +1,50 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+#
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+#
+# Modified to make a template file for a multi-binary package with separated
+# build-arch and build-indep targets  by Bill Allombert 2001
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# This has to be exported to make some magic below work.
+export DH_OPTIONS
+
+
+%:
+	dh $@ 
+
+override_dh_install:
+#	dh_install
+	mkdir -p $(CURDIR)/debian/puavo-ltsp-bootserver/usr/sbin/
+	mkdir -p $(CURDIR)/debian/puavo-ltsp-bootserver/usr/share/puavo-ltsp-bootserver/templates
+	install -m 755 boot-server/puavo-create-kvm-ltsp-server $(CURDIR)/debian/puavo-ltsp-bootserver/usr/sbin/
+	install -m 644 boot-server/templates/ltsp-server.xml $(CURDIR)/debian/puavo-ltsp-bootserver/usr/share/puavo-ltsp-bootserver/templates/
+
+	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/sbin/
+	install -m 755 client/puavo-pam-login $(CURDIR)/debian/puavo-ltsp-client/usr/sbin/
+	install -m 755 ltsp-server/puavo-init-ltsp-server $(CURDIR)/debian/puavo-ltsp-client/usr/sbin/
+
+	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/ltsp/init-ltsp.d/
+	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/ltsp-server/etc/ssh
+	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/ltsp-server/etc/pam.d
+	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/ltsp-server/etc/ldap
+	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/ltsp-server/etc/default
+	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/ltsp-server/etc/sssd
+
+	install -m 644 ltsp-server/init-ltsp.d/30-puavo-config-partition $(CURDIR)/debian/puavo-ltsp-client/usr/share/ltsp/init-ltsp.d/
+	install -m 644 ltsp-server/templates/etc/ssh/sshd_config $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/ltsp-server/etc/ssh/
+	install -m 644 ltsp-server/templates/etc/pam.d/common-auth $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/ltsp-server/etc/pam.d/
+	install -m 644 ltsp-server/templates/etc/pam.d/common-account $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/ltsp-server/etc/pam.d/
+	install -m 644 ltsp-server/templates/etc/pam.d/common-session $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/ltsp-server/etc/pam.d/
+	install -m 644 ltsp-server/templates/etc/ldap/ldap.conf $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/ltsp-server/etc/ldap/
+	install -m 644 ltsp-server/templates/etc/krb5.conf $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/ltsp-server/etc/
+	install -m 644 ltsp-server/templates/etc/nsswitch.conf $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/ltsp-server/etc/
+	install -m 644 ltsp-server/templates/etc/default/nfs-common $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/ltsp-server/etc/default/
+	install -m 644 ltsp-server/templates/etc/sssd/sssd.conf $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/ltsp-server/etc/sssd/
