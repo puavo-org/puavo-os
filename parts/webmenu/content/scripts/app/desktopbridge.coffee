@@ -8,22 +8,24 @@ define [
   io
 ) ->
 
-  class DesktopBridge
+  class DesktopBridge extends Backbone.Model
 
     connect: (emitter) ->
-      @io = io.connect()
-      @io.on "connect", ->
-        console.log "Socket.IO connected"
 
       # Emit all application level events to Node.JS
-      emitter.on "all", (event, arg) =>
-        @io.emit(event, arg)
+      emitter.on "all", (event, args...) =>
+        if args[0]?.node
+          return
 
-      # Emit all Node.JS to application.
-      #
-      # Socket.IO does not have a catch all event. So we need to manually list
-      # all events here.
-      ["show"].forEach (nodejsEvent) =>
-        @io.on nodejsEvent, => emitter.trigger nodejsEvent
+        console.info "Sending", event, args
+        e = new window.Event event
+        e.args = args
+        window.dispatchEvent(e)
+
+      ["show", "config"].forEach (nodejsEvent) =>
+        window.addEventListener nodejsEvent, (e) =>
+          console.log "FROM NODE", nodejsEvent, e
+          @trigger nodejsEvent, e.args...
+          console.info "triggered #{ nodejsEvent }"
 
 

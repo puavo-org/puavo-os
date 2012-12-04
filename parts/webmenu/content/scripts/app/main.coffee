@@ -17,42 +17,39 @@ define [
   Backbone
 )->
 
-  $.when(
-    $.get("/menu.json")
-    $.get("/user.json")
-    $.get("/config.json")
-  ).fail( (res, status) ->
-    console.log status, res
-    throw new Error "Failed to boot up app"
-  ).then (menuRes, userRes, configRes) ->
-
-    user = new Backbone.Model userRes[0]
-    config = new Backbone.Model configRes[0]
-
-    allItems = new AllItems
-    menuModel = new MenuModel menuRes[0], allItems
-
-    layout = new MenuLayout
-      user: user
-      config: config
-      initialMenu: menuModel
-      allItems: allItems
-
-
-    layout.render()
-    $(".content-container").append layout.el
-
     bridge = new DesktopBridge
     bridge.connect(Application)
 
-    allItems.on "select", (model) ->
-     if model.get("type") isnt "menu"
-       Application.trigger "open", model.toJSON()
+    Application.trigger "html-load"
+    console.info "Waiting for config"
+
+    bridge.on "config", (user, config, menu) ->
+
+      console.log "GOT Config", user, config, menu
+      user = new Backbone.Model user
+      config = new Backbone.Model config
+      allItems = new AllItems
+      menuModel = new MenuModel menu, allItems
 
 
-    $(window).blur ->
-     Application.trigger "hideWindow"
+      layout = new MenuLayout
+        user: user
+        config: config
+        initialMenu: menuModel
+        allItems: allItems
 
-    Application.on "reboot", ->
-      alert "reboot!"
+
+      layout.render()
+      $(".content-container").append layout.el
+
+
+      allItems.on "select", (model) ->
+       if model.get("type") isnt "menu"
+         Application.trigger "open", model.toJSON()
+
+      $(window).blur ->
+       Application.trigger "hideWindow"
+
+      Application.on "reboot", ->
+        alert "reboot!"
 

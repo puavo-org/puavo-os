@@ -3,7 +3,6 @@ http = require "http"
 {spawn} = require "child_process"
 
 app = require "appjs"
-express = require "express"
 stylus = require "stylus"
 nib = require "nib"
 posix = require "posix"
@@ -55,33 +54,10 @@ config = requirefallback(
   __dirname + "/config.json"
 )
 
-handler = express()
+bridge = null
 spawnEmitter = require("./lib/spawnmenu")(spawnPipePath)
 
-config.port ?= 1337
-server = http.createServer(handler).listen config.port or 1337, ->
-  console.warn "HTTP server listening on port #{ config.port }."
-  console.warn "Yes, this sucks and it will be fixed on a later release. https://github.com/opinsys/webmenu/issues/2"
-
-bridge = require("./lib/siobridge")(server)
-
-handler.configure "development", ->
-
-  compile = (str, path) ->
-    stylus(str)
-      .set("paths", [
-        __dirname + "/content/styles"
-      ])
-      .use(nib())
-
-  handler.use stylus.middleware
-    compile: compile
-    src: __dirname + "/content"
-
-handler.use express.static __dirname + "/content"
-
 app.init(CachePath: cachePath)
-
 
 locale = process.env.LANG
 locale = "fi_FI.UTF-8"
@@ -101,11 +77,7 @@ username = posix.getpwnam(posix.geteuid()).name
 userData = posix.getpwnam(username)
 userData.fullName = userData.gecos.split(",")[0]
 
-handler.get "/user.json", (req, res) -> res.json(userData)
-handler.get "/menu.json", (req, res) -> res.json(menuJSON)
-handler.get "/config.json", (req, res) -> res.json(config)
-
-handler.get "/osicon/:icon.png", require("./routes/osicon")(
+app.router.get "/osicon/", require("./routes/osicon")(
   config.iconSearchPaths
   config.fallbackIcon
 )
@@ -118,20 +90,24 @@ window = app.createWindow
   disableSecurity: true
   showOnTaskbar: false
   icons: __dirname + '/content/icons'
-  url: "http://localhost:#{ config.port }"
+  # url: "http://localhost:#{ config.port }"
 
-  # Node require in the browser breaks RequireJS. So disable it.
-  # https://github.com/opinsys/appjs/commit/74a1b2deba49a3abb65f51a27a8871f8aee7dcf1
-  disableBrowserRequire: true
+  # # Node require in the browser breaks RequireJS. So disable it.
+  # # https://github.com/opinsys/appjs/commit/74a1b2deba49a3abb65f51a27a8871f8aee7dcf1
+  # disableBrowserRequire: true
 
-  # Set appjs window as modal.
-  # TODO: Why this does not float the window on Awesome wm?
-  # https://github.com/opinsys/appjs/commit/15dfc63031126d5aab54fcf544891c5c9edf6a84
-  modal: true
+  # # Set appjs window as modal.
+  # # TODO: Why this does not float the window on Awesome wm?
+  # # https://github.com/opinsys/appjs/commit/15dfc63031126d5aab54fcf544891c5c9edf6a84
+  # modal: true
+  #
+
+
+app.serveFilesFrom(__dirname + '/content');
 
 displayMenu = ->
   title = "Opinsys Web Menu"
-  bridge.emit "show"
+  bridge?.emit "show"
   window.frame.title = title
   window.frame.show()
   window.frame.focus()
@@ -160,33 +136,35 @@ window.on "ready", ->
       argv["dev-tools"] = true
       window.frame.openDevTools()
 
+  bridge = require("./lib/windowbridge")(window)
 
-# TODO: legacy. remove
-handler.get "/show", (req, res) ->
-  res.send "ok"
-  console.warn "Called legacy http /show Use nc -w 1 -U #{ spawnPipePath }"
-  displayMenu()
+  spawnEmitter.on "spawn", ->
+    console.info "Opening menu from webmenu-spawn"
+    displayMenu()
 
-spawnEmitter.on "spawn", displayMenu
+  bridge.on "open", (msg) ->
+    launchCommand(msg)
+    window.frame.hide()
 
-bridge.on "open", (msg) ->
-  launchCommand(msg)
-  window.frame.hide()
+  bridge.on "openSettings", ->
+    launchCommand(config.settingsCMD)
+    window.frame.hide()
 
-bridge.on "openSettings", ->
-  launchCommand(config.settingsCMD)
-  window.frame.hide()
+  bridge.on "hideWindow", ->
+    window.frame.hide() if not argv["dev-tools"]
 
-bridge.on "hideWindow", ->
-  window.frame.hide() if not argv["dev-tools"]
+  bridge.on "showMyProfileWindow", ->
+    launchCommand(config.profileCMD)
 
-bridge.on "showMyProfileWindow", ->
-  launchCommand(config.profileCMD)
+  bridge.on "showChangePasswordWindow", ->
+    launchCommand(config.passwordCMD)
 
-bridge.on "showChangePasswordWindow", ->
-  launchCommand(config.passwordCMD)
+  bridge.on "shutdown", -> powermanager.shutdown()
+  bridge.on "reboot", -> powermanager.reboot()
+  bridge.on "logout", -> powermanager.logout()
 
-bridge.on "shutdown", -> powermanager.shutdown()
-bridge.on "reboot", -> powermanager.reboot()
-bridge.on "logout", -> powermanager.logout()
-
+  bridge.on "html-load", ->
+    console.info "Sending config"
+    e = new window.Event "config"
+    e.args = [userData, config, menuJSON]
+    window.dispatchEvent(e)

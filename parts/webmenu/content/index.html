@@ -5,7 +5,14 @@
 
     <title>Web Menu</title>
     <script>
-    window.require = { baseUrl: "/scripts/" };
+        // Remove Appjs node.js integration.
+        delete window.require;
+        delete window.process;
+        delete window.module;
+        window.require = { baseUrl: "/scripts/" };
+        window.onerror = function(e){
+            console.log(e.stack);
+        };
     </script>
     <script src="/scripts/require.js"></script>
     <script src="/scripts/config.js"></script>
@@ -17,7 +24,7 @@
     <link rel="stylesheet" href="theme/css/master.css">
 </head>
 <body>
-	<div class="container-fluid well"> 
+	<div class="container-fluid well">
       <div class="row-fluid content-container"></div>
     </div>
 </body>
