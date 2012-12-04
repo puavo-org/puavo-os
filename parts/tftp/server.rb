@@ -3,9 +3,11 @@
 require "etc"
 require "yaml"
 
-require "./lib/log"
-require "./lib/tftpserver"
-require "./lib/cachedfilereader"
+$LOAD_PATH.unshift( File.dirname(__FILE__) )
+
+require "puavo-tftp/log"
+require "puavo-tftp/tftpserver"
+require "puavo-tftp/cachedfilereader"
 
 require 'optparse'
 

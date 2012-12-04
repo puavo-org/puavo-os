@@ -1,5 +1,5 @@
 
-require "./lib/log"
+require "puavo-tftp/log"
 
 class CachedFileReader
 

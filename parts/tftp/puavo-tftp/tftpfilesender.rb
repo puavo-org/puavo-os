@@ -1,9 +1,9 @@
 
 require "eventmachine"
 
-require "./lib/constants"
-require "./lib/tftpconnection"
-require "./lib/log"
+require "puavo-tftp/constants"
+require "puavo-tftp/tftpconnection"
+require "puavo-tftp/log"
 
 module TFTP
 
