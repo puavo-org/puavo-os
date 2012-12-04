@@ -16,11 +16,11 @@ module PuavoTFTP
 
     # @param {String} client ip
     # @param {Fixnum} client port
-    def initialize(ip, port, filereader, options)
+    def initialize(ip, port, filereader, hooks=[])
       @filereader = filereader
       @ip = ip
       @port = port
-      @options = options
+      @hooks = hooks
 
       @block_num = 0
       @data = nil
@@ -74,7 +74,7 @@ module PuavoTFTP
       end
 
       # Check all hooks. Run hook command if regexp match to GET url
-      Array(@options[:hooks]).each do |hook|
+      @hooks.each do |hook|
         if name.match( Regexp.new(hook[:regexp]) )
           return exec_script("#{ hook[:command] } #{ name }")
         end
