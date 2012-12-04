@@ -57,8 +57,8 @@ EventMachine::run do
   EventMachine::open_datagram_socket(
     "0.0.0.0",
     options[:port],
-    TFTP::Server,
-    CachedFileReader.new(options[:root]),
+    PuavoTFTP::Server,
+    PuavoTFTP::CachedFileReader.new(options[:root]),
     options
   ) do
 

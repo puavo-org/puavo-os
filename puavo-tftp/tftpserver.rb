@@ -9,7 +9,7 @@ require "puavo-tftp/log"
 
 # http://tools.ietf.org/html/rfc1350
 
-module TFTP
+module PuavoTFTP
 
   # TFTP server listening on a fixed port (default 69)
   class Server < Connection

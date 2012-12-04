@@ -5,7 +5,7 @@ require "puavo-tftp/constants"
 require "puavo-tftp/tftpconnection"
 require "puavo-tftp/log"
 
-module TFTP
+module PuavoTFTP
 
   # One shot TFTP file sender server
   class FileSender < Connection

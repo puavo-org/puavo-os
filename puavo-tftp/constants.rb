@@ -1,5 +1,5 @@
 
-module TFTP
+module PuavoTFTP
 
   # http://tools.ietf.org/html/rfc1350#section-5
   module Opcode
