@@ -12,32 +12,49 @@ require "puavo-tftp/cachedfilereader"
 require 'optparse'
 
 
-options = {
+options_defaults = {
   :port => 69,
   :group => "nogroup",
   :root => Dir.pwd
 }
 
-configuration = YAML.load_file('config.yml')
-options.merge!( configuration ) if configuration
+CONF_FILES = [ File.join(ENV["HOME"] + ".config/puavo-tftp.yml"),
+               "/etc/puavo-tftp.yml",
+               File.join(File.dirname(__FILE__), "puavo-tftp.yml") ]
+               
+options_file = {}
+CONF_FILES.each do |file|
+  begin
+    options_file = YAML.load_file(file) || {}
+    break
+  rescue Errno::ENOENT
+    next
+  end
+end
 
+
+options_cli = {}
 OptionParser.new do |opts|
   opts.banner = "Usage: [sudo] ./server.rb [options]"
 
   opts.on("-r", "--root PATH", String, "Serve files from directory.") do |v|
     if v[0] == "/"
-      options[:root] = v
+      options_cli[:root] = v
     else
-      options[:root] = File.join(Dir.pwd, v)
+      options_cli[:root] = File.join(Dir.pwd, v)
     end
   end
 
   opts.on("-u", "--user USER", String, "Drop to user.") do |v|
-    options[:user] = v
+    options_cli[:user] = v
   end
 
-  opts.on("-g", "--group GROUP", String, "Drop to group. Default #{ options[:group] }") do |v|
-    options[:group] = v
+  opts.on("-g", "--group GROUP", String, "Drop to group. Default #{ options_defaults[:group] }") do |v|
+    options_cli[:group] = v
+  end
+
+  opts.on("-c", "--config FILE", String, "Configuration file") do |v|
+    options_cli[:config] = v
   end
 
   opts.on("--verbose", "Print more debugging stuff.") do |v|
@@ -45,12 +62,17 @@ OptionParser.new do |opts|
   end
 
   opts.on("-p", "--port PORT", "Listen on port.") do |v|
-    options[:port] = v.to_i
+    options_cli[:port] = v.to_i
   end
 
 end.parse!
 
 
+if options_cli[:config]
+  options_file = YAML.load_file(options_cli[:config]) || {}
+end
+
+options = options_defaults.merge(options_file).merge(options_cli)
 
 
 EventMachine::run do
