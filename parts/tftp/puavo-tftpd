@@ -21,7 +21,7 @@ options_defaults = {
 CONF_FILES = [ File.join(ENV["HOME"] + ".config/puavo-tftp.yml"),
                "/etc/puavo-tftp.yml",
                File.join(File.dirname(__FILE__), "puavo-tftp.yml") ]
-               
+
 options_file = {}
 CONF_FILES.each do |file|
   begin
@@ -81,7 +81,7 @@ EventMachine::run do
     options[:port],
     PuavoTFTP::Server,
     PuavoTFTP::CachedFileReader.new(options[:root]),
-    options
+    Array(options[:hooks])
   ) do
 
     log "Serving files from #{ options[:root] }"
