@@ -16,10 +16,11 @@ module TFTP
 
     # @param {String} client ip
     # @param {Fixnum} client port
-    def initialize(ip, port, filereader)
+    def initialize(ip, port, filereader, options)
       @filereader = filereader
       @ip = ip
       @port = port
+      @options = options
 
       @block_num = 0
       @data = nil
@@ -60,19 +61,11 @@ module TFTP
         return
       end
 
-
-      # Handle pxelinux.cfg with a custom script
-      if name.start_with?("pxelinux.cfg", "/pxelinux.cfg")
-
-        # We support only mac based configuration
-        if match_mac = name.downcase.match(/pxelinux.cfg\/01-(([0-9a-f]{2}[:-]){5}[0-9a-f]{2})/)
-          return exec_script( match_mac[1] )
+      # Check all hooks. Run hook command if regexp match to GET url
+      Array(@options[:hooks]).each do |hook|
+        if name.match( Regexp.new(hook[:regexp]) )
+          return exec_script("#{ hook[:command] } #{ name }")
         end
-
-        # If not mac just ignore
-        l "ERROR: ignoring #{ name }"
-        send_error_packet(ErrorCode::NOT_FOUND, "No found :(")
-        return
       end
 
       begin
@@ -128,11 +121,7 @@ module TFTP
       send_packet
     end
 
-    def exec_script(mac = nil)
-      command = "./ltspboot-config"
-      if mac
-        command += " --mac #{mac}"
-      end
+    def exec_script(command)
       l "Executing script #{ command }"
       started = Time.now
       child = EM::DeferrableChildProcess.open(command)

@@ -14,9 +14,10 @@ module TFTP
   # TFTP server listening on a fixed port (default 69)
   class Server < Connection
 
-    def initialize(filereader)
+    def initialize(filereader, options)
       @filereader = filereader
       @clients = {}
+      @options = options
     end
 
     def to_s
@@ -41,7 +42,8 @@ module TFTP
         FileSender,
         ip,
         port,
-        @filereader
+        @filereader,
+        @options
       )
 
       @clients[key] = sender

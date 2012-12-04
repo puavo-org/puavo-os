@@ -1,6 +1,7 @@
 #!/usr/bin/ruby1.9.3
 
 require "etc"
+require "yaml"
 
 require "./lib/log"
 require "./lib/tftpserver"
@@ -8,11 +9,15 @@ require "./lib/cachedfilereader"
 
 require 'optparse'
 
+
 options = {
   :port => 69,
   :group => "nogroup",
   :root => Dir.pwd
 }
+
+configuration = YAML.load_file('config.yml')
+options.merge!( configuration ) if configuration
 
 OptionParser.new do |opts|
   opts.banner = "Usage: [sudo] ./server.rb [options]"
@@ -51,7 +56,8 @@ EventMachine::run do
     "0.0.0.0",
     options[:port],
     TFTP::Server,
-    CachedFileReader.new(options[:root])
+    CachedFileReader.new(options[:root]),
+    options
   ) do
 
     log "Serving files from #{ options[:root] }"
