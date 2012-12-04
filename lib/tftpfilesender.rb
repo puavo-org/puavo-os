@@ -29,6 +29,18 @@ module TFTP
       @block_size = BLOCK_SIZE
       @current = nil
       @current_block_size = nil
+
+
+      @timer = EventMachine::PeriodicTimer.new(1) do
+        return if @packet_sent.nil?
+
+        diff = Time.now - @packet_sent
+        if TIMEOUT < diff
+          l "Timeout with #{ diff }. Resending."
+          send_packet
+        end
+      end
+
     end
 
     def to_s
@@ -133,7 +145,6 @@ module TFTP
 
     # set timeout for the current block
     def set_timeout
-      saved = @block_num
 
       if @retry_count == 0
         l "Tried resending #{ RETRY_COUNT } times. Giving up. #{ @current.inspect }"
@@ -146,18 +157,12 @@ module TFTP
       end
 
       @retry_count -= 1
-      @timeout = EventMachine::Timer.new(TIMEOUT) do
-        d "Resending packet from timeout. Retry #{ @retry_count }/#{ RETRY_COUNT }"
-        send_packet
-      end
+      @packet_sent = Time.now
     end
 
     # Clear timeout for the current block
     def clear_timeout
-      if @timeout
-        @timeout.cancel()
-        @timeout = nil
-      end
+      @packet_sent = nil
     end
 
     def reset_retries
@@ -172,15 +177,16 @@ module TFTP
       finish
     end
 
+    # Bad internet simulator
+    # def send_datagram(*args)
+    #   if Random.rand(10000) == 0
+    #     return puts "Skipping #{ @block_num }"
+    #   end
+    #   super(*args)
+    # end
 
     # Send current block to the client
     def send_packet
-      # Bad internet simulator
-      # if Random.rand(100) == 0
-      #   puts "skipping #{ @block_num }"
-      #   return
-      # end
-
       clear_timeout
       send_datagram(@current, @ip, @port)
       @on_data.call(@current, @ip, @port) if not @on_data.nil?
@@ -215,7 +221,7 @@ module TFTP
       super
       l "ABORT"
       clear_timeout
-      reset_retries
+      finish
     end
 
     def handle_ack(data)
@@ -254,6 +260,7 @@ module TFTP
     end
 
     def finish
+      @timer.cancel()
       clear_timeout
       close_connection
       @on_end.call() if not @on_end.nil?
