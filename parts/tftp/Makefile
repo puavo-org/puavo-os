@@ -11,6 +11,7 @@ test:
 
 .PHONY: install-dirs
 install-dirs:
+	mkdir -p $(DESTDIR)$(sysconfdir)
 	mkdir -p $(DESTDIR)$(prefix)/sbin
 	mkdir -p $(DESTDIR)$(prefix)/lib/ruby/vendor_ruby/puavo-tftp
 
