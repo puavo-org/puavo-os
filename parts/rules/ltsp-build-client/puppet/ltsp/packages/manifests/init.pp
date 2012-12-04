@@ -378,7 +378,7 @@ class packages {
     , 'wxmaxima' ]:
       tag => [ 'science', 'ubuntu', ];
 
-    [ 'opinsys-images' ]:
+    [ 'liitu-themes' ]:
       tag => [ 'themes', 'opinsys', ];
 
     [ 'breathe-icon-theme'

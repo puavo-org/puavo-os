@@ -32,5 +32,6 @@ class desktop::dconf {
   }
 
   Package <| (title == dconf-tools)
+          or (title == liitu-themes)
           or (title == ubuntu-mono) |>
 }
