@@ -1,7 +1,7 @@
 
 require "eventmachine"
 
-module TFTP
+module PuavoTFTP
 
   # Abstract class for TFTP::Server and TFTPFileSender
   class Connection < EventMachine::Connection
