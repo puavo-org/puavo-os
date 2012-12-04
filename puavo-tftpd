@@ -11,6 +11,13 @@ require "puavo-tftp/cachedfilereader"
 
 require 'optparse'
 
+def load_config_file(filename)
+  conf = YAML.load_file(filename) || {}
+  conf.dup.keys.each do |key|
+    conf[ (key.to_sym rescue key) || key ] = conf.delete(key)
+  end
+  conf
+end
 
 options_defaults = {
   :port => 69,
@@ -25,7 +32,7 @@ CONF_FILES = [ File.join(ENV["HOME"] + ".config/puavo-tftp.yml"),
 options_file = {}
 CONF_FILES.each do |file|
   begin
-    options_file = YAML.load_file(file) || {}
+    options_file = load_config_file(file) || {}
     break
   rescue Errno::ENOENT
     next
@@ -69,7 +76,7 @@ end.parse!
 
 
 if options_cli[:config]
-  options_file = YAML.load_file(options_cli[:config]) || {}
+  options_file = load_config_file(options_cli[:config]) || {}
 end
 
 options = options_defaults.merge(options_file).merge(options_cli)
