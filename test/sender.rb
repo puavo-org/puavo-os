@@ -1,9 +1,7 @@
 
 require "minitest/autorun"
 
-require "./lib/tftpfilesender"
-
-
+require "puavo-tftp/tftpfilesender"
 
 class DummyReader
 
@@ -23,7 +21,7 @@ class DummyReader
 
 end
 
-class DummyFileSender < TFTP::FileSender
+class DummyFileSender < PuavoTFTP::FileSender
 
   attr_reader :sent_packets
 
@@ -48,7 +46,7 @@ def ev_run(*args)
   end
 end
 
-describe TFTP::FileSender do
+describe PuavoTFTP::FileSender do
 
   it "sends small file in one package" do
     fs = DummyReader.new
@@ -64,7 +62,7 @@ describe TFTP::FileSender do
 
       fs.files["small"] = "small content"
       sender.handle_get([
-        TFTP::Opcode::RRQ,
+        PuavoTFTP::Opcode::RRQ,
         "small",
         "octet"
       ].pack("na*xa*x"))
@@ -79,7 +77,7 @@ describe TFTP::FileSender do
         _, num = data.unpack("nn")
 
         sender.handle_ack([
-          TFTP::Opcode::ACK,
+          PuavoTFTP::Opcode::ACK,
           num
         ].pack("nn"))
       end
@@ -100,7 +98,7 @@ describe TFTP::FileSender do
 
       fs.files["larger"] = "X"*600
       sender.handle_get([
-        TFTP::Opcode::RRQ,
+        PuavoTFTP::Opcode::RRQ,
         "larger",
         "octet"
       ].pack("na*xa*x"))
@@ -115,7 +113,7 @@ describe TFTP::FileSender do
       sender.on_data do |data, ip, port|
         _, num = data.unpack("nn")
         sender.handle_ack([
-          TFTP::Opcode::ACK,
+          PuavoTFTP::Opcode::ACK,
           num
         ].pack("nn"))
       end
@@ -130,7 +128,7 @@ describe TFTP::FileSender do
 
       fs.files["mod512"] = "X"*512*4
       sender.handle_get([
-        TFTP::Opcode::RRQ,
+        PuavoTFTP::Opcode::RRQ,
         "mod512",
         "octet"
       ].pack("na*xa*x"))
@@ -145,7 +143,7 @@ describe TFTP::FileSender do
       sender.on_data do |data, ip, port|
         _, num = data.unpack("nn")
         sender.handle_ack([
-          TFTP::Opcode::ACK,
+          PuavoTFTP::Opcode::ACK,
           num
         ].pack("nn"))
       end
@@ -159,7 +157,7 @@ describe TFTP::FileSender do
       end
 
       sender.handle_get([
-        TFTP::Opcode::RRQ,
+        PuavoTFTP::Opcode::RRQ,
         "notfound",
         "octet"
       ].pack("na*xa*x"))
@@ -182,7 +180,7 @@ describe TFTP::FileSender do
 
           fs.files["somefile"] = "X"*700
           sender.handle_get([
-            TFTP::Opcode::RRQ,
+            PuavoTFTP::Opcode::RRQ,
             "somefile",
             "octet",
             "tsize",
@@ -206,7 +204,7 @@ describe TFTP::FileSender do
 
           fs.files["somefile"] = "X"*700
           sender.handle_get([
-            TFTP::Opcode::RRQ,
+            PuavoTFTP::Opcode::RRQ,
             "somefile",
             "octet",
             "blksize",
@@ -224,7 +222,7 @@ describe TFTP::FileSender do
           handlers = [
             lambda do |data|
               sender.handle_ack([
-                TFTP::Opcode::ACK, 0
+                PuavoTFTP::Opcode::ACK, 0
               ].pack("nn"))
             end,
 
@@ -236,7 +234,7 @@ describe TFTP::FileSender do
               _, num = data.unpack("nn")
               puts "SENDING ACK TO SERVER #{ num }"
               sender.handle_ack([
-                TFTP::Opcode::ACK,
+                PuavoTFTP::Opcode::ACK,
                 num
               ].pack("nn"))
             end,
@@ -249,7 +247,7 @@ describe TFTP::FileSender do
               _, num = data.unpack("nn")
               puts "SENDING ACK TO SERVER #{ num }"
               sender.handle_ack([
-                TFTP::Opcode::ACK,
+                PuavoTFTP::Opcode::ACK,
                 num
               ].pack("nn"))
             end,
@@ -270,7 +268,7 @@ describe TFTP::FileSender do
 
           fs.files["blksizetest"] = "X"*12
           sender.handle_get([
-            TFTP::Opcode::RRQ,
+            PuavoTFTP::Opcode::RRQ,
             "blksizetest",
             "octet",
             "blksize",
@@ -293,7 +291,7 @@ describe TFTP::FileSender do
       handlers = [
         lambda do |data|
           sender.handle_ack([
-            TFTP::Opcode::ACK, 1
+            PuavoTFTP::Opcode::ACK, 1
           ].pack("nn"))
         end,
 
@@ -303,7 +301,7 @@ describe TFTP::FileSender do
             data
           )
           sender.handle_ack([
-            TFTP::Opcode::ACK, 1
+            PuavoTFTP::Opcode::ACK, 1
           ].pack("nn"))
         end,
 
@@ -324,7 +322,7 @@ describe TFTP::FileSender do
 
       fs.files["file"] = "X"*512 + "Y"*520
       sender.handle_get([
-        TFTP::Opcode::RRQ,
+        PuavoTFTP::Opcode::RRQ,
         "file",
         "octet"
       ].pack("na*xa*x"))
