@@ -2,10 +2,10 @@
 require "eventmachine"
 require "socket"
 
-require "./lib/constants"
-require "./lib/tftpconnection"
-require "./lib/tftpfilesender"
-require "./lib/log"
+require "puavo-tftp/constants"
+require "puavo-tftp/tftpconnection"
+require "puavo-tftp/tftpfilesender"
+require "puavo-tftp/log"
 
 # http://tools.ietf.org/html/rfc1350
 
