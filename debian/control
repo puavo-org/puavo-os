@@ -1,0 +1,17 @@
+Source: puavo-ltsp
+Section: unknown
+Priority: extra
+Maintainer: Veli-Matti Lintu <veli-matti.lintu@opinsys.fi>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.3
+Homepage: https://github.com/opinsys/puavo-ltsp
+
+Package: puavo-ltsp-bootserver
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Puavo LTSP bootserver runs infrastructure services for thin/fat
+ clients and LTSP servers. No user sessions are run on the server itself.
+
+Package: puavo-ltsp-client
+Architecture: all
+Description: Bits and pieces needed inside the LTSP chroot image.
