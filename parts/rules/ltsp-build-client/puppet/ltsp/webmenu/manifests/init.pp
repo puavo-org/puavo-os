@@ -13,5 +13,6 @@ class webmenu {
       require => Package['webmenu'];
   }
 
-  Package <| title == webmenu |>
+  Package <| (title == liitu-themes)
+          or (title == webmenu)      |>
 }
