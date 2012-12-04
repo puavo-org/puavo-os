@@ -1,0 +1,37 @@
+#!/usr/bin/ruby
+
+require 'fileutils'
+require 'highline/import'
+require 'tmpdir'
+
+@ldap_binddn       = File.read('/etc/puavo/ldap/dn'        ).chomp
+@ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp
+@ldap_master       = File.read('/etc/puavo/ldap/master'    ).chomp
+@ldap_base         = File.read('/etc/puavo/ldap/base'      ).chomp
+@kerberos_master   = File.read('/etc/puavo/kerberos/master').chomp
+@kerberos_realm    = File.read('/etc/puavo/kerberos/realm' ).chomp
+@kerberos_toprealm = File.read('/etc/puavo/kerberos/toprealm' ).chomp
+@puavo_hostname    = File.read('/etc/puavo/hostname'       ).chomp
+@puavo_domain      = File.read('/etc/puavo/domain'         ).chomp
+@puavo_topdomain   = File.read('/etc/puavo/topdomain'      ).chomp
+
+def write_config(filename)
+  conf_template = File.read("templates/#{filename}.erb")
+  conf = ERB.new(conf_template, 0, "%<>")
+
+  File.open(filename, "w", 0600) do |f|
+    f.write conf.result
+  end
+end
+
+write_config("/etc/sssd/sssd.conf")
+write_config("/etc/nsswitch.conf")
+write_config("/etc/pam.d/common-auth")
+write_config("/etc/pam.d/common-account")
+write_config("/etc/pam.d/common-session")
+write_config("/etc/ldap/ldap.conf")
+write_config("/etc/krb5.conf")
+write_config("/etc/default/nfs-common")
+write_config("/etc/ssh/sshd_config")
+
+exit(0)
