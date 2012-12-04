@@ -16,7 +16,7 @@ require 'tmpdir'
 @puavo_topdomain   = File.read('/etc/puavo/topdomain'      ).chomp
 
 def write_config(filename)
-  conf_template = File.read("templates/#{filename}.erb")
+  conf_template = File.read("/usr/share/puavo-ltsp-client/templates/ltsp-server/#{filename}")
   conf = ERB.new(conf_template, 0, "%<>")
 
   File.open(filename, "w", 0600) do |f|
