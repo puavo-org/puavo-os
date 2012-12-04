@@ -1,4 +1,5 @@
 prefix ?= /usr/local
+sysconfdir ?= $(prefix)/etc
 
 build:
 	@echo :\)
