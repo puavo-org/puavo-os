@@ -20,11 +20,11 @@ define [
 
     events:
       "click .bb-profile-settings": (e) ->
-        Application.trigger "showMyProfileWindow"
+        Application.bridge.send "showMyProfileWindow"
       "click .bb-change-password": (e) ->
-        Application.trigger "showChangePasswordWindow"
+        Application.bridge.send "showChangePasswordWindow"
       "click .bb-settings": (e) ->
-        Application.trigger "openSettings"
+        Application.bridge.send "openSettings"
       "click .bb-logout": (e) ->
 
         @lb = new Lightbox
@@ -34,7 +34,7 @@ define [
     constructor: (opts) ->
       super
       @config = opts.config
-      @bindTo Application, "show", =>
+      @bindTo Application.global, "show", =>
         @lb?.remove()
 
     viewJSON: -> {

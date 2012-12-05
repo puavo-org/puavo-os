@@ -1,5 +1,4 @@
 define [
-  "cs!app/desktopbridge"
   "cs!app/views/menulayout_view"
   "cs!app/models/menu_model"
   "cs!app/models/allitems_collection"
@@ -8,7 +7,6 @@ define [
   "backbone"
 ],
 (
-  DesktopBridge
   MenuLayout
   MenuModel
   AllItems
@@ -17,13 +15,8 @@ define [
   Backbone
 )->
 
-    bridge = new DesktopBridge
-    bridge.connect(Application)
-
-    Application.trigger "html-load"
-    console.info "Waiting for config"
-
-    bridge.on "config", (user, config, menu) ->
+    Application.bridge.send "html-load"
+    Application.bridge.on "config", (user, config, menu) ->
 
       console.log "GOT Config", user, config, menu
       user = new Backbone.Model user
@@ -31,25 +24,19 @@ define [
       allItems = new AllItems
       menuModel = new MenuModel menu, allItems
 
-
       layout = new MenuLayout
         user: user
         config: config
         initialMenu: menuModel
         allItems: allItems
 
-
       layout.render()
       $(".content-container").append layout.el
 
-
       allItems.on "select", (model) ->
        if model.get("type") isnt "menu"
-         Application.trigger "open", model.toJSON()
+         Application.bridge.send "open", model.toJSON()
 
       $(window).blur ->
-       Application.trigger "hideWindow"
-
-      Application.on "reboot", ->
-        alert "reboot!"
+       Application.bridge.send "hideWindow"
 

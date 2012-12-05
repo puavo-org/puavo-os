@@ -107,7 +107,7 @@ app.serveFilesFrom(__dirname + '/content');
 
 displayMenu = ->
   title = "Opinsys Web Menu"
-  bridge?.emit "show"
+  bridge?.send "show"
   window.frame.title = title
   window.frame.show()
   window.frame.focus()
@@ -136,7 +136,8 @@ window.on "ready", ->
       argv["dev-tools"] = true
       window.frame.openDevTools()
 
-  bridge = require("./lib/windowbridge")(window)
+  Bridge = require("./content/scripts/app/bridge.coffee")
+  bridge = new Bridge "node->browser", window
 
   spawnEmitter.on "spawn", ->
     console.info "Opening menu from webmenu-spawn"

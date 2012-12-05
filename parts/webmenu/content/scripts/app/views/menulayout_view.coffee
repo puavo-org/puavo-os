@@ -37,9 +37,6 @@ define [
 
       @setMenu(@initialMenu)
 
-      @bindTo Application, "show", =>
-        @reset()
-        @render()
 
       @bindTo @allItems, "select", (model) =>
         if model.get("type") is "menu"
@@ -51,13 +48,13 @@ define [
         @renderSubviews(newOnly: true)
       , 200
 
-      @bindTo Application, "showDescription", (model) =>
+      @bindTo Application.global, "showDescription", (model) =>
         delayedShowProfile.cancel()
         @_setView ".sidebar", new ItemDescriptionView
           model: model
         @renderSubviews(newOnly: true)
 
-      @bindTo Application, "hideDescription", => delayedShowProfile()
+      @bindTo Application.global, "hideDescription", => delayedShowProfile()
 
       @showProfile()
 

@@ -25,7 +25,7 @@ define [
           @render()
 
       "mouseenter .thumbnail": (e) ->
-        Application.trigger "showDescription", @model
+        Application.global.trigger "showDescription", @model
       "mouseleave .thumbnail": (e) ->
-        Application.trigger "hideDescription", @model
+        Application.global.trigger "hideDescription", @model
 
