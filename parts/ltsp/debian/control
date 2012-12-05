@@ -9,7 +9,7 @@ Homepage: https://github.com/opinsys/puavo-ltsp
 Package: puavo-ltsp-bootserver
 Architecture: all
 Depends: libsasl2-modules-gssapi-mit, isc-dhcp-server, bind9, dnsmasq,
- ruby1.9.3, nbd-server, nfs-kernel-server
+ ruby1.9.3, nbd-server, nfs-kernel-server, ruby-uuidtools
 Conflicts: nscd
 Description: Puavo LTSP bootserver runs infrastructure services for thin/fat
  clients and LTSP servers. No user sessions are run on the server itself.
@@ -17,7 +17,7 @@ Description: Puavo LTSP bootserver runs infrastructure services for thin/fat
 Package: puavo-ltsp-client
 Architecture: all
 Conflicts: nscd
-Depends: lightdm-gtk-greeter, libsasl2-modules-gssapi-mit, 
+Depends: lightdm, lightdm-gtk-greeter, libsasl2-modules-gssapi-mit, 
  libsasl2-modules-ldap, krb5-user, libpam-krb5, ruby1.9.3, ruby-ldap,
  ruby-dnsruby, sssd
 Description: Bits and pieces needed inside the LTSP chroot image.
