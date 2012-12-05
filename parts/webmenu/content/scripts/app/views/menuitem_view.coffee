@@ -16,13 +16,6 @@ define [
 
     template: template
 
-    constructor: ->
-      super
-
-      @bindTo Application, "hideWindow", =>
-        @spinner = false
-        @render()
-
     events:
       "click": (e) ->
         @model.trigger "select", @model
@@ -36,9 +29,3 @@ define [
       "mouseleave .thumbnail": (e) ->
         Application.trigger "hideDescription", @model
 
-
-    render: ->
-      super
-      # Disabled until https://github.com/appjs/appjs/issues/223 gets fixed
-      # if @spinner
-      #   spin @$(".thumbnail").get(0)
