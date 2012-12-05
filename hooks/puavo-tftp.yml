@@ -1,6 +1,8 @@
 # Configuration file for the puavo-tftpd
 #
-#
+
 hooks:
   - regexp: pxelinux.cfg\/01-(([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})
     command: puavo-ltspboot-config
+  - regexp: lts.conf$
+    command: puavo-lts-config

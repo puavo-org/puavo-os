@@ -1,0 +1,209 @@
+#!/usr/bin/ruby1.9.1
+#
+# Get device settings from the LDAP-server (Puavo) and generate lts.conf for terminal.
+#
+# Usage: [sudo] ltspboot-config [GET URL] [IP ADDRESS]
+#
+
+require 'ldap'
+
+class PuavoLdap
+  attr_reader :base, :dn, :password
+
+  ESCAPES = {
+    "\0" => '00',
+    '*'  => '2A',
+    '('  => '28',
+    ')'  => '29',
+    '\\' => '5C' }
+
+  ESCAPES_RE = Regexp.new("[#{ ESCAPES.keys.map { |e| Regexp.escape(e) }.join }]")
+
+  def initialize(ldapserver='localhost')
+    @base       = File.read('/etc/puavo/ldap/base'    ).chomp
+    @dn         = File.read('/etc/puavo/ldap/dn'      ).chomp
+    @password   = File.read('/etc/puavo/ldap/password').chomp
+    ldapserver  = File.read('/etc/puavo/ldap/master'  ).chomp
+
+    if ldapserver
+      @conn = LDAP::Conn.new(ldapserver)
+      @conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+      @conn.start_tls
+      @conn.bind(@dn, @password)
+
+    else
+      @conn = nil
+    end
+  end
+
+  def search(filter, &block)
+    search_with_base(@base, filter, &block)
+  end
+
+  def search_with_base(base, filter, &block)
+    return [] unless @conn
+    @conn.search(base, LDAP::LDAP_SCOPE_SUBTREE, filter, &block)
+  end
+
+  def self.escape(filter)
+    filter.gsub(ESCAPES_RE) { |char| "\\" + ESCAPES[char] }
+  end
+
+end
+
+def lookup_device(puavoldap, mac)
+  filter = "(&(objectClass=puavoNetbootDevice)(macAddress=#{ mac }))"
+  lookup_entry(puavoldap, filter)
+end
+
+def lookup_entry(puavoldap, searchfilter)
+  foundentry = nil
+  puavoldap.search(searchfilter) do |entry|
+    foundentry = entry.to_hash
+    break
+  end
+  foundentry
+end
+
+def provide_guest_login(device)
+  # make guestlogin possible for terminals that have 'guest'-tag set
+  tags = Array(device['puavoTag'])
+  tags.include?('guest') and not tags.include?('noguest')
+end
+
+def device_ltspvars(device)
+  devicetype = Array(device['puavoDeviceType']).first
+
+  ltspvars =
+    case devicetype
+      when 'thinclient'
+	{
+	  'LDM_AUTOLOGIN'  => 'False',
+	  'LDM_DIRECTX'    => 'True',
+	  'LOCAL_APPS'     => 'False',
+	  'LOCALDEV'       => 'True',
+	  'LTSP_FATCLIENT' => 'False',
+	  'SCREEN_07'      => 'ldm',
+	  'X_COLOR_DEPTH'  => '16',
+	}
+      when 'fatclient'
+	{
+	  'LOCAL_APPS'     => 'True',
+	  'LOCALDEV'       => 'False',
+	  'LTSP_FATCLIENT' => 'True',
+	  'SCREEN_07'      => 'gdm',
+	}
+      else
+	{}
+    end
+
+  if device['puavoDefaultPrinter']
+    ltspvars['LDM_PRINTER_DEFAULT'] = Array(device['puavoDefaultPrinter']).first
+  end
+
+  if device['puavoDeviceXserver']
+    ltspvars['XSERVER'] = Array(device['puavoDeviceXserver']).first
+  end
+
+  if devicetype == 'thinclient'
+    if provide_guest_login(device)
+      hostname = Array(device['puavoHostname']).first
+      if not hostname.match(/^[0-9a-z-]+$/)
+	raise "hostname #{ hostname } not of correct format"
+      else
+	ltspvars['LDM_GUESTLOGIN'] = 'True'
+	ltspvars['LDM_USERNAME']   = "anon-#{ hostname }"
+      end
+    else
+      ltspvars['LDM_GUESTLOGIN'] = 'False'
+    end
+  end
+
+  if device['puavoDeviceXrandrDisable'] \
+    and Array(device['puavoDeviceXrandrDisable']).first == 'TRUE'
+      ltspvars['XRANDR_DISABLE'] = 'True'
+  end
+
+  if device['puavoDeviceXrandr']
+    (0 .. Array(device['puavoDeviceXrandr']).size - 1).each do |i|
+      xrandrsetting = xrandrline(Array(device['puavoDeviceXrandr'])[i])
+      xrandrsetting.each do |key, value|
+	varname = "XRANDR_#{ key.upcase }_#{ i }"
+	ltspvars[ varname ] = value
+      end
+    end
+  end
+
+  # mostly for those X drivers that do not support xrandr
+  if device['puavoDeviceResolution']
+    ltspvars['X_MODE_0'] = Array(device['puavoDeviceResolution']).first
+  end
+  if device['puavoDeviceHorzSync']
+    ltspvars['X_HORZSYNC'] = Array(device['puavoDeviceHorzSync']).first
+  end
+  if device['puavoDeviceVertRefresh']
+    ltspvars['X_VERTREFRESH'] = Array(device['puavoDeviceVertRefresh']).first
+  end
+
+  begin
+    ghost_passwords = {}
+    IO.readlines('/etc/opinsys/desktop/autologins').each do |line|
+      login, password = * line.split
+      next if login.empty? or password.empty?
+      ghost_passwords[login] = password
+    end
+    if not ghost_passwords.empty? then
+      ghostuser = ghost_passwords.keys.shuffle[0]
+      ltspvars['LDM_PASSWORD']  = ghost_passwords[ghostuser]
+      ltspvars['LDM_USERNAME']  = ghostuser
+      ltspvars['LDM_AUTOLOGIN'] = 'True'
+    end
+  rescue
+    # /etc/opinsys/desktop/autologins is missing
+    # or configuration is faulty... autologins are disabled, then
+  end
+
+  ltspvars
+end
+
+def handle_ltsconf_request
+  ltspvars = {
+    'NBD_SWAP'              => 'False',
+    'SYSLOG'                => 'False',
+    'XKBLAYOUT'             => 'fi',
+  }
+
+  puavoldap = PuavoLdap.new
+
+  deviceentry = lookup_device(puavoldap, @mac)
+  if deviceentry
+    ltspvars.merge!(device_ltspvars(deviceentry))
+  else
+    ltspvars['SCREEN_02'] = 'register'
+  end
+
+  ltsconf(ltspvars, @mac)
+end
+
+def ltsconf(ltspvars, mac)
+  "[#{ mac }]\n" +
+  ltspvars.map { |key, value| "\t#{ key } = #{ value }\n" }.sort.join
+end
+
+
+@get_request = ARGV[0]
+@ip = ARGV[1]
+
+if not @ip
+  puts "Invalid IP-address"
+  exit
+end
+begin
+  # Get MAC-address by IP
+  @mac = `arp -n #{ @ip }`.split("\n").last.match(/(([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})/)[1]
+rescue
+  puts "Invalid IP-address"
+  exit
+end
+
+puts handle_ltsconf_request
