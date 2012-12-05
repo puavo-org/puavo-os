@@ -29,7 +29,6 @@ class packages {
     , 'libpam-ldapd'
     , 'lvm2'
     , 'nfs-common'
-    , 'nslcd'
     , 'openssh-client'
     , 'openssh-server'
     , 'vlan' ]:
