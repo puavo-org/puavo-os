@@ -103,7 +103,7 @@ window = app.createWindow
   #
 
 
-app.serveFilesFrom(__dirname + '/content');
+app.serveFilesFrom __dirname + '/content'
 
 displayMenu = ->
   title = "Opinsys Web Menu"
