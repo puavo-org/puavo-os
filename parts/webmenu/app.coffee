@@ -130,6 +130,7 @@ window.on "create", ->
 
 
 window.on "close", ->
+  console.info "Closing..."
   process.exit 0
 
 window.on "ready", ->
@@ -167,6 +168,7 @@ window.on "ready", ->
 
   bridge.on "html-load", ->
     console.info "Sending config"
+    # TODO: SEGFAULTS!!! Move to router
     bridge.send "config", userData, config, menuJSON
     bridge.send "yalr", yalrPort if yalrPort
 

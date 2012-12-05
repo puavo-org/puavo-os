@@ -19,7 +19,10 @@ class Bridge
       e.args = args
 
       # Send event to the other side
+      console.info "Dispatching event '#{ event }' #{ @name }...."
       @emitter.dispatchEvent(e)
+      console.info "...dispatch OK!"
+
       # Also emit it in here
       @_emit event, args...
     , 0
