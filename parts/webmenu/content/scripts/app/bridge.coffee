@@ -17,7 +17,11 @@ class Bridge
       e = new @emitter.Event event
       e.name = @name
       e.args = args
+
+      # Send event to the other side
       @emitter.dispatchEvent(e)
+      # Also emit it in here
+      @_emit event, args...
     , 0
 
   initListening: (event) ->
@@ -26,10 +30,14 @@ class Bridge
       if e.name is @name
         console.info "My event ignore"
         return
+      console.info "GOT EVENT", event, e.args
+      @_emit event, (e.args or [])...
 
-      @listeners[event].forEach (cb) =>
-        cb (e.args or [])...
-
+  _emit: (event, args...) ->
+    if handler = @listeners[event]
+      handler.forEach (cb) -> cb args...
+    else
+      console.error "No handler for bridge event #{ event }", args
 
 if define?.amd
   define [], -> Bridge
