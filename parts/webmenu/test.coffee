@@ -11,4 +11,8 @@ window = app.createWindow
 window.on "create", ->
   window.frame.show()
   window.frame.openDevTools()
+  require("yalr")({
+    path: "content"
+    port: 48939
+  })
 
