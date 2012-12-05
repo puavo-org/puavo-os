@@ -23,7 +23,6 @@
   <div id="mocha"></div>
   <script src="requirefix.js"></script>
   <script src="scripts/vendor/tests/mocha.js"></script>
-  <script src="scripts/vendor/tests/mocha-yeti-adaptor.js"></script>
   <script src="scripts/vendor/jquery.js"></script>
   <script src="scripts/vendor/tests/chai.js"></script>
   <script src="scripts/vendor/tests/chai-jquery.js"></script>
@@ -43,9 +42,7 @@
         "cs!tests/menuitem_view.test",
         "cs!tests/menumodel.test"
     ], function() {
-
-        var runner = mocha.run();
-        BUNYIP.hookup(runner);
+        mocha.run();
     });
   </script>
   <a href="#" onclick="window.location.reload()">Restart</a>
