@@ -76,7 +76,7 @@ module PuavoTFTP
       # Check all hooks. Run hook command if regexp match to GET url
       @hooks.each do |hook|
         if name.match( Regexp.new(hook[:regexp]) )
-          return exec_script("#{ hook[:command] } #{ name }")
+          return exec_script("#{ hook[:command] } #{ name } #{ @ip }")
         end
       end
 
