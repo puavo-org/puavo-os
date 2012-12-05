@@ -38,7 +38,8 @@ class packages {
     [ 'webmenu' ]:
       tag => [ 'desktop', 'opinsys', ];
 
-    [ 'nautilus'
+    [ 'lightdm'
+    , 'nautilus'
     , 'nautilus-dropbox'
     , 'ubuntu-gnome-desktop'
     , 'ubuntu-restricted-extras'
