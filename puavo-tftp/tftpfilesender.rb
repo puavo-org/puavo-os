@@ -64,7 +64,7 @@ module PuavoTFTP
 
       l "GET(#{ mode }) options: #{ opts }"
 
-      if mode != "octet"
+      if mode != "octet" && mode != "netascii"
         l "FATAL ERROR ERROR: mode '#{ mode }' is not implemented. Abort."
         send_error_packet(
           ErrorCode::NOT_DEFINED,
