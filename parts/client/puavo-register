@@ -570,7 +570,7 @@ class Control
         unless info['registration']['host_configuration']
 
 
-   if info['registration']['userCertificate']
+    if info['registration']['userCertificate']
       raise 'Root CA missing' \
         unless info['registration']['rootca']
       raise 'Organisation CA bundle missing' \
