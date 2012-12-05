@@ -33,7 +33,6 @@ class Bridge
       if e.name is @name
         console.info "My event ignore"
         return
-      console.info "GOT EVENT", event, e.args
       @_emit event, (e.args or [])...
 
   _emit: (event, args...) ->
