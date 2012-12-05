@@ -11,6 +11,7 @@ define [
   describe "ProfileView", ->
     view = null
     beforeEach ->
+      Application.reset()
       view = new ProfileView
         model: new Backbone.Model(fullName: "John Doe")
         config: new Backbone.Model
@@ -38,17 +39,17 @@ define [
 
     describe "my profile button", ->
       it "emits 'showMyProfileWindow'", (done) ->
-        Application.on "showMyProfileWindow", -> done()
+        Application.bridge.on "showMyProfileWindow", -> done()
         view.$(".bb-profile-settings").click()
 
     describe "password button", ->
       it "emits 'showChangePasswordWindow'", (done) ->
-        Application.on "showChangePasswordWindow", -> done()
+        Application.bridge.on "showChangePasswordWindow", -> done()
         view.$(".bb-change-password").click()
 
     describe "settings button", ->
       it "emits 'openSettings'", (done) ->
-        Application.on "openSettings", -> done()
+        Application.bridge.on "openSettings", -> done()
         view.$(".bb-settings").click()
 
     describe "with missing changePasswordUrl&profileUrl", ->
