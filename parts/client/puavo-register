@@ -634,7 +634,6 @@ module PostRegister
 end
 
 
-
 class Control
   def self.register(cmdline_params)
     if File.exists?(Host_configuration_path) && !cmdline_params['force']
