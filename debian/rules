@@ -41,13 +41,14 @@ override_dh_install:
 	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/default
 	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/sssd
 
-	install -m 644 client/init-ltsp.d/30-puavo-config-partition $(CURDIR)/debian/puavo-ltsp-client/usr/share/ltsp/init-ltsp.d/
+	install -m 644 client/puavo-ltsp.d/30-puavo-config-partition $(CURDIR)/debian/puavo-ltsp-client/usr/share/ltsp/init-ltsp.d/
 	install -m 644 client/templates/etc/ssh/sshd_config $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/ssh/
 	install -m 644 client/templates/etc/pam.d/common-auth $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/pam.d/
 	install -m 644 client/templates/etc/pam.d/common-account $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/pam.d/
 	install -m 644 client/templates/etc/pam.d/common-session $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/pam.d/
 	install -m 644 client/templates/etc/ldap/ldap.conf $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/ldap/
 	install -m 644 client/templates/etc/krb5.conf $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/
-	install -m 644 client/templates/etc/nsswitch.conf $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/
+	install -m 644 client/templates/etc/nsswitch.conf-extrausers $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/
+	install -m 644 client/templates/etc/nsswitch.conf-sss $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/
 	install -m 644 client/templates/etc/default/nfs-common $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/default/
 	install -m 644 client/templates/etc/sssd/sssd.conf $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/sssd/
