@@ -126,6 +126,10 @@ window.on "create", ->
     console.info "Opening devtools"
     window.frame.openDevTools()
 
+
+window.on "close", ->
+  process.exit 0
+
 window.on "ready", ->
   window.addEventListener "keydown", (e) ->
     if e.keyIdentifier is "F12"
