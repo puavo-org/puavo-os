@@ -36,6 +36,10 @@ else if argv.node
   call "node_modules/.bin/mocha --compilers coffee:coffee-script tests/*test*"
 else
   express = require "express"
+  require("yalr")({
+    path: "content"
+    port: 48939
+  })
   server = express()
   server.use express.static __dirname + "/content"
   server.listen 9001, ->
