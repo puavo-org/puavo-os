@@ -36,8 +36,6 @@ class Bridge
   _emit: (event, args...) ->
     if handler = @listeners[event]
       handler.forEach (cb) -> cb args...
-    else
-      console.error "No handler for bridge event #{ event }", args
 
 if define?.amd
   define [], -> Bridge

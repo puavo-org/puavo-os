@@ -15,7 +15,6 @@ define [
   Backbone
 )->
 
-
     Application.bridge.on "yalr", (port) ->
       $.getScript "http://localhost:#{ port }/livereload.js"
 
