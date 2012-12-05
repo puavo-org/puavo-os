@@ -8,6 +8,7 @@ nib = require "nib"
 posix = require "posix"
 mkdirp = require "mkdirp"
 rimraf = require "rimraf"
+
 optimist = require("optimist")
   .usage("Usage: webmenu [options]")
   .alias("h", "help")
@@ -39,6 +40,7 @@ launchCommand = require "./lib/launchcommand"
 menutools = require "./lib/menutools"
 powermanager = require "./lib/powermanager"
 requirefallback = require "./lib/requirefallback"
+Bridge = require "./content/scripts/app/bridge.coffee"
 
 webmenuHome = process.env.HOME + "/.config/webmenu"
 cachePath = webmenuHome + "/cache"
@@ -136,7 +138,6 @@ window.on "ready", ->
       argv["dev-tools"] = true
       window.frame.openDevTools()
 
-  Bridge = require("./content/scripts/app/bridge.coffee")
   bridge = new Bridge "node->browser", window
 
   spawnEmitter.on "spawn", ->
