@@ -162,9 +162,6 @@ window.on "ready", ->
 
   bridge.on "html-load", ->
     console.info "Sending config"
-    e = new window.Event "config"
-    e.args = [userData, config, menuJSON]
-    window.dispatchEvent(e)
-
+    bridge.send "config", userData, config, menuJSON
     bridge.send "yalr", yalrPort if yalrPort
 
