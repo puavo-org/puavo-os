@@ -27,6 +27,13 @@ clim.logWrite = (level, prefixes, msg) ->
   _logWrite(level, prefixes, msg)
 
 
+if process.env.NODE_ENV isnt "production"
+  yalrPort = 34243
+  require("yalr")({
+    path: "content"
+    port: yalrPort
+    ignore: "*.styl"
+  })
 
 launchCommand = require "./lib/launchcommand"
 menutools = require "./lib/menutools"
@@ -158,3 +165,6 @@ window.on "ready", ->
     e = new window.Event "config"
     e.args = [userData, config, menuJSON]
     window.dispatchEvent(e)
+
+    bridge.send "yalr", yalrPort if yalrPort
+
