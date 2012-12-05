@@ -39,6 +39,7 @@ class packages {
       tag => [ 'desktop', 'opinsys', ];
 
     [ 'lightdm'
+    , 'lightdm-gtk-greeter'
     , 'nautilus'
     , 'nautilus-dropbox'
     , 'ubuntu-gnome-desktop'
