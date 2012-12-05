@@ -62,8 +62,7 @@ class CmdLine
         when /^--(   force
                    | install
                    | netboot
-                   | noconfirm
-                   | noinstall )$/x
+                   | noconfirm )$/x
           params[$1] = true
         else
           if new_arg.nil?
@@ -128,7 +127,6 @@ class RegisterUserInterface
     @mode = {
       'boottype'  => @cmdline_params['netboot'] ? 'net' : 'local',
       'noconfirm' => @cmdline_params['noconfirm'],
-      'noinstall' => @cmdline_params['noinstall'],
     }
 
     @puavoserver     = @cmdline_params['puavoserver'] || default_puavoserver()
@@ -159,83 +157,6 @@ class RegisterUserInterface
     @attributes = request_attributes(@responses['devicetype'])
 
     set_host_attributes()
-  end
-
-  def show_disk_devices(disk_devices)
-    sleep(1.5)
-    disk_devices.each do |device|
-      system("fdisk -l /dev/#{ device } | more") \
-        or raise "Error running fdisk for device '#{ device }'"
-    end
-  end
-
-  def ask_installation_info()
-    info = {}
-
-    if @host['devicetype'] == 'laptop'
-      info['diskdevice'] = ask_diskdevice()
-      info['partition']  = ask_partition(info['diskdevice'])
-    end
-
-    info
-  end
-
-  def ask_diskdevice()
-    disk_devices = []
-
-    chosen_disk_device = nil
-    until disk_devices.include?(chosen_disk_device) do
-      disk_devices = %x(partprobe -ds) \
-                     .split("\n") \
-                     .map { |s| s.split(":")[0] } \
-                     .map { |s| (s.match(%r{^/dev/(.*)}))[1] } \
-                     .compact
-
-      puts '-----'
-      puts "This machine has the following disk devices:\n"
-      show_disk_devices(disk_devices)
-
-      if chosen_disk_device.nil?
-        chosen_disk_device = disk_devices[0]
-      end
-
-      puts "\nPossible disk devices are: #{ disk_devices.join(' ') }"
-      chosen_disk_device = ask_with_default('Choose a disk device:',
-                                    chosen_disk_device)
-    end
-
-    chosen_disk_device
-  end
-
-  def ask_partition(disk_device)
-    partitions = []
-
-    chosen_partition = 'whole'
-    until partitions.include?(chosen_partition) do
-      if chosen_partition == 'cfdisk'
-        system('cfdisk', "/dev/#{ disk_device }")
-        chosen_partition = 'whole'
-      end
-
-      puts '-----'
-      puts "The disk /dev/#{ disk_device } has the following partitions:\n"
-      show_disk_devices(disk_device)
-
-      partitions \
-        = %w(whole) \
-          + IO.readlines('/proc/partitions') \
-              .map { |line| (line.split)[3] } \
-              .compact \
-              .select { |part| part.match(/^#{ disk_device }[0-9]/) } \
-
-      puts "\nPossible partitions are: #{ partitions.join(' ') }"
-      puts "You may choose 'cfdisk' to partition this disk,"
-      puts "or choose 'whole' to use the whole disk."
-      chosen_partition = ask_with_default('Choose a partition:',
-                                          chosen_partition)
-    end
-
-    chosen_partition
   end
 
   def ask_machine_info(errors={}, ask_all=true)
@@ -403,10 +324,6 @@ class RegisterUserInterface
       until @mode['noconfirm'] or agree('Is this information correct? (y/n) ')
         ask_machine_info()
         print_machine_info()
-      end
-
-      unless @mode['noinstall']
-        info['installation'] = ask_installation_info()
       end
 
       HighLine.say 'Sending host information to puavo server...'
@@ -650,17 +567,11 @@ class Control
     organisation_info = rui.connection.get("/users/organisation.json")
     # org["ldap_host"], org["domain"]
 
-    if cmdline_params['noinstall']
-      Tools.goodmsg('Not doing post-registration configuration ' \
-                    + '(--noinstall is set)')
-      return
-    end
-
     raise 'Did not receive host configuration from Puavo' \
         unless info['registration']['host_configuration']
 
 
-   if info['registration']['userCertificate']
+    if info['registration']['userCertificate']
       raise 'Root CA missing' \
         unless info['registration']['rootca']
       raise 'Organisation CA bundle missing' \
@@ -698,10 +609,11 @@ class Control
     PostRegister.write_domain(organisation_info["domain"])
 
     PostRegister.write_host_configuration(
-      info['registration']['host_configuration'].merge(info['installation'])
+      info['registration']['host_configuration']
     )
 
   end
+end
 
 raise 'run me as root' unless Process.uid == 0
 
@@ -710,4 +622,3 @@ HighLine.say "\n\t-=< Puavo Devices Client >=-\n\n"
 cmdline_params = CmdLine.params(ARGV)
 
 Control.register(cmdline_params)
-end
