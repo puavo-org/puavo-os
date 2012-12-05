@@ -28,13 +28,15 @@ clim.logWrite = (level, prefixes, msg) ->
   _logWrite(level, prefixes, msg)
 
 
-if process.env.NODE_ENV isnt "production"
-  yalrPort = 34243
-  require("yalr")({
-    path: "content"
-    port: yalrPort
-    ignore: "*.styl"
-  })
+# if process.env.NODE_ENV isnt "production"
+#   yalrPort = 34243
+#   require("yalr")({
+#     path: "content"
+#     port: yalrPort
+#     ignore: "*.styl"
+#   })
+#   require("grunt").tasks("watch")
+
 
 launchCommand = require "./lib/launchcommand"
 menutools = require "./lib/menutools"
