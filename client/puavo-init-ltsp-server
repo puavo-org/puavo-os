@@ -15,8 +15,14 @@ require 'tmpdir'
 @puavo_domain      = File.read('/etc/puavo/domain'         ).chomp
 @puavo_topdomain   = File.read('/etc/puavo/topdomain'      ).chomp
 
-def write_config(filename)
-  conf_template = File.read("/usr/share/puavo-ltsp-client/templates/ltsp-server/#{filename}")
+def write_config(filename, version=nil)
+  template_file = filename
+
+  if version
+    template_file = "#{filename}-#{version}"
+  end
+
+  conf_template = File.read("/usr/share/puavo-ltsp-client/templates#{template_file}")
   conf = ERB.new(conf_template, 0, "%<>")
 
   File.open(filename, "w", 0600) do |f|
@@ -25,7 +31,7 @@ def write_config(filename)
 end
 
 write_config("/etc/sssd/sssd.conf")
-write_config("/etc/nsswitch.conf")
+write_config("/etc/nsswitch.conf", "sss")
 write_config("/etc/pam.d/common-auth")
 write_config("/etc/pam.d/common-account")
 write_config("/etc/pam.d/common-session")
