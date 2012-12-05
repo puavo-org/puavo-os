@@ -19,22 +19,16 @@ define [
 
     describe "logout button", ->
       it "emits logout event", (done) ->
-        Application.bridge.send = (event) ->
-          expect(event).to.eq "logout"
-          done()
+        Application.bridge.on "logout", -> done()
         view.$(".bb-logout").click()
 
     describe "shutdown button", ->
       it "emits shutdown event", (done) ->
-        Application.bridge.send = (event) ->
-          expect(event).to.eq "shutdown"
-          done()
+        Application.bridge.on "shutdown", -> done()
         view.$(".bb-shutdown").click()
 
     describe "reboot button", ->
       it "emits reboot event", (done) ->
-        Application.bridge.send = (event) ->
-          expect(event).to.eq "reboot"
-          done()
+        Application.bridge.on "reboot", -> done()
         view.$(".bb-reboot").click()
 
