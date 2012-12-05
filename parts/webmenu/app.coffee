@@ -166,9 +166,13 @@ window.on "ready", ->
   bridge.on "reboot", -> powermanager.reboot()
   bridge.on "logout", -> powermanager.logout()
 
+  bridge.on "log", (args...) ->
+    console.info "BROWSER", args...
+
   bridge.on "html-load", ->
     console.info "Sending config"
     # TODO: SEGFAULTS!!! Move to router
     bridge.send "config", userData, config, menuJSON
-    bridge.send "yalr", yalrPort if yalrPort
+
+    bridge.send "yalr", yalrPort if yalrPort?
 
