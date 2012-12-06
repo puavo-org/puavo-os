@@ -26,3 +26,8 @@ install: install-dirs
 		$(DESTDIR)$(prefix)/bin/webmenu
 	install -o root -g root -m 755 bin/webmenu-spawn \
 		$(DESTDIR)$(prefix)/bin/webmenu-spawn
+
+
+test-client:
+	DISPLAY=:1 bin/test --once
+

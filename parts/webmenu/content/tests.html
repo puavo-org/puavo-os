@@ -42,7 +42,16 @@
         "cs!tests/menuitem_view.test",
         "cs!tests/menumodel.test"
     ], function() {
-        mocha.run();
+        var runner = mocha.run();
+        var fails = []
+        runner.on("fail", function(test, err) {
+          fails.push({ test: test, err: err });
+        });
+        runner.on("end", function(foo, bar) {
+          var e = new Event("mocha-end");
+          e.fails = fails;
+          window.dispatchEvent(e);
+        });
     });
   </script>
   <a href="#" onclick="window.location.reload()">Restart</a>
