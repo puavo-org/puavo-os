@@ -13,9 +13,14 @@ optimist = require("optimist")
   .usage("Usage: webmenu [options]")
   .alias("h", "help")
   .alias("v", "verbose")
-  .describe("dev-tools", "Open Webkit inspector")
+  .describe("dev-tools", "Open Webkit inspector. Implies --no-hide")
+  .describe("no-hide", "Never hide menu window.")
+  .default("hide", true)
   .describe("reset-favorites", "Reset favorites list")
+
 argv = optimist.argv
+if argv["dev-tools"]
+  argv["hide"] = false
 
 
 clim = require "clim"
@@ -130,6 +135,12 @@ displayMenu = ->
         console.info('wmctrl exited with code ' + code)
   , 200
 
+hideMenu = ->
+  console.info "HIDE", argv
+  if argv["hide"]
+    window.frame.hide()
+  else
+    console.warn "Not hiding window because --no-hide is set or implied by devtools"
 
 window.on "create", ->
   displayMenu()
@@ -146,7 +157,7 @@ window.on "close", ->
 window.on "ready", ->
   window.addEventListener "keydown", (e) ->
     if e.keyIdentifier is "F12"
-      argv["dev-tools"] = true
+      argv["hide"] = false
       window.frame.openDevTools()
 
   bridge = new Bridge "node->browser", window
@@ -157,19 +168,21 @@ window.on "ready", ->
 
   bridge.on "open", (msg) ->
     launchCommand(msg)
-    window.frame.hide()
+    hideMenu()
 
   bridge.on "openSettings", ->
     launchCommand(config.settingsCMD)
-    window.frame.hide()
+    hideMenu()
 
   bridge.on "hideWindow", ->
-    window.frame.hide() if not argv["dev-tools"]
+    hideMenu()
 
   bridge.on "showMyProfileWindow", ->
+    hideMenu()
     launchCommand(config.profileCMD)
 
   bridge.on "showChangePasswordWindow", ->
+    hideMenu()
     launchCommand(config.passwordCMD)
 
   bridge.on "shutdown", -> powermanager.shutdown()
