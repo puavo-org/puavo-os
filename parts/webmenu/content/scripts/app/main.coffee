@@ -15,31 +15,32 @@ define [
   Backbone
 )->
 
-    Application.bridge.on "yalr", (port) ->
-      $.getScript "http://localhost:#{ port }/livereload.js"
+  Application.bridge.on "yalr", (port) ->
+    $.getScript "http://localhost:#{ port }/livereload.js"
 
-    Application.bridge.send "html-load"
-    Application.bridge.on "config", (user, config, menu) ->
+  Application.bridge.send "html-load"
 
-      console.log "GOT Config", user, config, menu
-      user = new Backbone.Model user
-      config = new Backbone.Model config
-      allItems = new AllItems
-      menuModel = new MenuModel menu, allItems
+  {user, config, menu} = APP_CONFIG
 
-      layout = new MenuLayout
-        user: user
-        config: config
-        initialMenu: menuModel
-        allItems: allItems
+  console.log "GOT Config", user, config, menu
+  user = new Backbone.Model user
+  config = new Backbone.Model config
+  allItems = new AllItems
+  menuModel = new MenuModel menu, allItems
 
-      layout.render()
-      $(".content-container").append layout.el
+  layout = new MenuLayout
+    user: user
+    config: config
+    initialMenu: menuModel
+    allItems: allItems
 
-      allItems.on "select", (model) ->
-       if model.get("type") isnt "menu"
-         Application.bridge.send "open", model.toJSON()
+  layout.render()
+  $(".content-container").append layout.el
 
-      $(window).blur ->
-       Application.bridge.send "hideWindow"
+  allItems.on "select", (model) ->
+   if model.get("type") isnt "menu"
+     Application.bridge.send "open", model.toJSON()
+
+  $(window).blur ->
+   Application.bridge.send "hideWindow"
 

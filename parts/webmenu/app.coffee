@@ -93,6 +93,14 @@ app.router.get "/osicon/", require("./routes/osicon")(
   config.fallbackIcon
 )
 
+app.router.get "/app-config.js", (req, res) ->
+  config =
+    config: config
+    user: userData
+    menu: menuJSON
+
+  res.send "var APP_CONFIG = #{ JSON.stringify config  };"
+
 window = app.createWindow
   width: 1000
   height: 550
@@ -172,9 +180,5 @@ window.on "ready", ->
     console.info "BROWSER", args...
 
   bridge.on "html-load", ->
-    console.info "Sending config"
-    # TODO: SEGFAULTS!!! Move to router
-    bridge.send "config", userData, config, menuJSON
-
     bridge.send "yalr", yalrPort if yalrPort?
 
