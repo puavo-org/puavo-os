@@ -1,26 +1,28 @@
 /**
- * Make sure that Appjs cannot override RequireJS require global.
+ * Make sure that AppJS cannot override RequireJS require function.
  *
- * @module requirefix
+ * At some time during start up AppJS tries to put node.js require function to
+ * window.require. From now on if window.require is an function the RequireJS
+ * require function is always returned.
+ *
  **/
 (function() {
-  var requireJSrequire;
+  var currentValue;
 
   Object.defineProperty(window, "require", {
-    set: function(val) {
-
-      if (typeof val === "function" && val.length !== 4) {
-        console.log("AppJS is trying to force node.js require to us. Ignoring it.", val);
-        // Use require from RequireJS
-        requireJSrequire =  window.requirejs;
-      }
-      else {
-        requireJSrequire = val;
-      }
+    set: function(value) {
+      currentValue = value;
     },
 
     get: function() {
-      return requireJSrequire;
+      // If window.require is set to function always return RequireJS require.
+      if (typeof currentValue === "function") {
+        return window.requirejs;
+      }
+      // Other values work as usual. (RequireJS config object).
+      else {
+        return currentValue;
+      }
     }
 
   });
