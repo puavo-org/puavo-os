@@ -36,10 +36,6 @@ module.exports = function(grunt) {
       }
     },
 
-    server: {
-      port: 3000,
-      base: "."
-    },
 
     watch: {
       files: "content/**",
