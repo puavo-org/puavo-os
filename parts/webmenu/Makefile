@@ -29,5 +29,9 @@ install: install-dirs
 
 
 test-client:
-	DISPLAY=:1 bin/test --once
+	bin/test --once
 
+test-node:
+	node_modules/.bin/mocha --compilers coffee:coffee-script tests/*test*
+
+test: test-client
