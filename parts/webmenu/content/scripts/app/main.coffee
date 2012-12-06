@@ -15,12 +15,14 @@ define [
   Backbone
 )->
 
-  Application.bridge.on "yalr", (port) ->
-    $.getScript "http://localhost:#{ port }/livereload.js"
+
 
   Application.bridge.send "html-load"
 
   {user, config, menu} = APP_CONFIG
+
+  if not config.production
+    $.getScript "http://localhost:35729/livereload.js"
 
   console.log "GOT Config", user, config, menu
   user = new Backbone.Model user

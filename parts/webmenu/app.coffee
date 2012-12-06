@@ -1,6 +1,6 @@
 
 http = require "http"
-{spawn} = require "child_process"
+{spawn, fork} = require "child_process"
 
 app = require "appjs"
 stylus = require "stylus"
@@ -33,15 +33,6 @@ clim.logWrite = (level, prefixes, msg) ->
   _logWrite(level, prefixes, msg)
 
 
-# if process.env.NODE_ENV isnt "production"
-#   yalrPort = 34243
-#   require("yalr")({
-#     path: "content"
-#     port: yalrPort
-#     ignore: "*.styl"
-#   })
-#   require("grunt").tasks("watch")
-
 
 launchCommand = require "./lib/launchcommand"
 menutools = require "./lib/menutools"
@@ -69,6 +60,12 @@ config = requirefallback(
   "/etc/webmenu/config.json"
   __dirname + "/config.json"
 )
+
+if process.env.NODE_ENV isnt "production"
+  config.production = false
+  fork __dirname + "/watchers.js"
+else
+  config.production = true
 
 bridge = null
 spawnEmitter = require("./lib/spawnmenu")(spawnPipePath)
@@ -191,7 +188,4 @@ window.on "ready", ->
 
   bridge.on "log", (args...) ->
     console.info "BROWSER", args...
-
-  bridge.on "html-load", ->
-    bridge.send "yalr", yalrPort if yalrPort?
 
