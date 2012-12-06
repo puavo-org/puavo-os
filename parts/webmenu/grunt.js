@@ -1,5 +1,8 @@
+/*jshint node:true*/
 module.exports = function(grunt) {
+  var pkg = require("./package.json");
   grunt.loadNpmTasks("grunt-stylus");
+  grunt.loadNpmTasks("grunt-contrib-yuidoc");
   grunt.initConfig({
 
     stylus: {
@@ -14,6 +17,30 @@ module.exports = function(grunt) {
       }
     },
 
+    yuidoc: {
+      compile: {
+        name: pkg.name,
+        description: pkg.description,
+        version: pkg.version,
+        url: "https://github.com/opinsys/webmenu",
+        options: {
+          quiet: false,
+          syntaxtype: "coffee",
+          extension: ".coffee",
+          paths: [
+            "content/scripts/app/",
+            "lib/"
+          ],
+          outdir: "./out"
+        }
+      }
+    },
+
+    server: {
+      port: 3000,
+      base: "."
+    },
+
     watch: {
       files: "content/**",
       tasks: "stylus"
@@ -21,5 +48,5 @@ module.exports = function(grunt) {
 
   });
 
-  grunt.registerTask("default", "stylus");
+  grunt.registerTask("default", "stylus yuidoc");
 };
