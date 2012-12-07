@@ -17,12 +17,12 @@ install-dirs:
 	mkdir -p $(DESTDIR)/opt/webmenu
 
 install: install-dirs
-	cp -r lib node_modules bin routes docs content nodejs *.js *.coffee *.json *.md $(DESTDIR)/opt/webmenu
+	cp -r lib node_modules bin routes docs content *.js *.coffee *.json *.md $(DESTDIR)/opt/webmenu
 	install -o root -g root -m 644 webmenu.desktop \
 		$(DESTDIR)/etc/xdg/autostart/webmenu.desktop
 	install -o root -g root -m 644 webmenu-spawn.desktop \
 		$(DESTDIR)$(prefix)/share/applications/webmenu-spawn.desktop
-	install -o root -g root -m 755 bin/start \
+	install -o root -g root -m 755 bin/webmenu-production \
 		$(DESTDIR)$(prefix)/bin/webmenu
 	install -o root -g root -m 755 bin/webmenu-spawn \
 		$(DESTDIR)$(prefix)/bin/webmenu-spawn

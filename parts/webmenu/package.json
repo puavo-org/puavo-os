@@ -3,7 +3,7 @@
   , "version": "0.1.1"
   , "private": true
   , "scripts": {
-     "start": "node --harmony app.js"
+     "start": "bin/webmenu"
      , "test": "make test"
     }
   , "dependencies": {

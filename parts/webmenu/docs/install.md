@@ -17,7 +17,10 @@ the default Ubuntu repositories.
 
 ## Source installation
 
-See `docs/hacking.md`
+    git clone https://github.com/opinsys/webmenu.git
+    cd webmenu
+    make
+    sudo make install
 
 ## Usage
 
