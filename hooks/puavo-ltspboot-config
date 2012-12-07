@@ -17,7 +17,7 @@ end
 
 option = ARGV[0]
 
-if option == "-h" || option == "--help"
+if option == "-h" || option == "--help" || option.nil?
   puts help
   exit
 end
