@@ -1,0 +1,216 @@
+#!/usr/bin/env ruby
+#
+# Setup local filesystems for Puavo hosts
+
+require 'fileutils'
+require 'highline/import'
+
+# XXX this should be elsewhere, other scripts might find this useful
+module PuavoFacts
+  Puavodir = '/etc/puavo'
+
+  FactPaths = {
+		'kerberos_master'   => 'kerberos/master',
+		'kerberos_realm'    => 'kerberos/realm',
+		'kerberos_toprealm' => 'kerberos/toprealm',
+		'ldap_base'         => 'ldap/base',
+		'ldap_binddn'       => 'ldap/dn',
+		'ldap_bindpw'       => 'ldap/password',
+		'ldap_master'       => 'ldap/master',
+		'puavo_domain'      => 'domain',
+		'puavo_hostname'    => 'hostname',
+		'puavo_hosttype'    => 'hosttype',
+		'puavo_topdomain'   => 'topdomain',
+	      }
+
+  def self.all
+    Hash[ FactPaths.map { |name, path| [ name, get(name) ] } ]
+  end
+
+  def self.get(name)
+    File.read("#{ Puavodir }/#{ FactPaths[ name ] }").chomp \
+      or raise "Could not read a fact '#{ name }'"
+  end
+end
+
+module DiskHandler
+  Filesystems = {
+    'laptop' => [
+      { 'size' => '4G',       'name' => 'swap',   'type' => 'swap' },
+      { 'size' => '32G',      'name' => 'images', 'type' => 'ext4' },
+      { 'size' => '10G',      'name' => 'state',  'type' => 'ext4' },
+      { 'size' => '100%FREE', 'name' => 'home',   'type' => 'ext4' },
+    ],
+    'ltsp' => [
+      { 'size' => '16G',      'name' => 'swap',   'type' => 'swap' },
+      { 'size' => '100%FREE', 'name' => 'state',  'type' => 'ext4' },
+    ],
+  }
+
+  def self.do_fs_setup(conf)
+    fs_conf = conf.clone
+
+    fs_setup_phases = []
+
+    if fs_conf['partition'] == 'whole'
+      fs_setup_phases += [ :lvm_partition, :puavo_filesystems ]
+      fs_conf['partition'] = "#{ fs_conf['device'] }1"
+    else
+      fs_setup_phases += [ :puavo_filesystems ]
+    end
+
+    fs_setup_phases += [ :mount_filesystems ]
+
+    fs_conf.merge!({ 'device'    => "/dev/#{ fs_conf['device'   ] }",
+		     'partition' => "/dev/#{ fs_conf['partition'] }" })
+
+    fs_setup_phases.each do |fn_sym|
+      method(fn_sym).call(fs_conf)
+    end
+  end
+
+  def self.run(*cmd)
+    system(*cmd) or raise "Error running command: '#{ cmd.inspect }'"
+  end
+
+  def self.lvm_partition(fs_conf)
+    # clean up possible confusing mess from the device
+
+    run('dd', 'if=/dev/zero', "of=#{ fs_conf['device'] }", 'count=1K')
+
+    # create an lvm partition
+    # see http://www.walkernews.net/2007/07/02/how-to-create-linux-lvm-in-3-minutes/
+    IO.popen("fdisk #{ fs_conf['device'] }", 'w') do |f|
+      f.print "n\np\n1\n\n\nt\n8e\np\nw\n"
+    end
+  end
+
+  def self.puavo_filesystems(fs_conf)
+    # clean up possible confusing mess from the partition
+    run('dd', 'if=/dev/zero', "of=#{ fs_conf['partition'] }", 'count=1K')
+
+    # create LVM volume groups
+    run('pvcreate', fs_conf['partition'])
+    run('vgcreate', '-s', '64M', 'puavo', fs_conf['partition'])
+
+    Filesystems[ fs_conf['hosttype'] ].each do |fs|
+      mkfs(fs['size'], fs['name'], fs['type'])
+    end
+  end
+
+  def self.mkfs(size, name, type)
+    run('lvcreate',
+	(size.match(/%/) ? '-l' : '-L'), size,
+	'-n', name,
+	'puavo')
+
+    case type
+      when 'ext4'
+        run('mkfs.ext4', '-v', "/dev/mapper/puavo-#{ name }")
+      when 'swap'
+        run('mkswap',    '-f', "/dev/mapper/puavo-#{ name }")
+    end
+  end
+
+  def self.mount_filesystems(fs_conf)
+    Filesystems[ fs_conf['hosttype'] ].each do |fs|
+      mnt_path = "/disk/#{ fs['name'] }"
+      FileUtils.mkdir_p(mnt_path)
+      run('mount', "/dev/mapper/puavo-#{ fs['name'] }", mnt_path)
+    end
+  end
+end
+
+module QueryDiskInfo
+  def self.ask_device()
+    disk_devices = []
+
+    chosen_disk_device = nil
+    until disk_devices.include?(chosen_disk_device) do
+      disk_devices = %x(partprobe -ds) \
+                     .split("\n") \
+                     .map { |s| s.split(":")[0] } \
+                     .map { |s| (s.match(%r{^/dev/(.*)}))[1] } \
+                     .compact
+
+      puts '-----'
+      puts "This machine has the following disk devices:\n"
+      show_disk_devices(disk_devices)
+
+      if chosen_disk_device.nil?
+        chosen_disk_device = disk_devices[0]
+      end
+
+      puts "\nPossible disk devices are: #{ disk_devices.join(' ') }"
+      chosen_disk_device = UI::ask_with_default('Choose a disk device:',
+					        chosen_disk_device)
+    end
+
+    chosen_disk_device
+  end
+
+  def self.ask_partition(disk_device)
+    partitions = []
+
+    chosen_partition = 'whole'
+    until partitions.include?(chosen_partition) do
+      if chosen_partition == 'cfdisk'
+        system('cfdisk', "/dev/#{ disk_device }")
+        chosen_partition = 'whole'
+      end
+
+      puts '-----'
+      puts "The disk /dev/#{ disk_device } has the following partitions:\n"
+      show_disk_devices(disk_device)
+
+      partitions \
+        = %w(whole) \
+          + IO.readlines('/proc/partitions') \
+              .map { |line| (line.split)[3] } \
+              .compact \
+              .select { |part| part.match(/^#{ disk_device }[0-9]/) } \
+
+      puts "\nPossible partitions are: #{ partitions.join(' ') }"
+      puts "You may choose 'cfdisk' to partition this disk,"
+      puts "or choose 'whole' to use the whole disk."
+      chosen_partition = UI::ask_with_default('Choose a partition:',
+					     chosen_partition)
+    end
+
+    chosen_partition
+  end
+
+  def self.show_disk_devices(disk_devices)
+    sleep(1.5)
+    disk_devices.each do |device|
+      system("fdisk -l /dev/#{ device } | more") \
+        or raise "Error running fdisk for device '#{ device }'"
+    end
+  end
+end
+
+# XXX could be shared with puavo-register
+module UI
+  def self.ask_with_default(question, default)
+    prompt = "#{ question } [#{ default }] "
+    answer = HighLine.ask(prompt) { |q| q.whitespace = nil }
+
+    return answer.match(/^\n$/)  ? default \
+         : answer.match(/^\s+$/) ? ''      \
+         : answer.strip
+  end
+end
+
+hosttype = PuavoFacts::get('puavo_hosttype')
+case hosttype
+  when ('laptop' or 'ltsp')
+    device    = QueryDiskInfo::ask_device()
+    partition = QueryDiskInfo::ask_partition(device)
+    conf      = { 'device'    => device,
+	          'hosttype'  => hosttype,
+	          'partition' => partition }
+
+    DiskHandler::do_fs_setup(conf)
+  else
+    puts "Hosttype '#{ hosttype }' does not need to setup local filesystems."
+end
