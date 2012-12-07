@@ -24,18 +24,13 @@ end
 
 if match_option = option.match(/01-(([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})/)
   client_mac = match_option[1].to_s.gsub('-', ':').downcase
-  client_mac = PuavoLdap.escape( client_mac )
 else
   puts "Invalid options\n\n"
   puts help
   exit
 end
 
-filter = "(&(|(objectClass=puavoNetbootDevice)(objectClass=puavoLocalbootDevice))(macAddress=#{client_mac}))"
-ltsp_client = {}
-PuavoLdap.new.search(filter) do |entry|
-  ltsp_client = entry.to_hash
-end
+ltsp_client = PuavoLdap.new.device_by_mac(client_mac)
 
 kernel_version = Array(ltsp_client['puavoDeviceKernelVersion']).first.to_s
 kernel_version = "-" + kernel_version if not kernel_version.empty?
