@@ -42,24 +42,39 @@ class PuavoLdap
   end
 
   def find_with_filter(filter, type = :first)
-    result = nil
 
     if type == :first
+      # Find first entry from ldap
+
+      result = {}
+
       @conn.search(base, LDAP::LDAP_SCOPE_SUBTREE, filter) do |entry|
-        result = entry.to_hash
+        result = ldap_entry_to_hash(entry)
         break
       end
-   
-      result.each do |key,value|
-        if value.class == Array && value.count <= 1
-          result[key] = value.first
-        end
+    else
+      # Find all entries from ldap
+
+      result = []
+
+      @conn.search(base, LDAP::LDAP_SCOPE_SUBTREE, filter) do |entry|
+        result.push ldap_entry_to_hash(entry)
       end
+   
     end
 
     result
   end
 
+  def ldap_entry_to_hash(entry)
+    entry.to_hash.each do |key,value|
+      if value.class == Array && value.count <= 1
+        entry[key] = value.first
+      end
+    end
+    entry
+  end
+  
   def self.escape(filter)
     filter.gsub(ESCAPES_RE) { |char| "\\" + ESCAPES[char] }
   end
