@@ -5,6 +5,8 @@
 # Usage: [sudo] ltspboot-config [GET URL] [IP ADDRESS]
 #
 
+$LOAD_PATH.unshift( File.dirname(__FILE__) )
+
 require 'puavo-ldap'
 
 def lookup_device(puavoldap, mac)
