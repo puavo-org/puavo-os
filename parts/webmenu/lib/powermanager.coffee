@@ -15,8 +15,19 @@ call = (cmd) ->
   child.stderr.pipe process.stderr
 
 
+###*
+# Manage computer power state
+#
+# @class powermanager
+# @static
+###
 module.exports =
 
+  ###*
+  # Shutdown computer
+  #
+  # @method shutdown
+  ###
   shutdown: -> call([
     'dbus-send'
     '--system'

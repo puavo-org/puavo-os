@@ -7,6 +7,12 @@ define [
   View
   _
 ) ->
+
+  ###*
+  # Adds Breadcrumbs to top of app
+  #
+  # @class Breadcrumbs
+  ###
   class Breadcrumbs extends View
 
     template: template
