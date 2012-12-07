@@ -8,7 +8,7 @@
     }
   , "dependencies": {
       "coffee-script": "1.3.x"
-      , "underscore": ""
+      , "underscore": "1.4.3"
       , "appjs": "0.0.20"
       , "optimist": "0.3.4"
       , "ini": "1.0.5"
@@ -25,10 +25,10 @@
       , "stylus": "0.30.1"
       , "nib": "0.8.2"
       , "yalr": "1.0.x"
-      , "mocha": ""
-      , "chai": ""
-      , "grunt": ""
-      , "grunt-stylus": ""
-      , "grunt-contrib-yuidoc": ""
+      , "mocha": "1.7.4"
+      , "chai": "1.4.0"
+      , "grunt": "0.3.17"
+      , "grunt-stylus": "0.2.0"
+      , "grunt-contrib-yuidoc": "0.3.2"
   }
 }
