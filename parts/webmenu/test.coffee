@@ -1,5 +1,6 @@
 
 app = require "appjs"
+_  = require "underscore"
 
 app.serveFilesFrom __dirname + '/content'
 {argv} = require("optimist")
@@ -9,7 +10,7 @@ window = app.createWindow
   height: 900
   url: "http://appjs/tests.html"
 
-window.on "ready", ->
+window.on "ready", _.once ->
   window.frame.show()
   window.frame.openDevTools()
 
