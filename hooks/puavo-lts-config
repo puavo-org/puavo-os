@@ -9,20 +9,6 @@ $LOAD_PATH.unshift( File.dirname(__FILE__) )
 
 require 'puavo-ldap'
 
-def lookup_device(puavoldap, mac)
-  filter = "(&(objectClass=puavoNetbootDevice)(macAddress=#{ mac }))"
-  lookup_entry(puavoldap, filter)
-end
-
-def lookup_entry(puavoldap, searchfilter)
-  foundentry = nil
-  puavoldap.search(searchfilter) do |entry|
-    foundentry = entry.to_hash
-    break
-  end
-  foundentry
-end
-
 def provide_guest_login(device)
   # make guestlogin possible for terminals that have 'guest'-tag set
   tags = Array(device['puavoTag'])
@@ -131,9 +117,7 @@ def handle_ltsconf_request
     'XKBLAYOUT'             => 'fi',
   }
 
-  puavoldap = PuavoLdap.new
-
-  deviceentry = lookup_device(puavoldap, @mac)
+  deviceentry = @puavoldap.netboot_device_by_mac(@mac)
   if deviceentry
     ltspvars.merge!(device_ltspvars(deviceentry))
   else
@@ -163,5 +147,8 @@ rescue
   puts "Invalid IP-address"
   exit
 end
+
+# Create ldap connection
+@puavoldap = PuavoLdap.new
 
 puts handle_ltsconf_request
