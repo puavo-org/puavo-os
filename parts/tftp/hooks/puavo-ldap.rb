@@ -67,12 +67,16 @@ class PuavoLdap
   end
 
   def ldap_entry_to_hash(entry)
+    hash_entry = {}
     entry.to_hash.each do |key,value|
+      # Use first value if Array length is 1
       if value.class == Array && value.count <= 1
-        entry[key] = value.first
+        hash_entry[key] = value.first
+      else
+        hash_entry[key] = value
       end
     end
-    entry
+    hash_entry
   end
   
   def self.escape(filter)
