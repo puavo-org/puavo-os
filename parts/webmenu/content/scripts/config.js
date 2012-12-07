@@ -10,6 +10,10 @@ require.config({
       deps: ["underscore", "jquery"],
       exports: "Backbone"
     },
+    "backbone.viewmaster": {
+      deps: ["backbone"],
+      exports: "Backbone.ViewMaster"
+    },
     "socket.io": {
       exports: "io"
     },
@@ -28,6 +32,7 @@ require.config({
     underscore: "vendor/underscore",
     "underscore.string": "vendor/underscore.string",
     backbone: "vendor/backbone",
+    "backbone.viewmaster": "vendor/backbone.viewmaster/lib/backbone.viewmaster",
     moment: "vendor/moment",
     uri: "vendor/URI",
     "socket.io": "vendor/socket.io",
