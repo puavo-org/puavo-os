@@ -1,20 +1,23 @@
 define [
+  "jquery"
+  "backbone"
+  "backbone.viewmaster"
+
   "cs!app/views/menulayout_view"
   "cs!app/models/menu_model"
   "cs!app/models/allitems_collection"
   "cs!app/application"
-  "jquery"
-  "backbone"
 ],
 (
+  $
+  Backbone
+  ViewMaster
+
   MenuLayout
   MenuModel
   AllItems
   Application
-  $
-  Backbone
 )->
-
 
 
   Application.bridge.send "html-load"

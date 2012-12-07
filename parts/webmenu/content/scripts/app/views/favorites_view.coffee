@@ -1,13 +1,15 @@
 define [
-  "cs!app/views/layout"
+  "backbone.viewmaster"
+
   "cs!app/views/menuitem_view"
   "hbs!app/templates/favorites"
 ], (
-  Layout
+  ViewMaster
+
   MenuItemView
   template
 ) ->
-  class Favorites extends Layout
+  class Favorites extends ViewMaster
 
     template: template
 
@@ -19,7 +21,7 @@ define [
     render: ->
       views = @collection.favorites(@config.get "maxFavorites").map (model) =>
         new MenuItemView model: model
-      @_setView ".most-used-list", views
+      @setView ".most-used-list", views
 
       super
 

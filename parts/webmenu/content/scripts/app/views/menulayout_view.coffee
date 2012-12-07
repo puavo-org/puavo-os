@@ -1,5 +1,6 @@
 define [
-  "cs!app/views/layout"
+  "backbone.viewmaster"
+
   "cs!app/views/itemdescription_view"
   "cs!app/views/menulist_view"
   "cs!app/views/breadcrumbs_view"
@@ -8,9 +9,9 @@ define [
   "cs!app/application"
   "hbs!app/templates/menulayout"
   "app/utils/debounce"
-  "backbone"
 ], (
-  Layout
+  ViewMaster
+
   ItemDescriptionView
   MenuListView
   Breadcrumbs
@@ -19,10 +20,9 @@ define [
   Application
   template
   debounce
-  Backbone
 ) ->
 
-  class MenuLayout extends Layout
+  class MenuLayout extends ViewMaster
 
     className: "bb-menu"
 
@@ -41,29 +41,29 @@ define [
       @bindTo @allItems, "select", (model) =>
         if model.get("type") is "menu"
           @setMenu model
-          @renderSubviews(newOnly: true)
+          @renderViews()
 
       delayedShowProfile = debounce =>
         @showProfile()
-        @renderSubviews(newOnly: true)
+        @renderViews()
       , 200
 
       @bindTo Application.global, "showDescription", (model) =>
         delayedShowProfile.cancel()
-        @_setView ".sidebar", new ItemDescriptionView
+        @setView ".sidebar", new ItemDescriptionView
           model: model
-        @renderSubviews(newOnly: true)
+        @renderViews()
 
       @bindTo Application.global, "hideDescription", => delayedShowProfile()
 
       @showProfile()
 
-      @_setView ".favorites", new Favorites
+      @setView ".favorites", new Favorites
         collection: @allItems
         config: @config
 
     showProfile: ->
-      @_setView ".sidebar", new ProfileView
+      @setView ".sidebar", new ProfileView
         model: @user
         config: @config
 
@@ -71,9 +71,9 @@ define [
       @setMenu(@initialMenu)
 
     setMenu: (model) ->
-      @_setView ".menu-app-list-container", new MenuListView
+      @setView ".menu-app-list-container", new MenuListView
         model: model
-      @_setView ".breadcrums-container", new Breadcrumbs
+      @setView ".breadcrums-container", new Breadcrumbs
         model: model
 
 

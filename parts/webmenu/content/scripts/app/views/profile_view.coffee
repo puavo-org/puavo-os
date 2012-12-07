@@ -1,18 +1,20 @@
 define [
-  "cs!app/view"
+  "backbone.viewmaster"
+
   "hbs!app/templates/profile"
   "cs!app/application"
   "cs!app/views/logout_view"
   "cs!app/views/lightbox_view"
 ], (
-  View
+  ViewMaster
+
   template
   Application
   LogoutView
   Lightbox
 ) ->
 
-  class ProfileView extends View
+  class ProfileView extends ViewMaster
 
     className: "bb-profile"
 
@@ -37,7 +39,7 @@ define [
       @bindTo Application.global, "show", =>
         @lb?.remove()
 
-    viewJSON: -> {
+    context: -> {
       user: @model.toJSON()
       config: @config.toJSON()
     }

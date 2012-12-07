@@ -1,16 +1,18 @@
 define [
-  "cs!app/view"
   "app/views/spin"
+  "backbone.viewmaster"
+
   "hbs!app/templates/menuitem"
   "cs!app/application"
 ], (
-  View
   spin
+  ViewMaster
+
   template
   Application
 ) ->
 
-  class MenuItemView extends View
+  class MenuItemView extends ViewMaster
 
     className: "bb-menu-item"
 

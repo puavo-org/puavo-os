@@ -1,15 +1,15 @@
 define [
-  "cs!app/views/layout"
+  "backbone.viewmaster"
+
   "cs!app/views/menuitem_view"
   "hbs!app/templates/menulist"
-  "backbone"
 ], (
-  Layout
+  ViewMaster
+
   MenuItemView
   template
-  Backbone
 ) ->
-  class MenuListView extends Layout
+  class MenuListView extends ViewMaster
 
     className: "bb-menu"
 
@@ -21,7 +21,7 @@ define [
       if @model.get("type") isnt "menu"
         throw new Error "Bad menu list model type: #{ @model.get("type") }"
 
-      @_setView ".menu-app-list", @model.items.map (model) ->
+      @setView ".menu-app-list", @model.items.map (model) ->
         new MenuItemView
           model: model
 

@@ -1,17 +1,19 @@
 define [
-  "cs!app/view"
+  "backbone.viewmaster"
+
   "hbs!app/templates/logout"
   "cs!app/application"
 ], (
-  View
+  ViewMaster
+
   template
   Application
 ) ->
-  class LogoutView extends View
+  class LogoutView extends ViewMaster
 
     template: template
 
-    viewJSON: -> {
+    context: -> {
       fatClient: true
     }
 

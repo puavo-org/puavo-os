@@ -1,10 +1,12 @@
 define [
+  "backbone.viewmaster"
+
   "hbs!app/templates/itemdescription"
-  "cs!app/view"
 ], (
+  ViewMaster
+
   template
-  View
 ) ->
-  class ItemDescriptionView extends View
+  class ItemDescriptionView extends ViewMaster
     className: "bb-item-description"
     template: template

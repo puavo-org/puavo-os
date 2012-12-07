@@ -1,16 +1,18 @@
 define [
-  "cs!app/views/layout"
+  "backbone.viewmaster"
+
   "hbs!app/templates/lightbox"
   "underscore"
   "backbone"
 ], (
-  Layout
+  ViewMaster
+
   template
   Backbone
   _
 ) ->
 
-  class Lightbox extends Layout
+  class Lightbox extends ViewMaster
 
     className: "bb-lightbox"
 
@@ -18,7 +20,7 @@ define [
 
     constructor: (opts) ->
       super
-      @_setView ".content", opts.view
+      @setView ".content", opts.view
 
     events:
       "click .background": -> @remove()

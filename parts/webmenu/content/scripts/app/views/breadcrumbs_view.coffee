@@ -1,11 +1,11 @@
 define [
+  "backbone.viewmaster"
+
   "hbs!app/templates/breadcrumbs"
-  "cs!app/view"
-  "underscore"
 ], (
+  ViewMaster
+
   template
-  View
-  _
 ) ->
 
   ###*
@@ -13,7 +13,7 @@ define [
   #
   # @class Breadcrumbs
   ###
-  class Breadcrumbs extends View
+  class Breadcrumbs extends ViewMaster
 
     template: template
 
@@ -24,7 +24,7 @@ define [
         selected = @model.allItems.getByCid(cid)
         selected.trigger "select", selected
 
-    viewJSON: ->
+    context: ->
       current = @model
       crumbs = while current
         data =
