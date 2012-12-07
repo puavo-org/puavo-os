@@ -22,11 +22,11 @@ define [
 
     events:
       "click .bb-profile-settings": (e) ->
-        Application.bridge.send "showMyProfileWindow"
+        Application.bridge.trigger "showMyProfileWindow"
       "click .bb-change-password": (e) ->
-        Application.bridge.send "showChangePasswordWindow"
+        Application.bridge.trigger "showChangePasswordWindow"
       "click .bb-settings": (e) ->
-        Application.bridge.send "openSettings"
+        Application.bridge.trigger "openSettings"
       "click .bb-logout": (e) ->
 
         @lb = new Lightbox

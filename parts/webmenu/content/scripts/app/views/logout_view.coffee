@@ -18,6 +18,6 @@ define [
     }
 
     events:
-      "click .bb-logout": -> Application.bridge.send "logout"
-      "click .bb-shutdown": -> Application.bridge.send "shutdown"
-      "click .bb-reboot": -> Application.bridge.send "reboot"
+      "click .bb-logout": -> Application.bridge.trigger "logout"
+      "click .bb-shutdown": -> Application.bridge.trigger "shutdown"
+      "click .bb-reboot": -> Application.bridge.trigger "reboot"

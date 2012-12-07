@@ -38,7 +38,7 @@ launchCommand = require "./lib/launchcommand"
 menutools = require "./lib/menutools"
 powermanager = require "./lib/powermanager"
 requirefallback = require "./lib/requirefallback"
-Bridge = require "./content/scripts/app/bridge.coffee"
+Dom2Em = require "./lib/dom2em"
 
 webmenuHome = process.env.HOME + "/.config/webmenu"
 cachePath = webmenuHome + "/cache"
@@ -117,7 +117,7 @@ app.serveFilesFrom __dirname + '/content'
 
 displayMenu = ->
   title = "Opinsys Web Menu"
-  bridge?.send "show"
+  bridge?.emit "spawnMenu"
   window.frame.title = title
   window.frame.show()
   window.frame.focus()
@@ -157,7 +157,7 @@ window.on "ready", ->
       argv["hide"] = false
       window.frame.openDevTools()
 
-  bridge = new Bridge "node->browser", window
+  bridge = new Dom2Em window
 
   spawnEmitter.on "spawn", ->
     console.info "Opening menu from webmenu-spawn"

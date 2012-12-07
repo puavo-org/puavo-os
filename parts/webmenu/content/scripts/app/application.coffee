@@ -2,18 +2,18 @@ define [
   "backbone"
   "underscore"
 
-  "cs!app/bridge"
+  "cs!app/utils/dom2bb"
 ], (
   Backbone
   _
 
-  Bridge
+  Dom2Bb
 ) ->
   Application =
 
     reset: ->
       @global = new Backbone.Model
-      @bridge = new Bridge "browser->node", window
+      @bridge = new Dom2Bb window
 
   Application.reset()
 

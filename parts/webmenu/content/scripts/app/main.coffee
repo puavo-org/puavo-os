@@ -20,7 +20,7 @@ define [
 )->
 
 
-  Application.bridge.send "html-load"
+  Application.bridge.trigger "html-load"
 
   {user, config, menu} = APP_CONFIG
 
@@ -43,9 +43,13 @@ define [
   $(".content-container").append layout.el
 
   allItems.on "select", (model) ->
-   if model.get("type") isnt "menu"
-     Application.bridge.send "open", model.toJSON()
+    if model.get("type") isnt "menu"
+      layout.reset()
+      Application.bridge.trigger "open", model.toJSON()
+
+  Application.bridge.on "spawnMenu", ->
 
   $(window).blur ->
-   Application.bridge.send "hideWindow"
+    layout.reset()
+    Application.bridge.trigger "hideWindow"
 
