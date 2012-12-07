@@ -6,7 +6,10 @@
 #
 # eg. sudo ltspboot-config pxelinux.cfg/01-78-e7-d1-d4-0f-5f
 
+$LOAD_PATH.unshift( File.dirname(__FILE__) )
+
 require 'puavo-ldap'
+
 def help
   "Usage: [sudo] ltspboot-config [PXE GET URL]\n" +
   "\t-h, --help\tShow this message\n"
