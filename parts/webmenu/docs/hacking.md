@@ -28,7 +28,7 @@ No broken tests on master!
 
     bin/test
 
-Can be also debugged from http://localhost:1234/tests.html
+Can be also debugged from <http://localhost:1234/tests.html>
 
 Travi-CI <https://travis-ci.org/opinsys/webmenu>
 
