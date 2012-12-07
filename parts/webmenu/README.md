@@ -4,5 +4,5 @@
 
 Our next generation desktop menu
 
-See `docs/install.md` and `doc/usage.md`
+See `docs/install.md`, `doc/usage.md` and `doc/hacking.md`
 
