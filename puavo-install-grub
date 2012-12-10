@@ -5,6 +5,10 @@ set -e
 images_dir=${1:-/images}
 diskdev=$2
 
+if [ -z "$diskdev" ]; then
+  diskdev=$(pvs | awk '$2 == "puavo" { print $1; exit }')
+fi
+
 if [ -z "$images_dir" -o -z "$diskdev" ]; then
   echo "Usage: $(basename $0) images_dir diskdev" > /dev/stderr
   exit 1
