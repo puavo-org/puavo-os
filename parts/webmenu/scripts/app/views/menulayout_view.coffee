@@ -45,7 +45,7 @@ define [
       delayedShowProfile = debounce =>
         @showProfile()
         @renderViews()
-      , 200
+      , 50
 
       @bindTo Application.global, "showDescription", (model) =>
         delayedShowProfile.cancel()
