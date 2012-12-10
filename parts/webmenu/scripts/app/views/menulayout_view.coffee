@@ -37,8 +37,7 @@ define [
 
       @setMenu(@initialMenu)
 
-
-      @bindTo @allItems, "select", (model) =>
+      @bindTo Application.global, "select", (model) =>
         if model.get("type") is "menu"
           @setMenu model
           @renderViews()

@@ -20,12 +20,7 @@ define [
 
     events:
       "click": (e) ->
-        @model.trigger "select", @model
-
-        if @model.get("type") isnt "menu"
-          @spinner = true
-          @render()
-
+        Application.global.trigger "select", @model
       "mouseenter .thumbnail": (e) ->
         Application.global.trigger "showDescription", @model
       "mouseleave .thumbnail": (e) ->

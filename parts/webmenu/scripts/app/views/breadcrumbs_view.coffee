@@ -1,10 +1,12 @@
 define [
   "backbone.viewmaster"
 
+  "cs!app/application"
   "hbs!app/templates/breadcrumbs"
 ], (
   ViewMaster
 
+  Application
   template
 ) ->
 
@@ -22,7 +24,7 @@ define [
         e.preventDefault()
         cid = $(e.target).data("cid")
         selected = @model.allItems.getByCid(cid)
-        selected.trigger "select", selected
+        Application.global.trigger "select", selected
 
     context: ->
       current = @model
