@@ -13,7 +13,7 @@ define [
 
     reset: ->
       @global = new Backbone.Model
-      @bridge = new Dom2Bb window
+      @bridge = new Backbone.Model
 
   Application.reset()
 

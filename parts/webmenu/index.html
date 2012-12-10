@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+    <title>Webmenu</title>
+    <script>
+        window.forceRedraw = function(element){
+
+            if (!element) { return; }
+
+            var n = document.createTextNode(' ');
+            var disp = element.style.display;  // don't worry about previous display style
+
+            element.appendChild(n);
+            element.style.display = 'none';
+
+            setTimeout(function(){
+                element.style.display = disp;
+                n.parentNode.removeChild(n);
+            },20); // you can play with this timeout to make it as short as possible
+        }
+
+      var gui = require('nw.gui');
+      window.nativeWindow = gui.Window.get();
+      window.nodeRequire = window.require;
+      window.require = undefined;
+      window.process = undefined;
+      window.require = { baseUrl: "scripts/" };
+      window.nodeConnect = window.nodeRequire("./lib/native");
+    </script>
+    <script src="scripts/require.js"></script>
+    <script src="scripts/config.js"></script>
+    <script src="scripts/start.js"></script>
+    <link rel="stylesheet" href="theme/css/master.css">
+</head>
+<body>
+	<div class="container-fluid well">
+      <div class="row-fluid content-container"></div>
+    </div>
+</body>
+</html>

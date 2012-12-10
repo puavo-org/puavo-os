@@ -17,15 +17,11 @@ define [
   MenuModel
   AllItems
   Application
-)->
+) -> (user, config, menu) ->
 
 
   Application.bridge.trigger "html-load"
 
-  {user, config, menu} = APP_CONFIG
-
-  if not config.production
-    $.getScript "http://localhost:35729/livereload.js"
 
   console.log "GOT Config", user, config, menu
   user = new Backbone.Model user
@@ -48,8 +44,17 @@ define [
       Application.bridge.trigger "open", model.toJSON()
 
   Application.bridge.on "spawnMenu", ->
+    setTimeout ->
+      console.log "RESEEEEEEEEEEEEEEEEEEEEEEET"
+      layout.reset()
+      setTimeout ->
+        window.forceRedraw(layout.menu.el)
+      , 1000
+    , 100
 
   $(window).blur ->
     layout.reset()
-    Application.bridge.trigger "hideWindow"
+    setTimeout ->
+      Application.bridge.trigger "hideWindow"
+    , 100
 

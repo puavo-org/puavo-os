@@ -2,10 +2,15 @@
     "name": "webmenu"
   , "version": "0.1.1"
   , "private": true
-  , "scripts": {
-     "start": "bin/webmenu"
-     , "test": "make test"
-    }
+  , "main": "index.html"
+  , "window": {
+    "toolbar": true
+    , "width": 1000
+    , "height": 550
+    , "always-on-top": true
+    , "as_desktop": false
+    , "frame": false
+  }
   , "dependencies": {
       "coffee-script": "1.3.x"
       , "underscore": "1.4.3"

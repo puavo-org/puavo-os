@@ -71,9 +71,10 @@ define [
       @setMenu(@initialMenu)
 
     setMenu: (model) ->
-      @setView ".menu-app-list-container", new MenuListView
+      @setView ".menu-app-list-container", menu = new MenuListView
         model: model
       @setView ".breadcrums-container", new Breadcrumbs
         model: model
+      @menu = menu
 
 
