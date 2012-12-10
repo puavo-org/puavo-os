@@ -37,8 +37,8 @@ module DiskHandler
   Filesystems = {
     'laptop' => [
       { 'size' => '4G',       'name' => 'swap',   'type' => 'swap' },
-      { 'size' => '32G',      'name' => 'images', 'type' => 'ext4' },
-      { 'size' => '10G',      'name' => 'state',  'type' => 'ext4' },
+      { 'size' => '40G',      'name' => 'images', 'type' => 'ext4' },
+      { 'size' => '6G',       'name' => 'state',  'type' => 'ext4' },
       { 'size' => '100%FREE', 'name' => 'home',   'type' => 'ext4' },
     ],
     'ltsp' => [
