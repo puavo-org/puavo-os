@@ -44,6 +44,8 @@ image = "ltsp_i386" if image.empty?
 bootmode = Array(ltsp_client['puavoDeviceBootMode']).first.to_s
 bootmode = "netboot" if bootmode.empty?
 
+device_type = ltsp_client['puavoDeviceType']
+
 header = ""
 # Show menu to user if device's boot mode is dualboot
 if bootmode == "dualboot"
@@ -72,6 +74,6 @@ label ltsp-NBD
   menu label LTSP, using NBD
   menu default
   kernel vmlinuz#{kernel_version}
-  append ro initrd=initrd.img#{kernel_version} init=/sbin/init-ltsp plymouth:force-splash vt.handoff=7 root=/dev/nbd0 nbdroot=:#{image} #{kernel_args}
+  append ro initrd=initrd.img#{kernel_version} init=/sbin/puavo-init-ltsp-#{ device_type } plymouth:force-splash vt.handoff=7 root=/dev/nbd0 nbdroot=:#{image} #{kernel_args}
   ipappend 2
 EOF
