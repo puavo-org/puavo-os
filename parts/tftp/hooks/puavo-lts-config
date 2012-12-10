@@ -27,7 +27,7 @@ def device_ltspvars(device)
 	  'LOCAL_APPS'     => 'False',
 	  'LOCALDEV'       => 'True',
 	  'LTSP_FATCLIENT' => 'False',
-	  'SCREEN_07'      => 'ldm',
+	  'SCREEN_07'      => 'lightdm',
 	  'X_COLOR_DEPTH'  => '16',
 	}
       when 'fatclient'
