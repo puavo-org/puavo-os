@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -e
+
+images_dir=${1:-/images}
+
+if ! [ -d "$images_dir" ]; then
+  echo "Usage: $(basename $0) images_dir" > /dev/stderr
+  exit 1
+fi
+
+total_size=$(df /dev/nbd0 | awk '$1 == "/dev/nbd0" { print $2 "k" }')
+
+dd if=/dev/nbd0 2>/dev/null | pv -s "$total_size" \
+  > $images_dir/ltspclient.img
+
+pv $images_dir/ltspclient.img > $image_dir/backup-ltspclient.img
