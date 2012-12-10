@@ -13,11 +13,8 @@ webmenuHome = process.env.HOME + "/.config/webmenu"
 spawnPipePath = webmenuHome + "/spawnmenu"
 mkdirp.sync(webmenuHome)
 
-
-
 argv =
   hide: true
-
 
 locale = process.env.LANG
 locale = "fi_FI.UTF-8"
@@ -52,19 +49,19 @@ userData.fullName = userData.gecos.split(",")[0]
 
 spawnEmitter = require("./spawnmenu")(spawnPipePath)
 
-module.exports = (Window, bridge) ->
+module.exports = (gui, bridge) ->
 
+  Window = gui.Window.get()
 
   displayMenu = ->
     console.log "DISPLAY"
-
     bridge.trigger "spawnMenu"
     Window.show()
     Window.focus()
 
-    title = "Webmenu"
+    # Force window activation
     setTimeout ->
-      wmctrl = spawn("wmctrl", ["-a", title])
+      wmctrl = spawn("wmctrl", ["-a", "Webmenu"])
       wmctrl.on 'exit', (code) ->
         if code isnt 0
           console.info('wmctrl exited with code ' + code)
@@ -84,26 +81,11 @@ module.exports = (Window, bridge) ->
 
   bridge.on "open", (msg) ->
     console.log "OPEN", msg
-    # launchCommand(msg)
-    hideMenu()
-
-  bridge.on "openSettings", ->
-    console.log "OPEN settings"
-    # launchCommand(config.settingsCMD)
-    hideMenu()
+    launchCommand(msg)
+    hideWindow()
 
   bridge.on "hideWindow", ->
-    hideMenu()
-
-  bridge.on "showMyProfileWindow", ->
-    console.log "show my profile"
-    hideMenu()
-    # launchCommand(config.profileCMD)
-
-  bridge.on "showChangePasswordWindow", ->
-    console.log "show change password"
-    hideMenu()
-    # launchCommand(config.passwordCMD)
+    hideWindow()
 
   bridge.on "shutdown", ->
     console.log "shutdown"
@@ -115,9 +97,8 @@ module.exports = (Window, bridge) ->
     console.log "logout"
     # powermanager.logout()
 
-  return {
+  bridge.trigger "desktop-ready",
     user: userData,
     config: config,
     menu: menuJSON
-  }
 

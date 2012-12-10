@@ -9,13 +9,9 @@ commandBuilders =
     command = msg.command.shift()
     args = msg.command
     return [command, args]
+
   custom: (msg) -> this.desktop(msg)
-  webWindow: (msg) ->
-    fork(
-      __dirname + "/webwindow.js",
-      [ msg.url ],
-      { detached: true }
-    )
+
   web: (msg) ->
     args = [msg.url]
     return ["xdg-open", args]
@@ -26,7 +22,7 @@ module.exports = (msg, cb) ->
   command = commandBuilders[msg.type]?(msg)
 
   if not command
-    console.error "Cannot find command from", msg
+    console.log "no commad for type #{ msg.type }"
     return
 
   [command, args] = command
@@ -36,7 +32,6 @@ module.exports = (msg, cb) ->
   cmd = spawn command, args,
     detached: true
     cwd: process.env.HOME
-
 
   cmd.on "exit", (code) ->
     console.log "Command '#{ command } #{ args.join " " } exited with #{ code }"

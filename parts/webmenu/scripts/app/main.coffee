@@ -17,44 +17,45 @@ define [
   MenuModel
   AllItems
   Application
-) -> (user, config, menu) ->
+) ->
 
+  openWebWindow = (cmd) ->
 
-  Application.bridge.trigger "html-load"
+    gui.Window.open cmd.url,
+      width: cmd.width or 1000
+      height: cmd.height or 800
+      "always-on-top": false
+      toolbar: false
+      frame: true
 
+  Application.bridge.on "desktop-ready", ({user, config, menu}) ->
 
-  console.log "GOT Config", user, config, menu
-  user = new Backbone.Model user
-  config = new Backbone.Model config
-  allItems = new AllItems
-  menuModel = new MenuModel menu, allItems
+    user = new Backbone.Model user
+    config = new Backbone.Model config
+    allItems = new AllItems
+    menuModel = new MenuModel menu, allItems
 
-  layout = new MenuLayout
-    user: user
-    config: config
-    initialMenu: menuModel
-    allItems: allItems
+    layout = new MenuLayout
+      user: user
+      config: config
+      initialMenu: menuModel
+      allItems: allItems
 
-  layout.render()
-  $(".content-container").append layout.el
-
-  allItems.on "select", (model) ->
-    if model.get("type") isnt "menu"
-      layout.reset()
+    Application.global.on "select", (model) ->
       Application.bridge.trigger "open", model.toJSON()
 
-  Application.bridge.on "spawnMenu", ->
-    setTimeout ->
-      console.log "RESEEEEEEEEEEEEEEEEEEEEEEET"
-      layout.reset()
-      setTimeout ->
-        window.forceRedraw(layout.menu.el)
-      , 1000
-    , 100
+    Application.bridge.on "open", (cmd) ->
+      if cmd.type is "menu"
+        return
 
-  $(window).blur ->
-    layout.reset()
-    setTimeout ->
+      layout.reset()
+      if cmd.type is "webWindow"
+        openWebWindow cmd
+
+    $(window).blur ->
       Application.bridge.trigger "hideWindow"
-    , 100
+
+    layout.render()
+    $(".content-container").append layout.el
+    Application.bridge.trigger "html-ready"
 
