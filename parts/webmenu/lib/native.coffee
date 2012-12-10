@@ -79,9 +79,20 @@ module.exports = (gui, bridge) ->
     console.info "Opening menu from webmenu-spawn"
     displayMenu()
 
-  bridge.on "open", (msg) ->
-    console.log "OPEN", msg
-    launchCommand(msg)
+  bridge.on "open", (cmd) ->
+    console.log "OPEN", cmd
+
+    # Use node-webkit to open toolbarless web window
+    if cmd.type is "webWindow"
+      gui.Window.open? cmd.url,
+        width: cmd.width or 1000
+        height: cmd.height or 800
+        "always-on-top": false
+        toolbar: false
+        frame: true
+    else
+      launchCommand(cmd)
+
     hideWindow()
 
   bridge.on "hideWindow", ->

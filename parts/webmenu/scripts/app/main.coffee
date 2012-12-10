@@ -19,15 +19,6 @@ define [
   Application
 ) ->
 
-  openWebWindow = (cmd) ->
-
-    gui.Window.open cmd.url,
-      width: cmd.width or 1000
-      height: cmd.height or 800
-      "always-on-top": false
-      toolbar: false
-      frame: true
-
   Application.bridge.on "desktop-ready", ({user, config, menu}) ->
 
     user = new Backbone.Model user
@@ -41,17 +32,18 @@ define [
       initialMenu: menuModel
       allItems: allItems
 
+    # Convert selected menu item models to CMD Events
+    # https://github.com/opinsys/webmenu/blob/master/docs/menujson.md
     Application.global.on "select", (model) ->
+      if model.get("type") is "menu"
+        return
+      # This will be send to node and node-webkit handlers
       Application.bridge.trigger "open", model.toJSON()
 
-    Application.bridge.on "open", (cmd) ->
-      if cmd.type is "menu"
-        return
-
+    Application.bridge.on "open", ->
       layout.reset()
-      if cmd.type is "webWindow"
-        openWebWindow cmd
 
+    # Hide window when focus is lost
     $(window).blur ->
       Application.bridge.trigger "hideWindow"
 
