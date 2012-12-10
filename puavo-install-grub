@@ -1,0 +1,99 @@
+#!/bin/sh
+
+set -e
+
+images_dir=${1:-/images}
+diskdev=$2
+
+if [ -z "$images_dir" -o -z "$diskdev" ]; then
+  echo "Usage: $(basename $0) images_dir diskdev" > /dev/stderr
+  exit 1
+fi
+
+grub-install --root-directory=$images_dir $diskdev
+
+cat <<'EOF' > $images_dir/boot/grub/grub.cfg
+set default="0"
+
+function load_video {
+  if [ x$feature_all_video_module = xy ]; then
+    insmod all_video
+  else
+    insmod efi_gop
+    insmod efi_uga
+    insmod ieee1275_fb
+    insmod vbe
+    insmod vga
+    insmod video_bochs
+    insmod video_cirrus
+  fi
+}
+
+if loadfont unicode ; then
+  set gfxmode=auto
+  load_video
+  insmod gfxterm
+  set locale_dir=$prefix/locale
+  set lang=fi_FI
+  insmod gettext
+fi
+terminal_output gfxterm
+set timeout=5
+### END /usr/local/etc/grub.d/00_header ###
+
+function pathname { regexp -s 2:"$2" '^(\(.*\))?(/.*)$'    "$1"; }
+function devname  { regexp -s "$2"   '^(\(.*\)).*$'        "$1"; }
+
+function ltsp_image_entry {
+  set file="$1"
+
+  pathname $file imagepath
+  devname $file dev
+
+  echo $imagepath
+  echo $dev
+
+  menuentry "LTSP - ${dev}${imagepath}" "$dev" "$imagepath" {
+    set dev="$2"
+    set imagepath="$3"
+
+    if test -f "${dev}/ltsp-kernel-settings"; then
+      load_env -f "${dev}/ltsp-kernel-settings"
+    fi
+
+    loopback loop "${file}"
+    set root='(loop)'
+
+    linux   /boot/vmlinuz${kernelversion} ro verbose init=/sbin/init-puavo-ltsp-laptop root=/dev/mapper/puavo-images loop="${imagepath}" ${kernelparameters}
+    initrd  /boot/initrd.img${kernelversion}
+
+    loopback -d loop
+  }
+}
+
+insmod gzio
+insmod part_msdos
+insmod ext2
+insmod squash4
+insmod biosdisk
+insmod regexp
+insmod loopback
+insmod usb_keyboard
+insmod lvm
+
+for dev in (lvm/puavo-images); do
+  echo "${dev}"
+
+  set primaryimage="${dev}/ltsp.img"
+
+  echo "PRIMARY: ${primaryimage}"
+  ltsp_image_entry "${primaryimage}"
+
+  for file in ${dev}/*.img; do
+    if test "${file}" = "${primaryimage}"; then continue; fi
+
+    echo "${file}"
+    ltsp_image_entry "${file}"
+  done
+done
+EOF

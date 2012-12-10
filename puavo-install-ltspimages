@@ -12,6 +12,6 @@ fi
 total_size=$(df /dev/nbd0 | awk '$1 == "/dev/nbd0" { print $2 "k" }')
 
 dd if=/dev/nbd0 2>/dev/null | pv -s "$total_size" \
-  > $images_dir/ltspclient.img
+  > $images_dir/ltsp.img
 
-pv $images_dir/ltspclient.img > $images_dir/backup-ltspclient.img
+pv $images_dir/ltsp.img > $images_dir/ltsp-backup.img
