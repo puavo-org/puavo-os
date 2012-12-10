@@ -2,6 +2,16 @@
 
 set -e
 
+install_from_nbd() {
+  images_dir=$1
+
+  total_size=$(df /dev/nbd0 | awk '$1 == "/dev/nbd0" { print $2 "k" }')
+  dd if=/dev/nbd0 2>/dev/null | pv -s "$total_size" \
+    > $images_dir/ltsp.img
+
+  pv $images_dir/ltsp.img > $images_dir/ltsp-backup.img
+}
+
 images_dir=${1:-/images}
 
 if ! [ -d "$images_dir" ]; then
@@ -9,9 +19,14 @@ if ! [ -d "$images_dir" ]; then
   exit 1
 fi
 
-total_size=$(df /dev/nbd0 | awk '$1 == "/dev/nbd0" { print $2 "k" }')
+hosttype=$(cat /etc/puavo/hosttype)
 
-dd if=/dev/nbd0 2>/dev/null | pv -s "$total_size" \
-  > $images_dir/ltsp.img
-
-pv $images_dir/ltsp.img > $images_dir/ltsp-backup.img
+case "$hosttype" in
+  laptop)
+    install_from_nbd $images_dir
+    ;;
+  *)
+    echo "Hosttype '$hosttype' is not supported" > /dev/stderr
+    exit 1
+    ;;
+esac
