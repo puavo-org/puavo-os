@@ -116,7 +116,7 @@ module DiskHandler
     Filesystems[ fs_conf['hosttype'] ] \
       .select { |fs| fs['type'] != 'swap' } \
       .each do |fs|
-        mnt_path = "/disk/#{ fs['name'] }"
+        mnt_path = "/#{ fs['name'] }"
         FileUtils.mkdir_p(mnt_path)
         run('mount', "/dev/mapper/puavo-#{ fs['name'] }", mnt_path)
     end
