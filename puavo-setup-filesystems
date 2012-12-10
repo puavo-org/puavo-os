@@ -113,10 +113,12 @@ module DiskHandler
   end
 
   def self.mount_filesystems(fs_conf)
-    Filesystems[ fs_conf['hosttype'] ].each do |fs|
-      mnt_path = "/disk/#{ fs['name'] }"
-      FileUtils.mkdir_p(mnt_path)
-      run('mount', "/dev/mapper/puavo-#{ fs['name'] }", mnt_path)
+    Filesystems[ fs_conf['hosttype'] ] \
+      .select { |fs| fs['type'] != 'swap' } \
+      .each do |fs|
+        mnt_path = "/disk/#{ fs['name'] }"
+        FileUtils.mkdir_p(mnt_path)
+        run('mount', "/dev/mapper/puavo-#{ fs['name'] }", mnt_path)
     end
   end
 end
