@@ -13,6 +13,8 @@ webmenuHome = process.env.HOME + "/.config/webmenu"
 spawnPipePath = webmenuHome + "/spawnmenu"
 mkdirp.sync(webmenuHome)
 
+# TODO: parse cli args when node-webkit 0.3.6 is released
+# https://github.com/rogerwang/node-webkit/commit/aed7590d7ae44994391c5dc79f398125b8f0504b
 argv =
   hide: true
 
