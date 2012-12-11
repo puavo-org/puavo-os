@@ -67,7 +67,7 @@ module.exports = (gui, bridge) ->
           console.info('wmctrl exited with code ' + code)
     , 100
 
-  hideMenu = ->
+  hideWindow = ->
     console.info "HIDE", argv
     if argv.hide
       Window.hide()
