@@ -16,8 +16,10 @@ install-dirs:
 	mkdir -p $(DESTDIR)/sbin
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)
+	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/init
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ldap
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sssd
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh
@@ -32,7 +34,8 @@ install: install-dirs
 		client/init-puavo.d/*-*
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh \
-		client/templates/etc/ssh/sshd_config
+		client/templates/etc/ssh/sshd_config \
+		client/templates/etc/ssh/ltspsshd_config \
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d \
 		client/templates/etc/pam.d/ltspsshd \
@@ -69,3 +72,9 @@ install: install-dirs
 		client/initramfs/puavo_udhcp
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom \
 		client/initramfs/puavo_ltsp 
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/init \
+		client/puavo-ltsp-client.conf \
+		client/ltspssh.conf
+
+	ln -s /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd
