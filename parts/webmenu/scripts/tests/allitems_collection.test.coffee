@@ -59,6 +59,45 @@ define [
       expect(allItems.favorites(10).length).to.eq 3
 
 
+    describe "searchFilter()", ->
+      itemData = [
+        type: "custom"
+        name: "good"
+        command: "good-cmd"
+        description: "foo bar descriptiontest"
+      ,
+        type: "custom"
+        name: "bad"
+        command: "bad-cmd"
+      ]
 
+      it "it filters item by name attribute", ->
+        itemsColl = new AllItems itemData
+        filtered = itemsColl.searchFilter("good")
+
+        expect(
+          _.find filtered, (model) -> model.get("name") is "good"
+          "good item should be included"
+        ).to.be.ok
+
+        expect(
+          _.find(filtered, (model) -> model.get("name") is "bad"),
+          "bad item should not be included"
+        ).to.be.not.ok
+
+
+      it "it filters item by description attribute", ->
+        itemsColl = new AllItems itemData
+        filtered = itemsColl.searchFilter("descriptiontest")
+
+        expect(
+          _.find filtered, (model) -> model.get("name") is "good"
+          "good item should be included"
+        ).to.be.ok
+
+        expect(
+          _.find(filtered, (model) -> model.get("name") is "bad"),
+          "bad item should not be included"
+        ).to.be.not.ok
 
 
