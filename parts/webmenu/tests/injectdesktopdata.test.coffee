@@ -3,6 +3,7 @@
 menutools = require "../lib/menutools"
 
 dir = __dirname + "/dotdesktop"
+iconsDir = __dirname + "/icons"
 
 describe "inject dot desktop data", ->
   describe "single item", ->
@@ -12,7 +13,7 @@ describe "inject dot desktop data", ->
       menu =
         type: "desktop"
         id: "thunderbird"
-      menutools.injectDesktopData(menu, [dir], "fi_FI.UTF-8")
+      menutools.injectDesktopData(menu, [dir], "fi_FI.UTF-8", [iconsDir], iconsDir + "/fallbackIcon")
 
     it "gets description", -> expect(menu.description).to.be.ok
     it "gets name", -> expect(menu.name).to.be.ok
@@ -27,7 +28,7 @@ describe "inject dot desktop data", ->
         type: "desktop"
         id: "thunderbird"
         name: "forced name"
-      menutools.injectDesktopData(menu, [dir], "fi_FI.UTF-8")
+      menutools.injectDesktopData(menu, [dir], "fi_FI.UTF-8", [iconsDir], iconsDir + "/fallbackIcon")
 
     it "should have forced name", ->
       expect(menu.name).to.eq "forced name"
