@@ -3,6 +3,6 @@ class packages::all {
           packages::partner,
           packages::ubuntu
 
-  # install all packages listed in packages
-  Package <| |> { ensure => present, }
+  # apply all package definitions listed in packages
+  Package <| |>
 }
