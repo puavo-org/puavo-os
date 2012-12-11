@@ -39,7 +39,7 @@ define [
       @user = opts.user
       @config = opts.config
 
-      @searchResultView = new SearchResult allItems: @allItems
+      @searchResultView = new SearchResult collection: @allItems
 
       @setMenu(@initialMenu)
 
