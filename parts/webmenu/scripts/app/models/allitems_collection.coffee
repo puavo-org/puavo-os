@@ -12,4 +12,18 @@ define [
       items = items.slice(0, limit) if limit
       return items
 
+    searchFilter: (filterWords) ->
+      console.log "Search Filter!"
+      @filter (item) ->
+        if item.get("type") is "menu"
+          return false
+        # FIXME
+        if not item.get("name")
+          return false
+        if item.get("name").indexOf(filterWords) isnt -1
+          return true
+
+        return true
+        #if item.get("name")  
+      #@toArray()
 

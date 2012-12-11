@@ -6,6 +6,8 @@ define [
   "cs!app/views/breadcrumbs_view"
   "cs!app/views/profile_view"
   "cs!app/views/favorites_view"
+  "cs!app/views/search_view"
+  "cs!app/views/search_result_view"
   "cs!app/application"
   "hbs!app/templates/menulayout"
   "app/utils/debounce"
@@ -17,6 +19,8 @@ define [
   Breadcrumbs
   ProfileView
   Favorites
+  Search
+  SearchResult
   Application
   template
   debounce
@@ -34,6 +38,10 @@ define [
       @allItems = opts.allItems
       @user = opts.user
       @config = opts.config
+
+      @searchResultView = new SearchResult allItems: @allItems
+      @menuListView = new MenuListView
+        model: model
 
       @setMenu(@initialMenu)
 
@@ -61,6 +69,12 @@ define [
         collection: @allItems
         config: @config
 
+      @bindTo this, "filter change", (filter) ->
+        @setView ".menu-app-list-container", @searchResultView
+        @searchResultView.displayItems(filter)
+        console.log "Filter: ", filter
+        @renderViews()
+
     showProfile: ->
       @setView ".sidebar", new ProfileView
         model: @user
@@ -70,10 +84,9 @@ define [
       @setMenu(@initialMenu)
 
     setMenu: (model) ->
-      @setView ".menu-app-list-container", menu = new MenuListView
-        model: model
+      @setView ".menu-app-list-container", @menuListView
       @setView ".breadcrums-container", new Breadcrumbs
         model: model
-      @menu = menu
+      @setView ".search-container", new Search
 
 
