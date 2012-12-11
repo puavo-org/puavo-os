@@ -17,8 +17,9 @@ define [
 
     template: template
 
+    elements:
+      "$input": "input[name=search]"
+
     events:
       "keyup input[name=search]": (e) ->
-        console.log "Do search"
-        console.log $(e.target).val()
-        @trigger "changeFilter", $(e.target).val()
+        @trigger "changeFilter", @$input.val()
