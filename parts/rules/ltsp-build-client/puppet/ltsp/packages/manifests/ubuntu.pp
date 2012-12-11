@@ -1,6 +1,6 @@
 class packages::ubuntu {
   include packages
 
-  # install all ubuntu packages listed in packages
-  Package <| tag == ubuntu |> { ensure => present, }
+  # apply all package definitions with "ubuntu"-tag listed in packages
+  Package <| tag == ubuntu |>
 }

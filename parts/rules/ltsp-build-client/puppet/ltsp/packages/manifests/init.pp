@@ -1,4 +1,7 @@
 class packages {
+  # install packages by default
+  Package { ensure => present, }
+
   @package {
     [ 'dconf-tools'
     , 'gawk'
@@ -472,5 +475,12 @@ class packages {
 
     'mimio-studio':
       tag => [ 'whiteboard-mimio', ];
+  }
+
+  # keep these packages out, we do not want these
+  @package {
+    'nscd':
+      ensure => purged,
+      tag    => [ 'basic', 'ubuntu', ];
   }
 }
