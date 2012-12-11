@@ -1,0 +1,17 @@
+sbin/init-puavo
+usr/sbin/puavo-ltsp-login
+usr/sbin/puavo-dns-client
+usr/sbin/puavo-configure-client
+usr/share/initramfs-tools/scripts/init-bottom/puavo_ltsp
+usr/share/initramfs-tools/scripts/init-premount/puavo_udhcp
+usr/share/ltsp/init-ltsp.d/30-puavo-config-partition
+usr/share/puavo-ltsp-client/templates/etc/ldap/ldap.conf
+usr/share/puavo-ltsp-client/templates/etc/nsswitch.conf-sss
+usr/share/puavo-ltsp-client/templates/etc/krb5.conf
+usr/share/puavo-ltsp-client/templates/etc/nsswitch.conf-extrausers
+usr/share/puavo-ltsp-client/templates/etc/pam.d/ltsp_sshd
+usr/share/puavo-ltsp-client/templates/etc/pam.d/lightdm-fatclient
+usr/share/puavo-ltsp-client/templates/etc/pam.d/lightdm-thinclient
+usr/share/puavo-ltsp-client/templates/etc/ssh/sshd_config
+usr/share/puavo-ltsp-client/templates/etc/default/nfs-common
+usr/share/puavo-ltsp-client/templates/etc/sssd/sssd.conf
