@@ -1,6 +1,6 @@
 
 fs = require "fs"
-gettext = require "gnu-gettext"
+gettext = require "../vendor/gnu-gettext"
 ini = require "ini"
 
 
