@@ -36,15 +36,12 @@ describe "inject dot desktop data", ->
     it "should have forced name", ->
       expect(menu.name).to.eq "forced name"
 
-  describe "Use default icon if application's icon not found", ->
+  describe "when icon not found use default icon for", ->
 
     menus = [
       {
         type: "desktop"
         id: "gedit"
-      }, {
-        type: "desktop"
-        id: "gwibber"
       }, {
         type: "custom"
         name: "Test Application"
@@ -64,5 +61,5 @@ describe "inject dot desktop data", ->
     menus.forEach (menu) ->
       menutools.injectDesktopData(menu, [dir], "fi_FI.UTF-8", [iconsDir], fallbackIconPath)
 
-      it "should have default icon", ->
+      it "#{menu.name} (#{menu.type})", ->
         expect(menu.osIconPath).to.eq fallbackIconPath
