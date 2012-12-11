@@ -68,7 +68,7 @@ define [
         collection: @allItems
         config: @config
 
-      @bindTo this, "filter change", (filter) ->
+      @bindTo this, "changeFilter", (filter) ->
         @setView ".menu-app-list-container", @searchResultView
         @searchResultView.displayItems(filter)
         console.log "Filter: ", filter

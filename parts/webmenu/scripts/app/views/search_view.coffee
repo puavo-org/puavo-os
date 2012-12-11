@@ -21,4 +21,4 @@ define [
       "keyup input[name=search]": (e) ->
         console.log "Do search"
         console.log $(e.target).val()
-        @trigger "filter change", $(e.target).val()
+        @trigger "changeFilter", $(e.target).val()
