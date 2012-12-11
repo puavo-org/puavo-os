@@ -40,7 +40,6 @@ define [
       @config = opts.config
 
       @searchResultView = new SearchResult allItems: @allItems
-      @menuListView = new MenuListView model: @initialMenu
 
       @setMenu(@initialMenu)
 
@@ -85,6 +84,7 @@ define [
       @setMenu(@initialMenu)
 
     setMenu: (model) ->
+      @menuListView = new MenuListView model: model
       @setView ".menu-app-list-container", @menuListView
       @setView ".breadcrums-container", new Breadcrumbs
         model: model
