@@ -29,7 +29,7 @@ install-dirs:
 .PHONY: install
 install: install-dirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d \
-		client/init-puavo.d/*
+		client/init-puavo.d/*-*
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh \
 		client/templates/etc/ssh/sshd_config
