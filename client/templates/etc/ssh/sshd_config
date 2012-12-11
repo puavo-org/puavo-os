@@ -85,3 +85,9 @@ Subsystem sftp /usr/lib/openssh/sftp-server
 # PAM authentication, then enable this but set PasswordAuthentication
 # and ChallengeResponseAuthentication to 'no'.
 UsePAM yes
+
+# Use only IPv4 as without IPv6 setup properly, sshd fails to open
+# X forwarding with error message (in auth.log):
+#
+# sshd[xxxx]: error: Failed to allocate internet-domain X11 display socket.
+AddressFamily inet
