@@ -19,7 +19,7 @@ hosttype=$(cat /etc/puavo/hosttype)
 
 case "$hosttype" in
   laptop)
-    hosttype_specific='init=/sbin/init-puavo-ltsp-laptop root=/dev/mapper/puavo-images loop="${imagepath}"'
+    hosttype_specific='init=/sbin/init-puavo root=/dev/mapper/puavo-images loop="${imagepath}"'
     ;;
   *)
     echo "Hosttype '$hosttype' is not supported" > /dev/stderr
