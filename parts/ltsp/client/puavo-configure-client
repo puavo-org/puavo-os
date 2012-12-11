@@ -21,7 +21,7 @@ end
 @puavo_domain      = File.read('/etc/puavo/domain'         ).chomp
 #@puavo_topdomain   = File.read('/etc/puavo/topdomain'      ).chomp
 
-def write_config(filename, version=nil)
+def write_config(filename, version=nil, secure=false)
   template_file = filename
 
   if version
@@ -31,7 +31,9 @@ def write_config(filename, version=nil)
   conf_template = File.read("/usr/share/puavo-ltsp-client/templates#{template_file}")
   conf = ERB.new(conf_template, 0, "%<>")
 
-  File.open(filename, "w", 0600) do |f|
+  perm = secure ? 0644 : 0600
+
+  File.open(filename, "w", perm) do |f|
     f.write conf.result
   end
 end
@@ -57,11 +59,10 @@ when puavo_device_type.eql?("ltspserver")
   write_config("/etc/default/nfs-common")
   write_config("/etc/ssh/sshd_config")
   write_config("/etc/ssh/ltspsshd_config")
-  write_config("/etc/init/ltspssh.conf")
 
   @ldap_binddn       = File.read('/etc/puavo/ldap/dn'        ).chomp
   @ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp
-  write_config("/etc/sssd/sssd.conf")
+  write_config("/etc/sssd/sssd.conf", nil, true)
 
   `service sssd start`
   `service ltspssh start`
