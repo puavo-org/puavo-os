@@ -29,7 +29,7 @@ install: install-dirs
 
 
 test-client:
-	bin/test --once
+	grunt mocha
 
 test-node:
 	node_modules/.bin/mocha -R spec --compilers coffee:coffee-script tests/*test*
