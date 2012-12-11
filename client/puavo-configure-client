@@ -1,0 +1,71 @@
+#!/usr/bin/ruby
+
+require 'fileutils'
+require 'highline/import'
+require 'tmpdir'
+
+puavo_device_type = ARGV[0]
+
+if (!puavo_device_type)
+  if File.exists?("/etc/puavo/type")
+    puavo_device_type = File.read('/etc/puavo/type').chomp
+  end
+end
+
+@ldap_master       = File.read('/etc/puavo/ldap/master'    ).chomp
+@ldap_base         = File.read('/etc/puavo/ldap/base'      ).chomp
+@kerberos_master   = File.read('/etc/puavo/kerberos/master').chomp
+@kerberos_realm    = File.read('/etc/puavo/kerberos/realm' ).chomp
+#@kerberos_toprealm = File.read('/etc/puavo/kerberos/toprealm' ).chomp
+@puavo_hostname    = File.read('/etc/puavo/hostname'       ).chomp
+@puavo_domain      = File.read('/etc/puavo/domain'         ).chomp
+#@puavo_topdomain   = File.read('/etc/puavo/topdomain'      ).chomp
+
+def write_config(filename, version=nil)
+  template_file = filename
+
+  if version
+    template_file = "#{filename}-#{version}"
+  end
+
+  conf_template = File.read("/usr/share/puavo-ltsp-client/templates#{template_file}")
+  conf = ERB.new(conf_template, 0, "%<>")
+
+  File.open(filename, "w", 0600) do |f|
+    f.write conf.result
+  end
+end
+
+case
+when puavo_device_type.eql?("thinclient")
+  write_config("/etc/nsswitch.conf", "extrausers")
+  write_config("/etc/pam.d/lightdm", "thinclient")
+  write_config("/etc/ldap/ldap.conf")
+  write_config("/etc/krb5.conf")
+  write_config("/etc/default/nfs-common")
+when puavo_device_type.eql?("fatclient")
+  write_config("/etc/nsswitch.conf", "extrausers")
+  write_config("/etc/pam.d/lightdm", "fatclient")
+  write_config("/etc/ldap/ldap.conf")
+  write_config("/etc/krb5.conf")
+  write_config("/etc/default/nfs-common")
+when puavo_device_type.eql?("ltspserver")
+  write_config("/etc/nsswitch.conf", "sss")
+  write_config("/etc/pam.d/common-auth")
+  write_config("/etc/pam.d/common-account")
+  write_config("/etc/pam.d/common-session")
+  write_config("/etc/ldap/ldap.conf")
+  write_config("/etc/krb5.conf")
+  write_config("/etc/default/nfs-common")
+  write_config("/etc/ssh/sshd_config")
+
+  @ldap_binddn       = File.read('/etc/puavo/ldap/dn'        ).chomp
+  @ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp
+  write_config("/etc/sssd/sssd.conf")
+when puavo_device_type.eql?("laptop")
+
+  @ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp
+  write_config("/etc/sssd/sssd.conf")
+end
+
+exit(0)
