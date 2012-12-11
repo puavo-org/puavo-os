@@ -7,7 +7,7 @@ auth    required        pam_env.so readenv=1
 auth    required        pam_env.so readenv=1 envfile=/etc/default/locale
 auth    sufficient      pam_succeed_if.so user ingroup nopasswdlogin
 
-auth    required	pam_krb5.so minimum_uid=1000 use_first_pass
+auth    required	pam_krb5.so minimum_uid=10000 use_first_pass
 auth	optional	pam_exec.so /usr/sbin/puavo-ltsp-login
 
 auth    optional        pam_gnome_keyring.so
