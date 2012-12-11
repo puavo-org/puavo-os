@@ -3,7 +3,7 @@
   , "version": "0.1.1"
   , "private": true
   , "scripts": {
-    "test": "grunt mocha"
+    "test": "make test-client"
   }
   , "main": "index.html"
   , "window": {
