@@ -54,7 +54,7 @@ install: install-dirs
 		client/templates/etc/sssd/sssd.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates \
-		boot-server/templates/ltsp-server.xml
+		bootserver/templates/ltsp-server.xml
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)/sbin \
 		client/init-puavo 
@@ -63,7 +63,7 @@ install: install-dirs
 		client/puavo-dns-client \
 		client/puavo-configure-client \
 		client/puavo-ltsp-login \
-		boot-server/puavo-create-kvm-ltsp-server
+		bootserver/puavo-create-kvm-ltsp-server
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount \
 		client/initramfs/puavo_udhcp
