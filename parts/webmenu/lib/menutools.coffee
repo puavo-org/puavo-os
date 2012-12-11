@@ -3,9 +3,23 @@
 
 path = require "path"
 dotdesktop = require "./dotdesktop"
+fs = require "fs"
 
-injectDesktopData = (menu, sources, locale) ->
+osIconPath = (iconSearchPaths, id, fallbackIcon) ->
+  osIconFilePath = fallbackIcon
+  iconSearchPaths.forEach (p) ->
+    filePath = "#{ p }/#{ id }.png"
+    if fs.existsSync( filePath )
+      osIconFilePath = filePath
+
+  return osIconFilePath
+
+injectDesktopData = (menu, sources, locale, iconSearchPaths, fallbackIcon) ->
+  if menu.type is "menu" &&  menu.osIcon
+     menu.osIconPath = osIconPath(iconSearchPaths, menu.osIcon, fallbackIcon)
+
   sources.forEach (desktopDir) ->
+
     if menu.type is "desktop" and menu.id
       filePath = desktopDir + "/#{ menu.id }.desktop"
       try
@@ -17,12 +31,13 @@ injectDesktopData = (menu, sources, locale) ->
       menu.name ?= desktopEntry.name
       menu.description ?= desktopEntry.description
       menu.command ?= desktopEntry.command
-      menu.osIcon ?= desktopEntry.osIcon
+      menu.osIconPath ?= osIconPath(iconSearchPaths, desktopEntry.osIcon, fallbackIcon)
       menu.upstreamName ?= desktopEntry.upstreamName
 
     else if menu.type is "menu"
       for menu_ in menu.items
-        injectDesktopData(menu_, sources, locale)
+        injectDesktopData(menu_, sources, locale, iconSearchPaths, fallbackIcon)
+
 
     if not menu.name
       console.error "Cannot find name for menu entry", menu

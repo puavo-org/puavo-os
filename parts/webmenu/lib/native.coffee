@@ -41,6 +41,8 @@ menutools.injectDesktopData(
   menuJSON
   config.dotDesktopSearchPaths
   locale
+  config.iconSearchPaths
+  config.fallbackIcon
 )
 
 username = posix.getpwnam(posix.geteuid()).name
