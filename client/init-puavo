@@ -36,7 +36,7 @@ for script in $(run_parts_list "$scriptsdir") ; do
     if [ "$script" = "$breakscript" ]; then
         warn "Spawning shell before $script"
         bash -l
-        warn "Continuing puavo-init-ltsp execution"
+        warn "Continuing init-puavo execution"
     fi
     debug "Sourcing $script"
     warn "Sourcing $script"
@@ -46,7 +46,7 @@ done
 
 debug "Done"
 
-# init=/sbin/puavo-init-ltsp can be used to launch this script, which should then
+# init=/sbin/init-puavo can be used to launch this script, which should then
 # chain to /sbin/init.
 # To run it from the initramfs instead, set the EXEC_INIT environment variable
 # to "false".

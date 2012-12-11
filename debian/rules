@@ -31,24 +31,35 @@ override_dh_install:
 	install -m 755 client/puavo-ltsp-login $(CURDIR)/debian/puavo-ltsp-client/usr/sbin/
 
 	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/sbin/
-	install -m 755 client/puavo-init-ltsp-server $(CURDIR)/debian/puavo-ltsp-client/sbin/
-	install -m 755 client/puavo-init-ltsp $(CURDIR)/debian/puavo-ltsp-client/sbin/
+	install -m 755 client/init-puavo $(CURDIR)/debian/puavo-ltsp-client/sbin/
+	install -m 755 client/puavo-dns-client $(CURDIR)/debian/puavo-ltsp-client/usr/sbin/
+	install -m 755 client/puavo-configure-client $(CURDIR)/debian/puavo-ltsp-client/usr/sbin/
 
-	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/ltsp/init-ltsp.d/
 	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/ssh
 	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/pam.d
 	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/ldap
 	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/default
 	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/sssd
+	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/initramfs-tools/scripts/init-premount
+	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/initramfs-tools/scripts/init-bottom
 
-	install -m 644 client/puavo-ltsp.d/30-puavo-config-partition $(CURDIR)/debian/puavo-ltsp-client/usr/share/ltsp/init-ltsp.d/
 	install -m 644 client/templates/etc/ssh/sshd_config $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/ssh/
-	install -m 644 client/templates/etc/pam.d/common-auth $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/pam.d/
-	install -m 644 client/templates/etc/pam.d/common-account $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/pam.d/
-	install -m 644 client/templates/etc/pam.d/common-session $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/pam.d/
+	install -m 644 client/templates/etc/pam.d/lightdm-thinclient $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/pam.d/
+	install -m 644 client/templates/etc/pam.d/lightdm-fatclient $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/pam.d/
 	install -m 644 client/templates/etc/ldap/ldap.conf $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/ldap/
 	install -m 644 client/templates/etc/krb5.conf $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/
 	install -m 644 client/templates/etc/nsswitch.conf-extrausers $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/
 	install -m 644 client/templates/etc/nsswitch.conf-sss $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/
 	install -m 644 client/templates/etc/default/nfs-common $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/default/
 	install -m 644 client/templates/etc/sssd/sssd.conf $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp-client/templates/etc/sssd/
+
+#	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp/puavo-init-ltsp.d/
+	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp/init-ltsp.d/
+	cp client/debian-ltsp.d/*-* $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp/init-ltsp.d/
+#	cp client/puavo-ltsp.d/*-* $(CURDIR)/debian/puavo-ltsp-client/usr/share/puavo-ltsp/init-ltsp.d/
+
+	install -m 755 client/initramfs/puavo_udhcp $(CURDIR)/debian/puavo-ltsp-client/usr/share/initramfs-tools/scripts/init-premount/
+	install -m 755 client/initramfs/puavo_ltsp $(CURDIR)/debian/puavo-ltsp-client/usr/share/initramfs-tools/scripts/init-bottom/
+
+	mkdir -p $(CURDIR)/debian/puavo-ltsp-client/etc/init
+	install -m 644 client/puavo-ltsp-client.conf $(CURDIR)/debian/puavo-ltsp-client/etc/init/
