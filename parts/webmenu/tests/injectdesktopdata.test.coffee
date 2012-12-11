@@ -19,6 +19,8 @@ describe "inject dot desktop data", ->
     it "gets name", -> expect(menu.name).to.be.ok
     it "gets command", -> expect(menu.command).to.be.ok
     it "gets upstreamName", -> expect(menu.upstreamName).to.be.ok
+    it "gets icon", -> expect(menu.osIconPath).to.eq iconsDir + "/thunderbird.png"
+
 
   describe "menu.json can force attributes", ->
 
