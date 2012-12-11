@@ -1,0 +1,55 @@
+#!/bin/sh
+
+. /usr/share/ltsp/ltsp-client-functions
+scriptsdir="/usr/share/puavo-ltsp/init-ltsp.d"
+
+# workaround Debian bug in initramfs-tools:
+# http://bugs.debian.org/660297
+mountpoint -q /sys || mount -t sysfs -o nodev,noexec,nosuid sysfs /sys
+mountpoint -q /proc || mount -t proc -o nodev,noexec,nosuid proc /proc
+
+# Provide an ltsp.break=<script-name> kernel parameter which will offer a shell
+# right before sourcing that script.
+for x in $(cat /proc/cmdline); do
+    case "$x" in
+        ltsp.break=*)
+            breakscript="$scriptsdir/${x#ltsp.break=}"
+            break;
+            ;;
+        puavo.type=*)
+            puavo_type="${x#puavo.type=}"
+            break;
+            ;;
+    esac
+done
+
+warn "test1"
+
+#rm -rf /etc/puavo
+mkdir -p /etc/puavo
+echo "${puavo_type}" > /etc/puavo/type
+export PUAVO_DEVICE_TYPE=${puavo_type}
+
+warn "test2"
+
+for script in $(run_parts_list "$scriptsdir") ; do
+    if [ "$script" = "$breakscript" ]; then
+        warn "Spawning shell before $script"
+        bash -l
+        warn "Continuing puavo-init-ltsp execution"
+    fi
+    debug "Sourcing $script"
+    warn "Sourcing $script"
+    . "$script"
+    warn "DONE"
+done
+
+debug "Done"
+
+# init=/sbin/puavo-init-ltsp can be used to launch this script, which should then
+# chain to /sbin/init.
+# To run it from the initramfs instead, set the EXEC_INIT environment variable
+# to "false".
+if [ "$EXEC_INIT" != "false" ]; then
+    exec /sbin/init
+fi
