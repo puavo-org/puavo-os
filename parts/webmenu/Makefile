@@ -17,7 +17,7 @@ install-dirs:
 	mkdir -p $(DESTDIR)/opt/webmenu
 
 install: install-dirs
-	cp -r lib node_modules bin routes docs content *.js *.coffee *.json *.md $(DESTDIR)/opt/webmenu
+	cp -r lib node_modules bin routes docs *.js *.coffee *.json *.md $(DESTDIR)/opt/webmenu
 	install -o root -g root -m 644 webmenu.desktop \
 		$(DESTDIR)/etc/xdg/autostart/webmenu.desktop
 	install -o root -g root -m 644 webmenu-spawn.desktop \

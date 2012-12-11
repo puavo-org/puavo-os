@@ -10,10 +10,10 @@ module.exports = function(grunt) {
       compile: {
         options: {
           'include css': true,
-          'paths': ["content/theme/css/"]
+          'paths': ["theme/css/"]
         },
         files: {
-          'content/theme/css/master.css': 'content/theme/css/master.styl'
+          'theme/css/master.css': 'theme/css/master.styl'
         }
       }
     },
@@ -29,7 +29,7 @@ module.exports = function(grunt) {
           syntaxtype: "coffee",
           extension: ".coffee",
           paths: [
-            "content/scripts/app/",
+            "scripts/app/",
             "lib/"
           ],
           outdir: "./out"
@@ -45,7 +45,7 @@ module.exports = function(grunt) {
     },
 
     watch: {
-      files: "content/**",
+      files: "theme/**",
       tasks: "stylus"
     }
 
