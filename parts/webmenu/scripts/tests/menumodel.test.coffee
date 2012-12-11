@@ -61,7 +61,7 @@ define [
       expect(model).to.have.property "items"
       expect(
         model.get("item")
-      ).to.be.a("undefined")
+      ).to.be.not.ok
 
     it "will increase click count on a 'select' event", (done) ->
       item = allItems.at(1)
