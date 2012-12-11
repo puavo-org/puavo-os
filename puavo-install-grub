@@ -6,7 +6,8 @@ images_dir=${1:-/images}
 diskdev=$2
 
 if [ -z "$diskdev" ]; then
-  diskdev=$(pvs | awk '$2 == "puavo" { print $1; exit }')
+  diskdev=$(pvs | awk '$2 == "puavo" { print $1; exit }' \
+		| sed -E 's|[0-9]+$||')
 fi
 
 if [ -z "$images_dir" -o -z "$diskdev" ]; then

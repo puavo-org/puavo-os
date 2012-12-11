@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -e
+
+puavo-register
+
+hosttype="$(cat /etc/puavo/hosttype)"
+
+case "$hosttype" in
+  laptop)
+    puavo-setup-filesystems
+    cp -a /etc/puavo /state
+    puavo-install-ltspimages
+    puavo-install-grub
+    ;;
+  ltspserver)
+    puavo-setup-filesystems
+    cp -a /etc/puavo /state
+    ;;
+esac
