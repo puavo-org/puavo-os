@@ -1,0 +1,4 @@
+if boolean_is_true ${DISABLE_GETTYS:-"True"} && [ -f /etc/inittab ]; then
+    # Disable getty on tty 2-6.
+    sed -i /getty.*tty[2-6]/d /etc/inittab
+fi

@@ -1,0 +1,4 @@
+# Load extra modules here, in case they affect other plugins
+for module in $(env|grep ^MODULE_|sed -e s/^MODULE_[0-9]*\=//|sed -e s/\ /*/g);do
+    modprobe $(echo $module|tr "*" " ")
+done

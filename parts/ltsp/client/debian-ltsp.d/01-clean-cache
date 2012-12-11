@@ -1,0 +1,6 @@
+# Make sure our cache dirs are there
+mkdir -p /var/cache/ltsp
+mkdir -p /var/cache/ltsp-localapps
+
+# Also delete the cache files in case they exist in the underlying root rofs.
+rm -f /var/cache/ltsp/ltsp_config /var/cache/ltsp/ltsp_config_env
