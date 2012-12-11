@@ -1,0 +1,47 @@
+# PAM configuration for the Secure Shell service
+
+# Read environment variables from /etc/environment and
+# /etc/security/pam_env.conf.
+auth       required     pam_env.so # [1]
+# In Debian 4.0 (etch), locale-related environment variables were moved to
+# /etc/default/locale, so read that as well.
+auth       required     pam_env.so envfile=/etc/default/locale
+
+# Standard Un*x authentication.
+auth    required                        pam_krb5.so minimum_uid=1000
+
+# Disallow non-root logins when /etc/nologin exists.
+account    required     pam_nologin.so
+
+# Uncomment and edit /etc/security/access.conf if you need to set complex
+# access limits that are hard to express in sshd_config.
+# account  required     pam_access.so
+
+# Standard Un*x authorization.
+account required	pam_permit.so
+
+# Standard Un*x session setup and teardown.
+session	required	pam_permit.so
+session optional	pam_umask.so
+session	optional	pam_krb5.so minimum_uid=1000
+session optional	pam_mkhomedir.so # Tilapäinen testausta varten (kunnes nfs-mountti toimii)
+session	required	pam_unix.so
+
+# Print the message of the day upon successful login.
+# This includes a dynamically generated part from /run/motd.dynamic
+# and a static (admin-editable) part from /etc/motd.
+session    optional     pam_motd.so  motd=/run/motd.dynamic noupdate
+session    optional     pam_motd.so # [1]
+
+# Print the status of the user's mailbox upon successful login.
+session    optional     pam_mail.so standard noenv # [1]
+
+# Set up user limits from /etc/security/limits.conf.
+session    required     pam_limits.so
+
+# Set up SELinux capabilities (need modified pam)
+# session  required     pam_selinux.so multiple
+
+# Standard Un*x password updating.
+#@include common-password
+
