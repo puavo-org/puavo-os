@@ -68,6 +68,8 @@ define [
         collection: @allItems
         config: @config
 
+      @setView ".search-container", new Search
+
       @bindTo this, "changeFilter", (filter) ->
         @setView ".menu-app-list-container", @searchResultView
         @searchResultView.displayItems(filter)
@@ -86,6 +88,5 @@ define [
       @setView ".menu-app-list-container", @menuListView
       @setView ".breadcrums-container", new Breadcrumbs
         model: model
-      @setView ".search-container", new Search
 
 
