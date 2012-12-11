@@ -11,17 +11,24 @@ define [
   describe "ProfileView", ->
     view = null
     beforeEach ->
-      Application.reset()
       view = new ProfileView
         model: new Backbone.Model(fullName: "John Doe")
         config: new Backbone.Model
-          profileCMD: "http://profile.example.com"
-          passwordCMD: "http://password.example.com"
+          profileCMD:
+            type: "webWindow"
+            url: "http://profile.example.com"
+          passwordCMD:
+            type: "webWindow"
+            url: "http://password.example.com"
+          settingsCMD:
+            type: "custom"
+            command: "gnome-control-center"
 
       view.render()
 
     afterEach ->
       view.remove()
+      Application.reset()
 
     it "should display user's fullname", ->
       expect(view.$el).to.contain("John Doe")
@@ -38,18 +45,30 @@ define [
         expect($("body")).to.have(".bb-lightbox")
 
     describe "my profile button", ->
-      it "emits 'showMyProfileWindow'", (done) ->
-        Application.bridge.on "showMyProfileWindow", -> done()
+      it "emits 'open' event on bridge with profile cmd", (done) ->
+        Application.bridge.on "open", (cmd) ->
+          expect(cmd).to.deep.eq
+            type: "webWindow"
+            url: "http://profile.example.com"
+          done()
         view.$(".bb-profile-settings").click()
 
     describe "password button", ->
-      it "emits 'showChangePasswordWindow'", (done) ->
-        Application.bridge.on "showChangePasswordWindow", -> done()
+      it "emits 'open' event on bridge with password cmd", (done) ->
+        Application.bridge.on "open", (cmd) ->
+          expect(cmd).to.deep.eq
+            type: "webWindow"
+            url: "http://password.example.com"
+          done()
         view.$(".bb-change-password").click()
 
-    describe "settings button", ->
-      it "emits 'openSettings'", (done) ->
-        Application.bridge.on "openSettings", -> done()
+    describe "emits 'open' event on bridge with settings cmd", ->
+      it "emits ", (done) ->
+        Application.bridge.on "open", (cmd) ->
+          expect(cmd).to.deep.eq
+            type: "custom"
+            command: "gnome-control-center"
+          done()
         view.$(".bb-settings").click()
 
     describe "with missing changePasswordUrl&profileUrl", ->

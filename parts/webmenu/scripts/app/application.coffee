@@ -12,6 +12,8 @@ define [
   Application =
 
     reset: ->
+      @global?.off()
+      @bridge?.off()
       @global = new Backbone.Model
       @bridge = new Backbone.Model
 

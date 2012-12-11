@@ -1,20 +1,24 @@
 
 define [
-  "cs!app/views/menulayout_view"
-  "cs!app/models/menu_model"
-  "cs!app/models/allitems_collection"
   "jquery"
   "backbone"
   "underscore.string"
+
+  "cs!app/application"
+  "cs!app/views/menulayout_view"
+  "cs!app/models/menu_model"
+  "cs!app/models/allitems_collection"
 ],
 (
-  MenuLayout
-  MenuModel
-  AllItems
   $
   Backbone
   str
-)->
+
+  Application
+  MenuLayout
+  MenuModel
+  AllItems
+) ->
   data =
     type: "menu"
     name: "Top"
@@ -41,6 +45,7 @@ define [
     layout = null
 
     beforeEach ->
+      Application.reset()
       allItems = new AllItems
       menuModel = new MenuModel data, allItems
       allItems.each (m) -> m.resetClicks?()
@@ -64,6 +69,7 @@ define [
     describe "after clicking one item", ->
 
       beforeEach ->
+
         layout.$(".bb-menu .bb-menu-item .item-name").filter(
           (i, e) -> $(e).text() is "Gimp"
         ).click()
