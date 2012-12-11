@@ -14,9 +14,8 @@ if [ -x "/sbin/vgchange" ]; then
     mount /dev/mapper/puavo-config /mnt/puavoconfig
 
     if [ -d "/mnt/puavoconfig/puavo" ]; then
-      rm -rf /etc/puavo /etc/krb5.keytab
-      ln -s /mnt/puavoconfig/puavo /etc/
-      ln -s /mnt/puavoconfig/krb5.keytab /etc/
+      cp -r /mnt/puavoconfig/puavo/* /etc/puavo/
+      cp /mnt/puavoconfig/krb5.keytab /etc/
     fi
   fi
 fi
