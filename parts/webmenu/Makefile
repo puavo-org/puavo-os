@@ -32,6 +32,6 @@ test-client:
 	grunt mocha
 
 test-node:
-	node_modules/.bin/mocha -R spec --compilers coffee:coffee-script tests/*test*
+	node_modules/.bin/mocha --reporter spec --compilers coffee:coffee-script tests/*test*
 
 test: test-client
