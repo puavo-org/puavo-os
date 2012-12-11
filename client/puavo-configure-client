@@ -51,15 +51,20 @@ when puavo_device_type.eql?("fatclient")
   write_config("/etc/default/nfs-common")
 when puavo_device_type.eql?("ltspserver")
   write_config("/etc/nsswitch.conf", "sss")
-  write_config("/etc/pam.d/ltsp_sshd")
+  write_config("/etc/pam.d/ltspsshd")
   write_config("/etc/ldap/ldap.conf")
   write_config("/etc/krb5.conf")
   write_config("/etc/default/nfs-common")
   write_config("/etc/ssh/sshd_config")
+  write_config("/etc/ssh/ltspsshd_config")
+  write_config("/etc/init/ltspssh.conf")
 
   @ldap_binddn       = File.read('/etc/puavo/ldap/dn'        ).chomp
   @ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp
   write_config("/etc/sssd/sssd.conf")
+
+  `service sssd start`
+  `service ltspssh start`
 when puavo_device_type.eql?("laptop")
 
   @ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp

@@ -35,7 +35,7 @@ install: install-dirs
 		client/templates/etc/ssh/sshd_config
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d \
-		client/templates/etc/pam.d/ltsp_sshd \
+		client/templates/etc/pam.d/ltspsshd \
 		client/templates/etc/pam.d/lightdm-thinclient \
 		client/templates/etc/pam.d/lightdm-fatclient
 
