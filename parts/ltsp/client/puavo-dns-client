@@ -22,9 +22,6 @@ PUAVO_DEVICE_TYPE="thinclient"
 if [ "thinclient" = "${PUAVO_DEVICE_TYPE}" -o \
      "fatclient" = "${PUAVO_DEVICE_TYPE}" ]; then
 
-  cat /etc/resolv.conf
-  ifconfig
-
   PUAVO_DOMAIN=$(dig +time=2 +tries=1 TXT _puavo +search +short | sed 's/^"//; s/"$//;')
   echo "PUAVO DOMAIN: ${PUAVO_DOMAIN}"
 
