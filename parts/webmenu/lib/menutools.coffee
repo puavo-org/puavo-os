@@ -15,10 +15,10 @@ osIconPath = (iconSearchPaths, id, fallbackIcon) ->
   return osIconFilePath
 
 injectDesktopData = (menu, sources, locale, iconSearchPaths, fallbackIcon) ->
-  if menu.type is "menu" &&  menu.osIcon
-     menu.osIconPath = osIconPath(iconSearchPaths, menu.osIcon, fallbackIcon)
 
   sources.forEach (desktopDir) ->
+    if menu.osIcon
+      menu.osIconPath = osIconPath(iconSearchPaths, menu.osIcon, fallbackIcon)
 
     if menu.type is "desktop" and menu.id
       filePath = desktopDir + "/#{ menu.id }.desktop"

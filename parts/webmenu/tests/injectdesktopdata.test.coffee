@@ -38,12 +38,31 @@ describe "inject dot desktop data", ->
 
   describe "Use default icon if application's icon not found", ->
 
-    menu = null
-    beforeEach ->
-      menu =
+    menus = [
+      {
         type: "desktop"
         id: "gedit"
+      }, {
+        type: "desktop"
+        id: "gwibber"
+      }, {
+        type: "custom"
+        name: "Test Application"
+        command: "test-command"
+        description: "test description"
+        osIcon: "testIcon"
+      }, {
+        type: "web"
+        name: "Walma"
+        url: "http://walmademo.opinsys.fi"
+        description: "Yhteistoiminnallinen piirtotaulu"
+        osIcon: "emblem-pictures"
+      }
+    ]
+      
+
+    menus.forEach (menu) ->
       menutools.injectDesktopData(menu, [dir], "fi_FI.UTF-8", [iconsDir], fallbackIconPath)
 
-    it "should have default icon", ->
-      expect(menu.osIconPath).to.eq fallbackIconPath
+      it "should have default icon", ->
+        expect(menu.osIconPath).to.eq fallbackIconPath
