@@ -28,8 +28,7 @@ HostCrtPath     = "#{ Puavodir }/certs/host.crt"
 HostKeyPath     = "#{ Puavodir }/certs/host.key"
 OrgCABundlePath = "#{ Puavodir }/certs/orgcabundle.pem"
 RootCAPath      = "#{ Puavodir }/certs/rootca.pem"
-
-Host_configuration_path = "#{ Puavodir }/host_configuration"
+Hosttype_path   = "#{ Puavodir }/hosttype"
 
 class Tools
   def self.colormsg(msg, tag, color)
@@ -541,19 +540,19 @@ module PostRegister
     Tools.goodmsg('Kerberos information is now set.')
   end
 
-  def self.write_host_configuration(conf)
+  def self.write_hosttype(hosttype)
     ensure_puavodir
-    File.open(Host_configuration_path, 'w') do |f|
-      f.print conf.to_yaml
+    File.open(Hosttype_path, 'w', 0644) do |f|
+      f.print "#{ hosttype }\n"
     end
-    Tools.goodmsg('Host configuration file is written.')
+    Tools.goodmsg('Host type is now set.')
   end
 end
 
 
 class Control
   def self.register(cmdline_params)
-    if File.exists?(Host_configuration_path) && !cmdline_params['force']
+    if File.exists?(Hosttype_path) && !cmdline_params['force']
       Tools.errmsg('Registration is already done and --force is not applied.')
       exit 1
     end
@@ -607,10 +606,8 @@ class Control
 
     PostRegister.write_domain(organisation_info["domain"])
 
-    PostRegister.write_host_configuration(
-      info['registration']['host_configuration']
-    )
-
+    PostRegister.write_hosttype(
+      info['registration']['host_configuration']['devicetype'])
   end
 end
 
