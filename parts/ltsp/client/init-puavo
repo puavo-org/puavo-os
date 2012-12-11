@@ -1,7 +1,7 @@
 #!/bin/sh
 
 . /usr/share/ltsp/ltsp-client-functions
-scriptsdir="/usr/share/puavo-ltsp/init-ltsp.d"
+scriptsdir="/usr/share/puavo-ltsp/init-puavo.d"
 
 # workaround Debian bug in initramfs-tools:
 # http://bugs.debian.org/660297

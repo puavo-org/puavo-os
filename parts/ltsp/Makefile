@@ -22,14 +22,14 @@ install-dirs:
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sssd
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default
-	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/init-ltsp.d
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom
 
 .PHONY: install
 install: install-dirs
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/init-ltsp.d \
-		client/puavo-ltsp.d/30-puavo-config-partition
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d \
+		client/init-puavo.d/*
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh \
 		client/templates/etc/ssh/sshd_config
