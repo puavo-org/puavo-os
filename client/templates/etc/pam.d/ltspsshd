@@ -8,7 +8,7 @@ auth       required     pam_env.so # [1]
 auth       required     pam_env.so envfile=/etc/default/locale
 
 # Standard Un*x authentication.
-auth    required                        pam_krb5.so minimum_uid=1000
+auth    required                        pam_krb5.so minimum_uid=10000
 
 # Disallow non-root logins when /etc/nologin exists.
 account    required     pam_nologin.so
