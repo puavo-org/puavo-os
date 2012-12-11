@@ -1,8 +1,0 @@
-#!/bin/sh
-
-set -e
-
-puavo-register
-puavo-setup-filesystems
-puavo-install-ltspimages
-puavo-install-grub
