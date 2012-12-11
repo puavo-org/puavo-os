@@ -3,6 +3,7 @@ module.exports = function(grunt) {
   var pkg = require("./package.json");
   grunt.loadNpmTasks("grunt-stylus");
   grunt.loadNpmTasks("grunt-contrib-yuidoc");
+  grunt.loadNpmTasks("grunt-mocha");
   grunt.initConfig({
 
     stylus: {
@@ -36,6 +37,12 @@ module.exports = function(grunt) {
       }
     },
 
+    mocha: {
+      client: {
+        src: [ "tests.html" ]
+
+      }
+    },
 
     watch: {
       files: "content/**",

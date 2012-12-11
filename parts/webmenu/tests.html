@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>Mocha Tests</title>
-  <link rel="stylesheet" href="/scripts/vendor/tests/mocha.css" />
+  <link rel="stylesheet" href="scripts/vendor/tests/mocha.css" />
   <style type="text/css" media="all">
     #docs {
       font-size: small;
@@ -21,7 +21,10 @@
     </ul>
   </div>
   <div id="mocha"></div>
-  <script src="requirefix.js"></script>
+  <script>
+    window.require = undefined;
+    window.process = undefined;
+  </script>
   <script src="scripts/vendor/tests/mocha.js"></script>
   <script src="scripts/vendor/jquery.js"></script>
   <script src="scripts/vendor/tests/chai.js"></script>
@@ -40,19 +43,9 @@
         "cs!tests/menulayout.test",
         "cs!tests/allitems_collection.test",
         "cs!tests/menuitem_view.test",
-        "cs!tests/menumodel.test",
-        "cs!tests/dom2bb.test"
+        "cs!tests/menumodel.test"
     ], function() {
         var runner = mocha.run();
-        var fails = []
-        runner.on("fail", function(test, err) {
-          fails.push({ test: test, err: err });
-        });
-        runner.on("end", function(foo, bar) {
-          var e = new Event("mocha-end");
-          e.fails = fails;
-          window.dispatchEvent(e);
-        });
     });
   </script>
   <a href="#" onclick="window.location.reload()">Restart</a>
