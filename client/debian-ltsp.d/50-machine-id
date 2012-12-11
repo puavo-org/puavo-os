@@ -1,0 +1,8 @@
+# The dbus machine id should be unique for each client, otherwise problems may
+# occur, e.g. if a thin client has the same id as the server, then `sudo gedit`
+# on the client session which runs on the server gives "access denied"!
+
+rm -f /var/lib/dbus/machine-id
+if [ -x /bin/dbus-uuidgen ]; then
+    dbus-uuidgen --ensure
+fi
