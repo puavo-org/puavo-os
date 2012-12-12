@@ -69,6 +69,7 @@ install: install-dirs
 		client/puavo-dns-client \
 		client/puavo-configure-client \
 		client/puavo-ltsp-login \
+		client/puavo-ltsp-mount-nfs-home \
 		bootserver/puavo-create-kvm-ltsp-server
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount \

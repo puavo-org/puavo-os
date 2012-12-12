@@ -24,7 +24,7 @@ account required	pam_permit.so
 session	required	pam_permit.so
 session optional	pam_umask.so
 session	optional	pam_krb5.so minimum_uid=1000
-session optional	pam_mkhomedir.so # Tilapäinen testausta varten (kunnes nfs-mountti toimii)
+session optional        pam_exec.so /usr/sbin/puavo-ltsp-mount-nfs-home
 session	required	pam_unix.so
 
 # Print the message of the day upon successful login.
