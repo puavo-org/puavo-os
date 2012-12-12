@@ -4,6 +4,7 @@ PUPPET_USE_CLASSES="
   organisation_adm_users
   packages::opinsys
   packages::partner
+  packages::sssd_install_workaround
   packages::ubuntu
   ssh_client
   sudo
