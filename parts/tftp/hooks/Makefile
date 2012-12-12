@@ -12,5 +12,5 @@ install: install-dirs
 	  $(DESTDIR)$(prefix)/sbin/puavo-ltspboot-config
 	install -o root -g root -m 755 puavo-lts-config \
 	  $(DESTDIR)$(prefix)/sbin/puavo-lts-config
-	install -o root -g root -m 755 puavo-tftp.yml $(sysconfdir)/puavo-tftp.yml
+	install -o root -g root -m 755 puavo-tftp.yml $(DESTDIR)$(sysconfdir)/puavo-tftp.yml
 	install -o root -g root -m 755 puavo-ldap.rb $(DESTDIR)$(prefix)/lib/ruby/vendor_ruby
