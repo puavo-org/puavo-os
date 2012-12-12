@@ -89,7 +89,7 @@ define [
 
       it "it filters item by description attribute", ->
         itemsColl = new AllItems itemData
-        filtered = itemsColl.searchFilter("descriptiontest")
+        filtered = itemsColl.searchFilter("bar descriptiontest")
 
         expect(
           _.find filtered, (model) -> model.get("name") is "good"
