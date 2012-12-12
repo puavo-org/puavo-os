@@ -140,7 +140,7 @@ describe("ViewMaster", function(){
 
       parent.renderViews({
         force: true,
-        views: [ ".containerA" ]
+        containers: [ ".containerA" ]
       });
 
       expect(childB.render).to.have.been.called.once;
