@@ -41,8 +41,11 @@ prereqs)
     ;;
 esac
 
-# Exit if an LTSP boot was not requested - FIXME: do not run for laptops!
+# Exit if an LTSP boot was not requested.
 grep -Eqsw "init=/sbin/init-puavo" /proc/cmdline || exit 0
+
+# Do not run for laptops!
+grep -Eqsw "puavo.hosttype=laptop" /proc/cmdline && exit 0
 
 bring_up_interfaces()
 {
