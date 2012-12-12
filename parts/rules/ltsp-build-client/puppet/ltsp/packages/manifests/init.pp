@@ -345,6 +345,12 @@ class packages {
     , 'spe' ]:
       tag => [ 'programming', 'ubuntu', ];
 
+    [ 'ltsp-lightdm'
+    , 'opinsys-ca-certificates'
+    , 'puavo-ltsp-client'
+    , 'puavo-register' ]:
+      tag => [ 'puavo', 'opinsys', ];
+
     [ 'vmware-view-client' ]:
       tag => [ 'remote_access', 'vmware-view-client', ];
 
