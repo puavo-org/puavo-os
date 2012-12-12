@@ -67,13 +67,13 @@ define [
         collection: @allItems
         config: @config
 
-      @setView ".search-container", new Search
-
-      @bindTo this, "changeFilter", (filter) ->
-        @setView ".menu-app-list-container", @searchResultView
-        @searchResultView.displayItems(filter)
-        console.log "Filter: ", filter
-        @renderViews(views: ".menu-app-list-container")
+      if window.FEATURE_SEARCH
+        @setView ".search-container", new Search
+        @bindTo this, "changeFilter", (filter) ->
+          @setView ".menu-app-list-container", @searchResultView
+          @searchResultView.displayItems(filter)
+          console.log "Filter: ", filter
+          @renderViews(views: ".menu-app-list-container")
 
     showProfile: ->
       @setView ".sidebar", new ProfileView

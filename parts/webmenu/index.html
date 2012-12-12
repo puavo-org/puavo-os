@@ -8,6 +8,10 @@
 
       window.gui = require('nw.gui');
       window.nodeRequire = window.require;
+
+      // Feature switches
+      window.FEATURE_SEARCH = !!window.process.env.search;
+
       window.require = undefined;
       window.process = undefined;
       window.require = { baseUrl: "scripts/" };
