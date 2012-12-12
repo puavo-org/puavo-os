@@ -25,7 +25,6 @@ injectDesktopData = (menu, sources, locale, iconSearchPaths, fallbackIcon) ->
       try
         desktopEntry = dotdesktop.parseFileSync(filePath, locale)
       catch err
-        console.log "Failed to parse #{ filePath }", err
         return
 
       menu.name ?= desktopEntry.name
