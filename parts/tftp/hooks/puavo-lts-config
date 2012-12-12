@@ -117,7 +117,7 @@ def handle_ltsconf_request
     'XKBLAYOUT'             => 'fi',
   }
 
-  deviceentry = @puavoldap.netboot_device_by_mac(@mac)
+  deviceentry = @puavoldap.device_by_mac(@mac)
   if deviceentry
     ltspvars.merge!(device_ltspvars(deviceentry))
   else
