@@ -27,6 +27,12 @@ install: install-dirs
 	install -o root -g root -m 755 bin/webmenu-spawn \
 		$(DESTDIR)$(prefix)/bin/webmenu-spawn
 
+uninstall:
+	rm $(DESTDIR)$(prefix)/bin/webmenu-spawn
+	rm $(DESTDIR)$(prefix)/bin/webmenu
+	rm -rf $(DESTDIR)/opt/webmenu
+	rm $(DESTDIR)$(prefix)/share/applications/webmenu-spawn.desktop 
+	rm $(DESTDIR)/etc/xdg/autostart/webmenu.desktop
 
 test-client:
 	grunt mocha
