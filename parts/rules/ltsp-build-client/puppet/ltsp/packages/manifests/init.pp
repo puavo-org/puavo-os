@@ -10,6 +10,7 @@ class packages {
     , 'gawk'
     , 'git'
     , 'lynx'
+    , 'pv'
     , 'sl'
     , 'sudo'
     , 'tmux'
