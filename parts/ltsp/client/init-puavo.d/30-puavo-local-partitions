@@ -1,0 +1,46 @@
+# Mount Puavo partitions from local hard drive and use files created by
+# puavo-register script.  Used by Puavo LTSP servers to get registration
+# information needed for sssd and kerberos principal for NFS mounts.
+# Images partition are used by laptops and need it mounted to update
+# the ltsp images.
+#
+# Checks if LVM partitions /dev/mapper/puavo-home, /dev/mapper/puavo-images
+# and /dev/mapper/puavo-state and mounts those as /home, /images, or /state,
+# correspondingly.  Also copy necessary directory hierarchies under /state
+# in case those are missing.
+
+puavo_link_to_state() {
+  for dir in "$@"; do
+    find "$dir" -type d -print0 | cpio -0dpm --quiet /state
+    mv -T "$dir" "$dir.rofs" 2>/dev/null || true
+    ln -fns "/state$dir" "$dir"
+  done
+}
+
+if [ -x "/sbin/vgchange" ]; then
+  vgchange -a y
+
+  if [ -b "/dev/mapper/puavo-home" ]; then
+    mkdir -p /home
+    mount /dev/mapper/puavo-home /home
+  fi
+
+  if [ -b "/dev/mapper/puavo-images" ]; then
+    mkdir -p /images
+    mount /dev/mapper/puavo-images /images
+  fi
+
+  if [ -b "/dev/mapper/puavo-state" ]; then
+    mkdir -p /state
+    mount /dev/mapper/puavo-state /state
+
+    case "$PUAVO_HOSTTYPE" in
+      laptop)
+        puavo_link_to_state /etc/puavo /var/lib/sss /var/log
+        ;;
+      ltspserver)
+        puavo_link_to_state /etc/puavo /var/log
+        ;;
+    esac
+  fi
+fi

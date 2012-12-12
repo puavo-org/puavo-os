@@ -9,7 +9,10 @@ hosttype="$(cat /etc/puavo/hosttype)"
 case "$hosttype" in
   laptop)
     puavo-setup-filesystems
-    cp -a /etc/puavo /state
+
+    mkdir -p /state/etc
+    cp -aT /etc/puavo /state/etc/puavo
+
     puavo-install-ltspimages
     puavo-install-grub
     ;;
