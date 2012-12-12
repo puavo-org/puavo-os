@@ -69,6 +69,7 @@ define [
         type: "custom"
         name: "bad"
         command: "bad-cmd"
+        description: "foo descriptiontest"
       ]
 
       it "it filters item by name attribute", ->
