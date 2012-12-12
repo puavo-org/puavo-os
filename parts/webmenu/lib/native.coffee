@@ -58,7 +58,7 @@ module.exports = (gui, bridge) ->
   Window = gui.Window.get()
 
   displayMenu = ->
-    console.log "DISPLAY"
+    console.log "Displaying menu"
     bridge.trigger "spawnMenu"
     Window.show()
     Window.focus()
@@ -72,7 +72,7 @@ module.exports = (gui, bridge) ->
     , 100
 
   hideWindow = ->
-    console.info "HIDE", argv
+    console.info "Hiding menu window"
     if argv.hide
       Window.hide()
     else
@@ -84,7 +84,7 @@ module.exports = (gui, bridge) ->
     displayMenu()
 
   bridge.on "open", (cmd) ->
-    console.log "OPEN", cmd
+    console.log "Opening command", cmd
 
     # Use node-webkit to open toolbarless web window
     if cmd.type is "webWindow"
