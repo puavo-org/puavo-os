@@ -16,21 +16,16 @@ for x in $(cat /proc/cmdline); do
             breakscript="$scriptsdir/${x#ltsp.break=}"
             break;
             ;;
-        puavo.type=*)
-            puavo_type="${x#puavo.type=}"
+        puavo.hosttype=*)
+            puavo_hosttype="${x#puavo.hosttype=}"
             break;
             ;;
     esac
 done
 
-warn "test1"
-
-#rm -rf /etc/puavo
 mkdir -p /etc/puavo
-echo "${puavo_type}" > /etc/puavo/type
-export PUAVO_DEVICE_TYPE=${puavo_type}
-
-warn "test2"
+echo "${puavo_type}" > /etc/puavo/hosttype
+export PUAVO_HOSTTYPE=${puavo_hosttype}
 
 for script in $(run_parts_list "$scriptsdir") ; do
     if [ "$script" = "$breakscript" ]; then
@@ -39,7 +34,6 @@ for script in $(run_parts_list "$scriptsdir") ; do
         warn "Continuing init-puavo execution"
     fi
     debug "Sourcing $script"
-    warn "Sourcing $script"
     . "$script"
     warn "DONE"
 done

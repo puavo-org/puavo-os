@@ -7,8 +7,8 @@ require 'tmpdir'
 puavo_device_type = ARGV[0]
 
 if (!puavo_device_type)
-  if File.exists?("/etc/puavo/type")
-    puavo_device_type = File.read('/etc/puavo/type').chomp
+  if File.exists?("/etc/puavo/hosttype")
+    puavo_device_type = File.read('/etc/puavo/hosttype').chomp
   end
 end
 
