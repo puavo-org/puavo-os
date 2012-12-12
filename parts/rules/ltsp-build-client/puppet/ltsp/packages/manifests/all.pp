@@ -1,5 +1,6 @@
 class packages::all {
   include packages,
+          packages::opinsys,
           packages::partner,
           packages::ubuntu
 
