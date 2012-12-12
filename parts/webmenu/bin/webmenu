@@ -1,3 +1,2 @@
 #!/bin/sh
-# Shell wrapper for --harmony switch
-node --harmony ./app.js "$@"
+nw /opt/webmenu
