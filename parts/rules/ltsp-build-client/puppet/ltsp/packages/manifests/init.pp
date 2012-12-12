@@ -1,5 +1,5 @@
 class packages {
-  include apt
+  include apt::repositories
 
   # install packages by default
   Package { ensure => present, }
@@ -447,9 +447,6 @@ class packages {
     , 'openjdk-6-jre' ]:
       tag => [ 'web', 'ubuntu', ];
 
-    [ 'walma-screenshot' ]:
-      tag => [ 'whiteboard-opinsys', 'opinsys', ];
-
     [ 'activaid'
     , 'activdriver'
     , 'activhwr-fi'
@@ -484,13 +481,5 @@ class packages {
     'nscd':
       ensure => purged,
       tag    => [ 'basic', 'ubuntu', ];
-  }
-
-  # XXX it would be nice if these were turned on simply if some package
-  # XXX from these repositories is asked to be installed
-  # define some apt repositories for use
-  @apt::repository {
-    'partner':
-      aptline => "http://archive.canonical.com/ubuntu $lsbdistcodename partner";
   }
 }

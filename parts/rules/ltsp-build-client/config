@@ -2,6 +2,7 @@ PUPPET_USE_CLASSES="
   console
   desktop
   organisation_adm_users
+  packages::opinsys
   packages::partner
   packages::ubuntu
   ssh_client
