@@ -1,0 +1,86 @@
+# gssd - rpcsec_gss daemon
+
+# The rpcsec_gss protocol gives a means of using the GSS-API generic security
+# API to provide security for protocols using RPC (in particular, NFS).
+
+description	"rpcsec_gss daemon"
+author		"Steve Langasek <steve.langasek@canonical.com>"
+
+start on local-filesystems
+stop on unmounted-remote-filesystems
+
+expect fork
+respawn
+
+env DEFAULTFILE=/etc/default/nfs-common
+env PIPEFS_MOUNTPOINT=/run/rpc_pipefs
+
+pre-start script
+	do_modprobe() {
+		modprobe -q "$1" || true
+	}
+
+	if [ -f "$DEFAULTFILE" ]; then
+		. "$DEFAULTFILE"
+	fi
+
+	#
+	# Parse the fstab file, and determine whether we need gssd. (The
+	# /etc/defaults settings, if any, will override our autodetection.)
+	# This code is partially adapted from the mountnfs.sh script in the
+	# sysvinit package.
+
+	if [ -f /etc/fstab ]; then
+		exec 9<&0 </etc/fstab
+
+		while read DEV MTPT FSTYPE OPTS REST
+		do
+			case "$OPTS" in
+				sec=krb5|*,sec=krb5|sec=krb5,*|*,sec=krb5,*|sec=krb5i|*,sec=krb5i|sec=krb5i,*|*,sec=krb5i,*|sec=krb5p|*,sec=krb5p|sec=krb5p,*|*,sec=krb5p,*)
+					AUTO_NEED_GSSD=yes
+					;;
+			esac
+		done
+
+		exec 0<&9 9<&-
+	fi
+
+	case "$NEED_GSSD" in
+		yes|no)
+			;;
+		*)
+			NEED_GSSD=$AUTO_NEED_GSSD
+			;;
+	esac
+	[ "x$NEED_GSSD" = xyes ] || { stop; exit 0; }
+
+	# we need this available; better to fail now than
+	# mysteriously on the first mount
+	if ! grep -q -E '^nfs[	 ]' /etc/services; then
+		echo "broken /etc/services, please see /usr/share/doc/nfs-common/README.Debian.nfsv4"
+		exit 1
+	fi
+
+	do_modprobe nfs
+	do_modprobe nfsd
+	do_modprobe rpcsec_gss_krb5
+
+	do_modprobe sunrpc
+
+	if ! mountpoint -q "$PIPEFS_MOUNTPOINT"
+	then
+		mkdir -p "$PIPEFS_MOUNTPOINT"
+		mount -t rpc_pipefs rpc_pipefs "$PIPEFS_MOUNTPOINT" || true
+	fi
+end script
+
+exec rpc.gssd -n
+
+post-stop script
+	if mountpoint -q "$PIPEFS_MOUNTPOINT"
+	then
+		# ignore any failures caused by the filesystem still
+		# being in use
+		umount "$PIPEFS_MOUNTPOINT" || true
+	fi
+end script
