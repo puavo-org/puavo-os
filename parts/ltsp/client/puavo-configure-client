@@ -47,12 +47,14 @@ when puavo_device_type.eql?("thinclient")
   write_config("/etc/ldap/ldap.conf")
   write_config("/etc/krb5.conf")
   write_config("/etc/default/nfs-common")
+  write_config("/etc/init/gssd.conf", "userprincipal")
 when puavo_device_type.eql?("fatclient")
   write_config("/etc/nsswitch.conf", "extrausers")
   write_config("/etc/pam.d/lightdm", "fatclient")
   write_config("/etc/ldap/ldap.conf")
   write_config("/etc/krb5.conf")
   write_config("/etc/default/nfs-common")
+  write_config("/etc/init/gssd.conf", "userprincipal")
 when puavo_device_type.eql?("ltspserver")
   write_config("/etc/nsswitch.conf", "sss")
   write_config("/etc/pam.d/ltspsshd")
@@ -66,12 +68,16 @@ when puavo_device_type.eql?("ltspserver")
   @ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp
   write_config("/etc/sssd/sssd.conf", nil, true)
 
-  `service sssd start`
-  `service ltspssh start`
+  `service sssd restart || service sssd start`
+  `service ltspssh restart || service ltspssh start`
+  `service gssd restart || service gssd start`
+  `service idmapd restart || service idmapd start`
 when puavo_device_type.eql?("laptop")
 
   @ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp
   write_config("/etc/sssd/sssd.conf")
 end
+
+`kill -HUP 1`
 
 exit(0)
