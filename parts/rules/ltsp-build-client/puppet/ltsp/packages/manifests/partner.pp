@@ -3,22 +3,8 @@ class packages::partner {
 
   # apply all package definitions with "partner"-tag listed in packages
   Package <| tag == partner |> {
-    require => [ Exec['apt update'],
-                 File['/etc/apt/sources.list.d/partner.list'], ],
+    require => Apt::Repository['partner'],
   }
 
-  # XXX this belongs a different place ... perhaps "apt"-module?
-  # XXX sources list might belong there as well
-  # XXX also, puppet stages would be nice here
-  exec {
-    'apt update':
-      command     => '/usr/bin/apt-get update',
-      refreshonly => true;
-  }
-
-  file {
-    '/etc/apt/sources.list.d/partner.list':
-      content => template('packages/partner.list'),
-      notify  => Exec['apt update'];
-  }
+  Apt::Repository <| title == partner |>
 }

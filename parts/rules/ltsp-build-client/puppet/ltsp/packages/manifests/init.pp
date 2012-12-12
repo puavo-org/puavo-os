@@ -1,4 +1,6 @@
 class packages {
+  include apt
+
   # install packages by default
   Package { ensure => present, }
 
@@ -482,5 +484,13 @@ class packages {
     'nscd':
       ensure => purged,
       tag    => [ 'basic', 'ubuntu', ];
+  }
+
+  # XXX it would be nice if these were turned on simply if some package
+  # XXX from these repositories is asked to be installed
+  # define some apt repositories for use
+  @apt::repository {
+    'partner':
+      aptline => "http://archive.canonical.com/ubuntu $lsbdistcodename partner";
   }
 }
