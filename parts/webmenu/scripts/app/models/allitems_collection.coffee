@@ -14,16 +14,29 @@ define [
 
     searchFilter: (filterWords) ->
       console.log "Search Filter!"
+
       @filter (item) ->
         if item.get("type") is "menu"
           return false
-        # FIXME
-        if not item.get("name")
-          return false
-        if item.get("name").indexOf(filterWords) isnt -1
+        if searchByWords item.get("name"), filterWords 
+          return true
+        if searchByWords item.get("description"), filterWords
           return true
 
-        return true
-        #if item.get("name")  
-      #@toArray()
+        return false
 
+
+searchByWords = (value, words) ->
+  if not value
+    return false
+  if not words
+    return false
+
+  if typeof(words) is "string"
+    words = [words]
+
+  for word in words
+    if value.indexOf(word) is -1
+      return false
+
+  return true
