@@ -31,11 +31,13 @@ def write_config(filename, version=nil, secure=false)
   conf_template = File.read("/usr/share/puavo-ltsp-client/templates#{template_file}")
   conf = ERB.new(conf_template, 0, "%<>")
 
-  perm = secure ? 0644 : 0600
+  perm = secure ? 0600 : 0644
 
   File.open(filename, "w", perm) do |f|
     f.write conf.result
   end
+
+  File.chmod(perm, filename)
 end
 
 case
