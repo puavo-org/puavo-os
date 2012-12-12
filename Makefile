@@ -74,7 +74,7 @@ install: install-dirs
 		client/initramfs/puavo_ltsp 
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
-		client/puavo-ltsp-client.conf \
-		client/ltspssh.conf
+		client/upstart/puavo-ltsp-client.conf \
+		client/upstart/ltspssh.conf
 
 	ln -s /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd
