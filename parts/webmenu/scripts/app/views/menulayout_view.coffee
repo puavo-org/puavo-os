@@ -67,7 +67,7 @@ define [
         collection: @allItems
         config: @config
 
-      if window.FEATURE_SEARCH
+      if FEATURE_SEARCH
         @setView ".search-container", new Search
         @bindTo this, "changeFilter", (filter) ->
           @setView ".menu-app-list-container", @searchResultView
