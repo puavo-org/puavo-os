@@ -27,6 +27,14 @@ mkdir -p /etc/puavo
 echo "${puavo_type}" > /etc/puavo/hosttype
 export PUAVO_HOSTTYPE=${puavo_hosttype}
 
+# puavo-ltsp-client and ltsp-client-core do not work well together at
+# the moment because ltsp-client-core has a lot of checks for ltsp
+# in /proc/cmdline. That check is overly jealous and causes some
+# initialisations to happens twice. As a temporary fix we just remove
+# whole ltsp-client-core upstart script when puavo-ltsp-client is used.
+rm -f /etc/init/ltsp-client-core.conf
+kill -HUP 1
+
 for script in $(run_parts_list "$scriptsdir") ; do
     if [ "$script" = "$breakscript" ]; then
         warn "Spawning shell before $script"
