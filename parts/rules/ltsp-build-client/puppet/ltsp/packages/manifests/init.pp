@@ -1,5 +1,6 @@
 class packages {
-  include apt::repositories
+  include apt::repositories,
+          organisation_apt_repositories
 
   # install packages by default
   Package { ensure => present, }
