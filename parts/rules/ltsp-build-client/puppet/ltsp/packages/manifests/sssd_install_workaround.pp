@@ -4,6 +4,9 @@ class packages::sssd_install_workaround {
   # XXX and autogenerate its configuration file, but it fails).
 
   file {
+    '/etc/sssd':
+      ensure => directory;
+
     '/etc/sssd/sssd.conf':
       ensure => present,
       before => Package['puavo-ltsp-client'];
