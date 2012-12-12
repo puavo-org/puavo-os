@@ -103,14 +103,11 @@ module.exports = (gui, bridge) ->
     hideWindow()
 
   bridge.on "shutdown", ->
-    console.log "shutdown"
-    # powermanager.shutdown()
+    powermanager.shutdown()
   bridge.on "reboot", ->
-    console.log "reboot"
-    # powermanager.reboot()
+    powermanager.restart()
   bridge.on "logout", ->
-    console.log "logout"
-    # powermanager.logout()
+    powermanager.logout()
 
   bridge.trigger "desktop-ready",
     user: userData,
