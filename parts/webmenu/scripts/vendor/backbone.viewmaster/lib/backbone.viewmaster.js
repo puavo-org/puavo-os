@@ -143,7 +143,7 @@
       opts = _.extend({}, opts);
 
       // Remove subviews with detach. This way they don't lose event handlers
-      this._detachViews();
+      this._detachViews(opts.views);
       opts.detach = false;
 
       this.$el.html(this.template(this.context()));
@@ -173,6 +173,8 @@
      * @param {Object} options
      *   @param {Boolean} [options.force]
      *   force rerendering of child views
+     *   @param {Array/String} [options.views]
+     *   view containers to render. Default: All
      * @return {Object} this
      **/
     renderViews: function(opts) {
@@ -181,9 +183,9 @@
 
       var oldView;
       while (oldView = this._remove.shift()) oldView.remove();
-      if (opts.detach) this._detachViews();
+      if (opts.detach) this._detachViews(opts.views);
 
-      this.eachView(function(containerSel, view) {
+      this.eachView(opts.views, function(containerSel, view) {
         if (opts.force || !view.rendered) view.render(opts);
         self.$(containerSel).append(view.el);
       });
@@ -265,23 +267,34 @@
      * Iterate each child view.
      *
      * @method eachView
+     * @param {Array} [views] container list to iterate over. Default: all
      * @param {Function} iterator
      *   @param {String} iterator.selector CSS selector for the view container
      *   @param {Object} iterator.view The view object
      * @return {Object} this
      **/
-    eachView: function(fn) {
+    eachView: function(filter, fn) {
       var containerSel, view, i, views = this._views;
+      if (_.isFunction(filter)) {
+        fn = filter;
+        filter = null;
+      }
+      else {
+        filter = filter ? ensureArray(filter) : null;
+      }
+
       for (containerSel in views) {
         for (i = 0; i < views[containerSel].length; i++) {
           view = views[containerSel][i];
-          fn(containerSel, view);
+          if (_.isNull(filter) || _.contains(filter, containerSel)) {
+            fn(containerSel, view);
+          }
         }
       }
     },
 
-    _detachViews: function() {
-      this.eachView(function(containerSel, view) {
+    _detachViews: function(views) {
+      this.eachView(views, function(containerSel, view) {
         view.$el.detach();
       });
     },

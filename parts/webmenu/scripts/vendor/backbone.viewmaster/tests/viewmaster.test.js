@@ -90,6 +90,63 @@ describe("ViewMaster", function(){
     expect(m.$el).to.have(second.$el);
   });
 
+  describe("eachView()", function() {
+    var parent = new Backbone.ViewMaster();
+    parent.setView(".foo", new Backbone.ViewMaster());
+    parent.setView(".bar", new Backbone.ViewMaster());
+
+    it("can iterate all views", function() {
+      var count = 0;
+      parent.eachView(function() {
+        count += 1;
+      });
+
+      expect(count).to.eq(2);
+    });
+
+    it("can iterate filtered views", function() {
+      var count = 0;
+      parent.eachView([".foo"], function() {
+        count += 1;
+      });
+
+      expect(count).to.eq(1);
+    });
+
+  });
+
+  it("can filter which containers are rendered", function() {
+      var childA = new Backbone.ViewMaster();
+      childA.template = function() {
+        return "<p>childA</p>";
+      };
+
+      var childB = new Backbone.ViewMaster();
+      childB.$el.detach = chai.spy(childB.$el.detach);
+      childB.render = chai.spy(childB.render);
+      childB.template = function() {
+        return "<p>childB</p>";
+      };
+
+      var parent = new Backbone.ViewMaster();
+      parent.template = function() {
+        return "<div class=containerA ></div><div class=containerB ></div>";
+      };
+
+      parent.setView(".containerA", childA);
+      parent.setView(".containerB", childB);
+      parent.render();
+
+
+      parent.renderViews({
+        force: true,
+        views: [ ".containerA" ]
+      });
+
+      expect(childB.render).to.have.been.called.once;
+      expect(childB.$el.detach).to.have.been.called.once;
+
+  });
 
   it("force option renders child views", function(){
     var m = new Master();
