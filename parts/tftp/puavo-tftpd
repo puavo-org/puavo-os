@@ -40,8 +40,7 @@ options_defaults = {
   :root => "/var/lib/tftpboot/"
 }
 
-CONF_FILES = [ File.join(ENV["HOME"] + ".config/puavo-tftp.yml"),
-               "/etc/puavo-tftp.yml",
+CONF_FILES = [ "/etc/puavo-tftp.yml",
                File.join(File.dirname(__FILE__), "puavo-tftp.yml") ]
 
 options_file = {}
