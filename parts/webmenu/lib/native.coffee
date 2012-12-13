@@ -72,6 +72,9 @@ module.exports = (gui, bridge) ->
     , 100
 
   hideWindow = ->
+    if process.env.nohide
+      console.log "Hiding disabled"
+      return
     console.info "Hiding menu window"
     if argv.hide
       Window.hide()
