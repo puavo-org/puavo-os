@@ -22,6 +22,9 @@ def device_ltspvars(device)
     case devicetype
       when 'thinclient'
 	{
+          'NBD_SWAP'       => 'False',
+          'SYSLOG'         => 'False',
+          'XKBLAYOUT'      => 'fi',
 	  'LDM_AUTOLOGIN'  => 'False',
 	  'LDM_DIRECTX'    => 'True',
 	  'LOCAL_APPS'     => 'False',
@@ -29,14 +32,29 @@ def device_ltspvars(device)
 	  'LTSP_FATCLIENT' => 'False',
 	  'SCREEN_07'      => 'lightdm',
 	  'X_COLOR_DEPTH'  => '16',
+          'LDM_SERVER'     => @ltsp_server_fqdn,
 	}
       when 'fatclient'
 	{
+          'NBD_SWAP'       => 'False',
+          'SYSLOG'         => 'False',
+          'XKBLAYOUT'      => 'fi',
 	  'LOCAL_APPS'     => 'True',
 	  'LOCALDEV'       => 'False',
 	  'LTSP_FATCLIENT' => 'True',
 	  'SCREEN_07'      => 'gdm',
 	}
+      when 'ltspserver'
+        {
+          'LDM_DIRECTX'        => 'True',
+          'LOCAL_APPS'         => 'False',
+          'LTSP_FATCLIENT'     => 'False',
+          'SCREEN_07'          => 'lightdm',
+          'X_COLOR_DEPTH'      => 16,
+          'LDM_SESSION'        => 'gnome-session --session => gnome-fallback',
+          'SSH_OVERRIDE_PORT'  => 222,
+          'RM_SYSTEM_SERVICES' => 'ltsp-client-core',
+        }
       else
 	{}
     end
@@ -112,11 +130,7 @@ end
 
 def handle_ltsconf_request
   ltspvars = {
-    'NBD_SWAP'              => 'False',
-    'SYSLOG'                => 'False',
-    'XKBLAYOUT'             => 'fi',
     'SERVER'                => @boot_server_fqdn,
-    'LDM_SERVER'            => @ltsp_server_fqdn,
     'NFS_SERVER'            => @boot_server_fqdn,
   }
 
