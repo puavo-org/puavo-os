@@ -24,7 +24,7 @@ for x in $(cat /proc/cmdline); do
 done
 
 mkdir -p /etc/puavo
-echo "${puavo_type}" > /etc/puavo/hosttype
+echo "${puavo_hosttype}" > /etc/puavo/hosttype
 export PUAVO_HOSTTYPE=${puavo_hosttype}
 
 # puavo-ltsp-client and ltsp-client-core do not work well together at
