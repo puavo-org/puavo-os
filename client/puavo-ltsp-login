@@ -62,7 +62,7 @@ require 'ldap'
 require 'etc'
 require 'dnsruby'
 
-uid = ENV['PAM_USER'] ? ENV['PAM_USER'] : Etc.getlogin
+uid = ENV['PAM_USER']
 
 if !uid or uid.eql?("root")  
   exit(0)
@@ -100,16 +100,16 @@ conn.sasl_bind("", "GSSAPI") do
     passwd = Array.new
     group = Array.new
 
-    conn.search("ou=People,#{suffix}", LDAP::LDAP_SCOPE_SUBTREE, "(&(objectClass=posixAccount)(uid=#{uid}))", ["uid", "uidNumber", "gidNumber", "homeDirectory", "cn"]) {|e|
+    conn.search("ou=People,#{suffix}", LDAP::LDAP_SCOPE_SUBTREE, "(&(objectClass=posixAccount)(uid=#{uid}))", ["uid", "uidNumber", "gidNumber", "homeDirectory", "displayName"]) {|e|
       if e.get_values('uid') and e.get_values('uidNumber') and
          e.get_values('gidNumber') and e.get_values('homeDirectory') and
-         e.get_values('cn')
+         e.get_values('displayName')
 
         uid = e.get_values('uid')[0]
         uidNumber = e.get_values('uidNumber')[0]
         gidNumber = e.get_values('gidNumber')[0]
         homeDirectory = e.get_values('homeDirectory')[0]
-        cn = e.get_values('cn')[0]
+        cn = e.get_values('displayName')[0]
 
         passwd << "#{uid}:x:#{uidNumber}:#{gidNumber}:#{cn}:#{homeDirectory}:/bin/bash"
       end
