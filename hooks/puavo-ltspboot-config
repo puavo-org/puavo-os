@@ -38,8 +38,9 @@ kernel_version = "-" + kernel_version if not kernel_version.empty?
 kernel_args = Array(ltsp_client['puavoDeviceKernelArguments']).first.to_s
 kernel_args = "quiet splash" if kernel_args.empty?
 
-image = Array(ltsp_client['puavoDeviceImage']).first.to_s
-image = "ltsp_i386" if image.empty?
+image = "ltsp/"
+image += Array(ltsp_client['puavoDeviceImage']).first.to_s
+image += "i386" if image == "ltsp/"
 
 bootmode = Array(ltsp_client['puavoDeviceBootMode']).first.to_s
 bootmode = "netboot" if bootmode.empty?
@@ -73,7 +74,7 @@ puts <<EOF
 label ltsp-NBD
   menu label LTSP, using NBD
   menu default
-  kernel vmlinuz#{kernel_version}
-  append ro initrd=initrd.img#{kernel_version} init=/sbin/init-puavo puavo.hosttype=#{device_type} plymouth:force-splash vt.handoff=7 root=/dev/nbd0 nbdroot=:#{image} #{kernel_args}
+  kernel #{image}/vmlinuz#{kernel_version}
+  append ro initrd=#{image}/initrd.img#{kernel_version} init=/sbin/init-puavo puavo.hosttype=#{device_type} plymouth:force-splash vt.handoff=7 root=/dev/nbd0 nbdroot=:#{image} #{kernel_args}
   ipappend 2
 EOF
