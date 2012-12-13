@@ -17,7 +17,12 @@
 # /etc/puavo/topdomain         - MISSING
 # /etc/puavo/hostname
 
-PUAVO_DEVICE_TYPE="thinclient"
+if [ ! -f "/etc/puavo/hosttype" ]; then
+  echo "/etc/puavo/hosttype missing!"
+  exit 0
+fi
+
+PUAVO_DEVICE_TYPE=$(cat /etc/puavo/hosttype)
 
 if [ "thinclient" = "${PUAVO_DEVICE_TYPE}" -o \
      "fatclient" = "${PUAVO_DEVICE_TYPE}" ]; then
