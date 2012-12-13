@@ -37,12 +37,20 @@ define [
       "$thumbnail": ".thumbnail"
       "$description": ".description"
 
+    context: ->
+      json = super()
+      json.menu = @model.get("type") is "menu"
+      return json
+
+
+
+
 
     showDescription: ->
       @$thumbnail.addClass "animated flipOutY"
       setTimeout =>
         @$description.css "display", "block"
-      , 300
+      , 200
 
 
 

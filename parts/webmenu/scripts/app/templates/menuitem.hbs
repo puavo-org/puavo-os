@@ -1,6 +1,11 @@
 <li class="span3 margin0 desktop-link" >
 
     <div class="description" >
+      {{#if menu}}
+      <span class="arrow icon-up-bold"></span>
+      {{else}}
+      <span class="arrow icon-forward"></span>
+      {{/if}}
       {{description}}
     </div>
 
