@@ -8,6 +8,9 @@ build: npm-install
 nw: build
 	zip -r ../${PWD##*/}.nw *
 
+clean-nw:
+	rm -r ../${PWD##*/}.nw
+
 npm-install:
 	npm install
 
@@ -15,7 +18,6 @@ clean:
 	npm clean
 	rm -rf node_modules
 	rm -rf out
-	rm -r ../${PWD##*/}.nw
 
 install-dirs:
 	mkdir -p $(DESTDIR)$(prefix)/bin
