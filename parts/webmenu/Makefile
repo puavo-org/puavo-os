@@ -14,6 +14,7 @@ npm-install:
 clean:
 	npm clean
 	rm -rf node_modules
+	rm -rf out
 
 install-dirs:
 	mkdir -p $(DESTDIR)$(prefix)/bin
