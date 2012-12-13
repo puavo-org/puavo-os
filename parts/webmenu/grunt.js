@@ -45,7 +45,7 @@ module.exports = function(grunt) {
     },
 
     watch: {
-      files: "theme/**",
+      files: "styles/**",
       tasks: "stylus"
     }
 
