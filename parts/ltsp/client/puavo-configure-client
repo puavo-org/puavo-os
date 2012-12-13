@@ -13,6 +13,7 @@ if (!puavo_device_type)
 end
 
 @ldap_master       = File.read('/etc/puavo/ldap/master'    ).chomp
+@ldap_slave        = File.read('/etc/puavo/ldap/slave'     ).chomp
 @ldap_base         = File.read('/etc/puavo/ldap/base'      ).chomp
 @kerberos_master   = File.read('/etc/puavo/kerberos/master').chomp
 @kerberos_realm    = File.read('/etc/puavo/kerberos/realm' ).chomp
