@@ -10,10 +10,10 @@ module.exports = function(grunt) {
       compile: {
         options: {
           'include css': true,
-          'paths': ["theme/css/"]
+          'paths': ["styles/"]
         },
         files: {
-          'theme/css/master.css': 'theme/css/master.styl'
+          'styles/main.css': 'styles/main.styl'
         }
       }
     },
