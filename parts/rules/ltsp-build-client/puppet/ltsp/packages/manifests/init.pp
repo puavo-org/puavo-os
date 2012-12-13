@@ -486,7 +486,8 @@ class packages {
 
   # keep these packages out, we do not want these
   @package {
-    'nscd':
+    [ 'nscd'
+    , 'tftpd-hpa', ]:
       ensure => purged,
       tag    => [ 'basic', 'ubuntu', ];
   }
