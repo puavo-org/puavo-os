@@ -4,6 +4,12 @@
 (function() {
   var VERSION = "1.1.0pre";
 
+  function log() {
+    if (Backbone.ViewMaster.debug) {
+      console.log.apply(console, arguments);
+    }
+  }
+
   function ensureArray(ob){
     return _.isArray(ob) ? ob : [ob];
   }
@@ -240,6 +246,10 @@
 
         // Render child view only if it never has been rendered before.
         var render = !view.rendered || opts.force;
+
+        if (refresh && !opts.detached) log("detaching " + containerSel + " " + view.constructor.name);
+        if (!view.rendered || opts.force) log("rendering " +  containerSel + " " + view.constructor.name);
+        if (refresh || opts.detached) log("appending " +  containerSel + " " + view.constructor.name);
 
         if (refresh && !opts.detached) view.$el.detach();
         if (!view.rendered || opts.force) view.render(opts);
