@@ -6,8 +6,7 @@ commandBuilders =
     if not msg.command
       console.error "Missing command from", msg
       return
-    command = msg.command.shift()
-    args = msg.command
+    [command, args...] = msg.command
     return [command, args]
 
   custom: (msg) -> this.desktop(msg)
