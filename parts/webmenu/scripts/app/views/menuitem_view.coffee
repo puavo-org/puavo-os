@@ -3,12 +3,14 @@ define [
   "backbone.viewmaster"
 
   "hbs!app/templates/menuitem"
+  "app/utils/debounce"
   "cs!app/application"
 ], (
   spin
   ViewMaster
 
   template
+  debounce
   Application
 ) ->
 
@@ -18,11 +20,29 @@ define [
 
     template: template
 
+    constructor: ->
+      @delayedShowDescription = debounce =>
+        @showDescription()
+      , 1000
+      super
+
     events:
-      "click": (e) ->
-        Application.global.trigger "select", @model
-      "mouseenter .thumbnail": (e) ->
-        Application.global.trigger "showDescription", @model
-      "mouseleave .thumbnail": (e) ->
-        Application.global.trigger "hideDescription", @model
+      "click": (e) -> Application.global.trigger "select", @model
+      "mouseenter .thumbnail": "delayedShowDescription"
+      "mouseleave": ->
+        @delayedShowDescription.cancel()
+        @render()
+
+    elements:
+      "$thumbnail": ".thumbnail"
+      "$description": ".description"
+
+
+    showDescription: ->
+      @$thumbnail.addClass "animated flipOutY"
+      setTimeout =>
+        @$description.css "display", "block"
+      , 300
+
+
 
