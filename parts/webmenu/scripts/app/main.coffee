@@ -37,6 +37,8 @@ define [
     Application.global.on "select", (model) ->
       if model.get("type") is "menu"
         return
+
+      model.incClicks()
       # This will be send to node and node-webkit handlers
       Application.bridge.trigger "open", model.toJSON()
 

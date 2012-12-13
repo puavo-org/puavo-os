@@ -16,13 +16,16 @@ define [
     constructor: (opts) ->
       super
       @config = opts.config
-      @bindTo @collection, "select", @render
 
-    render: ->
+      @setList()
+      @bindTo @collection, "change:clicks", =>
+        @setList()
+        @refreshViews()
+
+    setList: ->
       views = @collection.favorites(@config.get "maxFavorites").map (model) =>
         new MenuItemView model: model
       @setView ".most-used-list", views
 
-      super
 
 

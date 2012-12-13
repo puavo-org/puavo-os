@@ -26,10 +26,9 @@ define [
       if clicks = localStorage[@_lsID()]
         @set "clicks", parseInt(clicks, 10)
 
-      @on "select", =>
-        @set "clicks", @get("clicks") + 1
-        localStorage[@_lsID()] = @get "clicks"
-
+    incClicks: ->
+      @set "clicks", @get("clicks") + 1
+      localStorage[@_lsID()] = @get "clicks"
 
     _lsID: -> "clicks-#{ @id }"
 

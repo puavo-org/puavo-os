@@ -63,9 +63,9 @@ define [
         model.get("item")
       ).to.be.not.ok
 
-    it "will increase click count on a 'select' event", (done) ->
+    it "will increase click count with incClicks()", (done) ->
       item = allItems.at(1)
-      item.trigger "select"
+      item.incClicks()
       setTimeout ->
         expect(item.get "clicks").to.eq 1
         done()
