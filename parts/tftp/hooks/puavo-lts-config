@@ -42,7 +42,7 @@ def device_ltspvars(device)
 	  'LOCAL_APPS'     => 'True',
 	  'LOCALDEV'       => 'False',
 	  'LTSP_FATCLIENT' => 'True',
-	  'SCREEN_07'      => 'gdm',
+	  'SCREEN_07'      => 'lightdm',
 	}
       when 'ltspserver'
         {
