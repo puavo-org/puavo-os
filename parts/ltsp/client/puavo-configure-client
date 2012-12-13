@@ -73,9 +73,14 @@ when puavo_device_type.eql?("ltspserver")
   `service gssd restart || service gssd start`
   `service idmapd restart || service idmapd start`
 when puavo_device_type.eql?("laptop")
+  write_config("/etc/nsswitch.conf", "sss")
+  write_config("/etc/ldap/ldap.conf")
+  write_config("/etc/krb5.conf")
+  write_config("/etc/pam.d/lightdm", "laptop")
 
+  @ldap_binddn       = File.read('/etc/puavo/ldap/dn'        ).chomp
   @ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp
-  write_config("/etc/sssd/sssd.conf")
+  write_config("/etc/sssd/sssd.conf", nil, true)
 end
 
 `kill -HUP 1`
