@@ -6,10 +6,10 @@ build: npm-install
 # Build node-webkit package
 # https://github.com/rogerwang/node-webkit/wiki/How-to-package-and-distribute-your-apps
 nw: build
-	zip -r ../${PWD##*/}.nw *
+	zip -r ../webmenu-`git rev-parse HEAD`.nw *
 
 clean-nw:
-	rm -r ../${PWD##*/}.nw
+	rm -r ../webmenu-*.nw
 
 npm-install:
 	npm install
