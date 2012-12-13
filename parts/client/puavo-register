@@ -518,6 +518,9 @@ module PostRegister
       f.print "#{ password }\n"
     end
 
+    # Change group of pasword file
+    File.chown(nil, Etc.getgrnam('puavo').gid, "#{ Puavodir }/ldap/password")
+
     Tools.goodmsg('LDAP information is now set.')
   end
 
