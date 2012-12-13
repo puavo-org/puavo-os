@@ -5,7 +5,7 @@ build: npm-install
 
 # Build node-webkit package
 # https://github.com/rogerwang/node-webkit/wiki/How-to-package-and-distribute-your-apps
-build-nw:
+nw: build
 	zip -r ../${PWD##*/}.nw *
 
 npm-install:
@@ -15,6 +15,7 @@ clean:
 	npm clean
 	rm -rf node_modules
 	rm -rf out
+	rm -r ../${PWD##*/}.nw
 
 install-dirs:
 	mkdir -p $(DESTDIR)$(prefix)/bin
