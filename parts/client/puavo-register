@@ -514,7 +514,7 @@ module PostRegister
       f.print "#{ master }\n"
     end
 
-    File.open("#{ Puavodir }/ldap/password", 'w', 0600) do |f|
+    File.open("#{ Puavodir }/ldap/password", 'w', 0640) do |f|
       f.print "#{ password }\n"
     end
 
