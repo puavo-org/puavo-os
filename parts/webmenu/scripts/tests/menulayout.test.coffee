@@ -79,10 +79,11 @@ define [
 
     describe "after mouse entering item", ->
 
-      beforeEach ->
+      beforeEach (done) ->
         layout.$(".bb-menu-item .thumbnail").filter(
           (i, e) -> $(e).text().trim() is "Gimp"
         ).mouseenter()
+        setTimeout done, 600
 
       it "displays the item description", ->
         expect(layout.$el).to.have(".bb-item-description")
