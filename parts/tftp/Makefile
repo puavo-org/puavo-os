@@ -1,5 +1,11 @@
 prefix ?= /usr/local
+exec_prefix = $(prefix)
+sbindir = $(exec_prefix)/sbin
 sysconfdir ?= $(prefix)/etc
+
+INSTALL = install
+INSTALL_PROGRAM = $(INSTALL)
+INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY: build
 build:
@@ -9,15 +15,26 @@ build:
 test:
 	ruby1.9.3 test/run.rb
 
-.PHONY: install-dirs
-install-dirs:
+.PHONY: installdirs
+installdirs:
 	mkdir -p $(DESTDIR)$(sysconfdir)
-	mkdir -p $(DESTDIR)$(prefix)/sbin
+	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(prefix)/lib/ruby/vendor_ruby/puavo-tftp
 
 .PHONY: install
-install: install-dirs
-	install -o root -g root -m 755 puavo-tftpd \
-	  $(DESTDIR)$(prefix)/sbin/puavo-tftpd
-	install -o root -g root -m 644 puavo-tftp/* $(DESTDIR)$(prefix)/lib/ruby/vendor_ruby/puavo-tftp
-	install -o root -g root -m 644 puavo-tftp.yml $(DESTDIR)$(sysconfdir)/puavo-tftp.yml
+install: installdirs
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
+		puavo-tftpd
+	$(INSTALL_DATA) -t $(DESTDIR)$(prefix)/lib/ruby/vendor_ruby/puavo-tftp \
+		puavo-tftp/*.rb
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir) \
+		puavo-tftp.yml
+ifeq ($(INSTALL_HOOKS),yes)
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
+		hooks/puavo-ltspboot-config \
+		hooks/puavo-lts-config
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir) \
+		hooks/puavo-tftp.yml
+	$(INSTALL_DATA) -t $(DESTDIR)$(prefix)/lib/ruby/vendor_ruby \
+		hooks/puavo-ldap.rb
+endif
