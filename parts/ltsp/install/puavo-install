@@ -21,3 +21,6 @@ case "$hosttype" in
     cp -a /etc/puavo /state
     ;;
 esac
+
+sync
+umount /state
