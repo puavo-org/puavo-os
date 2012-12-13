@@ -129,16 +129,21 @@ def device_ltspvars(device)
 end
 
 def handle_ltsconf_request
-  ltspvars = {
-    'SERVER'                => @boot_server_fqdn,
-    'NFS_SERVER'            => @boot_server_fqdn,
-  }
 
   deviceentry = @puavoldap.device_by_mac(@mac)
-  if deviceentry
+  if not deviceentry.empty?
+    ltspvars = {
+      'SERVER'                => @boot_server_fqdn,
+      'NFS_SERVER'            => @boot_server_fqdn,
+    }
     ltspvars.merge!(device_ltspvars(deviceentry))
   else
-    ltspvars['SCREEN_02'] = 'register'
+    ltspvars = {
+      'NBD_SWAP'       => 'False',
+      'SYSLOG'         => 'False',
+      'XKBLAYOUT'      => 'fi',
+      'SCREEN_02'      => 'register',
+    }
   end
 
   ltsconf(ltspvars, @mac)
