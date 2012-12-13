@@ -3,6 +3,11 @@ prefix ?= /usr/local
 build: npm-install
 	node_modules/.bin/grunt
 
+# Build node-webkit package
+# https://github.com/rogerwang/node-webkit/wiki/How-to-package-and-distribute-your-apps
+build-nw:
+	zip -r ../${PWD##*/}.nw *
+
 npm-install:
 	npm install
 
