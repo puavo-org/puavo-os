@@ -34,12 +34,16 @@ if [ -x "/sbin/vgchange" ]; then
     mkdir -p /state
     mount /dev/mapper/puavo-state /state
 
+    for path in /etc/krb5.keytab /etc/puavo; do
+      cp -aT "/state${path}" "$path" 2>/dev/null || true
+    done
+
     case "$PUAVO_HOSTTYPE" in
       laptop)
-        puavo_link_to_state /etc/puavo /var/lib/sss /var/log
+        puavo_link_to_state /var/lib/sss /var/log
         ;;
       ltspserver)
-        puavo_link_to_state /etc/puavo /var/log
+        puavo_link_to_state /var/log
         ;;
     esac
   fi
