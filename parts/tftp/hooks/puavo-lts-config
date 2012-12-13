@@ -115,6 +115,9 @@ def handle_ltsconf_request
     'NBD_SWAP'              => 'False',
     'SYSLOG'                => 'False',
     'XKBLAYOUT'             => 'fi',
+    'SERVER'                => @boot_server_fqdn,
+    'LDM_SERVER'            => @ltsp_server_fqdn,
+    'NFS_SERVER'            => @boot_server_fqdn,
   }
 
   deviceentry = @puavoldap.device_by_mac(@mac)
@@ -150,5 +153,11 @@ end
 
 # Create ldap connection
 @puavoldap = PuavoLdap.new
+
+# Find servers fqdn
+@boot_server_hostname = File.read('/etc/puavo/hostname').chomp
+@domain = File.read('/etc/puavo/domain').chomp
+@boot_server_fqdn = "#{@boot_server_hostname}.#{@domain}"
+@ltsp_server_fqdn = File.read('/etc/puavo/primary_ltsp_server').chomp
 
 puts handle_ltsconf_request
