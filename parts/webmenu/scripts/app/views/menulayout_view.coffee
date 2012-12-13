@@ -46,20 +46,27 @@ define [
       @bindTo Application.global, "select", (model) =>
         if model.get("type") is "menu"
           @setMenu model
-          @renderViews()
+          @refreshViews()
 
-      delayedShowProfile = debounce =>
-        @showProfile()
-        @renderViews()
-      , 50
-
-      @bindTo Application.global, "showDescription", (model) =>
-        delayedShowProfile.cancel()
+      @delayedShowDescription = debounce (model) =>
+        @descActive = true
+        console.log "showing desc", model.get("name")
         @setView ".sidebar", new ItemDescriptionView
           model: model
-        @renderViews()
+        @refreshViews()
+      , 500
 
-      @bindTo Application.global, "hideDescription", => delayedShowProfile()
+      @bindTo Application.global, "showDescription", (model) =>
+        @delayedShowDescription(model)
+
+      @bindTo Application.global, "hideDescription", =>
+        @delayedShowDescription.cancel()
+        clearTimeout @showDescTimer
+        if @descActive
+          console.log "showing profile"
+          @showProfile()
+          @refreshViews()
+          @descActive = false
 
       @showProfile()
 
