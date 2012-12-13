@@ -5,30 +5,32 @@ set -e
 # Load lts.conf variables
 . /usr/share/ltsp/ltsp_config
 
-# rpc.gssd needs a user principal on netboot devices as they do not have
-# machine principals
-if [ ! -f "/etc/krb5.keytab" ]; then
-  install -o root -g root -m 600 "$PAM_KRB5CCNAME" /tmp/krb5cc_0
+if [ "${PAM_TYPE}" = "open_session" ]; then
+  # rpc.gssd needs a user principal on netboot devices as they do not have
+  # machine principals
+  if [ ! -f "/etc/krb5.keytab" ]; then
+    install -o root -g root -m 600 "$PAM_KRB5CCNAME" /tmp/krb5cc_0
 
-  service idmapd restart  || service idmapd start
-  service gssd restart    || service gssd start
+    service idmapd restart  || service idmapd start
+    service gssd restart    || service gssd start
+  fi
+
+  # NSS needs to be working so that we get the home directory with getent.
+  # For LTSP thin client and fat clients this comes most probably from
+  # libnss-extrausers that gets populated during PAM auth.
+  HOME=$(getent passwd $PAM_USER | awk -F: '{ print $6 }')
+
+  # Before mounting the home directory we should contact the
+  # server to make sure that the directory actually exists.
+  #
+  # FIXME - Figure out something for this
+
+
+  # Create a local directory for the user and mount it using nfs4+krb5
+
+  mkdir -p ${HOME}
+  mount -t nfs4 -o sec=krb5 ${SERVER}:${HOME} ${HOME}
+  chown $PAM_USER ${HOME}
 fi
-
-# NSS needs to be working so that we get the home directory with getent.
-# For LTSP thin client and fat clients this comes most probably from
-# libnss-extrausers that gets populated during PAM auth.
-HOME=$(getent passwd $PAM_USER | awk -F: '{ print $6 }')
-
-# Before mounting the home directory we should contact the
-# server to make sure that the directory actually exists.
-#
-# FIXME - Figure out something for this
-
-
-# Create a local directory for the user and mount it using nfs4+krb5
-
-mkdir -p ${HOME}
-mount -t nfs4 -o sec=krb5 ${SERVER}:${HOME} ${HOME}
-chown $PAM_USER ${HOME}
 
 exit 0
