@@ -48,27 +48,9 @@ define [
           @setMenu model
           @refreshViews()
 
-      @delayedShowDescription = debounce (model) =>
-        @descActive = true
-        console.log "showing desc", model.get("name")
-        @setView ".sidebar", new ItemDescriptionView
-          model: model
-        @refreshViews()
-      , 500
-
-      @bindTo Application.global, "showDescription", (model) =>
-        @delayedShowDescription(model)
-
-      @bindTo Application.global, "hideDescription", =>
-        @delayedShowDescription.cancel()
-        clearTimeout @showDescTimer
-        if @descActive
-          console.log "showing profile"
-          @showProfile()
-          @refreshViews()
-          @descActive = false
-
-      @showProfile()
+      @setView ".sidebar", new ProfileView
+        model: @user
+        config: @config
 
       @setView ".favorites", new Favorites
         collection: @allItems
@@ -82,10 +64,6 @@ define [
           console.log "Filter: ", filter
           @refreshViews()
 
-    showProfile: ->
-      @setView ".sidebar", new ProfileView
-        model: @user
-        config: @config
 
     reset: ->
       @setMenu(@initialMenu)
