@@ -73,7 +73,7 @@ define [
           @setView ".menu-app-list-container", @searchResultView
           @searchResultView.displayItems(filter)
           console.log "Filter: ", filter
-          @renderViews(containers: ".menu-app-list-container")
+          @refreshViews()
 
     showProfile: ->
       @setView ".sidebar", new ProfileView
