@@ -15,13 +15,8 @@ define [
 
     template: template
 
-    constructor: ->
-      super
-
-      if @model.get("type") isnt "menu"
-        throw new Error "Bad menu list model type: #{ @model.get("type") }"
-
-      @setView ".menu-app-list", @model.items.map (model) ->
+    setItems: (models) ->
+      @setView ".menu-app-list", models.map (model) ->
         new MenuItemView
           model: model
-
+      @refreshViews()

@@ -35,18 +35,20 @@ define [
     constructor: (opts) ->
       super
       @initialMenu = opts.initialMenu
+      @current = @initialMenu
+
       @allItems = opts.allItems
       @user = opts.user
       @config = opts.config
 
-      @searchResultView = new SearchResult collection: @allItems
-
-      @setMenu(@initialMenu)
+      @menuListView = new MenuListView
+      @setView ".menu-app-list-container", @menuListView
+      @displayCurrentMenu()
 
       @bindTo Application.global, "select", (model) =>
         if model.get("type") is "menu"
-          @setMenu model
-          @refreshViews()
+          @current = model
+          @displayCurrentMenu()
 
       @setView ".sidebar", new ProfileView
         model: @user
@@ -59,19 +61,19 @@ define [
       if FEATURE_SEARCH
         @setView ".search-container", new Search
         @bindTo this, "changeFilter", (filter) ->
-          @setView ".menu-app-list-container", @searchResultView
-          @searchResultView.displayItems(filter)
-          console.log "Filter: ", filter
-          @refreshViews()
-
+          if filter.trim()
+            @menuListView.setItems @allItems.searchFilter(filter)
+          else
+            @displayCurrentMenu()
 
     reset: ->
-      @setMenu(@initialMenu)
+      @curret = @initialMenu
+      @displayCurrentMenu()
 
-    setMenu: (model) ->
-      @menuListView = new MenuListView model: model
-      @setView ".menu-app-list-container", @menuListView
+    displayCurrentMenu: ->
+      @menuListView.setItems @current.items.toArray()
       @setView ".breadcrums-container", new Breadcrumbs
-        model: model
+        model: @current
+      @refreshViews()
 
 
