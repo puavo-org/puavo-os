@@ -46,6 +46,7 @@ def device_ltspvars(device)
           'LOCAL_APPS'           => 'False',
           'LOCALDEV'             => 'False',
           'LTSP_FATCLIENT'       => 'True',
+          'USE_NFS_HOMES'        => 'True',
           'SCREEN_07'            => 'lightdm',
           'KEEP_SYSTEM_SERVICES' => '"gssd idmapd rpcbind-boot portmap"',
           'SERVER'               => @boot_server_fqdn,
