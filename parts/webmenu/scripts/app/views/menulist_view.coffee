@@ -30,7 +30,7 @@ define [
           @refreshViews()
 
       if FEATURE_SEARCH
-        @bindTo Application.global, "changeFilter", (filter) ->
+        @bindTo Application.global, "search", (filter) ->
           if filter.trim()
             @setItems @collection.searchFilter(filter)
           else

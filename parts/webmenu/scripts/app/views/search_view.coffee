@@ -34,7 +34,7 @@ define [
         console.log "Press Enter"
         @trigger "startFirstApplication"
         return e.preventDefault()
-      @trigger "changeFilter", @$input.val()
+      @trigger "search", @$input.val()
 
     search: ->
-      Application.global.trigger "changeFilter", @$input.val()
+      Application.global.trigger "search", @$input.val()
