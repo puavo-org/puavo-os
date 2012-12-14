@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 
-# apt-get install ruby-uuidtools
+# XXX sudo apt-get -y install libvirt-bin qemu-kvm qemu-utils ruby-uuidtools
+# XXX presumes /virtual exists and is a directory
 
 require 'erb'
 require 'fileutils'
