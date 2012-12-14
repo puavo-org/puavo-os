@@ -536,8 +536,9 @@ class packages {
     , 'wget' ]:
       tag => [ 'remote_access', 'ubuntu', ];
 
-    [ 'googleearth' ]:
-      tag => [ 'science', ];
+# XXX disable for now, we do not have a properly functioning package
+#   [ 'googleearth' ]:
+#     tag => [ 'science', 'opinsys', ];
 
     [ 'atomix'
     , 'celestia'
