@@ -65,16 +65,6 @@ define [
         collection: @allItems
         config: @config
 
-      if FEATURE_SEARCH
-        @setView ".search-container", new Search
-        @bindTo this, "changeFilter", (filter) ->
-          if filter.trim()
-            resultItems = @allItems.searchFilter(filter)
-            @firstItem = resultItems[0]
-            @menuListView.displayItems resultItems
-          else
-            @displayCurrentMenu()
-
     reset: ->
       @menuListView.setRoot()
       @menuListView.refreshViews()
