@@ -33,7 +33,6 @@ define [
 
     search: (e) ->
       e.preventDefault()
-      console.log "PRESSED", e.which
       if e.which is ENTER
         Application.global.trigger "startFirstApplication"
         @$input.val("")

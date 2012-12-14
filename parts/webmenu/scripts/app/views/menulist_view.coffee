@@ -49,7 +49,6 @@ define [
 
     setItems: (models) ->
       @setView ".menu-app-list", models.map (model) ->
-        console.log "DISP", model.get("name")
         new MenuItemView
           model: model
 
