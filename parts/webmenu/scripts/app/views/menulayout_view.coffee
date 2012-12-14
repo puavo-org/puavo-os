@@ -41,6 +41,8 @@ define [
       @user = opts.user
       @config = opts.config
 
+      @firstItem = @allItems[0]
+
       @menuListView = new MenuListView
       @setView ".menu-app-list-container", @menuListView
       @displayCurrentMenu()
@@ -49,6 +51,10 @@ define [
         if model.get("type") is "menu"
           @current = model
           @displayCurrentMenu()
+
+      @bindTo this, "startFirstApplication", (filter) =>
+        Application.bridge.trigger "open", @firstItem.toJSON()
+ 
 
       @setView ".sidebar", new ProfileView
         model: @user
@@ -62,7 +68,9 @@ define [
         @setView ".search-container", new Search
         @bindTo this, "changeFilter", (filter) ->
           if filter.trim()
-            @menuListView.displayItems @allItems.searchFilter(filter)
+            resultItems = @allItems.searchFilter(filter)
+            @firstItem = resultItems[0]
+            @menuListView.displayItems resultItems
           else
             @displayCurrentMenu()
 

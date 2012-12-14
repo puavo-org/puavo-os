@@ -28,6 +28,11 @@ define [
 
     events:
       "keyup input[name=search]": "search"
+      
 
-    search: ->
+    search: (e) ->
+      if e.which in [13, 27]
+        console.log "Press Enter"
+        @trigger "startFirstApplication"
+        return e.preventDefault()
       @trigger "changeFilter", @$input.val()
