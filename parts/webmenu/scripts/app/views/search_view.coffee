@@ -17,6 +17,8 @@ define [
 ) ->
   class Search extends ViewMaster
 
+    ENTER = 13
+
     constructor: ->
       @search = _.debounce @search, 250
       super
@@ -32,7 +34,7 @@ define [
     search: (e) ->
       e.preventDefault()
       console.log "PRESSED", e.which
-      if e.which in [13, 27]
+      if e.which is ENTER
         Application.global.trigger "startFirstApplication"
         @$input.val("")
         return
