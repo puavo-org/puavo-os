@@ -89,4 +89,17 @@ define [
         expect(layout.$el).to.have(".bb-item-description")
         expect(layout.$el).to.not.have(".bb-profile")
 
+    describe "search", ->
 
+      beforeEach ->
+        search = layout.$(".search-container input[name=search]").filter(
+          (i, e) -> $(e).attr("name") is "search"
+        )
+        search.val("gimp")
+        search.keyup()
+
+      it "has found Gimp", ->
+        expect(layout.$(".bb-menu .item-name")).to.contain('Gimp')
+
+      it "has not found Shotwell", ->
+        expect(layout.$(".bb-menu .item-name")).to.not.contain('Shotwell')
