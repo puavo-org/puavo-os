@@ -34,8 +34,6 @@ define [
 
     constructor: (opts) ->
       super
-      @initialMenu = opts.initialMenu
-      @current = @initialMenu
 
       @allItems = opts.allItems
       @user = opts.user
@@ -44,13 +42,16 @@ define [
       @firstItem = @allItems[0]
 
       @menuListView = new MenuListView
-      @setView ".menu-app-list-container", @menuListView
-      @displayCurrentMenu()
+        model: opts.initialMenu
+        collection: opts.allItems
 
-      @bindTo Application.global, "select", (model) =>
-        if model.get("type") is "menu"
-          @current = model
-          @displayCurrentMenu()
+      @setView ".menu-app-list-container", @menuListView
+
+      if FEATURE_SEARCH
+        @setView ".search-container", new Search
+
+      @setView ".breadcrums-container", new Breadcrumbs
+        model: opts.initialMenu
 
       @bindTo this, "startFirstApplication", (filter) =>
         Application.bridge.trigger "open", @firstItem.toJSON()
@@ -75,13 +76,8 @@ define [
             @displayCurrentMenu()
 
     reset: ->
-      @curret = @initialMenu
-      @displayCurrentMenu()
+      @menuListView.setRoot()
+      @menuListView.refreshViews()
 
-    displayCurrentMenu: ->
-      @menuListView.displayItems @current.items.toArray()
-      @setView ".breadcrums-container", new Breadcrumbs
-        model: @current
-      @refreshViews()
 
 

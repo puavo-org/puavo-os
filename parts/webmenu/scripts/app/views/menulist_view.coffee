@@ -1,11 +1,13 @@
 define [
   "backbone.viewmaster"
 
+  "cs!app/application"
   "cs!app/views/menuitem_view"
   "hbs!app/templates/menulist"
 ], (
   ViewMaster
 
+  Application
   MenuItemView
   template
 ) ->
@@ -15,8 +17,35 @@ define [
 
     template: template
 
-    displayItems: (models) ->
+    constructor: (opts) ->
+      super
+
+      @initial = @model
+      @setCurrent()
+
+      @bindTo Application.global, "select", (model) =>
+        if model.get("type") is "menu"
+          @model = model
+          @setCurrent()
+          @refreshViews()
+
+      if FEATURE_SEARCH
+        @bindTo Application.global, "changeFilter", (filter) ->
+          if filter.trim()
+            @setItems @collection.searchFilter(filter)
+          else
+            @setCurrent()
+          @refreshViews()
+
+    setRoot: ->
+      @setItems(@initial)
+
+    setCurrent: ->
+      @setItems(@model.items.toArray())
+
+    setItems: (models) ->
       @setView ".menu-app-list", models.map (model) ->
+        console.log "DISP", model.get("name")
         new MenuItemView
           model: model
-      @refreshViews()
+

@@ -28,7 +28,6 @@ define [
 
     events:
       "keyup input[name=search]": "search"
-      
 
     search: (e) ->
       if e.which in [13, 27]
@@ -36,3 +35,6 @@ define [
         @trigger "startFirstApplication"
         return e.preventDefault()
       @trigger "changeFilter", @$input.val()
+
+    search: ->
+      Application.global.trigger "changeFilter", @$input.val()
