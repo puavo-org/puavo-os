@@ -83,7 +83,7 @@ install: install-dirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom \
 		client/initramfs/puavo_ltsp 
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/share/ltsp/screen.d \
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
 		client/screen.d/register
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
