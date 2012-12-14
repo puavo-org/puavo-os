@@ -50,6 +50,7 @@ install: install-dirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
 		client/templates/etc/krb5.conf \
+		client/templates/etc/idmapd.conf \
 		client/templates/etc/nsswitch.conf-extrausers \
 		client/templates/etc/nsswitch.conf-sss
 
