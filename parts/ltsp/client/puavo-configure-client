@@ -58,6 +58,9 @@ when puavo_device_type.eql?("fatclient")
   write_config("/etc/idmapd.conf")
   write_config("/etc/default/nfs-common")
   write_config("/etc/init/gssd.conf", "userprincipal")
+
+  # FIXME: Hack to get gnome fallback session
+  `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
 when puavo_device_type.eql?("ltspserver")
   write_config("/etc/nsswitch.conf", "sss")
   write_config("/etc/pam.d/ltspsshd")
@@ -86,6 +89,9 @@ when puavo_device_type.eql?("laptop")
   write_config("/etc/krb5.conf")
   write_config("/etc/idmapd.conf")
   write_config("/etc/pam.d/lightdm", "laptop")
+
+  # FIXME: Hack to get gnome fallback session
+  `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
 
   @ldap_binddn       = File.read('/etc/puavo/ldap/dn'        ).chomp
   @ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp
