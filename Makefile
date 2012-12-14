@@ -27,6 +27,7 @@ install-dirs:
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom
+	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
 
 .PHONY: install
 install: install-dirs
@@ -81,6 +82,9 @@ install: install-dirs
 		client/initramfs/puavo_udhcp
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom \
 		client/initramfs/puavo_ltsp 
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/share/ltsp/screen.d \
+		client/screen.d/register
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
 		client/upstart/puavo-ltsp-client.conf \
