@@ -33,7 +33,7 @@ install-dirs:
 	mkdir -p $(DESTDIR)/opt/webmenu
 
 install: install-dirs
-	cp -r lib node_modules bin docs scripts vendor theme styles *.js *.coffee *.json *.md *.html $(DESTDIR)/opt/webmenu
+	cp -r lib node_modules bin docs scripts vendor styles *.js *.coffee *.json *.md *.html $(DESTDIR)/opt/webmenu
 	$(INSTALL_DATA) -t $(DESTDIR)/etc/xdg/autostart \
 		webmenu.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/applications \
