@@ -70,7 +70,11 @@ install: install-dirs
 		client/puavo-configure-client \
 		client/puavo-ltsp-login \
 		client/puavo-ltsp-mount-nfs-home \
-		bootserver/puavo-create-kvm-ltsp-server
+		bootserver/puavo-create-kvm-ltsp-server \
+		install/puavo-install \
+		install/puavo-install-grub \
+		install/puavo-install-ltspimages \
+		install/puavo-setup-filesystems
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount \
 		client/initramfs/puavo_udhcp
