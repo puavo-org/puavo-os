@@ -15,7 +15,7 @@ define [
 
     template: template
 
-    setItems: (models) ->
+    displayItems: (models) ->
       @setView ".menu-app-list", models.map (model) ->
         new MenuItemView
           model: model

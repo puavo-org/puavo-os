@@ -62,7 +62,7 @@ define [
         @setView ".search-container", new Search
         @bindTo this, "changeFilter", (filter) ->
           if filter.trim()
-            @menuListView.setItems @allItems.searchFilter(filter)
+            @menuListView.displayItems @allItems.searchFilter(filter)
           else
             @displayCurrentMenu()
 
@@ -71,7 +71,7 @@ define [
       @displayCurrentMenu()
 
     displayCurrentMenu: ->
-      @menuListView.setItems @current.items.toArray()
+      @menuListView.displayItems @current.items.toArray()
       @setView ".breadcrums-container", new Breadcrumbs
         model: @current
       @refreshViews()
