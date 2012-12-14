@@ -39,8 +39,6 @@ define [
       @user = opts.user
       @config = opts.config
 
-      @firstItem = @allItems[0]
-
       @menuListView = new MenuListView
         model: opts.initialMenu
         collection: opts.allItems
@@ -52,10 +50,6 @@ define [
 
       @setView ".breadcrums-container", new Breadcrumbs
         model: opts.initialMenu
-
-      @bindTo this, "startFirstApplication", (filter) =>
-        Application.bridge.trigger "open", @firstItem.toJSON()
- 
 
       @setView ".sidebar", new ProfileView
         model: @user

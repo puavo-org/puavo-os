@@ -30,11 +30,11 @@ define [
       "keyup input[name=search]": "search"
 
     search: (e) ->
+      e.preventDefault()
+      console.log "PRESSED", e.which
       if e.which in [13, 27]
-        console.log "Press Enter"
-        @trigger "startFirstApplication"
-        return e.preventDefault()
-      @trigger "search", @$input.val()
-
-    search: ->
+        Application.global.trigger "startFirstApplication"
+        @$input.val("")
+        return
       Application.global.trigger "search", @$input.val()
+

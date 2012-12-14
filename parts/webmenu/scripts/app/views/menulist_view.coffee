@@ -30,15 +30,19 @@ define [
           @refreshViews()
 
       if FEATURE_SEARCH
-        @bindTo Application.global, "search", (filter) ->
+        @bindTo Application.global, "search", (filter) =>
           if filter.trim()
             @setItems @collection.searchFilter(filter)
           else
             @setCurrent()
           @refreshViews()
 
+        @bindTo Application.global, "startFirstApplication",  =>
+          if firtApp = @getViews(".menu-app-list")?[0].model
+            Application.bridge.trigger "open", firtApp.toJSON()
+
     setRoot: ->
-      @setItems(@initial)
+      @setItems(@initial.items.toArray())
 
     setCurrent: ->
       @setItems(@model.items.toArray())
