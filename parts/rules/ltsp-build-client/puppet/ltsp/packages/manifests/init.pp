@@ -522,6 +522,7 @@ class packages {
     [ 'ltsp-lightdm'
     , 'opinsys-ca-certificates'
     , 'puavo-ltsp-client'
+    , 'puavo-ltsp-install'
     , 'puavo-register' ]:
       tag => [ 'puavo', 'opinsys', ];
 
