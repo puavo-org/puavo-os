@@ -76,6 +76,10 @@ when puavo_device_type.eql?("ltspserver")
   `service ltspssh restart || service ltspssh start`
   `service gssd restart || service gssd start`
   `service idmapd restart || service idmapd start`
+
+  # http://askubuntu.com/questions/117127/flash-video-appears-blue
+  # FIXME - do this in ruby instead of perl
+  `perl -pi -e 's/libvdpau/lixvdpau/g' /usr/lib/adobe-flashplugin/libflashplayer.so`
 when puavo_device_type.eql?("laptop")
   write_config("/etc/nsswitch.conf", "sss")
   write_config("/etc/ldap/ldap.conf")
