@@ -23,7 +23,7 @@ npm-install:
 
 clean:
 	npm clean
-	rm styles/main.css
+	rm -f styles/main.css
 	rm -rf node_modules
 	rm -rf out
 
