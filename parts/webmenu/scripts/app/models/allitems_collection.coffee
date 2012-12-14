@@ -36,7 +36,7 @@ searchByWords = (value, words) ->
     words = [words]
 
   for word in words
-    if value.indexOf(word) is -1
+    if value.toLowerCase().indexOf(word.toLowerCase()) is -1
       return false
 
   return true
