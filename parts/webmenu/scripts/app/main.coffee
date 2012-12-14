@@ -55,3 +55,6 @@ define [
     $(".content-container").append layout.el
     Application.bridge.trigger "html-ready"
 
+    Application.global.trigger "focusSearch"
+    Application.bridge.on "spawnMenu", ->
+      Application.global.trigger "focusSearch"

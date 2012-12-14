@@ -20,8 +20,9 @@ define [
     ENTER = 13
 
     constructor: ->
-      @search = _.debounce @search, 250
       super
+      @search = _.debounce @search, 250
+      @bindTo Application.global, "focusSearch", @focus
 
     template: template
 
@@ -30,6 +31,9 @@ define [
 
     events:
       "keyup input[name=search]": "search"
+
+    focus: ->
+      @$input.get(0).focus()
 
     search: (e) ->
       e.preventDefault()
