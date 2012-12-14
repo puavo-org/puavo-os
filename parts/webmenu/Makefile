@@ -1,4 +1,11 @@
 prefix ?= /usr/local
+exec_prefix = $(prefix)
+bindir = $(exec_prefix)/bin
+datarootdir = $(prefix)/share
+
+INSTALL = install
+INSTALL_PROGRAM = $(INSTALL)
+INSTALL_DATA = $(INSTALL) -m 644
 
 build: npm-install
 	node_modules/.bin/grunt
@@ -20,27 +27,26 @@ clean:
 	rm -rf out
 
 install-dirs:
-	mkdir -p $(DESTDIR)$(prefix)/bin
-	mkdir -p $(DESTDIR)$(prefix)/share/applications
+	mkdir -p $(DESTDIR)$(bindir)
+	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	mkdir -p $(DESTDIR)/etc/xdg/autostart
 	mkdir -p $(DESTDIR)/opt/webmenu
 
 install: install-dirs
 	cp -r lib node_modules bin docs scripts vendor theme styles *.js *.coffee *.json *.md *.html $(DESTDIR)/opt/webmenu
-	install -o root -g root -m 644 webmenu.desktop \
-		$(DESTDIR)/etc/xdg/autostart/webmenu.desktop
-	install -o root -g root -m 644 webmenu-spawn.desktop \
-		$(DESTDIR)$(prefix)/share/applications/webmenu-spawn.desktop
-	install -o root -g root -m 755 bin/webmenu \
-		$(DESTDIR)$(prefix)/bin/webmenu
-	install -o root -g root -m 755 bin/webmenu-spawn \
-		$(DESTDIR)$(prefix)/bin/webmenu-spawn
+	$(INSTALL_DATA) -t $(DESTDIR)/etc/xdg/autostart \
+		webmenu.desktop
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/applications \
+		webmenu-spawn.desktop
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
+		bin/webmenu \
+		bin/webmenu-spawn
 
 uninstall:
-	rm $(DESTDIR)$(prefix)/bin/webmenu-spawn
-	rm $(DESTDIR)$(prefix)/bin/webmenu
+	rm $(DESTDIR)$(bindir)/webmenu-spawn
+	rm $(DESTDIR)$(bindir)/webmenu
 	rm -rf $(DESTDIR)/opt/webmenu
-	rm $(DESTDIR)$(prefix)/share/applications/webmenu-spawn.desktop 
+	rm $(DESTDIR)$(datarootdir)/applications/webmenu-spawn.desktop 
 	rm $(DESTDIR)/etc/xdg/autostart/webmenu.desktop
 
 test-client:
