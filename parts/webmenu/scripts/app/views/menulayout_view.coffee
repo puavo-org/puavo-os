@@ -7,7 +7,6 @@ define [
   "cs!app/views/profile_view"
   "cs!app/views/favorites_view"
   "cs!app/views/search_view"
-  "cs!app/views/search_result_view"
   "cs!app/application"
   "hbs!app/templates/menulayout"
   "app/utils/debounce"
@@ -20,7 +19,6 @@ define [
   ProfileView
   Favorites
   Search
-  SearchResult
   Application
   template
   debounce

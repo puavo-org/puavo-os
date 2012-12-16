@@ -2,15 +2,11 @@ define [
   "underscore"
   "backbone.viewmaster"
 
-  "cs!app/views/search_result_view"
-
   "cs!app/application"
   "hbs!app/templates/search"
 ], (
   _
   ViewMaster
-
-  SearchResult
 
   Application
   template
