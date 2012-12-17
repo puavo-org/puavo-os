@@ -1,0 +1,57 @@
+
+
+@import "sizes"
+
+.bb-menu-layout
+  &,
+  .sidebar,
+  .footer,
+  .main-area,
+  .header,
+  .border
+    position absolute
+
+  top borderMargin
+  left borderMargin
+  right borderMargin
+  bottom borderMargin
+
+  .main-area,
+  .footer,
+  .header
+    width mainAreaWidth
+
+  .main-area
+    left borderMargin
+    top headerHeight
+    bottom footerHeight
+
+  .header
+    height headerHeight
+    left borderMargin
+    top borderMargin
+    .search-container,
+    .breadcrumbs-container
+      float left
+      ul
+        margin 0px
+
+  .border
+    width 1px
+    background-color black
+    top 0px
+    bottom 0px
+    right sideBarWidth
+
+
+  .sidebar
+    width sideBarWidth
+    top borderMargin
+    bottom borderMargin
+    right borderMargin
+
+  .footer
+    height footerHeight
+    left borderMargin
+    bottom borderMargin
+

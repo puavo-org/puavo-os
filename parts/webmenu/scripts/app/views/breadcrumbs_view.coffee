@@ -17,6 +17,8 @@ define [
   ###
   class Breadcrumbs extends ViewMaster
 
+    className: "bb-breadcrumbs"
+
     template: template
 
     constructor: ->

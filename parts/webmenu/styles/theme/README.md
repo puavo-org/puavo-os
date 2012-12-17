@@ -1,1 +1,0 @@
-web-desktop-theme

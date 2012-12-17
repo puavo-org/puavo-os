@@ -1,49 +1,16 @@
-<!-- User details -->
-<div class="span12 normal-margin">
-  <ul class="thumbnails justify">
-    <li class="span12 smooth-margin">
-      <div class="thumbnail user-img-name ignore-thumbnail-hover">
-        <img class="avatar img-polaroid" src="styles/theme/img/anonymous.png">
-        <p>{{user.fullName}}</p>
-      </div>
-    </li>
-  </ul>
+
+<div class="profile">
+  <img class="avatar" src="styles/theme/default/img/anonymous.png">
+  <p>{{user.fullName}}</p>
 </div>
-<!-- Settings yms. -->
-<div class="span12">
-    <ul class="thumbnails justify sidebar-menu-ul">
-      <li class="margin0 bb-settings">
-        <div class="thumbnail">
-          <i class="icon-cog"></i>
-          <p>Laiteasetukset</p>
-        </div>
-      </li>
-      {{#if config.passwordCMD}}
-      <li class="margin0 bb-change-password">
-        <div class="thumbnail">
-          <i class="icon-cw"></i>
-          <p>Vaihda salasana</p>
-        </div>
-      </li>
-      {{/if}}
-      {{#if config.profileCMD}}
-      <li class="margin0 bb-profile-settings">
-        <div class="thumbnail">
-          <i class="icon-vcard"></i>
-          <p>Omat tiedot</p>
-        </div>
-      </li>
-      {{/if}}
-      <li class="margin0">
-        <div class="thumbnail ignore-thumbnail-hover bb-logout logout">
-          <i class="icon-logout"></i>
-          <p>Kirjaudu ulos</p>
-       </div>
-      </li> 
-    </ul>
-  <div class="pull-right margin0 logo">
-  <img alt="Opinsys" title="Opinsys" src="styles/theme/img/opinsys_logo-rgb-feather.png">
+
+<div class="settings-wrapper">
+  <div class="settings-container">
+  </div>
 </div>
+
+<div class="sidebar-footer">
+  <img alt="Opinsys" title="Opinsys" width="100" src="styles/theme/default/img/logo.png">
 </div>
 
 

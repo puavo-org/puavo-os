@@ -19,7 +19,7 @@ define [
     constructor: ->
       super
       @search = _.debounce @search, 250
-      @listenTo Application.global, "focusSearch", @focus
+      @listenTo this, "spawnMenu", @focus
 
     template: template
 

@@ -1,26 +1,34 @@
 
+width = 125px
+height = 100px
+iconSize = 50px
+
 .bb-menu-item
+  cursor pointer
+  margin 0px
+
+  word-wrap break-word
+  overflow hidden
+
+  width width
+  height height
+
+  .osIcon, .cssIcon
+    width iconSize
+    height iconSize
+  .cssIcon
+    font-size iconSize
+
+  .item-name
+    font-size 10pt
+    margin 0px
+    font-weight normal
 
   .thumbnail
-    cursor pointer
-    -webkit-animation-duration: 0.3s;
+    text-align center
 
   .description
-    cursor pointer
-    font-size 10pt
-    height 80px
     display none
-    float left
-    overflow hidden
-    text-overflow ellipsis
-    text-align center
-    width 100%
-    height 100%
-    .arrow
-      font-size 40pt
-      color rgba(237,113,19, 0.8)
-      display block
 
-
-.selectHighlight li
-  background-color red
+  &.selectHighlight
+    background-color red

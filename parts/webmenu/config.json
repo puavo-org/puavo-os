@@ -14,7 +14,21 @@
   "passwordCMD": null,
   "settingsCMD": {
     "type": "desktop",
-    "command": ["gnome-control-center"]
+    "command": ["gnome-control-center"],
+    "name": "Järjestelmäasetukset",
+    "cssIcon": "icon-cog"
+  },
+  "profileCMD": {
+    "type": "webWindow",
+    "url": "http://toimisto.opinsys.fi",
+    "name": "Profiili",
+    "cssIcon": "icon-vcard"
+  },
+  "passwordCMD": {
+    "type": "webWindow",
+    "url": "http://lmgtfy.com/?q=Reset+linux+password",
+    "name": "Salasana",
+    "cssIcon": "icon-cw"
   },
   "maxFavorites": 4,
   "port": 1337
