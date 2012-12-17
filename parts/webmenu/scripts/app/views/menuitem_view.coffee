@@ -27,7 +27,8 @@ define [
       super
 
     events:
-      "click": (e) -> Application.global.trigger "select", @model
+      "click": (e) ->
+        Application.global.trigger "select", @model
       "mouseenter .thumbnail": "delayedShowDescription"
       "mouseleave": ->
         @delayedShowDescription.cancel()
@@ -41,9 +42,6 @@ define [
       json = super()
       json.menu = @model.get("type") is "menu"
       return json
-
-
-
 
 
     showDescription: ->

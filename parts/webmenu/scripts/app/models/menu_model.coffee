@@ -9,8 +9,9 @@ define [
   class AbstractItemModel extends Backbone.Model
     constructor: (opts, allItems) ->
       super
-      @allItems = allItems
-      @allItems.add this
+      if allItems
+        @allItems = allItems
+        @allItems.add this
 
     isOk: -> true
 
@@ -45,7 +46,7 @@ define [
   class DesktopItemModel extends LauncherModel
 
   # Only export Recursive MenuModel. It can build other models for us
-  return class MenuModel extends AbstractItemModel
+  class MenuModel extends AbstractItemModel
 
     typemap =
       web: WebItemModel
@@ -68,3 +69,6 @@ define [
           @items.add model
 
     isOk: -> @items.size() > 0
+
+  MenuModel.LauncherModel = LauncherModel
+  return MenuModel

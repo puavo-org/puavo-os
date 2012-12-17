@@ -1,14 +1,18 @@
 define [
   "backbone.viewmaster"
 
+  "cs!app/models/menu_model"
   "hbs!app/templates/profile"
+  "cs!app/views/menuitem_view"
   "cs!app/application"
   "cs!app/views/logout_view"
   "cs!app/views/lightbox_view"
 ], (
   ViewMaster
 
+  MenuModel
   template
+  MenuItemView
   Application
   LogoutView
   Lightbox
@@ -20,24 +24,27 @@ define [
 
     template: template
 
-    events:
-      "click .bb-profile-settings": (e) ->
-        Application.bridge.trigger "open", @config.get("profileCMD")
-      "click .bb-change-password": (e) ->
-        Application.bridge.trigger "open", @config.get("passwordCMD")
-      "click .bb-settings": (e) ->
-        Application.bridge.trigger "open", @config.get("settingsCMD")
-      "click .bb-logout": (e) ->
-
-        @lb = new Lightbox
-          view: new LogoutView
-        @lb.render()
+    #     @lb = new Lightbox
+    #       view: new LogoutView
+    #     @lb.render()
 
     constructor: (opts) ->
       super
       @config = opts.config
       @listenTo Application.global, "show", =>
         @lb?.remove()
+
+      @appendView ".settings-container", new MenuItemView
+        model: new MenuModel.LauncherModel @config.get("settingsCMD")
+
+      if passwordCMD = @config.get("passwordCMD")
+        @appendView ".settings-container", new MenuItemView
+          model: new MenuModel.LauncherModel passwordCMD
+
+      if profileCMD = @config.get("profileCMD")
+        @appendView ".settings-container", new MenuItemView
+          model: new MenuModel.LauncherModel profileCMD
+
 
     context: -> {
       user: @model.toJSON()

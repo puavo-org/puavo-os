@@ -1,50 +1,13 @@
 
 <div class="profile">
-  <img class="avatar img-polaroid" src="styles/theme/img/anonymous.png">
+  <img class="avatar" src="styles/theme/img/anonymous.png">
   <p>{{user.fullName}}</p>
 </div>
 
-
-<div class="settings">
-
-    <ul>
-
-      <li>
-        <div class="thumbnail">
-          <i class="icon-cog"></i>
-          <p>Laiteasetukset</p>
-        </div>
-      </li>
-
-      {{#if config.passwordCMD}}
-      <li class="margin0 bb-change-password">
-        <div class="thumbnail">
-          <i class="icon-cw"></i>
-          <p>Vaihda salasana</p>
-        </div>
-      </li>
-      {{/if}}
-
-      {{#if config.profileCMD}}
-      <li class="bb-profile-settings">
-        <div class="thumbnail">
-          <i class="icon-vcard"></i>
-          <p>Omat tiedot</p>
-        </div>
-      </li>
-      {{/if}}
-
-      <li>
-        <div class="thumbnail ignore-thumbnail-hover">
-          <i class="icon-logout"></i>
-          <p>Kirjaudu ulos</p>
-       </div>
-      </li>
-
-    </ul>
-
+<div class="settings-wrapper">
+  <div class="settings-container">
+  </div>
 </div>
-
 
 <div class="sidebar-footer">
   <img alt="Opinsys" title="Opinsys" width="100" src="styles/theme/img/opinsys_logo-rgb-feather.png">
