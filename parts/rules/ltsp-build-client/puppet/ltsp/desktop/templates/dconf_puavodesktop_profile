@@ -115,7 +115,7 @@ object-id-list=['indicators', 'show-desktop', 'window-list', 'workspace-switcher
 toplevel-id-list=['bottom-panel']
 
 [org/gnome/gnome-panel/lockdown]
-locked_down=true
+locked-down=true
 
 [org/gnome/gnome-panel/run-dialog]
 history=['webmenu', 'firefox', 'chromium-browser']
