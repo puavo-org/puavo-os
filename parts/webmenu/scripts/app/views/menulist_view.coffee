@@ -60,7 +60,18 @@ define [
           model: model
 
     setStartApplication: (index) ->
+      views = @getViews(".menu-app-list")
+
+      if views.length is 0
+        @startApp = null
+        @startAppIndex = 0
+        return
+  
       @startApp.hideSelectHighlight() if @startApp
       @startAppIndex = index
-      @startApp = @getViews(".menu-app-list")?[@startAppIndex]
+
+      if not views[@startAppIndex]
+        @startAppIndex = 0
+  
+      @startApp = views[@startAppIndex]
       @startApp.displaySelectHighlight()
