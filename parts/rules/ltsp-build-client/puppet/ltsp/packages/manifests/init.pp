@@ -10,6 +10,7 @@ class packages {
     , 'gawk'
     , 'git'
     , 'lynx'
+    , 'm4'
     , 'pv'
     , 'sl'
     , 'sudo'
