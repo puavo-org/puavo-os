@@ -53,4 +53,5 @@ define [
       , 200
 
 
-
+    displaySelectHighlight: ->
+      @$el.addClass "selectHighlight"

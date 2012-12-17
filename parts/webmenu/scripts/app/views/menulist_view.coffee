@@ -33,6 +33,7 @@ define [
         @listenTo Application.global, "search", (filter) =>
           if filter.trim()
             @setItems @collection.searchFilter(filter)
+            @getViews(".menu-app-list")?[0].displaySelectHighlight()
           else
             @setCurrent()
           @refreshViews()
