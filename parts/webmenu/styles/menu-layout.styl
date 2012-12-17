@@ -1,11 +1,9 @@
 
-mainAreaWidth = 70%
-sideBarWidth = 30%
 
-headerHeight = 50px
-footerHeight = 180px
+@import "sizes"
 
 .bb-menu-layout
+  &,
   .sidebar,
   .footer,
   .main-area,
@@ -13,21 +11,25 @@ footerHeight = 180px
   .border
     position absolute
 
+  top borderMargin
+  left borderMargin
+  right borderMargin
+  bottom borderMargin
+
   .main-area,
   .footer,
   .header
     width mainAreaWidth
 
   .main-area
-    left 0px
+    left borderMargin
     top headerHeight
     bottom footerHeight
-    overflow auto
 
   .header
     height headerHeight
-    left 0px
-    top 0px
+    left borderMargin
+    top borderMargin
     .search-container,
     .breadcrumbs-container
       float left
@@ -44,12 +46,12 @@ footerHeight = 180px
 
   .sidebar
     width sideBarWidth
-    top 0px
-    bottom 0px
-    right 0px
+    top borderMargin
+    bottom borderMargin
+    right borderMargin
 
   .footer
     height footerHeight
-    left 0px
-    bottom 0px
+    left borderMargin
+    bottom borderMargin
 
