@@ -60,7 +60,7 @@ define [
           model: model
 
     setStartApplication: (index) ->
-      views = @getViews(".menu-app-list")
+      views = @getViews(".app-list-container")
 
       if views.length is 0
         @startApp = null
