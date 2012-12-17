@@ -1,0 +1,50 @@
+
+mainAreaWidth = 70%
+sideBarWidth = 30%
+
+headerHeight = 50px
+footerHeight = 180px
+
+.bb-menu-layout
+  .sidebar,
+  .footer,
+  .main-area,
+  .header
+    position absolute
+
+  .main-area,
+  .footer,
+  .header
+    width mainAreaWidth
+
+  .main-area
+    border 1px solid red
+    left 0px
+    top headerHeight
+    bottom footerHeight
+    overflow auto
+
+  .header
+    border 1px solid orange
+    height headerHeight
+    left 0px
+    top 0px
+    .search-container,
+    .breadcrumbs-container
+      float left
+      ul
+        margin 0px
+
+  .sidebar
+    border 1px solid green
+    width sideBarWidth
+    top 0px
+    bottom 0px
+    right 0px
+
+  .footer
+    border 1px solid blue
+    height footerHeight
+    left 0px
+    bottom 0px
+

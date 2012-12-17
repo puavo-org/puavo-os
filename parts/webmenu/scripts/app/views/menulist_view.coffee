@@ -13,7 +13,7 @@ define [
 ) ->
   class MenuListView extends ViewMaster
 
-    className: "bb-menu"
+    className: "bb-menu-list"
 
     template: template
 
@@ -55,7 +55,7 @@ define [
       @setItems(@model.items.toArray())
 
     setItems: (models) ->
-      @setView ".menu-app-list", models.map (model) ->
+      @setView ".app-list-container", models.map (model) ->
         new MenuItemView
           model: model
 

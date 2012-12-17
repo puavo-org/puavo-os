@@ -52,7 +52,7 @@ define [
       Application.bridge.trigger "hideWindow"
 
     layout.render()
-    $(".content-container").append layout.el
+    $("body").append layout.el
     Application.bridge.trigger "html-ready"
 
     Application.global.trigger "focusSearch"

@@ -11,6 +11,8 @@ define [
 ) ->
   class Favorites extends ViewMaster
 
+    className: "bb-favorites"
+
     template: template
 
     constructor: (opts) ->
@@ -25,7 +27,7 @@ define [
     setList: ->
       views = @collection.favorites(@config.get "maxFavorites").map (model) =>
         new MenuItemView model: model
-      @setView ".most-used-list", views
+      @setView ".app-list-container", views
 
 
 

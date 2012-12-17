@@ -26,7 +26,7 @@ define [
 
   class MenuLayout extends ViewMaster
 
-    className: "bb-menu"
+    className: "bb-menu-layout"
 
     template: template
 
@@ -41,19 +41,19 @@ define [
         model: opts.initialMenu
         collection: opts.allItems
 
-      @setView ".menu-app-list-container", @menuListView
+      @setView ".menu-list-container", @menuListView
 
       if FEATURE_SEARCH
         @setView ".search-container", new Search
 
-      @setView ".breadcrums-container", new Breadcrumbs
+      @setView ".breadcrumbs-container", new Breadcrumbs
         model: opts.initialMenu
 
-      @setView ".sidebar", new ProfileView
+      @setView ".profile-container", new ProfileView
         model: @user
         config: @config
 
-      @setView ".favorites", new Favorites
+      @setView ".favorites-container", new Favorites
         collection: @allItems
         config: @config
 

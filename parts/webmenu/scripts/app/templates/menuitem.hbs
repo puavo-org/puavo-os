@@ -1,25 +1,18 @@
-<li class="span3 margin0 desktop-link" >
+<div class="description" >
+  {{#if menu}}
+  <span class="arrow icon-up-bold"></span>
+  {{else}}
+  <span class="arrow icon-forward"></span>
+  {{/if}}
+  {{description}}
+</div>
 
-    <div class="description" >
-      {{#if menu}}
-      <span class="arrow icon-up-bold"></span>
-      {{else}}
-      <span class="arrow icon-forward"></span>
-      {{/if}}
-      {{description}}
-    </div>
-
-    <div class="thumbnail">
-      {{#if cssIcon}}
-        <i class="{{cssIcon}}"></i>
-      {{/if}}
-      {{#if osIconPath}}
-      <img src="file://{{osIconPath}}">
-      {{/if}}
-     <p class="item-name" >{{name}}</p>
-    </div>
-
-</li>
-
-
-
+<div class="thumbnail">
+  {{#if cssIcon}}
+    <i class="{{cssIcon}}"></i>
+  {{/if}}
+  {{#if osIconPath}}
+  <img src="file://{{osIconPath}}">
+  {{/if}}
+ <p class="item-name" >{{name}}</p>
+</div>
