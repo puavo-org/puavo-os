@@ -12,7 +12,7 @@ define [
       @allItems = allItems
       @allItems.add this
 
-    validate: ->
+    isOk: -> true
 
 
   class LauncherModel extends AbstractItemModel
@@ -30,20 +30,17 @@ define [
       @set "clicks", @get("clicks") + 1
       localStorage[@_lsID()] = @get "clicks"
 
-    _lsID: -> "clicks-#{ @id }"
+    _lsID: ->
+      "clicks-#{ @id }"
 
     resetClicks: ->
       delete localStorage[@_lsID()]
 
-    validate: ->
-      if not @get("command")
-        return "Command is missing"
+    isOk: -> !! @get("command")
 
   class WebItemModel extends LauncherModel
 
-    validate: ->
-      if not @get("url")
-        return "Url is missing"
+    isOk: -> !! @get("url")
 
   class DesktopItemModel extends LauncherModel
 
@@ -57,17 +54,17 @@ define [
       menu: MenuModel
 
     constructor: (opts, allItems) ->
+
       # Items will be presented as sub collection. Remove from model attributes
       super _.omit(opts, "items"), allItems
+
 
       @items = new Backbone.Collection
 
       for item in opts.items
         model = new typemap[item.type](item, allItems)
-        model.parent = this
-        if model.isValid()
+        if model.isOk()
+          model.parent = this
           @items.add model
 
-    validate: ->
-      if @items.size() is 0
-        return "empty menu"
+    isOk: -> @items.size() > 0
