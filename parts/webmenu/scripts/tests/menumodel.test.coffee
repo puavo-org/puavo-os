@@ -63,13 +63,10 @@ define [
         model.get("item")
       ).to.be.not.ok
 
-    it "will increase click count with incClicks()", (done) ->
+    it "will increase click count with incClicks()", ->
       item = allItems.at(1)
       item.incClicks()
-      setTimeout ->
-        expect(item.get "clicks").to.eq 1
-        done()
-      , 1
+      expect(item.get "clicks").to.eq 1
 
     it "ignores bad items", ->
       expect(
