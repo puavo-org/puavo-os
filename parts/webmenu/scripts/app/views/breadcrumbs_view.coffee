@@ -31,7 +31,7 @@ define [
       "click a": (e) ->
         e.preventDefault()
         cid = $(e.target).data("cid")
-        selected = @model.allItems.getByCid(cid)
+        selected = @model.allItems.get(cid)
         Application.global.trigger "select", selected
 
     context: ->
