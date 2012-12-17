@@ -40,12 +40,12 @@ define [
             @setCurrent()
           @refreshViews()
 
-        @listenTo Application.global, "startFirstApplication",  =>
+        @listenTo Application.global, "startApplication",  =>
           if @startApp?.model
             Application.bridge.trigger "open", @startApp.model.toJSON()
             @startApp = null
 
-        @listenTo Application.global, "nextFirstApplication", =>
+        @listenTo Application.global, "nextStartApplication", =>
           @setStartApplication(@startAppIndex + 1)
 
     setRoot: ->

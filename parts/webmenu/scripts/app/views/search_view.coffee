@@ -28,7 +28,7 @@ define [
 
     events:
       "keyup input[name=search]": "search"
-      "keydown input[name=search]": "nextFirstApplication"
+      "keydown input[name=search]": "nextStartApplication"
 
     focus: ->
       @$input.get(0).focus()
@@ -36,7 +36,7 @@ define [
     search: (e) ->
       e.preventDefault()
       if e.which is ENTER
-        Application.global.trigger "startFirstApplication"
+        Application.global.trigger "startApplication"
         @$input.val("")
         return
       else if e.which is TAP
@@ -44,10 +44,10 @@ define [
 
       Application.global.trigger "search", @$input.val()
 
-    nextFirstApplication: (e) ->
+    nextStartApplication: (e) ->
       console.log "KEY: ", e.which
       if e.which is TAP
         e.preventDefault()
-        Application.global.trigger "nextFirstApplication"
+        Application.global.trigger "nextStartApplication"
         return
       
