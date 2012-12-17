@@ -9,10 +9,10 @@
 
 <div class="thumbnail">
   {{#if cssIcon}}
-    <i class="{{cssIcon}}"></i>
+  <i class="cssIcon {{cssIcon}}"></i>
   {{/if}}
   {{#if osIconPath}}
-  <img src="file://{{osIconPath}}">
+  <img class="osIcon" src="file://{{osIconPath}}">
   {{/if}}
- <p class="item-name" >{{name}}</p>
+ <h1 class="item-name" >{{name}}</h1>
 </div>
