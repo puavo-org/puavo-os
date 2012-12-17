@@ -42,7 +42,7 @@ define [
 
         @listenTo Application.global, "startApplication",  =>
           if @startApp?.model
-            Application.bridge.trigger "open", @startApp.model.toJSON()
+            Application.global.trigger "select", @startApp.model
             @startApp = null
 
         @listenTo Application.global, "nextStartApplication", =>
