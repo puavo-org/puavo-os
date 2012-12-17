@@ -18,7 +18,7 @@ define [
       @config = opts.config
 
       @setList()
-      @bindTo @collection, "change:clicks", =>
+      @listenTo @collection, "change:clicks", =>
         @setList()
         @refreshViews()
 

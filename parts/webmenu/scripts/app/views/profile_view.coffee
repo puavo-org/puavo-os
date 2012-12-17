@@ -36,7 +36,7 @@ define [
     constructor: (opts) ->
       super
       @config = opts.config
-      @bindTo Application.global, "show", =>
+      @listenTo Application.global, "show", =>
         @lb?.remove()
 
     context: -> {

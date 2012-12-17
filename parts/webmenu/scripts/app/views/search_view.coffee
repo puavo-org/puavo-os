@@ -18,7 +18,7 @@ define [
     constructor: ->
       super
       @search = _.debounce @search, 250
-      @bindTo Application.global, "focusSearch", @focus
+      @listenTo Application.global, "focusSearch", @focus
 
     template: template
 

@@ -22,7 +22,7 @@ define [
     constructor: ->
       super
 
-      @bindTo Application.global, "select", (model) =>
+      @listenTo Application.global, "select", (model) =>
         if model.get("type") is "menu"
           @model = model
           @render()

@@ -23,21 +23,21 @@ define [
       @initial = @model
       @setCurrent()
 
-      @bindTo Application.global, "select", (model) =>
+      @listenTo Application.global, "select", (model) =>
         if model.get("type") is "menu"
           @model = model
           @setCurrent()
           @refreshViews()
 
       if FEATURE_SEARCH
-        @bindTo Application.global, "search", (filter) =>
+        @listenTo Application.global, "search", (filter) =>
           if filter.trim()
             @setItems @collection.searchFilter(filter)
           else
             @setCurrent()
           @refreshViews()
 
-        @bindTo Application.global, "startFirstApplication",  =>
+        @listenTo Application.global, "startFirstApplication",  =>
           if firtApp = @getViews(".menu-app-list")?[0].model
             Application.bridge.trigger "open", firtApp.toJSON()
 
