@@ -55,3 +55,6 @@ define [
 
     displaySelectHighlight: ->
       @$el.addClass "selectHighlight"
+
+    hideSelectHighlight: ->
+      @$el.removeClass "selectHighlight"

@@ -14,6 +14,7 @@ define [
   class Search extends ViewMaster
 
     ENTER = 13
+    TAP = 9
 
     constructor: ->
       super
@@ -27,6 +28,7 @@ define [
 
     events:
       "keyup input[name=search]": "search"
+      "keydown input[name=search]": "nextFirstApplication"
 
     focus: ->
       @$input.get(0).focus()
@@ -37,5 +39,15 @@ define [
         Application.global.trigger "startFirstApplication"
         @$input.val("")
         return
+      else if e.which is TAP
+        return
+
       Application.global.trigger "search", @$input.val()
 
+    nextFirstApplication: (e) ->
+      console.log "KEY: ", e.which
+      if e.which is TAP
+        e.preventDefault()
+        Application.global.trigger "nextFirstApplication"
+        return
+      

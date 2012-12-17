@@ -22,6 +22,8 @@ define [
 
       @initial = @model
       @setCurrent()
+      @firstApp = null
+      @firstAppIndex = 0
 
       @listenTo Application.global, "select", (model) =>
         if model.get("type") is "menu"
@@ -33,14 +35,19 @@ define [
         @listenTo Application.global, "search", (filter) =>
           if filter.trim()
             @setItems @collection.searchFilter(filter)
-            @getViews(".menu-app-list")?[0].displaySelectHighlight()
+            @setStartApplication(0)
           else
             @setCurrent()
           @refreshViews()
 
         @listenTo Application.global, "startFirstApplication",  =>
-          if firtApp = @getViews(".menu-app-list")?[0].model
-            Application.bridge.trigger "open", firtApp.toJSON()
+          if @firstApp?.model
+            Application.bridge.trigger "open", @firstApp.model.toJSON()
+            @firstApp = null
+
+        @listenTo Application.global, "nextFirstApplication", =>
+          @setStartApplication(@firstAppIndex + 1)
+          console.log "fistAppIndex: ", @firstAppIndex
 
     setRoot: ->
       @setItems(@initial.items.toArray())
@@ -53,3 +60,8 @@ define [
         new MenuItemView
           model: model
 
+    setStartApplication: (index) ->
+      @firstApp.hideSelectHighlight() if @firstApp
+      @firstAppIndex = index
+      @firstApp = @getViews(".menu-app-list")?[@firstAppIndex]
+      @firstApp.displaySelectHighlight()
