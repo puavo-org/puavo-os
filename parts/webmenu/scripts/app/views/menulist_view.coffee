@@ -22,8 +22,8 @@ define [
 
       @initial = @model
       @setCurrent()
-      @firstApp = null
-      @firstAppIndex = 0
+      @startApp = null
+      @startAppIndex = 0
 
       @listenTo Application.global, "select", (model) =>
         if model.get("type") is "menu"
@@ -41,13 +41,12 @@ define [
           @refreshViews()
 
         @listenTo Application.global, "startFirstApplication",  =>
-          if @firstApp?.model
-            Application.bridge.trigger "open", @firstApp.model.toJSON()
-            @firstApp = null
+          if @startApp?.model
+            Application.bridge.trigger "open", @startApp.model.toJSON()
+            @startApp = null
 
         @listenTo Application.global, "nextFirstApplication", =>
-          @setStartApplication(@firstAppIndex + 1)
-          console.log "fistAppIndex: ", @firstAppIndex
+          @setStartApplication(@startAppIndex + 1)
 
     setRoot: ->
       @setItems(@initial.items.toArray())
@@ -61,7 +60,7 @@ define [
           model: model
 
     setStartApplication: (index) ->
-      @firstApp.hideSelectHighlight() if @firstApp
-      @firstAppIndex = index
-      @firstApp = @getViews(".menu-app-list")?[@firstAppIndex]
-      @firstApp.displaySelectHighlight()
+      @startApp.hideSelectHighlight() if @startApp
+      @startAppIndex = index
+      @startApp = @getViews(".menu-app-list")?[@startAppIndex]
+      @startApp.displaySelectHighlight()
