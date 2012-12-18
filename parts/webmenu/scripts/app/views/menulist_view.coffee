@@ -51,6 +51,7 @@ define [
       @listenTo this, "open:menu", (model) =>
         @model = model
         @setCurrent()
+        @deselectItem()
         @refreshViews()
 
       @listenTo this, "search", (searchString) =>
