@@ -116,4 +116,7 @@ define [
         when "right"
           @selectItem(@selected.index + 1)
         when "left"
-          @selectItem(@selected.index - 1)
+          if @selected.index is 0
+            @selectItem(@getViews(".app-list-container").length - 1)
+          else
+            @selectItem(@selected.index - 1)
