@@ -53,7 +53,7 @@ define [
     constructor: (opts) ->
       super
       @config = opts.config
-      @listenTo Application.global, "show", =>
+      @listenTo this, "spawnMenu", =>
         @lb?.remove()
 
       @appendView ".settings-container", new MenuItemView

@@ -45,8 +45,8 @@ define [
 
       @setView ".search-container", new Search
 
-      @setView ".breadcrumbs-container", new Breadcrumbs
-        model: opts.initialMenu
+      @breadcrumbs = new Breadcrumbs model: opts.initialMenu
+      @setView ".breadcrumbs-container", @breadcrumbs
 
       @setView ".profile-container", new ProfileView
         model: @user
@@ -55,6 +55,19 @@ define [
       @setView ".favorites-container", new Favorites
         collection: @allItems
         config: @config
+
+      @listenTo this, "open:menu", (model, sender) =>
+        # Update MenuListView when user navigates from breadcrumbs
+        if sender is @breadcrumbs
+          @menuListView.broadcast("open:menu", model)
+        # Update breadcrums when user navigates from menu tree
+        if sender isnt @breadcrumbs
+          @breadcrumbs.broadcast("open:menu", model)
+
+      # Connect search events to MenuListView
+      @listenTo this, "search", (searchString) =>
+        @menuListView.broadcast("search", searchString)
+
 
     reset: ->
       @menuListView.setRoot()

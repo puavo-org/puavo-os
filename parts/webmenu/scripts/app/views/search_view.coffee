@@ -38,18 +38,17 @@ define [
     search: (e) ->
       e.preventDefault()
       if e.which is ENTER
-        Application.global.trigger "startApplication"
+        @bubble "startApplication"
         @$input.val("")
         return
       else if e.which is TAB
         return
 
-      Application.global.trigger "search", @$input.val()
+      @bubble "search", @$input.val()
 
     nextStartApplication: (e) ->
-      console.log "KEY: ", e.which
       if e.which is TAB
         e.preventDefault()
-        Application.global.trigger "nextStartApplication"
+        @bubble "nextStartApplication"
         return
 

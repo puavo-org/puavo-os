@@ -28,7 +28,11 @@ define [
 
     events:
       "click": (e) ->
-        Application.global.trigger "select", @model
+        if @model.get("type") is "menu"
+          @bubble "open:menu", @model
+        else
+          @bubble "open:app", @model
+
       "mouseenter .thumbnail": "delayedShowDescription"
       "mouseleave": ->
         @delayedShowDescription.cancel()

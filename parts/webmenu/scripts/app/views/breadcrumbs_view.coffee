@@ -24,17 +24,16 @@ define [
     constructor: ->
       super
 
-      @listenTo Application.global, "select", (model) =>
-        if model.get("type") is "menu"
-          @model = model
-          @render()
+      @listenTo this, "open:menu", (model) =>
+        @model = model
+        @render()
 
     events:
       "click a": (e) ->
         e.preventDefault()
         cid = $(e.target).data("cid")
-        selected = @model.allItems.get(cid)
-        Application.global.trigger "select", selected
+        menu = @model.allItems.get(cid)
+        @bubble "open:menu", menu, this
 
     context: ->
       current = @model

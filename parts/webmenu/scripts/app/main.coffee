@@ -36,16 +36,11 @@ define [
 
     # Convert selected menu item models to CMD Events
     # https://github.com/opinsys/webmenu/blob/master/docs/menujson.md
-    Application.global.on "select", (model) ->
-      if model.get("type") is "menu"
-        return
-
+    layout.on "open:app", (model) ->
       model.incClicks()
+      layout.reset()
       # This will be send to node and node-webkit handlers
       Application.bridge.trigger "open", model.toJSON()
-
-    Application.bridge.on "open", ->
-      layout.reset()
 
     # Hide window when focus is lost
     $(window).blur ->
@@ -53,8 +48,13 @@ define [
 
     layout.render()
     $("body").append layout.el
-    Application.bridge.trigger "html-ready"
 
     layout.broadcast("spawnMenu")
     Application.bridge.on "spawnMenu", ->
       layout.broadcast("spawnMenu")
+
+
+    ["logout", "shutdown", "reboot"].forEach (event) ->
+      layout.on event, -> Application.bridge.trigger(event)
+
+    Application.bridge.trigger "html-ready"

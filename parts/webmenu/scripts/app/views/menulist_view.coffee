@@ -25,26 +25,25 @@ define [
       @startApp = null
       @startAppIndex = 0
 
-      @listenTo Application.global, "select", (model) =>
-        if model.get("type") is "menu"
-          @model = model
-          @setCurrent()
-          @refreshViews()
+      @listenTo this, "open:menu", (model) =>
+        @model = model
+        @setCurrent()
+        @refreshViews()
 
-      @listenTo Application.global, "search", (filter) =>
-        if filter.trim()
-          @setItems @collection.searchFilter(filter)
+      @listenTo this, "search", (searchString) =>
+        if searchString.trim()
+          @setItems @collection.searchFilter(searchString)
           @setStartApplication(0)
         else
           @setCurrent()
         @refreshViews()
 
-      @listenTo Application.global, "startApplication",  =>
+      @listenTo this, "startApplication",  =>
         if @startApp?.model
-          Application.global.trigger "select", @startApp.model
+          @bubble "open:app", @startApp.model
           @startApp = null
 
-      @listenTo Application.global, "nextStartApplication", =>
+      @listenTo this, "nextStartApplication", =>
         @setStartApplication(@startAppIndex + 1)
 
     setRoot: ->
@@ -65,12 +64,12 @@ define [
         @startApp = null
         @startAppIndex = 0
         return
-  
+
       @startApp.hideSelectHighlight() if @startApp
       @startAppIndex = index
 
       if not views[@startAppIndex]
         @startAppIndex = 0
-  
+
       @startApp = views[@startAppIndex]
       @startApp.displaySelectHighlight()
