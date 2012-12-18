@@ -25,6 +25,10 @@ define [
       @startApp = null
       @startAppIndex = 0
 
+      @listenTo this, "reset", =>
+        @setItems(@initial.items.toArray())
+        @refreshViews()
+
       @listenTo this, "open:menu", (model) =>
         @model = model
         @setCurrent()
@@ -46,8 +50,6 @@ define [
       @listenTo this, "nextStartApplication", =>
         @setStartApplication(@startAppIndex + 1)
 
-    setRoot: ->
-      @setItems(@initial.items.toArray())
 
     setCurrent: ->
       @setItems(@model.items.toArray())

@@ -23,9 +23,14 @@ define [
 
     constructor: ->
       super
+      @initial = @model
 
       @listenTo this, "open:menu", (model) =>
         @model = model
+        @render()
+
+      @listenTo this, "reset", =>
+        @model = @initial
         @render()
 
     events:

@@ -37,7 +37,6 @@ define [
     # Convert selected menu item models to CMD Events
     # https://github.com/opinsys/webmenu/blob/master/docs/menujson.md
     layout.on "open:app", (model) ->
-      layout.reset()
       # This will be send to node and node-webkit handlers
       Application.bridge.trigger "open", model.toJSON()
 
@@ -51,7 +50,6 @@ define [
     layout.broadcast("spawnMenu")
     Application.bridge.on "spawnMenu", ->
       layout.broadcast("spawnMenu")
-
 
     ["logout", "shutdown", "reboot"].forEach (event) ->
       layout.on event, -> Application.bridge.trigger(event)
