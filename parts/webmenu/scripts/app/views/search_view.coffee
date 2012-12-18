@@ -13,6 +13,8 @@ define [
 ) ->
   class Search extends ViewMaster
 
+    className: "bb-search"
+
     ENTER = 13
     TAP = 9
 
