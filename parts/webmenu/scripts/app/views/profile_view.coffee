@@ -70,8 +70,6 @@ define [
       @appendView ".settings-container", new LogoutButton
 
 
-
-
     context: -> {
       user: @model.toJSON()
       config: @config.toJSON()

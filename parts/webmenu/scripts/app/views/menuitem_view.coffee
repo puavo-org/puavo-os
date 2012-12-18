@@ -26,6 +26,10 @@ define [
       , 1000
       super
 
+      @$el.addClass "item-" + @model.get("name")
+        .toLowerCase()
+        .replace(/[^a-z]/g, "")
+
     events:
       "click": (e) ->
         if @model.get("type") is "menu"
@@ -46,7 +50,6 @@ define [
       json = super()
       json.menu = @model.get("type") is "menu"
       return json
-
 
     showDescription: ->
       @$thumbnail.addClass "animated flipOutY"

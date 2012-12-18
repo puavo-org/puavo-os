@@ -15,12 +15,15 @@ define [
         model: new Backbone.Model(fullName: "John Doe")
         config: new Backbone.Model
           profileCMD:
+            name: "Profile"
             type: "webWindow"
             url: "http://profile.example.com"
           passwordCMD:
+            name: "Change password"
             type: "webWindow"
             url: "http://password.example.com"
           settingsCMD:
+            name: "System settings"
             type: "custom"
             command: "gnome-control-center"
 
@@ -34,7 +37,7 @@ define [
       expect(view.$el).to.contain("John Doe")
 
     it "should have profile settings button", ->
-      expect(view.$el).to.have(".bb-profile-settings")
+      expect(view.$el).to.have(".item-profile")
 
     it "should have change password button", ->
       expect(view.$el).to.have(".bb-change-password")
