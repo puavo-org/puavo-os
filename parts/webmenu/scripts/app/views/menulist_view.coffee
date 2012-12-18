@@ -60,10 +60,13 @@ define [
         @refreshViews()
 
       @listenTo this, "open:menu", (model) =>
-        @model = model
-        @setCurrent()
-        @deselectItem()
-        @refreshViews()
+        @animate "bounceOutLeft", =>
+          @model = model
+          @setCurrent()
+          @deselectItem()
+          @refreshViews()
+          @animate "bounceInRight"
+
 
       @listenTo this, "search", (searchString) =>
         if searchString
@@ -73,6 +76,15 @@ define [
           @setCurrent()
           @deselectItem()
         @refreshViews()
+
+    # className from http://daneden.me/animate/
+    animate: (className, cb) ->
+      className = "animated " + className
+      @$el.addClass(className)
+      setTimeout =>
+        @$el.removeClass(className)
+        cb?()
+      , 310
 
     setCurrent: ->
       @setItems(@model.items.toArray())
