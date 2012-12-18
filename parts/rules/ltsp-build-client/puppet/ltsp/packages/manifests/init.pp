@@ -607,7 +607,8 @@ class packages {
     [ 'adobe-flashplugin' ]:
       tag => [ 'web', 'partner', ];
 
-    [ 'chromium-browser'
+    [ 'bluefish'
+    , 'chromium-browser'
     , 'firefox'
     , 'gecko-mediaplayer'
     , 'icedtea-7-plugin'
