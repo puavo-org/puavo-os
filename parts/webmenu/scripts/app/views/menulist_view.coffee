@@ -59,6 +59,7 @@ define [
           @selectItem(0)
         else
           @setCurrent()
+          @deselectItem()
         @refreshViews()
 
     setCurrent: ->
