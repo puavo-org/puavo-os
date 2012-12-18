@@ -6,6 +6,7 @@
     "test": "make test-client"
   }
   , "main": "index.html"
+  , "single-instance": true
   , "window": {
     "title": "Webmenu"
     , "toolbar": false
