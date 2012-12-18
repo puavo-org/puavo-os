@@ -9,6 +9,7 @@ class packages {
     [ 'dconf-tools'
     , 'gawk'
     , 'git'
+    , 'initramfs-tools'
     , 'lynx'
     , 'm4'
     , 'pv'

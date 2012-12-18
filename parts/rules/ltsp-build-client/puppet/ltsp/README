@@ -35,6 +35,10 @@ packages
       packages::ubuntu  - install all (defined) packages that are in Ubuntu
                           repositories
 
+plymouth_theme
+    Setup a default plymouth theme (change from Ubuntu-default to
+    opinsys-specific theme.
+
 ssh_client
     Settings for openssh client.  XXX these actually weaken security from
     default, should find a way to do this in a smarter way.
