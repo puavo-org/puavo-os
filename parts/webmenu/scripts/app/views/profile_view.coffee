@@ -60,9 +60,10 @@ define [
       super
       @config = opts.config
 
-      @settings = new MenuItemView
-        model: new MenuModel.LauncherModel @config.get("settingsCMD")
-      @appendView ".settings-container", @settings
+      if settingsCMD = @config.get("settingsCMD")
+        @settings = new MenuItemView
+          model: new MenuModel.LauncherModel settingsCMD
+        @appendView ".settings-container", @settings
 
       if passwordCMD = @config.get("passwordCMD")
         @password = new MenuItemView
