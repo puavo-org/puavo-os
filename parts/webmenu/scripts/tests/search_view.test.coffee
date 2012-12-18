@@ -7,9 +7,9 @@ define [
 
   describe "Search view", ->
 
-    it "emit 'changeFilter' event on keyup", (done) ->
+    it "emit 'search' event on keyup", (done) ->
       view = new Search
-      view.on "changeFilter", (filter) ->
+      view.on "search", (filter) ->
         expect(filter).to.eq "test"
         done()
 
