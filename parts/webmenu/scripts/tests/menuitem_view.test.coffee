@@ -24,7 +24,7 @@ define [
       expect(view.el.tagName).to.eq("DIV")
 
     it "has html", ->
-      expect(view.$("p")).to.have.text("Foo")
+      expect(view.$("h1")).to.have.text("Foo")
 
     it "will emit select event on global vent", (done) ->
       Application.global.on "select", (model) ->
