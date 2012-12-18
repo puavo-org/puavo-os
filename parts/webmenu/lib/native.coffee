@@ -35,7 +35,6 @@ config = requirefallback(
 
 if process.env.NODE_ENV isnt "production"
   config.production = false
-  # fork __dirname + "/watchers.js"
 else
   config.production = true
 
@@ -56,6 +55,11 @@ spawnEmitter = require("./spawnmenu")(spawnPipePath)
 module.exports = (gui, bridge) ->
 
   Window = gui.Window.get()
+
+  if process.env.devtools
+    process.env.nohide = 1
+    config.devtools = true
+    Window.showDevTools()
 
   displayMenu = ->
     console.log "Displaying menu"

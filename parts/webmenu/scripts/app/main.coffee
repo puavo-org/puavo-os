@@ -23,6 +23,10 @@ define [
 
   Application.bridge.on "desktop-ready", ({user, config, menu}) ->
 
+    if config.devtools
+      console.log "Loading livereload.js"
+      $.getScript "http://localhost:35729/livereload.js"
+
     user = new Backbone.Model user
     config = new Backbone.Model config
     allItems = new AllItems

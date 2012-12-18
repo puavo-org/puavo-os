@@ -2,7 +2,7 @@
 console.info("Dev tools Starting!", process.argv);
 
 require("yalr")({
-  path: "content",
+  path: ["scripts", "styles"],
   ignore: "*.styl"
 });
 
