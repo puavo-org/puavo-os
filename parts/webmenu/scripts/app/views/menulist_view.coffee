@@ -31,22 +31,21 @@ define [
           @setCurrent()
           @refreshViews()
 
-      if FEATURE_SEARCH
-        @listenTo Application.global, "search", (filter) =>
-          if filter.trim()
-            @setItems @collection.searchFilter(filter)
-            @setStartApplication(0)
-          else
-            @setCurrent()
-          @refreshViews()
+      @listenTo Application.global, "search", (filter) =>
+        if filter.trim()
+          @setItems @collection.searchFilter(filter)
+          @setStartApplication(0)
+        else
+          @setCurrent()
+        @refreshViews()
 
-        @listenTo Application.global, "startApplication",  =>
-          if @startApp?.model
-            Application.global.trigger "select", @startApp.model
-            @startApp = null
+      @listenTo Application.global, "startApplication",  =>
+        if @startApp?.model
+          Application.global.trigger "select", @startApp.model
+          @startApp = null
 
-        @listenTo Application.global, "nextStartApplication", =>
-          @setStartApplication(@startAppIndex + 1)
+      @listenTo Application.global, "nextStartApplication", =>
+        @setStartApplication(@startAppIndex + 1)
 
     setRoot: ->
       @setItems(@initial.items.toArray())

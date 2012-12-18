@@ -43,8 +43,7 @@ define [
 
       @setView ".menu-list-container", @menuListView
 
-      if FEATURE_SEARCH
-        @setView ".search-container", new Search
+      @setView ".search-container", new Search
 
       @setView ".breadcrumbs-container", new Breadcrumbs
         model: opts.initialMenu
