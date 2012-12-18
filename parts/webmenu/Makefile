@@ -56,3 +56,6 @@ test-node:
 	node_modules/.bin/mocha --reporter spec --compilers coffee:coffee-script tests/*test*
 
 test: test-client test-node
+
+watch:
+	node watchers.js
