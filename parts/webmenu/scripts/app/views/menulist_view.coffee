@@ -35,6 +35,7 @@ define [
       @selected =
         index: 0
         item: null
+        cols: 0
 
       $(window).keydown (e) =>
         switch e.which
@@ -94,6 +95,8 @@ define [
         @deselectItem()
         return
 
+      @selected.cols = parseInt( @$el.innerWidth() / views[0].$el.innerWidth() )
+
       @selected.item.hideSelectHighlight() if @selected.item
       @selected.index = index
 
@@ -110,9 +113,9 @@ define [
   
       switch key
         when "down"
-          @selectItem(@selected.index + 1)
+          @selectItem( @selected.index + @selected.cols )
         when "up"
-          @selectItem(@selected.index + 1)
+          @selectItem( @selected.index - @selected.cols )
         when "right"
           @selectItem(@selected.index + 1)
         when "left"
