@@ -16,7 +16,7 @@ define [
     className: "bb-search"
 
     ENTER = 13
-    TAP = 9
+    TAB = 9
 
     constructor: ->
       super
@@ -41,15 +41,15 @@ define [
         Application.global.trigger "startApplication"
         @$input.val("")
         return
-      else if e.which is TAP
+      else if e.which is TAB
         return
 
       Application.global.trigger "search", @$input.val()
 
     nextStartApplication: (e) ->
       console.log "KEY: ", e.which
-      if e.which is TAP
+      if e.which is TAB
         e.preventDefault()
         Application.global.trigger "nextStartApplication"
         return
-      
+
