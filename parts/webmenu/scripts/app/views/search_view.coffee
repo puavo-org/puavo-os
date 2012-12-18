@@ -31,6 +31,7 @@ define [
       "keyup input[name=search]": "search"
 
     focus: ->
+      @$input.val("")
       @$input.get(0).focus()
 
     search: (e) ->
