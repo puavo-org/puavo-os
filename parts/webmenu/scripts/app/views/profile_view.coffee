@@ -29,6 +29,7 @@ define [
     constructor: ->
       super
       @listenTo this, "spawnMenu", @removeLightbox
+      @lb = null
 
     events:
       "click": ->
@@ -38,6 +39,11 @@ define [
 
     removeLightbox: ->
       @lb?.remove()
+      @lb = null
+
+    remove: ->
+      @removeLightbox()
+      super
 
     context: ->
       cssIcon: "icon-logout"
@@ -53,28 +59,26 @@ define [
     constructor: (opts) ->
       super
       @config = opts.config
-      @listenTo this, "spawnMenu", =>
-        @lb?.remove()
 
-      @appendView ".settings-container", new MenuItemView
+      @settings = new MenuItemView
         model: new MenuModel.LauncherModel @config.get("settingsCMD")
+      @appendView ".settings-container", @settings
 
       if passwordCMD = @config.get("passwordCMD")
-        @appendView ".settings-container", new MenuItemView
+        @password = new MenuItemView
           model: new MenuModel.LauncherModel passwordCMD
+        @appendView ".settings-container", @password
 
       if profileCMD = @config.get("profileCMD")
-        @appendView ".settings-container", new MenuItemView
+        console.log "profile!", profileCMD
+        @profile = new MenuItemView
           model: new MenuModel.LauncherModel profileCMD
+        @appendView ".settings-container",  @profile
 
-      @appendView ".settings-container", new LogoutButton
-
+      @logout = new LogoutButton
+      @appendView ".settings-container", @logout
 
     context: -> {
       user: @model.toJSON()
       config: @config.toJSON()
     }
-
-    remove: ->
-      @lb?.remove()
-      super
