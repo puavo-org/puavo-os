@@ -54,18 +54,12 @@ define [
         @refreshViews()
 
       @listenTo this, "search", (searchString) =>
-        console.log "GOT search", searchString
         if searchString
           @setItems @collection.searchFilter(searchString)
           @selectItem(0)
         else
           @setCurrent()
         @refreshViews()
-
-      @listenTo this, "search:open",  =>
-        if @startApp?.model
-          @bubble "open:app", @startApp.model
-          @startApp = null
 
     setCurrent: ->
       @setItems(@model.items.toArray())
