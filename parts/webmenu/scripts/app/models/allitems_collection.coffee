@@ -18,9 +18,11 @@ define [
       @filter (item) ->
         if item.get("type") is "menu"
           return false
-        if searchByWords item.get("name"), filterWords 
+        if searchByWords item.get("name"), filterWords
           return true
         if searchByWords item.get("description"), filterWords
+          return true
+        if searchByWords item.get("upstreamName"), filterWords
           return true
 
         return false
