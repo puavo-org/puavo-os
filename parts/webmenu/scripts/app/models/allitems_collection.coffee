@@ -13,8 +13,6 @@ define [
       return items
 
     searchFilter: (filterWords) ->
-      console.log "Search Filter!"
-
       @filter (item) ->
         if item.get("type") is "menu"
           return false
