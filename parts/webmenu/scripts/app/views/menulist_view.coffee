@@ -13,6 +13,9 @@ define [
 ) ->
   class MenuListView extends ViewMaster
 
+    ENTER = 13
+    TAB = 9
+
     className: "bb-menu-list"
 
     template: template
@@ -22,11 +25,27 @@ define [
 
       @initial = @model
       @setCurrent()
-      @startApp = null
-      @startAppIndex = 0
+
+      @selected =
+        index: 0
+        item: null
+
+      $(window).keydown (e) =>
+        switch e.which
+          when ENTER
+            e.preventDefault()
+            @selected.item?.open()
+          when TAB
+            e.preventDefault()
+            if not @selected.item
+              @selectItem(0)
+            else
+              @selectItem(@selected.index + 1)
+
 
       @listenTo this, "reset", =>
         @setItems(@initial.items.toArray())
+        @deselectItem()
         @refreshViews()
 
       @listenTo this, "open:menu", (model) =>
@@ -35,21 +54,18 @@ define [
         @refreshViews()
 
       @listenTo this, "search", (searchString) =>
-        if searchString.trim()
+        console.log "GOT search", searchString
+        if searchString
           @setItems @collection.searchFilter(searchString)
-          @setStartApplication(0)
+          @selectItem(0)
         else
           @setCurrent()
         @refreshViews()
 
-      @listenTo this, "startApplication",  =>
+      @listenTo this, "search:open",  =>
         if @startApp?.model
           @bubble "open:app", @startApp.model
           @startApp = null
-
-      @listenTo this, "nextStartApplication", =>
-        @setStartApplication(@startAppIndex + 1)
-
 
     setCurrent: ->
       @setItems(@model.items.toArray())
@@ -59,19 +75,24 @@ define [
         new MenuItemView
           model: model
 
-    setStartApplication: (index) ->
+    deselectItem: ->
+      @selected.item?.hideSelectHighlight()
+      @selected =
+        index: 0
+        item: null
+
+    selectItem: (index) ->
       views = @getViews(".app-list-container")
 
       if views.length is 0
-        @startApp = null
-        @startAppIndex = 0
+        @deselectItem()
         return
 
-      @startApp.hideSelectHighlight() if @startApp
-      @startAppIndex = index
+      @selected.item.hideSelectHighlight() if @selected.item
+      @selected.index = index
 
-      if not views[@startAppIndex]
-        @startAppIndex = 0
+      if not views[@selected.index]
+        @selected.index = 0
 
-      @startApp = views[@startAppIndex]
-      @startApp.displaySelectHighlight()
+      @selected.item = views[@selected.index]
+      @selected.item.displaySelectHighlight()

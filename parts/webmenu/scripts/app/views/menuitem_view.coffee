@@ -30,17 +30,19 @@ define [
         .toLowerCase()
         .replace(/[^a-z]/g, "")
 
-    events:
-      "click": (e) ->
-        if @model.get("type") is "menu"
-          @bubble "open:menu", @model
-        else
-          @bubble "open:app", @model
 
+    events:
+      "click": "open"
       "mouseenter .thumbnail": "delayedShowDescription"
       "mouseleave": ->
         @delayedShowDescription.cancel()
         @render()
+
+    open: ->
+      if @model.get("type") is "menu"
+        @bubble "open:menu", @model
+      else
+        @bubble "open:app", @model
 
     elements:
       "$thumbnail": ".thumbnail"
