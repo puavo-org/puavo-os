@@ -57,25 +57,25 @@ define [
       layout.render()
 
     it "has menu item(s)", ->
-      expect(layout.$(".bb-menu .item-name")).to.contain('Gimp')
+      expect(layout.$(".bb-menu-list .bb-menu-item")).to.contain('Gimp')
+
     it "has profile view", ->
       expect(layout.$el).to.have(".bb-profile")
     it "has favorites view", ->
-      expect(layout.$el).to.have(".most-used-list")
+      expect(layout.$el).to.have(".bb-favorites")
 
     it "has empty favorites view", ->
-      expect(layout.$(".favorites .bb-menu-item").size()).to.be 0
+      expect(layout.$(".bb-favorites .bb-menu-item").size()).to.be 0
 
     describe "after clicking one item", ->
 
       beforeEach ->
-
-        layout.$(".bb-menu .bb-menu-item .item-name").filter(
-          (i, e) -> $(e).text() is "Gimp"
+        layout.$(".bb-menu-list .bb-menu-item").filter(
+          (i, e) -> $(e).text().trim() is "Gimp"
         ).click()
 
       it "it has one favorite", ->
-        expect(layout.$(".favorites .bb-menu-item").size()).to.be 1
+        expect(layout.$(".bb-favorites .bb-menu-item").size()).to.eq 1
 
 
     describe "search", ->
@@ -88,7 +88,7 @@ define [
         search.keyup()
 
       it "has found Gimp", ->
-        expect(layout.$(".bb-menu .item-name")).to.contain('Gimp')
+        expect(layout.$(".bb-menu-list .bb-menu-item")).to.contain('Gimp')
 
       it "has not found Shotwell", ->
-        expect(layout.$(".bb-menu .item-name")).to.not.contain('Shotwell')
+        expect(layout.$(".bb-menu-list .bb-menu-item")).to.not.contain('Shotwell')
