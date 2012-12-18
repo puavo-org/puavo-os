@@ -15,6 +15,12 @@ define [
 
     ENTER = 13
     TAB = 9
+    ARROWKEYS = {
+      40: 'down',
+      38: 'up',
+      39: 'right',
+      37: 'left'
+    }
 
     className: "bb-menu-list"
 
@@ -41,6 +47,10 @@ define [
               @selectItem(0)
             else
               @selectItem(@selected.index + 1)
+
+        if Object.keys(ARROWKEYS).indexOf isnt -1
+          e.preventDefault()
+          @moveSelectItem(ARROWKEYS[e.which])
 
 
       @listenTo this, "reset", =>
@@ -92,3 +102,18 @@ define [
 
       @selected.item = views[@selected.index]
       @selected.item.displaySelectHighlight()
+
+    moveSelectItem: (key) ->
+      if not @selected.item
+        @selectItem(0)
+        return
+  
+      switch key
+        when "down"
+          @selectItem(@selected.index + 1)
+        when "up"
+          @selectItem(@selected.index + 1)
+        when "right"
+          @selectItem(@selected.index + 1)
+        when "left"
+          @selectItem(@selected.index - 1)

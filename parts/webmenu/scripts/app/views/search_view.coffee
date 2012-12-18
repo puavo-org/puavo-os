@@ -13,7 +13,7 @@ define [
 ) ->
   class Search extends ViewMaster
 
-    TAB = 9
+    SKIP_KEYS = [9,37,38,39,40]
 
     className: "bb-search"
 
@@ -35,6 +35,6 @@ define [
       @$input.get(0).focus()
 
     search: (e) ->
-      if e.which isnt TAB
+      if SKIP_KEYS.indexOf(e.which) is -1
         @bubble "search", @$input.val().trim()
 
