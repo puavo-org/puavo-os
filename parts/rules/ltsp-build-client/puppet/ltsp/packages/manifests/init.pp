@@ -533,6 +533,7 @@ class packages {
 
     [ 'gftp-gtk'
     , 'lftp'
+    , 'remmina'
     , 'smbclient'
     , 'ubuntuone-client'
     , 'wget' ]:
