@@ -6,6 +6,7 @@ PUPPET_USE_CLASSES="
   packages::partner
   packages::sssd_install_workaround
   packages::ubuntu
+  plymouth_theme
   ssh_client
   sudo
 "
