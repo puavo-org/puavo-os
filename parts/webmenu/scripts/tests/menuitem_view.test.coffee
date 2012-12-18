@@ -27,11 +27,11 @@ define [
       expect(view.$("h1")).to.have.text("Foo")
 
     it "will emit select event on global vent", (done) ->
-      Application.global.on "select", (model) ->
+      view.on "open:app", (model) ->
         expect(model.toJSON()).to.deep.eq
           type: "custom"
           command: "foo"
           name: "Foo"
         done()
-      view.$("p").trigger "click"
+      view.$("h1").trigger "click"
 
