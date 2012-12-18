@@ -56,6 +56,9 @@ define [
         collection: @allItems
         config: @config
 
+      @listenTo this, "open:app", (model, sender) =>
+        model.incClicks()
+
       @listenTo this, "open:menu", (model, sender) =>
         # Update MenuListView when user navigates from breadcrumbs
         if sender is @breadcrumbs
