@@ -49,7 +49,9 @@
         "cs!tests/menumodel.test",
         "cs!tests/search_view.test"
     ], function() {
-        var runner = mocha.run();
+    var runner = mocha
+      .globals(["jQuery*"])
+      .run();
     });
   </script>
   <a href="#" onclick="window.location.reload()">Restart</a>
