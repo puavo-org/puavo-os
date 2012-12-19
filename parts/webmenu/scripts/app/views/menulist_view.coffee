@@ -15,12 +15,10 @@ define [
 
     ENTER = 13
     TAB = 9
-    ARROWKEYS = {
-      40: 'down',
-      38: 'up',
-      39: 'right',
-      37: 'left'
-    }
+    LEFT = 37
+    UP = 38
+    RIGHT = 39
+    DOWN = 40
 
     className: "bb-menu-list"
 
@@ -50,17 +48,17 @@ define [
             else
               @selectItem(@selected.index + 1)
 
-        if [37,38,39].indexOf( e.which ) isnt -1
+        if [LEFT,UP,RIGHT].indexOf( e.which ) isnt -1
           if @selected.enabled
             e.preventDefault() 
-            @moveSelectItem(ARROWKEYS[e.which])
+            @moveSelectItem(e.which)
 
-        if e.which is 40
+        if e.which is DOWN
           e.preventDefault() 
           if not @selected.enabled
             @enableSelected()
           else
-            @moveSelectItem(ARROWKEYS[e.which])
+            @moveSelectItem(e.which)
 
 
       @listenTo this, "reset", =>
@@ -136,16 +134,16 @@ define [
         return
   
       switch key
-        when "down"
+        when DOWN
           @selectItem( @selected.index + @selected.cols )
-        when "up"
+        when UP
           if not views[@selected.index - @selected.cols]
             @deselectItem()
             return
           @selectItem( @selected.index - @selected.cols )
-        when "right"
+        when RIGHT
           @selectItem(@selected.index + 1)
-        when "left"
+        when LEFT
           if @selected.index is 0
             @selectItem(views.length - 1)
           else
