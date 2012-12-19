@@ -12,6 +12,10 @@ if (!puavo_device_type)
   end
 end
 
+if puavo_device_type == 'unregistered'
+  exit(0)
+end
+
 @ldap_master       = File.read('/etc/puavo/ldap/master'    ).chomp
 @ldap_slave        = File.read('/etc/puavo/ldap/slave'     ).chomp
 @ldap_base         = File.read('/etc/puavo/ldap/base'      ).chomp
