@@ -28,7 +28,7 @@ define [
 
     constructor: ->
       super
-      @listenTo this, "spawnMenu", @removeLightbox
+      @listenTo this, "spawn-menu", @removeLightbox
       @lb = null
 
     events:

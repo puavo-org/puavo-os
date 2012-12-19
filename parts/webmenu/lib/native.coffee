@@ -63,7 +63,7 @@ module.exports = (gui, bridge) ->
 
   displayMenu = ->
     console.log "Displaying menu"
-    bridge.trigger "spawnMenu"
+    bridge.trigger "spawn-menu"
     Window.show()
     Window.focus()
 
@@ -106,7 +106,7 @@ module.exports = (gui, bridge) ->
 
     hideWindow()
 
-  bridge.on "hideWindow", ->
+  bridge.on "hide-window", ->
     hideWindow()
 
   bridge.on "shutdown", ->

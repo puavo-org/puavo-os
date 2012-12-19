@@ -46,14 +46,14 @@ define [
 
     # Hide window when focus is lost
     $(window).blur ->
-      Application.bridge.trigger "hideWindow"
+      Application.bridge.trigger "hide-window"
 
     layout.render()
     $("body").append layout.el
 
-    layout.broadcast("spawnMenu")
-    Application.bridge.on "spawnMenu", ->
-      layout.broadcast("spawnMenu")
+    layout.broadcast("spawn-menu")
+    Application.bridge.on "spawn-menu", ->
+      layout.broadcast("spawn-menu")
 
     ["logout", "shutdown", "reboot"].forEach (event) ->
       layout.on event, -> Application.bridge.trigger(event)

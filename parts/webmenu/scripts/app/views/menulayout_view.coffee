@@ -61,7 +61,7 @@ define [
         # Reset breadcrumbs and app list to root
         @broadcast("reset")
 
-      @listenTo this, "spawnMenu", =>
+      @listenTo this, "spawn-menu", =>
         # Also reset when menu is hidden and no app was launched
         @broadcast("reset")
 

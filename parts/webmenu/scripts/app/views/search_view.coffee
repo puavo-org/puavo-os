@@ -20,7 +20,7 @@ define [
     constructor: ->
       super
       @search = _.debounce @search, 250
-      @listenTo this, "spawnMenu", @focus
+      @listenTo this, "spawn-menu", @focus
 
     template: template
 
