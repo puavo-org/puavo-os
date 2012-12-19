@@ -41,6 +41,7 @@
     window.expect = chai.expect;
     mocha.setup('bdd');
     require([
+        "cs!app/application",
         "cs!tests/profile_view.test",
         "cs!tests/logout_view.test",
         "cs!tests/menulayout.test",
@@ -48,7 +49,9 @@
         "cs!tests/menuitem_view.test",
         "cs!tests/menumodel.test",
         "cs!tests/search_view.test"
-    ], function() {
+    ], function(Application) {
+    // Lower animationDuration to speed up tests
+    Application.animationDuration = 10;
     var runner = mocha
       .globals(["jQuery*"])
       .run();

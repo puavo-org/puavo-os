@@ -69,10 +69,11 @@ define [
 
     describe "after clicking one item", ->
 
-      beforeEach ->
+      beforeEach (done) ->
         layout.$(".bb-menu-list .bb-menu-item").filter(
           (i, e) -> $(e).text().trim() is "Gimp"
         ).click()
+        setTimeout done, Application.animationDuration + 10
 
       it "it has one favorite", ->
         expect(layout.$(".bb-favorites .bb-menu-item").size()).to.eq 1
