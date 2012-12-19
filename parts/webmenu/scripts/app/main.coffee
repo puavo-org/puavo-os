@@ -49,6 +49,10 @@ define [
         Application.bridge.trigger "hide-window"
       , Application.animationDuration
 
+    $(window).keydown (e) ->
+      if e.which is 27 # Esc
+        Application.bridge.trigger "hide-window"
+
     # Hide window when focus is lost
     $(window).blur ->
       Application.bridge.trigger "hide-window"
