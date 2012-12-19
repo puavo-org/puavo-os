@@ -22,7 +22,8 @@ require 'resolv'
 require 'socket'
 require 'yaml'
 
-Puavodir = '/etc/puavo'
+Puavodir            = '/etc/puavo'
+Puavo_hostname_path = "#{ Puavodir }/hostname"
 
 HostCrtPath     = "#{ Puavodir }/certs/host.crt"
 HostKeyPath     = "#{ Puavodir }/certs/host.key"
@@ -480,7 +481,7 @@ module PostRegister
   def self.write_hostname(hostname)
     ensure_puavodir
 
-    File.open("#{ Puavodir }/hostname", 'w', 0644) do |f|
+    File.open(Puavo_hostname_path, 'w', 0644) do |f|
       f.print "#{ hostname }\n"
     end
   end
@@ -555,7 +556,7 @@ end
 
 class Control
   def self.register(cmdline_params)
-    if File.exists?(Hosttype_path) && !cmdline_params['force']
+    if File.exists?(Puavo_hostname_path) && !cmdline_params['force']
       Tools.errmsg('Registration is already done and --force is not applied.')
       exit 1
     end
@@ -605,12 +606,14 @@ class Control
       organisation_info['ldap_host']
     )
 
-    PostRegister.write_hostname(rui.responses["puavoHostname"])
-
     PostRegister.write_domain(organisation_info["domain"])
 
     PostRegister.write_hosttype(
       info['registration']['host_configuration']['devicetype'])
+
+    # Do this as the last thing, because this affects the test
+    # if this host has been registered.
+    PostRegister.write_hostname(rui.responses["puavoHostname"])
   end
 end
 
