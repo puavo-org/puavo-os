@@ -21,9 +21,6 @@ define [
     template: template
 
     constructor: ->
-      @delayedShowDescription = debounce =>
-        @showDescription()
-      , 1000
       super
 
       @$el.addClass "item-" + @model.get("name")
@@ -33,10 +30,6 @@ define [
 
     events:
       "click": "open"
-      "mouseenter .thumbnail": "delayedShowDescription"
-      "mouseleave": ->
-        @delayedShowDescription.cancel()
-        @render()
 
     open: ->
       if @model.get("type") is "menu"
@@ -56,12 +49,6 @@ define [
       json = super()
       json.menu = @model.get("type") is "menu"
       return json
-
-    showDescription: ->
-      @$thumbnail.addClass "animated flipOutY"
-      setTimeout =>
-        @$description.css "display", "block"
-      , 200
 
     displaySelectHighlight: ->
       @$el.addClass "selectHighlight"
