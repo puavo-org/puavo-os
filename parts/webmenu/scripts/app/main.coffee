@@ -49,6 +49,11 @@ define [
         Application.bridge.trigger "hide-window"
       , Application.animationDuration
 
+    # Disable DOM element dragging and text selection if target is not an input
+    $(window).mousedown (e) ->
+      if e.target.tagName isnt "INPUT"
+        e.preventDefault()
+
     $(window).keydown (e) ->
       if e.which is 27 # Esc
         Application.bridge.trigger "hide-window"
