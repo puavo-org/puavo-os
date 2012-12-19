@@ -36,6 +36,7 @@ define [
         index: 0
         item: null
         cols: 0
+        enabled: false
 
       $(window).keydown (e) =>
         switch e.which
@@ -44,14 +45,22 @@ define [
             @selected.item?.open()
           when TAB
             e.preventDefault()
-            if not @selected.item
-              @selectItem(0)
+            if not @selected.enabled
+              @enableSelected()
             else
               @selectItem(@selected.index + 1)
 
-        if Object.keys(ARROWKEYS).indexOf( e.which.toString() ) isnt -1
-          e.preventDefault()
-          @moveSelectItem(ARROWKEYS[e.which])
+        if [37,38,39].indexOf( e.which ) isnt -1
+          if @selected.enabled
+            e.preventDefault() 
+            @moveSelectItem(ARROWKEYS[e.which])
+
+        if e.which is 40
+          e.preventDefault() 
+          if not @selected.enabled
+            @enableSelected()
+          else
+            @moveSelectItem(ARROWKEYS[e.which])
 
 
       @listenTo this, "reset", =>
@@ -71,7 +80,6 @@ define [
       @listenTo this, "search", (searchString) =>
         if searchString
           @setItems @collection.searchFilter(searchString)
-          @selectItem(0)
         else
           @setCurrent()
           @deselectItem()
@@ -99,6 +107,8 @@ define [
       @selected =
         index: 0
         item: null
+        cols: 0
+        enabled: false
 
     selectItem: (index) ->
       views = @getViews(".app-list-container")
@@ -119,6 +129,8 @@ define [
       @selected.item.displaySelectHighlight()
 
     moveSelectItem: (key) ->
+      views = @getViews(".app-list-container")
+
       if not @selected.item
         @selectItem(0)
         return
@@ -127,11 +139,18 @@ define [
         when "down"
           @selectItem( @selected.index + @selected.cols )
         when "up"
+          if not views[@selected.index - @selected.cols]
+            @deselectItem()
+            return
           @selectItem( @selected.index - @selected.cols )
         when "right"
           @selectItem(@selected.index + 1)
         when "left"
           if @selected.index is 0
-            @selectItem(@getViews(".app-list-container").length - 1)
+            @selectItem(views.length - 1)
           else
             @selectItem(@selected.index - 1)
+
+    enableSelected: ->
+      @selected.enabled = true
+      @selectItem(0)
