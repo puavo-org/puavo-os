@@ -40,7 +40,10 @@ define [
         switch e.which
           when ENTER
             e.preventDefault()
-            @selected.item?.open()
+            if @selected.item
+              @selected.item?.open()
+            else
+              @getViews(".app-list-container")[0].open()
           when TAB
             e.preventDefault()
             if not @selected.enabled
