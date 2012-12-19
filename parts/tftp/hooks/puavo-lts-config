@@ -60,6 +60,7 @@ def device_ltspvars(device)
           'LTSP_SERVER'          => 'True',
           'KEEP_SYSTEM_SERVICES' => '"gssd idmapd rpcbind-boot portmap"',
           'SERVER'               => @boot_server_fqdn,
+          'USE_NFS_HOMES'        => 'True',
         }
       else
 	{}
