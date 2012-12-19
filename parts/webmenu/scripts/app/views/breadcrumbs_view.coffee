@@ -25,7 +25,7 @@ define [
       super
       @initial = @model
 
-      @listenTo this, "open:menu", (model) =>
+      @listenTo this, "open-menu", (model) =>
         @model = model
         @render()
 
@@ -38,7 +38,7 @@ define [
         e.preventDefault()
         cid = $(e.target).data("cid")
         menu = @model.allItems.get(cid)
-        @bubble "open:menu", menu, this
+        @bubble "open-menu", menu, this
 
     context: ->
       current = @model

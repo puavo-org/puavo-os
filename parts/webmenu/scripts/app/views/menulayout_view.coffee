@@ -56,7 +56,7 @@ define [
         collection: @allItems
         config: @config
 
-      @listenTo this, "open:app", (model, sender) =>
+      @listenTo this, "open-app", (model, sender) =>
         model.incClicks()
         # Reset breadcrumbs and app list to root
         @broadcast("reset")
@@ -66,13 +66,13 @@ define [
         @broadcast("reset")
 
 
-      @listenTo this, "open:menu", (model, sender) =>
+      @listenTo this, "open-menu", (model, sender) =>
         # Update MenuListView when user navigates from breadcrumbs
         if sender is @breadcrumbs
-          @menuListView.broadcast("open:menu", model)
+          @menuListView.broadcast("open-menu", model)
         # Update breadcrums when user navigates from menu tree
         if sender isnt @breadcrumbs
-          @breadcrumbs.broadcast("open:menu", model)
+          @breadcrumbs.broadcast("open-menu", model)
 
       # Connect search events to MenuListView
       @listenTo this, "search", (searchString) =>

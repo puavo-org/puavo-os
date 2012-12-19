@@ -52,24 +52,24 @@ define [
           expect($("body")).to.have(".bb-lightbox")
 
       describe "my profile button", ->
-        it "emits open:app for profile edit on profile button click", (done) ->
-          view.once "open:app", (model) ->
+        it "emits open-app for profile edit on profile button click", (done) ->
+          view.once "open-app", (model) ->
             expect(model.get("url")).to.eq "http://profile.example.com"
             expect(model.get("type")).to.eq "webWindow"
             done()
           view.profile.$el.click()
 
       describe "password button", ->
-        it "emits open:app for password edit on password button click", (done) ->
-          view.once "open:app", (model) ->
+        it "emits open-app for password edit on password button click", (done) ->
+          view.once "open-app", (model) ->
             expect(model.get("url")).to.eq "http://password.example.com"
             expect(model.get("type")).to.eq "webWindow"
             done()
           view.password.$el.click()
 
       describe "settings button", ->
-        it "emits open:app for system settings on settings button click", (done) ->
-          view.once "open:app", (model) ->
+        it "emits open-app for system settings on settings button click", (done) ->
+          view.once "open-app", (model) ->
             expect(model.get("command")).to.eq "gnome-control-center"
             expect(model.get("type")).to.eq "custom"
             done()

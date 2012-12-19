@@ -40,9 +40,9 @@ define [
 
     open: ->
       if @model.get("type") is "menu"
-        @bubble "open:menu", @model
+        @bubble "open-menu", @model
       else
-        @bubble "open:app", @model
+        @bubble "open-app", @model
 
     elements:
       "$thumbnail": ".thumbnail"

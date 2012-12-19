@@ -40,7 +40,7 @@ define [
 
     # Convert selected menu item models to CMD Events
     # https://github.com/opinsys/webmenu/blob/master/docs/menujson.md
-    layout.on "open:app", (model) ->
+    layout.on "open-app", (model) ->
       # This will be send to node and node-webkit handlers
       Application.bridge.trigger "open", model.toJSON()
 
