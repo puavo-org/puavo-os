@@ -115,6 +115,9 @@ module.exports = (gui, bridge) ->
   bridge.on "logout", ->
     powermanager.logout()
 
+  bridge.on "html-ready", ->
+    console.log "Webmenu ready. Use 'webmenu-spawn' to open it"
+
   bridge.trigger "desktop-ready",
     user: userData,
     config: config,
