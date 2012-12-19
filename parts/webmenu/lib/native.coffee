@@ -69,7 +69,7 @@ module.exports = (gui, bridge) ->
 
     # Force window activation
     setTimeout ->
-      wmctrl = spawn("wmctrl", ["-a", "Webmenu"])
+      wmctrl = spawn("wmctrl", ["-F", "-R", "Webmenu"])
       wmctrl.on 'exit', (code) ->
         if code isnt 0
           console.info('wmctrl exited with code ' + code)
