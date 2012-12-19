@@ -82,8 +82,9 @@ done
       run_sudo sh -c "echo $USER > $fasttmp/USER"
       ;;
     free)
-      run_sudo rm -rf $normaltmp/$USER
-      run_sudo mv $fasttmp/$USER $normaltmp/$USER || true
+      test -n "$reserving_user" || exit 1
+      run_sudo rm -rf $normaltmp/$reserving_user
+      run_sudo mv $fasttmp/$reserving_user $normaltmp/$reserving_user || true
       run_sudo rm -f $fasttmp/USER
       ;;
     image)
