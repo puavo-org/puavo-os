@@ -43,7 +43,7 @@ define [
             if @selected.item
               @selected.item?.open()
             else
-              @getViews(".app-list-container")[0].open()
+              @getMenuItemViews[0].open()
           when TAB
             e.preventDefault()
             if not @selected.enabled
@@ -101,7 +101,7 @@ define [
         enabled: false
 
     selectItem: (index) ->
-      views = @getViews(".app-list-container")
+      views = @getMenuItemViews()
 
       if views.length is 0
         @deselectItem()
@@ -119,7 +119,7 @@ define [
       @selected.item.displaySelectHighlight()
 
     moveSelectItem: (key) ->
-      views = @getViews(".app-list-container")
+      views = @getMenuItemViews()
 
       if not @selected.item
         @selectItem(0)
@@ -148,3 +148,6 @@ define [
     enableSelected: ->
       @selected.enabled = true
       @selectItem(0)
+
+    getMenuItemViews: ->
+      @getViews(".app-list-container")
