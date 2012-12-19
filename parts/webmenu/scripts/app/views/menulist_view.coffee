@@ -49,7 +49,7 @@ define [
             else
               @selectItem(@selected.index + 1)
 
-        if Object.keys(ARROWKEYS).indexOf isnt -1
+        if Object.keys(ARROWKEYS).indexOf( e.which.toString() ) isnt -1
           e.preventDefault()
           @moveSelectItem(ARROWKEYS[e.which])
 

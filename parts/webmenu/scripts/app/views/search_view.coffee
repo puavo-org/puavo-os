@@ -35,6 +35,6 @@ define [
       @$input.get(0).focus()
 
     search: (e) ->
-      if SKIP_KEYS.indexOf(e.which) is -1
+      if SKIP_KEYS.indexOf( parseInt(e.which) ) is -1
         @bubble "search", @$input.val().trim()
 
