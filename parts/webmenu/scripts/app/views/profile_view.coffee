@@ -36,6 +36,8 @@ define [
         @lb = new Lightbox
           view: new LogoutView
         @lb.render()
+        @lb.listenTo @lb, "all", (event) =>
+          @bubble event
 
     removeLightbox: ->
       @lb?.remove()

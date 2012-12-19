@@ -61,6 +61,7 @@ define [
       layout.broadcast("spawn-menu")
 
     ["logout", "shutdown", "reboot"].forEach (event) ->
-      layout.on event, -> Application.bridge.trigger(event)
+      layout.on event, ->
+        Application.bridge.trigger(event)
 
     Application.bridge.trigger "html-ready"
