@@ -54,8 +54,6 @@ define [
         collection: @allItems
         config: @config
 
-      @listenTo this, "open-app", (model, sender) =>
-        model.incClicks()
 
       @listenTo this, "spawn-menu", =>
         # reset when menu is hidden and no app was launched
