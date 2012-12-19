@@ -19,7 +19,6 @@ define [
   Application
 ) ->
 
-  ViewMaster.debug = true
 
   Application.bridge.on "desktop-ready", ({user, config, menu}) ->
 
