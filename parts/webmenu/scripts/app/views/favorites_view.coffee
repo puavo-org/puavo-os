@@ -1,11 +1,13 @@
 define [
   "backbone.viewmaster"
 
+  "cs!app/application"
   "cs!app/views/menuitem_view"
   "hbs!app/templates/favorites"
 ], (
   ViewMaster
 
+  Application
   MenuItemView
   template
 ) ->
@@ -21,8 +23,10 @@ define [
 
       @setList()
       @listenTo @collection, "change:clicks", =>
-        @setList()
-        @refreshViews()
+        setTimeout =>
+          @setList()
+          @refreshViews()
+        , Application.animationDuration
 
     setList: ->
       views = @collection.favorites(@config.get "maxFavorites").map (model) =>

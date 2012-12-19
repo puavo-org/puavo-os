@@ -43,9 +43,9 @@ define [
     layout.on "open-app", (model) ->
       # This will be send to node and node-webkit handlers
       Application.bridge.trigger "open", model.toJSON()
-
-    layout.on "open-animation-done", ->
-      Application.bridge.trigger "hide-window"
+      setTimeout ->
+        Application.bridge.trigger "hide-window"
+      , Application.animationDuration
 
     # Hide window when focus is lost
     $(window).blur ->

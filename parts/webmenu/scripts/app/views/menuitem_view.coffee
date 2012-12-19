@@ -45,13 +45,13 @@ define [
         @bubble "open-app", @model
         # Workaround this this with node-webkit too? https://github.com/appjs/appjs/issues/223
         setTimeout =>
-          @animate "bounceOut", 1300, =>
-            @bubble "open-animation-done"
+          @$("img").addClass "rotate-loading"
+          # @animate "bounceOut", Application.animationDuration
         , 10
 
     # className from http://daneden.me/animate/
     animate: (className, duration, cb) ->
-      duration ?= 1300 # Default duration
+      duration ?= Application.animationDuration
       className = "animated " + className
       @$el.addClass(className)
       setTimeout =>

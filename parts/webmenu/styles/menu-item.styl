@@ -30,3 +30,25 @@ iconSize = 50px
 
   .description
     display none
+
+  &.selectHighlight
+    background-color red
+
+
+@-webkit-keyframes rotate {
+
+  0% {
+    -webkit-transform: rotate(0);
+  }
+
+  100% {
+    -webkit-transform: rotate(1080deg);
+  }
+}
+
+.rotate-loading {
+  -webit-transition-timing-function: none;
+  -webkit-animation-name: rotate;
+  -webkit-animation-duration: 0.8s;
+  -webkit-animation-iteration-count: infinite;
+}

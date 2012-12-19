@@ -10,7 +10,7 @@ define [
   Dom2Bb
 ) ->
   Application =
-
+    animationDuration: 2000
     reset: ->
       @bridge?.off()
       @bridge = new Backbone.Model
