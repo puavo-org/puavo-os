@@ -74,6 +74,6 @@ label ltsp-NBD
   menu label LTSP, using NBD
   menu default
   kernel ltsp/#{image}/vmlinuz#{kernel_version}
-  append ro initrd=ltsp/#{image}/initrd.img#{kernel_version} init=/sbin/init-puavo puavo.hosttype=#{device_type} plymouth:force-splash vt.handoff=7 root=/dev/nbd0 nbdroot=:ltsp_#{image} #{kernel_args}
+  append ro initrd=ltsp/#{image}/initrd.img#{kernel_version} init=/sbin/init-puavo puavo.hosttype=#{device_type} root=/dev/nbd0 nbdroot=:ltsp_#{image} #{kernel_args}
   ipappend 2
 EOF
