@@ -1,7 +1,6 @@
 define [
   "backbone.viewmaster"
 
-  "cs!app/views/itemdescription_view"
   "cs!app/views/menulist_view"
   "cs!app/views/breadcrumbs_view"
   "cs!app/views/profile_view"
@@ -13,7 +12,6 @@ define [
 ], (
   ViewMaster
 
-  ItemDescriptionView
   MenuListView
   Breadcrumbs
   ProfileView
