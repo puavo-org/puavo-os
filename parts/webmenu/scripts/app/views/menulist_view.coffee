@@ -127,7 +127,11 @@ define [
   
       switch key
         when DOWN
-          @selectItem( @selected.index + @selected.cols )
+          if not views[@selected.index + @selected.cols]
+            if views[@selected.index - @selected.cols]
+              @selectItem( @selected.index - @selected.cols )
+          else
+            @selectItem( @selected.index + @selected.cols )
         when UP
           if not views[@selected.index - @selected.cols]
             @deselectItem()
