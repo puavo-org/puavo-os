@@ -5,7 +5,7 @@ export TERM=vt100
 setupcon
 clear
 
-until /usr/sbin/puavo-register --force --netboot; do true; done
+until /usr/sbin/puavo-register --netboot; do true; done
 
 echo
 echo -n rebooting...
