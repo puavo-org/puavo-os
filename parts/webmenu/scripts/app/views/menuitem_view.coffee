@@ -43,6 +43,21 @@ define [
         @bubble "open-menu", @model
       else
         @bubble "open-app", @model
+        # Workaround this this with node-webkit too? https://github.com/appjs/appjs/issues/223
+        setTimeout =>
+          @animate "bounceOut", 1300, =>
+            @bubble "open-animation-done"
+        , 10
+
+    # className from http://daneden.me/animate/
+    animate: (className, duration, cb) ->
+      duration ?= 1300 # Default duration
+      className = "animated " + className
+      @$el.addClass(className)
+      setTimeout =>
+        @$el.removeClass(className)
+        cb?()
+      , duration
 
     elements:
       "$thumbnail": ".thumbnail"
@@ -58,7 +73,6 @@ define [
       setTimeout =>
         @$description.css "display", "block"
       , 200
-
 
     displaySelectHighlight: ->
       @$el.addClass "selectHighlight"

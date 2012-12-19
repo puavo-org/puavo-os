@@ -58,13 +58,10 @@ define [
 
       @listenTo this, "open-app", (model, sender) =>
         model.incClicks()
-        # Reset breadcrumbs and app list to root
-        @broadcast("reset")
 
       @listenTo this, "spawn-menu", =>
-        # Also reset when menu is hidden and no app was launched
+        # reset when menu is hidden and no app was launched
         @broadcast("reset")
-
 
       @listenTo this, "open-menu", (model, sender) =>
         # Update MenuListView when user navigates from breadcrumbs

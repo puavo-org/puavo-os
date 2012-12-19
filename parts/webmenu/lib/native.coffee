@@ -104,7 +104,6 @@ module.exports = (gui, bridge) ->
     else
       launchCommand(cmd)
 
-    hideWindow()
 
   bridge.on "hide-window", ->
     hideWindow()
