@@ -85,36 +85,37 @@ define [
         nav = new Navigation menuViews, 3
         nav.next()
 
-      it "next() next item", ->
+      it "next() selects next item", ->
         nav.next()
         expect(nav.selected.model.get("name")).to.eq("Shotwell")
 
-      it "two next() calls", ->
+      it "two next() calls selects second item", ->
         nav.next()
         nav.next()
         expect(nav.selected.model.get("name")).to.eq("Flickr")
 
-      it "down() next item", ->
+      it "down() selects first from second row", ->
         nav.down()
         expect(nav.selected.model.get("name")).to.eq("Picasa")
 
-      it "right() next item", ->
+      it "right() selects next item", ->
         nav.right()
         expect(nav.selected.model.get("name")).to.eq("Shotwell")
+
+
+      it "left() selects last item from first item", ->
+        nav.left()
+        expect(nav.selected.model.get("name")).to.eq("Flickr")
+
+      it "up() deactivates selection from first row", ->
+        nav.up()
+        expect(nav.selected).to.be.not.ok
 
       it "up() next item", ->
         nav.down()
         nav.right()
         nav.up()
         expect(nav.selected.model.get("name")).to.eq("Shotwell")
-
-      it "left() next item", ->
-        nav.left()
-        expect(nav.selected.model.get("name")).to.eq("Flickr")
-
-      it "up() next item", ->
-        nav.up()
-        expect(nav.selected).to.be.not.ok
 
       it "down() from last row deselects", ->
         nav.down()
@@ -122,7 +123,7 @@ define [
         nav.down()
         expect(nav.selected).to.be.not.ok
 
-      it "right() from last column selects first item of line"
+      it "right() from last column selects first item of line", ->
         nav.right()
         nav.right()
         nav.right()
