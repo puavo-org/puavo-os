@@ -207,13 +207,13 @@ define [
           expect(e.preventDefault).to.have.been.called.once
 
         it "right key calls right() method", ->
-          e = keyRightEvent(Navigation.key.RIGHT)
+          e = keyDownEvent(Navigation.key.RIGHT)
           nav.handleKeyEvent(e)
           expect(nav.right).to.have.been.called.once
           expect(e.preventDefault).to.have.been.called.once
 
         it "up key calls up() method", ->
-          e = keyUpEvent(Navigation.key.UP)
+          e = keyDownEvent(Navigation.key.UP)
           nav.handleKeyEvent(e)
           expect(nav.up).to.have.been.called.once
           expect(e.preventDefault).to.have.been.called.once
