@@ -187,6 +187,10 @@ define [
         nav.right() # first
         expect(nav.selected.model.get("name")).to.eq("Gimp")
 
+      it "selects last item from first item with left()", ->
+        nav.left()
+        expect(nav.selected.model.get("name")).to.eq("Flickr")
+
 
     describe "keys", ->
 
