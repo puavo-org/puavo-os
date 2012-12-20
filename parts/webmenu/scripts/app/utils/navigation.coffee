@@ -1,4 +1,8 @@
-define [], ->
+define [
+  "underscore"
+], (
+  _
+) ->
   class Navigation
 
     @key = key =
