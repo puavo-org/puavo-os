@@ -184,18 +184,46 @@ define [
       nav = null
 
       beforeEach ->
+        # Item setup:
+        #
+        #   Gimp   Shotwell Flickr
+        #
         nav = new Navigation menuViews.slice(0, 3), 5
-        nav.next()
+        nav.next() # Gimp
 
       it "selects first item from last item with right()", ->
-        nav.right() # second
-        nav.right() # third
-        nav.right() # first
+        nav.right() # Shotwell
+        nav.right() # Flickr
+        nav.right() # Gimp
         expect(nav.selected.model.get("name")).to.eq("Gimp")
 
       it "selects last item from first item with left()", ->
-        nav.left()
+        nav.left() # Flickr
         expect(nav.selected.model.get("name")).to.eq("Flickr")
+
+    describe "with uneven item count with cols", ->
+
+      nav = null
+
+      beforeEach ->
+        # Item setup:
+        #
+        #   Gimp   Shotwell Flickr
+        #   Picasa Walma
+        #
+        nav = new Navigation menuViews.slice(0, 5), 3
+        nav.next() # Gimp
+
+      it "selects the first item of the last row with right() from the last item of the last row", ->
+        nav.right() # Shotwell
+        nav.down()  # Walma
+        nav.right() # Picasa
+        expect(nav.selected.model.get("name")).to.eq("Picasa")
+
+      it "selects last the item from the last row with left() from the first item of the last row", ->
+        nav.down()  # Picasa
+        nav.left()  # Walma
+        expect(nav.selected.model.get("name")).to.eq("Walma")
 
 
     describe "keys", ->
