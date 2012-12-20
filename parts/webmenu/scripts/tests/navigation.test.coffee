@@ -102,20 +102,28 @@ define [
         nav.right()
         expect(nav.selected.model.get("name")).to.eq("Shotwell")
 
+      it "left() from second item selects first", ->
+        nav.right()
+        nav.left()
+        expect(nav.selected.model.get("name")).to.eq("Gimp")
 
       it "left() selects last item from first item", ->
         nav.left()
         expect(nav.selected.model.get("name")).to.eq("Flickr")
 
+      it "left() from second row selects last item from second row", ->
+        nav.down()
+        nav.left()
+        expect(nav.selected.model.get("name")).to.eq("Pahvi")
+
       it "up() deactivates selection from first row", ->
         nav.up()
         expect(nav.selected).to.be.not.ok
 
-      it "up() next item", ->
+      it "up() from second row goes to first row", ->
         nav.down()
-        nav.right()
         nav.up()
-        expect(nav.selected.model.get("name")).to.eq("Shotwell")
+        expect(nav.selected.model.get("name")).to.eq("Gimp")
 
       it "down() from last row deselects", ->
         nav.down()
@@ -123,8 +131,7 @@ define [
         nav.down()
         expect(nav.selected).to.be.not.ok
 
-      it "right() from last column selects first item of line", ->
-        nav.right()
+      it "right() from last column selects first item of the row", ->
         nav.right()
         nav.right()
         nav.right()
