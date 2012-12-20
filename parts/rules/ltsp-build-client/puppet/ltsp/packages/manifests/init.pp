@@ -29,6 +29,7 @@ class packages {
     [ 'bash'
     , 'bridge-utils'
     , 'btrfs-tools'
+    , 'grub-pc'
     , 'libnss-extrausers'
     , 'libnss-ldapd'
     , 'libpam-ldapd'
@@ -177,6 +178,16 @@ class packages {
     , 'pidgin-libnotify'
     , 'pidgin-plugin-pack' ]:
       tag => [ 'instant_messaging', 'ubuntu', ];
+
+    [ 'linux-image-3.7.0-7-generic'
+    , 'linux-image-extra-3.7.0-7-generic' ]:
+      tag => [ 'kernel', 'opinsys', ];
+
+    [ 'linux-image-3.5.0-18-generic'
+    , 'linux-image-extra-3.5.0-18-generic'
+    , 'linux-image-3.5.0-19-generic'
+    , 'linux-image-extra-3.5.0-19-generic' ]:
+      tag => [ 'kernel', 'ubuntu', ];
 
     [ 'firefox-locale-en'
     , 'hyphen-en-us'
