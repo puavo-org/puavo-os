@@ -121,3 +121,10 @@ define [
         nav.down()
         nav.down()
         expect(nav.selected).to.be.not.ok
+
+      it "right() from last column selects first item of line"
+        nav.right()
+        nav.right()
+        nav.right()
+        nav.right()
+        expect(nav.selected.model.get("name")).to.eq("Gimp")
