@@ -11,6 +11,9 @@ define [
       RIGHT: 39
       DOWN: 40
 
+
+    activationKeys = [key.TAB, key.DOWN]
+
     constructor: (views, cols) ->
       @views = views
       @cols = cols
@@ -20,8 +23,26 @@ define [
       $(window).keydown @handleKeyEvent
 
     handleKeyEvent: (e) =>
-      key.ENTER
 
+      # Capture key down event always if navigation is active or key is an
+      # activation key
+      if @isActive() or e.which in activationKeys
+        e.preventDefault()
+
+      # Call activation methods always on activation key
+      if e.which is key.DOWN
+        @down()
+      if e.which is key.TAB
+        @next()
+
+      # Call other methods when navigation is active
+      if @isActive()
+        if e.which is key.LEFT
+          @left()
+        if e.which is key.RIGHT
+          @right()
+        if e.which is key.UP
+          @up()
 
     isActive: -> !!@selected
 
