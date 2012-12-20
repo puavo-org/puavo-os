@@ -629,6 +629,9 @@ class packages {
     , 'openjdk-6-jre' ]:
       tag => [ 'web', 'ubuntu', ];
 
+    'mimio-studio':
+      tag => [ 'whiteboard-mimio', ];
+
     [ 'activaid'
     , 'activdriver'
     , 'activhwr-fi'
@@ -647,15 +650,14 @@ class packages {
     [ 'nwfermi'
     , 'smart-activation'
     , 'smart-common'
+    , 'smart-galleryfiles'
     , 'smart-gallerysetup'
     , 'smart-hwr'
     , 'smart-languagesetup'
     , 'smart-notebook'
-    , 'smart-product-drivers' ]:
-      tag => [ 'whiteboard-smartboard', ];
-
-    'mimio-studio':
-      tag => [ 'whiteboard-mimio', ];
+    , 'smart-product-drivers'
+    , 'xf86-input-nextwindow' ]:
+      tag => [ 'whiteboard-smartboard', 'opinsys', ];
   }
 
   # keep these packages out, we do not want these
