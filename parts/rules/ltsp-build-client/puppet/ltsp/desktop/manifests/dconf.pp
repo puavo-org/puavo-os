@@ -1,6 +1,5 @@
 class desktop::dconf {
-  include packages,
-          webmenu
+  include packages
 
   exec {
     'update dconf':
@@ -33,5 +32,6 @@ class desktop::dconf {
 
   Package <| (title == dconf-tools)
           or (title == liitu-themes)
-          or (title == ubuntu-mono) |>
+          or (title == ubuntu-mono)
+          or (title == webmenu)      |>
 }
