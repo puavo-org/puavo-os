@@ -152,6 +152,11 @@ define [
         nav.right()
         expect(nav.selected.model.get("name")).to.eq("Picasa")
 
+      it "sets currentIndex to zero on deactivation", ->
+        nav.right()
+        nav.up()
+        expect(nav.currentIndex).to.eq(0)
+
     describe "keys", ->
 
       nav = null

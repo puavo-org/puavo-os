@@ -72,6 +72,7 @@ define [], ->
     deactivate: ->
       @selected?.hideSelectHighlight()
       @selected = null
+      @currentIndex = 0
 
     isOnFirstRow: -> @currentIndex+1 <= @cols
     isOnLastRow: -> @currentIndex > @views.length - @cols
