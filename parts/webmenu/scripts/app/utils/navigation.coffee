@@ -1,6 +1,4 @@
-define [
-], (
-) ->
+define [], ->
   class Navigation
 
     @key = key =
@@ -19,8 +17,6 @@ define [
       @cols = cols
       @selected = null
       @currentIndex = 0
-
-      $(window).keydown @handleKeyEvent
 
     handleKeyEvent: (e) =>
 
