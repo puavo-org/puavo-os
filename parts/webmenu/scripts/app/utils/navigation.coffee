@@ -9,8 +9,8 @@ define [], ->
       RIGHT: 39
       DOWN: 40
 
-
     activationKeys = [key.TAB, key.DOWN]
+    navigationKeys = _.values(key)
 
     constructor: (views, cols) ->
       @views = views
@@ -19,6 +19,10 @@ define [], ->
       @currentIndex = 0
 
     handleKeyEvent: (e) =>
+
+      # Ignore event completely if it is not a navigation related key
+      if e.which not in navigationKeys
+        return
 
       # Capture key down event always if navigation is active or key is an
       # activation key

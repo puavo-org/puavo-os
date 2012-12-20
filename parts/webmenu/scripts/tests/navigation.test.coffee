@@ -217,3 +217,8 @@ define [
           nav.handleKeyEvent(e)
           expect(nav.up).to.have.been.called.once
           expect(e.preventDefault).to.have.been.called.once
+
+        it "character keys still work", ->
+          e = keyDownEvent(70) # f key
+          nav.handleKeyEvent(e)
+          expect(e.preventDefault).to.not.have.been.called.once
