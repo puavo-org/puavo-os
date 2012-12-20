@@ -1,6 +1,7 @@
 PUPPET_USE_CLASSES="
   console
   desktop
+  kernels
   organisation_adm_users
   packages::opinsys
   packages::partner
