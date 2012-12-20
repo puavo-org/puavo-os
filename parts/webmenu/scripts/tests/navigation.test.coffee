@@ -173,6 +173,20 @@ define [
         nav.openItem()
         expect(item.open).to.have.been.called.once
 
+    describe "with item count < cols", ->
+
+      nav = null
+
+      beforeEach ->
+        nav = new Navigation menuViews.slice(0, 3), 5
+        nav.next()
+
+      it "selects first item from last item with right()", ->
+        nav.right() # second
+        nav.right() # third
+        nav.right() # first
+        expect(nav.selected.model.get("name")).to.eq("Gimp")
+
 
     describe "keys", ->
 
