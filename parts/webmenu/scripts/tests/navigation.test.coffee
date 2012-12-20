@@ -160,57 +160,57 @@ define [
       describe "when Navigate is not active", ->
 
         it "down key activates menu", ->
-          nav.handleKeyEvent(keyDownEvent(Navigation.keys.DOWN))
+          nav.handleKeyEvent(keyDownEvent(Navigation.key.DOWN))
           expect(nav.isActive).to.be.ok
 
         it "tab key activates menu", ->
-          nav.handleKeyEvent(keyDownEvent(Navigation.keys.TAB))
+          nav.handleKeyEvent(keyDownEvent(Navigation.key.TAB))
           expect(nav.isActive).to.be.ok
 
         it "right key does not activate menu", ->
-          rightKeyEvent = keyDownEvent(Navigation.keys.RIGHT)
+          rightKeyEvent = keyDownEvent(Navigation.key.RIGHT)
           nav.handleKeyEvent(rightKeyEvent)
           expect(nav.isActive).to.not.be.ok
           expect(rightKeyEvent.preventDefault).to.not.have.been.call.once
 
         it "left key does not activate menu", ->
-          leftKeyEvent = keyDownEvent(Navigation.keys.LEFT)
+          leftKeyEvent = keyDownEvent(Navigation.key.LEFT)
           nav.handleKeyEvent(leftKeyEvent)
           expect(nav.isActive).to.not.be.ok
           expect(leftKeyEvent.preventDefault).to.not.have.been.call.once
 
         it "up key does not activate menu", ->
-          upKeyEvent = keyDownEvent(Navigation.keys.UP)
+          upKeyEvent = keyDownEvent(Navigation.key.UP)
           nav.handleKeyEvent(upKeyEvent)
           expect(nav.isActive).to.not.be.ok
           expect(upKeyEvent.preventDefault).to.not.have.been.call.once
 
       describe "when Navigate is active", ->
         beforeEach ->
-          nav.handleKeyEvent(keyDownEvent(Navigation.keys.DOWN))
+          nav.handleKeyEvent(keyDownEvent(Navigation.key.DOWN))
           for method in ["up", "down", "left", "right"]
             nav[method] = chai.spy(nav[method])
 
         it "down key calls down() method", ->
-          e = keyDownEvent(Navigation.keys.DOWN)
+          e = keyDownEvent(Navigation.key.DOWN)
           nav.handleKeyEvent(e)
           expect(nav.down).to.have.been.call.once
           expect(e.preventDefault).to.have.been.call.once
 
         it "left key calls left() method", ->
-          e = keyLeftEvent(Navigation.keys.LEFT)
+          e = keyLeftEvent(Navigation.key.LEFT)
           nav.handleKeyEvent(e)
           expect(nav.left).to.have.been.call.once
           expect(e.preventDefault).to.have.been.call.once
 
         it "right key calls right() method", ->
-          e = keyRightEvent(Navigation.keys.RIGHT)
+          e = keyRightEvent(Navigation.key.RIGHT)
           nav.handleKeyEvent(e)
           expect(nav.right).to.have.been.call.once
           expect(e.preventDefault).to.have.been.call.once
 
         it "up key calls up() method", ->
-          e = keyUpEvent(Navigation.keys.UP)
+          e = keyUpEvent(Navigation.key.UP)
           nav.handleKeyEvent(e)
           expect(nav.up).to.have.been.call.once
           expect(e.preventDefault).to.have.been.call.once
