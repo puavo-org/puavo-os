@@ -60,6 +60,8 @@ define [
     next: ->
       if @isActive()
         @currentIndex += 1
+        # Start from begining if on last item
+        @currentIndex %= @views.length
 
       @select(@views[@currentIndex])
 
