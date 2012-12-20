@@ -198,7 +198,7 @@ define [
           expect(e.preventDefault).to.have.been.called.once
 
         it "left key calls left() method", ->
-          e = keyLeftEvent(Navigation.key.LEFT)
+          e = keyDownEvent(Navigation.key.LEFT)
           nav.handleKeyEvent(e)
           expect(nav.left).to.have.been.called.once
           expect(e.preventDefault).to.have.been.called.once
