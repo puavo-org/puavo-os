@@ -159,6 +159,12 @@ define [
         nav.right()
         expect(nav.selected.model.get("name")).to.eq("Picasa")
 
+      it "next() selects first item from last item", ->
+        nav.currentIndex = nav.views.length-1
+        nav.next()
+        expect(nav.selected.model.get("name")).to.eq("Gimp")
+
+
       it "sets currentIndex to zero on deactivation", ->
         nav.right()
         nav.up()
