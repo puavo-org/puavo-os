@@ -8,7 +8,7 @@ define [
   Backbone
 
   Navigation
-  MenuItem
+  MenuItemView
 ) ->
   data =
     type: "menu"
@@ -43,27 +43,36 @@ define [
       url: "http://www.opinsys.fi"
     ]
 
-  menuModels = data.map (d) ->
-    new Backbone.Model d
+  menuModels = null
+  menuViews = null
+  beforeEach ->
+    menuModels = data.items.map (d) ->
+      new Backbone.Model d
 
-  menuViews = menuModels.map (model) ->
-    new MenuItemView model: model
+    menuViews = menuModels.map (model) ->
+      new MenuItemView model: model
 
   describe "Navigation", ->
 
     describe "start", ->
 
+      it "select() activates hilight", ->
+        view = menuViews[0]
+        view.displaySelectHighlight = chai.spy(view.displaySelectHighlight)
+        nav = new Navigation menuViews, 3
+        nav.select(view)
+        expect(view.displaySelectHighlight).to.have.been.called.once
+
       it "is has not selected", ->
         nav = new Navigation menuViews, 3
-        expect(nav.selected.get("name")).to.be.not.ok
+        expect(nav.selected).to.be.not.ok
 
       it "next() selects first menu item", ->
         nav = new Navigation menuViews, 3
         nav.next()
-        expect(nav.selected.get("name")).to.eq("Gimp")
+        expect(nav.selected.model.get("name")).to.eq("Gimp")
 
       it "down() selects first menu item", ->
         nav = new Navigation menuViews, 3
         nav.down()
-        expect(nav.selected.get("name")).to.eq("Gimp")
-          
+        expect(nav.selected.model.get("name")).to.eq("Gimp")
