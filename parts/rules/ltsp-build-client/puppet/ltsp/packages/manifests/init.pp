@@ -3,7 +3,7 @@ class packages {
           organisation_apt_repositories
 
   # install packages by default
-  Package { ensure => present, }
+  Package { ensure => latest, }
 
   @package {
     [ 'dconf-tools'
