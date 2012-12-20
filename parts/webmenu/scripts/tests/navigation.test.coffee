@@ -176,8 +176,11 @@ define [
         it "left key does not activate menu", ->
           leftKeyEvent = keyDownEvent(Navigation.key.LEFT)
           nav.handleKeyEvent(leftKeyEvent)
-          expect(nav.isActive()).to.not.be.ok
-          expect(leftKeyEvent.preventDefault).to.not.have.been.called.once
+          expect(nav.isActive(), "not active").to.not.be.ok
+          expect(
+            leftKeyEvent.preventDefault,
+            "no preventDefault()"
+          ).to.not.have.been.called.once
 
         it "up key does not activate menu", ->
           upKeyEvent = keyDownEvent(Navigation.key.UP)
