@@ -63,6 +63,14 @@ define [
         nav.select(view)
         expect(view.displaySelectHighlight).to.have.been.called.once
 
+      it "select() deactivates previous item hilight", ->
+        view = menuViews[0]
+        view.hideSelectHighlight = chai.spy(view.hideSelectHighlight)
+        nav = new Navigation menuViews, 3
+        nav.select(view)
+        nav.select(menuViews[1])
+        expect(view.hideSelectHighlight).to.have.been.called.once
+
       it "is has not selected", ->
         nav = new Navigation menuViews, 3
         expect(nav.selected).to.be.not.ok

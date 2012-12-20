@@ -47,6 +47,7 @@ define [], ->
     isActive: -> !!@selected
 
     select: (view) ->
+      @selected?.hideSelectHighlight()
       view.displaySelectHighlight()
       @selected = view
 
