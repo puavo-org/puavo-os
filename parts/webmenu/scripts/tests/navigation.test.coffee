@@ -161,28 +161,28 @@ define [
 
         it "down key activates menu", ->
           nav.handleKeyEvent(keyDownEvent(Navigation.key.DOWN))
-          expect(nav.isActive).to.be.ok
+          expect(nav.isActive()).to.be.ok
 
         it "tab key activates menu", ->
           nav.handleKeyEvent(keyDownEvent(Navigation.key.TAB))
-          expect(nav.isActive).to.be.ok
+          expect(nav.isActive()).to.be.ok
 
         it "right key does not activate menu", ->
           rightKeyEvent = keyDownEvent(Navigation.key.RIGHT)
           nav.handleKeyEvent(rightKeyEvent)
-          expect(nav.isActive).to.not.be.ok
+          expect(nav.isActive()).to.not.be.ok
           expect(rightKeyEvent.preventDefault).to.not.have.been.call.once
 
         it "left key does not activate menu", ->
           leftKeyEvent = keyDownEvent(Navigation.key.LEFT)
           nav.handleKeyEvent(leftKeyEvent)
-          expect(nav.isActive).to.not.be.ok
+          expect(nav.isActive()).to.not.be.ok
           expect(leftKeyEvent.preventDefault).to.not.have.been.call.once
 
         it "up key does not activate menu", ->
           upKeyEvent = keyDownEvent(Navigation.key.UP)
           nav.handleKeyEvent(upKeyEvent)
-          expect(nav.isActive).to.not.be.ok
+          expect(nav.isActive()).to.not.be.ok
           expect(upKeyEvent.preventDefault).to.not.have.been.call.once
 
       describe "when Navigate is active", ->
