@@ -1,7 +1,7 @@
 define [
   "backbone.viewmaster"
 
-  "cs!app/models/menu_model"
+  "cs!app/models/launcher_model"
   "hbs!app/templates/profile"
   "hbs!app/templates/menuitem"
   "cs!app/views/menuitem_view"
@@ -11,7 +11,7 @@ define [
 ], (
   ViewMaster
 
-  MenuModel
+  LauncherModel
   template
   menuItemTemplate
   MenuItemView
@@ -64,18 +64,18 @@ define [
 
       if settingsCMD = @config.get("settingsCMD")
         @settings = new MenuItemView
-          model: new MenuModel.LauncherModel settingsCMD
+          model: new LauncherModel settingsCMD
         @appendView ".settings-container", @settings
 
       if passwordCMD = @config.get("passwordCMD")
         @password = new MenuItemView
-          model: new MenuModel.LauncherModel passwordCMD
+          model: new LauncherModel passwordCMD
         @appendView ".settings-container", @password
 
       if profileCMD = @config.get("profileCMD")
         console.log "profile!", profileCMD
         @profile = new MenuItemView
-          model: new MenuModel.LauncherModel profileCMD
+          model: new LauncherModel profileCMD
         @appendView ".settings-container",  @profile
 
       @logout = new LogoutButton

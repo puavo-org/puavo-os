@@ -1,43 +1,16 @@
 define [
   "backbone"
   "underscore"
+
+  "cs!app/models/launcher_model"
+  "cs!app/models/abstract_item_model"
 ], (
   Backbone
   _
+
+  LauncherModel
+  AbstractItemModel
 ) ->
-
-  class AbstractItemModel extends Backbone.Model
-    constructor: (opts, allItems) ->
-      super
-      if allItems
-        @allItems = allItems
-        @allItems.add this
-
-    isOk: -> true
-
-
-  class LauncherModel extends AbstractItemModel
-    defaults:
-      "clicks": 0
-
-    constructor: (opts) ->
-      if not opts.id
-        opts.id = opts.name
-      super
-      if clicks = localStorage[@_lsID()]
-        @set "clicks", parseInt(clicks, 10)
-
-    incClicks: ->
-      @set "clicks", @get("clicks") + 1
-      localStorage[@_lsID()] = @get "clicks"
-
-    _lsID: ->
-      "clicks-#{ @id }"
-
-    resetClicks: ->
-      delete localStorage[@_lsID()]
-
-    isOk: -> !! @get("command")
 
   class WebItemModel extends LauncherModel
 
@@ -70,5 +43,4 @@ define [
 
     isOk: -> @items.size() > 0
 
-  MenuModel.LauncherModel = LauncherModel
   return MenuModel
