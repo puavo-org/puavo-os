@@ -76,3 +76,48 @@ define [
         nav = new Navigation menuViews, 3
         nav.down()
         expect(nav.selected.model.get("name")).to.eq("Gimp")
+
+    describe "active", ->
+
+      nav = null
+
+      beforeEach ->
+        nav = new Navigation menuViews, 3
+        nav.next()
+
+      it "next() next item", ->
+        nav.next()
+        expect(nav.selected.model.get("name")).to.eq("Shotwell")
+
+      it "two next() calls", ->
+        nav.next()
+        nav.next()
+        expect(nav.selected.model.get("name")).to.eq("Flickr")
+
+      it "down() next item", ->
+        nav.down()
+        expect(nav.selected.model.get("name")).to.eq("Picasa")
+
+      it "right() next item", ->
+        nav.right()
+        expect(nav.selected.model.get("name")).to.eq("Shotwell")
+
+      it "up() next item", ->
+        nav.down()
+        nav.right()
+        nav.up()
+        expect(nav.selected.model.get("name")).to.eq("Shotwell")
+
+      it "left() next item", ->
+        nav.left()
+        expect(nav.selected.model.get("name")).to.eq("Flickr")
+
+      it "up() next item", ->
+        nav.up()
+        expect(nav.selected).to.be.not.ok
+
+      it "down() from last row deselects", ->
+        nav.down()
+        nav.down()
+        nav.down()
+        expect(nav.selected).to.be.not.ok
