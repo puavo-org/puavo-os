@@ -136,3 +136,10 @@ define [
         nav.right()
         nav.right()
         expect(nav.selected.model.get("name")).to.eq("Gimp")
+
+      it "right() from last column on second row selects first item of the row", ->
+        nav.down()
+        nav.right()
+        nav.right()
+        nav.right()
+        expect(nav.selected.model.get("name")).to.eq("Picasa")
