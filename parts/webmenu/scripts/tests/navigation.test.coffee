@@ -1,11 +1,11 @@
 define [
-  "backbone"
+  "cs!app/models/launcher_model"
 
   "cs!app/utils/navigation"
   "cs!app/views/menuitem_view"
 ],
 (
-  Backbone
+  LauncherModel
 
   Navigation
   MenuItemView
@@ -46,8 +46,8 @@ define [
   menuModels = null
   menuViews = null
   beforeEach ->
-    menuModels = data.items.map (d) ->
-      new Backbone.Model d
+    menuModels = data.items.map (item) ->
+      new LauncherModel item
 
     menuViews = menuModels.map (model) ->
       new MenuItemView model: model
@@ -84,6 +84,13 @@ define [
         nav = new Navigation menuViews, 3
         nav.down()
         expect(nav.selected.model.get("name")).to.eq("Gimp")
+
+      it "openItem() opens first item", ->
+        nav = new Navigation menuViews, 3
+        item = menuViews[0]
+        item.open = chai.spy(item.open)
+        nav.openItem()
+        expect(item.open).to.have.been.called.once
 
     describe "active", ->
 
@@ -157,6 +164,16 @@ define [
         nav.up()
         expect(nav.currentIndex).to.eq(0)
 
+      it "openItem() opens current item", ->
+        nav.right()
+
+        item = menuViews[1]
+        item.open = chai.spy(item.open)
+
+        nav.openItem()
+        expect(item.open).to.have.been.called.once
+
+
     describe "keys", ->
 
       nav = null
@@ -201,6 +218,13 @@ define [
           expect(nav.isActive()).to.not.be.ok
           expect(upKeyEvent.preventDefault).to.not.have.been.called.once
 
+        it "enter key calls openItem()", ->
+          nav.openItem = chai.spy(nav.openItem)
+          enterKeyEvent = keyDownEvent(Navigation.key.ENTER)
+          nav.handleKeyEvent(enterKeyEvent)
+          expect(nav.openItem).to.have.been.called.once
+
+
       describe "when Navigate is active", ->
         beforeEach ->
           nav.handleKeyEvent(keyDownEvent(Navigation.key.DOWN))
@@ -235,3 +259,9 @@ define [
           e = keyDownEvent(70) # f key
           nav.handleKeyEvent(e)
           expect(e.preventDefault).to.not.have.been.called.once
+
+        it "enter key calls openItem()", ->
+          nav.openItem = chai.spy(nav.openItem)
+          enterKeyEvent = keyDownEvent(Navigation.key.ENTER)
+          nav.handleKeyEvent(enterKeyEvent)
+          expect(nav.openItem).to.have.been.called.once

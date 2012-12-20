@@ -38,6 +38,8 @@ define [
         @down()
       if e.which is key.TAB
         @next()
+      if e.which is key.ENTER
+        @openItem()
 
       # Call other methods when navigation is active
       if @isActive()
@@ -105,3 +107,8 @@ define [
         @currentIndex -= 1
       @select(@views[@currentIndex])
 
+    openItem: ->
+      if @isActive()
+        @selected.open()
+      else
+        @views[0].open()
