@@ -143,3 +143,20 @@ define [
         nav.right()
         nav.right()
         expect(nav.selected.model.get("name")).to.eq("Picasa")
+
+    describe "keys", ->
+
+      keyDownEvent = (keycode) ->
+        return {
+          preventDefault: chai.spy()
+          which: keycode
+        }
+
+      it "down key activates menu", ->
+        nav.right = chai.spy(nav.right)
+        nav.handleKeyEvent(keyDownEvent(Navigation.DOWN))
+        nav.handleKeyEvent(keyDownEvent(Navigation.RIGHT))
+        expect()
+
+
+

@@ -3,11 +3,24 @@ define [
 ) ->
   class Navigation
 
+    @ENTER = 13
+    @TAB = 9
+    @LEFT = 37
+    @UP = 38
+    @RIGHT = 39
+    @DOWN = 40
+
     constructor: (views, cols) ->
       @views = views
       @cols = cols
       @selected = null
       @currentIndex = 0
+
+      $(window).keydown @handleKeyEvent
+
+    handleKeyEvent: (e) =>
+      key.ENTER
+
 
     isActive: -> !!@selected
 
