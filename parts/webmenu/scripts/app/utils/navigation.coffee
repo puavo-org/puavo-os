@@ -38,6 +38,8 @@ define [
         @down()
       if e.which is key.TAB
         @next()
+
+      # Enter opens always the first app or the selected one
       if e.which is key.ENTER
         @openItem()
 
