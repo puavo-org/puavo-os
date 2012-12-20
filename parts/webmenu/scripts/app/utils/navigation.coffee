@@ -76,6 +76,8 @@ define [], ->
 
     isOnFirstRow: -> @currentIndex+1 <= @cols
     isOnLastRow: -> @currentIndex > @views.length - @cols
+    isOnFirstRowItem: -> @currentIndex % @cols is 0
+    isOnLastRowItem: -> (@currentIndex+1) % @cols is 0
 
     up: ->
       if @isOnFirstRow()
@@ -85,7 +87,7 @@ define [], ->
         @select(@views[@currentIndex])
 
     right: ->
-      if (@currentIndex+1) % @cols is 0
+      if @isOnLastRowItem()
         @currentIndex -= @cols-1
       else
         @currentIndex += 1
@@ -93,7 +95,7 @@ define [], ->
 
 
     left: ->
-      if @currentIndex % @cols is 0
+      if @isOnFirstRowItem()
         @currentIndex += @cols-1
       else
         @currentIndex -= 1
