@@ -1,11 +1,8 @@
 class packages::partner {
-  include apt::repositories,
-          packages
+  include packages
 
   # apply all package definitions with "partner"-tag listed in packages
-  Package <| tag == partner |> {
-    require => [ Apt::Repository['partner'], Exec['apt update'], ],
-  }
+  Package <| tag == partner |>
 
   Apt::Repository <| title == partner |>
 }

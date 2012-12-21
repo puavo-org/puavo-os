@@ -1,5 +1,5 @@
 class packages {
-  include apt::repositories,
+  require apt::repositories,
           organisation_apt_repositories
 
   # install packages by default
