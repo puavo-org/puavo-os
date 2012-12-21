@@ -129,5 +129,14 @@ home-icon-visible=true
 trash-icon-visible=true
 volumes-visible=true
 
+[org/gnome/settings-daemon/plugins/media-keys]
+custom-keybindings=['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/']
+screenshot='Print'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0]
+binding='<Super>space'
+command='webmenu-spawn'
+name='Webmenu'
+
 [org/gnome/settings-daemon/plugins/ubuntuone]
 active=false
