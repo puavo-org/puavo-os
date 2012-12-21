@@ -37,10 +37,7 @@ define [
       else
         @bubble "open-app", @model
         @model.incClicks()
-        # Workaround this this with node-webkit too? https://github.com/appjs/appjs/issues/223
-        setTimeout =>
-          @$("img").addClass "rotate-loading"
-        , 10
+        @$("img").addClass "rotate-loading"
 
     elements:
       "$thumbnail": ".thumbnail"
