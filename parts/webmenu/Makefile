@@ -31,6 +31,7 @@ install-dirs:
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	mkdir -p $(DESTDIR)/etc/xdg/autostart
 	mkdir -p $(DESTDIR)/opt/webmenu
+	mkdir -p $(DESTDIR)/usr/share/icons
 
 install: install-dirs
 	cp -r lib node_modules bin docs scripts vendor styles *.js *.json *.md *.html $(DESTDIR)/opt/webmenu
