@@ -1,4 +1,3 @@
-
 define [
   "jquery"
   "backbone"
@@ -93,3 +92,8 @@ define [
 
       it "has not found Shotwell", ->
         expect(layout.$(".bb-menu-list .bb-menu-item")).to.not.contain('Shotwell')
+
+
+
+
+
