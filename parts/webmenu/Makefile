@@ -50,7 +50,7 @@ uninstall:
 	rm $(DESTDIR)/etc/xdg/autostart/webmenu.desktop
 
 test-client:
-	grunt mocha
+	node_modules/.bin/grunt mocha
 
 test-nw:
 	test=1 nw .
