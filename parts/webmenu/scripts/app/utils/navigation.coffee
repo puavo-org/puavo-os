@@ -112,10 +112,16 @@ define [
       @select(@views[@currentIndex])
 
     left: ->
+      prev = @currentIndex
+
       if @isOnFirstRowItem()
         @currentIndex += @cols-1
       else
         @currentIndex -= 1
+
+      if @isEmpty()
+        @currentIndex = @views.length-1
+
       @select(@views[@currentIndex])
 
     openItem: ->
