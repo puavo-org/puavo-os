@@ -36,6 +36,8 @@ install: install-dirs
 	cp -r lib node_modules bin docs scripts vendor styles *.js *.json *.md *.html $(DESTDIR)/opt/webmenu
 	$(INSTALL_DATA) -t $(DESTDIR)/etc/xdg/autostart \
 		extra/webmenu.desktop
+	$(INSTALL_DATA) -t $(DESTDIR)/usr/share/icons \
+		extra/icons/webmenu.png
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/applications \
 		extra/webmenu-spawn.desktop
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
@@ -48,6 +50,7 @@ uninstall:
 	rm -rf $(DESTDIR)/opt/webmenu
 	rm $(DESTDIR)$(datarootdir)/applications/webmenu-spawn.desktop 
 	rm $(DESTDIR)/etc/xdg/autostart/webmenu.desktop
+	rm $(DESTDIR)/usr/share/icons/webmenu.png
 
 test-client:
 	node_modules/.bin/grunt mocha
