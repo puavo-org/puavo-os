@@ -183,12 +183,6 @@ class packages {
     , 'linux-image-extra-3.6.6-999-generic' ]:
       tag => [ 'kernel', 'opinsys', ];
 
-    [ 'linux-image-3.5.0-18-generic'
-    , 'linux-image-extra-3.5.0-18-generic'
-    , 'linux-image-3.5.0-19-generic'
-    , 'linux-image-extra-3.5.0-19-generic' ]:
-      tag => [ 'kernel', 'ubuntu', ];
-
     [ 'firefox-locale-en'
     , 'hyphen-en-us'
     , 'kde-l10n-engb'
