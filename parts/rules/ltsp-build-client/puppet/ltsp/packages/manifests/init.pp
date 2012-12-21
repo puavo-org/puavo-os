@@ -179,10 +179,9 @@ class packages {
     , 'pidgin-plugin-pack' ]:
       tag => [ 'instant_messaging', 'ubuntu', ];
 
-##### XXX nfs does not work with this kernel, so remove for now
-#   [ 'linux-image-3.7.0-7-generic'
-#   , 'linux-image-extra-3.7.0-7-generic' ]:
-#     tag => [ 'kernel', 'opinsys', ];
+    [ 'linux-image-3.6.6-999-generic'
+    , 'linux-image-extra-3.6.6-999-generic' ]:
+      tag => [ 'kernel', 'opinsys', ];
 
     [ 'linux-image-3.5.0-18-generic'
     , 'linux-image-extra-3.5.0-18-generic'
