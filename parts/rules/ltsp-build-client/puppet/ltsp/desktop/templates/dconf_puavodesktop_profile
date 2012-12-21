@@ -9,6 +9,9 @@ picture-uri='file:///usr/share/backgrounds/opinsys-quantal-bg.png'
 show-desktop-icons=true
 
 [org/gnome/desktop/interface]
+document-font-name='Sans 10'
+font-name='Ubuntu 10'
+monospace-font-name='Ubuntu Mono 10'
 gtk-theme='Radiance'
 icon-theme='Faenza'
 
@@ -22,6 +25,7 @@ user-switch-enabled=false
 button-layout='menu:minimize,maximize,close'
 num-workspaces=2
 theme='Radiance'
+titlebar-font='Ubuntu Medium 10'
 
 [org/gnome/gnome-panel/layout/toplevels/bottom-panel]
 x=0
