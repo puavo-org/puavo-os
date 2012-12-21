@@ -179,6 +179,13 @@ define [
         nav.openItem()
         expect(item.open).to.have.been.called.once
 
+      it "deactivate() calls hideSelectHighlight on current view", ->
+        item = nav.selected
+        item.hideSelectHighlight = chai.spy(item.hideSelectHighlight)
+        nav.deactivate()
+        expect(item.hideSelectHighlight).to.have.been.called.once
+
+
     describe "with item count < cols", ->
 
       nav = null
