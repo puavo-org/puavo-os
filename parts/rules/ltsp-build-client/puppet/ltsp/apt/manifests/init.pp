@@ -1,4 +1,6 @@
 class apt {
+  $proxy_url = "http://localhost:3142"
+
   define key ($key_id, $key_source) {
     $keyname = $title
     $keypath = "/etc/apt/trusted.gpg.d/$keyname"

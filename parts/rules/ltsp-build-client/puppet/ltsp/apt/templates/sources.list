@@ -1,0 +1,3 @@
+deb http://fi.archive.ubuntu.com/ubuntu <%= lsbdistcodename %> main restricted universe multiverse
+deb http://fi.archive.ubuntu.com/ubuntu <%= lsbdistcodename %>-updates main restricted universe multiverse
+deb http://security.ubuntu.com/ubuntu <%= lsbdistcodename %>-security main restricted universe multiverse
