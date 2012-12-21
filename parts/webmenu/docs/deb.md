@@ -1,21 +1,28 @@
 # Debian package building
 
-  1. Install `devscripts` package from apt
-  1. Do source installation. See `docs/hacking.md`
-  1. Checkout the debian branch
-  1. Rebase to master
-  1. Extract node.js binary tarball to `./nodejs`
-  7. Update `debian/changelog` with `dch -i`
-  8. Execute `debuild -us -uc`
-  9. Hope for the best
+Get opinsys-debs repo
 
+    sudo apt-get install devscript build-essential git-core libssl-dev
+    git clone https://github.com/opinsys/opinsys-debs.git
+    cd opinsys-deb
 
+Package node-webkit (runtime dependency of webmenu)
 
-Node.js binary tarball extract
+    cd packages/node-webkit/
+    debian/rules get-orig-source
+    debuild -us -uc
+    
+Works only on 32bit for now :(
+    
+Package nodejs-bundle (build dependency of webmenu)
 
-```
-wget http://nodejs.org/dist/v0.8.14/node-v0.8.14-linux-x64.tar.gz
-tar xzvf node-v0.8.14-linux-x64.tar.gz
-rm node-v0.8.14-linux-x64.tar.gz 
-mv node-v0.8.14-linux-x64 nodejs
-```
+    cd packages/nodejs-bundle
+    debian/rules get-orig-source
+    debuild -us -uc
+    
+Package webmenu
+
+    sudo dpkg -i packages/nodejs-bundle*.deb # build dependency
+    cd packages/webmenu
+    debian/rules get-orig-source
+    debuild -us -uc
