@@ -36,6 +36,7 @@ define [
       @listenTo this, "reset", =>
         @setItems(@initial.items.toArray())
         @refreshViews()
+        @navigation.deactivate()
 
       @listenTo this, "open-menu", (model) =>
         @model = model
