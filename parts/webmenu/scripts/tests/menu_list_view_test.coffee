@@ -50,9 +50,35 @@ define [
         collection: allItems
       menuList.render()
 
+    it "has '.bb-menu-items", ->
+      expect(menuList.$(".bb-menu-item").size()).to.eq 4
 
-    it "deactivates search on 'search' event", ->
-      menuList.navigation.deactivate = chai.spy(menuList.navigation.deactivate)
-      menuList.trigger "search", "foo"
-      expect(menuList.navigation.deactivate).to.have.been.called.once
+
+    describe "'search' event", ->
+
+      it "deactivates navigation", ->
+        menuList.navigation.deactivate = chai.spy(menuList.navigation.deactivate)
+        menuList.trigger "search", "foo"
+        expect(menuList.navigation.deactivate).to.have.been.called.once
+
+      it "limits items", ->
+        menuList.trigger "search", "gimp"
+        expect(menuList.$(".bb-menu-item").size()).to.eq 1
+
+      it "emty search displays all items", ->
+        menuList.trigger "search", "gimp"
+        menuList.trigger "search", ""
+        expect(menuList.$(".bb-menu-item").size()).to.eq 4
+
+    describe "'reset' event", ->
+      it "display initial menu", ->
+        menuList.trigger "search", "gimp"
+        menuList.trigger "reset"
+        expect(menuList.$(".bb-menu-item").size()).to.eq 4
+
+      it "deactivates navigation", ->
+        menuList.navigation.deactivate = chai.spy(menuList.navigation.deactivate)
+        menuList.trigger "reset"
+        expect(menuList.navigation.deactivate).to.have.been.called.once
+
 
