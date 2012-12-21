@@ -35,9 +35,9 @@ install-dirs:
 install: install-dirs
 	cp -r lib node_modules bin docs scripts vendor styles *.js *.coffee *.json *.md *.html $(DESTDIR)/opt/webmenu
 	$(INSTALL_DATA) -t $(DESTDIR)/etc/xdg/autostart \
-		webmenu.desktop
+		extra/webmenu.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/applications \
-		webmenu-spawn.desktop
+		extra/webmenu-spawn.desktop
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		bin/webmenu \
 		bin/webmenu-spawn
