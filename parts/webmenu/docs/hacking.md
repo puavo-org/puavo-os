@@ -6,29 +6,37 @@ Ubuntu dependecies
 
     sudo add-apt-repository ppa:chris-lea/node.js
     sudo apt-get update
-    sudo apt-get install nodejs npm nodejs-dev wmctrl git-core build-essential libgtk2.0-dev gnome-themes-extras
+    sudo apt-get install nodejs npm nodejs-dev wmctrl git-core build-essential gnome-themes-extras
+    
+And get node-webkit from <https://github.com/rogerwang/node-webkit#downloads>
 
 ## Running
 
 Basic
 
-    bin/webmenu
+    nw .
 
-Disable hiding
+Devtools
 
-    bin/webmenu --no-hide
-
-With webkit inspector. Implies --no-hide
-
-    bin/webmenu --dev-tools
+    devtools=1 nw .
 
 ## Tests
 
 No broken tests on master!
 
-    bin/test
+Run in node-webkit:
 
-Can be also debugged from <http://localhost:1234/tests.html>
+    make test-nw
+
+Without window:
+
+    make test-nw-hidden
+
+node.js tests:
+
+    make test-node
+
+
 
 Travi-CI <https://travis-ci.org/opinsys/webmenu>
 
