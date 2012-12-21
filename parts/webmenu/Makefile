@@ -52,6 +52,12 @@ uninstall:
 test-client:
 	grunt mocha
 
+test-nw:
+	test=1 nw .
+
+test-nw-hidden:
+	test=1 exit=1 nw .
+
 test-node:
 	node_modules/.bin/mocha --reporter spec --compilers coffee:coffee-script tests/*test*
 

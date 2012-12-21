@@ -21,13 +21,8 @@
     </ul>
   </div>
   <div id="mocha"></div>
-  <script>
-    // Feature switches
-    window.FEATURE_SEARCH = true;
-
-    window.require = undefined;
-    window.process = undefined;
   </script>
+  <script src="scripts/nw-helper.js"></script>
   <script src="scripts/vendor/tests/mocha.js"></script>
   <script src="scripts/vendor/jquery.js"></script>
   <script src="scripts/vendor/tests/chai.js"></script>
@@ -47,7 +42,6 @@
         "cs!tests/logout_view.test",
         "cs!tests/menulayout.test",
         "cs!tests/allitems_collection.test",
-        "cs!tests/menuitem_view.test",
         "cs!tests/menumodel.test",
         "cs!tests/search_view.test",
         "cs!tests/menu_list_view_test",
@@ -58,6 +52,7 @@
     var runner = mocha
       .globals(["jQuery*"])
       .run();
+    mochaNwAdapter(runner);
     });
   </script>
   <a href="#" onclick="window.location.reload()">Restart</a>
