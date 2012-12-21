@@ -65,7 +65,7 @@ define [
         menuList.trigger "search", "gimp"
         expect(menuList.$(".bb-menu-item").size()).to.eq 1
 
-      it "emty search displays all items", ->
+      it "emty search displays current menu model", ->
         menuList.trigger "search", "gimp"
         menuList.trigger "search", ""
         expect(menuList.$(".bb-menu-item").size()).to.eq 4
