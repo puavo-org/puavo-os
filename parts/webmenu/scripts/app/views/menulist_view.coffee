@@ -49,6 +49,7 @@ define [
         else
           @setCurrent()
         @refreshViews()
+        @navigation.deactivate()
 
     setCurrent: ->
       @setItems(@model.items.toArray())
