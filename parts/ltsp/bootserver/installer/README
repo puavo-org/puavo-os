@@ -1,0 +1,10 @@
+- download Ubuntu Precise Pangolin 12.04.1 Server install ISO
+- create a boot media with unetbootin
+- install preseed files:
+
+mount /dev/sdb1 /media/usbstick
+cp syslinux.cfg /media/usbstick
+cp puavo-bootserver.cfg /media/usbstick/preseed
+umount /dev/sdb1
+
+Then just plug it in, boot and wait until the installation is finished.
