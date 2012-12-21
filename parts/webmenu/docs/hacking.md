@@ -36,6 +36,9 @@ node.js tests:
 
     make test-node
 
+Debug tests in a real browser:
+
+    make serve
 
 
 Travi-CI <https://travis-ci.org/opinsys/webmenu>
