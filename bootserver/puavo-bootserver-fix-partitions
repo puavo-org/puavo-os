@@ -1,0 +1,19 @@
+#!/bin/sh
+
+md1_uuid = $(blkid /dev/md1 | sed s'/.*UUID="\([^"]*\)".*/\1/')
+md2_uuid = $(blkid /dev/md2 | sed s'/.*UUID="\([^"]*\)".*/\1/')
+
+umount /tmp/dummy-ltsp
+umount /tmp/dummy-slow
+
+rmdir /tmp/dummy-ltsp
+rmdir /tmp/dummy-slow
+
+sed -i "s/^UUID=$md1_uuid.*//" /etc/fstab
+sed -i "s/^UUID=$md2_uuid.*//" /etc/fstab
+
+pvcreate /dev/md1
+pvcreate /dev/md2
+
+vgcreate ltsp /dev/md1
+vgcreate slow /dev/md2
