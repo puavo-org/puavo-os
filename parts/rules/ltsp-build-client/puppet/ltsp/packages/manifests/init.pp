@@ -19,6 +19,9 @@ class packages {
     , 'tshark' ]:
       tag => [ 'admin', 'ubuntu', ];
 
+    [ 'spotify-client' ]:
+      tag => [ 'audio', 'opinsys', ];
+
     [ 'libasound2-plugins'
     , 'pavucontrol'
     , 'pavumeter'
