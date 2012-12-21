@@ -88,6 +88,7 @@ define [
     isOnLastRow: -> @currentIndex > @views.length - @cols
     isOnFirstRowItem: -> @currentIndex % @cols is 0
     isOnLastRowItem: -> (@currentIndex+1) % @cols is 0
+    isEmpty: -> !@views[@currentIndex]
 
     up: ->
       if @isOnFirstRow()
@@ -97,12 +98,18 @@ define [
         @select(@views[@currentIndex])
 
     right: ->
+      prev = @currentIndex
+
       if @isOnLastRowItem()
         @currentIndex -= @cols-1
       else
         @currentIndex += 1
-      @select(@views[@currentIndex])
 
+      if @isEmpty()
+        mod = prev % @cols
+        @currentIndex = prev - mod
+
+      @select(@views[@currentIndex])
 
     left: ->
       if @isOnFirstRowItem()
