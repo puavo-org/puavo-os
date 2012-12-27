@@ -1,6 +1,10 @@
 [com/canonical/desktop/interface]
 scrollbar-mode='normal'
 
+[com/canonical/indicator/datetime]
+show-events=false
+show-week-numbers=true
+
 [com/ubuntu/update-notifier]
 auto-launch=false
 
