@@ -610,7 +610,7 @@ class packages {
       tag => [ 'utils', 'ubuntu', ];
 
     [ 'google-talkplugin' ]:
-      tag => [ 'web', ];
+      tag => [ 'web', 'opinsys', ];
 
     [ 'adobe-flashplugin' ]:
       tag => [ 'web', 'partner', ];
