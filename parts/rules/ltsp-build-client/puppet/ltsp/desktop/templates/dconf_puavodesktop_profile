@@ -16,6 +16,7 @@ gtk-theme='Radiance'
 icon-theme='Faenza'
 
 [org/gnome/desktop/lockdown]
+disable-lock-screen=false
 disable-user-switching=true
 
 [org/gnome/desktop/screensaver]
