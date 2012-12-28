@@ -222,6 +222,9 @@ class packages {
     , 'thunderbird-locale-sv-se' ]:
       tag => [ 'language-sv', 'ubuntu', ];
 
+    [ 'xexit' ]:
+      tag => [ 'ltsp', 'opinsys', ];
+
     [ 'ltsp-client'
     , 'ltsp-server' ]:
       tag => [ 'ltsp', 'ubuntu', ];
