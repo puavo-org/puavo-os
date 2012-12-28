@@ -1,0 +1,37 @@
+#!/bin/sh
+
+HOSTTYPE="$(cat /etc/puavo/hosttype)"
+
+case "$HOSTTYPE" in
+  ltspserver)
+    TERMINAL="$LTSP_CLIENT_HOSTNAME"
+    lookup_processes() {
+      ps eww -u "$USER" \
+        | grep -w "LTSP_CLIENT_HOSTNAME=$LTSP_CLIENT_HOSTNAME" \
+        | awk '{ print $1 }' \
+        | fgrep -vw $$ \
+        | xargs
+    }
+    ;;
+  *)
+    TERMINAL="$(hostname)"
+    lookup_processes() {
+      pgrep -u "$USER" | fgrep -vw $$ | xargs
+    }
+    ;;
+esac
+
+logger "kill_desktop_session: $$ killing all session processes of user $USER on $TERMINAL"
+
+for signal in CONT TERM KILL; do
+  if [ "$signal" = "KILL" ]; then
+    sleep 3
+  fi
+  PROCESSES="$(lookup_processes)"
+  if [ -n "$PROCESSES" ]; then
+    logger "kill_desktop_session: $$ sending $signal to $USER processes $PROCESSES"
+    kill -$signal $PROCESSES
+  fi
+done
+
+logger "kill_desktop_session: $$ finished killing"
