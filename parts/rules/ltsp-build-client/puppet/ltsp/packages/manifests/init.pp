@@ -536,8 +536,8 @@ class packages {
     , 'onboard'
     , 'openprinting-ppds'
     , 'pcmciautils'
-    , 'plymouth-theme-ubuntu-gnome-logo'
-    , 'plymouth-theme-ubuntu-gnome-text'
+    # , 'plymouth-theme-ubuntu-gnome-logo'      # not needed, we have our own
+    # , 'plymouth-theme-ubuntu-gnome-text'      # plymouth theme
     , 'policykit-desktop-privileges'
     , 'printer-driver-c2esp'
     , 'printer-driver-foo2zjs'
