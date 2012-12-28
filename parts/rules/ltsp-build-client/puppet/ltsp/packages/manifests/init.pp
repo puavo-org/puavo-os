@@ -607,7 +607,8 @@ class packages {
     , 'unrar' ]:
       tag => [ 'utils', 'ubuntu', ];
 
-    [ 'google-talkplugin' ]:
+    [ 'google-talkplugin'
+    , 'xul-ext-flashblock' ]:
       tag => [ 'web', 'opinsys', ];
 
     [ 'adobe-flashplugin' ]:
