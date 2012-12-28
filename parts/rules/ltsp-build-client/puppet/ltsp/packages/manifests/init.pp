@@ -34,8 +34,6 @@ class packages {
     , 'btrfs-tools'
     , 'grub-pc'
     , 'libnss-extrausers'
-    , 'libnss-ldapd'
-    , 'libpam-ldapd'
     , 'lvm2'
     , 'nfs-common'
     , 'openssh-client'
@@ -658,8 +656,7 @@ class packages {
 
   # keep these packages out, we do not want these
   @package {
-    [ 'nscd'
-    , 'tftpd-hpa', ]:
+    [ 'tftpd-hpa', ]:
       ensure => purged,
       tag    => [ 'basic', 'ubuntu', ];
   }
