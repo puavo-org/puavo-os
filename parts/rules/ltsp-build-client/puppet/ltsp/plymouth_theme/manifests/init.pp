@@ -9,7 +9,7 @@ class plymouth_theme {
       command => "/usr/bin/update-alternatives --set default.plymouth '$plymouth_theme_script'",
       notify  => Exec['update-initramfs'],
       require => Package['liitu-themes'],
-      unless  => "/usr/bin/test \"\$(/bin/readlink /etc/alternatives/default.plymouth)\" = '$plymouth_theme_script'";
+      unless  => "/usr/bin/update-alternatives --query default.plymouth | /bin/fgrep -qx 'Status: manual'";
   }
 
   # this package contains $plymouth_theme_script
