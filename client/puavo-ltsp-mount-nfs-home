@@ -22,22 +22,17 @@ if boolean_is_true "${USE_NFS_HOMES}" ; then
     # libnss-extrausers that gets populated during PAM auth.
     HOME=$(getent passwd $PAM_USER | awk -F: '{ print $6 }')
 
-    # Before mounting the home directory we should contact the
-    # server to make sure that the directory actually exists.
-    #
-    # FIXME - Figure out something for this
-
+    # Request a remote directory for the user (three second timeout, may fail)
+    { echo "$PAM_USER" | nc -w 3 "$SERVER" 907; } || true
 
     # Create a local directory for the user and mount it using nfs4+krb5
-
     mkdir -p ${HOME}
     mount -t nfs4 -o sec=krb5 ${SERVER}:${HOME} ${HOME}
-    chown $PAM_USER ${HOME}
   fi
 else
   HOME=$(getent passwd $PAM_USER | awk -F: '{ print $6 }')
   mkdir -p ${HOME}
-  chown $PAM_USER ${HOME}
+  chown $PAM_USER: ${HOME}
 fi
 
 exit 0
