@@ -5,6 +5,17 @@ class packages {
   # install packages by default
   Package { ensure => latest, }
 
+  define kernel_package_for_version ($package_tags) {
+    $version = $title
+
+    @package {
+      [ "linux-headers-$version"
+      , "linux-image-$version"
+      , "linux-image-extra-$version" ]:
+        tag => $package_tags;
+    }
+  }
+
   @package {
     [ 'dconf-tools'
     , 'gawk'
@@ -179,10 +190,6 @@ class packages {
     , 'pidgin-libnotify'
     , 'pidgin-plugin-pack' ]:
       tag => [ 'instant_messaging', 'ubuntu', ];
-
-    [ 'linux-image-3.6.6-999-generic'
-    , 'linux-image-extra-3.6.6-999-generic' ]:
-      tag => [ 'kernel', 'opinsys', ];
 
     [ 'firefox-locale-en'
     , 'hyphen-en-us'
@@ -656,6 +663,11 @@ class packages {
     , 'smart-product-drivers'
     , 'xf86-input-nextwindow' ]:
       tag => [ 'whiteboard-smartboard', 'opinsys', ];
+  }
+
+  kernel_package_for_version {
+    '3.6.6-999-generic':
+      package_tags => [ 'kernel', 'opinsys', ];
   }
 
   # keep these packages out, we do not want these
