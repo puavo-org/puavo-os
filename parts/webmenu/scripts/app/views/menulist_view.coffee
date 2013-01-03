@@ -51,6 +51,18 @@ define [
         @refreshViews()
         @navigation.deactivate()
 
+      @listenTo this, "scrollTo", (itemView) =>
+        itemBottom = itemView.$el.offset().top + itemView.$el.innerHeight()
+        itemTop = itemView.$el.offset().top
+
+        menuListTop = @$el.offset().top
+        menuListBottom = @$el.offset().top + @$el.innerHeight()
+
+        if itemBottom > menuListBottom
+          @$el.scrollTop( @$el.scrollTop() + itemBottom - menuListBottom )
+        else if itemTop < menuListTop
+          @$el.scrollTop( @$el.scrollTop() - (menuListTop - itemTop) )
+
     setCurrent: ->
       @setItems(@model.items.toArray())
 

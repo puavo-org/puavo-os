@@ -81,4 +81,8 @@ define [
         menuList.trigger "reset"
         expect(menuList.navigation.deactivate).to.have.been.called.once
 
-
+    # FIXME
+    #describe "'scroll' event", ->
+    #
+    #  it "scroll to bottom of the item", ->
+    #
