@@ -58,6 +58,7 @@ define [
       @selected?.hideSelectHighlight()
       view.displaySelectHighlight()
       @selected = view
+      view.scrollTo()
 
     next: ->
       if @isActive()
