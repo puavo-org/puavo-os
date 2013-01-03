@@ -3,6 +3,7 @@
 
 posix = require "posix"
 mkdirp = require "mkdirp"
+fs = require "fs"
 
 launchCommand = require "./launchcommand"
 menutools = require "./menutools"
@@ -45,6 +46,17 @@ menutools.injectDesktopData(
   config.iconSearchPaths
   config.fallbackIcon
 )
+
+# Set puavoDomain if domain file found
+try
+  puavoDomain = fs.readFileSync("/etc/puavo/domain").toString()
+catch err
+  console.log "WARN: ", "/etc/puavo/domain file not found"
+
+# Inject passworCMD configuration if puavoDomain is define
+if puavoDomain
+  if config.passwordCMD?
+    config.passwordCMD.url = "https://#{puavoDomain}/users/password/own"
 
 username = posix.getpwnam(posix.geteuid()).name
 userData = posix.getpwnam(username)
