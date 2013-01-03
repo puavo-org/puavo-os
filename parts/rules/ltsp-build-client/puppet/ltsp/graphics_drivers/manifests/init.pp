@@ -1,4 +1,6 @@
 class graphics_drivers {
+  require packages
+
   if $architecture != 'i386' {
     fail('This class is written to work only with i386')
   }
