@@ -81,8 +81,8 @@ class packages {
     , 'unetbootin' ]:
       tag => [ 'devel', 'ubuntu', ];
 
-    # [ 'fglrx'         # resolve conflict with nvidia-current
-    [ 'libgl1-mesa-glx'
+    [ 'fglrx'
+    , 'libgl1-mesa-glx'
     , 'nvidia-current'
     , 'nvidia-settings' ]:
       tag => [ 'drivers', 'ubuntu', ];
