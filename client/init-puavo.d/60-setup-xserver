@@ -1,0 +1,11 @@
+case "$XSERVER" in
+  fglrx)
+    update-alternatives --set i386-linux-gnu_gl_conf /usr/lib/fglrx/ld.so.conf
+    ln -f /etc/ld.so.cache-fglrx /etc/ld.so.cache
+    ;;
+  nvidia)
+    update-alternatives --set i386-linux-gnu_gl_conf \
+			/usr/lib/nvidia-current/ld.so.conf
+    ln -f /etc/ld.so.cache-nvidia /etc/ld.so.cache
+    ;;
+esac
