@@ -22,6 +22,8 @@ define [
       super
       @setView ".content", opts.view
 
+      @listenTo this, "cancel", =>
+        @remove()
 
     remove: (opts)->
       super

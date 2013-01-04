@@ -21,3 +21,4 @@ define [
       "click .bb-logout": -> @bubble "logout"
       "click .bb-shutdown": -> @bubble "shutdown"
       "click .bb-reboot": -> @bubble "reboot"
+      "click .bb-cancel": -> @bubble "cancel"
