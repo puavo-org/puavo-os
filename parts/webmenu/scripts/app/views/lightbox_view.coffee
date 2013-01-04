@@ -22,9 +22,6 @@ define [
       super
       @setView ".content", opts.view
 
-    events:
-      "click .background": -> @remove()
-      "click .close": -> @remove()
 
     remove: (opts)->
       super
