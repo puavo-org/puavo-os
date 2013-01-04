@@ -1,5 +1,8 @@
 class graphics_drivers {
-  require packages
+  require packages      # We use "require" here, because things here should be
+                        # done only after all packages have been installed,
+                        # because we run ldconfig and save its output for
+                        # later use.
 
   if $architecture != 'i386' {
     fail('This class is written to work only with i386')
