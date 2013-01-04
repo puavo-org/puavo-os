@@ -39,9 +39,13 @@ class graphics_drivers {
 			  Package['nvidia-settings'], ];
   }
 
+  # Fglrx and nvidia, give radeon and nouveau a chance!  Peace!
+  # (These files must be removed for the open drivers to work.)
   file {
-    # Nvidia, give nouveau a chance!  Peace!
-    # (This really need *is* needed for nouveau to work.)
+    '/etc/modprobe.d/fglrx.conf':
+      ensure  => absent,
+      require => Package['fglrx'];
+
     '/etc/modprobe.d/nvidia-current_hybrid.conf':
       ensure  => absent,
       require => Package['nvidia-current'];
