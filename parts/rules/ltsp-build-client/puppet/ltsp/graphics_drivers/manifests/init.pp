@@ -17,14 +17,15 @@ class graphics_drivers {
         command => "/usr/bin/update-alternatives --set i386-linux-gnu_gl_conf \
                       $gl_conf_target \
                     && /sbin/ldconfig \
-                    && /bin/cp -p /etc/ld.so.cache $ld_so_cache",
-        creates => $ld_so_cache;
+                    && /bin/cp /etc/ld.so.cache /etc/ld.so.cache-$driver",
+        unless => "/usr/bin/test /etc/ld.so.cache-mesa -nt /etc/ld.so.cache";
     }
   }
 
   driver_alternatives {
     'fglrx':
       gl_conf_target => '/usr/lib/fglrx/ld.so.conf',
+      notify         => Driver_alternatives['mesa'],
       require        => Package['fglrx'];
 
    'mesa':
@@ -35,20 +36,9 @@ class graphics_drivers {
 
    'nvidia':
       gl_conf_target => '/usr/lib/nvidia-current/ld.so.conf',
+      notify         => Driver_alternatives['mesa'],
       require        => [ Package['nvidia-current'],
 			  Package['nvidia-settings'], ];
-  }
-
-  # Fglrx and nvidia, give radeon and nouveau a chance!  Peace!
-  # (These files must be removed for the open drivers to work.)
-  file {
-    '/etc/modprobe.d/fglrx.conf':
-      ensure  => absent,
-      require => Package['fglrx'];
-
-    '/etc/modprobe.d/nvidia-current_hybrid.conf':
-      ensure  => absent,
-      require => Package['nvidia-current'];
   }
 
   Package <| title == fglrx
