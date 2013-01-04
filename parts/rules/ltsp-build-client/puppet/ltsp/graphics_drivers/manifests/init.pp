@@ -35,6 +35,20 @@ class graphics_drivers {
 
    'nvidia':
       gl_conf_target => '/usr/lib/nvidia-current/ld.so.conf',
-      require        => Package['nvidia-current'];
+      require        => [ Package['nvidia-current'],
+			  Package['nvidia-settings'], ];
   }
+
+  file {
+    # Nvidia, give nouveau a chance!  Peace!
+    # (This really need *is* needed for nouveau to work.)
+    '/etc/modprobe.d/nvidia-current_hybrid.conf':
+      ensure  => absent,
+      require => Package['nvidia-current'];
+  }
+
+  Package <| title == fglrx
+          or title == libgl1-mesa-glx
+          or title == nvidia-current
+          or title == nvidia-settings |>
 }
