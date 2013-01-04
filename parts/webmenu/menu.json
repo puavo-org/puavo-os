@@ -221,6 +221,10 @@
         },
         {
           "type": "desktop",
+          "id": "bluefish"
+        },
+        {
+          "type": "desktop",
           "id": "designer-qt4"
         }
           ]
@@ -329,27 +333,27 @@
       "items": [
         {
           "type": "desktop",
-          "id": "librewrite"
+          "id": "libreoffice-writer"
         },
         {
           "type": "desktop",
-          "id": "liblecalc"
+          "id": "libreoffice-calc"
         },
         {
           "type": "desktop",
-          "id": "libre esitys"
+          "id": "libreoffice-impress"
         },
         {
           "type": "desktop",
-          "id": "libre tietokanta"
+          "id": "libreoffice-draw"
         },
         {
           "type": "desktop",
-          "id": "libre piirros"
+          "id": "libreoffice-base"
         },
         {
           "type": "desktop",
-          "id": "libre kaava"
+          "id": "libreoffice-math"
         },
         {
           "type": "desktop",
@@ -358,6 +362,22 @@
         {
           "type": "desktop",
           "id": "acroread"
+        },
+        {
+          "type": "desktop",
+          "id": "vym"
+        },
+	{
+          "type": "desktop",
+          "id": "okular"
+        },
+	{
+          "type": "desktop",
+          "id": "evince"
+        },
+        {
+          "type": "desktop",
+          "id": "tellico"
         },
         {
           "type": "desktop",
@@ -484,6 +504,55 @@
         },
         {
           "type": "web",
+          "name": "Youtube",
+          "url": "http://youtube.com",
+          "description": "Youtube-videopalvelu",
+          "osIconPath": "/usr/share/icons/Faenza/apps/96/youtube.png"
+        },
+        {
+          "type": "web",
+          "name": "Wikipedia",
+          "url": "http://www.wikipedia.com",
+          "description": "Wikipedia-tietosanakirja",
+          "osIconPath": "/usr/share/icons/Faenza/apps/96/wikipedia.png"
+        },
+        {
+          "type": "web",
+          "name": "Yle Areena",
+          "url": "http://areena.yle.fi",
+          "description": "Yle Areena-videopalvelu",
+          "osIconPath": "/usr/share/icons/Faenza/apps/96/me-tv.png"
+        },
+        {
+          "type": "web",
+          "name": "Ylen Eläväarkisto",
+          "url": "http://elavaarkisto.yle.fi",
+          "description": "Ylen Eläväarkisto-videopalvelu",
+          "osIconPath": "/usr/share/icons/Faenza/apps/96/me-tv.png"
+        },
+        {
+          "type": "web",
+          "name": "Sumopaint",
+          "url": "http://www.sumopaint.com",
+          "description": "Sumopaint-webkuvankäsittely",
+          "osIconPath": "/usr/share/icons/Faenza/apps/96/gimp.png"
+        },
+        {
+          "type": "web",
+          "name": "Yle Areena",
+          "url": "http://areena.yle.fi",
+          "description": "Yle Areena-videopalvelu",
+          "osIconPath": "/usr/share/icons/Faenza/apps/96/me-tv.png"
+        },
+        {
+          "type": "web",
+          "name": "Yle Areena",
+          "url": "http://areena.yle.fi",
+          "description": "Yle Areena-videopalvelu",
+          "osIconPath": "/usr/share/icons/Faenza/apps/96/me-tv.png"
+        },
+        {
+          "type": "web",
           "name": "Walma",
           "url": "http://walmademo.opinsys.fi",
           "description": "Yhteistoiminnallinen piirtotaulu",
@@ -499,7 +568,8 @@
     },
     {
       "type": "desktop",
-      "id": "nautilus-home"
+      "id": "nautilus-home",
+      "osIconPath": "/usr/share/icons/Faenza/places/96/folder_home.png"
     }
   ]
 }
