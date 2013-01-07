@@ -1,2 +1,5 @@
 #!/bin/sh
-nw /opt/webmenu > $HOME/.config/webmenu/webmenu.log 2>&1
+
+while true; do
+  nw /opt/webmenu > $HOME/.config/webmenu/webmenu.log 2>&1
+done
