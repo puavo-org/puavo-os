@@ -40,16 +40,19 @@ if process.env.NODE_ENV isnt "production"
 else
   config.production = true
 
+
+# Inject puavo configuration
+puavo.injectConfiguration(
+  config
+)
+
+
 menutools.injectDesktopData(
   menuJSON
   config.dotDesktopSearchPaths
   locale
   config.iconSearchPaths
   config.fallbackIcon
-)
-# Inject puavo configuration
-puavo.injectConfiguration(
-  config
 )
 
 username = posix.getpwnam(posix.geteuid()).name
