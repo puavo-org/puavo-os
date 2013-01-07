@@ -18,6 +18,7 @@ class packages {
 
   @package {
     [ 'dconf-tools'
+    , 'epoptes'
     , 'gawk'
     , 'git'
     , 'initramfs-tools'
@@ -26,8 +27,10 @@ class packages {
     , 'pv'
     , 'sl'
     , 'sudo'
+    , 'terminator'
     , 'tmux'
-    , 'tshark' ]:
+    , 'tshark'
+    , 'vinagre' ]:
       tag => [ 'admin', 'ubuntu', ];
 
     [ 'spotify-client' ]:
@@ -262,7 +265,8 @@ class packages {
     , 'me-tv'
     , 'python-gst0.10'
     , 'vlc'
-    , 'vlc-plugin-pulse' ]:
+    , 'vlc-plugin-pulse'
+    , 'xbmc' ]:
       tag => [ 'mediaplayer', 'ubuntu', ];
 
 # XXX problems with these beasts
@@ -378,6 +382,7 @@ class packages {
     , 'kmplot'
     , 'kstars'
     , 'marble'
+    , 'mandelbulber'
     , 'pspp'
     , 'rkward'
     , 'stellarium'
