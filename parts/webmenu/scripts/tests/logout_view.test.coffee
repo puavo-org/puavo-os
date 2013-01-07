@@ -13,6 +13,7 @@ define [
     beforeEach ->
       Application.reset()
       view = new LogoutView
+        hostType: "fatclient"
       view.render()
     afterEach ->
       view.remove()
