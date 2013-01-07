@@ -9,7 +9,7 @@ injectConfiguration = (config) ->
 
   # Set puavoDomain if domain file found
   try
-    if puavoDomain = fs.readFileSync("/etc/puavo/domain").toString()
+    if puavoDomain = fs.readFileSync("/etc/puavo/domain").toString().trim()
       if config.passwordCMD?
         config.passwordCMD.url = "https://#{puavoDomain}/users/password/own"
   catch err
