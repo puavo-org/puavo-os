@@ -1,2 +1,2 @@
 #!/bin/sh
-nw /opt/webmenu
+nw /opt/webmenu > $HOME/.config/webmenu/webmenu.log 2>&1
