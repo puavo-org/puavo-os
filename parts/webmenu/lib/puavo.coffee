@@ -17,7 +17,7 @@ injectConfiguration = (config) ->
 
 
   try
-    if hostType = fs.readFileSync("/etc/puavo/hosttype").toString()
+    if hostType = fs.readFileSync("/etc/puavo/hosttype").toString().trim()
       config.hostType = hostType
   catch err
     console.log "WARN: ", "/etc/puavo/hosttype file not found"

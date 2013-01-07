@@ -14,7 +14,7 @@ define [
     template: template
 
     context: -> {
-      fatClient: true
+      localBoot: if @hostType is "thinclient" then false else true
     }
 
     events:
@@ -22,3 +22,8 @@ define [
       "click .bb-shutdown": -> @bubble "shutdown"
       "click .bb-reboot": -> @bubble "reboot"
       "click .bb-cancel": -> @bubble "cancel"
+
+    constructor: (opts) ->
+      super
+
+      @hostType = opts.hostType

@@ -26,15 +26,17 @@ define [
 
     template: menuItemTemplate
 
-    constructor: ->
+    constructor: (opts) ->
       super
       @listenTo this, "spawn-menu", @removeLightbox
       @lb = null
+      @hostType = opts.hostType
 
     events:
       "click": ->
         @lb = new Lightbox
           view: new LogoutView
+            hostType: @hostType
         @lb.render()
         @lb.listenTo @lb, "all", (event) =>
           @bubble event
@@ -79,6 +81,7 @@ define [
         @appendView ".settings-container",  @profile
 
       @logout = new LogoutButton
+        hostType: @config.get("hostType")
       @appendView ".settings-container", @logout
 
     context: -> {
