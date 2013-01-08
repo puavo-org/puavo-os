@@ -1,5 +1,8 @@
 #!/bin/sh
 
+index=1
+
 while true; do
-  nw /opt/webmenu > $HOME/.config/webmenu/webmenu.log 2>&1
+  nw /opt/webmenu > $HOME/.config/webmenu/webmenu$index.log 2>&1
+  index=`expr $index + 1`
 done
