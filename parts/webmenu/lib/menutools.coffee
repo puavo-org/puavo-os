@@ -14,11 +14,14 @@ osIconPath = (iconSearchPaths, id, fallbackIcon) ->
 
   return osIconFilePath
 
-injectDesktopData = (menu, sources, locale, iconSearchPaths, fallbackIcon) ->
+injectDesktopData = (menu, sources, locale, iconSearchPaths, fallbackIcon, hostType) ->
 
   sources.forEach (desktopDir) ->
     if menu.osIcon
       menu.osIconPath = osIconPath(iconSearchPaths, menu.osIcon, fallbackIcon)
+
+    if menu.inactiveByDeviceType is hostType
+      menu.status = "inactive"
 
     if menu.type is "desktop" and menu.id
       filePath = desktopDir + "/#{ menu.id }.desktop"
@@ -35,7 +38,7 @@ injectDesktopData = (menu, sources, locale, iconSearchPaths, fallbackIcon) ->
 
     else if menu.type is "menu"
       for menu_ in menu.items
-        injectDesktopData(menu_, sources, locale, iconSearchPaths, fallbackIcon)
+        injectDesktopData(menu_, sources, locale, iconSearchPaths, fallbackIcon, hostType)
 
 
     if not menu.name

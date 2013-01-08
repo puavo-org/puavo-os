@@ -53,6 +53,7 @@ menutools.injectDesktopData(
   locale
   config.iconSearchPaths
   config.fallbackIcon
+  config.hostType
 )
 
 username = posix.getpwnam(posix.geteuid()).name

@@ -27,17 +27,28 @@ define [
         .toLowerCase()
         .replace(/[^a-z]/g, "")
 
+      if @isInactive()
+        @$el.addClass "inactive"
 
     events:
       "click": "open"
+      "mouseover": "toggleInactiveNotify"
+      "mouseout": "toggleInactiveNotify"
 
     open: ->
+      if @isInactive()
+        return
+
       if @model.get("type") is "menu"
         @bubble "open-menu", @model
       else
         @bubble "open-app", @model
         @model.incClicks()
         @$("img").addClass "rotate-loading"
+
+    toggleInactiveNotify: ->
+      if @isInactive()
+        @$('.inactiveNotify').toggle()
 
     elements:
       "$thumbnail": ".thumbnail"
@@ -56,3 +67,6 @@ define [
 
     scrollTo: ->
       @bubble "scrollTo", @
+
+    isInactive: ->
+      if @model.get("status") is "inactive" then true else false

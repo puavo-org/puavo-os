@@ -7,6 +7,7 @@ iconSize = 50px
   cursor pointer
   margin 0px
   padding-top 5px
+  position relative
 
   word-wrap break-word
   overflow hidden
@@ -34,6 +35,18 @@ iconSize = 50px
   &.selectHighlight
     background-color red
 
+  &.inactive
+    .thumbnail
+      opacity 0.3
+
+  .inactiveNotify
+    display none
+    position absolute
+    top 0px
+    left 0px
+    margin-top 10px
+    text-align center
+    color white
 
 @keyframes rotate {
 
