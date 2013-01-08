@@ -1,2 +1,3 @@
 #!/bin/sh
-nc -U ~/.config/webmenu/spawnmenu
+hostname=`hostname`
+nc -U ~/.config/webmenu/spawnmenu-$hostname
