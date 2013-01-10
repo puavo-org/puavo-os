@@ -47,7 +47,6 @@ class packages {
     , 'bridge-utils'
     , 'btrfs-tools'
     , 'grub-pc'
-    , 'libnss-extrausers'
     , 'lvm2'
     , 'nfs-common'
     , 'openssh-client'
