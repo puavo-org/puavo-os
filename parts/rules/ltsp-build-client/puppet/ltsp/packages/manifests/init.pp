@@ -345,7 +345,8 @@ class packages {
     , 'opinsys-ca-certificates'
     , 'puavo-ltsp-client'
     , 'puavo-ltsp-install'
-    , 'puavo-register' ]:
+    , 'puavo-register'
+    , 'puavo-wlanap' ]:
       tag => [ 'puavo', 'opinsys', ];
 
     [ 'vmware-view-client' ]:
