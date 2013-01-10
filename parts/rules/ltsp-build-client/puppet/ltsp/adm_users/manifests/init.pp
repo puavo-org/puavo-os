@@ -1,7 +1,8 @@
 class adm_users {
   include adm_users::common_user,
           app_bash,
-          config::logins
+          config::logins,
+          packages
 
   $supplementary_groups = [ 'adm'
                           , 'lpadmin'
@@ -41,7 +42,7 @@ class adm_users {
         key     => $sshkey,
         require => File[$ssh_subdir],
         type    => $sshkey_type,
-        user    => $adm_user;
+        user    => $adm_user
     }
 
     user {
@@ -71,4 +72,6 @@ class adm_users {
       mode    => 750,
       require => Group[$config::logins::admin_user_groupname];
   }
+
+  Package <| title == openssh-server |>
 }
