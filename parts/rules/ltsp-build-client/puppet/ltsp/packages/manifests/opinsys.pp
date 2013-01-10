@@ -3,9 +3,6 @@ class packages::opinsys {
 
   include packages
 
-  # apply all package definitions with "opinsys"-tag listed in packages
-  Package <| tag == opinsys |>
-
   Apt::Key        <| title == "opinsys-repo.gpgkey" |>
   Apt::Repository <| title == liitu |>
 }

@@ -19,6 +19,9 @@ trap cleanup EXIT
   mode=$1
 }
 
+# we use the Ubuntu quantal-distribution as a default
+distribution=${DISTRIBUTION:-quantal}
+
 # fasttmp should be mounted on a tmpfs partition
 fasttmp=/virtualtmp
 normaltmp=/opt/ltsp/images/tmp
@@ -36,9 +39,11 @@ mirror=http://localhost:3142/fi.archive.ubuntu.com/ubuntu
 srcdir=$(dirname $0)
 srccopydir=$(mktemp -d /tmp/ltsp-builder-$USER.XXXXXXXXXX)
 
+configfile=$srccopydir/ltsp-build-client/config/$distribution
+
 build_date=$(date +%Y-%m-%d-%H%M%S)
 build_name=$(git branch | awk '$1 == "*" { print $2 }')
-build_version=ltsp-$build_name-$build_date
+build_version=ltsp-$distribution-$build_name-$build_date
 build_logfile=$srcdir/log/$build_version-$mode.log
 
 cp -pLR $srcdir $srccopydir
@@ -66,8 +71,9 @@ done
       run_sudo $srccopydir/ltsp-build-client/ltsp-build-client \
           --arch               $arch \
           --base               $basedir \
-          --config             $srccopydir/ltsp-build-client/config \
+          --config             $configfile \
           --debconf-seeds      $srccopydir/ltsp-build-client/debconf.seeds \
+          --dist               $distribution \
           --install-debs-dir   $srccopydir/ltsp-build-client/debs \
           --mirror             $mirror \
           --puppet-module-dirs $puppet_module_dirs \
@@ -106,14 +112,14 @@ done
       ;;
     update-chroot)
       run_sudo ltsp-apply-puppet \
-          --config             $srccopydir/ltsp-build-client/config \
+          --config             $configfile \
           --ltsp-chroot-opts   "--mount-all" \
           --puppet-module-dirs $puppet_module_dirs \
           --targetroot         "$basedir/$arch"
       ;;
     update-local)
       run_sudo ltsp-apply-puppet \
-          --config             $srccopydir/ltsp-build-client/config \
+          --config             $configfile \
           --puppet-module-dirs $puppet_module_dirs
       ;;
   esac
