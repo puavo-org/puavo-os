@@ -1,17 +1,11 @@
 PUPPET_USE_CLASSES="
   console
-  desktop
-  firefox
-  google_talkplugin
-  graphics_drivers
   kernels
+  lightdm
   organisation_adm_users
-  packages::opinsys
-  packages::partner
   packages::sssd_install_workaround
-  packages::ubuntu
+  packages::thinclient
   plymouth_theme
   ssh_client
   sudo
-  xexit
 "

@@ -12,7 +12,7 @@ class packages {
       [ "linux-headers-$version"
       , "linux-image-$version"
       , "linux-image-extra-$version" ]:
-        tag => $package_tags;
+        tag => [ 'kernel', $package_tags, ]
     }
   }
 
@@ -341,13 +341,15 @@ class packages {
     , 'spe' ]:
       tag => [ 'programming', 'ubuntu', ];
 
+    [ 'puavo-wlanap' ]:
+      tag => [ 'puavo', 'opinsys', ];
+
     [ 'ltsp-lightdm'
     , 'opinsys-ca-certificates'
     , 'puavo-ltsp-client'
     , 'puavo-ltsp-install'
-    , 'puavo-register'
-    , 'puavo-wlanap' ]:
-      tag => [ 'puavo', 'opinsys', ];
+    , 'puavo-register' ]:
+      tag => [ 'puavo', 'opinsys', 'thinclient', ];
 
     [ 'vmware-view-client' ]:
       tag => [ 'remote_access', 'vmware-view-client', ];
@@ -677,9 +679,14 @@ class packages {
       tag => [ 'whiteboard-smartboard', 'opinsys', ];
   }
 
-  kernel_package_for_version {
-    '3.6.6-999-generic':
-      package_tags => [ 'kernel', 'opinsys', ];
+  case $lsbdistcodename {
+    'precise': {}
+    'quantal': {
+      kernel_package_for_version {
+        '3.6.6-999-generic':
+          package_tags => 'opinsys';
+      }
+    }
   }
 
   # keep these packages out, we do not want these
