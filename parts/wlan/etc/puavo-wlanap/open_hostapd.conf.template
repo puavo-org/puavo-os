@@ -1,5 +1,5 @@
-interface=#{wlanif}
-bridge=br.#{wlanif}
+interface=#{hostap_interface}
+bridge=br.#{hostap_interface}
 driver=nl80211
 ssid=#{hostap_ssid}
 country_code=FI

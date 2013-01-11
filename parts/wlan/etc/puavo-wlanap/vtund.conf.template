@@ -14,15 +14,15 @@ wlan {
  
     up {
         program "ifconfig %% up";
-	program "brctl addbr br.#{wlanif}";
-	program "ifconfig br.#{wlanif} up";
-	program "brctl addif br.#{wlanif} %%";
+	program "brctl addbr br.#{hostap_interface}";
+	program "ifconfig br.#{hostap_interface} up";
+	program "brctl addif br.#{hostap_interface} %%";
     };
  
     down {
-    	program "brctl delif br.#{wlanif} %%";
-	program "ifconfig br.#{wlanif} down";
-	program "brctl delbr br.#{wlanif}";
+    	program "brctl delif br.#{hostap_interface} %%";
+	program "ifconfig br.#{hostap_interface} down";
+	program "brctl delbr br.#{hostap_interface}";
     	program "ifconfig %% down";
     };
 }

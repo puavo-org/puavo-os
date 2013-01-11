@@ -27,9 +27,9 @@ do
 		hostap_channel=$(echo $line | sed -n 's/^wlanch:\(.*\)$/\1/p')
 	    fi
 
-	    if [ -z $wlanif ]
+	    if [ -z $hostap_interface ]
 	    then
-		wlanif=$(echo $line | sed -n 's/^wlanif:\(.*\)$/\1/p')
+		hostap_interface=$(echo $line | sed -n 's/^wlanif:\(.*\)$/\1/p')
 	    fi
 
 	    if [ -z $hostap_ssid ]
@@ -75,7 +75,7 @@ fi
 
 mkdir -p /var/tmp/puavo-wlanap
 
-sed -e "s/#{wlanif}/$wlanif/g" \
+sed -e "s/#{hostap_interface}/$hostap_interface/g" \
     -e "s/#{hostap_ssid}/$hostap_ssid/g" \
     -e "s/#{hostap_psk}/$hostap_psk/g" \
     -e "s/#{eap_auth_server_addr}/$eap_auth_server_addr/g" \
@@ -86,5 +86,5 @@ sed -e "s/#{wlanif}/$wlanif/g" \
     -e "s/#{eap_acct_server_shared_secret}/$eap_acct_server_shared_secret/g" \
     /etc/puavo-wlanap/${hostap_auth}_hostapd.conf.template > /var/tmp/puavo-wlanap/hostapd.conf
 
-sed -e "s/#{wlanif}/$wlanif/g" \
+sed -e "s/#{hostap_interface}/$hostap_interface/g" \
     /etc/puavo-wlanap/vtund.conf.template > /var/tmp/puavo-wlanap/vtund.conf
