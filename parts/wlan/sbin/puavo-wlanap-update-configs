@@ -48,19 +48,19 @@ done < /etc/puavo/hosttags
 
 if [ -z "$hostap_channel" ]
 then
-    logger -p user.info "hostap_channel is not set, exiting"
+    logger -t puavo-wlanap -s -p user.info "hostap_channel is not set, exiting"
     exit 1
 fi
 
 if [ -z "$hostap_ssid" ]
 then
-    logger -p user.err "hostap_ssid is not set, aborting"
+    logger -t puavo-wlanap -s -p user.err "hostap_ssid is not set, aborting"
     exit 2
 fi
 
 if [ -z "$hostap_auth" ]
 then
-    logger -p user.err "wlan type is not set, aborting"
+    logger -t puavo-wlanap -s -p user.err "wlan type is not set, aborting"
     exit 3
 fi
 
@@ -68,7 +68,7 @@ if [ "$hostap_auth" = "psk" ]
 then
     if [ ${#hostap_psk} -lt 8 -o ${#hostap_psk} -gt 63 ]
     then
-	logger -p user.err "hostap_psk must be 8-63 characters long, aborting"
+	logger -t puavo-wlanap -s -p user.err "hostap_psk must be 8-63 characters long, aborting"
 	exit 4
     fi
 fi

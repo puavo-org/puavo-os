@@ -38,14 +38,14 @@ trap on_exit INT TERM HUP
 vtund -f /var/tmp/puavo-wlanap/vtund.conf wlan $vtun_gateway
 if [ $? -ne 0 ]
 then
-    echo "error: failed to start vtun" | logger -p user.err
+    echo "error: failed to start vtun" | logger -t puavo-wlanap -s -p user.err
     exit 1
 fi
 
 hostapd -B -P /var/tmp/puavo-wlanap/hostapd.pid /var/tmp/puavo-wlanap/hostapd.conf
 if [ $? -ne 0 ]
 then
-    echo "error: failed to start hostapd" | logger -p user.err
+    echo "error: failed to start hostapd" | logger -t puavo-wlanap -s -p user.err
     stop_vtund
     exit 1
 fi
