@@ -78,12 +78,6 @@ mkdir -p /var/tmp/puavo-wlanap
 sed -e "s/#{hostap_interface}/$hostap_interface/g" \
     -e "s/#{hostap_ssid}/$hostap_ssid/g" \
     -e "s/#{hostap_psk}/$hostap_psk/g" \
-    -e "s/#{eap_auth_server_addr}/$eap_auth_server_addr/g" \
-    -e "s/#{eap_auth_server_port}/$eap_auth_server_port/g" \
-    -e "s/#{eap_auth_server_shared_secret}/$eap_auth_server_shared_secret/g" \
-    -e "s/#{eap_acct_server_addr}/$eap_acct_server_addr/g" \
-    -e "s/#{eap_acct_server_port}/$eap_acct_server_port/g" \
-    -e "s/#{eap_acct_server_shared_secret}/$eap_acct_server_shared_secret/g" \
     /etc/puavo-wlanap/${hostap_auth}_hostapd.conf.template > /var/tmp/puavo-wlanap/hostapd.conf
 
 sed -e "s/#{hostap_interface}/$hostap_interface/g" \

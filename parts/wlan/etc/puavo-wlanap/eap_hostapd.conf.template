@@ -14,12 +14,12 @@ wds_sta=1
 
 # eap-specific configuration below
 ieee8021x=1
-auth_server_addr=#{eap_auth_server_addr}
-auth_server_port=#{eap_auth_server_port}
-auth_server_shared_secret=#{eap_auth_server_shared_secret}
-acct_server_addr=#{eap_acct_server_addr}
-acct_server_port=#{eap_acct_server_port}
-acct_server_shared_secret=#{eap_acct_server_shared_secret}
+auth_server_addr=
+auth_server_port=
+auth_server_shared_secret=
+acct_server_addr=
+acct_server_port=
+acct_server_shared_secret=
 wpa=2
 auth_algs=3
 rsn_pairwise=CCMP
