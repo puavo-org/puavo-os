@@ -44,7 +44,7 @@ do
 
     	    ;;
     esac
-done < $puavoroot/hosttags
+done < /etc/puavo/hosttags
 
 if [ -z "$hostap_channel" ]
 then
