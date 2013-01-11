@@ -37,9 +37,9 @@ do
 		ssid=$(echo $line | sed -n 's/^ssid:\(.*\)$/\1/p')
 	    fi
 
-	    if [ -z $password ]
+	    if [ -z $hostap_psk ]
 	    then
-		password=$(echo $line | sed -n 's/^psk:\(.*\)$/\1/p')
+		hostap_psk=$(echo $line | sed -n 's/^psk:\(.*\)$/\1/p')
 	    fi
 
     	    ;;
@@ -66,9 +66,9 @@ fi
 
 if [ "$wlantype" = "psk" ]
 then
-    if [ ${#password} -lt 8 -o ${#password} -gt 63 ]
+    if [ ${#hostap_psk} -lt 8 -o ${#hostap_psk} -gt 63 ]
     then
-	logger -p user.err "password must be 8-63 characters long, aborting"
+	logger -p user.err "hostap_psk must be 8-63 characters long, aborting"
 	exit 4
     fi
 fi
@@ -77,7 +77,7 @@ mkdir -p /var/tmp/puavo-wlanap
 
 sed -e "s/#{wlanif}/$wlanif/g" \
     -e "s/#{ssid}/$ssid/g" \
-    -e "s/#{password}/$password/g" \
+    -e "s/#{hostap_psk}/$hostap_psk/g" \
     -e "s/#{eap_auth_server_addr}/$eap_auth_server_addr/g" \
     -e "s/#{eap_auth_server_port}/$eap_auth_server_port/g" \
     -e "s/#{eap_auth_server_shared_secret}/$eap_auth_server_shared_secret/g" \

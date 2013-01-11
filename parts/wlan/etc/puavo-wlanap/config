@@ -1,6 +1,6 @@
 wlanch=
 server_ip=$(sed -n 's/^SERVER=\(.*\)$/\1/p' /etc/ltsp/getltscfg-cluster.conf)
-password=
+hostap_psk=
 ssid=puavo-wlanap
 wlantype=psk
 puavoroot=
