@@ -8,18 +8,18 @@ while read line
 do
     case line in
     	openwlan)
-    	    wlantype="open"
+    	    hostap_auth="open"
     	    ;;
     	eapwlan)
-    	    wlantype="eap"
+    	    hostap_auth="eap"
     	    ;;
     	pskwlan)
-    	    wlantype="psk"
+    	    hostap_auth="psk"
     	    ;;
     	*)
-	    if [ -z $wlantype ]
+	    if [ -z $hostap_auth ]
 	    then
-		wlantype=$(echo $line | sed -n 's/^wlantype:\(.*\)$/\1/p')
+		hostap_auth=$(echo $line | sed -n 's/^wlantype:\(.*\)$/\1/p')
 	    fi
 
 	    if [ -z $hostap_channel ]
@@ -58,13 +58,13 @@ then
     exit 2
 fi
 
-if [ -z "$wlantype" ]
+if [ -z "$hostap_auth" ]
 then
     logger -p user.err "wlan type is not set, aborting"
     exit 3
 fi
 
-if [ "$wlantype" = "psk" ]
+if [ "$hostap_auth" = "psk" ]
 then
     if [ ${#hostap_psk} -lt 8 -o ${#hostap_psk} -gt 63 ]
     then
@@ -84,7 +84,7 @@ sed -e "s/#{wlanif}/$wlanif/g" \
     -e "s/#{eap_acct_server_addr}/$eap_acct_server_addr/g" \
     -e "s/#{eap_acct_server_port}/$eap_acct_server_port/g" \
     -e "s/#{eap_acct_server_shared_secret}/$eap_acct_server_shared_secret/g" \
-    /etc/puavo-wlanap/${wlantype}_hostapd.conf.template > /var/tmp/puavo-wlanap/hostapd.conf
+    /etc/puavo-wlanap/${hostap_auth}_hostapd.conf.template > /var/tmp/puavo-wlanap/hostapd.conf
 
 sed -e "s/#{wlanif}/$wlanif/g" \
     /etc/puavo-wlanap/vtund.conf.template > /var/tmp/puavo-wlanap/vtund.conf

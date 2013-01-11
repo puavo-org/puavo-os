@@ -2,7 +2,7 @@ hostap_channel=
 vtun_gateway=$(sed -n 's/^SERVER=\(.*\)$/\1/p' /etc/ltsp/getltscfg-cluster.conf)
 hostap_psk=
 hostap_ssid=puavo-wlanap
-wlantype=psk
+hostap_auth=psk
 wlanif=wlan0
 eap_auth_server_addr=$vtun_gateway
 eap_auth_server_port=
