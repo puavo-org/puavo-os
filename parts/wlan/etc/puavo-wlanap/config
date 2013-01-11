@@ -1,6 +1,10 @@
 hostap_channel=
 vtun_gateway=
-hostap_psk=
 hostap_ssid=puavo-wlanap
-hostap_auth=psk
+
+hostap_auth=open
+
+## Uncomment and edit if hostap_auth == psk
+# hostap_psk=
+
 hostap_interface=wlan0
