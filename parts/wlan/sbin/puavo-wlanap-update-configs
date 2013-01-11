@@ -32,9 +32,9 @@ do
 		wlanif=$(echo $line | sed -n 's/^wlanif:\(.*\)$/\1/p')
 	    fi
 
-	    if [ -z $ssid ]
+	    if [ -z $hostap_ssid ]
 	    then
-		ssid=$(echo $line | sed -n 's/^ssid:\(.*\)$/\1/p')
+		hostap_ssid=$(echo $line | sed -n 's/^ssid:\(.*\)$/\1/p')
 	    fi
 
 	    if [ -z $hostap_psk ]
@@ -52,9 +52,9 @@ then
     exit 1
 fi
 
-if [ -z "$ssid" ]
+if [ -z "$hostap_ssid" ]
 then
-    logger -p user.err "wlan ssid is not set, aborting"
+    logger -p user.err "hostap_ssid is not set, aborting"
     exit 2
 fi
 
@@ -76,7 +76,7 @@ fi
 mkdir -p /var/tmp/puavo-wlanap
 
 sed -e "s/#{wlanif}/$wlanif/g" \
-    -e "s/#{ssid}/$ssid/g" \
+    -e "s/#{hostap_ssid}/$hostap_ssid/g" \
     -e "s/#{hostap_psk}/$hostap_psk/g" \
     -e "s/#{eap_auth_server_addr}/$eap_auth_server_addr/g" \
     -e "s/#{eap_auth_server_port}/$eap_auth_server_port/g" \

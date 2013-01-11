@@ -1,7 +1,7 @@
 interface=#{wlanif}
 bridge=br.#{wlanif}
 driver=nl80211
-ssid=#{ssid}
+ssid=#{hostap_ssid}
 country_code=FI
 hw_mode=g
 channel=6
