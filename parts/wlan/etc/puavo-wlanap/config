@@ -1,5 +1,5 @@
 hostap_channel=
-vtun_gateway=$(sed -n 's/^SERVER=\(.*\)$/\1/p' /etc/ltsp/getltscfg-cluster.conf)
+vtun_gateway=
 hostap_psk=
 hostap_ssid=puavo-wlanap
 hostap_auth=psk
