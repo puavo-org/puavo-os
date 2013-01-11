@@ -1,4 +1,4 @@
-wlanch=
+hostap_channel=
 server_ip=$(sed -n 's/^SERVER=\(.*\)$/\1/p' /etc/ltsp/getltscfg-cluster.conf)
 hostap_psk=
 ssid=puavo-wlanap

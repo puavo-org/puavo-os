@@ -22,9 +22,9 @@ do
 		wlantype=$(echo $line | sed -n 's/^wlantype:\(.*\)$/\1/p')
 	    fi
 
-	    if [ -z $wlanch ]
+	    if [ -z $hostap_channel ]
 	    then
-		wlanch=$(echo $line | sed -n 's/^wlanch:\(.*\)$/\1/p')
+		hostap_channel=$(echo $line | sed -n 's/^wlanch:\(.*\)$/\1/p')
 	    fi
 
 	    if [ -z $wlanif ]
@@ -46,9 +46,9 @@ do
     esac
 done < $puavoroot/hosttags
 
-if [ -z "$wlanch" ]
+if [ -z "$hostap_channel" ]
 then
-    logger -p user.info "wlan channel is not set, exiting"
+    logger -p user.info "hostap_channel is not set, exiting"
     exit 1
 fi
 
