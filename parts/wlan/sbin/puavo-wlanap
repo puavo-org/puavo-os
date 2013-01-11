@@ -22,15 +22,19 @@ on_exit()
 . /etc/puavo-wlanap/config
 
 puavo-wlanap-update-configs
+exitval=$?
 
-if [ $? -eq 1 ]
+if [ $exitval -eq 1 ]
 then
+    # puavo-wlanap-update-configs exits with 1 if hostap_channel is
+    # not set. That is fine, the user did not want puavo-wlanap to
+    # run.
     exit 0
 fi
 
-if [ $? -gt 1 ]
+if [ $exitval -gt 1 ]
 then
-    exit $?
+    exit $exitval
 fi
 
 trap on_exit INT TERM HUP
