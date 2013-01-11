@@ -3,7 +3,7 @@ options {
     syslog daemon;
 }
  
-wlan {
+puavo-wlanap {
     passwd    wlan;
     type      ether;
     proto     udp;

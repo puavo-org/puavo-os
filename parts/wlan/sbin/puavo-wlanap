@@ -8,8 +8,8 @@ stop_hostapd()
 
 stop_vtund()
 {
-    kill $(cat /var/run/vtund.wlan-$vtun_gateway.pid)
-    rm /var/run/vtund.wlan-$vtun_gateway.pid
+    kill $(cat /var/run/vtund.puavo-wlanap-$vtun_gateway.pid)
+    rm /var/run/vtund.puavo-wlanap-$vtun_gateway.pid
 }
 
 on_exit()
@@ -35,7 +35,7 @@ fi
 
 trap on_exit INT TERM HUP
 
-vtund -f /var/tmp/puavo-wlanap/vtund.conf wlan $vtun_gateway
+vtund -f /var/tmp/puavo-wlanap/vtund.conf puavo-wlanap $vtun_gateway
 if [ $? -ne 0 ]
 then
     echo "error: failed to start vtun" | logger -t puavo-wlanap -s -p user.err
