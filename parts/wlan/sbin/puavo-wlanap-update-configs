@@ -4,7 +4,7 @@ set -u
 
 . /etc/puavo-wlanap/config
 
-while read line
+[ -f "/etc/puavo/hosttags" ] && while read line
 do
     case line in
     	openwlan)
