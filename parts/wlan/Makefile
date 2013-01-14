@@ -11,14 +11,14 @@ INSTALL_DATA = $(INSTALL) -m 644
 all :
 
 .PHONY : installdirs
-installdirs : build-aux/mkinstalldirs
-	build-aux/mkinstalldirs $(DESTDIR)$(sbindir)
-	build-aux/mkinstalldirs $(DESTDIR)$(sysconfdir)/puavo-wlanap
-	build-aux/mkinstalldirs $(DESTDIR)$(sysconfdir)/default
-	build-aux/mkinstalldirs $(DESTDIR)$(sysconfdir)/init.d
+installdirs :
+	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-wlanap
+	mkdir -p $(DESTDIR)$(sysconfdir)/default
+	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
 
 .PHONY : install
-install : installdirs sbin
+install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		sbin/*
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-wlanap \
