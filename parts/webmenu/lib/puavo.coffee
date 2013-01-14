@@ -18,7 +18,7 @@ injectConfiguration = (config) ->
 
   try
     if hostType = fs.readFileSync("/etc/puavo/hosttype").toString().trim()
-      config.hostType = hostType
+      config.hostType = if hostType is "ltspserver" then "thinclient" else hostType
   catch err
     console.log "WARN: ", "/etc/puavo/hosttype file not found"
 
