@@ -16,34 +16,25 @@ postponed_graceful_exit()
     exit_requested=1
 }
 
-stop_hostapd()
+stop_process()
 {
-    [ -f /var/tmp/puavo-wlanap/hostapd.pid ] || return
-    kill $(cat /var/tmp/puavo-wlanap/hostapd.pid)
-    rm /var/tmp/puavo-wlanap/hostapd.pid
-}
-
-stop_vtund()
-{
-    [ -f /var/run/vtund.puavo-wlanap-$vtun_gateway.pid ] || return
-    kill $(cat /var/run/vtund.puavo-wlanap-$vtun_gateway.pid)
-    rm /var/run/vtund.puavo-wlanap-$vtun_gateway.pid
-}
-
-stop_dhclient()
-{
-    dhclient -r br.$hostap_interface
-    [ -f /var/tmp/puavo-wlanap/dhclient.pid ] || return
-    kill $(cat /var/tmp/puavo-wlanap/dhclient.pid)
-    rm /var/tmp/puavo-wlanap/dhclient.pid
+    local pidfile=$1
+    [ -f $pidfile ] || return
+    read hostapd_pid <$pidfile
+    kill $hostapd_pid
+    wait $hostapd_pid
+    rm -f $pidfile
 }
 
 graceful_exit()
 {
     [ $sleeppid ] && kill $sleeppid
-    stop_dhclient
-    stop_hostapd
-    stop_vtund
+
+    dhclient -r br.$hostap_interface
+    stop_process /var/tmp/puavo-wlanap/dhclient.pid
+    stop_process /var/tmp/puavo-wlanap/hostapd.pid
+    stop_process /var/run/vtund.puavo-wlanap-$vtun_gateway.pid
+
     exit 0
 }
 
