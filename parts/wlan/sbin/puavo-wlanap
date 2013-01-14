@@ -31,6 +31,7 @@ stop_dhclient()
 
 graceful_exit()
 {
+    [ $sleeppid ] && kill $sleeppid
     stop_dhclient
     stop_hostapd
     stop_vtund
@@ -85,7 +86,8 @@ mainloop()
 {
     while true
     do
-	sleep 300
+	sleep 300 & sleeppid=$!
+	wait
 	puavo-wlanap-send-status
     done
 }
