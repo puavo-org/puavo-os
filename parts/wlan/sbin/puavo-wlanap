@@ -1,5 +1,14 @@
 #!/bin/sh
 
+if [ $# -eq 1 ]; then
+    if [ "$1" = "--daemon" ]; then
+        daemon --noconfig --name='puavo-wlanap' -- puavo-wlanap
+        exit 0
+    fi
+    echo "puavo-wlanap: error: unexpected argument '$1'" >&2
+    exit 1
+fi
+
 exit_requested=0
 
 postponed_graceful_exit()
