@@ -70,8 +70,13 @@ then
     graceful_exit
 fi
 
-while true
-do
-    sleep 300
-    puavo-wlanap-send-status
-done
+mainloop()
+{
+    while true
+    do
+	sleep 300
+	puavo-wlanap-send-status
+    done
+}
+
+mainloop
