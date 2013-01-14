@@ -21,8 +21,17 @@ stop_vtund()
     rm /var/run/vtund.puavo-wlanap-$vtun_gateway.pid
 }
 
+stop_dhclient()
+{
+    dhclient -r br.$hostap_interface
+    [ -f /var/tmp/puavo-wlanap/dhclient.pid ] || return
+    kill $(cat /var/tmp/puavo-wlanap/dhclient.pid)
+    rm /var/tmp/puavo-wlanap/dhclient.pid
+}
+
 graceful_exit()
 {
+    stop_dhclient
     stop_hostapd
     stop_vtund
     exit 0
@@ -62,6 +71,8 @@ then
     stop_vtund
     exit 1
 fi
+
+dhclient -pf /var/tmp/puavo-wlanap/dhclient.pid br.$hostap_interface
 
 trap graceful_exit INT TERM HUP
 
