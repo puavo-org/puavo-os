@@ -4,7 +4,6 @@
 posix = require "posix"
 mkdirp = require "mkdirp"
 fs = require "fs"
-os = require "os"
 
 launchCommand = require "./launchcommand"
 menutools = require "./menutools"
@@ -13,7 +12,8 @@ requirefallback = require "./requirefallback"
 puavo = require "./puavo"
 
 webmenuHome = process.env.HOME + "/.config/webmenu"
-spawnPipePath = webmenuHome + "/spawnmenu-" + os.hostname()
+spawnMenu = process.env.SPAWNMENU
+spawnPipePath = webmenuHome + "/spawnmenu" + if spawnMenu then "-#{spawnMenu}" else ""
 mkdirp.sync(webmenuHome)
 
 # TODO: parse cli args when node-webkit 0.3.6 is released

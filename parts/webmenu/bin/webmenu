@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export SPAWNMENU=$(hostname)-$DISPLAY
+
 index=1
 
 while true; do

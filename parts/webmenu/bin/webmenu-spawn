@@ -1,3 +1,10 @@
 #!/bin/sh
-hostname=`hostname`
-nc -U ~/.config/webmenu/spawnmenu-$hostname
+
+DEFAULT_SPAWNMENU=~/.config/webmenu/spawnmenu
+SPAWNMENU=$DEFAULT_SPAWNMENU-$(hostname)-$DISPLAY
+
+nc -U $SPAWNMENU
+
+if [ $? -eq 1 ]; then
+  nc -U $DEFAULT_SPAWNMENU
+fi
