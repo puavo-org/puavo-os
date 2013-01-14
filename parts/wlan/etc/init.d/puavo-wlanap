@@ -8,52 +8,43 @@
 # Should-Stop:
 # Default-Start:	2 3 4 5
 # Default-Stop:		0 1 6
-# Short-Description:	Advanced IEEE 802.11 management daemon
-# Description:		Userspace IEEE 802.11 AP and IEEE 802.1X/WPA/WPA2/EAP
-#			Authenticator
+# Short-Description:	Puavo WLAN Access Point Daemon
+# Description:		Puavo WLAN Access Point Daemon
 ### END INIT INFO
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON_SBIN=/usr/sbin/puavo-wlanapd
 NAME=puavo-wlanap
-DESC="advanced IEEE 802.11 management"
-PIDFILE=/var/run/puavo-wlanap.pid
+EXECUTABLE=/usr/sbin/$NAME
+DESC="Puavo WLAN Access Point Daemon"
+PIDFILE=/var/run/$NAME.pid
 
-[ -x "$DAEMON_SBIN" ] || exit 0
+[ -x "$EXECUTABLE" ] || exit 0
 
 . /lib/lsb/init-functions
 
 case "$1" in
   start)
 	log_daemon_msg "Starting $DESC" "$NAME"
-	start-stop-daemon --start --oknodo --quiet --exec "$DAEMON_SBIN" \
-		--pidfile "$PIDFILE" >/dev/null
+	start-stop-daemon --start --exec "$EXECUTABLE" \
+            --pidfile "$PIDFILE" -- --daemon
 	log_end_msg "$?"
 	;;
   stop)
 	log_daemon_msg "Stopping $DESC" "$NAME"
-	start-stop-daemon --stop --oknodo --quiet --exec "$DAEMON_SBIN" \
-		--pidfile "$PIDFILE"
+	start-stop-daemon --stop --pidfile "$PIDFILE"
 	log_end_msg "$?"
 	;;
-  reload)
-  	log_daemon_msg "Reloading $DESC" "$NAME"
-	start-stop-daemon --stop --signal HUP --exec "$DAEMON_SBIN" \
-		--pidfile "$PIDFILE"
-	log_end_msg "$?"
-	;;
-  restart|force-reload)
+  restart)
   	$0 stop
-	sleep 8
+	sleep 3
 	$0 start
 	;;
   status)
-	status_of_proc "$DAEMON_SBIN" "$NAME"
+	status_of_proc -p "$PIDFILE" "$EXECUTABLE" "$NAME"
 	exit $?
 	;;
   *)
-	N=/etc/init.d/$NAME
-	echo "Usage: $N {start|stop|restart|force-reload|reload|status}" >&2
+	echo "Usage: service $NAME {start|stop|restart|status}" >&2
 	exit 1
 	;;
 esac
