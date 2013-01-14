@@ -46,7 +46,7 @@ then
     exit $exitval
 fi
 
-trap postponed_exit INT TERM HUP
+trap postponed_graceful_exit INT TERM HUP
 
 vtund -f /var/tmp/puavo-wlanap/vtund.conf puavo-wlanap $vtun_gateway
 if [ $? -ne 0 ]
