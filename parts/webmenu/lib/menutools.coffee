@@ -20,7 +20,7 @@ injectDesktopData = (menu, sources, locale, iconSearchPaths, fallbackIcon, hostT
     if menu.osIcon
       menu.osIconPath = osIconPath(iconSearchPaths, menu.osIcon, fallbackIcon)
 
-    if menu.inactiveByDeviceType is hostType
+    if menu.inactiveByDeviceType && menu.inactiveByDeviceType is hostType
       menu.status = "inactive"
 
     if menu.type is "desktop" and menu.id
