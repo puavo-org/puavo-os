@@ -15,6 +15,10 @@ def provide_guest_login(device)
   tags.include?('guest') and not tags.include?('noguest')
 end
 
+def device_tags(device)
+  Array(device['puavoTag']).join(" ")
+end
+
 def device_ltspvars(device)
   devicetype = Array(device['puavoDeviceType']).first
 
@@ -36,7 +40,8 @@ def device_ltspvars(device)
           'NFS_SERVER'           => @boot_server_fqdn,
           'LDM_SERVER'           => @ltsp_server_fqdn,
           'LDM_SESSION'          => '"gnome-session --session=gnome-fallback"',
-          'SSH_OVERRIDE_PORT'    => '222'
+          'SSH_OVERRIDE_PORT'    => '222',
+          'PUAVO_TAGS'           => device_tags(device)
         }
       when 'fatclient'
         {
@@ -51,6 +56,7 @@ def device_ltspvars(device)
           'KEEP_SYSTEM_SERVICES' => '"gssd idmapd rpcbind-boot portmap"',
           'SERVER'               => @boot_server_fqdn,
           'NFS_SERVER'           => @boot_server_fqdn,
+          'PUAVO_TAGS'           => device_tags(device)
         }
       when 'ltspserver'
         {
@@ -61,6 +67,7 @@ def device_ltspvars(device)
           'KEEP_SYSTEM_SERVICES' => '"gssd idmapd rpcbind-boot portmap"',
           'SERVER'               => @boot_server_fqdn,
           'USE_NFS_HOMES'        => 'True',
+          'PUAVO_TAGS'           => device_tags(device)
         }
       else
 	{}
