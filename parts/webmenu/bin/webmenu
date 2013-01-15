@@ -2,9 +2,11 @@
 
 export SPAWNMENU=$(hostname)-$DISPLAY
 
+logdir=$HOME/.config/webmenu/
 index=1
 
+mkdir -p $HOME/.config/webmenu/
 while true; do
-  nw /opt/webmenu > $HOME/.config/webmenu/webmenu$index.log 2>&1
+  nw /opt/webmenu > $logdir/webmenu$index.log 2>&1
   index=`expr $index + 1`
 done
