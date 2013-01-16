@@ -17,6 +17,11 @@ config
 console
     Startup getty on a console device.
 
+cpu_frequency_scaling
+    Disable "ondemand" cpu-frequency scaling (this triggers system freezes
+    on some machines, for example on most "CentaurHauls, VIA Nehemiah" 800MHz
+    processors on ETC-3800 machines).
+
 desktop
     Desktop settings.
 
