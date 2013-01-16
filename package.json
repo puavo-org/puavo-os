@@ -1,0 +1,19 @@
+{
+  "author": "Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>",
+  "name": "logrelay",
+  "private": true,
+  "description": "Opinsys logrelay",
+  "homepage": "https://github.com/opinsys/logrelay",
+  "version": "2.0.0",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/opinsys/logrelay.git"
+  },
+  "dependencies": {
+    "coffee-script": "",
+    "request": ""
+  }
+}

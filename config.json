@@ -1,0 +1,8 @@
+{
+  "user": "logrelay",
+  "group": "nogroup",
+  "updPort": 3858,
+  "initialInterval": 2,
+  "maxInterval": 600,
+  "target": "http://localhost:8080/log"
+}
