@@ -76,7 +76,6 @@ class packages {
     , 'dh-make'
     , 'dpkg-dev'
     , 'fakeroot'
-    , 'gcc'
     , 'gdb'
     , 'gnupg'
     , 'libssl-dev'
