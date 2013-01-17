@@ -1,18 +1,17 @@
-# Logrelay
+# puavo-logrelay
 
-Buffering log relay from UDP to HTTP.  Used by
-[school-status](https://github.com/opinsys/school-status).
+Buffering log relay.
 
-Required Ubuntu Lucid packages:
 
-    ruby libeventmachine-ruby libjson-ruby
+## See also
 
+  - [school-status](https://github.com/opinsys/school-status)
+  - [puavo-monitor](https://github.com/opinsys/puavo-monitor)
 
 ## Usage
 
-Logrelay will listen to the UDP port specified in /etc/logrelay.rb
-and will relay the UDP packets to given target as JSON HTTP POST.  See
-`config.rb-example`.
+Logrelay will listen to the UDP port specified in /etc/logrelay.json
+and will relay the UDP packets to given target as JSON HTTP POST.
 
 ## Packet format
 
@@ -32,6 +31,3 @@ Example
 
 See `stream_test_packets.sh` for netcat based examples
 
-For Ruby based example see [wlan-state][] script.
-
-[wlan-state]: https://github.com/opinsys/wlan-state
