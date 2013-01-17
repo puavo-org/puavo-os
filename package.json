@@ -6,7 +6,7 @@
   "homepage": "https://github.com/opinsys/logrelay",
   "version": "2.0.0",
   "scripts": {
-    "test": "node test.js"
+    "start": "node_modules/.bin/coffee server.coffee"
   },
   "repository": {
     "type": "git",
