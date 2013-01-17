@@ -9,5 +9,5 @@ $TTL 0		; no TTL
 				)
 			NS      ns1.<%= @puavo_domain %>.
 $ORIGIN <%= @puavo_domain %>.
-ns1			A	<%= @ltsp_iface_ip %>
+ns1			A	<%= @ltsp_iface.ip %>
 
