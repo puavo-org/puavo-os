@@ -10,7 +10,7 @@ JSONStream = require "json-stream"
 
 Sender = require "./sender"
 
-config = require "./config.json"
+config = require "/etc/puavo-logrelay.json"
 
 USERNAME = fs.readFileSync("/etc/puavo/ldap/dn").toString().trim()
 PASSWORD = fs.readFileSync("/etc/puavo/ldap/password").toString().trim()
