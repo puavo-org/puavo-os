@@ -1,0 +1,19 @@
+{
+  "author": "Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>",
+  "name": "uptimesocket",
+  "private": true,
+  "description": "Uptime socket keeping track of client usage",
+  "homepage": "https://github.com/opinsys/uptimesocket",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node_modules/.bin/coffee index.coffee"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/opinsys/uptimesocket.git"
+  },
+  "dependencies": {
+    "coffee-script": ""
+  }
+}
+
