@@ -1,12 +1,15 @@
 
 prefix ?= /usr/local
 
-all:
+build:
+	npm install
 
-install:
-	mkdir -p $(DESTDIR)$(prefix)/bin
-	install -o root -g root -m 755 server.rb \
-		$(DESTDIR)$(prefix)/bin/logrelay
+install-dirs:
+	mkdir -p $(DESTDIR)/opt/puavo-logrelay
 	mkdir -p $(DESTDIR)/etc
-	install -o root -g root -m 644 config.rb-dist \
-		$(DESTDIR)/etc/logrelay.rb
+
+install: install-dirs
+	cp -r package.json node_modules/ lib/ $(DESTDIR)/opt/puavo-logrelay
+	install -m 644 config.json $(DESTDIR)/etc/puavo-logrelay.json
+
+
