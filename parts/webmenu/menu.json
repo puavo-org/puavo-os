@@ -26,10 +26,12 @@
           "command": ["nautilus --no-default-window --no-desktop burn:/// "],
           "description": "Luo CD:itä ja DVD:itä",
           "osIcon":"media-cdrom"
+          "inactiveByDeviceType": "thinclient"
         },
         {
           "type": "desktop",
           "id": "brasero"
+          "inactiveByDeviceType": "thinclient"
         },
         {
           "type": "desktop",
@@ -102,10 +104,12 @@
         {
           "type": "desktop",
           "id": "simple-scan"
+          "inactiveByDeviceType": "thinclient"
         },
         {
           "type": "desktop",
           "id": "xsane"
+          "inactiveByDeviceType": "thinclient"
         }
           ]
     },
@@ -150,6 +154,7 @@
         {
           "type": "desktop",
           "id": "googleearth"
+          "inactiveByDeviceType": "thinclient"
         },
         {
           "type": "desktop",
@@ -298,10 +303,12 @@
         {
           "type": "desktop",
           "id": "celestia"
+          "inactiveByDeviceType": "thinclient"
         },
         {
           "type": "desktop",
           "id": "stellarium"
+          "inactiveByDeviceType": "thinclient"
         },
         {
           "type": "desktop",
@@ -314,6 +321,7 @@
         {
           "type": "desktop",
           "id": "ghemical"
+          "inactiveByDeviceType": "thinclient"
         },
         {
           "type": "desktop",
@@ -453,6 +461,7 @@
         {
           "type": "desktop",
           "id": "cheese"
+          "inactiveByDeviceType": "thinclient"
         },
         {
           "type": "desktop",
