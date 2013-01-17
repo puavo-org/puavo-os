@@ -5,6 +5,8 @@ config = require "./config"
 rand10to60 = -> (10 + parseInt(Math.random() * 50)) * 1000
 
 retry = ->
+  # Retry connection after some timeout if logrelay disconnects us. Use random
+  # timeout to somewhat balance reconnections.
   setTimeout ->
     connect(true)
   , rand10to60()
