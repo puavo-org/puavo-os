@@ -1,16 +1,16 @@
 {
   "author": "Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>",
-  "name": "logrelay",
+  "name": "puavo-logrelay",
   "private": true,
-  "description": "Opinsys logrelay",
-  "homepage": "https://github.com/opinsys/logrelay",
+  "description": "Buffering logrelay",
+  "homepage": "https://github.com/opinsys/puavo-logrelay",
   "version": "2.0.0",
   "scripts": {
-    "start": "node_modules/.bin/coffee server.coffee"
+    "start": "node_modules/.bin/coffee lib/server.coffee"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/opinsys/logrelay.git"
+    "url": "git://github.com/opinsys/puavo-logrelay.git"
   },
   "dependencies": {
     "coffee-script": "",
