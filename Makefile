@@ -17,7 +17,8 @@ install-dirs:
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/etc/bind
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/var/lib/bind
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/init
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ldap
@@ -64,6 +65,14 @@ install: install-dirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates \
 		bootserver/templates/ltsp-server.xml
 
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/etc/bind \
+		bootserver/templates/etc/bind/named.conf.local \
+		bootserver/templates/etc/bind/named.conf.options
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/var/lib/bind \
+		bootserver/templates/var/lib/bind/puavo_domain \
+		bootserver/templates/var/lib/bind/puavo_domain_reverse
+
 	$(INSTALL_PROGRAM) -t $(DESTDIR)/sbin \
 		client/init-puavo 
 
@@ -73,6 +82,8 @@ install: install-dirs
 		client/puavo-ltsp-login \
 		client/puavo-ltsp-mount-nfs-home \
 		bootserver/puavo-create-kvm-ltsp-server \
+		bootserver/puavo-init-bootserver-ddns \
+		bootserver/puavo-update-ddns \
 		install/puavo-install \
 		install/puavo-install-grub \
 		install/puavo-install-ltspimages \
