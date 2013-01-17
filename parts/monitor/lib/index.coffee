@@ -1,6 +1,7 @@
 
 net = require "net"
-config = require "./config"
+
+config = require "/etc/puavo-monitor.json"
 
 rand10to60 = -> (10 + parseInt(Math.random() * 50)) * 1000
 
