@@ -6,5 +6,5 @@ Monitor daemon for fat- and thinclients. Keeps active tcp connection open to the
 client is up and running.
 
 
-[logrelay]: https://github.com/opinsys/logrelay
+[logrelay]: https://github.com/opinsys/puavo-logrelay
 
