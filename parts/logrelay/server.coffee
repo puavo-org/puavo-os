@@ -1,11 +1,13 @@
 
 dgram = require "dgram"
+net = require "net"
 os = require "os"
 fs = require "fs"
 url = require "url"
 
+_ = require "underscore"
+JSONStream = require "json-stream"
 
-config = require "./config.json"
 Sender = require "./sender"
 
 config = require "./config.json"
@@ -39,21 +41,59 @@ targetUrl = url.parse(config.target)
 targetUrl.auth = "#{ USERNAME }:#{ PASSWORD }"
 targetUrl = url.format(targetUrl)
 
+###*
+# Extend Object with relay metadata
+#
+# @param {Object} packet
+# @return {Object} packet
+###
+extendRelayMeta = (packet) ->
+  return _.extend {}, packet, {
+    relay_hostname: RELAY_HOSTNAME
+    relay_puavo_domain: PUAVO_DOMAIN
+    relay_timestamp: Date.now()
+  }
+
+
 sender = new Sender(
   targetUrl
   config.initialInterval
   config.maxInterval
 )
 
-udpserver = dgram.createSocket("udp4")
 
-udpserver.on "message", (msg, rinfo) ->
+tcpServer = net.createServer (c) ->
+  jsonStream = new JSONStream()
+  machine = null
 
-  packet = {
-    relay_hostname: RELAY_HOSTNAME
-    relay_puavo_domain: PUAVO_DOMAIN
-    relay_timestamp: Date.now()
-  }
+  jsonStream.on "data", (packet) ->
+    console.log packet
+    packet = extendRelayMeta(packet)
+
+    if packet.type is "desktop" and packet.event is "bootend"
+      console.log "Started", packet
+      machine = packet
+
+    if machine
+      sender.send(packet)
+
+  c.on "close", ->
+    console.log "CLOSED", machine
+    # Convert start packet to shutdown packet
+    # Update relay metadata
+    endPacket = extendRelayMeta(machine)
+    endPacket.event = "shutdown"
+    endPacket.date = Date.now()
+    sender.send(endPacket)
+
+  c.pipe(jsonStream)
+
+
+udpServer = dgram.createSocket("udp4")
+
+udpServer.on "message", (msg, rinfo) ->
+
+  packet = {}
 
   msg.toString().split("\n").forEach (line) ->
     [k, v] = line.split(":")
@@ -65,11 +105,16 @@ udpserver.on "message", (msg, rinfo) ->
 
     packet[k] = v
 
-  console.log "PACKET", packet
+  packet = extendRelayMeta(packet)
   sender.send(packet)
 
-udpserver.on "listening", ->
-  address = udpserver.address()
-  console.log "Listening on #{ address.address }:#{ address.port }"
+udpServer.on "listening", ->
+  address = udpServer.address()
+  console.log "UDP listening on #{ address.address }:#{ address.port }"
 
-udpserver.bind(config.updPort)
+tcpServer.on "listening", ->
+  address = tcpServer.address()
+  console.log "TCP listening on #{ address.address }:#{ address.port }"
+
+udpServer.bind(config.updPort)
+tcpServer.listen(config.tcpPort)
