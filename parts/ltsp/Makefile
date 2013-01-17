@@ -17,7 +17,9 @@ install-dirs:
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/etc/apparmor.d/local
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/etc/bind
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/etc/dhcp
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/var/lib/bind
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/init
@@ -64,6 +66,15 @@ install: install-dirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates \
 		bootserver/templates/ltsp-server.xml
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/etc/apparmor.d/local \
+		bootserver/templates/etc/apparmor.d/local/usr.sbin.dhcpd
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/etc \
+		bootserver/templates/etc/dnsmasq.conf
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/etc/dhcp \
+		bootserver/templates/etc/dhcp/dhcpd.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/etc/bind \
 		bootserver/templates/etc/bind/named.conf.local \
