@@ -5,10 +5,8 @@ class packages::purged {
   Package { ensure => purged, }
 
   @package {
-    [ 'indicator-session'       # we do not want this functionality
-
     # the functionality in these is not for our end users
-    , 'software-properties-gtk'
+    [ 'software-properties-gtk'
     , 'synaptic'
     , 'ubuntu-release-upgrader-gtk'
     , 'update-manager'

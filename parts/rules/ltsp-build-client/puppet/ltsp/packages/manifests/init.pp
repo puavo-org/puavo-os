@@ -445,7 +445,7 @@ class packages {
     , 'cups'
     , 'cups-bsd'
     , 'cups-client'
-    , 'deja-dup'
+    # , 'deja-dup'              # not needed
     , 'dmz-cursor-theme'
     , 'doc-base'
     , 'empathy'
