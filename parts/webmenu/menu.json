@@ -25,12 +25,12 @@
           "name": "CD/DVD-luontityökalu",
           "command": ["nautilus --no-default-window --no-desktop burn:/// "],
           "description": "Luo CD:itä ja DVD:itä",
-          "osIcon":"media-cdrom"
+          "osIcon":"media-cdrom",
           "inactiveByDeviceType": "thinclient"
         },
         {
           "type": "desktop",
-          "id": "brasero"
+          "id": "brasero",
           "inactiveByDeviceType": "thinclient"
         },
         {
@@ -103,12 +103,12 @@
         },
         {
           "type": "desktop",
-          "id": "simple-scan"
+          "id": "simple-scan",
           "inactiveByDeviceType": "thinclient"
         },
         {
           "type": "desktop",
-          "id": "xsane"
+          "id": "xsane",
           "inactiveByDeviceType": "thinclient"
         }
           ]
@@ -153,7 +153,7 @@
         },
         {
           "type": "desktop",
-          "id": "googleearth"
+          "id": "googleearth",
           "inactiveByDeviceType": "thinclient"
         },
         {
@@ -302,12 +302,12 @@
         },
         {
           "type": "desktop",
-          "id": "celestia"
+          "id": "celestia",
           "inactiveByDeviceType": "thinclient"
         },
         {
           "type": "desktop",
-          "id": "stellarium"
+          "id": "stellarium",
           "inactiveByDeviceType": "thinclient"
         },
         {
@@ -320,7 +320,7 @@
         },
         {
           "type": "desktop",
-          "id": "ghemical"
+          "id": "ghemical",
           "inactiveByDeviceType": "thinclient"
         },
         {
@@ -460,7 +460,7 @@
         },
         {
           "type": "desktop",
-          "id": "cheese"
+          "id": "cheese",
           "inactiveByDeviceType": "thinclient"
         },
         {
