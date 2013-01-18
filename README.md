@@ -4,7 +4,7 @@ Buffering log relay.
 
 ## Installation
 
-Dependencies: nodejs-bundle
+Dependencies: node.js
 
     make
     sudo make install
