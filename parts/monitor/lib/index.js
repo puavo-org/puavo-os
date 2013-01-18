@@ -39,7 +39,7 @@ function basePacket(event, extra) {
 function connect(reconnect) {
 
   var client = net.connect(config.tcpPort, config.host);
-  var timer;
+  var loopTimer;
 
   client.on("connect", function() {
     console.log("Connected to " + config.host + ":" + config.tcpPort +
@@ -79,7 +79,7 @@ function connect(reconnect) {
           client.write(JSON.stringify("ping") + "\n");
 
           // two minute loop
-          timer = setTimeout(loginLoop, 60 * 2 * 1000);
+          loopTimer = setTimeout(loginLoop, 60 * 2 * 1000);
         });
       }());
 
@@ -96,7 +96,7 @@ function connect(reconnect) {
   });
 
   client.on("close", function() {
-    clearTimeout(timer);
+    clearTimeout(loopTimer);
     console.log("Connection closed. Reconnecting soon.");
     retry();
   });
