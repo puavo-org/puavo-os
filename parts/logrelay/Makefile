@@ -7,6 +7,7 @@ build:
 install-dirs:
 	mkdir -p $(DESTDIR)$(prefix)/lib/node_modules/puavo-logrelay
 	mkdir -p $(DESTDIR)/etc
+	mkdir -p $(DESTDIR)$(prefix)/bin
 
 install: install-dirs
 	cp -r package.json node_modules/ lib/ bin/ $(DESTDIR)$(prefix)/lib/node_modules/puavo-logrelay
