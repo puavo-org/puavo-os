@@ -2,8 +2,8 @@
 var exec = require('child_process').exec;
 
 /**
- * Determine which user is using this computer. Assumes that user using tty7 is
- * the one physically using it.
+ * Determine which user is using this computer. Just assume someone is
+ * physically using it if some tty is being used.
  *
  * @param {Function} callback
  *  @param {Error} callback.error Error object or null
@@ -15,7 +15,7 @@ function getXUser(cb) {
     var match;
     if (err) return cb(err);
 
-    if (match = stdout.match(/(\w+)\s+tty7/)) {
+    if (match = stdout.match(/(\w+)\s+tty[0-9]{1}/)) {
       return cb(null, match[1]);
     }
 
