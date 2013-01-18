@@ -69,11 +69,16 @@ tcpServer = net.createServer (c) ->
   machine = null
 
   jsonStream.on "data", (packet) ->
-    console.log "PACKET", packet
+
+    if packet is "ping"
+      return c.write("pong")
+
+
     packet = extendRelayMeta(packet)
 
+    console.log "Packet from tcp: ", packet
+
     if packet.type is "desktop" and packet.event is "bootend"
-      console.log "Boot end event for", packet
       machine = packet
 
     if machine
@@ -107,6 +112,7 @@ udpServer.on "message", (msg, rinfo) ->
     packet[k] = v
 
   packet = extendRelayMeta(packet)
+  console.log "Packet from udp: ", packet
   sender.send(packet)
 
 udpServer.on "listening", ->
