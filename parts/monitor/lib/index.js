@@ -2,6 +2,8 @@
 var os = require("os");
 var net = require("net");
 var config = require("/etc/puavo-monitor.json");
+var _ = require("underscore");
+
 
 var hostname = os.hostname();
 var devices = require("./devices");
