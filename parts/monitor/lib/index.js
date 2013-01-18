@@ -1,2 +1,60 @@
-require("coffee-script");
-require("./index.coffee");
+
+var os = require("os");
+var net = require("net");
+var config = require("/etc/puavo-monitor.json");
+
+var hostname = os.hostname();
+var devices = require("./devices");
+
+/**
+ * @return random int from 10000 to 60000
+ **/
+function rand10to60() {
+  return (10 + parseInt(Math.random() * 50, 10)) * 1000;
+}
+
+/**
+ * Retry connection after some timeout if logrelay disconnects us. Use random
+ * timeout to somewhat balance reconnections.
+ **/
+function retry() {
+  setTimeout(function() {
+    connect(true);
+  }, rand10to60());
+}
+
+connect = function(reconnect) {
+
+  var client = net.connect(config.tcpPort, config.host);
+
+  client.on("connect", function() {
+    console.log("Connected to " + config.host + ":" + config.tcpPort + ". Reconnect: " + reconnect);
+    var packet = {
+      type: "desktop",
+      event: "bootend",
+      date: Date.now(),
+      hostname: hostname,
+      devices: devices
+    };
+
+    if (reconnect) {
+      packet.reconnect = true;
+      console.log("reconnecting");
+    }
+
+    client.write(JSON.stringify(packet) + "\n");
+  });
+
+  client.on("close", function() {
+    console.log("Connection closed. Reconnecting soon.");
+    retry();
+  });
+
+  client.on("error", function(err) {
+    console.log("Connection failed. Reconnecting soon.");
+    retry();
+  });
+
+};
+
+connect();
