@@ -1,7 +1,11 @@
 
+os = require "os"
 net = require "net"
 
 config = require "/etc/puavo-monitor.json"
+
+hostname = os.hostname()
+devices = require "./devices"
 
 rand10to60 = -> (10 + parseInt(Math.random() * 50)) * 1000
 
@@ -26,6 +30,8 @@ connect = (reconnect=false) ->
       type: "desktop"
       event: "bootend"
       date: Date.now()
+      hostname: hostname
+      devices: devices
     }
 
     if reconnect
