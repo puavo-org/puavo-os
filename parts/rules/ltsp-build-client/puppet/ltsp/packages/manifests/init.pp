@@ -247,8 +247,9 @@ class packages {
     , 'ltsp-server' ]:
       tag => [ 'ltsp', 'ubuntu', ];
 
-    [ 'libdvdcss2' ]:
-      tag => [ 'mediaplayer', ];
+# XXX disable for now
+#   [ 'libdvdcss2' ]:
+#     tag => [ 'mediaplayer', ];
 
     [ 'spotify-client-qt' ]:
       tag => [ 'mediaplayer', ];
@@ -297,9 +298,10 @@ class packages {
     , 'tuxguitar' ]:
       tag => [ 'music_making', 'ubuntu', ];
 
-    [ 'acroread'
-    , 'cmaptools' ]:
-      tag => [ 'office', ];
+# XXX disable for now
+#   [ 'acroread'
+#   , 'cmaptools' ]:
+#     tag => [ 'office', ];
 
     [ 'libreoffice'
     , 'libreoffice-base'
@@ -415,8 +417,8 @@ class packages {
     , 'xscreensaver-data-extra' ]:
       tag => [ 'themes', 'ubuntu', ];
 
-    # the dependencies of ubuntu-gnome-desktop package without
-    # the tracker package
+    # the dependencies of ubuntu-gnome-desktop package
+    # without a few packages that we do not want
     [ 'abiword'
     , 'acpi-support'
     , 'aisleriot'
@@ -585,12 +587,12 @@ class packages {
     , 'seahorse'
     , 'shotwell'
     , 'simple-scan'
-    , 'software-properties-gtk'
+    # , 'software-properties-gtk'       # purged elsewhere
     , 'speech-dispatcher'
     , 'ssh-askpass-gnome'
     , 'telepathy-idle'
     , 'totem'
-    # , 'tracker'       # no tracker!
+    # , 'tracker'                       # purged elsewhere
     , 'transmission-gtk'
     , 'ttf-dejavu-core'
     , 'ttf-indic-fonts-core'
@@ -650,23 +652,25 @@ class packages {
     , 'openjdk-6-jre' ]:
       tag => [ 'web', 'ubuntu', ];
 
-    'mimio-studio':
-      tag => [ 'whiteboard-mimio', ];
+# XXX disabled for now
+#   'mimio-studio':
+#     tag => [ 'whiteboard-mimio', ];
 
-    [ 'activaid'
-    , 'activdriver'
-    , 'activhwr-fi'
-    , 'activhwr-sv'
-    , 'activinspire'
-    , 'activinspire-help-en-gb'
-    , 'activinspire-help-fi'
-    , 'activinspire-help-sv'
-    , 'activ-meta-fi'
-    , 'activresources-core-en'
-    , 'activresources-core-fi'
-    , 'activresources-core-sv'
-    , 'activtools' ]:
-      tag => [ 'whiteboard-promethean', ];
+# XXX disabled for now
+#   [ 'activaid'
+#   , 'activdriver'
+#   , 'activhwr-fi'
+#   , 'activhwr-sv'
+#   , 'activinspire'
+#   , 'activinspire-help-en-gb'
+#   , 'activinspire-help-fi'
+#   , 'activinspire-help-sv'
+#   , 'activ-meta-fi'
+#   , 'activresources-core-en'
+#   , 'activresources-core-fi'
+#   , 'activresources-core-sv'
+#   , 'activtools' ]:
+#     tag => [ 'whiteboard-promethean', ];
 
     [ 'nwfermi'
     , 'smart-activation'
@@ -693,8 +697,16 @@ class packages {
 
   # keep these packages out, we do not want these
   @package {
-    [ 'tftpd-hpa', ]:
+    [ 'indicator-session'       # we do not want this functionality
+
+    , 'software-properties-gtk' # this functionality is not for our end users
+
+    , 'tftpd-hpa'               # this is suggested by ltsp-server, but
+                                # we do not actually use tftpd on ltsp-server
+                                # (we use a separate boot server)
+
+    , 'tracker' ]:              # this uses too much resources when using nfs
       ensure => purged,
-      tag    => [ 'basic', 'ubuntu', ];
+      tag    => [ 'ubuntu', ];
   }
 }
