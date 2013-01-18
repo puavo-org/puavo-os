@@ -24,7 +24,7 @@ connect = (reconnect=false) ->
   )
 
   client.on "connect", ->
-    console.log "connect"
+    console.log "Connected to #{ config.host }:#{ config.tcpPort }. Reconnect: #{ reconnect }"
 
     packet = {
       type: "desktop"
