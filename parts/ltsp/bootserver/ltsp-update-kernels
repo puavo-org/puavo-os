@@ -198,8 +198,4 @@ for tftpdir in $TFTP_DIRS; do
     for name in "$@"; do
         update_kernels "$name" "$tftpdir"
     done
-    # Update selinux file contexts if necessary
-    if [ -f /selinux/enforce ] && [ -x /sbin/restorecon ]; then
-        restorecon -R "$tftpdir" > /dev/null
-    fi
 done
