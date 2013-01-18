@@ -26,6 +26,7 @@ function retry() {
 connect = function(reconnect) {
 
   var client = net.connect(config.tcpPort, config.host);
+  var interval;
 
   client.on("connect", function() {
     console.log("Connected to " + config.host + ":" + config.tcpPort + ". Reconnect: " + reconnect);
@@ -42,15 +43,22 @@ connect = function(reconnect) {
       console.log("reconnecting");
     }
 
+    // Write ping messages to keep connection alive
+    interval = setInterval(function() {
+      client.write(JSON.stringify("ping") + "\n");
+    }, 10 * 1000);
+
     client.write(JSON.stringify(packet) + "\n");
   });
 
   client.on("close", function() {
+    clearInterval(interval);
     console.log("Connection closed. Reconnecting soon.");
     retry();
   });
 
   client.on("error", function(err) {
+    clearInterval(interval);
     console.log("Connection failed. Reconnecting soon.");
     retry();
   });
