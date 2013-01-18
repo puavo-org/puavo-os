@@ -64,6 +64,8 @@ sender = new Sender(
 
 tcpServer = net.createServer (c) ->
   jsonStream = new JSONStream()
+
+  # Client machine owning this connection
   machine = null
 
   jsonStream.on "data", (packet) ->
@@ -71,16 +73,15 @@ tcpServer = net.createServer (c) ->
     packet = extendRelayMeta(packet)
 
     if packet.type is "desktop" and packet.event is "bootend"
-      console.log "Started", packet
+      console.log "Boot end event for", packet
       machine = packet
 
     if machine
       sender.send(packet)
 
+  # When tcp connection closes asume that the client machine was shutdown.
   c.on "close", ->
     console.log "Connection closed for", machine
-    # Convert start packet to shutdown packet
-    # Update relay metadata
     endPacket = extendRelayMeta(machine)
     endPacket.event = "shutdown"
     endPacket.date = Date.now()
