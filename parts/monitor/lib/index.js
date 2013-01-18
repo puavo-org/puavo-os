@@ -23,7 +23,7 @@ function retry() {
   }, rand10to60());
 }
 
-connect = function(reconnect) {
+function connect(reconnect) {
 
   var client = net.connect(config.tcpPort, config.host);
   var interval;
@@ -63,6 +63,6 @@ connect = function(reconnect) {
     retry();
   });
 
-};
+}
 
 connect();
