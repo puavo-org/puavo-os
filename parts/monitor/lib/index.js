@@ -64,11 +64,11 @@ function connect(reconnect) {
 
             // Ignore username completely here to keep statistics anonymoys
             if (username) {
-              console.log("Userlogged in", username);
+              console.log("User logged in", username);
               client.write(JSON.stringify(basePacket("login")) + "\n");
             }
             else {
-              console.log("Userlogged out", currentUser);
+              console.log("User logged out", currentUser);
               client.write(JSON.stringify(basePacket("logout")) + "\n");
             }
 
