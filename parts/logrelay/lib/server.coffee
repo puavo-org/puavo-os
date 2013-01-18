@@ -67,7 +67,7 @@ tcpServer = net.createServer (c) ->
   machine = null
 
   jsonStream.on "data", (packet) ->
-    console.log packet
+    console.log "PACKET", packet
     packet = extendRelayMeta(packet)
 
     if packet.type is "desktop" and packet.event is "bootend"
@@ -78,7 +78,7 @@ tcpServer = net.createServer (c) ->
       sender.send(packet)
 
   c.on "close", ->
-    console.log "CLOSED", machine
+    console.log "Connection closed for", machine
     # Convert start packet to shutdown packet
     # Update relay metadata
     endPacket = extendRelayMeta(machine)

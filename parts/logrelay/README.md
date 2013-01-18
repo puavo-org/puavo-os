@@ -2,16 +2,19 @@
 
 Buffering log relay.
 
+## Installation
 
-## See also
+Dependencies: nodejs-bundle
 
-  - [school-status](https://github.com/opinsys/school-status)
-  - [puavo-monitor](https://github.com/opinsys/puavo-monitor)
+    make
+    sudo make install
 
 ## Usage
 
 Logrelay will listen to the UDP port specified in /etc/logrelay.json
 and will relay the UDP packets to given target as JSON HTTP POST.
+
+    sudo puavo-logrelay
 
 ## Packet format
 
@@ -31,3 +34,7 @@ Example
 
 See `stream_test_packets.sh` for netcat based examples
 
+## See also
+
+  - [school-status](https://github.com/opinsys/school-status)
+  - [puavo-monitor](https://github.com/opinsys/puavo-monitor)
