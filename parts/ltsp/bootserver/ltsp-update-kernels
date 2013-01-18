@@ -35,14 +35,65 @@ usage() {
     cat <<EOF
 Usage: $0 [OPTION] [CHROOT...]
 Copies the chroot kernels to the TFTP directory. The TFTP directory
-can be set in /etc/ltsp/ltsp-server.conf using a TFTP_DIR and a
-TFTP_BOOT_DIR. The default TFTP directories are 
-/var/lib/tftpboot/ltsp, /tftpboot/ltsp and /srv/tftp/ltsp.
+can be set in TFTP_DIRS environment variable, which defaults to
+/var/lib/tftpboot, /tftpboot and /srv/tftp.
 
 Options:
   -b, --base=          The LTSP base directory. Defaults to "/opt/ltsp".
   -h, --help           This message.
 EOF
+}
+
+die() {
+    echo "$@" >&2
+    exit 1
+}
+
+require_root()
+{
+    if [ ${UID:-$(id -u)} -ne 0 ]; then
+        die "Superuser privileges are needed."
+    fi
+}
+
+# Remember mounted dirs so that it's easier to unmount them with a single call
+# to umount_marked. They'll be unmounted in reverse order.
+# Use the normal mount syntax, e.g.
+#   mark_mount -t proc proc "$ROOT/proc"
+mark_mount() {
+    local dir
+
+    # The last parameter is the dir we need to remember to unmount
+    dir=$(eval "echo \$$#")
+    if mount "$@"; then
+        # Use newlines to separate dirs, in case they contain spaces
+        if [ -z "$MARKED_MOUNTS" ]; then
+            MARKED_MOUNTS="$dir"
+        else
+            MARKED_MOUNTS="$dir
+$MARKED_MOUNTS"
+        fi
+    else
+        die "Could not mount $dir."
+    fi
+}
+
+umount_marked() {
+    [ -z "$MARKED_MOUNTS" ] && return
+
+    echo "$MARKED_MOUNTS" | while read dir; do
+        # binfmt_misc might need to be unmounted manually, see LP #534211
+        if [ "$dir%/proc}" != "$dir" ] && 
+            [ -d "$dir/sys/fs/binfmt_misc" ] && [ -f "$dir/mounts" ] &&
+            grep -q "^binfmt_misc $dir/sys/fs/binfmt_misc" "$dir/mounts"; then
+            if ! umount "$dir/sys/fs/binfmt_misc"; then
+                echo "Couldn't unmount $dir/sys/fs/binfmt_misc." >&2
+            fi
+        fi
+        if ! umount "$dir"; then
+            echo "Couldn't unmount $dir." >&2
+        fi
+    done
 }
 
 trap_cleanup() {
@@ -151,9 +202,6 @@ cleanup_kernels() {
     done
 }
 
-# This also sources vendor functions and .conf file settings
-. /usr/share/ltsp/ltsp-server-functions
-
 if ! args=$(getopt -n "$0" -o b:h \
     -l "base:,help" -- "$@")
 then
@@ -190,7 +238,10 @@ if [ $# -eq 0 ]; then
 fi
 test $# -gt 0 || die "No chroots found in $BASE"
 
+TFTP_BOOT_DIR=${TFTP_BOOT_DIR:-"ltsp"}
+TFTP_DIRS=${TFTP_DIRS:-"/var/lib/tftpboot" "/tftpboot" "/srv/tftp"}
 for tftpdir in $TFTP_DIRS; do
+    tftpdir=${tftpdir%/}
     if [ ! -d "$tftpdir" ]; then
         # skip directory
         continue
