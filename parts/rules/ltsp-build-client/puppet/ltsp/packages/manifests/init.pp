@@ -557,7 +557,9 @@ class packages {
     , 'mutter'
     , 'nautilus'
     , 'nautilus-sendto'
-    , 'nautilus-share'
+    # , 'nautilus-share'                        # this forces
+                                                # software-properties-gtk
+                                                # to be installed
     , 'network-manager-gnome'
     , 'network-manager-pptp'
     , 'network-manager-pptp-gnome'
@@ -699,13 +701,18 @@ class packages {
   @package {
     [ 'indicator-session'       # we do not want this functionality
 
-    , 'software-properties-gtk' # this functionality is not for our end users
-
     , 'tftpd-hpa'               # this is suggested by ltsp-server, but
                                 # we do not actually use tftpd on ltsp-server
                                 # (we use a separate boot server)
 
-    , 'tracker' ]:              # this uses too much resources when using nfs
+    , 'tracker'                 # this uses too much resources when using nfs
+
+    # the functionality in these is not for our end users
+    , 'software-properties-gtk'
+    , 'synaptic'
+    , 'ubuntu-release-upgrader-gtk'
+    , 'update-manager'
+    , 'update-notifier' ]:
       ensure => purged,
       tag    => [ 'ubuntu', ];
   }
