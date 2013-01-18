@@ -43,7 +43,8 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-create-kvm-ltsp-server \
 		puavo-init-bootserver-ddns \
-		puavo-update-ddns
+		puavo-update-ddns \
+		ltsp-update-kernels
 
 .PHONY : clean
 clean :
