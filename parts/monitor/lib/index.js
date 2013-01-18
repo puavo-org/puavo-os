@@ -5,6 +5,7 @@ var config = require("/etc/puavo-monitor.json");
 
 var hostname = os.hostname();
 var devices = require("./devices");
+var getXUser = require("./user");
 
 /**
  * @return random int from 10000 to 60000
@@ -23,42 +24,83 @@ function retry() {
   }, rand10to60());
 }
 
+function basePacket(event, extra) {
+  return _.extend({
+    type: "desktop",
+    event: event,
+    date: Date.now(),
+    hostname: hostname,
+    devices: devices
+  }, extra);
+}
+
 function connect(reconnect) {
 
   var client = net.connect(config.tcpPort, config.host);
-  var interval;
+  var timer;
 
   client.on("connect", function() {
-    console.log("Connected to " + config.host + ":" + config.tcpPort + ". Reconnect: " + reconnect);
-    var packet = {
-      type: "desktop",
-      event: "bootend",
-      date: Date.now(),
-      hostname: hostname,
-      devices: devices
-    };
+    console.log("Connected to " + config.host + ":" + config.tcpPort +
+      ". Reconnect: " + reconnect);
 
-    if (reconnect) {
-      packet.reconnect = true;
-      console.log("reconnecting");
-    }
+    getXUser(function(err, user) {
+      if (err) {
+        console.error("Failed to determine current user");
+        return;
+      }
 
-    // Write ping messages to keep connection alive
-    interval = setInterval(function() {
-      client.write(JSON.stringify("ping") + "\n");
-    }, 10 * 1000);
+      /**
+       * Timeout loop monitoring user currently logged in.
+       **/
+      var currentUser;
+      (function loginLoop() {
+        getXUser(function(err, username) {
+          if (err) console.error("Failed to determine current user", err);
 
-    client.write(JSON.stringify(packet) + "\n");
+          // Act on change
+          if (!err && username !== currentUser) {
+
+            // Ignore username completely here to keep statistics anonymoys
+            if (username) {
+              console.log("Userlogged in", username);
+              client.write(JSON.stringify(basePacket("login")) + "\n");
+            }
+            else {
+              console.log("Userlogged out", currentUser);
+              client.write(JSON.stringify(basePacket("logout")) + "\n");
+            }
+
+            currentUser = username;
+          }
+
+          // Just always send a ping to keep the connection alive.
+          client.write(JSON.stringify("ping") + "\n");
+
+          // two minute loop
+          timer = setTimeout(loginLoop, 60 * 2 * 1000);
+        });
+      }());
+
+      var packet = basePacket("bootend");
+
+      if (reconnect) {
+        packet.reconnect = true;
+        console.log("reconnecting");
+      }
+
+      client.write(JSON.stringify(packet) + "\n");
+
+    });
   });
 
   client.on("close", function() {
-    clearInterval(interval);
+    clearTimeout(timer);
     console.log("Connection closed. Reconnecting soon.");
     retry();
   });
 
   client.on("error", function(err) {
-    clearInterval(interval);
+    clearTimeout(timer);
     console.log("Connection failed. Reconnecting soon.");
     retry();
   });
