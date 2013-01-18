@@ -102,9 +102,7 @@ function connect(reconnect) {
   });
 
   client.on("error", function(err) {
-    clearTimeout(timer);
-    console.log("Connection failed. Reconnecting soon.");
-    retry();
+    console.log("Connection Error", err);
   });
 
 }
