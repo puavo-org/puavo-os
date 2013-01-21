@@ -13,7 +13,7 @@ require 'uuidtools'
 @kvm_memory = 2097152
 @kvm_mac = "aa:cc:" + (1..4).map{"%0.2x"%rand(256)}.join(":")
 
-conf_template = File.read("templates/ltsp-server.xml")
+conf_template = File.read("/usr/share/puavo-ltsp-bootserver/templates/ltsp-server.xml")
 conf = ERB.new(conf_template, 0, "%<>")
 
 xml = Tempfile.open("puavo-ltsp-kvm")
