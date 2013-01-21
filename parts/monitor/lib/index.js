@@ -1,13 +1,14 @@
 
-var os = require("os");
+var fs = require("fs");
 var net = require("net");
 var config = require("/etc/puavo-monitor.json");
 var _ = require("underscore");
 
 
-var hostname = os.hostname();
 var devices = require("./devices");
 var getXUser = require("./user");
+
+var hostname = fs.readFileSync("/etc/puavo/hostname").toString().trim();
 
 /**
  * @return random int from 10000 to 60000
