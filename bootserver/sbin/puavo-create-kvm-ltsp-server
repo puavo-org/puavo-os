@@ -22,6 +22,7 @@ xml.close
 
 puts `cat #{xml.path}`
 
+puts `mkdir -p /virtual`
 puts `qemu-img create -f raw /virtual/#{@kvm_name}.raw 2G`
 puts `virsh define #{xml.path}`
 
