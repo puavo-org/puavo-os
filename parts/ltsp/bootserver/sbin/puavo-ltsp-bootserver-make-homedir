@@ -1,0 +1,7 @@
+#!/usr/bin/ruby1.9.3
+
+require 'etc'
+
+loginname = STDIN.read.chomp
+user = Etc.getpwnam(loginname)
+system('/sbin/mkhomedir_helper', user.name, '0077')
