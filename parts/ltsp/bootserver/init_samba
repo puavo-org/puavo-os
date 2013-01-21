@@ -1,0 +1,25 @@
+#!/bin/sh
+
+set -e
+
+if [ -e /var/lib/samba/init_samba_done -a "$1" != '--force' ]; then
+  echo '/var/lib/samba/init_samba_done exists, use the --force, Mikko!'
+  exit 1
+fi
+
+service nmbd stop || true
+service smbd stop || true
+sleep 5
+pkill -9 -x '(nmbd|smbd)' || true
+
+pgrep -x '(nmbd|smbd)' >/dev/null && {
+  echo "could not kill nmbd or smbd" > /dev/stderr
+  exit 1
+}
+
+smbpasswd -w "$(cat /etc/puavo/ldap/password)"
+
+touch /var/lib/samba/init_samba_done
+
+service nmbd start
+service smbd start

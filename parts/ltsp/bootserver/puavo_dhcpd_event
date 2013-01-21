@@ -1,0 +1,91 @@
+#!/bin/bash
+
+set -e
+
+(
+  errorlog() {
+    logger "puavo_dhcpd_event unknown error with mac=$MAC ip=$IP"
+  }
+  trap errorlog ERR
+
+  reverse_ip() {
+    echo $1 | awk -F. '{ printf "%s.%s.%s.%s.in-addr.arpa", $4, $3, $2, $1 }'
+  }
+
+  this_server_first() {
+    awk -v this_server="$(hostname -f)" '
+      { lines[NR] = $0 }
+      $1 == this_server { servind = NR }
+      END {
+	if (servind) {
+	  print lines[servind]
+	  delete lines[servind]
+	}
+	for (i in lines) { print lines[i] }
+      }
+    '
+  }
+
+  run_nsupdate() {
+    echo -e "$1" \
+      | sudo -u bind nsupdate -k /etc/bind/nsupdate.key -p 553 -t 60 \
+    || {
+      logger "puavo_dhcpd_event update dns FAILED mac=$MAC ip=$IP hostname=$HOSTNAME dnsserver=$dnsserver"
+      false
+    }
+  }
+
+  DOMAIN='<%= puavoDomain %>'
+  TTL=0
+
+  # awk hack is necessary, because dhcpd may give us mac addresses of format
+  # 0:24:8c:b1:98:78
+  MAC=$(echo $1 \
+	 | awk -F: '{
+	     for (i = 1; i <= 6; i++) {
+	       printf("%02x%s", strtonum("0x" $i), (i != 6 ? ":" : ""))
+	     }
+	   }')
+  IP=$2
+  SUBDOMAIN=$3
+
+  REVERSED_IP=$(reverse_ip $IP)
+
+  HOSTNAME=$(timeout 30 sudo -g puavodevices /usr/local/sbin/lookup_host_by_macaddress $MAC) \
+    || {
+	 logger "puavo_dhcpd_event hostname lookup failure for mac=$MAC ip=$IP"
+	 exit 1
+       }
+
+  case "$SUBDOMAIN" in
+    wlan*) FQDN="$HOSTNAME.$SUBDOMAIN.$DOMAIN";;
+    *)     FQDN="$HOSTNAME.$DOMAIN";;
+  esac
+
+  DNSSERVERS="$(/usr/local/sbin/ltspserver_load_levels dnsupdate \
+		  | this_server_first \
+		  | awk '$2 != "not_active" { print $1 }')"
+
+  for dnsserver in $DNSSERVERS; do
+    UPDATE_CMD="server $dnsserver\n"
+
+    # remove all other hostnames that have this IP
+    for hostname in $(dig -x $IP +short); do
+      UPDATE_CMD="${UPDATE_CMD}update delete $hostname A $IP\n"
+    done
+
+    # connect hostname to IP (forward DNS)
+    UPDATE_CMD="${UPDATE_CMD}update delete $FQDN.\n"
+    UPDATE_CMD="${UPDATE_CMD}update add $FQDN. $TTL A $IP\n"
+
+    run_nsupdate "$UPDATE_CMD" || continue
+
+    # connect IP to hostname (reverse DNS)
+    UPDATE_CMD="server $dnsserver\n"
+    UPDATE_CMD="${UPDATE_CMD}update delete $REVERSED_IP\n"
+    UPDATE_CMD="${UPDATE_CMD}update add $REVERSED_IP $TTL PTR $FQDN\n"
+    run_nsupdate "$UPDATE_CMD" || continue
+
+    logger "puavo_dhcpd_event update dns OK mac=$MAC ip=$IP fqdn=$FQDN to $dnsserver"
+  done
+) &
