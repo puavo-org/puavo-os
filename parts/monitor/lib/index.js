@@ -4,11 +4,13 @@ var net = require("net");
 var config = require("/etc/puavo-monitor.json");
 var _ = require("underscore");
 
+require("./pid")(config.pidFile || "/var/run/puavo-monitor.pid");
 
 var devices = require("./devices");
 var getXUser = require("./user");
 
 var hostname = fs.readFileSync("/etc/puavo/hostname").toString().trim();
+
 
 /**
  * @return random int from 10000 to 60000
