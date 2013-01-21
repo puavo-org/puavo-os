@@ -3,7 +3,7 @@
 while true
 do
 
-nc -v -w 1 -u eventlog 3858 << EOF
+nc -w 1 -u eventlog 3858 << EOF
 type:wlan
 hostname:$(hostname)
 date:$(date +%s)
@@ -14,7 +14,7 @@ EOF
 
 sleep 3
 
-nc -v -w 1 -u eventlog 3858 << EOF
+nc -w 1 -u eventlog 3858 << EOF
 type:wlan
 hostname:$(hostname)
 date:$(date +%s)
