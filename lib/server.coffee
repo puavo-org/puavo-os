@@ -102,8 +102,12 @@ udpServer.on "message", (msg, rinfo) ->
   packet = {}
 
   msg.toString().split("\n").forEach (line) ->
+    if not line then return
+    if not line.match(/[.+:.+]/)
+      console.error "Bad line:", line
+      return
+
     [k, v] = line.split(":")
-    return if not k
 
     # Turn values inside brackets [foo,bar] to arrays
     if match = v.match(/\[(.*)\]/)
