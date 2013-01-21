@@ -41,10 +41,7 @@ install : installdirs
 		templates/var/lib/bind/puavo_domain_reverse
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
-		puavo-create-kvm-ltsp-server \
-		puavo-init-bootserver-ddns \
-		puavo-update-ddns \
-		ltsp-update-kernels
+		sbin/*
 
 .PHONY : clean
 clean :
