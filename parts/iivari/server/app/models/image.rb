@@ -40,7 +40,7 @@ class Image < ActiveRecord::Base
 
   def scale_new_image_file(max_width, max_height)
     image_orig = Magick::Image.read("#{Image.path}/#{self.key}" ).first
-    image_scale = image_orig.resize_to_fit(max_width,max_height)
+    image_scale = image_orig.auto_orient.resize_to_fit(max_width,max_height)
     filename = "#{Image.path}/#{self.key}_#{max_width}x#{max_height}"
     File.open( filename, "wb") { |f| f.write(image_scale.to_blob) }
   end
