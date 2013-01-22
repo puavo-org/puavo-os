@@ -19,7 +19,7 @@ def device_tags(device)
   Array(device['puavoTag']).join(" ")
 end
 
-def device_ltspvars(device)
+def device_ltspvars(device, organisation)
   devicetype = Array(device['puavoDeviceType']).first
 
   ltspvars =
@@ -139,6 +139,48 @@ def device_ltspvars(device)
     # or configuration is faulty... autologins are disabled, then
   end
 
+  # Set autopoweroffd configuration
+  if ['thinclient', 'fatclient'].include?(devicetype)
+
+    # Global defaults for all organisations
+    defaults = {
+      'AUTOPOWEROFF' => 'Y',
+      'AUTOPOWEROFF_START' => 7,
+      'AUTOPOWEROFF_END' => 16,
+      'AUTOPOWEROFF_STARTUP_DELAY' => 30,
+      'AUTOPOWEROFF_IDLE_TIME' => 30
+    }
+
+    ltspvars.merge!(defaults)
+
+    # Defaults by organisation
+    settings_by_organisation = {}
+    if organisation['puavoDeviceAutoPowerOffMode'] == 'off'
+      settings_by_organisation['AUTOPOWEROFF'] = 'N'
+    elsif organisation['puavoDeviceAutoPowerOffMode'] == 'custom'
+      settings_by_organisation['AUTOPOWEROFF'] = 'Y'
+      settings_by_organisation['AUTOPOWEROFF_START'] =
+        organisation['puavoDeviceOnHour'] if organisation['puavoDeviceOnHour']
+      settings_by_organisation['AUTOPOWEROFF_END'] =
+        organisation['puavoDeviceOffHour'] if organisation['puavoDeviceOffHour']
+    end
+
+    ltspvars.merge!(settings_by_organisation)
+
+    # Settings by device
+    settings_by_device = {}
+    if device['puavoDeviceAutoPowerOffMode'] == 'off'
+      settings_by_device['AUTOPOWEROFF'] = 'N'
+    elsif device['puavoDeviceAutoPowerOffMode'] == 'custom'
+      settings_by_device['AUTOPOWEROFF'] = 'Y'
+      settings_by_device['AUTOPOWEROFF_START'] = device['puavoDeviceOnHour'] if device['puavoDeviceOnHour']
+      settings_by_device['AUTOPOWEROFF_END'] = device['puavoDeviceOffHour'] if device['puavoDeviceOffHour']
+    end
+
+    ltspvars.merge!(settings_by_device)
+  end
+
+
   ltspvars
 end
 
@@ -146,8 +188,10 @@ def handle_ltsconf_request
   ltspvars = {}
 
   deviceentry = @puavoldap.device_by_mac(@mac)
+  organisation = @puavoldap.organisation
+
   if not deviceentry.empty?
-    ltspvars.merge!(device_ltspvars(deviceentry))
+    ltspvars.merge!(device_ltspvars(deviceentry, organisation))
   else
     ltspvars.merge!({ 'NBD_SWAP'  => 'False',
                       'SYSLOG'    => 'False',
