@@ -8,7 +8,7 @@
 
 [realms]
 	<%= @kerberos_realm %> = {
-		kdc = <%= @puavo_hostname %>
+		kdc = <%= @puavo_hostname + "." + @puavo_domain %>
 		admin_server = <%= @kerberos_master %>
 		default_domain = <%= @puavo_domain %>
 		database_module = ldap_<%= @puavo_domain %>
