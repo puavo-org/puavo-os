@@ -23,7 +23,6 @@
 #
 # /etc/puavo/nameserver.yml
 #
-# update:
 #   servers:
 #     - 127.0.0.1:553
 #   domain: example.org
@@ -82,7 +81,9 @@ include Dnsruby
 def lookup_hostname_by_mac(mac)
   base     = File.read('/etc/puavo/ldap/base'    ).chomp
   dn       = File.read('/etc/puavo/ldap/dn'      ).chomp
-  password = File.read('/etc/puavo/ldap/password').chomp
+# FIXME - find a proper solution to get dhcpd belong to the puavo group
+#  password = File.read('/etc/puavo/ldap/password').chomp
+  password = `sudo /bin/cat /etc/puavo/ldap/password`.chomp
   hostname = File.read('/etc/puavo/hostname').chomp
   domain   = File.read('/etc/puavo/domain'    ).chomp
 
@@ -91,7 +92,7 @@ def lookup_hostname_by_mac(mac)
   conn.start_tls
   conn.bind(dn, password) do
     begin
-      conn.search("ou=Hosts,#{base}", LDAP::LDAP_SCOPE_SUBTREE, "macAddress=*#{mac}") do |e|
+      conn.search("ou=Hosts,#{base}", LDAP::LDAP_SCOPE_SUBTREE, "macAddress=#{mac}") do |e|
         if e.get_values('cn')
           return e.get_values('cn').first
         end
@@ -102,40 +103,35 @@ def lookup_hostname_by_mac(mac)
   end
 end
 
-#hostname = ARGV[0]
+@puavo_hostname    = File.read('/etc/puavo/hostname'       ).chomp
+@puavo_domain      = File.read('/etc/puavo/domain'         ).chomp
 
 type = ARGV[0]
 mac = ARGV[1]
 ip = ARGV[2]
 subdomain = ARGV[3]
 
+config = Hash.new
+
 if File.exists?("/etc/dhcp/ddns-keys/nsupdate.key")
   tmp = File.read("/etc/dhcp/ddns-keys/nsupdate.key")
   if /key "(.*?)"/.match(tmp)
-    key_name = $1
+    config["key_name"] = $1
   end
 
   if /secret "(.*?)"/.match(tmp)
-    key = $1
+    config["key"] = $1
   end
 end
 
-config = YAML.load(File.read("/etc/puavo/nameserver.yml"))
+config["reverse_domain"] = "10.in-addr.arpa"
+config["servers"] = ["127.0.0.1:553"]
+config["domain"] = @puavo_domain
 
-key_name = config["update"]["key_name"] if config["update"] and config["update"]["key_name"]
-key = config["update"]["key"] if config["update"] and config["update"]["key"]
-
-@puavo_hostname    = File.read('/etc/puavo/hostname'       ).chomp
-@puavo_domain      = File.read('/etc/puavo/domain'         ).chomp
-
-if config["update"]["reverse_domain"]
-  reverse_domain = config["update"]["reverse_domain"]
-else
-  reverse_domain = "10.in-addr.arpa"
+if File.exists?("/etc/puavo/nameserver.yml")
+  config_file = YAML.load(File.read("/etc/puavo/nameserver.yml"))
+  config.merge(config_file)
 end
-
-servers = config["update"]["servers"]
-servers = ["127.0.0.1:553"] if !servers
 
 if type.eql?("mac")
   mac = mac.split(':').map {|x|
@@ -161,7 +157,7 @@ fqdn = "#{hostname}.#{subdomain}.#{@puavo_domain}"
 # Loop through all servers and update the A and reverse PTR records.
 # The records are first deleted and then added.
  
-servers.each do |url|
+config["servers"].each do |url|
   port = 53
   server = url
  
@@ -174,13 +170,13 @@ servers.each do |url|
   resolver.port=(port)
   response, error = resolver.send_plain_message(Message.new(fqdn, Types.A))
 
-  resolver.tsig=key_name,key
+  resolver.tsig=config["key_name"],config["key"]
 
-  update = Dnsruby::Update.new(@puavo_domain)
+  update = Dnsruby::Update.new(config["domain"])
   update.delete(fqdn,'A')
   update.add(fqdn,'A',60,ip)
 
-  update_reverse = Dnsruby::Update.new(reverse_domain)
+  update_reverse = Dnsruby::Update.new(config["reverse_domain"])
   in_addr="#{ip.split('.').reverse.join('.')}.in-addr.arpa"
 
   update_reverse.delete(in_addr)
