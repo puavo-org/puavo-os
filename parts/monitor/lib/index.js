@@ -1,5 +1,6 @@
 
 var fs = require("fs");
+var os = require("os");
 var net = require("net");
 var config = require("/etc/puavo-monitor.json");
 var _ = require("underscore");
@@ -8,8 +9,18 @@ require("./pid")(config.pidFile || "/var/run/puavo-monitor.pid");
 
 var devices = require("./devices");
 var getXUser = require("./user");
+var hostname;
 
-var hostname = fs.readFileSync("/etc/puavo/hostname").toString().trim();
+try {
+  // On new systems puavo-register writes registered hostname to
+  // /etc/puavo/hostname
+  hostname = fs.readFileSync("/etc/puavo/hostname").toString().trim();
+}
+catch (err) {
+  if (err.code !== "ENOENT") throw err;
+  // On older systems (lucid) we can safely fallback to hostname syscall
+  hostname = os.hostname();
+}
 
 
 /**
