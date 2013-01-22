@@ -41,6 +41,11 @@ class PuavoLdap
     find_with_filter(filter)
   end
 
+  def organisation
+    filter = '(objectClass=puavoEduOrg)'
+    find_with_filter(filter)
+  end
+
   def find_with_filter(filter, type = :first)
 
     if type == :first
