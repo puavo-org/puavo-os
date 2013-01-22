@@ -4,6 +4,11 @@ require 'erb'
 require 'fileutils'
 require 'tempfile'
 
+# Use SSL certificate that was acquired when the host was
+# registered to Puavo.
+ENV["LDAPTLS_REQCERT"] = "demand"
+ENV["LDAPTLS_CACERT"] = "/etc/puavo/certs/rootca.pem"
+
 Sentinel_file = '/var/lib/ldap/init_ldap_slave_done'
 
 if File.exist?(Sentinel_file) and not ARGV[0] == '--force'
