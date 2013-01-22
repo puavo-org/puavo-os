@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+find /opt/ltsp/images -type f -name '*.img' -printf '%f\n' | while read filename; do
+    image=$(sed s'/\(.*\)\.img/\1/')
+    cat <<EOF | sudo tee /etc/nbd-server/conf.d/ltsp_${image}.conf > /dev/null
+[ltsp_${image}]
+    exportname = /opt/ltsp/images/${filepath}
+    readonly = true
+EOF
+done
