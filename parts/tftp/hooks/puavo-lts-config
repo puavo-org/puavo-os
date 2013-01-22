@@ -7,6 +7,9 @@
 
 $LOAD_PATH.unshift( File.dirname(__FILE__) )
 
+ENV['LDAPTLS_REQCERT'] = 'demand'
+ENV['LDAPTLS_CACERT'] = '/etc/puavo/certs/rootca.pem'
+
 require 'puavo-ldap'
 
 def provide_guest_login(device)
