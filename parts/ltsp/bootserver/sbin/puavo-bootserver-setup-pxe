@@ -1,0 +1,6 @@
+#!/bin/sh
+
+mkdir -p /var/lib/tftpboot
+cp /usr/lib/syslinux/chain.c32  /var/lib/tftpboot/chain.c32
+cp /usr/lib/syslinux/menu.c32   /var/lib/tftpboot/menu.c32
+cp /usr/lib/syslinux/pxelinux.0 /var/lib/tftpboot/pxelinux.0
