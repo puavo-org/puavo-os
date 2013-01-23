@@ -23,7 +23,7 @@ class Sender
       @sending = false
 
       if err
-        console.log "ERROR", err
+        console.error "Failed to relay packet", err
         @error = true
         @updateInterval()
         @queue.push packet
