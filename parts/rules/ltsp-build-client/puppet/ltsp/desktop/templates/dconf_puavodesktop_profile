@@ -138,7 +138,11 @@ layouts=['fi', 'ru', 'ru\tphonetic']
 options=['grp\tgrp:shift_caps_toggle']
 
 [org/gnome/nautilus/desktop]
+computer-icon-name='Tietokone'
+computer-icon-visible=false
+home-icon-name='Kotikansio'
 home-icon-visible=true
+trash-icon-name='Roskakori'
 trash-icon-visible=true
 volumes-visible=true
 
