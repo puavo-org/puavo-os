@@ -64,6 +64,7 @@ class packages {
     [ 'lightdm'
     , 'lightdm-gtk-greeter'
     , 'nautilus-dropbox'
+    , 'overlay-scrollbar'               # needed by accessibility stuff
     , 'ubuntu-restricted-extras'
     , 'ubuntu-standard'
     , 'xul-ext-mozvoikko'
