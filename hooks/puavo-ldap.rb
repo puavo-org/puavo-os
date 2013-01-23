@@ -46,6 +46,15 @@ class PuavoLdap
     find_with_filter(filter)
   end
 
+  def school_by_dn(dn)
+    unless puavo_id_match = dn.to_s.match(/puavoId=([0-9]+)/)
+      return nil
+    end
+    school_puavo_id = puavo_id_match[1]
+    filter = "(&(objectClass=puavoSchool)(puavoId=#{school_puavo_id}))"
+    find_with_filter(filter)
+  end
+
   def find_with_filter(filter, type = :first)
 
     if type == :first
