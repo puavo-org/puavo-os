@@ -65,16 +65,6 @@ then
     exit 1
 fi
 
-hostapd -B -P /var/tmp/puavo-wlanap/hostapd.pid /var/tmp/puavo-wlanap/hostapd.conf
-if [ $? -ne 0 ]
-then
-    echo "error: failed to start hostapd" | logger -t puavo-wlanap -s -p user.err
-    stop_vtund
-    exit 1
-fi
-
-dhclient -pf /var/tmp/puavo-wlanap/dhclient.pid br.$hostap_interface
-
 trap graceful_exit INT TERM HUP
 
 if [ $exit_requested -ne 0 ]

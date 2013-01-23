@@ -13,16 +13,10 @@ puavo-wlanap {
     multi     yes;
  
     up {
-        program "ifconfig %% up";
-	program "brctl addbr br.#{hostap_interface}";
-	program "ifconfig br.#{hostap_interface} up";
-	program "brctl addif br.#{hostap_interface} %%";
+        program "puavo-wlanap-vtun-up %% br.#{hostap_interface}";
     };
  
     down {
-    	program "brctl delif br.#{hostap_interface} %%";
-	program "ifconfig br.#{hostap_interface} down";
-	program "brctl delbr br.#{hostap_interface}";
-    	program "ifconfig %% down";
+        program "puavo-wlanap-vtun-down %% br.#{hostap_interface}";
     };
 }

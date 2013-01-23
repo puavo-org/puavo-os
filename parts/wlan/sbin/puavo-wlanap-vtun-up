@@ -1,0 +1,11 @@
+#!/bin/sh
+
+ifconfig $1 up
+ddbr $2
+brctl setfd $2 0
+ifconfig $2 up
+brctl addif $2 $1
+sleep 2
+hostapd -B -P /var/tmp/puavo-wlanap/hostapd.pid /var/tmp/puavo-wlanap/hostapd.conf
+sleep 2
+dhclient -pf /var/tmp/puavo-wlanap/dhclient.pid $2
