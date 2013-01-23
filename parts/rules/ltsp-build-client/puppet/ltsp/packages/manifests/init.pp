@@ -403,7 +403,8 @@ class packages {
     , 'wxmaxima' ]:
       tag => [ 'science', 'ubuntu', ];
 
-    [ 'liitu-themes' ]:
+    [ 'faenza-icon-theme'
+    , 'liitu-themes' ]:
       tag => [ 'themes', 'opinsys', ];
 
     [ 'breathe-icon-theme'
