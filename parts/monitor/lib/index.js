@@ -23,6 +23,19 @@ catch (err) {
 }
 
 
+var hostType = [
+  "/etc/puavo/hosttype", // New systems
+  "/etc/opinsys/host/type" // Legacy lucid
+].reduce(function(prev, filePath) {
+  if (prev) return prev;
+  try {
+    return fs.readFileSync(filePath).toString().trim();
+  } catch (err) { }
+
+}, null);
+if (!hostType) hostType = "unregistered";
+
+
 /**
  * @return random int from 10000 to 60000
  **/
@@ -46,6 +59,7 @@ function basePacket(event, extra) {
     event: event,
     date: Date.now(),
     hostname: hostname,
+    hostType: hostType,
     devices: devices
   }, extra);
 }
