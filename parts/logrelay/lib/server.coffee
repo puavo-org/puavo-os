@@ -8,6 +8,14 @@ url = require "url"
 _ = require "underscore"
 JSONStream = require "json-stream"
 
+clim = require "clim"
+_write = clim.logWrite
+clim.logWrite = (level, prefixes, msg) ->
+  return if level is "LOG" and process.NODE_ENV is "production"
+  _write(level, prefixes, msg)
+clim(console, true)
+
+
 Sender = require "./sender"
 
 config = require "/etc/puavo-logrelay.json"
@@ -73,20 +81,20 @@ tcpServer = net.createServer (c) ->
     if packet is "ping"
       return c.write("pong")
 
-
     packet = extendRelayMeta(packet)
 
     console.log "Packet from tcp: ", packet
 
     if packet.type is "desktop" and packet.event is "bootend"
       machine = packet
+      console.info "TCP connection from", machine.hostname
 
     if machine
       sender.send(packet)
 
   # When tcp connection closes asume that the client machine was shutdown.
   c.on "close", ->
-    console.log "Connection closed for", machine
+    console.info "TCP connection closed for", machine.hostname
     endPacket = extendRelayMeta(machine)
     endPacket.event = "shutdown"
     endPacket.date = Date.now()
@@ -97,6 +105,7 @@ tcpServer = net.createServer (c) ->
 
 udpServer = dgram.createSocket("udp4")
 
+# TODO: We should json over udp too
 udpServer.on "message", (msg, rinfo) ->
 
   packet = {}
@@ -104,7 +113,7 @@ udpServer.on "message", (msg, rinfo) ->
   msg.toString().split("\n").forEach (line) ->
     if not line then return
     if not line.match(/[.+:.+]/)
-      console.error "Bad line:", line
+      console.error "UDP packet: bad line:", line
       return
 
     [k, v] = line.split(":")
@@ -121,11 +130,11 @@ udpServer.on "message", (msg, rinfo) ->
 
 udpServer.on "listening", ->
   address = udpServer.address()
-  console.log "UDP listening on #{ address.address }:#{ address.port }"
+  console.info "UDP listening on #{ address.address }:#{ address.port }"
 
 tcpServer.on "listening", ->
   address = tcpServer.address()
-  console.log "TCP listening on #{ address.address }:#{ address.port }"
+  console.info "TCP listening on #{ address.address }:#{ address.port }"
 
 udpServer.bind(config.updPort)
 tcpServer.listen(config.tcpPort)
