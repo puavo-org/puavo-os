@@ -4,47 +4,16 @@ set -u
 
 . /etc/puavo-wlanap/config
 
-[ -f "/etc/puavo/hosttags" ] && while read line
+[ -f "/etc/puavo/wlan/ssid" ] && while IFS=':' read auth ssid psk
 do
-    case line in
-    	openwlan)
-    	    hostap_auth="open"
-    	    ;;
-    	eapwlan)
-    	    hostap_auth="eap"
-    	    ;;
-    	pskwlan)
-    	    hostap_auth="psk"
-    	    ;;
-    	*)
-	    if [ -z $hostap_auth ]
-	    then
-		hostap_auth=$(echo $line | sed -n 's/^wlantype:\(.*\)$/\1/p')
-	    fi
+    hostap_auth=$auth
+    hostap_ssid=$ssid
+    hostap_psk=$psk
+done < /etc/puavo/wlan/ssid
 
-	    if [ -z $hostap_channel ]
-	    then
-		hostap_channel=$(echo $line | sed -n 's/^wlanch:\(.*\)$/\1/p')
-	    fi
-
-	    if [ -z $hostap_interface ]
-	    then
-		hostap_interface=$(echo $line | sed -n 's/^wlanif:\(.*\)$/\1/p')
-	    fi
-
-	    if [ -z $hostap_ssid ]
-	    then
-		hostap_ssid=$(echo $line | sed -n 's/^ssid:\(.*\)$/\1/p')
-	    fi
-
-	    if [ -z $hostap_psk ]
-	    then
-		hostap_psk=$(echo $line | sed -n 's/^psk:\(.*\)$/\1/p')
-	    fi
-
-    	    ;;
-    esac
-done < /etc/puavo/hosttags
+if [ -f "/etc/puavo/wlan/channel" ]; then
+    read hostap_channel < /etc/puavo/wlan/channel
+fi
 
 if [ -z "$hostap_channel" ]
 then
