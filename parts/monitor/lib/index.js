@@ -5,10 +5,9 @@ var net = require("net");
 var config = require("/etc/puavo-monitor.json");
 var _ = require("underscore");
 
-require("./pid")(config.pidFile || "/var/run/puavo-monitor.pid");
-
 var devices = require("./devices");
 var getXUser = require("./user");
+var lock = require("./lock")
 var hostname;
 
 try {
@@ -127,5 +126,12 @@ function connect(reconnect) {
   });
 
 }
+lock(config.lockFile || "/var/run/puavo-monitor.lock", function(err) {
+  if (err && err.code === "FLOCK_TIMEOUT") {
+    console.error("puavo-monitor is already running");
+    process.exit(1);
+  }
+  else if (err) throw err;
 
-connect();
+  connect();
+});
