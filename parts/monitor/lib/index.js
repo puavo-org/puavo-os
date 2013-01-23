@@ -18,6 +18,7 @@ try {
 }
 catch (err) {
   if (err.code !== "ENOENT") throw err;
+
   // On older systems (lucid) we can safely fallback to hostname syscall
   hostname = os.hostname();
 }
@@ -52,12 +53,18 @@ function basePacket(event, extra) {
 
 function connect(reconnect) {
 
+  if (reconnect) {
+    console.log("Reconnecting to " + config.host + ":" + config.tcpPort);
+  }
+  else {
+    console.log("Connecting to " + config.host + ":" + config.tcpPort);
+  }
+
   var client = net.connect(config.tcpPort, config.host);
   var loopTimer;
 
   client.on("connect", function() {
-    console.log("Connected to " + config.host + ":" + config.tcpPort +
-      ". Reconnect: " + reconnect);
+    console.log("Connection ok!");
 
     getXUser(function(err, user) {
       if (err) {
