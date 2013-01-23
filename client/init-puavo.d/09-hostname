@@ -11,13 +11,15 @@ if [ -z "$HOSTNAME" ]; then
     HOSTNAME="$HOSTNAME_BASE$HOSTNAME_EXTRA"
 fi
 
-SHORT_HOSTNAME=$(echo $HOSTNAME | cut -d. -f1)
-hostname "$SHORT_HOSTNAME"
-echo "$SHORT_HOSTNAME" > /etc/hostname
+FQDN="$HOSTNAME"
+HOSTNAME=$(echo "$FQDN" | cut -d. -f1)
+hostname "$HOSTNAME"
+echo "$HOSTNAME" > /proc/sys/kernel/hostname
+echo "$HOSTNAME" > /etc/hostname
 
 cat <<EOF > /etc/hosts
 127.0.0.1 localhost
-127.0.0.2 $SHORT_HOSTNAME
+127.0.0.2 $HOSTNAME
 
 # The following lines are desirable for IPv6 capable hosts
 ::1     ip6-localhost ip6-loopback
