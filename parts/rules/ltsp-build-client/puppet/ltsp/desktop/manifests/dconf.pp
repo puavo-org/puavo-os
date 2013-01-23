@@ -24,7 +24,8 @@ class desktop::dconf {
     '/etc/dconf/db/puavodesktop.d/profile':
       content => template('desktop/dconf_puavodesktop_profile'),
       notify  => Exec['update dconf'],
-      require => [ Package['liitu-themes']
+      require => [ Package['faenza-icon-theme']
+                 , Package['liitu-themes']
                  , Package['webmenu'] ];
 
     '/etc/dconf/profile/user':
@@ -32,5 +33,6 @@ class desktop::dconf {
   }
 
   Package <| (title == dconf-tools)
-          or (title == liitu-themes) |>
+          or (title == faenza-icon-theme)
+          or (title == liitu-themes)      |>
 }
