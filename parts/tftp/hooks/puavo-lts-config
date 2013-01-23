@@ -184,7 +184,7 @@ def device_ltspvars(device, organisation, school)
   index = 1
   Array(school["puavoWlanSSID"]).each do |wlan|
     lts_key = "WLAN_SSID_%02d" % index
-    ltspvars[lts_key] = wlan
+    ltspvars[lts_key] = '"' + wlan + '"'
     index += 1
   end
   
