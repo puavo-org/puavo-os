@@ -132,6 +132,7 @@ class packages {
     , 'luola'
     , 'neverball'
     , 'neverputt'
+    , 'openttd'
     , 'pacman'
     , 'pingus'
     , 'sgt-puzzles'
@@ -306,7 +307,8 @@ class packages {
 #   , 'cmaptools' ]:
 #     tag => [ 'office', ];
 
-    [ 'libreoffice'
+    [ 'librecad'
+    , 'libreoffice'
     , 'libreoffice-base'
     , 'libreoffice-calc'
     , 'libreoffice-impress'
@@ -315,7 +317,8 @@ class packages {
     , 'scribus-doc'
     , 'tellico'
     , 'thunderbird'
-    , 'vym' ]:
+    , 'vym'
+    , 'qcad' ]:
       tag => [ 'office', 'ubuntu', ];
 
     [ 'cdparanoia'
@@ -325,7 +328,8 @@ class packages {
     , 'sound-juicer' ]:
       tag => [ 'optical_media', 'ubuntu', ];
 
-    [ 'avrdude'
+    [ 'arduino'
+    , 'arduino-mk'
     , 'avr-libc'
     , 'basic256'
     , 'eclipse'
