@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ifconfig $1 up
-ddbr $2
+brctl addbr $2
 brctl setfd $2 0
 ifconfig $2 up
 brctl addif $2 $1
