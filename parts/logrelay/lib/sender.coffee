@@ -23,21 +23,23 @@ class Sender
       @sending = false
 
       if err
-        console.error "Failed to relay packet", err
         @error = true
         @updateInterval()
         @queue.push packet
+        console.error "Failed to relay packet to #{ @url }. Waiting for #{ @interval / 1000 } sec", err
+
         setTimeout =>
           @error = false
           @dequeue()
         , @interval
+
       else
         @reset()
         @dequeue()
 
   dequeue: ->
     if packet = @queue.shift()
-      console.log "Sending from queue. Size ", @queue.length + 1
+      console.log "Sending from queue. Size ", @queue.length
       @send(packet)
 
   updateInterval: ->
