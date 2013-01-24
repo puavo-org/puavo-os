@@ -8,6 +8,7 @@ var _ = require("underscore");
 var devices = require("./devices");
 var getXUser = require("./user");
 var lock = require("./lock")
+var hostType = require("./hosttype");
 var hostname;
 
 try {
@@ -22,19 +23,9 @@ catch (err) {
   hostname = os.hostname();
 }
 
-
-var hostType = [
-  "/etc/puavo/hosttype", // New systems
-  "/etc/opinsys/host/type" // Legacy lucid
-].reduce(function(prev, filePath) {
-  if (prev) return prev;
-  try {
-    return fs.readFileSync(filePath).toString().trim();
-  } catch (err) { }
-
-}, null);
-if (!hostType) hostType = "unregistered";
-
+console.info("puavo-monitor starting",
+  JSON.stringify({ hostType: hostType, hostname: hostname })
+);
 
 /**
  * @return random int from 10000 to 60000
