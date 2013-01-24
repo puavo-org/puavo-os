@@ -65,8 +65,8 @@ extendRelayMeta = (packet) ->
 
 sender = new Sender(
   targetUrl
-  config.initialInterval
-  config.maxInterval
+  config.initialInterval or 2000
+  config.maxInterval or 1000 * 30
 )
 
 
