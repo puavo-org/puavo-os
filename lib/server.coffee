@@ -24,6 +24,7 @@ USERNAME = fs.readFileSync("/etc/puavo/ldap/dn").toString().trim()
 PASSWORD = fs.readFileSync("/etc/puavo/ldap/password").toString().trim()
 RELAY_HOSTNAME = os.hostname()
 
+console.info "Logrelay starting with target #{ config.target }"
 
 # /etc/opinsys/desktop/puavodomain is for legacy lucid systems
 for domainPath in ["/etc/puavo/domain", "/etc/opinsys/desktop/puavodomain"]
