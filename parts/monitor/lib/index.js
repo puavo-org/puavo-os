@@ -101,7 +101,7 @@ function connect(reconnect) {
           client.write(JSON.stringify("ping") + "\n");
 
           // two minute loop
-          loopTimer = setTimeout(loginLoop, 60 * 2 * 1000);
+          loopTimer = setTimeout(loginLoop, 60 * 1000);
         });
       }());
 
