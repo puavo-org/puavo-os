@@ -23,9 +23,6 @@ catch (err) {
   hostname = os.hostname();
 }
 
-console.info("puavo-monitor starting",
-  JSON.stringify({ hostType: hostType, hostname: hostname })
-);
 
 /**
  * @return random int from 10000 to 60000
@@ -89,11 +86,11 @@ function connect(reconnect) {
 
             // Ignore username completely here to keep statistics anonymoys
             if (username) {
-              console.log("User logged in", username);
+              console.log("User logged in");
               client.write(JSON.stringify(basePacket("login")) + "\n");
             }
             else {
-              console.log("User logged out", currentUser);
+              console.log("User logged out");
               client.write(JSON.stringify(basePacket("logout")) + "\n");
             }
 
@@ -131,6 +128,7 @@ function connect(reconnect) {
   });
 
 }
+
 lock(config.lockFile || "/var/run/puavo-monitor.lock", function(err) {
   if (err && err.code === "FLOCK_TIMEOUT") {
     console.error("puavo-monitor is already running");
@@ -138,5 +136,8 @@ lock(config.lockFile || "/var/run/puavo-monitor.lock", function(err) {
   }
   else if (err) throw err;
 
+  console.info("puavo-monitor started",
+    JSON.stringify({ hostType: hostType, hostname: hostname, pid: process.pid })
+  );
   connect();
 });
