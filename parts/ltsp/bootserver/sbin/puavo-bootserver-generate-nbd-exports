@@ -2,7 +2,8 @@
 
 set -e
 
-find /opt/ltsp/images -type f -name '*.img' -printf '%f\n' | while read filename; do
+find /opt/ltsp/images -maxdepth 1 -name '*.img' -type f -or -type l -printf '%f\n' \
+  | while read filename; do
     image=$(echo "$filename" | sed s'/\(.*\)\.img/\1/')
     cat <<EOF | sudo tee /etc/nbd-server/conf.d/${image}.conf > /dev/null
 [${image}]
