@@ -244,7 +244,8 @@ class packages {
     , 'thunderbird-locale-sv-se' ]:
       tag => [ 'language-sv', 'ubuntu', ];
 
-    [ 'xexit' ]:
+    [ 'autopoweroff'
+    , 'xexit' ]:
       tag => [ 'ltsp', 'opinsys', ];
 
     [ 'ltsp-client'
