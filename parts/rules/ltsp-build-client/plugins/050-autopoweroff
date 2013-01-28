@@ -1,0 +1,12 @@
+case "$MODE" in
+    commandline)
+        add_option "autopoweroff" "`eval_gettext "enable autopoweroff"`" "advanced" "false"
+        ;;
+    configure)
+        if [ -n "$option_autopoweroff_value" ]; then
+            AUTOPOWEROFF="Yes"
+        fi
+        if [ "$AUTOPOWEROFF" = "Yes" ]; then
+            LATE_PACKAGES="$LATE_PACKAGES autopoweroff"
+        fi
+esac
