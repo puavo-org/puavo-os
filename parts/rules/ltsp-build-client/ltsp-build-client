@@ -44,7 +44,7 @@ export BASE=${BASE:-/opt/ltsp}                # LTSP base directory
 MODULES_BASE=${MODULES_BASE:-/usr/share/ltsp} # our modules place
 PLUGINS_BASE=$MODULES_BASE/plugins            # base plugin repository
 SCRIPT=ltsp-build-client
-PLUGIN_DIRS="/etc/ltsp/plugins/$SCRIPT $PLUGINS_BASE/$SCRIPT/$VENDOR-custom $PLUGINS_BASE/$SCRIPT/$VENDOR $PLUGINS_BASE/$SCRIPT/common $LTSP_CUSTOM_PLUGINS"
+PLUGIN_DIRS="$LTSP_CUSTOM_PLUGINS /etc/ltsp/plugins/$SCRIPT $PLUGINS_BASE/$SCRIPT/$VENDOR-custom $PLUGINS_BASE/$SCRIPT/$VENDOR $PLUGINS_BASE/$SCRIPT/common"
 
 PARAMS="config:"                              # store commandline params for getopt
 HELP_MESSAGE=""                               # store regular help messages
