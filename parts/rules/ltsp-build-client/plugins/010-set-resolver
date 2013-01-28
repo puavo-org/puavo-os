@@ -5,4 +5,9 @@ case "$MODE" in
             cp /etc/resolv.conf $ROOT/etc/resolv.conf
         fi
         ;;
+    finalization)
+        # cleanup the buildtime resolv.conf copied here by resolvconf-package
+        rm -f $ROOT/etc/resolvconf/resolv.conf.d/original \
+              $ROOT/etc/resolvconf/resolv.conf.d/tail
+        ;;
 esac
