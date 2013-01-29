@@ -97,9 +97,6 @@ function connect(reconnect) {
             currentUser = username;
           }
 
-          // Just always send a ping to keep the connection alive.
-          client.write(JSON.stringify("ping") + "\n");
-
           // two minute loop
           loopTimer = setTimeout(loginLoop, 60 * 1000);
         });
