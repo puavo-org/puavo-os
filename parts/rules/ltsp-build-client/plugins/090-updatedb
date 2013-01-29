@@ -1,0 +1,5 @@
+case "$MODE" in
+    finalization)
+        test -x $ROOT/usr/bin/updatedb && chroot $ROOT /usr/bin/updatedb
+        ;;
+esac
