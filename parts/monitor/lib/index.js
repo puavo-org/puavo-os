@@ -10,6 +10,7 @@ var getXUser = require("./user");
 var lock = require("./lock")
 var hostType = require("./hosttype");
 var hostname;
+var PING_TIMEOUT = 10000;
 
 try {
   // On new systems puavo-register writes registered hostname to
@@ -63,6 +64,7 @@ function connect(reconnect) {
 
   var client = net.connect(config.tcpPort, config.host);
   var loopTimer;
+  var keepAliveTimer;
 
   client.on("connect", function() {
     console.log("Connection ok!");
@@ -124,7 +126,25 @@ function connect(reconnect) {
     console.log("Connection Error", err);
   });
 
+  client.on("data", function(data) {
+    packet = JSON.parse(data);
+
+    if (packet.type === 'ping') {
+      if (keepAliveTimer) {
+        clearTimeout(keepAliveTimer);
+      }
+      client.write(JSON.stringify({type: 'ping'}) + "\n");
+      keepAliveTimer = setTimeout(function() {
+        return closeConnection(client)
+        }, PING_TIMEOUT);
+      }
+  });
 }
+
+closeConnection = function(client) {
+  console.info("Connection timeout -> close");
+  return client.emit('close');
+};
 
 lock(config.lockFile || "/var/run/puavo-monitor.lock", function(err) {
   if (err && err.code === "FLOCK_TIMEOUT") {
