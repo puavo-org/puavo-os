@@ -99,6 +99,8 @@ puppet_logfile_path="/var/log/puppet/ltsp-$(date +%Y-%m-%d-%H%M%S).log"
     rm -f $targetroot/puppet-error.log
   else
     ln -fns "$puppet_logfile_path" $targetroot/puppet-error.log
+    echo ">>> puppet returned an error, see $targetroot/puppet-error.log for details."
+    exit 1
   fi
 )
 
