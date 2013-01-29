@@ -23,6 +23,7 @@ config = require "/etc/puavo-logrelay.json"
 USERNAME = fs.readFileSync("/etc/puavo/ldap/dn").toString().trim()
 PASSWORD = fs.readFileSync("/etc/puavo/ldap/password").toString().trim()
 RELAY_HOSTNAME = os.hostname()
+PING_TIMEOUT = 5000
 
 console.info "Logrelay starting with target #{ config.target }"
 
@@ -73,18 +74,25 @@ sender = new Sender(
 
 tcpServer = net.createServer (c) ->
   jsonStream = new JSONStream()
+  pingTimer = ""
+  pingLoop = ""
 
   # Client machine owning this connection
   machine = null
 
   jsonStream.on "data", (packet) ->
-
-    if packet is "ping"
-      return c.write("pong")
-
     packet = extendRelayMeta(packet)
 
     console.log "Packet from tcp: ", packet
+
+    if packet.type is 'ping'
+      console.log "Recieve ping-package -> clear timeout"
+      clearTimeout(pingTimer)
+      clearTimeout(pingLoop)
+      pingLoop = setTimeout () ->
+         pingTimer = pingClient(c)
+      , PING_TIMEOUT
+      return
 
     if packet.type is "desktop" and packet.event is "bootend"
       machine = packet
@@ -96,6 +104,8 @@ tcpServer = net.createServer (c) ->
   # When tcp connection closes asume that the client machine was shutdown.
   c.on "close", ->
     console.info "TCP connection closed for", machine.hostname
+    clearTimeout(pingTimer)
+    clearTimeout(pingLoop)
     endPacket = extendRelayMeta(machine)
     endPacket.event = "shutdown"
     endPacket.date = Date.now()
@@ -103,6 +113,20 @@ tcpServer = net.createServer (c) ->
 
   c.pipe(jsonStream)
 
+  pingTimer = pingClient(c)
+
+pingTimeout = (c) ->
+  console.info "Connection timeout. Client is down -> close socket"
+  c.emit('close')
+  
+
+pingClient = (c) ->
+  console.log "Send ping-package to client"
+  c.write('{"type":"ping"}')
+  return setTimeout () ->
+    pingTimeout(c)
+  , PING_TIMEOUT
+  
 
 udpServer = dgram.createSocket("udp4")
 
