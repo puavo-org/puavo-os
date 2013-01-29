@@ -302,10 +302,12 @@ class packages {
     , 'tuxguitar' ]:
       tag => [ 'music_making', 'ubuntu', ];
 
+    [ 'acroread' ]:
+      tag => [ 'office', 'opinsys', ];
+
 # XXX disable for now
-#   [ 'acroread'
-#   , 'cmaptools' ]:
-#     tag => [ 'office', ];
+#   [ 'cmaptools' ]:
+#     tag => [ 'office', 'opinsys', ];
 
     [ 'librecad'
     , 'libreoffice'
