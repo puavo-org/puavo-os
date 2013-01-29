@@ -252,9 +252,8 @@ class packages {
     , 'ltsp-server' ]:
       tag => [ 'ltsp', 'ubuntu', ];
 
-# XXX disable for now
-#   [ 'libdvdcss2' ]:
-#     tag => [ 'mediaplayer', ];
+    [ 'libdvdcss2' ]:
+      tag => [ 'mediaplayer', 'opinsys', ];
 
     [ 'spotify-client-qt' ]:
       tag => [ 'mediaplayer', ];
