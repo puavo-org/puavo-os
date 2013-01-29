@@ -19,21 +19,24 @@ class packages {
   }
 
   @package {
-    [ 'dconf-tools'
-    , 'epoptes'
-    , 'gawk'
+    [ 'gawk'
     , 'git'
-    , 'iftop'
     , 'initramfs-tools'
+    , 'iftop'
     , 'iperf'
     , 'lynx'
     , 'm4'
+    , 'mlocate'
     , 'pv'
     , 'sl'
     , 'sudo'
-    , 'terminator'
     , 'tmux'
-    , 'tshark'
+    , 'tshark' ]:
+      tag => [ 'admin', 'thinclient', 'ubuntu', ];
+
+    [ 'dconf-tools'
+    , 'epoptes'
+    , 'terminator'
     , 'vinagre' ]:
       tag => [ 'admin', 'ubuntu', ];
 
