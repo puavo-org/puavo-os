@@ -4,13 +4,14 @@ var os = require("os");
 var net = require("net");
 var config = require("/etc/puavo-monitor.json");
 var _ = require("underscore");
+var JSONStream = require("json-stream");
 
 var devices = require("./devices");
 var getXUser = require("./user");
 var lock = require("./lock")
 var hostType = require("./hosttype");
 var hostname;
-var PING_TIMEOUT = 10000;
+var PING_TIMEOUT = 1000 * 10;
 
 try {
   // On new systems puavo-register writes registered hostname to
@@ -65,9 +66,19 @@ function connect(reconnect) {
   var client = net.connect(config.tcpPort, config.host);
   var loopTimer;
   var keepAliveTimer;
+  function keepAlive(){
+    clearTimeout(keepAliveTimer);
+    keepAliveTimer = setTimeout(function() {
+      client.destroy(); // Will emit 'close' event which launches reconnection...
+      console.error("Ping timeout. Reconnecting...");
+    }, PING_TIMEOUT);
+  }
 
   client.on("connect", function() {
-    console.log("Connection ok!");
+    console.info("Connection ok!");
+    if (reconnect) {
+      console.info("This is a reconnection");
+    }
 
     getXUser(function(err, user) {
       if (err) {
@@ -88,11 +99,11 @@ function connect(reconnect) {
 
             // Ignore username completely here to keep statistics anonymoys
             if (username) {
-              console.log("User logged in");
+              console.log("User is logged in");
               client.write(JSON.stringify(basePacket("login")) + "\n");
             }
             else {
-              console.log("User logged out");
+              console.log("User is now logged out");
               client.write(JSON.stringify(basePacket("logout")) + "\n");
             }
 
@@ -105,12 +116,7 @@ function connect(reconnect) {
       }());
 
       var packet = basePacket("bootend");
-
-      if (reconnect) {
-        packet.reconnect = true;
-        console.log("reconnecting");
-      }
-
+      if (reconnect) packet.reconnect = true;
       client.write(JSON.stringify(packet) + "\n");
 
     });
@@ -126,25 +132,19 @@ function connect(reconnect) {
     console.log("Connection Error", err);
   });
 
-  client.on("data", function(data) {
-    packet = JSON.parse(data);
 
-    if (packet.type === 'ping') {
-      if (keepAliveTimer) {
-        clearTimeout(keepAliveTimer);
-      }
-      client.write(JSON.stringify({type: 'ping'}) + "\n");
-      keepAliveTimer = setTimeout(function() {
-        return closeConnection(client)
-        }, PING_TIMEOUT);
-      }
+  keepAlive();
+  client.pipe(new JSONStream()).on("data", function(packet) {
+    if (packet.type === "internal" && packet.event === "ping") {
+      keepAlive();
+      client.write(JSON.stringify({
+        type: "internal",
+        event: "pong"
+      }) + "\n");
+    }
   });
-}
 
-closeConnection = function(client) {
-  console.info("Connection timeout -> close");
-  return client.emit('close');
-};
+}
 
 lock(config.lockFile || "/var/run/puavo-monitor.lock", function(err) {
   if (err && err.code === "FLOCK_TIMEOUT") {
