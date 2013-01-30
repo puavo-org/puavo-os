@@ -37,16 +37,12 @@ kill -HUP 1
 
 for script in $(run_parts_list "$scriptsdir") ; do
     if [ "$script" = "$breakscript" ]; then
-        warn "Spawning shell before $script"
+        echo "Spawning shell before $script" >&2
         bash -l
-        warn "Continuing init-puavo execution"
+        echo "Continuing ltsp-init execution" >&2
     fi
-    debug "Sourcing $script"
     . "$script"
-    warn "DONE"
 done
-
-debug "Done"
 
 # init=/sbin/init-puavo can be used to launch this script, which should then
 # chain to /sbin/init.
