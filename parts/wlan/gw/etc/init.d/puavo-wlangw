@@ -1,0 +1,56 @@
+#!/bin/sh -e
+### BEGIN INIT INFO
+# Provides:          puavo-wlangw
+# Required-Start:    $remote_fs $syslog $network
+# Required-Stop:     $remote_fs $syslog $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Puavo WLAN Gateway Daemon
+### END INIT INFO
+
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+DAEMON=/usr/sbin/vtund
+NAME=puavo-wlangw
+DESC="Puavo WLAN Gateway Daemon"
+CONFFILE=/etc/puavo-wlangw/vtund.conf
+PIDFILE=/var/run/vtund.server.pid # Hard-coded in upstream :SS
+
+[ -f $DAEMON ] || exit 0
+[ -f $CONFFILE ] || exit 0
+
+. /lib/lsb/init-functions
+
+mkdir -p /var/run/vtund /var/lock/vtund # Hard-coded in upstream :SS
+
+case "$1" in
+    start)
+        log_daemon_msg "Starting $DESC server " "$NAME"
+        start-stop-daemon --start --startas $DAEMON --oknodo \
+            --pidfile $PIDFILE -- -s -f $CONFFILE
+        log_end_msg $?
+        ;;
+    stop)
+        [ -f $PIDFILE ] || continue
+        log_daemon_msg "Stopping $DESC" "$NAME"
+        start-stop-daemon --oknodo --stop --pidfile $PIDFILE
+        rm -f $PIDFILE
+        ;;
+    status)
+        status_of_proc -p $PIDFILE $DAEMON puavo-wlangw
+	;;
+    reload|force-reload)
+        [ -f $PIDFILE ] || continue
+        echo "Reloading puavo-wlangw."
+        start-stop-daemon --oknodo --stop --signal 1 --pidfile $PIDFILE
+        ;;
+    restart)
+        $0 stop
+        sleep 1;
+        $0 start
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|reload|status|force-reload}" >&2
+        exit 1
+        ;;
+esac
+exit 0
