@@ -1,30 +1,24 @@
-prefix = /usr/local
-exec_prefix = $(prefix)
-sbindir = $(exec_prefix)/sbin
-sysconfdir = $(prefix)/etc
-
-INSTALL = install
-INSTALL_PROGRAM = $(INSTALL)
-INSTALL_DATA = $(INSTALL) -m 644
+subdirs = ap gw
+install-subdirs = $(subdirs:%=install-%)
+clean-subdirs = $(subdirs:%=clean-%)
 
 .PHONY : all
-all :
+all : $(subdirs)
 
-.PHONY : installdirs
-installdirs :
-	mkdir -p $(DESTDIR)$(sbindir)
-	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-wlanap
-	mkdir -p $(DESTDIR)$(sysconfdir)/default
-	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
+.PHONY : $(subdirs)
+$(subdirs) :
+	$(MAKE) -C $@
+
+.PHONY : $(install-subdirs)
+$(install-subdirs) :
+	$(MAKE) -C $(@:install-%=%) install
 
 .PHONY : install
-install : installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
-		sbin/*
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-wlanap \
-		etc/puavo-wlanap/*
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/init.d \
-		etc/init.d/puavo-wlanap
+install : $(install-subdirs)
+
+.PHONY : $(clean-subdirs)
+$(clean-subdirs) :
+	$(MAKE) -C $(@:clean-%=%) clean
 
 .PHONY : clean
-clean :
+clean : $(clean-subdirs)
