@@ -4,8 +4,10 @@ class lightdm {
   file {
     '/etc/lightdm/lightdm-gtk-greeter-ubuntu.conf':
       content => template('lightdm/lightdm-gtk-greeter-ubuntu.conf'),
-      require => Package['lightdm'];
+      require => [ Package['lightdm']
+                 , Package['liitu-themes'] ];
   }
 
-  Package <| title == lightdm |>
+  Package <| title == lightdm 
+          or title == liitu-themes |>
 }
