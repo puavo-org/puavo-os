@@ -39,7 +39,7 @@ class Sender
 
   dequeue: ->
     if packet = @queue.shift()
-      console.log "Sending from queue. Size ", @queue.length
+      console.log "Sending from queue. Size ", @queue.length, packet
       @send(packet)
 
   updateInterval: ->
