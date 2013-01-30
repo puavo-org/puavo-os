@@ -17,13 +17,15 @@ clim(console, true)
 
 
 Sender = require "./sender"
+Pinger = require "./pinger"
 
 config = require "/etc/puavo-logrelay.json"
 
 USERNAME = fs.readFileSync("/etc/puavo/ldap/dn").toString().trim()
 PASSWORD = fs.readFileSync("/etc/puavo/ldap/password").toString().trim()
 RELAY_HOSTNAME = os.hostname()
-PING_TIMEOUT = 5000
+PING_TIMEOUT = 1000 * 10
+PING_INTERVAL = 1000 * 5
 
 console.info "Logrelay starting with target #{ config.target }"
 
@@ -64,69 +66,52 @@ extendRelayMeta = (packet) ->
     relay_timestamp: Date.now()
   }
 
-
 sender = new Sender(
   targetUrl
   config.initialInterval or 2000
   config.maxInterval or 1000 * 30
 )
 
-
 tcpServer = net.createServer (c) ->
-  jsonStream = new JSONStream()
-  pingTimer = ""
-  pingLoop = ""
-
   # Client machine owning this connection
   machine = null
 
-  jsonStream.on "data", (packet) ->
-    packet = extendRelayMeta(packet)
+  jsonStream = new JSONStream()
+  pinger = new Pinger(c, jsonStream, PING_INTERVAL, PING_TIMEOUT)
 
-    console.log "Packet from tcp: ", packet
-
-    if packet.type is 'ping'
-      console.log "Recieve ping-package -> clear timeout"
-      clearTimeout(pingTimer)
-      clearTimeout(pingLoop)
-      pingLoop = setTimeout () ->
-         pingTimer = pingClient(c)
-      , PING_TIMEOUT
-      return
-
-    if packet.type is "desktop" and packet.event is "bootend"
-      machine = packet
-      console.info "TCP connection from", machine.hostname
-
-    if machine
-      sender.send(packet)
-
-  # When tcp connection closes asume that the client machine was shutdown.
-  c.on "close", ->
-    console.info "TCP connection closed for", machine.hostname
-    clearTimeout(pingTimer)
-    clearTimeout(pingLoop)
+  handleClose = ->
+    pinger.stop()
+    return if not machine
     endPacket = extendRelayMeta(machine)
     endPacket.event = "shutdown"
     endPacket.date = Date.now()
     sender.send(endPacket)
 
+  jsonStream.on "data", (packet) ->
+    packet = extendRelayMeta(packet)
+    console.log "Packet from tcp: ", packet
+
+    if packet.type is "desktop" and packet.event is "bootend"
+      machine = packet
+      console.info "TCP connection from", machine.hostname
+
+    # Do not relay internal packages
+    if machine and packet.type isnt "internal"
+      sender.send(packet)
+
+  # When tcp connection closes asume that the client machine was shutdown.
+  c.on "close", ->
+    console.info "TCP connection closed for", machine?.hostname
+    handleClose()
+
+  # Destroy connection timeout
+  pinger.on "timeout", ->
+    console.info "Ping timeout. Destroying connection for", machine?.hostname
+    c.destroy()
+    handleClose()
+
   c.pipe(jsonStream)
-
-  pingTimer = pingClient(c)
-
-pingTimeout = (c) ->
-  console.info "Connection timeout. Client is down -> close socket"
-  c.emit('close')
-  
-
-pingClient = (c) ->
-  console.log "Send ping-package to client"
-  c.write('{"type":"ping"}')
-  return setTimeout () ->
-    pingTimeout(c)
-  , PING_TIMEOUT
-  
+  pinger.ping()
 
 udpServer = dgram.createSocket("udp4")
 
