@@ -6,12 +6,16 @@ class Pinger extends EventEmitter
   constructor: (@tcpStream, @jsonStream, @interval, @timeout) ->
     @timeoutTimer = null
     @pingTimer = null
-    @jsonStream.on "data", (data) =>
-      if data.type is "internal" and data.event is "pong"
-        clearTimeout @timeoutTimer
-        @pingTimer = setTimeout =>
-          @ping()
-        , @interval
+
+    @_reply = @_reply.bind(this)
+    @jsonStream.on "data", @_reply
+
+  _reply: (data) ->
+    if data.type is "internal" and data.event is "pong"
+      clearTimeout @timeoutTimer
+      @pingTimer = setTimeout =>
+        @ping()
+      , @interval
 
   ping: ->
     @timeoutTimer = setTimeout =>
@@ -21,6 +25,7 @@ class Pinger extends EventEmitter
 
   stop: ->
     @ping = ->
+    @jsonStream.removeListener "data", @_reply
     clearTimeout @timeoutTimer
     clearTimeout @pingTimer
 
