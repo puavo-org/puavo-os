@@ -1,3 +1,4 @@
+var hostType = require("./hosttype");
 
 var exec = require('child_process').exec;
 
@@ -11,17 +12,39 @@ var exec = require('child_process').exec;
  *  error
  **/
 function getXUser(cb) {
-  exec("who", function(err, stdout, stderr) {
-    var match;
-    if (err) return cb(err);
+  if (hostType === "thinclient") {
+    exec("ps -ef", function(err, stdout, stderr) {
+      if (err) return cb(err);
 
-    if (match = stdout.match(/(\w+)\s+tty[0-9]{1}/)) {
-      return cb(null, match[1]);
-    }
+      var processList = stdout.split("\n").filter( function(line) {
+            return line.match(/LTSP_CLIENT/);
+      });
 
-    return cb(null);
+      if (processList.length == 0) {
+        return cb(null);
+      }
 
-  });
+      var matchUser = processList[0].match(/-l ([^ ]+)/);
+
+      if (!matchUser) {
+        return cb(null);
+      }
+
+      return cb(null, matchUser[1]);
+    });
+  } else {
+    exec("who", function(err, stdout, stderr) {
+      var match;
+      if (err) return cb(err);
+
+      if (match = stdout.match(/(\w+)\s+tty[0-9]{1}/)) {
+        return cb(null, match[1]);
+      }
+
+      return cb(null);
+
+    });
+  }
 }
 
 module.exports = getXUser;
