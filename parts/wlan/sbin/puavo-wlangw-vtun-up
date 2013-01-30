@@ -1,0 +1,4 @@
+#!/bin/sh
+
+ifconfig $1 up
+brctl addif $2 $1

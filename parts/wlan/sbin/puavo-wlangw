@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ $# -eq 1 ]; then
+    if [ "$1" = "--daemon" ]; then
+        daemon --noconfig --name='puavo-wlangw' -- puavo-wlangw
+        exit 0
+    fi
+    echo "puavo-wlangw: error: unexpected argument '$1'" >&2
+    exit 1
+fi
+
+vtund -s -f /etc/puavo-wlangw/vtund.conf puavo-wlangw
