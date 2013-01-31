@@ -7,13 +7,19 @@ class packages {
   # install packages by default
   Package { ensure => latest, }
 
-  define kernel_package_for_version ($package_tags) {
+  define kernel_package_for_version ($package_tags, $with_extra=true) {
     $version = $title
 
+    $packages = $with_extra ? {
+                  true  => [ "linux-headers-$version"
+                           , "linux-image-$version"
+                           , "linux-image-extra-$version" ],
+                  false => [ "linux-headers-$version"
+                           , "linux-image-$version" ],
+                }
+
     @package {
-      [ "linux-headers-$version"
-      , "linux-image-$version"
-      , "linux-image-extra-$version" ]:
+      $packages:
         tag => [ 'kernel', $package_tags, ]
     }
   }
@@ -707,6 +713,10 @@ class packages {
         [ '3.6.6-999-generic'
         , '3.6.6-1000-generic' ]:
           package_tags => 'opinsys';
+
+        '3.7.5':
+          package_tags => 'opinsys',
+          with_extra   => false;
       }
     }
   }
