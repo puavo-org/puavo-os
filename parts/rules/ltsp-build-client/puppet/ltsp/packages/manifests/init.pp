@@ -704,7 +704,8 @@ class packages {
     'precise': {}
     'quantal': {
       kernel_package_for_version {
-        '3.6.6-999-generic':
+        [ '3.6.6-999-generic'
+        , '3.6.6-1000-generic' ]:
           package_tags => 'opinsys';
       }
     }
