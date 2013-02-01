@@ -56,25 +56,17 @@
         }
       }
     },
-    "chai": {
-      "version": "1.4.0"
-    },
-    "grunt-stylus": {
-      "version": "0.2.0"
+    "requirejs": {
+      "version": "2.0.6"
     },
     "nib": {
       "version": "0.8.2"
     },
-    "requirejs": {
-      "version": "2.0.6"
+    "grunt-stylus": {
+      "version": "0.2.0"
     },
-    "node-static": {
-      "version": "0.6.5",
-      "dependencies": {
-        "colors": {
-          "version": "0.6.0-1"
-        }
-      }
+    "chai": {
+      "version": "1.4.0"
     },
     "stylus": {
       "version": "0.30.1",
@@ -87,19 +79,42 @@
         }
       }
     },
-    "grunt-mocha": {
-      "version": "0.1.7",
+    "node-static": {
+      "version": "0.6.5",
       "dependencies": {
-        "temporary": {
-          "version": "0.0.5",
-          "dependencies": {
-            "package": {
-              "version": "1.0.1"
-            }
-          }
+        "colors": {
+          "version": "0.6.0-1"
+        }
+      }
+    },
+    "mocha": {
+      "version": "1.7.4",
+      "dependencies": {
+        "commander": {
+          "version": "0.6.1"
         },
         "growl": {
           "version": "1.6.1"
+        },
+        "jade": {
+          "version": "0.26.3",
+          "dependencies": {
+            "mkdirp": {
+              "version": "0.3.0"
+            }
+          }
+        },
+        "diff": {
+          "version": "1.0.2"
+        },
+        "debug": {
+          "version": "0.7.0"
+        },
+        "mkdirp": {
+          "version": "0.3.3"
+        },
+        "ms": {
+          "version": "0.3.0"
         }
       }
     },
@@ -158,34 +173,93 @@
         }
       }
     },
-    "mocha": {
-      "version": "1.7.4",
+    "grunt-mocha": {
+      "version": "0.1.7",
       "dependencies": {
-        "commander": {
-          "version": "0.6.1"
-        },
-        "growl": {
-          "version": "1.6.1"
-        },
-        "jade": {
-          "version": "0.26.3",
+        "temporary": {
+          "version": "0.0.5",
           "dependencies": {
-            "mkdirp": {
-              "version": "0.3.0"
+            "package": {
+              "version": "1.0.1"
             }
           }
         },
-        "diff": {
-          "version": "1.0.2"
+        "growl": {
+          "version": "1.6.1"
+        }
+      }
+    },
+    "nw-gyp": {
+      "version": "0.7.3-4",
+      "dependencies": {
+        "glob": {
+          "version": "3.1.17",
+          "dependencies": {
+            "inherits": {
+              "version": "1.0.0"
+            }
+          }
         },
-        "debug": {
-          "version": "0.7.0"
+        "graceful-fs": {
+          "version": "1.1.14"
         },
-        "mkdirp": {
-          "version": "0.3.3"
+        "fstream": {
+          "version": "0.1.21",
+          "dependencies": {
+            "inherits": {
+              "version": "1.0.0"
+            }
+          }
         },
-        "ms": {
-          "version": "0.3.0"
+        "minimatch": {
+          "version": "0.2.9",
+          "dependencies": {
+            "lru-cache": {
+              "version": "2.0.4"
+            },
+            "sigmund": {
+              "version": "1.0.0"
+            }
+          }
+        },
+        "nopt": {
+          "version": "2.1.1",
+          "dependencies": {
+            "abbrev": {
+              "version": "1.0.4"
+            }
+          }
+        },
+        "npmlog": {
+          "version": "0.0.2",
+          "dependencies": {
+            "ansi": {
+              "version": "0.1.2"
+            }
+          }
+        },
+        "osenv": {
+          "version": "0.0.3"
+        },
+        "request": {
+          "version": "2.9.203"
+        },
+        "semver": {
+          "version": "1.1.2"
+        },
+        "tar": {
+          "version": "0.1.14",
+          "dependencies": {
+            "inherits": {
+              "version": "1.0.0"
+            },
+            "block-stream": {
+              "version": "0.0.6"
+            }
+          }
+        },
+        "which": {
+          "version": "1.0.5"
         }
       }
     },
