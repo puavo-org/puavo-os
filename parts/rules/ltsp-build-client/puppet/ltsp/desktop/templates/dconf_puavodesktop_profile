@@ -96,7 +96,7 @@ location='/usr/share/applications/firefox.desktop'
 [org/gnome/gnome-panel/layout/objects/indicators]
 pack-type='end'
 toplevel-id='bottom-panel'
-pack-index=0
+pack-index=1
 object-iid='IndicatorAppletCompleteFactory::IndicatorAppletComplete'
 
 [org/gnome/gnome-panel/layout/objects/object-1]
@@ -111,7 +111,7 @@ location='nautilus-home.desktop'
 [org/gnome/gnome-panel/layout/objects/object-2]
 pack-type='end'
 toplevel-id='bottom-panel'
-pack-index=1
+pack-index=2
 object-iid='PanelInternalFactory::Separator'
 
 [org/gnome/gnome-panel/layout/objects/object-3]
@@ -123,8 +123,17 @@ object-iid='PanelInternalFactory::Launcher'
 [org/gnome/gnome-panel/layout/objects/object-3/instance-config]
 location='webmenu-spawn.desktop'
 
+[org/gnome/gnome-panel/layout/objects/object-5]
+pack-type='end'
+toplevel-id='bottom-panel'
+pack-index=0
+object-iid='PanelInternalFactory::Launcher'
+
+[org/gnome/gnome-panel/layout/objects/object-5/instance-config]
+location='webmenu-end-session.desktop'
+
 [org/gnome/gnome-panel/layout]
-object-id-list=['indicators', 'show-desktop', 'window-list', 'workspace-switcher', 'object-0', 'object-1', 'object-3', 'object-2', 'object-4']
+object-id-list=['indicators', 'show-desktop', 'window-list', 'workspace-switcher', 'object-0', 'object-1', 'object-3', 'object-2', 'object-4', 'object-5']
 toplevel-id-list=['bottom-panel']
 
 [org/gnome/gnome-panel/lockdown]
