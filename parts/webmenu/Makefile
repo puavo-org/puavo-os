@@ -7,6 +7,8 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
+NW_GYP=$(CURDIR)/node_modules/.bin/nw-gyp
+
 build: npm-install
 	node_modules/.bin/grunt
 
@@ -20,6 +22,7 @@ clean-nw:
 
 npm-install:
 	npm install
+	cd node_modules/ffi/ && $(NW_GYP) configure --target=0.4.1 && $(NW_GYP) build
 
 clean:
 	rm -f styles/main.css
