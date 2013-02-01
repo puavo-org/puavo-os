@@ -34,7 +34,8 @@ define [
         @navigation.handleKeyEvent(e)
 
       @listenTo this, "reset", =>
-        @setItems(@initial.items.toArray())
+        @model = @initial
+        @setCurrent()
         @refreshViews()
         @navigation.deactivate()
 
