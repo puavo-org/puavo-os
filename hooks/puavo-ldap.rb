@@ -16,7 +16,10 @@ class PuavoLdap
     @base       = File.read('/etc/puavo/ldap/base'    ).chomp
     @dn         = File.read('/etc/puavo/ldap/dn'      ).chomp
     @password   = File.read('/etc/puavo/ldap/password').chomp
-    #ldapserver  = File.read('/etc/puavo/ldap/master'  ).chomp
+    @domain     = File.read('/etc/puavo/domain'       ).chomp
+    @hostname   = File.read('/etc/puavo/hostname'     ).chomp
+
+    ldapserver = @hostname + "." + @domain   
 
     if ldapserver
       @conn = LDAP::Conn.new(ldapserver)
