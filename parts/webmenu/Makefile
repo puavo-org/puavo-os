@@ -7,7 +7,14 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
+# node-webkit version
+NW_VERSION=0.4.1
+# https://github.com/rogerwang/nw-gyp
 NW_GYP=$(CURDIR)/node_modules/.bin/nw-gyp
+define nw-build
+	@echo "Building node.js module '$1' for node-webkit"
+	cd node_modules/$1/ && $(NW_GYP) configure --target=$(NW_VERSION) && $(NW_GYP) build
+endef
 
 build: npm-install
 	node_modules/.bin/grunt
@@ -22,7 +29,8 @@ clean-nw:
 
 npm-install:
 	npm install
-	cd node_modules/ffi/ && $(NW_GYP) configure --target=0.4.1 && $(NW_GYP) build
+	$(call nw-build,ffi)
+	$(call nw-build,posix)
 
 clean:
 	rm -f styles/main.css
