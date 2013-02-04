@@ -1,4 +1,5 @@
 define [
+  "underscore"
   "app/views/spin"
   "backbone.viewmaster"
 
@@ -6,6 +7,7 @@ define [
   "app/utils/debounce"
   "cs!app/application"
 ], (
+  _
   spin
   ViewMaster
 
@@ -22,6 +24,11 @@ define [
 
     constructor: ->
       super
+
+      # Make sure that single app can be opened only once in 250ms. Prevents
+      # situations when holding down enter key might spawn multiple instances
+      # of the same app
+      @open = _.throttle(@open, 250)
 
       @$el.addClass "item-" + @model.get("name")
         .toLowerCase()
