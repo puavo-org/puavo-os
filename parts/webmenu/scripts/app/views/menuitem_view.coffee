@@ -73,4 +73,4 @@ define [
       @bubble "scrollTo", @
 
     isInactive: ->
-      if @model.get("status") is "inactive" then true else false
+      @model.get("status") is "inactive"
