@@ -50,7 +50,9 @@ define [
       new LauncherModel item
 
     menuViews = menuModels.map (model) ->
-      new MenuItemView model: model
+      mv = new MenuItemView model: model
+      mv.render()
+      return mv
 
   describe "Navigation", ->
 

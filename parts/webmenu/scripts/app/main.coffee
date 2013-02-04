@@ -61,6 +61,7 @@ define [
     # Hide window when focus is lost
     $(window).blur ->
       Application.bridge.trigger "hide-window"
+      layout.broadcast("hide-window")
 
     layout.render()
     $("body").append layout.el

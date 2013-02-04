@@ -30,10 +30,18 @@ define [
       if @isInactive()
         @$el.addClass "inactive"
 
+      @listenTo this, "hide-window", =>
+        @$img.removeClass("rotate-loading")
+
     events:
       "click": "open"
       "mouseover": "toggleInactiveNotify"
       "mouseout": "toggleInactiveNotify"
+
+    elements:
+      "$thumbnail": ".thumbnail"
+      "$description": ".description"
+      "$img": "img"
 
     open: ->
       if @isInactive()
@@ -44,15 +52,11 @@ define [
       else
         @bubble "open-app", @model
         @model.incClicks()
-        @$("img").addClass "rotate-loading"
+        @$img.addClass("rotate-loading")
 
     toggleInactiveNotify: ->
       if @isInactive()
         @$('.inactiveNotify').toggle()
-
-    elements:
-      "$thumbnail": ".thumbnail"
-      "$description": ".description"
 
     context: ->
       json = super()
