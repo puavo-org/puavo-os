@@ -33,7 +33,7 @@ module.exports = (msg, cb) ->
     cwd: process.env.HOME
 
   cmd.on "exit", (code) ->
-    console.log "Command '#{ command } #{ args.join " " } exited with #{ code }"
+    console.log "Command '#{ command }' #{ JSON.stringify(args) } exited with #{ code }"
     cb?() # TODO: create an error object...
 
 
