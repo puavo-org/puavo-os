@@ -1,23 +1,26 @@
 class kernels {
-  include packages
+  include kernels::grub_update
+  require packages
 
-  # Make sure grub-pc is installed, and then remove some update-grub
-  # configurations that are unnecessary in ltsp clients, but prevent the
-  # installation of alternative kernels.
-  # XXX (Where should this really be fixed?)
+  $default_kernel = $lsbdistcodename ? {
+                      'precise' => '3.2.0-37-generic',
+                      'quantal' => '3.5.0-23-generic',
+                    }
 
-  $grub_update_files = [ '/etc/kernel/postinst.d/zz-update-grub'
-                       , '/etc/kernel/postrm.d/zz-update-grub' ]
+  define default_kernel_link {
+    $filename = $title
 
-  file {
-    $grub_update_files:
-      ensure  => absent,
-      require => Package['grub-pc'];
+    file {
+      "/boot/$filename":
+       ensure => link,
+       target => "${filename}-${kernels::default_kernel}";
+    }
   }
 
-  Package <| tag == kernel |> {
-    require => File[ $grub_update_files ],
+  default_kernel_link {
+    [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
+      require => Packages::Kernel_package_for_version[$default_kernel];
   }
 
-  Package <| title == grub-pc |>
+  Packages::Kernel_package_for_version <| title == $default_kernel |>
 }
