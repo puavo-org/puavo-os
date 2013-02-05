@@ -7,7 +7,7 @@ class packages {
   # install packages by default
   Package { ensure => latest, }
 
-  define kernel_package_for_version ($package_tags, $with_extra=true) {
+  define kernel_package_for_version ($package_tag='', $with_extra=true) {
     $version = $title
 
     $packages = $with_extra ? {
@@ -20,7 +20,10 @@ class packages {
 
     @package {
       $packages:
-        tag => [ 'kernel', $package_tags, ]
+        tag => $package_tag ? {
+                 ''      => 'kernel',
+                 default => [ 'kernel', $package_tag, ],
+               },
     }
   }
 
@@ -707,16 +710,25 @@ class packages {
   }
 
   case $lsbdistcodename {
-    'precise': {}
-    'quantal': {
+    'precise': {
       kernel_package_for_version {
-        '3.6.6-999-generic':
-          package_tags => 'opinsys';
-
-        '3.7.5':
-          package_tags => 'opinsys',
-          with_extra   => false;
+        '3.2.0-37-generic':
+          ;
       }
     }
+    'quantal': {
+      kernel_package_for_version {
+        '3.5.0-23-generic':
+          ;
+
+        '3.6.6-999-generic':
+          package_tag => 'opinsys';
+
+        '3.7.5':
+          package_tag => 'opinsys',
+          with_extra  => false;
+      }
+    }
+
   }
 }
