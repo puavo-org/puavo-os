@@ -48,6 +48,31 @@ iconSize = 50px
     text-align center
     color white
 
+  &.type-menu:hover img
+    -webkit-animation-name open-folder
+    -webkit-animation-duration 1.0s
+    -webkit-animation-iteration-count 1
+    -webkit-animation-fill-mode forwards
+
+@keyframes open-folder {
+
+  0% {
+    -webkit-transform: matrix3d(
+            1, 0, 0, 0,
+            0, 1, 0, 0.000,
+            0, 0, 1, 0,
+            0, 0, 0, 1);
+  }
+
+  100% {
+    -webkit-transform: matrix3d(
+            1, 0, 0, 0,
+            0, 1, 0, 0.015,
+            0, 0, 1, 0,
+            0, 10, 0, 1);
+  }
+
+}
 @keyframes rotate {
 
   0% {

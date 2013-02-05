@@ -34,6 +34,8 @@ define [
         .toLowerCase()
         .replace(/[^a-z]/g, "")
 
+      @$el.addClass("type-#{ @model.get("type") }")
+
       if @isInactive()
         @$el.addClass "inactive"
 
