@@ -713,7 +713,7 @@ class packages {
     'precise': {
       kernel_package_for_version {
         '3.2.0-37-generic':
-          ;
+          with_extra => false;
       }
     }
     'quantal': {
