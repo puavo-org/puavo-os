@@ -56,6 +56,49 @@
         }
       }
     },
+    "dbus-native": {
+      "version": "0.0.8",
+      "dependencies": {
+        "binary": {
+          "version": "0.2.0",
+          "dependencies": {
+            "chainsaw": {
+              "version": "0.1.0",
+              "dependencies": {
+                "traverse": {
+                  "version": "0.3.9"
+                }
+              }
+            },
+            "buffers": {
+              "version": "0.1.1"
+            }
+          }
+        },
+        "byline": {
+          "version": "2.0.3"
+        },
+        "put": {
+          "version": "0.0.6"
+        },
+        "abstractsocket": {
+          "version": "0.0.2",
+          "dependencies": {
+            "exec_stream": {
+              "version": "0.0.3"
+            }
+          }
+        },
+        "xml2js": {
+          "version": "0.1.14",
+          "dependencies": {
+            "sax": {
+              "version": "0.5.1"
+            }
+          }
+        }
+      }
+    },
     "requirejs": {
       "version": "2.0.6"
     },
@@ -173,22 +216,6 @@
         }
       }
     },
-    "grunt-mocha": {
-      "version": "0.1.7",
-      "dependencies": {
-        "temporary": {
-          "version": "0.0.5",
-          "dependencies": {
-            "package": {
-              "version": "1.0.1"
-            }
-          }
-        },
-        "growl": {
-          "version": "1.6.1"
-        }
-      }
-    },
     "nw-gyp": {
       "version": "0.7.3-4",
       "dependencies": {
@@ -260,6 +287,22 @@
         },
         "which": {
           "version": "1.0.5"
+        }
+      }
+    },
+    "grunt-mocha": {
+      "version": "0.1.7",
+      "dependencies": {
+        "temporary": {
+          "version": "0.0.5",
+          "dependencies": {
+            "package": {
+              "version": "1.0.1"
+            }
+          }
+        },
+        "growl": {
+          "version": "1.6.1"
         }
       }
     },
