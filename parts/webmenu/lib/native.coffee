@@ -10,6 +10,7 @@ menutools = require "./menutools"
 powermanager = require "./powermanager"
 requirefallback = require "./requirefallback"
 puavo = require "./puavo"
+dbus = require "./dbus"
 
 webmenuHome = process.env.HOME + "/.config/webmenu"
 spawnMenu = process.env.SPAWNMENU
@@ -134,10 +135,10 @@ module.exports = (gui, bridge) ->
     powermanager.logout()
 
   bridge.on "html-ready", ->
+    dbus.registerApplication()
     console.log "Webmenu ready. Use 'webmenu-spawn' to open it"
 
   bridge.trigger "desktop-ready",
     user: userData,
     config: config,
     menu: menuJSON
-
