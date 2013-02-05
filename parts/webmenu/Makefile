@@ -27,10 +27,13 @@ nw: build
 clean-nw:
 	rm -r ../webmenu-*.nw
 
-npm-install:
-	npm install
+nw-gyp:
 	$(call nw-build,ffi)
 	$(call nw-build,posix)
+
+npm-install:
+	npm install
+	make nw-gyp
 
 clean:
 	rm -f styles/main.css
