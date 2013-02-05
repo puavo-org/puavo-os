@@ -5,6 +5,7 @@ define [
 
   "hbs!app/templates/menuitem"
   "app/utils/debounce"
+  "cs!app/utils/render_fix"
   "cs!app/application"
 ], (
   _
@@ -13,6 +14,7 @@ define [
 
   template
   debounce
+  renderFix
   Application
 ) ->
 
@@ -53,10 +55,12 @@ define [
       "$img": "img"
 
     open: ->
+
       if @isInactive()
         return
 
       if @model.get("type") is "menu"
+        renderFix()
         @bubble "open-menu", @model
       else
         @bubble "open-app", @model

@@ -11,6 +11,7 @@
             return;
           }
 
+
           window.gui = require('nw.gui');
           window.nodeRequire = window.require;
 
@@ -18,11 +19,11 @@
           window.require = undefined;
           // Also disable process so some libraries won't get confused whether
           // this is browser or node.js
+          window.ENV = window.process.env;
           window.process = undefined;
           window.require = { baseUrl: "scripts/" };
 
           window.nodeConnect = window.nodeRequire("./lib/native");
-
       }())
     </script>
     <script src="scripts/require.js"></script>
