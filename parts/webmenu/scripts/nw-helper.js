@@ -4,6 +4,7 @@ window.mochaNwAdapter = function() {};
 
 (function() {
   if (!window.require) return;
+  window.ENV = window.process.env;
   var util = window.require("util");
   var require = window.require;
   var process = window.process;
