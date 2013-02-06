@@ -83,6 +83,9 @@ class packages {
     , 'xul-ext-ubufox' ]:
       tag => [ 'desktop', 'ubuntu', ];
 
+    'nodejs-bundle':
+      tag => [ 'devel', 'opinsys', ];
+
     [ 'ack-grep'
     , 'build-essential'
     , 'cdbs'
