@@ -84,18 +84,22 @@ module DiskHandler
     end
   end
 
+  def self.non_swap_filesystems(fs_conf)
+    Filesystems[ fs_conf['hosttype'] ] \
+      .select { |fs| fs['type'] != 'swap' }
+  end
+
   def self.puavo_filesystems(fs_conf)
-    # unmount filesystems, if those are mounted,
-    # and remove dmsetup volumes as well, in case these are effective
     begin
-      Filesystems[ fs_conf['hosttype'] ].each do |fs|
-	if fs['type'] != 'swap'; then
-	  run('umount', '-f', "/#{ fs['name'] }")
-	end
-	run('dmsetup', 'remove', '-f', "/dev/mapper/puavo-#{ fs['name'] }")
+      # Unmount filesystems, if those are mounted.
+      non_swap_filesystems(fs_conf).each do |fs|
+	run('umount', '-f', "/#{ fs['name'] }")
       end
     rescue
     end
+
+    # Remove dmsetup volumes as well, in case these are effective.
+    run('dmsetup', 'remove_all') rescue true
 
     # clean up possible confusing mess from the partition
     run('dd', 'if=/dev/zero', "of=#{ fs_conf['partition'] }", 'count=1K')
@@ -124,12 +128,10 @@ module DiskHandler
   end
 
   def self.mount_filesystems(fs_conf)
-    Filesystems[ fs_conf['hosttype'] ] \
-      .select { |fs| fs['type'] != 'swap' } \
-      .each do |fs|
-        mnt_path = "/#{ fs['name'] }"
-        FileUtils.mkdir_p(mnt_path)
-        run('mount', "/dev/mapper/puavo-#{ fs['name'] }", mnt_path)
+    non_swap_filesystems(fs_conf).each do |fs|
+      mnt_path = "/#{ fs['name'] }"
+      FileUtils.mkdir_p(mnt_path)
+      run('mount', "/dev/mapper/puavo-#{ fs['name'] }", mnt_path)
     end
   end
 end
