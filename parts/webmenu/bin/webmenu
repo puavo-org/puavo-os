@@ -3,10 +3,9 @@
 export SPAWNMENU=$(hostname)-$(echo $DISPLAY | sed -r s/[.][0-9]*$//)
 
 logdir=$HOME/.config/webmenu/
-index=1
 
 mkdir -p $HOME/.config/webmenu/
-while true; do
-  nw /opt/webmenu > $logdir/webmenu$index.log 2>&1
-  index=`expr $index + 1`
-done
+
+nw /opt/webmenu > $logdir/webmenu.log 2>&1
+
+# FIXME: send event message if exit status is not true
