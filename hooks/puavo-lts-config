@@ -181,17 +181,19 @@ def device_ltspvars(device, organisation, school)
   end
 
   # Set WLAN configuration
-  index = 1
-  Array(school["puavoWlanSSID"]).each do |wlan|
-    lts_key = "WLAN_SSID_%02d" % index
-    ltspvars[lts_key] = '"' + wlan + '"'
-    index += 1
-  end
-  
-  wlan_channel = school["puavoWlanChannel"]
-  wlan_channel = device["puavoWlanChannel"] if device["puavoWlanChannel"]
+  if school
+    index = 1
+    Array(school["puavoWlanSSID"]).each do |wlan|
+      lts_key = "WLAN_SSID_%02d" % index
+      ltspvars[lts_key] = '"' + wlan + '"'
+      index += 1
+    end
+    
+    wlan_channel = school["puavoWlanChannel"]
+    wlan_channel = device["puavoWlanChannel"] if device["puavoWlanChannel"]
 
-  ltspvars["WLAN_CHANNEL"] = wlan_channel if ltspvars["WLAN_SSID_01"]
+    ltspvars["WLAN_CHANNEL"] = wlan_channel if ltspvars["WLAN_SSID_01"]
+  end
 
   ltspvars
 end
