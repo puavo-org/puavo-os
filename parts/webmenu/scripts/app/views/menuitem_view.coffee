@@ -36,7 +36,11 @@ define [
         .toLowerCase()
         .replace(/[^a-z]/g, "")
 
-      @$el.addClass("type-#{ @model.get("type") }")
+      if @model.get("type") is "menu"
+        @$el.addClass("type-menu")
+      else
+        # Normalize "desktop", "custom" to "app"
+        @$el.addClass("type-app")
 
       if @isInactive()
         @$el.addClass "inactive"
