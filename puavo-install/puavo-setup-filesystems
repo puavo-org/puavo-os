@@ -75,7 +75,6 @@ module DiskHandler
 
   def self.lvm_partition(fs_conf)
     # clean up possible confusing mess from the device
-
     run('dd', 'if=/dev/zero', "of=#{ fs_conf['device'] }", 'count=1K')
 
     # create an lvm partition
@@ -86,6 +85,18 @@ module DiskHandler
   end
 
   def self.puavo_filesystems(fs_conf)
+    # unmount filesystems, if those are mounted,
+    # and remove dmsetup volumes as well, in case these are effective
+    begin
+      Filesystems[ fs_conf['hosttype'] ].each do |fs|
+	if fs['type'] != 'swap'; then
+	  run('umount', '-f', "/#{ fs['name'] }")
+	end
+	run('dmsetup', 'remove', '-f', "/dev/mapper/puavo-#{ fs['name'] }")
+      end
+    rescue
+    end
+
     # clean up possible confusing mess from the partition
     run('dd', 'if=/dev/zero', "of=#{ fs_conf['partition'] }", 'count=1K')
 
