@@ -15,12 +15,15 @@ case "$hosttype" in
 
     puavo-install-ltspimages
     puavo-install-grub
+
+    sync
+    umount /state /images /home
     ;;
   ltspserver)
     puavo-setup-filesystems
     cp -a /etc/puavo /state
+
+    sync
+    umount /state
     ;;
 esac
-
-sync
-umount /state
