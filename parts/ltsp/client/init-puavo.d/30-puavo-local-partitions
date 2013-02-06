@@ -17,34 +17,42 @@ puavo_link_to_state() {
   done
 }
 
+puavo_mount_partition() {
+  name=$1
+  if [ -b "/dev/mapper/puavo-$name" ]; then
+    mkdir -p /$name
+    mount /dev/mapper/puavo-$name /$name
+  fi
+}
+
 if [ -x "/sbin/vgchange" ]; then
   vgchange -a y
 
-  if [ -b "/dev/mapper/puavo-home" ]; then
-    mkdir -p /home
-    mount /dev/mapper/puavo-home /home
-  fi
+  case "$PUAVO_HOSTTYPE" in
+    laptop)
+      puavo_mount_partition home
+      puavo_mount_partition images
+      ;;
+  esac
 
-  if [ -b "/dev/mapper/puavo-images" ]; then
-    mkdir -p /images
-    mount /dev/mapper/puavo-images /images
-  fi
+  case "$PUAVO_HOSTTYPE" in
+    laptop|ltspserver)
+      if [ -b "/dev/mapper/puavo-state" ]; then
+	puavo_mount_partition state
 
-  if [ -b "/dev/mapper/puavo-state" ]; then
-    mkdir -p /state
-    mount /dev/mapper/puavo-state /state
+	for path in /etc/krb5.keytab /etc/puavo; do
+	  cp -aT "/state${path}" "$path" 2>/dev/null || true
+	done
 
-    for path in /etc/krb5.keytab /etc/puavo; do
-      cp -aT "/state${path}" "$path" 2>/dev/null || true
-    done
-
-    case "$PUAVO_HOSTTYPE" in
-      laptop)
-        puavo_link_to_state /var/lib/sss /var/log
-        ;;
-      ltspserver)
-        puavo_link_to_state /var/log
-        ;;
-    esac
-  fi
+	case "$PUAVO_HOSTTYPE" in
+	  laptop)
+	    puavo_link_to_state /var/lib/sss /var/log
+	    ;;
+	  ltspserver)
+	    puavo_link_to_state /var/log
+	    ;;
+	esac
+      fi
+      ;;
+  esac
 fi
