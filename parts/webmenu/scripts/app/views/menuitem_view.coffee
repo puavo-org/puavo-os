@@ -56,7 +56,7 @@ define [
     elements:
       "$thumbnail": ".thumbnail"
       "$description": ".description"
-      "$img": "img"
+      "$img": "img,.cssIcon"
 
     open: ->
 

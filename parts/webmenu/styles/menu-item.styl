@@ -16,8 +16,19 @@ iconSize = 50px
   height height
 
   .osIcon, .cssIcon
-    width iconSize
-    height iconSize
+    display block
+    clear both
+    margin auto 0
+
+  &.type-menu img
+    height 40px
+
+  &.type-app img
+    height 60px
+
+  &.type-menu .thumbnail
+    margin-top 20px
+
   .cssIcon
     font-size iconSize
 
@@ -28,7 +39,6 @@ iconSize = 50px
 
   .thumbnail
     text-align center
-    margin-top 15px
 
   .description
     display none

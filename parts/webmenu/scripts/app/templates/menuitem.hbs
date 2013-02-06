@@ -12,7 +12,9 @@
   <i class="cssIcon {{cssIcon}}"></i>
   {{/if}}
   {{#if osIconPath}}
-  <img class="osIcon" src="file://{{osIconPath}}">
+  <div clas="osIcon">
+    <img src="file://{{osIconPath}}">
+  </div>
   {{/if}}
  <h1 class="item-name" >{{name}}</h1>
 </div>
