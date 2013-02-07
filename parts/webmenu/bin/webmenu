@@ -30,6 +30,8 @@ echo "log: tail -f $WM_HOME/current.log"
 cd $WM_PATH
 nw $WM_PATH > $LOG_FILE 2>&1 || {
     # Webmenu crashed!
+    notify-send --urgency=critical "Webmenu crashed!" "Restarting..."
+
     WM_STATUS=$?
     ERR_LOG="$WM_HOME/crash-$(date +%Y-%m-%d_%H-%M-%S).log"
 
@@ -37,7 +39,6 @@ nw $WM_PATH > $LOG_FILE 2>&1 || {
     cp $LOG_FILE $ERR_LOG
     echo "Crashed with $WM_STATUS. Log saved to $ERR_LOG"
 
-    notify-send --urgency=critical "Webmenu crashed!" "Restarting..."
     # Post crash notice to puavo-logrelay
     nc -q 1 -w 1 -u eventlog 3858 << EOF
 type:webmenu
