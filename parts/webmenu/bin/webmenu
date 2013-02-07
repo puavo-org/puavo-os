@@ -40,7 +40,7 @@ nw $WM_PATH > $LOG_FILE 2>&1 || {
     echo "Crashed with $WM_STATUS. Log saved to $ERR_LOG"
 
     # Post crash notice to puavo-logrelay
-    nc -q 1 -w 1 -u eventlog 3858 << EOF
+    nc -q 1 -w 1 -u eventlog 3858 || true << EOF
 type:webmenu
 event:crash
 hostname:$(hostname)
