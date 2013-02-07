@@ -27,6 +27,7 @@ echo "Starting Webmenu from $WM_PATH"
 echo "log: tail -f $WM_HOME/current.log"
 
 # Start Webmenu using node-webkit
+cd $WM_PATH
 nw $WM_PATH > $LOG_FILE 2>&1 || {
     # Webmenu crashed!
     WM_STATUS=$?
