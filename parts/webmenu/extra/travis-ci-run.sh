@@ -2,6 +2,9 @@
 
 set -eu
 
+# Fix permissions
+sudo chmod 1777 /dev/shm
+
 sh -e /etc/init.d/xvfb start &
 sleep 2
 
