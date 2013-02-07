@@ -41,8 +41,9 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d \
 		templates/etc/pam.d/ltspsshd \
-		templates/etc/pam.d/lightdm-thinclient \
-		templates/etc/pam.d/lightdm-fatclient
+		templates/etc/pam.d/lightdm-fatclient \
+		templates/etc/pam.d/lightdm-laptop \
+		templates/etc/pam.d/lightdm-thinclient
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ldap \
 		templates/etc/ldap/ldap.conf
