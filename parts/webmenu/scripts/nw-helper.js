@@ -18,7 +18,6 @@ window.mochaNwAdapter = function() {};
 
   function exit(code) {
     if (exitApp) {
-      Window.close(true);
       process.exit(code);
     }
   }
