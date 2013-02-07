@@ -75,10 +75,17 @@ module.exports = (gui, bridge) ->
     config.devtools = true
     Window.showDevTools()
 
-  displayMenu = ->
+  ###*
+  # Make menu visible and bring it to current desktop
+  #
+  # @param {String} [viewName]
+  #   Which view to display. "menu" for the root menu or "logout" for logout
+  #   view
+  ###
+  displayMenu = (viewName="menu") ->
     console.log "Displaying menu"
     menuVisible = true
-    bridge.trigger "spawn-menu"
+    bridge.trigger "spawn-#{ viewName }"
     Window.show()
     Window.focus()
 
@@ -102,7 +109,7 @@ module.exports = (gui, bridge) ->
       console.warn "Not hiding window because --no-hide is set or implied by devtools"
 
   toggleMenu = ->
-    if menuVisible then hideWindow() else displayMenu()
+    if menuVisible then hideWindow() else displayMenu("menu")
 
 
   spawnEmitter.on "spawn", ->
