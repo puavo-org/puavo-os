@@ -21,7 +21,7 @@ and will relay the UDP packets to given target as JSON HTTP POST.
 The packet is constructed from multiple key-value pairs separated by line
 breaks:
 
-    <key>:<value | [comma separated list of values]>
+    <key>:<value | [comma separated list of values between square brackets]>
 
 Key `type` is required for every packet.  If it is defined as `log` Logrelay
 will just log it and won't relay it.  Useful for debugging.
