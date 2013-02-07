@@ -728,7 +728,7 @@ class packages {
         '3.6.6-999-generic':
           package_tag => 'opinsys';
 
-        '3.7.5':
+        '3.7.6':
           package_tag => 'opinsys',
           with_extra  => false;
       }
