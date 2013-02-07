@@ -1,4 +1,5 @@
 prefix ?= /usr/local
+NW ?= nw
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
 datarootdir = $(prefix)/share
@@ -72,10 +73,10 @@ test-client:
 	node_modules/.bin/grunt mocha
 
 test-nw:
-	test=1 nw .
+	test=1 $(NW) .
 
 test-nw-hidden:
-	test=1 exit=1 nw .
+	test=1 exit=1 $(NW) .
 
 test-node:
 	node_modules/.bin/mocha --reporter spec --compilers coffee:coffee-script tests/*test*
