@@ -64,7 +64,6 @@ userData.fullName = userData.gecos.split(",")[0]
 
 spawnEmitter = require("./spawnmenu")(spawnPipePath)
 
-menuVisible = false
 
 module.exports = (gui, bridge) ->
 
@@ -84,7 +83,6 @@ module.exports = (gui, bridge) ->
   ###
   displayMenu = (viewName="root") ->
     console.log "Displaying menu"
-    menuVisible = true
     bridge.trigger("spawn", viewName)
     Window.show()
     Window.focus()
@@ -103,17 +101,23 @@ module.exports = (gui, bridge) ->
       return
     console.info "Hiding menu window"
     if argv.hide
-      menuVisible = false
       Window.hide()
     else
       console.warn "Not hiding window because --no-hide is set or implied by devtools"
 
+  rootMenuVisible = false
   toggleMenu = ->
-    if menuVisible then hideWindow() else displayMenu("root")
+    if rootMenuVisible
+      hideWindow()
+      rootMenuVisible = false
+    else
+      displayMenu("root")
+      rootMenuVisible = true
 
   spawnEmitter.on "spawn", (options) ->
     if options.logout
       displayMenu("logout")
+      rootMenuVisible = false
     else
       toggleMenu()
 
@@ -134,6 +138,7 @@ module.exports = (gui, bridge) ->
 
   bridge.on "hide-window", ->
     hideWindow()
+    rootMenuVisible = false
 
   bridge.on "shutdown", ->
     powermanager.shutdown()
