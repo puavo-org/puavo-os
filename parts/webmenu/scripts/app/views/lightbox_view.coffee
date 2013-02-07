@@ -22,19 +22,12 @@ define [
       super
       @setView ".content", opts.view
 
-      @listenTo this, "cancel", =>
-        @remove()
+      @listenTo this, "cancel", @remove
 
-    remove: (opts)->
+    remove: (opts) ->
       super
-      $("body").css "overflow", "auto"
-      Lightbox.current = null
-
       if not opts?.silent
         @trigger "close"
-
-
-    renderToBody: -> @render()
 
     render: ->
       # Only one Lightbox can be active at once

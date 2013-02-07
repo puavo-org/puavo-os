@@ -19,7 +19,6 @@ define [
   Application
 ) ->
 
-
   Application.bridge.on "desktop-ready", ({user, config, menu}) ->
 
     if config.devtools
@@ -67,11 +66,9 @@ define [
     $("body").append layout.el
 
     Application.bridge.on "spawn", (viewName) ->
-      console.info "broadcasting #{ viewName }"
-      if viewName is "root"
-        layout.broadcast("reset")
+      console.info "broadcasting #{ viewName } and open-#{ viewName }-view"
+      layout.broadcast("reset")
       layout.broadcast("open-#{ viewName }-view")
-
 
     ["logout", "shutdown", "reboot"].forEach (event) ->
       layout.on event, ->

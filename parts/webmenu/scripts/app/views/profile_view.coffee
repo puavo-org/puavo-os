@@ -3,55 +3,18 @@ define [
 
   "cs!app/models/launcher_model"
   "hbs!app/templates/profile"
-  "hbs!app/templates/menuitem"
   "cs!app/views/menuitem_view"
+  "cs!app/views/logout_button_view"
   "cs!app/application"
-  "cs!app/views/logout_view"
-  "cs!app/views/lightbox_view"
 ], (
   ViewMaster
 
   LauncherModel
   template
-  menuItemTemplate
   MenuItemView
+  LogoutButtonView
   Application
-  LogoutView
-  Lightbox
 ) ->
-
-  class LogoutButton extends ViewMaster
-
-    className: "bb-menu-item"
-
-    template: menuItemTemplate
-
-    constructor: (opts) ->
-      super
-      @listenTo this, "reset", @removeLightbox
-      @lb = null
-      @hostType = opts.hostType
-
-    events:
-      "click": ->
-        @lb = new Lightbox
-          view: new LogoutView
-            hostType: @hostType
-        @lb.render()
-        @lb.listenTo @lb, "all", (event) =>
-          @bubble event
-
-    removeLightbox: ->
-      @lb?.remove()
-      @lb = null
-
-    remove: ->
-      @removeLightbox()
-      super
-
-    context: ->
-      cssIcon: "icon-logout"
-      name: "Kirjaudu ulos"
 
   class ProfileView extends ViewMaster
 
@@ -80,7 +43,7 @@ define [
           model: new LauncherModel profileCMD
         @appendView ".settings-container",  @profile
 
-      @logout = new LogoutButton
+      @logout = new LogoutButtonView
         hostType: @config.get("hostType")
       @appendView ".settings-container", @logout
 

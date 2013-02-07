@@ -46,11 +46,6 @@ define [
       it "should have change password button", ->
         expect(view.$el).to.have(".item-changepassword")
 
-      describe "logout button", ->
-        it "opens logout menu", ->
-          view.logout.$el.click()
-          expect($("body")).to.have(".bb-lightbox")
-
       describe "my profile button", ->
         it "emits open-app for profile edit on profile button click", (done) ->
           view.once "open-app", (model) ->
