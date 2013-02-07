@@ -82,10 +82,10 @@ module.exports = (gui, bridge) ->
   #   Which view to display. "menu" for the root menu or "logout" for logout
   #   view
   ###
-  displayMenu = (viewName="menu") ->
+  displayMenu = (viewName="root") ->
     console.log "Displaying menu"
     menuVisible = true
-    bridge.trigger "spawn-#{ viewName }"
+    bridge.trigger("spawn", viewName)
     Window.show()
     Window.focus()
 
@@ -109,12 +109,13 @@ module.exports = (gui, bridge) ->
       console.warn "Not hiding window because --no-hide is set or implied by devtools"
 
   toggleMenu = ->
-    if menuVisible then hideWindow() else displayMenu("menu")
+    if menuVisible then hideWindow() else displayMenu("root")
 
-
-  spawnEmitter.on "spawn", ->
-    console.info "Opening (or close) menu from webmenu-spawn"
-    toggleMenu()
+  spawnEmitter.on "spawn", (options) ->
+    if options.logout
+      displayMenu("logout")
+    else
+      toggleMenu()
 
   bridge.on "open", (cmd) ->
     console.log "Opening command", cmd

@@ -3,12 +3,19 @@
 DEFAULT_SPAWNMENU=~/.config/webmenu/spawnmenu
 SPAWNMENU=$DEFAULT_SPAWNMENU-$(hostname)-$(echo $DISPLAY | sed -r s/[.][0-9]*$//)
 
-nc -U $SPAWNMENU
-STATUS=$?
+ARGS=$@
+STATUS=0
 
-if [ "$STATUS" != "0"  ]; then
-  nc -U $DEFAULT_SPAWNMENU
+spawn(){
+  echo $ARGS | nc -w 1 -q 1 -U $1
   STATUS=$?
+}
+
+spawn $SPAWNMENU
+
+# Retry with default pipe path. Used when starting webmenu with "nw ."
+if [ "$STATUS" != "0"  ]; then
+  spawn $DEFAULT_SPAWNMENU
 fi
 
 if [ "$STATUS" != "0"  ]; then

@@ -28,7 +28,7 @@ define [
 
     constructor: (opts) ->
       super
-      @listenTo this, "spawn-menu", @removeLightbox
+      @listenTo this, "reset", @removeLightbox
       @lb = null
       @hostType = opts.hostType
 

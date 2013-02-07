@@ -54,11 +54,6 @@ define [
         collection: @allItems
         config: @config
 
-
-      @listenTo this, "spawn-menu", =>
-        # reset when menu is hidden and no app was launched
-        @broadcast("reset")
-
       @listenTo this, "open-menu", (model, sender) =>
         # Update MenuListView when user navigates from breadcrumbs
         if sender is @breadcrumbs
