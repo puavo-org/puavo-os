@@ -4,7 +4,14 @@ DEFAULT_SPAWNMENU=~/.config/webmenu/spawnmenu
 SPAWNMENU=$DEFAULT_SPAWNMENU-$(hostname)-$(echo $DISPLAY | sed -r s/[.][0-9]*$//)
 
 nc -U $SPAWNMENU
+STATUS=$?
 
-if [ $? -eq 1 ]; then
+if [ "$STATUS" != "0"  ]; then
   nc -U $DEFAULT_SPAWNMENU
+  STATUS=$?
+fi
+
+if [ "$STATUS" != "0"  ]; then
+    echo "fail"
+    notify-send --urgency=critical "Failed to spawn Webmenu" "Not running?"
 fi
