@@ -376,6 +376,7 @@ class packages {
     , 'opinsys-ca-certificates'
     , 'puavo-ltsp-client'
     , 'puavo-ltsp-install'
+    , 'puavo-monitor'
     , 'puavo-register' ]:
       tag => [ 'puavo', 'opinsys', 'thinclient', ];
 
