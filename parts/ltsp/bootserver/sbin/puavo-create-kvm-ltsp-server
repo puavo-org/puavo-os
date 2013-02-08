@@ -9,6 +9,7 @@ require 'tempfile'
 require 'uuidtools'
 
 @kvm_name = ARGV[0]
+@kvm_cpus = ARGV[1] || 1
 @kvm_uuid = UUIDTools::UUID.random_create.to_s
 @kvm_memory = 2097152
 @kvm_mac = "aa:cc:" + (1..4).map{"%0.2x"%rand(256)}.join(":")

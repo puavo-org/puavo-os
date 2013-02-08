@@ -3,7 +3,7 @@
   <uuid><%= @kvm_uuid %></uuid>
   <memory unit='KiB'><%= @kvm_memory %></memory>
   <currentMemory unit='KiB'><%= @kvm_memory %></currentMemory>
-  <vcpu placement='static'>1</vcpu>
+  <vcpu placement='static'><%= @kvm_cpus %></vcpu>
   <os>
     <type arch='x86_64' machine='pc-1.0'>hvm</type>
     <boot dev='network'/>
