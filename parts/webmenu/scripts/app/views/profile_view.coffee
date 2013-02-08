@@ -43,6 +43,11 @@ define [
           model: new LauncherModel profileCMD
         @appendView ".settings-container",  @profile
 
+      if supportCMD = @config.get("supportCMD")
+        @support = new MenuItemView
+          model: new LauncherModel supportCMD
+        @appendView ".settings-container",  @support
+
       @logout = new LogoutButtonView
         hostType: @config.get("hostType")
       @appendView ".settings-container", @logout
