@@ -115,12 +115,10 @@ tcpServer = net.createServer (c) ->
 
 udpServer = dgram.createSocket("udp4")
 
-# TODO: We should json over udp too
-udpServer.on "message", (msg, rinfo) ->
-
+parseLogrelayFormat = (data) ->
   packet = {}
 
-  msg.toString().split("\n").forEach (line) ->
+  data.toString().split("\n").forEach (line) ->
     if not line then return
     if not line.match(/[.+:.+]/)
       console.error "UDP packet: bad line:", line
@@ -133,6 +131,15 @@ udpServer.on "message", (msg, rinfo) ->
       v = match[1].split(",")
 
     packet[k] = v
+
+  return packet
+
+udpServer.on "message", (data, rinfo) ->
+
+  try
+    packet = JSON.parse(data)
+  catch err
+    packet = parseLogrelayFormat(data)
 
   packet = extendRelayMeta(packet)
   console.log "Packet from udp: ", packet
