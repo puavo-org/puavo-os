@@ -14,7 +14,6 @@ for x in $(cat /proc/cmdline); do
     case "$x" in
         ltsp.break=*)
             breakscript="$scriptsdir/${x#ltsp.break=}"
-            break;
             ;;
         puavo.hosttype=*)
             puavo_hosttype="${x#puavo.hosttype=}"
