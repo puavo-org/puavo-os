@@ -33,8 +33,8 @@
     "cssIcon": "icon-cw"
   },
   "supportCMD": {
-    "type": "webWindow",
-    "url": "http://www.opinsys.fi",
+    "type": "desktop",
+    "command": ["xdg-open", "http://www.opinsys.fi"],
     "name": "Tukisivusto",
     "cssIcon": "icon-cw"
   },
