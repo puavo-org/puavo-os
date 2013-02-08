@@ -122,6 +122,10 @@ module.exports = (gui, bridge) ->
     if options.logout
       displayMenu("logout")
       rootMenuVisible = false
+    else if options["webmenu-exit"]
+      code = parseInt(options["webmenu-exit"], 10) or 0
+      console.info "Exiting on user request with code #{ options["webmenu-exit"] }"
+      process.exit(code)
     else
       toggleMenu()
 
