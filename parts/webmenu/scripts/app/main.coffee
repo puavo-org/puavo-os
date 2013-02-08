@@ -19,6 +19,9 @@ define [
   Application
 ) ->
 
+  if window.ENV.animate
+    $("html").addClass("animate")
+
   Application.bridge.on "desktop-ready", ({user, config, menu}) ->
 
     if config.devtools
