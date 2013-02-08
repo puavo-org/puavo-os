@@ -1,8 +1,20 @@
 # Usage
 
-Start it with `webmenu` command. This should be kept running always. It can be
-spawned again using `webmenu-spawn` command.
+## `$ webmenu`
 
-Webmenu does not add a launcher automatically to panels yet. Just create custom
-Unity, gnome-panel, whatever entry for the `webmenu-spawn` command for now.
+Starts the Webmenu process. This should be kept running always. Use `webmenu-spawn` command to open it.
 
+
+## `$ webmenu-spawn`
+
+`--logout`
+
+Spawn with logout view open
+
+`--webmenu-exit [exit status]`
+
+Shutdown the Webmenu process with optional exit status. Nonzero exit status causes Webmenu to be restarted.
+
+
+Webmenu does not add a launcher automatically to panels yet. Use `.desktop` files from `extra/`
+to create panel launchers.
