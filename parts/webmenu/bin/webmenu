@@ -29,10 +29,11 @@ echo "log: tail -f $WM_HOME/current.log"
 # Start Webmenu using node-webkit
 cd $WM_PATH
 nw $WM_PATH > $LOG_FILE 2>&1 || {
+    WM_STATUS=$?
+
     # Webmenu crashed!
     notify-send --urgency=critical "Webmenu crashed!" "Restarting..." || true
 
-    WM_STATUS=$?
     ERR_LOG="$WM_HOME/crash-$(date +%Y-%m-%d_%H-%M-%S).log"
 
     # Save crash logs to own files
