@@ -9,7 +9,6 @@ launchCommand = require "./launchcommand"
 menutools = require "./menutools"
 powermanager = require "./powermanager"
 requirefallback = require "./requirefallback"
-puavo = require "./puavo"
 dbus = require "./dbus"
 
 webmenuHome = process.env.HOME + "/.config/webmenu"
@@ -36,17 +35,21 @@ config = requirefallback(
   __dirname + "/../config.json"
 )
 
+config.hostType = require "./hosttype"
+config.production = process.env.NODE_ENV isnt "production"
 
-if process.env.NODE_ENV isnt "production"
-  config.production = false
-else
-  config.production = true
-
-
-# Inject puavo configuration
-puavo.injectConfiguration(
-  config
-)
+try
+  puavoDomain = fs.readFileSync("/etc/puavo/domain").toString().trim()
+catch err
+  console.warn "Cannot read Puavo Domain", err
+  console.warn "Disabling password button"
+if puavoDomain
+  config.passwordCMD = {
+    type: "webWindow",
+    url: "https://#{puavoDomain}/users/password/own"
+    name: "Salasana",
+    cssIcon: "icon-cw"
+  }
 
 
 menutools.injectDesktopData(

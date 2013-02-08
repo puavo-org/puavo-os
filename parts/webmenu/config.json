@@ -24,12 +24,6 @@
     "name": "Profiili",
     "cssIcon": "icon-vcard"
   },
-  "passwordCMD": {
-    "type": "webWindow",
-    "url": "http://lmgtfy.com/?q=Reset+linux+password",
-    "name": "Salasana",
-    "cssIcon": "icon-cw"
-  },
   "supportCMD": {
     "type": "desktop",
     "command": ["xdg-open", "http://www.opinsys.fi"],
