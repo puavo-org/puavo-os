@@ -1,9 +1,9 @@
 
 {spawn} = require "child_process"
-
 posix = require "posix"
 mkdirp = require "mkdirp"
 fs = require "fs"
+_ = require "underscore"
 
 launchCommand = require "./launchcommand"
 menutools = require "./menutools"
@@ -70,9 +70,6 @@ spawnEmitter = require("./spawnmenu")(spawnPipePath)
 
 module.exports = (gui, bridge) ->
 
-  spawnTimer = null
-  spawnCounter = 0
-
   Window = gui.Window.get()
 
   if process.env.devtools
@@ -120,23 +117,17 @@ module.exports = (gui, bridge) ->
       displayMenu("root")
       rootMenuVisible = true
 
-  spawnEmitter.on "spawn", (options) ->
-    spawnCounter += 1
-    console.log spawnCounter
-
-    clearTimeout spawnTimer
-    spawnTimer = setTimeout ->
-      spawnCounter = 0
-    , 300
-
-    if spawnCounter > 1
-      return
+  spawnHandler = (options) ->
 
     if options.logout
       displayMenu("logout")
       rootMenuVisible = false
     else
       toggleMenu()
+
+  # Prevent crazy menu spawning which might cause slow machines to get stuck
+  # for long periods of time
+  spawnEmitter.on "spawn", _.throttle(spawnHandler, 300)
 
   bridge.on "open", (cmd) ->
     console.log "Opening command", cmd
