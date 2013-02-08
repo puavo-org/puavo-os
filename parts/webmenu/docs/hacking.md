@@ -2,13 +2,12 @@
 
 Here's how to setup the development environment for now:
 
-Ubuntu dependecies
+Get dependecies listed in [`debian/control`](https://github.com/opinsys/opinsys-debs/blob/master/packages/webmenu/debian/control).
 
-    sudo add-apt-repository ppa:chris-lea/node.js
-    sudo apt-get update
-    sudo apt-get install nodejs npm nodejs-dev wmctrl git-core build-essential gnome-themes-extras
+`node-webkit` can be found from from <https://github.com/rogerwang/node-webkit#downloads>.
+The `nw` binary should be put in the `PATH`.
 
-And get node-webkit from <https://github.com/rogerwang/node-webkit#downloads>
+Make sure you use the version listed in the [`Makefile`](https://github.com/opinsys/webmenu/blob/master/Makefile).
 
 Compile Webmenu
 
@@ -23,6 +22,10 @@ Basic
 Devtools
 
     devtools=1 nw .
+    
+With reload loop and crash reporting
+
+    bin/webmenu .
 
 ## Development
 
@@ -57,6 +60,10 @@ node.js tests:
 Debug tests in a real browser:
 
     make serve
+    
+## Installation
+
+    sudo make install
 
 
 [Travis-CI]: https://travis-ci.org/opinsys/webmenu
