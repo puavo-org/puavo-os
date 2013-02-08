@@ -49,10 +49,6 @@ Without window:
 
     make test-nw-hidden
 
-In [PhantomJS][] used on [Travis-CI][]
-
-    make test-client
-
 node.js tests:
 
     make test-node
