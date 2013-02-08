@@ -18,7 +18,6 @@ for x in $(cat /proc/cmdline); do
             ;;
         puavo.hosttype=*)
             puavo_hosttype="${x#puavo.hosttype=}"
-            break;
             ;;
     esac
 done
