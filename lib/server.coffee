@@ -49,6 +49,8 @@ catch err
   console.error "Failed to drop privileges to #{ config.user }:#{ config.group }", err
   process.exit(1)
 
+console.info "Dropped to uid #{ process.getuid() } and gid #{ process.getgid() }"
+
 targetUrl = url.parse(config.target)
 targetUrl.auth = "#{ USERNAME }:#{ PASSWORD }"
 targetUrl = url.format(targetUrl)
