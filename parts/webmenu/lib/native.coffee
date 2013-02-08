@@ -127,7 +127,7 @@ module.exports = (gui, bridge) ->
 
   # Prevent crazy menu spawning which might cause slow machines to get stuck
   # for long periods of time
-  spawnEmitter.on "spawn", _.throttle(spawnHandler, 300)
+  spawnEmitter.on "spawn", _.debounce(spawnHandler, 300, true)
 
   bridge.on "open", (cmd) ->
     console.log "Opening command", cmd
