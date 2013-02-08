@@ -1,11 +1,54 @@
 #!/bin/sh
 
+set -eu
+
+# Webmenu installation path
+WM_PATH="/opt/webmenu"
+
+# Webmenu config home
+WM_HOME=$HOME/.config/webmenu
+
+# Log file for the current Webmenu instance
+LOG_FILE="$WM_HOME/current.log"
+
+# Spawn menu pipe path. Create unique for each X instance
 export SPAWNMENU=$(hostname)-$(echo $DISPLAY | sed -r s/[.][0-9]*$//)
 
-logdir=$HOME/.config/webmenu/
+# Customize path with first arg.
+# Eg. use "bin/webmenu ." to start development version from git
+if [ $# -eq 1 ]; then
+    WM_PATH=$1
+fi
 
-mkdir -p $HOME/.config/webmenu/
 
-nw /opt/webmenu > $logdir/webmenu.log 2>&1
+mkdir -p $WM_HOME
 
-# FIXME: send event message if exit status is not true
+echo "Starting Webmenu from $WM_PATH"
+echo "log: tail -f $WM_HOME/current.log"
+
+# Start Webmenu using node-webkit
+cd $WM_PATH
+nw $WM_PATH > $LOG_FILE 2>&1 || {
+    WM_STATUS=$?
+
+    # Webmenu crashed!
+    notify-send --urgency=critical "Webmenu crashed!" "Restarting..." || true
+
+    ERR_LOG="$WM_HOME/crash-$(date +%Y-%m-%d_%H-%M-%S).log"
+
+    # Save crash logs to own files
+    cp $LOG_FILE $ERR_LOG
+    echo "Crashed with $WM_STATUS. Log saved to $ERR_LOG"
+
+    # Post crash notice to puavo-logrelay
+    nc -q 1 -w 1 -u eventlog 3858 << EOF || true
+type:webmenu
+event:crash
+hostname:$(hostname)
+date:$(date +%s)
+path:$ERR_LOG
+EOF
+    echo "Restarting in 5..."
+    sleep 5
+    exec $0 $WM_PATH
+}

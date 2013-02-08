@@ -1,15 +1,14 @@
 
 {spawn} = require "child_process"
-
 posix = require "posix"
 mkdirp = require "mkdirp"
 fs = require "fs"
+_ = require "underscore"
 
 launchCommand = require "./launchcommand"
 menutools = require "./menutools"
 powermanager = require "./powermanager"
 requirefallback = require "./requirefallback"
-puavo = require "./puavo"
 dbus = require "./dbus"
 
 webmenuHome = process.env.HOME + "/.config/webmenu"
@@ -36,17 +35,21 @@ config = requirefallback(
   __dirname + "/../config.json"
 )
 
+config.hostType = require "./hosttype"
+config.production = process.env.NODE_ENV isnt "production"
 
-if process.env.NODE_ENV isnt "production"
-  config.production = false
-else
-  config.production = true
-
-
-# Inject puavo configuration
-puavo.injectConfiguration(
-  config
-)
+try
+  puavoDomain = fs.readFileSync("/etc/puavo/domain").toString().trim()
+catch err
+  console.warn "Cannot read Puavo Domain", err
+  console.warn "Disabling password button"
+if puavoDomain
+  config.passwordCMD = {
+    type: "webWindow",
+    url: "https://#{puavoDomain}/users/password/own"
+    name: "Salasana",
+    cssIcon: "icon-cw"
+  }
 
 
 menutools.injectDesktopData(
@@ -64,7 +67,6 @@ userData.fullName = userData.gecos.split(",")[0]
 
 spawnEmitter = require("./spawnmenu")(spawnPipePath)
 
-menuWindowDisplayStatus = false
 
 module.exports = (gui, bridge) ->
 
@@ -75,10 +77,16 @@ module.exports = (gui, bridge) ->
     config.devtools = true
     Window.showDevTools()
 
-  displayMenu = ->
+  ###*
+  # Make menu visible and bring it to current desktop
+  #
+  # @param {String} [viewName]
+  #   Which view to display. "menu" for the root menu or "logout" for logout
+  #   view
+  ###
+  displayMenu = (viewName="root") ->
     console.log "Displaying menu"
-    menuWindowDisplayStatus = true
-    bridge.trigger "spawn-menu"
+    bridge.trigger("spawn", viewName)
     Window.show()
     Window.focus()
 
@@ -96,18 +104,34 @@ module.exports = (gui, bridge) ->
       return
     console.info "Hiding menu window"
     if argv.hide
-      menuWindowDisplayStatus = false
       Window.hide()
     else
       console.warn "Not hiding window because --no-hide is set or implied by devtools"
 
+  rootMenuVisible = false
   toggleMenu = ->
-    if menuWindowDisplayStatus then hideWindow() else displayMenu()
+    if rootMenuVisible
+      hideWindow()
+      rootMenuVisible = false
+    else
+      displayMenu("root")
+      rootMenuVisible = true
 
+  spawnHandler = (options) ->
 
-  spawnEmitter.on "spawn", ->
-    console.info "Opening (or close) menu from webmenu-spawn"
-    toggleMenu()
+    if options.logout
+      displayMenu("logout")
+      rootMenuVisible = false
+    else if options["webmenu-exit"]
+      code = parseInt(options["webmenu-exit"], 10) or 0
+      console.info "Exiting on user request with code #{ options["webmenu-exit"] }"
+      process.exit(code)
+    else
+      toggleMenu()
+
+  # Prevent crazy menu spawning which might cause slow machines to get stuck
+  # for long periods of time
+  spawnEmitter.on "spawn", _.debounce(spawnHandler, 300, true)
 
   bridge.on "open", (cmd) ->
     console.log "Opening command", cmd
@@ -126,6 +150,7 @@ module.exports = (gui, bridge) ->
 
   bridge.on "hide-window", ->
     hideWindow()
+    rootMenuVisible = false
 
   bridge.on "shutdown", ->
     powermanager.shutdown()

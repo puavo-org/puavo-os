@@ -6,6 +6,8 @@ define [
   "cs!app/views/profile_view"
   "cs!app/views/favorites_view"
   "cs!app/views/search_view"
+  "cs!app/views/lightbox_view"
+  "cs!app/views/logout_view"
   "cs!app/application"
   "hbs!app/templates/menulayout"
   "app/utils/debounce"
@@ -17,6 +19,8 @@ define [
   ProfileView
   Favorites
   Search
+  Lightbox
+  LogoutView
   Application
   template
   debounce
@@ -34,6 +38,7 @@ define [
       @allItems = opts.allItems
       @user = opts.user
       @config = opts.config
+      @lightbox = null
 
       @menuListView = new MenuListView
         model: opts.initialMenu
@@ -54,11 +59,6 @@ define [
         collection: @allItems
         config: @config
 
-
-      @listenTo this, "spawn-menu", =>
-        # reset when menu is hidden and no app was launched
-        @broadcast("reset")
-
       @listenTo this, "open-menu", (model, sender) =>
         # Update MenuListView when user navigates from breadcrumbs
         if sender is @breadcrumbs
@@ -71,5 +71,22 @@ define [
       @listenTo this, "search", (searchString) =>
         @menuListView.broadcast("search", searchString)
 
+
+      @listenTo this, "reset", @removeLightbox
+
+      @listenTo this, "open-logout-view", =>
+        @displayViewInLightbox new LogoutView
+          hostType: @config.get("hostType")
+
+    displayViewInLightbox: (view) ->
+      @removeLightbox()
+      @lightbox = new Lightbox view: view
+      @lightbox.render()
+      @lightbox.once "close", =>
+        @removeLightbox()
+
+    removeLightbox: ->
+      @lightbox?.remove()
+      @lightbox = null
 
 

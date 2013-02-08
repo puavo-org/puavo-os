@@ -12,8 +12,6 @@
     "/usr/share/icons/Faenza/apps/96"
   ],
   "fallbackIcon":  "/usr/share/icons/Gion/128x128/apps/gnome-terminal.png",
-  "profileCMD": null,
-  "passwordCMD": null,
   "settingsCMD": {
     "type": "desktop",
     "command": ["gnome-control-center"],
@@ -26,10 +24,10 @@
     "name": "Profiili",
     "cssIcon": "icon-vcard"
   },
-  "passwordCMD": {
-    "type": "webWindow",
-    "url": "http://lmgtfy.com/?q=Reset+linux+password",
-    "name": "Salasana",
+  "supportCMD": {
+    "type": "desktop",
+    "command": ["xdg-open", "http://www.opinsys.fi"],
+    "name": "Tukisivusto",
     "cssIcon": "icon-cw"
   },
   "maxFavorites": 5,

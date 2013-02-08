@@ -2,11 +2,8 @@
 Version=1.0
 Name=Webmenu
 Comment=A desktop menu application
-Exec=webmenu
+Exec=webmenu-spawn
 Terminal=false
 Type=Application
 Icon=webmenu
 Categories=Utility;
-NoDisplay=true
-X-GNOME-Autostart-enabled=true
-X-GNOME-Autostart-Phase=Initialization

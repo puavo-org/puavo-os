@@ -19,6 +19,8 @@ define [
   Application
 ) ->
 
+  if window.ENV.animate
+    $("html").addClass("animate")
 
   Application.bridge.on "desktop-ready", ({user, config, menu}) ->
 
@@ -66,9 +68,10 @@ define [
     layout.render()
     $("body").append layout.el
 
-    layout.broadcast("spawn-menu")
-    Application.bridge.on "spawn-menu", ->
-      layout.broadcast("spawn-menu")
+    Application.bridge.on "spawn", (viewName) ->
+      console.info "broadcasting #{ viewName } and open-#{ viewName }-view"
+      layout.broadcast("reset")
+      layout.broadcast("open-#{ viewName }-view")
 
     ["logout", "shutdown", "reboot"].forEach (event) ->
       layout.on event, ->

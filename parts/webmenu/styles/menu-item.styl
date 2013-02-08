@@ -1,12 +1,11 @@
 
-width = 125px
+width = 150px
 height = 100px
 iconSize = 50px
 
 .bb-menu-item
   cursor pointer
   margin 0px
-  padding-top 5px
   position relative
 
   word-wrap break-word
@@ -20,14 +19,11 @@ iconSize = 50px
     clear both
     margin auto 0
 
-  &.type-menu img
-    height 40px
+  img
+    height 45px
 
-  &.type-app img
-    height 60px
-
-  &.type-menu .thumbnail
-    margin-top 20px
+  .thumbnail
+    margin-top 22px
 
   .cssIcon
     font-size iconSize
@@ -66,29 +62,34 @@ iconSize = 50px
     background-size 100% 100%
 
   &.type-menu:hover
-    -webkit-animation-name open-folder
-    -webkit-animation-duration 0.5s
-    -webkit-animation-iteration-count 1
-    -webkit-animation-fill-mode forwards
+    background-image url(theme/default/folder-dark.png)
 
-  &.type-app:hover img:not(.rotate-loading)
-    -webkit-animation-name small-rotate
-    -webkit-animation-duration 0.5s
-    -webkit-animation-iteration-count 1
-    -webkit-animation-fill-mode forwards
 
-@keyframes small-rotate {
+.rotate-loading
+  -webit-transition-timing-function: none
+  -webkit-animation-name rotate
+  -webkit-animation-duration 0.8s
+  -webkit-animation-iteration-count 10
+
+
+@keyframes rotate {
 
   0% {
     -webkit-transform: rotate(0deg)
   }
 
   100% {
-    -webkit-transform: rotate(20deg)
+    -webkit-transform: rotate(1080deg)
   }
-
 }
 
+
+// Use only if env animate=1 is set
+.animate .bb-menu-item.type-menu:hover
+    -webkit-animation-name open-folder
+    -webkit-animation-duration 0.5s
+    -webkit-animation-iteration-count 1
+    -webkit-animation-fill-mode forwards
 
 @keyframes open-folder {
 
@@ -109,23 +110,3 @@ iconSize = 50px
   }
 
 }
-
-
-@keyframes rotate {
-
-  0% {
-    -webkit-transform: rotate(20deg)
-  }
-
-  100% {
-    -webkit-transform: rotate(1080deg)
-  }
-}
-
-
-.rotate-loading
-  -webit-transition-timing-function: none
-  -webkit-animation-name rotate
-  -webkit-animation-duration 0.8s
-  -webkit-animation-iteration-count 10
-

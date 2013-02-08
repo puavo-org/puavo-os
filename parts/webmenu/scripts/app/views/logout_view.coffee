@@ -14,7 +14,7 @@ define [
     template: template
 
     context: -> {
-      localBoot: if @hostType is "thinclient" then false else true
+      localBoot: @hostType isnt "thinclient"
     }
 
     events:

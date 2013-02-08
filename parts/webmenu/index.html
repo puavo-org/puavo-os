@@ -11,6 +11,7 @@
             return;
           }
 
+          window.onerror = require("./lib/js_error_reporter");
 
           window.gui = require('nw.gui');
           window.nodeRequire = window.require;

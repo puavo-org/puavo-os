@@ -35,6 +35,7 @@
 
   <script>
     window.expect = chai.expect;
+    window.assert = chai.assert;
     mocha.setup('bdd');
     require([
         "cs!app/application",
@@ -46,7 +47,8 @@
         "cs!tests/search_view.test",
         "cs!tests/menu_list_view_test",
         "cs!tests/navigation.test",
-        "cs!tests/menu_item_view.test"
+        "cs!tests/menu_item_view.test",
+        "cs!tests/logout_button_view.test"
     ], function(Application) {
     // Lower animationDuration to speed up tests
     Application.animationDuration = 10;

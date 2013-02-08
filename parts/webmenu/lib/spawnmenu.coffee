@@ -5,6 +5,8 @@ presented to the user
 TODO: Reimplement with dbus
 ###
 
+optimist = require "optimist"
+
 net = require "net"
 fs = require "fs"
 {EventEmitter} = require "events"
@@ -21,8 +23,14 @@ module.exports = (pipePath) ->
       throw err
 
   server = net.createServer (socket) ->
-    events.emit("spawn")
     socket.end("Spawning a menu for you!")
+    buffer = ""
+    socket.on "data", (data) ->
+      buffer += data.toString()
+
+    socket.on "close", ->
+      options = optimist.parse(buffer.split(" "))
+      events.emit("spawn", options)
 
   server.listen(pipePath)
 

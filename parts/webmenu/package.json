@@ -3,7 +3,7 @@
   "version": "0.2.2",
   "private": true,
   "scripts": {
-    "test": "make test-client"
+    "test": "make test-nw-hidden"
   },
   "main": "index.html",
   "single-instance": true,
