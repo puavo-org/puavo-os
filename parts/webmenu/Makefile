@@ -57,6 +57,8 @@ install: install-dirs
 		extra/icons/webmenu.png
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/applications \
 		extra/webmenu-spawn.desktop
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/applications \
+		extra/webmenu-spawn-logout.desktop
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		bin/webmenu \
 		bin/webmenu-spawn
