@@ -12,6 +12,7 @@ require 'uuidtools'
 @kvm_cpus = ARGV[1] || 1
 @kvm_uuid = UUIDTools::UUID.random_create.to_s
 @kvm_memory = ARGV[2] || 2097152
+@kvm_qemu_img_size = ARGV[3] || "2G"
 @kvm_mac = "aa:cc:" + (1..4).map{"%0.2x"%rand(256)}.join(":")
 
 conf_template = File.read("/usr/share/puavo-ltsp-bootserver/templates/ltsp-server.xml")
@@ -24,7 +25,7 @@ xml.close
 puts `cat #{xml.path}`
 
 puts `mkdir -p /virtual`
-puts `qemu-img create -f raw /virtual/#{@kvm_name}.raw 2G`
+puts `qemu-img create -f raw /virtual/#{@kvm_name}.raw #{@kvm_qemu_img_size}`
 puts `virsh define #{xml.path}`
 
 xml.unlink
