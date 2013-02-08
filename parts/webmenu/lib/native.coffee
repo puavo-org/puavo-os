@@ -67,6 +67,9 @@ spawnEmitter = require("./spawnmenu")(spawnPipePath)
 
 module.exports = (gui, bridge) ->
 
+  spawnTimer = null
+  spawnCounter = 0
+
   Window = gui.Window.get()
 
   if process.env.devtools
@@ -115,6 +118,17 @@ module.exports = (gui, bridge) ->
       rootMenuVisible = true
 
   spawnEmitter.on "spawn", (options) ->
+    spawnCounter += 1
+    console.log spawnCounter
+
+    clearTimeout spawnTimer
+    spawnTimer = setTimeout ->
+      spawnCounter = 0
+    , 300
+
+    if spawnCounter > 1
+      return
+
     if options.logout
       displayMenu("logout")
       rootMenuVisible = false
