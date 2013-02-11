@@ -146,7 +146,7 @@ function connect(reconnect) {
 
 }
 
-lock(config.lockFile || "/var/run/puavo-monitor.lock", function(err) {
+lock(config.lockFile || "/tmp/puavo-monitor.lock", function(err) {
   if (err && err.code === "FLOCK_TIMEOUT") {
     console.error("puavo-monitor is already running");
     process.exit(1);

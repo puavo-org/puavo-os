@@ -5,7 +5,7 @@ var fse = require("fs-ext");
 
 module.exports = function(lockFile, cb) {
 
-  fs.open(lockFile, "r", function(err, fd) {
+  fs.open(lockFile, "w", function(err, fd) {
     if (err) return cb(err);
 
     var timer = setTimeout(function() {
