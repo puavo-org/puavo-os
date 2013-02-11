@@ -46,11 +46,11 @@ install-dirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	mkdir -p $(DESTDIR)/etc/xdg/autostart
-	mkdir -p $(DESTDIR)/opt/webmenu
+	mkdir -p $(DESTDIR)/opt/webmenu/extra/icons/apps/
 	mkdir -p $(DESTDIR)/usr/share/icons
 
 install: install-dirs
-	cp -r lib node_modules bin docs scripts vendor styles *.js *.json *.md *.html $(DESTDIR)/opt/webmenu
+	cp -r lib node_modules bin docs scripts vendor styles extra *.js *.json *.md *.html $(DESTDIR)/opt/webmenu
 	$(INSTALL_DATA) -t $(DESTDIR)/etc/xdg/autostart \
 		extra/webmenu.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)/usr/share/icons \
