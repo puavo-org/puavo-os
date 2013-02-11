@@ -1,4 +1,3 @@
-
 # menu.json
 
 Menu content is created from a menu.json file. Webmenu will look it from
@@ -77,6 +76,8 @@ These attributes can be added to any object
   - `osIcon`: {String, optional} Icon from the operating system theme
   - `osIconPath`: {String, optional} Absolute or relative path from Webmenu
     installation directory to a icon file
+    - Example absolute: `/usr/share/icons/Faenza/apps/96/me-tv.png`
+    - Example relative `extra/icons/apps/youtube.png`
   - `cssIcon`: {String, optional} CSS icon class from [font-awesome][].
     Overrides `osIcon`
 
