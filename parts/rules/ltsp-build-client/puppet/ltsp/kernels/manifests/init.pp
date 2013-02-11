@@ -4,7 +4,7 @@ class kernels {
 
   $default_kernel = $lsbdistcodename ? {
                       'precise' => '3.2.0-37-generic',
-                      'quantal' => '3.5.0-23-generic',
+                      'quantal' => '3.6.6-999-generic',
                     }
 
   define default_kernel_link {
