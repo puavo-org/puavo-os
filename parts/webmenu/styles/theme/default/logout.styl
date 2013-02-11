@@ -3,10 +3,26 @@
 
 .logout-btn-container
   button
-    background-color: #ef8c41
-    border: 1px solid #f7ab70
+    border: 1px solid #ccc
     color: #ffffff
+    &:hover
+      border: 1px solid #dcdcdc
+      box-shadow inset 5px 5px 35px rgba(70,70,70,0.35), inset -5px -5px 35px rgba(70,70,70,0.35)
+      cursor pointer
+
+  .bb-logout
+    background-color #ef8c41
+    &:hover
+      background-color #FF7710
+  .bb-shutdown
+    background-color #c82828
+    &:hover
+      background-color #ff0000
+  .bb-reboot
+    background-color #28A228
+    &:hover
+      background-color #00B100
 
   .bb-cancel
     float: right
-    background-color: #f7ab70
+    background-color: #999
