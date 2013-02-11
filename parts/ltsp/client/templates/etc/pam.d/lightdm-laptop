@@ -22,7 +22,7 @@ session required                        pam_permit.so
 # See "man pam_umask".
 session optional                        pam_umask.so
 session optional                        pam_sss.so
-session	optional	pam_mkhomedir.so
+session	optional	pam_mkhomedir.so skel=/etc/skel/ umask=0077
 
 session optional        pam_gnome_keyring.so auto_start
 
