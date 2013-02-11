@@ -88,7 +88,8 @@
         {
           "type": "desktop",
           "id": "gthumb",
-          "name": "Gthumb-kuvakatselin"
+          "name": "Gthumb-kuvakatselin",
+          "osIconPath": "/usr/share/icons/hicolor/48x48/apps/gthumb.png"
         },
         {
           "type": "desktop",
@@ -227,7 +228,8 @@
         },
         {
           "type": "desktop",
-          "id": "eric"
+          "id": "eric",
+          "osIconPath": "/rofs/usr/share/eric/icons/default/eric.png"
         },
         {
           "type": "desktop",
@@ -237,7 +239,8 @@
         {
           "type": "desktop",
           "id": "idle-python2.7",
-          "name": "IDLE"
+          "name": "IDLE",
+          "osIconPath": "/usr/share/icons/Faenza/mimetypes/96/text-x-python.png"
         },
         {
           "type": "desktop",
@@ -266,7 +269,8 @@
         {
           "type": "desktop",
           "id": "designer-qt4",
-          "name": "Käyttöliittymä-suunnittelija"  
+          "name": "Käyttöliittymä-suunnittelija" ,
+          "osIconPath": "/usr/share/icons/Faenza/apps/96/qtdesigner.png" 
         }
           ]
     },
@@ -541,7 +545,8 @@
         {
           "type": "desktop",
           "id": "tuxguitar",
-          "name": "Kitaranuotinnus"
+          "name": "Kitaranuotinnus",
+          "osIconPath": "extra/icons/apps/overlord59-tux-guitar-1434.png"
         },
         {
           "type": "desktop",
@@ -551,7 +556,8 @@
         {
           "type": "desktop",
           "id": "luciole",
-          "name": "Stopmotion-animaatio-ohjelma"
+          "name": "Stopmotion-animaatio-ohjelma",
+          "osIconPath": "/rofs/usr/share/luciole/images/luciole.png"
         }
           ]
     },
@@ -559,19 +565,20 @@
       "type": "menu",
       "name": "Smartboard",
       "description": "Internet-sovellukset",
-      "cssIcon":"icon-folder",
+      "osIconPath": "/usr/share/icons/hicolor/128x128/apps/SMART_Tools.png",
       "items": [
         {
           "type": "desktop",
-          "id": "smarttech-notebook"
+          "id": "smarttech-notebook",
+          "osIconPath": "/usr/share/icons/hicolor/128x128/apps/SMART_Notebook.png"
         }
           ]
     },
     {
       "type": "menu",
-      "name": "Webbisovellukset",
+      "name": "Web-sovellukset",
       "description": "Web-sovellukset",
-      "osIcon": "applications-internet",
+      "osIconPath": "extra/icons/app/webapps.png",
       "items": [
         {
           "type": "desktop",
@@ -631,13 +638,13 @@
           "name": "Walma",
           "url": "http://walmademo.opinsys.fi",
           "description": "Yhteistoiminnallinen piirtotaulu",
-          "osIcon":"emblem-pictures"
+          "osIconPath": "/usr/share/icons/Faenza/mimetypes/96/text-html.png"
         },
         {
           "type": "web",
           "name": "Pahvi",
           "url": "http://pahvidemo.opinsys.fi/",
-          "osIcon":"deb"
+          "osIconPath": "/usr/share/icons/Faenza/mimetypes/96/text-html.png"
         }
       ]
     },
