@@ -17,7 +17,6 @@ if puavo_device_type == 'unregistered'
 end
 
 @ldap_master       = File.read('/etc/puavo/ldap/master'    ).chomp
-@ldap_slave        = File.read('/etc/puavo/ldap/slave'     ).chomp
 @ldap_base         = File.read('/etc/puavo/ldap/base'      ).chomp
 @kerberos_master   = File.read('/etc/puavo/kerberos/master').chomp
 @kerberos_realm    = File.read('/etc/puavo/kerberos/realm' ).chomp
@@ -47,6 +46,8 @@ end
 
 case puavo_device_type
   when "thinclient"
+    @ldap_slave = File.read('/etc/puavo/ldap/slave').chomp
+
     write_config("/etc/nsswitch.conf", "extrausers")
     write_config("/etc/pam.d/lightdm", "thinclient")
     write_config("/etc/ldap/ldap.conf")
@@ -55,6 +56,8 @@ case puavo_device_type
     write_config("/etc/default/nfs-common")
     write_config("/etc/init/gssd.conf", "userprincipal")
   when "fatclient"
+    @ldap_slave = File.read('/etc/puavo/ldap/slave').chomp
+
     write_config("/etc/nsswitch.conf", "extrausers")
     write_config("/etc/pam.d/lightdm", "fatclient")
     write_config("/etc/ldap/ldap.conf")
@@ -66,6 +69,8 @@ case puavo_device_type
     # FIXME: Hack to get gnome fallback session
     `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
   when "ltspserver"
+    @ldap_slave = File.read('/etc/puavo/ldap/slave').chomp
+
     write_config("/etc/nsswitch.conf", "sss")
     write_config("/etc/pam.d/ltspsshd")
     write_config("/etc/ldap/ldap.conf")
@@ -89,7 +94,6 @@ case puavo_device_type
     `perl -pi -e 's/libvdpau/lixvdpau/g' /usr/lib/adobe-flashplugin/libflashplayer.so`
   when "laptop"
     write_config("/etc/nsswitch.conf", "sss")
-    write_config("/etc/ldap/ldap.conf")
     write_config("/etc/krb5.conf")
     write_config("/etc/idmapd.conf")
     write_config("/etc/pam.d/lightdm", "laptop")
