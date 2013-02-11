@@ -1,4 +1,3 @@
-
 {spawn} = require "child_process"
 posix = require "posix"
 mkdirp = require "mkdirp"
@@ -48,7 +47,7 @@ if puavoDomain
     type: "webWindow",
     url: "https://#{puavoDomain}/users/password/own"
     name: "Salasana",
-    cssIcon: "icon-cw"
+    "osIconPath": "/usr/share/icons/Faenza/emblems/96/emblem-readonly.png"
   }
 
 

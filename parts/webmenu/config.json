@@ -16,19 +16,19 @@
     "type": "desktop",
     "command": ["gnome-control-center"],
     "name": "Järjestelmäasetukset",
-    "cssIcon": "icon-cog"
+    "osIconPath": "/usr/share/icons/Faenza/categories/96/applications-system.png"
   },
   "profileCMD": {
     "type": "webWindow",
     "url": "http://toimisto.opinsys.fi",
     "name": "Profiili",
-    "cssIcon": "icon-vcard"
+    "osIconPath": "/usr/share/icons/Faenza/emblems/96/emblem-personal.png"
   },
   "supportCMD": {
     "type": "desktop",
     "command": ["xdg-open", "http://www.opinsys.fi"],
     "name": "Tukisivusto",
-    "cssIcon": "icon-cw"
+    "osIconPath": "/usr/share/icons/Faenza/status/96/dialog-question.png"
   },
   "maxFavorites": 5,
   "port": 1337
