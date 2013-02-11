@@ -161,6 +161,9 @@ module.exports = (gui, bridge) ->
 
   bridge.on "html-ready", ->
     dbus.registerApplication()
+    if process.env.WM_STARTUP_TIME
+      startUpTime = Date.now() / 1000 - parseInt(process.env.WM_STARTUP_TIME)
+      console.log "Start up took #{ startUpTime } seconds"
     console.log "Webmenu ready. Use 'webmenu-spawn' to open it"
 
   bridge.trigger "desktop-ready",

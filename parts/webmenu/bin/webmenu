@@ -14,6 +14,9 @@ LOG_FILE="$WM_HOME/current.log"
 # Spawn menu pipe path. Create unique for each X instance
 export SPAWNMENU=$(hostname)-$(echo $DISPLAY | sed -r s/[.][0-9]*$//)
 
+# Save startup time to an env to log startup times
+export WM_STARTUP_TIME=$(date +%s)
+
 # Customize path with first arg.
 # Eg. use "bin/webmenu ." to start development version from git
 if [ $# -eq 1 ]; then
