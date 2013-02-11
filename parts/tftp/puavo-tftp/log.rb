@@ -1,7 +1,7 @@
 
 def log(*args)
   args[0] = Time.now.to_s + " " + args[0]
-  puts(*args)
+  $stderr.puts(*args)
 end
 
 def warn(*args)
