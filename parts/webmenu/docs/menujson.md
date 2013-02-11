@@ -74,7 +74,9 @@ Attributes
 These attributes can be added to any object
 
   - `description`: {String, optional} Description of the item or menu
-  - `osIcon`: {String, optional} Icon from the operating system
+  - `osIcon`: {String, optional} Icon from the operating system theme
+  - `osIconPath`: {String, optional} Absolute or relative path from Webmenu
+    installation directory to a icon file
   - `cssIcon`: {String, optional} CSS icon class from [font-awesome][].
     Overrides `osIcon`
 
