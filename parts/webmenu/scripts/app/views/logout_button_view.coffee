@@ -14,7 +14,7 @@ define [
 
   class LogoutButtonView extends ViewMaster
 
-    className: "bb-menu-item"
+    className: "bb-menu-item type-hover-btn"
 
     template: menuItemTemplate
 
@@ -23,5 +23,5 @@ define [
         @bubble "open-logout-view"
 
     context: ->
-      cssIcon: "icon-logout"
+      "osIconPath": "/usr/share/icons/Faenza/actions/96/system-shutdown.png"
       name: "Kirjaudu ulos"
