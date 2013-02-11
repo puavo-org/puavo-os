@@ -27,5 +27,6 @@ puts `cat #{xml.path}`
 puts `mkdir -p /virtual`
 puts `qemu-img create -f raw /virtual/#{@kvm_name}.raw #{@kvm_qemu_img_size}`
 puts `virsh define #{xml.path}`
+puts `virsh autostart #{@kvm_name}`
 
 xml.unlink
