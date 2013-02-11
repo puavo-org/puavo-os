@@ -1,8 +1,8 @@
 [Desktop Entry]
 Version=1.0
-Name=Webmenu
+Name=Webmenu Logout
 Comment=A desktop menu application
-Exec=webmenu-spawn
+Exec=webmenu-spawn --logout
 Terminal=false
 Type=Application
 Icon=webmenu

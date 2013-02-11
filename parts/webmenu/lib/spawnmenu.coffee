@@ -29,7 +29,10 @@ module.exports = (pipePath) ->
       buffer += data.toString()
 
     socket.on "close", ->
-      options = optimist.parse(buffer.split(" "))
+      if buffer.trim()
+        options = optimist.parse(buffer.split(" "))
+      else
+        options = {}
       events.emit("spawn", options)
 
   server.listen(pipePath)

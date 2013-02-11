@@ -17,10 +17,16 @@ osIconPath = (iconSearchPaths, id, fallbackIcon) ->
 injectDesktopData = (menu, sources, locale, iconSearchPaths, fallbackIcon, hostType) ->
 
   sources.forEach (desktopDir) ->
+
+    # Allow custom icons with relative path from Webmenu installation dir
+    if menu.osIconPath and menu.osIconPath[0] isnt "/"
+      menu.osIconPath = path.join(__dirname, "..", menu.osIconPath)
+
+    # Operating system icon
     if menu.osIcon
       menu.osIconPath = osIconPath(iconSearchPaths, menu.osIcon, fallbackIcon)
 
-    if menu.inactiveByDeviceType && menu.inactiveByDeviceType is hostType
+    if menu.inactiveByDeviceType and menu.inactiveByDeviceType is hostType
       menu.status = "inactive"
 
     if menu.type is "desktop" and menu.id

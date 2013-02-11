@@ -39,15 +39,17 @@ define [
       initialMenu: menuModel
       allItems: allItems
 
+
     # Convert selected menu item models to CMD Events
     # https://github.com/opinsys/webmenu/blob/master/docs/menujson.md
+    hideTimer = null
     layout.on "open-app", (model) ->
       # This will be send to node and node-webkit handlers
       Application.bridge.trigger "open", model.toJSON()
 
       # Hide window after animation as played for few seconds or when the
       # opening app steals focus
-      setTimeout ->
+      hideTimer = setTimeout ->
         Application.bridge.trigger "hide-window"
       , Application.animationDuration
 
@@ -62,6 +64,9 @@ define [
 
     # Hide window when focus is lost
     $(window).blur ->
+      # Clear hideTimer on blur to avoid unwanted hiding if user immediately
+      # spawns menu again
+      clearTimeout(hideTimer)
       Application.bridge.trigger "hide-window"
       layout.broadcast("hide-window")
 
