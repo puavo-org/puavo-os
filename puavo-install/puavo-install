@@ -2,7 +2,7 @@
 
 set -e
 
-puavo-register
+puavo-register --accepted-devicetypes fatclient,laptop,ltspserver,thinclient
 
 hosttype="$(cat /etc/puavo/hosttype)"
 
