@@ -1,0 +1,29 @@
+{
+  "dotDesktopSearchPaths": [
+    "/usr/share/applications",
+    "/usr/share/applications/kde4"
+  ],
+  "iconSearchPaths": [
+    "/usr/share/app-install/icons",
+    "/usr/share/pixmaps",
+    "/usr/share/icons/hicolor/128x128/apps",
+    "/usr/share/icons/Neu/128x128/categories",
+    "/usr/share/icons/Faenza/categories/64",
+    "/usr/share/icons/Faenza/apps/96"
+  ],
+  "fallbackIcon":  "/usr/share/icons/Gion/128x128/apps/gnome-terminal.png",
+  "settingsCMD": {
+    "type": "desktop",
+    "command": ["gnome-control-center"],
+    "name": "Asetukset",
+    "osIconPath": "/usr/share/icons/Faenza/categories/96/applications-system.png"
+  },
+  "supportCMD": {
+    "type": "desktop",
+    "command": ["xdg-open", "http://tuki.opinsys.fi"],
+    "name": "Tukisivusto",
+    "osIconPath": "/usr/share/icons/Faenza/status/96/dialog-question.png"
+  },
+  "maxFavorites": 5,
+  "port": 1337
+}
