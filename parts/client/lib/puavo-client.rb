@@ -1,3 +1,8 @@
+
+# Insert dependency paths from `bundle install --standalone --path ...`.
+# See Makefile
+require File.expand_path(File.dirname(__FILE__) + "/puavo-client-vendor/bundler/setup.rb")
+
 require 'httparty'
 require 'json'
 

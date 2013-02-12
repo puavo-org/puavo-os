@@ -1,0 +1,14 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    httparty (0.10.2)
+      multi_json (~> 1.0)
+      multi_xml (>= 0.5.2)
+    multi_json (1.5.1)
+    multi_xml (0.5.3)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  httparty

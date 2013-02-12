@@ -4,25 +4,22 @@ Simple ruby wrapper for the [Puavo API](https://github.com/opinsys/puavo-users)
 
 ## Installation
 
-    # Ubuntu 10.04
-    sudo apt-get install libjson-ruby libopenssl-ruby
-    sudo gem install httparty gemcutter jeweler puavo-client
+From [opinsys/opinsys-debs](https://github.com/opinsys/opinsys-debs/tree/master/packages/puavo-client)
 
 ## Examples
 
-    require 'rubygems'
     require 'puavo-client'
 
     puavo = Puavo::Client::Base.new('yourpuavoserver', 'yourusername', 'yourpassword')
-    
+
     schools = puavo.schools.all
-    
+
     puts "Devices by school"
     schools.each do |s|
       puts s.name
       puts puavo.devices.find_by_school_id(s.puavo_id).map{ |d| "\t#{d.puavoHostname}" }
     end
-    
+
     puts "Groups by school"
     schools.each do |s|
       puts s.name
