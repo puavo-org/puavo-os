@@ -5,27 +5,36 @@
 
     <title>Webmenu</title>
     <script>
-      (function(){
-         if (window.process.env.test) {
-            window.location = "tests.html";
-            return;
-          }
+    (function(){
+       // node-webkit boot up starts here.
 
-          window.onerror = require("./lib/js_error_reporter");
+       if (window.process.env.test) {
+          window.location = "tests.html";
+          return;
+        }
 
-          window.gui = require('nw.gui');
-          window.nodeRequire = window.require;
+        // Log plain node-webkit startup time nearly without any Javascript,
+        // HTML or CSS parsing/rendering.
+       if (window.process.env.WM_STARTUP_TIME) {
+         var startUpTime = (Date.now() / 1000) - parseInt(process.env.WM_STARTUP_TIME)
+         console.log("node-webkit started in " + startUpTime + " seconds");
+        }
 
-          // Disable node.js require to make RequireJS work
-          window.require = undefined;
-          // Also disable process so some libraries won't get confused whether
-          // this is browser or node.js
-          window.ENV = window.process.env;
-          window.process = undefined;
-          window.require = { baseUrl: "scripts/" };
+        window.onerror = require("./lib/js_error_reporter");
 
-          window.nodeConnect = window.nodeRequire("./lib/native");
-      }())
+        window.gui = require('nw.gui');
+        window.nodeRequire = window.require;
+
+        // Disable node.js require to make RequireJS work
+        window.require = undefined;
+        // Also disable process so some libraries won't get confused whether
+        // this is browser or node.js
+        window.ENV = window.process.env;
+        window.process = undefined;
+        window.require = { baseUrl: "scripts/" };
+
+        window.nodeConnect = window.nodeRequire("./lib/native");
+    }())
     </script>
     <script src="scripts/require.js"></script>
     <script src="scripts/config.js"></script>

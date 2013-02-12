@@ -51,6 +51,8 @@ if puavoDomain
   }
 
 
+desktopReadStarted = Date.now()
+# inject data from .desktop file to menuJSON.
 menutools.injectDesktopData(
   menuJSON
   config.dotDesktopSearchPaths
@@ -59,6 +61,8 @@ menutools.injectDesktopData(
   config.fallbackIcon
   config.hostType
 )
+desktopReadTook = (Date.now() - desktopReadStarted) / 1000
+console.log(".desktop files read in " + desktopReadTook + " seconds")
 
 username = posix.getpwnam(posix.geteuid()).name
 userData = posix.getpwnam(username)
@@ -160,9 +164,12 @@ module.exports = (gui, bridge) ->
 
   bridge.on "html-ready", ->
     dbus.registerApplication()
+
+    # Log full Webmenu startup time with everyting ready
     if process.env.WM_STARTUP_TIME
-      startUpTime = Date.now() / 1000 - parseInt(process.env.WM_STARTUP_TIME)
-      console.log "Start up took #{ startUpTime } seconds"
+      startUpTime = (Date.now() / 1000) - parseInt(process.env.WM_STARTUP_TIME)
+      console.log("Webmenu started in " + startUpTime + " seconds")
+
     console.log "Webmenu ready. Use 'webmenu-spawn' to open it"
 
   bridge.trigger "desktop-ready",
