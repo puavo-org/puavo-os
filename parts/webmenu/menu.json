@@ -293,6 +293,7 @@
         {
           "type": "desktop",
           "id": "kbruch",
+          "command": ["kbruch"],
           "name": "Kbruch-murtoluvut"        
         },
         {
@@ -328,7 +329,8 @@
         {
           "type": "desktop",
           "id": "khangman",
-          "name": "Hirsipuu"
+          "name": "Hirsipuu",
+          "command": ["khangman"]
         },
         {
           "type": "desktop",
@@ -350,7 +352,8 @@
         {
           "type": "desktop",
           "id": "kstars",
-          "name": "kStars-tähtitaivas"
+          "name": "kStars-tähtitaivas",
+          "command": ["kstars"]
         },
         {
           "type": "desktop",
@@ -366,7 +369,8 @@
         {
           "type": "desktop",
           "id": "kalzium",
-          "name": "Jaksollinen järjestelmä"
+          "name": "Jaksollinen järjestelmä",
+          "command": ["kalzium"]
         }
           ]
     },
@@ -607,8 +611,8 @@
         },
         {
           "type": "web",
-          "name": "Ylen Eläväarkisto",
-          "url": "http://elavaarkisto.yle.fi",
+          "name": "Ylen Elävä arkisto",
+          "url": "http://yle.fi/elavaarkisto/index.html",
           "description": "Ylen Eläväarkisto-videopalvelu",
           "osIconPath": "/usr/share/icons/Faenza/apps/96/me-tv.png"
         },
@@ -618,20 +622,6 @@
           "url": "http://www.sumopaint.com",
           "description": "Sumopaint-webkuvankäsittely",
           "osIconPath": "/usr/share/icons/Faenza/apps/96/gimp.png"
-        },
-        {
-          "type": "web",
-          "name": "Yle Areena",
-          "url": "http://areena.yle.fi",
-          "description": "Yle Areena-videopalvelu",
-          "osIconPath": "/usr/share/icons/Faenza/apps/96/me-tv.png"
-        },
-        {
-          "type": "web",
-          "name": "Yle Areena",
-          "url": "http://areena.yle.fi",
-          "description": "Yle Areena-videopalvelu",
-          "osIconPath": "/usr/share/icons/Faenza/apps/96/me-tv.png"
         },
         {
           "type": "web",
