@@ -4,9 +4,12 @@ class graphics_drivers {
                         # because we run ldconfig and save its output for
                         # later use.
 
-  if $architecture != 'i386' {
-    fail('This class is written to work only with i386')
-  }
+  # XXX Do not use this test... because our build machine might be something
+  # XXX other than i386 (amd64), and then this fails for no reason.
+  # XXX Note that this class does expect the i386 architecture.
+  # if $architecture != 'i386' {
+  #   fail('This class is written to work only with i386')
+  # }
 
   define driver_alternatives ($gl_conf_target) {
     $driver      = $title
