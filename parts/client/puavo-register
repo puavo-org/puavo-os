@@ -59,9 +59,8 @@ class CmdLine
 
     cmd_args.each do |i|
       case i
-        when /^--(   force
+        when /^--( | force
                    | install
-                   | netboot
                    | noconfirm )$/x
           params[$1] = true
         else
@@ -117,7 +116,6 @@ class HostCertificate
 end
 
 class RegisterUserInterface
-
   attr_accessor :responses, :connection
 
   def initialize(cmdline_params, cert)
@@ -125,8 +123,9 @@ class RegisterUserInterface
     @cmdline_params  = cmdline_params
 
     @mode = {
-      'boottype'  => @cmdline_params['netboot'] ? 'net' : 'local',
-      'noconfirm' => @cmdline_params['noconfirm'],
+      'accepted_devicetypes' =>
+        (@cmdline_params['accepted-devicetypes'] || '').split(','),
+      'noconfirm'            => @cmdline_params['noconfirm'],
     }
 
     @puavoserver     = @cmdline_params['puavoserver'] || default_puavoserver()
@@ -246,7 +245,7 @@ class RegisterUserInterface
         begin
           begin
             @puavoserver = ask_with_default('Puavo server name:', @puavoserver)
-            @connection  = PuavoDevicesConnection.new(@puavoserver, '', '', '')
+            @connection  = PuavoDevicesConnection.new(@puavoserver, '', '', [])
           rescue HttpAuthError
           end
           @username   = ask_with_default('Username:', @username)
@@ -305,9 +304,9 @@ class RegisterUserInterface
 
   def puavo_connection_request()
     PuavoDevicesConnection.new(@puavoserver,
-                               @username,
-                               @password,
-                               @mode['boottype'])
+			       @username,
+			       @password,
+			       @mode['accepted_devicetypes'])
   end
 
   def register_to_server
@@ -372,19 +371,17 @@ end
 class PuavoDevicesConnection
   attr_accessor :devicetypes, :schools
 
-  def initialize(server, username, password, boottype)
+  def initialize(server, username, password, accepted_devicetypes)
     @server   = server
     @username = username
     @password = password
-
-    devicetypes_url = "/devices/hosts/types.json?boottype=#{ boottype }"
 
     @http              = Net::HTTP.new(server, '443')
     @http.use_ssl      = true
     @http.ca_path      = '/etc/ssl/certs'
     @http.verify_mode  = OpenSSL::SSL::VERIFY_PEER
     @http.verify_depth = 5
-    @devicetypes       = get(devicetypes_url)
+    @devicetypes       = get_devicetypes(accepted_devicetypes)
 
     userinfo = get('/devices/sessions/show.json')
     @schools = userinfo['managed_schools'].clone
@@ -399,6 +396,23 @@ class PuavoDevicesConnection
         ]
       end
     ]
+  end
+
+  def get_devicetypes(accepted_devicetypes)
+    # list only those device types which are accepted...
+    # if none of them are accepted, list all
+
+    devicetypes_url = '/devices/hosts/types.json'
+
+    all_devicetypes = get(devicetypes_url)
+    return all_devicetypes if accepted_devicetypes.empty?
+
+    filtered_devicetypes = all_devicetypes.clone
+    filtered_devicetypes['list'] = Hash[
+      accepted_devicetypes.map { |d| [ d, all_devicetypes['list'][d] ] }
+    ]
+
+    filtered_devicetypes
   end
 
   def request_object_info(devicetype, school)
