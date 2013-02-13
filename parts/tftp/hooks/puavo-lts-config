@@ -23,16 +23,23 @@ def device_ltspvars(device, organisation, school)
 
   nfs_services = %w(gssd idmapd rpcbind-boot portmap)
   tty_services = %w(tty1 tty2 tty3 tty4 tty5 tty6)
-  all_services = nfs_services + tty_services
 
-  thin_system_services_string = %Q{"#{ tty_services.join(' ') }"}
-  all_system_services_string  = %Q{"#{ all_services.join(' ') }"}
+  services = {
+    'fatclient'  => tty_services + nfs_services,
+    'laptop'     => tty_services + nfs_services + %w(network-manager),
+    'ltspserver' => tty_services + nfs_services,
+    'thinclient' => tty_services,
+  }
+
+  keep_services_string_fn = lambda do |devicetype|
+			      %Q{"#{ services[devicetype].join(' ') }"}
+			    end
 
   ltspvars =
     case devicetype
       when 'thinclient'
         {
-          'KEEP_SYSTEM_SERVICES' => thin_system_services_string,
+          'KEEP_SYSTEM_SERVICES' => keep_services_string_fn.call(devicetype),
           'LDM_AUTOLOGIN'        => 'False',
           'LDM_DIRECTX'          => 'True',
           'LDM_SERVER'           => @ltsp_server_fqdn,
@@ -51,7 +58,7 @@ def device_ltspvars(device, organisation, school)
         }
       when 'fatclient'
         {
-          'KEEP_SYSTEM_SERVICES' => all_system_services_string,
+          'KEEP_SYSTEM_SERVICES' => keep_services_string_fn.call(devicetype),
           'LOCAL_APPS'           => 'False',
           'LOCALDEV'             => 'False',
           'LTSP_FATCLIENT'       => 'True',
@@ -63,9 +70,21 @@ def device_ltspvars(device, organisation, school)
           'USE_NFS_HOMES'        => 'True',
           'XKBLAYOUT'            => 'fi',
         }
+      when 'laptop'
+        {
+          'KEEP_SYSTEM_SERVICES' => keep_services_string_fn.call(devicetype),
+          'LOCAL_APPS'           => 'False',
+          'LOCALDEV'             => 'False',
+          'LTSP_FATCLIENT'       => 'True',
+          'NBD_SWAP'             => 'False',
+          'SCREEN_07'            => 'lightdm',
+          'SYSLOG'               => 'False',
+          'XKBLAYOUT'            => 'fi',
+        }
       when 'ltspserver'
         {
-          'KEEP_SYSTEM_SERVICES' => all_system_services_string,
+          'KEEP_SYSTEM_SERVICES' => keep_services_string_fn.call(devicetype),
+          'KEEP_SYSTEM_SERVICES' => keep_services_fn.call(devicetype),
           'LOCAL_APPS'           => 'False',
           'LOCALDEV'             => 'False',
           'LTSP_FATCLIENT'       => 'False',
