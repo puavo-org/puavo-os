@@ -21,49 +21,57 @@ end
 def device_ltspvars(device, organisation, school)
   devicetype = Array(device['puavoDeviceType']).first
 
+  nfs_services = %w(gssd idmapd rpcbind-boot portmap)
+  tty_services = %w(tty1 tty2 tty3 tty4 tty5 tty6)
+  all_services = nfs_services + tty_services
+
+  thin_system_services_string = %Q{"#{ tty_services.join(' ') }"}
+  all_system_services_string  = %Q{"#{ all_services.join(' ') }"}
+
   ltspvars =
     case devicetype
       when 'thinclient'
         {
-          'NBD_SWAP'             => 'False',
-          'SYSLOG'               => 'False',
-          'XKBLAYOUT'            => 'fi',
+          'KEEP_SYSTEM_SERVICES' => thin_system_services_string,
           'LDM_AUTOLOGIN'        => 'False',
           'LDM_DIRECTX'          => 'True',
+          'LDM_SERVER'           => @ltsp_server_fqdn,
+          'LDM_SESSION'          => '"gnome-session --session=gnome-fallback"',
           'LOCAL_APPS'           => 'False',
           'LOCALDEV'             => 'True',
           'LTSP_FATCLIENT'       => 'False',
-          'SCREEN_07'            => 'lightdm',
-          'X_COLOR_DEPTH'        => '16',
-          'SERVER'               => @boot_server_fqdn,
+          'NBD_SWAP'             => 'False',
           'NFS_SERVER'           => @boot_server_fqdn,
-          'LDM_SERVER'           => @ltsp_server_fqdn,
-          'LDM_SESSION'          => '"gnome-session --session=gnome-fallback"',
-          'SSH_OVERRIDE_PORT'    => '222'
+          'SCREEN_07'            => 'lightdm',
+          'SERVER'               => @boot_server_fqdn,
+          'SSH_OVERRIDE_PORT'    => '222',
+          'SYSLOG'               => 'False',
+          'X_COLOR_DEPTH'        => '16',
+          'XKBLAYOUT'            => 'fi',
         }
       when 'fatclient'
         {
-          'NBD_SWAP'             => 'False',
-          'SYSLOG'               => 'False',
-          'XKBLAYOUT'            => 'fi',
+          'KEEP_SYSTEM_SERVICES' => all_system_services_string,
           'LOCAL_APPS'           => 'False',
           'LOCALDEV'             => 'False',
           'LTSP_FATCLIENT'       => 'True',
-          'USE_NFS_HOMES'        => 'True',
+          'NBD_SWAP'             => 'False',
+          'NFS_SERVER'           => @boot_server_fqdn,
           'SCREEN_07'            => 'lightdm',
-          'KEEP_SYSTEM_SERVICES' => '"gssd idmapd rpcbind-boot portmap"',
           'SERVER'               => @boot_server_fqdn,
-          'NFS_SERVER'           => @boot_server_fqdn
+          'SYSLOG'               => 'False',
+          'USE_NFS_HOMES'        => 'True',
+          'XKBLAYOUT'            => 'fi',
         }
       when 'ltspserver'
         {
+          'KEEP_SYSTEM_SERVICES' => all_system_services_string,
           'LOCAL_APPS'           => 'False',
           'LOCALDEV'             => 'False',
           'LTSP_FATCLIENT'       => 'False',
           'LTSP_SERVER'          => 'True',
-          'KEEP_SYSTEM_SERVICES' => '"gssd idmapd rpcbind-boot portmap"',
           'SERVER'               => @boot_server_fqdn,
-          'USE_NFS_HOMES'        => 'True'
+          'USE_NFS_HOMES'        => 'True',
         }
       else
 	{}
