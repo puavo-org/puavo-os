@@ -18,6 +18,7 @@
        if (window.process.env.WM_STARTUP_TIME) {
          var startUpTime = (Date.now() / 1000) - parseInt(process.env.WM_STARTUP_TIME)
          console.log("node-webkit started in " + startUpTime + " seconds");
+         console.log("It's now " + new Date());
         }
 
         window.onerror = require("./lib/js_error_reporter");
