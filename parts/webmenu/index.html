@@ -23,6 +23,10 @@
         window.onerror = require("./lib/js_error_reporter");
 
         window.gui = require('nw.gui');
+        if (window.process.env.devtools) {
+          gui.Window.get().showDevTools()
+        }
+
         window.nodeRequire = window.require;
 
         // Disable node.js require to make RequireJS work

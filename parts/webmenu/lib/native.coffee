@@ -78,7 +78,6 @@ module.exports = (gui, bridge) ->
   if process.env.devtools
     process.env.nohide = 1
     config.devtools = true
-    Window.showDevTools()
 
   ###*
   # Make menu visible and bring it to current desktop
