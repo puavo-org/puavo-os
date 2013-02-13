@@ -62,6 +62,7 @@ class CmdLine
       case i
         when /^--( | force
                    | install
+                   | update
                    | noconfirm )$/x
           params[$1] = true
         else
@@ -639,6 +640,22 @@ class Control
     PostRegister.write_hostname(rui.responses["puavoHostname"])
 
     PostRegister.write_puavo_id(info["registration"]["puavoId"])
+
+  end
+
+  def self.update
+    require "puavo-client"
+    puavo = Puavo::Client::Base.from_host
+    device_info = puavo.devices.find_by_id(File.read(Puavo_id_path).to_i)
+    puts device_info
+
+    # PostRegister.write_ldap_info(...)
+    # PostRegister.write_kerberos_info(...)
+    # PostRegister.write_hosttype(...)
+    # PostRegister.write_hostname(...)
+    # XXX: write certs too?
+
+    raise "--update not implemented"
   end
 end
 
@@ -648,4 +665,8 @@ HighLine.say "\n\t-=< Puavo Devices Client >=-\n\n"
 
 cmdline_params = CmdLine.params(ARGV)
 
-Control.register(cmdline_params)
+if cmdline_params["update"]
+  Control.update()
+else
+  Control.register(cmdline_params)
+end
