@@ -40,6 +40,10 @@ module Puavo
 
         url += @path.to_s
 
+        if args.has_key?(:id)
+          url += "/#{args[:id]}"
+        end
+
         return url
       end
     end
