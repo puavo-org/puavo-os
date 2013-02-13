@@ -24,6 +24,7 @@ require 'yaml'
 
 Puavodir            = '/etc/puavo'
 Puavo_hostname_path = "#{ Puavodir }/hostname"
+Puavo_id_path       = "#{ Puavodir }/id"
 
 HostCrtPath     = "#{ Puavodir }/certs/host.crt"
 HostKeyPath     = "#{ Puavodir }/certs/host.key"
@@ -500,6 +501,14 @@ module PostRegister
     end
   end
 
+  def self.write_puavo_id(id)
+    ensure_puavodir
+
+    File.open(Puavo_id_path, 'w', 0644) do |f|
+      f.print "#{ id }\n"
+    end
+  end
+
   def self.write_domain(domain)
     ensure_puavodir
 
@@ -628,6 +637,8 @@ class Control
     # Do this as the last thing, because this affects the test
     # if this host has been registered.
     PostRegister.write_hostname(rui.responses["puavoHostname"])
+
+    PostRegister.write_puavo_id(info["registration"]["puavoId"])
   end
 end
 
