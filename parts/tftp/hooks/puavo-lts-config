@@ -26,7 +26,7 @@ def device_ltspvars(device, organisation, school)
 
   services = {
     'fatclient'  => tty_services + nfs_services,
-    'laptop'     => tty_services + nfs_services + %w(network-manager),
+    'laptop'     => tty_services + nfs_services,
     'ltspserver' => tty_services + nfs_services,
     'thinclient' => tty_services,
   }
