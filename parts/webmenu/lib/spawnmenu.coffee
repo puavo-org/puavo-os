@@ -5,6 +5,14 @@ presented to the user
 TODO: Reimplement with dbus
 ###
 
+
+# node-optimist crashes if process.env._ is undefined and it seems to undefined
+# when launching Webmenu from a .desktop file. Eg. during login. Hack around by
+# setting it to empty string. This hack should not affect us because we don't
+# use implicit argv parsing from node-optimist.
+if not process.env._
+  process.env._ = ""
+
 optimist = require "optimist"
 
 net = require "net"
