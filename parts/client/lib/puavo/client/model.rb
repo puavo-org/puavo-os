@@ -31,10 +31,16 @@ module Puavo
       def self.model_path(args = {})
         @path = args[:path] if args.has_key?(:path)
         @prefix = args[:prefix] if args.has_key?(:prefix)
+
+        url = @prefix.to_s
+
         if args.has_key?(:school_id)
-          return "#{@prefix}/#{args[:school_id]}#{@path}"
+          url += "/#{args[:school_id]}"
         end
-        return "#{@prefix}#{@path}"
+
+        url += @path.to_s
+
+        return url
       end
     end
   end
