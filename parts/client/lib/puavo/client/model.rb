@@ -18,6 +18,10 @@ module Puavo
         end
       end
 
+      def keys
+        @data.keys
+      end
+
       def self.parse(api, data)
         data.map do |d|
           new(api, d)
