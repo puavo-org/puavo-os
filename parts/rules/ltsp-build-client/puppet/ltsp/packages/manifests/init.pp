@@ -62,6 +62,7 @@ class packages {
     [ 'bash'
     , 'bridge-utils'
     , 'btrfs-tools'
+    , 'gdebi-core'
     , 'grub-pc'
     , 'lvm2'
     , 'nfs-common'
@@ -106,8 +107,10 @@ class packages {
 
     [ 'fglrx'
     , 'libgl1-mesa-glx'
+    , 'linux-firmware'
     , 'nvidia-current'
-    , 'nvidia-settings' ]:
+    , 'nvidia-settings'
+    , 'xserver-xorg-video-all' ]:
       tag => [ 'drivers', 'ubuntu', ];
 
     [ 'wine' ]:
