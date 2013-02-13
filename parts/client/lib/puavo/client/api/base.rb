@@ -35,6 +35,12 @@ module Puavo
           self.model_name.parse( self, rest("#{url_prefix}#{self.model_name.model_path}?memberUid=#{uid}").parsed_response )
         end
 
+        def find_by_id(id)
+          self.model_name.new( self,
+                               rest( "#{url_prefix}#{self.model_name.model_path( :id => id )}"
+                                     ).parsed_response )
+        end
+
         def rest(url)
           self.class.get(url,
                          :basic_auth => basic_auth,
