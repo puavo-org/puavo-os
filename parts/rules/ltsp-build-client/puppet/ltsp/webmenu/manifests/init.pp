@@ -15,6 +15,10 @@ class webmenu {
 
     '/usr/share/applications/webmenu-spawn.desktop':
       content => template('webmenu/webmenu-spawn.desktop');
+
+    '/usr/share/applications/webmenu-spawn-logout.desktop':
+      content => template('webmenu/webmenu-spawn-logout.desktop');
+
   }
 
   Package <| (title == liitu-themes)
