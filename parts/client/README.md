@@ -6,7 +6,7 @@ Ruby library for interacting with [Puavo](https://github.com/opinsys/puavo-users
 
 From [opinsys/opinsys-debs](https://github.com/opinsys/opinsys-debs/tree/master/packages/puavo-client)
 
-## HTTP API wrapper
+# HTTP API wrapper
 
     require 'puavo/client'
 
