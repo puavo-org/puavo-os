@@ -8,7 +8,7 @@ From [opinsys/opinsys-debs](https://github.com/opinsys/opinsys-debs/tree/master/
 
 ## HTTP API wrapper
 
-    require 'puavo-client'
+    require 'puavo/client'
 
     puavo = Puavo::Client::Base.new('yourpuavoserver', 'yourusername', 'yourpassword')
 
