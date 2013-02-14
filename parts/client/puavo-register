@@ -414,6 +414,18 @@ class PuavoDevicesConnection
       accepted_devicetypes.map { |d| [ d, all_devicetypes['list'][d] ] }
     ]
 
+    # if puavo gives us a default device type that we do not accept, replace
+    # the default type with the first devicetype that we actually accept
+    default_devicetype = filtered_devicetypes['default']
+    unless filtered_devicetypes['list'].has_key?(default_devicetype); then
+      filtered_devicetypes['default'] \
+	= filtered_devicetypes['list'].keys \
+	    .sort_by do |devtype|
+	      filtered_devicetypes['list'][devtype]['order']
+	    end \
+	    .first
+    end
+
     filtered_devicetypes
   end
 
