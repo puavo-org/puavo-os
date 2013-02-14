@@ -46,5 +46,11 @@ if [ -n "$DNS_SERVER" ] || [ -n "$SEARCH_DOMAIN" ]; then
             echo "nameserver $n" >> "$resolv"
         done
     fi
+
+    # If the /run/resolvconf stuff is used, put it into place right away so
+    # that we can use dns stuff from init-scripts.
+    if [ "$resolv" = "/run/resolvconf/interface/LTSP" ]; then
+        ln -fns ../run/resolvconf/interface/LTSP /etc/resolv.conf
+    fi
 fi
 true
