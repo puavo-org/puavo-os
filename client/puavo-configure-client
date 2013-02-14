@@ -84,11 +84,6 @@ case puavo_device_type
     @ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp
     write_config("/etc/sssd/sssd.conf", nil, true)
 
-    `service sssd restart || service sssd start`
-    `service ltspssh restart || service ltspssh start`
-    `service gssd restart || service gssd start`
-    `service idmapd restart || service idmapd start`
-
     # http://askubuntu.com/questions/117127/flash-video-appears-blue
     # FIXME - do this in ruby instead of perl
     `perl -pi -e 's/libvdpau/lixvdpau/g' /usr/lib/adobe-flashplugin/libflashplayer.so`
@@ -105,9 +100,6 @@ case puavo_device_type
     @ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp
 
     write_config("/etc/sssd/sssd.conf", nil, true)
-    `service sssd restart || service sssd start`
 end
-
-`kill -HUP 1`
 
 exit(0)
