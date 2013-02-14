@@ -17,3 +17,8 @@ install: install-dirs
 clean:
 	rm -rf .bundle
 	rm -rf lib/puavo-client-vendor
+
+test:
+	ruby test/*
+
+.PHONY: test

@@ -1,12 +1,12 @@
-## Overview
+# puavo-client
 
-Simple ruby wrapper for the [Puavo API](https://github.com/opinsys/puavo-users)
+Ruby library for interacting with [Puavo](https://github.com/opinsys/puavo-users)
 
 ## Installation
 
 From [opinsys/opinsys-debs](https://github.com/opinsys/opinsys-debs/tree/master/packages/puavo-client)
 
-## Examples
+## HTTP API wrapper
 
     require 'puavo-client'
 
@@ -25,6 +25,33 @@ From [opinsys/opinsys-debs](https://github.com/opinsys/opinsys-debs/tree/master/
       puts s.name
       puts puavo.groups.find_by_school_id(s.puavo_id).map{ |g| "\t#{g.abbreviation}" }
     end
+
+# puavo-etc
+
+Access [Puavo registration][] information from `/etc/puavo` using Ruby.
+
+## Usage
+
+For reading puavo-etc exposes single global object:
+
+```ruby
+require "puavo/etc"
+
+puts PUAVO_ETC.id
+```
+
+Puavo data is read lazily from `/etc/puavo` which means that possible
+permission exceptions ocur only when you actually try to access the attributes.
+Eg. reading  `PUAVO_ETC.ldap_password` without root.
+
+Writing happens using the `write` method
+
+```ruby
+PUAVO_ETC.write(:id, 1234)
+```
+
+Available attributes can be seen from `puavo_attr` calls in `puavo-etc.rb`.
+
 
 ## Copyright
 
