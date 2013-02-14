@@ -1,0 +1,21 @@
+#!/usr/bin/ruby1.8
+# 
+# Generate lts.conf file for Puavo device
+# 
+
+# FIXME
+$LOAD_PATH.unshift "../lib"
+$LOAD_PATH.unshift "../../puavo-etc"
+
+require 'puavo-etc'
+require 'puavo-client'
+require 'puavo/lts_config'
+
+puavo = Puavo::Client::Base.new(PUAVO_ETC.domain, PUAVO_ETC.ldap_dn, PUAVO_ETC.ldap_password)
+device = puavo.devices.find_by_id(PUAVO_ETC.id)
+# FIXME: use find_by_id method
+school = puavo.schools.all.select{ |s| s.puavo_id == device.school_id }.first
+organisation = puavo.organisation.find
+
+lts_config = Puavo::LtsConfig.new(organisation, school, device)
+puts lts_config.output
