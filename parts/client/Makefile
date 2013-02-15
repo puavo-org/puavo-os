@@ -3,7 +3,9 @@
 # of puavo-client during `make`. The idea is to avoid the work and possible
 # conflicts creating Debian packages from every single Gem dependency.
 
-prefix ?= /usr/local
+prefix = /usr/local
+exec_prefix = $(prefix)
+sbindir = $(exec_prefix)/sbin
 
 INSTALL         = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -20,10 +22,10 @@ build:
 
 install-dirs:
 	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
+	mkdir -p $(DESTDIR)$(sbindir)
 
 install: install-dirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
-		puavo-register
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-register
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
 
 clean:
