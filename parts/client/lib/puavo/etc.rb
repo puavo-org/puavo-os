@@ -69,7 +69,7 @@ class PuavoEtc
   puavo_attr :ldap_master, "ldap/master"
   puavo_attr :ldap_password, "ldap/password", :mode => 0640
 
-  puavo_attr :krb_master, "kerberos/password"
+  puavo_attr :krb_master, "kerberos/master"
   puavo_attr :krb_realm, "kerberos/realm"
   puavo_attr :krb_toprealm, "kerberos/toprealm"
 
