@@ -45,8 +45,14 @@ class PuavoEtc
     file_path = File.join(@root, options[:path])
     FileUtils.mkdir_p(File.dirname(file_path))
 
+    if value.nil? || value.empty?
+      value = ""
+    else
+      value = "#{ value }\n"
+    end
+
     File.open(file_path, "w", (options[:mode] || 0644)) do |f|
-      f.print "#{ value }\n"
+      f.print(value)
     end
 
   end
