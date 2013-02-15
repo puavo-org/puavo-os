@@ -30,6 +30,8 @@ class PuavoEtc
 
   end
 
+  attr_accessor :root
+
   # Initialize by default with /etc/puavo as the root
   def initialize(root="/etc/puavo")
     @root = root

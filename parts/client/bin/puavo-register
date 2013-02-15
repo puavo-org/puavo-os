@@ -588,6 +588,7 @@ class Control
     PUAVO_ETC.write(:hosttype, device_info.device_type)
     PUAVO_ETC.write(:kernel_version, device_info.kernel_version)
     PUAVO_ETC.write(:kernel_arguments, device_info.kernel_arguments)
+    Tools.goodmsg("Puavo attributes are now written to #{ PUAVO_ETC.root }")
   end
 end
 
