@@ -14,7 +14,9 @@ class PuavoEtc
   #
   # @param {Symbol} attr Attribute name
   # @param {String} file_path Path to a file under /etc/puavo
-  # @param {Symbol} convert String method used to convert the value
+  # @param {Hash} options
+  #   @param :convert {Symbol} method to call on string
+  #   @param :mode {Fixnum} file permissions
   def self.puavo_attr(attr, file_path, options={})
     options[:path] = file_path
     @@attr_paths[attr] = options
