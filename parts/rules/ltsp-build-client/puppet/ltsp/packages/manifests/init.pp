@@ -102,7 +102,8 @@ class packages {
     , 'perl-doc'
     , 'pinfo'
     , 'ruby-prof'
-    , 'unetbootin' ]:
+    , 'unetbootin'
+    , 'translate-toolkit' ]:
       tag => [ 'devel', 'ubuntu', ];
 
     [ 'fglrx'
@@ -205,6 +206,7 @@ class packages {
     , 'okular'
     , 'openshot'
     , 'pencil'
+    , 'pitivi'
     , 'python-lxml'
     , 'sane-utils'
     , 'stopmotion'
@@ -361,6 +363,7 @@ class packages {
     , 'idle'
     , 'kompare'
     , 'kturtle'
+    , 'lokalize'
     , 'netbeans'
     , 'pyqt4-dev-tools'
     , 'python-doc'
