@@ -5,6 +5,9 @@
 
 prefix ?= /usr/local
 
+INSTALL         = install
+INSTALL_PROGRAM = $(INSTALL)
+
 # For some reason ruby lib directory is different under /usr and /usr/local
 ifeq ($(prefix),/usr/local)
 	RUBY_LIB_DIR = /usr/local/lib/site_ruby
@@ -19,6 +22,8 @@ install-dirs:
 	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
 
 install: install-dirs
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
+		puavo-register
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
 
 clean:

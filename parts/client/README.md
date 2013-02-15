@@ -8,6 +8,8 @@ From [opinsys/opinsys-debs](https://github.com/opinsys/opinsys-debs/tree/master/
 
 # HTTP API wrapper
 
+## Usage
+
     require 'puavo/client'
 
     puavo = Puavo::Client::Base.new('yourpuavoserver', 'yourusername', 'yourpassword')
@@ -28,7 +30,7 @@ From [opinsys/opinsys-debs](https://github.com/opinsys/opinsys-debs/tree/master/
 
 # puavo-etc
 
-Access [Puavo registration][] information from `/etc/puavo` using Ruby.
+Access [Puavo registration][] information from `/etc/puavo`
 
 ## Usage
 
@@ -51,6 +53,21 @@ PUAVO_ETC.write(:id, 1234)
 ```
 
 Available attributes can be seen from `puavo_attr` calls in `puavo-etc.rb`.
+
+# puavo-register
+
+Register devices to Puavo from CLI
+
+## Requirements
+
+- facter, libhighline-ruby and libjson-ruby
+  - `sudo apt-get install facter libhighline-ruby libjson-ruby`
+- system user and group 'puavo'
+  - `sudo adduser --system --no-create-home --disabled-login --group puavo`
+
+## Usage
+
+    [sudo] puavo-register
 
 
 [Puavo registration]: https://github.com/opinsys/puavo-register
