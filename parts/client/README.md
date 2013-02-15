@@ -56,6 +56,12 @@ PUAVO_ETC.write(:id, 1234)
 
 Available attributes can be seen from `puavo_attr` calls in `puavo-etc.rb`.
 
+# puavo-lts
+
+Development with
+
+    ruby -Ilib/ bin/puavo-lts
+
 # puavo-register
 
 Register devices to Puavo from CLI

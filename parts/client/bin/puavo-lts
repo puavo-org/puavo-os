@@ -1,10 +1,7 @@
 #!/usr/bin/ruby1.8
-# 
+#
 # Generate lts.conf file for Puavo device
-# 
-
-# FIXME
-$LOAD_PATH.unshift "../lib"
+#
 
 require 'puavo/etc'
 require 'puavo-client'
