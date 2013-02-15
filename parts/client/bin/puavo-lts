@@ -8,7 +8,7 @@ $LOAD_PATH.unshift "../lib"
 
 require 'puavo/etc'
 require 'puavo-client'
-require 'puavo/lts_config'
+require 'puavo/lts'
 
 puavo = Puavo::Client::Base.new(PUAVO_ETC.domain, PUAVO_ETC.ldap_dn, PUAVO_ETC.ldap_password)
 device = puavo.devices.find_by_id(PUAVO_ETC.id)
@@ -16,5 +16,5 @@ device = puavo.devices.find_by_id(PUAVO_ETC.id)
 school = puavo.schools.all.select{ |s| s.puavo_id == device.school_id }.first
 organisation = puavo.organisation.find
 
-lts_config = Puavo::LtsConfig.new(organisation, school, device)
+lts_config = Puavo::Lts.new(organisation, school, device)
 puts lts_config.output
