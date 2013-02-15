@@ -629,6 +629,7 @@ class Control
     end
 
 
+    # TODO: Replace PostRegister with puavo/etc
 
     PostRegister.write_ldap_info(
       info['registration']['dn'],
