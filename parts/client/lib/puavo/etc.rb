@@ -78,6 +78,8 @@ class PuavoEtc
   puavo_attr :host_key, "certs/host.key"
   puavo_attr :orgcabundle, "certs/orgcabundle.pem"
 
+  puavo_attr :kernel_version, "kernel/version"
+  puavo_attr :kernel_arguments, "kernel/arguments"
 end
 
 
