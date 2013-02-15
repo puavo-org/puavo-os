@@ -6,6 +6,7 @@ require File.expand_path(File.dirname(__FILE__) + "/puavo-client-vendor/bundler/
 require 'httparty'
 require 'json'
 
+require 'puavo/etc'
 require 'puavo/client/base'
 require 'puavo/client/api/base'
 require 'puavo/client/api/schools'
