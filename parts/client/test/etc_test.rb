@@ -66,4 +66,15 @@ class TestPuavoEtcReader < Test::Unit::TestCase
     end
   end
 
+  def test_password_permissions
+    Dir.mktmpdir do |dir|
+      pe = PuavoEtc.new(dir)
+      pe.write :ldap_password, "secret"
+
+      stat = File.stat(dir + "/ldap/password")
+      mode = sprintf("%o", stat.mode)
+      assert_equal(mode, "100640")
+    end
+  end
+
 end

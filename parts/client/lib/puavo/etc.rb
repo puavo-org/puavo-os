@@ -45,7 +45,7 @@ class PuavoEtc
     file_path = File.join(@root, options[:path])
     FileUtils.mkdir_p(File.dirname(file_path))
 
-    File.open(file_path, "w", (options[:permissions] || 0644)) do |f|
+    File.open(file_path, "w", (options[:mode] || 0644)) do |f|
       f.print "#{ value }\n"
     end
 
@@ -61,7 +61,7 @@ class PuavoEtc
   puavo_attr :ldap_dn, "ldap/dn"
   puavo_attr :ldap_base, "ldap/base"
   puavo_attr :ldap_master, "ldap/master"
-  puavo_attr :ldap_password, "ldap/password" # Readable only as root
+  puavo_attr :ldap_password, "ldap/password", :mode => 0640
 
   puavo_attr :krb_master, "kerberos/password"
   puavo_attr :krb_realm, "kerberos/realm"
