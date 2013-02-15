@@ -5,14 +5,21 @@
 
 prefix ?= /usr/local
 
+# For some reason ruby lib directory is different under /usr and /usr/local
+ifeq ($(prefix),/usr/local)
+	RUBY_LIB_DIR = /usr/local/lib/site_ruby
+else
+	RUBY_LIB_DIR = $(prefix)/lib/ruby/vendor_ruby
+endif
+
 build:
 	bundle install --standalone --path lib/puavo-client-vendor
 
 install-dirs:
-	mkdir -p $(DESTDIR)$(prefix)/lib/ruby/vendor_ruby/
+	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
 
 install: install-dirs
-	cp -r lib/* $(DESTDIR)$(prefix)/lib/ruby/vendor_ruby/
+	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
 
 clean:
 	rm -rf .bundle
