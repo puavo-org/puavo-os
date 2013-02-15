@@ -91,6 +91,7 @@ case puavo_device_type
     write_config("/etc/nsswitch.conf", "sss")
     write_config("/etc/krb5.conf")
     write_config("/etc/idmapd.conf")
+    write_config("/etc/ldap/ldap.conf", "laptop")
     write_config("/etc/pam.d/lightdm", "laptop")
 
     # FIXME: Hack to get gnome fallback session
