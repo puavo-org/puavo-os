@@ -5,9 +5,8 @@
 
 # FIXME
 $LOAD_PATH.unshift "../lib"
-$LOAD_PATH.unshift "../../puavo-etc"
 
-require 'puavo-etc'
+require 'puavo/etc'
 require 'puavo-client'
 require 'puavo/lts_config'
 
