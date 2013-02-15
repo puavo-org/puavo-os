@@ -15,12 +15,13 @@ class PuavoEtc
   # @param {Symbol} attr Attribute name
   # @param {String} file_path Path to a file under /etc/puavo
   # @param {Symbol} convert String method used to convert the value
-  def self.puavo_attr(attr, file_path, convert=:to_s)
-    @@attr_paths[attr] = file_path
+  def self.puavo_attr(attr, file_path, options={})
+    options[:path] = file_path
+    @@attr_paths[attr] = options
     define_method attr do
       return @cache[attr] if @cache[attr]
       value = File.read(File.join(@root, file_path)).chomp
-      value = value.send(convert)
+      value = value.send(options[:convert] || :to_s)
       @cache[attr] = value
       return value
     end
@@ -39,13 +40,19 @@ class PuavoEtc
     if not @@attr_paths[attr]
       raise Exception, "Unkdown Puavo Attribute #{ attr }"
     end
-    file_path = File.join(@root, @@attr_paths[attr])
+    options = @@attr_paths[attr]
+
+    file_path = File.join(@root, options[:path])
     FileUtils.mkdir_p(File.dirname(file_path))
-    File.write(file_path, value.to_s + "\n")
+
+    File.open(file_path, "w", (options[:permissions] || 0644)) do |f|
+      f.print "#{ value }\n"
+    end
+
   end
 
   # Puavo Attribute definitions
-  puavo_attr :id, "id", :to_i
+  puavo_attr :id, "id", :convert => :to_i
   puavo_attr :domain, "domain"
   puavo_attr :topdomain, "topdomain"
   puavo_attr :hostname, "hostname"
