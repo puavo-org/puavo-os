@@ -663,10 +663,9 @@ class Control
       PUAVO_ETC.ldap_password
     )
 
-    device_info = puavo.devices.find_by_id(PUAVO_ETC.id)
-    puts device_info
-
-    raise "--update not implemented"
+    device_info = puavo.servers.find_by_id(PUAVO_ETC.id)
+    PUAVO_ETC.write :hostname, device_info.hostname
+    PUAVO_ETC.write :hosttype, device_info.device_type
   end
 end
 
