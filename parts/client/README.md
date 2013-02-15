@@ -10,23 +10,25 @@ From [opinsys/opinsys-debs](https://github.com/opinsys/opinsys-debs/tree/master/
 
 ## Usage
 
-    require 'puavo/client'
+```ruby
+require 'puavo/client'
 
-    puavo = Puavo::Client::Base.new('yourpuavoserver', 'yourusername', 'yourpassword')
+puavo = Puavo::Client::Base.new('yourpuavoserver', 'yourusername', 'yourpassword')
 
-    schools = puavo.schools.all
+schools = puavo.schools.all
 
-    puts "Devices by school"
-    schools.each do |s|
-      puts s.name
-      puts puavo.devices.find_by_school_id(s.puavo_id).map{ |d| "\t#{d.puavoHostname}" }
-    end
+puts "Devices by school"
+schools.each do |s|
+  puts s.name
+  puts puavo.devices.find_by_school_id(s.puavo_id).map{ |d| "\t#{d.puavoHostname}" }
+end
 
-    puts "Groups by school"
-    schools.each do |s|
-      puts s.name
-      puts puavo.groups.find_by_school_id(s.puavo_id).map{ |g| "\t#{g.abbreviation}" }
-    end
+puts "Groups by school"
+schools.each do |s|
+  puts s.name
+  puts puavo.groups.find_by_school_id(s.puavo_id).map{ |g| "\t#{g.abbreviation}" }
+end
+```
 
 # puavo-etc
 
