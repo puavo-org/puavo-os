@@ -1,4 +1,6 @@
 
 source "https://rubygems.org"
-gem "httparty"
 
+gem "httparty"
+gem "facter"
+gem "highline"

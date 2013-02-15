@@ -60,14 +60,15 @@ Register devices to Puavo from CLI
 
 ## Requirements
 
-- facter, libhighline-ruby and libjson-ruby
-  - `sudo apt-get install facter libhighline-ruby libjson-ruby`
 - system user and group 'puavo'
   - `sudo adduser --system --no-create-home --disabled-login --group puavo`
 
 ## Usage
 
-    [sudo] puavo-register
+    [sudo] puavo-register [--update]
 
+## Development
+
+    [sudo] ruby -Ilib/ bin/puavo-register [--update]
 
 [Puavo registration]: https://github.com/opinsys/puavo-register

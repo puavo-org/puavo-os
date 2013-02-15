@@ -12,6 +12,7 @@
 # suggestion: run this as:
 #  sudo ruby puavo-register
 
+require "puavo"
 require 'facter'
 require 'fileutils'
 require 'highline/import'
@@ -656,16 +657,14 @@ class Control
   end
 
   def self.update
-    require "puavo-client"
-    puavo = Puavo::Client::Base.from_host
-    device_info = puavo.devices.find_by_id(File.read(Puavo_id_path).to_i)
-    puts device_info
+    puavo = Puavo::Client::Base.new(
+      PUAVO_ETC.domain,
+      PUAVO_ETC.ldap_dn,
+      PUAVO_ETC.ldap_password
+    )
 
-    # PostRegister.write_ldap_info(...)
-    # PostRegister.write_kerberos_info(...)
-    # PostRegister.write_hosttype(...)
-    # PostRegister.write_hostname(...)
-    # XXX: write certs too?
+    device_info = puavo.devices.find_by_id(PUAVO_ETC.id)
+    puts device_info
 
     raise "--update not implemented"
   end
