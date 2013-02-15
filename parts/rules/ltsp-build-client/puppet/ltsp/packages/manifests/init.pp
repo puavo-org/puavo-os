@@ -683,6 +683,9 @@ class packages {
     , 'openjdk-6-jre' ]:
       tag => [ 'web', 'ubuntu', ];
 
+   [ 'open-sankore', ]:
+      tag => [ 'whiteboard', 'ubuntu', ];
+
 # XXX disabled for now
 #   'mimio-studio':
 #     tag => [ 'whiteboard-mimio', ];
