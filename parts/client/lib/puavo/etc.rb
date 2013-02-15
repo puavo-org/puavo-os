@@ -45,7 +45,7 @@ class PuavoEtc
     file_path = File.join(@root, options[:path])
     FileUtils.mkdir_p(File.dirname(file_path))
 
-    if value.nil? || value.empty?
+    if value.to_s.empty?
       value = ""
     else
       value = "#{ value }\n"
