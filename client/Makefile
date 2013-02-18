@@ -46,7 +46,8 @@ install : installdirs
 		templates/etc/pam.d/lightdm-thinclient
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ldap \
-		templates/etc/ldap/ldap.conf
+		templates/etc/ldap/ldap.conf \
+		templates/etc/ldap/ldap.conf-laptop
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
 		templates/etc/krb5.conf \
