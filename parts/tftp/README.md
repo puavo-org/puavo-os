@@ -16,7 +16,7 @@ To install it with hooks:
 
 ### Usage
 
-    Usage: [sudo] ./server.rb [options]
+    Usage: [sudo] puavo-tftpd [options]
         -r, --root PATH                  Serve files from directory.
         -u, --user USER                  Drop to user.
         -g, --group GROUP                Drop to group. Default nogroup
