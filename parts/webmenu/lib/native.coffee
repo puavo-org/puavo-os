@@ -1,4 +1,4 @@
-{spawn} = require "child_process"
+{exec} = require "child_process"
 posix = require "posix"
 mkdirp = require "mkdirp"
 fs = require "fs"
@@ -92,13 +92,24 @@ module.exports = (gui, bridge) ->
     Window.show()
     Window.focus()
 
-    # Force window activation
+    # Wait 100ms to make sure that window is really focusable
     setTimeout ->
-      wmctrl = spawn("wmctrl", ["-F", "-R", "Webmenu"])
-      wmctrl.on 'exit', (code) ->
-        if code isnt 0
-          console.info('wmctrl exited with code ' + code)
+      forceActivate (err) ->
+        if err
+          # Sometimes 100ms is not enough. Wait 200ms and retry.
+          # TODO: We should investigate how ofter this happens.
+          console.info "Retrying wmctrl..."
+          setTimeout(forceActivate, 200)
     , 100
+
+  # Use wmctrl to for force active the menu.
+  forceActivate = (cb=->) ->
+    cmd = "wmctrl -F -R Webmenu"
+    wmctrl = exec cmd, (err, stdout, stderr) ->
+      if err
+        console.error "wmctrl failed: '#{ cmd }'. Error: #{ JSON.stringify err }"
+        console.error "stdout: #{ stdout } stderr: #{ stderr }"
+      return cb err
 
   hideWindow = ->
     if process.env.nohide
