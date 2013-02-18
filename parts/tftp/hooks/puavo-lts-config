@@ -84,7 +84,6 @@ def device_ltspvars(device, organisation, school)
       when 'ltspserver'
         {
           'KEEP_SYSTEM_SERVICES' => keep_services_string_fn.call(devicetype),
-          'KEEP_SYSTEM_SERVICES' => keep_services_fn.call(devicetype),
           'LOCAL_APPS'           => 'False',
           'LOCALDEV'             => 'False',
           'LTSP_FATCLIENT'       => 'False',
