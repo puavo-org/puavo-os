@@ -8,6 +8,6 @@ class lightdm {
                  , Package['liitu-themes'] ];
   }
 
-  Package <| title == lightdm 
+  Package <| title == lightdm
           or title == liitu-themes |>
 }
