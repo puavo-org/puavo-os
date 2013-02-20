@@ -4,7 +4,7 @@ module Puavo
       module School
         include Base
 
-        def json_attributes
+        def prettify_attributes
           [
            { :original_attribute_name => "puavoId",
              :new_attribute_name => "puavo_id",

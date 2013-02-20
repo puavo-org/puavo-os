@@ -4,7 +4,7 @@ module Puavo
       module DeviceBase
         include Base
 
-        def json_attributes
+        def prettify_attributes
           # Note: value of attribute may be raw ldap value eg. { puavoHostname => ["thinclient-01"] }
           [
            { :original_attribute_name => "description",

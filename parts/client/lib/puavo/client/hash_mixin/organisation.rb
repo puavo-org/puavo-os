@@ -4,7 +4,7 @@ module Puavo
       module Organisation
         include Base
 
-        def json_attributes
+        def prettify_attributes
           [
            { :original_attribute_name => "puavoDomain",
              :new_attribute_name => "domain",
