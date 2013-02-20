@@ -5,6 +5,11 @@ module Puavo
         @data = data
         @api = api
       end
+      
+      def self.new_by_ldap_entry(entry)
+        self.new( nil, ldap_prettify(entry) )
+      end
+
 
       def api
         @api
@@ -22,11 +27,16 @@ module Puavo
         @data.keys
       end
 
+      def data
+        @data
+      end
+
       def self.parse(api, data)
         data.map do |d|
           new(api, d)
         end
       end
+
 
       def self.model_path(args = {})
         @path = args[:path] if args.has_key?(:path)

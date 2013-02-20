@@ -16,6 +16,13 @@ require 'puavo/client/api/users'
 require 'puavo/client/api/organisation'
 require 'puavo/client/api/servers'
 
+require 'puavo/client/hash_mixin/base'
+require 'puavo/client/hash_mixin/device_base'
+require 'puavo/client/hash_mixin/device'
+require 'puavo/client/hash_mixin/organisation'
+require 'puavo/client/hash_mixin/school'
+require 'puavo/client/hash_mixin/server'
+
 require 'puavo/client/model'
 require 'puavo/client/school'
 require 'puavo/client/group'

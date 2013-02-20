@@ -7,6 +7,18 @@ module Puavo
         @subdomain, @username, @password, @ssl = subdomain, username, password, ssl
       end
 
+      def self.new_by_ldap_entry(entry)
+        if entry["objectClass"].include?( "puavoSchool" )
+          Puavo::Client::School.new_by_ldap_entry(entry)
+        elsif entry["objectClass"].include?( "puavoEduOrg" )
+          Puavo::Client::Organisation.new_by_ldap_entry(entry)
+        elsif entry.has_key?("puavoDeviceType")
+          Puavo::Client::Device.new_by_ldap_entry(entry)
+        else
+          raise "Unknown object type"
+        end
+      end
+
       def organisation
         Puavo::Client::API::Organisation.new(subdomain, username, password, ssl)
       end
