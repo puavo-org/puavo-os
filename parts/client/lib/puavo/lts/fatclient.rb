@@ -8,17 +8,17 @@ module Puavo
         @device = device
 
         @lts_data = {
-          'NBD_SWAP'             => 'False',
-          'SYSLOG'               => 'False',
-          'XKBLAYOUT'            => 'fi',
+          'KEEP_SYSTEM_SERVICES' => keep_services_tty_and_nfs_services,
           'LOCAL_APPS'           => 'False',
           'LOCALDEV'             => 'False',
           'LTSP_FATCLIENT'       => 'True',
-          'USE_NFS_HOMES'        => 'True',
+          'NBD_SWAP'             => 'False',
+          'NFS_SERVER'           => boot_server_fqdn,
           'SCREEN_07'            => 'lightdm',
-          'KEEP_SYSTEM_SERVICES' => '"gssd idmapd rpcbind-boot portmap"',
           'SERVER'               => boot_server_fqdn,
-          'NFS_SERVER'           => boot_server_fqdn
+          'SYSLOG'               => 'False',
+          'USE_NFS_HOMES'        => 'True',
+          'XKBLAYOUT'            => 'fi',
         }
         
         @lts_data.merge!( define_tags )
