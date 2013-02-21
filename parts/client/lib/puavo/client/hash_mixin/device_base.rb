@@ -90,6 +90,15 @@ module Puavo
              :value_block => lambda{ |value| Array(value).first } },
            { :original_attribute_name => "puavoDeviceXserver",
              :new_attribute_name => "xserver_driver",
+             :value_block => lambda{ |value| Array(value).first } },
+           { :original_attribute_name => "puavoDeviceResolution",
+             :new_attribute_name => "resolution",
+             :value_block => lambda{ |value| Array(value).first } },
+           { :original_attribute_name => "puavoDeviceHorzSync",
+             :new_attribute_name => "horizontal_sync",
+             :value_block => lambda{ |value| Array(value).first } },
+           { :original_attribute_name => "puavoDeviceVertRefresh",
+             :new_attribute_name => "vertical_refresh",
              :value_block => lambda{ |value| Array(value).first } } ]
         end
       end

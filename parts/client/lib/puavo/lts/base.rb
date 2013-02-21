@@ -65,6 +65,13 @@ module Puavo
         { 'KEEP_SYSTEM_SERVICES' => '"tty1 tty2 tty3 tty4 tty5 tty6"' }
       end
 
+      def define_resolution
+        definition = {}
+        definition.merge!( @device.resolution ? { 'X_MODE_0' => @device.resolution } : {} )
+        definition.merge!( @device.horizontal_sync ? { 'X_HORZSYNC' => @device.horizontal_sync } : {} )
+        definition.merge!( @device.vertical_refresh ? { 'X_VERTREFRESH' => @device.vertical_refresh } : {} )
+      end
+
       def boot_server_fqdn
         "#{PUAVO_ETC.hostname}.#{PUAVO_ETC.domain}"
       end
