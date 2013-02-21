@@ -8,6 +8,8 @@ module Puavo
       end
 
       def self.new_by_ldap_entry(entry)
+        raise "Etry is nil" if entry.nil?
+
         if entry["objectClass"].include?( "puavoSchool" )
           Puavo::Client::School.new_by_ldap_entry(entry)
         elsif entry["objectClass"].include?( "puavoEduOrg" )
