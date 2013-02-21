@@ -87,6 +87,9 @@ module Puavo
              :value_block => lambda{ |value| Array(value).first } },
            { :original_attribute_name => "puavoDeviceImage",
              :new_attribute_name => "device_image",
+             :value_block => lambda{ |value| Array(value).first } },
+           { :original_attribute_name => "puavoDeviceXserver",
+             :new_attribute_name => "xserver_driver",
              :value_block => lambda{ |value| Array(value).first } } ]
         end
       end
