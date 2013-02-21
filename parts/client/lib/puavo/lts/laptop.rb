@@ -6,8 +6,6 @@ module Puavo
         @organisation = organisation
         @school = school
         @device = device
-        puts "\n\n Device: #{@device.inspect}"
-
 
         @lts_data = {
           'LOCAL_APPS'           => 'False',
