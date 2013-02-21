@@ -33,8 +33,8 @@ module Puavo
         @device.default_printer ? { 'LDM_PRINTER_DEFAULT' => @device.default_printer } : {}
       end
       
-      def define_xserver
-        @device.xserver ? { 'XSERVER' => @device.xserver } : {}
+      def define_xserver_driver
+        @device.xserver_driver ? { 'XSERVER' => @device.xserver_driver } : {}
       end
 
       def define_xrandr_disable

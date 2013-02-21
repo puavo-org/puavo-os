@@ -21,8 +21,7 @@ module Puavo
         
         @lts_data.merge!( define_tags )
         @lts_data.merge!( define_default_printer )
-        # FIXME
-        # @lts_data.merge( define_xserver )
+        @lts_data.merge( define_xserver_driver )
         @lts_data.merge!( define_xrandr_disable )
         @lts_data.merge!( define_system_services )
 
