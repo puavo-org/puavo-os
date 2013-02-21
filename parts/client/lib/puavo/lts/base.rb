@@ -124,6 +124,16 @@ module Puavo
       def boot_server_fqdn
         "#{PUAVO_ETC.hostname}.#{PUAVO_ETC.domain}"
       end
+
+      def keep_services_tty_services
+        "tty1 tty2 tty3 tty4 tty5 tty6"
+      end
+
+      def keep_services_tty_and_nfs_services
+        "#{keep_services_tty_services} gssd idmapd rpcbind-boot portmap"
+      end
+
+
     end
   end
 end
