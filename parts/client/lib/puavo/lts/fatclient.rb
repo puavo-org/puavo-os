@@ -24,6 +24,7 @@ module Puavo
         @lts_data.merge!( define_tags )
         @lts_data.merge!( define_default_printer )
         @lts_data.merge!( define_xserver_driver )
+        @lts_data.merge!( define_xrandrs )
       end
 
     end

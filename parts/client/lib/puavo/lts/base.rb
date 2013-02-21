@@ -1,3 +1,5 @@
+require 'shellwords'
+
 module Puavo
   module Lts
 
@@ -37,15 +39,35 @@ module Puavo
         @device.xserver_driver ? { 'XSERVER' => @device.xserver_driver } : {}
       end
 
-      def define_xrandr_disable
-        @device.xrandr_disable ?
-        { 'XRANDR_DISABLE' => 'True' } : {}
+      def define_xrandrs
+        xrandr_definition = {}
+        xrandr_definition.merge!( @device.xrandr_disable ?
+                                  { 'XRANDR_DISABLE' => 'True' } : {} )
+
+        if @device.xrandrs
+           @device.xrandrs.each_index do |i|
+            xrandrsetting = xrandrline( @device.xrandrs[i] )
+            xrandrsetting.each do |key, value|
+              varname = "XRANDR_#{ key.upcase }_#{ i }"
+              xrandr_definition.merge!( { "#{varname}" => value } )
+            end
+          end
+        end
+
+        xrandr_definition
+      end
+
+      def xrandrline(line)
+        Hash[ * Shellwords.shellwords(line).map { |s| s.split('=',2) }.flatten ]
       end
 
       def define_system_services
         { 'KEEP_SYSTEM_SERVICES' => '"tty1 tty2 tty3 tty4 tty5 tty6"' }
       end
 
+      def boot_server_fqdn
+        "#{PUAVO_ETC.hostname}.#{PUAVO_ETC.domain}"
+      end
     end
   end
 end
