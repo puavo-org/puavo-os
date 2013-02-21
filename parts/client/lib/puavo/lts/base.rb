@@ -110,7 +110,7 @@ module Puavo
 
       def define_wlan
         definition = {}
-        if @school
+        if @school.class == Puavo::Client::School
           index = 1
           @school.wlan_ssids.each do |ssid|
             lts_key = "WLAN_SSID_%02d" % index
