@@ -63,8 +63,8 @@ module Puavo
              :value_block => lambda{ |value| Array(value).first } },
 
            { :original_attribute_name => "puavoWlanSSID",
-             :new_attribute_name => "wlan_ssid",
-             :value_block => lambda{ |value| value } } ]
+             :new_attribute_name => "wlan_ssids",
+             :value_block => lambda{ |value| Array(value) } } ]
         end
       end
     end
