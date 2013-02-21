@@ -72,6 +72,42 @@ module Puavo
         definition.merge!( @device.vertical_refresh ? { 'X_VERTREFRESH' => @device.vertical_refresh } : {} )
       end
 
+      def define_auto_power_off
+        definition = {
+          'AUTOPOWEROFF' => 'Y',
+          'AUTOPOWEROFF_START' => 7,
+          'AUTOPOWEROFF_END' => 16,
+          'AUTOPOWEROFF_STARTUP_DELAY' => 30,
+          'AUTOPOWEROFF_IDLE_TIME' => 30
+        }
+
+        # Defaults by organisation
+        settings_by_organisation = {}
+        if @organisation.auto_power_off_mode == 'off'
+          settings_by_@organisation['AUTOPOWEROFF'] = 'N'
+        elsif @organisation.auto_power_off_mode == 'custom'
+          settings_by_@organisation['AUTOPOWEROFF'] = 'Y'
+          settings_by_@organisation['AUTOPOWEROFF_START'] =
+            @organisation.auto_power_on_hour if @organisation.auto_power_on_hour
+          settings_by_@organisation['AUTOPOWEROFF_END'] =
+            @organisation.auto_power_off_hour if @organisation.auto_power_off_hour
+        end
+        
+        definition.merge!(settings_by_organisation)
+
+        # Settings by device
+        settings_by_device = {}
+        if @device.auto_power_off_mode == 'off'
+          settings_by_device['AUTOPOWEROFF'] = 'N'
+        elsif @device.auto_power_off_mode == 'custom'
+          settings_by_device['AUTOPOWEROFF'] = 'Y'
+          settings_by_device['AUTOPOWEROFF_START'] = @device.auto_power_on_hour if @device.auto_power_on_hour
+          settings_by_device['AUTOPOWEROFF_END'] = @device.auto_power_off_hour if @device.auto_power_off_hour
+        end
+        
+        definition.merge!(settings_by_device)
+      end
+
       def boot_server_fqdn
         "#{PUAVO_ETC.hostname}.#{PUAVO_ETC.domain}"
       end
