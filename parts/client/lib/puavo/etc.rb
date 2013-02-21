@@ -84,6 +84,8 @@ class PuavoEtc
 
   puavo_attr :kernel_version, "kernel/version"
   puavo_attr :kernel_arguments, "kernel/arguments"
+
+  puavo_attr :primary_ltsp_server, "primary_ltsp_server"
 end
 
 
