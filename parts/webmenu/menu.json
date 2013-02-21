@@ -124,6 +124,12 @@
           "inactiveByDeviceType": "thinclient",
           "name": "Xsane-skannausohjelma",
           "osIconPath": "/usr/share/icons/Faenza/devices/96/scanner.png"
+        },
+        {
+          "type": "desktop",
+          "id": "blender",
+          "inactiveByDeviceType": "thinclient",
+          "name": "Blender-3D-mallinnusohjelma"
         }
           ]
     },
@@ -567,7 +573,7 @@
     },
     {
       "type": "menu",
-      "name": "Smartboard",
+      "name": "Älytaulut",
       "description": "Internet-sovellukset",
       "osIconPath": "/usr/share/icons/hicolor/128x128/apps/SMART_Tools.png",
       "items": [
@@ -575,6 +581,12 @@
           "type": "desktop",
           "id": "smarttech-notebook",
           "osIconPath": "/usr/share/icons/hicolor/128x128/apps/SMART_Notebook.png"
+        },
+        {
+          "type": "desktop",
+          "id": "Open-Sankore",
+          "name": "Open-Sankoré-älytauluohjelmisto",
+          "osIconPath": "/usr/local/Open-Sankore-2.00.00/sankore.png"
         }
           ]
     },
