@@ -7,7 +7,23 @@ module Puavo
         @school = school
         @device = device
 
-        @lts_data = {}
+        @lts_data = {
+          'NBD_SWAP'             => 'False',
+          'SYSLOG'               => 'False',
+          'XKBLAYOUT'            => 'fi',
+          'LOCAL_APPS'           => 'False',
+          'LOCALDEV'             => 'False',
+          'LTSP_FATCLIENT'       => 'True',
+          'USE_NFS_HOMES'        => 'True',
+          'SCREEN_07'            => 'lightdm',
+          'KEEP_SYSTEM_SERVICES' => '"gssd idmapd rpcbind-boot portmap"',
+          'SERVER'               => boot_server_fqdn,
+          'NFS_SERVER'           => boot_server_fqdn
+        }
+        
+        @lts_data.merge!( define_tags )
+        @lts_data.merge!( define_default_printer )
+        @lts_data.merge!( define_xserver_driver )
       end
 
     end
