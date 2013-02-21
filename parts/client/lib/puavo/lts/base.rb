@@ -108,6 +108,19 @@ module Puavo
         definition.merge!(settings_by_device)
       end
 
+      def define_wlan
+        definition = {}
+        if @school
+          index = 1
+          @school.wlan_ssids.each do |ssid|
+            lts_key = "WLAN_SSID_%02d" % index
+            definition[lts_key] = '"' + ssid + '"'
+            index += 1
+          end
+        end
+        definition
+      end
+
       def boot_server_fqdn
         "#{PUAVO_ETC.hostname}.#{PUAVO_ETC.domain}"
       end
