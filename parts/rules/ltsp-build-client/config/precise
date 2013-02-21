@@ -2,6 +2,7 @@ PUPPET_USE_CLASSES="
   autopoweroff
   console
   cpu_frequency_scaling
+  desktop
   kernels
   lightdm
   organisation_adm_users
@@ -11,4 +12,5 @@ PUPPET_USE_CLASSES="
   ssh_client
   ssh_server
   sudo
+  udev
 "
