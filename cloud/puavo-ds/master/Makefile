@@ -21,7 +21,7 @@ install: install-dirs
 	# TODO: bin etc...
 
 clean:
-		rm -rf .bundle
-		rm -rf lib/puavo-ds-master-vendor
+	rm -rf .bundle
+	rm -rf lib/puavo-ds-master-vendor
 
 
