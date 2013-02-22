@@ -1,4 +1,4 @@
-prefix = /usr
+prefix = /usr/local
 exec_prefix = $(prefix)
 sbindir = $(exec_prefix)/sbin
 datarootdir = $(prefix)/share
