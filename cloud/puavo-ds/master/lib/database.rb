@@ -18,21 +18,26 @@ class Database < ActiveLdap::Base
 
   def set_attribute_values
     self.olcDatabase = 'hdb'
-    self.olcDbConfig = ['set_cachesize 0 20971520 0',
-                        'set_lk_max_objects 1500',
-                        'set_lk_max_locks 1500',
-                        'set_lk_max_lockers 1500',
-                        'set_lk_detect DB_LOCK_OLDEST',
-                        'set_log_config DB_LOG_AUTO_REMOVE',
-                        'set_lg_max 5242880',
+    self.olcDbConfig = ['set_cachesize 0 10485760 0',
                         'set_lg_bsize 2097512',
-                        'set_tx_max 100']
+                        'set_flags DB_LOG_AUTOREMOVE']
     self.olcDbCheckpoint = '64 5'
     self.olcDbCachesize = '10000'
     self.olcLastMod = 'TRUE'
     self.olcDbCheckpoint = '512 30'
-    self.olcDbIndex = ['uid pres,eq',
-                       'cn,sn,mail pres,eq,approx,sub',
+    self.olcDbIndex = ['sambaSID pres,eq',
+                       'sambaSIDList pres,eq',
+                       'sambaGroupType pres,eq',
+                       'member,memberUid pres,eq',
+                       'puavoSchool pres,eq',
+                       'puavoId pres,eq',
+                       'puavoTag pres,eq',
+                       'puavoDeviceType pres,eq',
+                       'puavoHostname pres,eq,sub',
+                       'displayName,puavoEduPersonReverseDisplayName pres,eq,sub',
+                       'uid pres,eq',
+                       'krbPrincipalName pres,eq',
+                       'cn,sn,mail,givenName pres,eq,approx,sub',
                        'objectClass eq',
                        'entryUUID eq',
                        'entryCSN eq'
