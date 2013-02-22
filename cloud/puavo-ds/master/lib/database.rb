@@ -51,25 +51,6 @@ class Database < ActiveLdap::Base
     self.olcAccess = LdapAcl.generate_acls(suffix, samba_domain)
   end
 
-  def set_replication_settings
-    @rootdn = ActiveLdap::Base.configurations["settings"]["ldap_server"]["bind_dn"]
-    @rootpw = ActiveLdap::Base.configurations["settings"]["ldap_server"]["password"]
-    @servers = Array.new
-    @servers += ActiveLdap::Base.configurations["settings"]["syncrepl"]["urls"] if ActiveLdap::Base.configurations["settings"]["syncrepl"]["hosts"]
-    @suffix = self.olcSuffix
-    @database_dn = self.dn.to_s
-
-    ldif_template = File.read("templates/set_db_syncrepl_settings.ldif.erb")
-    ldif = ERB.new(ldif_template, 0, "%<>")
-    
-    tempfile = Tempfile.open("set_db_syncrepl_settings")
-    tempfile.puts ldif.result(binding)
-    tempfile.close
-
-    print `ldapmodify -x -D #{ @rootdn } -w #{@rootpw} -ZZ -H ldap://#{ @servers.first } -f #{tempfile.path}`
-    tempfile.delete
-  end
-
   def next_directory_id
     "%03d" % IdPool.next_id('puavoNextDatabaseId')
   end

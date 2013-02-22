@@ -33,8 +33,6 @@ if configuration = YAML.load_file("config/ldap.yml") rescue nil
   @monitorpw = configuration["settings"]["monitor"]["password"]
   @slavedn = configuration["settings"]["slave"]["bind_dn"]
   @slavepw = configuration["settings"]["slave"]["password"]
-
-  @servers = configuration["settings"]["syncrepl"]["urls"]
 else
   puts "LDAP configuration file (config/ldap.yml) not found!"
   exit
@@ -109,12 +107,9 @@ tempfile.delete
 `sleep 5`
 
 # slapd should be running now and the rest of the modifications
-# can be done with ldapmodify. This includes settings ACLs and
-# syncrepl replication.
+# can be done with ldapmodify.
 
-["set_global_acl",
- "set_syncrepl_settings",
- "set_puavo_syncrepl_settings"].each do |basename|
+["set_global_acl"].each do |basename|
 
   ldif_template = File.read("templates/#{basename}.ldif.erb")
   ldif = ERB.new(ldif_template, 0, "%<>")

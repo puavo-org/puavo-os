@@ -12,9 +12,6 @@ olcLogLevel: none
 # The tool-threads parameter sets the actual amount of cpu's that is used
 # for indexing.
 olcToolThreads: 1
-<% @servers.each_index do |index| %>
-olcServerId: <%= index+1 %> <%= @servers[index] %>
-<% end %>
 olcTLSCACertificateFile: /etc/ssl/certs/slapd-ca.crt
 olcTLSCertificateFile: /etc/ssl/certs/slapd-server.crt
 olcTLSCertificateKeyFile: /etc/ssl/certs/slapd-server.key
