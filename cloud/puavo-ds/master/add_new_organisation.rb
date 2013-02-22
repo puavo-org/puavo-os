@@ -92,9 +92,9 @@ require 'users/user'
 require 'users/samba_domain'
 require 'users/ldap_organisation'
 require 'kerberos'
-require 'oauth'
-require 'oauth_client'
-require 'oauth_token'
+#require 'oauth'
+#require 'oauth_client'
+#require 'oauth_token'
 
 def newpass( len )
   chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a
@@ -213,8 +213,8 @@ OrganizationalUnit.create_units(organisation)
 puts "* Setting up Samba configuration"
 Samba.create_samba_configuration(organisation_name, samba_domain, suffix_start)
 
-puts "* Create OAuth subtree"
-OAuth.create_oauth_branch
+#puts "* Create OAuth subtree"
+#OAuth.create_oauth_branch
 
 puts "* Create System Groups"
 SystemGroup.create_system_groups
