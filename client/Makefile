@@ -36,8 +36,7 @@ install : installdirs
 		templates/etc/init/gssd.conf-userprincipal
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh \
-		templates/etc/ssh/sshd_config \
-		templates/etc/ssh/ltspsshd_config
+		templates/etc/ssh/sshd_config
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d \
 		templates/etc/pam.d/ltspsshd \
@@ -78,9 +77,18 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
 		screen.d/register
 
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/default \
+		etc/default/ltspssh
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init.d \
+		etc/init.d/ltspssh
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
 		upstart/puavo-ltsp-client.conf \
 		upstart/ltspssh.conf
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/ssh \
+		etc/ssh/ltspsshd_config
 
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd
 

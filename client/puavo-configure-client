@@ -78,7 +78,6 @@ case puavo_device_type
     write_config("/etc/idmapd.conf")
     write_config("/etc/default/nfs-common")
     write_config("/etc/ssh/sshd_config")
-    write_config("/etc/ssh/ltspsshd_config")
 
     @ldap_binddn       = File.read('/etc/puavo/ldap/dn'        ).chomp
     @ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp
