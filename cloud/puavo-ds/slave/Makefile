@@ -18,12 +18,12 @@ installdirs:
 .PHONY: install
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
-		slave/puavo-init-ldap-slave \
-		slave/puavo-init-kdc-slave
+		puavo-init-ldap-slave \
+		puavo-init-kdc-slave
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ds-slave \
-		slave/init_ldap_slave.ldif.erb \
-		slave/krb5.conf.erb \
-		slave/kdc.conf.erb
+		init_ldap_slave.ldif.erb \
+		krb5.conf.erb \
+		kdc.conf.erb
 
 .PHONY: clean
 clean:
