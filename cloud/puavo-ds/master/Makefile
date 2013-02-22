@@ -18,6 +18,7 @@ install-dirs:
 
 install: install-dirs
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
+	# TODO: bin etc...
 
 clean:
 		rm -rf .bundle
