@@ -3,17 +3,19 @@ require 'database_acl'
 require 'tempfile'
 
 class Database < ActiveLdap::Base
-  ldap_mapping( :dn_attribute => "olcDatabase",
+  ldap_mapping( :dn_attribute => "cn",
                 :prefix => "",
-                :classes => ['olcDatabaseConfig', 'olcHdbConfig'] )
+                :classes => ['olcDatabaseConfig', 'olcHdbConfig', 'puavoDatabase'] )
 
   attr_accessor :samba_domain
   attr_accessor :kerberos_realm
-  before_save :set_attribute_values
+#  before_save :set_attribute_values
 
   def initialize(args)
     ActiveLdap::Base.setup_connection( configurations["settings"]["ldap_server"].merge( "base" => "cn=config" ) )
     super
+
+    set_attribute_values
   end
 
   def set_attribute_values
@@ -42,16 +44,12 @@ class Database < ActiveLdap::Base
                        'entryUUID eq',
                        'entryCSN eq'
                        ]
-    self.olcDbDirectory = "/var/lib/ldap/db#{next_directory_id}"
+    self.olcDbDirectory = "/var/lib/ldap/#{self.cn}"
 
     # Database ACLs
     suffix = self.olcSuffix
     samba_domain = self.samba_domain
 
     self.olcAccess = LdapAcl.generate_acls(suffix, samba_domain)
-  end
-
-  def next_directory_id
-    "%03d" % IdPool.next_id('puavoNextDatabaseId')
   end
 end

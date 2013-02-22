@@ -181,6 +181,7 @@ puts "\nStop krb5-kdc and kadmind services\n\n"
 begin
   new_db = Database.new( "olcSuffix" => suffix,
                          "olcRootDN" => rootDN,
+                         "cn" => options[:organisation],
                          :samba_domain => samba_domain,
                          :kerberos_realm => kerberos_realm )
   # Save without validation
