@@ -1,6 +1,6 @@
 class Overlay < ActiveLdap::Base
   # Load subclasses
-  Dir["lib/overlay/*.rb"].each do |f| require f end
+  Dir["overlay/*.rb"].each do |f| require f end
 
   def self.ldap_mapping(args)
     super( :dn_attribute => "olcOverlay",

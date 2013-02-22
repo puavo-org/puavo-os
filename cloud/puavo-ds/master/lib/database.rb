@@ -1,5 +1,5 @@
 require 'id_pool'
-require 'lib/database_acl'
+require 'database_acl'
 require 'tempfile'
 
 class Database < ActiveLdap::Base
