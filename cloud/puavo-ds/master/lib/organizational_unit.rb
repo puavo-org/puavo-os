@@ -7,7 +7,6 @@ class OrganizationalUnit < LdapOrganisationBase
     ['People',
      'Groups',
      'Hosts',
-     'Automount',
      'Roles',
      'Services',
      'System Accounts',

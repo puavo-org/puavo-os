@@ -74,7 +74,6 @@ end
 
 require 'ldap_organisation_base'
 require 'admin_user'
-require 'automount'
 require 'database'
 require 'samba_group'
 require 'samba_sid_group'
@@ -208,11 +207,8 @@ organisation = Organisation.create( :owner => configurations["settings"]["ldap_s
                                     :eduOrgLegalName => legal_name,
                                     :sambaDomainName => samba_domain )
 
-puts "* Add organizational units: People, Groups, Hosts, Automount, etc..."
+puts "* Add organizational units: People, Groups, Hosts, etc..."
 OrganizationalUnit.create_units(organisation)
-
-puts "* Setting up Autofs configuration"
-Automount.create_automount_configuration
 
 puts "* Setting up Samba configuration"
 Samba.create_samba_configuration(organisation_name, samba_domain, suffix_start)
