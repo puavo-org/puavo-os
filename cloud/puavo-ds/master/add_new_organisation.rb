@@ -227,23 +227,26 @@ school = School.first
 puts "\nCreate new school"
 school_name = "Administration"
 puts "School name: #{school_name}" 
-school = School.create!( :displayName => school_name,
-                         :cn => school_name.downcase.gsub(/[^a-z0-9]/, "") )
+school = School.create( :displayName => school_name,
+                        :cn => school_name.downcase.gsub(/[^a-z0-9]/, "") )
+school.save
 
 # Role
 puts "Create new role"
 role_name = "Maintenance"
 puts "Role name: #{role_name}"
-role = Role.create!( :displayName => role_name,
+role = Role.create( :displayName => role_name,
                     :puavoSchool => school.dn )
+role.save
 
 # Group
 puts "Create new group"
 group_name = "Maintenance"
 puts "Group name: #{group_name}"
-group = Group.create!( :displayName => group_name,
+group = Group.create( :displayName => group_name,
                       :cn => group_name.downcase.gsub(/[^a-z0-9]/, ""),
                       :puavoSchool => school.dn )
+group.save
 
 # Added association
 role.groups << group
