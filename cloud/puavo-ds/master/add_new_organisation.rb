@@ -179,6 +179,9 @@ puts "\nStop krb5-kdc and kadmind services\n\n"
 `/etc/init.d/puavo_kadmind stop`
 
 begin
+  `mkdir -p "/var/lib/ldap/#{options[:organisation]}"`
+  `chown openldap.openldap "/var/lib/ldap/#{options[:organisation]}"`
+
   new_db = Database.new( "olcSuffix" => suffix,
                          "olcRootDN" => rootDN,
                          "cn" => options[:organisation],
