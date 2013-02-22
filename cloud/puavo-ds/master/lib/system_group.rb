@@ -5,7 +5,6 @@ class SystemGroup < LdapOrganisationBase
 
   def self.create_system_groups
     [ { "cn" => "auth", "description" => "LDAP bind (dn, uid)" },
-      { "cn" => "auth", "description" => "LDAP bind (dn, uid)" },
       { "cn" => "getent", "description" => "getent passwd and group" },
       { "cn" => "printerqueues", "description" => "Printer queues" },
       { "cn" => "servers", "description" => "Server information" },
