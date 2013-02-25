@@ -85,6 +85,8 @@ spawnEmitter = require("./spawnmenu")(spawnPipePath)
 ###
 module.exports = (gui, bridge) ->
 
+  menuVisible = false
+
   bridge.set({
     animate: process.env.animate
     renderBug: process.env.RENDER_BUG
@@ -100,6 +102,7 @@ module.exports = (gui, bridge) ->
   # Make menu visible and bring it to current desktop
   ###
   displayMenu = ->
+    menuVisible = true
     console.log "Displaying menu"
     Window.show()
     Window.focus()
@@ -124,6 +127,7 @@ module.exports = (gui, bridge) ->
       return cb err
 
   hideWindow = ->
+    menuVisible = false
     if process.env.nohide
       console.log "Hiding disabled"
       return
@@ -133,27 +137,30 @@ module.exports = (gui, bridge) ->
     else
       console.warn "Not hiding window because --no-hide is set or implied by devtools"
 
-  menuVisible = false
-  toggleMenu = ->
+  currentView = null
+  toggleMenu = (viewName) ->
+    bridge.trigger("open-view", viewName)
+    if currentView isnt viewName
+      displayMenu()
+      currentView = viewName
+      return
+
     if menuVisible
       hideWindow()
-      menuVisible = false
     else
       displayMenu()
-      menuVisible = true
+
 
   spawnHandler = (options) ->
 
     if options.logout
-      bridge.trigger("open-view", "logout")
-      toggleMenu()
+      toggleMenu("logout")
     else if options["webmenu-exit"]
       code = parseInt(options["webmenu-exit"], 10) or 0
       console.info "Exiting on user request with code #{ options["webmenu-exit"] }"
       process.exit(code)
     else
-      bridge.trigger("open-view", "root")
-      toggleMenu()
+      toggleMenu("root")
 
   # Prevent crazy menu spawning which might cause slow machines to get stuck
   # for long periods of time
