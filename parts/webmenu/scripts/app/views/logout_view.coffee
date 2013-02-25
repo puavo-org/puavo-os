@@ -1,9 +1,11 @@
 define [
+  "backbone"
   "backbone.viewmaster"
 
   "hbs!app/templates/logout"
   "cs!app/application"
 ], (
+  Backbone
   ViewMaster
 
   template
@@ -18,10 +20,10 @@ define [
     }
 
     events:
-      "click .bb-logout": -> @bubble "logout"
-      "click .bb-shutdown": -> @bubble "shutdown"
-      "click .bb-reboot": -> @bubble "reboot"
-      "click .bb-cancel": -> @bubble "cancel"
+      "click .bb-logout": -> Backbone.trigger "logout"
+      "click .bb-shutdown": -> Backbone.trigger "shutdown"
+      "click .bb-reboot": -> Backbone.trigger "reboot"
+      "click .bb-cancel": -> Backbone.trigger "cancel"
 
     constructor: (opts) ->
       super

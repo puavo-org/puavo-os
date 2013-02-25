@@ -79,7 +79,7 @@ define [
       layout.broadcast("open-#{ viewName }-view")
 
     ["logout", "shutdown", "reboot"].forEach (event) ->
-      layout.on event, ->
+      Backbone.on event, ->
         Application.bridge.trigger(event)
 
     Application.bridge.trigger "html-ready"
