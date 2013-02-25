@@ -6,58 +6,58 @@
     <title>Webmenu</title>
     <script>
     (function(){
-       // node-webkit boot up starts here.
+      // node-webkit boot up starts here.
 
-       if (window.process.env.test) {
-          window.location = "tests.html";
-          return;
-        }
+      if (window.process.env.test) {
+         window.location = "tests.html";
+         return;
+      }
 
-        // Log plain node-webkit startup time nearly without any Javascript,
-        // HTML or CSS parsing/rendering.
-       if (window.process.env.WM_STARTUP_TIME) {
-         var startUpTime = (Date.now() / 1000) - parseInt(process.env.WM_STARTUP_TIME)
-         console.log("node-webkit started in " + startUpTime + " seconds");
-         console.log("It's now " + new Date());
-        }
+       // Log plain node-webkit startup time nearly without any Javascript,
+       // HTML or CSS parsing/rendering.
+      if (window.process.env.WM_STARTUP_TIME) {
+        var startUpTime = (Date.now() / 1000) - parseInt(process.env.WM_STARTUP_TIME)
+        console.log("node-webkit started in " + startUpTime + " seconds");
+        console.log("It's now " + new Date());
+      }
 
-       // Start from r.js optimized bundle file when running in production. This
-       // skips CoffeeScript and Handlebars compiling. Should speed up the start
-       // quite a bit.
-       if (window.process.env.NODE_ENV === "production") {
-         window.START = "bundle";
-       }
-       else {
-         window.START = "start";
-       }
+      // Start from r.js optimized bundle file when running in production. This
+      // skips CoffeeScript and Handlebars compiling. Should speed up the start
+      // quite a bit.
+      if (window.process.env.NODE_ENV === "production") {
+        window.START = "bundle";
+      }
+      else {
+        window.START = "start";
+      }
 
-        window.onerror = require("./lib/js_error_reporter");
+      // Setup error reporter (puavo-logrelay)
+      window.onerror = require("./lib/js_error_reporter");
 
-        window.gui = require('nw.gui');
-        if (window.process.env.devtools) {
-          gui.Window.get().showDevTools()
-        }
+      window.gui = require('nw.gui');
+      if (window.process.env.devtools) {
+        gui.Window.get().showDevTools()
+      }
 
-        window.nodeRequire = window.require;
+      window.nodeRequire = window.require;
 
-        // Disable node.js require to make RequireJS work
-        window.require = undefined;
-        // Also disable process so some libraries won't get confused whether
-        // this is browser or node.js
-        window.ENV = window.process.env;
-        window.process = undefined;
-        window.require = { baseUrl: "scripts/" };
+      // Disable node.js require to make RequireJS work
+      window.require = undefined;
+      // Also disable process so some libraries won't get confused whether
+      // this is browser or node.js
+      window.ENV = window.process.env;
+      window.process = undefined;
+      window.require = { baseUrl: "scripts/" };
 
-        window.nodeConnect = window.nodeRequire("./lib/native");
+      window.nodeConnect = window.nodeRequire("./lib/native");
     }())
     </script>
     <script src="scripts/require.js"></script>
     <script src="scripts/config.js"></script>
-    <script src="scripts/bundle.js"></script>
-   <script>document.write('<script src="scripts/'
-   + window.START
-   + '.js"></'
-   + 'script>')</script>
+    <script>
+       document.write('<script src="scripts/'
+       + window.START + '.js"></' + 'script>')
+    </script>
     <link rel="stylesheet" href="styles/vendor/font/iconfont.css">
     <link rel="stylesheet" href="styles/main.css">
 </head>
