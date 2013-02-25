@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+
+if lsusb | awk '$6 ~ /^0b8c:/' | grep -q .; then
+  exec "/opt/SMART Technologies/SMART Product Drivers/bin/SMART Board Tools" \
+       "$@"
+fi
+
+exit 0
