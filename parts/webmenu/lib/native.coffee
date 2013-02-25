@@ -81,14 +81,9 @@ module.exports = (gui, bridge) ->
 
   ###*
   # Make menu visible and bring it to current desktop
-  #
-  # @param {String} [viewName]
-  #   Which view to display. "menu" for the root menu or "logout" for logout
-  #   view
   ###
-  displayMenu = (viewName="root") ->
+  displayMenu = ->
     console.log "Displaying menu"
-    bridge.trigger("spawn", viewName)
     Window.show()
     Window.focus()
 
@@ -121,25 +116,26 @@ module.exports = (gui, bridge) ->
     else
       console.warn "Not hiding window because --no-hide is set or implied by devtools"
 
-  rootMenuVisible = false
+  menuVisible = false
   toggleMenu = ->
-    if rootMenuVisible
+    if menuVisible
       hideWindow()
-      rootMenuVisible = false
+      menuVisible = false
     else
-      displayMenu("root")
-      rootMenuVisible = true
+      displayMenu()
+      menuVisible = true
 
   spawnHandler = (options) ->
 
     if options.logout
-      displayMenu("logout")
-      rootMenuVisible = false
+      bridge.trigger("open-view", "logout")
+      toggleMenu()
     else if options["webmenu-exit"]
       code = parseInt(options["webmenu-exit"], 10) or 0
       console.info "Exiting on user request with code #{ options["webmenu-exit"] }"
       process.exit(code)
     else
+      bridge.trigger("open-view", "root")
       toggleMenu()
 
   # Prevent crazy menu spawning which might cause slow machines to get stuck
@@ -163,7 +159,7 @@ module.exports = (gui, bridge) ->
 
   bridge.on "hide-window", ->
     hideWindow()
-    rootMenuVisible = false
+    menuVisible = false
 
   bridge.on "shutdown", ->
     powermanager.shutdown()

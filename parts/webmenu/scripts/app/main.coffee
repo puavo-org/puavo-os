@@ -73,10 +73,10 @@ define [
     layout.render()
     $("body").append layout.el
 
-    Application.bridge.on "spawn", (viewName) ->
-      console.info "broadcasting #{ viewName } and open-#{ viewName }-view"
+    Application.bridge.on "open-view", (viewName) ->
       layout.broadcast("reset")
-      layout.broadcast("open-#{ viewName }-view")
+      if viewName
+        layout.broadcast("open-#{ viewName }-view")
 
     ["logout", "shutdown", "reboot"].forEach (event) ->
       Backbone.on event, ->
