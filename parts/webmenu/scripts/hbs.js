@@ -1,5 +1,5 @@
 /**
- * @license handlebars hbs 0.4.0 - Alex Sexton, but Handlebars has it's own licensing junk
+ * @license Handlebars hbs 0.4.0 - Alex Sexton, but Handlebars has it's own licensing junk
  *
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/require-cs for details on the plugin this was based off of
@@ -11,7 +11,7 @@
 define: false, process: false, window: false */
 define([
 //>>excludeStart('excludeHbs', pragmas.excludeHbs)
-'handlebars', 'underscore', 'i18nprecompile', 'json2'
+'./Handlebars', './hbs/underscore', './hbs/i18nprecompile', './hbs/json2'
 //>>excludeEnd('excludeHbs')
 ], function (
 //>>excludeStart('excludeHbs', pragmas.excludeHbs)
@@ -33,6 +33,10 @@ define([
         helperDirectory = "template/helpers/",
         i18nDirectory = "template/i18n/",
         buildCSSFileName = "screen.build.css";
+
+    Handlebars.registerHelper('$', function() {
+        //placeholder for translation helper
+    });
 
     if (typeof window !== "undefined" && window.navigator && window.document && !window.navigator.userAgent.match(/Node.js/)) {
         // Browser action
@@ -142,7 +146,7 @@ define([
             function recursiveNodeSearch( statements, res ) {
               _(statements).forEach(function ( statement ) {
                 if ( statement && statement.type && statement.type === 'partial' ) {
-                    res.push(statement.id.string);
+                    res.push(statement.partialName.name);
                 }
                 if ( statement && statement.program && statement.program.statements ) {
                   recursiveNodeSearch( statement.program.statements, res );
@@ -225,9 +229,13 @@ define([
                   var paramsWithoutParts = ['this', '.', '..', './..', '../..', '../../..'];
 
                   // grab the params
-                  if ( statement.params ) {
+                  if ( statement.params && typeof Handlebars.helpers[statement.id.string] === 'undefined') {
                     _(statement.params).forEach(function(param) {
-                      if ( _(paramsWithoutParts).contains(param.original) ) {
+                      if ( _(paramsWithoutParts).contains(param.original)
+                         || param instanceof Handlebars.AST.StringNode
+                        || param instanceof Handlebars.AST.IntegerNode
+                        || param instanceof Handlebars.AST.BooleanNode
+                        ) {
                         helpersres.push(statement.id.string);
                       }
 
@@ -309,7 +317,7 @@ define([
                               : function (name){return (config.hbs && config.hbs.helperDirectory ? config.hbs.helperDirectory : helperDirectory) + name;};
 
                         for ( i = 0; i < helps.length; i++ ) {
-                          paths[i] = "'" + pathGetter(helps[i]) + "'"
+                          paths[i] = "'" + pathGetter(helps[i], path) + "'"
                         }
                         return paths;
                       })().join(','),
@@ -383,10 +391,12 @@ define([
                   }
 
                   var mapping = disableI18n? false : _.extend( langMap, config.localeMapping ),
-                      prec = precompile( text, mapping, { originalKeyFallback: (config.hbs || {}).originalKeyFallback });
+                      configHbs = config.hbs || {},
+                      options = _.extend(configHbs.compileOptions || {}, { originalKeyFallback: configHbs.originalKeyFallback }),
+                      prec = precompile( text, mapping, options);
 
                   text = "/* START_TEMPLATE */\n" +
-                         "define(['hbs','handlebars'"+depStr+helpDepStr+"], function( hbs, Handlebars ){ \n" +
+                         "define(['hbs','Handlebars'"+depStr+helpDepStr+"], function( hbs, Handlebars ){ \n" +
                            "var t = Handlebars.template(" + prec + ");\n" +
                            "Handlebars.registerPartial('" + name.replace( /\//g , '_') + "', t);\n" +
                            debugProperties +
@@ -426,7 +436,7 @@ define([
                     });
                   }
                   else {
-                    load.fromText(text);
+                    load.fromText(name, text);
 
                     //Give result to load. Need to wait until the module
                     //is fully parse, which will happen after this
@@ -442,14 +452,35 @@ define([
               });
             }
 
-            var path = parentRequire.toUrl(name +'.'+ (config.hbs && config.hbs.templateExtension? config.hbs.templateExtension : templateExtension));
+            var path,
+                omitExtension = config.hbs && config.hbs.templateExtension === false;
+            if(omitExtension) {
+              path = parentRequire.toUrl(name);
+            } else {
+              path = parentRequire.toUrl(name +'.'+ (config.hbs && config.hbs.templateExtension ? config.hbs.templateExtension : templateExtension));
+            }
 
             if (disableI18n){
                 fetchAndRegister(false);
             } else {
-                fetchOrGetCached(parentRequire.toUrl((config.hbs && config.hbs.i18nDirectory ? config.hbs.i18nDirectory : i18nDirectory) + (config.locale || "en_us") + '.json'), function (langMap) {
-                  fetchAndRegister(JSON.parse(langMap));
-                });
+            	// Workaround until jam is able to pass config info or we move i18n to a separate module.
+            	// This logs a warning and disables i18n if there's an error loading the language file
+            	var langMapPath = (config.hbs && config.hbs.i18nDirectory ? config.hbs.i18nDirectory : i18nDirectory) + (config.locale || "en_us") + '.json';
+            	try {
+					fetchOrGetCached(parentRequire.toUrl(langMapPath), function (langMap) {
+					  fetchAndRegister(JSON.parse(langMap));
+					});
+                } catch(er) {
+                	// if there's no configuration at all, log a warning and disable i18n for this and subsequent templates
+                	if(!config.hbs) {
+                		console.warn('hbs: Error reading ' + langMapPath + ', disabling i18n. Ignore this if you\'re using jam, otherwise check your i18n configuration.\n');
+						config.hbs = {disableI18n: true};
+                		fetchAndRegister(false);
+                	} else {
+                		throw er;
+
+                	}
+                }
             }
           //>>excludeEnd('excludeHbs')
         }
