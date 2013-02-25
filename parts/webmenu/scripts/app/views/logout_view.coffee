@@ -23,7 +23,7 @@ define [
       "click .bb-logout": -> Backbone.trigger "logout"
       "click .bb-shutdown": -> Backbone.trigger "shutdown"
       "click .bb-reboot": -> Backbone.trigger "reboot"
-      "click .bb-cancel": -> Backbone.trigger "cancel"
+      "click .bb-cancel": -> @bubble "cancel"
 
     constructor: (opts) ->
       super
