@@ -17,9 +17,8 @@ define nw-build
 	cd node_modules/$1/ && $(NW_GYP) configure --target=$(NW_VERSION) && $(NW_GYP) build
 endef
 
-build: npm-install
-	node_modules/.bin/grunt
-	node_modules/.bin/r.js -o mainConfigFile=scripts/config.js name=start out=scripts/bundle.js
+
+build: npm-install grunt r.js
 
 # Build node-webkit package
 # https://github.com/rogerwang/node-webkit/wiki/How-to-package-and-distribute-your-apps
@@ -37,6 +36,12 @@ nw-gyp:
 npm-install:
 	npm install
 	make nw-gyp
+
+r.js:
+	node_modules/.bin/r.js -o mainConfigFile=scripts/config.js name=start out=scripts/bundle.js
+
+grunt:
+	node_modules/.bin/grunt
 
 clean:
 	rm -f styles/main.css
