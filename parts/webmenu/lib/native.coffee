@@ -97,7 +97,7 @@ module.exports = (gui, bridge) ->
       forceActivate (err) ->
         if err
           # Sometimes 100ms is not enough. Wait 200ms and retry.
-          # TODO: We should investigate how ofter this happens.
+          # TODO: We should investigate how often this happens.
           console.info "Retrying wmctrl..."
           setTimeout(forceActivate, 200)
     , 100
