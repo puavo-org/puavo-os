@@ -17,6 +17,9 @@ export SPAWNMENU=$(hostname)-$(echo $DISPLAY | sed -r s/[.][0-9]*$//)
 # Save startup time to an env to log startup times
 export WM_STARTUP_TIME=$(date +%s)
 
+# Use optimized RequireJS bundle
+export NODE_ENV=production
+
 # Customize path with first arg.
 # Eg. use "bin/webmenu ." to start development version from git
 if [ $# -eq 1 ]; then

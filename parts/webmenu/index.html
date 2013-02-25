@@ -21,6 +21,16 @@
          console.log("It's now " + new Date());
         }
 
+       // Start from r.js optimized bundle file when running in production. This
+       // skips CoffeeScript and Handlebars compiling. Should speed up the start
+       // quite a bit.
+       if (window.process.env.NODE_ENV === "production") {
+         window.START = "bundle";
+       }
+       else {
+         window.START = "start";
+       }
+
         window.onerror = require("./lib/js_error_reporter");
 
         window.gui = require('nw.gui');
@@ -43,7 +53,11 @@
     </script>
     <script src="scripts/require.js"></script>
     <script src="scripts/config.js"></script>
-    <script src="scripts/start.js"></script>
+    <script src="scripts/bundle.js"></script>
+   <script>document.write('<script src="scripts/'
+   + window.START
+   + '.js"></'
+   + 'script>')</script>
     <link rel="stylesheet" href="styles/vendor/font/iconfont.css">
     <link rel="stylesheet" href="styles/main.css">
 </head>

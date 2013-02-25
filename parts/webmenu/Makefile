@@ -19,6 +19,7 @@ endef
 
 build: npm-install
 	node_modules/.bin/grunt
+	node_modules/.bin/r.js -o mainConfigFile=scripts/config.js name=start out=scripts/bundle.js
 
 # Build node-webkit package
 # https://github.com/rogerwang/node-webkit/wiki/How-to-package-and-distribute-your-apps
