@@ -3,6 +3,11 @@ require([
   "cs!app/application",
   "cs!app/main"],
   function($, Application) {
-  nodeConnect(window.gui, Application.bridge);
+
+  // Connect "browser" and node.js
+  window.nodejs.require("./lib/native")(
+    window.gui, Application.bridge
+  );
+
 });
 

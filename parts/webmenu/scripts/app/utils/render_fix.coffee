@@ -1,5 +1,5 @@
 define ->
-  if window.ENV.RENDER_BUG
+  if window.nodejs.process.env.RENDER_BUG
     console.warn "Rendering bug fix active"
     return ->
       body = $("body")

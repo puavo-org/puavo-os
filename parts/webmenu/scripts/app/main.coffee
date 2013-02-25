@@ -19,7 +19,7 @@ define [
   Application
 ) ->
 
-  if window.ENV.animate
+  if window.nodejs.process.env.animate
     $("html").addClass("animate")
 
   Application.bridge.on "desktop-ready", ({user, config, menu}) ->

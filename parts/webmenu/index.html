@@ -39,17 +39,15 @@
         gui.Window.get().showDevTools()
       }
 
-      window.nodeRequire = window.require;
+      // Move node.js require&process to window.nodejs to make RequireJS work.
+      window.nodejs = {
+         require: window.require,
+         process: window.process,
+      };
+      window.require = window.process = undefined;
 
-      // Disable node.js require to make RequireJS work
-      window.require = undefined;
-      // Also disable process so some libraries won't get confused whether
-      // this is browser or node.js
-      window.ENV = window.process.env;
-      window.process = undefined;
+      // Configure RequireJS
       window.require = { baseUrl: "scripts/" };
-
-      window.nodeConnect = window.nodeRequire("./lib/native");
     }())
     </script>
     <script src="scripts/require.js"></script>
