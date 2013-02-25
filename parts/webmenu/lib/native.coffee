@@ -1,3 +1,8 @@
+###*
+# node.js side of things starts here and its connected with the node-webkit
+# "browser" in scripts/start.js.
+###
+
 {exec} = require "child_process"
 posix = require "posix"
 mkdirp = require "mkdirp"
@@ -71,7 +76,19 @@ userData.fullName = userData.gecos.split(",")[0]
 spawnEmitter = require("./spawnmenu")(spawnPipePath)
 
 
+###*
+# Function that connects node.js and node-webkit. We should not share any other
+# variables between these two worlds to keep them decoubled.
+#
+# @param {Object} gui node-webkit gui object
+# @param {Object} bridge Plain Backbone.js model
+###
 module.exports = (gui, bridge) ->
+
+  bridge.set({
+    animate: process.env.animate
+    renderBug: process.env.RENDER_BUG
+  })
 
   Window = gui.Window.get()
 
@@ -178,7 +195,9 @@ module.exports = (gui, bridge) ->
 
     console.log "Webmenu ready. Use 'webmenu-spawn' to open it"
 
-  bridge.trigger "desktop-ready",
+  bridge.set({
     user: userData,
     config: config,
     menu: menuJSON
+  })
+  bridge.trigger "desktop-ready"

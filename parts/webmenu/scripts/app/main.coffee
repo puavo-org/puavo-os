@@ -19,10 +19,12 @@ define [
   Application
 ) ->
 
-  if window.nodejs.process.env.animate
-    $("html").addClass("animate")
+  Application.bridge.on "desktop-ready", ->
 
-  Application.bridge.on "desktop-ready", ({user, config, menu}) ->
+    if Application.bridge.get("animate")
+      $("html").addClass("animate")
+
+    {user, config, menu} = Application.bridge.toJSON()
 
     if config.devtools
       console.log "Loading livereload.js"
