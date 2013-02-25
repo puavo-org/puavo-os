@@ -38,7 +38,6 @@ define [
         @appendView ".settings-container", @password
 
       if profileCMD = @config.get("profileCMD")
-        console.log "profile!", profileCMD
         @profile = new MenuItemView
           model: new LauncherModel profileCMD
         @appendView ".settings-container",  @profile
