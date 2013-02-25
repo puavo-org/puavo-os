@@ -31,9 +31,6 @@ desktop
 firefox
     Settings for Firefox.
 
-kernels
-    Kernel related stuff.
-
 google_talkplugin
     Install google talkplugin, but do not install its apt repository key
     and apt source.
@@ -41,6 +38,9 @@ google_talkplugin
 graphics_drivers
     Setup proprietary fglrx/nvidia drivers in a such a way they can be used
     (without breaking everything else).
+
+kernels
+    Kernel related stuff.
 
 lightdm
     Some lightdm configurations (some of these come from ltsp-lightdm package).
@@ -53,16 +53,16 @@ organisation_apt_repositories
     Define organisation-specific apt repositories here.
 
 packages
-    Lists packages that are to be installed to ltsp images.
-      packages::all     - install all (defined) packages
-      packages::partner - install all (defined) packages that are in Canonical
-                          partner repository
-      packages::ubuntu  - install all (defined) packages that are in Ubuntu
-                          repositories
+    Lists packages that are to be installed to ltsp images,
+    and those that should be kept out.
 
 plymouth_theme
     Setup a default plymouth theme (change from Ubuntu-default to
     opinsys-specific theme.
+
+smartboard
+    Special rules for handling smartboard software.  Make a wrapper for
+    smartboard panel so that it will start up conditionally.
 
 ssh_client
     Settings for openssh client.  XXX these actually weaken security from
@@ -73,6 +73,11 @@ ssh_server
 
 sudo
     Settings for sudo.
+
+udev
+    udev-related issues.  For now, contains workarounds to trigger udev-stuff
+    so that usb memory-sticks work correctly, as well as other device
+    permission related issues.
 
 webmenu
     Our own branding for webmenu.
