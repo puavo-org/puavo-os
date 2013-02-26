@@ -137,6 +137,11 @@ module.exports = (gui, bridge) ->
     else
       console.warn "Not hiding window because --no-hide is set or implied by devtools"
 
+  ###*
+  # Toggle menu visibility with given view name
+  #
+  # @param {String} viewName
+  ###
   currentView = null
   toggleMenu = (viewName) ->
     bridge.trigger("open-view", viewName)
