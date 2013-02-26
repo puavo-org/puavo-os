@@ -145,11 +145,22 @@ module.exports = (gui, bridge) ->
   currentView = null
   toggleMenu = (viewName) ->
     bridge.trigger("open-view", viewName)
+
     if currentView isnt viewName
-      displayMenu()
       currentView = viewName
+
+      if menuVisible
+        # When menu view is changing while the menu itself is still visible
+        # make sure it's hidden before the view is displayed. This ensures that
+        # the menu moves to the current cursor position. Required when user
+        # clicks logout button from the panel while menu is visible.
+        Window.hide()
+        setTimeout(displayMenu, 1) # Allow menu to disappear
+      else
+        displayMenu()
       return
 
+    # When view is not changing just toggle menu visibility
     if menuVisible
       hideWindow()
     else
