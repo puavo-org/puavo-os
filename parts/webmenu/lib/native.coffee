@@ -93,7 +93,19 @@ module.exports = (gui, bridge) ->
     renderBug: process.env.RENDER_BUG
   })
 
+  # menuitem size: 150, 110
+
   Window = gui.Window.get()
+  Window.window.resizeTo(
+    Window.window.screen.width,
+    440
+  )
+  Window.window.moveTo(
+    Window.window.screen.height,
+    Window.window.screen.width
+  )
+  Window.setResizable(false)
+
 
   if process.env.devtools
     process.env.nohide = 1

@@ -11,13 +11,9 @@
     "title": "Webmenu",
     "show": false,
     "toolbar": false,
-    "width": 1000,
-    "height": 520,
-    "position": "mouse",
     "always-on-top": true,
     "as_desktop": false,
-    "frame": false,
-    "resizable": false
+    "frame": false
   },
   "dependencies": {
     "coffee-script": "1.3.x",
