@@ -1,3 +1,3 @@
 class desktop {
-  include desktop::dconf
+  include desktop::puavodesktop
 }

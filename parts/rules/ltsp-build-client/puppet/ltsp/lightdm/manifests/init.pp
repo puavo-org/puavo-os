@@ -1,13 +1,12 @@
 class lightdm {
-  include packages
+  include desktop::dconf::puavodesktop,
+          packages
 
   file {
-    '/etc/lightdm/lightdm-gtk-greeter-ubuntu.conf':
-      content => template('lightdm/lightdm-gtk-greeter-ubuntu.conf'),
-      require => [ Package['lightdm']
-                 , Package['liitu-themes'] ];
+    '/etc/dconf/db/puavodesktop.d/lightdm_profile':
+      content => template('lightdm/dconf_lightdm_profile'),
+      notify  => Exec['update dconf'];
   }
 
-  Package <| title == lightdm
-          or title == liitu-themes |>
+  Package <| title == lightdm |>
 }
