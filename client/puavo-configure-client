@@ -55,6 +55,9 @@ case puavo_device_type
     write_config("/etc/idmapd.conf")
     write_config("/etc/default/nfs-common")
     write_config("/etc/init/gssd.conf", "userprincipal")
+
+    File.delete('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
+    File.delete('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "fatclient"
     @ldap_slave = File.read('/etc/puavo/ldap/slave').chomp
 
@@ -68,6 +71,9 @@ case puavo_device_type
 
     # FIXME: Hack to get gnome fallback session
     `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
+
+    File.delete('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
+    File.delete('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "ltspserver"
     @ldap_slave = File.read('/etc/puavo/ldap/slave').chomp
 
@@ -86,6 +92,9 @@ case puavo_device_type
     # http://askubuntu.com/questions/117127/flash-video-appears-blue
     # FIXME - do this in ruby instead of perl
     `perl -pi -e 's/libvdpau/lixvdpau/g' /usr/lib/adobe-flashplugin/libflashplayer.so`
+
+    File.delete('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
+    File.delete('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "laptop"
     write_config("/etc/nsswitch.conf", "sss")
     write_config("/etc/krb5.conf")
