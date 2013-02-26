@@ -80,7 +80,9 @@ define [
 
     displayViewInLightbox: (view) ->
       @removeLightbox()
-      @lightbox = new Lightbox view: view
+      @lightbox = new Lightbox
+        view: view
+        fullscreen: true
       @lightbox.render()
       @lightbox.once "close", =>
         @removeLightbox()

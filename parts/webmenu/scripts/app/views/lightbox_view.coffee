@@ -21,6 +21,8 @@ define [
     constructor: (opts) ->
       super
       @setView ".content", opts.view
+      if opts.fullscreen
+        @$el.addClass("fullscreen")
 
       @listenTo this, "cancel", @remove
 
