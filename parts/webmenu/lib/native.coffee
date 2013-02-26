@@ -93,16 +93,11 @@ module.exports = (gui, bridge) ->
     renderBug: process.env.RENDER_BUG
   })
 
-  # menuitem size: 150, 110
 
   Window = gui.Window.get()
   Window.window.resizeTo(
     Window.window.screen.width,
     440
-  )
-  Window.window.moveTo(
-    Window.window.screen.height,
-    Window.window.screen.width
   )
   Window.setResizable(false)
 
@@ -111,6 +106,11 @@ module.exports = (gui, bridge) ->
     process.env.nohide = 1
     config.devtools = true
 
+  ###*
+  # Move window to bottom of screen
+  ###
+  moveToBottomLeft = ->
+    Window.window.moveTo(0, Window.window.screen.height)
 
   ###*
   # Use wmctrl cli tool force focus on Webmenu. Calls the wmctrl after a given
@@ -143,6 +143,7 @@ module.exports = (gui, bridge) ->
     console.log "Displaying menu"
     Window.show()
     Window.focus()
+    moveToBottomLeft()
     forceFocus(50, 100, 350, 500)
 
   hideWindow = ->
