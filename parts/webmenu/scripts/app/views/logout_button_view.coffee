@@ -24,4 +24,4 @@ define [
 
     context: ->
       "osIconPath": "/usr/share/icons/Faenza/actions/96/system-shutdown.png"
-      name: "Kirjaudu ulos"
+      name: "Poistu"
