@@ -168,15 +168,7 @@ module.exports = (gui, bridge) ->
 
       if currentView isnt viewName
         currentView = viewName
-
-        if menuVisible
-          # When menu view is changing while the menu itself is still visible
-          # make sure it's hidden before the view is displayed. This ensures that
-          # the menu moves to the current cursor position. Required when user
-          # clicks logout button from the panel while menu is visible.
-          Window.hide()
-          setTimeout(displayMenu, 1) # Allow menu to disappear
-        else
+        if not menuVisible
           displayMenu()
         return
 
