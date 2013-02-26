@@ -126,9 +126,9 @@ module.exports = (gui, bridge) ->
       cmd = "wmctrl -F -R #{ pkg.window.title }"
       wmctrl = exec cmd, (err, stdout, stderr) ->
         if err
-          console.warn "wmctrl failed: '#{ cmd }'. Error: #{ JSON.stringify err }"
-          console.warn "stdout: #{ stdout } stderr: #{ stderr }"
-          console.warn "Retrying after #{ nextTry }ms"
+          console.warn "wmctrl: failed: '#{ cmd }'. Error: #{ JSON.stringify err }"
+          console.warn "wmctrl: stdout: #{ stdout } stderr: #{ stderr }"
+          console.warn "wmctrl: Retrying after #{ nextTry }ms"
           forceFocus(retries...)
     , nextTry
 
