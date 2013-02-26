@@ -156,6 +156,13 @@ module.exports = (gui, bridge) ->
       displayMenu()
 
 
+  ###*
+  # Handle menu spawns from panel and keyboard shortcuts
+  #
+  # @param {Object} options
+  #   @param {String} options.logout Display logout view
+  #   @param {String} options.webmenu-exit Exit Webmenu gracefully
+  ###
   spawnHandler = (options) ->
 
     if options.logout
@@ -207,6 +214,7 @@ module.exports = (gui, bridge) ->
 
     console.log "Webmenu ready. Use 'webmenu-spawn' to open it"
 
+  # Share settings with the browser
   bridge.set({
     user: userData,
     config: config,
