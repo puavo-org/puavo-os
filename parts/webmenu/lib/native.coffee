@@ -14,6 +14,7 @@ menutools = require "./menutools"
 powermanager = require "./powermanager"
 requirefallback = require "./requirefallback"
 dbus = require "./dbus"
+pkg = require "../package.json"
 
 webmenuHome = process.env.HOME + "/.config/webmenu"
 spawnMenu = process.env.SPAWNMENU
@@ -106,25 +107,31 @@ module.exports = (gui, bridge) ->
     console.log "Displaying menu"
     Window.show()
     Window.focus()
+    forceFocus(50, 100, 350, 500)
 
-    # Wait 100ms to make sure that window is really focusable
+  ###*
+  # Use wmctrl cli tool force focus on Webmenu. Calls the wmctrl after a given
+  # timeout to give it some time to appear on window lists. It will also retry
+  # itself if it fails which might happen on slow or high loaded machines.
+  #
+  # @param {Number} nextTry timeout to wait before calling wmctrl
+  # @param {Number} retries* one or more timeouts to retry
+  ###
+  forceFocus = (nextTry, retries...) ->
+    if not nextTry
+      console.error "wmctrl retries exhausted. Failed to activate Webmenu!"
+      return
+
     setTimeout ->
-      forceActivate (err) ->
+      cmd = "wmctrl -F -R #{ pkg.window.title }"
+      wmctrl = exec cmd, (err, stdout, stderr) ->
         if err
-          # Sometimes 100ms is not enough. Wait 200ms and retry.
-          # TODO: We should investigate how often this happens.
-          console.info "Retrying wmctrl..."
-          setTimeout(forceActivate, 200)
-    , 100
+          console.warn "wmctrl failed: '#{ cmd }'. Error: #{ JSON.stringify err }"
+          console.warn "stdout: #{ stdout } stderr: #{ stderr }"
+          console.warn "Retrying after #{ nextTry }ms"
+          forceFocus(retries...)
+    , nextTry
 
-  # Use wmctrl to for force active the menu.
-  forceActivate = (cb=->) ->
-    cmd = "wmctrl -F -R Webmenu"
-    wmctrl = exec cmd, (err, stdout, stderr) ->
-      if err
-        console.error "wmctrl failed: '#{ cmd }'. Error: #{ JSON.stringify err }"
-        console.error "stdout: #{ stdout } stderr: #{ stderr }"
-      return cb err
 
   hideWindow = ->
     menuVisible = false
