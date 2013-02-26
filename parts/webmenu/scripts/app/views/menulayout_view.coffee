@@ -82,7 +82,7 @@ define [
       @removeLightbox()
       @lightbox = new Lightbox
         view: view
-        fullscreen: true
+        position: "fullscreen"
       @lightbox.render()
       @lightbox.once "close", =>
         @removeLightbox()
