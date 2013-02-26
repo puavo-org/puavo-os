@@ -99,15 +99,6 @@ module.exports = (gui, bridge) ->
     process.env.nohide = 1
     config.devtools = true
 
-  ###*
-  # Make menu visible and bring it to current desktop
-  ###
-  displayMenu = ->
-    menuVisible = true
-    console.log "Displaying menu"
-    Window.show()
-    Window.focus()
-    forceFocus(50, 100, 350, 500)
 
   ###*
   # Use wmctrl cli tool force focus on Webmenu. Calls the wmctrl after a given
@@ -132,6 +123,15 @@ module.exports = (gui, bridge) ->
           forceFocus(retries...)
     , nextTry
 
+  ###*
+  # Make menu visible and bring it to current desktop
+  ###
+  displayMenu = ->
+    menuVisible = true
+    console.log "Displaying menu"
+    Window.show()
+    Window.focus()
+    forceFocus(50, 100, 350, 500)
 
   hideWindow = ->
     menuVisible = false
@@ -149,29 +149,30 @@ module.exports = (gui, bridge) ->
   #
   # @param {String} viewName
   ###
-  currentView = null
-  toggleMenu = (viewName) ->
-    bridge.trigger("open-view", viewName)
+  toggleMenu = do ->
+    currentView = null
+    return (viewName) ->
+      bridge.trigger("open-view", viewName)
 
-    if currentView isnt viewName
-      currentView = viewName
+      if currentView isnt viewName
+        currentView = viewName
 
+        if menuVisible
+          # When menu view is changing while the menu itself is still visible
+          # make sure it's hidden before the view is displayed. This ensures that
+          # the menu moves to the current cursor position. Required when user
+          # clicks logout button from the panel while menu is visible.
+          Window.hide()
+          setTimeout(displayMenu, 1) # Allow menu to disappear
+        else
+          displayMenu()
+        return
+
+      # When view is not changing just toggle menu visibility
       if menuVisible
-        # When menu view is changing while the menu itself is still visible
-        # make sure it's hidden before the view is displayed. This ensures that
-        # the menu moves to the current cursor position. Required when user
-        # clicks logout button from the panel while menu is visible.
-        Window.hide()
-        setTimeout(displayMenu, 1) # Allow menu to disappear
+        hideWindow()
       else
         displayMenu()
-      return
-
-    # When view is not changing just toggle menu visibility
-    if menuVisible
-      hideWindow()
-    else
-      displayMenu()
 
 
   ###*
@@ -213,7 +214,6 @@ module.exports = (gui, bridge) ->
 
   bridge.on "hide-window", ->
     hideWindow()
-    menuVisible = false
 
   bridge.on "shutdown", ->
     powermanager.shutdown()
