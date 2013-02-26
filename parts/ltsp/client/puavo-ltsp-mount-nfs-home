@@ -24,10 +24,6 @@ if boolean_is_true "${USE_NFS_HOMES}" ; then
 
     # Request a remote directory for the user (three second timeout, may fail)
     { echo "$PAM_USER" | nc -w 3 "$SERVER" 907; } || true
-
-    # Create a local directory for the user and mount it using nfs4+krb5
-    mkdir -p ${HOME}
-    mount -t nfs4 -o sec=krb5 ${SERVER}:${HOME} ${HOME}
   fi
 else
   HOME=$(getent passwd $PAM_USER | awk -F: '{ print $6 }')
