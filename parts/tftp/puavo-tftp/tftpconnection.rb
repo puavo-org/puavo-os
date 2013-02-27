@@ -7,14 +7,14 @@ module PuavoTFTP
   class Connection < EventMachine::Connection
 
     OPCODE_HANDLERS = {
-      Opcode::RRQ => :handle_get,
-      Opcode::ACK => :handle_ack,
-      Opcode::ERROR => :handle_error
+      [Opcode::RRQ].pack("n")[1] => :handle_get,
+      [Opcode::ACK].pack("n")[1] => :handle_ack,
+      [Opcode::ERROR].pack("n")[1] => :handle_error
     }
 
     def receive_data(data)
       # debug "Server got data #{ data.inspect }"
-      code = data.unpack("n").first
+      code = data[1]
       handle_opcode(code, data)
     end
 
