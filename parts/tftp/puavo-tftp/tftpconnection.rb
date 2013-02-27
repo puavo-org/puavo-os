@@ -37,10 +37,15 @@ module PuavoTFTP
       log(*args)
     end
 
-    # Context aware debug method
-    def d(*args)
-      args[0] = "#{ to_s } #{ args[0] }"
-      debug(*args)
+    if $tftp_debug
+      # Context aware debug method
+      def d(*args)
+        args[0] = "#{ to_s } #{ args[0] }"
+        debug(*args)
+      end
+    else
+      def d(*args)
+      end
     end
 
   end
