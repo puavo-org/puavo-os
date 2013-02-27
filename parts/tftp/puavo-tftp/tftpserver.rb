@@ -14,8 +14,8 @@ module PuavoTFTP
   # TFTP server listening on a fixed port (default 69)
   class Server < Connection
 
-    def initialize(filereader, hooks)
-      @filereader = filereader
+    def initialize(root, hooks)
+      @root = root
       @clients = {}
       @hooks = hooks
     end
@@ -42,7 +42,7 @@ module PuavoTFTP
         FileSender,
         ip,
         port,
-        @filereader,
+        @root,
         @hooks
       )
 

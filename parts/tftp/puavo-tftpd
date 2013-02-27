@@ -7,7 +7,6 @@ $LOAD_PATH.unshift( File.dirname(__FILE__) )
 
 require "puavo-tftp/log"
 require "puavo-tftp/tftpserver"
-require "puavo-tftp/cachedfilereader"
 
 require 'optparse'
 
@@ -101,7 +100,7 @@ EventMachine::run do
     "0.0.0.0",
     options[:port],
     PuavoTFTP::Server,
-    PuavoTFTP::CachedFileReader.new(options[:root]),
+    options[:root],
     Array(options[:hooks])
   ) do
 
