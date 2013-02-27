@@ -76,9 +76,8 @@ define [
     $("body").append layout.el
 
     Application.bridge.on "open-view", (viewName) ->
-      console.info "broadcasting reset"
+      layout.broadcast("reset")
       if viewName
-        console.info "broadcasting open-#{ viewName }-view"
         layout.broadcast("open-#{ viewName }-view")
 
     ["logout", "shutdown", "reboot"].forEach (event) ->
