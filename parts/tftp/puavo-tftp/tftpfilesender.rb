@@ -80,25 +80,29 @@ module PuavoTFTP
         end
       end
 
-      file_path = File.join(@root, name)
       begin
-        # Synchronously read the requested file, because there are no async
-        # file I/O operations in EventMachine.
-        #
-        # In theory this is really bad in evented environments like
-        # EventMachine, but in this case we are reading the same files over and
-        # over again and it appears that the files get cached really well by
-        # the kernel(?). There were no noticeable difference whether we
-        # manually cached the file in Ruby or not. So we just read the file
-        # here and be done with it.
-        data = File.open(file_path, "rb").read()
+        data = read_file(name)
       rescue Errno::ENOENT
-        l "ERROR: cannot find file #{ file_path }"
+        l "ERROR: cannot find file #{ name }"
         send_error_packet(ErrorCode::NOT_FOUND, "No found :(")
         return
       end
 
       init_sending(data)
+    end
+
+    def read_file(name)
+      # Synchronously read the requested file, because there are no async
+      # file I/O operations in EventMachine.
+      #
+      # In theory this is really bad in evented environments like
+      # EventMachine, but in this case we are reading the same files over and
+      # over again and it appears that the files get cached really well by
+      # the kernel(?). There were no noticeable difference whether we
+      # manually cached the file in Ruby or not. So we just read the file
+      # here and be done with it.
+      file_path = File.join(@root, name)
+      File.open(file_path, "rb").read()
     end
 
     # Set OACK packet to be sent on next send_packet call
