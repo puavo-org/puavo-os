@@ -103,7 +103,8 @@ class packages {
     , 'pinfo'
     , 'ruby-prof'
     , 'unetbootin'
-    , 'translate-toolkit' ]:
+    , 'translate-toolkit'
+    , 'vim-nox' ]:
       tag => [ 'devel', 'ubuntu', ];
 
     [ 'fglrx'
