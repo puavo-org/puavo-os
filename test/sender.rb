@@ -5,14 +5,12 @@ require "puavo-tftp/tftpfilesender"
 
 class DummyReader
 
-  attr_accessor :files
-
-  def initialize
-    @files = {}
+  def initialize(files)
+    @files = files
   end
 
   def read(name)
-    if f =@files[name]
+    if f = @files[name]
       return f
     else
       raise Errno::ENOENT
@@ -24,14 +22,21 @@ end
 class DummyFileSender < PuavoTFTP::FileSender
 
   attr_reader :sent_packets
+  attr_reader :test_files
 
   def initialize(*args)
-    super(*args)
+    super(*args, "/dummyroot")
     @sent_packets = []
+    @test_files = {}
+    @dr = DummyReader.new @test_files
   end
 
   def send_datagram(*args)
     @sent_packets.push args
+  end
+
+  def read_file(name)
+    @dr.read(name)
   end
 
 end
@@ -49,8 +54,7 @@ end
 describe PuavoTFTP::FileSender do
 
   it "sends small file in one package" do
-    fs = DummyReader.new
-    ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
+    ev_run DummyFileSender, "127.0.0.1", 1234 do |sender|
       sender.on_data do |data, ip, port|
         assert_equal(
           data,
@@ -60,7 +64,7 @@ describe PuavoTFTP::FileSender do
       end
 
 
-      fs.files["small"] = "small content"
+      sender.test_files["small"] = "small content"
       sender.handle_get([
         PuavoTFTP::Opcode::RRQ,
         "small",
@@ -70,8 +74,7 @@ describe PuavoTFTP::FileSender do
   end
 
   it "sends larger file in two packages" do
-    fs = DummyReader.new
-    ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
+    ev_run DummyFileSender, "127.0.0.1", 1234 do |sender|
 
       sender.on_data do |data, ip, port|
         _, num = data.unpack("nn")
@@ -96,7 +99,7 @@ describe PuavoTFTP::FileSender do
         EM::stop_event_loop
       end
 
-      fs.files["larger"] = "X"*600
+      sender.test_files["larger"] = "X"*600
       sender.handle_get([
         PuavoTFTP::Opcode::RRQ,
         "larger",
@@ -107,8 +110,7 @@ describe PuavoTFTP::FileSender do
   end
 
   it "sends an empty packge as last packet when sending mod 512 file" do
-    fs = DummyReader.new
-    ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
+    ev_run DummyFileSender, "127.0.0.1", 1234 do |sender|
 
       sender.on_data do |data, ip, port|
         _, num = data.unpack("nn")
@@ -126,7 +128,7 @@ describe PuavoTFTP::FileSender do
         EM::stop_event_loop
       end
 
-      fs.files["mod512"] = "X"*512*4
+      sender.test_files["mod512"] = "X"*512*4
       sender.handle_get([
         PuavoTFTP::Opcode::RRQ,
         "mod512",
@@ -137,8 +139,7 @@ describe PuavoTFTP::FileSender do
   end
 
   it "calls on_end on nonexistent files" do
-    fs = DummyReader.new
-    ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
+    ev_run DummyFileSender, "127.0.0.1", 1234 do |sender|
 
       sender.on_data do |data, ip, port|
         _, num = data.unpack("nn")
@@ -170,15 +171,14 @@ describe PuavoTFTP::FileSender do
 
     describe "tsize" do
       it "sents oack for tsize extension" do
-        fs = DummyReader.new
-        ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
+        ev_run DummyFileSender, "127.0.0.1", 1234 do |sender|
 
           sender.on_data do |data, ip, port|
             assert_equal(data, "\x00\x06tsize\x00700\x00")
             EM::stop_event_loop
           end
 
-          fs.files["somefile"] = "X"*700
+          sender.test_files["somefile"] = "X"*700
           sender.handle_get([
             PuavoTFTP::Opcode::RRQ,
             "somefile",
@@ -194,15 +194,14 @@ describe PuavoTFTP::FileSender do
 
     describe "blksize" do
       it "sents oack for block extension" do
-        fs = DummyReader.new
-        ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
+        ev_run DummyFileSender, "127.0.0.1", 1234 do |sender|
 
           sender.on_data do |data, ip, port|
             assert_equal(data, "\x00\x06blksize\x0010\x00")
             EM::stop_event_loop
           end
 
-          fs.files["somefile"] = "X"*700
+          sender.test_files["somefile"] = "X"*700
           sender.handle_get([
             PuavoTFTP::Opcode::RRQ,
             "somefile",
@@ -216,8 +215,7 @@ describe PuavoTFTP::FileSender do
       end
 
       it "sents blksize sized packages" do
-        fs = DummyReader.new
-        ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
+        ev_run DummyFileSender, "127.0.0.1", 1234 do |sender|
 
           handlers = [
             lambda do |data|
@@ -266,7 +264,7 @@ describe PuavoTFTP::FileSender do
             end
           end
 
-          fs.files["blksizetest"] = "X"*12
+          sender.test_files["blksizetest"] = "X"*12
           sender.handle_get([
             PuavoTFTP::Opcode::RRQ,
             "blksizetest",
@@ -285,8 +283,7 @@ describe PuavoTFTP::FileSender do
   end
 
   it "resends package if I send ack for previous package" do
-    fs = DummyReader.new
-    ev_run DummyFileSender, "127.0.0.1", 1234, fs do |sender|
+    ev_run DummyFileSender, "127.0.0.1", 1234 do |sender|
 
       handlers = [
         lambda do |data|
@@ -320,7 +317,7 @@ describe PuavoTFTP::FileSender do
         handlers[count].call data
       end
 
-      fs.files["file"] = "X"*512 + "Y"*520
+      sender.test_files["file"] = "X"*512 + "Y"*520
       sender.handle_get([
         PuavoTFTP::Opcode::RRQ,
         "file",
