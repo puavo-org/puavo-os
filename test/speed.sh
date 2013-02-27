@@ -8,11 +8,16 @@
 # cp README.md test/tftpboot
 # sudo ./puavo-tftpd  -u nobody -r test/tftpboot/
 
-# Run: time test/speed.sh
+# Run: time test/speed.sh 20
 
 # Optional: Add io stress: stress --io 10 --hdd 10
 
-for i in $(seq 20)
+if [ -z "$1" ]; then
+    echo "usage: $0 <count>"
+    exit 1
+fi
+
+for i in `seq 1 $1`
 do
     (
         tftp localhost -c get medium
