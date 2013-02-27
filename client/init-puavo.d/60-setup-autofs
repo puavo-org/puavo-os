@@ -2,11 +2,11 @@ if [ -x /usr/sbin/automount ]; then
   case "$PUAVO_HOSTTYPE" in
     fatclient|ltspserver)
       cat <<-EOF > /etc/auto.home
-	  * -fstype=nfs4,rw,sec=krb5,nodev,nosuid ${SERVER}:/home/&
-	  EOF
+	* -fstype=nfs4,rw,sec=krb5,nodev,nosuid ${SERVER}:/home/&
+	EOF
       cat <<-EOF > /etc/auto.master
-	  /home   /etc/auto.home
-	  EOF
+	/home   /etc/auto.home
+	EOF
       ;;
   esac
 fi
