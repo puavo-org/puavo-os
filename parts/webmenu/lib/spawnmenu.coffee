@@ -13,11 +13,13 @@ TODO: Reimplement with dbus
 if not process.env._
   process.env._ = ""
 
-optimist = require "optimist"
 
 net = require "net"
 fs = require "fs"
 {EventEmitter} = require "events"
+
+optimist = require "optimist"
+_ = require "underscore"
 
 
 module.exports = (pipePath) ->
@@ -31,17 +33,21 @@ module.exports = (pipePath) ->
       throw err
 
   server = net.createServer (socket) ->
-    socket.end("Spawning a menu for you!")
     buffer = ""
-    socket.on "data", (data) ->
-      buffer += data.toString()
 
-    socket.on "close", ->
-      if buffer.trim()
+    emitSpawn = _.once ->
+      socket.end()
+      buffer = buffer.trim()
+      if buffer
         options = optimist.parse(buffer.split(" "))
       else
         options = {}
+      console.info "spawn: parsed #{ buffer } to #{ JSON.stringify options }"
       events.emit("spawn", options)
+
+    socket.on "data", (data) ->
+      buffer += data.toString()
+      emitSpawn() if buffer.indexOf("\n") isnt -1
 
   server.listen(pipePath)
 

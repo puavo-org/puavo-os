@@ -7,7 +7,7 @@ ARGS=$@
 STATUS=0
 
 spawn(){
-  echo $ARGS | nc -w 1 -q 1 -U $1
+  echo $ARGS | nc -U $1
   STATUS=$?
 }
 

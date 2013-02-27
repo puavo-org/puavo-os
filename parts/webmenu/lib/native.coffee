@@ -190,14 +190,12 @@ module.exports = (gui, bridge) ->
   spawnHandler = (options) ->
 
     if options.logout
-      console.info "Toggling logout view"
       toggleMenu("logout")
     else if options["webmenu-exit"]
       code = parseInt(options["webmenu-exit"], 10) or 0
       console.info "Exiting on user request with code #{ options["webmenu-exit"] }"
       process.exit(code)
     else
-      console.info "Toggling root view"
       toggleMenu("root")
 
   # Prevent crazy menu spawning which might cause slow machines to get stuck
