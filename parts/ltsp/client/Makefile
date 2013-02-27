@@ -15,6 +15,7 @@ all :
 installdirs :
 	mkdir -p $(DESTDIR)/sbin
 	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)$(sysconfdir)/cups
 	mkdir -p $(DESTDIR)$(sysconfdir)/default
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
@@ -56,6 +57,10 @@ install : installdirs
 		templates/etc/idmapd.conf \
 		templates/etc/nsswitch.conf-extrausers \
 		templates/etc/nsswitch.conf-sss
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups \
+		templates/etc/cups/client.conf \
+		templates/etc/cups/cupsd.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default \
 		templates/etc/default/nfs-common
