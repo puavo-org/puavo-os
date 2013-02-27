@@ -25,8 +25,16 @@ define [
         @$el.addClass(opts.position)
       @listenTo this, "cancel", @remove
 
+      $(document).on "click", @bgClick = (e) =>
+        if e.target is @$background[0]
+          @remove()
+
+    elements:
+      "$background": ".background"
+
     remove: (opts) ->
       super
+      $(document).off("click", @bgClick)
       if not opts?.silent
         @trigger "close"
 
