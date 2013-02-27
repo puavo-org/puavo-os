@@ -712,6 +712,7 @@ class packages {
     [ 'nwfermi'
     , 'smart-activation'
     , 'smart-common'
+    , 'smart-extreme-collaboration'
     , 'smart-galleryfiles'
     , 'smart-gallerysetup'
     , 'smart-hwr'
