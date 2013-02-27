@@ -91,6 +91,7 @@ def device_ltspvars(device, organisation, school)
           'LTSP_SERVER'          => 'True',
           'SERVER'               => @boot_server_fqdn,
           'USE_NFS_HOMES'        => 'True',
+          'NFS_SERVER'           => @boot_server_fqdn,
         }
       else
 	{}
