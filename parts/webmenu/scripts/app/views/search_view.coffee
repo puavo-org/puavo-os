@@ -20,7 +20,7 @@ define [
     constructor: ->
       super
       @search = _.debounce @search, 250
-      @listenTo this, "spawn-menu", @focus
+      @listenTo this, "open-root-view", @focus, this
       @listenTo this, "reset", =>
         @$input.val("")
 
