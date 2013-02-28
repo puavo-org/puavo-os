@@ -97,7 +97,7 @@ module.exports = (gui, bridge) ->
   Window = gui.Window.get()
   Window.window.resizeTo(
     Window.window.screen.width,
-    440
+    410
   )
   Window.setResizable(false)
 
