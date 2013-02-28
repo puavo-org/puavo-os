@@ -21,6 +21,8 @@ define [
       super
       @search = _.debounce @search, 250
       @listenTo this, "spawn-menu", @focus
+      @listenTo this, "reset", =>
+        @$input.val("")
 
     template: template
 
