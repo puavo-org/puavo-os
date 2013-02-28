@@ -5,8 +5,11 @@ class packages::purged {
   Package { ensure => purged, }
 
   @package {
+    # we use webmenu for logouts and such, indicator-session is not needed
+    [ 'indicator-session'
+
     # the functionality in these is not for our end users
-    [ 'software-properties-gtk'
+    , 'software-properties-gtk'
     , 'synaptic'
     , 'ubuntu-release-upgrader-gtk'
     , 'update-manager'
