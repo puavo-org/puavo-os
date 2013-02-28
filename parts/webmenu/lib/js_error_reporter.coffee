@@ -23,8 +23,9 @@ module.exports = (errorMsg, url, lineNumber) ->
 
   message = new Buffer(JSON.stringify packet)
   client = dgram.createSocket("udp4")
+  client.on "error", (err) -> # prevent from throwing errors ever.
   client.send message, 0, message.length, 3858, "eventlog", (err) ->
     if err
-      console.error "Failed to post js error to 'eventlog'"
+      console.error "Failed to post js error to 'eventlog': #{ err.message }"
 
 
