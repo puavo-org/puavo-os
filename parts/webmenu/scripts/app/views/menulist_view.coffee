@@ -85,6 +85,7 @@ define [
       @setView ".app-list-container", models.map (model) ->
         new MenuItemView
           model: model
+      @$el.scrollTop(0)
 
     refreshViews: ->
       super
