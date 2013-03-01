@@ -53,6 +53,8 @@ install : installdirs
 		templates/etc/ldap/ldap.conf-laptop
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
+		templates/etc/auto.home \
+		templates/etc/auto.master \
 		templates/etc/krb5.conf \
 		templates/etc/idmapd.conf \
 		templates/etc/nsswitch.conf-extrausers \
