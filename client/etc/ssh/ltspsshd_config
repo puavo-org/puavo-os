@@ -27,8 +27,8 @@ LoginGraceTime 120
 PermitRootLogin yes
 StrictModes yes
 
-RSAAuthentication yes
-PubkeyAuthentication yes
+RSAAuthentication no
+PubkeyAuthentication no
 #AuthorizedKeysFile	%h/.ssh/authorized_keys
 
 # Don't read the user's ~/.rhosts and ~/.shosts files
