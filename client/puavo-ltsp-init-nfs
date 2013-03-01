@@ -17,18 +17,9 @@ if boolean_is_true "${USE_NFS_HOMES}" ; then
       service gssd restart    || service gssd start
     fi
 
-    # NSS needs to be working so that we get the home directory with getent.
-    # For LTSP thin client and fat clients this comes most probably from
-    # libnss-extrausers that gets populated during PAM auth.
-    HOME=$(getent passwd $PAM_USER | awk -F: '{ print $6 }')
-
     # Request a remote directory for the user (three second timeout, may fail)
     { echo "$PAM_USER" | nc -w 3 "$SERVER" 907; } || true
   fi
-else
-  HOME=$(getent passwd $PAM_USER | awk -F: '{ print $6 }')
-  mkdir -p ${HOME}
-  chown $PAM_USER: ${HOME}
 fi
 
 exit 0

@@ -75,7 +75,7 @@ install : installdirs
 		puavo-dns-client \
 		puavo-configure-client \
 		puavo-ltsp-login \
-		puavo-ltsp-mount-nfs-home
+		puavo-ltsp-init-nfs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount \
 		initramfs/puavo_udhcp
