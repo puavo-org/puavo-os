@@ -50,10 +50,13 @@ config["servers"].each do |url|
 
   update.delete("_universal._sub._ipp._tcp.#{config["domain"]}")
 
-  `lpstat -a`.split('\n').each do |line|
+  `lpstat -a`.split("\n").each do |line|
     if /^(.*?) /.match(line)
+      srv = Dnsruby::RR.create("#{$1}._ipp._tcp.#{config["domain"]} IN SRV 0 0 631 cups.#{config["domain"]}")
+
       update.add("_universal._sub._ipp._tcp.#{config["domain"]}", 'PTR', 60, "#{$1}._ipp._tcp.#{config["domain"]}.")
-      update.add("#{$1}._ipp._tcp.#{config["domain"]}", 'TXT', 60, [ "txtvers=1", "qtotal=1", "Transparent=T", "URF=DM3", "rp=printers/SAMSUNG-CLP-550", "note=Samsung CLP 550", "product=(GPL Ghostscript)", "printer-state=3", "printer-type=0x803014", "pdl=application/octet-stream,application/pdf,application/postscript,image/gif,image/jpeg,image/png,image/tiff,image/urf,text/html,text/plain,application/vnd.cups-banner,application/vnd.cups-pdf,application/vnd.cups-postscript,application/vnd.cups-raw" ])
+      update.add("#{$1}._ipp._tcp.#{config["domain"]}", 'TXT', 60, [ "txtvers=1", "qtotal=1", "Transparent=T", "URF=DM3", "rp=printers/#{$1}", "note=#{$1}", "product=(GPL Ghostscript)", "printer-state=3", "printer-type=0x803014", "pdl=application/octet-stream,application/pdf,application/postscript,image/gif,image/jpeg,image/png,image/tiff,image/urf,text/html,text/plain,application/vnd.cups-banner,application/vnd.cups-pdf,application/vnd.cups-postscript,application/vnd.cups-raw" ])
+      update.add(srv)
     end
   end
 
