@@ -33,20 +33,6 @@ define [
         @navigation.cols = @itemCols()
         @navigation.handleKeyEvent(e)
 
-      dragScroll = (e) =>
-        diff = @dragPos - e.pageY
-        console.log "moving from #{ @$el.scrollTop() } to #{ diff }"
-        @$el.scrollTop( @$el.scrollTop() + diff)
-
-      @$el.on "mousedown", (e) =>
-        @dragPos = e.pageY
-        @mouseDown = true
-      @$el.on "mousemove", (e) =>
-        dragScroll(e) if @mouseDown
-      @$el.on "mouseup", (e) =>
-        dragScroll(e)
-        @mouseDown = false
-
       @listenTo this, "reset", =>
         @model = @initial
         @setCurrent()
