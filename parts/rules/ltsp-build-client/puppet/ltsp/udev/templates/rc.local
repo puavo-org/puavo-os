@@ -12,12 +12,21 @@
 # By default this script does nothing.
 
 (
-  set +e
-  for i in $(seq 10); do
-    udevadm trigger --action=add
-    sleep $i
-    test "$(stat -c %a /dev/fuse 2>/dev/null)" = "1666" && break
-  done
+  # /etc/init/udevtrigger.conf misses some stuff when run in LTSP client
+  # (for some reason).  The end result is that, for example, the /dev/fuse
+  # permissions might be wrong on some boots (600, should be 1666).
+  # Other devices probably suffer from the same issues.
+
+  # Running "udevadm trigger --action=add" again at this stage messes up
+  # /etc/udev/rules.d/70-persistent-net.rules and
+  # /etc/udev/rules.d/70-persistent-cd.rules files (those will be added more
+  # entries after each udevadm-run), so it is not safe to simply run
+  # "udevadm trigger --action=add" again (it is run at an LTSP initramfs-stage
+  # and then later at /etc/init/udevtrigger.conf).
+
+  # We work around these issues by explicitly settings some permissions here.
+
+  chmod 1666 /dev/fuse
 )
 
 exit 0
