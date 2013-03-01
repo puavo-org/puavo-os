@@ -36,4 +36,7 @@ if (hostType === "fatclient") {
 // Wild installations are just unregistered
 if (!hostType) hostType = "unregistered";
 
+// For Webmenu purposes we can assume ltspserver being thinclients
+if (hostType === "ltspserver") hostType = "thinclient";
+
 module.exports = hostType;
