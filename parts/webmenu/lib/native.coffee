@@ -94,17 +94,25 @@ module.exports = (gui, bridge) ->
   })
 
 
-  Window = gui.Window.get()
-  Window.window.resizeTo(
-    Window.window.screen.width,
-    410
-  )
-  Window.setResizable(false)
-
-
   if process.env.devtools
     process.env.nohide = 1
     config.devtools = true
+  Window = gui.Window.get()
+
+
+  ###*
+  # Resize window to current screen width
+  ###
+  resizeToScreenWidth = ->
+    Window.setResizable(true)
+    Window.window.resizeTo(
+      Window.window.screen.width,
+      410
+    )
+    Window.setResizable(false)
+
+
+  resizeToScreenWidth()
 
   ###*
   # Move window to bottom of screen
@@ -197,6 +205,8 @@ module.exports = (gui, bridge) ->
       process.exit(code)
     else
       toggleMenu("root")
+
+    resizeToScreenWidth()
 
   # Prevent crazy menu spawning which might cause slow machines to get stuck
   # for long periods of time
