@@ -2,6 +2,7 @@
 fs = require "fs"
 gettext = require "../vendor/gnu-gettext"
 ini = require "ini"
+s = require "underscore.string"
 
 
 # Call a function with given array of arguments arrays in series. Return on
@@ -55,14 +56,34 @@ _findEmbedded = (desktopEntry, attr, lang) ->
   return desktopEntry[attr]
 
 findCommand = (desktopEntry) ->
-  cmd = desktopEntry["Exec"]
-  if not cmd
+  rawCmd = desktopEntry["Exec"]
+  if not rawCmd
     err = new Error "Exec is missing for #{ desktopEntry["Name"] }"
     err.desktopEntry = desktopEntry
     throw err
-  # Remove arguments
-  cmd = cmd.replace(/\ *%[A-Z-a-z]/, "")
-  return cmd.split(" ")
+
+  rawCmd = rawCmd.trim()
+
+  cmd = null
+  # Find command from Exec string. Paths with spaces are surrounded with quotes.
+  for matcher in [ /^'(.+)'(.*)/, /^"(.+)"(.*)/, /^([^ ]+)(.*)/ ]
+    if match = rawCmd.match(matcher)
+      [__, cmd, args] = match
+      break
+
+  if not cmd
+    console.error "failed to parse #{ rawCmd }"
+    throw new Error "Failed to parse cmd: '#{ rawCmd }'"
+
+  if "%" in args
+    # Skip arguments completely if it has Freedesktop Exec variables. We might
+    # want to implement them later, but for now there doesn't seem to be any
+    # use for them
+    args = []
+  else
+    args = s.clean(args).split(" ")
+
+  return [cmd].concat(args)
 
 parseFileSync = (filePath, locale) ->
   data = ini.parse fs.readFileSync(filePath).toString()
