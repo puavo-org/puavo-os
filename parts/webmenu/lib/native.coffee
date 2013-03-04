@@ -104,11 +104,33 @@ module.exports = (gui, bridge) ->
   # Resize window to current screen width
   ###
   resizeToScreenWidth = ->
+    rowSizes = [
+      300 # 1 item
+      410 # 2 items
+      520 # 3 items
+    ]
+
+    heights =
+      800: 0
+      1280: 1
+      1500: 2
+
+    width = Window.window.screen.width
+
+    # Dynamic size in the future? Does not work now because because sidebar
+    # does not scale properly for single row view.
+    # For now use 2 rows.
+    height = rowSizes[1]
+
+    # if width <= 1024
+    #   height = rowSizes[2]
+    # else if width <= 1280
+    #   height = rowSizes[1]
+    # else
+    #   height = rowSizes[0]
+
     Window.setResizable(true)
-    Window.window.resizeTo(
-      Window.window.screen.width,
-      410
-    )
+    Window.window.resizeTo(width, height)
     Window.setResizable(false)
 
 
