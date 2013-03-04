@@ -102,14 +102,25 @@
     "requirejs": {
       "version": "2.0.6"
     },
-    "nib": {
-      "version": "0.8.2"
+    "underscore.string": {
+      "version": "2.3.1"
+    },
+    "chai": {
+      "version": "1.4.0"
     },
     "grunt-stylus": {
       "version": "0.2.0"
     },
-    "chai": {
-      "version": "1.4.0"
+    "nib": {
+      "version": "0.8.2"
+    },
+    "node-static": {
+      "version": "0.6.5",
+      "dependencies": {
+        "colors": {
+          "version": "0.6.0-1"
+        }
+      }
     },
     "stylus": {
       "version": "0.30.1",
@@ -119,14 +130,6 @@
         },
         "debug": {
           "version": "0.7.0"
-        }
-      }
-    },
-    "node-static": {
-      "version": "0.6.5",
-      "dependencies": {
-        "colors": {
-          "version": "0.6.0-1"
         }
       }
     },
