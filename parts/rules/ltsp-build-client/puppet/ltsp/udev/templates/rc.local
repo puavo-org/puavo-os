@@ -26,6 +26,8 @@
 
   # We work around these issues by explicitly settings some permissions here.
 
+  set +e
+
   chmod 1666 /dev/fuse
 )
 
