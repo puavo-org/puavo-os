@@ -56,20 +56,8 @@ puts "Using #{@rootdn} as rootdn"
 # we'll just create new directories under it for different databases:
 #
 # /var/lib/ldap/o=puavo
-# /var/lib/ldap/db001
-# /var/lib/ldap/db002
-# /var/lib/ldap/db003
-# ...
 
 `mkdir -p /var/lib/ldap/o=puavo`
-
-(1..300).each do |num|
-  dir = "/var/lib/ldap/db%03d" % num
-
-  `mkdir -p #{dir}`
-  `chown openldap.openldap #{dir}`
-  `chmod 0750 #{dir}`
-end
 
 `cp schema/*.ldif /etc/ldap/schema/`
 `rm -rf /etc/ldap/slapd.d/*`
