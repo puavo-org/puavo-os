@@ -1,5 +1,5 @@
-require 'id_pool'
-require 'database_acl'
+require 'puavo-ds/id_pool'
+require 'puavo-ds/database_acl'
 require 'tempfile'
 
 class Database < ActiveLdap::Base
