@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/ruby1.9.1
 # -*- coding: utf-8 -*-
 #
 # Usage: ruby add_new_organisation.rb <organisation name>
@@ -11,9 +11,9 @@ $LOAD_PATH.unshift(
   )
 )
 
-require 'active_ldap'
-require 'optparse'
-require 'readline'
+require 'puavo-ds'
+
+puts CONFIGURATIONS.inspect
 
 options = {}
 a = OptionParser.new do |opts|
@@ -66,39 +66,7 @@ unless options.has_key?(:organisation)
   puts "Required option --organisation missing"
   exit
 end
-
-# LDAP configuration
-if configurations = YAML.load_file("config/ldap.yml") rescue nil
-  ActiveLdap::Base.configurations = configurations
-else
-  puts "Not found LDAP configuration file (config/ldap.yml)"
-  exit
-end
-
-require 'puavo-ds/ldap_organisation_base'
-require 'puavo-ds/admin_user'
-require 'puavo-ds/database'
-require 'puavo-ds/samba_group'
-require 'puavo-ds/samba_sid_group'
-require 'puavo-ds/organisation'
-require 'puavo-ds/organizational_unit'
-require 'puavo-ds/samba'
-require 'puavo-ds/overlay'
-require 'puavo-ds/system_group'
-require 'puavo-ds/users/ldap_base'
-require 'puavo-ds/users/base_group'
-require 'puavo-ds/users/school'
-require 'puavo-ds/users/role'
-require 'puavo-ds/users/group'
-require 'puavo-ds/users/user_error'
-require 'puavo-ds/users/user'
-require 'puavo-ds/users/samba_domain'
-require 'puavo-ds/users/ldap_organisation'
-require 'puavo-ds/kerberos'
-#require 'puavo-ds/oauth'
-#require 'puavo-ds/oauth_client'
-#require 'puavo-ds/oauth_token'
-
+ 
 def newpass( len )
   chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a
   newpass = ""
@@ -106,9 +74,9 @@ def newpass( len )
   return newpass
 end
 
-samba_domain_template = configurations["settings"]["templates"]["samba_domain"]
-suffix_template = configurations["settings"]["templates"]["suffix"]
-domain_template = configurations["settings"]["templates"]["domain"]
+samba_domain_template = CONFIGURATIONS["settings"]["templates"]["samba_domain"]
+suffix_template = CONFIGURATIONS["settings"]["templates"]["suffix"]
+domain_template = CONFIGURATIONS["settings"]["templates"]["domain"]
 
 # This needs to be cleaned up once the actual settings and needs
 # have been figured out
@@ -128,7 +96,7 @@ puts "  Initialising organisation: #{organisation_name}"
 puts "******************************************************"
 
 kerberos_realm = domain.upcase
-rootDN = configurations["settings"]["ldap_server"]["bind_dn"]
+rootDN = CONFIGURATIONS["settings"]["ldap_server"]["bind_dn"]
 
 puts "* Creating database for suffix: #{suffix}"
 puts "* Kerberos realm: #{kerberos_realm}"
@@ -204,7 +172,7 @@ Overlay.create_overlays(:database => new_db,
 
 # Create organisation and set LdapOrganisationBase LDAP connection
 puts "* Create organisation root"
-organisation = Organisation.create( :owner => configurations["settings"]["ldap_server"]["bind_dn"],
+organisation = Organisation.create( :owner => CONFIGURATIONS["settings"]["ldap_server"]["bind_dn"],
                                     :suffix => suffix,
                                     :puavoDomain => domain,
                                     :puavoKerberosRealm => kerberos_realm,
@@ -261,13 +229,13 @@ role.groups << group
 kerberos_masterpw = newpass(20)
 puts "\nInitializing kerberos realm with master key: #{kerberos_masterpw}\n"
 
-kerberos_configuration = KerberosSettings.new(:ldap_server => configurations["settings"]["ldap_server"])
+kerberos_configuration = KerberosSettings.new(:ldap_server => CONFIGURATIONS["settings"]["ldap_server"])
 
 kerberos_configuration.write_configurations_to_file
 
 kerberos_configuration.replace_server_configurations
 
-realm = KerberosRealm.new( :ldap_server => configurations["settings"]["ldap_server"],
+realm = KerberosRealm.new( :ldap_server => CONFIGURATIONS["settings"]["ldap_server"],
                            :realm => kerberos_realm,
                            :masterpw => kerberos_masterpw,
                            :suffix => suffix,

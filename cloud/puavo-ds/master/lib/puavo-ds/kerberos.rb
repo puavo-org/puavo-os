@@ -180,9 +180,6 @@ class KerberosSettings
 end
   
 class KerberosRealm
-  require "erb"
-  require "yaml"
-  require 'tempfile'
 
   attr_accessor :ldap_server, :realm, :masterpw, :suffix, :domain
 
