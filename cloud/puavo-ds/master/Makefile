@@ -26,9 +26,3 @@ install: install-dirs
 clean:
 	rm -rf .bundle
 	rm -rf lib/puavo-ds-master-vendor
-	rm -fr dotinstall
-
-dotinstall: build
-	$(MAKE) install DESTDIR=dotinstall prefix=/usr
-	find dotinstall/ -type f | sort -u | sed -e 's/^dotinstall\///' > puavo-ds-master.install
-	rm -fr dotinstall
