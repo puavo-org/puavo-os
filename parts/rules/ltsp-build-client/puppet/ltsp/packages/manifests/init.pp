@@ -734,11 +734,15 @@ class packages {
     }
     'quantal': {
       kernel_package_for_version {
-        '3.5.0-23-generic':
+        '3.5.0-25-generic':
           ;
 
         '3.6.6-999-generic':
           package_tag => 'opinsys';
+
+        '3.8.1.opinsys1':
+          package_tag => 'opinsys',
+          with_extra  => false;
       }
     }
 
