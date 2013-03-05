@@ -597,6 +597,8 @@ class packages {
     , 'network-manager-gnome'
     , 'network-manager-pptp'
     , 'network-manager-pptp-gnome'
+    , 'network-manager-openvpn'
+    , 'network-manager-openvpn-gnome'
     , 'onboard'
     , 'openprinting-ppds'
     , 'pcmciautils'
