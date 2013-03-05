@@ -120,7 +120,7 @@ module.exports = (gui, bridge) ->
     # Dynamic size in the future? Does not work now because because sidebar
     # does not scale properly for single row view.
     # For now use 2 rows.
-    height = rowSizes[1]
+    height = rowSizes[2]
 
     # if width <= 1024
     #   height = rowSizes[2]
