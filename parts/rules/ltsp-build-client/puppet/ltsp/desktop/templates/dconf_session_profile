@@ -155,6 +155,9 @@ trash-icon-name='Roskakori'
 trash-icon-visible=true
 volumes-visible=true
 
+[org/gnome/settings-daemon/peripherals/touchpad]
+scroll-method='two-finger-scrolling'
+
 [org/gnome/settings-daemon/plugins/media-keys]
 custom-keybindings=['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/']
 screenshot='Print'
