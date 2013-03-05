@@ -4,7 +4,7 @@
 #
 
 require 'puavo/etc'
-require 'puavo-client'
+require 'puavo'
 require 'puavo/lts'
 
 puavo = Puavo::Client::Base.new(PUAVO_ETC.domain, PUAVO_ETC.ldap_dn, PUAVO_ETC.ldap_password)
