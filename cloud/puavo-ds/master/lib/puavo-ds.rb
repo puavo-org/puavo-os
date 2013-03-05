@@ -7,10 +7,10 @@ require 'optparse'
 require 'readline'
 
 # LDAP configuration
-if CONFIGURATIONS = YAML.load_file("config/ldap.yml") rescue nil
+if CONFIGURATIONS = YAML.load_file("/etc/puavo-ldap.yml") rescue nil
   ActiveLdap::Base.configurations = CONFIGURATIONS
 else
-  puts "Not found LDAP configuration file (config/ldap.yml)"
+  puts "Not found LDAP configuration file (/etc/puavo-ldap.yml)"
   exit
 end
 

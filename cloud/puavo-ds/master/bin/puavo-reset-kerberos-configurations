@@ -18,10 +18,10 @@ require 'readline'
 require 'kerberos'
 
 # LDAP configuration
-if configurations = YAML.load_file("config/ldap.yml") rescue nil
+if configurations = YAML.load_file("/etc/puavo-ldap.yml") rescue nil
   ActiveLdap::Base.configurations = configurations
 else
-  puts "Not found LDAP configuration file (config/ldap.yml)"
+  puts "Not found LDAP configuration file (/etc/puavo-ldap.yml)"
   exit
 end
 

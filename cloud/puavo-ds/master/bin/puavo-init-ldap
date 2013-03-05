@@ -18,7 +18,7 @@ end
 # rootdn is configured as the rootdn for o=Puavo and given manage
 # access in cn=config
 
-if configuration = YAML.load_file("config/ldap.yml") rescue nil
+if configuration = YAML.load_file("/etc/puavo-ldap.yml") rescue nil
   @rootdn = configuration["settings"]["ldap_server"]["bind_dn"]
   @rootpw = configuration["settings"]["ldap_server"]["password"]
   @puavodn = configuration["settings"]["puavo"]["bind_dn"]
@@ -34,7 +34,7 @@ if configuration = YAML.load_file("config/ldap.yml") rescue nil
   @slavedn = configuration["settings"]["slave"]["bind_dn"]
   @slavepw = configuration["settings"]["slave"]["password"]
 else
-  puts "LDAP configuration file (config/ldap.yml) not found!"
+  puts "LDAP configuration file (/etc/puavo-ldap.yml) not found!"
   exit
 end
 
