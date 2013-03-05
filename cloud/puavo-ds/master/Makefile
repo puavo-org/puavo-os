@@ -15,9 +15,11 @@ build:
 install-dirs:
 	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
 	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)/etc/ldap/schema/
 
 install: install-dirs
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
+	cp schema/*.ldif $(DESTDIR)/etc/ldap/schema/
 	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-add-new-organisation
 	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-clone-master
 	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-reset-kerberos-configurations

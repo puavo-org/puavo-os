@@ -59,7 +59,6 @@ puts "Using #{@rootdn} as rootdn"
 
 `mkdir -p /var/lib/ldap/o=puavo`
 
-`cp schema/*.ldif /etc/ldap/schema/`
 `rm -rf /etc/ldap/slapd.d/*`
 
 `cp certs/slapd-ca.crt /etc/ssl/certs/slapd-ca.crt`
