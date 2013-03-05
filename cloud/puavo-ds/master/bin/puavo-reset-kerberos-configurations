@@ -12,12 +12,10 @@ $LOAD_PATH.unshift(
   )
 )
 
-require 'rubygems'
 require 'active_ldap'
 require 'optparse'
 require 'readline'
 require 'kerberos'
-#require 'ruby-debug'
 
 # LDAP configuration
 if configurations = YAML.load_file("config/ldap.yml") rescue nil
