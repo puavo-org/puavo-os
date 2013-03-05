@@ -28,7 +28,8 @@ class packages {
   }
 
   @package {
-    [ 'gawk'
+    [ 'bootchart'
+    , 'gawk'
     , 'git'
     , 'initramfs-tools'
     , 'iftop'
