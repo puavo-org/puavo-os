@@ -57,7 +57,7 @@ module PuavoTFTP
 
     # @param {String} data octet string
     def handle_get(data)
-      _, name, mode, *opts = data.unpack("nZ*Z*Z*Z*Z*Z*")
+      name, mode, *opts = data.unpack("Z*Z*Z*Z*Z*Z*")
       # http://tools.ietf.org/html/rfc2347
       @extensions = Hash[*opts]
       @name = name
@@ -240,7 +240,7 @@ module PuavoTFTP
     end
 
     def handle_ack(data)
-      _, block_num = data.unpack("nn")
+      block_num = data.unpack("n")[0]
 
       if @error
         l "ACK #{ block_num } for error. Stopping."
