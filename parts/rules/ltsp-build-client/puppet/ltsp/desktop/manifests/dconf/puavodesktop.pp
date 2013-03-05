@@ -8,5 +8,8 @@ class desktop::dconf::puavodesktop {
 
     '/etc/dconf/profile/user':
       content => template('desktop/dconf_profile_user');
+
+    '/etc/environment':
+      content => template('desktop/environment');
   }
 }
