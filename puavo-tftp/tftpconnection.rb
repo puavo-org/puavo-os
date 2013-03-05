@@ -7,14 +7,16 @@ module PuavoTFTP
   class Connection < EventMachine::Connection
 
     OPCODE_HANDLERS = {
-      Opcode::RRQ => :handle_get,
-      Opcode::ACK => :handle_ack,
-      Opcode::ERROR => :handle_error
+      [Opcode::RRQ].pack("n")[1] => :handle_get,
+      [Opcode::ACK].pack("n")[1] => :handle_ack,
+      [Opcode::ERROR].pack("n")[1] => :handle_error
     }
 
     def receive_data(data)
       # debug "Server got data #{ data.inspect }"
-      code = data.unpack("n").first
+      code = data[1]
+
+      data = data.byteslice(2, data.size)
       handle_opcode(code, data)
     end
 
@@ -27,7 +29,7 @@ module PuavoTFTP
     end
 
     def handle_error(data)
-      code, err_code, msg = data.unpack("nnZ*")
+      err_code, msg = data.unpack("nZ*")
       l "CLIENT ERROR: #{ ERROR_DESCRIPTIONS[err_code].inspect } msg: #{ msg }"
     end
 
@@ -37,10 +39,15 @@ module PuavoTFTP
       log(*args)
     end
 
-    # Context aware debug method
-    def d(*args)
-      args[0] = "#{ to_s } #{ args[0] }"
-      debug(*args)
+    if $tftp_debug
+      # Context aware debug method
+      def d(*args)
+        args[0] = "#{ to_s } #{ args[0] }"
+        debug(*args)
+      end
+    else
+      def d(*args)
+      end
     end
 
   end

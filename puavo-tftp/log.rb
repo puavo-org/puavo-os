@@ -9,10 +9,13 @@ def warn(*args)
   log(*args)
 end
 
-def debug(*args)
-  if $tftp_debug
-    args[0] = "DEBUG: " + args[0]
-    log(*args)
+if $tftp_debug
+  def debug(*args)
+      args[0] = "DEBUG: " + args[0]
+      log(*args)
+    end
+else
+  def debug(*args)
   end
 end
 
