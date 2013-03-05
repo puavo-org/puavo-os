@@ -11,6 +11,7 @@ ENV['LDAPTLS_REQCERT'] = 'demand'
 ENV['LDAPTLS_CACERT'] = '/etc/puavo/certs/rootca.pem'
 
 require 'puavo-ldap'
+require 'shellwords'
 
 def provide_guest_login(device)
   # make guestlogin possible for terminals that have 'guest'-tag set
@@ -224,6 +225,10 @@ def device_ltspvars(device, organisation, school)
   end
 
   ltspvars
+end
+
+def xrandrline(line)
+  Hash[ * Shellwords.shellwords(line).map { |s| s.split('=',2) }.flatten ]
 end
 
 def handle_ltsconf_request
