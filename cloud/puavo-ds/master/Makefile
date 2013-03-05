@@ -18,7 +18,10 @@ install-dirs:
 
 install: install-dirs
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
-	# TODO: bin etc...
+	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-add-new-organisation
+	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-clone-master
+	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-reset-kerberos-configurations
+	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-init-ldap
 
 clean:
 	rm -rf .bundle
