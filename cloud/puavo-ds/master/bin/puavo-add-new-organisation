@@ -4,7 +4,12 @@
 # Usage: ruby add_new_organisation.rb <organisation name>
 #
 
-$LOAD_PATH.unshift( File.join( File.dirname(__FILE__), 'lib' ) )
+# Add lib path for development
+$LOAD_PATH.unshift(
+  File.expand_path(
+    File.join( File.dirname(__FILE__), '..', 'lib' )
+  )
+)
 
 require 'rubygems'
 require 'active_ldap'

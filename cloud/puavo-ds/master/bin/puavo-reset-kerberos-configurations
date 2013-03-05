@@ -5,7 +5,12 @@
 # Usage: ruby reset_kerberos_configuration.rb
 #
 
-$LOAD_PATH.unshift( File.join( File.dirname(__FILE__), 'lib' ) )
+# Add lib path for development
+$LOAD_PATH.unshift(
+  File.expand_path(
+    File.join( File.dirname(__FILE__), '..', 'lib' )
+  )
+)
 
 require 'rubygems'
 require 'active_ldap'
