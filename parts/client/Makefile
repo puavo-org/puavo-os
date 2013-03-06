@@ -12,7 +12,7 @@ INSTALL_PROGRAM = $(INSTALL)
 
 # For some reason ruby lib directory is different under /usr and /usr/local
 ifeq ($(prefix),/usr/local)
-	RUBY_LIB_DIR = /usr/local/lib/site_ruby
+	RUBY_LIB_DIR = $(prefix)/lib/site_ruby
 else
 	RUBY_LIB_DIR = $(prefix)/lib/ruby/vendor_ruby
 endif
