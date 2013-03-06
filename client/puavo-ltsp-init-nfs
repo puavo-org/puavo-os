@@ -13,8 +13,9 @@ if boolean_is_true "${USE_NFS_HOMES}" ; then
       TMP_KRB5CCNAME=$(echo $KRB5CCNAME | sed -e 's/^FILE://')
       install -o root -g root -m 600 "$TMP_KRB5CCNAME" /tmp/krb5cc_0
 
-      service idmapd restart  || service idmapd start
-      service gssd restart    || service gssd start
+      service idmapd restart || service idmapd start
+      service gssd restart   || service gssd start
+      service autofs restart || service autofs start
     fi
 
     # Request a remote directory for the user (three second timeout, may fail)
