@@ -90,13 +90,14 @@ puts "Using #{@rootdn} as rootdn"
 
 `rm -rf /etc/ldap/slapd.d/*`
 
-`cp certs/slapd-ca.crt /etc/ssl/certs/slapd-ca.crt`
-`cp certs/slapd-server.crt /etc/ssl/certs/slapd-server.crt`
-`cp certs/slapd-server.key /etc/ssl/certs/slapd-server.key`
-
-`chown openldap.openldap /etc/ssl/certs/slapd-server.key`
-`chown openldap.openldap /etc/ssl/certs/slapd-server.crt`
-`chown openldap.openldap /etc/ssl/certs/slapd-ca.crt`
+# Check that the certificate files can be found
+["/etc/ssl/certs/slapd-ca.crt",
+ "/etc/ssl/certs/slapd-server.crt",
+ "/etc/ssl/certs/slapd-server.key"].each do |file|
+  if not File.exists?(file)
+    raise "Certificate file not found! #{file}."
+  end
+end
 
 # As /etc/ldap/slapd.d is now totally empty, slapd won't start before
 # initial config is added with slapadd.
