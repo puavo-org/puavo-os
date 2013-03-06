@@ -1,8 +1,10 @@
-#!/usr/bin/ruby
+#!/usr/bin/ruby1.9.1
 
 require "erb"
 require "yaml"
 require 'tempfile'
+require 'puavo/etc'
+require 'optparse'
 
 def parse_erb(basename)
   ldif_template = File.read("templates/#{basename}.ldif.erb")
@@ -15,28 +17,55 @@ def parse_erb(basename)
   return tempfile
 end
 
-# rootdn is configured as the rootdn for o=Puavo and given manage
-# access in cn=config
-
-if configuration = YAML.load_file("/etc/puavo-ldap.yml") rescue nil
-  @rootdn = configuration["settings"]["ldap_server"]["bind_dn"]
-  @rootpw = configuration["settings"]["ldap_server"]["password"]
-  @puavodn = configuration["settings"]["puavo"]["bind_dn"]
-  @puavopw = configuration["settings"]["puavo"]["password"]
-  @puppetdn = configuration["settings"]["puppet"]["bind_dn"]
-  @puppetpw = configuration["settings"]["puppet"]["password"]
-  @kdcdn = configuration["settings"]["kdc"]["bind_dn"]
-  @kdcpw = configuration["settings"]["kdc"]["password"]
-  @kadmindn = configuration["settings"]["kadmin"]["bind_dn"]
-  @kadminpw = configuration["settings"]["kadmin"]["password"]
-  @monitordn = configuration["settings"]["monitor"]["bind_dn"]
-  @monitorpw = configuration["settings"]["monitor"]["password"]
-  @slavedn = configuration["settings"]["slave"]["bind_dn"]
-  @slavepw = configuration["settings"]["slave"]["password"]
-else
-  puts "LDAP configuration file (/etc/puavo-ldap.yml) not found!"
-  exit
+def ask_dn(question, puavo_etc_method, default)
+  begin
+    value = PUAVO_ETC.send(puavo_etc_method)
+  rescue Errno::ENOENT
+    print "#{question} (#{default}): "
+    value = STDIN.gets.chomp
+    value = default if value.empty?
+    PUAVO_ETC.write(puavo_etc_method.to_sym, value)
+  end
+  return value
 end
+
+def ask_password(question, puavo_etc_method)
+  begin
+    value = PUAVO_ETC.send(puavo_etc_method)
+  rescue Errno::ENOENT
+    value = ""
+    while value.empty? do
+      print "#{question}: "
+      value = STDIN.gets.chomp
+    end
+    PUAVO_ETC.write(puavo_etc_method.to_sym, value)
+  end
+  return value
+end
+
+puts "\nInitialize slapd with Puavo configuration"
+puts
+
+@rootdn = ask_dn("root dn", "ldap_dn", "uid=admin,o=puavo")
+@rootpw = ask_password("root password", "ldap_password")
+
+@puavodn = ask_dn("puavo dn", "ds_puavo_dn", "uid=puavo,o=puavo")
+@puavopw = ask_password("puavo password", "ds_puavo_password")
+
+@puppetdn = ask_dn("puppet dn", "ds_puppet_dn", "uid=puppet,o=puavo")
+@puppetpw = ask_password("puppet password", "ds_puppet_password")
+
+@kdcdn = ask_dn("kdc dn", "ds_kdc_dn", "uid=kdc,o=puavo")
+@kdcpw = ask_password("kdc password", "ds_kdc_password")
+
+@kadmindn = ask_dn("kadmin dn", "ds_kadmin_dn", "uid=kadmin,o=puavo")
+@kadminpw = ask_password("kadmin password", "ds_kadmin_password")
+
+@monitordn = ask_dn("monitor dn", "ds_monitor_dn", "uid=monitor,o=puavo")
+@monitorpw = ask_password("monitor password", "ds_monitor_password")
+
+@slavedn = ask_dn("slave dn", "ds_slave_dn", "uid=slave,o=puavo")
+@slavepw = ask_password("slave password", "ds_slave_password")
 
 puts "Using #{@rootdn} as rootdn"
 
