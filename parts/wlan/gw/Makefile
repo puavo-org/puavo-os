@@ -17,8 +17,8 @@ installdirs :
 
 .PHONY : install
 install : installdirs
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-wlangw \
-		etc/puavo-wlangw/*
+	$(INSTALL_DATA) -m 0600 -t $(DESTDIR)$(sysconfdir)/puavo-wlangw \
+		etc/puavo-wlangw/vtund.conf
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		sbin/*
