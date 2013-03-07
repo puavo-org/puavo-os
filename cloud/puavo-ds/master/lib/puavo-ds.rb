@@ -1,6 +1,3 @@
-# Insert dependency paths from `bundle install --standalone --path ...`.
-# See Makefile
-require File.expand_path(File.dirname(__FILE__) + "/puavo-ds-master-vendor/bundler/setup.rb")
 
 require 'active_ldap'
 require 'optparse'
