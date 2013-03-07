@@ -12,10 +12,7 @@ $LOAD_PATH.unshift(
   )
 )
 
-require 'active_ldap'
-require 'optparse'
-require 'readline'
-require 'kerberos'
+require 'puavo-ds'
 
 # LDAP configuration
 if configurations = YAML.load_file("/etc/puavo-ldap.yml") rescue nil
