@@ -44,7 +44,7 @@ class Database < ActiveLdap::Base
                        'entryUUID eq',
                        'entryCSN eq'
                        ]
-    self.olcDbDirectory = "/var/lib/ldap/#{self.cn}"
+    self.olcDbDirectory = "/var/lib/ldap/#{self.olcSuffix}"
 
     # Database ACLs
     suffix = self.olcSuffix
