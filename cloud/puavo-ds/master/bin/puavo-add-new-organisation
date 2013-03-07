@@ -13,8 +13,6 @@ $LOAD_PATH.unshift(
 
 require 'puavo-ds'
 
-puts CONFIGURATIONS.inspect
-
 options = {}
 a = OptionParser.new do |opts|
   opts.banner = "Usage: add_new_organisation [options]"
