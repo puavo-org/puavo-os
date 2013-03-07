@@ -62,6 +62,9 @@ toplevel-id='bottom-panel'
 pack-index=1
 object-iid='PanelInternalFactory::Separator'
 
+[org/gnome/gnome-panel/layout/objects/window-list/instance-config]
+group-windows='auto-group'
+
 [org/gnome/gnome-panel/layout/objects/workspace-switcher]
 pack-type='start'
 toplevel-id='bottom-panel'
