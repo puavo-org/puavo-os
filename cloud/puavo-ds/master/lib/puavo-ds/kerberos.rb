@@ -4,7 +4,7 @@ class KerberosSettings
 
   attr_accessor :organisations
 
-  TMP = File.expand_path('kerberos_tmp')
+  TMP = "/tmp/puavo-ds-kerberos-tmp"
 
   def self.find_all_organisations(ldap_server)
     databases = `ldapsearch -Z -x -D #{ldap_server['bind_dn']} -w #{ldap_server['password']} -H ldap://#{ldap_server['host']} -s base -b "" "(objectClass=*)" namingContexts 2>/dev/null | grep namingContexts:`
