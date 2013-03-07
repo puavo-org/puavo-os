@@ -1,6 +1,6 @@
 class lightdm {
-  include desktop::dconf::puavodesktop,
-          packages
+  include desktop::dconf::puavodesktop
+  require packages
 
   file {
     '/etc/dconf/db/puavodesktop.d/lightdm_profile':
@@ -8,5 +8,9 @@ class lightdm {
       notify  => Exec['update dconf'];
   }
 
-  Package <| title == lightdm |>
+  # lightdm also likes language packages
+  Package <| title == lightdm
+          or title == language-pack-gnome-en
+          or title == language-pack-gnome-fi
+          or title == language-pack-gnome-sv |>
 }
