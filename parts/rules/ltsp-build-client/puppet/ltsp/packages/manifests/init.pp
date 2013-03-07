@@ -230,11 +230,13 @@ class packages {
     , 'pidgin-plugin-pack' ]:
       tag => [ 'instant_messaging', 'ubuntu', ];
 
+    'language-pack-gnome-en':
+      tag => [ 'language-en', 'thinclient', 'ubuntu', ];
+
     [ 'firefox-locale-en'
     , 'hyphen-en-us'
     , 'kde-l10n-engb'
     , 'language-pack-en'
-    , 'language-pack-gnome-en'
     , 'language-pack-kde-en'
     , 'libreoffice-help-en-gb'
     , 'libreoffice-l10n-en-gb'
@@ -244,10 +246,12 @@ class packages {
     , 'thunderbird-locale-en-gb' ]:
       tag => [ 'language-en', 'ubuntu', ];
 
+    'language-pack-gnome-fi':
+      tag => [ 'language-fi', 'thinclient', 'ubuntu', ];
+
     [ 'firefox-locale-fi'
     , 'kde-l10n-fi'
     , 'language-pack-fi'
-    , 'language-pack-gnome-fi'
     , 'language-pack-kde-fi'
     , 'libreoffice-help-fi'
     , 'libreoffice-l10n-fi'
@@ -256,10 +260,12 @@ class packages {
     , 'thunderbird-locale-fi' ]:
       tag => [ 'language-fi', 'ubuntu', ];
 
+    'language-pack-gnome-sv':
+      tag => [ 'language-sv', 'thinclient', 'ubuntu', ];
+
     [ 'firefox-locale-sv'
     , 'gimp-help-sv'
     , 'kde-l10n-sv'
-    , 'language-pack-gnome-sv'
     , 'language-pack-kde-sv'
     , 'language-pack-sv'
     , 'libreoffice-help-sv'
