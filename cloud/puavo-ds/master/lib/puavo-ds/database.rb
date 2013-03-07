@@ -5,7 +5,7 @@ require 'tempfile'
 class Database < ActiveLdap::Base
   ldap_mapping( :dn_attribute => "olcDatabase",
                 :prefix => "",
-                :classes => ['olcDatabaseConfig', 'olcHdbConfig', 'puavoDatabase'] )
+                :classes => ['olcDatabaseConfig', 'olcHdbConfig'] )
 
   attr_accessor :samba_domain
   attr_accessor :kerberos_realm
