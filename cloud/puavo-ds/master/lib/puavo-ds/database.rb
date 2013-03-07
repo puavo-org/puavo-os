@@ -3,7 +3,7 @@ require 'puavo-ds/database_acl'
 require 'tempfile'
 
 class Database < ActiveLdap::Base
-  ldap_mapping( :dn_attribute => "cn",
+  ldap_mapping( :dn_attribute => "olcDatabase",
                 :prefix => "",
                 :classes => ['olcDatabaseConfig', 'olcHdbConfig', 'puavoDatabase'] )
 
