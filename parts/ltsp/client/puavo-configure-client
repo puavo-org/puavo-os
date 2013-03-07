@@ -1,8 +1,6 @@
 #!/usr/bin/ruby
 
-require 'fileutils'
-require 'highline/import'
-require 'tmpdir'
+require 'erb'
 
 puavo_device_type = ARGV[0]
 
@@ -42,6 +40,11 @@ def write_config(filename, version=nil, secure=false)
   end
 
   File.chmod(perm, filename)
+end
+
+begin
+  Dir.mkdir('/etc/cups')
+rescue Errno::EEXIST
 end
 
 case puavo_device_type
