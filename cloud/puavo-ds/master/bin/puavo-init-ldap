@@ -7,13 +7,24 @@ $LOAD_PATH.unshift(
   )
 )
 
-require "erb"
-require "yaml"
+require 'erb'
+require 'yaml'
 require 'tempfile'
-require 'puavo/etc'
 require 'optparse'
+require 'fileutils'
+
+require 'puavo/etc'
 require 'puavo-ds/templates'
 
+# Assertive shell exec. Raises runtime error if given command does not exit
+# with 0
+def assert_exec(cmd)
+  out = `#{ cmd }`
+  if not $?.success?
+    raise "Failed to execute '#{ cmd }'"
+  end
+  return out
+end
 
 def parse_erb(basename)
   ldif_template = File.read("#{ TEMPLATES_PATH }/#{basename}.ldif.erb")
@@ -22,7 +33,7 @@ def parse_erb(basename)
   tempfile = Tempfile.open(basename)
   tempfile.puts ldif.result
   tempfile.close
-  
+
   return tempfile
 end
 
@@ -86,18 +97,20 @@ puts "Using #{@rootdn} as rootdn"
 
 # First whole slapd configuration and all data is wiped out
 
+# Make sure that slapd is not running
 `/etc/init.d/slapd stop`
 `killall -9 slapd`
-`rm -rf /var/lib/ldap/*`
+
+FileUtils.rm_r Dir.glob('/var/lib/ldap/*')
 
 # AppArmor rules allow slapd to access files under /var/lib/ldap so
 # we'll just create new directories under it for different databases:
 #
 # /var/lib/ldap/o=puavo
 
-`mkdir -p /var/lib/ldap/o=puavo`
+FileUtils.mkdir_p '/var/lib/ldap/o=puavo'
 
-`rm -rf /etc/ldap/slapd.d/*`
+FileUtils.rm_r Dir.glob('/etc/ldap/slapd.d/*')
 
 # Check that the certificate files can be found
 ["/etc/ssl/certs/slapd-ca.crt",
@@ -114,23 +127,23 @@ end
 # Initialize cn=config from a template ldif file
 
 tempfile = parse_erb("init_ldap")
-puts `slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b "cn=config"`
+puts assert_exec "slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b \"cn=config\""
 tempfile.delete
 
 # Initialize o=puavo from a template ldif file
 
 tempfile = parse_erb("init_puavo_db")
-puts `slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b "o=Puavo"`
+puts assert_exec "slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b \"o=Puavo\""
 tempfile.delete
 
 # slapdadd leaves the files owner by root, so let's fix those
 
-`chown -R openldap.openldap /etc/ldap/slapd.d`
-`chown -R openldap.openldap /var/lib/ldap/o=puavo`
-`chmod 0750 /var/lib/ldap/o=puavo`
+FileUtils.chown_R 'openldap', 'openldap', '/etc/ldap/slapd.d'
+FileUtils.chown_R 'openldap', 'openldap', '/var/lib/ldap/o=puavo'
+FileUtils.chmod 0750, '/var/lib/ldap/o=puavo'
 
-`/etc/init.d/slapd start`
-`sleep 5`
+assert_exec '/etc/init.d/slapd start'
+sleep 5
 
 # slapd should be running now and the rest of the modifications
 # can be done with ldapmodify.
@@ -149,3 +162,5 @@ tempfile.delete
 
   tempfile.delete
 end
+
+puts "LDAP init ok!"
