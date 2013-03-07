@@ -1,3 +1,5 @@
+require 'puavo-ds/templates'
+
 class KerberosSettings
 
   attr_accessor :organisations
@@ -52,7 +54,7 @@ class KerberosSettings
     if @kdc_conf
       return @kdc_conf
     else
-      kdc_conf_erb = File.read("templates/kdc.conf.erb")
+      kdc_conf_erb = File.read("#{ TEMPLATES_PATH }/kdc.conf.erb")
       kdc_conf = ERB.new(kdc_conf_erb, 0, "%<>")
 
       @kdc_conf = kdc_conf.result(getBinding)
@@ -65,7 +67,7 @@ class KerberosSettings
     if @krb5_conf
       return @krb5_conf
     else
-      krb5_conf_erb = File.read("templates/krb5.conf.erb")
+      krb5_conf_erb = File.read("#{ TEMPLATES_PATH }/krb5.conf.erb")
       krb5_conf = ERB.new(krb5_conf_erb, 0, "%<>")
 
       @krb5_conf = krb5_conf.result(getBinding)
@@ -78,7 +80,7 @@ class KerberosSettings
     if @kadm5_acl
       return @kadm5_acl
     else
-      kadm5_acl_erb = File.read("templates/kadm5.acl.erb")
+      kadm5_acl_erb = File.read("#{ TEMPLATES_PATH }/kadm5.acl.erb")
       kadm5_acl = ERB.new(kadm5_acl_erb, 0, "%<>")
 
       @kadm5_acl = kadm5_acl.result(getBinding)

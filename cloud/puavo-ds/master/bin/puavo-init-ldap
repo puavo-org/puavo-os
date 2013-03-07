@@ -1,13 +1,22 @@
 #!/usr/bin/ruby1.9.1
 
+# Add lib path for development
+$LOAD_PATH.unshift(
+  File.expand_path(
+    File.join( File.dirname(__FILE__), '..', 'lib' )
+  )
+)
+
 require "erb"
 require "yaml"
 require 'tempfile'
 require 'puavo/etc'
 require 'optparse'
+require 'puavo-ds/templates'
+
 
 def parse_erb(basename)
-  ldif_template = File.read("templates/#{basename}.ldif.erb")
+  ldif_template = File.read("#{ TEMPLATES_PATH }/#{basename}.ldif.erb")
   ldif = ERB.new(ldif_template, 0, "%<>")
 
   tempfile = Tempfile.open(basename)
@@ -128,7 +137,7 @@ tempfile.delete
 
 ["set_global_acl"].each do |basename|
 
-  ldif_template = File.read("templates/#{basename}.ldif.erb")
+  ldif_template = File.read("#{ TEMPLATES_PATH }/#{basename}.ldif.erb")
   ldif = ERB.new(ldif_template, 0, "%<>")
 
   tempfile = Tempfile.open(basename)
