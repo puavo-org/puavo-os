@@ -117,7 +117,7 @@ location='nautilus-home.desktop'
 [org/gnome/gnome-panel/layout/objects/object-2]
 pack-type='end'
 toplevel-id='bottom-panel'
-pack-index=2
+pack-index=3
 object-iid='PanelInternalFactory::Separator'
 
 [org/gnome/gnome-panel/layout/objects/object-3]
@@ -138,8 +138,14 @@ object-iid='PanelInternalFactory::Launcher'
 [org/gnome/gnome-panel/layout/objects/object-5/instance-config]
 location='webmenu-spawn-logout.desktop'
 
+[org/gnome/gnome-panel/layout/objects/object-6]
+pack-type='end'
+toplevel-id='bottom-panel'
+pack-index=2
+object-iid='NotificationAreaAppletFactory::NotificationArea'
+
 [org/gnome/gnome-panel/layout]
-object-id-list=['indicators', 'show-desktop', 'window-list', 'workspace-switcher', 'object-0', 'object-1', 'object-3', 'object-2', 'object-4', 'object-5']
+object-id-list=['indicators', 'show-desktop', 'window-list', 'workspace-switcher', 'object-0', 'object-1', 'object-3', 'object-2', 'object-4', 'object-5', 'object-6']
 toplevel-id-list=['bottom-panel']
 
 [org/gnome/gnome-panel/lockdown]
