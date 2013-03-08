@@ -71,6 +71,8 @@ end
 puts "\nInitialize slapd with Puavo configuration"
 puts
 
+# Ask Puavo attributes for /puavo/etc and save them to instance variable for
+# the erb templates
 @rootdn = ask_puavo_attr("root dn", :ldap_dn, "uid=admin,o=puavo")
 @rootpw = ask_puavo_attr("root password", "ldap_password")
 
