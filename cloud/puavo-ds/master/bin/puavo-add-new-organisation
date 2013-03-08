@@ -90,7 +90,6 @@ puts "  Initialising organisation: #{organisation_name}"
 puts "******************************************************"
 
 kerberos_realm = domain.upcase
-rootDN = PUAVO_ETC.dn
 
 puts "* Creating database for suffix: #{suffix}"
 puts "* Kerberos realm: #{kerberos_realm}"
@@ -148,7 +147,7 @@ begin
   `chown openldap.openldap "/var/lib/ldap/#{suffix}"`
 
   new_db = Database.new( "olcSuffix" => suffix,
-                         "olcRootDN" => rootDN,
+                         "olcRootDN" => PUAVO_ETC.ldap_dn,
                          :samba_domain => samba_domain,
                          :kerberos_realm => kerberos_realm )
   # Save without validation
