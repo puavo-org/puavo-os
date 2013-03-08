@@ -31,11 +31,11 @@ parser = OptionParser.new do |opts|
     options[:domain] = domain
   end
 
-  opts.on("--legal_name [LEGAL_NAME]", "Legal name") do |legal_name|
+  opts.on("--legal-name [LEGAL_NAME]", "Legal name") do |legal_name|
     options[:legal_name] = legal_name
   end
 
-  opts.on("--samba_domain [SAMBA_DOMAIN]", "Samba domain") do |samba_domain|
+  opts.on("--samba-domain [SAMBA_DOMAIN]", "Samba domain") do |samba_domain|
     options[:samba_domain] = samba_domain
   end
 
@@ -43,7 +43,7 @@ parser = OptionParser.new do |opts|
     options[:suffix] = suffix
   end
 
-  opts.on("--given_name [GIVEN_NAME]", "Given name") do |given_name|
+  opts.on("--given-name [GIVEN_NAME]", "Given name") do |given_name|
     options[:given_name] = given_name
   end
 
