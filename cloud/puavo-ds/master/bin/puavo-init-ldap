@@ -187,7 +187,7 @@ kerberos_configuration.write_configurations_to_file
 kerberos_configuration.replace_server_configurations
 
 # FIXME
-master_password = "test123"
+master_password = KerberosSettings.generate_new_password(20)
 
 puts "master password: #{master_password}"
 
