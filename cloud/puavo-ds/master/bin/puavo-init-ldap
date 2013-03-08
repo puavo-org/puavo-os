@@ -12,6 +12,7 @@ require 'yaml'
 require 'tempfile'
 require 'optparse'
 require 'fileutils'
+require 'socket'
 
 require 'puavo/etc'
 require 'puavo-ds/templates'
@@ -98,6 +99,9 @@ puts "Using #{@rootdn} as rootdn"
 
 # First whole slapd configuration and all data is wiped out
 
+# LDAP master address is this machine + topdomain
+PUAVO_ETC.write(:ldap_master, "#{ Socket.gethostname }.#{ PUAVO_ETC.topdomain }")
+
 # Make sure that slapd is not running
 `/etc/init.d/slapd stop`
 `killall -9 slapd`
@@ -164,6 +168,7 @@ sleep 5
   tempfile.delete
 end
 
+
 # Get kerberos configuration from toprealm
 kerberos_configuration = KerberosSettings.new(:ldap_server => PUAVO_ETC.ldap_master)
 kerberos_configuration.write_configurations_to_file
@@ -179,5 +184,7 @@ puts `echo "#{master_password}\\n#{master_password}\\n" | kdb5_ldap_util -D #{PU
 FileUtils.rm_rf("/etc/ldap/krb5.keytab")
 puts assert_exec "kadmin.local -r #{PUAVO_ETC.krb_toprealm} -q \"addprinc -randkey ldap/#{PUAVO_ETC.ldap_master}\""
 puts assert_exec "kadmin.local -r #{PUAVO_ETC.krb_toprealm} -q \"ktadd -norandkey -k /etc/ldap/krb5.keytab ldap/#{PUAVO_ETC.ldap_master}\""
+
+
 
 puts "LDAP init ok!"
