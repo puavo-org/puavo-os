@@ -136,7 +136,7 @@ end
 # FIXME: asking whether the user wants to configure kerberos?
 puts "\nStop krb5-kdc and kadmind services\n\n"
 `/etc/init.d/krb5-kdc stop`
-`/etc/init.d/puavo_kadmind stop`
+`/etc/init.d/puavo-kadmind stop`
 
 begin
   `mkdir -p "/var/lib/ldap/#{suffix}"`
@@ -237,7 +237,7 @@ kerberos_configuration.replace_keytab_file
 # FIXME: asking whether the user wants to configure kerberos?
 puts "Start krb5-kdc and kadmind services"
 `/etc/init.d/krb5-kdc start`
-`/etc/init.d/puavo_kadmind start`
+`/etc/init.d/puavo-kadmind start`
 
 puts "Restart slapd"
 `/etc/init.d/slapd restart`

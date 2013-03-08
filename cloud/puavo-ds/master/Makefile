@@ -23,4 +23,5 @@ install: install-dirs
 	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-clone-master
 	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-reset-kerberos-configurations
 	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-init-ldap
+	install -m 744 -t $(DESTDIR)/etc/init.d init/puavo-kadmind
 
