@@ -15,6 +15,7 @@ require 'fileutils'
 
 require 'puavo/etc'
 require 'puavo-ds/templates'
+require 'puavo-ds/kerberos'
 
 # Assertive shell exec. Raises runtime error if given command does not exit
 # with 0
@@ -162,5 +163,21 @@ sleep 5
 
   tempfile.delete
 end
+
+# Get kerberos configuration from toprealm
+kerberos_configuration = KerberosSettings.new(:ldap_server => PUAVO_ETC.ldap_master)
+kerberos_configuration.write_configurations_to_file
+kerberos_configuration.replace_server_configurations
+
+# FIXME
+master_password = "test123"
+
+puts "master password: #{master_password}"
+
+puts `echo "#{master_password}\\n#{master_password}\\n" | kdb5_ldap_util -D #{PUAVO_ETC.ldap_dn} create -k aes256-cts-hmac-sha1-96 -subtrees \"o=puavo\" -s -sf /etc/krb5kdc/stash.toprealm -H ldaps://#{PUAVO_ETC.ldap_master} -r #{PUAVO_ETC.krb_toprealm} -w #{PUAVO_ETC.ldap_password}`
+
+FileUtils.rm_rf("/etc/ldap/krb5.keytab")
+puts assert_exec "kadmin.local -r #{PUAVO_ETC.krb_toprealm} -q \"addprinc -randkey ldap/#{PUAVO_ETC.ldap_master}\""
+puts assert_exec "kadmin.local -r #{PUAVO_ETC.krb_toprealm} -q \"ktadd -norandkey -k /etc/ldap/krb5.keytab ldap/#{PUAVO_ETC.ldap_master}\""
 
 puts "LDAP init ok!"
