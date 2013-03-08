@@ -129,12 +129,8 @@ end
 if options.has_key?(:password)
   password = options[:password]
 else
-  system('stty','-echo');
   print "Password: "
   password = STDIN.gets.chomp
-  print "\nPassword confirmation: "
-  password_confirmation = STDIN.gets.chomp
-  system('stty','echo');
 end
 
 # FIXME: asking whether the user wants to configure kerberos?
@@ -255,7 +251,7 @@ user.givenName = given_name
 user.sn = surname
 user.uid = username
 user.new_password = password
-user.new_password_confirmation = password_confirmation
+user.new_password_confirmation = password
 user.role_name = role.displayName
 user.puavoSchool = school.dn
 user.puavoEduPersonAffiliation = "admin"
