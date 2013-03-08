@@ -65,3 +65,8 @@ objectClass: simpleSecurityObject
 uid: slave
 description: Account for slave servers to read information from databases, no write access
 userPassword: <%= @slavepw_hash %>
+
+dn: ou=Kerberos Realms,o=puavo
+objectClass: top
+objectClass: organizationalUnit
+ou: Kerberos Realms

@@ -101,7 +101,9 @@ olcDbIndex: cn,sn,mail pres,eq,approx,sub
 olcDbIndex: objectClass eq
 olcAccess: {0}to attrs=userPassword by anonymous auth
 olcAccess: {1}to dn.exact="cn=idPool,o=Puavo" attrs="puavoNextGidNumber,puavoNextUidNumber,puavoNextId" by dn.exact="uid=puavo,o=Puavo" write
-olcAccess: {2}to dn.subtree="o=Puavo" by dn.exact="uid=puavo,o=Puavo" read
+olcAccess: {2}to dn.subtree="ou=Kerberos Realms,o=Puavo" by dn.exact="uid=kadmin,o=puavo" write by dn.exact="uid=kdc,o=puavo" read
+olcAccess: {3}to dn.exact="o=Puavo" by dn="uid=kadmin,o=puavo" read by dn.exact="uid=kdc,o=puavo" read by dn.exact="uid=puavo,o=Puavo" read
+olcAccess: {4}to dn.subtree="o=Puavo" by dn.exact="uid=puavo,o=Puavo" read
 
 dn: olcOverlay={0}syncprov,olcDatabase={1}hdb,cn=config
 objectClass: olcSyncProvConfig

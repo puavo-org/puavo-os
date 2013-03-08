@@ -15,11 +15,19 @@
   }
 <% end %>
 
+  <%= PUAVO_ETC.krb_toprealm %> = {
+    kdc = localhost
+    master_kdc = localhost
+    database_module = ldap_toprealm
+  }
+
 [domain_realm]
 <% @organisations.each do |organisation| %>
          .<%= organisation['domain'] %> = <%= organisation['realm'] %>
          <%= organisation['domain'] %> = <%= organisation['realm'] %>
 <% end %>
+         .<%= PUAVO_ETC.topdomain %> = <%= PUAVO_ETC.krb_toprealm %>
+         <%= PUAVO_ETC.topdomain %> = <%= PUAVO_ETC.krb_toprealm %>
 
 [logging]
         kdc = FILE:/var/log/kdc.log
@@ -38,3 +46,12 @@ ldap_<%= organisation['domain'] %> = {
        }
 <% end %>
 
+ldap_toprealm = {
+               db_library = kldap
+               ldap_kerberos_container_dn = ou=Kerberos Realms,o=puavo
+               ldap_kdc_dn = uid=kdc,o=Puavo
+               ldap_kadmind_dn = uid=kadmin,o=Puavo
+               ldap_service_password_file = /etc/krb5.secrets
+               ldap_servers = ldapi:///
+               ldap_conns_per_server = 10
+       }
