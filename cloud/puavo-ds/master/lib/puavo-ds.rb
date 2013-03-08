@@ -1,4 +1,3 @@
-
 require 'active_ldap'
 require 'optparse'
 require 'readline'

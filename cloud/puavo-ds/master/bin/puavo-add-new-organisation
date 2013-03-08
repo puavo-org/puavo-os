@@ -12,9 +12,14 @@ $LOAD_PATH.unshift(
 )
 
 require 'puavo-ds'
+require 'puavo/etc'
 
-options = {}
-a = OptionParser.new do |opts|
+options = {
+  # Default to top domain from /etc/puavo. If not found expect --domain switch
+  :domain => (PUAVO_ETC.topdomain rescue Errno::ENOENT)
+}
+
+OptionParser.new do |opts|
   opts.banner = "Usage: add_new_organisation [options]"
 
   opts.on("-y", "--yes", "Automatic yes to prompts") do |y|
@@ -61,7 +66,7 @@ a = OptionParser.new do |opts|
 end.parse!
 
 unless options.has_key?(:organisation)
-  puts "Required option --organisation missing"
+  puts "Required option -o or --organisation missing"
   exit
 end
  
@@ -72,29 +77,18 @@ def newpass( len )
   return newpass
 end
 
-samba_domain_template = CONFIGURATIONS["settings"]["templates"]["samba_domain"]
-suffix_template = CONFIGURATIONS["settings"]["templates"]["suffix"]
-domain_template = CONFIGURATIONS["settings"]["templates"]["domain"]
-
-# This needs to be cleaned up once the actual settings and needs
-# have been figured out
-
-orgname = options[:organisation]
-domain = options.has_key?(:domain) ? options[:domain] : domain_template % orgname.downcase 
-
-suffix = options.has_key?(:suffix) ? options[:suffix] : suffix_template % orgname.downcase
+samba_domain = options[:samba_domain] || "EDU%s" % options[:organisation]
+organisation_name = options[:organisation_name] || options[:organisation]
+suffix = options[:suffix] || "dc=edu,dc=%s,dc=fi" % options[:organisation].downcase
 suffix_start = suffix.split(',')[0]
-organisation_name = options.has_key?(:organisation_name) ? options[:organisation_name] : orgname 
-legal_name = options.has_key?(:legal_name) ? options[:legal_name] : organisation_name
-
-samba_domain = options.has_key?(:samba_domain) ? options[:samba_domain] : samba_domain_template % orgname.upcase
+legal_name = options[:legal_name] || organisation_name
 
 puts "******************************************************"
 puts "  Initialising organisation: #{organisation_name}"
 puts "******************************************************"
 
 kerberos_realm = domain.upcase
-rootDN = CONFIGURATIONS["settings"]["ldap_server"]["bind_dn"]
+rootDN = PUAVO_ETC.dn
 
 puts "* Creating database for suffix: #{suffix}"
 puts "* Kerberos realm: #{kerberos_realm}"
@@ -169,7 +163,7 @@ Overlay.create_overlays(:database => new_db,
 
 # Create organisation and set LdapOrganisationBase LDAP connection
 puts "* Create organisation root"
-organisation = Organisation.create( :owner => CONFIGURATIONS["settings"]["ldap_server"]["bind_dn"],
+organisation = Organisation.create( :owner => PUAVO_ETC.dn,
                                     :suffix => suffix,
                                     :puavoDomain => domain,
                                     :puavoKerberosRealm => kerberos_realm,
@@ -226,13 +220,13 @@ role.groups << group
 kerberos_masterpw = newpass(20)
 puts "\nInitializing kerberos realm with master key: #{kerberos_masterpw}\n"
 
-kerberos_configuration = KerberosSettings.new(:ldap_server => CONFIGURATIONS["settings"]["ldap_server"])
+kerberos_configuration = KerberosSettings.new(:ldap_server => PUAVO_ETC.ldap_master)
 
 kerberos_configuration.write_configurations_to_file
 
 kerberos_configuration.replace_server_configurations
 
-realm = KerberosRealm.new( :ldap_server => CONFIGURATIONS["settings"]["ldap_server"],
+realm = KerberosRealm.new( :ldap_server => PUAVO_ETC.ldap_master,
                            :realm => kerberos_realm,
                            :masterpw => kerberos_masterpw,
                            :suffix => suffix,
