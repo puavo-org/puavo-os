@@ -1,5 +1,6 @@
 prefix = /usr/local
 exec_prefix = $(prefix)
+bindir = $(exec_prefix)/bin
 sbindir = $(exec_prefix)/sbin
 datarootdir = $(prefix)/share
 sysconfdir = $(prefix)/etc
@@ -14,6 +15,7 @@ all :
 .PHONY : installdirs
 installdirs :
 	mkdir -p $(DESTDIR)/sbin
+	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/default
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
@@ -70,6 +72,9 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)/sbin \
 		init-puavo 
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
+		puavo-ltsp-client-action
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-dns-client \

@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+  --reboot)   action="REBOOT";;
+  --shutdown) action="HALT"  ;;
+esac
+
+if [ -z "$action" ]; then
+  echo "Usage: $(basename $0) [--reboot|--shutdown]" > /dev/stderr
+  exit 1
+fi
+
+xprop -root -f LTSP_LOGOUT_ACTION 8s -set LTSP_LOGOUT_ACTION $action
