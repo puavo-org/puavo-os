@@ -10,7 +10,6 @@ else
 endif
 
 build:
-	bundle install --standalone --path lib/puavo-ds-master-vendor
 
 install-dirs:
 	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
@@ -25,6 +24,3 @@ install: install-dirs
 	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-reset-kerberos-configurations
 	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-init-ldap
 
-clean:
-	rm -rf .bundle
-	rm -rf lib/puavo-ds-master-vendor
