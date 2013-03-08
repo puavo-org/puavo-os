@@ -186,4 +186,5 @@ puts assert_exec "kadmin.local -r #{PUAVO_ETC.krb_toprealm} -q \"ktadd -norandke
 
 
 
+puts "Test: ldapsearch -ZZ -h #{ PUAVO_ETC.ldap_master } -D uid=admin,o=puavo -w #{ @rootpw } -x -b o=puavo"
 puts "LDAP init ok!"
