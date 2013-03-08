@@ -8,37 +8,37 @@ $LOAD_PATH.unshift(
   )
 )
 
+require 'optparse'
 require 'puavo-ds'
-require 'puavo/etc'
 
-options = {
-  # Default to top domain from /etc/puavo. If not found expect --domain switch
-  :domain => (PUAVO_ETC.topdomain rescue Errno::ENOENT)
-}
+def newpass( len )
+  chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a
+  newpass = ""
+  1.upto(len) { |i| newpass << chars[rand(chars.size-1)] }
+  return newpass
+end
 
-OptionParser.new do |opts|
-  opts.banner = "Usage: add_new_organisation [options]"
+options = {}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: #{ File.basename(__FILE__) } [options] <organisation>"
 
   opts.on("-y", "--yes", "Automatic yes to prompts") do |y|
     options[:yes] = y
   end
 
-  opts.on("-o=ORGANISATION", "Organisation") do |organisation|
-    options[:organisation] = organisation
-  end
-
   opts.on("--domain [DOMAIN]", "Domain") do |domain|
     options[:domain] = domain
   end
-  opts.on("--organisation_name [ORGANISATION_NAME]", "Organisation name") do |organisation|
-    options[:organisation_name] = organisation
-  end
+
   opts.on("--legal_name [LEGAL_NAME]", "Legal name") do |legal_name|
     options[:legal_name] = legal_name
   end
+
   opts.on("--samba_domain [SAMBA_DOMAIN]", "Samba domain") do |samba_domain|
     options[:samba_domain] = samba_domain
   end
+
   opts.on("--suffix [SUFFIX]", "Suffix") do |suffix|
     options[:suffix] = suffix
   end
@@ -60,25 +60,30 @@ OptionParser.new do |opts|
     puts opts
     exit
   end
-end.parse!
-
-unless options.has_key?(:organisation)
-  puts "Required option -o or --organisation missing"
-  exit
-end
- 
-def newpass( len )
-  chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a
-  newpass = ""
-  1.upto(len) { |i| newpass << chars[rand(chars.size-1)] }
-  return newpass
 end
 
-samba_domain = options[:samba_domain] || "EDU%s" % options[:organisation]
-organisation_name = options[:organisation_name] || options[:organisation]
-suffix = options[:suffix] || "dc=edu,dc=%s,dc=fi" % options[:organisation].downcase
+parser.parse!
+
+organisation_name = ARGV.first
+if not organisation_name
+  STDERR.puts "Organisation missing!"
+  STDERR.puts "\n"
+  STDERR.puts parser
+  exit 2
+end
+
+# Default to top domain from /etc/puavo. If not found expect --domain switch
+domain = options[:domain] || (PUAVO_ETC.topdomain rescue Errno::ENOENT)
+samba_domain = options[:samba_domain] || "EDU%s" % organisation_name
+suffix = options[:suffix] || "dc=edu,dc=%s,dc=fi" % organisation_name.downcase
 suffix_start = suffix.split(',')[0]
 legal_name = options[:legal_name] || organisation_name
+
+if not domain
+  STDERR.puts "--domain or /etc/puavo/topdomain missing"
+  exit 2
+end
+
 
 puts "******************************************************"
 puts "  Initialising organisation: #{organisation_name}"
