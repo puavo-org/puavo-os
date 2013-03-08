@@ -107,7 +107,7 @@ if options.has_key?(:given_name)
   given_name = options[:given_name]
   puts "Given name: #{given_name}"
 else
-  print "Given name: "
+  print "Given name> "
   given_name = STDIN.gets.chomp
 end
 
@@ -115,7 +115,7 @@ if options.has_key?(:surname)
   surname = options[:surname]
   puts "Surname: #{surname}"
 else
-  print "Surname: "
+  print "Surname> "
   surname = STDIN.gets.chomp
 end
 
@@ -123,13 +123,13 @@ if options.has_key?(:username)
   username =  options[:username] 
   puts "Username: #{username}"
 else
-  print "Username: "
+  print "Username> "
   username =  STDIN.gets.chomp
 end
 if options.has_key?(:password)
   password = options[:password]
 else
-  print "Password: "
+  print "Password> "
   password = STDIN.gets.chomp
 end
 
