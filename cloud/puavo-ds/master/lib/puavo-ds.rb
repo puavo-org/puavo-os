@@ -2,13 +2,18 @@ require 'active_ldap'
 require 'optparse'
 require 'readline'
 
-# LDAP configuration
-if CONFIGURATIONS = YAML.load_file("/etc/puavo-ldap.yml") rescue nil
-  ActiveLdap::Base.configurations = CONFIGURATIONS
-else
-  puts "Not found LDAP configuration file (/etc/puavo-ldap.yml)"
-  exit
-end
+require 'puavo/etc'
+
+ActiveLdap::Base.configurations = {
+  "settings" => {
+    "ldap_server" => {
+      "host" => PUAVO_ETC.ldap_master,
+      "bind_dn" => PUAVO_ETC.ldap_dn,
+      "password" => PUAVO_ETC.ldap_password,
+      "method" => "tls"
+    }
+  }
+}
 
 require 'puavo-ds/ldap_organisation_base'
 require 'puavo-ds/admin_user'
