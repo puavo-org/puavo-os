@@ -165,7 +165,7 @@ Overlay.create_overlays(:database => new_db,
 
 # Create organisation and set LdapOrganisationBase LDAP connection
 puts "* Create organisation root"
-organisation = Organisation.create( :owner => PUAVO_ETC.dn,
+organisation = Organisation.create( :owner => PUAVO_ETC.ldap_dn,
                                     :suffix => suffix,
                                     :puavoDomain => domain,
                                     :puavoKerberosRealm => kerberos_realm,
