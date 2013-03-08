@@ -1,8 +1,5 @@
 #!/usr/bin/ruby1.9.1
 # -*- coding: utf-8 -*-
-#
-# Usage: ruby add_new_organisation.rb <organisation name>
-#
 
 # Add lib path for development
 $LOAD_PATH.unshift(
