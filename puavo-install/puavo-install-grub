@@ -2,6 +2,14 @@
 
 set -e
 
+lookup_windows_partition_number() {
+  _diskdev=$1
+  fdisk -l $_diskdev \
+    | awk '$1 ~ "^/dev/" && $6 == "7" {
+	     if (match($1, /[0-9]+$/, _)) { print _[0] }
+           }'
+}
+
 images_dir=${1:-/images}
 diskdev=$2
 
@@ -114,3 +122,16 @@ for dev in (lvm/puavo-images); do
   done
 done
 EOF
+
+windows_partition_number=$(lookup_windows_partition_number $diskdev)
+
+if [ -n "$windows_partition_number" ]; then
+  cat <<EOF >> $images_dir/boot/grub/grub.cfg
+
+menuentry "Windows" {
+  insmod ntfs
+  set root=(hd0,$windows_partition_number)
+  chainloader +1
+}
+EOF
+fi
