@@ -39,55 +39,57 @@ def parse_erb(basename)
   return tempfile
 end
 
-def ask_dn(question, puavo_etc_method, default)
+# Ask puavo_attr for /etc/puavo with given question
+# @param {String} question Question printed to screen
+# @param {Symbol} puavo_attr Puavo attribute to be written to /etc/puavo
+# @param {String} [default] Default value for new Puavo attributes
+def ask_puavo_attr(question, puavo_attr, default=nil)
+
   begin
-    value = PUAVO_ETC.send(puavo_etc_method)
+    default = PUAVO_ETC.send(puavo_attr)
   rescue Errno::ENOENT
-    print "#{question} (#{default}): "
-    value = STDIN.gets.chomp
-    value = default if value.empty?
-    PUAVO_ETC.write(puavo_etc_method.to_sym, value)
   end
-  return value
+
+  while true
+    print "#{question} [#{ default }]> "
+    new_value = STDIN.gets.strip
+
+    # Use default or previous value if user did not give anything
+    new_value = default if new_value.to_s.empty?
+
+    # Break only when we have a value
+    break if not new_value.to_s.empty?
+  end
+
+  PUAVO_ETC.write(puavo_attr.to_sym, new_value)
+  return new_value
 end
 
-def ask_password(question, puavo_etc_method)
-  begin
-    value = PUAVO_ETC.send(puavo_etc_method)
-  rescue Errno::ENOENT
-    value = ""
-    while value.empty? do
-      print "#{question}: "
-      value = STDIN.gets.chomp
-    end
-    PUAVO_ETC.write(puavo_etc_method.to_sym, value)
-  end
-  return value
-end
+
 
 puts "\nInitialize slapd with Puavo configuration"
 puts
 
-@rootdn = ask_dn("root dn", "ldap_dn", "uid=admin,o=puavo")
-@rootpw = ask_password("root password", "ldap_password")
+@rootdn = ask_puavo_attr("root dn", "ldap_dn", "uid=admin,o=puavo")
+@rootpw = ask_puavo_attr("root password", "ldap_password")
 
-@puavodn = ask_dn("puavo dn", "ds_puavo_dn", "uid=puavo,o=puavo")
-@puavopw = ask_password("puavo password", "ds_puavo_password")
+@puavodn = ask_puavo_attr("puavo dn", "ds_puavo_dn", "uid=puavo,o=puavo")
+@puavopw = ask_puavo_attr("puavo password", "ds_puavo_password")
 
-@puppetdn = ask_dn("puppet dn", "ds_puppet_dn", "uid=puppet,o=puavo")
-@puppetpw = ask_password("puppet password", "ds_puppet_password")
+@puppetdn = ask_puavo_attr("puppet dn", "ds_puppet_dn", "uid=puppet,o=puavo")
+@puppetpw = ask_puavo_attr("puppet password", "ds_puppet_password")
 
-@kdcdn = ask_dn("kdc dn", "ds_kdc_dn", "uid=kdc,o=puavo")
-@kdcpw = ask_password("kdc password", "ds_kdc_password")
+@kdcdn = ask_puavo_attr("kdc dn", "ds_kdc_dn", "uid=kdc,o=puavo")
+@kdcpw = ask_puavo_attr("kdc password", "ds_kdc_password")
 
-@kadmindn = ask_dn("kadmin dn", "ds_kadmin_dn", "uid=kadmin,o=puavo")
-@kadminpw = ask_password("kadmin password", "ds_kadmin_password")
+@kadmindn = ask_puavo_attr("kadmin dn", "ds_kadmin_dn", "uid=kadmin,o=puavo")
+@kadminpw = ask_puavo_attr("kadmin password", "ds_kadmin_password")
 
-@monitordn = ask_dn("monitor dn", "ds_monitor_dn", "uid=monitor,o=puavo")
-@monitorpw = ask_password("monitor password", "ds_monitor_password")
+@monitordn = ask_puavo_attr("monitor dn", "ds_monitor_dn", "uid=monitor,o=puavo")
+@monitorpw = ask_puavo_attr("monitor password", "ds_monitor_password")
 
-@slavedn = ask_dn("slave dn", "ds_slave_dn", "uid=slave,o=puavo")
-@slavepw = ask_password("slave password", "ds_slave_password")
+@slavedn = ask_puavo_attr("slave dn", "ds_slave_dn", "uid=slave,o=puavo")
+@slavepw = ask_puavo_attr("slave password", "ds_slave_password")
 
 puts "Using #{@rootdn} as rootdn"
 
