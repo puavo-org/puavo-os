@@ -214,7 +214,7 @@ group.save
 # Added association
 role.groups << group
 
-kerberos_masterpw = newpass(20)
+kerberos_masterpw = KerberosSettings.generate_new_password(20)
 puts "\nInitializing kerberos realm with master key: #{kerberos_masterpw}\n"
 
 kerberos_configuration = KerberosSettings.new(:ldap_server => PUAVO_ETC.ldap_master)

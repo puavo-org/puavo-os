@@ -44,6 +44,13 @@ class KerberosSettings
 
   end
 
+  def self.generate_new_password( length )
+    chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a
+    newpass = ""
+    1.upto(length) { |i| newpass << chars[rand(chars.size-1)] }
+    return newpass
+  end
+
   def initialize(args)
     @ldap_server = args[:ldap_server]
     
