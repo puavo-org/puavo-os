@@ -43,6 +43,7 @@ end
 # @param {String} question Question printed to screen
 # @param {Symbol} puavo_attr Puavo attribute to be written to /etc/puavo
 # @param {String} [default] Default value for new Puavo attributes
+# @return {String} new value
 def ask_puavo_attr(question, puavo_attr, default=nil)
 
   begin
@@ -70,25 +71,25 @@ end
 puts "\nInitialize slapd with Puavo configuration"
 puts
 
-@rootdn = ask_puavo_attr("root dn", "ldap_dn", "uid=admin,o=puavo")
+@rootdn = ask_puavo_attr("root dn", :ldap_dn, "uid=admin,o=puavo")
 @rootpw = ask_puavo_attr("root password", "ldap_password")
 
-@puavodn = ask_puavo_attr("puavo dn", "ds_puavo_dn", "uid=puavo,o=puavo")
+@puavodn = ask_puavo_attr("puavo dn", :ds_puavo_dn, "uid=puavo,o=puavo")
 @puavopw = ask_puavo_attr("puavo password", "ds_puavo_password")
 
-@puppetdn = ask_puavo_attr("puppet dn", "ds_puppet_dn", "uid=puppet,o=puavo")
+@puppetdn = ask_puavo_attr("puppet dn", :ds_puppet_dn, "uid=puppet,o=puavo")
 @puppetpw = ask_puavo_attr("puppet password", "ds_puppet_password")
 
-@kdcdn = ask_puavo_attr("kdc dn", "ds_kdc_dn", "uid=kdc,o=puavo")
-@kdcpw = ask_puavo_attr("kdc password", "ds_kdc_password")
+@kdcdn = ask_puavo_attr("kdc dn", :ds_kdc_dn, "uid=kdc,o=puavo")
+@kdcpw = ask_puavo_attr("kdc password", :ds_kdc_password)
 
-@kadmindn = ask_puavo_attr("kadmin dn", "ds_kadmin_dn", "uid=kadmin,o=puavo")
-@kadminpw = ask_puavo_attr("kadmin password", "ds_kadmin_password")
+@kadmindn = ask_puavo_attr("kadmin dn", :ds_kadmin_dn, "uid=kadmin,o=puavo")
+@kadminpw = ask_puavo_attr("kadmin password", :ds_kadmin_password)
 
-@monitordn = ask_puavo_attr("monitor dn", "ds_monitor_dn", "uid=monitor,o=puavo")
-@monitorpw = ask_puavo_attr("monitor password", "ds_monitor_password")
+@monitordn = ask_puavo_attr("monitor dn", :ds_monitor_dn, "uid=monitor,o=puavo")
+@monitorpw = ask_puavo_attr("monitor password", :ds_monitor_password)
 
-@slavedn = ask_puavo_attr("slave dn", "ds_slave_dn", "uid=slave,o=puavo")
+@slavedn = ask_puavo_attr("slave dn", :ds_slave_dn, "uid=slave,o=puavo")
 @slavepw = ask_puavo_attr("slave password", "ds_slave_password")
 
 puts "Using #{@rootdn} as rootdn"
