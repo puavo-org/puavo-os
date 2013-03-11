@@ -34,30 +34,34 @@ file is read from the file system like in normal tftp servers.
 
 #### Example
 
-Return custom boot config for each LTSP client using a custom web service.
+Boot each LTSP client with custom kernel version using a web service.
 
 Match mac address based pxelinux.cfg read requests in `/etc/puavo-tftp.yml`:
 
 ```yaml
 hooks:
   - regexp: pxelinux.cfg\/01-(([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})
-    command: get-boot-config
+    command: fetch-boot-config
 ```
 
-`get-boot-config` is script like this in the PATH:
+`fetch-boot-config` is script like this in the PATH:
 
 ```sh
 #!/bin/sh
 
-# First argument constains the requested file path
-RRQ=$1
+# First argument constains the requested file path matching the regexp.
+# For example 'pxelinux.cfg/bc-5f-f4-56-59-71'.
+# Cut the mac adress from it
+MAC=$(echo $1 | cut -d / -f 2)
 
-wget \
-    # Disable wget debug output
-    --quiet \
-    # Write fetched file to standard output for puavo-tftp
-    --output-document=-
-    "http://example.net/bootconfig/$RRQ"
+# Fetch custom kernel version for the mac address from a http service
+KERNEL_VERSION=$(wget -q -O - http://devices.example.com/kernel/$MAC)
+
+# Generate boot config to stdout
+echo "DEFAULT ltsp
+LABEL ltsp
+KERNEL ltsp/i386/$KERNEL_VERSION
+APPEND ro initrd=ltsp/i386/initrd.img quiet splash"
 ```
 
 Checkout the [hooks][] directory for real world examples.
