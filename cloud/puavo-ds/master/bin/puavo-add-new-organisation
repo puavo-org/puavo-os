@@ -27,8 +27,8 @@ parser = OptionParser.new do |opts|
     options[:yes] = y
   end
 
-  opts.on("--domain [DOMAIN]", "Domain") do |domain|
-    options[:domain] = domain
+  opts.on("--top-domain [TOP_DOMAIN]", "Top domain") do |top_domain|
+    options[:top_domain] = top_domain
   end
 
   opts.on("--legal-name [LEGAL_NAME]", "Legal name") do |legal_name|
@@ -80,29 +80,34 @@ if not organisation_name
   exit 2
 end
 
-# Default to top domain from /etc/puavo. If not found expect --domain switch
-domain = options[:domain] || (PUAVO_ETC.topdomain rescue Errno::ENOENT)
+top_domain = options[:top_domain]
+if not top_domain
+  begin
+    top_domain = PUAVO_ETC.topdomain
+  rescue Errno::ENOENT
+    STDERR.puts "/etc/puavo/topdomain or --top-domain is required"
+    exit 2
+  end
+end
+
 samba_domain = options[:samba_domain] || "EDU%s" % organisation_name.upcase
 suffix = options[:suffix] || "dc=edu,dc=%s,dc=fi" % organisation_name.downcase
 suffix_start = suffix.split(',')[0]
 legal_name = options[:legal_name] || organisation_name
-
-if not domain
-  STDERR.puts "--domain or /etc/puavo/topdomain missing"
-  exit 2
-end
+domain = "#{ organisation_name }.#{ top_domain }"
+kerberos_realm = domain.upcase
 
 
 puts "******************************************************"
 puts "  Initialising organisation: #{organisation_name}"
 puts "******************************************************"
 
-kerberos_realm = domain.upcase
 
 puts "* Creating database for suffix: #{suffix}"
 puts "* Kerberos realm: #{kerberos_realm}"
 puts "* Legal name: #{legal_name}"
 puts "* Samba: #{samba_domain}"
+puts "* Top domain: #{top_domain}"
 puts "* Domain: #{domain}"
 puts "* Suffix start: #{suffix_start}"
 
