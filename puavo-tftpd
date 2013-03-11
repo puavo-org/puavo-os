@@ -54,7 +54,9 @@ OptionParser.new do |opts|
     options_cli[:user] = v
   end
 
-  opts.on("-g", "--group GROUP", String, "Drop to group. Default #{ options_defaults[:group] }") do |v|
+  opts.on("-g", "--group GROUP", String,
+    "Drop to group. Default #{ options_defaults[:group] }"
+  ) do |v|
     options_cli[:group] = v
   end
 
