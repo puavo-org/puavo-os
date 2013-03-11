@@ -20,7 +20,8 @@ end
 options_defaults = {
   :port => 69,
   :group => "nogroup",
-  :root => "/var/lib/tftpboot/"
+  :root => "/var/lib/tftpboot/",
+  :config => "/etc/puavo-tftp.yml"
 }
 
 CONF_FILES = [ "/etc/puavo-tftp.yml",
@@ -57,7 +58,9 @@ OptionParser.new do |opts|
     options_cli[:group] = v
   end
 
-  opts.on("-c", "--config FILE", String, "Configuration file") do |v|
+  opts.on("-c", "--config FILE", String,
+    "Configuration file. Default #{ options_defaults[:config] }"
+  ) do |v|
     options_cli[:config] = v
   end
 
