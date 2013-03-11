@@ -13,6 +13,7 @@ require 'optparse'
 
 def load_config_file(filename)
   conf = YAML.load_file(filename) || {}
+  STDERR.puts "Reading config from #{ filename }"
   symbolize_keys(conf)
 end
 
@@ -101,7 +102,7 @@ EventMachine::run do
 
     if Process.uid == 0
       if not options[:user]
-        log "ERROR: Started as root, but no --user is defined."
+        log "ERROR: Started as root, but no user option is defined. puavo-tftp should not be run as root!"
         Process.exit 1
       end
       Process.initgroups(options[:group], Etc.getgrnam(options[:group]).gid)
