@@ -82,7 +82,7 @@ end
 
 # Default to top domain from /etc/puavo. If not found expect --domain switch
 domain = options[:domain] || (PUAVO_ETC.topdomain rescue Errno::ENOENT)
-samba_domain = options[:samba_domain] || "EDU%s" % organisation_name
+samba_domain = options[:samba_domain] || "EDU%s" % organisation_name.upcase
 suffix = options[:suffix] || "dc=edu,dc=%s,dc=fi" % organisation_name.downcase
 suffix_start = suffix.split(',')[0]
 legal_name = options[:legal_name] || organisation_name
