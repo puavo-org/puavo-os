@@ -29,11 +29,11 @@ def assert_exec(cmd)
 end
 
 def parse_erb(basename)
-  ldif_template = File.read("#{ TEMPLATES_PATH }/#{basename}.ldif.erb")
-  ldif = ERB.new(ldif_template, 0, "%<>")
+  template = File.read("#{ TEMPLATES_PATH }/#{basename}.erb")
+  parse_file = ERB.new(template, 0, "%<>")
 
   tempfile = Tempfile.open(basename)
-  tempfile.puts ldif.result
+  tempfile.puts parse_file.result
   tempfile.close
 
   return tempfile
@@ -143,13 +143,13 @@ end
 #
 # Initialize cn=config from a template ldif file
 
-tempfile = parse_erb("init_ldap")
+tempfile = parse_erb("init_ldap.ldif")
 puts assert_exec "slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b \"cn=config\""
 tempfile.delete
 
 # Initialize o=puavo from a template ldif file
 
-tempfile = parse_erb("init_puavo_db")
+tempfile = parse_erb("init_puavo_db.ldif")
 puts assert_exec "slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b \"o=Puavo\""
 tempfile.delete
 
@@ -165,21 +165,10 @@ sleep 5
 # slapd should be running now and the rest of the modifications
 # can be done with ldapmodify.
 
-["set_global_acl"].each do |basename|
-
-  ldif_template = File.read("#{ TEMPLATES_PATH }/#{basename}.ldif.erb")
-  ldif = ERB.new(ldif_template, 0, "%<>")
-
-  tempfile = Tempfile.open(basename)
-  tempfile.puts ldif.result
-  tempfile.close
-
-  puts `cat #{tempfile.path}`
-  puts `ldapmodify -Y EXTERNAL -H ldapi:/// -f #{tempfile.path} 2>&1`
-
-  tempfile.delete
-end
-
+tempfile = parse_erb("set_global_acl.ldif")
+puts `cat #{tempfile.path}`
+puts `ldapmodify -Y EXTERNAL -H ldapi:/// -f #{tempfile.path} 2>&1`
+tempfile.delete
 
 # Get kerberos configuration from toprealm
 kerberos_configuration = KerberosSettings.new(:ldap_server => PUAVO_ETC.ldap_master)
