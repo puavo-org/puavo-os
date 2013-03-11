@@ -12,11 +12,8 @@ require "puavo-tftp/tftpserver"
 require 'optparse'
 
 def load_config_file(filename)
-  conf = YAML.load_file(filename) || {}
-  STDERR.puts "Reading config from #{ filename }"
-  symbolize_keys(conf)
+  symbolize_keys(YAML.load_file(filename) || {})
 end
-
 
 options_defaults = {
   :port => 69,
@@ -24,20 +21,6 @@ options_defaults = {
   :root => "/var/lib/tftpboot/",
   :config => "/etc/puavo-tftp.yml"
 }
-
-CONF_FILES = [ "/etc/puavo-tftp.yml",
-               File.join(File.dirname(__FILE__), "puavo-tftp.yml") ]
-
-options_file = {}
-CONF_FILES.each do |file|
-  begin
-    options_file = load_config_file(file) || {}
-    break
-  rescue Errno::ENOENT
-    next
-  end
-end
-
 
 options_cli = {}
 OptionParser.new do |opts|
@@ -78,9 +61,9 @@ OptionParser.new do |opts|
 end.parse!
 
 
-if options_cli[:config]
-  options_file = load_config_file(options_cli[:config]) || {}
-end
+options_file = load_config_file(
+  options_cli[:config] || options_defaults[:config]
+)
 
 options = options_defaults.merge(options_file).merge(options_cli)
 
