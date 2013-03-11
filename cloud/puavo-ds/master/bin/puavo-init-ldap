@@ -17,16 +17,8 @@ require 'socket'
 require 'puavo/etc'
 require 'puavo-ds/templates'
 require 'puavo-ds/kerberos'
+require 'puavo-ds/helpers'
 
-# Assertive shell exec. Raises runtime error if given command does not exit
-# with 0
-def assert_exec(cmd)
-  out = `#{ cmd }`
-  if not $?.success?
-    raise "Failed to execute '#{ cmd }'"
-  end
-  return out
-end
 
 def parse_erb(basename)
   template = File.read("#{ TEMPLATES_PATH }/#{basename}.erb")

@@ -15,6 +15,7 @@ ActiveLdap::Base.configurations = {
   }
 }
 
+require 'puavo-ds/helpers'
 require 'puavo-ds/ldap_organisation_base'
 require 'puavo-ds/admin_user'
 require 'puavo-ds/database'
