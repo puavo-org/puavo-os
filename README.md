@@ -1,7 +1,7 @@
 # puavo-tftp
 
-puavo-tftp is a dynamic read-only TFTP server. It's dynamic in a sense it can
-be configured to execute script hooks for a set of matched files on read
+puavo-tftp is a dynamic read-only [TFTP][] server. It's dynamic in a sense it
+can be configured to execute script hooks for a set of matched files on read
 requests (RRQ) instead of reading files from the file system. The standard
 output of the script will be used as the file content for those read requests.
 
@@ -10,41 +10,27 @@ output of the script will be used as the file content for those read requests.
 Configuration file is read from `/etc/puavo-tftp.yml` by default. You can
 customize it with `--config` switch. The file is in [YAML][] format.
 
-### `root`
+  - `root`: Serve file files from this root. Default: `/var/lib/tftpboot/`
+  - `user`: If started as root drop to this user.
+  - `group`: If started as root drop to this grop.
+  - `verbose`: Set to true to enable debug logging.
+  - `port`: Listen on port. Default: 69
+  - `hooks`: See the next paragraph
 
-Serve file files from this root.
+### Dynamic files with hooks
 
-Default: `/var/lib/tftpboot/`
+The `hooks` option is a list of associative arrays with `regexp` and `command`
+keys. The given regular expression will be matched against incoming read
+requests (RRQ). On match the command will be executed with the requested file
+as the first argument instead of reading the file from the file system. The
+standard output of the command will be sent to the client requesting the file.
 
-### `user`
-
-If started as root drop to this user.
-
-### `group`
-
-If started as root drop to this grop.
-
-### `verbose`
-
-Set to true to enable debug logging.
-
-### `port`
-
-Listen on port.
-
-Default: 69
-
-### `hooks`
-
-List of associative arrays with `regexp` and `command` keys. The given regular
-expression will be matched against incoming read requests (RRQ). On match the
-command will be executed with the requested file as the first argument instead
-of reading the file from the file system. The standard output of the command
-will be sent to the client requesting the file.
+Matching is stopped on the first matched regexp. If no matches are found the
+file is read from the file system like in normal tftp servers.
 
 #### Example
 
-Return custom boot config for each LTSP clients using custom web service.
+Return custom boot config for each LTSP client using a custom web service.
 
 Match mac address based pxelinux.cfg read requests in `/etc/puavo-tftp.yml`:
 
@@ -126,3 +112,4 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 [TFTP]: http://en.wikipedia.org/wiki/Trivial_File_Transfer_Protocol
 [YAML]: http://en.wikipedia.org/wiki/YAML
+
