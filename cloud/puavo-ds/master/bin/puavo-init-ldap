@@ -19,6 +19,17 @@ require 'puavo-ds/templates'
 require 'puavo-ds/kerberos'
 require 'puavo-ds/helpers'
 
+if ["-h", "--help"].include? ARGV.first
+  STDERR.puts "
+  usage: #{ File.basename(__FILE__) }
+
+  Initialize LDAP database with Puavo schemas on this machine.
+
+  WARNING: This is a destructive operation which cannot be undone. It will
+  destroy all existing databases.
+  "
+  exit 2
+end
 
 def parse_erb(basename)
   template = File.read("#{ TEMPLATES_PATH }/#{basename}.erb")
