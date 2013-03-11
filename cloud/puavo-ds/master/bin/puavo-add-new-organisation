@@ -39,6 +39,10 @@ parser = OptionParser.new do |opts|
     options[:samba_domain] = samba_domain
   end
 
+  opts.on("--puppet-host [PUPPET_HOST]", "Puppet host for legacy Lucid systems") do |puppet_host|
+    options[:puppet_host] = puppet_host
+  end
+
   opts.on("--suffix [SUFFIX]", "Suffix") do |suffix|
     options[:suffix] = suffix
   end
@@ -50,16 +54,20 @@ parser = OptionParser.new do |opts|
   opts.on("--surname [SURNAME]", "Surname") do |surname|
     options[:surname] = surname
   end
+
   opts.on("--username [USERNAME]", "Username") do |username|
     options[:username] = username
   end
+
   opts.on("--password [PASSWORD]", "Password") do |password|
     options[:password] = password
   end
+
   opts.on_tail("-h", "--help", "Show this message") do
     puts opts
     exit
   end
+
 end
 
 parser.parse!
@@ -160,15 +168,21 @@ Overlay.create_overlays(:database => new_db,
 
 # Create organisation and set LdapOrganisationBase LDAP connection
 puts "* Create organisation root"
-organisation = Organisation.create( :owner => PUAVO_ETC.ldap_dn,
-                                    :suffix => suffix,
-                                    :puavoDomain => domain,
-                                    :puavoKerberosRealm => kerberos_realm,
-                                    :o => organisation_name,
-                                    :cn => organisation_name,
-                                    :description => organisation_name,
-                                    :eduOrgLegalName => legal_name,
-                                    :sambaDomainName => samba_domain )
+organisation_attributes = {
+  :owner => PUAVO_ETC.ldap_dn,
+  :suffix => suffix,
+  :puavoDomain => domain,
+  :puavoKerberosRealm => kerberos_realm,
+  :o => organisation_name,
+  :cn => organisation_name,
+  :description => organisation_name,
+  :eduOrgLegalName => legal_name,
+  :sambaDomainName => samba_domain
+}
+if options[:puppet_host]
+  organisation_attributes[:puavoPuppetHost] = options[:puppet_host]
+end
+organisation = Organisation.create(organisation_attributes)
 
 puts "* Add organizational units: People, Groups, Hosts, etc..."
 OrganizationalUnit.create_units(organisation)
