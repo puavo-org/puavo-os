@@ -37,12 +37,14 @@ module DiskHandler
   Filesystems = {
     'laptop' => [
       { 'size' => '4G',       'name' => 'swap',   'type' => 'swap' },
+      { 'size' => '6G',       'name' => 'tmp',    'type' => 'ext4' },
       { 'size' => '40G',      'name' => 'images', 'type' => 'ext4' },
-      { 'size' => '6G',       'name' => 'state',  'type' => 'ext4' },
+      { 'size' => '4G',       'name' => 'state',  'type' => 'ext4' },
       { 'size' => '100%FREE', 'name' => 'home',   'type' => 'ext4' },
     ],
     'ltspserver' => [
       { 'size' => '16G',      'name' => 'swap',   'type' => 'swap' },
+      { 'size' => '6G',       'name' => 'tmp',    'type' => 'ext4' },
       { 'size' => '100%FREE', 'name' => 'state',  'type' => 'ext4' },
     ],
   }
