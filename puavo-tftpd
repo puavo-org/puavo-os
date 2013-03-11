@@ -67,7 +67,7 @@ OptionParser.new do |opts|
   end
 
   opts.on("--verbose", "Print more debugging stuff.") do |v|
-    $tftp_debug = true
+    options_cli[:verbose] = true
   end
 
   opts.on("-p", "--port PORT", "Listen on port.") do |v|
@@ -83,6 +83,9 @@ end
 
 options = options_defaults.merge(options_file).merge(options_cli)
 
+if options[:verbose]
+  $tftp_debug = true
+end
 
 EventMachine::run do
   EventMachine::open_datagram_socket(
