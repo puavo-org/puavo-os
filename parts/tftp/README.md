@@ -10,12 +10,16 @@ output of the script will be used as the file content for those read requests.
 Configuration file is read from `/etc/puavo-tftp.yml` by default. You can
 customize it with `--config` switch. The file is in [YAML][] format.
 
+Possible keys:
+
   - `root`: Serve file files from this root. Default: `/var/lib/tftpboot/`
   - `user`: If started as root drop to this user.
   - `group`: If started as root drop to this grop.
   - `verbose`: Set to true to enable debug logging.
   - `port`: Listen on port. Default: 69
   - `hooks`: See the next paragraph
+
+All keys are optional.
 
 ### Dynamic files with hooks
 
@@ -55,6 +59,8 @@ wget \
     --output-document=-
     "http://example.net/bootconfig/$RRQ"
 ```
+
+Checkout the [hooks][] directory for real world example.
 
 ## CLI switches
 
@@ -112,4 +118,5 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 [TFTP]: http://en.wikipedia.org/wiki/Trivial_File_Transfer_Protocol
 [YAML]: http://en.wikipedia.org/wiki/YAML
+[hooks]: https://github.com/opinsys/puavo-tftp/tree/master/hooks
 
