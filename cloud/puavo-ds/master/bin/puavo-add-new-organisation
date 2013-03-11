@@ -39,6 +39,10 @@ parser = OptionParser.new do |opts|
     options[:samba_domain] = samba_domain
   end
 
+  opts.on("--krb-realm [KERBEROS_REALM]", "Kerberos Realm") do |kerberos_realm|
+    options[:kerberos_realm] = kerberos_realm
+  end
+
   opts.on("--puppet-host [PUPPET_HOST]", "Puppet host for legacy Lucid systems") do |puppet_host|
     options[:puppet_host] = puppet_host
   end
@@ -95,7 +99,7 @@ suffix = options[:suffix] || "dc=edu,dc=%s,dc=fi" % organisation_name.downcase
 suffix_start = suffix.split(',')[0]
 legal_name = options[:legal_name] || organisation_name
 domain = "#{ organisation_name }.#{ top_domain }"
-kerberos_realm = domain.upcase
+kerberos_realm = options[:kerberos_realm] || domain.upcase
 
 
 puts "******************************************************"
