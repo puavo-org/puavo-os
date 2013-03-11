@@ -144,7 +144,7 @@ end
 # Replace slapd configuration file
 puts "Replace /etc/defaul/slapd configuration file"
 tempfile = parse_erb("default_slapd")
-FileUtils.cp(tempfile.path, "/etc/default/slapd"
+FileUtils.cp(tempfile.path, "/etc/default/slapd")
 tempfile.delete
 
 # As /etc/ldap/slapd.d is now totally empty, slapd won't start before
