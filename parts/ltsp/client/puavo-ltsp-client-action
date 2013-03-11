@@ -13,3 +13,11 @@ if [ -z "$action" ]; then
 fi
 
 xprop -root -f LTSP_LOGOUT_ACTION 8s -set LTSP_LOGOUT_ACTION $action
+
+case "$XDG_CURRENT_DESKTOP" in
+  GNOME)
+    gnome-session-quit --force --logout --no-prompt
+    ;;
+esac
+
+exit 0
