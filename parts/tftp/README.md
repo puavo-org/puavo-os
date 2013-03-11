@@ -60,7 +60,7 @@ wget \
     "http://example.net/bootconfig/$RRQ"
 ```
 
-Checkout the [hooks][] directory for real world example.
+Checkout the [hooks][] directory for real world examples.
 
 ## CLI switches
 
