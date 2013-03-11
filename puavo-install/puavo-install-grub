@@ -3,6 +3,8 @@
 set -e
 
 lookup_windows_partition_number() {
+  # Presume that the first partition not containing "Linux"
+  # is a Windows-partition.
   _diskdev=$1
   fdisk -l $_diskdev \
     | awk '$1 ~ "^/dev/" && !/Linux/ {
