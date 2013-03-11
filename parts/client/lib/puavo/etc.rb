@@ -1,4 +1,3 @@
-
 require "fileutils"
 
 # Simple Class for reading and writing data from /etc/puavo
@@ -42,7 +41,7 @@ class PuavoEtc
   def write(attr, value)
     @cache[attr] = nil
     if not @@attr_paths[attr]
-      raise Exception, "Unkdown Puavo Attribute #{ attr }"
+      raise Exception, "Unknown Puavo Attribute #{ attr }"
     end
     options = @@attr_paths[attr]
 
