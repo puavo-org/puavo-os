@@ -1,9 +1,10 @@
-#!/usr/bin/ruby1.8
+#!/usr/bin/ruby
 #
 # Setup local filesystems for Puavo hosts
 
 require 'fileutils'
 require 'highline/import'
+require 'open3'
 
 # XXX this should be elsewhere, other scripts might find this useful
 module PuavoFacts
@@ -164,6 +165,40 @@ module QueryDiskInfo
     chosen_disk_device
   end
 
+  def self.ask_confirmation(device, partition)
+    if device.nil? || device.empty? || partition.nil? || partition.empty?
+      return false
+    end
+
+    puts %Q{\nYou are going to install to device "/dev/#{ device }", } \
+	 + %Q{partition "#{ partition }".}
+    UI::colormsg("IF YOU PROCEED, ALL DATA ON THAT PARTITION IS DESTROYED!\n",
+		 HighLine::RED)
+
+    prompt = %q{Are you sure you want to proceed (write "yes" if this is okay?)}
+
+    UI::ask_with_default(prompt, 'no') == 'yes'
+  end
+
+  def self.ask_device_and_partition_with_confirmation(hosttype)
+    do_it = false
+    device    = nil
+    partition = nil
+
+    until do_it do
+      device    = QueryDiskInfo::ask_device()
+      partition = QueryDiskInfo::ask_partition(device)
+
+      do_it = QueryDiskInfo::ask_confirmation(device, partition)
+    end
+
+    {
+      'device'    => device,
+      'hosttype'  => hosttype,
+      'partition' => partition,
+    }
+  end
+
   def self.ask_partition(disk_device)
     partitions = []
 
@@ -186,18 +221,40 @@ module QueryDiskInfo
               .select { |part| part.match(/^#{ disk_device }[0-9]/) } \
 
       puts "\nPossible partitions are: #{ partitions.join(' ') }"
-      puts "You may choose 'cfdisk' to partition this disk,"
-      puts "or choose 'whole' to use the whole disk."
+      puts "\nYou may choose 'cfdisk' to partition this disk,"
+      puts "or choose 'whole' to use the whole disk.\n"
       chosen_partition = UI::ask_with_default('Choose a partition:',
 					     chosen_partition)
+
+      if chosen_partition == 'whole' \
+	and device_has_unknown_partitions?(disk_device) then
+	  msg = %Q{\nDevice "/dev/#{ disk_device }" has unknown partitions,\n} \
+	        + %Q{remove those with "cfdisk" (refusing to overwrite).\n}
+          UI::colormsg(msg, HighLine::RED)
+	  sleep(2)
+	  partitions = []
+          next
+      end
     end
 
     chosen_partition
   end
 
+  def self.device_has_unknown_partitions?(device)
+    known_partition_ids = %w(82 83 8e)	# these are Linux partition IDs
+
+    Open3.popen3('fdisk', '-l', "/dev/#{ device }") do |stdin, stdout, stderr|
+      stdout.readlines.each do |line|
+	return true if line.match(%r{^/dev/}) && !line.match(/Linux/)
+      end
+    end
+
+    return false
+  end
+
   def self.show_disk_devices(disk_devices)
     sleep(1.5)
-    disk_devices.each do |device|
+    [ disk_devices ].each do |device|
       system("fdisk -l /dev/#{ device } | more") \
         or raise "Error running fdisk for device '#{ device }'"
     end
@@ -214,17 +271,16 @@ module UI
          : answer.match(/^\s+$/) ? ''      \
          : answer.strip
   end
+
+  def self.colormsg(msg, color)
+    HighLine.say(HighLine.new.color(msg, color))
+  end
 end
 
 hosttype = PuavoFacts::get('puavo_hosttype')
 case hosttype
   when 'laptop', 'ltspserver'
-    device    = QueryDiskInfo::ask_device()
-    partition = QueryDiskInfo::ask_partition(device)
-    conf      = { 'device'    => device,
-	          'hosttype'  => hosttype,
-	          'partition' => partition }
-
+    conf = QueryDiskInfo::ask_device_and_partition_with_confirmation(hosttype)
     DiskHandler::do_fs_setup(conf)
   else
     puts "Hosttype '#{ hosttype }' does not need to setup local filesystems."
