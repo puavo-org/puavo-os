@@ -27,19 +27,33 @@ parser = OptionParser.new do |opts|
     options[:yes] = y
   end
 
-  opts.on("--top-domain [TOP_DOMAIN]", "Top domain") do |top_domain|
+  opts.on("--top-domain [TOP_DOMAIN]",
+    "Top domain. If omitted it's read from /etc/puavo"
+  ) do |top_domain|
     options[:top_domain] = top_domain
   end
 
-  opts.on("--legal-name [LEGAL_NAME]", "Legal name") do |legal_name|
+  opts.on("--domain [DOMAIN]",
+    "Force domain. By default it's generated from organisation and top domain"
+  ) do |top_domain|
+    options[:domain] = domain
+  end
+
+  opts.on("--legal-name [LEGAL_NAME]",
+    "Legal name. Defaults to organisation"
+  ) do |legal_name|
     options[:legal_name] = legal_name
   end
 
-  opts.on("--samba-domain [SAMBA_DOMAIN]", "Samba domain") do |samba_domain|
+  opts.on("--samba-domain [SAMBA_DOMAIN]",
+    "Samba domain. By default it's generated from domain"
+  ) do |samba_domain|
     options[:samba_domain] = samba_domain
   end
 
-  opts.on("--krb-realm [KERBEROS_REALM]", "Kerberos Realm") do |kerberos_realm|
+  opts.on("--krb-realm [KERBEROS_REALM]",
+    "Force Kerberos Realm. By default it's generated from domain"
+  ) do |kerberos_realm|
     options[:kerberos_realm] = kerberos_realm
   end
 
@@ -84,23 +98,27 @@ if not organisation_name
   exit 2
 end
 
-top_domain = options[:top_domain]
-if not top_domain
-  begin
-    top_domain = PUAVO_ETC.topdomain
-  rescue Errno::ENOENT
-    STDERR.puts "/etc/puavo/topdomain or --top-domain is required"
-    exit 2
-  end
+domain = options[:domain]
+top_domain = options[:top_domain] || begin
+  # read from /etc/puavo if --top-domain switch was not provided
+  PUAVO_ETC.topdomain
+rescue Errno::ENOENT
+  nil # Convert to nil if missing
 end
+
+if not domain and not top_domain
+  STDERR.puts "/etc/puavo/topdomain, --top-domain or --domain is required"
+  exit 2
+end
+
+# Generate from organisation_name and --top-domain if not forced by --domain
+domain ||= "#{ organisation_name }.#{ top_domain }"
 
 samba_domain = options[:samba_domain] || "EDU%s" % organisation_name.upcase
 suffix = options[:suffix] || "dc=edu,dc=%s,dc=fi" % organisation_name.downcase
 suffix_start = suffix.split(',')[0]
 legal_name = options[:legal_name] || organisation_name
-domain = "#{ organisation_name }.#{ top_domain }"
 kerberos_realm = options[:kerberos_realm] || domain.upcase
-
 
 puts "******************************************************"
 puts "  Initialising organisation: #{organisation_name}"
@@ -111,7 +129,6 @@ puts "* Creating database for suffix: #{suffix}"
 puts "* Kerberos realm: #{kerberos_realm}"
 puts "* Legal name: #{legal_name}"
 puts "* Samba: #{samba_domain}"
-puts "* Top domain: #{top_domain}"
 puts "* Domain: #{domain}"
 puts "* Suffix start: #{suffix_start}"
 
