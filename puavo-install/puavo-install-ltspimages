@@ -3,19 +3,37 @@
 set -e
 
 install_from_nbd() {
-  images_dir=$1
+  imagepath=$1
+
+  rm -f $images_dir/*.tmpimage
 
   total_size=$(df /dev/nbd0 | awk '$1 == "/dev/nbd0" { print $2 "k" }')
   dd if=/dev/nbd0 2>/dev/null | pv -s "$total_size" \
-    > $images_dir/ltsp.img
+    > "${imagepath}.tmpimage"
+  sync
+  mv "${imagepath}.tmpimage" "$imagepath"
+  sync
+}
 
-  pv $images_dir/ltsp.img > $images_dir/ltsp-backup.img
+install_image() {
+  images_dir=$1
+  imagename=$2
+
+  imagepath=$images_dir/$imagename
+
+  if [ -e "$imagepath" ]; then
+    echo "Image $imagename is already in place."
+    return 0
+  fi
+
+  install_from_nbd "$imagepath"
 }
 
 images_dir=${1:-/images}
+ltspimage_name=$2
 
-if ! [ -d "$images_dir" ]; then
-  echo "Usage: $(basename $0) images_dir" > /dev/stderr
+if ! [ -d "$images_dir" -o -z "$ltspimage_name" ]; then
+  echo "Usage: $(basename $0) images_dir ltspimage_name" > /dev/stderr
   exit 1
 fi
 
@@ -23,7 +41,7 @@ hosttype=$(cat /etc/puavo/hosttype)
 
 case "$hosttype" in
   laptop)
-    install_from_nbd $images_dir
+    install_image "$images_dir" "$ltspimage_name"
     ;;
   *)
     echo "Hosttype '$hosttype' is not supported" > /dev/stderr
