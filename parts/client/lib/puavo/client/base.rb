@@ -8,7 +8,7 @@ module Puavo
       end
 
       def self.new_by_ldap_entry(entry)
-        raise "Etry is nil" if entry.nil?
+        raise "Etry is nil or empty" if entry.nil? || entry.empty?
 
         if entry["objectClass"].include?( "puavoSchool" )
           Puavo::Client::School.new_by_ldap_entry(entry)
