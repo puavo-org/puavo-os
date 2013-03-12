@@ -15,8 +15,6 @@ module PuavoTFTP
     def receive_data(data)
       # debug "Server got data #{ data.inspect }"
       code = data[1]
-
-      data = data.byteslice(2, data.size)
       handle_opcode(code, data)
     end
 
@@ -29,7 +27,7 @@ module PuavoTFTP
     end
 
     def handle_error(data)
-      err_code, msg = data.unpack("nZ*")
+      code, err_code, msg = data.unpack("nnZ*")
       l "CLIENT ERROR: #{ ERROR_DESCRIPTIONS[err_code].inspect } msg: #{ msg }"
     end
 
