@@ -5,14 +5,14 @@ adm_users
     A helper module for creating administrative user accounts and setting up
     their public ssh-keys for authentication.
 
-app_bash
-    Special bash-configurations for administrative user accounts.
-
 apt
     Settings for apt.
 
 autopoweroff
     Settings for autopoweroff.
+
+bash
+    Special bash-configurations for administrative user accounts.
 
 config
     Set organisation name and other widely applied parameters.

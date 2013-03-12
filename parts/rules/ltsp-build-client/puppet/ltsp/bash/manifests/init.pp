@@ -1,15 +1,15 @@
-class app_bash {
+class bash {
   include config,
           config::logins,
           packages
 
   file {
     '/etc/bash.bashrc':
-      content => template('app_bash/bash.bashrc'),
+      content => template('bash/bash.bashrc'),
       require => Package['bash'];
 
     '/etc/skel/.bashrc':
-      content => template('app_bash/etc_skel_.bashrc'),
+      content => template('bash/etc_skel_.bashrc'),
       require => Package['bash'];
   }
 
