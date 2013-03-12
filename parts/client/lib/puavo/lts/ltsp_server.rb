@@ -8,7 +8,7 @@ module Puavo
         @device = device
 
         @lts_data = {
-          'KEEP_SYSTEM_SERVICES' => keep_services_tty_and_nfs_services,
+          'KEEP_SYSTEM_SERVICES' => keep_services_tty_and_nfs_services + " ltspssh",
           'LOCAL_APPS'           => 'False',
           'LOCALDEV'             => 'False',
           'LTSP_FATCLIENT'       => 'False',
