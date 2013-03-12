@@ -60,7 +60,7 @@ but version $new_ltspimage_name is available.
 
 Press ENTER to proceed to update it.
 EOF
-  read  
+  read answer
 }
 
 install_image() {
