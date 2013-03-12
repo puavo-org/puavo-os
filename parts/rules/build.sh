@@ -75,7 +75,7 @@ done
       # XXX ltsp-build-client --onlyimage ?
       run_sudo mksquashfs \
                  $basedir/$arch /opt/ltsp/images/$ltspimage_name \
-                 -noappend -no-progress -no-recovery -wildcards \
+                 -noappend -no-recovery -wildcards \
                  -ef $srccopydir/ltsp-build-client/ltsp-update-image.excludes
       ;;
     update-chroot)
