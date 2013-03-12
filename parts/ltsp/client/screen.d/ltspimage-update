@@ -5,3 +5,5 @@ set -e
 ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
 
 puavo-install-ltspimages "$ltspimage_name"
+
+reboot
