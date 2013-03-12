@@ -15,6 +15,7 @@ module Puavo
           'LTSP_SERVER'          => 'True',
           'SERVER'               => boot_server_fqdn,
           'USE_NFS_HOMES'        => 'True',
+          'NFS_SERVER'           => boot_server_fqdn,
         }
         
         @lts_data.merge!( define_tags )
