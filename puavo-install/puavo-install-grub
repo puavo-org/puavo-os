@@ -8,7 +8,7 @@ lookup_windows_partition_number() {
   _diskdev=$1
   fdisk -l $_diskdev \
     | awk '$1 ~ "^/dev/" && !/Linux/ {
-	     if (match($1, /[0-9]+$/, _)) { print _[0] }
+	     if (match($1, /[0-9]+$/, _)) { print _[0]; exit }
            }'
 }
 
