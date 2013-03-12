@@ -8,253 +8,10 @@
 $LOAD_PATH.unshift( File.dirname(__FILE__) )
 
 ENV['LDAPTLS_REQCERT'] = 'demand'
-ENV['LDAPTLS_CACERT'] = '/etc/puavo/certs/rootca.pem'
 
 require 'puavo-ldap'
-require 'shellwords'
-
-def provide_guest_login(device)
-  # make guestlogin possible for terminals that have 'guest'-tag set
-  tags = Array(device['puavoTag'])
-  tags.include?('guest') and not tags.include?('noguest')
-end
-
-def device_ltspvars(device, organisation, school)
-  devicetype = Array(device['puavoDeviceType']).first
-
-  nfs_services = %w(gssd idmapd rpcbind-boot portmap)
-  tty_services = %w(tty1 tty2 tty3 tty4 tty5 tty6)
-
-  services = {
-    'fatclient'  => tty_services + nfs_services,
-    'laptop'     => tty_services,
-    'ltspserver' => tty_services + nfs_services + %w(ltspssh),
-    'thinclient' => tty_services,
-  }
-
-  keep_services_string_fn = lambda do |devicetype|
-			      %Q{"#{ services[devicetype].join(' ') }"}
-			    end
-
-  ltspvars =
-    case devicetype
-      when 'thinclient'
-        {
-          'KEEP_SYSTEM_SERVICES' => keep_services_string_fn.call(devicetype),
-          'LDM_AUTOLOGIN'        => 'False',
-          'LDM_DIRECTX'          => 'True',
-          'LDM_SERVER'           => @ltsp_server_fqdn,
-          'LDM_SESSION'          => '"gnome-session --session=gnome-fallback"',
-          'LOCAL_APPS'           => 'False',
-          'LOCALDEV'             => 'True',
-          'LTSP_FATCLIENT'       => 'False',
-          'NBD_SWAP'             => 'False',
-          'NFS_SERVER'           => @boot_server_fqdn,
-          'SCREEN_07'            => 'lightdm',
-          'SERVER'               => @boot_server_fqdn,
-          'SSH_OVERRIDE_PORT'    => '222',
-          'SYSLOG'               => 'False',
-          'X_COLOR_DEPTH'        => '16',
-          'XKBLAYOUT'            => 'fi',
-        }
-      when 'fatclient'
-        {
-          'KEEP_SYSTEM_SERVICES' => keep_services_string_fn.call(devicetype),
-          'LOCAL_APPS'           => 'False',
-          'LOCALDEV'             => 'False',
-          'LTSP_FATCLIENT'       => 'True',
-          'NBD_SWAP'             => 'False',
-          'NFS_SERVER'           => @boot_server_fqdn,
-          'RM_SYSTEM_SERVICES'   => 'network-manager',
-          'SCREEN_07'            => 'lightdm',
-          'SERVER'               => @boot_server_fqdn,
-          'SYSLOG'               => 'False',
-          'USE_NFS_HOMES'        => 'True',
-          'XKBLAYOUT'            => 'fi',
-        }
-      when 'laptop'
-        {
-          'KEEP_SYSTEM_SERVICES' => keep_services_string_fn.call(devicetype),
-          'LOCAL_APPS'           => 'False',
-          'LOCALDEV'             => 'False',
-          'LTSP_FATCLIENT'       => 'True',
-          'NBD_SWAP'             => 'False',
-          'SCREEN_07'            => 'lightdm',
-          'SYSLOG'               => 'False',
-          'XKBLAYOUT'            => 'fi',
-        }
-      when 'ltspserver'
-        {
-          'KEEP_SYSTEM_SERVICES' => keep_services_string_fn.call(devicetype),
-          'LOCAL_APPS'           => 'False',
-          'LOCALDEV'             => 'False',
-          'LTSP_FATCLIENT'       => 'False',
-          'LTSP_SERVER'          => 'True',
-          'SERVER'               => @boot_server_fqdn,
-          'USE_NFS_HOMES'        => 'True',
-          'NFS_SERVER'           => @boot_server_fqdn,
-        }
-      else
-	{}
-    end
-
-  if device['puavoTag']
-    ltspvars['PUAVO_TAGS'] = Array(device['puavoTag']).join(" ")
-  end
-
-  if device['puavoDefaultPrinter']
-    ltspvars['LDM_PRINTER_DEFAULT'] = Array(device['puavoDefaultPrinter']).first
-  end
-
-  if device['puavoDeviceXserver']
-    ltspvars['XSERVER'] = Array(device['puavoDeviceXserver']).first
-  end
-
-  if devicetype == 'thinclient'
-    if provide_guest_login(device)
-      hostname = Array(device['puavoHostname']).first
-      if not hostname.match(/^[0-9a-z-]+$/)
-	raise "hostname #{ hostname } not of correct format"
-      else
-	ltspvars['LDM_GUESTLOGIN'] = 'True'
-	ltspvars['LDM_USERNAME']   = "anon-#{ hostname }"
-      end
-    else
-      ltspvars['LDM_GUESTLOGIN'] = 'False'
-    end
-  end
-
-  if device['puavoDeviceXrandrDisable'] \
-    and Array(device['puavoDeviceXrandrDisable']).first == 'TRUE'
-      ltspvars['XRANDR_DISABLE'] = 'True'
-  end
-
-  if device['puavoDeviceXrandr']
-    (0 .. Array(device['puavoDeviceXrandr']).size - 1).each do |i|
-      xrandrsetting = xrandrline(Array(device['puavoDeviceXrandr'])[i])
-      xrandrsetting.each do |key, value|
-	varname = "XRANDR_#{ key.upcase }_#{ i }"
-	ltspvars[ varname ] = value
-      end
-    end
-  end
-
-  # mostly for those X drivers that do not support xrandr
-  if device['puavoDeviceResolution']
-    ltspvars['X_MODE_0'] = Array(device['puavoDeviceResolution']).first
-  end
-  if device['puavoDeviceHorzSync']
-    ltspvars['X_HORZSYNC'] = Array(device['puavoDeviceHorzSync']).first
-  end
-  if device['puavoDeviceVertRefresh']
-    ltspvars['X_VERTREFRESH'] = Array(device['puavoDeviceVertRefresh']).first
-  end
-
-  begin
-    ghost_passwords = {}
-    IO.readlines('/etc/opinsys/desktop/autologins').each do |line|
-      login, password = * line.split
-      next if login.empty? or password.empty?
-      ghost_passwords[login] = password
-    end
-    if not ghost_passwords.empty? then
-      ghostuser = ghost_passwords.keys.shuffle[0]
-      ltspvars['LDM_PASSWORD']  = ghost_passwords[ghostuser]
-      ltspvars['LDM_USERNAME']  = ghostuser
-      ltspvars['LDM_AUTOLOGIN'] = 'True'
-    end
-  rescue
-    # /etc/opinsys/desktop/autologins is missing
-    # or configuration is faulty... autologins are disabled, then
-  end
-
-  # Set autopoweroffd configuration
-  if ['thinclient', 'fatclient'].include?(devicetype)
-
-    # Global defaults for all organisations
-    defaults = {
-      'AUTOPOWEROFF' => 'Y',
-      'AUTOPOWEROFF_START' => 7,
-      'AUTOPOWEROFF_END' => 16,
-      'AUTOPOWEROFF_STARTUP_DELAY' => 30,
-      'AUTOPOWEROFF_IDLE_TIME' => 30
-    }
-
-    ltspvars.merge!(defaults)
-
-    # Defaults by organisation
-    settings_by_organisation = {}
-    if organisation['puavoDeviceAutoPowerOffMode'] == 'off'
-      settings_by_organisation['AUTOPOWEROFF'] = 'N'
-    elsif organisation['puavoDeviceAutoPowerOffMode'] == 'custom'
-      settings_by_organisation['AUTOPOWEROFF'] = 'Y'
-      settings_by_organisation['AUTOPOWEROFF_START'] =
-        organisation['puavoDeviceOnHour'] if organisation['puavoDeviceOnHour']
-      settings_by_organisation['AUTOPOWEROFF_END'] =
-        organisation['puavoDeviceOffHour'] if organisation['puavoDeviceOffHour']
-    end
-
-    ltspvars.merge!(settings_by_organisation)
-
-    # Settings by device
-    settings_by_device = {}
-    if device['puavoDeviceAutoPowerOffMode'] == 'off'
-      settings_by_device['AUTOPOWEROFF'] = 'N'
-    elsif device['puavoDeviceAutoPowerOffMode'] == 'custom'
-      settings_by_device['AUTOPOWEROFF'] = 'Y'
-      settings_by_device['AUTOPOWEROFF_START'] = device['puavoDeviceOnHour'] if device['puavoDeviceOnHour']
-      settings_by_device['AUTOPOWEROFF_END'] = device['puavoDeviceOffHour'] if device['puavoDeviceOffHour']
-    end
-
-    ltspvars.merge!(settings_by_device)
-  end
-
-  # Set WLAN configuration
-  if school
-    index = 1
-    Array(school["puavoWlanSSID"]).each do |wlan|
-      lts_key = "WLAN_SSID_%02d" % index
-      ltspvars[lts_key] = '"' + wlan + '"'
-      index += 1
-    end
-    
-    wlan_channel = school["puavoWlanChannel"]
-    wlan_channel = device["puavoWlanChannel"] if device["puavoWlanChannel"]
-
-    ltspvars["WLAN_CHANNEL"] = wlan_channel if ltspvars["WLAN_SSID_01"]
-  end
-
-  ltspvars
-end
-
-def xrandrline(line)
-  Hash[ * Shellwords.shellwords(line).map { |s| s.split('=',2) }.flatten ]
-end
-
-def handle_ltsconf_request
-  ltspvars = {}
-
-  deviceentry = @puavoldap.device_by_mac(@mac)
-  organisation = @puavoldap.organisation
-  school = @puavoldap.school_by_dn(deviceentry["puavoSchool"])
-
-  if not deviceentry.empty?
-    ltspvars.merge!(device_ltspvars(deviceentry, organisation, school))
-  else
-    ltspvars.merge!({ 'NBD_SWAP'  => 'False',
-                      'SYSLOG'    => 'False',
-                      'XKBLAYOUT' => 'fi',
-                      'SCREEN_02' => 'register' })
-  end
-
-  ltsconf(ltspvars, @mac)
-end
-
-def ltsconf(ltspvars, mac)
-  "[#{ mac }]\n" +
-  ltspvars.map { |key, value| "\t#{ key } = #{ value }\n" }.sort.join
-end
-
+require 'puavo'
+require 'puavo/lts'
 
 @get_request = ARGV[0]
 @ip = ARGV[1]
@@ -274,10 +31,16 @@ end
 # Create ldap connection
 @puavoldap = PuavoLdap.new
 
-# Find servers fqdn
-@boot_server_hostname = File.read('/etc/puavo/hostname').chomp
-@domain = File.read('/etc/puavo/domain').chomp
-@boot_server_fqdn = "#{@boot_server_hostname}.#{@domain}"
-@ltsp_server_fqdn = File.read('/etc/puavo/primary_ltsp_server').chomp
+ldap_device = @puavoldap.device_by_mac(@mac)
+device = Puavo::Client::Base.new_by_ldap_entry( ldap_device )
 
-puts handle_ltsconf_request
+school = ""
+if ldap_device["puavoSchool"]
+  school = Puavo::Client::Base.new_by_ldap_entry( @puavoldap.school_by_dn(ldap_device["puavoSchool"]) )
+end
+
+organisation = Puavo::Client::Base.new_by_ldap_entry( @puavoldap.organisation )
+
+lts_config = Puavo::Lts.new(organisation, school, device)
+
+puts lts_config.output
