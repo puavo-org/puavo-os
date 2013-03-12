@@ -29,11 +29,11 @@ install_image() {
   install_from_nbd "$imagepath"
 }
 
-images_dir=${1:-/images}
-ltspimage_name=$2
+ltspimage_name=$1
+images_dir=${2:-/images}
 
-if ! [ -d "$images_dir" -o -z "$ltspimage_name" ]; then
-  echo "Usage: $(basename $0) images_dir ltspimage_name" > /dev/stderr
+if [ -z "$ltspimage_name" -o ! -d "$images_dir" ]; then
+  echo "Usage: $(basename $0) ltspimage_name images_dir" > /dev/stderr
   exit 1
 fi
 
