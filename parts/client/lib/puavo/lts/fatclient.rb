@@ -14,6 +14,7 @@ module Puavo
           'LTSP_FATCLIENT'       => 'True',
           'NBD_SWAP'             => 'False',
           'NFS_SERVER'           => boot_server_fqdn,
+          'RM_SYSTEM_SERVICES'   => 'network-manager',
           'SCREEN_07'            => 'lightdm',
           'SERVER'               => boot_server_fqdn,
           'SYSLOG'               => 'False',
