@@ -68,9 +68,13 @@ done
       run_sudo ltsp-chroot --base $basedir --mount-all
       ;;
     image)
+      ltspimage_name=$build_version-$arch.img
+      ltspimage_name_path=$basedir/$arch/etc/ltsp/this_ltspimage_name
+      run_sudo sh -c "echo $ltspimage_name > $ltspimage_name_path"
+
       # XXX ltsp-build-client --onlyimage ?
       run_sudo mksquashfs \
-                 $basedir/$arch /opt/ltsp/images/$build_version-$arch.img \
+                 $basedir/$arch /opt/ltsp/images/$ltspimage_name \
                  -noappend -no-progress -no-recovery -wildcards \
                  -ef $srccopydir/ltsp-build-client/ltsp-update-image.excludes
       ;;
