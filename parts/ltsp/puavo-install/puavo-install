@@ -13,7 +13,10 @@ case "$hosttype" in
     mkdir -p /state/etc
     cp -aT /etc/puavo /state/etc/puavo
 
-    puavo-install-ltspimages
+    # install from nbd, the ltsp image must contain its name in this path
+    ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
+
+    puavo-install-ltspimages "$ltspimage_name"
     puavo-install-grub
 
     sync
