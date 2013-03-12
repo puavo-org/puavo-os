@@ -1,6 +1,6 @@
 class adm_users {
   include adm_users::common_user,
-          app_bash,
+          bash,
           config::logins,
           packages
 
