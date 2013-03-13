@@ -190,6 +190,9 @@ master_password = KerberosSettings.generate_new_password(20)
 puts "master password: #{master_password}"
 
 puts `echo "#{master_password}\\n#{master_password}\\n" | kdb5_ldap_util -D #{PUAVO_ETC.ldap_dn} create -k aes256-cts-hmac-sha1-96 -subtrees \"o=puavo\" -s -sf /etc/krb5kdc/stash.toprealm -H ldaps://#{PUAVO_ETC.ldap_master} -r #{PUAVO_ETC.krb_toprealm} -w #{PUAVO_ETC.ldap_password}`
+puts `echo "#{PUAVO_ETC.ds_kdc_password}\\n#{PUAVO_ETC.ds_kdc_password}\\n" | /usr/sbin/kdb5_ldap_util stashsrvpw -f /etc/krb5.secrets "#{PUAVO_ETC.ds_kdc_dn}" 2>/dev/null`
+puts `echo "#{PUAVO_ETC.ds_kadmin_password}\\n#{PUAVO_ETC.ds_kadmin_password}\\n" | /usr/sbin/kdb5_ldap_util stashsrvpw -f /etc/krb5.secrets "#{PUAVO_ETC.ds_kadmin_dn}" 2>/dev/null`
+
 
 FileUtils.rm_rf("/etc/ldap/krb5.keytab")
 puts assert_exec "kadmin.local -r #{PUAVO_ETC.krb_toprealm} -q \"addprinc -randkey ldap/#{PUAVO_ETC.ldap_master}\""
