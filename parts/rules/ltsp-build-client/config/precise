@@ -4,6 +4,7 @@ PUPPET_USE_CLASSES="
   cpu_frequency_scaling
   kernels
   lightdm
+  motd
   organisation_adm_users
   packages::sssd_install_workaround
   packages::thinclient
