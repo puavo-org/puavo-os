@@ -36,11 +36,14 @@ class packages {
     , 'lynx'
     , 'm4'
     , 'mlocate'
+    , 'nmap'
     , 'pv'
+    , 'pwgen'
     , 'sl'
     , 'sudo'
     , 'tmux'
-    , 'tshark' ]:
+    , 'tshark'
+    , 'whois' ]:
       tag => [ 'admin', 'thinclient', 'ubuntu', ];
 
     [ 'dconf-tools'
