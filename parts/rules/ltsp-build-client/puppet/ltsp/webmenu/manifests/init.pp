@@ -1,5 +1,14 @@
 class webmenu {
-  include packages
+  include dpkg,
+          packages
+
+  dpkg::divert {
+    '/usr/share/applications/webmenu-spawn.desktop':
+      dest => '/usr/share/applications/webmenu-spawn.desktop.dist';
+
+    '/usr/share/applications/webmenu-spawn-logout.desktop':
+      dest => '/usr/share/applications/webmenu-spawn-logout.desktop.dist';
+  }
 
   File { require => [ Package['liitu-themes']
 		    , Package['webmenu'] ], }
@@ -14,10 +23,12 @@ class webmenu {
       content => template('webmenu/webmenu.desktop');
 
     '/usr/share/applications/webmenu-spawn.desktop':
-      content => template('webmenu/webmenu-spawn.desktop');
+      content => template('webmenu/webmenu-spawn.desktop'),
+      require => Dpkg::Divert['/usr/share/applications/webmenu-spawn.desktop'];
 
     '/usr/share/applications/webmenu-spawn-logout.desktop':
-      content => template('webmenu/webmenu-spawn-logout.desktop');
+      content => template('webmenu/webmenu-spawn-logout.desktop'),
+      require => Dpkg::Divert['/usr/share/applications/webmenu-spawn-logout.desktop'];
 
   }
 
