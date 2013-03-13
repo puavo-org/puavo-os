@@ -99,48 +99,6 @@ module.exports = (gui, bridge) ->
     config.devtools = true
   Window = gui.Window.get()
 
-
-  ###*
-  # Resize window to current screen width
-  ###
-  resizeToScreenWidth = ->
-    rowSizes = [
-      300 # 1 item
-      410 # 2 items
-      520 # 3 items
-    ]
-
-    heights =
-      800: 0
-      1280: 1
-      1500: 2
-
-    width = Window.window.screen.width
-
-    # Dynamic size in the future? Does not work now because because sidebar
-    # does not scale properly for single row view.
-    height = rowSizes[2]
-
-    # if width <= 1024
-    #   height = rowSizes[2]
-    # else if width <= 1280
-    #   height = rowSizes[1]
-    # else
-    #   height = rowSizes[0]
-
-    Window.setResizable(true)
-    Window.window.resizeTo(width, height)
-    Window.setResizable(false)
-
-
-  resizeToScreenWidth()
-
-  ###*
-  # Move window to bottom of screen
-  ###
-  moveToBottomLeft = ->
-    Window.window.moveTo(0, Window.window.screen.height)
-
   ###*
   # Use wmctrl cli tool force focus on Webmenu. Calls the wmctrl after a given
   # timeout to give it some time to appear on window lists. It will also retry
@@ -172,7 +130,6 @@ module.exports = (gui, bridge) ->
     console.log "Displaying menu"
     Window.show()
     Window.focus()
-    moveToBottomLeft()
     forceFocus(50, 100, 350, 500)
 
   hideWindow = ->
@@ -198,7 +155,15 @@ module.exports = (gui, bridge) ->
 
       if currentView isnt viewName
         currentView = viewName
-        if not menuVisible
+        if menuVisible
+          # When menu view is changing while the menu itself is still visible
+          # make sure it's hidden before the view is displayed. This ensures
+          # that the menu moves to the current cursor position. Required when
+          # user clicks the logout button from right of the panel while menu is
+          # visible on the left side.
+          Window.hide()
+          setTimeout(displayMenu, 1) # Allow menu to disappear
+        else
           displayMenu()
         return
 
@@ -227,7 +192,6 @@ module.exports = (gui, bridge) ->
     else
       toggleMenu("root")
 
-    resizeToScreenWidth()
 
   # Prevent crazy menu spawning which might cause slow machines to get stuck
   # for long periods of time
