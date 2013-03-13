@@ -15,6 +15,7 @@ install-dirs:
 	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)/etc/ldap/schema/
+	mkdir -p $(DESTDIR)/etc/init.d/
 
 install: install-dirs
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
