@@ -41,13 +41,16 @@ device_type = 'unregistered' if device_type.empty?
 kernel_version = Array(ltsp_client['puavoDeviceKernelVersion']).first.to_s
 kernel_version = "-" + kernel_version if not kernel_version.empty?
 
-if device_type == 'unregistered'
-  # splash interferes with register-session, so do not use it when registering
-  # also remove quiet for troubleshooting
-  kernel_args = ""
-else
-  kernel_args = Array(ltsp_client['puavoDeviceKernelArguments']).first.to_s
-  kernel_args = "quiet splash" if kernel_args.empty?
+case device_type
+  when 'laptop','unregistered'
+    # Splash interferes with register-session, so do not use it when
+    # registering.  Also remove quiet for troubleshooting.  This is required
+    # for laptops as well, because they do not normally boot off from the
+    # network, but if they do, they should get the maintenance/update dialogs.
+    kernel_args = ''
+  else
+    kernel_args = Array(ltsp_client['puavoDeviceKernelArguments']).first.to_s
+    kernel_args = "quiet splash" if kernel_args.empty?
 end
 
 image = Array(ltsp_client['puavoDeviceImage']).first.to_s
