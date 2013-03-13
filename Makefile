@@ -27,8 +27,6 @@ install: installdirs
 		puavo-tftpd
 	$(INSTALL_DATA) -t $(DESTDIR)$(prefix)/lib/ruby/vendor_ruby/puavo-tftp \
 		puavo-tftp/*.rb
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir) \
-		puavo-tftp.yml
 ifeq ($(INSTALL_HOOKS),yes)
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		hooks/puavo-ltspboot-config \
