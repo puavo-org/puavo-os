@@ -44,8 +44,13 @@ lookup_current_ltspimage_name() {
   current_ltspimage_inode="$(stat -c %i $current_ltspimage_path || true)"
 
   for file in $images_dir/*.img; do
+    # check that *.img expands to something
+    test -e "$file" || continue
+
+    # ltsp.img is not what we are looking for
     test "$file" = "$current_ltspimage_path" && continue
 
+    # we want its other name...
     if [ "$(stat -c %i "$file" || true)" = "$current_ltspimage_inode" ]; then
       echo "$(basename "$file")"
       break
