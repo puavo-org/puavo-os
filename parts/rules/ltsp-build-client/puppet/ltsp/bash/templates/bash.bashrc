@@ -67,15 +67,11 @@ if [ "$(id -u)" = 0 ] || (groups | fgrep -qw "<%= scope.lookupvar('config::login
   export PATH
 
   if [ "$(id -u)" = 0 ]; then
-    # blue/red prompt for root
-    PS1="
-\[\e[1;34m\][<%= scope.lookupvar('config::organisation') %> - $(cat /etc/ltsp/this_ltspimage_name 2>/dev/null || true)]\[\e[0m\]
-\[\e[1;31m\]\u@\h:\w\$\[\e[0m\] "
+    # red prompt for root
+    PS1="\[\e[1;31m\][<%= scope.lookupvar('config::organisation') %>] \u@\h:\w\$\[\e[0m\] "
   else
-    # blue/magenta prompt for admin users
-    PS1="
-\[\e[1;34m\][<%= scope.lookupvar('config::organisation') %> - $(cat /etc/ltsp/this_ltspimage_name 2>/dev/null || true)]\[\e[0m\]
-\[\e[1;35m\]\u@\h:\w\$\[\e[0m\] "
+    # magenta prompt for admin users
+    PS1="\[\e[1;35m\][<%= scope.lookupvar('config::organisation') %>] \u@\h:\w\$\[\e[0m\] "
   fi
 
   # automatic logout if shell is idle for 30 minutes
