@@ -8,6 +8,6 @@ As root init database
 
 Add organisation
 
-    # puavo-add-new-organisation -organisation hogwarts --given_name Albus --surname Dumbledore --password albus123 --username albus
+    # puavo-add-new-organisation hogwarts
 
 
