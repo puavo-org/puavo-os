@@ -257,13 +257,17 @@ role.groups << group
 kerberos_masterpw = KerberosSettings.generate_new_password(20)
 puts "\nInitializing kerberos realm with master key: #{kerberos_masterpw}\n"
 
-kerberos_configuration = KerberosSettings.new(:ldap_server => PUAVO_ETC.ldap_master)
+kerberos_configuration = KerberosSettings.new(:ldap_host => PUAVO_ETC.ldap_master,
+                                              :ldap_dn => PUAVO_ETC.ldap_dn,
+                                              :ldap_password => PUAVO_ETC.ldap_password)
 
 kerberos_configuration.write_configurations_to_file
 
 kerberos_configuration.replace_server_configurations
 
-realm = KerberosRealm.new( :ldap_server => PUAVO_ETC.ldap_master,
+realm = KerberosRealm.new( :ldap_host => PUAVO_ETC.ldap_master,
+                           :ldap_dn => PUAVO_ETC.ldap_dn,
+                           :ldap_password => PUAVO_ETC.ldap_password,
                            :realm => kerberos_realm,
                            :masterpw => kerberos_masterpw,
                            :suffix => suffix,

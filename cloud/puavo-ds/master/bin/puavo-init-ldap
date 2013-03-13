@@ -180,7 +180,9 @@ puts `ldapmodify -Y EXTERNAL -H ldapi:/// -f #{tempfile.path} 2>&1`
 tempfile.delete
 
 # Get kerberos configuration from toprealm
-kerberos_configuration = KerberosSettings.new(:ldap_server => PUAVO_ETC.ldap_master)
+kerberos_configuration = KerberosSettings.new(:ldap_host => PUAVO_ETC.ldap_master,
+                                              :ldap_dn => PUAVO_ETC.ldap_dn,
+                                              :ldap_password => PUAVO_ETC.ldap_password)
 kerberos_configuration.write_configurations_to_file
 kerberos_configuration.replace_server_configurations
 

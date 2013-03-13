@@ -2,12 +2,10 @@ require 'puavo-ds/templates'
 
 class KerberosSettings
 
-  attr_accessor :organisations
-
   TMP = "/tmp/puavo-ds-kerberos-tmp"
 
-  def self.find_all_organisations(ldap_server)
-    databases = `ldapsearch -Z -x -D #{ldap_server['bind_dn']} -w #{ldap_server['password']} -H ldap://#{ldap_server['host']} -s base -b "" "(objectClass=*)" namingContexts 2>/dev/null | grep namingContexts:`
+  def self.find_all_organisations(host, dn, password)
+    databases = `ldapsearch -Z -x -D #{dn} -w #{password} -H ldap://#{host} -s base -b "" "(objectClass=*)" namingContexts 2>/dev/null | grep namingContexts:`
 
     kerberos_organisations = []
 
@@ -19,7 +17,7 @@ class KerberosSettings
         if not /o=puavo/i.match(suffix) 
           organisation['suffix'] = suffix
 
-          tmp_dbinfo = `ldapsearch -LLL -D #{ldap_server['bind_dn']} -w #{ldap_server['password']} -H ldap://#{ldap_server['host']} -x -s base -b #{suffix} -Z 2> /dev/null`
+          tmp_dbinfo = `ldapsearch -LLL -D #{dn} -w #{password} -H ldap://#{host} -x -s base -b #{suffix} -Z 2> /dev/null`
 
           if /puavoDomain: (.*)/.match(tmp_dbinfo)
             organisation['domain'] = $1
@@ -52,9 +50,11 @@ class KerberosSettings
   end
 
   def initialize(args)
-    @ldap_server = args[:ldap_server]
+    @ldap_host = args[:ldap_host]
+    @ldap_dn = args[:ldap_dn]
+    @ldap_password = args[:ldap_password]
     
-    @organisations = self.class.find_all_organisations(@ldap_server)
+    @organisations = self.class.find_all_organisations(@ldap_host, @ldap_dn, @ldap_password)
   end
 
   def kdc_conf
@@ -190,18 +190,18 @@ end
   
 class KerberosRealm
 
-  attr_accessor :ldap_server, :realm, :masterpw, :suffix, :domain
-
   def initialize(args)
-    self.ldap_server = args[:ldap_server]
-    self.realm = args[:realm]
-    self.masterpw = args[:masterpw]
-    self.suffix = args[:suffix]
-    self.domain = args[:domain]
+    @ldap_host = args[:ldap_host]
+    @ldap_dn = args[:ldap_dn]
+    @ldap_password = args[:ldap_password]
+    @realm = args[:realm]
+    @masterpw = args[:masterpw]
+    @suffix = args[:suffix]
+    @domain = args[:domain]
   end
 
   # Create kerberos ldap tree and stash file
   def save
-    puts `echo "#{self.masterpw}\\n#{self.masterpw}\\n" | /usr/sbin/kdb5_ldap_util -D #{ldap_server["bind_dn"]} create -k aes256-cts-hmac-sha1-96 -subtrees "#{self.suffix}" -s -sf /etc/krb5kdc/stash.#{self.domain} -H ldaps://#{ldap_server["host"]} -r "#{self.realm}" -w #{ldap_server["password"]} 2>/dev/null`
+    puts `echo "#{@masterpw}\\n#{@masterpw}\\n" | /usr/sbin/kdb5_ldap_util -D #{@ldap_dn} create -k aes256-cts-hmac-sha1-96 -subtrees "#{@suffix}" -s -sf /etc/krb5kdc/stash.#{@domain} -H ldaps://#{@ldap_host} -r "#{@realm}" -w #{@ldap_password} 2>/dev/null`
   end
 end
