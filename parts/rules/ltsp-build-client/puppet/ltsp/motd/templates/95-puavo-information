@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+puavo_hosttype="$(cat /etc/puavo/hosttype           2>/dev/null || true)"
+ltspimage_name="$(cat /etc/ltsp/this_ltspimage_name 2>/dev/null || true)"
+
+if [ -n "$puavo_hosttype" ]; then
+  echo "  PuavoLTSP host type: $puavo_hosttype"
+fi
+if [ -n "$ltspimage_name" ]; then
+  echo "  PuavoLTSP image:     $ltspimage_name"
+fi
