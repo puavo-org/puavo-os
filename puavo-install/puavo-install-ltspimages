@@ -32,6 +32,9 @@ set_image_as_default_image() {
   ln -f "$imagepath" "${default_ltspimage_path}.tmp"
   mv "${default_ltspimage_path}.tmp" "$default_ltspimage_path"
   sync
+
+  echo "The PuavoLTSP image $imagename"
+  echo "is now installed and set as default."
 }
 
 lookup_current_ltspimage_name() {
@@ -69,7 +72,8 @@ install_image() {
 
   current_ltspimage_name=$(lookup_current_ltspimage_name "$images_dir")
   if [ "$current_ltspimage_name" = "$imagename" ]; then
-    # the image is already in place
+    echo "The wanted PuavoLTSP image $imagename"
+    echo "is already in place."
     return 0
   fi
 
