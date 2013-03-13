@@ -41,7 +41,7 @@ lookup_current_ltspimage_name() {
   images_dir=$1
 
   current_ltspimage_path=$images_dir/ltsp.img
-  current_ltspimage_inode="$(stat -c %i $current_ltspimage_path || true)"
+  current_ltspimage_inode="$(stat -c %i $current_ltspimage_path 2>/dev/null || true)"
 
   for file in $images_dir/*.img; do
     # check that *.img expands to something
