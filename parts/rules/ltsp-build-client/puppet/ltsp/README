@@ -25,6 +25,9 @@ cpu_frequency_scaling
     system freezes on some machines, for example on most
     "CentaurHauls, VIA Nehemiah" 800MHz processors on ETC-3800 machines).
 
+crash_reporting
+    Disable "whoopsie".
+
 desktop
     Desktop settings.
 
@@ -48,6 +51,10 @@ license_keys
 
 lightdm
     Some lightdm configurations (some of these come from ltsp-lightdm package).
+
+motd
+    Add stuff to MOTD, that means at least host type and ltsp image
+    name/version.
 
 organisation_adm_users
     List actual, real-life people here to create actual administrative user
