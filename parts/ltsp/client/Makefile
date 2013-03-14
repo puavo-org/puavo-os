@@ -21,17 +21,18 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/ssh
+	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom
+	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount
+	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d
+	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/init
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ldap
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sssd
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sssd
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d
-	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount
-	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom
-	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
 
 .PHONY : install
 install : installdirs
@@ -90,6 +91,9 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
 		screen.d/ltspimage-update \
 		screen.d/register
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d \
+		ltsp_config.d/00-puavoltsp-by-hosttype
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/default \
 		etc/default/ltspssh

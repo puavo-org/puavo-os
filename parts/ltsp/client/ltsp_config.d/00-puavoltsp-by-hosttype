@@ -1,0 +1,53 @@
+PUAVO_HOSTTYPE=$(/bin/cat /etc/puavo/hosttype)
+
+set_lts_var PUAVO_HOSTTYPE "$PUAVO_HOSTTYPE"
+
+puavo_nfs_services='gssd idmapd portmap rpcbind-boot'
+puavo_tty_services='tty3 tty4 tty5 tty6'
+
+set_lts_var LOCAL_APPS False
+set_lts_var NBD_SWAP   False
+set_lts_var SYSLOG     False
+set_lts_var XKBLAYOUT  fi	# XXX especially this is highly opinionated
+
+case "$PUAVO_HOSTTYPE" in
+  fatclient)
+    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_nfs_services $puavo_tty_services"
+    set_lts_var LOCALDEV             False
+    set_lts_var LTSP_FATCLIENT       True
+    set_lts_var RM_SYSTEM_SERVICES   'ltspssh network-manager'
+    set_lts_var SCREEN_07            lightdm
+    set_lts_var USE_NFS_HOMES        True
+    ;;
+  laptop)
+    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
+    set_lts_var LOCALDEV             False
+    set_lts_var LTSP_FATCLIENT       True
+    set_lts_var RM_SYSTEM_SERVICES   'ltspssh'
+    set_lts_var SCREEN_07            lightdm
+    ;;
+  ltspserver)
+    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_nfs_services $puavo_tty_services"
+    set_lts_var LOCALDEV             False
+    set_lts_var LTSP_FATCLIENT       False
+    set_lts_var LTSP_SERVER          True
+    set_lts_var RM_SYSTEM_SERVICES   'network-manager'
+    set_lts_var USE_NFS_HOMES        True
+    ;;
+  thinclient)
+    set_lts_var KEEP_SYSTEM_SERVICES 'tty1 tty2 tty3 tty4 tty5 tty6'
+    set_lts_var LDM_AUTOLOGIN        False
+    set_lts_var LDM_DIRECTX          True
+    set_lts_var LDM_SESSION          'gnome-session --session=gnome-fallback'
+    set_lts_var LOCALDEV             True
+    set_lts_var LTSP_FATCLIENT       False
+    set_lts_var RM_SYSTEM_SERVICES   'ltspssh network-manager'
+    set_lts_var SCREEN_07            lightdm
+    set_lts_var SSH_OVERRIDE_PORT    222
+    set_lts_var X_COLOR_DEPTH        16
+    ;;
+  unregistered)
+    set_lts_var RM_SYSTEM_SERVICES 'ltspssh network-manager'
+    set_lts_var SCREEN_02          register
+    ;;
+esac
