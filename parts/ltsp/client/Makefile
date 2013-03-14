@@ -93,7 +93,7 @@ install : installdirs
 		screen.d/ltspimage-update \
 		screen.d/register
 
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d \
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d \
 		ltsp_config.d/00-puavoltsp-by-hosttype
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/default \
