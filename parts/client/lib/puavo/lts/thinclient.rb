@@ -8,21 +8,9 @@ module Puavo
         @device = device
 
         @lts_data = {
-          'LDM_AUTOLOGIN'     => 'False',
-          'LDM_DIRECTX'       => 'True',
-          'LDM_SERVER'        => PUAVO_ETC.primary_ltsp_server,
-          'LDM_SESSION'       => '"gnome-session --session=gnome-fallback"',
-          'LOCAL_APPS'        => 'False',
-          'LOCALDEV'          => 'True',
-          'LTSP_FATCLIENT'    => 'False',
-          'NBD_SWAP'          => 'False',
-          'NFS_SERVER'        => boot_server_fqdn,
-          'SCREEN_07'         => 'lightdm',
-          'SERVER'            => boot_server_fqdn,
-          'SSH_OVERRIDE_PORT' => '222',
-          'SYSLOG'            => 'False',
-          'X_COLOR_DEPTH'     => '16',
-          'XKBLAYOUT'         => 'fi',
+          'LDM_SERVER' => PUAVO_ETC.primary_ltsp_server,
+          'NFS_SERVER' => boot_server_fqdn,
+          'SERVER'     => boot_server_fqdn,
         }
 
         @lts_data.merge!( define_tags )

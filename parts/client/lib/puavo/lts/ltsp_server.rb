@@ -8,13 +8,8 @@ module Puavo
         @device = device
 
         @lts_data = {
-          'LOCAL_APPS'     => 'False',
-          'LOCALDEV'       => 'False',
-          'LTSP_FATCLIENT' => 'False',
-          'LTSP_SERVER'    => 'True',
-          'SERVER'         => boot_server_fqdn,
-          'USE_NFS_HOMES'  => 'True',
-          'NFS_SERVER'     => boot_server_fqdn,
+          'NFS_SERVER' => boot_server_fqdn,
+          'SERVER'     => boot_server_fqdn,
         }
         
         @lts_data.merge!( define_tags )
