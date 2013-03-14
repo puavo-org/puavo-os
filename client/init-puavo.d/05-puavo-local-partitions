@@ -11,6 +11,11 @@
 
 puavo_link_to_state() {
   for dir in "$@"; do
+    # Before linking the directory, make sure that the /state partition has
+    # the same directory structure as the image so that applications do 
+    # not freak out because something was be missing. The original directory
+    # is renamed to $dir.rofs before replacing the directory with a 
+    # symbolic link to the /state partition.
     find "$dir" -type d -print0 | cpio -0dpm --quiet /state
     mv -T "$dir" "$dir.rofs" 2>/dev/null || true
     ln -fns "/state$dir" "$dir"
