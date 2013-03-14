@@ -4,19 +4,19 @@ module Puavo
   module Lts
 
     def self.new(organisation, school, device)
-      unless ['thinclient', 'fatclient', 'ltspserver', 'laptop'].include?(device.device_type)
-        raise "Invalid device type: #{device.device_type}"
-      end
+      class_by_device_type = {
+        'fatclient'    => Puavo::Lts::Fatclient,
+        'laptop'       => Puavo::Lts::Laptop,
+        'ltspserver'   => Puavo::Lts::LtspServer,
+        'thinclient'   => Puavo::Lts::Thinclient,
+        'unregistered' => Puavo::Lts::Unregistered,
+      }
 
-      case device.device_type
-      when "thinclient"
-        Puavo::Lts::Thinclient.new(organisation, school, device)
-      when "fatclient"
-        Puavo::Lts::Fatclient.new(organisation, school, device)
-      when "ltspserver"
-        Puavo::Lts::LtspServer.new(organisation, school, device)
-      when "laptop"
-        Puavo::Lts::Laptop.new(organisation, school, device)
+      device_class = class_by_device_type[device.device_type]
+      if device_class then
+        device_class.new(organisation, school, device)
+      else
+        raise "Invalid device type: #{ device.device_type }"
       end
     end
 
