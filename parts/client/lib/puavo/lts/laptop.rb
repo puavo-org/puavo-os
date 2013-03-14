@@ -8,21 +8,19 @@ module Puavo
         @device = device
 
         @lts_data = {
-          'KEEP_SYSTEM_SERVICES' => keep_services_tty_services,
-          'LOCAL_APPS'           => 'False',
-          'LOCALDEV'             => 'False',
-          'LTSP_FATCLIENT'       => 'True',
-          'NBD_SWAP'             => 'False',
-          'SCREEN_07'            => 'lightdm',
-          'SYSLOG'               => 'False',
-          'XKBLAYOUT'            => 'fi',
+          'LOCAL_APPS'     => 'False',
+          'LOCALDEV'       => 'False',
+          'LTSP_FATCLIENT' => 'True',
+          'NBD_SWAP'       => 'False',
+          'SCREEN_07'      => 'lightdm',
+          'SYSLOG'         => 'False',
+          'XKBLAYOUT'      => 'fi',
         }
         
         @lts_data.merge!( define_tags )
         @lts_data.merge!( define_default_printer )
         @lts_data.merge!( define_xserver_driver )
         @lts_data.merge!( define_xrandrs )
-        @lts_data.merge!( define_system_services )
 
       end
 

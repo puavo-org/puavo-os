@@ -8,14 +8,13 @@ module Puavo
         @device = device
 
         @lts_data = {
-          'KEEP_SYSTEM_SERVICES' => keep_services_tty_and_nfs_services + " ltspssh",
-          'LOCAL_APPS'           => 'False',
-          'LOCALDEV'             => 'False',
-          'LTSP_FATCLIENT'       => 'False',
-          'LTSP_SERVER'          => 'True',
-          'SERVER'               => boot_server_fqdn,
-          'USE_NFS_HOMES'        => 'True',
-          'NFS_SERVER'           => boot_server_fqdn,
+          'LOCAL_APPS'     => 'False',
+          'LOCALDEV'       => 'False',
+          'LTSP_FATCLIENT' => 'False',
+          'LTSP_SERVER'    => 'True',
+          'SERVER'         => boot_server_fqdn,
+          'USE_NFS_HOMES'  => 'True',
+          'NFS_SERVER'     => boot_server_fqdn,
         }
         
         @lts_data.merge!( define_tags )
@@ -24,7 +23,6 @@ module Puavo
         @lts_data.merge!( define_xrandrs )
         @lts_data.merge!( define_resolution )
         @lts_data.merge!( define_auto_power_off )
-        @lts_data.merge!( define_system_services )
       end
 
     end
