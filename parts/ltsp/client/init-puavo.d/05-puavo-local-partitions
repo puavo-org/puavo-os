@@ -4,10 +4,10 @@
 # Images partition are used by laptops and need it mounted to update
 # the ltsp images.
 #
-# Checks if LVM partitions /dev/mapper/puavo-home, /dev/mapper/puavo-images
-# and /dev/mapper/puavo-state and mounts those as /home, /images, or /state,
-# correspondingly.  Also copy necessary directory hierarchies under /state
-# in case those are missing.
+# Checks if LVM partitions /dev/mapper/puavo-home, /dev/mapper/puavo-images,
+# /dev/mapper/puavo-state and /dev/mapper/puavo-tmp and mounts those as 
+# /home, /images, /state or /tmp correspondingly.  Also copy necessary 
+# directory hierarchies under /state in case those are missing.
 
 puavo_link_to_state() {
   for dir in "$@"; do
@@ -55,7 +55,7 @@ if [ -x "/sbin/vgchange" ]; then
 
 	case "$PUAVO_HOSTTYPE" in
 	  laptop)
-	    puavo_link_to_state /var/lib/sss /var/log
+	    puavo_link_to_state /etc/NetworkManager/system-connections /var/lib/sss /var/log
 	    ;;
 	  ltspserver)
 	    puavo_link_to_state /var/log
