@@ -4,6 +4,11 @@ module Puavo
       module DeviceBase
         include Base
 
+        def booleanize(value)
+	  v = Array(value).first
+          (v && v != 'FALSE') ? true : false
+        end
+
         def prettify_attributes
           # Note: value of attribute may be raw ldap value eg. { puavoHostname => ["thinclient-01"] }
           [
@@ -87,7 +92,7 @@ module Puavo
              :value_block => lambda{ |value| Array(value) } },
            { :original_attribute_name => "puavoDeviceXrandrDisable",
              :new_attribute_name => "xrandr_disable",
-             :value_block => lambda{ |value| Array(value).first } },
+             :value_block => lambda{ |value| booleanize(value) } },
            { :original_attribute_name => "puavoDeviceType",
              :new_attribute_name => "device_type",
              :value_block => lambda{ |value| Array(value).first } },
