@@ -69,8 +69,10 @@ done
       ;;
     image)
       ltspimage_name=$build_version-$arch.img
-      ltspimage_name_path=$basedir/$arch/etc/ltsp/this_ltspimage_name
-      run_sudo sh -c "echo $ltspimage_name > $ltspimage_name_path"
+      run_sudo sh -c "
+        mkdir -p $basedir/$arch/etc/ltsp; \
+        echo $ltspimage_name > $basedir/$arch/etc/ltsp/this_ltspimage_name
+      "
 
       # XXX ltsp-build-client --onlyimage ?
       run_sudo mksquashfs \
