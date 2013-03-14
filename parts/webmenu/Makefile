@@ -96,4 +96,4 @@ serve:
 	node_modules/.bin/serve --no-stylus  --no-jade --port 3000 .
 
 watch:
-	node watchers.js
+	node extra/bin/watchers.js
