@@ -1,7 +1,4 @@
 require.config({
-  hbs: {
-    disableI18n: true
-  },
   shim: {
     backbone: {
       deps: ["underscore", "jquery"],
@@ -30,6 +27,7 @@ require.config({
     uri: "vendor/URI",
     "socket.io": "vendor/socket.io",
     "coffee-script": "vendor/coffee-script",
-    "spin": "vendor/spin"
+    "spin": "vendor/spin",
+    "handlebars": "vendor/handlebars"
   }
 });
