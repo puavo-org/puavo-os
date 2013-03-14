@@ -7,6 +7,15 @@
 
     <link rel="stylesheet" href="styles/vendor/font/iconfont.css">
     <link rel="stylesheet" href="styles/main.css">
+    <script>
+      (function() {
+        var lang = window.process.env.i18n ||
+          navigator.language.match(/^([a-z]+)\-/)[1];
+        document.write(
+          '<script src="i18n/' + lang + '/i18n.js"></' + 'script>'
+        );
+      }());
+    </script>
 
     <script>
     (function(){
