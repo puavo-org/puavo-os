@@ -18,7 +18,7 @@ define nw-build
 endef
 
 
-build: npm-install grunt r.js
+build: npm-install grunt r.js i18n-update
 
 # Build node-webkit package
 # https://github.com/rogerwang/node-webkit/wiki/How-to-package-and-distribute-your-apps

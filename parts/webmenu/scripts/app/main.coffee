@@ -6,6 +6,7 @@ define [
   "cs!app/views/menulayout_view"
   "cs!app/models/menu_model"
   "cs!app/models/allitems_collection"
+  "cs!app/utils/i18n" # Require to define hbs helper
   "cs!app/application"
 ],
 (
@@ -16,6 +17,7 @@ define [
   MenuLayout
   MenuModel
   AllItems
+  i18n
   Application
 ) ->
 
