@@ -11,6 +11,10 @@ if (!puavo_device_type)
 end
 
 if puavo_device_type == 'unregistered'
+  `hostname unregistered`
+  `echo unregistered > /proc/sys/kernel/hostname`
+  `echo unregistered > /etc/hostname`
+
   exit(0)
 end
 
@@ -46,6 +50,12 @@ begin
   Dir.mkdir('/etc/cups')
 rescue Errno::EEXIST
 end
+
+`hostname #{@puavo_hostname}`
+`echo #{@puavo_hostname} > /proc/sys/kernel/hostname`
+`echo #{@puavo_hostname} > /etc/hostname`
+
+write_config("/etc/hosts")
 
 case puavo_device_type
   when "thinclient"
