@@ -21,7 +21,16 @@ puavo_mount_partition() {
   name=$1
   if [ -b "/dev/mapper/puavo-$name" ]; then
     mkdir -p /$name
-    mount /dev/mapper/puavo-$name /$name
+
+    OPTIONS="-o noatime"
+
+    if [ -f "/sys/block/sda/queue/rotational" ]; then
+      if grep -q "0" /sys/block/sda/queue/rotational; then
+        OPTIONS="-o discard,noatime"
+      fi
+    fi
+
+    mount $OPTIONS /dev/mapper/puavo-$name /$name
   fi
 }
 
