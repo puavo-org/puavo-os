@@ -20,11 +20,18 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var USE_NFS_HOMES        True
     ;;
   laptop)
+    if [ -n "$SERVER" ]; then
+      # laptop booted off from network, offer to update it
+      set_lts_var SCREEN_07 ltspimage-update
+    else
+      # laptop booted from local disk, provide lightdm
+      set_lts_var SCREEN_07 lightdm
+    fi
+
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
     set_lts_var RM_SYSTEM_SERVICES   'ltspssh'
-    set_lts_var SCREEN_07            lightdm
     ;;
   ltspserver)
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_nfs_services $puavo_tty_services"
@@ -48,6 +55,6 @@ case "$PUAVO_HOSTTYPE" in
     ;;
   unregistered)
     set_lts_var RM_SYSTEM_SERVICES 'ltspssh network-manager'
-    set_lts_var SCREEN_02          register
+    set_lts_var SCREEN_07          register
     ;;
 esac
