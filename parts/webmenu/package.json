@@ -30,11 +30,9 @@
     "mime": "1.2.7",
     "ffi": "",
     "dbus-native": "0.0.8",
-    "requirejs": "~2.0.6",
     "underscore.string": "~2.3.1"
   },
   "devDependencies": {
-    "requirejs": "2.0.x",
     "node-static": "",
     "stylus": "0.30.1",
     "nib": "0.8.2",
@@ -46,6 +44,8 @@
     "grunt-mocha": "",
     "grunt-contrib-yuidoc": "0.3.2",
     "serve": "",
-    "nw-gyp": "~0.7.3-4"
+    "nw-gyp": "~0.7.3-4",
+    "messageformat": "~0.1.5",
+    "requirejs": "~2.0.6"
   }
 }
