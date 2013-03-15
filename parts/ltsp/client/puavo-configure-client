@@ -2,6 +2,12 @@
 
 require 'erb'
 
+def delete_file(file)
+  if File.exists?(file)
+    File.delete(file)
+  end
+end
+
 puavo_device_type = ARGV[0]
 
 if (!puavo_device_type)
@@ -70,8 +76,8 @@ case puavo_device_type
     write_config("/etc/init/gssd.conf", "userprincipal")
     write_config("/etc/cups/client.conf")
 
-    File.delete('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
-    File.delete('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
+    delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
+    delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "fatclient"
     @ldap_slave = File.read('/etc/puavo/ldap/slave').chomp
 
@@ -87,8 +93,8 @@ case puavo_device_type
     # FIXME: Hack to get gnome fallback session
     `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
 
-    File.delete('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
-    File.delete('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
+    delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
+    delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "ltspserver"
     @ldap_slave = File.read('/etc/puavo/ldap/slave').chomp
 
@@ -109,8 +115,8 @@ case puavo_device_type
     # FIXME - do this in ruby instead of perl
     `perl -pi -e 's/libvdpau/lixvdpau/g' /usr/lib/adobe-flashplugin/libflashplayer.so`
 
-    File.delete('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
-    File.delete('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
+    delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
+    delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "laptop"
     write_config("/etc/nsswitch.conf", "sss")
     write_config("/etc/krb5.conf")
