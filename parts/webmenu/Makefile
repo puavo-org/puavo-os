@@ -18,7 +18,7 @@ define nw-build
 endef
 
 
-build: npm-install grunt r.js i18n-update
+build: npm-install grunt r.js i18n
 
 # Build node-webkit package
 # https://github.com/rogerwang/node-webkit/wiki/How-to-package-and-distribute-your-apps
@@ -95,7 +95,7 @@ serve:
 	@echo View tests on http://localhost:3000/tests.html
 	node_modules/.bin/serve --no-stylus  --no-jade --port 3000 .
 
-i18n-update:
+i18n:
 	@node_modules/.bin/coffee extra/bin/i18n-update
 
 watch:
