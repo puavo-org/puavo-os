@@ -1,5 +1,6 @@
 case "$PUAVO_HOSTTYPE" in
   laptop|ltspserver)
+    mkdir -p /etc/puavo/vpn
     cat <<'EOF' > /etc/puavo/vpn/servers
 <%= scope.lookupvar('config::vpn::openvpn_remote_servers') -%>
 EOF
