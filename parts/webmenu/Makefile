@@ -98,6 +98,7 @@ serve:
 	@echo View tests on http://localhost:3000/tests.html
 	node_modules/.bin/serve --no-stylus  --no-jade --port 3000 .
 
+.PHONY : i18n
 i18n:
 	@node_modules/.bin/coffee extra/bin/i18n-update
 
