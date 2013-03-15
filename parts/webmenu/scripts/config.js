@@ -1,4 +1,5 @@
 require.config({
+  optimize: "uglify",
   shim: {
     backbone: {
       deps: ["underscore", "jquery"],
