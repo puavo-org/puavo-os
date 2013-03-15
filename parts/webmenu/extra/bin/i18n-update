@@ -64,7 +64,7 @@ fs.readdirSync(langRoot).filter (language) ->
 # Compile translations to raw Javascript code for speed
 fs.readdirSync(langRoot).forEach (language) ->
   langDir = path.join(langRoot, language)
-  exec "#{ messageformatCmd } --namespace window.MESSAGE_FORMAT_I18N --locale #{ language }",
+  exec "#{ messageformatCmd } --namespace window.MF --locale #{ language }",
     cwd: langDir
   , (err, stdout, stderr) ->
     throw err if err

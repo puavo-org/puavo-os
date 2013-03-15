@@ -7,24 +7,24 @@
 
     <link rel="stylesheet" href="styles/vendor/font/iconfont.css">
     <link rel="stylesheet" href="styles/main.css">
+    <script src="i18n/en/i18n.js"></script>
     <script>
       (function() {
-        var lang = window.process.env.i18n ||
-          navigator.language.match(/^([a-z]+)\-/)[1];
-        document.write(
-          '<script src="i18n/' + lang + '/i18n.js"></' + 'script>'
-        );
-      }());
-    </script>
+        // node-webkit boot up starts here.
+        if (window.process.env.test) {
+           window.location = "tests.html";
+           return;
+        }
 
-    <script>
-    (function(){
-      // node-webkit boot up starts here.
-
-      if (window.process.env.test) {
-         window.location = "tests.html";
-         return;
-      }
+        // English is always loaded, but if user has prefers another language load
+        // that too. It will nicely override english if it loads and silently
+        // fallbacks to english if missing
+        var lang = window.process.env.i18n || navigator.language.match(/^([a-z]+)\-/)[1];
+        if (lang !== "en") {
+          document.write(
+            '<script src="i18n/' + lang + '/i18n.js"></' + 'script>'
+          );
+        }
 
        // Log plain node-webkit startup time nearly without any Javascript,
        // HTML or CSS parsing/rendering.

@@ -4,6 +4,9 @@ define [
   Handlebars
 ) ->
 
+  if not window.MF
+    throw new Error "i18n.js is not loaded!"
+
   untranslatedRegexp = /\s{1}\[UNTRANSLATED\]$/
 
   ###*
@@ -15,7 +18,7 @@ define [
   # @param {Object} data Translation data
   ###
   i18n = (key, data) ->
-    current = window.MESSAGE_FORMAT_I18N
+    current = window.MF
     for attr in key.split(".")
       current = current[attr]
     if typeof current isnt "function"
