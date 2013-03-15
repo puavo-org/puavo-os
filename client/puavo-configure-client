@@ -123,6 +123,7 @@ case puavo_device_type
     write_config("/etc/idmapd.conf")
     write_config("/etc/ldap/ldap.conf", "laptop")
     write_config("/etc/pam.d/lightdm", "laptop")
+    write_config("/etc/network/if-up.d/sssd")
 
     # FIXME: Hack to get gnome fallback session
     `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
