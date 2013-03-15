@@ -2,6 +2,7 @@
 fs = require "fs"
 gettext = require "../vendor/gnu-gettext"
 ini = require "ini"
+_ = require "underscore"
 s = require "underscore.string"
 
 
@@ -81,7 +82,7 @@ findCommand = (desktopEntry) ->
     # use for them
     args = []
   else
-    args = s.clean(args).split(" ")
+    args = _.compact(s.clean(args).split(" "))
 
   return [cmd].concat(args)
 
