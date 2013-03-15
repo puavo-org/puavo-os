@@ -99,28 +99,20 @@
         }
       }
     },
-    "requirejs": {
-      "version": "2.0.6"
-    },
     "underscore.string": {
       "version": "2.3.1"
     },
-    "chai": {
-      "version": "1.4.0"
-    },
-    "grunt-stylus": {
-      "version": "0.2.0"
+    "requirejs": {
+      "version": "2.0.6"
     },
     "nib": {
       "version": "0.8.2"
     },
-    "node-static": {
-      "version": "0.6.5",
-      "dependencies": {
-        "colors": {
-          "version": "0.6.0-1"
-        }
-      }
+    "grunt-stylus": {
+      "version": "0.2.0"
+    },
+    "chai": {
+      "version": "1.4.0"
     },
     "stylus": {
       "version": "0.30.1",
@@ -130,6 +122,45 @@
         },
         "debug": {
           "version": "0.7.0"
+        }
+      }
+    },
+    "node-static": {
+      "version": "0.6.5",
+      "dependencies": {
+        "colors": {
+          "version": "0.6.0-1"
+        }
+      }
+    },
+    "mocha": {
+      "version": "1.7.4",
+      "dependencies": {
+        "commander": {
+          "version": "0.6.1"
+        },
+        "growl": {
+          "version": "1.6.1"
+        },
+        "jade": {
+          "version": "0.26.3",
+          "dependencies": {
+            "mkdirp": {
+              "version": "0.3.0"
+            }
+          }
+        },
+        "diff": {
+          "version": "1.0.2"
+        },
+        "debug": {
+          "version": "0.7.0"
+        },
+        "mkdirp": {
+          "version": "0.3.3"
+        },
+        "ms": {
+          "version": "0.3.0"
         }
       }
     },
@@ -185,37 +216,6 @@
         },
         "marked": {
           "version": "0.2.5"
-        }
-      }
-    },
-    "mocha": {
-      "version": "1.7.4",
-      "dependencies": {
-        "commander": {
-          "version": "0.6.1"
-        },
-        "growl": {
-          "version": "1.6.1"
-        },
-        "jade": {
-          "version": "0.26.3",
-          "dependencies": {
-            "mkdirp": {
-              "version": "0.3.0"
-            }
-          }
-        },
-        "diff": {
-          "version": "1.0.2"
-        },
-        "debug": {
-          "version": "0.7.0"
-        },
-        "mkdirp": {
-          "version": "0.3.3"
-        },
-        "ms": {
-          "version": "0.3.0"
         }
       }
     },
@@ -306,6 +306,53 @@
         },
         "growl": {
           "version": "1.6.1"
+        }
+      }
+    },
+    "messageformat": {
+      "version": "0.1.5",
+      "dependencies": {
+        "nopt": {
+          "version": "2.0.0",
+          "dependencies": {
+            "abbrev": {
+              "version": "1.0.4"
+            }
+          }
+        },
+        "coffee-script": {
+          "version": "1.2.0"
+        },
+        "watchr": {
+          "version": "1.0.0"
+        },
+        "underscore": {
+          "version": "1.3.3"
+        },
+        "async": {
+          "version": "0.1.22"
+        },
+        "glob": {
+          "version": "3.1.21",
+          "dependencies": {
+            "minimatch": {
+              "version": "0.2.11",
+              "dependencies": {
+                "lru-cache": {
+                  "version": "2.2.2"
+                },
+                "sigmund": {
+                  "version": "1.0.0"
+                }
+              }
+            },
+            "graceful-fs": {
+              "version": "1.2.0"
+            },
+            "inherits": {
+              "version": "1.0.0"
+            }
+          }
         }
       }
     },
