@@ -87,7 +87,7 @@ class PuavoEtc
   puavo_attr :primary_ltsp_server, "primary_ltsp_server"
 
   puavo_attr :ds_puavo_dn, "ds/puavo/dn"
-  puavo_attr :ds_puavo_password, "ds/puavo/password", :mode => 0640
+  puavo_attr :ds_puavo_password, "ds/puavo/password"
   puavo_attr :ds_puppet_dn, "ds/puppet/dn"
   puavo_attr :ds_puppet_password, "ds/puppet/password", :mode => 0640
   puavo_attr :ds_kdc_dn, "ds/kdc/dn"
