@@ -81,6 +81,21 @@ These attributes can be added to any object
   - `cssIcon`: {String, optional} CSS icon class from [font-awesome][].
     Overrides `osIcon`
 
+### Translations
+
+Item `name` and `description` attributes can be translated using a translation
+object.
+
+Example:
+
+```json
+{
+  "en": "Calculator",
+  "fi": "Laskin"
+}
+```
+
+menu.json example: <https://github.com/opinsys/webmenu/commit/bd75038be2dbe07e67f485f2277b180ef9fea82c#L0L4>
 
 [font-awesome]: http://fortawesome.github.com/Font-Awesome/
 

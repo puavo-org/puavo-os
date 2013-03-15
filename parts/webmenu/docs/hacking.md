@@ -37,6 +37,22 @@ or watch with
 
     make watch
 
+## Translations
+
+Translation are written in [MessageFormat][] style and they are kept in the
+`i18n` directory. After changes translations must be compiled with:
+
+    make i18n
+
+Translations can be accessed from templates using the `i18n` helper:
+
+    {{ i18n "logout.cancel" }}
+
+Where `logout` is the json file name and `cancel` a key name in the json
+object.
+
+For content translations see [menujson.md][menujson_i18n].
+
 ## Tests
 
 No broken tests on master!
@@ -56,7 +72,7 @@ node.js tests:
 Debug tests in a real browser:
 
     make serve
-    
+
 ## Installation
 
     sudo make install
@@ -64,3 +80,5 @@ Debug tests in a real browser:
 
 [Travis-CI]: https://travis-ci.org/opinsys/webmenu
 [PhantomJS]: http://phantomjs.org/
+[MessageFormat]: https://github.com/SlexAxton/messageformat.js
+[menujson_i18n]: https://github.com/opinsys/webmenu/blob/master/docs/menujson.md#translations
