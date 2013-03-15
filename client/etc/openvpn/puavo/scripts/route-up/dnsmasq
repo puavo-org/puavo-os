@@ -1,0 +1,9 @@
+#!/bin/sh
+
+LDAP_MASTER=$(cat /etc/puavo/ldap/master)
+KERBEROS_MASTER=$(cat /etc/puavo/kerberos/master)
+
+dbus-send --system --dest=org.freedesktop.NetworkManager.dnsmasq /uk/org/thekelleys/dnsmasq \
+  uk.org.thekelleys.SetDomainServers array:string:"/${LDAP_MASTER}/${route_vpn_gateway}"
+dbus-send --system --dest=org.freedesktop.NetworkManager.dnsmasq /uk/org/thekelleys/dnsmasq \
+  uk.org.thekelleys.SetDomainServers array:string:"/${KERBEROS_MASTER}/${route_vpn_gateway}"

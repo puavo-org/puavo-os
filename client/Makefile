@@ -18,6 +18,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/default
+	mkdir -p $(DESTDIR)$(sysconfdir)/openvpn/puavo/scripts/route-up
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/ssh
@@ -98,6 +99,10 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/default \
 		etc/default/ltspssh
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/openvpn/puavo/scripts/route-up \
+		etc/openvpn/puavo/scripts/route-up/dnsmasq \
+		etc/openvpn/puavo/scripts/route-up/sssd
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init.d \
 		etc/init.d/ltspssh
