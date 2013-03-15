@@ -1,0 +1,9 @@
+#!/bin/sh
+
+SCRIPTSUBDIR=$1
+
+for script in /etc/puavo-vpn-client/scripts/$SCRIPTSUBDIR/*; do
+    test -x $script && timeout 30 $script "$@"
+done
+
+exit 0
