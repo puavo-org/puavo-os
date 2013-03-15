@@ -130,6 +130,7 @@ module.exports = (gui, bridge) ->
     console.log "Displaying menu"
     Window.show()
     Window.focus()
+    Window.setAlwaysOnTop(true)
     forceFocus(50, 100, 350, 500)
 
   hideWindow = ->
@@ -199,6 +200,7 @@ module.exports = (gui, bridge) ->
 
   bridge.on "open", (cmd) ->
     console.log "Opening command", cmd
+    Window.setAlwaysOnTop(false)
 
     # Use node-webkit to open toolbarless web window
     if cmd.type is "webWindow"
