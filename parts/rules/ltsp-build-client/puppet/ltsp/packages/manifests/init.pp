@@ -390,10 +390,12 @@ class packages {
 
     [ 'ltsp-lightdm'
     , 'opinsys-ca-certificates'
+    # , 'puavo-client'          # XXX soon
     , 'puavo-ltsp-client'
     , 'puavo-ltsp-install'
     , 'puavo-monitor'
-    , 'puavo-register' ]:
+    , 'puavo-register'          # XXX soon gone (in puavo-client)
+    , 'puavo-vpn-client' ]:
       tag => [ 'puavo', 'opinsys', 'thinclient', ];
 
     [ 'vmware-view-client' ]:

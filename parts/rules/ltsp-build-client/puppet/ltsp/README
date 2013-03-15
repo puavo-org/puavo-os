@@ -74,6 +74,10 @@ plymouth_theme
     Setup a default plymouth theme (change from Ubuntu-default to
     opinsys-specific theme.
 
+puavo_openvpn
+    Configurations for puavo-openvpn.  The actual remote addresses are
+    stored in config::vpn.
+
 smartboard
     Special rules for handling smartboard software.  Make a wrapper for
     smartboard panel so that it will start up conditionally.
