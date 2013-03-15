@@ -47,6 +47,9 @@ clean:
 	rm -f styles/main.css
 	rm -rf node_modules
 	rm -rf out
+	rm -rf build/
+	rm -rf i18n/*/i18n.js
+	rm -rf scripts/bundle.js
 
 install-dirs:
 	mkdir -p $(DESTDIR)$(bindir)
