@@ -4,7 +4,10 @@
   "items": [
     {
       "type": "menu",
-      "name": "Apuohjelmat",
+      "name": {
+        "en": "Tools",
+        "fi": "Apuohjelmat"
+      },
       "description": "Apuohjelmia",
       "osIcon": "applications-accessories",
       "items": [

@@ -32,10 +32,6 @@ define [
       # of the same app
       @open = _.throttle(@open, 250)
 
-      @$el.addClass "item-" + @model.get("name")
-        .toLowerCase()
-        .replace(/[^a-z]/g, "")
-
       if @model.get("type") is "menu"
         @$el.addClass("type-menu")
       else

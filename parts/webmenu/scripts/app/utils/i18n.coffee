@@ -34,4 +34,26 @@ define [
     return translation
 
   Handlebars.registerHelper "i18n", i18n
+
+  ###*
+  # Pick translated string from object. This is used for translated menu content
+  # where strings can be defined also as a translation object. If requested
+  # language is missing it fallbacks to english.
+  #
+  # Example:
+  #
+  #  {
+  #    "en": "Calculator",
+  #    "fi": "Laskin"
+  #  }
+  #
+  ###
+  Handlebars.registerHelper "i18nPick", (ob) ->
+    return ob if typeof ob is "string"
+    if s = ob[window.LANG]
+      return s
+    else
+      console.error "Content translation missing for #{ window.LANG } in #{ JSON.stringify(ob) }"
+      return ob.en # English fallback
+
   return i18n
