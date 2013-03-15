@@ -24,7 +24,7 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client \
 		openvpn.conf
 
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir) \
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-vpn-client \
 		lib/runme
 
 .PHONY : clean
