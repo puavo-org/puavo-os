@@ -21,19 +21,19 @@ module.exports = (msg, cb) ->
   command = commandBuilders[msg.type]?(msg)
 
   if not command
-    console.log "no commad for type #{ msg.type }"
+    console.info "no commad for type #{ msg.type }"
     return
 
   [command, args] = command
 
-  console.log "Executing '#{ command }'"
+  console.info "Executing '#{ command }'"
 
   cmd = spawn command, args,
     detached: true
     cwd: process.env.HOME
 
   cmd.on "exit", (code) ->
-    console.log "Command '#{ command }' #{ JSON.stringify(args) } exited with #{ code }"
+    console.info "Command '#{ command }' #{ JSON.stringify(args) } exited with #{ code }"
     cb?() # TODO: create an error object...
 
 

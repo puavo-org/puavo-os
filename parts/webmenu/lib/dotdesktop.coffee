@@ -76,14 +76,10 @@ findCommand = (desktopEntry) ->
     console.error "failed to parse #{ rawCmd }"
     throw new Error "Failed to parse cmd: '#{ rawCmd }'"
 
-  if "%" in args
-    # Skip arguments completely if it has Freedesktop Exec variables. We might
-    # want to implement them later, but for now there doesn't seem to be any
-    # use for them
-    args = []
-  else
-    args = _.compact(s.clean(args).split(" "))
-
+  # Remove Exec variables for now.
+  # http://standards.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html#exec-variables
+  args = args.replace(/%[fFuUdDnNickvm]{1}/g, "")
+  args = _.compact(s.clean(args).split(" "))
   return [cmd].concat(args)
 
 parseFileSync = (filePath, locale) ->
