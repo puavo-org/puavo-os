@@ -7,6 +7,8 @@ following locations:
   2. /etc/webmenu/menu.json
   3. the bundled menu.json
 
+Use these paths to customize Webmenu content.
+
 In future Webmenu will be able to fetch it from a web service.
 
 ## Structure
