@@ -5,23 +5,23 @@
 
 <div class="logout-btn-container">
 
-  <button class="btn bb-logout">
+  <button class="btn js-logout">
     <img src="file:///usr/share/icons/Faenza/actions/24/system-log-out.png">
     {{ i18n "logout.logout" }}
   </button>
 
   {{#if localBoot}}
-  <button class="btn bb-shutdown">
+  <button class="btn js-shutdown">
     <img src="file:///usr/share/icons/Faenza/actions/24/system-shutdown.png">
     {{ i18n "logout.shutdown" }}
   </button>
-  <button class="btn bb-reboot">
+  <button class="btn js-reboot">
     <img src="file:///usr/share/icons/Faenza/actions/24/stock_undo.png">
     {{ i18n "logout.reboot" }}
   </button>
   {{/if}}
 
-  <button class="btn bb-cancel">
+  <button class="btn js-cancel">
     {{ i18n "logout.cancel" }}
   </button>
 </div>

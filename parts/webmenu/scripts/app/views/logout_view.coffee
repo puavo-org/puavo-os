@@ -20,10 +20,10 @@ define [
     }
 
     events:
-      "click .bb-logout": -> Backbone.trigger "logout"
-      "click .bb-shutdown": -> Backbone.trigger "shutdown"
-      "click .bb-reboot": -> Backbone.trigger "reboot"
-      "click .bb-cancel": -> @bubble "cancel"
+      "click .js-logout": -> Backbone.trigger "logout"
+      "click .js-shutdown": -> Backbone.trigger "shutdown"
+      "click .js-reboot": -> Backbone.trigger "reboot"
+      "click .js-cancel": -> @bubble "cancel"
 
     constructor: (opts) ->
       super
