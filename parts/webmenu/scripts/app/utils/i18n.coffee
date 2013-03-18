@@ -55,9 +55,8 @@ define [
       console.error "Content translation missing for #{ window.LANG } in #{ JSON.stringify(ob) }"
       return ob.en # English fallback
 
+  translate.pick = pick
   Handlebars.registerHelper "i18n", translate
   Handlebars.registerHelper "i18nPick", pick
-  return {
-    translate: translate
-    pick: pick
-  }
+  return translate
+
