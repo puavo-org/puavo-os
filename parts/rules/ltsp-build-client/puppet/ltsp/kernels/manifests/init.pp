@@ -3,7 +3,7 @@ class kernels {
   require packages
 
   $default_kernel = $lsbdistcodename ? {
-                      'precise' => '3.2.0-37-generic',
+                      'precise' => '3.2.0-38-generic',
                       'quantal' => '3.6.6-999-generic',
                     }
 
