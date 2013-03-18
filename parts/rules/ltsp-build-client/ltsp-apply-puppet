@@ -95,11 +95,10 @@ puppet_logfile_path="/var/log/puppet/ltsp-$(date +%Y-%m-%d-%H%M%S).log"
     || [ $? -eq 2 ]
   fi
 
-  if [ $? -eq 0 ]; then
-    rm -f $targetroot/puppet-error.log
-  else
+  if [ $? -ne 0 ]; then
     ln -fns "$puppet_logfile_path" $targetroot/puppet-error.log
-    echo ">>> puppet returned an error, see $targetroot/puppet-error.log for details."
+    echo ">>> puppet returned an error, see ${targetroot}${puppet_logfile_path} for details."
+    echo ">>> You MUST go through the whole build process to get a properly functioning image."
     exit 1
   fi
 )
