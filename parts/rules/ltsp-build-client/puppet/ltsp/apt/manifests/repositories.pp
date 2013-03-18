@@ -9,6 +9,14 @@ class apt::repositories {
       content => template('apt/sources.list'),
       notify  => Exec['apt update'],
       require => File['/etc/apt/apt.conf.d/00ltspbuild-proxy'];
+
+    # removes the file "/etc/apt/apt.conf.d/00ltspbuild-proxy" (above) at boot
+    '/etc/init/remove-apt-proxy.conf':
+      content => template('apt/remove_apt_proxy.conf');
+
+    '/etc/init.d/remove-apt-proxy':
+      ensure => link,
+      target => '/lib/init/upstart-job';
   }
 
   # define some apt keys and repositories for use
