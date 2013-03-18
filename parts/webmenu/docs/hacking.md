@@ -51,6 +51,15 @@ Translations can be accessed from templates using the `i18n` helper:
 Where `logout` is the json file name and `cancel` a key name in the json
 object.
 
+To create new translation just create a new directory for it  to `i18n` and run
+`make i18n`:
+
+    $ mkdir i18n/se
+    $ make i18n
+
+and edit the generated files. Remove the `[UNTRANSLATED]` tags from the strings
+after translating.
+
 For content translations see [menujson.md][menujson_i18n].
 
 ## menu.json development
