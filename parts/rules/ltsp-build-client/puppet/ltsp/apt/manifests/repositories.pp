@@ -12,7 +12,7 @@ class apt::repositories {
 
     # removes the file "/etc/apt/apt.conf.d/00ltspbuild-proxy" (above) at boot
     '/etc/init/remove-apt-proxy.conf':
-      content => template('apt/remove_apt_proxy.conf');
+      content => template('apt/remove-apt-proxy.conf');
 
     '/etc/init.d/remove-apt-proxy':
       ensure => link,
