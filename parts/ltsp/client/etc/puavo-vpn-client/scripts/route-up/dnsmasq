@@ -1,9 +1,22 @@
-#!/bin/sh
+#!/bin/bash
+
+# http://twobit.us/blog/2010/02/dnsmasq-and-racoon-vpn/
+function inet_aton () {
+    local count=3
+    local int=0
+    for num in $(echo $1 | sed -e 's/\./ /g'); do
+        let "int+=$num*256**$count"
+        let "count-=1"
+    done
+    echo $int
+}
 
 LDAP_MASTER=$(cat /etc/puavo/ldap/master)
 KERBEROS_MASTER=$(cat /etc/puavo/kerberos/master)
 
-dbus-send --system --dest=org.freedesktop.NetworkManager.dnsmasq /uk/org/thekelleys/dnsmasq \
-  uk.org.thekelleys.SetDomainServers array:string:"/${LDAP_MASTER}/${route_vpn_gateway}"
-dbus-send --system --dest=org.freedesktop.NetworkManager.dnsmasq /uk/org/thekelleys/dnsmasq \
-  uk.org.thekelleys.SetDomainServers array:string:"/${KERBEROS_MASTER}/${route_vpn_gateway}"
+dbus-send --system --dest=org.puavo.VPN.dnsmasq \
+  /uk/org/thekelleys/dnsmasq \
+  uk.org.thekelleys.SetServers \
+  uint32:$(inet_aton ${route_vpn_gateway}) \
+  string:"${LDAP_MASTER}" \
+  string:"${KERBEROS_MASTER}"
