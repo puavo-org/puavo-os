@@ -24,7 +24,7 @@ also contain other menu objects.
 Attributes
 
   - `name`: {String, required} Name of the item
-  - `items`: {Array, required} Array of item and/or menu objects
+  - `items`: {Array, required} Array of launcher object and/or menu objects
 
 ### `custom`
 
