@@ -17,7 +17,7 @@ define [
   # @param {String} key Translation key
   # @param {Object} data Translation data
   ###
-  i18n = (key, data) ->
+  translate = (key, data) ->
     current = window.MF
     for attr in key.split(".")
       current = current[attr]
@@ -33,12 +33,11 @@ define [
 
     return translation
 
-  Handlebars.registerHelper "i18n", i18n
 
   ###*
-  # Pick translated string from object. This is used for translated menu content
-  # where strings can be defined also as a translation object. If requested
-  # language is missing it fallbacks to english.
+  # Pick translated string from an object. This is used for translated menu
+  # content where strings can be defined also as a translation object. If
+  # requested language is missing it fallbacks to english.
   #
   # Example:
   #
@@ -48,7 +47,7 @@ define [
   #  }
   #
   ###
-  Handlebars.registerHelper "i18nPick", (ob) ->
+  pick = (ob) ->
     return ob if typeof ob is "string"
     if s = ob[window.LANG]
       return s
@@ -56,4 +55,9 @@ define [
       console.error "Content translation missing for #{ window.LANG } in #{ JSON.stringify(ob) }"
       return ob.en # English fallback
 
-  return i18n
+  Handlebars.registerHelper "i18n", translate
+  Handlebars.registerHelper "i18nPick", pick
+  return {
+    translate: translate
+    pick: pick
+  }
