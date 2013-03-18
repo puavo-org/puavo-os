@@ -22,7 +22,7 @@ Basic
 Devtools
 
     devtools=1 nw .
-    
+
 With reload loop and crash reporting
 
     bin/webmenu .
@@ -53,6 +53,27 @@ object.
 
 For content translations see [menujson.md][menujson_i18n].
 
+## menu.json development
+
+For simple [menu.json][] development on Opinsys desktops copy the current
+`menu.json` to `~/.config/webmenu/menu.json` and restart Webmenu manually from
+the console.
+
+Shutdown Webmenu:
+
+    $ webmenu-spawn --webmenu-exit
+
+Get current menu.json from Github:
+
+    $ wget https://github.com/opinsys/webmenu/raw/master/menu.json -O ~/.config/webmenu/menu.json
+
+Edit it as you wish and restart Webmenu:
+
+    $ cd /opt/webmenu
+    $ nw .
+
+Webmenu must be restarted after every change.
+
 ## Tests
 
 No broken tests on master!
@@ -82,3 +103,4 @@ Debug tests in a real browser:
 [PhantomJS]: http://phantomjs.org/
 [MessageFormat]: https://github.com/SlexAxton/messageformat.js
 [menujson_i18n]: https://github.com/opinsys/webmenu/blob/master/docs/menujson.md#translations
+[menu.json]: https://github.com/opinsys/webmenu/blob/master/docs/menujson.md
