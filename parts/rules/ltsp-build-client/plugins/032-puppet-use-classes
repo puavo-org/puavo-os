@@ -17,11 +17,13 @@ case "$MODE" in
         fi
         if [ -n "$PUPPET_MODULE_DIRS" -a -n "$PUPPET_USE_CLASSES" ]; then
             # we need a puppet interpreter to use puppet classes
-            LATE_PACKAGES="$LATE_PACKAGES puppet-common"
+            EARLY_PACKAGES="$EARLY_PACKAGES puppet-common"
         fi
         ;;
-    finalization)
+    after-install)
         if [ -n "$PUPPET_MODULE_DIRS" -a -n "$PUPPET_USE_CLASSES" ]; then
+            # this must be run before apt-get dist-upgrade
+            # (at 035-apt-get-upgrade)
             mkdir -p $ROOT/etc/puppet/ltsp
             ltsp-apply-puppet --puppet-module-dirs "$PUPPET_MODULE_DIRS" \
                               --puppet-use-classes "$PUPPET_USE_CLASSES" \
