@@ -100,7 +100,7 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/default \
 		etc/default/ltspssh
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up \
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up \
 		etc/puavo-vpn-client/scripts/route-up/dnsmasq \
 		etc/puavo-vpn-client/scripts/route-up/sssd
 
