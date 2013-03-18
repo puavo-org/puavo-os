@@ -21,15 +21,15 @@ define [
     describe "logout button", ->
       it "emits logout event", (done) ->
         Backbone.once "logout", -> done()
-        view.$(".bb-logout").click()
+        view.$(".js-logout").click()
 
     describe "shutdown button", ->
       it "emits shutdown event", (done) ->
         Backbone.once "shutdown", -> done()
-        view.$(".bb-shutdown").click()
+        view.$(".js-shutdown").click()
 
     describe "reboot button", ->
       it "emits reboot event", (done) ->
         Backbone.once "reboot", -> done()
-        view.$(".bb-reboot").click()
+        view.$(".js-reboot").click()
 
