@@ -31,8 +31,8 @@
     "osIconPath": "/usr/share/icons/Faenza/emblems/96/emblem-personal.png"
   },
   "supportCMD": {
-    "type": "desktop",
-    "command": ["xdg-open", "http://www.opinsys.fi"],
+    "type": "web",
+    "url": "http://www.opinsys.fi",
     "name": { 
       "fi": "Tukisivusto",
       "en": "Support"
