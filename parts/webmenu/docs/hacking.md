@@ -74,6 +74,9 @@ Edit it as you wish and restart Webmenu:
 
 Webmenu must be restarted after every change.
 
+For json editing <http://jsoneditoronline.org/> can be used to avoid some
+syntax errors.
+
 ## Tests
 
 No broken tests on master!
