@@ -82,7 +82,7 @@ define [
       if viewName
         layout.broadcast("open-#{ viewName }-view")
 
-    ["logout", "shutdown", "reboot"].forEach (event) ->
+    ["logout", "shutdown", "reboot", "lock"].forEach (event) ->
       Backbone.on event, ->
         Application.bridge.trigger(event)
 

@@ -223,6 +223,10 @@ module.exports = (gui, bridge) ->
     powermanager.restart()
   bridge.on "logout", ->
     powermanager.logout()
+  bridge.on "lock", ->
+    exec "gnome-screensaver-command  --lock", (err) ->
+      if err
+        console.error "Failed to lock screen"
 
   bridge.on "html-ready", ->
     dbus.registerApplication()
