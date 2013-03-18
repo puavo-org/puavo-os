@@ -740,7 +740,7 @@ class packages {
   case $lsbdistcodename {
     'precise': {
       kernel_package_for_version {
-        '3.2.0-37-generic':
+        '3.2.0-38-generic':
           with_extra => false;
       }
     }
