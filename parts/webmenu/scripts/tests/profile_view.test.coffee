@@ -10,14 +10,17 @@ define [
 
   config =
     profileCMD:
+      id: "profile"
       name: "Profile"
       type: "webWindow"
       url: "http://profile.example.com"
     passwordCMD:
+      id: "changepassword"
       name: "Change password"
       type: "webWindow"
       url: "http://password.example.com"
     settingsCMD:
+      id: "settings"
       name: "System settings"
       type: "custom"
       command: "gnome-control-center"

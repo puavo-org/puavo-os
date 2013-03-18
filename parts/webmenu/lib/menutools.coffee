@@ -29,13 +29,18 @@ injectDesktopData = (menu, sources, locale, iconSearchPaths, fallbackIcon, hostT
     if menu.inactiveByDeviceType and menu.inactiveByDeviceType is hostType
       menu.status = "inactive"
 
-    if menu.type is "desktop" and menu.id
-      filePath = desktopDir + "/#{ menu.id }.desktop"
+    if menu.type is "desktop"
+      if not menu.source
+        throw new Error("'desktop' item in menu.json item is missing " +
+          "'source' attribute: #{ JSON.stringify(menu) }")
+
+      filePath = desktopDir + "/#{ menu.source }.desktop"
       try
         desktopEntry = dotdesktop.parseFileSync(filePath, locale)
       catch err
         return
 
+      menu.id ?= menu.source
       menu.name ?= desktopEntry.name
       menu.description ?= desktopEntry.description
       menu.command ?= desktopEntry.command

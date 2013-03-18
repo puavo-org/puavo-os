@@ -4,6 +4,7 @@
   "items": [
     {
       "type": "menu",
+      "id": "tools",
       "name": {
         "en": "Tools",
         "fi": "Apuohjelmat"
@@ -13,52 +14,52 @@
       "items": [
         {
           "type": "desktop",
-          "id": "gcalctool"
+          "source": "gcalctool"
         },
         {
           "type": "desktop",
-          "id": "gedit",
+          "source": "gedit",
           "name": "Gedit-tekstieditori"
         },
         {
           "type": "desktop",
-          "id": "gucharmap"
+          "source": "gucharmap"
         },
         {
           "type": "desktop",
-          "id": "brasero",
+          "source": "brasero",
           "inactiveByDeviceType": "thinclient",
           "name": "Brasero levyjen poltto-ohjelma"
         },
         {
           "type": "desktop",
-          "id": "sound-juicer"
+          "source": "sound-juicer"
         },
         {
           "type": "desktop",
-          "id": "gnome-search-tool",
+          "source": "gnome-search-tool",
           "osIconPath": "/usr/share/icons/Faenza/apps/96/logviewer.png"
         },
         {
           "type": "desktop",
-          "id": "file-roller",
+          "source": "file-roller",
           "name": "Pakettienkäsittely-ohjelma"
         },
         {
           "type": "desktop",
-          "id": "gnome-terminal"
+          "source": "gnome-terminal"
         },
         {
           "type": "desktop",
-          "id": "seahorse"
+          "source": "seahorse"
         },
         {
           "type": "desktop",
-          "id": "system-config-printer"
+          "source": "system-config-printer"
         },
         {
           "type": "desktop",
-          "id": "gnome-screenshot"
+          "source": "gnome-screenshot"
         }
           ]
     },
@@ -70,67 +71,67 @@
       "items": [
         {
           "type": "desktop",
-          "id": "kolourpaint",
+          "source": "kolourpaint",
           "name": "KolourPaint"
         },
         {
           "type": "desktop",
-          "id": "tuxpaint",
+          "source": "tuxpaint",
           "name": "Tuxpaint-piirto-ohjelma"
         },
         {
           "type": "desktop",
-          "id": "mypaint",
+          "source": "mypaint",
           "name": "Mypaint-taideohjelma"
         },
         {
           "type": "desktop",
-          "id": "gimp",
+          "source": "gimp",
           "name": "Gimp-kuvankäsittely"
         },
         {
           "type": "desktop",
-          "id": "gthumb",
+          "source": "gthumb",
           "name": "Gthumb-kuvakatselin",
           "osIconPath": "/usr/share/icons/hicolor/48x48/apps/gthumb.png"
         },
         {
           "type": "desktop",
-          "id": "eog",
+          "source": "eog",
           "name": "Kuvakatselin"
         },
         {
           "type": "desktop",
-          "id": "f-spot",
+          "source": "f-spot",
           "name": "F-spot-kuvaohjelma"
         },
         {
           "type": "desktop",
-          "id": "inkscape",
+          "source": "inkscape",
           "name": "Inkscape-vektorigrafiikka"
         },
         {
           "type": "desktop",
-          "id": "picasa",
+          "source": "picasa",
           "name": "Picasa-verkkoalbumit"          
         },
         {
           "type": "desktop",
-          "id": "simple-scan",
+          "source": "simple-scan",
           "inactiveByDeviceType": "thinclient",
           "name": "Yksinkertainen skannausohjelma",
           "osIconPath": "/usr/share/icons/Faenza/devices/96/scanner.png"
         },
         {
           "type": "desktop",
-          "id": "xsane",
+          "source": "xsane",
           "inactiveByDeviceType": "thinclient",
           "name": "Xsane-skannausohjelma",
           "osIconPath": "/usr/share/icons/Faenza/devices/96/scanner.png"
         },
         {
           "type": "desktop",
-          "id": "blender",
+          "source": "blender",
           "inactiveByDeviceType": "thinclient",
           "name": "Blender-3D-mallinnusohjelma"
         }
@@ -144,77 +145,77 @@
       "items": [
         {
           "type": "desktop",
-          "id": "google-chrome"
+          "source": "google-chrome"
         },
         {
           "type": "desktop",
-          "id": "firefox",
+          "source": "firefox",
           "name": "Firefox-selain"
         },
         {
           "type": "desktop",
-          "id": "chromium-browser",
+          "source": "chromium-browser",
           "name": "Chromium-selain"
         },
         {
           "type": "desktop",
-          "id": "thunderbird",
+          "source": "thunderbird",
           "name": "Thunderbird-sähköposti"
         },
         {
           "type": "desktop",
-          "id": "evolution",
+          "source": "evolution",
           "name": "Evolution-sähköposti"
         },
         {
           "type": "desktop",
-          "id": "pidgin",
+          "source": "pidgin",
           "name": "Pidgin-pikaviestin"
         },
         {
           "type": "desktop",
-          "id": "gftp",
+          "source": "gftp",
           "osIconPath": "/usr/share/icons/Faenza/apps/96/preferences-system-windows.png"
         },
         {
           "type": "desktop",
-          "id": "liferea",
+          "source": "liferea",
           "name": "Livesyötteiden lukija"
         },
         {
           "type": "desktop",
-          "id": "googleearth",
+          "source": "googleearth",
           "inactiveByDeviceType": "thinclient",
           "name": "Google Earth",
           "osIconPath": "/usr/share/icons/Faenza/apps/96/googleearth.png"
         },
         {
           "type": "desktop",
-          "id": "skype",
+          "source": "skype",
           "name": "Skype",
           "osIconPath": "/usr/share/icons/skype.png"          
         },
         {
           "type": "desktop",
-          "id": "empathy",
+          "source": "empathy",
           "name": "Emphaty-pikaviestin"          
         },
         {
           "type": "desktop",
-          "id": "vinagre"
+          "source": "vinagre"
         },
         {
           "type": "desktop",
-          "id": "dropbox",
+          "source": "dropbox",
           "name": "Dropbox"
         },
         {
           "type": "desktop",
-          "id": "tsclient"
+          "source": "tsclient"
         },
         {
           "type": "desktop",
-          "id": "vmware-view-client",
+          "source": "vmware-view-client",
           "name": "Vmware client"
         }
           ]
@@ -227,57 +228,57 @@
       "items": [
         {
           "type": "desktop",
-          "id": "netbeans",
+          "source": "netbeans",
           "name": "NetBeans IDE",
           "osIconPath": "/usr/share/icons/Faenza/apps/96/netbeans.png"
         },
         {
           "type": "desktop",
-          "id": "eclipse"
+          "source": "eclipse"
         },
         {
           "type": "desktop",
-          "id": "eric",
+          "source": "eric",
           "osIconPath": "/usr/share/eric/icons/default/eric.png"
         },
         {
           "type": "desktop",
-          "id": "spe",
+          "source": "spe",
           "name": "Stanin python-editori"
         },
         {
           "type": "desktop",
-          "id": "idle-python2.7",
+          "source": "idle-python2.7",
           "name": "IDLE",
           "osIconPath": "/usr/share/icons/Faenza/mimetypes/96/text-x-python.png"
         },
         {
           "type": "desktop",
-          "id": "geany",
+          "source": "geany",
           "name": "Geany - monikielinen editori"
         },
         {
           "type": "desktop",
-          "id": "kturtle",
+          "source": "kturtle",
           "name": "Konna logo-ohjelmointi"
         },
         {
           "type": "desktop",
-          "id": "scratch",
+          "source": "scratch",
           "name": "Scratch hahmo-ohjelmointi"
         },
         {
           "type": "desktop",
-          "id": "kompozer"
+          "source": "kompozer"
         },
         {
           "type": "desktop",
-          "id": "bluefish",
+          "source": "bluefish",
           "name": "Bluefish html-editori"
         },
         {
           "type": "desktop",
-          "id": "designer-qt4",
+          "source": "designer-qt4",
           "name": "Käyttöliittymä-suunnittelija" ,
           "osIconPath": "/usr/share/icons/Faenza/apps/96/qtdesigner.png" 
         }
@@ -291,93 +292,93 @@
       "items": [
         {
           "type": "desktop",
-          "id": "gcompris",
+          "source": "gcompris",
           "name": "Gcompris-opetuspelit"
         },
         {
           "type": "desktop",
-          "id": "tuxmath",
+          "source": "tuxmath",
           "name": "Tuxmath-matikkapeli"
         },
         {
           "type": "desktop",
-          "id": "kbruch",
+          "source": "kbruch",
           "command": ["kbruch"],
           "name": "Kbruch-murtoluvut"        
         },
         {
           "type": "desktop",
-          "id": "geogebra",
+          "source": "geogebra",
           "name": "Geogebra"
         },
         {
           "type": "desktop",
-          "id": "kmplot",
+          "source": "kmplot",
           "name": "KmPlot-kuvaajat"
         },
         {
           "type": "desktop",
-          "id": "marble",
+          "source": "marble",
           "name": "Marble-maapallo"
         },
         {
           "type": "desktop",
-          "id": "kgeography",
+          "source": "kgeography",
           "name": "Kgeography-maantieto"
         },
         {
           "type": "desktop",
-          "id": "kanagram",
+          "source": "kanagram",
           "name": "Anagrammit"
         },
         {
           "type": "desktop",
-          "id": "kwordquiz",
+          "source": "kwordquiz",
           "name": "Sanastoharjoitus"
         },
         {
           "type": "desktop",
-          "id": "khangman",
+          "source": "khangman",
           "name": "Hirsipuu",
           "command": ["khangman"]
         },
         {
           "type": "desktop",
-          "id": "ktouch",
+          "source": "ktouch",
           "name": "Ktouch-konekirjoitus"
         },
         {
           "type": "desktop",
-          "id": "celestia",
+          "source": "celestia",
           "inactiveByDeviceType": "thinclient",
           "name": "Avaruussimulaattori"
         },
         {
           "type": "desktop",
-          "id": "stellarium",
+          "source": "stellarium",
           "inactiveByDeviceType": "thinclient",
           "name": "Stellarium-planetaario"
         },
         {
           "type": "desktop",
-          "id": "kstars",
+          "source": "kstars",
           "name": "kStars-tähtitaivas",
           "command": ["kstars"]
         },
         {
           "type": "desktop",
-          "id": "step",
+          "source": "step",
           "name": "Step-fysiikan simulaattori"
         },
         {
           "type": "desktop",
-          "id": "ghemical",
+          "source": "ghemical",
           "inactiveByDeviceType": "thinclient",
           "name": "3D-Molekyylit"
         },
         {
           "type": "desktop",
-          "id": "kalzium",
+          "source": "kalzium",
           "name": "Jaksollinen järjestelmä",
           "command": ["kalzium"]
         }
@@ -391,72 +392,72 @@
       "items": [
         {
           "type": "desktop",
-          "id": "libreoffice-writer",
+          "source": "libreoffice-writer",
           "name": "LibreOffice Tekstinkäsittely"
         },
         {
           "type": "desktop",
-          "id": "libreoffice-calc",
+          "source": "libreoffice-calc",
           "name": "LibreOffice Taulukkolaskenta"
         },
         {
           "type": "desktop",
-          "id": "libreoffice-impress",
+          "source": "libreoffice-impress",
           "name": "LibreOffice Esitys"
         },
         {
           "type": "desktop",
-          "id": "libreoffice-draw",
+          "source": "libreoffice-draw",
           "name": "LibreOffice Piirros"
         },
         {
           "type": "desktop",
-          "id": "libreoffice-base",
+          "source": "libreoffice-base",
           "name": "LibreOffice Tietokanta"
         },
         {
           "type": "desktop",
-          "id": "libreoffice-math",
+          "source": "libreoffice-math",
           "name": "LibreOffice Kaava"
         },
         {
           "type": "desktop",
-          "id": "scribus",
+          "source": "scribus",
           "name": "Scribus-julkaisuohjelma"
         },
         {
           "type": "desktop",
-          "id": "vym",
+          "source": "vym",
           "name": "Miellekarttasovellus"          
         },
         {
           "type": "desktop",
-          "id": "cmaptools",
+          "source": "cmaptools",
           "name": "Cmaptools-miellekartta"
         },
         {
           "type": "desktop",
-          "id": "acroread",
+          "source": "acroread",
           "name": "Acroread-asiakirjakatselin"
         },
         {
           "type": "desktop",
-          "id": "okular",
+          "source": "okular",
           "name": "Okular-asiakirjakatselin"
         },
-	    {
+        {
           "type": "desktop",
-          "id": "evince",
+          "source": "evince",
           "name": "Evince-asiakirjakatselin"
         },
         {
           "type": "desktop",
-          "id": "tellico",
+          "source": "tellico",
           "name": "Kirjasto-ohjelma"
         },
         {
           "type": "desktop",
-          "id": "primusclient",
+          "source": "primusclient",
           "name": "Primus"
         }
           ]
@@ -469,52 +470,52 @@
       "items": [
         {
           "type": "desktop",
-          "id": "gnome-sound-recorder",
+          "source": "gnome-sound-recorder",
           "name": "Ääninauhuri"
         },
         {
           "type": "desktop",
-          "id": "audacity",
+          "source": "audacity",
           "name": "Audacity-äänieditori"
         },      
         {
           "type": "desktop",
-          "id": "vlc",
+          "source": "vlc",
           "name": "VLC-mediasoitin"
         },
         {
           "type": "desktop",
-          "id": "gnome-mplayer",
+          "source": "gnome-mplayer",
           "name": "Gnome-mediasoitin"
         },
         {
           "type": "desktop",
-          "id": "kaffeine",
+          "source": "kaffeine",
           "name": "Kaffeine-mediasoitin"
         },
         {
           "type": "desktop",
-          "id": "rhythmbox",
+          "source": "rhythmbox",
           "name": "Rytmilaatikko-musiikkisoitin"
         },
         {
           "type": "desktop",
-          "id": "spotify",
+          "source": "spotify",
           "name": "Spotify"
         },
         {
           "type": "desktop",
-          "id": "cheese",
+          "source": "cheese",
           "inactiveByDeviceType": "thinclient"
         },
         {
           "type": "desktop",
-          "id": "openshot",
+          "source": "openshot",
           "name": "Openshot-videoeditori"
         },
         {
           "type": "desktop",
-          "id": "kdenlive",
+          "source": "kdenlive",
           "name": "Kdenlive-videoeditori"
         },
         {
@@ -527,48 +528,48 @@
         },
         {
           "type": "desktop",
-          "id": "pitivi",
+          "source": "pitivi",
           "name": "Pitivi-videoeditori"
         },
         {
           "type": "desktop",
-          "id": "solfege",
+          "source": "solfege",
           "name": "Korvanharjoitus-ohjelma"
         },
         {
           "type": "desktop",
-          "id": "mscore",
+          "source": "mscore",
           "name": "Nuotinnusohjelma"
         },
         {
           "type": "desktop",
-          "id": "denemo",
+          "source": "denemo",
           "name": "Denemo-nuotinnus"
         },
         {
           "type": "desktop",
-          "id": "hydrogen",
+          "source": "hydrogen",
           "name": "Rumpusimulaattori"
         },
         {
           "type": "desktop",
-          "id": "rosegarden",
+          "source": "rosegarden",
           "name": "Rosegarden-sekvensseri"
         },
         {
           "type": "desktop",
-          "id": "tuxguitar",
+          "source": "tuxguitar",
           "name": "Kitaranuotinnus",
           "osIconPath": "extra/icons/apps/overlord59-tux-guitar-1434.png"
         },
         {
           "type": "desktop",
-          "id": "fmit",
+          "source": "fmit",
           "name": "Viritinohjelma"
         },
         {
           "type": "desktop",
-          "id": "luciole",
+          "source": "luciole",
           "name": "Stopmotion-animaatio-ohjelma",
           "osIconPath": "/usr/share/luciole/images/luciole.png"
         }
@@ -582,12 +583,12 @@
       "items": [
         {
           "type": "desktop",
-          "id": "smarttech-notebook",
+          "source": "smarttech-notebook",
           "osIconPath": "/usr/share/icons/hicolor/128x128/apps/SMART_Notebook.png"
         },
         {
           "type": "desktop",
-          "id": "Open-Sankore",
+          "source": "Open-Sankore",
           "name": "Open-Sankoré-älytauluohjelmisto",
           "osIconPath": "/usr/local/Open-Sankore-2.00.00/sankore.png"
         }
@@ -601,7 +602,7 @@
       "items": [
         {
           "type": "desktop",
-          "id": "walma-screenshot"
+          "source": "walma-screenshot"
         },
         {
           "type": "web",
@@ -655,7 +656,7 @@
     },
     {
       "type": "desktop",
-      "id": "nautilus-home",
+      "source": "nautilus-home",
       "osIconPath": "/usr/share/icons/Faenza/places/96/folder_home.png"
     }
   ]

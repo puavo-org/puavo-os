@@ -32,6 +32,11 @@ define [
       # of the same app
       @open = _.throttle(@open, 250)
 
+      if id = @model.get("id")
+        @$el.addClass("item-#{ id }")
+      else
+        console.error "#{ @model.get("name") } has no id!"
+
       if @model.get("type") is "menu"
         @$el.addClass("type-menu")
       else

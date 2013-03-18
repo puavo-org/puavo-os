@@ -37,14 +37,15 @@ Attributes
 
 ### `desktop`
 
-Menu item from a .desktop file. It auto populates `name`, `description`,
-`command` and `osIcon` attributes. Any auto populated field can be overridden
-by specifying it directly to this object. If the requested .desktop file is not
-found the item will not be displayed. Respects the current locale.
+Launcher item from a .desktop file. It auto populates `id`, `name`,
+`description`, `command` and `osIcon` attributes. Any auto populated field can
+be overridden by specifying it directly to this object. If the requested
+.desktop file is not found the item will not be displayed. Respects the current
+locale.
 
-Desktop file locations are configured in `config.json`
+Desktop file locations are configured in `config.json`.
 
-  - `id`: {String, required} Name of the .desktop file without the extension
+  - `source`: {String, required} Name of the .desktop file without the extension
 
 
 ### `web`
@@ -84,7 +85,7 @@ These attributes can be added to any object
 ### Translations
 
 Item `name` and `description` attributes can be translated using a translation
-object.
+object instead of a plain string.
 
 Example:
 

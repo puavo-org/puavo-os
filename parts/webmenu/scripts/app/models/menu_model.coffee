@@ -39,6 +39,10 @@ define [
         model = new typemap[item.type](item, allItems)
         if model.isOk()
           model.parent = this
+
+          if @items.get(model.id)
+            console.error  "Menu item with id '#{ model.id }' already exists!"
+
           @items.add model
 
     isOk: -> @items.size() > 0
