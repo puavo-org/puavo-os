@@ -23,6 +23,9 @@ fs.readdirSync(path.join(langRoot, masterLang))
     s = fs.readFileSync(path.join(langRoot, masterLang, name)).toString()
     masterJSON[name] = JSON.parse(s)
 
+isUntranslated = (string) -> 
+  return true if not string
+  return !! string.match /\[UNTRANSLATED\]$/
 
 # Go throug all other languages
 fs.readdirSync(langRoot).filter (language) ->
@@ -42,7 +45,7 @@ fs.readdirSync(langRoot).filter (language) ->
 
     # Copy translation keys from master to target if target does not already
     # have it
-    for key, translation of master when not current[key]
+    for key, translation of master when isUntranslated(current[key])
       console.log "Adding '#{ key }: #{ master[key] }' to #{ language }/#{ name }"
       current[key] = master[key]
       # Add [UNTRANSLATED] tag to warn about missing translations
@@ -52,10 +55,14 @@ fs.readdirSync(langRoot).filter (language) ->
     for key, translation of current
       # Delete the translation if it has been removed from the master
       if not master[key]
-        console.log "Deleting '#{ key }: #{ translation }' from #{ language }/#{ name }"
+        console.log(
+          "Deleting '#{ key }: #{ translation }' from "
+          "#{ language }/#{ name } because it has been removed from the "
+          "master language (#{ masterLang })"
+        )
         delete current[key]
       # Warn if untranslated tag is still present
-      else if translation.match /\[UNTRANSLATED\]$/
+      else if isUntranslated(translation)
         console.log "Untranslated '#{ key }: #{ translation }' in #{ language }/#{ name }"
 
     # Write translation json back to file system
