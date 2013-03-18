@@ -6,5 +6,6 @@ script: "extra/travis-ci-run.sh"
 notifications:
   email:
     - dev@opinsys.fi
+    - esa-matti@suuronen.org
   irc: "irc.freenode.org#opinsys"
 
