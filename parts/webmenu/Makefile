@@ -59,7 +59,7 @@ install-dirs:
 	mkdir -p $(DESTDIR)/usr/share/icons
 
 install: install-dirs
-	cp -r lib node_modules bin docs scripts vendor styles extra *.js *.json *.md *.html $(DESTDIR)/opt/webmenu
+	cp -r lib node_modules bin docs scripts vendor styles extra i18n *.js *.json *.md *.html $(DESTDIR)/opt/webmenu
 	$(INSTALL_DATA) -t $(DESTDIR)/etc/xdg/autostart \
 		extra/webmenu.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)/usr/share/icons \
