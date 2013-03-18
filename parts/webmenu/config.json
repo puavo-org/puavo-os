@@ -15,19 +15,28 @@
   "settingsCMD": {
     "type": "desktop",
     "command": ["gnome-control-center"],
-    "name": "Järjestelmäasetukset",
+    "name": {
+      "fi": "Järjestelmäasetukset",
+      "en": "System Settings"
+    },
     "osIconPath": "/usr/share/icons/Faenza/categories/96/applications-system.png"
   },
   "profileCMD": {
     "type": "webWindow",
     "url": "http://toimisto.opinsys.fi",
-    "name": "Profiili",
+    "name": {
+      "fi": "Profiili",
+      "en": "Profile"
+    },
     "osIconPath": "/usr/share/icons/Faenza/emblems/96/emblem-personal.png"
   },
   "supportCMD": {
     "type": "desktop",
     "command": ["xdg-open", "http://www.opinsys.fi"],
-    "name": "Tukisivusto",
+    "name": { 
+      "fi": "Tukisivusto",
+      "en": "Support"
+    },
     "osIconPath": "/usr/share/icons/Faenza/status/96/dialog-question.png"
   },
   "maxFavorites": 5,
