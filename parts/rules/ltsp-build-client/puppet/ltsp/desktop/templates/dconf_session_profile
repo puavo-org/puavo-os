@@ -184,5 +184,10 @@ binding='<Alt>F1'
 command='webmenu-spawn'
 name='Webmenu'
 
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2]
+binding='<Primary><Super>z'
+command='xzoom'
+name='XZoom'
+
 [org/gnome/settings-daemon/plugins/ubuntuone]
 active=false
