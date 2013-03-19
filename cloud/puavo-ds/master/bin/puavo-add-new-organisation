@@ -218,7 +218,7 @@ puts "* Setting up Samba configuration"
 Samba.create_samba_configuration(organisation_name, samba_domain, suffix_start)
 
 #puts "* Create OAuth subtree"
-#OAuth.create_oauth_branch
+OAuth.create_oauth_branch
 
 puts "* Create System Groups"
 SystemGroup.create_system_groups
