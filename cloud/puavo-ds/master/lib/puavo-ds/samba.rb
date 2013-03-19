@@ -13,7 +13,7 @@ class Samba < LdapOrganisationBase
     self.create( "sambaDomainName" =>  samba_domain,
                  'sambaSID' => samba_sid,
                  'sambaAlgorithmicRidBase' => "1000",
-                 'sambaNextUserRid' => "1000",
+                 'sambaNextRid' => "1000",
                  'sambaMinPwdLength' => "7",
                  'sambaPwdHistoryLength' => "0",
                  'sambaLogonToChgPwd' => "0",
