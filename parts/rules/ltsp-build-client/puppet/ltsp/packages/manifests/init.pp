@@ -110,7 +110,8 @@ class packages {
     , 'vim-nox' ]:
       tag => [ 'devel', 'ubuntu', ];
 
-    [ 'fglrx'
+    [ 'bcmwl-kernel-source'
+    , 'fglrx'
     , 'libgl1-mesa-glx'
     , 'linux-firmware'
     , 'nvidia-current'
