@@ -399,8 +399,12 @@ class packages {
     , 'puavo-vpn-client' ]:
       tag => [ 'puavo', 'opinsys', 'thinclient', ];
 
+    [ 'icaclient'       # icaclient actually depends on libmotif4
+    , 'libmotif4' ]:
+      tag => [ 'remote_access', 'opinsys', ];
+
     [ 'vmware-view-client' ]:
-      tag => [ 'remote_access', 'vmware-view-client', ];
+      tag => [ 'remote_access', 'partner', ];
 
     [ 'gftp-gtk'
     , 'lftp'
