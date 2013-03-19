@@ -204,8 +204,8 @@ module QueryDiskInfo
 
     chosen_partition = 'whole'
     until partitions.include?(chosen_partition) do
-      if chosen_partition == 'cfdisk'
-        system('cfdisk', "/dev/#{ disk_device }")
+      if chosen_partition == 'fdisk'
+        system('fdisk', "/dev/#{ disk_device }")
         chosen_partition = 'whole'
       end
 
@@ -221,7 +221,7 @@ module QueryDiskInfo
               .select { |part| part.match(/^#{ disk_device }[0-9]/) } \
 
       puts "\nPossible partitions are: #{ partitions.join(' ') }"
-      puts "\nYou may choose 'cfdisk' to partition this disk,"
+      puts "\nYou may choose 'fdisk' to partition this disk,"
       puts "or choose 'whole' to use the whole disk.\n"
       chosen_partition = UI::ask_with_default('Choose a partition:',
 					     chosen_partition)
@@ -229,7 +229,7 @@ module QueryDiskInfo
       if chosen_partition == 'whole' \
 	and device_has_unknown_partitions?(disk_device) then
 	  msg = %Q{\nDevice "/dev/#{ disk_device }" has unknown partitions,\n} \
-	        + %Q{remove those with "cfdisk" (refusing to overwrite).\n}
+	        + %Q{remove those with "fdisk" (refusing to overwrite).\n}
           UI::colormsg(msg, HighLine::RED)
 	  sleep(2)
 	  partitions = []
