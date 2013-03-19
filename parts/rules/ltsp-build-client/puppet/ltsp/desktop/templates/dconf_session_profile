@@ -5,6 +5,10 @@ scrollbar-mode='normal'
 show-events=false
 show-week-numbers=true
 
+[com/canonical/indicator/sound]
+interested-media-players=['spotify', 'banshee']
+preferred-media-players=['']
+
 [com/ubuntu/update-notifier]
 auto-launch=false
 
