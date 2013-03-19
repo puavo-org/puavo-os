@@ -114,11 +114,14 @@ end
 # Generate from organisation_name and --top-domain if not forced by --domain
 domain ||= "#{ organisation_name }.#{ top_domain }"
 
+top_domain ||= domain.split(".")[1..-1].join(".")
+
 samba_domain = options[:samba_domain] || "EDU%s" % organisation_name.upcase
 suffix = options[:suffix] || "dc=edu,dc=%s,dc=fi" % organisation_name.downcase
 suffix_start = suffix.split(',')[0]
 legal_name = options[:legal_name] || organisation_name
 kerberos_realm = options[:kerberos_realm] || domain.upcase
+puppet_host = options[:puppet_host] || "#{organisation_name.downcase}.puppet.#{top_domain}"
 
 puts "******************************************************"
 puts "  Initialising organisation: #{organisation_name}"
@@ -203,11 +206,9 @@ organisation_attributes = {
   :cn => organisation_name,
   :description => organisation_name,
   :eduOrgLegalName => legal_name,
-  :sambaDomainName => samba_domain
+  :sambaDomainName => samba_domain,
+  :puavoPuppetHost => puppet_host
 }
-if options[:puppet_host]
-  organisation_attributes[:puavoPuppetHost] = options[:puppet_host]
-end
 organisation = Organisation.create(organisation_attributes)
 
 puts "* Add organizational units: People, Groups, Hosts, etc..."
