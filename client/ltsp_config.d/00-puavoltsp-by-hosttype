@@ -31,7 +31,39 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
-    set_lts_var RM_SYSTEM_SERVICES   'ltspssh'
+    set_lts_var RM_SYSTEM_SERVICES '
+      apport
+      atd
+      autofs
+      avahi-daemon
+      cron
+      cryptdisks-enable
+      cryptdisks-udev
+      epoptes
+      epoptes-client
+      gdm
+      hostapd
+      jetty
+      killprocs
+      ltspssh
+      mountkernfs.sh
+      mountnfs.sh
+      nbd-server
+      networking
+      openvpn
+      puavo-monitor
+      puavo-wlanap
+      puppet
+      rsync
+      sendsigs
+      ufw
+      umountnfs.sh
+      updatedb
+      update-motd.d
+      update-notifier
+      vtun
+      winbind
+    '
     ;;
   ltspserver)
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_nfs_services $puavo_tty_services"
