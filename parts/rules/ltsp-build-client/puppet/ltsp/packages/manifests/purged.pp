@@ -6,7 +6,8 @@ class packages::purged {
 
   @package {
     # the functionality in these is not for our end users
-    [ 'software-properties-gtk'
+    [ 'linux-image-generic'             # we want to choose kernels explicitly
+    , 'software-properties-gtk'
     , 'synaptic'
     , 'ubuntu-release-upgrader-gtk'
     , 'update-manager'
