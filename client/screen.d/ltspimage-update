@@ -9,12 +9,6 @@ ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
 
 until /usr/sbin/puavo-install-ltspimages "$ltspimage_name"; do sleep 1; done
 
-echo
-echo -n rebooting...
-for i in $(seq 5 | tac); do
-  echo -n " $i"
-  sleep 1
-done
-
-echo
+echo "Press ENTER to reboot".
+read answer
 reboot
