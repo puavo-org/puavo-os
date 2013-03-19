@@ -2,6 +2,30 @@ PUAVO_HOSTTYPE=$(/bin/cat /etc/puavo/hosttype)
 
 set_lts_var PUAVO_HOSTTYPE "$PUAVO_HOSTTYPE"
 
+puavo_common_unneeded_services='
+  apport
+  atd
+  cron
+  cryptdisks-enable
+  cryptdisks-udev
+  epoptes
+  epoptes-client
+  gdm
+  killprocs
+  mountkernfs.sh
+  nbd-server
+  networking
+  openvpn
+  puppet
+  rsync
+  sendsigs
+  ufw
+  updatedb
+  update-motd.d
+  update-notifier
+  winbind
+'
+
 puavo_nfs_services='gssd idmapd portmap rpcbind-boot'
 puavo_tty_services='tty3 tty4 tty5 tty6'
 
@@ -15,7 +39,11 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_nfs_services $puavo_tty_services"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
-    set_lts_var RM_SYSTEM_SERVICES   'ltspssh network-manager'
+    set_lts_var RM_SYSTEM_SERVICES "
+      $puavo_common_unneeded_services
+      ltspssh
+      network-manager
+    "
     set_lts_var SCREEN_07            lightdm
     set_lts_var USE_NFS_HOMES        True
     ;;
@@ -31,46 +59,29 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
-    set_lts_var RM_SYSTEM_SERVICES '
-      apport
-      atd
+    set_lts_var RM_SYSTEM_SERVICES "
+      $puavo_common_unneeded_services
       autofs
       avahi-daemon
-      cron
-      cryptdisks-enable
-      cryptdisks-udev
-      epoptes
-      epoptes-client
-      gdm
       hostapd
       jetty
-      killprocs
       ltspssh
-      mountkernfs.sh
       mountnfs.sh
-      nbd-server
-      networking
-      openvpn
       puavo-monitor
       puavo-wlanap
-      puppet
-      rsync
-      sendsigs
-      ufw
       umountnfs.sh
-      updatedb
-      update-motd.d
-      update-notifier
       vtun
-      winbind
-    '
+    "
     ;;
   ltspserver)
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_nfs_services $puavo_tty_services"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       False
     set_lts_var LTSP_SERVER          True
-    set_lts_var RM_SYSTEM_SERVICES   'network-manager'
+    set_lts_var RM_SYSTEM_SERVICES "
+      $puavo_common_unneeded_services
+      network-manager
+    "
     set_lts_var USE_NFS_HOMES        True
     ;;
   thinclient)
@@ -80,7 +91,11 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LDM_SESSION          'gnome-session --session=gnome-fallback'
     set_lts_var LOCALDEV             True
     set_lts_var LTSP_FATCLIENT       False
-    set_lts_var RM_SYSTEM_SERVICES   'ltspssh network-manager'
+    set_lts_var RM_SYSTEM_SERVICES "
+      $puavo_common_unneeded_services
+      ltspssh
+      network-manager
+    "
     set_lts_var SCREEN_07            lightdm
     set_lts_var SSH_OVERRIDE_PORT    222
     set_lts_var X_COLOR_DEPTH        16
