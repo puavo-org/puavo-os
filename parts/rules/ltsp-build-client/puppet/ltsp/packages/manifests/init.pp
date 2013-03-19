@@ -746,7 +746,7 @@ class packages {
     }
     'quantal': {
       kernel_package_for_version {
-        '3.5.0-25-generic':
+        '3.5.0-26-generic':
           ;
 
         '3.6.6-999-generic':
