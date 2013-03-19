@@ -1,3 +1,6 @@
+# Accept the citrix-client EULA.
+icaclient       icaclient/accepteula            boolean true
+
 # Do you agree with the DLJ license terms?
 sun-java6-bin   shared/accepted-sun-dlj-v1-1    boolean true
 sun-java6-jre   shared/accepted-sun-dlj-v1-1    boolean true
