@@ -1,7 +1,9 @@
 define [
   "backbone"
+  "underscore"
 ], (
   Backbone
+  _
 ) ->
   class AllItems extends Backbone.Collection
 
@@ -16,27 +18,19 @@ define [
       @filter (item) ->
         if item.get("type") is "menu"
           return false
-        if searchByWords item.get("name"), filterWords
-          return true
-        if searchByWords item.get("description"), filterWords
-          return true
-        if searchByWords item.get("upstreamName"), filterWords
-          return true
+        else
+          filterWords = [filterWords] if not _.isArray(filterWords)
+          return recurMatch(item.toJSON(), filterWords)
 
-        return false
+hasString = (source, needle) ->
+  source.toString().toLowerCase().indexOf(needle.toLowerCase()) isnt -1
 
+recurMatch = (ob, needles) ->
+  return false if not ob
 
-searchByWords = (value, words) ->
-  if not value
+  if typeof(ob) in  ["string", "number"]
+    for n in needles when hasString(ob, n)
+      return true
     return false
-  if not words
-    return false
 
-  if typeof(words) is "string"
-    words = [words]
-
-  for word in words
-    if value.toLowerCase().indexOf(word.toLowerCase()) is -1
-      return false
-
-  return true
+  return  _.values(ob).some (v) -> recurMatch(v, needles)
