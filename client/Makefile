@@ -64,6 +64,7 @@ install : installdirs
 		templates/etc/hosts \
 		templates/etc/idmapd.conf \
 		templates/etc/krb5.conf \
+		templates/etc/krb5.conf-laptop \
 		templates/etc/nsswitch.conf-extrausers \
 		templates/etc/nsswitch.conf-sss
 

@@ -119,7 +119,7 @@ case puavo_device_type
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "laptop"
     write_config("/etc/nsswitch.conf", "sss")
-    write_config("/etc/krb5.conf")
+    write_config("/etc/krb5.conf", "laptop")
     write_config("/etc/idmapd.conf")
     write_config("/etc/ldap/ldap.conf", "laptop")
     write_config("/etc/pam.d/lightdm", "laptop")
