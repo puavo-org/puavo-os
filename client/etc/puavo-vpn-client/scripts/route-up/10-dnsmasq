@@ -20,3 +20,9 @@ dbus-send --system --dest=org.puavo.VPN.dnsmasq \
   uint32:$(inet_aton ${route_vpn_gateway}) \
   string:"${LDAP_MASTER}" \
   string:"${KERBEROS_MASTER}"
+
+# Make sure that sssd goes online
+sleep 1
+killall -USR2 sssd
+sleep 6
+killall -USR2 sssd
