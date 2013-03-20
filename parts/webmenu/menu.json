@@ -19,7 +19,9 @@
         {
           "type": "desktop",
           "source": "gedit",
-          "name": "Gedit-tekstieditori"
+          "name": {
+            "en": "Gedit-text editor",
+            "fi": "Gedit-tekstieditori"}
         },
         {
           "type": "desktop",
@@ -29,7 +31,9 @@
           "type": "desktop",
           "source": "brasero",
           "inactiveByDeviceType": "thinclient",
-          "name": "Brasero levyjen poltto-ohjelma"
+          "name": {
+            "en": "Brasero - CD/DVD -writer",
+            "fi": "Brasero - CD/DVD -kirjoitus"}
         },
         {
           "type": "desktop",
@@ -65,7 +69,10 @@
     },
     {
       "type": "menu",
-      "name": "Grafiikka",
+      "name": {
+        "en": "Graphics",
+        "fi": "Grafiikka"
+      },
       "description": "Graafiset sovellukset",
       "osIcon":"applications-graphics",
       "items": [
@@ -99,6 +106,11 @@
           "type": "desktop",
           "source": "eog",
           "name": "Kuvakatselin"
+        },
+        {
+          "type": "desktop",
+          "source": "shotwell",
+          "name": "Shotwell-kuva-albumi"
         },
         {
           "type": "desktop",
@@ -198,7 +210,7 @@
         {
           "type": "desktop",
           "source": "empathy",
-          "name": "Emphaty-pikaviestin"
+          "name": "Empathy-pikaviestin"
         },
         {
           "type": "desktop",
@@ -222,7 +234,10 @@
     },
     {
       "type": "menu",
-      "name": "Ohjelmointi",
+      "name": {
+        "en": "Programming",
+        "fi": "Ohjelmointi"
+      },
       "description": "IDE-sovelluksia ohjelmointiin",
       "osIcon":"gnome-devel",
       "items": [
@@ -286,7 +301,10 @@
     },
     {
       "type": "menu",
-      "name": "Opetusohjelmat",
+      "name": {
+        "en": "Education",
+        "fi": "Opetusohjelmat"
+      },
       "description": "Sovelluksia oppimisen tueksi",
       "osIcon":"gnome-joystick",
       "items": [
@@ -386,7 +404,10 @@
     },
     {
       "type": "menu",
-      "name": "Toimisto",
+      "name": {
+        "en": "Office",
+        "fi": "Toimisto"
+      },
       "description": "Toimisto-ohjelmat",
       "osIcon":"applications-office",
       "items": [
@@ -464,7 +485,10 @@
     },
     {
       "type": "menu",
-      "name": "Ääni ja video",
+      "name": {
+        "en": "Audio and video",
+        "fi": "Ääni ja video"
+      },
       "description": "Internet-sovellukset",
       "osIcon":"applications-multimedia",
       "items": [
@@ -486,7 +510,7 @@
         {
           "type": "desktop",
           "source": "gnome-mplayer",
-          "name": "Gnome-mediasoitin"
+          "name": "Mplayer-mediasoitin"
         },
         {
           "type": "desktop",
@@ -495,8 +519,8 @@
         },
         {
           "type": "desktop",
-          "source": "rhythmbox",
-          "name": "Rytmilaatikko-musiikkisoitin"
+          "source": "banshee",
+          "name": "Banshee-musiikkisoitin"
         },
         {
           "type": "desktop",
@@ -506,17 +530,13 @@
         {
           "type": "desktop",
           "source": "cheese",
+          "osIconPath": "/usr/share/icons/Faenza/devices/96/camera-web.png",
           "inactiveByDeviceType": "thinclient"
         },
         {
           "type": "desktop",
           "source": "openshot",
           "name": "Openshot-videoeditori"
-        },
-        {
-          "type": "desktop",
-          "source": "kdenlive",
-          "name": "Kdenlive-videoeditori"
         },
         {
           "type": "custom",
@@ -549,7 +569,7 @@
         {
           "type": "desktop",
           "source": "hydrogen",
-          "name": "Rumpusimulaattori"
+          "name": "Hydrogen-rumpukone"
         },
         {
           "type": "desktop",
@@ -577,7 +597,10 @@
     },
     {
       "type": "menu",
-      "name": "Älytaulut",
+      "name": {
+        "en": "Interactive whiteboards",
+        "fi": "Älytaulut"
+      },
       "description": "Internet-sovellukset",
       "osIconPath": "/usr/share/icons/hicolor/128x128/apps/SMART_Tools.png",
       "items": [
@@ -596,7 +619,10 @@
     },
     {
       "type": "menu",
-      "name": "Web-sovellukset",
+      "name": {
+        "en": "Web applications",
+        "fi": "Web-sovellukset"
+      },
       "description": "Web-sovellukset",
       "osIconPath": "extra/icons/apps/webapps.png",
       "items": [
