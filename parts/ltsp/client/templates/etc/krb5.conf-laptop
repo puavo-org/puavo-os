@@ -2,13 +2,14 @@
     default_realm = <%= @kerberos_realm %>
     default_tgs_enctypes = des3-hmac-sha1 des-cbc-crc
     default_tkt_enctypes = des3-hmac-sha1 des-cbc-crc
-    dns_lookup_kdc = true
-    dns_lookup_realm = true
+    dns_lookup_kdc = false
+    dns_lookup_realm = false
     allow_weak_crypto = true
     rdns = false   # Do not use reverse DNS queries and force use of fqdn names for everything
 
 [realms]
         <%= @kerberos_realm %> = {
+                kdc = kerberos.<%= @puavo_domain %>
                 kdc = <%= @kerberos_master %>
                 default_domain = <%= @puavo_domain %>
         }

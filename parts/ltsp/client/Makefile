@@ -76,7 +76,8 @@ install : installdirs
 		templates/etc/default/nfs-common
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sssd \
-		templates/etc/sssd/sssd.conf
+		templates/etc/sssd/sssd.conf \
+		templates/etc/sssd/sssd.conf-laptop
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)/sbin \
 		init-puavo 
