@@ -62,15 +62,16 @@ define [
     describe "searchFilter()", ->
       itemData = [
         type: "custom"
-        name: "good"
         command: "good-cmd"
+        name: "good"
         description: "foo bar descriptiontest"
       ,
         type: "custom"
-        name: "bad"
         command: "bad-cmd"
+        name: "bad"
         description: "foo descriptiontest"
       ]
+
 
       it "it filters item by name attribute", ->
         itemsColl = new AllItems itemData
@@ -100,5 +101,26 @@ define [
           _.find(filtered, (model) -> model.get("name") is "bad"),
           "bad item should not be included"
         ).to.be.not.ok
+
+      describe "with translations", ->
+        translatedData = [
+          type: "custom"
+          command: "translated-cmd"
+          name:
+            en: "translated"
+            fi: "Käännetty"
+          description:
+            en: "Translated description"
+            fi: "Käännetty kuvaus"
+        ]
+
+        it "finds translated items", ->
+          itemsColl = new AllItems translatedData
+          filtered = itemsColl.searchFilter("kuvaus")
+
+          expect(
+            _.find filtered, (model) -> model.get("command") is "translated-cmd"
+            "translated item is included"
+          ).to.be.ok
 
 
