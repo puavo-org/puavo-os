@@ -48,12 +48,17 @@ define [
   #
   ###
   pick = (ob) ->
+    # No need to translate falsy values
+    return "" if not ob
+
+    # Just return the string if we have no translation object.
     return ob if typeof ob is "string"
+
     if s = ob[window.LANG]
       return s
     else
-      console.error "Content translation missing for #{ window.LANG } in #{ JSON.stringify(ob) }"
-      return ob.en # English fallback
+      console.warn "Content translation missing for #{ window.LANG } in #{ JSON.stringify(ob) }"
+      return ob.en or ob.fi or ob.se # Fallback to other languages prefering english
 
   translate.pick = pick
   Handlebars.registerHelper "i18n", translate
