@@ -78,12 +78,12 @@ module DiskHandler
 
   def self.lvm_partition(fs_conf)
     # clean up possible confusing mess from the device
-    run('dd', 'if=/dev/zero', "of=#{ fs_conf['device'] }", 'count=1K')
+    run('dd', 'if=/dev/zero', "of=#{ fs_conf['device'] }", 'count=2K')
 
     # create an lvm partition
     # see http://www.walkernews.net/2007/07/02/how-to-create-linux-lvm-in-3-minutes/
     IO.popen("fdisk #{ fs_conf['device'] }", 'w') do |f|
-      f.print "n\np\n1\n\n\nt\n8e\np\nw\n"
+      f.print "n\np\n1\n\n\nt\n8e\na\n1\np\nw\n"
     end
   end
 
