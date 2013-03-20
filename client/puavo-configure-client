@@ -131,7 +131,7 @@ case puavo_device_type
     @ldap_binddn       = File.read('/etc/puavo/ldap/dn'        ).chomp
     @ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp
 
-    write_config("/etc/sssd/sssd.conf", nil, true)
+    write_config("/etc/sssd/sssd.conf", "laptop", true)
 end
 
 exit(0)
