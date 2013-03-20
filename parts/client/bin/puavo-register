@@ -537,14 +537,12 @@ class Control
     end
 
 
+    top_domain = Tools.topdomain(organisation_info['ldap_host'])
     PUAVO_ETC.write(:id, info["registration"]["puavoId"])
 
     # In our architecture kerberos master is currently the same as ldap master
     PUAVO_ETC.write(:krb_master, organisation_info['ldap_host'])
-    PUAVO_ETC.write(
-      :krb_toprealm,
-      Tools.topdomain(organisation_info['ldap_host'])
-    )
+    PUAVO_ETC.write(:krb_toprealm, top_domain)
     PUAVO_ETC.write(
       :krb_realm,
       info['registration']["host_configuration"]["kerberos_realm"]
@@ -556,6 +554,7 @@ class Control
     PUAVO_ETC.write(:ldap_master, info['ldap_host'])
 
     PUAVO_ETC.write(:domain, organisation_info["domain"])
+    PUAVO_ETC.write(:topdomain, top_domain)
 
     PUAVO_ETC.write(
       :hosttype,
