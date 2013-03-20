@@ -78,9 +78,10 @@ define [
       @navigation.views = @getMenuItemViews()
 
     itemCols: ->
-      parseInt(
-        @$el.innerWidth() / @getMenuItemViews()[0].$el.innerWidth()
-      )
+      if views =  @getMenuItemViews()
+        return parseInt( @$el.innerWidth() / views[0].$el.innerWidth())
+      else
+        return 0
 
     getMenuItemViews: ->
       @getViews(".app-list-container")
