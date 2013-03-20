@@ -22,15 +22,34 @@ define [
           filterWords = [filterWords] if not _.isArray(filterWords)
           return recurMatch(item.toJSON(), filterWords)
 
+###*
+# Case insensitive string match.
+#
+# Return true if needle is found from source
+#
+# @param {String} source
+# @param {String} needle
+# @return {Boolean}
+###
 hasString = (source, needle) ->
   source.toString().toLowerCase().indexOf(needle.toLowerCase()) isnt -1
 
+###*
+# Recursively detect whether one of the `needles` appears in the given JSON
+# object.
+#
+# @param {Object} ob
+# @param {Array} needles Array of needles to search from `ob`
+# @return {Boolean}
+###
 recurMatch = (ob, needles) ->
   return false if not ob
 
+  # Threat strings and numbers as the leafs
   if typeof(ob) in  ["string", "number"]
     for n in needles when hasString(ob, n)
       return true
     return false
 
+  # Convert objects (and arrays) to arrays of values recur into them
   return  _.values(ob).some (v) -> recurMatch(v, needles)
