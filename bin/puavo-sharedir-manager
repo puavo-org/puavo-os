@@ -4,8 +4,8 @@
 require 'etc'
 require 'find'
 require 'open3'
-require 'puavo/ldap'
-require 'puavo/shared_directories'
+require 'puavo/sharedir/ldap'
+require 'puavo/sharedir/shared_directories'
 require 'rb-inotify'
 require 'socket'
 require 'syslog'
@@ -475,20 +475,6 @@ class Control
     run_notifier((25 - Time.new.hour) * 60 * 60)
     Syslog.debug('%s', 'Broke out of notifier.')
   end
-
-  def write_nautilus_bookmarks
-    nautilus_bookmarks_paths = %w(
-      /etc/opinsys/desktop/nautilus_bookmarks.yaml
-      /var/lib/tftpboot/files/puavo_share_manager/nautilus_bookmarks.yaml
-    )
-
-    nautilus_bookmarks_paths.each do |bookmarks_path|
-      File.open(bookmarks_path, 'w') do |f|
-	f.write(@box.share_bookmark_definitions)
-	Syslog.info('%s', "Wrote #{ bookmarks_path }.")
-      end
-    end
-  end
 end
 
 loop do
@@ -501,7 +487,6 @@ loop do
   begin
     control = Control.new
     control.initialize_shares_from_ldap
-    control.write_nautilus_bookmarks
 
     notifier_pid = fork { control.run_notifier_but_breakout_at_nighttime }
     control.fix_acls_recursively
