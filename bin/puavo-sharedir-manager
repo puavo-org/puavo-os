@@ -208,7 +208,7 @@ end
 
 class ShareBox
   def initialize(admins)
-    @admins = admins
+    @admin_groupnames = admins.map { |group| Array(group['cn']).first }
     @shares = {}
   end
 
@@ -229,7 +229,7 @@ class ShareBox
     share = PuavoShare.new(basedir_description,
 			   basedir_path,
 			   path,
-			   @admins.keys | writegroups.keys,
+			   @admin_groupnames | writegroups.keys,
 			   readgroups.keys,
 			   description,
 			   automatic_acls)
@@ -270,9 +270,9 @@ class PuavoShareLDAP
   end
 
   def find_groups(filter)
-    groups = {}
+    groups = []
     @puavoldap.search_with_baseprefix('ou=Groups', filter) do |entry|
-      groups[ Array(entry['cn']).first ] = Array(entry['displayName']).first
+      groups << entry.to_hash
     end
     groups
   end
@@ -289,7 +289,7 @@ class PuavoShareLDAP
 
   # XXX this should be school specific locale first,
   # XXX then organisation specific if school specific locale is not set
-  def find_locale()
+  def find_locale(schoolgroup)
     @puavoldap.search('(objectClass=puavoEduOrg)') do |entry|
       return Array(entry['preferredLanguage']).first
     end
@@ -302,7 +302,7 @@ class PuavoShareLDAP
   def find_teacher_groups()
     groups = find_groups('(objectClass=puavoEduGroup)')
     # XXX we need something smarter here than regexp
-    Hash[ groups.select { |k, v| k =~ /(-ope|opettajat)/ } ]
+    groups.select { |group| Array(group['cn']).first =~ /(-ope|opettajat)/ }
   end
 
   def unbind
@@ -314,14 +314,14 @@ class Control
   def initialize_shares_from_ldap
     shareldap = PuavoShareLDAP.new
 
-    @lang    = shareldap.find_locale()	# XXX @lang should be school specific
+    @lang = 'fi'
     admins   = shareldap.find_teacher_groups()
     @schools = shareldap.find_school_groups()
 
     @box = ShareBox.new(admins)
 
     make_sharebase()
-    @schools.keys.each do |schoolgroup|
+    @schools.each do |schoolgroup|
       add_directory(shareldap, schoolgroup)
     end
 
@@ -329,22 +329,24 @@ class Control
   end
 
   def add_directory(shareldap, schoolgroup)
-    school_sharedir = "#{ ShareDirBase }/#{ schoolgroup }"
+    school_name        = Array(schoolgroup['cn']).first
+    school_displayname = Array(schoolgroup['displayName']).first
+
+    school_sharedir = "#{ ShareDirBase }/#{ school_name }"
 
     PuavoShare.mkdir(school_sharedir, 0755)
 
     Syslog.notice('%s',
 		  "Directory #{ school_sharedir } is added to managed directories.")
 
-    schoolname    = @schools[schoolgroup]
-    school_groups = shareldap.find_groups_by_school(schoolgroup)
+    school_groups = shareldap.find_groups_by_school(school_name)
 
     basedir_path = PuavoSharedDirectories.dirpath(school_sharedir,
 						  'base',
 						  @lang)
     basedir_description = PuavoSharedDirectories.description('base',
 							     @lang,
-							     schoolname)
+							     school_displayname)
     PuavoShare.mkdir(basedir_path, 0755)
 
     @box.add_dir(basedir_description,
@@ -354,8 +356,8 @@ class Control
 						@lang),
 		 PuavoSharedDirectories.description('programs',
 						    @lang,
-						    schoolname),
-		 { schoolgroup => schoolname },
+						    school_displayname),
+		 { school_name => school_displayname },
 		 {},
 		 false)
 
@@ -366,32 +368,34 @@ class Control
 						@lang),
 		 PuavoSharedDirectories.description('material',
 						    @lang,
-						    schoolname),
+						    school_displayname),
 		 {},
-		 { schoolgroup => schoolname },
+		 { school_name => school_displayname },
 		 true)
 
     @box.add_dir(basedir_description,
 		 basedir_path,
 		 PuavoSharedDirectories.dirpath(school_sharedir, 'all', @lang),
-		 PuavoSharedDirectories.description('all', @lang, schoolname),
-		 { schoolgroup => schoolname },
+		 PuavoSharedDirectories.description('all', @lang, school_displayname),
+		 { school_name => school_displayname },
 		 {},
 		 true)
 
-    school_groups.keys.each do |group|
-      groupname = school_groups[group]
+    school_groups.each do |group|
+      group_name        = Array(group['cn']).first
+      group_displayname = Array(group['displayName']).first
+
       @box.add_dir(basedir_description,
 		   basedir_path,
 		   PuavoSharedDirectories.dirpath(school_sharedir,
 						  'group',
 						  @lang,
-						  groupname),
+						  group_name),
 		   PuavoSharedDirectories.description('group',
 						      @lang,
-						      schoolname,
-						      groupname),
-		   { group => groupname },
+						      school_displayname,
+						      group_name),
+		   { group_name => group_displayname },
 		   {},
 		   true)
     end
