@@ -320,7 +320,7 @@ class Control
 
     @box = ShareBox.new(admins)
 
-    PuavoShare.mkdir(ShareDirBase, 0755)
+    make_sharebase()
     @schools.keys.each do |schoolgroup|
       add_directory(shareldap, schoolgroup)
     end
@@ -402,6 +402,17 @@ class Control
 
   def fix_acls_recursively
     @box.fix_acls_recursively
+  end
+
+  def make_sharebase
+    # make share directory and symlinks for all supported languages for it
+    PuavoShare.mkdir(ShareDirBase, 0755)
+    %w(fi sv).each do |lang|
+      lang_dirname = PuavoSharedDirectories.dirpath(File.dirname(ShareDirBase),
+						    'base',
+						    lang)
+      File.symlink(File.basename(ShareDirBase), lang_dirname)
+    end
   end
 
   def run_notifier(max_seconds)
