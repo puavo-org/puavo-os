@@ -11,6 +11,8 @@ require 'socket'
 require 'syslog'
 require 'yaml'
 
+ShareDirBase = '/home/share'
+
 class PuavoShare
   attr_reader :automatic_acls
 
@@ -260,10 +262,6 @@ class ShareBox
   def paths_with_automatic_acls
     @shares.map { |path, share| share.automatic_acls ? path : nil }.compact
   end
-
-  def share_bookmark_definitions
-    @shares.values.map { |share| share.bookmark_definition }.compact.to_yaml
-  end
 end
 
 class PuavoShareLDAP
@@ -289,24 +287,12 @@ class PuavoShareLDAP
     find_groups("(&(objectClass=puavoEduGroup)(puavoSchool=#{ schooldn }))")
   end
 
+  # XXX this should be school specific locale first,
+  # XXX then organisation specific if school specific locale is not set
   def find_locale()
     @puavoldap.search('(objectClass=puavoEduOrg)') do |entry|
       return Array(entry['preferredLanguage']).first
     end
-  end
-
-  def find_local_homes()
-    hostname  = Socket.gethostname
-    all_homes = find_school_groups.keys.map { |group| "/home/#{ group }" }
-
-    homes = []
-    filter = "(&(objectClass=puavoServer)(puavoHostname=#{ hostname }))"
-    @puavoldap.search_with_baseprefix('ou=Servers,ou=Hosts', filter) do |entry|
-      homes = Array(entry['puavoExport']) & all_homes
-      break
-    end
-
-    homes
   end
 
   def find_school_groups()
@@ -328,39 +314,37 @@ class Control
   def initialize_shares_from_ldap
     shareldap = PuavoShareLDAP.new
 
-    @lang    = shareldap.find_locale()
-    homes    = shareldap.find_local_homes()
+    @lang    = shareldap.find_locale()	# XXX @lang should be school specific
     admins   = shareldap.find_teacher_groups()
     @schools = shareldap.find_school_groups()
 
     @box = ShareBox.new(admins)
 
+    PuavoShare.mkdir(ShareDirBase, 0755)
     @schools.keys.each do |schoolgroup|
-      add_directory(shareldap, schoolgroup, homes)
+      add_directory(shareldap, schoolgroup)
     end
 
     shareldap.unbind
   end
 
-  def add_directory(shareldap, schoolgroup, homes)
-    home = "/home/#{ schoolgroup }"
+  def add_directory(shareldap, schoolgroup)
+    school_sharedir = "#{ ShareDirBase }/#{ schoolgroup }"
 
-    if not homes.include?(home)
-      Syslog.debug('%s', "Directory #{ home } is not shared by this server.")
+    if not File.directory?(school_sharedir)
+      Syslog.warning('%s', "Directory #{ school_sharedir } does not exist.")
       return
     end
 
-    if not File.directory?(home)
-      Syslog.warn('%s', "Directory #{ home } does not exist.")
-      return
-    end
-
-    Syslog.notice('%s', "Directory #{ home } is added to managed directories.")
+    Syslog.notice('%s',
+		  "Directory #{ school_sharedir } is added to managed directories.")
 
     schoolname    = @schools[schoolgroup]
     school_groups = shareldap.find_groups_by_school(schoolgroup)
 
-    basedir_path        = PuavoSharedDirectories.dirpath(home, 'base', @lang)
+    basedir_path = PuavoSharedDirectories.dirpath(school_sharedir,
+						  'base',
+						  @lang)
     basedir_description = PuavoSharedDirectories.description('base',
 							     @lang,
 							     schoolname)
@@ -368,7 +352,9 @@ class Control
 
     @box.add_dir(basedir_description,
 		 basedir_path,
-		 PuavoSharedDirectories.dirpath(home, 'programs', @lang),
+		 PuavoSharedDirectories.dirpath(school_sharedir,
+						'programs',
+						@lang),
 		 PuavoSharedDirectories.description('programs',
 						    @lang,
 						    schoolname),
@@ -378,7 +364,9 @@ class Control
 
     @box.add_dir(basedir_description,
 		 basedir_path,
-		 PuavoSharedDirectories.dirpath(home, 'material', @lang),
+		 PuavoSharedDirectories.dirpath(school_sharedir,
+						'material',
+						@lang),
 		 PuavoSharedDirectories.description('material',
 						    @lang,
 						    schoolname),
@@ -388,7 +376,7 @@ class Control
 
     @box.add_dir(basedir_description,
 		 basedir_path,
-		 PuavoSharedDirectories.dirpath(home, 'all', @lang),
+		 PuavoSharedDirectories.dirpath(school_sharedir, 'all', @lang),
 		 PuavoSharedDirectories.description('all', @lang, schoolname),
 		 { schoolgroup => schoolname },
 		 {},
@@ -398,7 +386,7 @@ class Control
       groupname = school_groups[group]
       @box.add_dir(basedir_description,
 		   basedir_path,
-		   PuavoSharedDirectories.dirpath(home,
+		   PuavoSharedDirectories.dirpath(school_sharedir,
 						  'group',
 						  @lang,
 						  groupname),
