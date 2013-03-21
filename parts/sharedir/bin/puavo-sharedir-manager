@@ -331,10 +331,7 @@ class Control
   def add_directory(shareldap, schoolgroup)
     school_sharedir = "#{ ShareDirBase }/#{ schoolgroup }"
 
-    if not File.directory?(school_sharedir)
-      Syslog.warning('%s', "Directory #{ school_sharedir } does not exist.")
-      return
-    end
+    PuavoShare.mkdir(school_sharedir, 0755)
 
     Syslog.notice('%s',
 		  "Directory #{ school_sharedir } is added to managed directories.")
@@ -411,7 +408,10 @@ class Control
       lang_dirname = PuavoSharedDirectories.dirpath(File.dirname(ShareDirBase),
 						    'base',
 						    lang)
-      File.symlink(File.basename(ShareDirBase), lang_dirname)
+      begin
+        File.symlink(File.basename(ShareDirBase), lang_dirname)
+      rescue Errno::EEXIST
+      end
     end
   end
 
