@@ -542,7 +542,7 @@ class Control
 
     # In our architecture kerberos master is currently the same as ldap master
     PUAVO_ETC.write(:krb_master, organisation_info['ldap_host'])
-    PUAVO_ETC.write(:krb_toprealm, top_domain)
+    PUAVO_ETC.write(:krb_toprealm, top_domain.upcase)
     PUAVO_ETC.write(
       :krb_realm,
       info['registration']["host_configuration"]["kerberos_realm"]
