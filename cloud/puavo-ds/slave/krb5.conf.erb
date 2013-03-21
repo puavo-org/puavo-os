@@ -28,6 +28,10 @@
 [logging]
 	kdc = FILE:/var/log/kdc.log
 
+[dbdefaults]
+        disable_last_success = true
+        disable_lockout = true
+
 [dbmodules]
 	ldap_<%= @puavo_domain %> = {
 		db_library = kldap
