@@ -32,25 +32,25 @@ class PuavoSharedDirectories
 
     translations = {
       'en' => {
-        'all'      => 'share/All',
+        'all'      => 'All',
         'base'     => 'share',
-        'group'    => "share/#{ nicename }",
-        'material' => 'share/Material',
-        'programs' => 'share/Programs',
+        'group'    => "#{ nicename }",
+        'material' => 'Material',
+        'programs' => 'Programs',
       },
       'fi' => {
-        'all'      => 'yhteiset/Kaikki',
+        'all'      => 'Kaikki',
         'base'     => 'yhteiset',
-        'group'    => "yhteiset/#{ nicename }",
-        'material' => 'yhteiset/Materiaali',
-        'programs' => 'yhteiset/Ohjelmat',
+        'group'    => "#{ nicename }",
+        'material' => 'Materiaali',
+        'programs' => 'Ohjelmat',
       },
       'sv' => {
-        'all'      => 'delade_filer/Allmän',
+        'all'      => 'Allmän',
         'base'     => 'delade_filer',
-        'group'    => "delade_filer/#{ nicename }",
-        'material' => 'delade_filer/Material',
-        'programs' => 'delade_filer/Program',
+        'group'    => "#{ nicename }",
+        'material' => 'Material',
+        'programs' => 'Program',
       },
     }
 
