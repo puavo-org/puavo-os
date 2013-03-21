@@ -46,7 +46,8 @@ class packages {
     , 'whois' ]:
       tag => [ 'admin', 'thinclient', 'ubuntu', ];
 
-    [ 'dconf-tools'
+    [ 'clusterssh'
+    , 'dconf-tools'
     , 'epoptes'
     , 'terminator'
     , 'vinagre' ]:
@@ -211,6 +212,7 @@ class packages {
     , 'okular'
     , 'openshot'
     , 'pencil'
+    , 'pinta'
     , 'pitivi'
     , 'python-lxml'
     , 'sane-utils'
