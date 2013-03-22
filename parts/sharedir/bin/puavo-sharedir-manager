@@ -11,7 +11,7 @@ require 'socket'
 require 'syslog'
 require 'yaml'
 
-ShareDirBase = '/home/share'
+ShareDirBase = '/home/.share'
 
 class PuavoShare
   attr_reader :automatic_acls
@@ -408,7 +408,7 @@ class Control
   def make_sharebase
     # make share directory and symlinks for all supported languages for it
     PuavoShare.mkdir(ShareDirBase, 0755)
-    %w(fi sv).each do |lang|
+    %w(en fi sv).each do |lang|
       lang_dirname = PuavoSharedDirectories.dirpath(File.dirname(ShareDirBase),
 						    'base',
 						    lang)
