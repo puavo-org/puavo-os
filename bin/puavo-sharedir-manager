@@ -388,11 +388,11 @@ class Control
 	PuavoSharedDirectories.dirpath(school_sharedir,
 				       'group',
 				       lang,
-				       group_name),
+				       group_displayname),
         PuavoSharedDirectories.description('group',
 				           lang,
 					   school_displayname,
-					   group_name),
+					   group_displayname),
         { group_name => group_displayname },
         {},
         true)
