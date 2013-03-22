@@ -351,8 +351,6 @@ class Control
     basedir_description \
       = PuavoSharedDirectories.description('base', lang, school_displayname)
 
-    PuavoShare.mkdir(basedir_path, 0755)
-
     @box.add_dir(
       basedir_description,
       basedir_path,
