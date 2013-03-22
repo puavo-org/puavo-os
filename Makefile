@@ -12,6 +12,8 @@ else
 	RUBY_LIB_DIR = $(prefix)/lib/ruby/vendor_ruby
 endif
 
+all:
+
 install-dirs:
 	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
 	mkdir -p $(DESTDIR)$(sbindir)
