@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/opinsys/puavo-logrelay.png?branch=master)](https://travis-ci.org/opinsys/puavo-logrelay)
+
 # puavo-logrelay
 
 Buffering log relay.
