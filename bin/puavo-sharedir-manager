@@ -1,5 +1,18 @@
 #!/usr/bin/ruby
 # -*- coding: utf-8 -*-
+#
+# puavo-sharedir-manager handles permissions to shared directories.
+# Schools and groups are looked up from LDAP and a directory hierarchy
+# under /home/share/.share is created.  A set of symbolic link hierarchies
+# is created for each supported language under its own directory.
+#
+# Permissions are kept under control with inotify and ACLs.
+# Every time the script is started, fresh list of schools/groups
+# is looked up from LDAP, and all file permissions are fixed.
+# The inotify-eventloop is exited once a night and a "restart" is simulated,
+# where LDAP is looked up again and all file permissions are checked again.
+# Normally all file permissions should be fixed right away as file events
+# occur.
 
 require 'etc'
 require 'find'
@@ -7,9 +20,7 @@ require 'open3'
 require 'puavo/sharedir/ldap'
 require 'puavo/sharedir/shared_directories'
 require 'rb-inotify'
-require 'socket'
 require 'syslog'
-require 'yaml'
 
 Languages             = %w(en fi sv)
 ShareDirBase          = '/home/share'
@@ -300,11 +311,15 @@ class PuavoGroup
       or raise "Attribute '#{ attr }' is missing from an ldap entry"
   end
 
-  # XXX
   def cn               ; first('cn'               ); end
   def displayName      ; first('displayName'      ); end
   def preferredLanguage; first('preferredLanguage'); end
-  def puavoId          ; first('puavoId'          ); end
+
+  def puavoId
+    puavoId = first('puavoId')
+    raise "PuavoId is not numeric" unless puavoId.match(/^\d+$/)
+    puavoId
+  end
 end
 
 class PuavoShareLDAP
