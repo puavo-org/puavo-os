@@ -32,14 +32,16 @@ PING_INTERVAL = 1000 * 5
 console.info "Logrelay starting with target #{ config.target }"
 
 # /etc/opinsys/desktop/puavodomain is for legacy lucid systems
+err = null
 for domainPath in ["/etc/puavo/domain", "/etc/opinsys/desktop/puavodomain"]
   try
     PUAVO_DOMAIN = fs.readFileSync(domainPath).toString().trim()
     break
   catch e
+    err = e
     continue
 if not PUAVO_DOMAIN
-  throw e
+  throw err
 
 
 try
