@@ -17,7 +17,6 @@ ShareDirBaseFileStore = "#{ ShareDirBase }/.share"
 
 class PuavoShareSpec
   attr_accessor :automatic_acls,
-	        :dir_type,
 	        :group,
 	        :readgroups,
 	        :school,
@@ -28,7 +27,6 @@ class PuavoShareSpec
     spec = *args
 
     @automatic_acls = spec[:automatic_acls]
-    @dir_type       = spec[:dir_type]
     @group          = spec[:group]
     @readgroups     = spec[:readgroups]
     @school         = spec[:school]
@@ -41,7 +39,7 @@ class PuavoShareSpec
     schoolpart = PuavoSharedDirectories.detox(@school.displayName)
     grouppart  = \
       @group ? PuavoSharedDirectories.detox(@group.displayName) \
-             : PuavoSharedDirectories.dirname(@dir_type, lang)
+             : PuavoSharedDirectories.dirname(File.basename(@sharepath), lang)
 
     [ ShareDirBase, basename, schoolpart, grouppart ].join('/')
   end
@@ -150,10 +148,6 @@ class PuavoShare
     else
       @wanted_file_acls
     end
-  end
-
-  def make_links
-    # XXX
   end
 
   def make_wanted_acls(rwmode, romode, add_defaults)
@@ -398,7 +392,6 @@ class Control
       "Managing directory for school '#{ school.cn }' (#{ school_sharedir }).")
 
     ss_tmpl = PuavoShareSpec.new(:automatic_acls => true,
-				 :dir_type       => nil,
 				 :group          => nil,
 				 :readgroups     => [],
 				 :school         => school,
@@ -408,18 +401,15 @@ class Control
 
       ss                = ss_tmpl.clone
       ss.automatic_acls = false
-      ss.dir_type       = 'programs'
       ss.sharepath      = "#{ school_sharedir }/programs"
     @box.add_dir(ss)
 
       ss            = ss_tmpl.clone
-      ss.dir_type   = 'material'
       ss.readgroups = [ school.cn ]
       ss.sharepath  = "#{ school_sharedir }/material"
     @box.add_dir(ss)
 
       ss             = ss_tmpl.clone
-      ss.dir_type    = 'all'
       ss.sharepath   = "#{ school_sharedir }/all"
       ss.writegroups = [ school.cn ]
     @box.add_dir(ss)
@@ -431,7 +421,6 @@ class Control
 	= "#{ ShareDirBaseFileStore }/#{ school.puavoId }/#{ group.puavoId }"
 
       ss             = ss_tmpl.clone
-      ss.dir_type    = 'group'
       ss.group       = group
       ss.sharepath   = group_sharedir
       ss.writegroups = [ group.cn ]
