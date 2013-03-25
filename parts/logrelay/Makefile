@@ -14,3 +14,9 @@ install: install-dirs
 	install -m 644 config.json $(DESTDIR)/etc/puavo-logrelay.json
 	ln -fs ../lib/node_modules/puavo-logrelay/bin/puavo-logrelay $(DESTDIR)$(prefix)/bin/puavo-logrelay
 
+test:
+	npm test
+
+watch-test:
+	./watch.sh npm test
+
