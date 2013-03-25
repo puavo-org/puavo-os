@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 require 'etc'
+require 'fileutils'
 require 'find'
 require 'open3'
 require 'puavo/sharedir/ldap'
@@ -43,7 +44,7 @@ class PuavoShareSpec
       @group ? PuavoSharedDirectories.detox(@group.displayName) \
              : PuavoSharedDirectories.dirname(@dir_type, lang)
 
-    [ '', ShareDirBase, basename, schoolpart, grouppart ].join('/')
+    [ ShareDirBase, basename, schoolpart, grouppart ].join('/')
   end
 
   def physical_path
@@ -73,8 +74,9 @@ class PuavoShare
 
       begin
         PuavoShare.mkdir(File.dirname(link_path), 0755)
-	File.symlink(@spec.physical_path, link_path)
-      rescue Errno::EEXIST
+	FileUtils.symlink(@spec.physical_path, link_path, :force => true)
+        Syslog.notice('%s',
+	  "Made link from '#{ link_path }' to '#{ @spec.physical_path }'.")
       end 
     end
   end
