@@ -37,13 +37,13 @@ class PuavoShareSpec
   end
 
   def linkpath(lang)
-    basedir    = PuavoSharedDirectories.dirpath(ShareDirBase, 'base', lang)
-    schoolpath = "#{ basedir }/#{ @school.displayName }"
+    basename   = PuavoSharedDirectories.dirname('base', lang)
+    schoolpart = PuavoSharedDirectories.detox(@school.displayName)
+    grouppart  = \
+      @group ? PuavoSharedDirectories.detox(@group.displayName) \
+             : PuavoSharedDirectories.dirname(@dir_type, lang)
 
-    PuavoSharedDirectories.dirpath(schoolpath,
-				   @dir_type,
-				   lang,
-				   (@group ? @group.displayName : ''))
+    [ '', ShareDirBase, basename, schoolpart, grouppart ].join('/')
   end
 
   def physical_path
@@ -367,8 +367,8 @@ class Control
     PuavoShare.mkdir(ShareDirBase,          0755)
     PuavoShare.mkdir(ShareDirBaseFileStore, 0755)
     Languages.each do |lang|
-      basedir = PuavoSharedDirectories.dirpath(ShareDirBase, 'base', lang)
-      PuavoShare.mkdir(basedir, 0755)
+      basedir = PuavoSharedDirectories.dirname('base', lang) 
+      PuavoShare.mkdir("#{ ShareDirBase }/#{ basedir }", 0755)
     end
 
     @schools.each do |school|
@@ -429,18 +429,6 @@ class Control
   def fix_acls_recursively
     @box.fix_acls_recursively
   end
-
-# def make_sharebase
-#    %w(en fi sv).each do |lang|
-#      lang_dirname = PuavoSharedDirectories.dirpath(File.dirname(ShareDirBase),
-#						    'base',
-#						    lang)
-#      begin
-#        File.symlink(File.basename(ShareDirBase), lang_dirname)
-#      rescue Errno::EEXIST
-#      end
-#    end
-# end
 
   def run_notifier(max_seconds)
     max_time     = Time.new.to_i + max_seconds
