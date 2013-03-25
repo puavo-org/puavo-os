@@ -45,12 +45,6 @@ class PuavoShareSpec
 
     [ ShareDirBase, basename, schoolpart, grouppart ].join('/')
   end
-
-  def physical_path
-    (@dir_type == 'group') \
-      ? @sharepath \
-      : "#{ @sharepath }/#{ @dir_type }"
-  end
 end
 
 class PuavoShare
@@ -66,7 +60,7 @@ class PuavoShare
   end
 
   def create_sharedir
-    self.class.mkdir(@spec.physical_path, 0)
+    self.class.mkdir(@spec.sharepath, 0)
 
     Languages.each do |lang|
       link_path = @spec.linkpath(lang)
@@ -75,11 +69,11 @@ class PuavoShare
         PuavoShare.mkdir(File.dirname(link_path), 0755)
 
         prev_linktarget = File.readlink(link_path) rescue ''
-	if @spec.physical_path != prev_linktarget then
+	if @spec.sharepath != prev_linktarget then
 	  self.class.delete(link_path)
-	  File.symlink(@spec.physical_path, link_path)
+	  File.symlink(@spec.sharepath, link_path)
           Syslog.notice('%s',
-	    "Made link from '#{ link_path }' to '#{ @spec.physical_path }'.")
+	    "Made link from '#{ link_path }' to '#{ @spec.sharepath }'.")
         end
       end 
     end
@@ -408,23 +402,26 @@ class Control
 				 :group          => nil,
 				 :readgroups     => [],
 				 :school         => school,
-				 :sharepath      => school_sharedir,
+				 :sharepath      => nil,
 				 :writegroups    => [])
 
 
-    ss                = ss_tmpl.clone
-    ss.automatic_acls = false
-    ss.dir_type       = 'programs'
+      ss                = ss_tmpl.clone
+      ss.automatic_acls = false
+      ss.dir_type       = 'programs'
+      ss.sharepath      = "#{ school_sharedir }/programs"
     @box.add_dir(ss)
 
-    ss            = ss_tmpl.clone
-    ss.dir_type   = 'material'
-    ss.readgroups = [ school.cn ]
+      ss            = ss_tmpl.clone
+      ss.dir_type   = 'material'
+      ss.readgroups = [ school.cn ]
+      ss.sharepath  = "#{ school_sharedir }/material"
     @box.add_dir(ss)
 
-    ss            = ss_tmpl.clone
-    ss.dir_type   = 'all'
-    ss.writegroups = [ school.cn ]
+      ss             = ss_tmpl.clone
+      ss.dir_type    = 'all'
+      ss.sharepath   = "#{ school_sharedir }/all"
+      ss.writegroups = [ school.cn ]
     @box.add_dir(ss)
 
     school_groups = shareldap.find_groups_by_school(school)
