@@ -51,13 +51,14 @@ class PuavoShare
 
   def create_sharedir
     self.class.mkdir(@spec.sharepath, 0)
+    return
     %w(en fi sv).each do |lang|
       lang_basedir = PuavoSharedDirectories.dirpath(File.dirname(ShareDirBase), 
 						    'base',
 						    lang)
       self.class.mkdir(File.dirname(lang_basedir), 0755)
 
-      share_basedir = "#{ lang_basedir }/#{ @spec.school_name }"
+      share_basedir = "#{ lang_basedir }/#{ @spec.school.cn }"
       lang_dirname = PuavoSharedDirectories.dirpath(share_basedir,
 						    @spec.dir_type,
 						    lang,
@@ -225,26 +226,25 @@ end
 
 class ShareBox
   def initialize(admins)
-    @admin_groupnames = admins.map { |group| Array(group['cn']).first }
+    @admin_groupnames = admins.map { |group| group.cn }
     @shares           = {}
   end
 
-  def add_dir(sharedirspec)
+  def add_dir(spec)
     # check directory mode to allow disabling directories (chmod 000)
     begin
-      return if (File.stat(sharedir).mode & 0x777) == 0
+      return if (File.stat(spec.sharepath).mode & 0x777) == 0
     rescue Errno::ENOENT
       # if directory does not exist, it is enabled (it should be created)
     end
 
-    spec_with_admin_writes = sharedirspec.clone
-    spec_with_admin_writes.writegroups \
-      = @admin_groupnames | sharedirspec.writegroups
+    spec_with_admin_writes             = spec.clone
+    spec_with_admin_writes.writegroups = @admin_groupnames | spec.writegroups
 
     share = PuavoShare.new(spec_with_admin_writes)
 
     share.create_sharedir
-    @shares[sharedir] = share
+    @shares[spec.sharepath] = share
   end
 
   def fix_acls(path)
@@ -273,6 +273,22 @@ class ShareBox
   end
 end
 
+class PuavoGroup
+  def initialize(ldapentry)
+    @ldapentry = ldapentry
+  end
+
+  def first(attr)
+    Array(@ldapentry[attr]).first \
+      or raise "Attribute '#{ attr }' is missing from an ldap entry"
+  end
+
+  # XXX
+  def cn               ; first('cn'               ); end
+  def preferredLanguage; first('preferredLanguage'); end
+  def puavoId          ; first('puavoId'          ); end
+end
+
 class PuavoShareLDAP
   def initialize
     @puavoldap = PuavoLdap.new
@@ -281,13 +297,13 @@ class PuavoShareLDAP
   def find_groups(filter)
     groups = []
     @puavoldap.search_with_baseprefix('ou=Groups', filter) do |entry|
-      groups << entry.to_hash
+      groups << PuavoGroup.new(entry.to_hash)
     end
     groups
   end
 
-  def find_groups_by_school(schoolname)
-    schoolfilter = "(&(objectClass=puavoSchool)(cn=#{ schoolname }))"
+  def find_groups_by_school(school)
+    schoolfilter = "(&(objectClass=puavoSchool)(cn=#{ school.cn }))"
     schooldn     = ''
     @puavoldap.search_with_baseprefix('ou=Groups', schoolfilter) do |entry|
       schooldn = entry.dn
@@ -296,8 +312,9 @@ class PuavoShareLDAP
     find_groups("(&(objectClass=puavoEduGroup)(puavoSchool=#{ schooldn }))")
   end
 
-  def find_locale(schoolgroup)
-    school_language = Array(schoolgroup['preferredLanguage']).first
+  def find_locale(school)
+    school_language = (school.preferredLanguage rescue nil)
+
     if school_language
       return school_language
     else
@@ -306,7 +323,7 @@ class PuavoShareLDAP
       end
     end
 
-    raise "No language can be found for '#{ Array(schoolgroup['cn']).first }'"
+    raise "No language can be found for '#{ Array(school['cn']).first }'"
   end
 
   def find_school_groups()
@@ -316,7 +333,7 @@ class PuavoShareLDAP
   def find_teacher_groups()
     groups = find_groups('(objectClass=puavoEduGroup)')
     # XXX we need something smarter here than regexp
-    groups.select { |group| Array(group['cn']).first =~ /(-ope|opettajat)/ }
+    groups.select { |group| group.cn =~ /(-ope|opettajat)/ }
   end
 
   def unbind
@@ -336,18 +353,15 @@ class Control
     # make share directory
     PuavoShare.mkdir(ShareDirBase, 0755)
 
-    @schools.each do |schoolgroup|
-      add_directory(shareldap, schoolgroup)
+    @schools.each do |school|
+      add_directory(shareldap, school)
     end
 
     shareldap.unbind
   end
 
   def add_directory(shareldap, school)
-    school_name    = Array(school['cn']).first
-    school_puavoid = Array(school['puavoId']).first
-
-    school_sharedir = "#{ ShareDirBase }/#{ school_puavoid }"
+    school_sharedir = "#{ ShareDirBase }/#{ school.puavoId }"
 
     PuavoShare.mkdir(school_sharedir, 0755)
 
@@ -370,28 +384,25 @@ class Control
 
     ss            = ss_tmpl.clone
     ss.dir_type   = 'material'
-    ss.readgroups = [ school_name ]
+    ss.readgroups = [ school.cn ]
     @box.add_dir(ss)
 
     ss            = ss_tmpl.clone
     ss.dir_type   = 'all'
-    ss.writegroups = [ school_name ]
+    ss.writegroups = [ school.cn ]
     @box.add_dir(ss)
 
-    school_groups = shareldap.find_groups_by_school(school_name)
+    school_groups = shareldap.find_groups_by_school(school)
 
     school_groups.each do |group|
-      group_name    = Array(group['cn']).first
-      group_puavoid = Array(group['puavoId']).first
-
       group_sharedir \
-	= "#{ ShareDirBase }/#{ school_puavoid }/#{ group_puavoid }"
+	= "#{ ShareDirBase }/#{ school.puavoId }/#{ group.puavoId }"
 
       ss             = ss_tmpl.clone
       ss.dir_type    = 'group'
       ss.group       = group
       ss.sharepath   = group_sharedir
-      ss.writegroups = [ group_name ]
+      ss.writegroups = [ group.cn ]
             
       @box.add_dir(ss)
     end
