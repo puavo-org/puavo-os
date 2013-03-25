@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 require 'etc'
-require 'fileutils'
 require 'find'
 require 'open3'
 require 'puavo/sharedir/ldap'
@@ -74,10 +73,26 @@ class PuavoShare
 
       begin
         PuavoShare.mkdir(File.dirname(link_path), 0755)
-	FileUtils.symlink(@spec.physical_path, link_path, :force => true)
-        Syslog.notice('%s',
-	  "Made link from '#{ link_path }' to '#{ @spec.physical_path }'.")
+
+        prev_linktarget = File.readlink(link_path) rescue ''
+	if @spec.physical_path != prev_linktarget then
+	  self.class.delete(link_path)
+	  File.symlink(@spec.physical_path, link_path)
+          Syslog.notice('%s',
+	    "Made link from '#{ link_path }' to '#{ @spec.physical_path }'.")
+        end
       end 
+    end
+  end
+
+  def self.delete(path)
+    # delete path in a somewhat safe way
+    if not path.match(/^#{ ShareDirBase }/)
+      raise "An internal error, trying to delete '#{ path }'"
+    end
+    begin
+      File.delete(path)
+    rescue Errno::ENOENT
     end
   end
 
@@ -386,7 +401,7 @@ class Control
     PuavoShare.mkdir(school_sharedir, 0755)
 
     Syslog.notice('%s',
-		  "Directory #{ school_sharedir } is added to managed directories.")
+      "Managing directory for school '#{ school.cn }' (#{ school_sharedir }).")
 
     ss_tmpl = PuavoShareSpec.new(:automatic_acls => true,
 				 :dir_type       => nil,
@@ -449,7 +464,6 @@ class Control
 	    :recursive,
 	  ]
 
-	  Syslog.debug('%s', "Setting notifier watch on #{ monitor_path }.")
 	  notifier.watch(monitor_path, *events) do |event|
 	    path = event.absolute_name
 
