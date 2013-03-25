@@ -11,7 +11,9 @@ require 'socket'
 require 'syslog'
 require 'yaml'
 
-ShareDirBase = '/home/.share'
+Languages             = %w(en fi sv)
+ShareDirBase          = '/home/share'
+ShareDirBaseFileStore = "#{ ShareDirBase }/.share"
 
 class PuavoShareSpec
   attr_accessor :automatic_acls,
@@ -33,11 +35,25 @@ class PuavoShareSpec
     @sharepath      = spec[:sharepath]
     @writegroups    = spec[:writegroups]
   end
+
+  def linkpath(lang)
+    basedir    = PuavoSharedDirectories.dirpath(ShareDirBase, 'base', lang)
+    schoolpath = "#{ basedir }/#{ @school.displayName }"
+
+    PuavoSharedDirectories.dirpath(schoolpath,
+				   @dir_type,
+				   lang,
+				   (@group ? @group.displayName : ''))
+  end
+
+  def physical_path
+    (@dir_type == 'group') \
+      ? @sharepath \
+      : "#{ @sharepath }/#{ @dir_type }"
+  end
 end
 
 class PuavoShare
-  # XXX this many parameters to a function suggests that
-  # XXX maybe there is a need for another class... DirSpec ?
   def initialize(sharedirspec)
     @spec = sharedirspec
 
@@ -50,22 +66,14 @@ class PuavoShare
   end
 
   def create_sharedir
-    self.class.mkdir(@spec.sharepath, 0)
-    return
-    %w(en fi sv).each do |lang|
-      lang_basedir = PuavoSharedDirectories.dirpath(File.dirname(ShareDirBase), 
-						    'base',
-						    lang)
-      self.class.mkdir(File.dirname(lang_basedir), 0755)
+    self.class.mkdir(@spec.physical_path, 0)
 
-      share_basedir = "#{ lang_basedir }/#{ @spec.school.cn }"
-      lang_dirname = PuavoSharedDirectories.dirpath(share_basedir,
-						    @spec.dir_type,
-						    lang,
-						    @spec.dir_name)
+    Languages.each do |lang|
+      link_path = @spec.linkpath(lang)
+
       begin
-	puts "sharepath=#{ @spec.sharepath } lang_dirname=#{ lang_dirname }"
-	File.symlink(@spec.sharepath, lang_dirname)
+        PuavoShare.mkdir(File.dirname(link_path), 0755)
+	File.symlink(@spec.physical_path, link_path)
       rescue Errno::EEXIST
       end 
     end
@@ -131,6 +139,10 @@ class PuavoShare
     else
       @wanted_file_acls
     end
+  end
+
+  def make_links
+    # XXX
   end
 
   def make_wanted_acls(rwmode, romode, add_defaults)
@@ -285,6 +297,7 @@ class PuavoGroup
 
   # XXX
   def cn               ; first('cn'               ); end
+  def displayName      ; first('displayName'      ); end
   def preferredLanguage; first('preferredLanguage'); end
   def puavoId          ; first('puavoId'          ); end
 end
@@ -350,8 +363,13 @@ class Control
 
     @box = ShareBox.new(admins)
 
-    # make share directory
-    PuavoShare.mkdir(ShareDirBase, 0755)
+    # make the share base directories
+    PuavoShare.mkdir(ShareDirBase,          0755)
+    PuavoShare.mkdir(ShareDirBaseFileStore, 0755)
+    Languages.each do |lang|
+      basedir = PuavoSharedDirectories.dirpath(ShareDirBase, 'base', lang)
+      PuavoShare.mkdir(basedir, 0755)
+    end
 
     @schools.each do |school|
       add_directory(shareldap, school)
@@ -361,7 +379,7 @@ class Control
   end
 
   def add_directory(shareldap, school)
-    school_sharedir = "#{ ShareDirBase }/#{ school.puavoId }"
+    school_sharedir = "#{ ShareDirBaseFileStore }/#{ school.puavoId }"
 
     PuavoShare.mkdir(school_sharedir, 0755)
 
@@ -396,7 +414,7 @@ class Control
 
     school_groups.each do |group|
       group_sharedir \
-	= "#{ ShareDirBase }/#{ school.puavoId }/#{ group.puavoId }"
+	= "#{ ShareDirBaseFileStore }/#{ school.puavoId }/#{ group.puavoId }"
 
       ss             = ss_tmpl.clone
       ss.dir_type    = 'group'
