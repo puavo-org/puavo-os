@@ -27,34 +27,33 @@ class PuavoSharedDirectories
     lookup_translation(translations, lang, dirtype)
   end
 
-  def self.dirpath(basedir, dirtype, lang, name='')
-    nicename = name.scan(/[[:alnum:]åäöÅÄÖ._-]/).join
+  def self.detox(toxic)
+    toxic.scan(/[[:alnum:]åäöÅÄÖ._-]/).join
+  end
 
+  def self.dirname(dirtype, lang)
     translations = {
       'en' => {
         'all'      => 'All',
         'base'     => 'share',
-        'group'    => "#{ nicename }",
         'material' => 'Material',
         'programs' => 'Programs',
       },
       'fi' => {
         'all'      => 'Kaikki',
         'base'     => 'yhteiset',
-        'group'    => "#{ nicename }",
         'material' => 'Materiaali',
         'programs' => 'Ohjelmat',
       },
       'sv' => {
         'all'      => 'Allmän',
         'base'     => 'delade_filer',
-        'group'    => "#{ nicename }",
         'material' => 'Material',
         'programs' => 'Program',
       },
     }
 
-    "#{ basedir }/#{ lookup_translation(translations, lang, dirtype) }"
+    lookup_translation(translations, lang, dirtype)
   end
 
   def self.lookup_translation(translations, lang, key)
