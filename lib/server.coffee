@@ -8,6 +8,8 @@ url = require "url"
 _ = require "underscore"
 JSONStream = require "json-stream"
 
+logRelayPacketParse = require "./logrelay_packet_parse"
+
 clim = require "clim"
 _write = clim.logWrite
 clim.logWrite = (level, prefixes, msg) ->
@@ -117,31 +119,13 @@ tcpServer = net.createServer (c) ->
 
 udpServer = dgram.createSocket("udp4")
 
-parseLogrelayFormat = (data) ->
-  packet = {}
-
-  data.toString().split("\n").forEach (line) ->
-    if not line then return
-    if not line.match(/[.+:.+]/)
-      console.error "UDP packet: bad line:", line
-      return
-
-    [k, v] = line.split(":")
-
-    # Turn values inside brackets [foo,bar] to arrays
-    if match = v.match(/\[(.*)\]/)
-      v = match[1].split(",")
-
-    packet[k] = v
-
-  return packet
 
 udpServer.on "message", (data, rinfo) ->
 
   try
     packet = JSON.parse(data)
   catch err
-    packet = parseLogrelayFormat(data)
+    packet = logRelayPacketParse(data)
 
   packet = extendRelayMeta(packet)
   console.log "Packet from udp: ", packet
