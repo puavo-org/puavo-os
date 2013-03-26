@@ -42,7 +42,8 @@ reconnection_retries = 1
 #debug_level = 0xfff0
 auth_provider = krb5
 cache_credentials = true
-id_provider = ldap
+id_provider = proxy
+proxy_lib_name = extrausers
 dns_discovery_domain=<%= @puavo_domain %>
 krb5_server = kerberos.<%= @puavo_domain %>,<%= @kerberos_master %>
 krb5_realm = <%= @kerberos_realm %>
@@ -50,15 +51,19 @@ krb5_validate = false
 #ldap_krb5_init_creds = true
 #ldap_sasl_mech = gssapi
 #ldap_id_use_start_tls = true
-ldap_default_bind_dn=<%= @ldap_binddn %>
-ldap_default_authtok=<%= @ldap_bindpw %>
-ldap_user_search_base = ou=People,<%= @ldap_base %>?sub?(objectClass=posixAccount)
-ldap_group_search_base = ou=Groups,<%= @ldap_base %>?sub?(objectClass=posixGroup)
-ldap_tls_reqcert = demand
-ldap_uri = _srv_,ldap://<%= @ldap_master %>
-ldap_id_use_start_tls = true
+#ldap_default_bind_dn=<%= @ldap_binddn %>
+#ldap_default_authtok=<%= @ldap_bindpw %>
+#ldap_user_search_base = ou=People,<%= @ldap_base %>?sub?(objectClass=posixAccount)
+#ldap_group_search_base = ou=Groups,<%= @ldap_base %>?sub?(objectClass=posixGroup)
+#ldap_tls_reqcert = demand
+#ldap_uri = _srv_
+#<% if @ldap_slave.length > 0 %>
+#ldap_backup_uri = ldap://<%= @ldap_slave %>
+#<% end %>
+#ldap_chpass_uri = ldap://<%= @ldap_master %>
+#ldap_id_use_start_tls = true
 min_id = 500
-ldap_search_base = <%= @ldap_base %>
+#ldap_search_base = <%= @ldap_base %>
 krb5_store_password_if_offline = true
-ldap_user_fullname = displayName
-override_homedir = /home/%u
+#ldap_user_fullname = displayName
+#override_homedir = /home/%u
