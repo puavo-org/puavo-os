@@ -12,17 +12,33 @@ function inet_aton () {
 }
 
 LDAP_MASTER=$(cat /etc/puavo/ldap/master)
+LDAP_SLAVE=$(cat /etc/puavo/ldap/slave)
 KERBEROS_MASTER=$(cat /etc/puavo/kerberos/master)
+
+if [ -n "$LDAP_MASTER" ]; then
+  TMP_LDAP_MASTER="string:${LDAP_MASTER}"
+fi
+
+if [ -n "$LDAP_SLAVE" ]; then
+  TMP_LDAP_SLAVE="string:${LDAP_SLAVE}"
+fi
+
+if [ -n "$KERBEROS_MASTER" ]; then
+  TMP_KERBEROS_MASTER="string:${KERBEROS_MASTER}"
+fi
+
+echo dbus-send --system --dest=org.puavo.VPN.dnsmasq \
+  /uk/org/thekelleys/dnsmasq \
+  uk.org.thekelleys.SetServers \
+  uint32:$(inet_aton ${route_vpn_gateway}) \
+  "${TMP_LDAP_MASTER}" \
+  "${TMP_LDAP_SLAVE}" \
+  "${TMP_KERBEROS_MASTER}" > /tmp/jepukepu
 
 dbus-send --system --dest=org.puavo.VPN.dnsmasq \
   /uk/org/thekelleys/dnsmasq \
   uk.org.thekelleys.SetServers \
   uint32:$(inet_aton ${route_vpn_gateway}) \
-  string:"${LDAP_MASTER}" \
-  string:"${KERBEROS_MASTER}"
-
-# Make sure that sssd goes online
-sleep 1
-killall -USR2 sssd
-sleep 6
-killall -USR2 sssd
+  "${TMP_LDAP_MASTER}" \
+  "${TMP_LDAP_SLAVE}" \
+  "${TMP_KERBEROS_MASTER}"
