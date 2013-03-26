@@ -7,8 +7,10 @@ to cache passwd and group info from LDAP locally at login time.
 It requires kerberos authentication with pam_krb5.so to be done
 before calling. The script first queries the DNS server for LDAP 
 SRV record _ldap._tcp.#{puavo_domain} and connects the first LDAP
-server returned. If it does not respond, LDAP master server is
-contacted (TBD).
+server returned. If it does not respond, LDAP slave and master 
+servers are contacted. If bind dn and password are available, 
+they are used when contacting the servers, otherwise SASL GSSAPI 
+authentication is used.
 
 NOTE: The script always uses ldap+start_tls to connect and CA
 certificates need to be configured properly in /etc/ldap/ldap.conf
@@ -22,6 +24,11 @@ The following Puavo settings need to be set:
 
 /etc/puavo/ldap/base   - LDAP base, e.g. dc=edu,dc=example,dc=org
 /etc/puavo/ldap/master - LDAP master server fqdn
+
+The following Puavo settings are optional and used if they are set:
+/etc/puavo/ldap/slave    - LDAP slave server
+/etc/puavo/ldap/dn       - DN used to bind to LDAP servers with simple bind
+/etc/puavo/ldap/password - Password used for simple binds
 
 The script writes the following files for libnss-extrausers:
 
@@ -62,15 +69,114 @@ require 'ldap'
 require 'etc'
 require 'dnsruby'
 
+def connect_server(ldap_server, ldap_port, suffix, uid, binddn, bindpw)
+  begin
+    return false if !ldap_server or ldap_server.eql?("")
+
+    conn = LDAP::Conn.new(host=ldap_server, port=ldap_port)
+    conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+    conn.start_tls
+
+    if binddn and bindpw
+      conn.bind(binddn, bindpw)
+    else
+      conn.sasl_bind("", "GSSAPI")
+    end
+
+    if conn.bound?
+      passwd = Hash.new
+      group = Hash.new
+
+      if File.exists?("/var/lib/extrausers/passwd")
+        File.open("/var/lib/extrausers/passwd", "r").each_line do |line|
+          entry = line.split(":")
+          passwd[entry[0]] = line
+        end
+      end
+
+      if File.exists?("/var/lib/extrausers/group")
+        File.open("/var/lib/extrausers/group", "r").each_line do |line|
+          entry = line.split(":")
+          group[entry[0]] = line
+        end
+      end
+
+      conn.search("ou=People,#{suffix}", LDAP::LDAP_SCOPE_SUBTREE, "(&(objectClass=posixAccount)(uid=#{uid}))", ["uid", "uidNumber", "gidNumber", "homeDirectory", "displayName"]) {|e|
+        if e.get_values('uid') and e.get_values('uidNumber') and
+           e.get_values('gidNumber') and e.get_values('homeDirectory') and
+           e.get_values('displayName')
+
+          uid = e.get_values('uid')[0]
+          uidNumber = e.get_values('uidNumber')[0]
+          gidNumber = e.get_values('gidNumber')[0]
+          # Temporary override until old LDAP attributes have been migrated
+#          homeDirectory = e.get_values('homeDirectory')[0]
+          homeDirectory = "/home/#{uid}"
+          cn = e.get_values('displayName')[0]
+
+          passwd[uid] = "#{uid}:x:#{uidNumber}:#{gidNumber}:#{cn}:#{homeDirectory}:/bin/bash"
+        end
+      }
+
+      conn.search("ou=Groups,#{suffix}", LDAP::LDAP_SCOPE_SUBTREE, "(&(objectClass=posixGroup)(memberUid=#{uid}))", ["gidNumber", "cn"]) {|e|
+        if e.get_values('gidNumber') and
+           e.get_values('cn')
+
+          gidNumber = e.get_values('gidNumber')[0]
+          cn = e.get_values('cn')[0]
+
+          members = Array.new
+          members << uid
+
+          if group[cn]
+            tmp = group[cn].chomp.split(":")[3]
+            members.concat tmp.split(",")
+          end
+
+          group[cn] = "#{cn}:x:#{gidNumber}:#{members.uniq.join(',')}"
+        end
+      }
+
+      File.open("/var/lib/extrausers/passwd", "w") do |file|
+        passwd.each_value do |entry|
+          file.puts entry
+        end
+      end
+
+      File.open("/var/lib/extrausers/group", "w") do |file|
+        group.each_value do |entry|
+          file.puts entry
+        end
+      end
+
+      return true
+    end
+  rescue LDAP::ResultError
+    conn.perror("LDAP connection failed")
+    return false
+  end  
+end
+
+def read_file(file)
+  if File.exists?(file)
+    return File.read(file).chomp
+  end
+
+  return nil
+end
+
 uid = ENV['PAM_USER']
 
 if !uid or uid.eql?("root")  
   exit(0)
 end
 
-suffix = File.read('/etc/puavo/ldap/base').chomp
-ldap_master = File.read('/etc/puavo/ldap/master').chomp
-puavo_domain = File.read('/etc/puavo/domain').chomp
+suffix = read_file('/etc/puavo/ldap/base')
+ldap_master = read_file('/etc/puavo/ldap/master')
+ldap_slave = read_file('/etc/puavo/ldap/slave')
+puavo_domain = read_file('/etc/puavo/domain')
+binddn = read_file('/etc/puavo/ldap/dn')
+bindpw = read_file('/etc/puavo/ldap/password')
 
 dname = "_ldap._tcp.#{puavo_domain}"
 res   = Dnsruby::DNS.new
@@ -84,66 +190,23 @@ rescue Exception => e
   print "Can't find SRV records for #{dname}: ", e, "\n"
 end
 
-min_priority = (ldap_srv.keys.sort)[0]
-ldap_slave = ldap_srv[min_priority]
+servers = Array.new
+
+ldap_srv.keys.sort.each do |key|
+  servers << ldap_srv[key]
+end
+
+servers << ldap_slave
+servers << ldap_master
 
 if !ENV['KRB5CCNAME']
   ENV['KRB5CCNAME'] = ENV['PAM_KRB5CCNAME']
 end
 
-conn = LDAP::Conn.new(host=ldap_slave, port=389)
-conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
-conn.start_tls
+done = false
 
-conn.sasl_bind("", "GSSAPI") do
-  begin
-    passwd = Array.new
-    group = Array.new
-
-    conn.search("ou=People,#{suffix}", LDAP::LDAP_SCOPE_SUBTREE, "(&(objectClass=posixAccount)(uid=#{uid}))", ["uid", "uidNumber", "gidNumber", "homeDirectory", "displayName"]) {|e|
-      if e.get_values('uid') and e.get_values('uidNumber') and
-         e.get_values('gidNumber') and e.get_values('homeDirectory') and
-         e.get_values('displayName')
-
-        uid = e.get_values('uid')[0]
-        uidNumber = e.get_values('uidNumber')[0]
-        gidNumber = e.get_values('gidNumber')[0]
-        # Temporary override until old LDAP attributes have been migrated
-#        homeDirectory = e.get_values('homeDirectory')[0]
-        homeDirectory = "/home/#{uid}"
-        cn = e.get_values('displayName')[0]
-
-        passwd << "#{uid}:x:#{uidNumber}:#{gidNumber}:#{cn}:#{homeDirectory}:/bin/bash"
-      end
-    }
-
-    conn.search("ou=Groups,#{suffix}", LDAP::LDAP_SCOPE_SUBTREE, "(&(objectClass=posixGroup)(memberUid=#{uid}))", ["gidNumber", "cn"]) {|e|
-      if e.get_values('gidNumber') and
-         e.get_values('cn')
-
-          gidNumber = e.get_values('gidNumber')[0]
-          cn = e.get_values('cn')[0]
-
-          group << "#{cn}:x:#{gidNumber}:#{uid}"
-      end
-    }
-
-    File.open("/var/lib/extrausers/passwd", "w") do |file|
-      passwd.each do |entry|
-        file.puts entry
-      end
-    end
-
-    File.open("/var/lib/extrausers/group", "w") do |file|
-      group.each do |entry|
-        file.puts entry
-      end
-    end
-
-
-  rescue LDAP::ResultError
-    conn.perror("LDAP connection failed")
-  end  
+servers.each do |server|
+  break if connect_server(server, 389, suffix, uid, binddn, bindpw)
 end
 
 exit(0)
