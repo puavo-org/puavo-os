@@ -8,6 +8,14 @@ def delete_file(file)
   end
 end
 
+def read_file(file)
+  if File.exists?(file)
+    return File.read(file).chomp
+  end
+
+  return ""
+end
+
 puavo_device_type = ARGV[0]
 
 if (!puavo_device_type)
@@ -24,14 +32,15 @@ if puavo_device_type == 'unregistered'
   exit(0)
 end
 
-@ldap_master       = File.read('/etc/puavo/ldap/master'    ).chomp
-@ldap_base         = File.read('/etc/puavo/ldap/base'      ).chomp
-@kerberos_master   = File.read('/etc/puavo/kerberos/master').chomp
-@kerberos_realm    = File.read('/etc/puavo/kerberos/realm' ).chomp
-#@kerberos_toprealm = File.read('/etc/puavo/kerberos/toprealm' ).chomp
-@puavo_hostname    = File.read('/etc/puavo/hostname'       ).chomp
-@puavo_domain      = File.read('/etc/puavo/domain'         ).chomp
-#@puavo_topdomain   = File.read('/etc/puavo/topdomain'      ).chomp
+@ldap_master       = read_file('/etc/puavo/ldap/master')
+@ldap_slave        = read_file('/etc/puavo/ldap/slave')
+@ldap_base         = read_file('/etc/puavo/ldap/base')
+@kerberos_master   = read_file('/etc/puavo/kerberos/master')
+@kerberos_realm    = read_file('/etc/puavo/kerberos/realm' )
+@kerberos_toprealm = read_file('/etc/puavo/kerberos/toprealm' )
+@puavo_hostname    = read_file('/etc/puavo/hostname')
+@puavo_domain      = read_file('/etc/puavo/domain')
+@puavo_topdomain   = read_file('/etc/puavo/topdomain')
 
 def write_config(filename, version=nil, secure=false)
   template_file = filename
@@ -65,8 +74,6 @@ write_config("/etc/hosts")
 
 case puavo_device_type
   when "thinclient"
-    @ldap_slave = File.read('/etc/puavo/ldap/slave').chomp
-
     write_config("/etc/nsswitch.conf", "extrausers")
     write_config("/etc/pam.d/lightdm", "thinclient")
     write_config("/etc/ldap/ldap.conf")
@@ -79,8 +86,6 @@ case puavo_device_type
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "fatclient"
-    @ldap_slave = File.read('/etc/puavo/ldap/slave').chomp
-
     write_config("/etc/nsswitch.conf", "extrausers")
     write_config("/etc/pam.d/lightdm", "fatclient")
     write_config("/etc/ldap/ldap.conf")
@@ -96,8 +101,6 @@ case puavo_device_type
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "ltspserver"
-    @ldap_slave = File.read('/etc/puavo/ldap/slave').chomp
-
     write_config("/etc/nsswitch.conf", "sss")
     write_config("/etc/pam.d/ltspsshd")
     write_config("/etc/ldap/ldap.conf")
@@ -107,8 +110,8 @@ case puavo_device_type
     write_config("/etc/ssh/sshd_config")
     write_config("/etc/cups/client.conf")
 
-    @ldap_binddn       = File.read('/etc/puavo/ldap/dn'        ).chomp
-    @ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp
+    @ldap_binddn       = read_file('/etc/puavo/ldap/dn')
+    @ldap_bindpw       = read_file('/etc/puavo/ldap/password')
     write_config("/etc/sssd/sssd.conf", nil, true)
 
     # http://askubuntu.com/questions/117127/flash-video-appears-blue
@@ -128,8 +131,8 @@ case puavo_device_type
     # FIXME: Hack to get gnome fallback session
     `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
 
-    @ldap_binddn       = File.read('/etc/puavo/ldap/dn'        ).chomp
-    @ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp
+    @ldap_binddn       = read_file('/etc/puavo/ldap/dn')
+    @ldap_bindpw       = read_file('/etc/puavo/ldap/password')
 
     write_config("/etc/sssd/sssd.conf", "laptop", true)
 end
