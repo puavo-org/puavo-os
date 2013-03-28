@@ -1,23 +1,24 @@
-prefix = /usr/local
-exec_prefix = $(prefix)
-sbindir = $(exec_prefix)/sbin
+subdirs = client manager
+install-subdirs = $(subdirs:%=install-%)
+clean-subdirs = $(subdirs:%=clean-%)
 
-INSTALL         = install
-INSTALL_PROGRAM = $(INSTALL)
+.PHONY : all
+all : $(subdirs)
 
-# For some reason ruby lib directory is different under /usr and /usr/local
-ifeq ($(prefix),/usr/local)
-	RUBY_LIB_DIR = $(prefix)/lib/site_ruby
-else
-	RUBY_LIB_DIR = $(prefix)/lib/ruby/vendor_ruby
-endif
+.PHONY : $(subdirs)
+$(subdirs) :
+	$(MAKE) -C $@
 
-all:
+.PHONY : $(install-subdirs)
+$(install-subdirs) :
+	$(MAKE) -C $(@:install-%=%) install
 
-install-dirs:
-	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
-	mkdir -p $(DESTDIR)$(sbindir)
+.PHONY : install
+install : $(install-subdirs)
 
-install: install-dirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-sharedir-manager
-	cp -R lib/* $(DESTDIR)$(RUBY_LIB_DIR)
+.PHONY : $(clean-subdirs)
+$(clean-subdirs) :
+	$(MAKE) -C $(@:clean-%=%) clean
+
+.PHONY : clean
+clean : $(clean-subdirs)
