@@ -682,6 +682,7 @@ class packages {
     , 'fuse-utils'
     , 'gconf-editor'
     , 'gkbd-capplet'
+    , 'gpointing-device-settings'
     , 'kdepasswd'
     , 'khelpcenter4'
     , 'rarian-compat'
