@@ -1,6 +1,7 @@
 
 require "fileutils"
-require 'tmpdir'
+require "tmpdir"
+require "etc"
 require "test/unit"
 
 require "./lib/puavo/etc"
@@ -66,6 +67,7 @@ class TestPuavoEtcReader < Test::Unit::TestCase
     end
   end
 
+  # XXX: This test requires root permissions and a puavo group
   def test_password_permissions
     Dir.mktmpdir do |dir|
       pe = PuavoEtc.new(dir)
@@ -74,6 +76,7 @@ class TestPuavoEtcReader < Test::Unit::TestCase
       stat = File.stat(dir + "/ldap/password")
       mode = sprintf("%o", stat.mode)
       assert_equal(mode, "100640")
+      assert_equal(Etc.getgrgid(stat.gid).name, "puavo")
     end
   end
 

@@ -58,6 +58,10 @@ class PuavoEtc
       f.print(value)
     end
 
+    if options[:group]
+      FileUtils.chown("root", options[:group], file_path)
+    end
+
   end
 
   # Puavo Attribute definitions
@@ -70,8 +74,10 @@ class PuavoEtc
   puavo_attr :ldap_dn, "ldap/dn"
   puavo_attr :ldap_base, "ldap/base"
   puavo_attr :ldap_master, "ldap/master"
-  puavo_attr :ldap_password, "ldap/password", :mode => 0640
-
+  puavo_attr :ldap_password, "ldap/password", {
+    :mode => 0640,
+    :group => "puavo"
+  }
   puavo_attr :krb_master, "kerberos/master"
   puavo_attr :krb_realm, "kerberos/realm"
   puavo_attr :krb_toprealm, "kerberos/toprealm"
