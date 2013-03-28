@@ -1,0 +1,55 @@
+#!/bin/sh
+
+set -eu
+
+gtk_bookmarks() {
+  _networkfolder_displayname=$1
+  _schoolsharedir=$2
+  _share_displayname=$3
+
+  case "$(cat /etc/puavo/hosttype)" in
+    laptop)
+      # Add two bookmarks: to user home directory on server, and to shared
+      # directories on server.
+      echo "sftp://homedirserver:222${HOME} * ${_networkfolder_displayname}"
+      echo "stfp://homedirserver:222${_schoolsharedir} * ${_share_displayname}"
+      ;;
+    *)
+      # add a bookmark pointing to shared directories
+      echo "file://${_schoolsharedir} * ${_share_displayname}"
+      ;;
+  esac
+
+  # Pick up user's own bookmarks too (we treat all bookmarks with "* "-prefix
+  # as something we have full control over).
+  grep -v -P '^.*?\s+\* ' ~/.gtk-bookmarks
+}
+
+schoolgroup=$(id -gn)
+lang=$(echo $LANG | cut -c 1-2)
+
+case "$lang" in
+  fi)
+    networkfolder_displayname='Verkkokansio'
+    share_displayname='Yhteiset'
+    share_pathtranslation='yhteiset'
+    ;;
+  sv)
+    networkfolder_displayname='Nätverksmapp'
+    share_displayname='Delade Filer'
+    share_pathtranslation='delade_filer'
+    ;;
+  *)
+    networkfolder_displayname='Network folder'
+    share_displayname='Share'
+    share_pathtranslation='share'
+    ;;
+esac
+
+schoolsharedir=/home/share/${share_pathtranslation}/${schoolgroup}
+
+gtk_bookmarks "$networkfolder_displayname" \
+              "$share_displayname"         \
+              "$share_pathtranslation"     \
+  > ~/.gtk-bookmarks.tmp
+mv ~/.gtk-bookmarks.tmp ~/.gtk-bookmarks
