@@ -22,7 +22,7 @@ gtk_bookmarks() {
 
   # Pick up user's own bookmarks too (we treat all bookmarks with "* "-prefix
   # as something we have full control over).
-  grep -v -P '^.*?\s+\* ' ~/.gtk-bookmarks
+  perl -ne '/^.*?\s+\* / || print' ~/.gtk-bookmarks
 }
 
 schoolgroup=$(id -gn)
@@ -49,7 +49,7 @@ esac
 schoolsharedir=/home/share/${share_pathtranslation}/${schoolgroup}
 
 gtk_bookmarks "$networkfolder_displayname" \
+              "$schoolsharedir"            \
               "$share_displayname"         \
-              "$share_pathtranslation"     \
   > ~/.gtk-bookmarks.tmp
 mv ~/.gtk-bookmarks.tmp ~/.gtk-bookmarks
