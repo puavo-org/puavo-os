@@ -22,7 +22,7 @@ gtk_bookmarks() {
 
   # Pick up user's own bookmarks too (we treat all bookmarks with "* "-prefix
   # as something we have full control over).
-  perl -ne '/^.*?\s+\* / || print' ~/.gtk-bookmarks
+  awk '$2 != "*"' ~/.gtk-bookmarks
 }
 
 schoolgroup=$(id -gn)
