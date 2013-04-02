@@ -21,3 +21,5 @@ install-dirs:
 install: install-dirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-sharedir-manager
 	cp -R lib/* $(DESTDIR)$(RUBY_LIB_DIR)
+
+clean:

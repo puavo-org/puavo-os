@@ -12,3 +12,5 @@ install-dirs:
 
 install: install-dirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) update-gtk-bookmarks
+
+clean:
