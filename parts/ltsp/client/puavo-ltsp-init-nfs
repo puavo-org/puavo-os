@@ -11,13 +11,7 @@ if boolean_is_true "${USE_NFS_HOMES}" ; then
     # machine principals
     if [ ! -f "/etc/krb5.keytab" ]; then
       TMP_KRB5CCNAME=$(echo $KRB5CCNAME | sed -e 's/^FILE://')
-
-      # Install kerberos ticket to root only if root does not have a ticket
-      # already.  This works around a problem, when root ticket switches
-      # to another (gssd/nfs stuff does not like that (client id changes)
-      # and login failures occur).
-      test -e /tmp/krb5cc_0 \
-        || install -o root -g root -m 600 "$TMP_KRB5CCNAME" /tmp/krb5cc_0
+      install -o root -g root -m 600 "$TMP_KRB5CCNAME" /tmp/krb5cc_0
 
       service idmapd restart || service idmapd start
       service gssd restart   || service gssd start
