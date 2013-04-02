@@ -21,7 +21,12 @@ gtk_bookmarks() {
   esac
 
   # Pick up user's own bookmarks too (we treat all bookmarks with "* "-prefix
-  # as something we have full control over).
+  # as something we have full control over).  We create the bookmarks file
+  # first if it does not exist.
+  if ! [ -e ~/.gtk-bookmarks ]; then
+    /usr/bin/xdg-user-dirs-update
+    /usr/bin/xdg-user-dirs-gtk-update
+  fi
   awk '$2 != "*"' ~/.gtk-bookmarks
 }
 
