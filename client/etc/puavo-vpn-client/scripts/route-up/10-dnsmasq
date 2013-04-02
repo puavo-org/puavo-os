@@ -27,14 +27,6 @@ if [ -n "$KERBEROS_MASTER" ]; then
   TMP_KERBEROS_MASTER="string:${KERBEROS_MASTER}"
 fi
 
-echo dbus-send --system --dest=org.puavo.VPN.dnsmasq \
-  /uk/org/thekelleys/dnsmasq \
-  uk.org.thekelleys.SetServers \
-  uint32:$(inet_aton ${route_vpn_gateway}) \
-  "${TMP_LDAP_MASTER}" \
-  "${TMP_LDAP_SLAVE}" \
-  "${TMP_KERBEROS_MASTER}" > /tmp/jepukepu
-
 dbus-send --system --dest=org.puavo.VPN.dnsmasq \
   /uk/org/thekelleys/dnsmasq \
   uk.org.thekelleys.SetServers \
