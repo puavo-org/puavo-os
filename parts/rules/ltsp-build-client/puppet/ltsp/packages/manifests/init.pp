@@ -388,7 +388,8 @@ class packages {
     , 'spe' ]:
       tag => [ 'programming', 'ubuntu', ];
 
-    [ 'puavo-wlanap' ]:
+    [ 'puavo-sharedir-client'
+    , 'puavo-wlanap' ]:
       tag => [ 'puavo', 'opinsys', ];
 
     [ 'ltsp-lightdm'
