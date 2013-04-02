@@ -47,7 +47,7 @@ class PuavoShareSpec
 
   def linkpath(lang)
     basename   = PuavoSharedDirectories.dirname('base', lang)
-    schoolpart = PuavoSharedDirectories.detox(@school.displayName)
+    schoolpart = PuavoSharedDirectories.detox(@school.cn)
     grouppart  = \
       @group ? PuavoSharedDirectories.detox(@group.displayName) \
              : PuavoSharedDirectories.dirname(File.basename(@sharepath), lang)
