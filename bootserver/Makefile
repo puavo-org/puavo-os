@@ -16,6 +16,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/etc/apparmor.d/local
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/etc/bind
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/etc/dhcp
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/etc/samba
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/var/lib/bind
 
 .PHONY : install
@@ -35,6 +36,9 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/etc/bind \
 		templates/etc/bind/named.conf.local \
 		templates/etc/bind/named.conf.options
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/etc/samba \
+		templates/etc/samba/smb.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-bootserver/templates/var/lib/bind \
 		templates/var/lib/bind/puavo_domain \
