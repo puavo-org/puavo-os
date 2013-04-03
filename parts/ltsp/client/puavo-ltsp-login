@@ -69,6 +69,10 @@ require 'ldap'
 require 'etc'
 require 'dnsruby'
 
+# Needed when reading from /var/lib/extrausers/{passwd,group}, which
+# may contain utf-8 sequences in displayName.
+Encoding.default_external = 'utf-8'
+
 def connect_server(ldap_server, ldap_port, suffix, uid, binddn, bindpw)
   begin
     return false if !ldap_server or ldap_server.eql?("")
@@ -112,9 +116,9 @@ def connect_server(ldap_server, ldap_port, suffix, uid, binddn, bindpw)
           # Temporary override until old LDAP attributes have been migrated
 #          homeDirectory = e.get_values('homeDirectory')[0]
           homeDirectory = "/home/#{uid}"
-          cn = e.get_values('displayName')[0]
+          displayName = e.get_values('displayName')[0]
 
-          passwd[uid] = "#{uid}:x:#{uidNumber}:#{gidNumber}:#{cn}:#{homeDirectory}:/bin/bash"
+          passwd[uid] = "#{uid}:x:#{uidNumber}:#{gidNumber}:#{displayName}:#{homeDirectory}:/bin/bash"
         end
       }
 
