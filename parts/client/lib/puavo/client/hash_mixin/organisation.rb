@@ -6,6 +6,10 @@ module Puavo
 
         def prettify_attributes
           [
+           { :original_attribute_name => "sambaDomainName",
+             :new_attribute_name => "samba_domain_name",
+             :value_block => lambda{ |value| Array(value).first } },
+           
            { :original_attribute_name => "puavoDomain",
              :new_attribute_name => "domain",
              :value_block => lambda{ |value| Array(value).first } },
