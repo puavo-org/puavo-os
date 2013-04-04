@@ -12,7 +12,7 @@ gtk_bookmarks() {
       # Add two bookmarks: to user home directory on server, and to shared
       # directories on server.
       echo "sftp://homedir:222${HOME} * ${_networkfolder_displayname}"
-      echo "stfp://homedir:222${_schoolsharedir} * ${_share_displayname}"
+      echo "sftp://homedir:222${_schoolsharedir} * ${_share_displayname}"
       ;;
     *)
       # add a bookmark pointing to shared directories
