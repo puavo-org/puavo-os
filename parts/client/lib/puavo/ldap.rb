@@ -14,6 +14,16 @@ module Puavo
 
     ESCAPES_RE = Regexp.new("[#{ ESCAPES.keys.map { |e| Regexp.escape(e) }.join }]")
 
+    # Initialize ldap connection with Puavo style. If no arguments are supplied
+    # Puavo::Ldap will try get dn&password from /etc/puavo. If they are not
+    # found (fat clients) it will try to make a sasl bind with GSSAPI.
+    #
+    # Login data can be overridden with an options Hash:
+    #  dn: force dn
+    #  password: force password
+    #  base: force base
+    #  server: force server
+    #  sasl: set to true to force sasl bind
     def initialize(*args)
       options = args[0] || {}
 
