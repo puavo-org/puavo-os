@@ -1,4 +1,5 @@
 require 'ldap'
+require 'puavo/etc'
 
 module Puavo
   class Ldap
@@ -13,24 +14,33 @@ module Puavo
 
     ESCAPES_RE = Regexp.new("[#{ ESCAPES.keys.map { |e| Regexp.escape(e) }.join }]")
 
-    def initialize(ldapserver='localhost')
-      @base       = File.read('/etc/puavo/ldap/base'    ).chomp
-      @dn         = File.read('/etc/puavo/ldap/dn'      ).chomp
-      @password   = File.read('/etc/puavo/ldap/password').chomp
-      @domain     = File.read('/etc/puavo/domain'       ).chomp
-      @hostname   = File.read('/etc/puavo/hostname'     ).chomp
+    def initialize(*args)
+      options = args[0] || {}
 
-      ldapserver = @hostname + "." + @domain   
-
-      if ldapserver
-        @conn = LDAP::Conn.new(ldapserver)
-        @conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
-        @conn.start_tls
-        @conn.bind(@dn, @password)
-
-      else
-        @conn = nil
+      begin
+        @dn = options[:dn] || PUAVO_ETC.ldap_dn
+        # Let PUAVO_ETC.ldap_password to throw permision denied if run as non
+        # root
+        @password = options[:password] || PUAVO_ETC.ldap_password
+      rescue Errno::ENOENT
+        # If no dn was given and one was not found from /etc/puavo fallback to
+        # sasl.
+        options[:sasl] = true
       end
+
+      @base = options[:base] || PUAVO_ETC.ldap_base
+      @server = options[:server] || PUAVO_ETC.ldap_slave
+
+      @conn = LDAP::Conn.new(@server)
+      @conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+      @conn.start_tls
+
+      if options[:sasl]
+        @conn.sasl_bind("", "GSSAPI")
+      else
+        @conn.bind(@dn, @password)
+      end
+
     end
 
     def netboot_device_by_mac(mac)
