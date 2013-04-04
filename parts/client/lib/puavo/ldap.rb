@@ -17,15 +17,17 @@ module Puavo
     def initialize(*args)
       options = args[0] || {}
 
-      begin
-        @dn = options[:dn] || PUAVO_ETC.ldap_dn
-        # Let PUAVO_ETC.ldap_password to throw permision denied if run as non
-        # root
-        @password = options[:password] || PUAVO_ETC.ldap_password
-      rescue Errno::ENOENT
-        # If no dn was given and one was not found from /etc/puavo fallback to
-        # sasl.
-        options[:sasl] = true
+      if not options[:sasl]
+        begin
+          @dn = options[:dn] || PUAVO_ETC.ldap_dn
+          # Let PUAVO_ETC.ldap_password to throw permision denied if run as non
+          # root
+          @password = options[:password] || PUAVO_ETC.ldap_password
+        rescue Errno::ENOENT
+          # If no dn was given and one was not found from /etc/puavo fallback to
+          # sasl.
+          options[:sasl] = true
+        end
       end
 
       @base = options[:base] || PUAVO_ETC.ldap_base
