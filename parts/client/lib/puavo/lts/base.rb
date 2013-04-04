@@ -23,7 +23,7 @@ module Puavo
     class Base
 
       def output
-        "[#{ @device.mac_address }]\n" +
+        "[default]\n" +
           @lts_data.map { |key, value| "\t#{ key } = #{ value }\n" }.sort.join
       end
 
