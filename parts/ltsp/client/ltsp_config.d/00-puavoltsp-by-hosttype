@@ -43,6 +43,7 @@ case "$PUAVO_HOSTTYPE" in
       $puavo_common_unneeded_services
       ltspssh
       network-manager
+      ondemand
     "
     set_lts_var SCREEN_07            lightdm
     set_lts_var USE_NFS_HOMES        True
@@ -56,7 +57,15 @@ case "$PUAVO_HOSTTYPE" in
       set_lts_var SCREEN_07 lightdm
     fi
 
-    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
+    # Laptops will keep the "ondemand"-task, removed from others.
+    # A note about this: the service provides ondemand CPU frequency
+    # scaling, meaning less power usage.  It is disabled by default,
+    # but we want it for laptops.  However, on some machines, such as
+    # "ETC-3800 machines" with "CentaurHauls, VIA Nehemiah" 800MHz processors,
+    # the "ondemand" service makes the machines very unstable, so it should
+    # be enabled with caution and perhaps on machine type basis.
+
+    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services ondemand"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
     set_lts_var RM_SYSTEM_SERVICES "
@@ -81,11 +90,12 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
       network-manager
+      ondemand
     "
     set_lts_var USE_NFS_HOMES        True
     ;;
   thinclient)
-    set_lts_var KEEP_SYSTEM_SERVICES 'tty1 tty2 tty3 tty4 tty5 tty6'
+    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
     set_lts_var LDM_AUTOLOGIN        False
     set_lts_var LDM_DIRECTX          True
     set_lts_var LDM_SESSION          'gnome-session --session=gnome-fallback'
@@ -95,13 +105,14 @@ case "$PUAVO_HOSTTYPE" in
       $puavo_common_unneeded_services
       ltspssh
       network-manager
+      ondemand
     "
     set_lts_var SCREEN_07            lightdm
     set_lts_var SSH_OVERRIDE_PORT    222
     set_lts_var X_COLOR_DEPTH        16
     ;;
   unregistered)
-    set_lts_var RM_SYSTEM_SERVICES 'ltspssh network-manager'
+    set_lts_var RM_SYSTEM_SERVICES 'ltspssh network-manager ondemand'
     set_lts_var SCREEN_07          register
     ;;
 esac
