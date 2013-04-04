@@ -550,8 +550,8 @@ class Control
 
     PUAVO_ETC.write(:ldap_dn, info['registration']['dn'])
     PUAVO_ETC.write(:ldap_password, info['registration']['ldap_password'])
-    PUAVO_ETC.write(:ldap_base, info['base'])
-    PUAVO_ETC.write(:ldap_master, info['ldap_host'])
+    PUAVO_ETC.write(:ldap_base, organisation_info['base'])
+    PUAVO_ETC.write(:ldap_master, organisation_info['ldap_host'])
 
     PUAVO_ETC.write(:domain, organisation_info["domain"])
     PUAVO_ETC.write(:topdomain, top_domain)
