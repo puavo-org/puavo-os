@@ -511,6 +511,8 @@ class Control
     rui  = RegisterUserInterface.new(cmdline_params, cert)
     info = rui.register_to_server()
 
+    return if ['fatclient', 'thinclient'].include?( info['registration']['puavoDeviceType'] )
+
     organisation_info = rui.connection.get("/users/organisation.json")
     # org["ldap_host"], org["domain"]
 
