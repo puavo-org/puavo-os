@@ -8,6 +8,7 @@ GEM
       multi_xml (>= 0.5.2)
     multi_json (1.6.1)
     multi_xml (0.5.3)
+    ruby-ldap (0.9.12)
 
 PLATFORMS
   ruby
@@ -16,3 +17,4 @@ DEPENDENCIES
   facter
   highline
   httparty
+  ruby-ldap
