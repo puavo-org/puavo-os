@@ -74,6 +74,7 @@ class PuavoEtc
   puavo_attr :ldap_dn, "ldap/dn"
   puavo_attr :ldap_base, "ldap/base"
   puavo_attr :ldap_master, "ldap/master"
+  puavo_attr :ldap_slave, "ldap/slave"
   puavo_attr :ldap_password, "ldap/password", {
     :mode => 0640,
     :group => "puavo"
