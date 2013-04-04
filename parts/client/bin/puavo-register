@@ -568,7 +568,7 @@ class Control
     PUAVO_ETC.write(:hostname, rui.responses["puavoHostname"])
 
     # Also run update to write the kernel stuff
-    update()
+    update() if info['registration']['puavoDeviceType'] != "laptop"
   end
 
   # Write updatable Puavo attributes to /etc/puavo
