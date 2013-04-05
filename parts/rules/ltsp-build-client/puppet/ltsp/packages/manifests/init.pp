@@ -48,7 +48,6 @@ class packages {
 
     [ 'clusterssh'
     , 'dconf-tools'
-    , 'epoptes'
     , 'terminator'
     , 'vinagre' ]:
       tag => [ 'admin', 'ubuntu', ];
