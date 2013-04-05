@@ -9,9 +9,9 @@ $LOAD_PATH.unshift( File.dirname(__FILE__) )
 
 ENV['LDAPTLS_REQCERT'] = 'demand'
 
-require 'puavo-ldap'
 require 'puavo'
 require 'puavo/lts'
+require 'puavo/ldap'
 
 @get_request = ARGV[0]
 @ip = ARGV[1]
@@ -29,7 +29,7 @@ rescue
 end
 
 # Create ldap connection
-@puavoldap = PuavoLdap.new
+@puavoldap = Puavo::Ldap.new
 
 ldap_device = @puavoldap.device_by_mac(@mac)
 device = Puavo::Client::Base.new_by_ldap_entry( ldap_device )
