@@ -25,6 +25,7 @@ install-dirs:
 	mkdir -p $(DESTDIR)$(sbindir)
 
 install: install-dirs
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-lts
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-register
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
 
