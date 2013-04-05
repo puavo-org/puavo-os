@@ -26,8 +26,9 @@ All keys are optional.
 The `hooks` option is a list of associative arrays with `regexp` and `command`
 keys. The given regular expression will be matched against incoming read
 requests (RRQ). On match the command will be executed with the requested file
-as the first argument instead of reading the file from the file system. The
-standard output of the command will be sent to the client requesting the file.
+as the first argument and the client ip address as the second instead of reading 
+the file from the file system. The standard output of the command will be sent
+as the contents of the requested file.
 
 Matching is stopped on the first matched regexp. If no matches are found the
 file is read from the file system like in normal tftp servers.
