@@ -11,22 +11,17 @@ gtk_bookmarks() {
     laptop)
       # Add two bookmarks: to user home directory on server, and to shared
       # directories on server.
-      echo "sftp://homedir:222${HOME} * ${_networkfolder_displayname}"
-      echo "sftp://homedir:222${_schoolsharedir} * ${_share_displayname}"
+      echo "smb://homedir/${USER} * ${_networkfolder_displayname}"
+      echo "smb://homedir/share/${_schoolsharedir} * ${_share_displayname}"
       ;;
     *)
       # add a bookmark pointing to shared directories
-      echo "file://${_schoolsharedir} * ${_share_displayname}"
+      echo "file:///home/share/${_schoolsharedir} * ${_share_displayname}"
       ;;
   esac
 
   # Pick up user's own bookmarks too (we treat all bookmarks with "* "-prefix
-  # as something we have full control over).  We create the bookmarks file
-  # first if it does not exist.
-  if ! [ -e ~/.gtk-bookmarks ]; then
-    /usr/bin/xdg-user-dirs-update
-    /usr/bin/xdg-user-dirs-gtk-update
-  fi
+  # as something we have full control over).
   awk '$2 != "*"' ~/.gtk-bookmarks
 }
 
@@ -51,7 +46,13 @@ case "$lang" in
     ;;
 esac
 
-schoolsharedir=/home/share/${share_pathtranslation}/${schoolgroup}
+schoolsharedir=${share_pathtranslation}/${schoolgroup}
+
+# We create the bookmarks file first if it does not exist.
+if ! [ -e ~/.gtk-bookmarks ]; then
+  /usr/bin/xdg-user-dirs-update
+  /usr/bin/xdg-user-dirs-gtk-update
+fi
 
 gtk_bookmarks "$networkfolder_displayname" \
               "$schoolsharedir"            \
