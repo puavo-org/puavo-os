@@ -31,6 +31,16 @@ module Puavo
         @device.tags ? { 'PUAVO_TAGS' => Array(@device.tags).join(" ") } : {}
       end
 
+      def define_default_locale
+        lang = (
+          # Language priorities
+          @device.preferred_language ||
+          @school.preferred_language ||
+          @organisation.preferred_language
+        )
+        lang ? { 'DEFAULT_LOCALE' => lang } : {}
+      end
+
       def define_default_printer
         @device.default_printer ? { 'LDM_PRINTER_DEFAULT' => @device.default_printer } : {}
       end

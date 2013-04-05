@@ -20,6 +20,7 @@ module Puavo
         @lts_data.merge!( define_resolution )
         @lts_data.merge!( define_auto_power_off )
         @lts_data.merge!( define_wlan )
+        @lts_data.merge!( define_default_locale )
       end
     end
   end
