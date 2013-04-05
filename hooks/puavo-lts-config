@@ -18,14 +18,14 @@ require 'puavo/lts'
 
 if not @ip
   puts "Invalid IP-address"
-  exit
+  exit 1
 end
 begin
   # Get MAC-address by IP
   @mac = `arp -n #{ @ip }`.split("\n").last.match(/(([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})/)[1]
 rescue
-  puts "Invalid IP-address"
-  exit
+  puts "Cannot find ip (#{ @ip }) from arp table"
+  exit 1
 end
 
 # Create ldap connection
