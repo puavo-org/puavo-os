@@ -62,6 +62,10 @@ module Puavo
              :new_attribute_name => "puavoWlanChannel",
              :value_block => lambda{ |value| Array(value).first } },
 
+           { :original_attribute_name => "preferredLanguage",
+             :new_attribute_name => "preferred_language",
+             :value_block => lambda{ |value| Array(value).first } },
+
            { :original_attribute_name => "puavoWlanSSID",
              :new_attribute_name => "wlan_ssids",
              :value_block => lambda{ |value| Array(value) } } ]

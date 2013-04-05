@@ -108,6 +108,9 @@ module Puavo
            { :original_attribute_name => "puavoDeviceHorzSync",
              :new_attribute_name => "horizontal_sync",
              :value_block => lambda{ |value| Array(value).first } },
+           { :original_attribute_name => "preferredLanguage",
+             :new_attribute_name => "preferred_language",
+             :value_block => lambda{ |value| Array(value).first } },
            { :original_attribute_name => "puavoDeviceVertRefresh",
              :new_attribute_name => "vertical_refresh",
              :value_block => lambda{ |value| Array(value).first } } ]
