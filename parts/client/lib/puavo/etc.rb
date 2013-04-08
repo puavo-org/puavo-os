@@ -61,7 +61,15 @@ class PuavoEtc
     if options[:group]
       FileUtils.chown("root", options[:group], file_path)
     end
+  end
 
+  # Get puavo attribute or nil if the file is missing
+  def get(attr)
+    begin
+      send(attr)
+    rescue Errno::ENOENT
+      nil
+    end
   end
 
   # Puavo Attribute definitions

@@ -46,7 +46,9 @@ puts PUAVO_ETC.id
 
 Puavo data is read lazily from `/etc/puavo` which means that possible
 permission exceptions ocur only when you actually try to access the attributes.
-Eg. reading  `PUAVO_ETC.ldap_password` without root.
+Eg. reading  `PUAVO_ETC.ldap_password` without root and if the corresponding
+file in is missing `Errno::ENOENT` will be raised. `PUAVO_ETC.get(<attribute
+symbol>)` can be used to get `Errno::ENOENT` errors as nils.
 
 Writing happens using the `write` method
 
