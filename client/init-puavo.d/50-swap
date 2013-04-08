@@ -3,6 +3,12 @@ if boolean_is_true "$USE_LOCAL_SWAP" ; then
     for part in `sfdisk -l 2>/dev/null | awk '/ 82 / { print $1}'`; do
         swap_devices="$swap_devices $part"
     done
+
+    # Add puavo-swap as well, if it exists (the above check does not catch it,
+    # because it is on an LVM partition.
+    if [ -b /dev/mapper/puavo-swap ]; then
+        swap_devices="$swap_devices /dev/mapper/puavo-swap"
+    fi
 fi
 
 # Set NBD_SWAP=true by default for clients with RAM < NBD_SWAP_THRESHOLD
