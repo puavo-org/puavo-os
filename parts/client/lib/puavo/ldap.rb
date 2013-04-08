@@ -1,7 +1,17 @@
+require 'resolv'
 require 'ldap'
 require 'puavo/etc'
 
 module Puavo
+
+  # raises Resolv::ResolvError if not found
+  def self.resolve_ldap(puavo_domain)
+    name = "_ldap._tcp.#{ puavo_domain }"
+    resolver = Resolv::DNS.new
+    res = resolver.getresource(name, Resolv::DNS::Resource::IN::SRV)
+    return res.target.to_s
+  end
+
   class Ldap
     attr_reader :base, :dn, :password
 
@@ -41,7 +51,12 @@ module Puavo
       end
 
       @base = options[:base] || PUAVO_ETC.ldap_base
-      @server = options[:server] || PUAVO_ETC.ldap_slave
+
+      @server = options[:server] || begin
+        Puavo.resolve_ldap(PUAVO_ETC.domain)
+      rescue Resolv::ResolvError
+        nil
+      end || PUAVO_ETC.get(:ldap_slave) || PUAVO_ETC.ldap_master
 
       @conn = LDAP::Conn.new(@server)
       @conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
