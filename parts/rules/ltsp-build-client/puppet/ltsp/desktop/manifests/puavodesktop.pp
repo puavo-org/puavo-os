@@ -4,6 +4,24 @@ class desktop::puavodesktop {
           packages,
           webmenu
 
+  define dconf_locale {
+    $lang = $title
+
+    file {
+      "/etc/dconf/db/locale-${lang}.d":
+        ensure => directory;
+
+      "/etc/dconf/db/locale-${lang}.d/${lang}":
+        content => template("desktop/dconf_by_locale/${lang}"),
+        notify  => Exec['update dconf'];
+    }
+  }
+
+  dconf_locale {
+    [ 'en', 'fi', 'sv', ]:
+      ;
+  }
+
   file {
     '/etc/dconf/db/puavodesktop.d/locks/session_locks':
       content => template('desktop/dconf_session_locks'),
