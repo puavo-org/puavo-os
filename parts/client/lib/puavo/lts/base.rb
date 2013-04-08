@@ -38,7 +38,17 @@ module Puavo
           @school.preferred_language ||
           @organisation.preferred_language
         )
-        lang ? { 'DEFAULT_LOCALE' => lang } : {}
+
+        locales_by_lang = {
+          'de' => 'de_DE.UTF-8',
+          'en' => 'en_GB.UTF-8',
+          'fi' => 'fi_FI.UTF-8',
+          'ru' => 'ru_RU.UTF-8',
+          'sv' => 'sv_FI.UTF-8',
+        }
+
+        locale = locales_by_lang[lang]
+        locale ? { 'DEFAULT_LOCALE' => locale } : {}
       end
 
       def define_default_printer
