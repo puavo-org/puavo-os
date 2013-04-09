@@ -8,6 +8,7 @@
 # for the viapadlock and tpm drivers.
 #HRNGDEVICE=/dev/hwrng
 #HRNGDEVICE=/dev/null
+HRNGDEVICE=/dev/urandom
 
 # Additional options to send to rngd. See the rngd(8) manpage for
 # more information.  Do not specify -r/--rng-device here, use

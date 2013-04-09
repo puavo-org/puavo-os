@@ -101,6 +101,10 @@ udev
     so that usb memory-sticks work correctly, as well as other device
     permission related issues.
 
+use_urandom
+    Install rng-tools and configure it to use /dev/urandom as a source of
+    random numbers.
+
 webmenu
     Our own branding for webmenu.
 
