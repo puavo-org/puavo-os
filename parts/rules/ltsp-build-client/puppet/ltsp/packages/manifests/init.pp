@@ -5,7 +5,7 @@ class packages {
   include packages::purged
 
   # install packages by default
-  Package { ensure => latest, }
+  Package { ensure => present, }
 
   define kernel_package_for_version ($package_tag='', $with_extra=true) {
     $version = $title
