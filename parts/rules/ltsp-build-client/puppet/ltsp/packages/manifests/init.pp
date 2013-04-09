@@ -335,6 +335,10 @@ class packages {
     , 'tuxguitar' ]:
       tag => [ 'music_making', 'ubuntu', ];
 
+    [ 'ipsec-tools'
+    , 'racoon' ]:
+      tag => [ 'network', 'ubuntu', ];
+
     [ 'acroread' ]:
       tag => [ 'office', 'opinsys', ];
 
