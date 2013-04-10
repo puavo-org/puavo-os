@@ -88,6 +88,9 @@ class packages {
     , 'xul-ext-ubufox' ]:
       tag => [ 'desktop', 'ubuntu', ];
 
+    'nautilus-dropbox-dist':
+      tag => [ 'desktop', 'opinsys', ];
+
     'nodejs-bundle':
       tag => [ 'devel', 'opinsys', ];
 
