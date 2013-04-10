@@ -24,7 +24,8 @@ case "$hosttype" in
     ;;
   ltspserver)
     puavo-setup-filesystems
-    cp -a /etc/puavo /state
+    mkdir -p /state/etc
+    cp -a /etc/puavo /state/etc
 
     sync
     umount /state
