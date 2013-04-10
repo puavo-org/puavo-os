@@ -19,7 +19,7 @@
         // English is always loaded, but if user has prefers another language load
         // that too. It will nicely override english if it loads and silently
         // fallbacks to english if missing
-        window.LANG = window.process.env.i18n || navigator.language.match(/^([a-z]+)\-/)[1];
+        window.LANG = window.process.env.i18n || navigator.language.slice(0, 2)
         if (window.LANG !== "en") {
           document.write(
             '<script src="i18n/' + window.LANG + '/i18n.js"></' + 'script>'
