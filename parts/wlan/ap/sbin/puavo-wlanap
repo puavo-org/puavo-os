@@ -43,39 +43,34 @@ graceful_exit()
 puavo-wlanap-update-configs
 exitval=$?
 
-if [ $exitval -eq 1 ]
-then
+if [ $exitval -eq 1 ]; then
     # puavo-wlanap-update-configs exits with 1 if hostap_channel is
     # not set. That is fine, the user did not want puavo-wlanap to
     # run.
     exit 0
 fi
 
-if [ $exitval -gt 1 ]
-then
+if [ $exitval -gt 1 ]; then
     exit $exitval
 fi
 
 trap postponed_graceful_exit INT TERM HUP
 
 vtund -f /var/run/puavo-wlanap/vtund.conf puavo-wlanap $vtun_gateway
-if [ $? -ne 0 ]
-then
+if [ $? -ne 0 ]; then
     echo "error: failed to start vtun" | logger -t puavo-wlanap -s -p user.err
     exit 1
 fi
 
 trap graceful_exit INT TERM HUP
 
-if [ $exit_requested -ne 0 ]
-then
+if [ $exit_requested -ne 0 ]; then
     graceful_exit
 fi
 
 mainloop()
 {
-    while true
-    do
+    while true; do
 	sleep 300 & sleeppid=$!
 	wait
 	puavo-wlanap-send-status

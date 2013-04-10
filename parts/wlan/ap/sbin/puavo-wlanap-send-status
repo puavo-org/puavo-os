@@ -8,8 +8,7 @@ logerr()
 }
 
 output=$(hostapd_cli all_sta)
-if [ $? -ne 0 ]
-then
+if [ $? -ne 0 ]; then
     logerr "failed to execute 'hostapd_cli all_sta'"
     exit 1
 fi
@@ -23,8 +22,7 @@ connected_devices:[$devices]
 hostname:$(hostname)
 EOF
 
-if [ $? -ne 0 ]
-then
+if [ $? -ne 0 ]; then
     logerr "failed to send the event"
     exit 2
 fi

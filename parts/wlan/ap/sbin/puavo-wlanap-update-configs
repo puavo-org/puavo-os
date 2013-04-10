@@ -4,8 +4,7 @@ set -u
 
 . /etc/puavo-wlanap/config
 
-[ -f "/etc/puavo/wlan/ssid" ] && while IFS=':' read auth ssid psk
-do
+[ -f "/etc/puavo/wlan/ssid" ] && while IFS=':' read auth ssid psk; do
     hostap_auth=$auth
     hostap_ssid=$ssid
     hostap_psk=$psk
@@ -15,28 +14,23 @@ if [ -f "/etc/puavo/wlan/channel" ]; then
     read hostap_channel < /etc/puavo/wlan/channel
 fi
 
-if [ -z "$hostap_channel" ]
-then
+if [ -z "$hostap_channel" ]; then
     logger -t puavo-wlanap -s -p user.err "hostap_channel is not set"
     exit 1
 fi
 
-if [ -z "$hostap_ssid" ]
-then
+if [ -z "$hostap_ssid" ]; then
     logger -t puavo-wlanap -s -p user.err "hostap_ssid is not set"
     exit 2
 fi
 
-if [ -z "$hostap_auth" ]
-then
+if [ -z "$hostap_auth" ]; then
     logger -t puavo-wlanap -s -p user.err "wlan type is not set"
     exit 3
 fi
 
-if [ "$hostap_auth" = "psk" ]
-then
-    if [ ${#hostap_psk} -lt 8 -o ${#hostap_psk} -gt 63 ]
-    then
+if [ "$hostap_auth" = "psk" ]; then
+    if [ ${#hostap_psk} -lt 8 -o ${#hostap_psk} -gt 63 ]; then
 	logger -t puavo-wlanap -s -p user.err "hostap_psk must be 8-63 characters long"
 	exit 4
     fi
