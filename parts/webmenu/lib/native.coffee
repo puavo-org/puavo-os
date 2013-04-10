@@ -202,6 +202,7 @@ module.exports = (gui, bridge) ->
 
     # Use node-webkit to open toolbarless web window
     if cmd.type is "webWindow"
+      console.info "Opening web window", cmd.url
       gui.Window.open? cmd.url,
         width: cmd.width or 1000
         height: cmd.height or 800
