@@ -133,6 +133,7 @@ module Puavo
             definition[lts_key] = '"' + ssid + '"'
             index += 1
           end
+          definition["WLAN_CHANNEL"] = @school.wlan_channel if @school.wlan_channel
         end
         definition
       end

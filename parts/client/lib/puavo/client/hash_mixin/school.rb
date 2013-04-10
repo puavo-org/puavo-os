@@ -59,7 +59,7 @@ module Puavo
              :value_block => lambda{ |value| Array(value).first } },
 
            { :original_attribute_name => "puavoWlanChannel",
-             :new_attribute_name => "puavoWlanChannel",
+             :new_attribute_name => "wlan_channel",
              :value_block => lambda{ |value| Array(value).first } },
 
            { :original_attribute_name => "preferredLanguage",
