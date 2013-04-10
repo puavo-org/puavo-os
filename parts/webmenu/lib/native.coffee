@@ -8,6 +8,7 @@ posix = require "posix"
 mkdirp = require "mkdirp"
 fs = require "fs"
 _ = require "underscore"
+Handlebars = require "handlebars"
 
 launchCommand = require "./launchcommand"
 menutools = require "./menutools"
@@ -48,13 +49,10 @@ try
 catch err
   console.warn "Cannot read Puavo Domain", err
   console.warn "Disabling password button"
+  config.passwordCMD = null
 if puavoDomain
-  config.passwordCMD = {
-    type: "webWindow",
-    url: "https://#{puavoDomain}/users/password/own"
-    name: "Salasana",
-    "osIconPath": "/usr/share/icons/Faenza/emblems/96/emblem-readonly.png"
-  }
+  pwUrlTmpl = Handlebars.compile(config.passwordCMD.url)
+  config.passwordCMD.url = pwUrlTmpl(puavoDomain: puavoDomain)
 
 
 desktopReadStarted = Date.now()

@@ -42,6 +42,16 @@
     },
     "osIconPath": "/usr/share/icons/Faenza/status/96/dialog-question.png"
   },
+  "passwordCMD": {
+    "type": "webWindow",
+    "url": "https://{{puavoDomain}}/users/password/own",
+    "osIconPath": "/usr/share/icons/Faenza/emblems/96/emblem-readonly.png",
+    "name": {
+      "fi": "Salasana",
+      "en": "Password",
+      "sv": "Lösenord"
+      }
+  },
   "maxFavorites": 5,
   "port": 1337
 }
