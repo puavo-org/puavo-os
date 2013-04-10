@@ -42,12 +42,12 @@ then
     fi
 fi
 
-mkdir -p /var/tmp/puavo-wlanap
+mkdir -p /var/run/puavo-wlanap
 
 sed -e "s/#{hostap_interface}/$hostap_interface/g" \
     -e "s/#{hostap_ssid}/$hostap_ssid/g" \
     -e "s/#{hostap_psk}/$hostap_psk/g" \
-    /etc/puavo-wlanap/${hostap_auth}_hostapd.conf.template > /var/tmp/puavo-wlanap/hostapd.conf
+    /etc/puavo-wlanap/${hostap_auth}_hostapd.conf.template > /var/run/puavo-wlanap/hostapd.conf
 
 sed -e "s/#{hostap_interface}/$hostap_interface/g" \
-    /etc/puavo-wlanap/vtund.conf.template > /var/tmp/puavo-wlanap/vtund.conf
+    /etc/puavo-wlanap/vtund.conf.template > /var/run/puavo-wlanap/vtund.conf

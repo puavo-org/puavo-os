@@ -31,8 +31,8 @@ graceful_exit()
     [ $sleeppid ] && kill $sleeppid
 
     dhclient -r br.$hostap_interface
-    stop_process /var/tmp/puavo-wlanap/dhclient.pid
-    stop_process /var/tmp/puavo-wlanap/hostapd.pid
+    stop_process /var/run/puavo-wlanap/dhclient.pid
+    stop_process /var/run/puavo-wlanap/hostapd.pid
     stop_process /var/run/vtund.puavo-wlanap-$vtun_gateway.pid
 
     exit 0
@@ -58,7 +58,7 @@ fi
 
 trap postponed_graceful_exit INT TERM HUP
 
-vtund -f /var/tmp/puavo-wlanap/vtund.conf puavo-wlanap $vtun_gateway
+vtund -f /var/run/puavo-wlanap/vtund.conf puavo-wlanap $vtun_gateway
 if [ $? -ne 0 ]
 then
     echo "error: failed to start vtun" | logger -t puavo-wlanap -s -p user.err
