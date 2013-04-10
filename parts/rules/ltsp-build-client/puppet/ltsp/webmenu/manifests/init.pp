@@ -19,8 +19,9 @@ class webmenu {
     '/etc/webmenu/config.json':
       content => template('webmenu/config.json');
 
-    '/etc/webmenu/menu.json':
-      content => template('webmenu/menu.json');
+# XXX remove for now... we must figure out where we want this from
+#   '/etc/webmenu/menu.json':
+#     content => template('webmenu/menu.json');
 
     '/etc/xdg/autostart/webmenu.desktop':
       content => template('webmenu/webmenu.desktop');
