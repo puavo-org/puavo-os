@@ -209,6 +209,7 @@ module.exports = (gui, bridge) ->
         "always-on-top": false
         toolbar: false
         frame: true
+        title: cmd.name
     else
       launchCommand(cmd)
 

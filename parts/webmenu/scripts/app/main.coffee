@@ -49,7 +49,7 @@ define [
     hideTimer = null
     layout.on "open-app", (model) ->
       # This will be send to node and node-webkit handlers
-      Application.bridge.trigger "open", model.toJSON()
+      Application.bridge.trigger "open", model.toTranslatedJSON()
 
       # Hide window after animation as played for few seconds or when the
       # opening app steals focus
