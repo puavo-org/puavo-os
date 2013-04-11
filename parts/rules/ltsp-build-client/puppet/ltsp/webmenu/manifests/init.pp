@@ -16,10 +16,10 @@ class webmenu {
     '/etc/webmenu':
       ensure => directory;
 
-    '/etc/webmenu/config.json':
-      content => template('webmenu/config.json');
-
 # XXX remove for now... we must figure out where we want this from
+#   '/etc/webmenu/config.json':
+#     content => template('webmenu/config.json');
+#
 #   '/etc/webmenu/menu.json':
 #     content => template('webmenu/menu.json');
 
