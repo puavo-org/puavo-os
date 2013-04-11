@@ -13,7 +13,7 @@ PUAVO_DOMAIN=$(cat /etc/puavo/domain)
 IPSEC_GW=$(dig +time=2 +tries=1 TXT _ipsecgw.${PUAVO_DOMAIN} +short | sed 's/^"//; s/"$//;')
 HOMEDIR_IP=$(dig +time=2 +tries=1 homedir.$PUAVO_DOMAIN +short)
 
-if [ "$IPSEC_GW" != "" -a $HOMEDIR_IP != "" ]; then
+if [ "$IP" != "" -a "$IPSEC_GW" != "" -a "$HOMEDIR_IP" != "" ]; then
   TEMP=$(mktemp)
 
   cat <<EOF >$TEMP
@@ -34,4 +34,19 @@ spdadd 0.0.0.0/0 $HOMEDIR_IP[445] tcp -P out ipsec
 EOF
 
   setkey -f $TEMP
+  rm -f $TEMP
+else
+  TEMP=$(mktemp)
+
+  cat <<EOF >$TEMP
+#!/usr/sbin/setkey -f
+
+flush;
+spdflush;
+EOF
+
+  setkey -f $TEMP
+  rm -f $TEMP
 fi
+
+exit 0
