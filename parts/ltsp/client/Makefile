@@ -32,6 +32,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ldap
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-up.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/racoon
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/samba
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sssd
@@ -59,6 +60,7 @@ install : installdirs
 		templates/etc/ldap/ldap.conf-laptop
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-up.d \
+		templates/etc/network/if-up.d/ipsec \
 		templates/etc/network/if-up.d/sssd
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
@@ -75,6 +77,9 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default \
 		templates/etc/default/nfs-common
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/racoon \
+		templates/etc/racoon/racoon.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/samba \
 		templates/etc/samba/smb.conf-laptop
