@@ -22,8 +22,6 @@ var/cache/apt-xapian-index/*
 var/cache/lightdm/dmrc/*
 var/crash/*
 var/lib/apt/lists/*
-var/lib/lightdm/.*
-var/lib/lightdm/*
 var/lib/mysql/*
 var/lib/sudo/*
 var/log/*.1
