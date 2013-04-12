@@ -29,11 +29,12 @@ puavo_common_unneeded_services='
 puavo_nfs_services='gssd idmapd portmap rpcbind-boot'
 puavo_tty_services='tty3 tty4 tty5 tty6'
 
-set_lts_var LOCAL_APPS     False
-set_lts_var NBD_SWAP       False
-set_lts_var SYSLOG         False
-set_lts_var USE_LOCAL_SWAP True
-set_lts_var XKBLAYOUT      fi	# XXX especially this is highly opinionated
+set_lts_var ALLOW_GUESTLOGIN True
+set_lts_var LOCAL_APPS       False
+set_lts_var NBD_SWAP         False
+set_lts_var SYSLOG           False
+set_lts_var USE_LOCAL_SWAP   True
+set_lts_var XKBLAYOUT        fi    # XXX especially this is highly opinionated
 
 case "$PUAVO_HOSTTYPE" in
   fatclient)
