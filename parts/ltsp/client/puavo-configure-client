@@ -143,6 +143,14 @@ case puavo_device_type
     @ldap_bindpw       = read_file('/etc/puavo/ldap/password')
 
     write_config("/etc/sssd/sssd.conf", "laptop", true)
+
+    # Make sure that the nss-extrausers database files exist so that
+    # sssd does not go into offline mode when using extrausers proxy
+    ["/var/lib/extrausers/passwd", "/var/lib/extrausers/group"].each do |filename|
+      if !File.exists?(filename)
+        File.open(filename, "w") {|f| }
+      end
+    end
 end
 
 exit(0)
