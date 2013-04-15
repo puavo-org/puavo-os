@@ -163,7 +163,10 @@ end
 
 def read_file(file)
   if File.exists?(file)
-    return File.read(file).chomp
+    begin
+      return File.read(file).chomp
+    rescue
+    end
   end
 
   return nil
