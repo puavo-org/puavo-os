@@ -43,22 +43,26 @@ end
 @puavo_topdomain   = read_file('/etc/puavo/topdomain')
 
 def write_config(filename, version=nil, secure=false)
-  template_file = filename
+  begin
+    template_file = filename
 
-  if version
-    template_file = "#{filename}-#{version}"
+    if version
+      template_file = "#{filename}-#{version}"
+    end
+
+    conf_template = File.read("/usr/share/puavo-ltsp-client/templates#{template_file}")
+    conf = ERB.new(conf_template, 0, "%<>")
+
+    perm = secure ? 0600 : 0644
+
+    File.open(filename, "w", perm) do |f|
+      f.write conf.result
+    end
+
+    File.chmod(perm, filename)
+  rescue Exception => e
+    $stderr.puts "FAILED to write: #{filename} from /usr/share/puavo-ltsp-client/templates#{template_file}: #{e}"
   end
-
-  conf_template = File.read("/usr/share/puavo-ltsp-client/templates#{template_file}")
-  conf = ERB.new(conf_template, 0, "%<>")
-
-  perm = secure ? 0600 : 0644
-
-  File.open(filename, "w", perm) do |f|
-    f.write conf.result
-  end
-
-  File.chmod(perm, filename)
 end
 
 begin
