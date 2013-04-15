@@ -72,7 +72,6 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LTSP_FATCLIENT       True
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
-      autofs
       avahi-daemon
       hostapd
       jetty

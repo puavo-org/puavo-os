@@ -5,23 +5,34 @@ set -e
 # Load lts.conf variables
 . /usr/share/ltsp/ltsp_config
 
+is_nfs_mounted() {
+  mntpoint=$1
+  mount | awk -v "mntpoint=$mntpoint" '
+	    BEGIN { status = 1 }
+	    $3 == mntpoint && $5 == "nfs4" { status = 0 }
+	    END { exit(status) }
+          '
+}
+
 if boolean_is_true "${USE_NFS_HOMES}" ; then
   if [ "${PAM_TYPE}" = "open_session" ]; then
     # rpc.gssd needs a user principal on netboot devices as they do not have
-    # machine principals
-    if [ ! -f "/etc/krb5.keytab" ]; then
+    # machine principals.
+    #
+    # Install kerberos ticket to root only if root does not have a ticket
+    # already.  This works around a problem, when root ticket switches
+    # to another (gssd/nfs stuff does not like that (client id changes)
+    # and login failures occur).
+    if ! [ -e /etc/krb5.keytab -o -e /tmp/krb5cc_0 ]; then
       TMP_KRB5CCNAME=$(echo $KRB5CCNAME | sed -e 's/^FILE://')
 
-      # Install kerberos ticket to root only if root does not have a ticket
-      # already.  This works around a problem, when root ticket switches
-      # to another (gssd/nfs stuff does not like that (client id changes)
-      # and login failures occur).
-      test -e /tmp/krb5cc_0 \
-        || install -o root -g root -m 600 "$TMP_KRB5CCNAME" /tmp/krb5cc_0
-
+      install -o root -g root -m 600 "$TMP_KRB5CCNAME" /tmp/krb5cc_0
       service idmapd restart || service idmapd start
       service gssd restart   || service gssd start
-      service autofs restart || service autofs start
+    fi
+
+    if ! is_nfs_mounted /home; then
+      mount -t nfs4 -o sec=krb5,nodev,nosuid ${NFS_SERVER}:/home /home
     fi
 
     # Request a remote directory for the user (three second timeout, may fail)
