@@ -2,11 +2,6 @@ class kernels {
   include kernels::grub_update
   require packages
 
-  $default_kernel = $lsbdistcodename ? {
-                      'precise' => '3.2.0-38-generic',
-                      'quantal' => '3.6.6-999-generic',
-                    }
-
   define default_kernel_link {
     $filename = $title
 
@@ -17,10 +12,16 @@ class kernels {
     }
   }
 
-  default_kernel_link {
-    [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
-      require => Packages::Kernel_package_for_version[$default_kernel];
-  }
+  case $lsbdistcodename {
+    'quantal': {
+      $default_kernel = '3.8.6.opinsys2'
 
-  Packages::Kernel_package_for_version <| title == $default_kernel |>
+      default_kernel_link {
+        [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
+          require => Packages::Kernel_package_for_version[$default_kernel];
+      }
+
+      Packages::Kernel_package_for_version <| title == $default_kernel |>
+    }
+  }
 }
