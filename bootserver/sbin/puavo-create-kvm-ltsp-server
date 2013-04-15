@@ -9,10 +9,10 @@ require 'tempfile'
 require 'uuidtools'
 
 @kvm_name = ARGV[0]
-@kvm_cpus = ARGV[1] || 1
+@kvm_cpus = ARGV[1] || 6
 @kvm_uuid = UUIDTools::UUID.random_create.to_s
-@kvm_memory = ARGV[2] || 2097152
-@kvm_qemu_img_size = ARGV[3] || "2G"
+@kvm_memory = ARGV[2] || 12097152
+@kvm_qemu_img_size = ARGV[3] || "30G"
 @kvm_mac = "aa:cc:" + (1..4).map{"%0.2x"%rand(256)}.join(":")
 
 conf_template = File.read("/usr/share/puavo-ltsp-bootserver/templates/ltsp-server.xml")
