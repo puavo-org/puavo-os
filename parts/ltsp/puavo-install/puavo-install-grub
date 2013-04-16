@@ -72,23 +72,24 @@ function pathname { regexp -s 2:"$2" '^(\(.*\))?(/.*)$'    "$1"; }
 function devname  { regexp -s "$2"   '^(\(.*\)).*$'        "$1"; }
 
 function ltsp_image_entry {
-  set file="$1"
+  set imagefile="$1"
 
-  pathname $file imagepath
-  devname $file dev
+  pathname $imagefile imagepath
+  devname $imagefile dev
 
   echo $imagepath
   echo $dev
 
-  menuentry "LTSP - ${dev}${imagepath}" "$dev" "$imagepath" {
-    set dev="$2"
-    set imagepath="$3"
+  menuentry "LTSP - ${dev}${imagepath}" "$imagefile" "$dev" "$imagepath" {
+    set imagefile="$2"
+    set dev="$3"
+    set imagepath="$4"
 
     if test -f "${dev}/ltsp-kernel-settings"; then
       load_env -f "${dev}/ltsp-kernel-settings"
     fi
 
-    loopback loop "${file}"
+    loopback loop "${imagefile}"
     set root='(loop)'
 
     linux   /boot/vmlinuz${kernelversion} ro verbose init=/sbin/init-puavo __HOSTTYPE_SPECIFIC__ ${kernelparameters}
