@@ -28,9 +28,8 @@ installdirs :
 
 .PHONY : bin/puavo-bootserver-installdirs
 bin/puavo-bootserver-installdirs :
-	rm -f $@
 	mkdir -p bin
-	echo "PUAVO_BOOTSERVER_TEMPLATEDIR=$(datarootdir)/puavo-ltsp-bootserver/templates" >> $@
+	echo "PUAVO_BOOTSERVER_TEMPLATEDIR=$(datarootdir)/puavo-ltsp-bootserver/templates" > $@
 
 .PHONY : install
 install : bin/puavo-bootserver-installdirs installdirs
