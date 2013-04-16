@@ -73,6 +73,44 @@ require 'dnsruby'
 # may contain utf-8 sequences in displayName.
 Encoding.default_external = 'utf-8'
 
+class DesktopSettings
+  attr_accessor :preferredLanguage
+
+  def initialize(user)
+    @preferredLanguage = nil
+    @user = user
+  end
+
+  def environment
+    env_file_path = "/var/lib/puavo-desktop/users/#{ @user }/environment"
+
+    # XXX should use puavo-client, this is copied from it:
+    locales_by_lang = {
+      'de' => 'de_DE.UTF-8',
+      'en' => 'en_GB.UTF-8',
+      'fi' => 'fi_FI.UTF-8',
+      'ru' => 'ru_RU.UTF-8',
+      'sv' => 'sv_FI.UTF-8',
+    }
+    locale = locales_by_lang[@preferredLanguage]
+
+    if locale
+      begin
+        Dir.mkdir(File.dirname(env_file_path))
+      rescue Errno::EEXIST
+      end
+      File.open("#{ env_file_path }.tmp", 'w') do |f|
+        f.print "LANG=#{ locale }\n"
+      end
+      File.rename("#{ env_file_path }.tmp", env_file_path)
+    end
+  end
+
+  def update
+    self.environment
+  end
+end
+
 def connect_server(ldap_server, ldap_port, suffix, uid, binddn, bindpw)
   begin
     return false if !ldap_server or ldap_server.eql?("")
@@ -90,6 +128,7 @@ def connect_server(ldap_server, ldap_port, suffix, uid, binddn, bindpw)
     if conn.bound?
       passwd = Hash.new
       group = Hash.new
+      desktop_settings = DesktopSettings.new(uid)
 
       if File.exists?("/var/lib/extrausers/passwd")
         File.open("/var/lib/extrausers/passwd", "r").each_line do |line|
@@ -105,7 +144,7 @@ def connect_server(ldap_server, ldap_port, suffix, uid, binddn, bindpw)
         end
       end
 
-      conn.search("ou=People,#{suffix}", LDAP::LDAP_SCOPE_SUBTREE, "(&(objectClass=posixAccount)(uid=#{uid}))", ["uid", "uidNumber", "gidNumber", "homeDirectory", "displayName"]) {|e|
+      conn.search("ou=People,#{suffix}", LDAP::LDAP_SCOPE_SUBTREE, "(&(objectClass=posixAccount)(uid=#{uid}))", ["uid", "uidNumber", "gidNumber", "homeDirectory", "displayName", "preferredLanguage"]) {|e|
         if e.get_values('uid') and e.get_values('uidNumber') and
            e.get_values('gidNumber') and e.get_values('homeDirectory') and
            e.get_values('displayName')
@@ -117,6 +156,7 @@ def connect_server(ldap_server, ldap_port, suffix, uid, binddn, bindpw)
 #          homeDirectory = e.get_values('homeDirectory')[0]
           homeDirectory = "/home/#{uid}"
           displayName = e.get_values('displayName')[0]
+          desktop_settings.preferredLanguage = e.get_values('preferredLanguage')[0] if e.get_values('preferredLanguage')
 
           passwd[uid] = "#{uid}:x:#{uidNumber}:#{gidNumber}:#{displayName}:#{homeDirectory}:/bin/bash"
         end
@@ -151,6 +191,12 @@ def connect_server(ldap_server, ldap_port, suffix, uid, binddn, bindpw)
         group.each_value do |entry|
           file.puts entry
         end
+      end
+
+      begin
+        desktop_settings.update
+      rescue Exception => e
+        $stderr.puts "Could not update desktop settings: #{ e.message }\n"
       end
 
       return true
