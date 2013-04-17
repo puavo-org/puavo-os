@@ -1,0 +1,85 @@
+#!/bin/sh
+
+version=$1
+release=$2
+
+help () {
+    echo "
+    usage: $(basename $0) [version] [release]
+
+    Update debian/changelog and create git tags.
+
+    Run in the parent of the debian/ directory and make sure you have
+    DEBFULLNAME and DEBEMAIL environment variables set.
+    "
+}
+
+[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
+
+set -eu
+
+if [ ! -d "debian" ]; then
+    echo "Cannot find debian directory from $(pwd)/debian"
+    exit 1
+fi
+
+if [ ! -f "debian/upstream" ]; then
+    echo "debian/upstream is missing. Add one with a \"Repository\" field"
+    echo http://wiki.debian.org/UpstreamMetadata
+    echo
+    echo "Example:"
+    echo "Repository: git@github.com:opinsys/puavo-devscripts.git"
+    echo
+    echo "Make sure that the repostory uri is writable"
+    exit 1
+fi
+
+if [ -z "${DEBFULLNAME:-}" ]; then
+    DEBFULLNAME=$(git config --global user.name)
+fi
+
+if [ -z "${DEBEMAIL:-}" ]; then
+    DEBEMAIL=$(git config --global user.email)
+fi
+
+package_dir=$(pwd)
+gitrepo=$(sed -rne 's/^Repository:\s*(.+)$/\1/p' debian/upstream)
+package=$(sed -ne 's/^Source: //p' debian/control)
+tempdir=$(mktemp --directory --suffix=gitdeb)
+trap "rm -fr $tempdir" EXIT
+
+git clone $gitrepo $tempdir
+cd $tempdir
+
+# List tags by date and grab last
+# http://stackoverflow.com/questions/6269927/how-can-i-list-all-tags-in-my-git-repository-by-the-date-they-were-created
+prev_version=$(git for-each-ref --sort='*authordate' --format='%(refname:short)' refs/tags  | tail --lines=1)
+
+echo
+echo "Package: $package"
+echo "Previous tag: $prev_version"
+
+while [ -z "$version" ]
+do
+    read -p "New version> " version
+done
+
+[ -z "$release" ] && read -p "Release [precise]> " release
+
+echo "Creating new git tag with $version"
+git tag --message="Release $version" --annotate $version
+git push origin --tags
+
+echo "Writing new changelog entry"
+cd $package_dir
+cat > debian/changelog.new <<EOF
+$package ($version-0+opinsys1) ${release:-precise}; urgency=low
+
+  * https://github.com/opinsys/$package/compare/$prev_version...$version
+
+ -- $DEBFULLNAME <$DEBEMAIL>  $(date -R)
+
+EOF
+cat debian/changelog.new
+cat debian/changelog >> debian/changelog.new
+mv debian/changelog.new debian/changelog
