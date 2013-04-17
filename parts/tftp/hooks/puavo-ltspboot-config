@@ -87,6 +87,6 @@ label ltsp-NBD
   menu label LTSP, using NBD
   menu default
   kernel ltsp/#{image}/vmlinuz#{kernel_version}
-  append ro initrd=ltsp/#{image}/initrd.img#{kernel_version} init=/sbin/init-puavo puavo.hosttype=#{device_type} root=/dev/nbd0 nbdroot=:#{image} #{kernel_args}
+  append ro initrd=ltsp/#{image}/initrd.img#{kernel_version} init=/sbin/init-puavo puavo.hosttype=#{device_type} root=/dev/nbd0 nbdroot=:#{image} #{kernel_args} nfs.nfs4_unique_id=#{client_mac}-#{Time.now.to_i}
   ipappend 2
 EOF
