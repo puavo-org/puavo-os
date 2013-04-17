@@ -38,6 +38,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sssd
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d
+	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
 
 .PHONY : install
 install : installdirs
