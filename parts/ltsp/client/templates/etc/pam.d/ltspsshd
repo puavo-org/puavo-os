@@ -39,6 +39,8 @@ session    optional     pam_mail.so standard noenv # [1]
 # Set up user limits from /etc/security/limits.conf.
 session    required     pam_limits.so
 
+session    optional     pam_envfeed.so prog=/usr/sbin/puavo-ltsp-envfeed
+
 # Set up SELinux capabilities (need modified pam)
 # session  required     pam_selinux.so multiple
 

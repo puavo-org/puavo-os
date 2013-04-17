@@ -28,4 +28,6 @@ session optional        pam_exec.so /usr/sbin/puavo-ltsp-init-nfs
 
 session optional        pam_gnome_keyring.so auto_start
 
+session optional        pam_envfeed.so prog=/usr/sbin/puavo-ltsp-envfeed
+
 password	required	pam_ldap.so minimum_uid=1000
