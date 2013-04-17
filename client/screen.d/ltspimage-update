@@ -7,8 +7,16 @@ clear
 
 ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
 
-until /usr/sbin/puavo-install-ltspimages "$ltspimage_name"; do sleep 1; done
+until /usr/sbin/puavo-install-ltspimages "$ltspimage_name"; do
+  sleep 1
+done
 
-echo "Press ENTER to reboot".
+echo 'Updating grub settings.'
+until /usr/sbin/puavo-install-grub; do
+  echo 'Updating grub FAILED!  Press ENTER to try again.'
+  read answer
+done
+
+echo 'Press ENTER to reboot.'
 read answer
 reboot
