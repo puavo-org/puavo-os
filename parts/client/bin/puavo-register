@@ -22,6 +22,7 @@ require 'openssl'
 require 'resolv'
 require 'socket'
 require 'yaml'
+require 'uri'
 
 Puavodir            = '/etc/puavo'
 Puavo_hostname_path = "#{ Puavodir }/hostname"
@@ -375,12 +376,19 @@ class PuavoDevicesConnection
   attr_accessor :devicetypes, :schools
 
   def initialize(server, username, password, accepted_devicetypes)
-    @server   = server
+    if server.match(/^https?\:\/\//)
+      uri = URI(server)
+    else
+      # If not URI assume https
+      uri = URI("https://#{ server }")
+    end
+
+    @server   = uri.host
     @username = username
     @password = password
 
-    @http              = Net::HTTP.new(server, '443')
-    @http.use_ssl      = true
+    @http              = Net::HTTP.new(@server, uri.port)
+    @http.use_ssl      = uri.scheme == "https"
     @http.ca_path      = '/etc/ssl/certs'
     @http.verify_mode  = OpenSSL::SSL::VERIFY_PEER
     @http.verify_depth = 5
