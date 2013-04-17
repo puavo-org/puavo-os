@@ -7,12 +7,14 @@ gtk_bookmarks() {
   _schoolsharedir=$2
   _share_displayname=$3
 
+  homedir_server="homedir.$(cat /etc/puavo/domain)"
+
   case "$(cat /etc/puavo/hosttype)" in
     laptop)
       # Add two bookmarks: to user home directory on server, and to shared
       # directories on server.
-      echo "smb://homedir/${USER} * ${_networkfolder_displayname}"
-      echo "smb://homedir/share/${_schoolsharedir} * ${_share_displayname}"
+      echo "smb://${homedir_server}/${USER} * ${_networkfolder_displayname}"
+      echo "smb://${homedir_server}/share/${_schoolsharedir} * ${_share_displayname}"
       ;;
     *)
       # add a bookmark pointing to shared directories
