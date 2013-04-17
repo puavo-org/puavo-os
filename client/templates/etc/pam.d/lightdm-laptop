@@ -47,5 +47,7 @@ session	optional	pam_mkhomedir.so skel=/etc/skel/ umask=0077
 
 session optional        pam_gnome_keyring.so auto_start
 
+session optional        pam_envfeed.so prog=/usr/sbin/puavo-ltsp-envfeed
+
 # FIXME - does this work?
 password	required	pam_sss.so

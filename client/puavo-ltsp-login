@@ -101,6 +101,8 @@ class DesktopSettings
       end
       File.open("#{ env_file_path }.tmp", 'w') do |f|
         f.print "LANG=#{ locale }\n"
+        f.print "LANGUAGE=#{ @preferredLanguage }\n"
+        f.print "DCONF_PROFILE=user-#{ @preferredLanguage }\n"
       end
       File.rename("#{ env_file_path }.tmp", env_file_path)
     end

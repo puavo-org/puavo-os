@@ -30,5 +30,6 @@ session	optional	pam_mkhomedir.so
 session optional        pam_gnome_keyring.so auto_start
 session required        pam_exec.so /usr/share/ltsp-lightdm/puavo-ltsp-session
 
+session optional        pam_envfeed.so prog=/usr/sbin/puavo-ltsp-envfeed
 
 password	required	pam_ldap.so minimum_uid=1000
