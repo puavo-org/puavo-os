@@ -20,5 +20,6 @@ This can be worked around with rng-tools:
     
 Add `HRNGDEVICE=/dev/urandom` to `/etc/default/rng-tools` and (re)start:
 
+    # echo "HRNGDEVICE=/dev/urandom" > /etc/default/rng-tools
     # /etc/init.d/rng-tools restart
 
