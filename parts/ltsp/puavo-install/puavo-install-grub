@@ -12,6 +12,13 @@ lookup_windows_partition_number() {
            }'
 }
 
+if [ "$1" = "--only-update-config" ]; then
+  only_update_config=true
+  shift
+else
+  only_update_config=false
+fi
+
 images_dir=${1:-/images}
 diskdev=$2
 
@@ -21,7 +28,8 @@ if [ -z "$diskdev" ]; then
 fi
 
 if [ -z "$images_dir" -o -z "$diskdev" ]; then
-  echo "Usage: $(basename $0) images_dir diskdev" > /dev/stderr
+  echo "Usage: $(basename $0) [--only-update-config] [images_dir] [diskdev]" \
+    > /dev/stderr
   exit 1
 fi
 
@@ -37,9 +45,11 @@ case "$hosttype" in
     ;;
 esac
 
-grub-install --root-directory=$images_dir $diskdev
+if ! $only_update_config; then
+  grub-install --root-directory=$images_dir $diskdev
+fi
 
-cat <<'EOF' | sed "s|__HOSTTYPE_SPECIFIC__|$hosttype_specific|" > $images_dir/boot/grub/grub.cfg
+cat <<'EOF' | sed "s|__HOSTTYPE_SPECIFIC__|$hosttype_specific|" > $images_dir/boot/grub/grub.cfg.tmp
 set default="0"
 
 function load_video {
@@ -129,7 +139,7 @@ EOF
 windows_partition_number=$(lookup_windows_partition_number $diskdev)
 
 if [ -n "$windows_partition_number" ]; then
-  cat <<EOF >> $images_dir/boot/grub/grub.cfg
+  cat <<EOF >> $images_dir/boot/grub/grub.cfg.tmp
 
 menuentry "Windows" {
   insmod ntfs
@@ -138,3 +148,5 @@ menuentry "Windows" {
 }
 EOF
 fi
+
+mv $images_dir/boot/grub/grub.cfg.tmp $images_dir/boot/grub/grub.cfg
