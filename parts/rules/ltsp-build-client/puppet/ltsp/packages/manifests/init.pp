@@ -309,6 +309,7 @@ class packages {
     , 'python-gst0.10'
     , 'vlc'
     , 'vlc-plugin-pulse'
+    , 'x264'
     , 'xbmc' ]:
       tag => [ 'mediaplayer', 'ubuntu', ];
 
@@ -326,6 +327,7 @@ class packages {
     , 'fmit'
     , 'hydrogen'
     , 'jokosher'
+    , 'libavcodec-extra-53'
     , 'lmms'
     , 'mixxx'
     , 'musescore'
