@@ -150,3 +150,13 @@ EOF
 fi
 
 mv $images_dir/boot/grub/grub.cfg.tmp $images_dir/boot/grub/grub.cfg
+
+# We have got some weird spurious grub errors of the sort (at first boot):
+# "error: ELF header smaller than expected", so we play it safe
+# and try weird tricks to flush all caches to actual, physical disk.
+# But we are not quite sure yet this will actually work (the problem is
+# difficult to reproduce).
+sync
+echo 3 > /proc/sys/vm/drop_caches
+blockdev --flushbufs $diskdev
+hdparm -qF $diskdev
