@@ -102,7 +102,7 @@ module DiskHandler
     end
 
     # Remove dmsetup volumes as well, in case these are effective.
-    run('dmsetup', 'remove_all') rescue true
+    run('dmsetup', 'remove_all', '--force') rescue true
 
     # clean up possible confusing mess from the partition
     run('dd', 'if=/dev/zero', "of=#{ fs_conf['partition'] }", 'count=1K')
