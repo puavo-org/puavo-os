@@ -58,10 +58,11 @@ prev_version=$(git for-each-ref --sort='*authordate' --format='%(refname:short)'
 echo
 echo "Package: $package"
 echo "Previous tag: $prev_version"
+echo "Latests commit on master: $(git log --pretty=oneline -n 1)"
 
 while [ -z "$version" ]
 do
-    read -p "New version> " version
+    read -p "Tag it with version> " version
 done
 
 [ -z "$release" ] && read -p "Release [precise]> " release
