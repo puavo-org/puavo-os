@@ -14,7 +14,7 @@ class kernels {
 
   case $lsbdistcodename {
     'quantal': {
-      $default_kernel = '3.8.7.opinsys1'
+      $default_kernel = '3.8.8.opinsys1'
 
       default_kernel_link {
         [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
