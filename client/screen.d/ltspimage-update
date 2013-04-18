@@ -12,7 +12,7 @@ until /usr/sbin/puavo-install-ltspimages "$ltspimage_name"; do
 done
 
 echo 'Updating grub settings.'
-until /usr/sbin/puavo-install-grub; do
+until /usr/sbin/puavo-install-grub --only-update-config; do
   echo 'Updating grub FAILED!  Press ENTER to try again.'
   read answer
 done
