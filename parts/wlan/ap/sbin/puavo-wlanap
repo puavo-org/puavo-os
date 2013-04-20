@@ -6,6 +6,7 @@ if [ $# -eq 1 ]; then
         exit 0
     fi
     echo "puavo-wlanap: error: unexpected argument '$1'" >&2
+    echo "Usage: puavo-wlanap [--daemon]" >&2
     exit 1
 fi
 
