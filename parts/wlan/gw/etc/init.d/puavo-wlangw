@@ -15,8 +15,14 @@ DESC="Puavo WLAN Gateway Daemon"
 CONFFILE=/etc/puavo-wlangw/vtund.conf
 PIDFILE=/var/run/vtund.server.pid # Hard-coded in upstream :SS
 
+# Possible condition if the package has been removed (but not purged).
 [ -f $DAEMON ] || exit 0
 [ -f $CONFFILE ] || exit 0
+
+[ -f "/etc/default/$NAME" ] && . "/etc/default/$NAME"
+
+[ -n "$PUAVO_WLANGW_ENABLED" ] || exit 0
+[ "$PUAVO_WLANGW_ENABLED" -ne 0 ] || exit 0
 
 . /lib/lsb/init-functions
 
