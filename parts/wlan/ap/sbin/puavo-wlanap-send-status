@@ -1,28 +1,14 @@
 #!/bin/sh
 
-set -u
-
-logerr()
-{
-    logger -t puavo-wlanap-send-status -p local7.err "error: $1"
-}
+set -eu
 
 output=$(hostapd_cli all_sta)
-if [ $? -ne 0 ]; then
-    logerr "failed to execute 'hostapd_cli all_sta'"
-    exit 1
-fi
-
 devices=$(echo -n $output | sed -n 's/^dot11RSNAStatsSTAAddress=//p' | tr '\n' ',')
+hostname=$(hostname)
 
 nc -w 1 -u eventlog 3858 << EOF
 type:wlan
 wlan_event:hotspot_state
 connected_devices:[$devices]
-hostname:$(hostname)
+hostname:$hostname
 EOF
-
-if [ $? -ne 0 ]; then
-    logerr "failed to send the event"
-    exit 2
-fi
