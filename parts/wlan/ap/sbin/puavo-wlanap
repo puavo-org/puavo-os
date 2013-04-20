@@ -73,7 +73,7 @@ mainloop()
     while true; do
 	sleep 300 & sleeppid=$!
 	wait
-	puavo-wlanap-send-status
+	puavo-wlanap-report-status
     done
 }
 

@@ -1,9 +1,0 @@
-#!/bin/sh
-nc -w 1 -u eventlog 3858 << EOF
-hostname:$(hostname)
-date:$(date +%s)
-wlaninterface:$1
-event:$2
-mac:$3
-type:wlan
-EOF

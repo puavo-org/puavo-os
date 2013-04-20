@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -eu
+
+on_exit()
+{
+    local -r exitval=$?
+
+    rm -rf "$eventfile"
+
+    exit $exitval
+}
+
+# If these are going to fail, let them fail here before anything
+# irreversible happens.
+hostname=$(hostname)
+date=$(date +%s)
+
+# Cleanup on exit.
+trap on_exit EXIT
+
+# We are going to send the contents of this file.
+eventfile=$(mktemp)
+
+# Write the common header part.
+cat <<EOF >"$eventfile"
+type:wlan
+hostname:$hostname
+date:$date
+EOF
+
+# Concatenate the event specific stuff from stdin.
+cat >>"$eventfile"
+
+# And push it to network.
+nc -w 1 -u eventlog 3858 <"$eventfile"

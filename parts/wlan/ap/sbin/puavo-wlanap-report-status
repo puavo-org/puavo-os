@@ -4,11 +4,8 @@ set -eu
 
 output=$(hostapd_cli all_sta)
 devices=$(echo -n $output | sed -n 's/^dot11RSNAStatsSTAAddress=//p' | tr '\n' ',')
-hostname=$(hostname)
 
-nc -w 1 -u eventlog 3858 << EOF
-type:wlan
+puavo-wlanap-report <<EOF
 wlan_event:hotspot_state
 connected_devices:[$devices]
-hostname:$hostname
 EOF
