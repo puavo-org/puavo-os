@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 if [ $# -eq 1 ]; then
     if [ "$1" = "--daemon" ]; then
         daemon --noconfig --name='puavo-wlanap' -- puavo-wlanap
