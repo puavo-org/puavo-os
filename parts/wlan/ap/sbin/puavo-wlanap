@@ -1,6 +1,30 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eu
+
+on_exit()
+{
+    local -r exitval=$?
+
+    set +e
+
+    dhclient -r "br.$hostap_interface"
+
+    kill $(cat "/var/run/puavo-wlanap/dhclient.pid")
+    kill $(cat "/var/run/puavo-wlanap/hostapd.pid")
+    kill $(cat "/var/run/puavo-wlanap/vtund.pid")
+    kill $(cat "/var/run/puavo-wlanap/sleep.pid")
+
+    rm -rf "/var/run/puavo-wlanap"
+
+    exit $exitval
+}
+
+if [ $# -gt 1 ]; then
+    echo "puavo-wlanap: error: too many arguments" >&2
+    echo "Usage: puavo-wlanap [--daemon]" >&2
+    exit 1
+fi
 
 if [ $# -eq 1 ]; then
     if [ "$1" = "--daemon" ]; then
@@ -12,60 +36,21 @@ if [ $# -eq 1 ]; then
     exit 1
 fi
 
-exit_requested=0
-
-postponed_graceful_exit()
-{
-    exit_requested=1
-}
-
-stop_process()
-{
-    local pidfile=$1
-    [ -f $pidfile ] || return
-    read hostapd_pid <$pidfile
-    kill $hostapd_pid
-    wait $hostapd_pid
-    rm -f $pidfile
-}
-
-graceful_exit()
-{
-    [ $sleeppid ] && kill $sleeppid
-
-    dhclient -r br.$hostap_interface
-    stop_process /var/run/puavo-wlanap/dhclient.pid
-    stop_process /var/run/puavo-wlanap/hostapd.pid
-    stop_process /var/run/vtund.puavo-wlanap-$vtun_gateway.pid
-
-    exit 0
-}
-
 . /etc/puavo-wlanap/config
+
+trap on_exit EXIT
+
+mkdir -p "/var/run/puavo-wlanap"
 
 puavo-wlanap-update-configs
 
-trap postponed_graceful_exit INT TERM HUP
+vtund -n -f /var/run/puavo-wlanap/vtund.conf puavo-wlanap "$vtun_gateway" &
+echo "$!" >"/var/run/puavo-wlanap/vtund.pid"
 
-vtund -f /var/run/puavo-wlanap/vtund.conf puavo-wlanap $vtun_gateway
-if [ $? -ne 0 ]; then
-    echo "error: failed to start vtun" | logger -t puavo-wlanap -s -p user.err
-    exit 1
-fi
+while true; do
+    sleep 300 &
+    echo "$!" >"/var/run/puavo-wlanap/sleep.pid"
+    wait $(cat "/var/run/puavo-wlanap/sleep.pid")
 
-trap graceful_exit INT TERM HUP
-
-if [ $exit_requested -ne 0 ]; then
-    graceful_exit
-fi
-
-mainloop()
-{
-    while true; do
-	sleep 300 & sleeppid=$!
-	wait
-	puavo-wlanap-report-status
-    done
-}
-
-mainloop
+    puavo-wlanap-report-status || true
+done
