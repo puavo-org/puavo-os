@@ -1,7 +1,6 @@
 ### This file is a POSIX shell fragment.
 
-## WLAN channel of the access point. If left empty, puavo-wlanap just
-## exits if started.
+## WLAN channel of the access point.
 hostap_channel=6
 
 ## Service set identifier of the access point.
