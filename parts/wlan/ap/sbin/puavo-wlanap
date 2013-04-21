@@ -4,7 +4,7 @@ set -eu
 
 if [ $# -eq 1 ]; then
     if [ "$1" = "--daemon" ]; then
-        daemon --noconfig --name='puavo-wlanap' -- puavo-wlanap
+        daemon --noconfig --stderr='daemon.info' --name='puavo-wlanap' -- puavo-wlanap
         exit 0
     fi
     echo "puavo-wlanap: error: unexpected argument '$1'" >&2
