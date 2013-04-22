@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -eu
+
+. puavo-wlanap-env
+
+. "$PUAVO_WLANAP_LIBDIR/common.sh"
+
+[ $# -eq 3 ] || puavo_wlanap_usage_fail "missing parameters" "IFACE EVENT MAC"
+
+puavo_wlanap_report <<EOF
+wlaninterface:$1
+event:$2
+mac:$3
+EOF

@@ -1,6 +1,0 @@
-#!/bin/sh
-
-brctl delif $2 $1
-ifconfig $2 down
-brctl delbr $2
-ifconfig $1 down

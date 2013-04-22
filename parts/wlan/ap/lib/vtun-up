@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -eu
+
+tapiface="$1"
+wlaniface="$2"
+rundir="$3"
+briface="br.${wlaniface}"
+
+ifconfig "${tapiface}" up
+brctl addbr "${briface}"
+brctl setfd "${briface}" 0
+ifconfig "${briface}" up
+brctl addif "${briface}" "${tapiface}"
+sleep 2
+hostapd -B -P "${rundir}/hostapd.pid" "${rundir}/hostapd.conf"
+sleep 2
+dhclient -pf "${rundir}/dhclient.pid" "${briface}"

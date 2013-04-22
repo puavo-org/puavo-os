@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -eu
+
+tapiface="$1"
+wlaniface="$2"
+briface="br.${wlaniface}"
+
+brctl delif "${briface}" "${tapiface}"
+ifconfig "${briface}" down
+brctl delbr "${briface}"
+ifconfig "${tapiface}" down

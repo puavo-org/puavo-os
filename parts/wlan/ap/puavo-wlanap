@@ -1,0 +1,56 @@
+#!/bin/bash
+
+set -eu
+
+on_exit()
+{
+    local -r exitval=$?
+
+    set +e
+
+    dhclient -r "br.${PUAVO_WLANAP_IFACE}"
+
+    kill $(cat "${PUAVO_WLANAP_RUNDIR}/dhclient.pid")
+    kill $(cat "${PUAVO_WLANAP_RUNDIR}/hostapd.pid")
+    kill $(cat "${PUAVO_WLANAP_RUNDIR}/vtund.pid")
+    kill $(cat "${PUAVO_WLANAP_RUNDIR}/sleep.pid")
+
+    rm -rf "${PUAVO_WLANAP_RUNDIR}"
+
+    exit $exitval
+}
+
+. puavo-wlanap-env
+
+. "${PUAVO_WLANAP_DATADIR}/config"
+. "${PUAVO_WLANAP_CONFDIR}/config"
+
+. "${PUAVO_WLANAP_LIBDIR}/common.sh"
+
+[ $# -lt 2 ] || puavo_wlanap_usage_fail "too many arguments" "[--daemon]"
+
+if [ $# -eq 1 ]; then
+    if [ "$1" = "--daemon" ]; then
+        daemon --noconfig --stderr='daemon.info' --name='puavo-wlanap' -- puavo-wlanap
+        exit 0
+    fi
+    puavo_wlanap_usage_fail "unexpected argument '$1'" "[--daemon"]
+fi
+
+trap on_exit EXIT
+
+mkdir -p "${PUAVO_WLANAP_RUNDIR}"
+
+"${PUAVO_WLANAP_LIBDIR/write-runconf"
+
+vtund -n -f "${PUAVO_WLANAP_RUNDIR}/vtund.conf" \
+    puavo-wlanap "${PUAVO_WLANAP_GWADDR}" &
+echo "$!" >"${PUAVO_WLANAP_RUNDIR}/vtund.pid"
+
+while true; do
+    sleep 300 &
+    echo "$!" >"${PUAVO_WLANAP_RUNDIR}/sleep.pid"
+    wait $(cat "${PUAVO_WLANAP_RUNDIR}/sleep.pid")
+
+    "${PUAVO_WLANAP_LIBDIR/report-status" || true
+done

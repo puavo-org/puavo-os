@@ -1,0 +1,28 @@
+### This file is a POSIX shell fragment which is sourced by scripts.
+
+## Network interface of the access point.
+PUAVO_WLANAP_IFACE=wlan0
+
+## WLAN channel of the access point.
+PUAVO_WLANAP_CHANNEL=6
+
+## Service set identifier of the access point.
+PUAVO_WLANAP_SSID=puavo-wlanap
+
+## Authentication method of the access point.
+## Choices: open, psk, eap
+PUAVO_WLANAP_AUTH=open
+
+## Pre-shared key of the access point if hostap_auth == psk. The
+## length must be 6-63 characters.
+PUAVO_WLANAP_PSK=
+
+## Address of the vtun server to which all access point traffic will be
+## routed.
+PUAVO_WLANAP_GWADDR=wlangw
+
+## Port of the vtun server to which all access point traffic will be
+## routed.
+PUAVO_WLANAP_GWPORT=45045
+
+PUAVO_WLANAP_RUNDIR=/var/run/puavo-wlanap
