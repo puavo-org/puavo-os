@@ -7,16 +7,16 @@ user=$USER
 
 while getopts s:u: flag; do
     case $flag in
-	s)
-	    server="${OPTARG}"
-    ;;
-u)
-    user="${OPTARG}"
-    ;;
-?)
-    echo "error: unexpected option '${flag}'" >&2
-    exit 1;
-    ;;
+        s)
+            server="${OPTARG}"
+            ;;
+        u)
+            user="${OPTARG}"
+            ;;
+        ?)
+            echo "error: unexpected option '${flag}'" >&2
+            exit 1;
+            ;;
     esac
 done
 
