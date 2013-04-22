@@ -17,9 +17,8 @@ class packages::purged {
                                 # we do not actually use tftpd on ltsp-server
                                 # (we use a separate boot server)
 
-    , 'tracker'                 # this uses too much resources when using nfs
-    , 'zram-config' ]:          # zram triggers bugs in 3.6.6 and probably some
-                                # other kernels as well
+    , 'tracker' ]:              # this uses too much resources when using nfs
+
       tag => [ 'ubuntu', ];
   }
 }
