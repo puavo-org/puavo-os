@@ -5,4 +5,5 @@ class packages::opinsys {
 
   Apt::Key        <| title == "opinsys-repo.gpgkey" |>
   Apt::Repository <| title == liitu |>
+  Apt::Repository <| title == taulu |>
 }
