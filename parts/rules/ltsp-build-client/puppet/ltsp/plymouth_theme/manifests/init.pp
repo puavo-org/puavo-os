@@ -3,6 +3,7 @@ class plymouth_theme {
           plymouth_theme::initramfs
 
   $plymouth_theme_script = '/lib/plymouth/themes/opinmouth/opinmouth.plymouth'
+  $plymouth_theme_text   = '/lib/plymouth/themes/opinmouth-text/opinmouth-text.plymouth'
 
   exec {
     'set plymouth default theme':
@@ -10,6 +11,14 @@ class plymouth_theme {
       notify  => Exec['update-initramfs'],
       require => Package['liitu-themes'],
       unless  => "/usr/bin/update-alternatives --query default.plymouth | /bin/fgrep -qx 'Status: manual'";
+  }
+
+  exec {
+    'set plymouth text theme':
+      command => "/usr/bin/update-alternatives --set text.plymouth '$plymouth_theme_text'",
+      notify  => Exec['update-initramfs'],
+      require => Package['liitu-themes'],
+      unless  => "/usr/bin/update-alternatives --query text.plymouth | /bin/fgrep -qx 'Status: manual'";
   }
 
   # this package contains $plymouth_theme_script
