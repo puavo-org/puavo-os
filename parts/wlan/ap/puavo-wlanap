@@ -20,6 +20,62 @@ on_exit()
     exit $exitval
 }
 
+read_puavo_files()
+{
+    if [ -f "/etc/puavo/wlan/ssid" ]; then
+        IFS=':' read PUAVO_WLANAP_AUTH PUAVO_WLANAP_SSID PUAVO_WLANAP_PSK </etc/puavo/wlan/ssid
+    fi
+
+    if [ -f "/etc/puavo/wlan/channel" ]; then
+        read PUAVO_WLANAP_CHANNEL </etc/puavo/wlan/channel
+    fi
+}
+
+check_validity()
+{
+    if [ -z "${PUAVO_WLANAP_SSID}" ]; then
+        puavo_wlanap_fail "ssid is not set"
+    fi
+
+    case "${PUAVO_WLANAP_AUTH}" in
+        open)
+            if [ -n "${PUAVO_WLANAP_PSK}" ]; then
+                puavo_wlanap_warn "auth type is 'open', but psk was defined"
+            fi
+            ;;
+        eap)
+            ;;
+        psk)
+            if [ "${#PUAVO_WLANAP_PSK}" -lt 8 -o "${#PUAVO_WLANAP_PSK}" -gt 63 ]; then
+                puavo_wlanap_fail "psk must be 8-63 characters long"
+            fi
+            ;;
+        *)
+            puavo_wlanap_fail "unknown auth type '${PUAVO_WLANAP_AUTH}'"
+            ;;
+    esac
+
+    if [ "${PUAVO_WLANAP_CHANNEL}" -lt 1 -o "${PUAVO_WLANAP_CHANNEL}" -gt 13 ]; then
+        puavo_wlanap_fail "channel must be between 1 - 13"
+    fi
+}
+
+write_runconf()
+{
+    sed -e "s/#{PUAVO_WLANAP_IFACE}/${PUAVO_WLANAP_IFACE}/g" \
+        -e "s/#{PUAVO_WLANAP_SSID}/${PUAVO_WLANAP_SSID}/g" \
+        -e "s/#{PUAVO_WLANAP_PSK}/${PUAVO_WLANAP_PSK}/g" \
+        "${PUAVO_WLANAP_DATADIR}/${PUAVO_WLANAP_AUTH}_hostapd.conf" \
+        >"${PUAVO_WLANAP_RUNDIR}/hostapd.conf"
+
+    sed -e "s/#{PUAVO_WLANAP_LIBDIR}/${PUAVO_WLANAP_LIBDIR}/g" \
+        -e "s/#{PUAVO_WLANAP_GWPORT}/${PUAVO_WLANAP_GWPORT}/g" \
+        -e "s/#{PUAVO_WLANAP_IFACE}/${PUAVO_WLANAP_IFACE}/g" \
+        -e "s/#{PUAVO_WLANAP_RUNDIR}/${PUAVO_WLANAP_RUNDIR}/g" \
+        "${PUAVO_WLANAP_DATADIR}/vtund.conf" \
+        >"${PUAVO_WLANAP_RUNDIR}/vtund.conf"
+}
+
 # We don't know yet where our data, libs and configs have been
 # installed, but we do know the following script knows it and we do know
 # where the following script is (it in PATH!).
@@ -46,7 +102,11 @@ trap on_exit EXIT
 
 mkdir -p "${PUAVO_WLANAP_RUNDIR}"
 
-"${PUAVO_WLANAP_LIBDIR/write-runconf"
+read_puavo_files
+
+check_validity
+
+write_runconf
 
 vtund -n -f "${PUAVO_WLANAP_RUNDIR}/vtund.conf" \
     puavo-wlanap "${PUAVO_WLANAP_GWADDR}" &

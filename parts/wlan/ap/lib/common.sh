@@ -1,6 +1,11 @@
+puavo_wlanap_warn()
+{
+    echo "$(basename $0): warn: $1" >&2
+}
+
 puavo_wlanap_fail()
 {
-    echo "$(basename $0): error: $1" >&2
+    echo "$(basename $0): fail: $1" >&2
     false
 }
 
