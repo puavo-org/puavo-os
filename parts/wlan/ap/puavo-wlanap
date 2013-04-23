@@ -62,16 +62,16 @@ check_validity()
 
 write_runconf()
 {
-    sed -e "s/#{PUAVO_WLANAP_IFACE}/${PUAVO_WLANAP_IFACE}/g" \
-        -e "s/#{PUAVO_WLANAP_SSID}/${PUAVO_WLANAP_SSID}/g" \
-        -e "s/#{PUAVO_WLANAP_PSK}/${PUAVO_WLANAP_PSK}/g" \
+    sed -e "s|#{PUAVO_WLANAP_IFACE}|${PUAVO_WLANAP_IFACE}|g" \
+        -e "s|#{PUAVO_WLANAP_SSID}|${PUAVO_WLANAP_SSID}|g" \
+        -e "s|#{PUAVO_WLANAP_PSK}|${PUAVO_WLANAP_PSK}|g" \
         "${PUAVO_WLANAP_DATADIR}/${PUAVO_WLANAP_AUTH}_hostapd.conf" \
         >"${PUAVO_WLANAP_RUNDIR}/hostapd.conf"
 
-    sed -e "s/#{PUAVO_WLANAP_LIBDIR}/${PUAVO_WLANAP_LIBDIR}/g" \
-        -e "s/#{PUAVO_WLANAP_GWPORT}/${PUAVO_WLANAP_GWPORT}/g" \
-        -e "s/#{PUAVO_WLANAP_IFACE}/${PUAVO_WLANAP_IFACE}/g" \
-        -e "s/#{PUAVO_WLANAP_RUNDIR}/${PUAVO_WLANAP_RUNDIR}/g" \
+    sed -e "s|#{PUAVO_WLANAP_LIBDIR}|${PUAVO_WLANAP_LIBDIR}|g" \
+        -e "s|#{PUAVO_WLANAP_GWPORT}|${PUAVO_WLANAP_GWPORT}|g" \
+        -e "s|#{PUAVO_WLANAP_IFACE}|${PUAVO_WLANAP_IFACE}|g" \
+        -e "s|#{PUAVO_WLANAP_RUNDIR}|${PUAVO_WLANAP_RUNDIR}|g" \
         "${PUAVO_WLANAP_DATADIR}/vtund.conf" \
         >"${PUAVO_WLANAP_RUNDIR}/vtund.conf"
 }
