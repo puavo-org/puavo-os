@@ -1,6 +1,16 @@
 #!/bin/bash
 
-set -eu
+set -eubm
+
+on_sigchld()
+{
+    if [ -n "$vtundpid" ]; then
+        kill -0 $vtundpid 2>/dev/null && return
+        trap - SIGCHLD
+        puavo_wlanap_fail "tunnel collapsed, exiting" || true
+        kill $$
+    fi
+}
 
 on_exit()
 {
@@ -10,9 +20,18 @@ on_exit()
 
     dhclient -r "br.${PUAVO_WLANAP_IFACE}"
 
-    for pidfile in ${PUAVO_WLANAP_RUNDIR}/*.pid; do
-        kill $(cat "$pidfile")
-    done
+    kill -0 $sleeppid 2>/dev/null && kill $sleeppid
+    kill -0 $vtundpid 2>/dev/null && kill $vtundpid
+
+    if [ -r "${PUAVO_WLANAP_RUNDIR}/hostapd.pid" ]; then
+        read hostapdpid <"${PUAVO_WLANAP_RUNDIR}/hostapd.pid"
+        kill -0 "$hostapdpid" 2>/dev/null && kill "$hostapdpid"
+    fi
+
+    if [ -r "${PUAVO_WLANAP_RUNDIR}/dhclient.pid" ]; then
+        read dhclientpid <"${PUAVO_WLANAP_RUNDIR}/dhclient.pid"
+        kill -0 "$dhclientpid" 2>/dev/null && kill "$dhclientpid"
+    fi
 
     rm -rf "${PUAVO_WLANAP_RUNDIR}"
 
@@ -107,14 +126,17 @@ check_validity
 
 write_runconf
 
+vtundpid=
+trap on_sigchld SIGCHLD
+
 vtund -n -f "${PUAVO_WLANAP_RUNDIR}/vtund.conf" \
     puavo-wlanap "${PUAVO_WLANAP_GWADDR}" &
-echo "$!" >"${PUAVO_WLANAP_RUNDIR}/vtund.pid"
+vtundpid=$!
 
 while true; do
-    sleep 300 &
-    echo "$!" >"${PUAVO_WLANAP_RUNDIR}/sleep.pid"
-    wait $(cat "${PUAVO_WLANAP_RUNDIR}/sleep.pid")
+    sleep 3 &
+    sleeppid=$!
+    wait $sleeppid
 
     "${PUAVO_WLANAP_LIBDIR}/report-status" || true
 done
