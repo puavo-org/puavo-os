@@ -10,10 +10,9 @@ on_exit()
 
     dhclient -r "br.${PUAVO_WLANAP_IFACE}"
 
-    kill $(cat "${PUAVO_WLANAP_RUNDIR}/dhclient.pid")
-    kill $(cat "${PUAVO_WLANAP_RUNDIR}/hostapd.pid")
-    kill $(cat "${PUAVO_WLANAP_RUNDIR}/vtund.pid")
-    kill $(cat "${PUAVO_WLANAP_RUNDIR}/sleep.pid")
+    for pidfile in ${PUAVO_WLANAP_RUNDIR}/*.pid; do
+        kill $(cat "$pidfile")
+    done
 
     rm -rf "${PUAVO_WLANAP_RUNDIR}"
 
