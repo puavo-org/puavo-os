@@ -116,5 +116,5 @@ while true; do
     echo "$!" >"${PUAVO_WLANAP_RUNDIR}/sleep.pid"
     wait $(cat "${PUAVO_WLANAP_RUNDIR}/sleep.pid")
 
-    "${PUAVO_WLANAP_LIBDIR/report-status" || true
+    "${PUAVO_WLANAP_LIBDIR}/report-status" || true
 done
