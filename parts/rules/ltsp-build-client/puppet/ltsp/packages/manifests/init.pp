@@ -531,7 +531,7 @@ class packages {
     , 'gcalctool'
     , 'gcc'
     , 'gcr'
-    , 'gdm'
+    # , 'gdm'                   # not needed
     , 'gedit'
     , 'genisoimage'
     , 'ghostscript-x'
@@ -562,7 +562,7 @@ class packages {
     , 'gnome-session'
     , 'gnome-session-canberra'
     , 'gnome-settings-daemon'
-    , 'gnome-shell'
+    # , 'gnome-shell'           # not needed
     , 'gnome-sushi'
     , 'gnome-system-log'
     , 'gnome-system-monitor'
