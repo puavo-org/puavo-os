@@ -32,17 +32,13 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-wlanap
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-wlanap \
-		config \
+		config_defaults \
 		vtund.conf \
 		eap_hostapd.conf \
 		psk_hostapd.conf \
 		open_hostapd.conf
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-wlanap \
-		config \
-		vtund.conf \
-		eap_hostapd.conf \
-		psk_hostapd.conf \
-		open_hostapd.conf
+		config
 	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/puavo-wlanap \
 		lib/common.sh
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-wlanap \

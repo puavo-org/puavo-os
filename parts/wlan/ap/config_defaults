@@ -1,0 +1,8 @@
+export PUAVO_WLANAP_IFACE=wlan0
+export PUAVO_WLANAP_CHANNEL=6
+export PUAVO_WLANAP_SSID=puavo-wlanap
+export PUAVO_WLANAP_AUTH=open
+export PUAVO_WLANAP_PSK=
+export PUAVO_WLANAP_GWADDR=wlangw
+export PUAVO_WLANAP_GWPORT=45045
+export PUAVO_WLANAP_RUNDIR=/var/run/puavo-wlanap

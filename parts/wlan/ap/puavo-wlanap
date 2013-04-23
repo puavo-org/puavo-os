@@ -20,10 +20,15 @@ on_exit()
     exit $exitval
 }
 
+# We don't know yet where our data, libs and configs have been
+# installed, but we do know the following script knows it and we do know
+# where the following script is (it in PATH!).
 . puavo-wlanap-env
 
-. "${PUAVO_WLANAP_DATADIR}/config"
-. "${PUAVO_WLANAP_CONFDIR}/config"
+. "${PUAVO_WLANAP_DATADIR}/config_defaults"
+
+# The user might have deleted the configuration file, that's ok.
+[ -r "${PUAVO_WLANAP_CONFDIR}/config" ] && . "${PUAVO_WLANAP_CONFDIR}/config"
 
 . "${PUAVO_WLANAP_LIBDIR}/common.sh"
 
