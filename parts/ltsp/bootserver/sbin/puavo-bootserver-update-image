@@ -47,7 +47,9 @@ if [ -n "{server}" -a "${remote_file}" \> "${local_file}" ]; then
 
     read yesno
 
-    if [ "${yesno}" == "y" -o "${yesno}" == "Y" -o "${yesno}" == "" ]; then
+    yesno=$(echo "${yesno}" | sed 's/[yY]//')
+
+    if [ -z "${yesno}" ]; then
         cp "${local_dir}/${local_file}" "${local_dir}/${remote_file}"
         rsync -avz --progress "${user}@${server}:${remote_dir}/${remote_file}" "${local_dir}/${remote_file}"
     fi
