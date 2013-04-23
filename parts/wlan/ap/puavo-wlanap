@@ -138,5 +138,5 @@ while true; do
     sleeppid=$!
     wait $sleeppid
 
-    "${PUAVO_WLANAP_LIBDIR}/report-status" || true
+    puavo_wlanap_report_status || true
 done
