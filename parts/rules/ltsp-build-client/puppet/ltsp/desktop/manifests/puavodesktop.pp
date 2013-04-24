@@ -1,6 +1,6 @@
 class desktop::puavodesktop {
   include desktop::dconf::puavodesktop,
-          # desktop::mimedefaults,      # XXX needs more testing
+          desktop::mimedefaults,
           packages,
           webmenu
 
