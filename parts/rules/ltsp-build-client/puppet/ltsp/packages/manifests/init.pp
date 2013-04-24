@@ -701,6 +701,7 @@ class packages {
       tag => [ 'utils', 'ubuntu', ];
 
     [ 'google-talkplugin'
+    , 'oracle-java7-installer'
     , 'xul-ext-flashblock' ]:
       tag => [ 'web', 'opinsys', ];
 

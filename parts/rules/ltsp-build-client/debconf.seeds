@@ -1,9 +1,9 @@
 # Accept the citrix-client EULA.
 icaclient       icaclient/accepteula            boolean true
 
-# Do you agree with the DLJ license terms?
-sun-java6-bin   shared/accepted-sun-dlj-v1-1    boolean true
-sun-java6-jre   shared/accepted-sun-dlj-v1-1    boolean true
+# Accept Oracle Java license and use the tarball downloaded to /var/tmp.
+oracle-java7-installer  oracle-java7-installer/local    string /var/tmp/oracle-jjava-distfiles
+oracle-java7-installer  shared/accepted-oracle-license-v1-1      boolean true
 
 # In order to install this package, you must accept the license terms, the
 # "TrueType core fonts for the Web EULA ". Not accepting will cancel the
