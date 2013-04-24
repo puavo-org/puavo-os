@@ -61,8 +61,6 @@ check_validity()
                 puavo_wlanap_warn "auth type is 'open', but psk was defined"
             fi
             ;;
-        eap)
-            ;;
         psk)
             if [ "${#PUAVO_WLANAP_PSK}" -lt 8 -o "${#PUAVO_WLANAP_PSK}" -gt 63 ]; then
                 puavo_wlanap_fail "psk must be 8-63 characters long"

@@ -10,7 +10,7 @@ PUAVO_WLANAP_CHANNEL=6
 PUAVO_WLANAP_SSID=puavo-wlanap
 
 ## Authentication method of the access point.
-## Choices: open, psk, eap
+## Choices: open, psk
 PUAVO_WLANAP_AUTH=open
 
 ## Pre-shared key of the access point if hostap_auth == psk. The
