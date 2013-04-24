@@ -1,0 +1,11 @@
+## This file is a POSIX shell fragment which is sourced by scripts. It's
+## advisable to use only variale definitions.
+
+## Network interface where all access point traffic will be bridged to.
+PUAVO_WLANGW_IFACE=wlan0
+
+## Port to listen to for incoming accesspoint traffic.
+PUAVO_WLANGW_PORT=45045
+
+## Runtime directory which is created on start and removed on stop.
+PUAVO_WLANGW_RUNDIR=/var/run/puavo-wlangw

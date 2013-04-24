@@ -1,0 +1,71 @@
+#!/bin/bash
+
+set -eubm
+
+on_sigchld()
+{
+    if [ -n "$vtundpid" ]; then
+        kill -0 $vtundpid 2>/dev/null && return
+        trap - SIGCHLD
+        puavo_wlangw_fail "tunnel collapsed, exiting" || true
+        kill $$
+    fi
+}
+
+on_exit()
+{
+    local -r exitval=$?
+
+    set +e
+
+    kill -0 $vtundpid 2>/dev/null && kill $vtundpid
+
+    rm -rf "${PUAVO_WLANGW_RUNDIR}"
+
+    exit $exitval
+}
+
+write_runconf()
+{
+    sed -e "s|#{PUAVO_WLANGW_LIBDIR}|${PUAVO_WLANGW_LIBDIR}|g" \
+        -e "s|#{PUAVO_WLANGW_PORT}|${PUAVO_WLANGW_PORT}|g" \
+        -e "s|#{PUAVO_WLANGW_IFACE}|${PUAVO_WLANGW_IFACE}|g" \
+        "${PUAVO_WLANGW_DATADIR}/vtund.conf" \
+        >"${PUAVO_WLANGW_RUNDIR}/vtund.conf"
+}
+
+
+# We don't know yet where our data, libs and configs have been
+# installed, but we do know the following script knows it and we do know
+# where the following script is (it in PATH!).
+. puavo-wlangw-env
+
+. "${PUAVO_WLANGW_DATADIR}/config_defaults"
+
+# The user might have deleted the configuration file, that's ok.
+[ -r "${PUAVO_WLANGW_CONFDIR}/config" ] && . "${PUAVO_WLANGW_CONFDIR}/config"
+
+. "${PUAVO_WLANGW_LIBDIR}/common.sh"
+
+[ $# -lt 2 ] || puavo_wlangw_usage_fail "too many arguments" "[--daemon]"
+
+if [ $# -eq 1 ]; then
+    if [ "$1" = "--daemon" ]; then
+        daemon --noconfig --stderr='daemon.info' --name='puavo-wlangw' -- puavo-wlangw
+        exit 0
+    fi
+    puavo_wlangw_usage_fail "unexpected argument '$1'" "[--daemon"]
+fi
+
+trap on_exit EXIT
+
+mkdir -p "${PUAVO_WLANGW_RUNDIR}"
+
+write_runconf
+
+trap on_sigchld SIGCHLD
+
+vtund -s -n -f "${PUAVO_WLANGW_RUNDIR}/vtund.conf" &
+vtundpid=$!
+
+wait
