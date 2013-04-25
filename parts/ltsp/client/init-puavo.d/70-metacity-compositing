@@ -1,0 +1,11 @@
+echo "${PUAVO_TAGS}" | grep -q metacity_compositing && {
+    cat <<EOF >>/etc/dconf/db/puavodesktop.d/session_profile
+
+[org/gnome/metacity]
+compositing-manager=true
+EOF
+    cat <<EOF >>/etc/dconf/db/puavodesktop.d/locks/session_lock
+/org/gnome/metacity/compositing-manager
+EOF
+    dconf update
+}
