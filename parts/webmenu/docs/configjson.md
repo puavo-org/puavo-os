@@ -1,7 +1,8 @@
-
 # config.json
 
-Webmenu configuration.
+Webmenu configuration
+
+## Location
 
 Webmenu will look it from following locations:
 
