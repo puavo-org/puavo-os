@@ -1,0 +1,25 @@
+#!/bin/sh
+
+(
+  # Link smart notebook caches under /tmp.  This is because using $HOME
+  # with NFS might be excessively slow.  The time loading up the smart
+  # gallery shortens from about fourty seconds to two (in some environments).
+
+  set -e
+
+  srcdir="$HOME/.SMART Technologies Inc/SMART Board Software/Gallery"
+
+  cachedir="/tmp/smarttech-notebook-gallery-caches-$USER"
+
+  GROUP=$(id -gn)
+  install -d "$cachedir" -o "$USER" -g "$GROUP" -m 700
+
+  for cachefile in "essentials for educators_969cbfac.cache" \
+		   "gallery_9906c009.cache" \
+		   "lesson activity toolkit_b99f9747.cache"; do
+    ln -fns "$srcdir/$cachefile" "$cachedir/$cachefile"
+  done
+)
+
+exec "/opt/SMART Technologies/Notebook Software/bin/Notebook/notebook.real" \
+     "$@"
