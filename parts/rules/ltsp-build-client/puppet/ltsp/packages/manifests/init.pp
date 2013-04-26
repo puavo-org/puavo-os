@@ -96,6 +96,7 @@ class packages {
 
     [ 'ack-grep'
     , 'build-essential'
+    , 'bvi'
     , 'cdbs'
     , 'debconf-doc'
     , 'devscripts'
