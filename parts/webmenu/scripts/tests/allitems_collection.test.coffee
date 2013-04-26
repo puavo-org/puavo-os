@@ -65,6 +65,7 @@ define [
         command: "good-cmd"
         name: "good"
         description: "foo bar descriptiontest"
+        keywords: ["customkeyword"]
       ,
         type: "custom"
         command: "bad-cmd"
@@ -101,6 +102,15 @@ define [
           _.find(filtered, (model) -> model.get("name") is "bad"),
           "bad item should not be included"
         ).to.be.not.ok
+
+      it "it filters items by keywords", ->
+        itemsColl = new AllItems itemData
+        filtered = itemsColl.searchFilter("customkeyword")
+
+        expect(
+          _.find filtered, (model) -> model.get("name") is "good"
+          "should find items with keywords attribute"
+        ).to.be.ok
 
       describe "with translations", ->
         translatedData = [
