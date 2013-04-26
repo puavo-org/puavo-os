@@ -121,6 +121,7 @@
         {
           "type": "desktop",
           "source": "gimp",
+          "keywords": ["photoshop"],
           "name": {
             "fi": "Gimp-kuvankäsittely",
             "sv": "Gimp"
@@ -570,6 +571,7 @@
         {
           "type": "desktop",
           "source": "libreoffice-writer",
+          "keywords": ["openoffice", "word"],
           "name": {
             "fi": "LibreOffice Tekstinkäsittely",
             "sv": "LibreOffice Textbehandling"
@@ -578,6 +580,7 @@
         {
           "type": "desktop",
           "source": "libreoffice-calc",
+          "keywords": ["openoffice", "excel"],
           "name":{
             "fi": "LibreOffice Taulukkolaskenta",
             "sv": "LibreOffice kalkylblad"
@@ -586,6 +589,7 @@
         {
           "type": "desktop",
           "source": "libreoffice-impress",
+          "keywords": ["openoffice", "powerpoint"],
           "name":{
             "fi": "LibreOffice Esitys",
             "sv": "LibreOffice Presentation"
@@ -594,6 +598,7 @@
         {
           "type": "desktop",
           "source": "libreoffice-draw",
+          "keywords": ["openoffice"],
           "name":{
             "fi": "LibreOffice Piirros",
             "sv": "LibreOffice Rita"
@@ -602,6 +607,7 @@
         {
           "type": "desktop",
           "source": "libreoffice-base",
+          "keywords": ["openoffice"],
           "name":{
             "fi": "LibreOffice Tietokanta",
             "sv": "LibreOffice Databas"
@@ -610,6 +616,7 @@
         {
           "type": "desktop",
           "source": "libreoffice-math",
+          "keywords": ["openoffice"],
           "name": {
             "fi": "LibreOffice Kaava",
             "sv": "LibreOffice Ekvation"
@@ -642,11 +649,13 @@
         {
           "type": "desktop",
           "source": "acroread",
+          "keywords": ["pdf"],
           "name": "Acroread-asiakirjakatselin"
         },
         {
           "type": "desktop",
           "source": "okular",
+          "keywords": ["pdf"],
           "name": {
             "fi": "Okular-asiakirjakatselin",
             "sv": "Okular-dokumentläsare"
@@ -655,6 +664,7 @@
         {
           "type": "desktop",
           "source": "evince",
+          "keywords": ["pdf"],
           "name": {
             "fi": "Evince-asiakirjakatselin",
             "sv": "Evince-dokumentläsare"
@@ -866,6 +876,7 @@
         {
           "type": "desktop",
           "source": "Open-Sankore",
+          "keywords": ["smart", "notebook"],
           "name": {
             "fi": "Open-Sankoré-älytauluohjelmisto",
             "sv": "Open-Sankore"
@@ -879,7 +890,7 @@
       "name": {
         "en": "Web applications",
         "fi": "Web-sovellukset",
-	"sv": "Web applikationer"
+        "sv": "Web applikationer"
       },
       "description": {
         "fi": "Web-sovellukset",
@@ -941,6 +952,7 @@
         {
           "type": "web",
           "name": "Walma",
+          "keywords": ["photoshop"],
           "url": "http://walmademo.opinsys.fi",
           "description": {
             "fi": "Yhteistoiminnallinen piirtotaulu",
