@@ -53,20 +53,12 @@
       }
   },
   "shutdownCMD": [
-    "dbus-send",
-    "--system",
-    "--print-reply",
-    "--dest=org.freedesktop.ConsoleKit",
-    "/org/freedesktop/ConsoleKit/Manager",
-    "org.freedesktop.ConsoleKit.Manager.Stop"
+    "puavo-ltsp-client-action",
+    "--shutdown"
   ],
   "restartCMD": [
-    "dbus-send",
-    "--system",
-    "--print-reply",
-    "--dest=org.freedesktop.ConsoleKit",
-    "/org/freedesktop/ConsoleKit/Manager",
-    "org.freedesktop.ConsoleKit.Manager.Restart"
+    "puavo-ltsp-client-action",
+    "--reboot"
   ],
   "sleepCMD": [
     "dbus-send",
