@@ -15,15 +15,89 @@
   "settingsCMD": {
     "type": "desktop",
     "command": ["gnome-control-center"],
-    "name": "Asetukset",
+    "name": {
+      "fi": "Järjestelmäasetukset",
+      "en": "System Settings",
+      "sv": "Systeminställningar"
+    },
     "osIconPath": "/usr/share/icons/Faenza/categories/96/applications-system.png"
   },
+  "profileCMD": {
+    "type": "webWindow",
+    "url": "http://toimisto.opinsys.fi",
+    "name": {
+      "fi": "Profiili",
+      "en": "Profile",
+      "sv": "Profil"
+    },
+    "osIconPath": "/usr/share/icons/Faenza/emblems/96/emblem-personal.png"
+  },
   "supportCMD": {
-    "type": "desktop",
-    "command": ["xdg-open", "http://tuki.opinsys.fi"],
-    "name": "Tukisivusto",
+    "type": "web",
+    "url": "http://www.opinsys.fi",
+    "name": {
+      "fi": "Tukisivusto",
+      "en": "Support",
+      "sv": "Stöd"
+    },
     "osIconPath": "/usr/share/icons/Faenza/status/96/dialog-question.png"
   },
+  "passwordCMD": {
+    "type": "webWindow",
+    "url": "https://{{puavoDomain}}/users/password/own",
+    "osIconPath": "/usr/share/icons/Faenza/emblems/96/emblem-readonly.png",
+    "name": {
+      "fi": "Salasana",
+      "en": "Password",
+      "sv": "Lösenord"
+      }
+  },
+  "shutdownCMD": [
+    "dbus-send",
+    "--system",
+    "--print-reply",
+    "--dest=org.freedesktop.ConsoleKit",
+    "/org/freedesktop/ConsoleKit/Manager",
+    "org.freedesktop.ConsoleKit.Manager.Stop"
+  ],
+  "restartCMD": [
+    "dbus-send",
+    "--system",
+    "--print-reply",
+    "--dest=org.freedesktop.ConsoleKit",
+    "/org/freedesktop/ConsoleKit/Manager",
+    "org.freedesktop.ConsoleKit.Manager.Restart"
+  ],
+  "sleepCMD": [
+    "dbus-send",
+    "--system",
+    "--print-reply",
+    "--dest=org.freedesktop.UPower",
+    "/org/freedesktop/UPower",
+    "org.freedesktop.UPower.Suspend"
+  ],
+  "hibernateCMD": [
+    "dbus-send",
+    "--system",
+    "--print-reply",
+    "--dest=org.freedesktop.UPower",
+    "/org/freedesktop/UPower",
+    "org.freedesktop.UPower.Hibernate"
+  ],
+  "logoutCMD": [
+    "dbus-send",
+    "--session",
+    "--type=method_call",
+    "--print-reply",
+    "--dest=org.gnome.SessionManager",
+    "/org/gnome/SessionManager",
+    "org.gnome.SessionManager.Logout",
+    "uint32:1"
+  ],
+  "lockCMD": [
+    "gnome-screensaver-command",
+    "--lock"
+  ],
   "maxFavorites": 5,
   "port": 1337
 }
