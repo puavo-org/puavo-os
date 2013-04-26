@@ -83,6 +83,8 @@ These attributes can be added to any object
     - Example relative `extra/icons/apps/youtube.png`
   - `cssIcon`: {String, optional} CSS icon class from [font-awesome][].
     Overrides `osIcon`
+  - `keywords`: {Array} Array of strings. Make item appear also when on these
+    search strings.
 
 ### Translations
 
