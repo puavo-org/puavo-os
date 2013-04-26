@@ -9,6 +9,8 @@
 
   srcdir="$HOME/.SMART Technologies Inc/SMART Board Software/Gallery"
 
+  mkdir -p "$srcdir"
+
   cachedir="/tmp/smarttech-notebook-gallery-caches-$USER"
 
   GROUP=$(id -gn)
@@ -17,9 +19,9 @@
   for cachefile in "essentials for educators_969cbfac.cache" \
 		   "gallery_9906c009.cache" \
 		   "lesson activity toolkit_b99f9747.cache"; do
-    ln -fns "$srcdir/$cachefile" "$cachedir/$cachefile"
+    ln -fns "$cachedir/$cachefile" "$srcdir/$cachefile"
   done
 )
 
-exec "/opt/SMART Technologies/Notebook Software/bin/Notebook/notebook.real" \
-     "$@"
+exec "/opt/SMART Technologies/Notebook Software/bin/Notebook/.notebook_elf.real" \
+  "$@"
