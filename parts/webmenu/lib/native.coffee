@@ -53,14 +53,20 @@ config.production = process.env.NODE_ENV isnt "production"
 
 try
   puavoDomain = fs.readFileSync("/etc/puavo/domain").toString().trim()
+  expandVariables = (ob, attr) ->
+    tmpl = Handlebars.compile(ob[attr])
+    ob[attr] = tmpl(puavoDomain: puavoDomain)
 catch err
   console.warn "Cannot read Puavo Domain", err
-  console.warn "Disabling password button"
+  console.warn "Disabling password and profiles buttons"
   config.passwordCMD = null
-if puavoDomain
-  pwUrlTmpl = Handlebars.compile(config.passwordCMD.url)
-  config.passwordCMD.url = pwUrlTmpl(puavoDomain: puavoDomain)
+  config.profileCMD = null
 
+if puavoDomain
+  if config.passwordCMD
+    expandVariables(config.passwordCMD, "url")
+  if config.profileCMD
+    expandVariables(config.profileCMD, "url")
 
 desktopReadStarted = Date.now()
 # inject data from .desktop file to menuJSON.
