@@ -35,7 +35,7 @@
   "supportCMD": {
     "type": "web",
     "url": "http://www.opinsys.fi",
-    "name": { 
+    "name": {
       "fi": "Tukisivusto",
       "en": "Support",
       "sv": "Stöd"
@@ -52,6 +52,52 @@
       "sv": "Lösenord"
       }
   },
+  "shutdownCMD": [
+    "dbus-send",
+    "--system",
+    "--print-reply",
+    "--dest=\"org.freedesktop.ConsoleKit\"",
+    "/org/freedesktop/ConsoleKit/Manager",
+    "org.freedesktop.ConsoleKit.Manager.Stop"
+  ],
+  "restartCMD": [
+    "dbus-send",
+    "--system",
+    "--print-reply",
+    "--dest=\"org.freedesktop.ConsoleKit\"",
+    "/org/freedesktop/ConsoleKit/Manager",
+    "org.freedesktop.ConsoleKit.Manager.Restart"
+  ],
+  "sleepCMD": [
+    "dbus-send",
+    "--system",
+    "--print-reply",
+    "--dest=\"org.freedesktop.UPower\"",
+    "/org/freedesktop/UPower",
+    "org.freedesktop.UPower.Suspend"
+  ],
+  "hibernateCMD": [
+    "dbus-send",
+    "--system",
+    "--print-reply",
+    "--dest=\"org.freedesktop.UPower\"",
+    "/org/freedesktop/UPower",
+    "org.freedesktop.UPower.Hibernate"
+  ],
+  "logoutCMD": [
+    "dbus-send",
+    "--session",
+    "--type=method_call",
+    "--print-reply",
+    "--dest=org.gnome.SessionManager",
+    "/org/gnome/SessionManager",
+    "org.gnome.SessionManager.Logout",
+    "uint32:1"
+  ],
+  "lockCMD": [
+    "gnome-screensaver-command",
+    "--lock"
+  ],
   "maxFavorites": 5,
   "port": 1337
 }

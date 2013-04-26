@@ -12,7 +12,6 @@ Handlebars = require "handlebars"
 
 launchCommand = require "./launchcommand"
 menutools = require "./menutools"
-powermanager = require "./powermanager"
 requirefallback = require "./requirefallback"
 dbus = require "./dbus"
 pkg = require "../package.json"
@@ -218,15 +217,13 @@ module.exports = (gui, bridge) ->
     hideWindow()
 
   bridge.on "shutdown", ->
-    powermanager.shutdown()
+    launchCommand(config.shutdownCMD)
   bridge.on "reboot", ->
-    powermanager.restart()
+    launchCommand(config.restartCMD)
   bridge.on "logout", ->
-    powermanager.logout()
+    launchCommand(config.logoutCMD)
   bridge.on "lock", ->
-    exec "gnome-screensaver-command  --lock", (err) ->
-      if err
-        console.error "Failed to lock screen"
+    launchCommand(config.lockCMD)
 
   bridge.on "html-ready", ->
     dbus.registerApplication()
