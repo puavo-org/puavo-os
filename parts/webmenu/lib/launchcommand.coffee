@@ -16,7 +16,13 @@ commandBuilders =
     return ["xdg-open", args]
 
 
-module.exports = (msg, cb) ->
+launchCommand = (msg, cb) ->
+
+  if Array.isArray(msg)
+    return launchCommand({
+      type: "custom"
+      command: msg
+    }, cb)
 
   command = commandBuilders[msg.type]?(msg)
 
@@ -37,3 +43,4 @@ module.exports = (msg, cb) ->
     cb?() # TODO: create an error object...
 
 
+module.exports  = launchCommand
