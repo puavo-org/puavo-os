@@ -57,6 +57,7 @@ install-dirs:
 	mkdir -p $(DESTDIR)/etc/xdg/autostart
 	mkdir -p $(DESTDIR)/opt/webmenu/extra/icons/apps/
 	mkdir -p $(DESTDIR)/usr/share/icons
+	mkdir -p $(DESTDIR)/etc/webmenu
 
 install: install-dirs
 	cp -r lib node_modules bin docs scripts vendor styles extra i18n *.js *.json *.md *.html $(DESTDIR)/opt/webmenu
