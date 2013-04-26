@@ -56,7 +56,7 @@
     "dbus-send",
     "--system",
     "--print-reply",
-    "--dest=\"org.freedesktop.ConsoleKit\"",
+    "--dest=org.freedesktop.ConsoleKit",
     "/org/freedesktop/ConsoleKit/Manager",
     "org.freedesktop.ConsoleKit.Manager.Stop"
   ],
@@ -64,7 +64,7 @@
     "dbus-send",
     "--system",
     "--print-reply",
-    "--dest=\"org.freedesktop.ConsoleKit\"",
+    "--dest=org.freedesktop.ConsoleKit",
     "/org/freedesktop/ConsoleKit/Manager",
     "org.freedesktop.ConsoleKit.Manager.Restart"
   ],
@@ -72,7 +72,7 @@
     "dbus-send",
     "--system",
     "--print-reply",
-    "--dest=\"org.freedesktop.UPower\"",
+    "--dest=org.freedesktop.UPower",
     "/org/freedesktop/UPower",
     "org.freedesktop.UPower.Suspend"
   ],
@@ -80,7 +80,7 @@
     "dbus-send",
     "--system",
     "--print-reply",
-    "--dest=\"org.freedesktop.UPower\"",
+    "--dest=org.freedesktop.UPower",
     "/org/freedesktop/UPower",
     "org.freedesktop.UPower.Hibernate"
   ],
