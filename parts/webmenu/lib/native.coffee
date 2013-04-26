@@ -34,11 +34,19 @@ menuJSON = requirefallback(
   __dirname + "/../menu.json"
 )
 
-config = requirefallback(
-  webmenuHome + "/config.json"
-  "/etc/webmenu/config.json"
-  __dirname + "/../config.json"
+safeRequire = (path) ->
+  try
+    require(path)
+  catch e
+    {}
+
+# Merge config files. Last one overrides options from previous one
+config = _.extend({},
+  safeRequire(__dirname + "/../config.json"),
+  safeRequire("/etc/webmenu/config.json"),
+  safeRequire(webmenuHome + "/config.json"),
 )
+
 
 config.hostType = require "./hosttype"
 config.production = process.env.NODE_ENV isnt "production"

@@ -5,9 +5,14 @@ Webmenu configuration.
 
 Webmenu will look it from following locations:
 
-  1. ~/.config/webmenu/config.json
+  1. the bundled config.json
   2. /etc/webmenu/config.json
-  3. the bundled config.json
+  3. ~/.config/webmenu/config.json
+
+It will read file from each locations and merges those into a single
+configuration object. The options in latter ones will override options in
+previous ones. So users can for example just override a `logoutCMD` in
+`~/.config/webmenu/config.json` if needed.
 
 ## Attributes
 
