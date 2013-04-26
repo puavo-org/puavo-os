@@ -54,6 +54,22 @@ Command to launch from the settings button.
 
 Can be any launchable menu.json item object.
 
+### `shutdownCMD`
+
+Command to shutdown the computer
+
+### `restartCMD`
+
+Command to restart the computer
+
+### `sleepCMD`
+
+Command to put the computer to sleep (aka suspend)
+
+### `hibernateCMD`
+
+Command to hibernate
+
 ### `maxFavorites`
 
 Item count in favorites list.
