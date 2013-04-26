@@ -24,6 +24,8 @@ launchCommand = (msg, cb) ->
       command: msg
     }, cb)
 
+  console.info "Launching #{ JSON.stringify(msg) }"
+
   command = commandBuilders[msg.type]?(msg)
 
   if not command
@@ -31,8 +33,6 @@ launchCommand = (msg, cb) ->
     return
 
   [command, args] = command
-
-  console.info "Executing '#{ command }'"
 
   cmd = spawn command, args,
     detached: true
