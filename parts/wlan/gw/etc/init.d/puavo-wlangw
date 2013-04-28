@@ -23,8 +23,8 @@ PIDFILE=/var/run/$NAME.pid
 
 [ -f "/etc/default/$NAME" ] && . "/etc/default/$NAME"
 
-[ -n "$PUAVO_WLANGW_INIT_ENABLED" ] || exit 0
-[ "$PUAVO_WLANGW_INIT_ENABLED" -ne 0 ] || exit 0
+[ -n "$PUAVO_WLANGW_AUTOSTART" ] || exit 0
+[ "$PUAVO_WLANGW_AUTOSTART" -ne 0 ] || exit 0
 
 . /lib/lsb/init-functions
 
