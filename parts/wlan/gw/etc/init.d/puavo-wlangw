@@ -15,7 +15,7 @@
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 NAME=puavo-wlangw
 EXECUTABLE=/usr/sbin/$NAME
-DESC="Puavo WLAN Access Point Daemon"
+DESC="Puavo WLAN Gateway Daemon"
 PIDFILE=/var/run/$NAME.pid
 
 # Possible condition if the package has been removed (but not purged).
