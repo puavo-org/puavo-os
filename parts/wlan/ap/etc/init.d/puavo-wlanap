@@ -40,7 +40,7 @@ case "$1" in
 	start-stop-daemon --stop --pidfile "$PIDFILE"
 	log_end_msg "$?"
 	;;
-  restart)
+  force-reload|restart)
   	$0 stop
 	sleep 3
 	$0 start
@@ -50,7 +50,7 @@ case "$1" in
 	exit $?
 	;;
   *)
-	echo "Usage: service $NAME {start|stop|restart|status}" >&2
+	echo "Usage: service $NAME {start|stop|force-reload|restart|status}" >&2
 	exit 1
 	;;
 esac
