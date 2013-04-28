@@ -12,7 +12,7 @@ brctl addbr "${briface}"
 brctl setfd "${briface}" 0
 ifconfig "${briface}" up
 brctl addif "${briface}" "${tapiface}"
-sleep 2
+sleep 8
 hostapd -B -P "${rundir}/hostapd.pid" "${rundir}/hostapd.conf"
 sleep 2
 dhclient -pf "${rundir}/dhclient.pid" "${briface}"
