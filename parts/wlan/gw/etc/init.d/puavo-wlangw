@@ -29,27 +29,27 @@ PIDFILE=/var/run/$NAME.pid
 . /lib/lsb/init-functions
 
 case "$1" in
-  start)
+    start)
         log_daemon_msg "Starting $DESC" "$NAME"
         start-stop-daemon --start --exec "$EXECUTABLE" \
             --pidfile "$PIDFILE" -- --daemon
         log_end_msg "$?"
         ;;
-  stop)
+    stop)
         log_daemon_msg "Stopping $DESC" "$NAME"
         start-stop-daemon --stop --pidfile "$PIDFILE"
         log_end_msg "$?"
         ;;
-  restart)
+    restart)
         $0 stop
         sleep 3
         $0 start
         ;;
-  status)
+    status)
         status_of_proc -p "$PIDFILE" "$EXECUTABLE" "$NAME"
         exit $?
         ;;
-  *)
+    *)
         echo "Usage: service $NAME {start|stop|restart|status}" >&2
         exit 1
         ;;
