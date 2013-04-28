@@ -3,7 +3,7 @@
 ## Network interface of the access point.
 PUAVO_WLANAP_IFACE=wlan0
 
-## WLAN channel of the access point.
+## Channel of the access point.
 PUAVO_WLANAP_CHANNEL=6
 
 ## Service set identifier of the access point.
@@ -13,7 +13,7 @@ PUAVO_WLANAP_SSID=puavo-wlanap
 ## Choices: open, psk
 PUAVO_WLANAP_AUTH=open
 
-## Pre-shared key of the access point if hostap_auth == psk. The
+## Pre-shared key of the access point if PUAVO_WLANAP_AUTH is psk. The
 ## length must be 6-63 characters.
 PUAVO_WLANAP_PSK=
 
@@ -25,4 +25,6 @@ PUAVO_WLANAP_GWADDR=wlangw
 ## routed.
 PUAVO_WLANAP_GWPORT=45045
 
+## Directory for runtime data. This will be created and removed
+## dynamically by puavo-wlanap.
 PUAVO_WLANAP_RUNDIR=/var/run/puavo-wlanap
