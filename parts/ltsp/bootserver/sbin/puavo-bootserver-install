@@ -115,6 +115,7 @@ setup_root_passwd() {
 }
 
 setup_nbd_exports() {
+    mkdir -p /opt/ltsp/images
     for devimgname in i386 precise testing; do
         ln -sft /opt/ltsp/images $devimgname.img
     done
