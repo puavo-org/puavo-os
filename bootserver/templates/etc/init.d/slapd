@@ -161,7 +161,10 @@ start_ldap() {
 	trap 'report_failure' 0
 	log_daemon_msg "Starting OpenLDAP" "slapd"
 	start_slapd
-	initctl emit puavo-slapd-started
+
+	# emit start-event for kerberos, but do not care if the event fails
+	initctl emit puavo-slapd-started || true
+
 	trap "-" 0
 	log_end_msg 0
 }
@@ -171,7 +174,10 @@ stop_ldap() {
 	trap 'report_failure' 0
 	log_daemon_msg "Stopping OpenLDAP" "slapd"
 	stop_slapd
-	initctl emit puavo-slapd-stopped
+
+	# emit stop-event for kerberos, but do not care if the event fails
+	initctl emit puavo-slapd-stopped || true
+
 	trap "-" 0
 	log_end_msg 0
 }
