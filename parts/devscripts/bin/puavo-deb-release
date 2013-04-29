@@ -1,0 +1,24 @@
+#!/bin/sh
+
+target=$1
+
+help () {
+    echo "
+    usage: $(basename $0) [release]
+
+    Do .deb release from opinsys-debs
+    "
+}
+
+[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
+
+set -eu
+
+package=$(dpkg-parsechangelog | sed -ne 's/^Source: //p')
+version=$(dpkg-parsechangelog | sed -ne 's/^Version: //p')
+dsc="../${package}_${version}.dsc"
+
+debian/rules get-orig-source
+debuild -S -uc -us -sa
+debuilder-push-dsc $dsc $target
+
