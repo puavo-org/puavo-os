@@ -21,6 +21,8 @@ installdirs :
 	mkdir -p $(DESTDIR)$(templatedir)/etc/cups
 	mkdir -p $(DESTDIR)$(templatedir)/etc/default
 	mkdir -p $(DESTDIR)$(templatedir)/etc/dhcp
+	mkdir -p $(DESTDIR)$(templatedir)/etc/init
+	mkdir -p $(DESTDIR)$(templatedir)/etc/init.d
 	mkdir -p $(DESTDIR)$(templatedir)/etc/network
 	mkdir -p $(DESTDIR)$(templatedir)/etc/pam.d
 	mkdir -p $(DESTDIR)$(templatedir)/etc/samba
