@@ -138,6 +138,9 @@ wait_for_slapd_sync() {
     _previous_linecount=$_current_linecount
     _current_linecount=$(slapcat | wc -l)
   done
+
+  echo "LDAP database in now in sync."
+  echo
 }
 
 install -m 644 --backup=numbered "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/default/shorewall" /etc/default/shorewall
