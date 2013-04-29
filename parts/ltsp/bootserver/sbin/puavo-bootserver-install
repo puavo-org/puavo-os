@@ -5,12 +5,6 @@ set -e
 . puavo-bootserver-installdirs
 
 setup_ds_slave() {
-    install -o root -g root -m 644 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/default/slapd" /etc/default/slapd
-    install -o root -g root -m 755 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/init.d/slapd" /etc/init.d
-    install -o root -g root -m 644 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/default/krb5-kdc" /etc/default
-    install -o root -g root -m 755 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/init.d/krb5-kdc" /etc/init.d
-    install -o root -g root -m 644 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/init/puavo-krb5-kdc.conf" /etc/init
-
     cat <<EOF > /etc/ldap/ldap.conf
 BASE            $(cat /etc/puavo/ldap/base)
 NETWORK_TIMEOUT 15
@@ -40,6 +34,12 @@ Press ENTER when ready."
 
     read ready
     puavo-init-kdc-slave --force
+
+    install -o root -g root -m 644 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/default/slapd" /etc/default/slapd
+    install -o root -g root -m 755 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/init.d/slapd" /etc/init.d
+    install -o root -g root -m 644 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/default/krb5-kdc" /etc/default
+    install -o root -g root -m 755 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/init.d/krb5-kdc" /etc/init.d
+    install -o root -g root -m 644 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/init/puavo-krb5-kdc.conf" /etc/init
 }
 
 setup_cups() {
