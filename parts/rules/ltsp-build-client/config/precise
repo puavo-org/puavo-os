@@ -3,13 +3,13 @@ PUPPET_USE_CLASSES="
   console
   kernels
   lightdm
+  ltspimage_ssh_server
   motd
   organisation_adm_users
   packages::sssd_install_workaround
   packages::thinclient
   plymouth_theme
   ssh_client
-  ssh_server
   sudo
   udev
   use_urandom
