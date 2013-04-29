@@ -722,9 +722,8 @@ class packages {
    [ 'open-sankore', ]:
       tag => [ 'whiteboard', 'ubuntu', ];
 
-# XXX disabled for now
-#   'mimio-studio':
-#     tag => [ 'whiteboard-mimio', ];
+   [ 'mimio-studio', ]:
+    tag => [ 'whiteboard-mimio', 'opinsys', ];
 
 # XXX disabled for now
 #   [ 'activaid'
