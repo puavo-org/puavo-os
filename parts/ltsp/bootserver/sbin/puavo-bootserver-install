@@ -104,7 +104,7 @@ setup_sssd() {
 
 setup_network() {
     echo "Fix your network settings and reboot, otherwise press ENTER to continue."
-    read
+    read answer
 }
 
 setup_root_passwd() {
