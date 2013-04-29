@@ -1,10 +1,6 @@
 Short explanations for puppet modules listed here (to know exactly what
 they do, you need to look inside):
 
-adm_users
-    A helper module for creating administrative user accounts and setting up
-    their public ssh-keys for authentication.
-
 apt
     Settings for apt.
 
@@ -16,9 +12,6 @@ bash
 
 citrix
     Configurations for Citrix client.
-
-config
-    Set organisation name and other widely applied parameters.
 
 console
     Startup getty on a console device.
@@ -49,23 +42,12 @@ graphics_drivers
 kernels
     Kernel related stuff.
 
-license_keys
-    Add your license keys here (if needed) for running some proprietary
-    software.
-
 lightdm
     Some lightdm configurations (some of these come from ltsp-lightdm package).
 
 motd
     Add stuff to MOTD, that means at least host type and ltsp image
     name/version.
-
-organisation_adm_users
-    List actual, real-life people here to create actual administrative user
-    accounts.
-
-organisation_apt_repositories
-    Define organisation-specific apt repositories here.
 
 packages
     Lists packages that are to be installed to ltsp images,
@@ -86,9 +68,6 @@ smartboard
 ssh_client
     Settings for openssh client.  XXX these actually weaken security from
     default, should find a way to do this in a smarter way.
-
-ssh_server
-    ssh server configurations.
 
 sudo
     Settings for sudo.
