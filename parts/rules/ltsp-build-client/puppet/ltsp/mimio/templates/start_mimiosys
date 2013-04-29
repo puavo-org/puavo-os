@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -e
+
+if lsusb | awk '$6 ~ /^08d3:0003/' | grep -q .; then
+  exec "/var/opt/mimio/mimio-mimiosys" "$@"
+fi
+
+exit 0

@@ -45,6 +45,10 @@ kernels
 lightdm
     Some lightdm configurations (some of these come from ltsp-lightdm package).
 
+mimio
+    Make a wrapper for mimio panel applet so that it will start up
+    conditionally.
+
 motd
     Add stuff to MOTD, that means at least host type and ltsp image
     name/version.
