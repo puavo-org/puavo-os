@@ -1,3 +1,0 @@
-class ssh_server {
-  # ...
-}

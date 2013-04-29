@@ -1,3 +1,0 @@
-class license_keys {
-  # ...
-}
