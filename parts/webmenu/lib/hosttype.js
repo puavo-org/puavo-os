@@ -1,5 +1,5 @@
 /**
- * host type detection rutines.
+ * host type detection routines.
  * @exports {String} hostType
  **/
 
