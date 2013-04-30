@@ -15,16 +15,15 @@
     {{ i18n "logout.lock" }}
   </button>
 
-  {{#if localBoot}}
   <button class="btn js-shutdown">
     <img src="file:///usr/share/icons/Faenza/actions/24/system-shutdown.png">
     {{ i18n "logout.shutdown" }}
   </button>
+
   <button class="btn js-reboot">
     <img src="file:///usr/share/icons/Faenza/actions/24/stock_undo.png">
     {{ i18n "logout.reboot" }}
   </button>
-  {{/if}}
 
   <button class="btn js-cancel">
     {{ i18n "logout.cancel" }}
