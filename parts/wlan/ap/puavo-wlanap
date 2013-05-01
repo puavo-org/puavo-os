@@ -86,7 +86,6 @@ write_runconf()
         >"${PUAVO_WLANAP_RUNDIR}/hostapd.conf"
 
     sed -e "s|#{PUAVO_WLANAP_LIBDIR}|${PUAVO_WLANAP_LIBDIR}|g" \
-        -e "s|#{PUAVO_WLANAP_GWPORT}|${PUAVO_WLANAP_GWPORT}|g" \
         -e "s|#{PUAVO_WLANAP_IFACE}|${PUAVO_WLANAP_IFACE}|g" \
         -e "s|#{PUAVO_WLANAP_RUNDIR}|${PUAVO_WLANAP_RUNDIR}|g" \
         "${PUAVO_WLANAP_DATADIR}/vtund.conf" \
@@ -129,6 +128,7 @@ vtundpid=
 trap on_sigchld SIGCHLD
 
 vtund -n -f "${PUAVO_WLANAP_RUNDIR}/vtund.conf" \
+    -P "#{PUAVO_WLANAP_GWPORT}" \
     puavo-wlanap "${PUAVO_WLANAP_GWADDR}" &
 vtundpid=$!
 
