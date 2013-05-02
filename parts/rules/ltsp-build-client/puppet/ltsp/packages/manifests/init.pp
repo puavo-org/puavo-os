@@ -761,12 +761,7 @@ class packages {
         '3.6.6-999-generic':
           package_tag => 'opinsys';
 
-        [ '3.8.1.opinsys1'
-        , '3.8.5.opinsys1'
-        , '3.8.6.opinsys2'
-        , '3.8.7.opinsys1'
-        , '3.8.8.opinsys1'
-        , '3.8.10.opinsys1'
+        [ '3.8.8.opinsys1'
         , '3.8.11.opinsys1' ]:
           package_tag => 'opinsys',
           with_extra  => false;
