@@ -18,7 +18,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(templatedir)/etc/apparmor.d/local
 	mkdir -p $(DESTDIR)$(templatedir)/etc/bind
-	mkdir -p $(DESTDIR)$(templatedir)/etc/cups
 	mkdir -p $(DESTDIR)$(templatedir)/etc/default
 	mkdir -p $(DESTDIR)$(templatedir)/etc/dhcp
 	mkdir -p $(DESTDIR)$(templatedir)/etc/init
@@ -55,9 +54,6 @@ install : bin/puavo-bootserver-installdirs installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/samba \
 		templates/etc/samba/smb.conf
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/cups \
-		templates/etc/cups/cupsd.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/pam.d \
 		templates/etc/pam.d/common-password

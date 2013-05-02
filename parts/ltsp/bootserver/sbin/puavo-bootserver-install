@@ -40,14 +40,6 @@ Press ENTER when ready."
     puavo-init-kdc-slave --force
 }
 
-setup_cups() {
-  apt-get -y install m4
-
-  m4 -D__fqpuavoname__="$(cat /etc/puavo/hostname).$(cat /etc/puavo/domain)" \
-    "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/cups/cupsd.conf" | tee /etc/cups/cupsd.conf > /dev/null
-  service cups restart || service cups start
-}
-
 setup_nfs() {
   install -o root -g root -m 644 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/default/nfs-kernel-server.template" \
     /etc/default/nfs-kernel-server
@@ -152,7 +144,6 @@ setup_network
 setup_ds_slave
 setup_nfs
 setup_sssd
-setup_cups
 puavo-bootserver-setup-pxe
 puavo-init-bootserver-ddns
 puavo-create-kvm-ltsp-server "$(cat /etc/puavo/hostname)-ltsp1"
