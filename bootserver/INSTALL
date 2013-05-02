@@ -1,0 +1,29 @@
+Here are the post-installation configuration for puavo-ltsp-bootserver
+package.  The puavo-ltsp-bootserver package it used to configure Puavo
+bootservers, but unfortunately some configurations need to be slightly
+edited by-hand for everything to work correctly.  Some suggestions
+can safely be skipped if the corresponding functionality is not needed.
+
+These settings have been tested with Ubuntu version 12.04.
+
+
+Cups
+----
+
+To setup cups to work with Puavo certificates do edit
+/etc/apparmor.d/local/usr.sbin.cupsd to contain the line:
+
+  /etc/puavo/certs/* r,
+
+Also do edit the /etc/cups/cupsd.conf file to contain the lines:
+
+  ServerCertificate /etc/puavo/certs/host.crt
+  ServerKey /etc/puavo/certs/host.key
+
+Do restart apparmor and cups server:
+
+  sudo service apparmor restart
+  sudo service cups restart
+
+
+
