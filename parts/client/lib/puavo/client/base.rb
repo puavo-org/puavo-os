@@ -46,6 +46,11 @@ module Puavo
       def servers
         Puavo::Client::API::Servers.new(subdomain, username, password, ssl)
       end
+
+      def external_files
+        Puavo::Client::API::ExternalFiles.new(subdomain, username, password, ssl)
+      end
+
     end
   end
 end
