@@ -65,6 +65,7 @@ class CmdLine
         when /^--( | force
                    | install
                    | update
+                   | copy-files
                    | noconfirm )$/x
           params[$1] = true
         else
@@ -595,6 +596,15 @@ class Control
     PUAVO_ETC.write(:kernel_arguments, device_info.kernel_arguments)
     Tools.goodmsg("Puavo attributes are now written to #{ PUAVO_ETC.root }")
   end
+
+  def self.copy_files
+    puavo = Puavo::Client::Base.new
+    Puavo::Files.copy_external_files(
+      puavo.external_files,
+      File.join(Puavodir, "external_files")
+    )
+  end
+
 end
 
 raise 'run me as root' unless Process.uid == 0
@@ -605,6 +615,8 @@ cmdline_params = CmdLine.params(ARGV)
 
 if cmdline_params["update"]
   Control.update()
+elsif cmdline_params["copy-files"]
+  Control.copy_files
 else
   Control.register(cmdline_params)
 end
