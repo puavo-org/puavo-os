@@ -40,22 +40,6 @@ Press ENTER when ready."
     puavo-init-kdc-slave --force
 }
 
-setup_sssd() {
-  install -o root -g root -m 644 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/nsswitch.conf"  /etc/nsswitch.conf
-  install -o root -g root -m 600 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/sssd/sssd.conf" /etc/sssd/sssd.conf
-
-  # XXX may break easily...
-  sed -i \
-    "s|__puavo_ldap_dn__|$(cat /etc/puavo/ldap/dn)|;
-     s|__puavo_kerberos_realm__|$(cat /etc/puavo/kerberos/realm)|;
-     s|__puavo_domain__|$(cat /etc/puavo/domain)|;
-     s|__puavo_ldap_base__|$(cat /etc/puavo/ldap/base)|;
-     s|__puavo_ldap_master__|$(cat /etc/puavo/ldap/master)|;
-     s|__puavo_ldap_password__|$(cat /etc/puavo/ldap/password)|;" \
-      /etc/sssd/sssd.conf 
-  service sssd restart || service sssd start
-}
-
 setup_network() {
     echo "Fix your network settings and reboot, otherwise press ENTER to continue."
     read answer
@@ -106,8 +90,6 @@ apt-get -y dist-upgrade
 setup_network
 [ -d /etc/puavo ] || puavo-register
 setup_ds_slave
-setup_nfs
-setup_sssd
 puavo-bootserver-setup-pxe
 puavo-init-bootserver-ddns
 puavo-create-kvm-ltsp-server "$(cat /etc/puavo/hostname)-ltsp1"
