@@ -43,6 +43,7 @@ module Puavo
         file_path = File.join(target, ef.name)
 
         File.open(file_path, "w") do |f|
+          STDERR.puts "Writing file #{ file_path }"
           f.write(ef.get_data)
         end
 
