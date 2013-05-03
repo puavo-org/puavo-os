@@ -72,12 +72,21 @@ class PuavoEtc
     end
   end
 
+  def resolve_puavo_url
+    begin
+      return puavo_development_url
+    rescue Errno::ENOENT
+      return "https://#{ puavo_domain }"
+    end
+  end
+
   # Puavo Attribute definitions
   puavo_attr :id, "id", :convert => :to_i
   puavo_attr :domain, "domain"
   puavo_attr :topdomain, "topdomain"
   puavo_attr :hostname, "hostname"
   puavo_attr :hosttype, "hosttype"
+  puavo_attr :puavo_development_url, "puavo_development_url"
 
   puavo_attr :ldap_dn, "ldap/dn"
   puavo_attr :ldap_base, "ldap/base"
