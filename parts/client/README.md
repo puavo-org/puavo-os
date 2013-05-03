@@ -56,7 +56,7 @@ Writing happens using the `write` method
 PUAVO_ETC.write(:id, 1234)
 ```
 
-Available attributes can be seen from `puavo_attr` calls in `puavo-etc.rb`.
+Available attributes can be seen from `puavo_attr` calls in `lib/puavo/etc.rb`.
 
 # puavo-lts
 
