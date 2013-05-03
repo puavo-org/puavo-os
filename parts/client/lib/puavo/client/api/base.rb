@@ -1,6 +1,18 @@
 module Puavo
   module Client
     module API
+
+      class Error < Exception
+        attr_accessor :response
+        def initialize(response)
+          @response = response
+        end
+        def to_s
+          "<#{ self.class.name } error: #{ @response.code }>"
+        end
+      end
+
+
       class Base
         include HTTParty
         
@@ -42,13 +54,17 @@ module Puavo
         end
 
         def rest(url)
-          self.class.get(url,
+          res = self.class.get(url,
                          :basic_auth => basic_auth,
                          :headers => {
                            "Accept" => "application/json",
                            "Content-Type" => "application/json; charset=utf-8",
                            "User-Agent" => "PuavoClient/0.01" })
           # FIXME: version number
+          if res.code != 200
+            raise APIError.new res
+          end
+          return res
         end
       end
     end
