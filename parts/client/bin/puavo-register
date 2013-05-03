@@ -35,8 +35,21 @@ RootCAPath      = "#{ Puavodir }/certs/rootca.pem"
 Hosttype_path   = "#{ Puavodir }/hosttype"
 
 class Tools
+
+  def self.nocolor
+    @@nocolor
+  end
+
+  def self.nocolor=(status)
+    @@nocolor = status
+  end
+
   def self.colormsg(msg, tag, color)
-    HighLine.say(HighLine.new.color("*** #{ tag }: #{ msg }", color))
+    if nocolor
+      puts "*** #{ tag }: #{ msg }"
+    else
+      HighLine.say(HighLine.new.color("*** #{ tag }: #{ msg }", color))
+    end
   end
 
   def self.errmsg(msg) ; colormsg(msg, 'ERROR', HighLine::RED)  ; end
@@ -65,7 +78,7 @@ class CmdLine
         when /^--( | force
                    | install
                    | update
-                   | copy-files
+                   | nocolor
                    | noconfirm )$/x
           params[$1] = true
         else
@@ -136,6 +149,8 @@ class RegisterUserInterface
     @puavoserver     = @cmdline_params['puavoserver'] || default_puavoserver()
     @username        = @cmdline_params['username']
     @password        = @cmdline_params['password']
+
+    Tools.nocolor = @cmdline_params['nocolor'] ? true : false
 
     facts = Facter.to_hash
 
