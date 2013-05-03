@@ -75,7 +75,10 @@ Register devices to Puavo from CLI
 
 ## Usage
 
-    [sudo] puavo-register [--update]
+    [sudo] puavo-register [options]
+
+      --update update /etc/puavo files
+      --copy-files copy external files from Puavo to /etc/puavo/external_files
 
 ## Development
 
