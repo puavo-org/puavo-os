@@ -77,7 +77,7 @@ module Puavo
                            "User-Agent" => "PuavoClient/0.01" })
           # FIXME: version number
           if res.code != 200
-            raise APIError.new res
+            raise Error.new res
           end
           return res
         end
