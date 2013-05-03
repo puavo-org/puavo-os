@@ -18,19 +18,17 @@ module Puavo
       class Base
         include HTTParty
         
-        attr_accessor :domain, :username, :password, :ssl
+        attr_accessor :username, :password, :ssl
 
-        def initialize(
-          domain = PUAVO_ETC.domain,
-          username = PUAVO_ETC.ldap_dn,
-          password = PUAVO_ETC.ldap_password,
-          ssl = true
-        )
-          @domain, @username, @password, @ssl = domain, username, password, ssl
+        def initialize(domain=nil, username=nil, password=nil, ssl=true)
+          @domain = domain
+          @username = username || PUAVO_ETC.ldap_dn
+          @password = password || PUAVO_ETC.ldap_password
+          @ssl = ssl
         end
 
         def subdomain
-          STDERR.puts "Using legazy subdomain attribute"
+          STDERR.puts "Puavo::Client::API::Base using legazy subdomain attribute"
           @domain
         end
 
@@ -39,7 +37,12 @@ module Puavo
         end
 
         def url_prefix
-          (ssl ? 'https' : 'http') + "://" + @domain
+          if @domain
+            puts "Domain #{ @domain }"
+            (ssl ? 'https' : 'http') + "://" + @domain
+          else
+            PUAVO_ETC.resolve_puavo_url
+          end
         end
 
         class << self

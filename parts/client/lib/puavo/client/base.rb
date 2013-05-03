@@ -1,10 +1,20 @@
+require "puavo/etc"
+
 module Puavo
   module Client
     class Base
-      attr_accessor :subdomain, :username, :password, :ssl
+      attr_accessor :domain, :username, :password, :ssl
 
-      def initialize(subdomain, username, password, ssl = true)
-        @subdomain, @username, @password, @ssl = subdomain, username, password, ssl
+      def initialize(domain=nil, username=nil, password=nil, ssl=true)
+        @domain = domain
+        @username = username
+        @password = password
+        @ssl = ssl
+      end
+
+      def subdomain
+        STDERR.puts "Puavo::Client::Base using legazy subdomain attribute"
+        @domain
       end
 
       def self.new_by_ldap_entry(entry)
@@ -24,31 +34,31 @@ module Puavo
       end
 
       def organisation
-        Puavo::Client::API::Organisation.new(subdomain, username, password, ssl)
+        Puavo::Client::API::Organisation.new(domain, username, password, ssl)
       end
 
       def schools
-        Puavo::Client::API::Schools.new(subdomain, username, password, ssl)
+        Puavo::Client::API::Schools.new(domain, username, password, ssl)
       end
       
       def groups
-        Puavo::Client::API::Groups.new(subdomain, username, password, ssl)
+        Puavo::Client::API::Groups.new(domain, username, password, ssl)
       end
 
       def devices
-        Puavo::Client::API::Devices.new(subdomain, username, password, ssl)
+        Puavo::Client::API::Devices.new(domain, username, password, ssl)
       end
 
       def users
-        Puavo::Client::API::Users.new(subdomain, username, password, ssl)
+        Puavo::Client::API::Users.new(domain, username, password, ssl)
       end
 
       def servers
-        Puavo::Client::API::Servers.new(subdomain, username, password, ssl)
+        Puavo::Client::API::Servers.new(domain, username, password, ssl)
       end
 
       def external_files
-        Puavo::Client::API::ExternalFiles.new(subdomain, username, password, ssl)
+        Puavo::Client::API::ExternalFiles.new(domain, username, password, ssl)
       end
 
     end
