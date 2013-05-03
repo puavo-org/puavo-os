@@ -40,42 +40,6 @@ Press ENTER when ready."
     puavo-init-kdc-slave --force
 }
 
-setup_nfs() {
-  install -o root -g root -m 644 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/default/nfs-kernel-server.template" \
-    /etc/default/nfs-kernel-server
-
-  install -o root -g root -m 644 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/default/nfs-common.template" \
-    /etc/default/nfs-common
-
-  cat <<EOF > /etc/exports
-/export gss/krb5(rw,fsid=0,async,subtree_check,no_root_squash,crossmnt)
-/export/home gss/krb5(rw,async,subtree_check,no_root_squash)
-EOF
-
-  cat <<EOF > /etc/idmapd.conf
-[General]
-
-Verbosity = 0
-Pipefs-Directory = /run/rpc_pipefs
-Domain = $(cat /etc/puavo/kerberos/realm)
-
-[Mapping]
-
-Nobody-User = nobody
-Nobody-Group = nogroup
-EOF
-
-  cat <<EOF >> /etc/fstab
-/home /export/home none rw,bind 0 0
-EOF
-
-  mkdir -p /export/home
-
-  mount -a
-  service nfs-kernel-server restart
-  service idmapd restart
-}
-
 setup_sssd() {
   install -o root -g root -m 644 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/nsswitch.conf"  /etc/nsswitch.conf
   install -o root -g root -m 600 "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/sssd/sssd.conf" /etc/sssd/sssd.conf

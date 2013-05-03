@@ -26,4 +26,42 @@ Do restart apparmor and cups server:
   sudo service cups restart
 
 
+NFS-setup
+---------
 
+For fatclients NFS needs to be setup.  So far only NFSv4.1 is supported.
+The file /etc/default/nfs-kernel-server should contain these lines (in
+addition to the default lines):
+
+  NEED_SVCGSSD=yes
+  RPCNFSDOPTS="--nfs-version 4.1"
+
+Likewise, /etc/default/nfs-common should contain:
+
+  NEED_IDMAPD=yes
+  NEED_GSSD=yes
+
+The puavo-ltsp-client package expects that /home can be mounted from the
+bootserver, thus we need on /etc/exports:
+
+  /export gss/krb5(rw,fsid=0,async,subtree_check,no_root_squash,crossmnt)
+  /export/home gss/krb5(rw,async,subtree_check,no_root_squash)
+
+In /etc/idmapd.conf, "Domain" should be set to your kerberos realm (the same
+as in /etc/puavo/kerberos/realm after registering the host to Puavo):
+
+  Domain = ...
+
+On /etc/fstab there should be the following line:
+
+  /home /export/home none rw,bind 0 0
+
+Also /export/home should be created:
+
+  mkdir -p /export/home
+
+Do the following to get the NFS-configurations active:
+
+  mount -a
+  service nfs-kernel-server restart
+  service idmapd restart

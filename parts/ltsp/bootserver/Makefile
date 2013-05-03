@@ -66,8 +66,6 @@ install : bin/puavo-bootserver-installdirs installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/default \
 		templates/etc/default/krb5-kdc \
-		templates/etc/default/nfs-common.template \
-		templates/etc/default/nfs-kernel-server.template \
 		templates/etc/default/slapd
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/init.d \
