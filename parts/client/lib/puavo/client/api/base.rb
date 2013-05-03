@@ -1,3 +1,5 @@
+require "puavo/etc"
+
 module Puavo
   module Client
     module API
@@ -16,10 +18,20 @@ module Puavo
       class Base
         include HTTParty
         
-        attr_accessor :subdomain, :username, :password, :ssl
+        attr_accessor :domain, :username, :password, :ssl
 
-        def initialize(subdomain, username, password, ssl = true)
-          @subdomain, @username, @password, @ssl = subdomain, username, password, ssl
+        def initialize(
+          domain = PUAVO_ETC.domain,
+          username = PUAVO_ETC.ldap_dn,
+          password = PUAVO_ETC.ldap_password,
+          ssl = true
+        )
+          @domain, @username, @password, @ssl = domain, username, password, ssl
+        end
+
+        def subdomain
+          STDERR.puts "Using legazy subdomain attribute"
+          @domain
         end
 
         def basic_auth
@@ -27,7 +39,7 @@ module Puavo
         end
 
         def url_prefix
-          (ssl ? 'https' : 'http') + "://" + @subdomain
+          (ssl ? 'https' : 'http') + "://" + @domain
         end
 
         class << self

@@ -581,11 +581,7 @@ class Control
 
   # Write updatable Puavo attributes to /etc/puavo
   def self.update
-    puavo = Puavo::Client::Base.new(
-      PUAVO_ETC.domain,
-      PUAVO_ETC.ldap_dn,
-      PUAVO_ETC.ldap_password
-    )
+    puavo = Puavo::Client::Base.new
 
     if PUAVO_ETC.hosttype == "ltspserver"
       device_info = puavo.servers.find_by_id(PUAVO_ETC.id)
