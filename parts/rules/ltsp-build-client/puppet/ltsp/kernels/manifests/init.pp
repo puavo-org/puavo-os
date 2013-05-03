@@ -16,7 +16,7 @@ class kernels {
     $filename = $title
 
     file {
-      "/boot/$filename":
+      "/boot/$filename-edge":
        ensure => link,
        target => "${filename}-${kernels::edge_kernel}";
     }
@@ -33,7 +33,7 @@ class kernels {
       }
 
       edge_kernel_link {
-        [ 'initrd.img-edge', 'nbi.img-edge', 'vmlinuz-edge', ]:
+        [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
           require => Packages::Kernel_package_for_version[$edge_kernel];
       }
 
