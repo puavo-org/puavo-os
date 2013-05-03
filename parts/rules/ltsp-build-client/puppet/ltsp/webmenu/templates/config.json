@@ -1,47 +1,4 @@
 {
-  "dotDesktopSearchPaths": [
-    "/usr/share/applications",
-    "/usr/share/applications/kde4"
-  ],
-  "iconSearchPaths": [
-    "/usr/share/app-install/icons",
-    "/usr/share/pixmaps",
-    "/usr/share/icons/hicolor/128x128/apps",
-    "/usr/share/icons/Neu/128x128/categories",
-    "/usr/share/icons/Faenza/categories/64",
-    "/usr/share/icons/Faenza/apps/96"
-  ],
-  "fallbackIcon":  "/usr/share/icons/Gion/128x128/apps/gnome-terminal.png",
-  "settingsCMD": {
-    "type": "desktop",
-    "command": ["gnome-control-center"],
-    "name": {
-      "fi": "Järjestelmäasetukset",
-      "en": "System Settings",
-      "sv": "Systeminställningar"
-    },
-    "osIconPath": "/usr/share/icons/Faenza/categories/96/applications-system.png"
-  },
-  "profileCMD": {
-    "type": "webWindow",
-    "url": "http://toimisto.opinsys.fi",
-    "name": {
-      "fi": "Profiili",
-      "en": "Profile",
-      "sv": "Profil"
-    },
-    "osIconPath": "/usr/share/icons/Faenza/emblems/96/emblem-personal.png"
-  },
-  "supportCMD": {
-    "type": "web",
-    "url": "http://www.opinsys.fi",
-    "name": {
-      "fi": "Tukisivusto",
-      "en": "Support",
-      "sv": "Stöd"
-    },
-    "osIconPath": "/usr/share/icons/Faenza/status/96/dialog-question.png"
-  },
   "passwordCMD": {
     "type": "webWindow",
     "url": "https://{{puavoDomain}}/users/password/own",
@@ -60,36 +17,4 @@
     "puavo-ltsp-client-action",
     "--reboot"
   ],
-  "sleepCMD": [
-    "dbus-send",
-    "--system",
-    "--print-reply",
-    "--dest=org.freedesktop.UPower",
-    "/org/freedesktop/UPower",
-    "org.freedesktop.UPower.Suspend"
-  ],
-  "hibernateCMD": [
-    "dbus-send",
-    "--system",
-    "--print-reply",
-    "--dest=org.freedesktop.UPower",
-    "/org/freedesktop/UPower",
-    "org.freedesktop.UPower.Hibernate"
-  ],
-  "logoutCMD": [
-    "dbus-send",
-    "--session",
-    "--type=method_call",
-    "--print-reply",
-    "--dest=org.gnome.SessionManager",
-    "/org/gnome/SessionManager",
-    "org.gnome.SessionManager.Logout",
-    "uint32:1"
-  ],
-  "lockCMD": [
-    "gnome-screensaver-command",
-    "--lock"
-  ],
-  "maxFavorites": 5,
-  "port": 1337
 }
