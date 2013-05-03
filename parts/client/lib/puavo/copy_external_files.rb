@@ -11,16 +11,13 @@ module Puavo
       Dir.entries(dirpath).each do |name|
         begin
           File.open(File.join(dirpath, name), "rb") do |f|
-
             sha1 = Digest::SHA1.new
 
             while data = f.read(512)
               sha1.update(data)
             end
 
-            file_hashes[name] = {
-              :data_hash => sha1.hexdigest
-            }
+            file_hashes[name] = { :data_hash => sha1.hexdigest }
           end
         rescue Errno::EISDIR
         end
