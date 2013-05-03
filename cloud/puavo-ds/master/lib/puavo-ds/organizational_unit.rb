@@ -35,7 +35,8 @@ class OrganizationalUnit < LdapOrganisationBase
     ['Applications',
      'Bookmarks',
      'Services',
-     'Firefox'].each do |ou|
+     'Firefox',
+     'Files'].each do |ou|
       OrganizationalUnit.create( "ou" => ou )
     end
 
