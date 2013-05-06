@@ -7,6 +7,14 @@ can safely be skipped if the corresponding functionality is not needed.
 These settings have been tested with Ubuntu version 12.04.
 
 
+Networking
+----------
+
+Right now puavo-ltsp-bootserver presumes that an interface named ltsp0 must
+exist, and that is the interface to ltsp-network.  Create at least "ltsp0"
+into /etc/network/interfaces.  An interface named "wlan0" is also recommended.
+
+
 Cups
 ----
 
