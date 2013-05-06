@@ -83,7 +83,6 @@ wait_for_slapd_sync() {
   echo
 }
 
-install -m 644 --backup=numbered "$PUAVO_BOOTSERVER_TEMPLATEDIR/etc/pam.d/common-password" /etc/pam.d/common-password
 setup_root_passwd
 apt-get update
 apt-get -y dist-upgrade

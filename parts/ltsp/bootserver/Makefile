@@ -58,9 +58,6 @@ install : bin/puavo-bootserver-installdirs installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/samba \
 		templates/etc/samba/smb.conf
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/pam.d \
-		templates/etc/pam.d/common-password
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/network \
 		templates/etc/network/interfaces
 
