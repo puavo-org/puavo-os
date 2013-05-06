@@ -45,13 +45,6 @@ setup_network() {
     read answer
 }
 
-setup_root_passwd() {
-    echo 'Set root passwd? [y/N]'
-    read set_root_passwd
-    [ "$set_root_passwd" = "y" ] && su -c passwd
-    true
-}
-
 setup_nbd_exports() {
     mkdir -p /opt/ltsp/images
     for devimgname in i386 precise testing; do
@@ -83,7 +76,6 @@ wait_for_slapd_sync() {
   echo
 }
 
-setup_root_passwd
 apt-get update
 apt-get -y dist-upgrade
 setup_network
