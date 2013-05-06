@@ -27,7 +27,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(templatedir)/etc/network
 	mkdir -p $(DESTDIR)$(templatedir)/etc/pam.d
 	mkdir -p $(DESTDIR)$(templatedir)/etc/samba
-	mkdir -p $(DESTDIR)$(templatedir)/etc/sssd
 	mkdir -p $(DESTDIR)$(templatedir)/var/lib/bind
 
 .PHONY : bin/puavo-bootserver-installdirs
@@ -47,8 +46,7 @@ install : bin/puavo-bootserver-installdirs installdirs
 		templates/etc/apparmor.d/local/usr.sbin.dhcpd
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc \
-		templates/etc/dnsmasq.conf \
-		templates/etc/nsswitch.conf
+		templates/etc/dnsmasq.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/dhcp \
 		templates/etc/dhcp/dhcpd.conf
@@ -62,9 +60,6 @@ install : bin/puavo-bootserver-installdirs installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/pam.d \
 		templates/etc/pam.d/common-password
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/sssd \
-		templates/etc/sssd/sssd.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/network \
 		templates/etc/network/interfaces
