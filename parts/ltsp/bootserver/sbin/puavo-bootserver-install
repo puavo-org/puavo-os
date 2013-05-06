@@ -40,11 +40,6 @@ Press ENTER when ready."
     puavo-init-kdc-slave --force
 }
 
-setup_network() {
-    echo "Fix your network settings and reboot, otherwise press ENTER to continue."
-    read answer
-}
-
 setup_nbd_exports() {
     mkdir -p /opt/ltsp/images
     for devimgname in i386 precise testing; do
@@ -78,7 +73,6 @@ wait_for_slapd_sync() {
 
 apt-get update
 apt-get -y dist-upgrade
-setup_network
 [ -d /etc/puavo ] || puavo-register
 setup_ds_slave
 puavo-bootserver-setup-pxe
