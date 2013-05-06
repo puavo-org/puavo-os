@@ -96,7 +96,6 @@ puavo-create-kvm-ltsp-server "$(cat /etc/puavo/hostname)-ltsp1"
 cat <<EOF > /etc/puavo/primary_ltsp_server
 $(cat /etc/puavo/hostname)-ltsp1
 EOF
-adduser dhcpd puavo
 cat <<EOF > /etc/puavo/ldap/slave
 $(cat /etc/puavo/hostname).$(cat /etc/puavo/domain)
 EOF
