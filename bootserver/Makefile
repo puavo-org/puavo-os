@@ -4,6 +4,7 @@ bindir = $(exec_prefix)/bin
 sbindir = $(exec_prefix)/sbin
 datarootdir = $(prefix)/share
 templatedir = $(datarootdir)/puavo-ltsp-bootserver/templates
+sysconfdir = $(prefix)/etc
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -16,6 +17,7 @@ all :
 installdirs :
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)$(sysconfdir)/sudoers.d
 	mkdir -p $(DESTDIR)$(templatedir)/etc/apparmor.d/local
 	mkdir -p $(DESTDIR)$(templatedir)/etc/bind
 	mkdir -p $(DESTDIR)$(templatedir)/etc/default
@@ -35,6 +37,9 @@ bin/puavo-bootserver-installdirs :
 
 .PHONY : install
 install : bin/puavo-bootserver-installdirs installdirs
+	$(INSTALL) -m 440 -t $(DESTDIR)$(sysconfdir)/sudoers.d \
+		etc/sudoers.d/puavo-bootserver
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir) \
 		templates/ltsp-server.xml
 

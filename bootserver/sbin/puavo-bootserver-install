@@ -97,10 +97,6 @@ cat <<EOF > /etc/puavo/primary_ltsp_server
 $(cat /etc/puavo/hostname)-ltsp1
 EOF
 adduser dhcpd puavo
-cat <<EOF > /etc/sudoers.d/puavo-bootserver
-dhcpd ALL=(ALL) NOPASSWD: /bin/cat /etc/puavo/ldap/password
-EOF
-chmod 0440 /etc/sudoers.d/puavo-bootserver
 cat <<EOF > /etc/puavo/ldap/slave
 $(cat /etc/puavo/hostname).$(cat /etc/puavo/domain)
 EOF
