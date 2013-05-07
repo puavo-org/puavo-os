@@ -30,6 +30,11 @@ You should also either restart nbd-server in case it does not support
 re-reading configuration files after SIGHUP (this depends on its version).
 Note that restarting nbd-server will cut off existing nbd connections.
 
+Setup PXE-boot by creating /var/lib/tftpboot and copying the necessary files
+there:
+
+  puavo-bootserver-setup-pxe
+
 
 NFS-setup
 ---------
@@ -138,6 +143,20 @@ You may also want to configure something like:
 
 to /etc/ldap/ldap.conf for ldapsearch and other ldap-tools to work,
 but this should not be strictly necessary.
+
+
+Virtual LTSP-servers and thinclients
+------------------------------------
+
+If you need to serve thinclients (and not just fatclients), and you
+do not have physical machines (other than the bootserver)) to do this,
+you should setup a KVM virtual machine.  For example, you can create a
+machine named "ltsp1", with:
+
+  puavo-create-kvm-ltsp-server ltsp1
+
+Then putting the line "ltsp1" to /etc/puavo/primary_ltsp_server should be a
+good idea (this makes the created ltsp server the default ltsp server).
 
 
 Cups
