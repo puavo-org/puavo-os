@@ -2,12 +2,34 @@
 
 set -e
 
-find /opt/ltsp/images -maxdepth 1 -name '*.img' -type f -or -type l -printf '%f\n' \
-  | while read filename; do
+do_sighup=false
+
+handle_imagefiles() {
+  while read filename; do
     image=$(echo "$filename" | sed s'/\(.*\)\.img/\1/')
-    cat <<EOF | sudo tee /etc/nbd-server/conf.d/${image}.conf > /dev/null
+
+    conf=/etc/nbd-server/conf.d/${image}.conf
+    tmpconf=$conf.tmp
+
+    cat <<EOF > $tmpconf
 [${image}]
     exportname = /opt/ltsp/images/${filename}
     readonly = true
 EOF
-done
+
+    if cmp $conf $tmpconf 2>/dev/null; then
+      rm -f $tmpconf
+    else
+      mv $tmpconf $conf
+      do_sighup=true
+    fi
+  done
+}
+
+find /opt/ltsp/images \
+  -maxdepth 1 -name '*.img' -type f -or -type l -printf '%f\n' \
+    | handle_imagefiles
+
+if $do_sighup; then
+  pkill -HUP -x nbd-server
+fi
