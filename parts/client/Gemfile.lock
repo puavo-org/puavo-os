@@ -1,18 +1,16 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    facter (1.6.17)
-    highline (1.6.15)
-    httparty (0.10.2)
+    highline (1.6.18)
+    httparty (0.11.0)
       multi_json (~> 1.0)
       multi_xml (>= 0.5.2)
-    multi_json (1.6.1)
+    multi_json (1.7.3)
     multi_xml (0.5.3)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  facter
   highline
   httparty
