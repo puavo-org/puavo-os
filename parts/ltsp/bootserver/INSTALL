@@ -7,6 +7,19 @@ can safely be skipped if the corresponding functionality is not needed.
 These settings have been tested with Ubuntu version 12.04.
 
 
+Puavo-registration
+------------------
+
+You should register the bootserver to puavo with (run as root):
+
+  puavo-register
+
+This will create some files under /etc/puavo.
+
+Make sure that the bootserver's hostname matches the hostname used in
+registration.
+
+
 Networking
 ----------
 
