@@ -15,23 +15,20 @@ exist, and that is the interface to ltsp-network.  Create at least "ltsp0"
 into /etc/network/interfaces.  An interface named "wlan0" is also recommended.
 
 
-Cups
-----
+LTSP-images
+-----------
 
-To setup cups to work with Puavo certificates do edit
-/etc/apparmor.d/local/usr.sbin.cupsd to contain the line:
+You should put some LTSP-images to /opt/ltsp/images for nbd-server to serve.
+Do:
 
-  /etc/puavo/certs/* r,
+  mkdir -p /opt/ltsp/images
+  cp $YOUR_DEFAULT_LTSP_IMAGE /opt/ltsp/images/i386.img	# i386.img = default
+  cp $YOUR_OTHER_LTSP_IMAGE   /opt/ltsp/images/other.img
+  puavo-bootserver-generate-nbd-exports
 
-Also do edit the /etc/cups/cupsd.conf file to contain the lines:
-
-  ServerCertificate /etc/puavo/certs/host.crt
-  ServerKey /etc/puavo/certs/host.key
-
-Do restart apparmor and cups server:
-
-  sudo service apparmor restart
-  sudo service cups restart
+You should also either restart nbd-server in case it does not support
+re-reading configuration files after SIGHUP (this depends on its version).
+Note that restarting nbd-server will cut off existing nbd connections.
 
 
 NFS-setup
@@ -116,3 +113,25 @@ to the effect of:
   ldap_search_base = FILL_IN_YOUR_LDAP_BASE_AT_/etc/puavo/ldap/base
   krb5_store_password_if_offline = true
   ldap_user_fullname = displayName
+
+
+
+Cups
+----
+
+To setup cups to work with Puavo certificates do edit
+/etc/apparmor.d/local/usr.sbin.cupsd to contain the line:
+
+  /etc/puavo/certs/* r,
+
+Also do edit the /etc/cups/cupsd.conf file to contain the lines:
+
+  ServerCertificate /etc/puavo/certs/host.crt
+  ServerKey /etc/puavo/certs/host.key
+
+Do restart apparmor and cups server:
+
+  sudo service apparmor restart
+  sudo service cups restart
+
+
