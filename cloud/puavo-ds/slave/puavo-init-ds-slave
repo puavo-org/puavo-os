@@ -1,0 +1,57 @@
+#!/bin/sh
+
+set -e
+
+. puavo-ds-installdirs
+
+wait_for_slapd_sync() {
+  # it's a hack...
+
+  echo "Waiting for slapd to sync all data from ldap master."
+  echo "This may take a while."
+
+  _previous_linecount=-1
+  _current_linecount=0
+  while [ "$_previous_linecount" -ne "$_current_linecount" ]; do
+    if [ "$_current_linecount" -gt 0 ]; then
+      echo "Still waiting... the magic number is $_current_linecount now."
+    fi
+
+    sleep 10
+    _previous_linecount=$_current_linecount
+    _current_linecount=$(slapcat | wc -l)
+  done
+
+  echo "LDAP database in now in sync."
+  echo
+}
+
+install -o root -g root -m 644 \
+  "$PUAVO_DS_TEMPLATEDIR/etc/default/slapd" /etc/default/slapd
+install -o root -g root -m 755 \
+  "$PUAVO_DS_TEMPLATEDIR/etc/init.d/slapd" /etc/init.d
+install -o root -g root -m 644 \
+  "$PUAVO_DS_TEMPLATEDIR/etc/default/krb5-kdc" /etc/default
+install -o root -g root -m 755 \
+  "$PUAVO_DS_TEMPLATEDIR/etc/init.d/krb5-kdc" /etc/init.d
+install -o root -g root -m 644 \
+  "$PUAVO_DS_TEMPLATEDIR/etc/init/puavo-krb5-kdc.conf" /etc/init
+
+puavo-init-ldap-slave --force
+echo "Run following commands as a root in your LDAP-master:
+(if you have not already done so)
+
+  FQDN=$(cat /etc/puavo/hostname).$(cat /etc/puavo/domain)
+  REALM=$(cat /etc/puavo/kerberos/realm)
+  kadmin.local -r \${REALM} -q \"addprinc -randkey ldap/\${FQDN}\"
+  kadmin.local -r \${REALM} -q \"addprinc -randkey host/\${FQDN}\"
+  kadmin.local -r \${REALM} -q \"addprinc -randkey IPP/\${FQDN}\"
+  kadmin.local -r \${REALM} -q \"addprinc -randkey cifs/\${FQDN}\"
+  kadmin.local -r \${REALM} -q \"addprinc -randkey nfs/\${FQDN}\"
+
+  Press ENTER when ready."
+
+read ready
+
+wait_for_slapd_sync
+puavo-init-kdc-slave --force
