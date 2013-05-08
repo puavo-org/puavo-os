@@ -1,4 +1,5 @@
 PUPPET_USE_CLASSES="
+  apt_ltspbuild_proxy
   autopoweroff
   console
   kernels
