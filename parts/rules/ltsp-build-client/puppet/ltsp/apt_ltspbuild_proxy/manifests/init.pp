@@ -10,7 +10,7 @@ class apt_ltspbuild_proxy {
 
     # removes the file "/etc/apt/apt.conf.d/00ltspbuild-proxy" (above) at boot
     '/etc/init/remove-apt-proxy.conf':
-      content => template('apt/remove-apt-proxy.conf');
+      content => template('apt_ltspbuild_proxy/remove-apt-proxy.conf');
 
     '/etc/init.d/remove-apt-proxy':
       ensure => link,
