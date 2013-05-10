@@ -76,7 +76,7 @@ class PuavoEtc
     begin
       return puavo_development_url
     rescue Errno::ENOENT
-      return "https://#{ puavo_domain }"
+      return "https://#{ domain }"
     end
   end
 
