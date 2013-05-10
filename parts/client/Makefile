@@ -27,6 +27,7 @@ install-dirs:
 install: install-dirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-lts
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-register
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-sync-external-files
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
 
 clean:

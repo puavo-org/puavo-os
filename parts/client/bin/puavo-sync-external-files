@@ -1,0 +1,96 @@
+#!/usr/bin/env ruby1.9.1
+
+require "optparse"
+require "fileutils"
+require "digest/sha1"
+require "rest-client"
+require "json"
+require "puavo"
+
+options = {}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: #{ File.basename(__FILE__) } [options] [target]"
+
+  opts.on("-s", "--server [SERVER]", "Puavo REST server URI") do |server|
+    options[:server] = server
+  end
+
+  opts.on("-o", "--organisation [ORGANISATION]", "Orgsanisation key. Example 'hogwarts'") do |organisation|
+    options[:organisation] = organisation
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    STDERR.puts opts
+    exit
+  end
+
+end
+parser.parse!
+
+options[:target] = ARGV[0] || "/state/external_files"
+options[:organisation] ||= PUAVO_ETC.domain.match(/^(.*?)\./)[1]
+options[:server] ||= "https://api.opinsys.fi"
+
+def read_current_files(dirpath)
+  Dir.entries(dirpath).map do |name|
+    begin
+      File.open(File.join(dirpath, name), "rb") do |f|
+        sha1 = Digest::SHA1.new
+
+        while data = f.read(512)
+          sha1.update(data)
+        end
+
+        {
+          "name" => name,
+          "data_hash" => sha1.hexdigest
+        }
+      end
+    rescue Errno::EISDIR
+    end
+  end.compact
+end
+
+# Rest client, sorry :(
+class ExternalFiles < RestClient::Resource
+  def get_json(*args)
+    JSON.parse(get(*args))
+  end
+
+  def index
+    self["/external_files"].get_json
+  end
+
+  def data(name)
+    self["/external_files/#{ name }"].get
+  end
+
+  def metadata(name)
+    self["/external_files/#{ name }/metadata"].get_json
+  end
+end
+
+def main(options)
+
+  FileUtils.mkdir_p(options[:target])
+  current_files = read_current_files(options[:target])
+
+  ef_root = URI.join(options[:server], "/v3/", organisation[:organisation]).to_s
+  ef = ExternalFiles.new(ef_root)
+  ef.index.each do |meta|
+    next if current_files.include?(meta)
+
+    file_path = File.join(target_dir, meta["name"])
+
+    File.open(file_path, "w") do |f|
+      STDERR.puts "Writing file #{ file_path }"
+      f.write(ef.data(meta["name"]))
+    end
+  end
+end
+
+if __FILE__ == $0
+  main(options)
+end
+
