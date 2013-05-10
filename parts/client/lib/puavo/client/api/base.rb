@@ -38,7 +38,6 @@ module Puavo
 
         def url_prefix
           if @domain
-            puts "Domain #{ @domain }"
             (ssl ? 'https' : 'http') + "://" + @domain
           else
             PUAVO_ETC.resolve_puavo_url
