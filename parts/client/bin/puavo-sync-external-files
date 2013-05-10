@@ -76,7 +76,7 @@ def main(options)
   FileUtils.mkdir_p(options[:target])
   current_files = read_current_files(options[:target])
 
-  ef_root = URI.join(options[:server], "/v3/", organisation[:organisation]).to_s
+  ef_root = URI.join(options[:server], "/v3/", options[:organisation]).to_s
   ef = ExternalFiles.new(ef_root)
   ef.index.each do |meta|
     next if current_files.include?(meta)
