@@ -79,12 +79,15 @@ def main(options)
   ef_root = URI.join(options[:server], "/v3/", options[:organisation]).to_s
   ef = ExternalFiles.new(ef_root)
   ef.index.each do |meta|
-    next if current_files.include?(meta)
+    file_path = File.join(options[:target], meta["name"])
 
-    file_path = File.join(target_dir, meta["name"])
+    if current_files.include?(meta)
+      STDERR.puts "OK #{ file_path } #{ meta["data_hash"] }"
+      next
+    end
 
     File.open(file_path, "w") do |f|
-      STDERR.puts "Writing file #{ file_path }"
+      STDERR.puts "Writing #{ file_path } #{ meta["data_hash"] }"
       f.write(ef.data(meta["name"]))
     end
   end
