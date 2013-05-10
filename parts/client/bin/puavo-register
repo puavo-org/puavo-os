@@ -36,6 +36,8 @@ Hosttype_path   = "#{ Puavodir }/hosttype"
 
 class Tools
 
+  @@nocolor = false
+
   def self.nocolor
     @@nocolor
   end
@@ -150,7 +152,7 @@ class RegisterUserInterface
     @username        = @cmdline_params['username']
     @password        = @cmdline_params['password']
 
-    Tools.nocolor = @cmdline_params['nocolor'] ? true : false
+    Tools.nocolor = !!@cmdline_params['nocolor']
 
     facts = Facter.to_hash
 
