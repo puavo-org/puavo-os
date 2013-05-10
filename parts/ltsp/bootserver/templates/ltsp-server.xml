@@ -19,11 +19,10 @@
   <on_crash>restart</on_crash>
   <devices>
     <emulator>/usr/bin/kvm</emulator>
-    <disk type='file' device='disk'>
+    <disk type='block' device='disk'>
       <driver name='qemu' type='raw'/>
-      <source file='/virtual/<%= @kvm_name %>.raw'/>
-      <target dev='hda' bus='ide'/>
-      <address type='drive' controller='0' bus='0' target='0' unit='0'/>
+      <source dev='/dev/ltsp/<%= @kvm_name %>'/>
+      <target dev='vda' bus='virtio'/>
     </disk>
     <controller type='usb' index='0'>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x2'/>
