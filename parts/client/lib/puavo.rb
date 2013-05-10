@@ -36,5 +36,3 @@ require 'puavo/client/user'
 require 'puavo/client/organisation'
 require 'puavo/client/server'
 require 'puavo/client/external_file'
-
-require 'puavo/copy_external_files'
