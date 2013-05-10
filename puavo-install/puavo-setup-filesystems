@@ -147,7 +147,7 @@ module QueryDiskInfo
     until disk_devices.include?(chosen_disk_device) do
       disk_devices = IO.readlines('/proc/partitions') \
                      .map { |s| s.split(' ')[3] }     \
-                     .select { |s| s && s.match(/^sd[a-z]$/) }
+                     .select { |s| s && s.match(/^[vs]d[a-z]$/) }
 
       puts '-----'
       puts "This machine has the following disk devices:\n"
