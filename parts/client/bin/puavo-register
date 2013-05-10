@@ -45,7 +45,7 @@ class Tools
   end
 
   def self.colormsg(msg, tag, color)
-    if nocolor
+    if @@nocolor
       puts "*** #{ tag }: #{ msg }"
     else
       HighLine.say(HighLine.new.color("*** #{ tag }: #{ msg }", color))
