@@ -25,15 +25,12 @@
       <target dev='vda' bus='virtio'/>
     </disk>
     <controller type='usb' index='0'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x2'/>
     </controller>
     <controller type='ide' index='0'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x1'/>
     </controller>
     <interface type='bridge'>
       <mac address='<%= @kvm_mac %>'/>
       <source bridge='ltsp0'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
       <model type='virtio'/>
     </interface>
     <serial type='pty'>
@@ -43,7 +40,6 @@
       <target type='serial' port='0'/>
     </console>
     <memballoon model='virtio'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
     </memballoon>
   </devices>
 </domain>
