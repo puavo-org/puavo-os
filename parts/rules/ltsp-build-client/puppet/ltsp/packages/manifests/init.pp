@@ -758,15 +758,11 @@ class packages {
   case $lsbdistcodename {
     'quantal': {
       kernel_package_for_version {
-        '3.6.6-999-generic':
-          package_tag => 'opinsys';
-
-        [ '3.8.8.opinsys1'
-        , '3.8.11.opinsys1' ]:
+        [ '3.8.13.opinsys1'
+        , '3.9.2.opinsys1'  ]:
           package_tag => 'opinsys',
           with_extra  => false;
       }
     }
-
   }
 }
