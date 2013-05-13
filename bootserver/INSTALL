@@ -49,6 +49,21 @@ there:
   puavo-bootserver-setup-pxe
 
 
+DNS-setup
+---------
+
+For dynamic DNS setup to work, one should have either of the two lines
+in /etc/sudoers (edit it with visudo(8)):
+
+  dhcpd ALL=(ALL) NOPASSWD: /bin/cat /etc/puavo/ldap/password
+
+OR:
+
+  #includedir /etc/sudoers.d
+ 
+  (TODO: more of this should be documented...)
+
+
 NFS-setup
 ---------
 
