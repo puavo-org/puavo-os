@@ -27,7 +27,7 @@ EOF
 }
 
 find /opt/ltsp/images \
-  -maxdepth 1 -name '*.img' -type f -or -type l -printf '%f\n' \
+  -maxdepth 1 -name '*.img' '(' -type f -or -type l ')' -printf '%f\n' \
     | handle_imagefiles
 
 if $do_sighup; then
