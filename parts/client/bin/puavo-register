@@ -601,7 +601,7 @@ class Control
   def self.update
     puavo = Puavo::Client::Base.new
 
-    if PUAVO_ETC.hosttype == "ltspserver"
+    if ["ltspserver", "bootserver"].include?(PUAVO_ETC.hosttype)
       device_info = puavo.servers.find_by_id(PUAVO_ETC.id)
     else
       device_info = puavo.devices.find_by_id(PUAVO_ETC.id)
