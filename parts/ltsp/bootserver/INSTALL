@@ -206,3 +206,15 @@ Do restart apparmor and cups server:
   sudo service cups restart
 
 
+Clock sync
+----------
+
+There is some code in puavo-ltsp-client to synchronise ltsp client clocks
+from server.  To make use of this you need to uncomment the following line
+in /etc/inetd.conf:
+
+  time           stream  tcp     nowait  root    internal
+
+Then restart inetd:
+
+  sudo service openbsd-inetd restart
