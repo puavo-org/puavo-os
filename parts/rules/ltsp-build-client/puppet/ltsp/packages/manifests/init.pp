@@ -40,6 +40,7 @@ class packages {
     , 'pv'
     , 'pwgen'
     , 'sl'
+    , 'strace'
     , 'sudo'
     , 'tmux'
     , 'tshark'
