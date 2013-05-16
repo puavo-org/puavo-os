@@ -118,6 +118,8 @@ module Puavo
         
       end
 
+      return nil if result.empty?
+
       result
     end
 
