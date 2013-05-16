@@ -138,5 +138,14 @@ module Puavo
       filter.gsub(ESCAPES_RE) { |char| "\\" + ESCAPES[char] }
     end
 
+    def all_bases
+      @conn.search("", LDAP::LDAP_SCOPE_BASE, "(objectClass=*)", ["namingContexts"]) do |e|
+        return e.get_values("namingContexts")
+      end
+    end
+
+    def unbind
+      @conn.unbind
+    end
   end
 end
