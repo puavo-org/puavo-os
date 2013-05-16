@@ -125,6 +125,9 @@ class packages {
     , 'xserver-xorg-video-all' ]:
       tag => [ 'drivers', 'ubuntu', ];
 
+    [ 'opinsys-linux-firmware' ]:
+      tag => [ 'drivers', 'opinsys', ];
+
     [ 'wine' ]:
       tag => [ 'emulation', 'ubuntu', ];
 
