@@ -125,11 +125,12 @@ class HostCertificate
     @csr.to_pem
   end
 
-  def write_to_filesystem(certpath, keypath, rootcapath, orgcabundlepath)
-    File.open(certpath,        'w', 0444) { |f| f.print @crt.to_pem  }
-    File.open(keypath,         'w', 0400) { |f| f.print @key.to_pem  }
-    File.open(rootcapath,      'w', 0444) { |f| f.print @rootca      }
-    File.open(orgcabundlepath, 'w', 0444) { |f| f.print @orgcabundle }
+  def write_to_filesystem(certpath, keypath, rootcapath, hostorgcabundlepath, orgcabundlepath)
+    File.open(certpath,            'w', 0444) { |f| f.print @crt.to_pem                 }
+    File.open(keypath,             'w', 0400) { |f| f.print @key.to_pem                 }
+    File.open(rootcapath,          'w', 0444) { |f| f.print @rootca                     }
+    File.open(hostorgcabundlepath, 'w', 0444) { |f| f.print @crt.to_pem + @orgcabundle  }
+    File.open(orgcabundlepath,     'w', 0444) { |f| f.print @orgcabundle                }
 
     Tools.goodmsg('Certificates have been written to filesystem.')
   end
@@ -561,6 +562,7 @@ class Control
       cert.write_to_filesystem("#{ Puavodir }/certs/host.crt",
                                 "#{ Puavodir }/certs/host.key",
                                 "#{ Puavodir }/certs/rootca.pem",
+                                "#{ Puavodir }/certs/hostorgcabundle.pem",
                                 "#{ Puavodir }/certs/orgcabundle.pem")
     end
 
