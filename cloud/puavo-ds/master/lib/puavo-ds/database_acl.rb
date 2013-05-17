@@ -333,7 +333,6 @@ class LdapAcl
       [ Hosts.exact,												Rule.read(Set.all_admins,
 															  PuavoUid.puppet,
 															  PuavoUid.monitor),
-														'by',				# XXX this is most probably a bug, does it have any implications?
 														Rule.read(Set.devices,
 															  Set.servers,
 															  People.children),							],
