@@ -173,13 +173,13 @@ class Set
   end
 
   # self.sysgroups
-  def self.addressbook  ; sysgroup('addressbook')  ; end
-  def self.auth         ; sysgroup('auth')         ; end
-  def self.devices      ; sysgroup('devices')      ; end
-  def self.orginfo      ; sysgroup('orginfo')      ; end
-  def self.printerqueues; sysgroup('printerqueues'); end
-  def self.printers     ; sysgroup('printers')     ; end
-  def self.servers      ; sysgroup('servers')      ; end
+  def self.externalservice_addressbook  ; sysgroup('addressbook')  ; end
+  def self.externalservice_auth         ; sysgroup('auth')         ; end
+  def self.externalservice_devices      ; sysgroup('devices')      ; end
+  def self.externalservice_orginfo      ; sysgroup('orginfo')      ; end
+  def self.externalservice_printerqueues; sysgroup('printerqueues'); end
+  def self.externalservice_printers     ; sysgroup('printers')     ; end
+  def self.externalservice_servers      ; sysgroup('servers')      ; end
 end
 
 def attrs(attr_list)
@@ -232,24 +232,24 @@ class LdapAcl
 					 objectClass)),								Rule.read(Set.syncrepl,
 															  Set.owner_and_user,
 															  People.children,
-															  Set.printerqueues),							],
+															  Set.externalservice_printerqueues),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Printers.exact,		attrs(%w(children)),			Rule.write(Set.owner_and_user,
 										   Hosts.servers.children),	Rule.read(People.children,
 															  PuavoUid.slave,
-															  Set.printerqueues),							],
+															  Set.externalservice_printerqueues),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Printers.children,						Rule.write(Set.owner_and_user,
 										   Hosts.servers.children),	Rule.read(People.children,
 															  PuavoUid.slave,
-															  Set.printerqueues),							],
+															  Set.externalservice_printerqueues),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ LdapDn.new.subtree,											Rule.read(Set.syncrepl),		RuleBreak.none('*'),			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.exact,		attrs(%w(entry
 				      ou
 				      objectClass)),								Rule.read(Set.getent,
-															  Set.auth,
+															  Set.externalservice_auth,
 															  PuavoUid.puavo),		Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.exact,		attrs(%w(children)),			Rule.write(Set.all_admins),		Rule.read(PuavoUid.puavo),							],
@@ -282,7 +282,7 @@ class LdapAcl
 					 objectClass
 					 puavoEduPersonAffiliation)),	Rule.write(Set.admin),			Rule.read(PuavoUid.puavo('dn'),
 															  Set.getent,
-															  Set.auth),			Rule.perms('auth', 'anonymous'),	],
+															  Set.externalservice_auth),			Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(uidNumber
 					 gidNumber
@@ -301,14 +301,14 @@ class LdapAcl
 									Rule.write(Set.admin),			Rule.read(People.children,
 															  Hosts.subtree,
 															  Set.sysgroup('getent'),
-															  Set.addressbook),							],
+															  Set.externalservice_addressbook),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(puavoEduPersonPersonnelNumber)),
-									Rule.write(Set.admin),			Rule.read(Set.addressbook),							],
+									Rule.write(Set.admin),			Rule.read(Set.externalservice_addressbook),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(mail
 					 telephoneNumber)),		Rule.write(Set.admin,
-										   'self'),			Rule.read(Set.addressbook),							],
+										   'self'),			Rule.read(Set.externalservice_addressbook),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 																			# XXX odd
       [ People.subtree,		attrs(%w(puavoAcceptedTerms)),		Rule.write(Set.admin),			Rule.read(PuavoUid.puavo),		Rule.write('self'),			],
@@ -333,8 +333,8 @@ class LdapAcl
       [ Hosts.exact,												Rule.read(Set.all_admins,
 															  PuavoUid.puppet,
 															  PuavoUid.monitor),
-														Rule.read(Set.devices,
-															  Set.servers,
+														Rule.read(Set.externalservice_devices,
+															  Set.externalservice_servers,
 															  People.children),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.devices.exact,	attrs(%w(entry
@@ -342,12 +342,12 @@ class LdapAcl
 					 objectClass)),								Rule.read(Set.all_admins,
 															  PuavoUid.puppet,
 															  PuavoUid.monitor,
-															  Set.devices,
+															  Set.externalservice_devices,
 															  People.children),       	Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.devices.exact,	attrs(%w(children)),			Rule.write(Set.all_admins),		Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
-															  Set.devices,
+															  Set.externalservice_devices,
 															  People.children),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.devices.children,	attrs(%w(entry
@@ -355,27 +355,27 @@ class LdapAcl
 					 puavoHostname
 					 puavoTag)),			Rule.write(Set.admin),			Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
-															  Set.devices,
+															  Set.externalservice_devices,
 															  People.children),		Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.devices.children,						Rule.write(Set.admin),			Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
-															  Set.devices),			Rule.perms('auth', 'anonymous'),	],
+															  Set.externalservice_devices),			Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.servers.exact,	attrs(%w(entry
 					 ou
 					 objectClass)),								Rule.read(Set.owner_and_user,
 															  PuavoUid.puppet,
 															  PuavoUid.monitor,
-															  Set.servers),			Rule.perms('auth', 'anonymous'),	],
+															  Set.externalservice_servers),			Rule.perms('auth', 'anonymous'),	],
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.servers.exact,	attrs(%w(children)),			Rule.write(Set.owner_and_user),		Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
-															  Set.servers),								],
+															  Set.externalservice_servers),								],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.servers.children,						Rule.write(Set.owner_and_user),		Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
-															  Set.servers),
+															  Set.externalservice_servers),
 														RuleBreak.none(Set.laptops),		Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.servers.children,	attrs(%w(entry
@@ -494,7 +494,7 @@ class LdapAcl
 															  PuavoUid.puppet,
 															  PuavoUid.monitor,
 															  Set.getent,
-															  Set.orginfo),			Rule.perms('+sxd', '*'),		],
+															  Set.externalservice_orginfo),			Rule.perms('+sxd', '*'),		],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ LdapDn.new.dn,		attrs(%w(objectClass)),								Rule.read(Set.all_admins,
 															  PuavoUid.puavo,
@@ -503,7 +503,7 @@ class LdapAcl
 															  PuavoUid.puppet,
 															  PuavoUid.monitor,
 															  Set.getent,
-															  Set.orginfo),			Rule.perms('+sxd', '*'),		],
+															  Set.externalservice_orginfo),			Rule.perms('+sxd', '*'),		],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ LdapDn.new.dn,		attrs(%w(puavoEduOrgAbbreviation
 					 st
@@ -528,7 +528,7 @@ class LdapAcl
 															  PuavoUid.puppet,
 															  PuavoUid.monitor,
 															  Set.getent,
-															  Set.orginfo),			Rule.perms('+sxd', '*'),		],
+															  Set.externalservice_orginfo),			Rule.perms('+sxd', '*'),		],
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ LdapDn.new.dn,		attrs(%w(owner
@@ -537,7 +537,7 @@ class LdapAcl
 															  PuavoUid.puavo,
 															  PuavoUid.puppet,
 															  PuavoUid.monitor,
-															  Set.orginfo),								],
+															  Set.externalservice_orginfo),								],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ LdapDn.new.dn,												Rule.read(Set.all_admins,
 															  PuavoUid.puavo,
