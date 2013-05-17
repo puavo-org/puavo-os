@@ -135,6 +135,10 @@ class Set
     [ school_admin, owner_and_user, ]
   end
 
+  def self.hosts
+    [ Hosts.subtree ]
+  end
+
   def self.getent
     [ People.children, Hosts.subtree, sysgroup('getent'), ]
   end
