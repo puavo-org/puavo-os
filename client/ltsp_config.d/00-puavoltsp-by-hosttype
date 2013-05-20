@@ -117,6 +117,7 @@ case "$PUAVO_HOSTTYPE" in
     ;;
   unregistered)
     set_lts_var RM_SYSTEM_SERVICES "
+      $puavo_common_unneeded_services
       ltspssh
       network-manager
       ondemand
