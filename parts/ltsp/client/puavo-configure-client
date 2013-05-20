@@ -105,7 +105,7 @@ case puavo_device_type
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "ltspserver"
-    write_config("/etc/hosts.ltspserver")
+    write_config("/etc/hosts", "ltspserver")
     write_config("/etc/nsswitch.conf", "sss")
     write_config("/etc/pam.d/ltspsshd")
     write_config("/etc/ldap/ldap.conf")
