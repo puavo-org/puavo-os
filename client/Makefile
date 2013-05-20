@@ -70,7 +70,7 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
 		templates/etc/hosts \
-		templates/etc/hosts.ltspserver \
+		templates/etc/hosts-ltspserver \
 		templates/etc/idmapd.conf \
 		templates/etc/krb5.conf \
 		templates/etc/krb5.conf-laptop \
