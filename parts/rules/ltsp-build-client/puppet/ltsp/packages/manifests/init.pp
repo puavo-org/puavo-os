@@ -399,7 +399,8 @@ class packages {
     , 'spe' ]:
       tag => [ 'programming', 'ubuntu', ];
 
-    [ 'puavo-sharedir-client'
+    [ 'puavo-load-balancer'
+    , 'puavo-sharedir-client'
     , 'puavo-wlanap' ]:
       tag => [ 'puavo', 'opinsys', ];
 
