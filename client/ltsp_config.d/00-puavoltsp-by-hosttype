@@ -47,6 +47,7 @@ case "$PUAVO_HOSTTYPE" in
       ltspssh
       network-manager
       ondemand
+      puavo-load-balancer
     "
     set_lts_var SCREEN_07            lightdm
     set_lts_var USE_NFS_HOMES        True
@@ -77,6 +78,7 @@ case "$PUAVO_HOSTTYPE" in
       jetty
       ltspssh
       mountnfs.sh
+      puavo-load-balancer
       puavo-monitor
       puavo-wlanap
       umountnfs.sh
@@ -107,13 +109,19 @@ case "$PUAVO_HOSTTYPE" in
       ltspssh
       network-manager
       ondemand
+      puavo-load-balancer
     "
     set_lts_var SCREEN_07            lightdm
     set_lts_var SSH_OVERRIDE_PORT    222
     set_lts_var X_COLOR_DEPTH        16
     ;;
   unregistered)
-    set_lts_var RM_SYSTEM_SERVICES 'ltspssh network-manager ondemand'
+    set_lts_var RM_SYSTEM_SERVICES "
+      ltspssh
+      network-manager
+      ondemand
+      puavo-load-balancer
+    "
     set_lts_var SCREEN_07          register
     ;;
 esac
