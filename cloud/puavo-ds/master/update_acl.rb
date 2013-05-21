@@ -4,25 +4,17 @@ require 'rubygems'
 require "erb"
 require 'readline'
 require 'ldap'
-require 'lib/database_acl'
+require 'database_acl'
 require 'yaml'
+require 'puavo/etc'
 
-if configuration = YAML.load_file("config/ldap.yml") rescue nil
-  @ldaphost = configuration['settings']['ldap_server']['host']
-  @binddn = configuration['settings']['ldap_server']['bind_dn']
-
-  puts "Connecting to #{@ldaphost} as #{@binddn}...\n"
-else
-  puts "ERROR: Could not open LDAP configuration file (config/ldap.yml)"
-  exit
-end
 
 organisation_name = ARGV.first
 puts "******************************************************"
 puts "  Initialising organisation: #{organisation_name}"
 puts "******************************************************"
 
-puts "#{@binddn} password:"
+puts "#{PUAVO_ETC.ldap_dn} password:"
 @bindpw = Readline.readline('> ', true)
 
 def update_acls(suffix)
@@ -31,10 +23,10 @@ def update_acls(suffix)
   samba_domain = ""
   kerberos_realm = ""
 
-  conn = LDAP::SSLConn.new(host=@ldaphost, port=636)
+  conn = LDAP::SSLConn.new(host=PUAVO_ETC.ldap_master, port=636)
   conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
 
-  conn.bind(@binddn, @bindpw) do
+  conn.bind(PUAVO_ETC.ldap_dn, @bindpw) do
     begin
       conn.search("cn=config", LDAP::LDAP_SCOPE_SUBTREE, "(olcSuffix=#{suffix})") {|e|
         dn = e.dn
@@ -91,14 +83,14 @@ def update_acls(suffix)
     f.write "olcAuthzRegexp: uid=([^,]*)@#{kerberos_realm.downcase},cn=gssapi,cn=auth ldap:///ou=People,#{suffix}??one?(uid=$1)\n"
   }
 
-  puts `ldapmodify -c -h #{@ldaphost} -x -D #{@binddn} -Z -w #{@bindpw} -f /tmp/acl.ldif`
+  puts `ldapmodify -c -h #{PUAVO_ETC.ldap_master} -x -D #{PUAVO_ETC.ldap_dn} -Z -w #{@bindpw} -f /tmp/acl.ldif`
 end
 
 if organisation_name.eql?("--all")
-  conn = LDAP::SSLConn.new(host=@ldaphost, port=636)
+  conn = LDAP::SSLConn.new(host=PUAVO_ETC.ldap_master, port=636)
   conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
 
-  conn.bind(@binddn, @bindpw) do
+  conn.bind(PUAVO_ETC.ldap_dn, @bindpw) do
     begin
       puts "Looping through databases"
 
