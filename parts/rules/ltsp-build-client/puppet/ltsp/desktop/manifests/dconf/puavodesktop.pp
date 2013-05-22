@@ -5,6 +5,13 @@ class desktop::dconf::puavodesktop {
     $lang = $title
 
     file {
+      "/etc/dconf/db/locale-${lang}.d":
+        ensure => directory;
+
+      "/etc/dconf/db/locale-${lang}.d/${lang}":
+        content => template("desktop/dconf_by_locale/${lang}"),
+        notify  => Exec['update dconf'];
+
       "/etc/dconf/profile/user-${lang}":
         content => template("desktop/dconf_profile_user-${lang}");
     }
