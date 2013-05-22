@@ -582,6 +582,8 @@ class LdapAcl
 					 eduOrgLegalName
 					 o
 					 eduOrgHomePageURI
+                                         puavoWlanSSID
+                                         puavoWlanChannel
 					 puavoDeviceImage
 					 puavoDeviceOnHour
 					 puavoDeviceOffHour
