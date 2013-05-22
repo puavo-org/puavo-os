@@ -1,0 +1,40 @@
+# Get LDM_SERVER from the Puavo bootserver load balancer
+
+case "$(cat /etc/puavo/hosttype)" in
+  thinclient)
+    if boolean_is_true "$PUAVO_LTSP_SESSION"; then
+      # XXX This is not good, find the certificate to
+      # XXX /etc/puavo/certs/rootca.pem some other way.
+      if [ ! -e /etc/puavo/certs/rootca.pem ]; then
+        mkdir -p /etc/puavo/certs
+        cp /usr/share/ca-certificates/opinsys/opinsys-ca.crt \
+           /etc/puavo/certs/rootca.pem
+      fi
+
+      PUAVO_DOMAIN=$(cat /etc/puavo/domain)
+      API_SERVER=$(dig +time=2 +tries=1 SRV _puavo-api._tcp.${PUAVO_DOMAIN} \
+                       +search +short \
+                    | awk '{ sub(/\.$/, ""); printf "%s:%s", $4, $3 }')
+
+      if [ -n "$API_SERVER" ]; then
+        POSSIBLE_LDM_SERVER=$(
+          curl --cacert /etc/puavo/certs/rootca.pem \
+               --max-time 12 \
+               "https://${API_SERVER}/v3/ltsp_servers/_most_idle" 2>/dev/null \
+            | jq --raw-output .hostname)
+      else
+        echo "could not determine the Puavo API server from dns" \
+          | logger -t ltsp_config.d/02-find-puavo-ltsp-server
+      fi
+
+      if [ -n "$POSSIBLE_LDM_SERVER" ]; then
+        set_lts_var LDM_SERVER "$POSSIBLE_LDM_SERVER"
+        echo "using load balancing to direct login to $POSSIBLE_LDM_SERVER" \
+          | logger -t ltsp_config.d/02-find-puavo-ltsp-server
+      else
+        echo "could not use load balancing, logging in to $LDM_SERVER" \
+          | logger -t ltsp_config.d/02-find-puavo-ltsp-server
+      fi
+    fi
+    ;;
+esac
