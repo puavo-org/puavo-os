@@ -34,6 +34,7 @@ class packages {
     , 'iftop'
     , 'inotify-tools'
     , 'iperf'
+    , 'libstdc++5'
     , 'lynx'
     , 'm4'
     , 'mlocate'
