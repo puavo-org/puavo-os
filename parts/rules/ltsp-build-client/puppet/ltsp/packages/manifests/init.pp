@@ -297,6 +297,7 @@ class packages {
       tag => [ 'mediaplayer', ];
 
     [ 'banshee'
+    , 'clam-chordata'
     , 'gnome-mplayer'
     , 'gstreamer1.0-clutter'
     , 'gstreamer1.0-libav'
