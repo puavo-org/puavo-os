@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+
+if [ $# -ne 1 ]; then
+    echo "E: invalid arguments" >&2
+    echo "Usage: $(basename $0) CACHE_NAME"
+    exit 1
+fi
+
+cache_name="$1"
+
+dmsetup ls --target cache | egrep -q "^${cache_name}" || {
+    echo "E: cache does not exist" >&2
+    exit 1
+}
+
+cache_disk=$(pvscan | egrep "VG\s+${cache_name}" | awk '{printf $2}')
+
+dmsetup remove "${cache_name}"
+
+vgremove -f "${cache_name}"
+pvremove "${cache_disk}"

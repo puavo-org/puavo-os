@@ -1,0 +1,55 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+
+on_exit()
+{
+    local exitval=$?
+    set +e
+
+    if [ $exitval -ne 0 ]; then
+    [ $vgcreated ] && vgremove -f "${cache_name}"
+    [ $pvcreated ] && pvremove "${cache_disk}"
+    fi
+
+    exit $exitval
+}
+
+if [ $# -ne 3 ]; then
+    echo "E: invalid arguments" >&2
+    echo "Usage: $(basename $0) CACHE_NAME CACHE_DISK ORIG_DEV"
+    exit 1
+fi
+
+cache_name=$1
+cache_disk=$2
+orig_dev=$3
+
+dmsetup ls --target cache | egrep -q "^${cache_name}\s+" && {
+    echo "E: cache already exists" >&2
+    exit 1
+} || true # to proceed when the cache does not exist
+
+orig_dev_size=$(blockdev --getsz "${orig_dev}")
+cache_disk_size=$(blockdev --getsz "${cache_disk}")
+cache_block_size=512
+
+pvcreated=
+vgcreated=
+
+trap on_exit EXIT
+
+pvcreate "${cache_disk}"
+pvcreated=1
+
+vgcreate "${cache_name}" "${cache_disk}"
+vgcreated=1
+
+# https://www.redhat.com/archives/dm-devel/2012-December/msg00046.html
+metadata_kb=$(echo "(${cache_disk_size} / ${cache_block_size} * 16 + 5000000) / 1024" | bc)
+
+lvcreate -L "${metadata_kb}KB" --name metadata "${cache_name}"
+lvcreate -l '100%FREE' --name data "${cache_name}"
+
+dmsetup create "${cache_name}" --table "0 ${orig_dev_size} cache /dev/${cache_name}/metadata /dev/${cache_name}/data ${orig_dev} ${cache_block_size} 0 default 0"
