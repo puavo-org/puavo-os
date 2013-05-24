@@ -20,6 +20,8 @@ module Puavo
       def method_missing(method, *args, &block)
         if @data.has_key?(method.to_s)
           @data[method.to_s]
+        elsif method.to_s == "classes" && @data.has_key?("objectClass")
+          @data["objectClass"]
         else
           super
         end

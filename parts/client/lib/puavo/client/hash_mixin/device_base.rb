@@ -12,11 +12,11 @@ module Puavo
         def prettify_attributes
           # Note: value of attribute may be raw ldap value eg. { puavoHostname => ["thinclient-01"] }
           [
+           { :original_attribute_name => "objectClass",
+             :new_attribute_name => "classes",
+             :value_block => lambda{ |value| Array(value) } },
            { :original_attribute_name => "description",
              :new_attribute_name => "description",
-             :value_block => lambda{ |value| Array(value).first } },
-           { :original_attribute_name => "ipHostNumber",
-             :new_attribute_name => "ip_address",
              :value_block => lambda{ |value| Array(value).first } },
            { :original_attribute_name => "jpegPhoto",
              :new_attribute_name => "image",
