@@ -27,7 +27,8 @@ case "$(cat /etc/puavo/hosttype)" in
           | logger -t ltsp_config.d/02-find-puavo-ltsp-server
       fi
 
-      if [ -n "$POSSIBLE_LDM_SERVER" ]; then
+      if [ -n "$POSSIBLE_LDM_SERVER" \
+	   -a "$POSSIBLE_LDM_SERVER" != "null" ]; then
         set_lts_var LDM_SERVER "$POSSIBLE_LDM_SERVER"
         echo "using load balancing to direct login to $POSSIBLE_LDM_SERVER" \
           | logger -t ltsp_config.d/02-find-puavo-ltsp-server
