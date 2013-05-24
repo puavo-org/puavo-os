@@ -1,0 +1,51 @@
+#!/bin/sh
+
+set -e
+
+get_patchfile_name() {
+  previous_image_name=$1
+  next_image_name=$2
+
+  echo "$previous_image_name $next_image_name" \
+    | awk '{
+	orig   = $1
+	target = $2
+	regex  = "^(.*?)-([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6})-(.*?).img$"
+   
+	if (match(orig, regex, orig_match) \
+	  && match(target, regex, target_match)) {
+	    printf("%s-%s--%s-%s.rdiff\n",
+		   orig_match[1],
+		   orig_match[2],
+		   target_match[2],
+		   orig_match[3])
+	}
+      }'
+}
+
+# XXX
+# previous_image=ltsp-quantal-master-2013-05-14-093158-i386.img
+# next_image=ltsp-quantal-master-2013-05-22-100852-i386.img
+
+rdiff_filename=$(get_rdiff_filename $previous_image $next_image)
+
+mkdir -p /images/rdiffs
+
+# XXX
+# image_server=$(dig it)
+
+if [ -n "$image_server" ]; then
+  echo "Could not find image server from dns" > /dev/stderr
+  exit 1
+fi
+
+curl --cacert /etc/puavo/certs/rootca.pem \
+     --limit-rate 50k \
+     --output /images/rdiffs/${rdiff_filename}.tmp \
+     https://${image_server}/rdiffs/${rdiff_filename}
+mv /images/rdiffs/${rdiff_filename}.tmp /images/rdiffs/${rdiff_filename}
+
+# ionice -c 3 nice -n 20 \
+#   rdiff patch $original_file /images/rdiffs/${rdiff_filename} \
+#               /images/${next_image}.tmp
+# XXX
