@@ -7,7 +7,9 @@ module Puavo
       end
       
       def self.new_by_ldap_entry(entry)
-        self.new( nil, ldap_prettify(entry) )
+        new_object = self.new( nil, entry )
+        new_object.data = new_object.ldap_prettify
+        new_object
       end
 
 
@@ -29,6 +31,10 @@ module Puavo
 
       def data
         @data
+      end
+
+      def data=(new_data)
+        @data = new_data
       end
 
       def self.parse(api, data)

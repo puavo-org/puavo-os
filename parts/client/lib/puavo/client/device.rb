@@ -1,7 +1,7 @@
 module Puavo
   module Client
     class Device < Model
-      extend Puavo::Client::HashMixin::Device
+      include Puavo::Client::HashMixin::Device
 
       model_path :prefix => '/devices/api/v2', :path => "/devices"
     end
