@@ -1,8 +1,71 @@
 #!/bin/sh
 
+#
+# argument parsing
+#
+
+set -e
+
+log() { echo "$2" | logger -p "$1" -s -t puavo-update-ltspimage; }
+
 next_image=$1
 
-set -eu
+if [ -z "$next_image" ]; then
+  log err "Usage: $(basename $0) next_ltsp_image_name"
+  exit 1
+fi
+
+# XXX should get these from command line, somehow
+# rate_limit_opts="--limit-rate 50k"
+rate_limit_opts=""
+
+set -u
+
+#
+# subroutines
+#
+
+cleanup_previous_runs() {
+  images_dir=$1
+  rdiffs_dir=$2
+
+  rm -f ${images_dir}/*.tmp ${rdiffs_dir}/*.tmp
+
+  # XXX should also remove images which simply take space and are not needed
+}
+
+get_rdiff() {
+  images_dir=$1
+  rdiffs_dir=$2
+  previous_image=$3
+  extra_curl_opts=$4
+  rdiff_filename=$5
+
+  if [ -e "${rdiffs_dir}/${rdiff_filename}" ]; then
+    log info "the rdiff file '${rdiff_filename}' is already in place"
+    return 0
+  fi
+
+  image_server=$(lookup_image_server_from_dns)
+
+  mkdir -p "$rdiffs_dir"
+
+  # according to curl(1) --fail is not enough
+  curl_status_code=$(
+    curl --cacert /etc/puavo/certs/rootca.pem \
+         --fail \
+	 $extra_curl_opts \
+	 --output ${rdiffs_dir}/${rdiff_filename}.tmp \
+	 -w "%{http_code}\n" \
+	 https://${image_server}/images/rdiffs/${rdiff_filename})
+
+  if [ "$curl_status_code" != "200" ]; then
+    log err "curl returned status code '$curl_status_code'"
+    return 1
+  fi
+
+  mv "${rdiffs_dir}/${rdiff_filename}.tmp" "${rdiffs_dir}/${rdiff_filename}"
+}
 
 # XXX somewhat duplicate code with build_rdiffs.sh
 get_rdiff_filename() {
@@ -10,20 +73,24 @@ get_rdiff_filename() {
   next_image_name=$2
 
   echo "$previous_image_name $next_image_name" \
-    | awk '{
-	orig   = $1
-	target = $2
-	regex  = "^(.*?)-([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6})-(.*?).img$"
-   
-	if (match(orig, regex, orig_match) \
-	  && match(target, regex, target_match)) {
-	    printf("%s-%s--%s-%s.rdiff\n",
-		   orig_match[1],
-		   orig_match[2],
-		   target_match[2],
-		   orig_match[3])
+    | awk '
+        NR == 1 {
+	  orig   = $1
+	  target = $2
+	  regex  = "^(.*?)-([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6})-(.*?).img$"
+     
+	  if (match(orig, regex, orig_match) \
+	    && match(target, regex, target_match)) {
+	      printf("%s-%s--%s-%s.rdiff\n",
+		     orig_match[1],
+		     orig_match[2],
+		     target_match[2],
+		     orig_match[3])
+	      exit(0)
+	  }
+	  else { exit(1) }
 	}
-      }'
+      '
 }
 
 # XXX duplicate code with puavo-install-ltspimages
@@ -31,7 +98,8 @@ lookup_current_ltspimage_name() {
   images_dir=$1
 
   current_ltspimage_path=$images_dir/ltsp.img
-  current_ltspimage_inode="$(stat -c %i $current_ltspimage_path 2>/dev/null || true)"
+  current_ltspimage_inode="$(stat -c %i $current_ltspimage_path 2>/dev/null \
+			       || true)"
 
   for file in $images_dir/*.img; do
     # check that *.img expands to something
@@ -43,9 +111,26 @@ lookup_current_ltspimage_name() {
     # we want its other name...
     if [ "$(stat -c %i "$file" || true)" = "$current_ltspimage_inode" ]; then
       echo "$(basename "$file")"
-      break
+      return
     fi
   done
+
+  log err "could not find the current ltsp image name"
+  return 1
+}
+
+lookup_image_server_from_dns() {
+  puavo_domain=$(cat /etc/puavo/domain)
+  image_server=$(
+    dig SRV "_imageserver._tcp.${puavo_domain}" +search +short \
+      | awk '{ sub(/\.$/, ""); printf "%s:%s", $4, $3 }')
+
+  if [ -z "$image_server" ]; then
+    log err "could not find the image server from DNS"
+    return 1
+  else
+    echo "$image_server"
+  fi
 }
 
 # XXX duplicate code with puavo-install-ltspimages
@@ -64,57 +149,62 @@ set_image_as_default_image() {
   sync
 }
 
-if [ -z "$next_image" ]; then
-  echo "Usage: $(basename $0) next_ltsp_image_name" > /dev/stderr
-  exit 1
-fi
+patch_with_rdiff() {
+  images_dir=$1
+  rdiffs_dir=$2
+  previous_image=$3
+  next_image=$4
+  rdiff_filename=$5
+
+  if ionice -c 3 nice -n 20 \
+       rdiff patch ${images_dir}/$previous_image \
+		   ${rdiffs_dir}/${rdiff_filename} \
+		   ${images_dir}/${next_image}.tmp; then
+    true
+  else
+    rdiff_err=$?
+    case "$rdiff_err" in
+      # 2   == corrupt rdiff (says manual page)
+      # 103 == early eof-of-file (discovered by experimentation)
+      2|103)
+	log err "patch_with_rdiff returned $rdiff_err, removing patch file"
+	rm -f "${rdiffs_dir}/${rdiff_filename}"
+	return 1
+	;;
+    esac
+  fi
+
+  sync
+  mv "${images_dir}/${next_image}.tmp" "${images_dir}/${next_image}"
+}
+
+#
+# main
+#
 
 images_dir=/images
-previous_image=$(lookup_current_ltspimage_name $images_dir)
 
 if [ -e "${images_dir}/${next_image}" ]; then
-  echo "The requested image is already in place"
+  log info "the requested ltsp image is already in place"
   exit 0
 fi
 
-# XXX should use dns to look this up
-# image_server=$(dig it)
-
-if [ -z "$image_server" ]; then
-  echo "Could not find image server from dns" > /dev/stderr
-  exit 1
-fi
-
 rdiffs_dir=${images_dir}/rdiffs
-mkdir -p $rdiffs_dir
-
+previous_image=$(lookup_current_ltspimage_name $images_dir)
 rdiff_filename=$(get_rdiff_filename $previous_image $next_image)
 
-# clean up previous interrupted runs
-# XXX should also remove images which simply take space and are not needed
-rm -f ${images_dir}/*.tmp ${rdiffs_dir}/*.tmp
+cleanup_previous_runs "$images_dir" "$rdiffs_dir"
 
-# rate_limit_opts="--limit-rate 50k"
-rate_limit_opts=""
+get_rdiff "$images_dir"      \
+	  "$rdiffs_dir"      \
+	  "$previous_image"  \
+	  "$rate_limit_opts" \
+	  "$rdiff_filename"
 
-curl_status_code=$(
-  curl --cacert /etc/puavo/certs/rootca.pem \
-       --fail \
-       $rate_limit_opts \
-       --output ${rdiffs_dir}/${rdiff_filename}.tmp \
-       -w "%{http_code}\n" \
-       https://${image_server}/images/rdiffs/${rdiff_filename})
-if [ "$curl_status_code" != "200" ]; then
-  echo "curl returned status code '$curl_status_code'" > /dev/stderr
-  exit 1
-fi
+patch_with_rdiff "$images_dir"     \
+		 "$rdiffs_dir"     \
+		 "$previous_image" \
+		 "$next_image"     \
+		 "$rdiff_filename"
 
-mv ${rdiffs_dir}/${rdiff_filename}.tmp ${rdiffs_dir}/${rdiff_filename}
-
-ionice -c 3 nice -n 20 \
-  rdiff patch ${images_dir}/$previous_image \
-	      ${rdiffs_dir}/${rdiff_filename} \
-              ${images_dir}/${next_image}.tmp
-mv ${images_dir}/${next_image}.tmp ${images_dir}/${next_image}
-
-set_image_as_default_image $images_dir $next_image
+set_image_as_default_image "$images_dir" "$next_image"
