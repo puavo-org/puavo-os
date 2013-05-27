@@ -28,7 +28,7 @@ module Puavo
       end
 
       def define_tags
-        @device.tags ? { 'PUAVO_TAGS' => Array(@device.tags).join(" ") } : {}
+        @device.tags.empty? ? {} : { 'PUAVO_TAGS' => Array(@device.tags).join(" ") }
       end
 
       def define_default_locale
