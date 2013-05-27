@@ -8,3 +8,4 @@ gem "highline"
 gem "httparty"
 gem "facter"
 gem "highline"
+gem 'json', '~> 1.7.7'
