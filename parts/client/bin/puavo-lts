@@ -8,9 +8,8 @@ require 'puavo'
 require 'puavo/lts'
 
 puavo = Puavo::Client::Base.new(PUAVO_ETC.domain, PUAVO_ETC.ldap_dn, PUAVO_ETC.ldap_password)
-device = puavo.devices.find_by_id(PUAVO_ETC.id)
-# FIXME: use find_by_id method
-school = puavo.schools.all.select{ |s| s.puavo_id == device.school_id }.first
+device = puavo.devices.find_by_hostname(PUAVO_ETC.hostname)
+school = puavo.schools.find_by_id(device.school_id)
 organisation = puavo.organisation.find
 
 lts_config = Puavo::Lts.new(organisation, school, device)
