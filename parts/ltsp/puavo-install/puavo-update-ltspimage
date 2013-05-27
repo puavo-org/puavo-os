@@ -5,7 +5,7 @@ next_image=$1
 set -eu
 
 # XXX somewhat duplicate code with build_rdiffs.sh
-get_patchfile_name() {
+get_rdiff_filename() {
   previous_image_name=$1
   next_image_name=$2
 
@@ -69,17 +69,21 @@ if [ -z "$next_image" ]; then
   exit 1
 fi
 
+images_dir=/images
+previous_image=$(lookup_current_ltspimage_name $images_dir)
+
+if [ -e "${image_dir}/${next_image}" ]; then
+  echo "The requested image is already in place"
+  exit 0
+fi
+
 # XXX should use dns to look this up
 # image_server=$(dig it)
-image_server=juhaerk-boot8.kehitys.opinsys.fi
 
-if [ -n "$image_server" ]; then
+if [ -z "$image_server" ]; then
   echo "Could not find image server from dns" > /dev/stderr
   exit 1
 fi
-
-images_dir=/images
-previous_image=$(lookup_current_ltspimage_name $images_dir)
 
 rdiffs_dir=${images_dir}/rdiffs
 mkdir -p $rdiffs_dir
@@ -90,14 +94,18 @@ rdiff_filename=$(get_rdiff_filename $previous_image $next_image)
 # XXX should also remove images which simply take space and are not needed
 rm -f ${images_dir}/*.tmp ${rdiffs_dir}/*.tmp
 
+# rate_limit_opts="--limit-rate 50k"
+rate_limit_opts=""
+
 curl --cacert /etc/puavo/certs/rootca.pem \
-     --limit-rate 50k \
+     --fail \
+     $rate_limit_opts \
      --output ${rdiffs_dir}/${rdiff_filename}.tmp \
-     https://${image_server}/rdiffs/${rdiff_filename}
+     https://${image_server}/images/rdiffs/${rdiff_filename}
 mv ${rdiffs_dir}/${rdiff_filename}.tmp ${rdiffs_dir}/${rdiff_filename}
 
 ionice -c 3 nice -n 20 \
-  rdiff patch $previous_image \
+  rdiff patch ${images_dir}/$previous_image \
 	      ${rdiffs_dir}/${rdiff_filename} \
               ${images_dir}/${next_image}.tmp
 mv ${images_dir}/${next_image}.tmp ${images_dir}/${next_image}
