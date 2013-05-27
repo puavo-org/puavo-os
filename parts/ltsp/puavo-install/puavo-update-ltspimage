@@ -25,6 +25,11 @@ set -u
 # subroutines
 #
 
+check_with_cksum() {
+  # XXX use cksum(1) (or something similar)
+  true
+}
+
 cleanup_previous_runs() {
   images_dir=$1
   rdiffs_dir=$2
@@ -63,6 +68,8 @@ get_rdiff() {
     log err "curl returned status code '$curl_status_code'"
     return 1
   fi
+
+  # XXX use check_with_cksum
 
   mv "${rdiffs_dir}/${rdiff_filename}.tmp" "${rdiffs_dir}/${rdiff_filename}"
 }
@@ -133,22 +140,6 @@ lookup_image_server_from_dns() {
   fi
 }
 
-# XXX duplicate code with puavo-install-ltspimages
-set_image_as_default_image() {
-  images_dir=$1
-  imagename=$2
-  imagepath=$images_dir/$imagename
-
-  backup_ltspimage_path=$images_dir/ltsp-backup.img
-  default_ltspimage_path=$images_dir/ltsp.img
-
-  ln -f "$default_ltspimage_path" "$backup_ltspimage_path" 2>/dev/null || true
-  ln -f "$imagepath" "${default_ltspimage_path}.tmp"
-  sync
-  mv "${default_ltspimage_path}.tmp" "$default_ltspimage_path"
-  sync
-}
-
 patch_with_rdiff() {
   images_dir=$1
   rdiffs_dir=$2
@@ -174,8 +165,26 @@ patch_with_rdiff() {
     esac
   fi
 
+  # XXX use check_with_cksum
+
   sync
   mv "${images_dir}/${next_image}.tmp" "${images_dir}/${next_image}"
+}
+
+# XXX duplicate code with puavo-install-ltspimages
+set_image_as_default_image() {
+  images_dir=$1
+  imagename=$2
+  imagepath=$images_dir/$imagename
+
+  backup_ltspimage_path=$images_dir/ltsp-backup.img
+  default_ltspimage_path=$images_dir/ltsp.img
+
+  ln -f "$default_ltspimage_path" "$backup_ltspimage_path" 2>/dev/null || true
+  ln -f "$imagepath" "${default_ltspimage_path}.tmp"
+  sync
+  mv "${default_ltspimage_path}.tmp" "$default_ltspimage_path"
+  sync
 }
 
 #
