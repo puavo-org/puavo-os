@@ -68,7 +68,7 @@ module Puavo
              :value_block => lambda{ |value| Array(value).first } },
            { :original_attribute_name => "puavoTag",
              :new_attribute_name => "tags",
-             :value_block => lambda{ |value| Array(value).first } },
+             :value_block => lambda{ |value| Array(value) } },
            { :original_attribute_name => "puavoWarrantyEndDate",
              :new_attribute_name => "warranty_end_date",
              :value_block => lambda{ |value| Array(value).first } },
