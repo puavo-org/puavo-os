@@ -348,7 +348,8 @@ class LdapAcl
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.exact,												Rule.read(Set.all_admins,
 															  PuavoUid.puppet,
-															  PuavoUid.monitor),
+															  PuavoUid.monitor,
+															  Hosts.subtree),
 														Rule.read(Set.externalservice_devices,
 															  Set.externalservice_servers,
 															  People.children),							],
@@ -359,20 +360,26 @@ class LdapAcl
 															  PuavoUid.puppet,
 															  PuavoUid.monitor,
 															  Set.externalservice_devices,
-															  People.children),       	Rule.perms('auth', 'anonymous'),	],
+															  People.children,
+															  Hosts.subtree),       	Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.devices.exact,	attrs(%w(children)),			Rule.write(Set.all_admins),		Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
 															  Set.externalservice_devices,
-															  People.children),							],
+															  People.children,
+															  Hosts.subtree),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.devices.children,	attrs(%w(entry
 					 objectClass
+					 puavoWlanChannel
 					 puavoHostname
 					 puavoTag)),			Rule.write(Set.admin),			Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
 															  Set.externalservice_devices,
-															  People.children),		Rule.perms('auth', 'anonymous'),	],
+															  People.children,
+															  "self"),		Rule.perms('auth', 'anonymous'),	],
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      [ Hosts.devices.children,	attrs(%w(userPassword)),		Rule.write(Set.admin),			Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.devices.children,						Rule.write(Set.admin),			Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
