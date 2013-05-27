@@ -30,6 +30,7 @@ set_image_as_default_image() {
 
   ln -f "$default_ltspimage_path" "$backup_ltspimage_path" 2>/dev/null || true
   ln -f "$imagepath" "${default_ltspimage_path}.tmp"
+  sync
   mv "${default_ltspimage_path}.tmp" "$default_ltspimage_path"
   sync
 

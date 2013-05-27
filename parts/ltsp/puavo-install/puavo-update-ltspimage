@@ -1,7 +1,10 @@
 #!/bin/sh
 
-set -e
+next_image=$1
 
+set -eu
+
+# XXX somewhat duplicate code with build_rdiffs.sh
 get_patchfile_name() {
   previous_image_name=$1
   next_image_name=$2
@@ -23,29 +26,80 @@ get_patchfile_name() {
       }'
 }
 
-# XXX
-# previous_image=ltsp-quantal-master-2013-05-14-093158-i386.img
-# next_image=ltsp-quantal-master-2013-05-22-100852-i386.img
+# XXX duplicate code with puavo-install-ltspimages
+lookup_current_ltspimage_name() {
+  images_dir=$1
 
-rdiff_filename=$(get_rdiff_filename $previous_image $next_image)
+  current_ltspimage_path=$images_dir/ltsp.img
+  current_ltspimage_inode="$(stat -c %i $current_ltspimage_path 2>/dev/null || true)"
 
-mkdir -p /images/rdiffs
+  for file in $images_dir/*.img; do
+    # check that *.img expands to something
+    test -e "$file" || continue
 
-# XXX
+    # ltsp.img is not what we are looking for
+    test "$file" = "$current_ltspimage_path" && continue
+
+    # we want its other name...
+    if [ "$(stat -c %i "$file" || true)" = "$current_ltspimage_inode" ]; then
+      echo "$(basename "$file")"
+      break
+    fi
+  done
+}
+
+# XXX duplicate code with puavo-install-ltspimages
+set_image_as_default_image() {
+  images_dir=$1
+  imagename=$2
+  imagepath=$images_dir/$imagename
+
+  backup_ltspimage_path=$images_dir/ltsp-backup.img
+  default_ltspimage_path=$images_dir/ltsp.img
+
+  ln -f "$default_ltspimage_path" "$backup_ltspimage_path" 2>/dev/null || true
+  ln -f "$imagepath" "${default_ltspimage_path}.tmp"
+  sync
+  mv "${default_ltspimage_path}.tmp" "$default_ltspimage_path"
+  sync
+}
+
+if [ -z "$next_image" ]; then
+  echo "Usage: $(basename $0) next_ltsp_image_name" > /dev/stderr
+  exit 1
+fi
+
+# XXX should use dns to look this up
 # image_server=$(dig it)
+image_server=juhaerk-boot8.kehitys.opinsys.fi
 
 if [ -n "$image_server" ]; then
   echo "Could not find image server from dns" > /dev/stderr
   exit 1
 fi
 
+images_dir=/images
+previous_image=$(lookup_current_ltspimage_name $images_dir)
+
+rdiffs_dir=${images_dir}/rdiffs
+mkdir -p $rdiffs_dir
+
+rdiff_filename=$(get_rdiff_filename $previous_image $next_image)
+
+# clean up previous interrupted runs
+# XXX should also remove images which simply take space and are not needed
+rm -f ${images_dir}/*.tmp ${rdiffs_dir}/*.tmp
+
 curl --cacert /etc/puavo/certs/rootca.pem \
      --limit-rate 50k \
-     --output /images/rdiffs/${rdiff_filename}.tmp \
+     --output ${rdiffs_dir}/${rdiff_filename}.tmp \
      https://${image_server}/rdiffs/${rdiff_filename}
-mv /images/rdiffs/${rdiff_filename}.tmp /images/rdiffs/${rdiff_filename}
+mv ${rdiffs_dir}/${rdiff_filename}.tmp ${rdiffs_dir}/${rdiff_filename}
 
-# ionice -c 3 nice -n 20 \
-#   rdiff patch $original_file /images/rdiffs/${rdiff_filename} \
-#               /images/${next_image}.tmp
-# XXX
+ionice -c 3 nice -n 20 \
+  rdiff patch $previous_image \
+	      ${rdiffs_dir}/${rdiff_filename} \
+              ${images_dir}/${next_image}.tmp
+mv ${images_dir}/${next_image}.tmp ${images_dir}/${next_image}
+
+set_image_as_default_image $images_dir $next_image
