@@ -24,9 +24,9 @@ module Puavo
           Puavo::Client::School.new_by_ldap_entry(entry)
         elsif entry["objectClass"].include?( "puavoEduOrg" )
           Puavo::Client::Organisation.new_by_ldap_entry(entry)
-        elsif entry.has_key?("puavoDeviceType") && entry["puavoDeviceType"] != "ltspserver"
+        elsif entry.has_key?("puavoDeviceType") && !["ltspserver", "bootserver"].include?(entry["puavoDeviceType"])
           Puavo::Client::Device.new_by_ldap_entry(entry)
-        elsif entry.has_key?("puavoDeviceType") && entry["puavoDeviceType"] == "ltspserver"
+        elsif entry.has_key?("puavoDeviceType") && ["ltspserver", "bootserver"].include?(entry["puavoDeviceType"])
           Puavo::Client::Server.new_by_ldap_entry(entry)
         else
           raise "Unknown object type"
