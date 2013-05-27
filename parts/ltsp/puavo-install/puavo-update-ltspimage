@@ -72,7 +72,7 @@ fi
 images_dir=/images
 previous_image=$(lookup_current_ltspimage_name $images_dir)
 
-if [ -e "${image_dir}/${next_image}" ]; then
+if [ -e "${images_dir}/${next_image}" ]; then
   echo "The requested image is already in place"
   exit 0
 fi
@@ -97,11 +97,18 @@ rm -f ${images_dir}/*.tmp ${rdiffs_dir}/*.tmp
 # rate_limit_opts="--limit-rate 50k"
 rate_limit_opts=""
 
-curl --cacert /etc/puavo/certs/rootca.pem \
-     --fail \
-     $rate_limit_opts \
-     --output ${rdiffs_dir}/${rdiff_filename}.tmp \
-     https://${image_server}/images/rdiffs/${rdiff_filename}
+curl_status_code=$(
+  curl --cacert /etc/puavo/certs/rootca.pem \
+       --fail \
+       $rate_limit_opts \
+       --output ${rdiffs_dir}/${rdiff_filename}.tmp \
+       -w "%{http_code}\n" \
+       https://${image_server}/images/rdiffs/${rdiff_filename})
+if [ "$curl_status_code" != "200" ]; then
+  echo "curl returned status code '$curl_status_code'" > /dev/stderr
+  exit 1
+fi
+
 mv ${rdiffs_dir}/${rdiff_filename}.tmp ${rdiffs_dir}/${rdiff_filename}
 
 ionice -c 3 nice -n 20 \
