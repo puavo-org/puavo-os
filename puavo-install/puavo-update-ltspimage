@@ -82,7 +82,9 @@ ensure_enough_available_diskspace() {
     diskspace=$(stat -f -c '%S * %a' "$dir" | bc -l | xargs printf %.0f)
     echo "comparing $diskspace -lt $required_diskspace"
     if [ "$diskspace" -lt "$required_diskspace" ]; then
-      log err "Only $diskspace bytes available on $dir, need $diskspace bytes"
+      msg="Only $diskspace bytes available on $dir,"
+      msg="$msg need $required_diskspace bytes"
+      log err "$msg"
       return 1
     fi
   done
@@ -122,7 +124,7 @@ get_checksums_file() {
   images_dir=$2
   url=$3
 
-  checksum_file_path="${images_dir}/CKSUMS.TXT"
+  checksum_file_path="${images_dir}/CKSUMS"
 
   fetch_with_curl "$extra_curl_opts" \
 		  "${checksum_file_path}.tmp" \
@@ -293,7 +295,7 @@ ensure_enough_available_diskspace "$images_dir" "$rdiffs_dir"
 checksums_file=$(
   get_checksums_file "$rate_limit_opts" \
 		     "$images_dir"      \
-		     "https://${image_server}/images/CKSUMS.TXT")
+		     "https://${image_server}/images/CKSUMS")
 
 rdiff_url="https://${image_server}/images/rdiffs/${rdiff_filename}"
 
