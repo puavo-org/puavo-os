@@ -26,52 +26,101 @@ set -u
 #
 
 check_with_cksum() {
-  # XXX use cksum(1) (or something similar)
-  true
+  filename=$1
+  actual_file_path=$2
+  checksums_file=$3
+
+  calculated_checksum_line="$(
+    cksum "$actual_file_path" | awk -v filename="$filename" '$3 = filename')"
+
+  if fgrep -qx "$calculated_checksum_line" "$checksums_file"; then
+    log info "checksum for file $filename is okay"
+    return 0
+  else
+    log err \
+      "file '$filename' failed checksum check, removing '$actual_file_path'"
+    rm -f "$actual_file_path"
+    return 1
+  fi
 }
 
 cleanup_previous_runs() {
   images_dir=$1
   rdiffs_dir=$2
 
-  rm -f ${images_dir}/*.tmp ${rdiffs_dir}/*.tmp
+  # XXX should not clean up rdiffs like this
+  # rm -f ${images_dir}/*.tmp ${rdiffs_dir}/*.tmp
 
   # XXX should also remove images which simply take space and are not needed
 }
 
-get_rdiff() {
-  images_dir=$1
-  rdiffs_dir=$2
-  previous_image=$3
-  extra_curl_opts=$4
-  rdiff_filename=$5
-
-  if [ -e "${rdiffs_dir}/${rdiff_filename}" ]; then
-    log info "the rdiff file '${rdiff_filename}' is already in place"
-    return 0
-  fi
-
-  image_server=$(lookup_image_server_from_dns)
-
-  mkdir -p "$rdiffs_dir"
+fetch_with_curl() {
+  extra_curl_opts=$1
+  output_path=$2  
+  url=$3
 
   # according to curl(1) --fail is not enough
   curl_status_code=$(
     curl --cacert /etc/puavo/certs/rootca.pem \
-         --fail \
+	 --continue-at - \
 	 $extra_curl_opts \
-	 --output ${rdiffs_dir}/${rdiff_filename}.tmp \
+	 --output "$output_path" \
 	 -w "%{http_code}\n" \
-	 https://${image_server}/images/rdiffs/${rdiff_filename})
+	 "$url" \
+      || true)
 
-  if [ "$curl_status_code" != "200" ]; then
-    log err "curl returned status code '$curl_status_code'"
-    return 1
+  case "$curl_status_code" in
+    # 2*  == success
+    # 416 == "Requested Range not satisfiable" (file should be finished)
+    2*|416)
+      log info "fetched $url with status code $curl_status_code"
+      return 0
+      ;;
+    *)
+      log err "curl returned status code $curl_status_code"
+      return 1
+      ;;
+  esac
+
+  echo hello
+}
+
+get_checksums_file() {
+  extra_curl_opts=$1
+  images_dir=$2
+  url=$3
+
+  checksum_file_path="${images_dir}/CKSUMS.TXT"
+
+  fetch_with_curl "$extra_curl_opts" \
+		  "${checksum_file_path}.tmp" \
+		  "$url"
+  mv "${checksum_file_path}.tmp" "${checksum_file_path}"
+
+  echo "${checksum_file_path}"
+}
+
+get_rdiff() {
+  rdiffs_dir=$1
+  extra_curl_opts=$2
+  rdiff_filename=$3
+  rdiff_url=$4
+  checksums_file=$5
+
+  rdiff_path="${rdiffs_dir}/${rdiff_filename}"
+
+  if [ -e "$rdiff_path" ]; then
+    log info "the rdiff file $rdiff_filename is already in place"
+    return 0
   fi
 
-  # XXX use check_with_cksum
+  mkdir -p "$rdiffs_dir"
 
-  mv "${rdiffs_dir}/${rdiff_filename}.tmp" "${rdiffs_dir}/${rdiff_filename}"
+  rdiff_tmp="${rdiff_path}.tmp"
+  fetch_with_curl  "$extra_curl_opts" "$rdiff_tmp" "$rdiff_url"
+  check_with_cksum "$rdiff_filename"  "$rdiff_tmp" "$checksums_file"
+
+  mv "$rdiff_tmp" "$rdiff_path"
 }
 
 # XXX somewhat duplicate code with build_rdiffs.sh
@@ -146,11 +195,12 @@ patch_with_rdiff() {
   previous_image=$3
   next_image=$4
   rdiff_filename=$5
+  checksums_file=$6
 
   if ionice -c 3 nice -n 20 \
-       rdiff patch ${images_dir}/$previous_image \
-		   ${rdiffs_dir}/${rdiff_filename} \
-		   ${images_dir}/${next_image}.tmp; then
+       rdiff patch "${images_dir}/${previous_image}" \
+		   "${rdiffs_dir}/${rdiff_filename}" \
+		   "${images_dir}/${next_image}.tmp"; then
     true
   else
     rdiff_err=$?
@@ -165,7 +215,9 @@ patch_with_rdiff() {
     esac
   fi
 
-  # XXX use check_with_cksum
+  check_with_cksum "$next_image"                     \
+		   "${images_dir}/${next_image}.tmp" \
+		   "$checksums_file"
 
   sync
   mv "${images_dir}/${next_image}.tmp" "${images_dir}/${next_image}"
@@ -198,22 +250,32 @@ if [ -e "${images_dir}/${next_image}" ]; then
   exit 0
 fi
 
+image_server=$(lookup_image_server_from_dns)
+
 rdiffs_dir=${images_dir}/rdiffs
 previous_image=$(lookup_current_ltspimage_name $images_dir)
 rdiff_filename=$(get_rdiff_filename $previous_image $next_image)
 
 cleanup_previous_runs "$images_dir" "$rdiffs_dir"
 
-get_rdiff "$images_dir"      \
-	  "$rdiffs_dir"      \
-	  "$previous_image"  \
+checksums_file=$(
+  get_checksums_file "$rate_limit_opts" \
+		     "$images_dir"      \
+		     "https://${image_server}/images/CKSUMS.TXT")
+
+rdiff_url="https://${image_server}/images/rdiffs/${rdiff_filename}"
+
+get_rdiff "$rdiffs_dir"      \
 	  "$rate_limit_opts" \
-	  "$rdiff_filename"
+	  "$rdiff_filename"  \
+	  "$rdiff_url"       \
+	  "$checksums_file"
 
 patch_with_rdiff "$images_dir"     \
 		 "$rdiffs_dir"     \
 		 "$previous_image" \
 		 "$next_image"     \
-		 "$rdiff_filename"
+		 "$rdiff_filename" \
+	  	 "$checksums_file"
 
 set_image_as_default_image "$images_dir" "$next_image"
