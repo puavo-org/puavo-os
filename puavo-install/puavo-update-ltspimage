@@ -6,9 +6,11 @@
 
 set -e
 
-log() { echo "$2" | logger -p "$1" -s -t puavo-update-ltspimage; }
-
 next_image=$1
+
+set -u
+
+log() { echo "$2" | logger -p "$1" -s -t puavo-update-ltspimage; }
 
 if [ -z "$next_image" ]; then
   log err "Usage: $(basename $0) next_ltsp_image_name"
@@ -19,8 +21,6 @@ fi
 # rate_limit_opts="--limit-rate 50k"
 rate_limit_opts=""
 
-set -u
-
 #
 # subroutines
 #
@@ -29,6 +29,11 @@ check_with_cksum() {
   filename=$1
   actual_file_path=$2
   checksums_file=$3
+
+  if ! [ -r "$actual_file_path" ]; then
+    log err "could not find a file $filename to check"
+    return 1
+  fi
 
   calculated_checksum_line="$(
     cksum "$actual_file_path" | awk -v filename="$filename" '$3 = filename')"
@@ -81,8 +86,6 @@ fetch_with_curl() {
       return 1
       ;;
   esac
-
-  echo hello
 }
 
 get_checksums_file() {
@@ -227,6 +230,8 @@ set_image_as_default_image() {
   sync
   mv "${default_ltspimage_path}.tmp" "$default_ltspimage_path"
   sync
+
+  log notice "new ltsp image $imagename has been set as default"
 }
 
 #
@@ -235,7 +240,7 @@ set_image_as_default_image() {
 
 # be_very nice
 ionice -c 3  -p $$
-renice -n 20 -p $$
+renice -n 20 -p $$ > /dev/null
 
 images_dir=/images
 
