@@ -197,10 +197,9 @@ patch_with_rdiff() {
   rdiff_filename=$5
   checksums_file=$6
 
-  if ionice -c 3 nice -n 20 \
-       rdiff patch "${images_dir}/${previous_image}" \
-		   "${rdiffs_dir}/${rdiff_filename}" \
-		   "${images_dir}/${next_image}.tmp"; then
+  if rdiff patch "${images_dir}/${previous_image}" \
+		 "${rdiffs_dir}/${rdiff_filename}" \
+		 "${images_dir}/${next_image}.tmp"; then
     true
   else
     rdiff_err=$?
@@ -242,6 +241,10 @@ set_image_as_default_image() {
 #
 # main
 #
+
+# be_very nice
+ionice -c 3  -p $$
+renice -n 20 -p $$
 
 images_dir=/images
 
