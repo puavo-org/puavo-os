@@ -4,22 +4,41 @@
 # argument parsing
 #
 
-set -e
-
-next_image=$1
-
-set -u
+set -eu
 
 log() { echo "$2" | logger -p "$1" -s -t puavo-update-ltspimage; }
 
-if [ -z "$next_image" ]; then
-  log err "Usage: $(basename $0) next_ltsp_image_name"
+usage() {
+  log err "Usage: $(basename $0) [-r rate-limit] next_ltsp_image_name"
+}
+
+if ! args=$(getopt -n "$0" -o +r: -l 'rate-limit:' -- "$@"); then
+  usage
   exit 1
 fi
 
-# XXX should get these from command line, somehow
-# rate_limit_opts="--limit-rate 50k"
 rate_limit_opts=""
+
+eval "set -- $args"
+while [ $# -ne 0 ]; do
+  case "$1" in
+    -r|--rate-limit)
+      rate_limit_opts="--limit-rate $2"; shift; shift
+      ;;
+    --) shift; break;;      
+  esac
+done
+
+{
+  set +u
+  next_image=$1
+  set -u
+}
+
+if [ -z "$next_image" ]; then
+  usage
+  exit 1
+fi
 
 #
 # subroutines
@@ -201,7 +220,7 @@ lookup_current_ltspimage_name() {
     # we want its other name...
     if [ "$(stat -c %i "$file" || true)" = "$current_ltspimage_inode" ]; then
       echo "$(basename "$file")"
-      return
+      return 0
     fi
   done
 
