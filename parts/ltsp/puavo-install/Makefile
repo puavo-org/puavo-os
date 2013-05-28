@@ -19,7 +19,8 @@ install : installdirs
 		puavo-install \
 		puavo-install-grub \
 		puavo-install-ltspimages \
-		puavo-setup-filesystems
+		puavo-setup-filesystems \
+		puavo-update-ltspimage
 
 .PHONY : clean
 clean :
