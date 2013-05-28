@@ -383,7 +383,8 @@ class LdapAcl
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.devices.children,						Rule.write(Set.admin),			Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
-															  Set.externalservice_devices),			Rule.perms('auth', 'anonymous'),	],
+															  Set.externalservice_devices,
+															  "self"),			Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.servers.exact,	attrs(%w(entry
 					 ou
