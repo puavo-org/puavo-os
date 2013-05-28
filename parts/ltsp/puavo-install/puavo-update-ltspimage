@@ -52,11 +52,40 @@ check_with_cksum() {
 cleanup_previous_runs() {
   images_dir=$1
   rdiffs_dir=$2
+  rdiff_filename=$3
 
-  # XXX should not clean up rdiffs like this
-  # rm -f ${images_dir}/*.tmp ${rdiffs_dir}/*.tmp
+  # cleanup old ltsp images (and their possible temporary *.tmp files).
+  # The ltsp-backup.img is going to go too...
+  find "$images_dir" -maxdepth 1 -type f -a \
+    '(' '(' -name '*.img' -o -name '*.img.tmp' ')' \
+        -a '!' -samefile "${images_dir}/ltsp.img" ')' \
+    -exec rm -f \{} \;
 
-  # XXX should also remove images which simply take space and are not needed
+  # cleanup old rdiff files, except those that we want to use right now
+  find "$rdiffs_dir" -maxdepth 1 -type f -a \
+    '(' '(' -name '*.rdiff' -o -name '*.rdiff.tmp' ')' \
+        -a '!' '('    -name "${rdiff_filename}" \
+		   -o -name "${rdiff_filename}.tmp" ')' ')' \
+    -exec rm -f \{} \;
+}
+
+ensure_enough_available_diskspace() {
+  images_dir=$1
+  rdiffs_dir=$2
+
+  # 133% of the space taken by the current image is probably enough
+  # for updating to new image
+  required_diskspace=$(stat -c '1.33 * %s' "${images_dir}/ltsp.img" \
+			 | bc -l | xargs printf %.0f)
+
+  for dir in "$images_dir" "$rdiffs_dir"; do 
+    diskspace=$(stat -f -c '%S * %a' "$dir" | bc -l | xargs printf %.0f)
+    echo "comparing $diskspace -lt $required_diskspace"
+    if [ "$diskspace" -lt "$required_diskspace" ]; then
+      log err "Only $diskspace bytes available on $dir, need $diskspace bytes"
+      return 1
+    fi
+  done
 }
 
 fetch_with_curl() {
@@ -255,7 +284,11 @@ rdiffs_dir=${images_dir}/rdiffs
 previous_image=$(lookup_current_ltspimage_name $images_dir)
 rdiff_filename=$(get_rdiff_filename $previous_image $next_image)
 
-cleanup_previous_runs "$images_dir" "$rdiffs_dir"
+cleanup_previous_runs "$images_dir" \
+		      "$rdiffs_dir" \
+		      "$rdiff_filename"
+
+ensure_enough_available_diskspace "$images_dir" "$rdiffs_dir"
 
 checksums_file=$(
   get_checksums_file "$rate_limit_opts" \
