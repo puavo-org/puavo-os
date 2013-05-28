@@ -38,7 +38,7 @@ check_with_cksum() {
     return 0
   else
     log err \
-      "file '$filename' failed checksum check, removing '$actual_file_path'"
+      "file $filename failed checksum check, removing $actual_file_path"
     rm -f "$actual_file_path"
     return 1
   fi
@@ -197,22 +197,13 @@ patch_with_rdiff() {
   rdiff_filename=$5
   checksums_file=$6
 
-  if rdiff patch "${images_dir}/${previous_image}" \
-		 "${rdiffs_dir}/${rdiff_filename}" \
-		 "${images_dir}/${next_image}.tmp"; then
-    true
-  else
-    rdiff_err=$?
-    case "$rdiff_err" in
-      # 2   == corrupt rdiff (says manual page)
-      # 103 == early eof-of-file (discovered by experimentation)
-      2|103)
-	log err "patch_with_rdiff returned $rdiff_err, removing patch file"
-	rm -f "${rdiffs_dir}/${rdiff_filename}"
-	return 1
-	;;
-    esac
-  fi
+  # rdiff might fail due to a corrupt rdiff-file or for some other reason.
+  # We let rdiff pass through in case of failure, and we check the correctness
+  # of the output right after (removing the output if the checksum is bad).
+  rdiff patch "${images_dir}/${previous_image}" \
+	      "${rdiffs_dir}/${rdiff_filename}" \
+	      "${images_dir}/${next_image}.tmp" \
+    || true
 
   check_with_cksum "$next_image"                     \
 		   "${images_dir}/${next_image}.tmp" \
