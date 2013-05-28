@@ -74,17 +74,27 @@ cleanup_previous_runs() {
 
   # cleanup old ltsp images (and their possible temporary *.tmp files).
   # The ltsp-backup.img is going to go too...
-  find "$images_dir" -maxdepth 1 -type f -a \
-    '(' '(' -name '*.img' -o -name '*.img.tmp' ')' \
-        -a '!' -samefile "${images_dir}/ltsp.img" ')' \
-    -exec rm -f \{} \;
+  logmsg1=$(
+    find "$images_dir" -maxdepth 1 -type f -a \
+      '(' '(' -name '*.img' -o -name '*.img.tmp' ')' \
+	  -a '!' -samefile "${images_dir}/ltsp.img" ')' \
+      -print0 \
+    | xargs -0 rm -fv | sed 's/$/,/' | xargs)
 
   # cleanup old rdiff files, except those that we want to use right now
-  find "$rdiffs_dir" -maxdepth 1 -type f -a \
-    '(' '(' -name '*.rdiff' -o -name '*.rdiff.tmp' ')' \
-        -a '!' '('    -name "${rdiff_filename}" \
-		   -o -name "${rdiff_filename}.tmp" ')' ')' \
-    -exec rm -f \{} \;
+  logmsg2=$(
+    find "$rdiffs_dir" -maxdepth 1 -type f -a \
+      '(' '(' -name '*.rdiff' -o -name '*.rdiff.tmp' ')' \
+	  -a '!' '('    -name "${rdiff_filename}" \
+		     -o -name "${rdiff_filename}.tmp" ')' ')' \
+      -print0 \
+    | xargs -0 rm -fv | sed 's/$/,/' | xargs)
+
+  for log in "$logmsg1" "$logmsg2"; do
+    if [ -n "$log" ]; then
+      log info "cleaning up: $log"
+    fi
+  done
 }
 
 ensure_enough_available_diskspace() {
@@ -143,7 +153,7 @@ get_checksums_file() {
 
   checksum_file_path="${images_dir}/CKSUMS"
 
-  fetch_with_curl "$extra_curl_opts" \
+  fetch_with_curl "$extra_curl_opts -s" \
 		  "${checksum_file_path}.tmp" \
 		  "$url"
   mv "${checksum_file_path}.tmp" "${checksum_file_path}"
@@ -203,6 +213,8 @@ get_rdiff() {
     return 0
   fi
 
+  log info "we are missing the full rdiff $rdiff_filename, going to get it"
+
   mkdir -p "$rdiffs_dir"
 
   rdiff_tmp="${rdiff_path}.tmp"
@@ -211,6 +223,8 @@ get_rdiff() {
 
   sync
   mv "$rdiff_tmp" "$rdiff_path"
+
+  log notice "new rdiff file $rdiff_filename has been put into its place"
 }
 
 # XXX somewhat duplicate code with build_rdiffs.sh
@@ -301,6 +315,8 @@ patch_with_rdiff() {
 
   sync
   mv "${images_dir}/${next_image}.tmp" "${images_dir}/${next_image}"
+
+  log notice "new ltsp image $next_image has been put into its place"
 }
 
 # XXX duplicate code with puavo-install-ltspimages
@@ -317,6 +333,8 @@ set_image_as_default_image() {
   sync
   mv "${default_ltspimage_path}.tmp" "$default_ltspimage_path"
   sync
+
+  log notice "new ltsp image $next_image has been set as default"
 }
 
 #
@@ -330,6 +348,7 @@ renice -n 20 -p $$ > /dev/null
 images_dir=/images
 
 if [ ! -e "${images_dir}/${next_image}" ]; then
+  log info "we are missing $next_image, going to get it"
   get_next_image "$images_dir" "$next_image" "$rate_limit_opts"
 fi
 
@@ -337,5 +356,4 @@ if [ "${images_dir}/${next_image}" -ef "${images_dir}/ltsp.img" ]; then
   log info "the requested ltsp image is already in place"
 else
   set_image_as_default_image "$images_dir" "$next_image"
-  log notice "new ltsp image $next_image has been set as default"
 fi
