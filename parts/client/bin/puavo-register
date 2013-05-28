@@ -593,7 +593,7 @@ class Control
 
     # Do this as the last thing, because this affects the test
     # if this host has been registered.
-    PUAVO_ETC.write(:hostname, rui.responses["puavoHostname"])
+    PUAVO_ETC.write(:hostname, info['registration']["puavoHostname"])
 
     # Also run update to write the kernel stuff
     update() if info['registration']['puavoDeviceType'] != "laptop"
