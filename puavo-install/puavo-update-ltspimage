@@ -10,11 +10,11 @@ log() { echo "$2" | logger -p "$1" -s -t puavo-update-ltspimage; }
 
 usage() {
   log err "Usage: $(basename $0) [-r rate-limit] next_ltsp_image_name"
+  exit 1
 }
 
 if ! args=$(getopt -n "$0" -o +r: -l 'rate-limit:' -- "$@"); then
   usage
-  exit 1
 fi
 
 rate_limit_opts=""
@@ -37,7 +37,6 @@ done
 
 if [ -z "$next_image" ]; then
   usage
-  exit 1
 fi
 
 #
@@ -99,7 +98,6 @@ ensure_enough_available_diskspace() {
 
   for dir in "$images_dir" "$rdiffs_dir"; do 
     diskspace=$(stat -f -c '%S * %a' "$dir" | bc -l | xargs printf %.0f)
-    echo "comparing $diskspace -lt $required_diskspace"
     if [ "$diskspace" -lt "$required_diskspace" ]; then
       msg="Only $diskspace bytes available on $dir,"
       msg="$msg need $required_diskspace bytes"
@@ -153,6 +151,44 @@ get_checksums_file() {
   echo "${checksum_file_path}"
 }
 
+get_next_image() {
+  images_dir=$1
+  next_image=$2
+  rate_limit_opts=$3
+  
+  image_server=$(lookup_image_server_from_dns)
+
+  rdiffs_dir=${images_dir}/rdiffs
+  previous_image=$(lookup_current_ltspimage_name $images_dir)
+  rdiff_filename=$(get_rdiff_filename $previous_image $next_image)
+
+  cleanup_previous_runs "$images_dir" \
+			"$rdiffs_dir" \
+			"$rdiff_filename"
+
+  ensure_enough_available_diskspace "$images_dir" "$rdiffs_dir"
+
+  checksums_file=$(
+    get_checksums_file "$rate_limit_opts" \
+		       "$images_dir"      \
+		       "https://${image_server}/images/CKSUMS")
+
+  rdiff_url="https://${image_server}/images/rdiffs/${rdiff_filename}"
+
+  get_rdiff "$rdiffs_dir"      \
+	    "$rate_limit_opts" \
+	    "$rdiff_filename"  \
+	    "$rdiff_url"       \
+	    "$checksums_file"
+
+  patch_with_rdiff "$images_dir"     \
+		   "$rdiffs_dir"     \
+		   "$previous_image" \
+		   "$next_image"     \
+		   "$rdiff_filename" \
+		   "$checksums_file"
+}
+
 get_rdiff() {
   rdiffs_dir=$1
   extra_curl_opts=$2
@@ -173,6 +209,7 @@ get_rdiff() {
   fetch_with_curl  "$extra_curl_opts" "$rdiff_tmp" "$rdiff_url"
   check_with_cksum "$rdiff_filename"  "$rdiff_tmp" "$checksums_file"
 
+  sync
   mv "$rdiff_tmp" "$rdiff_path"
 }
 
@@ -280,8 +317,6 @@ set_image_as_default_image() {
   sync
   mv "${default_ltspimage_path}.tmp" "$default_ltspimage_path"
   sync
-
-  log notice "new ltsp image $imagename has been set as default"
 }
 
 #
@@ -294,41 +329,13 @@ renice -n 20 -p $$ > /dev/null
 
 images_dir=/images
 
-if [ -e "${images_dir}/${next_image}" ]; then
-  log info "the requested ltsp image is already in place"
-  exit 0
+if [ ! -e "${images_dir}/${next_image}" ]; then
+  get_next_image "$images_dir" "$next_image" "$rate_limit_opts"
 fi
 
-image_server=$(lookup_image_server_from_dns)
-
-rdiffs_dir=${images_dir}/rdiffs
-previous_image=$(lookup_current_ltspimage_name $images_dir)
-rdiff_filename=$(get_rdiff_filename $previous_image $next_image)
-
-cleanup_previous_runs "$images_dir" \
-		      "$rdiffs_dir" \
-		      "$rdiff_filename"
-
-ensure_enough_available_diskspace "$images_dir" "$rdiffs_dir"
-
-checksums_file=$(
-  get_checksums_file "$rate_limit_opts" \
-		     "$images_dir"      \
-		     "https://${image_server}/images/CKSUMS")
-
-rdiff_url="https://${image_server}/images/rdiffs/${rdiff_filename}"
-
-get_rdiff "$rdiffs_dir"      \
-	  "$rate_limit_opts" \
-	  "$rdiff_filename"  \
-	  "$rdiff_url"       \
-	  "$checksums_file"
-
-patch_with_rdiff "$images_dir"     \
-		 "$rdiffs_dir"     \
-		 "$previous_image" \
-		 "$next_image"     \
-		 "$rdiff_filename" \
-	  	 "$checksums_file"
-
-set_image_as_default_image "$images_dir" "$next_image"
+if [ "${images_dir}/${next_image}" -ef "${images_dir}/ltsp.img" ]; then
+  log info "the requested ltsp image is already in place"
+else
+  set_image_as_default_image "$images_dir" "$next_image"
+  log notice "new ltsp image $next_image has been set as default"
+fi
