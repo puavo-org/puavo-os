@@ -54,7 +54,8 @@ check_with_cksum() {
   fi
 
   calculated_checksum_line="$(
-    cksum "$actual_file_path" | awk -v filename="$filename" '$3 = filename')"
+    cksum "$actual_file_path" \
+      | awk -v filename="$filename" '{ $3 = filename; print }')"
 
   if fgrep -qx "$calculated_checksum_line" "$checksums_file"; then
     log info "checksum for file $filename is okay"
@@ -140,7 +141,7 @@ fetch_with_curl() {
       return 0
       ;;
     *)
-      log err "curl returned status code $curl_status_code"
+      log err "fetching $url, curl returned status code $curl_status_code"
       return 1
       ;;
   esac
@@ -181,7 +182,7 @@ get_next_image() {
   checksums_file=$(
     get_checksums_file "$rate_limit_opts" \
 		       "$images_dir"      \
-		       "https://${image_server}/images/CKSUMS")
+		       "https://${image_server}/images/rdiffs/CKSUMS")
 
   rdiff_url="https://${image_server}/images/rdiffs/${rdiff_filename}"
 
