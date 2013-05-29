@@ -21,7 +21,7 @@ vpath %.img ../
 all: CKSUMS $all_rdiffs $all_cksums
 
 CKSUMS::
-	cat *.cksum > CKSUM.\$\$\$\$ && mv CKSUM.\$\$\$\$ CKSUM
+	cat *.cksum > CKSUMS.\$\$\$\$ && mv CKSUMS.\$\$\$\$ CKSUMS
 
 EOF
 
