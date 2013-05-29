@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# obtain an exclusive lock on myself...
+# there should be only one instance of this program running
+
+exec 3<$0
+flock -nx 3 || { echo did not get a lock, exiting; exit 1; }
+
 #
 # argument parsing
 #
