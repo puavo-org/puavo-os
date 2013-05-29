@@ -322,7 +322,9 @@ class LdapAcl
       [ People.subtree,		attrs(%w(puavoEduPersonPersonnelNumber)),
 									Rule.write(Set.admin),			Rule.read(Set.externalservice_addressbook),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ People.subtree,		attrs(%w(mail
+      [ People.subtree,		attrs(%w(jpegPhoto
+					 mail
+					 preferredLanguage
 					 telephoneNumber)),		Rule.write(Set.admin,
 										   'self'),			Rule.read(Set.externalservice_addressbook),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
