@@ -31,4 +31,10 @@
   chmod 1666 /dev/fuse
 )
 
+# Lenovo ThinkPad Edge E320 seems to boot always with soft blocked wifi,
+# no matter what. The following line is intended to target this specific
+# model, but it does not harm to have it unblocked on any other device,
+# hence it's left without any model-specific guards.
+rfkill unblock wifi
+
 exit 0
