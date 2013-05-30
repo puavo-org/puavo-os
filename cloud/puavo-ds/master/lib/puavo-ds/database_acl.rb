@@ -305,7 +305,6 @@ class LdapAcl
 					 homeDirectory
 					 givenName
 					 sn
-					 preferredLanguage
 					 puavoPreferredDesktop
 					 loginShell)),	Rule.write(Set.admin),			Rule.read(Set.getent,
 															  PuavoUid.puavo('dn')),						],
