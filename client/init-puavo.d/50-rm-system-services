@@ -56,21 +56,6 @@ network-manager       # Network connection manager
 ufw                   # Uncomplicated Firewall
 upstart-socket-bridge # Bridge socket events into upstart
 ")"
-
-    # For low RAM thin clients, disable whatever isn't essential for booting
-    memtotal=$(sed -n 's/MemTotal: *\([0-9]*\) .*/\1/p' /proc/meminfo)
-    memtotal=$(($memtotal / 1024))
-    RM_RAM_THRESHOLD=${RM_RAM_THRESHOLD:-128}
-    if [ "$memtotal" -le "$RM_RAM_THRESHOLD" ]; then
-        rm_services="$rm_services $RM_LOW_RAM_SERVICES $(allowed_services "
-anacron               # anac(h)ronistic cron
-dbus                  # D-Bus system message bus
-cron                  # Regular background program processing daemon
-rsyslog               # System logging daemon
-tty1                  # Getty
-upstart-udev-bridge   # Bridge udev events into upstart
-")"
-    fi
 fi
 
 # We don't need NFS-related services if we're not using nfs
