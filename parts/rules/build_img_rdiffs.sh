@@ -2,7 +2,18 @@
 
 set -eu
 
-images="$(cat IMAGELIST)"
+{
+  set +u
+  imagelist_file=$1
+  set -u
+}
+
+if [ -z "$imagelist_file" ]; then
+  echo "Usage: $(basename $0) imagelist_file" > /dev/stderr
+  exit 1
+fi
+
+images=$(cat "$imagelist_file")
 
 # a bit ugly, but I want to use _make_, and with "-j"
 make_makefile() {
@@ -93,4 +104,4 @@ to_rdiff_orig_target() {
   '
 }
 
-make_makefile | tee Makefile | nice -n 20 make -f - -j "$(nproc)"
+make_makefile | nice -n 20 make -f - -j "$(nproc)"
