@@ -35,6 +35,7 @@ make_makefile() {
 
   cat <<'EOF'
 CKSUMS::
+	@echo "refreshing CKSUMS"
 	@cat *.cksum | awk '{ "basename " $$3 | getline $$3; print }' \
           > CKSUMS.$$$$ && mv CKSUMS.$$$$ CKSUMS
 EOF
@@ -56,7 +57,6 @@ EOF
   echo "$all_files" | xargs -n1 | awk '{
     printf "%s.cksum: %s\n", $1, $1
     print  "\tcksum $^ > $@"
-    print  "\t@echo refreshing CKSUMS"
     print  "\t@${MAKE} -s CKSUMS"
     print  ""
   }'
