@@ -30,14 +30,16 @@ make_makefile() {
   echo "# do not waste your time editing this"
   echo "vpath %.img ../"
   echo
-  echo "all: CKSUMS $all_rdiffs $all_cksums"
+  echo "all: make_cksums $all_rdiffs $all_cksums"
   echo
 
   cat <<'EOF'
-CKSUMS::
+.PHONY: make_cksums
+make_cksums::
 	@echo "refreshing CKSUMS"
 	@cat *.cksum | awk '{ "basename " $$3 | getline $$3; print }' \
           > CKSUMS.$$$$ && mv CKSUMS.$$$$ CKSUMS
+
 EOF
 
   # make .rdiff_signature rules (create signatures from source images)
@@ -57,7 +59,7 @@ EOF
   echo "$all_files" | xargs -n1 | awk '{
     printf "%s.cksum: %s\n", $1, $1
     print  "\tcksum $^ > $@"
-    print  "\t@${MAKE} -s CKSUMS"
+    print  "\t@${MAKE} -s make_cksums"
     print  ""
   }'
 }
