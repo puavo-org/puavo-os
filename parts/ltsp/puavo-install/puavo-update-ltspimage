@@ -362,5 +362,6 @@ fi
 if [ "${images_dir}/${next_image}" -ef "${images_dir}/ltsp.img" ]; then
   log info "the requested ltsp image is already in place"
 else
+  puavo-install-grub --only-update-config
   set_image_as_default_image "$images_dir" "$next_image"
 fi
