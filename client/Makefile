@@ -114,7 +114,6 @@ install : installdirs
 		initramfs/puavo_ltsp 
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
-		screen.d/ltspimage-update \
 		screen.d/register
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d \

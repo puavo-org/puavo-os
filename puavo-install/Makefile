@@ -1,6 +1,7 @@
 prefix = /usr/local
 exec_prefix = $(prefix)
 sbindir = $(exec_prefix)/sbin
+datarootdir = $(prefix)/share
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -12,6 +13,7 @@ all :
 .PHONY : installdirs
 installdirs :
 	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
 
 .PHONY : install
 install : installdirs
@@ -21,6 +23,9 @@ install : installdirs
 		puavo-install-ltspimages \
 		puavo-setup-filesystems \
 		puavo-update-ltspimage
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
+                screen.d/ltspimage-update
 
 .PHONY : clean
 clean :
