@@ -83,21 +83,19 @@ function devname  { regexp -s "$2"   '^(\(.*\)).*$'        "$1"; }
 
 function ltsp_image_entry {
   set imagefile="$1"
+  set description="$2"
 
   pathname $imagefile imagepath
   devname $imagefile dev
 
-  echo $imagepath
-  echo $dev
-
-  menuentry "LTSP - ${dev}${imagepath}" "$imagefile" "$dev" "$imagepath" {
+  menuentry "${description} (${imagepath})" "$imagefile" "$dev" "$imagepath" {
     set imagefile="$2"
     set dev="$3"
     set imagepath="$4"
 
-    if test -f "${dev}/ltsp-kernel-settings"; then
-      load_env -f "${dev}/ltsp-kernel-settings"
-    fi
+    # XXX fill in
+    set kernelversion=""
+    set kernelparameters=""
 
     loopback loop "${imagefile}"
     set root='(loop)'
@@ -120,18 +118,34 @@ insmod usb_keyboard
 insmod lvm
 
 for dev in (lvm/puavo-images); do
-  echo "${dev}"
+  for file in ${dev}/*.default; do
+    regexp -s default_alias_no_suffix '^(.*)\.default$' "${file}"
+    break
+  done
+  for file in ${dev}/*.backup; do
+    regexp -s backup_alias_no_suffix '^(.*)\.backup$' "${file}"
+    break
+  done
 
-  set primaryimage="${dev}/ltsp.img"
+  set default_image="${dev}/ltsp.img"
+  set backup_image="${dev}/ltsp-backup.img"
+  set default_image_alias="${default_alias_no_suffix}.img"
+  set backup_image_alias="${backup_alias_no_suffix}.img"
 
-  echo "PRIMARY: ${primaryimage}"
-  ltsp_image_entry "${primaryimage}"
+  if test -f "${default_image}"; then
+    ltsp_image_entry "${default_image}" "DEFAULT - ${default_image_alias}"
+  fi
+  if test -f "${backup_image}"; then
+    ltsp_image_entry "${backup_image}" "BACKUP - ${backup_image_alias}"
+  fi
 
   for file in ${dev}/*.img; do
-    if test "${file}" = "${primaryimage}"; then continue; fi
+    if test "${file}" = "${default_image}";       then continue; fi
+    if test "${file}" = "${backup_image}";        then continue; fi
+    if test "${file}" = "${default_image_alias}"; then continue; fi
+    if test "${file}" = "${backup_image_alias}";  then continue; fi
 
-    echo "${file}"
-    ltsp_image_entry "${file}"
+    ltsp_image_entry "${file}" "OTHER"
   done
 done
 EOF
