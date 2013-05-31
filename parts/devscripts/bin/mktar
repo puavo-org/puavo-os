@@ -1,0 +1,24 @@
+#!/bin/sh
+
+## Create a Debian-styled tarball from the contents of the current git
+## branch and place it to the parent directory of the repository.
+
+set -eu
+
+if [ $# -ne 1 ]; then
+    echo "E: wrong number of arguments" >&2
+    echo "usage: $(basename "$0") VERSION" >&2
+    exit 1
+fi
+
+version=$1
+toplevel_dirpath=$(git rev-parse --show-toplevel)
+toplevel_dirname=$(basename "${toplevel_dirpath}")
+
+[ -z "$(git diff)$(git diff --cached)" ] || {
+    echo "W: you have uncommitted changes in your working tree" >&2
+    echo "W: those will not be included in the tarball" >&2
+}
+
+git archive --format=tar --prefix="${toplevel_dirname}-${version}/" HEAD \
+    | gzip >"${toplevel_dirpath}/../${toplevel_dirname}_${version}.orig.tar.gz"

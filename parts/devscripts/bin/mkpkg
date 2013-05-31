@@ -1,0 +1,64 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+
+on_exit()
+{
+    local -r exitval=$?
+    set +e
+    [ -z "${tmpdir}" ] || rm -rf "${tmpdir}"
+    exit $exitval
+}
+
+assert_git_repo()
+{
+    git rev-parse --git-dir 2>&1 >/dev/null
+}
+
+assert_git_repo || {
+    echo "E: not a git repository, aborting" >&2
+    exit 1
+}
+
+[ -z "$(git diff)$(git diff --cached)" ] || {
+    echo "E: you have uncommitted changes in your working tree" >&2
+    echo "E: Please commit or stash changes before making a development snapshot." >&2
+    exit 1
+}
+
+toplevel_dirpath=$(git rev-parse --show-toplevel)
+package=$(basename "${toplevel_dirpath}")
+debian_dir=$(readlink -ve "${toplevel_dirpath}/debian")
+tmpdir=
+
+# All operations with side-effects must be executed after setting up
+# this trap to ensure proper cleanup on exit.
+trap on_exit EXIT
+
+tmpdir=$(mktemp --tmpdir -d "mkpkg_${package}.XXXXXXXXXX")
+
+cp -ar "${toplevel_dirpath}" "${tmpdir}"
+
+if [ -L "${tmpdir}/${package}/debian" ]; then
+    rm -rf "${tmpdir}/${package}/debian"
+    cp -ar "${debian_dir}" "${tmpdir}/${package}"
+fi
+
+cd "${tmpdir}/${package}"
+
+dist=$(dpkg-parsechangelog | sed -rn 's/^Distribution: (.*)/\1/p')
+last_orig_version=$(dpkg-parsechangelog | sed -ne 's/^Version: \(\([0-9]\+\):\)\?\(.*\)-.*/\3/p')
+this_orig_version="${last_orig_version}.dev$(date +%s)"
+this_package_version="${this_orig_version}-0+opinsys1"
+
+mktar "${this_orig_version}"
+
+dch -v "$this_package_version" "$(git rev-parse --short HEAD)"
+
+debuild -S -us -uc -sa
+cd "${toplevel_dirpath}"
+
+find "${tmpdir}" -maxdepth 1 -type f -name '*.dsc' | while read file; do
+    debuilder-push-dsc "$file" "$dist"
+done
