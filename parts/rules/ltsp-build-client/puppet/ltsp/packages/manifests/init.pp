@@ -432,7 +432,8 @@ class packages {
     , 'wget' ]:
       tag => [ 'remote_access', 'ubuntu', ];
 
-    [ 'googleearth' ]:
+    [ 'googleearth'
+    , 'av4kav' ]:
       tag => [ 'science', 'opinsys', ];
 
     [ 'atomix'
