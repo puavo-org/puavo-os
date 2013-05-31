@@ -176,7 +176,7 @@ get_next_image() {
   image_server=$(lookup_image_server_from_dns)
 
   rdiffs_dir=${images_dir}/rdiffs
-  previous_image=$(lookup_current_ltspimage_name $images_dir)
+  previous_image=$(lookup_ltspimage_name_by_alias "$images_dir" ltsp.img)
   rdiff_filename=$(get_rdiff_filename $previous_image $next_image)
 
   cleanup_previous_runs "$images_dir" \
@@ -261,10 +261,11 @@ get_rdiff_filename() {
 }
 
 # XXX duplicate code with puavo-install-ltspimages
-lookup_current_ltspimage_name() {
+lookup_ltspimage_name_by_alias() {
   images_dir=$1
+  imagename=$2
 
-  current_ltspimage_path=$images_dir/ltsp.img
+  current_ltspimage_path="$images_dir/$imagename"
   current_ltspimage_inode="$(stat -c %i $current_ltspimage_path 2>/dev/null \
 			       || true)"
 
@@ -341,7 +342,23 @@ set_image_as_default_image() {
   mv "${default_ltspimage_path}.tmp" "$default_ltspimage_path"
   sync
 
+  update_image_labels_for_grub "$images_dir"
+  sync
+
   log notice "new ltsp image $next_image has been set as default"
+}
+
+# XXX duplicate code with puavo-install-ltspimages
+update_image_labels_for_grub() {
+  images_dir=$1
+
+  default_image=$(lookup_ltspimage_name_by_alias "$images_dir" ltsp.img)
+  backup_image=$( lookup_ltspimage_name_by_alias "$images_dir" ltsp-backup.img)
+
+  rm -f ${images_dir}/ltsp-*.backup ${images_dir}/ltsp-*.default
+
+  test -n "$default_image" && touch "${default_image%.img}.default"
+  test -n "$backup_image"  && touch "${backup_image%.img}.backup"
 }
 
 #
