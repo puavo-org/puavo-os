@@ -39,6 +39,7 @@ class packages {
     , 'nmap'
     , 'pv'
     , 'pwgen'
+    , 'setserial'
     , 'sl'
     , 'strace'
     , 'sudo'
@@ -773,3 +774,4 @@ class packages {
     }
   }
 }
+
