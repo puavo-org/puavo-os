@@ -167,7 +167,7 @@ EOF
 fi
 
 
-if cmp "$grub_cfg_path" "$tmp_grub_cfg_path" 2>/dev/null; then
+if cmp "$grub_cfg_path" "$tmp_grub_cfg_path" >/dev/null 2>&1; then
   rm -f "$tmp_grub_cfg_path"
 else
   mv "$tmp_grub_cfg_path" "$grub_cfg_path"
