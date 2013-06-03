@@ -6,7 +6,7 @@ lookup_windows_partition_number() {
   # Presume that the first partition not containing "Linux"
   # is a Windows-partition.
   _diskdev=$1
-  fdisk -l $_diskdev \
+  fdisk -l "$_diskdev" \
     | awk '$1 ~ "^/dev/" && !/Linux/ {
 	     if (match($1, /[0-9]+$/, _)) { print _[0]; exit }
            }'
@@ -46,10 +46,13 @@ case "$hosttype" in
 esac
 
 if ! $only_update_config; then
-  grub-install --root-directory=$images_dir $diskdev
+  grub-install --root-directory=$images_dir "$diskdev"
 fi
 
-cat <<'EOF' | sed "s|__HOSTTYPE_SPECIFIC__|$hosttype_specific|" > $images_dir/boot/grub/grub.cfg.tmp
+grub_cfg_path="${images_dir}/boot/grub/grub.cfg"
+tmp_grub_cfg_path="${grub_cfg_path}.tmp"
+
+cat <<'EOF' | sed "s|__HOSTTYPE_SPECIFIC__|$hosttype_specific|" > "$tmp_grub_cfg_path"
 set default="0"
 
 function load_video {
@@ -150,10 +153,10 @@ for dev in (lvm/puavo-images); do
 done
 EOF
 
-windows_partition_number=$(lookup_windows_partition_number $diskdev)
+windows_partition_number=$(lookup_windows_partition_number "$diskdev")
 
 if [ -n "$windows_partition_number" ]; then
-  cat <<EOF >> $images_dir/boot/grub/grub.cfg.tmp
+  cat <<EOF >> "$tmp_grub_cfg_path"
 
 menuentry "Windows" {
   insmod ntfs
@@ -163,14 +166,19 @@ menuentry "Windows" {
 EOF
 fi
 
-mv $images_dir/boot/grub/grub.cfg.tmp $images_dir/boot/grub/grub.cfg
 
-# We have got some weird spurious grub errors of the sort (at first boot):
-# "error: ELF header smaller than expected", so we play it safe
-# and try weird tricks to flush all caches to actual, physical disk.
-# But we are not quite sure yet this will actually work (the problem is
-# difficult to reproduce).
-sync
-echo 3 > /proc/sys/vm/drop_caches
-blockdev --flushbufs $diskdev
-hdparm -qF $diskdev
+if cmp "$grub_cfg_path" "$tmp_grub_cfg_path" 2>/dev/null; then
+  rm -f "$tmp_grub_cfg_path"
+else
+  mv "$tmp_grub_cfg_path" "$grub_cfg_path"
+
+  # We have got some weird spurious grub errors of the sort (at first boot):
+  # "error: ELF header smaller than expected", so we play it safe
+  # and try weird tricks to flush all caches to actual, physical disk.
+  # But we are not quite sure yet this will actually work (the problem is
+  # difficult to reproduce).
+  sync
+  echo 3 > /proc/sys/vm/drop_caches
+  blockdev --flushbufs $diskdev
+  hdparm -qF $diskdev
+fi
