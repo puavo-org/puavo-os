@@ -48,6 +48,7 @@ case "$PUAVO_HOSTTYPE" in
       network-manager
       ondemand
       puavo-load-balancer
+      puavo-update-config
     "
     set_lts_var SCREEN_07            lightdm
     set_lts_var USE_NFS_HOMES        True
@@ -94,6 +95,7 @@ case "$PUAVO_HOSTTYPE" in
       $puavo_common_unneeded_services
       network-manager
       ondemand
+      puavo-update-config
     "
     set_lts_var USE_NFS_HOMES        True
     ;;
@@ -110,6 +112,7 @@ case "$PUAVO_HOSTTYPE" in
       network-manager
       ondemand
       puavo-load-balancer
+      puavo-update-config
     "
     set_lts_var SCREEN_07            lightdm
     set_lts_var SSH_OVERRIDE_PORT    222
@@ -122,6 +125,7 @@ case "$PUAVO_HOSTTYPE" in
       network-manager
       ondemand
       puavo-load-balancer
+      puavo-update-config
     "
     set_lts_var SCREEN_07          register
     ;;
