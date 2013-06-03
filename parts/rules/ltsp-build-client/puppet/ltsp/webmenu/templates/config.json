@@ -7,7 +7,7 @@
       "fi": "Salasana",
       "en": "Password",
       "sv": "Lösenord"
-      }
+    }
   },
   "shutdownCMD": [
     "puavo-ltsp-client-action",
@@ -16,5 +16,5 @@
   "restartCMD": [
     "puavo-ltsp-client-action",
     "--reboot"
-  ],
+  ]
 }
