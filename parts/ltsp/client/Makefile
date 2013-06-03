@@ -131,8 +131,9 @@ install : installdirs
 		etc/init.d/ltspssh
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
+		upstart/ltspssh.conf \
 		upstart/puavo-ltsp-client.conf \
-		upstart/ltspssh.conf
+		upstart/puavo-update-config.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/ssh \
 		etc/ssh/ltspsshd_config
