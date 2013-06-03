@@ -36,9 +36,10 @@ menuJSON = requirefallback(
 
 safeRequire = (path) ->
   try
-    require(path)
-  catch e
-    {}
+    return require(path)
+  catch err
+    throw err if err.code isnt "MODULE_NOT_FOUND"
+    return {}
 
 # Merge config files. Last one overrides options from previous one
 config = _.extend({},
