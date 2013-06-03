@@ -179,6 +179,8 @@ get_next_image() {
   previous_image=$(lookup_ltspimage_name_by_alias "$images_dir" ltsp.img)
   rdiff_filename=$(get_rdiff_filename $previous_image $next_image)
 
+  mkdir -p "$rdiffs_dir"
+
   cleanup_previous_runs "$images_dir" \
 			"$rdiffs_dir" \
 			"$rdiff_filename"
@@ -221,8 +223,6 @@ get_rdiff() {
   fi
 
   log info "we are missing the full rdiff $rdiff_filename, going to get it"
-
-  mkdir -p "$rdiffs_dir"
 
   rdiff_tmp="${rdiff_path}.tmp"
   fetch_with_curl  "$extra_curl_opts" "$rdiff_tmp" "$rdiff_url"
