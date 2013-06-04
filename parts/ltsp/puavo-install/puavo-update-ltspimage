@@ -378,7 +378,9 @@ if [ ! -e "${images_dir}/${next_image}" ]; then
   get_next_image "$images_dir" "$next_image" "$rate_limit_opts"
 fi
 
-if [ "${images_dir}/${next_image}" -ef "${images_dir}/ltsp.img" ]; then
+# must call /usr/bin/test because /bin/sh is broken regarding this test
+if /usr/bin/test "${images_dir}/${next_image}" \
+             -ef "${images_dir}/ltsp.img"; then
   log info "the requested ltsp image is already in place"
 else
   puavo-install-grub --only-update-config
