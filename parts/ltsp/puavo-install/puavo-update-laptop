@@ -12,7 +12,7 @@ puavo = Puavo::Client::Base.new(PUAVO_ETC.domain,
                                 PUAVO_ETC.ldap_password)
 device = puavo.devices.find_by_hostname(PUAVO_ETC.hostname)
 
-puts device.device_image
+puts "#{ device.device_image }.img"
 EOF
 }
 
