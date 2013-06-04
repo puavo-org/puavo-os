@@ -2,6 +2,7 @@ prefix = /usr/local
 exec_prefix = $(prefix)
 sbindir = $(exec_prefix)/sbin
 datarootdir = $(prefix)/share
+sysconfdir = $(prefix)/etc
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -12,8 +13,9 @@ all :
 
 .PHONY : installdirs
 installdirs :
-	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
+	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)$(sysconfdir)/init
 
 .PHONY : install
 install : installdirs
@@ -26,6 +28,9 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
                 screen.d/ltspimage-update
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
+		upstart/puavo-update-laptop.conf
 
 .PHONY : clean
 clean :
