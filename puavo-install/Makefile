@@ -24,6 +24,7 @@ install : installdirs
 		puavo-install-grub \
 		puavo-install-ltspimages \
 		puavo-setup-filesystems \
+		puavo-update-laptop \
 		puavo-update-ltspimage
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
