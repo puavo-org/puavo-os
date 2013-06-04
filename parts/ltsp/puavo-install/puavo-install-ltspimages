@@ -107,8 +107,10 @@ update_image_labels_for_grub() {
 
   rm -f ${images_dir}/ltsp-*.backup ${images_dir}/ltsp-*.default
 
-  test -n "$default_image" && touch "${default_image%.img}.default"
-  test -n "$backup_image"  && touch "${backup_image%.img}.backup"
+  test -n "$default_image" \
+    && touch "${images_dir}/${default_image%.img}.default"
+  test -n "$backup_image"  \
+    && touch "${images_dir}/${backup_image%.img}.backup"
 }
 
 
