@@ -187,6 +187,28 @@ Then putting the line "ltsp1" to /etc/puavo/primary_ltsp_server should be a
 good idea (this makes the created ltsp server the default ltsp server).
 
 
+Load balancing and laptop updates
+---------------------------------
+
+Load balancing between LTSP servers requires nginx configuration.
+Nginx is also used for distributing ltsp image binary patches
+to laptops for updating laptops.  Load balancing is not strictly
+required, but this may actually change soon, so it is a good idea
+to enable it.  Laptop updates are only useful if you have puavo-laptops
+installed.
+
+  # enable puavo-rest / load balancing:
+  sudo ln -fns /etc/nginx/sites-available/puavo-rest \
+               /etc/nginx/sites-enabled/puavo-rest
+
+  # enable ltsp-image / binary patch distribution (for laptops only)
+  sudo ln -fns /etc/nginx/sites-available/ltsp-images \
+               /etc/nginx/sites-enabled/ltsp-images
+
+  # make changes effective
+  sudo service nginx reload
+
+
 Cups
 ----
 
