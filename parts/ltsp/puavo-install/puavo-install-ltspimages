@@ -9,14 +9,14 @@ install_from_nbd() {
 
   test -e "$imagepath" && return 0
 
-  # clean up old tmpimages
-  rm -f $images_dir/*.tmpimage
+  # clean up old temporary images
+  rm -f $images_dir/*.tmp
 
   total_size=$(df /dev/nbd0 | awk '$1 == "/dev/nbd0" { print $2 "k" }')
   dd if=/dev/nbd0 2>/dev/null | pv -s "$total_size" \
-    > "${imagepath}.tmpimage"
+    > "${imagepath}.tmp"
   sync
-  mv "${imagepath}.tmpimage" "$imagepath"
+  mv "${imagepath}.tmp" "$imagepath"
   sync
 }
 
