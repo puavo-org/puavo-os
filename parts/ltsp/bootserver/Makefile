@@ -15,6 +15,7 @@ all :
 .PHONY : installdirs
 installdirs :
 	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)$(sysconfdir)/nginx/sites-available
 	mkdir -p $(DESTDIR)$(sysconfdir)/sudoers.d
 	mkdir -p $(DESTDIR)$(templatedir)/etc/apparmor.d/local
 	mkdir -p $(DESTDIR)$(templatedir)/etc/bind
@@ -31,6 +32,9 @@ installdirs :
 install : installdirs
 	$(INSTALL) -m 440 -t $(DESTDIR)$(sysconfdir)/sudoers.d \
 		etc/sudoers.d/puavo-bootserver
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/nginx/sites-available \
+		etc/nginx/sites-available/ltsp-images
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir) \
 		templates/ltsp-server.xml

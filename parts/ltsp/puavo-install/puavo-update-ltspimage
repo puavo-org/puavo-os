@@ -190,9 +190,9 @@ get_next_image() {
   checksums_file=$(
     get_checksums_file "$rate_limit_opts" \
 		       "$images_dir"      \
-		       "https://${image_server}/images/rdiffs/CKSUMS")
+		       "https://${image_server}/rdiffs/CKSUMS")
 
-  rdiff_url="https://${image_server}/images/rdiffs/${rdiff_filename}"
+  rdiff_url="https://${image_server}/rdiffs/${rdiff_filename}"
 
   get_rdiff "$rdiffs_dir"      \
 	    "$rate_limit_opts" \
