@@ -16,10 +16,6 @@ parser = OptionParser.new do |opts|
     options[:server] = server
   end
 
-  opts.on("-o", "--organisation [ORGANISATION]", "Orgsanisation key. Example 'hogwarts'") do |organisation|
-    options[:organisation] = organisation
-  end
-
   opts.on_tail("-h", "--help", "Show this message") do
     STDERR.puts opts
     exit
@@ -76,7 +72,7 @@ def main(options)
   FileUtils.mkdir_p(options[:target])
   current_files = read_current_files(options[:target])
 
-  ef_root = URI.join(options[:server], "/v3/", options[:organisation]).to_s
+  ef_root = URI.join(options[:server], "/v3/").to_s
   ef = ExternalFiles.new(ef_root)
   ef.index.each do |meta|
     file_path = File.join(options[:target], meta["name"])
