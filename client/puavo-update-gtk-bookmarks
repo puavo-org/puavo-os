@@ -6,6 +6,7 @@ gtk_bookmarks() {
   _networkfolder_displayname=$1
   _schoolsharedir=$2
   _share_displayname=$3
+  _mountpoint=$4
 
   homedir_server="homedir.$(cat /etc/puavo/domain)"
 
@@ -13,8 +14,8 @@ gtk_bookmarks() {
     laptop)
       # Add two bookmarks: to user home directory on server, and to shared
       # directories on server.
-      echo "smb://${homedir_server}/${USER} * ${_networkfolder_displayname}"
-      echo "smb://${homedir_server}/share/${_schoolsharedir} * ${_share_displayname}"
+      echo "file://${_mountpoint}/${homedir_server}/${USER} * ${_networkfolder_displayname}"
+      echo "file://${_mountpoint}/${homedir_server}/share/${_schoolsharedir} * ${_share_displayname}"
       ;;
     *)
       # add a bookmark pointing to shared directories
@@ -56,8 +57,20 @@ if ! [ -e ~/.gtk-bookmarks ]; then
   /usr/bin/xdg-user-dirs-gtk-update
 fi
 
+mountpoint="/home/${USER}/.puavo-sharedir"
+case "$(cat /etc/puavo/hosttype)" in
+  laptop)
+    mkdir -p "${mountpoint}"
+    mount | grep -q "${mountpoint}" && fusermount -u "${mountpoint}"
+    smbnetfs "${mountpoint}"
+    ;;
+  *)
+    ;;
+esac
+
 gtk_bookmarks "$networkfolder_displayname" \
               "$schoolsharedir"            \
               "$share_displayname"         \
+              "$mountpoint"                \
   > ~/.gtk-bookmarks.tmp
 mv ~/.gtk-bookmarks.tmp ~/.gtk-bookmarks
