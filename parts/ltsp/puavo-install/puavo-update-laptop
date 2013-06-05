@@ -2,9 +2,45 @@
 
 set -eu
 
-# XXX should we use ruby or should we use shell?  or is this okay?
-get_imagename_from_puavo() {
-  cat <<'EOF' | ruby1.9.1
+hosttype=$(cat /etc/puavo/hosttype)
+
+if [ "$hosttype" != "laptop" ]; then
+  echo 'This script should be run only for laptops!' > /dev/stderr
+  exit 1
+fi
+
+# Update several (different) things.  Even if one thing cannot be updated,
+# try to update others (order should not matter here, but do this sequentially
+# anyway).
+
+# update lts.conf
+{
+  replace_if_changed() {
+    dest=$1
+    src=$2
+
+    if cmp "$src" "$dest" >/dev/null 2>&1; then
+      rm -f "$src"
+    else
+      mv "$src" "$dest"
+    fi
+  }
+
+  install -o root -g root -m 600 /dev/null /state/etc/lts.conf.tmp
+  puavo-lts > /state/etc/lts.conf.tmp
+  replace_if_changed /state/etc/lts.conf /state/etc/lts.conf.tmp
+} || true
+
+# update external files (under /state/external_files)
+{
+  puavo-sync-external-files
+} || true
+
+# update the ltsp image
+{
+  # XXX should we use ruby or should we use shell?  or is this okay?
+  get_imagename_from_puavo() {
+    cat <<'EOF' | ruby1.9.1
 require 'puavo'
 
 puavo = Puavo::Client::Base.new(PUAVO_ETC.domain,
@@ -14,34 +50,10 @@ device = puavo.devices.find_by_hostname(PUAVO_ETC.hostname)
 
 puts "#{ device.device_image }.img"
 EOF
-}
+  }
 
-replace_if_changed() {
-  dest=$1
-  src=$2
-
-  if cmp "$src" "$dest" >/dev/null 2>&1; then
-    rm -f "$src"
-  else
-    mv "$src" "$dest"
+  next_imagename=$(get_imagename_from_puavo)
+  if [ -n "$next_imagename" ]; then
+    puavo-update-ltspimage --rate-limit 50k "$next_imagename"
   fi
-}
-
-hosttype=$(cat /etc/puavo/hosttype)
-
-if [ "$hosttype" != "laptop" ]; then
-  echo 'This script should be run only for laptops!' > /dev/stderr
-  exit 1
-fi
-
-# update lts.conf
-
-install -o root -g root -m 600 /dev/null /state/etc/lts.conf.tmp
-puavo-lts > /state/etc/lts.conf.tmp
-replace_if_changed /state/etc/lts.conf /state/etc/lts.conf.tmp
-
-next_imagename=$(get_imagename_from_puavo)
-
-if [ -n "$next_imagename" ]; then
-  puavo-update-ltspimage --rate-limit 50k "$next_imagename"
-fi
+} || true
