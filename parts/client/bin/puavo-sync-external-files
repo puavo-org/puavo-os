@@ -28,7 +28,6 @@ end
 parser.parse!
 
 options[:target] = ARGV[0] || "/state/external_files"
-options[:organisation] ||= PUAVO_ETC.domain.match(/^(.*?)\./)[1]
 options[:server] ||= "https://api.opinsys.fi/v3"
 
 def read_current_files(dirpath)
