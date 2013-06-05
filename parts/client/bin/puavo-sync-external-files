@@ -73,6 +73,7 @@ def main(options)
   current_files = read_current_files(options[:target])
 
   ef_root = URI.join(options[:server], "/v3/").to_s
+  STDERR.puts "Connecting to #{ ef_root }"
   ef = ExternalFiles.new(ef_root)
   ef.index.each do |meta|
     file_path = File.join(options[:target], meta["name"])
