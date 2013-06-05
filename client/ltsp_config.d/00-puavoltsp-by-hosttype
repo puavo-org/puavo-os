@@ -81,6 +81,7 @@ case "$PUAVO_HOSTTYPE" in
       mountnfs.sh
       puavo-load-balancer
       puavo-monitor
+      puavo-sync-external-files
       puavo-wlanap
       umountnfs.sh
       vtun
@@ -112,6 +113,7 @@ case "$PUAVO_HOSTTYPE" in
       network-manager
       ondemand
       puavo-load-balancer
+      puavo-sync-external-files
       puavo-update-laptop
     "
     set_lts_var SCREEN_07            lightdm
@@ -125,6 +127,7 @@ case "$PUAVO_HOSTTYPE" in
       network-manager
       ondemand
       puavo-load-balancer
+      puavo-sync-external-files
       puavo-update-laptop
     "
     set_lts_var SCREEN_07          register
