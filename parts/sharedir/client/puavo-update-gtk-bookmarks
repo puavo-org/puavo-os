@@ -57,7 +57,7 @@ if ! [ -e ~/.gtk-bookmarks ]; then
   /usr/bin/xdg-user-dirs-gtk-update
 fi
 
-mountpoint="/home/${USER}/.puavo-sharedir"
+mountpoint="${HOME}/.puavo-sharedir"
 case "$(cat /etc/puavo/hosttype)" in
   laptop)
     mkdir -p "${mountpoint}"
