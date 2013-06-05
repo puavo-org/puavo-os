@@ -32,6 +32,7 @@ class packages {
     , 'git'
     , 'initramfs-tools'
     , 'iftop'
+    , 'inotify-tools'
     , 'iperf'
     , 'lynx'
     , 'm4'
