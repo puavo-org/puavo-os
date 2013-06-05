@@ -27,8 +27,17 @@ parser = OptionParser.new do |opts|
 end
 parser.parse!
 
+def check_call(cmd)
+  res = `#{ cmd }`
+  if $?.success?
+    return res
+  else
+    raise "Failed to execute '#{ cmd }'"
+  end
+end
+
 options[:target] = ARGV[0] || "/state/external_files"
-options[:server] ||= "https://api.opinsys.fi/v3"
+options[:server] ||= check_call "puavo-resolve-api-server"
 
 def read_current_files(dirpath)
   Dir.entries(dirpath).map do |name|
