@@ -1,11 +1,14 @@
 #!/usr/bin/env ruby1.9.1
 
-require "optparse"
-require "fileutils"
 require "digest/sha1"
-require "rest-client"
+require "fileutils"
 require "json"
+require "optparse"
+
+# puavo lib must loaded before rest-client because rest-client is bundled into
+# puavo lib
 require "puavo"
+require "rest-client"
 
 options = {}
 
