@@ -17,7 +17,7 @@ puavo_domain=$(cat /etc/puavo/domain)
 
 dig_res=$(dig +time=2 +tries=1 SRV _puavo-api._tcp.${puavo_domain} +search +short)
 
-# dig does not exit with zero exit status even if the search fails. it will
+# dig does not exit with nonzero exit status even if the search fails. it will
 # just give an empty response
 if [ "$dig_res" != "" ]; then
     echo $dig_res | awk '{ sub(/\.$/, ""); printf "https://%s:%s", $4, $3 }'
