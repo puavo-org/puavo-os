@@ -18,6 +18,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/default
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-external-files-actions.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
@@ -102,11 +103,12 @@ install : installdirs
 		puavo-ltsp-client-action
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
-		puavo-dns-client \
 		puavo-configure-client \
-		puavo-ltsp-login \
+		puavo-dns-client \
+		puavo-handle-external-files-actions \
+		puavo-ltsp-envfeed \
 		puavo-ltsp-init-nfs \
-		puavo-ltsp-envfeed
+		puavo-ltsp-login
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount \
 		initramfs/puavo_udhcp
