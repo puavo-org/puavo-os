@@ -26,7 +26,7 @@ fi
 
 # Fallback for laptops that are not in the school network
 if [ $(cat /etc/puavo/hosttype) = "laptop" ]; then
-    echo -n "https://$(cat /etc/puavo/domain)"
+    echo -n "https://$puavo_domain"
     exit 0
 fi
 
