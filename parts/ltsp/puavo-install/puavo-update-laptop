@@ -34,6 +34,7 @@ fi
 # update external files (under /state/external_files)
 {
   puavo-sync-external-files
+  puavo-handle-external-files-actions
 } || true
 
 # update the ltsp image
