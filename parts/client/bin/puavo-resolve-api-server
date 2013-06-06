@@ -4,9 +4,9 @@ help () {
     echo "
     usage: $(basename $0)
 
-    Resolve puavo api server from dns. If the device type is laptop and dns resolve
-    fails it will return the global fallback server.
-"
+    Resolve local puavo api server from dns. If the device type is laptop and
+    dns resolve fails it will return the public server.
+    "
 }
 
 [ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
@@ -20,12 +20,13 @@ dig_res=$(dig +time=2 +tries=1 SRV _puavo-api._tcp.${puavo_domain} +search +shor
 # dig does not exit with zero exit status even if the search fails. it will
 # just give an empty response
 if [ "$dig_res" != "" ]; then
-    echo -n $dig_res | awk '{ sub(/\.$/, ""); printf "https://%s:%s", $4, $3 }'
+    echo $dig_res | awk '{ sub(/\.$/, ""); printf "https://%s:%s", $4, $3 }'
     exit 0
 fi
 
+# Fallback for laptops that are not in the school network
 if [ $(cat /etc/puavo/hosttype) = "laptop" ]; then
-    echo -n "https://api.opinsys.fi"
+    echo -n "https://$(cat /etc/puavo/domain)"
     exit 0
 fi
 
