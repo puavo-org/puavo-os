@@ -1,6 +1,6 @@
 class smartboard::config {
-  include puavo_external_files
-  require packages
+  require packages,
+          puavo_external_files
 
   file {
     '/etc/puavo-external-files-actions.d/smartboard':
