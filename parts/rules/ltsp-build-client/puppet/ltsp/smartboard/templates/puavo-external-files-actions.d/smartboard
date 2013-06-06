@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -eu
+
+# if there is no smartboard license, remove the notebook .desktop file
+if [ ! -e "/opt/SMART Technologies/common/data/.mp.1.1.dat" ]; then
+  rm -f /usr/share/applications/smarttech-notebook.desktop
+fi

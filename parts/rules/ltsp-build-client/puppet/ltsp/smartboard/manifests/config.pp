@@ -3,6 +3,10 @@ class smartboard::config {
   require packages
 
   file {
+    '/etc/puavo-external-files-actions.d/smartboard':
+      content => template('smartboard/puavo-external-files-actions.d/smartboard'),
+      mode    => 755;
+
     '/etc/xdg/SMART Technologies.conf':
       mode   => 644,
       source => 'puppet:///modules/smartboard/SMART_Technologies.conf';
