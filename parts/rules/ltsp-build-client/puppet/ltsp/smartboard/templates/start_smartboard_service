@@ -2,9 +2,15 @@
 
 set -e
 
-if lsusb | awk '$6 ~ /^0b8c:/' | grep -q .; then
-  exec "/opt/SMART Technologies/SMART Product Drivers/bin/SMARTBoardService" \
-       "$@"
+# do not start smartboard stuff if we do not have a license
+if [ ! -e "/opt/SMART Technologies/common/data/.mp.1.1.dat" ]; then
+  exit 1
 fi
 
-exit 0
+# do not start smartboard stuff if we do not have a smartboard connected
+if ! lsusb | awk '$6 ~ /^0b8c:/' | grep -q .; then
+  exit 1
+fi
+
+exec "/opt/SMART Technologies/SMART Product Drivers/bin/SMARTBoardService" \
+     "$@"
