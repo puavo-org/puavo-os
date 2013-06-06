@@ -1,15 +1,14 @@
 #!/bin/sh
 
-help () {
+[ "$1" = "--help" -o "$1" = "-h" ] && {
     echo "
     usage: $(basename $0)
 
     Resolve local puavo api server from dns. If the device type is laptop and
     dns resolve fails it will return the public server.
     "
-}
+} && exit 0
 
-[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
 
 set -eu
 
