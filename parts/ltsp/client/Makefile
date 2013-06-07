@@ -108,7 +108,8 @@ install : installdirs
 		puavo-handle-external-files-actions \
 		puavo-ltsp-envfeed \
 		puavo-ltsp-init-nfs \
-		puavo-ltsp-login
+		puavo-ltsp-login \
+		puavo-update-nm-configurations
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount \
 		initramfs/puavo_udhcp
