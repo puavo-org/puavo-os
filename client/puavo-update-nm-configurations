@@ -30,6 +30,7 @@
 
 require 'fileutils'
 require 'json'
+require 'uuidtools'
 
 Nm_config_directory = '/state/etc/NetworkManager/system-connections'
 
@@ -81,7 +82,7 @@ class Wlan
   end
 
   def uuidgen
-    %x(uuidgen).strip
+    UUIDTools::UUID.random_create.to_s
   end
 end
 
