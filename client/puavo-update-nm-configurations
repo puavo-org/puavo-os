@@ -1,0 +1,171 @@
+#!/usr/bin/ruby1.9.1
+
+#
+# Generate and update NetworkManager configuration files
+# based on network information in Puavo.
+#
+# Reads json from /etc/puavo/wlan.json
+# and excepts it to contain something like this
+# (only key, "type", "ssid" and possibly "password" are used).
+# The "type" can be "open" or "psk".
+#
+# {
+#   "networks": {
+#     "ankkalinna": {
+#       "freq":     "g/a/both",
+#       "type":     "psk",
+#       "ssid":     "Ankkalinna",
+#       "channel":  "11",
+#       "password": "AkuAnkka"
+#     },
+#     "humppaajat": {
+#       "freq":     "g/a/both",
+#       "type":     "open",
+#       "ssid":     "Humppaajat",
+#       "channel":  "11"
+#     }
+#   }
+# }
+#
+
+require 'fileutils'
+require 'json'
+
+Nm_config_directory = '/state/etc/NetworkManager/system-connections'
+
+class Wlan
+  def initialize(id, ssid)
+    raise "Wlan id is not set"                  if (  id.nil? ||   id.empty?)
+    raise "Wlan ssid is not set for id=#{ id }" if (ssid.nil? || ssid.empty?)
+
+    @id   = "puavo-#{ id }"
+    @ssid = ssid
+
+    # try to read uuid from the old config file, or generate with uuidgen
+    @uuid = read_uuid_from_config || uuidgen
+  end
+
+  def nm_config_path
+    "#{ Nm_config_directory }/#{ @id }"
+  end
+
+  def read_uuid_from_config
+    begin
+      section = ''
+      IO.readlines(nm_config_path).each do |line|
+        section_match = line.match(/^\[(.*)\]$/)
+        if section_match then
+          section = section_match[1]
+          next
+        end
+
+        uuid_match = line.match(/^uuid=(.*)$/)
+        if section == 'connection' and uuid_match
+          return uuid_match[1]
+        end
+      end
+    rescue
+      nil
+    end
+  end
+
+  def update_file
+    tmpfile_path = "#{ nm_config_path }.tmp"
+    File.open(tmpfile_path, 'w', 0600) { |f| f.print config }
+
+    if (FileUtils.compare_file(nm_config_path, tmpfile_path) rescue false) then
+      File.delete(tmpfile_path)
+    else
+      File.rename(tmpfile_path, nm_config_path)
+    end
+  end
+
+  def uuidgen
+    %x(uuidgen).strip
+  end
+end
+
+class Wlan::Open < Wlan
+  def config
+    <<"EOF"
+[connection]
+id=#{ @id }
+uuid=#{ @uuid }
+type=802-11-wireless
+
+[802-11-wireless]
+ssid=#{ @ssid }
+mode=infrastructure
+
+[ipv6]
+method=auto
+
+[ipv4]
+method=auto
+EOF
+  end
+end
+
+class Wlan::Psk < Wlan
+  def initialize(id, ssid, psk)
+    raise "Wlan password is not set for id=#{ id }" if (psk.nil? || psk.empty?)
+    @psk = psk
+
+    super(id, ssid)
+  end
+
+  def config
+    <<"EOF"
+[connection]
+id=#{ @id }
+uuid=#{ @uuid }
+type=802-11-wireless
+
+[802-11-wireless]
+ssid=#{ @ssid }
+mode=infrastructure
+security=802-11-wireless-security
+
+[802-11-wireless-security]
+key-mgmt=wpa-psk
+psk=#{ @psk }
+
+[ipv4]
+method=auto
+
+[ipv6]
+method=auto
+EOF
+  end
+end
+
+config_path = '/etc/puavo/wlan.json'
+
+config = JSON.parse(IO.read(config_path))
+
+wlan_collection = {}
+config['networks'].each do |id, info|
+  wlan \
+    = case info['type']
+	when 'open'
+	  Wlan::Open.new(id, info['ssid'])
+	when 'psk'
+	  Wlan::Psk.new(id, info['ssid'], info['password'])
+	else
+	  warn "Unsupported wlan type #{ info['type'] }"
+      end
+
+  if wlan
+    wlan_collection[id] = wlan
+  end
+end
+
+# Remove all puavo-* network manager configurations that no longer should be.
+Dir.glob("#{ Nm_config_directory }/puavo-*") do |puavo_config_path|
+  config_id = File.basename(puavo_config_path)
+  if not wlan_collection.has_key?(config_id) then
+    File.delete(puavo_config_path)
+  end
+end
+
+wlan_collection.values.each { |wlan| wlan.update_file }
