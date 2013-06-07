@@ -156,6 +156,13 @@ case puavo_device_type
         File.open(filename, "w") {|f| }
       end
     end
+
+    # Laptops also want the NetworkManager configurations to be done before
+    # it starts.  Should that be integrated here is an interesting question,
+    # but right now the puavo-update-nm-configurations script loads fileutils
+    # and json modules, which would needlessly slow down this script for other
+    # host types that do not need this.
+    system('puavo-update-nm-configurations')
 end
 
 exit(0)
