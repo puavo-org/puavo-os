@@ -67,20 +67,6 @@ def update_acls(suffix)
     acls_with_olcAccess = acls.map { |s| s.sub(/^/, 'olcAccess: ') }
     f.write acls_with_olcAccess.join('')
 
-# XXX comment this out because it could do some damage...  there appears to
-# XXX be a limit of 50 for these, and deleting/adding makes current ones to
-# XXX to the back of the list
-#   f.write "\n\n"
-#   f.write "dn: cn=config\n"
-#   f.write "changetype: modify\n"
-#   f.write "delete: olcAuthzRegexp\n"
-#   f.write "olcAuthzRegexp: uid=([^,]*)@#{kerberos_realm.downcase},cn=gssapi,cn=auth ldap:///ou=People,#{suffix}??one?(uid=$1)\n"
- 
-    f.write "\n\n"
-    f.write "dn: cn=config\n"
-    f.write "changetype: modify\n"
-    f.write "add: olcAuthzRegexp\n"
-    f.write "olcAuthzRegexp: uid=([^,]*)@#{kerberos_realm.downcase},cn=gssapi,cn=auth ldap:///ou=People,#{suffix}??one?(uid=$1)\n"
   }
 
   puts `ldapmodify -c -h #{PUAVO_ETC.ldap_master} -x -D #{PUAVO_ETC.ldap_dn} -Z -w #{@bindpw} -f /tmp/acl.ldif`
