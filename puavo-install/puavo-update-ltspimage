@@ -361,6 +361,8 @@ update_image_labels_for_grub() {
     && touch "${images_dir}/${default_image%.img}.default"
   test -n "$backup_image"  \
     && touch "${images_dir}/${backup_image%.img}.backup"
+
+  return 0
 }
 
 #
