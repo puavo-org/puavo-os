@@ -191,6 +191,8 @@ end
 
 new_db = Database.find(:first, :attribute => 'olcSuffix', :value => suffix)
 
+slapd_config = SlapdConfig.first
+
 puts "* Setting up overlay configuration to database"
 Overlay.create_overlays(:database => new_db,
                         :kerberos_realm => kerberos_realm)
@@ -210,6 +212,11 @@ organisation_attributes = {
   :puavoPuppetHost => puppet_host
 }
 organisation = Organisation.create(organisation_attributes)
+
+puts "* Update olcAuthzRegexp"
+slapd_config.olcAuthzRegexp = Array(slapd_config.olcAuthzRegexp) +
+  [ "uid=([^,]*)@#{kerberos_realm.downcase},cn=gssapi,cn=auth ldap:///ou=People,#{suffix}??one?(uid=$1)" ]
+slapd_config.save
 
 puts "* Add organizational units: People, Groups, Hosts, etc..."
 OrganizationalUnit.create_units(organisation)
