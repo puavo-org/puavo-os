@@ -81,27 +81,19 @@ cleanup_previous_runs() {
 
   # cleanup old ltsp images (and their possible temporary *.tmp files).
   # The ltsp-backup.img is going to go too...
-  logmsg1=$(
-    find "$images_dir" -maxdepth 1 -type f -a \
-      '(' '(' -name '*.img' -o -name '*.img.tmp' ')' \
-	  -a '!' -samefile "${images_dir}/ltsp.img" ')' \
-      -print0 \
-    | xargs -0 rm -fv | sed 's/$/,/' | xargs)
+  find "$images_dir" -maxdepth 1 -type f -a \
+    '(' '(' -name '*.img' -o -name '*.img.tmp' ')' \
+	-a '!' -samefile "${images_dir}/ltsp.img" ')' \
+    -print0 \
+  | xargs -0 rm -f
 
   # cleanup old rdiff files, except those that we want to use right now
-  logmsg2=$(
-    find "$rdiffs_dir" -maxdepth 1 -type f -a \
-      '(' '(' -name '*.rdiff' -o -name '*.rdiff.tmp' ')' \
-	  -a '!' '('    -name "${rdiff_filename}" \
-		     -o -name "${rdiff_filename}.tmp" ')' ')' \
-      -print0 \
-    | xargs -0 rm -fv | sed 's/$/,/' | xargs)
-
-  for log in "$logmsg1" "$logmsg2"; do
-    if [ -n "$log" ]; then
-      log info "cleaning up: $log"
-    fi
-  done
+  find "$rdiffs_dir" -maxdepth 1 -type f -a \
+    '(' '(' -name '*.rdiff' -o -name '*.rdiff.tmp' ')' \
+	-a '!' '('    -name "${rdiff_filename}" \
+		   -o -name "${rdiff_filename}.tmp" ')' ')' \
+    -print0 \
+  | xargs -0 rm -f
 }
 
 ensure_enough_available_diskspace() {
