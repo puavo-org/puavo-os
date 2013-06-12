@@ -15,11 +15,18 @@ set -eu
 log() { echo "$2" | logger -p "$1" -s -t puavo-update-ltspimage; }
 
 usage() {
-  log err "Usage: $(basename $0) [-r rate-limit] next_ltsp_image_name"
+  {
+    echo "Usage:"
+    echo "  $(basename $0) [--install-from-file path] next_ltsp_image_name"
+    echo "  $(basename $0) [--install-from-nbd path]  next_ltsp_image_name"
+    echo "  $(basename $0) [--rate-limit rate]        next_ltsp_image_name"
+  } > /dev/stderr
   exit 1
 }
 
-if ! args=$(getopt -n "$0" -o +r: -l 'rate-limit:' -- "$@"); then
+if ! args=$(getopt -n "$0" -o +f:n:r: \
+		   -l 'install-from-file:,install-from-nbd:,rate-limit:' \
+		   -- "$@"); then
   usage
 fi
 
@@ -28,6 +35,12 @@ rate_limit_opts=""
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
+    -f|--install-from-file)
+      image_from_file="$2"; shift; shift
+      ;;
+    -n|--install-from-nbd)
+      image_from_nbd="$2"; shift; shift
+      ;;
     -r|--rate-limit)
       rate_limit_opts="--limit-rate $2"; shift; shift
       ;;
@@ -251,6 +264,68 @@ get_rdiff_filename() {
       '
 }
 
+install_from_file_or_nbd() {
+  images_dir=$1
+  imagename=$2
+  type_opt=$3
+  type_arg=$4
+
+  imagepath=$images_dir/$imagename
+
+  test -e "$imagepath" && return 0
+
+  cleanup_previous_runs "$images_dir" "${images_dir}/rdiffs" ''
+  
+  case "$type_opt" in
+    -file)
+      image_src_path=$type_arg
+      total_size=$(df "$image_src_path" \
+		     | awk -v image_src_path="$image_src_path" '
+			 $1 == image_src_path { print $2 "k" }
+		       ')
+      ;;
+    -nbd)
+      image_src_path=$type_arg
+      total_size=$(du -k "$image_src_path" | awk '{ print $1 "k" }')
+      ;;
+    *)
+      log err "Internal error in install_from_file_or_nbd()"
+      return 1
+      ;;
+  esac
+
+  dd "if=$image_src_path" 2>/dev/null | pv -s "$total_size" \
+    > "${imagepath}.tmp"
+  sync
+  mv "${imagepath}.tmp" "$imagepath"
+  sync
+}
+
+install_image() {
+  images_dir=$1
+  imagename=$2
+  type_opt=$3
+  type_arg=$4
+
+  current_ltspimage_name=$(lookup_ltspimage_name_by_alias "$images_dir" \
+							  ltsp.img)
+  if [ "$current_ltspimage_name" = "$imagename" ]; then
+    echo "The wanted PuavoLTSP image $imagename"
+    echo "is already in place."
+    return 0
+  fi
+
+  if [ -n "$current_ltspimage_name" ]; then
+    query_update_confirmation "$current_ltspimage_name" "$imagename"
+  fi
+
+  install_from_file_or_nbd "$images_dir" "$imagename" "$type_opt" "$type_arg"
+  set_image_as_default_image "$images_dir" "$imagename"
+
+  echo "The PuavoLTSP image $imagename"
+  echo "is now installed and set as default."
+}
+
 lookup_image_server_from_dns() {
   puavo_domain=$(cat /etc/puavo/domain)
   image_server=$(
@@ -317,6 +392,19 @@ patch_with_rdiff() {
   log notice "new ltsp image $next_image has been put into its place"
 }
 
+query_update_confirmation() {
+  current_ltspimage_name=$1
+  new_ltspimage_name=$2
+
+  cat <<EOF
+The current PuavoLTSP image is $current_ltspimage_name,
+but version $new_ltspimage_name is available.
+
+Press ENTER to proceed to update it.
+EOF
+  read answer
+}
+
 # XXX duplicate code with puavo-install-ltspimages
 set_image_as_default_image() {
   images_dir=$1
@@ -336,6 +424,26 @@ set_image_as_default_image() {
   sync
 
   log notice "new ltsp image $next_image has been set as default"
+}
+
+update_image() {
+  images_dir=$1
+  next_image=$2
+  rate_limit_opts=$3
+
+  if [ ! -e "${images_dir}/${next_image}" ]; then
+    log info "we are missing $next_image, going to get it"
+    get_next_image "$images_dir" "$next_image" "$rate_limit_opts"
+  fi
+
+  # must call /usr/bin/test because /bin/sh is broken regarding this test
+  if /usr/bin/test "${images_dir}/${next_image}" \
+	       -ef "${images_dir}/ltsp.img"; then
+    log info "the requested ltsp image is already in place"
+  else
+    puavo-install-grub --only-update-config
+    set_image_as_default_image "$images_dir" "$next_image"
+  fi
 }
 
 update_image_labels_for_grub() {
@@ -364,102 +472,12 @@ renice -n 20 -p $$ > /dev/null
 
 images_dir=/images
 
-if [ ! -e "${images_dir}/${next_image}" ]; then
-  log info "we are missing $next_image, going to get it"
-  get_next_image "$images_dir" "$next_image" "$rate_limit_opts"
-fi
-
-# must call /usr/bin/test because /bin/sh is broken regarding this test
-if /usr/bin/test "${images_dir}/${next_image}" \
-             -ef "${images_dir}/ltsp.img"; then
-  log info "the requested ltsp image is already in place"
+if [ -n "$image_from_file" ]; then
+  install_image "$images_dir" "$next_image" -file "$image_from_file"
+elif [ -n "$image_from_nbd" ]; then
+  install_image "$images_dir" "$next_image" -nbd  "$image_from_nbd"
 else
-  puavo-install-grub --only-update-config
-  set_image_as_default_image "$images_dir" "$next_image"
+  update_image "$images_dir" "$next_image" "$rate_limit_opts"
 fi
 
 exit 0
-
-#
-# puavo-install-ltspimages (old code to be merged)
-#
-
-#!/bin/sh
-
-set -e
-
-install_from_nbd() {
-  images_dir=$1
-  imagename=$2
-  imagepath=$images_dir/$imagename
-
-  test -e "$imagepath" && return 0
-
-  # clean up old temporary images
-  rm -f $images_dir/*.tmp
-
-  total_size=$(df /dev/nbd0 | awk '$1 == "/dev/nbd0" { print $2 "k" }')
-  dd if=/dev/nbd0 2>/dev/null | pv -s "$total_size" \
-    > "${imagepath}.tmp"
-  sync
-  mv "${imagepath}.tmp" "$imagepath"
-  sync
-}
-
-query_update_confirmation() {
-  current_ltspimage_name=$1
-  new_ltspimage_name=$2
-
-  cat <<EOF
-The current PuavoLTSP image is $current_ltspimage_name,
-but version $new_ltspimage_name is available.
-
-Press ENTER to proceed to update it.
-EOF
-  read answer
-}
-
-install_image() {
-  images_dir=$1
-  imagename=$2
-
-  current_ltspimage_name=$(lookup_ltspimage_name_by_alias "$images_dir" \
-							  ltsp.img)
-  if [ "$current_ltspimage_name" = "$imagename" ]; then
-    echo "The wanted PuavoLTSP image $imagename"
-    echo "is already in place."
-    return 0
-  fi
-
-  if [ -n "$current_ltspimage_name" ]; then
-    query_update_confirmation "$current_ltspimage_name" "$imagename"
-  fi
-
-  install_from_nbd "$images_dir" "$imagename"
-  set_image_as_default_image "$images_dir" "$imagename"
-
-  echo "The PuavoLTSP image $imagename"
-  echo "is now installed and set as default."
-}
-
-
-ltspimage_name=$1
-images_dir=${2:-/images}
-
-if [ -z "$ltspimage_name" -o ! -d "$images_dir" ]; then
-  echo "Usage: $(basename $0) ltspimage_name images_dir" > /dev/stderr
-  exit 1
-fi
-
-hosttype=$(cat /etc/puavo/hosttype)
-
-case "$hosttype" in
-  laptop)
-    install_image "$images_dir" "$ltspimage_name"
-    ;;
-  *)
-    echo "Hosttype '$hosttype' is not supported" > /dev/stderr
-    exit 1
-    ;;
-esac
-
