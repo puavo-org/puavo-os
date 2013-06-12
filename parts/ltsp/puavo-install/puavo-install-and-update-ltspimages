@@ -183,7 +183,14 @@ get_next_image() {
   image_server=$(lookup_image_server_from_dns)
 
   rdiffs_dir=${images_dir}/rdiffs
-  previous_image=$(lookup_ltspimage_name_by_alias "$images_dir" ltsp.img)
+  previous_image=$(lookup_ltspimage_name_by_alias "$images_dir" ltsp.img \
+		     || true)
+
+  if [ -z "$previous_image" ]; then
+    log err 'Could not determine the current ltsp image name'
+    return 1
+  fi
+
   rdiff_filename=$(get_rdiff_filename $previous_image $next_image)
 
   mkdir -p "$rdiffs_dir"
@@ -310,7 +317,8 @@ install_image() {
   type_arg=$4
 
   current_ltspimage_name=$(lookup_ltspimage_name_by_alias "$images_dir" \
-							  ltsp.img)
+							  ltsp.img \
+			     || true)
   if [ "$current_ltspimage_name" = "$imagename" ]; then
     echo "The wanted PuavoLTSP image $imagename"
     echo "is already in place."
@@ -364,7 +372,6 @@ lookup_ltspimage_name_by_alias() {
     fi
   done
 
-  log err "could not find the current ltsp image name"
   return 1
 }
 
@@ -451,8 +458,10 @@ update_image() {
 update_image_labels_for_grub() {
   images_dir=$1
 
-  default_image=$(lookup_ltspimage_name_by_alias "$images_dir" ltsp.img)
-  backup_image=$( lookup_ltspimage_name_by_alias "$images_dir" ltsp-backup.img)
+  default_image=$(lookup_ltspimage_name_by_alias "$images_dir" ltsp.img \
+		    || true)
+  backup_image=$(lookup_ltspimage_name_by_alias "$images_dir" ltsp-backup.img \
+		   || true)
 
   rm -f ${images_dir}/ltsp-*.backup ${images_dir}/ltsp-*.default
 
