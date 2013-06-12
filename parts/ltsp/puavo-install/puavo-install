@@ -16,7 +16,8 @@ case "$hosttype" in
     # install from nbd, the ltsp image must contain its name in this path
     ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
 
-    puavo-install-ltspimages "$ltspimage_name"
+    puavo-install-and-update-ltspimages --install-from-nbd /dev/nbd0 \
+					"$ltspimage_name"
     puavo-install-grub
 
     sync
