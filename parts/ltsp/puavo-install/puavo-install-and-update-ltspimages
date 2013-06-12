@@ -30,6 +30,8 @@ if ! args=$(getopt -n "$0" -o +f:n:r: \
   usage
 fi
 
+image_from_file=""
+image_from_nbd=""
 rate_limit_opts=""
 
 eval "set -- $args"
