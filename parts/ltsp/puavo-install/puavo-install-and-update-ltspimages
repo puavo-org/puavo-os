@@ -281,14 +281,14 @@ install_from_file_or_nbd() {
   case "$type_opt" in
     -file)
       image_src_path=$type_arg
+      total_size=$(du -k "$image_src_path" | awk '{ print $1 "k" }')
+      ;;
+    -nbd)
+      image_src_path=$type_arg
       total_size=$(df "$image_src_path" \
 		     | awk -v image_src_path="$image_src_path" '
 			 $1 == image_src_path { print $2 "k" }
 		       ')
-      ;;
-    -nbd)
-      image_src_path=$type_arg
-      total_size=$(du -k "$image_src_path" | awk '{ print $1 "k" }')
       ;;
     *)
       log err "Internal error in install_from_file_or_nbd()"
