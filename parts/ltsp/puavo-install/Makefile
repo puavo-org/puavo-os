@@ -21,11 +21,10 @@ installdirs :
 install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-install \
+		puavo-install-and-update-ltspimages \
 		puavo-install-grub \
-		puavo-install-ltspimages \
 		puavo-setup-filesystems \
-		puavo-update-laptop \
-		puavo-update-ltspimage
+		puavo-update-laptop
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
                 screen.d/ltspimage-update
