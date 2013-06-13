@@ -16,6 +16,7 @@ PUPPET_USE_CLASSES="
   ltspimage_ssh_server
   mimio
   motd
+  network_manager
   organisation_adm_users
   packages::all
   packages::sssd_install_workaround

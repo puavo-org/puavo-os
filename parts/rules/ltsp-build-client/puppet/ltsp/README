@@ -50,6 +50,10 @@ motd
     Add stuff to MOTD, that means at least host type and ltsp image
     name/version.
 
+network_manager
+    Allow users to modify network manager connections, but clean them
+    up so that those modifications are (normally) only temporary.
+
 packages
     Lists packages that are to be installed to ltsp images,
     and those that should be kept out.

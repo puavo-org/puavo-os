@@ -74,6 +74,7 @@ class packages {
     , 'nfs-common'
     , 'openssh-client'
     , 'openssh-server'
+    , 'policykit-1'
     , 'rng-tools'
     , 'vlan' ]:
       tag => [ 'basic', 'ubuntu', ];
