@@ -142,7 +142,12 @@ end
 
 config_path = '/etc/puavo/wlan.json'
 
-config = JSON.parse(IO.read(config_path))
+begin
+  config = JSON.parse(IO.read(config_path))
+rescue Exception => e
+  STDERR.puts "Could not read and interpret #{ config_path }: #{ e.message }."
+  exit(1)
+end
 
 wlan_collection = {}
 config['networks'].each do |id, info|
