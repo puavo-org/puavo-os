@@ -97,7 +97,7 @@ write_runconf()
 # where the following script is (it in PATH!).
 . puavo-wlanap-env
 
-. "${PUAVO_WLANAP_DATADIR}/config_defaults"
+. "${PUAVO_WLANAP_DATADIR}/config"
 
 # The user might have deleted the configuration file, that's ok.
 [ -r "${PUAVO_WLANAP_CONFDIR}/config" ] && . "${PUAVO_WLANAP_CONFDIR}/config"
