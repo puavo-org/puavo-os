@@ -96,7 +96,7 @@ cleanup_previous_runs() {
 
   # cleanup old ltsp images (and their possible temporary *.tmp files).
   # The ltsp-backup.img is going to go too...
-  if [ -d "$images_dir" ]; then
+  if [ -d "$images_dir" -a -e "${images_dir}/ltsp.img" ]; then
     find "$images_dir" -maxdepth 1 -type f -a \
       '(' '(' -name '*.img' -o -name '*.img.tmp' ')' \
 	  -a '!' -samefile "${images_dir}/ltsp.img" ')' \
