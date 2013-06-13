@@ -35,7 +35,7 @@ install : puavo-wlangw-env installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-wlangw
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-wlangw \
-		config_defaults \
+		config \
 		vtund.conf
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-wlangw \
 		config

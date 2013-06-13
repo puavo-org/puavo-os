@@ -40,7 +40,7 @@ write_runconf()
 # where the following script is (it in PATH!).
 . puavo-wlangw-env
 
-. "${PUAVO_WLANGW_DATADIR}/config_defaults"
+. "${PUAVO_WLANGW_DATADIR}/config"
 
 # The user might have deleted the configuration file, that's ok.
 [ -r "${PUAVO_WLANGW_CONFDIR}/config" ] && . "${PUAVO_WLANGW_CONFDIR}/config"
