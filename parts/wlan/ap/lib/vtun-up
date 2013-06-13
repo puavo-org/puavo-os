@@ -2,10 +2,10 @@
 
 set -eu
 
-tapiface="$1"
-wlaniface="$2"
-rundir="$3"
-briface="br.${wlaniface}"
+tapiface=$1
+wlaniface=$2
+rundir=$3
+briface=br.${wlaniface}
 
 ifconfig "${tapiface}" up
 brctl addbr "${briface}"

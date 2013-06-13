@@ -2,9 +2,9 @@
 
 set -eu
 
-tapiface="$1"
-wlaniface="$2"
-briface="br.${wlaniface}"
+tapiface=$1
+wlaniface=$2
+briface=br.${wlaniface}
 
 brctl delif "${briface}" "${tapiface}"
 ifconfig "${briface}" down
