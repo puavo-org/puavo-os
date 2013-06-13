@@ -59,6 +59,6 @@ EOF
 
   next_imagename=$(get_imagename_from_puavo)
   if [ -n "$next_imagename" ]; then
-    puavo-update-ltspimage --rate-limit 50k "$next_imagename"
+    puavo-install-and-update-ltspimages --rate-limit 50k "$next_imagename"
   fi
 } || true

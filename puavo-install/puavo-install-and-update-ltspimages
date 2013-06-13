@@ -12,7 +12,7 @@ flock -nx 3 || { echo did not get a lock, exiting; exit 1; }
 
 set -eu
 
-log() { echo "$2" | logger -p "$1" -s -t puavo-update-ltspimage; }
+log() { echo "$2" | logger -p "$1" -s -t puavo-install-and-update-ltspimages; }
 
 usage() {
   {
