@@ -9,23 +9,33 @@ if [ "$hosttype" != "laptop" ]; then
   exit 1
 fi
 
+puavo_rest_request() {
+  urlpath=$1
+
+  puavo_rest_server=$(puavo-resolve-api-server)
+  curl --cacert /etc/puavo/certs/rootca.pem \
+       --max-time 60 \
+       --silent \
+       "${puavo_rest_server}/${urlpath}"
+}
+
+replace_if_changed() {
+  dest=$1
+  src=$2
+
+  if cmp "$src" "$dest" >/dev/null 2>&1; then
+    rm -f "$src"
+  else
+    mv "$src" "$dest"
+  fi
+}
+
 # Update several (different) things.  Even if one thing cannot be updated,
 # try to update others (order should not matter here, but do this sequentially
 # anyway).
 
 # update lts.conf
 {
-  replace_if_changed() {
-    dest=$1
-    src=$2
-
-    if cmp "$src" "$dest" >/dev/null 2>&1; then
-      rm -f "$src"
-    else
-      mv "$src" "$dest"
-    fi
-  }
-
   install -o root -g root -m 600 /dev/null /state/etc/lts.conf.tmp
   puavo-lts > /state/etc/lts.conf.tmp
   replace_if_changed /state/etc/lts.conf /state/etc/lts.conf.tmp
@@ -35,6 +45,15 @@ fi
 {
   puavo-sync-external-files
   puavo-handle-external-files-actions
+} || true
+
+# update wlan configurations
+{
+  puavo_rest_request "v3/devices/$(hostname)/wlan_networks" \
+    > /etc/puavo/wlan.json.tmp
+  replace_if_changed /etc/puavo/wlan.json /etc/puavo/wlan.json.tmp
+
+  puavo-update-nm-configurations
 } || true
 
 # update the ltsp image
