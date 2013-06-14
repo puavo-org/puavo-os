@@ -30,7 +30,7 @@ parser.parse!
 def check_call(cmd)
   res = `#{ cmd }`
   if $?.success?
-    return res
+    return res.chomp
   else
     raise "Failed to execute '#{ cmd }'"
   end
