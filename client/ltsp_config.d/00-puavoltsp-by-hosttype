@@ -1,3 +1,24 @@
+puavo_get_device_param() {
+  param_name=$1
+
+  if [ ! -e /etc/puavo/device.json ]; then
+    puavo_rest_request "v3/devices/$(hostname)" > /etc/puavo/device.json.tmp \
+      && mv /etc/puavo/device.json.tmp /etc/puavo/device.json
+  fi
+
+  jq --raw-output ".${param_name}" /etc/puavo/device.json
+}
+
+puavo_rest_request() {
+  urlpath=$1
+
+  puavo_rest_server=$(puavo-resolve-api-server)
+  curl --cacert /etc/puavo/certs/rootca.pem \
+       --max-time 5 \
+       --silent \
+       "${puavo_rest_server}/${urlpath}"
+}
+
 PUAVO_HOSTTYPE=$(/bin/cat /etc/puavo/hosttype)
 
 set_lts_var PUAVO_HOSTTYPE "$PUAVO_HOSTTYPE"
@@ -30,7 +51,14 @@ puavo_common_unneeded_services='
 puavo_nfs_services='gssd idmapd portmap rpcbind-boot'
 puavo_tty_services='tty3 tty4 tty5 tty6'
 
-set_lts_var ALLOW_GUESTLOGIN True
+# XXX guest login is not yet supported for thinclients
+if [ "$(puavo_get_device_param allow_guest)" = "true" \
+  -a "$PUAVO_HOSTTYPE" != "thinclient" ]; then
+    set_lts_var ALLOW_GUESTLOGIN True
+else
+  set_lts_var ALLOW_GUESTLOGIN False
+fi
+
 set_lts_var LOCAL_APPS       False
 set_lts_var NBD_SWAP         False
 set_lts_var SYSLOG           False
