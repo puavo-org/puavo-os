@@ -594,6 +594,8 @@ class LdapAcl
                                          puavoWlanSSID
                                          puavoWlanChannel
 					 puavoDeviceImage
+                                         puavoAllowGuest
+                                         puavoPersonalDevice
 					 puavoDeviceOnHour
 					 puavoDeviceOffHour
 					 puavoDeviceAutoPowerOffMode)),	Rule.write(Set.owner_and_user),		Rule.read(Set.all_admins,
