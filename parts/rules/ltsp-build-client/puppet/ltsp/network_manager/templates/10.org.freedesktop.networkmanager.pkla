@@ -4,3 +4,17 @@ Action=org.freedesktop.NetworkManager.settings.modify.system
 ResultAny=no
 ResultInactive=no
 ResultActive=yes
+
+[Lightdm User Permissions]
+Identity=unix-user:lightdm
+Action=org.freedesktop.NetworkManager.settings.modify.system
+ResultAny=no
+ResultInactive=no
+ResultActive=no
+
+[Login User Permissions]
+Identity=unix-user:lightdm
+Action=org.freedesktop.NetworkManager.enable-disable-network;org.freedesktop.NetworkManager.enable-disable-wifi
+ResultAny=yes
+ResultInactive=yes
+ResultActive=yes
