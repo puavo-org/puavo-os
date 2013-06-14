@@ -6,26 +6,23 @@
 #
 # Reads json from /etc/puavo/wlan.json
 # and excepts it to contain something like this
-# (only key, "type", "ssid" and possibly "password" are used).
+# (only "type", "ssid" and possibly "password" are used).
 # The "type" can be "open" or "psk".
 #
-# {
-#   "networks": {
-#     "ankkalinna": {
-#       "freq":     "g/a/both",
-#       "type":     "psk",
-#       "ssid":     "Ankkalinna",
-#       "channel":  "11",
-#       "password": "AkuAnkka"
-#     },
-#     "humppaajat": {
-#       "freq":     "g/a/both",
-#       "type":     "open",
-#       "ssid":     "Humppaajat",
-#       "channel":  "11"
-#     }
+# [
+#   {
+#     "type":     "psk",
+#     "ssid":     "Ankkalinna",
+#     "wlan_ap":  true,
+#     "password": "AkuAnkka"
+#   },
+#   {
+#     "type":     "open",
+#     "ssid":     "Humppaajat",
+#     "wlan_ap":  null,
+#     "password": ""
 #   }
-# }
+# ]
 #
 
 require 'fileutils'
@@ -35,11 +32,10 @@ require 'uuidtools'
 Nm_config_directory = '/state/etc/NetworkManager/system-connections'
 
 class Wlan
-  def initialize(id, ssid)
-    raise "Wlan id is not set"                  if (  id.nil? ||   id.empty?)
-    raise "Wlan ssid is not set for id=#{ id }" if (ssid.nil? || ssid.empty?)
+  def initialize(ssid)
+    raise "Wlan ssid is not set" if (ssid.nil? || ssid.empty?)
 
-    @id   = "puavo-#{ id }"
+    @id   = "puavo-#{ ssid }"
     @ssid = ssid
 
     # try to read uuid from the old config file, or generate with uuidgen
@@ -108,11 +104,13 @@ EOF
 end
 
 class Wlan::Psk < Wlan
-  def initialize(id, ssid, psk)
-    raise "Wlan password is not set for id=#{ id }" if (psk.nil? || psk.empty?)
+  def initialize(ssid, psk)
+    raise "Wlan ssid is not set" if (ssid.nil? || ssid.empty?)
+    raise "Wlan password is not set for ssid=#{ ssid }" \
+      if (psk.nil? || psk.empty?)
     @psk = psk
 
-    super(id, ssid)
+    super(ssid)
   end
 
   def config
@@ -143,26 +141,26 @@ end
 config_path = '/etc/puavo/wlan.json'
 
 begin
-  config = JSON.parse(IO.read(config_path))
+  networks = JSON.parse(IO.read(config_path))
 rescue Exception => e
   STDERR.puts "Could not read and interpret #{ config_path }: #{ e.message }."
   exit(1)
 end
 
 wlan_collection = {}
-config['networks'].each do |id, info|
+networks.each do |network|
   wlan \
-    = case info['type']
+    = case network['type']
 	when 'open'
-	  Wlan::Open.new(id, info['ssid'])
+	  Wlan::Open.new(network['ssid'])
 	when 'psk'
-	  Wlan::Psk.new(id, info['ssid'], info['password'])
+	  Wlan::Psk.new(network['ssid'], network['password'])
 	else
-	  warn "Unsupported wlan type #{ info['type'] }"
+	  warn "Unsupported wlan type #{ network['type'] }"
       end
 
   if wlan
-    wlan_collection[id] = wlan
+    wlan_collection[ network['ssid'] ] = wlan
   end
 end
 
