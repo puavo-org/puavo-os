@@ -120,6 +120,7 @@ install : installdirs
 		screen.d/register
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d \
+		ltsp_config.d/00-certificate-setup \
 		ltsp_config.d/00-puavoltsp-by-hosttype \
 		ltsp_config.d/02-find-puavo-ltsp-server
 
