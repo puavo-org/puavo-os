@@ -3,14 +3,6 @@
 case "$(cat /etc/puavo/hosttype)" in
   thinclient)
     if boolean_is_true "$PUAVO_LTSP_SESSION"; then
-      # XXX This is not good, find the certificate to
-      # XXX /etc/puavo/certs/rootca.pem some other way.
-      if [ ! -e /etc/puavo/certs/rootca.pem ]; then
-        mkdir -p /etc/puavo/certs
-        cp /usr/share/ca-certificates/opinsys/opinsys-ca.crt \
-           /etc/puavo/certs/rootca.pem
-      fi
-
       PUAVO_DOMAIN=$(cat /etc/puavo/domain)
       API_SERVER=$(dig +time=2 +tries=1 SRV _puavo-api._tcp.${PUAVO_DOMAIN} \
                        +search +short \
