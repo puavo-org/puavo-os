@@ -19,6 +19,17 @@ puavo_rest_request() {
        "${puavo_rest_server}/${urlpath}"
 }
 
+puavo_rest_request_and_replace() {
+  urlpath=$1
+  filepath=$2
+
+  tmp_filepath="${filepath}.tmp"
+  install -o root -g root -m 600 /dev/null "$tmp_filepath"
+  
+  puavo_rest_request "$urlpath" > "$tmp_filepath"
+  replace_if_changed "$filepath"  "$tmp_filepath"
+}
+
 replace_if_changed() {
   dest=$1
   src=$2
@@ -41,6 +52,12 @@ replace_if_changed() {
   replace_if_changed /state/etc/lts.conf /state/etc/lts.conf.tmp
 } || true
 
+# update device.json
+{
+  puavo_rest_request_and_replace "v3/devices/$(hostname)" \
+				 /state/etc/puavo/device.json
+} || true
+
 # update external files (under /state/external_files)
 {
   puavo-sync-external-files
@@ -49,10 +66,8 @@ replace_if_changed() {
 
 # update wlan configurations
 {
-  puavo_rest_request "v3/devices/$(hostname)/wlan_networks" \
-    > /etc/puavo/wlan.json.tmp
-  replace_if_changed /etc/puavo/wlan.json /etc/puavo/wlan.json.tmp
-
+  puavo_rest_request_and_replace "v3/devices/$(hostname)/wlan_networks" \
+				 /state/etc/puavo/wlan.json
   puavo-update-nm-configurations
 } || true
 
