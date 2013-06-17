@@ -13,7 +13,7 @@ if [ -n "$SERVER" -a -e /etc/puavo/domain ]; then
           --fail \
           --max-time 30 \
           --silent \
-          "$(puavo-resolve-api-server)/v3/devices/$(hostname)" \
+          "$(puavo-resolve-api-server)/v3/devices/$(hostname -s)" \
        > /etc/puavo/device.json.tmp; then
     mv /etc/puavo/device.json.tmp /etc/puavo/device.json
   else
