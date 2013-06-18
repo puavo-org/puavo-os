@@ -35,7 +35,7 @@ class Wlan
   def initialize(ssid)
     raise "Wlan ssid is not set" if (ssid.nil? || ssid.empty?)
 
-    @id   = "puavo-#{ ssid }"
+    @id   = "puavo-#{ ssid.scan(/[[:alnum:]_-]/).join }"
     @ssid = ssid
 
     # try to read uuid from the old config file, or generate with uuidgen
@@ -147,7 +147,6 @@ rescue Exception => e
   exit(1)
 end
 
-wlan_collection = {}
 networks.each do |network|
   wlan \
     = case network['type']
@@ -160,16 +159,6 @@ networks.each do |network|
       end
 
   if wlan
-    wlan_collection[ network['ssid'] ] = wlan
+    wlan.update_file
   end
 end
-
-# Remove all puavo-* network manager configurations that no longer should be.
-Dir.glob("#{ Nm_config_directory }/puavo-*") do |puavo_config_path|
-  config_id = File.basename(puavo_config_path)
-  if not wlan_collection.has_key?(config_id) then
-    File.delete(puavo_config_path)
-  end
-end
-
-wlan_collection.values.each { |wlan| wlan.update_file }
