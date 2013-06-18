@@ -22,6 +22,7 @@ puavo_rest_request() {
 
   puavo_rest_server=$(puavo-resolve-api-server)
   curl --cacert /etc/puavo/certs/rootca.pem \
+       --fail \
        --max-time 60 \
        --silent \
        "${puavo_rest_server}/${urlpath}"
