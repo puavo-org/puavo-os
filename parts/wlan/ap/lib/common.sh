@@ -20,7 +20,7 @@ puavo_wlanap_report()
 {
     local -r hostname=$(hostname)
     local -r date=$(date +%s)
-    local -r eventfile=$(mktemp --tmpdir="${PUAVO_WLANAP_RUNDIR}")
+    local -r eventfile=${PUAVO_WLANAP_RUNDIR}/report
 
     cat <<EOF >"${eventfile}"
 type:wlan
