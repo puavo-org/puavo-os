@@ -130,7 +130,15 @@ module Puavo
           index = 1
           @school.wlan_ssids.each do |ssid|
             lts_key = "WLAN_SSID_%02d" % index
-            definition[lts_key] = '"' + ssid + '"'
+            begin
+              wlan_settings = JSON.parse(ssid)
+              definition[lts_key] =
+                '"' +
+                "#{ wlan_settings['type'] }:#{ wlan_settings['ssid'] }:#{ wlan_settings['password'] }" +
+                '"'
+            rescue JSON::ParserError
+              definition[lts_key] = '"' + ssid + '"'
+            end
             index += 1
           end
           definition["WLAN_CHANNEL"] = @school.wlan_channel if @school.wlan_channel
