@@ -18,12 +18,23 @@ case "$hosttype" in
 
     puavo-install-and-update-ltspimages --install-from-nbd /dev/nbd0 \
 					"$ltspimage_name"
+
+    echo -n "Doing grub installation: "
     puavo-install-grub
-    puavo-update-laptop || true		# this is optional (can do later),
-					# but nice
+    sync
+
+    echo "Updating laptop configuration..."
+    if puavo-update-laptop; then
+      echo "  ... laptop configuration updated."
+    else
+      echo "  ... a problem occurred (updating configuration later)."
+    fi
     sync
 
     umount /state /images /home
+
+    echo "Press ENTER to reboot"
+    read answer
     ;;
   ltspserver)
     puavo-setup-filesystems
