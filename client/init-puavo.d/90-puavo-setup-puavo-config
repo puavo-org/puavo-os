@@ -20,5 +20,3 @@ if [ -n "$SERVER" -a -e /etc/puavo/domain ]; then
     rm -f /etc/puavo/device.json.tmp
   fi
 fi
-
-/usr/sbin/puavo-configure-client
