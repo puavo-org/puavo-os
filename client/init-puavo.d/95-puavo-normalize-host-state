@@ -10,9 +10,9 @@ case "$PUAVO_HOSTTYPE" in
       true
     else
       # a shared laptop, clean some things up
-      rm -rf /state/etc/cups/ppd/* \
-	     /state/etc/cups/printers.conf
-      rm -f  /state/etc/NetworkManager/system-connections/*
+      rm -f /state/etc/cups/ppd/* \
+	    /state/etc/cups/printers.conf \
+            /state/etc/NetworkManager/system-connections/*
     fi
     ;;
 esac
