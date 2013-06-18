@@ -2,20 +2,17 @@
 
 set -eu
 
-gtk_bookmarks() {
+gtk2_bookmarks() {
   _networkfolder_displayname=$1
   _schoolsharedir=$2
   _share_displayname=$3
-  _mountpoint=$4
-
-  homedir_server="homedir.$(cat /etc/puavo/domain)"
 
   case "$(cat /etc/puavo/hosttype)" in
     laptop)
       # Add two bookmarks: to user home directory on server, and to shared
       # directories on server.
-      echo "file://${_mountpoint}/${homedir_server}/${USER} * ${_networkfolder_displayname}"
-      echo "file://${_mountpoint}/${homedir_server}/share/${_schoolsharedir} * ${_share_displayname}"
+      echo "file://${HOME}/.puavo-sharedir.user * ${_networkfolder_displayname}"
+      echo "file://${HOME}/.puavo-sharedir.share * ${_share_displayname}"
       ;;
     *)
       # add a bookmark pointing to shared directories
@@ -28,10 +25,49 @@ gtk_bookmarks() {
   awk '$2 != "*"' ~/.gtk-bookmarks
 }
 
-schoolgroup=$(id -gn)
-lang=$(echo $LANG | cut -c 1-2)
+gtk3_bookmarks() {
+  _networkfolder_displayname=$1
+  _schoolsharedir=$2
+  _share_displayname=$3
 
-case "$lang" in
+  homedir_server="homedir.$(cat /etc/puavo/domain)"
+
+  case "$(cat /etc/puavo/hosttype)" in
+    laptop)
+      # Add two bookmarks: to user home directory on server, and to shared
+      # directories on server.
+      echo "smb://${homedir_server}/${USER} * ${_networkfolder_displayname}"
+      echo "smb://${homedir_server}/share/${_schoolsharedir} * ${_share_displayname}"
+      ;;
+    *)
+      # add a bookmark pointing to shared directories
+      echo "file:///home/share/${_schoolsharedir} * ${_share_displayname}"
+      ;;
+  esac
+
+  # Pick up user's own bookmarks too (we treat all bookmarks with "* "-prefix
+  # as something we have full control over).
+  awk '$2 != "*"' ~/.gtk-bookmarks
+}
+
+install_desktop_icon() {
+    . ~/.config/user-dirs.dirs
+    cat <<EOF >"${XDG_DESKTOP_DIR}/puavo-mount-shares.desktop.tmp"
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Activate Network Directories
+Name[fi]=Aktivoi verkkohakemistot
+Name[se]=Aktivera nätverkskataloger
+Exec=puavo-mount-shares
+Icon=network_fs
+Terminal=false
+EOF
+    chmod +x "${XDG_DESKTOP_DIR}/puavo-mount-shares.desktop.tmp"
+    mv "${XDG_DESKTOP_DIR}/puavo-mount-shares.desktop.tmp" "${XDG_DESKTOP_DIR}/puavo-mount-shares.desktop"
+}
+
+case "$(echo $LANG | cut -c 1-2)" in
   fi)
     networkfolder_displayname='Verkkokansio'
     share_displayname='Yhteiset'
@@ -49,7 +85,7 @@ case "$lang" in
     ;;
 esac
 
-schoolsharedir=${share_pathtranslation}/${schoolgroup}
+schoolsharedir=${share_pathtranslation}/$(id -gn)
 
 # We create the bookmarks file first if it does not exist.
 if ! [ -e ~/.gtk-bookmarks ]; then
@@ -57,20 +93,25 @@ if ! [ -e ~/.gtk-bookmarks ]; then
   /usr/bin/xdg-user-dirs-gtk-update
 fi
 
-mountpoint="${HOME}/.puavo-sharedir"
-case "$(cat /etc/puavo/hosttype)" in
-  laptop)
-    mkdir -p "${mountpoint}"
-    mount | grep -q "${mountpoint}" && fusermount -u "${mountpoint}"
-    smbnetfs "${mountpoint}"
-    ;;
-  *)
-    ;;
-esac
-
-gtk_bookmarks "$networkfolder_displayname" \
-              "$schoolsharedir"            \
-              "$share_displayname"         \
-              "$mountpoint"                \
+gtk2_bookmarks "$networkfolder_displayname" \
+               "$schoolsharedir"            \
+               "$share_displayname"         \
   > ~/.gtk-bookmarks.tmp
+
+mkdir -p ~/.config/gtk-3.0
+gtk3_bookmarks "$networkfolder_displayname" \
+               "$schoolsharedir"            \
+               "$share_displayname"         \
+  > ~/.config/gtk-3.0/bookmarks.tmp
+
 mv ~/.gtk-bookmarks.tmp ~/.gtk-bookmarks
+mv ~/.config/gtk-3.0/bookmarks.tmp ~/.config/gtk-3.0/bookmarks
+
+case "$(cat /etc/puavo/hosttype)" in
+    laptop)
+        install_desktop_icon
+        ;;
+    *)
+        exit 0
+        ;;
+esac

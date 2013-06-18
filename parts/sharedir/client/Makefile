@@ -15,8 +15,11 @@ install-dirs:
 
 install: install-dirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
-	  puavo-update-gtk-bookmarks.desktop
+		puavo-update-gtk-bookmarks.desktop \
+		puavo-mount-shares.desktop
 
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-update-gtk-bookmarks
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
+		puavo-update-gtk-bookmarks \
+		puavo-mount-shares
 
 clean:

@@ -1,0 +1,36 @@
+#!/bin/sh
+
+set -eu
+
+case "$(cat /etc/puavo/hosttype)" in
+    laptop)
+        break
+        ;;
+    *)
+        exit 0
+        ;;
+esac
+
+case "$(echo $LANG | cut -c 1-2)" in
+  fi)
+    sharepath='yhteiset'
+    ;;
+  sv)
+    sharepath='delade_filer'
+    ;;
+  *)
+    sharepath='share'
+    ;;
+esac
+
+homedirserver="homedir.$(cat /etc/puavo/domain)"
+gvfsroot="${HOME}/.gvfs"
+
+gvfs-mount "smb://${homedirserver}/${USER}" || true
+gvfs-mount "smb://${homedirserver}/share/${sharepath}/$(id -gn)" || true
+
+usermountdir=$(gvfs-mount -l | sed -rn "s/^Mount\([0-9]+\): (.*) -> smb://${homedirserver}/${USER}/\1/p")
+sharemountdir=$(gvfs-mount -l | sed -rn "s/^Mount\([0-9]+\): (.*) -> smb://${homedirserver}/share/\1/p")
+
+ln -sf "${gvfsroot}/${usermountdir}" "${HOME}/.puavo-sharedir.user"
+ln -sf "${gvfsroot}/${sharemountdir}" "${HOME}/.puavo-sharedir.share"
