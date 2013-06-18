@@ -128,7 +128,7 @@ vtundpid=
 trap on_sigchld SIGCHLD
 
 vtund -n -f "${PUAVO_WLANAP_RUNDIR}/vtund.conf" \
-    -P "#{PUAVO_WLANAP_GWPORT}" \
+    -P "${PUAVO_WLANAP_GWPORT}" \
     puavo-wlanap "${PUAVO_WLANAP_GWADDR}" &
 vtundpid=$!
 
