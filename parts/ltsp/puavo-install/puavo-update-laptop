@@ -78,7 +78,6 @@ replace_if_changed() {
 {
   puavo_rest_request_and_replace "v3/devices/$(hostname)/wlan_networks" \
 				 /state/etc/puavo/wlan.json
-  puavo-update-nm-configurations
 } || true
 
 # update the ltsp image
