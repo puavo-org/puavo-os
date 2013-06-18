@@ -61,6 +61,8 @@ if [ -x "/sbin/vgchange" ]; then
 	case "$PUAVO_HOSTTYPE" in
 	  laptop)
 	    puavo_link_to_state /etc/NetworkManager/system-connections \
+				/etc/cups/ppd \
+				/etc/cups/printers.conf \
 				/var/lib/extrausers \
 				/var/lib/puavo-desktop \
 				/var/lib/sss \

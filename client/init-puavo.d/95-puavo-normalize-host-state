@@ -1,0 +1,18 @@
+puavo_get_device_param() {
+  param_name=$1
+  jq --raw-output ".${param_name}" /etc/puavo/device.json 2>/dev/null
+}
+
+case "$PUAVO_HOSTTYPE" in
+  laptop)
+    if [ "$(puavo_get_device_param personal_device)" = "true" ]; then
+      # a personal laptop, nothing to do
+      true
+    else
+      # a shared laptop, clean some things up
+      rm -rf /state/etc/cups/ppd/* \
+	     /state/etc/cups/printers.conf
+      rm -f  /state/etc/NetworkManager/system-connections/*
+    fi
+    ;;
+esac
