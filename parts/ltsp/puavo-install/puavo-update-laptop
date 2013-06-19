@@ -1,7 +1,5 @@
 #!/bin/sh
 
-set -e
-
 hosttype=$(cat /etc/puavo/hosttype)
 
 if [ "$hosttype" != "laptop" ]; then
@@ -20,7 +18,7 @@ set -u
 puavo_rest_request() {
   urlpath=$1
 
-  puavo_rest_server=$(puavo-resolve-api-server)
+  puavo_rest_server=$(puavo-resolve-api-server) || return
   curl --cacert /etc/puavo/certs/rootca.pem \
        --fail \
        --max-time 60 \
@@ -33,9 +31,9 @@ puavo_rest_request_and_replace() {
   filepath=$2
 
   tmp_filepath="${filepath}.tmp"
-  install -o root -g root -m 600 /dev/null "$tmp_filepath"
+  install -o root -g root -m 600 /dev/null "$tmp_filepath" || return
   
-  puavo_rest_request "$urlpath" > "$tmp_filepath"
+  puavo_rest_request "$urlpath" > "$tmp_filepath" || return
   replace_if_changed "$filepath"  "$tmp_filepath"
 }
 
@@ -50,38 +48,24 @@ replace_if_changed() {
   fi
 }
 
-# Update several (different) things.  Even if one thing cannot be updated,
-# try to update others (order should not matter here, but do this sequentially
-# anyway).
-
-# update lts.conf
-{
-  install -o root -g root -m 600 /dev/null /state/etc/lts.conf.tmp
-  puavo-lts > /state/etc/lts.conf.tmp
-  replace_if_changed /state/etc/lts.conf /state/etc/lts.conf.tmp
-} || true
-
-# update device.json
-{
+update_device_json() {
   puavo_rest_request_and_replace "v3/devices/$(hostname)" \
-				 /state/etc/puavo/device.json
+			         /state/etc/puavo/device.json || return
   chmod 644 /state/etc/puavo/device.json
-} || true
+}
 
-# update external files (under /state/external_files)
-{
-  puavo-sync-external-files
+update_external_files() {
+  puavo-sync-external-files || return
   puavo-handle-external-files-actions
-} || true
+}
 
-# update wlan configurations
-{
-  puavo_rest_request_and_replace "v3/devices/$(hostname)/wlan_networks" \
-				 /state/etc/puavo/wlan.json
-} || true
+update_ltsconf() {
+  install -o root -g root -m 600 /dev/null /state/etc/lts.conf.tmp || return
+  puavo-lts > /state/etc/lts.conf.tmp                              || return
+  replace_if_changed /state/etc/lts.conf /state/etc/lts.conf.tmp
+}
 
-# update the ltsp image
-{
+update_ltsp_image() {
   # XXX should we use ruby or should we use shell?  or is this okay?
   get_imagename_from_puavo() {
     cat <<'EOF' | ruby1.9.1
@@ -100,9 +84,24 @@ end
 EOF
   }
 
-  next_imagename=$(get_imagename_from_puavo)
+  next_imagename=$(get_imagename_from_puavo) || return
   if [ -n "$next_imagename" ]; then
     puavo-install-and-update-ltspimages $update_ltspimage_params \
 					"$next_imagename"
   fi
-} || true
+}
+
+update_wlan_configurations() {
+  puavo_rest_request_and_replace "v3/devices/$(hostname)/wlan_networks" \
+				 /state/etc/puavo/wlan.json
+}
+
+# Update several (different) things.  Even if one thing cannot be updated,
+# try to update others (order does not matter here, but do this sequentially
+# anyway).
+
+update_ltsconf             || true
+update_device_json         || true
+update_external_files      || true
+update_wlan_configurations || true
+update_ltsp_image          || true
