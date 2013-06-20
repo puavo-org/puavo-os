@@ -19,6 +19,10 @@ parser = OptionParser.new do |opts|
     options[:server] = server
   end
 
+  opts.on("-h", "--hostname [HOSTNAME]", "Client hostname") do |hostname|
+    options[:hostname] = hostname
+  end
+
   opts.on_tail("-h", "--help", "Show this message") do
     STDERR.puts opts
     exit
@@ -38,6 +42,7 @@ end
 
 options[:target] = ARGV[0] || "/state/external_files"
 options[:server] ||= check_call "puavo-resolve-api-server"
+options[:hostname] ||= PUAVO_ETC.hostname
 
 def read_current_files(dirpath)
   Dir.entries(dirpath).map do |name|
@@ -73,6 +78,7 @@ class ExternalFiles < RestClient::Resource
     self["/external_files/#{ name }"].get
   end
 
+  # FIXME: useless method?
   def metadata(name)
     self["/external_files/#{ name }/metadata"].get_json
   end
@@ -83,7 +89,7 @@ def main(options)
   FileUtils.mkdir_p(options[:target])
   current_files = read_current_files(options[:target])
 
-  ef_root = URI.join(options[:server], "/v3/").to_s
+  ef_root = URI.join(options[:server], "/v3/devices/#{ options[:hostname] }").to_s
   STDERR.puts "Connecting to #{ ef_root }"
   ef = ExternalFiles.new(ef_root)
   ef.index.each do |meta|
