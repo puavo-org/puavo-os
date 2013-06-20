@@ -2,8 +2,18 @@
 
 set -e
 
-if lsusb | awk '$6 ~ /^08d3:0003/' | grep -q .; then
-  exec "/var/opt/mimio/mimio-mimiosys" "$@"
+# do not start mimio stuff if we do not have a license
+if ! [    -e "/var/opt/mimio/global/global.reg" \
+       -a -e "/var/opt/mimio/global/shared.reg" ]; then
+  exit 1
 fi
 
-exit 0
+# do not start mimio stuff if we do not have a mimio device connected
+if ! lsusb | awk '$6 ~ /^08d3:0003/' | grep -q .; then
+  exit 1
+fi
+
+# workaround a problem with NFS and fifos
+rm -f ~/.mimio/msgbus-lock ~/.mimio/system.mimio.com
+
+exec "/var/opt/mimio/mimio-mimiosys" "$@"

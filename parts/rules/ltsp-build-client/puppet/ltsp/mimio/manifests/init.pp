@@ -1,6 +1,7 @@
 class mimio {
   require packages
-  include mimio::startup
+  include mimio::license,
+          mimio::startup
 
   Package <| tag == whiteboard-mimio |>
 }
