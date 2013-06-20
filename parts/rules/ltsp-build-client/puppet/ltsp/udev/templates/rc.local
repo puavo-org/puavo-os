@@ -11,6 +11,8 @@
 #
 # By default this script does nothing.
 
+set +e
+
 (
   # /etc/init/udevtrigger.conf misses some stuff when run in LTSP client
   # (for some reason).  The end result is that, for example, the /dev/fuse
@@ -26,9 +28,14 @@
 
   # We work around these issues by explicitly settings some permissions here.
 
-  set +e
-
   chmod 1666 /dev/fuse
+
+  # Allow access to mimio device, in case udev got it wrong.
+  lsusb | perl -ane '
+    $F[5] eq "08d3:0003"
+      && /^Bus (\d+) Device (\d+):/
+      && system("chmod", "666", "/dev/bus/usb/$1/$2")
+  '
 )
 
 # Lenovo ThinkPad Edge E320 seems to boot always with soft blocked wifi,
