@@ -18,7 +18,7 @@ class smartboard::config {
 
   puavo_external_files::external_file {
     '/opt/SMART Technologies/common/data/.mp.1.1.dat':
-      external_file_name => 'smartlicense';
+      external_file_name => 'smartboard_license';
   }
 
   Package <| tag == whiteboard-smartboard |>
