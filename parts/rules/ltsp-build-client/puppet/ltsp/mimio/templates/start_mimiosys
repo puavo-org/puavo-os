@@ -15,5 +15,8 @@ fi
 
 # workaround a problem with NFS and fifos
 rm -f ~/.mimio/msgbus-lock ~/.mimio/system.mimio.com
+rm -f ~/.mimio/msgbus-lock ~/.mimio/tools.mimio.com
+rm -f ~/.mimio/msgbus-lock ~/.mimio/view.mimio.com
+rm -f ~/.mimio/msgbus-lock ~/.mimio/gallery.mimio.com
 
 exec "/var/opt/mimio/mimio-mimiosys" "$@"
