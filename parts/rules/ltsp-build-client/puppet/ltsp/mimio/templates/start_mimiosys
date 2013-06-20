@@ -14,9 +14,10 @@ if ! lsusb | awk '$6 ~ /^08d3:0003/' | grep -q .; then
 fi
 
 # workaround a problem with NFS and fifos
-rm -f ~/.mimio/msgbus-lock ~/.mimio/system.mimio.com
-rm -f ~/.mimio/msgbus-lock ~/.mimio/tools.mimio.com
-rm -f ~/.mimio/msgbus-lock ~/.mimio/view.mimio.com
-rm -f ~/.mimio/msgbus-lock ~/.mimio/gallery.mimio.com
+rm -f ~/.mimio/gallery.mimio.com \
+      ~/.mimio/msgbus-lock       \
+      ~/.mimio/system.mimio.com  \
+      ~/.mimio/tools.mimio.com   \
+      ~/.mimio/view.mimio.com
 
 exec "/var/opt/mimio/mimio-mimiosys" "$@"
