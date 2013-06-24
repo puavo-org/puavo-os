@@ -40,7 +40,7 @@ puavo_mount_partition() {
 }
 
 if [ -x "/sbin/vgchange" ]; then
-  vgchange -a y
+  vgchange -a y puavo
 
   case "$PUAVO_HOSTTYPE" in
     laptop)
