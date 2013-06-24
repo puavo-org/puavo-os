@@ -11,4 +11,4 @@ brctl addbr "${ssid}"
 brctl setfd "${ssid}" 0
 ifconfig "${ssid}" up
 brctl addif "${ssid}" "${tapiface}"
-dhclient -pf "${rundir}/${ssid}_dhclient.pid" "${ssid}"
+dhclient -nw -pf "${rundir}/${ssid}_dhclient.pid" "${ssid}"
