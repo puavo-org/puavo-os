@@ -3,9 +3,6 @@
 ## Network interface of the access point.
 PUAVO_WLANAP_IFACE=wlan0
 
-## Channel of the access point.
-PUAVO_WLANAP_CHANNEL=6
-
 ## Address of the vtun server to which all access point traffic will be
 ## routed.
 PUAVO_WLANAP_GWADDR=wlangw

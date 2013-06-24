@@ -61,10 +61,6 @@ read_puavo_files()
     if [ -r "/etc/puavo/wlan/ssid" ]; then
         readarray -n0 -t PUAVO_WLANAP_NETS </etc/puavo/wlan/ssid
     fi
-
-    if [ -r "/etc/puavo/wlan/channel" ]; then
-        read PUAVO_WLANAP_CHANNEL </etc/puavo/wlan/channel
-    fi
 }
 
 validate_config()
@@ -94,11 +90,6 @@ validate_config()
                 ;;
         esac
     done
-
-    if [ "${PUAVO_WLANAP_CHANNEL}" -lt 1 -o "${PUAVO_WLANAP_CHANNEL}" -gt 13 ]; then
-        puavo_wlanap_fail "channel must be between 1 - 13"
-        return 1
-    fi
 }
 
 write_runconf()
