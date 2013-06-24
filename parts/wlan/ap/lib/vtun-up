@@ -3,13 +3,12 @@
 set -eu
 
 tapiface=$1
-wlaniface=$2
+ssid=$2
 wlanap_pid=$3
-briface=br.${wlaniface}
 
 ifconfig "${tapiface}" up
-brctl addbr "${briface}"
-brctl setfd "${briface}" 0
-ifconfig "${briface}" up
-brctl addif "${briface}" "${tapiface}"
+brctl addbr "${ssid}"
+brctl setfd "${ssid}" 0
+ifconfig "${ssid}" up
+brctl addif "${ssid}" "${tapiface}"
 kill -USR1 "${wlanap_pid}"

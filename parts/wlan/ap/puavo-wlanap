@@ -7,7 +7,7 @@ on_sigusr1()
     sleep 8
     hostapd -B -P "${PUAVO_WLANAP_RUNDIR}/hostapd.pid" "${PUAVO_WLANAP_RUNDIR}/hostapd.conf"
     sleep 2
-    dhclient -pf "${PUAVO_WLANAP_RUNDIR}/dhclient.pid" "br.${PUAVO_WLANAP_IFACE}"
+    dhclient -pf "${PUAVO_WLANAP_RUNDIR}/dhclient.pid" "${PUAVO_WLANAP_SSID}"
 }
 
 on_sigchld()
@@ -94,7 +94,7 @@ write_runconf()
         >"${PUAVO_WLANAP_RUNDIR}/hostapd.conf"
 
     sed -e "s|#{PUAVO_WLANAP_LIBDIR}|${PUAVO_WLANAP_LIBDIR}|g" \
-        -e "s|#{PUAVO_WLANAP_IFACE}|${PUAVO_WLANAP_IFACE}|g" \
+        -e "s|#{PUAVO_WLANAP_SSID}|${PUAVO_WLANAP_SSID}|g" \
         -e "s|#{PUAVO_WLANAP_PID}|$$|g" \
         "${PUAVO_WLANAP_DATADIR}/vtund.conf" \
         >"${PUAVO_WLANAP_RUNDIR}/vtund.conf"

@@ -3,10 +3,9 @@
 set -eu
 
 tapiface=$1
-wlaniface=$2
-briface=br.${wlaniface}
+ssid=$2
 
-brctl delif "${briface}" "${tapiface}"
-ifconfig "${briface}" down
-brctl delbr "${briface}"
+brctl delif "${ssid}" "${tapiface}"
+ifconfig "${ssid}" down
+brctl delbr "${ssid}"
 ifconfig "${tapiface}" down
