@@ -9,9 +9,7 @@ on_sigchld()
         if [ -r "${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.pid" ]; then
             read vtundpid <"${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.pid"
             kill -0 "$vtundpid" 2>/dev/null && continue
-            trap - SIGCHLD
-            puavo_wlanap_fail "tunnel collapsed, exiting" || true
-            kill $$
+            puavo_wlanap_fail "tunnel collapsed, exiting"
         fi
     done
 }
@@ -21,6 +19,9 @@ on_exit()
     local -r exitval=$?
 
     set +eu
+
+    trap - SIGCHLD # We are not interested in our children anymore, they
+                   # all are gonna die anyways.
 
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
         IFS=':' read _ ssid _ <<<"${net}"
@@ -57,19 +58,20 @@ on_exit()
 
 read_puavo_files()
 {
-    if [ -f "/etc/puavo/wlan/ssid" ]; then
+    if [ -r "/etc/puavo/wlan/ssid" ]; then
         readarray -n0 -t PUAVO_WLANAP_NETS </etc/puavo/wlan/ssid
     fi
 
-    if [ -f "/etc/puavo/wlan/channel" ]; then
+    if [ -r "/etc/puavo/wlan/channel" ]; then
         read PUAVO_WLANAP_CHANNEL </etc/puavo/wlan/channel
     fi
 }
 
-check_validity()
+validate_config()
 {
     if [ ${#PUAVO_WLANAP_NETS[@]} -eq 0 ]; then
-        puavo_wlanap_fail "no networks defined" || return
+        puavo_wlanap_fail "no networks defined"
+        return 1
     fi
 
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
@@ -82,26 +84,31 @@ check_validity()
                 ;;
             psk)
                 if [ "${#psk}" -lt 8 -o "${#psk}" -gt 63 ]; then
-                    puavo_wlanap_fail "psk must be 8-63 characters long" || return
+                    puavo_wlanap_fail "psk must be 8-63 characters long"
+                    return 1
                 fi
                 ;;
             *)
-                puavo_wlanap_fail "unknown auth type '${auth}'" || return
+                puavo_wlanap_fail "unknown auth type '${auth}'"
+                return 1
                 ;;
         esac
     done
 
     if [ "${PUAVO_WLANAP_CHANNEL}" -lt 1 -o "${PUAVO_WLANAP_CHANNEL}" -gt 13 ]; then
-        puavo_wlanap_fail "channel must be between 1 - 13" || return
+        puavo_wlanap_fail "channel must be between 1 - 13"
+        return 1
     fi
 }
 
 write_runconf()
 {
     local ssid_count=0
+    local -r bssid=$(ifconfig "${PUAVO_WLANAP_IFACE}" | head -n1 | cut -d' ' -f10 | head -c-2)0
 
+    # Write common hostapd configs.
     sed -e "s|#{PUAVO_WLANAP_IFACE}|${PUAVO_WLANAP_IFACE}|g" \
-        -e "s|#{PUAVO_WLANAP_BSSID}|${PUAVO_WLANAP_BSSID}|g" \
+        -e "s|#{PUAVO_WLANAP_BSSID}|${bssid}|g" \
         -e "s|#{PUAVO_WLANAP_RUNDIR}|${PUAVO_WLANAP_RUNDIR}|g" \
         "${PUAVO_WLANAP_DATADIR}/hostapd.conf" \
         >"${PUAVO_WLANAP_RUNDIR}/hostapd.conf"
@@ -109,14 +116,16 @@ write_runconf()
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
         IFS=':' read auth ssid psk <<<"${net}"
 
-        cat "${PUAVO_WLANAP_DATADIR}/${auth}_hostapd.conf" >>"${PUAVO_WLANAP_RUNDIR}/hostapd.conf"
-
+        # Append SSID-specific hostapd configs.
+        cat "${PUAVO_WLANAP_DATADIR}/${auth}_hostapd.conf" \
+            >>"${PUAVO_WLANAP_RUNDIR}/hostapd.conf"
         sed -i \
             -e "s|#{PUAVO_WLANAP_BSS}|${PUAVO_WLANAP_IFACE}_${ssid_count}|g" \
             -e "s|#{PUAVO_WLANAP_SSID}|${ssid}|g" \
             -e "s|#{PUAVO_WLANAP_PSK}|${psk}|g" \
             "${PUAVO_WLANAP_RUNDIR}/hostapd.conf"
 
+        # Write SSID-specific vtund configs.
         sed -e "s|#{PUAVO_WLANAP_LIBDIR}|${PUAVO_WLANAP_LIBDIR}|g" \
             -e "s|#{PUAVO_WLANAP_SSID}|${ssid}|g" \
             -e "s|#{PUAVO_WLANAP_RUNDIR}|${PUAVO_WLANAP_RUNDIR}|g" \
@@ -128,8 +137,8 @@ write_runconf()
 }
 
 # We don't know yet where our data, libs and configs have been
-# installed, but we do know the following script knows it and we do know
-# where the following script is (it in PATH!).
+# installed, but we do know that the following script knows it and we do
+# know where the following script is (its in PATH!).
 . puavo-wlanap-env
 
 . "${PUAVO_WLANAP_DATADIR}/config"
@@ -155,12 +164,11 @@ mkdir -p "${PUAVO_WLANAP_RUNDIR}"
 
 read_puavo_files
 
-check_validity
-
-PUAVO_WLANAP_BSSID=$(ifconfig "${PUAVO_WLANAP_IFACE}" | head -n1 | cut -d' ' -f10 | head -c-2)0
+validate_config
 
 write_runconf
 
+# Trap SIGCHLD to exit when any of underlying the components fails.
 trap on_sigchld SIGCHLD
 
 for net in "${PUAVO_WLANAP_NETS[@]}"; do
