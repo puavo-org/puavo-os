@@ -1,7 +1,7 @@
-### This file is a POSIX shell fragment which is sourced by scripts.
+### This file is a Bash fragment which is sourced by puavo-wlanap.
 
 ## Network interface of the access point.
-PUAVO_WLANAP_IFACE=wlan0
+PUAVO_WLANAP_IFACES=("wlan0" "wlan1")
 
 ## Address of the vtun server to which all access point traffic will be
 ## routed.
