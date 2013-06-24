@@ -2,14 +2,6 @@
 
 set -eubm
 
-on_sigusr1()
-{
-    sleep 8
-    hostapd -B -P "${PUAVO_WLANAP_RUNDIR}/hostapd.pid" "${PUAVO_WLANAP_RUNDIR}/hostapd.conf"
-    sleep 2
-    dhclient -pf "${PUAVO_WLANAP_RUNDIR}/dhclient.pid" "${PUAVO_WLANAP_SSID}"
-}
-
 on_sigchld()
 {
     if [ -n "$vtundpid" ]; then
@@ -95,7 +87,7 @@ write_runconf()
 
     sed -e "s|#{PUAVO_WLANAP_LIBDIR}|${PUAVO_WLANAP_LIBDIR}|g" \
         -e "s|#{PUAVO_WLANAP_SSID}|${PUAVO_WLANAP_SSID}|g" \
-        -e "s|#{PUAVO_WLANAP_PID}|$$|g" \
+        -e "s|#{PUAVO_WLANAP_RUNDIR}|${PUAVO_WLANAP_RUNDIR}|g" \
         "${PUAVO_WLANAP_DATADIR}/vtund.conf" \
         >"${PUAVO_WLANAP_RUNDIR}/vtund.conf"
 }
@@ -135,12 +127,13 @@ write_runconf
 vtundpid=
 trap on_sigchld SIGCHLD
 
-trap on_sigusr1 SIGUSR1
-
 vtund -n -f "${PUAVO_WLANAP_RUNDIR}/vtund.conf" \
     -P "${PUAVO_WLANAP_GWPORT}" \
     puavo-wlanap "${PUAVO_WLANAP_GWADDR}" &
 vtundpid=$!
+
+sleep 8
+hostapd -B -P "${PUAVO_WLANAP_RUNDIR}/hostapd.pid" "${PUAVO_WLANAP_RUNDIR}/hostapd.conf"
 
 while true; do
     sleep 3 &

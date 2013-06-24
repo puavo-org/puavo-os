@@ -4,11 +4,11 @@ set -eu
 
 tapiface=$1
 ssid=$2
-wlanap_pid=$3
+rundir=$3
 
 ifconfig "${tapiface}" up
 brctl addbr "${ssid}"
 brctl setfd "${ssid}" 0
 ifconfig "${ssid}" up
 brctl addif "${ssid}" "${tapiface}"
-kill -USR1 "${wlanap_pid}"
+dhclient -pf "${rundir}/dhclient.pid" "${ssid}"
