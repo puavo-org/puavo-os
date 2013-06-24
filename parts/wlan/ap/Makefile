@@ -37,6 +37,7 @@ install : puavo-wlanap-env installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-wlanap \
 		config \
 		vtund.conf \
+		hostapd.conf \
 		psk_hostapd.conf \
 		open_hostapd.conf
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-wlanap \
