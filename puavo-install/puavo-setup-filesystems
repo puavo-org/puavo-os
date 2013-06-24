@@ -50,6 +50,22 @@ module DiskHandler
     ],
   }
 
+  def self.cleanup_disk_environment(hosttype)
+    # Unmount filesystems, if those are mounted.
+    non_swap_filesystems(hosttype).each do |fs|
+      run('umount', '-f', "/#{ fs['name'] }") rescue true
+    end
+
+    # turn off swap partitions
+    run('swapoff', '-a') rescue true
+
+    # Remove dmsetup volumes as well, in case these are effective.
+    run('dmsetup', 'remove_all', '--force') rescue true
+
+    # switch off all volume groups that may interfere with following operations
+    run('vgchange', '-a', 'n') rescue true
+  end
+
   def self.do_fs_setup(conf)
     fs_conf = conf.clone
 
@@ -87,23 +103,12 @@ module DiskHandler
     end
   end
 
-  def self.non_swap_filesystems(fs_conf)
-    Filesystems[ fs_conf['hosttype'] ] \
+  def self.non_swap_filesystems(hosttype)
+    Filesystems[ hosttype ] \
       .select { |fs| fs['type'] != 'swap' }
   end
 
   def self.puavo_filesystems(fs_conf)
-    begin
-      # Unmount filesystems, if those are mounted.
-      non_swap_filesystems(fs_conf).each do |fs|
-	run('umount', '-f', "/#{ fs['name'] }")
-      end
-    rescue
-    end
-
-    # Remove dmsetup volumes as well, in case these are effective.
-    run('dmsetup', 'remove_all', '--force') rescue true
-
     # clean up possible confusing mess from the partition
     run('dd', 'if=/dev/zero', "of=#{ fs_conf['partition'] }", 'count=1K')
 
@@ -131,7 +136,7 @@ module DiskHandler
   end
 
   def self.mount_filesystems(fs_conf)
-    non_swap_filesystems(fs_conf).each do |fs|
+    non_swap_filesystems( fs_conf['hosttype'] ).each do |fs|
       mnt_path = "/#{ fs['name'] }"
       FileUtils.mkdir_p(mnt_path)
       run('mount', "/dev/mapper/puavo-#{ fs['name'] }", mnt_path)
@@ -278,6 +283,9 @@ module UI
 end
 
 hosttype = PuavoFacts::get('puavo_hosttype')
+
+DiskHandler::cleanup_disk_environment(hosttype)
+
 case hosttype
   when 'laptop', 'ltspserver'
     conf = QueryDiskInfo::ask_device_and_partition_with_confirmation(hosttype)
