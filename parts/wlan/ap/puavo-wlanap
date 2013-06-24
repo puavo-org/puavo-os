@@ -5,16 +5,14 @@ set -eubm
 on_sigchld()
 {
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
-        echo "${net}" | {
-            IFS=':' read _ ssid _
-            if [ -r "${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.pid" ]; then
-                read vtundpid <"${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.pid"
-                kill -0 "$vtundpid" 2>/dev/null && continue
-                trap - SIGCHLD
-                puavo_wlanap_fail "tunnel collapsed, exiting" || true
-                kill $$
-            fi
-        }
+        IFS=':' read _ ssid _ <<<"${net}"
+        if [ -r "${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.pid" ]; then
+            read vtundpid <"${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.pid"
+            kill -0 "$vtundpid" 2>/dev/null && continue
+            trap - SIGCHLD
+            puavo_wlanap_fail "tunnel collapsed, exiting" || true
+            kill $$
+        fi
     done
 }
 
@@ -25,10 +23,8 @@ on_exit()
     set +eu
 
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
-        echo "${net}" | {
-            IFS=':' read _ ssid _
-            dhclient -r "${ssid}"
-        }
+        IFS=':' read _ ssid _ <<<"${net}"
+        dhclient -r "${ssid}"
     done
     
     if [ -n "$sleeppid" ]; then
@@ -41,21 +37,17 @@ on_exit()
     fi
 
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
-        echo "${net}" | {
-            IFS=':' read _ ssid _
-            if [ -r "${PUAVO_WLANAP_RUNDIR}/${ssid}_dhclient.pid" ]; then
-                read dhclientpid <"${PUAVO_WLANAP_RUNDIR}/${ssid}_dhclient.pid"
-                kill -0 "$dhclientpid" 2>/dev/null && kill "$dhclientpid"
-            fi
-        }
+        IFS=':' read _ ssid _ <<<"${net}"
+        if [ -r "${PUAVO_WLANAP_RUNDIR}/${ssid}_dhclient.pid" ]; then
+            read dhclientpid <"${PUAVO_WLANAP_RUNDIR}/${ssid}_dhclient.pid"
+            kill -0 "$dhclientpid" 2>/dev/null && kill "$dhclientpid"
+        fi
     done
 
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
-        echo "${net}" | {
-            IFS=':' read _ ssid _
-            read vtundpid <"${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.pid"
-            kill -0 "$vtundpid" 2>/dev/null && kill "$vtundpid"
-        }
+        IFS=':' read _ ssid _ <<<"${net}"
+        read vtundpid <"${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.pid"
+        kill -0 "$vtundpid" 2>/dev/null && kill "$vtundpid"
     done
 
     rm -rf "${PUAVO_WLANAP_RUNDIR}"
@@ -81,24 +73,22 @@ check_validity()
     fi
 
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
-        echo "${net}" | {
-            IFS=':' read auth ssid psk
-            case "${auth}" in
-                open)
-                    if [ -n "${psk}" ]; then
-                        puavo_wlanap_warn "auth type is 'open', but psk was defined"
-                    fi
-                    ;;
-                psk)
-                    if [ "${#psk}" -lt 8 -o "${#psk}" -gt 63 ]; then
-                        puavo_wlanap_fail "psk must be 8-63 characters long" || return
-                    fi
-                    ;;
-                *)
-                    puavo_wlanap_fail "unknown auth type '${auth}'" || return
-                    ;;
-            esac
-        }
+        IFS=':' read auth ssid psk <<<"${net}"
+        case "${auth}" in
+            open)
+                if [ -n "${psk}" ]; then
+                    puavo_wlanap_warn "auth type is 'open', but psk was defined"
+                fi
+                ;;
+            psk)
+                if [ "${#psk}" -lt 8 -o "${#psk}" -gt 63 ]; then
+                    puavo_wlanap_fail "psk must be 8-63 characters long" || return
+                fi
+                ;;
+            *)
+                puavo_wlanap_fail "unknown auth type '${auth}'" || return
+                ;;
+        esac
     done
 
     if [ "${PUAVO_WLANAP_CHANNEL}" -lt 1 -o "${PUAVO_WLANAP_CHANNEL}" -gt 13 ]; then
@@ -117,23 +107,22 @@ write_runconf()
         >"${PUAVO_WLANAP_RUNDIR}/hostapd.conf"
 
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
-        echo "${net}" | {
-            IFS=':' read auth ssid psk
-            cat "${PUAVO_WLANAP_DATADIR}/${auth}_hostapd.conf" >>"${PUAVO_WLANAP_RUNDIR}/hostapd.conf"
-            sed -i \
-                -e "s|#{PUAVO_WLANAP_BSS}|${PUAVO_WLANAP_IFACE}_${ssid_count}|g" \
-                -e "s|#{PUAVO_WLANAP_SSID}|${ssid}|g" \
-                -e "s|#{PUAVO_WLANAP_PSK}|${psk}|g" \
-                "${PUAVO_WLANAP_RUNDIR}/hostapd.conf"
+        IFS=':' read auth ssid psk <<<"${net}"
 
-            sed -e "s|#{PUAVO_WLANAP_LIBDIR}|${PUAVO_WLANAP_LIBDIR}|g" \
-                -e "s|#{PUAVO_WLANAP_SSID}|${ssid}|g" \
-                -e "s|#{PUAVO_WLANAP_RUNDIR}|${PUAVO_WLANAP_RUNDIR}|g" \
-                "${PUAVO_WLANAP_DATADIR}/vtund.conf" \
-                >"${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.conf"
-        } || {
-            puavo_wlanap_fail "failed to prepare runtime configuration" || return
-        }
+        cat "${PUAVO_WLANAP_DATADIR}/${auth}_hostapd.conf" >>"${PUAVO_WLANAP_RUNDIR}/hostapd.conf"
+
+        sed -i \
+            -e "s|#{PUAVO_WLANAP_BSS}|${PUAVO_WLANAP_IFACE}_${ssid_count}|g" \
+            -e "s|#{PUAVO_WLANAP_SSID}|${ssid}|g" \
+            -e "s|#{PUAVO_WLANAP_PSK}|${psk}|g" \
+            "${PUAVO_WLANAP_RUNDIR}/hostapd.conf"
+
+        sed -e "s|#{PUAVO_WLANAP_LIBDIR}|${PUAVO_WLANAP_LIBDIR}|g" \
+            -e "s|#{PUAVO_WLANAP_SSID}|${ssid}|g" \
+            -e "s|#{PUAVO_WLANAP_RUNDIR}|${PUAVO_WLANAP_RUNDIR}|g" \
+            "${PUAVO_WLANAP_DATADIR}/vtund.conf" \
+            >"${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.conf"
+
         ssid_count=$((ssid_count + 1))
     done
 }
@@ -175,13 +164,12 @@ write_runconf
 trap on_sigchld SIGCHLD
 
 for net in "${PUAVO_WLANAP_NETS[@]}"; do
-    echo "${net}" | {
-        IFS=':' read _ ssid _
-        vtund -n -f "${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.conf" \
-            -P "${PUAVO_WLANAP_GWPORT}" \
-            "${ssid}" "${PUAVO_WLANAP_GWADDR}" &
-        echo $! >"${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.pid"
-    }
+    IFS=':' read _ ssid _ <<<"${net}"
+
+    vtund -n -f "${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.conf" \
+        -P "${PUAVO_WLANAP_GWPORT}" \
+        "${ssid}" "${PUAVO_WLANAP_GWADDR}" &
+    echo $! >"${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.pid"
 done
 
 sleep 8
