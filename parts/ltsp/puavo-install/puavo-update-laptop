@@ -20,6 +20,7 @@ puavo_rest_request() {
 
   puavo_rest_server=$(puavo-resolve-api-server) || return
   curl --cacert /etc/puavo/certs/rootca.pem \
+       --header "Authorization: Bootserver" \
        --fail \
        --max-time 60 \
        --silent \
