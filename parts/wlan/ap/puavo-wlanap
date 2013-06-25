@@ -6,10 +6,10 @@ on_exit()
 {
     local -r exitval=$?
 
+    ## Do not exit or terminate on error or signal anymore. We are
+    ## already exiting and it would be shame to exit while exiting, yo
+    ## dawg.
     set +eu
-
-    ## Ignore all terminating signals because we are already
-    ## exiting. Ignoring ensures that this function is not interrupted.
     trap '' EXIT HUP INT QUIT ABRT ALRT TERM USR1 USR2
 
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
@@ -17,7 +17,8 @@ on_exit()
         dhclient -r "${ssid}" -pf "${PUAVO_WLANAP_RUNDIR}/${ssid}_dhclient.pid"
     done
 
-    ## Kill children.
+    ## Kill our child processes. There is no reason to let Init adopt
+    ## them when puavo-wlanap dies.
     pkill -TERM -P $$
 
     rm -rf "${PUAVO_WLANAP_RUNDIR}"
@@ -92,6 +93,7 @@ write_hostapd_conf()
     local ssid
     local psk
 
+    ## Configure one hostapd per radio.
     for iface in "${PUAVO_WLANAP_IFACES[@]}"; do
         ssid_count=0
         bssid=$(get_bssid "${iface}")
@@ -101,7 +103,8 @@ write_hostapd_conf()
             return 1
         }
 
-        ## Write interface-specific hostapd configuration.
+        ## Write interface-specific hostapd configuration to the
+        ## beginning of the file.
         sed -e "s|#{PUAVO_WLANAP_IFACE}|${iface}|g" \
             -e "s|#{PUAVO_WLANAP_BSSID}|${bssid}|g" \
             -e "s|#{PUAVO_WLANAP_RUNDIR}|${PUAVO_WLANAP_RUNDIR}|g" \
@@ -111,7 +114,7 @@ write_hostapd_conf()
         for net in "${PUAVO_WLANAP_NETS[@]}"; do
             IFS=':' read auth ssid psk <<<"${net}"
 
-            ## Append SSID-specific hostapd configuration.
+            ## Append network-specific hostapd configuration to the end.
             cat "${PUAVO_WLANAP_DATADIR}/${auth}_hostapd.conf" \
                 >>"${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.conf"
             sed -i \
@@ -129,6 +132,7 @@ write_vtund_conf()
     local net
     local ssid
 
+    ## Configure one vtund client per network.
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
         IFS=':' read _ ssid _ <<<"${net}"
         sed -e "s|#{PUAVO_WLANAP_LIBDIR}|${PUAVO_WLANAP_LIBDIR}|g" \
@@ -147,6 +151,7 @@ setup_services()
 
 start_services()
 {
+    ## Start one vtund client per network.
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
         IFS=':' read _ ssid _ <<<"${net}"
         vtund -n -f "${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.conf" \
@@ -154,9 +159,10 @@ start_services()
             "${ssid}" "${PUAVO_WLANAP_GWADDR}" &
     done
 
-    ## Magical sleep to "ensure" that both the bridge and the tunnel are
-    ## all set.
+    ## Magical sleep to "ensure" that bridges and tunnels are all set.
     sleep 8 & wait $!
+
+    ## Start one hostapd per radio.
     for iface in "${PUAVO_WLANAP_IFACES[@]}"; do
         hostapd -P "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.pid" \
             "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.conf" &
@@ -228,11 +234,12 @@ read_config()
     done
 }
 
-# We don't know yet where our data, libs and configs have been
-# installed, but we do know that the following script knows it and we do
-# know where the following script is (its in PATH!).
+## We don't know yet where our data, libs and configs have been
+## installed, but we do know that the following script knows it and we do
+## know where the following script is (its in PATH!).
 . puavo-wlanap-env
 
+## Import library routines.
 . "${PUAVO_WLANAP_LIBDIR}/common.sh"
 
 read_config
@@ -244,6 +251,10 @@ if [ "${PUAVO_WLANAP_ARGS_DAEMON}" -ne 0 ]; then
     exit 0
 fi
 
+## After this point the process is getting hot and starts taking actions
+## which might have persistent side-effects (files, directories,
+## bridges, other processes, etc.). The trap is set to ensure that
+## everything gets cleaned up properly afterwards.
 trap on_exit EXIT
 
 mkdir -p "${PUAVO_WLANAP_RUNDIR}"
