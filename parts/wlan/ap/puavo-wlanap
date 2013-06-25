@@ -114,6 +114,25 @@ get_bssid()
     return 1
 }
 
+get_amode_ifaces()
+{
+    find /sys/class/net -maxdepth 1 -type l -printf '%f\n' | while read iface; do
+        grep -q '^DEVTYPE=wlan$' "/sys/class/net/${iface}/uevent" || continue
+
+        driver=$(sed -rn 's/^DRIVER=(.*)$/\1/p' "/sys/class/net/${iface}/device/uevent")
+        [ -n "${driver}" ] || {
+            puavo_wlanap_warn "could not determine the driver of ${iface}, skipping"
+            continue
+        }
+
+        grep -q "${driver}" "${PUAVO_WLANAP_DATADIR}/supported_drivers" || continue
+
+        iwconfig "${iface}" | head -n1 | grep -q 'IEEE 802.11abgn ' || continue
+
+        echo "${iface}"
+    done
+}
+
 write_hostapd_conf()
 {
     local ssid_count
