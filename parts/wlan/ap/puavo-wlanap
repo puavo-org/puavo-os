@@ -84,8 +84,13 @@ find_ifaces()
 
 write_hostapd_conf()
 {
+    local iface
     local ssid_count
     local bssid
+    local net
+    local auth
+    local ssid
+    local psk
 
     for iface in "${PUAVO_WLANAP_IFACES[@]}"; do
         ssid_count=0
@@ -96,7 +101,7 @@ write_hostapd_conf()
             return 1
         }
 
-        # Write interface-specific hostapd configs.
+        ## Write interface-specific hostapd configuration.
         sed -e "s|#{PUAVO_WLANAP_IFACE}|${iface}|g" \
             -e "s|#{PUAVO_WLANAP_BSSID}|${bssid}|g" \
             -e "s|#{PUAVO_WLANAP_RUNDIR}|${PUAVO_WLANAP_RUNDIR}|g" \
@@ -106,7 +111,7 @@ write_hostapd_conf()
         for net in "${PUAVO_WLANAP_NETS[@]}"; do
             IFS=':' read auth ssid psk <<<"${net}"
 
-            # Append SSID-specific hostapd configs.
+            ## Append SSID-specific hostapd configuration.
             cat "${PUAVO_WLANAP_DATADIR}/${auth}_hostapd.conf" \
                 >>"${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.conf"
             sed -i \
@@ -121,15 +126,40 @@ write_hostapd_conf()
 
 write_vtund_conf()
 {
-    for net in "${PUAVO_WLANAP_NETS[@]}"; do
-        IFS=':' read auth ssid psk <<<"${net}"
+    local net
+    local ssid
 
-        # Write SSID-specific vtund configs.
+    for net in "${PUAVO_WLANAP_NETS[@]}"; do
+        IFS=':' read _ ssid _ <<<"${net}"
         sed -e "s|#{PUAVO_WLANAP_LIBDIR}|${PUAVO_WLANAP_LIBDIR}|g" \
             -e "s|#{PUAVO_WLANAP_SSID}|${ssid}|g" \
             -e "s|#{PUAVO_WLANAP_RUNDIR}|${PUAVO_WLANAP_RUNDIR}|g" \
             "${PUAVO_WLANAP_DATADIR}/vtund.conf" \
             >"${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.conf"
+    done
+}
+
+setup_services()
+{
+    write_hostapd_conf
+    write_vtund_conf
+}
+
+start_services()
+{
+    for net in "${PUAVO_WLANAP_NETS[@]}"; do
+        IFS=':' read _ ssid _ <<<"${net}"
+        vtund -n -f "${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.conf" \
+            -P "${PUAVO_WLANAP_GWPORT}" \
+            "${ssid}" "${PUAVO_WLANAP_GWADDR}" &
+    done
+
+    ## Magical sleep to "ensure" that both the bridge and the tunnel are
+    ## all set.
+    sleep 8 & wait $!
+    for iface in "${PUAVO_WLANAP_IFACES[@]}"; do
+        hostapd -P "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.pid" \
+            "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.conf" &
     done
 }
 
@@ -218,25 +248,14 @@ trap on_exit EXIT
 
 mkdir -p "${PUAVO_WLANAP_RUNDIR}"
 
-write_hostapd_conf
+setup_services
 
-write_vtund_conf
+start_services
 
-for net in "${PUAVO_WLANAP_NETS[@]}"; do
-    IFS=':' read _ ssid _ <<<"${net}"
-    vtund -n -f "${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.conf" \
-        -P "${PUAVO_WLANAP_GWPORT}" \
-        "${ssid}" "${PUAVO_WLANAP_GWADDR}" &
-done
-
-sleep 8 & wait $!
-for iface in "${PUAVO_WLANAP_IFACES[@]}"; do
-    hostapd -P "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.pid" \
-        "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.conf" &
-done
-
+## Serve forever.
 while true; do
     sleep 3 & wait $!
 
+    ## Keep going even if reporting fails.
     report_status || true
 done
