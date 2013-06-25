@@ -12,14 +12,16 @@ on_exit()
     set +eu
     trap '' EXIT HUP INT QUIT ABRT ALRT TERM USR1 USR2
 
-    for net in "${PUAVO_WLANAP_NETS[@]}"; do
-        IFS=':' read _ ssid _ <<<"${net}"
-        dhclient -r "${ssid}" -pf "${PUAVO_WLANAP_RUNDIR}/${ssid}_dhclient.pid"
-    done
-
     ## Kill our child processes. There is no reason to let Init adopt
     ## them when puavo-wlanap dies.
     pkill -TERM -P $$
+
+    ## Burn the bridges.
+    for net in "${PUAVO_WLANAP_NETS[@]}"; do
+        IFS=':' read _ ssid _ <<<"${net}"
+        ifconfig "${ssid}" down
+        brctl delbr "${ssid}"
+    done
 
     rm -rf "${PUAVO_WLANAP_RUNDIR}"
 
@@ -154,6 +156,13 @@ start_services()
     ## Start one vtund client per network.
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
         IFS=':' read _ ssid _ <<<"${net}"
+
+        ## Setup the bridge.
+        brctl addbr "${ssid}"
+        brctl setfd "${ssid}" 0
+        ifconfig "${ssid}" up
+        dhclient -d "${ssid}" &
+
         vtund -n -f "${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.conf" \
             -P "${PUAVO_WLANAP_GWPORT}" \
             "${ssid}" "${PUAVO_WLANAP_GWADDR}" &

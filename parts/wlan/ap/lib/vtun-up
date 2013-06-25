@@ -2,13 +2,5 @@
 
 set -eu
 
-tapiface=$1
-ssid=$2
-rundir=$3
-
-ifconfig "${tapiface}" up
-brctl addbr "${ssid}"
-brctl setfd "${ssid}" 0
-ifconfig "${ssid}" up
-brctl addif "${ssid}" "${tapiface}"
-dhclient -nw -pf "${rundir}/${ssid}_dhclient.pid" "${ssid}"
+ifconfig "$1" up
+brctl addif "$2" "$1"

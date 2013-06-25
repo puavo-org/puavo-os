@@ -2,10 +2,5 @@
 
 set -eu
 
-tapiface=$1
-ssid=$2
-
-brctl delif "${ssid}" "${tapiface}"
-ifconfig "${ssid}" down
-brctl delbr "${ssid}"
-ifconfig "${tapiface}" down
+brctl delif "$2" "$1"
+ifconfig "$1" down
