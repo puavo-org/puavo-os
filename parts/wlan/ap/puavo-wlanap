@@ -12,21 +12,13 @@ on_exit()
     ## exiting. Ignoring ensures that this function is not interrupted.
     trap '' EXIT HUP INT QUIT ABRT ALRT TERM USR1 USR2
 
-    [ -n "$sleeppid" ] && kill -0 "$sleeppid" 2>/dev/null && kill "$sleeppid"
-
-    for iface in "${PUAVO_WLANAP_IFACES[@]}"; do
-        read hostapdpid <"${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.pid" && \
-            kill -0 "$hostapdpid" 2>/dev/null && kill "$hostapdpid"
-    done
-
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
         IFS=':' read _ ssid _ <<<"${net}"
-        dhclient -r "${ssid}"
-        read dhclientpid <"${PUAVO_WLANAP_RUNDIR}/${ssid}_dhclient.pid" && \
-            kill -0 "$dhclientpid" 2>/dev/null && kill "$dhclientpid"
-        read vtundpid <"${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.pid" && \
-            kill -0 "$vtundpid" 2>/dev/null && kill "$vtundpid"
+        dhclient -r "${ssid}" -pf "${PUAVO_WLANAP_RUNDIR}/${ssid}_dhclient.pid"
     done
+
+    ## Kill children.
+    pkill -TERM -P $$
 
     rm -rf "${PUAVO_WLANAP_RUNDIR}"
 
@@ -227,22 +219,19 @@ write_vtund_conf
 
 for net in "${PUAVO_WLANAP_NETS[@]}"; do
     IFS=':' read _ ssid _ <<<"${net}"
-
     vtund -n -f "${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.conf" \
         -P "${PUAVO_WLANAP_GWPORT}" \
         "${ssid}" "${PUAVO_WLANAP_GWADDR}" &
-    echo $! >"${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.pid"
 done
 
-sleep 8
+sleep 8 & wait $!
 for iface in "${PUAVO_WLANAP_IFACES[@]}"; do
-    hostapd -B -P "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.pid" "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.conf"
+    hostapd -P "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.pid" \
+        "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.conf" &
 done
 
 while true; do
-    sleep 3 &
-    sleeppid=$!
-    wait $sleeppid
+    sleep 3 & wait $!
 
     report_status || true
 done
