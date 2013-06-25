@@ -43,35 +43,6 @@ on_exit()
     exit $exitval
 }
 
-validate_config()
-{
-    if [ ${#PUAVO_WLANAP_NETS[@]} -eq 0 ]; then
-        puavo_wlanap_fail "no networks defined"
-        return 1
-    fi
-
-    for net in "${PUAVO_WLANAP_NETS[@]}"; do
-        IFS=':' read auth ssid psk <<<"${net}"
-        case "${auth}" in
-            open)
-                if [ -n "${psk}" ]; then
-                    puavo_wlanap_warn "auth type is 'open', but psk was defined"
-                fi
-                ;;
-            psk)
-                if [ "${#psk}" -lt 8 -o "${#psk}" -gt 63 ]; then
-                    puavo_wlanap_fail "psk must be 8-63 characters long"
-                    return 1
-                fi
-                ;;
-            *)
-                puavo_wlanap_fail "unknown auth type '${auth}'"
-                return 1
-                ;;
-        esac
-    done
-}
-
 get_bssid()
 {
     local -r iface=$1
@@ -189,8 +160,31 @@ trap on_exit EXIT
 mkdir -p "${PUAVO_WLANAP_RUNDIR}"
 
 readarray -n0 -t PUAVO_WLANAP_NETS </etc/puavo/wlan/ssid
+if [ ${#PUAVO_WLANAP_NETS[@]} -eq 0 ]; then
+    puavo_wlanap_fail "no networks defined"
+    exit 1
+fi
 
-validate_config
+for net in "${PUAVO_WLANAP_NETS[@]}"; do
+    IFS=':' read auth ssid psk <<<"${net}"
+    case "${auth}" in
+        open)
+            if [ -n "${psk}" ]; then
+                puavo_wlanap_warn "auth type is 'open', but psk was defined"
+            fi
+            ;;
+        psk)
+            if [ "${#psk}" -lt 8 -o "${#psk}" -gt 63 ]; then
+                puavo_wlanap_fail "psk must be 8-63 characters long"
+                exit 1
+            fi
+            ;;
+        *)
+            puavo_wlanap_fail "unknown auth type '${auth}'"
+            exit 1
+            ;;
+    esac
+done
 
 write_hostapd_conf
 
