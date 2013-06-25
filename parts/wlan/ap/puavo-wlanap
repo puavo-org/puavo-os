@@ -141,6 +141,23 @@ write_vtund_conf()
     done
 }
 
+parse_args()
+{
+    PUAVO_WLANAP_ARGS_DAEMON=0
+
+    if [ $# -eq 1 ]; then
+        if [ "$1" = "--daemon" ]; then
+            PUAVO_WLANAP_ARGS_DAEMON=1
+            return 0
+        fi
+        puavo_wlanap_usage_fail "unexpected argument '$1'" "[--daemon]"
+        return 1
+    elif [ $# -gt 2 ]; then
+        puavo_wlanap_usage_fail "too many arguments" "[--daemon]"
+        return 1
+    fi
+}
+
 # We don't know yet where our data, libs and configs have been
 # installed, but we do know that the following script knows it and we do
 # know where the following script is (its in PATH!).
@@ -153,14 +170,11 @@ write_vtund_conf()
 
 . "${PUAVO_WLANAP_LIBDIR}/common.sh"
 
-[ $# -lt 2 ] || puavo_wlanap_usage_fail "too many arguments" "[--daemon]"
+parse_args "$@"
 
-if [ $# -eq 1 ]; then
-    if [ "$1" = "--daemon" ]; then
-        daemon --noconfig --stderr='daemon.info' --name='puavo-wlanap' -- puavo-wlanap
-        exit 0
-    fi
-    puavo_wlanap_usage_fail "unexpected argument '$1'" "[--daemon"]
+if [ "${PUAVO_WLANAP_ARGS_DAEMON}" -ne 0 ]; then
+    daemon --noconfig --stderr='daemon.info' --name='puavo-wlanap' -- puavo-wlanap
+    exit 0
 fi
 
 trap on_exit EXIT
