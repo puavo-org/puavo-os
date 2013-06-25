@@ -8,6 +8,10 @@ on_exit()
 
     set +eu
 
+    ## Ignore all terminating signals because we are already
+    ## exiting. Ignoring ensures that this function is not interrupted.
+    trap '' EXIT HUP INT QUIT ABRT ALRT TERM USR1 USR2
+
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
         IFS=':' read _ ssid _ <<<"${net}"
         dhclient -r "${ssid}"
