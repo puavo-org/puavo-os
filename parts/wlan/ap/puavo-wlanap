@@ -12,34 +12,20 @@ on_exit()
     ## exiting. Ignoring ensures that this function is not interrupted.
     trap '' EXIT HUP INT QUIT ABRT ALRT TERM USR1 USR2
 
+    [ -n "$sleeppid" ] && kill -0 "$sleeppid" 2>/dev/null && kill "$sleeppid"
+
+    for iface in "${PUAVO_WLANAP_IFACES[@]}"; do
+        read hostapdpid <"${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.pid" && \
+            kill -0 "$hostapdpid" 2>/dev/null && kill "$hostapdpid"
+    done
+
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
         IFS=':' read _ ssid _ <<<"${net}"
         dhclient -r "${ssid}"
-    done
-    
-    if [ -n "$sleeppid" ]; then
-        kill -0 "$sleeppid" 2>/dev/null && kill "$sleeppid"
-    fi
-
-    for iface in "${PUAVO_WLANAP_IFACES[@]}"; do
-        if [ -r "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.pid" ]; then
-            read hostapdpid <"${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.pid"
-            kill -0 "$hostapdpid" 2>/dev/null && kill "$hostapdpid"
-        fi
-    done
-
-    for net in "${PUAVO_WLANAP_NETS[@]}"; do
-        IFS=':' read _ ssid _ <<<"${net}"
-        if [ -r "${PUAVO_WLANAP_RUNDIR}/${ssid}_dhclient.pid" ]; then
-            read dhclientpid <"${PUAVO_WLANAP_RUNDIR}/${ssid}_dhclient.pid"
+        read dhclientpid <"${PUAVO_WLANAP_RUNDIR}/${ssid}_dhclient.pid" && \
             kill -0 "$dhclientpid" 2>/dev/null && kill "$dhclientpid"
-        fi
-    done
-
-    for net in "${PUAVO_WLANAP_NETS[@]}"; do
-        IFS=':' read _ ssid _ <<<"${net}"
-        read vtundpid <"${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.pid"
-        kill -0 "$vtundpid" 2>/dev/null && kill "$vtundpid"
+        read vtundpid <"${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.pid" && \
+            kill -0 "$vtundpid" 2>/dev/null && kill "$vtundpid"
     done
 
     rm -rf "${PUAVO_WLANAP_RUNDIR}"
