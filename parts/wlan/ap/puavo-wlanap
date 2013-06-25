@@ -43,13 +43,6 @@ on_exit()
     exit $exitval
 }
 
-read_puavo_files()
-{
-    if [ -r "/etc/puavo/wlan/ssid" ]; then
-        readarray -n0 -t PUAVO_WLANAP_NETS </etc/puavo/wlan/ssid
-    fi
-}
-
 validate_config()
 {
     if [ ${#PUAVO_WLANAP_NETS[@]} -eq 0 ]; then
@@ -195,7 +188,7 @@ trap on_exit EXIT
 
 mkdir -p "${PUAVO_WLANAP_RUNDIR}"
 
-read_puavo_files
+readarray -n0 -t PUAVO_WLANAP_NETS </etc/puavo/wlan/ssid
 
 validate_config
 
