@@ -40,9 +40,7 @@ install : puavo-wlanap-env installdirs
 		hostapd.conf \
 		psk_hostapd.conf \
 		open_hostapd.conf \
-		supported_drivers \
-		supported_devices_pci_a \
-		supported_devices_usb_a
+		supported_drivers
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-wlanap \
 		config
 	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/puavo-wlanap \
