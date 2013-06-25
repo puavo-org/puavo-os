@@ -433,6 +433,7 @@ class packages {
     , 'remmina'
     , 'smbclient'
     , 'ubuntuone-client'
+    , 'unison-gtk'
     , 'wget' ]:
       tag => [ 'remote_access', 'ubuntu', ];
 
