@@ -94,6 +94,26 @@ validate_config()
     done
 }
 
+find_first_mac()
+{
+    local -r iface=$1
+    local -r mac_head=$(ifconfig "${iface}" | head -n1 | sed -rn 's/.*HWaddr (([0-9a-f][0-9a-f]:){5})([0-9a-f])[0-9a-f]\s*$/\1\3/p')
+    local mac_tail=0
+    local mac="${mac_head}${mac_tail}"
+
+    [ -n "${mac}" ] || return 1
+
+    while [ "${mac_tail}" != "10" ]; do
+        ifconfig "${iface}" hw ether "${mac}" >/dev/null 2>/dev/null && {
+            echo "${mac}"
+            return 0
+        }
+        mac_tail=$(echo "obase=16; ${mac_tail} + 1" | bc)
+        mac="${mac_head}${mac_tail}"
+    done
+    return 1
+}
+
 write_hostapd_conf()
 {
     local ssid_count
@@ -101,11 +121,16 @@ write_hostapd_conf()
 
     for iface in "${PUAVO_WLANAP_IFACES[@]}"; do
         ssid_count=0
-        bssid_head=$(ifconfig "${iface}" | head -n1 | sed -rn 's/.*HWaddr (([0-9a-f][0-9a-f]:){5})([0-9a-f])[0-9a-f]\s*$/\1\3/p')
-        bssid_tail=$(ifconfig "${iface}" | head -n1 | sed -rn 's/.*HWaddr ([0-9a-f][0-9a-f]:){5}[0-9a-f]([0-9a-f])\s*$/\2/p' | tr [:lower:] [:upper:])
+        bssid=$(find_first_mac "${iface}")
+
+        [ -n "${bssid}" ] || {
+            puavo_wlanap_fail "failed to find the first address in the block"
+            return 1
+        }
 
         # Write interface-specific hostapd configs.
         sed -e "s|#{PUAVO_WLANAP_IFACE}|${iface}|g" \
+            -e "s|#{PUAVO_WLANAP_BSSID}|${bssid}|g" \
             -e "s|#{PUAVO_WLANAP_RUNDIR}|${PUAVO_WLANAP_RUNDIR}|g" \
             "${PUAVO_WLANAP_DATADIR}/hostapd.conf" \
             >"${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.conf"
@@ -113,15 +138,11 @@ write_hostapd_conf()
         for net in "${PUAVO_WLANAP_NETS[@]}"; do
             IFS=':' read auth ssid psk <<<"${net}"
 
-            bssid_tail=$(echo "obase=16; ${bssid_tail} + ${ssid_count}" | bc)
-            bssid="${bssid_head}${bssid_tail}"
-
             # Append SSID-specific hostapd configs.
             cat "${PUAVO_WLANAP_DATADIR}/${auth}_hostapd.conf" \
                 >>"${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.conf"
             sed -i \
                 -e "s|#{PUAVO_WLANAP_BSS}|${iface}_${ssid_count}|g" \
-                -e "s|#{PUAVO_WLANAP_BSSID}|${bssid}|g" \
                 -e "s|#{PUAVO_WLANAP_SSID}|${ssid}|g" \
                 -e "s|#{PUAVO_WLANAP_PSK}|${psk}|g" \
                 "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.conf"
