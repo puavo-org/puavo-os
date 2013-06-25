@@ -2,26 +2,11 @@
 
 set -eubm
 
-on_sigchld()
-{
-    for net in "${PUAVO_WLANAP_NETS[@]}"; do
-        IFS=':' read _ ssid _ <<<"${net}"
-        if [ -r "${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.pid" ]; then
-            read vtundpid <"${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.pid"
-            kill -0 "$vtundpid" 2>/dev/null && continue
-            puavo_wlanap_fail "tunnel collapsed, exiting"
-        fi
-    done
-}
-
 on_exit()
 {
     local -r exitval=$?
 
     set +eu
-
-    trap - SIGCHLD # We are not interested in our children anymore, they
-                   # all are gonna die anyways.
 
     for net in "${PUAVO_WLANAP_NETS[@]}"; do
         IFS=':' read _ ssid _ <<<"${net}"
@@ -217,9 +202,6 @@ validate_config
 write_hostapd_conf
 
 write_vtund_conf
-
-# Trap SIGCHLD to exit when any of underlying the components fails.
-trap on_sigchld SIGCHLD
 
 for net in "${PUAVO_WLANAP_NETS[@]}"; do
     IFS=':' read _ ssid _ <<<"${net}"
