@@ -53,21 +53,39 @@ get_bssid()
     return 1
 }
 
-get_amode_ifaces()
+## Find suitable WLAN interfaces and print their names to stdout, one
+## per line.
+find_ifaces()
 {
-    find /sys/class/net -maxdepth 1 -type l -printf '%f\n' | while read iface; do
-        grep -q '^DEVTYPE=wlan$' "/sys/class/net/${iface}/uevent" || continue
+    local -r hw_mode=$1
+    local path
+    local iface
+    local driver
 
-        driver=$(sed -rn 's/^DRIVER=(.*)$/\1/p' "/sys/class/net/${iface}/device/uevent")
+    for path in /sys/class/net/*; do
+        iface=$(basename "${path}")
+
+        ## We are only interested in wlan interfaces.
+        grep -q '^DEVTYPE=wlan$' "${path}/uevent" || continue
+
+        ## Find its driver.
+        driver=$(sed -rn 's/^DRIVER=(.*)$/\1/p' "${path}/device/uevent")
         [ -n "${driver}" ] || {
-            puavo_wlanap_warn "could not determine the driver of ${iface}, skipping"
+            puavo_wlanap_warn "driver not found for ${iface}, ignoring"
             continue
         }
 
-        grep -q "${driver}" "${PUAVO_WLANAP_DATADIR}/supported_drivers" || continue
+        ## Ignore if the driver is not whitelisted.
+        grep -q "${driver}" "${PUAVO_WLANAP_DATADIR}/supported_drivers" \
+            || continue
 
-        iwconfig "${iface}" | head -n1 | grep -q 'IEEE 802.11abgn ' || continue
+        ## Ignore if it is of wrong type, i.e. the iwconfig output does
+        ## not include the hw_mode char.
+        iwconfig "${iface}" | sed -rn '1 s/^.*IEEE 802.11([a-z]+).*/\1/p' \
+            | grep -q "${hw_mode}" || continue
 
+        ## All tests passed, the current interface meets our
+        ## requirements. Print its interface name.
         echo "${iface}"
     done
 }
