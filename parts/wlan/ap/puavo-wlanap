@@ -71,7 +71,7 @@ find_ifaces()
         ## Find its driver.
         driver=$(sed -rn 's/^DRIVER=(.*)$/\1/p' "${path}/device/uevent")
         [ -n "${driver}" ] || {
-            puavo_wlanap_warn "driver not found for ${iface}, ignoring"
+            puavo_wlanap_log "driver not found for ${iface}, ignoring"
             continue
         }
 
@@ -100,7 +100,7 @@ write_hostapd_conf()
         bssid=$(get_bssid "${iface}")
 
         [ -n "${bssid}" ] || {
-            puavo_wlanap_fail "failed to find the first address in the block"
+            puavo_wlanap_log "failed to find the first address in the block"
             return 1
         }
 
@@ -150,10 +150,12 @@ parse_args()
             PUAVO_WLANAP_ARGS_DAEMON=1
             return 0
         fi
-        puavo_wlanap_usage_fail "unexpected argument '$1'" "[--daemon]"
+        puavo_wlanap_log "unexpected argument '$1'"
+        echo "Usage: $(basename $0) [--daemon]" >&2
         return 1
     elif [ $# -gt 2 ]; then
-        puavo_wlanap_usage_fail "too many arguments" "[--daemon]"
+        puavo_wlanap_log "too many arguments"
+        echo "Usage: $(basename $0) [--daemon]" >&2
         return 1
     fi
 }
@@ -183,7 +185,7 @@ mkdir -p "${PUAVO_WLANAP_RUNDIR}"
 
 readarray -n0 -t PUAVO_WLANAP_NETS </etc/puavo/wlan/ssid
 if [ ${#PUAVO_WLANAP_NETS[@]} -eq 0 ]; then
-    puavo_wlanap_fail "no networks defined"
+    puavo_wlanap_log "no networks defined"
     exit 1
 fi
 
@@ -192,17 +194,17 @@ for net in "${PUAVO_WLANAP_NETS[@]}"; do
     case "${auth}" in
         open)
             if [ -n "${psk}" ]; then
-                puavo_wlanap_warn "auth type is 'open', but psk was defined"
+                puavo_wlanap_log "auth type is 'open', but psk was defined"
             fi
             ;;
         psk)
             if [ "${#psk}" -lt 8 -o "${#psk}" -gt 63 ]; then
-                puavo_wlanap_fail "psk must be 8-63 characters long"
+                puavo_wlanap_log "psk must be 8-63 characters long"
                 exit 1
             fi
             ;;
         *)
-            puavo_wlanap_fail "unknown auth type '${auth}'"
+            puavo_wlanap_log "unknown auth type '${auth}'"
             exit 1
             ;;
     esac

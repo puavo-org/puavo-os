@@ -1,19 +1,6 @@
-puavo_wlanap_warn()
+puavo_wlanap_log()
 {
-    echo "$(basename $0): warn: $1" >&2
-}
-
-puavo_wlanap_fail()
-{
-    echo "$(basename $0): fail: $1" >&2
-    false
-}
-
-puavo_wlanap_usage_fail()
-{
-    puavo_wlanap_fail "$1" || true
-    echo "Usage: $(basename $0) $2" >&2
-    false
+    echo "$(basename $0): $1" >&2
 }
 
 puavo_wlanap_report()

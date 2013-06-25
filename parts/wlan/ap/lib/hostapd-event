@@ -6,7 +6,11 @@ set -eu
 
 . "$PUAVO_WLANAP_LIBDIR/common.sh"
 
-[ $# -eq 3 ] || puavo_wlanap_usage_fail "missing parameters" "IFACE EVENT MAC"
+[ $# -eq 3 ] || {
+    puavo_wlanap_log "wrong number of arguments ($#)"
+    echo "Usage: $(basename $0) IFACE EVENT MAC" >&2
+    exit 1
+}
 
 puavo_wlanap_report <<EOF
 wlaninterface:$1
