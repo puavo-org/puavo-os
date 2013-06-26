@@ -28,28 +28,6 @@ on_exit()
     exit $exitval
 }
 
-get_bssid()
-{
-    local -r iface=$1
-    local i
-    local mac
-    local mask
-    local bssid
-
-    IFS=':' read -a mac <"/sys/class/net/${iface}/phy80211/macaddress"
-    IFS=':' read -a mask <"/sys/class/net/${iface}/phy80211/address_mask"
-
-    ## Prefix each element with 0x
-    mac=(${mac[@]/#/0x})
-    mask=(${mask[@]/#/0x})
-
-    for (( i = 0; i <= ${#mac[@]}; ++i )); do 
-        bssid[i]=$((mac[i] &~ mask[i]))
-    done
-
-    printf "%02x:" "${bssid[@]}" | head -c-1
-}
-
 ## Find suitable WLAN interfaces and print their names to stdout, one
 ## per line.
 find_ifaces()
@@ -100,7 +78,7 @@ write_hostapd_conf()
     ## Configure one hostapd per radio.
     for iface in "${PUAVO_WLANAP_IFACES[@]}"; do
         ssid_count=0
-        bssid=$(get_bssid "${iface}")
+        bssid=$("${PUAVO_WLANAP_LIBDIR}/get-bssid" "${iface}")
 
         [ -n "${bssid}" ] || {
             puavo_wlanap_log "failed to find the first address in the block"

@@ -48,7 +48,8 @@ install : puavo-wlanap-env installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-wlanap \
 		lib/hostapd-event \
 		lib/vtun-down \
-		lib/vtun-up
+		lib/vtun-up \
+		lib/get-bssid
 	rm -f puavo-wlanap-env
 
 .PHONY : clean

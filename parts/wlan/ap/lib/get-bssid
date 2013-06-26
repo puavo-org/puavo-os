@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -eu
+
+if [ $# -ne 1 ]; then
+    echo "$(basename $0): wrong number of arguments ($#)" >&2
+    echo "Usage: $(basename $0) IFACE" >&2
+    exit 1
+fi
+
+iface=$1
+bssid=()
+
+IFS=':' read -a mac <"/sys/class/net/${iface}/phy80211/macaddress"
+IFS=':' read -a mask <"/sys/class/net/${iface}/phy80211/address_mask"
+
+## Prefix each element with 0x to make them proper base16 values for
+## arithmetic evaluation.
+mac=(${mac[@]/#/0x})
+mask=(${mask[@]/#/0x})
+
+for (( i = 0; i <= ${#mac[@]}; ++i )); do 
+    bssid[i]=$((mac[i] &~ mask[i]))
+done
+
+printf "%02x:" "${bssid[@]}" | head -c-1
