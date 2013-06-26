@@ -39,7 +39,8 @@ write_hostapd_conf()
     local psk
 
     ## Configure one hostapd per radio.
-    for iface in "${PUAVO_WLANAP_IFACES[@]}"; do
+    for radio in "${PUAVO_WLANAP_RADIOS[@]}"; do
+        IFS=':' read channel iface <<<"${radio}"
         ssid_count=0
         bssid=$("${PUAVO_WLANAP_LIBDIR}/get-bssid" "${iface}")
 
@@ -53,7 +54,7 @@ write_hostapd_conf()
         sed -e "s|#{PUAVO_WLANAP_IFACE}|${iface}|g" \
             -e "s|#{PUAVO_WLANAP_BSSID}|${bssid}|g" \
             -e "s|#{PUAVO_WLANAP_RUNDIR}|${PUAVO_WLANAP_RUNDIR}|g" \
-            "${PUAVO_WLANAP_DATADIR}/hostapd.conf" \
+            "${PUAVO_WLANAP_DATADIR}/hostapd.conf.${channel}" \
             >"${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.conf"
 
         for net in "${PUAVO_WLANAP_NETS[@]}"; do
@@ -90,6 +91,34 @@ write_vtund_conf()
 
 setup_services()
 {
+    local -r channels=(1 6 11 36 40 44 48)
+    local i=0
+    local sband_ifaces=$({ "${PUAVO_WLANAP_LIBDIR}/find-ifaces" a; "${PUAVO_WLANAP_LIBDIR}/find-ifaces" g; } | sort | uniq -u)
+    local dband_ifaces=$({ "${PUAVO_WLANAP_LIBDIR}/find-ifaces" a; "${PUAVO_WLANAP_LIBDIR}/find-ifaces" g; } | sort | uniq -d)
+    PUAVO_WLANAP_RADIOS=()
+
+    i=0
+    for iface in ${sband_ifaces}; do
+        if [ ${#PUAVO_WLANAP_RADIOS[@]} -eq 3 ]; then
+            break # Max number of 2.4GHz radios
+        fi
+        PUAVO_WLANAP_RADIOS+=("${channels[i]}:${iface}")
+        ((++i))
+    done
+
+    i=3 # Start from 5GHz channels.
+    for iface in ${dband_ifaces}; do
+        if [ ${#PUAVO_WLANAP_RADIOS[@]} -eq 7 ]; then
+            break # Max number of radios
+        fi
+        if [ ${#PUAVO_WLANAP_RADIOS[@]} -eq 0 ]; then
+            PUAVO_WLANAP_RADIOS+=("${channels[0]}:${iface}")
+            continue
+        fi
+        PUAVO_WLANAP_RADIOS+=("${channels[i]}:${iface}")
+        ((++i))
+    done
+
     write_hostapd_conf
     write_vtund_conf
 }
@@ -115,7 +144,8 @@ start_services()
     sleep 8 & wait $!
 
     ## Start one hostapd per radio.
-    for iface in "${PUAVO_WLANAP_IFACES[@]}"; do
+    for radio in "${PUAVO_WLANAP_RADIOS[@]}"; do
+        IFS=':' read _ iface <<<"${radio}"
         hostapd -P "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.pid" \
             "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.conf" &
     done

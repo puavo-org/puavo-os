@@ -37,7 +37,13 @@ install : puavo-wlanap-env installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-wlanap \
 		config \
 		vtund.conf \
-		hostapd.conf \
+		hostapd.conf.1 \
+		hostapd.conf.6 \
+		hostapd.conf.11 \
+		hostapd.conf.36 \
+		hostapd.conf.40 \
+		hostapd.conf.44 \
+		hostapd.conf.48 \
 		psk_hostapd.conf \
 		open_hostapd.conf \
 		supported_drivers

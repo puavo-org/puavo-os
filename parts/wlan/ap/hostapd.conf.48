@@ -1,0 +1,12 @@
+interface=#{PUAVO_WLANAP_IFACE}
+bssid=#{PUAVO_WLANAP_BSSID}
+driver=nl80211
+country_code=FI
+hw_mode=a
+channel=48
+max_num_sta=1000
+wmm_enabled=1
+ctrl_interface=#{PUAVO_WLANAP_RUNDIR}/hostapd
+ieee80211n=1
+ht_capab=[HT40-]
+wds_sta=1
