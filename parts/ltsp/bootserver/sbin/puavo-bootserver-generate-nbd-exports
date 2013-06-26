@@ -31,5 +31,9 @@ find /opt/ltsp/images \
     | handle_imagefiles
 
 if $do_sighup; then
-  pkill -HUP -x nbd-server
+  # get the listening nbd_server pid, and send HUP to it
+  nbd_server_pid=$(lsof -t -u nbd -a -iTCP -sTCP:LISTEN)
+  test -n "$nbd_server_pid" && kill -HUP "$nbd_server_pid"
 fi
+
+exit 0
