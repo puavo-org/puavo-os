@@ -16,9 +16,9 @@ all :
 .PHONY : puavo-wlangw-env
 puavo-wlangw-env :
 	echo "#!/bin/sh" > $@
-	echo "export PUAVO_WLANGW_CONFDIR=$(sysconfdir)/puavo-wlangw" >> $@
-	echo "export PUAVO_WLANGW_DATADIR=$(datarootdir)/puavo-wlangw" >> $@
-	echo "export PUAVO_WLANGW_LIBDIR=$(libdir)/puavo-wlangw" >> $@
+	echo "export PWGW_CONFDIR=$(sysconfdir)/puavo-wlangw" >> $@
+	echo "export PWGW_DATADIR=$(datarootdir)/puavo-wlangw" >> $@
+	echo "export PWGW_LIBDIR=$(libdir)/puavo-wlangw" >> $@
 
 .PHONY : installdirs
 installdirs :

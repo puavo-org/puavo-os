@@ -4,15 +4,15 @@ set -eu
 
 . puavo-wlanap-env
 
-. "$PUAVO_WLANAP_LIBDIR/common.sh"
+. "$PWAP_LIBDIR/common.sh"
 
 [ $# -eq 3 ] || {
-    puavo_wlanap_log "wrong number of arguments ($#)"
+    pwap_log "wrong number of arguments ($#)"
     echo "Usage: $(basename $0) IFACE EVENT MAC" >&2
     exit 1
 }
 
-puavo_wlanap_report <<EOF
+pwap_report <<EOF
 wlaninterface:$1
 event:$2
 mac:$3

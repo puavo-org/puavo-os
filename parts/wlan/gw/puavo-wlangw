@@ -13,46 +13,46 @@ on_exit()
     ## Kill our child processes.
     pkill -TERM -P $$
 
-    rm -rf "${PUAVO_WLANGW_RUNDIR}"
+    rm -rf "${PWGW_RUNDIR}"
 
     exit $exitval
 }
 
 write_vtund_conf()
 {
-    sed -e "s|#{PUAVO_WLANGW_LIBDIR}|${PUAVO_WLANGW_LIBDIR}|g" \
-        -e "s|#{PUAVO_WLANGW_IFACE}|${PUAVO_WLANGW_IFACE}|g" \
-        "${PUAVO_WLANGW_DATADIR}/vtund.conf" \
-        >"${PUAVO_WLANGW_RUNDIR}/vtund.conf"
+    sed -e "s|#{PWGW_LIBDIR}|${PWGW_LIBDIR}|g" \
+        -e "s|#{PWGW_IFACE}|${PWGW_IFACE}|g" \
+        "${PWGW_DATADIR}/vtund.conf" \
+        >"${PWGW_RUNDIR}/vtund.conf"
 }
 
-puavo_wlangw_log()
+pwgw_log()
 {
     echo "$(basename $0): $1" >&2
 }
 
 read_config()
 {
-    . "${PUAVO_WLANGW_DATADIR}/config"
+    . "${PWGW_DATADIR}/config"
 
     ## The user might have deleted the configuration file, that's ok.
-    [ -r "${PUAVO_WLANGW_CONFDIR}/config" ] && . "${PUAVO_WLANGW_CONFDIR}/config"
+    [ -r "${PWGW_CONFDIR}/config" ] && . "${PWGW_CONFDIR}/config"
 }
 
 parse_args()
 {
-    PUAVO_WLANGW_ARGS_DAEMON=0
+    PWGW_ARGS_DAEMON=0
 
     if [ $# -eq 1 ]; then
         if [ "$1" = "--daemon" ]; then
-            PUAVO_WLANGW_ARGS_DAEMON=1
+            PWGW_ARGS_DAEMON=1
             return 0
         fi
-        puavo_wlangw_log "unexpected argument '$1'"
+        pwgw_log "unexpected argument '$1'"
         echo "Usage: $(basename $0) [--daemon]" >&2
         return 1
     elif [ $# -gt 2 ]; then
-        puavo_wlangw_log "too many arguments"
+        pwgw_log "too many arguments"
         echo "Usage: $(basename $0) [--daemon]" >&2
         return 1
     fi
@@ -67,17 +67,17 @@ read_config
 
 parse_args "$@"
 
-if [ "${PUAVO_WLANGW_ARGS_DAEMON}" -ne 0 ]; then
+if [ "${PWGW_ARGS_DAEMON}" -ne 0 ]; then
     daemon --noconfig --stderr='daemon.info' --name='puavo-wlangw' -- puavo-wlangw
     exit 0
 fi
 
 trap on_exit EXIT
 
-mkdir -p "${PUAVO_WLANGW_RUNDIR}"
+mkdir -p "${PWGW_RUNDIR}"
 
 write_vtund_conf
 
-vtund -s -P "${PUAVO_WLANGW_PORT}" -n -f "${PUAVO_WLANGW_RUNDIR}/vtund.conf" &
+vtund -s -P "${PWGW_PORT}" -n -f "${PWGW_RUNDIR}/vtund.conf" &
 
 wait

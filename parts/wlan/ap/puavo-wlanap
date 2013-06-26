@@ -17,13 +17,13 @@ on_exit()
     pkill -TERM -P $$
 
     ## Burn the bridges.
-    for net in "${PUAVO_WLANAP_NETS[@]}"; do
+    for net in "${PWAP_NETS[@]}"; do
         IFS=':' read _ ssid _ <<<"${net}"
         ifconfig "${ssid}" down
         brctl delbr "${ssid}"
     done
 
-    rm -rf "${PUAVO_WLANAP_RUNDIR}"
+    rm -rf "${PWAP_RUNDIR}"
 
     exit $exitval
 }
@@ -39,35 +39,35 @@ write_hostapd_conf()
     local psk
 
     ## Configure one hostapd per radio.
-    for radio in "${PUAVO_WLANAP_RADIOS[@]}"; do
+    for radio in "${PWAP_RADIOS[@]}"; do
         IFS=':' read channel iface <<<"${radio}"
         ssid_count=0
-        bssid=$("${PUAVO_WLANAP_LIBDIR}/get-bssid" "${iface}")
+        bssid=$("${PWAP_LIBDIR}/get-bssid" "${iface}")
 
         [ -n "${bssid}" ] || {
-            puavo_wlanap_log "failed to find the first address in the block"
+            pwap_log "failed to find the first address in the block"
             return 1
         }
 
         ## Write interface-specific hostapd configuration to the
         ## beginning of the file.
-        sed -e "s|#{PUAVO_WLANAP_IFACE}|${iface}|g" \
-            -e "s|#{PUAVO_WLANAP_BSSID}|${bssid}|g" \
-            -e "s|#{PUAVO_WLANAP_RUNDIR}|${PUAVO_WLANAP_RUNDIR}|g" \
-            "${PUAVO_WLANAP_DATADIR}/hostapd.conf.${channel}" \
-            >"${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.conf"
+        sed -e "s|#{PWAP_IFACE}|${iface}|g" \
+            -e "s|#{PWAP_BSSID}|${bssid}|g" \
+            -e "s|#{PWAP_RUNDIR}|${PWAP_RUNDIR}|g" \
+            "${PWAP_DATADIR}/hostapd.conf.${channel}" \
+            >"${PWAP_RUNDIR}/${iface}_hostapd.conf"
 
-        for net in "${PUAVO_WLANAP_NETS[@]}"; do
+        for net in "${PWAP_NETS[@]}"; do
             IFS=':' read auth ssid psk <<<"${net}"
 
             ## Append network-specific hostapd configuration to the end.
-            cat "${PUAVO_WLANAP_DATADIR}/${auth}_hostapd.conf" \
-                >>"${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.conf"
+            cat "${PWAP_DATADIR}/${auth}_hostapd.conf" \
+                >>"${PWAP_RUNDIR}/${iface}_hostapd.conf"
             sed -i \
-                -e "s|#{PUAVO_WLANAP_BSS}|${iface}_${ssid_count}|g" \
-                -e "s|#{PUAVO_WLANAP_SSID}|${ssid}|g" \
-                -e "s|#{PUAVO_WLANAP_PSK}|${psk}|g" \
-                "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.conf"
+                -e "s|#{PWAP_BSS}|${iface}_${ssid_count}|g" \
+                -e "s|#{PWAP_SSID}|${ssid}|g" \
+                -e "s|#{PWAP_PSK}|${psk}|g" \
+                "${PWAP_RUNDIR}/${iface}_hostapd.conf"
             ssid_count=$((ssid_count + 1))
         done
     done
@@ -79,42 +79,42 @@ write_vtund_conf()
     local ssid
 
     ## Configure one vtund client per network.
-    for net in "${PUAVO_WLANAP_NETS[@]}"; do
+    for net in "${PWAP_NETS[@]}"; do
         IFS=':' read _ ssid _ <<<"${net}"
-        sed -e "s|#{PUAVO_WLANAP_LIBDIR}|${PUAVO_WLANAP_LIBDIR}|g" \
-            -e "s|#{PUAVO_WLANAP_SSID}|${ssid}|g" \
-            -e "s|#{PUAVO_WLANAP_RUNDIR}|${PUAVO_WLANAP_RUNDIR}|g" \
-            "${PUAVO_WLANAP_DATADIR}/vtund.conf" \
-            >"${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.conf"
+        sed -e "s|#{PWAP_LIBDIR}|${PWAP_LIBDIR}|g" \
+            -e "s|#{PWAP_SSID}|${ssid}|g" \
+            -e "s|#{PWAP_RUNDIR}|${PWAP_RUNDIR}|g" \
+            "${PWAP_DATADIR}/vtund.conf" \
+            >"${PWAP_RUNDIR}/${ssid}_vtund.conf"
     done
 }
 
 setup_nets()
 {
-    "${PUAVO_WLANAP_LIBDIR}/fetch-nets" >"${PUAVO_WLANAP_RUNDIR}/nets"
+    "${PWAP_LIBDIR}/fetch-nets" >"${PWAP_RUNDIR}/nets"
 
-    readarray -n0 -t PUAVO_WLANAP_NETS <"${PUAVO_WLANAP_RUNDIR}/nets"
-    if [ ${#PUAVO_WLANAP_NETS[@]} -eq 0 ]; then
-        puavo_wlanap_log "no networks defined"
+    readarray -n0 -t PWAP_NETS <"${PWAP_RUNDIR}/nets"
+    if [ ${#PWAP_NETS[@]} -eq 0 ]; then
+        pwap_log "no networks defined"
         return 1
     fi
 
-    for net in "${PUAVO_WLANAP_NETS[@]}"; do
+    for net in "${PWAP_NETS[@]}"; do
         IFS=':' read auth ssid psk <<<"${net}"
         case "${auth}" in
             open)
                 if [ -n "${psk}" ]; then
-                    puavo_wlanap_log "auth type is 'open', but psk was defined"
+                    pwap_log "auth type is 'open', but psk was defined"
                 fi
                 ;;
             psk)
                 if [ "${#psk}" -lt 8 -o "${#psk}" -gt 63 ]; then
-                    puavo_wlanap_log "psk must be 8-63 characters long"
+                    pwap_log "psk must be 8-63 characters long"
                     return 1
                 fi
                 ;;
             *)
-                puavo_wlanap_log "unknown auth type '${auth}'"
+                pwap_log "unknown auth type '${auth}'"
                 return 1
                 ;;
         esac
@@ -125,29 +125,29 @@ setup_radios()
 {
     local -r channels=(1 6 11 36 40 44 48)
     local i=0
-    local sband_ifaces=$({ "${PUAVO_WLANAP_LIBDIR}/find-ifaces" a; "${PUAVO_WLANAP_LIBDIR}/find-ifaces" g; } | sort | uniq -u)
-    local dband_ifaces=$({ "${PUAVO_WLANAP_LIBDIR}/find-ifaces" a; "${PUAVO_WLANAP_LIBDIR}/find-ifaces" g; } | sort | uniq -d)
-    PUAVO_WLANAP_RADIOS=()
+    local sband_ifaces=$({ "${PWAP_LIBDIR}/find-ifaces" a; "${PWAP_LIBDIR}/find-ifaces" g; } | sort | uniq -u)
+    local dband_ifaces=$({ "${PWAP_LIBDIR}/find-ifaces" a; "${PWAP_LIBDIR}/find-ifaces" g; } | sort | uniq -d)
+    PWAP_RADIOS=()
 
     i=0
     for iface in ${sband_ifaces}; do
-        if [ ${#PUAVO_WLANAP_RADIOS[@]} -eq 3 ]; then
+        if [ ${#PWAP_RADIOS[@]} -eq 3 ]; then
             break # Max number of 2.4GHz radios
         fi
-        PUAVO_WLANAP_RADIOS+=("${channels[i]}:${iface}")
+        PWAP_RADIOS+=("${channels[i]}:${iface}")
         ((++i))
     done
 
     i=3 # Start from 5GHz channels.
     for iface in ${dband_ifaces}; do
-        if [ ${#PUAVO_WLANAP_RADIOS[@]} -eq 7 ]; then
+        if [ ${#PWAP_RADIOS[@]} -eq 7 ]; then
             break # Max number of radios
         fi
-        if [ ${#PUAVO_WLANAP_RADIOS[@]} -eq 0 ]; then
-            PUAVO_WLANAP_RADIOS+=("${channels[0]}:${iface}")
+        if [ ${#PWAP_RADIOS[@]} -eq 0 ]; then
+            PWAP_RADIOS+=("${channels[0]}:${iface}")
             continue
         fi
-        PUAVO_WLANAP_RADIOS+=("${channels[i]}:${iface}")
+        PWAP_RADIOS+=("${channels[i]}:${iface}")
         ((++i))
     done
 }
@@ -163,7 +163,7 @@ setup_services()
 start_services()
 {
     ## Start one vtund client per network.
-    for net in "${PUAVO_WLANAP_NETS[@]}"; do
+    for net in "${PWAP_NETS[@]}"; do
         IFS=':' read _ ssid _ <<<"${net}"
 
         ## Setup the bridge.
@@ -172,36 +172,36 @@ start_services()
         ifconfig "${ssid}" up
         dhclient -d "${ssid}" &
 
-        vtund -n -f "${PUAVO_WLANAP_RUNDIR}/${ssid}_vtund.conf" \
-            -P "${PUAVO_WLANAP_GWPORT}" \
-            "${ssid}" "${PUAVO_WLANAP_GWADDR}" &
+        vtund -n -f "${PWAP_RUNDIR}/${ssid}_vtund.conf" \
+            -P "${PWAP_GWPORT}" \
+            "${ssid}" "${PWAP_GWADDR}" &
     done
 
     ## Magical sleep to "ensure" that bridges and tunnels are all set.
     sleep 8 & wait $!
 
     ## Start one hostapd per radio.
-    for radio in "${PUAVO_WLANAP_RADIOS[@]}"; do
+    for radio in "${PWAP_RADIOS[@]}"; do
         IFS=':' read _ iface <<<"${radio}"
-        hostapd -P "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.pid" \
-            "${PUAVO_WLANAP_RUNDIR}/${iface}_hostapd.conf" &
+        hostapd -P "${PWAP_RUNDIR}/${iface}_hostapd.pid" \
+            "${PWAP_RUNDIR}/${iface}_hostapd.conf" &
     done
 }
 
 parse_args()
 {
-    PUAVO_WLANAP_ARGS_DAEMON=0
+    PWAP_ARGS_DAEMON=0
 
     if [ $# -eq 1 ]; then
         if [ "$1" = "--daemon" ]; then
-            PUAVO_WLANAP_ARGS_DAEMON=1
+            PWAP_ARGS_DAEMON=1
             return 0
         fi
-        puavo_wlanap_log "unexpected argument '$1'"
+        pwap_log "unexpected argument '$1'"
         echo "Usage: $(basename $0) [--daemon]" >&2
         return 1
     elif [ $# -gt 2 ]; then
-        puavo_wlanap_log "too many arguments"
+        pwap_log "too many arguments"
         echo "Usage: $(basename $0) [--daemon]" >&2
         return 1
     fi
@@ -209,10 +209,10 @@ parse_args()
 
 report_status()
 {
-    local -r output=$(hostapd_cli -p "${PUAVO_WLANAP_RUNDIR}/hostapd" all_sta)
+    local -r output=$(hostapd_cli -p "${PWAP_RUNDIR}/hostapd" all_sta)
     local -r devices=$(echo -n "${output}" | sed -n 's/^dot11RSNAStatsSTAAddress=//p' | tr '\n' ',')
 
-    puavo_wlanap_report <<EOF
+    pwap_report <<EOF
 wlan_event:hotspot_state
 connected_devices:[${devices}]
 EOF
@@ -220,10 +220,10 @@ EOF
 
 read_config()
 {
-    . "${PUAVO_WLANAP_DATADIR}/config"
+    . "${PWAP_DATADIR}/config"
 
     ## The user might have deleted the configuration file, that's ok.
-    [ -r "${PUAVO_WLANAP_CONFDIR}/config" ] && . "${PUAVO_WLANAP_CONFDIR}/config"
+    [ -r "${PWAP_CONFDIR}/config" ] && . "${PWAP_CONFDIR}/config"
 }
 
 ## We don't know yet where our data, libs and configs have been
@@ -232,13 +232,13 @@ read_config()
 . puavo-wlanap-env
 
 ## Import library routines.
-. "${PUAVO_WLANAP_LIBDIR}/common.sh"
+. "${PWAP_LIBDIR}/common.sh"
 
 read_config
 
 parse_args "$@"
 
-if [ "${PUAVO_WLANAP_ARGS_DAEMON}" -ne 0 ]; then
+if [ "${PWAP_ARGS_DAEMON}" -ne 0 ]; then
     daemon --noconfig --stderr='daemon.info' --name='puavo-wlanap' -- puavo-wlanap
     exit 0
 fi
@@ -249,7 +249,7 @@ fi
 ## everything gets cleaned up properly afterwards.
 trap on_exit EXIT
 
-mkdir -p "${PUAVO_WLANAP_RUNDIR}"
+mkdir -p "${PWAP_RUNDIR}"
 
 setup_services
 

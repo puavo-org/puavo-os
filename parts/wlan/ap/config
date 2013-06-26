@@ -2,12 +2,12 @@
 
 ## Address of the vtun server to which all access point traffic will be
 ## routed.
-PUAVO_WLANAP_GWADDR=wlangw
+PWAP_GWADDR=wlangw
 
 ## Port of the vtun server to which all access point traffic will be
 ## routed.
-PUAVO_WLANAP_GWPORT=45045
+PWAP_GWPORT=45045
 
 ## Directory for runtime data. This will be created and removed
 ## dynamically by puavo-wlanap.
-PUAVO_WLANAP_RUNDIR=/var/run/puavo-wlanap
+PWAP_RUNDIR=/var/run/puavo-wlanap

@@ -1,13 +1,13 @@
-puavo_wlanap_log()
+pwap_log()
 {
     echo "$(basename $0): $1" >&2
 }
 
-puavo_wlanap_report()
+pwap_report()
 {
     local -r hostname=$(hostname)
     local -r date=$(date +%s)
-    local -r eventfile=${PUAVO_WLANAP_RUNDIR}/report
+    local -r eventfile=${PWAP_RUNDIR}/report
 
     cat <<EOF >"${eventfile}"
 type:wlan

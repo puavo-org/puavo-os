@@ -16,9 +16,9 @@ all :
 .PHONY : puavo-wlanap-env
 puavo-wlanap-env :
 	echo "#!/bin/sh" > $@
-	echo "export PUAVO_WLANAP_CONFDIR=$(sysconfdir)/puavo-wlanap" >> $@
-	echo "export PUAVO_WLANAP_DATADIR=$(datarootdir)/puavo-wlanap" >> $@
-	echo "export PUAVO_WLANAP_LIBDIR=$(libdir)/puavo-wlanap" >> $@
+	echo "export PWAP_CONFDIR=$(sysconfdir)/puavo-wlanap" >> $@
+	echo "export PWAP_DATADIR=$(datarootdir)/puavo-wlanap" >> $@
+	echo "export PWAP_LIBDIR=$(libdir)/puavo-wlanap" >> $@
 
 .PHONY : installdirs
 installdirs :
