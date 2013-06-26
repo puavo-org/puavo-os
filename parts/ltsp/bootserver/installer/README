@@ -5,7 +5,7 @@
 git clone git://github.com/opinsys/puavo-ltsp.git
 cd puavo-ltsp/bootserver/installer
 mount /dev/sdb1 /media/usbstick
-sh install.sh
+./install.sh /media/usbstick
 umount /dev/sdb1
 
 Then just plug it in, boot and wait until the installation is finished.
