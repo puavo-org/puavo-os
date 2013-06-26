@@ -8,7 +8,8 @@ on_exit()
 
     set +e
 
-    kill -0 $vtundpid 2>/dev/null && kill $vtundpid
+    ## Kill our child processes.
+    pkill -TERM -P $$
 
     rm -rf "${PUAVO_WLANGW_RUNDIR}"
 
@@ -54,6 +55,5 @@ mkdir -p "${PUAVO_WLANGW_RUNDIR}"
 write_runconf
 
 vtund -s -n -f "${PUAVO_WLANGW_RUNDIR}/vtund.conf" &
-vtundpid=$!
 
 wait
