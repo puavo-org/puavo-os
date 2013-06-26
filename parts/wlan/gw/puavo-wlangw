@@ -2,16 +2,6 @@
 
 set -eubm
 
-on_sigchld()
-{
-    if [ -n "$vtundpid" ]; then
-        kill -0 $vtundpid 2>/dev/null && return
-        trap - SIGCHLD
-        puavo_wlangw_fail "tunnel collapsed, exiting" || true
-        kill $$
-    fi
-}
-
 on_exit()
 {
     local -r exitval=$?
@@ -62,8 +52,6 @@ trap on_exit EXIT
 mkdir -p "${PUAVO_WLANGW_RUNDIR}"
 
 write_runconf
-
-trap on_sigchld SIGCHLD
 
 vtund -s -n -f "${PUAVO_WLANGW_RUNDIR}/vtund.conf" &
 vtundpid=$!
