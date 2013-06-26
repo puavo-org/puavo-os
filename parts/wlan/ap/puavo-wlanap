@@ -89,7 +89,39 @@ write_vtund_conf()
     done
 }
 
-setup_services()
+setup_nets()
+{
+    "${PUAVO_WLANAP_LIBDIR}/fetch-nets" >"${PUAVO_WLANAP_RUNDIR}/nets"
+
+    readarray -n0 -t PUAVO_WLANAP_NETS <"${PUAVO_WLANAP_RUNDIR}/nets"
+    if [ ${#PUAVO_WLANAP_NETS[@]} -eq 0 ]; then
+        puavo_wlanap_log "no networks defined"
+        return 1
+    fi
+
+    for net in "${PUAVO_WLANAP_NETS[@]}"; do
+        IFS=':' read auth ssid psk <<<"${net}"
+        case "${auth}" in
+            open)
+                if [ -n "${psk}" ]; then
+                    puavo_wlanap_log "auth type is 'open', but psk was defined"
+                fi
+                ;;
+            psk)
+                if [ "${#psk}" -lt 8 -o "${#psk}" -gt 63 ]; then
+                    puavo_wlanap_log "psk must be 8-63 characters long"
+                    return 1
+                fi
+                ;;
+            *)
+                puavo_wlanap_log "unknown auth type '${auth}'"
+                return 1
+                ;;
+        esac
+    done
+}
+
+setup_radios()
 {
     local -r channels=(1 6 11 36 40 44 48)
     local i=0
@@ -118,7 +150,12 @@ setup_services()
         PUAVO_WLANAP_RADIOS+=("${channels[i]}:${iface}")
         ((++i))
     done
+}
 
+setup_services()
+{
+    setup_nets
+    setup_radios
     write_hostapd_conf
     write_vtund_conf
 }
@@ -187,33 +224,6 @@ read_config()
 
     ## The user might have deleted the configuration file, that's ok.
     [ -r "${PUAVO_WLANAP_CONFDIR}/config" ] && . "${PUAVO_WLANAP_CONFDIR}/config"
-
-    readarray -n0 -t PUAVO_WLANAP_NETS </etc/puavo/wlan/ssid
-    if [ ${#PUAVO_WLANAP_NETS[@]} -eq 0 ]; then
-        puavo_wlanap_log "no networks defined"
-        return 1
-    fi
-
-    for net in "${PUAVO_WLANAP_NETS[@]}"; do
-        IFS=':' read auth ssid psk <<<"${net}"
-        case "${auth}" in
-            open)
-                if [ -n "${psk}" ]; then
-                    puavo_wlanap_log "auth type is 'open', but psk was defined"
-                fi
-                ;;
-            psk)
-                if [ "${#psk}" -lt 8 -o "${#psk}" -gt 63 ]; then
-                    puavo_wlanap_log "psk must be 8-63 characters long"
-                    return 1
-                fi
-                ;;
-            *)
-                puavo_wlanap_log "unknown auth type '${auth}'"
-                return 1
-                ;;
-        esac
-    done
 }
 
 ## We don't know yet where our data, libs and configs have been

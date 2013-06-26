@@ -56,7 +56,8 @@ install : puavo-wlanap-env installdirs
 		lib/vtun-down \
 		lib/vtun-up \
 		lib/get-bssid \
-		lib/find-ifaces
+		lib/find-ifaces \
+		lib/fetch-nets
 	rm -f puavo-wlanap-env
 
 .PHONY : clean
