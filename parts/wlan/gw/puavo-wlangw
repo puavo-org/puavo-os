@@ -6,7 +6,9 @@ on_exit()
 {
     local -r exitval=$?
 
-    set +e
+    ## Try to make sure that this function is completed.
+    set +eu
+    trap '' EXIT HUP INT QUIT ABRT ALRM TERM USR1 USR2
 
     ## Kill our child processes.
     pkill -TERM -P $$
