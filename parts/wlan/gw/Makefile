@@ -39,8 +39,6 @@ install : puavo-wlangw-env installdirs
 		vtund.conf
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-wlangw \
 		config
-	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/puavo-wlangw \
-		lib/common.sh
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-wlangw \
 		lib/vtun-down \
 		lib/vtun-up

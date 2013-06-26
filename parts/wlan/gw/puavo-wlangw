@@ -18,44 +18,66 @@ on_exit()
     exit $exitval
 }
 
-write_runconf()
+write_vtund_conf()
 {
     sed -e "s|#{PUAVO_WLANGW_LIBDIR}|${PUAVO_WLANGW_LIBDIR}|g" \
-        -e "s|#{PUAVO_WLANGW_PORT}|${PUAVO_WLANGW_PORT}|g" \
         -e "s|#{PUAVO_WLANGW_IFACE}|${PUAVO_WLANGW_IFACE}|g" \
         "${PUAVO_WLANGW_DATADIR}/vtund.conf" \
         >"${PUAVO_WLANGW_RUNDIR}/vtund.conf"
 }
 
+puavo_wlangw_log()
+{
+    echo "$(basename $0): $1" >&2
+}
 
-# We don't know yet where our data, libs and configs have been
-# installed, but we do know the following script knows it and we do know
-# where the following script is (it in PATH!).
+read_config()
+{
+    . "${PUAVO_WLANGW_DATADIR}/config"
+
+    ## The user might have deleted the configuration file, that's ok.
+    [ -r "${PUAVO_WLANGW_CONFDIR}/config" ] && . "${PUAVO_WLANGW_CONFDIR}/config"
+}
+
+parse_args()
+{
+    PUAVO_WLANGW_ARGS_DAEMON=0
+
+    if [ $# -eq 1 ]; then
+        if [ "$1" = "--daemon" ]; then
+            PUAVO_WLANGW_ARGS_DAEMON=1
+            return 0
+        fi
+        puavo_wlangw_log "unexpected argument '$1'"
+        echo "Usage: $(basename $0) [--daemon]" >&2
+        return 1
+    elif [ $# -gt 2 ]; then
+        puavo_wlangw_log "too many arguments"
+        echo "Usage: $(basename $0) [--daemon]" >&2
+        return 1
+    fi
+}
+
+## We don't know yet where our data, libs and configs have been
+## installed, but we do know the following script knows it and we do know
+## where the following script is (it in PATH!).
 . puavo-wlangw-env
 
-. "${PUAVO_WLANGW_DATADIR}/config"
+read_config
 
-# The user might have deleted the configuration file, that's ok.
-[ -r "${PUAVO_WLANGW_CONFDIR}/config" ] && . "${PUAVO_WLANGW_CONFDIR}/config"
+parse_args "$@"
 
-. "${PUAVO_WLANGW_LIBDIR}/common.sh"
-
-[ $# -lt 2 ] || puavo_wlangw_usage_fail "too many arguments" "[--daemon]"
-
-if [ $# -eq 1 ]; then
-    if [ "$1" = "--daemon" ]; then
-        daemon --noconfig --stderr='daemon.info' --name='puavo-wlangw' -- puavo-wlangw
-        exit 0
-    fi
-    puavo_wlangw_usage_fail "unexpected argument '$1'" "[--daemon"]
+if [ "${PUAVO_WLANGW_ARGS_DAEMON}" -ne 0 ]; then
+    daemon --noconfig --stderr='daemon.info' --name='puavo-wlangw' -- puavo-wlangw
+    exit 0
 fi
 
 trap on_exit EXIT
 
 mkdir -p "${PUAVO_WLANGW_RUNDIR}"
 
-write_runconf
+write_vtund_conf
 
-vtund -s -n -f "${PUAVO_WLANGW_RUNDIR}/vtund.conf" &
+vtund -s -P "${PUAVO_WLANGW_PORT}" -n -f "${PUAVO_WLANGW_RUNDIR}/vtund.conf" &
 
 wait
