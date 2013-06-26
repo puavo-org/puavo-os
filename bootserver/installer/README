@@ -2,7 +2,7 @@
 - create a boot media with unetbootin
 - install preseed files:
 
-git clone git@github.com:opinsys/puavo-ltsp.git
+git clone git://github.com/opinsys/puavo-ltsp.git
 cd puavo-ltsp/bootserver/installer
 mount /dev/sdb1 /media/usbstick
 sh install.sh
