@@ -80,7 +80,6 @@ case "$PUAVO_HOSTTYPE" in
       mountnfs.sh
       puavo-load-balancer
       puavo-monitor
-      puavo-sync-external-files
       puavo-wlanap
       umountnfs.sh
       vtun
