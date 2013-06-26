@@ -105,6 +105,8 @@ class DesktopSettings
         f.print "DCONF_PROFILE=user-#{ @preferredLanguage }\n"
       end
       File.rename("#{ env_file_path }.tmp", env_file_path)
+    else
+      File.delete(env_file_path) rescue true
     end
   end
 
