@@ -5,6 +5,7 @@ set -eubm
 on_exit()
 {
     local -r exitval=$?
+    local net ssid
 
     ## Do not exit or terminate on error or signal anymore. We are
     ## already exiting and it would be shame to exit while exiting, yo
@@ -30,13 +31,7 @@ on_exit()
 
 write_hostapd_conf()
 {
-    local iface
-    local ssid_count
-    local bssid
-    local net
-    local auth
-    local ssid
-    local psk
+    local radio channel iface ssid_count bssid net auth ssid psk
 
     ## Configure one hostapd per radio.
     for radio in "${PWAP_RADIOS[@]}"; do
@@ -75,8 +70,7 @@ write_hostapd_conf()
 
 write_vtund_conf()
 {
-    local net
-    local ssid
+    local net ssid
 
     ## Configure one vtund client per network.
     for net in "${PWAP_NETS[@]}"; do
@@ -91,6 +85,8 @@ write_vtund_conf()
 
 setup_nets()
 {
+    local net auth ssid psk
+
     "${PWAP_LIBDIR}/fetch-nets" >"${PWAP_RUNDIR}/nets"
 
     readarray -n0 -t PWAP_NETS <"${PWAP_RUNDIR}/nets"
@@ -124,9 +120,10 @@ setup_nets()
 setup_radios()
 {
     local -r channels=(1 6 11 36 40 44 48)
-    local i=0
-    local sband_ifaces=$({ "${PWAP_LIBDIR}/find-ifaces" a; "${PWAP_LIBDIR}/find-ifaces" g; } | sort | uniq -u)
-    local dband_ifaces=$({ "${PWAP_LIBDIR}/find-ifaces" a; "${PWAP_LIBDIR}/find-ifaces" g; } | sort | uniq -d)
+    local i sband_ifaces dband_ifaces iface
+
+    sband_ifaces=$({ "${PWAP_LIBDIR}/find-ifaces" a; "${PWAP_LIBDIR}/find-ifaces" g; } | sort | uniq -u)
+    dband_ifaces=$({ "${PWAP_LIBDIR}/find-ifaces" a; "${PWAP_LIBDIR}/find-ifaces" g; } | sort | uniq -d)
     PWAP_RADIOS=()
 
     i=0
@@ -162,6 +159,8 @@ setup_services()
 
 start_services()
 {
+    local net ssid radio iface
+
     ## Start one vtund client per network.
     for net in "${PWAP_NETS[@]}"; do
         IFS=':' read _ ssid _ <<<"${net}"
