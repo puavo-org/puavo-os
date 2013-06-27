@@ -10,6 +10,7 @@ if [ -n "$SERVER" -a -e /etc/puavo/domain ]; then
   # set --max-time to 30 seconds to allow the boot to continue in case of
   # failure; so we can check out later (with ssh or some such) what went wrong.
   if curl --cacert /etc/puavo/certs/rootca.pem \
+          --header "Authorization: Bootserver" \
           --fail \
           --max-time 30 \
           --silent \

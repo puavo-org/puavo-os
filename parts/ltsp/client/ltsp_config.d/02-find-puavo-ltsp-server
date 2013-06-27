@@ -11,6 +11,7 @@ case "$(cat /etc/puavo/hosttype)" in
       if [ -n "$API_SERVER" ]; then
         POSSIBLE_LDM_SERVER=$(
           curl --cacert /etc/puavo/certs/rootca.pem \
+               --header "Authorization: Bootserver" \
 	       --fail \
                --max-time 12 \
                "https://${API_SERVER}/v3/ltsp_servers/_most_idle" 2>/dev/null \
