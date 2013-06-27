@@ -78,6 +78,9 @@ mkdir -p "${PWGW_RUNDIR}"
 
 write_vtund_conf
 
-vtund -s -P "${PWGW_PORT}" -n -f "${PWGW_RUNDIR}/vtund.conf" &
+vtund -s -P "${PWGW_VTUND_PORT}" -n -f "${PWGW_RUNDIR}/vtund.conf" &
+vtundpid=$!
+
+ncat -c "${PWGW_LIBDIR}/add-net \"${vtundpid}\" \"${PWGW_RUNDIR}/vtund.conf\" \"${PWGW_IFACE}\"" -k -l "${PWGW_PORT}" &
 
 wait

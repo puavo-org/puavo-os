@@ -1,0 +1,47 @@
+#!/bin/sh
+
+set -eu
+
+on_exit()
+{
+    local exitval=$?
+
+    set +eu
+    trap '' EXIT HUP INT QUIT ABRT ALRM TERM USR1 USR2
+
+    [ -z "${tmpfile}" ] || rm -f "${tmpfile}"
+
+    exit $exitval
+}
+
+if [ $# -ne 3 ]; then
+    echo "$(basename $0): wrong number of arguments" >&2
+    echo "Usage: $(basename $0) VTUND_PID VTUND_CONF_FILE IFACE" >&2
+    exit 1
+fi
+
+vtund_pid=$1
+vtund_conf_file=$2
+iface=$3
+
+read net
+
+. puavo-wlangw-env
+
+tmpfile=""
+
+trap on_exit EXIT HUP INT QUIT ABRT ALRM TERM USR1 USR2
+
+tmpfile=$(mktemp)
+
+cp -a "${vtund_conf_file}" "${tmpfile}"
+
+sed -e "s|#{PWGW_LIBDIR}|${PWGW_LIBDIR}|g" \
+    -e "s|#{PWGW_IFACE}|${iface}|g" \
+    -e "s|#{PWGW_NET}|${net}|g" \
+    "${PWGW_DATADIR}/vtund_session.conf" \
+    >>"${tmpfile}"
+
+mv "${tmpfile}" "${vtund_conf_file}"
+
+kill -HUP "${vtund_pid}"

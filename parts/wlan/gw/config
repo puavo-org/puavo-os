@@ -7,5 +7,7 @@ PWGW_IFACE=wlan0
 ## Port to listen to for incoming accesspoint traffic.
 PWGW_PORT=45045
 
+PWGW_VTUND_PORT=45046
+
 ## Runtime directory which is created on start and removed on stop.
 PWGW_RUNDIR=/var/run/puavo-wlangw

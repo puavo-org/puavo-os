@@ -115,6 +115,12 @@ setup_nets()
                 ;;
         esac
     done
+
+    ## Tell gateway which networks we are going to provide.
+    for net in "${PWAP_NETS[@]}"; do
+        IFS=':' read _ ssid _ <<<"${net}"
+        echo "${ssid}" | nc "${PWAP_GWADDR}" "${PWAP_GWPORT}"
+    done
 }
 
 setup_radios()
@@ -172,7 +178,7 @@ start_services()
         dhclient -d "${ssid}" &
 
         vtund -n -f "${PWAP_RUNDIR}/${ssid}_vtund.conf" \
-            -P "${PWAP_GWPORT}" \
+            -P "${PWAP_VTUND_PORT}" \
             "${ssid}" "${PWAP_GWADDR}" &
     done
 

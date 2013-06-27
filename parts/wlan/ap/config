@@ -6,6 +6,8 @@ PWAP_GWADDR=wlangw
 ## Gateway server port.
 PWAP_GWPORT=45045
 
+PWAP_VTUND_PORT=45046
+
 ## Directory for runtime data. This will be created and removed
 ## dynamically.
 PWAP_RUNDIR=/var/run/puavo-wlanap
