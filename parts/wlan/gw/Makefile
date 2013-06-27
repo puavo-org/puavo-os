@@ -37,13 +37,13 @@ install : puavo-wlangw-env installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-wlangw \
 		config \
 		vtund.conf \
-		vtund_session.conf
+		vtund_network.conf
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-wlangw \
 		config
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-wlangw \
 		lib/vtun-down \
 		lib/vtun-up \
-		lib/add-net
+		lib/add-network
 	rm -f puavo-wlangw-env
 
 .PHONY : clean

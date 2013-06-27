@@ -1,12 +1,13 @@
 ## This file is a POSIX shell fragment which is sourced by scripts. It's
 ## advisable to use only variale definitions.
 
-## Network interface where all access point traffic will be bridged to.
-PWGW_IFACE=wlan0
+## Network bridge to which all access point tunnels will be added.
+PWGW_BRIDGE=wlan0
 
-## Port to listen to for incoming accesspoint traffic.
+## Port to listen to for incoming accesspoints.
 PWGW_PORT=45045
 
+## Port to which all access point tunnels will be connected to.
 PWGW_VTUND_PORT=45046
 
 ## Runtime directory which is created on start and removed on stop.
