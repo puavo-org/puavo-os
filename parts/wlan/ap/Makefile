@@ -52,7 +52,7 @@ install : puavo-wlanap-env installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/puavo-wlanap \
 		lib/common.sh
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-wlanap \
-		lib/hostapd-event \
+		lib/report-hostapd-event \
 		lib/vtun-down \
 		lib/vtun-up \
 		lib/get-bssid \
