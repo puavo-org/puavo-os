@@ -26,6 +26,9 @@ bridge=$3
 
 read network
 
+## Quit if the network is already there.
+sed -nr "/^${network} \{/q1" "${vtund_conf_file}" || exit
+
 . puavo-wlangw-env
 
 tmpfile=""
