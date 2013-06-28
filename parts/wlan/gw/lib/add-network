@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eu
 
@@ -26,9 +26,6 @@ bridge=$3
 
 read network
 
-## Quit if the network is already there.
-sed -nr "/^${network} \{/q1" "${vtund_conf_file}" || exit
-
 . puavo-wlangw-env
 
 tmpfile=""
@@ -36,6 +33,16 @@ tmpfile=""
 trap on_exit EXIT HUP INT QUIT ABRT ALRM TERM USR1 USR2
 
 tmpfile=$(mktemp)
+
+## We aquire exclusive lock on the vtund configuration file, because
+## multiple instances of this script can be running simultaneously.
+## TODO: Make sure the lock file is not written over NFS! flock(2) does
+## not work over NFS!
+exec {lockfd}<"${vtund_conf_file}"
+flock "${lockfd}"
+
+## Quit if the network is already there.
+sed -nr "/^${network} \{/q1" "${vtund_conf_file}" || exit
 
 cp -a "${vtund_conf_file}" "${tmpfile}"
 
