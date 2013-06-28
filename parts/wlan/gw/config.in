@@ -12,3 +12,9 @@ PWGW_VTUND_PORT=45046
 
 ## Runtime directory which is created on start and removed on stop.
 PWGW_RUNDIR=/var/run/puavo-wlangw
+
+## Directory path for all internal data files.
+PWGW_DATADIR=#{PWGW_DATADIR}
+
+## Directory path for all internal library files.
+PWGW_LIBDIR=#{PWGW_LIBDIR}

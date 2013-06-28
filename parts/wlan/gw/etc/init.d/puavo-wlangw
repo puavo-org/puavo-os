@@ -32,7 +32,7 @@ case "$1" in
     start)
         log_daemon_msg "Starting $DESC" "$NAME"
         start-stop-daemon --start --exec "$EXECUTABLE" \
-            --pidfile "$PIDFILE" -- --daemon
+            --pidfile "$PIDFILE" -- -d "${PWGW_CONFIG_FILE}"
         log_end_msg "$?"
         ;;
     stop)

@@ -1,6 +1,5 @@
 prefix = /usr/local
 exec_prefix = $(prefix)
-bindir = $(exec_prefix)/bin
 sbindir = $(exec_prefix)/sbin
 sysconfdir = $(prefix)/etc
 datarootdir = $(prefix)/share
@@ -13,38 +12,32 @@ INSTALL_DATA = $(INSTALL) -m 644
 .PHONY : all
 all :
 
-.PHONY : puavo-wlangw-env
-puavo-wlangw-env :
-	echo "#!/bin/sh" > $@
-	echo "export PWGW_CONFDIR=$(sysconfdir)/puavo-wlangw" >> $@
-	echo "export PWGW_DATADIR=$(datarootdir)/puavo-wlangw" >> $@
-	echo "export PWGW_LIBDIR=$(libdir)/puavo-wlangw" >> $@
+.PHONY : config
+config :
+	sed -e "s|#{PWGW_DATADIR}|$(datarootdir)/puavo-wlangw|g" \
+	    -e "s|#{PWGW_LIBDIR}|$(libdir)/puavo-wlangw|g" \
+	    config.in >$@
+	chmod --reference=config.in $@
 
 .PHONY : installdirs
 installdirs :
-	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-wlangw
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-wlangw
 	mkdir -p $(DESTDIR)$(libdir)/puavo-wlangw
 
 .PHONY : install
-install : puavo-wlangw-env installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
-		puavo-wlangw-env
+install : config installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-wlangw
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-wlangw \
-		config \
-		vtund.conf \
-		vtund_network.conf
+		vtund.conf
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-wlangw \
 		config
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-wlangw \
 		lib/vtun-down \
 		lib/vtun-up \
 		lib/add-network
-	rm -f puavo-wlangw-env
 
 .PHONY : clean
 clean :

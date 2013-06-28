@@ -14,19 +14,19 @@ on_exit()
     exit $exitval
 }
 
-if [ $# -ne 3 ]; then
+if [ $# -ne 2 ]; then
     echo "$(basename $0): wrong number of arguments" >&2
-    echo "Usage: $(basename $0) VTUND_PID VTUND_CONF_FILE BRIDGE" >&2
+    echo "Usage: $(basename $0) PWGW_RUNDIR BRIDGE" >&2
     exit 1
 fi
 
-vtund_pid=$1
-vtund_conf_file=$2
-bridge=$3
+rundir=$1
+bridge=$2
 
 read network
 
-. puavo-wlangw-env
+libdir=$(dirname "$0")
+libdir=$(readlink -e "${libdir}")
 
 tmpfile=""
 
@@ -38,20 +38,36 @@ tmpfile=$(mktemp)
 ## multiple instances of this script can be running simultaneously.
 ## TODO: Make sure the lock file is not written over NFS! flock(2) does
 ## not work over NFS!
-exec {lockfd}<"${vtund_conf_file}"
+exec {lockfd}<"${rundir}/vtund.conf"
 flock "${lockfd}"
 
 ## Quit if the network is already there.
-sed -nr "/^${network} \{/q1" "${vtund_conf_file}" || exit
+sed -nr "/^${network} \{/q1" "${rundir}/vtund.conf" || exit
 
-cp -a "${vtund_conf_file}" "${tmpfile}"
+cp -a "${rundir}/vtund.conf" "${tmpfile}"
 
-sed -e "s|#{LIBDIR}|${PWGW_LIBDIR}|g" \
-    -e "s|#{BRIDGE}|${bridge}|g" \
-    -e "s|#{NETWORK}|${network}|g" \
-    "${PWGW_DATADIR}/vtund_network.conf" \
-    >>"${tmpfile}"
+cat <<EOF >>"${tmpfile}"
 
-mv "${tmpfile}" "${vtund_conf_file}"
+${network} {
+    passwd    wlan;
+    type      ether;
+    proto     udp;
+    speed     0;
+    encrypt   no;
+    compress  no;
+    multi     yes;
 
-kill -HUP "${vtund_pid}"
+    up {
+        program "${libdir}/vtun-up %% ${bridge}";
+    };
+
+    down {
+        program "${libdir}/vtun-down %% ${bridge}";
+    };
+}
+EOF
+
+mv "${tmpfile}" "${rundir}/vtund.conf"
+
+vtundpid=$(cat "${rundir}/vtund.pid")
+kill -HUP "${vtundpid}"
