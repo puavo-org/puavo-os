@@ -9,7 +9,7 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 # node-webkit version
-NW_VERSION=0.4.1
+NW_VERSION=0.6.1
 # https://github.com/rogerwang/nw-gyp
 NW_GYP=$(CURDIR)/node_modules/.bin/nw-gyp
 define nw-build
