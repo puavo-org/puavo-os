@@ -8,6 +8,8 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
+export PATH := node_modules/.bin:$(PATH)
+
 # node-webkit version
 NW_VERSION=0.6.1
 # https://github.com/rogerwang/nw-gyp
@@ -18,7 +20,7 @@ define nw-build
 endef
 
 
-build: npm-install grunt r.js i18n
+build: npm-install nw-gyp browserify
 
 # Build node-webkit package
 # https://github.com/rogerwang/node-webkit/wiki/How-to-package-and-distribute-your-apps
@@ -37,11 +39,9 @@ npm-install:
 	npm install
 	make nw-gyp
 
-r.js:
-	node_modules/.bin/r.js -o mainConfigFile=scripts/config.js name=start out=scripts/bundle.js
+browserify:
+	browserify -d -t coffeeify -t hbsfy scripts/main.coffee > bundle.js
 
-grunt:
-	node_modules/.bin/grunt
 
 clean:
 	rm -f styles/main.css

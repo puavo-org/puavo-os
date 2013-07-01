@@ -34,42 +34,25 @@
         console.log("It's now " + new Date());
       }
 
-      // Start from r.js optimized bundle file when running in production. This
-      // skips CoffeeScript and Handlebars compiling. Should speed up the start
-      // quite a bit.
-      if (window.process.env.NODE_ENV === "production") {
-        window.START = "bundle";
-      }
-      else {
-        window.START = "start";
-      }
-
-      // Setup error reporter (puavo-logrelay)
-      window.onerror = require("./lib/js_error_reporter");
-
       window.gui = require('nw.gui');
       if (window.process.env.devtools) {
-        gui.Window.get().showDevTools()
+        var win = gui.Window.get();
+        win.showDevTools("", true)
       }
+
+      window.connectNode = require("./lib/native");
 
       // Move node.js require&process to window.nodejs to make RequireJS work.
       window.nodejs = {
          require: window.require,
          process: window.process,
       };
-      window.require = window.process = undefined;
 
-      // Configure RequireJS
-      window.require = { baseUrl: "scripts/" };
+      window.require = window.process = undefined;
     }())
-    </script>
-    <script src="scripts/require.js"></script>
-    <script src="scripts/config.js"></script>
-    <script>
-       document.write('<script src="scripts/'
-       + window.START + '.js"></' + 'script>')
     </script>
 </head>
 <body>
+    <script src="bundle.js"></script>
 </body>
 </html>
