@@ -37,6 +37,6 @@ class MenuModel extends AbstractItemModel
 
                 @items.add model
 
-    isOk: -> @items.size() > 0
+    isOk: -> @items and @items.size() > 0
 
 module.exports = MenuModel

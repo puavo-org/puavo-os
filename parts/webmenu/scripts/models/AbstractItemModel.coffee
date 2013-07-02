@@ -6,7 +6,7 @@ i18n = require "../utils/i18n.coffee"
 class AbstractItemModel extends Backbone.Model
     constructor: (opts, allItems) ->
         super
-        if allItems
+        if allItems and @isOk()
             @allItems = allItems
             @allItems.add this
 
