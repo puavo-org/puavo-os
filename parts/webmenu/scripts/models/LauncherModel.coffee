@@ -1,26 +1,26 @@
 AbstractItemModel = require "./AbstractItemModel.coffee"
 
 class LauncherModel extends AbstractItemModel
-  defaults:
-    "clicks": 0
+    defaults:
+        "clicks": 0
 
-  constructor: (opts) ->
-    if not opts.id
-      opts.id = opts.name
-    super
-    if clicks = localStorage[@_lsID()]
-      @set "clicks", parseInt(clicks, 10)
+    constructor: (opts) ->
+        if not opts.id
+            opts.id = opts.name
+        super
+        if clicks = localStorage[@_lsID()]
+            @set "clicks", parseInt(clicks, 10)
 
-  incClicks: ->
-    @set "clicks", @get("clicks") + 1
-    localStorage[@_lsID()] = @get "clicks"
+    incClicks: ->
+        @set "clicks", @get("clicks") + 1
+        localStorage[@_lsID()] = @get "clicks"
 
-  _lsID: ->
-    "clicks-#{ @id }"
+    _lsID: ->
+        "clicks-#{ @id }"
 
-  resetClicks: ->
-    delete localStorage[@_lsID()]
+    resetClicks: ->
+        delete localStorage[@_lsID()]
 
-  isOk: -> !! @get("command")
+    isOk: -> !! @get("command")
 
 module.exports = LauncherModel

@@ -4,19 +4,19 @@ _ = require "underscore"
 i18n = require "../utils/i18n.coffee"
 
 class AbstractItemModel extends Backbone.Model
-  constructor: (opts, allItems) ->
-    super
-    if allItems
-      @allItems = allItems
-      @allItems.add this
+    constructor: (opts, allItems) ->
+        super
+        if allItems
+            @allItems = allItems
+            @allItems.add this
 
-  isOk: -> true
+    isOk: -> true
 
-  # Return menu items contents as translated on those parts that can be
-  # translated
-  toTranslatedJSON: -> _.extend(@toJSON(), {
-    name: i18n.pick(@get("name"))
-    description: i18n.pick(@get("name"))
-  })
+    # Return menu items contents as translated on those parts that can be
+    # translated
+    toTranslatedJSON: -> _.extend(@toJSON(), {
+        name: i18n.pick(@get("name"))
+        description: i18n.pick(@get("name"))
+    })
 
 module.exports = AbstractItemModel

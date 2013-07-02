@@ -2,19 +2,19 @@ Backbone = require "backbone"
 
 class AllItems extends Backbone.Collection
 
-  favorites: (limit) ->
-    items = @filter (m) -> m.get("type") isnt "menu" and m.get("clicks") > 0
-    items.sort (a, b) -> b.get("clicks") - a.get("clicks")
-    items = items.slice(0, limit) if limit
-    return items
+    favorites: (limit) ->
+        items = @filter (m) -> m.get("type") isnt "menu" and m.get("clicks") > 0
+        items.sort (a, b) -> b.get("clicks") - a.get("clicks")
+        items = items.slice(0, limit) if limit
+        return items
 
-  searchFilter: (filterWords) ->
-    @filter (item) ->
-      if item.get("type") is "menu"
-        return false
-      else
-        filterWords = [filterWords] if not _.isArray(filterWords)
-        return recurMatch(item.toJSON(), filterWords)
+    searchFilter: (filterWords) ->
+        @filter (item) ->
+            if item.get("type") is "menu"
+                return false
+            else
+                filterWords = [filterWords] if not _.isArray(filterWords)
+                return recurMatch(item.toJSON(), filterWords)
 
 ###*
 # Case insensitive string match.
@@ -26,7 +26,7 @@ class AllItems extends Backbone.Collection
 # @return {Boolean}
 ###
 hasString = (source, needle) ->
-  source.toString().toLowerCase().indexOf(needle.toLowerCase()) isnt -1
+    source.toString().toLowerCase().indexOf(needle.toLowerCase()) isnt -1
 
 ###*
 # Recursively detect whether one of the `needles` appears in the given JSON
@@ -37,15 +37,15 @@ hasString = (source, needle) ->
 # @return {Boolean}
 ###
 recurMatch = (ob, needles) ->
-  return false if not ob
+    return false if not ob
 
-  # Threat strings and numbers as the leafs
-  if typeof(ob) in  ["string", "number"]
-    for n in needles when hasString(ob, n)
-      return true
-    return false
+    # Threat strings and numbers as the leafs
+    if typeof(ob) in  ["string", "number"]
+        for n in needles when hasString(ob, n)
+            return true
+        return false
 
-  # Convert objects (and arrays) to arrays of values recur into them
-  return  _.values(ob).some (v) -> recurMatch(v, needles)
+    # Convert objects (and arrays) to arrays of values recur into them
+    return  _.values(ob).some (v) -> recurMatch(v, needles)
 
 module.exports = AllItems

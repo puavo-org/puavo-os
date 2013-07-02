@@ -3,22 +3,22 @@ ViewMaster = require "../vendor/backbone.viewmaster"
 
 class LogoutView extends ViewMaster
 
-  template: require "../templates/LogoutView.hbs"
+    template: require "../templates/LogoutView.hbs"
 
-  context: -> {
-    localBoot: @hostType isnt "thinclient"
-  }
+    context: -> {
+        localBoot: @hostType isnt "thinclient"
+    }
 
-  events:
-    "click .js-logout": -> Backbone.trigger "logout"
-    "click .js-shutdown": -> Backbone.trigger "shutdown"
-    "click .js-reboot": -> Backbone.trigger "reboot"
-    "click .js-lock": -> Backbone.trigger "lock"
-    "click .js-cancel": -> @bubble "cancel"
+    events:
+        "click .js-logout": -> Backbone.trigger "logout"
+        "click .js-shutdown": -> Backbone.trigger "shutdown"
+        "click .js-reboot": -> Backbone.trigger "reboot"
+        "click .js-lock": -> Backbone.trigger "lock"
+        "click .js-cancel": -> @bubble "cancel"
 
-  constructor: (opts) ->
-    super
+    constructor: (opts) ->
+        super
 
-    @hostType = opts.hostType
+        @hostType = opts.hostType
 
 module.exports = LogoutView

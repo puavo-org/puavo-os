@@ -1,7 +1,7 @@
 Handlebars = require "handlebars-runtime"
 
 if not window.MF
-  throw new Error "i18n.js is not loaded!"
+    throw new Error "i18n.js is not loaded!"
 
 untranslatedRegexp = /\s{1}\[UNTRANSLATED\]$/
 
@@ -14,20 +14,20 @@ untranslatedRegexp = /\s{1}\[UNTRANSLATED\]$/
 # @param {Object} data Translation data
 ###
 translate = (key, data) ->
-  current = window.MF
-  for attr in key.split(".")
-    current = current[attr]
-  if typeof current isnt "function"
-    console.error "Translation key is missing: #{ key }"
-    return "[#{ key }]"
+    current = window.MF
+    for attr in key.split(".")
+        current = current[attr]
+    if typeof current isnt "function"
+        console.error "Translation key is missing: #{ key }"
+        return "[#{ key }]"
 
-  translation = current(data)
-  if translation.match(untranslatedRegexp)
-    clean = translation.replace(untranslatedRegexp, "")
-    console.error "#{ window.navigator.language }: Translation missing #{ key }: #{ clean }"
-    return clean
+    translation = current(data)
+    if translation.match(untranslatedRegexp)
+        clean = translation.replace(untranslatedRegexp, "")
+        console.error "#{ window.navigator.language }: Translation missing #{ key }: #{ clean }"
+        return clean
 
-  return translation
+    return translation
 
 
 ###*
@@ -44,17 +44,17 @@ translate = (key, data) ->
 #
 ###
 pick = (ob) ->
-  # No need to translate falsy values
-  return "" if not ob
+    # No need to translate falsy values
+    return "" if not ob
 
-  # Just return the string if we have no translation object.
-  return ob if typeof ob is "string"
+    # Just return the string if we have no translation object.
+    return ob if typeof ob is "string"
 
-  if s = ob[window.LANG]
-    return s
-  else
-    console.warn "Content translation missing for #{ window.LANG } in #{ JSON.stringify(ob) }"
-    return ob.en or ob.fi or ob.se # Fallback to other languages prefering english
+    if s = ob[window.LANG]
+        return s
+    else
+        console.warn "Content translation missing for #{ window.LANG } in #{ JSON.stringify(ob) }"
+        return ob.en or ob.fi or ob.se # Fallback to other languages prefering english
 
 translate.pick = pick
 Handlebars.registerHelper "i18n", translate
