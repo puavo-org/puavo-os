@@ -15,12 +15,9 @@ exports.coffee = function() {
         out = "lib/" +  out;
         coffee.compile(sh.cat(file), {bare: true}).to(out);
     });
-};
-
-exports.copy_modules = function() {
-    console.log("copy_modules");
     sh.cp("-f", "src/*.js", "lib/");
 };
+
 
 exports.browserify = function(opts) {
     console.log("browserify");
@@ -43,7 +40,6 @@ exports.stylus = function() {
 
 exports.all = function(opts) {
     console.log("all");
-    exports.copy_modules(opts);
     exports.coffee(opts);
     exports.browserify(opts);
     exports.stylus(opts);
