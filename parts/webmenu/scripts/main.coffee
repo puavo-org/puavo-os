@@ -60,7 +60,6 @@ Application.bridge.on "desktop-ready", ->
         layout.broadcast("hide-window")
 
     layout.render()
-    debugger
     $("body").append layout.el
 
     Application.bridge.on "open-view", (viewName) ->

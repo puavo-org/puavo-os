@@ -20,7 +20,7 @@ define nw-build
 endef
 
 
-build: npm-install nw-gyp browserify
+build: npm-install nw-gyp assets
 
 # Build node-webkit package
 # https://github.com/rogerwang/node-webkit/wiki/How-to-package-and-distribute-your-apps
@@ -39,9 +39,8 @@ npm-install:
 	npm install
 	make nw-gyp
 
-browserify:
-	browserify -d -t coffeeify -t hbsfy scripts/main.coffee > bundle.js
-
+assets:
+	node make.js
 
 clean:
 	rm -f styles/main.css
@@ -81,9 +80,6 @@ uninstall:
 	rm $(DESTDIR)/etc/xdg/autostart/webmenu.desktop
 	rm $(DESTDIR)/usr/share/icons/webmenu.png
 
-test-client:
-	node_modules/.bin/grunt mocha
-
 test-nw:
 	test=1 $(NW) .
 
@@ -102,6 +98,3 @@ serve:
 .PHONY : i18n
 i18n:
 	@node_modules/.bin/coffee extra/bin/i18n-update
-
-watch:
-	node extra/bin/watchers.js
