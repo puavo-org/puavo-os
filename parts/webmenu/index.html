@@ -26,13 +26,8 @@
           );
         }
 
-       // Log plain node-webkit startup time nearly without any Javascript,
-       // HTML or CSS parsing/rendering.
-      if (window.process.env.WM_STARTUP_TIME) {
-        var startUpTime = (Date.now() / 1000) - parseInt(process.env.WM_STARTUP_TIME)
-        console.log("node-webkit started in " + startUpTime + " seconds");
-        console.log("It's now " + new Date());
-      }
+      console.log("It's now " + new Date());
+      require("./lib/logStartTime")("plain node-webkit started");
 
       window.gui = require('nw.gui');
       if (window.process.env.devtools) {

@@ -10,12 +10,10 @@ fs = require "fs"
 _ = require "underscore"
 Handlebars = require "handlebars"
 
-process.on "uncaughtException", (err) ->
-    console.log  "NODE ERR #{ err.message }"
-
 launchCommand = require "./launchcommand"
 menutools = require "./menutools"
 requirefallback = require "./requirefallback"
+logStartTime = require "./logStartTime"
 dbus = require "./dbus"
 pkg = require "../package.json"
 
@@ -72,6 +70,9 @@ if puavoDomain
     if config.profileCMD
         expandVariables(config.profileCMD, "url")
 
+dbus.registerApplication()
+logStartTime("dbus registration sent in")
+
 desktopReadStarted = Date.now()
 # inject data from .desktop file to menuJSON.
 menutools.injectDesktopData(
@@ -83,7 +84,7 @@ menutools.injectDesktopData(
     config.hostType
 )
 desktopReadTook = (Date.now() - desktopReadStarted) / 1000
-console.log(".desktop files read in " + desktopReadTook + " seconds")
+console.log(".desktop files read took " + desktopReadTook + " seconds")
 
 username = posix.getpwnam(posix.geteuid()).name
 userData = posix.getpwnam(username)
@@ -244,13 +245,7 @@ module.exports = (gui, bridge) ->
         launchCommand(config.lockCMD)
 
     bridge.on "html-ready", ->
-        dbus.registerApplication()
-
-        # Log full Webmenu startup time with everyting ready
-        if process.env.WM_STARTUP_TIME
-            startUpTime = (Date.now() / 1000) - parseInt(process.env.WM_STARTUP_TIME)
-            console.log("Webmenu started in " + startUpTime + " seconds")
-
+        logStartTime("Webmenu started")
         console.log "Webmenu ready. Use 'webmenu-spawn' to open it"
 
     # Share settings with the browser
@@ -259,5 +254,4 @@ module.exports = (gui, bridge) ->
         config: config,
         menu: menuJSON
     })
-    console.log "SENDING READY"
     bridge.trigger "desktop-ready"
