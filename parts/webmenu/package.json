@@ -23,7 +23,6 @@
     "underscore": "~1.4.3",
     "optimist": "~0.3.4",
     "ini": "1.0.5",
-    "mkdirp": "0.3.4",
     "clim": "1.0.0",
     "rimraf": "2.0.2",
     "mime": "1.2.7",
@@ -33,7 +32,8 @@
     "handlebars": "~1.0.10",
     "backbone": "~1.0.0",
     "posix": "~1.0.1",
-    "shelljs": "~0.1.4"
+    "shelljs": "~0.1.4",
+    "mkdirp": "~0.3.5"
   },
   "devDependencies": {
     "node-static": "",

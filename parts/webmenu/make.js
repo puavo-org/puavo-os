@@ -9,6 +9,7 @@ var sh = require("shelljs");
 
 exports.coffee = function() {
     console.log("coffee");
+    sh.mkdir("-p", "lib");
     sh.ls("src/*.coffee").forEach(function(file) {
         var out = path.basename(file);
         out = out.replace(/coffee$/, "js");
