@@ -16,6 +16,10 @@
            return;
         }
 
+
+        console.log("It's now " + new Date());
+        require("./lib/logStartTime")("plain node-webkit started");
+
         // English is always loaded, but if user has prefers another language load
         // that too. It will nicely override english if it loads and silently
         // fallbacks to english if missing
@@ -25,9 +29,6 @@
             '<script src="i18n/' + window.LANG + '/i18n.js"></' + 'script>'
           );
         }
-
-      console.log("It's now " + new Date());
-      require("./lib/logStartTime")("plain node-webkit started");
 
       window.gui = require('nw.gui');
       if (window.process.env.devtools) {
