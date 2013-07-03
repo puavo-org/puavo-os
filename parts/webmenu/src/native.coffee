@@ -198,7 +198,7 @@ module.exports = (gui, bridge) ->
 
     spawnEmitter.listening.done ->
         dbus.registerApplication()
-        logStartTime("dbus registration sent in")
+        logStartTime("dbus registration sent")
 
     bridge.on "open", (cmd) ->
         console.log "Opening command", cmd
