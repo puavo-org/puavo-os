@@ -10,12 +10,14 @@
     <script src="i18n/en/i18n.js"></script>
     <script>
       (function() {
+        window.gui = require('nw.gui');
+
         // node-webkit boot up starts here.
-        if (window.process.env.test) {
+        console.log(gui.App.argv);
+        if (gui.App.argv.indexOf("--test") !== -1) {
            window.location = "tests.html";
            return;
         }
-
 
         console.log("It's now " + new Date());
         require("./lib/logStartTime")("plain node-webkit started");
@@ -30,7 +32,6 @@
           );
         }
 
-      window.gui = require('nw.gui');
       if (window.process.env.devtools) {
         var win = gui.Window.get();
         win.showDevTools("", true)

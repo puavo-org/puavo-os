@@ -21,7 +21,24 @@
     </ul>
   </div>
   <div id="mocha"></div>
+
+  <script>
+    (function() {
+      var gui = window.require('nw.gui');
+      if (gui.App.argv.indexOf("--exit") !== -1) {
+        var p = window.process;
+        window.EXIT = function(code) {
+          p.exit(code);
+        }
+      }
+      else {
+        var win = gui.Window.get();
+        win.show()
+        win.showDevTools()
+      }
+    }());
   </script>
+
   <script src="i18n/en/i18n.js"></script>
   <script src="scripts/vendor/tests/mocha.js"></script>
   <script src="scripts/vendor/jquery.js"></script>
@@ -29,24 +46,12 @@
   <script src="scripts/vendor/tests/chai-jquery.js"></script>
   <script src="scripts/vendor/tests/chai-spies.js"></script>
 
-  <script>
-    window.expect = chai.expect;
-    window.assert = chai.assert;
-    mocha.setup('bdd');
-  </script>
-
   <script src="scripts/tests/bundle.js"></script>
 
-  <script>
-    var runner = mocha
-      .globals(["jQuery*"])
-      .run();
-  </script>
-
   <a href="#" onclick="window.location.reload()">Restart</a>
-  <script>document.write('<script src="http://'
-  + (location.host || 'localhost').split(':')[0]
-  + ':35729/livereload.js"></'
-  + 'script>')</script>
+  <!-- <script>document.write('<script src="http://' -->
+  <!-- + (location.host || 'localhost').split(':')[0] -->
+  <!-- + ':35729/livereload.js"></' -->
+  <!-- + 'script>')</script> -->
 </body>
 </html>

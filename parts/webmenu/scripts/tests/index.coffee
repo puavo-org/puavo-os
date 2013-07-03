@@ -1,3 +1,7 @@
+window.expect = chai.expect
+window.assert = chai.assert
+mocha.setup("bdd")
+
 Application = require "../Application.coffee"
 Application.animationDuration = 10
 
@@ -12,3 +16,20 @@ require "./MenuModel.test.coffee"
 require "./Navigation.test.coffee"
 require "./Search.test.coffee"
 
+runner = mocha.globals(["jQuery*"]).run()
+
+fails = []
+
+runner.on "fail", (test, error) ->
+    fails.push { test, error }
+    for fail in fails
+        console.error "FAIL: #{ test.title }: #{ error.message }"
+
+runner.on "end", ->
+    console.log "OK" if fails.length is 0
+    window.EXIT?(
+        if fails.length
+            1
+        else
+            0
+    )
