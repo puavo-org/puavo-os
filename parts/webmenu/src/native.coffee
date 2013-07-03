@@ -70,8 +70,6 @@ if puavoDomain
     if config.profileCMD
         expandVariables(config.profileCMD, "url")
 
-dbus.registerApplication()
-logStartTime("dbus registration sent in")
 
 desktopReadStarted = Date.now()
 # inject data from .desktop file to menuJSON.
@@ -213,6 +211,10 @@ module.exports = (gui, bridge) ->
     # Prevent crazy menu spawning which might cause slow machines to get stuck
     # for long periods of time
     spawnEmitter.on "spawn", _.debounce(spawnHandler, 300, true)
+
+    spawnEmitter.listening.done ->
+        dbus.registerApplication()
+        logStartTime("dbus registration sent in")
 
     bridge.on "open", (cmd) ->
         console.log "Opening command", cmd

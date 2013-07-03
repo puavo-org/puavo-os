@@ -20,11 +20,14 @@ fs = require "fs"
 
 optimist = require "optimist"
 _ = require "underscore"
+Q = require "q"
 
 
 module.exports = (pipePath) ->
 
+    listening = Q.defer()
     events = new EventEmitter
+    events.listening = listening.promise
 
     try
         fs.unlinkSync(pipePath)
@@ -49,6 +52,6 @@ module.exports = (pipePath) ->
             buffer += data.toString()
             emitSpawn() if buffer.indexOf("\n") isnt -1
 
-    server.listen(pipePath)
+    server.listen(pipePath, listening.resolve)
 
     return events
