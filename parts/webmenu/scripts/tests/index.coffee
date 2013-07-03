@@ -7,4 +7,5 @@ require "./LogoutView.test.coffee"
 require "./AllItems.test.coffee"
 require "./MenuItemView.test.coffee"
 require "./MenuListView.test.coffee"
+require "./MenuLayout.test.coffee"
 
