@@ -81,10 +81,10 @@ uninstall:
 	rm $(DESTDIR)/usr/share/icons/webmenu.png
 
 test-nw:
-	$(NW) . --test
+	WM_ENV=development $(NW) . --test
 
 test-nw-hidden:
-	$(NW) . --test --exit
+	WM_ENV=development $(NW) . --test --exit
 
 test-node:
 	node_modules/.bin/mocha --reporter spec --compilers coffee:coffee-script tests/*test*
