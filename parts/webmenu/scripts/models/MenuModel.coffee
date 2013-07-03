@@ -24,7 +24,6 @@ class MenuModel extends AbstractItemModel
         # attributes
         super _.omit(opts, "items"), allItems
 
-
         @items = new Backbone.Collection
 
         for item in opts.items
@@ -33,7 +32,7 @@ class MenuModel extends AbstractItemModel
                 model.parent = this
 
                 if @items.get(model.id)
-                    console.error  "Menu item with id '#{ model.id }' already exists!"
+                    console.error  "Menu item with id '#{ JSON.stringify(model.id) }' already exists!"
 
                 @items.add model
 
