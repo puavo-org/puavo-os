@@ -3,7 +3,7 @@ Backbone = require "backbone"
 
 Application = require "./Application.coffee"
 MenuLayout = require "./views/MenuLayout.coffee"
-AllItems = require "./views/AllItems.coffee"
+AllItems = require "./models/AllItems.coffee"
 MenuModel = require "./models/MenuModel.coffee"
 
 
