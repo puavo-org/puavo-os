@@ -11,7 +11,7 @@ TODO: Reimplement with dbus
 # setting it to empty string. This hack should not affect us because we don't
 # use implicit argv parsing from node-optimist.
 if not process.env._
-  process.env._ = ""
+    process.env._ = ""
 
 
 net = require "net"
@@ -24,31 +24,31 @@ _ = require "underscore"
 
 module.exports = (pipePath) ->
 
-  events = new EventEmitter
+    events = new EventEmitter
 
-  try
-    fs.unlinkSync(pipePath)
-  catch err
-    if err.code isnt "ENOENT"
-      throw err
+    try
+        fs.unlinkSync(pipePath)
+    catch err
+        if err.code isnt "ENOENT"
+            throw err
 
-  server = net.createServer (socket) ->
-    buffer = ""
+    server = net.createServer (socket) ->
+        buffer = ""
 
-    emitSpawn = _.once ->
-      socket.end()
-      buffer = buffer.trim()
-      if buffer
-        options = optimist.parse(buffer.split(" "))
-      else
-        options = {}
-      console.info "spawn: parsed #{ buffer } to #{ JSON.stringify options }"
-      events.emit("spawn", options)
+        emitSpawn = _.once ->
+            socket.end()
+            buffer = buffer.trim()
+            if buffer
+                options = optimist.parse(buffer.split(" "))
+            else
+                options = {}
+            console.info "spawn: parsed #{ buffer } to #{ JSON.stringify options }"
+            events.emit("spawn", options)
 
-    socket.on "data", (data) ->
-      buffer += data.toString()
-      emitSpawn() if buffer.indexOf("\n") isnt -1
+        socket.on "data", (data) ->
+            buffer += data.toString()
+            emitSpawn() if buffer.indexOf("\n") isnt -1
 
-  server.listen(pipePath)
+    server.listen(pipePath)
 
-  return events
+    return events
