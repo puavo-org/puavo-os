@@ -9,4 +9,5 @@ require "./MenuItemView.test.coffee"
 require "./MenuListView.test.coffee"
 require "./MenuLayout.test.coffee"
 require "./MenuModel.test.coffee"
+require "./Navigation.test.coffee"
 
