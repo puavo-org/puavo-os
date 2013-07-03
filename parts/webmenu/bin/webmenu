@@ -25,8 +25,10 @@ if [ $# -eq 1 ]; then
     WM_PATH=$1
 fi
 
-
 mkdir -p $WM_HOME
+
+# At max keep only 10 latest crash logs
+ls -1 -t "$WM_HOME/crash-*" | tail --lines=+10 | xargs rm -f
 
 echo "Starting Webmenu from $WM_PATH"
 echo "log: tail -f $WM_HOME/current.log"
