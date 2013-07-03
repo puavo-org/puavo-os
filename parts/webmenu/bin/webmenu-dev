@@ -3,7 +3,7 @@
 set -eu
 
 # Compile all assets before starting Webmenu
-node make.js
+node make.js --debug
 
 export WM_STARTUP_TIME=$(date +%s)
 
