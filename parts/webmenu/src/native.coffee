@@ -3,7 +3,6 @@
 # "browser" in scripts/start.js.
 ###
 
-{exec} = require "child_process"
 posix = require "posix"
 mkdirp = require "mkdirp"
 fs = require "fs"
@@ -15,6 +14,7 @@ menutools = require "./menutools"
 requirefallback = require "./requirefallback"
 logStartTime = require "./logStartTime"
 dbus = require "./dbus"
+forceFocus = require "./forceFocus"
 pkg = require "../package.json"
 
 webmenuHome = process.env.HOME + "/.config/webmenu"
@@ -113,28 +113,6 @@ module.exports = (gui, bridge) ->
         config.devtools = true
     Window = gui.Window.get()
 
-    ###*
-    # Use wmctrl cli tool force focus on Webmenu. Calls the wmctrl after a given
-    # timeout to give it some time to appear on window lists. It will also retry
-    # itself if it fails which might happen on slow or high loaded machines.
-    #
-    # @param {Number} nextTry timeout to wait before calling wmctrl
-    # @param {Number} retries* one or more timeouts to retry
-    ###
-    forceFocus = (nextTry, retries...) ->
-        if not nextTry
-            console.error "wmctrl retries exhausted. Failed to activate Webmenu!"
-            return
-
-        setTimeout ->
-            cmd = "wmctrl -F -R #{ pkg.window.title }"
-            wmctrl = exec cmd, (err, stdout, stderr) ->
-                if err
-                    console.warn "wmctrl: failed: '#{ cmd }'. Error: #{ JSON.stringify err }"
-                    console.warn "wmctrl: stdout: #{ stdout } stderr: #{ stderr }"
-                    console.warn "wmctrl: Retrying after #{ nextTry }ms"
-                    forceFocus(retries...)
-        , nextTry
 
     ###*
     # Make menu visible and bring it to current desktop
@@ -145,7 +123,7 @@ module.exports = (gui, bridge) ->
         Window.show()
         Window.focus()
         Window.setAlwaysOnTop(true)
-        forceFocus(50, 100, 350, 500)
+        forceFocus(pkg.window.title, 50, 100, 350, 500)
 
     hideWindow = ->
         menuVisible = false
