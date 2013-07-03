@@ -22,6 +22,12 @@ spawnMenu = process.env.SPAWNMENU
 spawnPipePath = webmenuHome + "/spawnmenu" + if spawnMenu then "-#{spawnMenu}" else ""
 mkdirp.sync(webmenuHome)
 
+process.on 'uncaughtException', (err) ->
+    console.error err.message
+    process.exit 1
+
+spawnEmitter = require("./spawnmenu")(spawnPipePath)
+
 # TODO: parse cli args when node-webkit 0.3.6 is released
 # https://github.com/rogerwang/node-webkit/commit/aed7590d7ae44994391c5dc79f398125b8f0504b
 argv =
@@ -89,7 +95,6 @@ username = posix.getpwnam(posix.geteuid()).name
 userData = posix.getpwnam(username)
 userData.fullName = userData.gecos.split(",")[0]
 
-spawnEmitter = require("./spawnmenu")(spawnPipePath)
 
 
 ###*
