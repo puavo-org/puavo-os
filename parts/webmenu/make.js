@@ -27,7 +27,7 @@ function browserifyBuild(entry, out, opts) {
         });
     }
 
-    console.log("listening on ");
+    if (opts.watch) console.log("listening on ", entry);
     b.on("update", bundle);
     bundle();
     return bundle;
@@ -72,6 +72,7 @@ exports.all = function(opts) {
     console.log("all");
     exports.coffee(opts);
     exports.browserify(opts);
+    exports.browserify_test(opts);
     exports.stylus(opts);
 };
 
