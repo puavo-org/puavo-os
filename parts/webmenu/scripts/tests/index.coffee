@@ -5,4 +5,5 @@ require "./ProfileView.test.coffee"
 require "./LogoutButtonView.test.coffee"
 require "./LogoutView.test.coffee"
 require "./AllItems.test.coffee"
+require "./MenuItemView.test.coffee"
 
