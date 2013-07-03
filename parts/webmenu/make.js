@@ -1,11 +1,37 @@
 var fs = require("fs");
 var path = require("path");
 
-var browserify = require("browserify");
 var coffee = require("coffee-script");
 var stylus = require("stylus");
 var nib = require("nib");
 var sh = require("shelljs");
+
+function browserifyBuild(entry, out, opts) {
+    var brwsrf = opts.watch ? require("watchify") : require("browserify");
+    var b = brwsrf(entry);
+    b.transform(require("hbsfy"));
+    b.transform(require("coffeeify"));
+        b.on("error", function(err) {
+            console.log(err);
+        });
+
+    function bundle() {
+        var started = Date.now();
+        b.bundle({ debug: opts.debug })
+        .on("error", function(err) {
+            console.error("BUILD error", err);
+        })
+        .pipe(fs.createWriteStream(out))
+        .on("close", function() {
+            console.log(out, "build in", Date.now() - started, "ms");
+        });
+    }
+
+    console.log("listening on ");
+    b.on("update", bundle);
+    bundle();
+    return bundle;
+}
 
 exports.coffee = function() {
     console.log("coffee");
@@ -20,12 +46,15 @@ exports.coffee = function() {
 };
 
 
+
 exports.browserify = function(opts) {
     console.log("browserify");
-    var b = browserify("./scripts/main.coffee");
-    b.transform(require("hbsfy"));
-    b.transform(require("coffeeify"));
-    b.bundle({ debug: opts.debug }).pipe(fs.createWriteStream("bundle.js"));
+    browserifyBuild("./scripts/main.coffee", "bundle.js", opts);
+};
+
+exports.browserify_test = function(opts) {
+    console.log("browserify_test");
+    browserifyBuild("./scripts/tests/index.coffee", "./scripts/tests/bundle.js", opts);
 };
 
 exports.stylus = function() {
@@ -48,7 +77,8 @@ exports.all = function(opts) {
 
 if (require.main === module) {
     var argv = require('optimist')
-        .alias('d', 'debug')
+        .alias("d", "debug")
+        .alias("w", "watch")
         .argv;
 
     if (argv._.length) {
