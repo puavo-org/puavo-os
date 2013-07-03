@@ -83,8 +83,8 @@ uninstall:
 test-nw:
 	bin/webmenu-dev --test
 
-test-nw-hidden:
-	bin/webmenu-dev --test --exit
+test-nw-hidden: assets
+	WM_ENV=development $(NW) . --test --exit
 
 test-node:
 	node_modules/.bin/mocha --reporter spec --compilers coffee:coffee-script tests/*test*
