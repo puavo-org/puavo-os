@@ -20,7 +20,7 @@ define nw-build
 endef
 
 
-build: npm-install nw-gyp assets
+build: npm-install nw-gyp assets i18n
 
 # Build node-webkit package
 # https://github.com/rogerwang/node-webkit/wiki/How-to-package-and-distribute-your-apps
