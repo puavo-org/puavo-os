@@ -51,7 +51,7 @@ config = _.extend({},
 
 
 config.hostType = require "./hosttype"
-config.production = process.env.NODE_ENV isnt "production"
+config.production = process.env.WM_ENV isnt "production"
 
 try
     puavoDomain = fs.readFileSync("/etc/puavo/domain").toString().trim()
@@ -81,6 +81,7 @@ menutools.injectDesktopData(
     config.fallbackIcon
     config.hostType
 )
+
 desktopReadTook = (Date.now() - desktopReadStarted) / 1000
 console.log(".desktop files read took " + desktopReadTook + " seconds")
 

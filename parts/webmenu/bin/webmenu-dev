@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -eu
+
+# Compile all assets before starting Webmenu
+node make.js
+
+export WM_STARTUP_TIME=$(date +%s)
+
+export WM_ENV=development
+
+nw . $@
