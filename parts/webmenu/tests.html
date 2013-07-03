@@ -23,43 +23,26 @@
   <div id="mocha"></div>
   </script>
   <script src="i18n/en/i18n.js"></script>
-  <script src="scripts/nw-helper.js"></script>
   <script src="scripts/vendor/tests/mocha.js"></script>
   <script src="scripts/vendor/jquery.js"></script>
   <script src="scripts/vendor/tests/chai.js"></script>
   <script src="scripts/vendor/tests/chai-jquery.js"></script>
   <script src="scripts/vendor/tests/chai-spies.js"></script>
 
-  <script>window.require = { baseUrl: "scripts/" };</script>
-  <script src="scripts/require.js"></script>
-  <script src="scripts/config.js"></script>
-
   <script>
     window.expect = chai.expect;
     window.assert = chai.assert;
     mocha.setup('bdd');
-    require([
-        "cs!app/application",
-        "cs!app/utils/i18n",
-        "cs!tests/profile_view.test",
-        "cs!tests/logout_view.test",
-        "cs!tests/menulayout.test",
-        "cs!tests/allitems_collection.test",
-        "cs!tests/menumodel.test",
-        "cs!tests/search_view.test",
-        "cs!tests/menu_list_view_test",
-        "cs!tests/navigation.test",
-        "cs!tests/menu_item_view.test",
-        "cs!tests/logout_button_view.test"
-    ], function(Application) {
-    // Lower animationDuration to speed up tests
-    Application.animationDuration = 10;
+  </script>
+
+  <script src="scripts/tests/bundle.js"></script>
+
+  <script>
     var runner = mocha
       .globals(["jQuery*"])
       .run();
-    mochaNwAdapter(runner);
-    });
   </script>
+
   <a href="#" onclick="window.location.reload()">Restart</a>
   <script>document.write('<script src="http://'
   + (location.host || 'localhost').split(':')[0]
