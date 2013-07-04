@@ -5,6 +5,7 @@ var coffee = require("coffee-script");
 var stylus = require("stylus");
 var nib = require("nib");
 var sh = require("shelljs");
+process.chdir(__dirname);
 
 function browserifyBuild(entry, out, opts) {
     var brwsrf = opts.watch ? require("watchify") : require("browserify");
