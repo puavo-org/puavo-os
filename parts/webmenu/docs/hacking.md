@@ -17,11 +17,11 @@ Compile Webmenu
 
 Basic
 
-    nw .
+    bin/webmenu-dev
 
 Devtools
 
-    devtools=1 nw .
+    bin/webmenu-dev --devtools
 
 With reload loop and crash reporting
 
@@ -29,13 +29,9 @@ With reload loop and crash reporting
 
 ## Development
 
-## Stylus compiling
+## Compile all assets manually
 
-    grunt stylus
-
-or watch with
-
-    make watch
+    node make.js
 
 ## Translations
 
@@ -75,11 +71,6 @@ Shutdown Webmenu:
 Get current menu.json from Github:
 
     $ wget https://github.com/opinsys/webmenu/raw/master/menu.json -O ~/.config/webmenu/menu.json
-
-Edit it as you wish and restart Webmenu:
-
-    $ cd /opt/webmenu
-    $ nw .
 
 Webmenu must be restarted after every change.
 

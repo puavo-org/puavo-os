@@ -33,10 +33,6 @@ spawnEmitter = createSpawnPipe spawnPipePath, (err) ->
     dbus.registerApplication()
     logStartTime("dbus registration sent")
 
-# TODO: parse cli args when node-webkit 0.3.6 is released
-# https://github.com/rogerwang/node-webkit/commit/aed7590d7ae44994391c5dc79f398125b8f0504b
-argv =
-    hide: true
 
 locale = process.env.LANG
 locale = "fi_FI.UTF-8"
@@ -109,18 +105,16 @@ userData.fullName = userData.gecos.split(",")[0]
 ###
 module.exports = (gui, Window) ->
     menuVisible = false
+    noHide = "--devtools" in gui.App.argv
     shared = new EventEmitter
 
     hideWindow =  ->
         menuVisible = false
-        if process.env.nohide
+        if noHide
             console.log "Hiding disabled"
             return
         console.info "Hiding menu window"
-        if argv.hide
-            Window.hide()
-        else
-            console.warn "Not hiding window because --no-hide is set or implied by devtools"
+        Window.hide()
 
     ###*
     # Make menu visible and bring it to current desktop
