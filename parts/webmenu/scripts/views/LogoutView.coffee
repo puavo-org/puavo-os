@@ -1,6 +1,8 @@
 Backbone = require "backbone"
 ViewMaster = require "../vendor/backbone.viewmaster"
 
+LogoutAction = require "./LogoutAction.coffee"
+
 class LogoutView extends ViewMaster
 
     className: "bb-logout-view"
@@ -12,10 +14,21 @@ class LogoutView extends ViewMaster
     }
 
     events:
-        "click .js-logout": -> Backbone.trigger "logout"
-        "click .js-shutdown": -> Backbone.trigger "shutdown"
-        "click .js-reboot": -> Backbone.trigger "reboot"
-        "click .js-lock": -> Backbone.trigger "lock"
+        "click .js-shutdown": -> @displayAction("shutdown")
+        "click .js-logout": -> @displayAction("logout")
+        "change select": (e) ->
+            @displayAction(e.target.value)
+
+    displayAction: (action) -> setTimeout =>
+        @$(".logout-btn-container").empty()
+        actionView = new LogoutAction action: action
+        @setView ".logout-btn-container", actionView
+        @refreshViews()
+        actionView.on "cancel", =>
+            actionView.remove()
+            @render()
+        , 1000
+    , 0 # Workaround immediate click trigger
 
     constructor: (opts) ->
         super
