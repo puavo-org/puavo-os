@@ -1,7 +1,6 @@
 _ = require "underscore"
 
 ViewMaster = require "../vendor/backbone.viewmaster"
-renderFix = require "../utils/renderFix.coffee"
 
 class MenuItemView extends ViewMaster
 
@@ -48,7 +47,6 @@ class MenuItemView extends ViewMaster
             return
 
         if @model.get("type") is "menu"
-            renderFix()
             @bubble "open-menu", @model
         else
             @bubble "open-app", @model
