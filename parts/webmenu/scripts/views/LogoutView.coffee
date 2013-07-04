@@ -3,6 +3,8 @@ ViewMaster = require "../vendor/backbone.viewmaster"
 
 class LogoutView extends ViewMaster
 
+    className: "bb-logout-view"
+
     template: require "../templates/LogoutView.hbs"
 
     context: -> {
