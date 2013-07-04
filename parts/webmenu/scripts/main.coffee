@@ -53,7 +53,7 @@ $(window).blur ->
     layout.broadcast("hide-window")
 
 layout.render()
-$("body").append layout.el
+$ -> $("body").html layout.el
 
 nodejs.on "open-view", (viewName) ->
     layout.broadcast("reset")
