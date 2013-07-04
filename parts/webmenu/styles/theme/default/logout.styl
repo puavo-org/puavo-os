@@ -2,27 +2,24 @@
 // Default theme
 
 .logout-btn-container
-  button
-    border: 1px solid #ccc
-    color: #ffffff
+  .action .item
+    border-radius 5px
+    border 1px solid #dcdcdc
     &:hover
-      border: 1px solid #dcdcdc
       box-shadow inset 5px 5px 35px rgba(70,70,70,0.35), inset -5px -5px 35px rgba(70,70,70,0.35)
       cursor pointer
+      background-color silver
 
-  .js-logout
-    background-color #ef8c41
-    &:hover
-      background-color #FF7710
-  .js-shutdown
-    background-color #c82828
-    &:hover
-      background-color #ff0000
-  .js-reboot
-    background-color #28A228
-    &:hover
-      background-color #00B100
+  .js-other select, .action .item
+    color black
+    background-color silver
+    font-size 12pt
+    border 0px
+    color black
+    background-color silver
 
-  .js-cancel
-    float: right
-    background-color: #999
+  select
+    background-color transparent
+
+
+

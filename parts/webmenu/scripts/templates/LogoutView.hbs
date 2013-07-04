@@ -5,24 +5,31 @@
 
 <div class="logout-btn-container">
 
-  <button class="btn js-logout">
-    <img src="file:///usr/share/icons/Faenza/actions/24/system-log-out.png">
-    {{ i18n "logout.logout" }}
-  </button>
 
-  <button class="btn js-lock">
-    <img src="file:///usr/share/icons/Faenza/actions/24/lock.png">
-    {{ i18n "logout.lock" }}
-  </button>
+  <div class="btn action">
+    <button class="js-logout item">
+      <img src="file:///usr/share/icons/Faenza/actions/24/system-log-out.png">
+      {{ i18n "logout.logout" }}
+    </button>
+  </div>
 
-  <button class="btn js-shutdown">
-    <img src="file:///usr/share/icons/Faenza/actions/24/system-shutdown.png">
-    {{ i18n "logout.shutdown" }}
-  </button>
+  <div class="btn action">
+    <button class="js-shutdown item">
+      <img src="file:///usr/share/icons/Faenza/actions/24/system-shutdown.png">
+      {{ i18n "logout.shutdown" }}
+    </button>
+  </div>
 
-  <button class="btn js-reboot">
-    <img src="file:///usr/share/icons/Faenza/actions/24/stock_undo.png">
-    {{ i18n "logout.reboot" }}
-  </button>
+  <div class="btn action">
+    <div class="item js-other">
+      <select>
+        <option value=select>Select...</option>
+        <option value=foo>Sleep</option>
+        <option value=bar>Hibernate</option>
+        <option value=baz>Lock</option>
+      </select>
+    </div>
+  </div>
+
 
 </div>
