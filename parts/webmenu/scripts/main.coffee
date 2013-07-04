@@ -36,8 +36,8 @@ layout.on "open-app", (model) ->
     , Application.animationDuration
 
 # Disable DOM element dragging and text selection if target is not an input
-$(window).mousedown (e) ->
-    if e.target.tagName isnt "INPUT"
+$(window).on "mousedown", (e) ->
+    if e.target.tagName not in ["INPUT", "SELECT", "OPTION"]
         e.preventDefault()
 
 $(window).keydown (e) ->
