@@ -2,12 +2,7 @@
 <html class=thin-client >
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-
     <title>Webmenu</title>
-
-    <link rel="stylesheet" href="styles/vendor/font/iconfont.css">
-    <link rel="stylesheet" href="styles/main.css">
-    <script src="i18n/en/i18n.js"></script>
     <script>
       (function() {
         if (!process.env.WM_ENV) {
@@ -15,47 +10,47 @@
           console.error("Use bin/webmenu or bin/webmenu-dev");
           process.exit(1);
         }
-        window.gui = require('nw.gui');
+        var gui = require('nw.gui');
+        var Window = gui.Window.get();
 
         // node-webkit boot up starts here.
-        console.log(gui.App.argv);
         if (gui.App.argv.indexOf("--test") !== -1) {
            window.location = "tests.html";
            return;
         }
+        if (gui.App.argv.indexOf("--devtools") !== -1) {
+          Window.showDevTools();
+        }
 
         console.log("It's now " + new Date());
         require("./lib/logStartTime")("plain node-webkit started");
+
+        var scripts = ["i18n/en/i18n.js"];
 
         // English is always loaded, but if user has prefers another language load
         // that too. It will nicely override english if it loads and silently
         // fallbacks to english if missing
         window.LANG = window.process.env.i18n || navigator.language.slice(0, 2)
         if (window.LANG !== "en") {
-          document.write(
-            '<script src="i18n/' + window.LANG + '/i18n.js"></' + 'script>'
-          );
+          scripts.push("i18n/" + window.LANG + "/i18n.js");
         }
+        scripts.push("bundle.js");
 
-      if (window.process.env.devtools) {
-        var win = gui.Window.get();
-        win.showDevTools("", true)
-      }
+        window.nodejs = require("./lib/native")(gui, Window);
 
-      window.connectNode = require("./lib/native");
+        scripts.forEach(function(src) {
+          var script = document.createElement('script');
+          script.src = src;
+          script.async = false;
+          document.head.appendChild(script);
+        });
 
-      // Move node.js require&process to window.nodejs to make RequireJS work.
-      window.nodejs = {
-         require: window.require,
-         process: window.process,
-      };
-
-      window.require = window.process = undefined;
     }())
     </script>
+    <link rel="stylesheet" href="styles/vendor/font/iconfont.css">
+    <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
     Loading...
-    <script src="bundle.js"></script>
 </body>
 </html>

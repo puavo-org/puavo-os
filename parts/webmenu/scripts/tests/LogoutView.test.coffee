@@ -7,7 +7,6 @@ Lightbox = require "../views/Lightbox.coffee"
 describe "LogoutView", ->
     view = null
     beforeEach ->
-        Application.reset()
         view = new LogoutView
             hostType: "fatclient"
         view.render()

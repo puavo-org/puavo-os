@@ -32,7 +32,6 @@ describe "ProfileView", ->
 
         afterEach ->
             view.remove()
-            Application.reset()
 
         it "should display user's fullname", ->
             expect(view.$el).to.contain("John Doe")

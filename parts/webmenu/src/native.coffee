@@ -8,6 +8,7 @@ mkdirp = require "mkdirp"
 fs = require "fs"
 _ = require "underscore"
 Handlebars = require "handlebars"
+{EventEmitter} = require "events"
 
 launchCommand = require "./launchcommand"
 menutools = require "./menutools"
@@ -15,6 +16,7 @@ requirefallback = require "./requirefallback"
 logStartTime = require "./logStartTime"
 dbus = require "./dbus"
 forceFocus = require "./forceFocus"
+createSpawnPipe = require "./createSpawnPipe"
 pkg = require "../package.json"
 
 webmenuHome = process.env.HOME + "/.config/webmenu"
@@ -26,7 +28,10 @@ process.on 'uncaughtException', (err) ->
     console.error err.message
     process.exit 1
 
-spawnEmitter = require("./spawnmenu")(spawnPipePath)
+spawnEmitter = createSpawnPipe spawnPipePath, (err) ->
+    throw err if err
+    dbus.registerApplication()
+    logStartTime("dbus registration sent")
 
 # TODO: parse cli args when node-webkit 0.3.6 is released
 # https://github.com/rogerwang/node-webkit/commit/aed7590d7ae44994391c5dc79f398125b8f0504b
@@ -96,29 +101,26 @@ userData = posix.getpwnam(username)
 userData.fullName = userData.gecos.split(",")[0]
 
 
-
 ###*
 # Function that connects node.js and node-webkit. We should not share any other
 # variables between these two worlds to keep them decoubled.
 #
 # @param {Object} gui node-webkit gui object
-# @param {Object} bridge Plain Backbone.js model
 ###
-module.exports = (gui, bridge) ->
-
+module.exports = (gui, Window) ->
     menuVisible = false
+    shared = new EventEmitter
 
-    bridge.set({
-        animate: process.env.animate
-        renderBug: process.env.RENDER_BUG
-    })
-
-
-    if process.env.devtools
-        process.env.nohide = 1
-        config.devtools = true
-    Window = gui.Window.get()
-
+    hideWindow =  ->
+        menuVisible = false
+        if process.env.nohide
+            console.log "Hiding disabled"
+            return
+        console.info "Hiding menu window"
+        if argv.hide
+            Window.hide()
+        else
+            console.warn "Not hiding window because --no-hide is set or implied by devtools"
 
     ###*
     # Make menu visible and bring it to current desktop
@@ -131,17 +133,6 @@ module.exports = (gui, bridge) ->
         Window.setAlwaysOnTop(true)
         forceFocus(pkg.window.title, 50, 100, 350, 500)
 
-    hideWindow = ->
-        menuVisible = false
-        if process.env.nohide
-            console.log "Hiding disabled"
-            return
-        console.info "Hiding menu window"
-        if argv.hide
-            Window.hide()
-        else
-            console.warn "Not hiding window because --no-hide is set or implied by devtools"
-
     ###*
     # Toggle menu visibility with given view name
     #
@@ -150,7 +141,7 @@ module.exports = (gui, bridge) ->
     toggleMenu = do ->
         currentView = null
         return (viewName) ->
-            bridge.trigger("open-view", viewName)
+            shared.emit("open-view", viewName)
 
             if currentView isnt viewName
                 currentView = viewName
@@ -191,16 +182,11 @@ module.exports = (gui, bridge) ->
         else
             toggleMenu("root")
 
-
     # Prevent crazy menu spawning which might cause slow machines to get stuck
     # for long periods of time
     spawnEmitter.on "spawn", _.debounce(spawnHandler, 300, true)
 
-    spawnEmitter.listening.done ->
-        dbus.registerApplication()
-        logStartTime("dbus registration sent")
-
-    bridge.on "open", (cmd) ->
+    open = (cmd) ->
         console.log "Opening command", cmd
         Window.setAlwaysOnTop(false)
 
@@ -217,27 +203,16 @@ module.exports = (gui, bridge) ->
         else
             launchCommand(cmd)
 
+    shared.user = userData
+    shared.config = config
+    shared.menu = menuJSON
+    shared.shutdown = ->launchCommand(config.shutdownCMD)
+    shared.restart = -> launchCommand(config.restartCMD)
+    shared.logout = -> launchCommand(config.logoutCMD)
+    shared.lock = -> launchCommand(config.lockCMD)
+    shared.hideWindow =  hideWindow
+    shared.open = open
+    shared.logReady = ->
+        logStartTime("Webmenu HTML/CSS/JS ready")
+    return shared
 
-    bridge.on "hide-window", ->
-        hideWindow()
-
-    bridge.on "shutdown", ->
-        launchCommand(config.shutdownCMD)
-    bridge.on "reboot", ->
-        launchCommand(config.restartCMD)
-    bridge.on "logout", ->
-        launchCommand(config.logoutCMD)
-    bridge.on "lock", ->
-        launchCommand(config.lockCMD)
-
-    bridge.on "html-ready", ->
-        logStartTime("Webmenu started")
-        console.log "Webmenu ready. Use 'webmenu-spawn' to open it"
-
-    # Share settings with the browser
-    bridge.set({
-        user: userData,
-        config: config,
-        menu: menuJSON
-    })
-    bridge.trigger "desktop-ready"

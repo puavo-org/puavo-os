@@ -30,7 +30,6 @@ describe "MenuLayout", ->
     layout = null
 
     beforeEach ->
-        Application.reset()
         allItems = new AllItems
         menuModel = new MenuModel data, allItems
         allItems.each (m) -> m.resetClicks?()
