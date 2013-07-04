@@ -14,7 +14,6 @@ class LogoutView extends ViewMaster
         "click .js-shutdown": -> Backbone.trigger "shutdown"
         "click .js-reboot": -> Backbone.trigger "reboot"
         "click .js-lock": -> Backbone.trigger "lock"
-        "click .js-cancel": -> @bubble "cancel"
 
     constructor: (opts) ->
         super
