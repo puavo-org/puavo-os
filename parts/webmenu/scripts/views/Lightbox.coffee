@@ -1,4 +1,5 @@
 ViewMaster = require "../vendor/backbone.viewmaster"
+asEvents = require "../utils/asEvents"
 
 class Lightbox extends ViewMaster
 
@@ -12,8 +13,7 @@ class Lightbox extends ViewMaster
         if opts.position
             @$el.addClass(opts.position)
         @listenTo this, "cancel", @remove
-
-        $(document).on "click", @bgClick = (e) =>
+        @listenTo asEvents(document), "click", (e) =>
             if e.target is @$background[0]
                 @remove()
 
@@ -22,7 +22,6 @@ class Lightbox extends ViewMaster
 
     remove: (opts) ->
         super
-        $(document).off("click", @bgClick)
         if not opts?.silent
             @trigger "close"
 
