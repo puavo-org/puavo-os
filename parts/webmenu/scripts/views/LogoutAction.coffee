@@ -25,6 +25,7 @@ ACTIONS =
 
 class LogoutAction extends ViewMaster
 
+    className: "bb-logout-action"
 
     constructor: (opts) ->
         super
