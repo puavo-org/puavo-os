@@ -37,7 +37,7 @@ layout.on "open-app", (model) ->
 
 # Disable DOM element dragging and text selection if target is not an input
 $(window).on "mousedown", (e) ->
-    if e.target.tagName not in ["INPUT", "SELECT", "OPTION"]
+    if e.target.tagName not in ["INPUT", "SELECT", "OPTION", "TEXTAREA"]
         e.preventDefault()
 
 $(window).keydown (e) ->

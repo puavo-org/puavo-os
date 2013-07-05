@@ -1,7 +1,7 @@
-Backbone = require "backbone"
 ViewMaster = require "../vendor/backbone.viewmaster"
 
 LogoutAction = require "./LogoutAction.coffee"
+Feedback = require "./Feedback.coffee"
 i18n = require "../utils/i18n.coffee"
 
 class LogoutView extends ViewMaster
@@ -11,6 +11,7 @@ class LogoutView extends ViewMaster
     constructor: (opts) ->
         super
         @hostType = opts.hostType
+        @setView ".feedback-container", new Feedback
 
     template: require "../templates/LogoutView.hbs"
 
