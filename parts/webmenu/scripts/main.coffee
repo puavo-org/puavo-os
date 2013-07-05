@@ -60,8 +60,9 @@ nodejs.on "open-view", (viewName) ->
     if viewName
         layout.broadcast("open-#{ viewName }-view")
 
-["logout", "shutdown", "reboot", "lock"].forEach (event) ->
-    Backbone.on event, ->
-        nodejs[event]()
+
+layout.on "logout-action", (action) ->
+    nodejs.hideWindow()
+    nodejs[action]()
 
 nodejs.logReady()
