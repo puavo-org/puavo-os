@@ -75,6 +75,12 @@ exports.all = function(opts) {
     exports.browserify(opts);
     exports.browserify_test(opts);
     exports.stylus(opts);
+    exports.i18n(opts);
+};
+
+exports.i18n = function() {
+    require("coffee-script");
+    require("./extra/i18nUpdate")();
 };
 
 if (require.main === module) {

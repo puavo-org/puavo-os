@@ -20,7 +20,7 @@ define nw-build
 endef
 
 
-build: npm-install nw-gyp assets i18n
+build: npm-install nw-gyp assets
 
 # Build node-webkit package
 # https://github.com/rogerwang/node-webkit/wiki/How-to-package-and-distribute-your-apps
@@ -95,6 +95,3 @@ serve:
 	@echo View tests on http://localhost:3000/tests.html
 	node_modules/.bin/serve --no-stylus  --no-jade --port 3000 .
 
-.PHONY : i18n
-i18n:
-	@node_modules/.bin/coffee extra/bin/i18n-update
