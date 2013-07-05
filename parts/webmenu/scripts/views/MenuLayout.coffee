@@ -67,6 +67,7 @@ class MenuLayout extends ViewMaster
         @lightbox = new Lightbox
             view: view
             position: "fullscreen"
+        @lightbox.parent = this
         @lightbox.render()
         @lightbox.once "close", =>
             @removeLightbox()
