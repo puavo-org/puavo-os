@@ -36,7 +36,7 @@ class LogoutView extends ViewMaster
         actionView = new LogoutAction action: action
         @setView ".logout-btn-container", actionView
         @refreshViews()
-        actionView.on "cancel", =>
+        actionView.on "close", =>
             actionView.remove()
             @render()
         , 1000

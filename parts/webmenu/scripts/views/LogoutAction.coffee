@@ -21,8 +21,7 @@ class LogoutAction extends ViewMaster
             @clearTimer()
             if e?.target is @nowButton
                 @sendAction()
-            else
-                @trigger("cancel")
+            @trigger("close")
 
         @listenTo(asEvents(document), "click", @cancel)
         @listenTo(asEvents(document), "keyup", @cancel)
