@@ -6,23 +6,6 @@ ViewMaster = require "../vendor/backbone.viewmaster"
 asEvents = require "../utils/asEvents"
 i18n = require "../utils/i18n.coffee"
 
-ACTIONS =
-    shutdown:
-        name: "Shutdown"
-        description: (count) -> i18n "logout.shutdownAction", {count}
-    logout:
-        name: "Logout"
-        description: (count) -> i18n "logout.logoutAction", {count}
-    reboot:
-        name: "Reboot"
-        description: (count) -> i18n "logout.rebootAction", {count}
-    sleep:
-        name: "Sleep"
-        description: (count) -> i18n "logout.sleepAction", {count}
-    hibernate:
-        name: "Hibernate"
-        description: (count) -> i18n "logout.hibernateAction", {count}
-
 class LogoutAction extends ViewMaster
 
     className: "bb-logout-action"
@@ -45,29 +28,28 @@ class LogoutAction extends ViewMaster
         @listenTo(asEvents(document), "keyup", @cancel)
         @listenTo(asEvents(window), "blur", @cancel)
 
-    context: -> {
-        action: ACTIONS[@action]
-    }
-
     template: require "../templates/LogoutAction.hbs"
 
     render: ->
         super
+        @nowButton = @$(".now").get(0)
+        @timerEl = @$(".timer-text").get(0)
         @startTimer()
 
+    renderActionText: (count) ->
+        @timerEl.innerText = i18n "logout.#{ @action }Action", {count}
+
     startTimer: ->
-        el = @$(".timer-text").get(0)
-        @nowButton = @$(".now").get(0)
         timeout = @timeout
-        draw = =>
-            el.innerText = ACTIONS[@action].description(timeout)
+        timer = =>
+            @renderActionText(timeout)
             if timeout <= 0
                 @sendAction()
                 return @clearTimer()
             timeout--
 
-        draw()
-        @interval = setInterval(draw, @updateInterval)
+        timer()
+        @interval = setInterval(timer, @updateInterval)
 
     remove: ->
         super
