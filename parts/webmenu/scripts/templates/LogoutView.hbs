@@ -24,9 +24,9 @@
     <div class="item js-other">
       <select>
         <option value=or>Or...</option>
-        <option value="sleep">Sleep</option>
-        <option value="hibernate">Hibernate</option>
-        <option value="lock">Lock</option>
+        {{#each actions}}
+        <option value="{{value}}">{{name}}</option>
+        {{/each}}
       </select>
     </div>
   </div>
