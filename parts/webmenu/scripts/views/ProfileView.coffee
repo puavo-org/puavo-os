@@ -34,9 +34,7 @@ class ProfileView extends ViewMaster
                 model: new LauncherModel supportCMD
             @appendView ".settings-container",  @support
 
-        @logout = new LogoutButtonView
-            hostType: @config.get("hostType")
-        @appendView ".settings-container", @logout
+        @appendView ".settings-container", LogoutButtonView
 
     context: -> {
         user: @model.toJSON()

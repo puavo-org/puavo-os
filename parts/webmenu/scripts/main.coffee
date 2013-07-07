@@ -1,5 +1,6 @@
 $ = require "./vendor/jquery.shim"
 Backbone = require "backbone"
+Q = require "q"
 
 Application = require "./Application.coffee"
 MenuLayout = require "./views/MenuLayout.coffee"
@@ -60,9 +61,18 @@ nodejs.on "open-view", (viewName) ->
     if viewName
         layout.broadcast("open-#{ viewName }-view")
 
+layout.on "send-feedback", (feedback) ->
+    nodejs.sendFeedback(feedback.toJSON())
 
-layout.on "logout-action", (action) ->
-    nodejs.hideWindow()
-    nodejs[action]()
+layout.on "logout-action", (action, feedback) ->
+    (
+        if feedback.get("mood")
+            console.log "got feedbac!"
+            nodejs.sendFeedback(feedback.toJSON())
+        else
+            Q()
+    ).finally ->
+        nodejs.hideWindow()
+        nodejs[action]()
 
 nodejs.logReady()

@@ -17,6 +17,7 @@ logStartTime = require "./logStartTime"
 dbus = require "./dbus"
 forceFocus = require "./forceFocus"
 createSpawnPipe = require "./createSpawnPipe"
+createFeedbackSender = require "./createFeedbackSender"
 pkg = require "../package.json"
 
 webmenuHome = process.env.HOME + "/.config/webmenu"
@@ -205,6 +206,8 @@ module.exports = (gui, Window) ->
     shared.logout = -> launchCommand(config.logoutCMD)
     shared.lock = -> launchCommand(config.lockCMD)
     shared.hideWindow =  hideWindow
+    if config.feedback
+        shared.sendFeedback = createFeedbackSender(config.feedback)
     shared.open = open
     shared.logReady = ->
         logStartTime("Webmenu HTML/CSS/JS ready")

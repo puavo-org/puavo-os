@@ -1,3 +1,4 @@
+Backbone = require "backbone"
 ViewMaster = require "../vendor/backbone.viewmaster"
 
 LogoutAction = require "./LogoutAction.coffee"
@@ -10,14 +11,16 @@ class LogoutView extends ViewMaster
 
     constructor: (opts) ->
         super
-        @hostType = opts.hostType
-        @setView ".feedback-container", new Feedback
+        @config = opts.config
+        @model = new Backbone.Model
+        if @config.get("feedback")
+            @setView ".feedback-container", Feedback
 
     template: require "../templates/LogoutView.hbs"
 
     context: ->
         actions = ["lock", "reboot"]
-        if @hostType is "laptop"
+        if @config.get("hostType") is "laptop"
             actions.unshift "hibernate"
             actions.unshift "sleep"
         return actions: actions.map (a) -> {
@@ -29,18 +32,27 @@ class LogoutView extends ViewMaster
         "click .js-shutdown": -> @displayAction("shutdown")
         "click .js-logout": -> @displayAction("logout")
         "change select": (e) ->
+            # TODO
             # return if e.target.value is "or"
             @displayAction(e.target.value)
 
     displayAction: (action) -> setTimeout =>
         @$(".logout-btn-container").empty()
-        actionView = new LogoutAction action: action
-        @setView ".logout-btn-container", actionView
-        @refreshViews()
+        actionView = new LogoutAction
+            action: action
+            model: @model
+
+        actionView.on "logout-action", (action) =>
+            @bubble "logout-action", action, @model
+
         actionView.on "close", =>
             actionView.remove()
             @render()
         , 1000
+
+        @setView ".logout-btn-container", actionView
+        @refreshViews()
+
     , 0 # Workaround immediate click trigger
 
 

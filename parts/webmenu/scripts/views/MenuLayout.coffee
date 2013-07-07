@@ -59,8 +59,7 @@ class MenuLayout extends ViewMaster
         @listenTo this, "reset", @removeLightbox
 
         @listenTo this, "open-logout-view", =>
-            @displayViewInLightbox new LogoutView
-                hostType: @config.get("hostType")
+            @displayViewInLightbox new LogoutView config: @config
 
     displayViewInLightbox: (view) ->
         @removeLightbox()
