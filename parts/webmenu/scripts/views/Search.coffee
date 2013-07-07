@@ -17,8 +17,8 @@ class Search extends ViewMaster
 
     template: require "../templates/Search.hbs"
 
-    elements:
-        "$input": "input[name=search]"
+    afterTemplate: ->
+        @$input = @$("input[name=search]")
 
     events:
         "keyup input[name=search]": "search"

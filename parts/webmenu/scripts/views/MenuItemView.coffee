@@ -36,10 +36,10 @@ class MenuItemView extends ViewMaster
         "mouseover": "toggleInactiveNotify"
         "mouseout": "toggleInactiveNotify"
 
-    elements:
-        "$thumbnail": ".thumbnail"
-        "$description": ".description"
-        "$img": "img,.cssIcon"
+    afterTemplate: ->
+        @$thumbnail = @$(".thumbnail")
+        @$description = @$(".description")
+        @$img = @$("img,.cssIcon")
 
     open: ->
 

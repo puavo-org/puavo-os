@@ -17,8 +17,8 @@ class Lightbox extends ViewMaster
             if e.target is @$background[0]
                 @remove()
 
-    elements:
-        "$background": ".background"
+    afterTemplate: ->
+        @$background = @$(".background")
 
     remove: (opts) ->
         super

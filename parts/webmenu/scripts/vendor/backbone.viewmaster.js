@@ -2,7 +2,7 @@
 /*jshint boss:true, browser:true */
 
 (function() {
-  var VERSION = "1.1.2";
+  var VERSION = "1.2.0";
   var Backbone = this.Backbone;
   var _ = this._;
 
@@ -15,6 +15,10 @@
 
   function ensureArray(ob){
     return _.isArray(ob) ? ob : [ob];
+  }
+
+  function isConstructor(o) {
+    return o.prototype && o === o.prototype.constructor;
   }
 
   /**
@@ -77,7 +81,6 @@
       this._dirty = {};
     },
 
-    elements: {},
 
     /**
      * Template function. User must override this!
@@ -127,12 +130,7 @@
 
       this.$el.html(this.template(this.context()));
 
-      // Set element properties from this.elements
-      var key, selector;
-      for (key in this.elements) {
-        selector = this.elements[key];
-        this[key] = this.$(selector);
-      }
+      this.afterTemplate();
 
       // Mark this view as rendered. Parent view wont try to render this
       // anymore unless force:true is passed
@@ -143,6 +141,21 @@
       return this;
     },
 
+    /**
+     * Overrideable by the view implementor.
+     *
+     * Called after the template has been rendered but before adding child
+     * views.  This is perfect place to hook up any jQuery plugings using
+     * `this.$` or `this.$el` or set access points to view DOM elements
+     *
+     *     this.$el("button").tooltipPlugin();
+     *     this.$saveButton = this.$("button.save");
+     *
+     * because they cannot have any side affects to child views.
+     *
+     * @method aftertemplate
+     **/
+    afterTemplate: function() {},
 
     /**
      * Refresh any child view changes made with `setView`, `appendView`,
@@ -170,9 +183,6 @@
         // Detach view from container if it is dirty to update possible view
         // order changes.
         var refresh = dirty[sel] || opts.force;
-
-        // Render child view only if it never has been rendered before.
-        var render = !view.rendered || opts.force;
 
         if (refresh && !opts.detached) view.$el.detach();
         if (!view.rendered || opts.force) view.render(opts);
@@ -213,17 +223,28 @@
      *
      * @private
      * @method _prepareViews
-     * @param {Object/Array} view(s) View object or an array of view objects
+     * @param {Object/Constructor/Array} view(s) One or array of view objects
+     * or Constructors
      **/
     _prepareViews: function(views) {
       var self = this;
-      _.each(ensureArray(views), function(view) {
+      views = _.map(ensureArray(views), _.bind(this._createInstance, this));
+
+      _.each(views, function(view) {
         // when parent is changing remove it from previous
         if (view.parent && view.parent !== self) view._removeParent();
         view.parent = self;
       });
+
+      return views;
     },
 
+    _createInstance: function(view) {
+      return isConstructor(view) ? new view({
+        model: this.model,
+        collection: this.collection
+      }) : view;
+    },
 
     /**
     * Like `trigger` but the events are bubbled all the way up to all
@@ -286,14 +307,19 @@
      * present in the new set will be discarded with `remove` on the next
      * `refreshViews` call unless detached with `detach` method.
      *
+     * If `views` parameter is a constructor function it will be instantiated
+     * with `model` and `collection` of the parent. This applies to
+     * `appendView`, `prependview` and `insertView` too.
+     *
      * @protected
      * @method setView
      * @param {String} selector CSS selector for the view container
-     * @param {Object/Array} view(s) View object or an array of view objects
+     * @param {Object/Constructor/Array} view(s) One or array of view objects
+     * or Constructors
      **/
     setView: function(sel, currentViews) {
       var previousViews;
-      currentViews = ensureArray(currentViews);
+      currentViews = this._prepareViews(currentViews);
 
       if (previousViews = this._views[sel]) {
         this._remove = this._remove.concat(
@@ -301,28 +327,28 @@
         );
       }
 
-      this._prepareViews(currentViews);
       this._views[sel] = currentViews;
       this._dirty[sel] = true;
       return this;
     },
 
     /**
-     * Insert view or array of views to specific index in the view array.
+     * Insert views to specific index in the view array.
      *
      * @protected
      * @method insertView
      * @param {String} selector CSS selector for the view container
      * @param {Number} index Index to insert view(s)
-     * @param {Object/Array} view(s) View object or an array of view objects
+     * @param {Object/Constructor/Array} view(s) Views to insert
      **/
     insertView: function(sel, index, views) {
       var current;
+      views = this._prepareViews(views);
       if (current = this._views[sel]) {
-        current.slice().splice.apply(current, [index, 0].concat(ensureArray(views)));
+        current.slice().splice.apply(current, [index, 0].concat(views));
       }
       else {
-        this._views[sel] = ensureArray(views);
+        this._views[sel] = views;
       }
 
       this._dirty[sel] = true;
@@ -330,17 +356,16 @@
     },
 
     /**
-     * Append a view or an array of views to a given view container.
+     * Append a views to a given view container.
      *
      * @protected
      * @method appendView
      * @param {String} selector CSS selector for the view container
-     * @param {Object/Array} view(s) View object or an array of view objects
+     * @param {Object/Constructor/Array} view(s) Views to append
      **/
     appendView: function(sel, views) {
-      this._prepareViews(views);
       this._views[sel] = (this._views[sel] || []).concat(
-        ensureArray(views)
+        this._prepareViews(views)
       );
 
       this._dirty[sel] = true;
@@ -348,16 +373,15 @@
     },
 
     /**
-     * Prepend a view or an array of views to a given view container.
+     * Prepend a views to a given view container.
      *
      * @protected
      * @method prependView
      * @param {String} selector CSS selector for the view container
-     * @param {Object/Array} view(s) View object or an array of view objects
+     * @param {Object/Constructor/Array} view(s) Views to prepend
      **/
     prependView: function(sel, views) {
-      this._prepareViews(views);
-      this._views[sel] = ensureArray(views).concat(
+      this._views[sel] = this._prepareViews(views).concat(
         this._views[sel] || []
       );
 
