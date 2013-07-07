@@ -23,6 +23,14 @@ data =
         type: "web"
         name: "Picasa"
         url: "http://picasa.com"
+    ,
+        type: "menu"
+        name: "submenu"
+        items: [
+            type: "web"
+            name: "Subitem"
+            url: "http://example.com"
+        ]
     ]
 
 describe "MenuLayout", ->
@@ -80,5 +88,17 @@ describe "MenuLayout", ->
 
 
 
+    describe "navigation", ->
+        it "opens new menu list after clicking menu item", ->
+            expect(layout.$(".bb-menu-list .bb-menu-item")).to.not.contain('Subitem')
+            layout.$(".bb-menu-item.type-menu").trigger("click")
+            expect(layout.$(".bb-menu-list .bb-menu-item")).to.contain('Subitem')
+
+        it "can go back using breadcrumbs", ->
+            layout.$(".bb-menu-item.type-menu").trigger("click")
+            layout.$(".bb-breadcrumbs li a").filter( (i, el) ->
+                el.innerText.trim() is "Top"
+            ).trigger("click")
+            expect(layout.$(".bb-menu-list .bb-menu-item")).to.not.contain('Subitem')
 
 
