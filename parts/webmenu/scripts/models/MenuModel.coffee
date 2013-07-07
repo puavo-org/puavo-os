@@ -19,13 +19,7 @@ class MenuModel extends AbstractItemModel
         menu: MenuModel
 
     constructor: (opts, allItems) ->
-
-        # Items will be presented as sub collection. Remove from model
-        # attributes
-        super _.omit(opts, "items"), allItems
-
         @items = new Backbone.Collection
-
         for item in opts.items
             model = new typemap[item.type](item, allItems)
             if model.isOk()
@@ -35,6 +29,10 @@ class MenuModel extends AbstractItemModel
                     console.error  "Menu item with id '#{ JSON.stringify(model.id) }' already exists!"
 
                 @items.add model
+
+        # Items will be presented as sub collection. Remove from model
+        # attributes
+        super _.omit(opts, "items"), allItems
 
     isOk: -> @items and @items.size() > 0
 

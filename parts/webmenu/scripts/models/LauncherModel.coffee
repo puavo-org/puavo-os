@@ -4,10 +4,10 @@ class LauncherModel extends AbstractItemModel
     defaults:
         "clicks": 0
 
-    constructor: (opts) ->
+    constructor: (opts, allItems) ->
         if not opts.id
             opts.id = opts.name
-        super
+        super(opts, allItems)
         if clicks = localStorage[@_lsID()]
             @set "clicks", parseInt(clicks, 10)
 
