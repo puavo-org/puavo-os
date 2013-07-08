@@ -19,13 +19,15 @@ class LogoutAction extends ViewMaster
 
         @cancel = _.once (e) =>
             @clearTimer()
-            if e?.target is @nowButton
-                @sendAction()
             @trigger("close")
 
         @listenTo(asEvents(document), "click", @cancel)
         @listenTo(asEvents(document), "keyup", @cancel)
         @listenTo(asEvents(window), "blur", @cancel)
+
+    events:
+        "click .now": (e) ->
+            @sendAction()
 
     template: require "../templates/LogoutAction.hbs"
 
