@@ -1,5 +1,7 @@
 
+Backbone = require "backbone"
 LogoutView = require "../views/LogoutView.coffee"
+FeedbackModel = require "../models/FeedbackModel.coffee"
 
 assert = require "assert"
 
@@ -7,7 +9,10 @@ describe "LogoutView", ->
 
     createLogoutView = (type) -> ->
         @view = new LogoutView
-            hostType: type
+            model: new FeedbackModel
+            config: new Backbone.Model
+                feedback: "send-feedback-command"
+                hostType: type
         @view.render()
         @options = @view.$("option").map (i, el) ->
             el.value

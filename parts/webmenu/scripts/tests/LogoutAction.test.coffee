@@ -22,7 +22,8 @@ describe "LogoutAction", ->
     it "logout-action can be canceled with view.cancel()", (done) ->
         view.on "logout-action", (action) ->
             done(new Error "action was not canceled")
-        view.on "cancel", -> done()
+
+        view.on "close", -> done()
 
         view.render()
         setTimeout ->
