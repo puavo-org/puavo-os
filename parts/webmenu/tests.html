@@ -36,8 +36,10 @@
       }
       else {
         var win = gui.Window.get();
-        win.show()
-        win.showDevTools()
+        if (win) {
+          win.show()
+          win.showDevTools()
+        }
       }
     }());
   </script>
