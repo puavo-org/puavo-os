@@ -2,14 +2,10 @@
 _ = require "underscore"
 ViewMaster = require "../vendor/backbone.viewmaster"
 
+i18n = require "../utils/i18n.coffee"
 asEvents = require "../utils/asEvents"
 renderTextarea = require "../templates/FeedbackMessage.hbs"
 renderMood = require "../templates/FeedbackMood.hbs"
-
-moodResponses =
-    good: "Glad to hear! If you want to send any other feedback just write it here and we'll read it!"
-    bad: "Ok, frowny face it is :( \nIf you wish - you may write here what bothered you so we can fix it!"
-
 
 class Feedback extends ViewMaster
 
@@ -30,10 +26,10 @@ class Feedback extends ViewMaster
         question = @$(".question-container")
 
         if @model.get "saved"
-            question.text "Thanks! Your feedback has been sent."
+            question.text i18n "feedback.thanks"
         else if @model.get("mood")
             question.html renderTextarea(
-                moodResponse: moodResponses[@model.get("mood")]
+                moodResponse: i18n "feedback.#{ [@model.get("mood")] }"
                 message: @model.get("message")
             )
             @$textarea = @$("textarea")
