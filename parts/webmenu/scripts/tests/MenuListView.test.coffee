@@ -34,6 +34,8 @@ describe "MenuListView", ->
             collection: allItems
         menuList.render()
 
+    afterEach -> menuList.remove()
+
     it "has '.bb-menu-items", ->
         expect(menuList.$(".bb-menu-item").size()).to.eq 4
 

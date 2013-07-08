@@ -48,6 +48,8 @@ describe "MenuLayout", ->
             user: new Backbone.Model
         layout.render()
 
+    afterEach -> layout.remove()
+
     it "has menu item(s)", ->
         expect(layout.$(".bb-menu-list .bb-menu-item")).to.contain('Gimp')
 
