@@ -1,5 +1,6 @@
-
+Q = require "q"
 Backbone = require "backbone"
+
 LogoutView = require "../views/LogoutView.coffee"
 FeedbackModel = require "../models/FeedbackModel.coffee"
 
@@ -16,6 +17,8 @@ describe "LogoutView", ->
         @view.render()
         @options = @view.$("option").map (i, el) ->
             el.value
+
+    afterEach -> @view.remove()
 
     describe "for laptop", ->
         beforeEach createLogoutView("laptop")
@@ -48,3 +51,18 @@ describe "LogoutView", ->
             setTimeout =>
                 @view.$(".now").trigger "click"
             , 1
+
+        it "removes logout action view on cancel", (done) ->
+            Backbone.$("body").append(@view.el)
+
+            @view.$(".js-shutdown").trigger "click"
+
+            Q.delay(1)
+            .then =>
+                assert.equal @view.$(".now").size(), 1
+                # "click anywhere cancel"
+                @view.$(".bb-logout-action").trigger "click"
+                Q.delay(1)
+            .then =>
+                assert.equal @view.$(".now").size(), 0
+            .done(done)
