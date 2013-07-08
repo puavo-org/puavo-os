@@ -17,6 +17,7 @@ require "./Navigation.test.coffee"
 require "./Search.test.coffee"
 require "./LogoutView.test.coffee"
 require "./LogoutAction.test.coffee"
+require "./Feedback.test.coffee"
 
 runner = mocha.globals(["jQuery*"]).run()
 

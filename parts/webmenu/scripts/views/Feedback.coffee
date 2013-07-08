@@ -20,9 +20,11 @@ class Feedback extends ViewMaster
     constructor: ->
         super
         @listenTo @model, "change", @render, this
-        @listenTo asEvents(window), "blur", =>
-            if @$textarea
-                @model.set(message: @$textarea.val())
+        @listenTo asEvents(window), "blur", @onBlur, this
+
+    onBlur: ->
+        if @$textarea
+            @model.set(message: @$textarea.val())
 
     afterTemplate: ->
         question = @$(".question-container")
