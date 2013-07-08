@@ -38,3 +38,13 @@ describe "LogoutView", ->
         it "has no sleep", -> assert not ("sleep" in @options)
         it "has reboot", -> assert "reboot" in @options
         it "has lock", -> assert "lock" in @options
+
+        it "bubbles logout-action with feedback", (done) ->
+            @view.on "logout-action", (action, feedback) ->
+                assert.equal action, "shutdown"
+                assert not feedback.haveFeedback()
+                done()
+            @view.$(".js-shutdown").trigger "click"
+            setTimeout =>
+                @view.$(".now").trigger "click"
+            , 1
