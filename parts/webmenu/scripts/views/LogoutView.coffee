@@ -12,7 +12,6 @@ class LogoutView extends ViewMaster
     constructor: (opts) ->
         super
         @config = opts.config
-        @model = new Backbone.Model
         if @config.get("feedback")
             @setView ".feedback-container", Feedback
 

@@ -2,6 +2,7 @@
 Backbone = require "backbone"
 ViewMaster = require "../vendor/backbone.viewmaster"
 
+FeedbackModel = require "../models/FeedbackModel.coffee"
 Application = require "../Application.coffee"
 Favorites = require "./Favorites.coffee"
 Lightbox = require "./Lightbox.coffee"
@@ -23,6 +24,7 @@ class MenuLayout extends ViewMaster
         @allItems = opts.allItems
         @user = opts.user
         @config = opts.config
+        @feedback = new FeedbackModel
         @lightbox = null
 
         @menuListView = new MenuListView
@@ -60,7 +62,9 @@ class MenuLayout extends ViewMaster
         @listenTo this, "reset", @removeLightbox
 
         @listenTo this, "open-logout-view", =>
-            @displayViewInLightbox new LogoutView config: @config
+            @displayViewInLightbox new LogoutView
+                model: @feedback
+                config: @config
 
     displayViewInLightbox: (view) ->
         @menuListView.releaseKeys()

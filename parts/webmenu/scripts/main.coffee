@@ -63,15 +63,19 @@ nodejs.on "open-view", (viewName) ->
 
 layout.on "send-feedback", (feedback) ->
     nodejs.sendFeedback(feedback.toJSON())
+    .fail (err) ->
+        console.log "failed to send feedback #{ err.message }"
 
 layout.on "logout-action", (action, feedback) ->
     (
-        if feedback.get("mood")
-            console.log "got feedbac!"
+        if feedback.haveFeedback()
             nodejs.sendFeedback(feedback.toJSON())
         else
             Q()
-    ).finally ->
+    ).fail (err) ->
+        console.error "Failed to send feedback #{ err.message }"
+    .finally (foo) ->
+        console.log "finally #{ foo }"
         nodejs.hideWindow()
         nodejs[action]()
 
