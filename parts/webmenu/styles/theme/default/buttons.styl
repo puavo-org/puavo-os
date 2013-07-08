@@ -1,0 +1,21 @@
+@import "nib"
+
+.btn
+  background-image linear-gradient(top, rgb(245, 245, 245) 0%, rgb(220, 220, 220) 100%)
+  border-radius 3px
+  border 1px solid #999
+  cursor pointer
+  padding 4px 8px
+  text-align center
+  &:hover
+    box-shadow inset 1px 1px 10px rgba(170,170,170,0.25), inset -1px -1px 10px rgba(170,170,170,0.35)
+  &:active
+    box-shadow inset 5px 5px 20px rgba(170,170,170,0.25), inset -5px -5px 20px rgba(170,170,170,0.35)
+
+.btn.good
+  &:hover
+    background-image linear-gradient(top, rgb(134, 180, 16) 0%, rgb(114, 160, 0) 100%)
+
+.btn.bad
+  &:hover
+    background-image linear-gradient(top, rgb(238, 20, 20) 0%, rgb(218, 0, 0) 100%)
