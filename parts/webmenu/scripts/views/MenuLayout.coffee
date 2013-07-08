@@ -1,4 +1,5 @@
 
+Backbone = require "backbone"
 ViewMaster = require "../vendor/backbone.viewmaster"
 
 Application = require "../Application.coffee"
@@ -62,6 +63,7 @@ class MenuLayout extends ViewMaster
             @displayViewInLightbox new LogoutView config: @config
 
     displayViewInLightbox: (view) ->
+        @menuListView.releaseKeys()
         @removeLightbox()
         @lightbox = new Lightbox
             view: view
@@ -72,8 +74,10 @@ class MenuLayout extends ViewMaster
             @removeLightbox()
 
     removeLightbox: ->
-        @lightbox?.remove()
-        @lightbox = null
+        if @lightbox
+            @menuListView.grabKeys()
+            @lightbox.remove()
+            @lightbox = null
 
 module.exports = MenuLayout
 

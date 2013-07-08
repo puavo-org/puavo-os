@@ -1,3 +1,4 @@
+Backbone = require "backbone"
 ViewMaster = require "../vendor/backbone.viewmaster"
 
 Navigation = require "../utils/Navigation.coffee"
@@ -17,9 +18,12 @@ class MenuListView extends ViewMaster
 
         @navigation = new Navigation @getMenuItemViews(), @itemCols()
 
-        $(window).keydown (e) =>
+        @keyHandler = (e) =>
             @navigation.cols = @itemCols()
             @navigation.handleKeyEvent(e)
+
+        @grabKeys()
+
 
         @listenTo this, "reset", =>
             @model = @initial
@@ -51,6 +55,17 @@ class MenuListView extends ViewMaster
                 @$el.scrollTop( @$el.scrollTop() + itemBottom - menuListBottom )
             else if itemTop < menuListTop
                 @$el.scrollTop( @$el.scrollTop() - (menuListTop - itemTop) )
+
+    grabKeys: ->
+        @releaseKeys() # ensure no double bindings...
+        Backbone.$(window).on "keydown", @keyHandler
+
+    releaseKeys: ->
+        Backbone.$(window).off "keydown", @keyHandler
+
+    remove: ->
+        super
+        @releaseKeys()
 
     setCurrent: ->
         @setItems(@model.items.toArray())
