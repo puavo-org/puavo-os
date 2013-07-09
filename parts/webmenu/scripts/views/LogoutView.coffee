@@ -41,9 +41,6 @@ class LogoutView extends ViewMaster
             action: action
             model: @model
 
-        actionView.on "logout-action", (action) =>
-            @bubble "logout-action", action, @model
-
         actionView.on "close", =>
             actionView.remove()
             @render()

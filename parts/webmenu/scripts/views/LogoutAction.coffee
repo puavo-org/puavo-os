@@ -62,7 +62,7 @@ class LogoutAction extends ViewMaster
             @interval = null
 
     sendAction: ->
-        @trigger "logout-action", @action
+        @bubble "logout-action", this
 
 module.exports = LogoutAction
 

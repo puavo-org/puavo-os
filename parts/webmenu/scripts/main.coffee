@@ -62,22 +62,10 @@ nodejs.on "open-view", (viewName) ->
     if viewName
         layout.broadcast("open-#{ viewName }-view")
 
-layout.on "send-feedback", (feedback) ->
-    nodejs.sendFeedback(feedback.toJSON())
-    .fail (err) ->
-        console.log "failed to send feedback #{ err.message }"
-
-layout.on "logout-action", (action, feedback) ->
-    (
-        if feedback.haveFeedback()
-            nodejs.sendFeedback(feedback.toJSON())
-        else
-            Q()
-    ).fail (err) ->
-        console.error "Failed to send feedback #{ err.message }"
-    .finally (foo) ->
-        console.log "finally #{ foo }"
+layout.on "logout-action", (view) ->
+    # Send possible feedback before logging out
+    view.model.send().finally ->
         nodejs.hideWindow()
-        nodejs[action]()
+        nodejs[view.action]()
 
 nodejs.logReady()

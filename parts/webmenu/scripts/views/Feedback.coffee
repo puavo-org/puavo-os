@@ -47,7 +47,6 @@ class Feedback extends ViewMaster
                 saved: true
                 message: @$textarea.val()
             )
-            @bubble "send-feedback", @model
-
+            @model.send(silent: true)
 
 module.exports = Feedback
