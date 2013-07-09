@@ -89,7 +89,7 @@
     "gnome-screensaver-command",
     "--lock"
   ],
-  "feedback": "cat > ~/feedback",
+  "feedback": "xargs notify-send --urgency=critical 'Webmenu Feedback'",
   "maxFavorites": 5,
   "port": 1337
 }
