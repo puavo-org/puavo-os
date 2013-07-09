@@ -7,5 +7,5 @@ module.exports = (cmd) -> (feedback) ->
   console.log "exec #{ cmd }"
   child = exec cmd, d.makeNodeResolver()
   child.stdin.on "error", (err) ->
-  child.stdin.write(JSON.stringify(feedback) + "\n")
+  child.stdin.end(JSON.stringify(feedback) + "\n")
   d.promise
