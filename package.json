@@ -7,21 +7,21 @@
   "version": "2.0.0",
   "scripts": {
     "start": "node_modules/.bin/coffee lib/server.coffee",
-    "test": "node_modules/.bin/mocha --reporter spec --compilers coffee:coffee-script test/*test*"
+    "test": "node_modules/.bin/mocha -C --reporter spec --compilers coffee:coffee-script test/*test*"
   },
   "repository": {
     "type": "git",
     "url": "git://github.com/opinsys/puavo-logrelay.git"
   },
   "dependencies": {
-    "coffee-script": "",
-    "request": "",
-    "json-stream": "",
-    "underscore": "",
-    "clim": ""
+    "coffee-script": "~1.6.3",
+    "request": "~2.22.0",
+    "json-stream": "~0.2.0",
+    "underscore": "~1.5.1",
+    "clim": "~1.0.0"
   },
   "devDependencies": {
-    "mocha": "",
-    "chai": ""
+    "mocha": "~1.12.0",
+    "chai": "~1.7.2"
   }
 }
