@@ -12,8 +12,8 @@ clim.logWrite = (level, prefixes, msg) ->
 clim(console, true)
 
 createServer = require "./lib/server"
-# config = require "/etc/puavo-logrelay.json"
-config = require "./config.json"
+config = require "/etc/puavo-logrelay.json"
+# config = require "./config.json"
 
 USERNAME = fs.readFileSync("/etc/puavo/ldap/dn").toString().trim()
 PASSWORD = fs.readFileSync("/etc/puavo/ldap/password").toString().trim()
