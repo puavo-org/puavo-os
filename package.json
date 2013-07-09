@@ -13,6 +13,9 @@
     "type": "git",
     "url": "git://github.com/opinsys/puavo-logrelay.git"
   },
+  "engines": {
+    "node" : "~0.10.0"
+  },
   "dependencies": {
     "coffee-script": "~1.6.3",
     "request": "~2.22.0",
