@@ -62,10 +62,10 @@ nodejs.on "open-view", (viewName) ->
     if viewName
         layout.broadcast("open-#{ viewName }-view")
 
-layout.on "logout-action", (view) ->
+layout.on "logout-action", (actionView) ->
     # Send possible feedback before logging out
-    view.model.send().finally ->
+    actionView.model.send().finally ->
         nodejs.hideWindow()
-        nodejs[view.action]()
+        nodejs[actionView.action]()
 
 nodejs.logReady()
