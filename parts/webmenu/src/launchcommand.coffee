@@ -34,13 +34,13 @@ launchCommand = (msg, cb) ->
 
   [command, args] = command
 
-###  cmd = spawn command, args,
+  cmd = spawn command, args,
     detached: true
     cwd: process.env.HOME
 
   cmd.on "exit", (code) ->
     console.info "Command '#{ command }' #{ JSON.stringify(args) } exited with #{ code }"
-    cb?() # TODO: create an error object...###
+    cb?() # TODO: create an error object...
 
 
 module.exports  = launchCommand
