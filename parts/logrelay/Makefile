@@ -17,6 +17,9 @@ install: install-dirs
 test:
 	npm test
 
+clean:
+	rm -rf node_modules
+
 watch-test:
 	./watch.sh npm test
 
