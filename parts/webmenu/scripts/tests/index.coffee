@@ -29,7 +29,7 @@ runner.on "fail", (test, error) ->
         console.error "FAIL: #{ test.title }: #{ error.message }"
 
 runner.on "end", ->
-    console.log "OK" if fails.length is 0
+    console.log "~~NW TESTS OK~~" if fails.length is 0
     window.EXIT?(
         if fails.length
             1
