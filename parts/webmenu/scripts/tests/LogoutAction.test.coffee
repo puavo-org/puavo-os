@@ -15,8 +15,8 @@ describe "LogoutAction", ->
     afterEach -> @view.remove()
 
     it "emits logout-action event after timeout", (done) ->
-        @view.once "logout-action", (action) ->
-            assert.equal action, "logout"
+        @view.once "logout-action", (actionView) ->
+            assert.equal actionView.action, "logout"
             done()
 
         @view.render()
@@ -43,8 +43,8 @@ describe "LogoutAction", ->
     it "can be executed immediately from now", (done) ->
         @view = new LogoutAction action: "logout"
         @view.render()
-        @view.on "logout-action", (action) ->
-            assert.equal action, "logout"
+        @view.on "logout-action", (actionView) ->
+            assert.equal actionView.action, "logout"
             done()
         @view.$(".now").trigger "click"
 

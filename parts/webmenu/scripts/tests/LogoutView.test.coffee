@@ -43,9 +43,9 @@ describe "LogoutView", ->
         it "has lock", -> assert "lock" in @options
 
         it "bubbles logout-action with feedback", (done) ->
-            @view.on "logout-action", (action, feedback) ->
-                assert.equal action, "shutdown"
-                assert not feedback.haveFeedback()
+            @view.on "logout-action", (actionView) ->
+                assert.equal actionView.action, "shutdown"
+                assert not actionView.model.hasFeedback()
                 done()
             @view.$(".js-shutdown").trigger "click"
             setTimeout =>

@@ -1,6 +1,10 @@
 Backbone = require "backbone"
+Q = require "q"
+
 Feedback = require "../views/Feedback.coffee"
 FeedbackModel = require "../models/FeedbackModel.coffee"
+
+FeedbackModel._sendFeedBack = -> Q()
 
 assert = require "assert"
 
@@ -37,7 +41,7 @@ describe "Feedback", ->
         beforeEach ->
             @view.$(".good").trigger "click"
 
-        it "save button sets message and saved to model", (done) ->
+        it "save button sets message and 'saved' to model", (done) ->
             @model.on "change", =>
                 assert.equal @model.get("message"), "foobar"
                 assert @model.get("saved")

@@ -6,6 +6,7 @@ Q = require "q"
 # the form.
 class FeedbackModel extends Backbone.Model
 
+    FeedbackModel._sendFeedBack = window.nodejs?.sendFeedback
 
     hasFeedback: -> !! @get "mood"
 
@@ -22,7 +23,7 @@ class FeedbackModel extends Backbone.Model
     send: (options) ->
         return @sending if @sending
         return Q.reject("no feedback") if not @hasFeedback()
-        @sending = window.nodejs.sendFeedback(@toJSON())
+        @sending = FeedbackModel._sendFeedBack(@toJSON())
         .fail (err) ->
             console.error "Failed to send feedback: #{ err.message }"
         .finally => @clear(options)
