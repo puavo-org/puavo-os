@@ -4,8 +4,7 @@ Q = require "q"
 
 module.exports = (cmd) -> (feedback) ->
   d = Q.defer()
-  console.log "exec #{ cmd }"
   child = exec cmd, d.makeNodeResolver()
   child.stdin.on "error", (err) ->
   child.stdin.end(JSON.stringify(feedback) + "\n")
-  d.promise
+  d.promise.timeout(5000)
