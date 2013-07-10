@@ -63,6 +63,7 @@ class LogoutAction extends ViewMaster
 
     sendAction: ->
         @bubble "logout-action", this
+        @remove()
 
 module.exports = LogoutAction
 
