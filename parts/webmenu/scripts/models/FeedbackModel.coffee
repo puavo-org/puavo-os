@@ -10,23 +10,16 @@ class FeedbackModel extends Backbone.Model
 
     hasFeedback: -> !! @get "mood"
 
-    toJSON: ->
-        ob = mood: @get "mood"
-        if @get "saved"
-            ob.message = @get "message"
-        ob
-
     clear: ->
         super
         @sending = null
 
-    send: (options) ->
+    send: ->
         return @sending if @sending
         return Q.reject("no feedback") if not @hasFeedback()
         @sending = FeedbackModel._sendFeedBack(@toJSON())
-        .fail (err) ->
-            console.error "Failed to send feedback: #{ err.message }"
-        .finally => @clear(options)
+        @trigger "start-sending"
+        return @sending
 
 
 module.exports = FeedbackModel

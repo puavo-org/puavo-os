@@ -41,21 +41,10 @@ describe "Feedback", ->
         beforeEach ->
             @view.$(".good").trigger "click"
 
-        it "save button sets message and 'saved' to model", (done) ->
+        it "save button sets message with on change event", (done) ->
             @model.on "change", =>
                 assert.equal @model.get("message"), "foobar"
-                assert @model.get("saved")
                 done()
             @view.$("textarea").val("foobar")
             @view.$(".save").trigger "click"
-
-
-        it "blur saves message to model but not with saved", (done) ->
-            @model.on "change", =>
-                assert.equal @model.get("message"), "foobar"
-                assert not @model.get("saved")
-                done()
-            @view.$("textarea").val("foobar")
-            @view.onBlur()
-
 

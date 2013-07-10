@@ -16,17 +16,21 @@ class Feedback extends ViewMaster
     constructor: ->
         super
         @listenTo @model, "change", @render, this
-        @listenTo asEvents(window), "blur", @onBlur, this
+        @listenTo @model, "start-sending", @render, this
 
-    onBlur: ->
+    persistMessage: ->
         if @$textarea
-            @model.set(message: @$textarea.val())
+            @model.set({message: @$textarea.val()}, {silent: true})
 
     afterTemplate: ->
         question = @$(".question-container")
 
-        if @model.get "saved"
-            question.text i18n "feedback.thanks"
+        if @model.sending
+            question.text i18n "logout.sending"
+            @model.sending.then =>
+                question.text i18n "feedback.thanks"
+            , =>
+                question.text i18n "logout.sendingFailed"
         else if @model.get("mood")
             question.html renderTextarea(
                 moodResponse: i18n "feedback.#{ [@model.get("mood")] }"
@@ -38,15 +42,14 @@ class Feedback extends ViewMaster
 
 
     events:
-        "click .bad": ->
-            @model.set "mood", "bad"
-        "click .good": ->
-            @model.set "mood", "good"
+        "keyup": "persistMessage"
+        "click .bad": -> @model.set "mood", "bad"
+        "click .good": -> @model.set "mood", "good"
         "click .save": ->
             @model.set(
-                saved: true
-                message: @$textarea.val()
+                message: @$textarea.val(),
+                silent: true
             )
-            @model.send(silent: true)
+            @model.send()
 
 module.exports = Feedback
