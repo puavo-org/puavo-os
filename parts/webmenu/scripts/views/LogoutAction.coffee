@@ -35,7 +35,6 @@ class LogoutAction extends ViewMaster
         super
         @nowButton = @$(".now").get(0)
         @timerEl = @$(".timer-text").get(0)
-        @$cover = $("<div>", class: "logout-cover-fade")
         @startTimer()
 
     renderActionText: (count) ->
@@ -43,7 +42,6 @@ class LogoutAction extends ViewMaster
 
     startTimer: ->
         timeout = @timeout
-        Backbone.$("body").append @$cover
         timer = =>
             @renderActionText(timeout)
             if timeout <= 0
@@ -59,7 +57,6 @@ class LogoutAction extends ViewMaster
         @clearTimer()
 
     clearTimer: ->
-        @$cover?.remove()
         if @interval
             clearInterval(@interval)
             @interval = null
