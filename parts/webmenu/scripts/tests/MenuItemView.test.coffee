@@ -5,11 +5,10 @@ MenuItemView = require "../views/MenuItemView.coffee"
 MenuModel = require "../models/MenuModel.coffee"
 
 describe "MenuItemView", ->
-    parent = null
-    item = null
+
     beforeEach ->
-        parent = new ViewMaster
-        parent.template = -> "<div class=container></div>"
+        @parent = new ViewMaster
+        @parent.template = -> "<div class=container></div>"
 
         model = new MenuModel
             name: "Test menu"
@@ -20,20 +19,22 @@ describe "MenuItemView", ->
                 command: "testcmd"
             ]
 
-        item = new MenuItemView
+        @item = new MenuItemView
             model: model.items.first()
 
-        parent.appendView(".container", item)
-        parent.render()
+        @parent.appendView(".container", @item)
+        @parent.render()
+
+    afterEach -> @parant.remove()
 
     it "MenuItemView#open() bubbles 'app-open' events only once in 250ms", (done) ->
 
         spy = chai.spy()
-        parent.on "open-app", spy
+        @parent.on "open-app", spy
 
-        item.open()
+        @item.open()
         setTimeout ->
-            item.open()
+            @item.open()
             expect(spy).to.have.been.called.once
             done()
         , 20
@@ -41,11 +42,11 @@ describe "MenuItemView", ->
     it "MenuItemView#open() bubbles 'app-open' events twice in 300ms", (done) ->
 
         spy = chai.spy()
-        parent.on "open-app", spy
+        @parent.on "open-app", spy
 
-        item.open()
+        @item.open()
         setTimeout ->
-            item.open()
+            @item.open()
             expect(spy).to.have.been.called.twice
             done()
         , 300
