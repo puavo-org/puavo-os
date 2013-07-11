@@ -1,5 +1,6 @@
 _ = require "underscore"
 
+
 ViewMaster = require "../vendor/backbone.viewmaster"
 
 class MenuItemView extends ViewMaster
@@ -32,14 +33,23 @@ class MenuItemView extends ViewMaster
             @$img.removeClass("rotate-loading")
 
     events:
-        "click": "open"
-        "mouseover": "toggleInactiveNotify"
+        "click": (e) ->
+            if e.target is @deleteButton
+                return
+            @open()
         "mouseout": "toggleInactiveNotify"
+        "mouseover": "toggleInactiveNotify"
+        "click .delete": "removeFromFavorites"
+
+    removeFromFavorites: ->
+        @model.resetClicks()
+        @bubble "favorite-removed"
 
     afterTemplate: ->
         @$thumbnail = @$(".thumbnail")
         @$description = @$(".description")
         @$img = @$("img,.cssIcon")
+        @deleteButton = @$(".delete").get(0)
 
     open: ->
 

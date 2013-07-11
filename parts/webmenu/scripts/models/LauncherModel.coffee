@@ -19,6 +19,7 @@ class LauncherModel extends AbstractItemModel
         "clicks-#{ @id }"
 
     resetClicks: ->
+        @set "clicks", 0
         delete localStorage[@_lsID()]
 
     isOk: -> !! @get("command")

@@ -1,8 +1,11 @@
+assert = require "assert"
+
 ViewMaster = require "../vendor/backbone.viewmaster"
 Backbone = require "backbone"
 
 MenuItemView = require "../views/MenuItemView.coffee"
 MenuModel = require "../models/MenuModel.coffee"
+
 
 describe "MenuItemView", ->
 
@@ -52,4 +55,14 @@ describe "MenuItemView", ->
             expect(spy).to.have.been.called.twice
             done()
         , 300
+
+    describe "click count", ->
+
+        beforeEach ->
+            @item.$el.trigger "click"
+
+        it "increases after a click", ->
+            assert false
+            # assert.equal @item.model.get("clicks"), 1
+
 
