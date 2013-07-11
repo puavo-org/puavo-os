@@ -14,7 +14,7 @@ forceFocus = (title, nextTry, retries...) ->
         return
 
     setTimeout ->
-        cmd = "wmctrl -F -R #{ title } -b add,skip_taskbar"
+        cmd = "wmctrl -F -R #{ title }"
         wmctrl = exec cmd, (err, stdout, stderr) ->
             if err
                 console.warn "wmctrl: failed: '#{ cmd }'. Error: #{ JSON.stringify err }"
