@@ -64,8 +64,9 @@ describe "MenuLayout", ->
     describe "after clicking one item", ->
 
         beforeEach (done) ->
-            layout.$(".bb-menu-list .bb-menu-item").filter(
-                (i, e) -> $(e).text().trim() is "Gimp"
+            layout.$(".bb-menu-list .bb-menu-item .item-name").filter(
+                (i, e) ->
+                    $(e).text().trim() is "Gimp"
             ).click()
             setTimeout done, Application.animationDuration + 10
 

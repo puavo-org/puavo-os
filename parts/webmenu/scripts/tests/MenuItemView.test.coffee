@@ -25,7 +25,9 @@ describe "MenuItemView", ->
         @parent.appendView(".container", @item)
         @parent.render()
 
-    afterEach -> @parant.remove()
+    afterEach ->
+        @item.remove()
+        @parent.remove()
 
     it "MenuItemView#open() bubbles 'app-open' events only once in 250ms", (done) ->
 
@@ -33,7 +35,7 @@ describe "MenuItemView", ->
         @parent.on "open-app", spy
 
         @item.open()
-        setTimeout ->
+        setTimeout =>
             @item.open()
             expect(spy).to.have.been.called.once
             done()
@@ -45,7 +47,7 @@ describe "MenuItemView", ->
         @parent.on "open-app", spy
 
         @item.open()
-        setTimeout ->
+        setTimeout =>
             @item.open()
             expect(spy).to.have.been.called.twice
             done()
