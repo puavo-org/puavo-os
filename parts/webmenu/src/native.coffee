@@ -14,7 +14,7 @@ launchCommand = require "./launchcommand"
 menutools = require "./menutools"
 requirefallback = require "./requirefallback"
 logStartTime = require "./logStartTime"
-dbus = require "./dbus"
+dbusRegister = require "./dbusRegister"
 forceFocus = require "./forceFocus"
 createSpawnPipe = require "./createSpawnPipe"
 createFeedbackSender = require "./createFeedbackSender"
@@ -27,12 +27,15 @@ mkdirp.sync(webmenuHome)
 
 process.on 'uncaughtException', (err) ->
     console.error err.message
+    console.error err.stack
     process.exit 1
 
 spawnEmitter = createSpawnPipe spawnPipePath, (err) ->
     throw err if err
-    dbus.registerApplication()
-    logStartTime("dbus registration sent")
+    dbusRegister().then ->
+        logStartTime("dbus registration sent")
+    , (err) ->
+        console.error "dbus registration failed: #{ err.message }"
 
 
 locale = process.env.LANG
