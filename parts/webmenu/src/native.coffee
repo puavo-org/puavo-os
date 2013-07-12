@@ -32,8 +32,8 @@ process.on 'uncaughtException', (err) ->
 
 spawnEmitter = createSpawnPipe spawnPipePath, (err) ->
     throw err if err
-    dbusRegister().then ->
-        logStartTime("dbus registration sent")
+    dbusRegister().then (msg) ->
+        logStartTime("dbus registration: #{ msg }")
     , (err) ->
         console.error "dbus registration failed: #{ err.message }"
 
