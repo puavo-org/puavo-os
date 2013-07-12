@@ -13,7 +13,7 @@ describe "MenuItemView", ->
         @parent = new ViewMaster
         @parent.template = -> "<div class=container></div>"
 
-        model = new MenuModel
+        @model = new MenuModel
             name: "Test menu"
             type: "menu"
             items: [
@@ -23,7 +23,7 @@ describe "MenuItemView", ->
             ]
 
         @item = new MenuItemView
-            model: model.items.first()
+            model: @model.items.first()
 
         @parent.appendView(".container", @item)
         @parent.render()
@@ -59,10 +59,19 @@ describe "MenuItemView", ->
     describe "click count", ->
 
         beforeEach ->
-            @item.$el.trigger "click"
+            @appItem = new MenuItemView
+                model: @model.items.last()
+            @appItem.render()
 
         it "increases after a click", ->
-            assert false
-            # assert.equal @item.model.get("clicks"), 1
+            before = @appItem.model.get("clicks")
+            @appItem.$el.trigger "click"
+            assert.equal @appItem.model.get("clicks"), before + 1
+
+        it "clicking delete resets clicks", ->
+            @appItem.$el.trigger "click"
+            @appItem.$(".delete").trigger "click"
+            assert.strictEqual @appItem.model.get("clicks"), 0
+
 
 
