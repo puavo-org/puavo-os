@@ -9,7 +9,7 @@ sh -e /etc/init.d/xvfb start &
 sleep 2
 
 # NW_NAME="node-webkit-v0.6.1-linux-ia32"
-NW_NAME="node-webkit-v0.6.1-linux-x64"
+NW_NAME="node-webkit-v0.6.3-linux-x64"
 NW_URL="https://s3.amazonaws.com/node-webkit/v0.6.1/$NW_NAME.tar.gz"
 
 wget --continue $NW_URL
