@@ -2,6 +2,9 @@ window.expect = chai.expect
 window.assert = chai.assert
 mocha.setup("bdd")
 
+Backbone = require "backbone"
+Backbone.$ = window.jQuery
+
 Application = require "../Application.coffee"
 Application.animationDuration = 10
 

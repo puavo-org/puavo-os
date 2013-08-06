@@ -1,5 +1,6 @@
 $ = require "./vendor/jquery.shim"
 Backbone = require "backbone"
+Backbone.$ = $
 Q = require "q"
 
 Application = require "./Application.coffee"
