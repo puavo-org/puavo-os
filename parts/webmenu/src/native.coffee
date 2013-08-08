@@ -205,6 +205,7 @@ module.exports = (gui, Window) ->
     shared.config = config
     shared.menu = menuJSON
     shared.shutdown = ->launchCommand(config.shutdownCMD)
+    shared.sleep = ->launchCommand(config.sleepCMD)
     shared.restart = -> launchCommand(config.restartCMD)
     shared.logout = -> launchCommand(config.logoutCMD)
     shared.lock = -> launchCommand(config.lockCMD)
