@@ -1,13 +1,11 @@
 {
   "logout": "Kirjaudu ulos",
   "shutdown": "Sammuta",
-  "reboot": "Käynnistä uudelleen",
   "exit": "Poistu",
   "cancel": "Peruuta",
   "lock": "Lukitse näyttö",
   "logoutAction": "Sinut kirjataan ulos {count}:ssa sekunnissa.",
   "shutdownAction": "Tietokone sammutetaan {count}:ssa sekunnissa.",
-  "rebootAction": "Tietokone käynnistetään uudelleen {count}:ssa sekunnissa.",
   "sleepAction": "Tietokone laitetaan nukkmaan {count}:ssa sekunnissa.",
   "hibernateAction": "Tietokone laitetaan horrostilaan {count}:ssa sekunnissa.",
   "hibernate": "Horrostila",
@@ -17,5 +15,7 @@
   "clickCancel": "Klikkaa mistä tahansa peruuttaakseni.",
   "sending": "Lähetetään...",
   "sendingFailed": "Lähetys epäonnistui jostain syystä :(",
-  "or": "Tai..."
+  "or": "Tai...",
+  "restart": "Käynnistä uudelleen [UNTRANSLATED]",
+  "restartAction": "Tietokone käynnistetään uudelleen {count}:ssa sekunnissa."
 }
