@@ -25,7 +25,7 @@ describe "LogoutView", ->
 
         it "has hibernate", -> assert "hibernate" in @options
         it "has sleep", -> assert "sleep" in @options
-        it "has reboot", -> assert "reboot" in @options
+        it "has restart", -> assert "restart" in @options
         it "has lock", -> assert "lock" in @options
         it "shutdown button opens shutdown timer", (done) ->
             @view.$(".js-shutdown").trigger "click"
@@ -39,7 +39,7 @@ describe "LogoutView", ->
 
         it "has no hibernate", -> assert not ("hibernate" in @options)
         it "has no sleep", -> assert not ("sleep" in @options)
-        it "has reboot", -> assert "reboot" in @options
+        it "has restart", -> assert "restart" in @options
         it "has lock", -> assert "lock" in @options
 
         it "bubbles logout-action with feedback", (done) ->
