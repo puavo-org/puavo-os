@@ -66,7 +66,8 @@ nodejs.on "open-view", (viewName) ->
 layout.on "logout-action", (actionView) ->
     # Send possible feedback before logging out
     actionView.model.send().finally ->
+        layout.broadcast("reset") # required when devtools is active
         nodejs.hideWindow()
-        nodejs[actionView.action]()
+        nodejs.executeAction(actionView.action)
 
 nodejs.logReady()

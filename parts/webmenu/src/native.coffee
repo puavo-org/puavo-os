@@ -204,11 +204,13 @@ module.exports = (gui, Window) ->
     shared.user = userData
     shared.config = config
     shared.menu = menuJSON
-    shared.shutdown = ->launchCommand(config.shutdownCMD)
-    shared.sleep = ->launchCommand(config.sleepCMD)
-    shared.restart = -> launchCommand(config.restartCMD)
-    shared.logout = -> launchCommand(config.logoutCMD)
-    shared.lock = -> launchCommand(config.lockCMD)
+
+    shared.executeAction = (action) ->
+        if actionCMD = config[action + "CMD"]
+            launchCommand(actionCMD)
+        else
+            console.error "Unknown action #{ action }"
+
     shared.hideWindow =  hideWindow
     if config.feedback
         shared.sendFeedback = createFeedbackSender(config.feedback)
