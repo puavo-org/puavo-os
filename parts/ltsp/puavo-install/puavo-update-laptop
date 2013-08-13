@@ -50,7 +50,7 @@ replace_if_changed() {
 }
 
 update_device_json() {
-  puavo_rest_request_and_replace "v3/devices/$(hostname)" \
+  puavo_rest_request_and_replace "v3/devices/$(cat /etc/puavo/hostname)" \
 			         /state/etc/puavo/device.json || return
   chmod 644 /state/etc/puavo/device.json
 }
@@ -93,7 +93,7 @@ EOF
 }
 
 update_wlan_configurations() {
-  puavo_rest_request_and_replace "v3/devices/$(hostname)/wlan_networks" \
+  puavo_rest_request_and_replace "v3/devices/$(cat /etc/puavo/hostname)/wlan_networks" \
 				 /state/etc/puavo/wlan.json
 }
 
