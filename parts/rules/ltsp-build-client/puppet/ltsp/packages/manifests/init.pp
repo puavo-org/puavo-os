@@ -357,9 +357,8 @@ class packages {
     [ 'acroread' ]:
       tag => [ 'office', 'opinsys', ];
 
-# XXX disable for now
-#   [ 'cmaptools' ]:
-#     tag => [ 'office', 'opinsys', ];
+    [ 'cmaptools' ]:
+      tag => [ 'office', 'opinsys', ];
 
     [ 'librecad'
     , 'libreoffice'
