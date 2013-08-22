@@ -57,10 +57,10 @@ end
 @ldap_base         = File.read('/etc/puavo/ldap/base'      ).chomp
 @kerberos_master   = File.read('/etc/puavo/kerberos/master').chomp
 @kerberos_realm    = File.read('/etc/puavo/kerberos/realm' ).chomp
-#@kerberos_toprealm = File.read('/etc/puavo/kerberos/toprealm' ).chomp
+@kerberos_toprealm = File.read('/etc/puavo/kerberos/toprealm' ).chomp
 @puavo_hostname    = File.read('/etc/puavo/hostname'       ).chomp
 @puavo_domain      = File.read('/etc/puavo/domain'         ).chomp
-#@puavo_topdomain   = File.read('/etc/puavo/topdomain'      ).chomp
+@puavo_topdomain   = File.read('/etc/puavo/topdomain'      ).chomp
 @arpazone = "10.in-addr.arpa"
 
 def write_config(filename, version=nil, secure=false)
