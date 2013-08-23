@@ -26,16 +26,9 @@ class graphics_drivers {
   }
 
   driver_alternatives {
-    'fglrx':
-      before         => File['/etc/modprobe.d/fglrx.conf'],
-      gl_conf_target => '/usr/lib/fglrx/ld.so.conf',
-      notify         => Driver_alternatives['mesa'],
-      require        => Package['fglrx'];
-
    'mesa':
       gl_conf_target => '/usr/lib/i386-linux-gnu/mesa/ld.so.conf',
-      require        => [ Driver_alternatives['fglrx'],
-                          Driver_alternatives['nvidia'],
+      require        => [ Driver_alternatives['nvidia'],
                           Package['libgl1-mesa-glx'], ];
 
    'nvidia':
@@ -51,15 +44,9 @@ class graphics_drivers {
     # but "alias nouveau off" is a no-no.
     '/etc/modprobe.d/nvidia-current_hybrid.conf':
       content => template('graphics_drivers/blacklist-nouveau.conf');
-
-    # Radeon must be blacklisted so we can use fglrx,
-    # but "alias radeon off" is a no-no.
-    '/etc/modprobe.d/fglrx.conf':
-      content => template('graphics_drivers/blacklist-radeon.conf');
   }
 
-  Package <| title == fglrx
-          or title == libgl1-mesa-glx
+  Package <| title == libgl1-mesa-glx
           or title == nvidia-current
           or title == nvidia-settings |>
 }
