@@ -354,7 +354,6 @@ class packages {
       tag => [ 'music_making', 'ubuntu', ];
 
     [ 'ipsec-tools'
-    , 'nmap'
     , 'amtterm'
     , 'wsmancli'
     , 'racoon' ]:
