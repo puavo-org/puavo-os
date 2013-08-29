@@ -23,6 +23,12 @@ on_exit()
         exit $exitval
 }
 
+if [ $# -ne 2 ]; then
+    echo "E: invalid arguments" >&2
+    echo "Usage: $(basename $0) IMGFILE1 IMGFILE2"
+    exit 1
+fi
+
 img1=$1
 img2=$2
 
