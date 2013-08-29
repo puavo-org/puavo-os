@@ -29,6 +29,7 @@ class packages {
 
   @package {
     [ 'elinks'
+    , 'ethtool'
     , 'fping'
     , 'gawk'
     , 'git'
@@ -710,6 +711,7 @@ class packages {
     , 'gkbd-capplet'
     , 'gpointing-device-settings'
     , 'kdepasswd'
+    , 'keychain'
     , 'khelpcenter4'
     , 'rarian-compat'
     , 'screenlets'
