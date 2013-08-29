@@ -29,6 +29,7 @@ class packages {
 
   @package {
     [ 'elinks'
+    , 'fping'
     , 'gawk'
     , 'git'
     , 'initramfs-tools'
