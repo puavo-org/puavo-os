@@ -28,7 +28,8 @@ class packages {
   }
 
   @package {
-    [ 'gawk'
+    [ 'elinks'
+    , 'gawk'
     , 'git'
     , 'initramfs-tools'
     , 'iftop'
@@ -47,7 +48,8 @@ class packages {
     , 'sudo'
     , 'tmux'
     , 'tshark'
-    , 'whois' ]:
+    , 'whois'
+    , 'w3m' ]:
       tag => [ 'admin', 'thinclient', 'ubuntu', ];
 
     [ 'clusterssh'
