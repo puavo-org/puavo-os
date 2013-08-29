@@ -16,6 +16,7 @@ install: installdirs
 		bin/puavo-dch \
 		bin/puavo-deb-release \
 		bin/mkpkg \
-		bin/mktar
+		bin/mktar \
+		bin/dpkg-diff-img
 
 clean:

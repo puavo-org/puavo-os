@@ -1,0 +1,60 @@
+#!/bin/bash
+
+set -eu
+
+on_exit()
+{
+        local -r exitval=$?
+        set +e
+
+        if [ -n "${img2_chroot}" ]; then
+            umount "${img2_chroot}"
+            rmdir "${img2_chroot}"
+        fi
+
+        if [ -n "${img1_chroot}" ]; then
+            umount "${img1_chroot}"
+            rmdir "${img1_chroot}"
+        fi
+
+        rm -f "${img1_dpkg_list}"
+        rm -f "${img2_dpkg_list}"
+
+        exit $exitval
+}
+
+img1=$1
+img2=$2
+
+img1_chroot=
+img2_chroot=
+
+img1_dpkg_list=
+img2_dpkg_list=
+
+trap on_exit EXIT
+
+img1_chroot=$(mktemp -d)
+mount -oro "${img1}" "${img1_chroot}"
+
+img1_dpkg_list=$(mktemp)
+chroot "${img1_chroot}" dpkg -l | awk '{printf "%s %s\n", $2, $3}' >"${img1_dpkg_list}"
+
+img2_chroot=$(mktemp -d)
+mount -oro "${img2}" "${img2_chroot}"
+
+img2_dpkg_list=$(mktemp)
+chroot "${img2_chroot}" dpkg -l | awk '{printf "%s %s\n", $2, $3}' >"${img2_dpkg_list}"
+
+diff --side-by-side --suppress-common-lines --width=500 "${img1_dpkg_list}" "${img2_dpkg_list}" | while read line; do
+    tokens=($line)
+    if [ "${#tokens[@]}" -eq 5 ]; then
+        printf "%-40s %-30s %-30s\n" "${tokens[0]}" "${tokens[1]}" "${tokens[4]}"
+    elif [ "${#tokens[@]}" -eq 3 ]; then
+        if [ "${tokens[0]}" == ">" ]; then
+            printf "%-40s %-30s %-30s\n" "${tokens[1]}" "-" "${tokens[2]}"
+        else
+            printf "%-40s %-30s %-30s\n" "${tokens[0]}" "${tokens[1]}" "-"
+        fi
+    fi
+done
