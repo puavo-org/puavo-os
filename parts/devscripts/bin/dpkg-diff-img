@@ -55,12 +55,14 @@ chroot "${img2_chroot}" dpkg -l | awk '{printf "%s %s\n", $2, $3}' >"${img2_dpkg
 diff --side-by-side --suppress-common-lines --width=500 "${img1_dpkg_list}" "${img2_dpkg_list}" | while read line; do
     tokens=($line)
     if [ "${#tokens[@]}" -eq 5 ]; then
-        printf "%-40s %-30s %-30s\n" "${tokens[0]}" "${tokens[1]}" "${tokens[4]}"
+        grade='>'
+        dpkg --compare-versions "${tokens[1]}" lt "${tokens[4]}" || grade='<'
+        printf "%s %-40s %-30s %-30s\n" "${grade}" "${tokens[0]}" "${tokens[1]}" "${tokens[4]}"
     elif [ "${#tokens[@]}" -eq 3 ]; then
         if [ "${tokens[0]}" == ">" ]; then
-            printf "%-40s %-30s %-30s\n" "${tokens[1]}" "-" "${tokens[2]}"
+            printf "%s %-40s %-30s %-30s\n" "+" "${tokens[1]}" "-" "${tokens[2]}"
         else
-            printf "%-40s %-30s %-30s\n" "${tokens[0]}" "${tokens[1]}" "-"
+            printf "%s %-40s %-30s %-30s\n" "-" "${tokens[0]}" "${tokens[1]}" "-"
         fi
     fi
 done
