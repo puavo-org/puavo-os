@@ -17,8 +17,11 @@ on_exit()
             rmdir "${img1_chroot}"
         fi
 
-        rm -f "${img1_dpkg_list}"
-        rm -f "${img2_dpkg_list}"
+        [ -n "${img1_dpkg_list}" ] && rm -f "${img1_dpkg_list}"
+        [ -n "${img2_dpkg_list}" ] && rm -f "${img2_dpkg_list}"
+        [ -n "${removed_packages}" ] && rm -f "${removed_packages}"
+        [ -n "${added_packages}" ] && rm -f "${added_packages}"
+        [ -n "${changed_packages}" ] && rm -f "${changed_packages}"
 
         exit $exitval
 }
@@ -44,25 +47,41 @@ img1_chroot=$(mktemp -d)
 mount -oro "${img1}" "${img1_chroot}"
 
 img1_dpkg_list=$(mktemp)
-chroot "${img1_chroot}" dpkg -l | awk '{printf "%s %s\n", $2, $3}' >"${img1_dpkg_list}"
+chroot "${img1_chroot}" dpkg -l | tail -n+6 | awk '{printf "%s %s\n", $2, $3}' >"${img1_dpkg_list}"
 
 img2_chroot=$(mktemp -d)
 mount -oro "${img2}" "${img2_chroot}"
 
 img2_dpkg_list=$(mktemp)
-chroot "${img2_chroot}" dpkg -l | awk '{printf "%s %s\n", $2, $3}' >"${img2_dpkg_list}"
+chroot "${img2_chroot}" dpkg -l | tail -n+6 | awk '{printf "%s %s\n", $2, $3}' >"${img2_dpkg_list}"
 
-diff --side-by-side --suppress-common-lines --width=500 "${img1_dpkg_list}" "${img2_dpkg_list}" | while read line; do
-    tokens=($line)
-    if [ "${#tokens[@]}" -eq 5 ]; then
-        grade='>'
-        dpkg --compare-versions "${tokens[1]}" lt "${tokens[4]}" || grade='<'
-        printf "%s %-40s %-30s %-30s\n" "${grade}" "${tokens[0]}" "${tokens[1]}" "${tokens[4]}"
-    elif [ "${#tokens[@]}" -eq 3 ]; then
-        if [ "${tokens[0]}" == ">" ]; then
-            printf "%s %-40s %-30s %-30s\n" "+" "${tokens[1]}" "-" "${tokens[2]}"
-        else
-            printf "%s %-40s %-30s %-30s\n" "-" "${tokens[0]}" "${tokens[1]}" "-"
+removed_packages=$(mktemp)
+comm -23 <(cut -d' ' -f1 "${img1_dpkg_list}" | sort) <(cut -d' ' -f1 "${img2_dpkg_list}" | sort) >"${removed_packages}"
+
+added_packages=$(mktemp)
+comm -23 <(cut -d' ' -f1 "${img2_dpkg_list}" | sort) <(cut -d' ' -f1 "${img1_dpkg_list}" | sort) >"${added_packages}"
+
+changed_packages=$(mktemp)
+comm -12 <(cut -d' ' -f1 "${img1_dpkg_list}" | sort) <(cut -d' ' -f1 "${img2_dpkg_list}" | sort) >"${changed_packages}"
+
+{
+    cat "${removed_packages}" | while read package; do
+        version=$(egrep "^${package} " "${img1_dpkg_list}" | cut -d' ' -f2)
+        printf "%s %-40s %-30s %-30s\n" "-" "${package}" "${version}" "-"
+    done
+
+    cat "${added_packages}" | while read package; do
+        version=$(egrep "^${package} " "${img2_dpkg_list}" | cut -d' ' -f2)
+        printf "%s %-40s %-30s %-30s\n" "+" "${package}" "-" "${version}"
+    done
+
+    cat "${changed_packages}" | while read package; do
+        img1_version=$(egrep "^${package} " "${img1_dpkg_list}" | cut -d' ' -f2)
+        img2_version=$(egrep "^${package} " "${img2_dpkg_list}" | cut -d' ' -f2)
+        if [ "${img1_version}" != "${img2_version}" ]; then
+            grade='>'
+            dpkg --compare-versions "${img1_version}" lt "${img2_version}" || grade='<'
+            printf "%s %-40s %-30s %-30s\n" "${grade}" "${package}" "${img1_version}" "${img2_version}"
         fi
-    fi
-done
+    done
+} | sort -k2
