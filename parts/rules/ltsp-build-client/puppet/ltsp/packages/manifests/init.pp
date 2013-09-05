@@ -309,6 +309,7 @@ class packages {
     [ 'banshee'
     , 'clam-chordata'
     , 'gnome-mplayer'
+    , 'goobox'
     , 'gstreamer1.0-clutter'
     , 'gstreamer1.0-libav'
     , 'gstreamer1.0-plugins-bad'
