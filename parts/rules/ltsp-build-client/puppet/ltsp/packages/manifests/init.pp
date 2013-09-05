@@ -741,6 +741,10 @@ class packages {
    [ 'open-sankore', ]:
       tag => [ 'whiteboard', 'ubuntu', ];
 
+   [ 'eleet'
+   , 'leap' ]:
+      tag => [ 'whiteboard', 'opinsys', ];
+
    [ 'mimio-studio', ]:
     tag => [ 'whiteboard-mimio', 'opinsys', ];
 
