@@ -318,6 +318,7 @@ class packages {
     , 'gstreamer1.0-plugins-ugly'
     , 'gstreamer1.0-tools'
     , 'kaffeine'
+    , 'kscd'
     , 'libdvdread4'
     , 'me-tv'
     , 'python-gst0.10'
