@@ -596,6 +596,7 @@ class LdapAcl
 					 puavoDeviceImage
                                          puavoAllowGuest
                                          puavoPersonalDevice
+                                         puavoActiveService
 					 puavoDeviceOnHour
 					 puavoDeviceOffHour
 					 puavoDeviceAutoPowerOffMode)),	Rule.write(Set.owner_and_user),		Rule.read(Set.all_admins,

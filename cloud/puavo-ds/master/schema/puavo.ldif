@@ -315,6 +315,33 @@ olcAttributeTypes: {92}( 1.3.6.1.4.1.27208.1.1.1.93 NAME 'puavoPrinterDeviceUR
 olcAttributeTypes: {93}( 1.3.6.1.4.1.27208.1.1.1.94 NAME 'puavoPrinterWireless
  Enabled' DESC 'Enable wireless printer sharing for the printer' EQUALITY bool
  eanMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 SINGLE-VALUE )
+olcAttributeTypes: {94}( 1.3.6.1.4.1.27208.1.1.1.95 NAME 'puavoServiceDescript
+ ionURL' DESC 'URL for more information about the service' EQUALITY caseIgnore
+ Match SUBSTR caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {95}( 1.3.6.1.4.1.27208.1.1.1.96 NAME 'puavoServiceSecret' 
+ DESC 'A shared secret' EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMa
+ tch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {96}( 1.3.6.1.4.1.27208.1.1.1.97 NAME 'puavoServiceTrusted'
+  DESC 'For own internal services. If true the service is active for all organ
+ isations and schools by default without school admins approval.' EQUALITY boo
+ leanMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 SINGLE-VALUE )
+olcAttributeTypes: {97}( 1.3.6.1.4.1.27208.1.1.1.98 NAME 'puavoServiceEmailReq
+ uired' DESC 'Some external services require an email to be set. If this is tr
+ ue user is prompted to se his/her email address before login can continue.' E
+ QUALITY booleanMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 SINGLE-VALUE )
+olcAttributeTypes: {98}( 1.3.6.1.4.1.27208.1.1.1.99 NAME 'puavoServiceAllowedA
+ ttribute' DESC 'Service receives this field on login' EQUALITY caseIgnoreMatc
+ h SUBSTR caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {99}( 1.3.6.1.4.1.27208.1.1.1.100 NAME 'puavoActiveService'
+  DESC 'DN of the activated service' EQUALITY distinguishedNameMatch SYNTAX 1.
+ 3.6.1.4.1.1466.115.121.1.12 )
+olcAttributeTypes: {100}( 1.3.6.1.4.1.27208.1.1.1.101 NAME 'puavoServiceDomain
+ ' DESC 'Domain used to identify the service' EQUALITY caseIgnoreMatch SUBSTR 
+ caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {101}( 1.3.6.1.4.1.27208.1.1.1.102 NAME 'puavoServicePathPr
+ efix' DESC 'Path prefix to identify the service on the same domain' EQUALITY 
+ caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.
+ 121.1.15 )
 olcObjectClasses: {0}( 1.3.6.1.4.1.27208.1.1.2.1 NAME 'puavoSchool' AUXILIARY 
  MUST ( puavoId ) MAY ( puavoSchoolHomePageURL $ puavoSchoolAdmin $ displayNam
  e $ telephoneNumber $ facsimileTelephoneNumber $ l $ street $ postOfficeBox $
@@ -322,7 +349,7 @@ olcObjectClasses: {0}( 1.3.6.1.4.1.27208.1.1.2.1 NAME 'puavoSchool' AUXILIARY
  referredLanguage $ jpegPhoto $ puavoDeviceOnHour $ puavoDeviceOffHour $ puavo
  DeviceAutoPowerOffMode $ puavoClassNamingScheme $ puavoBillingInfo $ puavoDev
  iceImage $ puavoWlanSSID $ puavoWlanChannel $ puavoAllowGuest $ puavoPersonal
- Device ) )
+ Device $ puavoActiveService ) )
 olcObjectClasses: {1}( 1.3.6.1.4.1.27208.1.1.2.2 NAME 'puavoEduGroup' AUXILIAR
  Y MUST ( puavoId $ puavoSchool ) MAY ( displayName $ puavoEduGroupType $ memb
  er $ puavoUserRole ) )
@@ -344,7 +371,7 @@ olcObjectClasses: {5}( 1.3.6.1.4.1.27208.1.1.2.6 NAME 'puavoEduOrg' AUXILIARY
  esktopPublicKey $ puavoRemoteDesktopPrivateKey $ puavoDeviceAutoPowerOffMode 
  $ puavoDeviceOnHour $ puavoDeviceOffHour $ puavoClassNamingScheme $ puavoVers
  ion $ puavoEduOrgAbbreviation $ puavoDeviceImage $ puavoWlanSSID $ puavoWlanC
- hannel $ puavoAllowGuest $ puavoPersonalDevice ) )
+ hannel $ puavoAllowGuest $ puavoPersonalDevice $ puavoActiveService ) )
 olcObjectClasses: {6}( 1.3.6.1.4.1.27208.1.1.2.7 NAME 'puavoShare' AUXILIARY M
  UST ( puavoId $ puavoServer ) )
 olcObjectClasses: {7}( 1.3.6.1.4.1.27208.1.1.2.8 NAME 'puavoDevice' AUXILIARY 
@@ -399,3 +426,10 @@ olcObjectClasses: {21}( 1.3.6.1.4.1.27208.1.1.2.22 NAME 'puavoOtherDevice' AUX
   )
 olcObjectClasses: {22}( 1.3.6.1.4.1.27208.1.1.2.23 NAME 'puavoFile' STRUCTURAL
   MUST ( puavoId $ cn $ puavoData $ puavoDataHash ) MAY ( puavoSchool ) )
+olcObjectClasses: {23}( 1.3.6.1.4.1.27208.1.1.2.24 NAME 'puavoService' STRUCTU
+ RAL MUST ( cn $ puavoId ) MAY ( description $ puavoServiceDescriptionURL $ pu
+ avoServiceTrusted $ puavoServiceEmailRequired $ puavoServiceAllowedAttribute 
+ $ mail ) )
+olcObjectClasses: {24}( 1.3.6.1.4.1.27208.1.1.2.25 NAME 'puavoJWTService' STRU
+ CTURAL SUP puavoService MUST ( puavoServiceDomain $ puavoServiceSecret ) MAY 
+ ( puavoServicePathPrefix ) )
