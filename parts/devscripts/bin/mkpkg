@@ -49,13 +49,21 @@ cd "${tmpdir}/${package}"
 
 dist=$(dpkg-parsechangelog | sed -rn 's/^Distribution: (.*)/\1/p')
 last_orig_version=$(dpkg-parsechangelog | sed -ne 's/^Version: \(\([0-9]\+\):\)\?\(.*\)-.*/\3/p')
-this_orig_version="${last_orig_version}.dev$(date +%s)"
-this_package_version="${this_orig_version}-0+opinsys1"
+this_orig_version="${last_orig_version}"
+lasttag=$(git tag | sort -V | tail -n1)
+git diff "$lasttag" # WTF: why this is needed? Otherwise the following
+		    # git diff just silently succeeds and .dev-suffix
+		    # is not appended to the version.
+git diff --quiet "$lasttag" || {
+    this_orig_version="${this_orig_version}.dev$(date +%s)"
+}
+last_version_prefix=$(dpkg-parsechangelog | sed -ne 's/^Version: \(\([0-9]\+\):\)\?\(.*\)-.*/\1/p')
+this_package_version="${last_version_prefix}${this_orig_version}-0+opinsys1"
 
 mktar "${this_orig_version}"
 
 dch -v "$this_package_version" "$(git rev-parse --short HEAD)"
-
+rm -rf "${tmpdir}/${package}/.git"
 debuild -S -us -uc -sa
 cd "${toplevel_dirpath}"
 
