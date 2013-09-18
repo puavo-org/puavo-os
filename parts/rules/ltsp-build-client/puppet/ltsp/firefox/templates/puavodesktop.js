@@ -6,5 +6,5 @@ lockPref("browser.safebrowsing.enabled", false);
 lockPref("browser.safebrowsing.malware.enabled", false);
 lockPref("network.dns.disableIPv6", true);
 lockPref("network.negotiate-auth.trusted-uris", "api.opinsys.fi");
-lockPref("print.postscript.paper_size", "a4");
+lockPref("print.postscript.paper_size", "iso_a4");
 lockPref("toolkit.storage.synchronous", 1);
