@@ -70,14 +70,22 @@ write_hostapd_conf()
 
 write_vtund_conf()
 {
-    local net ssid
+    local net ssid session
 
     ## Configure one vtund client per network.
     for net in "${PWAP_NETS[@]}"; do
         IFS=':' read _ ssid _ <<<"${net}"
+
+        if [ ${PWAP_LEGACY_MODE} -eq 0 ]; then
+            session="${ssid}"
+        else
+            session="puavo-wlanap"
+        fi
+
         sed -e "s|#{PWAP_LIBDIR}|${PWAP_LIBDIR}|g" \
             -e "s|#{PWAP_SSID}|${ssid}|g" \
             -e "s|#{PWAP_RUNDIR}|${PWAP_RUNDIR}|g" \
+            -e "s|#{PWAP_SESSION}|${session}|g" \
             "${PWAP_DATADIR}/vtund.conf" \
             >"${PWAP_RUNDIR}/${ssid}_vtund.conf"
     done
@@ -89,7 +97,13 @@ setup_nets()
 
     "${PWAP_LIBDIR}/fetch-nets" >"${PWAP_RUNDIR}/nets"
 
-    readarray -n0 -t PWAP_NETS <"${PWAP_RUNDIR}/nets"
+    if [ ${PWAP_LEGACY_MODE} -ne 0 ]; then
+        readarray -n0 -t PWAP_NETS <"${PWAP_RUNDIR}/nets"
+    else
+        # There's support for only one network in legacy mode.
+        readarray -n1 -t PWAP_NETS <"${PWAP_RUNDIR}/nets"
+    fi
+
     if [ ${#PWAP_NETS[@]} -eq 0 ]; then
         pwap_log "no networks defined"
         return 1
@@ -116,11 +130,13 @@ setup_nets()
         esac
     done
 
-    ## Tell gateway which networks we are going to provide.
-    for net in "${PWAP_NETS[@]}"; do
-        IFS=':' read _ ssid _ <<<"${net}"
-        echo "${ssid}" | nc "${PWAP_GWADDR}" "${PWAP_GWPORT}"
-    done
+    if [ ${PWAP_LEGACY_MODE} -eq 0 ]; then
+        ## Tell gateway which networks we are going to provide.
+        for net in "${PWAP_NETS[@]}"; do
+            IFS=':' read _ ssid _ <<<"${net}"
+            echo "${ssid}" | nc "${PWAP_GWADDR}" "${PWAP_GWPORT}"
+        done
+    fi
 }
 
 setup_radios()
@@ -165,11 +181,17 @@ setup_services()
 
 start_services()
 {
-    local net ssid radio iface
+    local net ssid radio iface session
 
     ## Start one vtund client per network.
     for net in "${PWAP_NETS[@]}"; do
         IFS=':' read _ ssid _ <<<"${net}"
+
+        if [ ${PWAP_LEGACY_MODE} -eq 0 ]; then
+            session="${ssid}"
+        else
+            session="puavo-wlanap"
+        fi
 
         ## Setup the bridge.
         brctl addbr "${ssid}"
@@ -179,10 +201,11 @@ start_services()
 
         vtund -n -f "${PWAP_RUNDIR}/${ssid}_vtund.conf" \
             -P "${PWAP_VTUND_PORT}" \
-            "${ssid}" "${PWAP_GWADDR}" &
+            "${session}" "${PWAP_GWADDR}" &
     done
 
-    ## Magical sleep to "ensure" that bridges and tunnels are all set.
+    ## Magical sleep to "ensure" that bridges and tunnels are all set
+    ## before proceeding.
     sleep 8 & wait $!
 
     ## Start one hostapd per radio.
