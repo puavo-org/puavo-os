@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+# Do not start eBeam stuff if we do not have a eBeam device connected.
+if ! lsusb | awk '$6 ~ /^2650:1311/' | grep -q .; then
+  exit 1
+fi
+
+LD_LIBRARY_PATH=/opt/diva /opt/diva/eBeam_Stylus_Driver
+LD_LIBRARY_PATH=/opt/diva daemon /opt/diva/eBeam_Mouse_Driver
+exec "/opt/interact/bin/init-tp"

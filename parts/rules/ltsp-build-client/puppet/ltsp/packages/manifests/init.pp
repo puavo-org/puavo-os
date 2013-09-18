@@ -750,6 +750,9 @@ class packages {
    [ 'mimio-studio', ]:
     tag => [ 'whiteboard-mimio', 'opinsys', ];
 
+   [ 'ebeam-edu', ]:
+    tag => [ 'whiteboard-ebeam', 'opinsys', ];
+  
 # XXX disabled for now
 #   [ 'activaid'
 #   , 'activdriver'
