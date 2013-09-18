@@ -44,6 +44,7 @@ class packages {
     , 'nmap'
     , 'pv'
     , 'pwgen'
+    , 'pwman3'
     , 'setserial'
     , 'sl'
     , 'strace'
@@ -51,7 +52,8 @@ class packages {
     , 'tmux'
     , 'tshark'
     , 'whois'
-    , 'w3m' ]:
+    , 'w3m' 
+    , 'x11vnc']:
       tag => [ 'admin', 'thinclient', 'ubuntu', ];
 
     [ 'clusterssh'
