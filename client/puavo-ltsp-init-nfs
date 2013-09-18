@@ -23,16 +23,41 @@ if boolean_is_true "${USE_NFS_HOMES}" ; then
     # already.  This works around a problem, when root ticket switches
     # to another (gssd/nfs stuff does not like that (client id changes)
     # and login failures occur).
-    if ! [ -e /etc/krb5.keytab -o -e /tmp/krb5cc_0 ]; then
-      TMP_KRB5CCNAME=$(echo $KRB5CCNAME | sed -e 's/^FILE://')
-
-      install -o root -g root -m 600 "$TMP_KRB5CCNAME" /tmp/krb5cc_0
-      service idmapd restart || service idmapd start
-      service gssd restart   || service gssd start
-    fi
-
+    #
+    # Current kernels seem to cause problems in diskless environments when
+    # SETCLIENTID or EXCHANGE_ID calls are done with GSS authentication. As
+    # a temporary fix, first do a sec=sys mount of / without a kerberos
+    # principal to force SETCLIENTID to be called with auth=sys.
+    #
+    # /home mount is done with a kerberos principal
     if ! is_nfs_mounted /home; then
-      mount -t nfs4 -o sec=krb5,nolock,soft,nodev,nosuid,minorversion=1 ${NFS_SERVER}:/home /home
+      mkdir -p /mntroot
+
+      # If /etc/krb5.keytab exists, we want to do the /home mount with the
+      # machine credentials
+
+      if [ -e /etc/krb5.keytab ]; then
+        mv /etc/krb5.keytab /etc/krb5.keytab.bu
+        rm -f /tmp/krb5cc_0
+
+        mount -t nfs4 -o sec=sys ${NFS_SERVER}:/ /mntroot
+
+        mv /etc/krb5.keytab.bu /etc/krb5.keytab
+
+        mount -t nfs4 -o sec=krb5,nodev,nosuid,minorversion=0 ${NFS_SERVER}:/home /home
+        umount /mntroot
+      else
+        rm -f /tmp/krb5cc_0
+
+        TMP_KRB5CCNAME=$(echo $KRB5CCNAME | sed -e 's/^FILE://')
+
+        mount -t nfs4 -o sec=sys ${NFS_SERVER}:/ /mntroot
+
+        install -o root -g root -m 600 "$TMP_KRB5CCNAME" /tmp/krb5cc_0
+
+        mount -t nfs4 -o sec=krb5,nodev,nosuid,minorversion=0 ${NFS_SERVER}:/home /home
+        umount /mntroot
+      fi
     fi
 
     # Request a remote directory for the user (three second timeout, may fail)
