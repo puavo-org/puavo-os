@@ -6,5 +6,10 @@ class puavo-wlanap {
       content => template('puavo-wlanap/config');
   }
 
+  file {
+    '/etc/default/puavo-wlanap':
+      content => template('puavo-wlanap/default');
+  }
+
   Package <| tag == puavo-wlanap |>
 }
