@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+# Do not start PolyVision stuff if we do not have a proper dongle
+# connected. If the pen can be used with a generic BT-dongle, then this
+# method is not suitable.
+if ! lsusb | awk '$6 ~ /^0a12:0001/' | grep -q .; then
+  exit 1
+fi
+
+exec "/opt/PolyVision/PolyVisionDriver/cdfnu"
