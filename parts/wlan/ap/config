@@ -3,10 +3,11 @@
 ## Gateway server address.
 PWAP_GWADDR=wlangw
 
-## Gateway server port.
-PWAP_GWPORT=45046
+## Gateway server port for control channel.
+PWAP_GWPORT_CTRL=45046
 
-PWAP_VTUND_PORT=45045
+## Gateway server port for data channel.
+PWAP_GWPORT_DATA=45045
 
 ## Set to 1 if you are connecting to puavo-wlangw version 0.4.2 or
 ## older.

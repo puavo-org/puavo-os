@@ -134,7 +134,7 @@ setup_nets()
         ## Tell gateway which networks we are going to provide.
         for net in "${PWAP_NETS[@]}"; do
             IFS=':' read _ ssid _ <<<"${net}"
-            echo "${ssid}" | nc "${PWAP_GWADDR}" "${PWAP_GWPORT}"
+            echo "${ssid}" | nc "${PWAP_GWADDR}" "${PWAP_GWPORT_CTRL}"
         done
     fi
 }
@@ -200,7 +200,7 @@ start_services()
         dhclient -d "${ssid}" &
 
         vtund -n -f "${PWAP_RUNDIR}/${ssid}_vtund.conf" \
-            -P "${PWAP_VTUND_PORT}" \
+            -P "${PWAP_GWPORT_DATA}" \
             "${session}" "${PWAP_GWADDR}" &
     done
 

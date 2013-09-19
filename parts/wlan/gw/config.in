@@ -4,11 +4,11 @@
 ## Network bridge to which all access point tunnels will be added.
 PWGW_BRIDGE=wlan0
 
-## Port to listen to for incoming accesspoints.
-PWGW_PORT=45046
+## Control channel port.
+PWGW_PORT_CTRL=45046
 
-## Port to which all access point tunnels will be connected to.
-PWGW_VTUND_PORT=45045
+## Data channel port.
+PWGW_PORT_DATA=45045
 
 ## Runtime directory which is created on start and removed on stop.
 PWGW_RUNDIR=/var/run/puavo-wlangw

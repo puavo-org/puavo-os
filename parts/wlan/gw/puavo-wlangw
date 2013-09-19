@@ -68,9 +68,9 @@ mkdir -p "${PWGW_RUNDIR}"
 
 cp "${PWGW_DATADIR}/vtund.conf" "${PWGW_RUNDIR}"
 
-vtund -s -P "${PWGW_VTUND_PORT}" -n -f "${PWGW_RUNDIR}/vtund.conf" &
+vtund -s -P "${PWGW_PORT_DATA}" -n -f "${PWGW_RUNDIR}/vtund.conf" &
 echo $! >"${PWGW_RUNDIR}/vtund.pid"
 
-ncat -c "${PWGW_LIBDIR}/add-network \"${PWGW_RUNDIR}\" \"${PWGW_BRIDGE}\"" -k -l "${PWGW_PORT}" &
+ncat -c "${PWGW_LIBDIR}/add-network \"${PWGW_RUNDIR}\" \"${PWGW_BRIDGE}\"" -k -l "${PWGW_PORT_CTRL}" &
 
 wait
