@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -eu
+
+unity_greeter_tty=$(ps -eH \
+    | grep -B2 unity-greeter \
+    | awk '{print $2}' \
+    | head -n1 \
+    | sed -n 's/^tty//p')
+
+if [ -z "${unity_greeter_tty}" ]; then
+    echo "E: unity-greeter is not running" >&2
+    exit 1
+fi
+
+chvt "${unity_greeter_tty}"
