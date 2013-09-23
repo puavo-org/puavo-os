@@ -482,7 +482,9 @@ class LdapAcl
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Groups.subtree,
 	  'filter=(objectClass=puavoSchool)',
-				attrs(%w(member
+				attrs(%w(puavoPrinterQueue
+					 puavoWirelessPrinterQueue
+					 member
 					 memberUid)),			Rule.write(Set.school_admin_or_owner_and_user),
 														Rule.read(People.children, Hosts.subtree),
 														RuleBreak.read(Set.sysgroup('getent')),						],
