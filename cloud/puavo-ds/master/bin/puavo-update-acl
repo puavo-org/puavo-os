@@ -1,12 +1,12 @@
 #!/usr/bin/ruby
 
-require 'rubygems'
 require "erb"
 require 'readline'
 require 'ldap'
-require 'database_acl'
 require 'yaml'
+
 require 'puavo/etc'
+require 'puavo-ds/database_acl'
 
 
 organisation_name = ARGV.first
