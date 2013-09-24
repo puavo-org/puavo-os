@@ -8,10 +8,18 @@ require 'fileutils'
 require 'tempfile'
 require 'uuidtools'
 
+@default_kvm_cpu = [1, (`nproc`.chomp.to_i)-2].max
+
+mem = File.read("/proc/meminfo")
+
+if /MemTotal:.*?(\d+)/.match(mem)
+  @default_kvm_mem = [$1.to_i-3*1024*1024, 2*1024*1024].max
+end
+
 @kvm_name = ARGV[0]
-@kvm_cpus = ARGV[1] || 6
+@kvm_cpus = ARGV[1] || @default_kvm_cpu
 @kvm_uuid = UUIDTools::UUID.random_create.to_s
-@kvm_memory = ARGV[2] || 12097152
+@kvm_memory = ARGV[2] || @default_kvm_mem
 kvm_disk_size = ARGV[3] || "30G"
 @kvm_mac = "aa:cc:" + (1..4).map{"%0.2x"%rand(256)}.join(":")
 
