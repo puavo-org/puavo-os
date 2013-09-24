@@ -31,7 +31,7 @@
     <interface type='bridge'>
       <mac address='<%= @kvm_mac %>'/>
       <source bridge='ltsp0'/>
-      <model type='virtio'/>
+      <model type='e1000'/>
     </interface>
     <serial type='pty'>
       <target port='0'/>
