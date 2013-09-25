@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # puavo-autopilot - automatic test tool for Puavo desktop sessions
 # Copyright (C) 2013 Opinsys Oy
 #
@@ -16,6 +16,19 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+set -eu
+
+on_exit()
+{
+    local exitval=$?
+
+    if [ -n "${workdir}" ]; then
+        rm -rf "${workdir}" || exitval=$?
+    fi
+
+    exit $exitval
+}
+
 if [ $# -ne 1 ]; then
     echo "E: missing argument" >&2
     echo "Usage: $0 PNG" >&2
@@ -28,15 +41,20 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-coords=$(detect-png "${png}" | head -n1)
-if [ -z "${coords}" ]; then
-    echo "E: image '${png}' not detected" >&2
-    exit 1
-fi
+workdir=''
 
-xte "mousemove ${coords}" || {
-    echo "E: failed to move the mouse cursor" >&2
+# After this point, we are going to make permanent changes, hence we
+# setup cleanup hook to make sure we do not leave anything behind us.
+
+trap on_exit EXIT
+
+workdir=$(mktemp -d)
+
+cd "${workdir}"
+
+scrot screenshot.png || {
+    echo "E: failed to take a screenshot" >&2
     exit 1
 }
 
-exit 0
+visgrep screenshot.png "${png}" | sed -nr 's/^([0-9]+),([0-9]+) .*$/\1 \2/p'
