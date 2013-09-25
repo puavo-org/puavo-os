@@ -8,7 +8,7 @@ if [ $# -ne 0 ]; then
     exit 1
 fi
 
-switch-to-unity-greeter-vt
+switch-to-login-vt
 
 ## The "Guest Session" widget might NOT be the active one, click down
 ## arrow to activate the guest login widget.

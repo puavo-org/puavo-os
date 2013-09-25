@@ -11,7 +11,7 @@ fi
 username=$1
 password=$2
 
-switch-to-unity-greeter-vt
+switch-to-login-vt
 
 ## The "Guest Session" widget might be the active one, click up arrow to
 ## activate the normal login widget.
