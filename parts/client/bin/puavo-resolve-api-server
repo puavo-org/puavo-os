@@ -33,5 +33,5 @@ if [ "$(cat /etc/puavo/hosttype)" = "laptop" -o "$cloud" = "--cloud" ]; then
     exit 0
 fi
 
-# no server was found :(
+echo "Failed to resolve api server" 1>&2
 exit 1
