@@ -3,3 +3,14 @@
 =================
 
 Automatic test tool for Puavo desktop sessions.
+
+Runtime dependencies
+====================
+
+- Bash (>= 4.2)
+- GNU coreutils (>= 8.13)
+- GNU awk (>= 4.0.1)
+- GNU grep (>= 2.12)
+- GNU sed (>= 4.2.1)
+- scrot (>= 0.8)
+- xautomation (>= 1.07)
