@@ -482,7 +482,24 @@ class LdapAcl
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Groups.subtree,
 	  'filter=(objectClass=puavoSchool)',
-				attrs(%w(puavoPrinterQueue
+				attrs(%w(displayName
+					 puavoNamePrefix
+					 puavoSchoolHomePageURL
+					 description
+					 telephoneNumber
+					 facsimileTelephoneNumber
+					 l
+					 street
+					 postOfficeBox
+					 postalAddress
+					 postalCode
+					 st
+					 jpegPhoto
+					 preferredLanguage
+					 puavoDeviceImage
+					 puavoAllowGuest
+					 puavoPersonalDevice
+					 puavoPrinterQueue
 					 puavoWirelessPrinterQueue
 					 member
 					 memberUid)),			Rule.write(Set.school_admin_or_owner_and_user),
