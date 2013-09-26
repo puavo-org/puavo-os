@@ -34,6 +34,9 @@ launchCommand = (msg, cb) ->
 
   [command, args] = command
 
+  console.info "ENV: #{ JSON.stringify(process.env) }"
+  console.info "Executing '#{ command }' with args '#{ args.join(" ") }'"
+
   cmd = spawn command, args,
     detached: true
     cwd: process.env.HOME
