@@ -9,7 +9,6 @@ osIconPath = (iconSearchPaths, id, fallbackIcon) ->
   try
     # Return if id is a real path
     r = fs.realpathSync(id)
-    console.log "REAL PATJ", r
     return r
   catch e
     # Otherwise just continue searching
