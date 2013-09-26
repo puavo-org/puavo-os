@@ -392,7 +392,7 @@ class LdapAcl
 					 objectClass)),								Rule.read(Set.owner_and_user,
 															  PuavoUid.puppet,
 															  PuavoUid.monitor,
-                                                                                                                          Set.school_admin,
+															  Set.school_admin,
 															  Set.externalservice_servers),			Rule.perms('auth', 'anonymous'),	],
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.servers.exact,	attrs(%w(children)),			Rule.write(Set.owner_and_user),		Rule.read(PuavoUid.puppet,
