@@ -39,7 +39,7 @@ spawnEmitter = createSpawnPipe spawnPipePath, (err) ->
 
 
 locale = process.env.LANG
-locale = "fi_FI.UTF-8"
+locale ||= "fi_FI.UTF-8"
 menuJSON = requirefallback(
     webmenuHome + "/menu.json"
     "/etc/webmenu/menu.json"
