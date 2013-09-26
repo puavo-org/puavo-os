@@ -406,6 +406,8 @@ class LdapAcl
                                                                                                                                Set.this_school_admin),	Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.servers.children,	attrs(%w(entry
+					 puavoId
+					 puavoSchool
 					 ou
 					 objectClass
 					 puavoExport
