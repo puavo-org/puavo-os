@@ -7,12 +7,12 @@
     Resolve local puavo api server from dns. If the device type is laptop and
     dns resolve fails it will return the public server.
 
-    --cloud       Fallback to cloud puavo-rest if bootserver dns lookup fails
+    --cloud-fallback       Fallback to cloud puavo-rest if bootserver dns lookup fails
 
     "
 } && exit 0
 
-cloud=$1
+option=$1
 
 set -eu
 
@@ -28,7 +28,7 @@ if [ "$dig_res" != "" ]; then
 fi
 
 # Fallback for laptops that are not in the school network
-if [ "$(cat /etc/puavo/hosttype)" = "laptop" -o "$cloud" = "--cloud" ]; then
+if [ "$(cat /etc/puavo/hosttype)" = "laptop" -o "$option" = "--cloud-fallback" ]; then
     echo -n "https://$puavo_domain"
     exit 0
 fi
