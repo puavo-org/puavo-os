@@ -40,6 +40,7 @@ launchCommand = (msg, cb) ->
   cmd = spawn command, args,
     detached: true
     cwd: process.env.HOME
+    env: process.env
 
   cmd.on "exit", (code) ->
     console.info "Command '#{ command }' #{ JSON.stringify(args) } exited with #{ code }"
