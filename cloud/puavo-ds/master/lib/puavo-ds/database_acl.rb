@@ -402,13 +402,15 @@ class LdapAcl
       [ Hosts.servers.children,						Rule.write(Set.owner_and_user),		Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
 															  Set.externalservice_servers),
-														RuleBreak.none(Set.laptops),		Rule.perms('auth', 'anonymous'),	],
+														RuleBreak.none(Set.laptops,
+                                                                                                                               Set.this_school_admin),	Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.servers.children,	attrs(%w(entry
 					 ou
 					 objectClass
 					 puavoExport
-					 puavoHostname)),							Rule.read(Set.laptops),								],
+					 puavoHostname)),							Rule.read(Set.laptops,
+															  Set.this_school_admin),						],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.samba.exact,	attrs(%w(entry
 					 ou
