@@ -41,7 +41,7 @@ def check_call(cmd)
 end
 
 options[:target] = ARGV[0] || "/state/external_files"
-options[:server] ||= check_call "puavo-resolve-api-server --fallback-cloud"
+options[:server] ||= check_call "puavo-resolve-api-server"
 options[:hostname] ||= PUAVO_ETC.hostname
 
 def read_current_files(dirpath)
