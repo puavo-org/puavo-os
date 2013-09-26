@@ -240,6 +240,11 @@ class packages {
     , 'xzoom' ]:
       tag => [ 'graphics', 'ubuntu', ];
 
+    [ 'iscan'
+    , 'iscan-data'
+    , 'esci-interpreter-perfection-v330' ]:
+      tag => [ 'epson-scanner', 'opinsys', ];
+
     [ 'skype' ]:
       tag => [ 'instant_messaging', 'partner', ];
 
