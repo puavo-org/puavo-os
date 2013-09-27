@@ -420,7 +420,7 @@ class packages {
     , 'spe' ]:
       tag => [ 'programming', 'ubuntu', ];
 
-    [ 'puavo-load-balancer'
+    [ 'puavo-load-reporter'
     , 'puavo-sharedir-client'
     , 'puavo-wlanap' ]:
       tag => [ 'puavo', 'opinsys', ];
