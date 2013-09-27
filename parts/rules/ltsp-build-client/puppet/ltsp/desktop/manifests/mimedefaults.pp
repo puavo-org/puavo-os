@@ -2,7 +2,7 @@ class desktop::mimedefaults {
   require packages
 
   file {
-    '/etc/gnome/defaults.list':
+    '/usr/share/applications/defaults.list':
        content => template('desktop/defaults.list');
   }
 
