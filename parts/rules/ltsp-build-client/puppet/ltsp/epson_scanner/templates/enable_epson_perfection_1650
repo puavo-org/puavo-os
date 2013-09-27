@@ -1,0 +1,6 @@
+#!/bin/sh
+
+set -eu
+
+/bin/sed -ri 's/^epson2$/#epson2/' /etc/sane.d/dll.conf
+/bin/sed -ri 's/^#epson$/epson/' /etc/sane.d/dll.conf
