@@ -1,0 +1,10 @@
+description "eno"
+ 
+start on runlevel [23]
+stop on shutdown
+ 
+script
+    exec /sbin/eno-connect
+end script
+ 
+respawn
