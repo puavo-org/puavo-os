@@ -15,6 +15,17 @@ class polyvision::startup {
     '/usr/local/bin/start_polyvision_cdfnu':
       content => template('polyvision/start_polyvision_cdfnu'),
       mode    => 755;
+
+    '/etc/init/eno.conf':
+      content => template('polyvision/eno.upstart');
+
+    '/sbin/eno-connect':
+      content => template('polyvision/eno-connect'),
+      mode    => 755;
+
+    '/sbin/eno-agent':
+      content => template('polyvision/eno-agent'),
+      mode    => 755;
   }
 
   Package <| tag == whiteboard-polyvision |>
