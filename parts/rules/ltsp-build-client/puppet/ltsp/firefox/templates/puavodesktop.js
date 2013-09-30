@@ -8,4 +8,4 @@ lockPref("network.dns.disableIPv6", true);
 lockPref("network.negotiate-auth.trusted-uris", "api.opinsys.fi");
 lockPref("print.postscript.paper_size", "iso_a4");
 lockPref("toolkit.storage.synchronous", 1);
-lockPref("flashblock.whitelist", "vetamix.net");
+pref("flashblock.whitelist", "vetamix.net");
