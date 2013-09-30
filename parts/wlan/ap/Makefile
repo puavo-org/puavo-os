@@ -36,16 +36,16 @@ install : puavo-wlanap-env installdirs
 		puavo-wlanap
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-wlanap \
 		config \
-		vtund.conf \
-		hostapd.conf.1 \
-		hostapd.conf.6 \
-		hostapd.conf.11 \
-		hostapd.conf.36 \
-		hostapd.conf.40 \
-		hostapd.conf.44 \
-		hostapd.conf.48 \
-		psk_hostapd.conf \
-		open_hostapd.conf \
+		templates/vtund.conf \
+		templates/hostapd.conf.1 \
+		templates/hostapd.conf.6 \
+		templates/hostapd.conf.11 \
+		templates/hostapd.conf.36 \
+		templates/hostapd.conf.40 \
+		templates/hostapd.conf.44 \
+		templates/hostapd.conf.48 \
+		templates/psk_hostapd.conf \
+		templates/open_hostapd.conf \
 		supported_drivers
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-wlanap \
 		config
