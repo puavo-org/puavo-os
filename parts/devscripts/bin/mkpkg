@@ -55,7 +55,7 @@ git diff "$lasttag" # WTF: why this is needed? Otherwise the following
 		    # git diff just silently succeeds and .dev-suffix
 		    # is not appended to the version.
 git diff --quiet "$lasttag" || {
-    this_orig_version="${this_orig_version}.dev$(date +%s)"
+    this_orig_version="${this_orig_version}+dev$(date +%s).$(git branch | cut -d' ' -f2).$(git rev-parse HEAD)"
 }
 last_version_prefix=$(dpkg-parsechangelog | sed -ne 's/^Version: \(\([0-9]\+\):\)\?\(.*\)-.*/\1/p')
 this_package_version="${last_version_prefix}${this_orig_version}-0+opinsys1"
