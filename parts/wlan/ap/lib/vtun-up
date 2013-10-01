@@ -2,5 +2,6 @@
 
 set -eu
 
-ifconfig "$1" up
-brctl addif "$2" "$1"
+. puavo-wlanap-env
+
+run-parts --arg="$1" --arg="$2" -- "${PWAP_DATADIR}/vtun-up.d"

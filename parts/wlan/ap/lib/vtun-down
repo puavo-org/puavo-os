@@ -2,5 +2,6 @@
 
 set -eu
 
-brctl delif "$2" "$1"
-ifconfig "$1" down
+. puavo-wlanap-env
+
+run-parts --arg="$1" --arg="$2" -- "${PWAP_DATADIR}/vtun-down.d"

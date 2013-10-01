@@ -26,10 +26,20 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-wlanap
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-wlanap
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-up.d
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-down.d
 	mkdir -p $(DESTDIR)$(libdir)/puavo-wlanap
 
 .PHONY : install
 install : puavo-wlanap-env installdirs
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-up.d \
+		vtun-up.d/README
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-down.d \
+		vtun-down.d/README
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-up.d \
+		vtun-up.d/01-add-network
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-down.d \
+		vtun-down.d/01-del-network
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-wlanap-env
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
