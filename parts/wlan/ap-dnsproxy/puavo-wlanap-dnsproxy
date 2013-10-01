@@ -1,0 +1,57 @@
+#!/bin/bash
+
+set -eubm
+
+on_exit()
+{
+    local -r exitval=$?
+
+    ## Do not exit or terminate on error or signal anymore. We are
+    ## already exiting and it would be shame to exit while exiting, yo
+    ## dawg.
+    set +eu
+    trap '' EXIT HUP INT QUIT ABRT ALRM TERM USR1 USR2
+
+    ## Kill our child processes. There is no reason to let Init adopt
+    ## them when we die.
+    pkill -TERM -P $$
+
+    rm -rf "${PWAP_DNSPROXY_RUNDIR}"
+
+    exit $exitval
+}
+
+PWAP_DNSPROXY_RUNDIR="/var/run/$(basename $0)"
+
+## After this point the process is getting hot and starts taking actions
+## which might have persistent side-effects (files, directories,
+## bridges, other processes, etc.). The trap is set to ensure that
+## everything gets cleaned up properly afterwards.
+trap on_exit EXIT
+
+mkdir -p "${PWAP_DNSPROXY_RUNDIR}"
+
+dnsmasq_ptr_record_args=""
+puavo_domain=$(cat /etc/puavo/domain)
+puavo_hostname=$(cat /etc/puavo/hostname)
+puavo_api_server=$(puavo-resolve-api-server)
+url="${puavo_api_server}/v3/devices/${puavo_hostname}/wireless_printer_queues"
+json=$(wget -O - -q --ca-certificate /etc/puavo/certs/rootca.pem --header 'Authorization: Bootserver' "${url}")
+printer_names=$(echo "${json}" | jq -r '.[].name')
+if [ "${printer_names}" == "null" ]; then
+    echo "I: wireless printers not found, exiting" >&2
+    exit 0
+fi
+
+for printer_name in ${printer_names}; do
+    dnsmasq_ptr_record_args="${dnsmasq_ptr_record_args} --ptr-record='_universal._sub._ipp._tcp.${puavo_domain},${printer_name}._ipp._tcp.${puavo_domain}'"
+done
+
+dnsmasq \
+    --port=5353 \
+    --keep-in-foreground \
+    --user=nobody \
+    --pid-file="${PWAP_DNSPROXY_RUNDIR}/dnsmasq.pid" \
+    ${dnsmasq_ptr_record_args} &
+
+wait
