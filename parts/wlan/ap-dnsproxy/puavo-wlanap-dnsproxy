@@ -54,4 +54,22 @@ dnsmasq \
     --pid-file="${PWAP_DNSPROXY_RUNDIR}/dnsmasq.pid" \
     ${dnsmasq_ptr_record_args} &
 
+nc -k -l -U "${PWAP_DNSPROXY_RUNDIR}/control.socket" | while read event wlanbridge; do
+    case "$event" in
+        vtun-up)
+            iptables -t nat -A PREROUTING -p udp --dport 53 -i "${wlanbridge}" -j REDIRECT --to-port 5353 || {
+                echo "W: failed to enable dns redirection" >&2
+            }
+            ;;
+        vtun-down)
+            iptables -t nat -D PREROUTING -p udp --dport 53 -i "${wlanbridge}" -j REDIRECT --to-port 5353 || {
+                echo "W: failed to disable dns redirection" >&2
+            }
+            ;;
+        *)
+            echo "W: received unknown event '${event} ${wlanbridge}'" >&2
+            ;;
+    esac
+done
+
 wait

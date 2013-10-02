@@ -2,4 +2,4 @@
 
 set -eu
 
-iptables -t nat -D PREROUTING -p udp --dport 53 -i "$2" -j REDIRECT --to-port 5353
+echo "vtun-down $2" | nc -U /var/run/puavo-wlanap-dnsproxy/control.socket
