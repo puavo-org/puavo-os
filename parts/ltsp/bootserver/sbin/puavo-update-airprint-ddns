@@ -5,64 +5,52 @@
 # Helper script to update DNS entries needed by AirPrint to print to CUPS
 # printers.
 
+require 'puavo'
+require 'rest-client'
 require 'yaml'
 require 'dnsruby'
-include Dnsruby
 
 config = Hash.new
-
-@puavo_domain      = File.read('/etc/puavo/domain'         ).chomp
 
 if File.exists?("/etc/dhcp/ddns-keys/nsupdate.key")
   tmp = File.read("/etc/dhcp/ddns-keys/nsupdate.key")
   if /key "(.*?)"/.match(tmp)
-    config["key_name"] = $1
+    config[:key_name] = $1
   end
 
   if /secret "(.*?)"/.match(tmp)
-    config["key"] = $1
+    config[:key] = $1
   end
 end
 
-config["servers"] = ["127.0.0.1:553"]
-config["domain"] = @puavo_domain
+config[:dns_server] = {
+  :host => "127.0.0.1",
+  :port => 553 }
 
-if File.exists?("/etc/puavo/nameserver.yml")
-  config_file = YAML.load(File.read("/etc/puavo/nameserver.yml"))
-  config.merge(config_file)
+config["domain"] = PUAVO_ETC.domain
+
+# Get printer queues from the puavo-rest (bootserver)
+printer_queues = RestClient.get "#{ PUAVO_ETC.domain }/v3/boot_server/#{ PUAVO_ETC.hostname }/wireless_printer_queues"
+
+# FIXME: set tsig by initialize
+dns_server = Dnsruby::Resolver.new({ :nameserver => config[:dns_server][:host],
+                                     :port => config[:dns_server][:port] })
+dns_server.tsig = [config[:key_name], config[:key]]
+
+# Get current value of _universal._sub._ipp._tcp.<domain of organisation>"
+dns_server.query( "_universal._sub._ipp._tcp.#{ config["domain"] }", Dnsruby::Types.PTR )
+
+dns_update_packet = Dnsruby::Update.new(config["domain"])
+
+dns_update_packet.delete("_universal._sub._ipp._tcp.#{ config["domain"] }")
+
+printer_queues.each do |printer_queue|
+  dns_update_packet.add("_universal._sub._ipp._tcp.#{ config["domain"] }", 'PTR', 60, "#{ printer_queue['name'] }._ipp._tcp.#{ config["domain"] }.")
 end
 
-config["servers"].each do |url|
-  port = 53
-  server = url
-
-  if /(.*):(\d+)/.match(url)
-    server = $1
-    port = $2
-  end
-
-  resolver = Dnsruby::Resolver.new({:nameserver => server})
-  resolver.port=(port)
-
-  update = Dnsruby::Update.new(config["domain"])
-
-  resolver.tsig=config["key_name"],config["key"]
-
-  update.delete("_universal._sub._ipp._tcp.#{config["domain"]}")
-
-  `lpstat -a`.split("\n").each do |line|
-    if /^(.*?) /.match(line)
-      srv = Dnsruby::RR.create("#{$1}._ipp._tcp.#{config["domain"]} IN SRV 0 0 631 cups.#{config["domain"]}")
-
-      update.add("_universal._sub._ipp._tcp.#{config["domain"]}", 'PTR', 60, "#{$1}._ipp._tcp.#{config["domain"]}.")
-      update.add("#{$1}._ipp._tcp.#{config["domain"]}", 'TXT', 60, [ "txtvers=1", "qtotal=1", "Transparent=T", "URF=DM3", "rp=printers/#{$1}", "note=#{$1}", "product=(GPL Ghostscript)", "printer-state=3", "printer-type=0x803014", "pdl=application/octet-stream,application/pdf,application/postscript,image/gif,image/jpeg,image/png,image/tiff,image/urf,text/html,text/plain,application/vnd.cups-banner,application/vnd.cups-pdf,application/vnd.cups-postscript,application/vnd.cups-raw" ])
-      update.add(srv)
-    end
-  end
-
-  begin
-    reply = resolver.send_message(update)
-  rescue Exception => e
-    puts "Update failed: #{e.inspect}"
-  end
+begin
+  # Update dns server
+  dns_server.send_message(dns_update_packet)
+rescue Exception => e
+  puts "DNS server (#{ config["server"]["host"] }) update failed: #{e.inspect}"
 end
