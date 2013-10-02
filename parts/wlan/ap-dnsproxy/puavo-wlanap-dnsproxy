@@ -44,7 +44,7 @@ if [ "${printer_names}" == "null" ]; then
 fi
 
 for printer_name in ${printer_names}; do
-    dnsmasq_ptr_record_args="${dnsmasq_ptr_record_args} --ptr-record='_universal._sub._ipp._tcp.${puavo_domain},${printer_name}._ipp._tcp.${puavo_domain}'"
+    dnsmasq_ptr_record_args="${dnsmasq_ptr_record_args} --ptr-record=_universal._sub._ipp._tcp.${puavo_domain},${printer_name}._ipp._tcp.${puavo_domain}"
 done
 
 dnsmasq \
