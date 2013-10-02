@@ -50,18 +50,15 @@ new_ipp_records.each_update do |r|
   new_ipp_record_strings.push r.rdata_to_string
 end
 
-if current_ipp_record_strings != new_ipp_record_strings
+if current_ipp_record_strings.sort != new_ipp_record_strings.sort
+  ipp_delete_records = Dnsruby::Update.new(PUAVO_ETC.domain)
+  ipp_delete_records.delete("_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }")
+
   begin
     # Update dns server
-    dns_server.send_message(new_ipp_record_strings)
+    dns_server.send_message(ipp_delete_records)
+    dns_server.send_message(new_ipp_records)
   rescue Exception => e
-    puts "DNS server (#{ config["server"]["host"] }) update failed (new universal ipp records): #{e.inspect}"
+    puts "DNS server (#{ dns_server_host }) update failed (new universal ipp records): #{e.inspect}"
   end
-end
-
-begin
-  # Update dns server
-  dns_server.send_message(dns_update_packet)
-rescue Exception => e
-  puts "DNS server (#{ config["server"]["host"] }) update failed: #{e.inspect}"
 end
