@@ -40,17 +40,16 @@ current_ipp_record_strings = current_ipp_records.answer.map do |r|
   r.rdata_to_string
 end
 
-new_ipp_records = Dnsruby::Update.new(PUAVO_ETC.domain)
-printer_queues.each do |printer_queue|
-  new_ipp_records.add("_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }", 'PTR', 60, "#{ printer_queue['name'] }._ipp._tcp.#{ PUAVO_ETC.domain }.")
-end
-
-new_ipp_record_strings = []
-new_ipp_records.each_update do |r|
-  new_ipp_record_strings.push r.rdata_to_string
+new_ipp_record_strings = printer_queues.map do |printer_queue|
+  "#{ printer_queue['name'] }._ipp._tcp.#{ PUAVO_ETC.domain }."
 end
 
 if current_ipp_record_strings.sort != new_ipp_record_strings.sort
+  new_ipp_records = Dnsruby::Update.new(PUAVO_ETC.domain)
+  printer_queues.each do |printer_queue|
+    new_ipp_records.add("_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }", 'PTR', 60, "#{ printer_queue['name'] }._ipp._tcp.#{ PUAVO_ETC.domain }.")
+  end
+
   ipp_delete_records = Dnsruby::Update.new(PUAVO_ETC.domain)
   ipp_delete_records.delete("_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }")
 
