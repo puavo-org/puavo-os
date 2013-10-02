@@ -1,4 +1,4 @@
-subdirs = ap gw
+subdirs = ap gw ap-dnsproxy
 install-subdirs = $(subdirs:%=install-%)
 clean-subdirs = $(subdirs:%=clean-%)
 
