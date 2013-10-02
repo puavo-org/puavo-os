@@ -33,12 +33,30 @@ dns_server = Dnsruby::Resolver.new({ :nameserver => dns_server_host,
 dns_server.tsig = [nsupdate_key_name, nsupdate_key]
 
 # Get current value of _universal._sub._ipp._tcp.<domain of organisation>"
-dns_server.query( "_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }", Dnsruby::Types.PTR )
+current_ipp_records = dns_server.query( "_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }",
+                                        Dnsruby::Types.PTR )
 
-dns_update_packet = Dnsruby::Update.new(PUAVO_ETC.domain)
+current_ipp_record_strings = current_ipp_records.answer.map do |r|
+  r.rdata_to_string
+end
 
+new_ipp_records = Dnsruby::Update.new(PUAVO_ETC.domain)
 printer_queues.each do |printer_queue|
-  dns_update_packet.add("_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }", 'PTR', 60, "#{ printer_queue['name'] }._ipp._tcp.#{ PUAVO_ETC.domain }.")
+  new_ipp_records.add("_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }", 'PTR', 60, "#{ printer_queue['name'] }._ipp._tcp.#{ PUAVO_ETC.domain }.")
+end
+
+new_ipp_record_strings = []
+new_ipp_records.each_update do |r|
+  new_ipp_record_strings.push r.rdata_to_string
+end
+
+if current_ipp_record_strings != new_ipp_record_strings
+  begin
+    # Update dns server
+    dns_server.send_message(new_ipp_record_strings)
+  rescue Exception => e
+    puts "DNS server (#{ config["server"]["host"] }) update failed (new universal ipp records): #{e.inspect}"
+  end
 end
 
 begin
