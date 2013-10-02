@@ -10,42 +10,37 @@ require 'rest-client'
 require 'yaml'
 require 'dnsruby'
 
-config = Hash.new
-
 if File.exists?("/etc/dhcp/ddns-keys/nsupdate.key")
   tmp = File.read("/etc/dhcp/ddns-keys/nsupdate.key")
   if /key "(.*?)"/.match(tmp)
-    config[:key_name] = $1
+    nsupdate_key_name = $1
   end
 
   if /secret "(.*?)"/.match(tmp)
-    config[:key] = $1
+    nsupdate_key = $1
   end
 end
 
-config[:dns_server] = {
-  :host => "127.0.0.1",
-  :port => 553 }
-
-config["domain"] = PUAVO_ETC.domain
+dns_server_host = "127.0.0.1"
+dns_server_port = 553
 
 # Get printer queues from the puavo-rest (bootserver)
 printer_queues = RestClient.get "#{ PUAVO_ETC.domain }/v3/boot_server/#{ PUAVO_ETC.hostname }/wireless_printer_queues"
 
 # FIXME: set tsig by initialize
-dns_server = Dnsruby::Resolver.new({ :nameserver => config[:dns_server][:host],
-                                     :port => config[:dns_server][:port] })
-dns_server.tsig = [config[:key_name], config[:key]]
+dns_server = Dnsruby::Resolver.new({ :nameserver => dns_server_host,
+                                     :port => dns_server_port })
+dns_server.tsig = [nsupdate_key_name, nsupdate_key]
 
 # Get current value of _universal._sub._ipp._tcp.<domain of organisation>"
-dns_server.query( "_universal._sub._ipp._tcp.#{ config["domain"] }", Dnsruby::Types.PTR )
+dns_server.query( "_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }", Dnsruby::Types.PTR )
 
-dns_update_packet = Dnsruby::Update.new(config["domain"])
+dns_update_packet = Dnsruby::Update.new(PUAVO_ETC.domain)
 
-dns_update_packet.delete("_universal._sub._ipp._tcp.#{ config["domain"] }")
+dns_update_packet.delete("_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }")
 
 printer_queues.each do |printer_queue|
-  dns_update_packet.add("_universal._sub._ipp._tcp.#{ config["domain"] }", 'PTR', 60, "#{ printer_queue['name'] }._ipp._tcp.#{ config["domain"] }.")
+  dns_update_packet.add("_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }", 'PTR', 60, "#{ printer_queue['name'] }._ipp._tcp.#{ PUAVO_ETC.domain }.")
 end
 
 begin
