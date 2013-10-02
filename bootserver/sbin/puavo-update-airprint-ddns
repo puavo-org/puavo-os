@@ -37,8 +37,6 @@ dns_server.query( "_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }", Dnsruby::Ty
 
 dns_update_packet = Dnsruby::Update.new(PUAVO_ETC.domain)
 
-dns_update_packet.delete("_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }")
-
 printer_queues.each do |printer_queue|
   dns_update_packet.add("_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }", 'PTR', 60, "#{ printer_queue['name'] }._ipp._tcp.#{ PUAVO_ETC.domain }.")
 end
