@@ -25,19 +25,33 @@ dns_server_host = "127.0.0.1"
 dns_server_port = 553
 
 # Get printer queues from the puavo-rest (bootserver)
-printer_queues = RestClient.get "#{ PUAVO_ETC.domain }/v3/boot_server/#{ PUAVO_ETC.hostname }/wireless_printer_queues"
+puavo_api_server = `puavo-resolve-api-server`.chomp
+response = RestClient.get( puavo_api_server +
+                           "/v3/boot_server/" +
+                           PUAVO_ETC.hostname +
+                           "/wireless_printer_queues" )
+
+printer_queues = []
+if response.code == 200
+  printer_queues = JSON.parse response.to_str
+end
 
 # FIXME: set tsig by initialize
 dns_server = Dnsruby::Resolver.new({ :nameserver => dns_server_host,
                                      :port => dns_server_port })
 dns_server.tsig = [nsupdate_key_name, nsupdate_key]
 
+current_ipp_record_strings = []
 # Get current value of _universal._sub._ipp._tcp.<domain of organisation>"
-current_ipp_records = dns_server.query( "_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }",
-                                        Dnsruby::Types.PTR )
+begin
+  current_ipp_records = dns_server.query( "_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }",
+                                          Dnsruby::Types.PTR )
 
-current_ipp_record_strings = current_ipp_records.answer.map do |r|
-  r.rdata_to_string
+  current_ipp_record_strings = current_ipp_records.answer.map do |r|
+    r.rdata_to_string
+  end
+rescue Dnsruby::NXDomain
+  puts "PTR records not found"
 end
 
 new_ipp_record_strings = printer_queues.map do |printer_queue|
@@ -83,9 +97,11 @@ printer_queues.each do |printer_queue|
 end
 
 begin
-  # Update dns server
-  puts "Send update packet to DNS server"
-  dns_server.send_message(dns_update_packet)
+  if dns_update_packet.update_counts > 0
+    # Update dns server
+    puts "Send update packet to DNS server"
+    dns_server.send_message(dns_update_packet)
+  end
 rescue Exception => e
   puts "DNS server (#{ dns_server_host }) update failed (new universal ipp records): #{e.inspect}"
 end
