@@ -46,16 +46,13 @@ end
 
 if current_ipp_record_strings.sort != new_ipp_record_strings.sort
   new_ipp_records = Dnsruby::Update.new(PUAVO_ETC.domain)
+  new_ipp_records.delete("_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }")
   printer_queues.each do |printer_queue|
     new_ipp_records.add("_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }", 'PTR', 60, "#{ printer_queue['name'] }._ipp._tcp.#{ PUAVO_ETC.domain }.")
   end
 
-  ipp_delete_records = Dnsruby::Update.new(PUAVO_ETC.domain)
-  ipp_delete_records.delete("_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }")
-
   begin
     # Update dns server
-    dns_server.send_message(ipp_delete_records)
     dns_server.send_message(new_ipp_records)
   rescue Exception => e
     puts "DNS server (#{ dns_server_host }) update failed (new universal ipp records): #{e.inspect}"
