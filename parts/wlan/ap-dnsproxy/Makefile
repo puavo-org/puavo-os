@@ -48,7 +48,7 @@ install : installdirs puavo-wlanap-dnsproxy-env config
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-wlanap-dnsproxy \
 		config
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
-		puavo-wlanap-dnxproxy-env
+		puavo-wlanap-dnsproxy-env
 	rm -f puavo-wlanap-dnsproxy-env
 
 .PHONY : clean
