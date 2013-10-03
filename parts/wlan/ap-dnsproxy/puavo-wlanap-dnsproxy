@@ -30,24 +30,24 @@ on_exit()
 
 check_dns_redirection()
 {
-    iptables -t nat -C PREROUTING -p udp --dport 53 -i "$1" -j REDIRECT --to-port "$2"
+    iptables -t nat -C PREROUTING -p udp --dport 53 -i "$1" -j REDIRECT --to-port "$2" -m comment --comment "puavo-wlanap-dnsproxy"
 }
 
 disable_dns_redirection()
 {
-    iptables -t nat -D PREROUTING -p udp --dport 53 -i "$1" -j REDIRECT --to-port "$2"
+    iptables -t nat -D PREROUTING -p udp --dport 53 -i "$1" -j REDIRECT --to-port "$2" -m comment --comment "puavo-wlanap-dnsproxy"
 }
 
 enable_dns_redirection()
 {
-    iptables -t nat -A PREROUTING -p udp --dport 53 -i "$1" -j REDIRECT --to-port "$2" || return $?
+    iptables -t nat -A PREROUTING -p udp --dport 53 -i "$1" -j REDIRECT --to-port "$2"  -m comment --comment "puavo-wlanap-dnsproxy" || return $?
 
     ## Ensure the rule is added only once. If we fail to disable what we
     ## just added, then there is something really strange going on and
     ## we can nothing but return with error.
     disable_dns_redirection "$1" "$2" || return $?
     check_dns_redirection "$1" "$2" 2>/dev/null || {
-        iptables -t nat -A PREROUTING -p udp --dport 53 -i "$1" -j REDIRECT --to-port "$2"
+        iptables -t nat -A PREROUTING -p udp --dport 53 -i "$1" -j REDIRECT --to-port "$2" -m comment --comment "puavo-wlanap-dnsproxy"
     }
 }
 
