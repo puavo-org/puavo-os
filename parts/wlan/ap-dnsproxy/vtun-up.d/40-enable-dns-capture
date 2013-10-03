@@ -9,5 +9,5 @@ source "${PWAP_CONFDIR}/config" || true
 networkcache="${PWAP_DNSPROXY_STATEDIR}/networkcache"
 touch "${networkcache}"
 echo "vtun-up $2" | nc -U "${PWAP_DNSPROXY_RUNDIR}/control.socket" || {
-    flock "${networkcache}" -c "echo $2 >>'${networkcache}'"
+    flock "${networkcache}" -c "sort -u <(cat '${networkcache}') <(echo $2) >'${networkcache}'"
 }
