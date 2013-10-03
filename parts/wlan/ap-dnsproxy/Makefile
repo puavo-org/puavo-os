@@ -35,7 +35,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(localstatedir)/lib/puavo-wlanap-dnsproxy
 
 .PHONY : install
-install : installdirs puavo-wlanap-dnsproxy-env
+install : installdirs puavo-wlanap-dnsproxy-env config
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-wlanap-dnsproxy
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-up.d \
