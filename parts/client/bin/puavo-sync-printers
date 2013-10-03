@@ -2,16 +2,8 @@
 
 require "puavo"
 require "optparse"
-require "rest-client"
-require "addressable/uri"
-require "pp"
-
-def inject_auth(url, user, password)
-  u = Addressable::URI.parse(url)
-  u.user = user
-  u.password = password
-  u.to_s
-end
+require "httparty"
+require "socket"
 
 options = {
   :printers_conf => "/etc/cups/printers.conf"
@@ -30,16 +22,16 @@ parser = OptionParser.new do |opts|
   Be default printers are read from #{ options[:printers_conf] }
   "
 
-  opts.on("--get-printers-url [URL]", "Url where to fetch current printers") do |url|
-    options[:get_printers] = url
-  end
-
   opts.on("--post-printers-url [URL]", "Url where to post printers") do |url|
     options[:post_printers] = url
   end
 
-  opts.on("-s", "--server-dn [DN]", "Server DN") do |server|
-    options[:server_dn] = server
+  opts.on("--api-server [URL]", "API server root") do |url|
+    options[:api_server] = url
+  end
+
+  opts.on("-h", "--hostname [HOSTNAME]", "Boot server hostname") do |hostname|
+    options[:hostname] = hostname
   end
 
   opts.on("-u", "--user [USER]", "Username or dn") do |username|
@@ -59,24 +51,33 @@ end
 
 parser.parse!
 
-options[:printers_conf] = ARGV[0] if ARGV[0]
-options[:server_dn] ||= PUAVO_ETC.ldap_dn
-options[:get_printers] ||= "#{ `puavo-resolve-api-server` }/v3/printer_queues"
+def assert_response(res)
+  if ![200, 201, 202].include?(res.code)
+    puts "Bad response status #{ res.code } for #{ res.request.path.to_s }: #{ res }"
+    exit 1
+  end
+end
+
+
+options[:api_server] ||= `puavo-resolve-api-server`
 options[:post_printers] ||= "https://#{ PUAVO_ETC.domain }/devices/printers.json"
 options[:user] ||= PUAVO_ETC.ldap_dn
 options[:password] ||= PUAVO_ETC.ldap_password
+options[:hostname] ||= Socket.gethostname
 
-options[:get_printers] = inject_auth(
-  options[:get_printers],
-  options[:user],
-  options[:password]
-)
+options[:get_printers] = "#{ options[:api_server] }/v3/printer_queues"
+options[:printers_conf] = ARGV[0] if ARGV[0]
 
-options[:post_printers] = inject_auth(
-  options[:post_printers],
-  options[:user],
-  options[:password]
-)
+
+boot_server_resource =  "#{ options[:api_server] }/v3/boot_servers/#{ options[:hostname] }"
+puts "Fetching boot server info from: #{ boot_server_resource }"
+res = HTTParty.get boot_server_resource,
+  :headers => {
+    "Authorization" => "Bootserver"
+  }
+assert_response res
+options[:server_dn] = res["dn"]
+
 
 # From https://github.com/opinsys/liitu-puppet/blob/25c92e5c85e8637cdbd04c390f98eca69d3cc68b/modules/service/templates/usr/local/sbin/send_printers_to_puavo#L18-L40
 def parse_cups_printers_conf(conf_path)
@@ -103,18 +104,27 @@ def parse_cups_printers_conf(conf_path)
   printers
 end
 
-current_printers = RestClient.get(options[:get_printers],
-  :params => {
-    :server => options[:server_dn]
-  }
-)
+puts "Fetching existing printers from #{ options[:get_printers] }"
 
-current_printers = JSON.parse(current_printers)
+current_printers = HTTParty.get(options[:get_printers],
+  :basic_auth => {
+    :username => options[:user],
+    :password => options[:password]
+  },
+  :headers => {
+    "Content-Type" => "application/json",
+    "Accept" => "application/json"
+  }
+ )
+assert_response res
+
 current_printer_descriptions = current_printers.map do |p|
   p["description"]
 end
 
-parse_cups_printers_conf(options[:printers_conf]).each do |description, info|
+server_printers = parse_cups_printers_conf(options[:printers_conf])
+puts "Ensuring #{ server_printers.size } printers to puavo"
+server_printers.each do |description, info|
 
   # TODO: We might want to check if any of the attributes has been changed and
   # update the printer. Now we only send the printer data if it is completely
@@ -132,10 +142,19 @@ parse_cups_printers_conf(options[:printers_conf]).each do |description, info|
     "puavoServer" => options[:server_dn]
   }
 
-  puts "Adding #{ printer.inspect }"
-  RestClient.post(options[:post_printers], printer.to_json,
-    :content_type => :json,
-    :accept => :json
-  )
+  json = printer.to_json
+  res = HTTParty.post(options[:post_printers],
+    :body => json,
+    :basic_auth => {
+      :username => options[:user],
+      :password => options[:password]
+    },
+    :headers => {
+      "Content-Type" => "application/json",
+      "Accept" => "application/json"
+    }
+   )
+  assert_response res
+  puts "SENT: #{ json }"
 
 end
