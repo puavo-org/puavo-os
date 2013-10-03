@@ -52,8 +52,8 @@ enable_dns_redirection()
 }
 
 source puavo-wlanap-dnsproxy-env
-source "${PWAP_DATADIR}/config"
-source "${PWAP_CONFDIR}/config" || true # User has deleted his config file, cool.
+source "${PWAP_DNSPROXY_DATADIR}/config"
+source "${PWAP_DNSPROXY_CONFDIR}/config" || true # User has deleted his config file, cool.
 
 ## After this point the process is getting hot and starts taking actions
 ## which might have persistent side-effects (files, directories,

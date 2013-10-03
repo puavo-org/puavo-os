@@ -3,8 +3,8 @@
 set -eu
 
 source puavo-wlanap-dnsproxy-env
-source "${PWAP_DATADIR}/config"
-source "${PWAP_CONFDIR}/config" || true
+source "${PWAP_DNSPROXY_DATADIR}/config"
+source "${PWAP_DNSPROXY_CONFDIR}/config" || true
 
 networkcache="${PWAP_DNSPROXY_STATEDIR}/networkcache"
 touch "${networkcache}"

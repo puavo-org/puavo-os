@@ -22,8 +22,8 @@ config : config.in
 .PHONY : puavo-wlanap-dnsproxy-env
 puavo-wlanap-dnsproxy-env :
 	echo "#!/bin/sh" > $@
-	echo "export PWAP_CONFDIR=$(sysconfdir)/puavo-wlanap-dnsproxy" >> $@
-	echo "export PWAP_DATADIR=$(datarootdir)/puavo-wlanap-dnsproxy" >> $@
+	echo "export PWAP_DNSPROXY_CONFDIR=$(sysconfdir)/puavo-wlanap-dnsproxy" >> $@
+	echo "export PWAP_DNSPROXY_DATADIR=$(datarootdir)/puavo-wlanap-dnsproxy" >> $@
 
 .PHONY : installdirs
 installdirs :
