@@ -143,6 +143,9 @@ server_printers.each do |description, info|
   }
 
   json = printer.to_json
+
+  puts "Sending #{ json }"
+  puts "to #{ options[:post_printers] }"
   res = HTTParty.post(options[:post_printers],
     :body => json,
     :basic_auth => {
@@ -155,6 +158,7 @@ server_printers.each do |description, info|
     }
    )
   assert_response res
-  puts "SENT: #{ json }"
+  puts "OK"
+  puts
 
 end
