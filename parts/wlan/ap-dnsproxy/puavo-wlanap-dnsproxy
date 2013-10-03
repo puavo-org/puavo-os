@@ -19,7 +19,7 @@ on_exit()
     ## Read cached events.
     while read wlanbridge; do
         disable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}" && {
-            echo "I: disabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
+            echo "disabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
         }
     done <"${PWAP_DNSPROXY_STATEDIR}/networkcache"
 
@@ -60,11 +60,11 @@ parse_args()
             PWAP_DNSPROXY_ARGS_DAEMON=1
             return 0
         fi
-        echo "E: unexpected argument '$1'" >&2
+        echo "unexpected argument '$1'" >&2
         echo "Usage: $(basename $0) [--daemon]" >&2
         return 1
     elif [ $# -gt 2 ]; then
-        echo "E: too many arguments" >&2
+        echo "too many arguments" >&2
         echo "Usage: $(basename $0) [--daemon]" >&2
         return 1
     fi
@@ -99,7 +99,7 @@ url="${puavo_api_server}/v3/devices/${puavo_hostname}/wireless_printer_queues"
 json=$(wget -O - -q --ca-certificate /etc/puavo/certs/rootca.pem --header 'Authorization: Bootserver' "${url}")
 printer_names=$(echo "${json}" | jq -r '.[].name')
 if [ "${printer_names}" == "null" ]; then
-    echo "I: wireless printers not found, exiting" >&2
+    echo "wireless printers not found, exiting" >&2
     exit 0
 fi
 
@@ -118,14 +118,14 @@ nc -k -l -U "${PWAP_DNSPROXY_RUNDIR}/control.socket" | while read event wlanbrid
     case "$event" in
         vtun-up)
             enable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}"
-            echo "I: enabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
+            echo "enabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
             ;;
         vtun-down)
             disable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}"
-            echo "I: disabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
+            echo "disabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
             ;;
         *)
-            echo "W: received unknown event '${event} ${wlanbridge}'" >&2
+            echo "received unknown event '${event} ${wlanbridge}'" >&2
             ;;
     esac
 done &
@@ -133,7 +133,7 @@ done &
 ## Read cached events.
 while read wlanbridge; do
     enable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}"
-    echo "I: enabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
+    echo "enabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
 done <"${PWAP_DNSPROXY_STATEDIR}/networkcache"
 
 wait
