@@ -50,6 +50,8 @@ source "${PWAP_CONFDIR}/config" || true # User has deleted his config file, cool
 ## everything gets cleaned up properly afterwards.
 trap on_exit EXIT
 
+touch "${PWAP_DNSPROXY_STATEDIR}/networkcache"
+
 mkdir -p "${PWAP_DNSPROXY_RUNDIR}"
 
 dnsmasq_ptr_record_args=""
@@ -96,6 +98,6 @@ while read wlanbridge; do
     enable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}"
     echo "I: enabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT} (cached request)" >&2
 done <"${PWAP_DNSPROXY_STATEDIR}/networkcache"
-rm -f "${PWAP_DNSPROXY_STATEDIR}/networkcache"
+echo -n >"${PWAP_DNSPROXY_STATEDIR}/networkcache"
 
 wait
