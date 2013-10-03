@@ -6,4 +6,8 @@ source puavo-wlanap-dnsproxy-env
 source "${PWAP_DATADIR}/config"
 source "${PWAP_CONFDIR}/config" || true
 
-echo "vtun-down $2" | nc -U "${PWAP_DNSPROXY_RUNDIR}/control.socket"
+networkcache="${PWAP_DNSPROXY_STATEDIR}/networkcache"
+touch "${networkcache}"
+echo "vtun-down $2" | nc -U "${PWAP_DNSPROXY_RUNDIR}/control.socket" || {
+    flock "networkcache" -c "sed -ir '/$2/d' '${networkcache}'"
+}

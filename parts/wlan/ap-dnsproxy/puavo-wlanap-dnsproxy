@@ -21,12 +21,28 @@ on_exit()
     exit $exitval
 }
 
+check_dns_redirection()
+{
+    iptables -t nat -C PREROUTING -p udp --dport 53 -i "$1" -j REDIRECT --to-port "$2"
+}
+
+disable_dns_redirection()
+{
+    iptables -t nat -D PREROUTING -p udp --dport 53 -i "$1" -j REDIRECT --to-port "$2"
+}
+
+enable_dns_redirection()
+{
+    iptables -t nat -A PREROUTING -p udp --dport 53 -i "$1" -j REDIRECT --to-port "$2" || return $?
+
+    ## Ensure the rule is added only once.
+    disable_dns_redirection "$1" "$2" || return $?
+    check_dns_redirection "$1" "$2" || enable_dns_redirection "$1" "$2"
+}
+
 source puavo-wlanap-dnsproxy-env
-
 source "${PWAP_DATADIR}/config"
-
-## The user might have deleted the configuration file, that's ok.
-source "${PWAP_CONFDIR}/config" || true
+source "${PWAP_CONFDIR}/config" || true # User has deleted his config file, cool.
 
 ## After this point the process is getting hot and starts taking actions
 ## which might have persistent side-effects (files, directories,
@@ -62,19 +78,21 @@ dnsmasq \
 nc -k -l -U "${PWAP_DNSPROXY_RUNDIR}/control.socket" | while read event wlanbridge; do
     case "$event" in
         vtun-up)
-            iptables -t nat -A PREROUTING -p udp --dport 53 -i "${wlanbridge}" -j REDIRECT --to-port "${PWAP_DNSPROXY_PORT}" || {
-                echo "W: failed to enable dns redirection" >&2
-            }
+            enable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}"
             ;;
         vtun-down)
-            iptables -t nat -D PREROUTING -p udp --dport 53 -i "${wlanbridge}" -j REDIRECT --to-port "${PWAP_DNSPROXY_PORT}" || {
-                echo "W: failed to disable dns redirection" >&2
-            }
+            disable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}"
             ;;
         *)
             echo "W: received unknown event '${event} ${wlanbridge}'" >&2
             ;;
     esac
-done
+done &
+
+## Read cached events.
+while read wlanbridge; do
+    enable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}"
+done <"${PWAP_DNSPROXY_STATEDIR}/networkcache"
+rm -f "${PWAP_DNSPROXY_STATEDIR}/networkcache"
 
 wait
