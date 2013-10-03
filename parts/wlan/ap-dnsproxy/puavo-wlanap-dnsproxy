@@ -51,9 +51,35 @@ enable_dns_redirection()
     }
 }
 
+parse_args()
+{
+    PWAP_DNSPROXY_ARGS_DAEMON=0
+
+    if [ $# -eq 1 ]; then
+        if [ "$1" = "--daemon" ]; then
+            PWAP_DNSPROXY_ARGS_DAEMON=1
+            return 0
+        fi
+        echo "E: unexpected argument '$1'" >&2
+        echo "Usage: $(basename $0) [--daemon]" >&2
+        return 1
+    elif [ $# -gt 2 ]; then
+        echo "E: too many arguments" >&2
+        echo "Usage: $(basename $0) [--daemon]" >&2
+        return 1
+    fi
+}
+
 source puavo-wlanap-dnsproxy-env
 source "${PWAP_DNSPROXY_DATADIR}/config"
 source "${PWAP_DNSPROXY_CONFDIR}/config" || true # User has deleted his config file, cool.
+
+parse_args "$@"
+
+if [ ${PWAP_DNSPROXY_ARGS_DAEMON} -ne 0 ]; then
+    daemon --noconfig --stderr='daemon.info' --name='puavo-wlanap-dnsproxy' -- puavo-wlanap-dnsproxy
+    exit 0
+fi
 
 ## After this point the process is getting hot and starts taking actions
 ## which might have persistent side-effects (files, directories,
