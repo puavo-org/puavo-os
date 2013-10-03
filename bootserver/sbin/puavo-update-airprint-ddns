@@ -29,7 +29,8 @@ puavo_api_server = `puavo-resolve-api-server`.chomp
 response = RestClient.get( puavo_api_server +
                            "/v3/boot_server/" +
                            PUAVO_ETC.hostname +
-                           "/wireless_printer_queues" )
+                           "/wireless_printer_queues",
+                           :authorization => "Bootserver")
 
 printer_queues = []
 if response.code == 200
