@@ -53,7 +53,7 @@ for printer_name in ${printer_names}; do
 done
 
 dnsmasq \
-    --port=5353 \
+    --port="${PWAP_DNSPROXY_PORT}" \
     --keep-in-foreground \
     --user=nobody \
     --pid-file="${PWAP_DNSPROXY_RUNDIR}/dnsmasq.pid" \
@@ -62,12 +62,12 @@ dnsmasq \
 nc -k -l -U "${PWAP_DNSPROXY_RUNDIR}/control.socket" | while read event wlanbridge; do
     case "$event" in
         vtun-up)
-            iptables -t nat -A PREROUTING -p udp --dport 53 -i "${wlanbridge}" -j REDIRECT --to-port 5353 || {
+            iptables -t nat -A PREROUTING -p udp --dport 53 -i "${wlanbridge}" -j REDIRECT --to-port "${PWAP_DNSPROXY_PORT}" || {
                 echo "W: failed to enable dns redirection" >&2
             }
             ;;
         vtun-down)
-            iptables -t nat -D PREROUTING -p udp --dport 53 -i "${wlanbridge}" -j REDIRECT --to-port 5353 || {
+            iptables -t nat -D PREROUTING -p udp --dport 53 -i "${wlanbridge}" -j REDIRECT --to-port "${PWAP_DNSPROXY_PORT}" || {
                 echo "W: failed to disable dns redirection" >&2
             }
             ;;
