@@ -27,7 +27,7 @@ dns_server_port = 553
 # Get printer queues from the puavo-rest (bootserver)
 puavo_api_server = `puavo-resolve-api-server`.chomp
 response = RestClient.get( puavo_api_server +
-                           "/v3/boot_server/" +
+                           "/v3/boot_servers/" +
                            PUAVO_ETC.hostname +
                            "/wireless_printer_queues",
                            :authorization => "Bootserver")
