@@ -8,6 +8,5 @@ source "${PWAP_CONFDIR}/config" || true
 
 networkcache="${PWAP_DNSPROXY_STATEDIR}/networkcache"
 touch "${networkcache}"
-echo "vtun-down $2" | nc -U "${PWAP_DNSPROXY_RUNDIR}/control.socket" || {
-    flock "${networkcache}" -c "sed -ir '/$2/d' '${networkcache}'"
-}
+flock "${networkcache}" -c "sed -ir '/$2/d' '${networkcache}'"
+echo "vtun-down $2" | nc -U "${PWAP_DNSPROXY_RUNDIR}/control.socket"

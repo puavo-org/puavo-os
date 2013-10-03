@@ -16,6 +16,13 @@ on_exit()
     ## them when we die.
     pkill -TERM -P $$
 
+    ## Read cached events.
+    while read wlanbridge; do
+        disable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}" && {
+            echo "I: disabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
+        }
+    done <"${PWAP_DNSPROXY_STATEDIR}/networkcache"
+
     rm -rf "${PWAP_DNSPROXY_RUNDIR}"
 
     exit $exitval
@@ -100,8 +107,7 @@ done &
 ## Read cached events.
 while read wlanbridge; do
     enable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}"
-    echo "I: enabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT} (cached request)" >&2
+    echo "I: enabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
 done <"${PWAP_DNSPROXY_STATEDIR}/networkcache"
-echo -n >"${PWAP_DNSPROXY_STATEDIR}/networkcache"
 
 wait
