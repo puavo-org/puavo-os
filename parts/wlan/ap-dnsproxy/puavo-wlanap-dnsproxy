@@ -79,9 +79,11 @@ nc -k -l -U "${PWAP_DNSPROXY_RUNDIR}/control.socket" | while read event wlanbrid
     case "$event" in
         vtun-up)
             enable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}"
+            echo "I: enabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
             ;;
         vtun-down)
             disable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}"
+            echo "I: disabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
             ;;
         *)
             echo "W: received unknown event '${event} ${wlanbridge}'" >&2
@@ -92,6 +94,7 @@ done &
 ## Read cached events.
 while read wlanbridge; do
     enable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}"
+    echo "I: enabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT} (cached request)" >&2
 done <"${PWAP_DNSPROXY_STATEDIR}/networkcache"
 rm -f "${PWAP_DNSPROXY_STATEDIR}/networkcache"
 
