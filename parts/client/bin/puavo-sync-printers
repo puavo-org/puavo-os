@@ -59,7 +59,7 @@ def assert_response(res)
 end
 
 
-options[:api_server] ||= `puavo-resolve-api-server`
+options[:api_server] ||= `puavo-resolve-api-server`.strip
 options[:post_printers] ||= "https://#{ PUAVO_ETC.domain }/devices/printers.json"
 options[:user] ||= PUAVO_ETC.ldap_dn
 options[:password] ||= PUAVO_ETC.ldap_password
