@@ -2,4 +2,8 @@
 
 set -eu
 
-echo "vtun-up $2" | nc -U /var/run/puavo-wlanap-dnsproxy/control.socket
+source puavo-wlanap-dnsproxy-env
+source "${PWAP_DATADIR}/config"
+source "${PWAP_CONFDIR}/config" || true
+
+echo "vtun-up $2" | nc -U "${PWAP_DNSPROXY_RUNDIR}/control.socket"
