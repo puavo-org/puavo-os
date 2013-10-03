@@ -5,6 +5,38 @@ require "optparse"
 require "httparty"
 require "socket"
 
+def assert_response(res)
+  if ![200, 201, 202].include?(res.code)
+    puts "Bad response status #{ res.code } for #{ res.request.path.to_s }: #{ res }"
+    exit 1
+  end
+end
+
+# From https://github.com/opinsys/liitu-puppet/blob/25c92e5c85e8637cdbd04c390f98eca69d3cc68b/modules/service/templates/usr/local/sbin/send_printers_to_puavo#L18-L40
+def parse_cups_printers_conf(conf_path)
+  printers_conf = File.readlines(conf_path)
+
+  printers = {}
+  description  = nil
+
+  printers_conf.each do |line|
+    match = line.match(/^<(?:DefaultPrinter|Printer) (.*)>$/)
+    if match
+      description = match[1]
+      printers[description] = {}
+    elsif line.match(%r{^</Printer>$})
+      description = nil
+    else
+      if description then
+        _, key, value = * line.match(/^([^ ]+) (.*)$/)
+        printers[description][key] = value
+      end
+    end
+  end
+
+  printers
+end
+
 options = {
   :printers_conf => "/etc/cups/printers.conf"
 }
@@ -60,14 +92,6 @@ if options[:log_file]
   $stderr.reopen(options[:log_file], "a")
 end
 
-def assert_response(res)
-  if ![200, 201, 202].include?(res.code)
-    puts "Bad response status #{ res.code } for #{ res.request.path.to_s }: #{ res }"
-    exit 1
-  end
-end
-
-
 options[:api_server] ||= `puavo-resolve-api-server`.strip
 options[:post_printers] ||= "https://#{ PUAVO_ETC.domain }/devices/printers.json"
 options[:user] ||= PUAVO_ETC.ldap_dn
@@ -88,30 +112,6 @@ assert_response res
 options[:server_dn] = res["dn"]
 
 
-# From https://github.com/opinsys/liitu-puppet/blob/25c92e5c85e8637cdbd04c390f98eca69d3cc68b/modules/service/templates/usr/local/sbin/send_printers_to_puavo#L18-L40
-def parse_cups_printers_conf(conf_path)
-  printers_conf = File.readlines(conf_path)
-
-  printers = {}
-  description  = nil
-
-  printers_conf.each do |line|
-    match = line.match(/^<(?:DefaultPrinter|Printer) (.*)>$/)
-    if match
-      description = match[1]
-      printers[description] = {}
-    elsif line.match(%r{^</Printer>$})
-      description = nil
-    else
-      if description then
-        _, key, value = * line.match(/^([^ ]+) (.*)$/)
-        printers[description][key] = value
-      end
-    end
-  end
-
-  printers
-end
 
 puts "Fetching existing printers from #{ options[:get_printers] }"
 
