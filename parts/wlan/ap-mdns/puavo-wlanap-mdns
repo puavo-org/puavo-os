@@ -1,0 +1,76 @@
+#!/bin/bash
+
+set -eubm
+
+on_exit()
+{
+    local -r exitval=$?
+
+    ## Do not exit or terminate on error or signal anymore. We are
+    ## already exiting and it would be shame to exit while exiting, yo
+    ## dawg.
+    set +eu
+    trap '' EXIT HUP INT QUIT ABRT ALRM TERM USR1 USR2
+
+    ## Kill our child processes. There is no reason to let Init adopt
+    ## them when we die.
+    pkill -TERM -P $$
+
+    rm -rf "${PWAP_MDNS_RUNDIR}"
+
+    exit $exitval
+}
+
+parse_args()
+{
+    PWAP_MDNS_ARGS_DAEMON=0
+
+    if [ $# -eq 1 ]; then
+        if [ "$1" = "--daemon" ]; then
+            PWAP_MDNS_ARGS_DAEMON=1
+            return 0
+        fi
+        echo "unexpected argument '$1'" >&2
+        echo "Usage: $(basename $0) [--daemon]" >&2
+        return 1
+    elif [ $# -gt 2 ]; then
+        echo "too many arguments" >&2
+        echo "Usage: $(basename $0) [--daemon]" >&2
+        return 1
+    fi
+}
+
+source puavo-wlanap-mdns-env
+source "${PWAP_MDNS_DATADIR}/config"
+source "${PWAP_MDNS_CONFDIR}/config" || true # User has deleted his config file, cool.
+
+parse_args "$@"
+
+if [ ${PWAP_MDNS_ARGS_DAEMON} -ne 0 ]; then
+    daemon --noconfig --stderr='daemon.info' --name='puavo-wlanap-mdns' -- puavo-wlanap-mdns
+    exit 0
+fi
+
+## After this point the process is getting hot and starts taking actions
+## which might have persistent side-effects (files, directories,
+## bridges, other processes, etc.). The trap is set to ensure that
+## everything gets cleaned up properly afterwards.
+trap on_exit EXIT
+
+touch "${PWAP_MDNS_STATEDIR}/networkcache"
+
+mkdir -p "${PWAP_MDNS_RUNDIR}"
+
+nc -k -l -U "${PWAP_MDNS_RUNDIR}/control.socket" | while read event wlanbridge; do
+    case "$event" in
+        vtun-up)
+            ;;
+        vtun-down)
+            ;;
+        *)
+            echo "received unknown event '${event} ${wlanbridge}'" >&2
+            ;;
+    esac
+done &
+
+wait
