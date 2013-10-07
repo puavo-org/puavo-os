@@ -4,7 +4,6 @@ bindir = $(exec_prefix)/bin
 sbindir = $(exec_prefix)/sbin
 datarootdir = $(prefix)/share
 sysconfdir = $(prefix)/etc
-localstatedir = $(prefix)/var
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -12,12 +11,6 @@ INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY : all
 all :
-
-.PHONY : config
-config : config.in
-	sed -e "s|#{PWAP_DNSPROXY_STATEDIR}|$(localstatedir)/lib/puavo-wlanap-dnsproxy|g" \
-	    config.in >$@
-	chmod --reference=config.in $@
 
 .PHONY : puavo-wlanap-dnsproxy-env
 puavo-wlanap-dnsproxy-env :
@@ -32,11 +25,10 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-up.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-down.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-wlanap-dnsproxy
-	mkdir -p $(DESTDIR)$(localstatedir)/lib/puavo-wlanap-dnsproxy
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-wlanap-dnsproxy
 
 .PHONY : install
-install : installdirs puavo-wlanap-dnsproxy-env config
+install : installdirs puavo-wlanap-dnsproxy-env
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-wlanap-dnsproxy
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-up.d \
