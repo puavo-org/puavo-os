@@ -80,9 +80,16 @@ write_avahi_services()
 
 write_avahi_conf()
 {
-    local interfaces
+    local interface
+    local interfaces=''
 
-    interfaces=$(tr '\n' ',' <"${PWAP_MDNS_STATEDIR}/networkcache")
+    while read interface; do
+        if [ -z "${interfaces}" ]; then
+            interfaces="${interface}"
+        else
+            interfaces="${interfaces}, ${interface}"
+        fi
+    done <"${PWAP_MDNS_STATEDIR}/networkcache"
 
     sed -e "s|#{PWAP_MDNS_INTERFACES}|${interfaces}|g" \
         "${PWAP_MDNS_DATADIR}/avahi-daemon.conf.in" >"${PWAP_MDNS_RUNDIR}/avahi-daemon.conf"
