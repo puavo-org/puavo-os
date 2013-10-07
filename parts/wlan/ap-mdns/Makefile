@@ -38,7 +38,7 @@ install : installdirs puavo-wlanap-mdns-env
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-wlanap-mdns \
 		config \
 		printer.service.in \
-		avahi-daemon.conf.in
+		avahi-daemon.conf
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-wlanap-mdns \
 		config
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \

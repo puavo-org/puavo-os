@@ -99,8 +99,8 @@ write_avahi_conf()
     done <"${PWAP_STATEDIR}/networks"
 
     tmpfile=$(mktemp)
-    sed -e "s|#{PWAP_MDNS_INTERFACES}|${bridge_ifaces}|g" \
-        "${PWAP_MDNS_DATADIR}/avahi-daemon.conf.in" >"${tmpfile}" || {
+    sed -r -e "s|^allow-interfaces=(.*)|allow-interfaces=${bridge_ifaces}|" \
+        "${PWAP_MDNS_DATADIR}/avahi-daemon.conf" >"${tmpfile}" || {
         rm -f "${tmpfile}"
         return 1
     }
