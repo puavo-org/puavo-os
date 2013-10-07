@@ -80,19 +80,88 @@ write_avahi_services()
 
 write_avahi_conf()
 {
-    local interface
-    local interfaces=''
+    local tap_iface
+    local bridge_iface
+    local bridge_ifaces=''
+    local tmpfile
 
-    while read interface; do
-        if [ -z "${interfaces}" ]; then
-            interfaces="${interface}"
+    while read tap_iface bridge_iface; do
+        if [ -z "${bridge_iface}" ]; then
+            bridge_ifaces="${bridge_iface}"
         else
-            interfaces="${interfaces}, ${interface}"
+            bridge_ifaces="${bridge_ifaces}, ${bridge_iface}"
         fi
     done <"${PWAP_MDNS_STATEDIR}/networkcache"
 
-    sed -e "s|#{PWAP_MDNS_INTERFACES}|${interfaces}|g" \
-        "${PWAP_MDNS_DATADIR}/avahi-daemon.conf.in" >"${PWAP_MDNS_RUNDIR}/avahi-daemon.conf"
+    tmpfile=$(mktemp)
+    sed -e "s|#{PWAP_MDNS_INTERFACES}|${bridge_ifaces}|g" \
+        "${PWAP_MDNS_DATADIR}/avahi-daemon.conf.in" >"${tmpfile}" || {
+        rm -f "${tmpfile}"
+        return 1
+    }
+
+    mv "${tmpfile}" "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf" || {
+        rm -f "${tmpfile}"
+        return 1
+    }
+}
+
+check_mdns_filter()
+{
+    iptables -t filter -C "$1" -p udp --dport 5353 -i "$2" -j DROP -m comment --comment "puavo-wlanap-mdns"
+}
+
+disable_mdns_filter()
+{
+    iptables -t filter -D "$1" -p udp --dport 5353 -i "$2" -j DROP -m comment --comment "puavo-wlanap-mdns"
+}
+
+enable_mdns_filter()
+{
+    iptables -t filter -A "$1" -p udp --dport 5353 -i "$2" -j DROP -m comment --comment "puavo-wlanap-mdns" || return $?
+
+    ## Ensure the rule is added only once. If we fail to disable what we
+    ## just added, then there is something really strange going on and
+    ## we can nothing but return with error.
+    disable_mdns_filter "$1" "$2" || return $?
+    check_mdns_filter "$1" "$2" 2>/dev/null || {
+        iptables -t filter -A "$1" -p udp --dport 5353 -i "$2" -j DROP -m comment --comment "puavo-wlanap-mdns"
+    }
+}
+
+add_avahi_iface()
+{
+    local retval
+
+    enable_mdns_filter INPUT "$1" || return $?
+    enable_mdns_filter OUTPUT "$1" || {
+        retval=$?
+        disable_mdns_filter INPUT "$1"
+        return $retval
+    }
+
+    write_avahi_conf || {
+        retval=$?
+        disable_mdns_filter OUTPUT "$1"
+        disable_mdns_filter INPUT "$1"
+        return $retval
+    }
+
+    avahi-daemon -r || {
+        retval=$?
+        disable_mdns_filter OUTPUT "$1"
+        disable_mdns_filter INPUT "$1"
+        return $retval
+     }
+}
+
+del_avahi_iface()
+{
+    write_avahi_conf
+    avahi-daemon -r
+
+    disable_mdns_filter OUTPUT "$1"
+    disable_mdns_filter INPUT "$1"
 }
 
 source puavo-wlanap-mdns-env
@@ -122,14 +191,16 @@ write_avahi_conf
 
 avahi-daemon -f "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf" &
 
-nc -k -l -U "${PWAP_MDNS_RUNDIR}/control.socket" | while read event wlanbridge; do
+nc -k -l -U "${PWAP_MDNS_RUNDIR}/control.socket" | while read event tap_iface bridge_iface; do
     case "$event" in
         vtun-up)
+            add_avahi_iface "${tap_iface}"
             ;;
         vtun-down)
+            del_avahi_iface "${tap_iface}"
             ;;
         *)
-            echo "received unknown event '${event} ${wlanbridge}'" >&2
+            echo "received unknown event '${event}'" >&2
             ;;
     esac
 done &

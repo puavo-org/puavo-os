@@ -9,8 +9,8 @@ source "${PWAP_MDNS_CONFDIR}/config" || true
 networkcache="${PWAP_MDNS_STATEDIR}/networkcache"
 touch "${networkcache}"
 tmpfile=$(mktemp)
-flock "${networkcache}" -c "sort -u <(cat '${networkcache}') <(echo $2) >'${tmpfile}' && mv '${tmpfile}' '${networkcache}'" || {
+flock "${networkcache}" -c "sort -u <(cat '${networkcache}') <(echo $1 $2) >'${tmpfile}' && mv '${tmpfile}' '${networkcache}'" || {
     rm -f "${tmpfile}"
     exit 1
 }
-echo "vtun-up $2" | nc -U "${PWAP_MDNS_RUNDIR}/control.socket"
+echo "vtun-up $1 $2" | nc -U "${PWAP_MDNS_RUNDIR}/control.socket"

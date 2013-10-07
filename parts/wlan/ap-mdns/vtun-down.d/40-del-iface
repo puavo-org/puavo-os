@@ -8,5 +8,5 @@ source "${PWAP_MDNS_CONFDIR}/config" || true
 
 networkcache="${PWAP_MDNS_STATEDIR}/networkcache"
 touch "${networkcache}"
-flock "${networkcache}" -c "sed -ir '/$2/d' '${networkcache}'"
-echo "vtun-down $2" | nc -U "${PWAP_MDNS_RUNDIR}/control.socket"
+flock "${networkcache}" -c "sed -ir '/$1 $2/d' '${networkcache}'"
+echo "vtun-down $1 $2" | nc -U "${PWAP_MDNS_RUNDIR}/control.socket"
