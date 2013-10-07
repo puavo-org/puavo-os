@@ -1,6 +1,19 @@
-#!/bin/sh
+#!/bin/bash
 
-set -eu
+if [ $# -ne 2 ]; then
+    echo "wrong number of arguments" >&2
+    exit 1
+fi
 
-brctl delif "$2" "$1"
-ifconfig "$1" down
+tap=$1
+bridge=$2
+
+source puavo-wlanap-env || exit 1
+
+networks="${PWAP_STATEDIR}/networks"
+
+(
+    flock "${networksfd}"
+
+    sed -ir "/${tap} ${bridge}/d" "${networks}"
+) {networksfd}>"${networks}"

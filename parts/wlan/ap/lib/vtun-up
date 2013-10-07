@@ -1,7 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 
-set -eu
+if [ $# -ne 2 ]; then
+    echo "wrong number of arguments" >&2
+    exit 1
+fi
 
-. puavo-wlanap-env
+tap=$1
+bridge=$2
 
-run-parts --arg="$1" --arg="$2" -- "${PWAP_DATADIR}/vtun-up.d"
+ifconfig "${tap}" up || exit 1
+brctl addif "${bridge}" "${tap}" || exit 1
+
+source puavo-wlanap-env || exit 1
+
+run-parts --arg="${tap}" --arg="${bridge}" -- "${PWAP_DATADIR}/vtun-up.d"
