@@ -111,20 +111,68 @@ write_avahi_conf()
     }
 }
 
+get_iface_flag()
+{
+    case "$1" in
+        INPUT)
+            return 'i'
+            ;;
+        OUTPUT)
+            return 'o'
+            ;;
+        *)
+            return ''
+            ;;
+    esac
+    exit 1
+}
+
 del_mdns_filter()
 {
-    iface_flag=$(echo "$1" | head -c1 | tr [:upper:] [:lower:])
-    iptables -t filter -D "$1" -p udp --dport 5353 -$iface_flag "$2" -j DROP \
+    local -r chain=$1
+    local -r iface=$2
+    local iface_flag
+
+    iface_flag=$(get_iface_flag "${chain}")
+    if [ -z "${iface_flag}" ]; then
+        echo "unexpected chain '${chain}'" >&2
+        return 1
+    fi
+
+    if [ -z "${iface}" ]; then
+        echo "got empty interface" >&2
+        return 1
+    fi
+
+    iptables -t filter -D "${chain}" -p udp --dport 5353 \
+        -$iface_flag "${iface}" -j DROP \
         -m comment --comment "puavo-wlanap-mdns"
 }
 
 add_mdns_filter()
 {
-    iface_flag=$(echo "$1" | head -c1 | tr [:upper:] [:lower:])
+    local -r chain=$1
+    local -r iface=$2
+    local iface_flag
 
-    iptables -t filter -C "$1" -p udp --dport 5353 -$iface_flag "$2" -j DROP \
-        -m comment --comment "puavo-wlanap-mdns" 2>/dev/null && return 0
-    iptables -t filter -A "$1" -p udp --dport 5353 -$iface_flag "$2" -j DROP \
+    iface_flag=$(get_iface_flag "${chain}")
+    if [ -z "${iface_flag}" ]; then
+        echo "unexpected chain '${chain}'" >&2
+        return 1
+    fi
+
+    if [ -z "${iface}" ]; then
+        echo "got empty interface" >&2
+        return 1
+    fi
+
+    ## Add the rule only if it does not yet exist.
+    iptables -t filter -C "${chain}" -p udp --dport 5353 \
+        -$iface_flag "${iface}" -j DROP \
+        -m comment --comment "puavo-wlanap-mdns" 2>/dev/null \
+        && return 0
+    iptables -t filter -A "${chain}" -p udp --dport 5353 \
+        -$iface_flag "${iface}" -j DROP \
         -m comment --comment "puavo-wlanap-mdns"
 }
 
