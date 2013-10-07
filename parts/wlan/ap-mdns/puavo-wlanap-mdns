@@ -111,48 +111,39 @@ write_avahi_conf()
     }
 }
 
-check_mdns_filter()
+del_mdns_filter()
 {
     iface_flag=$(echo "$1" | head -c1 | tr [:upper:] [:lower:])
-    iptables -t filter -C "$1" -p udp --dport 5353 -$iface_flag "$2" -j DROP -m comment --comment "puavo-wlanap-mdns"
+    iptables -t filter -D "$1" -p udp --dport 5353 -$iface_flag "$2" -j DROP \
+        -m comment --comment "puavo-wlanap-mdns"
 }
 
-disable_mdns_filter()
+add_mdns_filter()
 {
     iface_flag=$(echo "$1" | head -c1 | tr [:upper:] [:lower:])
-    iptables -t filter -D "$1" -p udp --dport 5353 -$iface_flag "$2" -j DROP -m comment --comment "puavo-wlanap-mdns"
-}
 
-enable_mdns_filter()
-{
-    iface_flag=$(echo "$1" | head -c1 | tr [:upper:] [:lower:])
-    iptables -t filter -A "$1" -p udp --dport 5353 -$iface_flag "$2" -j DROP -m comment --comment "puavo-wlanap-mdns" || return $?
-
-    ## Ensure the rule is added only once. If we fail to disable what we
-    ## just added, then there is something really strange going on and
-    ## we can nothing but return with error.
-    disable_mdns_filter "$1" "$2" || return $?
-    check_mdns_filter "$1" "$2" 2>/dev/null || {
-        iptables -t filter -A "$1" -p udp --dport 5353 -$iface_flag "$2" -j DROP -m comment --comment "puavo-wlanap-mdns"
-    }
+    iptables -t filter -C "$1" -p udp --dport 5353 -$iface_flag "$2" -j DROP \
+        -m comment --comment "puavo-wlanap-mdns" 2>/dev/null && return 0
+    iptables -t filter -A "$1" -p udp --dport 5353 -$iface_flag "$2" -j DROP \
+        -m comment --comment "puavo-wlanap-mdns"
 }
 
 enable_mdns_filters()
 {
-    local retval
-
-    enable_mdns_filter INPUT "$1" || return $?
-    enable_mdns_filter OUTPUT "$1" || {
-        retval=$?
-        disable_mdns_filter INPUT "$1"
-        return $retval
+    add_mdns_filter INPUT "$1" || return 1
+    add_mdns_filter OUTPUT "$1" || {
+        del_mdns_filter INPUT "$1"
+        return 1
     }
 }
 
 disable_mdns_filters()
 {
-    disable_mdns_filter OUTPUT "$1"
-    disable_mdns_filter INPUT "$1"
+    del_mdns_filter OUTPUT "$1" || {
+        del_mdns_filter INPUT "$1"
+        return 1
+    }
+    del_mdns_filter INPUT "$1"
 }
 
 source puavo-wlanap-env
