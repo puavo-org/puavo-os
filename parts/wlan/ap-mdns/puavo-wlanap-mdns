@@ -180,20 +180,17 @@ write_avahi_services
 
 write_avahi_conf
 
-avahi-daemon -f "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf" &
+## Read cached events.
+while read tap_iface bridge_iface; do
+    enable_mdns_filters "${tap_iface}"
+done <"${PWAP_MDNS_STATEDIR}/networkcache"
 
 nc -k -l -U "${PWAP_MDNS_RUNDIR}/control.socket" | while read event tap_iface bridge_iface; do
     case "$event" in
         vtun-up)
-            avahi-daemon -k
-            write_avahi_conf
             enable_mdns_filters "${tap_iface}"
-            avahi-daemon -f "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf" &
             ;;
         vtun-down)
-            avahi-daemon -k
-            write_avahi_conf
-            avahi-daemon -f "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf" &
             disable_mdns_filters "${tap_iface}"
             ;;
         *)
@@ -202,9 +199,6 @@ nc -k -l -U "${PWAP_MDNS_RUNDIR}/control.socket" | while read event tap_iface br
     esac
 done &
 
-## Read cached events.
-while read tap_iface bridge_iface; do
-    enable_mdns_filters "${tap_iface}"
-done <"${PWAP_MDNS_STATEDIR}/networkcache"
+avahi-daemon -f "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf" &
 
 wait
