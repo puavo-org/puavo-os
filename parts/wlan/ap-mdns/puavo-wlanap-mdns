@@ -16,6 +16,11 @@ on_exit()
     ## them when we die.
     pkill -TERM -P $$
 
+    ## Read cached events.
+    while read tap_iface bridge_iface; do
+        disable_mdns_filters "${tap_iface}"
+    done <"${PWAP_MDNS_STATEDIR}/networkcache"
+
     rm -rf "${PWAP_MDNS_RUNDIR}"
 
     exit $exitval
@@ -132,7 +137,7 @@ enable_mdns_filter()
     }
 }
 
-add_avahi_iface()
+enable_mdns_filters()
 {
     local retval
 
@@ -142,27 +147,10 @@ add_avahi_iface()
         disable_mdns_filter INPUT "$1"
         return $retval
     }
-
-    write_avahi_conf || {
-        retval=$?
-        disable_mdns_filter OUTPUT "$1"
-        disable_mdns_filter INPUT "$1"
-        return $retval
-    }
-
-    avahi-daemon -r || {
-        retval=$?
-        disable_mdns_filter OUTPUT "$1"
-        disable_mdns_filter INPUT "$1"
-        return $retval
-     }
 }
 
-del_avahi_iface()
+disable_mdns_filters()
 {
-    write_avahi_conf
-    avahi-daemon -r
-
     disable_mdns_filter OUTPUT "$1"
     disable_mdns_filter INPUT "$1"
 }
@@ -190,17 +178,23 @@ mkdir -p "${PWAP_MDNS_RUNDIR}"
 
 write_avahi_services
 
-cp "${PWAP_MDNS_DATADIR}/avahi-daemon.conf.in" "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf"
+write_avahi_conf
 
 avahi-daemon -f "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf" &
 
 nc -k -l -U "${PWAP_MDNS_RUNDIR}/control.socket" | while read event tap_iface bridge_iface; do
     case "$event" in
         vtun-up)
-            add_avahi_iface "${tap_iface}"
+            avahi-daemon -k
+            write_avahi_conf
+            enable_mdns_filters "${tap_iface}"
+            avahi-daemon -f "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf" &
             ;;
         vtun-down)
-            del_avahi_iface "${tap_iface}"
+            avahi-daemon -k
+            write_avahi_conf
+            avahi-daemon -f "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf" &
+            disable_mdns_filters "${tap_iface}"
             ;;
         *)
             echo "received unknown event '${event}'" >&2
@@ -210,7 +204,7 @@ done &
 
 ## Read cached events.
 while read tap_iface bridge_iface; do
-    add_avahi_iface "${tap_iface}"
+    enable_mdns_filters "${tap_iface}"
 done <"${PWAP_MDNS_STATEDIR}/networkcache"
 
 wait
