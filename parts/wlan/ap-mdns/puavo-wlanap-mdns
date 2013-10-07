@@ -86,7 +86,7 @@ write_avahi_conf()
     local tmpfile
 
     while read tap_iface bridge_iface; do
-        if [ -z "${bridge_iface}" ]; then
+        if [ -z "${bridge_ifaces}" ]; then
             bridge_ifaces="${bridge_iface}"
         else
             bridge_ifaces="${bridge_ifaces}, ${bridge_iface}"
