@@ -44,7 +44,9 @@ install : installdirs puavo-wlanap-mdns-env config
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-down.d \
 		vtun-down.d/40-del-iface
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-wlanap-mdns \
-		config
+		config \
+		printer.service.in \
+		avahi-daemon.conf.in
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-wlanap-mdns \
 		config
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
