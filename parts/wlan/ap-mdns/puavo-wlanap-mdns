@@ -187,7 +187,7 @@ mkdir -p "${PWAP_MDNS_RUNDIR}"
 
 write_avahi_services
 
-write_avahi_conf
+cp "${PWAP_MDNS_DATADIR}/avahi-daemon.conf.in" "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf"
 
 avahi-daemon -f "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf" &
 
@@ -204,5 +204,10 @@ nc -k -l -U "${PWAP_MDNS_RUNDIR}/control.socket" | while read event tap_iface br
             ;;
     esac
 done &
+
+## Read cached events.
+while read tap_iface bridge_iface; do
+    add_avahi_iface "${tap_iface}"
+done <"${PWAP_MDNS_STATEDIR}/networkcache"
 
 wait
