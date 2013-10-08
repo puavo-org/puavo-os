@@ -116,6 +116,9 @@ options[:server_dn] = res["dn"]
 puts "Fetching existing printers from #{ options[:get_printers] }"
 
 current_printers = HTTParty.get(options[:get_printers],
+  :query => {
+    "server_dn" => options[:server_dn]
+  },
   :basic_auth => {
     :username => options[:user],
     :password => options[:password]
