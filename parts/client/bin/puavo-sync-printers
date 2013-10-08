@@ -70,7 +70,7 @@ parser = OptionParser.new do |opts|
     options[:user] = username
   end
 
-  opts.on("-p", "--password [PASWORD]", "Password") do |pw|
+  opts.on("-p", "--password [PASSWORD]", "Password") do |pw|
     options[:password] = pw
   end
 
