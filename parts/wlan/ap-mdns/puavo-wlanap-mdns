@@ -217,14 +217,15 @@ while true; do
 
         echo "${adds}" | while read tap _; do
             enable_mdns_filters "${tap}"
+            touch "${PWAP_MDNS_RUNDIR}/restart_avahi"
         done
 
         echo "${dels}" | while read tap _; do
             disable_mdns_filters "${tap}"
+            touch "${PWAP_MDNS_RUNDIR}/restart_avahi"
         done
 
         cp -a "${newset}" "${oldset}"
-        touch "${PWAP_MDNS_RUNDIR}/restart_avahi"
     ) {networkslock}<"${PWAP_RUNDIR}/networks"
 
     if [ -f "${PWAP_MDNS_RUNDIR}/restart_avahi" ]; then
