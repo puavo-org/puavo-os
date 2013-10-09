@@ -21,6 +21,10 @@ on_exit()
         disable_mdns_filters "${tap_iface}"
     done <"${PWAP_MDNS_RUNDIR}/networks"
 
+    while read filepath; do
+        rm -f "${filepath}"
+    done <"${PWAP_MDNS_RUNDIR}/avahi_services"
+
     rm -rf "${PWAP_MDNS_RUNDIR}"
 
     exit $exitval
@@ -57,6 +61,7 @@ write_avahi_services()
     local printer_path
     local printer_location
     local printer_type
+    local service_file
 
     puavo_domain=$(cat /etc/puavo/domain)
     puavo_hostname=$(cat /etc/puavo/hostname)
@@ -73,13 +78,15 @@ write_avahi_services()
         printer_path="printers/${printer_name}"
         printer_location=$(echo "${json_object}" | jq -r '.location')
         printer_type=$(echo "${json_object}" | jq -r '.type')
+        service_file="/etc/avahi/services/${printer_name}.service"
 
         sed -e "s|#{PWAP_MDNS_PRINTER_NAME}|${printer_name}|g" \
             -e "s|#{PWAP_MDNS_PRINTER_HOST}|${printer_host}|g" \
             -e "s|#{PWAP_MDNS_PRINTER_PATH}|${printer_path}|g" \
             -e "s|#{PWAP_MDNS_PRINTER_LOCATION}|${printer_location}|g" \
             -e "s|#{PWAP_MDNS_PRINTER_TYPE}|${printer_type}|g" \
-            "${PWAP_MDNS_DATADIR}/printer.service.in" >"/etc/avahi/services/${printer_name}.service"
+            "${PWAP_MDNS_DATADIR}/printer.service.in" >"${service_file}"
+        echo "${service_file}" >>"${PWAP_MDNS_RUNDIR}/avahi_services"
     done
 }
 
@@ -214,6 +221,7 @@ trap on_exit EXIT
 
 mkdir -p "${PWAP_MDNS_RUNDIR}"
 touch "${PWAP_MDNS_RUNDIR}/networks"
+touch "${PWAP_MDNS_RUNDIR}/avahi_services"
 
 while true; do
     (
