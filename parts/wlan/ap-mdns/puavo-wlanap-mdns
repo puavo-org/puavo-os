@@ -118,29 +118,13 @@ write_avahi_daemon_conf()
     }
 }
 
-get_iface_flag()
-{
-    case "$1" in
-        INPUT)
-            echo -n 'i'
-            ;;
-        OUTPUT)
-            echo -n 'o'
-            ;;
-        *)
-            echo -n
-            ;;
-    esac
-    exit 1
-}
-
 del_mdns_filter()
 {
     local -r chain=$1
     local -r iface=$2
     local iface_flag
 
-    iface_flag=$(get_iface_flag "${chain}")
+    iface_flag=$(echo "${chain}" | sed -r '/INPUT|OUTPUT/ y/IO/io/' | head -c1)
     if [ -z "${iface_flag}" ]; then
         echo "unexpected chain '${chain}'" >&2
         return 1
@@ -162,7 +146,7 @@ add_mdns_filter()
     local -r iface=$2
     local iface_flag
 
-    iface_flag=$(get_iface_flag "${chain}")
+    iface_flag=$(echo "${chain}" | sed -r '/INPUT|OUTPUT/ y/IO/io/' | head -c1)
     if [ -z "${iface_flag}" ]; then
         echo "unexpected chain '${chain}'" >&2
         return 1
