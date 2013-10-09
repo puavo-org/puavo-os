@@ -19,7 +19,7 @@ on_exit()
     ## Read cached events.
     while read tap_iface bridge_iface; do
         disable_mdns_filters "${tap_iface}"
-    done <"${PWAP_STATEDIR}/networks"
+    done <"${PWAP_MDNS_RUNDIR}/networks"
 
     rm -rf "${PWAP_MDNS_RUNDIR}"
 
@@ -96,7 +96,7 @@ write_avahi_conf()
         else
             bridge_ifaces="${bridge_ifaces}, ${bridge_iface}"
         fi
-    done <"${PWAP_STATEDIR}/networks"
+    done <"${PWAP_MDNS_RUNDIR}/networks"
 
     tmpfile=$(mktemp)
     sed -r -e "s|^allow-interfaces=(.*)|allow-interfaces=${bridge_ifaces}|" \
@@ -213,30 +213,36 @@ fi
 trap on_exit EXIT
 
 mkdir -p "${PWAP_MDNS_RUNDIR}"
+touch "${PWAP_MDNS_RUNDIR}/networks"
 
-write_avahi_services
+while true; do
+    (
+        flock ${networkslock}
+        newset="${PWAP_STATEDIR}/networks"
+        oldset="${PWAP_MDNS_RUNDIR}/networks"
 
-write_avahi_conf
+        adds=$(sort "${newset}" "${oldset}" "${oldset}" | uniq -u)
+        dels=$(sort "${newset}" "${newset}" "${oldset}" | uniq -u)
 
-nc -k -l -U "${PWAP_MDNS_RUNDIR}/control.socket" | while read event tap_iface bridge_iface; do
-    case "$event" in
-        vtun-up)
-            enable_mdns_filters "${tap_iface}"
-            ;;
-        vtun-down)
-            disable_mdns_filters "${tap_iface}"
-            ;;
-        *)
-            echo "received unknown event '${event}'" >&2
-            ;;
-    esac
-done &
+        echo "${adds}" | while read tap _; do
+            enable_mdns_filters "${tap}"
+        done
 
-## Read cached events.
-while read tap_iface bridge_iface; do
-    enable_mdns_filters "${tap_iface}"
-done <"${PWAP_STATEDIR}/networks"
+        echo "${dels}" | while read tap _; do
+            disable_mdns_filters "${tap}"
+        done
 
-avahi-daemon -f "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf" &
+        cp -a "${newset}" "${oldset}"
+        touch "${PWAP_MDNS_RUNDIR}/restart_avahi"
+    ) {networkslock}<"${PWAP_STATEDIR}/networks"
 
-wait
+    if [ -f "${PWAP_MDNS_RUNDIR}/restart_avahi" ]; then
+        rm -f "${PWAP_MDNS_RUNDIR}/restart_avahi"
+        avahi-daemon -k
+        write_avahi_services
+        write_avahi_conf
+        avahi-daemon -f "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf" &
+    fi
+
+    sleep 10 & wait $!
+done

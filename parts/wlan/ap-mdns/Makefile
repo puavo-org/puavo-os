@@ -22,8 +22,6 @@ puavo-wlanap-mdns-env :
 installdirs :
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sbindir)
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-up.d
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-down.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-wlanap-mdns
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-wlanap-mdns
 
@@ -31,10 +29,6 @@ installdirs :
 install : installdirs puavo-wlanap-mdns-env
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-wlanap-mdns
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-up.d \
-		vtun-up.d/40-add-iface
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-down.d \
-		vtun-down.d/40-del-iface
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-wlanap-mdns \
 		config \
 		printer.service.in \

@@ -1,9 +1,0 @@
-#!/bin/bash
-
-set -eu
-
-source puavo-wlanap-mdns-env
-source "${PWAP_MDNS_DATADIR}/config"
-source "${PWAP_MDNS_CONFDIR}/config" || true
-
-echo "vtun-down $1 $2" | nc -U "${PWAP_MDNS_RUNDIR}/control.socket"
