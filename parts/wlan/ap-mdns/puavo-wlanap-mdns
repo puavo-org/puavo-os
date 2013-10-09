@@ -83,7 +83,7 @@ write_avahi_services()
     done
 }
 
-write_avahi_conf()
+write_avahi_daemon_conf()
 {
     local tap_iface
     local bridge_iface
@@ -240,7 +240,7 @@ while true; do
         rm -f "${PWAP_MDNS_RUNDIR}/restart_avahi"
         avahi-daemon -k
         write_avahi_services
-        write_avahi_conf
+        write_avahi_daemon_conf
         avahi-daemon -f "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf" &
     fi
 
