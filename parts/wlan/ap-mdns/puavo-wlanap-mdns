@@ -230,7 +230,7 @@ while true; do
 
     if [ -f "${PWAP_MDNS_RUNDIR}/restart_avahi" ]; then
         rm -f "${PWAP_MDNS_RUNDIR}/restart_avahi"
-        avahi-daemon -k
+        avahi-daemon -k || true # Might fail if not started yet.
         write_avahi_services
         write_avahi_daemon_conf
         avahi-daemon -f "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf" &
