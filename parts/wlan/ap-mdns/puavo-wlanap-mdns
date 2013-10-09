@@ -115,13 +115,13 @@ get_iface_flag()
 {
     case "$1" in
         INPUT)
-            return 'i'
+            echo -n 'i'
             ;;
         OUTPUT)
-            return 'o'
+            echo -n 'o'
             ;;
         *)
-            return ''
+            echo -n
             ;;
     esac
     exit 1
