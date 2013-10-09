@@ -2,6 +2,19 @@
 
 set -eubm
 
+remove_avahi_services()
+{
+    local filepath
+
+    if [ ! -e "${PWAP_MDNS_RUNDIR}/avahi_services" ]; then
+        return 0
+    fi
+
+    while read filepath; do
+        rm -f "${filepath}"
+    done <"${PWAP_MDNS_RUNDIR}/avahi_services"
+}
+
 on_exit()
 {
     local -r exitval=$?
@@ -21,9 +34,7 @@ on_exit()
         disable_mdns_filters "${tap_iface}"
     done <"${PWAP_MDNS_RUNDIR}/networks"
 
-    while read filepath; do
-        rm -f "${filepath}"
-    done <"${PWAP_MDNS_RUNDIR}/avahi_services"
+    remove_avahi_services
 
     rm -rf "${PWAP_MDNS_RUNDIR}"
 
@@ -204,7 +215,6 @@ trap on_exit EXIT
 
 mkdir -p "${PWAP_MDNS_RUNDIR}"
 touch "${PWAP_MDNS_RUNDIR}/networks"
-touch "${PWAP_MDNS_RUNDIR}/avahi_services"
 
 while true; do
     (
@@ -231,6 +241,7 @@ while true; do
     if [ -f "${PWAP_MDNS_RUNDIR}/restart_avahi" ]; then
         rm -f "${PWAP_MDNS_RUNDIR}/restart_avahi"
         avahi-daemon -k || true # Might fail if not started yet.
+        remove_avahi_services
         write_avahi_services
         write_avahi_daemon_conf
         avahi-daemon -f "${PWAP_MDNS_RUNDIR}/avahi-daemon.conf" &
