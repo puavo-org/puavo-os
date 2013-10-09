@@ -21,7 +21,7 @@ on_exit()
         disable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}" && {
             echo "disabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
         }
-    done <"${PWAP_STATEDIR}/networks"
+    done <"${PWAP_RUNDIR}/networks"
 
     rm -rf "${PWAP_DNSPROXY_RUNDIR}"
 
@@ -126,6 +126,6 @@ done &
 while read wlanbridge; do
     enable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}"
     echo "enabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
-done <"${PWAP_STATEDIR}/networks"
+done <"${PWAP_RUNDIR}/networks"
 
 wait

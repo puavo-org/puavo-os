@@ -10,7 +10,7 @@ bridge=$2
 
 source puavo-wlanap-env || exit 1
 
-networks="${PWAP_STATEDIR}/networks"
+networks="${PWAP_RUNDIR}/networks"
 
 (
     flock "${networksfd}"

@@ -185,7 +185,6 @@ disable_mdns_filters()
     del_mdns_filter INPUT "$1"
 }
 
-source puavo-wlanap-env
 source puavo-wlanap-mdns-env
 source "${PWAP_MDNS_DATADIR}/config"
 source "${PWAP_MDNS_CONFDIR}/config" || true # User has deleted his config file, cool.
@@ -210,7 +209,7 @@ touch "${PWAP_MDNS_RUNDIR}/avahi_services"
 while true; do
     (
         flock ${networkslock}
-        newset="${PWAP_STATEDIR}/networks"
+        newset="${PWAP_RUNDIR}/networks"
         oldset="${PWAP_MDNS_RUNDIR}/networks"
 
         adds=$(sort "${newset}" "${oldset}" "${oldset}" | uniq -u)
@@ -226,7 +225,7 @@ while true; do
 
         cp -a "${newset}" "${oldset}"
         touch "${PWAP_MDNS_RUNDIR}/restart_avahi"
-    ) {networkslock}<"${PWAP_STATEDIR}/networks"
+    ) {networkslock}<"${PWAP_RUNDIR}/networks"
 
     if [ -f "${PWAP_MDNS_RUNDIR}/restart_avahi" ]; then
         rm -f "${PWAP_MDNS_RUNDIR}/restart_avahi"

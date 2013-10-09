@@ -5,7 +5,6 @@ sbindir = $(exec_prefix)/sbin
 sysconfdir = $(prefix)/etc
 datarootdir = $(prefix)/share
 libdir = $(prefix)/lib
-localstatedir = $(prefix)/var
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -20,7 +19,6 @@ puavo-wlanap-env :
 	echo "export PWAP_CONFDIR=$(sysconfdir)/puavo-wlanap" >> $@
 	echo "export PWAP_DATADIR=$(datarootdir)/puavo-wlanap" >> $@
 	echo "export PWAP_LIBDIR=$(libdir)/puavo-wlanap" >> $@
-	echo "export PWAP_STATEDIR=$(localstatedir)/lib/puavo-wlanap" >> $@
 
 .PHONY : installdirs
 installdirs :
@@ -31,7 +29,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-up.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-wlanap/vtun-down.d
 	mkdir -p $(DESTDIR)$(libdir)/puavo-wlanap
-	mkdir -p $(DESTDIR)$(localstatedir)/lib/puavo-wlanap
 
 .PHONY : install
 install : puavo-wlanap-env installdirs
