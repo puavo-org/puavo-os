@@ -19,6 +19,24 @@ IFS=':' read -a mask <"/sys/class/net/${iface}/phy80211/address_mask"
 mac=(${mac[@]/#/0x})
 mask=(${mask[@]/#/0x})
 
+model_id=$(cat /sys/class/net/${iface}/device/{vendor,device} | tr -d [:space:])
+
+## Model-specific quirks.
+case "${model_id}" in
+    0x168c0x0030)
+        ## For some reason, at least with some driver versions, this
+        ## device model reports empty adress mask. However, hostapd
+        ## requires that mask >= 00:00:00:00:00:03 to support at most 4
+        ## different BSSIDs. Mask 00:00:00:00:00:03 has been verified to
+        ## work with the device in question.
+        if [ "${mask[@]}" = "0x00 0x00 0x00 0x00 0x00 0x00" ]; then
+            mask=(0x00 0x00 0x00 0x00 0x00 0x03)
+        fi
+        ;;
+    *)
+        ;;
+esac
+
 for (( i = 0; i <= ${#mac[@]}; ++i )); do 
     bssid[i]=$((mac[i] &~ mask[i]))
 done
