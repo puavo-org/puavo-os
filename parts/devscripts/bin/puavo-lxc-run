@@ -1,0 +1,84 @@
+#!/bin/bash
+# visudo: jenkins ALL = NOPASSWD: /usr/local/bin/run-in-lxc
+
+help(){
+    echo "
+    Usage: $(basename $0) <base container> <script to run>
+
+    Execute given script from a temporary container.
+
+    This must executed from the project root.
+    "
+
+}
+
+[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
+[ "$1" = "" -o "$2" = ""  ] && help && exit 1
+
+if [[ $EUID -ne 0 ]]; then
+    echo "Must run run as root"
+    exit 1
+fi
+
+echo "Running tests on:"
+git log --pretty=oneline -n 1
+echo
+
+basename="$1"
+script="$2"
+base="/var/lib/lxc/$1"
+
+set -eu
+
+if [ ! -d $base ]; then
+    echo "$base does not exists"
+    exit 1
+fi
+
+containername="cirun-$(date +%s)"
+lxcdir="/var/lib/lxc/$containername"
+projectname=$(basename $(pwd))
+
+echo "Cloning $basename"
+lxc-clone -o $basename -n $containername
+puavo-lxc-ci-prepare $containername
+
+mkdir "$lxcdir/rootfs/cirun"
+echo "Copying $(pwd) to /cirun for the container"
+rsync -a $(pwd) "$lxcdir/rootfs/cirun"
+
+# echo "Setting ssh key"
+# mkdir "$lxcdir/rootfs/home/ubuntu/.ssh"
+# cat ~/.ssh/id_rsa.pub > "$lxcdir/rootfs/home/ubuntu/.ssh/authorized_keys"
+
+cat > "$lxcdir/rootfs/run.sh"<<EOF
+#!/bin/sh
+set -eu
+
+while true; do
+    ip="\$(ifconfig eth0 | sed -rn '2 s/^\s+inet addr:([0-9\.]+).*$/\1/p')"
+    [ "\$ip" != "" ] && break
+    echo "Waiting for network..."
+    sleep 1
+done
+
+chown -R ci:ci /cirun
+chmod +x /cirun/$projectname/$script
+sudo -i -u ci sh -c "cd /cirun/$projectname && ./$script"
+EOF
+chmod +x "$lxcdir/rootfs/run.sh"
+
+echo "Starting container $containername"
+lxc-start --name $containername --daemon
+trap "lxc-shutdown --name $containername || true" EXIT
+
+lxc-wait --name $containername -s RUNNING
+echo "Container up!"
+
+lxc-attach --name $containername /run.sh
+
+# sudo -u jenkins ssh -oStrictHostKeyChecking=no -t -l ubuntu $ip "cd /cirun && ./ci.sh"
+
+lxc-shutdown --name $containername
+lxc-wait --name $containername -s STOPPED
+lxc-destroy --name $containername
