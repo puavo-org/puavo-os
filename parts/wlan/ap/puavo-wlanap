@@ -97,7 +97,7 @@ setup_nets()
 
     "${PWAP_LIBDIR}/fetch-nets" >"${PWAP_RUNDIR}/nets"
 
-    readarray -n0 -t PWAP_NETS <"${PWAP_RUNDIR}/nets"
+    readarray -n4 -t PWAP_NETS <"${PWAP_RUNDIR}/nets"
 
     if [ ${#PWAP_NETS[@]} -eq 0 ]; then
         pwap_log "no networks defined"
