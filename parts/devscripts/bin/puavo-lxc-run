@@ -23,9 +23,16 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-echo "Running tests on:"
-git log --pretty=oneline -n 1
-echo
+slaveip=$(ifconfig eth0 | sed -rn '2 s/^\s+inet addr:([0-9\.]+).*$/\1/p')
+
+echo "
+    Running build on
+
+    Node ip: $slaveip
+    Node hostname: $(hostname)
+    Git Branch: $(git rev-parse --abbrev-ref HEAD)
+    Git Commit: $(git log --pretty=oneline -n 1)
+"
 
 basename="$1"
 script="$2"
@@ -44,15 +51,43 @@ projectname=$(basename $(pwd))
 
 echo "Cloning $basename"
 lxc-clone -o $basename -n $containername
+
+on_exit(){
+    exitcode=$?
+    # Always shutdown container on exit
+    lxc-shutdown --name $containername || true
+    lxc-wait --name $containername -s STOPPED
+
+    if [ "$exitcode" = "0" ]; then
+        echo "All OK. Destroying the container."
+    else
+        newname="BROKEN-$containername"
+
+        echo "
+
+        Something went wrong!
+        Cloning container to
+
+            $slaveip:/var/lib/lxc/$newname
+
+        For later examination
+
+        "
+
+        lxc-clone -o $containername -n $newname
+    fi
+
+    lxc-destroy --name $containername
+}
+
+trap on_exit EXIT
+
+
 puavo-lxc-ci-prepare $containername
 
 mkdir "$lxcdir/rootfs/cirun"
 echo "Copying $(pwd) to /cirun for the container"
 rsync -a $(pwd) "$lxcdir/rootfs/cirun"
-
-# echo "Setting ssh key"
-# mkdir "$lxcdir/rootfs/home/ubuntu/.ssh"
-# cat ~/.ssh/id_rsa.pub > "$lxcdir/rootfs/home/ubuntu/.ssh/authorized_keys"
 
 cat > "$lxcdir/rootfs/run.sh"<<EOF
 #!/bin/sh
@@ -60,8 +95,11 @@ set -eu
 
 while true; do
     ip="\$(ifconfig eth0 | sed -rn '2 s/^\s+inet addr:([0-9\.]+).*$/\1/p')"
-    [ "\$ip" != "" ] && break
-    echo "Waiting for network..."
+    if [ "\$ip" != "" ]; then
+        echo "Container got ip \$ip!"
+        break
+    fi
+    echo "Waiting for container to get network..."
     sleep 1
 done
 
@@ -73,15 +111,9 @@ chmod +x "$lxcdir/rootfs/run.sh"
 
 echo "Starting container $containername"
 lxc-start --name $containername --daemon
-trap "lxc-shutdown --name $containername || true" EXIT
 
 lxc-wait --name $containername -s RUNNING
 echo "Container up!"
 
 lxc-attach --name $containername /run.sh
 
-# sudo -u jenkins ssh -oStrictHostKeyChecking=no -t -l ubuntu $ip "cd /cirun && ./ci.sh"
-
-lxc-shutdown --name $containername
-lxc-wait --name $containername -s STOPPED
-lxc-destroy --name $containername
