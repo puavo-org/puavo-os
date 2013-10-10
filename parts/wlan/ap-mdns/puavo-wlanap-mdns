@@ -225,12 +225,12 @@ while true; do
         adds=$(sort "${newset}" "${oldset}" "${oldset}" | uniq -u)
         dels=$(sort "${newset}" "${newset}" "${oldset}" | uniq -u)
 
-        echo "${adds}" | while read tap _; do
+        [ -n "${adds}" ] &&  echo "${adds}" | while read tap _; do
             enable_mdns_filters "${tap}"
             touch "${PWAP_MDNS_RUNDIR}/restart_avahi"
         done
 
-        echo "${dels}" | while read tap _; do
+        [ -n "${dels}" ] && echo "${dels}" | while read tap _; do
             disable_mdns_filters "${tap}"
             touch "${PWAP_MDNS_RUNDIR}/restart_avahi"
         done
