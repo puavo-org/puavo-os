@@ -16,16 +16,5 @@ networks="${PWAP_RUNDIR}/networks"
 
 (
     flock "${networksfd}"
-
-    tmpfile=$(mktemp) || exit 1
-
-    sort -u "${networks}" <(echo "${tap} ${bridge}") >"${tmpfile}" || {
-        rm -f "${tmpfile}"
-        exit 1
-    }
-
-    mv "${tmpfile}" "${networks}" || {
-        rm -f "${tmpfile}"
-        exit 1
-    }
-) {networksfd}>"${networks}"
+    echo "${tap} ${bridge}" >>"${networks}"
+) {networksfd}>>"${networks}"
