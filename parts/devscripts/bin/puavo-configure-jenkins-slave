@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -eu
+
+# deps: sudo apt-get install -y default-jre git linux-image-generic-lts-raring linux-headers-generic-lts-raring lxc
+
+adduser --system  --shell /bin/bash --disabled-password --group jenkins
+
+mkdir /home/jenkins/.ssh
+
+echo ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDnk9ksUrMK4j7kkKlion61Z/oy8dvvrBYYl6bt6TU1wUw9uGdrhzC1DHO4YddL3WCb8nSyRWIye6NN5Fqwyh6sd8JWOS2RzmZvw+EH+y1mUoqLE1JkkAj86VVZmopjullgEPAKi9FEs+k+GUkpp2FooN8rbUO880vQTlDpcKfMlcFNRqriMoV3pJYgzTsuI28sDJMC9//7m7dG2aBejau/7uVCGz5o30WagwIJgQmx0DREP35cf+Nnuf1kqbYxqteanj5jWuT83d2tGSl1p75JXZd7MZzfuwCQBSYSpvPhPtAeWFXXk3DpamW7Qh8jRKsHd1kbg+WFQCqV5IoJSvhx jenkins@ci > /home/jenkins/.ssh/authorized_keys
+
+chown -R jenkins:jenkins /home/jenkins/
+
+sudo -i -u jenkins git config --global user.email "dev@opinsys.fi"
+sudo -i -u jenkins git config --global user.name "Jenkins Slave $(hostname)"
+
