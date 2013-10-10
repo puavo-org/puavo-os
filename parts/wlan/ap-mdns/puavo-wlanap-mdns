@@ -180,6 +180,7 @@ add_mdns_filter()
 
 enable_mdns_filters()
 {
+    echo "enabling mDNS traffic filters on '${tap}'" >&2
     add_mdns_filter INPUT "$1" || return 1
     add_mdns_filter OUTPUT "$1" || {
         del_mdns_filter INPUT "$1"
@@ -189,6 +190,7 @@ enable_mdns_filters()
 
 disable_mdns_filters()
 {
+    echo "disabling mDNS traffic filters on '${tap}'" >&2
     del_mdns_filter OUTPUT "$1" || {
         del_mdns_filter INPUT "$1"
         return 1
@@ -239,6 +241,7 @@ while true; do
     ) {networkslock}<"${PWAP_RUNDIR}/networks"
 
     if [ -f "${PWAP_MDNS_RUNDIR}/restart_avahi" ]; then
+        echo "restarting avahi-daemon" >&2
         rm -f "${PWAP_MDNS_RUNDIR}/restart_avahi"
         avahi-daemon -k || true # Might fail if not started yet.
         remove_avahi_services
