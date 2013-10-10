@@ -217,7 +217,7 @@ mkdir -p "${PWAP_MDNS_RUNDIR}"
 touch "${PWAP_MDNS_RUNDIR}/networks"
 
 while true; do
-    (
+    [ -e "${PWAP_RUNDIR}/networks" ] && (
         flock ${networkslock}
         newset="${PWAP_RUNDIR}/networks"
         oldset="${PWAP_MDNS_RUNDIR}/networks"
