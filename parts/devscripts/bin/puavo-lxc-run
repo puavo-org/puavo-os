@@ -1,5 +1,8 @@
 #!/bin/bash
-# visudo: jenkins ALL = NOPASSWD: /usr/local/bin/run-in-lxc
+# visudo:
+#   jenkins ALL = NOPASSWD: /usr/local/bin/puavo-lxc-run
+# or
+#   jenkins ALL = NOPASSWD: /usr/bin/puavo-lxc-run
 
 help(){
     echo "
