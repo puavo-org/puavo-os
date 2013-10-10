@@ -33,11 +33,11 @@ session	required	pam_unix.so
 # Print the message of the day upon successful login.
 # This includes a dynamically generated part from /run/motd.dynamic
 # and a static (admin-editable) part from /etc/motd.
-session    optional     pam_motd.so  motd=/run/motd.dynamic noupdate
-session    optional     pam_motd.so # [1]
+#session    optional     pam_motd.so  motd=/run/motd.dynamic noupdate
+#session    optional     pam_motd.so # [1]
 
 # Print the status of the user's mailbox upon successful login.
-session    optional     pam_mail.so standard noenv # [1]
+#session    optional     pam_mail.so standard noenv # [1]
 
 # Set up user limits from /etc/security/limits.conf.
 session    required     pam_limits.so
