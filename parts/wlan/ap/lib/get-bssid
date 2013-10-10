@@ -37,7 +37,7 @@ case "${model_id}" in
         ;;
 esac
 
-for (( i = 0; i <= ${#mac[@]}; ++i )); do 
+for (( i = 0; i < ${#mac[@]}; ++i )); do
     bssid[i]=$((mac[i] &~ mask[i]))
 done
 
