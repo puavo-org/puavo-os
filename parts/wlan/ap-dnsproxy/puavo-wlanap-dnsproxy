@@ -17,9 +17,9 @@ on_exit()
     pkill -TERM -P $$
 
     ## Read cached events.
-    while read wlanbridge; do
-        disable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}" && {
-            echo "disabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
+    while read tap bridge; do
+        disable_dns_redirection "${bridge}" "${PWAP_DNSPROXY_PORT}" && {
+            echo "disabled DNS redirection for '${bridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
         }
     done <"${PWAP_RUNDIR}/networks"
 
@@ -106,26 +106,26 @@ dnsmasq \
     --pid-file="${PWAP_DNSPROXY_RUNDIR}/dnsmasq.pid" \
     ${dnsmasq_ptr_record_args} &
 
-nc -k -l -U "${PWAP_DNSPROXY_RUNDIR}/control.socket" | while read event wlanbridge; do
+nc -k -l -U "${PWAP_DNSPROXY_RUNDIR}/control.socket" | while read event tap bridge; do
     case "$event" in
         vtun-up)
-            enable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}"
-            echo "enabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
+            enable_dns_redirection "${bridge}" "${PWAP_DNSPROXY_PORT}"
+            echo "enabled DNS redirection for '${bridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
             ;;
         vtun-down)
-            disable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}"
-            echo "disabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
+            disable_dns_redirection "${bridge}" "${PWAP_DNSPROXY_PORT}"
+            echo "disabled DNS redirection for '${bridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
             ;;
         *)
-            echo "received unknown event '${event} ${wlanbridge}'" >&2
+            echo "received unknown event '${event} ${bridge}'" >&2
             ;;
     esac
 done &
 
 ## Read cached events.
-while read wlanbridge; do
-    enable_dns_redirection "${wlanbridge}" "${PWAP_DNSPROXY_PORT}"
-    echo "enabled DNS redirection for '${wlanbridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
+while read tap bridge; do
+    enable_dns_redirection "${bridge}" "${PWAP_DNSPROXY_PORT}"
+    echo "enabled DNS redirection for '${bridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
 done <"${PWAP_RUNDIR}/networks"
 
 wait
