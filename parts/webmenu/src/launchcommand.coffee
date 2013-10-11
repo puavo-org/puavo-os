@@ -30,9 +30,7 @@ launchCommand = (msg, cb) ->
 
   if not command
     console.info "no commad for type #{ msg.type }"
-    return
-
-    cb?() # TODO: create an error object...
+    return cb?(new Error("CMD object has no command!"))
 
   command = command.map((p) -> '"' + p + '"').join(" ")
 
