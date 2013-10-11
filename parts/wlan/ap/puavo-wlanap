@@ -99,14 +99,9 @@ setup_nets()
 
     # Magic SSID Mangling! The following Magic SSID is substituted with
     # a SSID derived from the hostname. This lets us configure
-    # AP-specific networks easily via Puavo. The Magic SSID is chosen to
-    # be longer than 32 characters, since 32 is the maximum length of a
-    # valid SSID, as defined in IEEE 802.11
-    # (http://standards.ieee.org/getieee802/download/802.11-2007.pdf). Moreover,
-    # since puavo-wlanap uses SSIDs as interface names, they must be
-    # shorter than 16 characters.
+    # AP-specific networks easily via Puavo.
     ap_ssid=$(hostname | tr -d [:space:] | tail -c15)
-    sed -ir "s/:le8Yuek9Some5eek1eeWo7Aij1iezon4O:/:${ap_ssid}:/" "${PWAP_RUNDIR}/nets"
+    sed -ir "s/:le8Yuek9Some5ee:/:${ap_ssid}:/" "${PWAP_RUNDIR}/nets"
 
     readarray -n4 -t PWAP_NETS <"${PWAP_RUNDIR}/nets"
 
