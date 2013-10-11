@@ -32,17 +32,18 @@ launchCommand = (msg, cb) ->
     console.info "no commad for type #{ msg.type }"
     return
 
-  [command, args] = command
+    cb?() # TODO: create an error object...
 
-  console.info "Executing '#{ command }' with args '#{ args.join(" ") }'"
+  command = command.map((p) -> '"' + p + '"').join(" ")
 
-  cmd = spawn command, args,
+  console.info "Executing '#{ command }'"
+  cmd = spawn "sh", ["-c", command + " &"],
     detached: true
     cwd: process.env.HOME
     env: process.env
 
   cmd.on "exit", (code) ->
-    console.info "Command '#{ command }' #{ JSON.stringify(args) } exited with #{ code }"
+    console.info "Command '#{ command }'exited with #{ code }"
     cb?() # TODO: create an error object...
 
 
