@@ -2,8 +2,6 @@
 
 set -e
 
-do_sighup=false
-
 handle_imagefiles() {
   while read filename; do
     image=$(echo "$filename" | sed s'/\(.*\)\.img/\1/')
@@ -16,13 +14,7 @@ handle_imagefiles() {
     exportname = /opt/ltsp/images/${filename}
     readonly = true
 EOF
-
-    if cmp $conf $tmpconf 2>/dev/null; then
-      rm -f $tmpconf
-    else
-      mv $tmpconf $conf
-      do_sighup=true
-    fi
+    mv $tmpconf $conf
   done
 }
 
@@ -30,10 +22,8 @@ find /opt/ltsp/images \
   -maxdepth 1 -name '*.img' '(' -type f -or -type l ')' -printf '%f\n' \
     | handle_imagefiles
 
-if $do_sighup; then
-  # get the listening nbd_server pid, and send HUP to it
-  nbd_server_pid=$(lsof -t -u nbd -a -iTCP:10809 -sTCP:LISTEN)
-  test -n "$nbd_server_pid" && kill -HUP "$nbd_server_pid"
-fi
+# get the listening nbd_server pid, and send HUP to it
+nbd_server_pid=$(lsof -t -u nbd -a -iTCP:10809 -sTCP:LISTEN)
+test -n "$nbd_server_pid" && kill -HUP "$nbd_server_pid"
 
 exit 0
