@@ -58,12 +58,10 @@ if [ "$opinsysdebs_location" = "" ]; then
 fi
 
 
-debian_dir=""
 for dist_code in $DISTRIB_CODENAME default; do
-    debian_dir_tmp="$opinsysdebs_location/packages/$dist_code/$repo_name/debian"
+    debian_dir="$opinsysdebs_location/packages/$dist_code/$repo_name/debian"
     if [ -d $debian_dir_tmp ]; then
         cp -r $debian_dir_tmp debian
-        debian_dir=$debian_dir_tmp
         break
     fi
 done
