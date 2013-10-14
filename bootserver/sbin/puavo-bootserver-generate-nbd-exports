@@ -2,20 +2,23 @@
 
 set -e
 
-handle_imagefiles() {
-  while read filename; do
-    image=$(echo "$filename" | sed s'/\(.*\)\.img/\1/')
+handle_imagefiles()
+{
+    local filename imagename conf tmpconf
 
-    conf=/etc/nbd-server/conf.d/${image}.conf
-    tmpconf=$conf.tmp
+    while read filename; do
+        imagename=$(echo "${filename}" | sed s'/\(.*\)\.img/\1/')
 
-    cat <<EOF > $tmpconf
-[${image}]
+        conf="/etc/nbd-server/conf.d/${imagename}.conf"
+        tmpconf="${conf}.tmp"
+
+        cat <<EOF > "${tmpconf}"
+[${imagename}]
     exportname = /opt/ltsp/images/${filename}
     readonly = true
 EOF
-    mv $tmpconf $conf
-  done
+        mv "${tmpconf}" "${conf}"
+    done
 }
 
 find /opt/ltsp/images \
@@ -24,6 +27,6 @@ find /opt/ltsp/images \
 
 # get the listening nbd_server pid, and send HUP to it
 nbd_server_pid=$(lsof -t -u nbd -a -iTCP:10809 -sTCP:LISTEN)
-test -n "$nbd_server_pid" && kill -HUP "$nbd_server_pid"
+test -n "${nbd_server_pid}" && kill -HUP "${nbd_server_pid}"
 
 exit 0
