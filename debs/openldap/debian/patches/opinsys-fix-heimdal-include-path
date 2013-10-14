@@ -1,0 +1,12 @@
+diff -Nur openldap-2.4.31.orig/contrib/slapd-modules/smbk5pwd/Makefile openldap-2.4.31/contrib/slapd-modules/smbk5pwd/Makefile
+--- openldap-2.4.31.orig/contrib/slapd-modules/smbk5pwd/Makefile	2012-10-18 06:13:53.765478821 +0000
++++ openldap-2.4.31/contrib/slapd-modules/smbk5pwd/Makefile	2012-10-18 05:01:15.249480364 +0000
+@@ -19,7 +19,7 @@
+ # Omit DO_KRB5, DO_SAMBA or DO_SHADOW if you don't want to support it.
+ DEFS=-DDO_KRB5 -DDO_SAMBA -DDO_SHADOW
+ 
+-HEIMDAL_INC=-I/usr/include
++HEIMDAL_INC=-I/usr/include/heimdal
+ SSL_INC=
+ LDAP_INC=-I../../../debian/build/include -I../../../debian/build/servers/slapd -I../../../include -I../../../servers/slapd
+ INCS=$(LDAP_INC) $(HEIMDAL_INC) $(SSL_INC)

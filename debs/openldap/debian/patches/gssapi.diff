@@ -1,0 +1,167 @@
+Index: openldap-2.4.23/configure.in
+===================================================================
+--- openldap-2.4.23.orig/configure.in	2010-07-28 11:20:57.054712043 -0400
++++ openldap-2.4.23/configure.in	2010-07-28 11:21:15.542403952 -0400
+@@ -242,6 +242,8 @@
+ 	auto, [auto yes no] )
+ OL_ARG_WITH(fetch,[  --with-fetch		  with fetch(3) URL support],
+ 	auto, [auto yes no] )
++OL_ARG_WITH(gssapi,[  --with-gssapi               with GSSAPI support],
++        auto, [auto yes no] )
+ OL_ARG_WITH(threads,[  --with-threads	  with threads],
+ 	auto, [auto nt posix mach pth lwp yes no manual] )
+ OL_ARG_WITH(tls,[  --with-tls		  with TLS/SSL support auto|openssl|gnutls],
+@@ -584,6 +586,7 @@
+ KRB4_LIBS=
+ KRB5_LIBS=
+ SASL_LIBS=
++GSSAPI_LIBS=
+ TLS_LIBS=
+ MODULES_LIBS=
+ SLAPI_LIBS=
+@@ -1148,6 +1151,63 @@
+ fi
+ 
+ dnl ----------------------------------------------------------------
++dnl GSSAPI
++ol_link_gssapi=no
++
++case $ol_with_gssapi in yes | auto)
++
++        ol_header_gssapi=no
++        AC_CHECK_HEADERS(gssapi/gssapi.h)
++        if test $ac_cv_header_gssapi_gssapi_h = yes ; then
++                ol_header_gssapi=yes
++        else
++                AC_CHECK_HEADERS(gssapi.h)
++                if test $ac_cv_header_gssapi_h = yes ; then
++                        ol_header_gssapi=yes
++                fi
++
++                dnl## not every gssapi has gss_oid_to_str()
++                dnl## as it's not defined in the GSSAPI V2 API
++                dnl## anymore
++                saveLIBS="$LIBS"
++                LIBS="$LIBS $GSSAPI_LIBS"
++                AC_CHECK_FUNCS(gss_oid_to_str)
++                LIBS="$saveLIBS"
++        fi
++
++        if test $ol_header_gssapi = yes ; then
++                dnl## we check for gss_wrap
++                dnl## as it's new to the GSSAPI V2 API
++                AC_CHECK_LIB(gssapi, gss_wrap,
++                             [ol_link_gssapi=yes;GSSAPI_LIBS="-lgssapi"],
++                             [ol_link_gssapi=no])
++                if test $ol_link_gssapi != yes ; then
++                        AC_CHECK_LIB(gssapi_krb5, gss_wrap,
++                                     [ol_link_gssapi=yes;GSSAPI_LIBS="-lgssapi_krb5"],
++                                     [ol_link_gssapi=no])
++                fi
++                if test $ol_link_gssapi != yes ; then
++                        AC_CHECK_LIB(gss, gss_wrap,
++                                     [ol_link_gssapi=yes;GSSAPI_LIBS="-lgss"],
++                                     [ol_link_gssapi=no])
++                fi
++        fi
++
++        ;;
++esac
++
++WITH_GSSAPI=no
++if test $ol_link_gssapi = yes; then
++        AC_DEFINE(HAVE_GSSAPI, 1, [define if you have GSSAPI])
++        WITH_GSSAPI=yes
++elif test $ol_with_gssapi = auto ; then
++        AC_MSG_WARN([Could not locate GSSAPI package])
++        AC_MSG_WARN([GSSAPI authentication not supported!])
++elif test $ol_with_gssapi = yes ; then
++        AC_MSG_ERROR([GSSAPI detection failed])
++fi
++
++dnl ----------------------------------------------------------------
+ dnl TLS/SSL
+ 	
+ if test $ol_with_tls = yes ; then
+@@ -1902,6 +1962,13 @@
+ fi
+ AC_SUBST(VERSION_OPTION)
+ 
++VERSION_OPTION=""
++OL_SYMBOL_VERSIONING
++if test $ol_cv_ld_version_script_option = yes ; then
++  VERSION_OPTION="-Wl,--version-script="
++fi
++AC_SUBST(VERSION_OPTION)
++
+ dnl ----------------------------------------------------------------
+ if test $ol_enable_wrappers != no ; then
+ 	AC_CHECK_HEADERS(tcpd.h,[
+@@ -3112,6 +3179,7 @@
+ AC_SUBST(KRB4_LIBS)
+ AC_SUBST(KRB5_LIBS)
+ AC_SUBST(SASL_LIBS)
++AC_SUBST(GSSAPI_LIBS)
+ AC_SUBST(TLS_LIBS)
+ AC_SUBST(MODULES_LIBS)
+ AC_SUBST(SLAPI_LIBS)
+Index: openldap-2.4.23/include/ldap.h
+===================================================================
+--- openldap-2.4.23.orig/include/ldap.h	2010-07-28 11:20:37.000000000 -0400
++++ openldap-2.4.23/include/ldap.h	2010-07-28 11:21:15.542403952 -0400
+@@ -1216,6 +1216,16 @@
+ 	struct berval	**servercredp,
+ 	int				freeit ));
+ 
++/*
++ * in gssapi.c:
++ */
++LDAP_F( int )
++ldap_gssapi_bind_s LDAP_P((
++	LDAP  *ld,
++	LDAP_CONST char *dn,
++	LDAP_CONST char *creds));
++
++
+ #if LDAP_DEPRECATED
+ /*
+  * in bind.c:
+Index: openldap-2.4.23/include/portable.hin
+===================================================================
+--- openldap-2.4.23.orig/include/portable.hin	2010-04-19 15:22:30.000000000 -0400
++++ openldap-2.4.23/include/portable.hin	2010-07-28 11:21:15.542403952 -0400
+@@ -253,6 +253,18 @@
+ /* Define to 1 if you have the <grp.h> header file. */
+ #undef HAVE_GRP_H
+ 
++/* define if you have GSSAPI */
++#undef HAVE_GSSAPI
++
++/* Define to 1 if you have the <gssapi/gssapi.h> header file. */
++#undef HAVE_GSSAPI_GSSAPI_H
++
++/* Define to 1 if you have the <gssapi.h> header file. */
++#undef HAVE_GSSAPI_H
++
++/* Define to 1 if you have the `gss_oid_to_str' function. */
++#undef HAVE_GSS_OID_TO_STR
++
+ /* Define to 1 if you have the `hstrerror' function. */
+ #undef HAVE_HSTRERROR
+ 
+Index: openldap-2.4.23/build/top.mk
+===================================================================
+--- openldap-2.4.23.orig/build/top.mk	2010-07-28 11:20:57.000000000 -0400
++++ openldap-2.4.23/build/top.mk	2010-07-28 11:21:15.542403952 -0400
+@@ -190,9 +190,10 @@
+ KRB5_LIBS = @KRB5_LIBS@
+ KRB_LIBS = @KRB4_LIBS@ @KRB5_LIBS@
+ SASL_LIBS = @SASL_LIBS@
++GSSAPI_LIBS = @GSSAPI_LIBS@
+ TLS_LIBS = @TLS_LIBS@
+ AUTH_LIBS = @AUTH_LIBS@
+-SECURITY_LIBS = $(SASL_LIBS) $(KRB_LIBS) $(TLS_LIBS) $(AUTH_LIBS)
++SECURITY_LIBS = $(SASL_LIBS) $(KRB_LIBS) $(GSSAPI_LIBS) $(TLS_LIBS) $(AUTH_LIBS)
+ ICU_LIBS = @ICU_LIBS@
+ 
+ MODULES_CPPFLAGS = @SLAPD_MODULES_CPPFLAGS@
