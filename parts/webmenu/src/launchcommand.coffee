@@ -26,15 +26,20 @@ launchCommand = (msg, cb) ->
 
   console.info "Launching #{ JSON.stringify(msg) }"
 
-  command = commandBuilders[msg.type]?(msg)
+  [command, args] = commandBuilders[msg.type]?(msg)
 
   if not command
     console.info "no commad for type #{ msg.type }"
     return cb?(new Error("CMD object has no command!"))
 
-  command = command.map((p) -> '"' + p + '"').join(" ")
+
+  # Build shell executable string. Quote everything to make args and commands
+  # with spaces to work correctly.
+  command = '"' + command + '" ' + args.map((p) -> '"' + p + '"').join(" ")
 
   console.info "Executing '#{ command }'"
+
+  # Manually fokr command because detached option is broken in node-webkit 0.6
   cmd = spawn "sh", ["-c", command + " &"],
     detached: true
     cwd: process.env.HOME
