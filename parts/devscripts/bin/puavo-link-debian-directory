@@ -55,7 +55,6 @@ fi
 debian_dir=""
 for dist_code in $DISTRIB_CODENAME default; do
     debian_dir_tmp="$opinsysdebs_location/packages/$dist_code/$repo_name/debian"
-    echo "Testing $debian_dir_tmp"
     if [ -d $debian_dir_tmp ]; then
         debian_dir=$debian_dir_tmp
         break
