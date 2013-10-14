@@ -122,10 +122,13 @@ nc -k -l -U "${PWAP_DNSPROXY_RUNDIR}/control.socket" | while read event tap brid
     esac
 done &
 
-## Read cached events.
-while read tap bridge; do
-    enable_dns_redirection "${bridge}" "${PWAP_DNSPROXY_PORT}"
-    echo "enabled DNS redirection for '${bridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
-done <"${PWAP_RUNDIR}/networks"
+[ -e "${PWAP_RUNDIR}/networks" ] && (
+    flock ${networkslock}
+    ## Read cached events.
+    while read tap bridge; do
+        enable_dns_redirection "${bridge}" "${PWAP_DNSPROXY_PORT}"
+        echo "enabled DNS redirection for '${bridge}' to port ${PWAP_DNSPROXY_PORT}" >&2
+    done <"${PWAP_RUNDIR}/networks"
+) {networkslock}<"${PWAP_RUNDIR}/networks"
 
 wait
