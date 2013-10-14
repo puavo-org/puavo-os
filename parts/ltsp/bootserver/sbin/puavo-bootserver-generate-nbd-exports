@@ -9,6 +9,10 @@ handle_imagefiles()
     while read filename; do
         imagename=$(echo "${filename}" | sed s'/\(.*\)\.img/\1/')
 
+        if [ -z "${imagename}" ]; then
+            continue
+        fi
+
         conf="/etc/nbd-server/conf.d/${imagename}.conf"
         tmpconf="${conf}.tmp"
 
