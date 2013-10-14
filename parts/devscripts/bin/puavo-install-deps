@@ -1,0 +1,39 @@
+#!/bin/bash
+
+help(){
+    echo "
+    Usage: $(basename $0) [debian control file]
+
+    Install build dependecies from the given debian control file
+
+    defaults to debian/control
+    "
+
+}
+
+[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
+
+if [[ $EUID -ne 0 ]]; then
+    echo "Must run run as root"
+    exit 1
+fi
+
+control_file="${1:-debian/control}"
+
+set -eu
+
+package=$(sed -ne 's/^Source: //p' $control_file)
+
+mk-build-deps $control_file
+
+dep_deb="$package-build-deps_1.0_all.deb"
+
+if [ ! -f $dep_deb ]; then
+    echo "Cannot find dependency dep from $dep_deb"
+    exit 1
+fi
+
+trap "rm $dep_deb" EXIT
+dpkg -i $dep_deb || true
+apt-get install -f -y
+
