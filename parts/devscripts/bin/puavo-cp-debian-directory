@@ -1,0 +1,70 @@
+#!/bin/bash
+
+help(){
+    echo "
+    Usage: $(basename $0) [CUSTOM REPOSITORY]
+
+    Copy debian directory for the current project from
+    https://github.com/opinsys/opinsys-debs
+
+    The debian directory will be picked using following scheme:
+
+        packages/<UBUNTU RELEASE CODE NAME>/<PROJECT NAME>/debian
+
+    <UBUNTU RELEASE CODE NAME>
+        Is read from /etc/lsb-release. If the repository does not contain
+        it default directory is used.
+
+    <PROJECT NAME>
+        Is the current directory name.
+
+    "
+
+}
+
+[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
+
+
+opinsysdebs_location="$1"
+
+set -eu
+
+assert_git_repo()
+{
+    git rev-parse --git-dir 2>&1 >/dev/null
+}
+
+assert_git_repo || {
+    echo "E: not a git repository, aborting" >&2
+    exit 1
+}
+
+# Get ubuntu version to $DISTRIB_CODENAME
+. /etc/lsb-release
+
+if [ -e debian ]; then
+    echo "debian directory already exists!"
+    exit 1
+fi
+
+repo_dir=$(pwd)
+repo_name=$(basename $repo_dir)
+
+
+if [ "$opinsysdebs_location" = "" ]; then
+    opinsysdebs_location=$(mktemp --directory --suffix=-opinsysdebs)
+    trap "rm -fr $opinsysdebs_location" EXIT
+    git clone https://github.com/opinsys/opinsys-debs.git $opinsysdebs_location
+fi
+
+
+debian_dir=""
+for dist_code in $DISTRIB_CODENAME default; do
+    debian_dir_tmp="$opinsysdebs_location/packages/$dist_code/$repo_name/debian"
+    if [ -d $debian_dir_tmp ]; then
+        cp -r $debian_dir_tmp debian
+        debian_dir=$debian_dir_tmp
+        break
+    fi
+done
+
