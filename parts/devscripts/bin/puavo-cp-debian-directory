@@ -60,8 +60,8 @@ fi
 
 for dist_code in $DISTRIB_CODENAME default; do
     debian_dir="$opinsysdebs_location/packages/$dist_code/$repo_name/debian"
-    if [ -d $debian_dir_tmp ]; then
-        cp -r $debian_dir_tmp debian
+    if [ -d $debian_dir ]; then
+        cp -r $debian_dir debian
         break
     fi
 done
