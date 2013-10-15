@@ -1,0 +1,13 @@
+description "debbox"
+
+start on runlevel [23]
+stop on shutdown
+
+pre-start script
+    adduser --no-create-home --disabled-password --disabled-login --system --group debbox
+end script
+
+env NODE_ENV=production
+exec sudo -E -u debbox debbox
+
+respawn

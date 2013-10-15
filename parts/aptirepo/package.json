@@ -1,0 +1,27 @@
+{
+  "name": "debbox",
+  "version": "0.0.0",
+  "description": "Web server that receives .deb packages and publishes to apt repositories",
+  "main": "index.js",
+  "bin": {
+    "debbox": "./bin/debbox"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/opinsys/debbox.git"
+  },
+  "author": "Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>",
+  "license": "GPL",
+  "bugs": {
+    "url": "https://github.com/opinsys/debbox/issues"
+  },
+  "dependencies": {
+    "q": "~0.9.7",
+    "express": "~3.4.0",
+    "optimist": "~0.6.0",
+    "xtend": "~2.1.1",
+    "temp": "~0.6.0",
+    "multiparty": "~2.1.9",
+    "rimraf": "~2.2.2"
+  }
+}
