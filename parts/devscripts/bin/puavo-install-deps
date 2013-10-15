@@ -34,6 +34,10 @@ if [ ! -f $dep_deb ]; then
 fi
 
 trap "rm $dep_deb" EXIT
-dpkg -i $dep_deb || true
+dpkg --install $dep_deb || true
 apt-get install -f -y
+
+# Assert that package was actually installed grep -q exits with nonzero status
+# if no match is found.
+dpkg --status "$package-build-deps" | grep -q "Status: install ok installed"
 
