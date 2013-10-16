@@ -66,12 +66,14 @@ on_exit(){
         echo "
 
         Something went wrong!
-        Cloning container to
+        Cloning container to /var/lib/lxc/$newname on $(hostname) $slaveip
 
-            $slaveip:/var/lib/lxc/$newname
+        You can examine it by starting it with:
 
-        For later examination
+            lxc-start -n $newname
 
+        Login with user ci and password ci. Project left as is to /cirun
+        inside the container.
         "
 
         lxc-clone -o $containername -n $newname
