@@ -91,9 +91,7 @@ app.post("/deb", function(req, res) {
             console.error("Upload failed", err);
             res.json(err, 400);
         }).finally(function() {
-            tmpDir.then(function(dirPath) {
-                return rimraf(dirPath);
-            }).fail(function(err) {
+            return tmpDir.then(rimraf).fail(function(err) {
                 console.error("Failed to remove temp dir", err);
             });
         }).done();
