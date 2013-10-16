@@ -39,11 +39,12 @@ function debExec(debPath) {
         console.log("Executing", command);
         exec(command, function(err, stdout, stderr) {
             var res = {
+                file: debPath,
                 command: command,
                 stdout: stdout,
                 stderr: stderr
             };
-            if (err) reject(res, xtend({error: err}));
+            if (err) reject(xtend(res, {error: err}));
             else resolve(res);
         });
 
@@ -82,10 +83,9 @@ app.post("/deb", function(req, res) {
 
 
     form.on("close", function() {
-        console.log("All files gotten", jobs.length);
 
         Q.all(jobs).then(function(commandOutput) {
-            console.log("Upload ok", res);
+            console.log("Upload ok", commandOutput);
             res.json(commandOutput);
         }, function(err) {
             console.error("Upload failed", err);
