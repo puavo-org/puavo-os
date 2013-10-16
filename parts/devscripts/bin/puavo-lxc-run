@@ -6,7 +6,7 @@
 
 help(){
     echo "
-    Usage: $(basename $0) <base container> <script to run> <script args>
+    Usage: $(basename $0) <base container> <script to run> [script args]
 
     Execute given script in a temporary container.
 
