@@ -19,8 +19,8 @@ var rimraf = Q.denodeify(require("rimraf"));
 var app = express();
 
 var config = [
-    "/etc/debbox.json",
     __dirname + "/debbox.json",
+    "/etc/debbox.json",
     "~/.config/debbox.json"
 ].reduce(function(memo, configPath) {
     var config;
