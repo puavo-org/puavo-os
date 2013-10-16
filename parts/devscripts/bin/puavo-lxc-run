@@ -8,7 +8,7 @@ help(){
     echo "
     Usage: $(basename $0) <base container> <script to run>
 
-    Execute given script from a temporary container.
+    Execute given script in a temporary container.
 
     This must executed from the project root.
     "
