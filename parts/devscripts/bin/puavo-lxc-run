@@ -38,7 +38,7 @@ basename="$1"
 shift
 script="$1"
 shift
-script_args="$1"
+script_args="$@"
 base="/var/lib/lxc/$basename"
 
 set -eu
