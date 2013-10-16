@@ -95,15 +95,20 @@ cat > "$lxcdir/rootfs/run.sh"<<EOF
 #!/bin/sh
 set -eu
 
-while true; do
+for i in \$(seq 100); do
     ip="\$(ifconfig eth0 | sed -rn '2 s/^\s+inet addr:([0-9\.]+).*$/\1/p')"
     if [ "\$ip" != "" ]; then
         echo "Container got ip \$ip!"
         break
     fi
-    echo "Waiting for container to get network..."
+    echo "Waiting for container to get network. Attempt \$i/100..."
     sleep 1
 done
+
+if [ "\$ip" = "" ]; then
+    echo "Container failed to get network!"
+    exit 1
+fi
 
 chown -R ci:ci /cirun
 chmod +x /cirun/$projectname/$script
