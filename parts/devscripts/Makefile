@@ -21,4 +21,9 @@ install: installdirs
 		bin/mktar \
 		bin/dpkg-diff-img
 
+install-lxc-tools: installdirs
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
+		bin/puavo-lxc-ci-prepare \
+		bin/puavo-lxc-run
+
 clean:
