@@ -10,7 +10,7 @@ var os = require("os");
 var temp = require("temp");
 var xtend = require("xtend");
 var fs = require("fs");
-var promiseFromStream = require("./promiseFromStream");
+var promisePipe = require("promisepipe");
 
 Q.longStackSupport = true;
 var mkTmpDir = Q.denodeify(temp.mkdir);
@@ -36,20 +36,17 @@ var config = [
 function debExec(debPath) {
     var command = config.debCommand.replace(/\$1/g, "'" + debPath + "'");
     return Q.promise(function(resolve, reject) {
-
         console.log("Executing", command);
+        exec(command, function(err, stdout, stderr) {
+            var res = {
+                command: command,
+                stdout: stdout,
+                stderr: stderr
+            };
+            if (err) reject(res, xtend({error: err}));
+            else resolve(res);
+        });
 
-        var child = exec(command).on("exit", function(exitcode) {
-            if (exitcode === 0) resolve();
-            else reject(new Error("Nonzero exit code: " + exitcode));
-        }).on("error", reject);
-
-        child.stdout.pipe(process.stdout);
-        child.stderr.pipe(process.stderr);
-
-    }).fail(function(err) {
-        err.command = command;
-        return Q.reject(err);
     });
 }
 
@@ -72,12 +69,10 @@ app.post("/deb", function(req, res) {
     var jobs = [];
 
     form.on("part", function(part) {
-        console.log("part", part.name, part.filename, part.headers);
-        jobs.push(promiseFromStream(part));
-
+        console.log("Got file", part.filename);
         jobs.push(tmpDir.then(function(dirPath) {
             var outPath = path.join(dirPath, part.filename);
-            return promiseFromStream(part.pipe(fs.createWriteStream(outPath)))
+            return promisePipe(part, fs.createWriteStream(outPath))
                 .then(function() {
                     return debExec(outPath);
                 });
@@ -87,18 +82,21 @@ app.post("/deb", function(req, res) {
 
 
     form.on("close", function() {
-        Q.all(jobs).then(function() {
-            res.send("ok");
+        console.log("All files gotten", jobs.length);
+
+        Q.all(jobs).then(function(commandOutput) {
+            console.log("Upload ok", res);
+            res.json(commandOutput);
         }, function(err) {
             console.error("Upload failed", err);
-            res.send(err.message, 400);
+            res.json(err, 400);
         }).finally(function() {
             tmpDir.then(function(dirPath) {
                 return rimraf(dirPath);
             }).fail(function(err) {
                 console.error("Failed to remove temp dir", err);
             });
-        });
+        }).done();
     });
 
     form.parse(req);
