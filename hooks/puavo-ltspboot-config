@@ -1,92 +1,19 @@
-#!/usr/bin/ruby1.9.3
+#!/bin/sh
 #
-# Get device settings from the LDAP-server (Puavo) and generate pxelinux.cfg data for terminal.
+# Get pxelinux.cfg configuration data from th puavo-rest server.
 # 
 # Usage: [sudo] ltspboot-config [PXE GET URL]
 #
 # eg. sudo ltspboot-config pxelinux.cfg/01-78-e7-d1-d4-0f-5f
 
-$LOAD_PATH.unshift( File.dirname(__FILE__) )
+mac_address=$(echo $1 | sed -r -n 's/.*01\-(([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})$/\1/p')
 
-ENV['LDAPTLS_REQCERT'] = 'demand'
-ENV['LDAPTLS_CACERT'] = '/etc/puavo/certs/rootca.pem'
+pxe_config=$(curl --silent --fail -H "Authorization: Bootserver" $(puavo-resolve-api-server)/v3/$mac_address/boot_configuration)
+status_code=$?
 
-require 'puavo-ldap'
-
-def help
-  "Usage: [sudo] ltspboot-config [PXE GET URL]\n" +
-  "\t-h, --help\tShow this message\n"
-end
-
-option = ARGV[0]
-
-if option == "-h" || option == "--help" || option.nil?
-  puts help
-  exit
-end
-
-if match_option = option.match(/01-(([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})/)
-  client_mac = match_option[1].to_s.gsub('-', ':').downcase
+if [ "$status_code" -eq 0 ]; then
+  echo "$pxe_config"
 else
-  puts "Invalid options\n\n"
-  puts help
-  exit
-end
-
-ltsp_client = PuavoLdap.new.device_by_mac(client_mac)
-
-device_type = Array(ltsp_client['puavoDeviceType']).first.to_s
-device_type = 'unregistered' if device_type.empty?
-
-kernel_version = Array(ltsp_client['puavoDeviceKernelVersion']).first.to_s
-kernel_version = "-" + kernel_version if not kernel_version.empty?
-
-case device_type
-  when 'laptop','unregistered'
-    # Splash interferes with register-session, so do not use it when
-    # registering.  Also remove quiet for troubleshooting.  This is required
-    # for laptops as well, because they do not normally boot off from the
-    # network, but if they do, they should get the maintenance/update dialogs.
-    kernel_args = ''
-  else
-    kernel_args = Array(ltsp_client['puavoDeviceKernelArguments']).first.to_s
-    kernel_args = "quiet splash" if kernel_args.empty?
-end
-
-image = Array(ltsp_client['puavoDeviceImage']).first.to_s
-image = "i386" if image.empty?
-
-bootmode = Array(ltsp_client['puavoDeviceBootMode']).first.to_s
-bootmode = "netboot" if bootmode.empty?
-
-header = ""
-# Show menu to user if device's boot mode is dualboot
-if bootmode == "dualboot"
-  header =<<EOF
-default menu.c32
-menu title Choose a system
-prompt 0
-timeout 100
-
-label local
-  menu label Local OS
-  localboot 0
-EOF
-else
-  header =<<EOF
-default ltsp-NBD
-ontimeout ltsp-NBD
-
-EOF
-end
-
-puts <<EOF
-#{header}
-
-label ltsp-NBD
-  menu label LTSP, using NBD
-  menu default
-  kernel ltsp/#{image}/vmlinuz#{kernel_version}
-  append ro initrd=ltsp/#{image}/initrd.img#{kernel_version} init=/sbin/init-puavo puavo.hosttype=#{device_type} root=/dev/nbd0 nbdroot=:#{image} #{kernel_args} nfs.nfs4_unique_id=#{client_mac}-#{Time.now.to_i}
-  ipappend 2
-EOF
+  # FIXME: error message with pxelinux syntax?
+  echo "Couldn't connect to puavo-rest server"
+fi
