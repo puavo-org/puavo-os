@@ -96,13 +96,16 @@ rsync -a $(pwd) "$lxcdir/rootfs/cirun"
 
 cat > "$lxcdir/rootfs/run.sh"<<EOF
 #!/bin/sh
-set -eu
+
+. /etc/environment
 
 if [ "\$http_proxy" != "" ]; then
     echo
-    echo "WARNING: Using global proxy \$http_proxy"
+    echo "WARNING: Container is using global proxy \$http_proxy"
     echo
 fi
+
+set -eu
 
 for i in \$(seq 100); do
     ip="\$(ifconfig eth0 | sed -rn '2 s/^\s+inet addr:([0-9\.]+).*$/\1/p')"
@@ -121,6 +124,8 @@ fi
 
 chown -R ci:ci /cirun
 chmod +x /cirun/$projectname/$script
+echo
+echo "Executing /cirun/$projectname/$script $script_args"
 sudo -i -u ci sh -c "cd /cirun/$projectname && ./$script $script_args"
 EOF
 chmod +x "$lxcdir/rootfs/run.sh"
