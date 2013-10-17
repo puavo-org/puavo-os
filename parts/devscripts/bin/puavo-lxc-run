@@ -101,7 +101,7 @@ cat > "$lxcdir/rootfs/run.sh"<<EOF
 
 if [ "\$http_proxy" != "" ]; then
     echo
-    echo "WARNING: Container is using global proxy \$http_proxy"
+    echo "WARNING: Container is using a global proxy \$http_proxy"
     echo
 fi
 
