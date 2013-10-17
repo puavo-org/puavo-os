@@ -98,6 +98,12 @@ cat > "$lxcdir/rootfs/run.sh"<<EOF
 #!/bin/sh
 set -eu
 
+if [ "\$http_proxy" != "" ]; then
+    echo
+    echo "WARNING: Using global proxy \$http_proxy"
+    echo
+fi
+
 for i in \$(seq 100); do
     ip="\$(ifconfig eth0 | sed -rn '2 s/^\s+inet addr:([0-9\.]+).*$/\1/p')"
     if [ "\$ip" != "" ]; then
