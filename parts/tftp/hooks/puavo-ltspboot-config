@@ -6,7 +6,7 @@
 #
 # eg. sudo ltspboot-config pxelinux.cfg/01-78-e7-d1-d4-0f-5f
 
-mac_address=$(echo $1 | sed -r -n 's/.*01\-(([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})$/\1/p')
+mac_address=$(echo $1 | sed -r -n 's/.*01[-:](([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})$/\1/p' | sed -e 's/-/:/g')
 
 pxe_config=$(curl --silent --fail -H "Authorization: Bootserver" $(puavo-resolve-api-server)/v3/$mac_address/boot_configuration)
 status_code=$?
