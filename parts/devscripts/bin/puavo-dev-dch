@@ -1,8 +1,6 @@
 #!/bin/sh
 
 
-[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
-
 help(){
     echo "
     Usage: $(basename $0)
@@ -10,6 +8,8 @@ help(){
     Autogenerate debian changelog entry from the current git repository.
     "
 }
+
+[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
 
 set -eu
 
