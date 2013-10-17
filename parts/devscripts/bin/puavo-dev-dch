@@ -42,9 +42,12 @@ fi
 package_dir=$(pwd)
 repo_name=$(basename $(pwd))
 
-# List tags by date and grab last
+# List tags by date
 # http://stackoverflow.com/questions/6269927/how-can-i-list-all-tags-in-my-git-repository-by-the-date-they-were-created
-prev_version=$(git for-each-ref --sort='*authordate' --format='%(refname:short)' refs/tags  | tail --lines=1)
+git_tags=$(git for-each-ref --sort='*authordate' --format='%(refname:short)' refs/tags)
+
+version_tags=$(echo "$git_tags" | grep --color=never --line-regexp --extended-regexp '^[0-9]+\.[0-9]+\.[0-9]$')
+prev_version=$(echo "$version_tags" | tail --lines=1)
 git_branch=$(git rev-parse --abbrev-ref HEAD)
 git_commit=$(git rev-parse HEAD)
 
