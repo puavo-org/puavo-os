@@ -33,4 +33,5 @@ dpkg-buildpackage -us -uc
 for deb in ../*.deb; do
     echo "Uploading $deb"
     curl --fail --form "deb=@${deb}" "${debbox_url}/deb"
+    echo
 done
