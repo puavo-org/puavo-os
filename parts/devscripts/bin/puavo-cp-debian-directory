@@ -29,16 +29,6 @@ opinsysdebs_location="$1"
 
 set -eu
 
-assert_git_repo()
-{
-    git rev-parse --git-dir 2>&1 >/dev/null
-}
-
-assert_git_repo || {
-    echo "E: not a git repository, aborting" >&2
-    exit 1
-}
-
 # Get ubuntu version to $DISTRIB_CODENAME
 . /etc/lsb-release
 
