@@ -1,0 +1,25 @@
+#!/bin/sh
+
+
+help(){
+    echo "
+    Usage: $(basename $0)
+
+    Execute puavo-lxc-run using it's full path with sudo.
+
+    When sudoers (use visudo) contains:
+
+      jenkins ALL = NOPASSWD: /usr/local/bin/puavo-lxc-run
+      jenkins ALL = NOPASSWD: /usr/bin/puavo-lxc-run
+
+    This script should run without asking a password from Jenkins.
+    "
+}
+
+[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
+
+set -eu
+
+script=$(which puavo-lxc-run)
+echo "Trying to execute $script with sudo..."
+sudo $script "$@"
