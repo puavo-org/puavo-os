@@ -8,7 +8,7 @@
 
 mac_address=$(echo $1 | sed -r -n 's/.*01[-:](([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})$/\1/p' | sed -e 's/-/:/g')
 
-pxe_config=$(curl --silent --fail -H "Authorization: Bootserver" $(puavo-resolve-api-server)/v3/$mac_address/boot_configuration)
+pxe_config=$(curl --cacert /etc/puavo/certs/rootca.pem --silent --fail -H "Authorization: Bootserver" $(puavo-resolve-api-server)/v3/$mac_address/boot_configuration)
 status_code=$?
 
 if [ "$status_code" -eq 0 ]; then
