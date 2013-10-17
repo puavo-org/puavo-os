@@ -26,11 +26,11 @@ if [ ! -d debian ]; then
 fi
 
 # Convert package to debian native format.
-sed -i s/quilt/source/ debian/source/format
+sed -i s/quilt/native/ debian/source/format
 
 dpkg-buildpackage -us -uc
 
 for deb in ../*.deb; do
     echo "Uploading $deb"
-    curl --form "deb=@package.deb" $debbox_url
+    curl --fail --form "deb=@${deb}" "${debbox_url}/deb"
 done
