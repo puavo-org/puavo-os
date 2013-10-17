@@ -1,0 +1,42 @@
+#!/bin/sh
+
+remove_remote_printers()
+{
+    LANG=C lpstat -v | while read line; do
+        name=$(echo "${line}" | sed -r -n 's|^device for (.*): ipp://.*$|\1|p')
+        [ -n "${name}" ] || continue
+        lpadmin -x "${name}"
+    done
+}
+
+add_remote_printers()
+{
+    local puavo_domain=$(cat /etc/puavo/domain)
+    readonly puavo_domain
+
+    echo "${PUAVO_SESSION}" | jq -r -c .printer_queues[] | while read printer; do
+        name=$(echo "${printer}" | jq -r -c .name)
+        location=$(echo "${printer}" | jq -r -c .location)
+        description=$(echo "${printer}" | jq -r -c .description)
+        remote_uri="ipp://cups.${puavo_domain}:631/printers/${name}"
+
+        lpadmin -p "${name}" -v "${remote_uri}" -L "${location}" -D "${description}" -E
+    done
+}
+
+PUAVO_API_SERVER=$(puavo-resolve-api-server)
+PUAVO_HOSTNAME=$(cat /etc/puavo/hostname)
+PUAVO_SESSION=$(curl --cacert /etc/puavo/certs/rootca.pem \
+    --negotiate \
+    --delegation always \
+    --user : \
+    --form "hostname=${PUAVO_HOSTNAME}" \
+    --fail \
+    --max-time 5 \
+    --retry 5 \
+    --retry-delay 1 \
+    "${PUAVO_API_SERVER}/v3/sessions" 2>/dev/null)
+
+remove_remote_printers
+
+add_remote_printers

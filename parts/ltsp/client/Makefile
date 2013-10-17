@@ -23,6 +23,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/ssh
+	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d
@@ -144,6 +145,9 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/ssh \
 		etc/ssh/ltspsshd_config
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
+		etc/X11/Xsession.d/90puavo-ltsp-client
 
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd
 
