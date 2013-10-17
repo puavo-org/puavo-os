@@ -17,6 +17,7 @@ install: installdirs
 		bin/puavo-deb-release \
 		bin/puavo-cp-debian-directory \
 		bin/puavo-install-deps \
+		bin/puavo-build-and-upload \
 		bin/mkpkg \
 		bin/mktar \
 		bin/dpkg-diff-img
