@@ -12,7 +12,7 @@ help(){
 }
 
 [ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
-[ "$1" = "" ] && help && exit 1
+[ "$1" = "" -o "$2" = "" ] && help && exit 1
 
 debbox_url="$1"
 shift
