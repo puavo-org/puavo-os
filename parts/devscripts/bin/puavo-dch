@@ -4,7 +4,7 @@ help(){
     echo "
     Usage: $(basename $0)
 
-    Autogenerate debian changelog entry from VERSION file and git commit.
+    Autogenerate debian/changelog entry from VERSION file and git commit.
 
     If the current git commit contains a string \"!dorelease\" a
     production release style version will be generated.
