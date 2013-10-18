@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# puavo-open-session connects puavo-rest to create a new session.
+# The returned session json contains device, user, desktop and printer
+# settings that are used to setup the desktop session for the user.
+#
+# Laptops can cache the returned json and reuse it on subsequent
+# offline logins.
+
+PUAVO_HOSTNAME=$(cat /etc/puavo/hostname)
+API_SERVER=$(puavo-resolve-api-server)
+
+if [ "x${KRB5CCNAME}" = "x" ]; then
+  KRB5CCNAME=$PAMENV_KRB5CCNAME
+fi
+
+if [ "x${API_SERVER}" != "x" ]; then
+    PUAVO_SESSION=$(
+        curl --cacert /etc/puavo/certs/rootca.pem \
+            --negotiate \
+            --delegation always \
+            --user : \
+            --form hostname=${PUAVO_HOSTNAME} \
+            --fail \
+            --max-time 5 \
+            --retry 5 \
+            --retry-delay 1 \
+	    --header "Expect:" \
+            "${API_SERVER}/v3/sessions" 2>/dev/null)
+
+    if [ "x${PUAVO_SESSION}" = "x" ]; then
+      echo "No session information received from ${API_SERVER}" \
+          | logger -t puavo-open-session -p auth.error
+
+      exit 99
+    fi
+
+    echo "Received puavo session: ${PUAVO_SESSION}" \
+        | logger -t puavo-open-session -p auth.info
+
+    UUID=$(echo "${PUAVO_SESSION}" | jq --raw-output .uuid)
+
+    echo "PUAVO_SESSION=${PUAVO_SESSION}"
+    echo "PUAVO_SESSION_ID=${UUID}"
+
+    exit 0
+else
+    echo "could not determine the Puavo API server from dns" \
+        | logger -t puavo-open-session -p auth.error
+
+    exit 98
+fi
