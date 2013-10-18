@@ -22,5 +22,5 @@ control_file="${1:-debian/control}"
 
 set -eu
 
-mk-build-deps --install $control_file --install --tool "apt-get --no-install-recommends --yes"
+mk-build-deps --install $control_file --install --tool "apt-get --yes"
 
