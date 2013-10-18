@@ -11,7 +11,7 @@ PUAVO_HOSTNAME=$(cat /etc/puavo/hostname)
 API_SERVER=$(puavo-resolve-api-server)
 
 if [ "x${KRB5CCNAME}" = "x" ]; then
-  KRB5CCNAME=$PAMENV_KRB5CCNAME
+  export KRB5CCNAME=$PAMENV_KRB5CCNAME
 fi
 
 if [ "x${API_SERVER}" != "x" ]; then
