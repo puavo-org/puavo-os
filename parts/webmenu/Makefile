@@ -86,10 +86,12 @@ test-nw:
 test-nw-hidden: assets
 	WM_ENV=development $(NW) . --test --exit
 
+test:
+	WM_ENV=development $(NW) . --test --exit
+
 test-node:
 	node_modules/.bin/mocha --reporter spec --compilers coffee:coffee-script tests/*test*
 
-test: test-client test-node
 
 serve:
 	@echo View tests on http://localhost:3000/tests.html
