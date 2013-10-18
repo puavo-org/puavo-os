@@ -114,6 +114,7 @@ install : installdirs
 		puavo-ltsp-envfeed \
 		puavo-ltsp-init-nfs \
 		puavo-ltsp-login \
+		puavo-open-session \
 		puavo-update-nm-configurations
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount \
