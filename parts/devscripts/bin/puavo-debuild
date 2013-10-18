@@ -10,7 +10,6 @@ help(){
 }
 
 [ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
-[ "$1" = "" ] && help && exit 1
 
 set -eu
 
