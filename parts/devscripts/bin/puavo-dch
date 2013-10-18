@@ -13,21 +13,6 @@ help(){
 
 [ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
 
-if [ -z "$DEBFULLNAME" ]; then
-    DEBFULLNAME=$(git config --global user.name)
-fi
-
-if [ -z "$DEBEMAIL" ]; then
-    DEBEMAIL=$(git config --global user.email)
-fi
-
-if [ -z "$DEBFULLNAME" ]; then
-    DEBFULLNAME="Opinsys Developers"
-fi
-
-if [ -z "$DEBEMAIL" ]; then
-    DEBEMAIL="dev@opinsys.fi"
-fi
 
 set -eu
 
@@ -51,6 +36,15 @@ assert_git_repo || {
     exit 1
 }
 
+if [ -z "${DEBFULLNAME:-}" ]; then
+    # Use git commit author name as the release author if no other name is set
+    DEBFULLNAME=$(git log -1 --pretty=%an)
+fi
+
+if [ -z "${DEBEMAIL:-}" ]; then
+    # Also same for the email
+    DEBEMAIL=$(git log -1 --pretty=%ae)
+fi
 
 # Get ubuntu version to $DISTRIB_CODENAME
 . /etc/lsb-release
