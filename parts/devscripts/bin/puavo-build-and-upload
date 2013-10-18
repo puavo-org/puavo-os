@@ -39,3 +39,7 @@ for deb in ../*.deb; do
     curl --fail --form "deb=@${deb}" "${debbox_url}/deb"
     echo
 done
+
+echo
+echo "Packages uploaded to $debbox_url"
+echo
