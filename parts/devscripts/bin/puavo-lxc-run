@@ -24,6 +24,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 slaveip=$(ifconfig eth0 | sed -rn '2 s/^\s+inet addr:([0-9\.]+).*$/\1/p')
+brokencontainerdir=/var/lib/lxc-broken
 
 echo "
     Running build on
@@ -63,26 +64,28 @@ on_exit(){
 
     if [ "$exitcode" = "0" ]; then
         echo "All OK. Destroying the container."
+        lxc-destroy --name $containername
     else
-        newname="BROKEN-$containername"
-
         echo "
 
         Something went wrong!
-        Cloning container to /var/lib/lxc/$newname on $(hostname) $slaveip
 
-        You can examine it by starting it with:
+        Moving container to $brokencontainerdir on $(hostname) $slaveip
 
-            lxc-start -n $newname
+        You can examine it by moving it back and starting it
 
-        Login with user ci and password ci. Project left as is to /cirun
+            mv $brokencontainerdir/$containername /var/lib/lxc
+            lxc-start -n $containername
+
+        Login with user ci and password ci. Project is left as is to /cirun
         inside the container.
+
         "
 
-        lxc-clone -o $containername -n $newname
+        mkdir -p "$brokencontainerdir"
+        mv "/var/lib/lxc/$containername" "$brokencontainerdir"
     fi
 
-    lxc-destroy --name $containername
 }
 
 trap on_exit EXIT
