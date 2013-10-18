@@ -16,7 +16,7 @@ install: installdirs
 		bin/puavo-dch \
 		bin/puavo-dev-dch \
 		bin/puavo-deb-release \
-		bin/puavo-cp-debian-directory \
+		bin/puavo-cp-debian-dir \
 		bin/puavo-install-deps \
 		bin/puavo-debuild \
 		bin/puavo-build-debian-dir \
