@@ -13,6 +13,22 @@ help(){
 
 [ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
 
+if [ -z "$DEBFULLNAME" ]; then
+    DEBFULLNAME=$(git config --global user.name)
+fi
+
+if [ -z "$DEBEMAIL" ]; then
+    DEBEMAIL=$(git config --global user.email)
+fi
+
+if [ -z "$DEBFULLNAME" ]; then
+    DEBFULLNAME="Opinsys Developers"
+fi
+
+if [ -z "$DEBEMAIL" ]; then
+    DEBEMAIL="dev@opinsys.fi"
+fi
+
 set -eu
 
 if [ ! -d debian ]; then
@@ -35,21 +51,6 @@ assert_git_repo || {
     exit 1
 }
 
-if [ -z "${DEBFULLNAME:-}" ]; then
-    DEBFULLNAME=$(git config --global user.name)
-fi
-
-if [ -z "${DEBEMAIL:-}" ]; then
-    DEBEMAIL=$(git config --global user.email)
-fi
-
-if [ -z "${DEBFULLNAME:-}" ]; then
-    DEBFULLNAME="Opinsys Developers"
-fi
-
-if [ -z "${DEBEMAIL:-}" ]; then
-    DEBEMAIL="dev@opinsys.fi"
-fi
 
 # Get ubuntu version to $DISTRIB_CODENAME
 . /etc/lsb-release
