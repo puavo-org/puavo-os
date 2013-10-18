@@ -1,0 +1,87 @@
+#!/bin/bash
+
+help(){
+    echo "
+    Usage: $(basename $0)
+
+    Autogenerate debian changelog entry from VERSION file and git commit.
+
+    If the current git commit contains a string \"!dorelease\" a
+    production release style version will be generated.
+    "
+}
+
+[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
+
+set -eu
+
+if [ ! -d debian ]; then
+    echo "Cannot find debian directory from cwd ($(pwd)/debian)"
+    exit 1
+fi
+
+if [ ! -f VERSION ]; then
+    echo "Cannot find VERSION file cwd ($(pwd)/VERSION)"
+    exit 1
+fi
+
+assert_git_repo()
+{
+    git rev-parse --git-dir 2>&1 >/dev/null
+}
+
+assert_git_repo || {
+    echo "E: not a git repository, aborting" >&2
+    exit 1
+}
+
+if [ -z "${DEBFULLNAME:-}" ]; then
+    DEBFULLNAME=$(git config --global user.name)
+fi
+
+if [ -z "${DEBEMAIL:-}" ]; then
+    DEBEMAIL=$(git config --global user.email)
+fi
+
+if [ -z "${DEBFULLNAME:-}" ]; then
+    DEBFULLNAME="Opinsys Developers"
+fi
+
+if [ -z "${DEBEMAIL:-}" ]; then
+    DEBEMAIL="dev@opinsys.fi"
+fi
+
+# Get ubuntu version to $DISTRIB_CODENAME
+. /etc/lsb-release
+
+package_dir=$(pwd)
+repo_name=$(basename $(pwd))
+
+# List tags by date
+# http://stackoverflow.com/questions/6269927/how-can-i-list-all-tags-in-my-git-repository-by-the-date-they-were-created
+git_tags=$(git for-each-ref --sort='*authordate' --format='%(refname:short)' refs/tags)
+version_tags=$(echo "$git_tags" | grep --color=never --line-regexp --extended-regexp '^[0-9]+\.[0-9]+\.[0-9]$')
+prev_version=$(echo "$version_tags" | tail --lines=1)
+git_branch=$(git rev-parse --abbrev-ref HEAD)
+git_commit=$(git rev-parse HEAD)
+git_commit_msg=$(git log -1 --pretty=%B)
+
+
+if [[ "$git_commit_msg" == *!dorelease* ]]; then
+    version=$(cat VERSION)
+else
+    version="$(cat VERSION)+dev$(date +%s).jenkins.$git_branch.$git_commit"
+fi
+
+
+cat > debian/changelog <<EOF
+$repo_name ($version) $DISTRIB_CODENAME; urgency=low
+
+  * Release from git commit ${git_commit}
+  * https://github.com/opinsys/$repo_name
+  * https://github.com/opinsys/webmenu/tree/$git_commit
+  * https://github.com/opinsys/$repo_name/compare/$prev_version...$git_commit
+
+ -- $DEBFULLNAME <$DEBEMAIL>  $(date -R)
+
+EOF
