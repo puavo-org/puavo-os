@@ -18,7 +18,7 @@ install: installdirs
 		bin/puavo-deb-release \
 		bin/puavo-cp-debian-directory \
 		bin/puavo-install-deps \
-		bin/puavo-build-and-upload \
+		bin/puavo-debuild \
 		bin/puavo-build-debian-dir \
 		bin/mkpkg \
 		bin/mktar \
