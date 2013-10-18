@@ -22,22 +22,5 @@ control_file="${1:-debian/control}"
 
 set -eu
 
-package=$(sed -ne 's/^Source: //p' $control_file)
-
-mk-build-deps $control_file
-
-dep_deb="$package-build-deps_1.0_all.deb"
-
-if [ ! -f $dep_deb ]; then
-    echo "Cannot find dependency dep from $dep_deb"
-    exit 1
-fi
-
-trap "rm $dep_deb" EXIT
-dpkg --install $dep_deb || true
-apt-get install -f -y
-
-# Assert that package was actually installed grep -q exits with nonzero status
-# if no match is found.
-dpkg --status "$package-build-deps" | grep -q "Status: install ok installed"
+mk-build-deps --install $control_file --install --tool "apt-get --no-install-recommends --yes"
 
