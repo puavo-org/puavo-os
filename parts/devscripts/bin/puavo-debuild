@@ -2,21 +2,15 @@
 
 help(){
     echo "
-    Usage: $(basename $0) <DEBBOX URL>
+    Usage: $(basename $0)
 
-    Build and publish debian native package to given debbox url.
-
-    https://github.com/opinsys/debbox
+    Build debian package Puavo style.
     "
 
 }
 
 [ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
 [ "$1" = "" ] && help && exit 1
-
-set -eu
-
-debbox_url="$1"
 
 set -eu
 
@@ -33,13 +27,3 @@ sed -i s/quilt/native/ debian/source/format
 sed -i '/#RMJENKINS\s*$/d' debian/rules
 
 dpkg-buildpackage -us -uc
-
-for deb in ../*.deb; do
-    echo "Uploading $deb"
-    curl --fail --form "deb=@${deb}" "${debbox_url}/deb"
-    echo
-done
-
-echo
-echo "Packages uploaded to $debbox_url"
-echo
