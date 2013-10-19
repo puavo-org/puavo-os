@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -u
+
+APTIREPO_ROOT=${APTIREPO_ROOT:-.}
+
+cd "${APTIREPO_ROOT}"
+
+apt-ftparchive -q generate ".aptirepo/update.conf"

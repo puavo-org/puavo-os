@@ -1,0 +1,143 @@
+#!/bin/sh
+
+set -u
+
+parse_multiline()
+{
+    local file field
+
+    file=$1
+    field=$2
+
+    ## Print all lines of the multiline field.
+    sed -r -n -e "
+/^${field}:/{    ## This line has only the field name...
+    :next_line
+    n            ## ... append the next line to the pattern space.
+    /^[ \t]*$/ q ## Stop if the line is empty.
+    /^[^ \t]/ q  ## Stop if the line does not start with whitespace.
+    s|^[ \t]+||p ## Remove preceding whitespace and print the line.
+    b next_line  ## Continue to the next line.
+}" "${file}"
+}
+
+parse_simple()
+{
+    local file field
+
+    file=$1
+    field=$2
+
+    sed -r -n -e "
+/^${field}:/{
+    s/^${field}:[ \t]*([^ \t]+)[ \t]*$/\1/p  ## Strip leading and trailing whitespace.
+    q                                        ## Stop after the first occurrence.
+}" "${file}"
+}
+
+import_changes()
+{
+    local changes_file changes_dir lines source_name distribution
+
+    changes_file=$1
+
+    changes_dir=$(dirname "${changes_file}")
+    if [ $? -ne 0 ]; then
+        echo "failed to obtain the directory path of '${changes_file}'" >&2
+        return 1
+    fi
+
+    changes_dir=$(readlink -e "${changes_dir}")
+    if [ $? -ne 0 ]; then
+        echo "failed to canonicalize the directory path '${changes_dir}'" >&2
+        return 1
+    fi
+
+    lines=$(parse_multiline "${changes_file}" "Files")
+    if [ $? -ne 0 ]; then
+        echo "failed to parse 'Files' from '${changes_file}'" >&2
+        return 1
+    fi
+    if [ -z "${lines}" ]; then
+        echo "control file field 'Files' not found from '${changes_file}'" >&2
+        return 1
+    fi
+
+    source_name=$(parse_simple "${changes_file}" "Source")
+    if [ $? -ne 0 ]; then
+        echo "failed to parse 'Source' from '${changes_file}'" >&2
+        return 1
+    fi
+    if [ -z "${source_name}" ]; then
+        echo "control file field 'Source' not found from '${changes_file}'" >&2
+        return 1
+    fi
+
+    distribution=$(parse_simple "${changes_file}" "Distribution")
+    if [ $? -ne 0 ]; then
+        echo "failed to parse 'Distribution' from '${changes_file}'" >&2
+        return 1
+    fi
+    if [ -z "${distribution}" ]; then
+        echo "control file field 'Distribution' not found from '${changes_file}'" >&2
+        return 1
+    fi
+
+    echo "${lines}" | while read md5 size section priority filename; do
+
+        filepath="${changes_dir}/${filename}"
+        echo "${md5}  ${filepath}" | md5sum --quiet --strict --check || {
+            echo "failed to check the md5 checksum of '${filepath}'" >&2
+            exit 1
+        }
+
+        component=$(echo "${section}" | sed -r -n 's|^(.*)/.*$|\1|p')
+        if [ $? -ne 0 ]; then
+            echo "failed to parse section '${section}'" >&2
+            exit 1
+        fi
+        if [ -z "${component}" ]; then
+            echo "'${filename}': component guessed as 'main'" >&2
+            component="main"
+        fi
+
+        dstdir="pool/${distribution}/${component}/$(echo ${source_name} | head -c1)/${source_name}"
+
+        mkdir -p "${dstdir}" || {
+            echo "failed to create the pool destination directory '${dstdir}'" >&2
+            exit 1
+        }
+
+        cp -a -n -t "${dstdir}" "${filepath}" || {
+            echo "failed to copy '${filepath}' to the pool directory '${dstdir}'" >&2
+            rmdir -p --ignore-fail-on-non-empty "${dstdir}"
+            exit 1
+        }
+
+    done || return 1
+}
+
+APTIREPO_ROOT=${APTIREPO_ROOT:-.}
+
+cd "${APTIREPO_ROOT}"
+
+if [ $# -ne 1 ]; then
+    echo "wrong number of arguments" >&2
+    echo "Usage: $(basename $0) FILE" >&2
+    exit 1
+fi
+
+case "$1" in
+    *.changes)
+        import_changes $1 || {
+            echo "failed to import '$1'" >&2
+            exit 1
+        }
+        ;;
+    *)
+        echo "ignoring '$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
