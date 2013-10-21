@@ -61,7 +61,7 @@ if [ ! -d "$container_path/$base_container" ]; then
     exit 1
 fi
 
-running_container="cirun-$(date +%s)"
+running_container="cirun-$(date +%s)-$(hostname)"
 lxcdir="/var/lib/lxc/$running_container"
 projectname=$(basename $(pwd))
 
