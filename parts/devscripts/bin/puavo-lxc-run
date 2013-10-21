@@ -29,7 +29,8 @@ slave_id=$(ifconfig eth0 | sed -rn '2 s/^\s+inet addr:([0-9\.]+).*$/\1/p')
 container_path=/var/lib/lxc
 base_container_dirname="lxc-base"
 base_container_path="/var/lib/$base_container_dirname"
-broken_container_path=/var/lib/lxc-broken
+broken_container_dirname="lxc-broken"
+broken_container_path=/"var/lib/$broken_container_dirname"
 
 echo "
     Running build on
@@ -80,12 +81,18 @@ on_exit(){
         echo "
 
         Something went wrong!
+        "
 
-        Moving container to $broken_container_path on $(hostname) $slave_id
+        mkdir -p "$broken_container_path"
+        mv "$container_path/$running_container" "$broken_container_path"
 
-        You can examine it by moving it back and starting it
+        echo "
 
-            mv $broken_container_path/$running_container /var/lib/lxc
+        Container is moved to $broken_container_path/$running_container on $(hostname) $slave_id
+
+        You start it again for examination by linking it to the container path:
+
+            ln -s ../$broken_container_dirname/$running_container $container_path/$running_container
             lxc-start -n $running_container
 
         Login with user ci and password ci. Project is left as is to /cirun
@@ -93,8 +100,6 @@ on_exit(){
 
         "
 
-        mkdir -p "$broken_container_path"
-        mv "/var/lib/lxc/$running_container" "$broken_container_path"
     fi
 
 }
