@@ -31,6 +31,25 @@ if ["-h", "--help"].include? ARGV.first
   exit 2
 end
 
+AUTO_YES = ARGV.include?("--AUTO-YES")
+WAIT_TIME = 10
+
+if AUTO_YES
+  puts
+  puts "!"*50
+  puts "WARNING: --AUTO-YES is set"
+  puts "I'm automatically going to destroy everything!"
+  puts "Hit Ctrl+c to cancel!"
+  puts "!"*50
+  puts
+
+  WAIT_TIME.times do |i|
+    print "\rStarting in #{ WAIT_TIME - i } seconds#{ "."*i }"
+    sleep 1
+  end
+end
+
+
 def parse_erb(basename)
   template = File.read("#{ TEMPLATES_PATH }/#{basename}.erb")
   parse_file = ERB.new(template, 0, "%<>")
@@ -56,10 +75,17 @@ def ask_puavo_attr(question, puavo_attr, default=nil)
 
   while true
     print "#{question} [#{ default }]> "
-    new_value = STDIN.gets.strip
+    new_value = STDIN.gets.strip if not AUTO_YES
 
     # Use default or previous value if user did not give anything
     new_value = default if new_value.to_s.empty?
+
+    if AUTO_YES && new_value.to_s.empty?
+      STDERR.puts "NO DEFAULT VALUE! --AUTO-YES failed"
+      Process.exit 1
+    else
+      puts default
+    end
 
     # Break only when we have a value
     break if not new_value.to_s.empty?
@@ -110,7 +136,7 @@ I'm now going to initialize new LDAP databases on this machine.
 This will destroy previous databases permanently.
 EOF
 
-while true
+while not AUTO_YES
   print "Type YES to continue> "
   break if STDIN.gets.strip == "YES"
 end
