@@ -2,9 +2,10 @@
 
 help(){
     echo "
-    Usage: $(basename $0)
+    Usage: $(basename $0) <version>
 
-    Autogenerate debian/changelog entry from VERSION file and git commit.
+    Autogenerate debian/changelog for given version using the current git
+    commit.
 
     If the current git commit contains a string \"!dorelease\" a
     production release style version will be generated.
@@ -13,16 +14,14 @@ help(){
 
 [ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
 
+version="$1"
 
 set -eu
 
+[ "$version" = "" ] && help && exit 1
+
 if [ ! -d debian ]; then
     echo "Cannot find debian directory from cwd ($(pwd)/debian)"
-    exit 1
-fi
-
-if [ ! -f VERSION ]; then
-    echo "Cannot find VERSION file cwd ($(pwd)/VERSION)"
     exit 1
 fi
 
@@ -80,12 +79,10 @@ if [ $git_branch = "HEAD" ]; then
 fi
 
 
-if [[ "$git_commit_msg" == *!dorelease* ]]; then
-    version=$(cat VERSION)
-else
-    version="$(cat VERSION)+dev$(date +%s).$git_branch.$git_commit"
+# If not release build append dev string to version
+if [[ "$git_commit_msg" != *!dorelease* ]]; then
+    version="$version+dev$(date +%s).$git_branch.$git_commit"
 fi
-
 
 cat > debian/changelog <<EOF
 $repo_name ($version) $DISTRIB_CODENAME; urgency=low
