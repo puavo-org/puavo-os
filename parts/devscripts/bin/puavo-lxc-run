@@ -23,24 +23,24 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-slaveip=$(ifconfig eth0 | sed -rn '2 s/^\s+inet addr:([0-9\.]+).*$/\1/p')
-brokencontainerdir=/var/lib/lxc-broken
+slave_id=$(ifconfig eth0 | sed -rn '2 s/^\s+inet addr:([0-9\.]+).*$/\1/p')
+broken_container_dir=/var/lib/lxc-broken
 
 echo "
     Running build on
 
-    Node ip: $slaveip
+    Node ip: $slave_id
     Node hostname: $(hostname)
     Git Branch: $(git rev-parse --abbrev-ref HEAD)
     Git Commit: $(git log --pretty=oneline -n 1)
 "
 
-basename="$1"
+base_container="$1"
 shift
 script="$1"
 shift
 script_args="$@"
-base="/var/lib/lxc/$basename"
+base="/var/lib/lxc/$base_container"
 
 set -eu
 
@@ -49,41 +49,41 @@ if [ ! -d $base ]; then
     exit 1
 fi
 
-containername="cirun-$(date +%s)"
-lxcdir="/var/lib/lxc/$containername"
+running_container="cirun-$(date +%s)"
+lxcdir="/var/lib/lxc/$running_container"
 projectname=$(basename $(pwd))
 
-echo "Cloning $basename"
-lxc-clone -o $basename -n $containername
+echo "Cloning $base_container"
+lxc-clone -o $base_container -n $running_container
 
 on_exit(){
     exitcode=$?
     # Always shutdown container on exit
-    lxc-shutdown --name $containername || true
-    lxc-wait --name $containername -s STOPPED
+    lxc-shutdown --name $running_container || true
+    lxc-wait --name $running_container -s STOPPED
 
     if [ "$exitcode" = "0" ]; then
         echo "All OK. Destroying the container."
-        lxc-destroy --name $containername
+        lxc-destroy --name $running_container
     else
         echo "
 
         Something went wrong!
 
-        Moving container to $brokencontainerdir on $(hostname) $slaveip
+        Moving container to $broken_container_dir on $(hostname) $slave_id
 
         You can examine it by moving it back and starting it
 
-            mv $brokencontainerdir/$containername /var/lib/lxc
-            lxc-start -n $containername
+            mv $broken_container_dir/$running_container /var/lib/lxc
+            lxc-start -n $running_container
 
         Login with user ci and password ci. Project is left as is to /cirun
         inside the container.
 
         "
 
-        mkdir -p "$brokencontainerdir"
-        mv "/var/lib/lxc/$containername" "$brokencontainerdir"
+        mkdir -p "$broken_container_dir"
+        mv "/var/lib/lxc/$running_container" "$broken_container_dir"
     fi
 
 }
@@ -91,7 +91,7 @@ on_exit(){
 trap on_exit EXIT
 
 
-puavo-lxc-ci-prepare $containername
+puavo-lxc-ci-prepare $running_container
 
 mkdir "$lxcdir/rootfs/cirun"
 echo "Copying $(pwd) to /cirun for the container"
@@ -133,11 +133,11 @@ sudo -i -u ci sh -c "cd /cirun/$projectname && ./$script $script_args"
 EOF
 chmod +x "$lxcdir/rootfs/run.sh"
 
-echo "Starting container $containername"
-lxc-start --name $containername --daemon
+echo "Starting container $running_container"
+lxc-start --name $running_container --daemon
 
-lxc-wait --name $containername -s RUNNING
+lxc-wait --name $running_container -s RUNNING
 echo "Container up!"
 
-lxc-attach --name $containername /run.sh
+lxc-attach --name $running_container /run.sh
 
