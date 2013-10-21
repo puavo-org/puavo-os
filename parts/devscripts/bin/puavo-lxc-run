@@ -4,6 +4,7 @@
 # or
 #   jenkins ALL = NOPASSWD: /usr/bin/puavo-lxc-run
 
+
 help(){
     echo "
     Usage: $(basename $0) <base container name> <script to run> [script args]
@@ -24,7 +25,11 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 slave_id=$(ifconfig eth0 | sed -rn '2 s/^\s+inet addr:([0-9\.]+).*$/\1/p')
-broken_container_dir=/var/lib/lxc-broken
+
+container_path=/var/lib/lxc
+base_container_dirname="lxc-base"
+base_container_path="/var/lib/$base_container_dirname"
+broken_container_path=/var/lib/lxc-broken
 
 echo "
     Running build on
@@ -40,12 +45,18 @@ shift
 script="$1"
 shift
 script_args="$@"
-base_container_dir="/var/lib/lxc/$base_container"
 
 set -eu
 
-if [ ! -d $base_container_dir ]; then
-    echo "$base_container_dir does not exists"
+
+if [ ! -d "$container_path/$base_container" ]; then
+    if [ -d "$base_container_path/$base_container" ]; then
+        ln -s "../$base_container_dirname/$base_container" "$container_path/$base_container"
+    fi
+fi
+
+if [ ! -d "$container_path/$base_container" ]; then
+    echo "Failed to find container $base_container"
     exit 1
 fi
 
@@ -70,11 +81,11 @@ on_exit(){
 
         Something went wrong!
 
-        Moving container to $broken_container_dir on $(hostname) $slave_id
+        Moving container to $broken_container_path on $(hostname) $slave_id
 
         You can examine it by moving it back and starting it
 
-            mv $broken_container_dir/$running_container /var/lib/lxc
+            mv $broken_container_path/$running_container /var/lib/lxc
             lxc-start -n $running_container
 
         Login with user ci and password ci. Project is left as is to /cirun
@@ -82,8 +93,8 @@ on_exit(){
 
         "
 
-        mkdir -p "$broken_container_dir"
-        mv "/var/lib/lxc/$running_container" "$broken_container_dir"
+        mkdir -p "$broken_container_path"
+        mv "/var/lib/lxc/$running_container" "$broken_container_path"
     fi
 
 }
