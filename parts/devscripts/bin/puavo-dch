@@ -83,7 +83,7 @@ fi
 if [[ "$git_commit_msg" == *!dorelease* ]]; then
     version=$(cat VERSION)
 else
-    version="$(cat VERSION)+dev$(date +%s).jenkins.$git_branch.$git_commit"
+    version="$(cat VERSION)+dev$(date +%s).$git_branch.$git_commit"
 fi
 
 
