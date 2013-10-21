@@ -6,7 +6,7 @@
 
 help(){
     echo "
-    Usage: $(basename $0) <base container> <script to run> [script args]
+    Usage: $(basename $0) <base container name> <script to run> [script args]
 
     Execute given script in a temporary container.
 
@@ -40,12 +40,12 @@ shift
 script="$1"
 shift
 script_args="$@"
-base="/var/lib/lxc/$base_container"
+base_container_dir="/var/lib/lxc/$base_container"
 
 set -eu
 
-if [ ! -d $base ]; then
-    echo "$base does not exists"
+if [ ! -d $base_container_dir ]; then
+    echo "$base_container_dir does not exists"
     exit 1
 fi
 
