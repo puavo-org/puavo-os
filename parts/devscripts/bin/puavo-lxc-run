@@ -49,6 +49,10 @@ echo df -h
 df -h
 echo
 
+echo uptime
+uptime
+echo
+
 base_container="$1"
 shift
 script="$1"
