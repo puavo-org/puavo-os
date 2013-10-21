@@ -57,9 +57,27 @@ repo_name=$(basename $(pwd))
 git_tags=$(git for-each-ref --sort='*authordate' --format='%(refname:short)' refs/tags)
 version_tags=$(echo "$git_tags" | grep --color=never --line-regexp --extended-regexp '^[0-9]+\.[0-9]+\.[0-9]$')
 prev_version=$(echo "$version_tags" | tail --lines=1)
-git_branch=$(git rev-parse --abbrev-ref HEAD)
 git_commit=$(git rev-parse HEAD)
 git_commit_msg=$(git log -1 --pretty=%B)
+git_branch=$(git rev-parse --abbrev-ref HEAD)
+
+if [ $git_branch = "HEAD" ]; then
+    # Shit. Were on detached head state (probably in Jenkins build).
+    # Do educated guess on the branch name
+    git_branch="$(git branch --remote --verbose --no-abbrev --contains | sed -rne 's/^.*\/([^\ ]+).*$/\1/p')"
+
+    # If there is multiple remote branches with the same head
+    if [ "$(echo "$git_branch" | wc --lines)" != 1 ]; then
+        # Just pick the master if it is one of them
+        if $(echo "$git_branch" | grep -Fxq master); then
+            git_branch="master"
+        else
+            echo "Failed to guess branch name for $git_commit from:"
+            git branch --remote --verbose --no-abbrev --contains
+            exit 1
+        fi
+    fi
+fi
 
 
 if [[ "$git_commit_msg" == *!dorelease* ]]; then

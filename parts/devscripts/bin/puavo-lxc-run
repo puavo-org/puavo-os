@@ -37,8 +37,8 @@ echo "
 
     Node ip: $slave_id
     Node hostname: $(hostname)
-    Git Branch: $(git rev-parse --abbrev-ref HEAD)
     Git Commit: $(git log --pretty=oneline -n 1)
+    Git Branch: $(git branch --remote --verbose --no-abbrev --contains | sed -rne 's/^.*\/([^\ ]+).*$/\1/p')
 "
 
 base_container="$1"
