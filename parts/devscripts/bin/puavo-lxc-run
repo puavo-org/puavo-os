@@ -24,7 +24,7 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-slave_id=$(ifconfig eth0 | sed -rn '2 s/^\s+inet addr:([0-9\.]+).*$/\1/p')
+slave_ip=$(ifconfig eth0 | sed -rn '2 s/^\s+inet addr:([0-9\.]+).*$/\1/p')
 
 container_path=/var/lib/lxc
 base_container_dirname="lxc-base"
@@ -35,7 +35,7 @@ broken_container_path=/"var/lib/$broken_container_dirname"
 echo "
     Running build on
 
-    Node ip: $slave_id
+    Node ip: $slave_ip
     Node hostname: $(hostname)
     Git Commit: $(git log --pretty=oneline -n 1)
     Git Branch: $(git branch --remote --verbose --no-abbrev --contains | sed -rne 's/^.*\/([^\ ]+).*$/\1/p')
@@ -100,7 +100,7 @@ on_exit(){
 
         echo "
 
-        Container is moved to $broken_container_path/$running_container on $(hostname) $slave_id
+        Container is moved to $broken_container_path/$running_container on $(hostname) $slave_ip
 
         You start it again for examination by linking it to the container path:
 
