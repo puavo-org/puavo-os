@@ -290,7 +290,8 @@ class RegisterUserInterface
   def default_puavoserver
     begin
       Resolv::DNS.open do |dns|
-        r = dns.getresources('_puavo._tcp', Resolv::DNS::Resource::IN::SRV)
+        r = dns.getresources( "_puavo._tcp.#{ PUAVO_ETC.domain }",
+                              Resolv::DNS::Resource::IN::SRV )
         r[0].target.to_s
       end
     rescue
