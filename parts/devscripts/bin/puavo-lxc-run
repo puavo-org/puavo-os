@@ -32,22 +32,21 @@ base_container_path="/var/lib/$base_container_dirname"
 broken_container_dirname="lxc-broken"
 broken_container_path=/"var/lib/$broken_container_dirname"
 
-echo "
-
-Running build on
-
-Node ip: $slave_ip
-Node hostname: $(hostname)
-"
-
 echo
 echo Git Branch:
 git branch --remote --verbose --no-abbrev --contains | sed -rne 's/^.*\/([^\ ]+).*$/\1/p'
 
-
 echo
 echo "Git commit:"
 git log -1
+
+echo "
+
+Running build on
+
+IP: $slave_ip
+Hostname: $(hostname)
+"
 
 echo
 echo free -m
