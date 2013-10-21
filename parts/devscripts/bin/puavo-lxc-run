@@ -41,6 +41,14 @@ echo "
     Git Branch: $(git branch --remote --verbose --no-abbrev --contains | sed -rne 's/^.*\/([^\ ]+).*$/\1/p')
 "
 
+echo free -m
+free -m
+echo
+
+echo df -h
+df -h
+echo
+
 base_container="$1"
 shift
 script="$1"
