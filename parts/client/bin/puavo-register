@@ -12,6 +12,8 @@
 # suggestion: run this as:
 #  sudo ruby puavo-register
 
+$VERBOSE = nil
+
 require "puavo"
 require 'facter'
 require 'fileutils'
