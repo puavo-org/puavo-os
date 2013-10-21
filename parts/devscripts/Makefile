@@ -26,7 +26,7 @@ install: installdirs
 
 install-lxc-tools: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
-		bin/puavo-lxc-ci-prepare \
+		bin/puavo-lxc-prepare \
 		bin/puavo-lxc-run \
 		bin/puavo-lxc-run-sudo-wrap
 
