@@ -7,11 +7,14 @@
 # Laptops can cache the returned json and reuse it on subsequent
 # offline logins.
 
+CACHE_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
+CACHE_FILE="${CACHE_DIR}/puavo_session.json"
+
 PUAVO_HOSTNAME=$(cat /etc/puavo/hostname)
 API_SERVER=$(puavo-resolve-api-server)
 
 if [ "x${KRB5CCNAME}" = "x" ]; then
-  export KRB5CCNAME=$PAMENV_KRB5CCNAME
+  export KRB5CCNAME=$PAM_KRB5CCNAME
 fi
 
 if [ "x${API_SERVER}" != "x" ]; then
@@ -28,25 +31,23 @@ if [ "x${API_SERVER}" != "x" ]; then
 	    --header "Expect:" \
             "${API_SERVER}/v3/sessions" 2>/dev/null)
 
-    if [ "x${PUAVO_SESSION}" = "x" ]; then
-      echo "No session information received from ${API_SERVER}" \
-          | logger -t puavo-open-session -p auth.error
-
-      exit 99
-    fi
-
-    echo "Received puavo session: ${PUAVO_SESSION}" \
-        | logger -t puavo-open-session -p auth.info
-
-    UUID=$(echo "${PUAVO_SESSION}" | jq --raw-output .uuid)
-
-    echo "PUAVO_SESSION=${PUAVO_SESSION}"
-    echo "PUAVO_SESSION_ID=${UUID}"
-
-    exit 0
-else
-    echo "could not determine the Puavo API server from dns" \
+  if [ "x${PUAVO_SESSION}" = "x" ]; then
+    echo "No session information received from ${API_SERVER}" \
         | logger -t puavo-open-session -p auth.error
 
-    exit 98
+    exit 99
+  fi
+
+  echo "Received puavo session: ${PUAVO_SESSION}" \
+      | logger -t puavo-open-session -p auth.info
+
+  mkdir -p "${CACHE_DIR}"
+  echo ${PUAVO_SESSION} > $CACHE_FILE
+
+  exit 0
+else
+  echo "could not determine the Puavo API server from dns" \
+      | logger -t puavo-open-session -p auth.error
+
+  exit 98
 fi
