@@ -14,7 +14,7 @@ PUAVO_HOSTNAME=$(cat /etc/puavo/hostname)
 API_SERVER=$(puavo-resolve-api-server)
 
 if [ "x${KRB5CCNAME}" = "x" ]; then
-  export KRB5CCNAME=$PAM_KRB5CCNAME
+  export KRB5CCNAME="${PAM_KRB5CCNAME}"
 fi
 
 if [ "x${API_SERVER}" != "x" ]; then
@@ -23,7 +23,7 @@ if [ "x${API_SERVER}" != "x" ]; then
             --negotiate \
             --delegation always \
             --user : \
-            --form hostname=${PUAVO_HOSTNAME} \
+            --form "hostname=${PUAVO_HOSTNAME}" \
             --fail \
             --max-time 5 \
             --retry 5 \
@@ -42,7 +42,7 @@ if [ "x${API_SERVER}" != "x" ]; then
       | logger -t puavo-open-session -p auth.info
 
   mkdir -p "${CACHE_DIR}"
-  echo ${PUAVO_SESSION} > $CACHE_FILE
+  echo "${PUAVO_SESSION}" >"${CACHE_FILE}"
 
   exit 0
 else
