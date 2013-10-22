@@ -105,8 +105,7 @@ install : installdirs
 		init-puavo 
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
-		puavo-ltsp-client-action \
-		puavo-printer-list
+		puavo-ltsp-client-action
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-configure-client \
