@@ -1,6 +1,7 @@
 prefix = /usr/local
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
+libdir = $(prefix)/lib
 sbindir = $(exec_prefix)/sbin
 datarootdir = $(prefix)/share
 sysconfdir = $(prefix)/etc
@@ -16,6 +17,8 @@ all :
 installdirs :
 	mkdir -p $(DESTDIR)/sbin
 	mkdir -p $(DESTDIR)$(bindir)
+	mkdir -p $(DESTDIR)$(libdir)
+	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-client
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/default
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-external-files-actions.d
@@ -114,7 +117,6 @@ install : installdirs
 		puavo-ltsp-envfeed \
 		puavo-ltsp-init-nfs \
 		puavo-ltsp-login \
-		puavo-open-session \
 		puavo-update-nm-configurations
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount \
@@ -148,7 +150,14 @@ install : installdirs
 		etc/ssh/ltspsshd_config
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
+		etc/X11/Xsession.d/40puavo-retrieve-thinclient-session \
+		etc/X11/Xsession.d/41puavo-set-locale \
 		etc/X11/Xsession.d/90puavo-ltsp-client
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
+		pam/puavo-pam-open-session \
+		pam/puavo-pam-populate-extrausers \
+		pam/puavo-pam-set-puavo-session-path
 
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd
 

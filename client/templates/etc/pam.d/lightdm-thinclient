@@ -8,7 +8,8 @@ auth    required        pam_env.so readenv=1 envfile=/etc/default/locale
 auth    sufficient      pam_succeed_if.so user ingroup nopasswdlogin
 
 auth    required	pam_krb5.so minimum_uid=10000 use_first_pass
-auth	optional	pam_exec.so /usr/sbin/puavo-ltsp-login
+auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/puavo-pam-open-session
+auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/puavo-pam-populate-extrausers
 auth    required        pam_exec.so /usr/share/ltsp-lightdm/puavo-ltsp-session
 
 auth    optional        pam_gnome_keyring.so
@@ -27,9 +28,10 @@ session optional                        pam_umask.so
 session optional                        pam_krb5.so minimum_uid=1000
 session	optional	pam_mkhomedir.so
 
+session required        pam_envfeed.so debug prog=/usr/lib/puavo-ltsp-client/puavo-pam-set-puavo-session-path
 session optional        pam_gnome_keyring.so auto_start
 session required        pam_exec.so /usr/share/ltsp-lightdm/puavo-ltsp-session
 
-session optional        pam_envfeed.so prog=/usr/sbin/puavo-ltsp-envfeed
+#session optional        pam_envfeed.so prog=/usr/sbin/puavo-ltsp-envfeed
 
-password	required	pam_ldap.so minimum_uid=1000
+#password	required	pam_ldap.so minimum_uid=1000
