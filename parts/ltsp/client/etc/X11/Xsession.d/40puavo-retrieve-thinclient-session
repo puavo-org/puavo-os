@@ -2,13 +2,13 @@ PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 PUAVO_HOSTNAME=$(cat /etc/puavo/hostname)
 API_SERVER=$(puavo-resolve-api-server)
 
-CACHE_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
-PUAVO_SESSION_PATH="${CACHE_DIR}/puavo_session.json"
-
-export PUAVO_SESSION_PATH
-
 case ${PUAVO_HOSTTYPE} in  
   ltspserver)
+    CACHE_DIR="/var/lib/puavo-desktop/users/${USER}"
+    PUAVO_SESSION_PATH="${CACHE_DIR}/puavo_session.json"
+
+    export PUAVO_SESSION_PATH
+
     if [ "x${API_SERVER}" != "x" ]; then
       if [ "x${PUAVO_SESSION_ID}" = "x" ]; then
         echo "No existing PUAVO_SESSION_ID founda, creating a new session!" \
