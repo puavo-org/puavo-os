@@ -14,7 +14,7 @@ add_remote_printers()
     local puavo_domain=$(cat /etc/puavo/domain)
     readonly puavo_domain
 
-    echo "${PUAVO_SESSION}" | jq -r -c .printer_queues[] | while read printer; do
+    cat "${PUAVO_SESSION_PATH}" | jq -r -c .printer_queues[] | while read printer; do
         name=$(echo "${printer}" | jq -r -c .name)
         location=$(echo "${printer}" | jq -r -c .location)
         description=$(echo "${printer}" | jq -r -c .description)
@@ -24,6 +24,33 @@ add_remote_printers()
     done
 }
 
-remove_remote_printers
+get_printer_list()
+{
+    cat "${PUAVO_SESSION_PATH}" | jq -r -c .printer_queues[] | {
+        PRINTER_LIST=''
+        while read printer; do
+            name=$(echo "${printer}" | jq -r -c .name)
+            if [ -z "${PRINTER_LIST}" ]; then
+                PRINTER_LIST="${name}"
+            else
+                PRINTER_LIST="${PRINTER_LIST},${name}"
+            fi
+        done
+        echo -n "${PRINTER_LIST}"
+    }
+}
 
-add_remote_printers
+hosttype=$(cat /etc/puavo/hosttype)
+
+case "${hosttype}" in
+    ltspserver)
+        export PRINTER_LIST=$(get_printer_list)
+        ;;
+    fatclient)
+        remove_remote_printers
+        add_remote_printers
+        ;;
+    *)
+        echo "hosttype '${hosttype}' does not support Puavo printer setup" >&2
+        ;;
+esac
