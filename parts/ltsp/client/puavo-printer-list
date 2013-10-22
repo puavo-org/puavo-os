@@ -1,0 +1,45 @@
+#!/bin/sh
+
+set -eu
+
+_OUTPUT_PREFIX=''
+
+while getopts hp flag; do
+    case "${flag}" in
+        h)
+            echo "Print comma-separated list of printer queues available in the current Puavo session"
+            echo ""
+            echo "-h                    print this help message"
+            echo "-p                    prefix output with PRINTER_LIST="
+            exit 0
+            ;;
+        p)
+            _OUTPUT_PREFIX='PRINTER_LIST='
+            ;;
+        ?)
+            exit 1
+            ;;
+    esac
+done
+
+shift $(( OPTIND - 1 ));
+
+if [ $# -ne 0 ]; then
+    echo "wrong number of arguments" >&2
+    echo "Usage: $(basename $0) [-e]" >&2
+fi
+
+PRINTER_LIST=$(echo "${PUAVO_SESSION}" | jq -r -c .printer_queues[] | {
+        PRINTER_LIST=''
+        while read printer; do
+            name=$(echo "${printer}" | jq -r -c .name)
+            if [ -z "${PRINTER_LIST}" ]; then
+                PRINTER_LIST="${name}"
+            else
+                PRINTER_LIST="${PRINTER_LIST},${name}"
+            fi
+        done
+        echo -n "${PRINTER_LIST}"
+        })
+
+echo "${_OUTPUT_PREFIX}${PRINTER_LIST}"
