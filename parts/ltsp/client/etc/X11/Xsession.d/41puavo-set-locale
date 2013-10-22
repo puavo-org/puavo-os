@@ -1,0 +1,32 @@
+DCONF_PROFILE=user-fi
+LANG=fi_FI.UTF-8
+LANGUAGE=fi
+
+if [ -f "${PUAVO_SESSION_PATH}" ]; then
+  PUAVO_SESSION=$(cat "${PUAVO_SESSION_PATH}")
+
+  LANGUAGE=$(echo ${PUAVO_SESSION} | jq --raw-output .user.preferred_language)
+  DCONF_PROFILE=user-${LANGUAGE}
+
+  case $LANGUAGE in
+    de)
+      LANG=de_DE.UTF-8
+      ;;
+    en)
+      LANG=en_GB.UTF-8
+      ;;
+    fi)
+      LANG=fi_FI.UTF-8
+      ;;
+    ru)
+      LANG=ru_RU.UTF-8
+      ;;
+    sv)
+      LANG=sv_FI.UTF-8
+      ;;
+  esac
+fi
+
+export DCONF_PROFILE
+export LANG
+export LANGUAGE
