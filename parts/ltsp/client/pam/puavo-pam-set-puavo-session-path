@@ -3,4 +3,7 @@
 CACHE_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
 CACHE_FILE="${CACHE_DIR}/puavo_session.json"
 
+mkdir -m 0700 -p ${CACHE_DIR}
+chown ${PAM_USER} ${CACHE_DIR}
+
 echo PUAVO_SESSION_PATH=${CACHE_FILE}
