@@ -1,6 +1,0 @@
-#!/bin/sh
-
-CACHE_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
-CACHE_FILE="${CACHE_DIR}/puavo_session.json"
-
-echo PUAVO_SESSION_PATH="${CACHE_FILE}"
