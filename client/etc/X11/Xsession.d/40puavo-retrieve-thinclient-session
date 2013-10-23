@@ -11,7 +11,7 @@ case ${PUAVO_HOSTTYPE} in
 
     if [ "x${API_SERVER}" != "x" ]; then
       if [ "x${PUAVO_SESSION_ID}" = "x" ]; then
-        echo "No existing PUAVO_SESSION_ID founda, creating a new session!" \
+        echo "No existing PUAVO_SESSION_ID found, creating a new session!" \
             | logger -t puavo-open-session -p auth.warn
 
         exit 99
