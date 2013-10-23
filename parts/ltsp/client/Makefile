@@ -155,7 +155,7 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
 		etc/X11/Xsession.d/40puavo-retrieve-thinclient-session \
 		etc/X11/Xsession.d/41puavo-set-locale \
-		etc/X11/Xsession.d/90puavo-ltsp-client
+		etc/X11/Xsession.d/90puavo-setup-printers
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
 		pam/open-session \
