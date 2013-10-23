@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+CACHE_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
+
+mkdir -m 0700 -p "${CACHE_DIR}"
+chmod 0700 "${CACHE_DIR}"
+chown "${PAM_USER}" "${CACHE_DIR}"
