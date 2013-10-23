@@ -30,7 +30,7 @@ case ${PUAVO_HOSTTYPE} in
     echo "Received puavo session: ${PUAVO_SESSION}" \
         | logger -t puavo-open-session -p auth.info
 
-    echo $PUAVO_SESSION > $PUAVO_SESSION_PATH
+    echo "${PUAVO_SESSION}" >"${PUAVO_SESSION_PATH}"
   fi
   ;;
 esac
