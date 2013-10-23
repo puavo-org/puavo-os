@@ -17,7 +17,7 @@ account required	pam_permit.so
 
 # Standard Un*x session setup and teardown.
 session	optional	pam_krb5.so minimum_uid=1000
-session required        pam_envfeed.so debug prog=/usr/lib/puavo-ltsp-client/puavo-pam-set-puavo-session-path
+session required        pam_envfeed.so debug prog=/usr/lib/puavo-ltsp-client/set-puavo-session-path
 session optional	pam_umask.so
 session optional        pam_exec.so /usr/sbin/puavo-ltsp-init-nfs
 
