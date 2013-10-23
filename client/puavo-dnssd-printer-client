@@ -1,0 +1,213 @@
+#!/usr/bin/ruby1.9
+
+=begin
+
+DNS-Based printing service discovery tool. Uses DNS to find available
+printers and configures them automatically on laptops.
+
+DNS-SD is refined in RFC 6763: http://www.ietf.org/rfc/rfc6763.txt
+
+
+First the script queries PTR record for b._dns-sd._udp 
+If the query returns a domain name, it is used to do a further query for
+
+PTR _universal._sub._ipp._tcp.<printer domain>
+PTR _universal._sub._ipps._tcp.<printer domain>
+
+If these queries return PTR records, they are all queried for two more
+records:
+
+TXT printer.fqdn
+SRV printer.fqdn
+
+SRV record defines the server offering the printing service and 
+TXT records define the print queue attributes.
+
+List of managed printers is written to file /var/lib/puavo-desktop/dnssd_printers 
+and this list is used on subsequent calls to define which printers are 
+managed by this script and which ones are defined elsewhere.
+
+=end
+
+require 'etc'
+require 'dnsruby'
+require 'json'
+require 'syslog'
+
+Encoding.default_external = 'utf-8'
+
+class Printer
+  attr_reader :name
+  attr_reader :path
+  attr_reader :description
+  attr_reader :location
+
+  def initialize(name, path, description, location)
+    @name = name
+    @path = path
+    @description = description
+    @location = location
+  end
+
+  def to_json(*a)
+    {
+      'name' => @name,
+      'path' => @path,
+      'description' => @description,
+      'location' => @location
+    }.to_json(*a)
+  end
+
+  def self.json_create(o)
+    new(o['name'], o['path'], o['description'], o['location'])
+  end
+
+  def equals?(other)
+    @name.eql?(other.name) and @path.eql?(other.path)
+  end
+end
+
+def log(message)
+  Syslog.open("puavo-dnssd-printer-client", Syslog::LOG_CONS) { |s| s.warning message }
+end
+
+# Queries DNS SRV and TXT records for a single printer and
+# returns a Printer object containing the information if 
+# the printer existed. Otherwise nil is returned.
+
+def query_printer(printer, ipps=false)
+  begin
+    res   = Dnsruby::DNS.new
+
+    path = nil
+    name = nil
+    server = nil
+    urf = nil
+
+    res.each_resource(printer, 'TXT') { |rr|
+      rr.rdata.each do |data|
+        if /rp=(.*)/.match(data)
+          path = $1
+        end
+
+        if /note=(.*)/.match(data)
+          name = $1
+        end
+
+        if /URF=(.*)/.match(data)
+          urf = $1
+        end
+      end
+    }
+
+    res.each_resource(printer, 'SRV') { |rr|
+      server = rr.target.to_s
+    }
+
+    if ipps
+      prefix = "ipps"
+    else
+      prefix = "ipp"
+    end
+
+    if path and name and server and urf
+      return Printer.new(name, "#{prefix}://#{server}/#{path}", "", "")
+    end
+  rescue Exception => e
+    log "querying printer #{printer} failed"
+    return nil
+  end
+end
+
+# Queries printers for the given domain and returns them in a hash.
+# ipps entries override ipp entries if both exist.
+
+def query_domain(domain, ipps)
+  res   = Dnsruby::DNS.new
+
+  printers = Hash.new
+
+  if ipps
+    prefix = "ipps"
+  else
+    prefix = "ipp"
+  end
+
+  begin
+    log "querying domain _universal._sub._#{prefix}._tcp.#{domain}"
+
+    res.each_resource("_universal._sub._#{prefix}._tcp.#{domain}", 'PTR') { |rr|
+      printer = query_printer(rr.rdata, ipps)
+
+      if printer
+        printers[printer.name] = printer
+      end
+    }
+  rescue Exception => e
+    log "querying domain _universal._sub._#{prefix}._tcp.#{domain} failed"
+  end
+
+  return printers
+end
+
+def add_printer(printer)
+  `lpadmin -p "#{printer.name}" -E -v #{printer.path} -L "#{printer.location}" -D "#{printer.description}"`
+end
+
+def delete_printer(printer)
+  `lpadmin -x #{printer.name}`
+end
+
+puavo_domain = File.read("/etc/puavo/domain").chomp
+dname = "b._dns-sd._udp"
+
+# First read old printer list
+
+managed_printers = Hash.new
+
+if File.exists?("/var/lib/puavo-desktop/dnssd_printers")
+  json = JSON.parse(File.read("/var/lib/puavo-desktop/dnssd_printers"))
+
+  json.each do |o|
+    printer = Printer.json_create(o)
+    managed_printers[printer.name] = printer
+  end
+end
+
+printers = Hash.new
+
+begin
+  res   = Dnsruby::DNS.new({:nameserver => ['10.246.176.4']})
+
+  res.each_resource(dname, 'PTR') { |rr|
+    printers.merge! query_domain(rr.rdata, false)
+    printers.merge! query_domain(rr.rdata, true)
+  }
+rescue Exception => e
+  print "Can't find PTR records for #{dname}: ", e, "\n"
+end
+
+# Delete printers that are not available anymore
+
+old_printers = managed_printers.select do |name, printer|
+  if !printers.has_key?(name) or !printers[name].equals?(printer)
+    log "Delete old printer entry #{printer.name} #{printer.path}"
+    delete_printer(printer)
+  end
+end
+
+# Add new entries
+
+new_printers = printers.select do |name, printer|
+  if !managed_printers.has_key?(name) or (!managed_printers[name].equals?(printer))
+    log "Add new printer entry #{printer.name} #{printer.path}"
+
+    add_printer(printer)
+  end
+end
+
+# Write new list of managed entries to the disk
+
+File.open("/var/lib/puavo-desktop/dnssd_printers", "w") do |file|
+  file.puts printers.values.to_json
+end
