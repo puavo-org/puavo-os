@@ -2,8 +2,7 @@
 
 case "$(cat /etc/puavo/hosttype)" in
   thinclient)
-    PUAVO_SESSION=$(cat "${PUAVO_SESSION_PATH}")
-    TMP_SERVER=$(echo $PUAVO_SESSION | jq --raw-output .ltsp_server.state.fqdn)
+    TMP_SERVER=$(jq -r .ltsp_server.state.fqdn "${PUAVO_SESSION_PATH}")
 
     set_lts_var LDM_SERVER "${TMP_SERVER}"
     ;;
