@@ -1,4 +1,4 @@
-#!/usr/bin/ruby1.9
+#!/usr/bin/ruby1.9.3
 
 =begin
 
@@ -177,7 +177,7 @@ end
 printers = Hash.new
 
 begin
-  res   = Dnsruby::DNS.new({:nameserver => ['10.246.176.4']})
+  res   = Dnsruby::DNS.new
 
   res.each_resource(dname, 'PTR') { |rr|
     printers.merge! query_domain(rr.rdata, false)
