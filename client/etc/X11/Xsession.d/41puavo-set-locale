@@ -24,6 +24,12 @@ if [ -f "${PUAVO_SESSION_PATH}" ]; then
     sv)
       LANG=sv_FI.UTF-8
       ;;
+     *)
+      echo "unknown langauge '${LANGUAGE}', falling back to 'fi'" >&2
+      DCONF_PROFILE=user-fi
+      LANG=fi_FI.UTF-8
+      LANGUAGE=fi
+      ;;
   esac
 fi
 
