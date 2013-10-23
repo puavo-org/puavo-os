@@ -9,6 +9,7 @@ auth       required     pam_env.so envfile=/etc/default/locale
 
 # Standard Un*x authentication.
 auth	required	pam_krb5.so minimum_uid=10000
+auth	required        pam_exec.so /usr/lib/puavo-ltsp-client/make-session-dirs
 auth	required	pam_permit.so
 
 # Standard Un*x authorization.

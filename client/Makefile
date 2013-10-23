@@ -160,7 +160,8 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
 		pam/puavo-pam-open-session \
 		pam/puavo-pam-populate-extrausers \
-		pam/puavo-pam-set-puavo-session-path
+		pam/puavo-pam-set-puavo-session-path \
+		pam/make-session-dirs
 
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd
 

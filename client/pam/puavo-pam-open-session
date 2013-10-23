@@ -41,7 +41,6 @@ if [ "x${API_SERVER}" != "x" ]; then
   echo "Received puavo session: ${PUAVO_SESSION}" \
       | logger -t puavo-open-session -p auth.info
 
-  mkdir -p "${CACHE_DIR}"
   echo "${PUAVO_SESSION}" >"${CACHE_FILE}"
 
   exit 0
