@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 # puavo-open-session connects puavo-rest to create a new session.
 # The returned session json contains device, user, desktop and printer
 # settings that are used to setup the desktop session for the user.

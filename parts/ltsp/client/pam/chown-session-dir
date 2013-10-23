@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 CACHE_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
 
 chown "${PAM_USER}" "${CACHE_DIR}"
