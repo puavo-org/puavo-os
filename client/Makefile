@@ -68,10 +68,12 @@ install : installdirs
 		templates/etc/ldap/ldap.conf-laptop
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-up.d \
+		templates/etc/network/if-up.d/dnssd-printers \
 		templates/etc/network/if-up.d/ipsec \
 		templates/etc/network/if-up.d/sssd
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-post-down.d \
+		templates/etc/network/if-post-down.d/dnssd-printers \
 		templates/etc/network/if-post-down.d/ipsec
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
@@ -113,6 +115,7 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-configure-client \
 		puavo-dns-client \
+		puavo-dnssd-printer-client \
 		puavo-handle-external-files-actions \
 		puavo-ltsp-envfeed \
 		puavo-ltsp-init-nfs \
