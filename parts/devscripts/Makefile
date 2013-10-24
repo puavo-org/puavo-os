@@ -32,3 +32,9 @@ install-lxc-tools: installdirs
 		bin/puavo-lxc-run-sudo-wrap
 
 clean:
+
+clean-deb:
+	rm -f ../puavo-devscripts_*.deb
+	rm -f ../puavo-devscripts_*.changes
+	rm -f ../puavo-devscripts_*.dsc
+	rm -f ../puavo-devscripts_*.tar.gz
