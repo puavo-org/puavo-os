@@ -24,6 +24,8 @@ if [ ! -d $rootfs ]; then
     exit 1
 fi
 
+date -R > "$rootfs/container_created"
+
 cat > "$rootfs/setup.sh"<<EOF
 #!/bin/sh
 set -eu
