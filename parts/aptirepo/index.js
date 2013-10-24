@@ -59,7 +59,8 @@ app.post("/deb", function(req, res) {
 
     var form = new multiparty.Form();
     form.on("error", function(err) {
-        return res.send("Failed to parse your data", 400);
+        res.write("debbox: Failed to parse multipart post");
+        res.end("\n", 400);
     });
 
     var tmpDir = mkTmpDir({
