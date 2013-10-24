@@ -17,6 +17,21 @@ def hostname
   Socket.gethostname
 end
 
+def detect_ubuntu_release
+  issue = File.open("/etc/issue.net").readlines.first.strip
+  ubuntu_version = issue.match(/^Ubuntu ([0-9\.]+)/)[1]
+  case ubuntu_version
+  when /^10.04/
+    "lucid"
+  when /^12.10/
+    "quantal"
+  else
+    "unknow"
+  end
+end
+
+@ubuntu_release = detect_ubuntu_release
+
 HighLine.say "\nUpdate certificate for Puavo device\n\n"
 HighLine.say "Puavo server: #{ puavo_server }"
 @username = HighLine.ask("Username: [admin] ").strip
