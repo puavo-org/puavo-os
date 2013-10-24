@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 
 require "puavo"
-require "optparse"
 require "httparty"
 require "socket"
 require 'openssl'
