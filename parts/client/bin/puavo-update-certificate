@@ -7,6 +7,7 @@ require 'openssl'
 require 'highline/import'
 
 private_key = "/etc/puavo/certs/host.key"
+certificate_file = "/etc/puavo/certs/host.crt"
 
 def puavo_server
   PUAVO_ETC.resolve_puavo_url
@@ -62,5 +63,5 @@ end
 host = JSON.parse(response.body)
 if host["userCertificate"]
   puts "Update host certificate (/etc/puavo/certs/host.crt)"
-  PUAVO_ETC.write(:host_crt, host["userCertificate"])
+  File.open(certificate_file, 'w', 0400) { |f| f.print host["userCertificate"] }
 end
