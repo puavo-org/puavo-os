@@ -421,10 +421,12 @@ class packages {
     , 'spe' ]:
       tag => [ 'programming', 'ubuntu', ];
 
-    [ 'puavo-load-reporter'
-    , 'puavo-sharedir-client'
-    , 'puavo-wlanap'
+    [ 'puavo-wlanap'
     , 'puavo-wlanap-dnsproxy' ]:
+      tag => [ 'puavo', 'puavo-wlan', 'opinsys' ];
+
+    [ 'puavo-load-reporter'
+    , 'puavo-sharedir-client' ]:
       tag => [ 'puavo', 'opinsys', ];
 
     [ 'ltsp-lightdm'
