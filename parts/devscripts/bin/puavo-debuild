@@ -18,6 +18,13 @@ if [ ! -d debian ]; then
     exit 1
 fi
 
+[ -z "$(git status --short)" ] || {
+    git status
+    echo
+    echo "This repository contains uncommitted changes! Not building."
+    exit 1
+}
+
 # Convert package to debian native format.
 sed -i s/quilt/native/ debian/source/format
 
