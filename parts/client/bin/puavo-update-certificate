@@ -1,0 +1,66 @@
+#!/usr/bin/env ruby
+
+require "puavo"
+require "optparse"
+require "httparty"
+require "socket"
+require 'openssl'
+
+private_key = "/etc/puavo/certs/host.key"
+
+def puavo_server
+  PUAVO_ETC.resolve_puavo_url
+end
+
+def hostname
+  # FIXME lucid? quantal?
+  PUAVO_ETC.hostname
+  # Socket.gethostname
+end
+
+# FIXME
+# ask username
+# ask password
+
+# Read old private key
+key_pem = File.read private_key
+@key = OpenSSL::PKey::RSA.new key_pem
+@csr = OpenSSL::X509::Request.new
+@csr.version = 0
+@csr.public_key = @key.public_key
+
+begin
+  res = HTTParty.post( "#{ puavo_server }/api/v2/hosts/sign_certificate",
+                       :body => {
+                         "hostname" => hostname,
+                         "host_certificate_request" => @csr.to_pem }.to_json,
+                       :basic_auth => {
+                         :username => "albus",
+                         :password => "albus"
+                       },
+                       :headers => {
+                         "Content-Type" => "application/json",
+                         "Accept" => "application/json"
+                       }
+                       )
+rescue EOFError
+  puts "Can't connect to puavo server (#{ puavo_server })"
+  exit
+end
+ 
+if res.code != 200
+  puts "Unable to sign certificate"
+  begin
+    puts JSON.parse(res.body)
+  rescue Exception => e
+    puts "Unable to parse response! (#{ e })"
+  end
+  exit
+end
+
+host = JSON.parse(res.body)
+
+if host["userCertificate"]
+  puts "Update host certificate (/etc/puavo/certs/host.crt)"
+  PUAVO_ETC.write(:host_crt, host["userCertificate"])
+end
