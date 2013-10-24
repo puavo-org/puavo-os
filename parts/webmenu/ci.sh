@@ -5,11 +5,6 @@ set -eu
 
 debbox_url="$1"
 
-echo "BUILD_NUMBER: $BUILD_NUMBER"
-echo "BUILD_URL: $BUILD_URL"
-echo "GIT_COMMIT : $GIT_COMMIT "
-echo "GIT_BRANCH  : $GIT_BRANCH  "
-
 sudo apt-get update
 sudo apt-get install -y puavo-devscripts
 sudo apt-get install -y node-webkit  wmctrl gnome-themes-extras socat netcat-openbsd libnotify-bin xvfb jq
