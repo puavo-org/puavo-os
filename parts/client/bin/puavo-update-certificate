@@ -6,7 +6,7 @@ require "socket"
 require 'openssl'
 require 'highline/import'
 
-private_key = "/etc/puavo/certs/host.key"
+certificate_private_key = "/etc/puavo/certs/host.key"
 certificate_file = "/etc/puavo/certs/host.crt"
 
 def puavo_server
@@ -26,7 +26,7 @@ HighLine.say "Puavo server: #{ puavo_server }"
 @password = HighLine.ask("Password: ") { |q| q.echo = '*' }.strip
 
 # Read old private key
-key_pem = File.read private_key
+key_pem = File.read certificate_private_key
 @key = OpenSSL::PKey::RSA.new key_pem
 @csr = OpenSSL::X509::Request.new
 @csr.version = 0
