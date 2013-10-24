@@ -14,9 +14,7 @@ def puavo_server
 end
 
 def hostname
-  # FIXME lucid? quantal?
-  PUAVO_ETC.hostname
-  # Socket.gethostname
+  Socket.gethostname
 end
 
 HighLine.say "\nUpdate certificate for Puavo device\n\n"
