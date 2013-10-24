@@ -170,7 +170,6 @@ if [ "\$ip" = "" ]; then
 fi
 
 chown -R ci:ci /cirun
-chmod +x /cirun/$projectname/$script
 echo
 echo "Executing /cirun/$projectname/$script $script_args"
 sudo -i -u ci sh -c "cd /cirun/$projectname && ./$script $script_args"
