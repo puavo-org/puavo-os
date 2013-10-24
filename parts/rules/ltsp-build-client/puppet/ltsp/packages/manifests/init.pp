@@ -423,7 +423,8 @@ class packages {
 
     [ 'puavo-load-reporter'
     , 'puavo-sharedir-client'
-    , 'puavo-wlanap' ]:
+    , 'puavo-wlanap'
+    , 'puavo-wlanap-dnsproxy' ]:
       tag => [ 'puavo', 'opinsys', ];
 
     [ 'ltsp-lightdm'

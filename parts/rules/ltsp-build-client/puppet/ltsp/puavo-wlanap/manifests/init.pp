@@ -11,5 +11,10 @@ class puavo-wlanap {
       content => template('puavo-wlanap/default');
   }
 
+  file {
+    '/etc/default/puavo-wlanap-dnsproxy':
+      content => template('puavo-wlanap/dnsproxy.default');
+  }
+
   Package <| tag == puavo-wlanap |>
 }
