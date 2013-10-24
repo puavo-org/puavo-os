@@ -81,7 +81,7 @@ end
 if response.code.to_i != 200
   puts "Unable to sign certificate"
   begin
-    puts JSON.parse(response.body)
+    puts "ERROR: " + JSON.parse(response.body)["error"]
   rescue Exception => e
     puts "Unable to parse response! (#{ e })"
   end
