@@ -162,7 +162,8 @@ install : installdirs
 		pam/open-session \
 		pam/populate-extrausers \
 		pam/chown-session-dir \
-		pam/make-session-dir
+		pam/make-session-dir \
+		make-release-logo
 
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd
 
