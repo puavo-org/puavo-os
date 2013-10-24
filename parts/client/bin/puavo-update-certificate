@@ -73,7 +73,7 @@ begin
   response = @http.request( request,
                             { "hostname" => hostname,
                               "host_certificate_request" => @csr.to_pem }.to_json )
-rescue EOFError
+rescue Errno::ECONNREFUSED
   puts "Can't connect to puavo server (#{ puavo_server })"
   exit
 end
