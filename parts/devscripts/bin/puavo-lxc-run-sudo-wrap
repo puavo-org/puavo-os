@@ -22,4 +22,4 @@ set -eu
 
 script=$(which puavo-lxc-run)
 echo "Trying to execute $script with sudo..."
-sudo $script "$@"
+sudo -E $script "$@"
