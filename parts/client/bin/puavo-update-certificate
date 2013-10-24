@@ -5,6 +5,7 @@ require "optparse"
 require "httparty"
 require "socket"
 require 'openssl'
+require 'highline/import'
 
 private_key = "/etc/puavo/certs/host.key"
 
@@ -18,9 +19,11 @@ def hostname
   # Socket.gethostname
 end
 
-# FIXME
-# ask username
-# ask password
+HighLine.say "\nUpdate certificate for Puavo device\n\n"
+HighLine.say "Puavo server: #{ puavo_server }"
+@username = HighLine.ask("Username: [admin] ").strip
+@username = "admin" if @username.match(/^\n$/)
+@password = HighLine.ask("Password: ") { |q| q.echo = '*' }.strip
 
 # Read old private key
 key_pem = File.read private_key
@@ -35,8 +38,8 @@ begin
                          "hostname" => hostname,
                          "host_certificate_request" => @csr.to_pem }.to_json,
                        :basic_auth => {
-                         :username => "albus",
-                         :password => "albus"
+                         :username => @username,
+                         :password => @password
                        },
                        :headers => {
                          "Content-Type" => "application/json",
