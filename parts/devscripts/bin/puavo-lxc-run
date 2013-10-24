@@ -4,10 +4,9 @@
 # or
 #   jenkins ALL = NOPASSWD: /usr/bin/puavo-lxc-run
 
-
 help(){
     echo "
-    Usage: $(basename $0) <base container name> <script to run> [script args]
+    Usage: $(basename $0) <environment file> <base container name> <script to run> [script args]
 
     Execute given script in a temporary container.
 
@@ -15,6 +14,7 @@ help(){
     "
 
 }
+
 
 [ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
 [ "$1" = "" -o "$2" = ""  ] && help && exit 1
@@ -61,11 +61,15 @@ echo uptime
 uptime
 echo
 
+jenkins_env="$1"
+shift
 base_container="$1"
 shift
 script="$1"
 shift
 script_args="$@"
+
+. "$jenkins_env"
 
 set -eu
 
@@ -81,7 +85,7 @@ if [ ! -d "$container_path/$base_container" ]; then
     exit 1
 fi
 
-running_container="cirun-$(date +%s)-$(hostname)"
+running_container="cirun-$BUILD_TAG-$(hostname)"
 lxcdir="/var/lib/lxc/$running_container"
 projectname=$(basename $(pwd))
 
@@ -90,6 +94,8 @@ lxc-clone -o $base_container -n $running_container
 
 on_exit(){
     exitcode=$?
+    rm $jenkins_env
+
     # Always shutdown container on exit
     lxc-shutdown --name $running_container || true
     lxc-wait --name $running_container -s STOPPED
@@ -132,6 +138,8 @@ puavo-lxc-prepare $running_container
 mkdir "$lxcdir/rootfs/cirun"
 echo "Copying $(pwd) to /cirun for the container"
 rsync -a $(pwd) "$lxcdir/rootfs/cirun"
+
+cat "$jenkins_env" >> "$lxcdir/rootfs/etc/environment"
 
 cat > "$lxcdir/rootfs/run.sh"<<EOF
 #!/bin/sh

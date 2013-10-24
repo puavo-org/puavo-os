@@ -5,7 +5,8 @@ help(){
     echo "
     Usage: $(basename $0)
 
-    Execute puavo-lxc-run using it's full path with sudo.
+    Execute puavo-lxc-run with Jenkins environment using it's full path with
+    sudo.
 
     When sudoers (use visudo) contains:
 
@@ -20,6 +21,24 @@ help(){
 
 set -eu
 
+# Preseving environment does not work here with sudo. Manually pass selected
+# Jenkins variables to the build
+# https://wiki.jenkins-ci.org/display/JENKINS/Building+a+software+project#Buildingasoftwareproject-JenkinsSetEnvironmentVariables
+env_tmp=$(mktemp --suffix=-jenkinsenv)
+cat >$env_tmp<<EOF
+BUILD_NUMBER=$BUILD_NUMBER
+BUILD_ID=$BUILD_ID
+BUILD_URL=$BUILD_URL
+NODE_NAME=$NODE_NAME
+JOB_NAME=$JOB_NAME
+BUILD_TAG=$BUILD_TAG
+JENKINS_URL=$JENKINS_URL
+EXECUTOR_NUMBER=$EXECUTOR_NUMBER
+GIT_COMMIT=$GIT_COMMIT
+GIT_BRANCH=$GIT_BRANCH
+http_proxy=$http_proxy
+EOF
+
 script=$(which puavo-lxc-run)
 echo "Trying to execute $script with sudo..."
-sudo -E $script "$@"
+sudo $script $env_tmp "$@"
