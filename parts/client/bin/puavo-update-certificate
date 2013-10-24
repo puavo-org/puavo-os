@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 
-require "puavo"
 require 'net/https'
 require "socket"
 require 'openssl'
 require 'highline/import'
+require 'json'
 
 certificate_private_key = "/etc/puavo/certs/host.key"
 certificate_file = "/etc/puavo/certs/host.crt"
@@ -31,6 +31,8 @@ def detect_ubuntu_release
 end
 
 @ubuntu_release = detect_ubuntu_release
+
+require "puavo/etc" if @ubuntu_release != "lucid"
 
 HighLine.say "\nUpdate certificate for Puavo device\n\n"
 HighLine.say "Puavo server: #{ puavo_server }"
