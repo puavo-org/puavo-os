@@ -79,10 +79,8 @@ if [ $git_branch = "HEAD" ]; then
 fi
 
 
-# If not release build append dev string to version
-if [[ "$git_commit_msg" != *!dorelease* ]]; then
-    version="$version+dev$(date +%s).$git_branch.$git_commit"
-fi
+version="$version+dev$(date +%s).$git_branch.$git_commit"
+[ "$BUILD_NUMBER" != "" ] && version="$version-$BUILD_NUMBER"
 
 cat > debian/changelog <<EOF
 $repo_name ($version) $DISTRIB_CODENAME; urgency=low
@@ -91,6 +89,7 @@ $repo_name ($version) $DISTRIB_CODENAME; urgency=low
   * https://github.com/opinsys/$repo_name/tree/$git_commit
   * https://github.com/opinsys/$repo_name/compare/$prev_version...$git_commit
   * Build on $(uname -a)
+  * Jenkins build ${BUILD_TAG:-} ${BUILD_URL:-}
 
  -- $DEBFULLNAME <$DEBEMAIL>  $(date -R)
 
