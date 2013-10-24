@@ -10,7 +10,20 @@ certificate_private_key = "/etc/puavo/certs/host.key"
 certificate_file = "/etc/puavo/certs/host.crt"
 
 def puavo_server
-  PUAVO_ETC.resolve_puavo_url
+  if @ubuntu_release == "lucid"
+    begin
+      Resolv::DNS.open do |dns|
+        r = dns.getresources( "_puavo._tcp.",
+                              Resolv::DNS::Resource::IN::SRV )
+        "https://" + r[0].target.to_s
+      end
+    rescue
+      puts 'Could not lookup default puavoserver.'
+      exit
+    end
+  else
+    PUAVO_ETC.resolve_puavo_url
+  end
 end
 
 def hostname
