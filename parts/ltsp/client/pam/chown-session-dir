@@ -2,6 +2,8 @@
 
 set -eu
 
-CACHE_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
+SESSION_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
 
-chown "${PAM_USER}" "${CACHE_DIR}"
+chown "${PAM_USER}" "${SESSION_DIR}"
+
+echo "PUAVO_SESSION_PATH=${SESSION_DIR}/puavo_session.json"
