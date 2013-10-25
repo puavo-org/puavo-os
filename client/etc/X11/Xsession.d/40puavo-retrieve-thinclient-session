@@ -25,7 +25,7 @@ case ${PUAVO_HOSTTYPE} in
               --retry 5 \
               --retry-delay 1 \
               --header "Expect:" \
-              "${API_SERVER}/v3/sessions_by_uuid/${PUAVO_SESSION_ID}" 2>/dev/null)
+              "${API_SERVER}/v3/sessions/${PUAVO_SESSION_ID}" 2>/dev/null)
 
     echo "Received puavo session: ${PUAVO_SESSION}" \
         | logger -t puavo-open-session -p auth.info
