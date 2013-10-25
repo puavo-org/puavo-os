@@ -70,14 +70,15 @@ if [ $git_branch = "HEAD" ]; then
 fi
 
 [ "${BUILD_NUMBER:-}" != "" ] && version="$version-$BUILD_NUMBER"
+
 version="$version~$git_branch.$git_commit"
 
 cat > debian/changelog <<EOF
 $repo_name ($version) $DISTRIB_CODENAME; urgency=low
 
-  * Release from git commit ${git_commit}
-  * https://github.com/opinsys/$repo_name/tree/$git_commit
-  * https://github.com/opinsys/$repo_name/compare/$prev_version...$git_commit
+  * Release from git commit $git_commit and branch $git_branch
+  * https://github.com/opinsys/${repo_name}/tree/${git_commit}
+  * https://github.com/opinsys/${repo_name}/compare/${prev_version}...${git_commit}
   * Build on $(uname -a)
   * Jenkins build ${BUILD_TAG:-} ${BUILD_URL:-}
 
