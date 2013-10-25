@@ -61,20 +61,11 @@ git_commit_msg=$(git log -1 --pretty=%B)
 git_branch=$(git rev-parse --abbrev-ref HEAD)
 
 if [ $git_branch = "HEAD" ]; then
-    # Shit. Were on detached head state (probably in Jenkins build).
-    # Do educated guess on the branch name
-    git_branch="$(git branch --remote --verbose --no-abbrev --contains | sed -rne 's/^.*\/([^\ ]+).*$/\1/p')"
-
-    # If there is multiple remote branches with the same head
-    if [ "$(echo "$git_branch" | wc --lines)" != 1 ]; then
-        # Just pick the master if it is one of them
-        if $(echo "$git_branch" | grep -Fxq master); then
-            git_branch="master"
-        else
-            echo "Failed to guess branch name for $git_commit from:"
-            git branch --remote --verbose --no-abbrev --contains
-            exit 1
-        fi
+    # Were on detached head state in jenkins. Use the variable set by Jenkins.
+    git_branch="${GIT_BRANCH:-}"
+    if [ $git_branch = "" ]; then
+        echo "Failed to determine git branch!"
+        exit 1
     fi
 fi
 
