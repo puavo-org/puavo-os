@@ -4,7 +4,7 @@ set -eu
 
 SESSION_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
 
-mkdir -m 0700 -p "${SESSION_DIR}"
+mkdir -m 0700 "${SESSION_DIR}"
 chmod 0700 "${SESSION_DIR}"
 
 echo "PUAVO_SESSION_PATH=${SESSION_DIR}/puavo_session.json"
