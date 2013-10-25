@@ -69,9 +69,8 @@ if [ $git_branch = "HEAD" ]; then
     fi
 fi
 
-
-version="$version+dev$(date +%s).$git_branch.$git_commit"
-[ "$BUILD_NUMBER" != "" ] && version="$version-$BUILD_NUMBER"
+[ "${BUILD_NUMBER:-}" != "" ] && version="$version-$BUILD_NUMBER"
+version="$version~$git_branch.$git_commit"
 
 cat > debian/changelog <<EOF
 $repo_name ($version) $DISTRIB_CODENAME; urgency=low
