@@ -5,6 +5,7 @@ require "socket"
 require 'openssl'
 require 'highline/import'
 require 'json'
+require 'resolv'
 
 certificate_private_key = "/etc/puavo/certs/host.key"
 certificate_file = "/etc/puavo/certs/host.crt"
