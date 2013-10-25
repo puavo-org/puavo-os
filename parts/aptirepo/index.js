@@ -11,17 +11,15 @@ var temp = require("temp");
 var xtend = require("xtend");
 var fs = require("fs");
 var promisePipe = require("promisepipe");
-var ecstatic = require("ecstatic");
 
 Q.longStackSupport = true;
 var mkTmpDir = Q.denodeify(temp.mkdir);
 var rimraf = Q.denodeify(require("rimraf"));
 
 var app = express();
-app.use("/packages", ecstatic({
-    root: "/var/local/debbox/packages",
-    showDir: true
-}));
+
+app.use("/packages", express.static("/var/local/debbox/packages"));
+app.use("/packages", express.directory("/var/local/debbox/packages"));
 
 var config = [
     __dirname + "/debbox.json",
