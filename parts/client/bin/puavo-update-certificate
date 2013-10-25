@@ -13,7 +13,7 @@ def puavo_server
   if @ubuntu_release == "lucid"
     begin
       Resolv::DNS.open do |dns|
-        r = dns.getresources( "_puavo._tcp.",
+        r = dns.getresources( "_puavo._tcp",
                               Resolv::DNS::Resource::IN::SRV )
         "https://" + r[0].target.to_s
       end
