@@ -51,7 +51,7 @@ require "puavo/etc" if @ubuntu_release != "lucid"
 HighLine.say "\nUpdate certificate for Puavo device\n\n"
 HighLine.say "Puavo server: #{ puavo_server }"
 @username = HighLine.ask("Username: [admin] ").strip
-@username = "admin" if @username.match(/^\n$/)
+@username = "admin" if @username.empty?
 @password = HighLine.ask("Password: ") { |q| q.echo = '*' }.strip
 
 # Read old private key
