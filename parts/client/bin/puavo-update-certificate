@@ -10,7 +10,7 @@ require 'resolv'
 certificate_private_key = "/etc/puavo/certs/host.key"
 certificate_file = "/etc/puavo/certs/host.crt"
 
-def puavo_server
+def resolv_puavo_server
   if @ubuntu_release == "lucid"
     begin
       Resolv::DNS.open do |dns|
@@ -20,6 +20,7 @@ def puavo_server
       end
     rescue Exception => e
       puts "Could not lookup default puavoserver. (#{ e })"
+      puts "Usage: puavo-update-certificate https://<server hostname>"
       exit
     end
   else
@@ -47,6 +48,8 @@ end
 @ubuntu_release = detect_ubuntu_release
 
 require "puavo/etc" if @ubuntu_release != "lucid"
+
+puavo_server = ( ARGV[0] || resolv_puavo_server ).strip
 
 HighLine.say "\nUpdate certificate for Puavo device\n\n"
 HighLine.say "Puavo server: #{ puavo_server }"
