@@ -106,7 +106,7 @@ dnsmasq \
     --pid-file="${PWAP_DNSPROXY_RUNDIR}/dnsmasq.pid" \
     ${dnsmasq_ptr_record_args} &
 
-nc -k -l -U "${PWAP_DNSPROXY_RUNDIR}/control.socket" | while read event tap bridge; do
+socat -u UNIX-LISTEN:"${PWAP_DNSPROXY_RUNDIR}/control.socket",fork - | while read event tap bridge; do
     case "$event" in
         vtun-up)
             enable_dns_redirection "${bridge}" "${PWAP_DNSPROXY_PORT}"
