@@ -20,5 +20,18 @@ install: installdirs
 		aptirepo-init \
 		aptirepo-update
 
+.PHONY: uninstallfiles
+uninstallfiles:
+	rm -f $(DESTDIR)$(bindir)/aptirepo-import
+	rm -f $(DESTDIR)$(bindir)/aptirepo-init
+	rm -f $(DESTDIR)$(bindir)/aptirepo-update
+
+.PHONY: uninstalldirs
+uninstalldirs: uninstallfiles
+	rmdir --ignore-fail-on-non-empty -p $(DESTDIR)$(bindir)
+
+.PHONY: uninstall
+uninstall: uninstalldirs
+
 .PHONY: clean
 clean:
