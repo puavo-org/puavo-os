@@ -1,8 +1,8 @@
 Index: openldap/contrib/slapd-modules/smbkrb5pwd/Makefile
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ openldap/contrib/slapd-modules/smbkrb5pwd/Makefile	2013-03-12 15:13:43.599150003 +0200
-@@ -0,0 +1,54 @@
++++ openldap/contrib/slapd-modules/smbkrb5pwd/Makefile	2013-10-28 17:19:42.499850486 +0200
+@@ -0,0 +1,57 @@
 +# $OpenLDAP: pkg/ldap/contrib/slapd-modules/smbk5pwd/Makefile,v 1.1.6.4 2009/10/02 21:16:53 quanah Exp $
 +# This work is part of OpenLDAP Software <http://www.openldap.org/>.
 +#
@@ -17,28 +17,31 @@ Index: openldap/contrib/slapd-modules/smbkrb5pwd/Makefile
 +# top-level directory of the distribution or, alternatively, at
 +# <http://www.OpenLDAP.org/license.html>.
 +
-+LIBTOOL=../../../debian/build/libtool
++LDAP_SRC=../../..
++LDAP_BUILD=$(LDAP_SRC)/debian/build
++
++LIBTOOL=$(LDAP_BUILD)/libtool
 +OPT=-g -O2
 +CC=gcc
 +
 +MIT_KRB5_INC=-I/usr/include/mit-krb5
 +SSL_INC=
-+LDAP_INC=-I../../../include -I../../../servers/slapd -I../../../../../include -I../../../../../servers/slapd -I../../../debian/build/include
++LDAP_INC=-I$(LDAP_SRC)/include -I$(LDAP_SRC)/servers/slapd -I$(LDAP_BUILD)/include
 +INCS=$(LDAP_INC) $(MIT_KRB5_INC) $(SSL_INC)
 +
 +MIT_KRB5_LIB=-L/usr/lib/$(shell gcc -print-multiarch)/mit-krb5 -lkrb5 -lkadm5clnt_mit
 +SSL_LIB=-lcrypto
-+LDAP_LIB=-L../../../debian/build/libraries/libldap_r/.libs -lldap_r \
-+	 -L../../../debian/build/libraries/liblber/.libs -llber
++LDAP_LIB=-L$(LDAP_BUILD)/libraries/libldap_r/.libs -lldap_r \
++	 -L$(LDAP_BUILD)/libraries/liblber/.libs -llber
 +LIBS=$(LDAP_LIB) $(MIT_KRB5_LIB) $(SSL_LIB)
 +
-+prefix=/usr/local
++prefix=/usr
 +exec_prefix=$(prefix)
-+ldap_subdir=/openldap
++ldap_subdir=/ldap
 +
 +libdir=$(exec_prefix)/lib
 +libexecdir=$(exec_prefix)/libexec
-+#moduledir = $(libexecdir)$(ldap_subdir)
++moduledir = $(lib)$(ldap_subdir)
 +moduledir = /usr/lib/ldap
 +
 +all:	smbkrb5pwd.la
@@ -60,7 +63,7 @@ Index: openldap/contrib/slapd-modules/smbkrb5pwd/Makefile
 Index: openldap/contrib/slapd-modules/smbkrb5pwd/README
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ openldap/contrib/slapd-modules/smbkrb5pwd/README	2013-03-12 15:12:28.307150001 +0200
++++ openldap/contrib/slapd-modules/smbkrb5pwd/README	2013-10-28 17:15:19.559844096 +0200
 @@ -0,0 +1,98 @@
 +!!! This is copied from documentation for smbk5pwd, it may not apply to
 +!!! smbkrb5pwd.  smbkrb5pwd is a modified version of smbk5pwd,
@@ -163,7 +166,7 @@ Index: openldap/contrib/slapd-modules/smbkrb5pwd/README
 Index: openldap/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ openldap/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c	2013-03-12 15:12:28.311150001 +0200
++++ openldap/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c	2013-10-28 17:15:19.559844096 +0200
 @@ -0,0 +1,981 @@
 +/* smbkrb5pwd.c - Overlay for managing Samba and MIT Kerberos passwords */
 +/* $OpenLDAP: pkg/ldap/contrib/slapd-modules/smbk5pwd/smbk5pwd.c,v 1.17.2.16 2009/08/17 21:49:00 quanah Exp $ */

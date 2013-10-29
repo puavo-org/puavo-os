@@ -1,0 +1,45 @@
+Description: make contrib/slapd-modules/smbk5pwd/Makefile debian-friendly
+
+Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+
+Index: openldap/contrib/slapd-modules/smbk5pwd/Makefile
+===================================================================
+--- openldap.orig/contrib/slapd-modules/smbk5pwd/Makefile	2013-10-26 23:46:04.000000000 +0300
++++ openldap/contrib/slapd-modules/smbk5pwd/Makefile	2013-10-28 17:14:31.255842868 +0200
+@@ -13,7 +13,7 @@
+ # <http://www.OpenLDAP.org/license.html>.
+ 
+ LDAP_SRC = ../../..
+-LDAP_BUILD = ../../..
++LDAP_BUILD = $(LDAP_SRC)/debian/build
+ LDAP_INC = -I$(LDAP_BUILD)/include -I$(LDAP_SRC)/include -I$(LDAP_SRC)/servers/slapd
+ LDAP_LIB = $(LDAP_BUILD)/libraries/libldap_r/libldap_r.la \
+ 	$(LDAP_BUILD)/libraries/liblber/liblber.la
+@@ -21,8 +21,8 @@
+ SSL_INC = 
+ SSL_LIB = -lcrypto
+ 
+-HEIMDAL_INC = -I/usr/heimdal/include
+-HEIMDAL_LIB = -L/usr/heimdal/lib -lkrb5 -lkadm5srv
++HEIMDAL_INC = -I/usr/include/heimdal
++HEIMDAL_LIB = -L/usr/lib/heimdal -lkrb5 -lkadm5srv
+ 
+ LIBTOOL = $(LDAP_BUILD)/libtool
+ CC = gcc
+@@ -35,13 +35,13 @@
+ PROGRAMS = smbk5pwd.la
+ LTVER = 0:0:0
+ 
+-prefix=/usr/local
++prefix=/usr
+ exec_prefix=$(prefix)
+-ldap_subdir=/openldap
++ldap_subdir=/ldap
+ 
+ libdir=$(exec_prefix)/lib
+ libexecdir=$(exec_prefix)/libexec
+-moduledir = $(libexecdir)$(ldap_subdir)
++moduledir = $(lib)$(ldap_subdir)
+ 
+ .SUFFIXES: .c .o .lo
+ 

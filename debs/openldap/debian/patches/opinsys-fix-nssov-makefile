@@ -1,0 +1,43 @@
+Description: make contrib/slapd-modules/nssov/Makefile debian-buildable
+
+Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+
+--- openldap-2.4.37.orig/contrib/slapd-modules/nssov/Makefile
++++ openldap-2.4.37/contrib/slapd-modules/nssov/Makefile
+@@ -17,7 +17,7 @@ LDAP_SRC=../../..
+ 
+ # Path to the OpenLDAP object tree - same as above unless
+ # you're doing out-of-tree builds.
+-LDAP_BUILD=../../..
++LDAP_BUILD=$(LDAP_SRC)/debian/build
+ 
+ LDAP_INC = -I$(LDAP_BUILD)/include -I$(LDAP_SRC)/include -I$(LDAP_SRC)/servers/slapd
+ LDAP_LIB = $(LDAP_BUILD)/libraries/libldap_r/libldap_r.la \
+@@ -32,14 +32,14 @@ DEFS =
+ INCS = $(LDAP_INC) $(NLDAPD_INC)
+ LIBS = $(LDAP_LIB)
+ 
+-prefix=/usr/local
++prefix=/usr
+ exec_prefix=$(prefix)
+-ldap_subdir=/openldap
++ldap_subdir=/ldap
+ 
+ libdir=$(exec_prefix)/lib
+ libexecdir=$(exec_prefix)/libexec
+-moduledir = $(libexecdir)$(ldap_subdir)
+-sysconfdir = $(prefix)/etc$(ldap_subdir)
++moduledir = $(lib)$(ldap_subdir)
++sysconfdir = /etc$(ldap_subdir)
+ schemadir = $(sysconfdir)/schema
+ 
+ all:	nssov.la
+@@ -61,7 +61,7 @@ $(OBJS):	nssov.h
+ 
+ nssov.la:	$(OBJS) $(XOBJS)
+ 	$(LIBTOOL) --mode=link $(CC) $(OPT) -version-info 0:0:0 \
+-	-rpath $(libdir) -module -o $@ $(OBJS) $(XOBJS) $(LIBS)
++	-rpath $(moduledir) -module -o $@ $(OBJS) $(XOBJS) $(LIBS)
+ 
+ install: nssov.la
+ 	mkdir -p $(DESTDIR)$(moduledir)
