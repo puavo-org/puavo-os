@@ -1,3 +1,14 @@
+openldap (2.4.37-0+opinsys2~alpha2) precise; urgency=low
+
+  * New upstream release.
+  * Source format 3.0 (quilt)
+  * Trivial build-fix patches:
+    - debian/patches/opinsys-fix-autogroup-makefile
+    - debian/patches/opinsys-fix-nssov-makefile
+    - debian/patches/opinsys-fix-smbk5pwd-makefile
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 28 Oct 2013 17:22:11 +0200
+
 openldap (2.4.31-1ubuntu2+opinsys6) quantal; urgency=low
 
   * Fix conflicting slapd-smbkrb5pwd files.
