@@ -2,6 +2,64 @@
 
 set -eu
 
+list_dirs()
+{
+    find "$1" -mindepth 1 -maxdepth 1 -type d -printf '%f\n'
+}
+
+write_contents()
+{
+    local dist comp
+
+    dist=$1
+    comp=$2
+
+    apt-ftparchive --db .aptirepo/db contents "pool/${dist}/${comp}" \
+        | gzip >"dists/${dist}/${comp}/Contents.gz"
+}
+
+write_sources()
+{
+    local dist comp archdir sources
+
+    dist=$1
+    comp=$2
+    archdir=$3
+    sources="dists/${dist}/${comp}/${archdir}/Sources"
+
+    apt-ftparchive sources "pool/${dist}/${comp}" >"${sources}"
+    gzip -c "${sources}" >"${sources}.gz"
+}
+
+write_packages()
+{
+    local dist comp archdir packages
+
+    dist=$1
+    comp=$2
+    archdir=$3
+    packages="dists/${dist}/${comp}/${archdir}/Packages"
+
+    apt-ftparchive --db .aptirepo/db --arch "${archdir#binary-}" \
+        packages "pool/${dist}/${comp}" >"${packages}"
+    gzip -c "${packages}" >"${packages}.gz"
+}
+
+write_release()
+{
+    local dist comps archs
+
+    dist=$1
+    comps=$(find "dists/${dist}" -mindepth 1 -maxdepth 1 -type d -printf '%f ')
+    archs=$(find "dists/${dist}" -mindepth 2 -maxdepth 2 -type d -printf '%f ')
+
+    apt-ftparchive --db .aptirepo/db \
+        -o "APT::FTPArchive::Release::Codename=${dist}" \
+        -o "APT::FTPArchive::Release::Components=${comps}" \
+        -o "APT::FTPArchive::Release::Architectures=${archs}" \
+        release "dists/${dist}" >"dists/${dist}/Release"
+}
+
 APTIREPO_ROOT=${APTIREPO_ROOT:-.}
 
 cd "${APTIREPO_ROOT}"
@@ -11,42 +69,16 @@ if [ ! -d .aptirepo ]; then
     exit 1
 fi
 
-
-list_dirs()
-{
-    find "$1" -mindepth 1 -maxdepth 1 -type d -printf '%f\n'
-}
-
-## - generate Sources and Packages For each architecture in each
-##   component in each distribution
-## - generate Contents for each component in each distribution
-## - generate Release for each distribution
 list_dirs dists | while read dist; do
     list_dirs "dists/${dist}" | while read comp; do
-        apt-ftparchive --db .aptirepo/db contents "pool/${dist}/${comp}" \
-            | gzip >"dists/${dist}/${comp}/Contents.gz"
+        write_contents "${dist}" "${comp}"
         list_dirs "dists/${dist}/${comp}" | while read archdir; do
             if [ "${archdir}" = "source" ]; then
-                apt-ftparchive sources "pool/${dist}/${comp}" \
-                    >"dists/${dist}/${comp}/${archdir}/Sources"
-                gzip -c "dists/${dist}/${comp}/${archdir}/Sources" \
-                    >"dists/${dist}/${comp}/${archdir}/Sources.gz"
+                write_sources "${dist}" "${comp}" "${archdir}"
             else
-                apt-ftparchive --db .aptirepo/db --arch "${archdir#binary-}" \
-                    packages "pool/${dist}/${comp}" \
-                    >"dists/${dist}/${comp}/${archdir}/Packages"
-                gzip -c "dists/${dist}/${comp}/${archdir}/Packages" \
-                    >"dists/${dist}/${comp}/${archdir}/Packages.gz"
+                write_packages "${dist}" "${comp}" "${archdir}"
             fi
         done
     done
-
-    comps=$(find "dists/${dist}" -mindepth 1 -maxdepth 1 -type d -printf '%f ')
-    archs=$(find "dists/${dist}" -mindepth 2 -maxdepth 2 -type d -printf '%f ')
-    apt-ftparchive --db .aptirepo/db \
-        -o "APT::FTPArchive::Release::Codename=${dist}" \
-        -o "APT::FTPArchive::Release::Components=${comps}" \
-        -o "APT::FTPArchive::Release::Architectures=${archs}" \
-        release "dists/${dist}" >"dists/${dist}/Release"
-
+    write_release "${dist}"
 done
