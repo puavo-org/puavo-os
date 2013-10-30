@@ -6,8 +6,15 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
+.PHONY: help
+help:
+	@echo "Targets:"
+	@echo
+	@echo "  install    [DESTDIR=''] [prefix='/usr/local']"
+	@echo "  uninstall  [DESTDIR=''] [prefix='/usr/local']"
+
 .PHONY: all
-all:
+all: help
 
 .PHONY: installdirs
 installdirs:
