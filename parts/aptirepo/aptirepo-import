@@ -111,11 +111,12 @@ import_changes()
             component="main"
         fi
 
+        distsuffix=''
         if [ -n "${APTIREPO_BRANCH}" ]; then
-            distribution="${distribution}-${APTIREPO_BRANCH}"
+            distsuffix="-${APTIREPO_BRANCH}"
         fi
 
-        dstdir="pool/${distribution}/${component}/$(echo ${source_name} | head -c1)/${source_name}"
+        dstdir="pool/${distribution}${distsuffix}/${component}/$(echo ${source_name} | head -c1)/${source_name}"
 
         mkdir -p "${dstdir}" || {
             echo "failed to create the pool destination directory '${dstdir}'" >&2
@@ -132,7 +133,7 @@ import_changes()
             if [ "${arch}"  != "source" ]; then
                 arch="binary-${arch}"
             fi
-            mkdir -p "dists/${distribution}/${component}/${arch}"
+            mkdir -p "dists/${distribution}${distsuffix}/${component}/${arch}"
         done
 
     done || return 1
