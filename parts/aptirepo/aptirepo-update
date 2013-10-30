@@ -1,13 +1,10 @@
 #!/bin/sh
 
-set -u
+set -eu
 
 APTIREPO_ROOT=${APTIREPO_ROOT:-.}
 
-cd "${APTIREPO_ROOT}" || {
-    echo "cannot access the repository root directory '${APTIREPO_ROOT}'" >&2
-    exit 1
-}
+cd "${APTIREPO_ROOT}"
 
 if [ ! -d .aptirepo ]; then
     echo "'$(pwd)' is not an aptirepo repository" >&2

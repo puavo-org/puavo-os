@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -u
+set -eu
 
 parse_multiline()
 {
@@ -140,10 +140,7 @@ import_changes()
 
 APTIREPO_ROOT=${APTIREPO_ROOT:-.}
 
-cd "${APTIREPO_ROOT}" || {
-    echo "could not change the current directory to repository root directory '${APTIREPO_ROOT}'" >&2
-    exit 1
-}
+cd "${APTIREPO_ROOT}"
 
 if [ ! -d .aptirepo ]; then
     echo "'$(pwd)' is not an aptirepo repository" >&2
@@ -192,5 +189,3 @@ case "$1" in
         exit 1
         ;;
 esac
-
-exit 0

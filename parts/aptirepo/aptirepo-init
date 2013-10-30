@@ -1,12 +1,9 @@
 #!/bin/sh
 
-set -u
+set -eu
 
 APTIREPO_ROOT=${APTIREPO_ROOT:-.}
 
-cd "${APTIREPO_ROOT}" || {
-    echo "could not change the current directory to repository root directory '${APTIREPO_ROOT}'" >&2
-    exit 1
-}
+cd "${APTIREPO_ROOT}"
 
 mkdir .aptirepo
