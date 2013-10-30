@@ -53,17 +53,6 @@ while read json; do
     archs=$(jq -r '.architectures[]' <(echo "${json}"))
     comps=$(jq -r '.components[]' <(echo "${json}"))
 
-    for arch in $archs; do
-        for comp in $comps; do
-            if [ "${arch}" != "source" ]; then
-                archdir="binary-${arch}"
-            else
-                archdir="${arch}"
-            fi
-            mkdir -p "dists/${dist}/${comp}/${archdir}"
-        done
-    done
-
     write_archive_conf "${dist}" "${archs}" "${comps}" >>.aptirepo/update.conf
 
 done < <(jq -c -r '.[]' dists.json)

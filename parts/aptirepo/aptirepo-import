@@ -37,7 +37,7 @@ parse_simple()
 
 import_changes()
 {
-    local changes_file changes_dir lines source_name distribution
+    local changes_file changes_dir lines source_name distribution archs
 
     changes_file=$1
 
@@ -83,6 +83,16 @@ import_changes()
         return 1
     fi
 
+    archs=$(parse_simple "${changes_file}" "Architecture")
+    if [ $? -ne 0 ]; then
+        echo "failed to parse 'Architecture' from '${changes_file}'" >&2
+        return 1
+    fi
+    if [ -z "${archs}" ]; then
+        echo "control file field 'Architecture' not found from '${changes_file}'" >&2
+        return 1
+    fi
+
     echo "${lines}" | while read md5 size section priority filename; do
 
         filepath="${changes_dir}/${filename}"
@@ -117,6 +127,13 @@ import_changes()
             rmdir -p --ignore-fail-on-non-empty "${dstdir}"
             exit 1
         }
+
+        for arch in $archs; do
+            if [ "${arch}"  != "source" ]; then
+                arch="binary-${arch}"
+            fi
+            mkdir -p "dists/${distribution}/${component}/${arch}"
+        done
 
     done || return 1
 }
