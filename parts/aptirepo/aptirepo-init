@@ -2,44 +2,6 @@
 
 set -u
 
-write_archive_conf_head()
-{
-    echo "# This file is generated with debbox-init.
-Dir {
-  ArchiveDir \".\";
-  CacheDir \".aptirepo/db\";
-};
-
-Default {
-  Packages::Compress \"gzip\";
-  Sources::Compress \"gzip\";
-  Contents::Compress \"gzip\";
-};
-
-TreeDefault {
-   BinCacheDB \"\$(DIST)-\$(SECTION)-\$(ARCH).db\";
-   Directory \"pool/\$(DIST)/\$(SECTION)\";
-   SrcDirectory \"pool/\$(DIST)/\$(SECTION)\";
-   Packages \"dists/\$(DIST)/\$(SECTION)/binary-\$(ARCH)/Packages\";
-   Contents \"dists/\$(DIST)/\$(SECTION)/binary-\$(ARCH)/Contents\";
-   Sources \"dists/\$(DIST)/\$(SECTION)/\$(ARCH)/Sources\";
-};
-"
-}
-
-write_archive_conf()
-{
-    local dist=$1
-    local archs=$(echo -n "$2" | tr '\n' ' ')
-    local comps=$(echo -n "$3" | tr '\n' ' ')
-
-    echo "Tree \"${dist}\" {
-  Sections \"${comps}\";
-  Architectures \"${archs}\";
-};
-"
-}
-
 APTIREPO_ROOT=${APTIREPO_ROOT:-.}
 
 cd "${APTIREPO_ROOT}" || {
@@ -48,16 +10,3 @@ cd "${APTIREPO_ROOT}" || {
 }
 
 mkdir .aptirepo
-write_archive_conf_head >.aptirepo/update.conf
-
-while read json; do
-
-    dist=$(jq -r '.distribution' <(echo "${json}"))
-    archs=$(jq -r '.architectures[]' <(echo "${json}"))
-    comps=$(jq -r '.components[]' <(echo "${json}"))
-
-    write_archive_conf "${dist}" "${archs}" "${comps}" >>.aptirepo/update.conf
-
-done < <(jq -c -r '.[]' dists.json)
-
-mkdir -p .aptirepo/db
