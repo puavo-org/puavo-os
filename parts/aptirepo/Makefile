@@ -22,10 +22,9 @@ installdirs:
 
 .PHONY: install
 install: installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
-		aptirepo-import \
-		aptirepo-init \
-		aptirepo-update
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) aptirepo-import
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) aptirepo-init
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) aptirepo-update
 
 .PHONY: uninstallfiles
 uninstallfiles:
