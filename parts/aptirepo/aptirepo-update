@@ -6,4 +6,9 @@ APTIREPO_ROOT=${APTIREPO_ROOT:-.}
 
 cd "${APTIREPO_ROOT}"
 
+if [ ! -d .aptirepo ]; then
+    echo "'$(pwd)' is not an aptirepo repository" >&2
+    exit 1
+fi
+
 apt-ftparchive -q generate ".aptirepo/update.conf"
