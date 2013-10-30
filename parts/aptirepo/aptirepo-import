@@ -180,10 +180,16 @@ fi
 
 case "$1" in
     *.changes)
-        import_changes $1 || {
-            echo "failed to import '$1'" >&2
-            exit 1
-        }
+        (
+            flock -n 9 || {
+                echo "failed to lock the repository" >&2
+                exit 1
+            }
+            import_changes $1 || {
+                echo "failed to import '$1'" >&2
+                exit 1
+            }
+        ) 9>.aptirepo/lock
         ;;
     *)
         echo "ignoring '$1'" >&2

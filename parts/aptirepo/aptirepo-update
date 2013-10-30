@@ -69,16 +69,22 @@ if [ ! -d .aptirepo ]; then
     exit 1
 fi
 
-list_dirs dists | while read dist; do
-    list_dirs "dists/${dist}" | while read comp; do
-        write_contents "${dist}" "${comp}"
-        list_dirs "dists/${dist}/${comp}" | while read archdir; do
-            if [ "${archdir}" = "source" ]; then
-                write_sources "${dist}" "${comp}" "${archdir}"
-            else
-                write_packages "${dist}" "${comp}" "${archdir}"
-            fi
+(
+    flock -n 9 || {
+        echo "failed to lock the repository" >&2
+        exit 1
+    }
+    list_dirs dists | while read dist; do
+        list_dirs "dists/${dist}" | while read comp; do
+            write_contents "${dist}" "${comp}"
+            list_dirs "dists/${dist}/${comp}" | while read archdir; do
+                if [ "${archdir}" = "source" ]; then
+                    write_sources "${dist}" "${comp}" "${archdir}"
+                else
+                    write_packages "${dist}" "${comp}" "${archdir}"
+                fi
+            done
         done
+        write_release "${dist}"
     done
-    write_release "${dist}"
-done
+) 9>.aptirepo/lock
