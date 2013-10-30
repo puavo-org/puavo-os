@@ -91,6 +91,10 @@ def ask_puavo_attr(question, puavo_attr, default=nil)
     break if not new_value.to_s.empty?
   end
 
+  if puavo_attr == "ldap_password" && !ARGV.include?("--save-admin-password")
+    return new_value
+  end
+
   PUAVO_ETC.write(puavo_attr.to_sym, new_value)
   return new_value
 end
