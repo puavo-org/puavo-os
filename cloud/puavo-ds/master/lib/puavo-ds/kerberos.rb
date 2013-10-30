@@ -97,7 +97,10 @@ class KerberosSettings
   end
 
   def daemon_args
-    return "DAEMON_ARGS=\"" + @organisations.collect {|org| "-r " + org['realm']}.join(" ") + "\""
+    organisation_args = @organisations.collect do |org|
+      "-r " + org['realm']
+    end.join(" ")
+    return "KRB5_KDC_START=1\nDAEMON_ARGS=\"#{ organisation_args }\""
   end
 
   def getBinding
