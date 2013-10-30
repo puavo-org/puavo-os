@@ -1,0 +1,17 @@
+==========
+ Aptirepo
+==========
+
+Thin wrapper for apt-ftparchive to create and update APT repositories.
+
+Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+License: GPLv2+
+
+Usage
+=====
+
+  mkdir myrepo
+  cd myrepo
+  aptirepo-init
+  aptirepo-import package.changes
+  aptirepo-update
