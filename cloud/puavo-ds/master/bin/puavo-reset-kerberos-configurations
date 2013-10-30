@@ -14,14 +14,6 @@ $LOAD_PATH.unshift(
 
 require 'puavo-ds'
 
-# LDAP configuration
-if configurations = YAML.load_file("/etc/puavo-ldap.yml") rescue nil
-  ActiveLdap::Base.configurations = configurations
-else
-  puts "Not found LDAP configuration file (/etc/puavo-ldap.yml)"
-  exit
-end
-
 # Set password for kadmin and kdc users
 
 `echo "#{ PUAVO_ETC.ds_kdc_password }\\n#{ PUAVO_ETC.ds_kdc_password }\\n" | /usr/sbin/kdb5_ldap_util stashsrvpw -f /etc/krb5.secrets "#{ PUAVO_ETC.ds_kdc_dn }" 2>/dev/null`
