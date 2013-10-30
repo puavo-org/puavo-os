@@ -30,8 +30,8 @@ parse_simple()
 
     sed -r -n -e "
 /^${field}:/{
-    s/^${field}:[ \t]*([^ \t]+)[ \t]*$/\1/p  ## Strip leading and trailing whitespace.
-    q                                        ## Stop after the first occurrence.
+    s/^${field}:[ \t]*(.+)[ \t]*$/\1/p  ## Strip leading and trailing whitespace.
+    q                                   ## Stop after the first occurrence.
 }" "${file}"
 }
 
