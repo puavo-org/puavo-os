@@ -17,6 +17,7 @@ fi
 
 ## - generate Sources and Packages For each architecture in each component in each distribution
 ## - generate Contents for each component in each distribution
+## - generate Release for each distribution
 find dists -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | while read dist; do
     find "dists/${dist}" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | while read comp; do
         apt-ftparchive contents "pool/${dist}/${comp}" | gzip >"dists/${dist}/${comp}/Contents.gz"
@@ -30,4 +31,11 @@ find dists -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | while read dist; do
             fi
         done
     done
+    comps=$(find "dists/${dist}" -mindepth 1 -maxdepth 1 -type d -printf '%f ')
+    archs=$(find "dists/${dist}" -mindepth 2 -maxdepth 2 -type d -printf '%f ')
+    apt-ftparchive \
+        -o "APT::FTPArchive::Release::Codename=${dist}" \
+        -o "APT::FTPArchive::Release::Components=${comps}" \
+        -o "APT::FTPArchive::Release::Architectures=${archs}" \
+        release "dists/${dist}" >"dists/${dist}/Release"
 done
