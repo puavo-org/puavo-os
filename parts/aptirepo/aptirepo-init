@@ -42,7 +42,10 @@ write_archive_conf()
 
 APTIREPO_ROOT=${APTIREPO_ROOT:-.}
 
-cd "${APTIREPO_ROOT}"
+cd "${APTIREPO_ROOT}" || {
+    echo "could not change the current directory to repository root directory '${APTIREPO_ROOT}'" >&2
+    exit 1
+}
 
 mkdir .aptirepo
 write_archive_conf_head >.aptirepo/update.conf

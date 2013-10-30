@@ -140,7 +140,10 @@ import_changes()
 
 APTIREPO_ROOT=${APTIREPO_ROOT:-.}
 
-cd "${APTIREPO_ROOT}"
+cd "${APTIREPO_ROOT}" || {
+    echo "could not change the current directory to repository root directory '${APTIREPO_ROOT}'" >&2
+    exit 1
+}
 
 if [ ! -d .aptirepo ]; then
     echo "'$(pwd)' is not an aptirepo repository" >&2
