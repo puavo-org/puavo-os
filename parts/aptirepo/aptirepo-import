@@ -101,6 +101,10 @@ import_changes()
             component="main"
         fi
 
+        if [ -n "${APTIREPO_BRANCH}" ]; then
+            distribution="${distribution}-${APTIREPO_BRANCH}"
+        fi
+
         dstdir="pool/${distribution}/${component}/$(echo ${source_name} | head -c1)/${source_name}"
 
         mkdir -p "${dstdir}" || {
@@ -121,9 +125,33 @@ APTIREPO_ROOT=${APTIREPO_ROOT:-.}
 
 cd "${APTIREPO_ROOT}"
 
+APTIREPO_BRANCH=''
+
+while getopts "b:" flag; do
+    case $flag in
+        b)
+            if [ -n "${APTIREPO_BRANCH}" ]; then
+                echo "-b can be used only once" >&2
+                exit 1
+            fi
+            # TODO: validate input
+            APTIREPO_BRANCH="${OPTARG}"
+            ;;
+        ?)
+            exit 1
+            ;;
+        *)
+            echo "getopts failed catastrophically" >&2
+            exit 1
+            ;;
+  esac
+done
+
+shift $((OPTIND-1))
+
 if [ $# -ne 1 ]; then
     echo "wrong number of arguments" >&2
-    echo "Usage: $(basename $0) FILE" >&2
+    echo "Usage: $(basename $0) [-b BRANCH] FILE" >&2
     exit 1
 fi
 
