@@ -11,10 +11,18 @@ var temp = require("temp");
 var xtend = require("xtend");
 var fs = require("fs");
 var promisePipe = require("promisepipe");
+var concat = require("concat-stream");
 
 Q.longStackSupport = true;
 var mkTmpDir = Q.denodeify(temp.mkdir);
 var rimraf = Q.denodeify(require("rimraf"));
+
+function promiseConcat(stream) {
+    return Q.promise(function(resolve, reject) {
+        stream.on("error", reject);
+        stream.pipe(concat(resolve));
+    });
+}
 
 var app = express();
 
@@ -36,14 +44,16 @@ var config = [
 }, {});
 
 
-function debExec(debPath) {
-    var command = config.debCommand.replace(/\$1/g, "'" + debPath + "'");
+function command(changesFilePath, branch) {
+    var cmdStr = config.command
+        .replace(/\$changes/g, changesFilePath)
+        .replace(/\$branch/g, branch.toString());
     return Q.promise(function(resolve, reject) {
-        console.log("Executing", command);
-        exec(command, function(err, stdout, stderr) {
+        console.log("Executing", cmdStr);
+        exec(cmdStr, function(err, stdout, stderr) {
             var res = {
-                file: debPath,
-                command: command,
+                file: changesFilePath,
+                command: cmdStr,
                 stdout: stdout,
                 stderr: stderr
             };
@@ -71,31 +81,50 @@ app.post("/deb", function(req, res) {
         prefix: "debupload"
     });
 
-    var jobs = [];
+    var files = [];
+
+    var changesFilePath = Q.defer();
+    var repoBranch = Q.defer();
+
 
     form.on("part", function(part) {
-        console.log("Got file", part.filename);
-        jobs.push(tmpDir.then(function(dirPath) {
-            var outPath = path.join(dirPath, part.filename);
-            return promisePipe(part, fs.createWriteStream(outPath))
-                .then(function() {
-                    return debExec(outPath);
-                });
-        }));
+        if (part.name === "branch") {
+            repoBranch.resolve(promiseConcat(part));
+            return;
+        }
+
+        if (part.filename) {
+            console.log("Got file", part.name, part.filename);
+            files.push(tmpDir.then(function(dirPath) {
+                var outPath = path.join(dirPath, part.filename);
+                if (part.name === "changes") {
+                    changesFilePath.resolve(outPath);
+                }
+                return promisePipe(part, fs.createWriteStream(outPath));
+            }));
+        } else {
+            console.error("Unknown field", part.name, part.filename);
+        }
 
     });
 
 
     form.on("close", function() {
 
-        Q.all(jobs).then(function(commandOutput) {
+        Q.all(files).then(function() {
+            return Q.all([changesFilePath.promise, repoBranch.promise])
+                .timeout(100, "changes file or branch missing")
+                .spread(command);
+        }).then(function(commandOutput) {
             console.log("Upload ok", commandOutput);
             res.json(commandOutput);
         }, function(err) {
             console.error("Upload failed", err);
-            res.json(err, 400);
+            res.json({ error: err.message }, 400);
         }).finally(function() {
-            return tmpDir.then(rimraf).fail(function(err) {
+            return tmpDir.then(function(p) {
+                console.log("REMOVING!!!!!!!!", p);
+            }).fail(function(err) {
                 console.error("Failed to remove temp dir", err);
             });
         }).done();
