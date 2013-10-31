@@ -137,7 +137,7 @@ override_dh_install:
 	dh_apparmor -pslapd --profile-name=usr.sbin.slapd
 
 override_dh_installinit:
-	dh_installinit -- "defaults 19 80"
+	dh_installinit --upstart-only
 
 override_dh_strip:
 	dh_strip -plibldap-2.4-2 --dbg-package=libldap-2.4-2-dbg
