@@ -4,6 +4,6 @@ server {
     autoindex on;
 
     location ~^\/$ {
-        proxy_pass http://localhost:8080$request_uri
+        proxy_pass http://127.0.0.1:8080$request_uri;
     }
 }
