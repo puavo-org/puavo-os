@@ -10,8 +10,21 @@ License: GPLv2+
 Usage
 =====
 
+To create and initialize an empty repository, run::
+
   mkdir myrepo
   cd myrepo
   aptirepo-init
-  aptirepo-import package.changes
-  aptirepo-update
+
+Then, to import new packages to the repository in the current directory,
+run::
+
+  aptirepo-import /path/to/package.changes
+
+It creates pool/ and copies packages into it. It also calls
+aptirepo-update which generates dists/ based on the pool contents.
+
+Optionally, if you want to import packages to a repository in some other
+directory, run::
+
+  APTIREPO_ROOT=/path/to/repository aptirepo-import /path/to/packages.changes
