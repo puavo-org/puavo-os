@@ -3,6 +3,9 @@
 set -eu
 set -x
 
+sudo apt-get update
+sudo apt-get install -y puavo-devscripts
+
 debbox_url="$1"
 
 puavo-build-debian-dir
