@@ -93,12 +93,12 @@ app.post("/", function(req, res) {
         }
 
         if (part.filename) {
-            console.log("Got file", part.name, part.filename);
             files.push(tmpDir.then(function(dirPath) {
                 var outPath = path.join(dirPath, part.filename);
                 if (part.name === "changes") {
                     changesFilePath.resolve(outPath);
                 }
+                console.log("Receiving", part.name, "to", outPath);
                 return promisePipe(part, fs.createWriteStream(outPath));
             }));
         } else {
