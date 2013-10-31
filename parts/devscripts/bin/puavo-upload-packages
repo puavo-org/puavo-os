@@ -1,0 +1,39 @@
+#!/bin/sh
+
+help(){
+    echo "
+    Usage: $(basename $0) <debbox url> <.changes file> [aptirepo branch]
+
+    https://github.com/opinsys/debbox
+    "
+
+}
+
+[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
+[ "$1" = "" -o "$2" = "" ] && help && exit 1
+
+
+debbox_url="$1"
+changes_file="$2"
+aptirepo_branch="$3"
+
+set -eu
+
+curl_args=""
+
+cd $(dirname $changes_file)
+
+
+curl_args="$curl_args -F changes=@$(basename $changes_file)"
+
+for file in *.deb *.dsc *.tar.gz
+do
+    curl_args="$curl_args -F file=@${file}"
+done
+
+echo $curl_args
+echo
+echo
+echo
+set -x
+curl -v -F "branch=$branch" $curl_args $debbox_url
