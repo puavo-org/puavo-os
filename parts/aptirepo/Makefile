@@ -20,3 +20,4 @@ install: clean-for-install install-dirs
 
 clean:
 	rm -rf node_modules
+	rm -rf debian
