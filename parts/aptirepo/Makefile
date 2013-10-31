@@ -1,4 +1,4 @@
-prefix ?= /usr/local
+prefix = /usr/local
 
 build:
 	npm install --registry http://registry.npmjs.org
@@ -16,7 +16,7 @@ install: clean-for-install install-dirs
 		*.html \
 		bin \
 		node_modules \
-	$(DESTDIR)$(prefix)/lib/node_modules/debbox/
+	$(DESTDIR)$(prefix)/lib/node_modules/debbox
 
 clean:
 	rm -rf node_modules
