@@ -22,7 +22,7 @@ puts "Master server:"
 puts "uid=admin,o=puavo password:"
 @bindpw = Readline.readline('> ', true)
 
-`/etc/init.d/slapd stop`
+`stop slapd`
 `killall -9 slapd`
 `rm -rf /etc/ldap/slapd.d/* /var/lib/ldap/*`
 
@@ -107,7 +107,7 @@ end
 `chown -R openldap.openldap /etc/ldap/slapd.d /var/lib/ldap`
 `chmod -R 0750 /var/lib/ldap`
 
-`/etc/init.d/slapd start`
+`start slapd`
 
 system('chown -R openldap.openldap /etc/ldap/slapd.d /var/lib/ldap') \
   or raise 'could not chown /etc/ldap/slapd.d /var/lib/ldap to openldap user'

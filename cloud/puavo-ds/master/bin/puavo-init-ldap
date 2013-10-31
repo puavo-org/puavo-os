@@ -149,7 +149,7 @@ end
 PUAVO_ETC.write(:ldap_master, "#{ Socket.gethostname }.#{ PUAVO_ETC.topdomain }")
 
 # Make sure that slapd is not running
-`/etc/init.d/slapd stop`
+`stop slapd`
 `killall -9 slapd`
 FileUtils.rm_r Dir.glob('/var/lib/ldap/*')
 
@@ -198,7 +198,7 @@ FileUtils.chown_R 'openldap', 'openldap', '/etc/ldap/slapd.d'
 FileUtils.chown_R 'openldap', 'openldap', '/var/lib/ldap/o=puavo'
 FileUtils.chmod 0750, '/var/lib/ldap/o=puavo'
 
-assert_exec '/etc/init.d/slapd start'
+assert_exec 'start slapd'
 sleep 5
 
 # slapd should be running now and the rest of the modifications

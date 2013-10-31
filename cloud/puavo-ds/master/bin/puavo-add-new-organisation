@@ -292,7 +292,7 @@ puts "Start krb5-kdc and kadmind services"
 `/etc/init.d/puavo-kadmind start`
 
 puts "Restart slapd"
-`/etc/init.d/slapd restart`
+`stop slapd ; start slapd`
 
 puts "Waiting 3 seconds"
 sleep(3)

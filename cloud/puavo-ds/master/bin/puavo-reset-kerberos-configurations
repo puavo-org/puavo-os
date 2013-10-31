@@ -53,7 +53,7 @@ if replace == "y"
   `/etc/init.d/puavo-kadmind start`
 
   puts "Restart slapd"
-  puts `/etc/init.d/slapd restart`
+  puts `stop slapd ; start slapd`
 
 end
 
