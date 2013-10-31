@@ -69,6 +69,31 @@ if [ ! -d .aptirepo ]; then
     exit 1
 fi
 
+APTIREPO_SIGN=0
+
+while getopts "s" flag; do
+    case $flag in
+        s)
+            APTIREPO_SIGN=1
+            ;;
+        ?)
+            exit 1
+            ;;
+        *)
+            echo "getopts failed catastrophically" >&2
+            exit 1
+            ;;
+  esac
+done
+
+shift $((OPTIND-1))
+
+if [ $# -ne 0 ]; then
+    echo "wrong number of arguments" >&2
+    echo "Usage: $(basename $0) [-s]" >&2
+    exit 1
+fi
+
 (
     flock -n 9 || {
         echo "failed to lock the repository" >&2
@@ -86,5 +111,12 @@ fi
             done
         done
         write_release "${dist}"
+    done
+
+    list_dirs dists | while read dist; do
+        if [ $APTIREPO_SIGN -ne 0 ]; then
+            gpg --output "dists/${dist}/Release.gpg" --detach-sign --armor \
+                "dists/${dist}/Release"
+        fi
     done
 ) 9>.aptirepo/lock
