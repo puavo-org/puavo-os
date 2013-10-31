@@ -56,7 +56,7 @@ git_commit_msg=$(git log -1 --pretty=%B)
 git_branch=$(git rev-parse --abbrev-ref HEAD)
 
 # Use GIT_BRANCH env if set. Usually set by Jenkins
-[ "${GIT_BRANCH:-}" != "" ] && git_branch=${GIT_BRANCH}
+[ "${GIT_BRANCH:-}" != "" ] && git_branch="$(echo "$GIT_BRANCH" | cut -d / -f 2)"
 
 [ "${BUILD_NUMBER:-}" != "" ] && version="$version-$BUILD_NUMBER"
 
