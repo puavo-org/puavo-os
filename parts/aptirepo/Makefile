@@ -1,4 +1,4 @@
-prefix = /usr/local
+prefix ?= /usr/local
 
 build:
 	npm install --registry http://registry.npmjs.org
