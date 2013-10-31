@@ -1,0 +1,14 @@
+Source: aptirepo
+Section: utils
+Priority: extra
+Maintainer: Opinsys Developers <dev@opinsys.fi>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.3
+Homepage: http://github.com/opinsys/aptirepo/
+
+Package: aptirepo
+Architecture: all
+Depends: ${misc:Depends}, apt-utils, gnupg, util-linux
+Description: simple APT repository tool
+ simple APT repository tool
+ .
