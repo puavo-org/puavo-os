@@ -51,11 +51,6 @@ fi
 package_dir=$(pwd)
 repo_name=$(basename $(pwd))
 
-# List tags by date
-# http://stackoverflow.com/questions/6269927/how-can-i-list-all-tags-in-my-git-repository-by-the-date-they-were-created
-git_tags=$(git for-each-ref --sort='*authordate' --format='%(refname:short)' refs/tags)
-version_tags=$(echo "$git_tags" | grep --color=never --line-regexp --extended-regexp '^[0-9]+\.[0-9]+\.[0-9]$')
-prev_version=$(echo "$version_tags" | tail --lines=1)
 git_commit=$(git rev-parse HEAD)
 git_commit_msg=$(git log -1 --pretty=%B)
 git_branch=$(git rev-parse --abbrev-ref HEAD)
@@ -78,7 +73,6 @@ $repo_name ($version) $DISTRIB_CODENAME; urgency=low
 
   * Release from git commit $git_commit and branch $git_branch
   * https://github.com/opinsys/${repo_name}/tree/${git_commit}
-  * https://github.com/opinsys/${repo_name}/compare/${prev_version}...${git_commit}
   * Build on $(uname -a)
   * Jenkins build ${BUILD_TAG:-} ${BUILD_URL:-}
 
