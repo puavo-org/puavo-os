@@ -121,9 +121,7 @@ app.post("/", function(req, res) {
             console.error("Upload failed", err);
             res.json({ error: err.message }, 400);
         }).finally(function() {
-            return tmpDir.then(function(p) {
-                console.log("REMOVING!!!!!!!!", p);
-            }).fail(function(err) {
+            return tmpDir.then(rimraf).fail(function(err) {
                 console.error("Failed to remove temp dir", err);
             });
         }).done();
