@@ -66,7 +66,7 @@ app.get("/", function(req, res) {
     res.sendfile(__dirname + "/index.html");
 });
 
-app.post("/deb", function(req, res) {
+app.post("/", function(req, res) {
 
     var form = new multiparty.Form();
     form.on("error", function(err) {
@@ -86,6 +86,7 @@ app.post("/deb", function(req, res) {
 
 
     form.on("part", function(part) {
+        console.log("got part", part.name);
         if (part.name === "branch") {
             repoBranch.resolve(promiseConcat(part));
             return;
