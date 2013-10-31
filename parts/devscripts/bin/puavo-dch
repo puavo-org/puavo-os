@@ -55,14 +55,8 @@ git_commit=$(git rev-parse HEAD)
 git_commit_msg=$(git log -1 --pretty=%B)
 git_branch=$(git rev-parse --abbrev-ref HEAD)
 
-if [ $git_branch = "HEAD" ]; then
-    # Were on detached head state in jenkins. Use the variable set by Jenkins.
-    git_branch="$(echo ${GIT_BRANCH:-} | cut -d / -f 2)"
-    if [ $git_branch = "" ]; then
-        echo "Failed to determine git branch!"
-        exit 1
-    fi
-fi
+# Use GIT_BRANCH env if set. Usually set by Jenkins
+[ "${GIT_BRANCH:-}" != "" ] && git_branch=${GIT_BRANCH}
 
 [ "${BUILD_NUMBER:-}" != "" ] && version="$version-$BUILD_NUMBER"
 
