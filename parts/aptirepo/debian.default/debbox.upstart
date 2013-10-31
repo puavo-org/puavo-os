@@ -3,7 +3,8 @@ description "debbox"
 start on runlevel [23]
 stop on shutdown
 
+chdir /usr/lib/node_modules/debbox
 env NODE_ENV=production
-exec sudo -E -u www-data debbox
+exec sudo -E -u www-data node index.js
 
 respawn
