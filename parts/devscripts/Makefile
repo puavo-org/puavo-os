@@ -20,7 +20,7 @@ install: installdirs
 		bin/puavo-install-deps \
 		bin/puavo-debuild \
 		bin/puavo-build-debian-dir \
-		bin/puavo-upload-packges \
+		bin/puavo-upload-packages \
 		bin/mkpkg \
 		bin/mktar \
 		bin/dpkg-diff-img
