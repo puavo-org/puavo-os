@@ -12,5 +12,4 @@ puavo-build-debian-dir
 sudo puavo-install-deps debian/control
 puavo-dch $(jq -r  .version package.json)
 puavo-debuild
-exit 1
 puavo-upload-packages "$debbox_url" ../debbox*.changes "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)"
