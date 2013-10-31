@@ -12,28 +12,30 @@ help(){
 [ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
 [ "$1" = "" -o "$2" = "" ] && help && exit 1
 
-
 debbox_url="$1"
 changes_file="$2"
 aptirepo_branch="$3"
+curl_args=""
 
 set -eu
 
-curl_args=""
+. /usr/lib/aptirepo/common.sh
+
+if [ "$aptirepo_branch" != "" ]; then
+    curl_args="$curl_args -F branch=$aptirepo_branch"
+fi
 
 cd $(dirname $changes_file)
-
+changes_file="$(basename "$changes_file")"
 
 curl_args="$curl_args -F changes=@$(basename $changes_file)"
 
-for file in *.deb *.dsc *.tar.gz
+for filename in $(parse_multiline "$changes_file" Files | cut -d " " -f 5)
 do
-    curl_args="$curl_args -F file=@${file}"
+    curl_args="$curl_args -F file=@${filename}"
 done
 
 echo $curl_args
-echo
-echo
-echo
+
 set -x
-curl -v -F "branch=$branch" $curl_args $debbox_url
+curl --fail -v $curl_args $debbox_url
