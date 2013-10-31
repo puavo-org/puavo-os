@@ -20,3 +20,9 @@ install: clean-for-install install-dirs
 
 clean:
 	rm -rf node_modules
+
+clean-deb:
+	rm -f ../debbox*.dsc
+	rm -f ../debbox*.deb
+	rm -f ../debbox*.changes
+	rm -f ../debbox*.tar.gz
