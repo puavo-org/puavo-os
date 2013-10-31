@@ -1,3 +1,9 @@
+openldap (2.4.37-0+opinsys3) precise; urgency=low
+
+  * slapd: increase slapd's max number of open files when started via init script
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 31 Oct 2013 09:48:59 +0200
+
 openldap (2.4.37-0+opinsys2~alpha2) precise; urgency=low
 
   * New upstream release.
