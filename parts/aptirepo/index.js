@@ -38,7 +38,9 @@ var config = [
         return memo;
     }
     return xtend(memo, config);
-}, {});
+}, {
+    aptirepo: "/srv/aptirepo"
+});
 
 
 function command(changesFilePath, branch) {
