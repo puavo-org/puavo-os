@@ -26,9 +26,6 @@ function promiseConcat(stream) {
 
 var app = express();
 
-app.use("/packages", express.static("/var/local/debbox/packages"));
-app.use("/packages", express.directory("/var/local/debbox/packages"));
-
 var config = [
     __dirname + "/debbox.json",
     "/etc/debbox.json",
