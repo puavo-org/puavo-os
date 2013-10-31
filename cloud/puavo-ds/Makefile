@@ -1,4 +1,4 @@
-subdirs = master slave
+subdirs = master slave ext
 install-subdirs = $(subdirs:%=install-%)
 clean-subdirs = $(subdirs:%=clean-%)
 
