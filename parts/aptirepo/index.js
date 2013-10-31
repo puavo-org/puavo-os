@@ -1,6 +1,6 @@
 
 var args = require("./args");
-var exec = require("child_process").exec;
+var spawn = require("child_process").spawn;
 var express = require("express");
 var http = require("http");
 var multiparty = require("multiparty");
@@ -45,21 +45,19 @@ var config = [
 
 
 function command(changesFilePath, branch) {
-    var cmdStr = config.command
-        .replace(/\$changes/g, changesFilePath)
-        .replace(/\$branch/g, branch.toString());
+
     return Q.promise(function(resolve, reject) {
-        console.log("Executing", cmdStr);
-        exec(cmdStr, function(err, stdout, stderr) {
-            var res = {
-                file: changesFilePath,
-                command: cmdStr,
-                stdout: stdout,
-                stderr: stderr
-            };
-            if (err) reject(xtend(res, {error: err}));
-            else resolve(res);
+
+        var child = spawn("aptirepo-import", ["-b", branch, changesFilePath], {
+            env: xtend({
+                APTIREPO_ROOT: config.aptirepo
+            }, process.env)
         });
+
+        child.on("error", reject);
+        child.on("close", resolve);
+        child.stdout.pipe(process.stdout);
+        child.stderr.pipe(process.stderr);
 
     });
 }
