@@ -32,19 +32,19 @@ kerberos_configuration.write_configurations_to_file
 # Show diff with new and old files
 kerberos_configuration.diff
 
-puts "Generate new keytab file"
-kerberos_configuration.generate_new_keytab_file
-
-
 # Replace kerberos configuration files
 puts "Replace kerberos configuration files? (y/n)"
 replace = STDIN.gets.chomp
 if replace == "y"
+
+  kerberos_configuration.replace_server_configurations
+
+  puts "Generate new keytab file"
+  kerberos_configuration.generate_new_keytab_file
+
   puts "\nStop krb5-kdc and kadmind services\n\n"
   `/etc/init.d/krb5-kdc stop`
   `/etc/init.d/puavo-kadmind stop`
-
-  kerberos_configuration.replace_server_configurations
 
   kerberos_configuration.replace_keytab_file
   
