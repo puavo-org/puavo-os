@@ -1,0 +1,62 @@
+#!/bin/sh
+
+set -eu
+
+APTIREPO_REMOTE=${APTIREPO_REMOTE:-}
+APTIREPO_BRANCH=''
+
+while getopts "r:b:" flag; do
+    case $flag in
+        r)
+            # TODO: validate input
+            APTIREPO_REMOTE="${OPTARG}"
+            ;;
+        b)
+            if [ -n "${APTIREPO_BRANCH}" ]; then
+                echo "-b can be used only once" >&2
+                exit 1
+            fi
+            # TODO: validate input
+            APTIREPO_BRANCH="${OPTARG}"
+            ;;
+        ?)
+            exit 1
+            ;;
+        *)
+            echo "getopts failed catastrophically" >&2
+            exit 1
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+if [ $# -ne 1 ]; then
+    echo "wrong number of arguments" >&2
+    echo "Usage: $(basename $0) [-r REMOTE] [-b BRANCH] FILE" >&2
+    exit 1
+fi
+
+changes_file="$1"
+curl_args=""
+
+. aptirepo-env
+
+. "${APTIREPO_LIBDIR}/common.sh"
+
+if [ "${APTIREPO_BRANCH}" != "" ]; then
+    curl_args="$curl_args -F branch=${APTIREPO_BRANCH}"
+fi
+
+cd $(dirname "${changes_file}")
+changes_file="$(basename "${changes_file}")"
+
+curl_args="$curl_args -F changes=@$(basename $changes_file)"
+
+for filename in $(parse_multiline "${changes_file}" Files | cut -d " " -f 5)
+do
+    curl_args="$curl_args -F file=@${filename}"
+done
+
+set -x
+curl --fail -v $curl_args "${APTIREPO_REMOTE}"
