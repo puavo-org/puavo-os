@@ -2,7 +2,7 @@
 var optimist = require("optimist");
 
 var args= optimist
-    .usage("Start debbox.\n\nUsage: $0")
+    .usage("Start aptirepo-http.\n\nUsage: $0")
     .alias("p", "port")
     .describe("p", "Port to listen")
 

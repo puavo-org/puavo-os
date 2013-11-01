@@ -4,7 +4,7 @@ build:
 	npm install --registry http://registry.npmjs.org
 
 install-dirs:
-	mkdir -p $(DESTDIR)$(prefix)/lib/node_modules/debbox
+	mkdir -p $(DESTDIR)$(prefix)/lib/node_modules/aptirepo-http
 
 clean-for-install:
 	npm prune
@@ -16,13 +16,13 @@ install: clean-for-install install-dirs
 		*.html \
 		bin \
 		node_modules \
-	$(DESTDIR)$(prefix)/lib/node_modules/debbox
+	$(DESTDIR)$(prefix)/lib/node_modules/aptirepo-http
 
 clean:
 	rm -rf node_modules
 
 clean-deb:
-	rm -f ../debbox*.dsc
-	rm -f ../debbox*.deb
-	rm -f ../debbox*.changes
-	rm -f ../debbox*.tar.gz
+	rm -f ../aptirepo-http*.dsc
+	rm -f ../aptirepo-http*.deb
+	rm -f ../aptirepo-http*.changes
+	rm -f ../aptirepo-http*.tar.gz

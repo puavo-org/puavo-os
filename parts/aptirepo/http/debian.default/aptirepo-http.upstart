@@ -1,9 +1,9 @@
-description "debbox"
+description "aptirepo-http"
 
 start on runlevel [23]
 stop on shutdown
 
-chdir /usr/lib/node_modules/debbox
+chdir /usr/lib/node_modules/aptirepo-http
 env NODE_ENV=production
 exec sudo -E -u www-data node index.js
 

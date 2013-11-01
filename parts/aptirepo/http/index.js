@@ -27,9 +27,9 @@ function promiseConcat(stream) {
 var app = express();
 
 var config = [
-    __dirname + "/debbox.json",
-    "/etc/debbox.json",
-    "~/.config/debbox.json"
+    __dirname + "/aptirepo-http.json",
+    "/etc/aptirepo-http.json",
+    "~/.config/aptirepo-http.json"
 ].reduce(function(memo, configPath) {
     var config;
     try {
@@ -69,7 +69,7 @@ app.post("/", function(req, res) {
 
     var form = new multiparty.Form();
     form.on("error", function(err) {
-        res.write("debbox: Failed to parse multipart post");
+        res.write("aptirepo-http: Failed to parse multipart post");
         res.end("\n", 400);
     });
 

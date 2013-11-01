@@ -1,12 +1,12 @@
-Source: debbox
+Source: aptirepo
 Section: admin
 Priority: extra
 Maintainer: Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>
 Build-Depends: debhelper (>= 8), nodejs-bundle, jq
 Standards-Version: 3.9.3
-Homepage: https://github.com/opinsys/debbox/
+Homepage: https://github.com/opinsys/aptirepo
 
-Package: debbox
+Package: aptirepo-http
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, nodejs-bundle, aptirepo, nginx
 Description: Http interface for aptirepo

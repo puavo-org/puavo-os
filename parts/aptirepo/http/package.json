@@ -1,19 +1,19 @@
 {
-  "name": "debbox",
+  "name": "aptirepo-http",
   "version": "0.2.0",
-  "description": "Web server that receives .deb packages and publishes to apt repositories",
+  "description": "aptirepo http interface",
   "main": "index.js",
   "bin": {
-    "debbox": "./bin/debbox"
+    "aptirepo-http": "./bin/aptirepo-http"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/opinsys/debbox.git"
+    "url": "https://github.com/opinsys/aptirepo.git"
   },
   "author": "Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>",
   "license": "GPL",
   "bugs": {
-    "url": "https://github.com/opinsys/debbox/issues"
+    "url": "https://github.com/opinsys/aptirepo/issues"
   },
   "dependencies": {
     "q": "~0.9.7",

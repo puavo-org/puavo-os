@@ -9,4 +9,4 @@
 
 
 override_dh_auto_install:
-	$(MAKE) install prefix=/usr sysconfdir=/etc DESTDIR=$(CURDIR)/debian/debbox
+	$(MAKE) install prefix=/usr sysconfdir=/etc DESTDIR=$(CURDIR)/debian/aptirepo-http
