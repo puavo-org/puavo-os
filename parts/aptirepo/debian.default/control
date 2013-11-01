@@ -16,6 +16,8 @@ Description: simple APT repository tool
 Package: aptirepo-http
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, nodejs-bundle, aptirepo
+Breaks: debbox
+Replaces: debbox
 Recommends: nginx
 Description: Http interface for aptirepo
  Http interface for aptirepo
