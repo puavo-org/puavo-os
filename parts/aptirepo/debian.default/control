@@ -2,7 +2,7 @@ Source: aptirepo
 Section: utils
 Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
-Build-Depends: debhelper (>= 8.0.0)
+Build-Depends: debhelper (>= 8.0.0), nodejs-bundle, jq
 Standards-Version: 3.9.3
 Homepage: http://github.com/opinsys/aptirepo/
 
@@ -12,3 +12,9 @@ Depends: ${misc:Depends}, apt-utils, gnupg, util-linux
 Description: simple APT repository tool
  simple APT repository tool
  .
+
+Package: aptirepo-http
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, nodejs-bundle, aptirepo, nginx
+Description: Http interface for aptirepo
+ Http interface for aptirepo
