@@ -96,12 +96,7 @@ import_changes()
             component="main"
         fi
 
-        distsuffix=''
-        if [ -n "${APTIREPO_BRANCH}" ]; then
-            distsuffix="-${APTIREPO_BRANCH}"
-        fi
-
-        dstdir="pool/${distribution}${distsuffix}/${component}/$(echo ${source_name} | head -c1)/${source_name}"
+        dstdir="pool/${distribution}/${component}/$(echo ${source_name} | head -c1)/${source_name}"
 
         mkdir -p "${dstdir}" || {
             echo "failed to create the pool destination directory '${dstdir}'" >&2
@@ -118,7 +113,7 @@ import_changes()
             if [ "${arch}"  != "source" ]; then
                 arch="binary-${arch}"
             fi
-            mkdir -p "dists/${distribution}${distsuffix}/${component}/${arch}"
+            mkdir -p "dists/${distribution}/${component}/${arch}"
         done
 
     done || return 1
@@ -133,33 +128,9 @@ if [ ! -d .aptirepo ]; then
     exit 1
 fi
 
-APTIREPO_BRANCH=''
-
-while getopts "b:" flag; do
-    case $flag in
-        b)
-            if [ -n "${APTIREPO_BRANCH}" ]; then
-                echo "-b can be used only once" >&2
-                exit 1
-            fi
-            # TODO: validate input
-            APTIREPO_BRANCH="${OPTARG}"
-            ;;
-        ?)
-            exit 1
-            ;;
-        *)
-            echo "getopts failed catastrophically" >&2
-            exit 1
-            ;;
-  esac
-done
-
-shift $((OPTIND-1))
-
 if [ $# -ne 1 ]; then
     echo "wrong number of arguments" >&2
-    echo "Usage: $(basename $0) [-b BRANCH] FILE" >&2
+    echo "Usage: $(basename $0) FILE" >&2
     exit 1
 fi
 
