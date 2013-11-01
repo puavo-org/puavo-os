@@ -6,9 +6,17 @@ Build-Depends: debhelper (>= 8.0.0), nodejs-bundle, jq
 Standards-Version: 3.9.3
 Homepage: http://github.com/opinsys/aptirepo/
 
+Package: aptirepo-common
+Architecture: all
+Depends: ${misc:Depends}, sed
+Description: simple APT repository tool common files
+ Simple APT repository tool
+ .
+ This package contains common files for all aptirepo packages.
+
 Package: aptirepo
 Architecture: all
-Depends: ${misc:Depends}, apt-utils, gnupg, util-linux
+Depends: ${misc:Depends}, apt-utils, gnupg, util-linux, aptirepo-common
 Description: simple APT repository tool
  simple APT repository tool
  .
@@ -21,3 +29,11 @@ Replaces: debbox
 Recommends: nginx
 Description: Http interface for aptirepo
  Http interface for aptirepo
+ .
+
+Package: aptirepo-upload
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, aptirepo-common
+Description: aptirepo package uploader
+ aptirepo package uploader
+ .
