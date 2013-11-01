@@ -18,9 +18,7 @@
 
 set -eu
 
-. aptirepo-env
-
-. "${APTIREPO_LIBDIR}/common.sh"
+. _aptirepo-common
 
 import_changes()
 {

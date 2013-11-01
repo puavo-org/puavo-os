@@ -40,9 +40,7 @@ fi
 changes_file="$1"
 curl_args=""
 
-. aptirepo-env
-
-. "${APTIREPO_LIBDIR}/common.sh"
+. _aptirepo-common
 
 if [ "${APTIREPO_BRANCH}" != "" ]; then
     curl_args="$curl_args -F branch=${APTIREPO_BRANCH}"
