@@ -10,6 +10,6 @@ aptirepo_url="$1"
 
 puavo-build-debian-dir
 sudo puavo-install-deps debian/control
-puavo-dch $(jq -r  .version package.json)
+puavo-dch $(cat VERSION)
 puavo-debuild
 puavo-upload-packages "$aptirepo_url" ../aptirepo*.changes "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)"
