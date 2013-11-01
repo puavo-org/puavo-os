@@ -43,7 +43,7 @@ var config = [
 });
 
 
-function command(changesFilePath, branch) {
+function aptirepoImport(changesFilePath, branch) {
 
     return Q.promise(function(resolve, reject) {
 
@@ -112,7 +112,7 @@ app.post("/", function(req, res) {
         Q.all(files).then(function() {
             return Q.all([changesFilePath.promise, repoBranch.promise])
                 .timeout(100, "changes file or branch missing")
-                .spread(command);
+                .spread(aptirepoImport);
         }).then(function(commandOutput) {
             console.log("Upload ok", commandOutput);
             res.json(commandOutput);
