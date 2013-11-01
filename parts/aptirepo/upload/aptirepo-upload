@@ -37,6 +37,11 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
+if [ "$APTIREPO_REMOTE" = "" ]; then
+    echo "No remote defined. Use -r or set APTIREPO_REMOTE environment variable" >&2
+    exit 1
+fi
+
 changes_file="$1"
 curl_args=""
 
