@@ -15,6 +15,7 @@ Description: simple APT repository tool
 
 Package: aptirepo-http
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, nodejs-bundle, aptirepo, nginx
+Depends: ${shlibs:Depends}, ${misc:Depends}, nodejs-bundle, aptirepo
+Recommends: nginx
 Description: Http interface for aptirepo
  Http interface for aptirepo
