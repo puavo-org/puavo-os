@@ -1,6 +1,5 @@
-#!/bin/sh
-# aptirepo - simple APT repository tool
-# Copyright (C) 2013 Opinsys Oy
+# aptirepo - Simple APT Repository Tool
+# Copyright (C) 2013 Tuomas Räsänen
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,10 +15,17 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-set -eu
+"""
+Simple APT Repository Tool
 
-APTIREPO_ROOT=${APTIREPO_ROOT:-.}
+Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
 
-cd "${APTIREPO_ROOT}"
+>>> repo = aptirepo.Aptirepo("/srv/repo")
+>>> repo.import_changes("/var/cache/pbuilder/results/sl_3.03-17_i386.changes")
+>>> repo.update_dists()
 
-mkdir .aptirepo
+"""
+
+from ._core import Aptirepo
+
+__all__ = ["Aptirepo"]

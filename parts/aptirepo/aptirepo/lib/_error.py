@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # aptirepo - Simple APT Repository Tool
 # Copyright (C) 2013 Tuomas Räsänen
 #
@@ -16,25 +15,6 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-import os
-import sys
-
-import aptirepo
-
-def main():
-    if len(sys.argv) != 2:
-        print("error: wrong number of arguments", file=sys.stderr)
-        print("Usage: aptirepo-import FILE", file=sys.stderr)
-        sys.exit(1)
-
-    changes_filepath = sys.argv[1]
-
-    rootdir = os.environ.get("APTIREPO_ROOTDIR", ".")
-    confdir = os.environ.get("APTIREPO_CONFDIR")
-    repo = aptirepo.Aptirepo(rootdir, confdir)
-
-    repo.import_changes(changes_filepath)
-    repo.update_dists()
-
-if __name__ == "__main__":
-    main()
+class Error(Exception):
+    """Common base class for all aptirepo errors."""
+    pass
