@@ -24,8 +24,8 @@ Description: Http interface for aptirepo
  .
 
 Package: aptirepo-upload
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Architecture: all
+Depends: ${misc:Depends}
 Description: aptirepo package uploader
  aptirepo package uploader
  .
