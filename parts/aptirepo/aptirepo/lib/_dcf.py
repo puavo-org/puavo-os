@@ -31,7 +31,7 @@ class ParseError(Error):
     pass
 
 def _assert_simple(paragraph, field_name):
-    if len(paragraph[field_name]) != 1:
+    if field_name not in paragraph or len(paragraph[field_name]) != 1:
         raise ParseError("field '%s' must be simple field" % field_name)
 
 ## TODO: add missing fields, see
