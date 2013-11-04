@@ -80,7 +80,6 @@ class Aptirepo:
         for codename, dist in self.__dists.items():
             for comp in dist["Components"]:
                 p = self.__join(dist["Pool"], comp)
-                print(p)
                 try:
                     os.makedirs(p)
                 except OSError  as e:
