@@ -26,6 +26,12 @@ set -eu
 # https://wiki.jenkins-ci.org/display/JENKINS/Building+a+software+project#Buildingasoftwareproject-JenkinsSetEnvironmentVariables
 env_tmp=$(mktemp --suffix=-jenkinsenv)
 cat >$env_tmp<<EOF
+http_proxy=$http_proxy
+
+APTIREPO_REMOTE=$APTIREPO_REMOTE
+APT_REPOSITORIES=$APT_REPOSITORIES
+
+# From Jenkins
 BUILD_NUMBER=$BUILD_NUMBER
 BUILD_ID=$BUILD_ID
 BUILD_URL=$BUILD_URL
@@ -36,8 +42,6 @@ JENKINS_URL=$JENKINS_URL
 EXECUTOR_NUMBER=$EXECUTOR_NUMBER
 GIT_COMMIT=$GIT_COMMIT
 GIT_BRANCH=$GIT_BRANCH
-APTIREPO_REMOTE=$APTIREPO_REMOTE
-http_proxy=$http_proxy
 EOF
 
 script=$(which puavo-lxc-run)
