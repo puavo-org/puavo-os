@@ -88,7 +88,8 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups \
 		templates/etc/cups/client.conf \
-		templates/etc/cups/cupsd.conf
+		templates/etc/cups/cupsd.conf \
+		templates/etc/cups/cupsd.conf-laptop
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default \
 		templates/etc/default/nfs-common
