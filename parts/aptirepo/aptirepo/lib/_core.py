@@ -70,14 +70,22 @@ class Aptirepo:
                     if arch == "source":
                         archdir = "source"
                     p = self.__join("dists", codename, comp, archdir)
-                    os.makedirs(p, exist_ok=True)
+                    try:
+                        os.makedirs(p)
+                    except OSError as e:
+                        if e.errno != errno.EEXIST:
+                            raise e
 
     def __create_pool(self):
         for codename, dist in self.__dists.items():
             for comp in dist["Components"]:
                 p = self.__join(dist["Pool"], comp)
                 print(p)
-                os.makedirs(p, exist_ok=True)
+                try:
+                    os.makedirs(p)
+                except OSError  as e:
+                    if e.errno != errno.EEXIST:
+                        raise e
 
     def __join(self, *args):
         return os.path.join(self.__rootdir, *args)

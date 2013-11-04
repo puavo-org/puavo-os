@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # aptirepo - Simple APT Repository Tool
 # Copyright (C) 2013 Tuomas Räsänen
 #
@@ -35,6 +36,8 @@ setup(name='aptirepo',
         "License :: OSI Approved :: GNU General Public License (GPL)",
         "Operating System :: POSIX :: Linux",
         "Topic :: System :: Archiving :: Packaging",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.1",
         "Programming Language :: Python :: 3.2",

@@ -2,13 +2,13 @@ Source: aptirepo
 Section: utils
 Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
-Build-Depends: debhelper (>= 8.0.0), nodejs-bundle, jq, python3-all-dev
+Build-Depends: debhelper (>= 8.0.0), nodejs-bundle, jq, python-all-dev
 Standards-Version: 3.9.3
 Homepage: http://github.com/opinsys/aptirepo/
 
 Package: aptirepo
 Architecture: all
-Depends: ${misc:Depends}, python3, apt-utils
+Depends: ${misc:Depends}, python, apt-utils
 Description: simple APT repository tool
  simple APT repository tool
  .
