@@ -3,8 +3,9 @@ description "aptirepo-http"
 start on runlevel [23]
 stop on shutdown
 
-chdir /usr/lib/node_modules/aptirepo-http
+chdir /usr/lib/aptirepo-http
 env NODE_ENV=production
-exec sudo -E -u www-data node index.js
+
+exec sudo -E -u www-data gunicorn server:app --bind 0.0.0.0:8080
 
 respawn
