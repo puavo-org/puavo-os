@@ -16,6 +16,7 @@ var concat = require("concat-stream");
 Q.longStackSupport = true;
 var mkTmpDir = Q.denodeify(temp.mkdir);
 var rimraf = Q.denodeify(require("rimraf"));
+var mkdirp = Q.denodeify(require("mkdirp"));
 
 function promiseConcat(stream) {
     return Q.promise(function(resolve, reject) {
@@ -28,7 +29,7 @@ var app = express();
 
 var config = [
     __dirname + "/aptirepo-http.json",
-    "/etc/aptirepo-http.json",
+    "/etc/aptirepo/http.json",
     "~/.config/aptirepo-http.json"
 ].reduce(function(memo, configPath) {
     var config;
@@ -44,21 +45,26 @@ var config = [
 
 
 function aptirepoImport(changesFilePath, branch) {
+    branch = branch.toString();
+    var aptirepoRootDir = path.join(config.aptirepo, branch);
+    return mkdirp(aptirepoRootDir).then(function() {
+        return Q.promise(function(resolve, reject) {
 
-    return Q.promise(function(resolve, reject) {
+            var child = spawn("aptirepo-import", [changesFilePath], {
+                env: xtend({
+                    APTIREPO_CONFDIR: "/etc/aptirepo",
+                    APTIREPO_ROOTDIR: aptirepoRootDir
+                }, process.env)
+            });
 
-        var child = spawn("aptirepo-import", ["-b", branch, changesFilePath], {
-            env: xtend({
-                APTIREPO_ROOT: config.aptirepo
-            }, process.env)
+            child.on("error", reject);
+            child.on("close", resolve);
+            child.stdout.pipe(process.stdout);
+            child.stderr.pipe(process.stderr);
+
         });
-
-        child.on("error", reject);
-        child.on("close", resolve);
-        child.stdout.pipe(process.stdout);
-        child.stderr.pipe(process.stderr);
-
     });
+
 }
 
 app.get("/", function(req, res) {

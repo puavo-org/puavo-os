@@ -5,11 +5,13 @@ build:
 
 install-dirs:
 	mkdir -p $(DESTDIR)$(prefix)/lib/node_modules/aptirepo-http
+	mkdir -p $(DESTDIR)/etc/aptirepo
 
 clean-for-install:
 	npm prune
 
 install: clean-for-install install-dirs
+	cp -a distributions $(DESTDIR)/etc/aptirepo/
 	cp -a \
 		*.js \
 		*.json \
