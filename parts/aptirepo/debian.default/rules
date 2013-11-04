@@ -13,7 +13,7 @@
 	dh $@
 
 override_dh_auto_install:
-	$(MAKE) -C aptirepo install prefix=/usr DESTDIR=$(CURDIR)/debian/aptirepo
+	$(MAKE) -C aptirepo install DESTDIR=$(CURDIR)/debian/aptirepo
 	$(MAKE) -C common install prefix=/usr DESTDIR=$(CURDIR)/debian/aptirepo-common
 	$(MAKE) -C http install prefix=/usr sysconfdir=/etc DESTDIR=$(CURDIR)/debian/aptirepo-http
 	$(MAKE) -C upload install prefix=/usr DESTDIR=$(CURDIR)/debian/aptirepo-upload
