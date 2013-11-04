@@ -11,4 +11,4 @@ sudo puavo-install-deps debian/control
 puavo-dch $(cat VERSION)
 puavo-debuild
 
-aptirepo-upload -b "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)" ../aptirepo*.changes
+aptirepo-upload -r $APTIREPO_REMOTE -b "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)" ../aptirepo*.changes
