@@ -34,7 +34,14 @@ def upload():
             os.path.join(tmp_dirpath, file.filename)
         )
 
-    repo = aptirepo.Aptirepo(rootdir, confdir)
+    
+    # TODO: read from config
+    rootdir = ""
+    confdir = ""
+    
+    repodir = os.path.join(rootdir, request.form["branch"])
+    
+    repo = aptirepo.Aptirepo(repodir, confdir)
     repo.import_changes(changes_filepath)
     repo.update_dists()
 
