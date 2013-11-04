@@ -2,6 +2,25 @@
 
 set -eu
 
+parse_multiline()
+{
+    local file field
+
+    file=$1
+    field=$2
+
+    ## Print all lines of the multiline field.
+    sed -r -n -e "
+/^${field}:/{    ## This line has only the field name...
+    :next_line
+    n            ## ... append the next line to the pattern space.
+    /^[ \t]*$/ q ## Stop if the line is empty.
+    /^[^ \t]/ q  ## Stop if the line does not start with whitespace.
+    s|^[ \t]+||p ## Remove preceding whitespace and print the line.
+    b next_line  ## Continue to the next line.
+}" "${file}"
+}
+
 APTIREPO_REMOTE=${APTIREPO_REMOTE:-}
 APTIREPO_BRANCH=''
 
@@ -44,8 +63,6 @@ fi
 
 changes_file="$1"
 curl_args=""
-
-. _aptirepo-common
 
 if [ "${APTIREPO_BRANCH}" != "" ]; then
     curl_args="$curl_args -F branch=${APTIREPO_BRANCH}"

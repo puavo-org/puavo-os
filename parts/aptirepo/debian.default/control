@@ -6,14 +6,6 @@ Build-Depends: debhelper (>= 8.0.0), nodejs-bundle, jq, python3-all-dev
 Standards-Version: 3.9.3
 Homepage: http://github.com/opinsys/aptirepo/
 
-Package: aptirepo-common
-Architecture: all
-Depends: ${misc:Depends}, sed
-Description: simple APT repository tool common files
- Simple APT repository tool
- .
- This package contains common files for all aptirepo packages.
-
 Package: aptirepo
 Architecture: all
 Depends: ${misc:Depends}, python3, apt-utils
@@ -33,7 +25,7 @@ Description: Http interface for aptirepo
 
 Package: aptirepo-upload
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, aptirepo-common
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: aptirepo package uploader
  aptirepo package uploader
  .
