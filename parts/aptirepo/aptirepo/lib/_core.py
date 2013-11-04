@@ -84,31 +84,28 @@ class Aptirepo:
 
     def __write_contents(self, pool, codename, comp):
         path = self.__join("dists", codename, comp, "Contents.gz")
-        dbpath = self.__join("db")
         with gzip.open(path, 'wb') as f:
-            subprocess.check_call(["apt-ftparchive", "--db", dbpath,
-                                   "contents", self.__join(pool, comp)],
-                                  stdout=f)
+            subprocess.check_call(["apt-ftparchive", "--db", "db",
+                                   "contents", os.path.join(pool, comp)],
+                                  stdout=f, cwd=self.__rootdir)
 
     def __write_packages(self, pool, codename, comp, arch):
         path = self.__join("dists", codename, comp, "binary-%s" % arch,
                            "Packages")
-        dbpath = self.__join("db")
         with open(path, "w") as f:
-            subprocess.check_call(["apt-ftparchive", "--db", dbpath,
-                                   "packages", self.__join(pool, comp)],
-                                  stdout=f)
+            subprocess.check_call(["apt-ftparchive", "--db", "db",
+                                   "packages", os.path.join(pool, comp)],
+                                  stdout=f, cwd=self.__rootdir)
         _gz(path)
 
     def __write_release(self, codename, comps, archs):
-        dbpath = self.__join("db")
         with open(self.__join("dists", codename, "Release"), "w") as f:
-            subprocess.check_call(["apt-ftparchive", "--db", dbpath,
+            subprocess.check_call(["apt-ftparchive", "--db", "db",
                                    "-o", "APT::FTPArchive::Release::Codename=%s" % codename,
                                    "-o", "APT::FTPArchive::Release::Components=%s" % " ".join(comps),
                                    "-o", "APT::FTPArchive::Release::Architectures=%s" % " ".join(archs),
-                                   "release", self.__join("dists", codename)],
-                                  stdout=f)
+                                   "release", os.path.join("dists", codename)],
+                                  stdout=f, cwd=self.__rootdir)
 
     def __write_sources(self, pool, codename, comp):
         path = self.__join("dists", codename, comp, "source", "Sources")
