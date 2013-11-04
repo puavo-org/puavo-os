@@ -26,15 +26,6 @@ fi
 
 date -R > "$rootfs/container_created"
 
-echo "# Apt repositories set by the Jenkins job" > "$rootfs/etc/apt/sources.list.d/jenkins-job.list"
-echo "${APT_REPOSITORIES:-}" | while read repository
-do
-    if [ "$repository" != "" ]; then
-        echo "Using apt repository $repository"
-        echo "$repository" >> "$rootfs/etc/apt/sources.list.d/jenkins-job.list"
-    fi
-done
-
 cat > "$rootfs/setup.sh"<<EOF
 #!/bin/sh
 set -eu

@@ -135,6 +135,15 @@ trap on_exit EXIT
 
 puavo-lxc-prepare $running_container
 
+jenkins_job_repos="$lxcdir/rootfs/etc/apt/sources.list.d/jenkins-job.list"
+echo "# Apt repositories set by the Jenkins job" > $jenkins_job_repos
+echo "${APT_REPOSITORY:-}"  >> $jenkins_job_repos
+echo "${APT_REPOSITORY1:-}" >> $jenkins_job_repos
+echo "${APT_REPOSITORY2:-}" >> $jenkins_job_repos
+echo "${APT_REPOSITORY3:-}" >> $jenkins_job_repos
+echo "${APT_REPOSITORY4:-}" >> $jenkins_job_repos
+echo "${APT_REPOSITORY5:-}" >> $jenkins_job_repos
+
 mkdir "$lxcdir/rootfs/cirun"
 echo "Copying $(pwd) to /cirun for the container"
 rsync -a $(pwd) "$lxcdir/rootfs/cirun"
