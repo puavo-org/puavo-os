@@ -1,11 +1,24 @@
 import tempfile
 import shutil
 import os.path
-
-from flask import Flask, render_template, request
-
 import aptirepo
 
+from debian import deb822
+from flask import Flask, render_template, request
+
+
+confdir = os.environ.get("APTIREPO_CONFDIR")
+if not confdir:
+    confdir = "/etc/aptirepo"
+
+def read_config(config_filepath):
+    config = None
+    with open(config_filepath, "r") as config_file:
+        content = config_file.read()
+        config =  deb822.Deb822(content.split("\n"))
+    return config
+
+config = read_config(os.path.join(confdir, "http.conf"))
 app = Flask(__name__)
 
 @app.route('/')
@@ -14,13 +27,23 @@ def index():
 
 @app.route('/', methods=["POST"])
 def upload():
-    tmp_dirpath = tempfile.mkdtemp(".tmp", "aptirepo-upload-")
 
-    if request.form["branch"] == "":
+    if "branch" not in request.form or request.form["branch"] == "":
         return "branch missing", 400
 
-    if request.files["changes"].filename == "":
+    if "changes" not in request.files or request.files["changes"].filename == "":
         return ".changes file missing", 400
+
+    repodir = os.path.join(
+        config["Repository-Parent"],
+        request.form["branch"]
+    )
+
+    if not os.path.isdir(repodir):
+        os.makedirs(repodir)
+
+    tmp_dirpath = tempfile.mkdtemp(".tmp", "aptirepo-upload-")
+
 
     changes_filepath = os.path.join(
         tmp_dirpath,
@@ -34,13 +57,7 @@ def upload():
             os.path.join(tmp_dirpath, file.filename)
         )
 
-    
-    # TODO: read from config
-    rootdir = ""
-    confdir = ""
-    
-    repodir = os.path.join(rootdir, request.form["branch"])
-    
+
     repo = aptirepo.Aptirepo(repodir, confdir)
     repo.import_changes(changes_filepath)
     repo.update_dists()
