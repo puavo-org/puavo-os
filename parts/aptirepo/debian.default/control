@@ -15,7 +15,7 @@ Description: simple APT repository tool
 
 Package: aptirepo-http
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, aptirepo, python-flask, gunicorn, python-debian
+Depends: ${shlibs:Depends}, ${misc:Depends}, aptirepo (>=0.3.0-21), python-flask, gunicorn, python-debian
 Breaks: debbox
 Replaces: debbox
 Recommends: nginx
