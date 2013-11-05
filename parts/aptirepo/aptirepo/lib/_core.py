@@ -25,7 +25,6 @@ import subprocess
 
 import debian.debfile
 
-from ._dcf import parse_changes
 from ._dcf import parse_distributions
 
 from ._error import Error
@@ -174,11 +173,16 @@ class Aptirepo:
         self.__copy_to_pool(deb_filepath, codename, source_name, section)
 
     def import_changes(self, changes_filepath):
-        changes = parse_changes(changes_filepath)
+        with open(changes_filepath) as changes_file:
+            changes = debian.deb822.Changes(changes_file)
+
         codename = changes["Distribution"]
         source_name = changes["Source"]
         changes_dirpath = os.path.dirname(changes_filepath)
-        for md5, size, section, priority, filename in changes["Files"]:
+        for f in changes["Files"]:
+            md5 = f["md5sum"]
+            section = f["section"]
+            filename = f["name"]
             filepath = os.path.join(changes_dirpath, filename)
             real_md5 = _md5sum(filepath)
 
