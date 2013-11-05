@@ -4,7 +4,6 @@ start on runlevel [23]
 stop on shutdown
 
 chdir /usr/lib/aptirepo-http
-env NODE_ENV=production
 
 exec sudo -E -u www-data gunicorn server:app --bind 0.0.0.0:8080 --error-logfile - --access-logfile -
 
