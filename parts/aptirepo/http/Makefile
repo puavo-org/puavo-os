@@ -8,7 +8,10 @@ install-dirs:
 		$(DESTDIR)$(prefix)/lib/aptirepo-http
 
 install: install-dirs
-	cp -a server.py $(DESTDIR)$(prefix)/lib/aptirepo-http
+	cp -a \
+		server.py \
+		templates \
+		$(DESTDIR)$(prefix)/lib/aptirepo-http
 	cp -a distributions $(DESTDIR)/etc/aptirepo
 
 clean:
