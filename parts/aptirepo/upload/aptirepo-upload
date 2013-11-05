@@ -79,4 +79,4 @@ do
 done
 
 set -x
-curl --fail -v $curl_args "${APTIREPO_REMOTE}"
+curl --noproxy "*" --fail -v $curl_args "${APTIREPO_REMOTE}"
