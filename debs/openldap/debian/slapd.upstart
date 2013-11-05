@@ -2,6 +2,9 @@ description "OpenLDAP standalone server"
 
 respawn
 
+kill signal SIGINT
+kill timeout 60
+
 limit nofile 100000 100000
 
 pre-start script
