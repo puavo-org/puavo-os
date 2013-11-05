@@ -2,6 +2,8 @@ import tempfile
 import shutil
 import os.path
 import aptirepo
+import sys
+import logging
 
 from debian import deb822
 from flask import Flask, render_template, request
@@ -19,6 +21,7 @@ def read_config(config_filepath):
     return config
 
 config = read_config(os.path.join(confdir, "http.conf"))
+
 app = Flask(__name__)
 
 @app.route('/')
@@ -69,3 +72,7 @@ def upload():
 if __name__ == '__main__':
     app.debug = True
     app.run(host="0.0.0.0", port=8080)
+
+if not app.debug:
+    app.logger.addHandler(logging.StreamHandler(sys.stdout))
+
