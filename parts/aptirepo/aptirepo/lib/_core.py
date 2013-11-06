@@ -118,7 +118,7 @@ class Aptirepo:
         path = self.__join("dists", codename, comp, "source", "Sources")
         with open(path, "w") as f:
             subprocess.check_call(["apt-ftparchive",
-                                   "sources", self.__join(pool, comp)],
+                                   "sources", os.path.join(pool, comp)],
                                   stdout=f, cwd=self.__rootdir)
         _gz(path)
 
