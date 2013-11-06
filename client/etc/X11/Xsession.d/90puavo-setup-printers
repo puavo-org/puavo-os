@@ -40,15 +40,26 @@ get_printer_list()
     }
 }
 
+set_default_printer()
+{
+    local default_printer_name
+
+    default_printer_name=$(jq -r .device.default_printer_name "${PUAVO_SESSION_PATH}")
+
+    lpadmin -d "${default_printer_name}"
+}
+
 hosttype=$(cat /etc/puavo/hosttype)
 
 case "${hosttype}" in
     ltspserver)
         export PRINTER_LIST=$(get_printer_list)
+        export PRINTER=$(jq -r .device.default_printer_name "${PUAVO_SESSION_PATH}")
         ;;
     fatclient)
         remove_remote_printers
         add_remote_printers
+        set_default_printer
         ;;
     *)
         echo "hosttype '${hosttype}' does not support Puavo printer setup" >&2
