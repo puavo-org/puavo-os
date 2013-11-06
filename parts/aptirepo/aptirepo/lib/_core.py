@@ -119,7 +119,7 @@ class Aptirepo:
         with open(path, "w") as f:
             subprocess.check_call(["apt-ftparchive",
                                    "sources", self.__join(pool, comp)],
-                                  stdout=f)
+                                  stdout=f, cwd=self.__rootdir)
         _gz(path)
 
     def import_changes(self, changes_filepath):
