@@ -179,8 +179,6 @@ fi
 
 chown -R ci:ci /cirun
 
-set -x
-
 git_dir="/cirun/${JOB_NAME}"
 script_location="\${git_dir}/${script_name}"
 
