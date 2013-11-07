@@ -23,19 +23,32 @@ import sys
 
 import aptirepo
 
+_IMPORT_FUNCTIONS = {
+    ".changes" : aptirepo.Aptirepo.import_changes,
+    ".deb"     : aptirepo.Aptirepo.import_deb,
+}
+
 def main():
     if len(sys.argv) != 2:
         print("error: wrong number of arguments", file=sys.stderr)
         print("Usage: aptirepo-import FILE", file=sys.stderr)
         sys.exit(1)
 
-    changes_filepath = sys.argv[1]
+    filepath = sys.argv[1]
+    _, ext = os.path.splitext(filepath)
+    try:
+        import_fn = _IMPORT_FUNCTIONS[ext]
+    except KeyError:
+        print("error: FILE must be %s" % " or ".join(_IMPORT_FUNCTIONS.keys()),
+              file=sys.stderr)
+        sys.exit(1)
 
     rootdir = os.environ.get("APTIREPO_ROOTDIR", ".")
     confdir = os.environ.get("APTIREPO_CONFDIR")
     repo = aptirepo.Aptirepo(rootdir, confdir)
 
-    repo.import_changes(changes_filepath)
+    import_fn(repo, filepath)
+
     repo.update_dists()
 
 if __name__ == "__main__":

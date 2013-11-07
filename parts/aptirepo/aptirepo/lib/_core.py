@@ -23,6 +23,8 @@ import os.path
 import shutil
 import subprocess
 
+import debian.debfile
+
 from ._dcf import parse_changes
 from ._dcf import parse_distributions
 
@@ -154,6 +156,14 @@ class Aptirepo:
             return
 
         shutil.copyfile(filepath, target_filepath)
+
+    def import_deb(self, deb_filepath):
+        debfile = debian.debfile.DebFile(deb_filepath)
+        codename = debfile.changelog().distributions
+        source_name = debfile.changelog().package
+        section = debfile.control.debcontrol()["Section"]
+
+        self.__copy_to_pool(deb_filepath, codename, source_name, section)
 
     def import_changes(self, changes_filepath):
         changes = parse_changes(changes_filepath)
