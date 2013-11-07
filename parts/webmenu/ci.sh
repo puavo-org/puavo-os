@@ -3,8 +3,6 @@
 set -x
 set -eu
 
-debbox_url="$1"
-
 sudo apt-get update
 sudo apt-get install -y --force-yes puavo-devscripts aptirepo-upload
 sudo apt-get install -y node-webkit  wmctrl gnome-themes-extras socat netcat-openbsd libnotify-bin xvfb jq
