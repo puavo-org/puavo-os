@@ -46,6 +46,7 @@ File.delete("/etc/krb5kdc/stash") if File.exists?("/etc/krb5kdc/stash")
 File.delete("/etc/krb5.secrets") if File.exists?("/etc/krb5.secrets")
 File.delete("/etc/krb5.keytab") if File.exists?("/etc/krb5.keytab")
 File.delete("/etc/ldap/krb5.keytab") if File.exists?("/etc/ldap/krb5.keytab")
+File.delete("/etc/puavo/puavo-rest.keytab") if File.exists?("/etc/puavo/puavo-rest.keytab")
 
 `echo "#{@ldap_bindpw}\\n#{@ldap_bindpw}\\n" | /usr/sbin/kdb5_ldap_util stashsrvpw -f /etc/krb5.secrets "#{@ldap_binddn}" 2>/dev/null`
 
@@ -61,10 +62,12 @@ Dir.mktmpdir do |dir|
   system("kadmin.local -q \"ktadd -norandkey -k #{dir}/system.keytab host/#{ @puavo_hostname }.#{ @puavo_domain }\"")
   system("kadmin.local -q \"ktadd -norandkey -k #{dir}/system.keytab nfs/#{ @puavo_hostname }.#{ @puavo_domain }\"")
   system("kadmin.local -q \"ktadd -norandkey -k #{dir}/ldap.keytab ldap/#{ @puavo_hostname }.#{ @puavo_domain }\"")
+  system("kadmin.local -q \"ktadd -norandkey -k #{dir}/http.keytab HTTP/#{ @puavo_hostname }.#{ @puavo_domain }\"")
 
   system("install -m 0600 #{dir}/cups.keytab /etc/cups/krb5.keytab")
   system("install -m 0600 #{dir}/system.keytab /etc/krb5.keytab")
   system("install -m 0640 -g openldap #{dir}/ldap.keytab /etc/ldap/krb5.keytab")
+  system("install -m 0640 -g puavo #{dir}/http.keytab /etc/puavo/puavo-rest.keytab")
 end
 
 FileUtils.touch(Sentinel_file)

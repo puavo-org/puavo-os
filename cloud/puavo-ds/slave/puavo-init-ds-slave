@@ -48,6 +48,7 @@ echo "Run following commands as a root in your LDAP-master:
   kadmin.local -r \${REALM} -q \"addprinc -randkey IPP/\${FQDN}\"
   kadmin.local -r \${REALM} -q \"addprinc -randkey cifs/\${FQDN}\"
   kadmin.local -r \${REALM} -q \"addprinc -randkey nfs/\${FQDN}\"
+  kadmin.local -r \${REALM} -q \"addprinc -randkey HTTP/\${FQDN}\"
 
   Press ENTER when ready."
 
