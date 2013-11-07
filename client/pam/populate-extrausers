@@ -45,12 +45,12 @@ if !File.exists?(CACHE_FILE)
 end
 
 begin
-  json = File.read(CACHE_FILE)
-  session = JSON.parse(json)
-
   # Needed when reading from /var/lib/extrausers/{passwd,group}, which
   # may contain utf-8 sequences in displayName.
   Encoding.default_external = 'utf-8'
+
+  json = File.read(CACHE_FILE)
+  session = JSON.parse(json)
 
   passwd = Hash.new
   groups = Hash.new
