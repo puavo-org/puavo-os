@@ -87,7 +87,6 @@ fi
 
 running_container="$JOB_NAME-$BUILD_NUMBER-$(hostname)"
 lxcdir="/var/lib/lxc/$running_container"
-projectname=$(basename $(pwd))
 
 echo "Cloning $base_container"
 lxc-clone -o $base_container -n $running_container
@@ -180,8 +179,8 @@ fi
 
 chown -R ci:ci /cirun
 echo
-echo "Executing /cirun/$projectname/$script $script_args"
-sudo -i -u ci sh -c "cd /cirun/$projectname && ./$script $script_args"
+echo "Executing /cirun/${JOB_NAME}/$script $script_args"
+sudo -i -u ci sh -c "cd /cirun/${JOB_NAME} && ./$script $script_args"
 EOF
 chmod +x "$lxcdir/rootfs/run.sh"
 
