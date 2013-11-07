@@ -59,7 +59,8 @@ class packages {
     [ 'clusterssh'
     , 'dconf-tools'
     , 'terminator'
-    , 'vinagre' ]:
+    , 'vinagre'
+    , 'xbacklight' ]:
       tag => [ 'admin', 'ubuntu', ];
 
     [ 'spotify-client' ]:
