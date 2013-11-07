@@ -8,6 +8,7 @@ sudo apt-get install -y --force-yes aptirepo-upload make devscripts equivs git-c
 
 
 # Dog food itself
+echo "Running in $(pwd)"
 make
 sudo make install
 
