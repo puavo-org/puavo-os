@@ -69,6 +69,7 @@ done
       sudo_for_ltsp ltsp-chroot --base $basedir --mount-all
       ;;
     image)
+      sudo_for_ltsp ltsp-chroot --base $basedir passwd
       ltspimage_name=$build_version-$arch.img
       sudo sh -c "
         mkdir -p $basedir/$arch/etc/ltsp; \
