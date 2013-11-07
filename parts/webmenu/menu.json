@@ -465,6 +465,7 @@
         {
           "type": "desktop",
           "source": "tuxmath",
+          "inactiveByDeviceType": "thinclient",
           "name":{
             "en": "TuxMath-math game",
             "fi": "TuxMath-matikkapeli",
@@ -1072,6 +1073,12 @@
           "name": "Pahvi",
           "url": "http://pahvidemo.opinsys.fi/",
           "osIconPath": "/usr/share/icons/Faenza/mimetypes/96/text-html.png"
+        },
+        {
+          "type": "web",
+          "name": "Ekapeli",
+          "url": "http://www.lukimat.fi/lukeminen/materiaalit/ekapeli",
+          "osIconPath": "/usr/share/icons/Faenza/categories/96/gnome-joystick.png"
         }
       ]
     },
