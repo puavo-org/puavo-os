@@ -4,7 +4,7 @@ set -eu
 set -x
 
 sudo apt-get update
-sudo apt-get install -y --force-yes aptirepo-upload make devscripts
+sudo apt-get install -y --force-yes aptirepo-upload make devscripts equivs
 
 
 # Dog food itself
