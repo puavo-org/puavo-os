@@ -6,7 +6,7 @@ set -eu
 debbox_url="$1"
 
 sudo apt-get update
-sudo apt-get install -y puavo-devscripts
+sudo apt-get install -y --force-yes puavo-devscripts aptirepo-upload
 sudo apt-get install -y node-webkit  wmctrl gnome-themes-extras socat netcat-openbsd libnotify-bin xvfb jq
 
 # XXX: Why node-webkit does not install these?
@@ -25,5 +25,6 @@ sudo npm set registry http://registry.npmjs.org/
 
 export DISPLAY=:99
 puavo-debuild
-puavo-deb-upload "$debbox_url" ../*.deb
+
+aptirepo-upload -r $APTIREPO_REMOTE -b "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)" ../webmenu*.changes
 
