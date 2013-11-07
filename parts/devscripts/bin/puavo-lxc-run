@@ -65,7 +65,7 @@ jenkins_env="$1"
 shift
 base_container="$1"
 shift
-script="$1"
+script_name="$1"
 shift
 script_args="$@"
 
@@ -178,9 +178,20 @@ if [ "\$ip" = "" ]; then
 fi
 
 chown -R ci:ci /cirun
+
+git_dir="/cirun/${JOB_NAME}"
+script_location="${git_dir}/${script_name}"
+
+if [ ! -f "\$script_location" ]; then
+    # If script is not found from the workspace it is probably in a
+    # subdirectory set by Jenkins. Use shell globbing to autodetect the dirname
+    script_location="/cirun/${JOB_NAME}/"*"/$script_name"
+    git_dir=\$(dirname $\script_location)
+fi
+
 echo
-echo "Executing /cirun/${JOB_NAME}/$script $script_args"
-sudo -i -u ci sh -c "cd /cirun/${JOB_NAME} && ./$script $script_args"
+echo "Executing ${script_location} ${script_args}"
+sudo -i -u ci sh -c "cd ${git_dir} && ${script_location} ${script_args}"
 EOF
 chmod +x "$lxcdir/rootfs/run.sh"
 
