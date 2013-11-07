@@ -31,6 +31,9 @@ from ._error import Error
 class ChangesError(Error):
     pass
 
+class PoolError(Error):
+    pass
+
 def _gz(filepath_in):
     filepath_out = "%s.gz" % filepath_in
     with open(filepath_in, "rb") as f_in:
@@ -122,11 +125,40 @@ class Aptirepo:
                                   stdout=f, cwd=self.__rootdir)
         _gz(path)
 
+    def __copy_to_pool(self, filepath, codename, source_name, section):
+        dist = self.__dists[codename]
+        filename = os.path.basename(filepath)
+
+        component, sep, section = section.partition("/")
+        if not sep:
+            component="main"
+
+        abbrevdir = self.__join(dist["Pool"], component, source_name[0])
+        try:
+            os.mkdir(abbrevdir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise e
+
+        packagedir = os.path.join(abbrevdir, source_name)
+        try:
+            os.mkdir(packagedir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise e
+
+        target_filepath = os.path.join(packagedir, filename)
+        if os.path.exists(target_filepath):
+            if _md5sum(target_filepath) != _md5sum(filepath):
+                raise PoolError("'%s' already exists in the repository with different checksum" % filename)
+            return
+
+        shutil.copyfile(filepath, target_filepath)
+
     def import_changes(self, changes_filepath):
         changes = parse_changes(changes_filepath)
         codename = changes["Distribution"]
         source_name = changes["Source"]
-        dist = self.__dists[codename]
         changes_dirpath = os.path.dirname(changes_filepath)
         for md5, size, section, priority, filename in changes["Files"]:
             filepath = os.path.join(changes_dirpath, filename)
@@ -135,31 +167,7 @@ class Aptirepo:
             if md5 != real_md5:
                 raise ChangesError("md5 checksum mismatch '%s': '%s' != '%s'" % (filename, md5, real_md5))
 
-            component, sep, section = section.partition("/")
-            if not sep:
-                component="main"
-
-            abbrevdir = self.__join(dist["Pool"], component, source_name[0])
-            try:
-                os.mkdir(abbrevdir)
-            except OSError as e:
-                if e.errno != errno.EEXIST:
-                    raise e
-
-            packagedir = os.path.join(abbrevdir, source_name)
-            try:
-                os.mkdir(packagedir)
-            except OSError as e:
-                if e.errno != errno.EEXIST:
-                    raise e
-
-            dest_filepath = os.path.join(packagedir, filename)
-            if os.path.exists(dest_filepath):
-                if _md5sum(dest_filepath) != md5:
-                    raise ChnagesError("'%s' already exists in the repository with different checksum" % filename)
-                continue
-
-            shutil.copyfile(filepath, dest_filepath)
+            self.__copy_to_pool(filepath, codename, source_name, section)
 
     def update_dists(self):
         for codename, dist in self.__dists.items():
