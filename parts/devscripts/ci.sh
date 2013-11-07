@@ -3,12 +3,14 @@
 set -eu
 set -x
 
+sudo apt-get update
+sudo apt-get install -y --force-yes aptirepo-upload make
+
+
 # Dog food itself
 make
 sudo make install
 
-sudo apt-get update
-sudo apt-get install -y --force-yes aptirepo-upload
 
 puavo-build-debian-dir
 sudo puavo-install-deps debian/control
