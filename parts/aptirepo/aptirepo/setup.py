@@ -42,4 +42,6 @@ setup(name='aptirepo',
         "Programming Language :: Python :: 3.1",
         "Programming Language :: Python :: 3.2",
         ],
+      requires=['debian'],
+      provides=['aptirepo'],
       )
