@@ -289,18 +289,6 @@ kerberos_configuration.replace_keytab_file
 puts "Start krb5-kdc service"
 `/etc/init.d/krb5-kdc start`
 
-puts "Stop slapd"
-`stop slapd`
-
-puts "Waiting 3 seconds"
-sleep(3)
-
-puts "Start slapd"
-`start slapd`
-
-puts "Waiting 3 seconds"
-sleep(3)
-
 user = User.new
 
 user.givenName = given_name
