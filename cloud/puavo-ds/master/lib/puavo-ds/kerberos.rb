@@ -156,6 +156,7 @@ class KerberosSettings
     `mv #{TMP}/krb5.conf /etc/krb5.conf`
     `mv #{TMP}/kadm5.acl /etc/krb5kdc/kadm5.acl`
     `mv #{TMP}/krb5-kdc /etc/default/krb5-kdc`
+    fix_files_permission
   end
 
   def generate_new_keytab_file
@@ -189,6 +190,14 @@ class KerberosSettings
     `chown root.openldap /etc/ldap/slapd.d/openldap-krb5.keytab`
     `chmod 0640 /etc/ldap/slapd.d/openldap-krb5.keytab`
   end
+
+  def fix_files_permission
+    `chgrp -R openldap /etc/krb5kdc`
+    `chmod -R g+r /etc/krb5kdc`
+    `chmod g+x /etc/krb5kdc`
+    `chgrp openldap /etc/krb5.secrets`
+    `chmod g+r /etc/krb5.secrets`
+  end
 end
   
 class KerberosRealm
@@ -206,5 +215,6 @@ class KerberosRealm
   # Create kerberos ldap tree and stash file
   def save
     puts `echo "#{@masterpw}\\n#{@masterpw}\\n" | /usr/sbin/kdb5_ldap_util -D #{@ldap_dn} create -k aes256-cts-hmac-sha1-96 -subtrees "#{@suffix}" -s -sf /etc/krb5kdc/stash.#{@domain} -H ldaps://#{@ldap_host} -r "#{@realm}" -w #{@ldap_password} 2>/dev/null`
+    fix_files_permission
   end
 end
