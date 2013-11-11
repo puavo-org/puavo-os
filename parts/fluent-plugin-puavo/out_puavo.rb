@@ -25,11 +25,16 @@ class PuavoWrapper
   end
 
   def configure(conf)
-    if not conf["flush_interval"]
-      conf["flush_interval"] = @plugin.default_flush_interval
+    conf.elements.select do |el|
+      if el.name == "device"
+        el.arg.split("|").include?(HOST_TYPE)
+      end
+    end.each do |customizations|
+      # merge! is not working here for some reason
+      customizations.each{ |k,v| conf[k] = v }
     end
-
     @plugin.configure(conf)
+    $log.info "flush_interval is #{ conf["flush_interval"] }"
   end
 
   def inject_device_source(record)
@@ -41,11 +46,7 @@ class PuavoWrapper
     }
   end
 
-
   def method_missing(name, *args)
-    puts "#"*80
-    puts "Proxy call to #{ @plugin.class }##{ name } with #{ args.inspect }"
-    puts "#"*80
     @plugin.send(name, *args)
   end
 
@@ -63,16 +64,12 @@ class WriteFail < Exception; end
 
 class AutoForward < Fluent::ForwardOutput
 
-  def default_flush_interval
-    "5s"
-  end
-
   def configure(conf)
 
     conf.elements.each do |el|
-      if el.name == "server" && el["name"] == "bootserver"
+      if el.name == "server" && el["host"].to_s.strip == ""
         el["host"] = resolve_bootserver_hostname
-        $log.info "bootserver was resolved to #{ el["host"] }"
+        $log.info "Forwarding host was resolved to #{ el["host"] } for #{ el.name }"
       end
     end
 
@@ -103,20 +100,11 @@ class RestOut < Fluent::BufferedOutput
   end
 
   def configure(conf)
-    if conf["rest_host"]
-      @host = conf["rest_host"]
-    end
-
-    if conf["rest_port"]
-      @port = conf["rest_port"]
-    end
+    @host = conf["rest_host"] if conf["rest_host"]
+    @port = conf["rest_port"] if conf["rest_port"]
 
     $log.info "Rest is using #{ @host }:#{ @port }"
     super(conf)
-  end
-
-  def default_flush_interval
-    "60s"
   end
 
   def format(tag, time, record)
@@ -124,32 +112,32 @@ class RestOut < Fluent::BufferedOutput
   end
 
   def write(chunk)
-    tags = {}
+    records = []
 
     chunk.msgpack_each do |(tag,time,record)|
-      tags[tag] ||= []
-      record["_timestamp"] = time.to_i
-      tags[tag].push(record)
+      puts "RECIRD #{ record.inspect }"
+      next if record.nil?
+      records.push(record.merge(
+        "_tag" => tag,
+        "_time" => time
+      ))
     end
 
-    tags.each do |tag, records|
-      path = "/v3/fluent/#{ tag }"
-      req = Net::HTTP::Post.new(path, "Content-Type" => "application/json")
-      req.basic_auth LDAP_DN, LDAP_PASSWORD
+    path = "/v3/fluent"
+    req = Net::HTTP::Post.new(path, "Content-Type" => "application/json")
+    req.basic_auth LDAP_DN, LDAP_PASSWORD
 
-      http = Net::HTTP.new(@host, @port)
-      http.use_ssl = @port == 443
+    http = Net::HTTP.new(@host, @port)
+    http.use_ssl = @port == 443
 
-      $log.info "Sending #{ records.size } #{ tag } records to #{ @host }:#{ @port }#{ path }"
-
-      res = http.request(req, records.to_json)
-      if res.code != "200"
-        msg = "Bad HTTP Response #{ res.code.inspect }: #{ res.body }"
-        $log.error msg
-        raise WriteFail, msg
-      end
-      $log.info "Sent ok! #{ res } #{ res.code } #{ res.body }"
+    $log.info "Sending #{ records.size } records using to #{ @host }:#{ @port }#{ path }"
+    res = http.request(req, records.to_json)
+    if res.code != "200"
+      msg = "Bad HTTP Response #{ res.code.inspect }: #{ res.body }"
+      $log.error msg
+      raise WriteFail, msg
     end
+    $log.info "Sent ok! #{ res } #{ res.code } #{ res.body }"
 
   end
 end
