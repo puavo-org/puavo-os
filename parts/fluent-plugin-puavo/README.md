@@ -5,8 +5,8 @@
 A [fluentd](http://fluentd.org/) plugin which intelligently configures itself
 on puavo managed installations.
 
-On fat and thin clients it will just auto configure the default [out_forward][]
-plugin to forward packets to a near by boot server.
+On ltsp servers and fat clients it will just auto configure the default
+[out_forward][] plugin to forward packets to a near by boot server.
 
 On boot servers and laptops it will forward the packets to the cloud
 installation of puavo-rest ([fluent_relay][] resource) using http(s) with the
