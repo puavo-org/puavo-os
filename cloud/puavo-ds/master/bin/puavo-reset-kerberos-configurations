@@ -49,9 +49,5 @@ if replace == "y"
   
   puts "\nStart krb5-kdc service\n\n"
   `/etc/init.d/krb5-kdc start`
-
-  puts "Restart slapd"
-  puts `stop slapd ; start slapd`
-
 end
 
