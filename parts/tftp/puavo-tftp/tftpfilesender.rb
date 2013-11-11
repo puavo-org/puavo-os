@@ -86,6 +86,10 @@ module PuavoTFTP
         l "ERROR: cannot find file #{ name }"
         send_error_packet(ErrorCode::NOT_FOUND, "No found :(")
         return
+      rescue Errno::EISDIR
+        l "ERROR: cannot read a directory #{ name }"
+        send_error_packet(ErrorCode::NOT_FOUND, "Is a directory :(")
+        return
       end
 
       init_sending(data)
