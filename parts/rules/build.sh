@@ -69,6 +69,15 @@ done
       sudo_for_ltsp ltsp-chroot --base $basedir --mount-all
       ;;
     image)
+      old_release_name=
+      if [ -r "$basedir/$arch/etc/ltsp/this_ltspimage_release" ]; then
+          read old_release_name <"$basedir/$arch/etc/ltsp/this_ltspimage_release"
+      fi
+      read -p "Release name [${old_release_name}]: " new_release_name
+      if [ -z "${new_release_name}" ]; then
+          new_release_name=${old_release_name}
+      fi
+      sudo sh -c "echo $new_release_name > $basedir/$arch/etc/ltsp/this_ltspimage_release"
       sudo_for_ltsp ltsp-chroot --base $basedir passwd
       ltspimage_name=$build_version-$arch.img
       sudo sh -c "
