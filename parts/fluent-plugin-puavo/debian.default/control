@@ -1,0 +1,13 @@
+Source: fluent-plugin-puavo
+Section: admin
+Priority: extra
+Maintainer: Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>
+Build-Depends: debhelper (>= 8)
+Standards-Version: 3.9.3
+Homepage: https://github.com/opinsys/fluent-plugin-puavo/
+
+Package: fluent-plugin-puavo
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, td-agent
+Description: Generic fluentd plugin for Puavo managed installations
+ Generic fluentd plugin for Puavo managed installations
