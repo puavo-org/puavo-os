@@ -90,6 +90,10 @@ module PuavoTFTP
         l "ERROR: cannot read a directory #{ name }"
         send_error_packet(ErrorCode::NOT_FOUND, "Is a directory :(")
         return
+      rescue Errno::EACCES
+        l "ERROR: permission denied #{ name }"
+        send_error_packet(ErrorCode::NOT_FOUND, "Permission denied :(")
+        return
       end
 
       init_sending(data)
