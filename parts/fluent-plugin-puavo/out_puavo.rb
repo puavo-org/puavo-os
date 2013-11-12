@@ -52,9 +52,9 @@ class PuavoWrapper
 
   def emit(tag, es, chain)
     es.each do |time, record|
+      $log.info "record: #{ tag }: #{ record.inspect }"
       inject_device_source(record)
     end
-    $log.info "emitting #{ tag }"
     @plugin.emit(tag, es, chain)
   end
 
@@ -115,7 +115,6 @@ class RestOut < Fluent::BufferedOutput
     records = []
 
     chunk.msgpack_each do |(tag,time,record)|
-      puts "RECIRD #{ record.inspect }"
       next if record.nil?
       records.push(record.merge(
         "_tag" => tag,
@@ -130,7 +129,7 @@ class RestOut < Fluent::BufferedOutput
     http = Net::HTTP.new(@host, @port)
     http.use_ssl = @port == 443
 
-    $log.info "Sending #{ records.size } records using to #{ @host }:#{ @port }#{ path }"
+    $log.info "Sending #{ records.size } records using http to #{ @host }:#{ @port }#{ path }"
     res = http.request(req, records.to_json)
     if res.code != "200"
       msg = "Bad HTTP Response #{ res.code.inspect }: #{ res.body }"
