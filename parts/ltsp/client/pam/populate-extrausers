@@ -73,7 +73,7 @@ begin
   passwd[user['username']] = "#{user['username']}:x:#{user['uid_number']}:#{user['gid_number']}:#{user['first_name']} #{user['last_name']}:/home/#{user['username']}:/bin/bash"
 
   session['user']['groups'].each do |user_group|
-    group = groups[user_group['name']]
+    group = groups[user_group['abbreviation']]
 
     members = Array.new
     members << user['username']
@@ -82,7 +82,7 @@ begin
       members.concat (group.chomp.split(":")[3]).split(",")
     end
 
-    groups[user_group['name']] = "#{user_group['name']}:x:#{user_group['gid_number']}:#{members.uniq.join(',')}"
+    groups[user_group['abbreviation']] = "#{user_group['abbreviation']}:x:#{user_group['gid_number']}:#{members.uniq.join(',')}"
   end
 
   File.open("/var/lib/extrausers/passwd", "w") do |file|
