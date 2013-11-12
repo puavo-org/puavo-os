@@ -8,6 +8,6 @@ Homepage: https://github.com/opinsys/fluent-plugin-puavo/
 
 Package: fluent-plugin-puavo
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, td-agent
+Depends: ${shlibs:Depends}, ${misc:Depends}, fluentd
 Description: Generic fluentd plugin for Puavo managed installations
  Generic fluentd plugin for Puavo managed installations
