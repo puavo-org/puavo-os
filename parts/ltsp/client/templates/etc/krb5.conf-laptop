@@ -14,6 +14,10 @@
                 kdc = <%= @kerberos_master %>
                 default_domain = <%= @puavo_domain %>
         }
+        <%= @kerberos_toprealm %> = {
+                kdc = <%= @kerberos_master %>
+                default_domain = <%= @puavo_topdomain %>
+        }
 
 [appdefaults]
         pam = {
