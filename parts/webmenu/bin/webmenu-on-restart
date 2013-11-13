@@ -18,6 +18,8 @@ record = {
   :type => ENV["CRASH_TYPE"]
 }
 
+puts "Crash! Error uuid: #{ record[:uuid] }"
+
 record["log"] = `tail --lines=100 #{ ENV["WM_LOG_FILE"] }`.split("\n")
 
 res = Net::HTTP.post_form(
