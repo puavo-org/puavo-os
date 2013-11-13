@@ -4,6 +4,9 @@ require "json"
 require "net/http"
 require "uri"
 
+if not ENV["WM_FLUENTD_ACTIVE"]
+  exit 0
+end
 
 if ENV["CRASH_TYPE"] == "restart"
   `notify-send --urgency=critical "Webmenu crashed" "restarting..."`

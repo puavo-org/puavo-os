@@ -50,6 +50,8 @@ for arg in $@; do
             help && exit 0
         ;;
         -d|--daemonize)
+            # Enable error reporting to fluend only in daemon mode
+            export WM_FLUENTD_ACTIVE=true
             mon_args="$mon_args --daemonize"
         ;;
         -s|--stop)
