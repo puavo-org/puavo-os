@@ -8,6 +8,6 @@ Homepage: http://github.com/opinsys/webmenu
 
 Package: webmenu
 Architecture: i386
-Depends: ${misc:Depends}, node-webkit (= 0.6.3-0+opinsys1ubuntu1), wmctrl, gnome-themes-extras, socat, netcat-openbsd, libnotify-bin, faenza-icon-theme
+Depends: ${misc:Depends}, node-webkit (= 0.6.3-0+opinsys1ubuntu1), wmctrl, gnome-themes-extras, socat, netcat-openbsd, libnotify-bin, faenza-icon-theme, zenity, visionmedia-mon, fluentd, ruby1.9.1
 Description: Webmenu
  Next generation desktop menu

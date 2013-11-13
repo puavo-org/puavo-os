@@ -1,15 +1,6 @@
 #!/bin/sh
 
-set -eu
-
-# Webmenu installation path
-WM_PATH="/opt/webmenu"
-
-# Webmenu config home
 WM_HOME=$HOME/.config/webmenu
-
-# Log file for the current Webmenu instance
-LOG_FILE="$WM_HOME/current.log"
 
 # Spawn menu pipe path. Create unique for each X instance
 export SPAWNMENU=$(hostname)-$(echo $DISPLAY | sed -r s/[.][0-9]*$//)
@@ -19,43 +10,77 @@ export WM_STARTUP_TIME=$(date +%s)
 
 export WM_ENV=production
 
-# Customize path with first arg.
-# Eg. use "bin/webmenu ." to start development version from git
-if [ $# -eq 1 ]; then
-    WM_PATH=$1
+# https://github.com/visionmedia/mon
+mon_args=""
+mon_pidfile="$WM_HOME/mon.pid"
+
+# Log file for the current Webmenu instance
+export WM_LOG_FILE="$WM_HOME/current.log"
+
+
+help(){
+    echo "
+    Usage: $(basename $0) [options]
+
+    Start Webmenu
+
+    -d --daemonize  Daemonize the process.
+                    Output will be written to $WM_LOG_FILE
+    -s --stop       Stop the running Webmenu process
+    --devtools      Start with developer tools
+    --test          Execute Webmenu tests
+    "
+}
+
+
+set -eu
+
+# Webmenu installation path
+if [ -f package.json ]; then
+    WM_PATH=$(pwd)
+else
+    WM_PATH="/opt/webmenu"
 fi
+
+cd $WM_PATH
+
+for arg in $@; do
+    case "$arg" in
+        -h|--help)
+            help && exit 0
+        ;;
+        -d|--daemonize)
+            mon_args="$mon_args --daemonize"
+        ;;
+        -s|--stop)
+            set -x
+            kill $(cat $mon_pidfile)
+            exit 0
+        ;;
+    esac
+done
+
+
+# Truncate log file to avoid excess disk usage
+if [ -f "$WM_LOG_FILE" ]; then
+    cat "$WM_LOG_FILE" | tail --lines 1000 > "$WM_LOG_FILE"
+fi
+
 
 mkdir -p $WM_HOME
 
-# At max keep only 10 latest crash logs
-ls -1 -t "$WM_HOME/crash-*" | tail --lines=+10 | xargs rm -f
+echo "Starting webmenu from $WM_PATH"
+echo "Logging to $WM_LOG_FILE"
 
-echo "Starting Webmenu from $WM_PATH"
-echo "log: tail -f $WM_HOME/current.log"
+export CRASH_TYPE="restart"
+export WM_RESTART_SCRIPT="$(pwd)/bin/webmenu-on-restart"
+error_script="$(pwd)/bin/webmenu-on-error"
 
-# Start Webmenu using node-webkit
-cd $WM_PATH
-nw $WM_PATH > $LOG_FILE 2>&1 || {
-    WM_STATUS=$?
-
-    # Webmenu crashed!
-    notify-send --urgency=critical "Webmenu crashed!" "Restarting..." || true
-
-    ERR_LOG="$WM_HOME/crash-$(date +%Y-%m-%d_%H-%M-%S).log"
-
-    # Save crash logs to own files
-    cp $LOG_FILE $ERR_LOG
-    echo "Crashed with $WM_STATUS. Log saved to $ERR_LOG"
-
-    # Post crash notice to puavo-logrelay
-    nc -q 1 -w 1 -u eventlog 3858 << EOF || true
-type:webmenu
-event:crash
-hostname:$(hostname)
-date:$(date +%s)
-path:$ERR_LOG
-EOF
-    echo "Restarting in 5..."
-    sleep 5
-    exec $0 $WM_PATH
-}
+set -x
+exec mon $mon_args \
+    --log $WM_LOG_FILE \
+    --attempts 2 \
+    --mon-pidfile "$mon_pidfile" \
+    --on-restart $WM_RESTART_SCRIPT \
+    --on-error $error_script \
+    "nw . $@"
