@@ -4,22 +4,23 @@ fs = require("fs")
 logger = require "./fluent-logger"
 startedFile = process.env.WM_HOME + "/started"
 
+started = null
+
+try
+    started = fs.readFileSync(startedFile).toString()
+    fs.unlinkSync(startedFile)
+catch err
+    # ok to be missing on restarts and development
+
 logStartTime = (msg) ->
-    fs.readFile startedFile, (err, data) ->
-        return if err # ok to be removed after restarts
+    return if not started
 
-        started = parseInt(data.toString(), 10)
-        sinceStart = (Date.now()/1000) - started
+    sinceStart = (Date.now()/1000) - parseInt(started, 10)
 
-        console.log(msg.trim() + "  in " + sinceStart + " seconds")
-        logger.emit(
-          msg: msg
-          time: sinceStart
-        )
+    console.log(msg.trim() + "  in " + sinceStart + " seconds")
+    logger.emit(
+      msg: msg
+      time: sinceStart
+    )
 
-        fs.unlink startedFile, (err) ->
-            if err
-                console.error("Failed to unlink startup file", err)
-
-
-module.exports = logStartTime;
+module.exports = logStartTime
