@@ -28,6 +28,7 @@ help(){
                     Output will be written to $WM_LOG_FILE
     -s --stop       Stop the running Webmenu process
     --devtools      Start with developer tools
+    --debug         Do debug build before starting
     --test          Execute Webmenu tests
     "
 }
@@ -53,6 +54,9 @@ for arg in $@; do
             # Enable error reporting to fluend only in daemon mode
             export WM_FLUENTD_ACTIVE=true
             mon_args="$mon_args --daemonize"
+        ;;
+        --debug)
+            node make.js all -d
         ;;
         -s|--stop)
             set -x
