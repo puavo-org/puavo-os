@@ -18,6 +18,7 @@ dbusRegister = require "./dbusRegister"
 forceFocus = require "./forceFocus"
 createSpawnPipe = require "./createSpawnPipe"
 createFeedbackSender = require "./createFeedbackSender"
+logger = require "./fluent-logger"
 pkg = require "../package.json"
 
 webmenuHome = process.env.HOME + "/.config/webmenu"

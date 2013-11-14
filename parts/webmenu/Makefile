@@ -31,6 +31,7 @@ clean-nw:
 	rm -r ../webmenu-*.nw
 
 nw-gyp:
+	$(call nw-build,fluent-logger/node_modules/msgpack)
 	$(call nw-build,ffi/node_modules/ref)
 	$(call nw-build,ffi)
 	$(call nw-build,posix)
