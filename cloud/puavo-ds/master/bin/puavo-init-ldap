@@ -238,6 +238,9 @@ FileUtils.rm_rf("/etc/ldap/krb5.keytab")
 puts assert_exec "kadmin.local -r #{PUAVO_ETC.krb_toprealm} -q \"addprinc -randkey ldap/#{PUAVO_ETC.ldap_master}\""
 puts assert_exec "kadmin.local -r #{PUAVO_ETC.krb_toprealm} -q \"ktadd -norandkey -k /etc/ldap/krb5.keytab ldap/#{PUAVO_ETC.ldap_master}\""
 
+# Fix file permissions
+FileUtils.chown 'root', 'openldap', '/etc/ldap/krb5.keytab'
+FileUtils.chmod 0640, '/etc/ldap/krb5.keytab'
 
 
 puts "Test: ldapsearch -ZZ -h #{ PUAVO_ETC.ldap_master } -D uid=admin,o=puavo -w #{ @rootpw } -x -b o=puavo"
