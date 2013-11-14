@@ -8,9 +8,6 @@ export SPAWNMENU=$(hostname)-$(echo $DISPLAY | sed -r s/[.][0-9]*$//)
 
 export WM_ENV=production
 
-# https://github.com/visionmedia/mon
-mon_args=""
-mon_pidfile="$WM_HOME/mon.pid"
 
 # Log file for the current Webmenu instance
 export WM_LOG_FILE="$WM_HOME/current.log"
@@ -22,17 +19,16 @@ help(){
 
     Start Webmenu
 
-    -d --daemonize  Daemonize the process.
+    --daemonize  Daemonize the process.
                     Output will be written to $WM_LOG_FILE
     -s --stop       Stop the running Webmenu process
+    -d --debug      Do debug build before starting
     --devtools      Start with developer tools
-    --debug         Do debug build before starting
     --test          Execute Webmenu tests
     "
 }
 
 
-set -eu
 
 # Webmenu installation path
 if [ -f package.json ]; then
@@ -41,29 +37,46 @@ else
     WM_PATH="/opt/webmenu"
 fi
 
-cd $WM_PATH
 
-for arg in $@; do
-    case "$arg" in
+# https://github.com/visionmedia/mon
+mon_args=""
+mon_pidfile="$WM_HOME/mon.pid"
+
+wm_args=""
+
+while true; do
+    case "$1" in
         -h|--help)
             help && exit 0
         ;;
-        -d|--daemonize)
+        --daemon|--daemonize)
             # Enable error reporting to fluend only in daemon mode
             export WM_FLUENTD_ACTIVE=true
             mon_args="$mon_args --daemonize"
+            shift
         ;;
-        --debug)
+        -d|-debug)
             node make.js all -d
+            shift
         ;;
         -s|--stop)
             set -x
             kill $(cat $mon_pidfile)
             exit 0
         ;;
+        "")
+            break
+        ;;
+        *)
+            wm_args="$wm_args $1"
+            shift
+        ;;
     esac
 done
 
+set -eu
+
+cd $WM_PATH
 
 # Truncate log file to avoid excess disk usage
 if [ -f "$WM_LOG_FILE" ]; then
@@ -89,4 +102,4 @@ exec mon $mon_args \
     --mon-pidfile "$mon_pidfile" \
     --on-restart $WM_RESTART_SCRIPT \
     --on-error $error_script \
-    "nw . $@"
+    "nw . $wm_args"
