@@ -1,3 +1,11 @@
+openldap (2.4.37-0+opinsys4) precise; urgency=low
+
+  * Use upstart instead of sysv init.
+  * Kill slapd with SIGINT
+  * Update smbkrb5pwd to https://github.com/opinsys/smbkrb5pwd/commit/049d3b1661eebe92adf561034331601c055e0a4f
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 14 Nov 2013 11:18:19 +0200
+
 openldap (2.4.37-0+opinsys3) precise; urgency=low
 
   * slapd: increase slapd's max number of open files when started via init script
