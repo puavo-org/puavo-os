@@ -2,8 +2,10 @@ Description: make contrib/slapd-modules/autogroup/Makefile debian-friendly
 
 Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
 
---- openldap-2.4.37.orig/contrib/slapd-modules/autogroup/Makefile
-+++ openldap-2.4.37/contrib/slapd-modules/autogroup/Makefile
+Index: openldap/contrib/slapd-modules/autogroup/Makefile
+===================================================================
+--- openldap.orig/contrib/slapd-modules/autogroup/Makefile	2013-11-13 17:33:57.000000000 +0200
++++ openldap/contrib/slapd-modules/autogroup/Makefile	2013-11-14 09:27:23.006930181 +0200
 @@ -1,7 +1,7 @@
  # $OpenLDAP$
  
@@ -13,20 +15,20 @@ Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
  LDAP_INC = -I$(LDAP_BUILD)/include -I$(LDAP_SRC)/include -I$(LDAP_SRC)/servers/slapd
  LDAP_LIB = $(LDAP_BUILD)/libraries/libldap_r/libldap_r.la \
  	$(LDAP_BUILD)/libraries/liblber/liblber.la
-@@ -16,13 +16,13 @@ LIBS = $(LDAP_LIB)
+@@ -16,12 +16,11 @@
  PROGRAMS = autogroup.la
  LTVER = 0:0:0
  
 -prefix=/usr/local
-+prefix=/usr
- exec_prefix=$(prefix)
+-exec_prefix=$(prefix)
 -ldap_subdir=/openldap
++prefix=/usr
 +ldap_subdir=/ldap
  
- libdir=$(exec_prefix)/lib
- libexecdir=$(exec_prefix)/libexec
--moduledir = $(libexecdir)$(ldap_subdir)
-+moduledir = $(lib)$(ldap_subdir)
+-libdir=$(exec_prefix)/lib
+-libexecdir=$(exec_prefix)/libexec
++libdir=$(prefix)/lib
++libexecdir=$(prefix)/lib
+ moduledir = $(libexecdir)$(ldap_subdir)
  
  .SUFFIXES: .c .o .lo
- 

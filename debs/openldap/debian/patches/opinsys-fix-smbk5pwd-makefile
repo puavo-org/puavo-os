@@ -4,8 +4,8 @@ Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
 
 Index: openldap/contrib/slapd-modules/smbk5pwd/Makefile
 ===================================================================
---- openldap.orig/contrib/slapd-modules/smbk5pwd/Makefile	2013-10-26 23:46:04.000000000 +0300
-+++ openldap/contrib/slapd-modules/smbk5pwd/Makefile	2013-10-28 17:14:31.255842868 +0200
+--- openldap.orig/contrib/slapd-modules/smbk5pwd/Makefile	2013-11-14 09:26:37.018928992 +0200
++++ openldap/contrib/slapd-modules/smbk5pwd/Makefile	2013-11-14 09:27:57.138930939 +0200
 @@ -13,7 +13,7 @@
  # <http://www.OpenLDAP.org/license.html>.
  
@@ -26,20 +26,20 @@ Index: openldap/contrib/slapd-modules/smbk5pwd/Makefile
  
  LIBTOOL = $(LDAP_BUILD)/libtool
  CC = gcc
-@@ -35,13 +35,13 @@
+@@ -35,12 +35,11 @@
  PROGRAMS = smbk5pwd.la
  LTVER = 0:0:0
  
 -prefix=/usr/local
-+prefix=/usr
- exec_prefix=$(prefix)
+-exec_prefix=$(prefix)
 -ldap_subdir=/openldap
++prefix=/usr
 +ldap_subdir=/ldap
  
- libdir=$(exec_prefix)/lib
- libexecdir=$(exec_prefix)/libexec
--moduledir = $(libexecdir)$(ldap_subdir)
-+moduledir = $(lib)$(ldap_subdir)
+-libdir=$(exec_prefix)/lib
+-libexecdir=$(exec_prefix)/libexec
++libdir=$(prefix)/lib
++libexecdir=$(prefix)/lib
+ moduledir = $(libexecdir)$(ldap_subdir)
  
  .SUFFIXES: .c .o .lo
- 
