@@ -5,6 +5,7 @@ require "net/http"
 require "uri"
 
 if not ENV["WM_FLUENTD_ACTIVE"]
+  puts "WM_FLUENTD_ACTIVE not set. Not sending crash report."
   exit 0
 end
 
@@ -21,7 +22,8 @@ record = {
 
 puts "Crash! Error uuid: #{ uuid }"
 
-record["error"]["log"] = `tail --lines=50 #{ ENV["WM_LOG_FILE"] }`.split("\n")
+record[:error][:log] = `tail --lines=50 #{ ENV["WM_LOG_FILE"] }`.split("\n")
+
 
 res = Net::HTTP.post_form(
   URI("http://127.0.0.1:8888/webmenu"),
@@ -30,6 +32,8 @@ res = Net::HTTP.post_form(
 
 if res.code != "200"
   puts "Bad HTTP Response #{ res.code.inspect }: #{ res.body }"
+else
+  puts "Error report sent ok"
 end
 
 File.open(ENV["WM_HOME"] + "/crash_uuids", "a") do |f|
