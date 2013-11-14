@@ -75,6 +75,10 @@ while true; do
             node make.js all
             shift
         ;;
+        --build-node)
+            node make.js coffee
+            shift
+        ;;
         -w|--watch)
             echo "Using inotify to do automatic debug builds."
             echo "Start webmenu from another terminal."
