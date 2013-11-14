@@ -175,6 +175,7 @@
 #  --with-fetch		  with fetch(3) URL support [auto]
 #  --with-threads	  with threads [auto]
 --with-threads
+--with-gssapi
 #  --with-tls		  with TLS/SSL support auto|openssl|gnutls|moznss [auto]
 --with-tls=openssl
 #  --with-yielding-select  with implicitly yielding select [auto]
