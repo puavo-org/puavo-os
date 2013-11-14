@@ -5,8 +5,6 @@ export WM_HOME=$HOME/.config/webmenu
 # Spawn menu pipe path. Create unique for each X instance
 export SPAWNMENU=$(hostname)-$(echo $DISPLAY | sed -r s/[.][0-9]*$//)
 
-# Save startup time to an env to log startup times
-export WM_STARTUP_TIME=$(date +%s)
 
 export WM_ENV=production
 
@@ -80,6 +78,9 @@ echo "Logging to $WM_LOG_FILE"
 
 export WM_RESTART_SCRIPT="$(pwd)/bin/webmenu-on-restart"
 error_script="$(pwd)/bin/webmenu-on-error"
+
+# Save startup time to a file to log start up times
+date +%s > "$WM_HOME/started"
 
 set -x
 exec mon $mon_args \
