@@ -104,7 +104,7 @@ mkdir -p $WM_HOME
 echo "Starting webmenu from $WM_PATH"
 echo "Logging to $WM_LOG_FILE"
 
-export WM_RESTART_SCRIPT="$(pwd)/bin/webmenu-on-restart"
+restart_script="$(pwd)/bin/webmenu-on-restart"
 error_script="$(pwd)/bin/webmenu-on-error"
 
 # Save startup time to a file to log start up times
@@ -115,6 +115,6 @@ exec mon $mon_args \
     --log $WM_LOG_FILE \
     --attempts 2 \
     --mon-pidfile "$mon_pidfile" \
-    --on-restart $WM_RESTART_SCRIPT \
+    --on-restart $restart_script \
     --on-error $error_script \
     "nw . $wm_args"
