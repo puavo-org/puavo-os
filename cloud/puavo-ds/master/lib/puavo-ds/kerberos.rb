@@ -159,28 +159,6 @@ class KerberosSettings
     fix_files_permission
   end
 
-  def generate_new_keytab_file
-    hostname = `hostname -f`.chomp
-
-    @organisations.each do |organisation|
-      smbkrb5pwd_princ = `kadmin.local -r #{organisation['realm']} -q "listprincs" | grep smbkrb5pwd/#{hostname}@#{organisation['realm']}`.chomp
-
-      if smbkrb5pwd_princ.empty?
-        puts "Creating smbkrb5pwd/#{hostname}@#{organisation['realm']} principal"
-        `kadmin.local -r #{organisation['realm']} -q "addprinc -randkey smbkrb5pwd/#{hostname}@#{organisation['realm']}"`
-      end
-
-      puts "Exporting smbkrb5pwd/#{hostname}@#{organisation['realm']} to keytab"
-      puts `kadmin.local -r #{organisation['realm']} -q "ktadd -norandkey -k #{TMP}/openldap-krb5.keytab smbkrb5pwd/#{hostname}@#{organisation['realm']}"`
-    end
-  end
-
-  def replace_keytab_file
-    `mv #{TMP}/openldap-krb5.keytab /etc/ldap/slapd.d/openldap-krb5.keytab`
-    `chown root.openldap /etc/ldap/slapd.d/openldap-krb5.keytab`
-    `chmod 0640 /etc/ldap/slapd.d/openldap-krb5.keytab`
-  end
-
   def fix_files_permission
     `chgrp -R openldap /etc/krb5kdc`
     `chmod -R g+r /etc/krb5kdc`

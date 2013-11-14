@@ -42,11 +42,6 @@ if replace == "y"
 
   kerberos_configuration.replace_server_configurations
 
-  puts "Generate new keytab file"
-  kerberos_configuration.generate_new_keytab_file
-
-  kerberos_configuration.replace_keytab_file
-  
   puts "\nStart krb5-kdc service\n\n"
   `/etc/init.d/krb5-kdc start`
 end
