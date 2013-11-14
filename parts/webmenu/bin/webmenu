@@ -6,7 +6,6 @@ export WM_HOME=$HOME/.config/webmenu
 export SPAWNMENU=$(hostname)-$(echo $DISPLAY | sed -r s/[.][0-9]*$//)
 
 
-export WM_ENV=production
 
 
 # Log file for the current Webmenu instance
@@ -19,15 +18,21 @@ help(){
 
     Start Webmenu
 
-    --daemonize  Daemonize the process.
+    --daemonize     Daemonize the process.
                     Output will be written to $WM_LOG_FILE
     -s --stop       Stop the running Webmenu process
-    -d --debug      Do debug build before starting
-    --devtools      Start with developer tools
+
+
+    Hacking options
+
+    -b --build      Do production build of Webmenu before starting it
+    -w --watch      Use inotify to build debug builds of webmenu
+    -d --devtools   Start with developer tools
     --test          Execute Webmenu tests
     "
 }
 
+export WM_ENV=production
 
 
 # Webmenu installation path
@@ -55,9 +60,19 @@ while true; do
             mon_args="$mon_args --daemonize"
             shift
         ;;
-        -d|-debug)
-            node make.js all -d
+        -d)
+            wm_args="$wm_args --devtools"
             shift
+        ;;
+        -b|--build)
+            node make.js all
+            shift
+        ;;
+        -w|--watch)
+            echo "Using inotify to do automatic debug builds."
+            echo "Start webmenu from another terminal."
+            read -p "[Enter to continue]" _
+            exec node make.js --debug --watch
         ;;
         -s|--stop)
             set -x
