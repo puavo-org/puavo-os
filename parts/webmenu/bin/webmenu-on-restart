@@ -8,19 +8,16 @@ if not ENV["WM_FLUENTD_ACTIVE"]
   exit 0
 end
 
-if ENV["CRASH_TYPE"] == "restart"
-  `notify-send --urgency=critical "Webmenu crashed" "restarting..."`
-end
+`notify-send --urgency=critical "The Menu crashed" "restarting..."`
 
 record = {
   :uuid => (0...25).map{ ('a'..'z').to_a[rand(26)] }.join,
-  :msg => "webmenu crash",
-  :type => ENV["CRASH_TYPE"]
+  :msg => "webmenu crash"
 }
 
 puts "Crash! Error uuid: #{ record[:uuid] }"
 
-record["log"] = `tail --lines=100 #{ ENV["WM_LOG_FILE"] }`.split("\n")
+record["log"] = `tail --lines=50 #{ ENV["WM_LOG_FILE"] }`.split("\n")
 
 res = Net::HTTP.post_form(
   URI("http://127.0.0.1:8888/webmenu"),
@@ -31,15 +28,11 @@ if res.code != "200"
   puts "Bad HTTP Response #{ res.code.inspect }: #{ res.body }"
 end
 
-if ENV["CRASH_TYPE"] == "error"
-`zenity --title Menu --error --text 'Sorry but the Menu has crashed :(
-
-Please contact support with the error id below and we will fix it! :)
-
-Error id: #{ record[:uuid] }' &`
-else
-  puts "Sleeping for 5s"
-  sleep 5
+File.open(ENV["WM_HOME"] + "/crash_uuids", "a") do |f|
+  f.puts(record[:uuid])
 end
+
+puts "Sleeping for 5s"
+sleep 5
 
 
