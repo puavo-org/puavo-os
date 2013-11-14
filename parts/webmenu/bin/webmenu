@@ -18,8 +18,9 @@ help(){
 
     Start Webmenu
 
-    --daemonize     Daemonize the process.
+    --daemonize     Daemonize the process. Cannot be used with --no-mon
                     Output will be written to $WM_LOG_FILE
+    --no-mon        Disable automatic restarting with mon
     -s --stop       Stop the running Webmenu process
 
 
@@ -49,6 +50,8 @@ mon_pidfile="$WM_HOME/mon.pid"
 
 wm_args=""
 
+use_mon=true
+
 while true; do
     case "$1" in
         -h|--help)
@@ -62,6 +65,10 @@ while true; do
         ;;
         -d)
             wm_args="$wm_args --devtools"
+            shift
+        ;;
+        --no-mon)
+            use_mon=false
             shift
         ;;
         -b|--build)
@@ -111,10 +118,15 @@ error_script="$(pwd)/bin/webmenu-on-error"
 date +%s > "$WM_HOME/started"
 
 set -x
-exec mon $mon_args \
-    --log $WM_LOG_FILE \
-    --attempts 2 \
-    --mon-pidfile "$mon_pidfile" \
-    --on-restart $restart_script \
-    --on-error $error_script \
-    "nw . $wm_args"
+
+if $use_mon; then
+    exec mon $mon_args \
+        --log $WM_LOG_FILE \
+        --attempts 2 \
+        --mon-pidfile "$mon_pidfile" \
+        --on-restart $restart_script \
+        --on-error $error_script \
+        "nw . $wm_args"
+else
+    exec nw . $wm_args
+fi
