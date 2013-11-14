@@ -187,6 +187,16 @@ module.exports = (gui, Window) ->
 
     open = (cmd) ->
         console.log "Opening command", cmd
+        logger.emit(
+            msg: "open"
+            cmd: _.omit(cmd,
+                "description",
+                "osIconPath",
+                "osIcon",
+                "keywords"
+            )
+        )
+
         Window.setAlwaysOnTop(false)
 
         # Use node-webkit to open toolbarless web window
