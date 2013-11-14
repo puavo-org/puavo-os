@@ -1,3 +1,19 @@
+
+nodejs = window.nodejs
+
+{user, config, menu, logger} = nodejs
+
+window.onerror = (message, file, line, column, errorObj) ->
+    logger.emit(
+        msg: "unhandled exception"
+        capturedFrom: "window.onerror"
+        error:
+            message: message
+            file: file
+            line: line
+    )
+
+
 $ = require "./vendor/jquery.shim"
 Backbone = require "backbone"
 Backbone.$ = $
@@ -8,9 +24,7 @@ MenuLayout = require "./views/MenuLayout.coffee"
 AllItems = require "./models/AllItems.coffee"
 MenuModel = require "./models/MenuModel.coffee"
 
-nodejs = window.nodejs
 
-{user, config, menu} = nodejs
 
 user = new Backbone.Model user
 config = new Backbone.Model config

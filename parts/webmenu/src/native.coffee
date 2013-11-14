@@ -215,6 +215,7 @@ module.exports = (gui, Window) ->
     shared.user = userData
     shared.config = config
     shared.menu = menuJSON
+    shared.logger = logger
 
     shared.executeAction = (action) ->
         if actionCMD = config[action + "CMD"]
