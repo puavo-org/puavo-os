@@ -172,16 +172,6 @@ class KerberosSettings
 
       puts "Exporting smbkrb5pwd/#{hostname}@#{organisation['realm']} to keytab"
       puts `kadmin.local -r #{organisation['realm']} -q "ktadd -norandkey -k #{TMP}/openldap-krb5.keytab smbkrb5pwd/#{hostname}@#{organisation['realm']}"`
-
-      ldap_princ = `kadmin.local -r #{organisation['realm']} -q "listprincs" | grep ldap/#{hostname}@#{organisation['realm']}`.chomp
-
-      if ldap_princ.empty?
-        puts "Creating ldap/#{hostname}@#{organisation['realm']} principal"
-        `kadmin.local -r #{organisation['realm']} -q "addprinc -randkey ldap/#{hostname}@#{organisation['realm']}"`
-      end
-      
-      puts "Exporting ldap/#{hostname}@#{organisation['realm']} to keytab"
-      puts `kadmin.local -r #{organisation['realm']} -q "ktadd -norandkey -k #{TMP}/openldap-krb5.keytab ldap/#{hostname}@#{organisation['realm']}"`
     end
   end
 
