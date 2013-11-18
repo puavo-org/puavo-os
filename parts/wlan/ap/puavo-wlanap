@@ -142,32 +142,79 @@ setup_nets()
 
 setup_radios()
 {
-    local -r channels=(1 6 11 36 40 44 48)
-    local i sband_ifaces dband_ifaces iface
+    local i
 
-    sband_ifaces=$({ "${PWAP_LIBDIR}/find-ifaces" a; "${PWAP_LIBDIR}/find-ifaces" g; } | sort | uniq -u)
-    dband_ifaces=$({ "${PWAP_LIBDIR}/find-ifaces" a; "${PWAP_LIBDIR}/find-ifaces" g; } | sort | uniq -d)
+    local channel
+    local channels_ag
+    local channels_a
+    local channels_g
+
+    local iface
+    local ifaces_ag
+    local ifaces_a
+    local ifaces_g
+
+    local used_channels=()
+    used_channels[1]=0
+    used_channels[6]=0
+    used_channels[11]=0
+    used_channels[36]=0
+    used_channels[40]=0
+    used_channels[44]=0
+    used_channels[48]=0
+
     PWAP_RADIOS=()
 
+    "${PWAP_LIBDIR}/find-ifaces" | while read iface; do
+        ifconfig "${iface}" up
+    done
+
+    channels=($("${PWAP_LIBDIR}/scan-channels" 1 6 11 36 40 44 48))
+    if [ ${#channels[@]} -ne 7 ]; then
+        echo "Failed to scan channels, falling back to random channel selection" >&2
+        channels=($(printf '%d\n' 1 6 11 36 40 44 48 | sort -R))
+    fi
+
+    channels_a=($(printf '%s\n' ${channels[@]} | sed -r -n 's/^(36|40|44|48)$/\1/p'))
+    channels_g=($(printf '%s\n' ${channels[@]} | sed -r -n 's/^(1|6|11)$/\1/p'))
+
+    ifaces_a=$({ "${PWAP_LIBDIR}/find-ifaces" a; "${PWAP_LIBDIR}/find-ifaces" g; "${PWAP_LIBDIR}/find-ifaces" g; } | sort | uniq -u | head -n4)
+    ifaces_g=$({ "${PWAP_LIBDIR}/find-ifaces" a; "${PWAP_LIBDIR}/find-ifaces" a; "${PWAP_LIBDIR}/find-ifaces" g; } | sort | uniq -u | head -n3)
+    ifaces_ag=$({ "${PWAP_LIBDIR}/find-ifaces" a; "${PWAP_LIBDIR}/find-ifaces" g; } | sort | uniq -d | head -n7)
+
+    ## Add radios which support only 5GHz frequency...
     i=0
-    for iface in ${sband_ifaces}; do
-        if [ ${#PWAP_RADIOS[@]} -eq 3 ]; then
-            break # Max number of 2.4GHz radios
-        fi
-        PWAP_RADIOS+=("${channels[i]}:${iface}")
+    for iface in ${ifaces_a}; do
+        channel=${channels_a[i]}
+        PWAP_RADIOS+=("${channel}:${iface}")
+        used_channels[$channel]=1
         ((++i))
     done
 
-    i=3 # Start from 5GHz channels.
-    for iface in ${dband_ifaces}; do
-        if [ ${#PWAP_RADIOS[@]} -eq 7 ]; then
-            break # Max number of radios
-        fi
+    ## ...then radios supporting only 2.4GHz frequency...
+    i=0
+    for iface in ${ifaces_g}; do
+        channel=${channels_g[i]}
+        PWAP_RADIOS+=("${channel}:${iface}")
+        used_channels[$channel]=1
+        ((++i))
+    done
+
+    ## ..and then radios which support both frequencies.
+    i=0
+    for iface in ${ifaces_ag}; do
+
+        ## Ensure there is at least one 2.4GHz radio.
         if [ ${#PWAP_RADIOS[@]} -eq 0 ]; then
-            PWAP_RADIOS+=("${channels[0]}:${iface}")
-            continue
+            channel=${channels_g[0]}
+        else
+            channel=${channels[$i]}
         fi
-        PWAP_RADIOS+=("${channels[i]}:${iface}")
+
+        if [ ${used_channels[$channel]} -eq 0 ]; then
+            PWAP_RADIOS+=("${channel}:${iface}")
+            used_channels[$channel]=1
+        fi
         ((++i))
     done
 }
