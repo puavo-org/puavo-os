@@ -101,7 +101,7 @@ setup_nets()
     # a SSID derived from the hostname. This lets us configure
     # AP-specific networks easily via Puavo.
     ap_ssid=$(hostname | tr -d [:space:] | tail -c15)
-    sed -ir "s/:le8Yuek9Some5ee:/:${ap_ssid}:/" "${PWAP_RUNDIR}/nets"
+    sed -i -r "s/:le8Yuek9Some5ee:/:${ap_ssid}:/" "${PWAP_RUNDIR}/nets"
 
     readarray -n4 -t PWAP_NETS <"${PWAP_RUNDIR}/nets"
 

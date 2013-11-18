@@ -17,5 +17,5 @@ networks="${PWAP_RUNDIR}/networks"
 (
     flock "${networksfd}"
 
-    sed -ir "/${tap} ${bridge}/d" "${networks}"
+    sed -i -r "/${tap} ${bridge}/d" "${networks}"
 ) {networksfd}>"${networks}"
