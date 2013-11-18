@@ -175,6 +175,8 @@ setup_radios()
         channels=($(printf '%d\n' 1 6 11 36 40 44 48 | sort -R))
     fi
 
+    echo ${channels[@]} >"${PWAP_RUNDIR}/channels"
+
     channels_a=($(printf '%s\n' ${channels[@]} | sed -r -n 's/^(36|40|44|48)$/\1/p'))
     channels_g=($(printf '%s\n' ${channels[@]} | sed -r -n 's/^(1|6|11)$/\1/p'))
 
