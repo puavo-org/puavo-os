@@ -19,7 +19,7 @@ IFS=':' read -a mask <"/sys/class/net/${iface}/phy80211/address_mask"
 mac=(${mac[@]/#/0x})
 mask=(${mask[@]/#/0x})
 
-model_id=$(cat /sys/class/net/${iface}/device/{vendor,device} | tr -d [:space:])
+model_id=$(sed -r -n 's|^PRODUCT=(.+)/(.+)/.*|0x\10x\2|p' "/sys/class/net/${iface}/device/uevent")
 
 ## Model-specific quirks.
 case "${model_id}" in
