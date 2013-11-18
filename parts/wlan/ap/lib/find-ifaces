@@ -7,13 +7,13 @@ set -eu
 
 . puavo-wlanap-env
 
-if [ $# -ne 1 ]; then
+if [ $# -gt 1 ]; then
     echo "$(basename $0): wrong number of arguments" >&2
-    echo "Usage: $(basename $0) HW_MODE" >&2
+    echo "Usage: $(basename $0) [HW_MODE]" >&2
     exit 1
 fi
 
-hw_mode=$1
+hw_mode=${1:-}
 
 for path in /sys/class/net/*; do
     iface=$(basename "${path}")
