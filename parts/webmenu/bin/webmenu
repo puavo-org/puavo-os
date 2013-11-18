@@ -21,7 +21,7 @@ help(){
     --daemonize     Daemonize the process. Cannot be used with --no-mon
                     Output will be written to $WM_LOG_FILE
     --no-mon        Disable automatic restarting with mon
-    --log    Enable fluentd logging
+    --log           Enable fluentd logging
     -s --stop       Stop the running Webmenu process
 
 
