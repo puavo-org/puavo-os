@@ -1,5 +1,6 @@
 
 if process.env.WM_FLUENTD_ACTIVE
+  console.info "Activating fluentd logging"
   logger = require "fluent-logger"
   logger.configure "webmenu", {
      host: "127.0.0.1"
@@ -12,4 +13,5 @@ if process.env.WM_FLUENTD_ACTIVE
   module.exports = logger
 
 else
+  console.info "Fluetnd logging disabled"
   module.exports = emit: ->

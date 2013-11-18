@@ -2,7 +2,7 @@
 Version=1.0
 Name=Webmenu Start
 Comment=A desktop menu application
-Exec=webmenu --daemonize
+Exec=webmenu --daemonize --log
 Terminal=false
 Type=Application
 Icon=webmenu

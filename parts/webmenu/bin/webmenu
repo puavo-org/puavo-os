@@ -21,6 +21,7 @@ help(){
     --daemonize     Daemonize the process. Cannot be used with --no-mon
                     Output will be written to $WM_LOG_FILE
     --no-mon        Disable automatic restarting with mon
+    --log    Enable fluentd logging
     -s --stop       Stop the running Webmenu process
 
 
@@ -58,13 +59,16 @@ while true; do
             help && exit 0
         ;;
         --daemon|--daemonize)
-            # Enable error reporting to fluend only in daemon mode
-            export WM_FLUENTD_ACTIVE=true
+            # Enable error reporting to fluentd only in daemon mode
             mon_args="$mon_args --daemonize"
             shift
         ;;
         -d)
             wm_args="$wm_args --devtools"
+            shift
+        ;;
+        --log)
+            export WM_FLUENTD_ACTIVE=true
             shift
         ;;
         --no-mon)
