@@ -19,15 +19,18 @@ IFS=':' read -a mask <"/sys/class/net/${iface}/phy80211/address_mask"
 mac=(${mac[@]/#/0x})
 mask=(${mask[@]/#/0x})
 
-model_id=$(sed -r -n 's|^PRODUCT=(.+)/(.+)/.*|0x\10x\2|p' "/sys/class/net/${iface}/device/uevent")
+model_id=$(sed -r -n 's|^PRODUCT=(.+)/(.+)/.*|0x\1 0x\2|p' "/sys/class/net/${iface}/device/uevent")
 if [ -z "${model_id}" ]; then
     ## PCI-devices have PCI_ID field instead of PRODUCT field.
-    model_id=$(sed -r -n 's|^PCI_ID=(.+):(.+)$|0x\10x\2|p' "/sys/class/net/${iface}/device/uevent")
+    model_id=$(sed -r -n 's|^PCI_ID=(.+):(.+)$|0x\1 0x\2|p' "/sys/class/net/${iface}/device/uevent")
 fi
+
+## Concatenate and zero-padd vendor and product ids.
+printf -v model_id '%04x%04x' ${model_id}
 
 ## Model-specific quirks.
 case "${model_id}" in
-    0x168c0x0030|0x168c0x002B)
+    168c0030|168c002b)
         ## For some reason, at least with some driver versions, this
         ## device model reports empty adress mask. However, hostapd
         ## requires that mask >= 00:00:00:00:00:03 to support at most 4
