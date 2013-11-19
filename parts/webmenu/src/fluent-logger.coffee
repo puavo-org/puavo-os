@@ -1,5 +1,8 @@
 _ = require "underscore"
 pkg = require "../package.json"
+fs = require "fs"
+
+GIT_COMMIT = fs.readFileSync("GIT_COMMIT").toString().trim()
 
 if process.env.WM_FLUENTD_ACTIVE
   console.info "Activating fluentd logging"
@@ -14,7 +17,7 @@ if process.env.WM_FLUENTD_ACTIVE
 
   module.exports = emit: (record) ->
     record.meta ||= {}
-    record.meta.version = pkg.version
+    record.meta.version = "#{ pkg.version } #{ GIT_COMMIT }"
     logger.emit(record)
 
 else

@@ -21,6 +21,7 @@ endef
 
 
 build: npm-install nw-gyp assets
+	git rev-parse HEAD > GIT_COMMIT
 
 # Build node-webkit package
 # https://github.com/rogerwang/node-webkit/wiki/How-to-package-and-distribute-your-apps
@@ -60,7 +61,7 @@ install-dirs:
 	mkdir -p $(DESTDIR)/etc/webmenu
 
 install: install-dirs
-	cp -r lib node_modules bin docs scripts vendor styles extra i18n *.js *.json *.md *.html $(DESTDIR)/opt/webmenu
+	cp -r GIT_COMMIT lib node_modules bin docs scripts vendor styles extra i18n *.js *.json *.md *.html $(DESTDIR)/opt/webmenu
 	$(INSTALL_DATA) -t $(DESTDIR)/etc/xdg/autostart \
 		extra/webmenu.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)/usr/share/icons \
