@@ -1,3 +1,5 @@
+_ = require "underscore"
+pkg = require "../package.json"
 
 if process.env.WM_FLUENTD_ACTIVE
   console.info "Activating fluentd logging"
@@ -10,7 +12,10 @@ if process.env.WM_FLUENTD_ACTIVE
   logger.on "error", (err) ->
     console.warn "fluentd error: #{ err.message }"
 
-  module.exports = logger
+  module.exports = emit: (record) ->
+    record.meta ||= {}
+    record.meta.version = pkg.version
+    logger.emit(record)
 
 else
   console.info "Fluetnd logging disabled"
