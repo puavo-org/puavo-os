@@ -1,33 +1,37 @@
 require "net/http"
+require "fluent/plugin/out_forward"
 
 module PuavoFluent
-  HOST_TYPE = File.open("/etc/puavo/hosttype", "r"){ |f| f.read }.strip
-  HOSTNAME = File.open("/etc/puavo/hostname", "r"){ |f| f.read }.strip
-  ORGANISATION_DOMAIN = File.open("/etc/puavo/domain", "r"){ |f| f.read }.strip
-  TOP_DOMAIN = File.open("/etc/puavo/topdomain", "r"){ |f| f.read }.strip
-  LDAP_DN = File.open("/etc/puavo/ldap/dn", "r"){ |f| f.read }.strip
-  LDAP_PASSWORD = File.open("/etc/puavo/ldap/password", "r"){ |f| f.read }.strip
 
 class PuavoWrapper
   Fluent::Plugin.register_output('puavo', self)
+  attr_accessor :plugin
 
-  def initialize(*args)
-    if ["laptop", "bootserver"].include?(HOST_TYPE)
-      @plugin = RestOut.new(*args)
-    else
-      @plugin = AutoForward.new(*args)
-    end
-
-    puts "#"*80
-    puts "Puavo: I'm a #{ HOST_TYPE } so I'm using #{ @plugin.class }"
-    puts "#"*80
-    super(*args)
+  def read_puavo_file(name)
+    File.open("/etc/puavo/#{ name }", "r"){ |f| f.read }.strip
   end
 
   def configure(conf)
+    conf["puavo_hosttype"] ||= read_puavo_file "hosttype"
+    conf["puavo_hostname"] ||= read_puavo_file "hostname"
+    conf["puavo_domain"] ||= read_puavo_file "domain"
+    conf["puavo_topdomain"] ||= read_puavo_file "topdomain"
+    conf["puavo_ldap_dn"] ||= read_puavo_file "ldap/dn"
+    conf["puavo_ldap_password"] ||= read_puavo_file "ldap/password"
+
+    if ["laptop", "bootserver"].include?(conf["puavo_hosttype"])
+      @plugin = RestOut.new
+    else
+      @plugin = AutoForward.new
+    end
+
+    puts "#"*80
+    puts "Puavo: I'm a #{ conf["puavo_hosttype"] } so I'm using #{ @plugin.class }"
+    puts "#"*80
+
     conf.elements.select do |el|
       if el.name == "device"
-        el.arg.split("|").include?(HOST_TYPE)
+        el.arg.split("|").include?(conf["puavo_hosttype"])
       end
     end.each do |customizations|
       # merge! is not working here for some reason
@@ -40,13 +44,16 @@ class PuavoWrapper
   def inject_device_source(record)
     record["meta"] ||= {}
     record["meta"]["device_source"] ||= {
-      "host_type" => HOST_TYPE,
-      "hostname" => HOSTNAME,
-      "organisation_domain" => ORGANISATION_DOMAIN
+      "host_type" => config["puavo_hosttype"],
+      "hostname" => config["puavo_hostname"],
+      "organisation_domain" => config["puavo_domain"]
     }
   end
 
   def method_missing(name, *args)
+    if @plugin.nil?
+      raise "@plugin not set! Cannot call #{ name.inspect } with #{ args.inspect }"
+    end
     @plugin.send(name, *args)
   end
 
@@ -91,13 +98,10 @@ end
 
 class RestOut < Fluent::BufferedOutput
 
-  def initialize(*args)
-    @port = 443
-    @host = "api.#{ TOP_DOMAIN }"
-    super(*args)
-  end
-
   def configure(conf)
+    @port = 443
+    @host = "api.#{ conf["puavo_topdomain"] }"
+
     @host = conf["rest_host"] if conf["rest_host"]
     @port = conf["rest_port"] if conf["rest_port"]
 
@@ -122,12 +126,13 @@ class RestOut < Fluent::BufferedOutput
 
     path = "/v3/fluent"
     req = Net::HTTP::Post.new(path, "Content-Type" => "application/json")
-    req.basic_auth LDAP_DN, LDAP_PASSWORD
+    req.basic_auth @config["puavo_ldap_dn"], @config["puavo_ldap_password"]
 
     http = Net::HTTP.new(@host, @port)
     http.use_ssl = @port == 443
 
     $log.info "Sending #{ records.size } records using http to #{ @host }:#{ @port }#{ path }"
+
     res = http.request(req, records.to_json)
     if res.code != "200"
       msg = "Bad HTTP Response #{ res.code }"

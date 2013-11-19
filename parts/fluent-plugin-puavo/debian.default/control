@@ -2,7 +2,7 @@ Source: fluent-plugin-puavo
 Section: admin
 Priority: extra
 Maintainer: Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>
-Build-Depends: debhelper (>= 8)
+Build-Depends: debhelper (>= 8), ruby-bundler
 Standards-Version: 3.9.3
 Homepage: https://github.com/opinsys/fluent-plugin-puavo/
 
