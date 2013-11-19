@@ -226,14 +226,6 @@ setup_radios()
     fi
 }
 
-setup_services()
-{
-    setup_radios
-    setup_nets
-    write_hostapd_conf
-    write_vtund_conf
-}
-
 start_services()
 {
     local net ssid radio iface session
@@ -334,8 +326,10 @@ trap on_exit EXIT
 
 mkdir -p "${PWAP_RUNDIR}"
 
-setup_services
-
+setup_radios
+setup_nets
+write_hostapd_conf
+write_vtund_conf
 start_services
 
 ## Serve forever.
