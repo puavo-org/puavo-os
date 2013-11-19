@@ -33,7 +33,7 @@ case "${model_id}" in
         ## requires that mask >= 00:00:00:00:00:03 to support at most 4
         ## different BSSIDs. Mask 00:00:00:00:00:03 has been verified to
         ## work with the device in question.
-        if [ "${mask[@]}" = "0x00 0x00 0x00 0x00 0x00 0x00" ]; then
+        if [ "${mask[*]}" = "0x00 0x00 0x00 0x00 0x00 0x00" ]; then
             mask=(0x00 0x00 0x00 0x00 0x00 0x03)
         fi
         ;;
