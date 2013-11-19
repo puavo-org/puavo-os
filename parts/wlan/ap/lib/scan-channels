@@ -16,7 +16,7 @@ supported_channels=$*
 ##                    Channel:11
 ##                    Frequency:2.462 GHz (Channel 11)
 ##                    Quality=21/70  Signal level=-89 dBm
-iwlist scan | egrep -A3 '^\s+Cell [0-9]+ - Address: ' | {
+iwlist scan 2>/dev/null | egrep -A3 '^\s+Cell [0-9]+ - Address: ' | {
 
     ## Print all supported channels with artifiaclly low signal levels
     ## to ensure that each supported channel is in the resulting
