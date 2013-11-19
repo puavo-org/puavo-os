@@ -135,7 +135,7 @@ class RestOut < Fluent::BufferedOutput
 
     res = http.request(req, records.to_json)
     if res.code != "200"
-      msg = "Bad HTTP Response #{ res.code }"
+      msg = "Bad HTTP Response #{ res.code }: #{ res.body[0...500] }"
       $log.error msg
       raise msg
     end
