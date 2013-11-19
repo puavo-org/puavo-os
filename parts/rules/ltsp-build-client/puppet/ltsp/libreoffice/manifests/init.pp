@@ -26,6 +26,10 @@ class libreoffice {
 
     '/usr/lib/libreoffice/share/registry/writer.xcd':
       content => template('libreoffice/writer.xcd');
+
+    # Use Gnome print dialog
+    '/usr/lib/libreoffice/share/registry/print.xcd':
+      content => template('libreoffice/print.xcd');
   }
 
   Package <| title == libreoffice-calc
