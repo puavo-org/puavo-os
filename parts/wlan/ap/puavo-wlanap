@@ -219,12 +219,16 @@ setup_radios()
         fi
         ((++i))
     done
+    if [ ${#PWAP_RADIOS[@]} -eq 0 ]; then
+        echo "No suitable radios found" >&2
+        return 1
+    fi
 }
 
 setup_services()
 {
-    setup_nets
     setup_radios
+    setup_nets
     write_hostapd_conf
     write_vtund_conf
 }
