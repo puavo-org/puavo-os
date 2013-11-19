@@ -60,8 +60,6 @@ class PuavoWrapper
 
 end
 
-class WriteFail < Exception; end
-
 class AutoForward < Fluent::ForwardOutput
 
   def configure(conf)
@@ -132,9 +130,9 @@ class RestOut < Fluent::BufferedOutput
     $log.info "Sending #{ records.size } records using http to #{ @host }:#{ @port }#{ path }"
     res = http.request(req, records.to_json)
     if res.code != "200"
-      msg = "Bad HTTP Response #{ res.code.inspect }: #{ res.body }"
+      msg = "Bad HTTP Response #{ res.code }"
       $log.error msg
-      raise WriteFail, msg
+      raise msg
     end
     $log.info "Sent ok! #{ res } #{ res.code } #{ res.body }"
 
