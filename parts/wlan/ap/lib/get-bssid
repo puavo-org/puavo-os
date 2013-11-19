@@ -27,7 +27,7 @@ fi
 
 ## Model-specific quirks.
 case "${model_id}" in
-    0x168c0x0030)
+    0x168c0x0030|0x168c0x002B)
         ## For some reason, at least with some driver versions, this
         ## device model reports empty adress mask. However, hostapd
         ## requires that mask >= 00:00:00:00:00:03 to support at most 4
