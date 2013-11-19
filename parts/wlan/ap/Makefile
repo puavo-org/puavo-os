@@ -68,7 +68,8 @@ install : puavo-wlanap-env installdirs
 		lib/get-bssid \
 		lib/find-ifaces \
 		lib/fetch-nets \
-		lib/scan-channels
+		lib/scan-channels \
+		lib/get-ht-capab
 	rm -f puavo-wlanap-env
 
 .PHONY : clean

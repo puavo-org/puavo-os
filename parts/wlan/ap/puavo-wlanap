@@ -45,11 +45,14 @@ write_hostapd_conf()
             return 1
         }
 
+        ht_capab=$("${PWAP_LIBDIR}/get-ht-capab" "${iface}" "${channel}")
+
         ## Write interface-specific hostapd configuration to the
         ## beginning of the file.
         sed -e "s|#{PWAP_IFACE}|${iface}|g" \
             -e "s|#{PWAP_BSSID}|${bssid}|g" \
             -e "s|#{PWAP_RUNDIR}|${PWAP_RUNDIR}|g" \
+            -e "s|#{PWAP_HT_CAPAB}|${ht_capab}|g" \
             "${PWAP_DATADIR}/hostapd.conf.${channel}" \
             >"${PWAP_RUNDIR}/${iface}_hostapd.conf"
 
