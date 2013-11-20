@@ -800,7 +800,8 @@ class packages {
     'quantal': {
       kernel_package_for_version {
         [ '3.8.13.opinsys1'
-        , '3.10.9.opinsys1'  ]:
+        , '3.10.9.opinsys1'
+        , '3.10.18.opinsys1'  ]:
           package_tag => 'opinsys',
           with_extra  => false;
       }
