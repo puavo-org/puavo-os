@@ -11,3 +11,4 @@ lockPref("toolkit.storage.synchronous", 1);
 pref("flashblock.whitelist", "vetamix.net");
 pref("flashblock.whitelist", "vimeo.com");
 pref("flashblock.whitelist", "youtube.com");
+pref("flashblock.whitelist", "translate.google.com");
