@@ -56,7 +56,7 @@ case "${hosttype}" in
         export PRINTER_LIST=$(get_printer_list)
         export PRINTER=$(jq -r .device.default_printer_name "${PUAVO_SESSION_PATH}")
         ;;
-    fatclient|laptop)
+    fatclient)
         remove_remote_printers
         add_remote_printers
         set_default_printer
