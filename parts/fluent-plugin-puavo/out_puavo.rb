@@ -2,6 +2,9 @@ require "net/http"
 require "fluent/plugin/out_forward"
 
 module PuavoFluent
+IMAGE_VERSION = File.open("/etc/ltsp/this_ltspimage_name", "r") do |f|
+  f.read
+end.strip rescue Errno::ENOENT
 
 class PuavoWrapper
   Fluent::Plugin.register_output('puavo', self)
@@ -46,7 +49,8 @@ class PuavoWrapper
     record["meta"]["device_source"] ||= {
       "host_type" => config["puavo_hosttype"],
       "hostname" => config["puavo_hostname"],
-      "organisation_domain" => config["puavo_domain"]
+      "organisation_domain" => config["puavo_domain"],
+      "image_version" => IMAGE_VERSION
     }
   end
 
