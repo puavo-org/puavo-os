@@ -28,9 +28,7 @@ class PuavoWrapper
       @plugin = AutoForward.new
     end
 
-    puts "#"*80
-    puts "Puavo: I'm a #{ conf["puavo_hosttype"] } so I'm using #{ @plugin.class }"
-    puts "#"*80
+    $log.info "Puavo: I'm a #{ conf["puavo_hosttype"] } so I'm using #{ @plugin.class }"
 
     conf.elements.select do |el|
       if el.name == "device"
