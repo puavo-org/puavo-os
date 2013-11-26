@@ -164,14 +164,6 @@ class Aptirepo:
 
         self.__copy_to_pool(deb_filepath, codename, source_name, section)
 
-    def import_deb(self, deb_filepath):
-        debfile = debian.debfile.DebFile(deb_filepath)
-        codename = debfile.changelog().distributions
-        source_name = debfile.changelog().package
-        section = debfile.control.debcontrol()["Section"]
-
-        self.__copy_to_pool(deb_filepath, codename, source_name, section)
-
     def import_changes(self, changes_filepath):
         with open(changes_filepath) as changes_file:
             changes = debian.deb822.Changes(changes_file)
