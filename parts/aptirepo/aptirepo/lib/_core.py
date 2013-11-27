@@ -15,6 +15,9 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+from __future__ import print_function
+
+import datetime
 import errno
 import gzip
 import hashlib
@@ -40,6 +43,7 @@ def _gz(filepath_in):
     with open(filepath_in, "rb") as f_in:
         with gzip.open(filepath_out, "wb") as f_out:
             f_out.writelines(f_in)
+    return filepath_out
 
 def _md5sum(filepath, block_size=4096):
     md5 = hashlib.md5()
@@ -62,9 +66,14 @@ class Aptirepo:
         self.__confdir = confdir
         if not self.__confdir:
             self.__confdir = self.__join("conf")
+        self.__logfile = open(self.__join("log"), "a")
         self.__dists = parse_distributions(self.__confdir)
         self.__create_pool()
         self.__create_dists()
+
+    def __log(self, msg):
+        ts = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%m:%S.%fZ")
+        print("%s  %s" % (ts, msg), file=self.__logfile)
 
     def __create_dists(self):
         for codename, dist in self.__dists.items():
@@ -79,6 +88,8 @@ class Aptirepo:
                     except OSError as e:
                         if e.errno != errno.EEXIST:
                             raise e
+                    else:
+                        self.__log("created directory '%s'" % p)
 
     def __create_pool(self):
         for codename, dist in self.__dists.items():
@@ -89,6 +100,8 @@ class Aptirepo:
                 except OSError  as e:
                     if e.errno != errno.EEXIST:
                         raise e
+                else:
+                    self.__log("created directory '%s'" % p)
 
     def __join(self, *args):
         return os.path.join(self.__rootdir, *args)
@@ -99,6 +112,7 @@ class Aptirepo:
             subprocess.check_call(["apt-ftparchive", "--db", "db",
                                    "contents", os.path.join(pool, comp)],
                                   stdout=f, cwd=self.__rootdir)
+            self.__log("wrote '%s'" % path)
 
     def __write_packages(self, pool, codename, comp, arch):
         path = self.__join("dists", codename, comp, "binary-%s" % arch,
@@ -107,16 +121,20 @@ class Aptirepo:
             subprocess.check_call(["apt-ftparchive", "--db", "db",
                                    "packages", os.path.join(pool, comp)],
                                   stdout=f, cwd=self.__rootdir)
-        _gz(path)
+            self.__log("wrote '%s'" % path)
+        pathgz =_gz(path)
+        self.__log("wrote '%s'" % pathgz)
 
     def __write_release(self, codename, comps, archs):
-        with open(self.__join("dists", codename, "Release"), "w") as f:
+        path = self.__join("dists", codename, "Release")
+        with open(path, "w") as f:
             subprocess.check_call(["apt-ftparchive", "--db", "db",
                                    "-o", "APT::FTPArchive::Release::Codename=%s" % codename,
                                    "-o", "APT::FTPArchive::Release::Components=%s" % " ".join(comps),
                                    "-o", "APT::FTPArchive::Release::Architectures=%s" % " ".join(archs),
                                    "release", os.path.join("dists", codename)],
                                   stdout=f, cwd=self.__rootdir)
+            self.__log("wrote '%s'" % path)
 
     def __write_sources(self, pool, codename, comp):
         path = self.__join("dists", codename, comp, "source", "Sources")
@@ -124,7 +142,9 @@ class Aptirepo:
             subprocess.check_call(["apt-ftparchive",
                                    "sources", os.path.join(pool, comp)],
                                   stdout=f, cwd=self.__rootdir)
-        _gz(path)
+            self.__log("wrote '%s'" % path)
+        pathgz = _gz(path)
+        self.__log("wrote '%s'" % pathgz)
 
     def __copy_to_pool(self, filepath, codename, source_name, section):
         dist = self.__dists[codename]
@@ -155,6 +175,7 @@ class Aptirepo:
             return
 
         shutil.copyfile(filepath, target_filepath)
+        self.__log("copied '%s' to '%s'" % (filepath, target_filepath))
 
     def import_deb(self, deb_filepath):
         debfile = debian.debfile.DebFile(deb_filepath)
