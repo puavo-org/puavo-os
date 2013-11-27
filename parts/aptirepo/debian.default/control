@@ -8,14 +8,14 @@ Homepage: http://github.com/opinsys/aptirepo/
 
 Package: aptirepo
 Architecture: all
-Depends: ${misc:Depends}, python, apt-utils
+Depends: ${misc:Depends}, python, apt-utils, python-debian
 Description: simple APT repository tool
  simple APT repository tool
  .
 
 Package: aptirepo-http
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, aptirepo (>=0.3.0-21), python-flask, gunicorn, python-debian
+Depends: ${shlibs:Depends}, ${misc:Depends}, aptirepo (>=0.3.0-21), python-flask, gunicorn
 Breaks: debbox
 Replaces: debbox
 Recommends: nginx
