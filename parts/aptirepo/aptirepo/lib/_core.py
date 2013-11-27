@@ -19,6 +19,7 @@ from __future__ import print_function
 
 import datetime
 import errno
+import fcntl
 import gzip
 import hashlib
 import os
@@ -66,6 +67,8 @@ class Aptirepo:
         self.__confdir = confdir
         if not self.__confdir:
             self.__confdir = self.__join("conf")
+        self.__lockfile = open(self.__join("lock"), "w")
+        fcntl.lockf(self.__lockfile, fcntl.LOCK_EX | fcntl.LOCK_NB)
         self.__logfile = open(self.__join("log"), "a")
         self.__dists = parse_distributions(self.__confdir)
         self.__create_pool()
