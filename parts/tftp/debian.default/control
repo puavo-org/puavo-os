@@ -1,0 +1,30 @@
+Source: puavo-tftp
+Section: utils
+Priority: extra
+Maintainer: Opinsys Developers <dev@opinsys.fi>
+Build-Depends: debhelper (>= 8.0.0), ruby1.9.3, ruby-minitest, ruby-eventmachine
+Standards-Version: 3.9.3
+Homepage: http://github.com/opinsys/puavo-tftp/
+
+Package: puavo-tftpd
+Architecture: all
+Depends: ${misc:Depends}, ruby1.9.3, ruby-eventmachine, libldap-ruby1.8, adduser
+Replaces: puavo-tftp (<< 0.3.2-0+opinsys2)
+Breaks: puavo-tftp (<< 0.3.2-0+opinsys2)
+Recommends: ruby-minitest
+Description: TFTP server for LTSP environments
+ puavo-tftp provides a TFTP server which dynamically queries ldap
+ server for pxelinux boot configuration.
+ .
+ This package provides generic TFTP server.
+ .
+
+Package: puavo-tftpd-hooks
+Architecture: all
+Depends: ${misc:Depends}, puavo-tftpd (>= 0.3.2-0+opinsys2), puavo-client (>= 1.1.4), curl
+Description: Puavo-service hooks for Puavo TFTP server
+ puavo-tftp provides a TFTP server which dynamically queries ldap server
+ for pxelinux boot configuration.
+ .
+ This package provides hook files desinged for Puavo-service.
+ .
