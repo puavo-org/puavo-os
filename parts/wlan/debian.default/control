@@ -1,0 +1,45 @@
+Source: puavo-wlan
+Section: utils
+Priority: extra
+Maintainer: Opinsys Developers <dev@opinsys.fi>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.3
+Homepage: http://github.com/opinsys/puavo-wlan/
+
+Package: puavo-wlanap
+Architecture: all
+Depends: ${misc:Depends}, hostapd, bridge-utils, net-tools, netcat-openbsd, vtun, daemon, wireless-crda, wireless-regdb, bash, curl, socat
+Description: host tunneled WLAN accesspoint
+ puavo-wlanap glues together hostapd, vtun and bridge tools to make
+ hosting a tunneled WLAN accespoint easy. Optionally, accesspoint can be
+ configured from Puavo.
+ .
+
+Package: puavo-wlanap-dnsproxy
+Architecture: all
+Depends: ${misc:Depends}, dnsmasq-base, debianutils, daemon
+Recommends: puavo-wlanap
+Description: DNS proxy responding to service list queries from WLAN networks
+ puavo-wlanap-dnsmasq glues together puavo-wlanap, dnsmasq and iptables
+ to respond to DNS service list queries from WLAN networks and forward
+ all other DNS queries to upstream servers. Accesspoint-specific service
+ lists are gathered from Puavo via its REST API.
+ .
+
+Package: puavo-wlanap-mdns
+Architecture: all
+Depends: ${misc:Depends}, debianutils, daemon, avahi-daemon
+Recommends: puavo-wlanap
+Description: mDNS daemon responding to queries from WLAN networks
+ puavo-wlanap-mdns glues together puavo-wlanap, avahi and iptables to
+ respond to mDNS queries from WLAN networks.Accesspoint-specific service
+ lists are gathered from Puavo via its REST API.
+ .
+
+Package: puavo-wlangw
+Architecture: all
+Depends: ${misc:Depends}, bridge-utils, net-tools, vtun, daemon, nmap, bash
+Description: host tunneled WLAN accesspoint
+ puavo-wlangw glues together vtun and bridge tools to make
+ hosting a tunneled WLAN gateway easy.
+ .
