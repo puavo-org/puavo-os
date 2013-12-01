@@ -55,6 +55,11 @@ def _md5sum(filepath, block_size=4096):
             data = f.read(block_size)
     return md5.hexdigest()
 
+def _abbrev(source_name):
+    if source_name.startswith("lib"):
+        return "lib"
+    return source_name[0]
+
 class Aptirepo:
     """Class representing Aptirepo repository directory tree.
 
@@ -157,7 +162,7 @@ class Aptirepo:
         if not sep:
             component="main"
 
-        abbrevdir = self.__join(dist["Pool"], component, source_name[0])
+        abbrevdir = self.__join(dist["Pool"], component, _abbrev(source_name))
         try:
             os.mkdir(abbrevdir)
         except OSError as e:
