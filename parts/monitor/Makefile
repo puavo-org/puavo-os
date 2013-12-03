@@ -2,7 +2,7 @@
 prefix ?= /usr/local
 
 build:
-	npm install
+	npm install --registry http://registry.npmjs.org
 
 install-dirs:
 	mkdir -p $(DESTDIR)$(prefix)/lib/node_modules/puavo-monitor
