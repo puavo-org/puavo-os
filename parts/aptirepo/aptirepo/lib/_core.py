@@ -185,9 +185,10 @@ class Aptirepo:
         shutil.copyfile(filepath, target_filepath)
         self.__log("copied '%s' to '%s'" % (filepath, target_filepath))
 
-    def import_deb(self, deb_filepath):
+    def import_deb(self, deb_filepath, codename=""):
         debfile = debian.debfile.DebFile(deb_filepath)
-        codename = debfile.changelog().distributions
+        if not codename:
+            codename = debfile.changelog().distributions
         source_name = debfile.changelog().package
         section = debfile.control.debcontrol()["Section"]
 
