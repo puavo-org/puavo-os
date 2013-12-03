@@ -20,16 +20,17 @@
 from __future__ import print_function
 
 import os
+import subprocess
 import sys
 
-import aptirepo
-
-_IMPORT_FUNCTIONS = {
-    ".changes" : aptirepo.Aptirepo.import_changes,
-    ".deb"     : aptirepo.Aptirepo.import_deb,
+_IMPORT_CMD = {
+    ".changes" : "importchanges",
+    ".deb"     : "importdeb",
 }
 
 def main():
+    print("This command is deprecated, please use aptirepo and its subcommands "
+          "instead! E.g. aptirepo importchanges FILE.changes", file=sys.stderr)
     if len(sys.argv) != 2:
         print("error: wrong number of arguments", file=sys.stderr)
         print("Usage: aptirepo-import FILE", file=sys.stderr)
@@ -38,19 +39,13 @@ def main():
     filepath = sys.argv[1]
     _, ext = os.path.splitext(filepath)
     try:
-        import_fn = _IMPORT_FUNCTIONS[ext]
+        import_cmd = _IMPORT_CMD[ext]
     except KeyError:
-        print("error: FILE must be %s" % " or ".join(_IMPORT_FUNCTIONS.keys()),
+        print("error: FILE must be %s" % " or ".join(_IMPORT_CMD.keys()),
               file=sys.stderr)
         sys.exit(1)
 
-    rootdir = os.environ.get("APTIREPO_ROOTDIR", ".")
-    confdir = os.environ.get("APTIREPO_CONFDIR")
-    repo = aptirepo.Aptirepo(rootdir, confdir)
-
-    import_fn(repo, filepath)
-
-    repo.update_dists()
+    p = subprocess.Popen(["aptirepo", import_cmd, filepath])
 
 if __name__ == "__main__":
     main()

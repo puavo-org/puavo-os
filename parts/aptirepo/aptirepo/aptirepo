@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# aptirepo - Simple APT Repository Tool
+# Copyright (C) 2013 Tuomas Räsänen
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+from __future__ import print_function
+
+import argparse
+import os
+import sys
+
+import aptirepo
+
+_IMPORT_FUNCTIONS = {
+    ".changes" : aptirepo.Aptirepo.import_changes,
+    ".deb"     : aptirepo.Aptirepo.import_deb,
+}
+
+def main():
+
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(dest="cmd", title="commands")
+
+    parser_importdeb = subparsers.add_parser("importdeb", help="import a single .deb file")
+    parser_importdeb.add_argument("debfile", metavar="FILE.deb")
+    parser_importdeb.add_argument("--codename", default="", help="target codename, defaults to codename defined in FILE.deb")
+
+    parser_importchanges = subparsers.add_parser("importchanges", help="import all files listed in a .changes file")
+    parser_importchanges.add_argument("changesfile", metavar="FILE.changes")
+
+    args = parser.parse_args()
+
+    rootdir = os.environ.get("APTIREPO_ROOTDIR", ".")
+    confdir = os.environ.get("APTIREPO_CONFDIR")
+    repo = aptirepo.Aptirepo(rootdir, confdir)
+
+    if args.cmd == "importdeb":
+        if not args.debfile.endswith(".deb"):
+            print("failed to import Debian binary package '%s': "
+                  "extension of the imported file must be '.deb'" % args.debfile,
+                  file=sys.stderr)
+            sys.exit(1)
+        repo.import_deb(args.debfile, codename=args.codename)
+    elif args.cmd == "importchanges":
+        if not args.changesfile.endswith(".changes"):
+            print("failed to import Debian package changes '%s': "
+                  "extension of the imported file must be '.changes'" % args.changesfile,
+                  file=sys.stderr)
+            sys.exit(1)
+        repo.import_changes(args.changesfile)
+    else:
+        raise RuntimeError("unexpected cmd '%s'" % args.cmd)
+
+    repo.update_dists()
+
+if __name__ == "__main__":
+    main()
