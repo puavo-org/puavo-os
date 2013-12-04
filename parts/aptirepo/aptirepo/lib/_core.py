@@ -234,4 +234,4 @@ class Aptirepo:
             with open(signature_path, "w") as signature_file:
                 subprocess.check_call(["gpg", "--output", "-", "-a", "-b", release_path],
                                       stdout=signature_file, cwd=self.__rootdir)
-                self.__log("signed '%s'" % path)
+                self.__log("signed '%s'" % release_path)
