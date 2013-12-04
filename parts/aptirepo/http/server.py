@@ -64,6 +64,7 @@ def upload():
     repo = aptirepo.Aptirepo(repodir, confdir)
     repo.import_changes(changes_filepath)
     repo.update_dists()
+    repo.sign_releases()
 
     shutil.rmtree(tmp_dirpath)
     return "ok"
