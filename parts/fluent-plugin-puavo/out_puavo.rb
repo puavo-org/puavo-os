@@ -2,9 +2,13 @@ require "net/http"
 require "fluent/plugin/out_forward"
 
 module PuavoFluent
-IMAGE_VERSION = File.open("/etc/ltsp/this_ltspimage_name", "r") do |f|
-  f.read
-end.strip rescue Errno::ENOENT
+begin
+  IMAGE_VERSION = File.open("/etc/ltsp/this_ltspimage_name", "r") do |f|
+    f.read
+  end.strip
+rescue Errno::ENOENT
+  IMAGE_VERSION = ""
+end
 
 class PuavoWrapper
   Fluent::Plugin.register_output('puavo', self)
