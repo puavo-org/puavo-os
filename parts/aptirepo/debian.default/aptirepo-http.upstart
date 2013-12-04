@@ -5,6 +5,6 @@ stop on shutdown
 
 chdir /usr/lib/aptirepo-http
 
-exec sudo -E -u www-data gunicorn server:app --bind 0.0.0.0:8080 --error-logfile - --access-logfile -
+exec sudo -E -u aptirepo-http gunicorn server:app --bind 0.0.0.0:8080 --error-logfile - --access-logfile -
 
 respawn
