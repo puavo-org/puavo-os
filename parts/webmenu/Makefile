@@ -11,12 +11,12 @@ INSTALL_DATA = $(INSTALL) -m 644
 export PATH := node_modules/.bin:$(PATH)
 
 # node-webkit version
-NW_VERSION=0.6.3
+NW_VERSION=0.8.1
 # https://github.com/rogerwang/nw-gyp
 NW_GYP=$(CURDIR)/node_modules/.bin/nw-gyp
 define nw-build
 	@echo "Building node.js module '$1' for node-webkit"
-	cd node_modules/$1/ && $(NW_GYP) configure --target=$(NW_VERSION) && $(NW_GYP) build
+	cd node_modules/$1/ && $(NW_GYP) configure --target=$(NW_VERSION) && $(NW_GYP) build --arch=ia32
 endef
 
 
