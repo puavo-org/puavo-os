@@ -226,3 +226,12 @@ class Aptirepo:
                     else:
                         self.__write_packages(pool, codename, comp, arch)
             self.__write_release(codename, comps, archs)
+
+    def sign_releases(self):
+        for codename in self.__dists:
+            release_path = self.__join("dists", codename, "Release")
+            signature_path = release_path + ".gpg"
+            with open(signature_path, "w") as signature_file:
+                subprocess.check_call(["gpg", "--output", "-", "-a", "-b", release_path],
+                                      stdout=signature_file, cwd=self.__rootdir)
+                self.__log("signed '%s'" % path)

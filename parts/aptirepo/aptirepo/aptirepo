@@ -25,22 +25,48 @@ import sys
 
 import aptirepo
 
-_IMPORT_FUNCTIONS = {
-    ".changes" : aptirepo.Aptirepo.import_changes,
-    ".deb"     : aptirepo.Aptirepo.import_deb,
-}
+def _importdeb(repo, args):
+    if not args.debfile.endswith(".deb"):
+        print("failed to import Debian binary package '%s': "
+              "extension of the imported file must be '.deb'" % args.debfile,
+              file=sys.stderr)
+        sys.exit(1)
+
+    repo.import_deb(args.debfile, codename=args.codename)
+
+    repo.update_dists()
+
+    if args.sign_releases:
+        repo.sign_releases()
+
+def _importchanges(repo, args):
+    if not args.changesfile.endswith(".changes"):
+        print("failed to import Debian package changes '%s': "
+              "extension of the imported file must be '.changes'" % args.changesfile,
+              file=sys.stderr)
+        sys.exit(1)
+
+    repo.import_changes(args.changesfile)
+
+    repo.update_dists()
+
+    if args.sign_releases:
+        repo.sign_releases()
 
 def main():
-
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="cmd", title="commands")
 
     parser_importdeb = subparsers.add_parser("importdeb", help="import a single .deb file")
     parser_importdeb.add_argument("debfile", metavar="FILE.deb")
     parser_importdeb.add_argument("--codename", default="", help="target codename, defaults to codename defined in FILE.deb")
+    parser_importdeb.add_argument("--sign-releases", action="store_true", default=False, help="sign Release files after update")
+    parser_importdeb.set_defaults(func=_importdeb)
 
     parser_importchanges = subparsers.add_parser("importchanges", help="import all files listed in a .changes file")
     parser_importchanges.add_argument("changesfile", metavar="FILE.changes")
+    parser_importchanges.add_argument("--sign-releases", action="store_true", default=False, help="sign Release files after update")
+    parser_importchanges.set_defaults(func=_importchanges)
 
     args = parser.parse_args()
 
@@ -48,24 +74,7 @@ def main():
     confdir = os.environ.get("APTIREPO_CONFDIR")
     repo = aptirepo.Aptirepo(rootdir, confdir)
 
-    if args.cmd == "importdeb":
-        if not args.debfile.endswith(".deb"):
-            print("failed to import Debian binary package '%s': "
-                  "extension of the imported file must be '.deb'" % args.debfile,
-                  file=sys.stderr)
-            sys.exit(1)
-        repo.import_deb(args.debfile, codename=args.codename)
-    elif args.cmd == "importchanges":
-        if not args.changesfile.endswith(".changes"):
-            print("failed to import Debian package changes '%s': "
-                  "extension of the imported file must be '.changes'" % args.changesfile,
-                  file=sys.stderr)
-            sys.exit(1)
-        repo.import_changes(args.changesfile)
-    else:
-        raise RuntimeError("unexpected cmd '%s'" % args.cmd)
-
-    repo.update_dists()
+    args.func(repo, args)
 
 if __name__ == "__main__":
     main()

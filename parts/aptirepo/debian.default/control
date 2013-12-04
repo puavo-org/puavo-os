@@ -8,7 +8,7 @@ Homepage: http://github.com/opinsys/aptirepo/
 
 Package: aptirepo
 Architecture: all
-Depends: ${misc:Depends}, python, apt-utils, python-debian
+Depends: ${misc:Depends}, python, apt-utils, python-debian, gnupg
 Description: simple APT repository tool
  simple APT repository tool
  .
