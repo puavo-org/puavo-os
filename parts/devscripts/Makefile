@@ -15,14 +15,9 @@ install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		bin/puavo-dch \
 		bin/puavo-dch-legacy \
-		bin/puavo-deb-release \
-		bin/puavo-fetch-debian-dir \
 		bin/puavo-install-deps \
 		bin/puavo-debuild \
 		bin/puavo-build-debian-dir \
-		bin/puavo-upload-packages \
-		bin/mkpkg \
-		bin/mktar \
 		bin/dpkg-diff-img
 
 install-lxc-tools: installdirs
