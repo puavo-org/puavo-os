@@ -12,7 +12,6 @@ echo "Running in $(pwd)"
 make
 sudo make install
 
-
 puavo-build-debian-dir
 sudo puavo-install-deps debian/control
 puavo-dch $(cat VERSION)
