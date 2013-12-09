@@ -60,6 +60,8 @@ git_branch=$(git rev-parse --abbrev-ref HEAD)
 
 [ "${BUILD_NUMBER:-}" != "" ] && version="$version-$BUILD_NUMBER"
 
+version="${version}-${DISTRIB_CODENAME}-$(dpkg-architecture -qDEB_BUILD_ARCH)"
+
 version="$version~$git_branch.$git_commit"
 
 cat > debian/changelog <<EOF
