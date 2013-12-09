@@ -3,7 +3,7 @@
 
 help(){
     echo "
-    Usage: $(basename $0)
+    Usage: $(basename $0) <script name> [script args]
 
     Execute puavo-lxc-run with Jenkins environment using it's full path with
     sudo.
@@ -35,6 +35,9 @@ APT_REPOSITORY2="${APT_REPOSITORY2:-}"
 APT_REPOSITORY3="${APT_REPOSITORY3:-}"
 APT_REPOSITORY4="${APT_REPOSITORY4:-}"
 APT_REPOSITORY5="${APT_REPOSITORY5:-}"
+
+CI_TARGET_DIST="${CI_TARGET_DIST:-}"
+CI_TARGET_ARCH="${CI_TARGET_ARCH:-}"
 
 # From Jenkins
 BUILD_NUMBER="${BUILD_NUMBER:-}"

@@ -6,7 +6,7 @@
 
 help(){
     echo "
-    Usage: $(basename $0) <environment file> <base container name> <script to run> [script args]
+    Usage: $(basename $0) <environment file> <script to run> [script args]
 
     Execute given script in a temporary container.
 
@@ -61,9 +61,9 @@ echo uptime
 uptime
 echo
 
+base_container="${CI_TARGET_DIST}-${CI_TARGET_ARCH}"
+
 jenkins_env="$1"
-shift
-base_container="$1"
 shift
 script_name="$1"
 shift
