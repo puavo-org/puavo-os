@@ -85,7 +85,9 @@ if [ ! -d "$container_path/$base_container" ]; then
     exit 1
 fi
 
-running_container="$JOB_NAME-$BUILD_NUMBER-$(hostname)"
+simple_job_name="$(echo $JOB_NAME |  cut -d / -f 1 )"
+
+running_container="${simple_job_name}-${CI_TARGET_DIST}-${CI_TARGET_ARCH}-${BUILD_NUMBER}"
 lxcdir="/var/lib/lxc/$running_container"
 
 echo "Cloning $base_container"
