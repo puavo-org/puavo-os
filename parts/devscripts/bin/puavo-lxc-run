@@ -61,7 +61,6 @@ echo uptime
 uptime
 echo
 
-base_container="${CI_TARGET_DIST}-${CI_TARGET_ARCH}"
 
 jenkins_env="$1"
 shift
@@ -73,6 +72,7 @@ script_args="$@"
 
 set -eu
 
+base_container="${CI_TARGET_DIST}-${CI_TARGET_ARCH}"
 
 if [ ! -d "$container_path/$base_container" ]; then
     if [ -d "$base_container_path/$base_container" ]; then
@@ -147,7 +147,8 @@ echo "${APT_REPOSITORY5:-}" >> $jenkins_job_repos
 
 mkdir "$lxcdir/rootfs/cirun"
 echo "Copying $(pwd) to /cirun for the container"
-rsync -a $(pwd) "$lxcdir/rootfs/cirun"
+mkdir "$lxcdir/rootfs/cirun/${simple_job_name}/"
+rsync -a "$(pwd)/" "$lxcdir/rootfs/cirun/${simple_job_name}/"
 
 cat "$jenkins_env" >> "$lxcdir/rootfs/etc/environment"
 
@@ -181,13 +182,13 @@ fi
 
 chown -R ci:ci /cirun
 
-git_dir="/cirun/${JOB_NAME}"
+git_dir="/cirun/${simple_job_name}"
 script_location="\${git_dir}/${script_name}"
 
 if [ ! -f "\$script_location" ]; then
     # If script is not found from the workspace it is probably in a
     # subdirectory set by Jenkins. Use shell globbing to autodetect the dirname
-    script_location=\$(ls -1 /cirun/${JOB_NAME}/*/${script_name})
+    script_location=\$(ls -1 /cirun/${simple_job_name}/*/${script_name})
     git_dir=\$(dirname \$script_location)
 fi
 
