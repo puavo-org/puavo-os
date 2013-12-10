@@ -68,7 +68,7 @@ git_branch=$(git rev-parse --abbrev-ref HEAD)
 
 version="${version}+${DISTRIB_CODENAME}.$(dpkg-architecture -qDEB_BUILD_ARCH)"
 
-version="$version~$git_branch.$git_commit"
+version="$version+$git_branch.$git_commit"
 
 tmpchangelog=$(mktemp)
 
