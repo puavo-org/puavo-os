@@ -2,7 +2,7 @@
 
 print_help(){
     echo "
-    Usage: $(basename $0) <version>
+    Usage: $(basename $0) [version]
 
     Autogenerate debian/changelog for given version using the current git
     commit.
@@ -14,14 +14,20 @@ print_help(){
 
 [ "$1" = "--help" -o "$1" = "-h" ] && print_help && exit 0
 
-version="$1"
-
 set -eu
-
-[ "$version" = "" ] && print_help && exit 1
 
 if [ ! -d debian ]; then
     echo "Cannot find debian directory from cwd ($(pwd)/debian)"
+    exit 1
+fi
+
+if [ $# -eq 0 ]; then
+    version="$(dpkg-parsechangelog | sed -r -n -e 's/^Version: //p')"
+elif [ $# -eq 1 ]; then
+    version=$1
+else
+    echo "wrong number of arguments" >&2
+    print_help >&2
     exit 1
 fi
 
@@ -64,7 +70,9 @@ version="${version}-${DISTRIB_CODENAME}-$(dpkg-architecture -qDEB_BUILD_ARCH)"
 
 version="$version~$git_branch.$git_commit"
 
-cat > debian/changelog <<EOF
+tmpchangelog=$(mktemp)
+
+cat >"${tmpchangelog}" <<EOF
 $repo_name ($version) $DISTRIB_CODENAME; urgency=low
 
   * Release from git commit $git_commit and branch $git_branch
@@ -75,3 +83,8 @@ $repo_name ($version) $DISTRIB_CODENAME; urgency=low
  -- $DEBFULLNAME <$DEBEMAIL>  $(date -R)
 
 EOF
+
+if [ -f debian/changelog ]; then
+    cat debian/changelog >>"${tmpchangelog}"
+fi
+mv "${tmpchangelog}" debian/changelog
