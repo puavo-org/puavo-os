@@ -1,6 +1,6 @@
 #!/bin/bash
 
-help(){
+print_help(){
     echo "
     Usage: $(basename $0) <version>
 
@@ -12,13 +12,13 @@ help(){
     "
 }
 
-[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
+[ "$1" = "--help" -o "$1" = "-h" ] && print_help && exit 0
 
 version="$1"
 
 set -eu
 
-[ "$version" = "" ] && help && exit 1
+[ "$version" = "" ] && print_help && exit 1
 
 if [ ! -d debian ]; then
     echo "Cannot find debian directory from cwd ($(pwd)/debian)"
