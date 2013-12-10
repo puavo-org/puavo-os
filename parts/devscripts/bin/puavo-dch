@@ -22,7 +22,7 @@ if [ ! -d debian ]; then
 fi
 
 if [ $# -eq 0 ]; then
-    version="$(dpkg-parsechangelog | sed -r -n -e 's/^Version: //p')"
+    version="$(dpkg-parsechangelog | sed -n -e 's/^Version: \(\([0-9]\+\):\)\?\(.*\)-.*/\3/p')"
 elif [ $# -eq 1 ]; then
     version=$1
 else
@@ -62,11 +62,11 @@ git_commit_msg=$(git log -1 --pretty=%B)
 git_branch=$(git rev-parse --abbrev-ref HEAD)
 
 # Use GIT_BRANCH env if set. Usually set by Jenkins
-[ "${GIT_BRANCH:-}" != "" ] && git_branch="$(echo "$GIT_BRANCH" | cut -d / -f 2)"
+[ "${GIT_BRANCH:-}" != "" ] && git_branch="$(echo "$GIT_BRANCH" | cut -d / -f 2 | tr '-' '_')"
 
 [ "${BUILD_NUMBER:-}" != "" ] && version="$version-$BUILD_NUMBER"
 
-version="${version}-${DISTRIB_CODENAME}-$(dpkg-architecture -qDEB_BUILD_ARCH)"
+version="${version}+${DISTRIB_CODENAME}.$(dpkg-architecture -qDEB_BUILD_ARCH)"
 
 version="$version~$git_branch.$git_commit"
 
