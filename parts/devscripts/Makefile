@@ -14,7 +14,6 @@ installdirs:
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		bin/puavo-dch \
-		bin/puavo-dch-legacy \
 		bin/puavo-install-deps \
 		bin/puavo-debuild \
 		bin/puavo-build-debian-dir \
