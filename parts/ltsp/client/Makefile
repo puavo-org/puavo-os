@@ -26,6 +26,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/ssh
+	mkdir -p $(DESTDIR)$(sysconfdir)/udev/rules.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount
@@ -152,6 +153,9 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/ssh \
 		etc/ssh/ltspsshd_config
 
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/udev/rules.d \
+		udev/rules.d/80-puavo-printers.rules
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
 		etc/X11/Xsession.d/40puavo-retrieve-thinclient-session \
 		etc/X11/Xsession.d/41puavo-set-locale \
@@ -162,7 +166,8 @@ install : installdirs
 		pam/populate-extrausers \
 		pam/chown-session-dir \
 		pam/make-session-dir \
-		make-release-logo
+		make-release-logo \
+		udev/udev-jetpipe \
 
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd
 

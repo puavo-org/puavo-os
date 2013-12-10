@@ -1,0 +1,17 @@
+#!/bin/sh
+  
+CMD=$1
+TYPE=$2
+ 
+PID=$(ps -ef|grep jetpipe|grep ${DEVNAME}|awk '{print $2}')
+kill $PID
+ 
+if [ ${CMD} = "add" ]; then
+  if [ ${TYPE} = "usb" ]; then
+    /usr/sbin/jetpipe ${DEVNAME} 9100
+  else
+    PORT=$(( $MINOR + 9101 ))
+ 
+    /usr/sbin/jetpipe ${DEVNAME} ${PORT}
+  fi
+fi
