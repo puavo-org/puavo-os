@@ -87,7 +87,10 @@ fi
 
 simple_job_name="$(echo $JOB_NAME |  cut -d / -f 1 )"
 
-running_container="${simple_job_name}-${CI_TARGET_DIST}-${CI_TARGET_ARCH}-${BUILD_NUMBER}"
+container_prefix="${simple_job_name}-${CI_TARGET_DIST}-${CI_TARGET_ARCH}-"
+running_container="${container_prefix}${BUILD_NUMBER}"
+
+
 lxcdir="/var/lib/lxc/$running_container"
 
 echo "Cloning $base_container"
@@ -104,6 +107,19 @@ on_exit(){
     if [ "$exitcode" = "0" ]; then
         echo "All OK. Destroying the container."
         lxc-destroy --name $running_container
+
+        # Use shell glob with the container_prefix to detect broken containers
+        # belonging to this project
+        for broken_container in "${broken_container_path}/${container_prefix}"*
+        do
+            broken_container_name="$(basename "${broken_container}")"
+            # Only remove the container if it is in STOPPED state
+            if [ "$(lxc-info -n "${broken_container_name}" --state | grep STOPPED)" ]; then
+                echo "Removing old broken container from ${broken_container}"
+                rm -rf ${broken_container}
+            fi
+        done
+
     else
         echo "
 
