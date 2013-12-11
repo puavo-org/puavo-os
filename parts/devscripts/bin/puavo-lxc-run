@@ -98,7 +98,7 @@ on_exit(){
     rm $jenkins_env
 
     # Always shutdown container on exit
-    lxc-shutdown --name $running_container || true
+    lxc-shutdown --name $running_container -t 30 || true
     lxc-wait --name $running_container -s STOPPED
 
     if [ "$exitcode" = "0" ]; then
