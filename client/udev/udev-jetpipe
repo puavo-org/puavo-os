@@ -4,8 +4,6 @@ CMD=$1
 TYPE=$2
 
 if [ ${CMD} = "add" ]; then
-  echo "ADD" >> /tmp/jep
-
   if [ ${TYPE} = "usb" ]; then
     PID=$(ps -ef|grep [j]etpipe\ /dev/usb|awk '{print $2}')
 
