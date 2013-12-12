@@ -32,7 +32,7 @@ module PuavoTFTP
 
 
       @timer = EventMachine::PeriodicTimer.new(1) do
-        return if @packet_sent.nil?
+        next if @packet_sent.nil?
 
         diff = Time.now - @packet_sent
         if TIMEOUT < diff
