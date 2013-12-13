@@ -22,10 +22,10 @@ class PuavoWrapper
     conf["puavo_hosttype"] ||= read_puavo_file "hosttype"
     conf["puavo_hostname"] ||= read_puavo_file "hostname"
     conf["puavo_domain"] ||= read_puavo_file "domain"
-    conf["puavo_ldap_dn"] ||= read_puavo_file "ldap/dn"
-    conf["puavo_ldap_password"] ||= read_puavo_file "ldap/password"
 
     if ["laptop", "bootserver"].include?(conf["puavo_hosttype"])
+      conf["puavo_ldap_dn"] ||= read_puavo_file "ldap/dn"
+      conf["puavo_ldap_password"] ||= read_puavo_file "ldap/password"
       @plugin = RestOut.new
     else
       @plugin = AutoForward.new
