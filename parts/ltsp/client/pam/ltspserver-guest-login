@@ -1,0 +1,9 @@
+#!/bin/sh
+
+REMOTE_HOST=$(echo $PAM_RHOST | awk --field-separator=. '{print $1}')
+
+if [ "guest-${REMOTE_HOST}" = "${PAM_USER}" ]; then
+  exit 0
+fi
+
+exit 2

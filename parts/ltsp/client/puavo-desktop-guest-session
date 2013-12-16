@@ -1,0 +1,55 @@
+#!/bin/sh
+
+PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+
+case "${PUAVO_HOSTTYPE}" in
+  fatclient)
+    gnome-session --session=gnome-fallback
+    break
+    ;;
+  thinclient)
+    # Guest session
+    if [ "`echo $USER | grep guest-`" != "" ]; then
+      PUAVO_SESSION=$(curl --cacert /etc/puavo/certs/rootca.pem \
+                           --form "hostname=$(hostname)" \
+                           --header 'Authorization: Bootserver' \
+                           --fail \
+                           --max-time 5 \
+                           --retry 5 \
+                           --retry-delay 1 \
+                           --header "Expect:" \
+                           "$(puavo-resolve-api-server)/v3/sessions")
+
+      DEFAULT_IFACE=`ip route|grep default|awk '{print $5}'`
+      IPADDR=`ip route|grep "dev $DEFAULT_IFACE"|grep src|awk '{print $9}'`
+
+#      PUAVO_SESSION=$(cat $PUAVO_SESSION_PATH)
+      PUAVO_SESSION_ID=$(echo $PUAVO_SESSION | jq -r .uuid)
+      PREFERRED_SERVER=$(echo $PUAVO_SESSION | jq -r .ltsp_server.state.fqdn)
+      REMOTE_SESSION="gnome-session-fallback"
+
+      REMOTE_DISPLAY="${IPADDR}${DISPLAY}"
+      SOCKET="/run/puavo/${USER}/$PREFERRED_SERVER"
+      LOCALDEV="; /usr/sbin/ltspfsmounter all cleanup"
+
+      XAUTH_PROTOCOL=$(xauth -f $XAUTHORITY list | head -1 | awk '{print $2}')
+      XAUTH_KEY=$(xauth -f $XAUTHORITY list | head -1| awk '{print $3}')
+
+      echo $USER | nc -w 3 $PREFERRED_SERVER 908
+      daemon --pidfile=/run/puavo/${USER}/ts-session.pid -i -- ssh -o NumberOfPasswordPrompts=0 -p 223 -Y -t $PREFERRED_SERVER -M -S $SOCKET "xauth remove ${REMOTE_DISPLAY}; xauth add ${REMOTE_DISPLAY} ${XAUTH_PROTOCOL} ${XAUTH_KEY}; $CLIENT_ENV PUAVO_SESSION_ID=$PUAVO_SESSION_ID DISPLAY=$REMOTE_DISPLAY PULSE_SERVER=tcp:$IPADDR:4713 /etc/X11/Xsession $REMOTE_SESSION < /dev/null > /dev/null $LOCALDEV"
+
+      sleep 10 # wait for the tunnel to open
+      while [ -S "$SOCKET" ]; do
+        sleep 1
+      done
+
+    # Normal thin sessionw is opened from PAM stack for now
+    else
+      HOST=`hostname`
+      sleep 10 # wait for the tunnel to open
+      while [ "`ps ax | grep ssh | grep $HOST`" != "" ]; do
+        sleep 1
+      done
+    fi
+    ;;
+esac

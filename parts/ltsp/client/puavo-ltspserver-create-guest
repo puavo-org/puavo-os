@@ -1,0 +1,22 @@
+#!/usr/bin/ruby1.9.3
+
+require 'etc'
+require 'tmpdir'
+require 'fileutils'
+
+loginname = STDIN.read.chomp
+
+if /guest-/.match(loginname)
+  begin
+    user = Etc.getpwnam(loginname)
+  rescue Exception => e
+    home = Dir.mktmpdir("#{loginname}-")
+    `/usr/sbin/adduser --disabled-password --no-create-home --system --home #{home} --gecos Guest --group --shell /bin/bash #{loginname}`
+  end
+end
+
+user = Etc.getpwnam(loginname)
+
+FileUtils.rm_rf home
+Dir.mkdir(home, 0700)
+FileUtils.chown(user.uid, user.gid, home)
