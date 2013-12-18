@@ -150,7 +150,7 @@ install : installdirs
 		upstart/puavo-ltsp-client.conf \
 		upstart/puavo-sync-external-files.conf
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d \
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d \
 		etc/NetworkManager/dispatcher.d/dnssd-printers
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/ssh \
