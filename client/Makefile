@@ -25,6 +25,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
+	mkdir -p $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/ssh
 	mkdir -p $(DESTDIR)/lib/udev/rules.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
@@ -69,7 +70,6 @@ install : installdirs
 		templates/etc/ldap/ldap.conf-laptop
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-up.d \
-		templates/etc/network/if-up.d/dnssd-printers \
 		templates/etc/network/if-up.d/ipsec \
 		templates/etc/network/if-up.d/sssd
 
@@ -149,6 +149,9 @@ install : installdirs
 		upstart/ltspssh.conf \
 		upstart/puavo-ltsp-client.conf \
 		upstart/puavo-sync-external-files.conf
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d \
+		etc/NetworkManager/dispatcher.d/dnssd-printers
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/ssh \
 		etc/ssh/ltspsshd_config
