@@ -1,0 +1,7 @@
+#!/bin/sh
+
+PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+
+if [ "${PUAVO_HOSTTYPE}" = "laptop" ]; then
+  /usr/sbin/puavo-dnssd-printer-client --delay 5 >/dev/null 2>&1 &
+fi
