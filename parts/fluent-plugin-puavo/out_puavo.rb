@@ -142,7 +142,8 @@ class RestOut < Fluent::BufferedOutput
 
     $log.info "Sending #{ records.size } records using http to #{ @host }:#{ @port }#{ path }"
 
-    res = http.request(req, Yajl::Encoder.encode(records))
+    json_data = Yajl::Encoder.encode(records)
+    res = http.request(req, json_data)
     if res.code != "200"
       msg = "Bad HTTP Response #{ res.code }: #{ res.body[0...500] }"
       $log.error msg
