@@ -106,9 +106,12 @@ class RestOut < Fluent::BufferedOutput
   def configure(conf)
     @port = 443
     @host = "api.opinsys.fi"
+    # max json records to send in single http post
+    @max_records = 20
 
     @host = conf["rest_host"] if conf["rest_host"]
     @port = conf["rest_port"] if conf["rest_port"]
+    @max_records = conf["max_records"] if conf["max_records"]
 
     $log.info "Rest is using #{ @host }:#{ @port }"
     super(conf)
@@ -126,9 +129,7 @@ class RestOut < Fluent::BufferedOutput
     http = Net::HTTP.new(@host, @port)
     http.use_ssl = @port == 443
 
-    # increase timeout as we might have huge set of records here if we've been
-    # offline
-    http.read_timeout = 600 # 10 min
+    http.read_timeout = 300 #  min
 
     $log.info "Sending #{ records.size } records using http to #{ @host }:#{ @port }#{ path }"
 
@@ -153,8 +154,8 @@ class RestOut < Fluent::BufferedOutput
         "_time" => time
       ))
 
-      if records.size >= 100
-        $log.info "records array is getting too big. Sending first http request with 100 records only"
+      if records.size >= @max_records
+        $log.info "Splitting send. Limiting to #{ records.size } records only"
         http_write(records)
         records = []
       end

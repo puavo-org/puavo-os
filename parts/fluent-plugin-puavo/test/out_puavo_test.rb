@@ -84,7 +84,7 @@ class PuavoOutput < Test::Unit::TestCase
       rest_port 80
       "
 
-    130.times do |i|
+    30.times do |i|
       time = Time.parse("2011-01-02 13:14:15").to_i + i*60
       d.emit({ "foo" => "bar" }, time)
     end
