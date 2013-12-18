@@ -118,17 +118,7 @@ class RestOut < Fluent::BufferedOutput
     [tag, time, record].to_msgpack
   end
 
-  def write(chunk)
-    records = []
-
-    chunk.msgpack_each do |(tag,time,record)|
-      next if record.nil?
-      records.push(record.merge(
-        "_tag" => tag,
-        "_time" => time
-      ))
-    end
-
+  def http_write(records)
     path = "/v3/fluent"
     req = Net::HTTP::Post.new(path, "Content-Type" => "application/json")
     req.basic_auth @config["puavo_ldap_dn"], @config["puavo_ldap_password"]
@@ -149,7 +139,29 @@ class RestOut < Fluent::BufferedOutput
       $log.error msg
       raise msg
     end
+
     $log.info "Sent ok! #{ res } #{ res.code } #{ res.body }"
+  end
+
+  def write(chunk)
+    records = []
+
+    chunk.msgpack_each do |(tag,time,record)|
+      next if record.nil?
+      records.push(record.merge(
+        "_tag" => tag,
+        "_time" => time
+      ))
+
+      if records.size >= 100
+        $log.info "records array is getting too big. Sending first http request with 100 records only"
+        http_write(records)
+        records = []
+      end
+
+    end
+
+    http_write(records)
 
   end
 end
