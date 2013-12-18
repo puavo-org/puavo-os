@@ -136,6 +136,10 @@ class RestOut < Fluent::BufferedOutput
     http = Net::HTTP.new(@host, @port)
     http.use_ssl = @port == 443
 
+    # increase timeout as we might have huge set of records here if we've been
+    # offline
+    http.read_timeout = 600 # 10 min
+
     $log.info "Sending #{ records.size } records using http to #{ @host }:#{ @port }#{ path }"
 
     res = http.request(req, Yajl::Encoder.encode(records))
