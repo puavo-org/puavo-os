@@ -33,6 +33,7 @@ require 'etc'
 require 'dnsruby'
 require 'json'
 require 'syslog'
+require 'trollop'
 
 Encoding.default_external = 'utf-8'
 
@@ -156,6 +157,14 @@ end
 
 def delete_printer(printer)
   `lpadmin -x #{printer.name}`
+end
+
+opts = Trollop::options do
+  opt :delay, "Delay execution for number of seconds", :type => Integer
+end
+
+if opts[:delay]
+  sleep(opts[:delay])
 end
 
 puavo_domain = File.read("/etc/puavo/domain").chomp
