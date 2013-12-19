@@ -69,31 +69,6 @@ class PuavoOutput < Test::Unit::TestCase
     assert got_request
   end
 
-  def test_splits_big_requests_to_smaller
-
-    req_count = 0
-    stub_request(:any, /testhost/).to_return do
-      req_count += 1
-      {:body => "abc", :status => 200, :headers => { 'Content-Length' => 3 }}
-    end
-
-    d = driver "test", "
-      puavo_hosttype laptop
-
-      rest_host testhost
-      rest_port 80
-      "
-
-    30.times do |i|
-      time = Time.parse("2011-01-02 13:14:15").to_i + i*60
-      d.emit({ "foo" => "bar" }, time)
-    end
-    d.run
-
-    assert_equal req_count, 2
-  end
-
-
   def test_can_customize_laptop_flush_interval
     driver "test", "
     puavo_hosttype laptop

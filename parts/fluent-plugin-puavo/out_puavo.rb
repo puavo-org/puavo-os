@@ -107,11 +107,9 @@ class RestOut < Fluent::BufferedOutput
     @port = 443
     @host = "api.opinsys.fi"
     # max json records to send in single http post
-    @max_records = 20
 
     @host = conf["rest_host"] if conf["rest_host"]
     @port = conf["rest_port"] if conf["rest_port"]
-    @max_records = conf["max_records"] if conf["max_records"]
 
     $log.info "Rest is using #{ @host }:#{ @port }"
     super(conf)
@@ -121,20 +119,19 @@ class RestOut < Fluent::BufferedOutput
     [tag, time, record].to_msgpack
   end
 
-  def http_write(records)
+  def http_write(chunk)
     path = "/v3/fluent"
-    req = Net::HTTP::Post.new(path, "Content-Type" => "application/json")
+    req = Net::HTTP::Post.new(path, "Content-Type" => "application/x-msgpack")
     req.basic_auth @config["puavo_ldap_dn"], @config["puavo_ldap_password"]
 
     http = Net::HTTP.new(@host, @port)
     http.use_ssl = @port == 443
 
-    http.read_timeout = 300 #  min
+    http.read_timeout = 300 # 5 min
 
-    $log.info "Sending #{ records.size } records using http to #{ @host }:#{ @port }#{ path }"
+    $log.info "Sending #{ chunk.size } bytes using http to #{ @host }:#{ @port }#{ path }"
 
-    json_data = Yajl::Encoder.encode(records)
-    res = http.request(req, json_data)
+    res = http.request(req, chunk)
     if res.code != "200"
       msg = "Bad HTTP Response #{ res.code }: #{ res.body[0...500] }"
       $log.error msg
@@ -145,25 +142,7 @@ class RestOut < Fluent::BufferedOutput
   end
 
   def write(chunk)
-    records = []
-
-    chunk.msgpack_each do |(tag,time,record)|
-      next if record.nil?
-      records.push(record.merge(
-        "_tag" => tag,
-        "_time" => time
-      ))
-
-      if records.size >= @max_records
-        $log.info "Splitting send. Limiting to #{ records.size } records only"
-        http_write(records)
-        records = []
-      end
-
-    end
-
-    http_write(records)
-
+    http_write(chunk.read)
   end
 end
 
