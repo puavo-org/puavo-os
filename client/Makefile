@@ -74,7 +74,6 @@ install : installdirs
 		templates/etc/network/if-up.d/sssd
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-post-down.d \
-		templates/etc/network/if-post-down.d/dnssd-printers \
 		templates/etc/network/if-post-down.d/ipsec
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
