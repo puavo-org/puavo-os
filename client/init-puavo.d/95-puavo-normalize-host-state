@@ -10,9 +10,13 @@ case "$PUAVO_HOSTTYPE" in
       true
     else
       # a shared laptop, clean some things up
-      rm -f /state/etc/cups/ppd/* \
-	    /state/etc/cups/printers.conf \
-            /state/etc/NetworkManager/system-connections/*
+      rm -f /state/etc/NetworkManager/system-connections/*
+
+      # Delete unmanaged printers as we do not want them to stay around
+      # on shared laptops. Managed printers are kept around until network
+      # comes up so that they are immediately available even when logging
+      # in offline mode.
+      /usr/sbin/puavo-dnssd-printer-client --delete-unmanaged --no-dns-query >/dev/null 2>&1 &
     fi
     ;;
 esac
