@@ -27,7 +27,7 @@ if [ "x${API_SERVER}" != "x" ]; then
             --user : \
             --form "hostname=${PUAVO_HOSTNAME}" \
             --fail \
-            --max-time 5 \
+            --max-time 60 \
             --retry 5 \
             --retry-delay 1 \
 	    --header "Expect:" \
