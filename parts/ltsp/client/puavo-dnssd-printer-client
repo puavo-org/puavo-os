@@ -184,7 +184,6 @@ if opts[:delay]
   sleep(opts[:delay])
 end
 
-puavo_domain = File.read("/etc/puavo/domain").chomp
 dname = "b._dns-sd._udp"
 
 # First read old printer list
@@ -237,8 +236,6 @@ if !opts[:no_dns_query]
     print "Can't find PTR records for #{dname}: ", e, "\n"
   end
 
-  #puts "OK: #{ptr_records_ok}"
-
   if opts[:require_dns_records] and !ptr_records_ok
     log "--require-dns-records defined and DNS entries were not found, not updating records"
   else
@@ -276,8 +273,6 @@ end
 if opts[:delete_unmanaged]
   `lpstat -a 2>/dev/null`.split("\n").each do |line|
     name = line.split(" ")[0]
-
-#    log printers.inspect
 
     if !managed_printers.has_key?(name)
       log "Deleting unmanaged printer #{name}"
