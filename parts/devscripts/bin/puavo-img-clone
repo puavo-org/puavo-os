@@ -34,24 +34,12 @@ on_exit()
     # anymore.
     set +eu
 
-    if [ -n "${dst_mountdir}" ]; then
-        umount "${dst_mountdir}"
+    if [ -n "${src_fsroot}" ]; then
+        umount "${src_fsroot}"
     fi
 
-    if [ -n "${dst_loopdev}" ]; then
-        losetup -d "${dst_loopdev}"
-    fi
-
-    if [ -n "${src_mountdir}" ]; then
-        umount "${src_mountdir}"
-    fi
-
-    if [ -n "${dst_mountdir}" ]; then
-        rmdir "${dst_mountdir}"
-    fi
-
-    if [ -n "${src_mountdir}" ]; then
-        rmdir "${src_mountdir}"
+    if [ -n "${src_fsroot}" ]; then
+        rmdir "${src_fsroot}"
     fi
 
     exit $exitval
@@ -76,8 +64,130 @@ is_uint()
     return 0
 }
 
+clone_to_ext4()
+{
+    local _dst_loopdev
+    local _exitval
+    local _src_size
+
+    _src_size=$(df --block-size=1 --output=size "${src_fsroot}" | tail -n1)
+    if [ -z "${_src_size}" ]; then
+        echo "error: failed to determine the size of the source filesystem" >&2
+        return 1
+    fi
+
+    if [ -z "${dst_size}" ]; then
+        dst_size=$((_src_size * 2))
+    fi
+
+    _tmpfile=$(mktemp)
+
+    dd if=/dev/zero of="${_tmpfile}" count=0 bs=1 seek="${dst_size}" || {
+        _exitval=$?
+        rm -rf "${_tmpfile}" || true
+        return $_exitval
+    }
+
+    _dst_loopdev=$(losetup -f --show "${_tmpfile}") || {
+        _exitval=$?
+        rm -rf "${_tmpfile}" || true
+        return $_exitval
+    }
+
+    mkfs.ext4 "${_dst_loopdev}" || {
+        _exitval=$?
+        losetup -d "${_dst_loopdev}" || true
+        rm -rf "${_tmpfile}" || true
+        return $_exitval
+    }
+
+    losetup -d "${_dst_loopdev}" || {
+        _exitval=$?
+        rm -rf "${_tmpfile}" || true
+        return $_exitval
+    }
+
+    _tmpdir=$(mktemp -d) || {
+        _exitval=$?
+        rm -rf "${_tmpfile}" || true
+        return $_exitval
+    }
+
+    mount -o loop "${_tmpfile}" "${_tmpdir}" || {
+        _exitval=$?
+        rm -rf "${_tmpfile}" || true
+        rmdir "${_tmpdir}" || true
+        return $_exitval
+    }
+
+    rsync -a "${src_fsroot}/" "${_tmpdir}/" || {
+        _exitval=$?
+        # If umount fails, leave everything as it is so that the user
+        # can cleanup manually later.
+        umount "${_tmpdir}" || return $_exitval
+        rmdir "${_tmpdir}" || true
+        rm -rf "${_tmpfile}" || true
+        return $_exitval
+    }
+
+    umount "${_tmpdir}"
+
+    mv "${_tmpfile}" "${dst_filepath}"
+
+    rmdir "${_tmpdir}"
+
+    return 0
+}
+
+clone_to_squashfs()
+{
+    local _dst_filepath_dir
+    local _exitval
+    local _tmpdir
+    local _tmpfile
+
+    _tmpdir=$(mktemp -d)
+
+    rsync -a "${src_fsroot}/" "${_tmpdir}/" || {
+        _exitval=$?
+        rm -rf "${_tmpdir}" || true
+        return $_exitval
+    }
+
+    _dst_filepath_dir=$(dirname "${dst_filepath}") || {
+        _exitval=$?
+        rm -rf "${_tmpdir}" || true
+        return $_exitval
+    }
+
+    _tmpfile=$(mktemp --tmpdir="${_dst_filepath_dir}") || {
+        _exitval=$?
+        rm -rf "${_tmpdir}" || true
+        return $_exitval
+    }
+
+    mksquashfs "${_tmpdir}" "${_tmpfile}" -noappend -no-recovery || {
+        _exitval=$?
+        rm -rf "${_tmpdir}" || true
+        rm -rf "${_tmpfile}" || true
+        return $_exitval
+    }
+
+    mv "${_tmpfile}" "${dst_filepath}" || {
+        _exitval=$?
+        rm -rf "${_tmpdir}" || true
+        rm -rf "${_tmpfile}" || true
+        return $_exitval
+    }
+
+    rm -rf "${_tmpdir}"
+
+    return 0
+}
+
 ## Main below
 
+clone_func=clone_to_ext4
 dst_size=
 force=0
 
@@ -90,6 +200,7 @@ while [ $# -gt 0 ]; do
             echo "Make a copy of a Puavo image in another format."
             echo
             echo "Options:"
+            echo "        --dst-fs-type DST_FS_TYPE    destination filesystem type, 'ext4' or 'squashfs', defaults to 'ext4'"
             echo "        --dst-size DST_BYTES         size of the destination image file in bytes, defaults to"
             echo "                                     twice the size of the source image filesystem"
             echo "    -f, --force                      overwrite existing destination file"
@@ -97,6 +208,21 @@ while [ $# -gt 0 ]; do
             echo "    -V, --version                    print version and exit"
             echo
             exit 0
+            ;;
+        --dst-fs-type)
+            shift
+            case $1 in
+                ext4)
+                    clone_func=clone_to_ext4
+                    ;;
+                squashfs)
+                    clone_func=clone_to_squashfs
+                    ;;
+                *)
+                    usage_error "invalid value '$1' for option '--dst-fs-type', expected 'ext4' or 'squashfs'"
+                    ;;
+            esac
+            shift
             ;;
         --dst-size)
             shift
@@ -112,7 +238,7 @@ while [ $# -gt 0 ]; do
             ;;
         -V|--version)
             shift
-            echo 0.1
+            echo 0.2
             exit 0
             ;;
         --)
@@ -132,44 +258,24 @@ if [ $# -ne 2 ]; then
     usage_error "invalid number of arguments ($#), expected 2"
 fi
 
-src_filepath=$1
-dst_filepath=$2
+src_filepath=$(readlink -e $1)
+dst_filepath=$(readlink -f $2)
 
 if [ ${force} -eq 0 -a -f "${dst_filepath}" ]; then
     echo "error: destination file '${dst_filepath}' already exists, use --force to overwrite" >&2
     exit 1
 fi
 
-# The trap function assigned below uses these variables, therefore they
-# are declared here to avoid referencing unbound variables.
-dst_loopdev=
-src_mountdir=
-dst_mountdir=
+# The trap function assigned below use this variable, therefore it is
+# declared here to avoid referencing an unbound variable.
+src_fsroot=
 
 # Set trap before any permanent changes, on_exit will cleanup everything
 # afterwards.
 trap on_exit EXIT
 
-src_mountdir=$(mktemp -d)
-dst_mountdir=$(mktemp -d)
+src_fsroot=$(mktemp -d)
 
-mount -o loop,ro "${src_filepath}" "${src_mountdir}"
+mount -o loop,ro "${src_filepath}" "${src_fsroot}"
 
-src_size=$(df --block-size=1 --output=size "${src_mountdir}" | tail -n1)
-if [ -z "${src_size}" ]; then
-    echo "error: failed to determine the size of the source filesystem" >&2
-    exit 1
-fi
-
-if [ -z "${dst_size}" ]; then
-    dst_size=$((src_size * 2))
-fi
-
-dd if=/dev/zero of="${dst_filepath}" count=0 bs=1 seek="${dst_size}"
-
-dst_loopdev=$(losetup -f --show "${dst_filepath}")
-mkfs.ext4 "${dst_loopdev}"
-
-mount "${dst_loopdev}" "${dst_mountdir}"
-
-rsync -a "${src_mountdir}/" "${dst_mountdir}/"
+${clone_func}
