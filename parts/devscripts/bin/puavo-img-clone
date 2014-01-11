@@ -224,7 +224,7 @@ while [ $# -gt 0 ]; do
             echo
             exit 0
             ;;
-        --type)
+        -t|--type)
             shift
             case $1 in
                 ext4)
@@ -239,7 +239,7 @@ while [ $# -gt 0 ]; do
             esac
             shift
             ;;
-        --size)
+        -s|--size)
             shift
             dstsize_G=$1
             shift
