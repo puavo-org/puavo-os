@@ -1,0 +1,175 @@
+#!/bin/bash
+#
+# ##############################################################################
+#
+# Copyright (C) 2014 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+#
+
+set -eu
+
+# This function is called when EXIT trap is triggered. Exit with the
+# original exit value.
+on_exit()
+{
+    exitval=$?
+
+    # We are already exiting and doing cleanups. Do not exit on error
+    # anymore.
+    set +eu
+
+    if [ -n "${dst_mountdir}" ]; then
+        umount "${dst_mountdir}"
+    fi
+
+    if [ -n "${dst_loopdev}" ]; then
+        losetup -d "${dst_loopdev}"
+    fi
+
+    if [ -n "${src_mountdir}" ]; then
+        umount "${src_mountdir}"
+    fi
+
+    if [ -n "${dst_mountdir}" ]; then
+        rmdir "${dst_mountdir}"
+    fi
+
+    if [ -n "${src_mountdir}" ]; then
+        rmdir "${src_mountdir}"
+    fi
+
+    exit $exitval
+}
+
+usage_error()
+{
+    echo "error: $1" >&2
+    echo "Try '$0 --help' for more information". >&2
+    return 1
+}
+
+is_uint()
+{
+    case $1 in
+        ''|*[!0-9]*)
+            return 1
+            ;;
+        *)
+            ;;
+    esac
+    return 0
+}
+
+## Main below
+
+dst_size=
+force=0
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            echo "Usage: $0 SRC DST"
+            echo
+            echo "Make a copy of a Puavo image in another format."
+            echo
+            echo "Options:"
+            echo "        --dst-size DST_BYTES         size of the destination image file in bytes, defaults to"
+            echo "                                     twice the size of the source image filesystem"
+            echo "    -f, --force                      overwrite existing destination file"
+            echo "    -h, --help                       print help and exit"
+            echo "    -V, --version                    print version and exit"
+            echo
+            exit 0
+            ;;
+        --dst-size)
+            shift
+            dst_size=$1
+            shift
+            is_uint "${dst_size}" || {
+                usage_error "invalid value '${dst_size}' for option '--dst-size', expected unsigned integer"
+            }
+            ;;
+        -f|--force)
+            shift
+            force=1
+            ;;
+        -V|--version)
+            shift
+            echo 0.1
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage_error "invalid argument '$1'"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -ne 2 ]; then
+    usage_error "invalid number of arguments ($#), expected 2"
+fi
+
+src_filepath=$1
+dst_filepath=$2
+
+if [ ${force} -eq 0 -a -f "${dst_filepath}" ]; then
+    echo "error: destination file '${dst_filepath}' already exists, use --force to overwrite" >&2
+    exit 1
+fi
+
+# The trap function assigned below uses these variables, therefore they
+# are declared here to avoid referencing unbound variables.
+dst_loopdev=
+src_mountdir=
+dst_mountdir=
+
+# Set trap before any permanent changes, on_exit will cleanup everything
+# afterwards.
+trap on_exit EXIT
+
+src_mountdir=$(mktemp -d)
+dst_mountdir=$(mktemp -d)
+
+mount -o loop,ro "${src_filepath}" "${src_mountdir}"
+
+src_size=$(df --block-size=1 --output=size "${src_mountdir}" | tail -n1)
+if [ -z "${src_size}" ]; then
+    echo "error: failed to determine the size of the source filesystem" >&2
+    exit 1
+fi
+
+if [ -z "${dst_size}" ]; then
+    dst_size=$((src_size * 2))
+fi
+
+dd if=/dev/zero of="${dst_filepath}" count=0 bs=1 seek="${dst_size}"
+
+dst_loopdev=$(losetup -f --show "${dst_filepath}")
+mkfs.ext4 "${dst_loopdev}"
+
+mount "${dst_loopdev}" "${dst_mountdir}"
+
+rsync -a "${src_mountdir}/" "${dst_mountdir}/"
