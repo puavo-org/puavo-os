@@ -58,10 +58,13 @@ is_uint()
 clone_to_ext4()
 {
     local dst_loopdev
+    local imgname
     local retval
     local src_size
     local tmpdir
     local tmpfile
+
+    imgname=$(basename "${dst_filepath_G}" .img) || return $?
 
     src_size=$(df --block-size=1 --output=size "${src_fsroot_G}" | tail -n1)
     if [ -z "${src_size}" ]; then
@@ -123,6 +126,14 @@ clone_to_ext4()
         return $retval
     }
 
+    echo "${imgname}" >"${tmpdir}/etc/ltsp/this_ltspimage_name" || {
+        retval=$?
+        umount "${tmpdir}" || return $retval
+        rmdir "${tmpdir}" || true
+        rm -rf "${tmpfile}" || true
+        return $retval
+    }
+
     umount "${tmpdir}" || return $?
 
     mv "${tmpfile}" "${dst_filepath_G}" || return $?
@@ -133,13 +144,22 @@ clone_to_ext4()
 clone_to_squashfs()
 {
     local dst_file_dir
+    local imgname
     local retval
     local tmpdir
     local tmpfile
 
+    imgname=$(basename "${dst_filepath_G}" .img) || return $?
+
     tmpdir=$(mktemp -d) || return $?
 
     rsync -a "${src_fsroot_G}/" "${tmpdir}/" || {
+        retval=$?
+        rm -rf "${tmpdir}" || true
+        return $retval
+    }
+
+    echo "${imgname}" >"${tmpdir}/etc/ltsp/this_ltspimage_name" || {
         retval=$?
         rm -rf "${tmpdir}" || true
         return $retval
@@ -190,7 +210,7 @@ while [ $# -gt 0 ]; do
             shift
             echo "Usage: $0 SRC DST"
             echo
-            echo "Make a copy of a Puavo image file."
+            echo "Make a copy of a Puavo image file with a new image name."
             echo
             echo "Options:"
             echo "    -t, --type FS_TYPE           destination filesystem type, must be"
