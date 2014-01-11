@@ -24,25 +24,16 @@
 
 set -eu
 
-# This function is called when EXIT trap is triggered. Exit with the
-# original exit value.
 on_exit()
 {
     exitval=$?
 
-    # We are already exiting and doing cleanups. Do not exit on error
-    # anymore.
     set +eu
 
-    if [ -n "${src_fsroot}" ]; then
-        umount "${src_fsroot}"
-    fi
+    umount "${src_filepath_G}"
+    rmdir "${src_fsroot_G}"
 
-    if [ -n "${src_fsroot}" ]; then
-        rmdir "${src_fsroot}"
-    fi
-
-    exit $exitval
+    return ${exitval}
 }
 
 usage_error()
@@ -66,130 +57,132 @@ is_uint()
 
 clone_to_ext4()
 {
-    local _dst_loopdev
-    local _exitval
-    local _src_size
+    local dst_loopdev
+    local retval
+    local src_size
+    local tmpdir
+    local tmpfile
 
-    _src_size=$(df --block-size=1 --output=size "${src_fsroot}" | tail -n1)
-    if [ -z "${_src_size}" ]; then
+    src_size=$(df --block-size=1 --output=size "${src_fsroot_G}" | tail -n1)
+    if [ -z "${src_size}" ]; then
         echo "error: failed to determine the size of the source filesystem" >&2
         return 1
     fi
 
-    if [ -z "${dst_size}" ]; then
-        dst_size=$((_src_size * 2))
+    if [ -z "${dst_size_G}" ]; then
+        dst_size_G=$((src_size * 2))
     fi
 
-    _tmpfile=$(mktemp)
+    tmpfile=$(mktemp) || return $?
 
-    dd if=/dev/zero of="${_tmpfile}" count=0 bs=1 seek="${dst_size}" || {
-        _exitval=$?
-        rm -rf "${_tmpfile}" || true
-        return $_exitval
+    dd if=/dev/zero of="${tmpfile}" count=0 bs=1 seek="${dst_size_G}" || {
+        retval=$?
+        rm -rf "${tmpfile}" || true
+        return $retval
     }
 
-    _dst_loopdev=$(losetup -f --show "${_tmpfile}") || {
-        _exitval=$?
-        rm -rf "${_tmpfile}" || true
-        return $_exitval
+    dst_loopdev=$(losetup -f --show "${tmpfile}") || {
+        retval=$?
+        rm -rf "${tmpfile}" || true
+        return $retval
     }
 
-    mkfs.ext4 "${_dst_loopdev}" || {
-        _exitval=$?
-        losetup -d "${_dst_loopdev}" || true
-        rm -rf "${_tmpfile}" || true
-        return $_exitval
+    mkfs.ext4 "${dst_loopdev}" || {
+        retval=$?
+        losetup -d "${dst_loopdev}" || true
+        rm -rf "${tmpfile}" || true
+        return $retval
     }
 
-    losetup -d "${_dst_loopdev}" || {
-        _exitval=$?
-        rm -rf "${_tmpfile}" || true
-        return $_exitval
+    losetup -d "${dst_loopdev}" || {
+        retval=$?
+        rm -rf "${tmpfile}" || true
+        return $retval
     }
 
-    _tmpdir=$(mktemp -d) || {
-        _exitval=$?
-        rm -rf "${_tmpfile}" || true
-        return $_exitval
+    tmpdir=$(mktemp -d) || {
+        retval=$?
+        rm -rf "${tmpfile}" || true
+        return $retval
     }
 
-    mount -o loop "${_tmpfile}" "${_tmpdir}" || {
-        _exitval=$?
-        rm -rf "${_tmpfile}" || true
-        rmdir "${_tmpdir}" || true
-        return $_exitval
+    mount -o loop "${tmpfile}" "${tmpdir}" || {
+        retval=$?
+        rm -rf "${tmpfile}" || true
+        rmdir "${tmpdir}" || true
+        return $retval
     }
 
-    rsync -a "${src_fsroot}/" "${_tmpdir}/" || {
-        _exitval=$?
+    rsync -a "${src_fsroot_G}/" "${tmpdir}/" || {
+        retval=$?
         # If umount fails, leave everything as it is so that the user
         # can cleanup manually later.
-        umount "${_tmpdir}" || return $_exitval
-        rmdir "${_tmpdir}" || true
-        rm -rf "${_tmpfile}" || true
-        return $_exitval
+        umount "${tmpdir}" || return $retval
+        rmdir "${tmpdir}" || true
+        rm -rf "${tmpfile}" || true
+        return $retval
     }
 
-    umount "${_tmpdir}"
+    umount "${tmpdir}" || return $?
 
-    mv "${_tmpfile}" "${dst_filepath}"
+    mv "${tmpfile}" "${dst_filepath_G}" || return $?
 
-    rmdir "${_tmpdir}"
-
-    return 0
+    rmdir "${tmpdir}"
 }
 
 clone_to_squashfs()
 {
-    local _dst_filepath_dir
-    local _exitval
-    local _tmpdir
-    local _tmpfile
+    local dst_file_dir
+    local retval
+    local tmpdir
+    local tmpfile
 
-    _tmpdir=$(mktemp -d)
+    tmpdir=$(mktemp -d) || return $?
 
-    rsync -a "${src_fsroot}/" "${_tmpdir}/" || {
-        _exitval=$?
-        rm -rf "${_tmpdir}" || true
-        return $_exitval
+    rsync -a "${src_fsroot_G}/" "${tmpdir}/" || {
+        retval=$?
+        rm -rf "${tmpdir}" || true
+        return $retval
     }
 
-    _dst_filepath_dir=$(dirname "${dst_filepath}") || {
-        _exitval=$?
-        rm -rf "${_tmpdir}" || true
-        return $_exitval
+    dst_file_dir=$(dirname "${dst_filepath_G}") || {
+        retval=$?
+        rm -rf "${tmpdir}" || true
+        return $retval
     }
 
-    _tmpfile=$(mktemp --tmpdir="${_dst_filepath_dir}") || {
-        _exitval=$?
-        rm -rf "${_tmpdir}" || true
-        return $_exitval
+    tmpfile=$(mktemp --tmpdir="${dst_file_dir}") || {
+        retval=$?
+        rm -rf "${tmpdir}" || true
+        return $retval
     }
 
-    mksquashfs "${_tmpdir}" "${_tmpfile}" -noappend -no-recovery || {
-        _exitval=$?
-        rm -rf "${_tmpdir}" || true
-        rm -rf "${_tmpfile}" || true
-        return $_exitval
+    mksquashfs "${tmpdir}" "${tmpfile}" -noappend -no-recovery || {
+        retval=$?
+        rm -rf "${tmpdir}" || true
+        rm -rf "${tmpfile}" || true
+        return $retval
     }
 
-    mv "${_tmpfile}" "${dst_filepath}" || {
-        _exitval=$?
-        rm -rf "${_tmpdir}" || true
-        rm -rf "${_tmpfile}" || true
-        return $_exitval
+    mv "${tmpfile}" "${dst_filepath_G}" || {
+        retval=$?
+        rm -rf "${tmpdir}" || true
+        rm -rf "${tmpfile}" || true
+        return $retval
     }
 
-    rm -rf "${_tmpdir}"
-
-    return 0
+    rm -rf "${tmpdir}"
 }
 
-## Main below
+# Main below
 
-clone_func=clone_to_ext4
-dst_size=
-force=0
+# Declare all global variables here and only here.
+clone_func_G=clone_to_ext4
+dst_filepath_G=
+dst_size_G=
+force_G=0
+src_filepath_G=
+src_fsroot_G=
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -197,48 +190,50 @@ while [ $# -gt 0 ]; do
             shift
             echo "Usage: $0 SRC DST"
             echo
-            echo "Make a copy of a Puavo image in another format."
+            echo "Make a copy of a Puavo image file."
             echo
             echo "Options:"
-            echo "        --dst-fs-type DST_FS_TYPE    destination filesystem type, 'ext4' or 'squashfs', defaults to 'ext4'"
-            echo "        --dst-size DST_BYTES         size of the destination image file in bytes, defaults to"
-            echo "                                     twice the size of the source image filesystem"
-            echo "    -f, --force                      overwrite existing destination file"
-            echo "    -h, --help                       print help and exit"
-            echo "    -V, --version                    print version and exit"
+            echo "    -t, --type FS_TYPE           destination filesystem type, must be"
+            echo "                                 'ext4' (default) or 'squashfs'"
+            echo "    -s, --size BYTES             size of the destination image file in bytes,"
+            echo "                                 defaults to twice the size of the source image"
+            echo "                                 filesystem"
+            echo "    -f, --force                  overwrite existing destination file"
+            echo "    -h, --help                   print help and exit"
+            echo "    -V, --version                print version and exit"
             echo
             exit 0
             ;;
-        --dst-fs-type)
+        --type)
             shift
             case $1 in
                 ext4)
-                    clone_func=clone_to_ext4
+                    clone_func_G=clone_to_ext4
                     ;;
                 squashfs)
-                    clone_func=clone_to_squashfs
+                    clone_func_G=clone_to_squashfs
                     ;;
                 *)
-                    usage_error "invalid value '$1' for option '--dst-fs-type', expected 'ext4' or 'squashfs'"
+                    usage_error "invalid value '$1' for option '--type', expected 'ext4' or 'squashfs'"
                     ;;
             esac
             shift
             ;;
-        --dst-size)
+        --size)
             shift
-            dst_size=$1
+            dst_size_G=$1
             shift
-            is_uint "${dst_size}" || {
-                usage_error "invalid value '${dst_size}' for option '--dst-size', expected unsigned integer"
+            is_uint "${dst_size_G}" || {
+                usage_error "invalid value '${dst_size_G}' for option '--size', expected unsigned integer"
             }
             ;;
         -f|--force)
             shift
-            force=1
+            force_G=1
             ;;
         -V|--version)
             shift
-            echo 0.2
+            echo 0.1
             exit 0
             ;;
         --)
@@ -258,24 +253,17 @@ if [ $# -ne 2 ]; then
     usage_error "invalid number of arguments ($#), expected 2"
 fi
 
-src_filepath=$(readlink -e $1)
-dst_filepath=$(readlink -f $2)
+src_filepath_G=$(readlink -e $1)
+dst_filepath_G=$(readlink -f $2)
 
-if [ ${force} -eq 0 -a -f "${dst_filepath}" ]; then
-    echo "error: destination file '${dst_filepath}' already exists, use --force to overwrite" >&2
+if [ ${force_G} -eq 0 -a -f "${dst_filepath_G}" ]; then
+    echo "error: destination file '${dst_filepath_G}' already exists, use --force to overwrite" >&2
     exit 1
 fi
 
-# The trap function assigned below use this variable, therefore it is
-# declared here to avoid referencing an unbound variable.
-src_fsroot=
-
-# Set trap before any permanent changes, on_exit will cleanup everything
-# afterwards.
 trap on_exit EXIT
 
-src_fsroot=$(mktemp -d)
+src_fsroot_G=$(mktemp -d)
 
-mount -o loop,ro "${src_filepath}" "${src_fsroot}"
-
-${clone_func}
+mount -o loop,ro "${src_filepath_G}" "${src_fsroot_G}"
+${clone_func_G}
