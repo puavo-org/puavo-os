@@ -178,6 +178,10 @@ if [ ${force_G} -a -f "${dstfile_G}" ]; then
     exit 1
 fi
 
+if [ ${clonefunc_G} = clone_to_squashfs -a -n "${dstsize_G}" ]; then
+    echo "warning: destination size is ignored because destination type is 'squashfs'" >&2
+fi
+
 imgname_G=$(basename "${dstfile_G}" .img)
 dstdir_G=$(dirname "${dstfile_G}")
 
