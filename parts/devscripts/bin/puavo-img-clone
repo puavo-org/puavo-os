@@ -30,7 +30,11 @@ on_exit()
 
     set +eu
 
-    umount "${srcfile_G}"
+    umount "${dstrootdir_G}"
+    umount "${srcmountdir_G}"
+    rm -rf "${tmpdstfile_G}"
+    rm -rf "${dstrootdir_G}" # rm -rf because it might not be empty if
+                             # targeted squashfs
     rmdir "${srcmountdir_G}"
 
     return ${exitval}
@@ -48,8 +52,6 @@ clone_to_ext4()
     local loopdev
     local retval
     local srcsize
-    local tmpdir
-    local tmpfile
 
     srcsize=$(du --bytes --summarize "${srcmountdir_G}" | cut -f1)
     if [ -z "${srcsize}" ]; then
@@ -61,112 +63,36 @@ clone_to_ext4()
         dstsize_G=$((srcsize * 2))
     fi
 
-    tmpfile=$(mktemp --tmpdir="${dstdir_G}") || return $?
+    qemu-img create -f raw "${tmpdstfile_G}" "${dstsize_G}" || return $?
 
-    qemu-img create -f raw "${tmpfile}" "${dstsize_G}" || {
-        retval=$?
-        rm -rf "${tmpfile}" || true
-        return ${retval}
-    }
-
-    loopdev=$(losetup -f --show "${tmpfile}") || {
-        retval=$?
-        rm -rf "${tmpfile}" || true
-        return ${retval}
-    }
+    loopdev=$(losetup -f --show "${tmpdstfile_G}") || return $?
 
     mkfs.ext4 "${loopdev}" || {
         retval=$?
         losetup -d "${loopdev}" || true
-        rm -rf "${tmpfile}" || true
         return ${retval}
     }
 
-    losetup -d "${loopdev}" || {
-        retval=$?
-        rm -rf "${tmpfile}" || true
-        return ${retval}
-    }
+    losetup -d "${loopdev}" || return $?
 
-    tmpdir=$(mktemp -d) || {
-        retval=$?
-        rm -rf "${tmpfile}" || true
-        return ${retval}
-    }
+    mount -o loop "${tmpdstfile_G}" "${dstrootdir_G}" || return $?
 
-    mount -o loop "${tmpfile}" "${tmpdir}" || {
-        retval=$?
-        rm -rf "${tmpfile}" || true
-        rmdir "${tmpdir}" || true
-        return ${retval}
-    }
+    rsync -a "${srcmountdir_G}/" "${dstrootdir_G}/" || return $?
 
-    rsync -a "${srcmountdir_G}/" "${tmpdir}/" || {
-        retval=$?
-        # If umount fails, leave everything as it is so that the user
-        # can cleanup manually later.
-        umount "${tmpdir}" || return ${retval}
-        rmdir "${tmpdir}" || true
-        rm -rf "${tmpfile}" || true
-        return ${retval}
-    }
+    echo "${imgname_G}" >"${dstrootdir_G}/etc/ltsp/this_ltspimage_name" || return $?
 
-    echo "${imgname_G}" >"${tmpdir}/etc/ltsp/this_ltspimage_name" || {
-        retval=$?
-        umount "${tmpdir}" || return ${retval}
-        rmdir "${tmpdir}" || true
-        rm -rf "${tmpfile}" || true
-        return ${retval}
-    }
-
-    umount "${tmpdir}" || return $?
-
-    mv "${tmpfile}" "${dstfile_G}" || return $?
-
-    rmdir "${tmpdir}"
+    mv "${tmpdstfile_G}" "${dstfile_G}"
 }
 
 clone_to_squashfs()
 {
-    local retval
-    local tmpdir
-    local tmpfile
+    rsync -a "${srcmountdir_G}/" "${dstrootdir_G}/" || return $?
 
-    tmpdir=$(mktemp -d) || return $?
+    echo "${imgname_G}" >"${dstrootdir_G}/etc/ltsp/this_ltspimage_name" || return $?
 
-    rsync -a "${srcmountdir_G}/" "${tmpdir}/" || {
-        retval=$?
-        rm -rf "${tmpdir}" || true
-        return ${retval}
-    }
+    mksquashfs "${dstrootdir_G}" "${tmpdstfile_G}" -noappend -no-recovery || return $?
 
-    echo "${imgname_G}" >"${tmpdir}/etc/ltsp/this_ltspimage_name" || {
-        retval=$?
-        rm -rf "${tmpdir}" || true
-        return ${retval}
-    }
-
-    tmpfile=$(mktemp --tmpdir="${dstdir_G}") || {
-        retval=$?
-        rm -rf "${tmpdir}" || true
-        return ${retval}
-    }
-
-    mksquashfs "${tmpdir}" "${tmpfile}" -noappend -no-recovery || {
-        retval=$?
-        rm -rf "${tmpdir}" || true
-        rm -rf "${tmpfile}" || true
-        return ${retval}
-    }
-
-    mv "${tmpfile}" "${dstfile_G}" || {
-        retval=$?
-        rm -rf "${tmpdir}" || true
-        rm -rf "${tmpfile}" || true
-        return ${retval}
-    }
-
-    rm -rf "${tmpdir}"
+    mv "${tmpdstfile_G}" "${dstfile_G}"
 }
 
 # Main below
@@ -180,6 +106,8 @@ force_G=0
 imgname_G=
 srcfile_G=
 srcfsroot_G=
+dstrootdir_G=
+tmpdstfile_G=
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -265,6 +193,9 @@ dstdir_G=$(dirname "${dstfile_G}")
 trap on_exit EXIT
 
 srcmountdir_G=$(mktemp -d)
+dstrootdir_G=$(mktemp -d)
+
+tmpdstfile_G=$(mktemp --tmpdir="${dstdir_G}")
 
 mount -o loop,ro "${srcfile_G}" "${srcmountdir_G}"
 ${clonefunc_G}
