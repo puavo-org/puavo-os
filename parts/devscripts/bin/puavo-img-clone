@@ -45,7 +45,6 @@ usage_error()
 
 clone_to_ext4()
 {
-    local dstdir
     local loopdev
     local retval
     local srcsize
@@ -62,9 +61,7 @@ clone_to_ext4()
         dstsize_G=$((srcsize * 2))
     fi
 
-    dstdir=$(dirname "${dstfile_G}") || return $?
-
-    tmpfile=$(mktemp --tmpdir="${dstdir}") || return $?
+    tmpfile=$(mktemp --tmpdir="${dstdir_G}") || return $?
 
     qemu-img create -f raw "${tmpfile}" "${dstsize_G}" || {
         retval=$?
@@ -131,7 +128,6 @@ clone_to_ext4()
 
 clone_to_squashfs()
 {
-    local dstdir
     local retval
     local tmpdir
     local tmpfile
@@ -150,13 +146,7 @@ clone_to_squashfs()
         return ${retval}
     }
 
-    dstdir=$(dirname "${dstfile_G}") || {
-        retval=$?
-        rm -rf "${tmpdir}" || true
-        return ${retval}
-    }
-
-    tmpfile=$(mktemp --tmpdir="${dstdir}") || {
+    tmpfile=$(mktemp --tmpdir="${dstdir_G}") || {
         retval=$?
         rm -rf "${tmpdir}" || true
         return ${retval}
@@ -183,6 +173,7 @@ clone_to_squashfs()
 
 # Declare all global variables here and only here.
 clonefunc_G=clone_to_ext4
+dstdir_G=
 dstfile_G=
 dstsize_G=
 force_G=0
@@ -268,6 +259,8 @@ if [ ${force_G} -eq 0 -a -f "${dstfile_G}" ]; then
 fi
 
 imgname_G=$(basename "${dstfile_G}" .img)
+
+dstdir_G=$(dirname "${dstfile_G}")
 
 trap on_exit EXIT
 
