@@ -43,18 +43,6 @@ usage_error()
     return 1
 }
 
-is_uint()
-{
-    case $1 in
-        ''|*[!0-9]*)
-            return 1
-            ;;
-        *)
-            ;;
-    esac
-    return 0
-}
-
 clone_to_ext4()
 {
     local dstdir
@@ -81,7 +69,7 @@ clone_to_ext4()
 
     tmpfile=$(mktemp --tmpdir="${dstdir}") || return $?
 
-    dd if=/dev/zero of="${tmpfile}" count=0 bs=1 seek="${dstsize_G}" || {
+    qemu-img create -f raw "${tmpfile}" "${dstsize_G}" || {
         retval=$?
         rm -rf "${tmpfile}" || true
         return ${retval}
@@ -218,9 +206,9 @@ while [ $# -gt 0 ]; do
             echo "Options:"
             echo "    -t, --type FS_TYPE           destination filesystem type, must be"
             echo "                                 'ext4' (default) or 'squashfs'"
-            echo "    -s, --size BYTES             size of the destination image file in bytes,"
-            echo "                                 defaults to about twice the size of the source"
-            echo "                                 image contents"
+            echo "    -s, --size SIZE              size of the destination image file, defaults"
+            echo "                                 to about twice the size of the source image"
+            echo "                                 contents, supports suffixes k, K, M, G and T"
             echo "    -f, --force                  overwrite existing destination file"
             echo "    -h, --help                   print help and exit"
             echo "    -V, --version                print version and exit"
@@ -246,8 +234,8 @@ while [ $# -gt 0 ]; do
             shift
             dstsize_G=$1
             shift
-            is_uint "${dstsize_G}" || {
-                usage_error "invalid value '${dstsize_G}' for option '--size', expected unsigned integer"
+            sed -r -n '/^[0-9]+[kKMGT]?$/ ! q1' <<<"${dstsize_G}" || {
+                usage_error "invalid value '${dstsize_G}' for option '--size'"
             }
             ;;
         -f|--force)
