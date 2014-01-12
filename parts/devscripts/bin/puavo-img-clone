@@ -57,6 +57,7 @@ is_uint()
 
 clone_to_ext4()
 {
+    local dstdir
     local loopdev
     local imgname
     local retval
@@ -76,7 +77,9 @@ clone_to_ext4()
         dstsize_G=$((srcsize * 2))
     fi
 
-    tmpfile=$(mktemp) || return $?
+    dstdir=$(dirname "${dstfile_G}") || return $?
+
+    tmpfile=$(mktemp --tmpdir="${dstdir}") || return $?
 
     dd if=/dev/zero of="${tmpfile}" count=0 bs=1 seek="${dstsize_G}" || {
         retval=$?
