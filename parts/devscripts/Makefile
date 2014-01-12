@@ -18,7 +18,8 @@ install: installdirs
 		bin/puavo-debuild \
 		bin/puavo-build-debian-dir \
 		bin/dpkg-diff-img \
-		bin/puavo-img-clone
+		bin/puavo-img-clone \
+		bin/puavo-img-chroot
 
 install-lxc-tools: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
