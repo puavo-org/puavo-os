@@ -51,47 +51,28 @@ clone_to_ext4()
 {
     local loopdev
     local retval
-    local srcsize
-
-    srcsize=$(du --bytes --summarize "${srcrootdir_G}" | cut -f1)
-    if [ -z "${srcsize}" ]; then
-        echo "error: failed to estimate the size of the source filesystem" >&2
-        return 1
-    fi
-
-    if [ -z "${dstsize_G}" ]; then
-        dstsize_G=$((srcsize * 2))
-    fi
 
     qemu-img create -f raw "${tmpdstfile_G}" "${dstsize_G}" || return $?
 
     loopdev=$(losetup -f --show "${tmpdstfile_G}") || return $?
-
     mkfs.ext4 "${loopdev}" || {
         retval=$?
         losetup -d "${loopdev}" || true
         return ${retval}
     }
-
     losetup -d "${loopdev}" || return $?
 
     mount -o loop "${tmpdstfile_G}" "${dstrootdir_G}" || return $?
-
     rsync -a "${srcrootdir_G}/" "${dstrootdir_G}/" || return $?
-
     echo "${imgname_G}" >"${dstrootdir_G}/etc/ltsp/this_ltspimage_name" || return $?
-
     mv "${tmpdstfile_G}" "${dstfile_G}"
 }
 
 clone_to_squashfs()
 {
     rsync -a "${srcrootdir_G}/" "${dstrootdir_G}/" || return $?
-
     echo "${imgname_G}" >"${dstrootdir_G}/etc/ltsp/this_ltspimage_name" || return $?
-
     mksquashfs "${dstrootdir_G}" "${tmpdstfile_G}" -noappend -no-recovery || return $?
-
     mv "${tmpdstfile_G}" "${dstfile_G}"
 }
 
@@ -106,6 +87,7 @@ force_G=0
 imgname_G=
 srcfile_G=
 srcfsroot_G=
+srcsize_G=
 dstrootdir_G=
 tmpdstfile_G=
 
@@ -187,15 +169,24 @@ if [ ${force_G} -eq 0 -a -f "${dstfile_G}" ]; then
 fi
 
 imgname_G=$(basename "${dstfile_G}" .img)
-
 dstdir_G=$(dirname "${dstfile_G}")
 
 trap on_exit EXIT
 
 srcrootdir_G=$(mktemp -d)
 dstrootdir_G=$(mktemp -d)
-
 tmpdstfile_G=$(mktemp --tmpdir="${dstdir_G}")
 
 mount -o loop,ro "${srcfile_G}" "${srcrootdir_G}"
+
+srcsize_G=$(du --bytes --summarize "${srcrootdir_G}" | cut -f1)
+if [ -z "${srcsize_G}" ]; then
+    echo "error: failed to estimate the size of the source filesystem" >&2
+    exit 1
+fi
+
+if [ -z "${dstsize_G}" ]; then
+    dstsize_G=$((srcsize_G * 2))
+fi
+
 ${clonefunc_G}
