@@ -31,11 +31,11 @@ on_exit()
     set +eu
 
     umount "${dstrootdir_G}"
-    umount "${srcmountdir_G}"
+    umount "${srcrootdir_G}"
     rm -rf "${tmpdstfile_G}"
     rm -rf "${dstrootdir_G}" # rm -rf because it might not be empty if
                              # targeted squashfs
-    rmdir "${srcmountdir_G}"
+    rmdir "${srcrootdir_G}"
 
     return ${exitval}
 }
@@ -53,7 +53,7 @@ clone_to_ext4()
     local retval
     local srcsize
 
-    srcsize=$(du --bytes --summarize "${srcmountdir_G}" | cut -f1)
+    srcsize=$(du --bytes --summarize "${srcrootdir_G}" | cut -f1)
     if [ -z "${srcsize}" ]; then
         echo "error: failed to estimate the size of the source filesystem" >&2
         return 1
@@ -77,7 +77,7 @@ clone_to_ext4()
 
     mount -o loop "${tmpdstfile_G}" "${dstrootdir_G}" || return $?
 
-    rsync -a "${srcmountdir_G}/" "${dstrootdir_G}/" || return $?
+    rsync -a "${srcrootdir_G}/" "${dstrootdir_G}/" || return $?
 
     echo "${imgname_G}" >"${dstrootdir_G}/etc/ltsp/this_ltspimage_name" || return $?
 
@@ -86,7 +86,7 @@ clone_to_ext4()
 
 clone_to_squashfs()
 {
-    rsync -a "${srcmountdir_G}/" "${dstrootdir_G}/" || return $?
+    rsync -a "${srcrootdir_G}/" "${dstrootdir_G}/" || return $?
 
     echo "${imgname_G}" >"${dstrootdir_G}/etc/ltsp/this_ltspimage_name" || return $?
 
@@ -192,10 +192,10 @@ dstdir_G=$(dirname "${dstfile_G}")
 
 trap on_exit EXIT
 
-srcmountdir_G=$(mktemp -d)
+srcrootdir_G=$(mktemp -d)
 dstrootdir_G=$(mktemp -d)
 
 tmpdstfile_G=$(mktemp --tmpdir="${dstdir_G}")
 
-mount -o loop,ro "${srcfile_G}" "${srcmountdir_G}"
+mount -o loop,ro "${srcfile_G}" "${srcrootdir_G}"
 ${clonefunc_G}
