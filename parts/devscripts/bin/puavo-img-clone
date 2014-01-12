@@ -87,7 +87,7 @@ clonefunc_G=clone_to_ext4
 dstdir_G=
 dstfile_G=
 dstsize_G=
-force_G=0
+force_G=true
 imgname_G=
 srcfile_G=
 srcfsroot_G=
@@ -146,7 +146,7 @@ while [ $# -gt 0 ]; do
             ;;
         -f|--force)
             shift
-            force_G=1
+            force_G=true
             ;;
         -V|--version)
             shift
@@ -173,7 +173,7 @@ fi
 srcfile_G=$(readlink -e $1)
 dstfile_G=$(readlink -f $2)
 
-if [ ${force_G} -eq 0 -a -f "${dstfile_G}" ]; then
+if [ ${force_G} -a -f "${dstfile_G}" ]; then
     echo "error: destination file '${dstfile_G}' already exists, use --force to overwrite" >&2
     exit 1
 fi
