@@ -67,9 +67,9 @@ clone_to_ext4()
 
     imgname=$(basename "${dstfile_G}" .img) || return $?
 
-    srcsize=$(df --block-size=1 --output=size "${srcmountdir_G}" | tail -n1)
+    srcsize=$(du --bytes --summarize "${srcmountdir_G}" | cut -f1)
     if [ -z "${srcsize}" ]; then
-        echo "error: failed to determine the size of the source filesystem" >&2
+        echo "error: failed to estimate the size of the source filesystem" >&2
         return 1
     fi
 
@@ -219,8 +219,8 @@ while [ $# -gt 0 ]; do
             echo "    -t, --type FS_TYPE           destination filesystem type, must be"
             echo "                                 'ext4' (default) or 'squashfs'"
             echo "    -s, --size BYTES             size of the destination image file in bytes,"
-            echo "                                 defaults to twice the size of the source image"
-            echo "                                 filesystem"
+            echo "                                 defaults to about twice the size of the source"
+            echo "                                 image contents"
             echo "    -f, --force                  overwrite existing destination file"
             echo "    -h, --help                   print help and exit"
             echo "    -V, --version                print version and exit"
