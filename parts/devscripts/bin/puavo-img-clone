@@ -47,13 +47,10 @@ clone_to_ext4()
 {
     local dstdir
     local loopdev
-    local imgname
     local retval
     local srcsize
     local tmpdir
     local tmpfile
-
-    imgname=$(basename "${dstfile_G}" .img) || return $?
 
     srcsize=$(du --bytes --summarize "${srcmountdir_G}" | cut -f1)
     if [ -z "${srcsize}" ]; then
@@ -117,7 +114,7 @@ clone_to_ext4()
         return ${retval}
     }
 
-    echo "${imgname}" >"${tmpdir}/etc/ltsp/this_ltspimage_name" || {
+    echo "${imgname_G}" >"${tmpdir}/etc/ltsp/this_ltspimage_name" || {
         retval=$?
         umount "${tmpdir}" || return ${retval}
         rmdir "${tmpdir}" || true
@@ -135,12 +132,9 @@ clone_to_ext4()
 clone_to_squashfs()
 {
     local dstdir
-    local imgname
     local retval
     local tmpdir
     local tmpfile
-
-    imgname=$(basename "${dstfile_G}" .img) || return $?
 
     tmpdir=$(mktemp -d) || return $?
 
@@ -150,7 +144,7 @@ clone_to_squashfs()
         return ${retval}
     }
 
-    echo "${imgname}" >"${tmpdir}/etc/ltsp/this_ltspimage_name" || {
+    echo "${imgname_G}" >"${tmpdir}/etc/ltsp/this_ltspimage_name" || {
         retval=$?
         rm -rf "${tmpdir}" || true
         return ${retval}
@@ -192,6 +186,7 @@ clonefunc_G=clone_to_ext4
 dstfile_G=
 dstsize_G=
 force_G=0
+imgname_G=
 srcfile_G=
 srcfsroot_G=
 
@@ -271,6 +266,8 @@ if [ ${force_G} -eq 0 -a -f "${dstfile_G}" ]; then
     echo "error: destination file '${dstfile_G}' already exists, use --force to overwrite" >&2
     exit 1
 fi
+
+imgname_G=$(basename "${dstfile_G}" .img)
 
 trap on_exit EXIT
 
