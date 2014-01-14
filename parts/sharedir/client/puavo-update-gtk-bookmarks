@@ -2,116 +2,55 @@
 
 set -eu
 
-gtk2_bookmarks() {
-  _networkfolder_displayname=$1
-  _schoolsharedir=$2
-  _share_displayname=$3
+update_bookmarks() {
+    local bookmarksdir
+    local bookmarksfile
+    local schooldir_displayname
+    local sharename
+    local tmpfile
+    local userdir_displayname
 
-  case "$(cat /etc/puavo/hosttype)" in
-    laptop)
-      # Add two bookmarks: to user home directory on server, and to shared
-      # directories on server.
-      echo "file://${HOME}/.puavo-sharedir.user * ${_networkfolder_displayname}"
-      echo "file://${HOME}/.puavo-sharedir.share * ${_share_displayname}"
-      ;;
-    *)
-      # add a bookmark pointing to shared directories
-      echo "file:///home/share/${_schoolsharedir} * ${_share_displayname}"
-      ;;
-  esac
+    userdir_displayname=$1
+    schooldir_displayname=$2
+    sharename=$3
+    bookmarksfile=$4
 
-  # Pick up user's own bookmarks too (we treat all bookmarks with "* "-prefix
-  # as something we have full control over).
-  awk '$2 != "*"' ~/.gtk-bookmarks
-}
+    bookmarksdir=$(dirname "${bookmarksfile}")
+    mkdir -p "${bookmarksdir}"
+    touch "${bookmarksfile}"
 
-gtk3_bookmarks() {
-  _networkfolder_displayname=$1
-  _schoolsharedir=$2
-  _share_displayname=$3
+    tmpfile=$(mktemp)
+    grep -v '\.puavo-sharedir-client' "${bookmarksfile}" >"${tmpfile}"
 
-  homedir_server="homedir.$(cat /etc/puavo/domain)"
-
-  case "$(cat /etc/puavo/hosttype)" in
-    laptop)
-      # Add two bookmarks: to user home directory on server, and to shared
-      # directories on server.
-      echo "smb://${homedir_server}/${USER} * ${_networkfolder_displayname}"
-      echo "smb://${homedir_server}/share/${_schoolsharedir} * ${_share_displayname}"
-      ;;
-    *)
-      # add a bookmark pointing to shared directories
-      echo "file:///home/share/${_schoolsharedir} * ${_share_displayname}"
-      ;;
-  esac
-
-  # Pick up user's own bookmarks too (we treat all bookmarks with "* "-prefix
-  # as something we have full control over).
-  awk '$2 != "*"' ~/.gtk-bookmarks
-}
-
-install_desktop_icon() {
-    . ~/.config/user-dirs.dirs
-    cat <<EOF >"${XDG_DESKTOP_DIR}/puavo-mount-shares.desktop.tmp"
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Activate Network Directories
-Name[fi]=Aktivoi verkkohakemistot
-Name[se]=Aktivera nätverkskataloger
-Exec=puavo-mount-shares
-Icon=network_fs
-Terminal=false
-EOF
-    chmod +x "${XDG_DESKTOP_DIR}/puavo-mount-shares.desktop.tmp"
-    mv "${XDG_DESKTOP_DIR}/puavo-mount-shares.desktop.tmp" "${XDG_DESKTOP_DIR}/puavo-mount-shares.desktop"
+    case "$(cat /etc/puavo/hosttype)" in
+        laptop)
+            echo "file://${HOME}/.puavo-sharedir-client.userdir ${userdir_displayname}" >>"${tmpfile}"
+            echo "file://${HOME}/.puavo-sharedir-client.schooldir ${schooldir_displayname}" >>"${tmpfile}"
+            ;;
+        *)
+            echo "file:///home/share/${sharename}/$(id -gn) ${schooldir_displayname}" >>"${tmpfile}"
+            ;;
+    esac
+    mv "${tmpfile}" "${bookmarksfile}"
 }
 
 case "$(echo $LANG | cut -c 1-2)" in
   fi)
-    networkfolder_displayname='Verkkokansio'
-    share_displayname='Yhteiset'
-    share_pathtranslation='yhteiset'
+    userdir_displayname='Verkkokansio'
+    schooldir_displayname='Yhteiset'
+    sharename='yhteiset'
     ;;
   sv)
-    networkfolder_displayname='Nätverksmapp'
-    share_displayname='Delade Filer'
-    share_pathtranslation='delade_filer'
+    userdir_displayname='Nätverksmapp'
+    schooldir_displayname='Delade Filer'
+    sharename='delade_filer'
     ;;
   *)
-    networkfolder_displayname='Network folder'
-    share_displayname='Share'
-    share_pathtranslation='share'
+    userdir_displayname='Network folder'
+    schooldir_displayname='Share'
+    sharename='share'
     ;;
 esac
 
-schoolsharedir=${share_pathtranslation}/$(id -gn)
-
-# We create the bookmarks file first if it does not exist.
-if ! [ -e ~/.gtk-bookmarks ]; then
-  /usr/bin/xdg-user-dirs-update
-  /usr/bin/xdg-user-dirs-gtk-update
-fi
-
-gtk2_bookmarks "$networkfolder_displayname" \
-               "$schoolsharedir"            \
-               "$share_displayname"         \
-  > ~/.gtk-bookmarks.tmp
-
-mkdir -p ~/.config/gtk-3.0
-gtk3_bookmarks "$networkfolder_displayname" \
-               "$schoolsharedir"            \
-               "$share_displayname"         \
-  > ~/.config/gtk-3.0/bookmarks.tmp
-
-mv ~/.gtk-bookmarks.tmp ~/.gtk-bookmarks
-mv ~/.config/gtk-3.0/bookmarks.tmp ~/.config/gtk-3.0/bookmarks
-
-case "$(cat /etc/puavo/hosttype)" in
-    laptop)
-        install_desktop_icon
-        ;;
-    *)
-        exit 0
-        ;;
-esac
+update_bookmarks "${userdir_displayname}" "${schooldir_displayname}" "${sharename}" "${HOME}/.gtk-bookmarks"
+update_bookmarks "${userdir_displayname}" "${schooldir_displayname}" "${sharename}" "${HOME}/.config/gtk-3.0/bookmarks"
