@@ -80,7 +80,9 @@ class PuavoShare
         prev_linktarget = File.readlink(link_path) rescue ''
 	if @spec.sharepath != prev_linktarget then
 	  self.class.delete(link_path)
-	  File.symlink(@spec.sharepath, link_path)
+	  link_dir = Pathname(link_path).dirname()
+	  link_dest = Pathname(@spec.sharepath).relative_path_from(link_dir)
+	  File.symlink(link_dest, link_path)
           Syslog.notice('%s',
 	    "Made link from '#{ link_path }' to '#{ @spec.sharepath }'.")
         end
