@@ -25,7 +25,7 @@ update_bookmarks() {
     case "$(cat /etc/puavo/hosttype)" in
         laptop)
             echo "file://${HOME}/.puavo-sharedir-client.userdir ${userdir_displayname}" >>"${tmpfile}"
-            echo "file://${HOME}/.puavo-sharedir-client.schooldir ${schooldir_displayname}" >>"${tmpfile}"
+            echo "file://${HOME}/.puavo-sharedir-client.schooldir/${sharename}/$(id -gn) ${schooldir_displayname}" >>"${tmpfile}"
             ;;
         *)
             echo "file:///home/share/${sharename}/$(id -gn) ${schooldir_displayname}" >>"${tmpfile}"
