@@ -20,12 +20,12 @@ update_bookmarks() {
     touch "${bookmarksfile}"
 
     tmpfile=$(mktemp)
-    grep -v '\.puavo-sharedir-client' "${bookmarksfile}" >"${tmpfile}"
+    grep -v '\.puavo-sharedir' "${bookmarksfile}" >"${tmpfile}"
 
     case "$(cat /etc/puavo/hosttype)" in
         laptop)
-            echo "file://${HOME}/.puavo-sharedir-client.userdir ${userdir_displayname}" >>"${tmpfile}"
-            echo "file://${HOME}/.puavo-sharedir-client.schooldir/${sharename}/$(id -gn) ${schooldir_displayname}" >>"${tmpfile}"
+            echo "file://${HOME}/.puavo-sharedir.userdir ${userdir_displayname}" >>"${tmpfile}"
+            echo "file://${HOME}/.puavo-sharedir.schooldir/${sharename}/$(id -gn) ${schooldir_displayname}" >>"${tmpfile}"
             ;;
         *)
             echo "file:///home/share/${sharename}/$(id -gn) ${schooldir_displayname}" >>"${tmpfile}"
