@@ -6,10 +6,10 @@ AUTOFS_MAPFILE=/var/lib/puavo-sharedir-client/auto.cifs
 
 puavo_domain=$(cat /etc/puavo/domain)
 
-userdir="/home/${PAM_USER}/.puavo-sharedir-client.userdir"
+userdir="/home/${PAM_USER}/.puavo-sharedir.userdir"
 userunc="://homedir.${puavo_domain}/${PAM_USER}"
 
-schooldir="/home/${PAM_USER}/.puavo-sharedir-client.schooldir"
+schooldir="/home/${PAM_USER}/.puavo-sharedir.schooldir"
 schoolunc="://homedir.${puavo_domain}/share"
 
 mountopts="-fstype=cifs,rw,cruid=${PAM_USER},user=${PAM_USER},sec=krb5,noperm"
