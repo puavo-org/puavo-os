@@ -305,6 +305,13 @@
           "type": "desktop",
           "source": "googleearth",
           "inactiveByDeviceType": "thinclient",
+          "name": "Google Earth - Legacy",
+          "osIconPath": "/usr/share/icons/Faenza/apps/96/googleearth.png"
+       },
+       {
+          "type": "desktop",
+          "source": "google-earth",
+          "inactiveByDeviceType": "thinclient",
           "name": "Google Earth",
           "osIconPath": "/usr/share/icons/Faenza/apps/96/googleearth.png"
         },
