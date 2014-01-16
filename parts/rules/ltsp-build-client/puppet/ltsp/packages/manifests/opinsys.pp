@@ -7,5 +7,5 @@ class packages::opinsys {
   Apt::Repository <| title == repo
                   or title == archive
                   or title == private-archive
-                  or title == termiikki |>
+                  or title == kernels |>
 }
