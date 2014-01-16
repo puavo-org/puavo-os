@@ -800,7 +800,8 @@ class packages {
   case $lsbdistcodename {
     'quantal': {
       kernel_package_for_version {
-        [ '3.10.23.opinsys1'  ]:
+        [ '3.10.23.opinsys1'
+        , '3.12.4.opinsys1' ]:
           package_tag => 'opinsys',
           with_extra  => false;
       }
