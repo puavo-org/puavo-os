@@ -455,6 +455,7 @@ class packages {
       tag => [ 'remote_access', 'ubuntu', ];
 
     [ 'google-earth-stable'
+    , 'googleearth'
     , 'av4kav' ]:
       tag => [ 'science', 'opinsys', ];
 
