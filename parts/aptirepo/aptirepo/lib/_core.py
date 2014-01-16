@@ -187,11 +187,25 @@ class Aptirepo:
 
     def import_deb(self, deb_filepath, codename=""):
         debfile = debian.debfile.DebFile(deb_filepath)
-        if not codename:
-            codename = debfile.changelog().distributions
-        source_name = debfile.changelog().package
-        section = debfile.control.debcontrol()["Section"]
-
+        debcontrol = debfile.debcontrol()
+        # Handle changelog inside try-except since it can fail multiple
+        # ways: some packages (at least google-earth-stable) seems to
+        # have compressed their data-parts with lzma, which
+        # python-debian cannot handle. Asking for a changelog for such a
+        # package causes debian.debfile.DebError to be raised.  On the
+        # other hand, some packages do not have changelog at all. In
+        # those cases DebFile.changelog() returns None in which case
+        # AttributeError is raised.
+        try:
+            changelog = debfile.changelog()
+            source_name = changelog.package
+            if not codename:
+                codename = changelog.distributions
+        except Exception:
+            # If the changelog cannot be found, use the binary package
+            # name as its source package name.
+            source_name = debcontrol["Package"]
+        section = debcontrol["Section"]
         self.__copy_to_pool(deb_filepath, codename, source_name, section)
 
     def import_changes(self, changes_filepath):
