@@ -45,6 +45,37 @@
         </p>
       </form>
 
+      <h1>Or a raw debian package</h1>
+
+      <form action="/upload_deb" method="post" enctype="multipart/form-data" accept-charset="utf-8">
+        <fieldset>
+            <legend>
+            repo branch
+            </legend>
+            <input type="text" name="branch">
+        </fieldset>
+
+        <fieldset>
+            <legend>
+            .deb
+            </legend>
+            <input type="file" name="deb" accept=".deb">
+        </fieldset>
+
+        <fieldset>
+            <legend>
+                codename
+            </legend>
+            <input type="text" name="codename">
+        </fieldset>
+
+        <div style="clear: both"></div>
+
+        <p>
+            <input type="submit">
+        </p>
+      </form>
+
       <h1>or curl</h1>
       <pre>
       curl \
@@ -57,6 +88,7 @@
         --form "file=@puavo-users_0.6.3~master.de673b79857e9be84eaee9e55ad7cb740224d14e.dsc" \
         http://aptirepo:8080
       </pre>
+
 
     </body>
 </html>

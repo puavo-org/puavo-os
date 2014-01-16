@@ -28,6 +28,8 @@ app = Flask(__name__)
 def index():
     return render_template("upload.html")
 
+
+
 @app.route('/', methods=["POST"])
 def upload():
 
@@ -60,7 +62,6 @@ def upload():
             os.path.join(tmp_dirpath, file.filename)
         )
 
-
     repo = aptirepo.Aptirepo(repodir, confdir)
     repo.import_changes(changes_filepath)
     repo.update_dists()
@@ -69,10 +70,43 @@ def upload():
     shutil.rmtree(tmp_dirpath)
     return "ok"
 
+@app.route('/upload_deb', methods=["POST"])
+def upload_deb():
+    codename = ""
+
+    if "codename" in request.form and request.form["codename"] != "":
+        codename = request.form["codename"]
+
+    repodir = os.path.join(
+        config["Repository-Parent"],
+        request.form["branch"]
+    )
+
+    if not os.path.isdir(repodir):
+        os.makedirs(repodir)
+
+    tmp_dirpath = tempfile.mkdtemp(".tmp", "aptirepo-upload-")
+
+    deb_package_path = os.path.join(
+        tmp_dirpath,
+        request.files["deb"].filename
+    )
+
+    request.files["deb"].save(deb_package_path)
+
+    repo = aptirepo.Aptirepo(repodir, confdir)
+    repo.import_deb(deb_package_path, codename)
+    repo.update_dists()
+    repo.sign_releases()
+
+    shutil.rmtree(tmp_dirpath)
+
+    return "ok"
+
 # production: gunicorn server:app --bind 0.0.0.0:8080
 if __name__ == '__main__':
     app.debug = True
-    app.run(host="0.0.0.0", port=8080)
+    app.run(host="0.0.0.0", port=8081)
 
 if not app.debug:
     app.logger.addHandler(logging.StreamHandler(sys.stdout))
