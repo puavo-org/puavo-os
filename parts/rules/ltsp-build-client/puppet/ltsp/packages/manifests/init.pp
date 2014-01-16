@@ -454,7 +454,7 @@ class packages {
     , 'wget' ]:
       tag => [ 'remote_access', 'ubuntu', ];
 
-    [ 'googleearth'
+    [ 'google-earth-stable'
     , 'av4kav' ]:
       tag => [ 'science', 'opinsys', ];
 
