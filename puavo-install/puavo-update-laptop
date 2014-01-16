@@ -67,28 +67,10 @@ update_ltsconf() {
 }
 
 update_ltsp_image() {
-  # XXX should we use ruby or should we use shell?  or is this okay?
-  get_imagename_from_puavo() {
-    cat <<'EOF' | ruby1.9.1
-require 'puavo'
-
-puavo = Puavo::Client::Base.new(PUAVO_ETC.domain,
-                                PUAVO_ETC.ldap_dn,
-                                PUAVO_ETC.ldap_password)
-device = puavo.devices.find_by_hostname(PUAVO_ETC.hostname)
-
-if device.device_image then
-  puts "#{ device.device_image }.img"
-else
-  exit 1
-end
-EOF
-  }
-
-  next_imagename=$(get_imagename_from_puavo) || return
+  next_imagename=$(jq -r .preferred_image /state/etc/puavo/device.json) || return
   if [ -n "$next_imagename" ]; then
     puavo-install-and-update-ltspimages $update_ltspimage_params \
-					"$next_imagename"
+					"${next_imagename}.img"
   fi
 }
 
