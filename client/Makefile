@@ -12,12 +12,16 @@ all:
 
 install-dirs:
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
+	mkdir -p $(DESTDIR)$(sysconfdir)/auto.master.d
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sbindir)
 
 install: install-dirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		puavo-update-gtk-bookmarks.desktop
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/auto.master.d \
+		puavo-sharedir-client.autofs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-update-gtk-bookmarks
