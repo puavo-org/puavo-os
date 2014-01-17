@@ -62,7 +62,15 @@ def upload():
             os.path.join(tmp_dirpath, file.filename)
         )
 
-    repo = aptirepo.Aptirepo(repodir, confdir)
+    repo_kwargs = {}
+    try:
+        repo_timeout = config["Repository-Lock-Timeout"]
+    except KeyError:
+        pass
+    else:
+        repo_kwargs["timeout_secs"] = int(repo_timeout)
+
+    repo = aptirepo.Aptirepo(repodir, confdir, **repo_kwargs)
     repo.import_changes(changes_filepath)
     repo.update_dists()
     repo.sign_releases()
@@ -94,7 +102,15 @@ def upload_deb():
 
     request.files["deb"].save(deb_package_path)
 
-    repo = aptirepo.Aptirepo(repodir, confdir)
+    repo_kwargs = {}
+    try:
+        repo_timeout = config["Repository-Lock-Timeout"]
+    except KeyError:
+        pass
+    else:
+        repo_kwargs["timeout_secs"] = int(repo_timeout)
+
+    repo = aptirepo.Aptirepo(repodir, confdir, **repo_kwargs)
     repo.import_deb(deb_package_path, codename)
     repo.update_dists()
     repo.sign_releases()
