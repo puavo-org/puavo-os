@@ -55,6 +55,11 @@ def _importchanges(repo, args):
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--timeout", default=0, type=int, metavar="SECONDS",
+                        help="fail if the repository lock could not be "
+                        "obtained in SECONDS, negative value means infinite "
+                        "timeout")
+
     subparsers = parser.add_subparsers(dest="cmd", title="commands")
 
     parser_importdeb = subparsers.add_parser("importdeb", help="import a single .deb file")

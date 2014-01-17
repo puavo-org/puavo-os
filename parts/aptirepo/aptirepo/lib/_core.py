@@ -25,6 +25,7 @@ import hashlib
 import os
 import os.path
 import shutil
+import signal
 import subprocess
 
 import debian.debfile
@@ -67,13 +68,33 @@ class Aptirepo:
     >>> repo.import_changes("/var/cache/pbuilder/results/sl_3.03-17_i386.changes")
     """
 
-    def __init__(self, rootdir, confdir=""):
+    def __init__(self, rootdir, confdir="", timeout_secs=0):
         self.__rootdir = os.path.abspath(rootdir)
         self.__confdir = confdir
         if not self.__confdir:
             self.__confdir = self.__join("conf")
-        self.__lockfile = open(self.__join("lock"), "w")
-        fcntl.lockf(self.__lockfile, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+        if timeout_secs == 0:
+            # No timeout, fail if the lock cannot be obtained right
+            # away.
+            self.__lockfile = open(self.__join("lock"), "w")
+            fcntl.lockf(self.__lockfile, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        elif timeout_secs < 0:
+            # Infinite timeout, block until the lock is obtained.
+            self.__lockfile = open(self.__join("lock"), "w")
+            fcntl.lockf(self.__lockfile, fcntl.LOCK_EX)
+        else:
+            # Block until the lock is obtained or timeout_secs has
+            # passed.
+            orig_sigalrm_handler = signal.signal(signal.SIGALRM, lambda *_ : None)
+            try:
+                signal.alarm(timeout_secs)
+                self.__lockfile = open(self.__join("lock"), "w")
+                fcntl.lockf(self.__lockfile, fcntl.LOCK_EX)
+            finally:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, orig_sigalrm_handler)
+
         self.__logfile = open(self.__join("log"), "a")
         self.__dists = parse_distributions(self.__confdir)
         self.__create_pool()
