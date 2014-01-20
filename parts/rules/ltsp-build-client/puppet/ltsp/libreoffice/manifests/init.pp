@@ -1,5 +1,6 @@
 class libreoffice {
   require packages
+  include libreoffice::config
 
   # Set libreoffice default formats to MS Office formats (yack!).
 
