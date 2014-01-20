@@ -456,7 +456,8 @@ class packages {
 
     [ 'google-earth-stable'
     , 'googleearth'
-    , 'av4kav' ]:
+    , 'av4kav'
+    , 'vstloggerpro' ]:
       tag => [ 'science', 'opinsys', ];
 
     [ 'atomix'
