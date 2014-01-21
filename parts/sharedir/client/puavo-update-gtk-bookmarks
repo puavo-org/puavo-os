@@ -20,9 +20,10 @@ update_bookmarks() {
     touch "${bookmarksfile}"
 
     tmpfile=$(mktemp)
-    if [ -f "${bookmarksfile}" ]; then
-        egrep -v "\.puavo-sharedir|^file:///home/share/|^smb://homedir\.$(cat /etc/puavo/domain)/" "${bookmarksfile}" >"${tmpfile}"
-    fi
+
+    # Grep fails if the file is empty, which is ok in this situation: it
+    # just means that there is not anything to preserve.
+    egrep -v "\.puavo-sharedir|^file:///home/share/|^smb://homedir\.$(cat /etc/puavo/domain)/" "${bookmarksfile}" >"${tmpfile}" || true
 
     case "$(cat /etc/puavo/hosttype)" in
         laptop)
