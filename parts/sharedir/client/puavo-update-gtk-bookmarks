@@ -20,7 +20,9 @@ update_bookmarks() {
     touch "${bookmarksfile}"
 
     tmpfile=$(mktemp)
-    egrep -v '\.puavo-sharedir|^file:///home/share/' "${bookmarksfile}" >"${tmpfile}"
+    if [ -f "${bookmarksfile}" ]; then
+        egrep -v '\.puavo-sharedir|^file:///home/share/' "${bookmarksfile}" >"${tmpfile}"
+    fi
 
     case "$(cat /etc/puavo/hosttype)" in
         laptop)
