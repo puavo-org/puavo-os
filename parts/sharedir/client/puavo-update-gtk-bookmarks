@@ -21,7 +21,7 @@ update_bookmarks() {
 
     tmpfile=$(mktemp)
     if [ -f "${bookmarksfile}" ]; then
-        egrep -v '\.puavo-sharedir|^file:///home/share/' "${bookmarksfile}" >"${tmpfile}"
+        egrep -v "\.puavo-sharedir|^file:///home/share/|^smb://homedir\.$(cat /etc/puavo/domain)/" "${bookmarksfile}" >"${tmpfile}"
     fi
 
     case "$(cat /etc/puavo/hosttype)" in
