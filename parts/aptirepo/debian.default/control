@@ -25,7 +25,7 @@ Description: Http interface for aptirepo
 
 Package: aptirepo-upload
 Architecture: all
-Depends: ${misc:Depends}
+Depends: ${misc:Depends}, curl
 Description: aptirepo package uploader
  aptirepo package uploader
  .
