@@ -190,6 +190,7 @@ trap on_exit EXIT
 srcrootdir_G=$(mktemp -d)
 dstrootdir_G=$(mktemp -d)
 tmpdstfile_G=$(mktemp --tmpdir="${dstdir_G}")
+chmod --reference="${srcfile_G}" "${tmpdstfile_G}"
 
 mount -o loop,ro "${srcfile_G}" "${srcrootdir_G}"
 
