@@ -95,6 +95,8 @@ srcsize_G=
 dstrootdir_G=
 tmpdstfile_G=
 do_update_name_G=true
+do_chmod_G=true
+do_chown_G=true
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -106,6 +108,8 @@ while [ $# -gt 0 ]; do
             echo
             echo "Options:"
             echo "        --dont-update-name       do not update the name file inside the image"
+            echo "        --no-chmod               do not clone file access modes"
+            echo "        --no-chown               do not clone file owner and group"
             echo "    -t, --type FS_TYPE           destination filesystem type, must be"
             echo "                                 'ext4' (default) or 'squashfs'"
             echo "    -s, --size SIZE              size of the destination image file, defaults"
@@ -120,6 +124,14 @@ while [ $# -gt 0 ]; do
         --dont-update-name)
             shift
             do_update_name_G=false
+            ;;
+        --no-chmod)
+            shift
+            do_chmod_G=false
+            ;;
+        --no-chown)
+            shift
+            do_chown_G=false
             ;;
         -t|--type)
             shift
@@ -190,8 +202,14 @@ trap on_exit EXIT
 srcrootdir_G=$(mktemp -d)
 dstrootdir_G=$(mktemp -d)
 tmpdstfile_G=$(mktemp --tmpdir="${dstdir_G}")
-chmod --reference="${srcfile_G}" "${tmpdstfile_G}"
-chown --reference="${srcfile_G}" "${tmpdstfile_G}"
+
+if $do_chmod; then
+    chmod --reference="${srcfile_G}" "${tmpdstfile_G}"
+fi
+
+if $do_chown; then
+    chown --reference="${srcfile_G}" "${tmpdstfile_G}"
+fi
 
 mount -o loop,ro "${srcfile_G}" "${srcrootdir_G}"
 
