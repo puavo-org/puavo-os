@@ -128,6 +128,7 @@ class packages {
       tag => [ 'devel', 'ubuntu', ];
 
     [ 'bcmwl-kernel-source'
+    , 'firmware-b43-installer'
     , 'libgl1-mesa-glx'
     , 'linux-firmware'
     , 'nvidia-current'
