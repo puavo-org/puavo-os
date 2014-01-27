@@ -8,7 +8,8 @@ Homepage: https://github.com/opinsys/puavo-devscripts
 
 Package: puavo-devscripts
 Architecture: all
-Depends: ${misc:Depends}, devscripts, equivs, git-core, wget, aptirepo-upload
+Depends: ${misc:Depends}, devscripts, equivs, git-core, wget, aptirepo-upload,
+ qemu-utils
 Recommends: quilt
 Description: Puavo developer tools
  Scripts to make the life of a Opinsys developer easier
