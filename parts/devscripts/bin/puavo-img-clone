@@ -203,11 +203,11 @@ srcrootdir_G=$(mktemp -d)
 dstrootdir_G=$(mktemp -d)
 tmpdstfile_G=$(mktemp --tmpdir="${dstdir_G}")
 
-if $do_chmod; then
+if $do_chmod_G; then
     chmod --reference="${srcfile_G}" "${tmpdstfile_G}"
 fi
 
-if $do_chown; then
+if $do_chown_G; then
     chown --reference="${srcfile_G}" "${tmpdstfile_G}"
 fi
 
