@@ -91,6 +91,17 @@
         {
           "type": "desktop",
           "source": "gnome-screenshot"
+        },
+        {
+          "type": "custom",
+          "name": "java",
+          "command": ["/opt/java/jdk1.7.0_51/jre/bin/ControlPanel"],
+          "osIcon":"openjdk-6",
+          "name": {
+            "en": "Java Control Panel",
+            "fi": "Java-asetukset",
+            "sv": "Java-inställningar"
+          }
         }
           ]
     },
