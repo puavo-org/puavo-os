@@ -1,3 +1,6 @@
+**NOTE**: There is now a Go rewrite too called [hooktftp](https://github.com/epeli/hooktftp)
+
+
 # puavo-tftp
 
 puavo-tftp is a dynamic read-only [TFTP][] server. It's dynamic in a sense it
