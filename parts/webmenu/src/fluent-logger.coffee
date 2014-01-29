@@ -27,5 +27,5 @@ if process.env.WM_FLUENTD_ACTIVE
     active: true
 
 else
-  console.info "Fluetnd logging disabled"
+  console.info "Fluentd logging disabled"
   module.exports = emit: ->
