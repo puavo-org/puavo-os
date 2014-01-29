@@ -173,6 +173,7 @@ install : installdirs
 		udev/rules.d/80-puavo-printers.rules
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
+		etc/X11/Xsession.d/30puavo-set-session-path \
 		etc/X11/Xsession.d/40puavo-retrieve-thinclient-session \
 		etc/X11/Xsession.d/41puavo-set-locale \
 		etc/X11/Xsession.d/42puavo-set-browser-homepage \
