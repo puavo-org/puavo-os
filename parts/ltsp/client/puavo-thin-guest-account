@@ -17,6 +17,30 @@ add_account()
   mkdir -p ${SOCKETDIR}
   chown -R $USER:$USER "${SOCKETDIR}"
 
+  PUAVO_SESSION_DIR="/var/lib/puavo-desktop/users/${USER}"
+  PUAVO_SESSION_PATH="${PUAVO_SESSION_DIR}/puavo_session.json"
+
+  mkdir -m 0700 -p "${PUAVO_SESSION_DIR}"
+  chmod 0700 "${PUAVO_SESSION_DIR}"
+
+  chown "${USER}": "${PUAVO_SESSION_DIR}"
+
+  PUAVO_SESSION=$(curl --cacert /etc/puavo/certs/rootca.pem \
+                        --form "hostname=$(hostname)" \
+                        --header 'Authorization: Bootserver' \
+                        --fail \
+                        --max-time 5 \
+                        --retry 5 \
+                        --retry-delay 1 \
+                        --header "Expect:" \
+                        "$(puavo-resolve-api-server)/v3/sessions")
+
+  PUAVO_SESSION_ID=$(echo $PUAVO_SESSION | jq -r .uuid)
+  echo "${PUAVO_SESSION}" >"${PUAVO_SESSION_PATH}"
+
+  export PUAVO_SESSION_ID
+  export PUAVO_SESSION_PATH
+
   echo $USER
 }
 
