@@ -65,6 +65,7 @@ clone_to_ext4()
     mount -o loop "${tmpdstfile_G}" "${dstrootdir_G}" || return $?
     rsync -a "${srcrootdir_G}/" "${dstrootdir_G}/" || return $?
     if $do_update_name_G; then
+        mkdir -p "${dstrootdir_G}/etc/ltsp"
         echo "${imgname_G}" >"${dstrootdir_G}/etc/ltsp/this_ltspimage_name" || return $?
     fi
     mv "${tmpdstfile_G}" "${dstfile_G}"
