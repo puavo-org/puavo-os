@@ -5,7 +5,21 @@ LANGUAGE=fi
 if [ -f "${PUAVO_SESSION_PATH}" ]; then
   PUAVO_SESSION=$(cat "${PUAVO_SESSION_PATH}")
 
-  LANGUAGE=$(echo ${PUAVO_SESSION} | jq --raw-output .user.preferred_language)
+  if [ -f "/etc/puavo/device.json" ]; then
+    DEVICE_JSON=$(cat "/etc/puavo/device.json")
+    DEVICE_LANGUAGE=$(echo ${DEVICE_JSON} | jq --raw-output .preferred_language)
+  fi
+
+  TMP_LANGUAGE=$(echo ${PUAVO_SESSION} | jq --raw-output .preferred_language)
+
+  if [ "${TMP_LANGUAGE}" != "null" -a "${TMP_LANGUAGE}" != "" ]; then
+    LANGUAGE="${TMP_LANGUAGE}"
+  else
+    if [ "${DEVICE_LANGUAGE}" != "null" -a "${DEVICE_LANGUAGE}" != "" ]; then
+      LANGUAGE="${DEVICE_LANGUAGE}"
+    fi
+  fi
+
   DCONF_PROFILE=user-${LANGUAGE}
 
   case $LANGUAGE in
