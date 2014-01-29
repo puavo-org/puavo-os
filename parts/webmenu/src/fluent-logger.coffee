@@ -15,10 +15,16 @@ if process.env.WM_FLUENTD_ACTIVE
   logger.on "error", (err) ->
     console.warn "fluentd error: #{ err.message }"
 
-  module.exports = emit: (record) ->
-    record.meta ||= {}
-    record.meta.version = "#{ pkg.version } #{ GIT_COMMIT }"
-    logger.emit(record)
+  module.exports =
+    emit: (label, record) ->
+      if typeof label isnt "string"
+        record = label
+        label = ""
+
+      record.meta ?= {}
+      record.meta.version = "#{ pkg.version } #{ GIT_COMMIT }"
+      logger.emit(label, record)
+    active: true
 
 else
   console.info "Fluetnd logging disabled"

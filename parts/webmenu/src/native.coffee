@@ -7,6 +7,7 @@ posix = require "posix"
 mkdirp = require "mkdirp"
 fs = require "fs"
 _ = require "underscore"
+Q = require "q"
 Handlebars = require "handlebars"
 {EventEmitter} = require "events"
 
@@ -17,7 +18,6 @@ logStartTime = require "./logStartTime"
 dbusRegister = require "./dbusRegister"
 forceFocus = require "./forceFocus"
 createSpawnPipe = require "./createSpawnPipe"
-createFeedbackSender = require "./createFeedbackSender"
 logger = require "./fluent-logger"
 pkg = require "../package.json"
 
@@ -38,6 +38,14 @@ spawnEmitter = createSpawnPipe spawnPipePath, (err) ->
     , (err) ->
         console.error "dbus registration failed: #{ err.message }"
 
+PUAVO_SESSION = null
+if sp = process.env.PUAVO_SESSION_PATH
+    try
+        PUAVO_SESSION = JSON.parse(fs.readFileSync(sp).toString())
+    catch e
+        console.error "Failed to read PUAVO_SESSION_PATH: #{ e.message }"
+
+console.log "SEES", PUAVO_SESSION
 
 locale = process.env.LANG
 locale ||= "fi_FI.UTF-8"
@@ -64,6 +72,7 @@ config = _.extend({},
 
 config.hostType = require "./hosttype"
 config.production = process.env.WM_ENV isnt "production"
+config.feedback = logger.active and process.env.WM_FEEDBACK_ACTIVE
 
 try
     puavoDomain = fs.readFileSync("/etc/puavo/domain").toString().trim()
@@ -225,7 +234,14 @@ module.exports = (gui, Window) ->
 
     shared.hideWindow =  hideWindow
     if config.feedback
-        shared.sendFeedback = createFeedbackSender(config.feedback)
+        shared.sendFeedback = (feedback) ->
+            logger.emit("feedback", {
+                msg: "feedback",
+                feedback: feedback
+                session: PUAVO_SESSION
+            })
+            return Q("feedback sent ok")
+
     shared.open = open
     shared.logReady = ->
         logStartTime("Webmenu HTML/CSS/JS ready")
