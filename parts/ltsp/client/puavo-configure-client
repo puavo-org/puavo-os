@@ -120,7 +120,9 @@ case puavo_device_type
     write_config("/etc/security/group.conf")
 
     # FIXME: Hack to get gnome fallback session
-    `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
+#    `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
+    `cp /usr/lib/puavo-ltsp-client/puavo-thin-guest-account /usr/sbin/guest-account`
+    `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
 
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
