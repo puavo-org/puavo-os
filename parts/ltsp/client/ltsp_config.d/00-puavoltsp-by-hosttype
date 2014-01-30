@@ -107,6 +107,7 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LTSP_FATCLIENT       False
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      fluentd
       ltspssh
       network-manager
       ondemand
