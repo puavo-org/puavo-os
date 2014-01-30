@@ -103,7 +103,8 @@ class packages {
     'nautilus-dropbox-dist':
       tag => [ 'desktop', 'opinsys', ];
 
-    'nodejs-bundle':
+    [ 'nodejs-bundle'
+    , 'puavo-devscripts' ]:
       tag => [ 'devel', 'opinsys', ];
 
     [ 'ack-grep'
