@@ -1,4 +1,4 @@
-**NOTE**: There is now a Go rewrite too called [hooktftp](https://github.com/epeli/hooktftp)
+**NOTE**: There is now a rewrite written on Go called [hooktftp](https://github.com/epeli/hooktftp)
 
 
 # puavo-tftp
