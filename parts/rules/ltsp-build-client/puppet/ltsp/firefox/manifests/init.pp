@@ -15,6 +15,10 @@ class firefox {
     '/usr/lib/firefox/firefox-puavodesktop.js':
       content => template('firefox/firefox-puavodesktop.js'),
       require => File['/etc/firefox/puavodesktop.js'];
+
+    '/etc/puavo-external-files-actions.d/firefox':
+      content => template('firefox/puavo-external-files-actions.d/firefox'),
+      mode    => 755;
   }
 
   Package <| title == firefox |>
