@@ -20,7 +20,7 @@ case "${PUAVO_HOSTTYPE}" in
                            --header "Expect:" \
                            "$(puavo-resolve-api-server)/v3/sessions")
 
-      DEFAULT_IFACE=`ip route|grep default|awk '{print $5}'`
+      DEFAULT_IFACE=`ip route|grep default\ via|awk '{print $5}'`
       IPADDR=`ip route|grep "dev $DEFAULT_IFACE"|grep src|awk '{print $9}'`
 
 #      PUAVO_SESSION=$(cat $PUAVO_SESSION_PATH)
