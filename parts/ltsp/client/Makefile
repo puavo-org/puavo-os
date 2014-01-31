@@ -62,6 +62,7 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d \
 		templates/etc/pam.d/ltspsshd \
+		templates/etc/pam.d/ltspguestsshd \
 		templates/etc/pam.d/lightdm-fatclient \
 		templates/etc/pam.d/lightdm-laptop \
 		templates/etc/pam.d/lightdm-thinclient
@@ -123,6 +124,7 @@ install : installdirs
 		puavo-ltsp-envfeed \
 		puavo-ltsp-init-nfs \
 		puavo-ltsp-login \
+		puavo-ltspserver-create-guest \
 		puavo-update-nm-configurations
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount \
@@ -138,7 +140,8 @@ install : installdirs
 		ltsp_config.d/02-find-puavo-ltsp-server
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/default \
-		etc/default/ltspssh
+		etc/default/ltspssh \
+		etc/default/ltspguestssh
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up \
 		etc/puavo-vpn-client/scripts/route-up/10-dnsmasq \
@@ -146,10 +149,12 @@ install : installdirs
 		etc/puavo-vpn-client/scripts/route-up/30-ntpdate
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init.d \
-		etc/init.d/ltspssh
+		etc/init.d/ltspssh \
+		etc/init.d/ltspguestssh
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
 		upstart/ltspssh.conf \
+		upstart/ltspguestssh.conf \
 		upstart/puavo-ltsp-client.conf \
 		upstart/puavo-set-sane-date.conf \
 		upstart/puavo-sync-external-files.conf
@@ -158,7 +163,8 @@ install : installdirs
 		etc/NetworkManager/dispatcher.d/dnssd-printers
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/ssh \
-		etc/ssh/ltspsshd_config
+		etc/ssh/ltspsshd_config \
+		etc/ssh/ltspguestsshd_config
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		etc/xdg/autostart/*
@@ -177,10 +183,15 @@ install : installdirs
 		pam/populate-extrausers \
 		pam/chown-session-dir \
 		pam/make-session-dir \
+		pam/ltspserver-guest-login \
 		make-release-logo \
-		udev/udev-jetpipe \
+		puavo-desktop-guest-session \
+		puavo-thin-guest-account \
+		puavo-ltspserver-create-guest \
+		udev/udev-jetpipe
 
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd
+	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspguestsshd
 
 .PHONY : clean
 clean :

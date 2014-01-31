@@ -44,6 +44,7 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LTSP_FATCLIENT       True
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      ltspguestssh
       ltspssh
       network-manager
       ntp
@@ -81,6 +82,7 @@ case "$PUAVO_HOSTTYPE" in
       $puavo_common_unneeded_services
       hostapd
       jetty
+      ltspguestssh
       ltspssh
       mountnfs.sh
       puavo-load-balancer
@@ -129,6 +131,7 @@ case "$PUAVO_HOSTTYPE" in
       eno
       fluentd
       gssd
+      ltspguestssh
       ltspssh
       network-manager
       ntp
@@ -156,6 +159,7 @@ case "$PUAVO_HOSTTYPE" in
       eno
       fluentd
       gssd
+      ltspguestssh
       ltspssh
       network-manager
       ntp
