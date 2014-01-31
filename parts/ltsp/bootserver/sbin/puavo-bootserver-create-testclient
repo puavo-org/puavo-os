@@ -1,0 +1,69 @@
+#!/bin/bash
+
+set -eu
+
+puavo_hostname=$(cat /etc/puavo/hostname)
+kvm_name="${puavo_hostname}-testclient"
+kvm_uuid=$(uuidgen)
+kvm_mac='aa:cc'
+
+for _ in {1..4}; do
+    printf -v kvm_mac '%s:%02x' "${kvm_mac}" $(($RANDOM % 255))
+done
+
+tmpfile=
+
+trap 'rm "${tmpfile}"' EXIT
+
+tmpfile=$(mktemp)
+
+cat <<EOF >"${tmpfile}"
+<domain type='kvm'>
+  <name>${kvm_name}</name>
+  <uuid>${kvm_uuid}</uuid>
+  <memory unit='KiB'>524288</memory>
+  <currentMemory unit='KiB'>524288</currentMemory>
+  <vcpu placement='static'>1</vcpu>
+  <os>
+    <type arch='x86_64' machine='pc-1.0'>hvm</type>
+    <boot dev='network'/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+    <pae/>
+  </features>
+  <clock offset='utc'/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <devices>
+    <emulator>/usr/bin/kvm</emulator>
+    <controller type='usb' index='0'>
+    </controller>
+    <controller type='ide' index='0'>
+    </controller>
+    <interface type='bridge'>
+      <mac address='${kvm_mac}'/>
+      <source bridge='ltsp0'/>
+      <model type='e1000'/>
+    </interface>
+    <serial type='pty'>
+      <target port='0'/>
+    </serial>
+    <console type='pty'>
+      <target type='serial' port='0'/>
+    </console>
+    <video>
+      <model type='vga' vram='8192' heads='1'>
+        <acceleration accel3d='no' accel2d='yes'/>
+      </model>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
+    </video>
+    <memballoon model='virtio'>
+    </memballoon>
+  </devices>
+</domain>
+EOF
+
+virsh define "${tmpfile}"
