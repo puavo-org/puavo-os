@@ -1,5 +1,5 @@
 class firefox {
-  include firefox
+  include packages
 
   # Firefox configuration system is still a mess... if there really is a more
   # straightforward way, I would like to hear about it.
@@ -17,6 +17,7 @@ class firefox {
       require => File['/etc/firefox/puavodesktop.js'];
 
     '/etc/puavo-external-files-actions.d/firefox':
+      require => Package['puavo-ltsp-client'],
       content => template('firefox/puavo-external-files-actions.d/firefox'),
       mode    => 755;
   }
