@@ -11,13 +11,15 @@ for _ in {1..4}; do
     printf -v kvm_mac '%s:%02x' "${kvm_mac}" $(($RANDOM % 255))
 done
 
-tmpfile=
+tmpdir=
 
-trap 'rm "${tmpfile}"' EXIT
+trap '[ -n "${tmpdir}" ] && rm -rf "${tmpdir}"' EXIT
 
-tmpfile=$(mktemp)
+tmpdir=$(mktemp -d --tmpdir)
 
-cat <<EOF >"${tmpfile}"
+xmlfile="${tmpdir}/${kvm_name}.xml"
+
+cat <<EOF >"${xmlfile}"
 <domain type='kvm'>
   <name>${kvm_name}</name>
   <uuid>${kvm_uuid}</uuid>
@@ -66,4 +68,38 @@ cat <<EOF >"${tmpfile}"
 </domain>
 EOF
 
-virsh define "${tmpfile}"
+virsh define "${xmlfile}"
+
+read -p "Username: " username
+read -s -p "Password: " password
+
+echo
+
+curl --user "${username}:${password}" \
+    --silent --show-error \
+    https://kehitys.opinsys.fi/users/schools.json >"${tmpdir}/schools.json"
+
+school_id=$(jq -r '.[] | select(.name == "Administration").puavo_id' "${tmpdir}/schools.json")
+
+if [ -z "${school_id}" ]; then
+    echo "error: could not resolve puavo_id of 'Administration' school" >&2
+    exit 1
+fi
+
+curl --user "${username}:${password}" \
+    --silent --show-error \
+    --max-time 3 \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    -X POST -d "
+{
+  \"puavoHostname\": \"${kvm_name}\",
+  \"macAddress\": \"${kvm_mac}\",
+  \"puavoDeviceType\": \"fatclient\",
+  \"classes\": [\"puavoNetbootDevice\"]
+}" "https://kehitys.opinsys.fi/devices/${school_id}/devices.json" >"${tmpdir}/device.json"
+
+if [ "${kvm_name}" != "$(jq -r .puavoHostname "${tmpdir}/device.json")" ]; then
+    echo "error: $(jq -r .puavoHostname[] "${tmpdir}/device.json")" >&2
+    exit 1
+fi
