@@ -95,6 +95,7 @@ case "$PUAVO_HOSTTYPE" in
       network-manager
       ondemand
       puavo-update-laptop
+      zram-config
     "
     set_lts_var USE_NFS_HOMES        True
     ;;
@@ -114,6 +115,7 @@ case "$PUAVO_HOSTTYPE" in
       puavo-load-balancer
       puavo-sync-external-files
       puavo-update-laptop
+      zram-config
     "
     set_lts_var SCREEN_07            lightdm
     set_lts_var SSH_OVERRIDE_PORT    222
@@ -128,6 +130,7 @@ case "$PUAVO_HOSTTYPE" in
       puavo-load-balancer
       puavo-sync-external-files
       puavo-update-laptop
+      zram-config
     "
     set_lts_var SCREEN_07          register
     ;;
