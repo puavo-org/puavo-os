@@ -75,9 +75,11 @@ read -s -p "Password: " password
 
 echo
 
+puavo_domain=$(cat /etc/puavo/domain)
+
 curl --user "${username}:${password}" \
     --silent --show-error \
-    https://kehitys.opinsys.fi/users/schools.json >"${tmpdir}/schools.json"
+    "https://${puavo_domain}/users/schools.json" >"${tmpdir}/schools.json"
 
 school_id=$(jq -r '.[] | select(.name == "Administration").puavo_id' "${tmpdir}/schools.json")
 
@@ -97,7 +99,7 @@ curl --user "${username}:${password}" \
   \"macAddress\": \"${kvm_mac}\",
   \"puavoDeviceType\": \"fatclient\",
   \"classes\": [\"puavoNetbootDevice\"]
-}" "https://kehitys.opinsys.fi/devices/${school_id}/devices.json" >"${tmpdir}/device.json"
+}" "https://${puavo_domain}/devices/${school_id}/devices.json" >"${tmpdir}/device.json"
 
 if [ "${kvm_name}" != "$(jq -r .puavoHostname "${tmpdir}/device.json")" ]; then
     echo "error: $(jq -r .puavoHostname[] "${tmpdir}/device.json")" >&2
