@@ -132,7 +132,7 @@ class packages {
     , 'firmware-b43-installer'
     , 'libgl1-mesa-glx'
     , 'linux-firmware'
-    , 'nvidia-current'
+    , 'nvidia-304'
     , 'nvidia-settings'
     , 'xserver-xorg-video-all' ]:
       tag => [ 'drivers', 'ubuntu', ];
