@@ -31,11 +31,13 @@ class ParseError(Error):
     """Debian control file parsing error."""
     pass
 
-def parse_simple_list(paragraph, name):
+def parse_simple_list(paragraph, name, default=None):
     try:
         value = paragraph[name]
     except KeyError:
-        raise ParseError("mandatory field '%s' is missing" % name)
+        if default is None:
+            raise ParseError("mandatory field '%s' is missing" % name)
+        value = default
     lines = value.splitlines()
     if not lines:
         raise ParseError("field '%s' must not be empty" % name)
@@ -52,7 +54,7 @@ def parse_distributions(confdir):
             codename = parse_simple_list(paragraph, "Codename")[0]
             archs = parse_simple_list(paragraph, "Architectures")
             comps = parse_simple_list(paragraph, "Components")
-            pool = parse_simple_list(paragraph, "Pool")[0]
+            pool = parse_simple_list(paragraph, "Pool", "pool")[0]
 
             if codename in dists:
                 raise ParseError("duplicate distribution '%s'" % codename)
