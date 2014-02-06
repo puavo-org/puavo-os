@@ -248,7 +248,10 @@ class Aptirepo:
 
             self.__copy_to_pool(filepath, codename, source_name, section)
 
-    def update_dists(self):
+    def update_dists(self, do_prune=False):
+        if do_prune:
+            shutil.rmtree(self.__join("dists"))
+            self.__create_dists()
         for codename, dist in self.__dists.items():
             pool = dist["Pool"]
             comps = dist["Components"]
