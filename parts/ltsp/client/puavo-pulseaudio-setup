@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -xeu
+
+DEFAULT_SINK=$(jq -r .default_audio_sink /etc/puavo/device.json)
+DEFAULT_SOURCE=$(jq -r .default_audio_source /etc/puavo/device.json)
+
+# jq outputs null for non-existing fields, treat them as empty
+# strings.
+[ "${DEFAULT_SINK}" = "null" ] && DEFAULT_SINK=
+[ "${DEFAULT_SOURCE}" = "null" ] && DEFAULT_SOURCE=
+
+# Quirk for smartboards: if the default sink was not set in Puavo
+# and if smartboard audio is connected, set it as default.
+if [ -z "${DEFAULT_SINK}" ]; then
+    DEFAULT_SINK=$(pacmd list-sinks \
+        | sed -r -n '/^\s+index: [0-9]+$/ n; s/^\s+name: <(.*C-Media.*)>$/\1/p')
+fi
+
+[ -n "${DEFAULT_SINK}" ] && pacmd set-default-sink "${DEFAULT_SINK}"
+[ -n "${DEFAULT_SOURCE}" ] && pacmd set-default-source "${DEFAULT_SOURCE}"

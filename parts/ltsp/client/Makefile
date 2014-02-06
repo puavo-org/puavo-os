@@ -27,6 +27,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/ssh
+	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 	mkdir -p $(DESTDIR)/lib/udev/rules.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom
@@ -110,7 +111,8 @@ install : installdirs
 		init-puavo 
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
-		puavo-ltsp-client-action
+		puavo-ltsp-client-action \
+		puavo-pulseaudio-setup
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-configure-client \
@@ -154,6 +156,9 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/ssh \
 		etc/ssh/ltspsshd_config
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
+		etc/xdg/autostart/*
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/udev/rules.d \
 		udev/rules.d/80-puavo-printers.rules
