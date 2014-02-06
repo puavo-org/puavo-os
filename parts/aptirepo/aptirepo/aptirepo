@@ -86,7 +86,7 @@ def main():
 
     rootdir = os.environ.get("APTIREPO_ROOTDIR", ".")
     confdir = os.environ.get("APTIREPO_CONFDIR")
-    repo = aptirepo.Aptirepo(rootdir, confdir)
+    repo = aptirepo.Aptirepo(rootdir, confdir, timeout_secs=args.timeout)
 
     args.func(repo, args)
 
