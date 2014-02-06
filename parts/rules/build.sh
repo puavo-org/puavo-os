@@ -78,7 +78,23 @@ done
           new_release_name=${old_release_name}
       fi
       sudo sh -c "echo $new_release_name > $basedir/$arch/etc/ltsp/this_ltspimage_release"
-      sudo_for_ltsp ltsp-chroot --base $basedir passwd
+      while true; do
+          read -p "Set root password [y/N] ? " do_set_rootpw
+          case $do_set_rootpw in
+              '')
+                  break
+                  ;;
+              y|Y)
+                  sudo_for_ltsp ltsp-chroot --base $basedir passwd
+                  break
+                  ;;
+              n|N)
+                  break
+                  ;;
+              *)
+                  echo "Simple question, simple answer please!" >&2
+          esac
+      done
       ltspimage_name=$build_version-$arch.img
       sudo sh -c "
         mkdir -p $basedir/$arch/etc/ltsp; \
