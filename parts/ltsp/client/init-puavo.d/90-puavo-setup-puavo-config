@@ -41,4 +41,3 @@ if [ -e /etc/puavo/domain -a -e /etc/puavo/hosttype ]; then
 fi
 
 rm -f /etc/puavo/device.json.tmp
-
