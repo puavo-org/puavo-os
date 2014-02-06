@@ -18,7 +18,8 @@ Depends: ${misc:Depends}, libsasl2-modules-gssapi-mit, isc-dhcp-server, bind9,
  openbsd-inetd, samba, cifs-utils, ipsec-tools, racoon, puavo-sharedir-manager,
  puavo-logrelay, nginx, puavo-rest-bootserver, jq, curl
 Recommends: tshark, git, emacs23-nox, sysstat, tmux, vim, openvpn, puavo-wlangw,
- etherwake, nmap, fping, w3m, hping3, screen, elinks, puavo-devscripts
+ etherwake, nmap, fping, w3m, hping3, screen, elinks, puavo-devscripts, ethtool,
+ iperf
 Suggests: ntp
 Conflicts: ltsp-server, nscd, tftpd-hpa
 Description: Puavo LTSP bootserver runs infrastructure services for thin/fat
