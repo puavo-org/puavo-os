@@ -1,6 +1,7 @@
 subdirs = aptirepo http upload
 install-subdirs = $(subdirs:%=install-%)
 clean-subdirs = $(subdirs:%=clean-%)
+test-subdirs =  test-aptirepo
 
 .PHONY : all
 all : $(subdirs)
@@ -22,3 +23,10 @@ $(clean-subdirs) :
 
 .PHONY : clean
 clean : $(clean-subdirs)
+
+.PHONY : $(test-subdirs)
+$(test-subdirs) :
+	$(MAKE) -C $(@:test-%=%) test
+
+.PHONY : test
+test : $(test-subdirs)
