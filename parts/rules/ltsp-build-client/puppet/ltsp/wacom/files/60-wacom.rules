@@ -1,0 +1,1 @@
+SUBSYSTEM=="usb", ACTION=="add", ATTRS{idVendor}=="056a", ATTRS{idProduct}=="0303", RUN+="/sbin/modprobe wacom"
