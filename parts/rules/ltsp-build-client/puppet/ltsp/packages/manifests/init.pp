@@ -84,6 +84,7 @@ class packages {
     , 'openssh-server'
     , 'policykit-1'
     , 'rng-tools'
+    , 'udev'
     , 'vlan' ]:
       tag => [ 'basic', 'ubuntu', ];
 
