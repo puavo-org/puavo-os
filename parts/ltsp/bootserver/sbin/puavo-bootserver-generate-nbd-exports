@@ -38,7 +38,7 @@ find /opt/ltsp/images \
     | handle_imagefiles
 
 # get the listening nbd_server pid, and send HUP to it
-nbd_server_pid=$(lsof -t -u nbd -a -iTCP:10809 -sTCP:LISTEN)
+nbd_server_pid=$(lsof -t -u nbd -a -iTCP:10809 -sTCP:LISTEN) || true
 test -n "${nbd_server_pid}" && kill -HUP "${nbd_server_pid}"
 
 exit 0
