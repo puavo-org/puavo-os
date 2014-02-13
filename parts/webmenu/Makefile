@@ -1,3 +1,5 @@
+export PATH := node_modules/.bin:$(PATH)
+
 prefix ?= /usr/local
 NW ?= nw
 exec_prefix = $(prefix)
@@ -42,7 +44,13 @@ npm-install:
 	make nw-gyp
 
 assets:
-	node make.js
+	node make.js all
+
+watch-browserify:
+	node make.js browserify -w
+
+watch-stylus:
+	node make.js stylus -w
 
 clean:
 	rm -f styles/main.css
@@ -93,7 +101,6 @@ test:
 
 test-node:
 	node_modules/.bin/mocha --reporter spec --compilers coffee:coffee-script tests/*test*
-
 
 serve:
 	@echo View tests on http://localhost:3000/tests.html

@@ -17,21 +17,25 @@ Compile Webmenu
 
 Basic
 
-    bin/webmenu-dev
+    bin/webmenu
 
 Devtools
 
-    bin/webmenu-dev --devtools
-
-With reload loop and crash reporting
-
-    bin/webmenu .
+    bin/webmenu --devtools
 
 ## Development
 
 ## Compile all assets manually
 
-    node make.js
+    make assets
+
+## Watch stylus changes
+
+    make watch-stylus
+
+## Watch browserify changes
+
+    make watch-browserify
 
 ## Translations
 

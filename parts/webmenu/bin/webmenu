@@ -25,13 +25,9 @@ help(){
     --feedback      Enable feedback. Implies --log
     -s --stop       Stop the running Webmenu process
 
-
     Hacking options
 
-    -b --build      Do production build of Webmenu before starting it
-    -w --watch      Use inotify to build debug builds of webmenu
     -d --devtools   Start with developer tools
-    --test          Execute Webmenu tests
     "
 }
 
@@ -41,6 +37,8 @@ export WM_ENV=production
 # Webmenu installation path
 if [ -f package.json ]; then
     WM_PATH=$(pwd)
+    echo "Development environment detected. Compiling CoffeeScript for node.js"
+    node make.js coffee
 else
     WM_PATH="/opt/webmenu"
 fi
@@ -80,20 +78,6 @@ while true; do
         --no-mon)
             use_mon=false
             shift
-        ;;
-        -b|--build)
-            node make.js all
-            shift
-        ;;
-        --build-node)
-            node make.js coffee
-            shift
-        ;;
-        -w|--watch)
-            echo "Using inotify to do automatic debug builds."
-            echo "Start webmenu from another terminal."
-            read -p "[Enter to continue]" _
-            exec node make.js --debug --watch
         ;;
         -s|--stop)
             set -x

@@ -2,7 +2,6 @@ var fs = require("fs");
 var path = require("path");
 
 var coffee = require("coffee-script");
-var nib = require("nib");
 var sh = require("shelljs");
 process.chdir(__dirname);
 
@@ -10,15 +9,6 @@ function browserifyBuild(entry, out, opts) {
     var brwsrf = opts.watch ? require("watchify") : require("browserify");
     var b = brwsrf(entry);
     b.transform(require("hbsfy"));
-
-    b.transform({
-        minify: false,
-        linenos: true,
-        configure: function(stylus) {
-            stylus.use(nib());
-        }
-    }, require("stylify"));
-
     b.transform(require("coffeeify"));
 
     function bundle() {
@@ -60,8 +50,15 @@ exports.browserify_test = function(opts) {
     browserifyBuild("./scripts/tests/index.coffee", "./scripts/tests/bundle.js", opts);
 };
 
+exports.stylus = function(opts) {
+    var cmd = "node_modules/.bin/stylus --line-numbers --use nib styles/main.styl";
+    if (opts && opts.watch) cmd += " -w";
+    sh.exec(cmd);
+};
+
 exports.all = function(opts) {
     console.log("all");
+    exports.stylus(opts);
     exports.coffee(opts);
     exports.browserify(opts);
     exports.browserify_test(opts);
@@ -78,6 +75,9 @@ if (require.main === module) {
         .alias("d", "debug")
         .alias("w", "watch")
         .argv;
+
+    // Enable debug always when watching
+    if (argv.watch) argv.debug = true;
 
     if (argv._.length) {
         argv._.forEach(function(task) {
