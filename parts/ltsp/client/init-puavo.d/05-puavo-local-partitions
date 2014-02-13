@@ -83,6 +83,12 @@ if [ -x "/sbin/vgchange" ]; then
       puavo_mount_partition home
       puavo_mount_partition images
       ;;
+    fatclient)
+      if [ -b "/dev/mapper/puavo-tmp" ]; then
+        puavo_mount_partition tmp
+        chmod 1777 /tmp
+      fi
+      ;;
   esac
 
   case "$PUAVO_HOSTTYPE" in
