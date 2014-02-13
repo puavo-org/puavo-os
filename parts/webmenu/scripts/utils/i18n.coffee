@@ -1,4 +1,4 @@
-Handlebars = require "handlebars-runtime"
+Handlebars = require "hbsfy/runtime"
 
 if not window.MF
     throw new Error "i18n.js is not loaded!"
