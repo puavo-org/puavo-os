@@ -47,6 +47,7 @@ case "$PUAVO_HOSTTYPE" in
       network-manager
       ondemand
       puavo-load-balancer
+      puavo-set-sane-date
       puavo-update-laptop
     "
     set_lts_var SCREEN_07            lightdm
@@ -94,6 +95,7 @@ case "$PUAVO_HOSTTYPE" in
       $puavo_common_unneeded_services
       network-manager
       ondemand
+      puavo-set-sane-date
       puavo-update-laptop
       zram-config
     "
@@ -113,6 +115,7 @@ case "$PUAVO_HOSTTYPE" in
       network-manager
       ondemand
       puavo-load-balancer
+      puavo-set-sane-date
       puavo-sync-external-files
       puavo-update-laptop
       zram-config
@@ -128,6 +131,7 @@ case "$PUAVO_HOSTTYPE" in
       network-manager
       ondemand
       puavo-load-balancer
+      puavo-set-sane-date
       puavo-sync-external-files
       puavo-update-laptop
       zram-config

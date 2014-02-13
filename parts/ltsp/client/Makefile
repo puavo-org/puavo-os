@@ -149,6 +149,7 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
 		upstart/ltspssh.conf \
 		upstart/puavo-ltsp-client.conf \
+		upstart/puavo-set-sane-date.conf \
 		upstart/puavo-sync-external-files.conf
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d \
