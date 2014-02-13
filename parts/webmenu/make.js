@@ -20,9 +20,10 @@ function browserifyBuild(entry, out, opts) {
     }, require("stylify"));
 
     b.transform(require("coffeeify"));
-        b.on("error", function(err) {
-            console.log(err);
-        });
+
+    b.on("error", function(err) {
+        console.log("Browserify build error!", err);
+    });
 
     function bundle() {
         var started = Date.now();
