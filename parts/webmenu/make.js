@@ -21,16 +21,9 @@ function browserifyBuild(entry, out, opts) {
 
     b.transform(require("coffeeify"));
 
-    b.on("error", function(err) {
-        console.log("Browserify build error!", err);
-    });
-
     function bundle() {
         var started = Date.now();
         b.bundle({ debug: opts.debug })
-        .on("error", function(err) {
-            console.error("BUILD error", err);
-        })
         .pipe(fs.createWriteStream(out))
         .on("close", function() {
             console.log(out, "build in", Date.now() - started, "ms");
