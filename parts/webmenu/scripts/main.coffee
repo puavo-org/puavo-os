@@ -1,6 +1,9 @@
 
 nodejs = window.nodejs
 
+insertCss = require "insert-css"
+insertCss(require("../styles/main.styl"))
+
 {user, config, menu, logger} = nodejs
 
 window.onerror = (message, file, line, column, errorObj) ->

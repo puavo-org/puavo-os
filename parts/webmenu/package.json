@@ -34,13 +34,13 @@
     "posix": "~1.0.1",
     "shelljs": "~0.1.4",
     "mkdirp": "~0.3.5",
-    "watchify": "0.1.0",
     "q": "~0.9.6",
-    "fluent-logger": "~0.2.6"
+    "fluent-logger": "~0.2.6",
+    "insert-css": "~0.1.1",
+    "stylify": "~0.1.2"
   },
   "devDependencies": {
     "node-static": "",
-    "stylus": "0.30.1",
     "nib": "0.8.2",
     "yalr": "1.0.x",
     "mocha": "1.7.4",
@@ -48,10 +48,10 @@
     "serve": "",
     "nw-gyp": "~0.10.9",
     "messageformat": "~0.1.5",
-    "requirejs": "~2.1.6",
     "coffeeify": "~0.5.1",
-    "handlebars-runtime": "~1.0.12",
-    "hbsfy": "~0.1.5",
-    "browserify": "~2.22.0"
+    "insert-css": "~0.1.1",
+    "watchify": "~0.6.1",
+    "stylify": "https://epeli@bitbucket.org/epeli/stylify.git",
+    "browserify": "~3.28.2"
   }
 }

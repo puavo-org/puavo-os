@@ -2,7 +2,6 @@ var fs = require("fs");
 var path = require("path");
 
 var coffee = require("coffee-script");
-var stylus = require("stylus");
 var nib = require("nib");
 var sh = require("shelljs");
 process.chdir(__dirname);
@@ -11,6 +10,15 @@ function browserifyBuild(entry, out, opts) {
     var brwsrf = opts.watch ? require("watchify") : require("browserify");
     var b = brwsrf(entry);
     b.transform(require("hbsfy"));
+
+    b.transform({
+        minify: false,
+        linenos: true,
+        configure: function(stylus) {
+            stylus.use(nib());
+        }
+    }, require("stylify"));
+
     b.transform(require("coffeeify"));
         b.on("error", function(err) {
             console.log(err);
@@ -58,23 +66,11 @@ exports.browserify_test = function(opts) {
     browserifyBuild("./scripts/tests/index.coffee", "./scripts/tests/bundle.js", opts);
 };
 
-exports.stylus = function() {
-    console.log("stylus");
-    stylus(sh.cat("styles/main.styl"))
-        .set("paths", [__dirname + "/styles"])
-        .use(nib())
-        .render(function(err, css) {
-            if (err) throw err;
-            css.to("styles/main.css");
-        });
-};
-
 exports.all = function(opts) {
     console.log("all");
     exports.coffee(opts);
     exports.browserify(opts);
     exports.browserify_test(opts);
-    exports.stylus(opts);
     exports.i18n(opts);
 };
 
