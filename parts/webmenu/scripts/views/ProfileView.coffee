@@ -1,8 +1,9 @@
-ViewMaster = require "../vendor/backbone.viewmaster"
+ViewMaster = require "viewmaster"
 
 LauncherModel = require "../models/LauncherModel.coffee"
 MenuItemView = require "./MenuItemView.coffee"
 LogoutButtonView = require "./LogoutButtonView.coffee"
+Carousel = require "./Carousel.coffee"
 
 class ProfileView extends ViewMaster
 
@@ -35,6 +36,7 @@ class ProfileView extends ViewMaster
             @appendView ".settings-container",  @support
 
         @appendView ".settings-container", LogoutButtonView
+        @appendView ".footer-container",  new Carousel
 
     context: -> {
         user: @model.toJSON()
