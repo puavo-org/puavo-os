@@ -15,15 +15,25 @@ class Carousel extends ViewMaster
 
     constructor: ->
       super
-      @index = 0
+      @randomizeIndex()
+      @on "reset", =>
+        @randomizeIndex()
+        @render()
+
+    randomizeIndex: ->
+      @index = Math.round(Math.random() * (@collection.size()-1) )
 
     context: ->
-      console.log "Using index #{ @index }"
+
+      coll = @collection.at(@index)
+      if not coll
+        console.error "wtf bad index #{ @index }"
+        return
 
       return {
         index: @index + 1
         size: @collection.size()
-        item:  @collection.at(@index).toJSON()
+        item: coll.toJSON()
       }
 
     render: ->
