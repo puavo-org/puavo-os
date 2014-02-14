@@ -21,12 +21,13 @@ Recommends: tshark, git, emacs23-nox, sysstat, tmux, vim, openvpn, puavo-wlangw,
  etherwake, nmap, fping, w3m, hping3, screen, elinks, puavo-devscripts, ethtool,
  iperf
 Suggests: ntp
-Conflicts: ltsp-server, tftpd-hpa
+Conflicts: ltsp-server, nscd, tftpd-hpa
 Description: Puavo LTSP bootserver runs infrastructure services for thin/fat
  clients and LTSP servers. No user sessions are run on the server itself.
 
 Package: puavo-ltsp-client
 Architecture: all
+Conflicts: nscd
 Depends: ${misc:Depends}, lightdm, lightdm-gtk-greeter,
  libsasl2-modules-gssapi-mit, libsasl2-modules-ldap, krb5-user, libpam-krb5,
  ruby1.9.3, ruby-ldap, ruby-dnsruby, sssd, dnsutils, libnss-extrausers,
@@ -35,5 +36,6 @@ Description: Bits and pieces needed inside the LTSP chroot image.
 
 Package: puavo-ltsp-install
 Architecture: all
+Conflicts: nscd
 Depends: ${misc:Depends}, ruby1.8, ruby-highline, nbd-client, pv, rdiff, curl
 Description: Bits and pieces needed inside the LTSP chroot image.
