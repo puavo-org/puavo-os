@@ -43,7 +43,8 @@ install : installdirs
 		templates/etc/apparmor.d/local/usr.sbin.dhcpd
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc \
-		templates/etc/dnsmasq.conf
+		templates/etc/dnsmasq.conf \
+		templates/etc/ntp.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/dhcp \
 		templates/etc/dhcp/dhcpd.conf
