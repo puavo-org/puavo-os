@@ -115,6 +115,7 @@ case puavo_device_type
     write_config("/etc/default/nfs-common")
     write_config("/etc/ssh/sshd_config")
     write_config("/etc/cups/client.conf")
+    write_config("/etc/ntp.conf")
 
     @ldap_binddn       = read_file('/etc/puavo/ldap/dn')
     @ldap_bindpw       = read_file('/etc/puavo/ldap/password')
@@ -142,6 +143,7 @@ case puavo_device_type
     write_config("/etc/racoon/racoon.conf")
     write_config("/etc/security/group.conf")
     write_config("/etc/samba/smb.conf", "laptop")
+    write_config("/etc/ntp.conf")
 
     # FIXME: Hack to get gnome fallback session
     `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`

@@ -45,6 +45,7 @@ case "$PUAVO_HOSTTYPE" in
       $puavo_common_unneeded_services
       ltspssh
       network-manager
+      ntp
       ondemand
       puavo-load-balancer
       puavo-set-sane-date
@@ -113,6 +114,7 @@ case "$PUAVO_HOSTTYPE" in
       fluentd
       ltspssh
       network-manager
+      ntp
       ondemand
       puavo-load-balancer
       puavo-set-sane-date
@@ -129,6 +131,7 @@ case "$PUAVO_HOSTTYPE" in
       $puavo_common_unneeded_services
       ltspssh
       network-manager
+      ntp
       ondemand
       puavo-load-balancer
       puavo-set-sane-date
