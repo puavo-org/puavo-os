@@ -13,7 +13,7 @@ Depends: ${misc:Depends}, libsasl2-modules-gssapi-mit, isc-dhcp-server, bind9,
  puavo-tftpd, puavo-tftpd-hooks, bridge-utils, puavo-ds-slave, puavo-register,
  cups, foomatic-db, foomatic-db-engine, foomatic-filters, hplip,
  openprinting-ppds, pnm2ppa, printer-driver-gutenprint, pxljr, splix,
- shorewall, linux-image-server, nfs-kernel-server, sssd, qemu-kvm,
+ shorewall, linux-image-server, nfs-kernel-server, qemu-kvm,
  libvirt-bin, ruby-ipaddress, syslinux, ruby-highline, ruby-dnsruby,
  openbsd-inetd, samba, cifs-utils, ipsec-tools, racoon, puavo-sharedir-manager,
  puavo-logrelay, nginx, puavo-rest-bootserver, jq, curl
