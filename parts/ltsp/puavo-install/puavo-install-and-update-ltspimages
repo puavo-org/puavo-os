@@ -487,6 +487,10 @@ renice -n 20 -p $$ > /dev/null
 
 images_dir=/images
 
+# do nothing if /images/DISABLE_IMAGE_UPDATES exists
+# (for development and emergencies)
+test -e "${images_dir}/DISABLE_IMAGE_UPDATES" && exit 0
+
 if [ -n "$image_from_file" ]; then
   install_image "$images_dir" "$next_image" -file "$image_from_file"
 elif [ -n "$image_from_nbd" ]; then
