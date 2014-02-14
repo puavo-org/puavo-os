@@ -27,8 +27,17 @@ spawnPipePath = webmenuHome + "/spawnmenu" + if spawnMenu then "-#{spawnMenu}" e
 mkdirp.sync(webmenuHome)
 
 process.on 'uncaughtException', (err) ->
-    console.error err.message
-    console.error err.stack
+    process.stderr.write "!!nodejs uncaughtException!!\n"
+    process.stderr.write err.message + "\n"
+    process.stderr.write err.stack + "\n"
+    logger.emit(
+        msg: "unhandled exception"
+        capturedFrom: "process.on(uncaughtException)"
+        error:
+            message: err.message
+            stack: err.stack
+    )
+
     process.exit 1
 
 spawnEmitter = createSpawnPipe spawnPipePath, (err) ->

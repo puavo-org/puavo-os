@@ -14,6 +14,7 @@ end
 uuid = (0...25).map{ ('a'..'z').to_a[rand(26)] }.join
 record = {
   :msg => "unhandled exception",
+  :capturedFrom => "wrapper script",
   :error => {
     :uuid => uuid,
     :message => "webmenu crash"
