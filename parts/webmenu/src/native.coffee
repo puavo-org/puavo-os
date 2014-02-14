@@ -195,6 +195,10 @@ module.exports = (gui, Window) ->
     spawnEmitter.on "spawn", _.debounce(spawnHandler, 300, true)
 
     open = (cmd) ->
+
+        if typeof cmd.toJSON is "function"
+            cmd = cmd.toJSON()
+
         console.log "Opening command", cmd
         logger.emit(
             msg: "open"

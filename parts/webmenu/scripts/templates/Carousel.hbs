@@ -1,20 +1,18 @@
-<div class="bb-carousel">
 
-    <h1>
-      Viestit
-    </h1>
+<header>
+  <h1>
+    Viestit
+  </h1>
+</header>
 
-    <p>
-      Tule tutustumaan ohjelmoitavaan nalleen (7e29)
-      <a href="#" >#educa</a>
-      <a href="#" >#Educa2014</a>
-      <a href="#" >pic.twitter.com/erIPwAY1wF</a>
-    </p>
-
-    <div class="nav">
-      <button class="icon-left" ></button>
-      <span>3 / 5</span>
-      <button class="icon-right"></button>
-    </div>
-
+<div class="message">
+  <p>
+    {{item.message}}
+  </p>
 </div>
+
+<nav>
+  <button class="icon-left prev" ></button>
+  <span>{{index}} / {{size}}</span>
+  <button class="icon-right next"></button>
+</nav>

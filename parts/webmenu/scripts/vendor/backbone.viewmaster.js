@@ -1,2 +1,2 @@
-console.warn("LEGACY VIEWMASTER REQUIRE");
+console.error("LEGACY VIEWMASTER REQUIRE");
 module.exports = require("viewmaster");
