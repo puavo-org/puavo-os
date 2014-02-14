@@ -22,18 +22,21 @@
     right sideBarWidth
 
   .main-area
+    disable-select()
     left borderMargin
     top headerHeight
     bottom footerHeight
 
 
   .header
+    disable-select()
     height headerHeight
     left borderMargin
     top borderMargin
 
     .search-container,
     .breadcrumbs-container
+      disable-select()
       margin 5px
       margin-top 10px
       margin-bottom 10px
@@ -60,6 +63,7 @@
     right borderMargin
 
   .footer
+    disable-select()
     height footerHeight
     left borderMargin
     bottom borderMargin
