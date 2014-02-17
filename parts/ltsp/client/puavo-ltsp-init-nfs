@@ -44,7 +44,7 @@ if boolean_is_true "${USE_NFS_HOMES}" ; then
 
         mv /etc/krb5.keytab.bu /etc/krb5.keytab
 
-        mount -t nfs4 -o sec=krb5,nodev,nosuid,minorversion=0 ${NFS_SERVER}:/home /home
+        mount -t nfs4 -o sec=krb5,nodev,nosuid,minorversion=0,nolock ${NFS_SERVER}:/home /home
         umount /mntroot
       else
         rm -f /tmp/krb5cc_0
