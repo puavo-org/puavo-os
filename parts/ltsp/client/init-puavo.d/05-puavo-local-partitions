@@ -96,6 +96,9 @@ if [ -x "/sbin/vgchange" ]; then
       if [ -b "/dev/mapper/puavo-state" ]; then
 	puavo_mount_partition state
 
+	# must fix in case puavo gid has changed...
+	chgrp puavo /state/etc/puavo/ldap/password
+
 	for path in /etc/krb5.keytab /etc/lts.conf /etc/puavo; do
 	  cp -aT "/state${path}" "$path" 2>/dev/null || true
 	done
