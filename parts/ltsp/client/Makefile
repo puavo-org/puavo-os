@@ -142,7 +142,8 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up \
 		etc/puavo-vpn-client/scripts/route-up/10-dnsmasq \
-		etc/puavo-vpn-client/scripts/route-up/20-sssd
+		etc/puavo-vpn-client/scripts/route-up/20-sssd \
+		etc/puavo-vpn-client/scripts/route-up/30-ntpdate
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init.d \
 		etc/init.d/ltspssh
