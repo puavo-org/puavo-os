@@ -43,4 +43,9 @@ parser.parse!
 
 options[:api_server] ||= Puavo.resolve_api_server!
 
-puts HTTParty.get("#{ options[:api_server] }/v3/devices/#{ Socket.gethostname }").to_json
+# TODO: If PUAVO_SESSION_PATH is set use apiserver/v3/session/<sessionid>/feed
+
+puts HTTParty.get("#{ options[:api_server] }/v3/devices/#{ Socket.gethostname }/feed").to_json
+
+
+
