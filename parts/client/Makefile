@@ -31,6 +31,7 @@ install: install-dirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-sync-printers
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-resolve-api-server
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-update-certificate
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-feed
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
 
 clean:
