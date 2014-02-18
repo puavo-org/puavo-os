@@ -9,3 +9,4 @@ gem "facter"
 gem "highline"
 gem "addressable"
 gem 'json', '~> 1.7.7'
+gem "debugger"
