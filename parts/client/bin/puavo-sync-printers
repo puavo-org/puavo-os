@@ -5,6 +5,8 @@ require "optparse"
 require "httparty"
 require "socket"
 
+require "puavo/api-server"
+
 def assert_response(res)
   if ![200, 201, 202].include?(res.code)
     puts "Bad response status #{ res.code } for #{ res.request.path.to_s }: #{ res }"
@@ -92,7 +94,7 @@ if options[:log_file]
   $stderr.reopen(options[:log_file], "a")
 end
 
-options[:api_server] ||= `puavo-resolve-api-server`.strip
+options[:api_server] ||= Puavo.resolve_api_server!
 options[:post_printers] ||= "https://#{ PUAVO_ETC.domain }/devices/printers.json"
 options[:user] ||= PUAVO_ETC.ldap_dn
 options[:password] ||= PUAVO_ETC.ldap_password
