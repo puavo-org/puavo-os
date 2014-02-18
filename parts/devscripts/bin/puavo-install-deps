@@ -24,6 +24,6 @@ set -eu
 
 mk-build-deps \
     --install $control_file \
-    --install --tool "apt-get --yes" \
+    --install --tool "apt-get --yes --force-yes" \
     --remove
 
