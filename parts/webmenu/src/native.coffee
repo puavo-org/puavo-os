@@ -11,6 +11,7 @@ Q = require "q"
 Handlebars = require "handlebars"
 {EventEmitter} = require "events"
 
+FeedCollection = require "./FeedCollection"
 launchCommand = require "./launchcommand"
 menutools = require "./menutools"
 requirefallback = require "./requirefallback"
@@ -238,6 +239,9 @@ module.exports = (gui, Window) ->
     shared.config = config
     shared.menu = menuJSON
     shared.logger = logger
+    shared.feeds = new FeedCollection([], {
+        command: config.feedCMD
+    })
 
     shared.executeAction = (action) ->
         if actionCMD = config[action + "CMD"]

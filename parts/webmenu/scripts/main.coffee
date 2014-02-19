@@ -34,6 +34,7 @@ menuModel = new MenuModel menu, allItems
 
 layout = new MenuLayout
     user: user
+    feeds: nodejs.feeds
     config: config
     initialMenu: menuModel
     allItems: allItems

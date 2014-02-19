@@ -74,3 +74,9 @@ Command to hibernate
 
 Item count in favorites list.
 
+### `feedCMD`
+
+Shell executable string which print array of json objects to stdout. The
+objects must contain a `message` field which is displayed on the Webmenu.
+
+

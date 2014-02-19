@@ -15,6 +15,7 @@ class ProfileView extends ViewMaster
     constructor: (opts) ->
         super
         @config = opts.config
+        @user = opts.user
 
         if settingsCMD = @config.get("settingsCMD")
             @settings = new MenuItemView
@@ -38,28 +39,11 @@ class ProfileView extends ViewMaster
 
         @appendView ".settings-container", LogoutButtonView
         @appendView ".footer-container",  new Carousel
-            collection: new Backbone.Collection([
-                {
-                    type: "opinsys"
-                    name: "Opinsys"
-                    message: "Tule tutustumaan ohjelmoitavaan nalleen (7e29) http://opinsys.fi"
-                }
-                {
-                    type: "opinsys"
-                    name: "Opinsys"
-                    message: "Foo bar"
-                }
-                {
-                    type: "opinsys"
-                    name: "Opinsys"
-                    message: "sadfk sadlfkjsda lsfda jfdlkj fdlksdfaj dslafkj flk jfsdlj sadfldfsaj dfskl asd sdf sdakfj sdfj sda jksadkj sad asdsadjk sadflk sadflas salkj slk jsal ks ljkslkj l sdfksdfl ksdfal ksadl sda fsdalkjfsda lkdfsjfdsj faklfjlsad jfsdl kjflsaj fldsj flsjadlfj sdfkjds alkfjsdlkfjsadlkjfsla lsda jfl jsdalfj slkajflj sdalkf jsadljf lksad jflk sjdafjsadlkjflks dajflksj aflkj welkj fwelkj flkajflkasdjlkfj salkfjlsakd  sdfaloppu "
-                }
-            ])
-
-
+            collection: opts.feeds
+        opts.feeds.fetch()
 
     context: -> {
-        user: @model.toJSON()
+        user: @user.toJSON()
         config: @config.toJSON()
     }
 

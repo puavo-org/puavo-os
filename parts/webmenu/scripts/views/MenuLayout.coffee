@@ -38,9 +38,7 @@ class MenuLayout extends ViewMaster
         @breadcrumbs = new Breadcrumbs model: opts.initialMenu
         @setView ".breadcrumbs-container", @breadcrumbs
 
-        @setView ".profile-container", new ProfileView
-            model: @user
-            config: @config
+        @setView ".profile-container", new ProfileView(opts)
 
         @setView ".favorites-container", new Favorites
             collection: @allItems
