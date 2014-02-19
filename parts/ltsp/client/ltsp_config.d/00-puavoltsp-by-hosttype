@@ -84,6 +84,7 @@ case "$PUAVO_HOSTTYPE" in
       ltspssh
       mountnfs.sh
       puavo-load-balancer
+      puavo-load-reporter
       puavo-monitor
       puavo-wlanap
       umountnfs.sh
