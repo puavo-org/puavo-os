@@ -96,6 +96,14 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       False
     set_lts_var LTSP_SERVER          True
+    set_lts_var RM_SESSION_SERVICES "
+      ebeam
+      mimio-mimiosys
+      polyvision-cdfnu
+      polyvision-pvd
+      smart_1-_Service
+      smart_1-_Tools
+    "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
       eno
