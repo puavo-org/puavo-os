@@ -33,6 +33,9 @@ data =
         ]
     ]
 
+class MockFeeds extends Backbone.Collection
+    fetch: ->
+
 describe "MenuLayout", ->
     allItems = null
     layout = null
@@ -46,6 +49,7 @@ describe "MenuLayout", ->
             allItems: allItems
             config: new Backbone.Model
             user: new Backbone.Model
+            feeds: new MockFeeds
         layout.render()
 
     afterEach -> layout.remove()

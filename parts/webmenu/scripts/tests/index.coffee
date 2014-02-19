@@ -30,6 +30,7 @@ runner.on "fail", (test, error) ->
     fails.push { test, error }
     for fail in fails
         console.error "FAIL: #{ test.title }: #{ error.message }"
+        console.error error.stack
 
 runner.on "end", ->
     console.log "~~NW TESTS OK~~" if fails.length is 0

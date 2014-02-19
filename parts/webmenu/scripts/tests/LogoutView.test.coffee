@@ -57,12 +57,12 @@ describe "LogoutView", ->
 
             @view.$(".js-shutdown").trigger "click"
 
-            Q.delay(1)
+            Q.delay(10)
             .then =>
                 assert.equal @view.$(".now").size(), 1
                 # "click anywhere cancel"
                 @view.$(".bb-logout-action").trigger "click"
-                Q.delay(1)
+                Q.delay(10)
             .then =>
                 assert.equal @view.$(".now").size(), 0
             .done(done)

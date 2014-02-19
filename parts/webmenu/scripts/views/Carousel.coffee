@@ -16,6 +16,10 @@ class Carousel extends ViewMaster
     constructor: ->
         super
         @randomizeIndex()
+
+        if not @collection
+            throw new Error "Collection missing"
+
         @listenTo @collection, "reset", => @render()
 
         @on "reset", =>

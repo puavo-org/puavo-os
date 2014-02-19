@@ -2,6 +2,10 @@ Backbone = require "backbone"
 Application = require "../Application.coffee"
 ProfileView = require "../views/ProfileView.coffee"
 
+class MockFeeds extends Backbone.Collection
+    fetch: ->
+
+
 config =
     profileCMD:
         id: "profile"
@@ -25,8 +29,9 @@ describe "ProfileView", ->
         view = null
         beforeEach ->
             view = new ProfileView
-                model: new Backbone.Model(fullName: "John Doe")
+                user: new Backbone.Model(fullName: "John Doe")
                 config: new Backbone.Model config
+                feeds: new MockFeeds
 
             view.render()
 
@@ -73,7 +78,8 @@ describe "ProfileView", ->
         after -> view.remove()
         before ->
             view = new ProfileView
-                model: new Backbone.Model(fullName: "John Doe")
+                user: new Backbone.Model(fullName: "John Doe")
+                feeds: new MockFeeds
                 config: new Backbone.Model
                     passwordCMD: null
                     profileCMD: null
