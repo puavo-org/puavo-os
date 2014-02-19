@@ -3,6 +3,7 @@ PUAVO_HOSTTYPE=$(/bin/cat /etc/puavo/hosttype)
 set_lts_var PUAVO_HOSTTYPE "$PUAVO_HOSTTYPE"
 
 puavo_common_unneeded_services='
+  anacron
   apport
   atd
   avahi-daemon
@@ -50,6 +51,8 @@ case "$PUAVO_HOSTTYPE" in
       puavo-load-balancer
       puavo-set-sane-date
       puavo-update-laptop
+      puavo-vpn-client
+      puavo-vpn-dnsmasq
     "
     set_lts_var SCREEN_07            lightdm
     set_lts_var USE_NFS_HOMES        True
@@ -81,6 +84,7 @@ case "$PUAVO_HOSTTYPE" in
       ltspssh
       mountnfs.sh
       puavo-load-balancer
+      puavo-load-reporter
       puavo-monitor
       puavo-wlanap
       umountnfs.sh
@@ -94,10 +98,13 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LTSP_SERVER          True
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      eno
       network-manager
+      nwfermi
       ondemand
       puavo-set-sane-date
       puavo-update-laptop
+      puavo-vpn-dnsmasq
       zram-config
     "
     set_lts_var USE_NFS_HOMES        True
@@ -111,15 +118,24 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LTSP_FATCLIENT       False
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      eno
       fluentd
+      gssd
       ltspssh
       network-manager
       ntp
+      nwfermi
       ondemand
       puavo-load-balancer
+      puavo-load-reporter
       puavo-set-sane-date
       puavo-sync-external-files
       puavo-update-laptop
+      puavo-vpn-client
+      puavo-vpn-dnsmasq
+      sssd
+      statd
+      statd-mounting
       zram-config
     "
     set_lts_var SCREEN_07            lightdm
@@ -129,14 +145,24 @@ case "$PUAVO_HOSTTYPE" in
   unregistered)
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      eno
+      fluentd
+      gssd
       ltspssh
       network-manager
       ntp
+      nwfermi
       ondemand
       puavo-load-balancer
+      puavo-load-reporter
       puavo-set-sane-date
       puavo-sync-external-files
       puavo-update-laptop
+      puavo-vpn-client
+      puavo-vpn-dnsmasq
+      sssd
+      statd
+      statd-mounting
       zram-config
     "
     set_lts_var SCREEN_07          register
