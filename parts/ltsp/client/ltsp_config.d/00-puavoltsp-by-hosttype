@@ -3,6 +3,7 @@ PUAVO_HOSTTYPE=$(/bin/cat /etc/puavo/hosttype)
 set_lts_var PUAVO_HOSTTYPE "$PUAVO_HOSTTYPE"
 
 puavo_common_unneeded_services='
+  anacron
   apport
   atd
   avahi-daemon
@@ -111,15 +112,24 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LTSP_FATCLIENT       False
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      eno
       fluentd
+      gssd
       ltspssh
       network-manager
       ntp
+      nwfermi
       ondemand
       puavo-load-balancer
+      puavo-load-reporter
       puavo-set-sane-date
       puavo-sync-external-files
       puavo-update-laptop
+      puavo-vpn-client
+      puavo-vpn-dnsmasq
+      sssd
+      statd
+      statd-mounting
       zram-config
     "
     set_lts_var SCREEN_07            lightdm
@@ -129,14 +139,24 @@ case "$PUAVO_HOSTTYPE" in
   unregistered)
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      eno
+      fluentd
+      gssd
       ltspssh
       network-manager
       ntp
+      nwfermi
       ondemand
       puavo-load-balancer
+      puavo-load-reporter
       puavo-set-sane-date
       puavo-sync-external-files
       puavo-update-laptop
+      puavo-vpn-client
+      puavo-vpn-dnsmasq
+      sssd
+      statd
+      statd-mounting
       zram-config
     "
     set_lts_var SCREEN_07          register
