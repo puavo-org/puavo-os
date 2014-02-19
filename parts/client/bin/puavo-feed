@@ -32,6 +32,10 @@ parser = OptionParser.new do |opts|
     options[:api_server] = url
   end
 
+  opts.on("-d", "--device [HOSTNAME]", "Device hostname") do |hostname|
+    options[:hostname] = hostname
+  end
+
   opts.on_tail("-h", "--help", "Show this message") do
     STDERR.puts opts
     exit
@@ -42,10 +46,9 @@ end
 parser.parse!
 
 options[:api_server] ||= Puavo.resolve_api_server!
+options[:hostname] ||= Socket.gethostname
 
 # TODO: If PUAVO_SESSION_PATH is set use apiserver/v3/session/<sessionid>/feed
 
-puts HTTParty.get("#{ options[:api_server] }/v3/devices/#{ Socket.gethostname }/feed").to_json
-
-
+puts HTTParty.get("#{ options[:api_server] }/v3/devices/#{ options[:hostname] }/feed").to_json
 
