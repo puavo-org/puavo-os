@@ -90,7 +90,7 @@
     "gnome-screensaver-command",
     "--lock"
   ],
-  "feedCMD": "puavo-feedsadf",
+  "feedCMD": "puavo-feed  --api-server http://10.246.134.17:9292 -d fat1",
   "maxFavorites": 5,
   "port": 1337
 }
