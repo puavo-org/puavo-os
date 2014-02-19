@@ -37,8 +37,9 @@ export WM_ENV=production
 # Webmenu installation path
 if [ -f package.json ]; then
     WM_PATH=$(pwd)
-    echo "Development environment detected. Compiling CoffeeScript for node.js"
-    node make.js coffee
+    echo "Development environment detected. Compiling i18n and CoffeeScript for node.js"
+    make i18n
+    make node-coffee
 else
     WM_PATH="/opt/webmenu"
 fi

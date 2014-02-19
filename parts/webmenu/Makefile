@@ -43,14 +43,35 @@ npm-install:
 	npm install
 	make nw-gyp
 
-assets:
-	node make.js all
+assets: i18n browserify browserify-test stylus node-coffee
+
+.PHONY: i18n
+i18n:
+	coffee extra/i18nUpdate.coffee
+
+browserify:
+	browserify -t hbsfy -t coffeeify ./scripts/main.coffee > bundle.js
 
 watch-browserify:
-	node make.js browserify -w
+	watchify --debug -v -t hbsfy -t coffeeify ./scripts/main.coffee -o bundle.js
+
+browserify-test:
+	browserify --debug -t hbsfy -t coffeeify ./scripts/tests/index.coffee > ./scripts/tests/bundle.js
+
+watch-browserify-test:
+	watchify --debug -v -t hbsfy -t coffeeify ./scripts/tests/index.coffee -o ./scripts/tests/bundle.js
+
+stylus:
+	stylus --line-numbers --use nib styles/main.styl
 
 watch-stylus:
-	node make.js stylus -w
+	stylus --watch --line-numbers --use nib styles/main.styl
+
+node-coffee:
+	mkdir -p lib
+	coffee --compile --output lib/ src/*.coffee
+	cp src/*.js lib/
+
 
 clean:
 	rm -f styles/main.css
