@@ -51,6 +51,8 @@ case "$PUAVO_HOSTTYPE" in
       puavo-load-balancer
       puavo-set-sane-date
       puavo-update-laptop
+      puavo-vpn-client
+      puavo-vpn-dnsmasq
     "
     set_lts_var SCREEN_07            lightdm
     set_lts_var USE_NFS_HOMES        True
