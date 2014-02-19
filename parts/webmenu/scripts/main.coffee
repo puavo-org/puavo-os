@@ -51,12 +51,6 @@ layout.on "open-app", (model) ->
         nodejs.hideWindow()
     , Application.animationDuration
 
-# Disable DOM element dragging and text selection if target is not an input
-# $(window).on "mousedown", (e) ->
-#     if e.target.tagName in ["INPUT", "SELECT", "OPTION", "TEXTAREA"]
-#         return
-# 
-#     e.preventDefault()
 
 $(window).keydown (e) ->
     if e.which is 27 # Esc
