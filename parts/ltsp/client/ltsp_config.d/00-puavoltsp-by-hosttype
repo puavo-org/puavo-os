@@ -98,10 +98,13 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LTSP_SERVER          True
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      eno
       network-manager
+      nwfermi
       ondemand
       puavo-set-sane-date
       puavo-update-laptop
+      puavo-vpn-dnsmasq
       zram-config
     "
     set_lts_var USE_NFS_HOMES        True
