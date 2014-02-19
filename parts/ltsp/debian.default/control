@@ -13,7 +13,7 @@ Depends: ${misc:Depends}, libsasl2-modules-gssapi-mit, isc-dhcp-server, bind9,
  puavo-tftpd, puavo-tftpd-hooks, bridge-utils, puavo-ds-slave, puavo-register,
  cups, foomatic-db, foomatic-db-engine, foomatic-filters, hplip,
  openprinting-ppds, pnm2ppa, printer-driver-gutenprint, pxljr, splix,
- shorewall, linux-image-server, nfs-kernel-server, sssd, qemu-kvm,
+ shorewall, linux-image-server, nfs-kernel-server, qemu-kvm,
  libvirt-bin, ruby-ipaddress, syslinux, ruby-highline, ruby-dnsruby,
  openbsd-inetd, samba, cifs-utils, ipsec-tools, racoon, puavo-sharedir-manager,
  puavo-logrelay, nginx, puavo-rest-bootserver, jq, curl, ntp
@@ -26,7 +26,6 @@ Description: Puavo LTSP bootserver runs infrastructure services for thin/fat
 
 Package: puavo-ltsp-client
 Architecture: all
-Conflicts: nscd
 Depends: ${misc:Depends}, lightdm, lightdm-gtk-greeter,
  libsasl2-modules-gssapi-mit, libsasl2-modules-ldap, krb5-user, libpam-krb5,
  ruby1.9.3, ruby-ldap, ruby-dnsruby, sssd, dnsutils, libnss-extrausers,
@@ -36,6 +35,5 @@ Description: Bits and pieces needed inside the LTSP chroot image.
 
 Package: puavo-ltsp-install
 Architecture: all
-Conflicts: nscd
 Depends: ${misc:Depends}, ruby1.8, ruby-highline, nbd-client, pv, rdiff, curl
 Description: Bits and pieces needed inside the LTSP chroot image.
