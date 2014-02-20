@@ -1,6 +1,9 @@
 description "puavo-hw-log"
 
-start on runlevel [23]
+start on net-device-up IFACE!=lo
+stop on runlevel [016]
 
-exec sh -c 'sleep 10 && puavo-hw-log'
-
+script
+  sleep 10
+  puavo-hw-log
+end script
