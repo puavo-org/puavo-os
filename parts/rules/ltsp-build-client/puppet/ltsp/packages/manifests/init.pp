@@ -436,6 +436,7 @@ class packages {
     [ 'ltsp-lightdm'
     , 'opinsys-ca-certificates'
     , 'puavo-client'
+    , 'puavo-hw-log'
     , 'puavo-ltsp-client'
     , 'puavo-ltsp-install'
     , 'puavo-monitor'
