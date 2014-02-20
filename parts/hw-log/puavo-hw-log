@@ -71,6 +71,11 @@ rescue
 end
 
 begin
+  data["fdisk_raw"] = assert_exec("fdisk -l")
+rescue
+end
+
+begin
   data["lshw"] = JSON.parse(assert_exec("lshw -quiet -json"))
 rescue
 end
@@ -79,7 +84,11 @@ if options[:stdout]
   puts data.to_json
 else
   Net::HTTP.post_form URI(options[:server] + "/puavo-hw-log"), {
-    "json" => data.to_json
+    "json" => {
+      "msg" => "hwinfo",
+      "hwinfo" => data
+    }.to_json
   }
+  puts "#{ Time.now } Data posted to #{ options[:server] }"
 end
 
