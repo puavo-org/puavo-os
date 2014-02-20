@@ -34,6 +34,11 @@ end
 
 parser.parse!
 
+if Process.uid != 0
+  STDERR.puts "Not root?"
+  exit 1
+end
+
 
 def assert_exec(cmd)
   out = `#{ cmd }`
