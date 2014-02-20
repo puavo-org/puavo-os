@@ -1,0 +1,80 @@
+#!/usr/bin/ruby1.9.1
+
+
+require "net/http"
+require "uri"
+require "json"
+require "optparse"
+
+options = {
+  :server => "http://localhost:8888"
+}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "
+  Usage: #{ File.basename(__FILE__) } [options]
+
+  Log hardware information to fluentd
+  "
+
+  opts.on("--server [URL]", "URL to fluentd HTTP server. Default: #{ options[:server] }") do |server|
+    options[:server] = server
+  end
+
+  opts.on("--stdout", "Print data to stdout as json instead of logging it to fluentd") do |server|
+    options[:stdout] = true
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    STDERR.puts opts
+    exit
+  end
+
+end
+
+parser.parse!
+
+
+def assert_exec(cmd)
+  out = `#{ cmd }`
+  if not $?.success?
+    raise "Failed to execute '#{ cmd }'"
+  end
+  return out
+end
+
+data = {}
+
+begin
+  data["lsusb_raw"] = assert_exec("lsusb")
+rescue
+end
+
+begin
+  data["df_raw"] = assert_exec("df")
+rescue
+end
+
+begin
+  data["free_raw"] = assert_exec("free")
+rescue
+end
+
+begin
+  data["xrandr_raw"] = assert_exec("xrandr")
+rescue
+end
+
+begin
+  data["lshw"] = JSON.parse(assert_exec("lshw -quiet -json"))
+rescue
+end
+
+if options[:stdout]
+  puts data.to_json
+else
+  Net::HTTP.post_form URI(options[:server] + "/puavo-hw-log"), {
+    "json" => data.to_json
+  }
+end
+

@@ -1,0 +1,6 @@
+description "puavo-hw-log"
+
+start on runlevel [23]
+
+exec sh -c 'sleep 10 && puavo-hw-log'
+
