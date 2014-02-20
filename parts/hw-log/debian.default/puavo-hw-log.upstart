@@ -4,6 +4,7 @@ start on net-device-up IFACE!=lo
 stop on runlevel [016]
 
 script
-  sleep 10
+  # Wait 30min to avoid slowing down start up
+  sleep 1800
   puavo-hw-log
 end script
