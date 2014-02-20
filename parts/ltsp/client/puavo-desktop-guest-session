@@ -29,7 +29,7 @@ case "${PUAVO_HOSTTYPE}" in
       REMOTE_SESSION="\"gnome-session --session=gnome-fallback\""
 
       REMOTE_DISPLAY="${IPADDR}${DISPLAY}"
-      SOCKET="/run/puavo/${USER}/$PREFERRED_SERVER"
+      SOCKET="/run/puavo/${USER}/socket_$PREFERRED_SERVER"
       LOCALDEV="; /usr/sbin/ltspfsmounter all cleanup"
 
       XAUTH_PROTOCOL=$(xauth -f $XAUTHORITY list | head -1 | awk '{print $2}')
