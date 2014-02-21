@@ -108,6 +108,10 @@ case puavo_device_type
     # Temporary hack until ltsp-lightdm is not used anymore
     `cp /usr/lib/puavo-ltsp-client/puavo-thin-guest-account /usr/sbin/guest-account`
     `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
+
+    # Temporary hack to get ltspfs working with thin guest sessions
+    write_config("/lib/udev/ltspfs_entry")
+    File.chmod(0755, "/lib/udev/ltspfs_entry")
   when "fatclient"
     write_config("/etc/nsswitch.conf", "extrausers")
     write_config("/etc/pam.d/lightdm", "fatclient")
