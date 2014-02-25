@@ -18,23 +18,30 @@ class Carousel extends ViewMaster
         if not @collection
             throw new Error "Collection missing"
 
+        @index = null
+
         @randomizeIndex()
 
-        @listenTo @collection, "reset", => @render()
+        @listenTo @collection, "reset change", =>
+            @randomizeIndex()
+            @render()
 
         @on "reset", =>
             @randomizeIndex()
             @render()
 
     randomizeIndex: ->
-        @index = Math.round(Math.random() * (@collection.size()-1) )
+        if @collection.size() is 0
+            @index = null
+        else
+            @index = Math.round(Math.random() * (@collection.size()-1) )
 
     context: ->
 
-        coll = @collection.at(@index)
-        if not coll
-            console.error "wtf bad index #{ @index }"
+        if @index is null
             return
+
+        coll = @collection.at(@index)
 
         return {
             index: @index + 1
@@ -43,7 +50,7 @@ class Carousel extends ViewMaster
         }
 
     render: ->
-        if not @collection or @collection?.size() is 0
+        if @index is null
             @$el.empty()
         else
             super
