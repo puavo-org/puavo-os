@@ -232,6 +232,7 @@ class packages {
     , 'nautilus-image-converter'
     , 'okular'
     , 'openshot'
+    , 'photofilmstrip'
     , 'pencil'
     , 'pinta'
     , 'pitivi'
