@@ -3,6 +3,8 @@
 set -eu
 set -x
 
+env
+
 sudo apt-get update
 sudo apt-get install -y --force-yes aptirepo-upload make devscripts equivs git-core
 
