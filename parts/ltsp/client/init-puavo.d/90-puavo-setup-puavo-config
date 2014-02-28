@@ -6,18 +6,39 @@
 # unregistered hosts), and puavo-resolve-api-server needs it, so this has
 # to be run after that.
 #
-if [ -n "$SERVER" -a -e /etc/puavo/domain ]; then
+if [ -e /etc/puavo/domain -a -e /etc/puavo/hosttype ]; then
   # set --max-time to 30 seconds to allow the boot to continue in case of
   # failure; so we can check out later (with ssh or some such) what went wrong.
-  if curl --cacert /etc/puavo/certs/rootca.pem \
-          --header "Authorization: Bootserver" \
-          --fail \
-          --max-time 30 \
-          --silent \
-          "$(puavo-resolve-api-server)/v3/devices/$(hostname -s)" \
-       > /etc/puavo/device.json.tmp; then
-    mv /etc/puavo/device.json.tmp /etc/puavo/device.json
-  else
-    rm -f /etc/puavo/device.json.tmp
-  fi
+
+  PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+
+  case "${PUAVO_HOSTTYPE}" in
+    ltspserver)
+      if curl --cacert /etc/puavo/certs/rootca.pem \
+              --header "Authorization: Bootserver" \
+              --fail \
+              --max-time 30 \
+              --silent \
+              "$(puavo-resolve-api-server)/v3/ltsp_servers/$(hostname -s)" \
+           > /etc/puavo/device.json.tmp; then
+        mv /etc/puavo/device.json.tmp /etc/puavo/device.json
+      fi
+      break
+      ;;
+    *)
+      if curl --cacert /etc/puavo/certs/rootca.pem \
+              --header "Authorization: Bootserver" \
+              --fail \
+              --max-time 30 \
+              --silent \
+              "$(puavo-resolve-api-server)/v3/devices/$(hostname -s)" \
+           > /etc/puavo/device.json.tmp; then
+        mv /etc/puavo/device.json.tmp /etc/puavo/device.json
+      fi
+      break
+      ;;
+  esac
 fi
+
+rm -f /etc/puavo/device.json.tmp
+
