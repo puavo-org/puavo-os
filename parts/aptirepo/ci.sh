@@ -14,7 +14,7 @@ sudo puavo-install-deps debian/control
 puavo-dch $(cat VERSION)
 puavo-debuild
 
-dpkg -i ../aptirepo-upload*.deb
-apt-get install -f -y --force-yew
+sudo dpkg -i ../aptirepo-upload*.deb
+sudo apt-get install -f -y --force-yew
 
 aptirepo-upload -r $APTIREPO_REMOTE -b "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)" ../aptirepo*.changes
