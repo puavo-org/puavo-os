@@ -18,3 +18,8 @@ Runtime dependencies
 - GNU sed (>= 4.2.1)
 - scrot (>= 0.8)
 - xautomation (>= 1.07)
+
+
+# login testing with lightdm:
+sudo env DISPLAY=:0 PATH="$(pwd):$PATH" XAUTHORITY=/var/run/lightdm/root/:0 \
+     ./login $username $password

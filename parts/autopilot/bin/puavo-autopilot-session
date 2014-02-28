@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -eu
+
+script_dir=$(dirname $0)
+cd $script_dir
+
+export PATH="${script_dir}:$PATH"
+
+commands() {
+  cat <<'EOF'
+firefox -new-window "http://areena.yle.fi/"
+firefox -new-window "http://www.amazon.com/"
+firefox -new-window "http://www.apple.com/"
+firefox -new-window "http://www.bing.com/"
+firefox -new-window "http://www.facebook.com/"
+firefox -new-window "http://www.google.com/"
+firefox -new-window "http://www.ubuntu.com/"
+firefox -new-window "http://www.youtube.com/"
+firefox -new-window "http://www.youtube.com/watch?v=mahBZ4lSZHQ"
+gnome-session-quit --force --no-prompt --logout
+gnome-session-quit --force --no-prompt --reboot
+libreoffice --base
+libreoffice --calc
+libreoffice --draw
+libreoffice --impress
+pkill -x -U $USER gnome-session
+EOF
+}
+
+random_command() {
+  commands | shuf -n 1
+}
+
+while true; do
+  random_command | sh &
+  sleep $(($RANDOM % 22 + 8))
+done
