@@ -10,20 +10,10 @@ case "${PUAVO_HOSTTYPE}" in
   thinclient)
     # Guest session
     if [ "`echo $USER | grep guest-`" != "" ]; then
-      PUAVO_SESSION=$(curl --cacert /etc/puavo/certs/rootca.pem \
-                           --form "hostname=$(hostname)" \
-                           --header 'Authorization: Bootserver' \
-                           --fail \
-                           --max-time 5 \
-                           --retry 5 \
-                           --retry-delay 1 \
-                           --header "Expect:" \
-                           "$(puavo-resolve-api-server)/v3/sessions")
-
       DEFAULT_IFACE=`ip route|grep default\ via|awk '{print $5}'`
       IPADDR=`ip route|grep "dev $DEFAULT_IFACE"|grep src|awk '{print $9}'`
 
-#      PUAVO_SESSION=$(cat $PUAVO_SESSION_PATH)
+      PUAVO_SESSION=$(cat $PUAVO_SESSION_PATH)
       PUAVO_SESSION_ID=$(echo $PUAVO_SESSION | jq -r .uuid)
       PREFERRED_SERVER=$(echo $PUAVO_SESSION | jq -r .ltsp_server.state.fqdn)
       REMOTE_SESSION="\"gnome-session --session=gnome-fallback\""
