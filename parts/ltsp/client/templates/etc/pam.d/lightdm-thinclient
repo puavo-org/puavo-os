@@ -12,7 +12,6 @@ auth    requisite       pam_deny.so
 auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/make-session-dir
 auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/open-session
 auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/populate-extrausers
-auth    required        pam_exec.so /usr/share/ltsp-lightdm/puavo-ltsp-session
 
 auth    optional        pam_gnome_keyring.so
 
@@ -32,7 +31,6 @@ session	optional	pam_mkhomedir.so
 
 session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/chown-session-dir
 session optional        pam_gnome_keyring.so auto_start
-session required        pam_exec.so /usr/share/ltsp-lightdm/puavo-ltsp-session
 
 #session optional        pam_envfeed.so prog=/usr/sbin/puavo-ltsp-envfeed
 
