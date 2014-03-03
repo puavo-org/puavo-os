@@ -1,38 +1,57 @@
-#!/bin/bash
+#!/usr/bin/ruby1.9.1
 
-set -eu
+ENV['PATH'] = "#{ File.dirname($0) }:#{ ENV['PATH'] }"
 
-script_dir=$(dirname $0)
-cd $script_dir
+def firefox(page)
+  system('firefox', '-new-window', page)
+end
 
-export PATH="${script_dir}:$PATH"
+def move_mouse
+  system('xte', 'mousermove 100 100')
+end
 
-commands() {
-  cat <<'EOF'
-firefox -new-window "http://areena.yle.fi/"
-firefox -new-window "http://www.amazon.com/"
-firefox -new-window "http://www.apple.com/"
-firefox -new-window "http://www.bing.com/"
-firefox -new-window "http://www.facebook.com/"
-firefox -new-window "http://www.google.com/"
-firefox -new-window "http://www.ubuntu.com/"
-firefox -new-window "http://www.youtube.com/"
-firefox -new-window "http://www.youtube.com/watch?v=mahBZ4lSZHQ"
-gnome-session-quit --force --no-prompt --logout
-gnome-session-quit --force --no-prompt --reboot
-libreoffice --base
-libreoffice --calc
-libreoffice --draw
-libreoffice --impress
-pkill -x -U $USER gnome-session
-EOF
-}
+commands = [
+  [ 3,  %q{ firefox('http://areena.yle.fi/')                      }, ],
+  [ 3,  %q{ firefox('http://www.amazon.com/')                     }, ],
+  [ 3,  %q{ firefox('http://www.apple.com/')                      }, ],
+  [ 3,  %q{ firefox('http://www.bing.com/')                       }, ],
+  [ 6,  %q{ firefox('http://www.facebook.com/')                   }, ],
+  [ 3,  %q{ firefox('http://www.google.com/')                     }, ],
+  [ 3,  %q{ firefox('http://www.ubuntu.com/')                     }, ],
+  [ 3,  %q{ firefox('http://www.youtube.com/')                    }, ],
+  [ 1,  %q{ firefox('http://www.youtube.com/watch?v=mahBZ4lSZHQ') }, ],
+  [ 7,  %q{ system('gnome-session-quit', '--force',
+		                         '--no-prompt',
+	                                 '--logout')              }, ], 
+  [ 3,  %q{ system('libreoffice', '--base'   )                    }, ],
+  [ 2,  %q{ system('libreoffice', '--calc'   )                    }, ],
+  [ 2,  %q{ system('libreoffice', '--draw'   )                    }, ],
+  [ 2,  %q{ system('libreoffice', '--impress')                    }, ],
+]
 
-random_command() {
-  commands | shuf -n 1
-}
+commands_with_cumulative_probability = []
+sum = 0
+commands.each do |cmdinfo|
+  commands_with_cumulative_probability << [ sum, cmdinfo[1] ]
+  sum += cmdinfo[0]
+end
 
-while true; do
-  random_command | sh &
-  sleep $(($RANDOM % 22 + 8))
-done
+def get_random_command_string(sum, commands_with_cumulative_probability)
+  random_number = rand() * sum
+  commands_with_cumulative_probability.reverse.each do |cmdinfo|
+    if random_number >= cmdinfo[0]
+      return cmdinfo[1]
+    end
+  end
+
+  raise 'Internal error on get_random_command'
+end
+
+while true do
+  cmd_string = get_random_command_string(sum,
+					 commands_with_cumulative_probability)
+  STDERR.puts "puavo-autopilot-session is going to run #{ cmd_string.strip }"
+  fork { eval(cmd_string) }
+
+  sleep(3 + rand() * 27)
+end
