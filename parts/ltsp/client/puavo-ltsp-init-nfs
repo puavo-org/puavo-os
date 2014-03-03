@@ -1,20 +1,45 @@
 #!/bin/sh
 
-set -e
+# This script must be run from PAM stack during user login.
+#
+# The script mounts user home directory from NFS server. The /home directory
+# is mounted from host homedir.<puavo domain>. The script relies on reverse 
+# DNS query support in kerberos so that the real server name is not needed 
+# for the mount.
+#
+# If /etc/puavo/device.json contains tag "sambahomes", individual user home 
+# mounts are done over CIFS from Samba running on the same server. /home/share
+# is still mounted over NFS separately so that it can be used by all users.
 
-# Load lts.conf variables
-. /usr/share/ltsp/ltsp_config
+set -e
 
 is_nfs_mounted() {
   mntpoint=$1
   mount | awk -v "mntpoint=$mntpoint" '
 	    BEGIN { status = 1 }
-	    $3 == mntpoint && $5 == "nfs4" { status = 0 }
+	    $3 == mntpoint && ( $5 == "nfs4" || $5 == "cifs" ) { status = 0 }
 	    END { exit(status) }
           '
 }
 
-if boolean_is_true "${USE_NFS_HOMES}" ; then
+PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+PUAVO_DOMAIN=$(cat /etc/puavo/domain)
+HOMEDIR_SERVER="homedir.${PUAVO_DOMAIN}"
+
+SAMBAHOMES=$(jq -r '.tags[] | select(. == "sambahomes")' /etc/puavo/device.json)
+
+case "${PUAVO_HOSTTYPE}" in
+  ltspserver|fatclient)
+    MOUNT_OPTIONS=",soft"
+    DO_MOUNT=true
+    ;;
+  fatclient)
+    MOUNT_OPTIONS=",soft"
+    DO_MOUNT=true
+    ;;
+esac
+
+if [ "${DO_MOUNT}" = "true" ]; then
   if [ "${PAM_TYPE}" = "open_session" ]; then
     # rpc.gssd needs a user principal on netboot devices as they do not have
     # machine principals.
@@ -28,40 +53,65 @@ if boolean_is_true "${USE_NFS_HOMES}" ; then
     # SETCLIENTID or EXCHANGE_ID calls are done with GSS authentication. As
     # a temporary fix, first do a sec=sys mount of / without a kerberos
     # principal to force SETCLIENTID to be called with auth=sys.
-    #
-    # /home mount is done with a kerberos principal
-    if ! is_nfs_mounted /home; then
+
+    # First check that the dummy /mntroot mountpoint exists
+
+    if ! is_nfs_mounted "/mntroot"; then
       mkdir -p /mntroot
 
-      # If /etc/krb5.keytab exists, we want to do the /home mount with the
-      # machine credentials
-
+      # If /etc/krb5.keytab exists, we want to do the mounts with the
+      # machine credentials, but /mntroot should be done without any
+      # credentials.
+      #
+      # If no machine credentials exist, copy the user credential cache
+      # to root.
       if [ -e /etc/krb5.keytab ]; then
         mv /etc/krb5.keytab /etc/krb5.keytab.bu
         rm -f /tmp/krb5cc_0
 
-        mount -t nfs4 -o sec=sys ${NFS_SERVER}:/ /mntroot
+        mount -t nfs4 -o sec=sys ${HOMEDIR_SERVER}:/ /mntroot
 
         mv /etc/krb5.keytab.bu /etc/krb5.keytab
-
-        mount -t nfs4 -o sec=krb5,nodev,nosuid,minorversion=0,nolock ${NFS_SERVER}:/home /home
-        umount /mntroot
       else
         rm -f /tmp/krb5cc_0
 
         TMP_KRB5CCNAME=$(echo $KRB5CCNAME | sed -e 's/^FILE://')
 
-        mount -t nfs4 -o sec=sys ${NFS_SERVER}:/ /mntroot
+        mount -t nfs4 -o sec=sys ${HOMEDIR_SERVER}:/ /mntroot
 
         install -o root -g root -m 600 "$TMP_KRB5CCNAME" /tmp/krb5cc_0
-
-        mount -t nfs4 -o sec=krb5,nodev,nosuid,minorversion=0 ${NFS_SERVER}:/home /home
-        umount /mntroot
       fi
     fi
 
-    # Request a remote directory for the user (three second timeout, may fail)
-    { echo "$PAM_USER" | nc -w 3 "$SERVER" 907; } || true
+    # Then do the real mounts
+
+    if [ "${SAMBAHOMES}" = "sambahomes" ]; then
+      HOME=$(getent passwd ${PAM_USER}|awk -F : '{print $6}')
+
+      if ! is_nfs_mounted ${HOME}; then
+        # Request a remote directory for the user (three second timeout, may fail)
+        { echo "$PAM_USER" | nc -w 3 "$SERVER" 907; } || true
+
+        mkdir -p "${HOME}"
+        chown ${PAM_USER}: "${HOME}"
+
+        mount -t cifs -o "rw,cruid=${PAM_USER},user=${PAM_USER},sec=krb5,noperm,nobrl" "//${HOMEDIR_SERVER}/${PAM_USER}" "${HOME}"
+      fi
+
+      if ! is_nfs_mounted /home/share; then
+        mkdir -p "/home/share"
+        chmod 755 /home/share
+
+        mount -t nfs4 -o sec=krb5,nodev,nosuid,minorversion=0${MOUNT_OPTIONS} "${HOMEDIR_SERVER}:/home/share" "/home/share"
+      fi
+    else
+      if ! is_nfs_mounted /home; then
+        # Request a remote directory for the user (three second timeout, may fail)
+        { echo "$PAM_USER" | nc -w 3 "$SERVER" 907; } || true
+
+        mount -t nfs4 -o sec=krb5,nodev,nosuid,minorversion=0${MOUNT_OPTIONS} ${HOMEDIR_SERVER}:/home /home
+      fi
+    fi
   fi
 fi
 
