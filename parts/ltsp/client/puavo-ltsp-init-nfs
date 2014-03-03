@@ -2,16 +2,14 @@
 
 # This script must be run from PAM stack during user login.
 #
-# The script mounts user home directory from NFS server. The directories 
-# are mounted individually for each user from host homedir.<puavo domain>. 
-# The script relies on reverse DNS query support in kerberos so that 
-# the real server name is not needed for the mount.
+# The script mounts user home directory from NFS server. The /home directory
+# is mounted from host homedir.<puavo domain>. The script relies on reverse 
+# DNS query support in kerberos so that the real server name is not needed 
+# for the mount.
 #
-# If /etc/puavo/device.json contains tag "sambahomes", the mount is done 
-# over CIFS from Samba running on the same server.
-#
-# On LTSP servers NFS mounts are done with lock and soft options to mitigate
-# possible NFS problems.
+# If /etc/puavo/device.json contains tag "sambahomes", individual user home 
+# mounts are done over CIFS from Samba running on the same server. /home/share
+# is still mounted over NFS separately so that it can be used by all users.
 
 set -e
 
@@ -32,10 +30,11 @@ SAMBAHOMES=$(jq -r '.tags[] | select(. == "sambahomes")' /etc/puavo/device.json)
 
 case "${PUAVO_HOSTTYPE}" in
   ltspserver|fatclient)
-    MOUNT_OPTIONS=",nolock,soft"
+    MOUNT_OPTIONS=",soft"
     DO_MOUNT=true
     ;;
   fatclient)
+    MOUNT_OPTIONS=",soft"
     DO_MOUNT=true
     ;;
 esac
@@ -54,7 +53,6 @@ if [ "${DO_MOUNT}" = "true" ]; then
     # SETCLIENTID or EXCHANGE_ID calls are done with GSS authentication. As
     # a temporary fix, first do a sec=sys mount of / without a kerberos
     # principal to force SETCLIENTID to be called with auth=sys.
-    HOME=$(getent passwd ${PAM_USER}|awk -F : '{print $6}')
 
     # First check that the dummy /mntroot mountpoint exists
 
@@ -87,25 +85,32 @@ if [ "${DO_MOUNT}" = "true" ]; then
 
     # Then do the real mounts
 
-    if ! is_nfs_mounted ${HOME}; then
-      # Request a remote directory for the user (three second timeout, may fail)
-      { echo "$PAM_USER" | nc -w 3 "$SERVER" 907; } || true
+    if [ "${SAMBAHOMES}" = "sambahomes" ]; then
+      HOME=$(getent passwd ${PAM_USER}|awk -F : '{print $6}')
 
-      mkdir -p "${HOME}"
-      chown ${PAM_USER}: "${HOME}"
+      if ! is_nfs_mounted ${HOME}; then
+        # Request a remote directory for the user (three second timeout, may fail)
+        { echo "$PAM_USER" | nc -w 3 "$SERVER" 907; } || true
 
-      if [ "${SAMBAHOMES}" = "sambahomes" ]; then
+        mkdir -p "${HOME}"
+        chown ${PAM_USER}: "${HOME}"
+
         mount -t cifs -o "rw,cruid=${PAM_USER},user=${PAM_USER},sec=krb5,noperm,nobrl" "//${HOMEDIR_SERVER}/${PAM_USER}" "${HOME}"
-      else
-        mount -t nfs4 -o sec=krb5,nodev,nosuid,minorversion=0${MOUNT_OPTIONS} "${HOMEDIR_SERVER}:${HOME}" "${HOME}"
       fi
-    fi
 
-    if ! is_nfs_mounted /home/share; then
-      mkdir -p "/home/share"
-      chmod 755 /home/share
+      if ! is_nfs_mounted /home/share; then
+        mkdir -p "/home/share"
+        chmod 755 /home/share
 
-      mount -t nfs4 -o sec=krb5,nodev,nosuid,minorversion=0${MOUNT_OPTIONS} "${HOMEDIR_SERVER}:/home/share" "/home/share"
+        mount -t nfs4 -o sec=krb5,nodev,nosuid,minorversion=0${MOUNT_OPTIONS} "${HOMEDIR_SERVER}:/home/share" "/home/share"
+      fi
+    else
+      if ! is_nfs_mounted /home; then
+        # Request a remote directory for the user (three second timeout, may fail)
+        { echo "$PAM_USER" | nc -w 3 "$SERVER" 907; } || true
+
+        mount -t nfs4 -o sec=krb5,nodev,nosuid,minorversion=0${MOUNT_OPTIONS} ${HOMEDIR_SERVER}:/home /home
+      fi
     fi
   fi
 fi
