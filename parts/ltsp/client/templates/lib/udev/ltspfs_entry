@@ -36,7 +36,7 @@ call_ltspfsmounter()
 {
     action="$1"
     MOUNTPOINT=$2
-    for LDM_SOCKET in /var/run/ldm_socket_* /run/puavo/*/socket_*; do
+    for LDM_SOCKET in /var/run/ldm_socket_* /run/puavo/*/socket_* /run/user/*/socket_*; do
         if [ -S ${LDM_SOCKET} ]; then
             SERVER=${LDM_SOCKET##*_}
             SSH_OPTS="-X"
