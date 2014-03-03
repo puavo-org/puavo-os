@@ -1,5 +1,7 @@
 #!/usr/bin/ruby1.9.1
 
+# XXX document what this is and what it does
+
 ENV['PATH'] = "#{ File.dirname($0) }:#{ ENV['PATH'] }"
 
 def firefox(page)
@@ -27,6 +29,7 @@ commands = [
   [ 2,  %q{ system('libreoffice', '--calc'   )                    }, ],
   [ 2,  %q{ system('libreoffice', '--draw'   )                    }, ],
   [ 2,  %q{ system('libreoffice', '--impress')                    }, ],
+  [ 3,  %q{ system('pkill', '-x', '-U', ENV['USER'], 'firefox')   }, ],
 ]
 
 commands_with_cumulative_probability = []
