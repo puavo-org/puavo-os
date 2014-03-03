@@ -28,7 +28,7 @@ PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 PUAVO_DOMAIN=$(cat /etc/puavo/domain)
 HOMEDIR_SERVER="homedir.${PUAVO_DOMAIN}"
 
-SAMBAHOMES=$(jq '.tags[] | select(contains("sambahomes"))' /etc/puavo/device.json)
+SAMBAHOMES=$(jq -r '.tags[] | select(. == "sambahomes")' /etc/puavo/device.json)
 
 case "${PUAVO_HOSTTYPE}" in
   ltspserver|fatclient)
@@ -94,8 +94,8 @@ if [ "${DO_MOUNT}" = "true" ]; then
       mkdir -p "${HOME}"
       chown ${PAM_USER}: "${HOME}"
 
-      if [ "${SAMBAHOMES}" != "" ]; then
-        mount -t cifs -o "rw,cruid=${PAM_USER},user=${PAM_USER},sec=krb5,noperm" "//${HOMEDIR_SERVER}/${PAM_USER}" "${HOME}"
+      if [ "${SAMBAHOMES}" = "sambahomes" ]; then
+        mount -t cifs -o "rw,cruid=${PAM_USER},user=${PAM_USER},sec=krb5,noperm,nobrl" "//${HOMEDIR_SERVER}/${PAM_USER}" "${HOME}"
       else
         mount -t nfs4 -o sec=krb5,nodev,nosuid,minorversion=0${MOUNT_OPTIONS} "${HOMEDIR_SERVER}:${HOME}" "${HOME}"
       fi
