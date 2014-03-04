@@ -4,32 +4,90 @@
 
 ENV['PATH'] = "#{ File.dirname($0) }:#{ ENV['PATH'] }"
 
+def click_mouse
+  system('xte', 'mouseclick 1')
+end
+
 def firefox(page)
   system('firefox', '-new-window', page)
 end
 
-def move_mouse
-  system('xte', 'mousermove 100 100')
+def humppaa
+  system('xte',
+	 'key h',
+	 'key u',
+	 'key m',
+	 'key p',
+	 'key p',
+	 'key a',
+	 'key a',
+	 'key Return')
+end
+
+def kill_current_window
+  system('xte', 'keydown Alt_L', 'key F4', 'keyup Alt_L')
+end
+
+def kill_kill_kill
+  32.times { move_mouse_somewhere(); click_mouse(); kill_current_window() }
+end
+
+def logout
+  system('gnome-session-quit', '--force', '--no-prompt', '--logout')
+end
+
+def move_mouse(x_dist, y_dist)
+  x = (x_dist / 20.0).to_i
+  y = (y_dist / 20.0).to_i
+  r = 0.0
+
+  while r <= 1 do
+    system('xte', "mousermove #{ x } #{ y }")
+    sleep(0.02)
+    r += 0.05
+  end
+end
+
+def move_mouse_somewhere
+  x = (rand() * 800).to_i - 400
+  y = (rand() * 600).to_i - 300
+  move_mouse(x, y)
+end
+
+def press_enter
+  system('xte', 'key Return')
 end
 
 commands = [
-  [ 3,  %q{ firefox('http://areena.yle.fi/')                      }, ],
-  [ 3,  %q{ firefox('http://www.amazon.com/')                     }, ],
-  [ 3,  %q{ firefox('http://www.apple.com/')                      }, ],
-  [ 3,  %q{ firefox('http://www.bing.com/')                       }, ],
-  [ 6,  %q{ firefox('http://www.facebook.com/')                   }, ],
-  [ 3,  %q{ firefox('http://www.google.com/')                     }, ],
+  [ 60, %q{ move_mouse_somewhere()                                }, ],
+  [ 20, %q{ click_mouse()                                         }, ],
+  [ 20, %q{ press_enter()                                         }, ],
+  [ 30, %q{ humppaa()                                             }, ],
+  [ 16, %q{ kill_current_window()                                 }, ],
+  [ 5,  %q{ kill_kill_kill()                                      }, ],
+
+  [ 6,  %q{ firefox('http://areena.yle.fi/')                      }, ],
+  [ 6,  %q{ firefox('http://www.amazon.com/')                     }, ],
+  [ 6,  %q{ firefox('http://www.apple.com/')                      }, ],
+  [ 6,  %q{ firefox('http://www.bing.com/')                       }, ],
+  [ 15, %q{ firefox('http://www.facebook.com/')                   }, ],
+  [ 6,  %q{ firefox('http://www.google.com/')                     }, ],
+  [ 3,  %q{ firefox('http://www.redhat.com/')                     }, ],
   [ 3,  %q{ firefox('http://www.ubuntu.com/')                     }, ],
-  [ 3,  %q{ firefox('http://www.youtube.com/')                    }, ],
-  [ 1,  %q{ firefox('http://www.youtube.com/watch?v=mahBZ4lSZHQ') }, ],
-  [ 7,  %q{ system('gnome-session-quit', '--force',
-		                         '--no-prompt',
-	                                 '--logout')              }, ], 
+  [ 6,  %q{ firefox('http://www.yahoo.com/')                      }, ],
+  [ 9,  %q{ firefox('http://www.youtube.com/')                    }, ],
+  [ 3,  %q{ firefox('http://www.youtube.com/watch?v=mahBZ4lSZHQ') }, ],
+  [ 3,  %q{ firefox('http://www.youtube.com/watch?v=S1Lz8b3w618') }, ],
+
+  [ 3,  %q{ system('gimp')                                        }, ],
+  [ 3,  %q{ system('khangman')                                    }, ],
+
   [ 3,  %q{ system('libreoffice', '--base'   )                    }, ],
   [ 2,  %q{ system('libreoffice', '--calc'   )                    }, ],
   [ 2,  %q{ system('libreoffice', '--draw'   )                    }, ],
   [ 2,  %q{ system('libreoffice', '--impress')                    }, ],
-  [ 3,  %q{ system('pkill', '-x', '-U', ENV['USER'], 'firefox')   }, ],
+
+  [ 6,  %q{ logout()                                              }, ],
 ]
 
 commands_with_cumulative_probability = []
@@ -54,7 +112,8 @@ while true do
   cmd_string = get_random_command_string(sum,
 					 commands_with_cumulative_probability)
   STDERR.puts "puavo-autopilot-session is going to run #{ cmd_string.strip }"
-  fork { eval(cmd_string) }
+  job = fork { eval(cmd_string) }
+  Process.detach(job)
 
-  sleep(3 + rand() * 27)
+  sleep(1  +  9 * rand())
 end

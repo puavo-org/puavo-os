@@ -40,7 +40,7 @@ sleep 1
 
 xte "str ${username}"
 xte 'key Return'
-sleep 2 ## Password widget activates slowly.
+sleep 4 ## Password widget activates slowly.
 
 xte "str ${password}"
 xte 'key Return'
