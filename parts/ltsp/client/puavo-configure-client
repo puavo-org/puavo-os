@@ -116,6 +116,7 @@ case puavo_device_type
   when "fatclient"
     write_config("/etc/nsswitch.conf", "extrausers")
     write_config("/etc/pam.d/lightdm", "fatclient")
+    write_config("/etc/pam.d/lightdm-autologin", "fatclient")
     write_config("/etc/ldap/ldap.conf")
     write_config("/etc/krb5.conf")
     write_config("/etc/idmapd.conf")
