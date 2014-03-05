@@ -2,7 +2,8 @@
   set -e
   sleep 12
   # XXX get user and password from some sane place
-  env PATH="/opt/puavo-autopilot/bin:$PATH" \
-    /opt/puavo-autopilot/bin/login "$(cat /opt/puavo-autopilot/USER)" \
-				   "$(cat /opt/puavo-autopilot/PASSWORD)"
+  env PATH="/usr/lib/puavo-autopilot:$PATH" \
+    puavo-autopilot-lightdm-login \
+      "$(cat /opt/puavo-autopilot/USER)" \
+      "$(cat /opt/puavo-autopilot/PASSWORD)"
 ) &

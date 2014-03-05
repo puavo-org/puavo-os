@@ -16,11 +16,6 @@ Runtime dependencies
 - GNU awk (>= 4.0.1)
 - GNU grep (>= 2.12)
 - GNU sed (>= 4.2.1)
-- ruby1.9.1
+- ruby (>= 1.9)
 - scrot (>= 0.8)
 - xautomation (>= 1.07)
-
-
-# login testing with lightdm:
-sudo env DISPLAY=:0 PATH="$(pwd):$PATH" XAUTHORITY=/var/run/lightdm/root/:0 \
-     ./login $username $password
