@@ -26,10 +26,16 @@ end
 
 def kill_current_window
   system('xte', 'keydown Alt_L', 'key F4', 'keyup Alt_L')
+  press_enter()
 end
 
 def kill_kill_kill
-  32.times { move_mouse_somewhere(); click_mouse(); kill_current_window() }
+  16.times do
+    move_mouse_somewhere()
+    click_mouse()
+    kill_current_window()
+    press_enter()
+  end
 end
 
 def logout
@@ -100,7 +106,7 @@ while true do
 
     [ 3 * (loadavg.to_i + 1), %q{ kill_current_window()             }, ],
     [ 1 * (loadavg.to_i + 1), %q{ kill_kill_kill()                  }, ],
-    [ 2 * (loadavg.to_i + 1), %q{ logout()                          }, ],
+    [ 1 * (loadavg.to_i + 1), %q{ logout()                          }, ],
   ]
 
   commands_with_cumulative_probability = []
