@@ -58,45 +58,6 @@ def press_enter
   system('xte', 'key Return')
 end
 
-commands = [
-  [ 60, %q{ move_mouse_somewhere()                                }, ],
-  [ 20, %q{ click_mouse()                                         }, ],
-  [ 20, %q{ press_enter()                                         }, ],
-  [ 30, %q{ humppaa()                                             }, ],
-  [ 16, %q{ kill_current_window()                                 }, ],
-  [ 5,  %q{ kill_kill_kill()                                      }, ],
-
-  [ 6,  %q{ firefox('http://areena.yle.fi/')                      }, ],
-  [ 6,  %q{ firefox('http://www.amazon.com/')                     }, ],
-  [ 6,  %q{ firefox('http://www.apple.com/')                      }, ],
-  [ 6,  %q{ firefox('http://www.bing.com/')                       }, ],
-  [ 15, %q{ firefox('http://www.facebook.com/')                   }, ],
-  [ 6,  %q{ firefox('http://www.google.com/')                     }, ],
-  [ 3,  %q{ firefox('http://www.redhat.com/')                     }, ],
-  [ 3,  %q{ firefox('http://www.ubuntu.com/')                     }, ],
-  [ 6,  %q{ firefox('http://www.yahoo.com/')                      }, ],
-  [ 9,  %q{ firefox('http://www.youtube.com/')                    }, ],
-  [ 3,  %q{ firefox('http://www.youtube.com/watch?v=mahBZ4lSZHQ') }, ],
-  [ 3,  %q{ firefox('http://www.youtube.com/watch?v=S1Lz8b3w618') }, ],
-
-  [ 3,  %q{ system('gimp')                                        }, ],
-  [ 3,  %q{ system('khangman')                                    }, ],
-
-  [ 3,  %q{ system('libreoffice', '--base'   )                    }, ],
-  [ 2,  %q{ system('libreoffice', '--calc'   )                    }, ],
-  [ 2,  %q{ system('libreoffice', '--draw'   )                    }, ],
-  [ 2,  %q{ system('libreoffice', '--impress')                    }, ],
-
-  [ 6,  %q{ logout()                                              }, ],
-]
-
-commands_with_cumulative_probability = []
-sum = 0
-commands.each do |cmdinfo|
-  commands_with_cumulative_probability << [ sum, cmdinfo[1] ]
-  sum += cmdinfo[0]
-end
-
 def get_random_command_string(sum, commands_with_cumulative_probability)
   random_number = rand() * sum
   commands_with_cumulative_probability.reverse.each do |cmdinfo|
@@ -109,11 +70,54 @@ def get_random_command_string(sum, commands_with_cumulative_probability)
 end
 
 while true do
+  loadavg = IO.read('/proc/loadavg').split(' ').first.to_f
+
+  commands = [
+    [ 60, %q{ move_mouse_somewhere()                                }, ],
+    [ 20, %q{ click_mouse()                                         }, ],
+    [ 20, %q{ press_enter()                                         }, ],
+    [ 30, %q{ humppaa()                                             }, ],
+    [ 6,  %q{ firefox('http://areena.yle.fi/')                      }, ],
+    [ 6,  %q{ firefox('http://www.amazon.com/')                     }, ],
+    [ 6,  %q{ firefox('http://www.apple.com/')                      }, ],
+    [ 6,  %q{ firefox('http://www.bing.com/')                       }, ],
+    [ 15, %q{ firefox('http://www.facebook.com/')                   }, ],
+    [ 6,  %q{ firefox('http://www.google.com/')                     }, ],
+    [ 3,  %q{ firefox('http://www.redhat.com/')                     }, ],
+    [ 3,  %q{ firefox('http://www.ubuntu.com/')                     }, ],
+    [ 6,  %q{ firefox('http://www.yahoo.com/')                      }, ],
+    [ 9,  %q{ firefox('http://www.youtube.com/')                    }, ],
+    [ 3,  %q{ firefox('http://www.youtube.com/watch?v=mahBZ4lSZHQ') }, ],
+    [ 3,  %q{ firefox('http://www.youtube.com/watch?v=S1Lz8b3w618') }, ],
+
+    [ 3,  %q{ system('gimp')                                        }, ],
+    [ 3,  %q{ system('khangman')                                    }, ],
+
+    [ 3,  %q{ system('libreoffice', '--base'   )                    }, ],
+    [ 2,  %q{ system('libreoffice', '--calc'   )                    }, ],
+    [ 2,  %q{ system('libreoffice', '--draw'   )                    }, ],
+    [ 2,  %q{ system('libreoffice', '--impress')                    }, ],
+
+    [ 3 * (loadavg.to_i + 1), %q{ kill_current_window()             }, ],
+    [ 1 * (loadavg.to_i + 1), %q{ kill_kill_kill()                  }, ],
+    [ 2 * (loadavg.to_i + 1), %q{ logout()                          }, ],
+  ]
+
+  commands_with_cumulative_probability = []
+  sum = 0
+  commands.each do |cmdinfo|
+    commands_with_cumulative_probability << [ sum, cmdinfo[1] ]
+    sum += cmdinfo[0]
+  end
+
   cmd_string = get_random_command_string(sum,
 					 commands_with_cumulative_probability)
   STDERR.puts "puavo-autopilot-session is going to run #{ cmd_string.strip }"
+
   job = fork { eval(cmd_string) }
   Process.detach(job)
 
-  sleep(1  +  9 * rand())
+  # sleep a bit before doing more....
+  # also slow down when system load rises (as users would do anyway)
+  sleep(1  +  5 * Math.log(1 + loadavg) * rand())
 end
