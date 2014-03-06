@@ -1,6 +1,11 @@
 #!/usr/bin/ruby1.9.1
 
-# XXX document what this is and what it does
+# puavo-autopilot-session
+#
+# Simulates system use by starting some programs and doing crazy things.
+# Takes no command line arguments, but can (and must) be configured with
+# tags from Puavo (reads tags from /etc/puavo/device.json).
+# See README for more information.
 
 require 'json'
 
