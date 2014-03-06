@@ -71,17 +71,12 @@ def get_autopilot_mode
     return ''
   end
 
-  autopilot_tags = conf['tags'].select { |s| s.match(/^autopilot/) }
-
-  if not autopilot_tag then
-    puts "No autopilot defined in #{ conffile_path }"
-    return ''
-  end
-
   # Mode must match user, so we check out autopilot tags and find the mode
   # for this user.  If the mode is not found nothing gets done.
   # This is also needed so that ordinary users can login to hosts
   # (especially ltspservers) and use the system in a normal way.
+
+  autopilot_tags = conf['tags'].select { |s| s.match(/^autopilot/) }
 
   available_modes = %w(stress)
   mode            = ''
