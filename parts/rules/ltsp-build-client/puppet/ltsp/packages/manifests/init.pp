@@ -438,6 +438,7 @@ class packages {
 
     [ 'ltsp-lightdm'
     , 'opinsys-ca-certificates'
+    , 'puavo-autopilot'
     , 'puavo-client'
     , 'puavo-ltsp-client'
     , 'puavo-ltsp-install'
