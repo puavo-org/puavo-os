@@ -1,9 +1,19 @@
 (
   set -e
-  sleep 12
-  # XXX get user and password from some sane place
-  env PATH="/usr/lib/puavo-autopilot:$PATH" \
-    puavo-autopilot-lightdm-login \
-      "$(cat /opt/puavo-autopilot/USER)" \
-      "$(cat /opt/puavo-autopilot/PASSWORD)"
+
+  # pick one autopilot configuration randomly
+  # (if only one has been defined, that one will of course be picked)
+  autopilot_line=$(jq --raw-output '.tags[]' /etc/puavo/device.json \
+		     | grep ^autopilot \
+		     | shuf \
+		     | head -1)
+
+  user=$(    echo "$autopilot_line" | cut -d : -f 3)
+  password=$(echo "$autopilot_line" | cut -d : -f 4)
+
+  if [ -n "$user" -a -n "$password" ]; then
+    sleep 15
+    env PATH="/usr/lib/puavo-autopilot:$PATH" \
+      puavo-autopilot-lightdm-login "$user" "$password"
+  ]
 ) &
