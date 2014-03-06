@@ -8,7 +8,7 @@ Homepage: https://github.com/opinsys/puavo-autopilot
 
 Package: puavo-autopilot
 Architecture: all
-Depends: ${misc:Depends}, dmsetup, lvm2, udev
+Depends: ${misc:Depends}, ruby1.9.1, scrot, xautomation
 Description: Automatic Puavo Desktop testing tool
  Provides scripts for testing various parts of Puavo desktop.
  .
