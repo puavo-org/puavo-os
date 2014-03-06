@@ -15,5 +15,5 @@
     sleep 15
     env PATH="/usr/lib/puavo-autopilot:$PATH" \
       puavo-autopilot-lightdm-login "$user" "$password"
-  ]
+  fi
 ) &

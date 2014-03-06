@@ -25,7 +25,7 @@ installdirs:
 .PHONY: install
 install: installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d \
-		I99-lightdm-login
+		I99-lightdm-puavo-autopilot-login
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		puavo-autopilot-session.desktop
