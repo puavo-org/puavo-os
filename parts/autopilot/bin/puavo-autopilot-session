@@ -2,7 +2,7 @@
 
 # XXX document what this is and what it does
 
-ENV['PATH'] = "#{ File.dirname($0) }:#{ ENV['PATH'] }"
+# actions
 
 def click_mouse
   system('xte', 'mouseclick 1')
@@ -10,18 +10,6 @@ end
 
 def firefox(page)
   system('firefox', '-new-window', page)
-end
-
-def humppaa
-  system('xte',
-	 'key h',
-	 'key u',
-	 'key m',
-	 'key p',
-	 'key p',
-	 'key a',
-	 'key a',
-	 'key Return')
 end
 
 def kill_current_window
@@ -64,6 +52,14 @@ def press_enter
   system('xte', 'key Return')
 end
 
+def write_line(line)
+  system('xte',
+	 * line.chomp.split('').map { |s| "key #{ s }" },
+	 'key Return')
+end
+
+# other functionality
+
 def get_random_command_string(sum, commands_with_cumulative_probability)
   random_number = rand() * sum
   commands_with_cumulative_probability.reverse.each do |cmdinfo|
@@ -82,7 +78,8 @@ while true do
     [ 60, %q{ move_mouse_somewhere()                                }, ],
     [ 20, %q{ click_mouse()                                         }, ],
     [ 20, %q{ press_enter()                                         }, ],
-    [ 30, %q{ humppaa()                                             }, ],
+    [ 30, %q{ write_line('humppaa')                                 }, ],
+
     [ 6,  %q{ firefox('http://areena.yle.fi/')                      }, ],
     [ 6,  %q{ firefox('http://www.amazon.com/')                     }, ],
     [ 6,  %q{ firefox('http://www.apple.com/')                      }, ],
