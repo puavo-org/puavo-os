@@ -2,6 +2,8 @@
 
 # XXX document what this is and what it does
 
+require 'json'
+
 # actions
 
 def click_mouse
@@ -60,6 +62,39 @@ end
 
 # other functionality
 
+def get_autopilot_mode
+  conffile_path = '/etc/puavo/device.json'
+  conf = JSON.parse( IO.read(conffile_path) )
+
+  if not conf.has_key?('tags') then
+    puts "No tags defined in #{ conffile_path }"
+    return ''
+  end
+
+  autopilot_tags = conf['tags'].select { |s| s.match(/^autopilot/) }
+
+  # pick one autopilot from many if there are many to choose from
+  autopilot_tag = autopilot_tags.shuffle.first
+
+  if not autopilot_tag then
+    puts "No autopilot defined in #{ conffile_path }"
+    return ''
+  end
+
+  autopilot_string, mode, username, password = * autopilot_tag.split(':')
+
+  available_modes = %w(stress)
+
+  if autopilot_string != 'autopilot'                        \
+     || mode.nil?     || (! available_modes.include?(mode)) \
+     || username.nil? || username.empty?                    \
+     || password.nil? || password.empty? then
+    raise "Autopilot tag '#{ autopilot_tag }' is not sensible."
+  end
+
+  mode
+end
+
 def get_random_command_string(sum, commands_with_cumulative_probability)
   random_number = rand() * sum
   commands_with_cumulative_probability.reverse.each do |cmdinfo|
@@ -71,8 +106,15 @@ def get_random_command_string(sum, commands_with_cumulative_probability)
   raise 'Internal error on get_random_command'
 end
 
+mode = get_autopilot_mode()
+
+if mode != 'stress' then
+  exit 0
+end
+
 while true do
-  loadavg = IO.read('/proc/loadavg').split(' ').first.to_f
+  spacechar = ' '
+  loadavg = IO.read('/proc/loadavg').split(spacechar).first.to_f
 
   commands = [
     [ 60, %q{ move_mouse_somewhere()                                }, ],
@@ -115,7 +157,7 @@ while true do
 
   cmd_string = get_random_command_string(sum,
 					 commands_with_cumulative_probability)
-  STDERR.puts "puavo-autopilot-session is going to run #{ cmd_string.strip }"
+  puts "puavo-autopilot-session is going to run #{ cmd_string.strip }"
 
   job = fork { eval(cmd_string) }
   Process.detach(job)
