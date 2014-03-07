@@ -18,3 +18,4 @@ sudo dpkg -i ../aptirepo-upload*.deb
 sudo apt-get install -f -y --force-yes
 
 aptirepo-upload -r $APTIREPO_REMOTE -b "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)" ../aptirepo*.changes
+
