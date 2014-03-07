@@ -65,7 +65,14 @@ if hostname and !hostname.eql?("") and hosttype and hosttype.eql?("thinclient")
   rescue Exception => e
     home = Dir.mktmpdir("#{loginname}-")
 
-    `/usr/sbin/adduser --disabled-password --no-create-home --system --home #{home} --gecos Guest --group --shell /bin/bash #{loginname}`
+    system('/usr/sbin/adduser', '--disabled-password',
+				'--no-create-home',
+				'--system',
+				'--home',  home,
+				'--gecos', 'Guest',
+				'--group',
+				'--shell', '/bin/bash',
+				loginname)
   end
 end
 
