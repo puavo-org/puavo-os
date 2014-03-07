@@ -52,29 +52,28 @@ if [ "${DO_MOUNT}" = "true" ]; then
 
     # First check that the dummy /mntroot mountpoint exists
 
-    if ! is_nfs_mounted "/mntroot"; then
-      mkdir -p /mntroot
+    # If /etc/krb5.keytab exists, we want to do the mounts with the
+    # machine credentials, but /mntroot should be done without any
+    # credentials.
 
-      # If /etc/krb5.keytab exists, we want to do the mounts with the
-      # machine credentials, but /mntroot should be done without any
-      # credentials.
-      #
-      # If no machine credentials exist, copy the user credential cache
-      # to root.
+    if ! is_nfs_mounted "/mntroot"; then
       if [ -e /etc/krb5.keytab ]; then
         mv /etc/krb5.keytab /etc/krb5.keytab.bu
-        rm -f /tmp/krb5cc_0
+      fi
+      rm -f /tmp/krb5cc_0
 
-        mount -t nfs4 -o sec=sys ${HOMEDIR_SERVER}:/ /mntroot
+      mkdir -p /mntroot
+      mount -t nfs4 -o sec=sys ${HOMEDIR_SERVER}:/ /mntroot
+    fi
 
-        mv /etc/krb5.keytab.bu /etc/krb5.keytab
-      else
-        rm -f /tmp/krb5cc_0
-
+    if [ -e /etc/krb5.keytab.bu ]; then
+      # Use machine credential now if it exists.
+      ln -f /etc/krb5.keytab.bu /etc/krb5.keytab
+    else
+      # If no machine credentials exist, copy the user credential cache to
+      # root.
+      if [ ! -e /tmp/krb5cc_0 ]; then
         TMP_KRB5CCNAME=$(echo $KRB5CCNAME | sed -e 's/^FILE://')
-
-        mount -t nfs4 -o sec=sys ${HOMEDIR_SERVER}:/ /mntroot
-
         install -o root -g root -m 600 "$TMP_KRB5CCNAME" /tmp/krb5cc_0
       fi
     fi
