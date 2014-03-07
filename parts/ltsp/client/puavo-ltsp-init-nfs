@@ -13,7 +13,7 @@
 
 set -e
 
-is_nfs_mounted() {
+is_mounted() {
   mntpoint=$1
   mount | awk -v "mntpoint=$mntpoint" '
 	    BEGIN { status = 1 }
@@ -56,7 +56,7 @@ if [ "${DO_MOUNT}" = "true" ]; then
     # machine credentials, but /mntroot should be done without any
     # credentials.
 
-    if ! is_nfs_mounted "/mntroot"; then
+    if ! is_mounted "/mntroot"; then
       if [ -e /etc/krb5.keytab ]; then
         mv /etc/krb5.keytab /etc/krb5.keytab.bu
       fi
@@ -83,7 +83,7 @@ if [ "${DO_MOUNT}" = "true" ]; then
     if [ "${SAMBAHOMES}" = "sambahomes" ]; then
       HOME=$(getent passwd ${PAM_USER}|awk -F : '{print $6}')
 
-      if ! is_nfs_mounted ${HOME}; then
+      if ! is_mounted ${HOME}; then
         # Request a remote directory for the user (three second timeout, may fail)
         { echo "$PAM_USER" | nc -w 3 "$SERVER" 907; } || true
 
@@ -93,14 +93,14 @@ if [ "${DO_MOUNT}" = "true" ]; then
         mount -t cifs -o "rw,cruid=${PAM_USER},user=${PAM_USER},sec=krb5,noperm,nobrl" "//${HOMEDIR_SERVER}/${PAM_USER}" "${HOME}"
       fi
 
-      if ! is_nfs_mounted /home/share; then
+      if ! is_mounted /home/share; then
         mkdir -p "/home/share"
         chmod 755 /home/share
 
         mount -t nfs4 -o sec=krb5,nodev,nosuid,minorversion=0${MOUNT_OPTIONS} "${HOMEDIR_SERVER}:/home/share" "/home/share"
       fi
     else
-      if ! is_nfs_mounted /home; then
+      if ! is_mounted /home; then
         # Request a remote directory for the user (three second timeout, may fail)
         { echo "$PAM_USER" | nc -w 3 "$SERVER" 907; } || true
 
