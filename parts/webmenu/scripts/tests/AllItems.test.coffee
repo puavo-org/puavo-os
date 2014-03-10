@@ -48,11 +48,6 @@ describe "AllItems Collection", ->
         favorites = allItems.favorites().map (m) -> m.get("name")
         expect(favorites).to.deep.eq ["Flickr", "Shotwell", "Gimp"]
 
-    it "can limit the list of favorites", ->
-        expect(allItems.favorites(1).length).to.eq 1
-        expect(allItems.favorites(2).length).to.eq 2
-        expect(allItems.favorites(10).length).to.eq 3
-
 
     describe "searchFilter()", ->
         itemData = [

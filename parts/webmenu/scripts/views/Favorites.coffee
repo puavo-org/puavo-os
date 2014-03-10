@@ -24,8 +24,14 @@ class Favorites extends ViewMaster
             , Application.animationDuration
 
     setList: ->
-        views = @collection.favorites(@config.get "maxFavorites").map (model) =>
+        views = @collection.favorites().filter((m) =>
+
+            return true if not m.get("inactiveByDeviceType")
+            return m.get("inactiveByDeviceType") isnt @config.get("hostType")
+
+        ).slice(0, @config.get("maxFavorites")).map (model) =>
             new MenuItemView model: model
+
         @setView ".app-list-container", views
 
 
