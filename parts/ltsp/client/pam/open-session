@@ -25,14 +25,14 @@ fi
 if [ $1 = "guest" ]; then
   PUAVO_SESSION=$(
       curl --cacert /etc/puavo/certs/rootca.pem \
-           --form "hostname=$(hostname)" \
+           --form "hostname=${PUAVO_HOSTNAME}" \
            --header 'Authorization: Bootserver' \
            --fail \
            --max-time 5 \
            --retry 5 \
            --retry-delay 1 \
            --header "Expect:" \
-           "$(puavo-resolve-api-server)/v3/sessions" 2>/dev/null)
+           "${API_SERVER}/v3/sessions" 2>/dev/null)
 
 
 else
