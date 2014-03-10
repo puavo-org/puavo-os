@@ -75,9 +75,3 @@ if hostname and !hostname.eql?("") and hosttype and hosttype.eql?("thinclient")
 				loginname)
   end
 end
-
-user = Etc.getpwnam(loginname)
-
-FileUtils.rm_rf home
-Dir.mkdir(home, 0700)
-FileUtils.chown(user.uid, user.gid, home)
