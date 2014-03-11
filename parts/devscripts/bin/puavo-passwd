@@ -1,4 +1,11 @@
 #!/usr/bin/ruby
+#
+# puavo-passwd change user (owner) password to the all organisations
+#
+# * LDAP-server read from the /etc/puavo/ldap/master file
+# * You must be know password for uid=puavo,o=puavo user
+# * You must be know your own password
+#
 
 require "ldap"
 require "puavo/etc"
