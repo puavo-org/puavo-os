@@ -499,6 +499,9 @@ class packages {
     , 'liitu-themes' ]:
       tag => [ 'themes', 'opinsys', ];
 
+    'ubuntu-mono':
+      tag => [ 'themes', 'thinclient', 'ubuntu', ];
+
     [ 'breathe-icon-theme'
     , 'gnome-icon-theme'
     , 'gnome-themes-ubuntu'
@@ -510,7 +513,6 @@ class packages {
     , 'pidgin-themes'
     , 'tangerine-icon-theme'
     , 'screensaver-default-images'
-    , 'ubuntu-mono'
     , 'ubuntu-wallpapers'
     , 'ubuntu-wallpapers-extra'
     , 'xscreensaver-data'
