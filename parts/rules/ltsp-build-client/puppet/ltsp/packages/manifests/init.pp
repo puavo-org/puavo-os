@@ -433,7 +433,6 @@ class packages {
       tag => [ 'puavo', 'puavo-wlan', 'opinsys' ];
 
     [ 'puavo-load-reporter'
-    , 'puavo-monitor'
     , 'puavo-sharedir-client' ]:
       tag => [ 'puavo', 'opinsys', ];
 
@@ -443,6 +442,7 @@ class packages {
     , 'puavo-client'
     , 'puavo-ltsp-client'
     , 'puavo-ltsp-install'
+    , 'puavo-monitor'
     , 'puavo-vpn-client' ]:
       tag => [ 'puavo', 'opinsys', 'thinclient', ];
 
