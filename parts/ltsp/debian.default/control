@@ -30,7 +30,7 @@ Depends: ${misc:Depends}, lightdm, lightdm-gtk-greeter,
  libsasl2-modules-gssapi-mit, libsasl2-modules-ldap, krb5-user, libpam-krb5,
  ruby1.9.3, ruby-ldap, ruby-dnsruby, sssd, dnsutils, libnss-extrausers,
  ltspfsd, rdate, puavo-vpn-client, libpam-envfeed, ruby-uuidtools,
- ruby-trollop, ntp
+ ruby-trollop, ntp, imagemagick
 Description: Bits and pieces needed inside the LTSP chroot image.
 
 Package: puavo-ltsp-install
