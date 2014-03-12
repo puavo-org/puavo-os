@@ -24,6 +24,7 @@ help(){
     --log           Enable fluentd logging
     --feedback      Enable feedback. Implies --log
     -s --stop       Stop the running Webmenu process
+    -n --no-build   Skip asset building in development mode
 
     Hacking options
 
@@ -35,15 +36,8 @@ help(){
 export WM_ENV=production
 
 
-# Webmenu installation path
-if [ -f package.json ]; then
-    WM_PATH=$(pwd)
-    echo "Development environment detected. Compiling i18n and CoffeeScript for node.js"
-    make assets
-else
-    WM_PATH="/opt/webmenu"
-fi
 
+build_in_dev=true
 
 # https://github.com/visionmedia/mon
 mon_args=""
@@ -80,6 +74,14 @@ while true; do
             use_mon=false
             shift
         ;;
+        -n|--no-build)
+            build_in_dev=false
+            shift
+        ;;
+        --no-mon)
+            use_mon=false
+            shift
+        ;;
         -s|--stop)
             set -x
             kill $(cat $mon_pidfile)
@@ -96,6 +98,18 @@ while true; do
 done
 
 set -eu
+
+# Webmenu installation path
+if [ -f package.json ]; then
+    WM_PATH=$(pwd)
+    echo "Development environment detected."
+    if $build_in_dev; then
+        echo "Compiling i18n and CoffeeScript for node.js"
+        make assets
+    fi
+else
+    WM_PATH="/opt/webmenu"
+fi
 
 cd $WM_PATH
 
