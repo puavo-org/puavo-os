@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -e
+
+REMOTE_HOST=$(echo $PAM_RHOST | awk --field-separator=. '{print $1}')
+HOME=$(getent passwd "guest-${REMOTE_HOST}"|awk --field-separator=: '{print $6}')
+
+if [ "guest-${REMOTE_HOST}" = "${PAM_USER}" ]; then
+  if [ "$(echo $HOME | grep ^/tmp/guest)" != "" ]; then
+    logger -t ltspserver-guest-login "Deleting guest user home directory ${HOME}"
+
+    rm -rf "${HOME}"
+    find /tmp -mindepth 1 -maxdepth 1 -user "$PAM_USER" -print0 \
+      | xargs -0 rm -rf || true
+
+    mkdir -m 0700 -p "${HOME}"
+    chown -R "${PAM_USER}:${PAM_USER}" "${HOME}"
+
+    exit 0
+  fi
+fi
+
+exit 2

@@ -16,6 +16,21 @@ def read_file(file)
   return ""
 end
 
+def add_line(file, line)
+  contents = ""
+
+  if File.exists?(file)
+    contents = File.read(file).chomp
+  end
+
+  contents << "\n"
+  contents << line
+
+  File.open(file, "w") do |f|
+    f.write(contents)
+  end
+end
+
 puavo_device_type = ARGV[0]
 
 if (!puavo_device_type)
@@ -80,6 +95,7 @@ case puavo_device_type
   when "thinclient"
     write_config("/etc/nsswitch.conf", "extrausers")
     write_config("/etc/pam.d/lightdm", "thinclient")
+    write_config("/etc/pam.d/lightdm-autologin", "thinclient")
     write_config("/etc/ldap/ldap.conf")
     write_config("/etc/krb5.conf")
     write_config("/etc/idmapd.conf")
@@ -89,9 +105,18 @@ case puavo_device_type
 
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
+
+    # Temporary hack until ltsp-lightdm is not used anymore
+    `cp /usr/lib/puavo-ltsp-client/puavo-thin-guest-account /usr/sbin/guest-account`
+    `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
+
+    # Temporary hack to get ltspfs working with thin guest sessions
+    write_config("/lib/udev/ltspfs_entry")
+    File.chmod(0755, "/lib/udev/ltspfs_entry")
   when "fatclient"
     write_config("/etc/nsswitch.conf", "extrausers")
     write_config("/etc/pam.d/lightdm", "fatclient")
+    write_config("/etc/pam.d/lightdm-autologin", "fatclient")
     write_config("/etc/ldap/ldap.conf")
     write_config("/etc/krb5.conf")
     write_config("/etc/idmapd.conf")
@@ -101,13 +126,16 @@ case puavo_device_type
     write_config("/etc/security/group.conf")
 
     # FIXME: Hack to get gnome fallback session
-    `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
+#    `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
+    `cp /usr/lib/puavo-ltsp-client/puavo-thin-guest-account /usr/sbin/guest-account`
+    `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
 
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "ltspserver"
     write_config("/etc/hosts", "ltspserver")
     write_config("/etc/nsswitch.conf", "sss")
+    write_config("/etc/pam.d/ltspguestsshd")
     write_config("/etc/pam.d/ltspsshd")
     write_config("/etc/ldap/ldap.conf")
     write_config("/etc/krb5.conf")
@@ -127,6 +155,8 @@ case puavo_device_type
 
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
+
+    add_line("/etc/inetd.conf", "908  stream  tcp     nowait  root    /usr/sbin/tcpd  /usr/lib/puavo-ltsp-client/puavo-ltspserver-create-guest")
   when "laptop"
     write_config("/etc/cups/cupsd.conf")
     write_config("/etc/nsswitch.conf", "sss-extrausers")

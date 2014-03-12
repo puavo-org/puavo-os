@@ -15,40 +15,55 @@ CACHE_FILE="${CACHE_DIR}/puavo_session.json"
 PUAVO_HOSTNAME=$(cat /etc/puavo/hostname)
 API_SERVER=$(puavo-resolve-api-server)
 
-if [ "x${KRB5CCNAME}" = "x" ]; then
-  export KRB5CCNAME="${PAM_KRB5CCNAME}"
-fi
-
-if [ "x${API_SERVER}" != "x" ]; then
-    PUAVO_SESSION=$(
-        curl --cacert /etc/puavo/certs/rootca.pem \
-            --negotiate \
-            --delegation always \
-            --user : \
-            --form "hostname=${PUAVO_HOSTNAME}" \
-            --fail \
-            --max-time 60 \
-            --retry 5 \
-            --retry-delay 1 \
-	    --header "Expect:" \
-            "${API_SERVER}/v3/sessions" 2>/dev/null)
-
-  if [ "x${PUAVO_SESSION}" = "x" ]; then
-    echo "No session information received from ${API_SERVER}" \
-        | logger -t puavo-open-session -p auth.error
-
-    exit 99
-  fi
-
-  echo "Received puavo session: ${PUAVO_SESSION}" \
-      | logger -t puavo-open-session -p auth.info
-
-  echo "${PUAVO_SESSION}" >"${CACHE_FILE}"
-
-  exit 0
-else
+if [ "x${API_SERVER}" = "x" ]; then
   echo "could not determine the Puavo API server from dns" \
       | logger -t puavo-open-session -p auth.error
 
   exit 98
 fi
+
+if [ $1 = "guest" ]; then
+  PUAVO_SESSION=$(
+      curl --cacert /etc/puavo/certs/rootca.pem \
+           --form "hostname=${PUAVO_HOSTNAME}" \
+           --header 'Authorization: Bootserver' \
+           --fail \
+           --max-time 5 \
+           --retry 5 \
+           --retry-delay 1 \
+           --header "Expect:" \
+           "${API_SERVER}/v3/sessions" 2>/dev/null)
+
+
+else
+  if [ "x${KRB5CCNAME}" = "x" ]; then
+    export KRB5CCNAME="${PAM_KRB5CCNAME}"
+  fi
+
+  PUAVO_SESSION=$(
+      curl --cacert /etc/puavo/certs/rootca.pem \
+           --negotiate \
+           --delegation always \
+           --user : \
+           --form "hostname=${PUAVO_HOSTNAME}" \
+           --fail \
+           --max-time 60 \
+           --retry 5 \
+           --retry-delay 1 \
+           --header "Expect:" \
+           "${API_SERVER}/v3/sessions" 2>/dev/null)
+fi
+
+if [ "x${PUAVO_SESSION}" = "x" ]; then
+  echo "No session information received from ${API_SERVER}" \
+      | logger -t puavo-open-session -p auth.error
+
+  exit 99
+fi
+
+echo "Received puavo session: ${PUAVO_SESSION}" \
+    | logger -t puavo-open-session -p auth.info
+
+echo "${PUAVO_SESSION}" >"${CACHE_FILE}"
+
+exit 0

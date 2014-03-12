@@ -1,37 +1,63 @@
+# Do locale settings for this session. The language is picked from the
+# first defined place in order: user language in session, session wide
+# language (puavo-rest defines this as device language if user language
+# is not set) and device language.
+#
+# Device language from device.json should be used only on laptop guest
+# sessions when recent puavo-rest is used.
+
 DCONF_PROFILE=user-fi
 LANG=fi_FI.UTF-8
 LANGUAGE=fi
 
+DEVICE_LANGUAGE=$(jq -r .preferred_language /etc/puavo/device.json)
+
 if [ -f "${PUAVO_SESSION_PATH}" ]; then
-  PUAVO_SESSION=$(cat "${PUAVO_SESSION_PATH}")
-
-  LANGUAGE=$(echo ${PUAVO_SESSION} | jq --raw-output .user.preferred_language)
-  DCONF_PROFILE=user-${LANGUAGE}
-
-  case $LANGUAGE in
-    de)
-      LANG=de_DE.UTF-8
-      ;;
-    en)
-      LANG=en_GB.UTF-8
-      ;;
-    fi)
-      LANG=fi_FI.UTF-8
-      ;;
-    ru)
-      LANG=ru_RU.UTF-8
-      ;;
-    sv)
-      LANG=sv_FI.UTF-8
-      ;;
-     *)
-      echo "unknown langauge '${LANGUAGE}', falling back to 'fi'" >&2
-      DCONF_PROFILE=user-fi
-      LANG=fi_FI.UTF-8
-      LANGUAGE=fi
-      ;;
-  esac
+  SESSION_LANGUAGE=$(jq -r .preferred_language "${PUAVO_SESSION_PATH}")
+  USER_LANGUAGE=$(jq -r .user.preferred_language "${PUAVO_SESSION_PATH}")
 fi
+
+[ "${DEVICE_LANGUAGE}" = "null" ] && DEVICE_LANGUAGE=
+[ "${SESSION_LANGUAGE}" = "null" ] && SESSION_LANGUAGE=
+[ "${USER_LANGUAGE}" = "null" ] && USER_LANGUAGE=
+
+if [ "${USER_LANGUAGE}" != "" ]; then
+  LANGUAGE="${USER_LANGUAGE}"
+else
+  if [ "${SESSION_LANGUAGE}" != "" ]; then
+    LANGUAGE="${SESSION_LANGUAGE}"
+  else
+    if [ "${DEVICE_LANGUAGE}" != "" ]; then
+      LANGUAGE="${DEVICE_LANGUAGE}"
+    fi
+  fi
+fi
+
+DCONF_PROFILE=user-${LANGUAGE}
+
+case $LANGUAGE in
+  de)
+    LANG=de_DE.UTF-8
+    ;;
+  en)
+    LANG=en_GB.UTF-8
+    ;;
+  fi)
+    LANG=fi_FI.UTF-8
+    ;;
+  ru)
+    LANG=ru_RU.UTF-8
+    ;;
+  sv)
+    LANG=sv_FI.UTF-8
+    ;;
+   *)
+    echo "unknown langauge '${LANGUAGE}', falling back to 'fi'" >&2
+    DCONF_PROFILE=user-fi
+    LANG=fi_FI.UTF-8
+    LANGUAGE=fi
+    ;;
+esac
 
 export DCONF_PROFILE
 export LANG
