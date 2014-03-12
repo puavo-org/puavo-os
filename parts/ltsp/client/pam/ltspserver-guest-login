@@ -10,12 +10,11 @@ if [ "guest-${REMOTE_HOST}" = "${PAM_USER}" ]; then
     logger -t ltspserver-guest-login "Deleting guest user home directory ${HOME}"
 
     rm -rf "${HOME}"
-    mkdir -m 0700 -p "${HOME}"
-
-    chown -R "${PAM_USER}:${PAM_USER}" "${HOME}"
-
     find /tmp -mindepth 1 -maxdepth 1 -user "$PAM_USER" -print0 \
       | xargs -0 rm -rf || true
+
+    mkdir -m 0700 -p "${HOME}"
+    chown -R "${PAM_USER}:${PAM_USER}" "${HOME}"
 
     exit 0
   fi
