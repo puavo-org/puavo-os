@@ -16,21 +16,6 @@ def read_file(file)
   return ""
 end
 
-def add_line(file, line)
-  contents = ""
-
-  if File.exists?(file)
-    contents = File.read(file).chomp
-  end
-
-  contents << "\n"
-  contents << line
-
-  File.open(file, "w") do |f|
-    f.write(contents)
-  end
-end
-
 puavo_device_type = ARGV[0]
 
 if (!puavo_device_type)
@@ -156,7 +141,9 @@ case puavo_device_type
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
 
-    add_line("/etc/inetd.conf", "908  stream  tcp     nowait  root    /usr/sbin/tcpd  /usr/lib/puavo-ltsp-client/puavo-ltspserver-create-guest")
+    File.open('/etc/inetd.conf', 'a') do |f|
+      f.write("908  stream  tcp     nowait  root    /usr/sbin/tcpd  /usr/lib/puavo-ltsp-client/puavo-ltspserver-create-guest\n")
+    end
   when "laptop"
     write_config("/etc/cups/cupsd.conf")
     write_config("/etc/nsswitch.conf", "sss-extrausers")
