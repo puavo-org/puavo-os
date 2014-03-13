@@ -15,7 +15,7 @@ schoolunc="://homedir.${puavo_domain}/share"
 uid=$(id -u "${PAM_USER}")
 gid=$(id -g "${PAM_USER}")
 
-mountopts="-fstype=cifs,rw,cruid=${PAM_USER},user=${PAM_USER},uid=${uid},forceuid,gid=${gid},forcegid,sec=krb5"
+mountopts="-fstype=cifs,rw,cruid=${PAM_USER},user=${PAM_USER},uid=${uid},forceuid,gid=${gid},forcegid,sec=krb5,nobrl"
 
 mkdir -p /var/lib/puavo-sharedir-client
 
