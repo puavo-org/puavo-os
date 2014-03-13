@@ -101,7 +101,8 @@ install: install-dirs
 		extra/webmenu-spawn-logout.desktop
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		bin/webmenu \
-		bin/webmenu-spawn
+		bin/webmenu-spawn \
+		bin/webmenu-env
 
 uninstall:
 	rm $(DESTDIR)$(bindir)/webmenu-spawn
@@ -115,10 +116,10 @@ test-nw:
 	bin/webmenu-dev --test
 
 test-nw-hidden: assets
-	WM_ENV=development $(NW) . --test --exit
+	$(NW) . --test --exit
 
 test:
-	WM_ENV=development $(NW) . --test --exit
+	$(NW) . --test --exit
 
 test-node:
 	node_modules/.bin/mocha --reporter spec --compilers coffee:coffee-script tests/*test*

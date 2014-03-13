@@ -22,12 +22,12 @@ optimist = require "optimist"
 _ = require "underscore"
 
 
-createSpawnPipe = (pipePath, cb) ->
+createSpawnPipe = (socketPath, cb) ->
 
     events = new EventEmitter
 
     try
-        fs.unlinkSync(pipePath)
+        fs.unlinkSync(socketPath)
     catch err
         if err.code isnt "ENOENT"
             throw err
@@ -49,7 +49,8 @@ createSpawnPipe = (pipePath, cb) ->
             buffer += data.toString()
             emitSpawn() if buffer.indexOf("\n") isnt -1
 
-    server.listen(pipePath, cb)
+    console.log "Writing Webmenu spawn socket to #{ socketPath }"
+    server.listen(socketPath, cb)
 
     return events
 

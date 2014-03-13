@@ -1,24 +1,30 @@
 #!/bin/sh
 
-DEFAULT_SPAWNMENU=~/.config/webmenu/spawnmenu
-SPAWNMENU=$DEFAULT_SPAWNMENU-$(hostname)-$(echo $DISPLAY | sed -r s/[.][0-9]*$//)
-
-ARGS=$@
-STATUS=0
-
-spawn(){
-  echo $ARGS | nc -U $1
-  STATUS=$?
-}
-
-spawn $SPAWNMENU
-
-# Retry with default pipe path. Used when starting webmenu with "nw ."
-if [ "$STATUS" != "0"  ]; then
-  spawn $DEFAULT_SPAWNMENU
+# detect development mode
+if [ -f package.json ]; then
+    export PATH="$(pwd)/bin:$PATH"
 fi
 
-if [ "$STATUS" != "0"  ]; then
+. webmenu-env
+
+default_spawn_sock=~/.config/webmenu/spawn.sock
+
+args="$@"
+status=0
+
+spawn(){
+    echo "$args" | nc -U $1
+    status=$?
+}
+
+spawn $WM_SOCK
+
+# Retry with default pipe path. Used when starting webmenu with "nw ."
+if [ "$status" != "0"  ]; then
+    spawn $default_spawn_sock
+fi
+
+if [ "$status" != "0"  ]; then
     echo "fail"
     notify-send --urgency=critical "Failed to spawn Webmenu" "Not running?"
 fi

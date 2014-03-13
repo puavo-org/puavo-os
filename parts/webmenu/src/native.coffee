@@ -8,6 +8,7 @@ mkdirp = require "mkdirp"
 fs = require "fs"
 _ = require "underscore"
 Q = require "q"
+path = require "path"
 Handlebars = require "handlebars"
 {EventEmitter} = require "events"
 
@@ -18,13 +19,15 @@ requirefallback = require "./requirefallback"
 logStartTime = require "./logStartTime"
 dbusRegister = require "./dbusRegister"
 forceFocus = require "./forceFocus"
-createSpawnPipe = require "./createSpawnPipe"
+createSpawnSocket = require "./createSpawnSocket"
 logger = require "./fluent-logger"
 pkg = require "../package.json"
 
 webmenuHome = process.env.HOME + "/.config/webmenu"
-spawnMenu = process.env.SPAWNMENU
-spawnPipePath = webmenuHome + "/spawnmenu" + if spawnMenu then "-#{spawnMenu}" else ""
+
+spawnSocket = path.join(webmenuHome, "spawn.sock")
+spawnSocket = process.env.WM_SOCK if process.env.WM_SOCK
+
 mkdirp.sync(webmenuHome)
 
 process.on 'uncaughtException', (err) ->
@@ -41,7 +44,7 @@ process.on 'uncaughtException', (err) ->
 
     process.exit 1
 
-spawnEmitter = createSpawnPipe spawnPipePath, (err) ->
+spawnEmitter = createSpawnSocket spawnSocket, (err) ->
     throw err if err
     dbusRegister().then (msg) ->
         logStartTime("dbus registration: #{ msg }")
@@ -81,7 +84,6 @@ config = _.extend({},
 
 
 config.hostType = require "./hosttype"
-config.production = process.env.WM_ENV isnt "production"
 config.feedback = logger.active and process.env.WM_FEEDBACK_ACTIVE
 
 try

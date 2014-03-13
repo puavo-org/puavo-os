@@ -5,11 +5,6 @@
     <title>Webmenu</title>
     <script>
       (function() {
-        if (!process.env.WM_ENV) {
-          console.error("No WM_ENV set!");
-          console.error("Use bin/webmenu or bin/webmenu-dev");
-          process.exit(1);
-        }
         var gui = require('nw.gui');
         var Window = gui.Window.get();
 

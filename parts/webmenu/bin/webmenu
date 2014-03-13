@@ -1,16 +1,6 @@
 #!/bin/sh
 
-export WM_HOME=$HOME/.config/webmenu
-
-# Spawn menu pipe path. Create unique for each X instance
-export SPAWNMENU=$(hostname)-$(echo $DISPLAY | sed -r s/[.][0-9]*$//)
-
-
-
-
-# Log file for the current Webmenu instance
-export WM_LOG_FILE="$WM_HOME/current.log"
-
+set -eu
 
 help(){
     echo "
@@ -19,7 +9,6 @@ help(){
     Start Webmenu
 
     --daemonize     Daemonize the process. Cannot be used with --no-mon
-                    Output will be written to $WM_LOG_FILE
     --no-mon        Disable automatic restarting with mon
     --log           Enable fluentd logging
     --feedback      Enable feedback. Implies --log
@@ -33,11 +22,18 @@ help(){
     "
 }
 
-export WM_ENV=production
+# Webmenu installation path
+if [ -f package.json ]; then
+    export PATH="$(pwd)/bin:$PATH"
+    WM_PATH=$(pwd)
+    build_assets=true
+    echo "Development environment detected."
+else
+    build_assets=false
+    WM_PATH="/opt/webmenu"
+fi
 
-
-
-build_in_dev=true
+. webmenu-env
 
 # https://github.com/visionmedia/mon
 mon_args=""
@@ -48,7 +44,7 @@ wm_args=""
 use_mon=true
 
 while true; do
-    case "$1" in
+    case "${1:-}" in
         -h|--help)
             help && exit 0
         ;;
@@ -75,7 +71,7 @@ while true; do
             shift
         ;;
         -n|--no-build)
-            build_in_dev=false
+            build_assets=false
             shift
         ;;
         --no-mon)
@@ -97,18 +93,10 @@ while true; do
     esac
 done
 
-set -eu
 
-# Webmenu installation path
-if [ -f package.json ]; then
-    WM_PATH=$(pwd)
-    echo "Development environment detected."
-    if $build_in_dev; then
-        echo "Compiling i18n and CoffeeScript for node.js"
-        make assets
-    fi
-else
-    WM_PATH="/opt/webmenu"
+if $build_assets; then
+    echo "Compiling i18n and CoffeeScript for node.js"
+    make assets
 fi
 
 cd $WM_PATH
