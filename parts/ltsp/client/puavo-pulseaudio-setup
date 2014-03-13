@@ -84,16 +84,18 @@ fi
 
 if [ -n "${sink}" ]; then
     if grep -q '|' <<<"${sink}"; then
-        IFS='|' read card profile sink <<<"${sink}"
+        IFS='|' read card profile sink sink_volume <<<"${sink}"
         pacmd set-card-profile "${card}" "${profile}"
+        [ -n "${sink_volume}" ] && pactl set-sink-volume "${source}" "${sink_volume}"
     fi
     pacmd set-default-sink "${sink}"
 fi
 
 if [ -n "${source}" ]; then
     if grep -q '|' <<<"${source}"; then
-        IFS='|' read card profile source <<<"${source}"
+        IFS='|' read card profile source source_volume <<<"${source}"
         pacmd set-card-profile "${card}" "${profile}"
+        [ -n "${source_volume}" ] && pactl set-source-volume "${source}" "${source_volume}"
     fi
     pacmd set-default-source "${source}"
 fi
