@@ -82,22 +82,26 @@ if [ "${DO_MOUNT}" = "true" ]; then
 
     if [ "${SAMBAHOMES}" = "sambahomes" ]; then
       HOME=$(getent passwd ${PAM_USER}|awk -F : '{print $6}')
+      USER_UID=$(id -u "${PAM_USER}")
+      USER_GID=$(id -g "${PAM_USER}")
 
-      if ! is_mounted ${HOME}; then
+      MOUNTOPTS="rw,cruid=${PAM_USER},user=${PAM_USER},uid=${USER_UID},forceuid,gid=${USER_GID},forcegid,sec=krb5,nobrl"
+
+      if ! is_mounted "${HOME}"; then
         # Request a remote directory for the user (three second timeout, may fail)
         { echo "$PAM_USER" | nc -w 3 "$SERVER" 907; } || true
 
         mkdir -m 700 -p "${HOME}"
-        chown ${PAM_USER}: "${HOME}"
+        chown "${PAM_USER}:" "${HOME}"
 
-        mount -t cifs -o "rw,cruid=${PAM_USER},user=${PAM_USER},sec=krb5,nobrl" "//${HOMEDIR_SERVER}/${PAM_USER}" "${HOME}"
+        mount -t cifs -o "$MOUNTOPTS" "//${HOMEDIR_SERVER}/${PAM_USER}" "${HOME}"
       fi
 
-      if ! is_mounted /home/share; then
-        mkdir -p "/home/share"
-        chmod 755 /home/share
-
-        mount -t nfs4 -o sec=krb5,nodev,nosuid,minorversion=0${MOUNT_OPTIONS} "${HOMEDIR_SERVER}:/home/share" "/home/share"
+      SCHOOLDIR="${HOME}/.puavo-sharedir.schooldir"
+      if ! is_mounted "$SCHOOLDIR"; then
+        mkdir -m 700 -p "$SCHOOLDIR"
+        chown "${PAM_USER}:" "$SCHOOLDIR"
+        mount -t cifs -o "$MOUNTOPTS" "//${HOMEDIR_SERVER}/share" "${SCHOOLDIR}"
       fi
     else
       if ! is_mounted /home; then
