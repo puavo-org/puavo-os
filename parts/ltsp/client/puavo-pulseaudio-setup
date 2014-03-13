@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -xeu
+set -eu
 
 sink=$(jq -r .default_audio_sink /etc/puavo/device.json)
 source=$(jq -r .default_audio_source /etc/puavo/device.json)
