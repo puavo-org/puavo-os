@@ -95,10 +95,10 @@ audio_setup()
         # 2) Just the sink/source name.
         if grep -q '|' <<<"${devname}"; then
             IFS='|' read card profile devname volume <<<"${devname}"
-            pacmd set-card-profile "${card}" "${profile}"
+            pacmd set-card-profile "${card}" "${profile}" >/dev/null
             [ -n "${volume}" ] && pactl "set-${devtype}-volume" "${devname}" "${volume}"
         fi
-        pacmd "set-default-${devtype}" "${devname}"
+        pacmd "set-default-${devtype}" "${devname}" >/dev/null
     fi
 }
 
