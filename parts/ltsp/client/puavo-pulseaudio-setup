@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -xeu
 
@@ -17,5 +17,27 @@ if [ -z "${DEFAULT_SINK}" ]; then
         | sed -r -n '/^\s+index: [0-9]+$/ n; s/^\s+name: <(.*C-Media.*)>$/\1/p')
 fi
 
-[ -n "${DEFAULT_SINK}" ] && pacmd set-default-sink "${DEFAULT_SINK}"
-[ -n "${DEFAULT_SOURCE}" ] && pacmd set-default-source "${DEFAULT_SOURCE}"
+# Default sink/source values provided by Puavo can be in two different
+# formats:
+# 1) Fields separated by | (ASCII 0x7c)
+# 2) Just the sink/source name
+
+if [ -n "${DEFAULT_SINK}" ]; then
+    if grep -q '|' <<<"${DEFAULT_SINK}"; then
+        IFS='|' read card profile sink <<<"${DEFAULT_SINK}"
+        pacmd set-card-profile "${card}" "${profile}"
+        pacmd set-default-sink "${sink}"
+    else
+        pacmd set-default-sink "${DEFAULT_SINK}"
+    fi
+fi
+
+if [ -n "${DEFAULT_SOURCE}" ]; then
+    if grep -q '|' <<<"${DEFAULT_SOURCE}"; then
+        IFS='|' read card profile source <<<"${DEFAULT_SOURCE}"
+        pacmd set-card-profile "${card}" "${profile}"
+        pacmd set-default-source "${source}"
+    else
+        pacmd set-default-source "${DEFAULT_SOURCE}"
+    fi
+fi
