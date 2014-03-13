@@ -87,7 +87,7 @@ if [ "${DO_MOUNT}" = "true" ]; then
         # Request a remote directory for the user (three second timeout, may fail)
         { echo "$PAM_USER" | nc -w 3 "$SERVER" 907; } || true
 
-        mkdir -p "${HOME}"
+        mkdir -m 700 -p "${HOME}"
         chown ${PAM_USER}: "${HOME}"
 
         mount -t cifs -o "rw,cruid=${PAM_USER},user=${PAM_USER},sec=krb5,nobrl" "//${HOMEDIR_SERVER}/${PAM_USER}" "${HOME}"
