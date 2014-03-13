@@ -24,6 +24,9 @@
 
 set -eu
 
+sink=
+source=
+
 while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
@@ -33,9 +36,21 @@ while [ $# -gt 0 ]; do
             echo "Setup PulseAudio according to the configuration defined in Puavo"
             echo
             echo "Options:"
+            echo "    --sink SINK                  override default sink configuration"
+            echo "    --source SOURCE              overrides default source configuration"
             echo "    -h, --help                   print help and exit"
             echo
             exit 0
+            ;;
+        --sink)
+            shift
+            sink="$1"
+            shift
+            ;;
+        --source)
+            shift
+            source="$1"
+            shift
             ;;
         *)
             break
@@ -47,8 +62,8 @@ if [ $# -ne 0 ]; then
     usage_error "invalid number of positional arguments ($#), expected 0"
 fi
 
-sink=$(jq -r .default_audio_sink /etc/puavo/device.json)
-source=$(jq -r .default_audio_source /etc/puavo/device.json)
+[ -n "${sink}" ] || sink=$(jq -r .default_audio_sink /etc/puavo/device.json)
+[ -n "${source}" ] || source=$(jq -r .default_audio_source /etc/puavo/device.json)
 
 # jq outputs null for non-existing fields, treat them as empty
 # strings.
