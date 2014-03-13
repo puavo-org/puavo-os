@@ -26,18 +26,14 @@ if [ -n "${sink}" ]; then
     if grep -q '|' <<<"${sink}"; then
         IFS='|' read card profile sink <<<"${sink}"
         pacmd set-card-profile "${card}" "${profile}"
-        pacmd set-default-sink "${sink}"
-    else
-        pacmd set-default-sink "${sink}"
     fi
+    pacmd set-default-sink "${sink}"
 fi
 
 if [ -n "${source}" ]; then
     if grep -q '|' <<<"${source}"; then
         IFS='|' read card profile source <<<"${source}"
         pacmd set-card-profile "${card}" "${profile}"
-        pacmd set-default-source "${source}"
-    else
-        pacmd set-default-source "${source}"
     fi
+    pacmd set-default-source "${source}"
 fi
