@@ -120,7 +120,8 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-ltsp-client-action \
-		puavo-pulseaudio-setup
+		puavo-pulseaudio-setup \
+		puavo-pulseaudio-list
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-configure-client \
