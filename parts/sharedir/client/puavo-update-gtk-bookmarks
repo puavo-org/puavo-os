@@ -2,6 +2,8 @@
 
 set -eu
 
+SAMBAHOMES=$(jq -r '.tags[] | select(. == "sambahomes")' /etc/puavo/device.json)
+
 update_bookmarks() {
     local bookmarksdir
     local bookmarksfile
@@ -31,9 +33,14 @@ update_bookmarks() {
             echo "file://${HOME}/.puavo-sharedir.schooldir/${sharename}/$(id -gn) ${schooldir_displayname}" >>"${tmpfile}"
             ;;
         *)
-            echo "file:///home/share/${sharename}/$(id -gn) ${schooldir_displayname}" >>"${tmpfile}"
+            if [ -n "$SAMBAHOMES" ]; then
+                echo "file://${HOME}/.puavo-sharedir.schooldir/${sharename}/$(id -gn) ${schooldir_displayname}" >>"${tmpfile}"
+            else
+                echo "file:///home/share/${sharename}/$(id -gn) ${schooldir_displayname}" >>"${tmpfile}"
+            fi
             ;;
     esac
+
     mv "${tmpfile}" "${bookmarksfile}"
 }
 
