@@ -1,0 +1,12 @@
+#!/bin/sh
+
+export LANG=fi_FI.UTF-8
+export TERM=vt100
+setupcon
+clear
+
+dhclient eth0 &
+
+echo 'Press ENTER to reboot.'
+read answer
+reboot

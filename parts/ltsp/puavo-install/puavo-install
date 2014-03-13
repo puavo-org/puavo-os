@@ -2,12 +2,12 @@
 
 set -e
 
-puavo-register --accepted-devicetypes fatclient,laptop,ltspserver,thinclient
+puavo-register --accepted-devicetypes fatclient,laptop,ltspserver,thinclient,wirelessaccesspoint
 
 hosttype="$(cat /etc/puavo/hosttype)"
 
 case "$hosttype" in
-  laptop)
+  laptop|wirelessaccesspoint)
     puavo-setup-filesystems
 
     mkdir -p /state/etc
@@ -23,7 +23,7 @@ case "$hosttype" in
     puavo-install-grub
     sync
 
-    echo "Updating laptop configuration..."
+    echo "Updating $hosttype configuration..."
     if puavo-update-laptop; then
       echo "  ... laptop configuration updated."
     else
