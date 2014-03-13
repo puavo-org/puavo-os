@@ -77,25 +77,30 @@ if [ -z "${sink}" ]; then
         | sed -r -n '/^\s+index: [0-9]+$/ n; s/^\s+name: <(.*C-Media.*)>$/\1/p')
 fi
 
-# Default sink/source values provided by Puavo can be in two different
-# formats:
-# 1) Fields separated by | (ASCII 0x7c)
-# 2) Just the sink/source name
+audio_setup()
+{
+    local devtype=$1
+    local devname=$2
 
-if [ -n "${sink}" ]; then
-    if grep -q '|' <<<"${sink}"; then
-        IFS='|' read card profile sink sink_volume <<<"${sink}"
-        pacmd set-card-profile "${card}" "${profile}"
-        [ -n "${sink_volume}" ] && pactl set-sink-volume "${source}" "${sink_volume}"
-    fi
-    pacmd set-default-sink "${sink}"
-fi
+    local card
+    local profile
+    local volume
 
-if [ -n "${source}" ]; then
-    if grep -q '|' <<<"${source}"; then
-        IFS='|' read card profile source source_volume <<<"${source}"
-        pacmd set-card-profile "${card}" "${profile}"
-        [ -n "${source_volume}" ] && pactl set-source-volume "${source}" "${source_volume}"
+    if [ -n "${devname}" ]; then
+        # Default sink/source names provided by Puavo can be in two different
+        # formats:
+        # 1) Multifield-value where each field is separated by | (ASCII 0x7c):
+        #    * Fields are: CARD|PROFILE|SINK/SOURCE[|VOLUME]
+        #    * Note that volume is optional.
+        # 2) Just the sink/source name.
+        if grep -q '|' <<<"${devname}"; then
+            IFS='|' read card profile devname volume <<<"${devname}"
+            pacmd set-card-profile "${card}" "${profile}"
+            [ -n "${volume}" ] && pactl "set-${devtype}-volume" "${devname}" "${volume}"
+        fi
+        pacmd "set-default-${devtype}" "${devname}"
     fi
-    pacmd set-default-source "${source}"
-fi
+}
+
+audio_setup 'sink' "${sink}"
+audio_setup 'source' "${source}"
