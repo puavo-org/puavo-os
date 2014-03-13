@@ -37,6 +37,7 @@ class Feedback extends ViewMaster
                 message: @model.get("message")
             )
             @$textarea = @$("textarea")
+            @$anonymous = @$(".anonymous input")
         else
             question.html renderMood()
 
@@ -47,6 +48,7 @@ class Feedback extends ViewMaster
         "click .good": -> @model.set "mood", "good"
         "click .save": ->
             @model.set(
+                anonymous: @$anonymous.get(0).checked
                 message: @$textarea.val(),
                 silent: true
             )

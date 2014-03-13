@@ -8,6 +8,10 @@ class FeedbackModel extends Backbone.Model
 
     FeedbackModel._sendFeedBack = window.nodejs?.sendFeedback
 
+    defaults: {
+        anonymous: true
+    }
+
     hasFeedback: -> !! @get "mood"
 
     clear: ->

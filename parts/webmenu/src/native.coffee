@@ -254,11 +254,16 @@ module.exports = (gui, Window) ->
     shared.hideWindow =  hideWindow
     if config.feedback
         shared.sendFeedback = (feedback) ->
-            logger.emit("feedback", {
+
+            msg = {
                 msg: "feedback",
                 feedback: feedback
-                session: PUAVO_SESSION
-            })
+            }
+
+            if not feedback.anonymous
+                msg.session = PUAVO_SESSION
+
+            logger.emit("feedback", msg)
             return Q("feedback sent ok")
 
     shared.open = open
