@@ -73,5 +73,8 @@ if hostname and !hostname.eql?("") and hosttype and hosttype.eql?("thinclient")
 				'--group',
 				'--shell', '/bin/bash',
 				loginname)
+
+    user = Etc.getpwnam(loginname)
+    FileUtils.chown(user.uid, user.gid, home)
   end
 end
