@@ -98,7 +98,9 @@
         },
         {
           "type": "custom",
-          "name": "java",
+          "name": {
+            "en": "java"
+          },
           "command": ["/opt/java/jdk1.7.0_51/jre/bin/ControlPanel"],
           "osIcon":"openjdk-6",
           "name": {
@@ -126,7 +128,9 @@
         {
           "type": "desktop",
           "source": "kolourpaint",
-          "name": "KolourPaint"
+          "name": {
+            "en": "KolourPaint"
+          }
         },
         {
           "type": "desktop",
@@ -258,7 +262,9 @@
     },
     {
       "type": "menu",
-      "name": "Internet",
+      "name": {
+        "en": "Internet"
+      },
       "description":{
         "en": "Internet-applications",
         "fi": "Internet-sovellukset",
@@ -333,20 +339,26 @@
           "type": "desktop",
           "source": "googleearth",
           "inactiveByDeviceType": "thinclient",
-          "name": "Google Earth - Legacy",
+          "name": {
+            "en": "Google Earth - Legacy"
+          },
           "osIconPath": "/usr/share/icons/Faenza/apps/96/googleearth.png"
        },
        {
           "type": "desktop",
           "source": "google-earth",
           "inactiveByDeviceType": "thinclient",
-          "name": "Google Earth",
+          "name": {
+            "en": "Google Earth"
+          },
           "osIconPath": "/usr/share/icons/Faenza/apps/96/googleearth.png"
         },
         {
           "type": "desktop",
           "source": "skype",
-          "name": "Skype",
+          "name": {
+            "en": "Skype"
+          },
           "osIconPath": "/usr/share/icons/Faenza/apps/32/skype.png"
         },
         {
@@ -365,7 +377,9 @@
         {
           "type": "desktop",
           "source": "dropbox",
-          "name": "Dropbox"
+          "name": {
+            "en": "Dropbox"
+          }
         },
         {
           "type": "desktop",
@@ -374,7 +388,9 @@
         {
           "type": "desktop",
           "source": "vmware-view-client",
-          "name": "Vmware client"
+          "name": {
+            "en": "Vmware client"
+          }
         }
           ]
     },
@@ -391,13 +407,17 @@
         {
           "type": "desktop",
           "source": "netbeans",
-          "name": "NetBeans IDE",
+          "name": {
+            "en": "NetBeans IDE"
+          },
           "osIconPath": "/usr/share/icons/Faenza/apps/96/netbeans.png"
         },
         {
           "type": "desktop",
           "source": "arduino",
-          "name": "Arduino IDE"
+          "name": {
+            "en": "Arduino IDE"
+          }
         },
         {
           "type": "desktop",
@@ -420,7 +440,9 @@
         {
           "type": "desktop",
           "source": "idle-python2.7",
-          "name": "IDLE",
+          "name": {
+            "en": "IDLE"
+          },
           "osIconPath": "/usr/share/icons/Faenza/mimetypes/96/text-x-python.png"
         },
         {
