@@ -75,6 +75,14 @@ fi
 if [ -z "${sink}" ]; then
     sink=$(pacmd list-sinks \
         | sed -r -n '/^\s+index: [0-9]+$/ n; s/^\s+name: <(.*C-Media.*)>$/\1/p')
+
+    # Set the default sink volume level to 100% for this specific
+    # model. By default, the volume level is 96% which is actually just
+    # the zero-level and hence the sink is practically muted by
+    # default.
+    if [ "${sink}" = "alsa_output.usb-C-Media_INC._C-Media_USB_Audio-00-Audio.analog-stereo" ]; then
+        sink="||${sink}|100%"
+    fi
 fi
 
 audio_setup()
@@ -95,7 +103,8 @@ audio_setup()
         # 2) Just the sink/source name.
         if grep -q '|' <<<"${devname}"; then
             IFS='|' read card profile devname volume <<<"${devname}"
-            pacmd set-card-profile "${card}" "${profile}" >/dev/null
+            [ -n "${card}" ] && [ -n "${profile}" ] && \
+                pacmd set-card-profile "${card}" "${profile}" >/dev/null
             [ -n "${volume}" ] && pactl "set-${devtype}-volume" "${devname}" "${volume}"
         fi
         pacmd "set-default-${devtype}" "${devname}" >/dev/null
