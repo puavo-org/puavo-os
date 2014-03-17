@@ -49,10 +49,10 @@ module DiskHandler
       { 'size' => '100%FREE', 'name' => 'state',  'type' => 'ext4' },
     ],
     'wirelessaccesspoint' => [
-      { 'size' => '2G ',      'name' => 'swap',   'type' => 'swap' },
+      { 'size' => '2G',       'name' => 'swap',   'type' => 'swap' },
       { 'size' => '3G',       'name' => 'tmp',    'type' => 'ext4' },
-      { 'size' => '20G',      'name' => 'images', 'type' => 'ext4' },
-      { 'size' => '100%FREE', 'name' => 'state',  'type' => 'ext4' },
+      { 'size' => '2G',       'name' => 'state',  'type' => 'ext4' },
+      { 'size' => '100%FREE', 'name' => 'images', 'type' => 'ext4' },
     ],
   }
 
