@@ -32,7 +32,10 @@ case "$hosttype" in
     fi
     sync
 
-    umount /state /images /home
+    case "$hosttype" in
+      laptop)              umount /state /images /home ;;
+      wirelessaccesspoint) umount /state /images       ;;
+    esac
 
     echo "Press ENTER to reboot"
     read answer
