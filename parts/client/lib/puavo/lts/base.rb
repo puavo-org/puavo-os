@@ -5,11 +5,12 @@ module Puavo
 
     def self.new(organisation, school, device)
       class_by_device_type = {
-        'fatclient'    => Puavo::Lts::Fatclient,
-        'laptop'       => Puavo::Lts::Laptop,
-        'ltspserver'   => Puavo::Lts::LtspServer,
-        'thinclient'   => Puavo::Lts::Thinclient,
-        'unregistered' => Puavo::Lts::Unregistered,
+        'fatclient'           => Puavo::Lts::Fatclient,
+        'laptop'              => Puavo::Lts::Laptop,
+        'ltspserver'          => Puavo::Lts::LtspServer,
+        'thinclient'          => Puavo::Lts::Thinclient,
+        'unregistered'        => Puavo::Lts::Unregistered,
+        'wirelessaccesspoint' => Puavo::Lts::Wirelessaccesspoint,
       }
 
       device_class = class_by_device_type[device.device_type]
