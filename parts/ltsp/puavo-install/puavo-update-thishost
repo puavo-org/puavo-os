@@ -4,7 +4,8 @@ hosttype=$(cat /etc/puavo/hosttype)
 
 if [ "$hosttype" != "laptop" -a \
      "$hosttype" != "wirelessaccesspoint" ]; then
-  echo 'This script should be run only for laptops!' > /dev/stderr
+  echo 'This script should be run only for laptops and wirelessaccesspoints!' \
+    > /dev/stderr
   exit 1
 fi
 
