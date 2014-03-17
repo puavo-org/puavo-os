@@ -2,7 +2,8 @@
 
 set -e
 
-puavo-register --accepted-devicetypes fatclient,laptop,ltspserver,thinclient,wirelessaccesspoint
+puavo-register --accepted-devicetypes \
+	       fatclient,laptop,ltspserver,thinclient,wirelessaccesspoint
 
 hosttype="$(cat /etc/puavo/hosttype)"
 
@@ -25,7 +26,7 @@ case "$hosttype" in
 
     echo "Updating $hosttype configuration..."
     if puavo-update-laptop; then
-      echo "  ... laptop configuration updated."
+      echo "  ... $hosttype configuration updated."
     else
       echo "  ... a problem occurred (updating configuration later)."
     fi
