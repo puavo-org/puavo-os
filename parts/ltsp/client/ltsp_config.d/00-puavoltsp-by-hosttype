@@ -51,7 +51,7 @@ case "$PUAVO_HOSTTYPE" in
       ondemand
       puavo-load-balancer
       puavo-set-sane-date
-      puavo-update-laptop
+      puavo-update-thishost
       puavo-vpn-client
       puavo-vpn-dnsmasq
     "
@@ -113,7 +113,7 @@ case "$PUAVO_HOSTTYPE" in
       nwfermi
       ondemand
       puavo-set-sane-date
-      puavo-update-laptop
+      puavo-update-thishost
       puavo-vpn-dnsmasq
       zram-config
     "
@@ -141,7 +141,7 @@ case "$PUAVO_HOSTTYPE" in
       puavo-load-reporter
       puavo-set-sane-date
       puavo-sync-external-files
-      puavo-update-laptop
+      puavo-update-thishost
       puavo-vpn-client
       puavo-vpn-dnsmasq
       sssd
@@ -184,7 +184,7 @@ case "$PUAVO_HOSTTYPE" in
       puavo-load-reporter
       puavo-set-sane-date
       puavo-sync-external-files
-      puavo-update-laptop
+      puavo-update-thishost
       puavo-vpn-client
       puavo-vpn-dnsmasq
       sssd
