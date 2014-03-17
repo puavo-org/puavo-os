@@ -37,7 +37,7 @@ hosttype=$(cat /etc/puavo/hosttype)
 
 case "$hosttype" in
   laptop|wirelessaccesspoint)
-    hosttype_specific='puavo.hosttype=${hosttype} root=/dev/mapper/puavo-images loop="${imagepath}"'
+    hosttype_specific="puavo.hosttype=${hosttype} root=/dev/mapper/puavo-images loop=\"\${imagepath}\""
     ;;
   *)
     echo "Hosttype '$hosttype' is not supported" > /dev/stderr
