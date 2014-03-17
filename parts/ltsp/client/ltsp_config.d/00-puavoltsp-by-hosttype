@@ -159,13 +159,11 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LTSP_FATCLIENT       True
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
-      ltspssh
       ltspguestssh
+      ltspssh
       network-manager
-      ntp
       ondemand
       puavo-load-balancer
-      puavo-set-sane-date
     "
     set_lts_var SCREEN_07            wirelessaccesspoint
     set_lts_var USE_NFS_HOMES        False
