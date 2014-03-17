@@ -293,7 +293,7 @@ hosttype = PuavoFacts::get('puavo_hosttype')
 DiskHandler::cleanup_disk_environment(hosttype)
 
 case hosttype
-  when 'laptop', 'ltspserver','wirelessaccesspoint'
+  when 'laptop', 'ltspserver', 'wirelessaccesspoint'
     conf = QueryDiskInfo::ask_device_and_partition_with_confirmation(hosttype)
     DiskHandler::do_fs_setup(conf)
   else
