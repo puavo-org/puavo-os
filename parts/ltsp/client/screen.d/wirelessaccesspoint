@@ -9,8 +9,9 @@ dhclient eth0 &
 
 echo
 echo
-echo 'This host is a wireless access point.'
+echo 'This host is a wireless access point.' | cowsay
 echo
 echo 'You can reboot this host by pressing ENTER.'
+echo
 read answer
 reboot
