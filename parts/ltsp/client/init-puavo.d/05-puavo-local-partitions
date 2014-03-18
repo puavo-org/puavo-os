@@ -79,20 +79,23 @@ if [ -x "/sbin/vgchange" ]; then
   vgchange -a y puavo
 
   case "$PUAVO_HOSTTYPE" in
-    laptop)
-      puavo_mount_partition home
-      puavo_mount_partition images
-      ;;
     fatclient)
       if [ -b "/dev/mapper/puavo-tmp" ]; then
         puavo_mount_partition tmp
         chmod 1777 /tmp
       fi
       ;;
+    laptop)
+      puavo_mount_partition home
+      puavo_mount_partition images
+      ;;
+    wirelessaccesspoint)
+      puavo_mount_partition images
+      ;;
   esac
 
   case "$PUAVO_HOSTTYPE" in
-    laptop|ltspserver)
+    laptop|ltspserver|wirelessaccesspoint)
       if [ -b "/dev/mapper/puavo-state" ]; then
 	puavo_mount_partition state
 
@@ -113,7 +116,7 @@ if [ -x "/sbin/vgchange" ]; then
 	    puavo_enable_utmp
 	    puavo_setup_cups_dir
 	    ;;
-	  ltspserver)
+	  ltspserver|wirelessaccesspoint)
 	    puavo_link_to_state /var/log
 	    puavo_enable_utmp
 	    ;;
