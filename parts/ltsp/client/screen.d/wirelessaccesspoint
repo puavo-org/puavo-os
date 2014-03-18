@@ -9,7 +9,7 @@ dhclient eth0 &
 
 echo
 echo
-echo 'This host is a wireless access point.' | cowsay
+echo 'This host is a wireless access point.' | /usr/games/cowsay
 echo
 echo 'You can reboot this host by pressing ENTER.'
 echo
