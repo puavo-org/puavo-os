@@ -47,6 +47,7 @@ class PuavoWrapper
 
   def inject_device_source(record)
     record["meta"] ||= {}
+    record["meta"]["timestamp"] ||= Time.now.to_s
     record["meta"]["device_source"] ||= {
       "host_type" => config["puavo_hosttype"],
       "hostname" => config["puavo_hostname"],
