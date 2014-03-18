@@ -7,6 +7,10 @@ clear
 
 dhclient eth0 &
 
-echo 'Press ENTER to reboot.'
+echo
+echo
+echo 'This host is a wireless access point.'
+echo
+echo 'You can reboot this host by pressing ENTER.'
 read answer
 reboot
