@@ -428,6 +428,9 @@ class packages {
     , 'spe' ]:
       tag => [ 'programming', 'ubuntu', ];
 
+    [ 'bluegriffon' ]:
+      tag => [ 'programming', 'opinsys' ];
+
     [ 'puavo-wlanap'
     , 'puavo-wlanap-dnsproxy' ]:
       tag => [ 'puavo', 'puavo-wlan', 'opinsys' ];
