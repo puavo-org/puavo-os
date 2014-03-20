@@ -50,5 +50,17 @@ options[:hostname] ||= Socket.gethostname
 
 # TODO: If PUAVO_SESSION_PATH is set use apiserver/v3/session/<sessionid>/feed
 
-puts HTTParty.get("#{ options[:api_server] }/v3/devices/#{ options[:hostname] }/feed").to_json
+feeds = HTTParty.get("#{ options[:api_server] }/v3/devices/#{ options[:hostname] }/feed")
+
+
+image = File.open("/etc/ltsp/this_ltspimage_name", "r").read rescue nil
+
+if image
+  image = image.gsub(/\.img$/, "").strip
+  feeds.push({
+    "message" => "Changelog http://changelog.opinsys.fi/##{ image }"
+  })
+end
+
+puts feeds.to_json
 
