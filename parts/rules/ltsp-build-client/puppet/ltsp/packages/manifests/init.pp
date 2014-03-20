@@ -777,10 +777,6 @@ class packages {
    [ 'ebeam-edu', ]:
     tag => [ 'whiteboard-ebeam', 'opinsys', ];
 
-   [ 'polyvision'
-   , 'bluez-compat' ]:
-    tag => [ 'whiteboard-polyvision', 'opinsys', ];
-
 # XXX disabled for now
 #   [ 'activaid'
 #   , 'activdriver'
