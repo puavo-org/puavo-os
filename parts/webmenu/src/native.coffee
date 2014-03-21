@@ -58,8 +58,6 @@ if sp = process.env.PUAVO_SESSION_PATH
     catch e
         console.error "Failed to read PUAVO_SESSION_PATH: #{ e.message }"
 
-console.log "SEES", PUAVO_SESSION
-
 locale = process.env.LANG
 locale ||= "fi_FI.UTF-8"
 menuJSON = requirefallback(
