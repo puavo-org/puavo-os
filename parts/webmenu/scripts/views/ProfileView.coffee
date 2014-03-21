@@ -40,7 +40,6 @@ class ProfileView extends ViewMaster
         @appendView ".settings-container", LogoutButtonView
         @appendView ".footer-container",  new Carousel
             collection: opts.feeds
-        opts.feeds.fetch()
 
     context: -> {
         user: @user.toJSON()

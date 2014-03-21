@@ -19,8 +19,9 @@ class FeedCollection extends Backbone.Collection
     constructor: (models, opts) ->
         super
         @command = opts.command
+        @_fetch()
 
-    fetch: ->
+    _fetch: ->
         if not @command
             console.warn "feedCMD not set"
             return
@@ -32,6 +33,7 @@ class FeedCollection extends Backbone.Collection
         ).catch( (err) =>
             console.error "Failed to fetch feeds", @command, err
             @emit("error", err)
-        )
+        ).delay(1000 * 60 * 60).then(@_fetch.bind(this))
+
 
 module.exports = FeedCollection
