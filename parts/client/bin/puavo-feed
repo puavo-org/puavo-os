@@ -19,6 +19,7 @@ def assert_exec(cmd)
 end
 
 
+
 options = {}
 
 parser = OptionParser.new do |opts|
@@ -50,8 +51,16 @@ options[:hostname] ||= Socket.gethostname
 
 # TODO: If PUAVO_SESSION_PATH is set use apiserver/v3/session/<sessionid>/feed
 
-feeds = HTTParty.get("#{ options[:api_server] }/v3/devices/#{ options[:hostname] }/feed")
 
+feeds = []
+
+res = HTTParty.get("#{ options[:api_server] }/v3/devices/#{ options[:hostname] }/feed")
+
+if res.code == 200
+  feeds.concat(res.to_a)
+else
+  STDERR.puts "Failed to fetch feeds from puavo! #{ res }"
+end
 
 image = File.open("/etc/ltsp/this_ltspimage_name", "r").read rescue nil
 
