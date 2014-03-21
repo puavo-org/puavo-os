@@ -52,19 +52,19 @@ i18n:
 browserify:
 	browserify -t hbsfy -t coffeeify ./scripts/main.coffee > bundle.js
 
-watch-browserify:
+browserify-watch:
 	watchify --debug -v -t hbsfy -t coffeeify ./scripts/main.coffee -o bundle.js
 
 browserify-test:
 	browserify --debug -t hbsfy -t coffeeify ./scripts/tests/index.coffee > ./scripts/tests/bundle.js
 
-watch-browserify-test:
+browserify-test-watch:
 	watchify --debug -v -t hbsfy -t coffeeify ./scripts/tests/index.coffee -o ./scripts/tests/bundle.js
 
 stylus:
 	stylus --line-numbers --use nib styles/main.styl
 
-watch-stylus:
+stylus-watch:
 	stylus --watch --line-numbers --use nib styles/main.styl
 
 node-coffee:
