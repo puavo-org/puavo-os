@@ -13,5 +13,10 @@ class pycharm {
     require => File["/opt/pycharm/opinsys-default-options"];
   }
 
+  file { "/usr/share/applications/pycharm.desktop":
+    source  => "puppet:///modules/pycharm/pycharm.desktop",
+    require => File["/opt/pycharm/bin/pycharm-wrapper"];
+  }
+
   Package <| title == pycharm |>
 }

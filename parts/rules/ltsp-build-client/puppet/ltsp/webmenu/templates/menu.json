@@ -413,19 +413,8 @@
           "osIconPath": "/usr/share/eric/icons/default/eric.png"
         },
         {
-          "type": "custom",
-          "command": ["/opt/pycharm/bin/pycharm-wrapper"],
-          "name": {
-            "en": "PyCharm Python IDE",
-            "fi": "PyCharm Python editori",
-            "sv": "PyCharm Python editor"
-          },
-          "osIcon":"/opt/pycharm/bin/pycharm.png",
-          "description": {
-            "en": "PyCharm Python IDE",
-            "fi": "PyCharm Python editori",
-            "sv": "PyCharm Python editor"
-          }
+          "type": "desktop",
+          "source": "pycharm"
         },
         {
           "type": "desktop",
