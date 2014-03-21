@@ -1,11 +1,15 @@
 
 ViewMaster = require "viewmaster"
 
+maxLength = (s, max) ->
+    return s if s.length <= max
+    s.slice(0, -(s.length - max)) + "..."
+
 
 replaceURLWithHTMLLinks = (text) ->
         exp = /\bhttps?:\/\/([-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig
         return text.replace exp, (full, body) ->
-                "<a href='#{ full }'>#{ body }</a>"
+                "<a href='#{ full }' title='#{ full }'>#{ maxLength(body, 30) }</a>"
 
 class Carousel extends ViewMaster
 
