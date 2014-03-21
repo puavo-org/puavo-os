@@ -428,7 +428,8 @@ class packages {
     , 'spe' ]:
       tag => [ 'programming', 'ubuntu', ];
 
-    [ 'bluegriffon' ]:
+    [ 'bluegriffon'
+    , 'pycharm' ]:
       tag => [ 'programming', 'opinsys' ];
 
     [ 'puavo-wlanap'

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application>
+  <component name="CodeStyleSchemes">
+    <option name="CURRENT_SCHEME_NAME" value="Default" />
+  </component>
+  <component name="HttpConfigurable">
+    <option name="PROXY_TYPE_IS_SOCKS" value="false" />
+    <option name="USE_HTTP_PROXY" value="false" />
+    <option name="USE_PROXY_PAC" value="false" />
+    <option name="PROXY_HOST" value="" />
+    <option name="PROXY_PORT" value="80" />
+    <option name="PROXY_AUTHENTICATION" value="false" />
+    <option name="PROXY_LOGIN" value="" />
+    <option name="PROXY_PASSWORD_CRYPT" value="" />
+    <option name="KEEP_PROXY_PASSWORD" value="false" />
+    <option name="myGenericPasswords">
+      <map />
+    </option>
+    <option name="myGenericCancelled">
+      <set />
+    </option>
+    <option name="PROXY_EXCEPTIONS" value="" />
+  </component>
+  <component name="TodoConfiguration">
+    <pattern icon="default" useCustomColors="false" case-sensitive="false" pattern="\btodo\b.*">
+      <option name="FOREGROUND" value="ff" />
+      <option name="FONT_TYPE" value="3" />
+      <option name="ERROR_STRIPE_COLOR" value="ff" />
+    </pattern>
+    <pattern icon="default" useCustomColors="false" case-sensitive="false" pattern="\bfixme\b.*">
+      <option name="FOREGROUND" value="ff" />
+      <option name="FONT_TYPE" value="3" />
+      <option name="ERROR_STRIPE_COLOR" value="ff" />
+    </pattern>
+  </component>
+  <component name="UpdatesConfigurable">
+    <option name="myPluginHosts">
+      <value>
+        <list size="0" />
+      </value>
+    </option>
+    <option name="myKnownUpdateChannels">
+      <value>
+        <list size="8">
+          <item index="0" class="java.lang.String" itemvalue="pycharm" />
+          <item index="1" class="java.lang.String" itemvalue="pycharm1EAP" />
+          <item index="2" class="java.lang.String" itemvalue="pycharm10" />
+          <item index="3" class="java.lang.String" itemvalue="pycharm2EAP" />
+          <item index="4" class="java.lang.String" itemvalue="pycharm2Beta" />
+          <item index="5" class="java.lang.String" itemvalue="pycharm2" />
+          <item index="6" class="java.lang.String" itemvalue="pycharm3EAP" />
+          <item index="7" class="java.lang.String" itemvalue="pycharm3" />
+        </list>
+      </value>
+    </option>
+    <option name="myIgnoredBuildNumbers">
+      <value>
+        <list size="0" />
+      </value>
+    </option>
+    <option name="CHECK_NEEDED" value="false" />
+    <option name="LAST_TIME_CHECKED" value="1395403936291" />
+    <option name="LAST_BUILD_CHECKED" value="PC-133.881" />
+    <option name="UPDATE_CHANNEL_TYPE" value="release" />
+  </component>
+  <component name="XDebuggerSettings">
+    <data-views />
+  </component>
+  <component name="com.intellij.javaee.ExternalResourceManagerImpl">
+    <ignored-resource url="http://relaxng.org/ns/compatibility/annotations/1.0" />
+    <ignored-resource url="http://www.w3.org/1998/Math/MathML" />
+    <ignored-resource url="http://www.w3.org/2000/svg" />
+  </component>
+</application>
+
