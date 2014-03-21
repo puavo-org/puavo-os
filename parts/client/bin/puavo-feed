@@ -1,4 +1,5 @@
 #!/usr/bin/ruby1.9.1
+# encoding: UTF-8
 
 require "socket"
 require "optparse"
@@ -67,7 +68,7 @@ image = File.open("/etc/ltsp/this_ltspimage_name", "r").read rescue nil
 if image
   image = image.gsub(/\.img$/, "").strip
   feeds.push({
-    "message" => "Changelog http://changelog.opinsys.fi/##{ image }"
+    "message" => "Päivitystiedote http://changelog.opinsys.fi/##{ image }"
   })
 end
 
