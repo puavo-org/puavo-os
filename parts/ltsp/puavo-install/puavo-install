@@ -25,7 +25,7 @@ case "$hosttype" in
     sync
 
     echo "Updating $hosttype configuration..."
-    if puavo-update-thishost; then
+    if puavo-update-client; then
       echo "  ... $hosttype configuration updated."
     else
       echo "  ... a problem occurred (updating configuration later)."
