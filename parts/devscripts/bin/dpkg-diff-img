@@ -26,10 +26,42 @@ on_exit()
         exit $exitval
 }
 
+
+usage_error()
+{
+    echo "error: $1" >&2
+    echo "Try '$0 --help' for more information". >&2
+    return 1
+}
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            echo "Usage: $0 IMGFILE1 IMGFILE2"
+            echo
+            echo "Compare dpkg lists of two Puavo images."
+            echo
+            echo "Options:"
+            echo "    -h, --help                   print help and exit"
+            echo
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage_error "invalid argument '$1'"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
 if [ $# -ne 2 ]; then
-    echo "E: invalid arguments" >&2
-    echo "Usage: $(basename $0) IMGFILE1 IMGFILE2"
-    exit 1
+    usage_error "invalid number of arguments ($#), expected 2"
 fi
 
 img1=$1
