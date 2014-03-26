@@ -153,28 +153,6 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var SSH_OVERRIDE_PORT    222
     set_lts_var X_COLOR_DEPTH        16
     ;;
-  wirelessaccesspoint)
-    if [ -n "$SERVER" ]; then
-      # wirelessaccesspoint booted off from network, offer to update it
-      set_lts_var SCREEN_07 ltspimage-update
-    else
-      # wirelessaccesspoint booted from local disk, provide another screen
-      set_lts_var SCREEN_07 wirelessaccesspoint
-    fi
-
-    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
-    set_lts_var LOCALDEV             False
-    set_lts_var LTSP_FATCLIENT       True
-    set_lts_var RM_SYSTEM_SERVICES "
-      $puavo_common_unneeded_services
-      ltspguestssh
-      ltspssh
-      network-manager
-      ondemand
-      puavo-load-balancer
-    "
-    set_lts_var USE_NFS_HOMES        False
-    ;;
   unregistered)
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
@@ -200,5 +178,27 @@ case "$PUAVO_HOSTTYPE" in
       zram-config
     "
     set_lts_var SCREEN_07          register
+    ;;
+  wirelessaccesspoint)
+    if [ -n "$SERVER" ]; then
+      # wirelessaccesspoint booted off from network, offer to update it
+      set_lts_var SCREEN_07 ltspimage-update
+    else
+      # wirelessaccesspoint booted from local disk, provide another screen
+      set_lts_var SCREEN_07 wirelessaccesspoint
+    fi
+
+    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
+    set_lts_var LOCALDEV             False
+    set_lts_var LTSP_FATCLIENT       True
+    set_lts_var RM_SYSTEM_SERVICES "
+      $puavo_common_unneeded_services
+      ltspguestssh
+      ltspssh
+      network-manager
+      ondemand
+      puavo-load-balancer
+    "
+    set_lts_var USE_NFS_HOMES        False
     ;;
 esac

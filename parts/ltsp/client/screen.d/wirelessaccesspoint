@@ -5,8 +5,6 @@ export TERM=vt100
 setupcon
 clear
 
-dhclient eth0 >/dev/null 2>&1 &
-
 echo
 echo
 echo 'This host is a wireless access point.' | /usr/games/cowsay
