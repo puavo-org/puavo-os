@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# This script is called from udev rules when udev detects a change in 
+# monitor configuration. All xrandr commands are called to restore 
+# the configuration. This is needed e.g. with document cameras that 
+# cause displays to come and go on regular basis.
+#
+# udev rule example:
+#
+# ACTION=="change", SUBSYSTEM=="drm", RUN+="/usr/bin/udev-hotplug-monitor"
+
+export DISPLAY=:0.0
+export XAUTHORITY=/var/run/lightdm/root/:0
+
+. /usr/share/ltsp/ltsp_config
+exec /usr/share/ltsp/xinitrc

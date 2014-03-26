@@ -196,6 +196,7 @@ install : installdirs
 		puavo-desktop-guest-session \
 		puavo-thin-guest-account \
 		puavo-ltspserver-create-guest \
+		udev/udev-hotplug-monitor \
 		udev/udev-jetpipe
 
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd
