@@ -17,6 +17,13 @@
           Window.showDevTools();
         }
 
+        // Prevent any links from opening inside the node-webkit window. We
+        // will handle these manually.
+        // https://github.com/rogerwang/node-webkit/wiki/Window#new-win-policy
+        Window.on("new-win-policy", function(frame, url, policy) {
+          policy.ignore();
+        });
+
         console.log("It's now " + new Date());
         require("./lib/logStartTime")("plain node-webkit started");
 
