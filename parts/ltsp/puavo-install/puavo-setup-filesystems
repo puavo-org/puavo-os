@@ -48,6 +48,12 @@ module DiskHandler
       { 'size' => '6G',       'name' => 'tmp',    'type' => 'ext4' },
       { 'size' => '100%FREE', 'name' => 'state',  'type' => 'ext4' },
     ],
+    'wirelessaccesspoint' => [
+      { 'size' => '2G',       'name' => 'swap',   'type' => 'swap' },
+      { 'size' => '3G',       'name' => 'tmp',    'type' => 'ext4' },
+      { 'size' => '2G',       'name' => 'state',  'type' => 'ext4' },
+      { 'size' => '100%FREE', 'name' => 'images', 'type' => 'ext4' },
+    ],
   }
 
   def self.cleanup_disk_environment(hosttype)
@@ -287,7 +293,7 @@ hosttype = PuavoFacts::get('puavo_hosttype')
 DiskHandler::cleanup_disk_environment(hosttype)
 
 case hosttype
-  when 'laptop', 'ltspserver'
+  when 'laptop', 'ltspserver', 'wirelessaccesspoint'
     conf = QueryDiskInfo::ask_device_and_partition_with_confirmation(hosttype)
     DiskHandler::do_fs_setup(conf)
   else

@@ -184,6 +184,8 @@ case puavo_device_type
     # and json modules, which would needlessly slow down this script for other
     # host types that do not need this.
     system('puavo-update-nm-configurations')
+  when "wirelessaccesspoint"
+    write_config("/etc/network/interfaces", "wirelessaccesspoint")
 end
 
 exit(0)

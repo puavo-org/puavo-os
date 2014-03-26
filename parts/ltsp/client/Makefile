@@ -74,6 +74,9 @@ install : installdirs
 		templates/etc/ldap/ldap.conf \
 		templates/etc/ldap/ldap.conf-laptop
 
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network \
+		templates/etc/network/interfaces-wirelessaccesspoint
+
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-up.d \
 		templates/etc/network/if-up.d/ipsec \
 		templates/etc/network/if-up.d/sssd
@@ -140,7 +143,8 @@ install : installdirs
 		initramfs/puavo_ltsp 
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
-		screen.d/register
+		screen.d/register \
+		screen.d/wirelessaccesspoint
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d \
 		ltsp_config.d/00-puavoltsp-by-hosttype \

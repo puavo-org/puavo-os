@@ -51,7 +51,7 @@ case "$PUAVO_HOSTTYPE" in
       ondemand
       puavo-load-balancer
       puavo-set-sane-date
-      puavo-update-laptop
+      puavo-update-client
       puavo-vpn-client
       puavo-vpn-dnsmasq
     "
@@ -113,7 +113,7 @@ case "$PUAVO_HOSTTYPE" in
       nwfermi
       ondemand
       puavo-set-sane-date
-      puavo-update-laptop
+      puavo-update-client
       puavo-vpn-dnsmasq
       zram-config
     "
@@ -141,7 +141,7 @@ case "$PUAVO_HOSTTYPE" in
       puavo-load-reporter
       puavo-set-sane-date
       puavo-sync-external-files
-      puavo-update-laptop
+      puavo-update-client
       puavo-vpn-client
       puavo-vpn-dnsmasq
       sssd
@@ -169,7 +169,7 @@ case "$PUAVO_HOSTTYPE" in
       puavo-load-reporter
       puavo-set-sane-date
       puavo-sync-external-files
-      puavo-update-laptop
+      puavo-update-client
       puavo-vpn-client
       puavo-vpn-dnsmasq
       sssd
@@ -178,5 +178,27 @@ case "$PUAVO_HOSTTYPE" in
       zram-config
     "
     set_lts_var SCREEN_07          register
+    ;;
+  wirelessaccesspoint)
+    if [ -n "$SERVER" ]; then
+      # wirelessaccesspoint booted off from network, offer to update it
+      set_lts_var SCREEN_07 ltspimage-update
+    else
+      # wirelessaccesspoint booted from local disk, provide another screen
+      set_lts_var SCREEN_07 wirelessaccesspoint
+    fi
+
+    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
+    set_lts_var LOCALDEV             False
+    set_lts_var LTSP_FATCLIENT       True
+    set_lts_var RM_SYSTEM_SERVICES "
+      $puavo_common_unneeded_services
+      ltspguestssh
+      ltspssh
+      network-manager
+      ondemand
+      puavo-load-balancer
+    "
+    set_lts_var USE_NFS_HOMES        False
     ;;
 esac

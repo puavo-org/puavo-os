@@ -24,13 +24,13 @@ install : installdirs
 		puavo-install-and-update-ltspimages \
 		puavo-install-grub \
 		puavo-setup-filesystems \
-		puavo-update-laptop
+		puavo-update-client
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
                 screen.d/ltspimage-update
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
-		upstart/puavo-update-laptop.conf
+		upstart/puavo-update-client.conf
 
 .PHONY : clean
 clean :
