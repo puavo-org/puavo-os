@@ -56,6 +56,8 @@ usage_error()
     return 1
 }
 
+do_pretty_output=false
+
 while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
@@ -65,9 +67,15 @@ while [ $# -gt 0 ]; do
             echo "Compare dpkg lists of two Puavo images."
             echo
             echo "Options:"
+            echo "        --pretty                 print differences in pretty format"
             echo "    -h, --help                   print help and exit"
             echo
             exit 0
+            ;;
+        --pretty)
+            do_pretty_output=true
+            shift
+            break
             ;;
         --)
             shift
@@ -117,6 +125,52 @@ comm -23 <(cut -d' ' -f1 "${img2_dpkg_list}" | sort) <(cut -d' ' -f1 "${img1_dpk
 
 changed_packages=$(mktemp)
 comm -12 <(cut -d' ' -f1 "${img1_dpkg_list}" | sort) <(cut -d' ' -f1 "${img2_dpkg_list}" | sort) >"${changed_packages}"
+
+upgraded_packages=$(mktemp)
+downgraded_packages=$(mktemp)
+
+cat "${changed_packages}" | while read package; do
+    img1_version=$(egrep "^${package} " "${img1_dpkg_list}" | cut -d' ' -f2)
+    img2_version=$(egrep "^${package} " "${img2_dpkg_list}" | cut -d' ' -f2)
+    if dpkg --compare-versions "${img1_version}" lt "${img2_version}"; then
+        echo "${package}" >>"${upgraded_packages}"
+    fi
+
+    if dpkg --compare-versions "${img1_version}" gt "${img2_version}"; then
+        echo "${package}" >>"${downgraded_packages}"
+    fi
+done
+
+if $do_pretty_output; then
+    printf "New packages:\n"
+    cat "${added_packages}" | while read package; do
+        version=$(egrep "^${package} " "${img2_dpkg_list}" | cut -d' ' -f2)
+        printf "  %s %s\n" "${package}" "${version}"
+    done
+
+    printf "Removed packages:\n"
+    cat "${removed_packages}" | while read package; do
+        version=$(egrep "^${package} " "${img1_dpkg_list}" | cut -d' ' -f2)
+        printf "  %s %s\n" "${package}" "${version}"
+    done
+
+    printf "Upgraded packages:\n"
+    cat "${upgraded_packages}" | while read package; do
+        img1_version=$(egrep "^${package} " "${img1_dpkg_list}" | cut -d' ' -f2)
+        img2_version=$(egrep "^${package} " "${img2_dpkg_list}" | cut -d' ' -f2)
+        printf "  %s %s\n" "${package}" "${img2_version}"
+        printf "    (was %s)\n" "${img1_version}"
+    done
+
+    printf "Downgraded packages:\n"
+    cat "${downgraded_packages}" | while read package; do
+        img1_version=$(egrep "^${package} " "${img1_dpkg_list}" | cut -d' ' -f2)
+        img2_version=$(egrep "^${package} " "${img2_dpkg_list}" | cut -d' ' -f2)
+        printf "  %s %s\n" "${package}" "${img2_version}"
+        printf "    (was %s)\n" "${img1_version}"
+    done
+    exit 0
+fi
 
 {
     cat "${removed_packages}" | while read package; do
