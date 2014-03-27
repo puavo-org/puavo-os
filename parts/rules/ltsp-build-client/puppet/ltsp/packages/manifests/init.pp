@@ -88,7 +88,8 @@ class packages {
     , 'vlan' ]:
       tag => [ 'basic', 'ubuntu', ];
 
-    [ 'webmenu' ]:
+    [ 'quicktile'
+    , 'webmenu' ]:
       tag => [ 'desktop', 'opinsys', ];
 
     [ 'lightdm'
