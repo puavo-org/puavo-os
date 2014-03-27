@@ -17,5 +17,5 @@ EOF
 
     cat >>"${eventfile}"
 
-    nc -w 1 -u eventlog 3858 <"${eventfile}"
+    timeout -k 8 4 nc -w 1 -u eventlog 3858 <"${eventfile}"
 }
