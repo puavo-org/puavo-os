@@ -109,7 +109,6 @@ case puavo_device_type
     write_config("/etc/init/gssd.conf", "userprincipal")
     write_config("/etc/cups/cupsd.conf")
     write_config("/etc/security/group.conf")
-    write_config("/etc/udev/rules.d/95-monitor-hotplug.rules")
 
     # FIXME: Hack to get gnome fallback session
 #    `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
