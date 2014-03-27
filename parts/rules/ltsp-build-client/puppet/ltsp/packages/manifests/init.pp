@@ -445,6 +445,7 @@ class packages {
     , 'opinsys-ca-certificates'
     , 'puavo-autopilot'
     , 'puavo-client'
+    , 'puavo-hw-log'
     , 'puavo-ltsp-client'
     , 'puavo-ltsp-install'
     , 'puavo-monitor'
