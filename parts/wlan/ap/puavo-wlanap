@@ -2,6 +2,24 @@
 
 set -eubm
 
+on_sigchld()
+{
+    if [ ! -f "${PWAP_RUNDIR}/critical_service.pids" ]; then
+        return
+    fi
+
+    # We track our "critical child services" by appending their PIDs to
+    # a list after a successful spawn (see start_services()) and then
+    # whenever any of our child processes dies, check if any of the
+    # critical child services is dead, make a suicide.
+    while read critical_service_pid; do
+        kill -0 "${critical_service_pid}" || {
+            echo "fatal: a critical child service has died, exiting" >&2
+            exit 1
+        }
+    done <"${PWAP_RUNDIR}/critical_service.pids"
+}
+
 on_exit()
 {
     local -r exitval=$?
@@ -248,10 +266,12 @@ start_services()
         brctl setfd "${ssid}" 0
         ifconfig "${ssid}" up
         dhclient -d "${ssid}" &
+        echo $! >>"${PWAP_RUNDIR}/critical_service.pids"
 
         vtund -n -f "${PWAP_RUNDIR}/${ssid}_vtund.conf" \
             -P "${PWAP_GWPORT_DATA}" \
             "${session}" "${PWAP_GWADDR}" &
+        echo $! >>"${PWAP_RUNDIR}/critical_service.pids"
     done
 
     ## Magical sleep to "ensure" that bridges and tunnels are all set
@@ -263,6 +283,7 @@ start_services()
         IFS=':' read _ iface <<<"${radio}"
         hostapd -P "${PWAP_RUNDIR}/${iface}_hostapd.pid" \
             "${PWAP_RUNDIR}/${iface}_hostapd.conf" &
+        echo $! >>"${PWAP_RUNDIR}/critical_service.pids"
     done
 }
 
@@ -333,6 +354,8 @@ setup_radios
 setup_nets
 write_hostapd_conf
 write_vtund_conf
+
+trap on_sigchld SIGCHLD
 start_services
 
 ## Serve forever.
