@@ -178,7 +178,8 @@ install : installdirs
 		etc/xdg/autostart/*
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/udev/rules.d \
-		udev/rules.d/80-puavo-printers.rules
+		udev/rules.d/80-puavo-printers.rules \
+		udev/rules.d/95-monitor-hotplug.rules
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
 		etc/X11/Xsession.d/40puavo-retrieve-thinclient-session \
