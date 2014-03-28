@@ -41,8 +41,9 @@ if [ $1 = "guest" ]; then
 
       echo "${PUAVO_SESSION}" >"${CACHE_FILE}"
   else
+      CODE=$?
       echo "Failed to get guest session from puavo-rest (curl returned ${CODE})" \
-          | logger -t puavo-open-session -p auth.warn
+          | logger -t puavo-open-session -p auth.error
 
       exit 96
   fi
