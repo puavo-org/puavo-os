@@ -8,11 +8,14 @@ set -e
 #
 # Laptops can cache the returned json and reuse it on subsequent
 # offline logins.
+#
+# On laptops old user session is used if the session request fails.
 
 CACHE_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
 CACHE_FILE="${CACHE_DIR}/puavo_session.json"
 
 PUAVO_HOSTNAME=$(cat /etc/puavo/hostname)
+PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 API_SERVER=$(puavo-resolve-api-server)
 
 if [ "x${API_SERVER}" = "x" ]; then
@@ -23,7 +26,7 @@ if [ "x${API_SERVER}" = "x" ]; then
 fi
 
 if [ $1 = "guest" ]; then
-  PUAVO_SESSION=$(
+  if PUAVO_SESSION=$(
       curl --cacert /etc/puavo/certs/rootca.pem \
            --form "hostname=${PUAVO_HOSTNAME}" \
            --header 'Authorization: Bootserver' \
@@ -32,15 +35,24 @@ if [ $1 = "guest" ]; then
            --retry 5 \
            --retry-delay 1 \
            --header "Expect:" \
-           "${API_SERVER}/v3/sessions" 2>/dev/null)
+           "${API_SERVER}/v3/sessions" 2>/dev/null); then
+      echo "Received puavo guest session: ${PUAVO_SESSION}" \
+          | logger -t puavo-open-session -p auth.info
 
+      echo "${PUAVO_SESSION}" >"${CACHE_FILE}"
+  else
+      CODE=$?
+      echo "Failed to get guest session from puavo-rest (curl returned ${CODE})" \
+          | logger -t puavo-open-session -p auth.error
 
+      exit 96
+  fi
 else
   if [ "x${KRB5CCNAME}" = "x" ]; then
     export KRB5CCNAME="${PAM_KRB5CCNAME}"
   fi
 
-  PUAVO_SESSION=$(
+  if PUAVO_SESSION=$(
       curl --cacert /etc/puavo/certs/rootca.pem \
            --negotiate \
            --delegation always \
@@ -51,7 +63,26 @@ else
            --retry 5 \
            --retry-delay 1 \
            --header "Expect:" \
-           "${API_SERVER}/v3/sessions" 2>/dev/null)
+           "${API_SERVER}/v3/sessions" 2>/dev/null); then
+    echo "Received puavo session: ${PUAVO_SESSION}" \
+        | logger -t puavo-open-session -p auth.info
+
+    echo "${PUAVO_SESSION}" >"${CACHE_FILE}"
+  else
+    CODE=$?
+
+    if [ -f "${CACHE_FILE}" -a "${PUAVO_HOSTTYPE}" = "laptop" ]; then
+      PUAVO_SESSION=$(cat $CACHE_FILE)
+
+      echo "Failed to get session from puavo-rest (curl returned ${CODE}), reusing old session: ${PUAVO_SESSION}" \
+          | logger -t puavo-open-session -p auth.warn
+    else
+      echo "Failed to get session from puavo-rest (curl returned ${CODE}), no old session to reuse" \
+          | logger -t puavo-open-session -p auth.error
+
+      exit 97
+    fi
+  fi
 fi
 
 if [ "x${PUAVO_SESSION}" = "x" ]; then
@@ -60,10 +91,5 @@ if [ "x${PUAVO_SESSION}" = "x" ]; then
 
   exit 99
 fi
-
-echo "Received puavo session: ${PUAVO_SESSION}" \
-    | logger -t puavo-open-session -p auth.info
-
-echo "${PUAVO_SESSION}" >"${CACHE_FILE}"
 
 exit 0

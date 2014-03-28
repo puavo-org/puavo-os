@@ -31,6 +31,7 @@ auth    optional          pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/populat
 
 require 'json'
 require 'syslog'
+require 'etc'
 
 def log(message)
   Syslog.open("puavo-ltsp-client/populate-extrausers", Syslog::LOG_CONS) { |s| s.warning message }
@@ -96,6 +97,10 @@ begin
       file.puts entry
     end
   end
+
+  # We need to query the user once to get sssd to store 
+  # the user authentication info for offline usage.
+  user = Etc.getpwnam(user['username'])
 rescue Exception => e
   log "Updating extrausers passwd and group failed: #{e}"
 end

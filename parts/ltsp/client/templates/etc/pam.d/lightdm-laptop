@@ -31,10 +31,10 @@ auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/populate-extrause
 auth    optional        pam_gnome_keyring.so
 auth    sufficient      pam_permit.so
 
-auth    optional        pam_sss.so use_first_pass
 auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/make-session-dir
 auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/open-session
 auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/populate-extrausers
+auth    optional        pam_sss.so use_first_pass
 auth    optional        pam_gnome_keyring.so
 auth    sufficient      pam_permit.so
 
