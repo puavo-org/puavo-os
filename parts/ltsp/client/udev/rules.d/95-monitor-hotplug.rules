@@ -1,1 +1,1 @@
-ACTION=="change", SUBSYSTEM=="drm", RUN+="/usr/lib/puavo-ltsp-client/hotplug-monitor"
+ACTION=="change", SUBSYSTEM=="drm", RUN+="/usr/lib/puavo-ltsp-client/udev-hotplug-monitor"
