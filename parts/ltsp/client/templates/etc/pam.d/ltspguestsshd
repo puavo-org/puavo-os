@@ -8,15 +8,15 @@ auth       required     pam_env.so # [1]
 auth       required     pam_env.so envfile=/etc/default/locale
 
 # Standard Un*x authentication.
-auth	required	pam_exec.so /usr/lib/puavo-ltsp-client/ltspserver-guest-login
+auth	required	pam_exec.so /usr/lib/puavo-ltsp-client/pam/ltspserver-guest-login
 auth	required	pam_permit.so
 
 # Standard Un*x authorization.
 account required	pam_permit.so
 
 # Standard Un*x session setup and teardown.
-session	required        pam_exec.so /usr/lib/puavo-ltsp-client/make-session-dir
-session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/chown-session-dir
+session	required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/make-session-dir
+session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/pam/chown-session-dir
 session optional	pam_umask.so
 
 # Set up user limits from /etc/security/limits.conf.

@@ -9,9 +9,9 @@ auth    sufficient      pam_succeed_if.so user ingroup nopasswdlogin
 
 auth    [success=1 default=ignore] pam_krb5.so minimum_uid=10000 use_first_pass
 auth    requisite       pam_deny.so
-auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/make-session-dir
-auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/open-session
-auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/populate-extrausers
+auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/make-session-dir
+auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/open-session
+auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/populate-extrausers
 
 auth    optional        pam_gnome_keyring.so
 
@@ -29,7 +29,7 @@ session optional                        pam_umask.so
 session optional                        pam_krb5.so minimum_uid=1000
 session	optional	pam_mkhomedir.so
 
-session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/chown-session-dir
+session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/pam/chown-session-dir
 session optional        pam_gnome_keyring.so auto_start
 
 #session optional        pam_envfeed.so prog=/usr/sbin/puavo-ltsp-envfeed
