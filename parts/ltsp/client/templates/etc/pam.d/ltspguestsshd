@@ -17,6 +17,7 @@ account required	pam_permit.so
 # Standard Un*x session setup and teardown.
 session	required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/make-session-dir
 session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/pam/chown-session-dir
+session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/pam/setup-guest-session
 session optional	pam_umask.so
 
 # Set up user limits from /etc/security/limits.conf.
