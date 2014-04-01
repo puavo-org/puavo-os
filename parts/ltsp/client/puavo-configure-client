@@ -151,6 +151,7 @@ case puavo_device_type
     write_config("/etc/idmapd.conf")
     write_config("/etc/ldap/ldap.conf", "laptop")
     write_config("/etc/pam.d/lightdm", "laptop")
+    write_config("/etc/pam.d/lightdm-autologin", "laptop")
     write_config("/etc/network/if-up.d/ipsec")
     File.chmod(0755, "/etc/network/if-up.d/ipsec")
     write_config("/etc/network/if-post-down.d/ipsec")
