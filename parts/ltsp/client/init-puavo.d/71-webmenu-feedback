@@ -1,3 +1,0 @@
-echo "${PUAVO_TAGS}" | grep -q enable_webmenu_feedback && {
-    echo 'WM_FEEDBACK_ACTIVE=true' >>/etc/environment
-}
