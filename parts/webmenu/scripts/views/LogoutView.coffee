@@ -18,7 +18,9 @@ class LogoutView extends ViewMaster
     template: require "../templates/LogoutView.hbs"
 
     context: ->
-        actions = ["lock", "restart"]
+        actions = ["restart"]
+        if not @config.get("is_guest_session")
+            actions.unshift "lock"
         if @config.get("hostType") is "laptop"
             actions.unshift "hibernate"
             actions.unshift "sleep"
