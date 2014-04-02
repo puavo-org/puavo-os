@@ -24,6 +24,5 @@ session required        pam_permit.so
 # See "man pam_umask".
 session optional        pam_umask.so
 
-session optional        pam_gnome_keyring.so auto_start
 session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/pam/chown-session-dir
 session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/pam/setup-guest-session
