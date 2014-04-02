@@ -11,6 +11,8 @@ auth       required     pam_env.so envfile=/etc/default/locale
 auth	required	pam_krb5.so minimum_uid=10000
 auth	required	pam_permit.so
 
+auth    optional        pam_gnome_keyring.so
+
 # Standard Un*x authorization.
 account required	pam_permit.so
 
@@ -24,6 +26,7 @@ session required        pam_exec.so /usr/sbin/puavo-ltsp-init-nfs
 # Set up user limits from /etc/security/limits.conf.
 session    required     pam_limits.so
 
+session optional        pam_gnome_keyring.so auto_start
 session	required	pam_permit.so
 
 # Standard Un*x password updating.
