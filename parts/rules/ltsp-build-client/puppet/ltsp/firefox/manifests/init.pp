@@ -1,5 +1,8 @@
 class firefox {
-  include packages
+  include config,
+          packages
+
+  $api_server = $config::api_server
 
   # Firefox configuration system is still a mess... if there really is a more
   # straightforward way, I would like to hear about it.
