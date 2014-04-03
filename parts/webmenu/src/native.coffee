@@ -83,7 +83,7 @@ config = _.extend({},
 
 config.hostType = require "./hosttype"
 config.feedback = logger.active and process.env.WM_FEEDBACK_ACTIVE
-config.is_guest_session = (process.env.GUEST_SESSION is "true")
+config.guestSession = (process.env.GUEST_SESSION is "true")
 
 try
     puavoDomain = fs.readFileSync("/etc/puavo/domain").toString().trim()

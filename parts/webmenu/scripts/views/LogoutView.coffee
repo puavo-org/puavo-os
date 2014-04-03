@@ -19,7 +19,7 @@ class LogoutView extends ViewMaster
 
     context: ->
         actions = ["restart"]
-        if not @config.get("is_guest_session")
+        if not @config.get("guestSession")
             actions.unshift "lock"
         if @config.get("hostType") is "laptop"
             actions.unshift "hibernate"
