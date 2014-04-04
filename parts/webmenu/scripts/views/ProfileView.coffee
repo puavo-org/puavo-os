@@ -20,7 +20,7 @@ class ProfileView extends ViewMaster
     }
 
     events: {
-        "click a": (e) ->
+        "click .profile": (e) ->
             e.preventDefault()
             @bubble("open-app", {
                 type: @profileCMD.type
