@@ -23,7 +23,16 @@
     },
     "osIconPath": "/usr/share/icons/Faenza/categories/96/applications-system.png"
   },
-  "profileCMD": null,
+  "profileCMD": {
+    "type": "webWindow",
+    "url": "https://{{puavoDomain}}/users/profile/edit",
+    "name": {
+      "fi": "Profiili",
+      "en": "Profile",
+      "sv": "Profil"
+    },
+    "osIconPath": "/usr/share/icons/Faenza/emblems/96/emblem-personal.png"
+  },
   "supportCMD": {
     "type": "web",
     "url": "http://tuki.opinsys.fi",
