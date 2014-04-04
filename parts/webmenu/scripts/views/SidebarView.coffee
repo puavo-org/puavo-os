@@ -5,6 +5,7 @@ LauncherModel = require "../models/LauncherModel.coffee"
 MenuItemView = require "./MenuItemView.coffee"
 LogoutButtonView = require "./LogoutButtonView.coffee"
 Carousel = require "./Carousel.coffee"
+ProfileView = require "./ProfileView.coffee"
 
 class SidebarView extends ViewMaster
 
@@ -27,16 +28,12 @@ class SidebarView extends ViewMaster
                 model: new LauncherModel passwordCMD
             @appendView ".settings-container", @password
 
-        if profileCMD = @config.get("profileCMD")
-            @profile = new MenuItemView
-                model: new LauncherModel profileCMD
-            @appendView ".settings-container",  @profile
-
         if supportCMD = @config.get("supportCMD")
             @support = new MenuItemView
                 model: new LauncherModel supportCMD
             @appendView ".settings-container",  @support
 
+        @appendView ".profile-container", new ProfileView(opts)
         @appendView ".settings-container", LogoutButtonView
         @appendView ".footer-container",  new Carousel
             collection: opts.feeds
