@@ -9,7 +9,7 @@ Lightbox = require "./Lightbox.coffee"
 LogoutView = require "./LogoutView.coffee"
 Breadcrumbs = require "./Breadcrumbs.coffee"
 MenuListView = require "./MenuListView.coffee"
-ProfileView = require "./ProfileView.coffee"
+SidebarView = require "./SidebarView.coffee"
 Search = require "./Search.coffee"
 
 class MenuLayout extends ViewMaster
@@ -38,7 +38,7 @@ class MenuLayout extends ViewMaster
         @breadcrumbs = new Breadcrumbs model: opts.initialMenu
         @setView ".breadcrumbs-container", @breadcrumbs
 
-        @setView ".profile-container", new ProfileView(opts)
+        @setView ".sidebar-container", new SidebarView(opts)
 
         @setView ".favorites-container", new Favorites
             collection: @allItems

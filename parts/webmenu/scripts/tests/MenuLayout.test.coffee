@@ -57,8 +57,8 @@ describe "MenuLayout", ->
     it "has menu item(s)", ->
         expect(layout.$(".bb-menu-list .bb-menu-item")).to.contain('Gimp')
 
-    it "has profile view", ->
-        expect(layout.$el).to.have(".bb-profile")
+    it "has sidebar view", ->
+        expect(layout.$el).to.have(".bb-sidebar")
     it "has favorites view", ->
         expect(layout.$el).to.have(".bb-favorites")
 

@@ -6,11 +6,11 @@ MenuItemView = require "./MenuItemView.coffee"
 LogoutButtonView = require "./LogoutButtonView.coffee"
 Carousel = require "./Carousel.coffee"
 
-class ProfileView extends ViewMaster
+class SidebarView extends ViewMaster
 
-    className: "bb-profile"
+    className: "bb-sidebar"
 
-    template: require "../templates/ProfileView.hbs"
+    template: require "../templates/SidebarView.hbs"
 
     constructor: (opts) ->
         super
@@ -46,4 +46,4 @@ class ProfileView extends ViewMaster
         config: @config.toJSON()
     }
 
-module.exports = ProfileView
+module.exports = SidebarView

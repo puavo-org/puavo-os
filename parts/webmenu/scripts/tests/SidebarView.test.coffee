@@ -1,6 +1,6 @@
 Backbone = require "backbone"
 Application = require "../Application.coffee"
-ProfileView = require "../views/ProfileView.coffee"
+SidebarView = require "../views/SidebarView.coffee"
 
 class MockFeeds extends Backbone.Collection
     fetch: ->
@@ -23,12 +23,12 @@ config =
         type: "custom"
         command: "gnome-control-center"
 
-describe "ProfileView", ->
+describe "SidebarView", ->
 
     describe "with basic contents", ->
         view = null
         beforeEach ->
-            view = new ProfileView
+            view = new SidebarView
                 user: new Backbone.Model(fullName: "John Doe")
                 config: new Backbone.Model config
                 feeds: new MockFeeds
@@ -77,7 +77,7 @@ describe "ProfileView", ->
         view = null
         after -> view.remove()
         before ->
-            view = new ProfileView
+            view = new SidebarView
                 user: new Backbone.Model(fullName: "John Doe")
                 feeds: new MockFeeds
                 config: new Backbone.Model
