@@ -7,6 +7,7 @@ lockPref("browser.safebrowsing.malware.enabled", false);
 lockPref("network.dns.disableIPv6", true);
 <% if not @api_server.nil? -%>
 lockPref("network.negotiate-auth.trusted-uris", "<%= @api_server %>");
+lockPref("network.negotiate-auth.delegation-uris", "<%= @api_server %>");
 <% end -%>
 lockPref("print.postscript.paper_size", "iso_a4");
 lockPref("toolkit.storage.synchronous", 1);
