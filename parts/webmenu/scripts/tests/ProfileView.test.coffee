@@ -33,6 +33,14 @@ describe "ProfileView", ->
         it "should have profile settings button", ->
             expect(view.$el).to.have(".profile")
 
+        describe "my profile link", ->
+            it "emits open-app for profile edit on profile link click", (done) ->
+                view.once "open-app", (model) ->
+                    expect(model.url).to.eq "http://profile.example.com"
+                    expect(model.type).to.eq "webWindow"
+                    done()
+                view.$el.find('.profile').click()
+
 
     describe "with missing profileUrl", ->
 
