@@ -22,11 +22,13 @@ puavo_rest_request() {
 
   puavo_rest_server=$(puavo-resolve-api-server) || return
   curl --cacert /etc/puavo/certs/rootca.pem \
-       --header "Authorization: Bootserver" \
+       --config - \
        --fail \
        --max-time 60 \
        --silent \
-       "${puavo_rest_server}/${urlpath}"
+       "${puavo_rest_server}/${urlpath}" <<EOF
+user=$(cat /etc/puavo/ldap/dn):$(cat /etc/puavo/ldap/password)
+EOF
 }
 
 puavo_rest_request_and_replace() {
