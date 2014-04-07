@@ -69,7 +69,8 @@ update_ltsconf() {
 }
 
 update_ltsp_image() {
-  next_imagename=$(jq -r .preferred_image /state/etc/puavo/device.json) || return
+  next_imagename=$(jq -r .preferred_image /state/etc/puavo/device.json) \
+		     || return
   if [ -n "$next_imagename" ]; then
     puavo-install-and-update-ltspimages $update_ltspimage_params \
 					"${next_imagename}.img"
@@ -77,7 +78,8 @@ update_ltsp_image() {
 }
 
 update_wlan_configurations() {
-  puavo_rest_request_and_replace "v3/devices/$(cat /etc/puavo/hostname)/wlan_networks" \
+  wlan_networks_uri="v3/devices/$(cat /etc/puavo/hostname)/wlan_networks"
+  puavo_rest_request_and_replace "$wlan_networks_uri" \
 				 /state/etc/puavo/wlan.json
 }
 
