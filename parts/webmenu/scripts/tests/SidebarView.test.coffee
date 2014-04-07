@@ -42,18 +42,10 @@ describe "SidebarView", ->
             expect(view.$el).to.contain("John Doe")
 
         it "should have profile settings button", ->
-            expect(view.$el).to.have(".item-profile")
+            expect(view.$el).to.have(".profile")
 
         it "should have change password button", ->
             expect(view.$el).to.have(".item-changepassword")
-
-        describe "my profile button", ->
-            it "emits open-app for profile edit on profile button click", (done) ->
-                view.once "open-app", (model) ->
-                    expect(model.get("url")).to.eq "http://profile.example.com"
-                    expect(model.get("type")).to.eq "webWindow"
-                    done()
-                view.profile.$el.click()
 
         describe "password button", ->
             it "emits open-app for password edit on password button click", (done) ->
