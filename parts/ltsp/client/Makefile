@@ -38,6 +38,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/init
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ldap
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/lightdm
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-up.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-post-down.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d
@@ -47,6 +48,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sssd
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/lib/udev
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
 
@@ -73,6 +75,9 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ldap \
 		templates/etc/ldap/ldap.conf \
 		templates/etc/ldap/ldap.conf-laptop
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/lightdm \
+		templates/etc/lightdm/lightdm.conf
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-up.d \
 		templates/etc/network/if-up.d/ipsec \
@@ -115,6 +120,9 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/lib/udev \
 		templates/lib/udev/ltspfs_entry
 
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions \
+		xsessions/puavo-desktop-session.desktop
+
 	$(INSTALL_PROGRAM) -t $(DESTDIR)/sbin \
 		init-puavo 
 
@@ -140,6 +148,7 @@ install : installdirs
 		initramfs/puavo_ltsp 
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
+		screen.d/lightdm \
 		screen.d/register \
 		screen.d/wirelessaccesspoint
 
@@ -194,11 +203,12 @@ install : installdirs
 		pam/make-session-dir \
 		pam/ltspserver-guest-login \
 		make-release-logo \
-		puavo-desktop-guest-session \
+		puavo-desktop-session \
 		puavo-thin-guest-account \
 		puavo-ltspserver-create-guest \
 		udev/udev-hotplug-monitor \
-		udev/udev-jetpipe
+		udev/udev-jetpipe \
+		xinitrc
 
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspguestsshd
