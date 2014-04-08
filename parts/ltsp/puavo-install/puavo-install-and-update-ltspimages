@@ -347,11 +347,19 @@ lookup_image_server_from_dns() {
       | awk '{ sub(/\.$/, ""); printf "%s:%s", $4, $3 }')
 
   if [ -z "$image_server" ]; then
-    log err "could not find the image server from DNS"
-    return 1
-  else
-    echo "$image_server"
+    # XXX take only the first image_server from "imageservers"...
+    # XXX we are not yet capable of trying out several servers
+    image_server=$(jq -r '.imageservers[]' /etc/puavo/device.json \
+		     2>/dev/null | head -1) || true
+    if [ -z "$image_server" ]; then
+      image_server="images.$(cat /etc/puavo/topdomain)"
+      log info $(printf "%s %s\n" \
+			"could not find the image server from DNS, " \
+			"falling back to $image_server")
+    fi
   fi
+
+  echo "$image_server"
 }
 
 lookup_ltspimage_name_by_alias() {
