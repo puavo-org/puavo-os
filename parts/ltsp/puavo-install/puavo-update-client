@@ -10,7 +10,7 @@ if [ "$hosttype" != "laptop" -a \
 fi
 
 if [ "$1" = "--use-rate-limit" ]; then
-  update_ltspimage_params="--rate-limit 50k"
+  update_ltspimage_params="--rate-limit 500k"
 else
   update_ltspimage_params=""
 fi
