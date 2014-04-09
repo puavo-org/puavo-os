@@ -1,0 +1,18 @@
+{
+  "main": "index.html",
+  "name": "language-selector",
+  "description": "Select language and print it to stdout",
+  "version": "0.0.1",
+  "keywords": [
+    "node-webkit"
+  ],
+  "single-instance": true,
+  "window": {
+    "title": "Select Language",
+    "toolbar": false,
+    "frame": true,
+    "width": 300,
+    "height": 100,
+    "position": "mouse"
+  }
+}
