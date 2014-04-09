@@ -1,3 +1,4 @@
+require('nw.gui').Window.get().resizeTo(screen.width, screen.height);
 
 var buttons = document.querySelectorAll("button");
 
