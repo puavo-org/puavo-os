@@ -95,10 +95,10 @@ def main(options)
   # log now, *without* username and password
   STDERR.puts "Connecting to #{ ef_root }"
 
-  dn       = IO.read('/etc/puavo/ldap/dn'      ).chomp
-  password = IO.read('/etc/puavo/ldap/password').chomp
+  dn       = PUAVO_ETC.ldap_dn
+  password = PUAVO_ETC.ldap_password
 
-  # apply username and password(ugly, but yeah...)
+  # apply username and password
   ef_root.sub!('://', "://#{ URI.escape(dn) }:#{ URI.escape(password) }@")
 
   ef = ExternalFiles.new(ef_root)
