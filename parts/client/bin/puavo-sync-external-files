@@ -4,6 +4,7 @@ require "digest/sha1"
 require "fileutils"
 require "json"
 require "optparse"
+require "uri"
 
 # puavo lib must loaded before rest-client because rest-client is bundled into
 # puavo lib
@@ -85,12 +86,21 @@ class ExternalFiles < RestClient::Resource
 end
 
 def main(options)
-
   FileUtils.mkdir_p(options[:target])
   current_files = read_current_files(options[:target])
 
-  ef_root = URI.join(options[:server], "/v3/devices/#{ options[:hostname] }").to_s
+  ef_root = URI.join(options[:server],
+		     "/v3/devices/#{ options[:hostname] }").to_s
+
+  # log now, *without* username and password
   STDERR.puts "Connecting to #{ ef_root }"
+
+  dn       = IO.read('/etc/puavo/ldap/dn'      ).chomp
+  password = IO.read('/etc/puavo/ldap/password').chomp
+
+  # apply username and password(ugly, but yeah...)
+  ef_root.sub!('://', "://#{ URI.escape(dn) }:#{ URI.escape(password) }@")
+
   ef = ExternalFiles.new(ef_root)
   ef.index.each do |meta|
     file_path = File.join(options[:target], meta["name"])
@@ -110,4 +120,3 @@ end
 if __FILE__ == $0
   main(options)
 end
-
