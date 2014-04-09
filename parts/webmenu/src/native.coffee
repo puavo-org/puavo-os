@@ -85,6 +85,13 @@ config.hostType = require "./hosttype"
 config.feedback = logger.active and process.env.WM_FEEDBACK_ACTIVE
 config.guestSession = (process.env.GUEST_SESSION is "true")
 
+userPhotoPath = "#{ webmenuHome }/user-photo.jpg"
+if fs.existsSync(userPhotoPath)
+  config.userPhoto = "file://#{ webmenuHome }/user-photo.jpg"
+else
+  config.userPhoto = "styles/theme/default/img/anonymous.png"
+
+
 try
     puavoDomain = fs.readFileSync("/etc/puavo/domain").toString().trim()
     expandVariables = (ob, attr) ->
