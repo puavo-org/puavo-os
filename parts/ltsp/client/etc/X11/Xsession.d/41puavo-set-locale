@@ -21,14 +21,18 @@ fi
 [ "${SESSION_LANGUAGE}" = "null" ] && SESSION_LANGUAGE=
 [ "${USER_LANGUAGE}" = "null" ] && USER_LANGUAGE=
 
-if [ "${USER_LANGUAGE}" != "" ]; then
-  LANGUAGE="${USER_LANGUAGE}"
+if [ "${PUAVO_SESSION_LANGUAGE}" != "" ]; then
+  LANGUAGE="${PUAVO_SESSION_LANGUAGE}"
 else
-  if [ "${SESSION_LANGUAGE}" != "" ]; then
-    LANGUAGE="${SESSION_LANGUAGE}"
+  if [ "${USER_LANGUAGE}" != "" ]; then
+    LANGUAGE="${USER_LANGUAGE}"
   else
-    if [ "${DEVICE_LANGUAGE}" != "" ]; then
-      LANGUAGE="${DEVICE_LANGUAGE}"
+    if [ "${SESSION_LANGUAGE}" != "" ]; then
+      LANGUAGE="${SESSION_LANGUAGE}"
+    else
+      if [ "${DEVICE_LANGUAGE}" != "" ]; then
+        LANGUAGE="${DEVICE_LANGUAGE}"
+      fi
     fi
   fi
 fi

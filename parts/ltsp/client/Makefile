@@ -192,6 +192,7 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
 		etc/X11/Xsession.d/40puavo-retrieve-thinclient-session \
+		etc/X11/Xsession.d/40puavo-webkiosk \
 		etc/X11/Xsession.d/41puavo-set-locale \
 		etc/X11/Xsession.d/42puavo-set-browser-homepage \
 		etc/X11/Xsession.d/90puavo-setup-printers
@@ -206,6 +207,7 @@ install : installdirs
 		puavo-desktop-session \
 		puavo-thin-guest-account \
 		puavo-ltspserver-create-guest \
+		puavo-webkiosk-restart-lightdm \
 		udev/udev-hotplug-monitor \
 		udev/udev-jetpipe \
 		xinitrc

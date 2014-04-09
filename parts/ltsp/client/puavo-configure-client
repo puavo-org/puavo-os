@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 
 require 'erb'
+require 'json'
 
 def delete_file(file)
   if File.exists?(file)
@@ -41,6 +42,13 @@ end
 @puavo_hostname    = read_file('/etc/puavo/hostname')
 @puavo_domain      = read_file('/etc/puavo/domain')
 @puavo_topdomain   = read_file('/etc/puavo/topdomain')
+
+@device=Hash.new
+
+if File.exists?("/etc/puavo/device.json")
+  @device = JSON.parse(File.read("/etc/puavo/device.json"))
+  @tags = @device["tags"]
+end
 
 def write_config(filename, version=nil, secure=false)
   begin
