@@ -90,18 +90,15 @@ def main(options)
   current_files = read_current_files(options[:target])
 
   ef_root = URI.join(options[:server],
-		     "/v3/devices/#{ options[:hostname] }").to_s
+		     "/v3/devices/#{ options[:hostname] }")
 
   # log now, *without* username and password
-  STDERR.puts "Connecting to #{ ef_root }"
+  STDERR.puts "Connecting to #{ ef_root.to_s }"
 
-  dn       = PUAVO_ETC.ldap_dn
-  password = PUAVO_ETC.ldap_password
+  ef_root.user     = PUAVO_ETC.ldap_dn
+  ef_root.password = PUAVO_ETC.ldap_password
 
-  # apply username and password
-  ef_root.sub!('://', "://#{ URI.escape(dn) }:#{ URI.escape(password) }@")
-
-  ef = ExternalFiles.new(ef_root)
+  ef = ExternalFiles.new(ef_root.to_s)
   ef.index.each do |meta|
     file_path = File.join(options[:target], meta["name"])
 
