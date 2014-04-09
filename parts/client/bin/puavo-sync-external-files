@@ -25,7 +25,7 @@ parser = OptionParser.new do |opts|
   end
 
   opts.on_tail("-h", "--help", "Show this message") do
-    STDERR.puts opts
+    puts opts
     exit
   end
 
@@ -93,19 +93,19 @@ def main(options)
 		     "/v3/devices/#{ options[:hostname] }/",
 		     'external_files').to_s
 
-  STDERR.puts "Connecting to #{ ef_root }"
+  puts "Connecting to #{ ef_root }"
 
   ef = ExternalFiles.new(ef_root, PUAVO_ETC.ldap_dn, PUAVO_ETC.ldap_password)
   ef.index.each do |meta|
     file_path = File.join(options[:target], meta["name"])
 
     if current_files.include?(meta)
-      STDERR.puts "OK #{ file_path } #{ meta["data_hash"] }"
+      puts "OK #{ file_path } #{ meta["data_hash"] }"
       next
     end
 
     File.open(file_path, "w") do |f|
-      STDERR.puts "Writing #{ file_path } #{ meta["data_hash"] }"
+      puts "Writing #{ file_path } #{ meta["data_hash"] }"
       f.write(ef.data(meta["name"]))
     end
   end
