@@ -65,23 +65,23 @@ def read_current_files(dirpath)
   end.compact
 end
 
-# Rest client, sorry :(
-class ExternalFiles < RestClient::Resource
-  def get_json(*args)
-    JSON.parse(get(*args))
-  end
-
-  def index
-    self["/external_files"].get_json
+class ExternalFiles
+  def initialize(base_uri, username, password)
+    @base_uri = base_uri
+    @username = username
+    @password = password
   end
 
   def data(name)
-    self["/external_files/#{ name }"].get
+    RestClient::Resource.new("#{ @base_uri }/#{ name }",
+			     @username,
+			     @password) \
+			.get
   end
 
-  # FIXME: useless method?
-  def metadata(name)
-    self["/external_files/#{ name }/metadata"].get_json
+  def index
+    r = RestClient::Resource.new(@base_uri, @username, @password).get
+    JSON.parse(r)
   end
 end
 
@@ -90,15 +90,12 @@ def main(options)
   current_files = read_current_files(options[:target])
 
   ef_root = URI.join(options[:server],
-		     "/v3/devices/#{ options[:hostname] }")
+		     "/v3/devices/#{ options[:hostname] }/",
+		     'external_files').to_s
 
-  # log now, *without* username and password
-  STDERR.puts "Connecting to #{ ef_root.to_s }"
+  STDERR.puts "Connecting to #{ ef_root }"
 
-  ef_root.user     = PUAVO_ETC.ldap_dn
-  ef_root.password = PUAVO_ETC.ldap_password
-
-  ef = ExternalFiles.new(ef_root.to_s)
+  ef = ExternalFiles.new(ef_root, PUAVO_ETC.ldap_dn, PUAVO_ETC.ldap_password)
   ef.index.each do |meta|
     file_path = File.join(options[:target], meta["name"])
 
