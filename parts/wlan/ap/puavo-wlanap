@@ -29,7 +29,7 @@ on_exit()
     ## already exiting and it would be shame to exit while exiting, yo
     ## dawg.
     set +eu
-    trap '' EXIT HUP INT QUIT ABRT ALRM TERM USR1 USR2
+    trap '' EXIT HUP INT QUIT ABRT ALRM TERM USR1 USR2 CHLD
 
     ## Kill our child processes. There is no reason to let Init adopt
     ## them when puavo-wlanap dies.
