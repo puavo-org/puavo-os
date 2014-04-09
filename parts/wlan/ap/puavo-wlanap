@@ -225,21 +225,24 @@ setup_radios()
     done
 
     ## ..and then radios which support both frequencies.
-    i=0
     for iface in ${ifaces_ag}; do
 
         ## Ensure there is at least one 2.4GHz radio.
         if [ ${#PWAP_RADIOS[@]} -eq 0 ]; then
             channel=${channels_g[0]}
-        else
-            channel=${channels[$i]}
-        fi
-
-        if [ ${used_channels[$channel]} -eq 0 ]; then
             PWAP_RADIOS+=("${channel}:${iface}")
             used_channels[$channel]=1
+            continue
         fi
-        ((++i))
+
+        ## Pick the best free channel.
+        for channel in ${channels[@]}; do
+            if [ ${used_channels[$channel]} -eq 0 ]; then
+                PWAP_RADIOS+=("${channel}:${iface}")
+                used_channels[$channel]=1
+                break
+            fi
+        done
     done
     if [ ${#PWAP_RADIOS[@]} -eq 0 ]; then
         echo "No suitable radios found" >&2
