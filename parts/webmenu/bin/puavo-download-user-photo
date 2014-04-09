@@ -1,0 +1,5 @@
+#!/bin/sh
+#
+#
+#
+curl -o $HOME/.config/webmenu/user-photo.jpg --negotiate --delegation always --user : $(puavo-resolve-api-server)/v3/users/$USER/profile.jpg

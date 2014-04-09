@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Name=User photo
+Comment=Download user photo from the api server
+Exec=/usr/bin/puavo-download-user-photo
+Terminal=false
+Type=Application
+Categories=Utility;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=60
