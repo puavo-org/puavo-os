@@ -3,9 +3,6 @@
 set -eu
 set -x
 
-# Load environment. Is missing on Trusty...
-. /etc/environment
-
 env
 
 sudo apt-get update
