@@ -149,10 +149,11 @@ module.exports = (gui, Window) ->
     # Make menu visible and bring it to current desktop
     ###
     displayMenu = ->
-        if fs.existsSync(userPhotoPath)
-          config.set("userPhoto", "file://#{ userPhotoPath }")
-        else
-          config.set("userPhoto", "styles/theme/default/img/anonymous.png")
+        fs.exists userPhotoPath, (exists) ->
+          if exists
+            config.set("userPhoto", "file://#{ userPhotoPath }")
+          else
+            config.set("userPhoto", "styles/theme/default/img/anonymous.png")
 
         menuVisible = true
         console.log "Displaying menu"
