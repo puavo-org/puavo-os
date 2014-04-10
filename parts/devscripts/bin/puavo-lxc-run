@@ -210,7 +210,7 @@ fi
 
 echo
 echo Executing \${script_location} ${script_args}
-sudo -i -u ci sh -c "cd \${git_dir} && \${script_location} ${script_args}"
+sudo -E -i -u ci sh -c "cd \${git_dir} && \${script_location} ${script_args}"
 EOF
 chmod +x "$lxcdir/rootfs/run.sh"
 
