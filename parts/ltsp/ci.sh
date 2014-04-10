@@ -1,8 +1,10 @@
-
 #!/bin/sh
 
 set -eu
 set -x
+
+# Workaround the environment issue on Trusty
+. /etc/environment
 
 sudo apt-get update
 sudo apt-get install -y --force-yes puavo-devscripts aptirepo-upload
