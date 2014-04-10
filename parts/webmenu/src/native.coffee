@@ -106,9 +106,9 @@ catch err
 
 if puavoDomain
     if config.get("passwordCMD")
-        expandVariables(config.passwordCMD, "url")
+        expandVariables(config.get("passwordCMD"), "url")
     if config.get("profileCMD")
-        expandVariables(config.profileCMD, "url")
+        expandVariables(config.get("profileCMD"), "url")
 
 
 desktopReadStarted = Date.now()
@@ -253,7 +253,7 @@ module.exports = (gui, Window) ->
     })
 
     shared.executeAction = (action) ->
-        if actionCMD = config[action + "CMD"]
+        if actionCMD = config.get(action + "CMD")
             launchCommand(actionCMD)
         else
             console.error "Unknown action #{ action }"
