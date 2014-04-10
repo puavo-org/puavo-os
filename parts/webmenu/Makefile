@@ -104,11 +104,13 @@ install: install-dirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		bin/webmenu \
 		bin/webmenu-spawn \
-		bin/webmenu-env
+		bin/webmenu-env \
+		bin/puavo-download-user-photo
 
 uninstall:
 	rm $(DESTDIR)$(bindir)/webmenu-spawn
 	rm $(DESTDIR)$(bindir)/webmenu
+	rm $(DESTDIR)$(bindir)/puavo-download-user-photo
 	rm -rf $(DESTDIR)/opt/webmenu
 	rm $(DESTDIR)$(datarootdir)/applications/webmenu-spawn.desktop 
 	rm $(DESTDIR)/etc/xdg/autostart/webmenu.desktop
