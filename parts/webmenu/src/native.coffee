@@ -11,6 +11,7 @@ Q = require "q"
 path = require "path"
 Handlebars = require "handlebars"
 {EventEmitter} = require "events"
+Backbone = require "backbone"
 
 FeedCollection = require "./FeedCollection"
 launchCommand = require "./launchcommand"
@@ -74,22 +75,22 @@ safeRequire = (path) ->
         return {}
 
 # Merge config files. Last one overrides options from previous one
-config = _.extend({},
+config_data = _.extend({},
     safeRequire(__dirname + "/../config.json"),
     safeRequire("/etc/webmenu/config.json"),
     safeRequire(webmenuHome + "/config.json"),
 )
 
-
-config.hostType = require "./hosttype"
-config.feedback = logger.active and process.env.WM_FEEDBACK_ACTIVE
-config.guestSession = (process.env.GUEST_SESSION is "true")
+config = new Backbone.Model config_data
+config.set("hostType", require "./hosttype")
+config.set("feedback", logger.active and process.env.WM_FEEDBACK_ACTIVE)
+config.set("guestSession", (process.env.GUEST_SESSION is "true"))
 
 userPhotoPath = "#{ webmenuHome }/user-photo.jpg"
 if fs.existsSync(userPhotoPath)
-  config.userPhoto = "file://#{ webmenuHome }/user-photo.jpg"
+  config.set("userPhoto", "file://#{ webmenuHome }/user-photo.jpg")
 else
-  config.userPhoto = "styles/theme/default/img/anonymous.png"
+  config.set("userPhoto", "styles/theme/default/img/anonymous.png")
 
 
 try
@@ -100,13 +101,13 @@ try
 catch err
     console.warn "Cannot read Puavo Domain", err
     console.warn "Disabling password and profiles buttons"
-    config.passwordCMD = null
-    config.profileCMD = null
+    config.set("passwordCMD", null)
+    config.set("profileCMD", null)
 
 if puavoDomain
-    if config.passwordCMD
+    if config.get("passwordCMD")
         expandVariables(config.passwordCMD, "url")
-    if config.profileCMD
+    if config.get("profileCMD")
         expandVariables(config.profileCMD, "url")
 
 
@@ -114,11 +115,11 @@ desktopReadStarted = Date.now()
 # inject data from .desktop file to menuJSON.
 menutools.injectDesktopData(
     menuJSON
-    config.dotDesktopSearchPaths
+    config.get("dotDesktopSearchPaths")
     locale
-    config.iconSearchPaths
-    config.fallbackIcon
-    config.hostType
+    config.get("iconSearchPaths")
+    config.get("fallbackIcon")
+    config.get("hostType")
 )
 
 desktopReadTook = (Date.now() - desktopReadStarted) / 1000
@@ -248,7 +249,7 @@ module.exports = (gui, Window) ->
     shared.menu = menuJSON
     shared.logger = logger
     shared.feeds = new FeedCollection([], {
-        command: config.feedCMD
+        command: config.get("feedCMD")
     })
 
     shared.executeAction = (action) ->
@@ -258,7 +259,7 @@ module.exports = (gui, Window) ->
             console.error "Unknown action #{ action }"
 
     shared.hideWindow =  hideWindow
-    if config.feedback
+    if config.get("feedback")
         shared.sendFeedback = (feedback) ->
 
             msg = {

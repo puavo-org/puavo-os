@@ -27,7 +27,6 @@ MenuModel = require "./models/MenuModel.coffee"
 
 
 user = new Backbone.Model user
-config = new Backbone.Model config
 allItems = new AllItems
 menuModel = new MenuModel menu, allItems
 
