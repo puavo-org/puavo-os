@@ -87,10 +87,6 @@ config.set("feedback", logger.active and process.env.WM_FEEDBACK_ACTIVE)
 config.set("guestSession", (process.env.GUEST_SESSION is "true"))
 
 userPhotoPath = "#{ webmenuHome }/user-photo.jpg"
-if fs.existsSync(userPhotoPath)
-  config.set("userPhoto", "file://#{ webmenuHome }/user-photo.jpg")
-else
-  config.set("userPhoto", "styles/theme/default/img/anonymous.png")
 
 
 try
@@ -153,6 +149,11 @@ module.exports = (gui, Window) ->
     # Make menu visible and bring it to current desktop
     ###
     displayMenu = ->
+        if fs.existsSync(userPhotoPath)
+          config.set("userPhoto", "file://#{ userPhotoPath }")
+        else
+          config.set("userPhoto", "styles/theme/default/img/anonymous.png")
+
         menuVisible = true
         console.log "Displaying menu"
         Window.show()

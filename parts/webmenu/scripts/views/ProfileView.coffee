@@ -14,6 +14,8 @@ class ProfileView extends ViewMaster
         @user = opts.user
         @profileCMD = opts.config.get("profileCMD")
 
+        @listenTo(@config, "change", @render)
+
     context: -> {
         user: @user.toJSON()
         config: @config.toJSON()
