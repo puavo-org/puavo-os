@@ -93,6 +93,8 @@ install: install-dirs
 	cp -r GIT_COMMIT lib node_modules bin docs scripts vendor styles extra i18n *.js *.json *.md *.html $(DESTDIR)/opt/webmenu
 	$(INSTALL_DATA) -t $(DESTDIR)/etc/xdg/autostart \
 		extra/webmenu.desktop
+	$(INSTALL_DATA) -t $(DESTDIR)/etc/xdg/autostart \
+		extra/download-user-photo.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)/usr/share/icons \
 		extra/icons/webmenu.png
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/applications \
@@ -110,6 +112,7 @@ uninstall:
 	rm -rf $(DESTDIR)/opt/webmenu
 	rm $(DESTDIR)$(datarootdir)/applications/webmenu-spawn.desktop 
 	rm $(DESTDIR)/etc/xdg/autostart/webmenu.desktop
+	rm $(DESTDIR)/etc/xdg/autostart/download-user-photo.desktop
 	rm $(DESTDIR)/usr/share/icons/webmenu.png
 
 test-nw:
