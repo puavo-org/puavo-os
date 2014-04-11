@@ -400,6 +400,7 @@ class packages {
     [ 'cdparanoia'
     , 'cdrdao'
     , 'cue2toc'
+    , 'eject'
     , 'rhythmbox-plugin-cdrecorder'
     , 'sound-juicer' ]:
       tag => [ 'optical_media', 'ubuntu', ];
