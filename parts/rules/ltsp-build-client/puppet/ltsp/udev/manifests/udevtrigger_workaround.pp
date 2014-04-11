@@ -14,11 +14,25 @@ class udev::udevtrigger_workaround {
   # Telling udevd to reload rules (/sbin/udevadm control --reload-rules)
   # before triggering buffered kernel events seems to fix the issue.
   #
+  # There are also problems with generated udev rules. Again, my guess
+  # is that there are problems with inotify+overlayfs -combo: udevd does
+  # not realize that generator-rules have generated new rule files and
+  # therefore does not use them. The fix is simple: tell udevd to reload
+  # rules after writing has finished by calling
+  #   /sbin/udevadm control --reload-rules
+  # before exit in /lib/udev/write_(net|cd)_rules scripts.
+  #
   # [1]: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/882147
 
   dpkg::divert {
     '/etc/init/udevtrigger.conf':
       dest => '/etc/init/udevtrigger.conf.dist';
+
+    '/lib/udev/write_cd_rules':
+      dest => '/lib/udev/write_cd_rules.dist';
+
+    '/lib/udev/write_net_rules':
+      dest => '/lib/udev/write_net_rules.dist';
   }
 
   File {
@@ -29,6 +43,14 @@ class udev::udevtrigger_workaround {
     '/etc/init/udevtrigger.conf':
       content => template('udev/udevtrigger.conf'),
       require => Dpkg::Divert['/etc/init/udevtrigger.conf'];
+
+    '/lib/udev/write_cd_rules':
+      content => template('udev/write_cd_rules'),
+      require => Dpkg::Divert['/lib/udev/write_cd_rules'];
+
+    '/lib/udev/write_net_rules':
+      content => template('udev/write_net_rules'),
+      require => Dpkg::Divert['/lib/udev/write_net_rules'];
   }
 
   Package <| (title == udev) |>
