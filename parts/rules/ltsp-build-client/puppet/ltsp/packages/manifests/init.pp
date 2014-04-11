@@ -411,6 +411,7 @@ class packages {
     , 'basic256'
     , 'eclipse'
     , 'emacs23'
+    , 'emacs24'
     , 'eric'
     , 'eric-api-files'
     , 'gcc-avr'
