@@ -13,31 +13,6 @@
 
 set +e
 
-(
-  # /etc/init/udevtrigger.conf misses some stuff when run in LTSP client
-  # (for some reason).  The end result is that, for example, the /dev/fuse
-  # permissions might be wrong on some boots (600, should be 1666).
-  # Other devices probably suffer from the same issues.
-
-  # Running "udevadm trigger --action=add" again at this stage messes up
-  # /etc/udev/rules.d/70-persistent-net.rules and
-  # /etc/udev/rules.d/70-persistent-cd.rules files (those will be added more
-  # entries after each udevadm-run), so it is not safe to simply run
-  # "udevadm trigger --action=add" again (it is run at an LTSP initramfs-stage
-  # and then later at /etc/init/udevtrigger.conf).
-
-  # We work around these issues by explicitly settings some permissions here.
-
-  chmod 1666 /dev/fuse
-
-  # Allow access to mimio device, in case udev got it wrong.
-  lsusb | perl -ane '
-    $F[5] eq "08d3:0003"
-      && /^Bus (\d+) Device (\d+):/
-      && system("chmod", "666", "/dev/bus/usb/$1/$2")
-  '
-)
-
 # Lenovo ThinkPad Edge E320 seems to boot always with soft blocked wifi,
 # no matter what. The following line is intended to target this specific
 # model, but it does not harm to have it unblocked on any other device,
