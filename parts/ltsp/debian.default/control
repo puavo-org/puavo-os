@@ -9,7 +9,7 @@ Homepage: https://github.com/opinsys/puavo-ltsp
 Package: puavo-ltsp-bootserver
 Architecture: all
 Depends: ${misc:Depends}, libsasl2-modules-gssapi-mit, isc-dhcp-server, bind9,
- dnsmasq, ruby1.8, ruby1.9.3, nbd-server, nfs-kernel-server, ruby-uuidtools,
+ dnsmasq, ruby1.9.3, nbd-server, nfs-kernel-server, ruby-uuidtools,
  puavo-tftpd, puavo-tftpd-hooks, bridge-utils, puavo-ds-slave, puavo-register,
  cups, foomatic-db, foomatic-db-engine, foomatic-filters, hplip,
  openprinting-ppds, pnm2ppa, printer-driver-gutenprint, pxljr, splix,
@@ -35,6 +35,6 @@ Description: Bits and pieces needed inside the LTSP chroot image.
 
 Package: puavo-ltsp-install
 Architecture: all
-Depends: ${misc:Depends}, ruby1.8, ruby-highline, nbd-client, pv, rdiff, curl,
+Depends: ${misc:Depends}, ruby-highline, nbd-client, pv, rdiff, curl,
  puavo-client
 Description: Bits and pieces needed inside the LTSP chroot image.
