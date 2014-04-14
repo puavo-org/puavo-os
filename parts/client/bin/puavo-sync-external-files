@@ -66,22 +66,28 @@ def read_current_files(dirpath)
 end
 
 class ExternalFiles
-  def initialize(base_uri, username, password)
+  def initialize(base_uri)
     @base_uri = base_uri
-    @username = username
-    @password = password
+
+    case PUAVO_ETC.hosttype
+      when 'laptop','wirelessaccesspoint'
+        @username = PUAVO_ETC.ldap_dn
+	@password = PUAVO_ETC.ldap_password
+    end
   end
 
-  def data(name)
-    RestClient::Resource.new("#{ @base_uri }/#{ name }",
-			     @username,
-			     @password) \
-			.get
+  def data(name='')
+    uri =  name != ''  ?  "#{ @base_uri }/#{ name }"  :  @base_uri
+
+    rc = @username && @password \
+           ? RestClient::Resource.new(uri, @username, @password) \
+           : RestClient::Resource.new(uri)
+
+    rc.get
   end
 
   def index
-    r = RestClient::Resource.new(@base_uri, @username, @password).get
-    JSON.parse(r)
+    JSON.parse( data() )
   end
 end
 
@@ -94,8 +100,8 @@ def main(options)
 		     'external_files').to_s
 
   puts "Connecting to #{ ef_root }"
+  ef = ExternalFiles.new(ef_root)
 
-  ef = ExternalFiles.new(ef_root, PUAVO_ETC.ldap_dn, PUAVO_ETC.ldap_password)
   ef.index.each do |meta|
     file_path = File.join(options[:target], meta["name"])
 
