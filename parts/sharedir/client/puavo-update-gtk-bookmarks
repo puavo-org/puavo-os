@@ -21,7 +21,7 @@ update_bookmarks() {
     mkdir -p "${bookmarksdir}"
     touch "${bookmarksfile}"
 
-    tmpfile=$(mktemp)
+    tmpfile="${bookmarksfile}.tmp"
 
     # Grep fails if the file is empty, which is ok in this situation: it
     # just means that there is not anything to preserve.
