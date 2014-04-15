@@ -59,9 +59,31 @@ script is called. It runs scripts under /etc/puavo-vpn-client/scripts/route-up/
 where puavo-vpn-dnsmasq script is located. It calls 
 /usr/lib/puavo-vpn-client/set-servers --query-services that stores the redirect 
 hostnames to file /run/puavo-vpn-client/services and send the information to 
-dnsmasq through DBUS.
+dnsmasq through DBUS. After it dnsmasq has been setup, it calls 
+/usr/lib/puavo-vpn-client/runme dns-up that runs scripts from 
+/etc/puavo-vpn-client/scripts/dns-up/. This is needed because one cannot pass 
+any traffic through the tunnel in route-up scripts and set-servers is run 
+in the background for that reason.
 
 set-servers is called also from /etc/NetworkManager/dispatcher.d/puavo-vpn-dnsmasq 
 when a network goes up or down. This ensures that puavo-vpn-dnsmasq always 
 has the correct upstream DNS server address(es). VPN gateway is not queried 
 in this case and only cached entries are used.
+
+
+
+Copyright © 2014 Opinsys Oy
+
+This program is free software; you can redistribute it and/or modify it 
+under the terms of the GNU General Public License as published by the 
+Free Software Foundation; either version 2 of the License, or (at your 
+option) any later version.
+
+This program is distributed in the hope that it will be useful, but 
+WITHOUT ANY WARRANTY; without even the implied warranty of 
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General 
+Public License for more details.
+
+You should have received a copy of the GNU General Public License along 
+with this program; if not, write to the Free Software Foundation, Inc., 
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
