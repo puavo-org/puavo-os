@@ -26,7 +26,8 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
 		upstart/puavo-vpn-client.conf \
-		upstart/puavo-vpn-dnsmasq.conf
+		upstart/puavo-vpn-dnsmasq.conf \
+		upstart/puavo-vpn-dnsmasq-set-servers.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client \
 		openvpn.conf
