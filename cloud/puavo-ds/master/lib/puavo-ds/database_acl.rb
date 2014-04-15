@@ -514,7 +514,7 @@ class LdapAcl
 					 puavoDeviceOnHour
 					 puavoExternalFeed
 					 puavoMountpoint
-					 pauvoTag
+					 puavoTag
 					 puavoWlanChannel
 					 puavoWlanSSID)),		Rule.write(Set.school_admin_or_owner_and_user),
 														Rule.read(People.children, Hosts.subtree),
