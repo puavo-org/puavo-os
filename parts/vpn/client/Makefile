@@ -33,11 +33,12 @@ install : installdirs
 		openvpn.conf
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-vpn-client \
+		lib/clean-client \
 		lib/runme \
 		lib/set-servers
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up \
-		scripts/puavo-vpn-dnsmasq
+		scripts/route-up/puavo-vpn-dnsmasq
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d \
 		dispatcher.d/puavo-vpn-dnsmasq

@@ -9,6 +9,11 @@ require 'dnsruby'
 
 Encoding.default_external = 'utf-8'
 ENV['LANG'] = "C"
+instance_id = "default"
+
+if ENV.has_key?('daemon_pid')
+  instance_id = ENV['daemon_pid']
+end
 
 def log(message)
   Syslog.open("puavo-vpn-set-servers", Syslog::LOG_CONS) { |s| s.warning message }
@@ -147,11 +152,13 @@ if opts[:query_services]
     puts delay
   end
 
+  filename = "/run/puavo-vpn-client/services-#{instance_id}"
+
   while (retries > 0) and !done
     begin
       services[opts[:query_services]] = query_vpn_services(opts[:query_services], puavo_topdomain)
 
-      File.open("/run/puavo-vpn-client/services", "w") do |f|
+      File.open(filename, "w") do |f|
         f.write services.to_json
       end
 
@@ -168,7 +175,12 @@ if opts[:query_services]
   end
 else
   if File.exists?("/run/puavo-vpn-client/services")
-    services = JSON.parse(File.read("/run/puavo-vpn-client/services"))
+    Dir.glob("/run/puavo-vpn-client/service*").each do |filename|
+      tmp = JSON.parse(File.read(filename))
+      tmp.each_pair do |key, value|
+        services[key] = value
+      end
+    end
   end
 end
 
