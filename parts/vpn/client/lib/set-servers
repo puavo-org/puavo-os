@@ -10,8 +10,6 @@ require 'dnsruby'
 Encoding.default_external = 'utf-8'
 ENV['LANG'] = "C"
 
-puavo_topdomain = File.read("/etc/puavo/topdomain").chomp
-
 def log(message)
   Syslog.open("puavo-vpn-set-servers", Syslog::LOG_CONS) { |s| s.warning message }
 end
@@ -131,6 +129,8 @@ services = Hash.new
 # queried. The script should be run with --query-services when VPN 
 # connection comes up and without when other network information changes.
 if opts[:query_services]
+  puavo_topdomain = File.read("/etc/puavo/topdomain").chomp
+
   retries = 1
 
   if opts[:retries]
