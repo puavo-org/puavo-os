@@ -507,7 +507,16 @@ class LdapAcl
 					 puavoPrinterQueue
 					 puavoWirelessPrinterQueue
 					 member
-					 memberUid)),			Rule.write(Set.school_admin_or_owner_and_user),
+					 memberUid
+					 puavoActiveService
+					 puavoDeviceAutoPowerOffMode
+					 puavoDeviceOffHour
+					 puavoDeviceOnHour
+					 puavoExternalFeed
+					 puavoMountpoint
+					 pauvoTag
+					 puavoWlanChannel
+					 puavoWlanSSID)),		Rule.write(Set.school_admin_or_owner_and_user),
 														Rule.read(People.children, Hosts.subtree),
 														RuleBreak.read(Set.sysgroup('getent')),						],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
