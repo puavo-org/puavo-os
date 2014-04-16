@@ -174,12 +174,10 @@ if opts[:query_services]
     end
   end
 else
-  if File.exists?("/run/puavo-vpn-client/services")
-    Dir.glob("/run/puavo-vpn-client/service*").each do |filename|
-      tmp = JSON.parse(File.read(filename))
-      tmp.each_pair do |key, value|
-        services[key] = value
-      end
+  Dir.glob("/run/puavo-vpn-client/services*").each do |filename|
+    tmp = JSON.parse(File.read(filename))
+    tmp.each_pair do |key, value|
+      services[key] = value
     end
   end
 end
