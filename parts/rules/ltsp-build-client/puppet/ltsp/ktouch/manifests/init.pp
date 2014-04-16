@@ -5,7 +5,7 @@ class ktouch {
     require => Package['ktouch']
   }
 
-  $ktouch_prefix = '/usr/share/kde4/apps/ktouch/keyboard'
+  $ktouch_prefix = '/usr/share/kde4/apps/ktouch/Lecture'
 
   file {
     "${ktouch_prefix}/finnish/fi.junior-remake.ktouch.xml":
