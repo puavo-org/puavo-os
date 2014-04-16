@@ -2,8 +2,8 @@ class ktouch {
   include packages
 
   file {
-    '/usr/share/kde4/apps/ktouch/keyboard/finnish/fi.junior.ktouch.xml':
-      content => template('ktouch/fi.junior.ktouch.xml'),
+    '/usr/share/kde4/apps/ktouch/keyboard/finnish/fi.junior-remake.ktouch.xml':
+      content => template('ktouch/fi.junior-remake.ktouch.xml'),
       require => Package['ktouch'];
   }
 
