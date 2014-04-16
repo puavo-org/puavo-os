@@ -458,6 +458,10 @@ class packages {
     [ 'google-earth-stable'
     , 'googleearth'
     , 'av4kav'
+    , 'texlive-fonts-extra'
+    , 'texlive-fonts-recommended'
+    , 'texlive-latex-extra'
+    , 'texlive-latex-recommended'
     , 'vstloggerpro' ]:
       tag => [ 'science', 'opinsys', ];
 
