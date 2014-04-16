@@ -14,6 +14,7 @@ all :
 installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/dbus-1/system.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-vpn-client/dnsmasq.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/dns-up
 	mkdir -p $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d
