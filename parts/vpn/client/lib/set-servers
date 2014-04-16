@@ -7,7 +7,7 @@ require 'json'
 require 'syslog'
 require 'dnsruby'
 
-Encoding.default_external = 'utf-8'
+#Encoding.default_external = 'utf-8'
 ENV['LANG'] = "C"
 instance_id = "default"
 
