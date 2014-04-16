@@ -1,22 +1,21 @@
 class ktouch {
   include packages
 
-  file {
-    '/usr/share/kde4/apps/ktouch/keyboard/finnish/fi.junior-remake.ktouch.xml':
-      content => template('ktouch/fi.junior-remake.ktouch.xml'),
-      require => Package['ktouch'];
+  File {
+    require => Package['ktouch']
   }
 
-  file {
-    '/usr/share/kde4/apps/ktouch/keyboard/english/en.junior.hard.ktouch.xml':
-      content => template('ktouch/en.junior.hard.ktouch.xml'),
-      require => Package['ktouch'];
-  }
+  $ktouch_prefix = '/usr/share/kde4/apps/ktouch/keyboard'
 
   file {
-    '/usr/share/kde4/apps/ktouch/keyboard/english/en.junior.easy.ktouch.xml':
-      content => template('ktouch/en.junior.easy.ktouch.xml'),
-      require => Package['ktouch'];
+    "${ktouch_prefix}/finnish/fi.junior-remake.ktouch.xml":
+      content => template('ktouch/fi.junior-remake.ktouch.xml');
+
+    "${ktouch_prefix}/english/en.junior.hard.ktouch.xml":
+      content => template('ktouch/en.junior.hard.ktouch.xml');
+
+    "${ktouch_prefix}/english/en.junior.easy.ktouch.xml":
+      content => template('ktouch/en.junior.easy.ktouch.xml');
   }
 
   Package <| title == ktouch |>
