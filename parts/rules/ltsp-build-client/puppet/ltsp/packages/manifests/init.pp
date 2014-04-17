@@ -812,7 +812,7 @@ class packages {
       kernel_package_for_version {
         [ '3.10.28.opinsys1'
         , '3.12.10.opinsys4'
-        , '3.13.1.opinsys2' ]:
+        , '3.14.1.opinsys1' ]:
           package_tag => 'opinsys',
           with_extra  => false;
       }
