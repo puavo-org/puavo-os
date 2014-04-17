@@ -22,10 +22,21 @@ class kernels {
     }
   }
 
+  define stable_kernel_link {
+    $filename = $title
+
+    file {
+      "/boot/$filename-stable":
+       ensure => link,
+       target => "${filename}-${kernels::stable_kernel}";
+    }
+  }
+
   case $lsbdistcodename {
     'quantal': {
       $default_kernel = '3.12.10.opinsys4'
       $edge_kernel = '3.14.1.opinsys1'
+      $stable_kernel = '3.10.28.opinsys1'
 
       default_kernel_link {
         [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
@@ -37,8 +48,14 @@ class kernels {
           require => Packages::Kernel_package_for_version[$edge_kernel];
       }
 
+      stable_kernel_link {
+        [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
+          require => Packages::Kernel_package_for_version[$stable_kernel];
+      }
+
       Packages::Kernel_package_for_version <| title == $default_kernel |>
       Packages::Kernel_package_for_version <| title == $edge_kernel |>
+      Packages::Kernel_package_for_version <| title == $stable_kernel |>
     }
   }
 }
