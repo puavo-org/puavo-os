@@ -17,6 +17,9 @@ override_dh_auto_install:
 	$(MAKE) -C bootserver install prefix=/usr sysconfdir=/etc DESTDIR=$(CURDIR)/debian/puavo-ltsp-bootserver
 	$(MAKE) -C puavo-install install prefix=/usr sysconfdir=/etc DESTDIR=$(CURDIR)/debian/puavo-ltsp-install
 
+override_dh_installcron:
+	dh_installcron --name=puavo-update-airprint-ddns
+
 override_dh_install:
 
 PACKAGE = $(shell dpkg-parsechangelog | sed -ne 's/^Source: //p')
