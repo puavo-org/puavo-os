@@ -123,3 +123,4 @@ write_config("/etc/apparmor.d/local/usr.sbin.dhcpd")
 `/etc/init.d/bind9 start`
 `/etc/init.d/dnsmasq start`
 `/etc/init.d/isc-dhcp-server start`
+`puavo-update-airprint-ddns`
