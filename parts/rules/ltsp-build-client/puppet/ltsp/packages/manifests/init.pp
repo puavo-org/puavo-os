@@ -357,7 +357,6 @@ class packages {
     , 'fmit'
     , 'hydrogen'
     , 'jokosher'
-    , 'libavcodec-extra-53'
     , 'lmms'
     , 'mixxx'
     , 'musescore'
