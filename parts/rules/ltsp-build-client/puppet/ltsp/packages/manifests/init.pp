@@ -511,6 +511,7 @@ class packages {
       tag => [ 'themes', 'thinclient', 'ubuntu', ];
 
     [ 'breathe-icon-theme'
+    , 'edubuntu-wallpapers'
     , 'gnome-icon-theme'
     , 'gnome-themes-ubuntu'
     , 'gtk2-engines'
@@ -522,7 +523,11 @@ class packages {
     , 'tangerine-icon-theme'
     , 'screensaver-default-images'
     , 'ubuntu-wallpapers'
-    , 'ubuntu-wallpapers-extra'
+    , 'ubuntu-wallpapers-precise'
+    , 'ubuntu-wallpapers-quantal'
+    , 'ubuntu-wallpapers-raring'
+    , 'ubuntu-wallpapers-saucy'
+    , 'ubuntu-wallpapers-trusty'
     , 'xscreensaver-data'
     , 'xscreensaver-data-extra' ]:
       tag => [ 'themes', 'ubuntu', ];
