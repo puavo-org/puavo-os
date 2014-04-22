@@ -187,7 +187,7 @@ class packages {
     , 'tuxmath'
     , 'tuxpaint'
     , 'tuxpaint-stamps-default'
-    , 'wormux'
+    , 'warmux'
     , 'xmoto' ]:
       tag => [ 'games', 'ubuntu', ];
 
