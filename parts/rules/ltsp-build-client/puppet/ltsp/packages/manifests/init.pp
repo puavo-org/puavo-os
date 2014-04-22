@@ -196,7 +196,6 @@ class packages {
     , 'gnome-applets'
     , 'gnome-power-manager'
     , 'gnome-user-guide'
-    , 'gnome-utils'
     , 'libgnome2-perl'
     , 'libgnomevfs2-bin'
     , 'libgnomevfs2-extra'
