@@ -23,7 +23,7 @@ on_sigchld()
 on_exit()
 {
     local -r exitval=$?
-    local net ssid
+    local net ssid bridge
 
     ## Do not exit or terminate on error or signal anymore. We are
     ## already exiting and it would be shame to exit while exiting, yo
@@ -38,8 +38,9 @@ on_exit()
     ## Burn the bridges.
     for net in "${PWAP_NETS[@]}"; do
         IFS=':' read _ ssid _ <<<"${net}"
-        ifconfig "${ssid}" down
-        brctl delbr "${ssid}"
+        bridge=$("${PWAP_LIBDIR}/get-bridge" "${ssid}")
+        ifconfig "${bridge}" down
+        brctl delbr "${bridge}"
     done
 
     rm -rf "${PWAP_RUNDIR}"
@@ -50,7 +51,7 @@ on_exit()
 
 write_hostapd_conf()
 {
-    local radio channel iface ssid_count bssid net auth ssid psk
+    local radio channel iface ssid_count bssid net auth ssid psk bridge
 
     ## Configure one hostapd per radio.
     for radio in "${PWAP_RADIOS[@]}"; do
@@ -77,12 +78,15 @@ write_hostapd_conf()
         for net in "${PWAP_NETS[@]}"; do
             IFS=':' read auth ssid psk <<<"${net}"
 
+            bridge=$("${PWAP_LIBDIR}/get-bridge" "${ssid}")
+
             ## Append network-specific hostapd configuration to the end.
             cat "${PWAP_DATADIR}/${auth}_hostapd.conf" \
                 >>"${PWAP_RUNDIR}/${iface}_hostapd.conf"
             sed -i \
                 -e "s|#{PWAP_BSS}|${iface}_${ssid_count}|g" \
                 -e "s|#{PWAP_SSID}|${ssid}|g" \
+                -e "s|#{PWAP_BRIDGE}|${bridge}|g" \
                 -e "s|#{PWAP_PSK}|${psk}|g" \
                 "${PWAP_RUNDIR}/${iface}_hostapd.conf"
             ssid_count=$((ssid_count + 1))
@@ -92,11 +96,13 @@ write_hostapd_conf()
 
 write_vtund_conf()
 {
-    local net ssid session
+    local net ssid session bridge
 
     ## Configure one vtund client per network.
     for net in "${PWAP_NETS[@]}"; do
         IFS=':' read _ ssid _ <<<"${net}"
+
+        bridge=$("${PWAP_LIBDIR}/get-bridge" "${ssid}")
 
         if [ ${PWAP_LEGACY_MODE} -eq 0 ]; then
             session="${ssid}"
@@ -105,7 +111,7 @@ write_vtund_conf()
         fi
 
         sed -e "s|#{PWAP_LIBDIR}|${PWAP_LIBDIR}|g" \
-            -e "s|#{PWAP_SSID}|${ssid}|g" \
+            -e "s|#{PWAP_BRIDGE}|${bridge}|g" \
             -e "s|#{PWAP_RUNDIR}|${PWAP_RUNDIR}|g" \
             -e "s|#{PWAP_SESSION}|${session}|g" \
             "${PWAP_DATADIR}/vtund.conf" \
@@ -252,7 +258,7 @@ setup_radios()
 
 start_services()
 {
-    local net ssid radio iface session
+    local net ssid radio iface session bridge
 
     ## Start one vtund client per network.
     for net in "${PWAP_NETS[@]}"; do
@@ -265,10 +271,11 @@ start_services()
         fi
 
         ## Setup the bridge.
-        brctl addbr "${ssid}"
-        brctl setfd "${ssid}" 0
-        ifconfig "${ssid}" up
-        dhclient -d "${ssid}" &
+        bridge=$("${PWAP_LIBDIR}/get-bridge" "${ssid}")
+        brctl addbr "${bridge}"
+        brctl setfd "${bridge}" 0
+        ifconfig "${bridge}" up
+        dhclient -d "${bridge}" &
         echo $! >>"${PWAP_RUNDIR}/critical_service.pids"
 
         vtund -n -f "${PWAP_RUNDIR}/${ssid}_vtund.conf" \
