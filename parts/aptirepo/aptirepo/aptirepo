@@ -32,7 +32,7 @@ def _importdeb(repo, args):
               file=sys.stderr)
         sys.exit(1)
 
-    repo.import_deb(args.debfile, codename=args.codename)
+    repo.import_deb(args.debfile, codename=args.codename, section=args.section)
 
     repo.update_dists()
 
@@ -70,6 +70,7 @@ def main():
     parser_importdeb = subparsers.add_parser("importdeb", help="import a single .deb file")
     parser_importdeb.add_argument("debfile", metavar="FILE.deb")
     parser_importdeb.add_argument("--codename", default="", help="target codename, defaults to codename defined in FILE.deb")
+    parser_importdeb.add_argument("--section", default="", help="target section, defaults to section defined in FILE.deb")
     parser_importdeb.add_argument("--sign-releases", action="store_true", default=False, help="sign Release files after update")
     parser_importdeb.set_defaults(func=_importdeb)
 

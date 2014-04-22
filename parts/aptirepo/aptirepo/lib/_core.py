@@ -206,7 +206,7 @@ class Aptirepo:
         shutil.copyfile(filepath, target_filepath)
         self.__log("copied '%s' to '%s'" % (filepath, target_filepath))
 
-    def import_deb(self, deb_filepath, codename=""):
+    def import_deb(self, deb_filepath, codename="", section=""):
         debfile = debian.debfile.DebFile(deb_filepath)
         debcontrol = debfile.debcontrol()
         # Handle changelog inside try-except since it can fail multiple
@@ -226,7 +226,8 @@ class Aptirepo:
             # If the changelog cannot be found, use the binary package
             # name as its source package name.
             source_name = debcontrol["Package"]
-        section = debcontrol["Section"]
+        if not section:
+            section = debcontrol["Section"]
         self.__copy_to_pool(deb_filepath, codename, source_name, section)
 
     def import_changes(self, changes_filepath):
