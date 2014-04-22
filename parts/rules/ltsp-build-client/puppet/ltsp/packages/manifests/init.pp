@@ -463,7 +463,6 @@ class packages {
     , 'lftp'
     , 'remmina'
     , 'smbclient'
-    , 'ubuntuone-client'
     , 'unison-gtk'
     , 'wget' ]:
       tag => [ 'remote_access', 'ubuntu', ];
@@ -700,7 +699,6 @@ class packages {
     , 'rfkill'
     , 'rhythmbox'
     , 'rhythmbox-plugin-magnatune'
-    , 'rhythmbox-ubuntuone'
     , 'seahorse'
     , 'shotwell'
     , 'simple-scan'
