@@ -123,7 +123,6 @@ class packages {
     , 'manpages-dev'
     , 'perl-doc'
     , 'pinfo'
-    , 'ruby-prof'
     , 'unetbootin'
     , 'translate-toolkit'
     , 'vim-nox' ]:
