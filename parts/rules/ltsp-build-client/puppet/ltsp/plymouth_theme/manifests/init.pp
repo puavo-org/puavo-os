@@ -9,7 +9,7 @@ class plymouth_theme {
     'set plymouth default theme':
       command => "/usr/bin/update-alternatives --set default.plymouth '$plymouth_theme_script'",
       notify  => Exec['update-initramfs'],
-      require => Package['liitu-themes'],
+      require => Package['opinsys-theme'],
       unless  => "/usr/bin/update-alternatives --query default.plymouth | /bin/fgrep -qx 'Status: manual'";
   }
 
@@ -17,10 +17,10 @@ class plymouth_theme {
     'set plymouth text theme':
       command => "/usr/bin/update-alternatives --set text.plymouth '$plymouth_theme_text'",
       notify  => Exec['update-initramfs'],
-      require => Package['liitu-themes'],
+      require => Package['opinsys-theme'],
       unless  => "/usr/bin/update-alternatives --query text.plymouth | /bin/fgrep -qx 'Status: manual'";
   }
 
   # this package contains $plymouth_theme_script
-  Package <| title == 'liitu-themes' |>
+  Package <| title == 'opinsys-theme' |>
 }
