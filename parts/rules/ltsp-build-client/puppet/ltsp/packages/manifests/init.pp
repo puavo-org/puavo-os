@@ -356,7 +356,6 @@ class packages {
     , 'denemo'
     , 'fmit'
     , 'hydrogen'
-    , 'jokosher'
     , 'lmms'
     , 'mixxx'
     , 'musescore'
