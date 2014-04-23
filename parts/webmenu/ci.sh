@@ -4,8 +4,8 @@ set -x
 set -eu
 
 sudo apt-get update
-sudo apt-get install -y --force-yes puavo-devscripts aptirepo-upload
-sudo apt-get install -y node-webkit  wmctrl gnome-themes-extras socat netcat-openbsd libnotify-bin xvfb jq
+sudo apt-get install -y --force-yes puavo-devscripts aptirepo-upload node-webkit jq
+sudo apt-get install -y wmctrl gnome-themes-extras socat netcat-openbsd libnotify-bin xvfb
 
 # XXX: Why node-webkit does not install these?
 sudo apt-get install -y libgconf2.0 libnss3
