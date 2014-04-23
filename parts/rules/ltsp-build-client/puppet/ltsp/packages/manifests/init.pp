@@ -648,7 +648,6 @@ class packages {
     , 'laptop-detect'
     , 'libatk-adaptor'
     , 'libgail-common'
-    , 'libgd2-xpm'
     , 'libnotify-bin'
     , 'libnss-mdns'
     , 'libpam-ck-connector'
