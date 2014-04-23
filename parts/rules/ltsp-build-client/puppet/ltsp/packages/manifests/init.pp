@@ -739,7 +739,7 @@ class packages {
       tag => [ 'ubuntu-gnome-desktop', 'ubuntu', ];
 
     [ 'desktop-file-utils'
-    , 'fuse-utils'
+    , 'fuse'
     , 'gconf-editor'
     , 'gkbd-capplet'
     , 'gpointing-device-settings'
