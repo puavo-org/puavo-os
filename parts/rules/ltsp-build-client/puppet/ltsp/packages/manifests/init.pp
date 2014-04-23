@@ -332,7 +332,6 @@ class packages {
     , 'me-tv'
     , 'ogmrip'  
     , 'python-gst0.10'
-    , 'thoggen'    
     , 'vlc'
     , 'vlc-plugin-pulse'
     , 'x264'
