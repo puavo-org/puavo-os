@@ -144,8 +144,7 @@ class packages {
       tag => [ 'emulation', 'ubuntu', ];
 
     [ 'ttf-freefont'
-    , 'ttf-mscorefonts-installer'
-    , 'x-ttcidfont-conf' ]:
+    , 'ttf-mscorefonts-installer' ]:
       tag => [ 'fonts', 'ubuntu', ];
 
     [ 'billard-gl'
