@@ -489,7 +489,7 @@ class packages {
       tag => [ 'science', 'ubuntu', ];
 
     [ 'faenza-icon-theme'
-    , 'liitu-themes' ]:
+    , 'opinsys-theme' ]:
       tag => [ 'themes', 'opinsys', ];
 
     'ubuntu-mono':

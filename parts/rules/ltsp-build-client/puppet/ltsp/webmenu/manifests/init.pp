@@ -10,7 +10,7 @@ class webmenu {
       dest => '/usr/share/applications/webmenu-spawn-logout.desktop.dist';
   }
 
-  File { require => [ Package['liitu-themes']
+  File { require => [ Package['opinsys-theme']
 		    , Package['webmenu'] ], }
   file {
     '/etc/webmenu':
@@ -35,6 +35,6 @@ class webmenu {
 
   }
 
-  Package <| (title == liitu-themes)
+  Package <| (title == opinsys-theme)
           or (title == webmenu)      |>
 }

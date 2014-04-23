@@ -13,10 +13,10 @@ class desktop::puavodesktop {
       content => template('desktop/dconf_session_profile'),
       notify  => Exec['update dconf'],
       require => [ Package['faenza-icon-theme']
-                 , Package['liitu-themes']
+                 , Package['opinsys-theme']
                  , Package['webmenu'] ];
   }
 
   Package <| (title == faenza-icon-theme)
-          or (title == liitu-themes)      |>
+          or (title == opinsys-theme)     |>
 }
