@@ -383,8 +383,7 @@ class packages {
     , 'scribus-doc'
     , 'tellico'
     , 'thunderbird'
-    , 'vym'
-    , 'qcad' ]:
+    , 'vym' ]:
       tag => [ 'office', 'ubuntu', ];
 
     [ 'cdparanoia'
