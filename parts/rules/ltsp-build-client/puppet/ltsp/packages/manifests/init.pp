@@ -286,7 +286,6 @@ class packages {
     , 'libreoffice-help-fi'
     , 'libreoffice-l10n-fi'
     , 'libreoffice-voikko'
-    , 'myspell-fi'
     , 'thunderbird-locale-fi' ]:
       tag => [ 'language-fi', 'ubuntu', ];
 
