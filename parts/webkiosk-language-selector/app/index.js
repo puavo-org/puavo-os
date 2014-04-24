@@ -2,7 +2,6 @@ require('nw.gui').Window.get().resizeTo(screen.width, screen.height);
 fs = require('fs');
 
 var json = JSON.parse(fs.readFileSync('/etc/webkiosk.menu', 'utf8'));
-console.log(json);
 
 if (json.hasOwnProperty("background")) {
   document.querySelector("body").setAttribute("background", json["background"]);
