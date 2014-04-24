@@ -1,0 +1,215 @@
+#!/bin/sh
+
+set -e
+
+user=${user:-$SUDO_USER}
+user=${user:-$USER}
+
+option=$1
+option_argument=$2
+
+set -u
+
+mirror_through_apt_cacher="http://localhost:3142/fi.archive.ubuntu.com/ubuntu/"
+
+images_dir="/opt/puavo/images"
+target_dir="/virtualtmp/$user/trusty"
+puppet_pdip_dir="$target_dir/etc/puppet/pdip"
+
+do_mounts() {
+  mount -o bind /dev     "$target_dir/dev"
+  mount -o bind /dev/pts "$target_dir/dev/pts"
+  mount -o bind /proc    "$target_dir/proc"
+}
+
+do_umounts() {
+  # umount -l or -f ?  (XXX -f did not seem to work)
+  umount -l "$target_dir/dev/pts"
+  umount -l "$target_dir/dev"
+  umount -l "$target_dir/proc"
+}
+
+wipe_chroot() {
+  do_umounts 2>/dev/null || true
+  rm -rf "$target_dir"
+}
+
+check_puppet_class() {
+  if [ -z "$1" ]; then
+    echo 'Did not define a puppet class, exiting...' >&2
+    return 1
+  fi
+}
+
+build_chroot() {
+  wipe_chroot
+
+  run_with_setarch \
+    debootstrap --arch=i386 \
+		--components=main,restricted,universe,multiverse \
+		trusty "$target_dir" "$mirror_through_apt_cacher"
+
+  # setup apt sources list
+
+  cat <<'EOF' > "$target_dir/etc/apt/sources.list.d/archive.list"
+deb http://archive.opinsys.fi/git-trusty trusty main restricted universe multiverse
+deb-src http://archive.opinsys.fi/git-trusty trusty main restricted universe multiverse
+EOF
+
+  # setup policy-rc.d (so that daemons are not started when installing)
+
+  cat <<'EOF' > "$target_dir/usr/sbin/policy-rc.d"
+#!/bin/sh
+[ "$DISABLE_DAEMONS" != "" ] && exit 101
+EOF
+  chmod 755 "$target_dir/usr/sbin/policy-rc.d"
+
+  # the install script
+
+  cat <<'EOF' > "$target_dir/root/install.sh"
+#!/bin/sh
+
+set -eu
+
+export DEBIAN_FRONTEND=noninteractive
+export DISABLE_DAEMONS=1
+
+apt-get update
+apt-get -y install linux-image-generic
+
+cd /boot
+for vmlinuz in vmlinuz-*; do
+  test -e "$vmlinuz" || break
+  kernel_version=${vmlinuz##vmlinuz-}
+  ln -s "vmlinuz-$kernel_version"    vmlinuz
+  ln -s "initrd.img-$kernel_version" initrd.img
+done
+
+# basic, required packages (from outside sources)
+# XXX should try to do without ltsp-client-core, replaced by puavo-image?
+# apt-get -y install ltsp-client-core nbd-client
+
+# helpful stuff
+# apt-get -y install openssh-server
+
+# use these for now
+# apt-get -y install gnome-session-flashback \
+#		   gnome-shell             \
+#		   ubuntu-desktop
+
+# XXX should do without --allow-unauthenticated
+puavo_packages="
+  ltsp-lightdm
+  opinsys-ca-certificates
+  puavo-ltsp-client
+  puavo-ltsp-install
+"
+apt-get --allow-unauthenticated -y install $puavo_packages
+
+# sed -i '/^root/s|^.*$|root:$6$jwLm8uMQ$8XSSaM6hu.4xCjB26Z/KnL9KZGFQNAMpROLNNQDB6hKdA2yMcv07dTMynH52VTm6qb6c7siLz1G.5421RIJYR1:16175:0:99999:7:::|' \
+#        /etc/shadow
+# 
+# sed -i 's/^PermitRootLogin without-password$/PermitRootLogin yes/' \
+#        /etc/ssh/sshd_config
+EOF
+  chmod 755 "$target_dir/root/install.sh"
+
+  run_in_chroot /root/install.sh
+}
+
+apply_puppet() {
+  puppet_classes=$(cat $target_dir/etc/puppet/pdip/.classes)
+  puppet_module_dirs=$(cat $target_dir/etc/puppet/pdip/.module_dirs)
+
+  rm -rf $puppet_pdip_dir/*
+  cp -HR puppet/* "$puppet_pdip_dir"
+
+  logfile_path="/var/log/puppet/pdip-$(date +%Y-%m-%d-%H%M%S).log"
+  run_in_chroot puppet apply                          \
+		  --detailed-exitcodes                \
+		  --logdest console                   \
+		  --logdest "$logfile_path"           \
+		  --execute "include $puppet_classes" \
+		  --modulepath "$puppet_module_dirs"  \
+    || [ $? -eq 2 ]
+}
+
+prepare_puppet() {
+  puppet_classes=$1
+
+  puppet_module_dirs=$(
+    echo puppet/* \
+      | xargs -n 1 basename  \
+      | xargs -n 1 printf "/etc/puppet/pdip/%s\n" \
+      | xargs \
+      | tr ' ' ':')
+
+  run_in_chroot apt-get -qq -y install puppet-common
+
+  mkdir -p "$puppet_pdip_dir"
+  echo "$puppet_classes"     > "$puppet_pdip_dir/.classes"
+  echo "$puppet_module_dirs" > "$puppet_pdip_dir/.module_dirs"
+}
+
+run_in_chroot() {
+  do_mounts
+  run_with_setarch chroot "$target_dir" env DISABLE_DAEMONS=1 "$@"
+  do_umounts
+}
+
+run_with_setarch() {
+  # i386 is hardcoded for now
+  setarch i386 "$@"
+}
+
+make_image() {
+  mkdir -p "$images_dir"
+  mksquashfs "$target_dir" "$images_dir/trusty.img.tmp" -noappend
+  mv "$images_dir/trusty.img.tmp" "$images_dir/trusty.img"
+}
+
+cleanup() {
+  do_umounts 2>/dev/null || true
+}
+
+trap cleanup 0 INT TERM
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo 'Run me as root' >&2
+  exit 1
+fi
+
+case "$option" in
+  --build-all-for)
+    check_puppet_class "$option_argument"
+
+    $0 --build-chroot
+    $0 --prepare-puppet "$option_argument"
+    # XXX apparently this does not stop and exit with puppet errors here, why?
+    $0 --puppet-chroot
+    $0 --image
+
+    ;;
+  --build-chroot)
+    build_chroot
+    ;;
+  --chroot)
+    run_in_chroot bash
+    ;;
+  --prepare-puppet)
+    check_puppet_class "$option_argument"
+    prepare_puppet "$option_argument"
+    ;;
+  --image)
+    make_image
+    ;;
+  --puppet-chroot)
+    apply_puppet
+    ;;
+  *)
+    echo "Usage: $(basename $0) [--build|--chroot|--image]" >&2
+    exit 1
+    ;;
+esac
+
+exit 0
