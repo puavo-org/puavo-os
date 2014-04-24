@@ -31,7 +31,7 @@ Depends: ${misc:Depends}, lightdm, lightdm-gtk-greeter,
  ruby1.9.3, ruby-ldap, ruby-dnsruby, sssd, dnsutils, libnss-extrausers,
  ltspfsd, rdate, puavo-vpn-client, libpam-envfeed, ruby-uuidtools,
  ruby-trollop, ruby-rest-client, ntp, imagemagick, cowsay, puavo-client,
- nfs-common
+ nfs-common, gnome-session-flashback
 Description: Bits and pieces needed inside the LTSP chroot image.
 
 Package: puavo-ltsp-install
