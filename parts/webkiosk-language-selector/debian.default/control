@@ -1,0 +1,11 @@
+Source: webkiosk-language-selector
+Maintainer: Opinsys <dev@opinsys.fi>
+Section: misc
+Priority: optional
+Build-Depends: debhelper (>= 8)
+Standards-Version: 3.9.3
+
+Package: webkiosk-language-selector
+Architecture: all
+Depends: ${misc:Depends}, node-webkit
+Description: Helper for webkiosks to select session language.
