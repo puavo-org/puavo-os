@@ -12,4 +12,4 @@ sudo puavo-install-deps debian/control
 puavo-dch $(cat VERSION)
 puavo-debuild
 
-aptirepo-upload -r $APTIREPO_REMOTE -b "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)" ../ltsp-lightdm*.changes
+aptirepo-upload -r $APTIREPO_REMOTE -b "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)" ../webkiosk-language-selector*.changes
