@@ -6,7 +6,7 @@ jq -r .tags[] /etc/puavo/device.json | grep -q -x webkiosk && {
   /usr/bin/ratpoison &
   RATPOISON_PID=$!
 
-  export PUAVO_SESSION_LANGUAGE=$(nw /usr/lib/puavo-ltsp-client/language-selector.nw)
+  export PUAVO_SESSION_LANGUAGE=$(nw webkiosk-language-selector)
 
   kill -9 ${RATPOISON_PID}
 
