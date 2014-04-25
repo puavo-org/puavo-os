@@ -7,16 +7,23 @@ class packages {
   # install packages by default
   Package { ensure => present, }
 
-  define kernel_package_for_version ($package_tag='', $with_extra=true) {
+  define kernel_package_for_version ($package_tag='', $with_extra=true, $with_dbg=false) {
     $version = $title
 
-    $packages = $with_extra ? {
-                  true  => [ "linux-headers-$version"
-                           , "linux-image-$version"
-                           , "linux-image-extra-$version" ],
-                  false => [ "linux-headers-$version"
-                           , "linux-image-$version" ],
-                }
+    $extra_packages = $with_extra ? {
+      true  => [ "linux-image-extra-$version" ],
+      false => [],
+    }
+
+    $dbg_packages = $with_dbg ? {
+      true  => [ "linux-image-$version-dbg" ],
+      false => [],
+    }
+
+    $packages = [ "linux-headers-$version"
+                , "linux-image-$version"
+                , $extra_packages
+                , $dbg_packages ]
 
     @package {
       $packages:
@@ -822,9 +829,9 @@ class packages {
         , '3.12.10.opinsys4'
         , '3.14.1.opinsys1' ]:
           package_tag => 'opinsys',
+          with_dbg    => false,
           with_extra  => false;
       }
     }
   }
 }
-
