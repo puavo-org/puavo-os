@@ -210,3 +210,7 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var USE_NFS_HOMES        False
     ;;
 esac
+
+if grep -q puavo_kdump_kernel /proc/cmdline; then
+    set_lts_var SCREEN_07 kdump
+fi
