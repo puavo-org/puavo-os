@@ -261,6 +261,9 @@ class packages {
     [ 'skype' ]:
       tag => [ 'instant_messaging', 'partner', ];
 
+    [ 'kdump-tools' ]:
+      tag => [ 'kernel', 'ubuntu', ];
+
     [ 'emesene'
     , 'gobby'
     , 'pidgin'
