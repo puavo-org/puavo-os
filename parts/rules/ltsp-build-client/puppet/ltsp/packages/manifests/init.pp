@@ -59,7 +59,7 @@ class packages {
     , 'tmux'
     , 'tshark'
     , 'whois'
-    , 'w3m' 
+    , 'w3m'
     , 'x11vnc']:
       tag => [ 'admin', 'thinclient', 'ubuntu', ];
 
@@ -342,9 +342,9 @@ class packages {
     , 'kscd'
     , 'libdvdread4'
     , 'me-tv'
-    , 'ogmrip'  
+    , 'ogmrip'
     , 'python-gst0.10'
-    , 'thoggen'    
+    , 'thoggen'
     , 'vlc'
     , 'vlc-plugin-pulse'
     , 'x264'
