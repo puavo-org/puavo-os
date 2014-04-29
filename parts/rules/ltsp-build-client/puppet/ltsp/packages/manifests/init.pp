@@ -337,14 +337,6 @@ class packages {
     , 'xbmc' ]:
       tag => [ 'mediaplayer', 'ubuntu', ];
 
-# XXX problems with these beasts
-#    [ 'nagios-nrpe-plugin'
-#    , 'nagios-nrpe-server'
-#    , 'nagios-plugins-basic'
-#    , 'nagios-plugins-extra'
-#    , 'nagios-plugins-standard' ]:
-#      tag => [ 'monitoring', 'ubuntu', ];
-
     [ 'ardour'
     , 'audacity'
     , 'denemo'
