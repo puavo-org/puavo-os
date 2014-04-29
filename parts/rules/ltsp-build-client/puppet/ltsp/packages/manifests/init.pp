@@ -518,12 +518,6 @@ class packages {
     , 'xscreensaver-data-extra' ]:
       tag => [ 'themes', 'ubuntu', ];
 
-    # XXX previous we did not include the following packages on the list below:
-    # XXX deja-dup (not needed), gdm (not needed), gnome-shell (not needed),
-    # XXX nautilus-share (this forces software-properties-gtk to be installed),
-    # XXX plymouth-theme-ubuntu-gnome-logo (not needed, we have our own
-    # XXX plymouth-theme-ubuntu-gnome-text  plymouth theme),
-
     # the dependencies (and recommends) of ubuntu-gnome-desktop package
     # without a few packages that we do not want
     [ 'acpi-support'
@@ -550,9 +544,9 @@ class packages {
     , 'cups-client'
     , 'cups-filters'
     , 'dconf-editor'
-    , 'deja-dup'
-    , 'deja-dup-backend-cloudfiles'
-    , 'deja-dup-backend-s3'
+    # , 'deja-dup'				# not needed
+    # , 'deja-dup-backend-cloudfiles'
+    # , 'deja-dup-backend-s3'
     , 'empathy'
     , 'eog'
     , 'evince'
@@ -577,7 +571,7 @@ class packages {
     , 'foomatic-db-compressed-ppds'
     , 'gcc'
     , 'gcr'
-    , 'gdm'
+    # , 'gdm'					# not needed
     , 'gedit'
     , 'genisoimage'
     , 'ghostscript-x'
@@ -590,7 +584,8 @@ class packages {
     , 'gnome-contacts'
     , 'gnome-control-center'
     , 'gnome-disk-utility'
-    , 'gnome-documents'
+    # , 'gnome-documents'	# forces tracker to be installed
+				# (tracker is purged elsewhere)
     , 'gnome-font-viewer'
     , 'gnome-icon-theme-extras'
     , 'gnome-icon-theme-full'
@@ -605,8 +600,8 @@ class packages {
     , 'gnome-session'
     , 'gnome-session-canberra'
     , 'gnome-settings-daemon'
-    , 'gnome-shell'
-    , 'gnome-shell-extensions'
+    # , 'gnome-shell'				# not needed
+    # , 'gnome-shell-extensions'
     , 'gnome-sudoku'
     , 'gnome-sushi'
     , 'gnome-system-log'
@@ -662,14 +657,14 @@ class packages {
     , 'mutter'
     , 'nautilus'
     , 'nautilus-sendto'
-    , 'nautilus-share'
+    # , 'nautilus-share' # forces software-properties-gtk to be installed
     , 'network-manager'
     , 'network-manager-pptp'
     , 'network-manager-pptp-gnome'
     , 'openprinting-ppds'
     , 'pcmciautils'
-    , 'plymouth-theme-ubuntu-gnome-logo'
-    , 'plymouth-theme-ubuntu-gnome-text'
+    # , 'plymouth-theme-ubuntu-gnome-logo'	# not needed
+    # , 'plymouth-theme-ubuntu-gnome-text'	# not needed
     , 'policykit-desktop-privileges'
     , 'printer-driver-c2esp'
     , 'printer-driver-foo2zjs'
@@ -690,13 +685,13 @@ class packages {
     , 'shotwell'
     , 'simple-scan'
     , 'software-center'
-    # , 'software-properties-gtk'	# (purged elsewhere)
+    # , 'software-properties-gtk'		# (purged elsewhere)
     , 'speech-dispatcher'
     , 'ssh-askpass-gnome'
     , 'system-config-printer-gnome'
     , 'telepathy-idle'
     , 'totem'
-    # , 'tracker'			# (purged elsewhere)
+    # , 'tracker'				# (purged elsewhere)
     , 'transmission-gtk'
     , 'ttf-indic-fonts-core'
     , 'ttf-punjabi-fonts'
@@ -705,10 +700,10 @@ class packages {
     , 'ubuntu-extras-keyring'
     , 'ubuntu-gnome-default-settings'
     , 'ubuntu-gnome-wallpapers'
-    # , 'ubuntu-release-upgrader-gtk'	# (purged elsewhere)
+    # , 'ubuntu-release-upgrader-gtk'		# (purged elsewhere)
     , 'unzip'
-    # , 'update-manager'		# (purged elsewhere)
-    # , 'update-notifier'		# (purged elsewhere)
+    # , 'update-manager'			# (purged elsewhere)
+    # , 'update-notifier'			# (purged elsewhere)
     , 'usb-creator-gtk'
     , 'vino'
     , 'whoopsie'
