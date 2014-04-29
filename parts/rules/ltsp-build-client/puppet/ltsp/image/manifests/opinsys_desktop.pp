@@ -5,7 +5,7 @@ class image::opinsys_desktop {
         'trusty': {
           include apt_ltspbuild_proxy,
   		  autopoweroff,
-		  citrix,
+		  # citrix,		# XXX we do not have 'icaclient' yet
 		  console,
 		  crash_reporting,
 		  desktop,
