@@ -28,5 +28,10 @@ if [ -d /etc/profile.d ]; then
   done
   unset i
 fi
-[ -f "/opt/SMART Technologies/.store/smart-product-drivers/install/bash-path" ] && . "/opt/SMART Technologies/.store/smart-product-drivers/install/bash-path"
-[ -f "/opt/SMART Technologies/.store/smart-notebook/install/bash-path" ] && . "/opt/SMART Technologies/.store/smart-notebook/install/bash-path"
+
+# SMART Board package scripts work only with bash, so do not run them otherwise.
+# The packages need fixing..
+if [ "x$BASH" != "x" ]; then
+  [ -f "/opt/SMART Technologies/.store/smart-product-drivers/install/bash-path" ] && . "/opt/SMART Technologies/.store/smart-product-drivers/install/bash-path"
+  [ -f "/opt/SMART Technologies/.store/smart-notebook/install/bash-path" ] && . "/opt/SMART Technologies/.store/smart-notebook/install/bash-path"
+fi
