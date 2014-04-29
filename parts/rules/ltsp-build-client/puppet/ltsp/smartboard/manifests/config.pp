@@ -3,6 +3,10 @@ class smartboard::config {
           puavo_external_files
 
   file {
+    '/etc/profile':
+      content => template('smartboard/profile'),
+      mode    => 644;
+
     '/etc/puavo-external-files-actions.d/smartboard':
       content => template('smartboard/puavo-external-files-actions.d/smartboard'),
       mode    => 755;
