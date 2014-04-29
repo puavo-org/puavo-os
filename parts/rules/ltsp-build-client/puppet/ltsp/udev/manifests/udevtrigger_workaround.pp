@@ -40,6 +40,10 @@ class udev::udevtrigger_workaround {
   }
 
   file {
+    '/etc/rc.local':
+      content => template('udev/rc.local'),
+      mode    => 755;
+
     '/etc/init/udevtrigger.conf':
       content => template('udev/udevtrigger.conf'),
       require => Dpkg::Divert['/etc/init/udevtrigger.conf'];
