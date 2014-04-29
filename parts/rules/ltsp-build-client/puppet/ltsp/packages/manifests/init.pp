@@ -132,13 +132,14 @@ class packages {
     , 'firmware-b43-installer'
     , 'libgl1-mesa-glx'
     , 'linux-firmware'
-    # , 'nvidia-304'	# XXX this breaks desktop as of now
+    # , 'nvidia-304'	# XXX this breaks desktop as of now (on Trusty)
     , 'nvidia-settings'
     , 'xserver-xorg-video-all' ]:
       tag => [ 'drivers', 'ubuntu', ];
 
-    [ 'opinsys-linux-firmware' ]:
-      tag => [ 'drivers', 'opinsys', ];
+    # XXX 'opinsys-linux-firmware' is not yet on Trusty
+    # [ 'opinsys-linux-firmware' ]:
+    #   tag => [ 'drivers', 'opinsys', ];
 
     [ 'wine' ]:
       tag => [ 'emulation', 'ubuntu', ];
@@ -367,8 +368,9 @@ class packages {
     , 'racoon' ]:
       tag => [ 'network', 'ubuntu', ];
 
-    [ 'acroread' ]:
-      tag => [ 'office', 'opinsys', ];
+    # XXX 'acroread' is not yet on Trusty
+    # [ 'acroread' ]:
+    #   tag => [ 'office', 'opinsys', ];
 
     [ 'cmaptools' ]:
       tag => [ 'office', 'opinsys', ];
@@ -417,9 +419,10 @@ class packages {
     , 'spe' ]:
       tag => [ 'programming', 'ubuntu', ];
 
-    [ 'bluegriffon'
-    , 'pycharm' ]:
-      tag => [ 'programming', 'opinsys' ];
+    # XXX 'bluegriffon' and 'pycharm' are not yet on Trusty
+    # [ 'bluegriffon'
+    # , 'pycharm' ]:
+    #   tag => [ 'programming', 'opinsys' ];
 
     [ 'puavo-wlanap'
     , 'puavo-wlanap-dnsproxy' ]:
@@ -440,9 +443,10 @@ class packages {
     , 'puavo-vpn-client' ]:
       tag => [ 'puavo', 'opinsys', 'thinclient', ];
 
-    [ 'icaclient'       # icaclient actually depends on libmotif4
-    , 'libmotif4' ]:
-      tag => [ 'remote_access', 'opinsys', ];
+    # XXX 'icaclient' is not yet on Trusty
+    # [ 'icaclient'       # icaclient actually depends on libmotif4
+    # , 'libmotif4' ]:
+    #   tag => [ 'remote_access', 'opinsys', ];
 
     [ 'vmware-view-client' ]:
       tag => [ 'remote_access', 'partner', ];
@@ -461,8 +465,9 @@ class packages {
     , 'texlive-fonts-extra'
     , 'texlive-fonts-recommended'
     , 'texlive-latex-extra'
-    , 'texlive-latex-recommended'
-    , 'vstloggerpro' ]:
+    , 'texlive-latex-recommended' ]:
+    # XXX 'vstloggerpro' is not yet on Trusty
+    # , 'vstloggerpro' ]:
       tag => [ 'science', 'opinsys', ];
 
     [ 'atomix'
@@ -748,8 +753,9 @@ class packages {
       tag => [ 'utils', 'ubuntu', ];
 
     [ 'google-talkplugin'
-    , 'oracle-java'
-    , 'xul-ext-flashblock' ]:
+    , 'oracle-java' ]:
+    # XXX 'xul-ext-flashblock' is not yet on Trusty
+    # , 'xul-ext-flashblock' ]:
       tag => [ 'web', 'opinsys', ];
 
     [ 'adobe-flashplugin' ]:
