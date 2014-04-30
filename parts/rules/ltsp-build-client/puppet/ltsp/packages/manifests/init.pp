@@ -757,34 +757,18 @@ class packages {
     , 'openjdk-6-jre' ]:
       tag => [ 'web', 'ubuntu', ];
 
-   [ 'open-sankore', ]:
+    [ 'open-sankore', ]:
       tag => [ 'whiteboard', 'ubuntu', ];
 
-   [ 'eleet'
-   , 'leap' ]:
+    [ 'eleet'
+    , 'leap' ]:
       tag => [ 'whiteboard', 'opinsys', ];
 
-   [ 'mimio-studio', ]:
-    tag => [ 'whiteboard-mimio', 'opinsys', ];
+    [ 'mimio-studio', ]:
+      tag => [ 'whiteboard-mimio', 'opinsys', ];
 
-   [ 'ebeam-edu', ]:
-    tag => [ 'whiteboard-ebeam', 'opinsys', ];
-
-# XXX disabled for now
-#   [ 'activaid'
-#   , 'activdriver'
-#   , 'activhwr-fi'
-#   , 'activhwr-sv'
-#   , 'activinspire'
-#   , 'activinspire-help-en-gb'
-#   , 'activinspire-help-fi'
-#   , 'activinspire-help-sv'
-#   , 'activ-meta-fi'
-#   , 'activresources-core-en'
-#   , 'activresources-core-fi'
-#   , 'activresources-core-sv'
-#   , 'activtools' ]:
-#     tag => [ 'whiteboard-promethean', ];
+    [ 'ebeam-edu', ]:
+      tag => [ 'whiteboard-ebeam', 'opinsys', ];
 
     [ 'nwfermi'
     , 'smart-activation'
