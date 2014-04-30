@@ -10,11 +10,20 @@ option_argument=$2
 
 set -u
 
-mirror_through_apt_cacher="http://localhost:3142/fi.archive.ubuntu.com/ubuntu/"
+# these should probably be some kind of parameters:
+arch=i386
+distribution=trusty
+mirror=fi.archive.ubuntu.com
+
+mirror_through_apt_cacher="http://localhost:3142/$mirror/ubuntu/"
 
 images_dir="/opt/puavo/images"
-target_dir="/virtualtmp/$user/trusty"
+target_dir="/virtualtmp/$user/$distribution"
 puppet_pdip_dir="$target_dir/etc/puppet/pdip"
+
+build_date=$(date +%Y-%m-%d-%H%M%S)
+build_version=pdip-$distribution-$build_date
+pdipimage_name="$build_version-$arch.img"
 
 do_mounts() {
   mount -o bind /dev     "$target_dir/dev"
@@ -39,6 +48,29 @@ check_puppet_class() {
     echo 'Did not define a puppet class, exiting...' >&2
     return 1
   fi
+}
+
+ask_and_set_image_information() {
+  old_release_name=
+  read old_release_name 2>/dev/null \
+    < "$target_dir/etc/ltsp/this_ltspimage_release" || true
+
+  read -p "Release name [${old_release_name}]: " new_release_name
+  new_release_name=${new_release_name:-${old_release_name}}
+
+  mkdir -p $target_dir/etc/ltsp
+  echo "$pdipimage_name"   > "$target_dir/etc/ltsp/this_ltspimage_name"
+  echo "$new_release_name" > "$target_dir/etc/ltsp/this_ltspimage_release"
+
+  while true; do
+    read -p 'Set root password [y/N] ? ' do_set_rootpw
+    case "$do_set_rootpw" in
+       '')                       break                       ;;
+      Y|y) run_in_chroot passwd; break                       ;;
+      N|n)                       break                       ;;
+        *) echo 'Simple question, simple answer please!' >&2 ;;
+    esac
+  done
 }
 
 build_chroot() {
@@ -163,12 +195,14 @@ run_with_setarch() {
 }
 
 make_image() {
+  ask_and_set_image_information
+
   mkdir -p "$images_dir"
-  mksquashfs "$target_dir" "$images_dir/trusty.img.tmp" \
+  mksquashfs "$target_dir" "$images_dir/${pdipimage_name}.tmp" \
 	     -noappend \
 	     -ef config/pdip-image.excludes \
 	     -wildcards
-  mv "$images_dir/trusty.img.tmp" "$images_dir/trusty.img"
+  mv "$images_dir/${pdipimage_name}.tmp" "$images_dir/${pdipimage_name}"
 }
 
 cleanup() {
