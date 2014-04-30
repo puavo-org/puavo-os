@@ -164,7 +164,10 @@ run_with_setarch() {
 
 make_image() {
   mkdir -p "$images_dir"
-  mksquashfs "$target_dir" "$images_dir/trusty.img.tmp" -noappend
+  mksquashfs "$target_dir" "$images_dir/trusty.img.tmp" \
+	     -noappend \
+	     -ef config/pdip-image.excludes \
+	     -wildcards
   mv "$images_dir/trusty.img.tmp" "$images_dir/trusty.img"
 }
 
