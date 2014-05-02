@@ -126,6 +126,11 @@ set_debconf_seeds() {
   run_in_chroot debconf-set-selections < config/debconf.seeds
 }
 
+set_timezone() {
+  cp /etc/localtime $target_dir/etc/localtime
+  cp /etc/timezone  $target_dir/etc/timezone
+}
+
 prepare_puppet() {
   puppet_classes=$1
 
@@ -206,12 +211,13 @@ case "$option" in
     ;;
   --build-chroot)
     build_chroot
+    set_debconf_seeds
+    set_timezone
     ;;
   --chroot)
     run_in_chroot bash
     ;;
   --prepare-puppet)
-    set_debconf_seeds
     check_puppet_class "$option_argument"
     prepare_puppet "$option_argument"
     ;;
