@@ -122,21 +122,8 @@ EOF
   run_in_chroot /root/install.sh
 }
 
-apply_puppet() {
-  puppet_classes=$(cat $target_dir/etc/puppet/pdip/.classes)
-  puppet_module_dirs=$(cat $target_dir/etc/puppet/pdip/.module_dirs)
-
-  rm -rf $puppet_pdip_dir/*
-  cp -HR puppet/* "$puppet_pdip_dir"
-
-  logfile_path="/var/log/puppet/pdip-$(date +%Y-%m-%d-%H%M%S).log"
-  run_in_chroot puppet apply                          \
-		  --detailed-exitcodes                \
-		  --logdest console                   \
-		  --logdest "$logfile_path"           \
-		  --execute "include $puppet_classes" \
-		  --modulepath "$puppet_module_dirs"  \
-    || [ $? -eq 2 ]
+set_debconf_seeds() {
+  run_in_chroot debconf-set-selections < config/debconf.seeds
 }
 
 prepare_puppet() {
@@ -154,6 +141,23 @@ prepare_puppet() {
   mkdir -p "$puppet_pdip_dir"
   echo "$puppet_classes"     > "$puppet_pdip_dir/.classes"
   echo "$puppet_module_dirs" > "$puppet_pdip_dir/.module_dirs"
+}
+
+apply_puppet() {
+  puppet_classes=$(cat $target_dir/etc/puppet/pdip/.classes)
+  puppet_module_dirs=$(cat $target_dir/etc/puppet/pdip/.module_dirs)
+
+  rm -rf $puppet_pdip_dir/*
+  cp -HR puppet/* "$puppet_pdip_dir"
+
+  logfile_path="/var/log/puppet/pdip-$(date +%Y-%m-%d-%H%M%S).log"
+  run_in_chroot puppet apply                          \
+		  --detailed-exitcodes                \
+		  --logdest console                   \
+		  --logdest "$logfile_path"           \
+		  --execute "include $puppet_classes" \
+		  --modulepath "$puppet_module_dirs"  \
+    || [ $? -eq 2 ]
 }
 
 run_in_chroot() {
@@ -207,6 +211,7 @@ case "$option" in
     run_in_chroot bash
     ;;
   --prepare-puppet)
+    set_debconf_seeds
     check_puppet_class "$option_argument"
     prepare_puppet "$option_argument"
     ;;
