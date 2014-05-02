@@ -5,6 +5,8 @@ require 'highline/import'
 require 'tmpdir'
 require 'ipaddress'
 
+ENV['LANG'] = "C"
+
 class Interface
   def initialize(name)
     @name = name
