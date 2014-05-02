@@ -435,10 +435,9 @@ class packages {
     , 'puavo-vpn-client' ]:
       tag => [ 'puavo', 'opinsys', 'thinclient', ];
 
-    # XXX 'icaclient' is not yet on Trusty
-    # [ 'icaclient'       # icaclient actually depends on libmotif4
-    # , 'libmotif4' ]:
-    #   tag => [ 'remote_access', 'opinsys', ];
+    [ 'icaclient'       # icaclient actually depends on libmotif4
+    , 'libmotif4' ]:
+      tag => [ 'remote_access', 'opinsys', ];
 
     [ 'vmware-view-client' ]:
       tag => [ 'remote_access', 'partner', ];
