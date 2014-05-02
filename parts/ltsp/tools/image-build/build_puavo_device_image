@@ -17,7 +17,7 @@ mirror=fi.archive.ubuntu.com
 
 mirror_through_apt_cacher="http://localhost:3142/$mirror/ubuntu/"
 
-images_dir="/opt/puavo/images"
+images_dir="/opt/ltsp/images"
 target_dir="/virtualtmp/$user/$distribution"
 puppet_ltsp_dir="$target_dir/etc/puppet/ltsp"
 
