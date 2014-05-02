@@ -19,11 +19,13 @@ mirror_through_apt_cacher="http://localhost:3142/$mirror/ubuntu/"
 
 images_dir="/opt/puavo/images"
 target_dir="/virtualtmp/$user/$distribution"
-puppet_pdip_dir="$target_dir/etc/puppet/pdip"
+puppet_ltsp_dir="$target_dir/etc/puppet/ltsp"
 
 build_date=$(date +%Y-%m-%d-%H%M%S)
-build_version=pdip-$distribution-$build_date
-pdipimage_name="$build_version-$arch.img"
+build_name=$(git branch | awk '$1 == "*" { print $2 }' 2>/dev/null \
+	       || echo master)
+build_version=ltsp-$distribution-$build_name-$build_date
+ltspimage_name="$build_version-$arch.img"
 
 do_mounts() {
   mount -o bind /dev     "$target_dir/dev"
@@ -59,7 +61,7 @@ ask_and_set_image_information() {
   new_release_name=${new_release_name:-${old_release_name}}
 
   mkdir -p $target_dir/etc/ltsp
-  echo "$pdipimage_name"   > "$target_dir/etc/ltsp/this_ltspimage_name"
+  echo "$ltspimage_name"   > "$target_dir/etc/ltsp/this_ltspimage_name"
   echo "$new_release_name" > "$target_dir/etc/ltsp/this_ltspimage_release"
 
   while true; do
@@ -137,25 +139,25 @@ prepare_puppet() {
   puppet_module_dirs=$(
     echo puppet/* \
       | xargs -n 1 basename  \
-      | xargs -n 1 printf "/etc/puppet/pdip/%s\n" \
+      | xargs -n 1 printf "/etc/puppet/ltsp/%s\n" \
       | xargs \
       | tr ' ' ':')
 
   run_in_chroot apt-get -qq -y install puppet-common
 
-  mkdir -p "$puppet_pdip_dir"
-  echo "$puppet_classes"     > "$puppet_pdip_dir/.classes"
-  echo "$puppet_module_dirs" > "$puppet_pdip_dir/.module_dirs"
+  mkdir -p "$puppet_ltsp_dir"
+  echo "$puppet_classes"     > "$puppet_ltsp_dir/.classes"
+  echo "$puppet_module_dirs" > "$puppet_ltsp_dir/.module_dirs"
 }
 
 apply_puppet() {
-  puppet_classes=$(cat $target_dir/etc/puppet/pdip/.classes)
-  puppet_module_dirs=$(cat $target_dir/etc/puppet/pdip/.module_dirs)
+  puppet_classes=$(cat $target_dir/etc/puppet/ltsp/.classes)
+  puppet_module_dirs=$(cat $target_dir/etc/puppet/ltsp/.module_dirs)
 
-  rm -rf $puppet_pdip_dir/*
-  cp -HR puppet/* "$puppet_pdip_dir"
+  rm -rf $puppet_ltsp_dir/*
+  cp -HR puppet/* "$puppet_ltsp_dir"
 
-  logfile_path="/var/log/puppet/pdip-$(date +%Y-%m-%d-%H%M%S).log"
+  logfile_path="/var/log/puppet/ltsp-$(date +%Y-%m-%d-%H%M%S).log"
   run_in_chroot puppet apply                          \
 		  --detailed-exitcodes                \
 		  --logdest console                   \
@@ -180,11 +182,11 @@ make_image() {
   ask_and_set_image_information
 
   mkdir -p "$images_dir"
-  mksquashfs "$target_dir" "$images_dir/${pdipimage_name}.tmp" \
+  mksquashfs "$target_dir" "$images_dir/${ltspimage_name}.tmp" \
 	     -noappend \
-	     -ef config/pdip-image.excludes \
+	     -ef config/ltsp-image.excludes \
 	     -wildcards
-  mv "$images_dir/${pdipimage_name}.tmp" "$images_dir/${pdipimage_name}"
+  mv "$images_dir/${ltspimage_name}.tmp" "$images_dir/${ltspimage_name}"
 }
 
 cleanup() {

@@ -1,7 +1,7 @@
 IMAGE_TARGETS = opinsys_desktop
 OTHER_TARGETS = all build-chroot chroot image prepare-puppet puppet-chroot
 
-LOGFILE = $(shell echo logs/pdip-$$(date +%Y-%m-%d-%H%M%S).log)
+LOGFILE = $(shell echo logs/ltsp-$$(date +%Y-%m-%d-%H%M%S).log)
 
 help:
 	@echo "Available targets are:"
