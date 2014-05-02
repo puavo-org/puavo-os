@@ -116,33 +116,6 @@ for vmlinuz in vmlinuz-*; do
   ln -s "vmlinuz-$kernel_version"    vmlinuz
   ln -s "initrd.img-$kernel_version" initrd.img
 done
-
-# basic, required packages (from outside sources)
-# XXX should try to do without ltsp-client-core, replaced by puavo-image?
-# apt-get -y install ltsp-client-core nbd-client
-
-# helpful stuff
-# apt-get -y install openssh-server
-
-# use these for now
-# apt-get -y install gnome-session-flashback \
-#		   gnome-shell             \
-#		   ubuntu-desktop
-
-# XXX should do without --allow-unauthenticated
-puavo_packages="
-  ltsp-lightdm
-  opinsys-ca-certificates
-  puavo-ltsp-client
-  puavo-ltsp-install
-"
-apt-get --allow-unauthenticated -y install $puavo_packages
-
-# sed -i '/^root/s|^.*$|root:$6$jwLm8uMQ$8XSSaM6hu.4xCjB26Z/KnL9KZGFQNAMpROLNNQDB6hKdA2yMcv07dTMynH52VTm6qb6c7siLz1G.5421RIJYR1:16175:0:99999:7:::|' \
-#        /etc/shadow
-# 
-# sed -i 's/^PermitRootLogin without-password$/PermitRootLogin yes/' \
-#        /etc/ssh/sshd_config
 EOF
   chmod 755 "$target_dir/root/install.sh"
 
