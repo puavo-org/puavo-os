@@ -14,6 +14,7 @@ auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/open-session
 auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/populate-extrausers
 
 auth    optional        pam_gnome_keyring.so
+auth    optional        pam_cap.so
 
 # Permit all accounts for now.
 account required                        pam_permit.so
