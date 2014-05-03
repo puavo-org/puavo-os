@@ -179,6 +179,9 @@ run_with_setarch() {
 }
 
 make_image() {
+  echo 'Running updatedb in chroot'
+  run_in_chroot updatedb
+
   ask_and_set_image_information
 
   mkdir -p "$images_dir"
