@@ -32,5 +32,3 @@ session required        pam_exec.so /usr/sbin/puavo-ltsp-init-nfs
 
 session optional        pam_gnome_keyring.so auto_start
 session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/chown-session-dir
-
-#password	required	pam_ldap.so minimum_uid=1000

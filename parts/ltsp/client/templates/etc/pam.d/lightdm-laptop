@@ -54,6 +54,3 @@ session optional        pam_exec.so /usr/sbin/puavo-update-sharedir-mounts
 
 session optional        pam_gnome_keyring.so auto_start
 session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/chown-session-dir
-
-# FIXME - does this work?
-password	required	pam_sss.so

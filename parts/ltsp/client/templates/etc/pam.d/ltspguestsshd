@@ -23,6 +23,3 @@ session optional	pam_umask.so
 session    required     pam_limits.so
 
 session	required	pam_permit.so
-
-# Standard Un*x password updating.
-#@include common-password

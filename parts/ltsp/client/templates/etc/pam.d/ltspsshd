@@ -25,6 +25,3 @@ session required        pam_exec.so /usr/sbin/puavo-ltsp-init-nfs
 session    required     pam_limits.so
 
 session	required	pam_permit.so
-
-# Standard Un*x password updating.
-#@include common-password
