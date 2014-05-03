@@ -411,10 +411,10 @@ class packages {
     , 'spe' ]:
       tag => [ 'programming', 'ubuntu', ];
 
-    # XXX 'bluegriffon' and 'pycharm' are not yet on Trusty
-    # [ 'bluegriffon'
+    [ 'bluegriffon' ]:
+    # XXX 'pycharm' is not yet on Trusty
     # , 'pycharm' ]:
-    #   tag => [ 'programming', 'opinsys' ];
+      tag => [ 'programming', 'opinsys' ];
 
     [ 'puavo-wlanap'
     , 'puavo-wlanap-dnsproxy' ]:
