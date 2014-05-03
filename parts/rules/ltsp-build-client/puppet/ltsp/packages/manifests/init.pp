@@ -738,6 +738,9 @@ class packages {
     , 'unrar' ]:
       tag => [ 'utils', 'ubuntu', ];
 
+    [ 'qemu-kvm' ]:
+      tag => [ 'virtualization', 'ubuntu', ];
+
     [ 'google-talkplugin'
     , 'oracle-java' ]:
     # XXX 'xul-ext-flashblock' is not yet on Trusty
