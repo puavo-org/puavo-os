@@ -11,7 +11,7 @@ auth       required     pam_env.so envfile=/etc/default/locale
 auth	required	pam_exec.so /usr/lib/puavo-ltsp-client/ltspserver-guest-login
 auth	required	pam_permit.so
 
-# Standard Un*x authorization.
+# Permit all accounts for now.
 account required	pam_permit.so
 
 # Standard Un*x session setup and teardown.
