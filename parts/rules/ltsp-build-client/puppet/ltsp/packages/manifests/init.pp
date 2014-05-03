@@ -742,9 +742,8 @@ class packages {
       tag => [ 'virtualization', 'ubuntu', ];
 
     [ 'google-talkplugin'
-    , 'oracle-java' ]:
-    # XXX 'xul-ext-flashblock' is not yet on Trusty
-    # , 'xul-ext-flashblock' ]:
+    , 'oracle-java'
+    , 'xul-ext-flashblock' ]:
       tag => [ 'web', 'opinsys', ];
 
     [ 'adobe-flashplugin' ]:
