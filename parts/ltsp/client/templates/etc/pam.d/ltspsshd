@@ -27,3 +27,5 @@ session required        pam_exec.so /usr/sbin/puavo-ltsp-init-nfs
 session    required     pam_limits.so
 
 session	required	pam_permit.so
+session optional	pam_systemd.so
+session optional	pam_ck_connector.so nox11
