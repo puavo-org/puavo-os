@@ -17,15 +17,15 @@ def read_file(file)
   return ""
 end
 
-puavo_device_type = ARGV[0]
+@puavo_device_type = ARGV[0]
 
-if (!puavo_device_type)
+if (!@puavo_device_type)
   if File.exists?("/etc/puavo/hosttype")
-    puavo_device_type = File.read('/etc/puavo/hosttype').chomp
+    @puavo_device_type = File.read('/etc/puavo/hosttype').chomp
   end
 end
 
-if puavo_device_type == 'unregistered'
+if @puavo_device_type == 'unregistered'
   `hostname unregistered`
   `echo unregistered > /proc/sys/kernel/hostname`
   `echo unregistered > /etc/hostname`
@@ -84,7 +84,7 @@ end
 
 write_config("/etc/hosts")
 
-case puavo_device_type
+case @puavo_device_type
   when "thinclient"
     write_config("/etc/nsswitch.conf", "extrausers")
     write_config("/etc/pam.d/lightdm", "thinclient")
