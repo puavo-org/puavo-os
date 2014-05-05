@@ -411,9 +411,8 @@ class packages {
     , 'spe' ]:
       tag => [ 'programming', 'ubuntu', ];
 
-    [ 'bluegriffon' ]:
-    # XXX 'pycharm' is not yet on Trusty
-    # , 'pycharm' ]:
+    [ 'bluegriffon'
+    , 'pycharm' ]:
       tag => [ 'programming', 'opinsys' ];
 
     [ 'puavo-wlanap'
