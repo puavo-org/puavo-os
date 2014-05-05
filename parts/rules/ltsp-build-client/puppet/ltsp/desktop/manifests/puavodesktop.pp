@@ -16,6 +16,10 @@ class desktop::puavodesktop {
                  , Package['light-themes']
                  , Package['opinsys-theme']
                  , Package['webmenu'] ];
+
+    # webmenu takes care of the equivalent functionality
+    '/etc/xdg/autostart/indicator-session.desktop':
+      ensure => absent;
   }
 
   Package <| (title == faenza-icon-theme)
