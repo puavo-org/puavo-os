@@ -73,6 +73,68 @@ def write_config(filename, version=nil, secure=false)
   end
 end
 
+def try_writing_puavomounts()
+  begin
+    conflines = []
+
+    mountpoints = @device['mountpoints']
+    if mountpoints.nil? || !mountpoints.kind_of?(Array) then
+      warn 'Device mountpoints list is not an array'
+      return
+    end
+
+    mountpoints.each do |mountinfo|
+      if mountinfo.nil? || !mountinfo.kind_of?(Hash) then
+	warn 'Mountpoint information is not a hash structure'
+	next
+      end
+
+      fs         = mountinfo['fs']
+      mountpoint = mountinfo['mountpoint']
+      options    = mountinfo['options']
+      path       = mountinfo['path']
+
+      if mountpoint.nil? || mountpoint.empty? then
+	warn "A mountpoint is not set for:\n#{ m.inspect }"
+	next
+      end
+
+      if path.nil? || path.empty? then
+	warn "A path is not set for:\n#{ m.inspect }"
+	next
+      end
+
+      # set "auto" be the default filesystem type
+      fs = (!fs.nil? && !fs.empty? && fs) || 'auto'
+      if !fs.kind_of?(String) then 
+	 warn "Filesystem info is not a string for:\n#{ m.inspect }"
+	 next
+      end
+
+      options = !options.nil? ? options : ''
+      if !options.kind_of?(String) then 
+	 warn "Mountpoint options is not a string for:\n#{ m.inspect }"
+	 next
+      end
+
+      autofs_options = "-fstype=#{ fs }"
+      if !options.empty? then
+	autofs_options << ",#{ options }"
+      end
+
+      conflines << [ mountpoint, autofs_options, path ].join(' ')
+    end
+
+    autofs_configuration = conflines.map { |s| "#{ s }\n" }.join('')
+
+    File.open('/etc/auto.master.d/puavomounts', 'w') do |f|
+      f.print(autofs_configuration)
+    end
+  rescue Exception => e
+    warn "Could not write puavomounts autofs configuration: #{ e.message }"
+  end
+end
+
 begin
   Dir.mkdir('/etc/cups')
 rescue Errno::EEXIST
@@ -125,6 +187,8 @@ case puavo_device_type
 
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
+
+    try_writing_puavomounts()
   when "ltspserver"
     write_config("/etc/hosts", "ltspserver")
     write_config("/etc/nsswitch.conf", "sss")
@@ -152,6 +216,8 @@ case puavo_device_type
     File.open('/etc/inetd.conf', 'a') do |f|
       f.write("908  stream  tcp     nowait  root    /usr/sbin/tcpd  /usr/lib/puavo-ltsp-client/puavo-ltspserver-create-guest\n")
     end
+
+    try_writing_puavomounts()
   when "laptop"
     write_config("/etc/cups/cupsd.conf")
     write_config("/etc/nsswitch.conf", "sss-extrausers")
