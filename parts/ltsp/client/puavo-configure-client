@@ -127,7 +127,7 @@ def try_writing_puavomounts()
 
     autofs_configuration = conflines.map { |s| "#{ s }\n" }.join('')
 
-    File.open('/etc/auto.master.d/puavomounts', 'w') do |f|
+    File.open('/etc/auto.master.d/puavomounts.autofs', 'w') do |f|
       f.print(autofs_configuration)
     end
   rescue Exception => e
