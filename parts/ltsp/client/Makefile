@@ -30,6 +30,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 	mkdir -p $(DESTDIR)/lib/udev/rules.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
+	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/hooks
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d
@@ -134,10 +135,12 @@ install : installdirs
 		puavo-ltspserver-create-guest \
 		puavo-update-nm-configurations
 
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/hooks/ \
+		initramfs/hooks/ethtool
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount \
-		initramfs/puavo_udhcp
+		initramfs/scripts/init-premount/puavo_udhcp
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom \
-		initramfs/puavo_ltsp 
+		initramfs/scripts/init-bottom/puavo_ltsp 
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
 		screen.d/register \

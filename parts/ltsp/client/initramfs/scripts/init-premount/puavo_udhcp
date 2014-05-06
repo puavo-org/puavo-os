@@ -167,6 +167,10 @@ interfaces=${interface:-$interfaces}
 [ "$quiet" != "y" ] && echo "DHCP request for $i..."
 while [ -z "$configured" ]; do
     for i in $interfaces; do    # Make a DHCP request for each interface
+        # Disable flow control
+        /sbin/ethtool -A $i autoneg off rx off tx off
+        echo "flow control off: $i"
+
         if udhcpc -n -C -O rootpath -s /tmp/dhcp-script.sh -i $i $hostname_param $ip_param >/dev/null 2>&1; then
             configured="true"
             break
