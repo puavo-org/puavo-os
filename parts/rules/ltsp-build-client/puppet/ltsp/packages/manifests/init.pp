@@ -443,8 +443,7 @@ class packages {
     , 'puavo-sharedir-client' ]:
       tag => [ 'puavo', 'opinsys', ];
 
-    [ 'ltsp-lightdm'
-    , 'opinsys-ca-certificates'
+    [ 'opinsys-ca-certificates'
     , 'puavo-autopilot'
     , 'puavo-client'
     , 'puavo-hw-log'
