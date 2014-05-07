@@ -21,16 +21,14 @@ fi
 [ "${SESSION_LANGUAGE}" = "null" ] && SESSION_LANGUAGE=
 [ "${USER_LANGUAGE}" = "null" ] && USER_LANGUAGE=
 
-if [ "${USER_LANGUAGE}" != "" ]; then
+if [ "${PUAVO_SESSION_LANGUAGE}" != "" ]; then
+  LANGUAGE="${PUAVO_SESSION_LANGUAGE}"
+elif [ "${USER_LANGUAGE}" != "" ]; then
   LANGUAGE="${USER_LANGUAGE}"
-else
-  if [ "${SESSION_LANGUAGE}" != "" ]; then
-    LANGUAGE="${SESSION_LANGUAGE}"
-  else
-    if [ "${DEVICE_LANGUAGE}" != "" ]; then
-      LANGUAGE="${DEVICE_LANGUAGE}"
-    fi
-  fi
+elif [ "${SESSION_LANGUAGE}" != "" ]; then
+  LANGUAGE="${SESSION_LANGUAGE}"
+elif [ "${DEVICE_LANGUAGE}" != "" ]; then
+  LANGUAGE="${DEVICE_LANGUAGE}"
 fi
 
 DCONF_PROFILE=user-${LANGUAGE}
