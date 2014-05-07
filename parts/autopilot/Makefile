@@ -37,5 +37,4 @@ install: installdirs
 
 	$(INSTALL) -t $(DESTDIR)$(libdir)/puavo-autopilot \
 		lib/detect-png \
-		lib/move-mouse-to-png \
-		lib/switch-to-login-vt
+		lib/move-mouse-to-png
