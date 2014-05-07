@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 
 require 'erb'
+require 'json'
 
 def delete_file(file)
   if File.exists?(file)
@@ -16,15 +17,15 @@ def read_file(file)
   return ""
 end
 
-puavo_device_type = ARGV[0]
+@puavo_device_type = ARGV[0]
 
-if (!puavo_device_type)
+if (!@puavo_device_type)
   if File.exists?("/etc/puavo/hosttype")
-    puavo_device_type = File.read('/etc/puavo/hosttype').chomp
+    @puavo_device_type = File.read('/etc/puavo/hosttype').chomp
   end
 end
 
-if puavo_device_type == 'unregistered'
+if @puavo_device_type == 'unregistered'
   `hostname unregistered`
   `echo unregistered > /proc/sys/kernel/hostname`
   `echo unregistered > /etc/hostname`
@@ -41,6 +42,13 @@ end
 @puavo_hostname    = read_file('/etc/puavo/hostname')
 @puavo_domain      = read_file('/etc/puavo/domain')
 @puavo_topdomain   = read_file('/etc/puavo/topdomain')
+
+@device=Hash.new
+
+if File.exists?("/etc/puavo/device.json")
+  @device = JSON.parse(File.read("/etc/puavo/device.json"))
+  @tags = @device["tags"]
+end
 
 def write_config(filename, version=nil, secure=false)
   begin
@@ -65,6 +73,71 @@ def write_config(filename, version=nil, secure=false)
   end
 end
 
+def try_writing_puavomounts()
+  begin
+    conflines = []
+
+    mountpoints = @device['mountpoints']
+    if mountpoints.nil? || !mountpoints.kind_of?(Array) then
+      warn 'Device mountpoints list is not an array'
+      return
+    end
+
+    mountpoints.each do |mountinfo|
+      if mountinfo.nil? || !mountinfo.kind_of?(Hash) then
+	warn 'Mountpoint information is not a hash structure'
+	next
+      end
+
+      fs         = mountinfo['fs']
+      mountpoint = mountinfo['mountpoint']
+      options    = mountinfo['options']
+      path       = mountinfo['path']
+
+      if mountpoint.nil? || mountpoint.empty? then
+	warn "A mountpoint is not set for:\n#{ m.inspect }"
+	next
+      end
+
+      if path.nil? || path.empty? then
+	warn "A path is not set for:\n#{ m.inspect }"
+	next
+      end
+
+      # set "auto" be the default filesystem type
+      fs = (!fs.nil? && !fs.empty? && fs) || 'auto'
+      if !fs.kind_of?(String) then 
+	 warn "Filesystem info is not a string for:\n#{ m.inspect }"
+	 next
+      end
+
+      options = !options.nil? ? options : ''
+      if !options.kind_of?(String) then 
+	 warn "Mountpoint options is not a string for:\n#{ m.inspect }"
+	 next
+      end
+
+      autofs_options = "-fstype=#{ fs }"
+      if !options.empty? then
+	autofs_options << ",#{ options }"
+      end
+
+      conflines << [ mountpoint, autofs_options, path ].join(' ')
+    end
+
+    autofs_configuration = conflines.map { |s| "#{ s }\n" }.join('')
+
+    File.open('/var/lib/puavo-desktop/puavomounts', 'w') do |f|
+      f.print(autofs_configuration)
+    end
+    File.open('/etc/auto.master.d/puavomounts.autofs', 'w') do |f|
+      f.print("/- /var/lib/puavo-desktop/puavomounts\n")
+    end
+  rescue Exception => e
+    warn "Could not write puavomounts autofs configuration: #{ e.message }"
+  end
+end
+
 begin
   Dir.mkdir('/etc/cups')
 rescue Errno::EEXIST
@@ -76,12 +149,13 @@ end
 
 write_config("/etc/hosts")
 
-case puavo_device_type
+case @puavo_device_type
   when "thinclient"
     write_config("/etc/nsswitch.conf", "extrausers")
     write_config("/etc/pam.d/lightdm", "thinclient")
     write_config("/etc/pam.d/lightdm-autologin", "thinclient")
     write_config("/etc/ldap/ldap.conf")
+    write_config("/etc/lightdm/lightdm.conf")
     write_config("/etc/krb5.conf")
     write_config("/etc/idmapd.conf")
     write_config("/etc/default/nfs-common")
@@ -93,7 +167,7 @@ case puavo_device_type
 
     # Temporary hack until ltsp-lightdm is not used anymore
     `cp /usr/lib/puavo-ltsp-client/puavo-thin-guest-account /usr/sbin/guest-account`
-    `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
+#    `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
 
     # Temporary hack to get ltspfs working with thin guest sessions
     write_config("/lib/udev/ltspfs_entry")
@@ -103,6 +177,7 @@ case puavo_device_type
     write_config("/etc/pam.d/lightdm", "fatclient")
     write_config("/etc/pam.d/lightdm-autologin", "fatclient")
     write_config("/etc/ldap/ldap.conf")
+    write_config("/etc/lightdm/lightdm.conf")
     write_config("/etc/krb5.conf")
     write_config("/etc/idmapd.conf")
     write_config("/etc/default/nfs-common")
@@ -113,10 +188,12 @@ case puavo_device_type
     # FIXME: Hack to get gnome fallback session
 #    `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
     `cp /usr/lib/puavo-ltsp-client/puavo-thin-guest-account /usr/sbin/guest-account`
-    `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
+#    `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
 
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
+
+    try_writing_puavomounts()
   when "ltspserver"
     write_config("/etc/hosts", "ltspserver")
     write_config("/etc/nsswitch.conf", "sss")
@@ -144,12 +221,15 @@ case puavo_device_type
     File.open('/etc/inetd.conf', 'a') do |f|
       f.write("908  stream  tcp     nowait  root    /usr/sbin/tcpd  /usr/lib/puavo-ltsp-client/puavo-ltspserver-create-guest\n")
     end
+
+    try_writing_puavomounts()
   when "laptop"
     write_config("/etc/cups/cupsd.conf")
     write_config("/etc/nsswitch.conf", "sss-extrausers")
     write_config("/etc/krb5.conf", "laptop")
     write_config("/etc/idmapd.conf")
     write_config("/etc/ldap/ldap.conf", "laptop")
+    write_config("/etc/lightdm/lightdm.conf")
     write_config("/etc/pam.d/lightdm", "laptop")
     write_config("/etc/network/if-up.d/ipsec")
     File.chmod(0755, "/etc/network/if-up.d/ipsec")

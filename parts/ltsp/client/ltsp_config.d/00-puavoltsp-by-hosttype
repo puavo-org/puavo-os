@@ -39,7 +39,7 @@ set_lts_var XKBLAYOUT      fi    # XXX especially this is highly opinionated
 
 case "$PUAVO_HOSTTYPE" in
   fatclient)
-    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_nfs_services $puavo_tty_services"
+    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_nfs_services $puavo_tty_services lightdm"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
     set_lts_var RM_SYSTEM_SERVICES "
@@ -55,16 +55,21 @@ case "$PUAVO_HOSTTYPE" in
       puavo-vpn-client
       puavo-vpn-dnsmasq
     "
-    set_lts_var SCREEN_07            lightdm
-    set_lts_var USE_NFS_HOMES        True
+    set_lts_var SCREEN_07     lightdm
+    set_lts_var USE_NFS_HOMES True
     ;;
   laptop)
+    # If laptop is booted from network, it should be updated instead of
+    # launching a normal session. We use $SERVER variable that comes from
+    # lts.conf to determine wheter we are network booting.
     if [ -n "$SERVER" ]; then
       # laptop booted off from network, offer to update it
       set_lts_var SCREEN_07 ltspimage-update
+      rm_system_services="lightdm"
     else
       # laptop booted from local disk, provide lightdm
       set_lts_var SCREEN_07 lightdm
+      keep_system_services="lightdm"
     fi
 
     # Laptops will keep the "ondemand"-task, removed from others.
@@ -75,11 +80,12 @@ case "$PUAVO_HOSTTYPE" in
     # the "ondemand" service makes the machines very unstable, so it should
     # be enabled with caution and perhaps on machine type basis.
 
-    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services ondemand"
+    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services $keep_system_services ondemand"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      $rm_system_services 
       hostapd
       jetty
       ltspguestssh
@@ -120,7 +126,7 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var USE_NFS_HOMES        True
     ;;
   thinclient)
-    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
+    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services lightdm"
     set_lts_var LDM_AUTOLOGIN        False
     set_lts_var LDM_DIRECTX          True
     set_lts_var LDM_SESSION          'gnome-session --session=gnome-fallback'
@@ -159,6 +165,7 @@ case "$PUAVO_HOSTTYPE" in
       eno
       fluentd
       gssd
+      lightdm
       ltspguestssh
       ltspssh
       network-manager
@@ -193,6 +200,7 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LTSP_FATCLIENT       True
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      lightdm
       ltspguestssh
       ltspssh
       network-manager

@@ -1,0 +1,19 @@
+# If webkiosk tag is defined, open a language selector dialog 
+# and start xautolock to kill the session automatically if 
+# the session has not been used in 10 minutes.
+
+jq -r .tags[] /etc/puavo/device.json | grep -q -x webkiosk && {
+  /usr/bin/ratpoison &
+  RATPOISON_PID=$!
+
+  export PUAVO_SESSION_LANGUAGE=$(webkiosk-language-selector)
+
+  kill -9 ${RATPOISON_PID}
+
+  # Logout user automatically if nothing has been done in 10 minutes
+  xautolock -locker "kill -9 -1" -time 10 &
+
+  # Automatically start firefox after session is opened
+  mkdir -p ~/.config/autostart
+  cp /usr/share/applications/firefox.desktop ~/.config/autostart/
+}

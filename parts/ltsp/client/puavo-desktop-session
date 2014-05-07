@@ -3,7 +3,7 @@
 PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 
 case "${PUAVO_HOSTTYPE}" in
-  fatclient)
+  fatclient|laptop)
     gnome-session --session=gnome-fallback
     break
     ;;
