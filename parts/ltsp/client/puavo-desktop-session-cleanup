@@ -6,7 +6,7 @@ set -eu
 
 # This is for triggering autologin on webkiosk mode.
 if jq -r .tags[] /etc/puavo/device.json | grep -Fqx webkiosk; then
-  trap "" SIGHUP SIGINT SIGTERM
+  trap '' HUP INT TERM
   PATH=$PATH:/sbin:/usr/sbin
   restart lightdm
   exit 0
