@@ -461,9 +461,8 @@ class packages {
     , 'texlive-fonts-extra'
     , 'texlive-fonts-recommended'
     , 'texlive-latex-extra'
-    , 'texlive-latex-recommended' ]:
-    # XXX 'vstloggerpro' is not yet on Trusty
-    # , 'vstloggerpro' ]:
+    , 'texlive-latex-recommended'
+    , 'vstloggerpro' ]:
       tag => [ 'science', 'opinsys', ];
 
     [ 'atomix'
