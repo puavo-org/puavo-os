@@ -7,16 +7,23 @@ class packages {
   # install packages by default
   Package { ensure => present, }
 
-  define kernel_package_for_version ($package_tag='', $with_extra=true) {
+  define kernel_package_for_version ($package_tag='', $with_extra=true, $with_dbg=false) {
     $version = $title
 
-    $packages = $with_extra ? {
-                  true  => [ "linux-headers-$version"
-                           , "linux-image-$version"
-                           , "linux-image-extra-$version" ],
-                  false => [ "linux-headers-$version"
-                           , "linux-image-$version" ],
-                }
+    $extra_packages = $with_extra ? {
+      true  => [ "linux-image-extra-$version" ],
+      false => [],
+    }
+
+    $dbg_packages = $with_dbg ? {
+      true  => [ "linux-image-$version-dbg" ],
+      false => [],
+    }
+
+    $packages = [ "linux-headers-$version"
+                , "linux-image-$version"
+                , $extra_packages
+                , $dbg_packages ]
 
     @package {
       $packages:
@@ -52,7 +59,7 @@ class packages {
     , 'tmux'
     , 'tshark'
     , 'whois'
-    , 'w3m' 
+    , 'w3m'
     , 'x11vnc']:
       tag => [ 'admin', 'thinclient', 'ubuntu', ];
 
@@ -249,6 +256,9 @@ class packages {
     [ 'skype' ]:
       tag => [ 'instant_messaging', 'partner', ];
 
+    [ 'kdump-tools' ]:
+      tag => [ 'kernel', 'ubuntu', ];
+
     [ 'emesene'
     , 'gobby'
     , 'pidgin'
@@ -329,7 +339,7 @@ class packages {
     , 'kscd'
     , 'libdvdread4'
     , 'me-tv'
-    , 'ogmrip'  
+    , 'ogmrip'
     , 'python-gst0.10'
     , 'vlc'
     , 'vlc-plugin-pulse'
@@ -423,8 +433,7 @@ class packages {
     , 'puavo-sharedir-client' ]:
       tag => [ 'puavo', 'opinsys', ];
 
-    [ 'ltsp-lightdm'
-    , 'opinsys-ca-certificates'
+    [ 'opinsys-ca-certificates'
     , 'puavo-autopilot'
     , 'puavo-client'
     , 'puavo-hw-log'
@@ -791,9 +800,9 @@ class packages {
         , '3.12.10.opinsys4'
         , '3.14.1.opinsys1' ]:
           package_tag => 'opinsys',
+          with_dbg    => false,
           with_extra  => false;
       }
     }
   }
 }
-

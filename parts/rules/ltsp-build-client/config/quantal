@@ -18,19 +18,20 @@ PUPPET_USE_CLASSES="
   libreoffice
   lightdm
   ltspimage_java
+  ltspimage_kdump
   ltspimage_lucid_nfs_compatibility
   ltspimage_ssh_server
   mimio
   motd
   network_manager
-  organisation_adm_users
   open-sankore
+  organisation_adm_users
   packages::all
   packages::sssd_install_workaround
   plymouth_theme
   primus
-  puavo_openvpn
   puavo-wlan
+  puavo_openvpn
   pycharm
   smartboard
   ssh_client

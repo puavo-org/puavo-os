@@ -9,8 +9,7 @@ media/*
 mnt/*
 opt/ltsp*
 proc/*
-root/.*
-root/*
+root/!(.ssh)
 run/*
 srv/*
 tmp/.*
