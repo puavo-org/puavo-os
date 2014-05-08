@@ -5,6 +5,8 @@ lockPref("browser.cache.disk.enable", false);
 lockPref("browser.safebrowsing.enabled", false);
 lockPref("browser.safebrowsing.malware.enabled", false);
 lockPref("network.dns.disableIPv6", true);
+lockPref("network.seer.enabled", false);
+<% if not @api_server.nil? -%>
 <% if not @api_server.nil? -%>
 lockPref("network.negotiate-auth.trusted-uris", "<%= @api_server %>");
 lockPref("network.negotiate-auth.delegation-uris", "<%= @api_server %>");
