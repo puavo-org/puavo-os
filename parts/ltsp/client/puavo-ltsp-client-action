@@ -17,7 +17,7 @@ send_to_Xserver_and_logout() {
   xprop -root -f LTSP_LOGOUT_ACTION 8s -set LTSP_LOGOUT_ACTION $_action
 
   case "$XDG_CURRENT_DESKTOP" in
-    GNOME)
+    GNOME|Unity)
       gnome-session-quit --force --logout --no-prompt
       ;;
   esac
