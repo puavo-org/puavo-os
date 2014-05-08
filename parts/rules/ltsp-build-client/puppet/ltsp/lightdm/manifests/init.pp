@@ -1,6 +1,5 @@
 class lightdm {
-  include desktop::dconf::puavodesktop,
-          lightdm::login_prompt_as_default
+  include desktop::dconf::puavodesktop
   require packages
 
   file {
