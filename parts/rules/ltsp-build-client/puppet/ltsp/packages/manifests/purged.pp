@@ -7,6 +7,7 @@ class packages::purged {
   @package {
     # the functionality in these is not for our end users
     [ 'linux-image-generic'             # we want to choose kernels explicitly
+    , 'gnome-media'                     # broken software
     , 'software-properties-gtk'
     , 'synaptic'
     , 'ubuntu-release-upgrader-gtk'
@@ -18,7 +19,6 @@ class packages::purged {
                                 # (we use a separate boot server)
 
     , 'tracker' ]:              # this uses too much resources when using nfs
-
       tag => [ 'ubuntu', ];
   }
 }
