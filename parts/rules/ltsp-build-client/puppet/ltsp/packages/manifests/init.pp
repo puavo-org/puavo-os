@@ -370,11 +370,8 @@ class packages {
     , 'racoon' ]:
       tag => [ 'network', 'ubuntu', ];
 
-    # XXX 'acroread' is not yet on Trusty
-    # [ 'acroread' ]:
-    #   tag => [ 'office', 'opinsys', ];
-
-    [ 'cmaptools' ]:
+    [ 'acroread'
+    , 'cmaptools' ]:
       tag => [ 'office', 'opinsys', ];
 
     [ 'librecad'
