@@ -1,5 +1,0 @@
-#!/bin/bash
-
-trap "" SIGHUP SIGINT SIGTERM
-PATH=$PATH:/sbin:/usr/sbin
-restart lightdm

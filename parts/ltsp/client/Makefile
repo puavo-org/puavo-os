@@ -212,9 +212,9 @@ install : installdirs
 		pam/ltspserver-guest-login \
 		make-release-logo \
 		puavo-desktop-session \
+		puavo-desktop-session-cleanup \
 		puavo-thin-guest-account \
 		puavo-ltspserver-create-guest \
-		puavo-webkiosk-restart-lightdm \
 		udev/udev-hotplug-monitor \
 		udev/udev-jetpipe \
 		xinitrc
