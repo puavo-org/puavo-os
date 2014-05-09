@@ -9,10 +9,8 @@ auth    sufficient      pam_succeed_if.so user ingroup nopasswdlogin
 auth    optional        pam_group.so
 
 auth    required        pam_permit.so
-auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/make-session-dir
-auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/open-session guest
-
-auth    optional        pam_gnome_keyring.so
+auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/make-session-dir
+auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/open-session guest
 
 # Permit all accounts for now.
 account required        pam_permit.so
@@ -26,5 +24,5 @@ session required        pam_permit.so
 # See "man pam_umask".
 session optional        pam_umask.so
 
-session optional        pam_gnome_keyring.so auto_start
-session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/chown-session-dir
+session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/pam/chown-session-dir
+session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/pam/setup-guest-session

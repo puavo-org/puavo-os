@@ -19,7 +19,7 @@ if [ "${DEVICE_HOMEPAGE}" = "null" ]; then
   DEVICE_HOMEPAGE=""
 fi
 
-HOMEPAGE=${DEVICE_HOMEPAGE}
+export HOMEPAGE=${DEVICE_HOMEPAGE}
 
 if [ "${USER_HOMEPAGE}" != "" ]; then
   if [ "${DEVICE_HOMEPAGE}" != "" ]; then

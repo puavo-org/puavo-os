@@ -5,10 +5,8 @@ auth    required        pam_env.so readenv=1
 auth    required        pam_env.so readenv=1 envfile=/etc/default/locale
 auth    required        pam_permit.so
 
-auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/make-session-dir
-auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/open-session guest
-
-auth    optional        pam_gnome_keyring.so
+auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/make-session-dir
+auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/open-session guest
 
 # Permit all accounts for now.
 account required        pam_permit.so
@@ -23,4 +21,4 @@ session required        pam_permit.so
 session optional        pam_umask.so
 session optional        pam_mkhomedir.so
 
-session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/chown-session-dir
+session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/pam/chown-session-dir
