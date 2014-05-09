@@ -14,7 +14,7 @@ class image::opinsys_desktop {
 		  firefox,
 		  google-earth-stable,
 		  google_talkplugin,
-		  # graphics_drivers,	# XXX nvidia is broken right now
+		  graphics_drivers,
 		  kaffeine,
 		  kernels,
 		  keyutils,

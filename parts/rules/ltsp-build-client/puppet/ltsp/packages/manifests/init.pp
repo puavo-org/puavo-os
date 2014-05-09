@@ -139,7 +139,7 @@ class packages {
     , 'firmware-b43-installer'
     , 'libgl1-mesa-glx'
     , 'linux-firmware'
-    # , 'nvidia-304'	# XXX this breaks desktop as of now (on Trusty)
+    , 'nvidia-331'
     , 'nvidia-settings'
     , 'xserver-xorg-video-all' ]:
       tag => [ 'drivers', 'ubuntu', ];
