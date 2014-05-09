@@ -111,7 +111,8 @@ cd $WM_PATH
 
 # Truncate log file to avoid excess disk usage
 if [ -f "$WM_LOG_FILE" ]; then
-    cat "$WM_LOG_FILE" | tail --lines 1000 > "$WM_LOG_FILE"
+    cat "$WM_LOG_FILE" | tail --lines 1000 > "${WM_LOG_FILE}.tmp"
+    mv "${WM_LOG_FILE}.tmp" "$WM_LOG_FILE"
 fi
 
 
