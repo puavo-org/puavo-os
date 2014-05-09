@@ -19,6 +19,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(libdir)
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-client
+	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-client/pam
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/default
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-external-files-actions.d
@@ -69,6 +70,7 @@ install : installdirs
 		templates/etc/pam.d/ltspsshd \
 		templates/etc/pam.d/ltspguestsshd \
 		templates/etc/pam.d/lightdm-autologin-fatclient \
+		templates/etc/pam.d/lightdm-autologin-laptop \
 		templates/etc/pam.d/lightdm-autologin-thinclient \
 		templates/etc/pam.d/lightdm-fatclient \
 		templates/etc/pam.d/lightdm-laptop \
@@ -203,14 +205,10 @@ install : installdirs
 		etc/X11/Xsession.d/40puavo-webkiosk \
 		etc/X11/Xsession.d/41puavo-set-locale \
 		etc/X11/Xsession.d/42puavo-set-browser-homepage \
+		etc/X11/Xsession.d/43puavo-set-guest-session-quirks \
 		etc/X11/Xsession.d/90puavo-setup-printers
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
-		pam/open-session \
-		pam/populate-extrausers \
-		pam/chown-session-dir \
-		pam/make-session-dir \
-		pam/ltspserver-guest-login \
 		make-release-logo \
 		puavo-desktop-session \
 		puavo-desktop-session-cleanup \
@@ -219,6 +217,14 @@ install : installdirs
 		udev/udev-hotplug-monitor \
 		udev/udev-jetpipe \
 		xinitrc
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/pam \
+		pam/chown-session-dir \
+		pam/ltspserver-guest-login \
+		pam/make-session-dir \
+		pam/open-session \
+		pam/populate-extrausers \
+		pam/setup-guest-session
 
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspguestsshd
