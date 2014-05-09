@@ -1,9 +1,10 @@
 # Clean up blacklists we do not want at this stage of boot
-# (these block nouveau and radeon, which is necessary for
-# fglrx and nvidia to work).  However, we may want to use
-# nouveau or radeon that are the default drivers for some chips.
+# (these block nouveau and radeon and these are required at an earlier
+# stage for the fglrx and nvidia drivers to work).  However, we may want
+# to use nouveau or radeon that are the default drivers for some chips.
+
 rm -f /etc/modprobe.d/fglrx.conf \
-      /etc/modprobe.d/nvidia-304_hybrid.conf
+      /etc/modprobe.d/nvidia-331_hybrid.conf
 
 case "$XSERVER" in
   fglrx)
@@ -12,7 +13,7 @@ case "$XSERVER" in
     ;;
   nvidia)
     update-alternatives --set i386-linux-gnu_gl_conf \
-			/usr/lib/nvidia-304/ld.so.conf
+			/usr/lib/nvidia-331/ld.so.conf
     ln -f /etc/ld.so.cache-nvidia /etc/ld.so.cache
     ;;
 esac
