@@ -34,7 +34,7 @@ class image::opinsys_desktop {
 		  primus,
 		  puavo_openvpn,
 		  puavo-wlan,
-		  # pycharm, # XXX not yet on Trusty
+		  pycharm,
 		  smartboard,
 		  ssh_client,
 		  sudo,
