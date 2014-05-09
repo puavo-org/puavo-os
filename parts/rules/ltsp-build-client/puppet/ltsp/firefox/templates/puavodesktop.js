@@ -12,7 +12,7 @@ lockPref("network.negotiate-auth.delegation-uris", "<%= @api_server %>");
 <% end -%>
 lockPref("print.postscript.paper_size", "iso_a4");
 lockPref("toolkit.storage.synchronous", 1);
-pref("flashblock.whitelist", "rockway.fi,ugri.net,sanomapro.fi,pelastusopisto.fi,suomeasavelin.net,vetamix.net,vimeo.com,youtube.com,translate.google.com,ksml.fi,quizlet.com,downloads.bbc.co.uk");
+pref("flashblock.whitelist", "rockway.fi,ugri.net,sanomapro.fi,pelastusopisto.fi,suomeasavelin.net,vetamix.net,vimeo.com,youtube.com,translate.google.com,ksml.fi,quizlet.com,downloads.bbc.co.uk,play.spotify.com");
 
 homepage=getenv("HOMEPAGE");
 
