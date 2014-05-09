@@ -117,7 +117,7 @@ def try_writing_puavomounts()
 	 next
       end
 
-      autofs_options = "-fstype=#{ fs }"
+      autofs_options = "-fstype=#{ fs },nodev,nosuid"
       if !options.empty? then
 	autofs_options << ",#{ options }"
       end
