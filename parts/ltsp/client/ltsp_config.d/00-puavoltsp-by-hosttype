@@ -121,6 +121,7 @@ case "$PUAVO_HOSTTYPE" in
       puavo-set-sane-date
       puavo-update-client
       puavo-vpn-dnsmasq
+      puavo-wlanap
       zram-config
     "
     set_lts_var USE_NFS_HOMES        True
@@ -179,6 +180,7 @@ case "$PUAVO_HOSTTYPE" in
       puavo-update-client
       puavo-vpn-client
       puavo-vpn-dnsmasq
+      puavo-wlanap
       sssd
       statd
       statd-mounting
