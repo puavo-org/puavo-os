@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -eu
+
+# if there are no mimio license files, remove the mimio-related .desktop files
+if ! [    -e "/var/opt/mimio/global/global.reg"
+       -a -e "/var/opt/mimio/global/shared.reg" ]; then
+  rm -f /etc/xdg/autostart/mimio-mimiosys.desktop       \
+	/usr/share/applications/mimio-gallery.desktop   \
+	/usr/share/applications/mimio-gradebook.desktop \
+	/usr/share/applications/mimio-launch.desktop    \
+	/usr/share/applications/mimio-notebook.desktop  \
+	/usr/share/applications/mimio-quickvote.desktop \
+	/usr/share/applications/mimio-reveal.desktop    \
+	/usr/share/applications/mimio-spotlight.desktop \
+	/usr/share/applications/mimio-texttools.desktop \
+        /usr/share/applications/mimio-tools.desktop     \
+	/usr/share/applications/mimio-view.desktop
+fi
