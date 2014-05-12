@@ -3,7 +3,7 @@
 set -eu
 
 # if there are no mimio license files, remove the mimio-related .desktop files
-if ! [    -e "/var/opt/mimio/global/global.reg"
+if ! [    -e "/var/opt/mimio/global/global.reg" \
        -a -e "/var/opt/mimio/global/shared.reg" ]; then
   rm -f /etc/xdg/autostart/mimio-mimiosys.desktop       \
 	/usr/share/applications/mimio-gallery.desktop   \
