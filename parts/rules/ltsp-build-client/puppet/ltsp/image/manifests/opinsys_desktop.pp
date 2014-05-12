@@ -32,6 +32,7 @@ class image::opinsys_desktop {
 		  packages::sssd_install_workaround,
 		  plymouth_theme,
 		  primus,
+		  promethean,
 		  puavo_openvpn,
 		  puavo-wlan,
 		  pycharm,
