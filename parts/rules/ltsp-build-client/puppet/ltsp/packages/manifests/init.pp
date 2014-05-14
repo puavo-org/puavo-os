@@ -790,14 +790,10 @@ class packages {
   }
 
   case $lsbdistcodename {
-    'quantal': {
+    'trusty': {
       kernel_package_for_version {
-        [ '3.10.37.opinsys2'
-        , '3.12.10.opinsys4'
-        , '3.14.1.opinsys1' ]:
-          package_tag => 'opinsys',
-          with_dbg    => false,
-          with_extra  => false;
+        '3.13.0-26-generic':
+          package_tag => 'opinsys';
       }
     }
   }
