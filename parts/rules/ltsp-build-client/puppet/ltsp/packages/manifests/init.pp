@@ -144,10 +144,6 @@ class packages {
     , 'xserver-xorg-video-all' ]:
       tag => [ 'drivers', 'ubuntu', ];
 
-    # XXX 'opinsys-linux-firmware' is not yet on Trusty
-    # [ 'opinsys-linux-firmware' ]:
-    #   tag => [ 'drivers', 'opinsys', ];
-
     [ 'wine' ]:
       tag => [ 'emulation', 'ubuntu', ];
 
