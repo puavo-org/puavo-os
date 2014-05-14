@@ -829,10 +829,13 @@ class packages {
     'quantal': {
       kernel_package_for_version {
         [ '3.10.37.opinsys2'
-        , '3.12.10.opinsys4'
         , '3.14.1.opinsys1' ]:
           package_tag => 'opinsys',
           with_dbg    => false,
+          with_extra  => false;
+        '3.12.10.opinsys4':
+          package_tag => 'opinsys',
+          with_dbg    => true,
           with_extra  => false;
       }
     }
