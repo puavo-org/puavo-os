@@ -33,29 +33,14 @@ class kernels {
   }
 
   case $lsbdistcodename {
-    'quantal': {
-      $default_kernel = '3.12.10.opinsys4'
-      $edge_kernel = '3.14.1.opinsys1'
-      $stable_kernel = '3.10.37.opinsys2'
+    'trusty': {
+      $default_kernel = '3.13.0-26-generic'
 
       default_kernel_link {
         [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
           require => Packages::Kernel_package_for_version[$default_kernel];
       }
-
-      edge_kernel_link {
-        [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
-          require => Packages::Kernel_package_for_version[$edge_kernel];
-      }
-
-      stable_kernel_link {
-        [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
-          require => Packages::Kernel_package_for_version[$stable_kernel];
-      }
-
       Packages::Kernel_package_for_version <| title == $default_kernel |>
-      Packages::Kernel_package_for_version <| title == $edge_kernel |>
-      Packages::Kernel_package_for_version <| title == $stable_kernel |>
     }
   }
 }
