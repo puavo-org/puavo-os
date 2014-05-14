@@ -5,7 +5,8 @@ class promethean {
   # XXX currently we do not have those as a standard part of the device image,
   # XXX so we have to set this up this way:
   file {
-    [ '/etc/xdg/Promethean'
+    [ '/etc/xdg'
+    , '/etc/xdg/Promethean'
     , '/etc/xdg/Promethean/ActivInspire' ]:
       ensure => directory;
   }
