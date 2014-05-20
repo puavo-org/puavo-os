@@ -1,4 +1,4 @@
-IMAGE_TARGETS = opinsys_desktop
+IMAGE_TARGETS = opinsys_desktop puavo_desktop
 OTHER_TARGETS = all build-chroot chroot image prepare-puppet puppet-chroot
 
 LOGFILE = $(shell echo logs/ltsp-$$(date +%Y-%m-%d-%H%M%S).log)
@@ -10,7 +10,7 @@ help:
 	@echo "Available image types are:"
 	@echo "  ${IMAGE_TARGETS}" | fmt
 
-all: opinsys_desktop
+all: ${IMAGE_TARGETS}
 
 ${IMAGE_TARGETS}:
 	@sudo ./build_puavo_device_image --build-all-for image::$@ \
