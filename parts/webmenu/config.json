@@ -19,7 +19,8 @@
     "name": {
       "fi": "Järjestelmäasetukset",
       "en": "System Settings",
-      "sv": "Systeminställningar"
+      "sv": "Systeminställningar",
+      "de": "Systemeinstellungen"
     },
     "osIconPath": "/usr/share/icons/Faenza/categories/96/applications-system.png"
   },
@@ -29,7 +30,8 @@
     "name": {
       "fi": "Profiili",
       "en": "Profile",
-      "sv": "Profil"
+      "sv": "Profil",
+      "de": "Profil"
     },
     "osIconPath": "/usr/share/icons/Faenza/emblems/96/emblem-personal.png"
   },
@@ -39,18 +41,20 @@
     "name": {
       "fi": "Tukisivusto",
       "en": "Support",
-      "sv": "Stöd"
+      "sv": "Stöd",
+      "de": "Support"
     },
     "osIconPath": "/usr/share/icons/Faenza/status/96/dialog-question.png"
   },
-  "passwordCMD": {
+  "passwordCMD": { 
     "type": "webWindow",
     "url": "https://{{puavoDomain}}/users/password/own",
     "osIconPath": "/usr/share/icons/Faenza/emblems/96/emblem-readonly.png",
     "name": {
       "fi": "Salasana",
       "en": "Password",
-      "sv": "Lösenord"
+      "sv": "Lösenord",
+      "de": "Passwort"
       }
   },
   "shutdownCMD": [
