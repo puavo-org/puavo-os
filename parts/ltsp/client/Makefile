@@ -214,6 +214,7 @@ install : installdirs
 		puavo-desktop-session-cleanup \
 		puavo-thin-guest-account \
 		puavo-ltspserver-create-guest \
+		puavo-x2go-set-xrandr-mode \
 		udev/udev-hotplug-monitor \
 		udev/udev-jetpipe \
 		xinitrc

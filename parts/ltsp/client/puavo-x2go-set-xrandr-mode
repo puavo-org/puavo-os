@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+# exit if not in x2go session
+[ -n "$X2GO_SESSION" ] || exit 0
+
+geometry=$(perl -F, -ane 'for (@F) { /^geometry=(.*)$/ && print $1 }' \
+	     ~/.x2go/C-$X2GO_SESSION/options)
+
+if [ -n "$geometry" ]; then
+  xrandr --output default --mode $geometry
+fi
