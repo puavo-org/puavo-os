@@ -29,7 +29,6 @@ class image::opinsys_desktop {
 		  organisation_adm_users,
 		  open-sankore,
 		  packages::all,
-		  packages::sssd_install_workaround,
 		  plymouth_theme,
 		  primus,
 		  promethean,
