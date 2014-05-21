@@ -36,6 +36,55 @@ class packages {
     }
   }
 
+  #
+  # packages from the ubuntu repositories
+  #
+
+  #
+  # packages from the canonical/ubuntu partner repository
+  #
+
+  #
+  # packages from the opinsys/puavo repository
+  #
+
+  @package {
+    [ 'ltsp-client'
+    , 'opinsys-ca-certificates'
+    , 'puavo-autopilot'
+    , 'puavo-client'
+    , 'puavo-hw-log'
+    , 'puavo-ltsp-client'
+    , 'puavo-ltsp-install'
+    , 'puavo-monitor'
+    , 'puavo-vpn-client' ]:
+      tag => [ 'misc', 'puavo', 'thinclient' ];
+
+    [ 'ltsp-server'
+    , 'puavo-load-reporter'
+    , 'puavo-sharedir-client'
+    , 'puavo-wlanap'
+    , 'puavo-wlanap-dnsproxy'
+    , 'quicktile'
+    , 'webmenu' ]:
+      tag => [ 'misc', 'puavo' ];
+
+    [ 'bluegriffon'
+    , 'pycharm' ]:
+      tag => [ 'programming', 'puavo' ];
+
+    'xul-ext-flashblock':
+      tag => [ 'web', 'puavo' ];
+  }
+
+  #
+  # packages from the (private) opinsys repository
+  #
+
+  #
+  # XXX uncategorized
+  #
+
   @package {
     [ 'elinks'
     , 'ethtool'
@@ -96,10 +145,6 @@ class packages {
     , 'udev'
     , 'vlan' ]:
       tag => [ 'basic', 'ubuntu', ];
-
-    [ 'quicktile'
-    , 'webmenu' ]:
-      tag => [ 'desktop', 'opinsys', ];
 
     [ 'lightdm'
     , 'lightdm-gtk-greeter'
@@ -311,10 +356,6 @@ class packages {
     , 'xexit' ]:
       tag => [ 'ltsp', 'opinsys', ];
 
-    [ 'ltsp-client'
-    , 'ltsp-server' ]:
-      tag => [ 'ltsp', 'ubuntu', ];
-
     [ 'libdvdcss2' ]:
       tag => [ 'mediaplayer', 'opinsys', ];
 
@@ -415,28 +456,6 @@ class packages {
     , 'scratch'
     , 'spe' ]:
       tag => [ 'programming', 'ubuntu', ];
-
-    [ 'bluegriffon'
-    , 'pycharm' ]:
-      tag => [ 'programming', 'opinsys' ];
-
-    [ 'puavo-wlanap'
-    , 'puavo-wlanap-dnsproxy' ]:
-      tag => [ 'puavo', 'puavo-wlan', 'opinsys' ];
-
-    [ 'puavo-load-reporter'
-    , 'puavo-sharedir-client' ]:
-      tag => [ 'puavo', 'opinsys', ];
-
-    [ 'opinsys-ca-certificates'
-    , 'puavo-autopilot'
-    , 'puavo-client'
-    , 'puavo-hw-log'
-    , 'puavo-ltsp-client'
-    , 'puavo-ltsp-install'
-    , 'puavo-monitor'
-    , 'puavo-vpn-client' ]:
-      tag => [ 'puavo', 'opinsys', 'thinclient', ];
 
     [ 'icaclient'       # icaclient actually depends on libmotif4
     , 'libmotif4' ]:
@@ -744,8 +763,7 @@ class packages {
       tag => [ 'virtualization', 'ubuntu', ];
 
     [ 'google-talkplugin'
-    , 'oracle-java'
-    , 'xul-ext-flashblock' ]:
+    , 'oracle-java' ]:
       tag => [ 'web', 'opinsys', ];
 
     [ 'adobe-flashplugin' ]:
