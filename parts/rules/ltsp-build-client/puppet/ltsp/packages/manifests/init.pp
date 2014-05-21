@@ -2,87 +2,14 @@ class packages {
   require apt::repositories,
           organisation_apt_repositories
 
-  include packages::purged
+  include packages::kernels,
+	  packages::purged
 
   # install packages by default
   Package { ensure => present, }
 
-  define kernel_package_for_version ($package_tag='',
-				     $with_extra=true,
-				     $with_dbg=false) {
-    $version = $title
-
-    $extra_packages = $with_extra ? {
-      true  => [ "linux-image-extra-$version" ],
-      false => [],
-    }
-
-    $dbg_packages = $with_dbg ? {
-      true  => [ "linux-image-$version-dbg" ],
-      false => [],
-    }
-
-    $packages = [ "linux-headers-$version"
-                , "linux-image-$version"
-                , $extra_packages
-                , $dbg_packages ]
-
-    @package {
-      $packages:
-        tag => $package_tag ? {
-                 ''      => 'kernel',
-                 default => [ 'kernel', $package_tag, ],
-               },
-    }
-  }
-
   #
   # packages from the ubuntu repositories
-  #
-
-  #
-  # packages from the canonical/ubuntu partner repository
-  #
-
-  #
-  # packages from the opinsys/puavo repository
-  #
-
-  @package {
-    [ 'ltsp-client'
-    , 'opinsys-ca-certificates'
-    , 'puavo-autopilot'
-    , 'puavo-client'
-    , 'puavo-hw-log'
-    , 'puavo-ltsp-client'
-    , 'puavo-ltsp-install'
-    , 'puavo-monitor'
-    , 'puavo-vpn-client' ]:
-      tag => [ 'misc', 'puavo', 'thinclient' ];
-
-    [ 'ltsp-server'
-    , 'puavo-load-reporter'
-    , 'puavo-sharedir-client'
-    , 'puavo-wlanap'
-    , 'puavo-wlanap-dnsproxy'
-    , 'quicktile'
-    , 'webmenu' ]:
-      tag => [ 'misc', 'puavo' ];
-
-    [ 'bluegriffon'
-    , 'pycharm' ]:
-      tag => [ 'programming', 'puavo' ];
-
-    'xul-ext-flashblock':
-      tag => [ 'web', 'puavo' ];
-  }
-
-  #
-  # packages from the (private) opinsys repository
-  #
-
-  #
-  # XXX uncategorized
   #
 
   @package {
@@ -121,9 +48,6 @@ class packages {
     , 'xbacklight' ]:
       tag => [ 'admin', 'ubuntu', ];
 
-    [ 'spotify-client' ]:
-      tag => [ 'audio', 'opinsys', ];
-
     [ 'libasound2-plugins'
     , 'pavucontrol'
     , 'pavumeter'
@@ -148,15 +72,11 @@ class packages {
 
     [ 'lightdm'
     , 'lightdm-gtk-greeter'
-    , 'nautilus-dropbox'
     , 'overlay-scrollbar'               # needed by accessibility stuff
     , 'ubuntu-restricted-extras'
     , 'ubuntu-standard'
     , 'xul-ext-mozvoikko' ]:
       tag => [ 'desktop', 'ubuntu', ];
-
-    'nautilus-dropbox-dist':
-      tag => [ 'desktop', 'opinsys', ];
 
     [ 'nodejs-bundle'
     , 'puavo-devscripts' ]:
@@ -291,14 +211,6 @@ class packages {
     , 'xzoom' ]:
       tag => [ 'graphics', 'ubuntu', ];
 
-    [ 'iscan'
-    , 'iscan-data'
-    , 'esci-interpreter-perfection-v330' ]:
-      tag => [ 'epson-scanner', 'opinsys', ];
-
-    [ 'skype' ]:
-      tag => [ 'instant_messaging', 'partner', ];
-
     [ 'kdump-tools' ]:
       tag => [ 'kernel', 'ubuntu', ];
 
@@ -309,7 +221,7 @@ class packages {
     , 'pidgin-plugin-pack' ]:
       tag => [ 'instant_messaging', 'ubuntu', ];
 
-    'language-pack-gnome-en':
+    [ 'language-pack-gnome-en' ]:
       tag => [ 'language-en', 'thinclient', 'ubuntu', ];
 
     [ 'firefox-locale-en'
@@ -325,7 +237,7 @@ class packages {
     , 'thunderbird-locale-en-gb' ]:
       tag => [ 'language-en', 'ubuntu', ];
 
-    'language-pack-gnome-fi':
+    [ 'language-pack-gnome-fi' ]:
       tag => [ 'language-fi', 'thinclient', 'ubuntu', ];
 
     [ 'firefox-locale-fi'
@@ -338,7 +250,7 @@ class packages {
     , 'thunderbird-locale-fi' ]:
       tag => [ 'language-fi', 'ubuntu', ];
 
-    'language-pack-gnome-sv':
+    [ 'language-pack-gnome-sv' ]:
       tag => [ 'language-sv', 'thinclient', 'ubuntu', ];
 
     [ 'firefox-locale-sv'
@@ -351,10 +263,6 @@ class packages {
     , 'myspell-sv-se'
     , 'thunderbird-locale-sv-se' ]:
       tag => [ 'language-sv', 'ubuntu', ];
-
-    [ 'autopoweroff'
-    , 'xexit' ]:
-      tag => [ 'ltsp', 'opinsys', ];
 
     [ 'libdvdcss2' ]:
       tag => [ 'mediaplayer', 'opinsys', ];
@@ -409,10 +317,6 @@ class packages {
     , 'racoon' ]:
       tag => [ 'network', 'ubuntu', ];
 
-    [ 'acroread'
-    , 'cmaptools' ]:
-      tag => [ 'office', 'opinsys', ];
-
     [ 'librecad'
     , 'libreoffice'
     , 'libreoffice-base'
@@ -457,14 +361,8 @@ class packages {
     , 'spe' ]:
       tag => [ 'programming', 'ubuntu', ];
 
-    [ 'icaclient'       # icaclient actually depends on libmotif4
-    , 'libmotif4' ]:
-      tag => [ 'remote_access', 'opinsys', ];
-
-    [ 'vmware-view-client' ]:
-      tag => [ 'remote_access', 'partner', ];
-
     [ 'gftp-gtk'
+    , 'libmotif4'	# required by icaclient
     , 'lftp'
     , 'remmina'
     , 'smbclient'
@@ -472,14 +370,10 @@ class packages {
     , 'wget' ]:
       tag => [ 'remote_access', 'ubuntu', ];
 
-    [ 'google-earth-stable'
-    , 'googleearth'
-    , 'av4kav'
-    , 'texlive-fonts-extra'
+    [ 'texlive-fonts-extra'
     , 'texlive-fonts-recommended'
     , 'texlive-latex-extra'
-    , 'texlive-latex-recommended'
-    , 'vstloggerpro' ]:
+    , 'texlive-latex-recommended' ]:
       tag => [ 'science', 'opinsys', ];
 
     [ 'atomix'
@@ -509,11 +403,7 @@ class packages {
     , 'wxmaxima' ]:
       tag => [ 'science', 'ubuntu', ];
 
-    [ 'faenza-icon-theme'
-    , 'opinsys-theme' ]:
-      tag => [ 'themes', 'opinsys', ];
-
-    'ubuntu-mono':
+    [ 'ubuntu-mono' ]:
       tag => [ 'themes', 'thinclient', 'ubuntu', ];
 
     [ 'breathe-icon-theme'
@@ -762,13 +652,6 @@ class packages {
     [ 'qemu-kvm' ]:
       tag => [ 'virtualization', 'ubuntu', ];
 
-    [ 'google-talkplugin'
-    , 'oracle-java' ]:
-      tag => [ 'web', 'opinsys', ];
-
-    [ 'adobe-flashplugin' ]:
-      tag => [ 'web', 'partner', ];
-
     [ 'bluefish'
     , 'chromium-browser'
     , 'gecko-mediaplayer'
@@ -777,19 +660,123 @@ class packages {
     , 'openjdk-6-jdk'
     , 'openjdk-6-jre' ]:
       tag => [ 'web', 'ubuntu', ];
+  }
 
-    [ 'open-sankore', ]:
-      tag => [ 'whiteboard', 'ubuntu', ];
+  #
+  # packages from the canonical/ubuntu partner repository
+  #
+
+  @package {
+    [ 'skype' ]:
+      tag => [ 'instant_messaging', 'partner', ];
+
+    [ 'vmware-view-client' ]:
+      tag => [ 'remote_access', 'partner', ];
+
+    [ 'adobe-flashplugin' ]:
+      tag => [ 'web', 'partner', ];
+ }
+
+  #
+  # packages from the opinsys/puavo repository
+  #
+
+  @package {
+    [ 'ltsp-client'
+    , 'opinsys-ca-certificates'
+    , 'puavo-autopilot'
+    , 'puavo-client'
+    , 'puavo-hw-log'
+    , 'puavo-ltsp-client'
+    , 'puavo-ltsp-install'
+    , 'puavo-monitor'
+    , 'puavo-vpn-client' ]:
+      tag => [ 'misc', 'puavo', 'thinclient', ];
+
+    [ 'ltsp-server'
+    , 'puavo-load-reporter'
+    , 'puavo-sharedir-client'
+    , 'puavo-wlanap'
+    , 'puavo-wlanap-dnsproxy'
+    , 'quicktile'
+    , 'webmenu' ]:
+      tag => [ 'misc', 'puavo', ];
+
+    [ 'bluegriffon'
+    , 'pycharm' ]:
+      tag => [ 'programming', 'puavo', ];
+
+    [ 'xul-ext-flashblock' ]:
+      tag => [ 'web', 'puavo', ];
+  }
+
+  case $lsbdistcodename {
+    'trusty': {
+      packages::kernels::kernel_package {
+        '3.13.0-26-generic':
+          package_tag => 'opinsys';
+      }
+    }
+  }
+
+  #
+  # packages from the (private) opinsys repository
+  #
+
+  @package {
+    [ 'spotify-client' ]:
+      tag => [ 'audio', 'opinsys', ];
+
+    [ 'esci-interpreter-perfection-v330'
+    , 'iscan'
+    , 'iscan-data' ]:
+      tag => [ 'epson-scanner', 'opinsys', ];
+
+    # XXX these should not be here, but in a public repository:
+    [ 'autopoweroff'
+    , 'xexit' ]:
+      tag => [ 'misc', 'opinsys', ];
+
+    [ 'nautilus-dropbox'
+    , 'nautilus-dropbox-dist' ]:
+      tag => [ 'misc', 'opinsys', ];
+
+    [ 'acroread'
+    , 'cmaptools' ]:
+      tag => [ 'office', 'opinsys', ];
+
+    [ 'icaclient' ]:
+      # icaclient has a hidden dependency on libmotif4
+      require => Package['libmotif4'],
+      tag     => [ 'remote_access', 'opinsys', ];
+
+    [ 'av4kav'
+    , 'google-earth-stable'
+    , 'googleearth'
+    , 'vstloggerpro' ]:
+      tag => [ 'science', 'opinsys', ];
+
+    [ 'faenza-icon-theme'
+    , 'opinsys-theme' ]:
+      tag => [ 'themes', 'opinsys', ];
+
+    [ 'google-talkplugin'
+    , 'oracle-java' ]:
+      tag => [ 'web', 'opinsys', ];
 
     [ 'eleet'
     , 'leap' ]:
       tag => [ 'whiteboard', 'opinsys', ];
 
-    [ 'mimio-studio', ]:
+    [ 'ebeam-edu' ]:
+      tag => [ 'whiteboard-ebeam', 'opinsys', ];
+
+    [ 'mimio-studio' ]:
       tag => [ 'whiteboard-mimio', 'opinsys', ];
 
-    [ 'ebeam-edu', ]:
-      tag => [ 'whiteboard-ebeam', 'opinsys', ];
+    # XXX this should not be here, but in a public repository:
+    [ 'open-sankore', ]:
+      tag => [ 'whiteboard-sankore', 'opinsys', ];
 
     [ 'nwfermi'
     , 'smart-activation'
@@ -803,14 +790,5 @@ class packages {
     , 'smart-product-drivers'
     , 'xf86-input-nextwindow' ]:
       tag => [ 'whiteboard-smartboard', 'opinsys', ];
-  }
-
-  case $lsbdistcodename {
-    'trusty': {
-      kernel_package_for_version {
-        '3.13.0-26-generic':
-          package_tag => 'opinsys';
-      }
-    }
   }
 }

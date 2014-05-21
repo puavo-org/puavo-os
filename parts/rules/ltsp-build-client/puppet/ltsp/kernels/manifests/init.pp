@@ -38,9 +38,10 @@ class kernels {
 
       default_kernel_link {
         [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
-          require => Packages::Kernel_package_for_version[$default_kernel];
+          require => Packages::Kernels::Kernel_package[$default_kernel];
       }
-      Packages::Kernel_package_for_version <| title == $default_kernel |>
+
+      Packages::Kernels::Kernel_package <| title == $default_kernel |>
     }
   }
 }
