@@ -1,9 +1,9 @@
-class image::puavo_desktop {
+class image::puavo {
   case $operatingsystem {
     'Ubuntu': {
       case $lsbdistcodename {
         'trusty': {
-          include image::opinsys_desktop
+          # include image::opinsys
         }
       }
     }
