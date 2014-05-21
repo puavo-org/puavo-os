@@ -1,4 +1,4 @@
-class image::bundle::thinclient {
+class image::bundle::basic {
   include apt_ltspbuild_proxy,
 	  autopoweroff,
 	  console,
