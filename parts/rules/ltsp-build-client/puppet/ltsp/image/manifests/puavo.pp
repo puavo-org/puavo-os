@@ -3,7 +3,8 @@ class image::puavo {
     'Ubuntu': {
       case $lsbdistcodename {
         'trusty': {
-          # include image::opinsys
+          include image::bundle::basic,
+		  packages::ubuntu
         }
       }
     }
