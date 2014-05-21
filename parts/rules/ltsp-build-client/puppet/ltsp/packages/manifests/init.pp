@@ -7,7 +7,9 @@ class packages {
   # install packages by default
   Package { ensure => present, }
 
-  define kernel_package_for_version ($package_tag='', $with_extra=true, $with_dbg=false) {
+  define kernel_package_for_version ($package_tag='',
+				     $with_extra=true,
+				     $with_dbg=false) {
     $version = $title
 
     $extra_packages = $with_extra ? {
@@ -60,7 +62,7 @@ class packages {
     , 'tshark'
     , 'whois'
     , 'w3m'
-    , 'x11vnc']:
+    , 'x11vnc' ]:
       tag => [ 'admin', 'thinclient', 'ubuntu', ];
 
     [ 'clusterssh'
