@@ -1,4 +1,4 @@
-class image::opinsys_desktop {
+class image::opinsys {
   case $operatingsystem {
     'Ubuntu': {
       case $lsbdistcodename {
