@@ -21,12 +21,6 @@ images_dir="/opt/ltsp/images"
 target_dir="/virtualtmp/$user/$distribution"
 puppet_ltsp_dir="$target_dir/etc/puppet/ltsp"
 
-build_date=$(date +%Y-%m-%d-%H%M%S)
-build_name=$(git branch | awk '$1 == "*" { print $2 }' 2>/dev/null \
-	       || echo master)
-build_version=ltsp-$distribution-$build_name-$build_date
-ltspimage_name="$build_version-$arch.img"
-
 do_mounts() {
   mount -o bind /dev     "$target_dir/dev"
   mount -o bind /dev/pts "$target_dir/dev/pts"
@@ -45,14 +39,17 @@ wipe_chroot() {
   rm -rf "$target_dir"
 }
 
-check_puppet_class() {
-  if [ -z "$1" ]; then
-    echo 'Did not define a puppet class, exiting...' >&2
+ask_and_set_image_information() {
+  imagetype=$(cat $target_dir/etc/ltsp/this_ltspimage_type)
+  if [ -z "$imagetype" ]; then
+    echo 'No imagetype is set in image chroot, can not continue' >&2
     return 1
   fi
-}
 
-ask_and_set_image_information() {
+  build_date=$(date +%Y-%m-%d-%H%M%S)
+  build_version=ltsp-$imagetype-$distribution-$build_date
+  ltspimage_name="$build_version-$arch.img"
+
   old_release_name=
   read old_release_name 2>/dev/null \
     < "$target_dir/etc/ltsp/this_ltspimage_release" || true
@@ -60,7 +57,6 @@ ask_and_set_image_information() {
   read -p "Release name [${old_release_name}]: " new_release_name
   new_release_name=${new_release_name:-${old_release_name}}
 
-  mkdir -p $target_dir/etc/ltsp
   echo "$ltspimage_name"   > "$target_dir/etc/ltsp/this_ltspimage_name"
   echo "$new_release_name" > "$target_dir/etc/ltsp/this_ltspimage_release"
 
@@ -133,6 +129,13 @@ set_timezone() {
   cp /etc/timezone  $target_dir/etc/timezone
 }
 
+set_ltspimage_type() {
+  imagetype=$1
+
+  mkdir -p $target_dir/etc/ltsp
+  echo "$imagetype" > "$target_dir/etc/ltsp/this_ltspimage_type"
+}
+
 prepare_puppet() {
   puppet_classes=$1
 
@@ -179,8 +182,10 @@ run_with_setarch() {
 }
 
 make_image() {
-  echo 'Running updatedb in chroot'
-  run_in_chroot updatedb
+  if [ -x "$target_dir/usr/bin/updatedb" ]; then
+    echo 'Running updatedb in chroot'
+    run_in_chroot updatedb
+  fi
 
   ask_and_set_image_information
 
@@ -205,35 +210,45 @@ fi
 
 case "$option" in
   --build-all-for)
-    check_puppet_class "$option_argument"
+    imagetype=$option_argument
 
-    $0 --build-chroot
-    $0 --prepare-puppet "$option_argument"
+    $0 --build-chroot "$imagetype"
     # XXX apparently this does not stop and exit with puppet errors here, why?
-    $0 --puppet-chroot
+    $0 --update-chroot
     $0 --image
 
     ;;
   --build-chroot)
+    imagetype=$option_argument
+    if [ -z "$imagetype" ]; then
+      echo 'Did not define an image type, exiting...' >&2
+      return 1
+    fi
+
     build_chroot
     set_debconf_seeds
     set_timezone
+    set_ltspimage_type "$imagetype"
+    prepare_puppet "image::$imagetype"
     ;;
   --chroot)
     run_in_chroot bash
     ;;
-  --prepare-puppet)
-    check_puppet_class "$option_argument"
-    prepare_puppet "$option_argument"
-    ;;
   --image)
     make_image
     ;;
-  --puppet-chroot)
+  --update-chroot)
     apply_puppet
     ;;
   *)
-    echo "Usage: $(basename $0) [--build|--chroot|--image]" >&2
+    cat <<EOF >&2
+Usage:
+  $(basename $0) --build-all-for imagetype
+  $(basename $0) --build-chroot imagetype
+  $(basename $0) --chroot
+  $(basename $0) --image
+  $(basename $0) --update-chroot
+EOF
     exit 1
     ;;
 esac
