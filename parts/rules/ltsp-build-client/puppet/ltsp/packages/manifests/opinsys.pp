@@ -5,6 +5,7 @@ class packages::opinsys {
 
   Apt::Key        <| title == "opinsys-repo.gpgkey" |>
   Apt::Repository <| title == repo
+                  or title == private-repo
                   or title == archive
                   or title == private-archive
                   or title == kernels |>
