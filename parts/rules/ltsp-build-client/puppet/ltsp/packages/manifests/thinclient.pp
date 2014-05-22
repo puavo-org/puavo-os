@@ -1,7 +1,4 @@
 class packages::thinclient {
-  require apt::repositories,
-          organisation_apt_repositories
-
   include packages
 
   Apt::Key        <| title == "opinsys-repo.gpgkey" |>
