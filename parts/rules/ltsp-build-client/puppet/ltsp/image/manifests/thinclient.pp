@@ -3,7 +3,8 @@ class image::thinclient {
     'Ubuntu': {
       case $lsbdistcodename {
         'trusty': {
-	  include image::bundle::basic
+	  include image::bundle::basic,
+		  packages::thinclient
         }
       }
     }
