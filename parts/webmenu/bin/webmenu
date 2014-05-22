@@ -12,6 +12,7 @@ help(){
     --no-mon        Disable automatic restarting with mon
     --log           Enable fluentd logging
     --feedback      Enable feedback. Implies --log
+    --webkiosk      Enable webkiosk mode.
     -s --stop       Stop the running Webmenu process
     -n --no-build   Skip asset building in development mode
 
@@ -74,6 +75,10 @@ while true; do
             export WM_FEEDBACK_ACTIVE=true
             shift
         ;;
+        --webkiosk)
+            export WM_WEBKIOSK_MODE=true
+            shift
+        ;;
         --no-mon)
             use_mon=false
             shift
@@ -111,7 +116,8 @@ cd $WM_PATH
 
 # Truncate log file to avoid excess disk usage
 if [ -f "$WM_LOG_FILE" ]; then
-    cat "$WM_LOG_FILE" | tail --lines 1000 > "$WM_LOG_FILE"
+    tail --lines 1000 "$WM_LOG_FILE" > "${WM_LOG_FILE}.tmp"
+    mv "${WM_LOG_FILE}.tmp" "$WM_LOG_FILE"
 fi
 
 

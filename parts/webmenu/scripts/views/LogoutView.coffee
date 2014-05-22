@@ -24,9 +24,12 @@ class LogoutView extends ViewMaster
         if @config.get("hostType") is "laptop"
             actions.unshift "hibernate"
             actions.unshift "sleep"
-        return actions: actions.map (a) -> {
-            value: a
-            name: i18n "logout.#{ a }"
+        return {
+            actions: actions.map (a) -> {
+                name: i18n "logout.#{ a }"
+                value: a
+            }
+            webkioskMode: @config.get("webkioskMode")
         }
 
     events:
