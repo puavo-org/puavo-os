@@ -21,7 +21,7 @@ class image::opinsys {
 		  mimio,
 		  network_manager,
 		  open-sankore,
-		  packages::all,
+		  packages::opinsys,
 		  primus,
 		  promethean,
 		  puavo_openvpn,

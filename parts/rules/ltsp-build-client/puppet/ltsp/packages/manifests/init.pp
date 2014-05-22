@@ -1,7 +1,4 @@
 class packages {
-  require apt::repositories,
-          organisation_apt_repositories
-
   include packages::kernels,
 	  packages::purged
 
@@ -663,21 +660,6 @@ class packages {
   }
 
   #
-  # packages from the canonical/ubuntu partner repository
-  #
-
-  @package {
-    [ 'skype' ]:
-      tag => [ 'instant_messaging', 'partner', ];
-
-    [ 'vmware-view-client' ]:
-      tag => [ 'remote_access', 'partner', ];
-
-    [ 'adobe-flashplugin' ]:
-      tag => [ 'web', 'partner', ];
- }
-
-  #
   # packages from the opinsys/puavo repository
   #
 
@@ -718,6 +700,21 @@ class packages {
       }
     }
   }
+
+  #
+  # packages from the canonical/ubuntu partner repository
+  #
+
+  @package {
+    [ 'skype' ]:
+      tag => [ 'instant_messaging', 'partner', ];
+
+    [ 'vmware-view-client' ]:
+      tag => [ 'remote_access', 'partner', ];
+
+    [ 'adobe-flashplugin' ]:
+      tag => [ 'web', 'partner', ];
+ }
 
   #
   # packages from the (private) opinsys repository
