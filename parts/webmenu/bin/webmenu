@@ -12,6 +12,7 @@ help(){
     --no-mon        Disable automatic restarting with mon
     --log           Enable fluentd logging
     --feedback      Enable feedback. Implies --log
+    --webkiosk      Enable webkiosk mode.
     -s --stop       Stop the running Webmenu process
     -n --no-build   Skip asset building in development mode
 
@@ -72,6 +73,10 @@ while true; do
         --feedback)
             export WM_FLUENTD_ACTIVE=true
             export WM_FEEDBACK_ACTIVE=true
+            shift
+        ;;
+        --webkiosk)
+            export WM_WEBKIOSK_MODE=true
             shift
         ;;
         --no-mon)

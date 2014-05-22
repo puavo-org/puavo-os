@@ -85,6 +85,7 @@ config = new Backbone.Model config_data
 config.set("hostType", require "./hosttype")
 config.set("feedback", logger.active and process.env.WM_FEEDBACK_ACTIVE)
 config.set("guestSession", (process.env.GUEST_SESSION is "true"))
+config.set("webkioskMode", (process.env.WM_WEBKIOSK_MODE is "true"))
 
 userPhotoPath = "#{ webmenuHome }/user-photo.jpg"
 

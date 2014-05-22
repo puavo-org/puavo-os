@@ -11,23 +11,25 @@
     </button>
   </div>
 
-  <div class="action">
-    <button class="js-shutdown item btn">
-      <img src="file:///usr/share/icons/Faenza/actions/24/system-shutdown.png">
-      {{ i18n "logout.shutdown" }}
-    </button>
-  </div>
-
-  <div class="other">
-    <div class="item js-other">
-      <select>
-        <option value=or>{{ i18n "logout.or" }}</option>
-        {{#each actions}}
-        <option value="{{value}}">{{name}}</option>
-        {{/each}}
-      </select>
+  {{#unless webkioskMode}}
+    <div class="action">
+      <button class="js-shutdown item btn">
+	<img src="file:///usr/share/icons/Faenza/actions/24/system-shutdown.png">
+	{{ i18n "logout.shutdown" }}
+      </button>
     </div>
-  </div>
+
+    <div class="other">
+      <div class="item js-other">
+	<select>
+	  <option value=or>{{ i18n "logout.or" }}</option>
+	  {{#each actions}}
+	  <option value="{{value}}">{{name}}</option>
+	  {{/each}}
+	</select>
+      </div>
+    </div>
+  {{/unless}}
 </div>
 
 <div style="clear: both"></div>
