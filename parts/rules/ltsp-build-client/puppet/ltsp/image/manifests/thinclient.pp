@@ -4,6 +4,7 @@ class image::thinclient {
       case $lsbdistcodename {
         'trusty': {
 	  include image::bundle::basic,
+		  plymouth_theme,
 		  packages::thinclient
         }
       }
