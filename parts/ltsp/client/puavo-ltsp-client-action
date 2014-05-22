@@ -43,14 +43,6 @@ handle_shutdown() {
 
 hosttype=$(cat /etc/puavo/hosttype)
 
-webkiosk=$(jq -r '.tags[] | select(. == "webkiosk")' /etc/puavo/device.json \
-             2>/dev/null || true)
-
-if [ "$GUEST_SESSION" = "true" -a -n "$webkiosk" ]; then
-  echo 'Trying to reboot/shutdown a webkiosk host, not doing anything' >&2
-  exit 1
-fi
-
 case "$1" in
   --reboot)   handle_restart  $hosttype;;
   --shutdown) handle_shutdown $hosttype;;
