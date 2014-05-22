@@ -22,6 +22,7 @@ class image::opinsys {
 		  network_manager,
 		  open-sankore,
 		  packages::opinsys,
+		  plymouth_theme,
 		  primus,
 		  promethean,
 		  puavo_openvpn,

@@ -7,7 +7,6 @@ class image::bundle::basic {
 	  ltspimage_ssh_server,
 	  motd,
 	  organisation_adm_users,
-	  plymouth_theme,
 	  ssh_client,
 	  sudo,
 	  udev,
