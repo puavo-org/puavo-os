@@ -17,7 +17,6 @@ class image::opinsys {
 		  keyutils,
 		  libreoffice,
 		  ltspimage_java,
-		  ltspimage_lucid_nfs_compatibility,
 		  ltspimage_plymouth_theme,
 		  mimio,
 		  network_manager,
