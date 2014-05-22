@@ -6,6 +6,7 @@ class packages::opinsys {
                   or title == kernels
                   or title == partner
                   or title == private-archive
+                  or title == private-repo
                   or title == repo |>
 
   # apply all package definitions listed in packages

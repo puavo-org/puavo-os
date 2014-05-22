@@ -3,7 +3,8 @@ class packages::puavo {
 
   Apt::Key        <| title == "opinsys-repo.gpgkey" |>
   Apt::Repository <| title == archive
-                  or title == kernels |>
+                  or title == kernels
+                  or title == repo |>
 
   # apply package definitions listed in packages with "puavo" or "ubuntu" tags
   Package <| tag == puavo
