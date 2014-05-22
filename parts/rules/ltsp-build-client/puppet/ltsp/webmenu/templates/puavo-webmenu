@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+
+webmenu_args=""
+if [ "$PUAVO_TAG_WEBKIOSK" ]; then
+  webmenu_args="--webkiosk"
+fi
+
+exec webmenu $webmenu_args "$@"
