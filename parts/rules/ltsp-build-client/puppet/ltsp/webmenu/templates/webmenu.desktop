@@ -2,7 +2,7 @@
 Version=1.0
 Name=Webmenu
 Comment=A desktop menu application
-Exec=webmenu --daemonize --log
+Exec=puavo-webmenu --daemonize --log
 Terminal=false
 Type=Application
 Icon=/usr/share/icons/webmenu/opinsys-puu-menu.png
