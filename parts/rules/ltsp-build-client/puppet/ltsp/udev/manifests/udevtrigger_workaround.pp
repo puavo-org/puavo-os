@@ -50,10 +50,12 @@ class udev::udevtrigger_workaround {
 
     '/lib/udev/write_cd_rules':
       content => template('udev/write_cd_rules'),
+      mode    => 755,
       require => Dpkg::Divert['/lib/udev/write_cd_rules'];
 
     '/lib/udev/write_net_rules':
       content => template('udev/write_net_rules'),
+      mode    => 755,
       require => Dpkg::Divert['/lib/udev/write_net_rules'];
   }
 
