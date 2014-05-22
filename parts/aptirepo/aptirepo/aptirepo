@@ -46,7 +46,7 @@ def _importchanges(repo, args):
               file=sys.stderr)
         sys.exit(1)
 
-    repo.import_changes(args.changesfile)
+    repo.import_changes(args.changesfile, codename=args.codename)
 
     repo.update_dists()
 
@@ -76,6 +76,7 @@ def main():
 
     parser_importchanges = subparsers.add_parser("importchanges", help="import all files listed in a .changes file")
     parser_importchanges.add_argument("changesfile", metavar="FILE.changes")
+    parser_importchanges.add_argument("--codename", default="", help="target codename, defaults to codename defined in FILE.changes")
     parser_importchanges.add_argument("--sign-releases", action="store_true", default=False, help="sign Release files after update")
     parser_importchanges.set_defaults(func=_importchanges)
 
