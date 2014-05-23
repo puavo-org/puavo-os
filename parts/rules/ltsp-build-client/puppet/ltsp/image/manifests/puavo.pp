@@ -3,9 +3,24 @@ class image::puavo {
     'Ubuntu': {
       case $lsbdistcodename {
 	'trusty': {
-	  include desktop,
+	  include crash_reporting,
+		  desktop,
+		  disable_geoclue,
+		  firefox,
+		  graphics_drivers,
 		  image::bundle::basic,
-		  packages::puavo
+		  kaffeine,
+		  keyutils,
+		  libreoffice,
+		  network_manager,
+		  open-sankore,
+		  packages::puavo,
+		  puavo_openvpn,
+		  puavo-wlan,
+		  pycharm,
+		  tuxpaint,
+		  wacom,
+		  xexit
 	}
       }
     }
