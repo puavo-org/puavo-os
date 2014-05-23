@@ -385,12 +385,6 @@ class packages {
     , 'wget' ]:
       tag => [ 'remote_access', 'ubuntu', ];
 
-    [ 'texlive-fonts-extra'
-    , 'texlive-fonts-recommended'
-    , 'texlive-latex-extra'
-    , 'texlive-latex-recommended' ]:
-      tag => [ 'science', 'opinsys', ];
-
     [ 'atomix'
     , 'celestia'
     , 'celestia-common-nonfree'
@@ -415,6 +409,10 @@ class packages {
     , 'pspp'
     , 'rkward'
     , 'stellarium'
+    , 'texlive-fonts-extra'
+    , 'texlive-fonts-recommended'
+    , 'texlive-latex-extra'
+    , 'texlive-latex-recommended'
     , 'wxmaxima' ]:
       tag => [ 'science', 'ubuntu', ];
 
