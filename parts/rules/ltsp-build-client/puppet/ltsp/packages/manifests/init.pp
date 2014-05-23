@@ -703,6 +703,9 @@ class packages {
     , 'pycharm' ]:
       tag => [ 'programming', 'puavo', ];
 
+    [ 'faenza-icon-theme' ]:
+      tag => [ 'themes', 'puavo', ];
+
     [ 'xul-ext-flashblock' ]:
       tag => [ 'web', 'puavo', ];
   }
@@ -767,8 +770,7 @@ class packages {
     , 'vstloggerpro' ]:
       tag => [ 'science', 'opinsys', ];
 
-    [ 'faenza-icon-theme'
-    , 'opinsys-theme' ]:
+    [ 'opinsys-theme' ]:
       tag => [ 'themes', 'opinsys', ];
 
     [ 'google-talkplugin'
