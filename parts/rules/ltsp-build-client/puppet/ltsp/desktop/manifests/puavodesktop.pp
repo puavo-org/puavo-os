@@ -14,7 +14,6 @@ class desktop::puavodesktop {
       notify  => Exec['update dconf'],
       require => [ Package['faenza-icon-theme']
                  , Package['light-themes']
-                 , Package['opinsys-theme']
                  , Package['webmenu'] ];
 
     # webmenu takes care of the equivalent functionality
@@ -22,7 +21,7 @@ class desktop::puavodesktop {
       ensure => absent;
   }
 
-  Package <| (title == faenza-icon-theme)
-          or (title == light-themes)
-          or (title == opinsys-theme)     |>
+  Package <| title == faenza-icon-theme
+          or title == light-themes
+          or title == webmenu           |>
 }
