@@ -714,7 +714,7 @@ class packages {
     'trusty': {
       packages::kernels::kernel_package {
         '3.13.0-26-generic':
-          package_tag => 'opinsys';
+          package_tag => 'puavo';
       }
     }
   }
