@@ -81,10 +81,6 @@ class packages {
     , 'ubuntu-restricted-extras' ]:
       tag => [ 'desktop', 'restricted', 'ubuntu', ];
 
-    [ 'nodejs-bundle'
-    , 'puavo-devscripts' ]:
-      tag => [ 'devel', 'opinsys', ];
-
     [ 'ack-grep'
     , 'build-essential'
     , 'bvi'
@@ -281,12 +277,6 @@ class packages {
     , 'myspell-sv-se'
     , 'thunderbird-locale-sv' ]:
       tag => [ 'language-sv', 'ubuntu', ];
-
-    [ 'libdvdcss2' ]:
-      tag => [ 'mediaplayer', 'opinsys', ];
-
-    [ 'spotify-client-qt' ]:
-      tag => [ 'mediaplayer', ];
 
     [ 'banshee'
     , 'clam-chordata'
@@ -683,7 +673,12 @@ class packages {
   #
 
   @package {
-    [ 'ltsp-client'
+    [ 'nodejs-bundle'
+    , 'puavo-devscripts' ]:
+      tag => [ 'devel', 'puavo', ];
+
+    [ 'autopoweroff'
+    , 'ltsp-client'
     , 'opinsys-ca-certificates'
     , 'puavo-autopilot'
     , 'puavo-client'
@@ -700,7 +695,8 @@ class packages {
     , 'puavo-wlanap'
     , 'puavo-wlanap-dnsproxy'
     , 'quicktile'
-    , 'webmenu' ]:
+    , 'webmenu'
+    , 'xexit' ]:
       tag => [ 'misc', 'puavo', ];
 
     [ 'bluegriffon'
@@ -748,10 +744,9 @@ class packages {
     , 'iscan-data' ]:
       tag => [ 'epson-scanner', 'opinsys', ];
 
-    # XXX these should not be here, but in a public repository:
-    [ 'autopoweroff'
-    , 'xexit' ]:
-      tag => [ 'misc', 'opinsys', ];
+    [ 'libdvdcss2'
+    , 'spotify-client-qt' ]:
+      tag => [ 'mediaplayer', 'opinsys', ];
 
     [ 'nautilus-dropbox'
     , 'nautilus-dropbox-dist' ]:
