@@ -6,7 +6,8 @@ class packages::thinclient {
                   or title == kernels
                   or title == private-archive
                   or title == private-repo
-                  or title == repo |>
+                  or title == repo
+                  or title == x2go |>
 
   # apply only thinclient package definitions listed in packages
   Package <| tag == thinclient |>
