@@ -16,7 +16,7 @@ class image::puavo {
 		  open-sankore,
 		  packages::puavo,
 		  puavo_openvpn,
-		  puavo-wlan,
+		  puavo_wlan,
 		  pycharm,
 		  tuxpaint,
 		  wacom,
