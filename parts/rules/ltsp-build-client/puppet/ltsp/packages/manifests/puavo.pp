@@ -11,5 +11,8 @@ class packages::puavo {
   Package <| tag == puavo
           or tag == ubuntu |>
 
-  Package <| tag == restricted |> { ensure => purged, }
+  # keep the "opinsys", "partner" and "restricted" packages out
+  Package <| tag == opinsys
+          or tag == partner
+          or tag == restricted |> { ensure => purged, }
 }
