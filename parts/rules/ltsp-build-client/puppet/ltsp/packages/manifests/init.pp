@@ -261,7 +261,7 @@ class packages {
     , 'libreoffice-help-sv'
     , 'libreoffice-l10n-sv'
     , 'myspell-sv-se'
-    , 'thunderbird-locale-sv-se' ]:
+    , 'thunderbird-locale-sv' ]:
       tag => [ 'language-sv', 'ubuntu', ];
 
     [ 'libdvdcss2' ]:
