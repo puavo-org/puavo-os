@@ -10,4 +10,6 @@ class packages::puavo {
   # apply package definitions listed in packages with "puavo" or "ubuntu" tags
   Package <| tag == puavo
           or tag == ubuntu |>
+
+  Package <| tag == restricted |> { ensure => purged, }
 }

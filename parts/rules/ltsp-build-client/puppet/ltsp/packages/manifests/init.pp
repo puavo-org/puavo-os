@@ -73,10 +73,13 @@ class packages {
     [ 'lightdm'
     , 'lightdm-gtk-greeter'
     , 'overlay-scrollbar'               # needed by accessibility stuff
-    , 'ubuntu-restricted-extras'
     , 'ubuntu-standard'
     , 'xul-ext-mozvoikko' ]:
       tag => [ 'desktop', 'ubuntu', ];
+
+    [ 'ubuntu-restricted-addons'
+    , 'ubuntu-restricted-extras' ]:
+      tag => [ 'desktop', 'restricted', 'ubuntu', ];
 
     [ 'nodejs-bundle'
     , 'puavo-devscripts' ]:
