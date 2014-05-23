@@ -26,7 +26,7 @@ class image::opinsys {
 		  primus,
 		  promethean,
 		  puavo_openvpn,
-		  puavo-wlan,
+		  puavo_wlan,
 		  pycharm,
 		  smartboard,
 		  tuxpaint,
