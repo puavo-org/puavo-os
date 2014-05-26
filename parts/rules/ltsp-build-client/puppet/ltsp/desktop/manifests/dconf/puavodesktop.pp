@@ -17,7 +17,7 @@ class desktop::dconf::puavodesktop {
     }
   }
 
-  locale { [ 'en', 'fi', 'sv', ]: ; }
+  locale { [ 'de', 'en', 'fi', 'sv', ]: ; }
 
   file {
     [ '/etc/dconf/db/puavodesktop.d'
