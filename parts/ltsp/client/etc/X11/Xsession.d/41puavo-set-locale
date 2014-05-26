@@ -6,10 +6,6 @@
 # Device language from device.json should be used only on laptop guest
 # sessions when recent puavo-rest is used.
 
-DCONF_PROFILE=user-fi
-LANG=fi_FI.UTF-8
-LANGUAGE=fi
-
 DEVICE_LANGUAGE=$(jq -r .preferred_language /etc/puavo/device.json)
 
 if [ -f "${PUAVO_SESSION_PATH}" ]; then
@@ -17,43 +13,63 @@ if [ -f "${PUAVO_SESSION_PATH}" ]; then
   USER_LANGUAGE=$(jq -r .user.preferred_language "${PUAVO_SESSION_PATH}")
 fi
 
-[ "${DEVICE_LANGUAGE}" = "null" ] && DEVICE_LANGUAGE=
+[ "${DEVICE_LANGUAGE}"  = "null" ] && DEVICE_LANGUAGE=
 [ "${SESSION_LANGUAGE}" = "null" ] && SESSION_LANGUAGE=
-[ "${USER_LANGUAGE}" = "null" ] && USER_LANGUAGE=
+[ "${USER_LANGUAGE}"    = "null" ] && USER_LANGUAGE=
 
 if [ "${PUAVO_SESSION_LANGUAGE}" != "" ]; then
-  LANGUAGE="${PUAVO_SESSION_LANGUAGE}"
+  PUAVO_LANGUAGE="${PUAVO_SESSION_LANGUAGE}"
 elif [ "${USER_LANGUAGE}" != "" ]; then
-  LANGUAGE="${USER_LANGUAGE}"
+  PUAVO_LANGUAGE="${USER_LANGUAGE}"
 elif [ "${SESSION_LANGUAGE}" != "" ]; then
-  LANGUAGE="${SESSION_LANGUAGE}"
+  PUAVO_LANGUAGE="${SESSION_LANGUAGE}"
 elif [ "${DEVICE_LANGUAGE}" != "" ]; then
-  LANGUAGE="${DEVICE_LANGUAGE}"
+  PUAVO_LANGUAGE="${DEVICE_LANGUAGE}"
+else
+  # use English as a fallback language
+  PUAVO_LANGUAGE=en_GB
 fi
 
-DCONF_PROFILE=user-${LANGUAGE}
+# set DCONF_PROFILE
+case "$PUAVO_LANGUAGE" in
+  de*) DCONF_PROFILE=user-de;;
+  en*) DCONF_PROFILE=user-en;;
+  fi*) DCONF_PROFILE=user-fi;;
+  sv*) DCONF_PROFILE=user-sv;;
+    *) DCONF_PROFILE=user-en;;
+esac
 
-case $LANGUAGE in
+# if full language type is not specified, expand it to default
+# (like sv --> sv_FI), otherwise take the full type
+case "$PUAVO_LANGUAGE" in
+  *_*)
+    LANG="${PUAVO_LANGUAGE}.UTF-8"
+    LANGUAGE="${PUAVO_LANGUAGE}"
+    ;;
   de)
     LANG=de_DE.UTF-8
+    LANGUAGE=de
     ;;
   en)
     LANG=en_GB.UTF-8
+    LANGUAGE=en
     ;;
   fi)
     LANG=fi_FI.UTF-8
+    LANGUAGE=fi
     ;;
   ru)
     LANG=ru_RU.UTF-8
+    LANGUAGE=ru
     ;;
   sv)
     LANG=sv_FI.UTF-8
+    LANGUAGE=sv
     ;;
-   *)
-    echo "unknown langauge '${LANGUAGE}', falling back to 'fi'" >&2
-    DCONF_PROFILE=user-fi
-    LANG=fi_FI.UTF-8
-    LANGUAGE=fi
+  *)
+    echo "unknown langauge '${LANGUAGE}', falling back to 'en'" >&2
+    LANG=en_GB.UTF-8
+    LANGUAGE=en
     ;;
 esac
 
