@@ -1,5 +1,5 @@
 IMAGE_TARGETS = opinsys puavo thinclient
-OTHER_TARGETS = all build-chroot chroot image update-chroot
+OTHER_TARGETS = all build-chroot chroot image update-chroot update-local
 
 LOGFILE = $(shell echo logs/ltsp-$$(date +%Y-%m-%d-%H%M%S).log)
 
@@ -21,7 +21,7 @@ build-chroot:
 	@sudo ./build_puavo_device_image --$@ ${IMAGE} 2>&1 \
 	   | tee -a ${LOGFILE}
 
-image update-chroot:
+image update-chroot update-local:
 	@sudo ./build_puavo_device_image --$@ 2>&1 | tee -a ${LOGFILE}
 
 chroot:

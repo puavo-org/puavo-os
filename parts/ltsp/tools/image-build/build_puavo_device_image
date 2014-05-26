@@ -19,7 +19,6 @@ mirror_through_apt_cacher="http://localhost:3142/$mirror/ubuntu/"
 
 images_dir="/opt/ltsp/images"
 target_dir="/virtualtmp/$user/$distribution"
-puppet_ltsp_dir="$target_dir/etc/puppet/ltsp"
 
 do_mounts() {
   mount -o bind /dev     "$target_dir/dev"
@@ -148,20 +147,42 @@ prepare_puppet() {
 
   run_in_chroot apt-get -qq -y install puppet-common
 
-  mkdir -p "$puppet_ltsp_dir"
-  echo "$puppet_classes"     > "$puppet_ltsp_dir/.classes"
-  echo "$puppet_module_dirs" > "$puppet_ltsp_dir/.module_dirs"
+  mkdir -p "$target_dir/etc/puppet/ltsp"
+  echo "$puppet_classes"     > "$target_dir/etc/puppet/ltsp/.classes"
+  echo "$puppet_module_dirs" > "$target_dir/etc/puppet/ltsp/.module_dirs"
 }
 
 apply_puppet() {
-  puppet_classes=$(cat $target_dir/etc/puppet/ltsp/.classes)
-  puppet_module_dirs=$(cat $target_dir/etc/puppet/ltsp/.module_dirs)
+  mode=$1
 
-  rm -rf $puppet_ltsp_dir/*
-  cp -HR puppet/* "$puppet_ltsp_dir"
+  case "$mode" in
+    chroot)
+      puppet_target_dir=$target_dir
+      run_command=run_in_chroot
+      ;;
+    local)
+      puppet_target_dir=/
+      run_command=
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  # sanity check to prevent mistakes
+  if [ ! -d "${puppet_target_dir}/etc/puppet/ltsp" ]; then
+    echo 'Puppet is not initialized to the target directory' >&2
+    return 1
+  fi
+
+  puppet_classes=$(cat ${puppet_target_dir}/etc/puppet/ltsp/.classes)
+  puppet_module_dirs=$(cat ${puppet_target_dir}/etc/puppet/ltsp/.module_dirs)
+
+  rm -rf $puppet_target_dir/etc/puppet/ltsp/*
+  cp -HR puppet/* "$puppet_target_dir/etc/puppet/ltsp"
 
   logfile_path="/var/log/puppet/ltsp-$(date +%Y-%m-%d-%H%M%S).log"
-  run_in_chroot puppet apply                          \
+  $run_command puppet apply                           \
 		  --detailed-exitcodes                \
 		  --logdest console                   \
 		  --logdest "$logfile_path"           \
@@ -238,7 +259,10 @@ case "$option" in
     make_image
     ;;
   --update-chroot)
-    apply_puppet
+    apply_puppet chroot
+    ;;
+  --update-local)
+    apply_puppet local
     ;;
   *)
     cat <<EOF >&2
