@@ -24,17 +24,17 @@ class libreoffice {
 
   file {
     '/usr/lib/libreoffice/share/registry/calc.xcd':
-      content => template('libreoffice/calc.xcd');
+      source => 'puppet:///modules/libreoffice/calc.xcd';
 
     '/usr/lib/libreoffice/share/registry/impress.xcd':
-      content => template('libreoffice/impress.xcd');
+      source => 'puppet:///modules/libreoffice/impress.xcd';
 
     # Use Gnome print dialog
     '/usr/lib/libreoffice/share/registry/print.xcd':
-      content => template('libreoffice/print.xcd');
+      source => 'puppet:///modules/libreoffice/print.xcd';
 
     '/usr/lib/libreoffice/share/registry/writer.xcd':
-      content => template('libreoffice/writer.xcd');
+      source => 'puppet:///modules/libreoffice/writer.xcd';
   }
 
   Package <| title == libreoffice-calc
