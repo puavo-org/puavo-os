@@ -13,6 +13,10 @@ class libreoffice {
       before => File['/usr/lib/libreoffice/share/registry/impress.xcd'],
       dest   => '/usr/lib/libreoffice/share/registry/impress.xcd.distrib';
 
+    '/usr/lib/libreoffice/share/registry/print.xcd':
+      before => File['/usr/lib/libreoffice/share/registry/print.xcd'],
+      dest   => '/usr/lib/libreoffice/share/registry/print.xcd.distrib';
+
     '/usr/lib/libreoffice/share/registry/writer.xcd':
       before => File['/usr/lib/libreoffice/share/registry/writer.xcd'],
       dest   => '/usr/lib/libreoffice/share/registry/writer.xcd.distrib';
@@ -25,12 +29,12 @@ class libreoffice {
     '/usr/lib/libreoffice/share/registry/impress.xcd':
       content => template('libreoffice/impress.xcd');
 
-    '/usr/lib/libreoffice/share/registry/writer.xcd':
-      content => template('libreoffice/writer.xcd');
-
     # Use Gnome print dialog
     '/usr/lib/libreoffice/share/registry/print.xcd':
       content => template('libreoffice/print.xcd');
+
+    '/usr/lib/libreoffice/share/registry/writer.xcd':
+      content => template('libreoffice/writer.xcd');
   }
 
   Package <| title == libreoffice-calc
