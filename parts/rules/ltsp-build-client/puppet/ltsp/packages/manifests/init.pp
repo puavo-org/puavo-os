@@ -113,9 +113,11 @@ class packages {
     [ 'wine' ]:
       tag => [ 'emulation', 'ubuntu', ];
 
-    [ 'ttf-freefont'
-    , 'ttf-mscorefonts-installer' ]:
+    [ 'ttf-freefont' ]:
       tag => [ 'fonts', 'ubuntu', ];
+
+    [ 'ttf-mscorefonts-installer' ]:
+      tag => [ 'fonts', 'restricted', 'ubuntu', ];
 
     [ 'billard-gl'
     , 'cuyo'
