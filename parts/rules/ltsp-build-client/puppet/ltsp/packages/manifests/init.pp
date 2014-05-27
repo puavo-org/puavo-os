@@ -703,6 +703,10 @@ class packages {
     , 'pycharm' ]:
       tag => [ 'programming', 'puavo', ];
 
+    [ 'x2goclient'
+    , 'x2goserver' ]:
+      tag => [ 'remote_access', 'puavo', ];
+
     [ 'faenza-icon-theme' ]:
       tag => [ 'themes', 'puavo', ];
 
