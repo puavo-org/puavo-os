@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Indicator Power
+Exec=/usr/lib/i386-linux-gnu/indicator-power/indicator-power-service
+NotShowIn=Unity;
+NoDisplay=true
+StartupNotify=false
+Terminal=false
+
