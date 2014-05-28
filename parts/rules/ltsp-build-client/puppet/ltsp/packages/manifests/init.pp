@@ -70,7 +70,8 @@ class packages {
     , 'vlan' ]:
       tag => [ 'basic', 'ubuntu', ];
 
-    [ 'lightdm'
+    [ 'indicator-power'
+    , 'lightdm'
     , 'lightdm-gtk-greeter'
     , 'onboard'
     , 'overlay-scrollbar'               # needed by accessibility stuff
