@@ -217,9 +217,11 @@ class packages {
 
     [ 'emesene'
     , 'gobby'
+    , 'irssi'
     , 'pidgin'
     , 'pidgin-libnotify'
-    , 'pidgin-plugin-pack' ]:
+    , 'pidgin-plugin-pack'
+    , 'xchat' ]:
       tag => [ 'instant_messaging', 'ubuntu', ];
 
     [ 'language-pack-gnome-de' ]:
