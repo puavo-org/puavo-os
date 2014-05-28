@@ -72,6 +72,7 @@ class packages {
 
     [ 'lightdm'
     , 'lightdm-gtk-greeter'
+    , 'onboard'
     , 'overlay-scrollbar'               # needed by accessibility stuff
     , 'ubuntu-standard'
     , 'xul-ext-mozvoikko' ]:
