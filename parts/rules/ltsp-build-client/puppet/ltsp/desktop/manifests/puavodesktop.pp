@@ -1,5 +1,6 @@
 class desktop::puavodesktop {
   include desktop::dconf::puavodesktop,
+          desktop::enable_indicator_power_service,
           desktop::mimedefaults,
           packages,
           webmenu
