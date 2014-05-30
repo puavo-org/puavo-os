@@ -353,9 +353,9 @@ lookup_image_server_from_dns() {
 		     2>/dev/null | head -1) || true
     if [ -z "$image_server" ]; then
       image_server="images.$(cat /etc/puavo/topdomain)"
-      log info $(printf "%s %s\n" \
-			"could not find the image server from DNS, " \
-			"falling back to $image_server")
+      log info "$(printf "%s %s\n" \
+			 "could not find the image server from DNS, " \
+			 "falling back to $image_server")"
     fi
   fi
 
