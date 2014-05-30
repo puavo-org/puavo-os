@@ -19,7 +19,7 @@ show-desktop-icons=true
 document-font-name='Sans 10'
 font-name='Ubuntu 10'
 monospace-font-name='Ubuntu Mono 10'
-gtk-theme='Radiance'
+gtk-theme='Radiance-opinsys'
 icon-theme='Faenza'
 
 [org/gnome/desktop/lockdown]
@@ -39,7 +39,7 @@ idle-delay=uint32 0
 [org/gnome/desktop/wm/preferences]
 button-layout='menu:minimize,maximize,close'
 num-workspaces=2
-theme='Radiance'
+theme='Radiance-opinsys'
 titlebar-font='Ubuntu Medium 10'
 
 [org/gnome/desktop/wm/keybindings]
