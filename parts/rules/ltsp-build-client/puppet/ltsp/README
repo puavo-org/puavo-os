@@ -22,6 +22,11 @@ desktop
 disable_geoclue
     Disable Ubuntu's geoclue-stuff.
 
+disable_gnome_keyring_autostart
+    Disable Gnome-keyring starting up automatically at desktop session.
+    This is confusing for people who do not know what it is.  But we do leave
+    the package in case someone needs it and knows how to use it.
+
 ebeam
     Special settings for Ebeam software/device.
 

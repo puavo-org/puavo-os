@@ -7,6 +7,7 @@ class image::opinsys {
 		  crash_reporting,
 		  desktop,
 		  disable_geoclue,
+		  disable_gnome_keyring_autostart,
 		  ebeam,
 		  firefox,
 		  google-earth-stable,
