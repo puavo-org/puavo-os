@@ -117,6 +117,7 @@ EOF
   chmod 755 "$target_dir/root/install.sh"
 
   run_in_chroot /root/install.sh
+  rm -f "$target_dir/root/install.sh"	# cleanup after
 }
 
 set_debconf_seeds() {
