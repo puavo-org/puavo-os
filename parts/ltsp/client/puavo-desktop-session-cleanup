@@ -4,8 +4,8 @@ set -eu
 
 # This script is run as root (from lightdm).
 
-# This is for triggering autologin on webkiosk mode.
-if jq -r .tags[] /etc/puavo/device.json | grep -Fqx webkiosk; then
+# This is for triggering autologin on infotv and webkiosk modes.
+if jq -r .tags[] /etc/puavo/device.json | grep -Eqx '(infotv|webkiosk)'; then
   trap '' HUP INT TERM
   PATH=$PATH:/sbin:/usr/sbin
   restart lightdm

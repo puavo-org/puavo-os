@@ -201,6 +201,7 @@ install : installdirs
 		udev/rules.d/95-monitor-hotplug.rules
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
+		etc/X11/Xsession.d/40puavo-infotv \
 		etc/X11/Xsession.d/40puavo-retrieve-thinclient-session \
 		etc/X11/Xsession.d/40puavo-webkiosk \
 		etc/X11/Xsession.d/41puavo-set-locale \

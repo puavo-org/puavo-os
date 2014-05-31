@@ -1,0 +1,8 @@
+# If webkiosk tag is defined, open a language selector dialog 
+# and start xautolock to kill the session automatically if 
+# the session has not been used in 10 minutes.
+
+jq -r .tags[] /etc/puavo/device.json | grep -q -x infotv && {
+  iivari_kiosk_domain="$(cat /etc/puavo/domain)"
+  STARTUP="iivari-kiosk --urlbase https://${iivari_kiosk_domain}/infotv/conductor"
+}
