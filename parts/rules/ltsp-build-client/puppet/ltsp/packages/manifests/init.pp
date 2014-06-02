@@ -107,6 +107,7 @@ class packages {
     , 'firmware-b43-installer'
     , 'libgl1-mesa-glx'
     , 'linux-firmware'
+    , 'nvidia-304'
     , 'nvidia-331'
     , 'nvidia-settings'
     , 'xserver-xorg-video-all' ]:
