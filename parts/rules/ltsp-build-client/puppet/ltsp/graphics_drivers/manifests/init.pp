@@ -29,21 +29,21 @@ class graphics_drivers {
                           Package['libgl1-mesa-glx'], ];
 
    'nvidia':
-      before         => File['/etc/modprobe.d/nvidia-331_hybrid.conf'],
-      gl_conf_target => '/usr/lib/nvidia-331/ld.so.conf',
+      before         => File['/etc/modprobe.d/nvidia-304_hybrid.conf'],
+      gl_conf_target => '/usr/lib/nvidia-304/ld.so.conf',
       notify         => Driver_alternatives['mesa'],
-      require        => [ Package['nvidia-331'],
+      require        => [ Package['nvidia-304'],
 			  Package['nvidia-settings'], ];
   }
 
   file {
     # Nouveau must be blacklisted so we can use nvidia,
     # but "alias nouveau off" is a no-no.
-    '/etc/modprobe.d/nvidia-331_hybrid.conf':
+    '/etc/modprobe.d/nvidia-304_hybrid.conf':
       content => template('graphics_drivers/blacklist-nouveau.conf');
   }
 
   Package <| title == libgl1-mesa-glx
-          or title == nvidia-331
+          or title == nvidia-304
           or title == nvidia-settings |>
 }
