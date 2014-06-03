@@ -358,6 +358,22 @@ olcAttributeTypes: {105}( 1.3.6.1.4.1.27208.1.1.1.106
   NAME 'puavoExternalFeed'
   DESC 'JSON formatted configuration for information feed that is associated to the given object.'
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {106}( 1.3.6.1.4.1.27208.1.1.1.107
+  NAME 'puavoTimezone'
+  DESC 'Default timezone where the organisation, school, device or user is located.'
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {107}( 1.3.6.1.4.1.27208.1.1.1.108
+  NAME 'puavoLocale'
+  DESC 'Default locale for the entry. Formatted as a POSIX locale with character set: [language[_territory][.codeset][@modifier]], e.g. fi_FI.UTF-8.'
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {108}( 1.3.6.1.4.1.27208.1.1.1.109
+  NAME 'puavoKeyboardLayout'
+  DESC 'Default keyboard layout used on devices.'
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {109}( 1.3.6.1.4.1.27208.1.1.1.110
+  NAME 'puavoKeyboardVariant'
+  DESC 'Default keyboard variant used on devices.'
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
 olcObjectClasses: {0}( 1.3.6.1.4.1.27208.1.1.2.1 NAME 'puavoSchool' AUXILIARY 
  MUST ( puavoId ) MAY ( puavoSchoolHomePageURL $ puavoSchoolAdmin $ displayNam
  e $ telephoneNumber $ facsimileTelephoneNumber $ l $ street $ postOfficeBox $
@@ -366,7 +382,8 @@ olcObjectClasses: {0}( 1.3.6.1.4.1.27208.1.1.2.1 NAME 'puavoSchool' AUXILIARY
  DeviceAutoPowerOffMode $ puavoClassNamingScheme $ puavoBillingInfo $ puavoDev
  iceImage $ puavoWlanSSID $ puavoWlanChannel $ puavoAllowGuest $ puavoPersonal
  Device $ puavoActiveService $ puavoPrinterQueue $ puavoWirelessPrinterQueue $
-  puavoMountpoint $ puavoExternalFeed $ puavoTag ) )
+  puavoMountpoint $ puavoExternalFeed $ puavoTag $ puavoTimezone $ puavoLocale $ 
+  puavoKeyboardLayout $ puavoKeyboardVariant ) )
 olcObjectClasses: {1}( 1.3.6.1.4.1.27208.1.1.2.2 NAME 'puavoEduGroup' AUXILIAR
  Y MUST ( puavoId $ puavoSchool ) MAY ( displayName $ puavoEduGroupType $ memb
  er $ puavoUserRole $ puavoPrinterQueue $ puavoExternalFeed ) )
@@ -375,7 +392,7 @@ olcObjectClasses: {2}( 1.3.6.1.4.1.27208.1.1.2.3 NAME 'puavoEduPerson' AUXILIA
  sonEmailEnabled $ puavoUserRole $ puavoEduPersonLastFirstName $ puavoEduPerso
  nAffiliation $ puavoPreferredDesktop $ puavoAllowRemoteAccess $ puavoEduPerso
  nReverseDisplayName $ puavoEduPersonPersonnelNumber $ puavoAdminOfSchool $ pu
- avoTimestamp $ puavoLocked $ puavoAcceptedTerms $ puavoExternalFeed ) )
+ avoTimestamp $ puavoLocked $ puavoAcceptedTerms $ puavoExternalFeed $ puavoTimezone $ puavoLocale ) )
 olcObjectClasses: {3}( 1.3.6.1.4.1.27208.1.1.2.4 NAME 'puavoUserRole' STRUCTUR
  AL MUST ( puavoId $ puavoSchool ) MAY ( cn $ displayName $ memberUid $ member
   $ puavoMemberGroup ) )
@@ -388,7 +405,8 @@ olcObjectClasses: {5}( 1.3.6.1.4.1.27208.1.1.2.6 NAME 'puavoEduOrg' AUXILIARY
  esktopPublicKey $ puavoRemoteDesktopPrivateKey $ puavoDeviceAutoPowerOffMode 
  $ puavoDeviceOnHour $ puavoDeviceOffHour $ puavoClassNamingScheme $ puavoVers
  ion $ puavoEduOrgAbbreviation $ puavoDeviceImage $ puavoWlanSSID $ puavoWlanC
- hannel $ puavoAllowGuest $ puavoPersonalDevice $ puavoActiveService $ puavoExternalFeed $ puavoTag ) )
+ hannel $ puavoAllowGuest $ puavoPersonalDevice $ puavoActiveService $ puavoExternalFeed $ puavoTag $ 
+  $ puavoTimezone $ puavoLocale $ puavoKeyboardLayout $ puavoKeyboardVariant) )
 olcObjectClasses: {6}( 1.3.6.1.4.1.27208.1.1.2.7 NAME 'puavoShare' AUXILIARY M
  UST ( puavoId $ puavoServer ) )
 olcObjectClasses: {7}( 1.3.6.1.4.1.27208.1.1.2.8 NAME 'puavoDevice' AUXILIARY 
@@ -404,7 +422,8 @@ olcObjectClasses: {7}( 1.3.6.1.4.1.27208.1.1.2.8 NAME 'puavoDevice' AUXILIARY
  voDeviceImage $ puavoWlanChannel $ preferredLanguage $ puavoDeviceDefaultAudi
  oSource $ puavoDeviceDefaultAudioSink $ puavoDeviceBootImage $ puavoAllowGues
  t $ puavoPersonalDevice $ puavoPrinterDeviceURI $ puavoPrinterPPD $ puavoPrin
- terQueue $ puavoMountpoint $ puavoExternalFeed ) )
+ terQueue $ puavoMountpoint $ puavoExternalFeed $ puavoTimezone $ puavoLocale $ 
+  puavoKeyboardLayout $ puavoKeyboardVariant ) )
 olcObjectClasses: {8}( 1.3.6.1.4.1.27208.1.1.2.9 NAME 'puavoServer' AUXILIARY 
  SUP puavoDevice MUST ( macAddress ) MAY ( puavoExport $ puavoSchool ) )
 olcObjectClasses: {9}( 1.3.6.1.4.1.27208.1.1.2.10 NAME 'puavoNetbootDevice' AU
