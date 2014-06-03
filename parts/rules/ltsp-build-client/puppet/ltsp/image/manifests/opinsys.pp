@@ -18,6 +18,7 @@ class image::opinsys {
 		  keyutils,
 		  libreoffice,
 		  ltspimage_java,
+		  ltspimage_kdump,
 		  ltspimage_opinsys_desktop,
 		  ltspimage_plymouth_theme,
 		  mimio,
