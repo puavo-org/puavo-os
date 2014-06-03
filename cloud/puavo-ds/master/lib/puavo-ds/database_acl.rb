@@ -624,6 +624,9 @@ class LdapAcl
 					 description
 					 preferredLanguage
 					 puavoLocale
+                                         puavoTimezone
+                                         puavoKeyboardLayout
+                                         puavoKeyboardVariant
 					 eduOrgLegalName
 					 o
 					 eduOrgHomePageURI
