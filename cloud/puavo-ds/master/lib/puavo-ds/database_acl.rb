@@ -324,6 +324,7 @@ class LdapAcl
       [ People.subtree,		attrs(%w(jpegPhoto
 					 mail
 					 preferredLanguage
+                                         puavoLocale
 					 telephoneNumber)),		Rule.write(Set.admin,
 										   'self'),			Rule.read(Set.externalservice_addressbook),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -501,6 +502,7 @@ class LdapAcl
 					 st
 					 jpegPhoto
 					 preferredLanguage
+                                         puavoLocale
 					 puavoDeviceImage
 					 puavoAllowGuest
 					 puavoPersonalDevice
@@ -621,6 +623,7 @@ class LdapAcl
 					 facsimileTelephoneNumber
 					 description
 					 preferredLanguage
+					 puavoLocale
 					 eduOrgLegalName
 					 o
 					 eduOrgHomePageURI
