@@ -54,6 +54,7 @@ case "$PUAVO_HOSTTYPE" in
       puavo-update-client
       puavo-vpn-client
       puavo-vpn-dnsmasq
+      x2goserver
     "
     set_lts_var SCREEN_07     lightdm
     set_lts_var USE_NFS_HOMES True
@@ -97,6 +98,7 @@ case "$PUAVO_HOSTTYPE" in
       puavo-wlanap
       umountnfs.sh
       vtun
+      x2goserver
     "
     ;;
   ltspserver)
@@ -154,6 +156,7 @@ case "$PUAVO_HOSTTYPE" in
       sssd
       statd
       statd-mounting
+      x2goserver
       zram-config
     "
     set_lts_var SCREEN_07            lightdm
@@ -184,6 +187,7 @@ case "$PUAVO_HOSTTYPE" in
       sssd
       statd
       statd-mounting
+      x2goserver
       zram-config
     "
     set_lts_var SCREEN_07          register
@@ -208,6 +212,7 @@ case "$PUAVO_HOSTTYPE" in
       network-manager
       ondemand
       puavo-load-balancer
+      x2goserver
     "
     set_lts_var USE_NFS_HOMES        False
     ;;
