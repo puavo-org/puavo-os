@@ -19,7 +19,8 @@ class desktop::puavodesktop {
 
     # webmenu takes care of the equivalent functionality
     '/etc/xdg/autostart/indicator-session.desktop':
-      ensure => absent;
+      ensure  => absent,
+      require => Package['indicator-session'];
 
     '/usr/share/icons/Faenza/apps/24/calendar.png':
       ensure  => link,
@@ -28,6 +29,7 @@ class desktop::puavodesktop {
   }
 
   Package <| title == faenza-icon-theme
+          or title == indicator-session
           or title == light-themes
           or title == webmenu           |>
 }

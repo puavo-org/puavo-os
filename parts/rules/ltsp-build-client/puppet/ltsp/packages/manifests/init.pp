@@ -71,6 +71,7 @@ class packages {
       tag => [ 'basic', 'ubuntu', ];
 
     [ 'indicator-power'
+    , 'indicator-session'
     , 'lightdm'
     , 'lightdm-gtk-greeter'
     , 'onboard'
