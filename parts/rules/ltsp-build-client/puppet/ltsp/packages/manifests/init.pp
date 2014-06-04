@@ -700,7 +700,6 @@ class packages {
     , 'puavo-sharedir-client'
     , 'puavo-wlanap'
     , 'puavo-wlanap-dnsproxy'
-    , 'quicktile'
     , 'webmenu'
     , 'xexit' ]:
       tag => [ 'misc', 'puavo', ];
