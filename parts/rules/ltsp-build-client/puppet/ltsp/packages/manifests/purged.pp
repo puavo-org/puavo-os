@@ -6,8 +6,13 @@ class packages::purged {
 
   @package {
     # the functionality in these is not for our end users
-    [ 'linux-image-generic'             # we want to choose kernels explicitly
-    , 'gnome-media'                     # broken software
+    [ 'gnome-media'			# broken software
+
+    # slows down login considerably
+    # (runs dpkg-query without speed considerations)
+    , 'im-config'
+
+    , 'linux-image-generic'             # we want to choose kernels explicitly
     , 'software-properties-gtk'
     , 'synaptic'
     , 'ubuntu-release-upgrader-gtk'
