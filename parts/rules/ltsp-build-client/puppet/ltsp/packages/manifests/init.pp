@@ -85,6 +85,7 @@ class packages {
       tag => [ 'desktop', 'restricted', 'ubuntu', ];
 
     [ 'ack-grep'
+    , 'acct'
     , 'build-essential'
     , 'bvi'
     , 'cdbs'
