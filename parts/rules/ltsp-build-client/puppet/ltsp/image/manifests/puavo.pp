@@ -5,6 +5,7 @@ class image::puavo {
 	'trusty': {
 	  include crash_reporting,
 		  desktop,
+		  disable_accounts_service,
 		  disable_geoclue,
 		  disable_gnome_keyring_autostart,
 		  firefox,

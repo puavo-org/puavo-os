@@ -19,6 +19,11 @@ crash_reporting
 desktop
     Desktop settings.
 
+disable_accounts_service
+    Accounts service daemon is not needed by our system and it seriously
+    slows system down in Trusty, at login time and otherwise.  This module
+    disables it (while leaving the package intact).
+
 disable_geoclue
     Disable Ubuntu's geoclue-stuff.
 
