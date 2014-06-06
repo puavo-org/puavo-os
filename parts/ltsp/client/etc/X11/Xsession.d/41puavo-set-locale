@@ -6,57 +6,67 @@
 # Device language from device.json should be used only on laptop guest
 # sessions when recent puavo-rest is used.
 
-DCONF_PROFILE=user-fi
-LANG=fi_FI.UTF-8
-LANGUAGE=fi
+puavo_find_locale_and_language() {
+  puavo_jq_file=$1
+  puavo_jq_locale_key=$2
+  puavo_jq_preferred_language_key=$3
 
-DEVICE_LANGUAGE=$(jq -r .preferred_language /etc/puavo/device.json)
+  puavo_language_short_form=
 
-if [ -f "${PUAVO_SESSION_PATH}" ]; then
-  SESSION_LANGUAGE=$(jq -r .preferred_language "${PUAVO_SESSION_PATH}")
-  USER_LANGUAGE=$(jq -r .user.preferred_language "${PUAVO_SESSION_PATH}")
-fi
+  puavo_locale=$(jq -r $puavo_jq_locale_key $puavo_jq_file)
+  if [ -n "$puavo_locale" -a "$puavo_locale" != "null" ]; then
+    puavo_language_short_form=$(echo "$puavo_locale" | cut -c 1-2)
+  else
+    puavo_locale=
+    puavo_preferred_language=$(jq -r $puavo_jq_preferred_language_key \
+				     $puavo_jq_file)
+    if [ -n "$puavo_preferred_language" \
+         -a "$puavo_preferred_language" != "null" ]; then
+      puavo_language_short_form=$(echo "$puavo_preferred_language" \
+				    | cut -c 1-2)
+    fi
+  fi
 
-[ "${DEVICE_LANGUAGE}" = "null" ] && DEVICE_LANGUAGE=
-[ "${SESSION_LANGUAGE}" = "null" ] && SESSION_LANGUAGE=
-[ "${USER_LANGUAGE}" = "null" ] && USER_LANGUAGE=
+  [ -n "$puavo_language_short_form" ]
+}
 
 if [ "${PUAVO_SESSION_LANGUAGE}" != "" ]; then
-  LANGUAGE="${PUAVO_SESSION_LANGUAGE}"
-elif [ "${USER_LANGUAGE}" != "" ]; then
-  LANGUAGE="${USER_LANGUAGE}"
-elif [ "${SESSION_LANGUAGE}" != "" ]; then
-  LANGUAGE="${SESSION_LANGUAGE}"
-elif [ "${DEVICE_LANGUAGE}" != "" ]; then
-  LANGUAGE="${DEVICE_LANGUAGE}"
+  puavo_language_short_form="${PUAVO_SESSION_LANGUAGE}"
+  puavo_locale=
+else
+  puavo_find_locale_and_language "${PUAVO_SESSION_PATH}"    \
+				 .user.locale               \
+				 .user.preferred_language   \
+  || puavo_find_locale_and_language "${PUAVO_SESSION_PATH}" \
+				    .locale                 \
+				    .preferred_language     \
+  || puavo_find_locale_and_language /etc/puavo/device.json  \
+				    .locale                 \
+				    .preferred_language
 fi
 
-DCONF_PROFILE=user-${LANGUAGE}
+if [ -n "$puavo_locale" ]; then
+  LANG="$puavo_locale"
+else
+  case "$puavo_language_short_form" in
+    de) LANG=de_DE.UTF-8 ;;
+    en) LANG=en_GB.UTF-8 ;;
+    fi) LANG=fi_FI.UTF-8 ;;
+    sv) LANG=sv_FI.UTF-8 ;;
+     *)
+        echo "unknown language '${puavo_language_short_form}', falling back to 'fi'" >&2
+        LANG=fi_FI.UTF-8
+        ;;
+  esac
+fi
 
-case $LANGUAGE in
-  de)
-    LANG=de_DE.UTF-8
-    ;;
-  en)
-    LANG=en_GB.UTF-8
-    ;;
-  fi)
-    LANG=fi_FI.UTF-8
-    ;;
-  ru)
-    LANG=ru_RU.UTF-8
-    ;;
-  sv)
-    LANG=sv_FI.UTF-8
-    ;;
-   *)
-    echo "unknown langauge '${LANGUAGE}', falling back to 'fi'" >&2
-    DCONF_PROFILE=user-fi
-    LANG=fi_FI.UTF-8
-    LANGUAGE=fi
-    ;;
-esac
+if [ -n "$puavo_language_short_form" ]; then
+  LANGUAGE="$puavo_language_short_form"
 
-export DCONF_PROFILE
-export LANG
-export LANGUAGE
+  puavo_dconf_profile="user-$puavo_language_short_form"
+  if [ -e "/etc/dconf/profile/${puavo_dconf_profile}" ]; then
+    DCONF_PROFILE="${puavo_dconf_profile}"
+  fi
+fi
+
+export DCONF_PROFILE LANG LANGUAGE
