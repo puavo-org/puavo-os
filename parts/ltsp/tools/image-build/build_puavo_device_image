@@ -124,11 +124,6 @@ set_debconf_seeds() {
   run_in_chroot debconf-set-selections < config/debconf.seeds
 }
 
-set_timezone() {
-  cp /etc/localtime $target_dir/etc/localtime
-  cp /etc/timezone  $target_dir/etc/timezone
-}
-
 set_ltspimage_type() {
   imagetype=$1
 
@@ -249,7 +244,6 @@ case "$option" in
 
     build_chroot
     set_debconf_seeds
-    set_timezone
     set_ltspimage_type "$imagetype"
     prepare_puppet "image::$imagetype"
     ;;
