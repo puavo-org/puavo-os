@@ -1,0 +1,24 @@
+# This file is sourced
+
+puavo_keyboard_layout=$(jq -r .keyboard_layout /etc/puavo/device.json)
+puavo_keyboard_variant=$(jq -r .keyboard_variant /etc/puavo/device.json)
+
+for file in /etc/default/console-setup /etc/default/keyboard; do
+  if [ -f "$file" ]; then
+    awk -v puavo_keyboard_layout="$puavo_keyboard_layout" \
+        -v puavo_keyboard_variant="$puavo_keyboard_variant" '
+        /^XKBLAYOUT=/ {
+          if (puavo_keyboard_layout && puavo_keyboard_layout != "null") {
+            printf "XKBLAYOUT=\"%s\"\n", puavo_keyboard_layout; next
+          }
+        }
+        /^XKBVARIANT=/ {
+          if (puavo_keyboard_variant && puavo_keyboard_variant != "null") {
+            printf "XKBVARIANT=\"%s\"\n", puavo_keyboard_variant; next
+          }
+        }
+        { print }
+      ' "$file" > "$file.tmp" \
+        && mv "$file.tmp" "$file"
+  fi
+done
