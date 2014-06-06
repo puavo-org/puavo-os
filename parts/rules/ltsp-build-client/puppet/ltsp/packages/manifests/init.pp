@@ -225,6 +225,7 @@ class packages {
     , 'pidgin'
     , 'pidgin-libnotify'
     , 'pidgin-plugin-pack'
+    , 'sflphone-gnome'
     , 'xchat' ]:
       tag => [ 'instant_messaging', 'ubuntu', ];
 
