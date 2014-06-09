@@ -17,7 +17,7 @@ puavo_preferred_language=$(jq -r .preferred_language /etc/puavo/device.json)
       sv) echo "LANG=sv_FI.UTF-8" ;;
        *)
           echo "unknown language '${puavo_language_short_form}', falling back to 'fi'" >&2
-          LANG=fi_FI.UTF-8
+          echo "LANG=fi_FI.UTF-8"
           ;;
     esac
   fi
