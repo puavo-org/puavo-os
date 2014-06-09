@@ -4,6 +4,7 @@ sbindir = $(exec_prefix)/sbin
 datarootdir = $(prefix)/share
 templatedir = $(datarootdir)/puavo-ltsp-bootserver/templates
 sysconfdir = $(prefix)/etc
+libdir = $(prefix)/lib
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -27,6 +28,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(templatedir)/etc/pam.d
 	mkdir -p $(DESTDIR)$(templatedir)/etc/samba
 	mkdir -p $(DESTDIR)$(templatedir)/var/lib/bind
+	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-bootserver
 
 .PHONY : install
 install : installdirs
@@ -62,6 +64,9 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		sbin/*
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-bootserver \
+		lib/*
 
 .PHONY : clean
 clean :

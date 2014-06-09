@@ -1,0 +1,110 @@
+#!/bin/bash
+#
+# ##############################################################################
+#
+# Copyright (C) 2014 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+#
+
+set -eu
+
+on_exit()
+{
+    local exitval=$?
+
+    set +eu
+
+    if [ -n "${tmpdir}" ]; then
+        rm -rf "${tmpdir}"
+    fi
+
+    if ${encountered_errors}; then
+        exit 1
+    fi
+
+    exit ${exitval}
+}
+
+usage_error()
+{
+    echo "error: $1" >&2
+    echo "Try '$0 --help' for more information." >&2
+    return 1
+}
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            echo "Usage: $0"
+            echo
+            echo "Copy /boot from image files to TFTP boot directories."
+	    echo
+	    echo "Image file directory defaults to /opt/ltsp/images but can be set in "
+	    echo "PUAVO_IMAGE_DIR environment variable."
+	    echo
+	    echo "TFTP boot directory defaults to /var/lib/tftpboot/ltsp but can be set in "
+	    echo "PUAVO_TFTP_BOOT_DIR environment variable."
+            echo
+            echo "Options:"
+            echo "    -h, --help                   print help and exit"
+            echo
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage_error "invalid argument '$1'"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -ne 0 ]; then
+    usage_error "invalid number of arguments ($#), expected 0"
+fi
+
+tmpdir=
+encountered_errors=false
+
+trap on_exit EXIT
+
+tmpdir=$(mktemp -d)
+image_filepaths="${tmpdir}/image_filepaths"
+
+# Save the list of image filepaths to a temporary file.
+find "${PUAVO_IMAGE_DIR:-/opt/ltsp/images}"  \
+    -mindepth 1 -maxdepth 1            \
+    \( -type f -o -type l \)           \
+    -name '*.img'                      \
+    >"${image_filepaths}"
+
+while read image_filepath; do
+    image_name=$(basename "${image_filepath}" '.img')
+
+    /usr/lib/puavo-ltsp-bootserver/update-tftpboot "${image_filepath}" || {
+        encountered_errors=true
+        echo "W: failed to update the TFTP boot directory of image '${image_name}'" >&2
+        continue
+    }
+done <"${image_filepaths}"
