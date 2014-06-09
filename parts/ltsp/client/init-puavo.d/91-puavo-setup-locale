@@ -30,4 +30,10 @@ puavo_preferred_language=$(jq -r .preferred_language /etc/puavo/device.json)
       echo "DCONF_PROFILE=${puavo_dconf_profile}"
     fi
   fi
-} > /etc/default/locale
+} > /etc/default/locale.tmp
+
+if [ -s /etc/default/locale.tmp ]; then
+  mv /etc/default/locale.tmp /etc/default/locale
+else
+  rm -f /etc/default/locale.tmp
+fi
