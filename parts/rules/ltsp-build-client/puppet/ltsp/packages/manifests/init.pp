@@ -114,6 +114,9 @@ class packages {
     , 'xserver-xorg-video-all' ]:
       tag => [ 'drivers', 'ubuntu', ];
 
+    [ 'mutt' ]:
+      tag => [ 'email', 'ubuntu', ];
+
     [ 'wine' ]:
       tag => [ 'emulation', 'ubuntu', ];
 
