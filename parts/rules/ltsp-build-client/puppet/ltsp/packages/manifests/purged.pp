@@ -15,9 +15,7 @@ class packages::purged {
     , 'linux-image-generic'             # we want to choose kernels explicitly
     , 'software-properties-gtk'
     , 'synaptic'
-    , 'ubuntu-release-upgrader-gtk'
-    , 'update-manager'
-    , 'update-notifier'
+    , 'ubuntu-release-upgrader-core'
 
     , 'tftpd-hpa'               # this is suggested by ltsp-server, but
                                 # we do not actually use tftpd on ltsp-server
