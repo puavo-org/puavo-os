@@ -57,7 +57,6 @@ class packages {
 
     [ 'bash'
     , 'bridge-utils'
-    , 'btrfs-tools'
     , 'gdebi-core'
     , 'grub-pc'
     , 'lvm2'
