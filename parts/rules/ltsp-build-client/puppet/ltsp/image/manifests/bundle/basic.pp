@@ -2,6 +2,7 @@ class image::bundle::basic {
   include apt_ltspbuild_proxy,
 	  autopoweroff,
 	  console,
+	  disable_update_notifications,
 	  kernels,
 	  lightdm,
 	  ltspimage_ssh_server,
