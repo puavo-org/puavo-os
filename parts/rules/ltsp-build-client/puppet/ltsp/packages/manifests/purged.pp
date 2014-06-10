@@ -13,6 +13,10 @@ class packages::purged {
     , 'im-config'
 
     , 'linux-image-generic'             # we want to choose kernels explicitly
+
+    , 'samba'				# not needed, gets into system as
+					# some recommendation through winbind
+
     , 'software-properties-gtk'
     , 'synaptic'
     , 'ubuntu-release-upgrader-core'
