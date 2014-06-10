@@ -700,7 +700,8 @@ class packages {
     , 'puavo-vpn-client' ]:
       tag => [ 'misc', 'puavo', 'thinclient', ];
 
-    [ 'ltsp-server'
+    [ 'iivari-client'
+    , 'ltsp-server'
     , 'puavo-load-reporter'
     , 'puavo-sharedir-client'
     , 'puavo-wlanap'
