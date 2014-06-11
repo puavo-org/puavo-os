@@ -198,13 +198,23 @@ run_with_setarch() {
   setarch i386 "$@"
 }
 
+make_release_logos() {
+  if [ -x "$target_dir/usr/lib/puavo-ltsp-client/puavo-make-release-logos" ]
+  then
+    echo "Making release logos..."
+    run_in_chroot /usr/lib/puavo-ltsp-client/puavo-make-release-logos
+  fi
+}
+
 make_image() {
+  ask_and_set_image_information
+
   if [ -x "$target_dir/usr/bin/updatedb" ]; then
     echo 'Running updatedb in chroot'
     run_in_chroot updatedb
   fi
 
-  ask_and_set_image_information
+  make_release_logos
 
   mkdir -p "$images_dir"
   mksquashfs "$target_dir" "$images_dir/${ltspimage_name}.tmp" \
