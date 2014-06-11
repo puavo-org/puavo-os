@@ -12,13 +12,16 @@ fi
 # If no DNS_SERVER was defined in lts.conf or in DHCP (e.g. IPAPPEND=3),
 # check the LTSP server, gateway, and Google Public DNS.
 if [ -z "$DNS_SERVER" ] && [ -x /usr/bin/dig ]; then
-    gateway=$(LANG=C ip route | sed -n 's/default via \([0-9.]*\).*/\1/p')
-    for dns in $SERVER $gateway 8.8.8.8; do
+    # network is not up for laptops here (and in that case $SERVER is not set)
+    if [ -n "$SERVER" ]; then
+      gateway=$(LANG=C ip route | sed -n 's/default via \([0-9.]*\).*/\1/p')
+      for dns in $SERVER $gateway 8.8.8.8; do
         if dig +time=1 +tries=1 +short "@$dns" localhost >/dev/null 2>&1; then
             DNS_SERVER="$dns"
             break
         fi
-    done
+      done
+    fi
 fi
 
 if [ -z "$SEARCH_DOMAIN" ] && [ -n "$DNSDOMAIN" ]; then
