@@ -210,11 +210,11 @@ install : installdirs
 		etc/X11/Xsession.d/90puavo-setup-printers
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
-		make-release-logo \
 		puavo-desktop-session \
 		puavo-desktop-session-cleanup \
-		puavo-thin-guest-account \
 		puavo-ltspserver-create-guest \
+		puavo-make-release-logos \
+		puavo-thin-guest-account \
 		puavo-x2go-set-xrandr-mode \
 		udev/udev-hotplug-monitor \
 		udev/udev-jetpipe \
