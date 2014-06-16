@@ -1,0 +1,16 @@
+#!/bin/sh
+
+puavo_keyboard_layout=$(jq -r .keyboard_layout /etc/puavo/device.json)
+puavo_keyboard_variant=$(jq -r .keyboard_variant /etc/puavo/device.json)
+
+[ "${puavo_keyboard_layout}" = "null" ] && puavo_keyboard_layout=
+[ "${puavo_keyboard_variant}" = "null" ] && puavo_keyboard_variant=
+
+export XAUTHORITY=/var/run/lightdm/root/:0
+export DISPLAY=:0
+
+if [ "${puavo_keyboard_layout}" != "" ]; then
+  setxkbmap ${puavo_keyboard_layout} ${puavo_keyboard_variant}
+fi
+
+exit 0
