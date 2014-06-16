@@ -177,6 +177,10 @@ class packages {
     , 'libgnome2-perl'
     , 'libgnomevfs2-bin'
     , 'libgnomevfs2-extra'
+
+    # needed by (gnome|unity)-control-center accessibility settings
+    , 'libunity-core-6.0-9'
+
     , 'notification-daemon'
     , 'thunderbird-gnome-support'
     , 'ubuntu-docs' ]:
