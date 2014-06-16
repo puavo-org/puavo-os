@@ -38,6 +38,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/dbus-1/system.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/init
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ldap
@@ -104,6 +105,9 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups \
 		templates/etc/cups/client.conf \
 		templates/etc/cups/cupsd.conf
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/dbus-1/system.d \
+		templates/etc/dbus-1/system.d/org.freedesktop.login1.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default \
 		templates/etc/default/nfs-common
