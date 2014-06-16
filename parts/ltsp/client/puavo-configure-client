@@ -177,6 +177,7 @@ case @puavo_device_type
     write_config("/etc/default/nfs-common")
     write_config("/etc/init/gssd.conf", "userprincipal")
     write_config("/etc/cups/client.conf")
+    write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
 
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
@@ -200,6 +201,7 @@ case @puavo_device_type
     write_config("/etc/init/gssd.conf", "userprincipal")
     write_config("/etc/cups/cupsd.conf")
     write_config("/etc/security/group.conf")
+    write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
 
     # FIXME: Hack to get gnome fallback session
 #    `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
@@ -222,6 +224,7 @@ case @puavo_device_type
     write_config("/etc/ssh/sshd_config")
     write_config("/etc/cups/client.conf")
     write_config("/etc/ntp.conf")
+    write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
 
     @ldap_binddn       = read_file('/etc/puavo/ldap/dn')
     @ldap_bindpw       = read_file('/etc/puavo/ldap/password')
