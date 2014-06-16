@@ -203,8 +203,6 @@ case @puavo_device_type
     write_config("/etc/security/group.conf")
     write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
 
-    # FIXME: Hack to get gnome fallback session
-#    `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
     `cp /usr/lib/puavo-ltsp-client/puavo-thin-guest-account /usr/sbin/guest-account`
 #    `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
 
@@ -261,9 +259,6 @@ case @puavo_device_type
     write_config("/etc/security/group.conf")
     write_config("/etc/samba/smb.conf", "laptop")
     write_config("/etc/ntp.conf")
-
-    # FIXME: Hack to get gnome fallback session
-    `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
 
     @ldap_binddn       = read_file('/etc/puavo/ldap/dn')
     @ldap_bindpw       = read_file('/etc/puavo/ldap/password')
