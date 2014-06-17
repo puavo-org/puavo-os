@@ -6,6 +6,10 @@ class lightdm {
     '/etc/dconf/db/puavodesktop.d/lightdm_profile':
       content => template('lightdm/dconf_lightdm_profile'),
       notify  => Exec['update dconf'];
+
+    '/etc/dconf/db/puavodesktop.d/locks/lightdm_locks':
+      content => template('lightdm/dconf_lightdm_locks'),
+      notify  => Exec['update dconf'];
   }
 
   # lightdm also likes language packages
