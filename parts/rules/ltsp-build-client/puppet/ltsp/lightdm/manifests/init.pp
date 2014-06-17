@@ -14,6 +14,7 @@ class lightdm {
 
   # lightdm also likes language packages
   Package <| title == lightdm
+          or title == language-pack-gnome-de
           or title == language-pack-gnome-en
           or title == language-pack-gnome-fi
           or title == language-pack-gnome-sv |>
