@@ -26,6 +26,8 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
+	mkdir -p $(DESTDIR)$(sysconfdir)/network/if-up.d
+	mkdir -p $(DESTDIR)$(sysconfdir)/network/if-post-down.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/ssh
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
@@ -84,12 +86,12 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/lightdm \
 		templates/etc/lightdm/lightdm.conf
 
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-up.d \
-		templates/etc/network/if-up.d/ipsec \
-		templates/etc/network/if-up.d/sssd
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/network/if-up.d \
+		etc/network/if-up.d/ipsec \
+		etc/network/if-up.d/sssd
 
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-post-down.d \
-		templates/etc/network/if-post-down.d/ipsec
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/network/if-post-down.d \
+		etc/network/if-post-down.d/ipsec
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
 		templates/etc/hosts \

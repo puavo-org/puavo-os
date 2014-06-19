@@ -1,5 +1,11 @@
 #!/bin/sh
 
+PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+
+if [ "$PUAVO_HOSTTYPE" != "laptop" ]; then
+  exit 0
+fi
+
 # Enable IPSec tunneling for CIFS traffic on ports TCP 139 and 445
 # from the client to homedir.PUAVO_DOMAIN.
 
