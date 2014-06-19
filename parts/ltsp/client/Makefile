@@ -168,6 +168,7 @@ install : installdirs
 		ltsp_config.d/02-find-puavo-ltsp-server
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d \
+		xinitrc.d/I10-puavo-xrandr \
 		xinitrc.d/I95-set-lightdm-state
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/default \
@@ -219,6 +220,7 @@ install : installdirs
 		puavo-desktop-session-cleanup \
 		puavo-ltspserver-create-guest \
 		puavo-make-release-logos \
+		puavo-run-xrandr \
 		puavo-thin-guest-account \
 		puavo-x2go-set-xrandr-mode \
 		udev/udev-hotplug-monitor \
