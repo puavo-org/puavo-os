@@ -35,7 +35,7 @@ device['xrandr'].each do |xrandconf|
            'reflect',
            'rotate',
            'size'
-        xrandr_args += [ "--#{ key }", value ]
+        xrandr_args += [ "--#{ key }", Shellwords.shellwords(value) ].flatten
     end
   end
 
