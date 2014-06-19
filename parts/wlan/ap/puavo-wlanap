@@ -291,6 +291,15 @@ start_services()
     ## Start one hostapd per radio.
     for radio in "${PWAP_RADIOS[@]}"; do
         IFS=':' read _ iface <<<"${radio}"
+
+        ## Try to disable power saving, because it seems to cause flaky
+        ## connection quality in some scenarios. However, if something
+        ## goes wrong, just log it and keep going; disabled power save
+        ## is not a strict requirement.
+        iw dev "${iface}" set power_save off || {
+            echo "failed to disable power saving" >&2
+        }
+
         hostapd -P "${PWAP_RUNDIR}/${iface}_hostapd.pid" \
             "${PWAP_RUNDIR}/${iface}_hostapd.conf" &
         echo $! >>"${PWAP_RUNDIR}/critical_service.pids"
