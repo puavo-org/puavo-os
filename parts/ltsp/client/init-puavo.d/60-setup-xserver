@@ -1,3 +1,9 @@
+# For now, use the ltsp upstream X configuration mechanism,
+# but get the values for it from /etc/puavo/device.json.
+# This is also used by 98-configure-xorg later.
+PUAVO_XSERVER=$(jq -r .graphics_driver /etc/puavo/device.json)
+XSERVER=${PUAVO_XSERVER:-$XSERVER}
+
 # Clean up blacklists we do not want at this stage of boot
 # (these block nouveau and radeon and these are required at an earlier
 # stage for the fglrx and nvidia drivers to work).  However, we may want

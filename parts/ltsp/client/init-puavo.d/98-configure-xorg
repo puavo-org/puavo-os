@@ -1,10 +1,5 @@
 #!/bin/sh
 
-# For now, use the ltsp upstream X configuration mechanism,
-# but get the values for it from /etc/puavo/device.json.
-PUAVO_XSERVER=$(jq -r .graphics_driver /etc/puavo/device.json)
-XSERVER=${PUAVO_XSERVER:-$XSERVER}
-
 # Do X settings using the standard LTSP configuration tools
 . /usr/share/ltsp/screen-x-common
 
