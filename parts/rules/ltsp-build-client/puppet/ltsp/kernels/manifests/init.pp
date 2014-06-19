@@ -34,7 +34,7 @@ class kernels {
 
   case $lsbdistcodename {
     'trusty': {
-      $default_kernel = '3.13.0-26-generic'
+      $default_kernel = '3.13.0-29-generic'
 
       default_kernel_link {
         [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
