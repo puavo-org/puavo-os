@@ -20,6 +20,6 @@ esac
 . /usr/share/initramfs-tools/hook-functions
 
 # Copy across the binaries
-if [ -x /sbin/udhcpc ]; then
+if [ -x /sbin/ethtool ]; then
     copy_exec /sbin/ethtool /sbin
 fi
