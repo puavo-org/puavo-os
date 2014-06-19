@@ -40,7 +40,7 @@ device['xrandr'].each do |xrandconf|
   end
 
   if ! xrandr_args.empty? then
-    if command_spec['outout'] then
+    if command_spec['output'] then
       system('xrandr', * xrandr_args)
     else
       connected_displays.each do |display|
