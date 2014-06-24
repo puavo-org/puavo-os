@@ -222,6 +222,7 @@ make_image() {
 	     -ef config/ltsp-image.excludes \
 	     -wildcards
   mv "$images_dir/${ltspimage_name}.tmp" "$images_dir/${ltspimage_name}"
+  echo "Succesfully created a squashfs image: $images_dir/${ltspimage_name}"
 }
 
 cleanup() {
