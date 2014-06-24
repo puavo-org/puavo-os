@@ -16,6 +16,10 @@ case "$1" in
     ;;
 esac
 
+PUAVO_IMAGE=
+PUAVO_IMAGE_OVERLAY=
+PUAVO_HOSTTYPE=
+
 # We support one method to call the init-puavo.d scripts.
 # Pass "init=/sbin/init-puavo", which will execute the scripts
 # in the real system and chain to /sbin/init after that.
@@ -25,7 +29,15 @@ for x in $(cat /proc/cmdline); do
         init=/sbin/init-puavo)
             LTSP_BOOT=true
             PUAVO_LTSP_BOOT=true
-            break
+            ;;
+        puavo.image.overlay=*)
+            PUAVO_IMAGE_OVERLAY="${x#puavo.image.overlay=}"
+            ;;
+        loop=*)
+            PUAVO_IMAGE=$(basename "${x#loop=}")
+            ;;
+        puavo.hosttype=*)
+            PUAVO_HOSTTYPE="${x#puavo.hosttype=}"
             ;;
     esac
 done
@@ -34,26 +46,89 @@ test -n "$LTSP_BOOT" || exit
 
 [ -z "${rootmnt}" ] && panic "rootmnt unknown in init-bottom"
 [ -d "${rootmnt}/proc" ] || panic "rootmnt not mounted in init-bottom"
-# mount writeable filesystems if / is not already mounted writeable.
-if ! chroot ${rootmnt} /usr/bin/test -w "/" ; then
-    mkdir -p /rofs /cow
-    mount -t tmpfs -o mode=0755 tmpfs /cow
-    mount -o move ${rootmnt} /rofs
+
+do_union_mount()
+{
+    cow=$1
+
+    mkdir -p /rofs
+    mount -o move "${rootmnt}" /rofs
+
     if modprobe overlayfs; then
         UNION_TYPE=overlayfs
-        UNION_OPTS="upperdir=/cow,lowerdir=/rofs"
+        UNION_OPTS="upperdir=${cow},lowerdir=/rofs"
     elif modprobe aufs; then
         UNION_TYPE=aufs
-        UNION_OPTS="dirs=/cow=rw:/rofs=ro"
+        UNION_OPTS="dirs=${cow}=rw:/rofs=ro"
     else
-        . /scripts/functions
         panic "Could not load neither overlayfs nor aufs."
     fi
-    mount -t ${UNION_TYPE} -o ${UNION_OPTS} ${UNION_TYPE} ${rootmnt}
-    for dir in /rofs /cow ; do
-        mkdir -p ${rootmnt}${dir}
-    	mount -o move ${dir} ${rootmnt}${dir}
-    done
+    mount -t "${UNION_TYPE}" -o "${UNION_OPTS}" "${UNION_TYPE}" "${rootmnt}"
+
+    mkdir -p "${rootmnt}/rofs"
+    mount -o move /rofs "${rootmnt}/rofs"
+}
+
+do_union_mount_temporary()
+{
+    mkdir -p /cow
+    mount -t tmpfs -o mode=0755 tmpfs /cow
+
+    do_union_mount /cow
+
+    mkdir -p "${rootmnt}/cow"
+    mount -o move /cow "${rootmnt}/cow"
+}
+
+do_union_mount_persistent()
+{
+    cow="/images/overlays/${PUAVO_IMAGE}/${PUAVO_IMAGE_OVERLAY}"
+    mkdir -p "${cow}"
+
+    do_union_mount "${cow}"
+}
+
+mount_puavo_partition() {
+  name=$1
+  if [ -b "/dev/mapper/puavo-${name}" ]; then
+    mkdir -p "/${name}"
+
+    OPTIONS="-o noatime"
+
+    if [ -f "/sys/block/sda/queue/rotational" ]; then
+      if grep -q "0" /sys/block/sda/queue/rotational; then
+        OPTIONS="-o discard,noatime"
+      fi
+    fi
+
+    mount ${OPTIONS} "/dev/mapper/puavo-${name}" "/${name}"
+  fi
+}
+
+move_puavo_partition()
+{
+    name=$1
+
+    mkdir -p "${rootmnt}/${name}"
+    mount -o move "/${name}" "${rootmnt}/${name}"
+}
+
+# mount writeable filesystems if / is not already mounted writeable.
+if ! chroot "${rootmnt}" /usr/bin/test -w "/" ; then
+    case "${PUAVO_HOSTTYPE}" in
+        laptop|wirelessaccesspoint)
+            mount_puavo_partition images
+            if [ -n "${PUAVO_IMAGE}" -a -n "${PUAVO_IMAGE_OVERLAY}" ]; then
+                do_union_mount_persistent
+            else
+                do_union_mount_temporary
+            fi
+            move_puavo_partition images
+            ;;
+        *)
+            do_union_mount_temporary
+            ;;
+    esac
 fi
 
 # Copy networking configuration to the root file system
