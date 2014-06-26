@@ -748,13 +748,13 @@ class packages {
 
   @package {
     [ 'skype' ]:
-      tag => [ 'instant_messaging', 'partner', ];
+      tag => [ 'instant_messaging', 'partner', 'restricted' ];
 
     [ 'vmware-view-client' ]:
-      tag => [ 'remote_access', 'partner', ];
+      tag => [ 'remote_access', 'partner', 'restricted' ];
 
     [ 'adobe-flashplugin' ]:
-      tag => [ 'web', 'partner', ];
+      tag => [ 'web', 'partner', 'restricted' ];
  }
 
   #
@@ -762,16 +762,16 @@ class packages {
   #
 
   @package {
-    [ 'spotify-client' ]:
-      tag => [ 'audio', 'opinsys', ];
+    [ 'spotify-client'
+    , 'spotify-client-qt' ]:
+      tag => [ 'audio', 'opinsys', 'restricted' ];
 
     [ 'esci-interpreter-perfection-v330'
     , 'iscan'
     , 'iscan-data' ]:
       tag => [ 'epson-scanner', 'opinsys', ];
 
-    [ 'libdvdcss2'
-    , 'spotify-client-qt' ]:
+    [ 'libdvdcss2' ]:
       tag => [ 'mediaplayer', 'opinsys', ];
 
     [ 'nautilus-dropbox'
@@ -780,39 +780,41 @@ class packages {
 
     [ 'acroread'
     , 'cmaptools' ]:
-      tag => [ 'office', 'opinsys', ];
+      tag => [ 'office', 'opinsys', 'restricted' ];
 
     [ 'icaclient' ]:
       # icaclient has a hidden dependency on libmotif4
       require => Package['libmotif4'],
-      tag     => [ 'remote_access', 'opinsys', ];
+      tag     => [ 'remote_access', 'opinsys', 'restricted' ];
 
     [ 'av4kav'
     , 'google-earth-stable'
-    , 'googleearth'
-    , 'vstloggerpro' ]:
-      tag => [ 'science', 'opinsys', ];
+    , 'googleearth' ]:
+      tag => [ 'science', 'opinsys', 'restricted' ];
+
+    [ 'vstloggerpro' ]:
+      tag => [ 'science', 'opinsys' ];
 
     [ 'opinsys-theme' ]:
       tag => [ 'themes', 'opinsys', ];
 
     [ 'google-talkplugin'
     , 'oracle-java' ]:
-      tag => [ 'web', 'opinsys', ];
+      tag => [ 'web', 'opinsys', 'restricted' ];
 
     [ 'eleet'
     , 'leap' ]:
-      tag => [ 'whiteboard', 'opinsys', ];
+      tag => [ 'whiteboard', 'whiteboard-leapmotion', 'opinsys', 'restricted' ];
 
     [ 'ebeam-edu' ]:
-      tag => [ 'whiteboard-ebeam', 'opinsys', ];
+      tag => [ 'whiteboard', 'whiteboard-ebeam', 'opinsys', 'restricted' ];
 
     [ 'mimio-studio' ]:
-      tag => [ 'whiteboard-mimio', 'opinsys', ];
+      tag => [ 'whiteboard', 'whiteboard-mimio', 'opinsys', 'restricted' ];
 
     # XXX this should not be here, but in a public repository:
     [ 'open-sankore', ]:
-      tag => [ 'whiteboard-sankore', 'opinsys', ];
+      tag => [ 'whiteboard', 'whiteboard-sankore', 'opinsys', ];
 
     [ 'nwfermi'
     , 'smart-activation'
@@ -825,6 +827,6 @@ class packages {
     , 'smart-notebook'
     , 'smart-product-drivers'
     , 'xf86-input-nextwindow' ]:
-      tag => [ 'whiteboard-smartboard', 'opinsys', ];
+      tag => [ 'whiteboard', 'whiteboard-smartboard', 'opinsys', 'restricted' ];
   }
 }
