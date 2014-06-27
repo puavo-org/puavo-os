@@ -1,4 +1,4 @@
-IMAGE_TARGETS = opinsys puavo thinclient
+IMAGE_TARGETS = opinsys puavo thinclient opinsys_unrestricted
 OTHER_TARGETS = all build-chroot chroot image update-chroot update-local
 
 LOGFILE = $(shell echo logs/ltsp-$$(date +%Y-%m-%d-%H%M%S).log)
