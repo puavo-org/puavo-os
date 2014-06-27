@@ -236,7 +236,7 @@ module QueryDiskInfo
       puts "or choose 'whole' to use the whole disk.\n"
       chosen_partition = UI::ask_with_default('Choose a partition:',
 					     chosen_partition)
-
+    end
     chosen_partition
   end
 
