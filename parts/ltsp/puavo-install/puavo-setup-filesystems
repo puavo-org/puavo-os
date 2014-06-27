@@ -237,30 +237,7 @@ module QueryDiskInfo
       chosen_partition = UI::ask_with_default('Choose a partition:',
 					     chosen_partition)
 
-      if chosen_partition == 'whole' \
-	and device_has_unknown_partitions?(disk_device) then
-	  msg = %Q{\nDevice "/dev/#{ disk_device }" has unknown partitions,\n} \
-	        + %Q{remove those with "fdisk" (refusing to overwrite).\n}
-          UI::colormsg(msg, HighLine::RED)
-	  sleep(2)
-	  partitions = []
-          next
-      end
-    end
-
     chosen_partition
-  end
-
-  def self.device_has_unknown_partitions?(device)
-    fdisk_cmd = [ 'env', 'LANG=C', 'fdisk', '-l', "/dev/#{ device }" ]
-    Open3.popen3(*fdisk_cmd) do |stdin, stdout, stderr|
-      stdout.readlines.each do |line|
-	return true if line.match(%r{^/dev/}) \
-			 && !line.match(/(Extended|Linux)/)
-      end
-    end
-
-    return false
   end
 
   def self.show_disk_devices(disk_devices)
