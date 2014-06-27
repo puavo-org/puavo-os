@@ -105,7 +105,7 @@ module DiskHandler
     # create an lvm partition
     # see http://www.walkernews.net/2007/07/02/how-to-create-linux-lvm-in-3-minutes/
     IO.popen("fdisk #{ fs_conf['device'] }", 'w') do |f|
-      f.print "n\np\n1\n\n\nt\n8e\na\n1\np\nw\n"
+      f.print "n\np\n1\n#{ fs_conf['first_sector'] }\n#{ fs_conf['last_sector'] }\nt\n8e\na\n1\np\nw\n"
     end
   end
 
@@ -191,21 +191,63 @@ module QueryDiskInfo
     UI::ask_with_default(prompt, 'no') == 'yes'
   end
 
+  GIBI_BYTES = 1024 ** 3
+
+  def self.ask_last_sector(device, first_sector)
+    device_basename = File.basename(device)
+    sectors = File.read("/sys/block/#{device_basename}/size").strip().to_i()
+    sector_bytes = File.read("/sys/block/#{device_basename}/queue/logical_block_size").strip().to_i()
+
+    while true do
+      tailroom_gibis_str = UI::ask_with_default('How much unpartitioned space '\
+                                                '(in gibibytes) should be left '\
+                                                'to the end of the device:', '0')
+      begin
+        tailroom_gibis = Integer(tailroom_gibis_str)
+      rescue ArgumentError
+        UI::colormsg("Invalid number '#{tailroom_gibis_str}', expected integer.",
+                     HighLine::RED)
+        next
+      end
+
+      tailroom_bytes = tailroom_gibis * GIBI_BYTES
+      tailroom_sectors = tailroom_bytes / sector_bytes
+      if tailroom_sectors > sectors - first_sector
+        UI::colormsg("The size of the tailroom exceeds the size of the device.",
+                     HighLine::RED)
+        next
+      end
+
+      last_sector = sectors - tailroom_sectors - 1
+      break
+
+    end
+    last_sector
+  end
+
   def self.ask_device_and_partition_with_confirmation(hosttype)
     do_it = false
     device    = nil
     partition = nil
+    first_sector = nil
+    last_sector = nil
 
     until do_it do
       device    = QueryDiskInfo::ask_device()
       partition = QueryDiskInfo::ask_partition(device)
+      if partition == 'whole'
+        first_sector = 2048
+        last_sector = QueryDiskInfo::ask_last_sector(device, first_sector)
+      end
 
       do_it = QueryDiskInfo::ask_confirmation(device, partition)
     end
 
     {
       'device'    => device,
+      'first_sector' => first_sector,
       'hosttype'  => hosttype,
+      'last_sector' => last_sector,
       'partition' => partition,
     }
   end
