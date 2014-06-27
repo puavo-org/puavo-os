@@ -205,6 +205,7 @@ class packages {
     , 'kino'
     , 'kolourpaint4'
     , 'libav-tools'
+    , 'libsane'
     , 'libsane-extras'
     , 'luciole'
     , 'mencoder'
