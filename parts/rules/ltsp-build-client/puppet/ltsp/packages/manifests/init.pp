@@ -770,7 +770,7 @@ class packages {
     [ 'esci-interpreter-perfection-v330'
     , 'iscan'
     , 'iscan-data' ]:
-      tag => [ 'epson-scanner', 'opinsys', ];
+      tag => [ 'epson-scanner', 'opinsys', 'restricted' ];
 
     [ 'libdvdcss2' ]:
       tag => [ 'mediaplayer', 'opinsys', ];
