@@ -1,9 +1,10 @@
 class epson_scanner {
-  require packages
+  include packages
   
   file {
-    '/var/lib/udev/rules.d/40-epson-scanner.rules':
-      content => template('epson_scanner/udev.rules');
+    '/lib/udev/rules.d/40-epson-scanner.rules':
+      content => template('epson_scanner/udev.rules'),
+      require => Package['udev'];
   }
 
   file {
@@ -18,5 +19,5 @@ class epson_scanner {
       mode    => 755;
   }
 
-  Package <| tag == epson-scanner |>
+  Package <| tag == libsane |>
 }
