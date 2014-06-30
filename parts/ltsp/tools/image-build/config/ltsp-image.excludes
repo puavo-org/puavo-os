@@ -1,7 +1,10 @@
+run/.*
 run/*
 tmp/.*
 tmp/*
 var/cache/apt/archives/*.deb
 var/cache/apt/archives/partial/*
+var/run/.*
+var/run/*
 var/tmp/.*
 var/tmp/*
