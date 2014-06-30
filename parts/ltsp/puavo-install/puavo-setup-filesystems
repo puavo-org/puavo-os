@@ -193,48 +193,17 @@ module QueryDiskInfo
     UI::ask_with_default(prompt, 'no') == 'yes'
   end
 
-  UNIT_BYTES = {
-    'K' => 1024 ** 1,
-    'M' => 1024 ** 2,
-    'G' => 1024 ** 3,
-  }
-
   def self.ask_last_sector(device, first_sector)
     device_basename = File.basename(device)
     sectors = File.read("/sys/block/#{device_basename}/size").strip().to_i()
     sector_bytes = File.read("/sys/block/#{device_basename}/queue/logical_block_size").strip().to_i()
 
     while true do
-      tailroom_str = UI::ask_with_default('How much unpartitioned space '\
-                                          'should be left to the end of '\
-                                          'the device:', '0G')
-
-      # Parse and check the unit.
-      tailroom_unit = tailroom_str[-1]
-      if not UNIT_BYTES.include?(tailroom_unit)
-        UI::colormsg("Invalid unit, available units: #{UNIT_BYTES.keys}.",
-                     HighLine::RED)
-        next
-      end
-      unit_bytes = UNIT_BYTES[tailroom_unit]
-
-      # Parse and check the value.
-      tailroom_value_str = tailroom_str[0..-2]
-      begin
-        tailroom_value = Integer(tailroom_value_str)
-      rescue ArgumentError
-        UI::colormsg("Invalid number '#{tailroom_value_str}', expected a non-negative integer.",
-                     HighLine::RED)
-        next
-      end
-      if tailroom_value < 0
-        UI::colormsg("Invalid number '#{tailroom_value_str}', expected a non-negative integer.",
-                     HighLine::RED)
-        next
-      end
-
-      # Convert value to sectors.
-      tailroom_bytes   = tailroom_value * unit_bytes
+      tailroom_size =
+        UI::ask_size_with_default('How much unpartitioned space '\
+                                  'should be left to the end of '\
+                                  'the device:', '0G')
+      tailroom_bytes = Size::to_bytes(tailroom_size)
       tailroom_sectors = tailroom_bytes / sector_bytes
       if tailroom_sectors > sectors - first_sector
         UI::colormsg("The size of the tailroom exceeds the size of the device.",
@@ -269,11 +238,12 @@ module QueryDiskInfo
         ].each do |fs_name|
           fs = DiskHandler::Filesystems[hosttype][fs_name]
           next if fs.nil?
-          fs_size = UI::ask_with_default("Filesystem size of #{ fs_name }:",
-                                         fs['size'])
-          fs['size'] = fs_size
-        end
+          fs_size =
+            UI::ask_size_with_default("Filesystem size of #{ fs_name }:",
+                                      fs['size'])
 
+          fs['size'] = fs_size.join()
+        end
       end
 
       do_it = QueryDiskInfo::ask_confirmation(device, partition)
@@ -327,6 +297,35 @@ module QueryDiskInfo
   end
 end
 
+module Size
+  UNIT_BYTES = {
+    'K' => 1024 ** 1,
+    'M' => 1024 ** 2,
+    'G' => 1024 ** 3,
+  }
+
+  def self.parse(str)
+    unit = str[-1]
+    if not UNIT_BYTES.include?(unit)
+      raise ArgumentError, "invalid unit, expected one from #{UNIT_BYTES.keys}"
+    end
+
+    number = str[0..-2]
+    value = Integer(number)
+    if value < 0
+      raise ArgumentError, "invalid size, expected a non-negative value"
+    end
+
+    [value, unit]
+  end
+
+  def self.to_bytes(size)
+    value, unit = size
+    value * UNIT_BYTES[unit]
+  end
+
+end
+
 # XXX could be shared with puavo-register
 module UI
   def self.ask_with_default(question, default)
@@ -336,6 +335,20 @@ module UI
     return answer.match(/^\n$/)  ? default \
          : answer.match(/^\s+$/) ? ''      \
          : answer.strip
+  end
+
+  def self.ask_size_with_default(question, default)
+    while true do
+      str = ask_with_default(question, default)
+      begin
+        size = Size::parse(str)
+      rescue ArgumentError => e
+        colormsg(e.message, HighLine::RED)
+        next
+      end
+      break
+    end
+    size
   end
 
   def self.colormsg(msg, color)
