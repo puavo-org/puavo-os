@@ -221,7 +221,12 @@ module QueryDiskInfo
       begin
         tailroom_value = Integer(tailroom_value_str)
       rescue ArgumentError
-        UI::colormsg("Invalid number '#{tailroom_value_str}', expected integer.",
+        UI::colormsg("Invalid number '#{tailroom_value_str}', expected a non-negative integer.",
+                     HighLine::RED)
+        next
+      end
+      if tailroom_value < 0
+        UI::colormsg("Invalid number '#{tailroom_value_str}', expected a non-negative integer.",
                      HighLine::RED)
         next
       end
