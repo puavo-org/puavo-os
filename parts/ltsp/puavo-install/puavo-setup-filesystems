@@ -191,7 +191,11 @@ module QueryDiskInfo
     UI::ask_with_default(prompt, 'no') == 'yes'
   end
 
-  GIBI_BYTES = 1024 ** 3
+  UNIT_BYTES = {
+    'K' => 1024 ** 1,
+    'M' => 1024 ** 2,
+    'G' => 1024 ** 3,
+  }
 
   def self.ask_last_sector(device, first_sector)
     device_basename = File.basename(device)
@@ -199,18 +203,31 @@ module QueryDiskInfo
     sector_bytes = File.read("/sys/block/#{device_basename}/queue/logical_block_size").strip().to_i()
 
     while true do
-      tailroom_gibis_str = UI::ask_with_default('How much unpartitioned space '\
-                                                '(in gibibytes) should be left '\
-                                                'to the end of the device:', '0')
+      tailroom_str = UI::ask_with_default('How much unpartitioned space '\
+                                          'should be left to the end of '\
+                                          'the device:', '0G')
+
+      # Parse and check the unit.
+      tailroom_unit = tailroom_str[-1]
+      if not UNIT_BYTES.include?(tailroom_unit)
+        UI::colormsg("Invalid unit, available units: #{UNIT_BYTES.keys}.",
+                     HighLine::RED)
+        next
+      end
+      unit_bytes = UNIT_BYTES[tailroom_unit]
+
+      # Parse and check the value.
+      tailroom_value_str = tailroom_str[0..-2]
       begin
-        tailroom_gibis = Integer(tailroom_gibis_str)
+        tailroom_value = Integer(tailroom_value_str)
       rescue ArgumentError
-        UI::colormsg("Invalid number '#{tailroom_gibis_str}', expected integer.",
+        UI::colormsg("Invalid number '#{tailroom_value_str}', expected integer.",
                      HighLine::RED)
         next
       end
 
-      tailroom_bytes = tailroom_gibis * GIBI_BYTES
+      # Convert value to sectors.
+      tailroom_bytes = tailroom_value * unit_bytes
       tailroom_sectors = tailroom_bytes / sector_bytes
       if tailroom_sectors > sectors - first_sector
         UI::colormsg("The size of the tailroom exceeds the size of the device.",
