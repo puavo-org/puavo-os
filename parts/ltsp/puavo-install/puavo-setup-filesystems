@@ -232,7 +232,7 @@ module QueryDiskInfo
       end
 
       # Convert value to sectors.
-      tailroom_bytes = tailroom_value * unit_bytes
+      tailroom_bytes   = tailroom_value * unit_bytes
       tailroom_sectors = tailroom_bytes / sector_bytes
       if tailroom_sectors > sectors - first_sector
         UI::colormsg("The size of the tailroom exceeds the size of the device.",
@@ -248,29 +248,29 @@ module QueryDiskInfo
   end
 
   def self.ask_device_and_partition_with_confirmation(hosttype)
-    do_it = false
-    device    = nil
-    partition = nil
+    do_it        = false
+    device       = nil
+    partition    = nil
     first_sector = nil
-    last_sector = nil
+    last_sector  = nil
 
     until do_it do
       device    = QueryDiskInfo::ask_device()
       partition = QueryDiskInfo::ask_partition(device)
       if partition == 'whole'
         first_sector = 2048
-        last_sector = QueryDiskInfo::ask_last_sector(device, first_sector)
+        last_sector  = QueryDiskInfo::ask_last_sector(device, first_sector)
       end
 
       do_it = QueryDiskInfo::ask_confirmation(device, partition)
     end
 
     {
-      'device'    => device,
+      'device'       => device,
       'first_sector' => first_sector,
-      'hosttype'  => hosttype,
-      'last_sector' => last_sector,
-      'partition' => partition,
+      'hosttype'     => hosttype,
+      'last_sector'  => last_sector,
+      'partition'    => partition,
     }
   end
 
