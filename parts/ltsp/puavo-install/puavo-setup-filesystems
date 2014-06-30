@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/ruby1.9.3
 #
 # Setup local filesystems for Puavo hosts
 
@@ -36,30 +36,30 @@ end
 
 module DiskHandler
   Filesystems = {
-    'laptop' => [
-      { 'size' => '4G',       'name' => 'swap',   'type' => 'swap' },
-      { 'size' => '6G',       'name' => 'tmp',    'type' => 'ext4' },
-      { 'size' => '40G',      'name' => 'images', 'type' => 'ext4' },
-      { 'size' => '4G',       'name' => 'state',  'type' => 'ext4' },
-      { 'size' => '100%FREE', 'name' => 'home',   'type' => 'ext4' },
-    ],
-    'ltspserver' => [
-      { 'size' => '16G',      'name' => 'swap',   'type' => 'swap' },
-      { 'size' => '6G',       'name' => 'tmp',    'type' => 'ext4' },
-      { 'size' => '100%FREE', 'name' => 'state',  'type' => 'ext4' },
-    ],
-    'wirelessaccesspoint' => [
-      { 'size' => '2G',       'name' => 'swap',   'type' => 'swap' },
-      { 'size' => '3G',       'name' => 'tmp',    'type' => 'ext4' },
-      { 'size' => '2G',       'name' => 'state',  'type' => 'ext4' },
-      { 'size' => '100%FREE', 'name' => 'images', 'type' => 'ext4' },
-    ],
+    'laptop' => {
+      'swap'   => { 'size' => '4G',       'type' => 'swap' },
+      'tmp'    => { 'size' => '6G',       'type' => 'ext4' },
+      'images' => { 'size' => '40G',       'type' => 'ext4' },
+      'state'  => { 'size' => '4G',       'type' => 'ext4' },
+      'home'   => { 'size' => '100%FREE', 'type' => 'ext4' },
+    },
+    'ltspserver' => {
+      'swap'   => { 'size' => '16G',      'type' => 'swap' },
+      'tmp'    => { 'size' => '6G',       'type' => 'ext4' },
+      'state'  => { 'size' => '100%FREE', 'type' => 'ext4' },
+    },
+    'wirelessaccesspoint' => {
+      'swap'   => { 'size' => '2G',       'type' => 'swap' },
+      'tmp'    => { 'size' => '3G',       'type' => 'ext4' },
+      'state'  => { 'size' => '2G',       'type' => 'ext4' },
+      'images' => { 'size' => '100%FREE', 'type' => 'ext4' },
+    },
   }
 
   def self.cleanup_disk_environment(hosttype)
     # Unmount filesystems, if those are mounted.
-    non_swap_filesystems(hosttype).each do |fs|
-      run('umount', '-f', "/#{ fs['name'] }") rescue true
+    non_swap_filesystems(hosttype).each do |name, attrs|
+      run('umount', '-f', "/#{ name }") rescue true
     end
 
     # turn off swap partitions
@@ -111,7 +111,7 @@ module DiskHandler
 
   def self.non_swap_filesystems(hosttype)
     Filesystems[ hosttype ] \
-      .select { |fs| fs['type'] != 'swap' }
+      .select { |name, attrs| attrs['type'] != 'swap' }
   end
 
   def self.puavo_filesystems(fs_conf)
@@ -122,8 +122,8 @@ module DiskHandler
     run('pvcreate', fs_conf['partition'])
     run('vgcreate', '-s', '64M', 'puavo', fs_conf['partition'])
 
-    Filesystems[ fs_conf['hosttype'] ].each do |fs|
-      mkfs(fs['size'], fs['name'], fs['type'])
+    Filesystems[ fs_conf['hosttype'] ].each do |name, attrs|
+      mkfs(attrs['size'], name, attrs['type'])
     end
   end
 
@@ -142,10 +142,10 @@ module DiskHandler
   end
 
   def self.mount_filesystems(fs_conf)
-    non_swap_filesystems( fs_conf['hosttype'] ).each do |fs|
-      mnt_path = "/#{ fs['name'] }"
+    non_swap_filesystems( fs_conf['hosttype'] ).each do |name, attrs|
+      mnt_path = "/#{ name }"
       FileUtils.mkdir_p(mnt_path)
-      run('mount', "/dev/mapper/puavo-#{ fs['name'] }", mnt_path)
+      run('mount', "/dev/mapper/puavo-#{ name }", mnt_path)
     end
   end
 end
