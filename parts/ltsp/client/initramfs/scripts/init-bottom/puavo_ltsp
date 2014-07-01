@@ -16,7 +16,6 @@ case "$1" in
     ;;
 esac
 
-PUAVO_IMAGE=
 PUAVO_IMAGE_OVERLAY=
 PUAVO_HOSTTYPE=
 
@@ -33,9 +32,6 @@ for x in $(cat /proc/cmdline); do
         puavo.image.overlay=*)
             PUAVO_IMAGE_OVERLAY="${x#puavo.image.overlay=}"
             ;;
-        loop=*)
-            PUAVO_IMAGE=$(basename "${x#loop=}")
-            ;;
         puavo.hosttype=*)
             PUAVO_HOSTTYPE="${x#puavo.hosttype=}"
             ;;
@@ -46,6 +42,8 @@ test -n "$LTSP_BOOT" || exit
 
 [ -z "${rootmnt}" ] && panic "rootmnt unknown in init-bottom"
 [ -d "${rootmnt}/proc" ] || panic "rootmnt not mounted in init-bottom"
+
+PUAVO_IMAGE=$(cat "${rootmnt}/etc/ltsp/this_ltspimage_name")
 
 do_union_mount()
 {
