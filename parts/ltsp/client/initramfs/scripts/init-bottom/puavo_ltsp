@@ -115,13 +115,15 @@ move_puavo_partition()
 if ! chroot "${rootmnt}" /usr/bin/test -w "/" ; then
     case "${PUAVO_HOSTTYPE}" in
         laptop|wirelessaccesspoint)
-            mount_puavo_partition imageoverlays
             if [ -n "${PUAVO_IMAGE}" -a -n "${PUAVO_IMAGE_OVERLAY}" ]; then
-                do_union_mount_persistent
+                {
+                  mount_puavo_partition imageoverlays \
+                    && do_union_mount_persistent      \
+                    && move_puavo_partition imageoverlays
+                } || panic "could not mount persistent overlay"
             else
                 do_union_mount_temporary
             fi
-            move_puavo_partition imageoverlays
             ;;
         *)
             do_union_mount_temporary
