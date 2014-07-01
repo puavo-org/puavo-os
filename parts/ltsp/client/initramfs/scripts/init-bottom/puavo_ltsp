@@ -40,6 +40,9 @@ done
 
 test -n "$LTSP_BOOT" || exit
 
+# contains definition for "panic"
+. /scripts/functions
+
 [ -z "${rootmnt}" ] && panic "rootmnt unknown in init-bottom"
 [ -d "${rootmnt}/proc" ] || panic "rootmnt not mounted in init-bottom"
 
