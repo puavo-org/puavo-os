@@ -9,7 +9,6 @@
     <h1>Puavo-laptop configuration tool</h1>
 
     <hr/>
-
     <form>
       <div>Allow login for:</div>
       <table>
@@ -57,12 +56,16 @@
       <div>Accept licenses for:</div>
       <table>
         <tr>
-          <td><input name="license_adobe_acroread" type="checkbox">
-          <td>Adobe acroread X.XX</td>
+          <td><input name="licenses[adobe_acroread]" type="checkbox">
+          <td>Adobe acroread</td>
+          <td><a class="license_link"
+                 href="http://www.openbsd.org/">(see license terms)</a></td>
         </tr>
         <tr>
-          <td><input name="license_adobe_flash_plugin" type="checkbox">
-          <td>Adobe flash plugin X.XX</td>
+          <td><input name="licenses[adobe_flash_plugin]" type="checkbox">
+          <td>Adobe flash plugin</td>
+          <td><a class="license_link"
+		 href="http://www.openbsd.org/">(see license terms)</a></td>
         </tr>
       </table>
 
