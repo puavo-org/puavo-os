@@ -1,3 +1,4 @@
+
 function done(e) {
   var response = document.forms[0].elements;
   var conf = {};
@@ -9,11 +10,18 @@ function done(e) {
     'adobe_flash_plugin': response['licenses[adobe_flash_plugin]'].checked,
   };
 
+  var local_user_errors = document.querySelector('div[id=localuser_errors]');
+  local_user_errors.innerHTML = '';
+  if (response.localuser_password.value
+        !== response.localuser_password_again.value) {
+    local_user_errors.innerHTML = 'Passwords do not match.';
+    return;
+  }
+
   conf.local_user = {
-    localuser_admin_rights:   response.localuser_admin_rights.checked,
-    localuser_name:           response.localuser_name.value,
-    localuser_password:       response.localuser_password.value,
-    localuser_password_again: response.localuser_password_again.value,
+    admin_rights: response.localuser_admin_rights.checked,
+    name:         response.localuser_name.value,
+    password:     response.localuser_password.value,
   };
 
   conf.superlaptop_mode = response.superlaptop_mode.checked;
