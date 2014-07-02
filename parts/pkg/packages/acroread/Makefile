@@ -37,5 +37,5 @@ distclean:
 clean: distclean
 	rm -rf $(TARBALL) $(TARBALL).tmp
 
-.PHONY: all install installdirs uninstall
+.PHONY: all clean distclean install installdirs uninstall
 
