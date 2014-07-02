@@ -1,3 +1,13 @@
+var child_process = require('child_process');
+var gui = require('nw.gui');
+
+function open_external_link(e) {
+  var child = child_process.spawn('x-www-browser',
+				  [ e.href ],
+				  { detached: true,
+				    stdio: [ 'ignore', 'ignore', 'ignore' ] });
+  child.unref();
+}
 
 function done(e) {
   var response = document.forms[0].elements;
@@ -29,6 +39,15 @@ function done(e) {
   process.stdout.write(JSON.stringify(conf) + "\n");
   process.exit(0);
 }
+
+var license_links = document.querySelectorAll('a[class=license_link]');
+
+[].forEach.call(license_links,
+                function(el) {
+                  el.addEventListener('click',
+				      function(e) {
+					e.preventDefault();
+					open_external_link(el); }) });
 
 document.querySelector('input[id=done_button]')
         .addEventListener('click', done);
