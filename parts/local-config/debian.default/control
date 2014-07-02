@@ -1,0 +1,11 @@
+Source: puavo-laptop-config
+Maintainer: Opinsys <dev@opinsys.fi>
+Section: misc
+Priority: optional
+Build-Depends: debhelper (>= 8)
+Standards-Version: 3.9.3
+
+Package: puavo-laptop-config
+Architecture: all
+Depends: ${misc:Depends}, node-webkit
+Description: Puavo laptop configuration tool.
