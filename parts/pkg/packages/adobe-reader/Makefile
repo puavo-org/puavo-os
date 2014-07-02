@@ -1,6 +1,6 @@
 TARBALL = $(shell awk '{printf $$2}' MD5SUMS)
 
-pkgdir=/state/restricted-packages/acroread
+pkgdir=/state/restricted-packages/adobe-reader
 
 all: build
 
