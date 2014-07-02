@@ -11,9 +11,7 @@
     <hr/>
 
     <form>
-      <!-- Allowed login types -->
       <div>Allow login for:</div>
-
       <table>
         <tr>
           <td>
@@ -33,10 +31,7 @@
       </table>
 
       <hr/>
-
-      <div>Local user:</div>
-
-      <!-- Local user -->
+      <div>Local users:</div>
       <table>
         <tr>
           <td>Username:</td>
@@ -50,12 +45,16 @@
           <td>Password again:</td>
           <td><input name="localuser_password_again" type="password"></td>
         </tr>
+        <tr>
+          <td>Has administrative rights:</td>
+          <td><input name="localuser_admin_rights"
+		     checked="checked"
+		     type="checkbox"></td>
+        </tr>
       </table>
 
       <hr/>
-
       <div>Accept licenses for:</div>
-
       <table>
         <tr>
           <td><input name="license_adobe_acroread" type="checkbox">
@@ -67,8 +66,20 @@
         </tr>
       </table>
 
+      <hr/>
+      <div>
+        "Superlaptop" mode
+        (no automatic updates, changes to system persist across system boots):
+      </div>
+      <table>
+        <tr>
+          <td>Enable superlaptop mode:</td>
+          <td><input name="superlaptop_mode" type="checkbox"></td>
+        </tr>
+      </table>
+
       <input id="done_button"
-	     name="laptop_configuration_done"
+             name="laptop_configuration_done"
              type="submit"
              value="Done!">
     </form>
