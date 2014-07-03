@@ -1,6 +1,8 @@
 var child_process = require('child_process');
 var fs = require('fs');
 
+var config_json_path = '/state/etc/puavo/local.json';
+
 function done(e) {
   var response = document.forms[0].elements;
   var conf = {};
@@ -31,7 +33,11 @@ function done(e) {
 
   conf.superlaptop_mode = response.superlaptop_mode.checked;
 
-  process.stdout.write(JSON.stringify(conf) + "\n");
+  try {
+    fs.writeFileSync(config_json_path,
+		     JSON.stringify(conf) + "\n");
+  } catch (ex) { alert(ex); throw(ex); }
+
   process.exit(0);
 }
 
@@ -113,6 +119,26 @@ function open_external_link(e) {
 				    stdio: [ 'ignore', 'ignore', 'ignore' ] });
   child.unref();
 }
+
+function read_config_json(config_json_path) {
+  var config;
+
+  try {
+    config = JSON.parse( fs.readFileSync(config_json_path) );
+  } catch (ex) {
+    if (ex.code !== 'ENOENT') {
+      alert(ex);
+      return false;
+    } else {
+      config = {};
+    }
+  }
+
+  return config;
+}
+
+var config_json = read_config_json(config_json_path);
+if (!config_json) { process.exit(1); }
 
 add_licenses(get_license_list());
 
