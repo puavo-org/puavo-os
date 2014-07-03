@@ -3,7 +3,7 @@ var fs = require('fs');
 
 var config_json_path = '/state/etc/puavo/local.json';
 
-function assemble_config_and_exit(e) {
+function assemble_config_and_exit() {
   var response = document.forms[0].elements;
   var conf = {};
 
