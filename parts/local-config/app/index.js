@@ -67,7 +67,7 @@ function add_one_license(parentNode, license_info) {
 function add_licenses(license_list) {
   var ll = document.querySelector('table[id=license_list]');
 
-  for (i in license_list)
+  for (var i in license_list)
     add_one_license(ll, license_list[i]);
 }
 
@@ -82,7 +82,7 @@ function get_license_list() {
 
   var list = [];
 
-  for (i in software_directories) {
+  for (var i in software_directories) {
     var dir_fullpath = basedir + '/' + software_directories[i];
     if (! fs.statSync(dir_fullpath).isDirectory())
       continue;
