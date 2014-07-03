@@ -178,7 +178,14 @@ function set_form_values_from_config(config) {
                     }
                   });
 
-
+  // superlaptop_mode
+  var superlaptop_mode_el
+    = document.querySelector('input[name=superlaptop_mode]')
+  if (config.superlaptop_mode) {
+    superlaptop_mode_el.setAttribute('checked', true);
+  } else {
+    superlaptop_mode_el.removeAttribute('checked');
+  }
 }
 
 var config = read_config(config_json_path);
