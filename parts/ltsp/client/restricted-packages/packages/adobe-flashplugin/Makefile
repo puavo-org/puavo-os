@@ -28,7 +28,19 @@ installdirs:
 install: installdirs build
 	cp -a -T build $(DESTDIR)$(pkgdir)
 
+	update-alternatives \
+		--install \
+			$(DESTDIR)/usr/lib/mozilla/plugins/flashplugin-alternative.so \
+			mozilla-flashplugin \
+			$(DESTDIR)$(pkgdir)/libflashplayer.so \
+			50
+
 uninstall:
+	update-alternatives \
+		--remove \
+			mozilla-flashplugin \
+			$(DESTDIR)$(pkgdir)/libflashplayer.so
+
 	rm -rf $(DESTDIR)$(pkgdir)
 
 distclean:
