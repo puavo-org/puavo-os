@@ -32,6 +32,42 @@ function done(e) {
   process.exit(0);
 }
 
+function add_one_license(parentNode, license_info) {
+  var tr = document.createElement('tr');
+
+  // create checkbox element
+  var td = document.createElement('td');
+  var input = document.createElement('input');
+  input.setAttribute('name',
+		     'licenses[' + license_info.key + ']');
+  input.setAttribute('type', 'checkbox');
+  tr.appendChild( td.appendChild(input) );
+
+  // create license name element
+  var td = document.createElement('td');
+  td.textContent = license_info.name;
+  tr.appendChild(td);
+
+  // create license url link
+  var td = document.createElement('td');
+  var a = document.createElement('a');
+  a.setAttribute('href', license_info.url);
+  a.addEventListener('click',
+		     function(e) { e.preventDefault();
+				   open_external_link(a); });
+  a.textContent = '(license terms)';
+  tr.appendChild( td.appendChild(a) );
+
+  parentNode.appendChild(tr);
+}
+
+function add_licenses(license_list) {
+  var ll = document.querySelector('table[id=license_list]');
+
+  for (i in license_list)
+    add_one_license(ll, license_list[i]);
+}
+
 function get_license_list() {
   var basedir = '/opt/optional_software_installers';
   try {
@@ -75,16 +111,7 @@ function open_external_link(e) {
   child.unref();
 }
 
-var license_list = get_license_list();
-
-// open license links in an external browser
-var license_links = document.querySelectorAll('a[class=license_link]');
-[].forEach.call(license_links,
-                function(el) {
-                  el.addEventListener('click',
-				      function(e) {
-					e.preventDefault();
-					open_external_link(el); }) });
+add_licenses(get_license_list());
 
 // in the end print configuration data as json
 document.querySelector('input[id=done_button]')
