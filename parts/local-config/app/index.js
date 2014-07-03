@@ -147,7 +147,7 @@ function set_form_values_from_config(config) {
   [].forEach.call(document.querySelectorAll('input[name=allow_login'),
                   function(e) {
                     if (e.getAttribute('value') === config.allow_login)
-                      e.setAttribute('checked', 'checked'); });
+                      e.setAttribute('checked', true); });
 
   // local_users
   for (var i in config.local_users) {
@@ -158,7 +158,7 @@ function set_form_values_from_config(config) {
 
     if (config.local_users[i].admin_rights) {
       document.querySelector('input[name=localuser_' + i + '_admin_rights')
-              .setAttribute('checked', 'checked');
+              .setAttribute('checked', true);
     } else {
       document.querySelector('input[name=localuser_' + i + '_admin_rights')
               .removeAttribute('checked');
@@ -172,11 +172,13 @@ function set_form_values_from_config(config) {
                   function(lc) {
                     var name = lc.getAttribute('name');
                     if (config.licenses[name]) {
-                      lc.setAttribute('checked', 'checked');
+                      lc.setAttribute('checked', true);
                     } else {
                       lc.removeAttribute('checked');
                     }
                   });
+
+
 }
 
 var config = read_config(config_json_path);
