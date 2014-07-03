@@ -32,8 +32,8 @@ function assemble_config_and_exit() {
 
   conf.local_users = [
     {
-      login:           response['localuser_0_login'].value,
-      name:            response['localuser_0_name' ].value,
+      login: response['localuser_0_login'].value,
+      name:  response['localuser_0_name' ].value,
     }
   ];
 
