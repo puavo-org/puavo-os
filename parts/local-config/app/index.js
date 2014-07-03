@@ -7,10 +7,13 @@ function done(e) {
 
   conf.allow_login = response.allow_login.value;
 
-  conf.licenses = {
-    'adobe_acroread':     response['licenses[adobe_acroread]'    ].checked,
-    'adobe_flash_plugin': response['licenses[adobe_flash_plugin]'].checked,
-  };
+  conf.licenses = {};
+  var license_checkboxes
+    = document.querySelectorAll('input[class=license_acceptance_checkbox]');
+  [].forEach.call(license_checkboxes,
+		  function(lc) {
+		    var name = lc.getAttribute('name');
+		    conf.licenses[name] = response[name].checked; });
 
   var local_user_errors = document.querySelector('div[id=localuser_errors]');
   local_user_errors.innerHTML = '';
@@ -38,8 +41,8 @@ function add_one_license(parentNode, license_info) {
   // create checkbox element
   var td = document.createElement('td');
   var input = document.createElement('input');
-  input.setAttribute('name',
-		     'licenses[' + license_info.key + ']');
+  input.setAttribute('class', 'license_acceptance_checkbox');
+  input.setAttribute('name', license_info.key);
   input.setAttribute('type', 'checkbox');
   tr.appendChild( td.appendChild(input) );
 
