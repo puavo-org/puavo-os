@@ -116,7 +116,7 @@ function get_license_list() {
   return list;
 }
 
-function hash_password(password, callback) {
+function hash_password(password, cb) {
   var child = child_process.spawn('mkpasswd',
                                   [ '-m', 'sha-512', '-s' ]);
   child.stdin.end(password);
@@ -125,7 +125,12 @@ function hash_password(password, callback) {
   child.stdout.on('data',
                   function(buf) { hashed_password += buf.toString(); });
   child.stdout.on('end', function() {
-                           callback(hashed_password.replace(/\n$/, '')); });
+                           if (!hashed_password) {
+                             alert('Could not hash user password');
+                           } else {
+                             return cb(hashed_password.replace(/\n$/, ''));
+                           }
+                         });
 }
 
 function open_external_link(e) {
