@@ -7,5 +7,5 @@ Standards-Version: 3.9.3
 
 Package: puavo-laptop-config
 Architecture: all
-Depends: ${misc:Depends}, node-webkit
+Depends: ${misc:Depends}, node-webkit, whois
 Description: Puavo laptop configuration tool.

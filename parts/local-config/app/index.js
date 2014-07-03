@@ -3,7 +3,7 @@ var fs = require('fs');
 
 var config_json_path = '/state/etc/puavo/local.json';
 
-function done(e) {
+function assemble_config_and_exit(e) {
   var response = document.forms[0].elements;
   var conf = {};
 
@@ -17,6 +17,11 @@ function done(e) {
                     var name = lc.getAttribute('name');
                     conf.licenses[name] = response[name].checked; });
 
+  conf.admins =
+    response['localuser_0_admin_rights'].checked
+      ? [ response['localuser_0_login'].value ]
+      : [];
+
   var local_user_errors = document.querySelector('div[id=localuser_0_errors]');
   local_user_errors.innerHTML = '';
   if (response.localuser_0_password.value
@@ -25,29 +30,19 @@ function done(e) {
     return;
   }
 
-  // XXX should try to create local user(s) (if those do not exist)
-  // XXX and return error in case of problems
-
-  conf.admins =
-    response['localuser_0_admin_rights'].checked
-      ? [ response['localuser_0_login'].value ]
-      : [];
-
   conf.local_users = [
     {
-      login: response['localuser_0_login'].value,
-      name:  response['localuser_0_name' ].value,
+      login:           response['localuser_0_login'].value,
+      name:            response['localuser_0_name' ].value,
     }
   ];
 
   conf.superlaptop_mode = response.superlaptop_mode.checked;
 
-  try {
-    fs.writeFileSync(config_json_path,
-                     JSON.stringify(conf) + "\n");
-  } catch (ex) { alert(ex); throw(ex); }
-
-  process.exit(0);
+  hash_password(response['localuser_0_password'].value,
+                function(hashed_password) {
+                  conf.local_users[0].hashed_password = hashed_password;
+                  write_config_json_and_exit(conf); });
 }
 
 function add_one_license(parentNode, license_info) {
@@ -121,15 +116,26 @@ function get_license_list() {
   return list;
 }
 
+function hash_password(password, callback) {
+  var child = child_process.spawn('mkpasswd',
+                                  [ '-m', 'sha-512', '-s' ]);
+  child.stdin.end(password);
+
+  var hashed_password = '';
+  child.stdout.on('data',
+                  function(buf) { hashed_password += buf.toString(); });
+  child.stdout.on('end', function() {
+                           callback(hashed_password.replace(/\n$/, '')); });
+}
+
 function open_external_link(e) {
   var child = child_process.spawn('x-www-browser',
                                   [ e.href ],
-                                  { detached: true,
-                                    stdio: [ 'ignore', 'ignore', 'ignore' ] });
+                                  { detached: true, stdio: 'ignore' });
   child.unref();
 }
 
-function read_config(config_json_path) {
+function read_config() {
   var config;
 
   try {
@@ -202,7 +208,16 @@ function set_form_values_from_config(config) {
   }
 }
 
-var config = read_config(config_json_path);
+function write_config_json_and_exit(conf) {
+  try {
+    fs.writeFileSync(config_json_path,
+                     JSON.stringify(conf) + "\n");
+  } catch (ex) { alert(ex); throw(ex); }
+
+  process.exit(0);
+}
+
+var config = read_config();
 if (!config) { process.exit(1); }
 
 add_licenses(get_license_list());
@@ -211,4 +226,4 @@ set_form_values_from_config(config);
 
 // in the end print configuration data as json
 document.querySelector('input[id=done_button]')
-        .addEventListener('click', done);
+        .addEventListener('click', assemble_config_and_exit);
