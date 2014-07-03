@@ -17,19 +17,24 @@ function done(e) {
                     var name = lc.getAttribute('name');
                     conf.licenses[name] = response[name].checked; });
 
-  var local_user_errors = document.querySelector('div[id=localuser_errors]');
+  var local_user_errors = document.querySelector('div[id=localuser_0_errors]');
   local_user_errors.innerHTML = '';
-  if (response.localuser_password.value
-        !== response.localuser_password_again.value) {
+  if (response.localuser_0_password.value
+        !== response.localuser_0_password_again.value) {
     local_user_errors.innerHTML = 'Passwords do not match.';
     return;
   }
 
-  conf.local_user = {
-    admin_rights: response.localuser_admin_rights.checked,
-    name:         response.localuser_name.value,
-    password:     response.localuser_password.value,
-  };
+  // XXX should try to create local user(s)
+  // and return error in case of problems
+
+  conf.local_users = [
+    {
+      admin_rights: response['localuser_0_admin_rights'].checked,
+      login:        response['localuser_0_login'       ].value,
+      name:         response['localuser_0_name'        ].value,
+    }
+  ];
 
   conf.superlaptop_mode = response.superlaptop_mode.checked;
 
@@ -138,10 +143,27 @@ function read_config(config_json_path) {
 }
 
 function set_form_values_from_config(config) {
+  // allow_login
   [].forEach.call(document.querySelectorAll('input[name=allow_login'),
                   function(e) {
                     if (e.getAttribute('value') === config.allow_login)
                       e.setAttribute('checked', 'checked'); });
+
+  // local_users
+  for (var i in config.local_users) {
+    document.querySelector('input[name=localuser_' + i + '_login')
+            .setAttribute('value', config.local_users[i].login);
+    document.querySelector('input[name=localuser_' + i + '_name')
+            .setAttribute('value', config.local_users[i].name);
+
+    if (config.local_users[i].admin_rights) {
+      document.querySelector('input[name=localuser_' + i + '_admin_rights')
+              .setAttribute('checked', 'checked');
+    } else {
+      document.querySelector('input[name=localuser_' + i + '_admin_rights')
+              .removeAttribute('checked');
+    }
+  }
 }
 
 var config = read_config(config_json_path);
