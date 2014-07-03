@@ -25,14 +25,18 @@ function done(e) {
     return;
   }
 
-  // XXX should try to create local user(s)
-  // and return error in case of problems
+  // XXX should try to create local user(s) (if those do not exist)
+  // XXX and return error in case of problems
+
+  conf.admins =
+    response['localuser_0_admin_rights'].checked
+      ? [ response['localuser_0_login'].value ]
+      : [];
 
   conf.local_users = [
     {
-      admin_rights: response['localuser_0_admin_rights'].checked,
-      login:        response['localuser_0_login'       ].value,
-      name:         response['localuser_0_name'        ].value,
+      login: response['localuser_0_login'].value,
+      name:  response['localuser_0_name' ].value,
     }
   ];
 
@@ -135,7 +139,13 @@ function read_config(config_json_path) {
       alert(ex);
       return false;
     } else {
-      config = { allow_login: 'localusers' };
+      config = {
+        allow_login:      'localusers',
+        admins:           [],
+        licenses:         {},
+        local_users:      [],
+        superlaptop_mode: false,
+      };
     }
   }
 
@@ -151,12 +161,16 @@ function set_form_values_from_config(config) {
 
   // local_users
   for (var i in config.local_users) {
-    document.querySelector('input[name=localuser_' + i + '_login')
-            .setAttribute('value', config.local_users[i].login);
-    document.querySelector('input[name=localuser_' + i + '_name')
-            .setAttribute('value', config.local_users[i].name);
+    var login = config.local_users[i].login;
+    var name  = config.local_users[i].name;
 
-    if (config.local_users[i].admin_rights) {
+    document.querySelector('input[name=localuser_' + i + '_login')
+            .setAttribute('value', login);
+    document.querySelector('input[name=localuser_' + i + '_name')
+            .setAttribute('value', name);
+
+    // check if user if found in the admins array
+    if (config.admins.indexOf(login) >= 0) {
       document.querySelector('input[name=localuser_' + i + '_admin_rights')
               .setAttribute('checked', true);
     } else {
@@ -171,7 +185,7 @@ function set_form_values_from_config(config) {
   [].forEach.call(license_checkboxes,
                   function(lc) {
                     var name = lc.getAttribute('name');
-                    if (config.licenses[name]) {
+                    if (name in config.licenses && config.licenses[name]) {
                       lc.setAttribute('checked', true);
                     } else {
                       lc.removeAttribute('checked');
