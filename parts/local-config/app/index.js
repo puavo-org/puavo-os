@@ -13,9 +13,9 @@ function done(e) {
   var license_checkboxes
     = document.querySelectorAll('input[class=license_acceptance_checkbox]');
   [].forEach.call(license_checkboxes,
-		  function(lc) {
-		    var name = lc.getAttribute('name');
-		    conf.licenses[name] = response[name].checked; });
+                  function(lc) {
+                    var name = lc.getAttribute('name');
+                    conf.licenses[name] = response[name].checked; });
 
   var local_user_errors = document.querySelector('div[id=localuser_errors]');
   local_user_errors.innerHTML = '';
@@ -35,7 +35,7 @@ function done(e) {
 
   try {
     fs.writeFileSync(config_json_path,
-		     JSON.stringify(conf) + "\n");
+                     JSON.stringify(conf) + "\n");
   } catch (ex) { alert(ex); throw(ex); }
 
   process.exit(0);
@@ -62,8 +62,8 @@ function add_one_license(parentNode, license_info) {
   var a = document.createElement('a');
   a.setAttribute('href', license_info.url);
   a.addEventListener('click',
-		     function(e) { e.preventDefault();
-				   open_external_link(a); });
+                     function(e) { e.preventDefault();
+                                   open_external_link(a); });
   a.textContent = '(license terms)';
   tr.appendChild( td.appendChild(a) );
 
@@ -114,13 +114,13 @@ function get_license_list() {
 
 function open_external_link(e) {
   var child = child_process.spawn('x-www-browser',
-				  [ e.href ],
-				  { detached: true,
-				    stdio: [ 'ignore', 'ignore', 'ignore' ] });
+                                  [ e.href ],
+                                  { detached: true,
+                                    stdio: [ 'ignore', 'ignore', 'ignore' ] });
   child.unref();
 }
 
-function read_config_json(config_json_path) {
+function read_config(config_json_path) {
   var config;
 
   try {
@@ -130,17 +130,26 @@ function read_config_json(config_json_path) {
       alert(ex);
       return false;
     } else {
-      config = {};
+      config = { allow_login: 'localusers' };
     }
   }
 
   return config;
 }
 
-var config_json = read_config_json(config_json_path);
-if (!config_json) { process.exit(1); }
+function set_form_values_from_config(config) {
+  [].forEach.call(document.querySelectorAll('input[name=allow_login'),
+                  function(e) {
+                    if (e.getAttribute('value') === config.allow_login)
+                      e.setAttribute('checked', 'checked'); });
+}
+
+var config = read_config(config_json_path);
+if (!config) { process.exit(1); }
 
 add_licenses(get_license_list());
+
+set_form_values_from_config(config);
 
 // in the end print configuration data as json
 document.querySelector('input[id=done_button]')
