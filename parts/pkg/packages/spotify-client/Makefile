@@ -24,11 +24,17 @@ build: $(TARBALL)
 
 installdirs:
 	mkdir $(DESTDIR)$(pkgdir)
+	mkdir -p $(DESTDIR)/usr/bin
 
 install: installdirs build
 	cp -a -T build $(DESTDIR)$(pkgdir)
 
+	ln -s $(DESTDIR)$(pkgdir)/opt/spotify/spotify-client/spotify \
+		$(DESTDIR)/usr/bin/spotify
+
 uninstall:
+	rm -f $(DESTDIR)/usr/bin/spotify
+
 	rm -rf $(DESTDIR)$(pkgdir)
 
 distclean:
