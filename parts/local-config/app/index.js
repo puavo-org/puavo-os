@@ -164,6 +164,19 @@ function set_form_values_from_config(config) {
               .removeAttribute('checked');
     }
   }
+
+  // licenses
+  var license_checkboxes
+    = document.querySelectorAll('input[class=license_acceptance_checkbox]');
+  [].forEach.call(license_checkboxes,
+                  function(lc) {
+                    var name = lc.getAttribute('name');
+                    if (config.licenses[name]) {
+                      lc.setAttribute('checked', 'checked');
+                    } else {
+                      lc.removeAttribute('checked');
+                    }
+                  });
 }
 
 var config = read_config(config_json_path);
