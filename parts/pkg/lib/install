@@ -1,0 +1,35 @@
+#!/bin/sh
+
+set -eu
+
+package=$1
+
+custom_script="/usr/local/share/puavo-restricted-package-helper/packages/${package}/install"
+
+upstream_pack="/state/restricted-packages/${package}/upstream.pack"
+upstream_pack_md5sum=$(cat "/usr/local/share/puavo-restricted-package-helper/packages/${package}/upstream.pack.md5sum")
+
+echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check
+
+installdir="/state/restricted-packages/${package}/i"
+
+mkdir "${installdir}"
+mkdir "${installdir}.tmp"
+
+if [ -x "${custom_script}" ]; then
+    {
+        "${custom_script}" "${upstream_pack}" "${installdir}.tmp"
+        mv -T "${installdir}.tmp" "${installdir}"
+    } || {
+        rm -rf "${installdir}.tmp"
+        exit 1
+    }
+    exit 0
+fi
+
+mv "${installdir}.tmp" "${installdir}" || {
+    rm -rf "${installdir}.tmp"
+    exit 1
+}
+
+exit 0

@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -eu
+
+package=$1
+
+installdir="/state/restricted-packages/${package}/i"
+custom_script="/usr/local/share/puavo-restricted-package-helper/packages/${package}/deactivate"
+activate_log="/state/restricted-packages/${package}/activate.log"
+
+if [ -x "${custom_script}" ]; then
+    "${custom_script}" "/state/restricted-packages/${package}/i" && rm -f "${activate_log}"
+    exit 0
+fi
+
+rm -f "${activate_log}"
+
+exit 0

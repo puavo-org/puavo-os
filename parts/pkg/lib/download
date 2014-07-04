@@ -1,0 +1,38 @@
+#!/bin/sh
+
+set -eu
+
+package=$1
+
+custom_script="/usr/local/share/puavo-restricted-package-helper/packages/${package}/download"
+upstream_pack="/state/restricted-packages/${package}/upstream.pack"
+upstream_pack_md5sum=$(cat "/usr/local/share/puavo-restricted-package-helper/packages/${package}/upstream.pack.md5sum")
+
+set +e
+echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status && {
+    echo "I: upstream pack is already in place and has a correct checksum" >&2
+    exit 0
+}
+set -e
+
+mkdir -p "/state/restricted-packages/${package}"
+
+if [ -x "${custom_script}" ]; then
+    "${custom_script}" "${upstream_pack}"
+    exit 0
+fi
+
+wget \
+    --no-use-server-timestamps \
+    --no-verbose \
+    --no-check-certificate \
+    --no-cookies \
+    --input-file "/usr/local/share/puavo-restricted-package-helper/packages/${package}/upstream.pack.url" \
+    --output-document "${upstream_pack}.tmp" || {
+    rm -f "${upstream_pack}.tmp"
+    exit 1
+}
+
+mv "${upstream_pack}.tmp" "${upstream_pack}"
+
+exit 0

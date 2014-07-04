@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+package=$2
+
+case "${command}" in
+    download|install|activate|deactivate|uninstall|purge)
+        "/usr/local/lib/puavo-restricted-package-helper/scripts/${command}" "${package}"
+        ;;
+    *)
+        echo "E: unknown command '${command}'" >&2
+        exit 1
+esac
+
+exit 0
+
