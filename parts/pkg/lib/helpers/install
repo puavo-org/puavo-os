@@ -1,0 +1,80 @@
+#!/bin/bash
+#
+# ##############################################################################
+#
+# Copyright (C) 2014 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+
+set -eu
+
+on_exit()
+{
+    local exitval=$?
+    set +e
+
+    rm -rf "${installdir}.tmp"
+
+    exit $exitval
+}
+
+package=$1
+
+installdir="/state/restricted-packages/${package}/i"
+
+if [ -d "${installdir}" ]; then
+    if [ -x "/usr/share/puavo-ltsp-client/restricted-packages/${package}/postinst" ]; then
+        "/usr/share/puavo-ltsp-client/restricted-packages/${package}/postinst" "${installdir}"
+    fi
+    exit 0
+fi
+
+custom_script="/usr/share/puavo-ltsp-client/restricted-packages/${package}/install"
+upstream_pack="/state/restricted-packages/${package}/upstream.pack"
+upstream_pack_md5sum=$(cat "/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.md5sum")
+
+if [ ! -f "${upstream_pack}" ]; then
+    echo "E: cannot install package '${package}' because the upstream pack" \
+        "is missing, download it first" >&2
+    exit 1
+fi
+
+echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status || {
+    echo "E: md5 checksum of the upstream pack '${upstream_pack}' does not" \
+        "match the known checksum ${upstream_pack_md5sum}," \
+        "perhaps you should purge the package and download it again?" >&2
+    exit 1
+}
+
+trap on_exit EXIT
+
+# We own this directory!
+rm -rf "${installdir}.tmp"
+mkdir "${installdir}.tmp"
+
+if [ -x "${custom_script}" ]; then
+    "${custom_script}" "${upstream_pack}" "${installdir}.tmp"
+fi
+
+mv -T "${installdir}.tmp" "${installdir}"
+
+if [ -x "/usr/share/puavo-ltsp-client/restricted-packages/${package}/postinst" ]; then
+    "/usr/share/puavo-ltsp-client/restricted-packages/${package}/postinst" "${installdir}"
+fi
+
+exit 0

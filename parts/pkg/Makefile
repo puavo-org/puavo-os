@@ -15,6 +15,7 @@ all :
 installdirs :
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-client/restricted-packages/commands
+	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-client/restricted-packages/helpers
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/restricted-packages
 
 .PHONY : install
@@ -24,6 +25,9 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/restricted-packages/commands \
 		lib/commands/*
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/restricted-packages/helpers \
+		lib/helpers/*
 
 	cp -r -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/restricted-packages \
 		packages/*

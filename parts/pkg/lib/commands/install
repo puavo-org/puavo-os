@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # ##############################################################################
 #
@@ -23,16 +23,6 @@
 
 set -eu
 
-on_exit()
-{
-    local exitval=$?
-    set +e
-
-    rm -rf "${installdir}.tmp"
-
-    exit $exitval
-}
-
 usage_error()
 {
     echo "error $1" >&2
@@ -44,16 +34,25 @@ while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
             shift
-            echo "Usage: puavo-restricted-package-tool install PACKAGE"
+            echo "Usage: puavo-restricted-package-tool install PACKAGE [PACKAGE]..."
+            echo "Usage: puavo-restricted-package-tool install --all"
             echo "Usage: puavo-restricted-package-tool install --help"
             echo
-            echo "Install a restricted package."
+            echo "Install restricted packages."
             echo
             echo "Options:"
             echo "    -h, --help                   print help and exit"
+            echo "    --all                        install all available packages"
             echo
             exit 0
             ;;
+	--all)
+	    shift
+	    packages=$(find /usr/share/puavo-ltsp-client/restricted-packages \
+		-mindepth 1 -maxdepth 1 -type d -printf '%P ' | sort)
+	    set -- ${packages}
+	    break
+	    ;;
         --)
             shift
             break
@@ -67,53 +66,19 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-if [ $# -ne 1 ]; then
-    usage_error "invalid number of arguments ($#), expected 1"
+if [ $# -lt 1 ]; then
+    usage_error "invalid number of arguments ($#), expected at least 1"
 fi
 
-package=$1
-shift
+exitval=0
 
-installdir="/state/restricted-packages/${package}/i"
+for package in "$@"; do
+    /usr/lib/puavo-ltsp-client/restricted-packages/helpers/install "${package}" || {
+	exitval=$?
+	echo "E: failed to install package '${package}'" >&2
+	# Continue until we have tried to install all given packages
+	# and then fail.
+    }
+done
 
-if [ -d "${installdir}" ]; then
-    if [ -x "/usr/share/puavo-ltsp-client/restricted-packages/${package}/postinst" ]; then
-        "/usr/share/puavo-ltsp-client/restricted-packages/${package}/postinst" "${installdir}"
-    fi
-    exit 0
-fi
-
-custom_script="/usr/share/puavo-ltsp-client/restricted-packages/${package}/install"
-upstream_pack="/state/restricted-packages/${package}/upstream.pack"
-upstream_pack_md5sum=$(cat "/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.md5sum")
-
-if [ ! -f "${upstream_pack}" ]; then
-    echo "E: cannot install package '${package}' because the upstream pack" \
-        "is missing, download it first" >&2
-    exit 1
-fi
-
-echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status || {
-    echo "E: md5 checksum of the upstream pack '${upstream_pack}' does not" \
-        "match the known checksum ${upstream_pack_md5sum}," \
-        "perhaps you should purge the package and download it again?" >&2
-    exit 1
-}
-
-trap on_exit EXIT
-
-# We own this directory!
-rm -rf "${installdir}.tmp"
-mkdir "${installdir}.tmp"
-
-if [ -x "${custom_script}" ]; then
-    "${custom_script}" "${upstream_pack}" "${installdir}.tmp"
-fi
-
-mv -T "${installdir}.tmp" "${installdir}"
-
-if [ -x "/usr/share/puavo-ltsp-client/restricted-packages/${package}/postinst" ]; then
-    "/usr/share/puavo-ltsp-client/restricted-packages/${package}/postinst" "${installdir}"
-fi
-
-exit 0
+exit $exitval
