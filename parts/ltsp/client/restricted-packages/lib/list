@@ -2,7 +2,7 @@
 
 set -eu
 
-packages=$(find /usr/local/share/puavo-restricted-package-helper/packages \
+packages=$(find /usr/share/puavo-ltsp-client/restricted-packages \
     -mindepth 1 -maxdepth 1 -type d -printf '%P\n' | sort)
 
 # The length of the longest package name.

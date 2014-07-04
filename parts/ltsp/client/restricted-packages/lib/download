@@ -14,9 +14,9 @@ on_exit()
 
 package=$1
 
-custom_script="/usr/local/share/puavo-restricted-package-helper/packages/${package}/download"
+custom_script="/usr/share/puavo-ltsp-client/restricted-packages/${package}/download"
 upstream_pack="/state/restricted-packages/${package}/upstream.pack"
-upstream_pack_md5sum=$(cat "/usr/local/share/puavo-restricted-package-helper/packages/${package}/upstream.pack.md5sum")
+upstream_pack_md5sum=$(cat "/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.md5sum")
 
 set +e
 echo "${upstream_pack_md5sum}  ${upstream_pack}" \
@@ -26,7 +26,7 @@ echo "${upstream_pack_md5sum}  ${upstream_pack}" \
 }
 set -e
 
-url_file="/usr/local/share/puavo-restricted-package-helper/packages/${package}/upstream.pack.url"
+url_file="/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.url"
 
 mkdir -p "/state/restricted-packages/${package}"
 
