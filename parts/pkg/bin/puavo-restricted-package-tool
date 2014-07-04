@@ -7,7 +7,7 @@ shift
 
 case "${command}" in
     download|install|activate|deactivate|uninstall|purge|list)
-        "/usr/local/lib/puavo-restricted-package-helper/scripts/${command}" "$@"
+        "/usr/lib/puavo-ltsp-client/restricted-packages/${command}" "$@"
         ;;
     *)
         echo "E: unknown command '${command}'" >&2

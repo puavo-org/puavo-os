@@ -14,10 +14,10 @@ on_exit()
 
 package=$1
 
-custom_script="/usr/local/share/puavo-restricted-package-helper/packages/${package}/install"
+custom_script="/usr/share/puavo-ltsp-client/restricted-packages/${package}/install"
 
 upstream_pack="/state/restricted-packages/${package}/upstream.pack"
-upstream_pack_md5sum=$(cat "/usr/local/share/puavo-restricted-package-helper/packages/${package}/upstream.pack.md5sum")
+upstream_pack_md5sum=$(cat "/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.md5sum")
 
 if [ ! -f "${upstream_pack}" ]; then
     echo "E: cannot install package '${package}' because the upstream pack" \

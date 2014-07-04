@@ -5,7 +5,7 @@ set -eu
 package=$1
 
 installdir="/state/restricted-packages/${package}/i"
-custom_script="/usr/local/share/puavo-restricted-package-helper/packages/${package}/deactivate"
+custom_script="/usr/share/puavo-ltsp-client/restricted-packages/${package}/deactivate"
 activate_log="/state/restricted-packages/${package}/activate.log"
 
 if [ ! -f "${activate_log}" ]; then
