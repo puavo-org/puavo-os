@@ -1,6 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eu
+
+on_exit()
+{
+    local exitval=$?
+    set +e
+
+    rm -f "${upstream_pack}.tmp"
+
+    exit $exitval
+}
 
 package=$1
 
@@ -16,23 +26,23 @@ echo "${upstream_pack_md5sum}  ${upstream_pack}" \
 }
 set -e
 
+url_file="/usr/local/share/puavo-restricted-package-helper/packages/${package}/upstream.pack.url"
+
 mkdir -p "/state/restricted-packages/${package}"
 
-if [ -x "${custom_script}" ]; then
-    "${custom_script}" "${upstream_pack}"
-    exit 0
-fi
+trap on_exit EXIT
 
-wget \
-    --no-use-server-timestamps \
-    --no-verbose \
-    --no-check-certificate \
-    --no-cookies \
-    --input-file "/usr/local/share/puavo-restricted-package-helper/packages/${package}/upstream.pack.url" \
-    --output-document "${upstream_pack}.tmp" || {
-    rm -f "${upstream_pack}.tmp"
-    exit 1
-}
+if [ -x "${custom_script}" ]; then
+    "${custom_script}" "${url_file}" "${upstream_pack}.tmp"
+else
+    wget \
+        --no-use-server-timestamps \
+        --no-verbose \
+        --no-check-certificate \
+        --no-cookies \
+        --input-file "${url_file}" \
+        --output-document "${upstream_pack}.tmp"
+fi
 
 mv "${upstream_pack}.tmp" "${upstream_pack}"
 
