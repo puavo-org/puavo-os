@@ -29,7 +29,9 @@ if [ -d "${installdir}" ]; then
 fi
 
 trap on_exit EXIT
-mkdir "${installdir}"
+
+# We own this directory!
+rm -rf "${installdir}.tmp"
 mkdir "${installdir}.tmp"
 
 if [ -x "${custom_script}" ]; then
