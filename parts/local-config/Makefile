@@ -21,9 +21,10 @@ installdirs :
 .PHONY : install
 install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
-		puavo-laptop-config
+		puavo-laptop-config               \
+		puavo-laptop-config-ui
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/puavo-laptop-config \
+	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/puavo-laptop-config-ui \
 		app/index.html   \
 		app/package.json \
 		app/style.css
