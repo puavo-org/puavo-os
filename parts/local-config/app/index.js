@@ -3,24 +3,26 @@ var fs = require('fs');
 
 var config_json_path = '/state/etc/puavo/local.json';
 
-function assemble_config_and_exit() {
+function assemble_config_and_exit(old_config) {
   var response = document.forms[0].elements;
-  var conf = {};
+  var new_config = {};
 
-  conf.allow_login = response.allow_login.value;
+  new_config.allow_login = response.allow_login.value;
 
-  conf.licenses = {};
+  new_config.licenses = {};
   var license_checkboxes
     = document.querySelectorAll('input[class=license_acceptance_checkbox]');
   [].forEach.call(license_checkboxes,
                   function(lc) {
                     var name = lc.getAttribute('name');
-                    conf.licenses[name] = response[name].checked; });
+                    new_config.licenses[name] = response[name].checked; });
 
-  conf.admins =
-    response['localuser_0_admin_rights'].checked
-      ? [ response['localuser_0_login'].value ]
-      : [];
+  new_config.superlaptop_mode = response.superlaptop_mode.checked;
+
+  new_config.admins
+    = response['localuser_0_admin_rights'].checked
+        ? [ response['localuser_0_login'].value ]
+        : [];
 
   var local_user_errors = document.querySelector('div[id=localuser_0_errors]');
   local_user_errors.innerHTML = '';
@@ -30,19 +32,30 @@ function assemble_config_and_exit() {
     return;
   }
 
-  conf.local_users = [
+  new_config.local_users = [
     {
       login: response['localuser_0_login'].value,
       name:  response['localuser_0_name' ].value,
     }
   ];
 
-  conf.superlaptop_mode = response.superlaptop_mode.checked;
+  // XXX should validate more properly
+  if (new_config.local_users[0].login === '') {
+    alert('Login is missing');
+    return;
+  }
+
+  // XXX should validate more properly
+  if (new_config.local_users[0].name === '') {
+    alert('Name is missing');
+    return;
+  }
 
   hash_password(response['localuser_0_password'].value,
-                function(hashed_password) {
-                  conf.local_users[0].hashed_password = hashed_password;
-                  write_config_json_and_exit(conf); });
+                old_config.local_users[0].hashed_password,
+                function(hp) {
+                  new_config.local_users[0].hashed_password = hp;
+                  write_config_json_and_exit(new_config); });
 }
 
 function add_one_license(parentNode, license_info) {
@@ -116,7 +129,11 @@ function get_license_list() {
   return list;
 }
 
-function hash_password(password, cb) {
+function hash_password(password, old_hashed_password, cb) {
+  // if user did not provide a password,
+  // use the password from old configuration
+  if (password === '') { return cb(old_hashed_password); }
+
   var child = child_process.spawn('mkpasswd',
                                   [ '-m', 'sha-512', '-s' ]);
   child.stdin.end(password);
@@ -154,7 +171,7 @@ function read_config() {
         allow_login:      'localusers',
         admins:           [],
         licenses:         {},
-        local_users:      [],
+        local_users:      [ { hashed_password: '', login: '', name: '', } ],
         superlaptop_mode: false,
       };
     }
@@ -222,13 +239,14 @@ function write_config_json_and_exit(conf) {
   process.exit(0);
 }
 
-var config = read_config();
-if (!config) { process.exit(1); }
+var old_config = read_config();
+if (!old_config) { process.exit(1); }
 
 add_licenses(get_license_list());
 
-set_form_values_from_config(config);
+set_form_values_from_config(old_config);
 
 // in the end print configuration data as json
 document.querySelector('input[id=done_button]')
-        .addEventListener('click', assemble_config_and_exit);
+        .addEventListener('click',
+                          function() { assemble_config_and_exit(old_config) });
