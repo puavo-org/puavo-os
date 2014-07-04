@@ -9,9 +9,7 @@ packages=$(find /usr/share/puavo-ltsp-client/restricted-packages \
 col_width=$(echo "${packages}" | awk '{print length}' | sort -r -n | head -n1)
 
 for package in ${packages}; do
-    if [ -f "/state/restricted-packages/${package}/activate.log" ]; then
-        status="ACTIVE"
-    elif [ -d "/state/restricted-packages/${package}/i" ]; then
+    if [ -d "/state/restricted-packages/${package}/i" ]; then
         status="INSTALLED"
     elif [ -d "/state/restricted-packages/${package}" ]; then
         status="DOWNLOADED"
