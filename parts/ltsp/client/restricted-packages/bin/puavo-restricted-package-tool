@@ -73,7 +73,7 @@ shift
 
 case "${command}" in
     download|install|uninstall|purge|list)
-        "/usr/lib/puavo-ltsp-client/restricted-packages/${command}" "$@"
+        "/usr/lib/puavo-ltsp-client/restricted-packages/commands/${command}" "$@"
         ;;
     *)
         usage_error "unknown command '${command}'"
