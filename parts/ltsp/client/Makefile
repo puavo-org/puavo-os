@@ -20,7 +20,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(libdir)
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-client
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-client/pam
-	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-client/restricted-packages
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/default
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-external-files-actions.d
@@ -38,7 +37,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/restricted-packages
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/dbus-1/system.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default
@@ -150,8 +148,7 @@ install : installdirs
 		puavo-ltsp-init-nfs \
 		puavo-ltsp-login \
 		puavo-ltspserver-create-guest \
-		puavo-update-nm-configurations \
-		restricted-packages/bin/puavo-restricted-package-tool
+		puavo-update-nm-configurations
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/hooks/ \
 		initramfs/hooks/ethtool
@@ -238,14 +235,10 @@ install : installdirs
 		pam/populate-extrausers \
 		pam/setup-guest-session
 
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/restricted-packages \
-		restricted-packages/lib/*
-
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspguestsshd
 
-	cp -r -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/restricted-packages \
-		restricted-packages/packages/*
+	$(MAKE) -C restricted-packages install prefix=$(prefix)
 
 .PHONY : clean
 clean :
