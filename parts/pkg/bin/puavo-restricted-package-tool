@@ -6,7 +6,7 @@ command=$1
 shift
 
 case "${command}" in
-    download|install|activate|deactivate|uninstall|purge|list)
+    download|install|uninstall|purge|list)
         "/usr/lib/puavo-ltsp-client/restricted-packages/${command}" "$@"
         ;;
     *)

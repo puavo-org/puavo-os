@@ -13,22 +13,22 @@ on_exit()
 }
 
 package=$1
+installdir="/state/restricted-packages/${package}/i"
+
+if [ -d "${installdir}" ]; then
+    if [ -x "/usr/share/puavo-ltsp-client/restricted-packages/${package}/postinst" ]; then
+	"/usr/share/puavo-ltsp-client/restricted-packages/${package}/postinst" "${installdir}"
+    fi
+    exit 0
+fi
 
 custom_script="/usr/share/puavo-ltsp-client/restricted-packages/${package}/install"
-
 upstream_pack="/state/restricted-packages/${package}/upstream.pack"
 upstream_pack_md5sum=$(cat "/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.md5sum")
 
 if [ ! -f "${upstream_pack}" ]; then
     echo "E: cannot install package '${package}' because the upstream pack" \
         "is missing, download it first" >&2
-    exit 1
-fi
-
-installdir="/state/restricted-packages/${package}/i"
-
-if [ -d "${installdir}" ]; then
-    echo "E: package '${package}' is already installed" >&2
     exit 1
 fi
 
@@ -50,5 +50,9 @@ if [ -x "${custom_script}" ]; then
 fi
 
 mv -T "${installdir}.tmp" "${installdir}"
+
+if [ -x "/usr/share/puavo-ltsp-client/restricted-packages/${package}/postinst" ]; then
+    "/usr/share/puavo-ltsp-client/restricted-packages/${package}/postinst" "${installdir}"
+fi
 
 exit 0

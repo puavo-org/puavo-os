@@ -5,11 +5,9 @@ set -eu
 package=$1
 
 installdir="/state/restricted-packages/${package}/i"
-activate_log="/state/restricted-packages/${package}/activate.log"
 
-if [ -f "${activate_log}" ]; then
-    echo "E: package '${package}' is still active, deactivate it first" >&2
-    exit 1
+if [ -x "/usr/share/puavo-ltsp-client/restricted-packages/${package}/prerm" ]; then
+    "/usr/share/puavo-ltsp-client/restricted-packages/${package}/prerm" "${installdir}"
 fi
 
 rm -rf "${installdir}"
