@@ -8,40 +8,82 @@
 # on command arguments.  All wanted functionality must be explicitly requested
 # with command arguments.
 
+require 'fileutils'
 require 'getoptlong'
 require 'json'
 
-def configure_admins(conf)
-  # we could also use a new, specific group for this?
-
-  File.open('/etc/group', 'r') do |f|
+def search_and_replace_line(file, re, new_line_fn, append_if_missing=false)
+  File.open(file, 'r') do |inputf|
     output_lines = []
 
     have_match = false
 
-    f.flock(File::LOCK_EX);
-    input_lines = f.read.split("\n")
+    inputf.flock(File::LOCK_EX);
+
+    input_lines = inputf.read.split("\n")
     input_lines.each do |line|
-      match = line.match(/^sudo:(.*):(.*)$/)
+      match = line.match(re)
       if match then
         have_match = true
-        output_lines.push("sudo:#{ match[1] }:#{ conf['admins'].join(',') }")
+        output_lines.push( new_line_fn.call(match) )
       else
         output_lines.push(line)
       end
     end
 
-    output = output_lines.map { |s| "#{ s }\n" }.join
+    if have_match || append_if_missing then
+      if !have_match then
+        output_lines.push( new_line_fn.call(nil) )
+      end
 
-    if have_match then
-      File.open('/etc/group.plctmp', 'w') { |f| f.write(output) }
-      File.rename('/etc/group.plctmp', '/etc/group')
+      output = output_lines.map { |s| "#{ s }\n" }.join
+
+      tmpfile = "#{ file }.plctmp"
+      File.open(tmpfile, 'w', 0600) { |outputf| outputf.write(output) }
+      FileUtils.chmod(inputf.stat.mode, tmpfile)
+      FileUtils.chown(inputf.stat.uid, inputf.stat.gid, tmpfile)
+      File.rename(tmpfile, file)
     end
   end
 end
 
+def configure_admins(conf)
+  # we could also use a new, specific group for this?
+  new_line_fn = lambda { |m| "sudo:#{ m[1] }:#{ conf['admins'].join(',') }" }
+
+  search_and_replace_line('/etc/group',
+                         /^sudo:(.*):(.*)$/,
+                         new_line_fn)
+end
+
 def configure_local_users(conf)
-  raise 'XXX'
+  uid     = 3000
+  uid_max = 3999
+
+  conf['local_users'].each do |user|
+    raise 'uid is over uid_max' if uid > uid_max
+
+    home = "/home/#{ uid }"
+    # 100 == 'users'
+    passwd_line \
+      = "#{ user['login'] }:x:#{ uid }:100:#{ user['name'] },,,:#{ home }" \
+        + ":/bin/bash"
+    search_and_replace_line('/etc/passwd',
+                            /^#{ user['login'] }:/,
+                            lambda { |m| passwd_line },
+                            true)
+
+    shadow_line = "#{ user['login'] }:#{ user['hashed_password'] }:::::::"
+    search_and_replace_line('/etc/shadow',
+                            /^#{ user['login'] }:/,
+                            lambda { |m| shadow_line },
+                            true)
+
+    FileUtils.mkdir(home, :mode => 0700)
+    FileUtils.chown(uid, 100, home)
+
+    uid += 1
+  end
 end
 
 def configure_login_permissions(conf)
@@ -123,7 +165,7 @@ apply_configs.each do |part|
   begin
     dispatch_table[part].call()
   rescue Exception => e
-    warn "Could not handle #{ part }: #{ e.message }"
+    warn "Could not handle #{ part }: #{ e.message } / #{ e.backtrace }"
     exit_code = 1
   end
 end
