@@ -8,6 +8,11 @@ installdir="/state/restricted-packages/${package}/i"
 custom_script="/usr/local/share/puavo-restricted-package-helper/packages/${package}/deactivate"
 activate_log="/state/restricted-packages/${package}/activate.log"
 
+if [ ! -f "${activate_log}" ]; then
+    echo "E: cannot deactivate inactive package '${package}'" >&2
+    exit 1
+fi
+
 if [ -x "${custom_script}" ]; then
     "${custom_script}" "/state/restricted-packages/${package}/i" && rm -f "${activate_log}"
     exit 0
