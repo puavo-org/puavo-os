@@ -8,6 +8,11 @@ installdir="/state/restricted-packages/${package}/i"
 custom_script="/usr/local/share/puavo-restricted-package-helper/packages/${package}/activate"
 activate_log="/state/restricted-packages/${package}/activate.log"
 
+if [ ! -d "${installdir}" ]; then
+    echo "E: cannot activate package '${package}', install it first" >&2
+    exit 1
+fi
+
 if [ -x "${custom_script}" ]; then
     "${custom_script}" "${installdir}" && touch "${activate_log}"
     exit 0
