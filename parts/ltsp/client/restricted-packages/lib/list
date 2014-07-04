@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -eu
+
+packages=$(find /usr/local/share/puavo-restricted-package-helper/packages \
+    -mindepth 1 -maxdepth 1 -type d -printf '%P\n' | sort)
+
+# The length of the longest package name.
+col_width=$(echo "${packages}" | awk '{print length}' | sort -r -n | head -n1)
+
+for package in ${packages}; do
+    if [ -f "/state/restricted-packages/${package}/activate.log" ]; then
+        status="ACTIVE"
+    elif [ -d "/state/restricted-packages/${package}/i" ]; then
+        status="INSTALLED"
+    elif [ -d "/state/restricted-packages/${package}" ]; then
+        status="DOWNLOADED"
+    else
+        status="PURGED"
+    fi
+    printf "%-${col_width}s | %s\n" "${package}" "${status}"
+done
+
+exit 0
