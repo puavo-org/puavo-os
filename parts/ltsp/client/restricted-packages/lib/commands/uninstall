@@ -35,15 +35,24 @@ while [ $# -gt 0 ]; do
         -h|--help)
             shift
             echo "Usage: puavo-restricted-package-tool uninstall PACKAGE"
+            echo "Usage: puavo-restricted-package-tool uninstall --all"
             echo "Usage: puavo-restricted-package-tool uninstall --help"
             echo
             echo "Uninstall a restricted package."
             echo
             echo "Options:"
             echo "    -h, --help                   print help and exit"
+            echo "    --all                        uninstall all packages"
             echo
             exit 0
             ;;
+	--all)
+	    shift
+	    packages=$(find /usr/share/puavo-ltsp-client/restricted-packages \
+		-mindepth 1 -maxdepth 1 -type d -printf '%P ' | sort)
+	    set -- ${packages}
+	    break
+	    ;;
         --)
             shift
             break
@@ -57,19 +66,19 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-if [ $# -ne 1 ]; then
-    usage_error "invalid number of arguments ($#), expected 1"
+if [ $# -lt 1 ]; then
+    usage_error "invalid number of arguments ($#), expected at least 1"
 fi
 
-package=$1
-shift
+exitval=0
 
-installdir="/state/restricted-packages/${package}/i"
+for package in "$@"; do
+    /usr/lib/puavo-ltsp-client/restricted-packages/helpers/uninstall "${package}" || {
+	exitval=$?
+	echo "E: failed to uninstall package '${package}'" >&2
+	# Continue until we have tried to uninstall all given packages
+	# and then fail.
+    }
+done
 
-if [ -x "/usr/share/puavo-ltsp-client/restricted-packages/${package}/prerm" ]; then
-    "/usr/share/puavo-ltsp-client/restricted-packages/${package}/prerm" "${installdir}"
-fi
-
-rm -rf "${installdir}"
-
-exit 0
+exit $exitval
