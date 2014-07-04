@@ -22,6 +22,12 @@ upstream_pack_md5sum=$(cat "/usr/local/share/puavo-restricted-package-helper/pac
 echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status
 
 installdir="/state/restricted-packages/${package}/i"
+
+if [ -d "${installdir}" ]; then
+    echo "E: package '${package}' is already installed" >&2
+    exit 1
+fi
+
 trap on_exit EXIT
 mkdir "${installdir}"
 mkdir "${installdir}.tmp"
