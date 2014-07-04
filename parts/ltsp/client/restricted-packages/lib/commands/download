@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # ##############################################################################
 #
@@ -23,16 +23,6 @@
 
 set -eu
 
-on_exit()
-{
-    local exitval=$?
-    set +e
-
-    rm -f "${upstream_pack}.tmp"
-
-    exit $exitval
-}
-
 usage_error()
 {
     echo "error $1" >&2
@@ -45,15 +35,24 @@ while [ $# -gt 0 ]; do
         -h|--help)
             shift
             echo "Usage: puavo-restricted-package-tool download PACKAGE"
+            echo "Usage: puavo-restricted-package-tool download --all"
             echo "Usage: puavo-restricted-package-tool download --help"
             echo
             echo "Download a restricted package."
             echo
             echo "Options:"
             echo "    -h, --help                   print help and exit"
+	    echo "    --all                        download all available pacakges"
             echo
             exit 0
             ;;
+	--all)
+	    shift
+	    packages=$(find /usr/share/puavo-ltsp-client/restricted-packages \
+		-mindepth 1 -maxdepth 1 -type d -printf '%P ' | sort)
+	    set -- ${packages}
+	    break
+	    ;;
         --)
             shift
             break
@@ -67,43 +66,19 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-if [ $# -ne 1 ]; then
-    usage_error "invalid number of arguments ($#), expected 1"
+if [ $# -lt 1 ]; then
+    usage_error "invalid number of arguments ($#), expected at least 1"
 fi
 
-package=$1
-shift
+exitval=0
 
-custom_script="/usr/share/puavo-ltsp-client/restricted-packages/${package}/download"
-upstream_pack="/state/restricted-packages/${package}/upstream.pack"
-upstream_pack_md5sum=$(cat "/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.md5sum")
+for package in "$@"; do
+    /usr/lib/puavo-ltsp-client/restricted-packages/helpers/download "${package}" || {
+	exitval=$?
+	echo "E: failed to download package '${package}'" >&2
+	# Continue until we have tried to download all given packages
+	# and then fail.
+    }
+done
 
-set +e
-echo "${upstream_pack_md5sum}  ${upstream_pack}" \
-    | md5sum --check --status 2>/dev/null && {
-    echo "I: upstream pack is already in place and has a correct checksum" >&2
-    exit 0
-}
-set -e
-
-url_file="/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.url"
-
-mkdir -p "/state/restricted-packages/${package}"
-
-trap on_exit EXIT
-
-if [ -x "${custom_script}" ]; then
-    "${custom_script}" "${url_file}" "${upstream_pack}.tmp"
-else
-    wget \
-        --no-use-server-timestamps \
-        --no-verbose \
-        --no-check-certificate \
-        --no-cookies \
-        --input-file "${url_file}" \
-        --output-document "${upstream_pack}.tmp"
-fi
-
-mv "${upstream_pack}.tmp" "${upstream_pack}"
-
-exit 0
+exit $exitval
