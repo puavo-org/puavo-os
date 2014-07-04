@@ -19,7 +19,11 @@ custom_script="/usr/local/share/puavo-restricted-package-helper/packages/${packa
 upstream_pack="/state/restricted-packages/${package}/upstream.pack"
 upstream_pack_md5sum=$(cat "/usr/local/share/puavo-restricted-package-helper/packages/${package}/upstream.pack.md5sum")
 
-echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status
+if [ ! -f "${upstream_pack}" ]; then
+    echo "E: cannot install package '${package}' because the upstream pack" \
+        "is missing, download it first" >&2
+    exit 1
+fi
 
 installdir="/state/restricted-packages/${package}/i"
 
@@ -27,6 +31,13 @@ if [ -d "${installdir}" ]; then
     echo "E: package '${package}' is already installed" >&2
     exit 1
 fi
+
+echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status || {
+    echo "E: md5 checksum of the upstream pack '${upstream_pack}' does not" \
+        "match the known checksum ${upstream_pack_md5sum}," \
+        "perhaps you should purge the package and download it again?" >&2
+    exit 1
+}
 
 trap on_exit EXIT
 
