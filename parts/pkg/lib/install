@@ -1,6 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eu
+
+on_exit()
+{
+    local exitval=$?
+    set +e
+
+    rm -rf "${installdir}.tmp"
+
+    exit $exitval
+}
 
 package=$1
 
@@ -12,24 +22,14 @@ upstream_pack_md5sum=$(cat "/usr/local/share/puavo-restricted-package-helper/pac
 echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status
 
 installdir="/state/restricted-packages/${package}/i"
-
+trap on_exit EXIT
 mkdir "${installdir}"
 mkdir "${installdir}.tmp"
 
 if [ -x "${custom_script}" ]; then
-    {
-        "${custom_script}" "${upstream_pack}" "${installdir}.tmp"
-        mv -T "${installdir}.tmp" "${installdir}"
-    } || {
-        rm -rf "${installdir}.tmp"
-        exit 1
-    }
-    exit 0
+    "${custom_script}" "${upstream_pack}" "${installdir}.tmp"
 fi
 
-mv "${installdir}.tmp" "${installdir}" || {
-    rm -rf "${installdir}.tmp"
-    exit 1
-}
+mv -T "${installdir}.tmp" "${installdir}"
 
 exit 0
