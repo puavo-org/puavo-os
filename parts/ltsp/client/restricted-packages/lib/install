@@ -9,7 +9,7 @@ custom_script="/usr/local/share/puavo-restricted-package-helper/packages/${packa
 upstream_pack="/state/restricted-packages/${package}/upstream.pack"
 upstream_pack_md5sum=$(cat "/usr/local/share/puavo-restricted-package-helper/packages/${package}/upstream.pack.md5sum")
 
-echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check
+echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status
 
 installdir="/state/restricted-packages/${package}/i"
 
