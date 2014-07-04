@@ -17,7 +17,7 @@ function assemble_config_and_exit(old_config) {
                     var name = lc.getAttribute('name');
                     new_config.licenses[name] = response[name].checked; });
 
-  new_config.superlaptop_mode = response.superlaptop_mode.checked;
+  new_config.persistent_overlay = response.persistent_overlay.checked;
 
   new_config.admins
     = response['localuser_0_admin_rights'].checked
@@ -168,11 +168,11 @@ function read_config() {
       return false;
     } else {
       config = {
-        allow_login:      'localusers',
-        admins:           [],
-        licenses:         {},
-        local_users:      [ { hashed_password: '', login: '', name: '', } ],
-        superlaptop_mode: false,
+        allow_login:        'localusers',
+        admins:             [],
+        licenses:           {},
+        local_users:        [ { hashed_password: '', login: '', name: '', } ],
+        persistent_overlay: false,
       };
     }
   }
@@ -220,13 +220,13 @@ function set_form_values_from_config(config) {
                     }
                   });
 
-  // superlaptop_mode
-  var superlaptop_mode_el
-    = document.querySelector('input[name=superlaptop_mode]')
-  if (config.superlaptop_mode) {
-    superlaptop_mode_el.setAttribute('checked', true);
+  // persistent_overlay
+  var persistent_overlay_el
+    = document.querySelector('input[name=persistent_overlay]')
+  if (config.persistent_overlay) {
+    persistent_overlay_el.setAttribute('checked', true);
   } else {
-    superlaptop_mode_el.removeAttribute('checked');
+    persistent_overlay_el.removeAttribute('checked');
   }
 }
 
