@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -eu
+
+installdir=$1
+
+ln -s "${installdir}/opt/spotify/spotify-client/spotify" /usr/bin/spotify

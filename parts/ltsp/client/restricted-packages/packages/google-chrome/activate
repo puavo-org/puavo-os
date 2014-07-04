@@ -1,0 +1,40 @@
+#!/bin/sh
+
+set -eu
+
+installdir=$1
+
+mkdir -p /usr/bin
+mkdir -p /usr/share/applications
+mkdir -p /usr/share/man/man1
+mkdir -p /usr/share/icons/hicolor/16x16/apps
+mkdir -p /usr/share/icons/hicolor/22x22/apps
+mkdir -p /usr/share/icons/hicolor/24x24/apps
+mkdir -p /usr/share/icons/hicolor/32x32/apps
+mkdir -p /usr/share/icons/hicolor/48x48/apps
+mkdir -p /usr/share/icons/hicolor/64x64/apps
+mkdir -p /usr/share/icons/hicolor/128x128/apps
+mkdir -p /usr/share/icons/hicolor/256x256/apps
+
+ln -s "${installdir}/opt/google/chrome/product_logo_16.png" \
+    /usr/share/icons/hicolor/16x16/apps/google-chrome.png
+ln -s "${installdir}/opt/google/chrome/product_logo_22.png" \
+    /usr/share/icons/hicolor/22x22/apps/google-chrome.png
+ln -s "${installdir}/opt/google/chrome/product_logo_24.png" \
+    /usr/share/icons/hicolor/24x24/apps/google-chrome.png
+ln -s "${installdir}/opt/google/chrome/product_logo_32.png" \
+    /usr/share/icons/hicolor/32x32/apps/google-chrome.png
+ln -s "${installdir}/opt/google/chrome/product_logo_48.png" \
+    /usr/share/icons/hicolor/48x48/apps/google-chrome.png
+ln -s "${installdir}/opt/google/chrome/product_logo_64.png" \
+    /usr/share/icons/hicolor/64x64/apps/google-chrome.png
+ln -s "${installdir}/opt/google/chrome/product_logo_128.png" \
+    /usr/share/icons/hicolor/128x128/apps/google-chrome.png
+ln -s "${installdir}/opt/google/chrome/product_logo_256.png" \
+    /usr/share/icons/hicolor/256x256/apps/google-chrome.png
+ln -s" ${installdir}/usr/share/man/man1/google-chrome.1" \
+    /usr/share/man/man1/google-chrome.1
+ln -s "${installdir}/usr/share/applications/google-chrome.desktop" \
+    /usr/share/applications/google-chrome.desktop
+ln -s "${installdir}/opt/google/chrome/google-chrome" \
+    /usr/bin/google-chrome-stable

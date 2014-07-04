@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -eu
+
+package=$1
+
+packagedir="/state/restricted-packages/${package}"
+installdir="${packagedir}/i"
+
+if [ -e "${installdir}" ]; then
+    echo "E: package '${package}' is still installed, uninstall it first" >&2
+    exit 1
+fi
+
+rm -rf "${packagedir}"
+
+exit 0

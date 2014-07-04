@@ -1,0 +1,54 @@
+#!/bin/bash
+
+set -eu
+
+on_exit()
+{
+    local exitval=$?
+    set +e
+
+    rm -rf "${installdir}.tmp"
+
+    exit $exitval
+}
+
+package=$1
+
+custom_script="/usr/share/puavo-ltsp-client/restricted-packages/${package}/install"
+
+upstream_pack="/state/restricted-packages/${package}/upstream.pack"
+upstream_pack_md5sum=$(cat "/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.md5sum")
+
+if [ ! -f "${upstream_pack}" ]; then
+    echo "E: cannot install package '${package}' because the upstream pack" \
+        "is missing, download it first" >&2
+    exit 1
+fi
+
+installdir="/state/restricted-packages/${package}/i"
+
+if [ -d "${installdir}" ]; then
+    echo "E: package '${package}' is already installed" >&2
+    exit 1
+fi
+
+echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status || {
+    echo "E: md5 checksum of the upstream pack '${upstream_pack}' does not" \
+        "match the known checksum ${upstream_pack_md5sum}," \
+        "perhaps you should purge the package and download it again?" >&2
+    exit 1
+}
+
+trap on_exit EXIT
+
+# We own this directory!
+rm -rf "${installdir}.tmp"
+mkdir "${installdir}.tmp"
+
+if [ -x "${custom_script}" ]; then
+    "${custom_script}" "${upstream_pack}" "${installdir}.tmp"
+fi
+
+mv -T "${installdir}.tmp" "${installdir}"
+
+exit 0

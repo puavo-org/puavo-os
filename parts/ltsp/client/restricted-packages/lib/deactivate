@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -eu
+
+package=$1
+
+installdir="/state/restricted-packages/${package}/i"
+custom_script="/usr/share/puavo-ltsp-client/restricted-packages/${package}/deactivate"
+activate_log="/state/restricted-packages/${package}/activate.log"
+
+if [ ! -f "${activate_log}" ]; then
+    echo "E: cannot deactivate inactive package '${package}'" >&2
+    exit 1
+fi
+
+if [ -x "${custom_script}" ]; then
+    "${custom_script}" "/state/restricted-packages/${package}/i" && rm -f "${activate_log}"
+    exit 0
+fi
+
+rm -f "${activate_log}"
+
+exit 0
