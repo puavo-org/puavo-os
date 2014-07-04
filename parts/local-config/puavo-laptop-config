@@ -12,23 +12,48 @@ require 'getoptlong'
 require 'json'
 
 def configure_admins(conf)
-  # XXX
+  # we could also use a new, specific group for this?
+
+  File.open('/etc/group', 'r') do |f|
+    output_lines = []
+
+    have_match = false
+
+    f.flock(File::LOCK_EX);
+    input_lines = f.read.split("\n")
+    input_lines.each do |line|
+      match = line.match(/^sudo:(.*):(.*)$/)
+      if match then
+        have_match = true
+        output_lines.push("sudo:#{ match[1] }:#{ conf['admins'].join(',') }")
+      else
+        output_lines.push(line)
+      end
+    end
+
+    output = output_lines.map { |s| "#{ s }\n" }.join
+
+    if have_match then
+      File.open('/etc/group.plctmp', 'w') { |f| f.write(output) }
+      File.rename('/etc/group.plctmp', '/etc/group')
+    end
+  end
 end
 
 def configure_local_users(conf)
-  # XXX
+  raise 'XXX'
 end
 
 def configure_login_permissions(conf)
-  # XXX
+  raise 'XXX'
 end
 
 def configure_persistent_overlay(conf)
-  # XXX
+  raise 'XXX'
 end
 
 def install_software(conf, license_list)
-  # XXX
+  raise 'XXX'
 end
 
 config_path = '/etc/puavo/local.json'
@@ -92,4 +117,15 @@ dispatch_table = {
   '--software-installation' => lambda { install_software(conf, license_list) },
 }
 
-apply_configs.each { |part| dispatch_table[part].call() }
+exit_code = 0
+
+apply_configs.each do |part|
+  begin
+    dispatch_table[part].call()
+  rescue Exception => e
+    warn "Could not handle #{ part }: #{ e.message }"
+    exit_code = 1
+  end
+end
+
+exit(exit_code)
