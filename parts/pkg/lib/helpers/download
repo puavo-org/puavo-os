@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# ##############################################################################
+#
+# Copyright (C) 2014 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+
+set -eu
+
+on_exit()
+{
+    local exitval=$?
+    set +e
+
+    rm -f "${upstream_pack}.tmp"
+
+    exit $exitval
+}
+
+package=$1
+
+custom_script="/usr/share/puavo-ltsp-client/restricted-packages/${package}/download"
+upstream_pack="/state/restricted-packages/${package}/upstream.pack"
+upstream_pack_md5sum=$(cat "/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.md5sum")
+
+set +e
+echo "${upstream_pack_md5sum}  ${upstream_pack}" \
+    | md5sum --check --status 2>/dev/null && {
+    echo "I: upstream pack is already in place and has a correct checksum" >&2
+    exit 0
+}
+set -e
+
+url_file="/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.url"
+
+mkdir -p "/state/restricted-packages/${package}"
+
+trap on_exit EXIT
+
+if [ -x "${custom_script}" ]; then
+    "${custom_script}" "${url_file}" "${upstream_pack}.tmp"
+else
+    wget \
+        --no-use-server-timestamps \
+        --no-verbose \
+        --no-check-certificate \
+        --no-cookies \
+        --input-file "${url_file}" \
+        --output-document "${upstream_pack}.tmp"
+fi
+
+mv "${upstream_pack}.tmp" "${upstream_pack}"
+
+exit 0
