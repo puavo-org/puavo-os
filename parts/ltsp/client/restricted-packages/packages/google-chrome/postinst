@@ -32,7 +32,7 @@ ln -sf "${installdir}/opt/google/chrome/product_logo_128.png" \
     /usr/share/icons/hicolor/128x128/apps/google-chrome.png
 ln -sf "${installdir}/opt/google/chrome/product_logo_256.png" \
     /usr/share/icons/hicolor/256x256/apps/google-chrome.png
-ln -sf" ${installdir}/usr/share/man/man1/google-chrome.1" \
+ln -sf "${installdir}/usr/share/man/man1/google-chrome.1" \
     /usr/share/man/man1/google-chrome.1
 ln -sf "${installdir}/usr/share/applications/google-chrome.desktop" \
     /usr/share/applications/google-chrome.desktop

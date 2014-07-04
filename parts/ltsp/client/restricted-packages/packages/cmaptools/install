@@ -1,4 +1,4 @@
-#!/bin/bassh
+#!/bin/bash
 
 set -eu
 
@@ -263,4 +263,4 @@ USER_SHORTCUTS=Do Not Install
 EOF
 
 chmod +x "$1"
-"./${1}" -f "${tmpfile}" -i silent || true
+"${1}" -f "${tmpfile}" -i silent || true
