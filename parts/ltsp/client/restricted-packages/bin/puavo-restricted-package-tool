@@ -1,6 +1,72 @@
 #!/bin/sh
+#
+# ##############################################################################
+#
+# Copyright (C) 2014 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
 
 set -eu
+
+usage_error()
+{
+    echo "error $1" >&2
+    echo "Try '$0 --help' for more information." >&2
+    return 1
+}
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            echo "Usage: $0 COMMAND [COMMAND_OPTIONS]"
+            echo "Usage: $0 --help"
+            echo
+            echo "Manage restricted packages."
+            echo
+            echo "Options:"
+            echo "    -h, --help                   print help and exit"
+            echo
+            echo "Commands:"
+            echo "    download                     download upstream pack"
+            echo "    install                      install package"
+            echo "    uninstall                    uninstall package"
+            echo "    purge                        purge the upstream pack"
+            echo "    list                         list all packages and their status"
+            echo
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage_error "invalid argument '$1'"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -lt 1 ]; then
+    usage_error "invalid number of arguments ($#), at least 1"
+fi
 
 command=$1
 shift
@@ -10,9 +76,7 @@ case "${command}" in
         "/usr/lib/puavo-ltsp-client/restricted-packages/${command}" "$@"
         ;;
     *)
-        echo "E: unknown command '${command}'" >&2
-        exit 1
+        usage_error "unknown command '${command}'"
 esac
 
 exit 0
-
