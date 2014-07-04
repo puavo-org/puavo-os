@@ -1,0 +1,95 @@
+#!/usr/bin/ruby1.9.1
+
+# puavo-laptop-config configures system according to admin user preferences.
+# See puavo-laptop-config-ui for the user interface.  puavo-laptop-config
+# reads a configuration file ("/etc/puavo/local.json" by default) that
+# contains user preferences, and applies those to the system depending on
+# given option arguments.  Run "puavo-laptop-config --help" for information
+# on command arguments.  All wanted functionality must be explicitly requested
+# with command arguments.
+
+require 'getoptlong'
+require 'json'
+
+def configure_admins(conf)
+  # XXX
+end
+
+def configure_local_users(conf)
+  # XXX
+end
+
+def configure_login_permissions(conf)
+  # XXX
+end
+
+def configure_persistent_overlay(conf)
+  # XXX
+end
+
+def install_software(conf, license_list)
+  # XXX
+end
+
+config_path = '/etc/puavo/local.json'
+
+opts = GetoptLong.new(
+  [ '--config-path',           '-c', GetoptLong::REQUIRED_ARGUMENT, ],
+  [ '--help',                  '-h', GetoptLong::NO_ARGUMENT,       ],
+
+  [ '--admins',                      GetoptLong::NO_ARGUMENT,       ],
+  [ '--local-users',                 GetoptLong::NO_ARGUMENT,       ],
+  [ '--login-permissions',           GetoptLong::NO_ARGUMENT,       ],
+  [ '--persistent-overlay',          GetoptLong::NO_ARGUMENT,       ],
+  [ '--software-installation',       GetoptLong::REQUIRED_ARGUMENT, ],
+)
+
+apply_configs = []
+license_list = []
+
+opts.each do |opt, arg|
+  case opt
+    when '--config-path'
+      config_path = arg
+    when '--help'
+      puts <<-EOF
+puavo-laptop-config [OPTIONS]
+
+-c, --config-path          set configuration file path
+-h, --help                 show help
+
+    --admins               configure admins
+    --local-users          configure local users
+    --login-permissions    configure login permissions
+    --persistent-overlay   configure persistent image overlay
+
+    --software-installation ["all" | a list of licenses separated with comma]
+        EOF
+      exit(0)
+    when '--admins',
+         '--local-users',
+         '--login-permissions',
+         '--persistent-overlay'
+      apply_configs.push(opt)
+    when '--software-installation'
+      apply_configs.push(opt)
+      license_list = arg.split(',')
+  end
+end
+
+begin
+  conf = JSON.parse( IO.read(config_path) )
+rescue Exception => e
+  warn "Could not read and interpret #{ config_path }: #{ e.message }"
+  exit(1)
+end
+
+dispatch_table = {
+  '--admins'                => lambda { configure_admins(conf)               },
+  '--local-users'           => lambda { configure_local_users(conf)          },
+  '--login-permissions'     => lambda { configure_login_permissions(conf)    },
+  '--persistent-overlay'    => lambda { configure_persistent_overlay(conf)   },
+  '--software-installation' => lambda { install_software(conf, license_list) },
+}
+
+apply_configs.each { |part| dispatch_table[part].call() }
