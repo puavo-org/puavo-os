@@ -9,7 +9,8 @@ upstream_pack="/state/restricted-packages/${package}/upstream.pack"
 upstream_pack_md5sum=$(cat "/usr/local/share/puavo-restricted-package-helper/packages/${package}/upstream.pack.md5sum")
 
 set +e
-echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status && {
+echo "${upstream_pack_md5sum}  ${upstream_pack}" \
+    | md5sum --check --status 2>/dev/null && {
     echo "I: upstream pack is already in place and has a correct checksum" >&2
     exit 0
 }
