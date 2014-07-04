@@ -1,16 +1,34 @@
+DESTDIR ?= /state/restricted-packages
 packages = $(shell find $(CURDIR) -mindepth 1 -maxdepth 1 -type d -printf '%f ')
+downloads = $(packages:%=%/upstream.pack)
+builddirs = $(packages:%=%/build)
+installdirs = $(packages:%=$(installroot)/%)
 install-packages = $(packages:%=install-%)
 uninstall-packages = $(packages:%=uninstall-%)
 clean-packages = $(packages:%=clean-%)
 distclean-packages = $(packages:%=distclean-%)
 
-all : $(packages)
+all : $(builddirs)
 
-$(packages) :
-	$(MAKE) -C $@
+$(downloads):
+	./download $@
+
+download : $(downloads)
+
+$(builddirs): %/build : %/upstream.pack
+	cd $(@:%/build=%) && md5sum --check MD5SUMS
+	rm -rf $@ $@.tmp
+	mkdir $@.tmp
+	$(MAKE) -C $(@:%/build=%) -f rules.mk build
+	mv $@.tmp $@
+	touch $@
+
+build : $(builddirs)
 
 $(install-packages) :
-	$(MAKE) -C $(@:install-%=%) install
+	mkdir $(DESTDIR)/$(@:install-%=%)
+	cp -r -t $(DESTDIR)/$(@:install-%=%) $(@:install-%=%/build)
+	$(MAKE) -C $(@:install-%=%) -f rules.mk install DESTDIR=$(DESTDIR)/$(@:install-%=%/build)
 
 install : $(install-packages)
 
@@ -29,6 +47,6 @@ clean : $(clean-packages)
 
 distclean : $(distclean-packages)
 
-.PHONY : all clean distclean install uninstall \
+.PHONY : all download build clean distclean install uninstall \
 	$(packages) $(clean-packages) $(distclean-packages) \
 	$(install-packages) $(uninstall-packages)
