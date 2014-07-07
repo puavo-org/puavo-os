@@ -7,11 +7,14 @@ set -x
 . /etc/environment
 
 sudo apt-get update
-sudo apt-get install -y --force-yes puavo-devscripts aptirepo-upload
+sudo apt-get install -y --force-yes puavo-devscripts
 
 puavo-build-debian-dir
 sudo puavo-install-deps debian/control
 puavo-dch $(cat VERSION)
 puavo-debuild
 
-aptirepo-upload -r $APTIREPO_REMOTE -b "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)" ../puavo-ltsp*.changes
+if [ -n "${APTIREPO_REMOTE:-}" ]; then
+    sudo apt-get install -y --force-yes aptirepo-upload
+    aptirepo-upload -r $APTIREPO_REMOTE -b "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)" ../puavo-ltsp*.changes
+fi
