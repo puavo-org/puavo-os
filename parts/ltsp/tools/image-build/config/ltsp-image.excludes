@@ -8,3 +8,7 @@ var/run/.*
 var/run/*
 var/tmp/.*
 var/tmp/*
+
+# Remove build-time resolvconfs
+etc/resolvconf/resolv.conf.d/original
+etc/resolvconf/resolv.conf.d/tail
