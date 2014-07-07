@@ -9,10 +9,8 @@ set -x
 sudo apt-get update
 sudo apt-get install -y --force-yes puavo-devscripts
 
-puavo-build-debian-dir
-sudo puavo-install-deps debian/control
-puavo-dch $(cat VERSION)
-puavo-debuild
+sudo puavo-install-deps debian.default/control
+make deb
 
 if [ -n "${APTIREPO_REMOTE:-}" ]; then
     sudo apt-get install -y --force-yes aptirepo-upload
