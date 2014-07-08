@@ -48,6 +48,7 @@ usage_error()
     return 1
 }
 
+do_prune=false
 force_flag=
 
 while [ $# -gt 0 ]; do
@@ -72,12 +73,18 @@ while [ $# -gt 0 ]; do
             echo "    -h, --help                   print help and exit"
             echo "    --force                      update all boot directories, regardless of"
             echo "                                 their last modification times"
+            echo "    --prune                      remove all orphan boot directories"
             echo
             exit 0
             ;;
         --force)
             shift
             force_flag='--force'
+            break
+            ;;
+        --prune)
+            shift
+            do_prune=true
             break
             ;;
         --)
@@ -121,3 +128,18 @@ while read image_filepath; do
         continue
     }
 done <"${image_filepaths}"
+
+if $do_prune; then
+    # Save the list of boot directories to a temporary file.
+    find "${PUAVO_TFTP_BOOT_DIR:-/var/lib/tftpboot/ltsp}"  \
+        -mindepth 1 -maxdepth 1 -type d >"${bootdirs}"
+
+    while read bootdir; do
+        image_name=$(basename "${bootdir}")
+        image_filepath="${PUAVO_IMAGE_DIR:-/opt/ltsp/images/${image_name}.img"
+
+        if [ ! -e "${image_filepath}" ]; then
+            rm -rf "${bootdir}"
+        fi
+    done <"${bootdirs}"
+fi
