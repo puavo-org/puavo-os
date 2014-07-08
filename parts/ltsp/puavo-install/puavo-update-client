@@ -17,6 +17,7 @@ if [ "$hosttype" != "laptop" -a \
 fi
 
 use_rate_limit=false
+do_image_update=true
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -28,6 +29,7 @@ while [ $# -gt 0 ]; do
             echo
             echo "Options:"
             echo "    --use-rate-limit             limit the image download rate"
+            echo "    --no-image-update            do not update images, only configurations"
             echo "    -h, --help                   print help and exit"
             echo
             exit 0
@@ -35,6 +37,11 @@ while [ $# -gt 0 ]; do
         --use-rate-limit)
             shift
             use_rate_limit=true
+            break
+            ;;
+        --no-image-update)
+            shift
+            do_image_update=false
             break
             ;;
         --)
@@ -153,4 +160,7 @@ update_ltsconf             || true
 update_device_json         || true
 update_external_files      || true
 update_wlan_configurations || true
-update_ltsp_image          || true
+
+if $do_image_update; then
+    update_ltsp_image || true
+fi
