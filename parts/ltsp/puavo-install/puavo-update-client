@@ -1,5 +1,12 @@
 #!/bin/sh
 
+usage_error()
+{
+    echo "error: $1" >&2
+    echo "Try '$0 --help' for more information". >&2
+    exit 1
+}
+
 hosttype=$(cat /etc/puavo/hosttype)
 
 if [ "$hosttype" != "laptop" -a \
@@ -9,10 +16,42 @@ if [ "$hosttype" != "laptop" -a \
   exit 1
 fi
 
-if [ "$1" = "--use-rate-limit" ]; then
-  use_rate_limit=true
-else
-  use_rate_limit=false
+use_rate_limit=false
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            echo "Usage: $0"
+            echo
+            echo "Update Puavo configuration and images."
+            echo
+            echo "Options:"
+            echo "    --use-rate-limit             limit the image download rate"
+            echo "    -h, --help                   print help and exit"
+            echo
+            exit 0
+            ;;
+        --use-rate-limit)
+            shift
+            use_rate_limit=true
+            break
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage_error "invalid argument '$1'"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -ne 0 ]; then
+    usage_error "invalid number of arguments ($#), expected 0"
 fi
 
 set -u
