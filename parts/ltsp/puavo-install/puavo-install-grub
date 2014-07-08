@@ -87,18 +87,19 @@ function devname  { regexp -s "$2"   '^(\(.*\)).*$'        "$1"; }
 function ltsp_image_entry {
   set imagefile="$1"
   set description="$2"
+  set kernelparameters="$3"
 
   pathname $imagefile imagepath
   devname $imagefile dev
 
-  menuentry "${description} (${imagepath})" "$imagefile" "$dev" "$imagepath" {
+  menuentry "${description} (${imagepath})" "$imagefile" "$dev" "$imagepath" "$kernelparameters" {
     set imagefile="$2"
     set dev="$3"
     set imagepath="$4"
 
     # XXX fill in
     set kernelversion=""
-    set kernelparameters=""
+    set kernelparameters="$5"
 
     loopback loop "${imagefile}"
     set root='(loop)'
@@ -108,6 +109,22 @@ function ltsp_image_entry {
 
     loopback -d loop
   }
+}
+
+## Superlaptop mode = persistent image changes + local admins
+function ltsp_image_entry_superlaptop {
+  set imagefile="$1"
+  set description="$2"
+  set kernelparameters="$3"
+
+  if [ ! -d (lvm/puavo-imageoverlays) ]; then
+    return
+  fi
+
+  set description="[SUPERLAPTOP] ${description}"
+  set kernelparameters="puavo.image.overlay=default puavo.local.enable_superusers=true $kernelparameters"
+
+  ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}"
 }
 
 insmod gzio
@@ -137,9 +154,11 @@ for dev in (lvm/puavo-images); do
 
   if test -f "${default_image}"; then
     ltsp_image_entry "${default_image}" "DEFAULT - ${default_image_alias}"
+    ltsp_image_entry_superlaptop "${default_image}" "DEFAULT - ${default_image_alias}"
   fi
   if test -f "${backup_image}"; then
     ltsp_image_entry "${backup_image}" "BACKUP - ${backup_image_alias}"
+    ltsp_image_entry_superlaptop "${backup_image}" "BACKUP - ${backup_image_alias}"
   fi
 
   for file in ${dev}/*.img; do
@@ -149,6 +168,7 @@ for dev in (lvm/puavo-images); do
     if test "${file}" = "${backup_image_alias}";  then continue; fi
 
     ltsp_image_entry "${file}" "OTHER"
+    ltsp_image_entry_superlaptop "${file}" "OTHER"
   done
 done
 EOF
