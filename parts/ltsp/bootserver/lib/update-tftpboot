@@ -55,6 +55,8 @@ usage_error()
     return 1
 }
 
+use_force=false
+
 while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
@@ -67,8 +69,15 @@ while [ $# -gt 0 ]; do
             echo
             echo "Options:"
             echo "    -h, --help                   print help and exit"
+            echo "    --force                      update the boot directory, regardless of"
+            echo "                                 its last modification time"
             echo
             exit 0
+            ;;
+        --force)
+            shift
+            use_force=true
+            break
             ;;
         --)
             shift
@@ -95,8 +104,15 @@ mount_point=
 
 trap on_exit EXIT
 
-mount_point=$(mktemp -d)
+mkdir -p "${PUAVO_TFTP_BOOT_DIR:-/var/lib/tftpboot/ltsp}"
 
-mkdir -p "${image_boot_dir}"
+if [ "${image_filepath}" -ot "${image_boot_dir}" ]; then
+    if ! $use_force; then
+        exit 0
+    fi
+fi
+
+mount_point=$(mktemp -d)
 mount -oloop,ro "${image_filepath}" "${mount_point}"
-cp -a -T "${mount_point}/boot" "${image_boot_dir}"
+cp -r -T "${mount_point}/boot" "${image_boot_dir}"
+chmod -R +r "${image_boot_dir}"

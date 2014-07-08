@@ -48,6 +48,8 @@ usage_error()
     return 1
 }
 
+force_flag=
+
 while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
@@ -55,17 +57,28 @@ while [ $# -gt 0 ]; do
             echo "Usage: $0"
             echo
             echo "Copy /boot from image files to TFTP boot directories."
-	    echo
-	    echo "Image file directory defaults to /opt/ltsp/images but can be set in "
-	    echo "PUAVO_IMAGE_DIR environment variable."
-	    echo
-	    echo "TFTP boot directory defaults to /var/lib/tftpboot/ltsp but can be set in "
-	    echo "PUAVO_TFTP_BOOT_DIR environment variable."
+            echo
+            echo "Image file directory defaults to /opt/ltsp/images but can be set in "
+            echo "PUAVO_IMAGE_DIR environment variable."
+            echo
+            echo "TFTP boot directory defaults to /var/lib/tftpboot/ltsp but can be set in "
+            echo "PUAVO_TFTP_BOOT_DIR environment variable."
+            echo
+            echo "By default, only boot directories, which are older than their corresponding"
+            echo "image files, are updated. One can use --force to update all boot directories,"
+            echo "regardless of their last modification times."
             echo
             echo "Options:"
             echo "    -h, --help                   print help and exit"
+            echo "    --force                      update all boot directories, regardless of"
+            echo "                                 their last modification times"
             echo
             exit 0
+            ;;
+        --force)
+            shift
+            force_flag='--force'
+            break
             ;;
         --)
             shift
@@ -102,7 +115,7 @@ find "${PUAVO_IMAGE_DIR:-/opt/ltsp/images}"  \
 while read image_filepath; do
     image_name=$(basename "${image_filepath}" '.img')
 
-    /usr/lib/puavo-ltsp-bootserver/update-tftpboot "${image_filepath}" || {
+    /usr/lib/puavo-ltsp-bootserver/update-tftpboot ${force_flag} "${image_filepath}" || {
         encountered_errors=true
         echo "W: failed to update the TFTP boot directory of image '${image_name}'" >&2
         continue
