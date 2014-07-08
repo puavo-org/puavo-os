@@ -69,7 +69,7 @@ while [ $# -gt 0 ]; do
             echo
             echo "Options:"
             echo "    -h, --help                   print help and exit"
-            echo "    --force                      update the boot directory, regardless of"
+            echo "    --force                      copy the boot directory, regardless of"
             echo "                                 its last modification time"
             echo
             exit 0

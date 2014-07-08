@@ -71,7 +71,7 @@ while [ $# -gt 0 ]; do
             echo
             echo "Options:"
             echo "    -h, --help                   print help and exit"
-            echo "    --force                      update all boot directories, regardless of"
+            echo "    --force-copy                 copy all boot directories, regardless of"
             echo "                                 their last modification times"
             echo "    --prune                      remove all orphan boot directories"
             echo
@@ -122,9 +122,9 @@ find "${PUAVO_IMAGE_DIR:-/opt/ltsp/images}"  \
 while read image_filepath; do
     image_name=$(basename "${image_filepath}" '.img')
 
-    /usr/lib/puavo-ltsp-bootserver/update-tftpboot ${force_flag} "${image_filepath}" || {
+    /usr/lib/puavo-ltsp-bootserver/copy-tftpboot ${force_flag} "${image_filepath}" || {
         encountered_errors=true
-        echo "W: failed to update the TFTP boot directory of image '${image_name}'" >&2
+        echo "W: failed to copy the boot directory of image '${image_name}'" >&2
         continue
     }
 done <"${image_filepaths}"
