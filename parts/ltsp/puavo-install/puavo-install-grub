@@ -82,7 +82,6 @@ set timeout=5
 ### END /usr/local/etc/grub.d/00_header ###
 
 function pathname { regexp -s 2:"$2" '^(\(.*\))?(/.*)$'    "$1"; }
-function devname  { regexp -s "$2"   '^(\(.*\)).*$'        "$1"; }
 
 function ltsp_image_entry {
   set imagefile="$1"
@@ -90,16 +89,14 @@ function ltsp_image_entry {
   set kernelparameters="$3"
 
   pathname $imagefile imagepath
-  devname $imagefile dev
 
-  menuentry "${description} (${imagepath})" "$imagefile" "$dev" "$imagepath" "$kernelparameters" {
+  menuentry "${description} (${imagepath})" "$imagefile" "$imagepath" "$kernelparameters" {
     set imagefile="$2"
-    set dev="$3"
-    set imagepath="$4"
+    set imagepath="$3"
 
     # XXX fill in
     set kernelversion=""
-    set kernelparameters="$5"
+    set kernelparameters="$4"
 
     loopback loop "${imagefile}"
     set root='(loop)'
