@@ -24,7 +24,9 @@ install : installdirs
 		puavo-install-and-update-ltspimages \
 		puavo-install-grub \
 		puavo-setup-filesystems \
-		puavo-update-client
+		puavo-update-client \
+		puavo-update-client-configuration \
+		puavo-update-client-images
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
                 screen.d/ltspimage-update

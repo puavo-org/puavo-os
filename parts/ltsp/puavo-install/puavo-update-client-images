@@ -17,7 +17,6 @@ if [ "$hosttype" != "laptop" -a \
 fi
 
 use_rate_limit=false
-do_image_update=true
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -25,11 +24,10 @@ while [ $# -gt 0 ]; do
             shift
             echo "Usage: $0"
             echo
-            echo "Update device configuration and images."
+            echo "Update device images."
             echo
             echo "Options:"
             echo "    --use-rate-limit             limit the image download rate"
-            echo "    --no-image-update            do not update images, only configurations"
             echo "    -h, --help                   print help and exit"
             echo
             exit 0
@@ -37,11 +35,6 @@ while [ $# -gt 0 ]; do
         --use-rate-limit)
             shift
             use_rate_limit=true
-            break
-            ;;
-        --no-image-update)
-            shift
-            do_image_update=false
             break
             ;;
         --)
@@ -63,12 +56,34 @@ fi
 
 set -u
 
-if $use_rate_limit; then
-    puavo-update-client-configuration --use-rate-limit || true
-else
-    puavo-update-client-configuration || true
-fi
+update_ltsp_image() {
+  next_imagename=$(jq -r .preferred_image /state/etc/puavo/device.json) \
+		     || return
 
-if $do_image_update; then
-    puavo-update-client-image || true
-fi
+  if $use_rate_limit; then
+    rate_limit=$(
+      jq -r '.tags[]' /state/etc/puavo/device.json \
+        | awk -F: '
+            BEGIN { rate_limit = "500k" }
+            $1 == "imagedownload-rate-limit" && $2 ~ /^[0-9]+k/ {
+	      rate_limit = $2
+	    }
+            END { print rate_limit }
+          ')
+  else
+    rate_limit=''
+  fi
+
+  if [ -n "$rate_limit" ]; then
+    update_ltspimage_params="--rate-limit $rate_limit"
+  else
+    update_ltspimage_params=""
+  fi
+
+  if [ -n "$next_imagename" ]; then
+    puavo-install-and-update-ltspimages $update_ltspimage_params \
+					"${next_imagename}.img"
+  fi
+}
+
+update_ltsp_image || true

@@ -1,0 +1,117 @@
+#!/bin/sh
+
+usage_error()
+{
+    echo "error: $1" >&2
+    echo "Try '$0 --help' for more information". >&2
+    exit 1
+}
+
+hosttype=$(cat /etc/puavo/hosttype)
+
+if [ "$hosttype" != "laptop" -a \
+     "$hosttype" != "wirelessaccesspoint" ]; then
+  echo 'This script should be run only for laptops and wirelessaccesspoints!' \
+    > /dev/stderr
+  exit 1
+fi
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            echo "Usage: $0"
+            echo
+            echo "Update device configuration."
+            echo
+            echo "Options:"
+            echo "    -h, --help                   print help and exit"
+            echo
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage_error "invalid argument '$1'"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -ne 0 ]; then
+    usage_error "invalid number of arguments ($#), expected 0"
+fi
+
+set -u
+
+puavo_rest_request() {
+  urlpath=$1
+
+  puavo_rest_server=$(puavo-resolve-api-server) || return
+  curl --cacert /etc/puavo/certs/rootca.pem \
+       --config - \
+       --fail \
+       --max-time 60 \
+       --silent \
+       "${puavo_rest_server}/${urlpath}" <<EOF
+user=$(cat /etc/puavo/ldap/dn):$(cat /etc/puavo/ldap/password)
+EOF
+}
+
+puavo_rest_request_and_replace() {
+  urlpath=$1
+  filepath=$2
+
+  tmp_filepath="${filepath}.tmp"
+  install -o root -g root -m 600 /dev/null "$tmp_filepath" || return
+  
+  puavo_rest_request "$urlpath" > "$tmp_filepath" || return
+  replace_if_changed "$filepath"  "$tmp_filepath"
+}
+
+replace_if_changed() {
+  dest=$1
+  src=$2
+
+  if cmp "$src" "$dest" >/dev/null 2>&1; then
+    rm -f "$src"
+  else
+    mv "$src" "$dest"
+  fi
+}
+
+update_device_json() {
+  puavo_rest_request_and_replace "v3/devices/$(cat /etc/puavo/hostname)" \
+			         /state/etc/puavo/device.json || return
+  chmod 644 /state/etc/puavo/device.json
+}
+
+update_external_files() {
+  puavo-sync-external-files || return
+  puavo-handle-external-files-actions
+}
+
+update_ltsconf() {
+  install -o root -g root -m 600 /dev/null /state/etc/lts.conf.tmp || return
+  puavo-lts > /state/etc/lts.conf.tmp                              || return
+  replace_if_changed /state/etc/lts.conf /state/etc/lts.conf.tmp
+}
+
+update_wlan_configurations() {
+  wlan_networks_uri="v3/devices/$(cat /etc/puavo/hostname)/wlan_networks"
+  puavo_rest_request_and_replace "$wlan_networks_uri" \
+				 /state/etc/puavo/wlan.json
+}
+
+# Update several (different) things.  Even if one thing cannot be updated,
+# try to update others (order does not matter here, but do this sequentially
+# anyway).
+
+update_ltsconf             || true
+update_device_json         || true
+update_external_files      || true
+update_wlan_configurations || true
