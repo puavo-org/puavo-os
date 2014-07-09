@@ -1,22 +1,28 @@
 #!/usr/bin/ruby1.9.1
 
 require 'dbus'
+require 'open3'
 
 class Updater < DBus::Object
 
   dbus_interface "org.puavo.client.update" do
 
-    dbus_method :UpdateImages, "in use_rate_limit:b" do |use_rate_limit|
+    dbus_method :UpdateImages, "in use_rate_limit:b, out s" do |use_rate_limit|
       command = "/usr/lib/puavo-ltsp-install/update-images #{use_rate_limit}"
-      if not system(command) then
-        raise "failed to update device images"
+      output, status = Open3.capture2e(command)
+      if not status.success? then
+        raise "failed to update device images: #{output}"
       end
+      return output
     end
 
-    dbus_method :UpdateConfiguration do
-      if not system("/usr/lib/puavo-ltsp-install/update-configuration") then
-        raise "failed to update device configuration"
+    dbus_method :UpdateConfiguration, "out s" do
+      command = "/usr/lib/puavo-ltsp-install/update-configuration"
+      output, status = Open3.capture2e(command)
+      if not status.success? then
+        raise "failed to update device configuration: #{output}"
       end
+      return output
     end
   end
 
