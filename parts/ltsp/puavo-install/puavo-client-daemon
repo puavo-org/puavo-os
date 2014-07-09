@@ -1,0 +1,44 @@
+#!/usr/bin/ruby1.9.1
+
+require 'dbus'
+
+class Updater < DBus::Object
+
+  dbus_interface "org.puavo.client.update" do
+
+    dbus_method :UpdateImages, "in use_rate_limit:b" do |use_rate_limit|
+      command = "/usr/sbin/puavo-update-client-images"
+      if use_rate_limit then
+        command = "#{command} --use-rate-limit"
+      end
+      if not system(command) then
+        raise "failed to update device images"
+      end
+    end
+
+    dbus_method :UpdateConfiguration do
+      if not system("/usr/sbin/puavo-update-client-configuration") then
+        raise "failed to update device configuration"
+      end
+    end
+  end
+
+end
+
+bus = DBus::SystemBus.instance
+
+# Request a well-known name for the service. It can be denied if someone
+# has reserved the name (very unlikely, only if someone is playing
+# tricks with us) or we do not have permissions to own the name (missing
+# conf file in /etc/dbus-1/system.d).
+service = bus.request_service("org.puavo.client.Daemon")
+
+# Export all dbus-accessible objects. Currently we have only one, but
+# there isn't any reason why we wouldn't them more in future.
+updater = Updater.new("/updater")
+service.export(updater)
+
+# Run Forrest, run!
+loop = DBus::Main.new
+loop << bus
+loop.run

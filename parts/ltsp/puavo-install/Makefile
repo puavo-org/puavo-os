@@ -13,13 +13,16 @@ all :
 
 .PHONY : installdirs
 installdirs :
+	mkdir -p $(DESTDIR)$(datarootdir)/dbus-1/system-services
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
 	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)$(sysconfdir)/dbus-1/system.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 
 .PHONY : install
 install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
+		puavo-client-daemon \
 		puavo-install \
 		puavo-install-and-update-ltspimages \
 		puavo-install-grub \
@@ -28,8 +31,14 @@ install : installdirs
 		puavo-update-client-configuration \
 		puavo-update-client-images
 
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/dbus-1/system-services \
+                dbus-1/org.puavo.client.Daemon.service
+
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
                 screen.d/ltspimage-update
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/dbus-1/system.d \
+		dbus-1/org.puavo.client.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
 		upstart/puavo-update-client.conf
