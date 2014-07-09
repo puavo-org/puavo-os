@@ -7,17 +7,14 @@ class Updater < DBus::Object
   dbus_interface "org.puavo.client.update" do
 
     dbus_method :UpdateImages, "in use_rate_limit:b" do |use_rate_limit|
-      command = "/usr/sbin/puavo-update-client-images"
-      if use_rate_limit then
-        command = "#{command} --use-rate-limit"
-      end
+      command = "/usr/lib/puavo-ltsp-install/update-images #{use_rate_limit}"
       if not system(command) then
         raise "failed to update device images"
       end
     end
 
     dbus_method :UpdateConfiguration do
-      if not system("/usr/sbin/puavo-update-client-configuration") then
+      if not system("/usr/lib/puavo-ltsp-install/update-configuration") then
         raise "failed to update device configuration"
       end
     end

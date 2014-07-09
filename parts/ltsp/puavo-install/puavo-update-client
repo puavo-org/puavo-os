@@ -63,12 +63,12 @@ fi
 
 set -u
 
-if $use_rate_limit; then
-    puavo-update-client-configuration --use-rate-limit || true
-else
-    puavo-update-client-configuration || true
-fi
+dbus-send --system --dest=org.puavo.client.Daemon \
+    --print-reply=literal \
+    /updater org.puavo.client.update.UpdateConfiguration || true
 
 if $do_image_update; then
-    puavo-update-client-image || true
+    dbus-send --system --dest=org.puavo.client.Daemon \
+        --print-reply=literal \
+        /updater org.puavo.client.update.UpdateImages "boolean:${use_rate_limit}" || true
 fi
