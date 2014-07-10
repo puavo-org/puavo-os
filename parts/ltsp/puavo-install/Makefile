@@ -38,7 +38,8 @@ install : installdirs
                 screen.d/ltspimage-update
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-install \
-                lib/update-configuration \
+		lib/is-update-available \
+		lib/update-configuration \
 		lib/update-images
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/dbus-1/system.d \
