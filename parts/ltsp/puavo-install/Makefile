@@ -24,6 +24,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/dbus-1/system.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
+	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
 .PHONY : install
 install : installdirs
@@ -61,6 +62,9 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
 		upstart/puavo-update-client.conf
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
+		xdg-autostart/*
 
 .PHONY : clean
 clean :
