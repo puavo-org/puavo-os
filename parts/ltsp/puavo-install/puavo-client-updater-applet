@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import sys
+import gtk
+import appindicator
+import dbus
+import dbus.mainloop.glib
+dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+
+import re
+
+class UpdateIndicatorApplet:
+    def __init__(self):
+        self.indicator = appindicator.Indicator("update-indicator",
+                                                "update-idle",
+                                                appindicator.CATEGORY_APPLICATION_STATUS)
+        self.indicator.set_status(appindicator.STATUS_ACTIVE)
+
+        self.menu = gtk.Menu()
+
+        self.update_image_item = gtk.MenuItem("(Up to date)")
+        self.update_image_item.connect("activate", self.update_image)
+        self.update_image_item.show()
+        self.update_image_item.set_sensitive(False)
+        self.menu.append(self.update_image_item)
+
+        self.indicator.set_menu(self.menu)
+
+        self.bus = dbus.SystemBus()
+        self.updater = self.bus.get_object('org.puavo.client.Daemon',
+                                           '/updater')
+        self.update_iface = dbus.Interface(self.updater,
+                                           dbus_interface='org.puavo.client.update')
+        self.update_iface.connect_to_signal("UpdateAvailable",
+                                            self.on_update_available)
+
+    def on_update_available(self):
+        self.update_image_item.get_child().set_text("Update")
+        self.update_image_item.set_sensitive(True)
+        self.indicator.set_attention_icon("update-available")
+        self.indicator.set_status(appindicator.STATUS_ATTENTION)
+
+    def handle_update_image_reply(self, output):
+        self.update_image_item.get_child().set_text("(Reboot required to finish the update)")
+        self.update_image_item.set_sensitive(False)
+        self.indicator.set_attention_icon("update-installed")
+        self.indicator.set_status(appindicator.STATUS_ATTENTION)
+
+    def handle_update_image_error(self, error):
+        self.indicator.set_attention_icon("update-error")
+        self.indicator.set_status(appindicator.STATUS_ATTENTION)
+
+    def update_image(self, widget):
+        self.indicator.set_attention_icon("update-downloading")
+        self.indicator.set_status(appindicator.STATUS_ATTENTION)
+        self.update_iface.UpdateImages(False,
+            reply_handler=self.handle_update_image_reply,
+            error_handler=self.handle_update_image_error)
+
+if __name__ == "__main__":
+    applet = UpdateIndicatorApplet()
+    gtk.main()

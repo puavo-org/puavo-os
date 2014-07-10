@@ -1,0 +1,52 @@
+#!/usr/bin/ruby1.9.1
+
+require 'dbus'
+require 'open3'
+
+class Updater < DBus::Object
+
+  dbus_interface "org.puavo.client.update" do
+
+    dbus_signal :UpdateAvailable
+
+    dbus_method :UpdateImages, "in use_rate_limit:b, out s" do |use_rate_limit|
+      command = "/usr/lib/puavo-ltsp-install/update-images #{use_rate_limit}"
+      output, status = Open3.capture2e(command)
+      if not status.success? then
+        raise "failed to update device images: #{output}"
+      end
+      return output
+    end
+
+    dbus_method :UpdateConfiguration, "out s" do
+      command = "/usr/lib/puavo-ltsp-install/update-configuration"
+      output, status = Open3.capture2e(command)
+      if not status.success? then
+        raise "failed to update device configuration: #{output}"
+      end
+      if system("/usr/lib/puavo-ltsp-install/is-update-available") then
+        self.UpdateAvailable
+      end
+      return output
+    end
+  end
+
+end
+
+bus = DBus::SystemBus.instance
+
+# Request a well-known name for the service. It can be denied if someone
+# has reserved the name (very unlikely, only if someone is playing
+# tricks with us) or we do not have permissions to own the name (missing
+# conf file in /etc/dbus-1/system.d).
+service = bus.request_service("org.puavo.client.Daemon")
+
+# Export all dbus-accessible objects. Currently we have only one, but
+# there isn't any reason why we wouldn't them more in future.
+updater = Updater.new("/updater")
+service.export(updater)
+
+# Run Forrest, run!
+loop = DBus::Main.new
+loop << bus
+loop.run

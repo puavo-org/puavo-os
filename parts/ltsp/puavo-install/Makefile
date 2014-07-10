@@ -1,7 +1,10 @@
 prefix = /usr/local
 exec_prefix = $(prefix)
-sbindir = $(exec_prefix)/sbin
+
+bindir = $(exec_prefix)/bin
 datarootdir = $(prefix)/share
+libdir = $(prefix)/lib
+sbindir = $(exec_prefix)/sbin
 sysconfdir = $(prefix)/etc
 
 INSTALL = install
@@ -13,24 +16,55 @@ all :
 
 .PHONY : installdirs
 installdirs :
+	mkdir -p $(DESTDIR)$(bindir)
+	mkdir -p $(DESTDIR)$(datarootdir)/dbus-1/system-services
+	mkdir -p $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
+	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-install
 	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)$(sysconfdir)/dbus-1/system.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
+	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
 .PHONY : install
 install : installdirs
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
+		puavo-client-updater-applet
+
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
+		puavo-client-daemon \
 		puavo-install \
 		puavo-install-and-update-ltspimages \
 		puavo-install-grub \
 		puavo-setup-filesystems \
 		puavo-update-client
 
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/dbus-1/system-services \
+		dbus-1/org.puavo.client.Daemon.service
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status \
+		icons/update-available.svg \
+		icons/update-error.svg \
+		icons/update-downloading.svg \
+		icons/update-idle.svg \
+		icons/update-installed.svg
+
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
-                screen.d/ltspimage-update
+		screen.d/ltspimage-update
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-install \
+		lib/is-update-available \
+		lib/update-configuration \
+		lib/update-images
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/dbus-1/system.d \
+		dbus-1/org.puavo.client.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
 		upstart/puavo-update-client.conf
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
+		xdg-autostart/*
 
 .PHONY : clean
 clean :
