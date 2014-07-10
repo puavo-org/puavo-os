@@ -34,6 +34,12 @@ class UpdateIndicatorApplet:
                                            dbus_interface='org.puavo.client.update')
         self.update_iface.connect_to_signal("UpdateAvailable",
                                             self.on_update_available)
+        self.update_iface.connect_to_signal("UpdateCompleted",
+                                            self.on_update_completed)
+        self.update_iface.connect_to_signal("UpdateStarted",
+                                            self.on_update_started)
+        self.update_iface.connect_to_signal("UpdateFailed",
+                                            self.on_update_failed)
 
     def on_update_available(self):
         self.update_image_item.get_child().set_text("Update")
@@ -41,22 +47,26 @@ class UpdateIndicatorApplet:
         self.indicator.set_attention_icon("update-available")
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
-    def handle_update_image_reply(self, output):
+    def on_update_completed(self):
         self.update_image_item.get_child().set_text("(Reboot required to finish the update)")
         self.update_image_item.set_sensitive(False)
         self.indicator.set_attention_icon("update-installed")
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
-    def handle_update_image_error(self, error):
+    def on_update_started(self):
+        self.update_image_item.get_child().set_text("(Updating)")
+        self.update_image_item.set_sensitive(False)
+        self.indicator.set_attention_icon("update-downloading")
+        self.indicator.set_status(appindicator.STATUS_ATTENTION)
+
+    def on_update_failed(self):
+        self.update_image_item.get_child().set_text("Update")
+        self.update_image_item.set_sensitive(True)
         self.indicator.set_attention_icon("update-error")
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
     def update_image(self, widget):
-        self.indicator.set_attention_icon("update-downloading")
-        self.indicator.set_status(appindicator.STATUS_ATTENTION)
-        self.update_iface.UpdateImages(False,
-            reply_handler=self.handle_update_image_reply,
-            error_handler=self.handle_update_image_error)
+        self.update_iface.UpdateImages(False)
 
 if __name__ == "__main__":
     applet = UpdateIndicatorApplet()

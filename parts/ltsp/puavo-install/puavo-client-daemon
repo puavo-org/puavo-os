@@ -12,13 +12,19 @@ class Updater < DBus::Object
   dbus_interface "org.puavo.client.update" do
 
     dbus_signal :UpdateAvailable
+    dbus_signal :UpdateFailed
+    dbus_signal :UpdateCompleted
+    dbus_signal :UpdateStarted
 
     dbus_method :UpdateImages, "in use_rate_limit:b, out s" do |use_rate_limit|
+      self.UpdateStarted
       command = "/usr/lib/puavo-ltsp-install/update-images #{use_rate_limit}"
       output, status = Open3.capture2e(command)
       if not status.success? then
+        self.UpdateFailed
         raise "failed to update device images: #{output}"
       end
+      self.UpdateCompleted
       return output
     end
 
