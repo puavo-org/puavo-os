@@ -39,7 +39,7 @@ install : installdirs
 		puavo-update-client
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/dbus-1/system-services \
-                dbus-1/org.puavo.client.Daemon.service
+		dbus-1/org.puavo.client.Daemon.service
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status \
 		icons/update-available.svg \
@@ -49,7 +49,7 @@ install : installdirs
 		icons/update-installed.svg
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
-                screen.d/ltspimage-update
+		screen.d/ltspimage-update
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-install \
 		lib/is-update-available \
