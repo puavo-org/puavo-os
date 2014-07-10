@@ -1,5 +1,9 @@
 #!/usr/bin/ruby1.9.1
 
+# Services activated by DBus service activation mechanism do not have
+# all necessary components in PATH
+ENV["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
 require 'dbus'
 require 'open3'
 
