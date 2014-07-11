@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
 import sys
 import gtk
 import appindicator
@@ -65,8 +67,16 @@ class UpdateIndicatorApplet:
         self.indicator.set_attention_icon("update-error")
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
+    def handle_update_image_reply(self, output):
+        print(output)
+
+    def handle_update_image_error(self, error):
+        print(error, file=sys.stderr)
+
     def update_image(self, widget):
-        self.update_iface.UpdateImages(False)
+        self.update_iface.UpdateImages(False,
+                                       reply_handler=self.handle_update_image_reply,
+                                       error_handler=self.handle_update_image_error)
 
 if __name__ == "__main__":
     applet = UpdateIndicatorApplet()
