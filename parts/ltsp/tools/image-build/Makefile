@@ -27,4 +27,4 @@ image update-chroot update-local:
 chroot:
 	@sudo ./build_puavo_device_image --$@
 
-.PHONY: ${IMAGE_TARGETS} ${TARGETS}
+.PHONY: ${IMAGE_TARGETS} ${OTHER_TARGETS}
