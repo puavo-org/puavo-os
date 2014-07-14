@@ -8,6 +8,7 @@
 # on command arguments.  All wanted functionality must be explicitly requested
 # with command arguments.
 
+require 'etc'
 require 'fileutils'
 require 'getoptlong'
 require 'json'
@@ -80,10 +81,10 @@ def configure_local_users(conf)
     raise 'uid is over uid_max' if uid > uid_max
 
     home = "/home/#{ uid }"
-    # 100 == 'users'
+    group_id = Etc.getgrnam('users').gid
     passwd_line \
-      = "#{ user['login'] }:x:#{ uid }:100:#{ user['name'] },,,:#{ home }" \
-        + ":/bin/bash"
+      = "#{ user['login'] }:x:#{ uid }:#{ group_id }:#{ user['name'] },,," \
+        + ":#{ home }:/bin/bash"
     search_and_replace_line('/etc/passwd',
                             /^#{ user['login'] }:/,
                             lambda { |m| passwd_line },
@@ -96,7 +97,7 @@ def configure_local_users(conf)
                             true)
 
     FileUtils.mkdir_p(home, :mode => 0700)
-    FileUtils.chown(uid, 100, home)
+    FileUtils.chown(uid, group_id, home)
 
     uid += 1
   end
