@@ -93,7 +93,7 @@ function add_licenses(license_list) {
 }
 
 function get_license_list() {
-  var basedir = '/opt/optional_software_installers';
+  var basedir = '/usr/share/puavo-ltsp-client/restricted-packages';
   try {
     var software_directories = fs.readdirSync(basedir);
   } catch (ex) {
