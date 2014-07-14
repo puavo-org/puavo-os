@@ -95,7 +95,7 @@ def configure_local_users(conf)
                             lambda { |m| shadow_line },
                             true)
 
-    FileUtils.mkdir(home, :mode => 0700)
+    FileUtils.mkdir_p(home, :mode => 0700)
     FileUtils.chown(uid, 100, home)
 
     uid += 1
