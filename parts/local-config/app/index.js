@@ -17,8 +17,6 @@ function assemble_config_and_exit(old_config) {
                     var name = lc.getAttribute('name');
                     new_config.licenses[name] = response[name].checked; });
 
-  new_config.persistent_overlay = response.persistent_overlay.checked;
-
   new_config.admins
     = response['localuser_0_admin_rights'].checked
         ? [ response['localuser_0_login'].value ]
@@ -168,11 +166,10 @@ function read_config() {
       return false;
     } else {
       config = {
-        allow_login:        'localusers',
-        admins:             [],
-        licenses:           {},
-        local_users:        [ { hashed_password: '', login: '', name: '', } ],
-        persistent_overlay: false,
+        allow_login: 'localusers',
+        admins:      [],
+        licenses:    {},
+        local_users: [ { hashed_password: '', login: '', name: '', } ],
       };
     }
   }
@@ -219,15 +216,6 @@ function set_form_values_from_config(config) {
                       lc.removeAttribute('checked');
                     }
                   });
-
-  // persistent_overlay
-  var persistent_overlay_el
-    = document.querySelector('input[name=persistent_overlay]')
-  if (config.persistent_overlay) {
-    persistent_overlay_el.setAttribute('checked', true);
-  } else {
-    persistent_overlay_el.removeAttribute('checked');
-  }
 }
 
 function write_config_json_and_exit(conf) {
