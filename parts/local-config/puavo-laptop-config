@@ -12,6 +12,22 @@ require 'fileutils'
 require 'getoptlong'
 require 'json'
 
+def print_help()
+  puts <<-EOF
+puavo-laptop-config [OPTIONS]
+
+-c, --config-path          set configuration file path
+-h, --help                 show help
+
+    --admins               configure admins
+    --local-users          configure local users
+    --login-permissions    configure login permissions
+    --persistent-overlay   configure persistent image overlay
+
+    --software-installation ["all" | a list of licenses separated with comma]
+  EOF
+end
+
 def search_and_replace_line(file, re, new_line_fn, append_if_missing=false)
   File.open(file, 'r') do |inputf|
     output_lines = []
@@ -100,48 +116,42 @@ end
 
 config_path = '/etc/puavo/local.json'
 
-opts = GetoptLong.new(
-  [ '--config-path',           '-c', GetoptLong::REQUIRED_ARGUMENT, ],
-  [ '--help',                  '-h', GetoptLong::NO_ARGUMENT,       ],
-
-  [ '--admins',                      GetoptLong::NO_ARGUMENT,       ],
-  [ '--local-users',                 GetoptLong::NO_ARGUMENT,       ],
-  [ '--login-permissions',           GetoptLong::NO_ARGUMENT,       ],
-  [ '--persistent-overlay',          GetoptLong::NO_ARGUMENT,       ],
-  [ '--software-installation',       GetoptLong::REQUIRED_ARGUMENT, ],
-)
-
 apply_configs = []
 license_list = []
 
-opts.each do |opt, arg|
-  case opt
-    when '--config-path'
-      config_path = arg
-    when '--help'
-      puts <<-EOF
-puavo-laptop-config [OPTIONS]
+begin
+  opts = GetoptLong.new(
+    [ '--config-path',           '-c', GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--help',                  '-h', GetoptLong::NO_ARGUMENT,       ],
 
--c, --config-path          set configuration file path
--h, --help                 show help
+    [ '--admins',                      GetoptLong::NO_ARGUMENT,       ],
+    [ '--local-users',                 GetoptLong::NO_ARGUMENT,       ],
+    [ '--login-permissions',           GetoptLong::NO_ARGUMENT,       ],
+    [ '--persistent-overlay',          GetoptLong::NO_ARGUMENT,       ],
+    [ '--software-installation',       GetoptLong::REQUIRED_ARGUMENT, ],
+  )
 
-    --admins               configure admins
-    --local-users          configure local users
-    --login-permissions    configure login permissions
-    --persistent-overlay   configure persistent image overlay
-
-    --software-installation ["all" | a list of licenses separated with comma]
-        EOF
-      exit(0)
-    when '--admins',
-         '--local-users',
-         '--login-permissions',
-         '--persistent-overlay'
-      apply_configs.push(opt)
-    when '--software-installation'
-      apply_configs.push(opt)
-      license_list = arg.split(',')
+  opts.each do |opt, arg|
+    case opt
+      when '--config-path'
+	config_path = arg
+      when '--help'
+	print_help()
+	exit(0)
+      when '--admins',
+	   '--local-users',
+	   '--login-permissions',
+	   '--persistent-overlay'
+	apply_configs.push(opt)
+      when '--software-installation'
+	apply_configs.push(opt)
+	license_list = arg.split(',')
+    end
   end
+
+rescue GetoptLong::InvalidOption => e
+  print_help()
+  exit(1)
 end
 
 begin
