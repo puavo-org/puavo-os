@@ -29,7 +29,7 @@ puavo-local-config [OPTIONS]
   EOF
 end
 
-def search_and_replace_line(file, re, new_line_fn, append_if_missing=false)
+def search_and_replace_line(file, re, new_line)
   File.open(file, 'r') do |inputf|
     output_lines = []
 
@@ -42,39 +42,46 @@ def search_and_replace_line(file, re, new_line_fn, append_if_missing=false)
       match = line.match(re)
       if match then
         have_match = true
-        output_lines.push( new_line_fn.call(match) )
+        output_lines.push(new_line)
       else
         output_lines.push(line)
       end
     end
 
-    if have_match || append_if_missing then
-      if !have_match then
-        output_lines.push( new_line_fn.call(nil) )
-      end
-
-      output = output_lines.map { |s| "#{ s }\n" }.join
-
-      tmpfile = "#{ file }.plctmp"
-      File.open(tmpfile, 'w', 0600) { |outputf| outputf.write(output) }
-      FileUtils.chmod(inputf.stat.mode, tmpfile)
-      FileUtils.chown(inputf.stat.uid, inputf.stat.gid, tmpfile)
-      File.rename(tmpfile, file)
+    if !have_match then
+      output_lines.push(new_line)
     end
+
+    output = output_lines.map { |s| "#{ s }\n" }.join
+
+    tmpfile = "#{ file }.plctmp"
+    File.open(tmpfile, 'w', 0600) { |outputf| outputf.write(output) }
+    FileUtils.chmod(inputf.stat.mode, tmpfile)
+    FileUtils.chown(inputf.stat.uid, inputf.stat.gid, tmpfile)
+    File.rename(tmpfile, file)
   end
 end
 
 def configure_admins(conf)
-  # we could also use a new, specific group for this?
-  new_line_fn = lambda { |m| "sudo:#{ m[1] }:#{ conf['admins'].join(',') }" }
+  kernel_cmdline = IO.read('/proc/cmdline')
 
+  # we could also use a new, specific group for this?
+  new_line = "puavolocaladmins:x:3000:#{ conf['admins'].join(',') }"
   search_and_replace_line('/etc/group',
-                         /^sudo:(.*):(.*)$/,
-                         new_line_fn)
+                         /^puavolocaladmins:/,
+                         new_line)
+
+  File.open('/etc/sudoers.d/puavolocaladmins.pcltmp', 'w') do |f|
+    if superlaptop_mode? then
+      f.write("%puavolocaladmins ALL=(ALL) ALL\n")
+    end
+  end
+  File.rename('/etc/sudoers.d/puavolocaladmins.pcltmp',
+              '/etc/sudoers.d/puavolocaladmins')
 end
 
 def configure_local_users(conf)
-  uid     = 3000
+  uid     = 3001
   uid_max = 3999
 
   conf['local_users'].each do |user|
@@ -86,15 +93,13 @@ def configure_local_users(conf)
       = "#{ user['login'] }:x:#{ uid }:#{ group_id }:#{ user['name'] },,," \
         + ":#{ home }:/bin/bash"
     search_and_replace_line('/etc/passwd',
-                            /^#{ user['login'] }:/,
-                            lambda { |m| passwd_line },
-                            true)
+			    /^#{ user['login'] }:/,
+			    passwd_line)
 
     shadow_line = "#{ user['login'] }:#{ user['hashed_password'] }:::::::"
     search_and_replace_line('/etc/shadow',
                             /^#{ user['login'] }:/,
-                            lambda { |m| shadow_line },
-                            true)
+                            shadow_line)
 
     FileUtils.mkdir_p(home, :mode => 0700)
     FileUtils.chown(uid, group_id, home)
@@ -109,10 +114,6 @@ def configure_grub_default()
   raise 'Could not figure out loop= device' unless match
   loop_img = "#{ match[1] }.img"
 
-  superlaptop_mode_re \
-    = /puavo.image.overlay=default puavo.local.enable_superusers=true/
-  superlaptop_mode = kernel_cmdline.match(superlaptop_mode_re)
-
   this_ltspimage_name = IO.read('/etc/ltsp/this_ltspimage_name').chomp
 
   choice_types = {
@@ -126,7 +127,7 @@ def configure_grub_default()
         ? "#{ choice_type } - (lvm/puavo-images)/#{ this_ltspimage_name } (#{ loop_img })" \
         : "OTHER (#{ loop_img })"
 
-  if superlaptop_mode
+  if superlaptop_mode?
     description = "*SUPERLAPTOP* #{ description }"
   end
 
@@ -139,6 +140,13 @@ end
 
 def configure_login_permissions(conf)
   raise 'XXX'
+end
+
+def superlaptop_mode?
+  kernel_cmdline = IO.read('/proc/cmdline')
+  superlaptop_mode_re \
+    = /puavo.image.overlay=default puavo.local.enable_superusers=true/
+  kernel_cmdline.match(superlaptop_mode_re) ? true : false
 end
 
 def setup_software(conf, software_list)
