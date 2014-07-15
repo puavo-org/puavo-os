@@ -1,10 +1,10 @@
 #!/usr/bin/ruby1.9.1
 
-# puavo-laptop-config configures system according to admin user preferences.
-# See puavo-laptop-config-ui for the user interface.  puavo-laptop-config
+# puavo-local-config configures system according to admin user preferences.
+# See puavo-local-config-ui for the user interface.  puavo-local-config
 # reads a configuration file ("/etc/puavo/local.json" by default) that
 # contains user preferences, and applies those to the system depending on
-# given option arguments.  Run "puavo-laptop-config --help" for information
+# given option arguments.  Run "puavo-local-config --help" for information
 # on command arguments.  All wanted functionality must be explicitly requested
 # with command arguments.
 
@@ -15,7 +15,7 @@ require 'json'
 
 def print_help()
   puts <<-EOF
-puavo-laptop-config [OPTIONS]
+puavo-local-config [OPTIONS]
 
 -c, --config-path          set configuration file path
 -h, --help                 show help

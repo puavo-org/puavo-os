@@ -1,8 +1,8 @@
-puavo-laptop-config
-===================
+puavo-local-config
+==================
 
-A configuration tool for puavo laptops, with a user interface
-for end users.
+A configuration tool for local (host-specific) features, mostly for laptops,
+with a user interface for end users.
 
 ## Dependencies
 

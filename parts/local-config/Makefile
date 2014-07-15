@@ -16,15 +16,15 @@ all :
 .PHONY : installdirs
 installdirs :
 	mkdir -p $(DESTDIR)$(bindir)
-	mkdir -p $(DESTDIR)$(libdir)/puavo-laptop-config-ui
+	mkdir -p $(DESTDIR)$(libdir)/puavo-local-config-ui
 
 .PHONY : install
 install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
-		puavo-laptop-config               \
-		puavo-laptop-config-ui
+		puavo-local-config                \
+		puavo-local-config-ui
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/puavo-laptop-config-ui \
+	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/puavo-local-config-ui \
 		app/index.html   \
 		app/index.js     \
 		app/package.json \
