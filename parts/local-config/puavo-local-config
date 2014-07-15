@@ -21,9 +21,9 @@ puavo-local-config [OPTIONS]
 -h, --help                 show help
 
     --admins               configure admins
+    --grub-default         configure grub default
     --local-users          configure local users
     --login-permissions    configure login permissions
-    --persistent-overlay   configure persistent image overlay
 
     --software-installation ["all" | a list of licenses separated with comma]
   EOF
@@ -103,11 +103,41 @@ def configure_local_users(conf)
   end
 end
 
-def configure_login_permissions(conf)
-  raise 'XXX'
+def configure_grub_default()
+  kernel_cmdline = IO.read('/proc/cmdline')
+  match = kernel_cmdline.match(/loop=(.*?)\.img/)
+  raise 'Could not figure out loop= device' unless match
+  loop_img = "#{ match[1] }.img"
+
+  superlaptop_mode_re \
+    = /puavo.image.overlay=default puavo.local.enable_superusers=true/
+  superlaptop_mode = kernel_cmdline.match(superlaptop_mode_re)
+
+  this_ltspimage_name = IO.read('/etc/ltsp/this_ltspimage_name').chomp
+
+  choice_types = {
+    '/ltsp.img'        => 'DEFAULT',
+    '/ltsp-backup.img' => 'BACKUP',
+  }
+
+  choice_type = choice_types[loop_img]
+  description \
+    = choice_type \
+        ? "#{ choice_type } - (lvm/puavo-images)/#{ this_ltspimage_name } (#{ loop_img })" \
+        : "OTHER (#{ loop_img })"
+
+  if superlaptop_mode
+    description = "*SUPERLAPTOP* #{ description }"
+  end
+
+  system('grub-editenv',
+         '/images/boot/grub/grubenv',
+         'set',
+         %Q{default=#{ description }}) \
+    or raise 'Problem in updating grub environment'
 end
 
-def configure_persistent_overlay(conf)
+def configure_login_permissions(conf)
   raise 'XXX'
 end
 
@@ -126,9 +156,9 @@ begin
     [ '--help',                  '-h', GetoptLong::NO_ARGUMENT,       ],
 
     [ '--admins',                      GetoptLong::NO_ARGUMENT,       ],
+    [ '--grub-default',                GetoptLong::NO_ARGUMENT,       ],
     [ '--local-users',                 GetoptLong::NO_ARGUMENT,       ],
     [ '--login-permissions',           GetoptLong::NO_ARGUMENT,       ],
-    [ '--persistent-overlay',          GetoptLong::NO_ARGUMENT,       ],
     [ '--software-installation',       GetoptLong::REQUIRED_ARGUMENT, ],
   )
 
@@ -140,9 +170,9 @@ begin
 	print_help()
 	exit(0)
       when '--admins',
+	   '--grub-default',
 	   '--local-users',
-	   '--login-permissions',
-	   '--persistent-overlay'
+	   '--login-permissions'
 	apply_configs.push(opt)
       when '--software-installation'
 	apply_configs.push(opt)
@@ -164,9 +194,9 @@ end
 
 dispatch_table = {
   '--admins'                => lambda { configure_admins(conf)               },
+  '--grub-default'          => lambda { configure_grub_default()             },
   '--local-users'           => lambda { configure_local_users(conf)          },
   '--login-permissions'     => lambda { configure_login_permissions(conf)    },
-  '--persistent-overlay'    => lambda { configure_persistent_overlay(conf)   },
   '--software-installation' => lambda { install_software(conf, license_list) },
 }
 
