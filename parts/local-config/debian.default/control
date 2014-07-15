@@ -7,5 +7,5 @@ Standards-Version: 3.9.3
 
 Package: puavo-local-config
 Architecture: all
-Depends: ${misc:Depends}, node-webkit, puavo-ltsp-client, whois
+Depends: ${misc:Depends}, node-webkit, puavo-ltsp-client, ruby1.9.1, whois
 Description: Puavo configuration tool for local (host-specific) features.
