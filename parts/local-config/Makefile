@@ -16,7 +16,7 @@ all :
 .PHONY : installdirs
 installdirs :
 	mkdir -p $(DESTDIR)$(bindir)
-	mkdir -p $(DESTDIR)$(libdir)/puavo-laptop-config
+	mkdir -p $(DESTDIR)$(libdir)/puavo-laptop-config-ui
 
 .PHONY : install
 install : installdirs
@@ -26,6 +26,7 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/puavo-laptop-config-ui \
 		app/index.html   \
+		app/index.js     \
 		app/package.json \
 		app/style.css
 
