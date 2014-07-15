@@ -104,7 +104,8 @@ function get_license_list() {
   var list = [];
 
   for (var i in software_directories) {
-    var dir_fullpath = basedir + '/' + software_directories[i];
+    var dir = software_directories[i];
+    var dir_fullpath = basedir + '/' + dir;
     if (! fs.statSync(dir_fullpath).isDirectory())
       continue;
 
@@ -113,10 +114,8 @@ function get_license_list() {
       var license_info = JSON.parse(fs.readFileSync(license_path));
     } catch(ex) { alert(ex); continue; }
 
-    if (license_info
-          && license_info.key
-          && license_info.name
-          && license_info.url) {
+    if (license_info && license_info.name && license_info.url) {
+      license_info.key = dir;
       list.push(license_info);
     } else {
       alert('License information was not in correct format in '
