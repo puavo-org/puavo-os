@@ -1,4 +1,4 @@
-/usr/sbin/puavo-local-config --admins         \
-			     --grub-default   \
-			     --local-users    \
-			     --setup-software
+/usr/sbin/puavo-local-config --admins             \
+                             --grub-default       \
+                             --local-users        \
+                             --setup-software all
