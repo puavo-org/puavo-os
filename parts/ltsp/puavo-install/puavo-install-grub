@@ -54,6 +54,7 @@ tmp_grub_cfg_path="${grub_cfg_path}.tmp"
 
 cat <<'EOF' | sed "s|__HOSTTYPE_SPECIFIC__|$hosttype_specific|" > "$tmp_grub_cfg_path"
 set default="0"
+load_env
 
 function load_video {
   if [ x$feature_all_video_module = xy ]; then
