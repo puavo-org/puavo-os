@@ -122,7 +122,7 @@ function ltsp_image_entry_superlaptop {
     return
   fi
 
-  set description="[SUPERLAPTOP] ${description}"
+  set description="*SUPERLAPTOP* ${description}"
   set kernelparameters="puavo.image.overlay=default puavo.local.enable_superusers=true $kernelparameters"
 
   ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}"
