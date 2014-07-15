@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+
+from xdg import Menu
+from xdg.DesktopEntry import DesktopEntry
+
+
+
+
+def walk_menu(menu, prefix=""):
+    if isinstance(menu, Menu.MenuEntry):
+        return print_entry(menu, prefix)
+
+    if isinstance(menu, Menu.Menu):
+        print_menu(menu, prefix)
+        for e in menu.getEntries():
+            walk_menu(e, prefix + "  ")
+        return
+
+    print prefix, "stop", menu.__class__
+    return
+
+def print_entry(entry, prefix=""):
+    de = entry.DesktopEntry
+    print prefix, "-", de.getName() + ": " + de.getExec().encode('utf-8'), de.getIcon()
+
+def print_menu(menu, prefix=""):
+    print prefix, menu.getName()
+
+
+menu = Menu.parse("/etc/xdg/menus/gnome-applications.menu")
+walk_menu(menu)
