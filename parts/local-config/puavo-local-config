@@ -17,15 +17,15 @@ def print_help()
   puts <<-EOF
 puavo-local-config [OPTIONS]
 
--c, --config-path          set configuration file path
--h, --help                 show help
+-c, --config-path         set configuration file path
+-h, --help                show help
 
-    --admins               configure admins
-    --grub-default         configure grub default
-    --local-users          configure local users
-    --login-permissions    configure login permissions
+    --admins              configure admins
+    --grub-default        configure grub default
+    --local-users         configure local users
+    --login-permissions   configure login permissions
 
-    --software-installation ["all" | a list of licenses separated with comma]
+    --setup-software      ["all" | a list of software separated with comma]
   EOF
 end
 
@@ -141,25 +141,42 @@ def configure_login_permissions(conf)
   raise 'XXX'
 end
 
-def install_software(conf, license_list)
-  raise 'XXX'
+def setup_software(conf, software_list)
+  if software_list.include?('all')
+    software_list \
+      = Dir.glob('/usr/share/puavo-ltsp-client/restricted-packages/*') \
+           .map { |s| File.basename(s) }
+  end
+
+  to_install, to_uninstall \
+    = software_list.partition { |software| conf['licenses'][software] }
+
+  if !to_install.empty? then
+    system('puavo-restricted-package-tool', 'install', *to_install) \
+      or warn 'Problem in installing packages'
+  end
+
+  if !to_uninstall.empty? then
+    system('puavo-restricted-package-tool', 'uninstall', *to_uninstall) \
+      or warn 'Problem in uninstalling packages'
+  end
 end
 
-config_path = '/etc/puavo/local.json'
+config_path = '/state/etc/puavo/local.json'
 
 apply_configs = []
-license_list = []
+software_list = []
 
 begin
   opts = GetoptLong.new(
-    [ '--config-path',           '-c', GetoptLong::REQUIRED_ARGUMENT, ],
-    [ '--help',                  '-h', GetoptLong::NO_ARGUMENT,       ],
+    [ '--config-path',       '-c', GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--help',              '-h', GetoptLong::NO_ARGUMENT,       ],
 
-    [ '--admins',                      GetoptLong::NO_ARGUMENT,       ],
-    [ '--grub-default',                GetoptLong::NO_ARGUMENT,       ],
-    [ '--local-users',                 GetoptLong::NO_ARGUMENT,       ],
-    [ '--login-permissions',           GetoptLong::NO_ARGUMENT,       ],
-    [ '--software-installation',       GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--admins',                  GetoptLong::NO_ARGUMENT,       ],
+    [ '--grub-default',            GetoptLong::NO_ARGUMENT,       ],
+    [ '--local-users',             GetoptLong::NO_ARGUMENT,       ],
+    [ '--login-permissions',       GetoptLong::NO_ARGUMENT,       ],
+    [ '--setup-software',          GetoptLong::REQUIRED_ARGUMENT, ],
   )
 
   opts.each do |opt, arg|
@@ -174,9 +191,9 @@ begin
 	   '--local-users',
 	   '--login-permissions'
 	apply_configs.push(opt)
-      when '--software-installation'
+      when '--setup-software'
 	apply_configs.push(opt)
-	license_list = arg.split(',')
+	software_list = arg.split(',')
     end
   end
 
@@ -193,11 +210,11 @@ rescue Exception => e
 end
 
 dispatch_table = {
-  '--admins'                => lambda { configure_admins(conf)               },
-  '--grub-default'          => lambda { configure_grub_default()             },
-  '--local-users'           => lambda { configure_local_users(conf)          },
-  '--login-permissions'     => lambda { configure_login_permissions(conf)    },
-  '--software-installation' => lambda { install_software(conf, license_list) },
+  '--admins'            => lambda { configure_admins(conf)              },
+  '--grub-default'      => lambda { configure_grub_default()            },
+  '--local-users'       => lambda { configure_local_users(conf)         },
+  '--login-permissions' => lambda { configure_login_permissions(conf)   },
+  '--setup-software'    => lambda { setup_software(conf, software_list) },
 }
 
 exit_code = 0
