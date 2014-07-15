@@ -91,6 +91,9 @@ function ltsp_image_entry {
 
   pathname $imagefile imagepath
 
+  # if changing menuentry description, update correspondingly on
+  # puavo-local-config configure_grub_default()
+
   menuentry "${description} (${imagepath})" "$imagefile" "$imagepath" "$kernelparameters" {
     set imagefile="$2"
     set imagepath="$3"
