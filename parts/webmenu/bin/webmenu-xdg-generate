@@ -1,31 +1,96 @@
 #!/usr/bin/env python
+"""
+http://standards.freedesktop.org/menu-spec/latest/
+http://pyxdg.readthedocs.org/en/latest/index.html
+"""
+
+
+import os
+import json
+import argparse
+from os import path
 
 from xdg import Menu
 from xdg.DesktopEntry import DesktopEntry
+from xdg.Exceptions import ParsingError
+
+XDG_CONFIG_DIRS = os.getenv("XDG_CONFIG_DIRS", "/etc/xdg/menus/")
+XDG_MENU_PREFIX = os.getenv("XDG_MENU_PREFIX", "gnome-")
 
 
+def walk_xdg_menu(menu, menu_json=None):
+    """
+    Walk xdg menu recursively to Webmenu menu json
+    """
 
+    if not menu_json:
+        menu_json = {
+            "name": "Categories",
+            "items": []
+        }
 
-def walk_menu(menu, prefix=""):
     if isinstance(menu, Menu.MenuEntry):
-        return print_entry(menu, prefix)
+
+        de = menu.DesktopEntry
+        menu_json["items"].append({
+            "type": "custom",
+            "name": de.getName(),
+            "command": de.getExec().encode("utf-8"),
+            "osIconPath": de.getIcon()
+        })
+        return menu_json
 
     if isinstance(menu, Menu.Menu):
-        print_menu(menu, prefix)
+        submenu = {
+            "type": "menu",
+            "name": menu.getName(),
+            "items": []
+        }
+
+        menu_json["items"].append(submenu)
+
         for e in menu.getEntries():
-            walk_menu(e, prefix + "  ")
-        return
+            walk_xdg_menu(e, submenu)
 
-    print prefix, "stop", menu.__class__
-    return
+        return menu_json
 
-def print_entry(entry, prefix=""):
-    de = entry.DesktopEntry
-    print prefix, "-", de.getName() + ": " + de.getExec().encode('utf-8'), de.getIcon()
+    return menu_json
 
-def print_menu(menu, prefix=""):
-    print prefix, menu.getName()
+def find_menu_file():
+    for config_dir in XDG_CONFIG_DIRS.split(":"):
+        menu_path = path.join(config_dir, "menus", XDG_MENU_PREFIX + "applications.menu")
+        try:
+            return Menu.parse(menu_path)
+        except (ParsingError, IOError):
+            pass
+
+def main():
+    parser = argparse.ArgumentParser(description=
+    """
+    Generate Webmenu menu.json from freedesktop.org Desktop Menu Specification 
+    http://standards.freedesktop.org/menu-spec/latest/
+    """)
+
+    parser.add_argument('menu_path', metavar='MENU_FILE', type=str,  nargs='?',
+                           help='Custom path to a .menu file. If not specified XDG_CONFIG_DIRS and XDG_MENU_PREFIX environment variables are used find correct menu file according to the specification.')
+
+    args = parser.parse_args()
+
+    menu = None
+    if args.menu_path:
+        menu = Menu.parse(args.menu_path)
+    else:
+        menu = find_menu_file()
+
+    if not menu:
+        raise Exception("Could not find any .menu files")
+
+    menu_json = walk_xdg_menu(menu)
+    print json.dumps(
+        menu_json,
+        sort_keys=True,
+        indent=2,
+    )
 
 
-menu = Menu.parse("/etc/xdg/menus/gnome-applications.menu")
-walk_menu(menu)
+main()
