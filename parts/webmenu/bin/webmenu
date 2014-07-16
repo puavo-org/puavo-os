@@ -55,11 +55,16 @@ done
 
 # https://github.com/visionmedia/mon
 mon_args=""
-mon_pidfile="$WM_HOME/mon.pid"
+pidfile="$WM_HOME/mon.pid"
 
 wm_args=""
 
 use_mon=true
+
+# Kill previous webmenu if any
+if [ -f "$pidfile" ]; then
+    kill $(cat $pidfile) || true
+fi
 
 while true; do
     case "${1:-}" in
@@ -106,8 +111,6 @@ while true; do
             shift
         ;;
         -s|--stop)
-            set -x
-            kill $(cat $mon_pidfile)
             exit 0
         ;;
         "")
@@ -151,10 +154,11 @@ if $use_mon; then
     exec mon $mon_args \
         --log $WM_LOG_FILE \
         --attempts 2 \
-        --mon-pidfile "$mon_pidfile" \
+        --mon-pidfile "$pidfile" \
         --on-restart $restart_script \
         --on-error $error_script \
         "nw . $wm_args"
 else
+    echo $$ > "$pidfile"
     exec nw . $wm_args
 fi
