@@ -195,7 +195,11 @@ get_next_image() {
     return 1
   fi
 
-  rdiff_filename=$(get_rdiff_filename $previous_image $next_image)
+  rdiff_filename=$(get_rdiff_filename $previous_image $next_image) || {
+      log err "failed to determine the filename of rdiff between images \
+'${previous_image}' and '${next_image}'"
+      return 1
+  }
 
   mkdir -p "$rdiffs_dir"
 
