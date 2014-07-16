@@ -18,6 +18,7 @@ help(){
     --no-mon        Disable automatic restarting with mon
     --log           Enable fluentd logging
     --feedback      Enable feedback. Implies --log
+    -x --use-xdg    Generating menu content using the Desktop Menu Specification
     --webkiosk      Enable webkiosk mode.
     -s --stop       Stop the running Webmenu process
     -n --no-build   Skip asset building in development mode
@@ -93,6 +94,11 @@ while true; do
         ;;
         -n|--no-build)
             build_assets=false
+            shift
+        ;;
+        -x|--use-xdg)
+            echo "Generating menu.json"
+            webmenu-xdg > "$WM_HOME/menu.json"
             shift
         ;;
         --no-mon)
