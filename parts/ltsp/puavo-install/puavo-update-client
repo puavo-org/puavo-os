@@ -18,6 +18,7 @@ fi
 
 use_rate_limit=false
 do_image_update=true
+async=false
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -28,11 +29,16 @@ while [ $# -gt 0 ]; do
             echo "Update device configuration and images."
             echo
             echo "Options:"
+            echo "    --async                      do not wait for a reply"
             echo "    --use-rate-limit             limit the image download rate"
             echo "    --no-image-update            do not update images, only configurations"
             echo "    -h, --help                   print help and exit"
             echo
             exit 0
+            ;;
+        --async)
+            shift
+            async=true
             ;;
         --use-rate-limit)
             shift
@@ -61,12 +67,18 @@ fi
 
 set -u
 
+dbus_send_args=
+
+if ! $async; then
+    dbus_send_args='--print-reply=literal'
+fi
+
 dbus-send --system --dest=org.puavo.client.Daemon \
-    --print-reply=literal \
+    ${dbus_send_args} \
     /updater org.puavo.client.update.UpdateConfiguration || true
 
 if $do_image_update; then
     dbus-send --system --dest=org.puavo.client.Daemon \
-        --print-reply=literal \
+        ${dbus_send_args} \
         /updater org.puavo.client.update.UpdateImages "boolean:${use_rate_limit}" || true
 fi
