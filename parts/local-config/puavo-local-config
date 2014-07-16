@@ -19,15 +19,14 @@ def print_help()
   puts <<-EOF
 puavo-local-config [OPTIONS]
 
--c, --config-path         set configuration file path
--h, --help                show help
+-c, --config-path      set configuration file path
+-h, --help             show help
 
-    --admins              configure admins
-    --grub-default        configure grub default
-    --local-users         configure local users
-    --login-permissions   configure login permissions
+    --admins           configure admins
+    --grub-default     configure grub default
+    --local-users      configure local users
 
-    --setup-software      ["all" | a list of software separated with comma]
+    --setup-software   ["all" | a list of software separated with comma]
   EOF
 end
 
@@ -144,12 +143,6 @@ def configure_grub_default()
     or raise 'Problem in updating grub environment'
 end
 
-def configure_login_permissions(conf)
-  raise 'No configuration' if conf.nil?
-
-  raise 'XXX'
-end
-
 def superlaptop_mode?
   kernel_cmdline = IO.read('/proc/cmdline')
   superlaptop_mode_re \
@@ -197,7 +190,6 @@ begin
     [ '--admins',                  GetoptLong::NO_ARGUMENT,       ],
     [ '--grub-default',            GetoptLong::NO_ARGUMENT,       ],
     [ '--local-users',             GetoptLong::NO_ARGUMENT,       ],
-    [ '--login-permissions',       GetoptLong::NO_ARGUMENT,       ],
     [ '--setup-software',          GetoptLong::REQUIRED_ARGUMENT, ],
   )
 
@@ -208,10 +200,7 @@ begin
       when '--help'
 	print_help()
 	exit(0)
-      when '--admins',
-	   '--grub-default',
-	   '--local-users',
-	   '--login-permissions'
+      when '--admins', '--grub-default', '--local-users'
 	apply_configs.push(opt)
       when '--setup-software'
 	apply_configs.push(opt)
@@ -232,11 +221,10 @@ rescue Exception => e
 end
 
 dispatch_table = {
-  '--admins'            => lambda { configure_admins(conf)              },
-  '--grub-default'      => lambda { configure_grub_default()            },
-  '--local-users'       => lambda { configure_local_users(conf)         },
-  '--login-permissions' => lambda { configure_login_permissions(conf)   },
-  '--setup-software'    => lambda { setup_software(conf, software_list) },
+  '--admins'         => lambda { configure_admins(conf)              },
+  '--grub-default'   => lambda { configure_grub_default()            },
+  '--local-users'    => lambda { configure_local_users(conf)         },
+  '--setup-software' => lambda { setup_software(conf, software_list) },
 }
 
 exit_code = 0
