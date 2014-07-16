@@ -157,16 +157,23 @@ class MenuJSON(object):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=
-    """
-    Generate Webmenu menu.json from freedesktop.org Desktop Menu Specification
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+        description="""
+        Generate Webmenu menu.json from freedesktop.org Desktop Menu Specification
 
+        http://standards.freedesktop.org/menu-spec/latest/
 
-    Example: %s > ~/.config/webmenu/menu.json
+        Example:
 
+            {script} > ~/.config/webmenu/menu.json
 
-    http://standards.freedesktop.org/menu-spec/latest/
-    """ % SCRIPT_NAME)
+        Set LANGUAGE to generate menu for custom languages:
+
+            LANGUAGE=de_CH {script} > ~/.config/webmenu/menu.json
+
+        """.format(script=SCRIPT_NAME)
+    )
 
     parser.add_argument("-v", "--verbose",
         action="store_true",
