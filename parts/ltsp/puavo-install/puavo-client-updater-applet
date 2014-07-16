@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+import datetime
 import sys
 import gtk
 import appindicator
@@ -53,7 +54,7 @@ class UpdateIndicatorApplet:
                                      buttons=(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
         self.log_dialog.set_default_size(600, 300)
         self.log_buffer = gtk.TextBuffer()
-        self.log_error_tag = self.log_buffer.create_tag(foreground="red")
+        self.log_error_tag = self.log_buffer.create_tag(foreground="red", left_margin=20)
         log_view = gtk.TextView(self.log_buffer)
         log_view.set_editable(False)
         log_view.set_cursor_visible(False)
@@ -91,8 +92,11 @@ class UpdateIndicatorApplet:
         self.update_image_item.set_sensitive(True)
         self.indicator.set_attention_icon("update-error")
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
-        end_iter = self.log_buffer.get_end_iter()
-        self.log_buffer.insert_with_tags(end_iter, errmsg, self.log_error_tag)
+        self.log_buffer.insert(self.log_buffer.get_end_iter(),
+                               "%s: Update failed:\n" %
+                               datetime.datetime.now())
+        self.log_buffer.insert_with_tags(self.log_buffer.get_end_iter(),
+                                         errmsg, self.log_error_tag)
 
     def handle_update_image_reply(self, output):
         print(output)
