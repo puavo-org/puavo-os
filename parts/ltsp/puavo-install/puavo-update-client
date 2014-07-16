@@ -73,12 +73,16 @@ if ! $async; then
     dbus_send_args='--print-reply=literal'
 fi
 
+# if synchronous call, fail after 30 seconds
 dbus-send --system --dest=org.puavo.client.Daemon \
+    --reply-timeout=30000 \
     ${dbus_send_args} \
     /updater org.puavo.client.update.UpdateConfiguration || true
 
 if $do_image_update; then
+    # if synchronous cal, fail after 8 hours
     dbus-send --system --dest=org.puavo.client.Daemon \
+        --reply-timeout=28800000 \
         ${dbus_send_args} \
         /updater org.puavo.client.update.UpdateImages "boolean:${use_rate_limit}" || true
 fi
