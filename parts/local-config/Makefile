@@ -17,6 +17,7 @@ all :
 installdirs :
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d
 	mkdir -p $(DESTDIR)$(libdir)/puavo-local-config-ui
 
@@ -27,6 +28,9 @@ install : installdirs
 	
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-local-config
+	
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/applications \
+		puavo-local-config-ui.desktop
 	
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d \
 		init-puavo.d/*-*
