@@ -179,7 +179,7 @@ def main():
 
     parser.add_argument("-f", "--fallback",
         default="gnome-terminal",
-        help="Fallback icon name for items not having name"
+        help="Fallback icon name for items with missing or invalid icon"
     )
 
     parser.add_argument("menu_path",
