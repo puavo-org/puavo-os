@@ -7,7 +7,10 @@ function assemble_config_and_exit(old_config) {
   var response = document.forms[0].elements;
   var new_config = {};
 
-  new_config.allow_login = response.allow_login.value;
+  new_config.allow_logins_for
+    = response.allow_logins_for.value === 'all_puavo_domain_users'
+        ? [ '*' ]
+        : [];
 
   new_config.licenses = {};
   var license_checkboxes
@@ -165,10 +168,10 @@ function read_config() {
       return false;
     } else {
       config = {
-        allow_login: 'localusers',
-        admins:      [],
-        licenses:    {},
-        local_users: [ { hashed_password: '', login: '', name: '', } ],
+        admins:           [],
+        allow_logins_for: [ '*' ],
+        licenses:         {},
+        local_users:      [ { hashed_password: '', login: '', name: '', } ],
       };
     }
   }
@@ -177,10 +180,15 @@ function read_config() {
 }
 
 function set_form_values_from_config(config) {
-  // allow_login
-  [].forEach.call(document.querySelectorAll('input[name=allow_login'),
+  // allow_logins_for
+  allow_logins_for
+    = config.allow_logins_for.indexOf('*') >= 0
+        ? 'all_puavo_domain_users'
+        : 'some_puavo_domain_users';
+
+  [].forEach.call(document.querySelectorAll('input[name=allow_logins_for]'),
                   function(e) {
-                    if (e.getAttribute('value') === config.allow_login)
+                    if (e.getAttribute('value') === allow_logins_for)
                       e.setAttribute('checked', true); });
 
   // local_users
