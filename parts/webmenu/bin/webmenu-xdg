@@ -40,12 +40,10 @@ def to_data_uri(filename):
     http://en.wikipedia.org/wiki/Data_URI_scheme
     """
     pixbuf = gtk.gdk.pixbuf_new_from_file(filename)
-    tmp = NamedTemporaryFile()
-    pixbuf.save(tmp.name, "png")
-    tmp.seek(0)
-    b64 = base64.b64encode(tmp.read())
-    tmp.close()
-    return "data:image/png;base64," + b64
+    with NamedTemporaryFile() as tmp:
+        pixbuf.save(tmp.name, "png")
+        b64 = base64.b64encode(tmp.read())
+        return "data:image/png;base64," + b64
 
 def to_webmenu_format(icon):
     "Convert gtk.IconInfo or filename string to a format understood by Webmenu"
