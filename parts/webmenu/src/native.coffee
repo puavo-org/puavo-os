@@ -24,7 +24,11 @@ createSpawnSocket = require "./createSpawnSocket"
 logger = require "./fluent-logger"
 pkg = require "../package.json"
 
-webmenuHome = process.env.HOME + "/.config/webmenu"
+
+if process.env.WM_HOME
+    webmenuHome = process.env.WM_HOME
+else
+    webmenuHome = process.env.HOME + "/.config/webmenu"
 
 spawnSocket = path.join(webmenuHome, "spawn.sock")
 spawnSocket = process.env.WM_SOCK if process.env.WM_SOCK
@@ -62,6 +66,7 @@ if sp = process.env.PUAVO_SESSION_PATH
 locale = process.env.LANG
 locale ||= "fi_FI.UTF-8"
 menuJSON = requirefallback(
+    webmenuHome + "/xdg-menu.json"
     webmenuHome + "/menu.json"
     "/etc/webmenu/menu.json"
     __dirname + "/../menu.json"

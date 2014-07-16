@@ -62,6 +62,7 @@ pidfile="$WM_HOME/mon.pid"
 wm_args=""
 
 use_mon=true
+use_xdg=false
 
 # Kill previous webmenu if any
 if [ -f "$pidfile" ]; then
@@ -104,8 +105,7 @@ while true; do
             shift
         ;;
         -x|--use-xdg)
-            echo "Generating menu.json"
-            webmenu-xdg > "$WM_HOME/menu.json"
+            use_xdg=true
             shift
         ;;
         --no-mon)
@@ -125,6 +125,13 @@ while true; do
     esac
 done
 
+
+if $use_xdg; then
+    echo "Generating xdg-menu.json"
+    webmenu-xdg > "$WM_HOME/xdg-menu.json"
+else
+    rm -f "$WM_HOME/xdg-menu.json"
+fi
 
 if $build_assets; then
     echo "Compiling i18n and CoffeeScript for node.js"
