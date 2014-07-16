@@ -12,6 +12,13 @@ auth    optional        pam_group.so
 # exists and contains some restrictions
 auth	required	pam_exec.so /usr/lib/puavo-ltsp-client/pam/restrict-logins-by-local-config
 
+# allow local users in
+auth    [success=ok default=4]      pam_unix.so
+auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/make-session-dir
+auth    optional        pam_gnome_keyring.so
+auth    optional        pam_cap.so
+auth    sufficient      pam_permit.so
+
 # Here we do some tricks to get sssd behave nicely with shared laptops where 
 # a new user is using the laptop right after it connects to the network. 
 # LDAP provider in sssd 1.9.4 takes some time to realise that it can go online 
@@ -27,7 +34,7 @@ auth	required	pam_exec.so /usr/lib/puavo-ltsp-client/pam/restrict-logins-by-loca
 # If pam_krb5 fails, pam_sss needs to succeed for the user to be able to
 # login. In that case do not call puavo-ltsp-login as it could not connect 
 # a working server.
-auth    [success=7 default=ignore]      pam_krb5.so
+auth    [success=7 default=ignore]      pam_krb5.so use_first_pass
 auth    [success=1 default=ignore]	pam_sss.so use_first_pass
 auth	requisite	pam_deny.so
 auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/make-session-dir
