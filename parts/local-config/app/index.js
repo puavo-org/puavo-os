@@ -1,7 +1,7 @@
 var child_process = require('child_process');
 var fs = require('fs');
 
-var config_json_path = '/state/etc/puavo/local.json';
+var config_json_path = '/state/etc/puavo/local/config.json';
 
 function assemble_config_and_exit(old_config) {
   var response = document.forms[0].elements;
@@ -219,8 +219,10 @@ function set_form_values_from_config(config) {
 
 function write_config_json_and_exit(conf) {
   try {
-    fs.writeFileSync(config_json_path,
-                     JSON.stringify(conf) + "\n");
+    var data = JSON.stringify(conf) + "\n";
+    var tmpfile = config_json_path + '.tmp';
+    fs.writeFileSync(tmpfile, data);
+    fs.renameSync(tmpfile, config_json_path);
   } catch (ex) { alert(ex); throw(ex); }
 
   process.exit(0);

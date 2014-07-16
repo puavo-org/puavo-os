@@ -13,6 +13,8 @@ require 'fileutils'
 require 'getoptlong'
 require 'json'
 
+Ltspadmins_group_id = 3000
+
 def print_help()
   puts <<-EOF
 puavo-local-config [OPTIONS]
@@ -66,7 +68,7 @@ def configure_admins(conf)
   kernel_cmdline = IO.read('/proc/cmdline')
 
   # we could also use a new, specific group for this?
-  new_line = "puavolocaladmins:x:3000:#{ conf['admins'].join(',') }"
+  new_line = "puavolocaladmins:x:#{ Ltspadmins_group_id }:#{ conf['admins'].join(',') }"
   search_and_replace_line('/etc/group',
                          /^puavolocaladmins:/,
                          new_line)
@@ -170,7 +172,13 @@ def setup_software(conf, software_list)
   end
 end
 
-config_path = '/state/etc/puavo/local.json'
+config_path = '/state/etc/puavo/local/config.json'
+
+# we prepare the standard config path directory
+config_path_dir = File.dirname(config_path)
+FileUtils.mkdir_p(config_path_dir)
+FileUtils.chmod(02770, config_path_dir)
+FileUtils.chown(0, Ltspadmins_group_id, config_path_dir)
 
 apply_configs = []
 software_list = []
