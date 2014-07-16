@@ -12,20 +12,25 @@ flock -nx 3 || { echo did not get a lock, exiting; exit 1; }
 
 set -eu
 
-log() { echo "$2" | logger -p "$1" -s -t puavo-install-and-update-ltspimages; }
+log() {
+    if $quiet && [ "$1" != "err" ]; then
+            return 0
+    fi
+    echo "$2" | logger -p "$1" -s -t puavo-install-and-update-ltspimages
+}
 
 usage() {
   {
     echo "Usage:"
-    echo "  $(basename $0) [--install-from-file path] next_ltsp_image_name"
-    echo "  $(basename $0) [--install-from-nbd path]  next_ltsp_image_name"
-    echo "  $(basename $0) [--rate-limit rate]        next_ltsp_image_name"
+    echo "  $(basename $0) [--quiet] [--install-from-file path] next_ltsp_image_name"
+    echo "  $(basename $0) [--quiet] [--install-from-nbd path]  next_ltsp_image_name"
+    echo "  $(basename $0) [--quiet] [--rate-limit rate]        next_ltsp_image_name"
   } > /dev/stderr
   exit 1
 }
 
-if ! args=$(getopt -n "$0" -o +f:n:r: \
-		   -l 'install-from-file:,install-from-nbd:,rate-limit:' \
+if ! args=$(getopt -n "$0" -o +f:n:r:q \
+		   -l 'install-from-file:,install-from-nbd:,rate-limit:,quiet' \
 		   -- "$@"); then
   usage
 fi
@@ -33,6 +38,7 @@ fi
 image_from_file=""
 image_from_nbd=""
 rate_limit_opts=""
+quiet=false
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
@@ -45,6 +51,9 @@ while [ $# -ne 0 ]; do
       ;;
     -r|--rate-limit)
       rate_limit_opts="--limit-rate $2"; shift; shift
+      ;;
+    -q|--quiet)
+      quiet=true; shift;
       ;;
     --) shift; break;;      
   esac
