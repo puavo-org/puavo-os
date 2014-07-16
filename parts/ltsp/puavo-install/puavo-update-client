@@ -37,12 +37,10 @@ while [ $# -gt 0 ]; do
         --use-rate-limit)
             shift
             use_rate_limit=true
-            break
             ;;
         --no-image-update)
             shift
             do_image_update=false
-            break
             ;;
         --)
             shift
