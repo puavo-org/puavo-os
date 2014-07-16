@@ -1,6 +1,12 @@
 #!/bin/sh
 
+if [ "$WM_HOME" = "" ]; then
+    export WM_HOME="$HOME/.config/webmenu"
+fi
+
+
 set -eu
+
 
 help(){
     echo "
@@ -22,6 +28,8 @@ help(){
     --test          Run tests
     "
 }
+
+mkdir -p $WM_HOME
 
 # Webmenu installation path
 if [ -f package.json ]; then
@@ -121,7 +129,6 @@ if [ -f "$WM_LOG_FILE" ]; then
 fi
 
 
-mkdir -p $WM_HOME
 
 echo "Starting webmenu from $WM_PATH"
 echo "Logging to $WM_LOG_FILE"
