@@ -65,6 +65,8 @@ def search_and_replace_line(file, re, new_line)
 end
 
 def configure_admins(conf)
+  raise 'No configuration' if conf.nil?
+
   kernel_cmdline = IO.read('/proc/cmdline')
 
   # we could also use a new, specific group for this?
@@ -83,6 +85,8 @@ def configure_admins(conf)
 end
 
 def configure_local_users(conf)
+  raise 'No configuration' if conf.nil?
+
   uid     = 3001
   uid_max = 3999
 
@@ -141,6 +145,8 @@ def configure_grub_default()
 end
 
 def configure_login_permissions(conf)
+  raise 'No configuration' if conf.nil?
+
   raise 'XXX'
 end
 
@@ -222,7 +228,7 @@ begin
   conf = JSON.parse( IO.read(config_path) )
 rescue Exception => e
   warn "Could not read and interpret #{ config_path }: #{ e.message }"
-  exit(1)
+  conf = nil
 end
 
 dispatch_table = {
