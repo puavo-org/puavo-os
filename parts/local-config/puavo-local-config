@@ -2,11 +2,13 @@
 
 # puavo-local-config configures system according to admin user preferences.
 # See puavo-local-config-ui for the user interface.  puavo-local-config
-# reads a configuration file ("/etc/puavo/local.json" by default) that
-# contains user preferences, and applies those to the system depending on
-# given option arguments.  Run "puavo-local-config --help" for information
-# on command arguments.  All wanted functionality must be explicitly requested
-# with command arguments.
+# reads a configuration file ("/state/etc/puavo/local/config.json"
+# by default) that contains user preferences, and applies those to the
+# system depending on given option arguments.  Run
+# "puavo-local-config --help" for information on command arguments.
+# Most wanted functionality must be explicitly requested with command
+# arguments, but puavo-local-config also intends to prepare the system for
+# configuration (by puavo-local-config-ui).
 
 require 'etc'
 require 'fileutils'
@@ -64,12 +66,16 @@ def search_and_replace_line(file, re, new_line)
 end
 
 def configure_admins(conf)
-  raise 'No configuration' if conf.nil?
+  # If there is no conf, there are no admin, but as a side effect this creates
+  # the "puavolocaladmins"-group, which is needed to configure the system
+  # (to create the configuration file).  At this stage guest-users will be
+  # put into "puavolocaladmins"-group dynamically.
+  admins = conf ? conf['admins'] : []
 
   kernel_cmdline = IO.read('/proc/cmdline')
 
   # we could also use a new, specific group for this?
-  new_line = "puavolocaladmins:x:#{ Ltspadmins_group_id }:#{ conf['admins'].join(',') }"
+  new_line = "puavolocaladmins:x:#{ Ltspadmins_group_id }:#{ admins.join(',') }"
   search_and_replace_line('/etc/group',
                          /^puavolocaladmins:/,
                          new_line)
@@ -84,7 +90,7 @@ def configure_admins(conf)
 end
 
 def configure_local_users(conf)
-  raise 'No configuration' if conf.nil?
+  return if conf.nil?
 
   uid     = 3001
   uid_max = 3999
@@ -148,6 +154,8 @@ def superlaptop_mode?
 end
 
 def setup_software(conf, software_list)
+  return if conf.nil?
+
   if software_list.include?('all')
     software_list \
       = Dir.glob('/usr/share/puavo-ltsp-client/restricted-packages/*') \
@@ -212,6 +220,11 @@ end
 
 begin
   conf = JSON.parse( IO.read(config_path) )
+rescue Errno::ENOENT
+  conf = nil
+  # configure puavo-local-config-ui to autostart if configuration is missing
+  FileUtils.cp('/usr/share/applications/puavo-local-config-ui.desktop',
+	       '/etc/xdg/autostart/puavo-local-config-ui.desktop')
 rescue Exception => e
   warn "Could not read and interpret #{ config_path }: #{ e.message }"
   conf = nil
