@@ -28,6 +28,7 @@ XDG_MENU_PREFIX = os.getenv("XDG_MENU_PREFIX", "gnome-")
 DEBUG = False
 
 def d(*a):
+    "Print when --verbose is set"
     if DEBUG:
         print(*a, file=sys.stderr)
 
@@ -36,7 +37,7 @@ def to_data_uri(filename):
     """
     Convert filename to png data uri
 
-    node-webkit cannot display xpm icons.
+    http://en.wikipedia.org/wiki/Data_URI_scheme
     """
     pixbuf = gtk.gdk.pixbuf_new_from_file(filename)
     tmp = NamedTemporaryFile()
@@ -47,18 +48,24 @@ def to_data_uri(filename):
     return "data:image/png;base64," + b64
 
 def to_webmenu_format(icon):
+    "Convert gtk.IconInfo or filename string to a format understood by Webmenu"
     if isinstance(icon, basestring):
         full_icon_path = icon
     else:
         full_icon_path = icon.get_filename()
 
     icon_name, ext = path.splitext(full_icon_path)
+    # node-webkit does not understand xpm files
     if ext == ".xpm":
         return to_data_uri(full_icon_path)
 
     return full_icon_path
 
 def find_menu_file():
+    """
+    Find .menu file according to the spec
+    http://standards.freedesktop.org/menu-spec/latest/ar01s02.html
+    """
     for config_dir in XDG_CONFIG_DIRS.split(":"):
         menu_path = path.join(config_dir, "menus", XDG_MENU_PREFIX + "applications.menu")
         try:
@@ -88,6 +95,8 @@ class MenuJSON(object):
         )
 
     def get_icon(self, name, prefered_size=48):
+        "Get icon by name with prefered size"
+
         icon = self._theme.lookup_icon(name, prefered_size, 0)
         if icon:
             return icon
@@ -103,12 +112,14 @@ class MenuJSON(object):
         return icon
 
 
-    def _resolve_icon_path(self, icon):
-        icon_name, ext = path.splitext(icon)
+    def _resolve_icon_path(self, icon_name):
+        icon_name, ext = path.splitext(icon_name)
 
-        if path.exists(icon):
-            return to_webmenu_format(icon)
+        # Just return if absolute path to a icon
+        if path.exists(icon_name):
+            return to_webmenu_format(icon_name)
 
+        # Otherwise look it up from the theme
         if self._theme.has_icon(icon_name):
             icon_ob = self.get_icon(icon_name)
             if icon_ob:
@@ -116,17 +127,16 @@ class MenuJSON(object):
             else:
                 d("WTF", icon_name, "exists but still not here?")
 
-        d("Using fallback icon", self._fallback_icon_name, "for", icon)
+        d("Using fallback icon", self._fallback_icon_name, "for", icon_name)
         return to_webmenu_format(self._get_fallback_icon())
 
 
     def _walk(self, menu, menu_json):
         """
-        Walk xdg menu recursively to Webmenu menu json
+        Walk xdg menu recursively to Webmenu menu.json format
         """
 
         if isinstance(menu, Menu.MenuEntry):
-
             de = menu.DesktopEntry
             menu_json["items"].append({
                 "type": "custom",
@@ -186,7 +196,7 @@ def main():
 
     parser.add_argument("-f", "--fallback",
         default="gnome-terminal",
-        help="Fallback icon name for items with missing or invalid icon"
+        help="Fallback icon name for items with missing or invalid icon. Must exists in the current theme."
     )
 
     parser.add_argument("menu_path",
