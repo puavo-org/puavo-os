@@ -31,6 +31,8 @@ help(){
 }
 
 mkdir -p $WM_HOME
+# Save startup time to a file to log start up times
+date +%s > "$WM_HOME/started"
 
 # Webmenu installation path
 if [ -f package.json ]; then
@@ -145,8 +147,6 @@ echo "Logging to $WM_LOG_FILE"
 restart_script="$(pwd)/bin/webmenu-on-restart"
 error_script="$(pwd)/bin/webmenu-on-error"
 
-# Save startup time to a file to log start up times
-date +%s > "$WM_HOME/started"
 
 set -x
 
