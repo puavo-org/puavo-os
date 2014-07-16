@@ -1,12 +1,18 @@
 
 {spawn, fork} = require "child_process"
+parseExec = require("./parseExec")
 
 commandBuilders =
   desktop: (msg) ->
     if not msg.command
       console.error "Missing command from", msg
       return
-    [command, args...] = msg.command
+
+    if typeof msg.command == "string"
+      [command, args...] = parseExec(msg.command)
+    else
+      [command, args...] = msg.command
+
     return [command, args]
 
   custom: (msg) -> this.desktop(msg)
