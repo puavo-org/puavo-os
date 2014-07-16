@@ -66,6 +66,10 @@ if File.exists?("/etc/puavo/device.json")
   append_tags_to_environment(@tags)
 end
 
+@needs_local_configuration \
+  = @device['personally_administered_device'] \
+      && !File.exists?('/state/etc/puavo/local/config.json')
+
 def write_config(filename, version=nil, secure=false)
   begin
     template_file = filename
