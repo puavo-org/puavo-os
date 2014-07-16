@@ -104,6 +104,7 @@ install: install-dirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		bin/webmenu \
 		bin/webmenu-spawn \
+		bin/webmenu-xdg \
 		bin/webmenu-env \
 		bin/puavo-download-user-photo
 
