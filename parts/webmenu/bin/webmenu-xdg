@@ -24,7 +24,7 @@ from xdg.Exceptions import ParsingError
 
 SCRIPT_NAME = path.basename(__file__)
 XDG_CONFIG_DIRS = os.getenv("XDG_CONFIG_DIRS", "/etc/xdg/menus/")
-XDG_MENU_PREFIX = os.getenv("XDG_MENU_PREFIX", "gnome-")
+XDG_MENU_PREFIX = os.getenv("XDG_MENU_PREFIX", "")
 DEBUG = False
 
 def d(*a):
