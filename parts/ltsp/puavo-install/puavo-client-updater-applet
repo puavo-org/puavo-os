@@ -55,13 +55,13 @@ class UpdateIndicatorApplet:
         self.log_dialog.set_default_size(600, 300)
         self.log_buffer = gtk.TextBuffer()
         self.log_error_tag = self.log_buffer.create_tag(foreground="red", left_margin=20)
-        log_view = gtk.TextView(self.log_buffer)
-        log_view.set_editable(False)
-        log_view.set_cursor_visible(False)
-        log_view.show()
+        self.log_view = gtk.TextView(self.log_buffer)
+        self.log_view.set_editable(False)
+        self.log_view.set_cursor_visible(False)
+        self.log_view.show()
         log_scroll = gtk.ScrolledWindow()
         log_scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        log_scroll.add(log_view)
+        log_scroll.add(self.log_view)
         log_scroll.show()
         self.log_dialog.vbox.pack_start(log_scroll)
 
@@ -97,6 +97,7 @@ class UpdateIndicatorApplet:
                                datetime.datetime.now())
         self.log_buffer.insert_with_tags(self.log_buffer.get_end_iter(),
                                          errmsg, self.log_error_tag)
+        self.log_view.scroll_mark_onscreen(self.log_buffer.get_insert())
 
     def handle_update_image_reply(self, output):
         print(output)
