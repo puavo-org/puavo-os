@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -eu
+
+config_path=/state/etc/puavo/local/config.json 
+
+allowed_logins() { jq -r .allow_logins_for[] "$config_path"; }
+
+# config does not exist or is not readable, so do not restrict anyone
+[ ! -r "$config_path" ] && exit 0
+
+# if configuration contains '*', allow all
+allowed_logins | fgrep -qx '*' && exit 0
+
+# allow this specific user, if match is found in configuration file
+allowed_logins | fgrep -qx "${PAM_USER}" && exit 0
+
+# otherwise, tough luck!
+echo 'User is not allowed in based on locally administered restrictions' >&2
+exit 1

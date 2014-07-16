@@ -235,6 +235,7 @@ install : installdirs
 		pam/make-session-dir \
 		pam/open-session \
 		pam/populate-extrausers \
+		pam/restrict-logins-by-local-config \
 		pam/setup-guest-session
 
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd

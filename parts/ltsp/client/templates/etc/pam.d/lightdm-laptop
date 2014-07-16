@@ -8,6 +8,10 @@ auth    required        pam_env.so readenv=1 envfile=/etc/default/locale
 auth    sufficient      pam_succeed_if.so user ingroup nopasswdlogin
 auth    optional        pam_group.so
 
+# make sure that user is allowed in if /state/etc/puavo/local/config.json
+# exists and contains some restrictions
+auth	required	pam_exec.so /usr/lib/puavo-ltsp-client/pam/restrict-logins-by-local-config
+
 # Here we do some tricks to get sssd behave nicely with shared laptops where 
 # a new user is using the laptop right after it connects to the network. 
 # LDAP provider in sssd 1.9.4 takes some time to realise that it can go online 
