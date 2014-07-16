@@ -84,6 +84,8 @@ def configure_admins(conf)
     if superlaptop_mode? then
       f.write("%puavolocaladmins ALL=(ALL) ALL\n")
     end
+    f.write('%puavolocaladmins ALL=(ALL) NOPASSWD: ' \
+            + "/usr/sbin/puavo-local-config\n")
   end
   File.rename('/etc/sudoers.d/puavolocaladmins.pcltmp',
               '/etc/sudoers.d/puavolocaladmins')
