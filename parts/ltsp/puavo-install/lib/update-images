@@ -34,4 +34,4 @@ update_ltsp_image() {
     fi
 }
 
-update_ltsp_image || true
+update_ltsp_image

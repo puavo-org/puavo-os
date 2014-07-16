@@ -21,6 +21,11 @@ class UpdateIndicatorApplet:
 
         self.menu = gtk.Menu()
 
+        self.view_log_item = gtk.MenuItem("View log...")
+        self.view_log_item.connect("activate", self.view_log)
+        self.view_log_item.show()
+        self.menu.append(self.view_log_item)
+
         self.update_image_item = gtk.MenuItem("(Up to date)")
         self.update_image_item.connect("activate", self.update_image)
         self.update_image_item.show()
@@ -43,6 +48,22 @@ class UpdateIndicatorApplet:
         self.update_iface.connect_to_signal("UpdateFailed",
                                             self.on_update_failed)
 
+        self.log_dialog = gtk.Dialog(title="Update log", parent=None,
+                                     flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                                     buttons=(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        self.log_dialog.set_default_size(600, 300)
+        self.log_buffer = gtk.TextBuffer()
+        self.log_error_tag = self.log_buffer.create_tag(foreground="red")
+        log_view = gtk.TextView(self.log_buffer)
+        log_view.set_editable(False)
+        log_view.set_cursor_visible(False)
+        log_view.show()
+        log_scroll = gtk.ScrolledWindow()
+        log_scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        log_scroll.add(log_view)
+        log_scroll.show()
+        self.log_dialog.vbox.pack_start(log_scroll)
+
     def on_update_available(self):
         self.update_image_item.get_child().set_text("Update")
         self.update_image_item.set_sensitive(True)
@@ -61,11 +82,17 @@ class UpdateIndicatorApplet:
         self.indicator.set_attention_icon("update-downloading")
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
-    def on_update_failed(self):
+    def view_log(self, widget):
+        self.log_dialog.run()
+        self.log_dialog.hide()
+
+    def on_update_failed(self, errmsg):
         self.update_image_item.get_child().set_text("Update")
         self.update_image_item.set_sensitive(True)
         self.indicator.set_attention_icon("update-error")
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
+        end_iter = self.log_buffer.get_end_iter()
+        self.log_buffer.insert_with_tags(end_iter, errmsg, self.log_error_tag)
 
     def handle_update_image_reply(self, output):
         print(output)
