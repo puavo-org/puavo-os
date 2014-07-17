@@ -107,17 +107,13 @@ function add_licenses(license_list) {
 }
 
 function check_download_packs(cb) {
-  var child = child_process.spawn('puavo-restricted-package-tool',
-                                  [ 'list' ]);
+  var handler
+    = function (error, stdout, stderr) {
+        if (error) { throw(error); }
 
-  var output = '';
-  child.stdout.on('data',
-                  function(buf) { output += buf.toString(); });
-
-  var find_downloaded_pkgs
-    = function() {
         obj = {};
-        output.split("\n")
+        stdout.toString()
+              .split("\n")
               .forEach(function (line) {
                          if (line !== '') {
                            a = line.split(/\s+/);
@@ -127,7 +123,25 @@ function check_download_packs(cb) {
         cb(obj);
       };
 
-  child.stdout.on('end', find_downloaded_pkgs);
+  child_process.execFile('puavo-restricted-package-tool',
+                         [ 'list' ],
+                         {},
+                         handler);
+}
+
+function configure_system_and_exit() {
+  var cmd_args = [ '/usr/sbin/puavo-local-config'
+                 , '--admins'
+                 , '--local-users'
+                 , '--setup-pkgs', 'all' ];
+
+  var handler
+    = function(error, stdout, stderr) {
+        if (error) { throw(error); }
+        process.exit(0);
+      };
+
+  child_process.execFile('sudo', cmd_args, {}, handler);
 }
 
 function get_license_list() {
@@ -266,7 +280,7 @@ function write_config_json_and_exit(conf) {
     fs.renameSync(tmpfile, config_json_path);
   } catch (ex) { alert(ex); throw(ex); }
 
-  process.exit(0);
+  configure_system_and_exit();
 }
 
 var old_config = read_config();
