@@ -1,6 +1,6 @@
 prefix = /usr/local
 exec_prefix = $(prefix)
-bindir = $(exec_prefix)/bin
+sbindir = $(exec_prefix)/sbin
 libdir = $(prefix)/lib
 datarootdir = $(prefix)/share
 
@@ -13,22 +13,22 @@ all :
 
 .PHONY : installdirs
 installdirs :
-	mkdir -p $(DESTDIR)$(bindir)
+	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-client/restricted-packages/commands
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-client/restricted-packages/helpers
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/restricted-packages
 
 .PHONY : install
 install : installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
-		bin/puavo-restricted-package-tool
-
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/restricted-packages/commands \
 		lib/commands/*
-
+	
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/restricted-packages/helpers \
 		lib/helpers/*
-
+	
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
+		sbin/puavo-restricted-package-tool
+	
 	cp -r -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/restricted-packages \
 		packages/*
 
