@@ -14,6 +14,53 @@ function add_download_button(license_key) {
   return button;
 }
 
+function add_licenses(license_list) {
+  var ll = document.querySelector('table[id=license_list]');
+
+  check_download_packs(function (downloaded_packs) {
+                         for (var i in license_list) {
+                           var license = license_list[i];
+                           add_one_license(ll,
+                                           license,
+                                           downloaded_packs[license]);
+                         }
+                       });
+}
+
+function add_one_license(parentNode, license_info, downloaded) {
+  var tr = document.createElement('tr');
+
+  var td = document.createElement('td');
+  if (downloaded) {
+    // create checkbox element
+    var input = document.createElement('input');
+    input.setAttribute('class', 'license_acceptance_checkbox');
+    input.setAttribute('name', license_info.key);
+    input.setAttribute('type', 'checkbox');
+    td.appendChild(input);
+  } else {
+    td.appendChild( add_download_button(license_info.key) );
+  }
+  tr.appendChild(td);
+
+  // create license name element
+  var td = document.createElement('td');
+  td.textContent = license_info.name;
+  tr.appendChild(td);
+
+  // create license url link
+  var td = document.createElement('td');
+  var a = document.createElement('a');
+  a.setAttribute('href', license_info.url);
+  a.addEventListener('click',
+                     function(e) { e.preventDefault();
+                                   open_external_link(a); });
+  a.textContent = '(license terms)';
+  tr.appendChild( td.appendChild(a) );
+
+  parentNode.appendChild(tr);
+}
+
 function assemble_config_and_exit(old_config) {
   var response = document.forms[0].elements;
   var new_config = {};
@@ -68,53 +115,6 @@ function assemble_config_and_exit(old_config) {
                 function(hp) {
                   new_config.local_users[0].hashed_password = hp;
                   write_config_json_and_exit(new_config); });
-}
-
-function add_one_license(parentNode, license_info, downloaded) {
-  var tr = document.createElement('tr');
-
-  var td = document.createElement('td');
-  if (downloaded) {
-    // create checkbox element
-    var input = document.createElement('input');
-    input.setAttribute('class', 'license_acceptance_checkbox');
-    input.setAttribute('name', license_info.key);
-    input.setAttribute('type', 'checkbox');
-    td.appendChild(input);
-  } else {
-    td.appendChild( add_download_button(license_info.key) );
-  }
-  tr.appendChild(td);
-
-  // create license name element
-  var td = document.createElement('td');
-  td.textContent = license_info.name;
-  tr.appendChild(td);
-
-  // create license url link
-  var td = document.createElement('td');
-  var a = document.createElement('a');
-  a.setAttribute('href', license_info.url);
-  a.addEventListener('click',
-                     function(e) { e.preventDefault();
-                                   open_external_link(a); });
-  a.textContent = '(license terms)';
-  tr.appendChild( td.appendChild(a) );
-
-  parentNode.appendChild(tr);
-}
-
-function add_licenses(license_list) {
-  var ll = document.querySelector('table[id=license_list]');
-
-  check_download_packs(function (downloaded_packs) {
-                         for (var i in license_list) {
-                           var license = license_list[i];
-                           add_one_license(ll,
-                                           license,
-                                           downloaded_packs[license]);
-                         }
-                       });
 }
 
 function check_download_packs(cb) {
