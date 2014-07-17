@@ -14,7 +14,7 @@ function add_download_button(license_key, errormsg_element, download_done) {
   };
 
   if (download_done) {
-    button.textContent = 'DOWNLOAD DONE';
+    button.textContent = 'INSTALLED';
     button.setAttribute('style', styles.ok);
     return button;
   }
