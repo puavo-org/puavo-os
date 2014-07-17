@@ -169,20 +169,18 @@ function hash_password(password, old_hashed_password, cb) {
   // use the password from old configuration
   if (password === '') { return cb(old_hashed_password); }
 
-  var child = child_process.spawn('mkpasswd',
-                                  [ '-m', 'sha-512', '-s' ]);
-  child.stdin.end(password);
+  var handler
+    = function (error, stdout, stderr) {
+        if (error) { throw(error); }
+        cb(stdout.toString().replace(/\n$/, ''));
+      };
 
-  var hashed_password = '';
-  child.stdout.on('data',
-                  function(buf) { hashed_password += buf.toString(); });
-  child.stdout.on('end', function() {
-                           if (!hashed_password) {
-                             alert('Could not hash user password');
-                           } else {
-                             return cb(hashed_password.replace(/\n$/, ''));
-                           }
-                         });
+  var child = child_process.execFile('mkpasswd',
+                                     [ '-m', 'sha-512', '-s' ],
+                                     {},
+                                     handler);
+
+  child.stdin.end(password);
 }
 
 function open_external_link(e) {
