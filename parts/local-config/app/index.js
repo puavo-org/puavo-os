@@ -59,16 +59,21 @@ function assemble_config_and_exit(old_config) {
                   write_config_json_and_exit(new_config); });
 }
 
-function add_one_license(parentNode, license_info) {
+function add_one_license(parentNode, license_info, downloaded) {
   var tr = document.createElement('tr');
 
-  // create checkbox element
   var td = document.createElement('td');
-  var input = document.createElement('input');
-  input.setAttribute('class', 'license_acceptance_checkbox');
-  input.setAttribute('name', license_info.key);
-  input.setAttribute('type', 'checkbox');
-  tr.appendChild( td.appendChild(input) );
+  if (downloaded) {
+    // create checkbox element
+    var input = document.createElement('input');
+    input.setAttribute('class', 'license_acceptance_checkbox');
+    input.setAttribute('name', license_info.key);
+    input.setAttribute('type', 'checkbox');
+    td.appendChild(input);
+  } else {
+    td.textContent = 'NOT DOWNLOADED';
+  }
+  tr.appendChild(td);
 
   // create license name element
   var td = document.createElement('td');
@@ -91,8 +96,38 @@ function add_one_license(parentNode, license_info) {
 function add_licenses(license_list) {
   var ll = document.querySelector('table[id=license_list]');
 
-  for (var i in license_list)
-    add_one_license(ll, license_list[i]);
+  check_download_packs(function (downloaded_packs) {
+                         for (var i in license_list) {
+                           var license = license_list[i];
+                           add_one_license(ll,
+                                           license,
+                                           downloaded_packs[license]);
+                         }
+                       });
+}
+
+function check_download_packs(cb) {
+  var child = child_process.spawn('puavo-restricted-package-tool',
+                                  [ 'list' ]);
+
+  var output = '';
+  child.stdout.on('data',
+                  function(buf) { output += buf.toString(); });
+
+  var find_downloaded_pkgs
+    = function() {
+        obj = {};
+        output.split("\n")
+              .forEach(function (line) {
+                         if (line !== '') {
+                           a = line.split(/\s+/);
+                           obj[ a[0] ] = (a[2] !== 'PURGED');
+                         }
+                       });
+        cb(obj);
+      };
+
+  child.stdout.on('end', find_downloaded_pkgs);
 }
 
 function get_license_list() {
