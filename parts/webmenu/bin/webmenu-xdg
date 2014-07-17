@@ -114,7 +114,7 @@ class MenuJSON(object):
             else:
                 d("WTF", icon_name, "exists but still not here?")
 
-        d("Using fallback icon", self._fallback_icon_name, "for", icon_name)
+        d("Using fallback icon", self._fallback_icon_name, "for", raw_name)
         return to_webmenu_format(self._get_fallback_icon())
 
 
@@ -201,6 +201,7 @@ def main():
         icon_theme = gtk.icon_theme_get_default()
 
     menu = Menu.parse()
+    d("Using menu file", menu.Filename)
 
     menu_json = MenuJSON(
         menu,
