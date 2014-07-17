@@ -110,12 +110,12 @@ class MenuJSON(object):
         return icon
 
 
-    def _resolve_icon_path(self, icon_name):
-        icon_name, ext = path.splitext(icon_name)
+    def _resolve_icon_path(self, raw_name):
+        icon_name, _ = path.splitext(raw_name)
 
         # Just return if absolute path to a icon
-        if path.exists(icon_name):
-            return to_webmenu_format(icon_name)
+        if path.exists(raw_name):
+            return to_webmenu_format(raw_name)
 
         # Otherwise look it up from the theme
         if self._theme.has_icon(icon_name):
@@ -160,6 +160,7 @@ class MenuJSON(object):
 
             return menu_json
 
+        d("Unknown menu item", menu)
         return menu_json
 
 
