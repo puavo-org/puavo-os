@@ -141,7 +141,7 @@ def configure_grub_default()
     description = "*SUPERLAPTOP* #{ description }"
   end
 
-  system('grub-editenv',
+  system('/usr/bin/grub-editenv',
          '/images/boot/grub/grubenv',
          'set',
          %Q{default=#{ description }}) \
@@ -168,12 +168,16 @@ def setup_software(conf, software_list)
     = software_list.partition { |software| conf['licenses'][software] }
 
   if !to_install.empty? then
-    system('puavo-restricted-package-tool', 'install', *to_install) \
+    system('/usr/sbin/puavo-restricted-package-tool',
+           'install',
+           *to_install) \
       or warn 'Problem in installing packages'
   end
 
   if !to_uninstall.empty? then
-    system('puavo-restricted-package-tool', 'uninstall', *to_uninstall) \
+    system('/usr/sbin/puavo-restricted-package-tool',
+           'uninstall',
+           *to_uninstall) \
       or warn 'Problem in uninstalling packages'
   end
 end
