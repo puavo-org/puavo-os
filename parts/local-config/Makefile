@@ -43,3 +43,10 @@ install : installdirs
 
 .PHONY : clean
 clean :
+
+.PHONY : deb
+deb :
+	rm -rf debian
+	cp -a debian.default debian
+	puavo-dch $(shell cat VERSION)
+	dpkg-buildpackage -us -uc
