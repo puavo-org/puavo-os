@@ -154,7 +154,8 @@ def configure_grub_default()
 end
 
 def download_pkgs(pkg_list)
-  restricted_package_tool('download', *pkg_list)
+  restricted_package_tool('download', *pkg_list) \
+    or raise "Problem in downloading: #{ pkg_list.join(', ') }"
 end
 
 def parse_pkg_list(pkg_list)
@@ -175,12 +176,12 @@ def setup_pkgs(conf, pkg_list)
 
   if !to_install.empty? then
     restricted_package_tool('install', *to_install) \
-      or warn 'Problem in installing packages'
+      or raise 'Problem in installing packages'
   end
 
   if !to_uninstall.empty? then
     restricted_package_tool('uninstall', *to_uninstall) \
-      or warn 'Problem in uninstalling packages'
+      or raise 'Problem in uninstalling packages'
   end
 end
 

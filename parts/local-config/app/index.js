@@ -3,13 +3,30 @@ var fs = require('fs');
 
 var config_json_path = '/state/etc/puavo/local/config.json';
 
-function add_download_button(license_key) {
+function add_download_button(license_key, errormsg_element, download_done) {
   var button = document.createElement('button');
+
+  var styles = {
+    error:      'background-color: red',
+    ok:         'background-color: lightgreen',
+    download_a: 'background-color: yellow',
+    download_b: 'background-color: white',
+  };
+
+  if (download_done) {
+    button.textContent = 'DOWNLOAD DONE';
+    button.setAttribute('style', styles.ok);
+    return button;
+  }
+
   button.textContent = 'DOWNLOAD';
   button.addEventListener('click',
                           function(e) {
                             e.preventDefault();
-                            download_pkg(license_key, button); });
+                            download_pkg(license_key,
+                                         button,
+                                         styles,
+                                         errormsg_element); });
 
   return button;
 }
@@ -22,41 +39,45 @@ function add_licenses(license_list) {
                            var license = license_list[i];
                            add_one_license(ll,
                                            license,
-                                           downloaded_packs[license]);
+                                           downloaded_packs[license.key]);
                          }
                        });
 }
 
-function add_one_license(parentNode, license_info, downloaded) {
+function add_one_license(parentNode, license_info, download_done) {
   var tr = document.createElement('tr');
 
-  var td = document.createElement('td');
-  if (downloaded) {
-    // create checkbox element
-    var input = document.createElement('input');
-    input.setAttribute('class', 'license_acceptance_checkbox');
-    input.setAttribute('name', license_info.key);
-    input.setAttribute('type', 'checkbox');
-    td.appendChild(input);
-  } else {
-    td.appendChild( add_download_button(license_info.key) );
-  }
-  tr.appendChild(td);
-
   // create license name element
-  var td = document.createElement('td');
-  td.textContent = license_info.name;
-  tr.appendChild(td);
+  var license_name_td = document.createElement('td');
+  license_name_td.textContent = license_info.name;
+  tr.appendChild(license_name_td);
 
   // create license url link
-  var td = document.createElement('td');
+  var license_url_td = document.createElement('td');
   var a = document.createElement('a');
   a.setAttribute('href', license_info.url);
   a.addEventListener('click',
                      function(e) { e.preventDefault();
                                    open_external_link(a); });
   a.textContent = '(license terms)';
-  tr.appendChild( td.appendChild(a) );
+  tr.appendChild( license_url_td.appendChild(a) );
+
+  debugger;
+  var download_td = document.createElement('td');
+  var download_errormsg_element = document.createElement('td');
+  download_td.appendChild( add_download_button(license_info.key,
+                                               download_errormsg_element,
+                                               download_done) );
+  tr.appendChild(download_td);
+
+  var accept_td = document.createElement('td');
+  var input = document.createElement('input');
+  input.setAttribute('class', 'license_acceptance_checkbox');
+  input.setAttribute('name', license_info.key);
+  input.setAttribute('type', 'checkbox');
+  tr.appendChild( accept_td.appendChild(input) );
+
+  tr.appendChild(download_errormsg_element);
 
   parentNode.appendChild(tr);
 }
@@ -155,27 +176,38 @@ function configure_system_and_exit() {
   child_process.execFile('sudo', cmd_args, {}, handler);
 }
 
-function download_pkg(license_key, button) {
-  var progress = {
-    error:      'background-color: red',
-    ok:         'background-color: green',
-    download_a: 'background-color: yellow',
-    download_b: 'background-color: white',
-  };
-
+function download_pkg(license_key, button, styles, error_element) {
   button.textContent = 'Downloading...';
-  button.setAttribute('style', progress.download_a);
+  button.setAttribute('style', styles.download_a);
 
   var flashes
     = function() {
-        if (button.getAttribute('style') === progress.download_a) {
-          button.setAttribute('style', progress.download_b);
-        } else if (button.getAttribute('style') === progress.download_b) {
-          button.setAttribute('style', progress.download_a);
+        if (button.getAttribute('style') === styles.download_a) {
+          button.setAttribute('style', styles.download_b);
+        } else if (button.getAttribute('style') == styles.download_b) {
+          button.setAttribute('style', styles.download_a);
         }
       };
 
-  var interval = setInterval(flashes, 300);
+  var flash_interval = setInterval(flashes, 500);
+
+  var cmd_args = [ '/usr/sbin/puavo-local-config'
+                 , '--download-pkgs'
+                 , license_key ]
+
+  var handler
+    = function(error, stdout, stderr) {
+        if (error) {
+          button.setAttribute('style', styles.error);
+          error_element.textContent = stderr;
+        } else {
+          button.setAttribute('style', styles.ok);
+          error_element.textContent = '';
+        }
+        clearInterval(flash_interval);
+      };
+
+  child_process.execFile('sudo', cmd_args, {}, handler);
 }
 
 function get_license_list() {
