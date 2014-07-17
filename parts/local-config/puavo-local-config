@@ -189,12 +189,6 @@ end
 
 config_path = '/state/etc/puavo/local/config.json'
 
-# we prepare the standard config path directory
-config_path_dir = File.dirname(config_path)
-FileUtils.mkdir_p(config_path_dir)
-FileUtils.chmod(02770, config_path_dir)
-FileUtils.chown(0, Ltspadmins_group_id, config_path_dir)
-
 apply_configs     = []
 download_pkg_list = []
 setup_pkg_list    = []
@@ -233,6 +227,12 @@ rescue GetoptLong::InvalidOption => e
   print_help()
   exit(1)
 end
+
+# we prepare the standard config path directory
+config_path_dir = File.dirname(config_path)
+FileUtils.mkdir_p(config_path_dir)
+FileUtils.chmod(02770, config_path_dir)
+FileUtils.chown(0, Ltspadmins_group_id, config_path_dir)
 
 begin
   conf = JSON.parse( IO.read(config_path) )
