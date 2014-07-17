@@ -95,8 +95,12 @@ end
 def configure_local_users(conf)
   return if conf.nil?
 
-  uid     = 3001
-  uid_max = 3999
+  uid_min, uid_max = 3001, 3999
+  uid = uid_min
+
+  # XXX should lookup all users between uid_min and uid_max and remove
+  # XXX those from /etc/passwd and /etc/shadow, as new ones are added and
+  # XXX changes are made.
 
   conf['local_users'].each do |user|
     raise 'uid is over uid_max' if uid > uid_max
