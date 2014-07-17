@@ -21,14 +21,15 @@ def print_help()
   puts <<-EOF
 puavo-local-config [OPTIONS]
 
--c, --config-path      set configuration file path
--h, --help             show help
+-c, --config-path     set configuration file path
+-h, --help            show help
 
-    --admins           configure admins
-    --grub-default     configure grub default
-    --local-users      configure local users
+    --admins          configure admins
+    --grub-default    configure grub default
+    --local-users     configure local users
 
-    --setup-software   ["all" | a list of software separated with comma]
+    --download-pkgs   ["all" | a list of software separated with comma]
+    --setup-pkgs      ["all" | a list of software separated with comma]
   EOF
 end
 
@@ -148,38 +149,41 @@ def configure_grub_default()
     or raise 'Problem in updating grub environment'
 end
 
+def download_pkgs(pkg_list)
+  raise 'XXX'
+end
+
+def restricted_package_tool(*args)
+  system('/usr/sbin/puavo-restricted-package-tool', *args)
+end
+
+def setup_pkgs(conf, pkg_list)
+  return if conf.nil?
+
+  if pkg_list.include?('all')
+    pkg_list \
+      = Dir.glob('/usr/share/puavo-ltsp-client/restricted-packages/*') \
+           .map { |s| File.basename(s) }
+  end
+
+  to_install, to_uninstall = pkg_list.partition { |pkg| conf['licenses'][pkg] }
+
+  if !to_install.empty? then
+    restricted_package_tool('install', *to_install) \
+      or warn 'Problem in installing packages'
+  end
+
+  if !to_uninstall.empty? then
+    restricted_package_tool('uninstall', *to_uninstall) \
+      or warn 'Problem in uninstalling packages'
+  end
+end
+
 def superlaptop_mode?
   kernel_cmdline = IO.read('/proc/cmdline')
   superlaptop_mode_re \
     = /puavo.image.overlay=default puavo.local.enable_superusers=true/
   kernel_cmdline.match(superlaptop_mode_re) ? true : false
-end
-
-def setup_software(conf, software_list)
-  return if conf.nil?
-
-  if software_list.include?('all')
-    software_list \
-      = Dir.glob('/usr/share/puavo-ltsp-client/restricted-packages/*') \
-           .map { |s| File.basename(s) }
-  end
-
-  to_install, to_uninstall \
-    = software_list.partition { |software| conf['licenses'][software] }
-
-  if !to_install.empty? then
-    system('/usr/sbin/puavo-restricted-package-tool',
-           'install',
-           *to_install) \
-      or warn 'Problem in installing packages'
-  end
-
-  if !to_uninstall.empty? then
-    system('/usr/sbin/puavo-restricted-package-tool',
-           'uninstall',
-           *to_uninstall) \
-      or warn 'Problem in uninstalling packages'
-  end
 end
 
 config_path = '/state/etc/puavo/local/config.json'
@@ -190,18 +194,20 @@ FileUtils.mkdir_p(config_path_dir)
 FileUtils.chmod(02770, config_path_dir)
 FileUtils.chown(0, Ltspadmins_group_id, config_path_dir)
 
-apply_configs = []
-software_list = []
+apply_configs     = []
+download_pkg_list = []
+setup_pkg_list    = []
 
 begin
   opts = GetoptLong.new(
-    [ '--config-path',       '-c', GetoptLong::REQUIRED_ARGUMENT, ],
-    [ '--help',              '-h', GetoptLong::NO_ARGUMENT,       ],
+    [ '--config-path',   '-c', GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--help',          '-h', GetoptLong::NO_ARGUMENT,       ],
 
-    [ '--admins',                  GetoptLong::NO_ARGUMENT,       ],
-    [ '--grub-default',            GetoptLong::NO_ARGUMENT,       ],
-    [ '--local-users',             GetoptLong::NO_ARGUMENT,       ],
-    [ '--setup-software',          GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--admins',              GetoptLong::NO_ARGUMENT,       ],
+    [ '--grub-default',        GetoptLong::NO_ARGUMENT,       ],
+    [ '--local-users',         GetoptLong::NO_ARGUMENT,       ],
+    [ '--download-pkgs',       GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--setup-pkgs',          GetoptLong::REQUIRED_ARGUMENT, ],
   )
 
   opts.each do |opt, arg|
@@ -213,9 +219,12 @@ begin
 	exit(0)
       when '--admins', '--grub-default', '--local-users'
 	apply_configs.push(opt)
-      when '--setup-software'
+      when '--download-pkgs'
 	apply_configs.push(opt)
-	software_list = arg.split(',')
+	download_pkg_list = arg.split(',')
+      when '--setup-pkgs'
+	apply_configs.push(opt)
+	setup_pkg_list = arg.split(',')
     end
   end
 
@@ -237,10 +246,11 @@ rescue Exception => e
 end
 
 dispatch_table = {
-  '--admins'         => lambda { configure_admins(conf)              },
-  '--grub-default'   => lambda { configure_grub_default()            },
-  '--local-users'    => lambda { configure_local_users(conf)         },
-  '--setup-software' => lambda { setup_software(conf, software_list) },
+  '--admins'        => lambda { configure_admins(conf)           },
+  '--grub-default'  => lambda { configure_grub_default()         },
+  '--local-users'   => lambda { configure_local_users(conf)      },
+  '--download-pkgs' => lambda { download_pkgs(download_pkg_list) },
+  '--setup-pkgs'    => lambda { setup_pkgs(conf, setup_pkg_list) },
 }
 
 exit_code = 0
