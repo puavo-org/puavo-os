@@ -3,6 +3,17 @@ var fs = require('fs');
 
 var config_json_path = '/state/etc/puavo/local/config.json';
 
+function add_download_button(license_key) {
+  var button = document.createElement('button');
+  button.textContent = 'DOWNLOAD';
+  button.addEventListener('click',
+                          function(e) {
+                            e.preventDefault();
+                            download_pkg(license_key, button); });
+
+  return button;
+}
+
 function assemble_config_and_exit(old_config) {
   var response = document.forms[0].elements;
   var new_config = {};
@@ -71,7 +82,7 @@ function add_one_license(parentNode, license_info, downloaded) {
     input.setAttribute('type', 'checkbox');
     td.appendChild(input);
   } else {
-    td.textContent = 'NOT DOWNLOADED';
+    td.appendChild( add_download_button(license_info.key) );
   }
   tr.appendChild(td);
 
@@ -142,6 +153,29 @@ function configure_system_and_exit() {
       };
 
   child_process.execFile('sudo', cmd_args, {}, handler);
+}
+
+function download_pkg(license_key, button) {
+  var progress = {
+    error:      'background-color: red',
+    ok:         'background-color: green',
+    download_a: 'background-color: yellow',
+    download_b: 'background-color: white',
+  };
+
+  button.textContent = 'Downloading...';
+  button.setAttribute('style', progress.download_a);
+
+  var flashes
+    = function() {
+        if (button.getAttribute('style') === progress.download_a) {
+          button.setAttribute('style', progress.download_b);
+        } else if (button.getAttribute('style') === progress.download_b) {
+          button.setAttribute('style', progress.download_a);
+        }
+      };
+
+  var interval = setInterval(flashes, 300);
 }
 
 function get_license_list() {
