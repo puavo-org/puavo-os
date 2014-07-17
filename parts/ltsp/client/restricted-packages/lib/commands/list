@@ -70,7 +70,7 @@ col_width=$(echo "${packages}" | awk '{print length}' | sort -r -n | head -n1)
 for package in ${packages}; do
     if [ -d "/state/restricted-packages/${package}/i" ]; then
         status="INSTALLED"
-    elif [ -d "/state/restricted-packages/${package}" ]; then
+    elif [ -f "/state/restricted-packages/${package}/upstream.pack" ]; then
         status="DOWNLOADED"
     else
         status="PURGED"
