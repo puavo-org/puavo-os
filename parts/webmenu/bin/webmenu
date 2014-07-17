@@ -14,7 +14,8 @@ help(){
 
     Start Webmenu
 
-    --daemonize     Daemonize the process. Cannot be used with --no-mon
+    -b --daemonize  Daemonize the process to background.
+                    Cannot be used with --no-mon
     --no-mon        Disable automatic restarting with mon
     --log           Enable fluentd logging
     --feedback      Enable feedback. Implies --log
@@ -74,7 +75,7 @@ while true; do
         -h|--help)
             help && exit 0
         ;;
-        --daemon|--daemonize)
+        -b|--daemon|--daemonize)
             # Enable error reporting to fluentd only in daemon mode
             mon_args="$mon_args --daemonize"
             shift
