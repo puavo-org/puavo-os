@@ -199,9 +199,11 @@ function download_pkg(license_key, button, styles, error_element) {
     = function(error, stdout, stderr) {
         if (error) {
           button.setAttribute('style', styles.error);
+          button.textContent = 'ERROR';
           error_element.textContent = stderr;
         } else {
           button.setAttribute('style', styles.ok);
+          button.textContent = 'INSTALLED';
           error_element.textContent = '';
         }
         clearInterval(flash_interval);
