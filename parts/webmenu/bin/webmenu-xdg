@@ -59,17 +59,6 @@ def to_webmenu_format(icon):
 
     return full_icon_path
 
-def find_menu_file():
-    """
-    Find .menu file according to the spec
-    http://standards.freedesktop.org/menu-spec/latest/ar01s02.html
-    """
-    for config_dir in XDG_CONFIG_DIRS.split(":"):
-        menu_path = path.join(config_dir, "menus", XDG_MENU_PREFIX + "applications.menu")
-        try:
-            return Menu.parse(menu_path)
-        except (ParsingError, IOError):
-            pass
 
 
 class MenuJSON(object):
@@ -173,6 +162,9 @@ def main():
 
         http://standards.freedesktop.org/menu-spec/latest/
 
+        XDG_CONFIG_DIRS and XDG_MENU_PREFIX environment variables are used find
+        correct .menu file according to the specification.
+
         Example:
 
             {script} > ~/.config/webmenu/menu.json
@@ -198,13 +190,6 @@ def main():
         help="Fallback icon name for items with missing or invalid icon. Must exists in the current theme."
     )
 
-    parser.add_argument("menu_path",
-        metavar="MENU_FILE",
-        type=str,
-        nargs="?",
-        help="Custom path to a .menu file. If not specified XDG_CONFIG_DIRS and XDG_MENU_PREFIX environment variables are used find correct menu file according to the specification."
-    )
-
     args = parser.parse_args()
     global DEBUG
     DEBUG = args.verbose
@@ -215,14 +200,7 @@ def main():
     else:
         icon_theme = gtk.icon_theme_get_default()
 
-    menu = None
-    if args.menu_path:
-        menu = Menu.parse(args.menu_path)
-    else:
-        menu = find_menu_file()
-
-    if not menu:
-        raise Exception("Could not find any .menu files")
+    menu = Menu.parse()
 
     menu_json = MenuJSON(
         menu,
