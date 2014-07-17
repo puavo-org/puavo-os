@@ -150,7 +150,14 @@ def configure_grub_default()
 end
 
 def download_pkgs(pkg_list)
-  raise 'XXX'
+  restricted_package_tool('download', *pkg_list)
+end
+
+def parse_pkg_list(pkg_list)
+  pkg_list == 'all' \
+    ? Dir.glob('/usr/share/puavo-ltsp-client/restricted-packages/*') \
+         .map { |s| File.basename(s) } \
+    : pkg_list.split(',')
 end
 
 def restricted_package_tool(*args)
@@ -159,12 +166,6 @@ end
 
 def setup_pkgs(conf, pkg_list)
   return if conf.nil?
-
-  if pkg_list.include?('all')
-    pkg_list \
-      = Dir.glob('/usr/share/puavo-ltsp-client/restricted-packages/*') \
-           .map { |s| File.basename(s) }
-  end
 
   to_install, to_uninstall = pkg_list.partition { |pkg| conf['licenses'][pkg] }
 
@@ -221,10 +222,10 @@ begin
 	apply_configs.push(opt)
       when '--download-pkgs'
 	apply_configs.push(opt)
-	download_pkg_list = arg.split(',')
+	download_pkg_list = parse_pkg_list(arg)
       when '--setup-pkgs'
 	apply_configs.push(opt)
-	setup_pkg_list = arg.split(',')
+	setup_pkg_list = parse_pkg_list(arg)
     end
   end
 
