@@ -2,6 +2,9 @@
 
 set -eu
 
+# 10000 is the minimum uid for Puavo users, do nothing for users below that
+[ "$(id -u "$PAM_USER")" -lt 10000 ] && exit 0
+
 AUTOFS_MAPFILE=/var/lib/puavo-sharedir-client/auto.cifs
 
 puavo_domain=$(cat /etc/puavo/domain)
