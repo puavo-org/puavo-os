@@ -130,6 +130,7 @@ while read image_filepath; do
 done <"${image_filepaths}"
 
 if $do_prune; then
+    bootdirs="${tmpdir}/bootdirs"
     # Save the list of boot directories to a temporary file.
     find "${PUAVO_TFTP_BOOT_DIR:-/var/lib/tftpboot/ltsp}"  \
         -mindepth 1 -maxdepth 1 -type d >"${bootdirs}"
