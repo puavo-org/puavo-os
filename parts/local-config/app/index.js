@@ -86,11 +86,16 @@ function assemble_config_and_exit(old_config) {
   var response = document.forms[0].elements;
   var new_config = {};
 
+  // allow_logins_for
   new_config.allow_logins_for
     = response.allow_logins_for.value === 'all_puavo_domain_users'
         ? [ '*' ]
         : [];
 
+  // allow_remoteadmins
+  new_config.allow_remoteadmins = response.allow_remoteadmins.checked;
+
+  // licenses
   new_config.licenses = {};
   var license_checkboxes
     = document.querySelectorAll('input[class=license_acceptance_checkbox]');
@@ -99,11 +104,13 @@ function assemble_config_and_exit(old_config) {
                     var name = lc.getAttribute('name');
                     new_config.licenses[name] = response[name].checked; });
 
+  // admins
   new_config.admins
     = response['localuser_0_admin_rights'].checked
         ? [ response['localuser_0_login'].value ]
         : [];
 
+  // local_users
   var local_user_errors = document.querySelector('div[id=localuser_0_errors]');
   local_user_errors.innerHTML = '';
   if (response.localuser_0_password.value
@@ -131,6 +138,7 @@ function assemble_config_and_exit(old_config) {
     return;
   }
 
+  // write configuration once passwords are hashed
   hash_password(response['localuser_0_password'].value,
                 old_config.local_users[0].hashed_password,
                 function(hp) {
@@ -283,10 +291,11 @@ function read_config() {
       return false;
     } else {
       config = {
-        admins:           [],
-        allow_logins_for: [ '*' ],
-        licenses:         {},
-        local_users:      [ { hashed_password: '', login: '', name: '', } ],
+        admins:             [],
+        allow_logins_for:   [ '*' ],
+        allow_remoteadmins: false,
+        licenses:           {},
+        local_users:        [ { hashed_password: '', login: '', name: '', } ],
       };
     }
   }
@@ -324,6 +333,15 @@ function set_form_values_from_config(config) {
       document.querySelector('input[name=localuser_' + i + '_admin_rights')
               .removeAttribute('checked');
     }
+  }
+
+  // allow_remoteadmins
+  var allow_remoteadmins_checkbox
+    = document.querySelector('input[name=allow_remoteadmins]');
+  if (config.allow_remoteadmins) {
+    allow_remoteadmins_checkbox.setAttribute('checked', true);
+  } else {
+    allow_remoteadmins_checkbox.removeAttribute('checked');
   }
 
   // licenses
