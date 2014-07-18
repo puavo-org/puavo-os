@@ -84,13 +84,27 @@ function add_one_license(parentNode, license_info, download_done) {
 
 function assemble_config_and_exit(old_config) {
   var response = document.forms[0].elements;
-  var new_config = {};
+  var new_config = {
+    admins:           [],
+    allow_logins_for: [],
+    licenses:         {},
+    local_users:      [],
+  };
 
+  // iterate all local users
   for (i = 0; ('localuser_' + i + '_login') in response; i++) {
     // XXX how to get the password hashes?
+    var login    = response['localuser_' + i + '_login'       ].value;
+    var name     = response['localuser_' + i + '_name'        ].value;
+    var is_admin = response['localuser_' + i + '_admin_rights'].checked;
+
+    if (is_admin) { new_config.admins.push(login); }
+
+    new_config.allow_logins_for.push(login);
+
     new_config.local_users.push({
-      login: response['localuser_' + i + '_login'].value,
-      name:  response['localuser_' + i + '_name' ].value,
+      login: login,
+      name:  name,
     });
   }
 
