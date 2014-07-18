@@ -28,7 +28,7 @@ is_admin_user()
 allowed_logins | fgrep -qx "${PAM_USER}" && exit 0
 
 if is_admin_user; then
-    case $(jq -r .allow_admins "$config_path") in
+    case $(jq -r .allow_remoteadmins "$config_path") in
 	true)
 	    exit 0
 	    ;;
