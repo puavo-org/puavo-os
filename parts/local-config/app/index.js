@@ -92,13 +92,40 @@ function assemble_config_and_exit(old_config) {
   };
 
   // iterate all local users
+  var has_errors = false;
+
   for (i = 0; ('localuser_' + i + '_login') in response; i++) {
     // XXX how to get the password hashes?
-    var login    = response['localuser_' + i + '_login'       ].value;
-    var name     = response['localuser_' + i + '_name'        ].value;
-    var is_admin = response['localuser_' + i + '_admin_rights'].checked;
+    var login     = response['localuser_' + i + '_login'    ].value;
+    var name      = response['localuser_' + i + '_name'     ].value;
+    var is_admin  = response['localuser_' + i + '_admin'    ].checked;
+    var password1 = response['localuser_' + i + '_password1'].value;
+    var password2 = response['localuser_' + i + '_password2'].value;
 
-    if (is_admin) { new_config.admins.push(login); }
+    var error_element
+      = document.querySelector('div[id=localuser_' + i + '_errors]');
+
+    var errors = [];
+
+    if (login.match(/^\s+$/) && name.match(/^\s+$/))
+      continue;       
+
+    if (!login.match(/^[a-z\.-]+$/))
+      errors.push('Login is not in correct format.');
+
+    if (!name.match(/^[a-zA-Z\. -]+$/))
+      errors.push('Name is not in correct format.');
+
+    if (password1 !== password2)
+      errors.push('Passwords do not match.');
+
+    if (errors.length > 0) {
+      error_element.textContent = errors.join(' / ');
+      has_errors = true;
+    }
+    
+    if (is_admin)
+      new_config.admins.push(login);
 
     new_config.allow_logins_for.push(login);
 
@@ -107,6 +134,8 @@ function assemble_config_and_exit(old_config) {
       name:  name,
     });
   }
+
+  if (has_errors) { return; }
 
 /*
   // allow_logins_for
@@ -129,15 +158,15 @@ function assemble_config_and_exit(old_config) {
 
   // admins
   new_config.admins
-    = response['localuser_0_admin_rights'].checked
+    = response['localuser_0_admin'].checked
         ? [ response['localuser_0_login'].value ]
         : [];
 
   // local_users
   var local_user_errors = document.querySelector('div[id=localuser_0_errors]');
   local_user_errors.innerHTML = '';
-  if (response.localuser_0_password.value
-        !== response.localuser_0_password_again.value) {
+  if (response.localuser_0_password1.value
+        !== response.localuser_0_password2.value) {
     local_user_errors.innerHTML = 'Passwords do not match.';
     return;
   }
@@ -336,7 +365,7 @@ function generate_one_user_create_table(parentNode, old_config, user_i) {
     },
     {
       name:     'Has administrative rights:',
-      key:      'admin_rights',
+      key:      'admin',
       type:     'checkbox',
       value_fn: function(input) {
                   if (old_config.admins.indexOf(old_user_data.login) >= 0) {
@@ -348,12 +377,12 @@ function generate_one_user_create_table(parentNode, old_config, user_i) {
     },
     {
       name: 'Password:',
-      key:  'password',
+      key:  'password1',
       type: 'password',
     },
     {
       name: 'Password again:',
-      key:  'password_again',
+      key:  'password2',
       type: 'password',
     },
   ];
@@ -508,10 +537,10 @@ function set_form_values_from_config(config) {
 
     // check if user if found in the admins array
     if (config.admins.indexOf(login) >= 0) {
-      document.querySelector('input[name=localuser_' + i + '_admin_rights')
+      document.querySelector('input[name=localuser_' + i + '_admin')
               .setAttribute('checked', true);
     } else {
-      document.querySelector('input[name=localuser_' + i + '_admin_rights')
+      document.querySelector('input[name=localuser_' + i + '_admin')
               .removeAttribute('checked');
     }
   }
