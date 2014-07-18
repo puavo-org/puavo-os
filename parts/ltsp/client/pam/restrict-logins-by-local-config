@@ -6,6 +6,12 @@ config_path=/state/etc/puavo/local/config.json
 
 allowed_logins() { jq -r .allow_logins_for[] "$config_path"; }
 
+deny()
+{
+    echo 'Access denied due to local policy.' >&2
+    exit 1
+}
+
 is_admin_user()
 {
     # No one is admin if reading the admin group name fails.
@@ -27,8 +33,7 @@ if is_admin_user; then
 	    exit 0
 	    ;;
 	*)
-	    echo 'Access denied due to local policy.' >&2
-	    exit 1
+	    deny
 	    ;;
     esac
 fi
@@ -37,5 +42,4 @@ fi
 allowed_logins | fgrep -qx '*' && exit 0
 
 # otherwise, tough luck!
-echo 'Access denied due to local policy.' >&2
-exit 1
+deny
