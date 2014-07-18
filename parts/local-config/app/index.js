@@ -296,7 +296,7 @@ function generate_login_users_input(form, old_config) {
   if (local_users.length === 0) { append_empty_user(); }
 
   for (i in local_users) {
-    generate_one_user_create_table(user_inputs, local_users[i], i);
+    generate_one_user_create_table(user_inputs, old_config, i);
   }
  
   var add_new_user
@@ -304,21 +304,21 @@ function generate_login_users_input(form, old_config) {
         e.preventDefault();
         append_empty_user();
         var last_i = local_users.length - 1;
-        generate_one_user_create_table(user_inputs,
-                                       local_users[last_i],
-                                       last_i);
+        generate_one_user_create_table(user_inputs, old_config, last_i);
       };
 
   add_button.addEventListener('click', add_new_user);
 }
 
-function generate_one_user_create_table(parentNode, old_user_data, user_i) {
+function generate_one_user_create_table(parentNode, old_config, user_i) {
   var div = document.createElement('div');
   div.setAttribute('id', 'localuser_' + user_i + '_errors');
   parentNode.appendChild(div);
 
   var table = document.createElement('table');
 
+  var old_user_data = old_config.local_users[user_i];
+  
   var fields = [
     {
       name:     'Login:',
@@ -338,7 +338,13 @@ function generate_one_user_create_table(parentNode, old_user_data, user_i) {
       name:     'Has administrative rights:',
       key:      'admin_rights',
       type:     'checkbox',
-      value_fn: function(input) { true; },
+      value_fn: function(input) {
+                  if (old_config.admins.indexOf(old_user_data.login) >= 0) {
+                    input.setAttribute('checked', true);
+                  } else {
+                    input.removeAttribute('checked');
+                  }
+                },
     },
     {
       name: 'Password:',
