@@ -111,9 +111,10 @@ trap on_exit EXIT
 
 tmpdir=$(mktemp -d)
 image_filepaths="${tmpdir}/image_filepaths"
+image_dir="${PUAVO_IMAGE_DIR:-/opt/ltsp/images}"
 
 # Save the list of image filepaths to a temporary file.
-find "${PUAVO_IMAGE_DIR:-/opt/ltsp/images}"  \
+find "${image_dir}"  \
     -mindepth 1 -maxdepth 1            \
     \( -type f -o -type l \)           \
     -name '*.img'                      \
@@ -137,7 +138,7 @@ if $do_prune; then
 
     while read bootdir; do
         image_name=$(basename "${bootdir}")
-        image_filepath="${PUAVO_IMAGE_DIR:-/opt/ltsp/images/${image_name}.img"
+        image_filepath="${image_dir}/${image_name}.img"
 
         if [ ! -e "${image_filepath}" ]; then
             rm -rf "${bootdir}"
