@@ -39,6 +39,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
+	mkdir -p $(DESTDIR)$(datarootdir)/pam-configs
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/dbus-1/system.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default
@@ -60,6 +61,9 @@ installdirs :
 
 .PHONY : install
 install : installdirs
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/pam-configs \
+		pam/configs/puavo-local-access
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d \
 		init-puavo.d/*-*
 
