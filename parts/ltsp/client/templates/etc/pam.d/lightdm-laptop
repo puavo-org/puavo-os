@@ -8,10 +8,6 @@ auth    required        pam_env.so readenv=1 envfile=/etc/default/locale
 auth    sufficient      pam_succeed_if.so user ingroup nopasswdlogin
 auth    optional        pam_group.so
 
-# make sure that user is allowed in if /state/etc/puavo/local/config.json
-# exists and contains some restrictions
-auth	required	pam_exec.so /usr/lib/puavo-ltsp-client/pam/restrict-logins-by-local-config
-
 # allow local users in
 auth    [success=ok default=4]      pam_unix.so
 auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/make-session-dir
@@ -51,7 +47,7 @@ auth    optional        pam_gnome_keyring.so
 auth    optional        pam_cap.so
 auth    sufficient      pam_permit.so
 
-# Permit all accounts for now.
+account required        pam_exec.so quiet /usr/lib/puavo-ltsp-client/pam/restrict-logins-by-local-config
 account required                        pam_permit.so
 
 session required        pam_limits.so
