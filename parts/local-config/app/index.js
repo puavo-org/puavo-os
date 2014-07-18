@@ -272,25 +272,50 @@ function generate_form(old_config) {
 
 function generate_login_users_input(form, old_config) {
   var title = document.createElement('div');
-  title.textContent = 'Local users:';
+  var titletext = document.createTextNode('Local users:');
+  title.appendChild(titletext);
+
+  var add_button = document.createElement('input');
+  add_button.setAttribute('type', 'button');
+  add_button.setAttribute('value', 'Add another user');
+  title.appendChild(add_button);
+
   form.appendChild(title);
+
+
+  var user_inputs = document.createElement('div');
+  form.appendChild(user_inputs);
 
   var local_users = old_config['local_users'];
 
-  if (local_users.length === 0) {
-    // create at least one empty user if things are this bad
-    local_users.push({ hashed_password: '', login: '', name: '', });
-  }
+  var append_empty_user
+    = function() { 
+        local_users.push({ hashed_password: '', login: '', name: '', }); }
 
-  for (i = 0; i < local_users.length; i++) {
-    generate_one_user_create_table(form, local_users[i], i);
+  // create at least one empty user
+  if (local_users.length === 0) { append_empty_user(); }
+
+  for (i in local_users) {
+    generate_one_user_create_table(user_inputs, local_users[i], i);
   }
+ 
+  var add_new_user
+    = function(e) {
+        e.preventDefault();
+        append_empty_user();
+        var last_i = local_users.length - 1;
+        generate_one_user_create_table(user_inputs,
+                                       local_users[last_i],
+                                       last_i);
+      };
+
+  add_button.addEventListener('click', add_new_user);
 }
 
-function generate_one_user_create_table(form, old_user_data, user_index) {
+function generate_one_user_create_table(parentNode, old_user_data, user_i) {
   var div = document.createElement('div');
-  div.setAttribute('id', 'localuser_' + user_index + '_errors');
-  form.appendChild(div);
+  div.setAttribute('id', 'localuser_' + user_i + '_errors');
+  parentNode.appendChild(div);
 
   var table = document.createElement('table');
 
@@ -345,7 +370,7 @@ function generate_one_user_create_table(form, old_user_data, user_index) {
 
                    var input_td = document.createElement('td');
                    var input = make_input(fieldinfo.key,
-                                          user_index,
+                                          user_i,
                                           fieldinfo.type,
                                           fieldinfo.value_fn);
 
@@ -355,7 +380,8 @@ function generate_one_user_create_table(form, old_user_data, user_index) {
                    table.appendChild(tr);
                  });
 
-  form.appendChild(table);
+  parentNode.appendChild(table);
+  parentNode.appendChild( document.createElement('hr') );
 }
 
 function generate_done_button(form, old_config) {
