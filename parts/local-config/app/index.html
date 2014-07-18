@@ -7,67 +7,8 @@
   </head>
   <body>
     <h1>Puavo-laptop configuration tool</h1>
-
     <hr/>
-    <form>
-      <div>Allow login for:</div>
-      <table>
-        <tr>
-          <td>
-            <input name="allow_logins_for" type="radio" value="all_puavo_domain_users">
-            All puavo domain users.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <input name="allow_logins_for" type="radio" value="some_puavo_domain_users">
-            Some puavo domain users.
-          </td>
-        </tr>
-      </table>
-
-      <hr/>
-      <div>Local users:</div>
-      <div id="localuser_0_errors"></div>
-      <table>
-        <tr>
-          <td>Login:</td>
-          <td><input name="localuser_0_login" type="text"></td>
-        </tr>
-        <tr>
-        <tr>
-          <td>Name:</td>
-          <td><input name="localuser_0_name" type="text"></td>
-        </tr>
-        <tr>
-          <td>Has administrative rights:</td>
-          <td><input name="localuser_0_admin_rights" type="checkbox"></td>
-        </tr>
-        <tr>
-          <td>Password:</td>
-          <td><input name="localuser_0_password" type="password"></td>
-        </tr>
-        <tr>
-          <td>Password again:</td>
-          <td><input name="localuser_0_password_again" type="password"></td>
-        </tr>
-      </table>
-
-      <hr/>
-      <div>
-        Allow login from remote admins:
-        <input name="allow_remoteadmins" type="checkbox">
-      </div>
-
-      <hr/>
-      <div>Download software and accept licenses for:</div>
-      <table id="license_list"></table>
-
-      <input id="done_button"
-             name="laptop_configuration_done"
-             type="button"
-             value="Done!">
-    </form>
+    <form id="dynamic_form"></form>
   </body>
 
   <script src="index.js" charset="utf-8"></script>

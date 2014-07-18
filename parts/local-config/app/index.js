@@ -86,6 +86,15 @@ function assemble_config_and_exit(old_config) {
   var response = document.forms[0].elements;
   var new_config = {};
 
+  for (i = 0; ('localuser_' + i + '_login') in response; i++) {
+    // XXX how to get the password hashes?
+    new_config.local_users.push({
+      login: response['localuser_' + i + '_login'].value,
+      name:  response['localuser_' + i + '_name' ].value,
+    });
+  }
+
+/*
   // allow_logins_for
   new_config.allow_logins_for
     = response.allow_logins_for.value === 'all_puavo_domain_users'
@@ -137,13 +146,18 @@ function assemble_config_and_exit(old_config) {
     alert('Name is missing');
     return;
   }
+*/
 
+  write_config_json_and_exit(new_config);
+
+  /*
   // write configuration once passwords are hashed
   hash_password(response['localuser_0_password'].value,
                 old_config.local_users[0].hashed_password,
                 function(hp) {
-                  new_config.local_users[0].hashed_password = hp;
+                  // new_config.local_users[0].hashed_password = hp;
                   write_config_json_and_exit(new_config); });
+  */
 }
 
 function check_download_packs(cb) {
@@ -170,6 +184,8 @@ function check_download_packs(cb) {
 }
 
 function configure_system_and_exit() {
+  process.exit(0);
+
   var cmd_args = [ '/usr/sbin/puavo-local-config'
                  , '--admins'
                  , '--local-users'
@@ -218,6 +234,125 @@ function download_pkg(license_key, button, styles, error_element) {
       };
 
   child_process.execFile('sudo', cmd_args, {}, handler);
+}
+
+function generate_allow_logins_input(form, old_config) {
+  var hr = document.createElement('hr');
+  form.appendChild(hr);
+
+  var title = document.createElement('div');
+  title.textContent = 'Allow login for';
+
+  form.appendChild(title);
+}
+
+function generate_form(old_config) {
+  // XXX add_licenses(get_license_list());
+
+  var form = document.querySelector('form[id=dynamic_form]');
+
+  generate_login_users_input(form, old_config);
+  // generate_allow_logins_input(form, old_config);
+  generate_done_button(form, old_config);
+}
+
+function generate_login_users_input(form, old_config) {
+  var title = document.createElement('div');
+  title.textContent = 'Local users:';
+  form.appendChild(title);
+
+  var local_users = old_config['local_users'];
+
+  if (local_users.length === 0) {
+    // create at least one empty user if things are this bad
+    local_users.push({ hashed_password: '', login: '', name: '', });
+  }
+
+  for (i = 0; i < local_users.length; i++) {
+    generate_one_user_create_table(form, local_users[i], i);
+  }
+}
+
+function generate_one_user_create_table(form, old_user_data, user_index) {
+  var div = document.createElement('div');
+  div.setAttribute('id', 'localuser_' + user_index + '_errors');
+  form.appendChild(div);
+
+  var table = document.createElement('table');
+
+  var fields = [
+    {
+      name:     'Login:',
+      key:      'login',
+      type:     'text',
+      value_fn: function(input) { 
+                  input.setAttribute('value', old_user_data.login) },
+    },
+    {
+      name:     'Name:',
+      key:      'name',
+      type:     'text',
+      value_fn: function(input) {
+                  input.setAttribute('value', old_user_data.name) },
+    },
+    {
+      name:     'Has administrative rights:',
+      key:      'admin_rights',
+      type:     'checkbox',
+      value_fn: function(input) { true; },
+    },
+    {
+      name: 'Password:',
+      key:  'password',
+      type: 'password',
+    },
+    {
+      name: 'Password again:',
+      key:  'password_again',
+      type: 'password',
+    },
+  ];
+
+  var make_input
+    = function(field, i, type, value_fn) {
+        input = document.createElement('input');
+        input.setAttribute('name', 'localuser_' + i + '_' + field);
+        input.setAttribute('type', type);
+        if (value_fn) { value_fn(input); }
+        return input;
+      };
+ 
+  fields.forEach(function (fieldinfo) { 
+                   var tr = document.createElement('tr');
+
+                   var name_td = document.createElement('td');
+                   name_td.textContent = fieldinfo.name;
+                   tr.appendChild(name_td);
+
+                   var input_td = document.createElement('td');
+                   var input = make_input(fieldinfo.key,
+                                          user_index,
+                                          fieldinfo.type,
+                                          fieldinfo.value_fn);
+
+                   input_td.appendChild(input);
+                   tr.appendChild(input_td);
+
+                   table.appendChild(tr);
+                 });
+
+  form.appendChild(table);
+}
+
+function generate_done_button(form, old_config) {
+  var input = document.createElement('input');
+  input.setAttribute('type',  'button');
+  input.setAttribute('value', 'Done!');
+
+  input.addEventListener('click',
+                         function() { assemble_config_and_exit(old_config) });
+
+  form.appendChild(input);
 }
 
 function get_license_list() {
@@ -295,7 +430,7 @@ function read_config() {
         allow_logins_for:   [ '*' ],
         allow_remoteadmins: false,
         licenses:           {},
-        local_users:        [ { hashed_password: '', login: '', name: '', } ],
+        local_users:        [],
       };
     }
   }
@@ -369,14 +504,8 @@ function write_config_json_and_exit(conf) {
   configure_system_and_exit();
 }
 
+
 var old_config = read_config();
 if (!old_config) { process.exit(1); }
 
-add_licenses(get_license_list());
-
-set_form_values_from_config(old_config);
-
-// in the end print configuration data as json
-document.querySelector('input[id=done_button]')
-        .addEventListener('click',
-                          function() { assemble_config_and_exit(old_config) });
+generate_form(old_config);
