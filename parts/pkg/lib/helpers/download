@@ -65,6 +65,12 @@ else
         --output-document "${upstream_pack}.tmp"
 fi
 
+echo "${upstream_pack_md5sum}  ${upstream_pack}" \
+    | md5sum --check --status 2>/dev/null || {
+    echo "E: downloaded upstream pack has incorrect checksum" >&2
+    exit 1
+}
+
 mv "${upstream_pack}.tmp" "${upstream_pack}"
 
 exit 0
