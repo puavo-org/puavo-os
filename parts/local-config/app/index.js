@@ -107,7 +107,7 @@ function assemble_config_and_exit(old_config) {
 
     var errors = [];
 
-    if (login.match(/^\s+$/) && name.match(/^\s+$/))
+    if (login.match(/^\s*$/) && name.match(/^\s*$/))
       continue;       
 
     if (!login.match(/^[a-z\.-]+$/))
