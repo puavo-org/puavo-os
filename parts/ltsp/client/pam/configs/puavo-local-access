@@ -4,4 +4,4 @@ Priority: 256
 
 Account-Type: Additional
 Account:
-	required	pam_exec.so /usr/lib/puavo-ltsp-client/pam/restrict-logins-by-local-config
+	required	pam_exec.so quiet /usr/lib/puavo-ltsp-client/pam/restrict-logins-by-local-config
