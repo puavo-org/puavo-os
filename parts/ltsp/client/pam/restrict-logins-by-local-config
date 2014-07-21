@@ -41,5 +41,21 @@ fi
 # if configuration contains '*', allow all
 allowed_logins | fgrep -qx '*' && exit 0
 
+# Test for a special case: if allow_logins_for is missing, jq outputs
+# null. Note the difference between .allow_logins_for and
+# .allow_logins_for[]: the latter tries to iterate over an array which
+# results in an empty string if the field does not exist. The former
+# returns null. This kind of voodoo-testing is required because jq is
+# notorious for not exiting on error! This script also serves as a
+# perfect example why jq should not be used anywhere. It is completely
+# broken by design.
+case $(jq -r .allow_logins_for "${config_path}") in
+    null)
+	exit 0
+	;;
+    *)
+	;;
+esac
+
 # otherwise, tough luck!
 deny
