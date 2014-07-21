@@ -17,6 +17,9 @@ class Updater < DBus::Object
     dbus_signal :UpdateStarted
 
     dbus_method :UpdateImages, "in use_rate_limit:b, out s" do |use_rate_limit|
+      if system("/usr/lib/puavo-ltsp-install/is-update-available") then
+        return ""
+      end
       self.UpdateStarted
       command = "/usr/lib/puavo-ltsp-install/update-images #{use_rate_limit}"
       output, errput, status = Open3.capture3(command)
