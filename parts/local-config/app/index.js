@@ -87,7 +87,7 @@ function assemble_config_and_exit(old_config) {
   var new_config = {
     admins:             [],
     allow_logins_for:   [],
-    allow_removeadmins: false,
+    allow_remoteadmins: false,
     licenses:           {},
     local_users:        [],
     version:            1,
@@ -132,8 +132,9 @@ function assemble_config_and_exit(old_config) {
     new_config.allow_logins_for.push(login);
 
     new_config.local_users.push({
-      login: login,
-      name:  name,
+      hashed_password: '$6$cLWEUGTsV$CMsWTZAgRRYV5FEB0A9OhBxKF4L.C8/TcgG7gbnJuaJ6laKt8xROZyNYQZDV3/iahXWgC52Sg4KAgJGbISFM51',
+      login:           login,
+      name:            name,
     });
   }
 

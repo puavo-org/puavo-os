@@ -39,7 +39,7 @@ def conf_version_1_ok?(conf)
   conf['admins'].kind_of?(Array) \
     && conf['admins'].map { |s| s.kind_of?(String) } \
     && conf['allow_logins_for'].kind_of?(Array) \
-    && conf['allow_logins_for'].map { |s| s.kind_of?(String) } \
+    && conf['allow_logins_for'].map { |s| s.kind_of?(String) }.all? \
     && is_boolean.call(conf['allow_remoteadmins']) \
     && conf['licenses'].kind_of?(Hash) \
     && conf['licenses'].map do |k, v|
