@@ -50,6 +50,9 @@ device['xrandr'].each do |xrandconf|
   end
 
   if ! xrandr_direct_command_args.empty? then
+    if xrandr_direct_command_args[0] == 'xrandr' then
+      xrandr_direct_command_args.slice!(0)
+    end
     system('xrandr', * xrandr_direct_command_args)
   end
 end
