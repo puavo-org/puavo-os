@@ -82,6 +82,69 @@ function add_one_license(parentNode, license_info, download_done) {
   parentNode.appendChild(tr);
 }
 
+function make_local_users_config(response,
+                                 i,
+                                 old_config,
+                                 new_config,
+                                 has_errors,
+                                 cb) {
+  var next_user_fn = function() {
+                       make_local_users_config(response,
+                                               i+1,
+                                               old_config,
+                                               new_config,
+                                               has_errors,
+                                               cb);
+                     };
+
+  if (!(('localuser_' + i + '_login') in response))
+    return cb(has_errors, new_config);
+
+  var login     = response['localuser_' + i + '_login'    ].value;
+  var name      = response['localuser_' + i + '_name'     ].value;
+  var is_admin  = response['localuser_' + i + '_admin'    ].checked;
+  var password1 = response['localuser_' + i + '_password1'].value;
+  var password2 = response['localuser_' + i + '_password2'].value;
+
+  var error_element
+    = document.querySelector('div[id=localuser_' + i + '_errors]');
+
+  var errors = [];
+
+  if (login.match(/^\s*$/) && name.match(/^\s*$/))
+    next_user_fn();
+
+  if (!login.match(/^[a-z\.-]+$/))
+    errors.push('Login is not in correct format.');
+
+  if (!name.match(/^[a-zA-Z\. -]+$/))
+    errors.push('Name is not in correct format.');
+
+  if (password1 !== password2)
+    errors.push('Passwords do not match.');
+
+  if (errors.length > 0) {
+    error_element.textContent = errors.join(' / ');
+    has_errors = true;
+  }
+
+  if (is_admin)
+    new_config.admins.push(login);
+
+  new_config.allow_logins_for.push(login);
+
+  hash_password(password1,
+                old_config.local_users[i].hashed_password,
+                function(hp) {
+                  new_config.local_users.push({
+                    hashed_password: hp,
+                    login:           login,
+                    name:            name,
+                  });
+                  next_user_fn();
+               });
+}
+
 function assemble_config_and_exit(old_config) {
   var response = document.forms[0].elements;
   var new_config = {
@@ -93,52 +156,20 @@ function assemble_config_and_exit(old_config) {
     version:            1,
   };
 
-  // iterate all local users
-  var has_errors = false;
+  var do_with_local_users =
+    function(has_errors, local_users) {
+      if (has_errors) { throw('errors in user creation'); }
 
-  for (i = 0; ('localuser_' + i + '_login') in response; i++) {
-    // XXX how to get the password hashes?
-    var login     = response['localuser_' + i + '_login'    ].value;
-    var name      = response['localuser_' + i + '_name'     ].value;
-    var is_admin  = response['localuser_' + i + '_admin'    ].checked;
-    var password1 = response['localuser_' + i + '_password1'].value;
-    var password2 = response['localuser_' + i + '_password2'].value;
+      write_config_json_and_exit(new_config);
+    };
 
-    var error_element
-      = document.querySelector('div[id=localuser_' + i + '_errors]');
-
-    var errors = [];
-
-    if (login.match(/^\s*$/) && name.match(/^\s*$/))
-      continue;       
-
-    if (!login.match(/^[a-z\.-]+$/))
-      errors.push('Login is not in correct format.');
-
-    if (!name.match(/^[a-zA-Z\. -]+$/))
-      errors.push('Name is not in correct format.');
-
-    if (password1 !== password2)
-      errors.push('Passwords do not match.');
-
-    if (errors.length > 0) {
-      error_element.textContent = errors.join(' / ');
-      has_errors = true;
-    }
-    
-    if (is_admin)
-      new_config.admins.push(login);
-
-    new_config.allow_logins_for.push(login);
-
-    new_config.local_users.push({
-      hashed_password: '$6$cLWEUGTsV$CMsWTZAgRRYV5FEB0A9OhBxKF4L.C8/TcgG7gbnJuaJ6laKt8xROZyNYQZDV3/iahXWgC52Sg4KAgJGbISFM51',
-      login:           login,
-      name:            name,
-    });
-  }
-
-  if (has_errors) { return; }
+  make_local_users_config(response,
+                          0,
+                          old_config,
+                          new_config,
+                          false,
+                          do_with_local_users);
+}
 
 /*
   // allow_logins_for
@@ -164,47 +195,7 @@ function assemble_config_and_exit(old_config) {
     = response['localuser_0_admin'].checked
         ? [ response['localuser_0_login'].value ]
         : [];
-
-  // local_users
-  var local_user_errors = document.querySelector('div[id=localuser_0_errors]');
-  local_user_errors.innerHTML = '';
-  if (response.localuser_0_password1.value
-        !== response.localuser_0_password2.value) {
-    local_user_errors.innerHTML = 'Passwords do not match.';
-    return;
-  }
-
-  new_config.local_users = [
-    {
-      login: response['localuser_0_login'].value,
-      name:  response['localuser_0_name' ].value,
-    }
-  ];
-
-  // XXX should validate more properly
-  if (new_config.local_users[0].login === '') {
-    alert('Login is missing');
-    return;
-  }
-
-  // XXX should validate more properly
-  if (new_config.local_users[0].name === '') {
-    alert('Name is missing');
-    return;
-  }
 */
-
-  write_config_json_and_exit(new_config);
-
-  /*
-  // write configuration once passwords are hashed
-  hash_password(response['localuser_0_password'].value,
-                old_config.local_users[0].hashed_password,
-                function(hp) {
-                  // new_config.local_users[0].hashed_password = hp;
-                  write_config_json_and_exit(new_config); });
-  */
-}
 
 function check_download_packs(cb) {
   var handler
