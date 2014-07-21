@@ -33,6 +33,53 @@ puavo-local-config [OPTIONS]
   EOF
 end
 
+def conf_version_1_ok?(conf)
+  is_boolean = lambda { |v| v.kind_of?(TrueClass) || v.kind_of?(FalseClass) }
+
+  conf['admins'].kind_of?(Array) \
+    && conf['admins'].map { |s| s.kind_of?(String) } \
+    && conf['allow_logins_for'].kind_of?(Array) \
+    && conf['allow_logins_for'].map { |s| s.kind_of?(String) } \
+    && is_boolean.call(conf['allow_remoteadmins']) \
+    && conf['licenses'].kind_of?(Hash) \
+    && conf['licenses'].map do |k, v|
+                              k.kind_of?(String) && is_boolean.call(v)
+                            end \
+                       .all? \
+    && conf['local_users'].kind_of?(Array) \
+    && conf['local_users'].map do |u|
+                                 u.kind_of?(Hash) \
+                                   && u['hashed_password'].kind_of?(String) \
+                                   && u['login'].kind_of?(String)           \
+                                   && u['name'].kind_of?(String)
+                               end \
+                          .all?
+end
+
+def ensure_conf_sanity(conf, config_path)
+  move_conf = lambda {
+                warn 'Moving configuration file, because it is messed up'
+                FileUtils.mv(config_path,
+                             "#{ config_path }.backup-#{ Time.now().to_i }")
+              }
+
+  if conf.nil? then
+    if File.exists?(config_path) then
+      move_conf.call()
+    end
+    return nil
+  end
+
+  # this might include migration code if version should be greater
+
+  if conf['version'] == 1 && conf_version_1_ok?(conf) then
+    return conf
+  else
+    move_conf.call()
+    return nil
+  end
+end
+
 def search_and_replace_line(file, re, new_line)
   File.open(file, 'r') do |inputf|
     output_lines = []
@@ -250,6 +297,8 @@ rescue Exception => e
   warn "Could not read and interpret #{ config_path }: #{ e.message }"
   conf = nil
 end
+
+conf = ensure_conf_sanity(conf, config_path)
 
 dispatch_table = {
   '--admins'        => lambda { configure_admins(conf)           },

@@ -85,10 +85,12 @@ function add_one_license(parentNode, license_info, download_done) {
 function assemble_config_and_exit(old_config) {
   var response = document.forms[0].elements;
   var new_config = {
-    admins:           [],
-    allow_logins_for: [],
-    licenses:         {},
-    local_users:      [],
+    admins:             [],
+    allow_logins_for:   [],
+    allow_removeadmins: false,
+    licenses:           {},
+    local_users:        [],
+    version:            1,
   };
 
   // iterate all local users
