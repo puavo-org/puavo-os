@@ -98,7 +98,7 @@ function make_local_users_config(response,
                      };
 
   if (!(('localuser_' + i + '_login') in response))
-    return cb(has_errors, new_config);
+    return cb(has_errors);
 
   var login     = response['localuser_' + i + '_login'    ].value;
   var name      = response['localuser_' + i + '_name'     ].value;
@@ -156,9 +156,18 @@ function assemble_config_and_exit(old_config) {
     version:            1,
   };
 
-  var do_with_local_users =
-    function(has_errors, local_users) {
-      if (has_errors) { throw('errors in user creation'); }
+  var do_after_local_users_are_ok =
+    function(has_errors) {
+      if (has_errors) { return; }
+
+      switch(response.allow_logins_for.value) {
+        case 'all_puavo_domain_users':
+          new_config.allow_logins_for = [ '*' ];
+          break;
+        case 'some_puavo_domain_users':
+          new_config.allow_logins_for = [ 'XXX' ];
+          break;
+      }
 
       write_config_json_and_exit(new_config);
     };
@@ -168,7 +177,7 @@ function assemble_config_and_exit(old_config) {
                           old_config,
                           new_config,
                           false,
-                          do_with_local_users);
+                          do_after_local_users_are_ok);
 }
 
 /*
@@ -274,11 +283,49 @@ function download_pkg(license_key, button, styles, error_element) {
 }
 
 function generate_allow_logins_input(form, old_config) {
-  var hr = document.createElement('hr');
-  form.appendChild(hr);
+  var table = document.createElement('table');
+
+  var make_radiobutton
+    = function(tr, value, text, checked) {
+        var input = document.createElement('input');
+        if (checked) {
+          input.setAttribute('checked', true);
+        } else {
+          input.removeAttribute('checked');
+        }
+        input.setAttribute('name', 'allow_logins_for');
+        input.setAttribute('type', 'radio');
+        input.setAttribute('value', value);
+
+        var tr = table.appendChild( document.createElement('tr') );
+        var td = tr   .appendChild( document.createElement('td') );
+
+        var textnode = document.createTextNode(text);
+        td.appendChild(input);
+        td.appendChild(textnode);
+
+        return tr;
+      };
+
+  var all_is_chosen = (old_config.allow_logins_for.indexOf('*') >= 0);
+
+  make_radiobutton(table,
+                   'all_puavo_domain_users',
+                   'All puavo domain users',
+                   all_is_chosen);
+
+  var rb_tr = make_radiobutton(table,
+                               'some_puavo_domain_users',
+                               'Some puavo domain users:',
+                               !all_is_chosen);
+
+  // XXX a b c should obviously come from previous configuration
+  make_listwidgets(rb_tr, 'allowed_puavo_users', [ 'a', 'b', 'c' ]);
+
 
   var title = document.createElement('div');
-  title.textContent = 'Allow login for';
+  title.textContent = 'Allow logins for:';
+  title.appendChild(table);
 
   form.appendChild(title);
 }
@@ -289,7 +336,7 @@ function generate_form(old_config) {
   var form = document.querySelector('form[id=dynamic_form]');
 
   generate_login_users_input(form, old_config);
-  // generate_allow_logins_input(form, old_config);
+  generate_allow_logins_input(form, old_config);
   generate_done_button(form, old_config);
 }
 
@@ -305,7 +352,6 @@ function generate_login_users_input(form, old_config) {
 
   form.appendChild(title);
 
-
   var user_inputs = document.createElement('div');
   form.appendChild(user_inputs);
 
@@ -318,9 +364,8 @@ function generate_login_users_input(form, old_config) {
   // create at least one empty user
   if (local_users.length === 0) { append_empty_user(); }
 
-  for (i in local_users) {
+  for (i in local_users)
     generate_one_user_create_table(user_inputs, old_config, i);
-  }
  
   var add_new_user
     = function(e) {
@@ -477,6 +522,55 @@ function hash_password(password, old_hashed_password, cb) {
   child.stdin.end(password);
 }
 
+function make_listwidgets(parentNode, fieldname, initial_values) {
+  var listwidgets = [];
+
+  var make_listwidget
+    = function(value) {
+        var table = document.createElement('table');
+        var tr    = table.appendChild( document.createElement('tr')    );
+        var td    = tr   .appendChild( document.createElement('td')    );
+        var input = td   .appendChild( document.createElement('input') );
+        input.setAttribute('name', fieldname);
+        input.setAttribute('type', 'text');
+        input.setAttribute('value', value);
+        input.addEventListener('focusout',
+                               function(ev) { update_listwidgets(); });
+        input.addEventListener('keyup',
+                               function(ev) { update_listwidgets(); });
+
+        parentNode.appendChild(table);
+
+        return { input: input, table: table, };
+      };
+
+  var update_listwidgets
+    = function() {
+        var one_empty_listwidget = false;
+
+        for (i in listwidgets) {
+          if (listwidgets[i].input.value.match(/^\s*$/)) {
+            if (one_empty_listwidget) {
+              var table = listwidgets[i].table;
+              delete listwidgets[i];
+              table.parentNode.removeChild(table);
+            } else {
+              one_empty_listwidget = true;
+            }
+          }
+        }
+
+        if (!one_empty_listwidget) {
+          listwidgets.push( make_listwidget('') );
+        }
+      };
+
+  for (v in initial_values)
+    listwidgets.push( make_listwidget(initial_values[v]) );
+
+  update_listwidgets();
+}
+
 function open_external_link(e) {
   var child = child_process.spawn('x-www-browser',
                                   [ e.href ],
@@ -494,6 +588,7 @@ function read_config() {
       alert(ex);
       return false;
     } else {
+      // default config in case everything is missing
       config = {
         admins:             [],
         allow_logins_for:   [ '*' ],
