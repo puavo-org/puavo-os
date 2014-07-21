@@ -776,9 +776,11 @@ class packages {
     [ 'libdvdcss2' ]:
       tag => [ 'mediaplayer', 'opinsys', ];
 
-    [ 'nautilus-dropbox'
-    , 'nautilus-dropbox-dist' ]:
+    [ 'nautilus-dropbox' ]
       tag => [ 'misc', 'opinsys', ];
+
+    [ 'nautilus-dropbox-dist' ]:
+      tag => [ 'misc', 'opinsys', 'restricted' ];
 
     [ 'acroread'
     , 'cmaptools' ]:
