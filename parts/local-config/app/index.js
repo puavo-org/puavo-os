@@ -87,22 +87,24 @@ function add_one_license(parentNode, license_info, download_done, checked) {
 }
 
 function make_local_users_config(response,
-                                 i,
+                                 user_indexes,
                                  old_config,
                                  new_config,
                                  has_errors,
                                  cb) {
+  if (user_indexes.length === 0)
+    return cb(has_errors);
+
+  var i = user_indexes.pop();
+
   var next_user_fn = function() {
                        make_local_users_config(response,
-                                               i+1,
+                                               user_indexes,
                                                old_config,
                                                new_config,
                                                has_errors,
                                                cb);
                      };
-
-  if (!(('localuser_' + i + '_login') in response))
-    return cb(has_errors);
 
   var login     = response['localuser_' + i + '_login'    ].value;
   var name      = response['localuser_' + i + '_name'     ].value;
@@ -137,14 +139,37 @@ function make_local_users_config(response,
 
   new_config.allow_logins_for.push(login);
 
+  old_user = old_config.local_users[login];
+
+  var uid;
+  if (old_user && old_user.uid) {
+    uid = old_user.uid;
+  } else {
+    var get_uids = function(conf) {
+                     conf ? Object.keys(conf.local_users)
+                                  .map(function(key) {
+                                         return conf.local_users[key].uid; })
+                          : []
+                   };
+    var max_fn = function(a,b) { return Math.max(a,b); };
+
+    old_uids = get_uids(old_config);
+    new_uids = get_uids(new_config);
+
+    debugger; /* XXX this does not work yet, properly */
+    uid = old_uids.concat(new_uids).reduce(max_fn, 3000) + 1;
+  }
+
   hash_password(password1,
-                old_config.local_users[i].hashed_password,
                 function(hp) {
-                  new_config.local_users.push({
-                    hashed_password: hp,
-                    login:           login,
+                  var pw = hp || (old_user && old_user.hashed_password) || '!';
+
+                  new_config.local_users[login] = {
+                    hashed_password: pw,
                     name:            name,
-                  });
+                    uid:             uid,
+                  };
+
                   next_user_fn();
                });
 }
@@ -156,7 +181,7 @@ function assemble_config_and_exit(old_config) {
     allow_logins_for:   [],
     allow_remoteadmins: false,
     licenses:           {},
-    local_users:        [],
+    local_users:        {},
     version:            1,
   };
 
@@ -175,12 +200,8 @@ function assemble_config_and_exit(old_config) {
             if (user && user.match(/\S+/)) { allowed_puavo_users.push(user); }
           }
 
-	  var local_users = new_config.local_users
-				      .map(function(lu) { return lu.login; });
-
-	  debugger;
-	  new_config.allow_logins_for
-	    = allowed_puavo_users.concat(local_users);
+          new_config.allow_logins_for
+            = allowed_puavo_users.concat(Object.keys(new_config.local_users));
 
           break;
       }
@@ -197,8 +218,15 @@ function assemble_config_and_exit(old_config) {
       write_config_json_and_exit(new_config);
     };
 
+  var user_indexes = [];
+  for (i in response) {
+    match = response[i].name
+              && response[i].name.match(/^localuser_(\d+)_login$/);
+    if (match) { user_indexes.push(match[1]); }
+  }
+
   make_local_users_config(response,
-                          0,
+                          user_indexes,
                           old_config,
                           new_config,
                           false,
@@ -324,10 +352,9 @@ function generate_allow_logins_input(form, old_config) {
 
   var nonlocal_users_allowed_logins = [];
   if (!all_is_chosen) {
-    var local_user_names
-      = old_config.local_users.map(function(lu) { return lu.login });
     nonlocal_users_allowed_logins
-      = diff_arrays(old_config.allow_logins_for, local_user_names);
+      = diff_arrays(old_config.allow_logins_for,
+                    Object.keys(old_config.local_users));
   }
 
   make_listwidgets(rb_tr,
@@ -396,24 +423,30 @@ function generate_login_users_input(form, old_config) {
   var user_inputs = document.createElement('div');
   form.appendChild(user_inputs);
 
-  var local_users = old_config.local_users;
+  var local_users_list = [];
+  for (login in old_config.local_users)
+    local_users_list.push({
+                            is_admin: (old_config.admins.indexOf(login) >= 0),
+                            login:    login,
+                            name:     old_config.local_users[login].name,
+                          });
 
   var append_empty_user
     = function() { 
-        local_users.push({ hashed_password: '', login: '', name: '', }); }
+        local_users_list.push({ hashed_password: '', login: '', name: '', }); }
 
   // create at least one empty user
-  if (local_users.length === 0) { append_empty_user(); }
+  if (local_users_list.length === 0) { append_empty_user(); }
 
-  for (i in local_users)
-    generate_one_user_create_table(user_inputs, old_config, i);
+  for (i in local_users_list)
+    generate_one_user_create_table(user_inputs, local_users_list, i);
  
   var add_new_user
     = function(e) {
         e.preventDefault();
         append_empty_user();
-        var last_i = local_users.length - 1;
-        generate_one_user_create_table(user_inputs, old_config, last_i);
+        var last_i = local_users_list.length - 1;
+        generate_one_user_create_table(user_inputs, local_users_list, last_i);
       };
 
   add_button.addEventListener('click', add_new_user);
@@ -421,7 +454,7 @@ function generate_login_users_input(form, old_config) {
   form.appendChild( document.createElement('hr') );
 }
 
-function generate_one_user_create_table(parentNode, old_config, user_i) {
+function generate_one_user_create_table(parentNode, local_users_list, user_i) {
   var user_div = document.createElement('div');
   parentNode.appendChild(user_div);
 
@@ -431,15 +464,15 @@ function generate_one_user_create_table(parentNode, old_config, user_i) {
 
   var table = document.createElement('table');
 
-  var old_user_data = old_config.local_users[user_i];
+  var old_user_data = local_users_list[user_i];
+  var login = old_user_data.login;
   
   var fields = [
     {
       name:     'Login:',
       key:      'login',
       type:     'text',
-      value_fn: function(input) { 
-                  input.setAttribute('value', old_user_data.login) },
+      value_fn: function(input) { input.setAttribute('value', login) },
     },
     {
       name:     'Name:',
@@ -453,7 +486,7 @@ function generate_one_user_create_table(parentNode, old_config, user_i) {
       key:      'admin',
       type:     'checkbox',
       value_fn: function(input) {
-                  if (old_config.admins.indexOf(old_user_data.login) >= 0) {
+                  if (old_user_data.is_admin) {
                     input.setAttribute('checked', true);
                   } else {
                     input.removeAttribute('checked');
@@ -481,9 +514,9 @@ function generate_one_user_create_table(parentNode, old_config, user_i) {
         if (fieldinfo.value_fn) { fieldinfo.value_fn(input); }
         return input;
       };
- 
+
   fields.forEach(function (fieldinfo) { 
-	           var tr = document.createElement('tr');
+                   var tr = document.createElement('tr');
 
                    var name_td = document.createElement('td');
                    name_td.textContent = fieldinfo.name;
@@ -491,11 +524,18 @@ function generate_one_user_create_table(parentNode, old_config, user_i) {
 
                    var input_td = document.createElement('td');
 
-                   var input
-                     = (fieldinfo.key === 'login'
-                          && old_user_data.login !== '')
-                         ? document.createTextNode(old_user_data.login)
-                         : make_input(fieldinfo);
+                   var input;
+                   if (fieldinfo.key === 'login' && login !== '') {
+                     input_td.appendChild( document.createTextNode(login) );
+                     input = make_input({
+                               key: 'login',
+                               type: 'hidden',
+                               value_fn: function(i) {
+                                 i.setAttribute('value', login) }
+                             });
+                   } else {
+                     input = make_input(fieldinfo);
+                   }
 
                    input_td.appendChild(input);
                    tr.appendChild(input_td);
@@ -505,7 +545,7 @@ function generate_one_user_create_table(parentNode, old_config, user_i) {
                        = function(e) {
                            e.preventDefault();
                            var ok = (old_user_data.login === '')
-                                       || confirm('OK?');
+                                      || confirm('OK?');
                            if (ok) { parentNode.removeChild(user_div); }
                          };
 
@@ -570,10 +610,10 @@ function get_license_list() {
   return list;
 }
 
-function hash_password(password, old_hashed_password, cb) {
+function hash_password(password, cb) {
   // if user did not provide a password,
   // use the password from old configuration
-  if (password === '') { return cb(old_hashed_password); }
+  if (password === '') { return cb(''); }
 
   var handler
     = function (error, stdout, stderr) {
@@ -658,7 +698,7 @@ function read_config() {
         allow_logins_for:   [ '*' ],
         allow_remoteadmins: false,
         licenses:           {},
-        local_users:        [],
+        local_users:        {},
       };
     } else {
       alert(ex);
