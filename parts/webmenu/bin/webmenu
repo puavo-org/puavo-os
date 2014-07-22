@@ -28,6 +28,13 @@ help(){
 
     -d --devtools   Start with developer tools
     --test          Run tests
+
+    Environment variables
+
+    WM_MENU_JSON_PATH   Colon separated list of paths where to search for menu.json
+    WM_HOME             Webmenu config home
+    WM_FEEDBACK_ACTIVE  Activate anonymous usage statistics
+    WM_WEBKIOSK_MODE    Activate webkiosk mode
     "
 }
 
