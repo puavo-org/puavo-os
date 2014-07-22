@@ -31,20 +31,19 @@ function add_download_button(license_key, errormsg_element, download_done) {
   return button;
 }
 
-function add_licenses(license_list) {
-  var ll = document.querySelector('table[id=license_list]');
-
+function add_licenses(table, old_config, license_list) {
   check_download_packs(function (downloaded_packs) {
                          for (var i in license_list) {
                            var license = license_list[i];
-                           add_one_license(ll,
+                           add_one_license(table,
                                            license,
-                                           downloaded_packs[license.key]);
+                                           downloaded_packs[license.key],
+                                           old_config.licenses[license.key]);
                          }
                        });
 }
 
-function add_one_license(parentNode, license_info, download_done) {
+function add_one_license(parentNode, license_info, download_done, checked) {
   var tr = document.createElement('tr');
 
   // create license name element
@@ -74,6 +73,12 @@ function add_one_license(parentNode, license_info, download_done) {
   input.setAttribute('class', 'license_acceptance_checkbox');
   input.setAttribute('name', license_info.key);
   input.setAttribute('type', 'checkbox');
+  if (checked) {
+    input.setAttribute('checked', true);
+  } else {
+    input.removeAttribute('checked');
+  }
+
   tr.appendChild( accept_td.appendChild(input) );
 
   tr.appendChild(download_errormsg_element);
@@ -169,17 +174,23 @@ function assemble_config_and_exit(old_config) {
             var user = response.allowed_puavo_users[i].value;
             if (user && user.match(/\S+/)) { allowed_puavo_users.push(user); }
           }
-
-          var local_users = new_config.local_users
-                                      .map(function(lu) { return lu.login; });
-
-          new_config.allow_logins_for
-            = allowed_puavo_users.concat(local_users);
-
           break;
       }
 
+      var local_users = new_config.local_users
+                                  .map(function(lu) { return lu.login; });
+
+      new_config.allow_logins_for
+        = allowed_puavo_users.concat(local_users);
+
       new_config.allow_remoteadmins = response.allow_remoteadmins.checked;
+
+      for (i in response) {
+        if (response[i].className === 'license_acceptance_checkbox') {
+          var name = response[i].getAttribute('name');
+          new_config.licenses[name] = response[i].checked;
+        }
+      }
 
       write_config_json_and_exit(new_config);
     };
@@ -204,12 +215,6 @@ function assemble_config_and_exit(old_config) {
 
   // licenses
   new_config.licenses = {};
-  var license_checkboxes
-    = document.querySelectorAll('input[class=license_acceptance_checkbox]');
-  [].forEach.call(license_checkboxes,
-                  function(lc) {
-                    var name = lc.getAttribute('name');
-                    new_config.licenses[name] = response[name].checked; });
 
   // admins
   new_config.admins
@@ -376,14 +381,21 @@ function generate_allow_remoteadmins_input(form, old_config) {
   form.appendChild( document.createElement('hr') );
 }
 
-function generate_form(old_config) {
-  // XXX add_licenses(get_license_list());
+function generate_software_installation_controls(form, old_config) {
+  var table = document.createElement('table');
 
+  add_licenses(table, old_config, get_license_list());
+
+  form.appendChild(table);
+}
+
+function generate_form(old_config) {
   var form = document.querySelector('form[id=dynamic_form]');
 
   generate_login_users_input(form, old_config);
   generate_allow_logins_input(form, old_config);
   generate_allow_remoteadmins_input(form, old_config);
+  generate_software_installation_controls(form, old_config);
   generate_done_button(form, old_config);
 }
 
