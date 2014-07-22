@@ -18,10 +18,10 @@ describe "LogoutView", ->
         @options = @view.$("option").map (i, el) ->
             el.value
 
-    afterEach -> @view.remove()
 
     describe "for laptop", ->
         beforeEach createLogoutView("laptop")
+        afterEach -> @view.remove()
 
         it "has hibernate", -> assert "hibernate" in @options
         it "has sleep", -> assert "sleep" in @options
@@ -36,6 +36,7 @@ describe "LogoutView", ->
 
     describe "for thinclient", ->
         beforeEach createLogoutView("thinclient")
+        afterEach -> @view.remove()
 
         it "has no hibernate", -> assert not ("hibernate" in @options)
         it "has no sleep", -> assert not ("sleep" in @options)
