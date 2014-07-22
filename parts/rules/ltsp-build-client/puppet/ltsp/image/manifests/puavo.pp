@@ -9,6 +9,7 @@ class image::puavo {
 		  disable_geoclue,
 		  disable_gnome_keyring_autostart,
 		  firefox,
+		  gnome_terminal,
 		  graphics_drivers,
 		  image::bundle::basic,
 		  kaffeine,
