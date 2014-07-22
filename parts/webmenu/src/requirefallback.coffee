@@ -1,7 +1,9 @@
 
 # Node.js require with fallback support
+_ = require "underscore"
 
 module.exports = (paths...) ->
+  paths = _.flatten(paths)
   err = null
   while path = paths.shift()
     try

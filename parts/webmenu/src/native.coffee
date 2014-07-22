@@ -23,6 +23,7 @@ forceFocus = require "./forceFocus"
 createSpawnSocket = require "./createSpawnSocket"
 logger = require "./fluent-logger"
 pkg = require "../package.json"
+getMenuJSONPaths = require "./getMenuJSONPaths"
 
 
 if process.env.WM_HOME
@@ -65,12 +66,7 @@ if sp = process.env.PUAVO_SESSION_PATH
 
 locale = process.env.LANG
 locale ||= "fi_FI.UTF-8"
-menuJSON = requirefallback(
-    webmenuHome + "/xdg-menu.json"
-    webmenuHome + "/menu.json"
-    "/etc/webmenu/menu.json"
-    __dirname + "/../menu.json"
-)
+menuJSON = requirefallback(getMenuJSONPaths(webmenuHome))
 
 safeRequire = (path) ->
     try

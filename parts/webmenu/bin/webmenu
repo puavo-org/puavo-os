@@ -126,12 +126,13 @@ while true; do
     esac
 done
 
+generated_menu_json="$WM_HOME/menu-generated.json"
 
 if $use_xdg; then
-    echo "Generating xdg-menu.json"
-    webmenu-xdg > "$WM_HOME/xdg-menu.json"
+    echo "Generating $generated_menu_json"
+    webmenu-xdg > "$generated_menu_json"
 else
-    rm -f "$WM_HOME/xdg-menu.json"
+    rm -f "$generated_menu_json"
 fi
 
 if $build_assets; then
