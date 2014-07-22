@@ -179,6 +179,8 @@ function assemble_config_and_exit(old_config) {
           break;
       }
 
+      new_config.allow_remoteadmins = response.allow_remoteadmins.checked;
+
       write_config_json_and_exit(new_config);
     };
 
@@ -350,6 +352,28 @@ function generate_allow_logins_input(form, old_config) {
   title.appendChild(table);
 
   form.appendChild(title);
+
+  form.appendChild( document.createElement('hr') );
+}
+
+function generate_allow_remoteadmins_input(form, old_config) {
+  var div = document.createElement('div');
+  var titletext = document.createTextNode('Allow login from remote admins:');
+  div.appendChild(titletext);
+
+  var input = document.createElement('input');
+  input.setAttribute('name', 'allow_remoteadmins');
+  input.setAttribute('type', 'checkbox');
+  if (old_config.allow_remoteadmins) {
+    input.setAttribute('checked', true);
+  } else {
+    input.removeAttribute('checked');
+  }
+
+  div.appendChild(input);
+  form.appendChild(div);
+
+  form.appendChild( document.createElement('hr') );
 }
 
 function generate_form(old_config) {
@@ -359,6 +383,7 @@ function generate_form(old_config) {
 
   generate_login_users_input(form, old_config);
   generate_allow_logins_input(form, old_config);
+  generate_allow_remoteadmins_input(form, old_config);
   generate_done_button(form, old_config);
 }
 
