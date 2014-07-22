@@ -623,10 +623,7 @@ function read_config() {
   try {
     config = JSON.parse( fs.readFileSync(config_json_path) );
   } catch (ex) {
-    if (ex.code !== 'ENOENT') {
-      alert(ex);
-      return false;
-    } else {
+    if (ex.code === 'ENOENT') {
       // default config in case everything is missing
       config = {
         admins:             [],
@@ -635,6 +632,9 @@ function read_config() {
         licenses:           {},
         local_users:        [],
       };
+    } else {
+      alert(ex);
+      return false;
     }
   }
 
