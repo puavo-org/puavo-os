@@ -62,7 +62,6 @@ function add_one_license(parentNode, license_info, download_done) {
   a.textContent = '(license terms)';
   tr.appendChild( license_url_td.appendChild(a) );
 
-  debugger;
   var download_td = document.createElement('td');
   var download_errormsg_element = document.createElement('td');
   download_td.appendChild( add_download_button(license_info.key,
@@ -165,7 +164,18 @@ function assemble_config_and_exit(old_config) {
           new_config.allow_logins_for = [ '*' ];
           break;
         case 'some_puavo_domain_users':
-          new_config.allow_logins_for = [ 'XXX' ];
+          var allowed_puavo_users = [];
+          for (i in response.allowed_puavo_users) {
+            var user = response.allowed_puavo_users[i].value;
+            if (user && user.match(/\S+/)) { allowed_puavo_users.push(user); }
+          }
+
+          var local_users = new_config.local_users
+                                      .map(function(lu) { return lu.login; });
+
+          new_config.allow_logins_for
+            = allowed_puavo_users.concat(local_users);
+
           break;
       }
 
@@ -246,6 +256,10 @@ function configure_system_and_exit() {
   child_process.execFile('sudo', cmd_args, {}, handler);
 }
 
+function diff_arrays(a, b) {
+  return a.filter(function(i) { return b.indexOf(i) < 0; });
+};
+
 function download_pkg(license_key, button, styles, error_element) {
   button.textContent = 'Downloading...';
   button.setAttribute('style', styles.download_a);
@@ -319,9 +333,17 @@ function generate_allow_logins_input(form, old_config) {
                                'Some puavo domain users:',
                                !all_is_chosen);
 
-  // XXX a b c should obviously come from previous configuration
-  make_listwidgets(rb_tr, 'allowed_puavo_users', [ 'a', 'b', 'c' ]);
+  var nonlocal_users_allowed_logins = [];
+  if (!all_is_chosen) {
+    var local_user_names
+      = old_config.local_users.map(function(lu) { return lu.login });
+    nonlocal_users_allowed_logins
+      = diff_arrays(old_config.allow_logins_for, local_user_names);
+  }
 
+  make_listwidgets(rb_tr,
+                   'allowed_puavo_users',
+                   nonlocal_users_allowed_logins);
 
   var title = document.createElement('div');
   title.textContent = 'Allow logins for:';
@@ -355,7 +377,7 @@ function generate_login_users_input(form, old_config) {
   var user_inputs = document.createElement('div');
   form.appendChild(user_inputs);
 
-  var local_users = old_config['local_users'];
+  var local_users = old_config.local_users;
 
   var append_empty_user
     = function() { 
