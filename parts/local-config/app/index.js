@@ -174,14 +174,16 @@ function assemble_config_and_exit(old_config) {
             var user = response.allowed_puavo_users[i].value;
             if (user && user.match(/\S+/)) { allowed_puavo_users.push(user); }
           }
+
+	  var local_users = new_config.local_users
+				      .map(function(lu) { return lu.login; });
+
+	  debugger;
+	  new_config.allow_logins_for
+	    = allowed_puavo_users.concat(local_users);
+
           break;
       }
-
-      var local_users = new_config.local_users
-                                  .map(function(lu) { return lu.login; });
-
-      new_config.allow_logins_for
-        = allowed_puavo_users.concat(local_users);
 
       new_config.allow_remoteadmins = response.allow_remoteadmins.checked;
 
@@ -415,12 +417,17 @@ function generate_login_users_input(form, old_config) {
       };
 
   add_button.addEventListener('click', add_new_user);
+
+  form.appendChild( document.createElement('hr') );
 }
 
 function generate_one_user_create_table(parentNode, old_config, user_i) {
+  var user_div = document.createElement('div');
+  parentNode.appendChild(user_div);
+
   var div = document.createElement('div');
   div.setAttribute('id', 'localuser_' + user_i + '_errors');
-  parentNode.appendChild(div);
+  user_div.appendChild(div);
 
   var table = document.createElement('table');
 
@@ -466,35 +473,56 @@ function generate_one_user_create_table(parentNode, old_config, user_i) {
   ];
 
   var make_input
-    = function(field, i, type, value_fn) {
+    = function(fieldinfo) {
         input = document.createElement('input');
-        input.setAttribute('name', 'localuser_' + i + '_' + field);
-        input.setAttribute('type', type);
-        if (value_fn) { value_fn(input); }
+        input.setAttribute('name',
+                           'localuser_' + user_i + '_' + fieldinfo.key);
+        input.setAttribute('type', fieldinfo.type);
+        if (fieldinfo.value_fn) { fieldinfo.value_fn(input); }
         return input;
       };
  
   fields.forEach(function (fieldinfo) { 
-                   var tr = document.createElement('tr');
+	           var tr = document.createElement('tr');
 
                    var name_td = document.createElement('td');
                    name_td.textContent = fieldinfo.name;
                    tr.appendChild(name_td);
 
                    var input_td = document.createElement('td');
-                   var input = make_input(fieldinfo.key,
-                                          user_i,
-                                          fieldinfo.type,
-                                          fieldinfo.value_fn);
+
+                   var input
+                     = (fieldinfo.key === 'login'
+                          && old_user_data.login !== '')
+                         ? document.createTextNode(old_user_data.login)
+                         : make_input(fieldinfo);
 
                    input_td.appendChild(input);
                    tr.appendChild(input_td);
 
+                   if (fieldinfo.key === 'login') {
+                     var delete_create_user_table
+                       = function(e) {
+                           e.preventDefault();
+                           var ok = (old_user_data.login === '')
+                                       || confirm('OK?');
+                           if (ok) { parentNode.removeChild(user_div); }
+                         };
+
+                     var remove_td = document.createElement('td');
+                     var input = document.createElement('input');
+                     input.setAttribute('type', 'button');
+                     input.setAttribute('value', 'remove');
+                     input.addEventListener('click', delete_create_user_table);
+                     remove_td.appendChild(input);
+                     tr.appendChild(remove_td);
+                   }
+
                    table.appendChild(tr);
                  });
 
-  parentNode.appendChild(table);
-  parentNode.appendChild( document.createElement('hr') );
+  user_div.appendChild(table);
+  user_div.appendChild( document.createElement('hr') );
 }
 
 function generate_done_button(form, old_config) {
