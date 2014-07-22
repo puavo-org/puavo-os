@@ -28,6 +28,8 @@ shift
 
 installdir="/state/restricted-packages/${package}/i"
 
+[ -d "${installdir}" ] || exit 0
+
 if [ -x "/usr/share/puavo-ltsp-client/restricted-packages/${package}/prerm" ]; then
     "/usr/share/puavo-ltsp-client/restricted-packages/${package}/prerm" "${installdir}"
 fi
