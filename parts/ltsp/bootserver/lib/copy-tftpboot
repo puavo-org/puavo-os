@@ -106,7 +106,12 @@ trap on_exit EXIT
 
 mkdir -p "${PUAVO_TFTP_BOOT_DIR:-/var/lib/tftpboot/ltsp}"
 
-image_boot_dir_mtime=$(stat --format %Y "${image_boot_dir}")
+if [ -d "${image_boot_dir}" ]; then
+    image_boot_dir_mtime=$(stat --format %Y "${image_boot_dir}")
+else
+    image_boot_dir_mtime=0
+fi
+
 image_filepath_mtime=$(stat --format %Y "${image_filepath}")
 
 # image_filepath is potentially a symlink, we can skip copying iff
