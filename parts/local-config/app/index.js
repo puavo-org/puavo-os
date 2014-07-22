@@ -203,26 +203,6 @@ function assemble_config_and_exit(old_config) {
                           do_after_local_users_are_ok);
 }
 
-/*
-  // allow_logins_for
-  new_config.allow_logins_for
-    = response.allow_logins_for.value === 'all_puavo_domain_users'
-        ? [ '*' ]
-        : [];
-
-  // allow_remoteadmins
-  new_config.allow_remoteadmins = response.allow_remoteadmins.checked;
-
-  // licenses
-  new_config.licenses = {};
-
-  // admins
-  new_config.admins
-    = response['localuser_0_admin'].checked
-        ? [ response['localuser_0_login'].value ]
-        : [];
-*/
-
 function check_download_packs(cb) {
   var handler
     = function (error, stdout, stderr) {
@@ -659,61 +639,6 @@ function read_config() {
   }
 
   return config;
-}
-
-function set_form_values_from_config(config) {
-  // allow_logins_for
-  allow_logins_for
-    = config.allow_logins_for.indexOf('*') >= 0
-        ? 'all_puavo_domain_users'
-        : 'some_puavo_domain_users';
-
-  [].forEach.call(document.querySelectorAll('input[name=allow_logins_for]'),
-                  function(e) {
-                    if (e.getAttribute('value') === allow_logins_for)
-                      e.setAttribute('checked', true); });
-
-  // local_users
-  for (var i in config.local_users) {
-    var login = config.local_users[i].login;
-    var name  = config.local_users[i].name;
-
-    document.querySelector('input[name=localuser_' + i + '_login')
-            .setAttribute('value', login);
-    document.querySelector('input[name=localuser_' + i + '_name')
-            .setAttribute('value', name);
-
-    // check if user if found in the admins array
-    if (config.admins.indexOf(login) >= 0) {
-      document.querySelector('input[name=localuser_' + i + '_admin')
-              .setAttribute('checked', true);
-    } else {
-      document.querySelector('input[name=localuser_' + i + '_admin')
-              .removeAttribute('checked');
-    }
-  }
-
-  // allow_remoteadmins
-  var allow_remoteadmins_checkbox
-    = document.querySelector('input[name=allow_remoteadmins]');
-  if (config.allow_remoteadmins) {
-    allow_remoteadmins_checkbox.setAttribute('checked', true);
-  } else {
-    allow_remoteadmins_checkbox.removeAttribute('checked');
-  }
-
-  // licenses
-  var license_checkboxes
-    = document.querySelectorAll('input[class=license_acceptance_checkbox]');
-  [].forEach.call(license_checkboxes,
-                  function(lc) {
-                    var name = lc.getAttribute('name');
-                    if (name in config.licenses && config.licenses[name]) {
-                      lc.setAttribute('checked', true);
-                    } else {
-                      lc.removeAttribute('checked');
-                    }
-                  });
 }
 
 function write_config_json_and_exit(conf) {
