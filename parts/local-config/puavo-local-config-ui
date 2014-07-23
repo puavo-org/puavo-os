@@ -1,3 +1,9 @@
 #!/bin/sh
 
+set -e
+
+if [ "$1" = "--auto" -a -e /state/etc/puavo/local/config.json ]; then
+  exit 0
+fi
+
 nw /usr/lib/puavo-local-config-ui/

@@ -20,6 +20,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d
 	mkdir -p $(DESTDIR)$(libdir)/puavo-local-config-ui
+	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
 .PHONY : install
 install : installdirs
@@ -40,6 +41,9 @@ install : installdirs
 		app/index.js     \
 		app/package.json \
 		app/style.css
+	
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
+		puavo-local-config-ui-autostart.desktop
 
 .PHONY : clean
 clean :
