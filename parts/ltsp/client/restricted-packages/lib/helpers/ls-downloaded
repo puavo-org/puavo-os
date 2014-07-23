@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+find /state/restricted-packages \
+    -maxdepth 2 -mindepth 2 -type f -name upstream.pack -printf '%h\n' \
+    | while read package_path; do
+    basename "${package_path}"
+done
