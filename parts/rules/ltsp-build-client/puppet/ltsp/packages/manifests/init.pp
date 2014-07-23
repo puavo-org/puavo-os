@@ -833,4 +833,18 @@ class packages {
     , 'xf86-input-nextwindow' ]:
       tag => [ 'whiteboard', 'whiteboard-smartboard', 'opinsys', 'restricted' ];
   }
+
+  # Packages which are not restricted per se, but which are required by
+  # restricted packages. These need to be installed and distributed in
+  # the image to minimize the effort of installing restricted packages
+  # "during runtime".
+  @package {
+    [ 'libnspr4-0d' # spotify
+    , 'libssl0.9.8' # spotify
+    , 'lsb-core' ]: # google-earth
+      tag => [ 'ubuntu', 'required-by-restricted' ];
+
+    [ 'libudev0' ]: # spotify
+      tag => [ 'puavo', 'required-by-restricted' ];
+  }
 }
