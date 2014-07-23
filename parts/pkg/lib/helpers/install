@@ -67,6 +67,9 @@ trap on_exit EXIT
 rm -rf "${installdir}.tmp"
 mkdir "${installdir}.tmp"
 
+cp -a "/usr/share/puavo-ltsp-client/restricted-packages/${package}" \
+    "/state/restricted-packages/${package}"
+
 if [ -x "${custom_script}" ]; then
     "${custom_script}" "${upstream_pack}" "${installdir}.tmp"
 fi
