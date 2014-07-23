@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -eu
+
+installdir=$1
+
+mkdir -p /usr/bin
+ln -sf -T "${installdir}/bin/CmapTools" /usr/bin/CmapTools
+
+for icon in "${installdir}/../icons/"*.png; do
+  icon_size="${icon##*/cmaptools-}"
+  xdg-icon-resource install --size "${icon_size%.png}" "${icon}" cmaptools
+done
+
+xdg-desktop-menu install "${installdir}/../cmaptools.desktop"
