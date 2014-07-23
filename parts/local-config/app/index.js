@@ -139,32 +139,26 @@ function make_local_users_config(response,
 
   new_config.allow_logins_for.push(login);
 
-  old_user = old_config.local_users[login];
+  user = new_config.local_users[login];
 
   var uid;
-  if (old_user && old_user.uid) {
-    uid = old_user.uid;
+  if (user && user.uid) {
+    uid = user.uid;
   } else {
-    var get_uids = function(conf) {
-                     conf ? Object.keys(conf.local_users)
-                                  .map(function(key) {
-                                         return conf.local_users[key].uid; })
-                          : []
-                   };
+    var uids = Object.keys(new_config.local_users)
+                     .map(function(key) {
+                            return new_config.local_users[key].uid; });
     var max_fn = function(a,b) { return Math.max(a,b); };
 
-    old_uids = get_uids(old_config);
-    new_uids = get_uids(new_config);
-
-    debugger; /* XXX this does not work yet, properly */
-    uid = old_uids.concat(new_uids).reduce(max_fn, 3000) + 1;
+    uid = uids.reduce(max_fn, 3000) + 1;
   }
 
   hash_password(password1,
                 function(hp) {
-                  var pw = hp || (old_user && old_user.hashed_password) || '!';
+                  var pw = hp || (user && user.hashed_password) || '!';
 
                   new_config.local_users[login] = {
+                    enabled:         true,
                     hashed_password: pw,
                     name:            name,
                     uid:             uid,
@@ -181,13 +175,33 @@ function assemble_config_and_exit(old_config) {
     allow_logins_for:   [],
     allow_remoteadmins: false,
     licenses:           {},
-    local_users:        {},
     version:            1,
   };
+
+  // Initialize new_config.local_users with old information,
+  // but disable all users (those will be enabled later, if given in user
+  // interface).
+  new_config.local_users = {};
+  for (user in old_config.local_users) {
+    var old = old_config.local_users[user];
+    new_config.local_users[user] = {
+                                     enabled:         false,
+                                     hashed_password: old.hashed_password,
+                                     name:            old.name,
+                                     uid:             old.uid,
+                                   };
+  }
 
   var do_after_local_users_are_ok =
     function(has_errors) {
       if (has_errors) { return; }
+
+      // make sure that disabled users have password '!'
+      for (user in new_config.local_users) {
+        if (!new_config.local_users[user].enabled) {
+          new_config.local_users[user].hashed_password = '!';
+        }
+      }
 
       switch(response.allow_logins_for.value) {
         case 'all_puavo_domain_users':
@@ -273,10 +287,6 @@ function configure_system_and_exit() {
   child_process.execFile('sudo', cmd_args, {}, handler);
 }
 
-function diff_arrays(a, b) {
-  return a.filter(function(i) { return b.indexOf(i) < 0; });
-};
-
 function download_pkg(license_key, button, styles, error_element) {
   button.textContent = 'Downloading...';
   button.setAttribute('style', styles.download_a);
@@ -352,9 +362,13 @@ function generate_allow_logins_input(form, old_config) {
 
   var nonlocal_users_allowed_logins = [];
   if (!all_is_chosen) {
-    nonlocal_users_allowed_logins
-      = diff_arrays(old_config.allow_logins_for,
-                    Object.keys(old_config.local_users));
+    for (i in old_config.allow_logins_for) {
+      var user = old_config.allow_logins_for[i];
+      if (! (old_config.local_users[user]
+               && old_config.local_users[user].enabled)) {
+        nonlocal_users_allowed_logins.push(user);
+      }
+    }
   }
 
   make_listwidgets(rb_tr,
@@ -424,16 +438,22 @@ function generate_login_users_input(form, old_config) {
   form.appendChild(user_inputs);
 
   var local_users_list = [];
-  for (login in old_config.local_users)
-    local_users_list.push({
-                            is_admin: (old_config.admins.indexOf(login) >= 0),
-                            login:    login,
-                            name:     old_config.local_users[login].name,
-                          });
+  for (login in old_config.local_users) {
+    if (old_config.local_users[login].enabled) {
+      is_admin = (old_config.admins.indexOf(login) >= 0);
+      local_users_list.push({
+			      is_admin: is_admin,
+			      login:    login,
+			      name:     old_config.local_users[login].name,
+			    });
+    }
+  }
 
   var append_empty_user
     = function() { 
-        local_users_list.push({ hashed_password: '', login: '', name: '', }); }
+        local_users_list.push({ hashed_password: '!',
+                                login:           '',
+                                name:            '', }); }
 
   // create at least one empty user
   if (local_users_list.length === 0) { append_empty_user(); }

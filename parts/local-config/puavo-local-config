@@ -46,12 +46,14 @@ def conf_version_1_ok?(conf)
                               k.kind_of?(String) && is_boolean.call(v)
                             end \
                        .all? \
-    && conf['local_users'].kind_of?(Array) \
-    && conf['local_users'].map do |u|
-                                 u.kind_of?(Hash) \
+    && conf['local_users'].kind_of?(Hash) \
+    && conf['local_users'].map do |login, u|
+                                 login.kind_of?(String) \
+                                   && u.kind_of?(Hash) \
                                    && u['hashed_password'].kind_of?(String) \
-                                   && u['login'].kind_of?(String)           \
-                                   && u['name'].kind_of?(String)
+                                   && u['name'].kind_of?(String) \
+                                   && u['uid'].kind_of?(Integer) \
+                                   && is_boolean.call(u['enabled'])
                                end \
                           .all?
 end
@@ -93,14 +95,14 @@ def search_and_replace_line(file, re, new_line)
       match = line.match(re)
       if match then
         have_match = true
-        output_lines.push(new_line)
+        output_lines.push(new_line) if new_line
       else
         output_lines.push(line)
       end
     end
 
     if !have_match then
-      output_lines.push(new_line)
+      output_lines.push(new_line) if new_line
     end
 
     output = output_lines.map { |s| "#{ s }\n" }.join
@@ -143,31 +145,43 @@ def configure_local_users(conf)
   return if conf.nil?
 
   uid_min, uid_max = 3001, 3999
-  uid = uid_min
+  group_id = Etc.getgrnam('users').gid
 
-  # XXX should lookup all users between uid_min and uid_max and remove
-  # XXX those from /etc/passwd and /etc/shadow, as new ones are added and
-  # XXX changes are made.
+  problems = false
 
-  conf['local_users'].each do |user|
-    raise 'uid is over uid_max' if uid > uid_max
+  conf['local_users'].each do |login, user|
+    if user['uid'] < uid_min then
+      warn "uid is below uid_min for '#{ login }'"
+      problems = true
+      next
+    end
+    if user['uid'] > uid_max
+      warn "uid is over uid_max for '#{ login }'"
+      problems = true
+      next
+    end
 
-    home = "/home/#{ uid }"
-    group_id = Etc.getgrnam('users').gid
+    home = "/home/#{ login }"
     passwd_line \
-      = "#{ user['login'] }:x:#{ uid }:#{ group_id }:#{ user['name'] },,," \
-        + ":#{ home }:/bin/bash"
+      = user['enabled'] \
+          ? ("#{ login }:x:#{ user['uid'] }:#{ group_id }" \
+               + ":#{ user['name'] },,,:#{ home }:/bin/bash")
+          : nil
+
     search_and_replace_line('/etc/passwd',
-			    /^#{ user['login'] }:/,
+			    /^#{ login }:/,
 			    passwd_line)
 
-    shadow_line = "#{ user['login'] }:#{ user['hashed_password'] }:::::::"
-    search_and_replace_line('/etc/shadow',
-                            /^#{ user['login'] }:/,
-                            shadow_line)
+    shadow_line = user['enabled'] \
+                    ? "#{ login }:#{ user['hashed_password'] }:::::::" \
+                    : nil
 
-    uid += 1
+    search_and_replace_line('/etc/shadow',
+                            /^#{ login }:/,
+                            shadow_line)
   end
+
+  raise 'Problems in configure_local_users' if problems
 end
 
 def configure_grub_default()
