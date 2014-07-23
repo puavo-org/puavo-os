@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -eu
+
+installdir=$1
+
+xdg-desktop-menu uninstall "${installdir}/../cmaptools.desktop"
+
+for icon in "${installdir}/../icons/"*.png; do
+  icon_size="${icon##*/cmaptools-}"
+  xdg-icon-resource uninstall --size "${icon_size%.png}" "${icon}" cmaptools
+done
+
+rm -f /usr/bin/CmapTools
