@@ -2,9 +2,10 @@
 
 set -eu
 
-config_path=/state/etc/puavo/local/config.json 
+device_config_path=/state/etc/puavo/device.json
+local_config_path=/state/etc/puavo/local/config.json 
 
-allowed_logins() { jq -r .allow_logins_for[] "$config_path"; }
+allowed_logins() { jq -r .allow_logins_for[] "$local_config_path"; }
 
 deny()
 {
@@ -22,13 +23,13 @@ is_admin_user()
 }
 
 # config does not exist or is not readable, so do not restrict anyone
-[ ! -r "$config_path" ] && exit 0
+[ ! -r "$local_config_path" ] && exit 0
 
 # Allow all explicitly listed users, not matter what.
 allowed_logins | fgrep -qx "${PAM_USER}" && exit 0
 
 if is_admin_user; then
-    case $(jq -r .allow_remoteadmins "$config_path") in
+    case $(jq -r .allow_remoteadmins "$local_config_path") in
 	true)
 	    exit 0
 	    ;;
@@ -49,13 +50,19 @@ allowed_logins | fgrep -qx '*' && exit 0
 # notorious for not exiting on error! This script also serves as a
 # perfect example why jq should not be used anywhere. It is completely
 # broken by design.
-case $(jq -r .allow_logins_for "${config_path}") in
+case $(jq -r .allow_logins_for "${local_config_path}") in
     null)
 	exit 0
 	;;
     *)
 	;;
 esac
+
+# allow primary user in irrespective of local configurations
+primary_user="$(jq -r .primary_user "${device_config_path}")"
+if [ "$primary_user" != "null" -a "$primary_user" = "${PAM_USER}" ]; then
+  exit 0
+fi
 
 # otherwise, tough luck!
 deny
