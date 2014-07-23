@@ -36,9 +36,7 @@ end
 def conf_version_1_ok?(conf)
   is_boolean = lambda { |v| v.kind_of?(TrueClass) || v.kind_of?(FalseClass) }
 
-  conf['admins'].kind_of?(Array) \
-    && conf['admins'].map { |s| s.kind_of?(String) } \
-    && conf['allow_logins_for'].kind_of?(Array) \
+  conf['allow_logins_for'].kind_of?(Array) \
     && conf['allow_logins_for'].map { |s| s.kind_of?(String) }.all? \
     && is_boolean.call(conf['allow_remoteadmins']) \
     && conf['licenses'].kind_of?(Hash) \
@@ -115,17 +113,13 @@ def search_and_replace_line(file, re, new_line)
   end
 end
 
-def configure_admins(conf)
-  # If there is no conf, there are no admin, but as a side effect this creates
-  # the "puavolocaladmins"-group, which is needed to configure the system
-  # (to create the configuration file).  At this stage guest-users will be
-  # put into "puavolocaladmins"-group dynamically.
-  admins = conf ? conf['admins'] : []
+def configure_admins()
+  device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
+  admin  = device['primary_user']
 
   kernel_cmdline = IO.read('/proc/cmdline')
 
-  # we could also use a new, specific group for this?
-  new_line = "puavolocaladmins:x:#{ Ltspadmins_group_id }:#{ admins.join(',') }"
+  new_line = "puavolocaladmins:x:#{ Ltspadmins_group_id }:#{ admin }"
   search_and_replace_line('/etc/group',
                          /^puavolocaladmins:/,
                          new_line)
@@ -315,7 +309,7 @@ end
 conf = ensure_conf_sanity(conf, config_path)
 
 dispatch_table = {
-  '--admins'        => lambda { configure_admins(conf)           },
+  '--admins'        => lambda { configure_admins()               },
   '--grub-default'  => lambda { configure_grub_default()         },
   '--local-users'   => lambda { configure_local_users(conf)      },
   '--download-pkgs' => lambda { download_pkgs(download_pkg_list) },
