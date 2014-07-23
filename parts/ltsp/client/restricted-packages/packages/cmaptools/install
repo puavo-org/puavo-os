@@ -264,3 +264,9 @@ EOF
 
 chmod +x "$1"
 "${1}" -f "${tmpfile}" -i silent || true
+
+# The installer dumps lot of files with mode 777 XD
+chmod -R go-w "$2"
+
+# The installer dumps some files with uid and gid 1000 XD
+chown -R root:root "$2"
