@@ -512,6 +512,7 @@ class LdapAcl
 					 memberUid
 					 puavoActiveService
 					 puavoDeviceAutoPowerOffMode
+					 puavoAutomaticImageUpdates
 					 puavoDeviceOffHour
 					 puavoDeviceOnHour
 					 puavoExternalFeed
