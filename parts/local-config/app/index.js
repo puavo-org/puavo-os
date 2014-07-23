@@ -128,8 +128,8 @@ function make_local_users_config(response,
   if (password1 !== password2)
     errors.push('Passwords do not match.');
 
+  error_element.textContent = errors.join(' / ');
   if (errors.length > 0) {
-    error_element.textContent = errors.join(' / ');
     has_errors = true;
   }
 
@@ -162,7 +162,7 @@ function make_local_users_config(response,
                });
 }
 
-function assemble_config_and_exit(old_config) {
+function write_config(old_config) {
   var response = document.forms[0].elements;
   var new_config = {
     allow_logins_for:   [],
@@ -222,7 +222,7 @@ function assemble_config_and_exit(old_config) {
         }
       }
 
-      write_config_json_and_exit(new_config);
+      write_and_apply_config(new_config);
     };
 
   var user_indexes = [];
@@ -263,17 +263,17 @@ function check_download_packs(cb) {
                          handler);
 }
 
-function configure_system_and_exit() {
-  process.exit(0);
-
+function configure_system() {
   var cmd_args = [ '/usr/sbin/puavo-local-config'
                  , '--local-users'
                  , '--setup-pkgs', 'all' ];
 
   var handler
     = function(error, stdout, stderr) {
-        if (error) { throw(error); }
-        process.exit(0);
+        if (error) {
+          throw(error);
+          /* XXX how to handle this properly? */
+        }
       };
 
   child_process.execFile('sudo', cmd_args, {}, handler);
@@ -411,7 +411,6 @@ function generate_form(old_config) {
   generate_allow_logins_input(form, old_config);
   generate_allow_remoteadmins_input(form, old_config);
   generate_software_installation_controls(form, old_config);
-  generate_done_button(form, old_config);
 }
 
 function generate_login_users_input(form, old_config) {
@@ -449,14 +448,20 @@ function generate_login_users_input(form, old_config) {
   if (local_users_list.length === 0) { append_empty_user(); }
 
   for (i in local_users_list)
-    generate_one_user_create_table(user_inputs, local_users_list, i);
+    generate_one_user_create_table(old_config,
+                                   user_inputs,
+                                   local_users_list,
+                                   i);
  
   var add_new_user
     = function(e) {
         e.preventDefault();
         append_empty_user();
         var last_i = local_users_list.length - 1;
-        generate_one_user_create_table(user_inputs, local_users_list, last_i);
+        generate_one_user_create_table(old_config,
+                                       user_inputs,
+                                       local_users_list,
+                                       last_i);
       };
 
   add_button.addEventListener('click', add_new_user);
@@ -464,7 +469,10 @@ function generate_login_users_input(form, old_config) {
   form.appendChild( document.createElement('hr') );
 }
 
-function generate_one_user_create_table(parentNode, local_users_list, user_i) {
+function generate_one_user_create_table(old_config,
+                                        parentNode,
+                                        local_users_list,
+                                        user_i) {
   var user_div = document.createElement('div');
   parentNode.appendChild(user_div);
 
@@ -510,6 +518,10 @@ function generate_one_user_create_table(parentNode, local_users_list, user_i) {
                            'localuser_' + user_i + '_' + fieldinfo.key);
         input.setAttribute('type', fieldinfo.type);
         if (fieldinfo.value_fn) { fieldinfo.value_fn(input); }
+        input.addEventListener('keyup',
+                               function() { write_config(old_config); });
+        input.addEventListener('focusout',
+                               function() { write_config(old_config); });
         return input;
       };
 
@@ -561,17 +573,6 @@ function generate_one_user_create_table(parentNode, local_users_list, user_i) {
 
   user_div.appendChild(table);
   user_div.appendChild( document.createElement('hr') );
-}
-
-function generate_done_button(form, old_config) {
-  var input = document.createElement('input');
-  input.setAttribute('type',  'button');
-  input.setAttribute('value', 'Done!');
-
-  input.addEventListener('click',
-                         function() { assemble_config_and_exit(old_config) });
-
-  form.appendChild(input);
 }
 
 function get_license_list() {
@@ -706,7 +707,7 @@ function read_config() {
   return config;
 }
 
-function write_config_json_and_exit(conf) {
+function write_and_apply_config(conf) {
   try {
     var data = JSON.stringify(conf) + "\n";
     var tmpfile = config_json_path + '.tmp';
@@ -714,9 +715,9 @@ function write_config_json_and_exit(conf) {
     fs.renameSync(tmpfile, config_json_path);
   } catch (ex) { alert(ex); throw(ex); }
 
-  configure_system_and_exit();
+  // XXX when should this be done?
+  // configure_system();
 }
-
 
 var old_config = read_config();
 if (!old_config) { process.exit(1); }
