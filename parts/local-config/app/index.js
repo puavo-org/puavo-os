@@ -2,6 +2,7 @@ var child_process = require('child_process');
 var fs = require('fs');
 
 var config_json_path = '/state/etc/puavo/local/config.json';
+var old_config;
 
 function add_download_button(license_key, errormsg_element, download_done) {
   var button = document.createElement('button');
@@ -31,7 +32,7 @@ function add_download_button(license_key, errormsg_element, download_done) {
   return button;
 }
 
-function add_licenses(table, old_config, license_list) {
+function add_licenses(table, license_list) {
   check_download_packs(function (downloaded_packs) {
                          for (var i in license_list) {
                            var license = license_list[i];
@@ -88,7 +89,6 @@ function add_one_license(parentNode, license_info, download_done, checked) {
 
 function make_local_users_config(response,
                                  user_indexes,
-                                 old_config,
                                  new_config,
                                  has_errors,
                                  cb) {
@@ -100,7 +100,6 @@ function make_local_users_config(response,
   var next_user_fn = function() {
                        make_local_users_config(response,
                                                user_indexes,
-                                               old_config,
                                                new_config,
                                                has_errors,
                                                cb);
@@ -162,7 +161,7 @@ function make_local_users_config(response,
                });
 }
 
-function write_config(old_config) {
+function write_config() {
   var response = document.forms[0].elements;
   var new_config = {
     allow_logins_for:   [],
@@ -234,7 +233,6 @@ function write_config(old_config) {
 
   make_local_users_config(response,
                           user_indexes,
-                          old_config,
                           new_config,
                           false,
                           do_after_local_users_are_ok);
@@ -315,7 +313,7 @@ function download_pkg(license_key, button, styles, error_element) {
   child_process.execFile('sudo', cmd_args, {}, handler);
 }
 
-function generate_allow_logins_input(form, old_config) {
+function generate_allow_logins_input(form) {
   var table = document.createElement('table');
 
   var make_radiobutton
@@ -329,6 +327,7 @@ function generate_allow_logins_input(form, old_config) {
         input.setAttribute('name', 'allow_logins_for');
         input.setAttribute('type', 'radio');
         input.setAttribute('value', value);
+        input.addEventListener('click', write_config);
 
         var tr = table.appendChild( document.createElement('tr') );
         var td = tr   .appendChild( document.createElement('td') );
@@ -376,7 +375,7 @@ function generate_allow_logins_input(form, old_config) {
   form.appendChild( document.createElement('hr') );
 }
 
-function generate_allow_remoteadmins_input(form, old_config) {
+function generate_allow_remoteadmins_input(form) {
   var div = document.createElement('div');
   var titletext = document.createTextNode('Allow login from remote admins:');
   div.appendChild(titletext);
@@ -389,6 +388,7 @@ function generate_allow_remoteadmins_input(form, old_config) {
   } else {
     input.removeAttribute('checked');
   }
+  input.addEventListener('click', write_config);
 
   div.appendChild(input);
   form.appendChild(div);
@@ -396,24 +396,24 @@ function generate_allow_remoteadmins_input(form, old_config) {
   form.appendChild( document.createElement('hr') );
 }
 
-function generate_software_installation_controls(form, old_config) {
+function generate_software_installation_controls(form) {
   var table = document.createElement('table');
 
-  add_licenses(table, old_config, get_license_list());
+  add_licenses(table, get_license_list());
 
   form.appendChild(table);
 }
 
-function generate_form(old_config) {
+function generate_form() {
   var form = document.querySelector('form[id=dynamic_form]');
 
-  generate_login_users_input(form, old_config);
-  generate_allow_logins_input(form, old_config);
-  generate_allow_remoteadmins_input(form, old_config);
-  generate_software_installation_controls(form, old_config);
+  generate_login_users_input(form);
+  generate_allow_logins_input(form);
+  generate_allow_remoteadmins_input(form);
+  generate_software_installation_controls(form);
 }
 
-function generate_login_users_input(form, old_config) {
+function generate_login_users_input(form) {
   var title = document.createElement('div');
   var titletext = document.createTextNode('Local users:');
   title.appendChild(titletext);
@@ -448,20 +448,14 @@ function generate_login_users_input(form, old_config) {
   if (local_users_list.length === 0) { append_empty_user(); }
 
   for (i in local_users_list)
-    generate_one_user_create_table(old_config,
-                                   user_inputs,
-                                   local_users_list,
-                                   i);
+    generate_one_user_create_table(user_inputs, local_users_list, i);
  
   var add_new_user
     = function(e) {
         e.preventDefault();
         append_empty_user();
         var last_i = local_users_list.length - 1;
-        generate_one_user_create_table(old_config,
-                                       user_inputs,
-                                       local_users_list,
-                                       last_i);
+        generate_one_user_create_table(user_inputs, local_users_list, last_i);
       };
 
   add_button.addEventListener('click', add_new_user);
@@ -469,10 +463,7 @@ function generate_login_users_input(form, old_config) {
   form.appendChild( document.createElement('hr') );
 }
 
-function generate_one_user_create_table(old_config,
-                                        parentNode,
-                                        local_users_list,
-                                        user_i) {
+function generate_one_user_create_table(parentNode, local_users_list, user_i) {
   var user_div = document.createElement('div');
   parentNode.appendChild(user_div);
 
@@ -518,10 +509,8 @@ function generate_one_user_create_table(old_config,
                            'localuser_' + user_i + '_' + fieldinfo.key);
         input.setAttribute('type', fieldinfo.type);
         if (fieldinfo.value_fn) { fieldinfo.value_fn(input); }
-        input.addEventListener('keyup',
-                               function() { write_config(old_config); });
-        input.addEventListener('focusout',
-                               function() { write_config(old_config); });
+        input.addEventListener('keyup', write_config);
+        input.addEventListener('focusout', write_config);
         return input;
       };
 
@@ -557,6 +546,7 @@ function generate_one_user_create_table(old_config,
                            var ok = (old_user_data.login === '')
                                       || confirm('OK?');
                            if (ok) { parentNode.removeChild(user_div); }
+                           write_config();
                          };
 
                      var remove_td = document.createElement('td');
@@ -640,10 +630,12 @@ function make_listwidgets(parentNode, fieldname, initial_values) {
         input.setAttribute('name', fieldname);
         input.setAttribute('type', 'text');
         input.setAttribute('value', value);
-        input.addEventListener('focusout',
-                               function(ev) { update_listwidgets(); });
-        input.addEventListener('keyup',
-                               function(ev) { update_listwidgets(); });
+        input.addEventListener('focusout', function(e) {
+                                             update_listwidgets();
+                                             write_config(); });
+        input.addEventListener('keyup', function(e) {
+                                          update_listwidgets();
+                                          write_config(); });
 
         parentNode.appendChild(table);
 
@@ -719,7 +711,7 @@ function write_and_apply_config(conf) {
   // configure_system();
 }
 
-var old_config = read_config();
+old_config = read_config();
 if (!old_config) { process.exit(1); }
 
-generate_form(old_config);
+generate_form();
