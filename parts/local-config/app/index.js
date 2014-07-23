@@ -133,8 +133,6 @@ function make_local_users_config(response,
     has_errors = true;
   }
 
-  new_config.allow_logins_for.push(login);
-
   user = new_config.local_users[login];
 
   var uid;
@@ -193,7 +191,9 @@ function assemble_config_and_exit(old_config) {
 
       // make sure that disabled users have password '!'
       for (user in new_config.local_users) {
-        if (!new_config.local_users[user].enabled) {
+        if (new_config.local_users[user].enabled) {
+          new_config.allow_logins_for.push(user);
+        } else {
           new_config.local_users[user].hashed_password = '!';
         }
       }
@@ -203,14 +203,12 @@ function assemble_config_and_exit(old_config) {
           new_config.allow_logins_for = [ '*' ];
           break;
         case 'some_puavo_domain_users':
-          var allowed_puavo_users = [];
           for (i in response.allowed_puavo_users) {
             var user = response.allowed_puavo_users[i].value;
-            if (user && user.match(/\S+/)) { allowed_puavo_users.push(user); }
+            if (user && user.match(/\S+/)) {
+              new_config.allow_logins_for.push(user);
+            }
           }
-
-          new_config.allow_logins_for
-            = allowed_puavo_users.concat(Object.keys(new_config.local_users));
 
           break;
       }
