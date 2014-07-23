@@ -108,7 +108,6 @@ function make_local_users_config(response,
 
   var login     = response['localuser_' + i + '_login'    ].value;
   var name      = response['localuser_' + i + '_name'     ].value;
-  var is_admin  = response['localuser_' + i + '_admin'    ].checked;
   var password1 = response['localuser_' + i + '_password1'].value;
   var password2 = response['localuser_' + i + '_password2'].value;
 
@@ -133,9 +132,6 @@ function make_local_users_config(response,
     error_element.textContent = errors.join(' / ');
     has_errors = true;
   }
-
-  if (is_admin)
-    new_config.admins.push(login);
 
   new_config.allow_logins_for.push(login);
 
@@ -171,7 +167,6 @@ function make_local_users_config(response,
 function assemble_config_and_exit(old_config) {
   var response = document.forms[0].elements;
   var new_config = {
-    admins:             [],
     allow_logins_for:   [],
     allow_remoteadmins: false,
     licenses:           {},
@@ -274,7 +269,6 @@ function configure_system_and_exit() {
   process.exit(0);
 
   var cmd_args = [ '/usr/sbin/puavo-local-config'
-                 , '--admins'
                  , '--local-users'
                  , '--setup-pkgs', 'all' ];
 
@@ -440,11 +434,9 @@ function generate_login_users_input(form, old_config) {
   var local_users_list = [];
   for (login in old_config.local_users) {
     if (old_config.local_users[login].enabled) {
-      is_admin = (old_config.admins.indexOf(login) >= 0);
       local_users_list.push({
-			      is_admin: is_admin,
-			      login:    login,
-			      name:     old_config.local_users[login].name,
+			      login: login,
+			      name:  old_config.local_users[login].name,
 			    });
     }
   }
@@ -500,18 +492,6 @@ function generate_one_user_create_table(parentNode, local_users_list, user_i) {
       type:     'text',
       value_fn: function(input) {
                   input.setAttribute('value', old_user_data.name) },
-    },
-    {
-      name:     'Has administrative rights:',
-      key:      'admin',
-      type:     'checkbox',
-      value_fn: function(input) {
-                  if (old_user_data.is_admin) {
-                    input.setAttribute('checked', true);
-                  } else {
-                    input.removeAttribute('checked');
-                  }
-                },
     },
     {
       name: 'Password:',
@@ -714,7 +694,6 @@ function read_config() {
     if (ex.code === 'ENOENT') {
       // default config in case everything is missing
       config = {
-        admins:             [],
         allow_logins_for:   [ '*' ],
         allow_remoteadmins: false,
         licenses:           {},
