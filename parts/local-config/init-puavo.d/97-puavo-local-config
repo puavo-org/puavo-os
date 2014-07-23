@@ -1,7 +1,7 @@
-puavo_personally_administered_device=$(jq -r .personally_administered_device \
-				             /etc/puavo/device.json)
+puavo_personally_administered=$(jq -r .personally_administered \
+				      /etc/puavo/device.json)
 
-if [ "$puavo_personally_administered_device" = "true" ]; then
+if [ "$puavo_personally_administered" = "true" ]; then
   /usr/sbin/puavo-local-config --admins         \
                                --grub-default   \
                                --local-users    \
