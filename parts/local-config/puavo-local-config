@@ -115,7 +115,7 @@ end
 
 def configure_admins()
   device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
-  admin  = device['primary_user']
+  admin  = device['primary_user'] || ''
 
   kernel_cmdline = IO.read('/proc/cmdline')
 
