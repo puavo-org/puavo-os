@@ -137,11 +137,11 @@ function create_action_button_with_initial_state(button,
 
   var make_flashes
     = function(a, b) {
-	if (button.getAttribute('style') === styles[a]) {
-	  button.setAttribute('style', styles[b]);
-	} else if (button.getAttribute('style') === styles[b]) {
-	  button.setAttribute('style', styles[a]);
-	};
+        if (button.getAttribute('style') === styles[a]) {
+          button.setAttribute('style', styles[b]);
+        } else if (button.getAttribute('style') === styles[b]) {
+          button.setAttribute('style', styles[a]);
+        };
       };
 
   /* XXX Should just do an update on button state, depending on the state
