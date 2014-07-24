@@ -48,7 +48,8 @@ while [ $# -gt 0 ]; do
             ;;
 	--all)
 	    shift
-	    packages=$(puavo-restricted-package-tool list | awk '{ if ($3 != "PURGED") print $1 }')
+	    packages=$(puavo-restricted-package-tool list \
+		| awk '{ if ($3 != "PURGED") print $1 }')
 	    set -- ${packages}
 	    break
 	    ;;
