@@ -42,7 +42,7 @@ installdir="${packagedir}/i"
 prpdir="${packagedir}/PRP"
 [ -d "${installdir}" ] && {
     # The package is already unpacked, just re-configure it and exit.
-    [ -x "${prpdir}/postinst" ] && "${prpdir}/postinst" "${installdir}"
+    [ -x "${prpdir}/postinst" ] && "${prpdir}/postinst" "${installdir}" "${prpdir}"
     exit 0
 }
 
@@ -69,6 +69,6 @@ echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status || {
 
 mkdir "${installdir}"
 [ -x "${prpdir}/unpack" ] && "${prpdir}/unpack" "${upstream_pack}" "${installdir}"
-[ -x "${prpdir}/postinst" ] && "${prpdir}/postinst" "${installdir}"
+[ -x "${prpdir}/postinst" ] && "${prpdir}/postinst" "${installdir}" "${prpdir}"
 
 exit 0
