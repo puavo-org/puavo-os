@@ -4,6 +4,111 @@ var fs = require('fs');
 var config_json_path = '/state/etc/puavo/local/config.json';
 var old_config;
 
+function add_action_button(license_key,
+                           errormsg_element,
+                           sw_state,
+                           user_wants_it) {
+  var button = document.createElement('button');
+
+  installation = user_wants_it ? 'installing' : 'press_install';
+
+  button_state
+    = {
+        DOWNLOADED: installation,
+        PURGED:     installation,
+        INSTALLED:  'press_uninstall',
+      }[sw_state] || installation;
+
+  create_action_button_with_initial_state(button,
+                                          button_state,
+                                          license_key,
+                                          errormsg_element);
+
+  return button;
+}
+
+function add_licenses(table, license_list) {
+  check_software_state(function (sw_state) {
+                         for (var i in license_list) {
+                           var license = license_list[i];
+                           add_one_license(table,
+                                           license,
+                                           sw_state[license.key],
+                                           old_config.licenses[license.key]);
+                         }
+                       });
+}
+
+function add_one_license(parentNode, license_info, sw_state, user_wants_it) {
+  var tr = document.createElement('tr');
+
+  // create license name element
+  var license_name_td = document.createElement('td');
+  license_name_td.textContent = license_info.name;
+  tr.appendChild(license_name_td);
+
+  // create license url link
+  var license_url_td = document.createElement('td');
+  var a = document.createElement('a');
+  a.setAttribute('href', license_info.url);
+  a.addEventListener('click',
+                     function(e) { e.preventDefault();
+                                   open_external_link(a); });
+  a.textContent = '(license terms)';
+  tr.appendChild( license_url_td.appendChild(a) );
+
+  // create action button and error element
+  var action_td = document.createElement('td');
+  var action_errormsg_element = document.createElement('td');
+  action_td.appendChild( add_action_button(license_info.key,
+                                           action_errormsg_element,
+                                           sw_state,
+                                           user_wants_it) );
+  tr.appendChild(action_td);
+  tr.appendChild(action_errormsg_element);
+
+  parentNode.appendChild(tr);
+}
+
+function check_software_state(cb) {
+  var handler
+    = function (error, stdout, stderr) {
+        if (error) { throw(error); }
+
+        sw_state = {};
+        stdout.toString()
+              .split("\n")
+              .forEach(function (line) {
+                         if (line !== '') {
+                           a = line.split(/\s+/);
+                           sw_state[ a[0] ] = a[2];
+                         }
+                       });
+        cb(sw_state);
+      };
+
+  child_process.execFile('puavo-restricted-package-tool',
+                         [ 'list' ],
+                         {},
+                         handler);
+}
+
+function configure_system() {
+  var cmd_args = [ '/usr/sbin/puavo-local-config'
+                 , '--local-users'
+                 , '--setup-pkgs', 'all' ];
+
+  var handler
+    = function(error, stdout, stderr) {
+        if (error) {
+          throw(error);
+          /* XXX how to handle this properly? */
+        }
+      };
+
+  child_process.execFile('sudo', cmd_args, {}, handler);
+}
+
 function create_action_button_with_initial_state(button,
                                                  initial_state,
                                                  license_key,
@@ -103,283 +208,6 @@ function create_action_button_with_initial_state(button,
   state_functions[initial_state]();
 }
 
-function add_action_button(license_key,
-                           errormsg_element,
-                           sw_state,
-                           user_wants_it) {
-  var button = document.createElement('button');
-
-  installation = user_wants_it ? 'installing' : 'press_install';
-
-  button_state
-    = {
-        DOWNLOADED: installation,
-        PURGED:     installation,
-        INSTALLED:  'press_uninstall',
-      }[sw_state] || installation;
-
-  create_action_button_with_initial_state(button,
-                                          button_state,
-                                          license_key,
-                                          errormsg_element);
-
-  return button;
-}
-
-function add_licenses(table, license_list) {
-  check_software_state(function (sw_state) {
-                         for (var i in license_list) {
-                           var license = license_list[i];
-                           add_one_license(table,
-                                           license,
-                                           sw_state[license.key],
-                                           old_config.licenses[license.key]);
-                         }
-                       });
-}
-
-function add_one_license(parentNode, license_info, sw_state, user_wants_it) {
-  var tr = document.createElement('tr');
-
-  // create license name element
-  var license_name_td = document.createElement('td');
-  license_name_td.textContent = license_info.name;
-  tr.appendChild(license_name_td);
-
-  // create license url link
-  var license_url_td = document.createElement('td');
-  var a = document.createElement('a');
-  a.setAttribute('href', license_info.url);
-  a.addEventListener('click',
-                     function(e) { e.preventDefault();
-                                   open_external_link(a); });
-  a.textContent = '(license terms)';
-  tr.appendChild( license_url_td.appendChild(a) );
-
-  // create action button and error element
-  var action_td = document.createElement('td');
-  var action_errormsg_element = document.createElement('td');
-  action_td.appendChild( add_action_button(license_info.key,
-                                           action_errormsg_element,
-                                           sw_state,
-                                           user_wants_it) );
-  tr.appendChild(action_td);
-  tr.appendChild(action_errormsg_element);
-
-  parentNode.appendChild(tr);
-}
-
-function make_local_users_config(response,
-                                 user_indexes,
-                                 new_config,
-                                 has_errors,
-                                 cb) {
-  if (user_indexes.length === 0)
-    return cb(has_errors);
-
-  var i = user_indexes.pop();
-
-  var login     = response['localuser_' + i + '_login'    ].value;
-  var name      = response['localuser_' + i + '_name'     ].value;
-  var password1 = response['localuser_' + i + '_password1'].value;
-  var password2 = response['localuser_' + i + '_password2'].value;
-
-  var error_element
-    = document.querySelector('div[id=localuser_' + i + '_errors]');
-
-  var errors = [];
-  var update_errormsg = function() {
-                          error_element.textContent = errors.join(' / '); };
-
-  var next_user_fn = function() {
-                       update_errormsg();
-                       make_local_users_config(response,
-                                               user_indexes,
-                                               new_config,
-                                               has_errors,
-                                               cb);
-                     };
-
-  if (login.match(/^\s*$/) && name.match(/^\s*$/))
-    return next_user_fn();
-
-  if (!login.match(/^[a-z\.-]+$/))
-    errors.push('Login is not in correct format.');
-
-  if (!name.match(/^[a-zA-Z\. -]+$/))
-    errors.push('Name is not in correct format.');
-
-  if (password1 !== password2)
-    errors.push('Passwords do not match.');
-
-  update_errormsg();
-  if (errors.length > 0)
-    has_errors = true;
-
-  user = new_config.local_users[login];
-
-  var uid;
-  if (user && user.uid) {
-    uid = user.uid;
-  } else {
-    var uids = Object.keys(new_config.local_users)
-                     .map(function(key) {
-                            return new_config.local_users[key].uid; });
-    var max_fn = function(a,b) { return Math.max(a,b); };
-
-    uid = uids.reduce(max_fn, 3000) + 1;
-  }
-
-  hash_password(password1,
-                function(hp) {
-                  var pw = hp || (user && user.hashed_password) || '!';
-
-                  new_config.local_users[login] = {
-                    enabled:         true,
-                    hashed_password: pw,
-                    name:            name,
-                    uid:             uid,
-                  };
-
-                  next_user_fn();
-               });
-}
-
-function write_config() {
-  var response = document.forms[0].elements;
-  var new_config = {
-    allow_logins_for:   [],
-    allow_remoteadmins: false,
-    licenses:           {},
-    version:            1,
-  };
-
-  // Initialize new_config.local_users with old information,
-  // but disable all users (those will be enabled later, if given in user
-  // interface).
-  new_config.local_users = {};
-  for (user in old_config.local_users) {
-    var old = old_config.local_users[user];
-    new_config.local_users[user] = {
-                                     enabled:         false,
-                                     hashed_password: old.hashed_password,
-                                     name:            old.name,
-                                     uid:             old.uid,
-                                   };
-  }
-
-  var do_after_local_users_are_ok =
-    function(has_errors) {
-      /* XXX this should update a big banner that no configuration updated
-       * XXX because of errors */
-      if (has_errors) { return; }
-
-      // make sure that disabled users have password '!'
-      for (user in new_config.local_users) {
-        if (new_config.local_users[user].enabled) {
-          new_config.allow_logins_for.push(user);
-        } else {
-          new_config.local_users[user].hashed_password = '!';
-        }
-      }
-
-      switch(response.allow_logins_for.value) {
-        case 'all_puavo_domain_users':
-          new_config.allow_logins_for = [ '*' ];
-          break;
-        case 'some_puavo_domain_users':
-          allowed_puavo_users
-            = (response.allowed_puavo_users.constructor === HTMLInputElement)
-                ? [ response.allowed_puavo_users ]
-                : response.allowed_puavo_users;
-          for (i in allowed_puavo_users) {
-            var user = allowed_puavo_users[i].value;
-            if (user && user.match(/\S+/)) {
-              new_config.allow_logins_for.push(user);
-            }
-          }
-
-          break;
-      }
-
-      new_config.allow_remoteadmins = response.allow_remoteadmins.checked;
-
-      for (i in response) {
-        if (response[i].className === 'license_acceptance_checkbox') {
-          var name = response[i].getAttribute('name');
-          new_config.licenses[name] = response[i].checked;
-        }
-      }
-
-      write_and_apply_config(new_config);
-    };
-
-  var user_indexes = [];
-  for (i in response) {
-    match = response[i].name
-              && response[i].name.match(/^localuser_(\d+)_login$/);
-    if (match) { user_indexes.push(match[1]); }
-  }
-
-  make_local_users_config(response,
-                          user_indexes,
-                          new_config,
-                          false,
-                          do_after_local_users_are_ok);
-}
-
-function check_software_state(cb) {
-  var handler
-    = function (error, stdout, stderr) {
-        if (error) { throw(error); }
-
-        sw_state = {};
-        stdout.toString()
-              .split("\n")
-              .forEach(function (line) {
-                         if (line !== '') {
-                           a = line.split(/\s+/);
-                           sw_state[ a[0] ] = a[2];
-                         }
-                       });
-        cb(sw_state);
-      };
-
-  child_process.execFile('puavo-restricted-package-tool',
-                         [ 'list' ],
-                         {},
-                         handler);
-}
-
-function configure_system() {
-  var cmd_args = [ '/usr/sbin/puavo-local-config'
-                 , '--local-users'
-                 , '--setup-pkgs', 'all' ];
-
-  var handler
-    = function(error, stdout, stderr) {
-        if (error) {
-          throw(error);
-          /* XXX how to handle this properly? */
-        }
-      };
-
-  child_process.execFile('sudo', cmd_args, {}, handler);
-}
-
-function handle_pkg(mode, license_key, errormsg_element, cb) {
-  cmd_mode = (mode === 'install' ? '--install-pkgs' : '--uninstall-pkgs');
-  var cmd_args = [ '/usr/sbin/puavo-local-config', cmd_mode, license_key ]
-
-  var handler
-    = function(error, stdout, stderr) {
-        errormsg_element.textContent = error ? stderr : '';
-        cb(error);
-      };
-
-  child_process.execFile('sudo', cmd_args, {}, handler);
-}
-
 function generate_allow_logins_input(form) {
   var table = document.createElement('table');
 
@@ -461,14 +289,6 @@ function generate_allow_remoteadmins_input(form) {
   form.appendChild(div);
 
   form.appendChild( document.createElement('hr') );
-}
-
-function generate_software_installation_controls(form) {
-  var table = document.createElement('table');
-
-  add_licenses(table, get_license_list());
-
-  form.appendChild(table);
 }
 
 function generate_form() {
@@ -632,6 +452,14 @@ function generate_one_user_create_table(parentNode, local_users_list, user_i) {
   user_div.appendChild( document.createElement('hr') );
 }
 
+function generate_software_installation_controls(form) {
+  var table = document.createElement('table');
+
+  add_licenses(table, get_license_list());
+
+  form.appendChild(table);
+}
+
 function get_license_list() {
   var basedir = '/usr/share/puavo-ltsp-client/restricted-packages';
   try {
@@ -664,6 +492,19 @@ function get_license_list() {
   }
 
   return list;
+}
+
+function handle_pkg(mode, license_key, errormsg_element, cb) {
+  cmd_mode = (mode === 'install' ? '--install-pkgs' : '--uninstall-pkgs');
+  var cmd_args = [ '/usr/sbin/puavo-local-config', cmd_mode, license_key ]
+
+  var handler
+    = function(error, stdout, stderr) {
+        errormsg_element.textContent = error ? stderr : '';
+        cb(error);
+      };
+
+  child_process.execFile('sudo', cmd_args, {}, handler);
 }
 
 function hash_password(password, cb) {
@@ -736,6 +577,82 @@ function make_listwidgets(parentNode, fieldname, initial_values) {
   update_listwidgets();
 }
 
+function make_local_users_config(response,
+                                 user_indexes,
+                                 new_config,
+                                 has_errors,
+                                 cb) {
+  if (user_indexes.length === 0)
+    return cb(has_errors);
+
+  var i = user_indexes.pop();
+
+  var login     = response['localuser_' + i + '_login'    ].value;
+  var name      = response['localuser_' + i + '_name'     ].value;
+  var password1 = response['localuser_' + i + '_password1'].value;
+  var password2 = response['localuser_' + i + '_password2'].value;
+
+  var error_element
+    = document.querySelector('div[id=localuser_' + i + '_errors]');
+
+  var errors = [];
+  var update_errormsg = function() {
+                          error_element.textContent = errors.join(' / '); };
+
+  var next_user_fn = function() {
+                       update_errormsg();
+                       make_local_users_config(response,
+                                               user_indexes,
+                                               new_config,
+                                               has_errors,
+                                               cb);
+                     };
+
+  if (login.match(/^\s*$/) && name.match(/^\s*$/))
+    return next_user_fn();
+
+  if (!login.match(/^[a-z\.-]+$/))
+    errors.push('Login is not in correct format.');
+
+  if (!name.match(/^[a-zA-Z\. -]+$/))
+    errors.push('Name is not in correct format.');
+
+  if (password1 !== password2)
+    errors.push('Passwords do not match.');
+
+  update_errormsg();
+  if (errors.length > 0)
+    has_errors = true;
+
+  user = new_config.local_users[login];
+
+  var uid;
+  if (user && user.uid) {
+    uid = user.uid;
+  } else {
+    var uids = Object.keys(new_config.local_users)
+                     .map(function(key) {
+                            return new_config.local_users[key].uid; });
+    var max_fn = function(a,b) { return Math.max(a,b); };
+
+    uid = uids.reduce(max_fn, 3000) + 1;
+  }
+
+  hash_password(password1,
+                function(hp) {
+                  var pw = hp || (user && user.hashed_password) || '!';
+
+                  new_config.local_users[login] = {
+                    enabled:         true,
+                    hashed_password: pw,
+                    name:            name,
+                    uid:             uid,
+                  };
+
+                  next_user_fn();
+               });
+}
+
 function open_external_link(e) {
   var child = child_process.spawn('x-www-browser',
                                   [ e.href ],
@@ -776,6 +693,89 @@ function write_and_apply_config(conf) {
 
   // XXX when should this be done?
   // configure_system();
+}
+
+function write_config() {
+  var response = document.forms[0].elements;
+  var new_config = {
+    allow_logins_for:   [],
+    allow_remoteadmins: false,
+    licenses:           {},
+    version:            1,
+  };
+
+  // Initialize new_config.local_users with old information,
+  // but disable all users (those will be enabled later, if given in user
+  // interface).
+  new_config.local_users = {};
+  for (user in old_config.local_users) {
+    var old = old_config.local_users[user];
+    new_config.local_users[user] = {
+                                     enabled:         false,
+                                     hashed_password: old.hashed_password,
+                                     name:            old.name,
+                                     uid:             old.uid,
+                                   };
+  }
+
+  var do_after_local_users_are_ok =
+    function(has_errors) {
+      /* XXX this should update a big banner that no configuration updated
+       * XXX because of errors */
+      if (has_errors) { return; }
+
+      // make sure that disabled users have password '!'
+      for (user in new_config.local_users) {
+        if (new_config.local_users[user].enabled) {
+          new_config.allow_logins_for.push(user);
+        } else {
+          new_config.local_users[user].hashed_password = '!';
+        }
+      }
+
+      switch(response.allow_logins_for.value) {
+        case 'all_puavo_domain_users':
+          new_config.allow_logins_for = [ '*' ];
+          break;
+        case 'some_puavo_domain_users':
+          allowed_puavo_users
+            = (response.allowed_puavo_users.constructor === HTMLInputElement)
+                ? [ response.allowed_puavo_users ]
+                : response.allowed_puavo_users;
+          for (i in allowed_puavo_users) {
+            var user = allowed_puavo_users[i].value;
+            if (user && user.match(/\S+/)) {
+              new_config.allow_logins_for.push(user);
+            }
+          }
+
+          break;
+      }
+
+      new_config.allow_remoteadmins = response.allow_remoteadmins.checked;
+
+      for (i in response) {
+        if (response[i].className === 'license_acceptance_checkbox') {
+          var name = response[i].getAttribute('name');
+          new_config.licenses[name] = response[i].checked;
+        }
+      }
+
+      write_and_apply_config(new_config);
+    };
+
+  var user_indexes = [];
+  for (i in response) {
+    match = response[i].name
+              && response[i].name.match(/^localuser_(\d+)_login$/);
+    if (match) { user_indexes.push(match[1]); }
+  }
+
+  make_local_users_config(response,
+                          user_indexes,
+                          new_config,
+                          false,
+                          do_after_local_users_are_ok);
 }
 
 old_config = read_config();
