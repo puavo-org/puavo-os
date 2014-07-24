@@ -30,7 +30,7 @@ packagedir="/state/restricted-packages/${package}"
 installdir="${packagedir}/i"
 prpdir="${packagedir}/PRP"
 
-[ -x "${prpdir}/prerm" ] && "${prpdir}/prerm" "${installdir}"
+[ -x "${prpdir}/prerm" ] && "${prpdir}/prerm" "${installdir}" "${prpdir}"
 rm -rf "${prpdir}"
 rm -rf "${installdir}"
 

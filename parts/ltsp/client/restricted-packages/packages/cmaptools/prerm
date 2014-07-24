@@ -3,10 +3,11 @@
 set -eu
 
 installdir=$1
+prpdir=$2
 
-xdg-desktop-menu uninstall --novendor "${installdir}/../cmaptools.desktop"
+xdg-desktop-menu uninstall --novendor "${prpdir}/cmaptools.desktop"
 
-for icon in "${installdir}/../icons/"*.png; do
+for icon in "${prpdir}/icons/"*.png; do
   icon_size="${icon##*/cmaptools-}"
   xdg-icon-resource uninstall --novendor --size "${icon_size%.png}" "${icon}" cmaptools
 done
