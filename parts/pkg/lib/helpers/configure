@@ -32,6 +32,6 @@ prpdir="${packagedir}/PRP"
     exit 1
 }
 
-[ -x "${prpdir}/postinst" ] && "${prpdir}/postinst" "${installdir}" "${prpdir}"
+[ -x "${prpdir}/configure" ] && "${prpdir}/configure" "${installdir}" "${prpdir}"
 
 exit 0
