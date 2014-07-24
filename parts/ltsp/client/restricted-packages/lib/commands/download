@@ -48,8 +48,8 @@ while [ $# -gt 0 ]; do
             ;;
 	--all)
 	    shift
-	    packages=$(find /usr/share/puavo-ltsp-client/restricted-packages \
-		-mindepth 1 -maxdepth 1 -type d -printf '%P ' | sort)
+	    packages=$(puavo-restricted-package-tool list \
+		| awk '{ if ($3 == "PURGED") print $1 }')
 	    set -- ${packages}
 	    break
 	    ;;
