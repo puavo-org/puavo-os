@@ -28,32 +28,38 @@ on_exit()
     local exitval=$?
     set +e
 
-    rm -rf "${installdir}.tmp"
+    if [ $exitval -ne 0 ]; then
+	rm -rf "${prpdir}"
+	rm -rf "${installdir}"
+    fi
 
     exit $exitval
 }
 
 package=$1
-
-installdir="/state/restricted-packages/${package}/i"
-
-if [ -d "${installdir}" ]; then
-    if [ -x "/usr/share/puavo-ltsp-client/restricted-packages/${package}/postinst" ]; then
-        "/usr/share/puavo-ltsp-client/restricted-packages/${package}/postinst" "${installdir}"
-    fi
+packagedir="/state/restricted-packages/${package}"
+installdir="${packagedir}/i"
+prpdir="${packagedir}/PRP"
+[ -d "${installdir}" ] && {
+    # The package is already unpacked, just re-configure it and exit.
+    [ -x "${prpdir}/postinst" ] && "${prpdir}/postinst" "${installdir}"
     exit 0
-fi
+}
 
-unpack_script="/usr/share/puavo-ltsp-client/restricted-packages/${package}/unpack"
-upstream_pack="/state/restricted-packages/${package}/upstream.pack"
-upstream_pack_md5sum=$(cat "/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.md5sum")
-
-if [ ! -f "${upstream_pack}" ]; then
+upstream_pack="${packagedir}/upstream.pack"
+[ ! -f "${upstream_pack}" ] && {
     echo "E: cannot install package '${package}' because the upstream pack" \
         "is missing, download it first" >&2
     exit 1
-fi
+}
 
+trap on_exit EXIT
+
+# Copy all packaging stuff from the template directory.
+mkdir "${prpdir}"
+cp -a -T "/usr/share/puavo-ltsp-client/restricted-packages/${package}" "${prpdir}"
+
+upstream_pack_md5sum=$(cat "${prpdir}/upstream.pack.md5sum")
 echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status || {
     echo "E: md5 checksum of the upstream pack '${upstream_pack}' does not" \
         "match the known checksum ${upstream_pack_md5sum}," \
@@ -61,23 +67,8 @@ echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status || {
     exit 1
 }
 
-trap on_exit EXIT
-
-# We own this directory!
-rm -rf "${installdir}.tmp"
-mkdir "${installdir}.tmp"
-
-cp -a -T "/usr/share/puavo-ltsp-client/restricted-packages/${package}" \
-    "/state/restricted-packages/${package}"
-
-if [ -x "${unpack_script}" ]; then
-    "${unpack_script}" "${upstream_pack}" "${installdir}.tmp"
-fi
-
-mv -T "${installdir}.tmp" "${installdir}"
-
-if [ -x "/usr/share/puavo-ltsp-client/restricted-packages/${package}/postinst" ]; then
-    "/usr/share/puavo-ltsp-client/restricted-packages/${package}/postinst" "${installdir}"
-fi
+mkdir "${installdir}"
+[ -x "${prpdir}/unpack" ] && "${prpdir}/unpack" "${upstream_pack}" "${installdir}"
+[ -x "${prpdir}/postinst" ] && "${prpdir}/postinst" "${installdir}"
 
 exit 0

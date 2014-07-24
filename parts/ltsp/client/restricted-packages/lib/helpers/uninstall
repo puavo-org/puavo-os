@@ -26,14 +26,12 @@ set -eu
 package=$1
 shift
 
-installdir="/state/restricted-packages/${package}/i"
+packagedir="/state/restricted-packages/${package}"
+installdir="${packagedir}/i"
+prpdir="${packagedir}/PRP"
 
-[ -d "${installdir}" ] || exit 0
-
-if [ -x "/usr/share/puavo-ltsp-client/restricted-packages/${package}/prerm" ]; then
-    "/usr/share/puavo-ltsp-client/restricted-packages/${package}/prerm" "${installdir}"
-fi
-
+[ -x "${prpdir}/prerm" ] && "${prpdir}/prerm" "${installdir}"
+rm -rf "${prpdir}"
 rm -rf "${installdir}"
 
 exit 0
