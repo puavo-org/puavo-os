@@ -73,7 +73,10 @@ fi
 exitval=0
 
 for package in "$@"; do
-    /usr/lib/puavo-ltsp-client/restricted-packages/helpers/install "${package}" || {
+    {
+        /usr/lib/puavo-ltsp-client/restricted-packages/helpers/unpack "${package}"
+        /usr/lib/puavo-ltsp-client/restricted-packages/helpers/configure "${package}"
+    } || {
 	exitval=$?
 	echo "E: failed to install package '${package}'" >&2
 	# Continue until we have tried to install all given packages
