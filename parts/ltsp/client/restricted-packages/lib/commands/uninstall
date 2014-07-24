@@ -73,7 +73,10 @@ fi
 exitval=0
 
 for package in "$@"; do
-    /usr/lib/puavo-ltsp-client/restricted-packages/helpers/uninstall "${package}" || {
+    {
+	/usr/lib/puavo-ltsp-client/restricted-packages/helpers/unconfigure "${package}"
+	/usr/lib/puavo-ltsp-client/restricted-packages/helpers/uninstall "${package}"
+    } || {
 	exitval=$?
 	echo "E: failed to uninstall package '${package}'" >&2
 	# Continue until we have tried to uninstall all given packages
