@@ -39,13 +39,11 @@ custom_script="/usr/share/puavo-ltsp-client/restricted-packages/${package}/downl
 upstream_pack="/state/restricted-packages/${package}/upstream.pack"
 upstream_pack_md5sum=$(cat "/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.md5sum")
 
-set +e
 echo "${upstream_pack_md5sum}  ${upstream_pack}" \
     | md5sum --check --status 2>/dev/null && {
     echo "I: upstream pack is already in place and has a correct checksum" >&2
     exit 0
 }
-set -e
 
 url_file="/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.url"
 
