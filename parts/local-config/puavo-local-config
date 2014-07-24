@@ -21,15 +21,16 @@ def print_help()
   puts <<-EOF
 puavo-local-config [OPTIONS]
 
--c, --config-path    set configuration file path
--h, --help           show help
+-c, --config-path      set configuration file path
+-h, --help             show help
 
-    --admins         configure admins
-    --grub-default   configure grub default
-    --local-users    configure local users
+    --admins           configure admins
+    --grub-default     configure grub default
+    --local-users      configure local users
 
-    --install-pkgs   ["all" | a list of software separated with comma]
-    --setup-pkgs     ["all" | a list of software separated with comma]
+    --install-pkgs     ["all" | a list of software separated with comma]
+    --setup-pkgs       ["all" | a list of software separated with comma]
+    --uninstall-pkgs   ["all" | a list of software separated with comma]
   EOF
 end
 
@@ -249,11 +250,17 @@ def superlaptop_mode?
   kernel_cmdline.match(superlaptop_mode_re) ? true : false
 end
 
+def uninstall_pkgs(pkg_list)
+  restricted_package_tool('uninstall', *pkg_list) \
+    or raise "Problem in uninstalling: #{ pkg_list.join(', ') }"
+end
+
 config_path = '/state/etc/puavo/local/config.json'
 
-apply_configs    = []
-install_pkg_list = []
-setup_pkg_list   = []
+apply_configs      = []
+install_pkg_list   = []
+setup_pkg_list     = []
+uninstall_pkg_list = []
 
 begin
   opts = GetoptLong.new(
@@ -265,6 +272,7 @@ begin
     [ '--local-users',         GetoptLong::NO_ARGUMENT,       ],
     [ '--install-pkgs',        GetoptLong::REQUIRED_ARGUMENT, ],
     [ '--setup-pkgs',          GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--uninstall-pkgs',      GetoptLong::REQUIRED_ARGUMENT, ],
   )
 
   opts.each do |opt, arg|
@@ -282,6 +290,9 @@ begin
       when '--setup-pkgs'
 	apply_configs.push(opt)
 	setup_pkg_list = parse_pkg_list(arg)
+      when '--uninstall-pkgs'
+	apply_configs.push(opt)
+	uninstall_pkg_list = parse_pkg_list(arg)
     end
   end
 
@@ -308,11 +319,12 @@ end
 conf = ensure_conf_sanity(conf, config_path)
 
 dispatch_table = {
-  '--admins'       => lambda { configure_admins()               },
-  '--grub-default' => lambda { configure_grub_default()         },
-  '--local-users'  => lambda { configure_local_users(conf)      },
-  '--install-pkgs' => lambda { install_pkgs(install_pkg_list)   },
-  '--setup-pkgs'   => lambda { setup_pkgs(conf, setup_pkg_list) },
+  '--admins'         => lambda { configure_admins()                 },
+  '--grub-default'   => lambda { configure_grub_default()           },
+  '--local-users'    => lambda { configure_local_users(conf)        },
+  '--install-pkgs'   => lambda { install_pkgs(install_pkg_list)     },
+  '--setup-pkgs'     => lambda { setup_pkgs(conf, setup_pkg_list)   },
+  '--uninstall-pkgs' => lambda { uninstall_pkgs(uninstall_pkg_list) },
 }
 
 exit_code = 0

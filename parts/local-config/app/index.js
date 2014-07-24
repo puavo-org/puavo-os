@@ -4,82 +4,103 @@ var fs = require('fs');
 var config_json_path = '/state/etc/puavo/local/config.json';
 var old_config;
 
-function set_action_button_state(button,
-                                 state,
-                                 license_key,
-                                 errormsg_element) {
+function create_action_button_with_initial_state(button,
+                                                 initial_state,
+                                                 license_key,
+                                                 errormsg_element) {
   var styles = {
-    install:      'background-color: orange',
-    installing_a: 'background-color: yellow',
-    installing_b: 'background-color: white',
-    uninstall:    'background-color: lightgreen',
+    install:        'background-color: orange',
+    installing_a:   'background-color: yellow',
+    installing_b:   'background-color: white',
+    uninstall:      'background-color: lightgreen',
+    uninstalling_a: 'background-color: red',
+    uninstalling_b: 'background-color: yellow',
   };
 
-  // XXX should be kind of like "static variable"
-  var flash_interval;
-  if (flash_interval) { clearInterval(flash_interval); }
+  var flash_interval, previous_eventhandler;
+  var setup_action = function(fn) {
+    if (flash_interval) {
+      clearInterval(flash_interval);
+      flash_interval = null;
+    }
+    if (previous_eventhandler) {
+      button.removeEventListener('click', previous_eventhandler);
+    }
+    button.addEventListener('click', fn);
+    previous_eventhandler = fn;
+  };
+
+  var make_flashes
+    = function(a, b) {
+	if (button.getAttribute('style') === styles[a]) {
+	  button.setAttribute('style', styles[b]);
+	} else if (button.getAttribute('style') === styles[b]) {
+	  button.setAttribute('style', styles[a]);
+	};
+      };
+
+  /* XXX Should just do an update on button state, depending on the state
+   * XXX reported by puavo-restricted-package-tool.
+   * XXX flash_interval should be cleared here as well. */
 
   var install_returned
     = function(error) {
-        if (error) {
-          state_functions.press_install();
-        } else {
-          state_functions.press_uninstall();
-        }
+        state_functions[ !error ? 'press_uninstall' : 'press_install' ]();
       };
 
-  var previous_eventlistener;
-  var replace_eventhandler = function(fn) {
-    if (previous_eventlistener) {
-      button.removeEventListener('click', previous_eventhandler);
-    }
-    previous_eventlistener = button.addEventListener('click', fn);
-  };
+  var uninstall_returned
+    = function(error) {
+        state_functions[ !error ? 'press_install' : 'press_uninstall' ]();
+      };
 
   var state_functions = {
     installing:
       function() {
         button.textContent = 'Installing...';
         button.setAttribute('style', styles.installing_a);
-
-        var flashes
-          = function() {
-              if (button.getAttribute('style') === styles.installing_a) {
-                button.setAttribute('style', styles.installing_b);
-              } else if (button.getAttribute('style') === styles.installing_b) {
-                button.setAttribute('style', styles.installing_a);
-              };
-            };
-
-        flash_interval = setInterval(flashes, 500);
+        flash_interval
+          = setInterval(function () { make_flashes('installing_a',
+                                                   'installing_b'); },
+                        500);
       },
     press_install:
       function() {
         button.textContent = 'INSTALL';
         button.setAttribute('style', styles.install);
-        replace_eventhandler(function(e) {
-                               e.preventDefault();
-                               install_pkg(license_key,
-                                           errormsg_element,
-                                           install_returned);
-                               state_functions.installing();
-                            });
+        setup_action(function(e) {
+                       e.preventDefault();
+                       handle_pkg('install',
+                                  license_key,
+                                  errormsg_element,
+                                  install_returned);
+                       state_functions.installing();
+                     });
       },
     press_uninstall:
       function() {
         button.textContent = 'UNINSTALL';
         button.setAttribute('style', styles.uninstall);
-        replace_eventhandler(function(e) {
-                               e.preventDefault();
-                               state_functions.uninstalling(); });
+        setup_action(function(e) {
+                       e.preventDefault();
+                       handle_pkg('uninstall',
+                                  license_key,
+                                  errormsg_element,
+                                  uninstall_returned);
+                       state_functions.uninstalling();
+                     });
       },
     uninstalling:
       function() {
         button.textContent = 'Uninstalling...';
+        button.setAttribute('style', styles.uninstalling_a);
+        flash_interval
+          = setInterval(function () { make_flashes('uninstalling_a',
+                                                   'uninstalling_b'); },
+                        200);
       },
   };
 
-  state_functions[state]();
+  state_functions[initial_state]();
 }
 
 function add_action_button(license_key,
@@ -88,19 +109,19 @@ function add_action_button(license_key,
                            user_wants_it) {
   var button = document.createElement('button');
 
-  switch (sw_state) {
-    case 'DOWNLOADED':
-    case 'PURGED':
-      button_state = user_wants_it ? 'installing' : 'press_install';
-      set_action_button_state(button,
-                              button_state,
-                              license_key,
-                              errormsg_element);
-      break;
-    case 'XXX':
-      /* XXX other cases should be handled */
-      break;
-  }
+  installation = user_wants_it ? 'installing' : 'press_install';
+
+  button_state
+    = {
+        DOWNLOADED: installation,
+        PURGED:     installation,
+        INSTALLED:  'press_uninstall',
+      }[sw_state] || installation;
+
+  create_action_button_with_initial_state(button,
+                                          button_state,
+                                          license_key,
+                                          errormsg_element);
 
   return button;
 }
@@ -346,10 +367,9 @@ function configure_system() {
   child_process.execFile('sudo', cmd_args, {}, handler);
 }
 
-function install_pkg(license_key, errormsg_element, cb) {
-  var cmd_args = [ '/usr/sbin/puavo-local-config'
-                 , '--install-pkgs'
-                 , license_key ]
+function handle_pkg(mode, license_key, errormsg_element, cb) {
+  cmd_mode = (mode === 'install' ? '--install-pkgs' : '--uninstall-pkgs');
+  var cmd_args = [ '/usr/sbin/puavo-local-config', cmd_mode, license_key ]
 
   var handler
     = function(error, stdout, stderr) {
