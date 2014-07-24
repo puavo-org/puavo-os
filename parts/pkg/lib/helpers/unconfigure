@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # ##############################################################################
 #
@@ -24,13 +24,14 @@
 set -eu
 
 package=$1
-shift
-
 packagedir="/state/restricted-packages/${package}"
 installdir="${packagedir}/i"
 prpdir="${packagedir}/PRP"
+[ -d "${installdir}" ] || {
+    echo "E: failed to unconfigure package '${package}' because it is not installed" >&2
+    exit 1
+}
 
-rm -rf "${prpdir}"
-rm -rf "${installdir}"
+[ -x "${prpdir}/prerm" ] && "${prpdir}/prerm" "${installdir}" "${prpdir}"
 
 exit 0
