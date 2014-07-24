@@ -44,7 +44,7 @@ if [ -d "${installdir}" ]; then
     exit 0
 fi
 
-custom_script="/usr/share/puavo-ltsp-client/restricted-packages/${package}/install"
+unpack_script="/usr/share/puavo-ltsp-client/restricted-packages/${package}/unpack"
 upstream_pack="/state/restricted-packages/${package}/upstream.pack"
 upstream_pack_md5sum=$(cat "/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.md5sum")
 
@@ -70,8 +70,8 @@ mkdir "${installdir}.tmp"
 cp -a -T "/usr/share/puavo-ltsp-client/restricted-packages/${package}" \
     "/state/restricted-packages/${package}"
 
-if [ -x "${custom_script}" ]; then
-    "${custom_script}" "${upstream_pack}" "${installdir}.tmp"
+if [ -x "${unpack_script}" ]; then
+    "${unpack_script}" "${upstream_pack}" "${installdir}.tmp"
 fi
 
 mv -T "${installdir}.tmp" "${installdir}"
