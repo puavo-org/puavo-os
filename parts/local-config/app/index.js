@@ -202,8 +202,12 @@ function write_config() {
           new_config.allow_logins_for = [ '*' ];
           break;
         case 'some_puavo_domain_users':
-          for (i in response.allowed_puavo_users) {
-            var user = response.allowed_puavo_users[i].value;
+          allowed_puavo_users
+            = (response.allowed_puavo_users.constructor === HTMLInputElement)
+                ? [ response.allowed_puavo_users ]
+                : response.allowed_puavo_users;
+          for (i in allowed_puavo_users) {
+            var user = allowed_puavo_users[i].value;
             if (user && user.match(/\S+/)) {
               new_config.allow_logins_for.push(user);
             }
