@@ -144,10 +144,6 @@ function create_action_button_with_initial_state(button,
         };
       };
 
-  /* XXX Should just do an update on button state, depending on the state
-   * XXX reported by puavo-restricted-package-tool.
-   * XXX flash_interval should be cleared here as well. */
-
   var install_returned
     = function(error) {
         state_functions[ !error ? 'press_uninstall' : 'press_install' ]();
