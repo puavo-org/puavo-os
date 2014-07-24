@@ -4,47 +4,120 @@ var fs = require('fs');
 var config_json_path = '/state/etc/puavo/local/config.json';
 var old_config;
 
-function add_download_button(license_key, errormsg_element, download_done) {
-  var button = document.createElement('button');
-
+function set_action_button_state(button,
+                                 state,
+                                 license_key,
+                                 errormsg_element) {
   var styles = {
-    error:      'background-color: red',
-    ok:         'background-color: lightgreen',
-    download_a: 'background-color: yellow',
-    download_b: 'background-color: white',
+    install:      'background-color: orange',
+    installing_a: 'background-color: yellow',
+    installing_b: 'background-color: white',
+    uninstall:    'background-color: lightgreen',
   };
 
-  if (download_done) {
-    button.textContent = 'INSTALLED';
-    button.setAttribute('style', styles.ok);
-    return button;
-  }
+  // XXX should be kind of like "static variable"
+  var flash_interval;
+  if (flash_interval) { clearInterval(flash_interval); }
 
-  button.textContent = 'DOWNLOAD';
-  button.addEventListener('click',
-                          function(e) {
-                            e.preventDefault();
-                            download_pkg(license_key,
-                                         button,
-                                         styles,
-                                         errormsg_element); });
+  var install_returned
+    = function(error) {
+        if (error) {
+          state_functions.press_install();
+        } else {
+          state_functions.press_uninstall();
+        }
+      };
+
+  var previous_eventlistener;
+  var replace_eventhandler = function(fn) {
+    if (previous_eventlistener) {
+      button.removeEventListener('click', previous_eventhandler);
+    }
+    previous_eventlistener = button.addEventListener('click', fn);
+  };
+
+  var state_functions = {
+    installing:
+      function() {
+        button.textContent = 'Installing...';
+        button.setAttribute('style', styles.installing_a);
+
+        var flashes
+          = function() {
+              if (button.getAttribute('style') === styles.installing_a) {
+                button.setAttribute('style', styles.installing_b);
+              } else if (button.getAttribute('style') === styles.installing_b) {
+                button.setAttribute('style', styles.installing_a);
+              };
+            };
+
+        flash_interval = setInterval(flashes, 500);
+      },
+    press_install:
+      function() {
+        button.textContent = 'INSTALL';
+        button.setAttribute('style', styles.install);
+        replace_eventhandler(function(e) {
+                               e.preventDefault();
+                               install_pkg(license_key,
+                                           errormsg_element,
+                                           install_returned);
+                               state_functions.installing();
+                            });
+      },
+    press_uninstall:
+      function() {
+        button.textContent = 'UNINSTALL';
+        button.setAttribute('style', styles.uninstall);
+        replace_eventhandler(function(e) {
+                               e.preventDefault();
+                               state_functions.uninstalling(); });
+      },
+    uninstalling:
+      function() {
+        button.textContent = 'Uninstalling...';
+      },
+  };
+
+  state_functions[state]();
+}
+
+function add_action_button(license_key,
+                           errormsg_element,
+                           sw_state,
+                           user_wants_it) {
+  var button = document.createElement('button');
+
+  switch (sw_state) {
+    case 'DOWNLOADED':
+    case 'PURGED':
+      button_state = user_wants_it ? 'installing' : 'press_install';
+      set_action_button_state(button,
+                              button_state,
+                              license_key,
+                              errormsg_element);
+      break;
+    case 'XXX':
+      /* XXX other cases should be handled */
+      break;
+  }
 
   return button;
 }
 
 function add_licenses(table, license_list) {
-  check_download_packs(function (downloaded_packs) {
+  check_software_state(function (sw_state) {
                          for (var i in license_list) {
                            var license = license_list[i];
                            add_one_license(table,
                                            license,
-                                           downloaded_packs[license.key],
+                                           sw_state[license.key],
                                            old_config.licenses[license.key]);
                          }
                        });
 }
 
-function add_one_license(parentNode, license_info, download_done, checked) {
+function add_one_license(parentNode, license_info, sw_state, user_wants_it) {
   var tr = document.createElement('tr');
 
   // create license name element
@@ -62,27 +135,15 @@ function add_one_license(parentNode, license_info, download_done, checked) {
   a.textContent = '(license terms)';
   tr.appendChild( license_url_td.appendChild(a) );
 
-  var download_td = document.createElement('td');
-  var download_errormsg_element = document.createElement('td');
-  download_td.appendChild( add_download_button(license_info.key,
-                                               download_errormsg_element,
-                                               download_done) );
-  tr.appendChild(download_td);
-
-  var accept_td = document.createElement('td');
-  var input = document.createElement('input');
-  input.setAttribute('class', 'license_acceptance_checkbox');
-  input.setAttribute('name', license_info.key);
-  input.setAttribute('type', 'checkbox');
-  if (checked) {
-    input.setAttribute('checked', true);
-  } else {
-    input.removeAttribute('checked');
-  }
-
-  tr.appendChild( accept_td.appendChild(input) );
-
-  tr.appendChild(download_errormsg_element);
+  // create action button and error element
+  var action_td = document.createElement('td');
+  var action_errormsg_element = document.createElement('td');
+  action_td.appendChild( add_action_button(license_info.key,
+                                           action_errormsg_element,
+                                           sw_state,
+                                           user_wants_it) );
+  tr.appendChild(action_td);
+  tr.appendChild(action_errormsg_element);
 
   parentNode.appendChild(tr);
 }
@@ -246,21 +307,21 @@ function write_config() {
                           do_after_local_users_are_ok);
 }
 
-function check_download_packs(cb) {
+function check_software_state(cb) {
   var handler
     = function (error, stdout, stderr) {
         if (error) { throw(error); }
 
-        obj = {};
+        sw_state = {};
         stdout.toString()
               .split("\n")
               .forEach(function (line) {
                          if (line !== '') {
                            a = line.split(/\s+/);
-                           obj[ a[0] ] = (a[2] !== 'PURGED');
+                           sw_state[ a[0] ] = a[2];
                          }
                        });
-        cb(obj);
+        cb(sw_state);
       };
 
   child_process.execFile('puavo-restricted-package-tool',
@@ -285,37 +346,15 @@ function configure_system() {
   child_process.execFile('sudo', cmd_args, {}, handler);
 }
 
-function download_pkg(license_key, button, styles, error_element) {
-  button.textContent = 'Downloading...';
-  button.setAttribute('style', styles.download_a);
-
-  var flashes
-    = function() {
-        if (button.getAttribute('style') === styles.download_a) {
-          button.setAttribute('style', styles.download_b);
-        } else if (button.getAttribute('style') == styles.download_b) {
-          button.setAttribute('style', styles.download_a);
-        }
-      };
-
-  var flash_interval = setInterval(flashes, 500);
-
+function install_pkg(license_key, errormsg_element, cb) {
   var cmd_args = [ '/usr/sbin/puavo-local-config'
-                 , '--download-pkgs'
+                 , '--install-pkgs'
                  , license_key ]
 
   var handler
     = function(error, stdout, stderr) {
-        if (error) {
-          button.setAttribute('style', styles.error);
-          button.textContent = 'ERROR';
-          error_element.textContent = stderr;
-        } else {
-          button.setAttribute('style', styles.ok);
-          button.textContent = 'INSTALLED';
-          error_element.textContent = '';
-        }
-        clearInterval(flash_interval);
+        errormsg_element.textContent = error ? stderr : '';
+        cb(error);
       };
 
   child_process.execFile('sudo', cmd_args, {}, handler);
@@ -440,9 +479,9 @@ function generate_login_users_input(form) {
   for (login in old_config.local_users) {
     if (old_config.local_users[login].enabled) {
       local_users_list.push({
-			      login: login,
-			      name:  old_config.local_users[login].name,
-			    });
+                              login: login,
+                              name:  old_config.local_users[login].name,
+                            });
     }
   }
 

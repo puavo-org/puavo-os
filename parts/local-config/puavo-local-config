@@ -21,15 +21,15 @@ def print_help()
   puts <<-EOF
 puavo-local-config [OPTIONS]
 
--c, --config-path     set configuration file path
--h, --help            show help
+-c, --config-path    set configuration file path
+-h, --help           show help
 
-    --admins          configure admins
-    --grub-default    configure grub default
-    --local-users     configure local users
+    --admins         configure admins
+    --grub-default   configure grub default
+    --local-users    configure local users
 
-    --download-pkgs   ["all" | a list of software separated with comma]
-    --setup-pkgs      ["all" | a list of software separated with comma]
+    --install-pkgs   ["all" | a list of software separated with comma]
+    --setup-pkgs     ["all" | a list of software separated with comma]
   EOF
 end
 
@@ -208,9 +208,11 @@ def configure_grub_default()
     or raise 'Problem in updating grub environment'
 end
 
-def download_pkgs(pkg_list)
-  restricted_package_tool('download', *pkg_list) \
-    or raise "Problem in downloading: #{ pkg_list.join(', ') }"
+def install_pkgs(pkg_list)
+  %w(download install).each do |action|
+    restricted_package_tool(action, *pkg_list) \
+      or raise "Problem in downloading: #{ pkg_list.join(', ') }"
+  end
 end
 
 def parse_pkg_list(pkg_list)
@@ -249,9 +251,9 @@ end
 
 config_path = '/state/etc/puavo/local/config.json'
 
-apply_configs     = []
-download_pkg_list = []
-setup_pkg_list    = []
+apply_configs    = []
+install_pkg_list = []
+setup_pkg_list   = []
 
 begin
   opts = GetoptLong.new(
@@ -261,7 +263,7 @@ begin
     [ '--admins',              GetoptLong::NO_ARGUMENT,       ],
     [ '--grub-default',        GetoptLong::NO_ARGUMENT,       ],
     [ '--local-users',         GetoptLong::NO_ARGUMENT,       ],
-    [ '--download-pkgs',       GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--install-pkgs',        GetoptLong::REQUIRED_ARGUMENT, ],
     [ '--setup-pkgs',          GetoptLong::REQUIRED_ARGUMENT, ],
   )
 
@@ -274,9 +276,9 @@ begin
 	exit(0)
       when '--admins', '--grub-default', '--local-users'
 	apply_configs.push(opt)
-      when '--download-pkgs'
+      when '--install-pkgs'
 	apply_configs.push(opt)
-	download_pkg_list = parse_pkg_list(arg)
+	install_pkg_list = parse_pkg_list(arg)
       when '--setup-pkgs'
 	apply_configs.push(opt)
 	setup_pkg_list = parse_pkg_list(arg)
@@ -306,11 +308,11 @@ end
 conf = ensure_conf_sanity(conf, config_path)
 
 dispatch_table = {
-  '--admins'        => lambda { configure_admins()               },
-  '--grub-default'  => lambda { configure_grub_default()         },
-  '--local-users'   => lambda { configure_local_users(conf)      },
-  '--download-pkgs' => lambda { download_pkgs(download_pkg_list) },
-  '--setup-pkgs'    => lambda { setup_pkgs(conf, setup_pkg_list) },
+  '--admins'       => lambda { configure_admins()               },
+  '--grub-default' => lambda { configure_grub_default()         },
+  '--local-users'  => lambda { configure_local_users(conf)      },
+  '--install-pkgs' => lambda { install_pkgs(install_pkg_list)   },
+  '--setup-pkgs'   => lambda { setup_pkgs(conf, setup_pkg_list) },
 }
 
 exit_code = 0
