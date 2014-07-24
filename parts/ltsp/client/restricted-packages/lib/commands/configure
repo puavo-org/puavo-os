@@ -26,7 +26,7 @@ set -eu
 usage_error()
 {
     echo "error $1" >&2
-    echo "Try '$0 --help' for more information." >&2
+    echo "Try 'puavo-restricted-package-tool configure --help' for more information." >&2
     return 1
 }
 
@@ -34,23 +34,24 @@ while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
             shift
-            echo "Usage: $0 COMMAND [COMMAND_OPTIONS]"
-            echo "Usage: $0 --help"
+            echo "Usage: puavo-restricted-package-tool configure PACKAGE [PACKAGE]..."
+            echo "Usage: puavo-restricted-package-tool configure --all"
+            echo "Usage: puavo-restricted-package-tool configure --help"
             echo
-            echo "Manage restricted packages."
+            echo "Configure restricted packages."
             echo
             echo "Options:"
             echo "    -h, --help                   print help and exit"
-            echo
-            echo "Commands:"
-            echo "    configure                    configure package"
-            echo "    download                     download upstream pack"
-            echo "    install                      install package"
-            echo "    uninstall                    uninstall package"
-            echo "    purge                        purge the upstream pack"
-            echo "    list                         list all packages and their status"
+            echo "    --all                        configure all installed packages"
             echo
             exit 0
+            ;;
+        --all)
+            shift
+            packages=$(puavo-restricted-package-tool list \
+                | awk '{ if ($3 == "INSTALLED") print $1 }')
+            set -- ${packages}
+            break
             ;;
         --)
             shift
@@ -66,18 +67,18 @@ while [ $# -gt 0 ]; do
 done
 
 if [ $# -lt 1 ]; then
-    usage_error "invalid number of arguments ($#), at least 1"
+    usage_error "invalid number of arguments ($#), expected at least 1"
 fi
 
-command=$1
-shift
+exitval=0
 
-case "${command}" in
-    download|install|uninstall|purge|list|configure)
-        "/usr/lib/puavo-ltsp-client/restricted-packages/commands/${command}" "$@"
-        ;;
-    *)
-        usage_error "unknown command '${command}'"
-esac
+for package in "$@"; do
+    /usr/lib/puavo-ltsp-client/restricted-packages/helpers/configure "${package}" || {
+        exitval=$?
+        echo "E: failed to configure package '${package}'" >&2
+        # Continue until we have tried to configure all given packages
+        # and then fail.
+    }
+done
 
-exit 0
+exit $exitval

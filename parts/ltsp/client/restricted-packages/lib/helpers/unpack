@@ -40,11 +40,7 @@ package=$1
 packagedir="/state/restricted-packages/${package}"
 installdir="${packagedir}/i"
 prpdir="${packagedir}/PRP"
-[ -d "${installdir}" ] && {
-    # The package is already unpacked, just re-configure it and exit.
-    [ -x "${prpdir}/postinst" ] && "${prpdir}/postinst" "${installdir}" "${prpdir}"
-    exit 0
-}
+[ -d "${installdir}" ] && exit 0
 
 upstream_pack="${packagedir}/upstream.pack"
 [ ! -f "${upstream_pack}" ] && {
@@ -69,6 +65,5 @@ echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status || {
 
 mkdir "${installdir}"
 [ -x "${prpdir}/unpack" ] && "${prpdir}/unpack" "${upstream_pack}" "${installdir}"
-[ -x "${prpdir}/postinst" ] && "${prpdir}/postinst" "${installdir}" "${prpdir}"
 
 exit 0
