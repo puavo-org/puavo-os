@@ -27,9 +27,9 @@ puavo-local-config [OPTIONS]
     --admins           configure admins
     --grub-default     configure grub default
     --local-users      configure local users
+    --setup-pkgs       configure installed (optional) packages
 
     --install-pkgs     ["all" | a list of software separated with comma]
-    --setup-pkgs       ["all" | a list of software separated with comma]
     --uninstall-pkgs   ["all" | a list of software separated with comma]
   EOF
 end
@@ -40,11 +40,6 @@ def conf_version_1_ok?(conf)
   conf['allow_logins_for'].kind_of?(Array) \
     && conf['allow_logins_for'].map { |s| s.kind_of?(String) }.all? \
     && is_boolean.call(conf['allow_remoteadmins']) \
-    && conf['licenses'].kind_of?(Hash) \
-    && conf['licenses'].map do |k, v|
-                              k.kind_of?(String) && is_boolean.call(v)
-                            end \
-                       .all? \
     && conf['local_users'].kind_of?(Hash) \
     && conf['local_users'].map do |login, u|
                                  login.kind_of?(String) \
@@ -227,20 +222,9 @@ def restricted_package_tool(*args)
   system('/usr/sbin/puavo-restricted-package-tool', *args)
 end
 
-def setup_pkgs(conf, pkg_list)
-  return if conf.nil?
-
-  to_install, to_uninstall = pkg_list.partition { |pkg| conf['licenses'][pkg] }
-
-  if !to_install.empty? then
-    restricted_package_tool('install', *to_install) \
-      or raise 'Problem in installing packages'
-  end
-
-  if !to_uninstall.empty? then
-    restricted_package_tool('uninstall', *to_uninstall) \
-      or raise 'Problem in uninstalling packages'
-  end
+def setup_pkgs()
+  restricted_package_tool('configure', '--all') \
+    or raise 'Problem in configuring packages'
 end
 
 def superlaptop_mode?
@@ -259,7 +243,6 @@ config_path = '/state/etc/puavo/local/config.json'
 
 apply_configs      = []
 install_pkg_list   = []
-setup_pkg_list     = []
 uninstall_pkg_list = []
 
 begin
@@ -271,7 +254,7 @@ begin
     [ '--grub-default',        GetoptLong::NO_ARGUMENT,       ],
     [ '--local-users',         GetoptLong::NO_ARGUMENT,       ],
     [ '--install-pkgs',        GetoptLong::REQUIRED_ARGUMENT, ],
-    [ '--setup-pkgs',          GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--setup-pkgs',          GetoptLong::NO_ARGUMENT,       ],
     [ '--uninstall-pkgs',      GetoptLong::REQUIRED_ARGUMENT, ],
   )
 
@@ -289,7 +272,6 @@ begin
 	install_pkg_list = parse_pkg_list(arg)
       when '--setup-pkgs'
 	apply_configs.push(opt)
-	setup_pkg_list = parse_pkg_list(arg)
       when '--uninstall-pkgs'
 	apply_configs.push(opt)
 	uninstall_pkg_list = parse_pkg_list(arg)
@@ -323,7 +305,7 @@ dispatch_table = {
   '--grub-default'   => lambda { configure_grub_default()           },
   '--local-users'    => lambda { configure_local_users(conf)        },
   '--install-pkgs'   => lambda { install_pkgs(install_pkg_list)     },
-  '--setup-pkgs'     => lambda { setup_pkgs(conf, setup_pkg_list)   },
+  '--setup-pkgs'     => lambda { setup_pkgs()                       },
   '--uninstall-pkgs' => lambda { uninstall_pkgs(uninstall_pkg_list) },
 }
 

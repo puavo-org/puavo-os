@@ -4,20 +4,12 @@ var fs = require('fs');
 var config_json_path = '/state/etc/puavo/local/config.json';
 var old_config;
 
-function add_action_button(license_key,
-                           errormsg_element,
-                           sw_state,
-                           user_wants_it) {
+function add_action_button(license_key, errormsg_element, sw_state) {
   var button = document.createElement('button');
 
-  installation = user_wants_it ? 'installing' : 'press_install';
-
-  button_state
-    = {
-        DOWNLOADED: installation,
-        PURGED:     installation,
-        INSTALLED:  'press_uninstall',
-      }[sw_state] || installation;
+  button_state = (sw_state !== 'INSTALLED')
+                    ? 'press_install'
+                    : 'press_uninstall';
 
   create_action_button_with_initial_state(button,
                                           button_state,
@@ -33,13 +25,12 @@ function add_licenses(table, license_list) {
                            var license = license_list[i];
                            add_one_license(table,
                                            license,
-                                           sw_state[license.key],
-                                           old_config.licenses[license.key]);
+                                           sw_state[license.key]);
                          }
                        });
 }
 
-function add_one_license(parentNode, license_info, sw_state, user_wants_it) {
+function add_one_license(parentNode, license_info, sw_state) {
   var tr = document.createElement('tr');
 
   // create license name element
@@ -62,8 +53,7 @@ function add_one_license(parentNode, license_info, sw_state, user_wants_it) {
   var action_errormsg_element = document.createElement('td');
   action_td.appendChild( add_action_button(license_info.key,
                                            action_errormsg_element,
-                                           sw_state,
-                                           user_wants_it) );
+                                           sw_state) );
   tr.appendChild(action_td);
   tr.appendChild(action_errormsg_element);
 
@@ -159,6 +149,7 @@ function create_action_button_with_initial_state(button,
       function() {
         button.textContent = 'Installing...';
         button.setAttribute('style', styles.installing_a);
+        setup_action(function(e) { e.preventDefault(); });
         flash_interval
           = setInterval(function () { make_flashes('installing_a',
                                                    'installing_b'); },
@@ -194,6 +185,7 @@ function create_action_button_with_initial_state(button,
       function() {
         button.textContent = 'Uninstalling...';
         button.setAttribute('style', styles.uninstalling_a);
+        setup_action(function(e) { e.preventDefault(); });
         flash_interval
           = setInterval(function () { make_flashes('uninstalling_a',
                                                    'uninstalling_b'); },
@@ -667,7 +659,6 @@ function read_config() {
       config = {
         allow_logins_for:   [ '*' ],
         allow_remoteadmins: false,
-        licenses:           {},
         local_users:        {},
       };
     } else {
@@ -696,7 +687,6 @@ function write_config() {
   var new_config = {
     allow_logins_for:   [],
     allow_remoteadmins: false,
-    licenses:           {},
     version:            1,
   };
 
@@ -749,13 +739,6 @@ function write_config() {
       }
 
       new_config.allow_remoteadmins = response.allow_remoteadmins.checked;
-
-      for (i in response) {
-        if (response[i].className === 'license_acceptance_checkbox') {
-          var name = response[i].getAttribute('name');
-          new_config.licenses[name] = response[i].checked;
-        }
-      }
 
       write_and_apply_config(new_config);
     };
