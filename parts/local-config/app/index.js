@@ -1,5 +1,6 @@
 var child_process = require('child_process');
 var fs = require('fs');
+var gui = require('nw.gui');
 
 var config_json_path = '/state/etc/puavo/local/config.json';
 var old_config;
@@ -84,15 +85,20 @@ function check_software_state(cb) {
 }
 
 function configure_system() {
-  var cmd_args = [ '/usr/sbin/puavo-local-config'
-                 , '--local-users'
-                 , '--setup-pkgs', 'all' ];
+  var cmd_args = [ '/usr/sbin/puavo-local-config', '--local-users' ];
 
+  /* XXX this should also work if process is killed via signal...
+     XXX in this case user will not see error messages, though */
+
+  var win = this;
   var handler
     = function(error, stdout, stderr) {
         if (error) {
+          alert('Error in applying configuration settings: '
+                + error + ' / ' + stderr);
           throw(error);
-          /* XXX how to handle this properly? */
+        } else {
+          win.close(true);
         }
       };
 
@@ -677,9 +683,6 @@ function write_and_apply_config(conf) {
     fs.writeFileSync(tmpfile, data);
     fs.renameSync(tmpfile, config_json_path);
   } catch (ex) { alert(ex); throw(ex); }
-
-  // XXX when should this be done?
-  // configure_system();
 }
 
 function write_config() {
@@ -761,3 +764,6 @@ old_config = read_config();
 if (!old_config) { process.exit(1); }
 
 generate_form();
+
+// XXX process.on('exit', configure_system);
+gui.Window.get().on('close', configure_system);
