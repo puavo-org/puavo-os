@@ -97,14 +97,6 @@ function make_local_users_config(response,
 
   var i = user_indexes.pop();
 
-  var next_user_fn = function() {
-                       make_local_users_config(response,
-                                               user_indexes,
-                                               new_config,
-                                               has_errors,
-                                               cb);
-                     };
-
   var login     = response['localuser_' + i + '_login'    ].value;
   var name      = response['localuser_' + i + '_name'     ].value;
   var password1 = response['localuser_' + i + '_password1'].value;
@@ -114,9 +106,20 @@ function make_local_users_config(response,
     = document.querySelector('div[id=localuser_' + i + '_errors]');
 
   var errors = [];
+  var update_errormsg = function() {
+                          error_element.textContent = errors.join(' / '); };
+
+  var next_user_fn = function() {
+                       update_errormsg();
+                       make_local_users_config(response,
+                                               user_indexes,
+                                               new_config,
+                                               has_errors,
+                                               cb);
+                     };
 
   if (login.match(/^\s*$/) && name.match(/^\s*$/))
-    next_user_fn();
+    return next_user_fn();
 
   if (!login.match(/^[a-z\.-]+$/))
     errors.push('Login is not in correct format.');
@@ -127,10 +130,9 @@ function make_local_users_config(response,
   if (password1 !== password2)
     errors.push('Passwords do not match.');
 
-  error_element.textContent = errors.join(' / ');
-  if (errors.length > 0) {
+  update_errormsg();
+  if (errors.length > 0)
     has_errors = true;
-  }
 
   user = new_config.local_users[login];
 
@@ -186,6 +188,8 @@ function write_config() {
 
   var do_after_local_users_are_ok =
     function(has_errors) {
+      /* XXX this should update a big banner that no configuration updated
+       * XXX because of errors */
       if (has_errors) { return; }
 
       // make sure that disabled users have password '!'
