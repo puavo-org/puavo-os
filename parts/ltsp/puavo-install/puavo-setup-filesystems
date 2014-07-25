@@ -3,6 +3,7 @@
 # Setup local filesystems for Puavo hosts
 
 require 'fileutils'
+require 'getoptlong'
 require 'highline/import'
 require 'open3'
 
@@ -328,7 +329,45 @@ end
 
 # XXX could be shared with puavo-register
 module UI
+
+  @accept_defaults = false
+
+  def self.help_and_exit
+    puts <<-EOF
+puavo-setup-filesystems [OPTIONS]
+
+-h, --help             show help
+
+    --accept-defaults  accept all default values automatically
+EOF
+  end
+
+  def self.parse_args
+    begin
+      opts = GetoptLong.new(
+                            [ '--help', '-h'     , GetoptLong::NO_ARGUMENT,],
+                            [ '--accept-defaults', GetoptLong::NO_ARGUMENT,],
+                            )
+
+      opts.each do |opt, arg|
+        case opt
+        when '--help'
+          help_and_exit
+          exit(0)
+        when '--accept-defaults'
+          Ui::AcceptDefaults = true
+        end
+      end
+    rescue GetoptLong::InvalidOption => e
+      help_and_exit
+      exit(1)
+    end
+  end
+
   def self.ask_with_default(question, default)
+    if @accept_defaults then
+      return default
+    end
     prompt = "#{ question } [#{ default }] "
     answer = HighLine.ask(prompt) { |q| q.whitespace = nil }
 
@@ -355,6 +394,8 @@ module UI
     HighLine.say(HighLine.new.color(msg, color))
   end
 end
+
+UI::parse_args
 
 hosttype = PuavoFacts::get('puavo_hosttype')
 
