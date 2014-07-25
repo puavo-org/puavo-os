@@ -64,5 +64,10 @@ if [ "$primary_user" != "null" -a "$primary_user" = "${PAM_USER}" ]; then
   exit 0
 fi
 
+# Allow root always.
+if [ "${PAM_USER}" = "root" ]; then
+    exit 0
+fi
+
 # otherwise, tough luck!
 deny
