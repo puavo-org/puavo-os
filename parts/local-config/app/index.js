@@ -2,7 +2,8 @@ var child_process = require('child_process');
 var fs = require('fs');
 var gui = require('nw.gui');
 
-var config_json_path = '/state/etc/puavo/local/config.json';
+var config_json_dir  = '/state/etc/puavo/local';
+var config_json_path = config_json_dir + '/config.json';
 var old_config;
 
 function add_action_button(license_key, errormsg_element, sw_state) {
@@ -748,6 +749,21 @@ function write_config() {
                           new_config,
                           false,
                           do_after_local_users_are_ok);
+}
+
+
+// make sure only admins can use this tool (this is just a gui niceness)
+var access_ok;
+try {
+  fs.readdirSync(config_json_dir);
+  access_ok = true;
+} catch(ex) {
+  access_ok = false;
+};
+
+if (!access_ok) {
+  alert('You do not have permission to run this tool');
+  process.exit(1);
 }
 
 old_config = read_config();
