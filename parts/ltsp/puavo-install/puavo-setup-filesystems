@@ -173,7 +173,8 @@ module QueryDiskInfo
 
       puts "\nPossible disk devices are: #{ disk_devices.join(' ') }"
       chosen_disk_device = UI::ask_with_default('Choose a disk device:',
-					        chosen_disk_device)
+					        chosen_disk_device,
+                                                UI::DiskDevicePrompt)
     end
 
     chosen_disk_device
@@ -191,7 +192,7 @@ module QueryDiskInfo
 
     prompt = %q{Are you sure you want to proceed (write "yes" if this is okay?)}
 
-    UI::ask_with_default(prompt, 'no') == 'yes'
+    UI::ask_with_default(prompt, 'no', UI::ConfirmPartitionsPrompt) == 'yes'
   end
 
   def self.ask_last_sector(device, first_sector)
@@ -203,7 +204,7 @@ module QueryDiskInfo
       tailroom_size =
         UI::ask_size_with_default('How much unpartitioned space '\
                                   'should be left to the end of '\
-                                  'the device:', '0G')
+                                  'the device:', '0G', UI::UnpartitionedSpacePrompt)
       tailroom_bytes = Size::to_bytes(tailroom_size)
       tailroom_sectors = tailroom_bytes / sector_bytes
       if tailroom_sectors > sectors - first_sector
@@ -235,13 +236,13 @@ module QueryDiskInfo
 
         # Let the user set the size of the following filesystems:
         [
-         'imageoverlays',
-        ].each do |fs_name|
+         ['imageoverlays', UI::ImageoverlaySizePrompt],
+        ].each do |fs_name, prompt_key|
           fs = DiskHandler::Filesystems[hosttype][fs_name]
           next if fs.nil?
           fs_size =
             UI::ask_size_with_default("Filesystem size of #{ fs_name }:",
-                                      fs['size'])
+                                      fs['size'], prompt_key)
 
           fs['size'] = fs_size.join()
         end
@@ -284,7 +285,8 @@ module QueryDiskInfo
       puts "\nYou may choose 'fdisk' to partition this disk,"
       puts "or choose 'whole' to use the whole disk.\n"
       chosen_partition = UI::ask_with_default('Choose a partition:',
-					     chosen_partition)
+					     chosen_partition,
+                                              UI::PartitionPrompt)
     end
     chosen_partition
   end
@@ -330,23 +332,42 @@ end
 # XXX could be shared with puavo-register
 module UI
 
+  ConfirmPartitionsPrompt,
+  DiskDevicePrompt,
+  ImageoverlaySizePrompt,
+  PartitionPrompt,
+  UnpartitionedSpacePrompt,
+  = *(1..5)
+
   @accept_defaults = false
+  @defaults = {}
 
   def self.help_and_exit
     puts <<-EOF
 puavo-setup-filesystems [OPTIONS]
 
--h, --help             show help
+-h, --help                        show help
 
-    --accept-defaults  accept all default values automatically
+    --accept-defaults             accept all prompts with default values
+    --default-confirm-partitions  default value for confirm partitions prompt
+    --default-disk-device         default value for disk device prompt
+    --default-imageoverlay-size   default value for imageoverlay size prompt
+    --default-partition           default value for partition prompt
+    --default-unpartitioned-space default value for partitioned space prompt
+
 EOF
   end
 
   def self.parse_args
     begin
       opts = GetoptLong.new(
-                            [ '--help', '-h'     , GetoptLong::NO_ARGUMENT,],
-                            [ '--accept-defaults', GetoptLong::NO_ARGUMENT,],
+                            [ '--help', '-h'                 , GetoptLong::NO_ARGUMENT      ,],
+                            [ '--accept-defaults'            , GetoptLong::NO_ARGUMENT      ,],
+                            [ '--default-confirm-partitions' , GetoptLong::REQUIRED_ARGUMENT,],
+                            [ '--default-disk-device'        , GetoptLong::REQUIRED_ARGUMENT,],
+                            [ '--default-imageoverlay-size'  , GetoptLong::REQUIRED_ARGUMENT,],
+                            [ '--default-partition'          , GetoptLong::REQUIRED_ARGUMENT,],
+                            [ '--default-unpartitioned-space', GetoptLong::REQUIRED_ARGUMENT,],
                             )
 
       opts.each do |opt, arg|
@@ -355,7 +376,17 @@ EOF
           help_and_exit
           exit(0)
         when '--accept-defaults'
-          Ui::AcceptDefaults = true
+          @accept_defaults = true
+        when '--default-confirm-partitions'
+          @defaults[ConfirmPartitionsPrompt] = arg
+        when '--default-disk-device'
+          @defaults[DiskDevicePrompt] = arg
+        when '--default-imageoverlay-size'
+          @defaults[ImageoverlaySizePrompt] = arg
+        when '--default-partition'
+          @defaults[PartitionPrompt] = arg
+        when '--default-unpartitioned-space'
+          @defaults[UnpartitionedSpacePrompt] = arg
         end
       end
     rescue GetoptLong::InvalidOption => e
@@ -364,7 +395,10 @@ EOF
     end
   end
 
-  def self.ask_with_default(question, default)
+  def self.ask_with_default(question, default, prompt_key=nil)
+    if @defaults.has_key?(prompt_key) then
+      default = @defaults[prompt_key]
+    end
     if @accept_defaults then
       return default
     end
@@ -376,9 +410,9 @@ EOF
          : answer.strip
   end
 
-  def self.ask_size_with_default(question, default)
+  def self.ask_size_with_default(question, default, prompt_key=nil)
     while true do
-      str = ask_with_default(question, default)
+      str = ask_with_default(question, default, prompt_key)
       begin
         size = Size::parse(str)
       rescue ArgumentError => e
