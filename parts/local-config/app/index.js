@@ -84,21 +84,16 @@ function check_software_state(cb) {
                          handler);
 }
 
-function configure_system() {
+function configure_system(win) {
   var cmd_args = [ '/usr/sbin/puavo-local-config', '--local-users' ];
 
-  /* XXX this should also work if process is killed via signal...
-     XXX in this case user will not see error messages, though */
-
-  var win = this;
   var handler
     = function(error, stdout, stderr) {
         if (error) {
           alert('Error in applying configuration settings: '
                 + error + ' / ' + stderr);
-          throw(error);
         } else {
-          win.close(true);
+          if (win) { win.close(true); }
         }
       };
 
@@ -765,5 +760,10 @@ if (!old_config) { process.exit(1); }
 
 generate_form();
 
-// XXX process.on('exit', configure_system);
-gui.Window.get().on('close', configure_system);
+var win = gui.Window.get();
+win.on('close', function() { configure_system(win); });
+
+[ 'SIGHUP' , 'SIGINT' , 'SIGQUIT' , 'SIGTERM' ]
+  .forEach(function(eventname) {
+             process.on(eventname, function () { configure_system(null) });
+           });
