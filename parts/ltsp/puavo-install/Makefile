@@ -20,6 +20,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/dbus-1/system-services
 	mkdir -p $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_500G
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-install
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/dbus-1/system.d
@@ -51,6 +52,9 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
 		screen.d/ltspimage-update
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_500G \
+		preseeds/personal_laptop_500G/*
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-install \
 		lib/is-update-available \
