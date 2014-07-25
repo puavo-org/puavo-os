@@ -84,17 +84,12 @@ function check_software_state(cb) {
                          handler);
 }
 
-function configure_system(win) {
+function configure_system_and_exit() {
   var cmd_args = [ '/usr/sbin/puavo-local-config', '--local-users' ];
 
   var handler
     = function(error, stdout, stderr) {
-        if (error) {
-          alert('Error in applying configuration settings: '
-                + error + ' / ' + stderr);
-        } else {
-          if (win) { win.close(true); }
-        }
+        process.exit(error ? 1 : 0);
       };
 
   child_process.execFile('sudo', cmd_args, {}, handler);
@@ -760,10 +755,27 @@ if (!old_config) { process.exit(1); }
 
 generate_form();
 
-var win = gui.Window.get();
-win.on('close', function() { configure_system(win); });
+gui.Window.get().on('close', configure_system_and_exit);
 
-[ 'SIGHUP' , 'SIGINT' , 'SIGQUIT' , 'SIGTERM' ]
+var all_signals = [ 'SIGHUP'
+		  , 'SIGINT'
+		  , 'SIGQUIT'
+		  , 'SIGILL'
+		  , 'SIGABRT'
+		  , 'SIGFPE'
+		  , 'SIGSEGV'
+		  , 'SIGPIPE'
+		  , 'SIGALRM'
+		  , 'SIGTERM'
+		  , 'SIGUSR1'
+		  , 'SIGUSR2'
+		  , 'SIGTSTP'
+		  , 'SIGTTIN'
+		  , 'SIGTTOU' ];
+
+
+// XXX does not always run code in configure_system_and_exit :-(
+all_signals
   .forEach(function(eventname) {
-             process.on(eventname, function () { configure_system(null) });
+             process.on(eventname, configure_system_and_exit);
            });
