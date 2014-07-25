@@ -2,8 +2,12 @@
 
 set -e
 
-if [ "$1" = "--auto" -a -e /state/etc/puavo/local/config.json ]; then
-  exit 0
+if [ "$1" = "--auto" ]; then
+  # if user can not write to /state/etc/puavo/local, this is not for him/her
+  test -w /state/etc/puavo/local || exit 0
+
+  # if configuration file is initialized, do nothing
+  test -r /state/etc/puavo/local/config.json || exit 0
 fi
 
 nw /usr/lib/puavo-local-config-ui/
