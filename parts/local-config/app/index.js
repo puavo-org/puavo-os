@@ -654,7 +654,7 @@ function read_config() {
     if (ex.code === 'ENOENT') {
       // default config in case everything is missing
       config = {
-        allow_logins_for:   [ '*' ],
+        allow_logins_for:   [],
         allow_remoteadmins: false,
         local_users:        {},
       };
