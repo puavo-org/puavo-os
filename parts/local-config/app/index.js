@@ -774,21 +774,20 @@ generate_form();
 gui.Window.get().on('close', configure_system_and_exit);
 
 var all_signals = [ 'SIGHUP'
-		  , 'SIGINT'
-		  , 'SIGQUIT'
-		  , 'SIGILL'
-		  , 'SIGABRT'
-		  , 'SIGFPE'
-		  , 'SIGSEGV'
-		  , 'SIGPIPE'
-		  , 'SIGALRM'
-		  , 'SIGTERM'
-		  , 'SIGUSR1'
-		  , 'SIGUSR2'
-		  , 'SIGTSTP'
-		  , 'SIGTTIN'
-		  , 'SIGTTOU' ];
-
+                  , 'SIGINT'
+                  , 'SIGQUIT'
+                  , 'SIGILL'
+                  , 'SIGABRT'
+                  , 'SIGFPE'
+                  , 'SIGSEGV'
+                  , 'SIGPIPE'
+                  , 'SIGALRM'
+                  , 'SIGTERM'
+                  , 'SIGUSR1'
+                  , 'SIGUSR2'
+                  , 'SIGTSTP'
+                  , 'SIGTTIN'
+                  , 'SIGTTOU' ];
 
 // XXX does not always run code in configure_system_and_exit :-(
 all_signals
