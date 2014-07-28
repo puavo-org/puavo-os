@@ -1,15 +1,22 @@
 class lightdm {
-  include desktop::dconf::puavodesktop
+  include desktop::dconf
   require packages
 
   file {
-    '/etc/dconf/db/puavodesktop.d/lightdm_profile':
+    [ '/etc/dconf/db/lightdm.d'
+    , '/etc/dconf/db/lightdm.d/locks' ]:
+      ensure => directory;
+
+    '/etc/dconf/db/lightdm.d/lightdm_profile':
       content => template('lightdm/dconf_lightdm_profile'),
       notify  => Exec['update dconf'];
 
-    '/etc/dconf/db/puavodesktop.d/locks/lightdm_locks':
+    '/etc/dconf/db/lightdm.d/locks/lightdm_locks':
       content => template('lightdm/dconf_lightdm_locks'),
       notify  => Exec['update dconf'];
+
+    '/etc/dconf/profile/lightdm':
+      content => template('lightdm/dconf_profile_lightdm');
   }
 
   # lightdm also likes language packages
