@@ -57,6 +57,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/lib/udev
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d
+	mkdir -p $(DESTDIR)$(datarootdir)/xgreeters
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
 
 .PHONY : install
@@ -154,6 +155,7 @@ install : installdirs
 		puavo-ltsp-init-nfs \
 		puavo-ltsp-login \
 		puavo-ltspserver-create-guest \
+		puavo-unity-greeter \
 		puavo-update-nm-configurations
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/hooks/ \
@@ -244,6 +246,9 @@ install : installdirs
 
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspguestsshd
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/xgreeters \
+		xgreeters/puavo-unity-greeter.desktop
 
 	$(MAKE) -C restricted-packages install prefix=$(prefix)
 
