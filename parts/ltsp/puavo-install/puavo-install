@@ -42,6 +42,19 @@ preseed_count=$(echo "${preseeds}" | wc -l)
     preseed=$(echo "${preseeds}" | sed -n "${preseed_nr}p")
     puavo_register_args=$(cat "/usr/share/puavo-ltsp-install/preseeds/${preseed}/puavo_register_args")
     puavo_setup_filesystems_args=$(cat "/usr/share/puavo-ltsp-install/preseeds/${preseed}/puavo_setup_filesystems_args")
+
+    gen_puavo_register_args="/usr/share/puavo-ltsp-install/preseeds/${preseed}/gen_puavo_register_args"
+    if [ -x "${gen_puavo_register_args}" ]; then
+        puavo_register_extra_args=$("${gen_puavo_register_args}")
+        puavo_register_args="${puavo_register_args} ${puavo_register_extra_args}"
+    fi
+
+    gen_puavo_setup_filesystems_args="/usr/share/puavo-ltsp-install/preseeds/${preseed}/gen_puavo_setup_filesystems_args"
+    if [ -x "${gen_puavo_setup_filesystems_args}" ]; then
+        puavo_setup_filesystems_extra_args=$("${gen_puavo_setup_filesystems_args}")
+        puavo_setup_filesystems_args="${puavo_setup_filesystems_args} ${puavo_setup_filesystems_extra_args}"
+    fi
+
     break
 done
 
