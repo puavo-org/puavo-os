@@ -6,6 +6,52 @@ var config_json_dir  = '/state/etc/puavo/local';
 var config_json_path = config_json_dir + '/config.json';
 var old_config;
 
+var locale = process.env.LANG.substring(0, 2);
+var mc =
+  function(msg) {
+    translations = {
+      fi: {
+        'Personal computer configuration tool':
+          'Henkilökohtaisen tietokoneen asetustyökalu',
+
+        'Add another user': 'Lisää uusi käyttäjä',
+        'Local users:':     'Paikalliset käyttäjät:',
+        'Login:':           'Käyttäjätunnus:',
+        'Name:':            'Nimi:',
+        'OK?':              'OK?',
+        'Password again:':  'Salasana uudestaan:',
+        'Password:':        'Salasana:',
+        'remove':           'poista',
+
+        'Login is not in correct format.':
+          'Käyttäjätunnus ei ole oikean muotoinen',
+        'Name is not in correct format.':
+          'Nimi ei ole oikean muotoinen',
+        'Passwords do not match.':
+          'Salasanat eivät täsmää.',
+
+        'Allow logins for:':        'Salli kirjautumiset käyttäjätunnuksille:',
+        'All puavo domain users':   'Kaikki puavo-domain käyttäjät',
+        'Some puavo domain users:': 'Jotkut puavo-domain käyttäjät:',
+
+        'Allow login from remote admins:':
+          'Salli kirjautumiset etäylläpitäjille:',
+
+        'INSTALL':         'ASENNA',
+        'Installing...':   'Asennetaan...',
+        'license terms':   'lisenssiehdot',
+        'Uninstalling...': 'Poistetaan...',
+        'UNINSTALL':       'POISTA',
+
+        'You do not have permission to run this tool':
+          'Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön',
+      },
+    }
+
+    return (translations[locale] && translations[locale][msg])
+              || msg;
+  };
+
 function add_action_button(license_key, errormsg_element, sw_state) {
   var button = document.createElement('button');
 
@@ -47,7 +93,7 @@ function add_one_license(parentNode, license_info, sw_state) {
   a.addEventListener('click',
                      function(e) { e.preventDefault();
                                    open_external_link(a); });
-  a.textContent = '(license terms)';
+  a.textContent = mc('license terms');
   tr.appendChild( license_url_td.appendChild(a) );
 
   // create action button and error element
@@ -144,7 +190,7 @@ function create_action_button_with_initial_state(button,
   var state_functions = {
     installing:
       function() {
-        button.textContent = 'Installing...';
+        button.textContent = mc('Installing...');
         button.setAttribute('style', styles.installing_a);
         setup_action(function(e) { e.preventDefault(); });
         flash_interval
@@ -154,7 +200,7 @@ function create_action_button_with_initial_state(button,
       },
     press_install:
       function() {
-        button.textContent = 'INSTALL';
+        button.textContent = mc('INSTALL');
         button.setAttribute('style', styles.install);
         setup_action(function(e) {
                        e.preventDefault();
@@ -167,7 +213,7 @@ function create_action_button_with_initial_state(button,
       },
     press_uninstall:
       function() {
-        button.textContent = 'UNINSTALL';
+        button.textContent = mc('UNINSTALL');
         button.setAttribute('style', styles.uninstall);
         setup_action(function(e) {
                        e.preventDefault();
@@ -180,7 +226,7 @@ function create_action_button_with_initial_state(button,
       },
     uninstalling:
       function() {
-        button.textContent = 'Uninstalling...';
+        button.textContent = mc('Uninstalling...');
         button.setAttribute('style', styles.uninstalling_a);
         setup_action(function(e) { e.preventDefault(); });
         flash_interval
@@ -223,12 +269,12 @@ function generate_allow_logins_input(form) {
 
   make_radiobutton(table,
                    'all_puavo_domain_users',
-                   'All puavo domain users',
+                   mc('All puavo domain users'),
                    all_is_chosen);
 
   var rb_tr = make_radiobutton(table,
                                'some_puavo_domain_users',
-                               'Some puavo domain users:',
+                               mc('Some puavo domain users:'),
                                !all_is_chosen);
 
   var nonlocal_users_allowed_logins = [];
@@ -247,7 +293,7 @@ function generate_allow_logins_input(form) {
                    nonlocal_users_allowed_logins);
 
   var title = document.createElement('div');
-  title.textContent = 'Allow logins for:';
+  title.textContent = mc('Allow logins for:');
   title.appendChild(table);
 
   form.appendChild(title);
@@ -257,7 +303,8 @@ function generate_allow_logins_input(form) {
 
 function generate_allow_remoteadmins_input(form) {
   var div = document.createElement('div');
-  var titletext = document.createTextNode('Allow login from remote admins:');
+  var titletext
+    = document.createTextNode( mc('Allow login from remote admins:') );
   div.appendChild(titletext);
 
   var input = document.createElement('input');
@@ -287,12 +334,12 @@ function generate_form() {
 
 function generate_login_users_input(form) {
   var title = document.createElement('div');
-  var titletext = document.createTextNode('Local users:');
+  var titletext = document.createTextNode( mc('Local users:') );
   title.appendChild(titletext);
 
   var add_button = document.createElement('input');
   add_button.setAttribute('type', 'button');
-  add_button.setAttribute('value', 'Add another user');
+  add_button.setAttribute('value', mc('Add another user'));
   title.appendChild(add_button);
 
   form.appendChild(title);
@@ -347,28 +394,28 @@ function generate_one_user_create_table(parentNode, local_users_list, user_i) {
 
   var old_user_data = local_users_list[user_i];
   var login = old_user_data.login;
-  
+
   var fields = [
     {
-      name:     'Login:',
+      name:     mc('Login:'),
       key:      'login',
       type:     'text',
       value_fn: function(input) { input.setAttribute('value', login) },
     },
     {
-      name:     'Name:',
+      name:     mc('Name:'),
       key:      'name',
       type:     'text',
       value_fn: function(input) {
                   input.setAttribute('value', old_user_data.name) },
     },
     {
-      name: 'Password:',
+      name: mc('Password:'),
       key:  'password1',
       type: 'password',
     },
     {
-      name: 'Password again:',
+      name: mc('Password again:'),
       key:  'password2',
       type: 'password',
     },
@@ -416,7 +463,7 @@ function generate_one_user_create_table(parentNode, local_users_list, user_i) {
                        = function(e) {
                            e.preventDefault();
                            var ok = (old_user_data.login === '')
-                                      || confirm('OK?');
+                                      || confirm( mc('OK?') );
                            if (ok) { parentNode.removeChild(user_div); }
                            write_config();
                          };
@@ -424,7 +471,7 @@ function generate_one_user_create_table(parentNode, local_users_list, user_i) {
                      var remove_td = document.createElement('td');
                      var input = document.createElement('input');
                      input.setAttribute('type', 'button');
-                     input.setAttribute('value', 'remove');
+                     input.setAttribute('value', mc('remove'));
                      input.addEventListener('click', delete_create_user_table);
                      remove_td.appendChild(input);
                      tr.appendChild(remove_td);
@@ -597,13 +644,13 @@ function make_local_users_config(response,
     return next_user_fn();
 
   if (!login.match(/^[a-z\.-]+$/))
-    errors.push('Login is not in correct format.');
+    errors.push( mc('Login is not in correct format.') );
 
   if (!name.match(/^[a-zA-Z\. -]+$/))
-    errors.push('Name is not in correct format.');
+    errors.push( mc('Name is not in correct format.') );
 
   if (password1 !== password2)
-    errors.push('Passwords do not match.');
+    errors.push( mc('Passwords do not match.') );
 
   update_errormsg();
   if (errors.length > 0)
@@ -762,12 +809,18 @@ try {
 };
 
 if (!access_ok) {
-  alert('You do not have permission to run this tool');
+  alert( mc('You do not have permission to run this tool') );
   process.exit(1);
 }
 
 old_config = read_config();
 if (!old_config) { process.exit(1); }
+
+// set document titles
+document.querySelector('title').innerText
+  = mc('Personal computer configuration tool');
+document.querySelector('h1').innerText
+  = mc('Personal computer configuration tool');
 
 generate_form();
 
