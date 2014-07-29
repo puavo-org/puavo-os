@@ -52,6 +52,9 @@ var mc =
       sv: {
         'Personal computer configuration tool':
           'Personliga datorns konfigurationsverktyg',
+          
+        'Configuration needs corrections, no changes are saved.':
+          'Inställningarna kräver korrigering, inga ändringar har sparats',
 
         'Add another user': 'Lägg till en annan användare',
         'Local users:':     'Lokala användarna:',
