@@ -46,6 +46,42 @@ var mc =
         'You do not have permission to run this tool':
           'Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön',
       },
+      sv: {
+        'Personal computer configuration tool':
+          '',
+
+        'Add another user': '',
+        'Local users:':     '',
+        'Login:':           '',
+        'Name:':            '',
+        'OK?':              '',
+        'Password again:':  '',
+        'Password:':        '',
+        'remove':           '',
+
+        'Login is not in correct format.':
+          '',
+        'Name is not in correct format.':
+          '',
+        'Passwords do not match.':
+          '',
+
+        'Allow logins for:':        '',
+        'All puavo domain users':   '',
+        'Some puavo domain users:': '',
+
+        'Allow login from remote admins:':
+          '',
+
+        'INSTALL':         '',
+        'Installing...':   '',
+        'license terms':   '',
+        'Uninstalling...': '',
+        'UNINSTALL':       '',
+
+        'You do not have permission to run this tool':
+          '',
+      },
     }
 
     return (translations[locale] && translations[locale][msg])
