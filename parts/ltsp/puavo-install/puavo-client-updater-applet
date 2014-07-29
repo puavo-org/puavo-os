@@ -100,7 +100,7 @@ class UpdateIndicatorApplet:
         self.log_buffer.insert(self.log_buffer.get_end_iter(),
                                "%s: %s:\n" %
                                datetime.datetime.now(),
-                               tr("Update failed"))
+                               _tr("Update failed"))
         self.log_buffer.insert_with_tags(self.log_buffer.get_end_iter(),
                                          errmsg, self.log_error_tag)
         self.log_view.scroll_mark_onscreen(self.log_buffer.get_insert())
