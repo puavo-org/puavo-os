@@ -1,2 +1,11 @@
 /* styles */
+#error_banner {
+  background-color: lightgrey;
+  color:            red;
+  float:            right;
+  font-size:        x-large;
+  font-weight:      bold;
+  margin:           0.5em;
+}
+
 td.error { color: red; }

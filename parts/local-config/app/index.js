@@ -14,6 +14,9 @@ var mc =
         'Personal computer configuration tool':
           'Henkilökohtaisen tietokoneen asetustyökalu',
 
+        'Configuration needs corrections, no changes are saved.':
+          'Asetukset vaativat korjausta, muutokset eivät tallennu.',
+
         'Add another user': 'Lisää uusi käyttäjä',
         'Local users:':     'Paikalliset käyttäjät:',
         'Login:':           'Käyttäjätunnus:',
@@ -794,9 +797,10 @@ function write_config() {
 
   var do_after_local_users_are_ok =
     function(has_errors) {
-      /* XXX this should update a big banner that no configuration updated
-       * XXX because of errors */
-      if (has_errors) { return; }
+      document.querySelector('div[id=error_banner]').innerText
+        = has_errors
+            ? mc('Configuration needs corrections, no changes are saved.')
+            : '';
 
       // make sure that disabled users have password '!'
       for (user in new_config.local_users) {
