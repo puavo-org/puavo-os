@@ -105,12 +105,9 @@ cleanup_previous_runs() {
 
   # cleanup old ltsp images (and their possible temporary *.tmp files).
   # The ltsp-backup.img is going to go too...
-  if [ -d "$images_dir" -a -e "${images_dir}/ltsp.img" ]; then
-    find "$images_dir" -maxdepth 1 -type f -a \
-      '(' '(' -name '*.img' -o -name '*.img.tmp' ')' \
-	  -a '!' -samefile "${images_dir}/ltsp.img" ')' \
-      -print0 \
-    | xargs -0 rm -f
+  old_images=$("/usr/lib/puavo-ltsp-install/ls-old-images" "${images_dir}")
+  if [ -n "${old_images}" ]; then
+      echo -n "${old_images}" | xargs -r -d'\n' -L1 rm -f
   fi
 
   # cleanup old rdiff files, except those that we want to use right now
