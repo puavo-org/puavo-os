@@ -51,7 +51,7 @@ var mc =
       },
       sv: {
         'Personal computer configuration tool':
-          'Personlig datorn konfigurationsverktyg',
+          'Personliga datorns konfigurationsverktyg',
 
         'Add another user': 'Lägg till en annan användare',
         'Local users:':     'Lokala användarna:',
@@ -65,7 +65,7 @@ var mc =
         'Login is not in correct format.':
           'Inloggning är inte i rätt format.',
         'Name is not in correct format.':
-          'Namn är inte i rätt format.',
+          'Namnet är inte i rätt format.',
         'Passwords do not match.':
           'Lösenorden stämmer inte.',
 
