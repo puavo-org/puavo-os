@@ -51,39 +51,39 @@ var mc =
       },
       sv: {
         'Personal computer configuration tool':
-          '',
+          'Personlig datorn konfigurationsverktyg',
 
-        'Add another user': '',
-        'Local users:':     '',
-        'Login:':           '',
-        'Name:':            '',
-        'OK?':              '',
-        'Password again:':  '',
-        'Password:':        '',
-        'remove':           '',
+        'Add another user': 'Lägg till en annan användare',
+        'Local users:':     'Lokala användarna:',
+        'Login:':           'Inloggning:',
+        'Name:':            'Namn:',
+        'OK?':              'OK?',
+        'Password again:':  'Lösenord igen:',
+        'Password:':        'Lösenord:',
+        'remove':           'ta bort',
 
         'Login is not in correct format.':
-          '',
+          'Inloggning är inte i rätt format.',
         'Name is not in correct format.':
-          '',
+          'Namn är inte i rätt format.',
         'Passwords do not match.':
-          '',
+          'Lösenorden stämmer inte.',
 
-        'Allow logins for:':        '',
-        'All puavo domain users':   '',
-        'Some puavo domain users:': '',
+        'Allow logins for:':        'Tillåt inloggningar för:',
+        'All puavo domain users':   'Alla puavo domänanvändare',
+        'Some puavo domain users:': 'Några puavo domänanvändare:',
 
         'Allow login from remote admins:':
-          '',
+          'Tillåt inloggning för fjärradmins:',
 
-        'INSTALL':         '',
-        'Installing...':   '',
-        'license terms':   '',
-        'Uninstalling...': '',
-        'UNINSTALL':       '',
+        'INSTALL':         'INSTALLERA',
+        'Installing...':   'Installering...',
+        'license terms':   'licensvillkor',
+        'Uninstalling...': 'Avinstallering...',
+        'UNINSTALL':       'AVINSTALLERA',
 
         'You do not have permission to run this tool':
-          '',
+          'Du har inte rättigheter för att köra det här verktyget',
       },
     }
 
