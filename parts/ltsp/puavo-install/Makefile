@@ -76,6 +76,7 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-install \
 		lib/is-update-available \
+		lib/ls-old-imageoverlays \
 		lib/ls-old-images \
 		lib/update-configuration \
 		lib/update-images
