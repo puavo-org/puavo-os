@@ -386,10 +386,6 @@ function generate_one_user_create_table(parentNode, local_users_list, user_i) {
   var user_div = document.createElement('div');
   parentNode.appendChild(user_div);
 
-  var div = document.createElement('div');
-  div.setAttribute('id', 'localuser_' + user_i + '_errors');
-  user_div.appendChild(div);
-
   var table = document.createElement('table');
 
   var old_user_data = local_users_list[user_i];
@@ -475,7 +471,18 @@ function generate_one_user_create_table(parentNode, local_users_list, user_i) {
                      input.addEventListener('click', delete_create_user_table);
                      remove_td.appendChild(input);
                      tr.appendChild(remove_td);
+                   } else {
+                     tr.appendChild( document.createElement('td') );
                    }
+
+		   var error_td = document.createElement('td');
+		   error_td.setAttribute('class', 'error');
+		   error_td.setAttribute('id',
+					 'localuser_'
+					   + user_i
+					   + '_error_'
+					   + fieldinfo.key);
+		   tr.appendChild(error_td);
 
                    table.appendChild(tr);
                  });
@@ -624,15 +631,17 @@ function make_local_users_config(response,
   var password1 = response['localuser_' + i + '_password1'].value;
   var password2 = response['localuser_' + i + '_password2'].value;
 
-  var error_element
-    = document.querySelector('div[id=localuser_' + i + '_errors]');
+  var errors = {
+    login: document.querySelector('td[id=localuser_' + i + '_error_login]'),
+    name:  document.querySelector('td[id=localuser_' + i + '_error_name]'),
+    password1:
+      document.querySelector('td[id=localuser_' + i + '_error_password1]'),
+  };
 
-  var errors = [];
-  var update_errormsg = function() {
-                          error_element.textContent = errors.join(' / '); };
+  for (i in errors)
+    errors[i].innerText = '';
 
   var next_user_fn = function() {
-                       update_errormsg();
                        make_local_users_config(response,
                                                user_indexes,
                                                new_config,
@@ -643,18 +652,20 @@ function make_local_users_config(response,
   if (login.match(/^\s*$/) && name.match(/^\s*$/))
     return next_user_fn();
 
-  if (!login.match(/^[a-z\.-]+$/))
-    errors.push( mc('Login is not in correct format.') );
-
-  if (!name.match(/^[a-zA-Z\. -]+$/))
-    errors.push( mc('Name is not in correct format.') );
-
-  if (password1 !== password2)
-    errors.push( mc('Passwords do not match.') );
-
-  update_errormsg();
-  if (errors.length > 0)
+  if (!login.match(/^[a-z\.-]+$/)) {
+    errors.login.innerText = mc('Login is not in correct format.');
     has_errors = true;
+  }
+
+  if (!name.match(/^[a-zA-Z\. -]+$/)) {
+    errors.name.innerText = mc('Name is not in correct format.');
+    has_errors = true;
+  }
+
+  if (password1 !== password2) {
+    errors.password1.innerText = mc('Passwords do not match.');
+    has_errors = true;
+  }
 
   user = new_config.local_users[login];
 
