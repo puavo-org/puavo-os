@@ -24,7 +24,11 @@
 set -eu
 
 package=$1
-packagedir="/state/restricted-packages/${package}"
+
+upstream_pack_md5sum_file="/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.md5sum"
+upstream_pack_md5sum="$(cat "$upstream_pack_md5sum_file")"
+
+packagedir="/state/restricted-packages/${package}/${upstream_pack_md5sum}"
 installdir="${packagedir}/i"
 prpdir="${packagedir}/PRP"
 [ -d "${installdir}" ] || {

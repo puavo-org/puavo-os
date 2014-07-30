@@ -37,7 +37,11 @@ on_exit()
 }
 
 package=$1
-packagedir="/state/restricted-packages/${package}"
+
+upstream_pack_md5sum_file="/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.md5sum"
+upstream_pack_md5sum="$(cat "$upstream_pack_md5sum_file")"
+
+packagedir="/state/restricted-packages/${package}/${upstream_pack_md5sum}"
 installdir="${packagedir}/i"
 prpdir="${packagedir}/PRP"
 [ -d "${installdir}" ] && exit 0
@@ -55,7 +59,6 @@ trap on_exit EXIT
 mkdir "${prpdir}"
 cp -a -T "/usr/share/puavo-ltsp-client/restricted-packages/${package}" "${prpdir}"
 
-upstream_pack_md5sum=$(cat "${prpdir}/upstream.pack.md5sum")
 echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status || {
     echo "E: md5 checksum of the upstream pack '${upstream_pack}' does not" \
         "match the known checksum ${upstream_pack_md5sum}," \
