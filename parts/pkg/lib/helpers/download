@@ -23,6 +23,8 @@
 
 set -eu
 
+. /usr/lib/puavo-ltsp-client/restricted-packages/common
+
 on_exit()
 {
     local exitval=$?
@@ -37,8 +39,8 @@ package=$1
 
 custom_script="/usr/share/puavo-ltsp-client/restricted-packages/${package}/download"
 
-upstream_pack_md5sum_file="/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.md5sum"
-upstream_pack_md5sum="$(cat "$upstream_pack_md5sum_file")"
+packagedir=$(packagedir "$package")
+upstream_pack_md5sum=$(upstream_pack_md5sum "$package")
 upstream_pack="/state/restricted-packages/${package}/${upstream_pack_md5sum}/upstream.pack"
 
 echo "${upstream_pack_md5sum}  ${upstream_pack}" \

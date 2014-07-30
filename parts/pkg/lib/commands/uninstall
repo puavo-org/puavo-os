@@ -23,6 +23,8 @@
 
 set -eu
 
+. /usr/lib/puavo-ltsp-client/restricted-packages/common
+
 usage_error()
 {
     echo "error $1" >&2
