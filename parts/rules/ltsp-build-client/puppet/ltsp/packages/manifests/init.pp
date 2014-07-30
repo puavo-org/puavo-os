@@ -67,6 +67,7 @@ class packages {
     , 'openssh-client'
     , 'openssh-server'
     , 'policykit-1'
+    , 'pm-utils'
     , 'rng-tools'
     , 'udev'
     , 'vlan' ]:
