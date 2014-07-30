@@ -30,7 +30,7 @@ on_exit()
 
     if [ $exitval -ne 0 ]; then
 	rm -rf "${prpdir}"
-	rm -rf "${installdir}"
+	rm -rf "${installdir}" "${installdir}.tmp"
     fi
 
     exit $exitval
@@ -63,7 +63,12 @@ echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status || {
     exit 1
 }
 
-mkdir "${installdir}"
-[ -x "${prpdir}/unpack" ] && "${prpdir}/unpack" "${upstream_pack}" "${installdir}"
+# We own this directory!
+rm -rf "${installdir}.tmp"
+mkdir "${installdir}.tmp"
+
+[ -x "${prpdir}/unpack" ] && "${prpdir}/unpack" "${upstream_pack}" "${installdir}.tmp"
+
+mv -T "${installdir}.tmp" "${installdir}"
 
 exit 0
