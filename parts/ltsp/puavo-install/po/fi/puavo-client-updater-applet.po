@@ -21,18 +21,28 @@ msgstr "(Päivitetty)"
 msgid "Update log"
 msgstr "Päivitysloki"
 
-#: puavo-client-updater-applet:74 puavo-client-updater-applet:96
+#: puavo-client-updater-applet:73
+msgid ""
+"The old version of the system has been edited by the user. Updating the system "
+"causes all these changes to be lost. Do you want to proceed?"
+msgstr "Vanha versio järjestelmästä sisältää käyttäjän tekemiä muutoksia, jotka tuhoutuvat päivityksessä. Haluatko jatkaa?"
+
+#: puavo-client-updater-applet:81
+msgid "Continue updating?"
+msgstr "Jatka päivittämistä?"
+
+#: puavo-client-updater-applet:84 puavo-client-updater-applet:106
 msgid "Update"
 msgstr "Päivitä"
 
-#: puavo-client-updater-applet:80
+#: puavo-client-updater-applet:90
 msgid "(Reboot required to finish the update)"
 msgstr "(Päivityksen käyttöönotto vaatii uudelleenkäynnistyksen)"
 
-#: puavo-client-updater-applet:86
+#: puavo-client-updater-applet:96
 msgid "(Updating)"
 msgstr "(Päivittyy)"
 
-#: puavo-client-updater-applet:103
+#: puavo-client-updater-applet:112
 msgid "Update failed"
-msgstr ""
+msgstr "Päivitys epäonnistui"

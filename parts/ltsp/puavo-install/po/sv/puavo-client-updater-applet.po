@@ -21,18 +21,29 @@ msgstr "(Aktuell)"
 msgid "Update log"
 msgstr "Uppdateringslogg"
 
-#: puavo-client-updater-applet:74 puavo-client-updater-applet:96
+#: puavo-client-updater-applet:73
+msgid ""
+"The old version of the system has been edited by the user. Updating the "
+"system causes all these changes to be lost. Do you want to proceed?"
+msgstr "Den gamla versionen av systemet innehåller konfigurationer som användaren "
+"har gjort, dessa förstörs i uppdateringen. Vill du fortsätta?"
+
+#: puavo-client-updater-applet:81
+msgid "Continue updating?"
+msgstr "Fortsät uppdateringen"
+
+#: puavo-client-updater-applet:84 puavo-client-updater-applet:106
 msgid "Update"
 msgstr "Uppdatera"
 
-#: puavo-client-updater-applet:80
+#: puavo-client-updater-applet:90
 msgid "(Reboot required to finish the update)"
 msgstr "(Omstart krävs för att avsluta uppdateringen)"
 
-#: puavo-client-updater-applet:86
+#: puavo-client-updater-applet:96
 msgid "(Updating)"
 msgstr "(Uppdatering)"
 
-#: puavo-client-updater-applet:103
+#: puavo-client-updater-applet:112
 msgid "Update failed"
-msgstr ""
+msgstr "Uppdateringen misslyckades"
