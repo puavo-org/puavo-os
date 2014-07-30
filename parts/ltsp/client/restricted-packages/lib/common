@@ -1,0 +1,7 @@
+packagedir() {
+  echo "/state/restricted-packages/$1/$(upstream_pack_md5sum "$1")"
+}
+
+upstream_pack_md5sum() {
+  cat "/usr/share/puavo-ltsp-client/restricted-packages/$1/upstream.pack.md5sum"
+}

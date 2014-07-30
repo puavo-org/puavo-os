@@ -23,6 +23,8 @@
 
 set -eu
 
+. /usr/lib/puavo-ltsp-client/restricted-packages/common
+
 usage_error()
 {
     echo "error $1" >&2
@@ -64,10 +66,7 @@ fi
 package=$1
 shift
 
-upstream_pack_md5sum_file="/usr/share/puavo-ltsp-client/restricted-packages/${package}/upstream.pack.md5sum"
-upstream_pack_md5sum="$(cat "$upstream_pack_md5sum_file")"
-
-packagedir="/state/restricted-packages/${package}/${upstream_pack_md5sum}"
+packagedir=$(packagedir "${package}")
 installdir="${packagedir}/i"
 
 if [ -e "${installdir}" ]; then

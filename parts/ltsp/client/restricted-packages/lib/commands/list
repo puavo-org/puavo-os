@@ -23,6 +23,8 @@
 
 set -eu
 
+. /usr/lib/puavo-ltsp-client/restricted-packages/common
+
 usage_error()
 {
     echo "error $1" >&2
@@ -68,9 +70,10 @@ packages=$(find /usr/share/puavo-ltsp-client/restricted-packages \
 col_width=$(echo "${packages}" | awk '{print length}' | sort -r -n | head -n1)
 
 for package in ${packages}; do
-    if [ -d "/state/restricted-packages/${package}/i" ]; then
+    packagedir=$(packagedir "$package")
+    if [ -d "${packagedir}/i" ]; then
         status="INSTALLED"
-    elif [ -f "/state/restricted-packages/${package}/upstream.pack" ]; then
+    elif [ -f "${packagedir}/upstream.pack" ]; then
         status="DOWNLOADED"
     else
         status="PURGED"
