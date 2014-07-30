@@ -16,6 +16,15 @@ class Updater < DBus::Object
     dbus_signal :UpdateCompleted
     dbus_signal :UpdateStarted
 
+    dbus_method :HasOldOverlays, "out b" do
+      command = "/usr/lib/puavo-ltsp-install/ls-old-imageoverlays /images /imageoverlays"
+      output, errput, status = Open3.capture3(command)
+      if not status.success? then
+        raise "failed to list old overlays: #{errput}"
+      end
+      return !output.empty?
+    end
+
     dbus_method :UpdateImages, "in use_rate_limit:b, in delete_overlays:b, out s" do |use_rate_limit, delete_overlays|
       if not system("/usr/lib/puavo-ltsp-install/is-update-available") then
         return ""

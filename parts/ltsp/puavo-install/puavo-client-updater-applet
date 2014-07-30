@@ -70,6 +70,16 @@ class UpdateIndicatorApplet:
         log_scroll.show()
         self.log_dialog.vbox.pack_start(log_scroll)
 
+        delete_overlays_message = _tr("The old version of the system has been edited "
+                                      "by the user. Updating the system causes "
+                                      "all these changes to be lost. "
+                                      "Do you want to proceed?")
+        self.delete_overlays_dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL,
+                                                        gtk.MESSAGE_QUESTION,
+                                                        gtk.BUTTONS_YES_NO,
+                                                        delete_overlays_message)
+        self.delete_overlays_dialog.set_title(_tr("Continue updating?"))
+
     def on_update_available(self):
         self.update_image_item.get_child().set_text(_tr("Update"))
         self.update_image_item.set_sensitive(True)
@@ -112,6 +122,18 @@ class UpdateIndicatorApplet:
 
     def update_image(self, widget):
         delete_overlays = False
+        if self.update_iface.HasOldOverlays():
+            delete_overlays = self.delete_overlays_dialog.run() == gtk.RESPONSE_YES
+            self.delete_overlays_dialog.hide()
+            if not delete_overlays:
+                # The user has just answered no, so we are not going
+                # to proceed. Returning here is not necessary,
+                # UpdateImages() fails if called with
+                # delete_overlays=False and there exists some
+                # overlays. By returning we avoid generating an
+                # user-visible error which would just confuse the
+                # user.
+                return
         self.update_iface.UpdateImages(False, delete_overlays,
                                        reply_handler=self.handle_update_image_reply,
                                        error_handler=self.handle_update_image_error)
