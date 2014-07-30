@@ -19,6 +19,7 @@ fi
 use_rate_limit=false
 do_image_update=true
 async=false
+delete_overlays=false
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -30,6 +31,7 @@ while [ $# -gt 0 ]; do
             echo
             echo "Options:"
             echo "    --async                      do not wait for a reply"
+            echo "    --delete-overlays            delete attached overlays when deleting old images"
             echo "    --use-rate-limit             limit the image download rate"
             echo "    --no-image-update            do not update images, only configurations"
             echo "    -h, --help                   print help and exit"
@@ -39,6 +41,10 @@ while [ $# -gt 0 ]; do
         --async)
             shift
             async=true
+            ;;
+        --delete-overlays)
+            shift
+            delete_overlays=true
             ;;
         --use-rate-limit)
             shift
@@ -84,5 +90,6 @@ if $do_image_update; then
     dbus-send --system --dest=org.puavo.client.Daemon \
         --reply-timeout=28800000 \
         ${dbus_send_args} \
-        /updater org.puavo.client.update.UpdateImages "boolean:${use_rate_limit}" || true
+        /updater org.puavo.client.update.UpdateImages \
+        "boolean:${use_rate_limit}" "boolean:${delete_overlays}" || true
 fi

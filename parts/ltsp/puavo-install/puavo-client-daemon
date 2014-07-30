@@ -16,12 +16,12 @@ class Updater < DBus::Object
     dbus_signal :UpdateCompleted
     dbus_signal :UpdateStarted
 
-    dbus_method :UpdateImages, "in use_rate_limit:b, out s" do |use_rate_limit|
+    dbus_method :UpdateImages, "in use_rate_limit:b, in delete_overlays:b, out s" do |use_rate_limit, delete_overlays|
       if not system("/usr/lib/puavo-ltsp-install/is-update-available") then
         return ""
       end
       self.UpdateStarted
-      command = "/usr/lib/puavo-ltsp-install/update-images #{use_rate_limit}"
+      command = "/usr/lib/puavo-ltsp-install/update-images #{use_rate_limit} #{delete_overlays}"
       output, errput, status = Open3.capture3(command)
       if not status.success? then
         self.UpdateFailed errput

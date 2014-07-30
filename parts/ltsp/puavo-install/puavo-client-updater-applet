@@ -112,7 +112,8 @@ class UpdateIndicatorApplet:
         print(error, file=sys.stderr)
 
     def update_image(self, widget):
-        self.update_iface.UpdateImages(False,
+        delete_overlays = False
+        self.update_iface.UpdateImages(False, delete_overlays,
                                        reply_handler=self.handle_update_image_reply,
                                        error_handler=self.handle_update_image_error)
 

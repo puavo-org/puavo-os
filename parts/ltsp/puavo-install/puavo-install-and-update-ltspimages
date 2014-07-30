@@ -22,15 +22,15 @@ log() {
 usage() {
   {
     echo "Usage:"
-    echo "  $(basename $0) [--quiet] [--install-from-file path] next_ltsp_image_name"
-    echo "  $(basename $0) [--quiet] [--install-from-nbd path]  next_ltsp_image_name"
-    echo "  $(basename $0) [--quiet] [--rate-limit rate]        next_ltsp_image_name"
+    echo "  $(basename $0) [--quiet] [--delete-overlays] [--install-from-file path] next_ltsp_image_name"
+    echo "  $(basename $0) [--quiet] [--delete-overlays] [--install-from-nbd path]  next_ltsp_image_name"
+    echo "  $(basename $0) [--quiet] [--delete-overlays] [--rate-limit rate]        next_ltsp_image_name"
   } > /dev/stderr
   exit 1
 }
 
 if ! args=$(getopt -n "$0" -o +f:n:r:q \
-		   -l 'install-from-file:,install-from-nbd:,rate-limit:,quiet' \
+		   -l 'install-from-file:,install-from-nbd:,rate-limit:,quiet,delete-overlays' \
 		   -- "$@"); then
   usage
 fi
@@ -39,10 +39,14 @@ image_from_file=""
 image_from_nbd=""
 rate_limit_opts=""
 quiet=false
+delete_overlays=false
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
+    --delete-overlays)
+      delete_overlays=true; shift
+      ;;
     -f|--install-from-file)
       image_from_file="$2"; shift; shift
       ;;
@@ -102,6 +106,16 @@ cleanup_previous_runs() {
   images_dir=$1
   rdiffs_dir=$2
   rdiff_filename=$3
+
+  old_imageoverlays=$("/usr/lib/puavo-ltsp-install/ls-old-imageoverlays" "${images_dir}" /imageoverlays)
+  if [ -n "${old_imageoverlays}" ]; then
+      if ${delete_overlays}; then
+          echo -n "${old_imageoverlays}" | xargs -r -d'\n' -L1 rm -rf
+      else
+          log err "cleanup failed: old images have existing overlays and --delete-overlays was not used" >&2
+          return 1
+      fi
+  fi
 
   # cleanup old ltsp images (and their possible temporary *.tmp files).
   # The ltsp-backup.img is going to go too...

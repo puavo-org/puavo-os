@@ -3,6 +3,7 @@
 set -u
 
 use_rate_limit=$1
+delete_overlays=$2
 
 update_ltsp_image() {
     next_imagename=$(jq -r .preferred_image /state/etc/puavo/device.json) \
@@ -22,10 +23,14 @@ update_ltsp_image() {
         rate_limit=''
     fi
 
+    update_ltspimage_params=""
+
     if [ -n "$rate_limit" ]; then
-        update_ltspimage_params="--rate-limit $rate_limit"
-    else
-        update_ltspimage_params=""
+        update_ltspimage_params="${update_ltspimage_params} --rate-limit $rate_limit"
+    fi
+
+    if $delete_overlays; then
+	update_ltspimage_params="${update_ltspimage_params} --delete-overlays"
     fi
 
     if [ -n "$next_imagename" ]; then
