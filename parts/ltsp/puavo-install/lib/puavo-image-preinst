@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# We should be run by puavo-install-and-update-ltspimages when the
+# new image is downloaded but not yet set as default.
+# Care must be taken to not break old images (because we might still
+# be booted to those), yet we should help the system move forward to this
+# new image.
+#
+# This script will be run for all device types that boot from local
+# hard drive.  You should be able to read the device type from
+# "/etc/puavo/hosttype".  If this script fails, new image will *not* be
+# set as default.
+#
+# This script should be written so that it might be run once or many times,
+# and always should do the right thing.
+#
+# The old image/system should now be mounted at /, and this new image
+# should be mounted at /images/mnt.
+
+set -eu
+
+exit 0

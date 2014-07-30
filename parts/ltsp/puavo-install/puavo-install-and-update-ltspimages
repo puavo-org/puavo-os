@@ -450,6 +450,15 @@ EOF
   read answer
 }
 
+run_image_preinst_hook() {
+  imagepath=$1
+  mkdir -p /images/mnt
+  umount -f /images/mnt 2>/dev/null || true
+  mount "$imagepath" /images/mnt
+  /images/mnt/usr/lib/puavo-ltsp-install/puavo-image-preinst
+  umount /images/mnt || true
+}
+
 # XXX duplicate code with puavo-install-ltspimages
 set_image_as_default_image() {
   images_dir=$1
@@ -458,6 +467,8 @@ set_image_as_default_image() {
 
   backup_ltspimage_path=$images_dir/ltsp-backup.img
   default_ltspimage_path=$images_dir/ltsp.img
+
+  run_image_preinst_hook "$imagepath"
 
   ln -f "$default_ltspimage_path" "$backup_ltspimage_path" 2>/dev/null || true
   ln -f "$imagepath" "${default_ltspimage_path}.tmp"

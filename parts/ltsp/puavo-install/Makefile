@@ -78,6 +78,7 @@ install : installdirs
 		lib/is-update-available \
 		lib/ls-old-imageoverlays \
 		lib/ls-old-images \
+		lib/puavo-image-preinst \
 		lib/update-configuration \
 		lib/update-images
 
