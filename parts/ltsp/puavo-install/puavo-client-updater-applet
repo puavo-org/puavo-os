@@ -98,9 +98,8 @@ class UpdateIndicatorApplet:
         self.indicator.set_attention_icon("update-error")
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
         self.log_buffer.insert(self.log_buffer.get_end_iter(),
-                               "%s: %s:\n" %
-                               datetime.datetime.now(),
-                               _tr("Update failed"))
+                               "%s: %s\n" % (datetime.datetime.now(),
+                                             _tr("Update failed")))
         self.log_buffer.insert_with_tags(self.log_buffer.get_end_iter(),
                                          errmsg, self.log_error_tag)
         self.log_view.scroll_mark_onscreen(self.log_buffer.get_insert())
