@@ -23,7 +23,7 @@
 
 set -eu
 
-. /usr/lib/puavo-ltsp-client/restricted-packages/common
+. "${RESTRICTED_PKG_LIBDIR}/common"
 
 usage_error()
 {
@@ -76,8 +76,8 @@ exitval=0
 
 for package in "$@"; do
     {
-        /usr/lib/puavo-ltsp-client/restricted-packages/helpers/unpack "${package}"
-        /usr/lib/puavo-ltsp-client/restricted-packages/helpers/configure "${package}"
+        "${RESTRICTED_PKG_LIBDIR}/helpers/unpack"    "${package}"
+        "${RESTRICTED_PKG_LIBDIR}/helpers/configure" "${package}"
     } || {
 	exitval=$?
 	echo "E: failed to install package '${package}'" >&2

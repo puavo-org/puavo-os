@@ -23,7 +23,7 @@
 
 set -eu
 
-. /usr/lib/puavo-ltsp-client/restricted-packages/common
+. "${RESTRICTED_PKG_LIBDIR}/common"
 
 usage_error()
 {
@@ -76,8 +76,8 @@ exitval=0
 
 for package in "$@"; do
     {
-	/usr/lib/puavo-ltsp-client/restricted-packages/helpers/unconfigure "${package}"
-	/usr/lib/puavo-ltsp-client/restricted-packages/helpers/uninstall "${package}"
+	"${RESTRICTED_PKG_LIBDIR}/helpers/unconfigure" "${package}"
+	"${RESTRICTED_PKG_LIBDIR}/helpers/uninstall"   "${package}"
     } || {
 	exitval=$?
 	echo "E: failed to uninstall package '${package}'" >&2

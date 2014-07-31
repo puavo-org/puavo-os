@@ -23,7 +23,7 @@
 
 set -eu
 
-. /usr/lib/puavo-ltsp-client/restricted-packages/common
+. "${RESTRICTED_PKG_LIBDIR}/common"
 
 package=$1
 shift
