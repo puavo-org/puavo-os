@@ -21,13 +21,16 @@
 #
 # Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
 
-set -eu
+set -e
 
-PUAVOLTSP_IMAGE_NAME_PATH=${PUAVOLTSP_IMAGE_NAME_PATH:-/etc/ltsp/this_ltspimage_name}
 RESTRICTED_PKG_LIBDIR=${RESTRICTED_PKG_LIBDIR:-/usr/lib/puavo-ltsp-client/restricted-packages}
 RESTRICTED_PKG_SHAREDIR=${RESTRICTED_PKG_SHAREDIR:-/usr/share/puavo-ltsp-client/restricted-packages}
 
-PUAVOLTSP_IMAGE_NAME=$(cat "$PUAVOLTSP_IMAGE_NAME_PATH")
+if [ -z "$PUAVOLTSP_IMAGE_NAME" ]; then
+  PUAVOLTSP_IMAGE_NAME=$(cat /etc/ltsp/this_ltspimage_name)
+fi
+
+set -u
 
 export PUAVOLTSP_IMAGE_NAME RESTRICTED_PKG_LIBDIR RESTRICTED_PKG_SHAREDIR
 
