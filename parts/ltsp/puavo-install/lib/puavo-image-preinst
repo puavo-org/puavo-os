@@ -19,4 +19,6 @@
 
 set -eu
 
+/images/mnt/usr/sbin/puavo-install-grub --only-update-config
+
 exit 0

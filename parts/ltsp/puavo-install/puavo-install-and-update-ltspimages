@@ -468,6 +468,7 @@ set_image_as_default_image() {
   backup_ltspimage_path=$images_dir/ltsp-backup.img
   default_ltspimage_path=$images_dir/ltsp.img
 
+  # this should do at least grub configuration update
   run_image_preinst_hook "$imagepath"
 
   ln -f "$default_ltspimage_path" "$backup_ltspimage_path" 2>/dev/null || true
@@ -497,7 +498,6 @@ update_image() {
 	       -ef "${images_dir}/ltsp.img"; then
     log info "the requested ltsp image is already in place"
   else
-    puavo-install-grub --only-update-config
     set_image_as_default_image "$images_dir" "$next_image"
   fi
 }
