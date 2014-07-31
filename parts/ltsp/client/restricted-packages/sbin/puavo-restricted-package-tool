@@ -24,7 +24,7 @@
 set -eu
 
 RESTRICTED_PKG_LIBDIR=${RESTRICTED_PKG_LIBDIR:-/usr/lib/puavo-ltsp-client/restricted-packages}
-RESTRICTED_PKG_SHAREDIR=${RESTRICTED_PKGDB_PATH:-/usr/share/puavo-ltsp-client/restricted-packages}
+RESTRICTED_PKG_SHAREDIR=${RESTRICTED_PKG_SHAREDIR:-/usr/share/puavo-ltsp-client/restricted-packages}
 
 export RESTRICTED_PKG_LIBDIR RESTRICTED_PKG_SHAREDIR
 
