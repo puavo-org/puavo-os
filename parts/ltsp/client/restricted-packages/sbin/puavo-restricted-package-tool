@@ -23,6 +23,11 @@
 
 set -eu
 
+RESTRICTED_PKG_LIBDIR=${RESTRICTED_PKG_LIBDIR:-/usr/lib/puavo-ltsp-client/restricted-packages}
+RESTRICTED_PKG_SHAREDIR=${RESTRICTED_PKGDB_PATH:-/usr/share/puavo-ltsp-client/restricted-packages}
+
+export RESTRICTED_PKG_LIBDIR RESTRICTED_PKG_SHAREDIR
+
 usage_error()
 {
     echo "error $1" >&2
@@ -75,7 +80,7 @@ shift
 
 case "${command}" in
     download|install|uninstall|purge|list|configure|unconfigure)
-        "/usr/lib/puavo-ltsp-client/restricted-packages/commands/${command}" "$@"
+        "${RESTRICTED_PKG_LIBDIR}/commands/${command}" "$@"
         ;;
     *)
         usage_error "unknown command '${command}'"

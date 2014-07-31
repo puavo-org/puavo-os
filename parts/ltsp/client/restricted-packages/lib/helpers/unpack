@@ -23,7 +23,7 @@
 
 set -eu
 
-. /usr/lib/puavo-ltsp-client/restricted-packages/common
+. "${RESTRICTED_PKG_LIBDIR}/common"
 
 on_exit()
 {
@@ -57,7 +57,7 @@ trap on_exit EXIT
 
 # Copy all packaging stuff from the template directory.
 mkdir "${prpdir}"
-cp -a -T "/usr/share/puavo-ltsp-client/restricted-packages/${package}" "${prpdir}"
+cp -a -T "${RESTRICTED_PKG_SHAREDIR}/${package}" "${prpdir}"
 
 echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status || {
     echo "E: md5 checksum of the upstream pack '${upstream_pack}' does not" \

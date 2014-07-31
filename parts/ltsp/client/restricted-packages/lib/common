@@ -3,5 +3,5 @@ packagedir() {
 }
 
 upstream_pack_md5sum() {
-  cat "/usr/share/puavo-ltsp-client/restricted-packages/$1/upstream.pack.md5sum"
+  cat "${RESTRICTED_PKG_SHAREDIR}/$1/upstream.pack.md5sum"
 }
