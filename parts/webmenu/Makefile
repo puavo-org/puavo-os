@@ -124,7 +124,7 @@ uninstall:
 	rm $(DESTDIR)/usr/share/icons/webmenu.png
 
 test-nw:
-	bin/webmenu-dev --test
+	bin/webmenu --test
 
 test-nw-hidden: assets
 	$(NW) . --test --exit
