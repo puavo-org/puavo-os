@@ -71,7 +71,10 @@ col_width=$(echo "${packages}" | awk '{print length}' | sort -r -n | head -n1)
 
 for package in ${packages}; do
     packagedir=$(packagedir "$package")
-    if [ -d "${packagedir}/i" ]; then
+    installdir="${packagedir}/i"
+    install_marker="${packagedir}/${PUAVOLTSP_IMAGE_NAME}"
+
+    if [ -e "${install_marker}" ]; then
         status="INSTALLED"
     elif [ -f "${packagedir}/upstream.pack" ]; then
         status="DOWNLOADED"

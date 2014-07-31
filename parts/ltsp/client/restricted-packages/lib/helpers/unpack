@@ -43,8 +43,15 @@ package=$1
 upstream_pack_md5sum=$(upstream_pack_md5sum "$package")
 packagedir=$(packagedir "$package")
 installdir="${packagedir}/i"
+install_marker="${packagedir}/${PUAVOLTSP_IMAGE_NAME}"
 prpdir="${packagedir}/PRP"
-[ -d "${installdir}" ] && exit 0
+
+[ -e "${install_marker}" ] && exit 0
+
+if [ -d "${installdir}" ]; then
+  touch "${install_marker}"
+  exit 0
+fi
 
 upstream_pack="${packagedir}/upstream.pack"
 [ ! -f "${upstream_pack}" ] && {
@@ -73,5 +80,7 @@ mkdir "${installdir}.tmp"
 [ -x "${prpdir}/unpack" ] && "${prpdir}/unpack" "${upstream_pack}" "${installdir}.tmp"
 
 mv -T "${installdir}.tmp" "${installdir}"
+
+touch "${install_marker}"
 
 exit 0
