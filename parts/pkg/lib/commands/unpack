@@ -23,15 +23,12 @@
 
 set -eu
 
-RESTRICTED_PKG_LIBDIR=${RESTRICTED_PKG_LIBDIR:-/usr/lib/puavo-ltsp-client/restricted-packages}
-RESTRICTED_PKG_SHAREDIR=${RESTRICTED_PKG_SHAREDIR:-/usr/share/puavo-ltsp-client/restricted-packages}
-
-export RESTRICTED_PKG_LIBDIR RESTRICTED_PKG_SHAREDIR
+. "${RESTRICTED_PKG_LIBDIR}/common"
 
 usage_error()
 {
     echo "error $1" >&2
-    echo "Try '$0 --help' for more information." >&2
+    echo "Try 'puavo-restricted-package-tool unpack --help' for more information." >&2
     return 1
 }
 
@@ -39,22 +36,13 @@ while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
             shift
-            echo "Usage: $0 COMMAND [COMMAND_OPTIONS]"
-            echo "Usage: $0 --help"
+            echo "Usage: puavo-restricted-package-tool unpack PACKAGE [PACKAGE]..."
+            echo "Usage: puavo-restricted-package-tool unpack --help"
             echo
-            echo "Manage restricted packages."
+            echo "Unpack restricted packages."
             echo
             echo "Options:"
             echo "    -h, --help                   print help and exit"
-            echo
-            echo "Commands:"
-            echo "    configure                    configure package"
-            echo "    download                     download upstream pack"
-            echo "    install                      install package"
-            echo "    unconfigure                  unconfigure package"
-            echo "    uninstall                    uninstall package"
-            echo "    purge                        purge the upstream pack"
-            echo "    list                         list all packages and their status"
             echo
             exit 0
             ;;
@@ -72,18 +60,18 @@ while [ $# -gt 0 ]; do
 done
 
 if [ $# -lt 1 ]; then
-    usage_error "invalid number of arguments ($#), at least 1"
+    usage_error "invalid number of arguments ($#), expected at least 1"
 fi
 
-command=$1
-shift
+exitval=0
 
-case "${command}" in
-    download|unpack|install|uninstall|purge|list|configure|unconfigure)
-        "${RESTRICTED_PKG_LIBDIR}/commands/${command}" "$@"
-        ;;
-    *)
-        usage_error "unknown command '${command}'"
-esac
+for package in "$@"; do
+    "${RESTRICTED_PKG_LIBDIR}/helpers/unpack" "${package}" || {
+        exitval=$?
+        echo "E: failed to unpack package '${package}'" >&2
+        # Continue until we have tried to unpack all given packages
+        # and then fail.
+    }
+done
 
-exit 0
+exit $exitval
