@@ -62,6 +62,7 @@ class packages {
     , 'bridge-utils'
     , 'gdebi-core'
     , 'grub-pc'
+    , 'laptop-mode-tools'
     , 'lvm2'
     , 'nfs-common'
     , 'openssh-client'
