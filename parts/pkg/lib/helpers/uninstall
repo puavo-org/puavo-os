@@ -30,9 +30,19 @@ shift
 
 packagedir=$(packagedir "$package")
 installdir="${packagedir}/i"
+install_marker="${packagedir}/${PUAVOLTSP_IMAGE_NAME}"
 prpdir="${packagedir}/PRP"
 
-rm -rf "${prpdir}"
-rm -rf "${installdir}"
+rm -f "${install_marker}"
+
+for img in ${packagedir}/*.img; do
+  if [ ! -e "$img" ]; then
+    # last install marker removed, garbage collect this
+    rm -rf "${prpdir}"
+    rm -rf "${installdir}"
+    break
+  fi
+done
+
 
 exit 0
