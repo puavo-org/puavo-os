@@ -454,7 +454,7 @@ run_image_preinst_hook() {
   imagepath=$1
   mkdir -p /images/mnt
   umount -f /images/mnt 2>/dev/null || true
-  mount "$imagepath" /images/mnt
+  mount -o ro "$imagepath" /images/mnt
   /images/mnt/usr/lib/puavo-ltsp-install/puavo-image-preinst
   umount /images/mnt || true
 }
