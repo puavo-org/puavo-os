@@ -44,6 +44,7 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LTSP_FATCLIENT       True
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      laptop-mode
       ltspguestssh
       ltspssh
       network-manager
@@ -81,7 +82,7 @@ case "$PUAVO_HOSTTYPE" in
     # the "ondemand" service makes the machines very unstable, so it should
     # be enabled with caution and perhaps on machine type basis.
 
-    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services $keep_system_services ondemand"
+    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services $keep_system_services ondemand laptop-mode"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
     set_lts_var RM_SYSTEM_SERVICES "
@@ -117,6 +118,7 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
       eno
+      laptop-mode
       network-manager
       nwfermi
       ondemand
@@ -140,6 +142,7 @@ case "$PUAVO_HOSTTYPE" in
       eno
       fluentd
       gssd
+      laptop-mode
       ltspguestssh
       ltspssh
       network-manager
@@ -169,6 +172,7 @@ case "$PUAVO_HOSTTYPE" in
       eno
       fluentd
       gssd
+      laptop-mode
       lightdm
       ltspguestssh
       ltspssh
@@ -206,6 +210,7 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LTSP_FATCLIENT       True
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      laptop-mode
       lightdm
       ltspguestssh
       ltspssh
