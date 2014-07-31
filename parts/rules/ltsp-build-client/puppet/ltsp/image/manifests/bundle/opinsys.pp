@@ -11,6 +11,7 @@ class image::bundle::opinsys {
 	  kaffeine,
 	  keyutils,
 	  libreoffice,
+	  ltspimage_java::tools,
 	  ltspimage_kdump,
 	  ltspimage_opinsys_desktop,
 	  ltspimage_plymouth_theme,
