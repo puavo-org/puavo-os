@@ -79,6 +79,7 @@ class packages {
     , 'lightdm'
     , 'lightdm-gtk-greeter'
     , 'network-manager-openvpn-gnome'
+    , 'notify-osd'
     , 'onboard'
     , 'overlay-scrollbar'               # needed by accessibility stuff
     , 'ubuntu-standard'
