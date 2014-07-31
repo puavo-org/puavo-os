@@ -42,6 +42,10 @@ nw-gyp:
 
 npm-install:
 	npm install
+	# WTF! execSync is as a dependency in package.json but it does not get
+	# installed with plain "npm install". Workaround it by installing it manually.
+	# XXX: remove this asap
+	npm install execSync
 	make nw-gyp
 
 assets: i18n browserify browserify-test stylus node-coffee
