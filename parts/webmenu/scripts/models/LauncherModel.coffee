@@ -22,6 +22,7 @@ class LauncherModel extends AbstractItemModel
         @set "clicks", 0
         delete localStorage[@_lsID()]
 
-    isOk: -> !! @get("command")
+    isOk: ->
+        super() and !!@get("command")
 
 module.exports = LauncherModel

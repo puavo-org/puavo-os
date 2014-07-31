@@ -6,7 +6,8 @@ LauncherModel = require "./LauncherModel.coffee"
 
 class WebItemModel extends LauncherModel
 
-    isOk: -> !! @get("url")
+    isOk: ->
+        super() and !!@get("url")
 
 class DesktopItemModel extends LauncherModel
 
@@ -34,6 +35,7 @@ class MenuModel extends AbstractItemModel
         # attributes
         super _.omit(opts, "items"), allItems
 
-    isOk: -> @items and @items.size() > 0
+    isOk: ->
+        super() and @items and @items.size() > 0 
 
 module.exports = MenuModel

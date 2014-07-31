@@ -4,6 +4,7 @@
 path = require "path"
 dotdesktop = require "./dotdesktop"
 fs = require "fs"
+execSync = require "execSync"
 
 findOsIcon = (iconSearchPaths, id, fallbackIcon) ->
   try
@@ -38,6 +39,15 @@ normalizeIconPath = (p) ->
 
 
 injectDesktopData = (menu, desktopFileSearchPaths, locale, iconSearchPaths, fallbackIcon, hostType) ->
+
+  if menu.type is "custom"
+    # Can string or array
+    command = [].concat(menu.command)[0]
+
+    code = execSync.run("which #{ command }")
+    if code isnt 0
+        menu.broken = true
+        console.warn("WARNING: Custom command broken: " + command)
 
   # Operating system icon
   if menu.osIcon

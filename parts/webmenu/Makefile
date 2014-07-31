@@ -38,6 +38,7 @@ nw-gyp:
 	$(call nw-build,ffi/node_modules/ref)
 	$(call nw-build,ffi)
 	$(call nw-build,posix)
+	$(call nw-build,execSync)
 
 npm-install:
 	npm install
