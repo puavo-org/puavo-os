@@ -71,15 +71,18 @@ case "$hosttype" in
     mkdir -p /state/etc
     cp -aT /etc/puavo /state/etc/puavo
 
+    # Grub needs to be installed before images, because grub
+    # configuration is updated during image installation by
+    # puavo-image-preinst.
+    echo -n "Doing grub installation: "
+    puavo-install-grub
+    sync
+
     # install from nbd, the ltsp image must contain its name in this path
     ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
 
     puavo-install-and-update-ltspimages --install-from-nbd /dev/nbd0 \
 					"$ltspimage_name"
-
-    echo -n "Doing grub installation: "
-    puavo-install-grub
-    sync
 
     echo "Updating $hosttype configuration..."
     if puavo-update-client; then
