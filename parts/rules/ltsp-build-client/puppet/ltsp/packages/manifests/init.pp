@@ -370,7 +370,6 @@ class packages {
     , 'avr-libc'
     , 'basic256'
     , 'eclipse'
-    , 'emacs23'
     , 'emacs24'
     , 'eric'
     , 'eric-api-files'
