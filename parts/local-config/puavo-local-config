@@ -176,6 +176,12 @@ end
 
 def configure_grub_default()
   kernel_cmdline = IO.read('/proc/cmdline')
+
+  if kernel_cmdline.match(%r{root=/dev/nbd}) then
+    # booted from nbd, nothing to do
+    return
+  end
+
   match = kernel_cmdline.match(/loop=(.*?)\.img/)
   raise 'Could not figure out loop= device' unless match
   loop_img = "#{ match[1] }.img"
