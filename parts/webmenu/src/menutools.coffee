@@ -37,24 +37,21 @@ normalizeIconPath = (p) ->
   return "file://" + path.join(__dirname, "..", p)
 
 
-injectDesktopData = (menu, sources, locale, iconSearchPaths, fallbackIcon, hostType) ->
+injectDesktopData = (menu, desktopFileSearchPaths, locale, iconSearchPaths, fallbackIcon, hostType) ->
 
-  sources.forEach (desktopDir) ->
+  # Operating system icon
+  if menu.osIcon
+    menu.osIconPath = findOsIcon(iconSearchPaths, menu.osIcon, fallbackIcon)
 
+  if menu.inactiveByDeviceType and menu.inactiveByDeviceType is hostType
+    menu.status = "inactive"
 
-    # Operating system icon
-    if menu.osIcon
-      menu.osIconPath = findOsIcon(iconSearchPaths, menu.osIcon, fallbackIcon)
+  if menu.type is "desktop"
+    if not menu.source
+      throw new Error("'desktop' item in menu.json item is missing " +
+        "'source' attribute: #{ JSON.stringify(menu) }")
 
-
-    if menu.inactiveByDeviceType and menu.inactiveByDeviceType is hostType
-      menu.status = "inactive"
-
-    if menu.type is "desktop"
-      if not menu.source
-        throw new Error("'desktop' item in menu.json item is missing " +
-          "'source' attribute: #{ JSON.stringify(menu) }")
-
+    desktopFileSearchPaths.forEach (desktopDir) ->
       filePath = desktopDir + "/#{ menu.source }.desktop"
       try
         desktopEntry = dotdesktop.parseFileSync(filePath, locale)
@@ -69,15 +66,13 @@ injectDesktopData = (menu, sources, locale, iconSearchPaths, fallbackIcon, hostT
       menu.upstreamName ?= desktopEntry.upstreamName
       menu.osIconPath = normalizeIconPath(menu.osIconPath)
 
-    else if menu.type is "menu"
-      for menu_ in menu.items
-        injectDesktopData(menu_, sources, locale, iconSearchPaths, fallbackIcon, hostType)
-
-
     if not menu.name
-      console.error "Cannot find name for menu entry", menu
-      console.error "Maybe just add it manually?"
-      process.exit(1)
+      console.error "WARNING: Cannot find name for .desktop entry: " + menu.source
+      menu.broken = true
+
+  if menu.type is "menu"
+    for menu_ in menu.items
+      injectDesktopData(menu_, desktopFileSearchPaths, locale, iconSearchPaths, fallbackIcon, hostType)
 
 module.exports =
   injectDesktopData: injectDesktopData
