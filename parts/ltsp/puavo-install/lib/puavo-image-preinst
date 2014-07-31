@@ -19,6 +19,48 @@
 
 set -eu
 
-/images/mnt/usr/sbin/puavo-install-grub --only-update-config
+cleanup() {
+  test -d "$tmpdir" && rm -rf "$tmpdir"
+}
 
-exit 0
+statuscode=0
+tmpdir=$(mktemp -d /tmp/puavo-image-preinst.XXXXXXXXXX)
+
+trap cleanup 0 INT TERM
+
+
+new_mnt=/images/mnt
+
+new_image_prpt() {
+  env RESTRICTED_PKG_LIBDIR="${new_mnt}/usr/lib/puavo-ltsp-client/restricted-packages" \
+      RESTRICTED_PKG_SHAREDIR="${new_mnt}/usr/share/puavo-ltsp-client/restricted-packages" \
+      "${new_mnt}/usr/sbin/puavo-restricted-package-tool" "$@"
+}
+
+old_image_prpt() {
+  /usr/sbin/puavo-restricted-package-tool "$@"
+}
+
+new_image_prpt list | sort > "${tmpdir}/new_image_restricted_pkgs"
+old_image_prpt list | sort > "${tmpdir}/old_image_restricted_pkgs"
+
+packages=$(join "${tmpdir}/old_image_restricted_pkgs" \
+                "${tmpdir}/new_image_restricted_pkgs" \
+             | awk '$3 == "INSTALLED" && $5 != "INSTALLED" { print $1 }')
+
+# XXX log stuff so we can know what happens
+
+for package in $packages; do
+  # XXX should try to do this only if license has not changed
+  {
+    new_image_prpt download $package \
+      && new_image_prpt unpack $package
+  } || statuscode=1
+done
+
+
+# update grub configuration from the new image
+"${new_mnt}/usr/sbin/puavo-install-grub" --only-update-config
+
+
+exit $statuscode
