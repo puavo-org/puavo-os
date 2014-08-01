@@ -36,6 +36,6 @@ class MenuModel extends AbstractItemModel
         super _.omit(opts, "items"), allItems
 
     isOk: ->
-        super() and @items and @items.size() > 0 
+        super() and @items and @items.size() > 0
 
 module.exports = MenuModel

@@ -28,6 +28,8 @@ class Breadcrumbs extends ViewMaster
             e.preventDefault()
             cid = $(e.target).data("cid")
             menu = @model.allItems.get(cid)
+            if not menu
+                throw new Error("allItems collection has no MenuItem with cid #{ cid }")
             @bubble "open-menu", menu, this
 
     context: ->

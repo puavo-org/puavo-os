@@ -42,11 +42,17 @@ normalizeIconPath = (p) ->
 injectDesktopData = (menu, desktopFileSearchPaths, locale, iconSearchPaths, fallbackIcon, hostType) ->
 
   if menu.type is "custom"
-    # Can string or array
-    command = [].concat(menu.command)[0]
-    command = parseExec(command)[0]
 
-    code = execSync.run("which '#{ command }' > /dev/null 2>&1")
+    if Array.isArray(menu.command)
+      command = menu.command
+    else if typeof menu.command is "string"
+      command = parseExec(menu.command)
+    else
+      throw new Error("Bad command in: #{ JSON.stringify(menu) }")
+
+    menu.id = "custom:#{command.join(" ")}"
+
+    code = execSync.run("which '#{ command[0] }' > /dev/null 2>&1")
     if code isnt 0
         menu.broken = true
         console.warn("WARNING: Custom command broken: " + command)
@@ -70,7 +76,7 @@ injectDesktopData = (menu, desktopFileSearchPaths, locale, iconSearchPaths, fall
       catch err
         return
 
-      menu.id ?= menu.source
+      menu.id = "desktop:#{menu.source}"
       menu.name ?= desktopEntry.name
       menu.description ?= desktopEntry.description
       menu.command ?= desktopEntry.command
@@ -83,6 +89,8 @@ injectDesktopData = (menu, desktopFileSearchPaths, locale, iconSearchPaths, fall
       menu.broken = true
 
   if menu.type is "menu"
+    # XXX
+    menu.id = "menu:#{JSON.stringify(menu.name)}"
     for menu_ in menu.items
       injectDesktopData(menu_, desktopFileSearchPaths, locale, iconSearchPaths, fallbackIcon, hostType)
 
