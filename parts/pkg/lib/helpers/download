@@ -60,7 +60,6 @@ if [ -x "${custom_script}" ]; then
 else
     wget \
         --no-use-server-timestamps \
-        --no-verbose \
         --no-check-certificate \
         --no-cookies \
         --input-file "${url_file}" \
