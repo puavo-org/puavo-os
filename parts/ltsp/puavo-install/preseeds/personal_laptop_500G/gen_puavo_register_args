@@ -18,4 +18,20 @@ while true; do
     break
 done
 
-echo "--primary_user_uid ${primary_user}"
+while true; do
+    read -p "Hostname: " puavo_hostname
+
+    echo "${puavo_hostname}" | egrep -q '\s' && {
+        echo "E: hostname name cannot contain whitespace" >&2
+        continue
+    }
+
+    [ -z "${puavo_hostname}" ] && {
+        echo "E: hostname name cannot be an empty string" >&2
+        continue
+    }
+
+    break
+done
+
+echo "--primary_user_uid ${primary_user} --puavoHostname ${puavo_hostname}"
