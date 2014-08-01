@@ -12,25 +12,34 @@ function inet_aton () {
 }
 
 LDAP_MASTER=$(cat /etc/puavo/ldap/master)
-LDAP_SLAVE=$(cat /etc/puavo/ldap/slave)
+
+if [ -f "/etc/puavo/ldap/slave" ]; then
+  LDAP_SLAVE=$(cat /etc/puavo/ldap/slave)
+fi
+
 KERBEROS_MASTER=$(cat /etc/puavo/kerberos/master)
+TOPDOMAIN=$(cat /etc/puavo/topdomain)
+HOSTTYPE=$(cat /etc/puavo/hosttype)
+PARAMS=""
 
 if [ -n "$LDAP_MASTER" ]; then
-  TMP_LDAP_MASTER="string:${LDAP_MASTER}"
+  PARAMS+="string:${LDAP_MASTER} "
 fi
 
 if [ -n "$LDAP_SLAVE" ]; then
-  TMP_LDAP_SLAVE="string:${LDAP_SLAVE}"
+  PARAMS+="string:${LDAP_SLAVE} "
 fi
 
 if [ -n "$KERBEROS_MASTER" ]; then
-  TMP_KERBEROS_MASTER="string:${KERBEROS_MASTER}"
+  PARAMS+="string:${KERBEROS_MASTER} "
+fi
+
+if [ -n "$TOPDOMAIN" -a "$HOSTTYPE" = "laptop" ]; then
+  PARAMS+="string:images.${TOPDOMAIN} string:imageproxy.${TOPDOMAIN}"
 fi
 
 dbus-send --system --dest=org.puavo.VPN.dnsmasq \
   /uk/org/thekelleys/dnsmasq \
   uk.org.thekelleys.SetServers \
   uint32:$(inet_aton ${route_vpn_gateway}) \
-  "${TMP_LDAP_MASTER}" \
-  "${TMP_LDAP_SLAVE}" \
-  "${TMP_KERBEROS_MASTER}"
+  ${PARAMS}
