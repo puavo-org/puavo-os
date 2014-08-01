@@ -3,8 +3,6 @@ description "puavo-krb5-kdc"
 start on puavo-slapd-started
 stop on puavo-slapd-stopped
 
-expect fork
-
 respawn
-exec /usr/sbin/krb5kdc
+exec /usr/sbin/krb5kdc -n
 post-stop exec sleep 10
