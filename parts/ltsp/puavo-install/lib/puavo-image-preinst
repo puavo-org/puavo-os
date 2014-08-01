@@ -84,14 +84,19 @@ packages=$(join "${tmpdir}/old_image_restricted_pkgs" \
                 "${tmpdir}/new_image_restricted_pkgs" \
              | awk '$3 == "INSTALLED" && $5 != "INSTALLED" { print $1 }')
 
-# XXX log stuff so we can know what happens
-
 for package in $packages; do
-  # XXX should try to do this only if license has not changed
-  {
-    new_image_prpt download $package \
-      && new_image_prpt unpack $package
-  } || statuscode=1
+  if [ "$(old_image_prpt license "$package")" \
+         = "$(new_image_prpt license "$package")" ]; then
+    # licenses match in old and new packages, let's do an automatic update
+    {
+      new_image_prpt download $package \
+	&& new_image_prpt unpack $package
+      # XXX log success
+    } || {
+      # XXX log errors
+      statuscode=1
+    }
+  fi
 done
 
 
