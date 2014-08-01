@@ -13,3 +13,8 @@ update-alternatives \
     "${installdir}/bin/javaws" 1100 \
     --slave /usr/share/man/man1/javaws.1.gz javaws.1.gz \
     "${installdir}/man/man1/javaws.1"
+
+if [ -x /opt/java/opinsys-add-cert ]; then
+    /opt/java/opinsys-add-cert "${installdir}"
+    /opt/java/opinsys-create-signed-ruleset
+fi
