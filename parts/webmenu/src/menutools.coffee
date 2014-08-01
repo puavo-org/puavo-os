@@ -5,6 +5,7 @@ path = require "path"
 dotdesktop = require "./dotdesktop"
 fs = require "fs"
 execSync = require "execSync"
+parseExec = require "./parseExec"
 
 findOsIcon = (iconSearchPaths, id, fallbackIcon) ->
   try
@@ -43,6 +44,7 @@ injectDesktopData = (menu, desktopFileSearchPaths, locale, iconSearchPaths, fall
   if menu.type is "custom"
     # Can string or array
     command = [].concat(menu.command)[0]
+    command = parseExec(command)[0]
 
     code = execSync.run("which #{ command }")
     if code isnt 0
