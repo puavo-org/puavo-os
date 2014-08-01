@@ -43,13 +43,12 @@ package=$1
 upstream_pack_md5sum=$(upstream_pack_md5sum "$package")
 packagedir=$(packagedir "$package")
 installdir="${packagedir}/i"
-install_marker="${packagedir}/${PUAVOLTSP_IMAGE_NAME}"
 prpdir="${packagedir}/PRP"
 
-[ -e "${install_marker}" ] && exit 0
+has_install_link "$package" && exit 0
 
 if [ -d "${installdir}" ]; then
-  touch "${install_marker}"
+  make_install_link "$packagedir" "$package"
   exit 0
 fi
 
@@ -81,6 +80,6 @@ mkdir "${installdir}.tmp"
 
 mv -T "${installdir}.tmp" "${installdir}"
 
-touch "${install_marker}"
+make_install_link "$packagedir" "$package"
 
 exit 0
