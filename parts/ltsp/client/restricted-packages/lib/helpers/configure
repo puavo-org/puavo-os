@@ -29,10 +29,9 @@ package=$1
 
 packagedir=$(packagedir "${package}")
 installdir="${packagedir}/i"
-install_marker="${packagedir}/${PUAVOLTSP_IMAGE_NAME}"
 prpdir="${packagedir}/PRP"
 
-[ -e "${install_marker}" ] || {
+has_install_link "$package" || {
     echo "E: failed to configure package '${package}' because it is not installed" >&2
     exit 1
 }

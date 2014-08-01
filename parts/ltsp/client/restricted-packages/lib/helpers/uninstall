@@ -30,16 +30,14 @@ shift
 
 packagedir=$(packagedir "$package")
 installdir="${packagedir}/i"
-install_marker="${packagedir}/${PUAVOLTSP_IMAGE_NAME}"
 prpdir="${packagedir}/PRP"
 
-rm -f "${install_marker}"
+remove_install_link "$package"
 
-for img in ${packagedir}/*.img; do
-  if [ ! -e "$img" ]; then
-    # last install marker removed, garbage collect this
-    rm -rf "${prpdir}"
-    rm -rf "${installdir}"
+for imglink in $(packagebase "$package")/*.img; do
+  if [ ! -h "$imglink" ]; then
+    # last install link removed, garbage collect this
+    rm -rf "${installdir}" "${prpdir}"
     break
   fi
 done
