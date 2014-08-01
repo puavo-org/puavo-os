@@ -54,12 +54,15 @@ while [ $# -gt 0 ]; do
             echo "    -h, --help                   print help and exit"
             echo
             echo "Commands:"
-            echo "    configure                    configure package"
+            echo "    list                         list all packages and their status"
+            echo "    license                      show package license"
             echo "    download                     download upstream pack"
             echo "    install                      install package"
+            echo "    configure                    configure package"
             echo "    unconfigure                  unconfigure package"
             echo "    uninstall                    uninstall package"
-            echo "    list                         list all packages and their status"
+            echo "    unpack                       unpack package"
+
             echo
             exit 0
             ;;
@@ -84,7 +87,7 @@ command=$1
 shift
 
 case "${command}" in
-    download|unpack|install|uninstall|list|configure|unconfigure)
+    list|license|download|install|configure|unconfigure|uninstall|unpack)
         "${RESTRICTED_PKG_LIBDIR}/commands/${command}" "$@"
         ;;
     *)
