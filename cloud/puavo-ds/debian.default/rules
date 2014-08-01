@@ -37,6 +37,10 @@ override_dh_auto_build:
 	gem1.9.3 install -i $(GEM_HOME) bundler --version '1.2.4'
 	dh_auto_build --
 
+override_dh_installinit:
+	dh_installinit --name puavo-krb5-kdc
+	dh_installinit
+
 PACKAGE = $(shell dpkg-parsechangelog | sed -ne 's/^Source: //p')
 SRC_VERSION := $(shell dpkg-parsechangelog | sed -ne 's/^Version: \(\([0-9]\+\):\)\?\(.*\)-.*/\3/p')
 TARBALL = $(PACKAGE)_$(SRC_VERSION).orig.tar.gz
