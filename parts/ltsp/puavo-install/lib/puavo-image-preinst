@@ -98,9 +98,11 @@ for package in $packages; do
     {
       new_image_prpt download $package \
 	&& new_image_prpt unpack $package
-      # XXX log success
+      logger -t puavo-image-preinst -p err \
+             "error in updating restricted-package '$package'"
     } || {
-      # XXX log errors
+      logger -t puavo-image-preinst \
+             "updated restricted-package '$package'"
       statuscode=1
     }
   fi
