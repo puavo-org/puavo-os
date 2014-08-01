@@ -46,7 +46,7 @@ injectDesktopData = (menu, desktopFileSearchPaths, locale, iconSearchPaths, fall
     command = [].concat(menu.command)[0]
     command = parseExec(command)[0]
 
-    code = execSync.run("which #{ command }")
+    code = execSync.run("which '#{ command }' > /dev/null 2>&1")
     if code isnt 0
         menu.broken = true
         console.warn("WARNING: Custom command broken: " + command)
