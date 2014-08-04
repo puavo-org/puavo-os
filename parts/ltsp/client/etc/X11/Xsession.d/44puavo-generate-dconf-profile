@@ -1,0 +1,27 @@
+# Generate dconf profile based on locale and host type.
+#
+
+tmp_dconf_profile=$(mktemp /tmp/puavo-dconf-$USER.XXXXXXXXXX) || return 1
+
+{
+  echo "user-db:user"
+
+  if [ -n "$LANGUAGE" ]; then
+    echo "system-db:locale-$LANGUAGE"
+  else
+    echo "system-db:locale-en"
+  fi
+
+  PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+  case "$PUAVO_HOSTTYPE" in
+    laptop)
+      echo "system-db:laptop"
+      ;;
+  esac
+
+  echo "system-db:puavodesktop"
+} > $tmp_dconf_profile || return 1
+
+DCONF_PROFILE=$tmp_dconf_profile
+
+export DCONF_PROFILE
