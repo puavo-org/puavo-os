@@ -1,4 +1,5 @@
 PUAVO_HOSTTYPE=$(/bin/cat /etc/puavo/hosttype)
+PERSONALLY_ADMINISTERED=$(jq -r .personally_administered /etc/puavo/device.json)
 
 set_lts_var PUAVO_HOSTTYPE "$PUAVO_HOSTTYPE"
 
@@ -27,6 +28,13 @@ puavo_common_unneeded_services='
   update-notifier
   winbind
 '
+
+# On personally administered devices we do not want to run fluentd and other
+# reporting services as the data is not comparable to other devices.
+
+if [ "${PERSONALLY_ADMINISTERED}" = "true" ]; then
+  puavo_common_unneeded_services="${puavo_common_unneeded_services} fluentd puavo-hw-log"
+fi
 
 puavo_nfs_services='gssd idmapd portmap rpcbind-boot'
 puavo_tty_services='tty3 tty4 tty5 tty6'
