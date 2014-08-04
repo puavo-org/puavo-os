@@ -11,9 +11,6 @@ class desktop::dconf::puavodesktop {
       "/etc/dconf/db/locale-${lang}.d/${lang}":
         content => template("desktop/dconf_by_locale/${lang}"),
         notify  => Exec['update dconf'];
-
-      "/etc/dconf/profile/user-${lang}":
-        content => template("desktop/dconf_profile_user-${lang}");
     }
   }
 
@@ -25,7 +22,7 @@ class desktop::dconf::puavodesktop {
       ensure => directory;
 
     '/etc/dconf/profile/user':
-      content => template('desktop/dconf_profile_user-en');
+      content => template('desktop/dconf_profile_user');
 
     '/etc/environment':
       content => template('desktop/environment');
