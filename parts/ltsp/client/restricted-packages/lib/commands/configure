@@ -53,6 +53,7 @@ while [ $# -gt 0 ]; do
             packages=$(puavo-restricted-package-tool list \
                 | awk '{ if ($3 == "INSTALLED") print $1 }')
             set -- ${packages}
+            [ $# -eq 0 ] && exit 0
             break
             ;;
         --)
