@@ -86,17 +86,20 @@ packages=$(join "${tmpdir}/old_image_restricted_pkgs" \
 
 for package in $packages; do
   if [ "$(old_image_prpt installedlicense "$package" | jq -r .version)" \
-         = "$(new_image_prpt license "$package" | jq -r .version)" ]; then
+         != "$(new_image_prpt license "$package" | jq -r .version)" ]; then
+    logger -t puavo-image-preinst \
+           "license version has changed, not updating '$package'"
+  else
     # license versions match in old and new packages,
     # let's do an automatic update
     {
       new_image_prpt download $package \
 	&& new_image_prpt unpack $package
-      logger -t puavo-image-preinst -p err \
-             "error in updating restricted-package '$package'"
-    } || {
       logger -t puavo-image-preinst \
              "updated restricted-package '$package'"
+    } || {
+      logger -t puavo-image-preinst -p err \
+             "error in updating restricted-package '$package'"
       statuscode=1
     }
   fi
