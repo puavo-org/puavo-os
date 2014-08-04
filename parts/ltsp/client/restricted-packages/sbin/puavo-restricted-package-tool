@@ -56,6 +56,7 @@ while [ $# -gt 0 ]; do
             echo "Commands:"
             echo "    list                         list all packages and their status"
             echo "    license                      show package license"
+            echo "    installedlicense             show license of installed package"
             echo "    download                     download upstream pack"
             echo "    install                      install package"
             echo "    configure                    configure package"
@@ -87,7 +88,7 @@ command=$1
 shift
 
 case "${command}" in
-    list|license|download|install|configure|unconfigure|uninstall|unpack)
+    list|license|installedlicense|download|install|configure|unconfigure|uninstall|unpack)
         "${RESTRICTED_PKG_LIBDIR}/commands/${command}" "$@"
         ;;
     *)

@@ -77,12 +77,6 @@ old_image_prpt() {
   fi
 }
 
-license_version() {
-  prpt_cmd=$1
-  package=$2
-  $prpt_cmd license "$package" | jq -r .version
-}
-
 new_image_prpt list | sort > "${tmpdir}/new_image_restricted_pkgs"
 old_image_prpt list | sort > "${tmpdir}/old_image_restricted_pkgs"
 
@@ -91,8 +85,8 @@ packages=$(join "${tmpdir}/old_image_restricted_pkgs" \
              | awk '$3 == "INSTALLED" && $5 != "INSTALLED" { print $1 }')
 
 for package in $packages; do
-  if [ "$(license_version old_image_prpt "$package")" \
-         = "$(license_version new_image_prpt "$package")" ]; then
+  if [ "$(old_image_prpt installedlicense "$package" | jq -r .version)" \
+         = "$(new_image_prpt license "$package" | jq -r .version)" ]; then
     # license versions match in old and new packages,
     # let's do an automatic update
     {
