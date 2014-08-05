@@ -56,7 +56,11 @@ wget \
     --no-check-certificate \
     --no-cookies \
     --input-file "${url_file}" \
-    --output-document "${upstream_pack}"
+    --output-document "${upstream_pack}.part"
 
 gpg --import $PUBFILE || exit 1
-gpg --verify ${upstream_pack}.sig ${upstream_pack}
+gpg --verify ${upstream_pack}.sig ${upstream_pack}.part || exit 1
+
+mv "${upstream_pack}.part" "${upstream_pack}"
+
+exit 0
