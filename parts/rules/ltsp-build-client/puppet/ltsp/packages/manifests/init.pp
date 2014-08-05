@@ -129,8 +129,9 @@ class packages {
     [ 'ttf-freefont' ]:
       tag => [ 'fonts', 'ubuntu', ];
 
+    # XXX really is restricted, but let it be for now:
     [ 'ttf-mscorefonts-installer' ]:
-      tag => [ 'fonts', 'restricted', 'ubuntu', ];
+      tag => [ 'fonts', 'ubuntu', ];
 
     [ 'billard-gl'
     , 'cuyo'
@@ -773,7 +774,8 @@ class packages {
     , 'iscan-data' ]:
       tag => [ 'epson-scanner', 'opinsys', 'restricted' ];
 
-    [ 'libdvdcss2' ]:
+    [ 'libdvdcss2'
+    , 'pipelight-multi' ]:
       tag => [ 'mediaplayer', 'opinsys', ];
 
     [ 'nautilus-dropbox' ]:
