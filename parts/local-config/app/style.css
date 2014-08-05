@@ -1,11 +1,137 @@
-/* styles */
+
+.doc {
+  text-align: left;
+  font-size: 10pt;
+}
+
+
+h1, h2, h3, h4, h5 {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+p, li {
+  line-height: 2em;
+}
+
+ul {
+  padding-left: 4em;
+}
+
+
+h1 {
+  font-size: 30pt;
+}
+
+h2 {
+  font-size: 20pt;
+  border-bottom: 1px solid gray;
+}
+
+h3 {
+  font-size: 15pt;
+}
+
+code, pre {
+  margin: 0 2px;
+  padding: 0px 5px;
+  background: #E5E2CD;
+  border: 1px solid #8F8F8F;
+  border-radius: 3px;
+  font-family: Consolas, "Liberation Mono", Courier, monospace;
+  font-size: 12px;
+  overflow-x: auto;
+}
+pre code {
+  border: 0px;
+}
+pre {
+  padding-top: 1em;
+  padding-bottom: 1em;
+}
+
+.login {
+  padding: 3em;
+  max-width: 820px;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+
+
+a.anchor {
+  display: block;
+  float: right;
+  font-size: 20pt;
+  margin-right: 1em;
+  text-decoration: none;
+  color: transparent;
+}
+
+a.anchor:visited {
+  color: transparent;
+}
+
+h2:hover a.anchor {
+  color: gray;
+}
+
+.show-more {
+  /* margin: 1em; */
+}
+
+.more {
+  display: block;
+  background-color: #E0DCC0;
+  border: 1px solid rgb(158, 154, 107);
+  margin: 2em;
+  padding: 2em;
+}
+
+.more-wrap {
+  /* margin: 2em; */
+}
+
+.more * {
+  /* font-size: 80%; */
+}
+
+
+.main {
+  position: relative;
+}
+
+.toc {
+  color: black;
+  position: fixed;
+  top: 2em;
+  right: 2em;
+  list-style: none;
+  font-size: 8pt;
+  text-align: left;
+  border: 1px solid rgb(170, 140, 96);
+  padding: 1em;
+  border-radius: 5px;
+  background-color: rgb(235, 204, 165);
+}
+
+.toc a {
+  color: black;
+}
+
+.toc .selected {
+  color: white;
+}
+
 #error_banner {
   background-color: lightgrey;
-  color:            red;
-  float:            right;
-  font-size:        x-large;
-  font-weight:      bold;
-  margin:           0.5em;
+  color: red;
+  float: right;
+  font-size: x-large;
+  font-weight: bold;
+  margin: 0.5em;
 }
 
 td.error { color: red; }
