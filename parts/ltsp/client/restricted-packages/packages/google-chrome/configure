@@ -38,3 +38,14 @@ ln -sf "${installdir}/usr/share/applications/google-chrome.desktop" \
     /usr/share/applications/google-chrome.desktop
 ln -sf "${installdir}/opt/google/chrome/google-chrome" \
     /usr/bin/google-chrome-stable
+
+export PEPPER_FLASH_VERSION=$(grep '"version":' "${installdir}/opt/google/chrome/PepperFlash/manifest.json"| grep -Po '(?<=version": ")(?:\d|\.)*')
+
+cat <<EOF >/etc/chromium-browser/default
+# Default settings for chromium-browser. This file is sourced by /bin/sh from
+# /usr/bin/chromium-browser
+
+# Options to pass to chromium-browser
+
+CHROMIUM_FLAGS="--ppapi-flash-path=${installdir}/opt/google/chrome/PepperFlash/libpepflashplayer.so --ppapi-flash-version=$PEPPER_FLASH_VERSION"
+EOF
