@@ -1359,8 +1359,8 @@
       "osIconPath": "/usr/share/icons/Faenza/places/96/folder_home.png"
     },
     {
-      "type": "web",
-      "url": "file:///usr/lib/puavo-local-settings-ui/index.html",
+      "type": "custom",
+      "command": "puavo-local-config-ui",
       "name": {
         "fi": "Henkilökohtaisen tietokoneen asetukset",
         "sv": "Personlig datorns inställningar",
