@@ -62,7 +62,9 @@ url_file="${RESTRICTED_PKG_SHAREDIR}/${package}/upstream.pack.url"
 trap on_exit EXIT
 
 if [ -x "${custom_script}" ]; then
-    "${custom_script}" "${url_file}" "${upstream_pack}.tmp"
+    "${custom_script}" "${url_file}" "${upstream_pack}.tmp" || {
+      echo "E: package downloader returned an error!"; exit 1;
+    }
 else
     wget \
         --no-use-server-timestamps \
@@ -73,11 +75,13 @@ else
         --output-document "${upstream_pack}.tmp"
 fi
 
-echo "${upstream_pack_md5sum}  ${upstream_pack}.tmp" \
-    | md5sum --check --status 2>/dev/null || {
-    echo "E: downloaded upstream pack has incorrect checksum" >&2
-    exit 1
-}
+if [ ! -f "${upstream_pack_md5sum}.nocheck" ]; then
+  echo "${upstream_pack_md5sum}  ${upstream_pack}.tmp" \
+      | md5sum --check --status 2>/dev/null || {
+      echo "E: downloaded upstream pack has incorrect checksum" >&2
+      exit 1
+  }
+fi
 
 mv "${upstream_pack}.tmp" "${upstream_pack}"
 
