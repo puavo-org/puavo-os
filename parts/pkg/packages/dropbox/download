@@ -1,0 +1,62 @@
+#!/bin/bash
+
+set -eu
+
+url_file=$1
+upstream_pack=$2
+
+TMPDIR=$(mktemp -d)
+
+GNUPGHOME="${TMPDIR}/.gnupg"
+PUBFILE=${TMPDIR}/pack.pub
+GPGOUTPUT=${TMPDIR}/gpg.output
+
+on_exit()
+{
+  rm -rf "${TMPDIR}"
+}
+
+mkdir -m 0700 "${GNUPGHOME}"
+export GNUPGHOME
+
+trap on_exit EXIT
+
+# Available from http://linux.dropbox.com/fedora/rpm-public-key.asc
+cat <<EOF >$PUBFILE
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: SKS 1.1.0
+
+mQENBEt0ibEBCACv4hZRPqwtpU6z8+BB5YZU1a3yjEvg2W68+a6hEwxtCa2U++4dzQ+7EqaU
+q5ybQnwtbDdpFpsOi9x31J+PCpufPUfIG694/0rlEpmzl2GWzY8NqfdBFGGm/SPSSwvKbeNc
+FMRLu5neo7W9kwvfMbGjHmvUbzBUVpCVKD0OEEf1q/Ii0Qcekx9CMoLvWq7ZwNHEbNnij7ec
+nvwNlE2MxNsOSJj+hwZGK+tM19kuYGSKw4b5mR8IyThlgiSLIfpSBh1n2KX+TDdk9GR+57TY
+vlRu6nTPu98P05IlrrCP+KF0hYZYOaMvQs9Rmc09tc/eoQlN0kkaBWw9Rv/dvLVc0aUXABEB
+AAG0MURyb3Bib3ggQXV0b21hdGljIFNpZ25pbmcgS2V5IDxsaW51eEBkcm9wYm94LmNvbT6J
+ATYEEwECACAFAkt0ibECGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIXgAAKCRD8kYszUESRLi/z
+B/wMscEa15rS+0mIpsORknD7kawKwyda+LHdtZc0hD/73QGFINR2P23UTol/R4nyAFEuYNsF
+0C4IAD6y4pL49eZ72IktPrr4H27Q9eXhNZfJhD7BvQMBx75L0F5gSQwuC7GdYNlwSlCD0AAh
+Qbi70VBwzeIgITBkMQcJIhLvllYo/AKD7Gv9huy4RLaIoSeofp+2Q0zUHNPl/7zymOqu+5Ox
+e1ltuJT/kd/8hU+N5WNxJTSaOK0sF1/wWFM6rWd6XQUP03VyNosAevX5tBo++iD1WY2/lFVU
+JkvAvge2WFk3c6tAwZT/tKxspFy4M/tNbDKeyvr685XKJw9ei6GcOGHD
+=5rWG
+-----END PGP PUBLIC KEY BLOCK-----
+EOF
+
+wget \
+    --no-use-server-timestamps \
+    --no-verbose \
+    --no-check-certificate \
+    --no-cookies \
+    --output-document "${upstream_pack}.sig" \
+    "https://www.dropbox.com/download?plat=lnx.x86&signature=1"
+
+wget \
+    --no-use-server-timestamps \
+    --no-verbose \
+    --no-check-certificate \
+    --no-cookies \
+    --input-file "${url_file}" \
+    --output-document "${upstream_pack}"
+
+gpg --import $PUBFILE || exit 1
+gpg --verify ${upstream_pack}.sig ${upstream_pack}
