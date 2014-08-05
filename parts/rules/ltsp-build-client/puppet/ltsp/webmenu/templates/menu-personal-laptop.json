@@ -3,8 +3,9 @@
   "name": {
     "en": "Categories",
     "fi": "Kategoriat",
-    "sv": "Kategorier"
-    },
+    "sv": "Kategorier",
+    "de": "Kategorie"
+  },
   "items": [
     {
       "type": "menu",
@@ -12,19 +13,22 @@
       "name": {
         "en": "Tools",
         "fi": "Apuohjelmat",
-        "sv": "Verktyg"
+        "sv": "Verktyg",
+        "de": "Werkzeuge"
       },
       "description": {
-         "en": "Tools",
-         "fi": "Apuohjelmia",
-         "sv": "Verktyg"
-
+        "en": "Tools",
+        "fi": "Apuohjelmia",
+        "sv": "Verktyg",
+        "de": "Werkzeuge"
       },
       "osIcon": "applications-accessories",
       "items": [
         {
           "type": "desktop",
-          "keywords": ["leapmotion"],
+          "keywords": [
+            "leapmotion"
+          ],
           "source": "eleet"
         },
         {
@@ -41,12 +45,17 @@
           "name": {
             "en": "Gedit-text editor",
             "fi": "Gedit-tekstieditori",
-            "sv": "Gedit- tekstredigerare"
-            }
+            "sv": "Gedit- tekstredigerare",
+            "de": "Gedit-Texteditor"
+          }
         },
         {
           "type": "desktop",
           "source": "gucharmap"
+        },
+        {
+          "type": "desktop",
+          "source": "onboard"
         },
         {
           "type": "desktop",
@@ -55,8 +64,9 @@
           "name": {
             "en": "Brasero - CD/DVD -writer",
             "fi": "Brasero - CD/DVD -kirjoitus",
-            "sv": "Brasero - CD/DVD -brännare"
-            }
+            "sv": "Brasero - CD/DVD -brännare",
+            "de": "Brasero - CD/DVD -brennen"
+          }
         },
         {
           "type": "desktop",
@@ -71,10 +81,11 @@
           "type": "desktop",
           "source": "file-roller",
           "name": {
-             "en": "Archive Manager",
-             "fi": "Pakettienkäsittely-ohjelma",
-             "sv": "Pakethanterare"
-           }
+            "en": "Archive Manager",
+            "fi": "Pakettienkäsittely-ohjelma",
+            "sv": "Pakethanterare",
+            "de": "Archiv Verwaltung"
+          }
         },
         {
           "type": "desktop",
@@ -90,36 +101,58 @@
         },
         {
           "type": "desktop",
+          "source": "vino-preferences"
+        },
+        {
+          "type": "desktop",
           "source": "gnome-screenshot"
+        },
+        {
+          "type": "custom",
+          "name": {
+            "en": "Java Control Panel",
+            "fi": "Java-asetukset",
+            "sv": "Java-inställningar",
+            "de": "Java Einstellungen"
+          },
+          "command": [
+            "/opt/java/jdk1.7.0_51/jre/bin/ControlPanel"
+          ],
+          "osIcon": "openjdk-6"
         }
-          ]
+      ]
     },
     {
       "type": "menu",
       "name": {
         "en": "Graphics",
         "fi": "Grafiikka",
-        "sv": "Grafik"
+        "sv": "Grafik",
+        "de": "Grafik"
       },
       "description": {
         "en": "Graphic applications",
         "fi": "Graafiset Internet-sovellukset",
-        "sv": "Ritprogram"
-       },
-      "osIcon":"applications-graphics",
+        "sv": "Ritprogram",
+        "de": "Grafikprogramme"
+      },
+      "osIcon": "applications-graphics",
       "items": [
         {
           "type": "desktop",
           "source": "kolourpaint",
-          "name": "KolourPaint"
+          "name": {
+            "en": "KolourPaint"
+          }
         },
         {
           "type": "desktop",
           "source": "tuxpaint",
-          "name":{
+          "name": {
             "en": "Tuxpaint-drawing program",
             "fi": "Tuxpaint-piirto-ohjelma",
-            "sv": "Tuxpaint"
+            "sv": "Tuxpaint",
+            "de": "Tuxpaint"
           }
         },
         {
@@ -128,18 +161,30 @@
           "name": {
             "en": "MyPaint",
             "fi": "MyPaint-taideohjelma",
-            "sv": "MyPaint"
-              }
+            "sv": "MyPaint",
+            "de": "MyPaint"
+          }
         },
         {
           "type": "desktop",
           "source": "gimp",
-          "keywords": ["photoshop"],
+          "keywords": [
+            "photoshop",
+            "digabi"
+          ],
           "name": {
             "en": "Gimp - GNU Image Manipulation Program",
             "fi": "Gimp-kuvankäsittely",
-            "sv": "Gimp"
+            "sv": "Gimp",
+            "de": "Gimp"
           }
+        },
+        {
+          "type": "desktop",
+          "keywords": [
+            "digabi"
+          ],
+          "source": "pinta"
         },
         {
           "type": "desktop",
@@ -147,17 +192,19 @@
           "name": {
             "en": "gThumb-image viewer",
             "fi": "gThumb-kuvakatselin",
-            "sv": "gThumb-bildvisare"
+            "sv": "gThumb-bildvisare",
+            "de": "gThumb-Bildbetrachter"
           },
           "osIconPath": "/usr/share/icons/hicolor/48x48/apps/gthumb.png"
         },
         {
           "type": "desktop",
           "source": "eog",
-          "name":{
+          "name": {
             "en": "Image Viewer",
             "fi": "Kuvakatselin",
-            "sv": "Bildvisare"
+            "sv": "Bildvisare",
+            "de": "Bildbetrachter"
           }
         },
         {
@@ -166,7 +213,8 @@
           "name": {
             "en": "Shotwell-photo organizer",
             "fi": "Shotwell-kuva-albumi",
-            "sv": "Shotwell-foto-album"
+            "sv": "Shotwell-foto-album",
+            "de": "Shotwell Fotos verwalten"
           }
         },
         {
@@ -175,16 +223,21 @@
           "name": {
             "en": "F-spot-photo management application",
             "fi": "F-spot-kuvaohjelma",
-            "sv": "F-spot"
+            "sv": "F-spot",
+            "de": "F-Spot"
           }
         },
         {
           "type": "desktop",
           "source": "inkscape",
+          "keywords": [
+            "digabi"
+          ],
           "name": {
             "en": "Inkscape-vector graphics editor",
             "fi": "Inkscape-vektorigrafiikka",
-            "sv": "Inkscape-vektorgrafik"
+            "sv": "Inkscape-vektorgrafik",
+            "de": "Inkscape-Vektorgrafik"
           }
         },
         {
@@ -192,7 +245,8 @@
           "source": "picasa",
           "name": {
             "fi": "Picasa-verkkoalbumit",
-            "sv": "Picasa-fotoalbum"
+            "sv": "Picasa-fotoalbum",
+            "de": "Picasa-Fotoalbum"
           }
         },
         {
@@ -202,7 +256,8 @@
           "name": {
             "en": "Simple Scan",
             "fi": "Yksinkertainen skannausohjelma",
-            "sv": "Enkelt scanningsverktyg"
+            "sv": "Enkelt scanningsverktyg",
+            "de": "Einfaches Scanner Werkzeug"
           },
           "osIconPath": "/usr/share/icons/Faenza/devices/96/scanner.png"
         },
@@ -213,7 +268,8 @@
           "name": {
             "en": "XSane-graphical scanning",
             "fi": "Xsane-skannausohjelma",
-            "sv": "Xsane-scanningsverktyg"
+            "sv": "Xsane-scanningsverktyg",
+            "de": "Xsane Scannerwerkzeug"
           },
           "osIconPath": "/usr/share/icons/Faenza/devices/96/scanner.png"
         },
@@ -221,22 +277,35 @@
           "type": "desktop",
           "source": "blender",
           "inactiveByDeviceType": "thinclient",
-          "name":{
+          "name": {
             "fi": "Blender-3D-mallinnusohjelma",
-            "sv": "Blender-3D-modellering"
+            "sv": "Blender-3D-modellering",
+            "de": "Blender-3D-Modellierung"
+          }
+        },
+        {
+          "type": "desktop",
+          "source": "photofilmstrip",
+          "name": {
+            "fi": "Photofilmstrip-kuvaesitys",
+            "sv": "Photofilmstrip",
+            "de": "Photofilmstrip"
           }
         }
-          ]
+      ]
     },
     {
       "type": "menu",
-      "name": "Internet",
-      "description":{
+      "name": {
+        "en": "Internet"
+      },
+      "description": {
         "en": "Internet-applications",
         "fi": "Internet-sovellukset",
-        "sv": "Internet-program"
+        "sv": "Internet-program",
+        "de": "Interent Programme"
       },
-      "osIcon":"applications-internet",
+      "osIcon": "applications-internet",
       "items": [
         {
           "type": "desktop",
@@ -248,7 +317,8 @@
           "name": {
             "en": "Firefox-browser",
             "fi": "Firefox-selain",
-            "sv": "Firefox"
+            "sv": "Firefox",
+            "de": "Firefox"
           }
         },
         {
@@ -257,7 +327,8 @@
           "name": {
             "en": "Chromium-browser",
             "fi": "Chromium-selain",
-            "sv": "Chromium"
+            "sv": "Chromium",
+            "de": "Chromium-Browser"
           }
         },
         {
@@ -266,7 +337,8 @@
           "name": {
             "en": "Thunderbird-email",
             "fi": "Thunderbird-sähköposti",
-            "sv": "Thundebird-e-post"
+            "sv": "Thundebird-e-post",
+            "de": "Thunderbird-Email"
           }
         },
         {
@@ -275,7 +347,8 @@
           "name": {
             "en": "Evolution-email",
             "fi": "Evolution-sähköposti",
-            "sv": "Evolution-e-post"
+            "sv": "Evolution-e-post",
+            "de": "Evolution-Email"
           }
         },
         {
@@ -284,7 +357,8 @@
           "name": {
             "en": "Pidgin-chat client",
             "fi": "Pidgin-pikaviestin",
-            "sv": "Pidgin-IM-klient"
+            "sv": "Pidgin-IM-klient",
+            "de": "Pidgin-Chat-Client"
           }
         },
         {
@@ -298,36 +372,44 @@
           "name": {
             "en": "Liferea-feed reader",
             "fi": "Livesyötteiden lukija",
-            "sv": "Liferea"
+            "sv": "Liferea",
+            "de": "Liferea Feadreader"
           }
         },
         {
           "type": "desktop",
           "source": "googleearth",
           "inactiveByDeviceType": "thinclient",
-          "name": "Google Earth - Legacy",
+          "name": {
+            "en": "Google Earth - Legacy"
+          },
           "osIconPath": "/usr/share/icons/Faenza/apps/96/googleearth.png"
-       },
-       {
+        },
+        {
           "type": "desktop",
           "source": "google-earth",
           "inactiveByDeviceType": "thinclient",
-          "name": "Google Earth",
+          "name": {
+            "en": "Google Earth"
+          },
           "osIconPath": "/usr/share/icons/Faenza/apps/96/googleearth.png"
         },
         {
           "type": "desktop",
           "source": "skype",
-          "name": "Skype",
+          "name": {
+            "en": "Skype"
+          },
           "osIconPath": "/usr/share/icons/Faenza/apps/32/skype.png"
         },
         {
           "type": "desktop",
           "source": "empathy",
-          "name":{
+          "name": {
             "en": "Empathy-chat client",
             "fi": "Empathy-pikaviestin",
-            "sv": "Empathy-IM-klient"
+            "sv": "Empathy-IM-klient",
+            "de": "Empathy-Chat-Client"
           }
         },
         {
@@ -337,7 +419,9 @@
         {
           "type": "desktop",
           "source": "dropbox",
-          "name": "Dropbox"
+          "name": {
+            "en": "Dropbox"
+          }
         },
         {
           "type": "desktop",
@@ -346,30 +430,41 @@
         {
           "type": "desktop",
           "source": "vmware-view-client",
-          "name": "Vmware client"
+          "name": {
+            "en": "Vmware client"
+          }
         }
-          ]
+      ]
     },
     {
       "type": "menu",
       "name": {
         "en": "Programming",
         "fi": "Ohjelmointi",
-        "sv": "Programmering"
+        "sv": "Programmering",
+        "de": "Programmierung"
       },
       "description": "IDE-sovelluksia ohjelmointiin",
-      "osIcon":"gnome-devel",
+      "osIcon": "gnome-devel",
       "items": [
         {
           "type": "desktop",
           "source": "netbeans",
-          "name": "NetBeans IDE",
+          "name": {
+            "en": "NetBeans IDE"
+          },
           "osIconPath": "/usr/share/icons/Faenza/apps/96/netbeans.png"
         },
         {
           "type": "desktop",
           "source": "arduino",
-          "name": "Arduino IDE"
+          "name": {
+            "en": "Arduino IDE"
+          }
+        },
+        {
+          "type": "desktop",
+          "source": "bluegriffon"
         },
         {
           "type": "desktop",
@@ -382,17 +477,24 @@
         },
         {
           "type": "desktop",
+          "source": "pycharm"
+        },
+        {
+          "type": "desktop",
           "source": "spe",
           "name": {
             "en": "SPE - Python IDE",
             "fi": "Stanin python-editori",
-            "sv": "Stanis python-editor"
+            "sv": "Stanis python-editor",
+            "de": "Stanis Python IDE"
           }
         },
         {
           "type": "desktop",
           "source": "idle-python2.7",
-          "name": "IDLE",
+          "name": {
+            "en": "IDLE"
+          },
           "osIconPath": "/usr/share/icons/Faenza/mimetypes/96/text-x-python.png"
         },
         {
@@ -401,7 +503,8 @@
           "name": {
             "en": "Geany - text editor",
             "fi": "Geany - monikielinen editori",
-            "sv": "Geany - utvecklingsmiljö"
+            "sv": "Geany - utvecklingsmiljö",
+            "de": "Geany - Textverarbeitung"
           }
         },
         {
@@ -410,16 +513,22 @@
           "name": {
             "en": "KTurtle - easy programming",
             "fi": "Konna logo-ohjelmointi",
-            "sv": "KTurtle - logoprogrammering"
-          }
+            "sv": "KTurtle - logoprogrammering",
+            "de": "KTurtle - Programieren mit Logo"
+          },
+          "command": [
+            "kturtle"
+          ]
         },
         {
           "type": "desktop",
           "source": "scratch",
+          "inactiveByDeviceType": "thinclient",
           "name": {
             "en": "Scratch",
             "fi": "Scratch hahmo-ohjelmointi",
-            "sv": "Scratch"
+            "sv": "Scratch",
+            "de": "Scratch"
           }
         },
         {
@@ -432,7 +541,8 @@
           "name": {
             "en": "Bluefish html-editor",
             "fi": "Bluefish html-editori",
-            "sv": "Bluefish html-redigerare"
+            "sv": "Bluefish html-redigerare",
+            "de": "Bluefish Htmleditor"
           }
         },
         {
@@ -441,85 +551,68 @@
           "name": {
             "en": "Qt4 - graphical UI designer",
             "fi": "Käyttöliittymä-suunnittelija",
-            "sv": "Användargränssnitt-designer"
+            "sv": "Användargränssnitt-designer",
+            "de": "Qt4 - Grafischer UI Designer"
           },
           "osIconPath": "/usr/share/icons/Faenza/apps/96/qtdesigner.png"
         }
-          ]
+      ]
     },
     {
       "type": "menu",
       "name": {
         "en": "Education",
         "fi": "Opetusohjelmat",
-        "sv": "Undervisningsprogram"
+        "sv": "Undervisningsprogram",
+        "de": "Bildung"
       },
       "description": {
         "en": "Educational applications",
         "fi": "Sovelluksia oppimisen tueksi",
-        "sv": "Pedagogiska program"
+        "sv": "Pedagogiska program",
+        "de": "Bildungs Programme"
       },
-      "osIcon":"gnome-joystick",
+      "osIcon": "gnome-joystick",
       "items": [
         {
           "type": "desktop",
-          "source": "gcompris",
-          "name": {
-            "en": "GCompris-educational software suite",
-            "fi": "GCompris-opetuspelit",
-            "sv": "GCompris-pedagogiksvit"
-          }
-        },
-        {
-          "type": "desktop",
-          "source": "tuxmath",
-          "inactiveByDeviceType": "thinclient",
-          "name":{
-            "en": "TuxMath-math game",
-            "fi": "TuxMath-matikkapeli",
-            "sv": "TuxMath-matematikspel"
-          }
-        },
-        {
-          "type": "desktop",
           "source": "kbruch",
-          "command": ["kbruch"],
-          "name":{
+          "command": [
+            "kbruch"
+          ],
+          "name": {
             "en": "KBruch-fractions",
             "fi": "KBruch-murtoluvut",
-            "sv": "KBruch-bråktal"
+            "sv": "KBruch-bråktal",
+            "de": "KBruch - Rechnen mit Brüchen"
           }
         },
         {
           "type": "desktop",
           "source": "geogebra",
+          "keywords": [
+            "digabi"
+          ],
           "name": "Geogebra"
         },
         {
           "type": "desktop",
           "source": "kmplot",
-          "name":{
+          "name": {
             "en": "KmPlot-function plotter",
             "fi": "KmPlot-kuvaajat",
-            "sv": "KmPlot"
+            "sv": "KmPlot",
+            "de": "KmPlot"
           }
         },
         {
           "type": "desktop",
           "source": "marble",
-          "name":{
+          "name": {
             "en": "Marble-virtual world",
             "fi": "Marble-maapallo",
-            "sv": "Marble-jordglob"
-          }
-        },
-        {
-          "type": "desktop",
-          "source": "kgeography",
-          "name":{
-            "en": "KGeography-geography",
-            "fi": "KGeography-maantieto",
-            "sv": "KGeography-geografi"
+            "sv": "Marble-jordglob",
+            "de": "Marble virtueller Globus"
           }
         },
         {
@@ -528,27 +621,35 @@
           "name": {
             "en": "Kanagram - anagrams",
             "fi": "Anagrammit",
-            "sv": "Anagram"
+            "sv": "Anagram",
+            "de": "Anagramme"
           }
         },
         {
           "type": "desktop",
           "source": "kwordquiz",
-          "name":{
+          "name": {
             "en": "KWordQuiz-vocabulary learning",
             "fi": "Sanastoharjoitus",
-            "sv": "Ordförrådsövningar"
-          }
+            "sv": "Ordförrådsövningar",
+            "de": "Kreuzworträtsel"
+          },
+          "command": [
+            "kwordquiz"
+          ]
         },
         {
           "type": "desktop",
           "source": "khangman",
-          "name":{
+          "name": {
             "en": "KHangMan-hangman game",
             "fi": "Hirsipuu",
-            "sv": "KHangMan"
+            "sv": "KHangMan",
+            "de": "KHangman"
           },
-          "command": ["khangman"]
+          "command": [
+            "khangman"
+          ]
         },
         {
           "type": "desktop",
@@ -556,8 +657,12 @@
           "name": {
             "en": "KTouch-touch typing",
             "fi": "KTouch-konekirjoitus",
-            "sv": "KTouch-maskinskrivning"
-          }
+            "sv": "KTouch-maskinskrivning",
+            "de": "KTouch-Schreibmaschine"
+          },
+          "command": [
+            "ktouch"
+          ]
         },
         {
           "type": "desktop",
@@ -566,7 +671,8 @@
           "name": {
             "en": "Celestia-space simulation",
             "fi": "Avaruussimulaattori",
-            "sv": "Rymdsimulator"
+            "sv": "Rymdsimulator",
+            "de": "Celestia Weltraum Simulator"
           }
         },
         {
@@ -576,7 +682,8 @@
           "name": {
             "en": "Stellarium-planetarium",
             "fi": "Stellarium-planetaario",
-            "sv": "Stellarium-planetarium"
+            "sv": "Stellarium-planetarium",
+            "de": "Stellaruim-Planetarium"
           }
         },
         {
@@ -585,9 +692,12 @@
           "name": {
             "en": "KStars-astronomy",
             "fi": "KStars-tähtitaivas",
-            "sv": "KStars-stjärnhimlen"
+            "sv": "KStars-stjärnhimlen",
+            "de": "KStars-Astronomie"
           },
-          "command": ["kstars"]
+          "command": [
+            "kstars"
+          ]
         },
         {
           "type": "desktop",
@@ -595,12 +705,26 @@
           "name": {
             "en": "Step-physics simulator",
             "fi": "Step-fysiikan simulaattori",
-            "sv": "Step-fysik simulator"
-          }
+            "sv": "Step-fysik simulator",
+            "de": "Step Physik Simulator"
+          },
+          "command": [
+            "step"
+          ]
         },
         {
           "type": "desktop",
+          "keywords": [
+            "digabi"
+          ],
           "source": "LoggerPro"
+        },
+        {
+          "type": "desktop",
+          "keywords": [
+            "digabi"
+          ],
+          "source": "wxmaxima"
         },
         {
           "type": "desktop",
@@ -609,7 +733,8 @@
           "name": {
             "en": "Ghemical-3D-molecules",
             "fi": "3D-Molekyylit",
-            "sv": "3D-Molekyler"
+            "sv": "3D-Molekyler",
+            "de": "3D-Moleküle"
           }
         },
         {
@@ -618,84 +743,126 @@
           "name": {
             "en": "Kalzium-periodic system",
             "fi": "Jaksollinen järjestelmä",
-            "sv": "Periodsystem"
+            "sv": "Periodsystem",
+            "de": "Periodensystem"
           },
-          "command": ["kalzium"]
-        }
+          "command": [
+            "kalzium"
           ]
+        },
+        {
+          "type": "desktop",
+          "source": "mandelbulber",
+          "name": {
+            "en": "Mandelbulber",
+            "fi": "Mandelbulber",
+            "sv": "Mandelbulber",
+            "de": "Mandelbulber"
+          }
+        }
+      ]
     },
     {
       "type": "menu",
       "name": {
         "en": "Office",
         "fi": "Toimisto",
-        "sv": "Kontor"
+        "sv": "Kontor",
+        "de": "Büro"
       },
-      "description":{
+      "description": {
         "en": "Office applications",
         "fi": "Toimisto-ohjelmat",
-        "sv": "Kontorsprogram"
+        "sv": "Kontorsprogram",
+        "de": "Büroprogramme"
       },
-      "osIcon":"applications-office",
+      "osIcon": "applications-office",
       "items": [
         {
           "type": "desktop",
           "source": "libreoffice-writer",
-          "keywords": ["openoffice", "word"],
+          "keywords": [
+            "openoffice",
+            "word",
+            "digabi"
+          ],
           "name": {
             "en": "LibreOffice Writer",
             "fi": "LibreOffice Tekstinkäsittely",
-            "sv": "LibreOffice Textbehandling"
+            "sv": "LibreOffice Textbehandling",
+            "de": "LibreOffice Textverarbeitung"
           }
         },
         {
           "type": "desktop",
           "source": "libreoffice-calc",
-          "keywords": ["openoffice", "excel"],
-          "name":{
+          "keywords": [
+            "openoffice",
+            "excel",
+            "digabi"
+          ],
+          "name": {
             "en": "LibreOffice Calc",
             "fi": "LibreOffice Taulukkolaskenta",
-            "sv": "LibreOffice kalkylblad"
+            "sv": "LibreOffice kalkylblad",
+            "de": "LibreOffice Tabellenkalkulation"
           }
         },
         {
           "type": "desktop",
           "source": "libreoffice-impress",
-          "keywords": ["openoffice", "powerpoint"],
-          "name":{
+          "keywords": [
+            "openoffice",
+            "powerpoint",
+            "digabi"
+          ],
+          "name": {
             "en": "LibreOffice Impress",
             "fi": "LibreOffice Esitys",
-            "sv": "LibreOffice Presentation"
+            "sv": "LibreOffice Presentation",
+            "de": "LibreOffice Präsentaionenen"
           }
         },
         {
           "type": "desktop",
           "source": "libreoffice-draw",
-          "keywords": ["openoffice"],
-          "name":{
+          "keywords": [
+            "openoffice",
+            "digabi"
+          ],
+          "name": {
             "en": "LibreOffice Draw",
             "fi": "LibreOffice Piirros",
-            "sv": "LibreOffice Rita"
+            "sv": "LibreOffice Rita",
+            "de": "LibreOffice Zeichnen"
           }
         },
         {
           "type": "desktop",
           "source": "libreoffice-base",
-          "keywords": ["openoffice"],
-          "name":{
+          "keywords": [
+            "openoffice",
+            "digabi"
+          ],
+          "name": {
             "en": "LibreOffice Base",
             "fi": "LibreOffice Tietokanta",
-            "sv": "LibreOffice Databas"
+            "sv": "LibreOffice Databas",
+            "de": "LibreOffice Datenbank"
           }
         },
         {
           "type": "desktop",
           "source": "libreoffice-math",
-          "keywords": ["openoffice"],
+          "keywords": [
+            "openoffice",
+            "digabi"
+          ],
           "name": {
             "en": "LibreOffice Math",
             "fi": "LibreOffice Kaava",
-            "sv": "LibreOffice Ekvation"
+            "sv": "LibreOffice Ekvation",
+            "de": "LibreOffice Mathematik"
           }
         },
         {
@@ -704,16 +871,18 @@
           "name": {
             "en": "Scribus-desktop publishing",
             "fi": "Scribus-julkaisuohjelma",
-            "sv": "Scribus Layout"
+            "sv": "Scribus Layout",
+            "de": "Scribus Seitengestaltung"
           }
         },
         {
           "type": "desktop",
           "source": "vym",
-          "name":{
+          "name": {
             "en": "VYM-mindmap",
             "fi": "Miellekarttasovellus",
-            "sv": "Mindmap"
+            "sv": "Mindmap",
+            "de": "Mindmap"
           }
         },
         {
@@ -722,33 +891,45 @@
           "name": {
             "en": "CmapTools-mindmap",
             "fi": "CmapTools-miellekartta",
-            "sv": "CmapTools-mindmap"
+            "sv": "CmapTools-mindmap",
+            "de": "CmapTools-Mindmap"
           }
         },
         {
           "type": "desktop",
           "source": "acroread",
-          "keywords": ["pdf"],
+          "keywords": [
+            "pdf"
+          ],
           "name": "Acroread-asiakirjakatselin"
         },
         {
           "type": "desktop",
           "source": "okular",
-          "keywords": ["pdf"],
+          "keywords": [
+            "pdf"
+          ],
           "name": {
             "en": "Okular-document viewer",
             "fi": "Okular-asiakirjakatselin",
-            "sv": "Okular-dokumentläsare"
-          }
+            "sv": "Okular-dokumentläsare",
+            "de": "Okular Dokumentenbetrachter"
+          },
+          "command": [
+            "okular"
+          ]
         },
         {
           "type": "desktop",
           "source": "evince",
-          "keywords": ["pdf"],
+          "keywords": [
+            "pdf"
+          ],
           "name": {
             "en": "Evince-document viewer",
             "fi": "Evince-asiakirjakatselin",
-            "sv": "Evince-dokumentläsare"
+            "sv": "Evince-dokumentläsare",
+            "de": "Evince Dokumentenbetrachter"
           }
         },
         {
@@ -757,29 +938,51 @@
           "name": {
             "en": "Tellico-collection manager",
             "fi": "Kirjasto-ohjelma",
-            "sv": "Biblotek"
+            "sv": "Biblotek",
+            "de": "Tellico Sammlungs-Verwalter"
+          },
+          "command": [
+            "tellico"
+          ]
+        },
+        {
+          "type": "desktop",
+          "source": "Open-Sankore",
+          "keywords": [
+            "smart",
+            "notebook"
+          ],
+          "name": {
+            "en": "Open-Sankore",
+            "fi": "Open-Sankoré-älytauluohjelmisto",
+            "sv": "Open-Sankore",
+            "de": "Open-Sankore"
           }
         },
         {
           "type": "desktop",
-          "source": "primusclient",
-          "name": "Primus"
+          "keywords": [
+            "digabi"
+          ],
+          "source": "dia"
         }
-          ]
+      ]
     },
     {
       "type": "menu",
       "name": {
         "en": "Audio and video",
         "fi": "Ääni ja video",
-        "sv": "Ljud och Video"
+        "sv": "Ljud och Video",
+        "de": "Audio und Video"
       },
       "description": {
         "en": "Internet-applications",
         "fi": "Internet-sovellukset",
-        "sv": "Internet -applikationer"
+        "sv": "Internet -applikationer",
+        "de": "Interent Programme"
       },
-      "osIcon":"applications-multimedia",
+      "osIcon": "applications-multimedia",
       "items": [
         {
           "type": "desktop",
@@ -787,7 +990,8 @@
           "name": {
             "en": "Sound Recorder",
             "fi": "Ääninauhuri",
-            "sv": "Ljudinspelare"
+            "sv": "Ljudinspelare",
+            "de": "Tonaufnahmen"
           }
         },
         {
@@ -796,7 +1000,8 @@
           "name": {
             "en": "Audacity-audio editor",
             "fi": "Audacity-äänieditori",
-            "sv": "Audacity-ljudredigerare"
+            "sv": "Audacity-ljudredigerare",
+            "de": "Audacity Audio bearbeiten"
           }
         },
         {
@@ -805,11 +1010,20 @@
         },
         {
           "type": "desktop",
+          "source": "omgrip"
+        },
+        {
+          "type": "desktop",
+          "source": "thoggen"
+        },
+        {
+          "type": "desktop",
           "source": "vlc",
           "name": {
             "en": "VLC-media player",
             "fi": "VLC-mediasoitin",
-            "sv": "VLC-mediaspelare"
+            "sv": "VLC-mediaspelare",
+            "de": "VLC Medienspieler"
           }
         },
         {
@@ -818,7 +1032,8 @@
           "name": {
             "en": "MPlayer-media player",
             "fi": "MPlayer-mediasoitin",
-            "sv": "MPlayer-mediaspelare"
+            "sv": "MPlayer-mediaspelare",
+            "de": "MPlayer Medienspieler"
           }
         },
         {
@@ -826,7 +1041,8 @@
           "source": "kaffeine",
           "name": {
             "fi": "Kaffeine-mediasoitin",
-            "sv": "Kaffeine-mediaspelare"
+            "sv": "Kaffeine-mediaspelare",
+            "de": "Kaffeine Medienspieler"
           }
         },
         {
@@ -835,7 +1051,8 @@
           "name": {
             "en": "Banshee-music player",
             "fi": "Banshee-musiikkisoitin",
-            "sv": "Banshee-mediaspelare"
+            "sv": "Banshee-mediaspelare",
+            "de": "Banshee Medienspieler"
           }
         },
         {
@@ -855,24 +1072,28 @@
           "name": {
             "en": "OpenShot-video editor",
             "fi": "OpenShot-videoeditori",
-            "sv": "OpenShot-videoredigerare"
+            "sv": "OpenShot-videoredigerare",
+            "de": "OpenShot Videoeditor"
           }
         },
         {
           "type": "custom",
-          "name": "Kino",
-          "command": ["kino"],
-          "description": {
-            "en": "Edit videos",
-            "fi": "Muokkaa videoita",
-            "sv": "Redigera videon"
-          },
-          "osIcon":"kino",
           "name": {
             "en": "Kino-non-linear DV editor",
             "fi": "Kino-videoeditori",
-            "sv": "Kino-videoredigerare"
-          }
+            "sv": "Kino-videoredigerare",
+            "de": "Kino Filme bearbeiten"
+          },
+          "command": [
+            "kino"
+          ],
+          "description": {
+            "en": "Edit videos",
+            "fi": "Muokkaa videoita",
+            "sv": "Redigera videon",
+            "de": "Video bearbeiten"
+          },
+          "osIcon": "kino"
         },
         {
           "type": "desktop",
@@ -880,7 +1101,8 @@
           "name": {
             "en": "Pitivi-video editor",
             "fi": "Pitivi-videoeditori",
-            "sv": "Pitivi-videoredigerare"
+            "sv": "Pitivi-videoredigerare",
+            "de": "Pitivi Filme bearbeiten"
           }
         },
         {
@@ -889,7 +1111,8 @@
           "name": {
             "en": "Solfege-ear training program",
             "fi": "Korvanharjoitus-ohjelma",
-            "sv": "Gehör-övningar"
+            "sv": "Gehör-övningar",
+            "de": "Hörbildung"
           }
         },
         {
@@ -898,7 +1121,8 @@
           "name": {
             "en": "MuseScore-music composition & notation",
             "fi": "Nuotinnusohjelma",
-            "sv": "Notering"
+            "sv": "Notering",
+            "de": "Musik-Notensatz"
           }
         },
         {
@@ -907,7 +1131,8 @@
           "name": {
             "en": "Denemo-music notation",
             "fi": "Denemo-nuotinnus",
-            "sv": "Denemo-notering"
+            "sv": "Denemo-notering",
+            "de": "Denemo Notizen"
           }
         },
         {
@@ -916,7 +1141,8 @@
           "name": {
             "en": "Hydrogen-drum machine",
             "fi": "Hydrogen-rumpukone",
-            "sv": "Hydrogen-trummaskin"
+            "sv": "Hydrogen-trummaskin",
+            "de": "Hydrogen Drum Machine"
           }
         },
         {
@@ -925,7 +1151,8 @@
           "name": {
             "en": "Rosegarden-sequencer",
             "fi": "Rosegarden-sekvensseri",
-            "sv": "Rosegarden-sekvenser"
+            "sv": "Rosegarden-sekvenser",
+            "de": "Rosegarden Sequencer"
           }
         },
         {
@@ -934,7 +1161,8 @@
           "name": {
             "en": "TuxGuitar-multitrack tablature editor",
             "fi": "Kitaranuotinnus",
-            "sv": "Noter för gitarr"
+            "sv": "Noter för gitarr",
+            "de": "Tabulaturen für Gitarre"
           },
           "osIconPath": "extra/icons/apps/overlord59-tux-guitar-1434.png"
         },
@@ -944,7 +1172,8 @@
           "name": {
             "en": "Fmit-instrument tuner",
             "fi": "Viritinohjelma",
-            "sv": "Stämmningsprogram"
+            "sv": "Stämmningsprogram",
+            "de": "Stimmprogramm"
           }
         },
         {
@@ -953,63 +1182,80 @@
           "name": {
             "en": "Luciole-stopmotion software",
             "fi": "Stopmotion-animaatio-ohjelma",
-            "sv": "Stopmotion-animationsprogram"
+            "sv": "Stopmotion-animationsprogram",
+            "de": "Stopmotion Animationsprogramm"
           },
           "osIconPath": "/usr/share/luciole/images/luciole.png"
         }
-          ]
+      ]
     },
     {
       "type": "menu",
       "name": {
-        "en": "Interactive whiteboards",
-        "fi": "Älytaulut",
-        "sv": "Interaktiva tavlor"
+        "en": "Games",
+        "fi": "Pelit",
+        "sv": "Spel",
+        "de": "Spiele"
       },
       "description": {
-        "en": "Internet-applications",
-        "fi": "Internet-sovellukset",
-        "sv": "Internet-applikationer"
+        "en": "Games",
+        "fi": "Pelit",
+        "sv": "Spel",
+        "de": "Spiele"
       },
-      "osIconPath": "/usr/share/icons/hicolor/128x128/apps/SMART_Tools.png",
+      "osIcon": "applications-cardgames",
       "items": [
         {
           "type": "desktop",
-          "source": "smarttech-notebook",
-          "osIconPath": "/usr/share/icons/hicolor/128x128/apps/SMART_Notebook.png"
+          "source": "extremetuxracer"
         },
         {
           "type": "desktop",
-          "source": "Open-Sankore",
-          "keywords": ["smart", "notebook"],
-          "name": {
-            "en": "Open-Sankore",
-            "fi": "Open-Sankoré-älytauluohjelmisto",
-            "sv": "Open-Sankore"
-          }
+          "source": "foobillardplus"
         },
         {
           "type": "desktop",
-          "source": "ebeam"
+          "source": "freeciv-gtk3"
         },
         {
           "type": "desktop",
-          "source": "mimio-notebook",
-          "osIconPath": "/usr/share/icons/mimio-notebook.png"
+          "source": "freecol"
+        },
+        {
+          "type": "desktop",
+          "source": "neverball"
+        },
+        {
+          "type": "desktop",
+          "source": "neverputt"
+        },
+        {
+          "type": "desktop",
+          "source": "luola"
+        },
+        {
+          "type": "desktop",
+          "source": "openttd"
+        },
+        {
+          "type": "desktop",
+          "source": "xmoto"
         }
-          ]
+      ]
     },
     {
       "type": "menu",
       "name": {
         "en": "Web applications",
         "fi": "Web-sovellukset",
-        "sv": "Web applikationer"
+        "sv": "Web applikationer",
+        "de": "Web Anwendungen"
       },
       "description": {
         "en": "Web applications",
         "fi": "Web-sovellukset",
-        "sv": "Web applikationer"
+        "sv": "Web applikationer",
+        "de": "Web Anwendungen"
       },
       "osIconPath": "extra/icons/apps/webapps.png",
       "items": [
@@ -1024,7 +1270,8 @@
           "description": {
             "en": "YouTube",
             "fi": "YouTube-videopalvelu",
-            "sv": "YouTube"
+            "sv": "YouTube",
+            "de": "YouTube"
           },
           "osIconPath": "/usr/share/icons/Faenza/apps/96/youtube.png"
         },
@@ -1035,7 +1282,8 @@
           "description": {
             "en": "Wikipedia encyclopedia",
             "fi": "Wikipedia-tietosanakirja",
-            "sv": "Wikipedia uppslagsverk"
+            "sv": "Wikipedia uppslagsverk",
+            "de": "Wikipedia Enziklopädie"
           },
           "osIconPath": "/usr/share/icons/Faenza/apps/96/wikipedia.png"
         },
@@ -1046,7 +1294,8 @@
           "description": {
             "en": "Yle Areena-online videos",
             "fi": "Yle Areena-videopalvelu",
-            "sv": "Yle Arena"
+            "sv": "Yle Arena",
+            "de": "Yle Arena - Online Videos"
           },
           "osIconPath": "/usr/share/icons/Faenza/apps/96/me-tv.png"
         },
@@ -1064,19 +1313,23 @@
           "description": {
             "en": "Sumopaint-online graphics editor",
             "fi": "Sumopaint-webkuvankäsittely",
-            "sv": "Sumopaint-bildbehandling"
+            "sv": "Sumopaint-bildbehandling",
+            "de": "Sumopaint Online Bildbearbeitung"
           },
           "osIconPath": "/usr/share/icons/Faenza/apps/96/gimp.png"
         },
         {
           "type": "web",
           "name": "Walma",
-          "keywords": ["photoshop"],
+          "keywords": [
+            "photoshop"
+          ],
           "url": "http://walmademo.opinsys.fi",
           "description": {
             "en": "Collaborative whiteboard",
             "fi": "Yhteistoiminnallinen piirtotaulu",
-            "sv": "Kollaborativ whiteboard"
+            "sv": "Kollaborativ whiteboard",
+            "de": "Mit dem Whiteboard zusammenarbweiten"
           },
           "osIconPath": "/usr/share/icons/Faenza/mimetypes/96/text-html.png"
         },
@@ -1091,24 +1344,8 @@
           "name": "SanomaPro",
           "url": "http://sanomapro.fi/",
           "osIconPath": "/usr/share/icons/Faenza/mimetypes/96/text-html.png"
-        },
-        {
-          "type": "web",
-          "name": "Ekapeli",
-          "url": "http://www.lukimat.fi/lukeminen/materiaalit/ekapeli",
-          "osIconPath": "/usr/share/icons/Faenza/categories/96/gnome-joystick.png"
         }
       ]
-    },
-    {
-      "type": "webWindow",
-      "url": "file:///usr/lib/puavo-local-config-ui/index.html",
-      "name": {
-        "fi": "Henkilökohtaisen tietokoneen asetukset",
-        "sv": "Personlig datorns inställningar",
-        "en": "Personal computer settings"
-      },
-      "osIconPath": "/usr/share/icons/Faenza/places/96/folder_home.png"
     },
     {
       "type": "desktop",
@@ -1116,20 +1353,21 @@
       "name": {
         "fi": "Kotikansio",
         "sv": "Hemmapp",
-        "en": "Home folder"
+        "en": "Home folder",
+        "de": "Home Verzeichnis"
       },
       "osIconPath": "/usr/share/icons/Faenza/places/96/folder_home.png"
     },
     {
-      "type": "webWindow",
-      "url": "file:///usr/lib/puavo-local-config-ui/index.html",
+      "type": "web",
+      "url": "file:///usr/lib/puavo-local-settings-ui/index.html",
       "name": {
-        "fi": "Henkilökohtaisen tietokoneen asetukset",
+        "fi": "Henkilökohtaisen kannettavan asetukset",
         "sv": "Personlig datorns inställningar",
-        "en": "Personal computer settings"
+        "en": "Personal computer settings",
+        "de": "Personal computer einstellungen"
       },
-      "osIconPath": "/usr/share/icons/Faenza/places/96/folder_home.png"
+      "osIconPath": "/usr/share/icons/Faenza/devices/64/drive-harddisk-system.png"
     }
   ]
 }
-
