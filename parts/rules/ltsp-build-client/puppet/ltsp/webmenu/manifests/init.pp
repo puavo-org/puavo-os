@@ -4,11 +4,15 @@ class webmenu {
 
   File { require => Package['webmenu'], }
   file {
-    '/etc/webmenu':
+    [ '/etc/webmenu'
+    , '/etc/webmenu/personally-administered-device' ]:
       ensure => directory;
 
     '/etc/webmenu/config.json':
       content => template('webmenu/config.json');
+
+    '/etc/webmenu/personally-administered-device/menu.json':
+      content => template('webmenu/personally-administered-device-menu.json');
 
     '/etc/xdg/autostart/webmenu.desktop':
       content => template('webmenu/webmenu.desktop'),
