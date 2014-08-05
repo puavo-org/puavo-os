@@ -9,40 +9,48 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: puavo-client-updater-applet:30
+#: puavo-client-updater-applet:37
+msgid "Updates are disabled in developer mode, boot to normal mode to update."
+msgstr ""
+"Päivittäminen ei ole mahdollista kehittäjätilassa, käynnistä normaalitilaan "
+"päivittääksesi."
+
+#: puavo-client-updater-applet:46
 msgid "View log..."
 msgstr "Näytä loki..."
 
-#: puavo-client-updater-applet:35
+#: puavo-client-updater-applet:51
 msgid "(Up to date)"
 msgstr "(Päivitetty)"
 
-#: puavo-client-updater-applet:57
+#: puavo-client-updater-applet:72
 msgid "Update log"
 msgstr "Päivitysloki"
 
-#: puavo-client-updater-applet:73
+#: puavo-client-updater-applet:88
 msgid ""
-"The old version of the system has been edited by the user. Updating the system "
-"causes all these changes to be lost. Do you want to proceed?"
-msgstr "Vanha versio järjestelmästä sisältää käyttäjän tekemiä muutoksia, jotka tuhoutuvat päivityksessä. Haluatko jatkaa?"
+"The old version of the system has been edited by the user. Updating the "
+"system causes all these changes to be lost. Do you want to proceed?"
+msgstr ""
+"Vanha versio järjestelmästä sisältää käyttäjän tekemiä muutoksia, jotka "
+"tuhoutuvat päivityksessä. Haluatko jatkaa?"
 
-#: puavo-client-updater-applet:81
+#: puavo-client-updater-applet:96
 msgid "Continue updating?"
 msgstr "Jatka päivittämistä?"
 
-#: puavo-client-updater-applet:84 puavo-client-updater-applet:106
+#: puavo-client-updater-applet:99 puavo-client-updater-applet:121
 msgid "Update"
 msgstr "Päivitä"
 
-#: puavo-client-updater-applet:90
+#: puavo-client-updater-applet:105
 msgid "(Reboot required to finish the update)"
 msgstr "(Päivityksen käyttöönotto vaatii uudelleenkäynnistyksen)"
 
-#: puavo-client-updater-applet:96
+#: puavo-client-updater-applet:111
 msgid "(Updating)"
 msgstr "(Päivittyy)"
 
-#: puavo-client-updater-applet:112
+#: puavo-client-updater-applet:127
 msgid "Update failed"
 msgstr "Päivitys epäonnistui"

@@ -18,6 +18,12 @@ dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
 import re
 
+def is_on_persistent_overlay():
+    file = open('/proc/cmdline', 'r')
+    cmdline = file.read()
+    file.close()
+    return re.match(".*?puavo.image.overlay=", cmdline)
+
 class UpdateIndicatorApplet:
     def __init__(self):
         self.indicator = appindicator.Indicator("update-indicator",
@@ -26,6 +32,16 @@ class UpdateIndicatorApplet:
         self.indicator.set_status(appindicator.STATUS_ACTIVE)
 
         self.menu = gtk.Menu()
+
+        if is_on_persistent_overlay():
+            msg = _tr("Updates are disabled in developer mode, boot to normal mode to update.")
+            self.disabled_msg = gtk.MenuItem(msg)
+            self.disabled_msg.show()
+            self.disabled_msg.set_sensitive(False)
+            self.menu.append(self.disabled_msg)
+
+            self.indicator.set_menu(self.menu)
+            return
 
         self.view_log_item = gtk.MenuItem(_tr("View log..."))
         self.view_log_item.connect("activate", self.view_log)
@@ -37,7 +53,6 @@ class UpdateIndicatorApplet:
         self.update_image_item.show()
         self.update_image_item.set_sensitive(False)
         self.menu.append(self.update_image_item)
-
         self.indicator.set_menu(self.menu)
 
         self.bus = dbus.SystemBus()

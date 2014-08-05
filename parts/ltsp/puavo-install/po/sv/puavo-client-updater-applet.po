@@ -9,41 +9,46 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: puavo-client-updater-applet:30
+#: puavo-client-updater-applet:37
+msgid "Updates are disabled in developer mode, boot to normal mode to update."
+msgstr ""
+
+#: puavo-client-updater-applet:46
 msgid "View log..."
 msgstr "Visa logg..."
 
-#: puavo-client-updater-applet:35
+#: puavo-client-updater-applet:51
 msgid "(Up to date)"
 msgstr "(Aktuell)"
 
-#: puavo-client-updater-applet:57
+#: puavo-client-updater-applet:72
 msgid "Update log"
 msgstr "Uppdateringslogg"
 
-#: puavo-client-updater-applet:73
+#: puavo-client-updater-applet:88
 msgid ""
 "The old version of the system has been edited by the user. Updating the "
 "system causes all these changes to be lost. Do you want to proceed?"
-msgstr "Den gamla versionen av systemet innehåller konfigurationer som användaren "
+msgstr ""
+"Den gamla versionen av systemet innehåller konfigurationer som användaren "
 "har gjort, dessa förstörs i uppdateringen. Vill du fortsätta?"
 
-#: puavo-client-updater-applet:81
+#: puavo-client-updater-applet:96
 msgid "Continue updating?"
 msgstr "Fortsät uppdateringen"
 
-#: puavo-client-updater-applet:84 puavo-client-updater-applet:106
+#: puavo-client-updater-applet:99 puavo-client-updater-applet:121
 msgid "Update"
 msgstr "Uppdatera"
 
-#: puavo-client-updater-applet:90
+#: puavo-client-updater-applet:105
 msgid "(Reboot required to finish the update)"
 msgstr "(Omstart krävs för att avsluta uppdateringen)"
 
-#: puavo-client-updater-applet:96
+#: puavo-client-updater-applet:111
 msgid "(Updating)"
 msgstr "(Uppdatering)"
 
-#: puavo-client-updater-applet:112
+#: puavo-client-updater-applet:127
 msgid "Update failed"
 msgstr "Uppdateringen misslyckades"
