@@ -40,7 +40,8 @@ install : installdirs
 		app/index.html   \
 		app/index.js     \
 		app/package.json \
-		app/style.css
+		app/style.css    \
+		app/theme.css
 	
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		puavo-local-config-ui-autostart.desktop
