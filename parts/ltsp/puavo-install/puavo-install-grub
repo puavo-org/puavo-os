@@ -122,7 +122,6 @@ function ltsp_image_entry_superlaptop {
     return
   fi
 
-  set description="*SUPERLAPTOP* ${description}"
   set kernelparameters="puavo.image.overlay=default puavo.local.enable_superusers=true $kernelparameters"
 
   ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}"
@@ -154,12 +153,12 @@ for dev in (lvm/puavo-images); do
   set backup_image_alias="${backup_alias_no_suffix}.img"
 
   if test -f "${default_image}"; then
-    ltsp_image_entry "${default_image}" "DEFAULT - ${default_image_alias}"
-    ltsp_image_entry_superlaptop "${default_image}" "DEFAULT - ${default_image_alias}"
+    ltsp_image_entry "${default_image}" "Normaali käynnistys - ${default_image_alias}"
+    ltsp_image_entry_superlaptop "${default_image}" "Kehittäjätila - ${default_image_alias}"
   fi
   if test -f "${backup_image}"; then
-    ltsp_image_entry "${backup_image}" "BACKUP - ${backup_image_alias}"
-    ltsp_image_entry_superlaptop "${backup_image}" "BACKUP - ${backup_image_alias}"
+    ltsp_image_entry "${backup_image}" "Varajärjestelmä, normaali käynnistys - ${backup_image_alias}"
+    ltsp_image_entry_superlaptop "${backup_image}" "Varajärjestelmä, kehittäjätila - ${backup_image_alias}"
   fi
 
   for file in ${dev}/*.img; do
@@ -168,8 +167,8 @@ for dev in (lvm/puavo-images); do
     if test "${file}" = "${default_image_alias}"; then continue; fi
     if test "${file}" = "${backup_image_alias}";  then continue; fi
 
-    ltsp_image_entry "${file}" "OTHER"
-    ltsp_image_entry_superlaptop "${file}" "OTHER"
+    ltsp_image_entry "${file}" "Muu järjestelmä, normaali käynnistys"
+    ltsp_image_entry_superlaptop "${file}" "Muu järjestelmä, kehittäjätila"
   done
 done
 EOF
