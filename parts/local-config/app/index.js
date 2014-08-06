@@ -344,6 +344,9 @@ function generate_allow_logins_input(form) {
 }
 
 function generate_allow_remoteadmins_input(form) {
+  // XXX disabled, we will figure out what we want to do with this:
+  return
+
   var div = document.createElement('div');
   var titletext
     = document.createTextNode( mc('Allow login from remote admins:') );
@@ -757,7 +760,9 @@ function read_config() {
         allow_logins_for:   [],
         allow_remoteadmins: false,
         local_users:        {},
+        version:            1,
       };
+      write_config_to_file(config);
     } else {
       alert(ex);
       return false;
@@ -765,15 +770,6 @@ function read_config() {
   }
 
   return config;
-}
-
-function write_and_apply_config(conf) {
-  try {
-    var data = JSON.stringify(conf) + "\n";
-    var tmpfile = config_json_path + '.tmp';
-    fs.writeFileSync(tmpfile, data);
-    fs.renameSync(tmpfile, config_json_path);
-  } catch (ex) { alert(ex); throw(ex); }
 }
 
 function write_config() {
@@ -833,9 +829,10 @@ function write_config() {
           break;
       }
 
-      new_config.allow_remoteadmins = response.allow_remoteadmins.checked;
+      // XXX disabled, we will figure out what we want to do with this:
+      // new_config.allow_remoteadmins = response.allow_remoteadmins.checked;
 
-      write_and_apply_config(new_config);
+      write_config_to_file(new_config);
     };
 
   var user_indexes = [];
@@ -850,6 +847,15 @@ function write_config() {
                           new_config,
                           false,
                           do_after_local_users_are_ok);
+}
+
+function write_config_to_file(conf) {
+  try {
+    var data = JSON.stringify(conf) + "\n";
+    var tmpfile = config_json_path + '.tmp';
+    fs.writeFileSync(tmpfile, data);
+    fs.renameSync(tmpfile, config_json_path);
+  } catch (ex) { alert(ex); throw(ex); }
 }
 
 
