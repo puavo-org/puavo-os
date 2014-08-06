@@ -129,7 +129,8 @@ class packages {
     [ 'ttf-freefont' ]:
       tag => [ 'fonts', 'ubuntu', ];
 
-    # XXX really is restricted, but let it be for now:
+    # needs debconf seeds or such to set license accepted,
+    # but package itself is okay
     [ 'ttf-mscorefonts-installer' ]:
       tag => [ 'fonts', 'ubuntu', ];
 
