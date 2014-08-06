@@ -121,7 +121,11 @@ EOF
 }
 
 set_debconf_seeds() {
-  run_in_chroot debconf-set-selections < config/debconf.seeds
+  imagetype=$1
+  debconf_seeds_file=config/debconf.seeds.$imagetype
+  if [ -r "$debconf_seeds_file" ]; then
+    run_in_chroot debconf-set-selections < "$debconf_seeds_file"
+  fi
 }
 
 set_ltspimage_type() {
@@ -254,7 +258,7 @@ case "$option" in
     fi
 
     build_chroot
-    set_debconf_seeds
+    set_debconf_seeds "$imagetype"
     set_ltspimage_type "$imagetype"
     prepare_puppet "image::$imagetype"
     ;;
