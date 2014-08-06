@@ -1,4 +1,5 @@
 #!/usr/bin/ruby1.9.1
+# encoding: UTF-8
 
 # puavo-local-config configures system according to admin user preferences.
 # See puavo-local-config-ui for the user interface.  puavo-local-config
@@ -188,20 +189,23 @@ def configure_grub_default()
 
   this_ltspimage_name = IO.read('/etc/ltsp/this_ltspimage_name').chomp
 
-  choice_types = {
-    '/ltsp.img'        => 'DEFAULT',
-    '/ltsp-backup.img' => 'BACKUP',
+  # XXX need localizations for these
+  messages = {
+    '/ltsp.img' => { false => 'Normaali käynnistys',
+                     true  => 'Kehittäjätila' },
+    '/ltsp-backup.img' => { false => 'Varajärjestelmä, normaali käynnistys',
+                            true  => 'Varajärjestelmä, kehittäjätila' },
+    nil => { false => 'Muu järjestelmä, normaali käynnistys',
+             true  => 'Muu järjestelmä, kehittäjätila' },
   }
 
-  choice_type = choice_types[loop_img]
-  description \
-    = choice_type \
-        ? "#{ choice_type } - (lvm/puavo-images)/#{ this_ltspimage_name } (#{ loop_img })" \
-        : "OTHER (#{ loop_img })"
+  msg \
+    = messages[loop_img] \
+        ? messages[loop_img][superlaptop_mode?] \
+        : messages[nil][superlaptop_mode?]
 
-  if superlaptop_mode?
-    description = "*SUPERLAPTOP* #{ description }"
-  end
+  description \
+    = "#{ msg } - (lvm/puavo-images)/#{ this_ltspimage_name } (#{ loop_img })"
 
   system('/usr/bin/grub-editenv',
          '/images/boot/grub/grubenv',
