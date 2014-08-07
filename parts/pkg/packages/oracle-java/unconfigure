@@ -5,7 +5,7 @@ set -eu
 installdir=$1
 
 update-alternatives \
-    --remove mozilla-javaplugin.so "${installdir}/jre/lib/i386/libnpjp2.so"
+    --remove mozilla-javaplugin.so "${installdir}/lib/i386/libnpjp2.so"
 
 update-alternatives \
     --remove javaws "${installdir}/bin/javaws"
