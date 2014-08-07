@@ -4,4 +4,6 @@ set -eu
 
 if [ "$1" = remove ]; then
     pam-auth-update --package --remove puavo-local-access
+
+    rm -rf /var/lib/puavo-ltsp-client-restricted-packages/*
 fi

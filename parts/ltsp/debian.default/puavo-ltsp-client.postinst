@@ -17,11 +17,19 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+prpt() {
+  env RESTRICTED_PKG_STATEDIR=/var/lib/puavo-ltsp-client-restricted-packages \
+    puavo-restricted-package-tool "$@"
+}
+
 
 case "$1" in
     configure)
 	update-initramfs -u -k all
 	pam-auth-update --package
+
+        prpt download        --all
+        prpt downloadlicense --all
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
