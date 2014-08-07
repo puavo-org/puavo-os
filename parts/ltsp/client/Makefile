@@ -55,6 +55,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sssd
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/lib/udev
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/var/lib/polkit-1/localauthority/10-vendor.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d
 	mkdir -p $(DESTDIR)$(datarootdir)/xgreeters
@@ -135,6 +136,9 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/lib/udev \
 		templates/lib/udev/ltspfs_entry
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/var/lib/polkit-1/localauthority/10-vendor.d \
+		templates/var/lib/polkit-1/localauthority/10-vendor.d/com.ubuntu.desktop.pkla
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions \
 		xsessions/puavo-desktop-session.desktop
