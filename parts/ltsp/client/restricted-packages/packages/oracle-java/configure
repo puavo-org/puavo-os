@@ -6,7 +6,7 @@ installdir=$1
 
 update-alternatives \
     --install /usr/lib/mozilla/plugins/libjavaplugin.so mozilla-javaplugin.so \
-    "${installdir}/jre/lib/i386/libnpjp2.so" 1100
+    "${installdir}/lib/i386/libnpjp2.so" 1100
 
 update-alternatives \
     --install /usr/bin/javaws javaws \
