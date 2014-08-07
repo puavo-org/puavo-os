@@ -25,6 +25,7 @@ set -e
 
 RESTRICTED_PKG_LIBDIR=${RESTRICTED_PKG_LIBDIR:-/usr/lib/puavo-ltsp-client/restricted-packages}
 RESTRICTED_PKG_SHAREDIR=${RESTRICTED_PKG_SHAREDIR:-/usr/share/puavo-ltsp-client/restricted-packages}
+RESTRICTED_PKG_STATEDIR=${RESTRICTED_PKG_STATEDIR:-/state/restricted-packages}
 
 if [ -z "$PUAVOLTSP_IMAGE_NAME" ]; then
   PUAVOLTSP_IMAGE_NAME=$(cat /etc/ltsp/this_ltspimage_name)
