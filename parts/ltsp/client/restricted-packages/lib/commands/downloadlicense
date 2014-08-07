@@ -76,8 +76,8 @@ exitval=0
 for package in "$@"; do
     "${RESTRICTED_PKG_LIBDIR}/helpers/downloadlicense" "${package}" || {
 	exitval=$?
-	echo "E: failed to download package '${package}'" >&2
-	# Continue until we have tried to download all given packages
+	echo "E: failed to download package license for '${package}'" >&2
+	# Continue until we have tried to download all given package licenses
 	# and then fail.
     }
 done
