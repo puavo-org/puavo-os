@@ -14,4 +14,4 @@ From archive.opinsys.fi
 
 Run
 
-    nw app
+    nw plc-ui

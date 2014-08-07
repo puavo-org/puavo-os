@@ -37,11 +37,11 @@ install : installdirs
 		init-puavo.d/*-*
 	
 	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/puavo-local-config-ui \
-		app/index.html   \
-		app/index.js     \
-		app/package.json \
-		app/style.css    \
-		app/theme.css
+		plc-ui/index.html   \
+		plc-ui/index.js     \
+		plc-ui/package.json \
+		plc-ui/style.css    \
+		plc-ui/theme.css
 	
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		puavo-local-config-ui-autostart.desktop
