@@ -41,7 +41,7 @@ custom_script="${RESTRICTED_PKG_SHAREDIR}/${package}/download"
 
 packagedir=$(packagedir "$package")
 upstream_pack_md5sum=$(upstream_pack_md5sum "$package")
-upstream_pack="/state/restricted-packages/${package}/${upstream_pack_md5sum}/upstream.pack"
+upstream_pack="${packagedir}/upstream.pack"
 
 echo "${upstream_pack_md5sum}  ${upstream_pack}" \
     | md5sum --check --status 2>/dev/null && {
@@ -51,7 +51,7 @@ echo "${upstream_pack_md5sum}  ${upstream_pack}" \
 
 url_file="${RESTRICTED_PKG_SHAREDIR}/${package}/upstream.pack.url"
 
-mkdir -p "/state/restricted-packages/${package}/${upstream_pack_md5sum}"
+mkdir -p "$packagedir"
 
 trap on_exit EXIT
 
