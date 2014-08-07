@@ -69,11 +69,7 @@ else
         --no-cookies \
         --output-document "${upstream_license}.tmp" \
         --quiet \
-        "${url}" \
-      || {
-        echo "Problem fetching '${url}'" >&2
-        exit 1
-      }
+        "${url}"
 fi
 
 mv "${upstream_license}.tmp" "${upstream_license}"
