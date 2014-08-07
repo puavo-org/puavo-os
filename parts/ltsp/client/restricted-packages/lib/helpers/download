@@ -43,6 +43,14 @@ packagedir=$(packagedir "$package")
 upstream_pack_md5sum=$(upstream_pack_md5sum "$package")
 upstream_pack="${packagedir}/upstream.pack"
 
+cache_path=$(upstream_pack_cache_path "$package")
+
+mkdir -p "$packagedir"
+
+if [ -e "$cache_path" -a ! "$cache_path" -ef "$upstream_pack" ]; then
+  cp -u "$cache_path" "$upstream_pack"
+fi
+
 echo "${upstream_pack_md5sum}  ${upstream_pack}" \
     | md5sum --check --status 2>/dev/null && {
     echo "I: upstream pack is already in place and has a correct checksum" >&2
@@ -50,8 +58,6 @@ echo "${upstream_pack_md5sum}  ${upstream_pack}" \
 }
 
 url_file="${RESTRICTED_PKG_SHAREDIR}/${package}/upstream.pack.url"
-
-mkdir -p "$packagedir"
 
 trap on_exit EXIT
 
