@@ -48,13 +48,14 @@ while [ $# -gt 0 ]; do
             echo
             exit 0
             ;;
-	--all)
-	    shift
-	    packages=$(puavo-restricted-package-tool list \
-		| awk '{ if ($3 == "PURGED") print $1 }')
-	    set -- ${packages}
-	    break
-	    ;;
+        --all)
+            shift
+            packages=$(puavo-restricted-package-tool list \
+                | awk '{ if ($3 == "PURGED") print $1 }')
+            set -- ${packages}
+            [ $# -eq 0 ] && exit 0
+            break
+            ;;
         --)
             shift
             break
@@ -76,10 +77,10 @@ exitval=0
 
 for package in "$@"; do
     "${RESTRICTED_PKG_LIBDIR}/helpers/download" "${package}" || {
-	exitval=$?
-	echo "E: failed to download package '${package}'" >&2
-	# Continue until we have tried to download all given packages
-	# and then fail.
+        exitval=$?
+        echo "E: failed to download package '${package}'" >&2
+        # Continue until we have tried to download all given packages
+        # and then fail.
     }
 done
 

@@ -43,6 +43,14 @@ packagedir=$(packagedir "$package")
 upstream_pack_md5sum=$(upstream_pack_md5sum "$package")
 upstream_license="${packagedir}/upstream.license"
 
+cache_path=$(upstream_license_cache_path "$package")
+
+mkdir -p "$packagedir"
+
+if [ -e "$cache_path" -a ! "$cache_path" -ef "$upstream_license" ]; then
+  cp -u "$cache_path" "$upstream_license"
+fi
+
 if [ -r "$upstream_license" ]; then
   echo "License file is already in place for '${package}'" >&2
   exit 0
@@ -54,8 +62,6 @@ if [ -z "$url" ]; then
   echo "No license url could be found for '${package}'" >&2
   exit 1
 fi
-
-mkdir -p "$packagedir"
 
 trap on_exit EXIT
 
