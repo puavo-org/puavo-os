@@ -3,6 +3,10 @@
 CMD=$1
 TYPE=$2
 
+if ! egrep -q thinclient\|fatclient /etc/puavo/hosttype; then
+  exit 0
+fi
+
 if [ ${CMD} = "add" ]; then
   if [ ${TYPE} = "usb" ]; then
     PID=$(ps -ef|grep [j]etpipe\ /dev/usb|awk '{print $2}')
@@ -23,3 +27,4 @@ if [ ${CMD} = "add" ]; then
     /usr/sbin/jetpipe ${DEVNAME} ${PORT}
   fi
 fi
+
