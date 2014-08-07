@@ -1,32 +1,9 @@
-body
-{
+body {
 	width: 100%;
 	height: 100%;
 }
 
-#buttons
-{
-	width: 490px;
-	height: 50px;
-
-	position: absolute;
-	top:0;
-	bottom: 0;
-	left: 0;
-	right: 0;
-
-	margin: auto;
-}
-
-.logo
-{
-	border: 0;
-	position: fixed;
-	bottom: 0;
-	right: 0;
-}
-
-.button {
+#accept_button {
 	-moz-box-shadow:inset 0px 1px 0px 0px #fce2c1;
 	-webkit-box-shadow:inset 0px 1px 0px 0px #fce2c1;
 	box-shadow:inset 0px 1px 0px 0px #fce2c1;
@@ -61,12 +38,15 @@ body
 	text-align:center;
 	text-shadow:1px 1px 0px #cc9f52;
 }
-.button:hover {
+
+#accept_button:hover {
 	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #fb9e25), color-stop(1, #ffc477) );
 	background:-moz-linear-gradient( center top, #fb9e25 5%, #ffc477 100% );
 	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#fb9e25', endColorstr='#ffc477');
 	background-color:#fb9e25;
-}.button:active {
+}
+
+#accept_button:active {
 	position:relative;
 	top:1px;
 }
