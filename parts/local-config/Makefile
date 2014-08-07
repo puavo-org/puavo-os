@@ -48,9 +48,10 @@ install : installdirs
 		plc-ui/theme.css
 	
 	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/puavo-local-license-acceptance \
-		plla-ui/index.html   \
-		plla-ui/index.js     \
-		plla-ui/package.json \
+		plla-ui/background.png \
+		plla-ui/index.html     \
+		plla-ui/index.js       \
+		plla-ui/package.json   \
 		plla-ui/style.css
 	
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
