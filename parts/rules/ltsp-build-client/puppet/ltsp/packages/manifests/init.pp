@@ -752,13 +752,13 @@ class packages {
 
   @package {
     [ 'skype' ]:
-      tag => [ 'instant_messaging', 'partner', 'restricted' ];
+      tag => [ 'instant_messaging', 'partner', 'extra', 'restricted' ];
 
     [ 'vmware-view-client' ]:
       tag => [ 'remote_access', 'partner', 'restricted' ];
 
     [ 'adobe-flashplugin' ]:
-      tag => [ 'web', 'partner', 'restricted' ];
+      tag => [ 'web', 'partner', 'extra', 'restricted' ];
  }
 
   #
@@ -768,7 +768,7 @@ class packages {
   @package {
     [ 'spotify-client'
     , 'spotify-client-qt' ]:
-      tag => [ 'audio', 'opinsys', 'restricted' ];
+      tag => [ 'audio', 'opinsys', 'extra', 'restricted' ];
 
     [ 'esci-interpreter-perfection-v330'
     , 'iscan'
@@ -783,21 +783,23 @@ class packages {
       tag => [ 'misc', 'opinsys', ];
 
     [ 'nautilus-dropbox-dist' ]:
-      tag => [ 'misc', 'opinsys', 'restricted' ];
+      tag => [ 'misc', 'opinsys', 'extra', 'restricted' ];
 
     [ 'acroread'
     , 'cmaptools' ]:
-      tag => [ 'office', 'opinsys', 'restricted' ];
+      tag => [ 'office', 'opinsys', 'extra', 'restricted' ];
 
     [ 'icaclient' ]:
       # icaclient has a hidden dependency on libmotif4
       require => Package['libmotif4'],
       tag     => [ 'remote_access', 'opinsys', 'restricted' ];
 
-    [ 'av4kav'
-    , 'google-earth-stable'
-    , 'googleearth' ]:
+    [ 'av4kav' ]:
       tag => [ 'science', 'opinsys', 'restricted' ];
+
+    [ 'google-earth-stable'
+    , 'googleearth' ]:
+      tag => [ 'science', 'opinsys', 'extra', 'restricted' ];
 
     [ 'vstloggerpro' ]:
       tag => [ 'science', 'opinsys' ];
@@ -805,9 +807,12 @@ class packages {
     [ 'opinsys-theme' ]:
       tag => [ 'themes', 'opinsys', ];
 
-    [ 'google-talkplugin'
-    , 'oracle-java' ]:
+    [ 'google-talkplugin' ]:
       tag => [ 'web', 'opinsys', 'restricted' ];
+
+    [ 'google-chrome-stable'
+    , 'oracle-java' ]:
+      tag => [ 'web', 'opinsys', 'extra', 'restricted' ];
 
     [ 'eleet'
     , 'leap' ]:
