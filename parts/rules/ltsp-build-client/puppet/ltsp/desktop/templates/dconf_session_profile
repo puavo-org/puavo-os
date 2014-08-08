@@ -78,7 +78,7 @@ group-windows='auto-group'
 [org/gnome/gnome-panel/layout/objects/workspace-switcher]
 pack-type='start'
 toplevel-id='bottom-panel'
-pack-index=6
+pack-index=5
 object-iid='WnckletFactory::WorkspaceSwitcherApplet'
 
 [org/gnome/gnome-panel/layout/objects/workspace-switcher/instance-config]
@@ -88,7 +88,7 @@ num-rows=1
 [org/gnome/gnome-panel/layout/objects/window-list]
 pack-type='start'
 toplevel-id='bottom-panel'
-pack-index=7
+pack-index=6
 object-iid='WnckletFactory::WindowListApplet'
 
 [org/gnome/gnome-panel/layout/objects/show-desktop]
@@ -151,17 +151,8 @@ toplevel-id='bottom-panel'
 pack-index=2
 object-iid='NotificationAreaAppletFactory::NotificationArea'
 
-[org/gnome/gnome-panel/layout/objects/object-7]
-pack-type='start'
-toplevel-id='bottom-panel'
-pack-index=5
-object-iid='PanelInternalFactory::Launcher'
-
-[org/gnome/gnome-panel/layout/objects/object-7/instance-config]
-location='/usr/share/applications/chromium-browser.desktop'
-
 [org/gnome/gnome-panel/layout]
-object-id-list=['indicators', 'show-desktop', 'window-list', 'workspace-switcher', 'object-0', 'object-1', 'object-2', 'object-3', 'object-4', 'object-5', 'object-6', 'object-7']
+object-id-list=['indicators', 'show-desktop', 'window-list', 'workspace-switcher', 'object-0', 'object-1', 'object-3', 'object-2', 'object-4', 'object-5', 'object-6']
 toplevel-id-list=['bottom-panel']
 
 [org/gnome/gnome-panel/lockdown]
