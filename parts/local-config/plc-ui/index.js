@@ -374,7 +374,9 @@ function generate_form() {
   generate_login_users_input(form);
   generate_allow_logins_input(form);
   generate_allow_remoteadmins_input(form);
-  generate_software_installation_controls(form);
+
+  // XXX not enabled, we do not know what to do
+  // generate_software_installation_controls(form);
 }
 
 function generate_login_users_input(form) {
