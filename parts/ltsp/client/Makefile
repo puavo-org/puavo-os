@@ -60,7 +60,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d
 	mkdir -p $(DESTDIR)$(datarootdir)/xgreeters
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
-	mkdir -p $(DESTDIR)/var/lib/puavo-ltsp-client-restricted-packages
 
 .PHONY : install
 install : installdirs
@@ -255,8 +254,6 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/xgreeters \
 		xgreeters/puavo-unity-greeter.desktop
-
-	$(MAKE) -C restricted-packages install prefix=$(prefix)
 
 .PHONY : clean
 clean :
