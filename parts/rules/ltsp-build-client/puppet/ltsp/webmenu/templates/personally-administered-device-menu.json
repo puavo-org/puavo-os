@@ -1077,6 +1077,16 @@
           }
         },
         {
+          "type": "desktop",
+          "source": "kdenlive",
+          "name": {
+            "en": "Kdenlive-video editor",
+            "fi": "Kdenlive-videoeditori",
+            "sv": "Kdenlive-videoredigerare",
+            "de": "Kdenlive Videoeditor"
+          }
+        },
+        {
           "type": "custom",
           "name": {
             "en": "Kino-non-linear DV editor",
@@ -1208,6 +1218,7 @@
         {
           "type": "desktop",
           "name": "Tux Racer",
+          "osIconPath": "/usr/share/pixmaps/etracericon.svg",
           "source": "extremetuxracer"
         },
         {
@@ -1233,6 +1244,7 @@
         },
         {
           "type": "desktop",
+          "osIconPath": "/usr/share/pixmaps/luola-icon.xpm",
           "source": "luola"
         },
         {
@@ -1242,6 +1254,7 @@
         {
           "type": "desktop",
           "name": "XMoto",
+          "osIconPath": "/usr/share/pixmaps/xmoto.xpm",
           "source": "xmoto"
         }
       ]
