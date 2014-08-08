@@ -19,95 +19,9 @@
 
 set -eu
 
-cleanup() {
-  test -d "$tmpdir" && rm -rf "$tmpdir"
-}
-
-statuscode=0
-tmpdir=$(mktemp -d /tmp/puavo-image-preinst.XXXXXXXXXX)
-
-trap cleanup 0 INT TERM
-
-
 new_mnt=/images/mnt
-
-new_image_prpt() {
-  image_name=$(cat "${new_mnt}/etc/ltsp/this_ltspimage_name")
-
-  env PUAVOLTSP_IMAGE_NAME="$image_name" \
-      RESTRICTED_PKG_LIBDIR="${new_mnt}/usr/lib/puavo-ltsp-client/restricted-packages" \
-      RESTRICTED_PKG_SHAREDIR="${new_mnt}/usr/share/puavo-ltsp-client/restricted-packages" \
-      "${new_mnt}/usr/sbin/puavo-restricted-package-tool" "$@"
-}
-
-# XXX copied from /usr/sbin/puavo-install-and-update-ltspimages
-lookup_ltspimage_name_by_alias() {
-  images_dir=$1
-  imagename=$2
-
-  current_ltspimage_path="$images_dir/$imagename"
-  current_ltspimage_inode="$(stat -c %i $current_ltspimage_path 2>/dev/null \
-                               || true)"
-
-  for file in $images_dir/*.img; do
-    # check that *.img expands to something
-    test -e "$file" || continue
-
-    # ltsp.img is not what we are looking for
-    test "$file" = "$current_ltspimage_path" && continue
-
-    # we want its other name...
-    if [ "$(stat -c %i "$file" || true)" = "$current_ltspimage_inode" ]; then
-      echo "$(basename "$file")"
-      return 0
-    fi
-  done
-
-  return 1
-}
-
-old_image_prpt() {
-  if image_name=$(lookup_ltspimage_name_by_alias /images ltsp.img); then
-    # There is an old image, we should look at installed restricted packages
-    # as if they were installed to the old image.
-    env PUAVOLTSP_IMAGE_NAME="$image_name" \
-        /usr/sbin/puavo-restricted-package-tool "$@"
-  else
-    /usr/sbin/puavo-restricted-package-tool "$@"
-  fi
-}
-
-new_image_prpt list | sort > "${tmpdir}/new_image_restricted_pkgs"
-old_image_prpt list | sort > "${tmpdir}/old_image_restricted_pkgs"
-
-packages=$(join "${tmpdir}/old_image_restricted_pkgs" \
-                "${tmpdir}/new_image_restricted_pkgs" \
-             | awk '$3 == "INSTALLED" && $5 != "INSTALLED" { print $1 }')
-
-for package in $packages; do
-  if [ "$(old_image_prpt installedlicense "$package" | jq -r .version)" \
-         != "$(new_image_prpt license "$package" | jq -r .version)" ]; then
-    logger -t puavo-image-preinst \
-           "license version has changed, not updating '$package'"
-  else
-    # license versions match in old and new packages,
-    # let's do an automatic update
-    {
-      new_image_prpt download $package \
-	&& new_image_prpt unpack $package
-      logger -t puavo-image-preinst \
-             "updated restricted-package '$package'"
-    } || {
-      logger -t puavo-image-preinst -p err \
-             "error in updating restricted-package '$package'"
-      statuscode=1
-    }
-  fi
-done
-
 
 # update grub configuration from the new image
 "${new_mnt}/usr/sbin/puavo-install-grub" --only-update-config
 
-
-exit $statuscode
+exit 0
