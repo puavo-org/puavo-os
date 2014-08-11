@@ -38,7 +38,6 @@ describe "LogoutView", ->
         beforeEach createLogoutView("thinclient")
         afterEach -> @view.remove()
 
-        it "has no hibernate", -> assert not ("hibernate" in @options)
         it "has no sleep", -> assert not ("sleep" in @options)
         it "has restart", -> assert "restart" in @options
         it "has lock", -> assert "lock" in @options
