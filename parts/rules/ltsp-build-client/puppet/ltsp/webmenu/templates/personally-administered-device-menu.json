@@ -1244,6 +1244,7 @@
         },
         {
           "type": "desktop",
+          "osIcon": "applications-boardgames",
           "source": "luola"
         },
         {
@@ -1253,7 +1254,117 @@
         {
           "type": "desktop",
           "name": "XMoto",
+          "osIcon": "applications-boardgames",
           "source": "xmoto"
+        }
+      ]
+    },
+    {
+      "type": "menu",
+      "name": "Digabi",
+      "description": "Digabi",
+      "osIcon": "/usr/share/icons/oxygen/64x64/categories/applications-education.png",
+      "items": [
+                {
+          "type": "desktop",
+          "source": "gimp",
+          "name": {
+            "en": "Gimp - GNU Image Manipulation Program",
+            "fi": "Gimp-kuvankäsittely",
+            "sv": "Gimp",
+            "de": "Gimp"
+          }
+       },
+       {
+          "type": "desktop",
+          "source": "pinta"
+       },
+       {
+          "type": "desktop",
+          "source": "inkscape",
+          "name": {
+            "en": "Inkscape-vector graphics editor",
+            "fi": "Inkscape-vektorigrafiikka",
+            "sv": "Inkscape-vektorgrafik",
+            "de": "Inkscape-Vektorgrafik"
+          }
+        },
+        {
+          "type": "desktop",
+          "source": "geogebra",
+          "name": "Geogebra"
+        },
+        {
+          "type": "desktop",
+          "source": "wxmaxima"
+       },
+       {
+          "type": "desktop",
+          "source": "LoggerPro"
+       },
+       {
+          "type": "desktop",
+          "source": "dia"
+       },
+       {
+          "type": "desktop",
+          "source": "libreoffice-writer",
+          "name": {
+            "en": "LibreOffice Writer",
+            "fi": "LibreOffice Tekstinkäsittely",
+            "sv": "LibreOffice Textbehandling",
+            "de": "LibreOffice Textverarbeitung"
+            }
+        },
+        {
+          "type": "desktop",
+          "source": "libreoffice-calc",
+          "name": {
+            "en": "LibreOffice Calc",
+            "fi": "LibreOffice Taulukkolaskenta",
+            "sv": "LibreOffice kalkylblad",
+            "de": "LibreOffice Tabellenkalkulation"
+          }
+        },
+        {
+          "type": "desktop",
+          "source": "libreoffice-impress",
+          "name": {
+            "en": "LibreOffice Impress",
+            "fi": "LibreOffice Esitys",
+            "sv": "LibreOffice Presentation",
+            "de": "LibreOffice Präsentaionenen"
+          }
+        },
+        {
+          "type": "desktop",
+          "source": "libreoffice-draw",
+          "name": {
+            "en": "LibreOffice Draw",
+            "fi": "LibreOffice Piirros",
+            "sv": "LibreOffice Rita",
+            "de": "LibreOffice Zeichnen"
+          }
+        },
+        {
+          "type": "desktop",
+          "source": "libreoffice-base",
+          "name": {
+            "en": "LibreOffice Base",
+            "fi": "LibreOffice Tietokanta",
+            "sv": "LibreOffice Databas",
+            "de": "LibreOffice Datenbank"
+          }
+        },
+        {
+          "type": "desktop",
+          "source": "libreoffice-math",
+          "name": {
+            "en": "LibreOffice Math",
+            "fi": "LibreOffice Kaava",
+            "sv": "LibreOffice Ekvation",
+            "de": "LibreOffice Mathematik"
+          }
         }
       ]
     },
