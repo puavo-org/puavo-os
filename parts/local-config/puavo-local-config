@@ -126,7 +126,7 @@ def configure_admins()
       f.write("%puavolocaladmins ALL=(ALL) ALL\n")
     end
     f.write('%puavolocaladmins ALL=(ALL) NOPASSWD: ' \
-            + "/usr/sbin/puavo-local-config\n")
+            + "/usr/sbin/puavo-local-config, /usr/sbin/getweb\n")
   end
   File.rename('/etc/sudoers.d/puavolocaladmins.pcltmp',
               '/etc/sudoers.d/puavolocaladmins')
