@@ -22,7 +22,6 @@ class LogoutView extends ViewMaster
         if not @config.get("guestSession")
             actions.unshift "lock"
         if @config.get("hostType") is "laptop"
-            actions.unshift "hibernate"
             actions.unshift "sleep"
         return {
             actions: actions.map (a) -> {
