@@ -23,7 +23,6 @@ describe "LogoutView", ->
         beforeEach createLogoutView("laptop")
         afterEach -> @view.remove()
 
-        it "has hibernate", -> assert "hibernate" in @options
         it "has sleep", -> assert "sleep" in @options
         it "has restart", -> assert "restart" in @options
         it "has lock", -> assert "lock" in @options
