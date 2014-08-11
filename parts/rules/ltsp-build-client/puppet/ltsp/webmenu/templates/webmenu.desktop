@@ -2,7 +2,7 @@
 Version=1.0
 Name=Webmenu
 Comment=A desktop menu application
-Exec=puavo-webmenu --daemonize --log
+Exec=puavo-webmenu --log
 Terminal=false
 Type=Application
 Icon=webmenu
