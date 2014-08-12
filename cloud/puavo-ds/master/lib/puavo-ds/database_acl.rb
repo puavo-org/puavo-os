@@ -298,6 +298,7 @@ class LdapAcl
 					 eduPersonPrincipalName
 					 objectClass
 					 puavoEduPersonAffiliation)),	Rule.write(Set.admin),			Rule.read(PuavoUid.puavo('dn'),
+															  PuavoUid.puavo_ticket('dn'),
 															  Set.getent,
 															  Set.externalservice_auth),			Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -308,7 +309,8 @@ class LdapAcl
 					 sn
 					 puavoPreferredDesktop
 					 loginShell)),	Rule.write(Set.admin),			Rule.read(Set.getent,
-															  PuavoUid.puavo('dn')),						],
+															  PuavoUid.puavo('dn'),
+															  PuavoUid.puavo_ticket('dn')),						],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(givenName
 					 sn
@@ -330,7 +332,7 @@ class LdapAcl
 										   'self'),			Rule.read(Set.externalservice_addressbook),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 																			# XXX odd
-      [ People.subtree,		attrs(%w(puavoAcceptedTerms)),		Rule.write(Set.admin),			Rule.read(PuavoUid.puavo),		Rule.write('self'),			],
+      [ People.subtree,		attrs(%w(puavoAcceptedTerms)),		Rule.write(Set.admin),			Rule.read(PuavoUid.puavo, PuavoUid.puavo_ticket),		Rule.write('self'),			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(puavoSchool)),			Rule.write(Set.admin),			Rule.read('self'),								],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -598,6 +600,7 @@ class LdapAcl
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ LdapDn.new.dn,		attrs(%w(entry)),								Rule.read(Set.all_admins,
 															  PuavoUid.puavo,
+															  PuavoUid.puavo_ticket,
 															  PuavoUid.kdc,
 															  PuavoUid.kadmin,
 															  PuavoUid.puppet,
@@ -607,6 +610,7 @@ class LdapAcl
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ LdapDn.new.dn,		attrs(%w(objectClass)),								Rule.read(Set.all_admins,
 															  PuavoUid.puavo,
+															  PuavoUid.puavo_ticket,
 															  PuavoUid.kdc,
 															  PuavoUid.kadmin,
 															  PuavoUid.puppet,
@@ -643,6 +647,7 @@ class LdapAcl
 					 puavoDeviceAutoPowerOffMode
 					 puavoAutomaticImageUpdates)),	Rule.write(Set.owner_and_user),		Rule.read(Set.all_admins,
 															  PuavoUid.puavo,
+															  PuavoUid.puavo_ticket,
 															  PuavoUid.kdc,
 															  PuavoUid.kadmin,
 															  PuavoUid.puppet,
@@ -655,12 +660,14 @@ class LdapAcl
 					 puavoDomain
 					 puavoPuppetHost)),							Rule.read(Set.all_admins,
 															  PuavoUid.puavo,
+															  PuavoUid.puavo_ticket,
 															  PuavoUid.puppet,
 															  PuavoUid.monitor,
 															  Set.externalservice_orginfo),								],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ LdapDn.new.dn,												Rule.read(Set.all_admins,
 															  PuavoUid.puavo,
+															  PuavoUid.puavo_ticket,
 															  PuavoUid.kdc,
 															  PuavoUid.kadmin,
 															  PuavoUid.puppet,
