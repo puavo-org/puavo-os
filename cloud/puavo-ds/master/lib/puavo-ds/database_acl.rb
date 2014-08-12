@@ -71,14 +71,14 @@ class PuavoUid < LdapDn
   end
 
   # XXX why some are exact and some are not?
-  def self.kadmin(method='exact'); new('kadmin' ).send(method); end	# XXX why sometimes .dn, sometimes .exact ?
-  def self.kdc(method='exact')   ; new('kdc'    ).send(method); end	# XXX why sometimes .dn, sometimes .exact ?
-  def self.monitor               ; new('monitor').dn          ; end
-  def self.puavo(method='exact') ; new('puavo'  ).send(method); end	# XXX why sometimes .dn, sometimes .exact ?
+  def self.kadmin(method='exact')      ; new('kadmin'       ).send(method); end	# XXX why sometimes .dn, sometimes .exact ?
+  def self.kdc(method='exact')         ; new('kdc'          ).send(method); end	# XXX why sometimes .dn, sometimes .exact ?
+  def self.monitor                     ; new('monitor'      ).dn          ; end
+  def self.puavo(method='exact')       ; new('puavo'        ).send(method); end	# XXX why sometimes .dn, sometimes .exact ?
   def self.puavo_ticket(method='exact'); new('puavo-ticket' ).dn          ; end
-  def self.puppet                ; new('puppet' ).dn          ; end
-  def self.samba                 ; new('samba'  ).dn          ; end
-  def self.slave                 ; new('slave'  ).exact       ; end
+  def self.puppet                      ; new('puppet'       ).dn          ; end
+  def self.samba                       ; new('samba'        ).dn          ; end
+  def self.slave                       ; new('slave'        ).exact       ; end
 end
 
 class Rule
