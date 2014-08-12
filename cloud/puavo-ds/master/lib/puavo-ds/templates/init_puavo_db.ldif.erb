@@ -66,6 +66,13 @@ uid: slave
 description: Account for slave servers to read information from databases, no write access
 userPassword: <%= @slavepw_hash %>
 
+dn: <%= @puavo_ticket_dn %>
+objectClass: account
+objectClass: simpleSecurityObject
+uid: puavo-ticket
+description: Account for Puavo Ticket to get information of organisations
+userPassword: <%= @puavo_ticket_pw_hash %>
+
 dn: ou=Kerberos Realms,o=puavo
 objectClass: top
 objectClass: organizationalUnit
