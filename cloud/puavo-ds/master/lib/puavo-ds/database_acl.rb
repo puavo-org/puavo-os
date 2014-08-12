@@ -319,17 +319,17 @@ class LdapAcl
 									Rule.write(Set.admin),			Rule.read(People.children,
 															  Hosts.subtree,
 															  Set.sysgroup('getent'),
-															  Set.externalservice_addressbook),							],
+															  Set.externalservice_addressbook, PuavoUid.puavo_ticket),				],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(puavoEduPersonPersonnelNumber)),
-									Rule.write(Set.admin),			Rule.read(Set.externalservice_addressbook),							],
+									Rule.write(Set.admin),			Rule.read(Set.externalservice_addressbook, PuavoUid.puavo_ticket),				],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(jpegPhoto
 					 mail
 					 preferredLanguage
                                          puavoLocale
 					 telephoneNumber)),		Rule.write(Set.admin,
-										   'self'),			Rule.read(Set.externalservice_addressbook),							],
+										   'self'),			Rule.read(Set.externalservice_addressbook, PuavoUid.puavo_ticket),				],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 																			# XXX odd
       [ People.subtree,		attrs(%w(puavoAcceptedTerms)),		Rule.write(Set.admin),			Rule.read(PuavoUid.puavo, PuavoUid.puavo_ticket),		Rule.write('self'),			],
