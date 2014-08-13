@@ -1038,6 +1038,16 @@
           }
         },
         {
+          "type": "desktop",
+          "source": "kdenlive",
+          "name": {
+            "en": "Kdenlive-video editor",
+            "fi": "Kdenlive-videoeditori",
+            "sv": "Kdenlive-videoredigerare",
+            "de": "Kdenlive Videoeditor"
+          }
+        },
+        {
           "type": "custom",
           "name": "Kino",
           "command": ["kino"],
@@ -1146,6 +1156,14 @@
             "de": "Stopmotion Animationsprogramm"
           },
           "osIconPath": "/usr/share/luciole/images/luciole.png"
+        },
+        {
+          "type": "desktop",
+          "source": "qsynth"
+        },
+        {
+          "type": "desktop",
+          "source": "qjackctl"
         }
           ]
     },
