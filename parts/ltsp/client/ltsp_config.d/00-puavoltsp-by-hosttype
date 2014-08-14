@@ -3,6 +3,9 @@ PERSONALLY_ADMINISTERED=$(jq -r .personally_administered /etc/puavo/device.json)
 
 set_lts_var PUAVO_HOSTTYPE "$PUAVO_HOSTTYPE"
 
+puavo_automatic_image_updates=$(jq -r .automatic_image_updates /etc/puavo/device.json)
+puavo_personally_administered=$(jq -r .personally_administered /etc/puavo/device.json)
+
 puavo_common_unneeded_services='
   anacron
   apport
@@ -50,6 +53,9 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_nfs_services $puavo_tty_services lightdm"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
+    set_lts_var RM_SESSION_SERVICES "
+      puavo-client-updater-applet
+    "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
       laptop-mode
@@ -93,6 +99,14 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services $keep_system_services ondemand laptop-mode"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
+
+    if ! [ "$puavo_automatic_image_updates" = "false" \
+             -a "$puavo_personally_administered" = "true" ]; then
+      set_lts_var RM_SESSION_SERVICES "
+        puavo-client-updater-applet
+      "
+    fi
+
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
       $rm_system_services 
@@ -120,6 +134,7 @@ case "$PUAVO_HOSTTYPE" in
       mimio-mimiosys
       polyvision-cdfnu
       polyvision-pvd
+      puavo-client-updater-applet
       smart_1-_Service
       smart_1-_Tools
     "
@@ -145,6 +160,9 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LDM_SESSION          'gnome-session --session=gnome-fallback'
     set_lts_var LOCALDEV             True
     set_lts_var LTSP_FATCLIENT       False
+    set_lts_var RM_SESSION_SERVICES "
+      puavo-client-updater-applet
+    "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
       eno
@@ -175,6 +193,9 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var X_COLOR_DEPTH        16
     ;;
   unregistered)
+    set_lts_var RM_SESSION_SERVICES "
+      puavo-client-updater-applet
+    "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
       eno
@@ -216,6 +237,9 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
+    set_lts_var RM_SESSION_SERVICES "
+      puavo-client-updater-applet
+    "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
       laptop-mode
