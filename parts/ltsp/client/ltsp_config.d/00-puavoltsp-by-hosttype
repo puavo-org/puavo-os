@@ -54,6 +54,7 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
     set_lts_var RM_SESSION_SERVICES "
+      nm-applet
       puavo-client-updater-applet
     "
     set_lts_var RM_SYSTEM_SERVICES "
@@ -132,6 +133,7 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var RM_SESSION_SERVICES "
       ebeam
       mimio-mimiosys
+      nm-applet
       polyvision-cdfnu
       polyvision-pvd
       puavo-client-updater-applet
@@ -161,6 +163,7 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LOCALDEV             True
     set_lts_var LTSP_FATCLIENT       False
     set_lts_var RM_SESSION_SERVICES "
+      nm-applet
       puavo-client-updater-applet
     "
     set_lts_var RM_SYSTEM_SERVICES "
@@ -194,6 +197,7 @@ case "$PUAVO_HOSTTYPE" in
     ;;
   unregistered)
     set_lts_var RM_SESSION_SERVICES "
+      nm-applet
       puavo-client-updater-applet
     "
     set_lts_var RM_SYSTEM_SERVICES "
@@ -238,6 +242,7 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
     set_lts_var RM_SESSION_SERVICES "
+      nm-applet
       puavo-client-updater-applet
     "
     set_lts_var RM_SYSTEM_SERVICES "
