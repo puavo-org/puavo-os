@@ -5,6 +5,7 @@ class image::opinsysrestricted {
         'trusty': {
           include citrix,
 		  ebeam,
+		  chromium_with_chrome_flash,
 		  google-earth-stable,
 		  google_talkplugin,
 		  image::bundle::opinsys,
