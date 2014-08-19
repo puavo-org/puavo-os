@@ -155,9 +155,8 @@ def configure_local_users(conf)
     end
 
     if device['primary_user'] == login then
-      warn "login is the same one that primary user has: '#{ login }'"
-      problems = true
-      next
+      warn "disabling login that is reserved for primary user: '#{ login }'"
+      user['enabled'] = false
     end
 
     home = "/home/#{ login }"
