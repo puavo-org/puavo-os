@@ -6,6 +6,9 @@ var config_json_dir  = '/state/etc/puavo/local';
 var config_json_path = config_json_dir + '/config.json';
 var old_config;
 
+var device_json_path = '/state/etc/puavo/device.json';
+var device_config;
+
 var locale = process.env.LANG.substring(0, 2);
 var mc =
   function(msg) {
@@ -26,6 +29,8 @@ var mc =
         'Password:':        'Salasana:',
         'remove':           'poista',
 
+        'Login is the same one that primary user has.':
+          'Käyttäjätunnus on sama kuin ensisijaisella käyttäjällä.',
         'Login is not in correct format.':
           'Käyttäjätunnus ei ole oikean muotoinen',
         'Name is not in correct format.':
@@ -699,7 +704,10 @@ function make_local_users_config(response,
   if (login.match(/^\s*$/) && name.match(/^\s*$/))
     return next_user_fn();
 
-  if (!login.match(/^[a-z\.-]+$/)) {
+  if (device_config.primary_user === login) {
+    errors.login.innerText = mc('Login is the same one that primary user has.');
+    has_errors = true;
+  } else if (!login.match(/^[a-z\.-]+$/)) {
     errors.login.innerText = mc('Login is not in correct format.');
     has_errors = true;
   }
@@ -772,6 +780,14 @@ function read_config() {
   }
 
   return config;
+}
+
+function read_device_config() {
+  try {
+    return JSON.parse( fs.readFileSync(device_json_path) );
+  } catch (ex) {
+    return {};
+  }
 }
 
 function write_config() {
@@ -877,6 +893,8 @@ if (!access_ok) {
 
 old_config = read_config();
 if (!old_config) { process.exit(1); }
+
+device_config = read_device_config();
 
 // set document titles
 document.querySelector('title').innerText

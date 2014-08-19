@@ -111,7 +111,7 @@ def search_and_replace_line(file, re, new_line)
 end
 
 def configure_admins()
-  device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
+  device = read_device()
   admin  = device['primary_user'] || ''
 
   kernel_cmdline = IO.read('/proc/cmdline')
@@ -135,6 +135,8 @@ end
 def configure_local_users(conf)
   return if conf.nil?
 
+  device = read_device()
+
   uid_min, uid_max = 3001, 3999
   group_id = Etc.getgrnam('users').gid
 
@@ -148,6 +150,12 @@ def configure_local_users(conf)
     end
     if user['uid'] > uid_max
       warn "uid is over uid_max for '#{ login }'"
+      problems = true
+      next
+    end
+
+    if device['primary_user'] == login then
+      warn "login is the same one that primary user has: '#{ login }'"
       problems = true
       next
     end
@@ -226,6 +234,10 @@ def parse_pkg_list(pkg_list)
     ? Dir.glob('/usr/share/puavo-ltsp-client/restricted-packages/*') \
          .map { |s| File.basename(s) } \
     : pkg_list.split(',')
+end
+
+def read_device()
+  JSON.parse( IO.read('/state/etc/puavo/device.json') )
 end
 
 def restricted_package_tool(*args)
