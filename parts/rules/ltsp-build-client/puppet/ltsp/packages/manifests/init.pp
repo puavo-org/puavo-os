@@ -419,7 +419,7 @@ class packages {
     , 'kig'
     , 'kmplot'
     , 'kstars'
-    , 'marble'
+    , 'marble-qt'
     , 'mandelbulber'
     , 'pspp'
     , 'rkward'
