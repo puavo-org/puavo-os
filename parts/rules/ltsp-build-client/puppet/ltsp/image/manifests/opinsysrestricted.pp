@@ -3,14 +3,16 @@ class image::opinsysrestricted {
     'Ubuntu': {
       case $lsbdistcodename {
         'trusty': {
-          include citrix,
-		  ebeam,
+          include chrome,
 		  chromium_with_chrome_flash,
+		  citrix,
+		  ebeam,
 		  google-earth-stable,
 		  google_talkplugin,
 		  image::bundle::opinsys,
 		  ltspimage_java,
 		  mimio,
+		  netflix_with_chrome,
 		  packages::opinsysrestricted,
 		  primus,
 		  promethean,
