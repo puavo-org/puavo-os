@@ -810,7 +810,8 @@ class packages {
     [ 'google-talkplugin' ]:
       tag => [ 'web', 'opinsys', 'restricted' ];
 
-    [ 'google-chrome-stable'
+    [ 'google-chrome-beta'
+    , 'google-chrome-stable'
     , 'oracle-java' ]:
       tag => [ 'web', 'opinsys', 'extra', 'restricted' ];
 

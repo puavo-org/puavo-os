@@ -7,6 +7,9 @@ apt_ltspbuild_proxy
 autopoweroff
     Settings for autopoweroff.
 
+chrome
+    Do not activate the apt source for chrome.
+
 chromium_with_chrome_flash
     Setup chromium to use flashplugin in chrome.
 
@@ -89,6 +92,9 @@ mimio
 motd
     Add stuff to MOTD, that means at least host type and ltsp image
     name/version.
+
+netflix_with_chrome
+    Wrapper for running netflix in Chrome.
 
 network_manager
     Allow users to modify network manager connections, but clean them

@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -e
+
+google-chrome-beta --app="http://netflix.com" \
+                   --disable-translate \
+                   --no-first-run \
+                   --user-agent="Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2114.2 Safari/537.36" --user-data-dir="${HOME}/.config/google-chrome-netflix"
