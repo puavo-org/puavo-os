@@ -155,6 +155,22 @@ function add_one_license(parentNode, license_info, sw_state) {
   parentNode.appendChild(tr);
 }
 
+function check_access() {
+  // make sure only admins can use this tool (this is just a gui niceness)
+  var access_ok;
+  try {
+    fs.readdirSync(config_json_dir);
+    access_ok = true;
+  } catch(ex) {
+    access_ok = false;
+  };
+
+  if (!access_ok) {
+    alert( mc('You do not have permission to run this tool') );
+    process.exit(1);
+  }
+}
+
 function check_software_state(cb) {
   var handler
     = function (error, stdout, stderr) {
@@ -877,19 +893,7 @@ function write_config_to_file(conf) {
 }
 
 
-// make sure only admins can use this tool (this is just a gui niceness)
-var access_ok;
-try {
-  fs.readdirSync(config_json_dir);
-  access_ok = true;
-} catch(ex) {
-  access_ok = false;
-};
-
-if (!access_ok) {
-  alert( mc('You do not have permission to run this tool') );
-  process.exit(1);
-}
+check_access();         // will exit in case of errors
 
 old_config = read_config();
 if (!old_config) { process.exit(1); }
