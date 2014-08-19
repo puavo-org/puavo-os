@@ -5,7 +5,7 @@
     "fi": "Kategoriat",
     "sv": "Kategorier",
     "de": "Kategorie"
-    },
+  },
   "items": [
     {
       "type": "menu",
@@ -17,17 +17,18 @@
         "de": "Werkzeuge"
       },
       "description": {
-         "en": "Tools",
-         "fi": "Apuohjelmia",
-         "sv": "Verktyg",
-         "de": "Werkzeuge"
-
+        "en": "Tools",
+        "fi": "Apuohjelmia",
+        "sv": "Verktyg",
+        "de": "Werkzeuge"
       },
       "osIcon": "applications-accessories",
       "items": [
         {
           "type": "desktop",
-          "keywords": ["leapmotion"],
+          "keywords": [
+            "leapmotion"
+          ],
           "source": "eleet"
         },
         {
@@ -46,7 +47,7 @@
             "fi": "Gedit-tekstieditori",
             "sv": "Gedit- tekstredigerare",
             "de": "Gedit-Texteditor"
-            }
+          }
         },
         {
           "type": "desktop",
@@ -65,7 +66,7 @@
             "fi": "Brasero - CD/DVD -kirjoitus",
             "sv": "Brasero - CD/DVD -brännare",
             "de": "Brasero - CD/DVD -brennen"
-            }
+          }
         },
         {
           "type": "desktop",
@@ -80,11 +81,11 @@
           "type": "desktop",
           "source": "file-roller",
           "name": {
-             "en": "Archive Manager",
-             "fi": "Pakettienkäsittely-ohjelma",
-             "sv": "Pakethanterare",
-             "de": "Archiv Verwaltung"
-           }
+            "en": "Archive Manager",
+            "fi": "Pakettienkäsittely-ohjelma",
+            "sv": "Pakethanterare",
+            "de": "Archiv Verwaltung"
+          }
         },
         {
           "type": "desktop",
@@ -109,18 +110,17 @@
         {
           "type": "custom",
           "name": {
-            "en": "java"
-          },
-          "command": ["/opt/java/jdk1.7.0_51/jre/bin/ControlPanel"],
-          "osIcon":"openjdk-6",
-          "name": {
             "en": "Java Control Panel",
             "fi": "Java-asetukset",
             "sv": "Java-inställningar",
             "de": "Java Einstellungen"
-          }
+          },
+          "command": [
+            "/opt/java/jdk1.7.0_51/jre/bin/ControlPanel"
+          ],
+          "osIcon": "openjdk-6"
         }
-          ]
+      ]
     },
     {
       "type": "menu",
@@ -135,8 +135,8 @@
         "fi": "Graafiset Internet-sovellukset",
         "sv": "Ritprogram",
         "de": "Grafikprogramme"
-       },
-      "osIcon":"applications-graphics",
+      },
+      "osIcon": "applications-graphics",
       "items": [
         {
           "type": "desktop",
@@ -148,7 +148,7 @@
         {
           "type": "desktop",
           "source": "tuxpaint",
-          "name":{
+          "name": {
             "en": "Tuxpaint-drawing program",
             "fi": "Tuxpaint-piirto-ohjelma",
             "sv": "Tuxpaint",
@@ -163,12 +163,15 @@
             "fi": "MyPaint-taideohjelma",
             "sv": "MyPaint",
             "de": "MyPaint"
-              }
+          }
         },
         {
           "type": "desktop",
           "source": "gimp",
-          "keywords": ["photoshop","digabi"],
+          "keywords": [
+            "photoshop",
+            "digabi"
+          ],
           "name": {
             "en": "Gimp - GNU Image Manipulation Program",
             "fi": "Gimp-kuvankäsittely",
@@ -178,7 +181,9 @@
         },
         {
           "type": "desktop",
-          "keywords": ["digabi"],
+          "keywords": [
+            "digabi"
+          ],
           "source": "pinta"
         },
         {
@@ -195,7 +200,7 @@
         {
           "type": "desktop",
           "source": "eog",
-          "name":{
+          "name": {
             "en": "Image Viewer",
             "fi": "Kuvakatselin",
             "sv": "Bildvisare",
@@ -225,7 +230,9 @@
         {
           "type": "desktop",
           "source": "inkscape",
-          "keywords": ["digabi"],
+          "keywords": [
+            "digabi"
+          ],
           "name": {
             "en": "Inkscape-vector graphics editor",
             "fi": "Inkscape-vektorigrafiikka",
@@ -270,7 +277,7 @@
           "type": "desktop",
           "source": "blender",
           "inactiveByDeviceType": "thinclient",
-          "name":{
+          "name": {
             "fi": "Blender-3D-mallinnusohjelma",
             "sv": "Blender-3D-modellering",
             "de": "Blender-3D-Modellierung"
@@ -279,27 +286,26 @@
         {
           "type": "desktop",
           "source": "photofilmstrip",
-          "name":{
-            "fi": "Photofilmstrip",
+          "name": {
             "fi": "Photofilmstrip-kuvaesitys",
             "sv": "Photofilmstrip",
             "de": "Photofilmstrip"
           }
         }
-          ]
+      ]
     },
     {
       "type": "menu",
       "name": {
         "en": "Internet"
       },
-      "description":{
+      "description": {
         "en": "Internet-applications",
         "fi": "Internet-sovellukset",
         "sv": "Internet-program",
         "de": "Interent Programme"
       },
-      "osIcon":"applications-internet",
+      "osIcon": "applications-internet",
       "items": [
         {
           "type": "desktop",
@@ -378,8 +384,8 @@
             "en": "Google Earth - Legacy"
           },
           "osIconPath": "/usr/share/icons/Faenza/apps/96/googleearth.png"
-       },
-       {
+        },
+        {
           "type": "desktop",
           "source": "google-earth",
           "inactiveByDeviceType": "thinclient",
@@ -399,7 +405,7 @@
         {
           "type": "desktop",
           "source": "empathy",
-          "name":{
+          "name": {
             "en": "Empathy-chat client",
             "fi": "Empathy-pikaviestin",
             "sv": "Empathy-IM-klient",
@@ -428,7 +434,7 @@
             "en": "Vmware client"
           }
         }
-          ]
+      ]
     },
     {
       "type": "menu",
@@ -439,7 +445,7 @@
         "de": "Programmierung"
       },
       "description": "IDE-sovelluksia ohjelmointiin",
-      "osIcon":"gnome-devel",
+      "osIcon": "gnome-devel",
       "items": [
         {
           "type": "desktop",
@@ -510,7 +516,9 @@
             "sv": "KTurtle - logoprogrammering",
             "de": "KTurtle - Programieren mit Logo"
           },
-          "command": ["kturtle"]
+          "command": [
+            "kturtle"
+          ]
         },
         {
           "type": "desktop",
@@ -548,7 +556,7 @@
           },
           "osIconPath": "/usr/share/icons/Faenza/apps/96/qtdesigner.png"
         }
-          ]
+      ]
     },
     {
       "type": "menu",
@@ -601,13 +609,15 @@
         {
           "type": "desktop",
           "source": "geogebra",
-          "keywords": ["digabi"],
+          "keywords": [
+            "digabi"
+          ],
           "name": "Geogebra"
         },
         {
           "type": "desktop",
           "source": "kmplot",
-          "name":{
+          "name": {
             "en": "KmPlot-function plotter",
             "fi": "KmPlot-kuvaajat",
             "sv": "KmPlot",
@@ -647,24 +657,28 @@
         {
           "type": "desktop",
           "source": "kwordquiz",
-          "name":{
+          "name": {
             "en": "KWordQuiz-vocabulary learning",
             "fi": "Sanastoharjoitus",
             "sv": "Ordförrådsövningar",
             "de": "Kreuzworträtsel"
           },
-          "command": ["kwordquiz"]
+          "command": [
+            "kwordquiz"
+          ]
         },
         {
           "type": "desktop",
           "source": "khangman",
-          "name":{
+          "name": {
             "en": "KHangMan-hangman game",
             "fi": "Hirsipuu",
             "sv": "KHangMan",
             "de": "KHangman"
           },
-          "command": ["khangman"]
+          "command": [
+            "khangman"
+          ]
         },
         {
           "type": "desktop",
@@ -675,7 +689,9 @@
             "sv": "KTouch-maskinskrivning",
             "de": "KTouch-Schreibmaschine"
           },
-          "command": ["ktouch"]
+          "command": [
+            "ktouch"
+          ]
         },
         {
           "type": "desktop",
@@ -708,7 +724,9 @@
             "sv": "KStars-stjärnhimlen",
             "de": "KStars-Astronomie"
           },
-          "command": ["kstars"]
+          "command": [
+            "kstars"
+          ]
         },
         {
           "type": "desktop",
@@ -719,16 +737,22 @@
             "sv": "Step-fysik simulator",
             "de": "Step Physik Simulator"
           },
-          "command": ["step"]
+          "command": [
+            "step"
+          ]
         },
         {
           "type": "desktop",
-          "keywords": ["digabi"],
+          "keywords": [
+            "digabi"
+          ],
           "source": "LoggerPro"
         },
         {
           "type": "desktop",
-          "keywords": ["digabi"],
+          "keywords": [
+            "digabi"
+          ],
           "source": "wxmaxima"
         },
         {
@@ -751,7 +775,9 @@
             "sv": "Periodsystem",
             "de": "Periodensystem"
           },
-          "command": ["kalzium"]
+          "command": [
+            "kalzium"
+          ]
         },
         {
           "type": "desktop",
@@ -763,7 +789,7 @@
             "de": "Mandelbulber"
           }
         }
-          ]
+      ]
     },
     {
       "type": "menu",
@@ -773,18 +799,22 @@
         "sv": "Kontor",
         "de": "Büro"
       },
-      "description":{
+      "description": {
         "en": "Office applications",
         "fi": "Toimisto-ohjelmat",
         "sv": "Kontorsprogram",
         "de": "Büroprogramme"
       },
-      "osIcon":"applications-office",
+      "osIcon": "applications-office",
       "items": [
         {
           "type": "desktop",
           "source": "libreoffice-writer",
-          "keywords": ["openoffice", "word", "digabi"],
+          "keywords": [
+            "openoffice",
+            "word",
+            "digabi"
+          ],
           "name": {
             "en": "LibreOffice Writer",
             "fi": "LibreOffice Tekstinkäsittely",
@@ -795,8 +825,12 @@
         {
           "type": "desktop",
           "source": "libreoffice-calc",
-          "keywords": ["openoffice", "excel", "digabi"],
-          "name":{
+          "keywords": [
+            "openoffice",
+            "excel",
+            "digabi"
+          ],
+          "name": {
             "en": "LibreOffice Calc",
             "fi": "LibreOffice Taulukkolaskenta",
             "sv": "LibreOffice kalkylblad",
@@ -806,8 +840,12 @@
         {
           "type": "desktop",
           "source": "libreoffice-impress",
-          "keywords": ["openoffice", "powerpoint", "digabi"],
-          "name":{
+          "keywords": [
+            "openoffice",
+            "powerpoint",
+            "digabi"
+          ],
+          "name": {
             "en": "LibreOffice Impress",
             "fi": "LibreOffice Esitys",
             "sv": "LibreOffice Presentation",
@@ -817,8 +855,11 @@
         {
           "type": "desktop",
           "source": "libreoffice-draw",
-          "keywords": ["openoffice", "digabi"],
-          "name":{
+          "keywords": [
+            "openoffice",
+            "digabi"
+          ],
+          "name": {
             "en": "LibreOffice Draw",
             "fi": "LibreOffice Piirros",
             "sv": "LibreOffice Rita",
@@ -828,8 +869,11 @@
         {
           "type": "desktop",
           "source": "libreoffice-base",
-          "keywords": ["openoffice", "digabi"],
-          "name":{
+          "keywords": [
+            "openoffice",
+            "digabi"
+          ],
+          "name": {
             "en": "LibreOffice Base",
             "fi": "LibreOffice Tietokanta",
             "sv": "LibreOffice Databas",
@@ -839,7 +883,10 @@
         {
           "type": "desktop",
           "source": "libreoffice-math",
-          "keywords": ["openoffice", "digabi"],
+          "keywords": [
+            "openoffice",
+            "digabi"
+          ],
           "name": {
             "en": "LibreOffice Math",
             "fi": "LibreOffice Kaava",
@@ -860,7 +907,7 @@
         {
           "type": "desktop",
           "source": "vym",
-          "name":{
+          "name": {
             "en": "VYM-mindmap",
             "fi": "Miellekarttasovellus",
             "sv": "Mindmap",
@@ -880,25 +927,33 @@
         {
           "type": "desktop",
           "source": "acroread",
-          "keywords": ["pdf"],
+          "keywords": [
+            "pdf"
+          ],
           "name": "Acroread-asiakirjakatselin"
         },
         {
           "type": "desktop",
           "source": "okular",
-          "keywords": ["pdf"],
+          "keywords": [
+            "pdf"
+          ],
           "name": {
             "en": "Okular-document viewer",
             "fi": "Okular-asiakirjakatselin",
             "sv": "Okular-dokumentläsare",
             "de": "Okular Dokumentenbetrachter"
           },
-          "command": ["okular"]
+          "command": [
+            "okular"
+          ]
         },
         {
           "type": "desktop",
           "source": "evince",
-          "keywords": ["pdf"],
+          "keywords": [
+            "pdf"
+          ],
           "name": {
             "en": "Evince-document viewer",
             "fi": "Evince-asiakirjakatselin",
@@ -943,7 +998,7 @@
         "sv": "Internet -applikationer",
         "de": "Interent Programme"
       },
-      "osIcon":"applications-multimedia",
+      "osIcon": "applications-multimedia",
       "items": [
         {
           "type": "desktop",
@@ -1049,21 +1104,22 @@
         },
         {
           "type": "custom",
-          "name": "Kino",
-          "command": ["kino"],
+          "name": {
+            "en": "Kino-non-linear DV editor",
+            "fi": "Kino-videoeditori",
+            "sv": "Kino-videoredigerare",
+            "de": "Kino Filme bearbeiten"
+          },
+          "command": [
+            "kino"
+          ],
           "description": {
             "en": "Edit videos",
             "fi": "Muokkaa videoita",
             "sv": "Redigera videon",
             "de": "Video bearbeiten"
           },
-          "osIcon":"kino",
-          "name": {
-            "en": "Kino-non-linear DV editor",
-            "fi": "Kino-videoeditori",
-            "sv": "Kino-videoredigerare",
-            "de": "Kino Filme bearbeiten"
-          }
+          "osIcon": "kino"
         },
         {
           "type": "desktop",
@@ -1288,7 +1344,9 @@
         {
           "type": "web",
           "name": "Walma",
-          "keywords": ["photoshop"],
+          "keywords": [
+            "photoshop"
+          ],
           "url": "http://walmademo.opinsys.fi",
           "description": {
             "en": "Collaborative whiteboard",
