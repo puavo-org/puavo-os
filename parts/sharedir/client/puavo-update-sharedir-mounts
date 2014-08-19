@@ -5,6 +5,11 @@ set -eu
 # 10000 is the minimum uid for Puavo users, do nothing for users below that
 [ "$(id -u "$PAM_USER")" -lt 10000 ] && exit 0
 
+# if "sharedirs"-tags is not set, do nothing
+if ! jq -r .tags[] /etc/puavo/device.json | grep -qx sharedirs; then
+  exit 0
+fi
+
 AUTOFS_MAPFILE=/var/lib/puavo-sharedir-client/auto.cifs
 
 puavo_domain=$(cat /etc/puavo/domain)
