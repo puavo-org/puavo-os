@@ -233,9 +233,15 @@ case "$PUAVO_HOSTTYPE" in
     if [ -n "$SERVER" ]; then
       # wirelessaccesspoint booted off from network, offer to update it
       set_lts_var SCREEN_07 ltspimage-update
+      puavo_wirelessaccesspoint_unneeded_services="lightdm"
+    elif jq -r . tags[] /etc/puavo/device.json \
+           | grep -Eqx '(infotv|webkiosk)'; then
+      # if we are an infotv or a webkiosk, we do want the lightdm to start up
+      set_lts_var SCREEN_07 lightdm
+      puavo_wirelessaccesspoint_unneeded_services=""
     else
-      # wirelessaccesspoint booted from local disk, provide another screen
       set_lts_var SCREEN_07 wirelessaccesspoint
+      puavo_wirelessaccesspoint_unneeded_services="lightdm"
     fi
 
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
@@ -247,8 +253,8 @@ case "$PUAVO_HOSTTYPE" in
     "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      $puavo_wirelessaccesspoint_unneeded_services
       laptop-mode
-      lightdm
       ltspguestssh
       ltspssh
       network-manager
