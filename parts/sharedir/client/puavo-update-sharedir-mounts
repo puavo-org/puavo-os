@@ -6,7 +6,7 @@ set -eu
 [ "$(id -u "$PAM_USER")" -lt 10000 ] && exit 0
 
 # if "sharedirs"-tags is not set, do nothing
-if ! jq -r .tags[] /etc/puavo/device.json | grep -qx sharedirs; then
+if ! jq -r .tags[] /etc/puavo/device.json | grep -qx use_sharedir_mounts; then
   exit 0
 fi
 
