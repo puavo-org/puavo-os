@@ -1,0 +1,7 @@
+# /etc/cron.d/infotv_display_control: turn infotv displays on and off
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+0 7  * * 1-5	root	iivari-display_on
+0 17 * * 1-5	root	iivari-display_off

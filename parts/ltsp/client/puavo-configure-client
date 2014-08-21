@@ -57,11 +57,12 @@ end
 @puavo_domain      = read_file('/etc/puavo/domain')
 @puavo_topdomain   = read_file('/etc/puavo/topdomain')
 
-@device=Hash.new
+@device = {}
+@tags   = []
 
 if File.exists?("/etc/puavo/device.json")
-  @device = JSON.parse(File.read("/etc/puavo/device.json"))
-  @tags = @device["tags"]
+  @device = JSON.parse( File.read("/etc/puavo/device.json") )
+  @tags   = @device["tags"] || []
 
   append_tags_to_environment(@tags)
 end
@@ -291,6 +292,11 @@ case @puavo_device_type
     write_config("/etc/lightdm/lightdm.conf")
     write_config("/etc/pam.d/lightdm-autologin", "wirelessaccesspoint")
     write_config("/etc/ntp.conf")
+
+    # turn infotv displays on and off
+    if @tags && @tags.include?('infotv') then
+      write_config("/etc/cron.d/infotv_display_control")
+    end
 end
 
 exit(0)

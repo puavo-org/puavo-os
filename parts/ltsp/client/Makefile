@@ -40,6 +40,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
 	mkdir -p $(DESTDIR)$(datarootdir)/pam-configs
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cron.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/dbus-1/system.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default
@@ -81,6 +82,7 @@ install : installdirs
 		templates/etc/pam.d/lightdm-autologin-fatclient \
 		templates/etc/pam.d/lightdm-autologin-laptop \
 		templates/etc/pam.d/lightdm-autologin-thinclient \
+		templates/etc/pam.d/lightdm-autologin-wirelessaccesspoint \
 		templates/etc/pam.d/lightdm-fatclient \
 		templates/etc/pam.d/lightdm-laptop \
 		templates/etc/pam.d/lightdm-thinclient
@@ -109,6 +111,9 @@ install : installdirs
 		templates/etc/nsswitch.conf-sss \
 		templates/etc/nsswitch.conf-sss-extrausers \
 		templates/etc/ntp.conf
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cron.d \
+		templates/etc/cron.d/infotv_display_control
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups \
 		templates/etc/cups/client.conf \

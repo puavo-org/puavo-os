@@ -11,7 +11,6 @@ puavo_common_unneeded_services='
   apport
   atd
   avahi-daemon
-  cron
   cryptdisks-enable
   cryptdisks-udev
   epoptes
@@ -59,6 +58,7 @@ case "$PUAVO_HOSTTYPE" in
     "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      cron
       laptop-mode
       ltspguestssh
       ltspssh
@@ -111,6 +111,7 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
       $rm_system_services 
+      cron
       hostapd
       jetty
       ltspguestssh
@@ -142,6 +143,7 @@ case "$PUAVO_HOSTTYPE" in
     "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      cron
       eno
       laptop-mode
       network-manager
@@ -168,6 +170,7 @@ case "$PUAVO_HOSTTYPE" in
     "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      cron
       eno
       fluentd
       gssd
@@ -202,6 +205,7 @@ case "$PUAVO_HOSTTYPE" in
     "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      cron
       eno
       fluentd
       gssd
