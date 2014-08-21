@@ -285,6 +285,12 @@ case @puavo_device_type
         file.write("\nauto #{ interface }\niface #{ interface } inet dhcp\n")
       end
     end
+
+    # wirelessaccesspoints may be used as infotv/webkiosk devices
+    # depending on device tags.
+    write_config("/etc/lightdm/lightdm.conf")
+    write_config("/etc/pam.d/lightdm-autologin", "wirelessaccesspoint")
+    write_config("/etc/ntp.conf")
 end
 
 exit(0)

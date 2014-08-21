@@ -234,9 +234,8 @@ case "$PUAVO_HOSTTYPE" in
       # wirelessaccesspoint booted off from network, offer to update it
       set_lts_var SCREEN_07 ltspimage-update
       puavo_wirelessaccesspoint_unneeded_services="lightdm"
-    elif jq -r .tags[] /etc/puavo/device.json \
-           | grep -Eqx '(infotv|webkiosk)'; then
-      # if we are an infotv or a webkiosk, we do want the lightdm to start up
+    elif jq -r .tags[] /etc/puavo/device.json | grep -qx infotv; then
+      # if we are an infotv, we do want the lightdm to start up
       set_lts_var SCREEN_07 lightdm
       puavo_wirelessaccesspoint_unneeded_services=""
     else
