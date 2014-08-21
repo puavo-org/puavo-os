@@ -664,6 +664,8 @@ class packages {
       tag => [ 'ubuntu-gnome-desktop', 'ubuntu', ];
 
     [ 'desktop-file-utils'
+    , 'exfat-fuse'
+    , 'exfat-utils'
     , 'fuse'
     , 'gconf-editor'
     , 'gkbd-capplet'
