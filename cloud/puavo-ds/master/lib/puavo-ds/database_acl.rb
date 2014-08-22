@@ -76,6 +76,7 @@ class PuavoUid < LdapDn
   def self.monitor                     ; new('monitor'      ).dn          ; end
   def self.puavo(method='exact')       ; new('puavo'        ).send(method); end	# XXX why sometimes .dn, sometimes .exact ?
   def self.puavo_ticket(method='exact'); new('puavo-ticket' ).dn          ; end
+  def self.pw_mgmt(method='exact')     ; new('pw-mgmt'      ).dn          ; end
   def self.puppet                      ; new('puppet'       ).dn          ; end
   def self.samba                       ; new('samba'        ).dn          ; end
   def self.slave                       ; new('slave'        ).exact       ; end
@@ -297,7 +298,8 @@ class LdapAcl
 					 puavoId
 					 eduPersonPrincipalName
 					 objectClass
-					 puavoEduPersonAffiliation)),	Rule.write(Set.admin),			Rule.read(PuavoUid.puavo('dn'),
+					 puavoEduPersonAffiliation)),	Rule.write(Set.admin),			Rule.read(PuavoUid.pw_mgmt('dn'),
+                                                                                                                          PuavoUid.puavo('dn'),
 															  PuavoUid.puavo_ticket('dn'),
 															  Set.getent,
 															  Set.externalservice_auth),			Rule.perms('auth', 'anonymous'),	],
@@ -309,13 +311,15 @@ class LdapAcl
 					 sn
 					 puavoPreferredDesktop
 					 loginShell)),	Rule.write(Set.admin),			Rule.read(Set.getent,
+                                                                                                          PuavoUid.pw_mgmt('dn'),
 															  PuavoUid.puavo('dn'),
 															  PuavoUid.puavo_ticket('dn')),						],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(givenName
 					 sn
 					 displayName
-					 puavoEduPersonReverseDisplayName)),
+					 puavoEduPersonReverseDisplayName
+)),
 									Rule.write(Set.admin),			Rule.read(People.children,
 															  Hosts.subtree,
 															  Set.sysgroup('getent'),
@@ -329,7 +333,9 @@ class LdapAcl
 					 preferredLanguage
                                          puavoLocale
 					 telephoneNumber)),		Rule.write(Set.admin,
-										   'self'),			Rule.read(Set.externalservice_addressbook, PuavoUid.puavo_ticket),				],
+										   'self'),			Rule.read(Set.externalservice_addressbook,
+                                                                                                                          PuavoUid.pw_mgmt,
+                                                                                                                          PuavoUid.puavo_ticket),						],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 																			# XXX odd
       [ People.subtree,		attrs(%w(puavoAcceptedTerms)),		Rule.write(Set.admin),			Rule.read(PuavoUid.puavo, PuavoUid.puavo_ticket),		Rule.write('self'),			],
