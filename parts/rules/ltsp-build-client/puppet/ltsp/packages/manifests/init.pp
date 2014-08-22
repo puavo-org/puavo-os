@@ -725,6 +725,7 @@ class packages {
       tag => [ 'misc', 'puavo', ];
 
     [ 'bluegriffon'
+    , 'enchanting'
     , 'pycharm' ]:
       tag => [ 'programming', 'puavo', ];
 
