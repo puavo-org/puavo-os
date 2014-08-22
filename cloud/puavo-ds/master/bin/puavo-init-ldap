@@ -130,6 +130,9 @@ puts
 @puavo_ticket_dn = ask_puavo_attr("puavo-ticket dn", :ds_puavo_ticket_dn, "uid=puavo-ticket,o=puavo")
 @puavo_ticket_pw = ask_puavo_attr("puavo-ticket password", "ds_puavo_ticket_password")
 
+@pw_mgmt_dn = ask_puavo_attr("pw-mgmt dn", :ds_pw_mgmt_dn, "uid=pw-mgmt,o=puavo")
+@pw_mgmt_pw = ask_puavo_attr("pw-mgmt password", :ds_pw_mgmt_password)
+
 puts "Using #{@rootdn} as rootdn"
 
 @rootpw_hash=`slappasswd -h "{SSHA}" -s "#{@rootpw}"`.gsub(/\n/,"")
@@ -138,6 +141,7 @@ puts "Using #{@rootdn} as rootdn"
 @kdcpw_hash=`slappasswd -h "{SSHA}" -s "#{@kdcpw}"`.gsub(/\n/,"")
 @kadminpw_hash=`slappasswd -h "{SSHA}" -s "#{@kadminpw}"`.gsub(/\n/,"")
 @puavo_ticket_pw_hash=`slappasswd -h "{SSHA}" -s "#{@puavo_ticket_pw}"`.gsub(/\n/,"")
+@pw_mgmt_pw_hash=`slappasswd -h "{SSHA}" -s "#{@pw_mgmt_pw}"`.gsub(/\n/,"")
 
 print <<EOF
 I'm now going to initialize new LDAP databases on this machine.

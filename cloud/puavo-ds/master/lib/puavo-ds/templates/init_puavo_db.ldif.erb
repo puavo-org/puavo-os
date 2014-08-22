@@ -73,6 +73,13 @@ uid: puavo-ticket
 description: Account for Puavo Ticket to get information of organisations
 userPassword: <%= @puavo_ticket_pw_hash %>
 
+dn: <%= @pw_mgmt_dn %>
+objectClass: account
+objectClass: simpleSecurityObject
+uid: pw-mgmt
+description: Account for password management service
+userPassword: <%= @pw_mgmt_pw_hash %>
+
 dn: ou=Kerberos Realms,o=puavo
 objectClass: top
 objectClass: organizationalUnit
