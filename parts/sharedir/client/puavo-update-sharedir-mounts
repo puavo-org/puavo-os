@@ -5,8 +5,13 @@ set -eu
 # 10000 is the minimum uid for Puavo users, do nothing for users below that
 [ "$(id -u "$PAM_USER")" -lt 10000 ] && exit 0
 
-# if "use_sharedir_mounts"-tags is not set, do nothing
+# if "use_sharedir_mounts"-tags is *not* set, do nothing
 if ! jq -r .tags[] /etc/puavo/device.json | grep -qx use_sharedir_mounts; then
+  exit 0
+fi
+
+# if "no_sharedir_mounts"-tags *is* set, do nothing
+if jq -r .tags[] /etc/puavo/device.json | grep -qx no_sharedir_mounts; then
   exit 0
 fi
 
