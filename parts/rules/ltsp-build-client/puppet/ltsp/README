@@ -38,6 +38,9 @@ disable_gnome_keyring_autostart
     This is confusing for people who do not know what it is.  But we do leave
     the package in case someone needs it and knows how to use it.
 
+disable_suspend_on_halt
+    When on runlevel 0 (halt), do not suspend.
+
 disable_update_notifications
     Disable some functionality in update-notifier-common package
     (just removing the package would be nice, but ttf-mscorefonts-installer
