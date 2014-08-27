@@ -1,0 +1,8 @@
+#!/bin/sh
+
+runlevel=$(runlevel | awk '{ print $2 }')
+
+if [ "$runlevel" = "0" ]; then
+  # halt in progress, do not suspend
+  exit 1
+fi
