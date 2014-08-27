@@ -24,6 +24,7 @@ do_mounts() {
   mount -o bind /dev     "$target_dir/dev"
   mount -o bind /dev/pts "$target_dir/dev/pts"
   mount -o bind /proc    "$target_dir/proc"
+  mount -o bind /sys     "$target_dir/sys"
 }
 
 do_umounts() {
@@ -31,6 +32,7 @@ do_umounts() {
   umount -l "$target_dir/dev/pts"
   umount -l "$target_dir/dev"
   umount -l "$target_dir/proc"
+  umount -l "$target_dir/sys"
 }
 
 wipe_chroot() {
