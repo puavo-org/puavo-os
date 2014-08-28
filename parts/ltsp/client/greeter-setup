@@ -2,15 +2,24 @@
 
 puavo_keyboard_layout=$(jq -r .keyboard_layout /etc/puavo/device.json)
 puavo_keyboard_variant=$(jq -r .keyboard_variant /etc/puavo/device.json)
+puavo_primary_user=$(jq -r .primary_user /etc/puavo/device.json)
 
 [ "${puavo_keyboard_layout}" = "null" ] && puavo_keyboard_layout=
 [ "${puavo_keyboard_variant}" = "null" ] && puavo_keyboard_variant=
+[ "${puavo_primary_user}" = "null" ] && puavo_primary_user=
 
 export XAUTHORITY=/var/run/lightdm/root/:0
 export DISPLAY=:0
 
 if [ "${puavo_keyboard_layout}" != "" ]; then
   setxkbmap ${puavo_keyboard_layout} ${puavo_keyboard_variant}
+fi
+
+if [ "${puavo_primary_user}" != "" ]; then
+  mkdir -p /var/lib/lightdm/.config/dconf
+  chown -R lightdm: /var/lib/lightdm/.config/dconf
+  su -s /bin/sh lightdm -c "dbus-launch gsettings set com.canonical.unity-greeter default-user ${puavo_primary_user}"
+  su -s /bin/sh lightdm -c "dbus-launch gsettings set com.canonical.unity-greeter exclude-prefixes \"['adm-', 'opinsys']\""
 fi
 
 exit 0
