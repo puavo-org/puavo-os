@@ -105,7 +105,7 @@ check_with_cksum() {
 cleanup_previous_runs() {
   images_dir=$1
   rdiffs_dir=$2
-  rdiff_filename=$3
+  preserve_filename=$3
 
   old_imageoverlays=$("/usr/lib/puavo-ltsp-install/ls-old-imageoverlays" "${images_dir}" /imageoverlays)
   if [ -n "${old_imageoverlays}" ]; then
@@ -121,15 +121,17 @@ cleanup_previous_runs() {
   # The ltsp-backup.img is going to go too...
   old_images=$("/usr/lib/puavo-ltsp-install/ls-old-images" "${images_dir}")
   if [ -n "${old_images}" ]; then
-      echo -n "${old_images}" | xargs -r -d'\n' -L1 rm -f
+      echo -n "${old_images}" \
+        | grep -vx "${images_dir}/${preserve_filename}" \
+        | xargs -r -d'\n' -L1 rm -f
   fi
 
   # cleanup old rdiff files, except those that we want to use right now
   if [ -d "$rdiffs_dir" ]; then
     find "$rdiffs_dir" -maxdepth 1 -type f -a \
       '(' '(' -name '*.rdiff' -o -name '*.rdiff.tmp' ')' \
-	  -a '!' '('    -name "${rdiff_filename}" \
-		     -o -name "${rdiff_filename}.tmp" ')' ')' \
+	  -a '!' '('    -name "${preserve_filename}" \
+		     -o -name "${preserve_filename}.tmp" ')' ')' \
       -print0 \
     | xargs -0 rm -f
   fi
@@ -311,15 +313,15 @@ install_from_file_or_nbd() {
 
   test -e "$imagepath" && return 0
 
-  cleanup_previous_runs "$images_dir" "${images_dir}/rdiffs" ''
-  
   case "$type_opt" in
     -file)
       image_src_path=$type_arg
+      preserve_filename=$(basename "$image_src_path")
       total_size=$(du -k "$image_src_path" | awk '{ print $1 "k" }')
       ;;
     -nbd)
       image_src_path=$type_arg
+      preserve_filename=''
       total_size=$(df "$image_src_path" \
 		     | awk -v image_src_path="$image_src_path" '
 			 $1 == image_src_path { print $2 "k" }
@@ -330,6 +332,10 @@ install_from_file_or_nbd() {
       return 1
       ;;
   esac
+
+  cleanup_previous_runs "$images_dir"          \
+                        "${images_dir}/rdiffs" \
+                        "$preserve_filename"
 
   dd "if=$image_src_path" 2>/dev/null | pv -s "$total_size" \
     > "${imagepath}.tmp"
