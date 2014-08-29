@@ -337,6 +337,7 @@ class LdapAcl
 					 telephoneNumber)),		Rule.write(Set.admin,
 										   'self'),			Rule.read(Set.externalservice_addressbook,
                                                                                                                           PuavoUid.pw_mgmt,
+                                                                                                                          PuavoUid.puavo,
                                                                                                                           PuavoUid.puavo_ticket),						],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 																			# XXX odd
