@@ -269,6 +269,7 @@ class LdapAcl
 				      objectClass)),								Rule.read(Set.getent,
 															  Set.externalservice_auth,
                                                                                                                           PuavoUid.pw_mgmt,
+                                                                                                                          PuavoUid.puavo_ticket,
 															  PuavoUid.puavo),		Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.exact,		attrs(%w(children)),			Rule.write(Set.all_admins),		Rule.read(PuavoUid.puavo),							],
