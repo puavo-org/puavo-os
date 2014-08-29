@@ -81,15 +81,16 @@ check_with_cksum() {
   filename=$1
   actual_file_path=$2
   checksums_file=$3
+  phase=$4
 
   if ! [ -r "$actual_file_path" ]; then
     log err "could not find a file $filename to check"
     return 1
   fi
 
-  calculated_checksum_line="$(
-    cksum "$actual_file_path" \
-      | awk -v filename="$filename" '{ $3 = filename; print }')"
+  calculated_checksum_line=$(
+    cksum_with_progress "$phase" "$actual_file_path" \
+      | awk -v filename="$filename" '{ $3 = filename; print }')
 
   if fgrep -qx "$calculated_checksum_line" "$checksums_file"; then
     log info "checksum for file $filename is okay"
@@ -100,6 +101,18 @@ check_with_cksum() {
     rm -f "$actual_file_path"
     return 1
   fi
+}
+
+cksum_with_progress() {
+  phase=$1
+  cksum_filepath=$2
+
+  # exchange stdout and stderr, redirect stderr to stdout after that
+  {
+    pv -n "$cksum_filepath" 3>&1 1>&2 2>&3 3>&- \
+      | update_stats_with_progress "$phase"
+  } 2>&1 \
+    | cksum
 }
 
 cleanup_previous_runs() {
@@ -161,16 +174,23 @@ fetch_with_curl() {
   extra_curl_opts=$1
   output_path=$2  
   url=$3
+  phase=$4
 
   # according to curl(1) --fail is not enough
   curl_status_code=$(
-    curl --cacert /etc/puavo/certs/rootca.pem \
-	 --continue-at - \
-	 $extra_curl_opts \
-	 --output "$output_path" \
-	 -w "%{http_code}\n" \
-	 "$url" \
-      || true)
+    {
+      curl --cacert /etc/puavo/certs/rootca.pem \
+	   --continue-at -                      \
+	   $extra_curl_opts                     \
+	   --output "$output_path"              \
+	   -w "%{http_code}\n"                  \
+	   "$url"                               \
+           3>&1 1>&2 2>&3 3>&-                  \
+        | unbuffer -p tr '\r' '\n' \
+        | unbuffer -p awk '$1 ~ /^[[:digit:]]+$/ { print $1 }' \
+        | update_stats_with_progress "$phase"
+    } 2>&1 || true
+  )
 
   case "$curl_status_code" in
     # 2*  == success
@@ -193,9 +213,10 @@ get_checksums_file() {
 
   checksum_file_path="${images_dir}/CKSUMS"
 
-  fetch_with_curl "$extra_curl_opts -s" \
+  fetch_with_curl "$extra_curl_opts" \
 		  "${checksum_file_path}.tmp" \
-		  "$url"
+		  "$url" \
+                  checksums_fetch
   mv "${checksum_file_path}.tmp" "${checksum_file_path}"
 
   echo "${checksum_file_path}"
@@ -269,8 +290,11 @@ get_rdiff() {
   log info "we are missing the full rdiff $rdiff_filename, going to get it"
 
   rdiff_tmp="${rdiff_path}.tmp"
-  fetch_with_curl  "$extra_curl_opts" "$rdiff_tmp" "$rdiff_url"
-  check_with_cksum "$rdiff_filename"  "$rdiff_tmp" "$checksums_file"
+  fetch_with_curl  "$extra_curl_opts" "$rdiff_tmp" "$rdiff_url" rdiff_fetch
+  check_with_cksum "$rdiff_filename" \
+                   "$rdiff_tmp"      \
+                   "$checksums_file" \
+                   rdiff_checksum
 
   sync
   mv "$rdiff_tmp" "$rdiff_path"
@@ -370,6 +394,15 @@ install_image() {
   echo "is now installed and set as default."
 }
 
+lookup_filesize_from_cksums() {
+  # XXX /images here hardcoded
+  awk -v filename="$(basename "$1")" '
+    BEGIN { status = 1 }
+    $3 == filename { print $2; status = 0 }
+    END { exit(status) }
+  ' /images/CKSUMS
+}
+
 lookup_image_server_from_dns() {
   puavo_domain=$(cat /etc/puavo/domain)
   image_server=$(
@@ -425,17 +458,27 @@ patch_with_rdiff() {
   rdiff_filename=$5
   checksums_file=$6
 
+  if ! next_image_filesize=$(lookup_filesize_from_cksums "$next_image"); then
+    log err "Could not lookup image size from CKSUMS for '${next_image}'"
+    return 1
+  fi
+
   # rdiff might fail due to a corrupt rdiff-file or for some other reason.
   # We let rdiff pass through in case of failure, and we check the correctness
   # of the output right after (removing the output if the checksum is bad).
-  rdiff patch "${images_dir}/${previous_image}" \
-	      "${rdiffs_dir}/${rdiff_filename}" \
-	      "${images_dir}/${next_image}.tmp" \
-    || true
+  {
+    rdiff patch "${images_dir}/${previous_image}" \
+	        "${rdiffs_dir}/${rdiff_filename}" \
+	        - \
+      | { pv -n -s "$next_image_filesize" 3>&1 1>&2 2>&3 3>&- \
+            | update_stats_with_progress image_patch; } 2>&1 \
+      > "${images_dir}/${next_image}.tmp"
+  } || true
 
   check_with_cksum "$next_image"                     \
 		   "${images_dir}/${next_image}.tmp" \
-		   "$checksums_file"
+		   "$checksums_file" \
+                   image_checksum
 
   sync
   mv "${images_dir}/${next_image}.tmp" "${images_dir}/${next_image}"
@@ -524,6 +567,36 @@ update_image_labels_for_grub() {
     && touch "${images_dir}/${backup_image%.img}.backup"
 
   return 0
+}
+
+update_stats() {
+  phase=$1
+  progress=$2
+
+  # XXX $images_dir ?
+  stats_filepath=/images/image_update.stats
+
+  {
+    echo "phase ${phase}"
+    echo "progress ${progress}"
+  } > ${stats_filepath}.tmp
+
+  mv ${stats_filepath}.tmp ${stats_filepath}
+}
+
+update_stats_with_progress() {
+  phase=$1
+
+  # possible phases are:
+  #   checksums_fetch
+  #   rdiff_fetch
+  #   rdiff_checksum
+  #   image_patch
+  #   image_checksum
+
+  while read progress; do
+    update_stats "$phase" "$progress"
+  done
 }
 
 #
