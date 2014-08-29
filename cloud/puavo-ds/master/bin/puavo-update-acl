@@ -26,23 +26,29 @@ def update_acls(suffix)
   conn = LDAP::SSLConn.new(host=PUAVO_ETC.ldap_master, port=636)
   conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
 
-  conn.bind(PUAVO_ETC.ldap_dn, @bindpw) do
+
+  ldap_search = false
+  while ldap_search != true
     begin
-      conn.search("cn=config", LDAP::LDAP_SCOPE_SUBTREE, "(olcSuffix=#{suffix})") {|e|
-        dn = e.dn
-        puts "DN: #{dn}"
-      }
+      # COMMAND
+      conn.bind(PUAVO_ETC.ldap_dn, @bindpw) do
+        conn.search("cn=config", LDAP::LDAP_SCOPE_SUBTREE, "(olcSuffix=#{suffix})") {|e|
+          dn = e.dn
+          puts "DN: #{dn}"
+        }
 
-      conn.search(suffix, LDAP::LDAP_SCOPE_BASE, "(objectClass=eduOrg)") {|e|
-        samba_domain = e.get_values('sambaDomainName')[0]
-        kerberos_realm = e.get_values('puavoKerberosRealm')[0]
-        domain = e.get_values('puavoDomain')[0]
-      }
-
-      rescue LDAP::ResultError
-        conn.perror("LDAP connection failed")
-        puts "LDAP connection failed"
-      end  
+        conn.search(suffix, LDAP::LDAP_SCOPE_BASE, "(objectClass=eduOrg)") {|e|
+          samba_domain = e.get_values('sambaDomainName')[0]
+          kerberos_realm = e.get_values('puavoKerberosRealm')[0]
+          domain = e.get_values('puavoDomain')[0]
+        }
+      end
+      ldap_search = true
+    rescue LDAP::ResultError
+      conn.perror("LDAP connection failed")
+      puts "LDAP connection failed, press enter to try again"
+      STDIN.gets
+    end
   end
 
   puts
