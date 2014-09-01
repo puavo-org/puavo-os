@@ -565,7 +565,7 @@ update_stats() {
     mv "${stats_filepath}.tmp" "${stats_filepath}"
     test -x "${puavoinstall_libdir}/update-ltspimage-update-stats" \
          && "${puavoinstall_libdir}/update-ltspimage-update-stats" \
-               "${stats_filepath}"
+               "${stats_filepath}" 2>/dev/null || true
   fi
 }
 
