@@ -70,7 +70,8 @@ install : puavo-wlanap-env installdirs
 		lib/fetch-nets \
 		lib/scan-channels \
 		lib/get-ht-capab \
-		lib/get-bridge
+		lib/get-bridge \
+		lib/set-txpower
 	rm -f puavo-wlanap-env
 
 .PHONY : clean

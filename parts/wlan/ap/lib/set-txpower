@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+txpower=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^txpower://p' | tail -n1)
+
+if [ -n "${txpower}" ]; then
+    iwconfig "${INTERFACE}" txpower "${txpower}"
+fi
