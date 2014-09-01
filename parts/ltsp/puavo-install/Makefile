@@ -80,7 +80,8 @@ install : installdirs
 		lib/ls-old-images \
 		lib/puavo-image-preinst \
 		lib/update-configuration \
-		lib/update-images
+		lib/update-images \
+		lib/update-ltspimage-update-stats
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/dbus-1/system.d \
 		dbus-1/org.puavo.client.conf

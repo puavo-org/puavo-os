@@ -36,6 +36,7 @@ if ! args=$(getopt -n "$0" -o +f:n:r:q \
 fi
 
 images_dir=/images
+puavoinstall_libdir=/usr/lib/puavo-ltsp-install
 
 image_from_file=""
 image_from_nbd=""
@@ -122,8 +123,8 @@ cleanup_previous_runs() {
   preserve_filename=$2
 
   old_imageoverlays=$(
-    /usr/lib/puavo-ltsp-install/ls-old-imageoverlays "${images_dir}" \
-						     /imageoverlays)
+    "${puavoinstall_libdir}/ls-old-imageoverlays" "${images_dir}" \
+						  /imageoverlays)
   if [ -n "${old_imageoverlays}" ]; then
       if ${delete_overlays}; then
           echo -n "${old_imageoverlays}" | xargs -r -d'\n' -L1 rm -rf
@@ -135,7 +136,7 @@ cleanup_previous_runs() {
 
   # cleanup old ltsp images (and their possible temporary *.tmp files).
   # The ltsp-backup.img is going to go too...
-  old_images=$(/usr/lib/puavo-ltsp-install/ls-old-images "${images_dir}")
+  old_images=$("${puavoinstall_libdir}/ls-old-images" "${images_dir}")
   if [ -n "${old_images}" ]; then
       echo -n "${old_images}" \
         | grep -vx "${images_dir}/${preserve_filename}" \
@@ -490,7 +491,7 @@ run_image_preinst_hook() {
   mkdir -p /images/mnt
   umount -f /images/mnt 2>/dev/null || true
   mount -o ro "$imagepath" /images/mnt
-  /images/mnt/usr/lib/puavo-ltsp-install/puavo-image-preinst
+  "/images/mnt/${puavoinstall_libdir}/puavo-image-preinst"
   umount /images/mnt || true
 }
 
@@ -558,9 +559,14 @@ update_stats() {
   {
     echo "phase ${phase}"
     echo "progress ${progress}"
-  } > ${stats_filepath}.tmp
+  } > "${stats_filepath}.tmp"
 
-  mv ${stats_filepath}.tmp ${stats_filepath}
+  if ! cmp "${stats_filepath}" "${stats_filepath}.tmp" 2>/dev/null; then
+    mv "${stats_filepath}.tmp" "${stats_filepath}"
+    test -x "${puavoinstall_libdir}/update-ltspimage-update-stats" \
+         && "${puavoinstall_libdir}/update-ltspimage-update-stats" \
+               "${stats_filepath}"
+  fi
 }
 
 update_stats_with_progress() {
