@@ -468,8 +468,8 @@ patch_with_rdiff() {
   # of the output right after (removing the output if the checksum is bad).
   {
     rdiff patch "${images_dir}/${previous_image}" \
-	        "${rdiffs_dir}/${rdiff_filename}" \
-	        - \
+		"${rdiffs_dir}/${rdiff_filename}" \
+		-                                 \
       | { pv -n -s "$next_image_filesize" 3>&1 1>&2 2>&3 3>&- \
             | update_stats_with_progress image_patch; } 2>&1 \
       > "${images_dir}/${next_image}.tmp"
@@ -477,8 +477,8 @@ patch_with_rdiff() {
 
   check_with_cksum "$next_image"                     \
 		   "${images_dir}/${next_image}.tmp" \
-		   "$checksums_file" \
-                   image_checksum
+		   "$checksums_file"                 \
+		   image_checksum
 
   sync
   mv "${images_dir}/${next_image}.tmp" "${images_dir}/${next_image}"
