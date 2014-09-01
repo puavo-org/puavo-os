@@ -561,7 +561,7 @@ update_stats() {
     echo "progress ${progress}"
   } > "${stats_filepath}.tmp"
 
-  if ! cmp "${stats_filepath}" "${stats_filepath}.tmp" 2>/dev/null; then
+  if ! cmp "${stats_filepath}" "${stats_filepath}.tmp" >/dev/null 2>&1; then
     mv "${stats_filepath}.tmp" "${stats_filepath}"
     test -x "${puavoinstall_libdir}/update-ltspimage-update-stats" \
          && "${puavoinstall_libdir}/update-ltspimage-update-stats" \
