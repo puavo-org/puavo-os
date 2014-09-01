@@ -390,6 +390,8 @@ install_image() {
   install_from_file_or_nbd "$images_dir" "$imagename" "$type_opt" "$type_arg"
   set_image_as_default_image "$images_dir" "$imagename"
 
+  update_stats finished 100
+
   echo "The PuavoLTSP image $imagename"
   echo "is now installed and set as default."
 }
