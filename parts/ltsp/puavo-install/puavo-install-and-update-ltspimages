@@ -471,8 +471,8 @@ patch_with_rdiff() {
 		"${rdiffs_dir}/${rdiff_filename}" \
 		-                                 \
       | { pv -n -s "$next_image_filesize" 3>&1 1>&2 2>&3 3>&- \
-            | update_stats_with_progress image_patch; } 2>&1 \
-      > "${images_dir}/${next_image}.tmp"
+            | update_stats_with_progress image_patch; } \
+      > "${images_dir}/${next_image}.tmp" 2>&1
   } || true
 
   check_with_cksum "$next_image"                     \
