@@ -4,6 +4,7 @@ ViewMaster = require "viewmaster"
 LauncherModel = require "../models/LauncherModel.coffee"
 MenuItemView = require "./MenuItemView.coffee"
 LogoutButtonView = require "./LogoutButtonView.coffee"
+LockScreenButtonView = require "./LockScreenButtonView.coffee"
 Carousel = require "./Carousel.coffee"
 ProfileView = require "./ProfileView.coffee"
 
@@ -35,6 +36,7 @@ class SidebarView extends ViewMaster
 
         @appendView ".profile-container", new ProfileView(opts)
         @appendView ".settings-container", LogoutButtonView
+        @appendView ".settings-container", LockScreenButtonView
         @appendView ".footer-container",  new Carousel
             collection: opts.feeds
 

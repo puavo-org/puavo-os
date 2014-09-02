@@ -79,4 +79,7 @@ layout.on "logout-action", (actionView) ->
         nodejs.hideWindow()
         nodejs.executeAction(actionView.action)
 
+layout.on "lock-screen", () ->
+    nodejs.executeAction("lock")
+
 nodejs.logReady()
