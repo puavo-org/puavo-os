@@ -14,6 +14,7 @@ class Updater < DBus::Object
     dbus_signal :UpdateAvailable
     dbus_signal :UpdateFailed, "in errmsg:s"
     dbus_signal :UpdateCompleted
+    dbus_signal :UpdateProgressIndicator, "in phase:s, in progress:i"
     dbus_signal :UpdateStarted
 
     dbus_method :HasOldOverlays, "out b" do
@@ -50,6 +51,11 @@ class Updater < DBus::Object
         self.UpdateAvailable
       end
       return output
+    end
+
+    dbus_method :UpdateProgress,
+                "in phase:s, in progress:i" do |phase, progress|
+      self.UpdateProgressIndicator(phase, progress)
     end
   end
 

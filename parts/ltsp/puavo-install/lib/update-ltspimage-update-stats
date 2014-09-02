@@ -4,4 +4,18 @@ set -eu
 
 stats_filepath=$1
 
-exit 0
+get_stats_value() {
+  awk -v key="$1" '$1 == key { print $2 }' "$stats_filepath"
+}
+
+phase=$(get_stats_value phase)
+progress=$(get_stats_value progress)
+
+dbus-send --dest=org.puavo.client.Daemon         \
+          --reply-timeout=100                    \
+          --print-reply=literal                  \
+          --system                               \
+          /updater                               \
+          org.puavo.client.update.UpdateProgress \
+          "string:$phase"                        \
+          "int32:$progress"
