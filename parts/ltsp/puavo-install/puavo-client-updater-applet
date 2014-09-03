@@ -24,6 +24,7 @@ def is_on_persistent_overlay():
     file.close()
     return re.match(".*?puavo.image.overlay=", cmdline)
 
+
 class UpdateIndicatorApplet:
     def __init__(self):
         self.indicator = appindicator.Indicator("update-indicator",
@@ -31,100 +32,117 @@ class UpdateIndicatorApplet:
                                                 appindicator.CATEGORY_APPLICATION_STATUS)
         self.indicator.set_status(appindicator.STATUS_ACTIVE)
 
-        self.menu = gtk.Menu()
+        menu = gtk.Menu()
 
         if is_on_persistent_overlay():
-            msg = _tr("Updates are disabled in developer mode, boot to normal mode to update.")
-            self.disabled_msg = gtk.MenuItem(msg)
-            self.disabled_msg.show()
-            self.disabled_msg.set_sensitive(False)
-            self.menu.append(self.disabled_msg)
-
-            self.indicator.set_menu(self.menu)
+            self.add_disabled_widget(menu)
             return
 
+        self.add_view_log_button(menu)
+        self.add_update_button(menu)
+        self.add_progress_label(menu)
+
+        self.connect_to_dbus()
+        self.setup_log()
+        self.setup_delete_overlays_dialog()
+
+        self.indicator.set_menu(menu)
+
+
+    def add_disabled_widget(self, menu):
+	msg = _tr("Updates are disabled in developer mode, boot to normal mode to update.")
+	self.disabled_msg = gtk.MenuItem(msg)
+	self.disabled_msg.show()
+	self.disabled_msg.set_sensitive(False)
+	menu.append(self.disabled_msg)
+
+	self.indicator.set_menu(menu)
+
+
+    def add_progress_label(self, menu):
+        self.progress_label = gtk.Label()
+        self.progress_label.show()
+
+        self.progress_menuitem = gtk.MenuItem()
+
+        self.progress_menuitem.add(self.progress_label)
+        self.progress_menuitem.hide()
+
+        menu.append(self.progress_menuitem)
+
+
+    def add_update_button(self, menu):
+        self.update_button = gtk.MenuItem(_tr("Check for updates"))
+        self.set_update_button_mode('check')
+        menu.append(self.update_button)
+
+
+    def add_view_log_button(self, menu):
         self.view_log_item = gtk.MenuItem(_tr("View log..."))
         self.view_log_item.connect("activate", self.view_log)
         self.view_log_item.show()
-        self.menu.append(self.view_log_item)
+        menu.append(self.view_log_item)
 
-        self.update_image_item = UpdateElement(self.menu, self.update_image)
 
-        self.indicator.set_menu(self.menu)
+    def check_for_updates(self, widget):
+        # XXX should set the update_button inactive with appropriate message
+        self.update_iface \
+            .UpdateConfiguration(reply_handler=self.handle_configuration_update_reply,
+                                 error_handler=self.handle_configuration_update_error)
 
+
+    def connect_to_dbus(self):
         self.bus = dbus.SystemBus()
-        self.updater = self.bus.get_object('org.puavo.client.Daemon',
-                                           '/updater')
-        self.update_iface = dbus.Interface(self.updater,
+        updater = self.bus.get_object('org.puavo.client.Daemon', '/updater')
+        self.update_iface = dbus.Interface(updater,
                                            dbus_interface='org.puavo.client.update')
         self.update_iface.connect_to_signal("UpdateAvailable",
                                             self.on_update_available)
-        self.update_iface.connect_to_signal("UpdateCompleted",
-                                            self.on_update_completed)
         self.update_iface.connect_to_signal("UpdateStarted",
                                             self.on_update_started)
-        self.update_iface.connect_to_signal("UpdateFailed",
-                                            self.on_update_failed)
         self.update_iface.connect_to_signal("UpdateProgressIndicator",
                                             self.on_update_progress_indicator)
+        self.update_iface.connect_to_signal("UpdateFailed",
+                                            self.on_update_failed)
+        self.update_iface.connect_to_signal("UpdateCompleted",
+                                            self.on_update_completed)
 
-        self.log_dialog = gtk.Dialog(title=_tr("Update log"), parent=None,
-                                     flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                                     buttons=(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        self.log_dialog.set_default_size(600, 300)
-        self.log_buffer = gtk.TextBuffer()
-        self.log_error_tag = self.log_buffer.create_tag(foreground="red", left_margin=20)
-        self.log_view = gtk.TextView(self.log_buffer)
-        self.log_view.set_editable(False)
-        self.log_view.set_cursor_visible(False)
-        self.log_view.show()
-        log_scroll = gtk.ScrolledWindow()
-        log_scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        log_scroll.add(self.log_view)
-        log_scroll.show()
-        self.log_dialog.vbox.pack_start(log_scroll)
 
-        delete_overlays_message = _tr("The old version of the system has been edited "
-                                      "by the user. Updating the system causes "
-                                      "all these changes to be lost. "
-                                      "Do you want to proceed?")
-        self.delete_overlays_dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL,
-                                                        gtk.MESSAGE_QUESTION,
-                                                        gtk.BUTTONS_YES_NO,
-                                                        delete_overlays_message)
-        self.delete_overlays_dialog.set_title(_tr("Continue updating?"))
+    def handle_configuration_update_error(self, error):
+        print(error, file=sys.stderr)
+
+
+    def handle_configuration_update_reply(self, output):
+        print(output)
+
+
+    def handle_update_image_error(self, error):
+        print(error, file=sys.stderr)
+
+
+    def handle_update_image_reply(self, output):
+        print(output)
 
 
     def on_update_available(self):
-        self.update_image_item.update_available()
+        self.update_button.get_child().set_text(_tr("Update"))
+        self.set_update_button_mode('update')
 
         self.indicator.set_attention_icon("update-available")
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
 
     def on_update_completed(self):
-        self.update_image_item.update_completed()
+        self.update_button.get_child().set_text(_tr("(Reboot required to finish the update)"))
+        self.update_button.set_sensitive(False)
 
         self.indicator.set_attention_icon("update-installed")
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
 
-    def on_update_progress_indicator(self, phase, progress):
-        self.update_image_item.update_progress(phase, progress)
-
-
-    def on_update_started(self):
-        self.indicator.set_attention_icon("update-downloading")
-        self.indicator.set_status(appindicator.STATUS_ATTENTION)
-
-
-    def view_log(self, widget):
-        self.log_dialog.run()
-        self.log_dialog.hide()
-
-
     def on_update_failed(self, errmsg):
-        self.update_image_item.update_failed()
+        self.update_button.get_child().set_text(_tr("Update"))
+        self.update_button.set_sensitive(True)
 
         self.indicator.set_attention_icon("update-error")
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
@@ -136,81 +154,10 @@ class UpdateIndicatorApplet:
         self.log_view.scroll_mark_onscreen(self.log_buffer.get_insert())
 
 
-    def handle_update_image_reply(self, output):
-        print(output)
-
-
-    def handle_update_image_error(self, error):
-        print(error, file=sys.stderr)
-
-
-    def update_image(self, widget):
-        delete_overlays = False
-        if self.update_iface.HasOldOverlays():
-            delete_overlays = self.delete_overlays_dialog.run() == gtk.RESPONSE_YES
-            self.delete_overlays_dialog.hide()
-            if not delete_overlays:
-                # The user has just answered no, so we are not going
-                # to proceed. Returning here is not necessary,
-                # UpdateImages() fails if called with
-                # delete_overlays=False and there exists some
-                # overlays. By returning we avoid generating an
-                # user-visible error which would just confuse the
-                # user.
-                return
-        self.update_iface.UpdateImages(False, delete_overlays,
-                                       reply_handler=self.handle_update_image_reply,
-                                       error_handler=self.handle_update_image_error)
-
-
-class UpdateElement:
-    def __init__(self, menu, update_method):
-        self.button = gtk.MenuItem(_tr("(Up to date)"))
-        self.button.connect("activate", update_method)
-        self.button.show()
-        self.button.set_sensitive(False)
-
-        self.p_menuitem = gtk.MenuItem()
-        self.progress = gtk.Label()
-
-        self.p_menuitem.add(self.progress)
-        self.p_menuitem.hide()
-
-        menu.append(self.button)
-        menu.append(self.p_menuitem)
-
-
-    def progress_visible(self, yes_or_no):
-      if yes_or_no:
-        self.button.hide()
-        self.p_menuitem.show()
-      else:
-        self.p_menuitem.hide()
-        self.button.show()
-
-
-    def update_available(self):
-        self.button.get_child().set_text(_tr("Update"))
-        self.button.set_sensitive(True)
-        self.progress_visible(False)
-
-
-    def update_completed(self):
-        self.button.get_child().set_text(_tr("(Reboot required to finish the update)"))
-        self.button.set_sensitive(False)
-        self.progress_visible(False)
-
-
-    def update_failed(self):
-        self.button.get_child().set_text(_tr("Update"))
-        self.button.set_sensitive(True)
-        self.progress_visible(False)
-
-
-    def update_progress(self, phase, progress):
+    def on_update_progress_indicator(self, phase, progress):
         if phase == 'finished':
-            self.progress.set_text('')
-            self.progress_visible(False)
+            self.progress_label.set_text('')
+            self.progress_menuitem.hide()
             return
 
         phases = {
@@ -230,12 +177,86 @@ class UpdateElement:
         text = '%s (%s/5) %s%%' \
                  % (_tr('Update progress:'), phase_number, progress)
 
-        self.progress.set_text(text)
-        self.progress_visible(True)
+        self.progress_label.set_text(text)
+        self.progress_menuitem.show()
 
 
-    def update_started(self):
-        self.update_progress('starting', 0)
+    def on_update_started(self):
+        self.indicator.set_attention_icon("update-downloading")
+        self.indicator.set_status(appindicator.STATUS_ATTENTION)
+
+
+    def set_update_button_mode(self, mode):
+        if mode == 'check':
+            self.update_button.connect('activate', self.check_for_updates)
+            self.update_button.set_sensitive(True)
+            self.update_button.show()
+        elif mode == 'update':
+            self.update_button.connect('activate', self.update_image)
+            self.update_button.set_sensitive(True)
+            self.update_button.show()
+        else:
+            raise Exception('Internal error in set_update_button_mode')
+
+
+
+    def setup_delete_overlays_dialog(self):
+        delete_overlays_message = _tr("The old version of the system has been edited "
+                                      "by the user. Updating the system causes "
+                                      "all these changes to be lost. "
+                                      "Do you want to proceed?")
+        self.delete_overlays_dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL,
+                                                        gtk.MESSAGE_QUESTION,
+                                                        gtk.BUTTONS_YES_NO,
+                                                        delete_overlays_message)
+        self.delete_overlays_dialog.set_title(_tr("Continue updating?"))
+
+
+    def setup_log(self):
+        self.log_dialog = gtk.Dialog(title=_tr("Update log"), parent=None,
+                                     flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                                     buttons=(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        self.log_dialog.set_default_size(600, 300)
+        self.log_buffer = gtk.TextBuffer()
+        self.log_error_tag = self.log_buffer.create_tag(foreground="red", left_margin=20)
+        self.log_view = gtk.TextView(self.log_buffer)
+        self.log_view.set_editable(False)
+        self.log_view.set_cursor_visible(False)
+        self.log_view.show()
+        log_scroll = gtk.ScrolledWindow()
+        log_scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        log_scroll.add(self.log_view)
+        log_scroll.show()
+        self.log_dialog.vbox.pack_start(log_scroll)
+
+
+    def update_image(self, widget):
+        # XXX should set the update_button inactive with appropriate message
+        delete_overlays = False
+
+        if self.update_iface.HasOldOverlays():
+            delete_overlays = self.delete_overlays_dialog.run() == gtk.RESPONSE_YES
+            self.delete_overlays_dialog.hide()
+            if not delete_overlays:
+                # The user has just answered no, so we are not going
+                # to proceed. Returning here is not necessary,
+                # UpdateImages() fails if called with
+                # delete_overlays=False and there exists some
+                # overlays. By returning we avoid generating an
+                # user-visible error which would just confuse the
+                # user.
+                return
+
+        self.update_iface \
+            .UpdateImages(False,
+                          delete_overlays,
+                          reply_handler=self.handle_update_image_reply,
+                          error_handler=self.handle_update_image_error)
+
+
+    def view_log(self, widget):
+        self.log_dialog.run()
+        self.log_dialog.hide()
 
 
 if __name__ == "__main__":
