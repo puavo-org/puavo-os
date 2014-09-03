@@ -573,11 +573,13 @@ update_stats_with_progress() {
   phase=$1
 
   # possible phases are:
+  #   starting
   #   checksums_fetch
   #   rdiff_fetch
   #   rdiff_checksum
   #   image_patch
   #   image_checksum
+  #   finished
 
   while read progress; do
     update_stats "$phase" "$progress"
@@ -595,6 +597,8 @@ renice -n 20 -p $$ > /dev/null
 # do nothing if /images/DISABLE_IMAGE_UPDATES exists
 # (for development and emergencies)
 test -e "${images_dir}/DISABLE_IMAGE_UPDATES" && exit 0
+
+update_stats starting 0
 
 if [ -n "$image_from_file" ]; then
   install_image "$next_image" -file "$image_from_file"
