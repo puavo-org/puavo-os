@@ -35,8 +35,8 @@ class Updater < DBus::Object
       self.UpdateStarted
       output, errput, status \
         = Open3.capture3('/usr/lib/puavo-ltsp-install/update-images',
-                         use_rate_limit,
-                         delete_overlays)
+                         use_rate_limit  ? 'true' : 'false',
+                         delete_overlays ? 'true' : 'false')
       if not status.success? then
         self.UpdateFailed errput
         raise "failed to update device images: #{errput}"
