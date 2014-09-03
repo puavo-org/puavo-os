@@ -18,8 +18,10 @@ class Updater < DBus::Object
     dbus_signal :UpdateStarted
 
     dbus_method :HasOldOverlays, "out b" do
-      command = "/usr/lib/puavo-ltsp-install/ls-old-imageoverlays /images /imageoverlays"
-      output, errput, status = Open3.capture3(command)
+      output, errput, status \
+        = Open3.capture3('/usr/lib/puavo-ltsp-install/ls-old-imageoverlays',
+                         '/images',
+                         '/imageoverlays')
       if not status.success? then
         raise "failed to list old overlays: #{errput}"
       end
@@ -31,8 +33,10 @@ class Updater < DBus::Object
         return ""
       end
       self.UpdateStarted
-      command = "/usr/lib/puavo-ltsp-install/update-images #{use_rate_limit} #{delete_overlays}"
-      output, errput, status = Open3.capture3(command)
+      output, errput, status \
+        = Open3.capture3('/usr/lib/puavo-ltsp-install/update-images',
+                         use_rate_limit,
+                         delete_overlays)
       if not status.success? then
         self.UpdateFailed errput
         raise "failed to update device images: #{errput}"
