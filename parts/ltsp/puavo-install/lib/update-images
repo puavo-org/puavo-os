@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -u
+set -eu
 
 use_rate_limit=$1
 delete_overlays=$2
@@ -9,7 +9,7 @@ update_ltsp_image() {
     next_imagename=$(jq -r .preferred_image /state/etc/puavo/device.json) \
         || return
 
-    if $use_rate_limit; then
+    if [ "$use_rate_limit" = "true" ]; then
         rate_limit=$(
             jq -r '.tags[]' /state/etc/puavo/device.json \
                 | awk -F: '
@@ -29,7 +29,7 @@ update_ltsp_image() {
         update_ltspimage_params="${update_ltspimage_params} --rate-limit $rate_limit"
     fi
 
-    if $delete_overlays; then
+    if [ "$delete_overlays" = "true" ]; then
 	update_ltspimage_params="${update_ltspimage_params} --delete-overlays"
     fi
 
