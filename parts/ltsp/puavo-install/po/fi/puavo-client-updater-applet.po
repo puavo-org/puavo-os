@@ -9,21 +9,41 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: puavo-client-updater-applet:37
+#: puavo-client-updater-applet:53
 msgid "Updates are disabled in developer mode, boot to normal mode to update."
 msgstr ""
 "Päivittäminen ei ole mahdollista kehittäjätilassa, käynnistä normaalitilaan "
 "päivittääksesi."
 
-#: puavo-client-updater-applet:46
+#: puavo-client-updater-applet:77
 msgid "View log..."
 msgstr "Näytä loki..."
 
-#: puavo-client-updater-applet:71
-msgid "Update log"
-msgstr "Päivitysloki"
+#: puavo-client-updater-applet:144
+msgid "Update failed"
+msgstr "Päivitys epäonnistui"
 
-#: puavo-client-updater-applet:87
+#: puavo-client-updater-applet:173
+msgid "Update progress:"
+msgstr "Päivityksen edistyminen:"
+
+#: puavo-client-updater-applet:187
+msgid "Check for updates"
+msgstr ""
+
+#: puavo-client-updater-applet:191
+msgid "(Reboot required to finish the update)"
+msgstr "(Päivityksen käyttöönotto vaatii uudelleenkäynnistyksen)"
+
+#: puavo-client-updater-applet:194
+msgid "Update"
+msgstr "Päivitä"
+
+#: puavo-client-updater-applet:198
+msgid "(Updating)"
+msgstr "(Päivittyy)"
+
+#: puavo-client-updater-applet:205
 msgid ""
 "The old version of the system has been edited by the user. Updating the "
 "system causes all these changes to be lost. Do you want to proceed?"
@@ -31,29 +51,13 @@ msgstr ""
 "Vanha versio järjestelmästä sisältää käyttäjän tekemiä muutoksia, jotka "
 "tuhoutuvat päivityksessä. Haluatko jatkaa?"
 
-#: puavo-client-updater-applet:95
+#: puavo-client-updater-applet:213
 msgid "Continue updating?"
 msgstr "Jatka päivittämistä?"
 
-#: puavo-client-updater-applet:133
-msgid "Update failed"
-msgstr "Päivitys epäonnistui"
+#: puavo-client-updater-applet:217
+msgid "Update log"
+msgstr "Päivitysloki"
 
-#: puavo-client-updater-applet:168
-msgid "(Up to date)"
-msgstr "(Päivitetty)"
-
-#: puavo-client-updater-applet:193 puavo-client-updater-applet:205
-msgid "Update"
-msgstr "Päivitä"
-
-#: puavo-client-updater-applet:199
-msgid "(Reboot required to finish the update)"
-msgstr "(Päivityksen käyttöönotto vaatii uudelleenkäynnistyksen)"
-
-#: puavo-client-updater-applet:231
-msgid "Update progress:"
-msgstr "Päivityksen edistyminen:"
-
-#~ msgid "(Updating)"
-#~ msgstr "(Päivittyy)"
+#~ msgid "(Up to date)"
+#~ msgstr "(Päivitetty)"

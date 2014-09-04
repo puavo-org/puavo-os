@@ -40,7 +40,7 @@ class UpdateIndicatorApplet:
 
         self.add_view_log_button(menu)
         self.add_update_button(menu)
-        self.add_progress_label(menu)
+        self.add_progress(menu)
 
         self.connect_to_dbus()
         self.setup_log()
@@ -59,20 +59,16 @@ class UpdateIndicatorApplet:
 	self.indicator.set_menu(menu)
 
 
-    def add_progress_label(self, menu):
-        self.progress_label = gtk.Label()
-        self.progress_label.show()
+    def add_progress(self, menu):
+        self.progress = gtk.MenuItem('')
+        self.progress.hide()
 
-        self.progress_menuitem = gtk.MenuItem()
-
-        self.progress_menuitem.add(self.progress_label)
-        self.progress_menuitem.hide()
-
-        menu.append(self.progress_menuitem)
+        menu.append(self.progress)
 
 
     def add_update_button(self, menu):
-        self.update_button = gtk.MenuItem(_tr("Check for updates"))
+        self.update_button = gtk.MenuItem('')
+        self.update_button.show()
         self.set_update_button_mode('check')
         menu.append(self.update_button)
 
@@ -125,7 +121,6 @@ class UpdateIndicatorApplet:
 
 
     def on_update_available(self):
-        self.update_button.get_child().set_text(_tr("Update"))
         self.set_update_button_mode('update')
 
         self.indicator.set_attention_icon("update-available")
@@ -133,16 +128,14 @@ class UpdateIndicatorApplet:
 
 
     def on_update_completed(self):
-        self.update_button.get_child().set_text(_tr("(Reboot required to finish the update)"))
-        self.update_button.set_sensitive(False)
+        self.set_update_button_mode('reboot')
 
         self.indicator.set_attention_icon("update-installed")
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
 
     def on_update_failed(self, errmsg):
-        self.update_button.get_child().set_text(_tr("Update"))
-        self.update_button.set_sensitive(True)
+        self.set_update_button_mode('update')
 
         self.indicator.set_attention_icon("update-error")
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
@@ -155,9 +148,11 @@ class UpdateIndicatorApplet:
 
 
     def on_update_progress_indicator(self, phase, progress):
+        self.set_update_button_mode('updating')
+
         if phase == 'finished':
-            self.progress_label.set_text('')
-            self.progress_menuitem.hide()
+            self.progress.get_child().set_text('')
+            self.progress.hide()
             return
 
         phases = {
@@ -177,27 +172,33 @@ class UpdateIndicatorApplet:
         text = '%s (%s/5) %s%%' \
                  % (_tr('Update progress:'), phase_number, progress)
 
-        self.progress_label.set_text(text)
-        self.progress_menuitem.show()
+        self.progress.get_child().set_text(text)
+        self.progress.show()
 
 
     def on_update_started(self):
+        self.set_update_button_mode('updating')
         self.indicator.set_attention_icon("update-downloading")
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
 
     def set_update_button_mode(self, mode):
         if mode == 'check':
+            self.update_button.get_child().set_text(_tr('Check for updates'))
             self.update_button.connect('activate', self.check_for_updates)
             self.update_button.set_sensitive(True)
-            self.update_button.show()
+        elif mode == 'reboot':
+            self.update_button.get_child().set_text(_tr('(Reboot required to finish the update)'))
+            self.update_button.set_sensitive(False)
         elif mode == 'update':
+            self.update_button.get_child().set_text(_tr('Update'))
             self.update_button.connect('activate', self.update_image)
             self.update_button.set_sensitive(True)
-            self.update_button.show()
+        elif mode == 'updating':
+            self.update_button.get_child().set_text(_tr('(Updating)'))
+            self.update_button.set_sensitive(False)
         else:
-            raise Exception('Internal error in set_update_button_mode')
-
+            raise Exception('Wrong arguments for set_update_button_mode')
 
 
     def setup_delete_overlays_dialog(self):

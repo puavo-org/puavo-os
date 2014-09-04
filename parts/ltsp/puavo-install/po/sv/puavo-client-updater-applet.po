@@ -9,19 +9,39 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: puavo-client-updater-applet:37
+#: puavo-client-updater-applet:53
 msgid "Updates are disabled in developer mode, boot to normal mode to update."
 msgstr ""
 
-#: puavo-client-updater-applet:46
+#: puavo-client-updater-applet:77
 msgid "View log..."
 msgstr "Visa logg..."
 
-#: puavo-client-updater-applet:71
-msgid "Update log"
-msgstr "Uppdateringslogg"
+#: puavo-client-updater-applet:144
+msgid "Update failed"
+msgstr "Uppdateringen misslyckades"
 
-#: puavo-client-updater-applet:87
+#: puavo-client-updater-applet:173
+msgid "Update progress:"
+msgstr "Uppdateringens framsteg:"
+
+#: puavo-client-updater-applet:187
+msgid "Check for updates"
+msgstr ""
+
+#: puavo-client-updater-applet:191
+msgid "(Reboot required to finish the update)"
+msgstr "(Omstart krävs för att avsluta uppdateringen)"
+
+#: puavo-client-updater-applet:194
+msgid "Update"
+msgstr "Uppdatera"
+
+#: puavo-client-updater-applet:198
+msgid "(Updating)"
+msgstr "(Uppdatering)"
+
+#: puavo-client-updater-applet:205
 msgid ""
 "The old version of the system has been edited by the user. Updating the "
 "system causes all these changes to be lost. Do you want to proceed?"
@@ -29,29 +49,13 @@ msgstr ""
 "Den gamla versionen av systemet innehåller konfigurationer som användaren "
 "har gjort, dessa förstörs i uppdateringen. Vill du fortsätta?"
 
-#: puavo-client-updater-applet:95
+#: puavo-client-updater-applet:213
 msgid "Continue updating?"
 msgstr "Fortsät uppdateringen"
 
-#: puavo-client-updater-applet:133
-msgid "Update failed"
-msgstr "Uppdateringen misslyckades"
+#: puavo-client-updater-applet:217
+msgid "Update log"
+msgstr "Uppdateringslogg"
 
-#: puavo-client-updater-applet:168
-msgid "(Up to date)"
-msgstr "(Aktuell)"
-
-#: puavo-client-updater-applet:193 puavo-client-updater-applet:205
-msgid "Update"
-msgstr "Uppdatera"
-
-#: puavo-client-updater-applet:199
-msgid "(Reboot required to finish the update)"
-msgstr "(Omstart krävs för att avsluta uppdateringen)"
-
-#: puavo-client-updater-applet:231
-msgid "Update progress:"
-msgstr "Uppdateringens framsteg:"
-
-#~ msgid "(Updating)"
-#~ msgstr "(Uppdatering)"
+#~ msgid "(Up to date)"
+#~ msgstr "(Aktuell)"
