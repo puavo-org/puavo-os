@@ -1,0 +1,10 @@
+NOACCEL=$(jq -r '.tags[] | select(. == "noaccel")' /etc/puavo/device.json)
+
+if [ "${NOACCEL}" = "noaccel" ]; then
+    cat <<EOF >/usr/share/X11/xorg.conf.d/noaccel.conf
+Section "Device"
+    Identifier  "No Hardware Acceleration"
+    Option      "NoAccel"       "true"
+EndSection
+EOF
+fi
