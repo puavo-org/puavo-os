@@ -25,6 +25,7 @@ class packages {
     , 'iperf'
     , 'libstdc++5'
     , 'lm-sensors'
+    , 'lshw'
     , 'lynx'
     , 'm4'
     , 'mlocate'
