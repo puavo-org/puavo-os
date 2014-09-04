@@ -36,6 +36,7 @@ class UpdateIndicatorApplet:
 
         if is_on_persistent_overlay():
             self.add_disabled_widget(menu)
+	    self.indicator.set_menu(menu)
             return
 
         self.add_view_log_button(menu)
@@ -52,24 +53,23 @@ class UpdateIndicatorApplet:
     def add_disabled_widget(self, menu):
 	msg = _tr("Updates are disabled in developer mode, boot to normal mode to update.")
 	self.disabled_msg = gtk.MenuItem(msg)
-	self.disabled_msg.show()
 	self.disabled_msg.set_sensitive(False)
+	self.disabled_msg.show()
 	menu.append(self.disabled_msg)
-
-	self.indicator.set_menu(menu)
 
 
     def add_progress(self, menu):
-        self.progress = gtk.MenuItem('')
-        self.progress.hide()
+        self.progress = gtk.MenuItem('(No update progress.)')
+        self.progress.set_sensitive(False)
+        self.progress.show()
 
         menu.append(self.progress)
 
 
     def add_update_button(self, menu):
         self.update_button = gtk.MenuItem('')
-        self.update_button.show()
         self.set_update_button_mode('check')
+        self.update_button.show()
         menu.append(self.update_button)
 
 
@@ -81,7 +81,8 @@ class UpdateIndicatorApplet:
 
 
     def check_for_updates(self, widget):
-        # XXX should set the update_button inactive with appropriate message
+        self.set_update_button_mode('checking')
+
         self.update_iface \
             .UpdateConfiguration(reply_handler=self.handle_configuration_update_reply,
                                  error_handler=self.handle_configuration_update_error)
@@ -151,8 +152,7 @@ class UpdateIndicatorApplet:
         self.set_update_button_mode('updating')
 
         if phase == 'finished':
-            self.progress.get_child().set_text('')
-            self.progress.hide()
+            self.progress.get_child().set_text(_tr('Update done.'))
             return
 
         phases = {
@@ -183,23 +183,39 @@ class UpdateIndicatorApplet:
 
 
     def set_update_button_mode(self, mode):
+        action = None
+
         if mode == 'check':
-            self.update_button.get_child().set_text(_tr('Check for updates'))
-            self.update_button.connect('activate', self.check_for_updates)
-            self.update_button.set_sensitive(True)
+            action      = self.check_for_updates
+            message     = _tr('Check for updates')
+            sensitivity = True
+        elif mode == 'checking':
+            message     = _tr('(Checking for updates)')
+            sensitivity = False
         elif mode == 'reboot':
-            self.update_button.get_child().set_text(_tr('(Reboot required to finish the update)'))
-            self.update_button.set_sensitive(False)
+            message     = _tr('(Reboot required to finish the update)')
+            sensitivity = False
         elif mode == 'update':
-            self.update_button.get_child().set_text(_tr('Update'))
-            self.update_button.connect('activate', self.update_image)
-            self.update_button.set_sensitive(True)
+            action      = self.update_image
+            message     = _tr('Update')
+            sensitivity = True
         elif mode == 'updating':
-            self.update_button.get_child().set_text(_tr('(Updating)'))
-            self.update_button.set_sensitive(False)
+            message     =_tr('(Update in progress.)')
+            action      = self.stop_image_update
+            sensitivity = False
         else:
             raise Exception('Wrong arguments for set_update_button_mode')
 
+        if action:
+            self.update_button.connect('activate', action)
+
+        self.update_button.get_child().set_text(message)
+        self.update_button.set_sensitive(sensitivity)
+
+
+    def stop_image_update():
+        # XXX not implemented yet
+        pass
 
     def setup_delete_overlays_dialog(self):
         delete_overlays_message = _tr("The old version of the system has been edited "
@@ -232,7 +248,6 @@ class UpdateIndicatorApplet:
 
 
     def update_image(self, widget):
-        # XXX should set the update_button inactive with appropriate message
         delete_overlays = False
 
         if self.update_iface.HasOldOverlays():
@@ -253,6 +268,9 @@ class UpdateIndicatorApplet:
                           delete_overlays,
                           reply_handler=self.handle_update_image_reply,
                           error_handler=self.handle_update_image_error)
+
+        self.set_update_button_mode('updating')
+        self.on_update_progress_indicator('starting', 0)
 
 
     def view_log(self, widget):

@@ -8,13 +8,14 @@ require 'dbus'
 require 'open3'
 
 class Updater < DBus::Object
+  @@image_update_thread = nil
 
   dbus_interface "org.puavo.client.update" do
 
     dbus_signal :UpdateAvailable
-    dbus_signal :UpdateFailed, "in errmsg:s"
-    dbus_signal :UpdateCompleted
-    dbus_signal :UpdateProgressIndicator, "in phase:s, in progress:i"
+    dbus_signal :UpdateFailed,            'in errmsg:s'
+    dbus_signal :UpdateCompleted,         'out outmsg:s'
+    dbus_signal :UpdateProgressIndicator, 'in phase:s, in progress:i'
     dbus_signal :UpdateStarted
 
     dbus_method :HasOldOverlays, "out b" do
@@ -29,20 +30,28 @@ class Updater < DBus::Object
     end
 
     dbus_method :UpdateImages, "in use_rate_limit:b, in delete_overlays:b, out s" do |use_rate_limit, delete_overlays|
-      if not system("/usr/lib/puavo-ltsp-install/is-update-available") then
-        return ""
+      return 'Image update is in progress' if @@image_update_thread
+
+      @@image_update_thread = Thread.new do
+        if not system("/usr/lib/puavo-ltsp-install/is-update-available") then
+          return ""
+        end
+
+        self.UpdateStarted
+
+	output, errput, status \
+	  = Open3.capture3('/usr/lib/puavo-ltsp-install/update-images',
+			   use_rate_limit  ? 'true' : 'false',
+			   delete_overlays ? 'true' : 'false')
+
+	if not status.success? then
+	  self.UpdateFailed errput
+	  raise "failed to update device images: #{errput}"
+	end
+	self.UpdateCompleted output
       end
-      self.UpdateStarted
-      output, errput, status \
-        = Open3.capture3('/usr/lib/puavo-ltsp-install/update-images',
-                         use_rate_limit  ? 'true' : 'false',
-                         delete_overlays ? 'true' : 'false')
-      if not status.success? then
-        self.UpdateFailed errput
-        raise "failed to update device images: #{errput}"
-      end
-      self.UpdateCompleted
-      return output
+
+      return 'Image update started.'
     end
 
     dbus_method :UpdateConfiguration, "out s" do
