@@ -566,6 +566,8 @@ update_stats() {
     test -x "${puavoinstall_libdir}/update-ltspimage-update-stats" \
          && "${puavoinstall_libdir}/update-ltspimage-update-stats" \
                "${stats_filepath}" 2>/dev/null || true
+  else
+    rm -f "${stats_filepath}.tmp"
   fi
 }
 
