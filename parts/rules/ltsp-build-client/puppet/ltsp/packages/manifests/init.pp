@@ -139,6 +139,7 @@ class packages {
 
     [ 'billard-gl'
     , 'cuyo'
+    , 'dosbox'
     , 'extremetuxracer'
     , 'freeciv-client-gtk'
     , 'frozen-bubble'
