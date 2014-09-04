@@ -19,6 +19,7 @@ dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 import re
 
 def is_on_persistent_overlay():
+    return False # XXX
     file = open('/proc/cmdline', 'r')
     cmdline = file.read()
     file.close()
@@ -39,9 +40,9 @@ class UpdateIndicatorApplet:
 	    self.indicator.set_menu(menu)
             return
 
-        self.add_view_log_button(menu)
         self.add_update_button(menu)
         self.add_progress(menu)
+        self.add_view_log_button(menu)
 
         self.connect_to_dbus()
         self.setup_log()
@@ -106,19 +107,19 @@ class UpdateIndicatorApplet:
 
 
     def handle_configuration_update_error(self, error):
-        print(error, file=sys.stderr)
+        print(error, file=sys.stderr, end='')
 
 
     def handle_configuration_update_reply(self, output):
-        print(output)
+        print(output, end='')
 
 
     def handle_update_image_error(self, error):
-        print(error, file=sys.stderr)
+        print(error, file=sys.stderr, end='')
 
 
     def handle_update_image_reply(self, output):
-        print(output)
+        print(output, end='')
 
 
     def on_update_available(self):
@@ -128,14 +129,14 @@ class UpdateIndicatorApplet:
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
 
-    def on_update_completed(self):
+    def on_update_completed(self, outmsg, errmsg):
         self.set_update_button_mode('reboot')
 
         self.indicator.set_attention_icon("update-installed")
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
 
-    def on_update_failed(self, errmsg):
+    def on_update_failed(self, outmsg, errmsg):
         self.set_update_button_mode('update')
 
         self.indicator.set_attention_icon("update-error")
@@ -153,6 +154,7 @@ class UpdateIndicatorApplet:
 
         if phase == 'finished':
             self.progress.get_child().set_text(_tr('Update done.'))
+            self.progress.set_sensitive(False)
             return
 
         phases = {
@@ -173,6 +175,7 @@ class UpdateIndicatorApplet:
                  % (_tr('Update progress:'), phase_number, progress)
 
         self.progress.get_child().set_text(text)
+        self.progress.set_sensitive(True)
         self.progress.show()
 
 
