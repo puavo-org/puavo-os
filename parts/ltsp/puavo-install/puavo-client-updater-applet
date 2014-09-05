@@ -69,6 +69,7 @@ class UpdateIndicatorApplet:
 
     def add_update_button(self, menu):
         self.update_button = gtk.MenuItem('')
+        self.button_action_handler = None
         self.set_update_button_mode('check')
         self.update_button.show()
         menu.append(self.update_button)
@@ -76,9 +77,13 @@ class UpdateIndicatorApplet:
 
     def add_view_log_button(self, menu):
         self.view_log_item = gtk.MenuItem(_tr("View log..."))
-        self.view_log_item.connect("activate", self.view_log)
+        self.view_log_item.connect('activate', self.view_log)
         self.view_log_item.show()
         menu.append(self.view_log_item)
+
+
+    def cancel_image_update(self, widget):
+        self.update_iface.CancelImageUpdate()
 
 
     def check_for_updates(self, widget):
@@ -94,15 +99,19 @@ class UpdateIndicatorApplet:
         updater = self.bus.get_object('org.puavo.client.Daemon', '/updater')
         self.update_iface = dbus.Interface(updater,
                                            dbus_interface='org.puavo.client.update')
-        self.update_iface.connect_to_signal("UpdateAvailable",
+        self.update_iface.connect_to_signal('UpdateIsUpToDate',
+                                            self.on_update_isuptodate)
+        self.update_iface.connect_to_signal('UpdateAvailable',
                                             self.on_update_available)
-        self.update_iface.connect_to_signal("UpdateStarted",
+        self.update_iface.connect_to_signal('UpdateStarted',
                                             self.on_update_started)
-        self.update_iface.connect_to_signal("UpdateProgressIndicator",
+        self.update_iface.connect_to_signal('UpdateProgressIndicator',
                                             self.on_update_progress_indicator)
-        self.update_iface.connect_to_signal("UpdateFailed",
+        self.update_iface.connect_to_signal("UpdateCancelled",
+                                            self.on_update_cancelled)
+        self.update_iface.connect_to_signal('UpdateFailed',
                                             self.on_update_failed)
-        self.update_iface.connect_to_signal("UpdateCompleted",
+        self.update_iface.connect_to_signal('UpdateCompleted',
                                             self.on_update_completed)
 
 
@@ -129,6 +138,11 @@ class UpdateIndicatorApplet:
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
 
+    def on_update_cancelled(self, outmsg, errmsg):
+        # XXX could do something with outmsg and errmsg
+        self.on_update_available()
+
+
     def on_update_completed(self, outmsg, errmsg):
         self.set_update_button_mode('reboot')
 
@@ -147,6 +161,11 @@ class UpdateIndicatorApplet:
         self.log_buffer.insert_with_tags(self.log_buffer.get_end_iter(),
                                          errmsg, self.log_error_tag)
         self.log_view.scroll_mark_onscreen(self.log_buffer.get_insert())
+
+
+    def on_update_isuptodate(self):
+        self.set_update_button_mode('uptodate')
+        # XXX appindicator status should be updated as well
 
 
     def on_update_progress_indicator(self, phase, progress):
@@ -171,7 +190,7 @@ class UpdateIndicatorApplet:
         except KeyError:
             phase_number = '?'
 
-        text = '%s (%s/5) %s%%' \
+        text = '-=>  %s (%s/5) %s%%  <=-' \
                  % (_tr('Update progress:'), phase_number, progress)
 
         self.progress.get_child().set_text(text)
@@ -203,22 +222,25 @@ class UpdateIndicatorApplet:
             message     = _tr('Update')
             sensitivity = True
         elif mode == 'updating':
-            message     =_tr('(Update in progress.)')
-            action      = self.stop_image_update
+            message     =_tr('Cancel image update')
+            action      = self.cancel_image_update
+            sensitivity = True
+        elif mode == 'uptodate':
+            message     = _tr('(Up to date.)')
             sensitivity = False
         else:
             raise Exception('Wrong arguments for set_update_button_mode')
 
+        if self.button_action_handler:
+            self.update_button.disconnect(self.button_action_handler)
+            self.button_action_handler = None
         if action:
-            self.update_button.connect('activate', action)
+            self.button_action_handler \
+              = self.update_button.connect('activate', action)
 
         self.update_button.get_child().set_text(message)
         self.update_button.set_sensitive(sensitivity)
 
-
-    def stop_image_update():
-        # XXX not implemented yet
-        pass
 
     def setup_delete_overlays_dialog(self):
         delete_overlays_message = _tr("The old version of the system has been edited "

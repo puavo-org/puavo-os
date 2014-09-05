@@ -9,39 +9,51 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: puavo-client-updater-applet:53
+#: puavo-client-updater-applet:55
 msgid "Updates are disabled in developer mode, boot to normal mode to update."
 msgstr ""
 
-#: puavo-client-updater-applet:77
+#: puavo-client-updater-applet:79
 msgid "View log..."
 msgstr "Visa logg..."
 
-#: puavo-client-updater-applet:144
+#: puavo-client-updater-applet:160
 msgid "Update failed"
 msgstr "Uppdateringen misslyckades"
 
-#: puavo-client-updater-applet:173
+#: puavo-client-updater-applet:175
+msgid "Update done."
+msgstr ""
+
+#: puavo-client-updater-applet:194
 msgid "Update progress:"
 msgstr "Uppdateringens framsteg:"
 
-#: puavo-client-updater-applet:187
+#: puavo-client-updater-applet:212
 msgid "Check for updates"
 msgstr ""
 
-#: puavo-client-updater-applet:191
+#: puavo-client-updater-applet:215
+msgid "(Checking for updates)"
+msgstr ""
+
+#: puavo-client-updater-applet:218
 msgid "(Reboot required to finish the update)"
 msgstr "(Omstart krävs för att avsluta uppdateringen)"
 
-#: puavo-client-updater-applet:194
+#: puavo-client-updater-applet:222
 msgid "Update"
 msgstr "Uppdatera"
 
-#: puavo-client-updater-applet:198
-msgid "(Updating)"
-msgstr "(Uppdatering)"
+#: puavo-client-updater-applet:225
+msgid "Cancel image update"
+msgstr ""
 
-#: puavo-client-updater-applet:205
+#: puavo-client-updater-applet:229
+msgid "(Up to date.)"
+msgstr ""
+
+#: puavo-client-updater-applet:246
 msgid ""
 "The old version of the system has been edited by the user. Updating the "
 "system causes all these changes to be lost. Do you want to proceed?"
@@ -49,13 +61,16 @@ msgstr ""
 "Den gamla versionen av systemet innehåller konfigurationer som användaren "
 "har gjort, dessa förstörs i uppdateringen. Vill du fortsätta?"
 
-#: puavo-client-updater-applet:213
+#: puavo-client-updater-applet:254
 msgid "Continue updating?"
 msgstr "Fortsät uppdateringen"
 
-#: puavo-client-updater-applet:217
+#: puavo-client-updater-applet:258
 msgid "Update log"
 msgstr "Uppdateringslogg"
+
+#~ msgid "(Updating)"
+#~ msgstr "(Uppdatering)"
 
 #~ msgid "(Up to date)"
 #~ msgstr "(Aktuell)"

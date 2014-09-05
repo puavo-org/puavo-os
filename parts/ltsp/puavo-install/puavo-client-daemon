@@ -7,17 +7,27 @@ ENV["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 require 'dbus'
 require 'open3'
 
-class Updater < DBus::Object
-  @@configuration_update_thread = nil
-  @@image_update_thread         = nil
+$configuration_update_thread = nil
+$image_update_thread         = nil
 
+class CancelledImageUpdate < RuntimeError; end
+
+class Updater < DBus::Object
   dbus_interface "org.puavo.client.update" do
 
     dbus_signal :UpdateAvailable
+    dbus_signal :UpdateCancelled,         'in outmsg:s, in errmsg:s'
     dbus_signal :UpdateFailed,            'in outmsg:s, in errmsg:s'
     dbus_signal :UpdateCompleted,         'in outmsg:s, in errmsg:s'
     dbus_signal :UpdateProgressIndicator, 'in phase:s, in progress:i'
     dbus_signal :UpdateStarted
+    dbus_signal :UpdateIsUpToDate
+
+    dbus_method :CancelImageUpdate, '' do
+      if $image_update_thread then
+        $image_update_thread.raise(CancelledImageUpdate, 'Cancel image update')
+      end
+    end
 
     dbus_method :HasOldOverlays, "out b" do
       output, errput, status \
@@ -31,28 +41,56 @@ class Updater < DBus::Object
     end
 
     dbus_method :UpdateImages, "in use_rate_limit:b, in delete_overlays:b, out s" do |use_rate_limit, delete_overlays|
-      return "Image update is in progress.\n" if @@image_update_thread
+      return "Image update is in progress.\n" if $image_update_thread
 
-      @@image_update_thread = Thread.new do
-        begin
-	  if not system("/usr/lib/puavo-ltsp-install/is-update-available") then
-	    return ""
+      $image_update_thread = Thread.new do
+        wait_thr, out_thr, err_thr = nil, nil, nil
+
+	begin
+	  if not system('/usr/lib/puavo-ltsp-install/is-update-available') then
+	    return ''
 	  end
 
 	  self.UpdateStarted
 
-	  output, errput, status \
-	    = Open3.capture3('/usr/lib/puavo-ltsp-install/update-images',
-			     use_rate_limit  ? 'true' : 'false',
-			     delete_overlays ? 'true' : 'false')
+	  stdin, stdout, stderr, wait_thr \
+	    = Open3.popen3('/usr/lib/puavo-ltsp-install/update-images',
+			   use_rate_limit  ? 'true' : 'false',
+			   delete_overlays ? 'true' : 'false',
+                           { :pgroup => true })
+
+          stdin.close
+          output, errput = '', ''
+          out_thr = Thread.new { output = stdout.read }
+          err_thr = Thread.new { errput = stderr.read }
+
+          status = wait_thr.value
+
+          [ out_thr, err_thr ].each { |t| t.join if t }
 
 	  if not status.success? then
 	    self.UpdateFailed(output, errput)
-	    raise "failed to update device images: #{errput}"
+	    raise "failed to update device images: #{ errput }"
 	  end
 	  self.UpdateCompleted(output, errput)
-        ensure
-	  @@image_update_thread = nil
+
+        rescue CancelledImageUpdate => e
+          if wait_thr then
+            if wait_thr.alive? then
+              Process.kill('-TERM', wait_thr.pid)
+            end
+            wait_thr.join
+
+            [ out_thr, err_thr ].each { |t| t.join if t }
+
+            self.UpdateCancelled(output, errput)
+          else
+            self.UpdateCancelled('', '')
+          end
+
+	ensure
+          [ out_thr, err_thr ].each { |t| t.exit if t }
+	  $image_update_thread = nil
 	end
       end
 
@@ -61,9 +99,9 @@ class Updater < DBus::Object
 
     dbus_method :UpdateConfiguration, "out s" do
       return "Configuration update is in progress.\n" \
-        if @@configuration_update_thread
+        if $configuration_update_thread
 
-      @@configuration_update_thread = Thread.new do
+      $configuration_update_thread = Thread.new do
         begin
 	  command = '/usr/lib/puavo-ltsp-install/update-configuration'
 
@@ -73,9 +111,11 @@ class Updater < DBus::Object
 	  end
 	  if system('/usr/lib/puavo-ltsp-install/is-update-available') then
 	    self.UpdateAvailable
+          else
+	    self.UpdateIsUpToDate
 	  end
         ensure
-          @@configuration_update_thread = nil
+          $configuration_update_thread = nil
         end
       end
 
