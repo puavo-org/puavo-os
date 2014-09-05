@@ -110,9 +110,9 @@ class Updater < DBus::Object
 	    raise "failed to update device configuration: #{ output }"
 	  end
 	  if system('/usr/lib/puavo-ltsp-install/is-update-available') then
-	    self.UpdateAvailable
+	    self.UpdateAvailable unless $image_update_thread
           else
-	    self.UpdateIsUpToDate
+	    self.UpdateIsUpToDate unless $image_update_thread
 	  end
         ensure
           $configuration_update_thread = nil
