@@ -725,6 +725,7 @@ class packages {
     , 'puavo-wlanap'
     , 'puavo-wlanap-dnsproxy'
     , 'webmenu'
+    , 'webkiosk-language-selector'
     , 'xexit' ]:
       tag => [ 'misc', 'puavo', ];
 
