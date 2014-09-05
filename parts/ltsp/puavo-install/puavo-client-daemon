@@ -122,6 +122,8 @@ class Updater < DBus::Object
                                                      delete_overlays)) \
             .join
         end
+
+        return "Configuration and image updates triggered.\n"
     end
 
     dbus_method :UpdateConfiguration, "out s" do
