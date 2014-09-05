@@ -236,11 +236,11 @@ install : installdirs
 		greeter-setup \
 		puavo-desktop-session \
 		puavo-desktop-session-cleanup \
+		puavo-display-setup \
 		puavo-ltspserver-create-guest \
 		puavo-make-release-logos \
 		puavo-run-xrandr \
 		puavo-thin-guest-account \
-		puavo-x2go-set-xrandr-mode \
 		udev/udev-hotplug-monitor \
 		udev/udev-jetpipe \
 		xinitrc
