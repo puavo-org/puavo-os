@@ -69,17 +69,20 @@ fi
 
 set -u
 
-# if synchronous call, fail after 30 seconds
-dbus-send --system --dest=org.puavo.client.Daemon \
-    --reply-timeout=30000 \
-    --print-reply=literal \
-    /updater org.puavo.client.update.UpdateConfiguration || true
+dbus_cmd="
+  dbus-send --dest=org.puavo.client.Daemon
+            --print-reply=literal
+            --reply-timeout=30000
+            --system
+            /updater
+"
 
-if $do_image_update; then
-    # if synchronous cal, fail after 8 hours
-    dbus-send --system --dest=org.puavo.client.Daemon \
-        --reply-timeout=28800000 \
-        --print-reply=literal \
-        /updater org.puavo.client.update.UpdateImages \
-        "boolean:${use_rate_limit}" "boolean:${delete_overlays}" || true
+if ! $do_image_update; then
+    # do only the configuration update
+    $dbus_cmd org.puavo.client.update.UpdateConfiguration
+else
+    # do the whole update (configuration update + image update)
+    $dbus_cmd org.puavo.client.update.Update \
+              "boolean:${use_rate_limit}"    \
+              "boolean:${delete_overlays}"
 fi
