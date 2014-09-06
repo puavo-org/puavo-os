@@ -90,7 +90,9 @@ update_stats() {
     echo "image ${next_image}" # $next_image is "global", just use it here
     echo "phase ${phase}"
     echo "progress ${progress}"
-  } > "${stats_filepath}.tmp"
+  } | tr -d '\r' > "${stats_filepath}.tmp"
+    # tr -d here is nice because progress may contain \r ... originates from
+    # curl and should be stripped earlier but it was difficult
 
   if ! cmp "${stats_filepath}" "${stats_filepath}.tmp" >/dev/null 2>&1; then
     mv "${stats_filepath}.tmp" "${stats_filepath}"
