@@ -27,9 +27,10 @@ def is_on_persistent_overlay():
 
 class UpdateIndicatorApplet:
     def __init__(self):
-        self.indicator = appindicator.Indicator("update-indicator",
-                                                "update-idle",
-                                                appindicator.CATEGORY_APPLICATION_STATUS)
+        self.indicator \
+          = appindicator.Indicator('update-indicator',
+                                   'update-idle',
+                                   appindicator.CATEGORY_APPLICATION_STATUS)
         self.indicator.set_status(appindicator.STATUS_ACTIVE)
 
         menu = gtk.Menu()
@@ -51,7 +52,7 @@ class UpdateIndicatorApplet:
 
 
     def add_disabled_widget(self, menu):
-	msg = _tr("Updates are disabled in developer mode, boot to normal mode to update.")
+	msg = _tr('Updates are disabled in developer mode, boot to normal mode to update.')
 	self.disabled_msg = gtk.MenuItem(msg)
 	self.disabled_msg.set_sensitive(False)
 	self.disabled_msg.show()
@@ -60,7 +61,8 @@ class UpdateIndicatorApplet:
 
 
     def add_progress(self, menu):
-        self.progress = gtk.MenuItem('(No update progress.)')
+        self.progress = gtk.MenuItem('')
+        self.set_progress_text( _tr('No update progress.') )
         self.progress.set_sensitive(False)
         self.progress.show()
 
@@ -136,7 +138,7 @@ class UpdateIndicatorApplet:
     def on_update_available(self):
         self.set_update_button_mode('update')
 
-        self.indicator.set_attention_icon("update-available")
+        self.indicator.set_attention_icon('update-available')
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
 
@@ -146,44 +148,52 @@ class UpdateIndicatorApplet:
 
 
     def on_update_completed(self, outmsg, errmsg):
-        self.set_update_button_mode('reboot')
+        self.set_update_button_mode('check')
 
-        self.indicator.set_attention_icon("update-installed")
+        self.indicator.set_attention_icon('update-installed')
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
 
     def on_update_failed(self, outmsg, errmsg):
         self.set_update_button_mode('update')
 
-        self.indicator.set_attention_icon("update-error")
+        self.indicator.set_attention_icon('update-error')
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
+
         self.log_buffer.insert(self.log_buffer.get_end_iter(),
                                "%s: %s\n" % (datetime.datetime.now(),
-                                             _tr("Update failed")))
+                                             _tr('Update failed')))
         self.log_buffer.insert_with_tags(self.log_buffer.get_end_iter(),
                                          errmsg, self.log_error_tag)
         self.log_view.scroll_mark_onscreen(self.log_buffer.get_insert())
 
 
     def on_update_isuptodate(self):
-        self.set_update_button_mode('uptodate')
-        # XXX appindicator status should be updated as well
+        self.on_update_progress_indicator('uptodate')
+
+        self.indicator.set_attention_icon('update-idle')
+        self.indicator.set_status(appindicator.STATUS_ACTIVE)
 
 
     def on_update_progress_indicator(self, phase, progress=0):
+        mode, text = None, None
+
         if phase == 'error':
-            self.set_progress_text( _tr('Error on update.') )
-            self.set_update_button_mode('update')
-            return
+            mode = 'update'
+            text = _tr('Error on update.')
+        elif phase == 'finished':
+            mode = 'check'
+            text = _tr('Update done, reboot required to finish the update.')
+        elif phase == 'interrupted':
+            mode = 'update'
+            text = _tr('Update interrupted.')
+        elif phase == 'uptodate':
+            mode = 'check'
+            text = _tr('Up to date.')
 
-        if phase == 'finished':
-            self.set_progress_text( _tr('Update done.') )
-            self.set_update_button_mode('reboot')
-            return
-
-        if phase == 'interrupted':
-            self.set_progress_text( _tr('Update interrupted.') )
-            self.set_update_button_mode('update')
+        if mode and text:
+            self.set_progress_text(text)
+            self.set_update_button_mode(mode)
             return
 
         phases = {
@@ -209,12 +219,12 @@ class UpdateIndicatorApplet:
 
     def on_update_started(self):
         self.set_update_button_mode('updating')
-        self.indicator.set_attention_icon("update-downloading")
+        self.indicator.set_attention_icon('update-downloading')
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
 
     def set_progress_text(self, text):
-        wrapped_text = '-=> ' + text + ' <='
+        wrapped_text = '-=> ' + text + ' <=-'
         self.progress.get_child().set_text(wrapped_text)
 
 
@@ -228,9 +238,6 @@ class UpdateIndicatorApplet:
         elif mode == 'checking':
             message     = _tr('(Checking for updates)')
             sensitivity = False
-        elif mode == 'reboot':
-            message     = _tr('(Reboot required to finish the update)')
-            sensitivity = False
         elif mode == 'update':
             action      = self.update_image
             message     = _tr('Update')
@@ -239,9 +246,6 @@ class UpdateIndicatorApplet:
             message     =_tr('Cancel image update')
             action      = self.cancel_image_update
             sensitivity = True
-        elif mode == 'uptodate':
-            message     = _tr('(Up to date.)')
-            sensitivity = False
         else:
             raise Exception('Wrong arguments for set_update_button_mode')
 

@@ -111,8 +111,6 @@ finish() {
     else
       update_stats error 0
     fi
-  else
-    update_stats finished 100
   fi
 }
 
@@ -419,6 +417,7 @@ install_image() {
   if [ "$current_ltspimage_name" = "$imagename" ]; then
     echo "The wanted PuavoLTSP image $imagename"
     echo "is already in place."
+    update_stats uptodate 100
     return 0
   fi
 
@@ -565,6 +564,8 @@ set_image_as_default_image() {
   sync
 
   log notice "new ltsp image $next_image has been set as default"
+
+  update_stats finished 100
 }
 
 update_image() {
@@ -580,6 +581,7 @@ update_image() {
   if /usr/bin/test "${images_dir}/${next_image}" \
 	       -ef "${images_dir}/ltsp.img"; then
     log info "the requested ltsp image is already in place"
+    update_stats uptodate 100
   else
     set_image_as_default_image "$next_image"
   fi

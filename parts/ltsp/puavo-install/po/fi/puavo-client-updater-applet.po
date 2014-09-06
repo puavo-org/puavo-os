@@ -15,47 +15,55 @@ msgstr ""
 "Päivittäminen ei ole mahdollista kehittäjätilassa, käynnistä normaalitilaan "
 "päivittääksesi."
 
-#: puavo-client-updater-applet:79
+#: puavo-client-updater-applet:65
+msgid "No update progress."
+msgstr ""
+
+#: puavo-client-updater-applet:82
 msgid "View log..."
 msgstr "Näytä loki..."
 
-#: puavo-client-updater-applet:160
+#: puavo-client-updater-applet:165
 msgid "Update failed"
 msgstr "Päivitys epäonnistui"
 
-#: puavo-client-updater-applet:175
-msgid "Update done."
+#: puavo-client-updater-applet:183
+msgid "Error on update."
 msgstr ""
 
-#: puavo-client-updater-applet:194
+#: puavo-client-updater-applet:186
+msgid "Update done, reboot required to finish the update."
+msgstr ""
+
+#: puavo-client-updater-applet:189
+msgid "Update interrupted."
+msgstr ""
+
+#: puavo-client-updater-applet:192
+msgid "Up to date."
+msgstr ""
+
+#: puavo-client-updater-applet:214
 msgid "Update progress:"
 msgstr "Päivityksen edistyminen:"
 
-#: puavo-client-updater-applet:212
+#: puavo-client-updater-applet:236
 msgid "Check for updates"
 msgstr ""
 
-#: puavo-client-updater-applet:215
+#: puavo-client-updater-applet:239
 msgid "(Checking for updates)"
 msgstr ""
 
-#: puavo-client-updater-applet:218
-msgid "(Reboot required to finish the update)"
-msgstr "(Päivityksen käyttöönotto vaatii uudelleenkäynnistyksen)"
-
-#: puavo-client-updater-applet:222
+#: puavo-client-updater-applet:243
 msgid "Update"
 msgstr "Päivitä"
 
-#: puavo-client-updater-applet:225
+#: puavo-client-updater-applet:246
 msgid "Cancel image update"
 msgstr ""
 
-#: puavo-client-updater-applet:229
-msgid "(Up to date.)"
-msgstr ""
-
-#: puavo-client-updater-applet:246
+#: puavo-client-updater-applet:264
 msgid ""
 "The old version of the system has been edited by the user. Updating the "
 "system causes all these changes to be lost. Do you want to proceed?"
@@ -63,13 +71,16 @@ msgstr ""
 "Vanha versio järjestelmästä sisältää käyttäjän tekemiä muutoksia, jotka "
 "tuhoutuvat päivityksessä. Haluatko jatkaa?"
 
-#: puavo-client-updater-applet:254
+#: puavo-client-updater-applet:272
 msgid "Continue updating?"
 msgstr "Jatka päivittämistä?"
 
-#: puavo-client-updater-applet:258
+#: puavo-client-updater-applet:276
 msgid "Update log"
 msgstr "Päivitysloki"
+
+#~ msgid "(Reboot required to finish the update)"
+#~ msgstr "(Päivityksen käyttöönotto vaatii uudelleenkäynnistyksen)"
 
 #~ msgid "(Updating)"
 #~ msgstr "(Päivittyy)"
