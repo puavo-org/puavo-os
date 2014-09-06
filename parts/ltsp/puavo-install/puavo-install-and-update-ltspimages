@@ -87,6 +87,7 @@ update_stats() {
   stats_filepath="${images_dir}/image_update.stats"
 
   {
+    echo "image ${next_image}" # $next_image is "global", just use it here
     echo "phase ${phase}"
     echo "progress ${progress}"
   } > "${stats_filepath}.tmp"
