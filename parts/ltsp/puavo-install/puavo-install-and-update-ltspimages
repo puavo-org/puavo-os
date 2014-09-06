@@ -77,6 +77,54 @@ if [ -z "$next_image" ]; then
 fi
 
 #
+# functions related to exiting
+#
+
+update_stats() {
+  phase=$1
+  progress=$2
+
+  stats_filepath="${images_dir}/image_update.stats"
+
+  {
+    echo "phase ${phase}"
+    echo "progress ${progress}"
+  } > "${stats_filepath}.tmp"
+
+  if ! cmp "${stats_filepath}" "${stats_filepath}.tmp" >/dev/null 2>&1; then
+    mv "${stats_filepath}.tmp" "${stats_filepath}"
+    test -x "${puavoinstall_libdir}/update-ltspimage-update-stats" \
+         && "${puavoinstall_libdir}/update-ltspimage-update-stats" \
+               "${stats_filepath}" 2>/dev/null || true
+  else
+    rm -f "${stats_filepath}.tmp"
+  fi
+}
+
+interrupted=false
+
+finish() {
+  if [ "$?" -ne 0 ]; then
+    if $interrupted; then
+      update_stats interrupted 0
+    else
+      update_stats error 0
+    fi
+  else
+    update_stats finished 100
+  fi
+}
+
+interrupted() {
+  interrupted=true
+  exit 1
+}
+
+trap finish 0
+trap interrupted INT TERM
+
+
+#
 # subroutines
 #
 
@@ -550,27 +598,6 @@ update_image_labels_for_grub() {
   return 0
 }
 
-update_stats() {
-  phase=$1
-  progress=$2
-
-  stats_filepath="${images_dir}/image_update.stats"
-
-  {
-    echo "phase ${phase}"
-    echo "progress ${progress}"
-  } > "${stats_filepath}.tmp"
-
-  if ! cmp "${stats_filepath}" "${stats_filepath}.tmp" >/dev/null 2>&1; then
-    mv "${stats_filepath}.tmp" "${stats_filepath}"
-    test -x "${puavoinstall_libdir}/update-ltspimage-update-stats" \
-         && "${puavoinstall_libdir}/update-ltspimage-update-stats" \
-               "${stats_filepath}" 2>/dev/null || true
-  else
-    rm -f "${stats_filepath}.tmp"
-  fi
-}
-
 update_stats_with_progress() {
   phase=$1
 
@@ -609,7 +636,5 @@ elif [ -n "$image_from_nbd" ]; then
 else
   update_image "$next_image" "$rate_limit_opts"
 fi
-
-update_stats finished 100
 
 exit 0
