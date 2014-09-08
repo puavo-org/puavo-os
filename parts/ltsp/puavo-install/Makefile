@@ -59,6 +59,7 @@ install : installdirs
 		icons/update-available.svg \
 		icons/update-error.svg \
 		icons/update-downloading.svg \
+		icons/update-downloading-*.svg \
 		icons/update-idle.svg \
 		icons/update-installed.svg
 

@@ -43,6 +43,9 @@ class UpdateIndicatorApplet:
 
         pynotify.init('puavo-client-updater-applet')
         self.available_notice_shown = False
+        self.download_animation_icons \
+          = [ 'update-downloading' ] \
+              + [ 'update-downloading-%02d' % x for x in range(2, 14) ]
 
         self.add_update_button(menu)
         self.add_view_log_button(menu)
@@ -210,7 +213,7 @@ class UpdateIndicatorApplet:
             self.indicator.set_status(appindicator.STATUS_ATTENTION)
         else:
             self.on_update_progress_indicator('uptodate')
-            self.indicator.set_attention_icon('update-idle')
+            self.indicator.set_icon('update-idle')
             self.indicator.set_status(appindicator.STATUS_ACTIVE)
 
 
@@ -254,6 +257,15 @@ class UpdateIndicatorApplet:
 
         self.set_progress_text(text)
         self.set_update_button_mode('updating')
+
+        self.indicator.set_attention_icon(self.download_animation_icons[0])
+        self.indicator.set_status(appindicator.STATUS_ATTENTION)
+
+        # cycle attention icons
+        self.download_animation_icons \
+          = self.download_animation_icons[1:] \
+              + [ self.download_animation_icons[0] ]
+
 
 
     def on_update_started(self):
