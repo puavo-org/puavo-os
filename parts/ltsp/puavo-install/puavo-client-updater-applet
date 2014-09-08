@@ -168,6 +168,7 @@ class UpdateIndicatorApplet:
         self.indicator.set_attention_icon('update-installed')
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
+        self.available_notice_shown = False
         self.notify( _tr('System update is finished, reboot the computer.') )
 
 
