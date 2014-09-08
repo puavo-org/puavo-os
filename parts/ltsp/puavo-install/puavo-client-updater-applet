@@ -83,11 +83,38 @@ class UpdateIndicatorApplet:
 
 
     def add_view_log_button(self, menu):
-        self.view_log_item = gtk.MenuItem(_tr("View log..."))
+        self.view_log_item = gtk.MenuItem( _tr('View log...') )
         self.view_log_item.connect('activate', self.view_log)
         self.view_log_item.show()
 
         menu.append(self.view_log_item)
+
+
+    def append_error_to_log(self, errortext):
+        self.append_text_to_log(errortext, True)
+
+
+    def append_text_to_log(self, text, error=False):
+        if text == '':
+            return
+
+        end_iter = self.log_buffer.get_end_iter()
+
+        timestamped_text = re.sub(r'^',
+                                  '%s: ' % datetime.datetime.now(),
+                                  text.rstrip(),
+                                  flags=re.MULTILINE) \
+                             + "\n"
+
+        if not error:
+            self.log_buffer.insert_with_tags(end_iter, timestamped_text)
+            print(timestamped_text, end='')
+        else:
+            self.log_buffer.insert_with_tags(end_iter,
+                                             timestamped_text,
+                                             self.log_error_tag)
+            print(timestamped_text, file=sys.stderr, end='')
+
 
 
     def cancel_image_update(self, widget):
@@ -98,8 +125,8 @@ class UpdateIndicatorApplet:
         self.set_update_button_mode('checking')
 
         self.update_iface \
-            .UpdateConfiguration(reply_handler=self.handle_configuration_update_reply,
-                                 error_handler=self.handle_configuration_update_error)
+            .UpdateConfiguration(reply_handler=self.append_text_to_log,
+                                 error_handler=self.append_error_to_log)
 
 
     def connect_to_dbus(self):
@@ -123,22 +150,6 @@ class UpdateIndicatorApplet:
                                             self.on_update_completed)
 
 
-    def handle_configuration_update_error(self, error):
-        print(error, file=sys.stderr, end='')
-
-
-    def handle_configuration_update_reply(self, output):
-        print(output, end='')
-
-
-    def handle_update_image_error(self, error):
-        print(error, file=sys.stderr, end='')
-
-
-    def handle_update_image_reply(self, output):
-        print(output, end='')
-
-
     def notify(self, msg):
         pynotify.Notification(msg).show()
 
@@ -159,6 +170,10 @@ class UpdateIndicatorApplet:
         self.on_update_progress_indicator('interrupted')
         self.on_update_available()
 
+        self.append_text_to_log( _tr('Update cancelled.') + "\n" )
+        self.append_text_to_log(outmsg)
+        self.append_error_to_log(errmsg)
+
         self.notify( _tr('System update has been cancelled.') )
 
 
@@ -166,6 +181,10 @@ class UpdateIndicatorApplet:
         self.set_update_button_mode('check')
 
         self.on_update_isuptodate(True)
+
+        self.append_text_to_log( _tr('Update completed.') + "\n" )
+        self.append_text_to_log(outmsg)
+        self.append_error_to_log(errmsg)
 
         self.available_notice_shown = False
         self.notify( _tr('System update is finished, reboot the computer.') )
@@ -177,12 +196,9 @@ class UpdateIndicatorApplet:
         self.indicator.set_attention_icon('update-error')
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
-        self.log_buffer.insert(self.log_buffer.get_end_iter(),
-                               "%s: %s\n" % (datetime.datetime.now(),
-                                             _tr('Update failed')))
-        self.log_buffer.insert_with_tags(self.log_buffer.get_end_iter(),
-                                         errmsg, self.log_error_tag)
-        self.log_view.scroll_mark_onscreen(self.log_buffer.get_insert())
+        self.append_text_to_log( _tr('Update failed.') + "\n" )
+        self.append_text_to_log(outmsg)
+        self.append_error_to_log(errmsg)
 
         self.notify( _tr('An error occurred when updating the system.') )
 
@@ -286,32 +302,44 @@ class UpdateIndicatorApplet:
 
 
     def setup_delete_overlays_dialog(self):
-        delete_overlays_message = _tr("The old version of the system has been edited "
-                                      "by the user. Updating the system causes "
-                                      "all these changes to be lost. "
-                                      "Do you want to proceed?")
-        self.delete_overlays_dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL,
-                                                        gtk.MESSAGE_QUESTION,
-                                                        gtk.BUTTONS_YES_NO,
-                                                        delete_overlays_message)
-        self.delete_overlays_dialog.set_title(_tr("Continue updating?"))
+        delete_overlays_message \
+          = _tr('The old version of the system has been edited '
+                'by the user. Updating the system causes '
+                'all these changes to be lost. '
+                'Do you want to proceed?')
+
+        self.delete_overlays_dialog \
+          = gtk.MessageDialog(None,
+                              gtk.DIALOG_MODAL,
+                              gtk.MESSAGE_QUESTION,
+                              gtk.BUTTONS_YES_NO,
+                              delete_overlays_message)
+
+        self.delete_overlays_dialog.set_title( _tr('Continue updating?') )
 
 
     def setup_log(self):
-        self.log_dialog = gtk.Dialog(title=_tr("Update log"), parent=None,
-                                     flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                                     buttons=(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        self.log_dialog \
+          = gtk.Dialog(title=_tr('Update log'),
+                       parent=None,
+                       flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                       buttons=(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+
         self.log_dialog.set_default_size(600, 300)
         self.log_buffer = gtk.TextBuffer()
-        self.log_error_tag = self.log_buffer.create_tag(foreground="red", left_margin=20)
+        self.log_error_tag = self.log_buffer.create_tag(foreground='red',
+                                                        left_margin=20)
+
         self.log_view = gtk.TextView(self.log_buffer)
         self.log_view.set_editable(False)
         self.log_view.set_cursor_visible(False)
         self.log_view.show()
+
         log_scroll = gtk.ScrolledWindow()
         log_scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         log_scroll.add(self.log_view)
         log_scroll.show()
+
         self.log_dialog.vbox.pack_start(log_scroll)
 
 
@@ -319,7 +347,9 @@ class UpdateIndicatorApplet:
         delete_overlays = False
 
         if self.update_iface.HasOldOverlays():
-            delete_overlays = self.delete_overlays_dialog.run() == gtk.RESPONSE_YES
+            delete_overlays \
+              = self.delete_overlays_dialog.run() == gtk.RESPONSE_YES
+
             self.delete_overlays_dialog.hide()
             if not delete_overlays:
                 # The user has just answered no, so we are not going
@@ -334,8 +364,8 @@ class UpdateIndicatorApplet:
         self.update_iface \
             .UpdateImages(False,
                           delete_overlays,
-                          reply_handler=self.handle_update_image_reply,
-                          error_handler=self.handle_update_image_error)
+                          reply_handler=self.append_text_to_log,
+                          error_handler=self.append_error_to_log)
 
         self.set_update_button_mode('updating')
         self.on_update_progress_indicator('starting')

@@ -21,67 +21,75 @@ msgstr ""
 msgid "View log..."
 msgstr "Visa logg..."
 
-#: puavo-client-updater-applet:154
+#: puavo-client-updater-applet:165
 msgid "A new system update is available."
 msgstr ""
 
-#: puavo-client-updater-applet:162
+#: puavo-client-updater-applet:173
+msgid "Update cancelled."
+msgstr ""
+
+#: puavo-client-updater-applet:177
 msgid "System update has been cancelled."
 msgstr ""
 
-#: puavo-client-updater-applet:171
+#: puavo-client-updater-applet:185
+msgid "Update completed."
+msgstr ""
+
+#: puavo-client-updater-applet:190
 msgid "System update is finished, reboot the computer."
 msgstr ""
 
-#: puavo-client-updater-applet:182
-msgid "Update failed"
-msgstr "Uppdateringen misslyckades"
+#: puavo-client-updater-applet:199
+msgid "Update failed."
+msgstr ""
 
-#: puavo-client-updater-applet:187
+#: puavo-client-updater-applet:203
 msgid "An error occurred when updating the system."
 msgstr ""
 
-#: puavo-client-updater-applet:206
+#: puavo-client-updater-applet:222
 msgid "Error on update."
 msgstr ""
 
-#: puavo-client-updater-applet:209
+#: puavo-client-updater-applet:225
 msgid "Update done, reboot required to finish the update."
 msgstr ""
 
-#: puavo-client-updater-applet:212
+#: puavo-client-updater-applet:228
 msgid "Update interrupted."
 msgstr ""
 
-#: puavo-client-updater-applet:215
+#: puavo-client-updater-applet:231
 msgid "Up to date."
 msgstr ""
 
-#: puavo-client-updater-applet:237
+#: puavo-client-updater-applet:253
 msgid "Update progress:"
 msgstr "Uppdateringens framsteg:"
 
-#: puavo-client-updater-applet:248
+#: puavo-client-updater-applet:264
 msgid "System update has been started."
 msgstr ""
 
-#: puavo-client-updater-applet:261
+#: puavo-client-updater-applet:277
 msgid "Check for updates"
 msgstr ""
 
-#: puavo-client-updater-applet:264
+#: puavo-client-updater-applet:280
 msgid "(Checking for updates)"
 msgstr ""
 
-#: puavo-client-updater-applet:268
+#: puavo-client-updater-applet:284
 msgid "Update"
 msgstr "Uppdatera"
 
-#: puavo-client-updater-applet:271
+#: puavo-client-updater-applet:287
 msgid "Cancel image update"
 msgstr ""
 
-#: puavo-client-updater-applet:289
+#: puavo-client-updater-applet:306
 msgid ""
 "The old version of the system has been edited by the user. Updating the "
 "system causes all these changes to be lost. Do you want to proceed?"
@@ -89,13 +97,16 @@ msgstr ""
 "Den gamla versionen av systemet innehåller konfigurationer som användaren "
 "har gjort, dessa förstörs i uppdateringen. Vill du fortsätta?"
 
-#: puavo-client-updater-applet:297
+#: puavo-client-updater-applet:318
 msgid "Continue updating?"
 msgstr "Fortsät uppdateringen"
 
-#: puavo-client-updater-applet:301
+#: puavo-client-updater-applet:323
 msgid "Update log"
 msgstr "Uppdateringslogg"
+
+#~ msgid "Update failed"
+#~ msgstr "Uppdateringen misslyckades"
 
 #~ msgid "(Reboot required to finish the update)"
 #~ msgstr "(Omstart krävs för att avsluta uppdateringen)"

@@ -13,10 +13,17 @@ flock -nx 3 || { echo did not get a lock, exiting; exit 1; }
 set -eu
 
 log() {
-    if $quiet && [ "$1" != "err" ]; then
-            return 0
-    fi
-    echo "$2" | logger -p "$1" -s -t puavo-install-and-update-ltspimages
+    case "$1" in
+      warn|err|crit|alert|emerg)
+        logger_flags="-s"
+        ;;
+      *)
+        if $quiet; then return 0; fi
+        logger_flags=""
+        ;;
+    esac
+    echo "$2" \
+      | logger -p "$1" $logger_flags -t puavo-install-and-update-ltspimages
 }
 
 usage() {
