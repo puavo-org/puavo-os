@@ -12,6 +12,7 @@ _tr = gettext.gettext
 import sys
 import gtk
 import appindicator
+import pynotify
 import dbus
 import dbus.mainloop.glib
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
@@ -39,6 +40,9 @@ class UpdateIndicatorApplet:
             self.add_disabled_widget(menu)
 	    self.indicator.set_menu(menu)
             return
+
+        pynotify.init('puavo-client-updater-applet')
+        self.available_notice_shown = False
 
         self.add_update_button(menu)
         self.add_view_log_button(menu)
@@ -135,16 +139,27 @@ class UpdateIndicatorApplet:
         print(output, end='')
 
 
+    def notify(self, msg):
+        pynotify.Notification(msg).show()
+
+
     def on_update_available(self):
         self.set_update_button_mode('update')
 
         self.indicator.set_attention_icon('update-available')
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
+        # show only once after each login
+        if not self.available_notice_shown:
+            self.notify( _tr('A new system update is available.') )
+            self.available_notice_shown = True
+
 
     def on_update_cancelled(self, outmsg, errmsg):
         self.on_update_progress_indicator('interrupted')
         self.on_update_available()
+
+        self.notify( _tr('System update has been cancelled.') )
 
 
     def on_update_completed(self, outmsg, errmsg):
@@ -152,6 +167,8 @@ class UpdateIndicatorApplet:
 
         self.indicator.set_attention_icon('update-installed')
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
+
+        self.notify( _tr('System update is finished, reboot the computer.') )
 
 
     def on_update_failed(self, outmsg, errmsg):
@@ -166,6 +183,8 @@ class UpdateIndicatorApplet:
         self.log_buffer.insert_with_tags(self.log_buffer.get_end_iter(),
                                          errmsg, self.log_error_tag)
         self.log_view.scroll_mark_onscreen(self.log_buffer.get_insert())
+
+        self.notify( _tr('An error occurred when updating the system.') )
 
 
     def on_update_isuptodate(self):
@@ -221,6 +240,8 @@ class UpdateIndicatorApplet:
         self.set_update_button_mode('updating')
         self.indicator.set_attention_icon('update-downloading')
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
+
+        self.notify( _tr('System update has been started.') )
 
 
     def set_progress_text(self, text):
