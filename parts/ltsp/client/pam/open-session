@@ -25,7 +25,7 @@ if [ "x${API_SERVER}" = "x" ]; then
   exit 98
 fi
 
-if [ $1 = "guest" ]; then
+if [ "$1" = "guest" ]; then
   if PUAVO_SESSION=$(
       curl --cacert /etc/puavo/certs/rootca.pem \
            --form "hostname=${PUAVO_HOSTNAME}" \
