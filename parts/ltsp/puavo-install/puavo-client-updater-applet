@@ -165,8 +165,7 @@ class UpdateIndicatorApplet:
     def on_update_completed(self, outmsg, errmsg):
         self.set_update_button_mode('check')
 
-        self.indicator.set_attention_icon('update-installed')
-        self.indicator.set_status(appindicator.STATUS_ATTENTION)
+        self.on_update_isuptodate(True)
 
         self.available_notice_shown = False
         self.notify( _tr('System update is finished, reboot the computer.') )
@@ -188,11 +187,15 @@ class UpdateIndicatorApplet:
         self.notify( _tr('An error occurred when updating the system.') )
 
 
-    def on_update_isuptodate(self):
-        self.on_update_progress_indicator('uptodate')
-
-        self.indicator.set_attention_icon('update-idle')
-        self.indicator.set_status(appindicator.STATUS_ACTIVE)
+    def on_update_isuptodate(self, reboot_required):
+        if reboot_required:
+            self.on_update_progress_indicator('finished')
+            self.indicator.set_attention_icon('update-installed')
+            self.indicator.set_status(appindicator.STATUS_ATTENTION)
+        else:
+            self.on_update_progress_indicator('uptodate')
+            self.indicator.set_attention_icon('update-idle')
+            self.indicator.set_status(appindicator.STATUS_ACTIVE)
 
 
     def on_update_progress_indicator(self, phase, progress=0):

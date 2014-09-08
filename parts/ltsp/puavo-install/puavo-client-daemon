@@ -22,10 +22,17 @@ class Updater < DBus::Object
 	if not status.success? then
 	  raise "failed to update device configuration: #{ output }"
 	end
-	if system('/usr/lib/puavo-ltsp-install/is-update-available') then
-	  self.UpdateAvailable unless $image_update_thread
-	else
-	  self.UpdateIsUpToDate unless $image_update_thread
+
+	if !$image_update_thread then
+	  system('/usr/lib/puavo-ltsp-install/is-update-available')
+	  case $?.exitstatus
+	    when 0
+	      self.UpdateAvailable
+	    when 1
+	      self.UpdateIsUpToDate(false) # no reboot required
+	    when 2
+	      self.UpdateIsUpToDate(true)  # reboot *is* required
+	  end
 	end
       ensure
 	$configuration_update_thread = nil
@@ -93,7 +100,7 @@ class Updater < DBus::Object
     dbus_signal :UpdateCompleted,         'in outmsg:s, in errmsg:s'
     dbus_signal :UpdateProgressIndicator, 'in phase:s, in progress:i'
     dbus_signal :UpdateStarted
-    dbus_signal :UpdateIsUpToDate
+    dbus_signal :UpdateIsUpToDate,        'in reboot_required:b'
 
     dbus_method :CancelImageUpdate, '' do
       if $image_update_thread then
