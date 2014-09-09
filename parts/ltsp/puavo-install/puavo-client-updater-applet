@@ -69,7 +69,7 @@ class UpdateIndicatorApplet:
 
     def add_progress(self, menu):
         self.progress = gtk.MenuItem('')
-        self.set_progress_text( _tr('No update progress.') )
+        self.set_progress_text( _tr('(No update progress.)') )
         self.progress.set_sensitive(False)
         self.progress.show()
 
@@ -222,7 +222,7 @@ class UpdateIndicatorApplet:
 
         if phase == 'error':
             mode = 'update'
-            text = _tr('Error on update.')
+            text = _tr('Update failed.')
         elif phase == 'finished':
             mode = 'check'
             text = _tr('Update done, reboot required to finish the update.')
@@ -289,14 +289,14 @@ class UpdateIndicatorApplet:
             message     = _tr('Check for updates')
             sensitivity = True
         elif mode == 'checking':
-            message     = _tr('(Checking for updates)')
+            message     = _tr('(Checking for updates.)')
             sensitivity = False
         elif mode == 'update':
             action      = self.update_image
             message     = _tr('Update')
             sensitivity = True
         elif mode == 'updating':
-            message     =_tr('Cancel image update')
+            message     =_tr('Cancel update')
             action      = self.cancel_image_update
             sensitivity = True
         else:
