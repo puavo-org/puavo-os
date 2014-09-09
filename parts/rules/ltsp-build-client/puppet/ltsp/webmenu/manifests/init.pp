@@ -4,6 +4,11 @@ class webmenu {
 
   File { require => Package['webmenu'], }
   file {
+    '/etc/puavo-external-files-actions.d/webmenu':
+      require => Package['puavo-ltsp-client'],
+      content => template('webmenu/puavo-external-files-actions.d/webmenu'),
+      mode    => 755;
+
     [ '/etc/webmenu'
     , '/etc/webmenu/personally-administered-device' ]:
       ensure => directory;
