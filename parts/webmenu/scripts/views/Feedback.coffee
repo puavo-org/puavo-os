@@ -44,8 +44,10 @@ class Feedback extends ViewMaster
 
     events:
         "keyup": "persistMessage"
-        "click .bad": -> @model.set "mood", "bad"
-        "click .good": -> @model.set "mood", "good"
+        "click .face1": -> @model.set "mood", "very-good"
+        "click .face2": -> @model.set "mood", "good"
+        "click .face3": -> @model.set "mood", "bad"
+        "click .face4": -> @model.set "mood", "very-bad"
         "click .save": ->
             @model.set(
                 anonymous: @$anonymous.get(0).checked

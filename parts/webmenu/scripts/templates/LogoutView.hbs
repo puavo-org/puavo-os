@@ -1,37 +1,22 @@
-<h1 class="shut-down-header">
-  <img src="file:///usr/share/icons/Faenza/actions/48/system-shutdown.png">
-  {{ i18n "logout.exit" }}
-</h1>
-
-<div class="logout-btn-container">
-  <div class="action">
-    <button class="js-logout item btn">
-      <img src="file:///usr/share/icons/Faenza/actions/24/system-log-out.png">
-      {{ i18n "logout.logout" }}
-    </button>
-  </div>
-
-  {{#unless webkioskMode}}
-    <div class="action">
-      <button class="js-shutdown item btn">
-	<img src="file:///usr/share/icons/Faenza/actions/24/system-shutdown.png">
-	{{ i18n "logout.shutdown" }}
-      </button>
-    </div>
-
-    <div class="other">
-      <div class="item js-other">
-	<select>
-	  <option value=or>{{ i18n "logout.or" }}</option>
-	  {{#each actions}}
-	  <option value="{{value}}">{{name}}</option>
-	  {{/each}}
-	</select>
-      </div>
-    </div>
-  {{/unless}}
-</div>
-
-<div style="clear: both"></div>
 <div class="feedback-container"></div>
+
+<div class="logout-container">
+
+  <h1 class="shut-down-header">
+    <img src="file:///usr/share/icons/Faenza/actions/48/system-shutdown.png">
+    {{ i18n "logout.exit" }}
+  </h1>
+
+  <div class="logout-btn-container">
+
+    {{#each actions}}
+      <div>
+        <button class="{{class}} item btn">
+          <img src="file://{{ icon }}">
+          {{ i18n text }}
+        </button>
+       </div>
+    {{/each}}
+  </div>
+</div>
 

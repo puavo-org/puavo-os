@@ -18,17 +18,44 @@ class LogoutView extends ViewMaster
     template: require "../templates/LogoutView.hbs"
 
     context: ->
-        actions = ["restart"]
-        if not @config.get("guestSession")
-            actions.unshift "lock"
-        if @config.get("hostType") is "laptop"
-            actions.unshift "sleep"
+        actions = [ {
+                      action: "logout",
+                      class: "js-logout",
+                      icon:  "/usr/share/icons/Faenza/actions/24/system-log-out.png",
+                      text:  "logout.logout"
+                    } ]
+
+        if not @config.get("webkioskMode")
+            if not @config.get("guestSession")
+                actions.unshift( {
+                    action: "lock",
+                    class: "js-lock",
+                    icon:  "/usr/share/icons/Faenza/actions/24/lock.png",
+                    text:  "logout.lock"
+                } )
+
+          actions.push( {
+              action: "restart",
+              class: "js-restart",
+              icon:  "/usr/share/icons/Faenza/apps/24/system-restart.png",
+              text:  "logout.restart"
+          },
+          {
+              action: "shutdown",
+              class: "js-shutdown",
+              icon:  "/usr/share/icons/Faenza/actions/24/system-shutdown-panel.png",
+              text:  "logout.shutdown"
+          } )
+
+          if @config.get("hostType") is "laptop"
+              actions.push( {
+                  action: "sleep",
+                  class: "js-sleep",
+                  icon:  "/usr/share/icons/Faenza/apps/24/system-suspend.png",
+                  text:  "logout.sleep"
+              } )
         return {
-            actions: actions.map (a) -> {
-                name: i18n "logout.#{ a }"
-                value: a
-            }
-            webkioskMode: @config.get("webkioskMode")
+            actions: actions
         }
 
     events:
