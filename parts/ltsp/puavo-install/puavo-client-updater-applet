@@ -9,15 +9,18 @@ gettext.bindtextdomain('puavo-client-updater-applet', '/usr/share/locale')
 gettext.textdomain('puavo-client-updater-applet')
 _tr = gettext.gettext
 
-import sys
-import gtk
 import appindicator
-import pynotify
 import dbus
 import dbus.mainloop.glib
-dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-
+import grp
+import gtk
+import os
+import pwd
+import pynotify
 import re
+import sys
+
+dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
 def is_on_persistent_overlay():
     file = open('/proc/cmdline', 'r')
@@ -389,5 +392,12 @@ class UpdateIndicatorApplet:
 
 
 if __name__ == "__main__":
+    user = pwd.getpwuid( os.getuid() ).pw_name
+    puavolocaladmins = grp.getgrnam('puavolocaladmins').gr_mem
+    if not user in puavolocaladmins:
+        print('You do not have a permission to run this program',
+              file=sys.stderr)
+        sys.exit(1)
+
     applet = UpdateIndicatorApplet()
     gtk.main()
