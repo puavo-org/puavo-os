@@ -13,10 +13,17 @@ flock -nx 3 || { echo did not get a lock, exiting; exit 1; }
 set -eu
 
 log() {
-    if $quiet && [ "$1" != "err" ]; then
-            return 0
-    fi
-    echo "$2" | logger -p "$1" -s -t puavo-install-and-update-ltspimages
+    case "$1" in
+      warn|err|crit|alert|emerg)
+        logger_flags="-s"
+        ;;
+      *)
+        if $quiet; then return 0; fi
+        logger_flags=""
+        ;;
+    esac
+    echo "$2" \
+      | logger -p "$1" $logger_flags -t puavo-install-and-update-ltspimages
 }
 
 usage() {
@@ -34,6 +41,9 @@ if ! args=$(getopt -n "$0" -o +f:n:r:q \
 		   -- "$@"); then
   usage
 fi
+
+images_dir=/images
+puavoinstall_libdir=/usr/lib/puavo-ltsp-install
 
 image_from_file=""
 image_from_nbd=""
@@ -74,6 +84,55 @@ if [ -z "$next_image" ]; then
 fi
 
 #
+# functions related to exiting
+#
+
+update_stats() {
+  phase=$1
+  progress=$2
+
+  stats_filepath="${images_dir}/image_update.stats"
+
+  {
+    echo "image ${next_image}" # $next_image is "global", just use it here
+    echo "phase ${phase}"
+    echo "progress ${progress}"
+  } | tr -d '\r' > "${stats_filepath}.tmp"
+    # tr -d here is nice because progress may contain \r ... originates from
+    # curl and should be stripped earlier but it was difficult
+
+  if ! cmp "${stats_filepath}" "${stats_filepath}.tmp" >/dev/null 2>&1; then
+    mv "${stats_filepath}.tmp" "${stats_filepath}"
+    test -x "${puavoinstall_libdir}/update-ltspimage-update-stats" \
+         && "${puavoinstall_libdir}/update-ltspimage-update-stats" \
+               "${stats_filepath}" 2>/dev/null || true
+  else
+    rm -f "${stats_filepath}.tmp"
+  fi
+}
+
+interrupted=false
+
+finish() {
+  if [ "$?" -ne 0 ]; then
+    if $interrupted; then
+      update_stats interrupted 0
+    else
+      update_stats error 0
+    fi
+  fi
+}
+
+interrupted() {
+  interrupted=true
+  exit 1
+}
+
+trap finish 0
+trap interrupted INT TERM
+
+
+#
 # subroutines
 #
 
@@ -81,15 +140,16 @@ check_with_cksum() {
   filename=$1
   actual_file_path=$2
   checksums_file=$3
+  phase=$4
 
   if ! [ -r "$actual_file_path" ]; then
     log err "could not find a file $filename to check"
     return 1
   fi
 
-  calculated_checksum_line="$(
-    cksum "$actual_file_path" \
-      | awk -v filename="$filename" '{ $3 = filename; print }')"
+  calculated_checksum_line=$(
+    cksum_with_progress "$phase" "$actual_file_path" \
+      | awk -v filename="$filename" '{ $3 = filename; print }')
 
   if fgrep -qx "$calculated_checksum_line" "$checksums_file"; then
     log info "checksum for file $filename is okay"
@@ -102,12 +162,25 @@ check_with_cksum() {
   fi
 }
 
-cleanup_previous_runs() {
-  images_dir=$1
-  rdiffs_dir=$2
-  preserve_filename=$3
+cksum_with_progress() {
+  phase=$1
+  cksum_filepath=$2
 
-  old_imageoverlays=$("/usr/lib/puavo-ltsp-install/ls-old-imageoverlays" "${images_dir}" /imageoverlays)
+  # exchange stdout and stderr, redirect stderr to stdout after that
+  {
+    pv -n "$cksum_filepath" 3>&1 1>&2 2>&3 3>&- \
+      | update_stats_with_progress "$phase"
+  } 2>&1 \
+    | cksum
+}
+
+cleanup_previous_runs() {
+  rdiffs_dir=$1
+  preserve_filename=$2
+
+  old_imageoverlays=$(
+    "${puavoinstall_libdir}/ls-old-imageoverlays" "${images_dir}" \
+						  /imageoverlays)
   if [ -n "${old_imageoverlays}" ]; then
       if ${delete_overlays}; then
           echo -n "${old_imageoverlays}" | xargs -r -d'\n' -L1 rm -rf
@@ -119,7 +192,7 @@ cleanup_previous_runs() {
 
   # cleanup old ltsp images (and their possible temporary *.tmp files).
   # The ltsp-backup.img is going to go too...
-  old_images=$("/usr/lib/puavo-ltsp-install/ls-old-images" "${images_dir}")
+  old_images=$("${puavoinstall_libdir}/ls-old-images" "${images_dir}")
   if [ -n "${old_images}" ]; then
       echo -n "${old_images}" \
         | grep -vx "${images_dir}/${preserve_filename}" \
@@ -138,8 +211,7 @@ cleanup_previous_runs() {
 }
 
 ensure_enough_available_diskspace() {
-  images_dir=$1
-  rdiffs_dir=$2
+  rdiffs_dir=$1
 
   # 133% of the space taken by the current image is probably enough
   # for updating to new image
@@ -161,16 +233,23 @@ fetch_with_curl() {
   extra_curl_opts=$1
   output_path=$2  
   url=$3
+  phase=$4
 
   # according to curl(1) --fail is not enough
   curl_status_code=$(
-    curl --cacert /etc/puavo/certs/rootca.pem \
-	 --continue-at - \
-	 $extra_curl_opts \
-	 --output "$output_path" \
-	 -w "%{http_code}\n" \
-	 "$url" \
-      || true)
+    {
+      curl --cacert /etc/puavo/certs/rootca.pem \
+	   --continue-at -                      \
+	   $extra_curl_opts                     \
+	   --output "$output_path"              \
+	   -w "%{http_code}\n"                  \
+	   "$url"                               \
+           3>&1 1>&2 2>&3 3>&-                  \
+        | unbuffer -p tr '\r' '\n' \
+        | unbuffer -p awk '$1 ~ /^[[:digit:]]+$/ { print $1 }' \
+        | update_stats_with_progress "$phase"
+    } 2>&1 || true
+  )
 
   case "$curl_status_code" in
     # 2*  == success
@@ -188,29 +267,27 @@ fetch_with_curl() {
 
 get_checksums_file() {
   extra_curl_opts=$1
-  images_dir=$2
-  url=$3
+  url=$2
 
   checksum_file_path="${images_dir}/CKSUMS"
 
-  fetch_with_curl "$extra_curl_opts -s" \
+  fetch_with_curl "$extra_curl_opts" \
 		  "${checksum_file_path}.tmp" \
-		  "$url"
+		  "$url" \
+                  checksums_fetch
   mv "${checksum_file_path}.tmp" "${checksum_file_path}"
 
   echo "${checksum_file_path}"
 }
 
 get_next_image() {
-  images_dir=$1
-  next_image=$2
-  rate_limit_opts=$3
+  next_image=$1
+  rate_limit_opts=$2
   
   image_server=$(lookup_image_server_from_dns)
 
-  rdiffs_dir=${images_dir}/rdiffs
-  previous_image=$(lookup_ltspimage_name_by_alias "$images_dir" ltsp.img \
-		     || true)
+  rdiffs_dir="${images_dir}/rdiffs"
+  previous_image=$(lookup_ltspimage_name_by_alias ltsp.img || true)
 
   if [ -z "$previous_image" ]; then
     log err 'Could not determine the current ltsp image name'
@@ -225,15 +302,12 @@ get_next_image() {
 
   mkdir -p "$rdiffs_dir"
 
-  cleanup_previous_runs "$images_dir" \
-			"$rdiffs_dir" \
-			"$rdiff_filename"
+  cleanup_previous_runs "$rdiffs_dir" "$rdiff_filename"
 
-  ensure_enough_available_diskspace "$images_dir" "$rdiffs_dir"
+  ensure_enough_available_diskspace "$rdiffs_dir"
 
   checksums_file=$(
     get_checksums_file "$rate_limit_opts" \
-		       "$images_dir"      \
 		       "https://${image_server}/rdiffs/CKSUMS")
 
   rdiff_url="https://${image_server}/rdiffs/${rdiff_filename}"
@@ -244,8 +318,7 @@ get_next_image() {
 	    "$rdiff_url"       \
 	    "$checksums_file"
 
-  patch_with_rdiff "$images_dir"     \
-		   "$rdiffs_dir"     \
+  patch_with_rdiff "$rdiffs_dir"     \
 		   "$previous_image" \
 		   "$next_image"     \
 		   "$rdiff_filename" \
@@ -269,8 +342,11 @@ get_rdiff() {
   log info "we are missing the full rdiff $rdiff_filename, going to get it"
 
   rdiff_tmp="${rdiff_path}.tmp"
-  fetch_with_curl  "$extra_curl_opts" "$rdiff_tmp" "$rdiff_url"
-  check_with_cksum "$rdiff_filename"  "$rdiff_tmp" "$checksums_file"
+  fetch_with_curl  "$extra_curl_opts" "$rdiff_tmp" "$rdiff_url" rdiff_fetch
+  check_with_cksum "$rdiff_filename" \
+                   "$rdiff_tmp"      \
+                   "$checksums_file" \
+                   rdiff_checksum
 
   sync
   mv "$rdiff_tmp" "$rdiff_path"
@@ -304,12 +380,11 @@ get_rdiff_filename() {
 }
 
 install_from_file_or_nbd() {
-  images_dir=$1
-  imagename=$2
-  type_opt=$3
-  type_arg=$4
+  imagename=$1
+  type_opt=$2
+  type_arg=$3
 
-  imagepath=$images_dir/$imagename
+  imagepath="${images_dir}/${imagename}"
 
   test -e "$imagepath" && return 0
 
@@ -333,9 +408,7 @@ install_from_file_or_nbd() {
       ;;
   esac
 
-  cleanup_previous_runs "$images_dir"          \
-                        "${images_dir}/rdiffs" \
-                        "$preserve_filename"
+  cleanup_previous_runs "${images_dir}/rdiffs" "$preserve_filename"
 
   dd "if=$image_src_path" 2>/dev/null | pv -s "$total_size" \
     > "${imagepath}.tmp"
@@ -345,17 +418,15 @@ install_from_file_or_nbd() {
 }
 
 install_image() {
-  images_dir=$1
-  imagename=$2
-  type_opt=$3
-  type_arg=$4
+  imagename=$1
+  type_opt=$2
+  type_arg=$3
 
-  current_ltspimage_name=$(lookup_ltspimage_name_by_alias "$images_dir" \
-							  ltsp.img \
-			     || true)
+  current_ltspimage_name=$(lookup_ltspimage_name_by_alias ltsp.img || true)
   if [ "$current_ltspimage_name" = "$imagename" ]; then
     echo "The wanted PuavoLTSP image $imagename"
     echo "is already in place."
+    update_stats uptodate 100
     return 0
   fi
 
@@ -363,11 +434,19 @@ install_image() {
     query_update_confirmation "$current_ltspimage_name" "$imagename"
   fi
 
-  install_from_file_or_nbd "$images_dir" "$imagename" "$type_opt" "$type_arg"
-  set_image_as_default_image "$images_dir" "$imagename"
+  install_from_file_or_nbd "$imagename" "$type_opt" "$type_arg"
+  set_image_as_default_image "$imagename"
 
   echo "The PuavoLTSP image $imagename"
   echo "is now installed and set as default."
+}
+
+lookup_filesize_from_cksums() {
+  awk -v filename="$(basename "$1")" '
+    BEGIN { status = 1 }
+    $3 == filename { print $2; status = 0 }
+    END { exit(status) }
+  ' "${images_dir}/CKSUMS"
 }
 
 lookup_image_server_from_dns() {
@@ -393,14 +472,13 @@ lookup_image_server_from_dns() {
 }
 
 lookup_ltspimage_name_by_alias() {
-  images_dir=$1
-  imagename=$2
+  imagename=$1
 
-  current_ltspimage_path="$images_dir/$imagename"
+  current_ltspimage_path="${images_dir}/${imagename}"
   current_ltspimage_inode="$(stat -c %i $current_ltspimage_path 2>/dev/null \
 			       || true)"
 
-  for file in $images_dir/*.img; do
+  for file in ${images_dir}/*.img; do
     # check that *.img expands to something
     test -e "$file" || continue
 
@@ -418,24 +496,33 @@ lookup_ltspimage_name_by_alias() {
 }
 
 patch_with_rdiff() {
-  images_dir=$1
-  rdiffs_dir=$2
-  previous_image=$3
-  next_image=$4
-  rdiff_filename=$5
-  checksums_file=$6
+  rdiffs_dir=$1
+  previous_image=$2
+  next_image=$3
+  rdiff_filename=$4
+  checksums_file=$5
+
+  if ! next_image_filesize=$(lookup_filesize_from_cksums "$next_image"); then
+    log err "Could not lookup image size from CKSUMS for '${next_image}'"
+    return 1
+  fi
 
   # rdiff might fail due to a corrupt rdiff-file or for some other reason.
   # We let rdiff pass through in case of failure, and we check the correctness
   # of the output right after (removing the output if the checksum is bad).
-  rdiff patch "${images_dir}/${previous_image}" \
-	      "${rdiffs_dir}/${rdiff_filename}" \
-	      "${images_dir}/${next_image}.tmp" \
-    || true
+  {
+    rdiff patch "${images_dir}/${previous_image}" \
+		"${rdiffs_dir}/${rdiff_filename}" \
+		-                                 \
+      | { pv -n -s "$next_image_filesize" 3>&1 1>&2 2>&3 3>&- \
+            | update_stats_with_progress image_patch; } \
+      > "${images_dir}/${next_image}.tmp" 2>&1
+  } || true
 
   check_with_cksum "$next_image"                     \
 		   "${images_dir}/${next_image}.tmp" \
-		   "$checksums_file"
+		   "$checksums_file"                 \
+		   image_checksum
 
   sync
   mv "${images_dir}/${next_image}.tmp" "${images_dir}/${next_image}"
@@ -461,18 +548,17 @@ run_image_preinst_hook() {
   mkdir -p /images/mnt
   umount -f /images/mnt 2>/dev/null || true
   mount -o ro "$imagepath" /images/mnt
-  /images/mnt/usr/lib/puavo-ltsp-install/puavo-image-preinst
+  "/images/mnt/${puavoinstall_libdir}/puavo-image-preinst"
   umount /images/mnt || true
 }
 
 # XXX duplicate code with puavo-install-ltspimages
 set_image_as_default_image() {
-  images_dir=$1
-  imagename=$2
-  imagepath=$images_dir/$imagename
+  imagename=$1
+  imagepath="${images_dir}/${imagename}"
 
-  backup_ltspimage_path=$images_dir/ltsp-backup.img
-  default_ltspimage_path=$images_dir/ltsp.img
+  backup_ltspimage_path="${images_dir}/ltsp-backup.img"
+  default_ltspimage_path="${images_dir}/ltsp.img"
 
   # this should do at least grub configuration update
   run_image_preinst_hook "$imagepath"
@@ -483,38 +569,36 @@ set_image_as_default_image() {
   mv "${default_ltspimage_path}.tmp" "$default_ltspimage_path"
   sync
 
-  update_image_labels_for_grub "$images_dir"
+  update_image_labels_for_grub
   sync
 
   log notice "new ltsp image $next_image has been set as default"
+
+  update_stats finished 100
 }
 
 update_image() {
-  images_dir=$1
-  next_image=$2
-  rate_limit_opts=$3
+  next_image=$1
+  rate_limit_opts=$2
 
   if [ ! -e "${images_dir}/${next_image}" ]; then
     log info "we are missing $next_image, going to get it"
-    get_next_image "$images_dir" "$next_image" "$rate_limit_opts"
+    get_next_image "$next_image" "$rate_limit_opts"
   fi
 
   # must call /usr/bin/test because /bin/sh is broken regarding this test
   if /usr/bin/test "${images_dir}/${next_image}" \
 	       -ef "${images_dir}/ltsp.img"; then
     log info "the requested ltsp image is already in place"
+    update_stats uptodate 100
   else
-    set_image_as_default_image "$images_dir" "$next_image"
+    set_image_as_default_image "$next_image"
   fi
 }
 
 update_image_labels_for_grub() {
-  images_dir=$1
-
-  default_image=$(lookup_ltspimage_name_by_alias "$images_dir" ltsp.img \
-		    || true)
-  backup_image=$(lookup_ltspimage_name_by_alias "$images_dir" ltsp-backup.img \
-		   || true)
+  default_image=$(lookup_ltspimage_name_by_alias ltsp.img || true)
+  backup_image=$(lookup_ltspimage_name_by_alias ltsp-backup.img || true)
 
   rm -f ${images_dir}/ltsp-*.backup ${images_dir}/ltsp-*.default
 
@@ -526,6 +610,23 @@ update_image_labels_for_grub() {
   return 0
 }
 
+update_stats_with_progress() {
+  phase=$1
+
+  # possible phases are:
+  #   starting
+  #   checksums_fetch
+  #   rdiff_fetch
+  #   rdiff_checksum
+  #   image_patch
+  #   image_checksum
+  #   finished
+
+  while read progress; do
+    update_stats "$phase" "$progress"
+  done
+}
+
 #
 # main
 #
@@ -534,18 +635,18 @@ update_image_labels_for_grub() {
 ionice -c 3  -p $$
 renice -n 20 -p $$ > /dev/null
 
-images_dir=/images
-
 # do nothing if /images/DISABLE_IMAGE_UPDATES exists
 # (for development and emergencies)
 test -e "${images_dir}/DISABLE_IMAGE_UPDATES" && exit 0
 
+update_stats starting 0
+
 if [ -n "$image_from_file" ]; then
-  install_image "$images_dir" "$next_image" -file "$image_from_file"
+  install_image "$next_image" -file "$image_from_file"
 elif [ -n "$image_from_nbd" ]; then
-  install_image "$images_dir" "$next_image" -nbd  "$image_from_nbd"
+  install_image "$next_image" -nbd  "$image_from_nbd"
 else
-  update_image "$images_dir" "$next_image" "$rate_limit_opts"
+  update_image "$next_image" "$rate_limit_opts"
 fi
 
 exit 0
