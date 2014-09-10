@@ -101,12 +101,28 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
 
+    puavo_laptop_unneeded_session_services=""
+
+    # puavo-client-updater-applet is not needed except on
+    # personally administered laptops with no automatic updates
     if ! [ "$puavo_automatic_image_updates" = "false" \
              -a "$puavo_personally_administered" = "true" ]; then
-      set_lts_var RM_SESSION_SERVICES "
+      puavo_laptop_unneeded_session_services="
         puavo-client-updater-applet
       "
     fi
+
+    # do not start nm-applet on laptops when on webkiosk mode
+    if jq -r .tags[] /etc/puavo/device.json | grep -qx webkiosk; then
+      puavo_laptop_unneeded_session_services="
+        $puavo_laptop_unneeded_session_services
+        nm-applet
+      "
+    fi
+
+    set_lts_var RM_SESSION_SERVICES "
+      $puavo_laptop_unneeded_session_services
+    "
 
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services

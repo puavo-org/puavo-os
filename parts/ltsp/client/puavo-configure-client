@@ -204,6 +204,10 @@ case @puavo_device_type
     write_config("/etc/security/group.conf")
     write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
 
+    if @tags.include?("webkiosk") then
+      write_config("/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla")
+    end
+
     `cp /usr/lib/puavo-ltsp-client/puavo-thin-guest-account /usr/sbin/guest-account`
 #    `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
 
@@ -255,6 +259,10 @@ case @puavo_device_type
     write_config("/etc/samba/smb.conf", "laptop")
     write_config("/etc/ntp.conf")
     write_config("/var/lib/polkit-1/localauthority/10-vendor.d/com.ubuntu.desktop.pkla")
+
+    if @tags.include?("webkiosk") then
+      write_config("/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla")
+    end
 
     @ldap_binddn       = read_file('/etc/puavo/ldap/dn')
     @ldap_bindpw       = read_file('/etc/puavo/ldap/password')

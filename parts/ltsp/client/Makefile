@@ -50,6 +50,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-up.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-post-down.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/polkit-1/localauthority/50-local.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/racoon
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/samba
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/security
@@ -124,6 +125,9 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default \
 		templates/etc/default/nfs-common
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/polkit-1/localauthority/50-local.d \
+		templates/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/racoon \
 		templates/etc/racoon/racoon.conf
