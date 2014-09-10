@@ -19,11 +19,11 @@ class LogoutView extends ViewMaster
 
     context: ->
         actions = [ {
-                      action: "logout",
-                      class: "js-logout",
-                      icon:  "/usr/share/icons/Faenza/actions/24/system-log-out.png",
-                      text:  "logout.logout"
-                    } ]
+            action: "logout",
+            class: "js-logout",
+            icon:  "/usr/share/icons/Faenza/actions/24/system-log-out.png",
+            text:  "logout.logout"
+        } ]
 
         if not @config.get("webkioskMode")
             if not @config.get("guestSession")
@@ -34,29 +34,30 @@ class LogoutView extends ViewMaster
                     text:  "logout.lock"
                 } )
 
-          actions.push( {
-              action: "restart",
-              class: "js-restart",
-              icon:  "/usr/share/icons/Faenza/apps/24/system-restart.png",
-              text:  "logout.restart"
-          },
-          {
-              action: "shutdown",
-              class: "js-shutdown",
-              icon:  "/usr/share/icons/Faenza/actions/24/system-shutdown-panel.png",
-              text:  "logout.shutdown"
-          } )
+            actions.push( {
+                action: "restart",
+                class: "js-restart",
+                icon:  "/usr/share/icons/Faenza/apps/24/system-restart.png",
+                text:  "logout.restart"
+            },
+            {
+                action: "shutdown",
+                class: "js-shutdown",
+                icon:  "/usr/share/icons/Faenza/actions/24/system-shutdown-panel.png",
+                text:  "logout.shutdown"
+            } )
 
-          if @config.get("hostType") is "laptop"
-              actions.push( {
-                  action: "sleep",
-                  class: "js-sleep",
-                  icon:  "/usr/share/icons/Faenza/apps/24/system-suspend.png",
-                  text:  "logout.sleep"
-              } )
-        return {
-            actions: actions
-        }
+            if @config.get("hostType") is "laptop"
+                actions.push( {
+                    action: "sleep",
+                    class: "js-sleep",
+                    icon:  "/usr/share/icons/Faenza/apps/24/system-suspend.png",
+                    text:  "logout.sleep"
+                } )
+
+            return {
+                actions: actions
+            }
 
     events:
         "click .js-shutdown": -> @displayAction("shutdown")
