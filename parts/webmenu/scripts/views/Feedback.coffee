@@ -5,7 +5,6 @@ ViewMaster = require "../vendor/backbone.viewmaster"
 i18n = require "../utils/i18n.coffee"
 asEvents = require "../utils/asEvents"
 renderTextarea = require "../templates/FeedbackMessage.hbs"
-renderMood = require "../templates/FeedbackMood.hbs"
 
 class Feedback extends ViewMaster
     MOODS = ["very-good", "good", "bad", "very-bad"]
