@@ -16,7 +16,6 @@ class image::puavo {
 		  keyutils,
 		  libreoffice,
 		  network_manager,
-		  open-sankore,
 		  packages::puavo,
 		  puavo_openvpn,
 		  puavo_wlan,
