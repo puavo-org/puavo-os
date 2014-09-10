@@ -16,7 +16,6 @@ class image::bundle::opinsys {
 	  ltspimage_opinsys_desktop,
 	  ltspimage_plymouth_theme,
 	  network_manager,
-	  open-sankore,
 	  puavo_openvpn,
 	  puavo_wlan,
 	  pycharm,
