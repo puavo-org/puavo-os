@@ -748,7 +748,7 @@ class packages {
   case $lsbdistcodename {
     'trusty': {
       packages::kernels::kernel_package {
-        '3.13.0-29-generic':
+        '3.13.0-36-generic':
           package_tag => 'puavo';
       }
     }
