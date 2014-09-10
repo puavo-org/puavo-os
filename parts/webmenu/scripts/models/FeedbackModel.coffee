@@ -19,6 +19,7 @@ class FeedbackModel extends Backbone.Model
         @sending = null
 
     send: ->
+        @set "hasSendFeedback", true
         return @sending if @sending
         return Q.reject("no feedback") if not @hasFeedback()
         @sending = FeedbackModel._sendFeedBack(@toJSON())

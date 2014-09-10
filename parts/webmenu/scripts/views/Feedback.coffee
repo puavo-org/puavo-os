@@ -8,6 +8,7 @@ renderTextarea = require "../templates/FeedbackMessage.hbs"
 renderMood = require "../templates/FeedbackMood.hbs"
 
 class Feedback extends ViewMaster
+    MOODS = ["very-good", "good", "bad", "very-bad"]
 
     className: "bb-feedback"
 
@@ -37,17 +38,36 @@ class Feedback extends ViewMaster
                 message: @model.get("message")
             )
             @$textarea = @$("textarea")
-            @$anonymous = @$(".anonymous input")
-        else
-            question.html renderMood()
+
+    context: ->
+        moods = MOODS.map (mood) =>
+            cssClass = mood
+            cssClass += " selected" if mood == @model.get("mood")
+
+            return {
+                cssClass: cssClass,
+                imagePath: "styles/theme/default/img/#{ mood }.png"
+            }
+
+        return {
+            moods: moods
+        }
 
 
     events:
         "keyup": "persistMessage"
-        "click .face1": -> @model.set "mood", "very-good"
-        "click .face2": -> @model.set "mood", "good"
-        "click .face3": -> @model.set "mood", "bad"
-        "click .face4": -> @model.set "mood", "very-bad"
+        "click .very-good": (e) ->
+            return if @model.get("hasSendFeedback")
+            @model.set "mood", "very-good"
+        "click .good": (e) ->
+            return if @model.get("hasSendFeedback")
+            @model.set "mood", "good"
+        "click .bad": (e) ->
+            return if @model.get("hasSendFeedback")
+            @model.set "mood", "bad"
+        "click .very-bad": (e) ->
+            return if @model.get("hasSendFeedback")
+            @model.set "mood", "very-bad"
         "click .save": ->
             @model.set(
                 anonymous: @$anonymous.get(0).checked
