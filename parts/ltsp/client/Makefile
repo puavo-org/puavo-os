@@ -180,6 +180,7 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
 		screen.d/lightdm \
+		screen.d/ltspserver \
 		screen.d/kdump \
 		screen.d/register \
 		screen.d/wirelessaccesspoint

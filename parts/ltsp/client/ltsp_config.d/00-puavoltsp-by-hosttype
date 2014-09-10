@@ -171,6 +171,7 @@ case "$PUAVO_HOSTTYPE" in
       puavo-wlanap
       zram-config
     "
+    set_lts_var SCREEN_07            ltspserver
     set_lts_var USE_NFS_HOMES        True
     ;;
   thinclient)
