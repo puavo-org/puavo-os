@@ -70,7 +70,6 @@ class Feedback extends ViewMaster
             @model.set "mood", "very-bad"
         "click .save": ->
             @model.set(
-                anonymous: @$anonymous.get(0).checked
                 message: @$textarea.val(),
                 silent: true
             )
