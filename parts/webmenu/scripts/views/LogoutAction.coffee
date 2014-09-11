@@ -35,10 +35,20 @@ class LogoutAction extends ViewMaster
         super
         @nowButton = @$(".now").get(0)
         @timerEl = @$(".timer-text").get(0)
+        # console.log "FOO\n\n"
+        # @$(".timer-text").css("top", "1")
+        #console.log @$(".timer-text").position().top
         @startTimer()
 
     renderActionText: (count) ->
         @timerEl.innerText = i18n "logout.#{ @action }Action", {count}
+        offset = $(@timerEl).offset()
+        #$(@timerEl).offset()
+        # offset = @timerEl.offset()
+        # console.log offset.top
+        # if offset.top > 0
+        #     $(@timerEl).css("top", offset.top - 20)
+        # console.log $(".timer-text").offset().top
 
     startTimer: ->
         timeout = @timeout

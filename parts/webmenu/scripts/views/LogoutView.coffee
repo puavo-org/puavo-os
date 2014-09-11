@@ -62,12 +62,23 @@ class LogoutView extends ViewMaster
     events:
         "click .js-shutdown": -> @displayAction("shutdown")
         "click .js-logout": -> @displayAction("logout")
-        "click .js-lock": -> @displayAction("lock")
+        "click .js-lock": (e) ->
+            @displayAction("lock")
         "click .js-restart": -> @displayAction("restart")
         "click .js-sleep": -> @displayAction("sleep")
 
     displayAction: (action) -> setTimeout =>
-        @$(".logout-btn-container").empty()
+        $(".js-shutdown").addClass("toBack")
+        $(".js-shutdown").attr("disabled", true)
+        $(".js-lock").addClass("toBack")
+        $(".js-lock").attr("disabled", true)
+        $(".js-logout").addClass("toBack")
+        $(".js-logout").attr("disabled", true)
+        $(".js-restart").addClass("toBack")
+        $(".js-restart").attr("disabled", true)
+        $(".js-sleep").addClass("toBack")
+        $(".js-sleep").attr("disabled", true)
+        @$(".#{ action }").empty()
         actionView = new LogoutAction
             action: action
             model: @model
@@ -77,8 +88,15 @@ class LogoutView extends ViewMaster
             @render()
         , 1000
 
-        @setView ".logout-btn-container", actionView
+        @setView ".#{ action }", actionView
         @refreshViews()
+        offset = $(".timer-text").offset()
+        height = $(".timer-text").height()
+        debugger
+        console.log "POO"
+        console.log offset
+        $(".timer-text").css("top", offset.top - height - 5)
+        
 
     , 0 # Workaround immediate click trigger
 
