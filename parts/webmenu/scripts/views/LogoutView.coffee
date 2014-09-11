@@ -62,10 +62,9 @@ class LogoutView extends ViewMaster
     events:
         "click .js-shutdown": -> @displayAction("shutdown")
         "click .js-logout": -> @displayAction("logout")
-        "change select": (e) ->
-            # TODO
-            # return if e.target.value is "or"
-            @displayAction(e.target.value)
+        "click .js-lock": -> @displayAction("lock")
+        "click .js-restart": -> @displayAction("restart")
+        "click .js-sleep": -> @displayAction("sleep")
 
     displayAction: (action) -> setTimeout =>
         @$(".logout-btn-container").empty()

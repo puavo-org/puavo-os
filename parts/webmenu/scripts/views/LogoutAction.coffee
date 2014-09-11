@@ -13,7 +13,7 @@ class LogoutAction extends ViewMaster
     constructor: (opts) ->
         super
         @action = opts.action
-        @timeout = opts.timeout || 5
+        @timeout = opts.timeout || 50
         @updateInterval = opts.updateInterval || 1000
         @interval = null
 
