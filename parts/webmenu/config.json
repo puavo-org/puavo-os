@@ -57,30 +57,60 @@
       "de": "Passwort"
       }
   },
-  "shutdownCMD": [
-    "dbus-send",
-    "--system",
-    "--print-reply",
-    "--dest=org.freedesktop.ConsoleKit",
-    "/org/freedesktop/ConsoleKit/Manager",
-    "org.freedesktop.ConsoleKit.Manager.Stop"
-  ],
-  "restartCMD": [
-    "dbus-send",
-    "--system",
-    "--print-reply",
-    "--dest=org.freedesktop.ConsoleKit",
-    "/org/freedesktop/ConsoleKit/Manager",
-    "org.freedesktop.ConsoleKit.Manager.Restart"
-  ],
-  "sleepCMD": [
-    "dbus-send",
-    "--system",
-    "--print-reply",
-    "--dest=org.freedesktop.UPower",
-    "/org/freedesktop/UPower",
-    "org.freedesktop.UPower.Suspend"
-  ],
+  "shutdownCMD": {
+      "type": "custom",
+      "osIconPath": "/usr/share/icons/Faenza/actions/96/system-shutdown.png",
+      "name": {
+          "en": "Shutdown",
+          "fi": "Sammuta",
+          "sv": "Stäng av",
+          "de": "Abscahlten"
+      },
+      "command": [
+          "dbus-send",
+          "--system",
+          "--print-reply",
+          "--dest=org.freedesktop.ConsoleKit",
+          "/org/freedesktop/ConsoleKit/Manager",
+          "org.freedesktop.ConsoleKit.Manager.Stop"
+      ]
+  },
+  "restartCMD": {
+      "type": "custom",
+      "osIconPath": "/usr/share/icons/Faenza/apps/96/system-restart.png",
+      "name": {
+          "en": "Restart",
+          "fi": "Käynnistä uudelleen",
+          "sv": "Starta om",
+          "de": "Neustarten"
+      },
+      "command": [
+          "dbus-send",
+          "--system",
+          "--print-reply",
+          "--dest=org.freedesktop.ConsoleKit",
+          "/org/freedesktop/ConsoleKit/Manager",
+          "org.freedesktop.ConsoleKit.Manager.Restart"
+      ]
+  },
+  "sleepCMD": {
+      "type": "custom",
+      "osIconPath": "/usr/share/icons/Faenza/apps/96/system-suspend.png",
+      "name": {
+          "en": "Sleep",
+          "fi": "Unitila",
+          "sv": "Strömsparläge",
+          "de": "Schlafen"
+      },
+      "command": [
+          "dbus-send",
+          "--system",
+          "--print-reply",
+          "--dest=org.freedesktop.UPower",
+          "/org/freedesktop/UPower",
+          "org.freedesktop.UPower.Suspend"
+      ]
+  },
   "hibernateCMD": [
     "dbus-send",
     "--system",
@@ -89,20 +119,40 @@
     "/org/freedesktop/UPower",
     "org.freedesktop.UPower.Hibernate"
   ],
-  "logoutCMD": [
-    "dbus-send",
-    "--session",
-    "--type=method_call",
-    "--print-reply",
-    "--dest=org.gnome.SessionManager",
-    "/org/gnome/SessionManager",
-    "org.gnome.SessionManager.Logout",
-    "uint32:1"
-  ],
-  "lockCMD": [
-    "gnome-screensaver-command",
-    "--lock"
-  ],
+  "logoutCMD": {
+      "type": "custom",
+      "osIconPath": "/usr/share/icons/Faenza/actions/96/gnome-logout.png",
+      "name": {
+          "en": "Logout",
+          "fi": "Kirjaudu ulos",
+          "sv": "Logga ut",
+          "de": "Abmelden"
+      },
+      "command": [
+          "dbus-send",
+          "--session",
+          "--type=method_call",
+          "--print-reply",
+          "--dest=org.gnome.SessionManager",
+          "/org/gnome/SessionManager",
+          "org.gnome.SessionManager.Logout",
+          "uint32:1"
+      ]
+  },
+  "lockCMD": {
+      "type": "custom",
+      "osIconPath": "/usr/share/icons/Faenza/actions/96/system-lock-screen.png",
+      "name": {
+          "en": "Lock Screen",
+          "fi": "Lukitse näyttö",
+          "sv": "Lås skärmen",
+          "de": "Bildschirm sperren"
+      },
+      "command": [
+          "gnome-screensaver-command",
+          "--lock"
+      ]
+  },
   "feedCMD": "puavo-feed",
   "maxFavorites": 5,
   "port": 1337
