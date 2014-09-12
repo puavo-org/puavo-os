@@ -57,7 +57,7 @@ class SidebarView extends ViewMaster
             @logoutItems.push new MenuItemView
                 model: new LauncherModel sleepCMD
 
-        @appendView ".footer-container",  new Carousel
+        @carousel = new Carousel
             collection: opts.feeds
 
         @showDefaultItems()
@@ -74,10 +74,12 @@ class SidebarView extends ViewMaster
     }
 
     showLogoutItems: =>
+        @$(".footer-container").empty()
         @setView ".settings-container", @logoutItems
         @refreshViews()
 
     showDefaultItems: =>
+        @appendView ".footer-container", @carousel
         @setView ".settings-container", @defaultItems
         @refreshViews()
 
