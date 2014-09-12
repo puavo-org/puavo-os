@@ -19,30 +19,68 @@ class SidebarView extends ViewMaster
         @config = opts.config
         @user = opts.user
 
+        @appendView ".profile-container", new ProfileView(opts)
+
+        @defaultItems = []
         if settingsCMD = @config.get("settingsCMD")
-            @settings = new MenuItemView
+            @defaultItems.push new MenuItemView
                 model: new LauncherModel settingsCMD
-            @appendView ".settings-container", @settings
 
         if passwordCMD = @config.get("passwordCMD")
-            @password = new MenuItemView
+            @defaultItems.push new MenuItemView
                 model: new LauncherModel passwordCMD
-            @appendView ".settings-container", @password
 
         if supportCMD = @config.get("supportCMD")
-            @support = new MenuItemView
+            @defaultItems.push new MenuItemView
                 model: new LauncherModel supportCMD
-            @appendView ".settings-container",  @support
 
-        @appendView ".profile-container", new ProfileView(opts)
-        @appendView ".settings-container", LogoutButtonView
-        @appendView ".settings-container", LockScreenButtonView
+        @defaultItems.push LogoutButtonView
+        @defaultItems.push LockScreenButtonView
+
+        @logoutItems = []
+        if shutdownCMD = @config.get("shutdownCMD")
+            @logoutItems.push new MenuItemView
+                model: new LauncherModel shutdownCMD
+
+        if restartCMD = @config.get("restartCMD")
+            @logoutItems.push new MenuItemView
+                model: new LauncherModel restartCMD
+
+        if lockCMD = @config.get("lockCMD")
+            @logoutItems.push new MenuItemView
+                model: new LauncherModel lockCMD
+
+        if logoutCMD = @config.get("logoutCMD")
+            @logoutItems.push new MenuItemView
+                model: new LauncherModel logoutCMD
+
+        if sleepCMD = @config.get("sleepCMD")
+            @logoutItems.push new MenuItemView
+                model: new LauncherModel sleepCMD
+
         @appendView ".footer-container",  new Carousel
             collection: opts.feeds
+
+        @showDefaultItems()
+
+        @listenTo this, "open-logout-view", =>
+            @showLogoutItems()
+
+        @listenTo this, "open-root-view", =>
+            @showDefaultItems()
 
     context: -> {
         user: @user.toJSON()
         config: @config.toJSON()
     }
+
+    showLogoutItems: =>
+        @setView ".settings-container", @logoutItems
+        @refreshViews()
+
+    showDefaultItems: =>
+        @setView ".settings-container", @defaultItems
+        @refreshViews()
+
 
 module.exports = SidebarView
