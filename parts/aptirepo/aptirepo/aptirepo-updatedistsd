@@ -117,44 +117,52 @@ def _main():
     repodirs = set()
     repodirs_rlock = threading.RLock()
 
-    serv_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    serv_sock = None
+    try:
+        serv_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
-    serv_sock.bind(args.socket_file)
-    serv_sock.listen(1)
+        serv_sock.bind(args.socket_file)
+        serv_sock.listen(1)
 
-    while True:
-        rfds, _, _ = select.select([serv_sock], [], [], min_work_interval_secs)
+        while True:
+            rfds, _, _ = select.select([serv_sock], [], [], min_work_interval_secs)
 
-        if serv_sock in rfds:
-            conn_sock = None
+            if serv_sock in rfds:
+                conn_sock = None
+                try:
+                    conn_sock, _ = serv_sock.accept()
+                    data = _recv_all(conn_sock)
+                    if data.endswith("\n"):
+                        reponame = data[:-1]
+                        repodir = os.path.join(args.aptirepo_rootdir, reponame)
+                        with repodirs_rlock:
+                            repodirs.add(repodir)
+                        print("Received request to update aptirepo repository '%s'" % repodir, file=sys.stderr)
+                        conn_sock.send("OK\n")
+                    else:
+                        print("Received unknown request '%s'" % data, file=sys.stderr)
+                        conn_sock.send("FAIL\n")
+                finally:
+                    if conn_sock is not None:
+                        conn_sock.close()
+
+            with last_work_time_rlock:
+                do_start_worker = (
+                    time.time() > last_work_time + min_work_interval_secs
+                    and not worker.is_alive())
+
+            if do_start_worker:
+                worker = threading.Thread(target=_work,
+                                          args=(repodirs, repodirs_rlock),
+                                          kwargs=aptirepo_kwargs)
+                worker.start()
+                print("Started worker thread", repodirs, file=sys.stderr)
+    finally:
+        if serv_sock is not None:
             try:
-                conn_sock, _ = serv_sock.accept()
-                data = _recv_all(conn_sock)
-                if data.endswith("\n"):
-                    reponame = data[:-1]
-                    repodir = os.path.join(args.aptirepo_rootdir, reponame)
-                    with repodirs_rlock:
-                        repodirs.add(repodir)
-                    print("Received request to update aptirepo repository '%s'" % repodir, file=sys.stderr)
-                    conn_sock.send("OK\n")
-                else:
-                    print("Received unknown request '%s'" % data, file=sys.stderr)
-                    conn_sock.send("FAIL\n")
+                serv_sock.close()
             finally:
-                if conn_sock is not None:
-                    conn_sock.close()
-
-        with last_work_time_rlock:
-            do_start_worker = (
-                time.time() > last_work_time + min_work_interval_secs
-                and not worker.is_alive())
-
-        if do_start_worker:
-            worker = threading.Thread(target=_work,
-                                      args=(repodirs, repodirs_rlock),
-                                      kwargs=aptirepo_kwargs)
-            worker.start()
-            print("Started worker thread", repodirs, file=sys.stderr)
+                os.unlink(args.socket_file)
 
 if __name__ == "__main__":
     _main()
