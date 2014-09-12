@@ -1,7 +1,10 @@
+from __future__ import print_function
+
 import tempfile
 import shutil
 import os.path
 import aptirepo
+import socket
 import sys
 import logging
 
@@ -28,7 +31,37 @@ app = Flask(__name__)
 def index():
     return render_template("upload.html")
 
+def _recv_all(sock):
+    all_data = ""
 
+    while True:
+        data = sock.recv(4096)
+        if not data:
+            break
+        all_data += data
+
+    return all_data
+
+def _notify_updatedistsd(reporoot, repodir):
+    try:
+        sock = None
+        try:
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            sock.connect(os.path.join(reporoot, "updatedistsd.sock"))
+            sock.sendall("%s\n" % repodir)
+            sock.shutdown(socket.SHUT_WR)
+            status = _recv_all(sock)
+            sock.shutdown(socket.SHUT_RD)
+            if status != "OK\n":
+                print("Failed to notify updatedistsd of aptirepo repository '%s'" % repodir, file=sys.stderr)
+        finally:
+            if sock is not None:
+                sock.shutdown(socket.SHUT_RDWR)
+                sock.close()
+    except Error, e:
+        # If just anything goes wrong with the update dists
+        # notification, log it and continue. It is not fatal.
+        print(e, file=sys.stderr)
 
 @app.route('/', methods=["POST"])
 def upload():
@@ -39,8 +72,9 @@ def upload():
     if "changes" not in request.files or request.files["changes"].filename == "":
         return ".changes file missing", 400
 
+    reporoot = config["Repository-Parent"]
     repodir = os.path.join(
-        config["Repository-Parent"],
+        reporoot,
         request.form["branch"]
     )
 
@@ -72,8 +106,8 @@ def upload():
 
     repo = aptirepo.Aptirepo(repodir, confdir, **repo_kwargs)
     repo.import_changes(changes_filepath)
-    repo.update_dists()
-    repo.sign_releases()
+
+    _notify_updatedistsd(reporoot, repodir)
 
     shutil.rmtree(tmp_dirpath)
     return "ok"
@@ -85,8 +119,9 @@ def upload_deb():
     if "codename" in request.form and request.form["codename"] != "":
         codename = request.form["codename"]
 
+    reporoot = config["Repository-Parent"]
     repodir = os.path.join(
-        config["Repository-Parent"],
+        reporoot,
         request.form["branch"]
     )
 
@@ -108,8 +143,8 @@ def upload_deb():
 
         repo = aptirepo.Aptirepo(repodir, confdir, **repo_kwargs)
         repo.import_deb(deb_package_path, codename)
-        repo.update_dists()
-        repo.sign_releases()
+
+        _notify_updatedistsd(reporoot, repodir)
 
         shutil.rmtree(tmp_dirpath)
 
