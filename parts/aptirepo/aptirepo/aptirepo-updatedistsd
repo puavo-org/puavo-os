@@ -18,6 +18,7 @@
 
 from __future__ import print_function
 
+import argparse
 import debian.deb822
 import errno
 import os
@@ -86,13 +87,28 @@ def _recv_all(sock):
 
     return all_data
 
+def _parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--aptirepo-confdir",
+                        help="global aptirepo configuration directory")
+    parser.add_argument("--aptirepo-rootdir",
+                        default="/srv/aptirepo",
+                        help="root directory which contains all repositories, default: %(default)s")
+    parser.add_argument("--socket-file",
+                        default="/tmp/aptirepo-updatedistsd.sock",
+                        help="socket file to listen to, default: %(default)s")
+
+    return parser.parse_args()
+
 def _main():
     global last_work_time_rlock
     global last_work_time
 
-    aptirepo_kwargs = {
-        "confdir": "/etc/aptirepo",
-    }
+    args = _parse_args()
+
+    aptirepo_kwargs = {}
+    if args.aptirepo_confdir is not None:
+        aptirepo_kwargs["confdir"] = args.aptirepo_confdir
 
     min_work_interval_secs = 5
 
@@ -103,7 +119,7 @@ def _main():
 
     serv_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
-    serv_sock.bind("/run/aptirepo-updatedistsd.sock")
+    serv_sock.bind(args.socket_file)
     serv_sock.listen(1)
 
     while True:
@@ -116,7 +132,7 @@ def _main():
                 data = _recv_all(conn_sock)
                 if data.endswith("\n"):
                     reponame = data[:-1]
-                    repodir = os.path.join("/srv/aptirepo", reponame)
+                    repodir = os.path.join(args.aptirepo_rootdir, reponame)
                     with repodirs_rlock:
                         repodirs.add(repodir)
                     print("Received request to update aptirepo repository '%s'" % repodir, file=sys.stderr)
