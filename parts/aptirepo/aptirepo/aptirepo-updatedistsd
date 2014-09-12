@@ -113,7 +113,7 @@ def _main():
     if args.aptirepo_confdir is not None:
         aptirepo_kwargs["confdir"] = args.aptirepo_confdir
 
-    min_work_interval_secs = 5
+    min_work_interval_secs = 60
 
     worker = threading.Thread()
 
