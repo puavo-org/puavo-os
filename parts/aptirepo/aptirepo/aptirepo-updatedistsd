@@ -128,7 +128,7 @@ def _main():
         serv_sock.listen(1)
 
         while True:
-            rfds, _, _ = select.select([serv_sock], [], [], min_work_interval_secs)
+            rfds, _, _ = select.select([serv_sock], [], [], 5)
 
             if serv_sock in rfds:
                 conn_sock = None
