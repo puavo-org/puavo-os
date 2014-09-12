@@ -34,9 +34,13 @@ import aptirepo
 last_work_time_rlock = threading.RLock()
 last_work_time = 0
 
-def _work(repodirs, repodirs_rlock, confdir):
+def _work(repodirs, repodirs_rlock, **aptirepo_kwargs):
     global last_work_time_rlock
     global last_work_time
+
+    # Make aptirepo.Aptirepo() to fail right away if the repository lock
+    # cannot be acquired.
+    aptirepo_kwargs["timeout_secs"] = 0
 
     # Make a copy of the repodirs to allow us to iterate through the
     # copy and remove updated repos from the original set
@@ -50,7 +54,7 @@ def _work(repodirs, repodirs_rlock, confdir):
     for repodir in repodirs_tmp:
         try:
             print("Updating aptirepo repository '%s'" % repodir, file=sys.stderr)
-            repo = aptirepo.Aptirepo(repodir, confdir, timeout_secs=0)
+            repo = aptirepo.Aptirepo(repodir, **aptirepo_kwargs)
         except IOError, e:
             if e.errno != errno.EAGAIN:
                 raise e
@@ -86,7 +90,10 @@ def _main():
     global last_work_time_rlock
     global last_work_time
 
-    confdir = "/etc/aptirepo"
+    aptirepo_kwargs = {
+        "confdir": "/etc/aptirepo",
+    }
+
     min_work_interval_secs = 5
 
     worker = threading.Thread()
@@ -128,7 +135,8 @@ def _main():
 
         if do_start_worker:
             worker = threading.Thread(target=_work,
-                                      args=(repodirs, repodirs_rlock, confdir))
+                                      args=(repodirs, repodirs_rlock),
+                                      kwargs=aptirepo_kwargs)
             worker.start()
             print("Started worker thread", repodirs, file=sys.stderr)
 
