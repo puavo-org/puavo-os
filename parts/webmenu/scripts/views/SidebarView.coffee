@@ -35,7 +35,6 @@ class SidebarView extends ViewMaster
                 model: new LauncherModel supportCMD
 
         @defaultItems.push LogoutButtonView
-        @defaultItems.push LockScreenButtonView
 
         @logoutItems = []
         if shutdownCMD = @config.get("shutdownCMD")
