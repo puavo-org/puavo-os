@@ -159,7 +159,8 @@ def _main():
                                           args=(repodirs, repodirs_rlock),
                                           kwargs=aptirepo_kwargs)
                 worker.start()
-                print("Started worker thread", repodirs, file=sys.stderr)
+                print("Started worker thread to update aptirepo repositories {%s}" %
+                      ",".join([repr(r) for r in repodirs]), file=sys.stderr)
     finally:
         if serv_sock is not None:
             try:
