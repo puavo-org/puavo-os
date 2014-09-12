@@ -60,8 +60,6 @@ class MenuLayout extends ViewMaster
             @menuListView.broadcast("search", searchString)
 
 
-        @listenTo this, "reset", @removeLightbox
-
         @listenTo this, "open-root-view", =>
             @setView ".favorites-container", @favorites
             @setView ".search-container", @search
@@ -74,23 +72,6 @@ class MenuLayout extends ViewMaster
             @$(".search-container").empty()
             @$(".breadcrumbs-container").empty()
             @refreshViews()
-
-    displayViewInLightbox: (view) ->
-        @menuListView.releaseKeys()
-        @removeLightbox()
-        @lightbox = new Lightbox
-            view: view
-            position: "fullscreen"
-        @lightbox.parent = this
-        @lightbox.render()
-        @lightbox.once "close", =>
-            @removeLightbox()
-
-    removeLightbox: ->
-        if @lightbox
-            @menuListView.grabKeys()
-            @lightbox.remove()
-            @lightbox = null
 
 module.exports = MenuLayout
 
