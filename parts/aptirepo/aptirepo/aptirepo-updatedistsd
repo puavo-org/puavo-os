@@ -95,7 +95,7 @@ def _parse_args():
                         default="/srv/aptirepo",
                         help="root directory which contains all repositories, default: %(default)s")
     parser.add_argument("--socket-file",
-                        default="/tmp/aptirepo-updatedistsd.sock",
+                        default="/srv/aptirepo/updatedistsd.sock",
                         help="socket file to listen to, default: %(default)s")
 
     return parser.parse_args()
