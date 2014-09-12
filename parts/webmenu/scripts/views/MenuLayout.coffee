@@ -33,16 +33,19 @@ class MenuLayout extends ViewMaster
 
         @setView ".menu-list-container", @menuListView
 
-        @setView ".search-container", new Search
+        @search = new Search
+        @setView ".search-container", @search
 
         @breadcrumbs = new Breadcrumbs model: opts.initialMenu
         @setView ".breadcrumbs-container", @breadcrumbs
 
-        @setView ".sidebar-container", new SidebarView(opts)
+        @sidebarView = new SidebarView(opts)
+        @setView ".sidebar-container", @sidebarView
 
-        @setView ".favorites-container", new Favorites
+        @favorites =  new Favorites
             collection: @allItems
             config: @config
+        @setView ".favorites-container", @favorites
 
         @listenTo this, "open-menu", (model, sender) =>
             # Update MenuListView when user navigates from breadcrumbs
@@ -59,10 +62,18 @@ class MenuLayout extends ViewMaster
 
         @listenTo this, "reset", @removeLightbox
 
+        @listenTo this, "open-root-view", =>
+            @setView ".favorites-container", @favorites
+            @setView ".search-container", @search
+            @setView ".breadcrumbs-container", @breadcrumbs
+            @refreshViews()
+
         @listenTo this, "open-logout-view", =>
-            @displayViewInLightbox new LogoutView
-                model: @feedback
-                config: @config
+            @menuListView.broadcast("open-logout-view")
+            @$(".favorites-container").empty()
+            @$(".search-container").empty()
+            @$(".breadcrumbs-container").empty()
+            @refreshViews()
 
     displayViewInLightbox: (view) ->
         @menuListView.releaseKeys()
