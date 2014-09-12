@@ -58,6 +58,9 @@ def _work(repodirs, repodirs_rlock, **aptirepo_kwargs):
             repo = aptirepo.Aptirepo(repodir, **aptirepo_kwargs)
         except IOError, e:
             if e.errno != errno.EAGAIN:
+                with repodirs_rlock:
+                    # Unexpected error, remove from the update queue.
+                    repodirs.remove(repodir)
                 raise e
             # Aptirepo timeouted because it is locked. Fine, just
             # continue to update other repositories. The repository is
