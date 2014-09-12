@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+(
+  flock -x -w 5 9 || { echo 'Ekapeli is already running' >&2; exit 1; }
+
+  exec setsid /usr/local/lib/ekapeli/ekapeli_wrapper
+) 9</usr/local/bin/ekapeli

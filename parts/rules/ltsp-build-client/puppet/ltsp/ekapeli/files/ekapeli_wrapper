@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -eu
+
+user=$(id -nu)
+group=$(id -g)
+
+cleanup() {
+  # kill all java processes in our process group, in case the ekapeli
+  # is still running
+  pkill -g 0 '^java' 2>/dev/null || true
+
+  sleep 3 || true
+
+  fusermount -uz "/var/tmp/ekapeli-$user"         || true
+  fusermount -uz "/var/tmp/.ekapeli-${user}.rofs" || true
+}
+
+trap cleanup EXIT
+
+
+mkdir -p "/var/tmp/ekapeli-$user"        \
+         "/var/tmp/.ekapeli-${user}.cow" \
+         "/var/tmp/.ekapeli-${user}.rofs"
+
+chown "$user:$group" "/var/tmp/ekapeli-$user"        \
+                     "/var/tmp/.ekapeli-${user}.cow" \
+                     "/var/tmp/.ekapeli-${user}.rofs"
+
+bindfs -u "$user" -g "$group" /opt/ekapeli/cache \
+                              "/var/tmp/.ekapeli-${user}.rofs"
+
+unionfs-fuse -o cow \
+  "/var/tmp/.ekapeli-${user}.cow=RW:/var/tmp/.ekapeli-${user}.rofs=RO" \
+  "/var/tmp/ekapeli-$user"
+
+env EKAPELI_CACHE_PATH="/var/tmp/ekapeli-$user" \
+    javaws -wait /opt/ekapeli/game.jnlp
+
+# -nowait does not really do what one could expect, so we wait until
+# all '^java' processes in our own process group have exited...
+while sleep 3; do
+  if [ "$(pgrep -c -g 0 '^java')" -eq 0 ]; then
+    break
+  fi
+done

@@ -7,6 +7,7 @@ class image::opinsysrestricted {
 		  chromium_with_chrome_flash,
 		  citrix,
 		  ebeam,
+		  ekapeli,
 		  google-earth-stable,
 		  google_talkplugin,
 		  image::bundle::opinsys,
