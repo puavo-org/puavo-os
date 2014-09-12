@@ -140,10 +140,10 @@ def _main():
                         with repodirs_rlock:
                             repodirs.add(repodir)
                         print("Received request to update aptirepo repository '%s'" % repodir, file=sys.stderr)
-                        conn_sock.send("OK\n")
+                        conn_sock.sendall("OK\n")
                     else:
                         print("Received unknown request '%s'" % data, file=sys.stderr)
-                        conn_sock.send("FAIL\n")
+                        conn_sock.sendall("FAIL\n")
                 finally:
                     if conn_sock is not None:
                         conn_sock.close()
