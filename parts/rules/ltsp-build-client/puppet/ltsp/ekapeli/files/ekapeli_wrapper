@@ -16,6 +16,8 @@ cleanup() {
 
   fusermount -uz "${tmpdir}/ekapeli"      || true
   fusermount -uz "${tmpdir}/ekapeli.rofs" || true
+
+  rm -rf "${tmpdir}"
 }
 
 trap cleanup EXIT
