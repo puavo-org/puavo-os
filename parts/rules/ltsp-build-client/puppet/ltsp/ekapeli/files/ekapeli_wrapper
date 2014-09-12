@@ -5,6 +5,8 @@ set -eu
 user=$(id -nu)
 group=$(id -g)
 
+tmpdir=$(mktemp -d /var/tmp/ekapeli-${user}.XXXXXXXXXX)
+
 cleanup() {
   # kill all java processes in our process group, in case the ekapeli
   # is still running
@@ -12,29 +14,24 @@ cleanup() {
 
   sleep 3 || true
 
-  fusermount -uz "/var/tmp/ekapeli-$user"         || true
-  fusermount -uz "/var/tmp/.ekapeli-${user}.rofs" || true
+  fusermount -uz "${tmpdir}/ekapeli"      || true
+  fusermount -uz "${tmpdir}/ekapeli.rofs" || true
 }
 
 trap cleanup EXIT
 
 
-mkdir -p "/var/tmp/ekapeli-$user"        \
-         "/var/tmp/.ekapeli-${user}.cow" \
-         "/var/tmp/.ekapeli-${user}.rofs"
+mkdir -p "${tmpdir}/ekapeli"     \
+         "${tmpdir}/ekapeli.cow" \
+         "${tmpdir}/ekapeli.rofs"
 
-chown "$user:$group" "/var/tmp/ekapeli-$user"        \
-                     "/var/tmp/.ekapeli-${user}.cow" \
-                     "/var/tmp/.ekapeli-${user}.rofs"
-
-bindfs -u "$user" -g "$group" /opt/ekapeli/cache \
-                              "/var/tmp/.ekapeli-${user}.rofs"
+bindfs -u "$user" -g "$group" /opt/ekapeli/cache "${tmpdir}/ekapeli.rofs"
 
 unionfs-fuse -o cow \
-  "/var/tmp/.ekapeli-${user}.cow=RW:/var/tmp/.ekapeli-${user}.rofs=RO" \
-  "/var/tmp/ekapeli-$user"
+  "${tmpdir}/ekapeli.cow=RW:${tmpdir}/ekapeli.rofs=RO" \
+  "${tmpdir}/ekapeli"
 
-env EKAPELI_CACHE_PATH="/var/tmp/ekapeli-$user" \
+env EKAPELI_CACHE_PATH="${tmpdir}/ekapeli" \
     javaws -wait /opt/ekapeli/game.jnlp
 
 # -nowait does not really do what one could expect, so we wait until
