@@ -667,7 +667,8 @@ class packages {
     , 'zsync' ]:
       tag => [ 'ubuntu-gnome-desktop', 'ubuntu', ];
 
-    [ 'desktop-file-utils'
+    [ 'bindfs'
+    , 'desktop-file-utils'
     , 'exfat-fuse'
     , 'exfat-utils'
     , 'fuse'
@@ -680,6 +681,7 @@ class packages {
     , 'rarian-compat'
     , 'screenlets'
     , 'unace'
+    , 'unionfs-fuse'
     , 'unrar' ]:
       tag => [ 'utils', 'ubuntu', ];
 
@@ -782,6 +784,9 @@ class packages {
     , 'iscan'
     , 'iscan-data' ]:
       tag => [ 'epson-scanner', 'opinsys', 'restricted' ];
+
+    [ 'ekapeli' ]:
+      tag => [ 'games', 'opinsys', 'restricted', ];
 
     [ 'libdvdcss2'
     , 'pipelight-multi' ]:
