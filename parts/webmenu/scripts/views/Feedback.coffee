@@ -41,7 +41,12 @@ class Feedback extends ViewMaster
     context: ->
         moods = MOODS.map (mood) =>
             cssClass = mood
-            cssClass += " selected" if mood == @model.get("mood")
+
+            if @model.get("mood")
+                if mood == @model.get("mood")
+                    cssClass += " selected"
+                else
+                    cssClass += " unselected"
 
             return {
                 cssClass: cssClass,
