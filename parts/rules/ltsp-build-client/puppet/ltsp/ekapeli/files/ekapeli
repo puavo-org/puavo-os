@@ -2,8 +2,19 @@
 
 set -eu
 
-(
-  flock -x -w 5 9 || { echo 'Ekapeli is already running' >&2; exit 1; }
+ekapeli_is_running() {
+  pgrep -x -U "$USER" ekapeli_wrapper >/dev/null
+}
 
-  exec setsid /usr/local/lib/ekapeli/ekapeli_wrapper
-) 9</usr/local/bin/ekapeli
+# do not try to startup ekapeli if it is already running
+if ekapeli_is_running; then
+  # ekapeli may be closing, so wait a bit and try again
+  sleep 6
+
+  if ekapeli_is_running; then
+    echo 'Ekapeli is already running' >&2
+    exit 1
+  fi
+fi
+
+setsid /usr/local/lib/ekapeli/ekapeli_wrapper
