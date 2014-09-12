@@ -16,11 +16,14 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+from __future__ import print_function
+
 import debian.deb822
 import errno
 import os
 import select
 import socket
+import sys
 import threading
 import time
 
@@ -46,6 +49,7 @@ def _work(repodirs, repodirs_rlock, confdir):
     # it.
     for repodir in repodirs_tmp:
         try:
+            print("Updating aptirepo repository '%s'" % repodir, file=sys.stderr)
             repo = aptirepo.Aptirepo(repodir, confdir, timeout_secs=0)
         except IOError, e:
             if e.errno != errno.EAGAIN:
@@ -54,6 +58,7 @@ def _work(repodirs, repodirs_rlock, confdir):
             # continue to update other repositories. The repository is
             # removed from the set only if everything went
             # succesfully.
+            print("Aptirepo repository '%s' was locked" % repodir, file=sys.stderr)
             continue
         repo.update_dists()
         repo.sign_releases()
@@ -107,8 +112,10 @@ def _main():
                     repodir = os.path.join("/srv/aptirepo", reponame)
                     with repodirs_rlock:
                         repodirs.add(repodir)
+                    print("Received request to update aptirepo repository '%s'" % repodir, file=sys.stderr)
                     conn_sock.send("OK\n")
                 else:
+                    print("Received unknown request '%s'" % data, file=sys.stderr)
                     conn_sock.send("FAIL\n")
             finally:
                 if conn_sock is not None:
@@ -123,6 +130,7 @@ def _main():
             worker = threading.Thread(target=_work,
                                       args=(repodirs, repodirs_rlock, confdir))
             worker.start()
+            print("Started worker thread", repodirs, file=sys.stderr)
 
 if __name__ == "__main__":
     _main()
