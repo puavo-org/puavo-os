@@ -10,5 +10,5 @@ while true; do
     echo
     echo 'This host is a Puavo thinclient server.' | /usr/games/cowsay
     echo
-    read
+    read answer
 done
