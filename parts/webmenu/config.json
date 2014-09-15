@@ -73,7 +73,8 @@
           "--dest=org.freedesktop.ConsoleKit",
           "/org/freedesktop/ConsoleKit/Manager",
           "org.freedesktop.ConsoleKit.Manager.Stop"
-      ]
+      ],
+      "confirm": true
   },
   "restartCMD": {
       "type": "custom",
@@ -91,7 +92,8 @@
           "--dest=org.freedesktop.ConsoleKit",
           "/org/freedesktop/ConsoleKit/Manager",
           "org.freedesktop.ConsoleKit.Manager.Restart"
-      ]
+      ],
+      "confirm": true
   },
   "sleepCMD": {
       "type": "custom",
@@ -137,7 +139,8 @@
           "/org/gnome/SessionManager",
           "org.gnome.SessionManager.Logout",
           "uint32:1"
-      ]
+      ],
+      "confirm": true
   },
   "lockCMD": {
       "type": "custom",

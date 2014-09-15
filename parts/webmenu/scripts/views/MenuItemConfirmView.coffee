@@ -10,14 +10,12 @@ class MenuItemConfirmView extends ViewMaster
     constructor: (opts) ->
         super
         @config = opts.config
-        @timeout = opts.timeout || 50
+        @timeout = opts.timeout || 5
         @updateInterval = opts.updateInterval || 1000
         @interval = null
 
 
     template: require "../templates/MenuItemConfirmView.hbs"
-
-#    context: ->
 
     render: ->
         super
@@ -34,7 +32,9 @@ class MenuItemConfirmView extends ViewMaster
         timer = =>
             @renderConfirmText(timeout)
             if timeout <= 0
-                @sendAction() # FIXME
+                console.log("TIMEOUT, run command")
+                @bubble "open-app", @model
+                @remove()
                 return @clearTimer()
             timeout--
 
@@ -54,11 +54,12 @@ class MenuItemConfirmView extends ViewMaster
 
 
     events:
-        "click .js-lock": (e) ->
-            #@displayAction("lock")
-            console.log("CLICK")
-        "close": ->
-            console.log("CLOSE")
+        "click .cancel": (e) ->
+            console.log("CLICK cancel")
+            @bubble "cancel"
+        "click .ok": (e) ->
+            console.log("CLICK OK")
+            @bubble "open-app", @model
 
 
 module.exports = MenuItemConfirmView
