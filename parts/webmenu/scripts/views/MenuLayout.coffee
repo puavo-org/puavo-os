@@ -7,6 +7,7 @@ Application = require "../Application.coffee"
 Favorites = require "./Favorites.coffee"
 Lightbox = require "./Lightbox.coffee"
 LogoutView = require "./LogoutView.coffee"
+MenuItemConfirmView = require "./MenuItemConfirmView.coffee"
 Breadcrumbs = require "./Breadcrumbs.coffee"
 MenuListView = require "./MenuListView.coffee"
 SidebarView = require "./SidebarView.coffee"
@@ -55,6 +56,13 @@ class MenuLayout extends ViewMaster
             if sender isnt @breadcrumbs
                 @breadcrumbs.broadcast("open-menu", model)
 
+        @listenTo this, "open-confirm", (model) =>
+            @displayViewInLightbox new MenuItemConfirmView
+                model: model
+                config: @config
+
+
+
         # Connect search events to MenuListView
         @listenTo this, "search", (searchString) =>
             @menuListView.broadcast("search", searchString)
@@ -72,6 +80,24 @@ class MenuLayout extends ViewMaster
             @$(".search-container").empty()
             @$(".breadcrumbs-container").empty()
             @refreshViews()
+
+
+    displayViewInLightbox: (view) ->
+        @menuListView.releaseKeys()
+        @removeLightbox()
+        @lightbox = new Lightbox
+            view: view
+            position: "fullscreen"
+        @lightbox.parent = this
+        @lightbox.render()
+        @lightbox.once "close", =>
+            @removeLightbox()
+
+    removeLightbox: ->
+        if @lightbox
+            @menuListView.grabKeys()
+            @lightbox.remove()
+            @lightbox = null
 
 module.exports = MenuLayout
 

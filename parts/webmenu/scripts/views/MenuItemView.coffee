@@ -58,6 +58,8 @@ class MenuItemView extends ViewMaster
 
         if @model.get("type") is "menu"
             @bubble "open-menu", @model
+        else if @model.get("confirm")
+            @bubble "open-confirm", @model
         else
             @bubble "open-app", @model
             @model.incClicks()
