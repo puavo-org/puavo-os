@@ -24,7 +24,7 @@ class MenuItemConfirmView extends ViewMaster
 
 
     renderConfirmText: (count) ->
-        @timerEl.innerText = "Tietokone sammutetaan #{ count } sekunnin kuluttua..." #i18n "logout.#{ @action }Action", {count}
+        @timerEl.innerText = i18n @model.get("confirmText"), {count}
 
 
     startTimer: ->

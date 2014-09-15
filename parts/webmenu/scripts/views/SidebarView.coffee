@@ -38,10 +38,11 @@ class SidebarView extends ViewMaster
 
         @logoutItems = []
         if shutdownCMD = @config.get("shutdownCMD")
+            shutdownCMD["confirmText"] = "logout.shutdownAction"
             @logoutItems.push new MenuItemView
                 model: new LauncherModel shutdownCMD
-
         if restartCMD = @config.get("restartCMD")
+            restartCMD["confirmText"] = "logout.restartAction"
             @logoutItems.push new MenuItemView
                 model: new LauncherModel restartCMD
 
@@ -50,6 +51,7 @@ class SidebarView extends ViewMaster
                 model: new LauncherModel lockCMD
 
         if logoutCMD = @config.get("logoutCMD")
+            logoutCMD["confirmText"] = "logout.logoutAction"
             @logoutItems.push new MenuItemView
                 model: new LauncherModel logoutCMD
 
