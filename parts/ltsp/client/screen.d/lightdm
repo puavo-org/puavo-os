@@ -5,11 +5,6 @@ export TERM=vt100
 setupcon
 clear
 
-echo
-echo
-echo 'Lightdm starts from Upstart.' | /usr/games/cowsay
-echo
-echo 'You can reboot this host by pressing ENTER.'
-echo
-read answer
-reboot
+while true; do
+    read
+done
