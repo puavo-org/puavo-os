@@ -64,7 +64,7 @@ while [ $# -ne 0 ]; do
       image_from_nbd="$2"; shift; shift
       ;;
     -r|--rate-limit)
-      rate_limit_opts="--limit-rate $2"; shift; shift
+      rate_limit_opts="--limit-rate=$2"; shift; shift
       ;;
     -q|--quiet)
       quiet=true; shift;
@@ -98,8 +98,8 @@ update_stats() {
     echo "phase ${phase}"
     echo "progress ${progress}"
   } | tr -d '\r' > "${stats_filepath}.tmp"
-    # tr -d here is nice because progress may contain \r ... originates from
-    # curl and should be stripped earlier but it was difficult
+    # tr -d here is nice because progress may contain \r ...
+    # perhaps originates from unbuffer(?) and should be stripped earlier
 
   if ! cmp "${stats_filepath}" "${stats_filepath}.tmp" >/dev/null 2>&1; then
     mv "${stats_filepath}.tmp" "${stats_filepath}"
@@ -229,51 +229,58 @@ ensure_enough_available_diskspace() {
   done
 }
 
-fetch_with_curl() {
-  extra_curl_opts=$1
+fetch_with_wget() {
+  extra_wget_opts=$1
   output_path=$2  
   url=$3
   phase=$4
 
-  # according to curl(1) --fail is not enough
-  curl_status_code=$(
+  wget_error_code=$(
     {
-      curl --cacert /etc/puavo/certs/rootca.pem \
-	   --continue-at -                      \
-	   $extra_curl_opts                     \
-	   --output "$output_path"              \
-	   -w "%{http_code}\n"                  \
-	   "$url"                               \
-           3>&1 1>&2 2>&3 3>&-                  \
-        | unbuffer -p tr '\r' '\n' \
-        | unbuffer -p awk '$1 ~ /^[[:digit:]]+$/ { print $1 }' \
-        | update_stats_with_progress "$phase"
+      {
+	wget --ca-certificate=/etc/puavo/certs/rootca.pem \
+	     --continue                                   \
+	     --output-document=${output_path}             \
+	     --progress=dot                               \
+             $extra_wget_opts                             \
+	     "$url" >/dev/null                            \
+	  || echo $?
+      } 3>&1 1>&2 2>&3 3>&- \
+	| unbuffer -p awk '
+	    BEGIN { progress = -1 }
+
+	    {
+	      percentage = substr($0, 63, 4)
+	      if (match(percentage, /^[[:space:]]*([[:digit:]]+)%$/, a)) {
+		new_progress = a[1]
+		if (progress != new_progress) {
+		  progress = new_progress
+		  print progress
+		}
+	      }
+	    }
+	  ' 2>/dev/null \
+	| update_stats_with_progress "$phase"
     } 2>&1 || true
   )
 
-  case "$curl_status_code" in
-    # 2*  == success
-    # 416 == "Requested Range not satisfiable" (file should be finished)
-    2*|416)
-      log info "fetched $url with status code $curl_status_code"
-      return 0
-      ;;
-    *)
-      log err "fetching $url, curl returned status code $curl_status_code"
-      return 1
-      ;;
-  esac
+  if [ -n "$wget_error_code" ]; then
+    log err "fetching $url, wget returned error code $wget_error_code"
+    return 1
+  fi
+
+  log info "fetched $url with success"
 }
 
 get_checksums_file() {
-  extra_curl_opts=$1
+  extra_wget_opts=$1
   url=$2
 
   checksum_file_path="${images_dir}/CKSUMS"
 
-  fetch_with_curl "$extra_curl_opts" \
+  fetch_with_wget "$extra_wget_opts"          \
 		  "${checksum_file_path}.tmp" \
-		  "$url" \
+		  "$url"                      \
                   checksums_fetch
   mv "${checksum_file_path}.tmp" "${checksum_file_path}"
 
@@ -327,7 +334,7 @@ get_next_image() {
 
 get_rdiff() {
   rdiffs_dir=$1
-  extra_curl_opts=$2
+  extra_wget_opts=$2
   rdiff_filename=$3
   rdiff_url=$4
   checksums_file=$5
@@ -342,7 +349,7 @@ get_rdiff() {
   log info "we are missing the full rdiff $rdiff_filename, going to get it"
 
   rdiff_tmp="${rdiff_path}.tmp"
-  fetch_with_curl  "$extra_curl_opts" "$rdiff_tmp" "$rdiff_url" rdiff_fetch
+  fetch_with_wget  "$extra_wget_opts" "$rdiff_tmp" "$rdiff_url" rdiff_fetch
   check_with_cksum "$rdiff_filename" \
                    "$rdiff_tmp"      \
                    "$checksums_file" \
