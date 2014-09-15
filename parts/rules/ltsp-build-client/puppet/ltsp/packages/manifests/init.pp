@@ -426,6 +426,7 @@ class packages {
     , 'marble-qt'
     , 'mandelbulber'
     , 'pspp'
+    , 'qgis'
     , 'rkward'
     , 'stellarium'
     , 'texlive-fonts-extra'
