@@ -72,6 +72,9 @@ class Feedback extends ViewMaster
         "click .very-bad": (e) ->
             return if @model.get("hasSendFeedback")
             @model.set "mood", "very-bad"
+        "click .cancel": ->
+            @model.set "mood", null
+            @$textarea.val("")
         "click .save": ->
             @model.set(
                 message: @$textarea.val(),
