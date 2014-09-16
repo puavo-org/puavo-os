@@ -85,6 +85,7 @@ class MenuListView extends ViewMaster
         @setItems(@model.items.toArray())
 
     setItems: (models) ->
+        @feedbackView.detach()
         @setView ".app-list-container", models.map (model) ->
             new MenuItemView
                 model: model
