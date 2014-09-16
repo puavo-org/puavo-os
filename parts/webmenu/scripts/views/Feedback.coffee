@@ -78,7 +78,8 @@ class Feedback extends ViewMaster
         "click .save": ->
             @model.set(
                 message: @$textarea.val(),
-                silent: true
+                silent: true,
+                hasSendFeedback: true
             )
             @model.send()
 
