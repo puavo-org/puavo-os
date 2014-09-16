@@ -28,6 +28,7 @@ class MenuLayout extends ViewMaster
         @menuListView = new MenuListView
             model: opts.initialMenu
             collection: opts.allItems
+            config: opts.config
 
         @setView ".menu-list-container", @menuListView
 

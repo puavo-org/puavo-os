@@ -14,6 +14,7 @@ class MenuListView extends ViewMaster
 
     constructor: (opts) ->
         super
+        @config = opts.config
 
         @feedback = new FeedbackModel
 
@@ -42,9 +43,15 @@ class MenuListView extends ViewMaster
 
         @listenTo this, "open-logout-view", =>
             @releaseKeys()
-            @setView ".app-list-container", @feedbackView
+
+            if @config.get("feedback")
+                @setView ".app-list-container", @feedbackView
+            else
+                $(".app-list-container").empty()
+
             @$el.attr("style", "bottom: -100px")
             @refreshViews()
+            @navigation.deactivate()
 
         @listenTo this, "open-menu", (model) =>
             @model = model
