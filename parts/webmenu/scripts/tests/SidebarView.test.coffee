@@ -53,7 +53,7 @@ describe "SidebarView", ->
                     expect(model.get("url")).to.eq "http://password.example.com"
                     expect(model.get("type")).to.eq "webWindow"
                     done()
-                view.password.$el.click()
+                view.$el.find(".item-changepassword").click()
 
         describe "settings button", ->
             it "emits open-app for system settings on settings button click", (done) ->
@@ -61,7 +61,7 @@ describe "SidebarView", ->
                     expect(model.get("command")).to.eq "gnome-control-center"
                     expect(model.get("type")).to.eq "custom"
                     done()
-                view.settings.$el.click()
+                view.$el.find(".item-settings").click()
 
 
     describe "with missing changePasswordUrl&profileUrl", ->
