@@ -733,6 +733,9 @@ class packages {
     , 'xexit' ]:
       tag => [ 'misc', 'puavo', ];
 
+    [ 'dymo-cups-drivers' ]:
+      tag => [ 'printing', 'puavo', ];
+
     [ 'bluegriffon'
     , 'enchanting'
     , 'pycharm' ]:
