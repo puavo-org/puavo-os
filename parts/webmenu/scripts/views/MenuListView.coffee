@@ -41,6 +41,7 @@ class MenuListView extends ViewMaster
             @navigation.deactivate()
 
         @listenTo this, "open-logout-view", =>
+            @releaseKeys()
             @setView ".app-list-container", @feedbackView
             @$el.attr("style", "bottom: -100px")
             @refreshViews()
