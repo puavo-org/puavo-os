@@ -339,6 +339,7 @@ class packages {
     , 'musescore'
     , 'musescore-soundfont-gm'
     , 'qsynth'
+    , 'rakarrack'
     , 'rosegarden'
     , 'solfege'
     , 'soundconverter'
