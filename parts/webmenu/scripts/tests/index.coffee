@@ -19,7 +19,6 @@ require "./MenuLayout.test.coffee"
 require "./MenuModel.test.coffee"
 require "./Navigation.test.coffee"
 require "./Search.test.coffee"
-require "./LogoutAction.test.coffee"
 require "./Feedback.test.coffee"
 
 runner = mocha.globals(["jQuery*"]).run()
