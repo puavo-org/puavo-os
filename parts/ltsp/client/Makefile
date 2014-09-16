@@ -251,6 +251,7 @@ install : installdirs
 		xinitrc
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/pam \
+		pam/check-if-account-is-locked \
 		pam/chown-session-dir \
 		pam/ltspserver-guest-login \
 		pam/make-session-dir \
