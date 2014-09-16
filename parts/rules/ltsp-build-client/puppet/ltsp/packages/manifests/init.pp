@@ -379,6 +379,7 @@ class packages {
     , 'emacs24'
     , 'eric'
     , 'eric-api-files'
+    , 'fritzing'
     , 'gcc-avr'
     , 'geany'
     , 'idle'
