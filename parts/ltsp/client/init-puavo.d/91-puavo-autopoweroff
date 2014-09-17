@@ -1,0 +1,39 @@
+puavo_autopoweroff_mode=$(jq -r .autopoweroff_mode /etc/puavo/device.json)
+
+case "$puavo_autopoweroff_mode" in
+  custom|default)
+    puavo_autopoweroff_onhour=$(jq -r .autopoweroff_onhour \
+                                      /etc/puavo/device.json)
+    puavo_autopoweroff_offhour=$(jq -r .autopoweroff_offhour \
+                                       /etc/puavo/device.json)
+
+    if [ -z "$puavo_autopoweroff_onhour" \
+         -o "$puavo_autopoweroff_onhour" = "null" ]; then
+      puavo_autopoweroff_onhour=7
+    fi
+    if [ -z "$puavo_autopoweroff_offhour" \
+         -o "$puavo_autopoweroff_offhour" = "null" ]; then
+      puavo_autopoweroff_offhour=16
+    fi
+
+    cat <<-EOF > /etc/autopoweroff.conf
+	[NO_SHUTDOWN_TIME_RANGE]
+	StartHour=$puavo_autopoweroff_onhour
+	EndHour=$puavo_autopoweroff_offhour
+	
+	[TIMEOUTS]
+	StartupDelay=30
+	IdleTime=30
+	
+	[DEPENDANTS]
+	Hosts=
+	EOF
+    ;;
+  off)
+    cat <<-EOF > /etc/autopoweroff.conf
+	EOF
+    ;;
+  *)
+    # "null" or some such we do not understand, so do nothing
+    ;;
+esac
