@@ -3,6 +3,20 @@
 puavo_keyboard_layout=$(jq -r .keyboard_layout /etc/puavo/device.json)
 puavo_keyboard_variant=$(jq -r .keyboard_variant /etc/puavo/device.json)
 puavo_primary_user=$(jq -r .primary_user /etc/puavo/device.json)
+puavo_greeter_background_mode=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background_mode://p' | tail -n1)
+
+background=
+
+case "${puavo_greeter_background_mode}" in
+    ''|static)
+        ;;
+    random)
+        background=$(find /usr/share/backgrounds -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' \) | sort -R | head -n1)
+        ;;
+    *)
+        echo "unknown greeter background mode '${puavo_greeter_background_mode}'" >&2
+        ;;
+esac
 
 [ "${puavo_keyboard_layout}" = "null" ] && puavo_keyboard_layout=
 [ "${puavo_keyboard_variant}" = "null" ] && puavo_keyboard_variant=
@@ -20,6 +34,12 @@ if [ "${puavo_primary_user}" != "" ]; then
   chown -R lightdm: /var/lib/lightdm/.config/dconf
   su -s /bin/sh lightdm -c "dbus-launch gsettings set com.canonical.unity-greeter default-user ${puavo_primary_user}"
   su -s /bin/sh lightdm -c "dbus-launch gsettings set com.canonical.unity-greeter exclude-prefixes \"['adm-', 'opinsys']\""
+fi
+
+if [ -n "${background}" ]; then
+  mkdir -p /var/lib/lightdm/.config/dconf
+  chown -R lightdm: /var/lib/lightdm/.config/dconf
+  su -s /bin/sh lightdm -c "dbus-launch gsettings set com.canonical.unity-greeter background ${background}"
 fi
 
 exit 0
