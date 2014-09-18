@@ -41,6 +41,9 @@ disable_gnome_keyring_autostart
 disable_suspend_on_halt
     When on runlevel 0 (halt), do not suspend.
 
+disable_unclutter
+    Disable unclutter, causes problems on some hardware.
+
 disable_update_notifications
     Disable some functionality in update-notifier-common package
     (just removing the package would be nice, but ttf-mscorefonts-installer

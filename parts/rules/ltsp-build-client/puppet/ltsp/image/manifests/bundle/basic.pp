@@ -3,6 +3,7 @@ class image::bundle::basic {
 	  autopoweroff,
 	  console,
 	  disable_suspend_on_halt,
+	  disable_unclutter,
 	  disable_update_notifications,
 	  kernels,
 	  lightdm,
