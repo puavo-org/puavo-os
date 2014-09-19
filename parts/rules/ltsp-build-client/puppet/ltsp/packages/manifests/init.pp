@@ -81,6 +81,7 @@ class packages {
     , 'indicator-session'
     , 'lightdm'
     , 'lightdm-gtk-greeter'
+    , 'lsb-invalid-mta'
     , 'network-manager-openvpn-gnome'
     , 'notify-osd'
     , 'onboard'
