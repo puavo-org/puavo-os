@@ -1,7 +1,7 @@
 # Generate dconf profile based on locale and host type.
 #
 
-tmp_dconf_profile=$(mktemp /tmp/puavo-dconf-$USER.XXXXXXXXXX) || return 1
+puavo_dconf_profile_path="/var/lib/puavo-desktop/users/${USER}/dconf_profile"
 
 {
   echo "user-db:user"
@@ -20,8 +20,8 @@ tmp_dconf_profile=$(mktemp /tmp/puavo-dconf-$USER.XXXXXXXXXX) || return 1
   esac
 
   echo "system-db:puavodesktop"
-} > $tmp_dconf_profile || return 1
+} > $puavo_dconf_profile_path || return 1
 
-DCONF_PROFILE=$tmp_dconf_profile
+DCONF_PROFILE=$puavo_dconf_profile_path
 
 export DCONF_PROFILE
