@@ -8,19 +8,21 @@ puavo_greeter_background=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's
 
 background=
 
+BACKGROUNDS_DIR=/usr/share/backgrounds/puavo-greeter
+
 case "${puavo_greeter_background_mode}" in
     ''|static)
         ;;
     dynamic)
         if [ -n "${puavo_greeter_background}" ]; then
-            find /usr/share/backgrounds -type f -printf '%P\n' \
+            find "${BACKGROUNDS_DIR}" -type f -printf '%P\n' \
                 | grep -q -x "${puavo_greeter_background}" && {
-                background="/usr/share/backgrounds/${puavo_greeter_background}"
+                background="${BACKGROUNDS_DIR}/${puavo_greeter_background}"
             }
         fi
         ;;
     random)
-        background=$(find /usr/share/backgrounds -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' \) | sort -R | head -n1)
+        background=$(find "${BACKGROUNDS_DIR}" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' \) | sort -R | head -n1)
         ;;
     *)
         echo "unknown greeter background mode '${puavo_greeter_background_mode}'" >&2
