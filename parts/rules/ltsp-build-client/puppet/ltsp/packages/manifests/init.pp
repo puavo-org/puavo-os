@@ -414,7 +414,6 @@ class packages {
     , 'drgeo'
     , 'drgeo-doc'
     , 'gchempaint'
-    , 'geogebra'
     , 'ghemical'
     , 'gnucap'
     , 'gnuplot'
@@ -817,7 +816,8 @@ class packages {
     [ 'av4kav' ]:
       tag => [ 'science', 'opinsys', 'restricted' ];
 
-    [ 'google-earth-stable'
+    [ 'geogebra'
+    , 'google-earth-stable'
     , 'googleearth' ]:
       tag => [ 'science', 'opinsys', 'extra', 'restricted' ];
 
