@@ -1,5 +1,6 @@
 class lightdm {
   include desktop::dconf
+  include lightdm::background
   require packages
 
   file {
