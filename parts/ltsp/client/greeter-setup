@@ -4,11 +4,20 @@ puavo_keyboard_layout=$(jq -r .keyboard_layout /etc/puavo/device.json)
 puavo_keyboard_variant=$(jq -r .keyboard_variant /etc/puavo/device.json)
 puavo_primary_user=$(jq -r .primary_user /etc/puavo/device.json)
 puavo_greeter_background_mode=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background_mode://p' | tail -n1)
+puavo_greeter_background=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background://p' | tail -n1)
 
 background=
 
 case "${puavo_greeter_background_mode}" in
     ''|static)
+        ;;
+    dynamic)
+        if [ -n "${puavo_greeter_background}" ]; then
+            find /usr/share/backgrounds -type f -printf '%P\n' \
+                | grep -q -x "${puavo_greeter_background}" && {
+                background="/usr/share/backgrounds/${puavo_greeter_background}"
+            }
+        fi
         ;;
     random)
         background=$(find /usr/share/backgrounds -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' \) | sort -R | head -n1)
