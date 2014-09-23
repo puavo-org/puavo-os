@@ -1,7 +1,8 @@
 # Generate dconf profile based on locale and host type.
 #
 
-puavo_dconf_profile_path="/var/lib/puavo-desktop/users/${USER}/dconf_profile"
+puavo_user_desktopconf_path="/var/lib/puavo-desktop/users/${USER}"
+puavo_dconf_profile_path="${puavo_user_desktopconf_path}/dconf_profile"
 
 {
   echo "user-db:user"
@@ -19,6 +20,7 @@ puavo_dconf_profile_path="/var/lib/puavo-desktop/users/${USER}/dconf_profile"
       ;;
   esac
 
+  echo "system-db:keyboard"
   echo "system-db:puavodesktop"
 } > $puavo_dconf_profile_path || return 1
 
