@@ -53,9 +53,10 @@ class SidebarView extends ViewMaster
             logoutItems.push new MenuItemView
                 model: new LauncherModel restartCMD
 
-        if lockCMD = @config.get("lockCMD")
-            logoutItems.push new MenuItemView
-                model: new LauncherModel lockCMD
+        if not @config.get("guestSession")
+            if lockCMD = @config.get("lockCMD")
+                logoutItems.push new MenuItemView
+                    model: new LauncherModel lockCMD
 
         if logoutCMD = @config.get("logoutCMD")
             logoutCMD["confirmText"] = "logout.logoutAction"
