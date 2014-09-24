@@ -1,5 +1,5 @@
 class lightdm::background {
-  require packages
+  include packages
 
   file {
     '/usr/share/backgrounds/puavo-greeter':
