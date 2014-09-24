@@ -63,9 +63,10 @@ class SidebarView extends ViewMaster
             logoutItems.push new MenuItemView
                 model: new LauncherModel logoutCMD
 
-        if sleepCMD = @config.get("sleepCMD")
-            logoutItems.push new MenuItemView
-                model: new LauncherModel sleepCMD
+        if @config.get("hostType") is "laptop"
+            if sleepCMD = @config.get("sleepCMD")
+                logoutItems.push new MenuItemView
+                    model: new LauncherModel sleepCMD
 
         @setView ".settings-container", logoutItems
         @refreshViews()
