@@ -44,29 +44,32 @@ class SidebarView extends ViewMaster
         @$(".footer-container").empty()
 
         logoutItems = []
-        if shutdownCMD = @config.get("shutdownCMD")
-            shutdownCMD["confirmText"] = "logout.shutdownAction"
-            logoutItems.push new MenuItemView
-                model: new LauncherModel shutdownCMD
-        if restartCMD = @config.get("restartCMD")
-            restartCMD["confirmText"] = "logout.restartAction"
-            logoutItems.push new MenuItemView
-                model: new LauncherModel restartCMD
-
-        if not @config.get("guestSession")
-            if lockCMD = @config.get("lockCMD")
-                logoutItems.push new MenuItemView
-                    model: new LauncherModel lockCMD
 
         if logoutCMD = @config.get("logoutCMD")
             logoutCMD["confirmText"] = "logout.logoutAction"
             logoutItems.push new MenuItemView
                 model: new LauncherModel logoutCMD
 
-        if @config.get("hostType") is "laptop"
-            if sleepCMD = @config.get("sleepCMD")
-                logoutItems.push new MenuItemView
-                    model: new LauncherModel sleepCMD
+        if not @config.get('webkioskMode')
+            if not @config.get("guestSession")
+                if lockCMD = @config.get("lockCMD")
+                    logoutItems.unshift new MenuItemView
+                        model: new LauncherModel lockCMD
+
+            if restartCMD = @config.get("restartCMD")
+                restartCMD["confirmText"] = "logout.restartAction"
+                logoutItems.unshift new MenuItemView
+                    model: new LauncherModel restartCMD
+
+            if shutdownCMD = @config.get("shutdownCMD")
+                shutdownCMD["confirmText"] = "logout.shutdownAction"
+                logoutItems.unshift new MenuItemView
+                    model: new LauncherModel shutdownCMD
+
+            if @config.get("hostType") is "laptop"
+                if sleepCMD = @config.get("sleepCMD")
+                    logoutItems.push new MenuItemView
+                        model: new LauncherModel sleepCMD
 
         @setView ".settings-container", logoutItems
         @refreshViews()
