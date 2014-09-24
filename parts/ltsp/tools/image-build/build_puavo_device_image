@@ -147,7 +147,10 @@ prepare_puppet() {
       | xargs \
       | tr ' ' ':')
 
-  run_in_chroot apt-get -qq -y install puppet-common
+
+  # install puppet and also language-pack-en is so that puppet rules can
+  # use utf8-characters
+  run_in_chroot apt-get -qq -y install language-pack-en puppet-common
 
   mkdir -p "$target_dir/etc/puppet/ltsp"
   echo "$puppet_classes"     > "$target_dir/etc/puppet/ltsp/.classes"
@@ -184,7 +187,8 @@ apply_puppet() {
   cp -HR puppet/* "$puppet_target_dir/etc/puppet/ltsp"
 
   logfile_path="/var/log/puppet/ltsp-$(date +%Y-%m-%d-%H%M%S).log"
-  $run_command puppet apply                           \
+  $run_command env LANG=en_US.UTF-8                   \
+		  puppet apply                        \
 		  --detailed-exitcodes                \
 		  --logdest console                   \
 		  --logdest "$logfile_path"           \
