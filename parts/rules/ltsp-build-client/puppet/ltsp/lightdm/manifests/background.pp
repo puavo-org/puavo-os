@@ -2,7 +2,8 @@ class lightdm::background {
   include packages
 
   file {
-    '/usr/share/backgrounds/puavo-greeter':
+    [ '/usr/share/backgrounds'
+    , '/usr/share/backgrounds/puavo-greeter' ]:
       ensure => directory;
 
     '/usr/share/backgrounds/puavo-greeter/Beach_by_Renato_Giordanelli.jpg':
