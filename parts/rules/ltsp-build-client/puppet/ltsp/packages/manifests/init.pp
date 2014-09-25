@@ -739,7 +739,8 @@ class packages {
 
     [ 'bluegriffon'
     , 'enchanting'
-    , 'pycharm' ]:
+    , 'pycharm'
+    , 'snap4arduino' ]:
       tag => [ 'programming', 'puavo', ];
 
     [ 'x2goclient'
