@@ -114,6 +114,12 @@ ask_and_set_image_information() {
     return 1
   fi
 
+  distribution=$(run_in_chroot lsb_release -c | awk '{ print $2 }')
+  if [ -z "$distribution" ]; then
+    echo 'Could not figure out target image distribution' >&2
+    return 1
+  fi
+
   build_date=$(date +%Y-%m-%d-%H%M%S)
   build_version=ltsp-$imagetype-$distribution-$build_date
   ltspimage_name="$build_version-$arch.img"
