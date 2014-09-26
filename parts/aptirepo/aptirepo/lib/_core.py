@@ -251,21 +251,52 @@ class Aptirepo:
             self.__copy_to_pool(filepath, codename, source_name, section)
 
     def update_dists(self, do_prune=False):
-        if do_prune:
-            shutil.rmtree(self.__join("dists"))
-            self.__create_dists("dists")
-        for codename, dist in self.__dists.items():
-            pool = dist["Pool"]
-            comps = dist["Components"]
-            archs = dist["Architectures"]
-            for comp in comps:
-                self.__write_contents(pool, codename, comp, "dists")
-                for arch in archs:
-                    if arch == "source":
-                        self.__write_sources(pool, codename, comp, "dists")
-                    else:
-                        self.__write_packages(pool, codename, comp, arch, "dists")
-            self.__write_release(codename, comps, archs, "dists")
+        try:
+            old_dists_dirname = "dists"
+            new_dists_dirname = "dists.tmp"
+            if do_prune:
+                self.__create_dists(new_dists_dirname)
+            else:
+                shutil.copytree(self.__join(old_dists_dirname),
+                                self.__join(new_dists_dirname))
+
+            for codename, dist in self.__dists.items():
+                pool = dist["Pool"]
+                comps = dist["Components"]
+                archs = dist["Architectures"]
+                for comp in comps:
+                    self.__write_contents(pool, codename, comp,
+                                          new_dists_dirname)
+                    for arch in archs:
+                        if arch == "source":
+                            self.__write_sources(pool, codename, comp,
+                                                 new_dists_dirname)
+                        else:
+                            self.__write_packages(pool, codename, comp, arch,
+                                                  new_dists_dirname)
+                self.__write_release(codename, comps, archs,
+                                     new_dists_dirname)
+
+            # Finally, do the real updating.
+            try:
+                shutil.rmtree(self.__join(old_dists_dirname))
+            except OSError, e:
+                if e.errno != errno.ENOENT:
+                    raise e
+                self.__log("Trying to overwrite old dists with new dists but "
+                           "old dists is missing. This seems like a programming "
+                           "error, but don't worry, it is not fatal. Just "
+                           "inform the maintainer about it. Thanks!")
+            os.rename(self.__join(new_dists_dirname),
+                      self.__join(old_dists_dirname))
+
+        finally:
+            # Ensure the temporary directory is removed afterwards.
+            try:
+                shutil.rmtree(self.__join(new_dists_dirname))
+            except OSError, e:
+                if e.errno != errno.ENOENT:
+                    raise e
 
     def sign_releases(self):
         for codename in self.__dists:
