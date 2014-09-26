@@ -302,7 +302,16 @@ class Aptirepo:
         for codename in self.__dists:
             release_path = self.__join("dists", codename, "Release")
             signature_path = release_path + ".gpg"
-            with open(signature_path, "w") as signature_file:
-                subprocess.check_call(["gpg", "--output", "-", "-a", "-b", release_path],
-                                      stdout=signature_file, cwd=self.__rootdir)
-                self.__log("signed '%s'" % release_path)
+            tmp_signature_path = release_path + ".gpg.tmp"
+            try:
+                with open(tmp_signature_path, "w") as signature_file:
+                    subprocess.check_call(["gpg", "--output", "-", "-a", "-b", release_path],
+                                          stdout=signature_file, cwd=self.__rootdir)
+                    os.rename(tmp_signature_path, signature_path)
+                    self.__log("signed '%s'" % release_path)
+            finally:
+                try:
+                    os.remove(tmp_signature_path)
+                except OSError, e:
+                    if e.errno != errno.ENOENT:
+                        raise e
