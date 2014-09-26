@@ -98,20 +98,20 @@ class Aptirepo:
         self.__logfile = open(self.__join("log"), "a")
         self.__dists = parse_distributions(self.__confdir)
         self.__create_pool()
-        self.__create_dists()
+        self.__create_dists("dists")
 
     def __log(self, msg):
         ts = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%m:%S.%fZ")
         print("%s  %s" % (ts, msg), file=self.__logfile)
 
-    def __create_dists(self):
+    def __create_dists(self, dists_dirname):
         for codename, dist in self.__dists.items():
             for comp in dist["Components"]:
                 for arch in dist["Architectures"]:
                     archdir = "binary-%s" % arch
                     if arch == "source":
                         archdir = "source"
-                    p = self.__join("dists", codename, comp, archdir)
+                    p = self.__join(dists_dirname, codename, comp, archdir)
                     try:
                         os.makedirs(p)
                     except OSError as e:
@@ -135,16 +135,16 @@ class Aptirepo:
     def __join(self, *args):
         return os.path.join(self.__rootdir, *args)
 
-    def __write_contents(self, pool, codename, comp):
-        path = self.__join("dists", codename, comp, "Contents.gz")
+    def __write_contents(self, pool, codename, comp, dists_dirname):
+        path = self.__join(dists_dirname, codename, comp, "Contents.gz")
         with gzip.open(path, 'wb') as f:
             subprocess.check_call(["apt-ftparchive", "--db", "db",
                                    "contents", os.path.join(pool, comp)],
                                   stdout=f, cwd=self.__rootdir)
             self.__log("wrote '%s'" % path)
 
-    def __write_packages(self, pool, codename, comp, arch):
-        path = self.__join("dists", codename, comp, "binary-%s" % arch,
+    def __write_packages(self, pool, codename, comp, arch, dists_dirname):
+        path = self.__join(dists_dirname, codename, comp, "binary-%s" % arch,
                            "Packages")
         with open(path, "w") as f:
             subprocess.check_call(["apt-ftparchive", "--db", "db",
@@ -154,19 +154,19 @@ class Aptirepo:
         pathgz =_gz(path)
         self.__log("wrote '%s'" % pathgz)
 
-    def __write_release(self, codename, comps, archs):
-        path = self.__join("dists", codename, "Release")
+    def __write_release(self, codename, comps, archs, dists_dirname):
+        path = self.__join(dists_dirname, codename, "Release")
         with open(path, "w") as f:
             subprocess.check_call(["apt-ftparchive", "--db", "db",
                                    "-o", "APT::FTPArchive::Release::Codename=%s" % codename,
                                    "-o", "APT::FTPArchive::Release::Components=%s" % " ".join(comps),
                                    "-o", "APT::FTPArchive::Release::Architectures=%s" % " ".join(archs),
-                                   "release", os.path.join("dists", codename)],
+                                   "release", os.path.join(dists_dirname, codename)],
                                   stdout=f, cwd=self.__rootdir)
             self.__log("wrote '%s'" % path)
 
-    def __write_sources(self, pool, codename, comp):
-        path = self.__join("dists", codename, comp, "source", "Sources")
+    def __write_sources(self, pool, codename, comp, dists_dirname):
+        path = self.__join(dists_dirname, codename, comp, "source", "Sources")
         with open(path, "w") as f:
             subprocess.check_call(["apt-ftparchive",
                                    "sources", os.path.join(pool, comp)],
@@ -253,19 +253,19 @@ class Aptirepo:
     def update_dists(self, do_prune=False):
         if do_prune:
             shutil.rmtree(self.__join("dists"))
-            self.__create_dists()
+            self.__create_dists("dists")
         for codename, dist in self.__dists.items():
             pool = dist["Pool"]
             comps = dist["Components"]
             archs = dist["Architectures"]
             for comp in comps:
-                self.__write_contents(pool, codename, comp)
+                self.__write_contents(pool, codename, comp, "dists")
                 for arch in archs:
                     if arch == "source":
-                        self.__write_sources(pool, codename, comp)
+                        self.__write_sources(pool, codename, comp, "dists")
                     else:
-                        self.__write_packages(pool, codename, comp, arch)
-            self.__write_release(codename, comps, archs)
+                        self.__write_packages(pool, codename, comp, arch, "dists")
+            self.__write_release(codename, comps, archs, "dists")
 
     def sign_releases(self):
         for codename in self.__dists:
