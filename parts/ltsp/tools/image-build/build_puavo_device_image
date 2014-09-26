@@ -1,21 +1,88 @@
 #!/bin/sh
 
-set -e
+set -eu
+
+usage() {
+    cat <<EOF
+Usage:
+  $(basename $0) --build-all-for imagetype
+  $(basename $0) --build-chroot imagetype
+  $(basename $0) --chroot
+  $(basename $0) --image
+  $(basename $0) --update-chroot
+  $(basename $0) --update-local
+
+  --build-all-for and --build-chroot take optional arguments:
+
+    --arch         [i386 or some such]
+    --distribution [trusty, or precise, or...]
+    --gitbranch    [trusty, or precise, or...]
+    --mirror       [fi.archive.ubuntu.com, for example]
+
+EOF
+    exit 1
+}
+
+if ! args=$(getopt -n "$0" -o + \
+              -l 'build-all-for:,build-chroot:,chroot,image,update-chroot,update-local,arch:,distribution:,gitbranch:,mirror:' \
+              -- "$@"); then
+  usage
+fi
+
+# defaults for these parameters (can be overridden on the command line args)
+arch=i386
+distribution=trusty
+gitbranch=trusty
+mirror=fi.archive.ubuntu.com
+
+eval "set -- $args"
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --build-all-for)
+      action="build-all-for"; imagetype=$2; shift; shift
+      ;;
+    --build-chroot)
+      action="build-chroot";  imagetype=$2; shift; shift
+      ;;
+    --chroot)
+      action="chroot"; shift
+      ;;
+    --image)
+      action="image"; shift
+      ;;
+    --update-chroot)
+      action="update-chroot"; shift
+      ;;
+    --update-local)
+      action="update-local"; shift
+      ;;
+
+    --arch)
+      arch=$2; shift; shift
+      ;;
+    --distribution)
+      distribution=$2; shift; shift
+      ;;
+    --gitbranch)
+      gitbranch=$2; shift; shift
+      ;;
+    --mirror)
+      mirror=$2; shift; shift
+      ;;
+    --)
+      shift; break;
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+
+
+mirror_through_apt_cacher="http://localhost:3142/$mirror/ubuntu/"
 
 user=${user:-$SUDO_USER}
 user=${user:-$USER}
-
-option=$1
-option_argument=$2
-
-set -u
-
-# these should probably be some kind of parameters:
-arch=i386
-distribution=trusty
-mirror=fi.archive.ubuntu.com
-
-mirror_through_apt_cacher="http://localhost:3142/$mirror/ubuntu/"
 
 images_dir="/opt/ltsp/images"
 target_dir="/virtualtmp/$user/$distribution"
@@ -76,15 +143,15 @@ build_chroot() {
   wipe_chroot
 
   run_with_setarch \
-    debootstrap --arch=i386 \
+    debootstrap --arch="$arch" \
 		--components=main,restricted,universe,multiverse \
-		trusty "$target_dir" "$mirror_through_apt_cacher"
+		"$distribution" "$target_dir" "$mirror_through_apt_cacher"
 
   # setup apt sources list
 
-  cat <<'EOF' > "$target_dir/etc/apt/sources.list.d/archive.list"
-deb http://archive.opinsys.fi/git-trusty trusty main restricted universe multiverse
-deb-src http://archive.opinsys.fi/git-trusty trusty main restricted universe multiverse
+  cat <<EOF > "$target_dir/etc/apt/sources.list.d/archive.list"
+deb http://archive.opinsys.fi/git-$gitbranch $distribution main restricted universe multiverse
+deb-src http://archive.opinsys.fi/git-$gitbranch $distribution main restricted universe multiverse
 EOF
 
   # setup policy-rc.d (so that daemons are not started when installing)
@@ -204,8 +271,7 @@ run_in_chroot() {
 }
 
 run_with_setarch() {
-  # i386 is hardcoded for now
-  setarch i386 "$@"
+  setarch "$arch" "$@"
 }
 
 make_release_logos() {
@@ -246,50 +312,36 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-case "$option" in
-  --build-all-for)
-    imagetype=$option_argument
+case "$action" in
+  build-all-for)
+    $0 --build-chroot "$imagetype"    \
+       --arch         "$arch"         \
+       --distribution "$distribution" \
+       --gitbranch    "$gitbranch"    \
+       --mirror       "$mirror"
 
-    $0 --build-chroot "$imagetype"
     # XXX apparently this does not stop and exit with puppet errors here, why?
     $0 --update-chroot
     $0 --image
 
     ;;
-  --build-chroot)
-    imagetype=$option_argument
-    if [ -z "$imagetype" ]; then
-      echo 'Did not define an image type, exiting...' >&2
-      return 1
-    fi
-
+  build-chroot)
     build_chroot
     set_debconf_seeds "$imagetype"
     set_ltspimage_type "$imagetype"
     prepare_puppet "image::$imagetype"
     ;;
-  --chroot)
+  chroot)
     run_in_chroot bash
     ;;
-  --image)
+  image)
     make_image
     ;;
-  --update-chroot)
+  update-chroot)
     apply_puppet chroot
     ;;
-  --update-local)
+  update-local)
     apply_puppet local
-    ;;
-  *)
-    cat <<EOF >&2
-Usage:
-  $(basename $0) --build-all-for imagetype
-  $(basename $0) --build-chroot imagetype
-  $(basename $0) --chroot
-  $(basename $0) --image
-  $(basename $0) --update-chroot
-EOF
-    exit 1
     ;;
 esac
 

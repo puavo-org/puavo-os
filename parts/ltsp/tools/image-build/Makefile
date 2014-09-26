@@ -1,4 +1,12 @@
-IMAGE_TARGETS = opinsys opinsysextra opinsysrestricted puavo thinclient
+PRECISE_IMAGE_TARGETS = thinclient-precise
+
+TRUSTY_IMAGE_TARGETS = opinsys-trusty           \
+		       opinsysextra-trusty      \
+		       opinsysrestricted-trusty \
+		       puavo-trusty
+
+IMAGE_TARGETS = $(PRECISE_IMAGE_TARGETS) $(TRUSTY_IMAGE_TARGETS)
+
 OTHER_TARGETS = all build-chroot chroot image update-chroot update-local help
 
 LOGFILE = $(shell echo logs/ltsp-$$(date +%Y-%m-%d-%H%M%S).log)
@@ -12,8 +20,14 @@ help:
 
 all: ${IMAGE_TARGETS}
 
-${IMAGE_TARGETS}:
-	@sudo ./build_puavo_device_image --build-all-for $@ 2>&1 \
+${PRECISE_IMAGE_TARGETS}:
+	@sudo ./build_puavo_device_image \
+           --build-all-for $(@:%-precise=%) --distribution precise 2>&1 \
+	   | tee -a ${LOGFILE}
+
+${TRUSTY_IMAGE_TARGETS}:
+	@sudo ./build_puavo_device_image \
+           --build-all-for $(@:%-trusty=%) --distribution trusty 2>&1 \
 	   | tee -a ${LOGFILE}
 
 build-chroot:
