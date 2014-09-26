@@ -85,7 +85,7 @@ user=${user:-$SUDO_USER}
 user=${user:-$USER}
 
 images_dir="/opt/ltsp/images"
-target_dir="/virtualtmp/$user/$distribution"
+target_dir="/virtualtmp/imagebuild"
 
 do_mounts() {
   mount -o bind /dev     "$target_dir/dev"
