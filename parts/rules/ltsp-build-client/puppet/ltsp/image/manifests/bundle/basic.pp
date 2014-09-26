@@ -14,4 +14,10 @@ class image::bundle::basic {
 	  sudo,
 	  udev,
 	  use_urandom
+
+  case $lsbdistcodename {
+    'precise': {
+      include packages::sssd_install_workaround
+    }
+  }
 }
