@@ -454,14 +454,18 @@ class packages {
     , 'tangerine-icon-theme'
     , 'screensaver-default-images'
     , 'ubuntu-wallpapers'
-    , 'ubuntu-wallpapers-precise'
-    , 'ubuntu-wallpapers-quantal'
-    , 'ubuntu-wallpapers-raring'
-    , 'ubuntu-wallpapers-saucy'
-    , 'ubuntu-wallpapers-trusty'
     , 'xscreensaver-data'
     , 'xscreensaver-data-extra' ]:
       tag => [ 'themes', 'ubuntu', ];
+
+    [ 'ubuntu-wallpapers-precise' ]:
+      tag => [ 'backgroundimages', 'themes', 'ubuntu', 'precise', 'trusty', ];
+
+    [ 'ubuntu-wallpapers-quantal'
+    , 'ubuntu-wallpapers-raring'
+    , 'ubuntu-wallpapers-saucy'
+    , 'ubuntu-wallpapers-trusty' ]:
+      tag => [ 'backgroundimages', 'themes', 'ubuntu', 'trusty', ];
 
     # the dependencies (and recommends) of ubuntu-gnome-desktop package
     # without a few packages that we do not want
