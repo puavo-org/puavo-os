@@ -1,0 +1,2 @@
+[com/canonical/unity-greeter]
+background='<%= scope.lookupvar('lightdm::background::image_path') %>'

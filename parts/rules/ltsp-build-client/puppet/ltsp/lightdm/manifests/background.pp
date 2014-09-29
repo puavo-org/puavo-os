@@ -1,10 +1,27 @@
 class lightdm::background {
-  include packages
+  include desktop::dconf,
+	  lightdm,
+          packages
+
+  $image_path = $lsbdistcodename ? {
+    'precise' => '/usr/share/backgrounds/Precise_Pangolin_by_Vlad_Gerasimov.jpg',
+    default   => '/usr/share/backgrounds/Nylon_Rainbow_by_Sam_Hewitt.jpg',
+  }
+
+  $image_package = $lsbdistcodename ? {
+    'precise' => 'ubuntu-wallpapers-precise',
+    default   => 'ubuntu-wallpapers-saucy',
+  }
 
   file {
     [ '/usr/share/backgrounds'
     , '/usr/share/backgrounds/puavo-greeter' ]:
       ensure => directory;
+
+    '/etc/dconf/db/lightdm.d/lightdm_background_profile':
+      content => template('lightdm/dconf_lightdm_background_profile'),
+      notify  => Exec['update dconf'],
+      require => Package[$image_package];
   }
 
   @file {
@@ -89,4 +106,6 @@ class lightdm::background {
 
   File    <| tag == backgroundimages and tag == $lsbdistcodename |>
   Package <| tag == backgroundimages and tag == $lsbdistcodename |>
+
+  Package <| title == $image_package |>
 }
