@@ -114,7 +114,7 @@ ask_and_set_image_information() {
     return 1
   fi
 
-  distribution=$(run_in_chroot lsb_release -c | awk '{ print $2 }')
+  distribution=$(run_in_chroot lsb_release -cs)
   if [ -z "$distribution" ]; then
     echo 'Could not figure out target image distribution' >&2
     return 1
