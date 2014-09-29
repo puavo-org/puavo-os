@@ -309,10 +309,6 @@
       "items": [
         {
           "type": "desktop",
-          "source": "google-chrome"
-        },
-        {
-          "type": "desktop",
           "source": "firefox",
           "name": {
             "en": "Firefox-browser",
@@ -329,6 +325,16 @@
             "fi": "Chromium-selain",
             "sv": "Chromium",
             "de": "Chromium-Browser"
+          }
+        },
+        {
+          "type": "desktop",
+          "source": "google-chrome",
+          "name": {
+            "en": "Chrome-browser",
+            "fi": "Chrome-selain",
+            "sv": "Chrome",
+            "de": "Chrome"
           }
         },
         {
@@ -465,6 +471,12 @@
         },
         {
           "type": "desktop",
+          "osIconPath": "/usr/share/pixmaps/fritzing_icon.png",
+          "source": "fritzing"
+        },
+        {
+          "type": "desktop",
+          "inactiveByDeviceType": "thinclient",
           "source": "Snap4Arduino",
           "name": {
             "en": "Teddy Bear programming",
@@ -801,6 +813,7 @@
         },
         {
           "type": "desktop",
+          "inactiveByDeviceType": "thinclient",
           "source": "mandelbulber",
           "name": {
             "en": "Mandelbulber",
@@ -1107,6 +1120,13 @@
           "inactiveByDeviceType": "thinclient"
         },
         {
+          "type": "custom",
+          "name": "Kena Vision Microscope",
+          "command": "/opt/av4kav/lib/av4.sh",
+          "osIconPath": "/usr/share/icons/Faenza/devices/96/camera-web.png",
+          "inactiveByDeviceType": "thinclient"
+        },
+        {
           "type": "desktop",
           "source": "openshot",
           "name": {
@@ -1239,10 +1259,12 @@
         },
         {
           "type": "desktop",
+          "inactiveByDeviceType": "thinclient",
           "source": "qsynth"
         },
         {
           "type": "desktop",
+          "inactiveByDeviceType": "thinclient",
           "source": "qjackctl"
         }
           ]
@@ -1400,6 +1422,7 @@
         },
         {
           "type": "desktop",
+          "inactiveByDeviceType": "thinclient",
           "source": "netflix"
         }
       ]
