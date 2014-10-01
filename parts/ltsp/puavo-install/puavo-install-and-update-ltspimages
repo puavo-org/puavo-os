@@ -578,11 +578,11 @@ run_image_preinst_hook() {
 
   # this should do at least grub configuration update
 
-  mkdir -p /images/mnt
-  umount -f /images/mnt 2>/dev/null || true
-  mount -o ro "$imagepath" /images/mnt
-  "/images/mnt/${puavoinstall_libdir}/puavo-image-preinst"
-  umount /images/mnt || true
+  mkdir -p "${images_dir}/mnt"
+  umount -f "${images_dir}/mnt" 2>/dev/null || true
+  mount -o ro "$imagepath" "${images_dir}/mnt"
+  "${images_dir}/mnt/${puavoinstall_libdir}/puavo-image-preinst"
+  umount "${images_dir}/mnt" || true
 }
 
 # XXX duplicate code with puavo-install-ltspimages
