@@ -271,9 +271,9 @@ apply_puppet() {
 }
 
 run_in_chroot() {
-  do_mounts
-  run_with_setarch chroot "$target_dir" env DISABLE_DAEMONS=1 "$@"
-  do_umounts
+  do_mounts                                                        || return $?
+  run_with_setarch chroot "$target_dir" env DISABLE_DAEMONS=1 "$@" || return $?
+  do_umounts                                                       || return $?
 }
 
 run_with_setarch() {
