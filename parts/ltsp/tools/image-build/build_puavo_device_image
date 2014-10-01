@@ -11,6 +11,7 @@ Usage:
   $(basename $0) --dist-upgrade
   $(basename $0) --image
   $(basename $0) --update-chroot
+  $(basename $0) --update-chroot-error-on-change
   $(basename $0) --update-local
 
   --build-all-for and --build-chroot take optional arguments:
@@ -25,7 +26,7 @@ EOF
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build-all-for:,build-chroot:,chroot,dist-upgrade,image,update-chroot,update-local,arch:,distribution:,gitbranch:,mirror:' \
+              -l 'build-all-for:,build-chroot:,chroot,dist-upgrade,image,update-chroot,update-chroot-error-on-change,update-local,arch:,distribution:,gitbranch:,mirror:' \
               -- "$@"); then
   usage
 fi
@@ -39,26 +40,20 @@ mirror=fi.archive.ubuntu.com
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
+    --chroot                          \
+    | --dist-upgrade                  \
+    | --image                         \
+    | --update-chroot                 \
+    | --update-chroot-error-on-change \
+    | --update-local)
+      action=${1#--}; shift
+      ;;
+
     --build-all-for)
-      action="build-all-for"; imagetype=$2; shift; shift
+      action=${1#--}; imagetype=$2; shift; shift
       ;;
     --build-chroot)
-      action="build-chroot";  imagetype=$2; shift; shift
-      ;;
-    --chroot)
-      action="chroot"; shift
-      ;;
-    --dist-upgrade)
-      action="dist-upgrade"; shift
-      ;;
-    --image)
-      action="image"; shift
-      ;;
-    --update-chroot)
-      action="update-chroot"; shift
-      ;;
-    --update-local)
-      action="update-local"; shift
+      action=${1#--}; imagetype=$2; shift; shift
       ;;
 
     --arch)
@@ -236,6 +231,7 @@ prepare_puppet() {
 
 apply_puppet() {
   mode=$1
+  error_if_changed=$2
 
   case "$mode" in
     chroot)
@@ -250,6 +246,12 @@ apply_puppet() {
       return 1
       ;;
   esac
+
+  if [ "$error_if_changed" = "true" ]; then
+    another_ok_puppetcode=0
+  else
+    another_ok_puppetcode=2
+  fi
 
   # sanity check to prevent mistakes
   if [ ! -d "${puppet_target_dir}/etc/puppet/ltsp" ]; then
@@ -271,7 +273,7 @@ apply_puppet() {
 		  --logdest "$logfile_path"           \
 		  --execute "include $puppet_classes" \
 		  --modulepath "$puppet_module_dirs"  \
-    || [ $? -eq 2 ]
+    || [ $? -eq $another_ok_puppetcode ]
 }
 
 run_in_chroot() {
@@ -333,6 +335,7 @@ case "$action" in
     $0 --update-chroot
     $0 --dist-upgrade
     $0 --update-chroot
+    $0 --update-chroot-error-on-change
     $0 --image
 
     ;;
@@ -353,10 +356,13 @@ case "$action" in
     make_image
     ;;
   update-chroot)
-    apply_puppet chroot
+    apply_puppet chroot false
+    ;;
+  update-chroot-error-on-change)
+    apply_puppet chroot true
     ;;
   update-local)
-    apply_puppet local
+    apply_puppet local false
     ;;
 esac
 
