@@ -628,6 +628,7 @@ update_stats_with_progress() {
   #   image_patch
   #   image_checksum
   #   finished
+  #   uptodate
 
   while read progress; do
     update_stats "$phase" "$progress"
