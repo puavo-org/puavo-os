@@ -326,7 +326,6 @@ case "$action" in
        --gitbranch    "$gitbranch"    \
        --mirror       "$mirror"
 
-    # XXX apparently this does not stop and exit with puppet errors here, why?
     $0 --update-chroot
     $0 --image
 
