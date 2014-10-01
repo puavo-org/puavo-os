@@ -5,11 +5,13 @@ set -eu
 usage() {
     cat <<EOF
 Usage:
-  $(basename $0) --build-all-for imagetype
+  $(basename $0) --build-all-for imagetype --release-name release-name
+                                           --set-root-password
+
   $(basename $0) --build-chroot imagetype
   $(basename $0) --chroot
   $(basename $0) --dist-upgrade
-  $(basename $0) --image
+  $(basename $0) --image --release-name release-name --set-root-password
   $(basename $0) --update-chroot
   $(basename $0) --update-chroot-error-on-change
   $(basename $0) --update-local
@@ -26,7 +28,7 @@ EOF
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build-all-for:,build-chroot:,chroot,dist-upgrade,image,update-chroot,update-chroot-error-on-change,update-local,arch:,distribution:,gitbranch:,mirror:' \
+              -l 'build-all-for:,build-chroot:,chroot,dist-upgrade,image,update-chroot,update-chroot-error-on-change,update-local,arch:,distribution:,gitbranch:,mirror:,release-name:,set-root-password' \
               -- "$@"); then
   usage
 fi
@@ -36,6 +38,9 @@ arch=i386
 distribution=trusty
 gitbranch=trusty
 mirror=fi.archive.ubuntu.com
+
+release_name=
+set_root_password=
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
@@ -67,6 +72,12 @@ while [ $# -ne 0 ]; do
       ;;
     --mirror)
       mirror=$2; shift; shift
+      ;;
+    --release-name)
+      release_name=$2; shift; shift
+      ;;
+    --set-root-password)
+      set_root_password=$1; shift;
       ;;
     --)
       shift; break;
@@ -107,6 +118,8 @@ wipe_chroot() {
 }
 
 ask_and_set_image_information() {
+  release_name=$1
+
   imagetype=$(cat $target_dir/etc/ltsp/this_ltspimage_type)
   if [ -z "$imagetype" ]; then
     echo 'No imagetype is set in image chroot, can not continue' >&2
@@ -123,25 +136,22 @@ ask_and_set_image_information() {
   build_version=ltsp-$imagetype-$distribution-$build_date
   ltspimage_name="$build_version-$arch.img"
 
-  old_release_name=
-  read old_release_name 2>/dev/null \
-    < "$target_dir/etc/ltsp/this_ltspimage_release" || true
+  if [ -n "$release_name" ]; then
+    new_release_name=$release_name
+  else
+    old_release_name=$(
+      cat "$target_dir/etc/ltsp/this_ltspimage_release" 2>/dev/null || true)
 
-  read -p "Release name [${old_release_name}]: " new_release_name
-  new_release_name=${new_release_name:-${old_release_name}}
+    while true; do
+      read -p "Release name [${old_release_name}]: " new_release_name
+      new_release_name=${new_release_name:-${old_release_name}}
+      [ -n "$new_release_name" ] && break
+      echo 'Give a release name!' >&2
+    done
+  fi
 
   echo "$ltspimage_name"   > "$target_dir/etc/ltsp/this_ltspimage_name"
   echo "$new_release_name" > "$target_dir/etc/ltsp/this_ltspimage_release"
-
-  while true; do
-    read -p 'Set root password [y/N] ? ' do_set_rootpw
-    case "$do_set_rootpw" in
-       '')                       break                       ;;
-      Y|y) run_in_chroot passwd; break                       ;;
-      N|n)                       break                       ;;
-        *) echo 'Simple question, simple answer please!' >&2 ;;
-    esac
-  done
 }
 
 build_chroot() {
@@ -286,6 +296,18 @@ run_with_setarch() {
   setarch "$arch" "$@"
 }
 
+set_root_password() {
+  while true; do
+    read -p 'Set root password [y/N] ? ' do_set_rootpw
+    case "$do_set_rootpw" in
+       '')                       break                       ;;
+      Y|y) run_in_chroot passwd; break                       ;;
+      N|n)                       break                       ;;
+        *) echo 'Simple question, simple answer please!' >&2 ;;
+    esac
+  done
+}
+
 make_release_logos() {
   if [ -x "$target_dir/usr/lib/puavo-ltsp-client/puavo-make-release-logos" ]
   then
@@ -295,8 +317,6 @@ make_release_logos() {
 }
 
 make_image() {
-  ask_and_set_image_information
-
   if [ -x "$target_dir/usr/bin/updatedb" ]; then
     echo 'Running updatedb in chroot'
     run_in_chroot updatedb
@@ -310,7 +330,7 @@ make_image() {
 	     -ef config/ltsp-image.excludes \
 	     -wildcards
   mv "$images_dir/${ltspimage_name}.tmp" "$images_dir/${ltspimage_name}"
-  echo "Succesfully created a squashfs image: $images_dir/${ltspimage_name}"
+  echo "Successfully created a squashfs image: $images_dir/${ltspimage_name}"
 }
 
 cleanup() {
@@ -336,7 +356,7 @@ case "$action" in
     $0 --dist-upgrade
     $0 --update-chroot
     $0 --update-chroot-error-on-change
-    $0 --image
+    $0 --image --release-name "$release_name" $set_root_password
 
     ;;
   build-chroot)
@@ -353,6 +373,8 @@ case "$action" in
     run_in_chroot apt-get -y -o Dpkg::Options::="--force-confold" dist-upgrade
     ;;
   image)
+    [ -n "$set_root_password" ] && set_root_password
+    ask_and_set_image_information "$release_name"
     make_image
     ;;
   update-chroot)
