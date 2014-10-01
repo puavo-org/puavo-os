@@ -347,7 +347,7 @@ case "$action" in
     ;;
   dist-upgrade)
     run_in_chroot apt-get -y update
-    run_in_chroot apt-get -y dist-upgrade
+    run_in_chroot apt-get -y -o Dpkg::Options::="--force-confold" dist-upgrade
     ;;
   image)
     make_image
