@@ -229,6 +229,27 @@ ensure_enough_available_diskspace() {
   done
 }
 
+ensure_that_default_image_is_the_current_one() {
+  booted_image=$(cat /etc/ltsp/this_ltspimage_name || true)
+  default_image=$(lookup_ltspimage_name_by_alias ltsp.img || true)
+
+  if [ -z "$booted_image" ]; then
+    log err "Could not determine the current ltspimage"
+    return 1
+  fi
+
+  if [ "$booted_image" != "$default_image" ]; then
+    if [ ! -e "${images_dir}/${booted_image}" ]; then
+      log err "Booted from image '${booted_image}', but it does not exist!"
+      return 1
+    fi
+
+    log notice \
+        "Not booted the default image, setting '${booted_image}' as default"
+    set_image_as_default_image "$booted_image"
+  fi
+}
+
 fetch_with_wget() {
   extra_wget_opts=$1
   output_path=$2  
@@ -290,7 +311,7 @@ get_checksums_file() {
 get_next_image() {
   next_image=$1
   rate_limit_opts=$2
-  
+
   image_server=$(lookup_image_server_from_dns)
 
   rdiffs_dir="${images_dir}/rdiffs"
@@ -443,6 +464,7 @@ install_image() {
 
   install_from_file_or_nbd "$imagename" "$type_opt" "$type_arg"
   set_image_as_default_image "$imagename"
+  run_image_preinst_hook     "$imagename"
 
   echo "The PuavoLTSP image $imagename"
   echo "is now installed and set as default."
@@ -551,7 +573,11 @@ EOF
 }
 
 run_image_preinst_hook() {
-  imagepath=$1
+  imagename=$1
+  imagepath="${images_dir}/${imagename}"
+
+  # this should do at least grub configuration update
+
   mkdir -p /images/mnt
   umount -f /images/mnt 2>/dev/null || true
   mount -o ro "$imagepath" /images/mnt
@@ -566,9 +592,6 @@ set_image_as_default_image() {
 
   backup_ltspimage_path="${images_dir}/ltsp-backup.img"
   default_ltspimage_path="${images_dir}/ltsp.img"
-
-  # this should do at least grub configuration update
-  run_image_preinst_hook "$imagepath"
 
   ln -f "$default_ltspimage_path" "$backup_ltspimage_path" 2>/dev/null || true
   ln -f "$imagepath" "${default_ltspimage_path}.tmp"
@@ -589,6 +612,8 @@ update_image() {
   rate_limit_opts=$2
 
   if [ ! -e "${images_dir}/${next_image}" ]; then
+    ensure_that_default_image_is_the_current_one
+
     log info "we are missing $next_image, going to get it"
     get_next_image "$next_image" "$rate_limit_opts"
   fi
@@ -600,6 +625,7 @@ update_image() {
     update_stats uptodate 100
   else
     set_image_as_default_image "$next_image"
+    run_image_preinst_hook     "$next_image"
   fi
 }
 
