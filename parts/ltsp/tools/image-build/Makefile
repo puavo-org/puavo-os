@@ -7,7 +7,8 @@ TRUSTY_IMAGE_TARGETS = opinsys-trusty           \
 
 IMAGE_TARGETS = $(PRECISE_IMAGE_TARGETS) $(TRUSTY_IMAGE_TARGETS)
 
-OTHER_TARGETS = all build-chroot chroot image update-chroot update-local help
+OTHER_TARGETS = all build-chroot chroot dist-upgrade image update-chroot \
+                update-local help
 
 help:
 	@echo "Available targets are:"
@@ -30,10 +31,7 @@ build-chroot:
 	@if [ -z "${IMAGE}" ]; then echo define IMAGE; exit 1; fi
 	@sudo ./build_puavo_device_image --$@ ${IMAGE}
 
-image update-chroot update-local:
-	@sudo ./build_puavo_device_image --$@
-
-chroot:
+chroot dist-upgrade image update-chroot update-local:
 	@sudo ./build_puavo_device_image --$@
 
 .PHONY: ${IMAGE_TARGETS} ${OTHER_TARGETS}

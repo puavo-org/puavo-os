@@ -8,6 +8,7 @@ Usage:
   $(basename $0) --build-all-for imagetype
   $(basename $0) --build-chroot imagetype
   $(basename $0) --chroot
+  $(basename $0) --dist-upgrade
   $(basename $0) --image
   $(basename $0) --update-chroot
   $(basename $0) --update-local
@@ -24,7 +25,7 @@ EOF
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build-all-for:,build-chroot:,chroot,image,update-chroot,update-local,arch:,distribution:,gitbranch:,mirror:' \
+              -l 'build-all-for:,build-chroot:,chroot,dist-upgrade,image,update-chroot,update-local,arch:,distribution:,gitbranch:,mirror:' \
               -- "$@"); then
   usage
 fi
@@ -46,6 +47,9 @@ while [ $# -ne 0 ]; do
       ;;
     --chroot)
       action="chroot"; shift
+      ;;
+    --dist-upgrade)
+      action="dist-upgrade"; shift
       ;;
     --image)
       action="image"; shift
@@ -327,6 +331,8 @@ case "$action" in
        --mirror       "$mirror"
 
     $0 --update-chroot
+    $0 --dist-upgrade
+    $0 --update-chroot
     $0 --image
 
     ;;
@@ -338,6 +344,10 @@ case "$action" in
     ;;
   chroot)
     run_in_chroot bash
+    ;;
+  dist-upgrade)
+    run_in_chroot apt-get -y update
+    run_in_chroot apt-get -y dist-upgrade
     ;;
   image)
     make_image
