@@ -9,8 +9,6 @@ IMAGE_TARGETS = $(PRECISE_IMAGE_TARGETS) $(TRUSTY_IMAGE_TARGETS)
 
 OTHER_TARGETS = all build-chroot chroot image update-chroot update-local help
 
-LOGFILE = $(shell echo logs/ltsp-$$(date +%Y-%m-%d-%H%M%S).log)
-
 help:
 	@echo "Available targets are:"
 	@echo "  ${OTHER_TARGETS}" | fmt
@@ -22,21 +20,18 @@ all: ${IMAGE_TARGETS}
 
 ${PRECISE_IMAGE_TARGETS}:
 	@sudo ./build_puavo_device_image \
-           --build-all-for $(@:%-precise=%) --distribution precise 2>&1 \
-	   | tee -a ${LOGFILE}
+           --build-all-for $(@:%-precise=%) --distribution precise
 
 ${TRUSTY_IMAGE_TARGETS}:
 	@sudo ./build_puavo_device_image \
-           --build-all-for $(@:%-trusty=%) --distribution trusty 2>&1 \
-	   | tee -a ${LOGFILE}
+           --build-all-for $(@:%-trusty=%) --distribution trusty
 
 build-chroot:
 	@if [ -z "${IMAGE}" ]; then echo define IMAGE; exit 1; fi
-	@sudo ./build_puavo_device_image --$@ ${IMAGE} 2>&1 \
-	   | tee -a ${LOGFILE}
+	@sudo ./build_puavo_device_image --$@ ${IMAGE}
 
 image update-chroot update-local:
-	@sudo ./build_puavo_device_image --$@ 2>&1 | tee -a ${LOGFILE}
+	@sudo ./build_puavo_device_image --$@
 
 chroot:
 	@sudo ./build_puavo_device_image --$@
