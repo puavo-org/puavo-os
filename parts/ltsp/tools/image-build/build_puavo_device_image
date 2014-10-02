@@ -357,6 +357,14 @@ fi
 
 case "$action" in
   build)
+    if [ -e "${target_dir}/tmp/.chroot_build_done" ]; then
+      {
+        echo "Build for $(basename $target_dir) has already been done."
+        echo "Do --cleanup-chroot if you want to throw away the build."
+      } >&2
+      exit 1
+    fi
+
     build_chroot
     set_debconf_seeds  "$imagetype"
     set_ltspimage_type "$imagetype"
@@ -366,6 +374,8 @@ case "$action" in
     $0 --dist-upgrade                  --target-dir "$target_dir"
     $0 --puppet-chroot                 --target-dir "$target_dir"
     $0 --puppet-chroot-error-on-change --target-dir "$target_dir"
+
+    touch "${target_dir}/tmp/.chroot_build_done"
 
     $0 --image --release-name "$release_name" $set_root_password \
        --target-dir "$target_dir"
