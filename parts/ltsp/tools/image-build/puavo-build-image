@@ -96,10 +96,7 @@ while [ $# -ne 0 ]; do
   esac
 done
 
-if [ -z "$target_dir" ]; then
-  echo 'Target dir is not set!' >&2
-  exit 1
-fi
+[ -z "$target_dir" ] && usage
 
 mirror_through_apt_cacher="http://localhost:3142/$mirror/ubuntu/"
 
