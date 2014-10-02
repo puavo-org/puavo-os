@@ -12,7 +12,8 @@ CHROOT_TARGETS = chroot                        \
                  image                         \
                  puppet-chroot                 \
                  puppet-chroot-error-on-change \
-                 puppet-local
+                 puppet-local                  \
+                 update-chroot
 
 OTHER_TARGETS = all help ${CHROOT_TARGETS}
 
@@ -37,7 +38,7 @@ ${TRUSTY_IMAGE_TARGETS}:
            --build $(@:%-trusty=%) --distribution trusty \
            --target-dir ${BUILD_DIR}/$@
 
-chroot dist-upgrade image puppet-chroot puppet-chroot-error-on-change puppet-local:
+chroot dist-upgrade image puppet-chroot puppet-chroot-error-on-change puppet-local update-chroot:
 	@TARGET_DIR=$$(./ask_target_dir ${BUILD_DIR}) \
 	  && sudo ./build_puavo_device_image --$@ --target-dir $${TARGET_DIR}
 
