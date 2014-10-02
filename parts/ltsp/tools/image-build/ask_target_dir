@@ -31,7 +31,7 @@ while true; do
     echo
   } | more >&2
 
-  read -p "target dir? " target_dir_num
+  read -p "Choose build: " target_dir_num
   target_dir=$(
     echo "$target_dirs" \
       | awk -v target_dir_num="$target_dir_num" '
