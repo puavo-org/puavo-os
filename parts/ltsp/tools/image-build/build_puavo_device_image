@@ -10,6 +10,7 @@ Usage:
                                    --target-dir target-dir
 
   $(basename $0) --chroot                 --target-dir target-dir
+  $(basename $0) --cleanup-chroot         --target-dir target-dir
   $(basename $0) --dist-upgrade           --target-dir target-dir
   $(basename $0) --image --release-name release-name --set-root-password
                          --target-dir target-dir
@@ -32,7 +33,7 @@ EOF
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build:,chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,arch:,distribution:,gitbranch:,mirror:,release-name:,set-root-password,target-dir:' \
+              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,arch:,distribution:,gitbranch:,mirror:,release-name:,set-root-password,target-dir:' \
               -- "$@"); then
   usage
 fi
@@ -51,6 +52,7 @@ eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
     --chroot                          \
+    | --cleanup-chroot                \
     | --dist-upgrade                  \
     | --image                         \
     | --puppet-chroot                 \
@@ -370,6 +372,9 @@ case "$action" in
     ;;
   chroot)
     run_in_chroot bash
+    ;;
+  cleanup-chroot)
+    rm -rf "$target_dir"
     ;;
   dist-upgrade)
     run_in_chroot apt-get -y update

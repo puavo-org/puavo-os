@@ -8,6 +8,7 @@ TRUSTY_IMAGE_TARGETS = opinsys-trusty           \
 IMAGE_TARGETS = $(PRECISE_IMAGE_TARGETS) $(TRUSTY_IMAGE_TARGETS)
 
 CHROOT_TARGETS = chroot                        \
+                 cleanup-chroot                \
                  dist-upgrade                  \
                  image                         \
                  puppet-chroot                 \
@@ -38,7 +39,7 @@ ${TRUSTY_IMAGE_TARGETS}:
            --build $(@:%-trusty=%) --distribution trusty \
            --target-dir ${BUILD_DIR}/$@
 
-chroot dist-upgrade image puppet-chroot puppet-chroot-error-on-change puppet-local update-chroot:
+chroot cleanup-chroot dist-upgrade image puppet-chroot puppet-chroot-error-on-change puppet-local update-chroot:
 	@TARGET_DIR=$$(./ask_target_dir ${BUILD_DIR}) \
 	  && sudo ./build_puavo_device_image --$@ --target-dir $${TARGET_DIR}
 
