@@ -730,6 +730,7 @@ class packages {
     , 'ltsp-server'
     , 'puavo-load-reporter'
     , 'puavo-local-config'
+    , 'puavo-ltsp-tools'
     , 'puavo-sharedir-client'
     , 'puavo-wlanap'
     , 'puavo-wlanap-dnsproxy'
