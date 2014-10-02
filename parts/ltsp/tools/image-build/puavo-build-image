@@ -134,7 +134,7 @@ wipe_chroot() {
 ask_and_set_image_information() {
   release_name=$1
 
-  imagetype=$(cat $target_dir/etc/ltsp/this_ltspimage_type)
+  imagetype=$(cat "$target_dir/etc/ltsp/this_ltspimage_type")
   if [ -z "$imagetype" ]; then
     echo 'No imagetype is set in image chroot, can not continue' >&2
     return 1
@@ -236,7 +236,7 @@ set_debconf_seeds() {
 set_ltspimage_type() {
   imagetype=$1
 
-  mkdir -p $target_dir/etc/ltsp
+  mkdir -p "$target_dir/etc/ltsp"
   echo "$imagetype" > "$target_dir/etc/ltsp/this_ltspimage_type"
 }
 
@@ -265,7 +265,7 @@ apply_puppet() {
 
   case "$mode" in
     chroot)
-      puppet_target_dir=$target_dir
+      puppet_target_dir="$target_dir"
       run_command=run_in_chroot
       ;;
     local)
@@ -289,8 +289,8 @@ apply_puppet() {
     return 1
   fi
 
-  puppet_classes=$(cat ${puppet_target_dir}/etc/puppet/ltsp/.classes)
-  puppet_module_dirs=$(cat ${puppet_target_dir}/etc/puppet/ltsp/.module_dirs)
+  puppet_classes=$(cat "${puppet_target_dir}/etc/puppet/ltsp/.classes")
+  puppet_module_dirs=$(cat "${puppet_target_dir}/etc/puppet/ltsp/.module_dirs")
 
   rm -rf $puppet_target_dir/etc/puppet/ltsp/*
   cp -HR puppet/* "$puppet_target_dir/etc/puppet/ltsp"
