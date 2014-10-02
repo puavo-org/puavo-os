@@ -43,3 +43,8 @@ Depends: ${misc:Depends}, ruby-highline, nbd-client, pv, rdiff, curl,
  puavo-client, ruby-dbus, python-gtk2, python-appindicator, python-dbus,
  expect-dev, python-notify, wget
 Description: Bits and pieces needed inside the LTSP chroot image.
+
+Package: puavo-ltsp-tools
+Architecture: all
+Depends: ${misc:Depends}, debootstrap, squashfs-tools
+Description: Some tools like image building scripts.

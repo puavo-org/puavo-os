@@ -240,7 +240,6 @@ prepare_puppet() {
       | xargs \
       | tr ' ' ':')
 
-
   # install puppet and also language-pack-en is so that puppet rules can
   # use utf8-characters
   run_in_chroot apt-get -qq -y install language-pack-en puppet-common

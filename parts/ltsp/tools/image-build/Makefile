@@ -1,46 +1,34 @@
-PRECISE_IMAGE_TARGETS = thinclient-precise
+prefix = /usr/local
+exec_prefix = $(prefix)
+bindir = $(exec_prefix)/bin
+libdir = $(prefix)/lib
+sbindir = $(exec_prefix)/sbin
+datarootdir = $(prefix)/share
+sysconfdir = $(prefix)/etc
 
-TRUSTY_IMAGE_TARGETS = opinsys-trusty           \
-		       opinsysextra-trusty      \
-		       opinsysrestricted-trusty \
-		       puavo-trusty
+INSTALL = install
+INSTALL_PROGRAM = $(INSTALL)
+INSTALL_DATA = $(INSTALL) -m 644
 
-IMAGE_TARGETS = $(PRECISE_IMAGE_TARGETS) $(TRUSTY_IMAGE_TARGETS)
+.PHONY : all
+all :
 
-CHROOT_TARGETS = chroot                        \
-                 cleanup-chroot                \
-                 dist-upgrade                  \
-                 image                         \
-                 puppet-chroot                 \
-                 puppet-chroot-error-on-change \
-                 puppet-local                  \
-                 update-chroot
+.PHONY : installdirs
+installdirs :
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-tools
+	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-tools
+	mkdir -p $(DESTDIR)$(sbindir)
 
-OTHER_TARGETS = all help ${CHROOT_TARGETS}
+.PHONY : install
+install : installdirs
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-tools \
+		puavo-ask-buildtarget-dir
+	
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
+		puavo-build-image
+	
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-tools \
+		ImageBuildMakefile
 
-BUILD_DIR = /virtualtmp
-
-help:
-	@echo "Available targets are:"
-	@echo "  ${OTHER_TARGETS}" | fmt
-	@echo
-	@echo "Available image types are:"
-	@echo "  ${IMAGE_TARGETS}" | fmt
-
-all: ${IMAGE_TARGETS}
-
-${PRECISE_IMAGE_TARGETS}:
-	@sudo ./build_puavo_device_image                   \
-           --build $(@:%-precise=%) --distribution precise \
-           --target-dir ${BUILD_DIR}/$@
-
-${TRUSTY_IMAGE_TARGETS}:
-	@sudo ./build_puavo_device_image                 \
-           --build $(@:%-trusty=%) --distribution trusty \
-           --target-dir ${BUILD_DIR}/$@
-
-chroot cleanup-chroot dist-upgrade image puppet-chroot puppet-chroot-error-on-change puppet-local update-chroot:
-	@TARGET_DIR=$$(./ask_target_dir ${BUILD_DIR}) \
-	  && sudo ./build_puavo_device_image --$@ --target-dir $${TARGET_DIR}
-
-.PHONY: ${IMAGE_TARGETS} ${OTHER_TARGETS}
+.PHONY : clean
+clean :
