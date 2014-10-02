@@ -1,6 +1,5 @@
 class image::bundle::basic {
-  include apt_ltspbuild_proxy,
-	  autopoweroff,
+  include autopoweroff,
 	  console,
 	  disable_suspend_on_halt,
 	  disable_unclutter,
