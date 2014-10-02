@@ -4,6 +4,8 @@ set -eu
 
 build_basedir=$1
 
+previous_buildtarget_file=~/.config/puavo-build-image/previous-ask-buildtarget
+
 get_dirs() {
   build_basedir=$1
   for dir in $(ls -1 $build_basedir); do
@@ -18,10 +20,18 @@ if [ -z "$target_dirs" ]; then
   exit 1
 fi
 
-if [ "$(echo "$target_dirs" | wc -w)" -eq 1 ]; then
+if [ "$(echo "$target_dirs" | wc -l)" -eq 1 ]; then
   echo "$target_dirs"
   exit 0
 fi
+
+default_choice_name=$(cat "$previous_buildtarget_file" 2>/dev/null || true)
+
+default_choice_num=$(
+  echo "$target_dirs" \
+    | awk -v default_choice_name="$default_choice_name" '
+        $1 == default_choice_name { print NR }
+      ')
 
 while true; do
   {
@@ -31,17 +41,24 @@ while true; do
     echo
   } | more >&2
 
-  read -p "Choose build: " target_dir_num
+  read -p "Choose build [$default_choice_num]: " target_dir_num
   target_dir=$(
     echo "$target_dirs" \
-      | awk -v target_dir_num="$target_dir_num" '
-          NR == target_dir_num { print $1 }
+      | awk -v default_choice_num="$default_choice_num" \
+            -v target_dir_num="$target_dir_num" '
+          NR == target_dir_num { print $1; exit(0) }
+          NR == default_choice_num { target_dir = $1 }
+          END { if (target_dir_num == "") { print target_dir } }
         ')
+
   [ -n "${target_dir}" -a -d "${build_basedir}/${target_dir}" ] && break
 
   echo 'No such target directory' >&2
   sleep 1
   echo >&2
 done
+
+mkdir -p "$(dirname $previous_buildtarget_file)"
+echo "$target_dir" > "$previous_buildtarget_file"
 
 echo "${build_basedir}/${target_dir}"
