@@ -13,9 +13,9 @@ Usage:
   $(basename $0) --dist-upgrade           --target-dir target-dir
   $(basename $0) --image --release-name release-name --set-root-password
                          --target-dir target-dir
-  $(basename $0) --update-chroot                 --target-dir target-dir
-  $(basename $0) --update-chroot-error-on-change --target-dir target-dir
-  $(basename $0) --update-local                  --target-dir target-dir
+  $(basename $0) --puppet-chroot                 --target-dir target-dir
+  $(basename $0) --puppet-chroot-error-on-change --target-dir target-dir
+  $(basename $0) --puppet-local                  --target-dir target-dir
 
   --target-dir is a required argument for all
 
@@ -31,7 +31,7 @@ EOF
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build:,chroot,dist-upgrade,image,update-chroot,update-chroot-error-on-change,update-local,arch:,distribution:,gitbranch:,mirror:,release-name:,set-root-password,target-dir:' \
+              -l 'build:,chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,arch:,distribution:,gitbranch:,mirror:,release-name:,set-root-password,target-dir:' \
               -- "$@"); then
   usage
 fi
@@ -52,9 +52,9 @@ while [ $# -ne 0 ]; do
     --chroot                          \
     | --dist-upgrade                  \
     | --image                         \
-    | --update-chroot                 \
-    | --update-chroot-error-on-change \
-    | --update-local)
+    | --puppet-chroot                 \
+    | --puppet-chroot-error-on-change \
+    | --puppet-local)
       action=${1#--}; shift
       ;;
 
@@ -358,10 +358,10 @@ case "$action" in
     set_ltspimage_type "$imagetype"
     prepare_puppet     "image::$imagetype"
 
-    $0 --update-chroot                 --target-dir "$target_dir"
+    $0 --puppet-chroot                 --target-dir "$target_dir"
     $0 --dist-upgrade                  --target-dir "$target_dir"
-    $0 --update-chroot                 --target-dir "$target_dir"
-    $0 --update-chroot-error-on-change --target-dir "$target_dir"
+    $0 --puppet-chroot                 --target-dir "$target_dir"
+    $0 --puppet-chroot-error-on-change --target-dir "$target_dir"
 
     $0 --image --release-name "$release_name" $set_root_password \
        --target-dir "$target_dir"
@@ -379,13 +379,13 @@ case "$action" in
     ask_and_set_image_information "$release_name"
     make_image
     ;;
-  update-chroot)
+  puppet-chroot)
     apply_puppet chroot false
     ;;
-  update-chroot-error-on-change)
+  puppet-chroot-error-on-change)
     apply_puppet chroot true
     ;;
-  update-local)
+  puppet-local)
     apply_puppet local false
     ;;
 esac
