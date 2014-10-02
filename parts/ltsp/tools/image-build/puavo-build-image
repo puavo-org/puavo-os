@@ -179,7 +179,7 @@ build_chroot() {
   # setup apt proxy (maybe)
   if [ -n "$apt_proxy" ]; then
     cat <<EOF > "$target_dir/etc/apt/apt.conf.d/00imagebuild-proxy"
-acquire::http::proxy "$apt_proxy";
+acquire::http::proxy "http://$apt_proxy";
 EOF
   fi
 
