@@ -7,8 +7,16 @@ TRUSTY_IMAGE_TARGETS = opinsys-trusty           \
 
 IMAGE_TARGETS = $(PRECISE_IMAGE_TARGETS) $(TRUSTY_IMAGE_TARGETS)
 
-OTHER_TARGETS = all build-chroot chroot dist-upgrade image update-chroot \
-                update-chroot-error-on-change update-local help
+CHROOT_TARGETS = chroot                        \
+                 dist-upgrade                  \
+                 image                         \
+                 update-chroot                 \
+                 update-chroot-error-on-change \
+                 update-local
+
+OTHER_TARGETS = all help ${CHROOT_TARGETS}
+
+BUILD_DIR = /virtualtmp
 
 help:
 	@echo "Available targets are:"
@@ -20,18 +28,17 @@ help:
 all: ${IMAGE_TARGETS}
 
 ${PRECISE_IMAGE_TARGETS}:
-	@sudo ./build_puavo_device_image \
-           --build-all-for $(@:%-precise=%) --distribution precise
+	@sudo ./build_puavo_device_image                   \
+           --build $(@:%-precise=%) --distribution precise \
+           --target-dir ${BUILD_DIR}/$@
 
 ${TRUSTY_IMAGE_TARGETS}:
-	@sudo ./build_puavo_device_image \
-           --build-all-for $(@:%-trusty=%) --distribution trusty
-
-build-chroot:
-	@if [ -z "${IMAGE}" ]; then echo define IMAGE; exit 1; fi
-	@sudo ./build_puavo_device_image --$@ ${IMAGE}
+	@sudo ./build_puavo_device_image                 \
+           --build $(@:%-trusty=%) --distribution trusty \
+           --target-dir ${BUILD_DIR}/$@
 
 chroot dist-upgrade image update-chroot update-chroot-error-on-change update-local:
-	@sudo ./build_puavo_device_image --$@
+	@TARGET_DIR=$$(./ask_target_dir ${BUILD_DIR}) \
+	  && sudo ./build_puavo_device_image --$@ --target-dir $${TARGET_DIR}
 
 .PHONY: ${IMAGE_TARGETS} ${OTHER_TARGETS}

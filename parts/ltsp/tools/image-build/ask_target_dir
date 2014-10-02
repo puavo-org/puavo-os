@@ -1,0 +1,47 @@
+#!/bin/sh
+
+set -eu
+
+build_basedir=$1
+
+get_dirs() {
+  build_basedir=$1
+  for dir in $(ls -1 $build_basedir); do
+    [ -d "${build_basedir}/${dir}" ] && echo "${dir}"
+  done
+}
+
+target_dirs=$(get_dirs "$build_basedir")
+
+if [ -z "$target_dirs" ]; then
+  echo "No build directories could be found under ${build_basedir}" >&2
+  exit 1
+fi
+
+if [ "$(echo "$target_dirs" | wc -w)" -eq 1 ]; then
+  echo "$target_dirs"
+  exit 0
+fi
+
+while true; do
+  {
+    echo "Available image builds are:"
+    echo
+    echo "$target_dirs" | xargs -n1 | awk '{ printf "\t[%d] %s\n", NR, $1 }'
+    echo
+  } | more >&2
+
+  read -p "target dir? " target_dir_num
+  target_dir=$(
+    echo "$target_dirs" \
+      | awk -v target_dir_num="$target_dir_num" '
+          NR == target_dir_num { print $1 }
+        ')
+  [ -n "${target_dir}" -a -d "${build_basedir}/${target_dir}" ] && break
+
+  echo 'No such target directory' >&2
+  sleep 1
+  echo >&2
+done
+
+echo "${build_basedir}/${target_dir}"

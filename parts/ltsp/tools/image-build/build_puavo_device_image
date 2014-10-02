@@ -5,18 +5,21 @@ set -eu
 usage() {
     cat <<EOF
 Usage:
-  $(basename $0) --build-all-for imagetype --release-name release-name
-                                           --set-root-password
+  $(basename $0) --build imagetype --release-name release-name
+                                   --set-root-password
+                                   --target-dir target-dir
 
-  $(basename $0) --build-chroot imagetype
-  $(basename $0) --chroot
-  $(basename $0) --dist-upgrade
+  $(basename $0) --chroot                 --target-dir target-dir
+  $(basename $0) --dist-upgrade           --target-dir target-dir
   $(basename $0) --image --release-name release-name --set-root-password
-  $(basename $0) --update-chroot
-  $(basename $0) --update-chroot-error-on-change
-  $(basename $0) --update-local
+                         --target-dir target-dir
+  $(basename $0) --update-chroot                 --target-dir target-dir
+  $(basename $0) --update-chroot-error-on-change --target-dir target-dir
+  $(basename $0) --update-local                  --target-dir target-dir
 
-  --build-all-for and --build-chroot take optional arguments:
+  --target-dir is a required argument for all
+
+  --build takes optional arguments:
 
     --arch         [i386 or some such]
     --distribution [trusty, or precise, or...]
@@ -28,7 +31,7 @@ EOF
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build-all-for:,build-chroot:,chroot,dist-upgrade,image,update-chroot,update-chroot-error-on-change,update-local,arch:,distribution:,gitbranch:,mirror:,release-name:,set-root-password' \
+              -l 'build:,chroot,dist-upgrade,image,update-chroot,update-chroot-error-on-change,update-local,arch:,distribution:,gitbranch:,mirror:,release-name:,set-root-password,target-dir:' \
               -- "$@"); then
   usage
 fi
@@ -41,6 +44,7 @@ mirror=fi.archive.ubuntu.com
 
 release_name=
 set_root_password=
+target_dir=
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
@@ -54,10 +58,7 @@ while [ $# -ne 0 ]; do
       action=${1#--}; shift
       ;;
 
-    --build-all-for)
-      action=${1#--}; imagetype=$2; shift; shift
-      ;;
-    --build-chroot)
+    --build)
       action=${1#--}; imagetype=$2; shift; shift
       ;;
 
@@ -79,6 +80,9 @@ while [ $# -ne 0 ]; do
     --set-root-password)
       set_root_password=$1; shift;
       ;;
+    --target-dir)
+      target_dir=$2; shift; shift
+      ;;
     --)
       shift; break;
       ;;
@@ -88,6 +92,10 @@ while [ $# -ne 0 ]; do
   esac
 done
 
+if [ -z "$target_dir" ]; then
+  echo 'Target dir is not set!' >&2
+  exit 1
+fi
 
 mirror_through_apt_cacher="http://localhost:3142/$mirror/ubuntu/"
 
@@ -95,7 +103,6 @@ user=${user:-$SUDO_USER}
 user=${user:-$USER}
 
 images_dir="/opt/ltsp/images"
-target_dir="/virtualtmp/imagebuild"
 
 do_mounts() {
   mount -o bind /dev     "$target_dir/dev"
@@ -345,25 +352,19 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 case "$action" in
-  build-all-for)
-    $0 --build-chroot "$imagetype"    \
-       --arch         "$arch"         \
-       --distribution "$distribution" \
-       --gitbranch    "$gitbranch"    \
-       --mirror       "$mirror"
-
-    $0 --update-chroot
-    $0 --dist-upgrade
-    $0 --update-chroot
-    $0 --update-chroot-error-on-change
-    $0 --image --release-name "$release_name" $set_root_password
-
-    ;;
-  build-chroot)
+  build)
     build_chroot
-    set_debconf_seeds "$imagetype"
+    set_debconf_seeds  "$imagetype"
     set_ltspimage_type "$imagetype"
-    prepare_puppet "image::$imagetype"
+    prepare_puppet     "image::$imagetype"
+
+    $0 --update-chroot                 --target-dir "$target_dir"
+    $0 --dist-upgrade                  --target-dir "$target_dir"
+    $0 --update-chroot                 --target-dir "$target_dir"
+    $0 --update-chroot-error-on-change --target-dir "$target_dir"
+
+    $0 --image --release-name "$release_name" $set_root_password \
+       --target-dir "$target_dir"
     ;;
   chroot)
     run_in_chroot bash
