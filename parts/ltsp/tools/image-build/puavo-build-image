@@ -5,19 +5,19 @@ set -eu
 usage() {
     cat <<EOF
 Usage:
-  $(basename $0) --build imagetype --release-name release-name
-                                   --set-root-password
-                                   --target-dir target-dir
+  puavo-build-image --build imagetype --release-name release-name
+                                      --set-root-password
+                                      --target-dir target-dir
 
-  $(basename $0) --chroot                 --target-dir target-dir
-  $(basename $0) --cleanup-chroot         --target-dir target-dir
-  $(basename $0) --dist-upgrade           --target-dir target-dir
-  $(basename $0) --image --release-name release-name --set-root-password
-                         --target-dir target-dir
-  $(basename $0) --puppet-chroot                 --target-dir target-dir
-  $(basename $0) --puppet-chroot-error-on-change --target-dir target-dir
-  $(basename $0) --puppet-local                  --target-dir target-dir
-  $(basename $0) --update-chroot                 --target-dir target-dir
+  puavo-build-image --chroot                 --target-dir target-dir
+  puavo-build-image --cleanup-chroot         --target-dir target-dir
+  puavo-build-image --dist-upgrade           --target-dir target-dir
+  puavo-build-image --image --release-name release-name --set-root-password
+                            --target-dir target-dir
+  puavo-build-image --puppet-chroot                 --target-dir target-dir
+  puavo-build-image --puppet-chroot-error-on-change --target-dir target-dir
+  puavo-build-image --puppet-local                  --target-dir target-dir
+  puavo-build-image --update-chroot                 --target-dir target-dir
 
   --target-dir is a required argument for all
 
