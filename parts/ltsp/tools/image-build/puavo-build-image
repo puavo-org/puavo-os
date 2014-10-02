@@ -100,9 +100,6 @@ done
 
 mirror_through_apt_cacher="http://localhost:3142/$mirror/ubuntu/"
 
-user=${user:-$SUDO_USER}
-user=${user:-$USER}
-
 images_dir="/opt/ltsp/images"
 
 do_mounts() {
