@@ -23,17 +23,18 @@ Usage:
 
   --build takes optional arguments:
 
-    --arch         [i386 or some such]
-    --distribution [trusty, or precise, or...]
-    --gitbranch    [trusty, or precise, or...]
-    --mirror       [fi.archive.ubuntu.com, for example]
+    --apt-proxy    [e.g. localhost:3142]
+    --arch         [e.g. i386]
+    --distribution [e.g. trusty]
+    --gitbranch    [e.g. trusty]
+    --mirror       [e.g. fi.archive.ubuntu.com]
 
 EOF
     exit 1
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,arch:,distribution:,gitbranch:,mirror:,release-name:,set-root-password,target-dir:' \
+              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,distribution:,gitbranch:,mirror:,release-name:,set-root-password,target-dir:' \
               -- "$@"); then
   usage
 fi
@@ -43,6 +44,7 @@ arch=i386
 distribution=trusty
 gitbranch=trusty
 mirror=fi.archive.ubuntu.com
+apt_proxy=localhost:3142
 
 release_name=
 set_root_password=
@@ -66,6 +68,9 @@ while [ $# -ne 0 ]; do
       action=${1#--}; imagetype=$2; shift; shift
       ;;
 
+    --apt-proxy)
+      apt_proxy=$2; shift; shift
+      ;;
     --arch)
       arch=$2; shift; shift
       ;;
@@ -98,7 +103,11 @@ done
 
 [ -z "$target_dir" ] && usage
 
-mirror_through_apt_cacher="http://localhost:3142/$mirror/ubuntu/"
+if [ -n "$apt_proxy" ]; then
+  mirror_through_proxy="http://${apt_proxy}/${mirror}/ubuntu/"
+else
+  mirror_through_proxy="http://${mirror}/ubuntu/"
+fi
 
 images_dir="/opt/ltsp/images"
 
@@ -165,7 +174,14 @@ build_chroot() {
   run_with_setarch \
     debootstrap --arch="$arch" \
 		--components=main,restricted,universe,multiverse \
-		"$distribution" "$target_dir" "$mirror_through_apt_cacher"
+		"$distribution" "$target_dir" "$mirror_through_proxy"
+
+  # setup apt proxy (maybe)
+  if [ -n "$apt_proxy" ]; then
+    cat <<EOF > "$target_dir/etc/apt/apt.conf.d/00imagebuild-proxy"
+acquire::http::proxy "$apt_proxy";
+EOF
+  fi
 
   # setup apt sources list
 
