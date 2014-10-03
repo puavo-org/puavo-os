@@ -1,5 +1,0 @@
-case "$MODE" in
-    finalization)
-        echo "lp" >> $ROOT/etc/modules
-        ;;
-esac

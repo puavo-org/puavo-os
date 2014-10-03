@@ -1,4 +1,4 @@
-ltsp-build
-==========
+puavo-image
+===========
 
-LTSP host image building scripts.
+Configurations for building puavo-images.

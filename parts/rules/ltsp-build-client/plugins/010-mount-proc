@@ -1,5 +1,0 @@
-case "$MODE" in
-    after-install)
-        chroot_mount proc /proc "-t proc"
-        ;;
-esac
