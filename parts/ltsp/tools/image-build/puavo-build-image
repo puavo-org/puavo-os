@@ -433,6 +433,7 @@ case "$action" in
     apply_puppet local false
     ;;
   update-chroot)
+    run_in_chroot apt-get -y update
     $0 --puppet-chroot                 --target-dir "$target_dir"
     $0 --dist-upgrade                  --target-dir "$target_dir"
     $0 --puppet-chroot                 --target-dir "$target_dir"
