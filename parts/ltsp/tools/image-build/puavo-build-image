@@ -5,36 +5,49 @@ set -eu
 usage() {
     cat <<EOF
 Usage:
-  puavo-build-image --build imagetype --release-name release-name
-                                      --set-root-password
-                                      --target-dir target-dir
+  puavo-build-image --build imagetype
+                    --imagebuild-sources-dir imagebuild-sources-dir
+                    --release-name release-name
+                    --set-root-password
+                    --target-dir target-dir
 
-  puavo-build-image --chroot                 --target-dir target-dir
-  puavo-build-image --cleanup-chroot         --target-dir target-dir
-  puavo-build-image --dist-upgrade           --target-dir target-dir
+  puavo-build-image --chroot         --target-dir target-dir
+  puavo-build-image --cleanup-chroot --target-dir target-dir
+  puavo-build-image --dist-upgrade   --target-dir target-dir
   puavo-build-image --image --release-name release-name --set-root-password
                             --target-dir target-dir
-  puavo-build-image --puppet-chroot                 --target-dir target-dir
-  puavo-build-image --puppet-chroot-error-on-change --target-dir target-dir
-  puavo-build-image --puppet-local                  --target-dir target-dir
-  puavo-build-image --update-chroot                 --target-dir target-dir
+
+  puavo-build-image --puppet-chroot
+                    --imagebuild-sources-dir imagebuild-sources-dir
+                    --target-dir target-dir
+  puavo-build-image --puppet-chroot-error-on-change
+                    --imagebuild-sources-dir imagebuild-sources-dir
+                    --target-dir target-dir
+  puavo-build-image --puppet-local
+                    --imagebuild-sources-dir imagebuild-sources-dir
+                    --target-dir target-dir
+  puavo-build-image --update-chroot
+                    --imagebuild-sources-dir imagebuild-sources-dir
+                    --target-dir target-dir
 
   --target-dir is a required argument for all
 
+  --imagebuild-sources-dir defaults to current directory
+
   --build takes optional arguments:
 
-    --apt-proxy    [e.g. localhost:3142]
-    --arch         [e.g. i386]
-    --distribution [e.g. trusty]
-    --gitbranch    [e.g. trusty]
-    --mirror       [e.g. fi.archive.ubuntu.com]
+    --apt-proxy    [default is "localhost:3142", "" may be used to turn off]
+    --arch         [default is "i386"]
+    --distribution [default is "trusty"]
+    --gitbranch    [default is "trusty"]
+    --mirror       [default is "fi.archive.ubuntu.com"]
 
 EOF
     exit 1
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,distribution:,gitbranch:,mirror:,release-name:,set-root-password,target-dir:' \
+              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,distribution:,gitbranch:,mirror:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
               -- "$@"); then
   usage
 fi
@@ -45,6 +58,7 @@ distribution=trusty
 gitbranch=trusty
 mirror=fi.archive.ubuntu.com
 apt_proxy=localhost:3142
+imagebuild_sources_dir=
 
 release_name=
 set_root_password=
@@ -79,6 +93,9 @@ while [ $# -ne 0 ]; do
       ;;
     --gitbranch)
       gitbranch=$2; shift; shift
+      ;;
+    --imagebuild-sources-dir)
+      imagebuild_sources_dir=$2; shift; shift
       ;;
     --mirror)
       mirror=$2; shift; shift
@@ -227,7 +244,7 @@ EOF
 
 set_debconf_seeds() {
   imagetype=$1
-  debconf_seeds_file=config/debconf.seeds.$imagetype
+  debconf_seeds_file=${imagebuild_sources_dir}/config/debconf.seeds.$imagetype
   if [ -r "$debconf_seeds_file" ]; then
     run_in_chroot debconf-set-selections < "$debconf_seeds_file"
   fi
@@ -244,7 +261,7 @@ prepare_puppet() {
   puppet_classes=$1
 
   puppet_module_dirs=$(
-    echo puppet/* \
+    echo ${imagebuild_sources_dir}/puppet/* \
       | xargs -n 1 basename  \
       | xargs -n 1 printf "/etc/puppet/ltsp/%s\n" \
       | xargs \
@@ -293,7 +310,8 @@ apply_puppet() {
   puppet_module_dirs=$(cat "${puppet_target_dir}/etc/puppet/ltsp/.module_dirs")
 
   rm -rf $puppet_target_dir/etc/puppet/ltsp/*
-  cp -HR puppet/* "$puppet_target_dir/etc/puppet/ltsp"
+  cp -HR ${imagebuild_sources_dir}/puppet/* \
+         "$puppet_target_dir/etc/puppet/ltsp"
 
   logfile_path="/var/log/puppet/ltsp-$(date +%Y-%m-%d-%H%M%S).log"
   $run_command env LANG=en_US.UTF-8                   \
@@ -347,7 +365,7 @@ make_image() {
   mkdir -p "$images_dir"
   mksquashfs "$target_dir" "$images_dir/${ltspimage_name}.tmp" \
 	     -noappend \
-	     -ef config/ltsp-image.excludes \
+	     -ef ${imagebuild_sources_dir}/config/ltsp-image.excludes \
 	     -wildcards
   mv "$images_dir/${ltspimage_name}.tmp" "$images_dir/${ltspimage_name}"
   echo "Successfully created a squashfs image: $images_dir/${ltspimage_name}"
