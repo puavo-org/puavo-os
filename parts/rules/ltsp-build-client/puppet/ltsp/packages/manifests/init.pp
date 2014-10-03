@@ -728,9 +728,9 @@ class packages {
 
     [ 'iivari-client'
     , 'ltsp-server'
+    , 'puavo-image-tools'
     , 'puavo-load-reporter'
     , 'puavo-local-config'
-    , 'puavo-ltsp-tools'
     , 'puavo-sharedir-client'
     , 'puavo-wlanap'
     , 'puavo-wlanap-dnsproxy'
