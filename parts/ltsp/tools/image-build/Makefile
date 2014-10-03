@@ -15,7 +15,6 @@ all :
 
 .PHONY : installdirs
 installdirs :
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-image-tools
 	mkdir -p $(DESTDIR)$(libdir)/puavo-image-tools
 	mkdir -p $(DESTDIR)$(sbindir)
 
@@ -28,9 +27,6 @@ install : installdirs
 		puavo-build-image \
 		puavo-build-rdiffs \
 		puavo-setup-imagebuild
-	
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-image-tools \
-		ImageBuildMakefile
 
 .PHONY : clean
 clean :
