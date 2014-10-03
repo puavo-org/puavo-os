@@ -17,8 +17,8 @@ class graphics_drivers {
         command => "/usr/bin/update-alternatives --set i386-linux-gnu_gl_conf \
                       $gl_conf_target \
                     && /sbin/ldconfig \
-                    && /bin/cp /etc/ld.so.cache /etc/ld.so.cache-$driver",
-        unless => "/usr/bin/test /etc/ld.so.cache-mesa -nt /etc/ld.so.cache";
+                    && /bin/cp -p /etc/ld.so.cache /etc/ld.so.cache-$driver",
+        onlyif => "/usr/bin/test /etc/ld.so.cache-mesa -ot /etc/ld.so.cache";
     }
   }
 
