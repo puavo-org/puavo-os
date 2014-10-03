@@ -25,7 +25,8 @@ install : installdirs
 		puavo-ask-buildtarget-dir
 	
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
-		puavo-build-image
+		puavo-build-image \
+		puavo-setup-imagebuild
 	
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-image-tools \
 		ImageBuildMakefile

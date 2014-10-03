@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+echo 'Welcome to puavo-setup-imagebuild!'
+echo
+
+while true; do
+  cat <<'EOF'
+Choose a git repository that contains image build configurations:
+  (or alternatively, give your own git repository url, such as
+   https://github.com/opinsys/puavo-image.git)
+
+    [1] https://github.com/opinsys/puavo-image.git
+    [2] git@github.com:opinsys/puavo-image.git
+
+EOF
+  git_url=''
+
+  read -p 'Choose: [1] ' chosen_giturl
+
+  case "$chosen_giturl" in
+    https*|git*) git_url=$chosen_giturl                               ;;
+    1|'')        git_url="https://github.com/opinsys/puavo-image.git" ;;
+    2)           git_url="git@github.com:opinsys/puavo-image.git"     ;;
+  esac
+
+  [ -n "$git_url" ] && break
+
+  echo "\nNot a valid git url!\n" >&2
+done
+
+read -p "Where to setup the puavo-image sources? [$puavo_image_dir]" \
+        puavo_image_dir
+[ -z "$puavo_image_dir" ] && puavo_image_dir=~/puavo-image
+
+git clone "$git_url" "$puavo_image_dir"
