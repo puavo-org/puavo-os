@@ -1,7 +1,0 @@
-case "$MODE" in
-    configure)
-        if [ "$HOST_ARCH" != "$ARCH" ] && [ -x /usr/sbin/qemu-debootstrap ]; then
-            DEBOOTSTRAP=qemu-debootstrap
-        fi
-        ;;
-esac

@@ -1,7 +1,0 @@
-case "$MODE" in
-    after-install)
-        # zero out the hostname file, so system hostname gotten from DHCP takes
-        # priority.
-        echo > $ROOT/etc/hostname
-        ;;
-esac
