@@ -58,7 +58,7 @@ distribution=trusty
 gitbranch=trusty
 mirror=fi.archive.ubuntu.com
 apt_proxy=localhost:3142
-imagebuild_sources_dir=
+imagebuild_sources_dir=$(pwd)
 
 release_name=
 set_root_password=
