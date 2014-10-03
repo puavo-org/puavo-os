@@ -13,7 +13,7 @@ still required on 2007-12-21.
 
 --- a/include/ldap.h
 +++ b/include/ldap.h
-@@ -2518,5 +2518,25 @@
+@@ -2517,5 +2517,25 @@ ldap_parse_deref_control LDAP_P((
  	LDAPControl	**ctrls,
  	LDAPDerefRes	**drp ));
  
@@ -182,7 +182,7 @@ still required on 2007-12-21.
 +
 --- a/libraries/libldap/Makefile.in
 +++ b/libraries/libldap/Makefile.in
-@@ -27,7 +27,7 @@
+@@ -27,7 +27,7 @@ SRCS	= bind.c open.c result.c error.c co
  	init.c options.c print.c string.c util-int.c schema.c \
  	charray.c os-local.c dnssrv.c utf-8.c utf-8-conv.c \
  	tls2.c tls_o.c tls_g.c tls_m.c \
@@ -191,7 +191,7 @@ still required on 2007-12-21.
  	assertion.c deref.c ldif.c fetch.c
  
  OBJS	= bind.lo open.lo result.lo error.lo compare.lo search.lo \
-@@ -40,7 +40,7 @@
+@@ -40,7 +40,7 @@ OBJS	= bind.lo open.lo result.lo error.l
  	init.lo options.lo print.lo string.lo util-int.lo schema.lo \
  	charray.lo os-local.lo dnssrv.lo utf-8.lo utf-8-conv.lo \
  	tls2.lo tls_o.lo tls_g.lo tls_m.lo \
@@ -202,7 +202,7 @@ still required on 2007-12-21.
  LDAP_INCDIR= ../../include       
 --- a/libraries/libldap_r/Makefile.in
 +++ b/libraries/libldap_r/Makefile.in
-@@ -29,7 +29,7 @@
+@@ -29,7 +29,7 @@ XXSRCS    = apitest.c test.c \
  	init.c options.c print.c string.c util-int.c schema.c \
  	charray.c os-local.c dnssrv.c utf-8.c utf-8-conv.c \
  	tls2.c tls_o.c tls_g.c tls_m.c \
@@ -211,7 +211,7 @@ still required on 2007-12-21.
  	assertion.c deref.c ldif.c fetch.c
  SRCS	= threads.c rdwr.c rmutex.c tpool.c rq.c \
  	thr_posix.c thr_cthreads.c thr_thr.c thr_nt.c \
-@@ -47,7 +47,7 @@
+@@ -47,7 +47,7 @@ OBJS	= threads.lo rdwr.lo rmutex.lo tpoo
  	init.lo options.lo print.lo string.lo util-int.lo schema.lo \
  	charray.lo os-local.lo dnssrv.lo utf-8.lo utf-8-conv.lo \
  	tls2.lo tls_o.lo tls_g.lo tls_m.lo \

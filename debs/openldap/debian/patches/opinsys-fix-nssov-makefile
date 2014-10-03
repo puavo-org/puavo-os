@@ -35,12 +35,3 @@ Index: openldap/contrib/slapd-modules/nssov/Makefile
  schemadir = $(sysconfdir)/schema
  
  all:	nssov.la
-@@ -61,7 +60,7 @@
- 
- nssov.la:	$(OBJS) $(XOBJS)
- 	$(LIBTOOL) --mode=link $(CC) $(OPT) -version-info 0:0:0 \
--	-rpath $(libdir) -module -o $@ $(OBJS) $(XOBJS) $(LIBS)
-+	-rpath $(moduledir) -module -o $@ $(OBJS) $(XOBJS) $(LIBS)
- 
- install: nssov.la
- 	mkdir -p $(DESTDIR)$(moduledir)

@@ -1,33 +1,33 @@
-Index: trunk/contrib/slapd-modules/smbk5pwd/Makefile
-===================================================================
---- trunk.orig/contrib/slapd-modules/smbk5pwd/Makefile
-+++ trunk/contrib/slapd-modules/smbk5pwd/Makefile
-@@ -12,30 +12,30 @@
- # top-level directory of the distribution or, alternatively, at
- # <http://www.OpenLDAP.org/license.html>.
+--- a/contrib/slapd-modules/smbk5pwd/Makefile
++++ b/contrib/slapd-modules/smbk5pwd/Makefile
+@@ -14,17 +14,17 @@
  
--LIBTOOL=../../../libtool
-+LIBTOOL=../../../debian/build/libtool
- OPT=-g -O2
- CC=gcc
+ LDAP_SRC = ../../..
+ LDAP_BUILD = ../../..
+-LDAP_INC = -I$(LDAP_BUILD)/include -I$(LDAP_SRC)/include -I$(LDAP_SRC)/servers/slapd
+-LDAP_LIB = $(LDAP_BUILD)/libraries/libldap_r/libldap_r.la \
+-	$(LDAP_BUILD)/libraries/liblber/liblber.la
++LDAP_INC = -I$(LDAP_BUILD)/debian/build/include -I$(LDAP_BUILD)/debian/build/servers/slapd -I$(LDAP_BUILD)/include -I$(LDAP_SRC)/include -I$(LDAP_SRC)/servers/slapd
++LDAP_LIB = $(LDAP_BUILD)/debian/build/libraries/libldap_r/libldap_r.la \
++	$(LDAP_BUILD)/debian/build/libraries/liblber/liblber.la
  
+ SSL_INC = 
+-SSL_LIB = -lcrypto
++SSL_LIB = -lgcrypt
+ 
+-HEIMDAL_INC = -I/usr/heimdal/include
+-HEIMDAL_LIB = -L/usr/heimdal/lib -lkrb5 -lkadm5srv
++HEIMDAL_INC = -I/usr/include
++HEIMDAL_LIB = -lkrb5 -lkadm5srv
+ 
+-LIBTOOL = $(LDAP_BUILD)/libtool
++LIBTOOL = $(LDAP_BUILD)/debian/build/libtool
+ CC = gcc
+ OPT = -g -O2 -Wall
  # Omit DO_KRB5, DO_SAMBA or DO_SHADOW if you don't want to support it.
- DEFS=-DDO_KRB5 -DDO_SAMBA -DDO_SHADOW
- 
--HEIMDAL_INC=-I/usr/heimdal/include
-+HEIMDAL_INC=-I/usr/include
- SSL_INC=
--LDAP_INC=-I../../../include -I../../../servers/slapd
-+LDAP_INC=-I../../../debian/build/include -I../../../debian/build/servers/slapd -I../../../include -I../../../servers/slapd
- INCS=$(LDAP_INC) $(HEIMDAL_INC) $(SSL_INC)
- 
--HEIMDAL_LIB=-L/usr/heimdal/lib -lkrb5 -lkadm5srv
--SSL_LIB=-lcrypto
--LDAP_LIB=-lldap_r -llber
-+HEIMDAL_LIB=-lkrb5 -lkadm5srv
-+SSL_LIB=-lgcrypt
-+LDAP_LIB=-lldap_r -llber -L../../../debian/build/libraries/libldap_r -L../../../debian/build/libraries/liblber
- LIBS=$(LDAP_LIB) $(HEIMDAL_LIB) $(SSL_LIB)
+@@ -35,13 +35,13 @@ LIBS = $(LDAP_LIB) $(HEIMDAL_LIB) $(SSL_
+ PROGRAMS = smbk5pwd.la
+ LTVER = 0:0:0
  
 -prefix=/usr/local
 +prefix=/usr
@@ -40,17 +40,14 @@ Index: trunk/contrib/slapd-modules/smbk5pwd/Makefile
 -moduledir = $(libexecdir)$(ldap_subdir)
 +moduledir = $(libdir)$(ldap_subdir)
  
- all:	smbk5pwd.la
+ .SUFFIXES: .c .o .lo
  
-@@ -48,8 +48,9 @@
+@@ -55,7 +55,7 @@ smbk5pwd.la:	smbk5pwd.lo
  	-rpath $(moduledir) -module -o $@ $? $(LIBS)
  
  clean:
--	rm -f smbk5pwd.lo smbk5pwd.la
+-	rm -rf *.o *.lo *.la .libs
 +	$(LIBTOOL) --mode=clean rm -f
  
--install: smbk5pwd.la
-+install: all
+ install: $(PROGRAMS)
  	mkdir -p $(DESTDIR)$(moduledir)
- 	$(LIBTOOL) --mode=install cp smbk5pwd.la $(DESTDIR)$(moduledir)
-+

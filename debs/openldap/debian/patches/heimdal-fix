@@ -10,9 +10,9 @@ Description: adapt parameters of hdb_generate_key_set_password() to heimdal 1.6~
 Bug-Debian: 664930
 Reviewed-by: Peter Marschall <peter@adpm.de>
 
---- openldap-2.4.28.orig/contrib/slapd-modules/smbk5pwd/smbk5pwd.c	2011-11-25 19:52:29.000000000 +0100
-+++ openldap-2.4.28/contrib/slapd-modules/smbk5pwd/smbk5pwd.c	2012-03-30 10:03:14.035984880 +0200
-@@ -468,7 +468,7 @@
+--- a/contrib/slapd-modules/smbk5pwd/smbk5pwd.c
++++ b/contrib/slapd-modules/smbk5pwd/smbk5pwd.c
+@@ -470,7 +470,7 @@ static int smbk5pwd_exop_passwd(
  		}
  
  		ret = hdb_generate_key_set_password(context, ent.principal,

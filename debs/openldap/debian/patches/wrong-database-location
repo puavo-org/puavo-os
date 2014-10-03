@@ -5,7 +5,7 @@ Debian-specific.
 
 --- a/doc/man/man5/slapd-bdb.5
 +++ b/doc/man/man5/slapd-bdb.5
-@@ -133,7 +133,7 @@
+@@ -131,7 +131,7 @@ Specify the directory where the BDB file
  associated indexes live.
  A separate directory must be specified for each database.
  The default is
@@ -16,7 +16,7 @@ Debian-specific.
  Allow reads of modified but not yet committed data.
 --- a/doc/man/man5/slapd.conf.5
 +++ b/doc/man/man5/slapd.conf.5
-@@ -1969,7 +1969,7 @@
+@@ -2007,7 +2007,7 @@ suffix    "dc=our\-domain,dc=com"
  # The database directory MUST exist prior to
  # running slapd AND should only be accessible
  # by the slapd/tools. Mode 0700 recommended.
@@ -38,7 +38,7 @@ Debian-specific.
  	/* default max deref depth for aliases */
 --- a/servers/slapd/Makefile.in
 +++ b/servers/slapd/Makefile.in
-@@ -430,9 +430,9 @@
+@@ -445,9 +445,9 @@ install-conf: FORCE
  
  install-db-config: FORCE
  	@-$(MKDIR) $(DESTDIR)$(localstatedir) $(DESTDIR)$(sysconfdir)
@@ -52,7 +52,7 @@ Debian-specific.
  
 --- a/doc/man/man5/slapd-config.5
 +++ b/doc/man/man5/slapd-config.5
-@@ -2015,7 +2015,7 @@
+@@ -2051,7 +2051,7 @@ olcSuffix: "dc=our\-domain,dc=com"
  # The database directory MUST exist prior to
  # running slapd AND should only be accessible
  # by the slapd/tools. Mode 0700 recommended.
@@ -61,3 +61,14 @@ Debian-specific.
  # Indices to maintain
  olcDbIndex:     objectClass  eq
  olcDbIndex:     cn,sn,mail   pres,eq,approx,sub
+--- a/doc/man/man5/slapd-mdb.5
++++ b/doc/man/man5/slapd-mdb.5
+@@ -52,7 +52,7 @@ Specify the directory where the LMDB fil
+ associated indexes live.
+ A separate directory must be specified for each database.
+ The default is
+-.BR LOCALSTATEDIR/openldap\-data .
++.BR LOCALSTATEDIR/lib/ldap .
+ .TP
+ \fBenvflags \fR{\fBnosync\fR,\fBnometasync\fR,\fBwritemap\fR,\fBmapasync\fR,\fBnordahead\fR}
+ Specify flags for finer-grained control of the LMDB library's operation.

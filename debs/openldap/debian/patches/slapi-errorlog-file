@@ -5,7 +5,7 @@ Debian-specific.
 
 --- a/servers/slapd/slapi/slapi_overlay.c
 +++ b/servers/slapd/slapi/slapi_overlay.c
-@@ -927,7 +927,7 @@
+@@ -930,7 +930,7 @@ int slapi_over_config( BackendDB *be, Co
  		ldap_pvt_thread_mutex_init( &slapi_printmessage_mutex );
  
  		if ( slapi_log_file == NULL )

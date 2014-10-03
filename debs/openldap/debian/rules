@@ -28,7 +28,7 @@ MAKEVARS	:= STRIP=
 
 # These variables are used only by get-orig-source, which will normally only
 # be run by maintainers.
-VERSION = 2.4.37
+VERSION = 2.4.40
 URL     = http://www.openldap.org/software/download/OpenLDAP/openldap-release/
 
 # Download the upstream source and make changes as required for DFSG reasons.

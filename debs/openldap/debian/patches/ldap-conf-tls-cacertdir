@@ -1,6 +1,6 @@
 --- a/doc/man/man5/ldap.conf.5
 +++ b/doc/man/man5/ldap.conf.5
-@@ -317,7 +317,7 @@
+@@ -317,7 +317,7 @@ certificates in separate individual file
  .B TLS_CACERT
  is always used before
  .B TLS_CACERTDIR.
@@ -9,7 +9,7 @@
  
  When using Mozilla NSS, <path> may contain a Mozilla NSS cert/key
  database.  If <path> contains a Mozilla NSS cert/key database and
-@@ -411,7 +411,7 @@
+@@ -428,7 +428,7 @@ This parameter is ignored with GnuTLS.
  Specifies the file to obtain random bits from when /dev/[u]random is
  not available. Generally set to the name of the EGD/PRNGD socket.
  The environment variable RANDFILE can also be used to specify the filename.
@@ -18,7 +18,7 @@
  .TP
  .B TLS_REQCERT <level>
  Specifies what checks to perform on server certificates in a TLS session,
-@@ -444,7 +444,7 @@
+@@ -461,7 +461,7 @@ Specifies if the Certificate Revocation
  used to verify if the server certificates have not been revoked. This
  requires
  .B TLS_CACERTDIR

@@ -11,11 +11,9 @@ Description: don't second-guess BDB ABI
 Bug-Debian: http://bugs.debian.org/651333
 Forwarded: not-needed
 
-Index: trunk/servers/slapd/back-bdb/init.c
-===================================================================
---- trunk.orig/servers/slapd/back-bdb/init.c
-+++ trunk/servers/slapd/back-bdb/init.c
-@@ -756,7 +756,7 @@
+--- a/servers/slapd/back-bdb/init.c
++++ b/servers/slapd/back-bdb/init.c
+@@ -762,7 +762,7 @@ bdb_back_initialize(
  	bi->bi_controls = controls;
  
  	{	/* version check */
@@ -24,7 +22,7 @@ Index: trunk/servers/slapd/back-bdb/init.c
  		char *version = db_version( &major, &minor, &patch );
  #ifdef HAVE_EBCDIC
  		char v2[1024];
-@@ -770,17 +770,6 @@
+@@ -776,17 +776,6 @@ bdb_back_initialize(
  		version = v2;
  #endif
  

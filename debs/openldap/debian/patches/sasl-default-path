@@ -14,7 +14,7 @@ interest upstream.
  #endif /* _LDAP_CONFIG_H */
 --- a/servers/slapd/sasl.c
 +++ b/servers/slapd/sasl.c
-@@ -1104,12 +1104,38 @@
+@@ -1103,12 +1103,38 @@ static const rewrite_mapper slapd_mapper
  };
  #endif
  

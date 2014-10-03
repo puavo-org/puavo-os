@@ -1,125 +1,60 @@
-openldap (2.4.37-0+opinsys4) precise; urgency=low
+openldap (2.4.40-1) unstable; urgency=high
 
-  * Use upstart instead of sysv init.
-  * Kill slapd with SIGINT
-  * Update smbkrb5pwd to https://github.com/opinsys/smbkrb5pwd/commit/049d3b1661eebe92adf561034331601c055e0a4f
+  * New upstream version
+  * debian/ based on Debian's 2.4.39 packaging
+  * Included Opinsys patches:
+    - opinsys-increase-max-number-of-ldap-keys
+      To increase the maximum number of databases
+    - opinsys-increase-max-rewrite-passes
+      To increase the maximum number of olcAuthzRegexp attributes in cn=config
+    - opinsys-smbkrb5pwd
+      https://github.com/opinsys/smbkrb5pwd/ @ 049d3b1661
+    - opinsys-fix-smbkrb5pwd-makefile
+      Fix upstream paths to match debian build environment
 
- -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 14 Nov 2013 11:18:19 +0200
+ -- Veli-Matti Lintu <veli-matti.lintu@opinsys.fi>  Thu, 02 Oct 2014 17:34:44 +0300
 
-openldap (2.4.37-0+opinsys3) precise; urgency=low
+openldap (2.4.39-1.1) unstable; urgency=high
 
-  * slapd: increase slapd's max number of open files when started via init script
+  * Non-maintainer upload by the Security Team.
+  * Fix CVE-2013-4449: reference counting logic issue (closes: #729367).
 
- -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 31 Oct 2013 09:48:59 +0200
+ -- Michael Gilbert <mgilbert@debian.org>  Sat, 09 Aug 2014 09:26:51 +0000
 
-openldap (2.4.37-0+opinsys2~alpha2) precise; urgency=low
+openldap (2.4.39-1) unstable; urgency=low
 
-  * New upstream release.
-  * Source format 3.0 (quilt)
-  * Trivial build-fix patches:
-    - debian/patches/opinsys-fix-autogroup-makefile
-    - debian/patches/opinsys-fix-nssov-makefile
-    - debian/patches/opinsys-fix-smbk5pwd-makefile
+  [ Peter Marschall ]
+  * debian/patches/wrong-database-location: fix database location in
+    doc/man/man5/slapd-mdb.5
+  * debian/configure.options: add info on --enable-mdb
 
- -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 28 Oct 2013 17:22:11 +0200
+  [ Russ Allbery ]
+  * Remove myself from Uploaders.
 
-openldap (2.4.31-1ubuntu2+opinsys6) quantal; urgency=low
+  [ Steve Langasek ]
+  * Remove Stephen Frost from Uploaders, per discussion with him.  Thanks for
+    your contributions, Stephen!
+  * Adjust dh_autoreconf usage to update all config.sub/config.guess
+    instances in the source, so that we can be forwards-compatible with new
+    ports.  Thanks to Colin Watson <cjwatson@ubuntu.com> for the patch.
+    Closes: #725824.
+  * Add Timo to Uploaders.
+  * Update Vcs-* fields to point at the new git repo; thanks to Timo for
+    driving this migration!
+  * Rebuild against db5.3, with a corresponding dump/restore of the database
+    on upgrade.  Closes: #738641.
 
-  * Fix conflicting slapd-smbkrb5pwd files.
+  [ Timo Aaltonen ]
+  * contrib-modules-use-dpkg-buildflags, autogroup-makefile,
+    smbk5pwd-makefile:
+    - Updated for current upstream.
+  * Refresh patches to apply cleanly.
+  * rules: Use dpkg-parsechangelog to determine the upstream version for
+    get-orig-source.
+  * source: Add lintian overrides for non-transatable internal
+    templates.
 
- -- Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>  Mon, 29 Apr 2013 13:57:19 +0300
-
-openldap (2.4.31-1ubuntu2+opinsys5) quantal; urgency=low
-
-  * Fix slapd-smbkrb5pwd linking.
-
- -- Opinsys Developers <dev@opinsys.fi>  Tue, 12 Mar 2013 15:16:07 +0200
-
-openldap (2.4.31-1ubuntu2+opinsys4) quantal; urgency=low
-
-  * Fix slapd-smbkrb5pwd installation again.
-
- -- Opinsys Developers <dev@opinsys.fi>  Mon, 04 Mar 2013 20:05:09 +0200
-
-openldap (2.4.31-1ubuntu2+opinsys3) quantal; urgency=low
-
-  * Fix slapd-smbkrb5pwd installation.
-
- -- Opinsys Developers <dev@opinsys.fi>  Fri, 22 Feb 2013 12:30:43 +0200
-
-openldap (2.4.31-1ubuntu2+opinsys2) quantal; urgency=low
-
-  * Do not start slapd at boot.
-
- -- Opinsys Developers <dev@opinsys.fi>  Mon, 11 Feb 2013 15:37:29 +0200
-
-openldap (2.4.31-1ubuntu2+opinsys1) quantal; urgency=low
-
-  * Use openssl instead of gnutls
-  * Fix get-orig-source to get 2.4.31
-  * Increase the max number of ldap keys to 512
-    - debian/patches/opinsys-increase-max-number-of-ldap-keys
-  * Fix heimdal include path
-    - debian/patches/opinsys-fix-heimdal-include-path
-  * New slapd-module: smbkrb5pwd
-    - debian/patches/opinsys-smbkrb5pwd
-
- -- Opinsys Developers <dev@opinsys.fi>  Wed, 16 Jan 2013 16:31:50 +0200
-
-openldap (2.4.31-1ubuntu2) quantal-proposed; urgency=low
-
-  * debian/slapd.py: Add AppArmor info and logs to apport hook.
-
- -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Mon, 20 Aug 2012 08:46:02 -0400
-
-openldap (2.4.31-1ubuntu1) quantal; urgency=low
-
-  * Merge from Debian unstable.  Remaining changes:
-    - Enable AppArmor support:
-      - d/apparmor-profile: add AppArmor profile
-      - d/rules: use dh_apparmor
-      - d/control: Build-Depends on dh-apparmor
-      - d/slapd.README.Debian: add note about AppArmor
-      - d/slapd.dirs: add etc/apparmor.d/force-complain
-    - Enable GSSAPI support (LP: #495418):
-      - d/patches/gssapi.diff, thanks to Jerry Carter (Likewise):
-        - Add --with-gssapi support
-        - Make guess_service_principal() more robust when determining
-          principal
-      - d/configure.options: Configure with --with-gssapi
-      - d/control: Added libkrb5-dev as a build depend
-    - Enable ufw support (LP: #423246):
-      - d/control: suggest ufw.
-      - d/rules: install ufw profile.
-      - d/slapd.ufw.profile: add ufw profile.
-    - Enable nss overlay (LP: #675391):
-      - d/{patches/nssov-build,/rules}: Apply, build and package the
-        nss overlay.
-    - d/{rules,slapd.py}: Add apport hook. (LP: #610544)
-    - d/slapd.init.ldif: don't set olcRootDN since it's not defined in
-      either the default DIT nor via an Authn mapping.
-    - d/slapd.scripts-common: 
-      - add slapcat_opts to local variables.
-      - Remove unused variable new_conf.
-      - Fix backup directory naming for multiple reconfiguration.
-    - d/{slapd.default,slapd.README.Debian}: use the new configuration style.
-    - d/rules: Enable -DLDAP_CONNECTIONLESS to build CLDAP (UDP) support
-      in the openldap library, as required by Likewise-Open (LP: #390579)
-    - d/{control,rules}: enable PIE hardening
-  * Dropped changes:
-    - d/patches/its-7107-fix-Operation-init-on-reuse.diff: Included in upstream release.
-    - d/patches/CVE-2011-4079: Included in upstream release.
-    - d/patches/service-operational-before-detach: Included in upstream release.
-    - d/schema/extra/misc.ldif: Included upstream.
-    - d/{rules,schema/extra}: Fix configure and clean rules to support
-      extra schemas shipped as part of the debian/schema/ directory; no longer required.
-    - Included in Debian:
-      + Document cn=config in README file.
-      + Install a default DIT; actually a minimal configuration.
-      + d/patches/heimdal-fix.
-  * General tidy of d/patches to remove obsolete patches being held in Ubuntu delta.
-
- -- James Page <james.page@ubuntu.com>  Fri, 20 Jul 2012 13:48:32 +0100
+ -- Steve Langasek <vorlon@debian.org>  Mon, 17 Mar 2014 15:27:31 -0700
 
 openldap (2.4.31-1) unstable; urgency=low
 
@@ -147,121 +82,6 @@ openldap (2.4.31-1) unstable; urgency=low
 
  -- Steve Langasek <vorlon@debian.org>  Wed, 27 Jun 2012 03:27:34 +0000
 
-openldap (2.4.28-1.1ubuntu6) quantal; urgency=low
-
-  * Fix issue with intermittent connection issues when using LDAPv3
-    protocol (LP: #1023025):
-    - d/patches/its-7107-fix-Operation-init-on-reuse.diff: Cherry picked
-      patch from upstream VCS which ensures objects are initialized before
-      re-use.
-
- -- Pierre Fersing <pfersing@sierrawireless.com>  Thu, 19 Jul 2012 14:05:09 +0100
-
-openldap (2.4.28-1.1ubuntu5) quantal; urgency=low
-
-  * debian/rules: Add smbk5pwd build.
-  * debian/control: Add slapd-smbk5pwd binary package.
-  * debian/patches/heimdal-fix: adapt parameters of 
-    hdb_generate_key_set_password() to heimdal 1.6~git20120311
-    (patch from Debian #664930).
-
- -- Jorge Salamero Sanz <bencer@debian.org>  Wed, 18 Jul 2012 09:30:28 -0400
-
-openldap (2.4.28-1.1ubuntu4) precise; urgency=low
-
-  * debian/control: Build-Depends on dh-apparmor (LP: #948481)
-
- -- Jamie Strandboge <jamie@ubuntu.com>  Thu, 05 Apr 2012 09:34:37 -0500
-
-openldap (2.4.28-1.1ubuntu3) precise; urgency=low
-
-  * Add its-7176-only-poll-sockets-for-write-as-needed.diff
-    (LP: #932823).
-
- -- Timo Aaltonen <tjaalton@ubuntu.com>  Tue, 21 Feb 2012 15:36:29 +0200
-
-openldap (2.4.28-1.1ubuntu2) precise; urgency=low
-
-  * Remove debian/patches/CVE-2011-4079; it's already in this upstream
-    version. Fixes FTBFS.
-
- -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 25 Jan 2012 17:26:17 -0500
-
-openldap (2.4.28-1.1ubuntu1) precise; urgency=low
-
-  * Merge from Debian testing.  Remaining changes:
-    - Install a default DIT (LP: #442498).
-    - Document cn=config in README file (LP: #370784).
-    - remaining changes:
-      + AppArmor support:
-        - debian/apparmor-profile: add AppArmor profile
-        - use dh_apparmor:
-          - debian/rules: use dh_apparmor
-          - debian/control: Build-Depends on debhelper 7.4.20ubuntu5
-        - updated debian/slapd.README.Debian for note on AppArmor
-        - debian/slapd.dirs: add etc/apparmor.d/force-complain
-      + Enable GSSAPI support (LP: #495418):
-        - debian/patches/gssapi.diff, thanks to Jerry Carter (Likewise):
-          - Add --with-gssapi support
-          - Make guess_service_principal() more robust when determining
-            principal
-        - debian/patches/series: apply gssapi.diff patch.
-        - debian/configure.options: Configure with --with-gssapi
-        - debian/control: Added libkrb5-dev as a build depend
-      + debian/rules: Enable -DLDAP_CONNECTIONLESS to build CLDAP (UDP) support
-        in the openldap library, as required by Likewise-Open (LP: #390579)
-     + Don't build smbk5pwd overlay since it uses heimdal instead of krb5:
-        - debian/control: 
-          - remove build-dependency on heimdal-dev.
-          - remove slapd-smbk5pwd binary package.
-        - debian/rules: don't build smbk5pwd slapd module.
-      + debian/{control,rules}: enable PIE hardening
-      + ufw support (LP: #423246):
-        - debian/control: suggest ufw.
-        - debian/rules: install ufw profile.
-        - debian/slapd.ufw.profile: add ufw profile.
-      + Enable nssoverlay:
-        - debian/patches/nssov-build, debian/series, debian/rules: 
-          Apply, build and package the nss overlay.
-        - debian/schema/extra/misc.ldif: add ldif file for the misc schema
-          which defines rfc822MailMember (required by the nss overlay).
-      + debian/rules, debian/schema/extra/: 
-        Fix configure rule to supports extra schemas shipped as part
-        of the debian/schema/ directory.
-      + debian/rules, debian/slapd.py: Add apport hook. (LP: #610544)
-      + debian/slapd.init.ldif: don't set olcRootDN since it's not defined in
-       neither the default DIT nor via an Authn mapping.
-      + debian/slapd.scripts-common: adjust minimum version that triggers a
-        database upgrade. Upgrade from maverick shouldn't trigger database
-        upgrade (which would happen with the version used in Debian).
-      + debian/slapd.scripts-common: add slapcat_opts to local variables.
-        Remove unused variable new_conf.
-      + debian/slapd.script-common: Fix package reconfiguration.
-        - Fix backup directory naming for multiple reconfiguration.
-      + debian/slapd.default, debian/slapd.README.Debian: 
-        use the new configuration style.
-      + Install nss overlay (LP: #675391):
-        - debian/rules: run install target for nssov module.
-        - debian/patches/nssov-build: fix patch to install schema in /etc/ldap/schema
-      + debian/patches/gssapi.diff:
-        - Update patch so that likewise-open is usuable again. (LP: #661547)
-      + debian/patches/service-operational-before-detach: New patch replacing old one
-        of the same name as previous could cause database corruption based on upstream commits.
-        (LP: #727973)
-      + debian/patches/CVE-2011-4079: fix off by one error in postalAddressNormalize()
-        (CVE-2011-4079)
-
-
- -- Chuck Short <zulcss@ubuntu.com>  Mon, 23 Jan 2012 10:01:13 -0500
-
-openldap (2.4.28-1.1) unstable; urgency=low
-
-  * Non-maintainer upload.
-  * Disable the mdb backend on non-Linux, it looks like it doesn't work with
-    linuxthreads (closes: #654824).
-
- -- Julien Cristau <jcristau@debian.org>  Mon, 16 Jan 2012 19:45:42 +0100
-
 openldap (2.4.28-1) unstable; urgency=low
 
   * New upstream release.
@@ -288,72 +108,6 @@ openldap (2.4.28-1) unstable; urgency=low
   * Dutch, thanks to Jeroen Schot <schot@A-Eskwadraat.nl>.  Closes: #651400.
 
  -- Steve Langasek <vorlon@debian.org>  Thu, 05 Jan 2012 06:07:11 +0000
-
-openldap (2.4.25-4ubuntu1) precise; urgency=low
-
-  * Merge from Debian testing.  Remaining changes:
-    - Install a default DIT (LP: #442498).
-    - Document cn=config in README file (LP: #370784).
-    - remaining changes:
-      + AppArmor support:
-        - debian/apparmor-profile: add AppArmor profile
-        - use dh_apparmor:
-          - debian/rules: use dh_apparmor
-          - debian/control: Build-Depends on debhelper 7.4.20ubuntu5
-        - updated debian/slapd.README.Debian for note on AppArmor
-        - debian/slapd.dirs: add etc/apparmor.d/force-complain
-      + Enable GSSAPI support (LP: #495418):
-        - debian/patches/gssapi.diff, thanks to Jerry Carter (Likewise):
-          - Add --with-gssapi support
-          - Make guess_service_principal() more robust when determining
-            principal
-        - debian/patches/series: apply gssapi.diff patch.
-        - debian/configure.options: Configure with --with-gssapi
-        - debian/control: Added libkrb5-dev as a build depend
-      + debian/rules: Enable -DLDAP_CONNECTIONLESS to build CLDAP (UDP) support
-        in the openldap library, as required by Likewise-Open (LP: #390579)
-     + Don't build smbk5pwd overlay since it uses heimdal instead of krb5:
-        - debian/control: 
-          - remove build-dependency on heimdal-dev.
-          - remove slapd-smbk5pwd binary package.
-        - debian/rules: don't build smbk5pwd slapd module.
-      + debian/{control,rules}: enable PIE hardening
-      + ufw support (LP: #423246):
-        - debian/control: suggest ufw.
-        - debian/rules: install ufw profile.
-        - debian/slapd.ufw.profile: add ufw profile.
-      + Enable nssoverlay:
-        - debian/patches/nssov-build, debian/series, debian/rules: 
-          Apply, build and package the nss overlay.
-        - debian/schema/extra/misc.ldif: add ldif file for the misc schema
-          which defines rfc822MailMember (required by the nss overlay).
-      + debian/rules, debian/schema/extra/: 
-        Fix configure rule to supports extra schemas shipped as part
-        of the debian/schema/ directory.
-      + debian/rules, debian/slapd.py: Add apport hook. (LP: #610544)
-      + debian/slapd.init.ldif: don't set olcRootDN since it's not defined in
-       neither the default DIT nor via an Authn mapping.
-      + debian/slapd.scripts-common: adjust minimum version that triggers a
-        database upgrade. Upgrade from maverick shouldn't trigger database
-        upgrade (which would happen with the version used in Debian).
-      + debian/slapd.scripts-common: add slapcat_opts to local variables.
-        Remove unused variable new_conf.
-      + debian/slapd.script-common: Fix package reconfiguration.
-        - Fix backup directory naming for multiple reconfiguration.
-      + debian/slapd.default, debian/slapd.README.Debian: 
-        use the new configuration style.
-      + Install nss overlay (LP: #675391):
-        - debian/rules: run install target for nssov module.
-        - debian/patches/nssov-build: fix patch to install schema in /etc/ldap/schema
-      + debian/patches/gssapi.diff:
-        - Update patch so that likewise-open is usuable again. (LP: #661547)
-      + debian/patches/service-operational-before-detach: New patch replacing old one
-        of the same name as previous could cause database corruption based on upstream commits.
-        (LP: #727973)
-      + debian/patches/CVE-2011-4079: fix off by one error in postalAddressNormalize()
-        (CVE-2011-4079)
-
- -- Chuck Short <zulcss@ubuntu.com>  Tue, 22 Nov 2011 06:17:49 +0000
 
 openldap (2.4.25-4) unstable; urgency=low
 
@@ -388,85 +142,6 @@ openldap (2.4.25-4) unstable; urgency=low
 
  -- Steve Langasek <vorlon@debian.org>  Tue, 18 Oct 2011 01:08:34 +0000
 
-openldap (2.4.25-3ubuntu3) precise; urgency=low
-
-  * Rebuild for Perl 5.14.
-
- -- Colin Watson <cjwatson@ubuntu.com>  Tue, 15 Nov 2011 20:50:09 +0000
-
-openldap (2.4.25-3ubuntu2) precise; urgency=low
-
-  * SECURITY UPDATE: potential denial of service (LP: #884163)
-    - debian/patches/CVE-2011-4079: fix off by one error in
-      postalAddressNormalize()
-    - CVE-2011-4079
-
- -- Jamie Strandboge <jamie@ubuntu.com>  Mon, 14 Nov 2011 13:59:56 -0600
-
-openldap (2.4.25-3ubuntu1) precise; urgency=low
-
-  * Merge from debian unstable.  Remaining changes:
-    - Install a default DIT (LP: #442498).
-    - Document cn=config in README file (LP: #370784).
-    - remaining changes:
-      + AppArmor support:
-        - debian/apparmor-profile: add AppArmor profile
-        - use dh_apparmor:
-          - debian/rules: use dh_apparmor
-          - debian/control: Build-Depends on debhelper 7.4.20ubuntu5
-        - updated debian/slapd.README.Debian for note on AppArmor
-        - debian/slapd.dirs: add etc/apparmor.d/force-complain
-      + Enable GSSAPI support (LP: #495418):
-        - debian/patches/gssapi.diff, thanks to Jerry Carter (Likewise):
-          - Add --with-gssapi support
-          - Make guess_service_principal() more robust when determining
-            principal
-        - debian/patches/series: apply gssapi.diff patch.
-        - debian/configure.options: Configure with --with-gssapi
-        - debian/control: Added libkrb5-dev as a build depend
-      + debian/rules: Enable -DLDAP_CONNECTIONLESS to build CLDAP (UDP) support
-        in the openldap library, as required by Likewise-Open (LP: #390579)
-     + Don't build smbk5pwd overlay since it uses heimdal instead of krb5:
-        - debian/control: 
-          - remove build-dependency on heimdal-dev.
-          - remove slapd-smbk5pwd binary package.
-        - debian/rules: don't build smbk5pwd slapd module.
-      + debian/{control,rules}: enable PIE hardening
-      + ufw support (LP: #423246):
-        - debian/control: suggest ufw.
-        - debian/rules: install ufw profile.
-        - debian/slapd.ufw.profile: add ufw profile.
-      + Enable nssoverlay:
-        - debian/patches/nssov-build, debian/series, debian/rules: 
-          Apply, build and package the nss overlay.
-        - debian/schema/extra/misc.ldif: add ldif file for the misc schema
-          which defines rfc822MailMember (required by the nss overlay).
-      + debian/rules, debian/schema/extra/: 
-        Fix configure rule to supports extra schemas shipped as part
-        of the debian/schema/ directory.
-      + debian/rules, debian/slapd.py: Add apport hook. (LP: #610544)
-      + debian/slapd.init.ldif: don't set olcRootDN since it's not defined in
-       neither the default DIT nor via an Authn mapping.
-      + debian/slapd.scripts-common: adjust minimum version that triggers a
-        database upgrade. Upgrade from maverick shouldn't trigger database
-        upgrade (which would happen with the version used in Debian).
-      + debian/slapd.scripts-common: add slapcat_opts to local variables.
-        Remove unused variable new_conf.
-      + debian/slapd.script-common: Fix package reconfiguration.
-        - Fix backup directory naming for multiple reconfiguration.
-      + debian/slapd.default, debian/slapd.README.Debian: 
-        use the new configuration style.
-      + Install nss overlay (LP: #675391):
-        - debian/rules: run install target for nssov module.
-        - debian/patches/nssov-build: fix patch to install schema in /etc/ldap/schema
-      + debian/patches/gssapi.diff:
-        - Update patch so that likewise-open is usuable again. (LP: #661547)
-      + debian/patches/service-operational-before-detach: New patch replacing old one
-        of the same name as previous could cause database corruption based on upstream commits.
-        (LP: #727973)
-
- -- Chuck Short <zulcss@ubuntu.com>  Wed, 19 Oct 2011 20:53:08 +0000
-
 openldap (2.4.25-3) unstable; urgency=low
 
   * Brown paper bag: really fix the .links.in handling, so we don't generate
@@ -489,167 +164,12 @@ openldap (2.4.25-2) unstable; urgency=low
 
  -- Steve Langasek <vorlon@debian.org>  Sun, 14 Aug 2011 23:17:09 -0700
 
-openldap (2.4.25-1.1ubuntu4) oneiric; urgency=low
-
-  * Brown paper bag: really fix the .links.in handling, so we don't generate
-    broken /usr/lib/${DEB_HOST_MULTIARCH} dirs.
-
- -- Steve Langasek <steve.langasek@ubuntu.com>  Mon, 15 Aug 2011 09:43:29 +0000
-
-openldap (2.4.25-1.1ubuntu3) oneiric; urgency=low
-
-  * Cherry-pick multiarch support from Debian (LP: #826601):
-    - Bump to compat level 7, so we don't have to spell out debian/tmp in
-      every single .install file
-    - Build for multiarch.
-
- -- Steve Langasek <steve.langasek@ubuntu.com>  Mon, 15 Aug 2011 02:23:43 -0700
-
-openldap (2.4.25-1.1ubuntu2) oneiric; urgency=low
-
-  * debian/apparmor-profile: Allow /var/run and /run. (LP: #810270)
-
- -- Martin Pitt <martin.pitt@ubuntu.com>  Thu, 14 Jul 2011 15:18:02 +0200
-
-openldap (2.4.25-1.1ubuntu1) oneiric; urgency=low
-
-  * Merge from debian unstable.  Remaining changes:
-    - Install a default DIT (LP: #442498).
-    - Document cn=config in README file (LP: #370784).
-    - remaining changes:
-      + AppArmor support:
-        - debian/apparmor-profile: add AppArmor profile
-        - use dh_apparmor:
-          - debian/rules: use dh_apparmor
-          - debian/control: Build-Depends on debhelper 7.4.20ubuntu5
-        - updated debian/slapd.README.Debian for note on AppArmor
-        - debian/slapd.dirs: add etc/apparmor.d/force-complain
-      + Enable GSSAPI support (LP: #495418):
-        - debian/patches/gssapi.diff, thanks to Jerry Carter (Likewise):
-          - Add --with-gssapi support
-          - Make guess_service_principal() more robust when determining
-            principal
-        - debian/patches/series: apply gssapi.diff patch.
-        - debian/configure.options: Configure with --with-gssapi
-        - debian/control: Added libkrb5-dev as a build depend
-      + debian/rules: Enable -DLDAP_CONNECTIONLESS to build CLDAP (UDP) support
-        in the openldap library, as required by Likewise-Open (LP: #390579)
-      + Don't build smbk5pwd overlay since it uses heimdal instead of krb5:
-        - debian/control: 
-          - remove build-dependency on heimdal-dev.
-          - remove slapd-smbk5pwd binary package.
-        - debian/rules: don't build smbk5pwd slapd module.
-      + debian/{control,rules}: enable PIE hardening
-      + ufw support (LP: #423246):
-        - debian/control: suggest ufw.
-        - debian/rules: install ufw profile.
-        - debian/slapd.ufw.profile: add ufw profile.
-      + Enable nssoverlay:
-        - debian/patches/nssov-build, debian/series, debian/rules: 
-          Apply, build and package the nss overlay.
-        - debian/schema/extra/misc.ldif: add ldif file for the misc schema
-          which defines rfc822MailMember (required by the nss overlay).
-      + debian/rules, debian/schema/extra/: 
-        Fix configure rule to supports extra schemas shipped as part
-        of the debian/schema/ directory.
-      + debian/rules, debian/slapd.py: Add apport hook. (LP: #610544)
-      + debian/slapd.init.ldif: don't set olcRootDN since it's not defined in
-        neither the default DIT nor via an Authn mapping.
-      + debian/slapd.scripts-common: adjust minimum version that triggers a
-        database upgrade. Upgrade from maverick shouldn't trigger database
-        upgrade (which would happen with the version used in Debian).
-      + debian/slapd.scripts-common: add slapcat_opts to local variables.
-        Remove unused variable new_conf.
-      + debian/slapd.script-common: Fix package reconfiguration.
-        - Fix backup directory naming for multiple reconfiguration.
-      + debian/slapd.default, debian/slapd.README.Debian: 
-        use the new configuration style.
-      + Install nss overlay (LP: #675391):
-        - debian/rules: run install target for nssov module.
-        - debian/patches/nssov-build: fix patch to install schema in /etc/ldap/schema
-      + debian/patches/gssapi.diff:
-        - Update patch so that likewise-open is usuable again. (LP: #661547)
-      + debian/patches/service-operational-before-detach: New patch replacing old one
-        of the same name as previous could cause database corruption based on upstream commits.
-        (LP: #727973)
-
- -- Chuck Short <zulcss@ubuntu.com>  Sun, 05 Jun 2011 17:38:40 +0100
-
 openldap (2.4.25-1.1) unstable; urgency=low
 
   * Non-maintainer upload to fix RC bug.
   * Fix "dpkg-reconfigure slapd". Closes: #596343
 
  -- Thijs Kinkhorst <thijs@debian.org>  Tue, 31 May 2011 11:57:29 +0200
-
-openldap (2.4.25-1ubuntu1) oneiric; urgency=low
-
-  * Merge from debian unstable.  Remaining changes:
-    - Install a default DIT (LP: #442498).
-    - Document cn=config in README file (LP: #370784).
-    - remaining changes:
-      + AppArmor support:
-        - debian/apparmor-profile: add AppArmor profile
-        - use dh_apparmor:
-          - debian/rules: use dh_apparmor
-          - debian/control: Build-Depends on debhelper 7.4.20ubuntu5
-        - updated debian/slapd.README.Debian for note on AppArmor
-        - debian/slapd.dirs: add etc/apparmor.d/force-complain
-      + Enable GSSAPI support (LP: #495418):
-        - debian/patches/gssapi.diff, thanks to Jerry Carter (Likewise):
-          - Add --with-gssapi support
-          - Make guess_service_principal() more robust when determining
-            principal
-        - debian/patches/series: apply gssapi.diff patch.
-        - debian/configure.options: Configure with --with-gssapi
-        - debian/control: Added libkrb5-dev as a build depend
-      + debian/rules: Enable -DLDAP_CONNECTIONLESS to build CLDAP (UDP) support
-        in the openldap library, as required by Likewise-Open (LP: #390579)
-      + Don't build smbk5pwd overlay since it uses heimdal instead of krb5:
-        - debian/control: 
-          - remove build-dependency on heimdal-dev.
-          - remove slapd-smbk5pwd binary package.
-        - debian/rules: don't build smbk5pwd slapd module.
-      + debian/{control,rules}: enable PIE hardening
-      + ufw support (LP: #423246):
-        - debian/control: suggest ufw.
-        - debian/rules: install ufw profile.
-        - debian/slapd.ufw.profile: add ufw profile.
-      + Enable nssoverlay:
-        - debian/patches/nssov-build, debian/series, debian/rules: 
-          Apply, build and package the nss overlay.
-        - debian/schema/extra/misc.ldif: add ldif file for the misc schema
-          which defines rfc822MailMember (required by the nss overlay).
-      + debian/rules, debian/schema/extra/: 
-        Fix configure rule to supports extra schemas shipped as part
-        of the debian/schema/ directory.
-      + debian/rules, debian/slapd.py: Add apport hook. (LP: #610544)
-      + debian/slapd.init.ldif: don't set olcRootDN since it's not defined in
-        neither the default DIT nor via an Authn mapping.
-      + debian/slapd.scripts-common: adjust minimum version that triggers a
-        database upgrade. Upgrade from maverick shouldn't trigger database
-        upgrade (which would happen with the version used in Debian).
-      + debian/slapd.scripts-common: add slapcat_opts to local variables.
-        Remove unused variable new_conf.
-      + debian/slapd.script-common: Fix package reconfiguration.
-        - Fix backup directory naming for multiple reconfiguration.
-      + debian/slapd.default, debian/slapd.README.Debian: 
-        use the new configuration style.
-      + Install nss overlay (LP: #675391):
-        - debian/rules: run install target for nssov module.
-        - debian/patches/nssov-build: fix patch to install schema in /etc/ldap/schema
-      + debian/patches/gssapi.diff:
-        - Update patch so that likewise-open is usuable again. (LP: #661547)
-      + debian/patches/service-operational-before-detach: New patch replacing old one
-        of the same name as previous could cause database corruption based on upstream commits.
-        (LP: #727973)
-       + Dropped:
-         - debian/patches/gold: Use the debian version instead
-         - debian/patches/CVE-2011-1024: Fixed upstream
-         - debian/patches/CVE-2011-1025: Fixed upstream
-         - debian/patches/CVE-2011-1081: Fixed upstream 
-
- -- Chuck Short <zulcss@ubuntu.com>  Sun, 08 May 2011 16:34:09 +0100
 
 openldap (2.4.25-1) unstable; urgency=low
 
@@ -681,116 +201,6 @@ openldap (2.4.23-7) unstable; urgency=low
   * Updated danish translation, thanks Joe Dalton (Closes: #599835)
 
  -- Matthijs Mohlmann <matthijs@cacholong.nl>  Sat, 06 Nov 2010 12:13:01 +0100
-
-openldap (2.4.23-6ubuntu7) oneiric; urgency=low
-
-  * Rebuild for Perl 5.12.
-
- -- Colin Watson <cjwatson@ubuntu.com>  Sun, 08 May 2011 13:40:28 +0100
-
-openldap (2.4.23-6ubuntu6) natty; urgency=low
-
-  * SECURITY UPDATE: fix successful anonymous bind via chain overlay when
-    using forwarded authentication failures
-    - debian/patches/CVE-2011-1024
-    - CVE-2011-1024
-  * SECURITY UPDATE: verify password when authenticating to rootdn and using ndb
-    backend. Note: Ubuntu is not compiled with --enable-ndb by default
-    - debian/patches/CVE-2011-1025
-    - CVE-2011-1025
-  * SECURITY UPDATE: fix DoS when processing unauthenticated modrdn requests
-    and requestDN is empty
-    - debian/patches/CVE-2011-1081
-    - CVE-2011-1081
-    - LP: #742104
-
- -- Jamie Strandboge <jamie@ubuntu.com>  Thu, 07 Apr 2011 11:36:53 -0500
-
-openldap (2.4.23-6ubuntu5) natty; urgency=low
-
-  * debian/patches/service-operational-before-detach: New patch replacing
-    old one of same name as previous could cause database corruption, 
-    based on upstream commits. (LP: #727973)
-
- -- Dave Walker (Daviey) <DaveWalker@ubuntu.com>  Wed, 02 Mar 2011 20:33:08 +0000
-
-openldap (2.4.23-6ubuntu4) natty; urgency=low
-
-  * Fix FTBFS with ld.gold.
-
- -- Matthias Klose <doko@ubuntu.com>  Wed, 19 Jan 2011 07:39:49 +0100
-
-openldap (2.4.23-6ubuntu3) natty; urgency=low
-
-  * debian/patches/gssapi.diff:
-    Update patch so that likewise-open is usable again (LP: #661547)
-
- -- Thierry Carrez (ttx) <thierry.carrez@ubuntu.com>  Fri, 26 Nov 2010 15:50:11 +0100
-
-openldap (2.4.23-6ubuntu2) natty; urgency=low
-
-  * Install nss overlay (LP: #675391):
-    - debian/rules: run install target for nssov module.
-    - debian/patches/nssov-build: fix patch to install schema in
-      /etc/ldap/schema.
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Wed, 17 Nov 2010 18:16:42 -0500
-
-openldap (2.4.23-6ubuntu1) natty; urgency=low
-
-  * Merge from Debian unstable:
-    - Install a default DIT (LP: #442498).
-    - Document cn=config in README file (LP: #370784).
-    - remaining changes:
-      + AppArmor support:
-        - debian/apparmor-profile: add AppArmor profile
-        - use dh_apparmor:
-          - debian/rules: use dh_apparmor
-          - debian/control: Build-Depends on debhelper 7.4.20ubuntu5
-        - updated debian/slapd.README.Debian for note on AppArmor
-        - debian/slapd.dirs: add etc/apparmor.d/force-complain
-      + Enable GSSAPI support (LP: #495418):
-        - debian/patches/gssapi.diff, thanks to Jerry Carter (Likewise):
-          - Add --with-gssapi support
-          - Make guess_service_principal() more robust when determining
-            principal
-        - debian/patches/series: apply gssapi.diff patch.
-        - debian/configure.options: Configure with --with-gssapi
-        - debian/control: Added libkrb5-dev as a build depend
-      + debian/rules: Enable -DLDAP_CONNECTIONLESS to build CLDAP (UDP) support
-        in the openldap library, as required by Likewise-Open (LP: #390579)
-      + Don't build smbk5pwd overlay since it uses heimdal instead of krb5:
-        - debian/control: 
-          - remove build-dependency on heimdal-dev.
-          - remove slapd-smbk5pwd binary package.
-        - debian/rules: don't build smbk5pwd slapd module.
-      + debian/{control,rules}: enable PIE hardening
-      + ufw support (LP: #423246):
-        - debian/control: suggest ufw.
-        - debian/rules: install ufw profile.
-        - debian/slapd.ufw.profile: add ufw profile.
-      + Enable nssoverlay:
-        - debian/patches/nssov-build, debian/series, debian/rules: 
-          Apply, build and package the nss overlay.
-        - debian/schema/extra/misc.ldif: add ldif file for the misc schema
-          which defines rfc822MailMember (required by the nss overlay).
-      + debian/rules, debian/schema/extra/: 
-        Fix configure rule to supports extra schemas shipped as part
-        of the debian/schema/ directory.
-      + debian/rules, debian/slapd.py: Add apport hook. (LP: #610544)
-      + debian/slapd.init.ldif: don't set olcRootDN since it's not defined in
-        neither the default DIT nor via an Authn mapping.
-      + debian/slapd.scripts-common: adjust minimum version that triggers a
-        database upgrade. Upgrade from maverick shouldn't trigger database
-        upgrade (which would happen with the version used in Debian).
-      + debian/slapd.scripts-common: add slapcat_opts to local variables.
-        Remove unused variable new_conf.
-      + debian/slapd.script-common: Fix package reconfiguration.
-        - Fix backup directory naming for multiple reconfiguration.
-      + debian/slapd.default, debian/slapd.README.Debian: 
-        use the new configuration style.
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Fri, 12 Nov 2010 15:19:07 -0500
 
 openldap (2.4.23-6) unstable; urgency=high
 
@@ -914,80 +324,6 @@ openldap (2.4.23-1) unstable; urgency=low
 
  -- Matthijs Mohlmann <matthijs@cacholong.nl>  Mon, 12 Jul 2010 13:25:00 +0200
 
-openldap (2.4.23-0ubuntu4) natty; urgency=low
-
-  * debian/slapd.templates: amended typo in slapd/move_old_database 
-    (LP: #666028)
-
- -- James Page <james.page@canonical.com>  Mon, 08 Nov 2010 10:00:58 +0000
-
-openldap (2.4.23-0ubuntu3.2) maverick-proposed; urgency=low
-
-  * debian/slapd.templates: re-add slapd/move_old_database template as it's
-    used during the package upgrade. Thanks to James Page for pointing it.
-  * debian/slapd.config: restore debconf question slapd/move_old_database.
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Thu, 14 Oct 2010 16:56:38 -0400
-
-openldap (2.4.23-0ubuntu3.1) maverick-proposed; urgency=low
-
-  [ James Page ]
-  * Fixed install/upgrade process to dump/restore databases due 
-    to uplift to libdb4.8-dev (LP: #658227)   
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Thu, 14 Oct 2010 14:50:49 -0400
-
-openldap (2.4.23-0ubuntu3) maverick; urgency=low
-
-  * debian/rules: move dh_apparmor before dh_installinit
-
- -- Jamie Strandboge <jamie@ubuntu.com>  Fri, 06 Aug 2010 17:34:21 -0500
-
-openldap (2.4.23-0ubuntu2) maverick; urgency=low
-
-  * convert to using dh_apparmor:
-    - debian/rules, debian/slapd.post{inst,rm}: use dh_apparmor
-    - debian/control: Build-Depends on debhelper 7.4.20ubuntu5
-  * debian/apparmor-profile: use local include
-
- -- Jamie Strandboge <jamie@ubuntu.com>  Fri, 06 Aug 2010 15:08:55 -0500
-
-openldap (2.4.23-0ubuntu1) maverick; urgency=low
-
-  * New release, features include:
-    + Fixed libldap to return server's error code (ITS#6569)
-    + Fixed libldap memleaks (ITS#6568)
-    + Fixed liblutil off-by-one with delta (ITS#6541)
-    + Fixed slapd acls with glued databases (ITS#6468)
-    + Fixed slapd syncrepl rid logging (ITS#6533)
-    + Fixed slapd modrdn handling of invalid values (ITS#6570)
-    + Fixed slapd-bdb hasSubordinates computation (ITS#6549)
-    + Fixed slapd-bdb to use memcpy instead for strcpy (ITS#6474)
-    + Fixed slapd-bdb entry cache delete failure (ITS#6577)
-    + Fixed slapd-ldap to return control responses (ITS#6530)
-    + Fixed slapo-ppolicy to use Debug (ITS#6566)
-    + Fixed slapo-refint to zero out freed DN vals (ITS#6572)
-    + Fixed slapo-rwm to use Debug (ITS#6566)
-    + Fixed slapo-sssvlv to use Debug (ITS#6566)
-    + Fixed slapo-syncprov lost deletes in refresh phase (ITS#6555)
-    + Fixed slapo-valsort to use Debug (ITS#6566)
-    + Fixed contrib/nssov network.c missing patch (ITS#6562)
-    + Fixed test043 attribute sorting (ITS#6553)
-    + slapd-config(5) note default rootdn (ITS#6546)
-  * Rebased patches debian/patches/dropped nssov-build
-  * Resynchronize with Debian:
-    + debian/control:
-      - Bump standards-version to 3.9.0
-      - Use libdb4.8-dev (LP: #572489)
-    + Added debian/patches/issue-6534-patch
-    + Added debian/patches/ldap-conf-tls-cacertdir
-  * Add ufw support, thanks to  PatRiehecky (LP: #423246)
-
-   [Adam Sommer]
-   * debian/rules, debian/slapd.py: Add apport hook. (LP: #610544)
-
- -- Chuck Short <zulcss@ubuntu.com>  Wed, 28 Jul 2010 11:35:16 -0400
-
 openldap (2.4.21-1) unstable; urgency=low
 
   [ Steve Langasek ]
@@ -1019,79 +355,6 @@ openldap (2.4.21-1) unstable; urgency=low
 
  -- Matthijs Mohlmann <matthijs@cacholong.nl>  Thu, 22 Apr 2010 23:40:30 +0200
 
-openldap (2.4.21-0ubuntu5) lucid; urgency=low
-
-  * Fix local root connection access: replace olcAuthzRegexp mapping to
-    cn=localroot,cn=config with using the SASL dn directly in olcAccess.
-    Makes upgrades much simpler and robust (LP: #563829).
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Fri, 23 Apr 2010 00:23:31 -0400
-
-openldap (2.4.21-0ubuntu4) lucid; urgency=low
-
-  [ Simon Olofsson ]
-  * debian/slapd.postinst:
-    - Show a message after successful migration (LP: #538848)
-
-  [ Jorgen Rosink ]
-  * debian/slapd.init: add simple status checking with LSB compatible exit
-    codes (LP: #562377)
-  * debian/slapd.init.ldif:
-    - remove admin user in default config database (LP: #556176)
-    - in default config, add olcAccess entries giving access to controls
-      available and cn=subschema (LP: #427842)
-
-  [ Scott Moser ]
-  *  debian/slapd.scripts-common: Do not create /nonexistent directory
-     for openldap user's home (LP: #556176)
-  *  debian/slapd.postinst: fix cn=config olcAccess migration (LP: #559070)
-
- -- Scott Moser <smoser@ubuntu.com>  Mon, 12 Apr 2010 16:16:47 -0400
-
-openldap (2.4.21-0ubuntu3) lucid; urgency=low
-
-  * debian/slapd.postinst, debian/slapd.scripts-common: Upgrade databases
-    before trying to convert to slapd.d, to avoid upgrade failure from hardy
-    (LP: #536958)
-  * debian/slapd.postinst: Add a {1} numeric index to olcAccess entry in
-    olcDatabase={0}config.ldif to avoid upgrade failures (LP: #538516, #526230)
-
- -- Thierry Carrez <thierry.carrez@ubuntu.com>  Mon, 29 Mar 2010 13:31:47 +0200
-
-openldap (2.4.21-0ubuntu2) lucid; urgency=low
-
-  * debian/apparmor-profile: Update apparmor profile. (LP: #508190) 
-
- -- Chuck Short <zulcss@ubuntu.com>  Tue, 09 Mar 2010 13:33:35 -0500
-
-openldap (2.4.21-0ubuntu1) lucid; urgency=low
-
-  * New upstream release.
-  * debian/rules, debian/schema/extra/: 
-    Fix get-orig-source rule to supports extra schemas shipped as part of the
-    debian/schema/ directory.
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Thu, 18 Feb 2010 00:58:13 -0500
-
-openldap (2.4.18-0ubuntu2) lucid; urgency=low
-
-  * debian/patches/gssapi.diff, thanks to Jerry Carter (Likewise):
-    - Add --with-gssapi support
-    - Make guess_service_principal() more robust when determining principal
-  * Enable GSSAPI support (LP: #495418):
-    - debian/configure.options: Configure with --with-gssapi
-    - debian/control: Added libkrb5-dev as a build depend
-
- -- Thierry Carrez <thierry.carrez@ubuntu.com>  Fri, 11 Dec 2009 11:31:11 +0100
-
-openldap (2.4.18-0ubuntu1) karmic; urgency=low
-
-  * New upstream release: (LP: #419515):
-    + pcache overlay supports disconnected mode.
-  * Fix nss overlay load (LP: #417163).
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Mon, 07 Sep 2009 13:41:10 -0400
-
 openldap (2.4.17-2.1) unstable; urgency=high
 
   * Non-maintainer upload by the Security Team.
@@ -1118,108 +381,6 @@ openldap (2.4.17-2) unstable; urgency=low
 
  -- Steve Langasek <vorlon@debian.org>  Tue, 22 Sep 2009 20:06:34 -0700
 
-openldap (2.4.17-1ubuntu3) karmic; urgency=low
-
-   * Install a minimal slapd configuration instead of creating a default
-     database with a default DIT:
-     + Move openldap user home from /var/lib/ldap to /nonexistent.
-     + Remove all code and templates dealing with the default database and DIT
-       creation.
-     + Add an Authz map from root user (UID=0) to cn=localroot,cn=config and
-       grant all access to the latter in the cn=config database as well as the
-       default backend configuration.
-   * Add cn=localroot,cn=config authz mapping on upgrades.
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Tue, 11 Aug 2009 14:48:56 -0400
-
-openldap (2.4.17-1ubuntu2) karmic; urgency=low
-
-  [ Thierry Carrez ]
-  * debian/rules: Enable -DLDAP_CONNECTIONLESS to build CLDAP (UDP) support
-    in the openldap library, as required by Likewise-Open (LP: #390579)
-
-  [ Mathias Gug ]
-  * debian/patches/its6077-uniqueness-overlay: fixes some issues with the
-    uniqueness overlay.
-  * debian/patches/its6220-writetimeout-directive: fixes a problem with the
-    writetimeout directive being in effect even if it wasn't set, 
-    closing connections incorrectly.
-  * debian/patches/its6222-dncachesize-parameter: fixes the behavior of the
-    dncachesize parameter that was added in RE24, so that if it is set to 
-    "0" (now the default), it has an unlimited DN cache (RE23 always 
-    had an unlimited DN cache).
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Fri, 31 Jul 2009 13:43:46 -0400
-
-openldap (2.4.17-1ubuntu1) karmic; urgency=low
-  
-  [ Steve Langasek ]
-  * Fix up the lintian warnings:
-    - add missing misc-depends on all packages
-    - slapd, libldap-2.4-2-dbg sections changed to 'debug' to match archive
-      overrides
-    - bump Standards-Version to 3.8.2, no changes required.
-
-  [ Mathias Gug ]
-  * Resynchronise with Debian. Remaining changes:
-    - AppArmor support:
-      - debian/apparmor-profile: add AppArmor profile
-      - updated debian/slapd.README.Debian for note on AppArmor
-      - debian/slapd.dirs: add etc/apparmor.d/force-complain
-      - debian/slapd.postrm: remove symlink in force-complain/ on purge
-      - debian/rules: install apparmor profile.
-    - Don't use local statement in config script as it fails if /bin/sh
-      points to bash.
-    - debian/slapd.postinst, debian/slapd.script-common: set correct
-      ownership and permissions on /var/lib/ldap, /etc/ldap/slapd.d (group
-      readable) and /var/run/slapd (world readable).
-    - Enable nssoverlay:
-      - debian/patches/nssov-build, debian/rules: Build and package the nss
-        overlay.
-      - debian/schema/misc.ldif: add ldif file for the misc schema which
-        defines rfc822MailMember (required by the nss overlay).
-    - debian/{control,rules}: enable PIE hardening
-    - Use cn=config as the default configuration backend instead of
-      slapd.conf. Migrate slapd.conf file to /etc/ldap/slapd.d/ on upgrade
-      asking the end user to enter a new password to control the access to
-      the cn=config tree.
-    - debian/slapd.postinst: create /var/run/slapd before updating its
-      permissions.
-    - debian/slapd.init: Correctly set slapd config backend option even if
-      the pidfile is configured in slapd default file.
-  * Dropped:
-    - Merged in Debian:
-      - Update priority of libldap-2.4-2 to match the archive override.
-      - Add the missing ldapexop and ldapurl tools to ldap-utils, as well as
-        the ldapurl(1) manpage.
-      - Bump build-dependency on debhelper to 6 instead of 5, since that's
-        what we're using.
-      - Set the default SLAPD_SERVICES to ldap:/// ldapi:///, instead of using
-        the built-in default of ldap:/// only.
-    - Fixed in upstream release:
-      - debian/patches/fix-ldap_back_entry_get_rwa.patch: fix test-0034
-        failure when built with PIE.
-      - debian/patches/gnutls-enable-v1-ca-certs: Enable V1 CA certs to be
-        trusted.
-    - Update Apparmor profile support: don't support upgrade from pre-hardy
-      systems:
-      - debian/slapd.postinst: Reload AA profile on configuration
-      - debian/control: Recommends apparmor >= 2.1+1075-0ubuntu6
-      - debian/control: Conflicts with apparmor-profiles <<
-        2.1+1075-0ubuntu4 to make sure that if earlier version of
-        apparmor-profiles gets installed it won't overwrite our profile.
-      - follow ApparmorProfileMigration and force apparmor complain mode on
-        some upgrades
-      - debian/slapd.preinst: create symlink for force-complain on
-        pre-feisty upgrades, upgrades where apparmor-profiles profile is
-        unchanged (ie non-enforcing) and upgrades where apparmor profile
-        does not exist.
-    - debian/patches/autogen.sh: no longer needed with karmic libtool.
-      - Call libtoolize with the --install option to install
-        config.{guess,sub} files.
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Thu, 30 Jul 2009 16:42:58 -0400
-
 openldap (2.4.17-1) unstable; urgency=low
 
   * New upstream version.
@@ -1242,153 +403,6 @@ openldap (2.4.17-1) unstable; urgency=low
 
  -- Steve Langasek <vorlon@debian.org>  Tue, 28 Jul 2009 10:17:15 -0700
 
-openldap (2.4.15-1.1ubuntu1) karmic; urgency=low
-
-  * Resynchronise with Debian. Remaining changes:
-    - AppArmor support:
-      - debian/apparmor-profile: add AppArmor profile
-      - debian/slapd.postinst: Reload AA profile on configuration
-      - updated debian/slapd.README.Debian for note on AppArmor
-      - debian/control: Recommends apparmor >= 2.1+1075-0ubuntu6
-      - debian/control: Conflicts with apparmor-profiles <<
-        2.1+1075-0ubuntu4 to make sure that if earlier version of
-        apparmor-profiles gets installed it won't overwrite our profile.
-      - follow ApparmorProfileMigration and force apparmor complain mode on
-        some upgrades
-      - debian/slapd.dirs: add etc/apparmor.d/force-complain
-      - debian/slapd.preinst: create symlink for force-complain on
-        pre-feisty upgrades, upgrades where apparmor-profiles profile is
-        unchanged (ie non-enforcing) and upgrades where apparmor profile
-        does not exist.
-      - debian/slapd.postrm: remove symlink in force-complain/ on purge
-    - debian/patches/autogen.sh:
-      - Call libtoolize with the --install option to install
-        config.{guess,sub} files.
-    - Don't use local statement in config script as it fails if /bin/sh
-      points to bash.
-    - debian/slapd.postinst, debian/slapd.script-common: set correct
-      ownership and permissions on /var/lib/ldap, /etc/ldap/slapd.d (group
-      readable) and /var/run/slapd (world readable).
-    - Enable nssoverlay:
-      - debian/patches/nssov-build, debian/rules: Build and package the nss
-        overlay.
-      - debian/schema/misc.ldif: add ldif file for the misc schema which
-        defines rfc822MailMember (required by the nss overlay).
-    - debian/{control,rules}: enable PIE hardening
-    - Use cn=config as the default configuration backend instead of
-      slapd.conf. Migrate slapd.conf file to /etc/ldap/slapd.d/ on upgrade
-      asking the end user to enter a new password to control the access to
-      the cn=config tree.
-    - Update priority of libldap-2.4-2 to match the archive override.
-    - Add the missing ldapexop and ldapurl tools to ldap-utils, as well as
-      the ldapurl(1) manpage.
-    - Bump build-dependency on debhelper to 6 instead of 5, since that's
-      what we're using.
-    - Set the default SLAPD_SERVICES to ldap:/// ldapi:///, instead of using
-      the built-in default of ldap:/// only.
-    - debian/patches/fix-ldap_back_entry_get_rwa.patch: fix test-0034
-      failure when built with PIE.
-    - debian/patches/gnutls-enable-v1-ca-certs: Enable V1 CA certs to be
-      trusted.
-    - debian/slapd.postinst: create /var/run/slapd before updating its
-      permissions.
-    - debian/slapd.init: Correctly set slapd config backend option even if
-      the pidfile is configured in slapd default file.
-  * Drop patch to avoid the test suite on hppa, as hppa is EOL.
-
- -- Colin Watson <cjwatson@ubuntu.com>  Wed, 24 Jun 2009 10:45:20 +0100
-
-openldap (2.4.15-1.1) unstable; urgency=low
-
-  * Non-maintainer upload.
-  * Change libltdl3-dev Build-Depends to libltdl-dev | libltdl3-dev
-    (Closes: #522965)
-
- -- Kurt Roeckx <kurt@roeckx.be>  Sun, 19 Apr 2009 18:24:32 +0200
-
-openldap (2.4.15-1ubuntu3) jaunty; urgency=low
-
-  * No-change rebuild to fix lpia shared library dependencies.
-
- -- Colin Watson <cjwatson@ubuntu.com>  Thu, 19 Mar 2009 09:52:40 +0000
-
-openldap (2.4.15-1ubuntu2) jaunty; urgency=low
-
-  * debian/slapd.postinst: create /var/run/slapd before updating its
-    permissions (LP: #298928). 
-  * debian/slapd.init: Correclty set slapd config backend option even if the
-    pidfile is configured in slapd default file (LP: #292364).
-  * debian/apparmor-profile: support multiple databases to be stored under
-    /var/lib/ldap/. (LP: #286614).
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Fri, 13 Mar 2009 13:56:12 -0400
-
-openldap (2.4.15-1ubuntu1) jaunty; urgency=low
-
-  [ Steve Langasek ]
-  * Update priority of libldap-2.4-2 to match the archive override.
-  * Add the missing ldapexop and ldapurl tools to ldap-utils, as well as the
-    ldapurl(1) manpage.  Thanks to Peter Marschall for the patch.
-    Closes: #496749.
-  * Bump build-dependency on debhelper to 6 instead of 5, since that's
-    what we're using.  Closes: #498116.
-  * Set the default SLAPD_SERVICES to ldap:/// ldapi:///, instead of using
-    the built-in default of ldap:/// only.
-
-  [ Mathias Gug ]
-  * Merge from debian unstable, remaining changes:
-    - Modify Maintainer value to match the DebianMaintainerField
-      speficication.
-    - AppArmor support:
-      - debian/apparmor-profile: add AppArmor profile
-      - debian/slapd.postinst: Reload AA profile on configuration
-      - updated debian/slapd.README.Debian for note on AppArmor
-      - debian/control: Recommends apparmor >= 2.1+1075-0ubuntu6
-      - debian/control: Conflicts with apparmor-profiles << 2.1+1075-0ubuntu4
-        to make sure that if earlier version of apparmour-profiles gets
-        installed it won't overwrite our profile.
-      - follow ApparmorProfileMigration and force apparmor compalin mode on 
-        some upgrades (LP: #203529)
-      - debian/slapd.dirs: add etc/apparmor.d/force-complain
-      - debian/slapd.preinst: create symlink for force-complain on pre-feisty
-        upgrades, upgrades where apparmor-profiles profile is unchanged (ie
-        non-enforcing) and upgrades where apparmor profile does not exist.
-      - debian/slapd.postrm: remove symlink in force-complain/ on purge
-    - debian/control:
-      - Build-depend on libltdl7-dev rather then libltdl3-dev.
-    - debian/patches/autogen.sh:
-      - Call libtoolize with the --install option to install config.{guess,sub}
-        files.
-    - Don't use local statement in config script as it fails if /bin/sh
-      points to bash (LP: #286063).
-    - Disable the testsuite on hppa. Allows building of packages on this
-      architecture again, once this package is in the archive.
-      LP: #288908.
-    - debian/slapd.postinst, debian/slapd.script-common: set correct ownership
-      and permissions on /var/lib/ldap, /etc/ldap/slapd.d (group readable) and
-      /var/run/slapd (world readable). (LP: #257667).
-    - Enable nssoverlay:
-      - debian/patches/nssov-build, debian/rules: Build and package 
-        the nss overlay.
-      - debian/schema/misc.ldif: add ldif file for the misc schema
-        which defines rfc822MailMember (required by the nss overlay).
-    - debian/{control,rules}: enable PIE hardening
-    - Use cn=config as the default configuration backend instead of 
-      slapd.conf. Migrate slapd.conf  file to /etc/ldap/slapd.d/ on upgrade
-      asking the end user to enter a new password to control the access to the
-      cn=config tree.
-  * Dropped:
-    - debian/patches/corrupt-contextCSN: The contextCSN can get corrupted at
-      times. (ITS: #5947) Fixed in new upstream version 2.4.15.
-    - debian/patches/fix-ucred-libc due to changes how newer glibc handle
-      the ucred struct now. Implemented in Debian.
-  * debian/patches/fix-ldap_back_entry_get_rwa.patch: fix test-0034 failure
-    when built with PIE.
-  * debian/patches/gnutls-enable-v1-ca-certs: Enable V1 CA certs to be
-    trusted (LP: #305264).
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Fri, 06 Mar 2009 17:34:21 -0500
-
 openldap (2.4.15-1) unstable; urgency=low
 
   * New upstream version
@@ -1405,69 +419,6 @@ openldap (2.4.15-1) unstable; urgency=low
     current headers in unstable
 
  -- Steve Langasek <vorlon@debian.org>  Tue, 24 Feb 2009 14:27:35 -0800
-
-openldap (2.4.14-0ubuntu1) jaunty; urgency=low
-
-  [ Steve Langasek ]
-  * New upstream version
-    - Fixes a bug with the pcache overlay not returning cached entries
-      (closes: #497697)
-    - Update evolution-ntlm patch to apply to current Makefiles.
-    - (tentatively) drop gnutls-ciphers, since this bug was reported to be
-      fixed upstream in 2.4.8.  The fix applied in 2.4.8 didn't match the
-      patch from the bug report, so this should be watched for regressions.
-  * Build against db4.7 instead of db4.2 at last!  Closes: #421946.
-  * Build with --disable-ndb, to avoid a misbuild when libmysqlclient is
-    installed in the build environment.
-  * New patch, no-crlcheck-for-gnutls, to fix a build failure when using
-    --with-tls=gnutls.
-
-  [ Mathias Gug ]
-  * Merge from debian unstable, remaining changes:
-    - debian/apparmor-profile: add AppArmor profile
-    - debian/slapd.postinst: Reload AA profile on configuration
-    - updated debian/slapd.README.Debian for note on AppArmor
-    - debian/control: Recommends apparmor >= 2.1+1075-0ubuntu6
-    - debian/control: Conflicts with apparmor-profiles << 2.1+1075-0ubuntu4
-      to make sure that if earlier version of apparmour-profiles gets
-      installed it won't overwrite our profile.
-    - Modify Maintainer value to match the DebianMaintainerField
-      speficication.
-    - follow ApparmorProfileMigration and force apparmor compalin mode on 
-      some upgrades (LP: #203529)
-    - debian/slapd.dirs: add etc/apparmor.d/force-complain
-    - debian/slapd.preinst: create symlink for force-complain on pre-feisty
-      upgrades, upgrades where apparmor-profiles profile is unchanged (ie
-      non-enforcing) and upgrades where apparmor profile does not exist.
-    - debian/slapd.postrm: remove symlink in force-complain/ on purge
-    - debian/patches/fix-ucred-libc due to changes how newer glibc handle
-      the ucred struct now.
-    - debian/control:
-      - Build-depend on libltdl7-dev rather then libltdl3-dev.
-    - debian/patches/autogen.sh:
-      - Call libtoolize with the --install option to install config.{guess,sub}
-        files.
-    - Don't use local statement in config script as it fails if /bin/sh
-      points to bash (LP: #286063).
-    - Disable the testsuite on hppa. Allows building of packages on this
-      architecture again, once this package is in the archive.
-      LP: #288908.
-    - debian/slapd.postinst, debian/slapd.script-common: set correct ownership
-      and permissions on /var/lib/ldap, /etc/ldap/slapd.d (group readable) and
-      /var/run/slapd (world readable). (LP: #257667).
-    - debian/patches/nssov-build, debian/rules: 
-      Build and package the nss overlay.
-      debian/schema/misc.ldif: add ldif file for the misc schema, which defines
-      rfc822MailMember (required by the nss overlay).
-    - debian/{control,rules}: enable PIE hardening
-    - Use cn=config as the default configuration backend instead of 
-      slapd.conf. Migrate slapd.conf  file to /etc/ldap/slapd.d/ on upgrade
-      asking the end user to enter a new password to control the access to the
-      cn=config tree.
-  * debian/patches/corrupt-contextCSN: The contextCSN can get corrupted at
-    times. (ITS: #5947)
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Wed, 18 Feb 2009 18:44:00 -0500
 
 openldap (2.4.11-1) unstable; urgency=low
 
@@ -1490,110 +441,6 @@ openldap (2.4.11-1) unstable; urgency=low
     problems from etch.  Closes: #487211.
 
  -- Steve Langasek <vorlon@debian.org>  Sat, 11 Oct 2008 01:53:55 -0700
-
-openldap (2.4.11-0ubuntu7) jaunty; urgency=low
-
-  * Don't use local statement in config script as it fails if /bin/sh
-    points to bash (LP: #286063).
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Tue, 04 Nov 2008 20:03:46 -0500
-
-openldap (2.4.11-0ubuntu6) intrepid; urgency=low
-
-  * Disable the testsuite on hppa. Allows building of packages on this
-    architecture again, once this package is in the archive.
-    LP: #288908.
-
- -- Matthias Klose <doko@ubuntu.com>  Fri, 24 Oct 2008 23:22:33 +0200
-
-openldap (2.4.11-0ubuntu5) intrepid; urgency=low
-
-  * Don't set admin passwords in ldif files if adminpw is empty. 
-    (LP: #273988 - LP: #276606).  
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Mon, 13 Oct 2008 19:31:15 -0400
-
-openldap (2.4.11-0ubuntu4) intrepid; urgency=low
-
-  * debian/slapd.postinst, debian/slapd.script-common: set correct ownership
-    and permissions on /var/lib/ldap, /etc/ldap/slapd.d (group readable) and
-    /var/run/slapd (world readable). (LP: #257667).
-  * debian/slapd.script-common: 
-    - Fix package reconfiguration:
-      + Remove slapd.d/ directory if it already exists when creating a new 
-        configuration.
-      + Fix backup directory naming for multiple reconfiguration.
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Wed, 24 Sep 2008 21:01:42 -0400
-
-openldap (2.4.11-0ubuntu3) intrepid; urgency=low
-
-  * debian/patches/nssov-build, debian/rules: 
-    Build and package the nss overlay.
-  * debian/schema/misc.ldif: add ldif file for the misc schema, which defines
-    rfc822MailMember (required by the nss overlay).
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Tue, 26 Aug 2008 18:42:54 -0400
-
-openldap (2.4.11-0ubuntu2) intrepid; urgency=low
-
-  * debian/{control,rules}: enable PIE hardening
-
- -- Kees Cook <kees@ubuntu.com>  Wed, 20 Aug 2008 15:47:01 -0700
-
-openldap (2.4.11-0ubuntu1) intrepid; urgency=low
-
-  * New upstream version:
-    - Mainly bug fixes.
-    - New nss slapd overlay (not compiled by default).
-  * Use cn=config as the default configuration backend instead of 
-    slapd.conf. Migrate slapd.conf  file to /etc/ldap/slapd.d/ on upgrade
-    asking the end user to enter a new password to control the access to the
-    cn=config tree.
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Mon, 11 Aug 2008 20:26:05 -0400
-
-openldap (2.4.10-3ubuntu1) intrepid; urgency=low
-
-  [ Mathias Gug ]
-  * Merge from debian unstable, remaining changes:
-    - debian/apparmor-profile: add AppArmor profile
-    - debian/slapd.postinst: Reload AA profile on configuration
-    - updated debian/slapd.README.Debian for note on AppArmor
-    - debian/control: Recommends apparmor >= 2.1+1075-0ubuntu6
-    - debian/control: Conflicts with apparmor-profiles << 2.1+1075-0ubuntu4
-      to make sure that if earlier version of apparmour-profiles gets
-      installed it won't overwrite our profile.
-    - Modify Maintainer value to match the DebianMaintainerField
-      speficication.
-    - follow ApparmorProfileMigration and force apparmor compalin mode on 
-      some upgrades (LP: #203529)
-    - debian/slapd.dirs: add etc/apparmor.d/force-complain
-    - debian/slapd.preinst: create symlink for force-complain on pre-feisty
-      upgrades, upgrades where apparmor-profiles profile is unchanged (ie
-      non-enforcing) and upgrades where apparmor profile does not exist.
-    - debian/slapd.postrm: remove symlink in force-complain/ on purge
-    - debian/patches/fix-ucred-libc due to changes how newer glibc handle
-      the ucred struct now.
-    - debian/patches/fix-unique-overlay-assertion.patch: 
-      Fix another assertion error in unique overlay (LP: #243337).
-      Backport from head.
-  * Dropped - implemented in Debian:
-    - debian/patches/fix-gnutls-key-strength.patch:
-      Fix slapd handling of ssf using gnutls. (LP: #244925).
-    - debian/control:
-      Add time as build dependency: needed by make test.
-  * debian/control:
-    - Build-depend on libltdl7-dev rather then libltdl3-dev.
-  * debian/patches/autogen.sh:
-    - Call libtoolize with the --install option to install config.{guess,sub}
-    files.
-
-  [ Jamie Strandboge ]
-  * adjust apparmor profile to allow gssapi (LP: #229252)
-  * adjust apparmor profile to allow cnconfig (LP: #243525) 
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Wed, 30 Jul 2008 19:46:02 -0400
 
 openldap (2.4.10-3) unstable; urgency=low
 
@@ -1628,40 +475,6 @@ openldap (2.4.10-3) unstable; urgency=low
 
  -- Steve Langasek <vorlon@debian.org>  Mon, 28 Jul 2008 15:26:06 -0700
 
-openldap (2.4.10-2ubuntu1) intrepid; urgency=low
-
-  * Merge from debian unstable, remaining changes:
-    - debian/apparmor-profile: add AppArmor profile
-    - debian/slapd.postinst: Reload AA profile on configuration
-    - updated debian/slapd.README.Debian for note on AppArmor
-    - debian/control: Recommends apparmor >= 2.1+1075-0ubuntu6
-    - debian/control: Conflicts with apparmor-profiles << 2.1+1075-0ubuntu4
-      to make sure that if earlier version of apparmour-profiles gets
-      installed it won't overwrite our profile.
-    - Modify Maintainer value to match the DebianMaintainerField
-      speficication.
-    - follow ApparmorProfileMigration and force apparmor compalin mode on 
-      some upgrades (LP: #203529)
-    - debian/slapd.dirs: add etc/apparmor.d/force-complain
-    - debian/slapd.preinst: create symlink for force-complain on pre-feisty
-      upgrades, upgrades where apparmor-profiles profile is unchanged (ie
-      non-enforcing) and upgrades where apparmor profile does not exist.
-    - debian/slapd.postrm: remove symlink in force-complain/ on purge
-    - debian/patches/fix-ucred-libc due to changes how newer glibc handle
-      the ucred struct now.
-    - debian/patches/fix-unique-overlay-assertion.patch: 
-      Fix another assertion error in unique overlay (LP: #243337).
-      Backport from head.
-    - debian/patches/fix-gnutls-key-strength.patch:
-      Fix slapd handling of ssf using gnutls. (LP: #244925).
-    - debian/control:
-      Add time as build dependency: needed by make test.
-  * Dropped - implemented in Debian:
-    - debian/rules:
-      Support debuild nocheck option: don't run tests if nocheck is set.
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Thu, 10 Jul 2008 14:45:49 -0400
-
 openldap (2.4.10-2) unstable; urgency=low
 
   * Support DEB_BUILD_OPTIONS=nocheck to disable running the test suite at
@@ -1675,54 +488,6 @@ openldap (2.4.10-2) unstable; urgency=low
       back into the archive due to my bad merge of 2.4.10.
 
  -- Steve Langasek <vorlon@debian.org>  Sun, 06 Jul 2008 22:03:32 -0700
-
-openldap2.3 (2.4.10-1ubuntu1) intrepid; urgency=low
-
-  * Merge from debian unstable, remaining changes:
-    - debian/apparmor-profile: add AppArmor profile
-    - debian/slapd.postinst: Reload AA profile on configuration
-    - updated debian/slapd.README.Debian for note on AppArmor
-    - debian/control: Recommends apparmor >= 2.1+1075-0ubuntu6
-    - debian/control: Conflicts with apparmor-profiles << 2.1+1075-0ubuntu4
-      to make sure that if earlier version of apparmour-profiles gets
-      installed it won't overwrite our profile.
-    - Modify Maintainer value to match the DebianMaintainerField
-      speficication.
-    - follow ApparmorProfileMigration and force apparmor compalin mode on 
-      some upgrades (LP: #203529)
-    - debian/slapd.dirs: add etc/apparmor.d/force-complain
-    - debian/slapd.preinst: create symlink for force-complain on pre-feisty
-      upgrades, upgrades where apparmor-profiles profile is unchanged (ie
-      non-enforcing) and upgrades where apparmor profile does not exist.
-    - debian/slapd.postrm: remove symlink in force-complain/ on purge
-    - debian/patches/fix-ucred-libc due to changes how newer glibc handle
-      the ucred struct now.
-    - debian/patches/fix-unique-overlay-assertion.patch: 
-      Fix another assertion error in unique overlay (LP: #243337).
-      Backport from head.
-  * debian/control:
-    - add time as build dependency: needed by make test.
-  * debian/rules:
-    - support debuild nocheck option: don't run tests if nocheck is set.
-  * debian/patches/fix-gnutls-key-strength.patch:
-    - fix slapd handling of ssf using gnutls. (LP: #244925).
-  * Dropped - accepted in Debian:
-    - debian/rules, debian/slapd.links: use hard links to slapd instead of
-      symlinks for slap* so these applications aren't confined by apparmor
-      (LP: #203898)
-  * Dropped - fixed in new upstream release:
-    - debian/patches/fix-assertion-io.patch: Fixes ber_flush2 assertion. 
-      (LP: #215904)
-    - debian/patches/fix-dnpretty-assertion.patch: Fix dnPrettyNormal assertion
-      error. (LP: #234196)
-    - dropped debian/patches/fix-notify-crasher.patch: Fix modify timestamp crashes.
-      (LP: #220724)
-    - debian/patches/fix-syncrepl-oops: Fixes segmentation fault when using
-      syncrepl. (LP: #227178) 
-    - dropped debian/patches/SECURITY_CVE-2008-0658.patch. Already applied 
-      upstream.
-
- -- Mathias Gug <mathiaz@ubuntu.com>  Thu, 03 Jul 2008 14:15:08 -0400
 
 openldap2.3 (2.4.10-1) unstable; urgency=low
 
@@ -1747,64 +512,6 @@ openldap2.3 (2.4.10-1) unstable; urgency=low
     (Closes: #474976, #483631, #483633)
 
  -- Steve Langasek <vorlon@debian.org>  Mon, 30 Jun 2008 04:28:34 -0700
-
-openldap2.3 (2.4.9-1ubuntu4) intrepid; urgency=low
-
-  * debian/patches/fix-unique-overlay-assertion.patch: 
-    - Fix another assertion error in unique overlay, backported from head.
-      (LP: #243337) Note: This patch will still be needed when moved to 2.4.10 
-
- -- Chuck Short <zulcss@ubuntu.com>  Mon, 30 Jun 2008 18:49:52 +0000
-
-openldap2.3 (2.4.9-1ubuntu3) intrepid; urgency=low
-
-  * Drop spurious dependency on hiemdal-dev. Caused by an aborted attempt to
-    include the smbk5pwd overlay.
-
- -- Chuck Short <zulcss@ubuntu.com>  Wed, 11 Jun 2008 21:25:40 +0000
-
-openldap2.3 (2.4.9-1ubuntu2) intrepid; urgency=low
-
-  * Rebuild for perl 5.10 transition (LP: #230016)
-  * debian/patches/fix-syncrepl-oops: Fixes segmentation fault when using
-    syncrepl. (LP: #227178) 
-
- -- Chuck Short <zulcss@ubuntu.com>  Mon, 09 Jun 2008 14:56:40 +0000
-
-openldap2.3 (2.4.9-1ubuntu1) intrepid; urgency=low
-
-  * Merge from debian unstable, remaining changes:
-    - debian/apparmor-profile: add AppArmor profile
-    - debian/slapd.postinst: Reload AA profile on configuration
-    - updated debian/slapd.README.Debian for note on AppArmor
-    - debian/control: Recommends apparmor >= 2.1+1075-0ubuntu6
-    - debian/control: Conflicts with apparmor-profiles << 2.1+1075-0ubuntu4
-      to make sure that if earlier version of apparmour-profiles gets
-      installed it won't overwrite our profile.
-    - Modify Maintainer value to match the DebianMaintainerField
-      speficication.
-    - follow ApparmorProfileMigration and force apparmor compalin mode on 
-      some upgrades (LP: #203529)
-    - debian/slapd.dirs: add etc/apparmor.d/force-complain
-    - debian/slapd.preinst: create symlink for force-complain on pre-feisty
-      upgrades, upgrades where apparmor-profiles profile is unchanged (ie
-      non-enforcing) and upgrades where apparmor profile does not exist.
-    - debian/slapd.postrm: remove symlink in force-complain/ on purge
-    - debian/rules, debian/slapd.links: use hard links to slapd instead of
-      symlinks for slap* so these applications aren't confined by apparmor
-      (LP: #203898)
-    - debian/patches/fix-assertion-io.patch: Fixes ber_flush2 assertion. 
-      (LP: #215904)
-    - debian/patches/fix-dnpretty-assertion.patch: Fix dnPrettyNormal assertion
-      error. (LP: #234196)
-    - dropped debian/patches/fix-notify-crasher.patch: Fix modify timestamp crashes.
-      (LP: #220724)
-    - dropped debian/patches/SECURITY_CVE-2008-0658.patch. Already applied 
-      upstream.
-   * Added debian/patches/fix-ucred-libc due to changes how newer glibc handle
-     the ucred struct now.
-
- -- Chuck Short <zulcss@ubuntu.com>  Fri, 30 May 2008 17:09:53 +0100
 
 openldap2.3 (2.4.9-1) unstable; urgency=low
 
@@ -1876,51 +583,6 @@ openldap2.3 (2.4.7-6.1) unstable; urgency=high
 
  -- Nico Golde <nion@debian.org>  Tue, 04 Mar 2008 14:34:44 +0100
 
-openldap2.3 (2.4.7-6ubuntu3) hardy; urgency=low
-
-  * remove apparmor-profile workaround for Launchpad #202161 (it's now fixed
-    in klibc)
-
- -- Jamie Strandboge <jamie@ubuntu.com>  Mon, 07 Apr 2008 16:09:38 -0400
-
-openldap2.3 (2.4.7-6ubuntu2) hardy; urgency=low
-
-  * apparmor-profile workaround for Launchpad #202161 
-  * follow ApparmorProfileMigration and force apparmor complain mode on some
-    upgrades (LP: #203529)
-    - debian/control: Recommends apparmor >= 2.1+1075-0ubuntu6
-    - debian/slapd.dirs: add etc/apparmor.d/force-complain
-    - debian/slapd.preinst: create symlink for force-complain/ on pre-feisty
-      upgrades, upgrades where apparmor-profiles profile is unchanged (ie
-      non-enforcing) and upgrades where apparmor profile does not exist
-    - debian/slapd.postrm: remove symlink in force-complain/ on purge
-  * debian/rules, debian/slapd.links: use hard links to slapd instead of
-    symlinks for slap* so these applications aren't confined by apparmor
-    (LP: #203898)
-
- -- Jamie Strandboge <jamie@ubuntu.com>  Tue, 18 Mar 2008 13:53:23 -0400
-
-openldap2.3 (2.4.7-6ubuntu1) hardy; urgency=low
-
-  * Merge from Debian unstable, remaining changes:
-    + debian/patches/SECURITY_CVE-2008-0658.patch (LP: #197077)
-      slapd/back-bdb/modrdn.c in the BDB backend for slapd in OpenLDAP 2.3.39
-      allows remote authenticated users to cause a denial of service (daemon
-      crash) via a modrdn operation with a NOOP (LDAP_X_NO_OPERATION)
-      control, a related issue to CVE-2007-6698.
-    + debian/apparmor-profile: add AppArmor profile
-    + debian/slapd.postinst: Reload AA profile on configuration
-    + updated debian/slapd.README.Debian for note on AppArmor
-    + debian/control: Replaces apparmor-profiles << 2.1+1075-0ubuntu4 as we
-      should now take control
-    + debian/control: Conflicts with apparmor-profiles << 2.1+1075-0ubuntu4
-      to make sure that if earlier version of apparmor-profiles gets
-      installed it won't overwrite our profile
-    + Modify Maintainer value to match the DebianMaintainerField
-      specification.
-
- -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 04 Mar 2008 01:59:51 +0000
-
 openldap2.3 (2.4.7-6) unstable; urgency=low
 
   [ Updated debconf translations ]
@@ -1965,37 +627,6 @@ openldap2.3 (2.4.7-6) unstable; urgency=low
       upstream.
 
  -- Steve Langasek <vorlon@debian.org>  Thu, 28 Feb 2008 22:15:17 -0800
-
-openldap2.3 (2.4.7-5ubuntu2) hardy; urgency=low
-
-  * SECURITY UPDATE: 
-   + debian/patches/SECURITY_CVE-2008-0658.patch (LP: #197077)
-     slapd/back-bdb/modrdn.c in the BDB backend for slapd in OpenLDAP 2.3.39 
-     allows remote authenticated users to cause a denial of service (daemon crash) 
-     via a modrdn operation with a NOOP (LDAP_X_NO_OPERATION) control, a related 
-     issue to CVE-2007-6698.
-
-  * References
-   - http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=2008-0658
-   - http://www.openldap.org/its/index.cgi/Software%20Bugs?id=5358
-
- -- Emanuele Gentili <emgent@emanuele-gentili.com>  Sun, 02 Mar 2008 16:34:30 +0100
-
-openldap2.3 (2.4.7-5ubuntu1) hardy; urgency=low
-
-  * add AppArmor profile
-    + debian/apparmor-profile
-    + debian/slapd.postinst: Reload AA profile on configuration
-  * updated debian/slapd.README.Debian for note on AppArmor
-  * debian/control: Replaces apparmor-profiles << 2.1+1075-0ubuntu4 as we
-    should now take control
-  * debian/control: Conflicts with apparmor-profiles << 2.1+1075-0ubuntu4
-    to make sure that if earlier version of apparmor-profiles gets installed
-    it won't overwrite our profile
-  * Modify Maintainer value to match the DebianMaintainerField
-    specification.
-
- -- Jamie Strandboge <jamie@ubuntu.com>  Wed, 13 Feb 2008 17:15:41 +0000
 
 openldap2.3 (2.4.7-5) unstable; urgency=low
 
@@ -4090,4 +2721,3 @@ openldap2 (2.0-1) unstable; urgency=low
   * Initial release of OpenLDAP 2 test code
 
  -- Ben Collins <bcollins@debian.org>  Tue, 29 Aug 2000 14:28:39 -0400
-

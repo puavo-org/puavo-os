@@ -1,30 +1,35 @@
-Index: trunk/contrib/slapd-modules/autogroup/Makefile
-===================================================================
---- trunk.orig/contrib/slapd-modules/autogroup/Makefile
-+++ trunk/contrib/slapd-modules/autogroup/Makefile
-@@ -1,6 +1,6 @@
--LIBTOOL=../../../libtool
-+LIBTOOL=../../../debian/build/libtool
+--- a/contrib/slapd-modules/autogroup/Makefile
++++ b/contrib/slapd-modules/autogroup/Makefile
+@@ -2,11 +2,11 @@
  
--CPPFLAGS+=-I../../../include -I../../../servers/slapd
-+CPPFLAGS+=-I../../../debian/build/include -I../../../include -I../../../servers/slapd
+ LDAP_SRC = ../../..
+ LDAP_BUILD = ../../..
+-LDAP_INC = -I$(LDAP_BUILD)/include -I$(LDAP_SRC)/include -I$(LDAP_SRC)/servers/slapd
+-LDAP_LIB = $(LDAP_BUILD)/libraries/libldap_r/libldap_r.la \
+-	$(LDAP_BUILD)/libraries/liblber/liblber.la
++LDAP_INC = -I$(LDAP_BUILD)/debian/build/include -I$(LDAP_BUILD)/include -I$(LDAP_SRC)/include -I$(LDAP_SRC)/servers/slapd
++LDAP_LIB = $(LDAP_BUILD)/debian/build/libraries/libldap_r/libldap_r.la \
++	$(LDAP_BUILD)/debian/build/libraries/liblber/liblber.la
  
- ldap_subdir = openldap
- prefix=/usr/local
-@@ -16,12 +16,12 @@
+-LIBTOOL = $(LDAP_BUILD)/libtool
++LIBTOOL = $(LDAP_BUILD)/debian/build/libtool
+ CC = gcc
+ OPT = -g -O2 -Wall
+ DEFS = 
+@@ -16,13 +16,13 @@ LIBS = $(LDAP_LIB)
+ PROGRAMS = autogroup.la
+ LTVER = 0:0:0
  
- autogroup.la:	autogroup.lo
- 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -version-info 0:0:0 \
--	-rpath $(libdir) -module -o $@ $? 
-+	-rpath /usr/lib/ldap -module -o $@ $?
+-prefix=/usr/local
++prefix=/usr
+ exec_prefix=$(prefix)
+-ldap_subdir=/openldap
++ldap_subdir=/ldap
  
- clean:
- 	rm -f autogroup.lo autogroup.la
+ libdir=$(exec_prefix)/lib
+ libexecdir=$(exec_prefix)/libexec
+-moduledir = $(libexecdir)$(ldap_subdir)
++moduledir = $(libdir)$(ldap_subdir)
  
- install: autogroup.la
--	mkdir -p $(DESTDIR)$(moduledir)
--	$(LIBTOOL) --mode=install cp autogroup.la $(DESTDIR)$(moduledir)
--	$(LIBTOOL) --finish $(DESTDIR)$(moduledir)
-+	mkdir -p $(DESTDIR)/usr/lib/ldap
-+	$(LIBTOOL) --mode=install cp autogroup.la $(DESTDIR)/usr/lib/ldap
-+
+ .SUFFIXES: .c .o .lo
+ 

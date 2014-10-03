@@ -15,7 +15,7 @@ thread-safe implementations.
 
 --- a/libraries/libldap/os-ip.c
 +++ b/libraries/libldap/os-ip.c
-@@ -592,13 +592,7 @@
+@@ -602,13 +602,7 @@ ldap_connect_to_host(LDAP *ld, Sockbuf *
  	hints.ai_socktype = socktype;
  	snprintf(serv, sizeof serv, "%d", port );
  
@@ -31,7 +31,7 @@ thread-safe implementations.
  			AC_GAI_STRERROR(err), 0, 0);
 --- a/libraries/libldap/util-int.c
 +++ b/libraries/libldap/util-int.c
-@@ -426,9 +426,7 @@
+@@ -431,9 +431,7 @@ int ldap_pvt_get_hname(
  	int rc;
  #if defined( HAVE_GETNAMEINFO )
  

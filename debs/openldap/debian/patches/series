@@ -1,4 +1,3 @@
-# nssov-build
 man-slapd 
 evolution-ntlm
 slapi-errorlog-file 
@@ -8,24 +7,20 @@ index-files-created-as-root
 sasl-default-path 
 libldap-symbol-versions
 getaddrinfo-is-threadsafe
-gssapi.diff
 do-not-second-guess-sonames
-# contrib-modules-use-dpkg-buildflags
-opinsys-fix-autogroup-makefile
-opinsys-fix-smbk5pwd-makefile
-opinsys-fix-nssov-makefile
-# smbk5pwd-makefile
-# autogroup-makefile
+contrib-modules-use-dpkg-buildflags
+smbk5pwd-makefile
+autogroup-makefile
 ldap-conf-tls-cacertdir
 add-tlscacert-option-to-ldap-conf
 fix-ftbfs-binutils-gold
 fix-build-top-mk
-# no-AM_INIT_AUTOMAKE
-opinsys-fix-configure.in
+no-AM_INIT_AUTOMAKE
 switch-to-lt_dlopenadvise-to-get-RTLD_GLOBAL-set.diff
 no-bdb-ABI-second-guessing
 heimdal-fix
 opinsys-increase-max-number-of-ldap-keys
-# opinsys-fix-heimdal-include-path
+opinsys-increase-max-rewrite-passes
 opinsys-smbkrb5pwd
 opinsys-fix-smbkrb5pwd-makefile
+opinsys-fix-nssov-makefile

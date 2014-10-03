@@ -4,37 +4,37 @@ Description: pass CFLAGS to contrib builds
 Author: Simon Ruderich <simon@ruderich.org>
 Bug-Debian: http://bugs.debian.org/663724
 
-Index: trunk/contrib/slapd-modules/autogroup/Makefile
-===================================================================
---- trunk.orig/contrib/slapd-modules/autogroup/Makefile
-+++ trunk/contrib/slapd-modules/autogroup/Makefile
-@@ -12,10 +12,10 @@
- all: autogroup.la
+--- a/contrib/slapd-modules/autogroup/Makefile
++++ b/contrib/slapd-modules/autogroup/Makefile
+@@ -27,12 +27,12 @@ moduledir = $(libexecdir)$(ldap_subdir)
+ .SUFFIXES: .c .o .lo
  
- autogroup.lo:	autogroup.c
--	$(LIBTOOL) --mode=compile $(CC) $(CPPFLAGS) -Wall -c $?
-+	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(CPPFLAGS) -Wall -c $?
+ .c.lo:
+-	$(LIBTOOL) --mode=compile $(CC) $(OPT) $(DEFS) $(INCS) -c $<
++	$(LIBTOOL) --mode=compile $(CC) $(OPT) $(CFLAGS) $(DEFS) $(INCS) -c $<
  
- autogroup.la:	autogroup.lo
--	$(LIBTOOL) --mode=link $(CC) -version-info 0:0:0 \
-+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -version-info 0:0:0 \
- 	-rpath $(libdir) -module -o $@ $? 
+ all: $(PROGRAMS)
+ 
+ autogroup.la: autogroup.lo
+-	$(LIBTOOL) --mode=link $(CC) $(OPT) -version-info $(LTVER) \
++	$(LIBTOOL) --mode=link $(CC) $(OPT) $(LDFLAGS) -version-info $(LTVER) \
+ 	-rpath $(moduledir) -module -o $@ $? $(LIBS)
  
  clean:
-Index: trunk/contrib/slapd-modules/smbk5pwd/Makefile
-===================================================================
---- trunk.orig/contrib/slapd-modules/smbk5pwd/Makefile
-+++ trunk/contrib/slapd-modules/smbk5pwd/Makefile
-@@ -41,10 +41,10 @@
+--- a/contrib/slapd-modules/smbk5pwd/Makefile
++++ b/contrib/slapd-modules/smbk5pwd/Makefile
+@@ -46,12 +46,12 @@ moduledir = $(libexecdir)$(ldap_subdir)
+ .SUFFIXES: .c .o .lo
  
+ .c.lo:
+-	$(LIBTOOL) --mode=compile $(CC) $(OPT) $(DEFS) $(INCS) -c $<
++	$(LIBTOOL) --mode=compile $(CC) $(OPT) $(CFLAGS) $(DEFS) $(INCS) -c $<
  
- smbk5pwd.lo:	smbk5pwd.c
--	$(LIBTOOL) --mode=compile $(CC) $(OPT) $(DEFS) $(INCS) -c $?
-+	$(LIBTOOL) --mode=compile $(CC) $(OPT) $(CFLAGS) $(CPPFLAGS) $(DEFS) $(INCS) -c $?
+ all: $(PROGRAMS)
  
  smbk5pwd.la:	smbk5pwd.lo
--	$(LIBTOOL) --mode=link $(CC) $(OPT) -version-info 0:0:0 \
-+	$(LIBTOOL) --mode=link $(CC) $(OPT) $(LDFLAGS) -version-info 0:0:0 \
+-	$(LIBTOOL) --mode=link $(CC) $(OPT) -version-info $(LTVER) \
++	$(LIBTOOL) --mode=link $(CC) $(OPT) $(LDFLAGS) -version-info $(LTVER) \
  	-rpath $(moduledir) -module -o $@ $? $(LIBS)
  
  clean:
