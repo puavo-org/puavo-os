@@ -6,13 +6,25 @@ echo 'Welcome to puavo-setup-imagebuild!'
 echo
 
 while true; do
+  imagebuild_sources_dir=~/puavo-image
+  read -p "Where to setup the puavo-image sources? [$imagebuild_sources_dir] " \
+          imagebuild_sources_dir
+  [ -z "$imagebuild_sources_dir" ] && imagebuild_sources_dir=~/puavo-image
+
+  [ ! -e "$imagebuild_sources_dir" ] && break
+
+  echo "$imagebuild_sources_dir exists, remove it or choose another path" >&2
+done
+
+while true; do
   cat <<'EOF'
+
 Choose a git repository that contains image build configurations:
   (or alternatively, give your own git repository url, such as
    https://github.com/opinsys/puavo-image.git)
 
-    [1] https://github.com/opinsys/puavo-image.git
-    [2] git@github.com:opinsys/puavo-image.git
+    [1] git@github.com:opinsys/puavo-image.git
+    [2] https://github.com/opinsys/puavo-image.git
 
 EOF
   git_url=''
@@ -21,8 +33,8 @@ EOF
 
   case "$chosen_giturl" in
     https*|git*) git_url=$chosen_giturl                               ;;
-    1|'')        git_url="https://github.com/opinsys/puavo-image.git" ;;
-    2)           git_url="git@github.com:opinsys/puavo-image.git"     ;;
+    1|'')        git_url="git@github.com:opinsys/puavo-image.git"     ;;
+    2)           git_url="https://github.com/opinsys/puavo-image.git" ;;
   esac
 
   [ -n "$git_url" ] && break
@@ -30,8 +42,58 @@ EOF
   echo "\nNot a valid git url!\n" >&2
 done
 
-read -p "Where to setup the puavo-image sources? [$puavo_image_dir]" \
-        puavo_image_dir
-[ -z "$puavo_image_dir" ] && puavo_image_dir=~/puavo-image
 
-git clone "$git_url" "$puavo_image_dir"
+cat <<'EOF'
+
+It is recommended to use apt-proxy such as apt-cacher-ng with
+puavo-build-image.  If you have the "apt-cacher-ng" package installed,
+"localhost:3142" uses it, otherwise you can give some other host:port,
+or write "no" if you do not want to use apt-proxy.
+
+EOF
+
+apt_proxy="localhost:3142"
+read -p "Apt proxy address? [$apt_proxy] " apt_proxy
+case "$apt_proxy" in
+  '') apt_proxy="localhost:3142" ;;
+  no) apt_proxy=""               ;;
+esac
+
+
+builds_dir=${imagebuild_sources_dir}/builds
+cat <<EOF
+
+Which directory you would like to use for building puavo images?
+The default directory is $builds_dir.
+
+EOF
+
+read -p "Directory for doing image builds? [$builds_dir] " builds_dir
+[ -z "$builds_dir" ] && builds_dir=${imagebuild_sources_dir}/builds
+
+
+echo
+git clone "$git_url" "$imagebuild_sources_dir"
+
+config_path=~/.config/puavo-build-image/defaults
+
+mkdir -p "$(dirname "$config_path")"
+
+cat <<EOF > ~/.config/puavo-build-image/defaults
+apt-proxy $apt_proxy
+builds-dir $builds_dir
+imagebuild-sources-dir $imagebuild_sources_dir
+EOF
+
+cat <<EOF
+
+puavo-image sources have been setup to $imagebuild_sources_dir
+
+Created the following configuration file to
+~/.config/puavo-build-image/defaults, you may edit it by hand.
+
+EOF
+
+echo -----
+cat "$config_path"
+echo -----
