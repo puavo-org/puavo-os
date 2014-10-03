@@ -15,19 +15,19 @@ all :
 
 .PHONY : installdirs
 installdirs :
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-tools
-	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-tools
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-image-tools
+	mkdir -p $(DESTDIR)$(libdir)/puavo-image-tools
 	mkdir -p $(DESTDIR)$(sbindir)
 
 .PHONY : install
 install : installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-tools \
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-image-tools \
 		puavo-ask-buildtarget-dir
 	
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-build-image
 	
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-tools \
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-image-tools \
 		ImageBuildMakefile
 
 .PHONY : clean

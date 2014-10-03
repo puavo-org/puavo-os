@@ -44,7 +44,7 @@ Depends: ${misc:Depends}, ruby-highline, nbd-client, pv, rdiff, curl,
  expect-dev, python-notify, wget
 Description: Bits and pieces needed inside the LTSP chroot image.
 
-Package: puavo-ltsp-tools
+Package: puavo-image-tools
 Architecture: all
 Depends: ${misc:Depends}, debootstrap, squashfs-tools
-Description: Some tools like image building scripts.
+Description: Tools for building images.
