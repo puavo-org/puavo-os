@@ -6,6 +6,7 @@ usage() {
     cat <<EOF
 Usage:
   puavo-build-image --build imagetype
+                    --extra-puppet-modules-dirs extra-puppet-modules-dirs
                     --imagebuild-sources-dir imagebuild-sources-dir
                     --release-name release-name
                     --set-root-password
@@ -18,21 +19,28 @@ Usage:
                             --target-dir target-dir
 
   puavo-build-image --puppet-chroot
+                    --extra-puppet-modules-dirs extra-puppet-modules-dirs
                     --imagebuild-sources-dir imagebuild-sources-dir
                     --target-dir target-dir
   puavo-build-image --puppet-chroot-error-on-change
+                    --extra-puppet-modules-dirs extra-puppet-modules-dirs
                     --imagebuild-sources-dir imagebuild-sources-dir
                     --target-dir target-dir
   puavo-build-image --puppet-local
+                    --extra-puppet-modules-dirs extra-puppet-modules-dirs
                     --imagebuild-sources-dir imagebuild-sources-dir
                     --target-dir target-dir
   puavo-build-image --update-chroot
+                    --extra-puppet-modules-dirs extra-puppet-modules-dirs
                     --imagebuild-sources-dir imagebuild-sources-dir
                     --target-dir target-dir
 
   An optional --builds-dir argument can be given to all actions.  If
   --target-dir is not set but --builds-dir is, --target-dir is asked
   interactively.
+
+  --extra-puppet-modules-dirs is a comma-separated list of directories
+  that contain some extra puppet modules
 
   --imagebuild-sources-dir defaults to current directory
 
@@ -54,7 +62,7 @@ get_default_for() {
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,builds-dir:,distribution:,gitbranch:,mirror:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
+              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,builds-dir:,distribution:,extra-puppet-modules-dirs:,gitbranch:,mirror:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
               -- "$@"); then
   usage
 fi
@@ -72,6 +80,7 @@ target_dir=
 # parameters with config defaults
 apt_proxy=$(get_default_for apt-proxy)
 builds_dir=$(get_default_for builds-dir)
+extra_puppet_modules_dirs=$(get_default_for extra-puppet-modules-dirs)
 imagebuild_sources_dir=$(get_default_for imagebuild-sources-dir)
 
 [ -z "$apt_proxy"              ] && apt_proxy=localhost:3142
@@ -107,6 +116,9 @@ while [ $# -ne 0 ]; do
       ;;
     --distribution)
       distribution=$2; shift; shift
+      ;;
+    --extra-puppet-modules-dirs)
+      extra_puppet_modules_dirs=$2; shift; shift
       ;;
     --gitbranch)
       gitbranch=$2; shift; shift
@@ -326,8 +338,20 @@ apply_puppet() {
   puppet_classes=$(cat "${puppet_target_dir}/etc/puppet/ltsp/.classes")
 
   rm -rf $puppet_target_dir/etc/puppet/ltsp/*
-  cp -HR ${imagebuild_sources_dir}/puppet/* \
-         "$puppet_target_dir/etc/puppet/ltsp"
+  for puppet_dir in ${imagebuild_sources_dir}/puppet \
+                    $(echo "$extra_puppet_modules_dirs" | tr ',' ' '); do
+    for puppet_module in ${puppet_dir}/*; do
+      if [ -d "$puppet_module" ]; then
+        puppet_module_target_path="${puppet_target_dir}/etc/puppet/ltsp/$(basename "$puppet_module")"
+        if [ -e "$puppet_module_target_path" ]; then
+          echo "Puppet module in $puppet_module overrides another module" >&2
+          return 1
+        fi
+
+        cp -R "$puppet_module" "$puppet_target_dir/etc/puppet/ltsp"
+      fi
+    done
+  done
 
   logfile_path="/var/log/puppet/ltsp-$(date +%Y-%m-%d-%H%M%S).log"
   $run_command env LANG=en_US.UTF-8                   \
