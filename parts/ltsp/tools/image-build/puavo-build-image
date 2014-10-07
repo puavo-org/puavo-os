@@ -30,7 +30,9 @@ Usage:
                     --imagebuild-sources-dir imagebuild-sources-dir
                     --target-dir target-dir
 
-  --target-dir is a required argument for all
+  An optional --builds-dir argument can be given to all actions.  If
+  --target-dir is not set but --builds-dir is, --target-dir is asked
+  interactively.
 
   --imagebuild-sources-dir defaults to current directory
 
@@ -46,8 +48,13 @@ EOF
     exit 1
 }
 
+get_default_for() {
+  awk -v key="$1" '$1 == key { print $2 }' \
+    ~/.config/puavo-build-image/defaults
+}
+
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,distribution:,gitbranch:,mirror:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
+              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,builds-dir:,distribution:,gitbranch:,mirror:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
               -- "$@"); then
   usage
 fi
@@ -57,12 +64,19 @@ arch=i386
 distribution=trusty
 gitbranch=trusty
 mirror=fi.archive.ubuntu.com
-apt_proxy=localhost:3142
-imagebuild_sources_dir=$(pwd)
 
 release_name=
 set_root_password=
 target_dir=
+
+# parameters with config defaults
+apt_proxy=$(get_default_for apt-proxy)
+builds_dir=$(get_default_for builds-dir)
+imagebuild_sources_dir=$(get_default_for imagebuild-sources-dir)
+
+[ -z "$apt_proxy"              ] && apt_proxy=localhost:3142
+[ -z "$imagebuild_sources_dir" ] && imagebuild_sources_dir=$(pwd)
+
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
@@ -87,6 +101,9 @@ while [ $# -ne 0 ]; do
       ;;
     --arch)
       arch=$2; shift; shift
+      ;;
+    --builds-dir)
+      builds_dir=$2; shift; shift
       ;;
     --distribution)
       distribution=$2; shift; shift
@@ -118,7 +135,15 @@ while [ $# -ne 0 ]; do
   esac
 done
 
-[ -z "$target_dir" ] && usage
+if [ -z "$target_dir" ]; then
+  if [ -n "$builds_dir" ]; then
+    target_dir=$(/usr/lib/puavo-image-tools/puavo-ask-buildtarget-dir \
+                   "$builds_dir")
+    [ -z "$target_dir" ] && usage
+  else
+    usage
+  fi
+fi
 
 if [ -n "$apt_proxy" ]; then
   mirror_through_proxy="http://${apt_proxy}/${mirror}/ubuntu/"
