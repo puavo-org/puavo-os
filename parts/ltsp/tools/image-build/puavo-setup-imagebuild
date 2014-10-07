@@ -72,6 +72,18 @@ read -p "Directory for doing image builds? [$builds_dir] " builds_dir
 [ -z "$builds_dir" ] && builds_dir=${imagebuild_sources_dir}/builds
 
 
+images_dir=${imagebuild_sources_dir}/images
+cat <<EOF
+
+Which directory you would like to put the final images to?
+The default directory is $images_dir
+
+EOF
+
+read -p "Directory for images? [$images_dir] " images_dir
+[ -z "$images_dir" ] && images_dir=${imagebuild_sources_dir}/images
+
+
 echo
 git clone "$git_url" "$imagebuild_sources_dir"
 
@@ -83,6 +95,7 @@ cat <<EOF > ~/.config/puavo-build-image/defaults
 apt-proxy $apt_proxy
 builds-dir $builds_dir
 imagebuild-sources-dir $imagebuild_sources_dir
+images-dir $images_dir
 EOF
 
 cat <<EOF
