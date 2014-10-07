@@ -437,10 +437,9 @@ case "$action" in
     set_ltspimage_type "$imagetype"
     prepare_puppet     "image::$imagetype"
 
-    $0 --puppet-chroot                 --target-dir "$target_dir"
-    $0 --dist-upgrade                  --target-dir "$target_dir"
-    $0 --puppet-chroot                 --target-dir "$target_dir"
-    $0 --puppet-chroot-error-on-change --target-dir "$target_dir"
+    $0 --update-chroot                                          \
+       --extra-puppet-modules-dirs "$extra_puppet_modules_dirs" \
+       --target-dir "$target_dir"
 
     touch "${target_dir}/tmp/.chroot_build_done"
 
@@ -474,10 +473,13 @@ case "$action" in
     ;;
   update-chroot)
     run_in_chroot apt-get -y update
-    $0 --puppet-chroot                 --target-dir "$target_dir"
-    $0 --dist-upgrade                  --target-dir "$target_dir"
-    $0 --puppet-chroot                 --target-dir "$target_dir"
-    $0 --puppet-chroot-error-on-change --target-dir "$target_dir"
+    for action_arg in --puppet-chroot \
+                      --dist-upgrade  \
+                      --puppet-chroot \
+                      --puppet-chroot-error-on-change; do
+      $0 $action_arg --extra-puppet-modules-dirs "$extra_puppet_modules_dirs" \
+                     --target-dir "$target_dir"
+    done
     ;;
 esac
 
