@@ -149,8 +149,12 @@ done
 
 if [ -z "$target_dir" ]; then
   if [ -n "$builds_dir" ]; then
-    target_dir=$(/usr/lib/puavo-image-tools/puavo-ask-buildtarget-dir \
-                   "$builds_dir")
+    if [ "$action" = "build" ]; then
+      target_dir="${builds_dir}/${imagetype}-${distribution}"
+    else
+      target_dir=$(/usr/lib/puavo-image-tools/puavo-ask-buildtarget-dir \
+                     "$builds_dir")
+    fi
     [ -z "$target_dir" ] && usage
   else
     usage
