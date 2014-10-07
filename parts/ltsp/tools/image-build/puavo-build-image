@@ -260,20 +260,12 @@ set_ltspimage_type() {
 prepare_puppet() {
   puppet_classes=$1
 
-  puppet_module_dirs=$(
-    echo ${imagebuild_sources_dir}/puppet/* \
-      | xargs -n 1 basename  \
-      | xargs -n 1 printf "/etc/puppet/ltsp/%s\n" \
-      | xargs \
-      | tr ' ' ':')
-
   # install puppet and also language-pack-en is so that puppet rules can
   # use utf8-characters
   run_in_chroot apt-get -qq -y install language-pack-en puppet-common
 
   mkdir -p "$target_dir/etc/puppet/ltsp"
-  echo "$puppet_classes"     > "$target_dir/etc/puppet/ltsp/.classes"
-  echo "$puppet_module_dirs" > "$target_dir/etc/puppet/ltsp/.module_dirs"
+  echo "$puppet_classes" > "$target_dir/etc/puppet/ltsp/.classes"
 }
 
 apply_puppet() {
@@ -307,7 +299,6 @@ apply_puppet() {
   fi
 
   puppet_classes=$(cat "${puppet_target_dir}/etc/puppet/ltsp/.classes")
-  puppet_module_dirs=$(cat "${puppet_target_dir}/etc/puppet/ltsp/.module_dirs")
 
   rm -rf $puppet_target_dir/etc/puppet/ltsp/*
   cp -HR ${imagebuild_sources_dir}/puppet/* \
@@ -320,7 +311,7 @@ apply_puppet() {
 		  --logdest console                   \
 		  --logdest "$logfile_path"           \
 		  --execute "include $puppet_classes" \
-		  --modulepath "$puppet_module_dirs"  \
+		  --modulepath "/etc/puppet/ltsp"     \
     || [ $? -eq $another_ok_puppetcode ]
 }
 
