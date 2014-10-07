@@ -13,6 +13,16 @@ get_dirs() {
   done
 }
 
+write_output_and_exit() {
+  target_dir=$1
+
+  mkdir -p "$(dirname $previous_buildtarget_file)"
+  echo "$target_dir" > "$previous_buildtarget_file"
+
+  echo "${build_basedir}/${target_dir}" # THE output of the script
+  exit 0
+}
+
 target_dirs=$(get_dirs "$build_basedir")
 
 if [ -z "$target_dirs" ]; then
@@ -21,8 +31,8 @@ if [ -z "$target_dirs" ]; then
 fi
 
 if [ "$(echo "$target_dirs" | wc -l)" -eq 1 ]; then
-  echo "$target_dirs"
-  exit 0
+  # do not bother asking anything, only one choice
+  write_output_and_exit "$target_dirs"
 fi
 
 default_choice_name=$(cat "$previous_buildtarget_file" 2>/dev/null || true)
@@ -58,7 +68,4 @@ while true; do
   echo >&2
 done
 
-mkdir -p "$(dirname $previous_buildtarget_file)"
-echo "$target_dir" > "$previous_buildtarget_file"
-
-echo "${build_basedir}/${target_dir}"
+write_output_and_exit "$target_dir"
