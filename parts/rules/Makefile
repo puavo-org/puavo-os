@@ -34,6 +34,6 @@ ${TRUSTY_IMAGE_TARGETS}:
 	@sudo puavo-build-image --build $(@:%-trusty=%)  --distribution trusty
 
 chroot cleanup-chroot dist-upgrade image puppet-chroot puppet-chroot-error-on-change puppet-local update-chroot:
-	sudo puavo-build-image --$@
+	@sudo puavo-build-image --$@
 
 .PHONY: ${IMAGE_TARGETS} ${OTHER_TARGETS}
