@@ -49,6 +49,12 @@
 
   /usr/sbin/slapd mr,
 
+  /usr/lib/x86_64-linux-gnu/krb5/plugins/kdb/kldap.so mr,
+  /etc/krb5kdc/ r,
+  /etc/krb5kdc/* kr,
+  /etc/krb5.conf r,
+  /etc/krb5.secrets r,
+
   # Site-specific additions and overrides. See local/README for details.
   #include <local/usr.sbin.slapd>
 }
