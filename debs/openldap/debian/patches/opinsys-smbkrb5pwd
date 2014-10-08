@@ -1,8 +1,58 @@
-Index: openldap/contrib/slapd-modules/smbkrb5pwd/Makefile
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ openldap/contrib/slapd-modules/smbkrb5pwd/Makefile	2013-11-14 09:41:41.898951028 +0200
-@@ -0,0 +1,72 @@
+diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/LICENSE openldap/contrib/slapd-modules/smbkrb5pwd/LICENSE
+--- openldap.orig/contrib/slapd-modules/smbkrb5pwd/LICENSE	1970-01-01 00:00:00.000000000 +0000
++++ openldap/contrib/slapd-modules/smbkrb5pwd/LICENSE	2014-10-07 15:09:40.386104000 +0000
+@@ -0,0 +1,47 @@
++The OpenLDAP Public License
++  Version 2.8, 17 August 2003
++
++Redistribution and use of this software and associated documentation
++("Software"), with or without modification, are permitted provided
++that the following conditions are met:
++
++1. Redistributions in source form must retain copyright statements
++   and notices,
++
++2. Redistributions in binary form must reproduce applicable copyright
++   statements and notices, this list of conditions, and the following
++   disclaimer in the documentation and/or other materials provided
++   with the distribution, and
++
++3. Redistributions must contain a verbatim copy of this document.
++
++The OpenLDAP Foundation may revise this license from time to time.
++Each revision is distinguished by a version number.  You may use
++this Software under terms of this license revision or under the
++terms of any subsequent revision of the license.
++
++THIS SOFTWARE IS PROVIDED BY THE OPENLDAP FOUNDATION AND ITS
++CONTRIBUTORS ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES,
++INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
++AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT
++SHALL THE OPENLDAP FOUNDATION, ITS CONTRIBUTORS, OR THE AUTHOR(S)
++OR OWNER(S) OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT,
++INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
++LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
++CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++POSSIBILITY OF SUCH DAMAGE.
++
++The names of the authors and copyright holders must not be used in
++advertising or otherwise to promote the sale, use or other dealing
++in this Software without specific, written prior permission.  Title
++to copyright in this Software shall at all times remain with copyright
++holders.
++
++OpenLDAP is a registered trademark of the OpenLDAP Foundation.
++
++Copyright 1999-2003 The OpenLDAP Foundation, Redwood City,
++California, USA.  All Rights Reserved.  Permission to copy and
++distribute verbatim copies of this document is granted.
+diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/Makefile openldap/contrib/slapd-modules/smbkrb5pwd/Makefile
+--- openldap.orig/contrib/slapd-modules/smbkrb5pwd/Makefile	1970-01-01 00:00:00.000000000 +0000
++++ openldap/contrib/slapd-modules/smbkrb5pwd/Makefile	2014-10-07 15:10:10.058104000 +0000
+@@ -0,0 +1,70 @@
 +# $OpenLDAP: pkg/ldap/contrib/slapd-modules/smbk5pwd/Makefile,v 1.1.6.4 2009/10/02 21:16:53 quanah Exp $
 +# This work is part of OpenLDAP Software <http://www.openldap.org/>.
 +#
@@ -20,8 +70,6 @@ Index: openldap/contrib/slapd-modules/smbkrb5pwd/Makefile
 +LDAP_SRC=../../..
 +LDAP_BUILD=$(LDAP_SRC)
 +LDAP_INC=-I$(LDAP_BUILD)/include -I$(LDAP_SRC)/include -I$(LDAP_SRC)/servers/slapd
-+LDAP_LIB=$(LDAP_BUILD)/libraries/libldap_r/libldap_r.la \
-+	$(LDAP_BUILD)/libraries/liblber/liblber.la
 +
 +SSL_INC=
 +SSL_LIB=-lcrypto
@@ -37,7 +85,7 @@ Index: openldap/contrib/slapd-modules/smbkrb5pwd/Makefile
 +
 +DEFS=
 +INCS=$(LDAP_INC) $(MIT_KRB5_INC) $(SSL_INC)
-+LIBS=$(LDAP_LIB) $(MIT_KRB5_LIB) $(SSL_LIB)
++LIBS=$(MIT_KRB5_LIB) $(SSL_LIB)
 +
 +MIT_KRB5_SRV_LIB=-lkadm5srv_mit
 +MIT_KRB5_CLNT_LIB=-lkadm5clnt_mit
@@ -75,10 +123,9 @@ Index: openldap/contrib/slapd-modules/smbkrb5pwd/Makefile
 +	mkdir -p $(DESTDIR)$(moduledir)
 +	$(LIBTOOL) --mode=install cp smbkrb5pwd.la $(DESTDIR)$(moduledir)
 +	$(LIBTOOL) --mode=install cp smbkrb5pwd_srv.la $(DESTDIR)$(moduledir)
-Index: openldap/contrib/slapd-modules/smbkrb5pwd/README
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ openldap/contrib/slapd-modules/smbkrb5pwd/README	2013-11-14 09:41:56.518951426 +0200
+diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/README openldap/contrib/slapd-modules/smbkrb5pwd/README
+--- openldap.orig/contrib/slapd-modules/smbkrb5pwd/README	1970-01-01 00:00:00.000000000 +0000
++++ openldap/contrib/slapd-modules/smbkrb5pwd/README	2014-10-07 15:09:40.386104000 +0000
 @@ -0,0 +1,171 @@
 +Documentation is available at: https://github.com/opinsys/smbkrb5pwd/wiki
 +
@@ -251,10 +298,9 @@ Index: openldap/contrib/slapd-modules/smbkrb5pwd/README
 +A copy of this license is available in the file LICENSE in the
 +top-level directory of the distribution or, alternatively, at
 +<http://www.OpenLDAP.org/license.html>.
-Index: openldap/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ openldap/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c	2013-11-14 09:29:50.026933657 +0200
+diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c openldap/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c
+--- openldap.orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c	1970-01-01 00:00:00.000000000 +0000
++++ openldap/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c	2014-10-07 15:09:40.386104000 +0000
 @@ -0,0 +1,918 @@
 +/* smbkrb5pwd.c - Overlay for managing Samba and MIT Kerberos passwords */
 +/* $OpenLDAP: pkg/ldap/contrib/slapd-modules/smbk5pwd/smbk5pwd.c,v 1.17.2.16 2009/08/17 21:49:00 quanah Exp $ */
