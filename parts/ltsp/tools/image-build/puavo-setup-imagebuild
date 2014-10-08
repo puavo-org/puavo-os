@@ -54,10 +54,7 @@ EOF
 
 apt_proxy="localhost:3142"
 read -p "Apt proxy address? [$apt_proxy] " apt_proxy
-case "$apt_proxy" in
-  '') apt_proxy="localhost:3142" ;;
-  no) apt_proxy=""               ;;
-esac
+[ -z "$apt_proxy" ] && apt_proxy="localhost:3142"
 
 
 builds_dir=${imagebuild_sources_dir}/builds

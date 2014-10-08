@@ -48,7 +48,7 @@ Usage:
 
   --build takes optional arguments:
 
-    --apt-proxy    [default is "localhost:3142", "" may be used to turn off]
+    --apt-proxy    [default is "localhost:3142", "no" may be used to turn off]
     --arch         [default is "i386"]
     --distribution [default is "trusty"]
     --gitbranch    [default is "trusty"]
@@ -89,7 +89,6 @@ images_dir="$(get_default_for images-dir)"
 [ -z "$apt_proxy"              ] && apt_proxy="localhost:3142"
 [ -z "$imagebuild_sources_dir" ] && imagebuild_sources_dir="$(pwd)"
 [ -z "$images_dir"             ] && images_dir="/opt/ltsp/images"
-
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
@@ -168,6 +167,7 @@ if [ -z "$target_dir" ]; then
   fi
 fi
 
+[ "$apt_proxy" = "no" ] && apt_proxy=
 if [ -n "$apt_proxy" ]; then
   mirror_maybe_proxied="http://${apt_proxy}/${mirror}/ubuntu/"
 else
