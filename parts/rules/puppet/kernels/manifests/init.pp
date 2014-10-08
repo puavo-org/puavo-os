@@ -32,9 +32,13 @@ class kernels {
     }
   }
 
+  $default_kernel = $lsbdistcodename ? {
+                      'precise' => '3.2.0-69-generic',
+                      'trusty'  => '3.13.0-36-generic',
+                    }
+
   case $lsbdistcodename {
-    'trusty': {
-      $default_kernel = '3.13.0-36-generic'
+    'precise', 'trusty': {
 
       default_kernel_link {
         [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:

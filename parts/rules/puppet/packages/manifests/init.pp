@@ -760,6 +760,13 @@ class packages {
   }
 
   case $lsbdistcodename {
+    'precise': {
+      packages::kernels::kernel_package {
+        '3.2.0-69-generic':
+          package_tag => 'puavo',
+          with_extra  => false;
+      }
+    }
     'trusty': {
       packages::kernels::kernel_package {
         '3.13.0-36-generic':
