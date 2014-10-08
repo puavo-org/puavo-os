@@ -85,7 +85,7 @@ case "$hosttype" in
 					"$ltspimage_name"
 
     echo "Updating $hosttype configuration..."
-    if puavo-update-client; then
+    if /usr/lib/puavo-ltsp-install/update-configuration; then
       echo "  ... $hosttype configuration updated."
     else
       echo "  ... a problem occurred (updating configuration later)."
