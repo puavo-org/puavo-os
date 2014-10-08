@@ -1,9 +1,5 @@
-Description: make contrib/slapd-modules/smbkrb5pwd/Makefile debian-friendly
-
-Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
-
---- openldap-2.4.37.orig/contrib/slapd-modules/smbkrb5pwd/Makefile
-+++ openldap-2.4.37/contrib/slapd-modules/smbkrb5pwd/Makefile
+--- orig/contrib/slapd-modules/smbkrb5pwd/Makefile	2014-10-08 06:53:07.994104000 +0000
++++ new/contrib/slapd-modules/smbkrb5pwd/Makefile	2014-10-08 06:53:13.282104000 +0000
 @@ -13,7 +13,7 @@
  # <http://www.OpenLDAP.org/license.html>.
  
@@ -11,9 +7,9 @@ Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
 -LDAP_BUILD=$(LDAP_SRC)
 +LDAP_BUILD=$(LDAP_SRC)/debian/build
  LDAP_INC=-I$(LDAP_BUILD)/include -I$(LDAP_SRC)/include -I$(LDAP_SRC)/servers/slapd
- LDAP_LIB=$(LDAP_BUILD)/libraries/libldap_r/libldap_r.la \
- 	$(LDAP_BUILD)/libraries/liblber/liblber.la
-@@ -37,11 +37,11 @@ LIBS=$(LDAP_LIB) $(MIT_KRB5_LIB) $(SSL_L
+ 
+ SSL_INC=
+@@ -35,11 +35,11 @@
  MIT_KRB5_SRV_LIB=-lkadm5srv_mit
  MIT_KRB5_CLNT_LIB=-lkadm5clnt_mit
  
