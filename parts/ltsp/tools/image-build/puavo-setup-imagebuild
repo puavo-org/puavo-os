@@ -57,6 +57,11 @@ read -p "Apt proxy address? [$apt_proxy] " apt_proxy
 [ -z "$apt_proxy" ] && apt_proxy="localhost:3142"
 
 
+mirror="archive.ubuntu.com"
+read -p "Ubuntu mirror? [$mirror] " mirror
+[ -z "$mirror" ] && mirror="archive.ubuntu.com"
+
+
 builds_dir=${imagebuild_sources_dir}/builds
 cat <<EOF
 
@@ -93,6 +98,7 @@ apt-proxy $apt_proxy
 builds-dir $builds_dir
 imagebuild-sources-dir $imagebuild_sources_dir
 images-dir $images_dir
+mirror $mirror
 EOF
 
 cat <<EOF

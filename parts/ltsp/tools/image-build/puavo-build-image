@@ -73,7 +73,6 @@ fi
 arch=i386
 distribution=trusty
 gitbranch=trusty
-mirror=fi.archive.ubuntu.com
 
 release_name=
 set_root_password=
@@ -85,10 +84,12 @@ builds_dir=$(get_default_for builds-dir)
 extra_puppet_modules_dirs=$(get_default_for extra-puppet-modules-dirs)
 imagebuild_sources_dir=$(get_default_for imagebuild-sources-dir)
 images_dir="$(get_default_for images-dir)"
+mirror="$(get_default_for mirror)"
 
 [ -z "$apt_proxy"              ] && apt_proxy="localhost:3142"
 [ -z "$imagebuild_sources_dir" ] && imagebuild_sources_dir="$(pwd)"
 [ -z "$images_dir"             ] && images_dir="/opt/ltsp/images"
+[ -z "$mirror"                 ] && mirror="archive.ubuntu.com"
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
