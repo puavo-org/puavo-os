@@ -169,9 +169,9 @@ if [ -z "$target_dir" ]; then
 fi
 
 if [ -n "$apt_proxy" ]; then
-  mirror_through_proxy="http://${apt_proxy}/${mirror}/ubuntu/"
+  mirror_maybe_proxied="http://${apt_proxy}/${mirror}/ubuntu/"
 else
-  mirror_through_proxy="http://${mirror}/ubuntu/"
+  mirror_maybe_proxied="http://${mirror}/ubuntu/"
 fi
 
 do_mounts() {
@@ -237,12 +237,16 @@ build_chroot() {
   run_with_setarch \
     debootstrap --arch="$arch" \
                 --components=main,restricted,universe,multiverse \
-                "$distribution" "$target_dir" "$mirror_through_proxy"
+                "$distribution" "$target_dir" "$mirror_maybe_proxied"
 
   # setup apt proxy (maybe)
   if [ -n "$apt_proxy" ]; then
     cat <<EOF > "$target_dir/etc/apt/apt.conf.d/00imagebuild-proxy"
 acquire::http::proxy "http://$apt_proxy";
+EOF
+    # url in sources.list may be with proxy-prefix, so now clean this up:
+    cat <<EOF > "$target_dir/etc/apt/sources.list"
+deb http://${mirror}/ubuntu $distribution main restricted universe multiverse
 EOF
   fi
 
