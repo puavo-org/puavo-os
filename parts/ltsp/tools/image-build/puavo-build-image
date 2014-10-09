@@ -7,6 +7,7 @@ usage() {
 Usage:
   puavo-build-image --build imagetype
                     --imagebuild-sources-dir imagebuild-sources-dir
+                    --puppet-classes puppet-classes
                     --puppet-modules-dirs puppet-modules-dirs
                     --release-name release-name
                     --set-root-password
@@ -21,30 +22,28 @@ Usage:
                             --target-dir target-dir
 
   puavo-build-image --puppet-chroot
-                    --imagebuild-sources-dir imagebuild-sources-dir
-                    --puppet-modules-dirs puppet-modules-dirs
-                    --target-dir target-dir
   puavo-build-image --puppet-chroot-error-on-change
-                    --imagebuild-sources-dir imagebuild-sources-dir
-                    --puppet-modules-dirs puppet-modules-dirs
-                    --target-dir target-dir
   puavo-build-image --puppet-local
-                    --imagebuild-sources-dir imagebuild-sources-dir
-                    --puppet-modules-dirs puppet-modules-dirs
-                    --target-dir target-dir
   puavo-build-image --update-chroot
-                    --imagebuild-sources-dir imagebuild-sources-dir
-                    --puppet-modules-dirs puppet-modules-dirs
-                    --target-dir target-dir
+
+  --puppet-chroot, --puppet-chroot-error-on-change, --puppet-local and
+  --update-chroot take the following extra arguments:
+
+      --imagebuild-sources-dir imagebuild-sources-dir
+      --puppet-classes puppet-classes
+      --puppet-modules-dirs puppet-modules-dirs
+      --target-dir target-dir
 
   An optional --builds-dir argument can be given to all actions.  If
   --target-dir is not set but --builds-dir is, --target-dir is asked
   interactively.
 
+  --imagebuild-sources-dir defaults to current directory
+
+  --puppet-classes is a comma-separated list of puppet classes to be applied
+
   --puppet-modules-dirs is a comma-separated list of directories
   that contain some puppet modules
-
-  --imagebuild-sources-dir defaults to current directory
 
   --build takes optional arguments:
 
@@ -64,7 +63,7 @@ get_default_for() {
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,builds-dir:,distribution:,gitbranch:,images-dir:,mirror:,puppet-modules-dirs:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
+              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,builds-dir:,distribution:,gitbranch:,images-dir:,mirror:,puppet-classes:,puppet-modules-dirs:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
               -- "$@"); then
   usage
 fi
@@ -132,6 +131,9 @@ while [ $# -ne 0 ]; do
       ;;
     --mirror)
       mirror=$2; shift; shift
+      ;;
+    --puppet-classes)
+      puppet_classes=$2; shift; shift
       ;;
     --puppet-modules-dirs)
       puppet_modules_dirs=$2; shift; shift
@@ -309,17 +311,20 @@ set_ltspimage_type() {
 }
 
 prepare_puppet() {
-  puppet_classes=$1
+  if [ -n "$puppet_modules_dirs" -a -n "$puppet_classes" ]; then
+    # install puppet and also language-pack-en is so that puppet rules can
+    # use utf8-characters
+    run_in_chroot apt-get -qq -y install language-pack-en puppet-common
 
-  # install puppet and also language-pack-en is so that puppet rules can
-  # use utf8-characters
-  run_in_chroot apt-get -qq -y install language-pack-en puppet-common
-
-  mkdir -p "$target_dir/etc/puppet/ltsp"
-  echo "$puppet_classes" > "$target_dir/etc/puppet/ltsp/.classes"
+    mkdir -p "$target_dir/etc/puppet/ltsp"
+  fi
 }
 
 apply_puppet() {
+  if [ -z "$puppet_modules_dirs" -o -z "$puppet_classes" ]; then
+    return 0
+  fi
+
   mode=$1
   error_if_changed=$2
 
@@ -343,13 +348,12 @@ apply_puppet() {
     another_ok_puppetcode=2
   fi
 
-  # sanity check to prevent mistakes
+  # sanity check to prevent mistakes, like running --update-local on a host
+  # not using an image
   if [ ! -d "${puppet_target_dir}/etc/puppet/ltsp" ]; then
     echo 'Puppet is not initialized to the target directory' >&2
     return 1
   fi
-
-  puppet_classes=$(cat "${puppet_target_dir}/etc/puppet/ltsp/.classes")
 
   rm -rf $puppet_target_dir/etc/puppet/ltsp/*
   for puppet_dir in $(echo "$puppet_modules_dirs" | tr ',' ' '); do
@@ -448,9 +452,10 @@ case "$action" in
     build_chroot
     set_debconf_seeds  "$imagetype"
     set_ltspimage_type "$imagetype"
-    prepare_puppet     "image::$imagetype"
+    prepare_puppet     "$puppet_classes"
 
     $0 --update-chroot                              \
+       --puppet-classes "$puppet_classes"           \
        --puppet-modules-dirs "$puppet_modules_dirs" \
        --target-dir "$target_dir"
 
@@ -490,7 +495,8 @@ case "$action" in
                       --dist-upgrade  \
                       --puppet-chroot \
                       --puppet-chroot-error-on-change; do
-      $0 $action_arg --puppet-modules-dirs "$puppet_modules_dirs" \
+      $0 $action_arg --puppet-classes "$puppet_classes"           \
+                     --puppet-modules-dirs "$puppet_modules_dirs" \
                      --target-dir "$target_dir"
     done
 
