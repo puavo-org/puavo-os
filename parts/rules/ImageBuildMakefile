@@ -27,11 +27,33 @@ help:
 
 all: ${IMAGE_TARGETS}
 
-${PRECISE_IMAGE_TARGETS}:
-	@sudo puavo-build-image --build $(@:%-precise=%) --distribution precise
+# XXX these belong to some configuration file... actually this Makefile should
+# XXX die... but we want at least some shell completions?
 
-${TRUSTY_IMAGE_TARGETS}:
-	@sudo puavo-build-image --build $(@:%-trusty=%)  --distribution trusty
+opinsys-trusty:
+	@sudo puavo-build-image --build opinsys       \
+				--distribution trusty \
+                                --puppet-classes opinsysimage::opinsys
+
+opinsysextra-trusty:
+	@sudo puavo-build-image --build opinsysextra  \
+				--distribution trusty \
+                                --puppet-classes opinsysimage::opinsysextra
+
+opinsysrestricted-trusty:
+	@sudo puavo-build-image --build opinsysrestricted \
+				--distribution trusty     \
+                                --puppet-classes opinsysimage::opinsysrestricted
+
+puavo-trusty:
+	@sudo puavo-build-image --build puavo         \
+				--distribution trusty \
+                                --puppet-classes image::puavo
+
+thinclient-precise:
+	@sudo puavo-build-image --build thinclient     \
+				--distribution precise \
+				--puppet-classes image::thinclient
 
 chroot cleanup-chroot dist-upgrade image puppet-chroot puppet-chroot-error-on-change puppet-local update-chroot:
 	@sudo puavo-build-image --$@
