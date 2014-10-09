@@ -46,6 +46,9 @@ disable_update_notifications
     (just removing the package would be nice, but ttf-mscorefonts-installer
     package depends on it).
 
+dpkg
+    A helper module for dealing with dpkg.
+
 ebeam
     Special settings for Ebeam software/device.
 
