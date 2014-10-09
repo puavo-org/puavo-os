@@ -7,5 +7,10 @@ class citrix {
       creates => $certs_copied_stamp;
   }
 
+  file {
+    '/opt/Citrix/ICAClient/keystore/cacerts/gd_intermediate.crt':
+      require => Package['icaclient'],
+      source => 'puppet:///modules/citrix/gd_intermediate.crt';
+
   Package <| title == ca-certificates and title == icaclient |>
 }
