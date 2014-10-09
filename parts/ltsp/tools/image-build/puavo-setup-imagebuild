@@ -45,6 +45,24 @@ done
 
 cat <<'EOF'
 
+You should have a list of puppet module directories that contain
+modules that are used with image build.  The puavo-rules repository
+contains the default rules, but you may have a different set of modules
+in other places as well.  Give a comma-separated list of directories
+that contain puppet modules:
+
+EOF
+
+puppet_modules_dirs="${imagebuild_sources_dir}/puppet"
+read -p "Directories with puppet modules? [$puppet_modules_dirs] " \
+        puppet_modules_dirs
+[ -z "$puppet_modules_dirs" ] \
+  && puppet_modules_dirs="${imagebuild_sources_dir}/puppet"
+
+
+
+cat <<'EOF'
+
 It is recommended to use apt-proxy such as apt-cacher-ng with
 puavo-build-image.  If you have the "apt-cacher-ng" package installed,
 "localhost:3142" uses it, otherwise you can give some other host:port,
@@ -99,6 +117,7 @@ builds-dir $builds_dir
 imagebuild-sources-dir $imagebuild_sources_dir
 images-dir $images_dir
 mirror $mirror
+puppet-modules-dirs $puppet_modules_dirs
 EOF
 
 cat <<EOF

@@ -6,8 +6,8 @@ usage() {
     cat <<EOF
 Usage:
   puavo-build-image --build imagetype
-                    --extra-puppet-modules-dirs extra-puppet-modules-dirs
                     --imagebuild-sources-dir imagebuild-sources-dir
+                    --puppet-modules-dirs puppet-modules-dirs
                     --release-name release-name
                     --set-root-password
                     --target-dir target-dir
@@ -21,28 +21,28 @@ Usage:
                             --target-dir target-dir
 
   puavo-build-image --puppet-chroot
-                    --extra-puppet-modules-dirs extra-puppet-modules-dirs
                     --imagebuild-sources-dir imagebuild-sources-dir
+                    --puppet-modules-dirs puppet-modules-dirs
                     --target-dir target-dir
   puavo-build-image --puppet-chroot-error-on-change
-                    --extra-puppet-modules-dirs extra-puppet-modules-dirs
                     --imagebuild-sources-dir imagebuild-sources-dir
+                    --puppet-modules-dirs puppet-modules-dirs
                     --target-dir target-dir
   puavo-build-image --puppet-local
-                    --extra-puppet-modules-dirs extra-puppet-modules-dirs
                     --imagebuild-sources-dir imagebuild-sources-dir
+                    --puppet-modules-dirs puppet-modules-dirs
                     --target-dir target-dir
   puavo-build-image --update-chroot
-                    --extra-puppet-modules-dirs extra-puppet-modules-dirs
                     --imagebuild-sources-dir imagebuild-sources-dir
+                    --puppet-modules-dirs puppet-modules-dirs
                     --target-dir target-dir
 
   An optional --builds-dir argument can be given to all actions.  If
   --target-dir is not set but --builds-dir is, --target-dir is asked
   interactively.
 
-  --extra-puppet-modules-dirs is a comma-separated list of directories
-  that contain some extra puppet modules
+  --puppet-modules-dirs is a comma-separated list of directories
+  that contain some puppet modules
 
   --imagebuild-sources-dir defaults to current directory
 
@@ -64,7 +64,7 @@ get_default_for() {
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,builds-dir:,distribution:,extra-puppet-modules-dirs:,gitbranch:,images-dir:,mirror:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
+              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,builds-dir:,distribution:,gitbranch:,images-dir:,mirror:,puppet-modules-dirs:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
               -- "$@"); then
   usage
 fi
@@ -81,10 +81,10 @@ target_dir=
 # parameters with config defaults
 apt_proxy=$(get_default_for apt-proxy)
 builds_dir=$(get_default_for builds-dir)
-extra_puppet_modules_dirs=$(get_default_for extra-puppet-modules-dirs)
 imagebuild_sources_dir=$(get_default_for imagebuild-sources-dir)
 images_dir="$(get_default_for images-dir)"
 mirror="$(get_default_for mirror)"
+puppet_modules_dirs=$(get_default_for puppet-modules-dirs)
 
 [ -z "$apt_proxy"              ] && apt_proxy="localhost:3142"
 [ -z "$imagebuild_sources_dir" ] && imagebuild_sources_dir="$(pwd)"
@@ -121,9 +121,6 @@ while [ $# -ne 0 ]; do
     --distribution)
       distribution=$2; shift; shift
       ;;
-    --extra-puppet-modules-dirs)
-      extra_puppet_modules_dirs=$2; shift; shift
-      ;;
     --gitbranch)
       gitbranch=$2; shift; shift
       ;;
@@ -135,6 +132,9 @@ while [ $# -ne 0 ]; do
       ;;
     --mirror)
       mirror=$2; shift; shift
+      ;;
+    --puppet-modules-dirs)
+      puppet_modules_dirs=$2; shift; shift
       ;;
     --release-name)
       release_name=$2; shift; shift
@@ -352,8 +352,7 @@ apply_puppet() {
   puppet_classes=$(cat "${puppet_target_dir}/etc/puppet/ltsp/.classes")
 
   rm -rf $puppet_target_dir/etc/puppet/ltsp/*
-  for puppet_dir in ${imagebuild_sources_dir}/puppet \
-                    $(echo "$extra_puppet_modules_dirs" | tr ',' ' '); do
+  for puppet_dir in $(echo "$puppet_modules_dirs" | tr ',' ' '); do
     for puppet_module in ${puppet_dir}/*; do
       if [ -d "$puppet_module" ]; then
         puppet_module_target_path="${puppet_target_dir}/etc/puppet/ltsp/$(basename "$puppet_module")"
@@ -451,8 +450,8 @@ case "$action" in
     set_ltspimage_type "$imagetype"
     prepare_puppet     "image::$imagetype"
 
-    $0 --update-chroot                                          \
-       --extra-puppet-modules-dirs "$extra_puppet_modules_dirs" \
+    $0 --update-chroot                              \
+       --puppet-modules-dirs "$puppet_modules_dirs" \
        --target-dir "$target_dir"
 
     $0 --image --images-dir "$images_dir"     \
@@ -491,7 +490,7 @@ case "$action" in
                       --dist-upgrade  \
                       --puppet-chroot \
                       --puppet-chroot-error-on-change; do
-      $0 $action_arg --extra-puppet-modules-dirs "$extra_puppet_modules_dirs" \
+      $0 $action_arg --puppet-modules-dirs "$puppet_modules_dirs" \
                      --target-dir "$target_dir"
     done
 
