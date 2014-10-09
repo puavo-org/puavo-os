@@ -440,8 +440,8 @@ case "$action" in
   build)
     if [ -e "${target_dir}/tmp/.chroot_build_done" ]; then
       {
-        echo "Build for $(basename $target_dir) has already been done."
-        echo "Do --cleanup-chroot if you want to throw away the build."
+        echo "Build for $(basename $target_dir) has already been successfully"
+        echo "done.  Do --cleanup-chroot if you want to throw away the build."
       } >&2
       exit 1
     fi
@@ -454,8 +454,6 @@ case "$action" in
     $0 --update-chroot                                          \
        --extra-puppet-modules-dirs "$extra_puppet_modules_dirs" \
        --target-dir "$target_dir"
-
-    touch "${target_dir}/tmp/.chroot_build_done"
 
     $0 --image --images-dir "$images_dir"     \
                --release-name "$release_name" \
@@ -496,6 +494,8 @@ case "$action" in
       $0 $action_arg --extra-puppet-modules-dirs "$extra_puppet_modules_dirs" \
                      --target-dir "$target_dir"
     done
+
+    touch "${target_dir}/tmp/.chroot_build_done"
     ;;
 esac
 
