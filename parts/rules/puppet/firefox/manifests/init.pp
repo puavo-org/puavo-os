@@ -1,8 +1,8 @@
 class firefox {
-  include config,
-          packages
+  include packages
 
-  $api_server = $config::api_server
+  # XXX not ideal, but what could or should the api_server be?
+  $api_server = "api.opinsys.fi"
 
   # Firefox configuration system is still a mess... if there really is a more
   # straightforward way, I would like to hear about it.
