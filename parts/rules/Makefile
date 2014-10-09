@@ -1,39 +1,23 @@
-PRECISE_IMAGE_TARGETS = thinclient-precise
+prefix = /usr/local
+datarootdir = $(prefix)/share
 
-TRUSTY_IMAGE_TARGETS = opinsys-trusty           \
-		       opinsysextra-trusty      \
-		       opinsysrestricted-trusty \
-		       puavo-trusty
+.PHONY: all
+all:
 
-IMAGE_TARGETS = $(PRECISE_IMAGE_TARGETS) $(TRUSTY_IMAGE_TARGETS)
+.PHONY: installdirs
+installdirs:
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-rules/puppet
 
-CHROOT_TARGETS = chroot                        \
-                 cleanup-chroot                \
-                 dist-upgrade                  \
-                 image                         \
-                 puppet-chroot                 \
-                 puppet-chroot-error-on-change \
-                 puppet-local                  \
-                 update-chroot
+.PHONY: install
+install: installdirs
+	cp -R -t $(DESTDIR)$(datarootdir)/puavo-rules/puppet puppet/*
 
-OTHER_TARGETS = all help ${CHROOT_TARGETS}
+.PHONY: clean
+clean:
 
-help:
-	@echo "Available targets are:"
-	@echo "  ${OTHER_TARGETS}" | fmt
-	@echo
-	@echo "Available image types are:"
-	@echo "  ${IMAGE_TARGETS}" | fmt
-
-all: ${IMAGE_TARGETS}
-
-${PRECISE_IMAGE_TARGETS}:
-	@sudo puavo-build-image --build $(@:%-precise=%) --distribution precise
-
-${TRUSTY_IMAGE_TARGETS}:
-	@sudo puavo-build-image --build $(@:%-trusty=%)  --distribution trusty
-
-chroot cleanup-chroot dist-upgrade image puppet-chroot puppet-chroot-error-on-change puppet-local update-chroot:
-	@sudo puavo-build-image --$@
-
-.PHONY: ${IMAGE_TARGETS} ${OTHER_TARGETS}
+.PHONY: deb
+deb:
+	rm -rf debian
+	cp -a debian.default debian
+	puavo-dch $(shell cat VERSION)
+	dpkg-buildpackage -us -uc
