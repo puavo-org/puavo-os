@@ -1,0 +1,6 @@
+deb http://<%= @mirror %>/ubuntu <%= @lsbdistcodename %> main restricted universe multiverse
+deb-src http://<%= @mirror %>/ubuntu <%= @lsbdistcodename %> main restricted universe multiverse
+deb http://<%= @mirror %>/ubuntu <%= @lsbdistcodename %>-updates main restricted universe multiverse
+deb-src http://<%= @mirror %>/ubuntu <%= @lsbdistcodename %>-updates main restricted universe multiverse
+deb http://<%= @securitymirror %>/ubuntu <%= @lsbdistcodename %>-security main restricted universe multiverse
+deb-src http://<%= @securitymirror %>/ubuntu <%= @lsbdistcodename %>-security main restricted universe multiverse
