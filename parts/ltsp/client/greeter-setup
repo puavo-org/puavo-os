@@ -15,14 +15,14 @@ case "${puavo_greeter_background_mode}" in
         ;;
     dynamic)
         if [ -n "${puavo_greeter_background}" ]; then
-            find "${BACKGROUNDS_DIR}" -type f -printf '%P\n' \
+            find "${BACKGROUNDS_DIR}" \( -type f -o -type l \) -printf '%P\n' \
                 | grep -q -x "${puavo_greeter_background}" && {
                 background="${BACKGROUNDS_DIR}/${puavo_greeter_background}"
             }
         fi
         ;;
     random)
-        background=$(find "${BACKGROUNDS_DIR}" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' \) | sort -R | head -n1)
+        background=$(find "${BACKGROUNDS_DIR}" -maxdepth 1 \( -type f -o -type l \) \( -name '*.png' -o -name '*.jpg' \) | sort -R | head -n1)
         ;;
     *)
         echo "unknown greeter background mode '${puavo_greeter_background_mode}'" >&2
