@@ -8,7 +8,6 @@ class image::bundle::basic {
 	  lightdm,
 	  motd,
 	  ssh_client,
-	  sudo,
 	  udev,
 	  use_urandom
 
