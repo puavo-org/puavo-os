@@ -22,7 +22,7 @@ case "${puavo_greeter_background_mode}" in
         fi
         ;;
     random)
-        background=$(find "${BACKGROUNDS_DIR}" -maxdepth 1 \( -type f -o -type l \) \( -name '*.png' -o -name '*.jpg' \) | sort -R | head -n1)
+        background=$(find "${BACKGROUNDS_DIR}" -maxdepth 1 \( -type f -o -type l \) | sort -R | head -n1)
         ;;
     *)
         echo "unknown greeter background mode '${puavo_greeter_background_mode}'" >&2
