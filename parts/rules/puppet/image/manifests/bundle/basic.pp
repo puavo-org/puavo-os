@@ -7,7 +7,6 @@ class image::bundle::basic {
 	  kernels,
 	  lightdm,
 	  motd,
-	  organisation_adm_users,
 	  ssh_client,
 	  sudo,
 	  udev,
