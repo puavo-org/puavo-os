@@ -1,6 +1,6 @@
 class packages {
   require apt::repositories,
-          organisation_apt_repositories
+          opinsys_apt_repositories
 
   include packages::kernels,
 	  packages::purged
