@@ -6,7 +6,6 @@ class image::bundle::basic {
 	  disable_update_notifications,
 	  kernels,
 	  lightdm,
-	  ltspimage_ssh_server,
 	  motd,
 	  organisation_adm_users,
 	  ssh_client,
