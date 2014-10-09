@@ -1,2 +1,0 @@
-# Members of the group for ltsp administrators may gain root privileges
-%<%= scope.lookupvar('config::logins::admin_user_groupname') %> ALL=(ALL) NOPASSWD: ALL
