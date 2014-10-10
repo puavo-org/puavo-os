@@ -103,7 +103,7 @@ olcAttributeTypes: {42}( 1.3.6.1.4.1.5322.21.2.4 NAME 'krbAllowedToDelegateTo'
   EQUALITY caseExactIA5Match SUBSTR caseExactSubstringsMatch SYNTAX 1.3.6.1.4.
  1.1466.115.121.1.26 )
 olcObjectClasses: {0}( 2.16.840.1.113719.1.301.6.1.1 NAME 'krbContainer' SUP t
- op STRUCTURAL MUST cn )
+ op STRUCTURAL MUST cn MAY ( ou ) )
 olcObjectClasses: {1}( 2.16.840.1.113719.1.301.6.2.1 NAME 'krbRealmContainer' 
  SUP top STRUCTURAL MUST cn MAY ( krbMKey $ krbUPEnabled $ krbSubTrees $ krbSe
  archScope $ krbLdapServers $ krbSupportedEncSaltTypes $ krbDefaultEncSaltType

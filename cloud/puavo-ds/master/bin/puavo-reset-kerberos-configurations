@@ -20,6 +20,9 @@ require 'puavo-ds'
 
 `echo "#{ PUAVO_ETC.ds_kadmin_password }\\n#{ PUAVO_ETC.ds_kadmin_password }\\n" | /usr/sbin/kdb5_ldap_util stashsrvpw -f /etc/krb5.secrets "#{ PUAVO_ETC.ds_kadmin_dn }" 2>/dev/null`
 
+`chown root:openldap /etc/krb5.secrets`
+`chmod 0640 /etc/krb5.secrets`
+
 # Get kerberos configuration from ldap (all organisation)
 kerberos_configuration = KerberosSettings.new(:ldap_host => PUAVO_ETC.ldap_master,
                                               :ldap_dn => PUAVO_ETC.ldap_dn,
@@ -37,23 +40,12 @@ puts "Replace kerberos configuration files? (y/n)"
 replace = STDIN.gets.chomp
 if replace == "y"
 
+  puts "\nStop krb5-kdc service\n\n"
+  `/etc/init.d/krb5-kdc stop`
+
   kerberos_configuration.replace_server_configurations
 
-  puts "Generate new keytab file"
-  kerberos_configuration.generate_new_keytab_file
-
-  puts "\nStop krb5-kdc and kadmind services\n\n"
-  `/etc/init.d/krb5-kdc stop`
-  `/etc/init.d/puavo-kadmind stop`
-
-  kerberos_configuration.replace_keytab_file
-  
-  puts "\nStart krb5-kdc and kadmind services\n\n"
+  puts "\nStart krb5-kdc service\n\n"
   `/etc/init.d/krb5-kdc start`
-  `/etc/init.d/puavo-kadmind start`
-
-  puts "Restart slapd"
-  puts `stop slapd ; start slapd`
-
 end
 

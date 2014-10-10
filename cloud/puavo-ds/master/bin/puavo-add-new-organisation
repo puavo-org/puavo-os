@@ -171,9 +171,8 @@ else
 end
 
 # FIXME: asking whether the user wants to configure kerberos?
-puts "\nStop krb5-kdc and kadmind services\n\n"
+puts "\nStop krb5-kdc service\n\n"
 `/etc/init.d/krb5-kdc stop`
-`/etc/init.d/puavo-kadmind stop`
 
 begin
   `mkdir -p "/var/lib/ldap/#{suffix}"`
@@ -282,26 +281,9 @@ realm = KerberosRealm.new( :ldap_host => PUAVO_ETC.ldap_master,
                            :domain => domain )
 realm.save
 
-puts "Update keytab file"
-kerberos_configuration.generate_new_keytab_file
-kerberos_configuration.replace_keytab_file
-
 # FIXME: asking whether the user wants to configure kerberos?
-puts "Start krb5-kdc and kadmind services"
+puts "Start krb5-kdc service"
 `/etc/init.d/krb5-kdc start`
-`/etc/init.d/puavo-kadmind start`
-
-puts "Stop slapd"
-`stop slapd`
-
-puts "Waiting 3 seconds"
-sleep(3)
-
-puts "Start slapd"
-`start slapd`
-
-puts "Waiting 3 seconds"
-sleep(3)
 
 user = User.new
 

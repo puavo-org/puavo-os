@@ -156,38 +156,15 @@ class KerberosSettings
     `mv #{TMP}/krb5.conf /etc/krb5.conf`
     `mv #{TMP}/kadm5.acl /etc/krb5kdc/kadm5.acl`
     `mv #{TMP}/krb5-kdc /etc/default/krb5-kdc`
+    fix_file_permissions
   end
 
-  def generate_new_keytab_file
-    hostname = `hostname -f`.chomp
-
-    @organisations.each do |organisation|
-      smbkrb5pwd_princ = `kadmin.local -r #{organisation['realm']} -q "listprincs" | grep smbkrb5pwd/#{hostname}@#{organisation['realm']}`.chomp
-
-      if smbkrb5pwd_princ.empty?
-        puts "Creating smbkrb5pwd/#{hostname}@#{organisation['realm']} principal"
-        `kadmin.local -r #{organisation['realm']} -q "addprinc -randkey smbkrb5pwd/#{hostname}@#{organisation['realm']}"`
-      end
-
-      puts "Exporting smbkrb5pwd/#{hostname}@#{organisation['realm']} to keytab"
-      puts `kadmin.local -r #{organisation['realm']} -q "ktadd -norandkey -k #{TMP}/openldap-krb5.keytab smbkrb5pwd/#{hostname}@#{organisation['realm']}"`
-
-      ldap_princ = `kadmin.local -r #{organisation['realm']} -q "listprincs" | grep ldap/#{hostname}@#{organisation['realm']}`.chomp
-
-      if ldap_princ.empty?
-        puts "Creating ldap/#{hostname}@#{organisation['realm']} principal"
-        `kadmin.local -r #{organisation['realm']} -q "addprinc -randkey ldap/#{hostname}@#{organisation['realm']}"`
-      end
-      
-      puts "Exporting ldap/#{hostname}@#{organisation['realm']} to keytab"
-      puts `kadmin.local -r #{organisation['realm']} -q "ktadd -norandkey -k #{TMP}/openldap-krb5.keytab ldap/#{hostname}@#{organisation['realm']}"`
-    end
-  end
-
-  def replace_keytab_file
-    `mv #{TMP}/openldap-krb5.keytab /etc/ldap/slapd.d/openldap-krb5.keytab`
-    `chown root.openldap /etc/ldap/slapd.d/openldap-krb5.keytab`
-    `chmod 0640 /etc/ldap/slapd.d/openldap-krb5.keytab`
+  def fix_file_permissions
+    `chown -R root:openldap /etc/krb5kdc`
+    `chmod 0750 /etc/krb5kdc`
+    `chmod 0640 /etc/krb5kdc/*`
+    `chown root:openldap /etc/krb5.secrets`
+    `chmod 0640 /etc/krb5.secrets`
   end
 end
   
@@ -206,5 +183,7 @@ class KerberosRealm
   # Create kerberos ldap tree and stash file
   def save
     puts `echo "#{@masterpw}\\n#{@masterpw}\\n" | /usr/sbin/kdb5_ldap_util -D #{@ldap_dn} create -k aes256-cts-hmac-sha1-96 -subtrees "#{@suffix}" -s -sf /etc/krb5kdc/stash.#{@domain} -H ldaps://#{@ldap_host} -r "#{@realm}" -w #{@ldap_password} 2>/dev/null`
+    `chown root:openldap /etc/krb5kdc/stash.#{@domain}`
+    `chmod 0640 /etc/krb5kdc/stash.#{@domain}`
   end
 end
