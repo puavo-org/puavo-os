@@ -15,7 +15,6 @@ class image::desktop {
 	      libreoffice,
 	      network_manager,
 	      packages::puavo,
-	      puavo_openvpn,
 	      puavo_wlan,
 	      pycharm,
 	      tuxpaint,

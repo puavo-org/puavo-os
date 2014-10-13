@@ -122,10 +122,6 @@ promethean
 puavo_external_files
     Some helper definitions for setting up links to /state/external_files.
 
-puavo_openvpn
-    Configurations for puavo-openvpn.  The actual remote addresses are
-    stored in config::vpn.
-
 puavo_wlan
     Configurations for puavo-wlanap.
 
