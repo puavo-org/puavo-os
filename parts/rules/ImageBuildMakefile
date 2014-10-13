@@ -32,7 +32,7 @@ all: ${IMAGE_TARGETS}
 # XXX die... but we want at least some shell completions?
 
 desktop-trusty:
-	@sudo puavo-build-image --build puavo         \
+	@sudo puavo-build-image --build desktop       \
 				--distribution trusty \
                                 --puppet-classes image::desktop
 
@@ -52,8 +52,8 @@ opinsysrestricted-trusty:
                                 --puppet-classes opinsysimage::opinsysrestricted
 
 opinsysthinclient-precise:
-	@sudo puavo-build-image --build thinclient     \
-				--distribution precise \
+	@sudo puavo-build-image --build opinsysthinclient \
+				--distribution precise    \
 				--puppet-classes opinsysimage::opinsysthinclient
 
 thinclient-precise:
