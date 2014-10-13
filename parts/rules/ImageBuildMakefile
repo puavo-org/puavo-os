@@ -39,22 +39,22 @@ desktop-trusty:
 opinsysdesktop-trusty:
 	@sudo puavo-build-image --build opinsys       \
 				--distribution trusty \
-                                --puppet-classes opinsysimage::opinsysdesktop
+                                --puppet-classes opinsysimage::desktop
 
 opinsysextra-trusty:
 	@sudo puavo-build-image --build opinsysextra  \
 				--distribution trusty \
-                                --puppet-classes opinsysimage::opinsysextra
+                                --puppet-classes opinsysimage::extra
 
 opinsysrestricted-trusty:
 	@sudo puavo-build-image --build opinsysrestricted \
 				--distribution trusty     \
-                                --puppet-classes opinsysimage::opinsysrestricted
+                                --puppet-classes opinsysimage::restricted
 
 opinsysthinclient-precise:
 	@sudo puavo-build-image --build opinsysthinclient \
 				--distribution precise    \
-				--puppet-classes opinsysimage::opinsysthinclient
+				--puppet-classes opinsysimage::thinclient
 
 thinclient-precise:
 	@sudo puavo-build-image --build thinclient     \
