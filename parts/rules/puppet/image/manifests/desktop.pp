@@ -1,4 +1,4 @@
-class image::puavo {
+class image::desktop {
   case $operatingsystem {
     'Ubuntu': {
       include crash_reporting,
