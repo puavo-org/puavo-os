@@ -6,11 +6,11 @@ all:
 
 .PHONY: installdirs
 installdirs:
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-rules/puppet
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-rules/rules
 
 .PHONY: install
 install: installdirs
-	cp -R -t $(DESTDIR)$(datarootdir)/puavo-rules/puppet puppet/*
+	cp -R -t $(DESTDIR)$(datarootdir)/puavo-rules/rules rules/*
 
 .PHONY: clean
 clean:
