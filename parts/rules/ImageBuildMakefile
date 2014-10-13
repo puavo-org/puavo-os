@@ -1,10 +1,10 @@
 PRECISE_IMAGE_TARGETS = opinsysthinclient-precise \
 			thinclient-precise
 
-TRUSTY_IMAGE_TARGETS = opinsys-trusty           \
+TRUSTY_IMAGE_TARGETS = desktop-trusty           \
+		       opinsysdesktop-trusty    \
 		       opinsysextra-trusty      \
-		       opinsysrestricted-trusty \
-		       puavo-trusty
+		       opinsysrestricted-trusty
 
 IMAGE_TARGETS = $(PRECISE_IMAGE_TARGETS) $(TRUSTY_IMAGE_TARGETS)
 
@@ -31,10 +31,15 @@ all: ${IMAGE_TARGETS}
 # XXX these belong to some configuration file... actually this Makefile should
 # XXX die... but we want at least some shell completions?
 
-opinsys-trusty:
+desktop-trusty:
+	@sudo puavo-build-image --build puavo         \
+				--distribution trusty \
+                                --puppet-classes image::desktop
+
+opinsysdesktop-trusty:
 	@sudo puavo-build-image --build opinsys       \
 				--distribution trusty \
-                                --puppet-classes opinsysimage::opinsys
+                                --puppet-classes opinsysimage::opinsysdesktop
 
 opinsysextra-trusty:
 	@sudo puavo-build-image --build opinsysextra  \
@@ -50,11 +55,6 @@ opinsysthinclient-precise:
 	@sudo puavo-build-image --build thinclient     \
 				--distribution precise \
 				--puppet-classes opinsysimage::opinsysthinclient
-
-puavo-trusty:
-	@sudo puavo-build-image --build puavo         \
-				--distribution trusty \
-                                --puppet-classes image::puavo
 
 thinclient-precise:
 	@sudo puavo-build-image --build thinclient     \
