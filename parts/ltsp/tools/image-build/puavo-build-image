@@ -322,7 +322,7 @@ prepare_puppet() {
 }
 
 apply_puppet() {
-  if [ -z "$puppet_modules_dirs" -o -z "$puppet_classes" ]; then
+  if [ -z "$puppet_modules_dirs" ]; then
     return 0
   fi
 
@@ -349,12 +349,18 @@ apply_puppet() {
     another_ok_puppetcode=2
   fi
 
-  # sanity check to prevent mistakes, like running --update-local on a host
-  # not using an image
-  if [ ! -d "${puppet_target_dir}/etc/puppet/ltsp" ]; then
-    echo 'Puppet is not initialized to the target directory' >&2
-    return 1
+  if [ -z "$puppet_classes" ]; then
+    puppet_classes="$(cat "${puppet_target_dir}/etc/puppet/ltsp/.classes" \
+                        2>/dev/null || true)"
+    if [ -z "$puppet_classes" ]; then
+      # sanity check to prevent mistakes such as running puppet where puppet
+      # should not be run (like, with --update-local)
+      echo 'Puppet is not initialized to the target directory' >&2
+      return 1
+    fi
   fi
+
+  echo "$puppet_classes" > "${puppet_target_dir}/etc/puppet/ltsp/.classes"
 
   rm -rf $puppet_target_dir/etc/puppet/ltsp/*
   for puppet_dir in $(echo "$puppet_modules_dirs" | tr ',' ' '); do
