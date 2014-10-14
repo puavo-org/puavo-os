@@ -394,6 +394,7 @@ class packages {
     , 'pythontracer'
     , 'qt4-designer'
     , 'qt4-doc'
+    , 'racket'
     , 'scratch'
     , 'spe' ]:
       tag => [ 'programming', 'ubuntu', ];
