@@ -21,7 +21,8 @@ installdirs :
 .PHONY : install
 install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-image-tools \
-		puavo-ask-buildtarget-dir
+		puavo-ask-buildtarget-dir \
+		puavo-imgbuild-tool
 	
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-build-image \
