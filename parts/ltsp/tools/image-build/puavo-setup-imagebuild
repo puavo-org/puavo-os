@@ -45,19 +45,18 @@ done
 
 cat <<'EOF'
 
-You should have a list of puppet module directories that contain
-modules that are used with image build.  The puavo-rules repository
-contains the default rules, but you may have a different set of modules
-in other places as well.  Give a comma-separated list of directories
-that contain puppet modules:
+You should have a list of rules directories that contain image build
+definitions, such as debconf seeds, puppet rules and package directories.
+The puavo-rules repository contains the default rules, but you may have a
+different set of rules/modules in other places as well.  Give a
+comma-separated list of rule directories:
 
 EOF
 
-puppet_modules_dirs="${imagebuild_sources_dir}/puppet"
-read -p "Directories with puppet modules? [$puppet_modules_dirs] " \
-        puppet_modules_dirs
-[ -z "$puppet_modules_dirs" ] \
-  && puppet_modules_dirs="${imagebuild_sources_dir}/puppet"
+buildrules_dirs="${imagebuild_sources_dir}/rules"
+read -p "Directories with image build rules? [$buildrules_dirs] " \
+        buildrules_dirs
+[ -z "$buildrules_dirs" ] && buildrules_dirs="${imagebuild_sources_dir}/rules"
 
 
 
@@ -113,11 +112,11 @@ mkdir -p "$(dirname "$config_path")"
 
 cat <<EOF > ~/.config/puavo-build-image/defaults
 apt-proxy $apt_proxy
+buildrules-dirs $buildrules_dirs
 builds-dir $builds_dir
 imagebuild-sources-dir $imagebuild_sources_dir
 images-dir $images_dir
 mirror $mirror
-puppet-modules-dirs $puppet_modules_dirs
 EOF
 
 cat <<EOF

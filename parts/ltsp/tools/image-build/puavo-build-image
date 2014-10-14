@@ -6,9 +6,9 @@ usage() {
     cat <<EOF
 Usage:
   puavo-build-image --build imagetype
+                    --buildrules-dirs buildrules-dirs
                     --imagebuild-sources-dir imagebuild-sources-dir
                     --puppet-classes puppet-classes
-                    --puppet-modules-dirs puppet-modules-dirs
                     --release-name release-name
                     --set-root-password
                     --target-dir target-dir
@@ -29,9 +29,9 @@ Usage:
   --puppet-chroot, --puppet-chroot-error-on-change, --puppet-local and
   --update-chroot take the following extra arguments:
 
+      --buildrules-dirs buildrules-dirs
       --imagebuild-sources-dir imagebuild-sources-dir
       --puppet-classes puppet-classes
-      --puppet-modules-dirs puppet-modules-dirs
       --target-dir target-dir
 
   An optional --builds-dir argument can be given to all actions.  If
@@ -42,8 +42,9 @@ Usage:
 
   --puppet-classes is a comma-separated list of puppet classes to be applied
 
-  --puppet-modules-dirs is a comma-separated list of directories
-  that contain some puppet modules
+  --buildrules-dirs is a comma-separated list of directories
+  that contain rules for building images, such as debconf seeds, puppet
+  modules and packages
 
   --build takes optional arguments:
 
@@ -57,13 +58,23 @@ EOF
     exit 1
 }
 
+dirs_with_postfix() {
+  dirlist=$1
+  postfix=$2
+
+  echo "$dirlist" \
+    | awk -F, -v postfix="$postfix" '
+        { for (i = 1; i <= NF; i++) { print $i postfix } }
+      '
+}
+
 get_default_for() {
   awk -v key="$1" '$1 == key { print $2 }' \
     ~/.config/puavo-build-image/defaults
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,builds-dir:,distribution:,gitbranch:,images-dir:,mirror:,puppet-classes:,puppet-modules-dirs:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
+              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,buildrules-dirs:,builds-dir:,distribution:,gitbranch:,images-dir:,mirror:,puppet-classes:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
               -- "$@"); then
   usage
 fi
@@ -73,6 +84,7 @@ arch=i386
 distribution=trusty
 gitbranch=trusty
 
+imagetype=
 puppet_classes=
 release_name=
 set_root_password=
@@ -80,11 +92,11 @@ target_dir=
 
 # parameters with config defaults
 apt_proxy=$(get_default_for apt-proxy)
+buildrules_dirs=$(get_default_for buildrules-dirs)
 builds_dir=$(get_default_for builds-dir)
 imagebuild_sources_dir=$(get_default_for imagebuild-sources-dir)
 images_dir="$(get_default_for images-dir)"
 mirror="$(get_default_for mirror)"
-puppet_modules_dirs=$(get_default_for puppet-modules-dirs)
 
 [ -z "$apt_proxy"              ] && apt_proxy="localhost:3142"
 [ -z "$imagebuild_sources_dir" ] && imagebuild_sources_dir="$(pwd)"
@@ -115,6 +127,9 @@ while [ $# -ne 0 ]; do
     --arch)
       arch=$2; shift; shift
       ;;
+    --buildrules-dirs)
+      buildrules_dirs=$2; shift; shift
+      ;;
     --builds-dir)
       builds_dir=$2; shift; shift
       ;;
@@ -136,9 +151,6 @@ while [ $# -ne 0 ]; do
     --puppet-classes)
       puppet_classes=$2; shift; shift
       ;;
-    --puppet-modules-dirs)
-      puppet_modules_dirs=$2; shift; shift
-      ;;
     --release-name)
       release_name=$2; shift; shift
       ;;
@@ -157,6 +169,13 @@ while [ $# -ne 0 ]; do
   esac
 done
 
+[ "$apt_proxy" = "no" ] && apt_proxy=
+if [ -n "$apt_proxy" ]; then
+  mirror_maybe_proxied="http://${apt_proxy}/${mirror}/ubuntu/"
+else
+  mirror_maybe_proxied="http://${mirror}/ubuntu/"
+fi
+
 if [ -z "$target_dir" ]; then
   if [ -n "$builds_dir" ]; then
     if [ "$action" = "build" ]; then
@@ -171,12 +190,23 @@ if [ -z "$target_dir" ]; then
   fi
 fi
 
-[ "$apt_proxy" = "no" ] && apt_proxy=
-if [ -n "$apt_proxy" ]; then
-  mirror_maybe_proxied="http://${apt_proxy}/${mirror}/ubuntu/"
-else
-  mirror_maybe_proxied="http://${mirror}/ubuntu/"
+if [ -z "$imagetype" ]; then
+  imagetype=$(cat "$target_dir/etc/ltsp/this_ltspimage_type" \
+                2>/dev/null || true)
 fi
+
+if [ -z "$imagetype" ]; then
+  echo 'Imagetype is not set' >&2
+  usage
+fi
+
+# get some variables that are derived from --buildrules-dirs and --imagetype
+# ${buildrules_dirs} is a list of dirs separated by commas
+debconf_seeds_files="$(dirs_with_postfix "${buildrules_dirs}" \
+                                         "/debseeds/${imagetype}")"
+packages_dirs="$(dirs_with_postfix "${buildrules_dirs}" \
+                                   "/packages/${imagetype}")"
+puppet_modules_dirs="$(dirs_with_postfix "${buildrules_dirs}" /puppet)"
 
 do_mounts() {
   mount -o bind /dev     "$target_dir/dev"
@@ -200,12 +230,6 @@ wipe_chroot() {
 
 ask_and_set_image_information() {
   release_name=$1
-
-  imagetype=$(cat "$target_dir/etc/ltsp/this_ltspimage_type")
-  if [ -z "$imagetype" ]; then
-    echo 'No imagetype is set in image chroot, can not continue' >&2
-    return 1
-  fi
 
   distribution=$(run_in_chroot lsb_release -cs)
   if [ -z "$distribution" ]; then
@@ -297,16 +321,14 @@ EOF
 }
 
 set_debconf_seeds() {
-  imagetype=$1
-  debconf_seeds_file=${imagebuild_sources_dir}/config/debconf.seeds.$imagetype
-  if [ -r "$debconf_seeds_file" ]; then
-    run_in_chroot debconf-set-selections < "$debconf_seeds_file"
-  fi
+  for debconf_seeds_file in ${debconf_seeds_files}; do
+    if [ -r "$debconf_seeds_file" ]; then
+      run_in_chroot debconf-set-selections < "$debconf_seeds_file"
+    fi
+  done
 }
 
 set_ltspimage_type() {
-  imagetype=$1
-
   mkdir -p "$target_dir/etc/ltsp"
   echo "$imagetype" > "$target_dir/etc/ltsp/this_ltspimage_type"
 }
@@ -363,7 +385,7 @@ apply_puppet() {
   echo "$puppet_classes" > "${puppet_target_dir}/etc/puppet/ltsp/.classes"
 
   rm -rf $puppet_target_dir/etc/puppet/ltsp/*
-  for puppet_dir in $(echo "$puppet_modules_dirs" | tr ',' ' '); do
+  for puppet_dir in $puppet_modules_dirs; do
     for puppet_module in ${puppet_dir}/*; do
       if [ -d "$puppet_module" ]; then
         puppet_module_target_path="${puppet_target_dir}/etc/puppet/ltsp/$(basename "$puppet_module")"
@@ -457,13 +479,13 @@ case "$action" in
     fi
 
     build_chroot
-    set_debconf_seeds  "$imagetype"
-    set_ltspimage_type "$imagetype"
+    set_debconf_seeds
+    set_ltspimage_type
     prepare_puppet     "$puppet_classes"
 
-    $0 --update-chroot                              \
-       --puppet-classes "$puppet_classes"           \
-       --puppet-modules-dirs "$puppet_modules_dirs" \
+    $0 --update-chroot                      \
+       --buildrules-dirs "$buildrules_dirs" \
+       --puppet-classes "$puppet_classes"   \
        --target-dir "$target_dir"
 
     $0 --image --images-dir "$images_dir"     \
@@ -502,8 +524,8 @@ case "$action" in
                       --dist-upgrade  \
                       --puppet-chroot \
                       --puppet-chroot-error-on-change; do
-      $0 $action_arg --puppet-classes "$puppet_classes"           \
-                     --puppet-modules-dirs "$puppet_modules_dirs" \
+      $0 $action_arg --buildrules-dirs "$buildrules_dirs" \
+                     --puppet-classes "$puppet_classes"   \
                      --target-dir "$target_dir"
     done
 
