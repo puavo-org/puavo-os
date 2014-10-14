@@ -1,33 +1,56 @@
 #!/usr/bin/ruby1.9.1
 
+require 'getoptlong'
 require 'json'
 
-# XXX probably not
-def get_rules_directories()
-  config_file_path = "#{ ENV['HOME'] }/.config/puavo-build-image/defaults"
+def image_configuration(imagejson_path)
+  JSON.parse( File.read(imagejson_path) )
+end
 
-  IO.readlines(config_file_path).each do |line|
-    key, value = * line.split
-    if key == 'buildrules-dirs' then
-      return value.split(',')
+def output_makefile(image_confs)
+  makefile = []
+
+  image_confs.keys.each do |imagetype|
+    makefile << <<-EOF
+.PHONY: #{ imagetype }
+#{ imagetype }:
+	@sudo puavo-build-image --config-template $@
+EOF
+  end
+
+  puts makefile.join("\n")
+end
+
+def usage()
+  puts <<-EOF
+You use me wrong, use better!
+EOF
+  exit(1)
+end
+
+config_file = nil
+output_makefile = false
+
+begin
+  opts = GetoptLong.new(
+           [ '--config',          '-c', GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--output-makefile', '-m', GetoptLong::NO_ARGUMENT       ])
+
+  opts.each do |opt, arg|
+    case opt
+      when '--config'
+	config_file = arg
+      when '--output-makefile'
+	output_makefile = true
     end
   end
-
-  raise 'Could not found rule directories'
+rescue GetoptLong::InvalidOption => e
+  usage
 end
 
-def get_image_configurations()
-  ruledirs = get_rules_directories()
-
-  imageconfs = {}
-
-  imageconf_files = ruledirs.map { |s| "#{ s }/images.json" } \
-                            .select { |path| File.exists?(path) }
-  imageconf_files.each do |jsonfile_path|
-    imageconfs.merge!( JSON.parse( File.read(jsonfile_path) ) )
-  end
-
-  imageconfs
+if output_makefile && config_file then
+  output_makefile( image_configuration(config_file) )
+  exit(0)
+else
+  usage()
 end
-
-p get_image_configurations()
