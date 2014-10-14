@@ -242,7 +242,7 @@ ask_and_set_image_information() {
   fi
 
   build_date=$(date +%Y-%m-%d-%H%M%S)
-  build_version=ltsp-$imagetype-$build_date
+  build_version=$imagetype-$build_date
   ltspimage_name="$build_version-$arch.img"
 
   if [ -n "$release_name" ]; then
@@ -403,7 +403,7 @@ apply_puppet() {
     done
   done
 
-  logfile_path="/var/log/puppet/ltsp-$(date +%Y-%m-%d-%H%M%S).log"
+  logfile_path="/var/log/puppet/puavo-build-image-$(date +%Y-%m-%d-%H%M%S).log"
   $run_command env LANG=en_US.UTF-8                   \
                   puppet apply                        \
                   --detailed-exitcodes                \
