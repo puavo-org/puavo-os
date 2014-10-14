@@ -21,6 +21,9 @@ Usage:
                             --set-root-password
                             --target-dir target-dir
 
+  puavo-build-image --install-packages --buildrules-dirs buildrules-dirs
+                                       --target-dir target-dir
+
   puavo-build-image --puppet-chroot
   puavo-build-image --puppet-chroot-error-on-change
   puavo-build-image --puppet-local
@@ -74,7 +77,7 @@ get_default_for() {
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,buildrules-dirs:,builds-dir:,distribution:,gitbranch:,images-dir:,mirror:,puppet-classes:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
+              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,install-packages,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,buildrules-dirs:,builds-dir:,distribution:,gitbranch:,images-dir:,mirror:,puppet-classes:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
               -- "$@"); then
   usage
 fi
@@ -110,6 +113,7 @@ while [ $# -ne 0 ]; do
     | --cleanup-chroot                \
     | --dist-upgrade                  \
     | --image                         \
+    | --install-packages              \
     | --puppet-chroot                 \
     | --puppet-chroot-error-on-change \
     | --puppet-local                  \
@@ -204,8 +208,8 @@ fi
 # ${buildrules_dirs} is a list of dirs separated by commas
 debconf_seeds_files="$(dirs_with_postfix "${buildrules_dirs}" \
                                          "/debseeds/${imagetype}")"
-packages_dirs="$(dirs_with_postfix "${buildrules_dirs}" \
-                                   "/packages/${imagetype}")"
+package_dirs="$(dirs_with_postfix "${buildrules_dirs}" \
+                                  "/packages/${imagetype}")"
 puppet_modules_dirs="$(dirs_with_postfix "${buildrules_dirs}" /puppet)"
 
 do_mounts() {
@@ -410,6 +414,28 @@ apply_puppet() {
     || [ $? -eq $another_ok_puppetcode ]
 }
 
+install_packages() {
+  rm -f ${target_dir}/var/tmp/puavo-build-debs/*
+
+  there_are_packages_to_install=false
+
+  for package_dir in $package_dirs; do
+    mkdir -p "${target_dir}/var/tmp/puavo-build-debs"
+    for deb in ${package_dir}/*.deb; do
+      [ ! -e "$deb" ] && continue
+      cp "$deb" "${target_dir}/var/tmp/puavo-build-debs"
+      there_are_packages_to_install=true
+    done
+  done
+
+  if $there_are_packages_to_install; then
+    # use gdebi instead of dpkg, dpkg is dumb with dependencies
+    run_in_chroot apt-get -y install gdebi-core
+    run_in_chroot sh -c 'gdebi -n /var/tmp/puavo-build-debs/*'
+    rm -f ${target_dir}/var/tmp/puavo-build-debs/*
+  fi
+}
+
 run_in_chroot() {
   do_mounts                                                        || return $?
   run_with_setarch chroot "$target_dir" env DISABLE_DAEMONS=1 "$@" || return $?
@@ -481,7 +507,7 @@ case "$action" in
     build_chroot
     set_debconf_seeds
     set_ltspimage_type
-    prepare_puppet     "$puppet_classes"
+    prepare_puppet "$puppet_classes"
 
     $0 --update-chroot                      \
        --buildrules-dirs "$buildrules_dirs" \
@@ -509,6 +535,9 @@ case "$action" in
     ask_and_set_image_information "$release_name"
     make_image
     ;;
+  install-packages)
+    install_packages
+    ;;
   puppet-chroot)
     apply_puppet chroot false
     ;;
@@ -520,10 +549,11 @@ case "$action" in
     ;;
   update-chroot)
     run_in_chroot apt-get -y update
-    for action_arg in --puppet-chroot \
-                      --dist-upgrade  \
-                      --puppet-chroot \
-                      --puppet-chroot-error-on-change; do
+    for action_arg in --puppet-chroot                 \
+                      --dist-upgrade                  \
+                      --puppet-chroot                 \
+                      --puppet-chroot-error-on-change \
+                      --install-packages; do
       $0 $action_arg --buildrules-dirs "$buildrules_dirs" \
                      --puppet-classes "$puppet_classes"   \
                      --target-dir "$target_dir"
