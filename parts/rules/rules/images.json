@@ -1,0 +1,14 @@
+{
+  "ltsp-desktop-trusty": {
+    "distribution": "trusty",
+    "puppet-classes": "image::desktop",
+    "release-name": "Development",
+    "images": []
+  },
+  "ltsp-thinclient-precise": {
+    "distribution": "precise",
+    "puppet-classes": "image::thinclient",
+    "release-name": "Development",
+    "images": []
+  }
+}
