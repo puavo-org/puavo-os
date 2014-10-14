@@ -1,10 +1,10 @@
-PRECISE_IMAGE_TARGETS = opinsysthinclient-precise \
-			thinclient-precise
+PRECISE_IMAGE_TARGETS = ltsp-opinsysthinclient-precise \
+			ltsp-thinclient-precise
 
-TRUSTY_IMAGE_TARGETS = desktop-trusty           \
-		       opinsysdesktop-trusty    \
-		       opinsysextra-trusty      \
-		       opinsysrestricted-trusty
+TRUSTY_IMAGE_TARGETS = ltsp-desktop-trusty           \
+		       ltsp-opinsysdesktop-trusty    \
+		       ltsp-opinsysextra-trusty      \
+		       ltsp-opinsysrestricted-trusty
 
 IMAGE_TARGETS = $(PRECISE_IMAGE_TARGETS) $(TRUSTY_IMAGE_TARGETS)
 
@@ -31,33 +31,33 @@ all: ${IMAGE_TARGETS}
 # XXX these belong to some configuration file... actually this Makefile should
 # XXX die... but we want at least some shell completions?
 
-desktop-trusty:
-	@sudo puavo-build-image --build desktop       \
+ltsp-desktop-trusty:
+	@sudo puavo-build-image --build $@            \
 				--distribution trusty \
                                 --puppet-classes image::desktop
 
-opinsysdesktop-trusty:
-	@sudo puavo-build-image --build opinsys       \
+ltsp-opinsysdesktop-trusty:
+	@sudo puavo-build-image --build $@            \
 				--distribution trusty \
                                 --puppet-classes opinsysimage::desktop
 
-opinsysextra-trusty:
-	@sudo puavo-build-image --build opinsysextra  \
+ltsp-opinsysextra-trusty:
+	@sudo puavo-build-image --build $@            \
 				--distribution trusty \
                                 --puppet-classes opinsysimage::extra
 
-opinsysrestricted-trusty:
-	@sudo puavo-build-image --build opinsysrestricted \
-				--distribution trusty     \
+ltsp-opinsysrestricted-trusty:
+	@sudo puavo-build-image --build $@            \
+				--distribution trusty \
                                 --puppet-classes opinsysimage::restricted
 
-opinsysthinclient-precise:
-	@sudo puavo-build-image --build opinsysthinclient \
-				--distribution precise    \
+ltsp-opinsysthinclient-precise:
+	@sudo puavo-build-image --build $@             \
+				--distribution precise \
 				--puppet-classes opinsysimage::thinclient
 
-thinclient-precise:
-	@sudo puavo-build-image --build thinclient     \
+ltsp-thinclient-precise:
+	@sudo puavo-build-image --build $@             \
 				--distribution precise \
 				--puppet-classes image::thinclient
 
