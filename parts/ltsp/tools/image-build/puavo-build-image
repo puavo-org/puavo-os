@@ -183,7 +183,7 @@ fi
 if [ -z "$target_dir" ]; then
   if [ -n "$builds_dir" ]; then
     if [ "$action" = "build" ]; then
-      target_dir="${builds_dir}/${imagetype}-${distribution}"
+      target_dir="${builds_dir}/${imagetype}"
     else
       target_dir=$(/usr/lib/puavo-image-tools/puavo-ask-buildtarget-dir \
                      "$builds_dir")
@@ -242,7 +242,7 @@ ask_and_set_image_information() {
   fi
 
   build_date=$(date +%Y-%m-%d-%H%M%S)
-  build_version=ltsp-$imagetype-$distribution-$build_date
+  build_version=ltsp-$imagetype-$build_date
   ltspimage_name="$build_version-$arch.img"
 
   if [ -n "$release_name" ]; then
