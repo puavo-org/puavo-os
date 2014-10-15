@@ -39,27 +39,28 @@ def image_configuration(imagejson_path)
 end
 
 def output_makefile(image_confs)
-  makefile = []
+  image_names = image_confs.keys
+  image_names.each do |image_name|
+    if !image_name.match(/^[a-zA-Z0-9-]+$/) then
+      raise "Image name '#{ image_name }' is not okay"
+    end
+  end
 
-  makefile << <<'EOF'
+  puts <<EOF
 CHROOT_TARGETS = chroot cleanup-chroot dist-upgrade image install-packages \
 		 puppet-chroot puppet-chroot-error-on-change puppet-local \
 		 update-chroot
 
+IMAGE_TARGETS = #{ image_names.join(' ') }
+
 .PHONY: ${CHROOT_TARGETS}
 ${CHROOT_TARGETS}:
 	@sudo /usr/lib/puavo-image-tools/puavo-imgbuild-tool --$@
-EOF
 
-  image_confs.keys.each do |imagetype|
-    makefile << <<-EOF
-.PHONY: #{ imagetype }
-#{ imagetype }: images.json
+.PHONY: ${IMAGE_TARGETS}
+${IMAGE_TARGETS}: images.json
 	@sudo puavo-build-image --config-target $@ --images-config $<
 EOF
-  end
-
-  puts makefile.join("\n")
 end
 
 def usage()
