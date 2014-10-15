@@ -325,9 +325,16 @@ EOF
 }
 
 set_debconf_seeds() {
+  debconf_seeding_ok=false
   for debconf_seeds_file in ${debconf_seeds_files}; do
-    run_in_chroot debconf-set-selections < "$debconf_seeds_file"
+    run_in_chroot debconf-set-selections < "$debconf_seeds_file" \
+      && debconf_seeding_ok=true
   done
+
+  if !$debconf_seeding_ok; then
+    echo "Could not find a debconf seed file for image '$imagetype'" >&2
+    return 1
+  fi
 }
 
 set_ltspimage_type() {
