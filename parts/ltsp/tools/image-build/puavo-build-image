@@ -47,8 +47,8 @@ def output_makefile(image_confs)
   end
 
   puts <<EOF
-CHROOT_TARGETS = chroot cleanup-chroot dist-upgrade image install-packages \
-		 puppet-chroot puppet-chroot-error-on-change puppet-local \
+CHROOT_TARGETS = chroot cleanup-chroot dist-upgrade image install-packages \\
+		 puppet-chroot puppet-chroot-error-on-change puppet-local \\
 		 update-chroot
 
 IMAGE_TARGETS = #{ image_names.join(' ') }
