@@ -3,6 +3,37 @@
 require 'getoptlong'
 require 'json'
 
+def imgbuild_args(cmdline_switch, conf, key)
+  value = conf[key]
+  value.kind_of?(String) && !value.empty? \
+    ? [ cmdline_switch, value ]           \
+    : []
+end
+
+def build_config_target(config_target, config_file)
+  image_confs = image_configuration(config_file)
+
+  if !image_confs.has_key?(config_target) then
+    raise "No config target '#{ config_target }' in '#{ config_file }'"
+  end
+
+  conf = image_confs[config_target]
+
+  raise "Distribution is not defined for '#{ config_target }'" \
+    unless conf['distribution'].kind_of?(String) \
+             && !conf['distribution'].empty?
+
+  puppet_args  = imgbuild_args('--puppet-classes', conf, 'puppet-classes')
+  release_args = imgbuild_args('--release-name',   conf, 'release-name')
+
+  system('/usr/lib/puavo-image-tools/puavo-imgbuild-tool',
+         '--build',        config_target,
+         '--distribution', conf['distribution'],
+         *puppet_args,
+         *release_args) \
+    or raise "Problem in building '#{ config_target }'"
+end
+
 def image_configuration(imagejson_path)
   JSON.parse( File.read(imagejson_path) )
 end
@@ -10,11 +41,21 @@ end
 def output_makefile(image_confs)
   makefile = []
 
+  makefile << <<'EOF'
+CHROOT_TARGETS = chroot cleanup-chroot dist-upgrade image install-packages \
+		 puppet-chroot puppet-chroot-error-on-change puppet-local \
+		 update-chroot
+
+.PHONY: ${CHROOT_TARGETS}
+${CHROOT_TARGETS}:
+	@sudo /usr/lib/puavo-image-tools/puavo-imgbuild-tool --$@
+EOF
+
   image_confs.keys.each do |imagetype|
     makefile << <<-EOF
 .PHONY: #{ imagetype }
-#{ imagetype }:
-	@sudo puavo-build-image --config-template $@
+#{ imagetype }: images.json
+	@sudo puavo-build-image --config-target $@ --images-config $<
 EOF
   end
 
@@ -29,16 +70,20 @@ EOF
 end
 
 config_file = nil
+config_target = nil
 output_makefile = false
 
 begin
   opts = GetoptLong.new(
-           [ '--config',          '-c', GetoptLong::REQUIRED_ARGUMENT ],
-           [ '--output-makefile', '-m', GetoptLong::NO_ARGUMENT       ])
+           [ '--images-config',   '-i', GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--output-makefile', '-m', GetoptLong::NO_ARGUMENT       ],
+           [ '--config-target',   '-t', GetoptLong::REQUIRED_ARGUMENT ])
 
   opts.each do |opt, arg|
     case opt
-      when '--config'
+      when '--config-target'
+	config_target = arg
+      when '--images-config'
 	config_file = arg
       when '--output-makefile'
 	output_makefile = true
@@ -51,6 +96,8 @@ end
 if output_makefile && config_file then
   output_makefile( image_configuration(config_file) )
   exit(0)
+elsif config_file && config_target then
+  build_config_target(config_target, config_file)
 else
   usage()
 end
