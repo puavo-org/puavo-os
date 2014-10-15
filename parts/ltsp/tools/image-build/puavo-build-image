@@ -55,11 +55,18 @@ IMAGE_TARGETS = #{ image_names.join(' ') }
 
 .PHONY: ${CHROOT_TARGETS}
 ${CHROOT_TARGETS}:
-	@sudo /usr/lib/puavo-image-tools/puavo-imgbuild-tool --$@
+	sudo /usr/lib/puavo-image-tools/puavo-imgbuild-tool --$@
 
 .PHONY: ${IMAGE_TARGETS}
 ${IMAGE_TARGETS}: images.json
-	@sudo puavo-build-image --config-target $@ --images-config $<
+	sudo puavo-build-image --config-target $@ --images-config $<
+
+help:
+	@echo "Available image targets are:"
+	@echo "  ${IMAGE_TARGETS}" | fmt
+	@echo
+	@echo "Available other targets are:"
+	@echo "  ${CHROOT_TARGETS}" | fmt
 EOF
 end
 
