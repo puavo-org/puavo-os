@@ -1,4 +1,6 @@
-CHROOT_TARGETS = chroot cleanup-chroot dist-upgrade image install-packages 		 puppet-chroot puppet-chroot-error-on-change puppet-local 		 update-chroot
+CHROOT_TARGETS = chroot cleanup-chroot dist-upgrade image install-packages \
+		 puppet-chroot puppet-chroot-error-on-change puppet-local \
+		 update-chroot
 
 IMAGE_TARGETS = ltsp-desktop-trusty ltsp-thinclient-precise
 
