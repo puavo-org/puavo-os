@@ -168,6 +168,7 @@ class packages {
     , 'openttd'
     , 'pacman'
     , 'pingus'
+    , 'realtimebattle'
     , 'sgt-puzzles'
     , 'supertuxkart'
     , 'tuxmath'
