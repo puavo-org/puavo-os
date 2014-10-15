@@ -141,6 +141,7 @@
         {
           "type": "desktop",
           "source": "kolourpaint",
+          "osIconPath": "/usr/share/icons/hicolor/48x48/apps/kolourpaint.png",
           "name": {
             "en": "KolourPaint"
           }
@@ -1209,6 +1210,7 @@
         {
           "type": "desktop",
           "source": "hydrogen",
+          "osIconPath": "/usr/share/hydrogen/data/img/gray/icon.svg",
           "name": {
             "en": "Hydrogen-drum machine",
             "fi": "Hydrogen-rumpukone",
@@ -1266,6 +1268,7 @@
         {
           "type": "desktop",
           "inactiveByDeviceType": "thinclient",
+          "osIconPath": "/usr/share/icons/hicolor/32x32/apps/qjackctl.png",
           "source": "qjackctl"
         }
           ]
@@ -1371,7 +1374,7 @@
         },
         {
           "type": "web",
-          "name": "Ylen Elävä arkisto",
+          "name": "Yle - Elävä arkisto",
           "url": "http://yle.fi/elavaarkisto/index.html",
           "description": "Ylen Eläväarkisto-videopalvelu",
           "osIconPath": "/usr/share/icons/Faenza/apps/96/me-tv.png"
