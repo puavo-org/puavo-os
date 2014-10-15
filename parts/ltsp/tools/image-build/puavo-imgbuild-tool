@@ -326,9 +326,7 @@ EOF
 
 set_debconf_seeds() {
   for debconf_seeds_file in ${debconf_seeds_files}; do
-    if [ -r "$debconf_seeds_file" ]; then
-      run_in_chroot debconf-set-selections < "$debconf_seeds_file"
-    fi
+    run_in_chroot debconf-set-selections < "$debconf_seeds_file"
   done
 }
 
