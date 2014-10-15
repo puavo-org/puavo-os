@@ -1,7 +1,8 @@
 class image::desktop {
   case $operatingsystem {
     'Ubuntu': {
-      include crash_reporting,
+      include acroread,
+	      crash_reporting,
 	      ::desktop,
 	      disable_accounts_service,
 	      disable_geoclue,
