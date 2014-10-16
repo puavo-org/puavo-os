@@ -407,7 +407,8 @@ class packages {
     , 'remmina'
     , 'smbclient'
     , 'unison-gtk'
-    , 'wget' ]:
+    , 'wget'
+    , 'xtightvncviewer']:
       tag => [ 'remote_access', 'ubuntu', ];
 
     [ 'atomix'
