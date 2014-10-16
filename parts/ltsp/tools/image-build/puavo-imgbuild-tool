@@ -76,6 +76,20 @@ get_default_for() {
     ~/.config/puavo-build-image/defaults
 }
 
+get_imagetype() {
+  if [ -z "$imagetype" -a -n "$target_dir" ]; then
+    imagetype=$(cat "${target_dir}/etc/ltsp/this_ltspimage_type" \
+                  2>/dev/null || true)
+  fi
+
+  if [ -z "$imagetype" ]; then
+    echo 'Could not determine imagetype' >&2
+    return 1
+  fi
+
+  echo "$imagetype"
+}
+
 if ! args=$(getopt -n "$0" -o + \
               -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,install-packages,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,buildrules-dirs:,builds-dir:,distribution:,gitbranch:,images-dir:,mirror:,puppet-classes:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
               -- "$@"); then
@@ -100,6 +114,7 @@ builds_dir=$(get_default_for builds-dir)
 imagebuild_sources_dir=$(get_default_for imagebuild-sources-dir)
 images_dir="$(get_default_for images-dir)"
 mirror="$(get_default_for mirror)"
+puppet_modules_dirs="$(dirs_with_postfix "${buildrules_dirs}" /puppet)"
 
 [ -z "$apt_proxy"              ] && apt_proxy="localhost:3142"
 [ -z "$imagebuild_sources_dir" ] && imagebuild_sources_dir="$(pwd)"
@@ -183,7 +198,7 @@ fi
 if [ -z "$target_dir" ]; then
   if [ -n "$builds_dir" ]; then
     if [ "$action" = "build" ]; then
-      target_dir="${builds_dir}/${imagetype}"
+      target_dir="${builds_dir}/$(get_imagetype)"
     else
       target_dir=$(/usr/lib/puavo-image-tools/puavo-ask-buildtarget-dir \
                      "$builds_dir")
@@ -194,23 +209,6 @@ if [ -z "$target_dir" ]; then
   fi
 fi
 
-if [ -z "$imagetype" ]; then
-  imagetype=$(cat "$target_dir/etc/ltsp/this_ltspimage_type" \
-                2>/dev/null || true)
-fi
-
-if [ -z "$imagetype" ]; then
-  echo 'Imagetype is not set' >&2
-  usage
-fi
-
-# get some variables that are derived from --buildrules-dirs and --imagetype
-# ${buildrules_dirs} is a list of dirs separated by commas
-debconf_seeds_files="$(dirs_with_postfix "${buildrules_dirs}" \
-                                         "/debseeds/${imagetype}")"
-package_dirs="$(dirs_with_postfix "${buildrules_dirs}" \
-                                  "/packages/${imagetype}")"
-puppet_modules_dirs="$(dirs_with_postfix "${buildrules_dirs}" /puppet)"
 
 do_mounts() {
   mount -o bind /dev     "$target_dir/dev"
@@ -242,7 +240,7 @@ ask_and_set_image_information() {
   fi
 
   build_date=$(date +%Y-%m-%d-%H%M%S)
-  build_version=$imagetype-$build_date
+  build_version=$(get_imagetype)-$build_date
   ltspimage_name="$build_version-$arch.img"
 
   if [ -n "$release_name" ]; then
@@ -325,6 +323,9 @@ EOF
 }
 
 set_debconf_seeds() {
+  debconf_seeds_files="$(dirs_with_postfix "${buildrules_dirs}" \
+                                           "/debseeds/$(get_imagetype)")"
+
   debconf_seeding_ok=false
   for debconf_seeds_file in ${debconf_seeds_files}; do
     run_in_chroot debconf-set-selections < "$debconf_seeds_file" \
@@ -332,14 +333,14 @@ set_debconf_seeds() {
   done
 
   if !$debconf_seeding_ok; then
-    echo "Could not find a debconf seed file for image '$imagetype'" >&2
+    echo "Could not find a debconf seed file for image '$(get_imagetype)'" >&2
     return 1
   fi
 }
 
 set_ltspimage_type() {
   mkdir -p "$target_dir/etc/ltsp"
-  echo "$imagetype" > "$target_dir/etc/ltsp/this_ltspimage_type"
+  echo "$(get_imagetype)" > "${target_dir}/etc/ltsp/this_ltspimage_type"
 }
 
 prepare_puppet() {
@@ -420,6 +421,9 @@ apply_puppet() {
 }
 
 install_packages() {
+  package_dirs="$(dirs_with_postfix "${buildrules_dirs}" \
+                                    "/packages/$(get_imagetype)")"
+
   rm -f ${target_dir}/var/tmp/puavo-build-debs/*
 
   there_are_packages_to_install=false
