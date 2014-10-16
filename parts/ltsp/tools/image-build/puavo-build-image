@@ -34,24 +34,44 @@ def build_config_target(config_target, config_file)
     or raise "Problem in building '#{ config_target }'"
 end
 
+def builder_confs(builder_confs_path)
+  Hash[ IO.readlines(builder_confs_path).map { |line| line.split } ]
+end
+
 def image_configuration(imagejson_path)
   JSON.parse( File.read(imagejson_path) )
 end
 
-def output_makefile(image_confs)
-  image_names = image_confs.keys
-  image_names.each do |image_name|
-    if !image_name.match(/^[a-zA-Z0-9-]+$/) then
-      raise "Image name '#{ image_name }' is not okay"
-    end
-  end
+def ensure_string_sanity(string)
+  return if string.kind_of?(String) && string.match(/^[.a-zA-Z0-9-]+$/)
+
+  raise "String '#{ string }' is not sane enough"
+end
+
+def output_makefile(builder_confs, image_confs)
+  image_targets = image_confs.keys
+  image_targets.each { |image_target| ensure_string_sanity(image_target) }
+
+  images_dir = builder_confs['images-dir'] || ''
+
+  image_files = \
+    image_confs.map do |image_target, image_settings|
+      images = image_settings['images'].kind_of?(Array) \
+                 ? image_settings['images']             \
+                 : []
+      images.each { |s| ensure_string_sanity(s) }
+
+      images.map { |s| "#{ images_dir }/#{ s }" }
+    end.flatten.uniq
 
   puts <<EOF
 CHROOT_TARGETS = chroot cleanup-chroot dist-upgrade image install-packages \\
 		 puppet-chroot puppet-chroot-error-on-change puppet-local \\
 		 update-chroot
 
-IMAGE_TARGETS = #{ image_names.join(' ') }
+IMAGE_FILES = #{ image_files.join(' ') }
+
+IMAGE_TARGETS = #{ image_targets.join(' ') }
 
 .PHONY: ${CHROOT_TARGETS}
 ${CHROOT_TARGETS}:
@@ -102,7 +122,9 @@ rescue GetoptLong::InvalidOption => e
 end
 
 if output_makefile && config_file then
-  output_makefile( image_configuration(config_file) )
+  builder_confs_path = "#{ ENV['HOME'] }/.config/puavo-build-image/defaults"
+  builder_confs = builder_confs(builder_confs_path)
+  output_makefile(builder_confs, image_configuration(config_file))
   exit(0)
 elsif config_file && config_target then
   build_config_target(config_target, config_file)
