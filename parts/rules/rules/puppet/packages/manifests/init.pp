@@ -44,7 +44,8 @@ class packages {
     , 'tshark'
     , 'whois'
     , 'w3m'
-    , 'x11vnc' ]:
+    , 'x11vnc'
+    , 'xinput-calibrator' ]:
       tag => [ 'admin', 'thinclient', 'ubuntu', ];
 
     [ 'clusterssh'
