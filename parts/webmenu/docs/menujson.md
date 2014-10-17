@@ -70,6 +70,25 @@ Attributes
   - `width`: {Integer, optional} Width in pixels
   - `Height`: {Integer, optional} height in pixels
 
+**WARNING** Use with caution. This causes the web page to be run in the same
+instance as the menu which means if the web site crashes it might crash the
+menu too. Also the security implications are not well understood. This should
+be only used with sites you trust 100%.
+
+For more secure web window solution you can use Chrome (or `chromium-browser`)
+with the `--app` switch via the custom type.
+
+```json
+{
+  "type": "custom",
+  "name": "My windowed web app",
+  "command": ["chromium-browser", "--app=http://example.com/"],
+  "osIconPath": "path-to-icon"
+}
+```
+
+You might want to specify `--user-data-dir=DIR` too if you want separate
+cookies from the actual browser instance.
 
 ### Common attributes
 
