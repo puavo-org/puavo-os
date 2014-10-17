@@ -52,7 +52,11 @@ def output_makefile(builder_confs, image_confs)
   image_targets = image_confs.keys
   image_targets.each { |image_target| ensure_string_sanity(image_target) }
 
-  images_dir = builder_confs['images-dir'] || ''
+  images_dir = builder_confs['images-dir']
+  raise 'Images directory is not set' if images_dir.nil? || images_dir.empty?
+
+  rdiffs_dir = builder_confs['rdiffs-dir']
+  raise 'Rdiffs directory is not set' if rdiffs_dir.nil? || rdiffs_dir.empty?
 
   image_files = \
     image_confs.map do |image_target, image_settings|
