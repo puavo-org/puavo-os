@@ -15,6 +15,7 @@ class MenuModel extends AbstractItemModel
 
     typemap =
         web: WebItemModel
+        webWindow: WebItemModel
         desktop: DesktopItemModel
         custom: DesktopItemModel
         menu: MenuModel
