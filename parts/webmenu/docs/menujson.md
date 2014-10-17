@@ -68,7 +68,7 @@ Attributes
   - `name`: {String, required} Name of the item
   - `url`: {String, required} Url to open
   - `width`: {Integer, optional} Width in pixels
-  - `Height`: {Integer, optional} height in pixels
+  - `height`: {Integer, optional} height in pixels
 
 **WARNING** Use with caution. This causes the web page to be run in the same
 instance as the menu which means if the web site crashes it might crash the
