@@ -56,15 +56,18 @@ do_union_mount()
     mount -o move "${rootmnt}" /rofs
 
     if modprobe overlayfs; then
-        UNION_TYPE=overlayfs
-        UNION_OPTS="upperdir=${cow},lowerdir=/rofs"
+        mount -t overlayfs \
+            -o "upperdir=${cow},lowerdir=/rofs" overlayfs "${rootmnt}" || {
+            mkdir "${cow}/rootdir" "${cow}/workdir"
+            mount -t overlayfs \
+                -o "upperdir=${cow}/rootdir,lowerdir=/rofs,workdir=${cow}/workdir" \
+                overlayfs "${rootmnt}"
+        }
     elif modprobe aufs; then
-        UNION_TYPE=aufs
-        UNION_OPTS="dirs=${cow}=rw:/rofs=ro"
+        mount -t aufs -o "dirs=${cow}=rw:/rofs=ro" aufs "${rootmnt}"
     else
         panic "Could not load neither overlayfs nor aufs."
     fi
-    mount -t "${UNION_TYPE}" -o "${UNION_OPTS}" "${UNION_TYPE}" "${rootmnt}"
 
     mkdir -p "${rootmnt}/rofs"
     mount -o move /rofs "${rootmnt}/rofs"
