@@ -158,8 +158,10 @@ def output_makefile(builder_confs, image_confs)
     rdiff_make_snippets = * get_rdiff_targets_info(image_confs)
 
   puts <<EOF
-IMAGES_DIR = #{ images_dir }
-RDIFFS_DIR = #{ rdiffs_dir }
+IMAGES_DIR     = #{ images_dir }
+RDIFFS_DIR     = #{ rdiffs_dir }
+CKSUMS_DIR     = ${RDIFFS_DIR}/.cksums
+MIRROR_DIR     = ${RDIFFS_DIR}/.mirror
 SIGNATURES_DIR = ${RDIFFS_DIR}/.signatures
 
 CHROOT_TARGETS = chroot cleanup-chroot dist-upgrade image install-packages \\
@@ -176,9 +178,20 @@ IMAGE_SERIES = #{ image_series_list.join(' ') }
 
 IMAGE_SERIES_RDIFF_TARGETS = #{ image_series_rdiff_targets.join(' ') }
 
-RDIFF_FILES = #{ all_rdiff_files.join(' ') }
+RDIFF_FILES_AP = #{ all_rdiff_files.join(' ') }
+RDIFF_FILES = $(notdir ${RDIFF_FILES_AP})
 
 RDIFF_TARGET_DIRS = #{ rdiff_target_dirs.join(' ') }
+
+CKSUM_FILES = $(addsuffix .cksum,${IMAGE_FILES}) \\
+              $(addsuffix .cksum,${RDIFF_FILES})
+CKSUM_FILES_AP = $(addprefix ${CKSUMS_DIR}/,${CKSUM_FILES})
+
+MIRROR_DIR_IMAGES = $(addprefix ${MIRROR_DIR}/,${IMAGE_FILES})
+MIRROR_DIR_RDIFFS = $(addprefix ${MIRROR_DIR}/rdiffs/,${RDIFF_FILES})
+
+vpath %.img   ${IMAGES_DIR}
+vpath %.rdiff ${RDIFF_TARGET_DIRS}
 
 help:
 	@echo "Available image series targets are:"
@@ -190,9 +203,19 @@ help:
 	@echo "Available rdiff series targets are:"
 	@echo "  ${IMAGE_SERIES_RDIFF_TARGETS}" | fmt
 
+.PHONY: all-new-images
 all-new-images: ${IMAGE_SERIES}
 
-all-rdiffs: ${RDIFF_FILES}
+.PHONY: all-rdiffs
+all-rdiffs: ${RDIFF_FILES_AP}
+
+.PHONY: update-mirror
+update-mirror: ${MIRROR_DIR}/CKSUMS ${MIRROR_DIR_IMAGES} ${MIRROR_DIR_RDIFFS}
+
+.PHONY: cleanup-mirror
+cleanup-mirror:
+	@test -d "${MIRROR_DIR}"
+	rm -rf ${MIRROR_DIR}/*
 
 .PHONY: ${CHROOT_TARGETS}
 ${CHROOT_TARGETS}:
@@ -202,10 +225,27 @@ ${CHROOT_TARGETS}:
 ${IMAGE_SERIES}: images.json
 	sudo puavo-build-image --config-target $@ --images-config $<
 
-${SIGNATURES_DIR} ${RDIFF_TARGET_DIRS}:
+${CKSUMS_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs ${RDIFF_TARGET_DIRS} ${SIGNATURES_DIR}:
 	mkdir -p $@
 
-${SIGNATURES_DIR}/%.rdiff_signature: ${IMAGES_DIR}/%.img ${SIGNATURES_DIR}
+${CKSUMS_DIR}/%.img.cksum: %.img ${CKSUMS_DIR}
+	cksum $< > $@
+
+${CKSUMS_DIR}/%.rdiff.cksum: %.rdiff ${CKSUMS_DIR}
+	cksum $< > $@
+
+${MIRROR_DIR}/CKSUMS: ${CKSUM_FILES_AP} ${MIRROR_DIR}
+	cat ${CKSUM_FILES_AP} > $@
+
+# link ${MIRROR_DIR_IMAGES}
+${MIRROR_DIR}/%.img: %.img ${MIRROR_DIR}
+	@ln -f $< $@
+
+# link ${MIRROR_DIR_RDIFFS}
+${MIRROR_DIR}/rdiffs/%.rdiff: %.rdiff ${MIRROR_DIR}/rdiffs
+	@ln -f $< $@
+
+${SIGNATURES_DIR}/%.rdiff_signature: %.img ${SIGNATURES_DIR}
 	rdiff signature $< $@
 
 #
