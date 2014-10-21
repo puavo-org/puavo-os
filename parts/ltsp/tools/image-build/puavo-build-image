@@ -73,26 +73,21 @@ def rdiff_files_for(imagelist)
   rdiffs_by_source_image
 end
 
-def output_makefile(builder_confs, image_confs)
-  image_series_list = image_confs.keys
-  image_series_list.each { |image_series| ensure_string_sanity(image_series) }
+def validate_and_list_image_filenames(image_confs)
+  image_confs.map do |image_series, series_settings|
+    images = series_settings['images'].kind_of?(Array) \
+	       ? series_settings['images']             \
+	       : []
+    images.each { |s| ensure_string_sanity(s) }
+    images
+  end.flatten.uniq
+end
 
-  images_dir = builder_confs['images-dir']
-  raise 'Images directory is not set' if images_dir.nil? || images_dir.empty?
-
-  rdiffs_dir = builder_confs['rdiffs-dir']
-  raise 'Rdiffs directory is not set' if rdiffs_dir.nil? || rdiffs_dir.empty?
-
-
-  image_files = \
-    image_confs.map do |image_series, series_settings|
-      images = series_settings['images'].kind_of?(Array) \
-                 ? series_settings['images']             \
-                 : []
-      images.each { |s| ensure_string_sanity(s) }
-      images
-    end.flatten.uniq
-
+def get_rdiff_targets_info(image_confs)
+  all_rdiff_files            = []
+  image_series_rdiff_targets = []
+  rdiff_make_snippets        = []
+  rdiff_target_dirs          = []
 
   rdiff_specs = {}
   image_confs.each do |image_series, series_settings|
@@ -105,12 +100,6 @@ def output_makefile(builder_confs, image_confs)
     rdiff_specs[image_series]['rdiffs'] \
       = rdiff_files_for( series_settings['images'] )
   end
-
-
-  all_rdiff_files            = []
-  image_series_rdiff_targets = []
-  rdiff_make_snippets        = []
-  rdiff_target_dirs          = []
 
   rdiff_specs.each do |image_series, rdiffs_conf|
     target_image     = rdiffs_conf['image']
@@ -145,9 +134,28 @@ EOF
       << "#{ image_series }-rdiffs: #{ this_series_rdiff_targets.join(' ') }\n"
   end
 
-  all_rdiff_files            = all_rdiff_files           .sort.uniq
-  image_series_rdiff_targets = image_series_rdiff_targets.sort.uniq
-  rdiff_target_dirs          = rdiff_target_dirs         .sort.uniq
+  [ all_rdiff_files.sort.uniq,
+    image_series_rdiff_targets.sort.uniq,
+    rdiff_target_dirs.sort.uniq,
+    rdiff_make_snippets ]
+end
+
+def output_makefile(builder_confs, image_confs)
+  image_series_list = image_confs.keys
+  image_series_list.each { |image_series| ensure_string_sanity(image_series) }
+
+  images_dir = builder_confs['images-dir']
+  raise 'Images directory is not set' if images_dir.nil? || images_dir.empty?
+
+  rdiffs_dir = builder_confs['rdiffs-dir']
+  raise 'Rdiffs directory is not set' if rdiffs_dir.nil? || rdiffs_dir.empty?
+
+  image_files = validate_and_list_image_filenames(image_confs)
+
+  all_rdiff_files,
+    image_series_rdiff_targets,
+    rdiff_target_dirs,
+    rdiff_make_snippets = * get_rdiff_targets_info(image_confs)
 
   puts <<EOF
 IMAGES_DIR = #{ images_dir }
