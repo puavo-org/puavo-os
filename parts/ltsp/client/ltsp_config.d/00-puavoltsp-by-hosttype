@@ -126,6 +126,7 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
       $rm_system_services 
+      autopoweroff
       cron
       hostapd
       jetty
@@ -274,6 +275,7 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
       $puavo_wirelessaccesspoint_unneeded_services
+      autopoweroff
       laptop-mode
       ltspguestssh
       ltspssh
