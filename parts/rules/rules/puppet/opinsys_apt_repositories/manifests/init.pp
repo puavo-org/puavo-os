@@ -1,11 +1,9 @@
 class opinsys_apt_repositories {
   include apt
 
-  # XXX this twist should probably go away, just use:
-  # XXX $subdir = "git-$lsbdistcodename"
   $subdir = $lsbdistcodename ? {
-              'quantal' => 'git-master',
-              default   => "git-$lsbdistcodename",
+              'quantal' => 'git-legacy1',
+              default   => "git-master",
             }
 
   # define some apt keys and repositories for use
