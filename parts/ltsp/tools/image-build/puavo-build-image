@@ -235,7 +235,7 @@ ${CKSUMS_DIR}/%.rdiff.cksum: %.rdiff ${CKSUMS_DIR}
 	cksum $< > $@
 
 ${MIRROR_DIR}/CKSUMS: ${CKSUM_FILES_AP} ${MIRROR_DIR}
-	cat ${CKSUM_FILES_AP} > $@
+	awk '{ "basename " $$3 | getline $$3; print }' ${CKSUM_FILES_AP} > $@
 
 # link ${MIRROR_DIR_IMAGES}
 ${MIRROR_DIR}/%.img: %.img ${MIRROR_DIR}
