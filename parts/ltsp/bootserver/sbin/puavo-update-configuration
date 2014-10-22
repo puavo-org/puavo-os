@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# Update Puavo configuration files under /etc/puavo. Configuration is 
+# fetched from puavo-rest that is resolved using 
+# puavo-resolve-api-server. Usually on bootservers this resolves to the 
+# bootserver itself, but also Puavo master servers can be used.
+
+if [ -e /etc/puavo/domain -a -e /etc/puavo/hosttype ]; then
+  PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+
+  case "${PUAVO_HOSTTYPE}" in
+    bootserver)
+      if curl --cacert /etc/puavo/certs/rootca.pem \
+              --header "Authorization: Bootserver" \
+              --fail \
+              --max-time 30 \
+              --silent \
+              "$(puavo-resolve-api-server)/v3/boot_servers/$(hostname -s)" \
+           > /etc/puavo/device.json.tmp; then
+        mv /etc/puavo/device.json.tmp /etc/puavo/device.json
+      fi
+      break
+      ;;
+  esac
+fi
+
+rm -f /etc/puavo/device.json.tmp

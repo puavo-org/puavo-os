@@ -62,11 +62,6 @@ fi
 
 if [ -n "$puavo_language_short_form" ]; then
   LANGUAGE="$puavo_language_short_form"
-
-  puavo_dconf_profile="user-$puavo_language_short_form"
-  if [ -e "/etc/dconf/profile/${puavo_dconf_profile}" ]; then
-    DCONF_PROFILE="${puavo_dconf_profile}"
-  fi
 fi
 
-export DCONF_PROFILE LANG LANGUAGE
+export LANG LANGUAGE

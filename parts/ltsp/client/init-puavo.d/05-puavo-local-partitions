@@ -115,6 +115,14 @@ if [ -x "/sbin/vgchange" ]; then
 				/var/log
 	    puavo_enable_utmp
 	    puavo_setup_cups_dir
+
+            for dir in zjs lava oak hp qpdl slx hiperc;
+            do
+              if [ ! -d /usr/share/foo2${dir}/icm ]; then
+                mkdir -p /usr/share/foo2${dir}/icm
+                puavo_link_to_state /usr/share/foo2${dir}/icm
+              fi
+            done
 	    ;;
 	  ltspserver|wirelessaccesspoint)
 	    puavo_link_to_state /var/log

@@ -1,0 +1,58 @@
+#!/bin/sh
+
+PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+
+if [ "$PUAVO_HOSTTYPE" != "laptop" ]; then
+  exit 0
+fi
+
+# Enable IPSec tunneling for CIFS traffic on ports TCP 139 and 445
+# from the client to homedir.PUAVO_DOMAIN.
+
+# Don't do anything for the lo interface
+test "$IFACE" != lo || exit 0
+
+DEFAULTGW=$(ip route | awk '/default/{print $3}')
+IP=$(ip route get $DEFAULTGW|awk '/src/{print $5}')
+
+PUAVO_DOMAIN=$(cat /etc/puavo/domain)
+IPSEC_GW=$(dig +time=2 +tries=1 TXT _ipsecgw.${PUAVO_DOMAIN} +short | sed 's/^"//; s/"$//;')
+HOMEDIR_IP=$(dig +time=2 +tries=1 homedir.$PUAVO_DOMAIN +short)
+
+if [ "$IP" != "" -a "$IPSEC_GW" != "" -a "$HOMEDIR_IP" != "" ]; then
+  TEMP=$(mktemp)
+
+  cat <<EOF >$TEMP
+#!/usr/sbin/setkey -f
+
+flush;
+spdflush;
+
+spdadd $HOMEDIR_IP[139] 0.0.0.0/0 tcp -P in ipsec
+  esp/tunnel/$IPSEC_GW-$IP/unique;
+spdadd 0.0.0.0/0 $HOMEDIR_IP[139] tcp -P out ipsec
+  esp/tunnel/$IP-$IPSEC_GW/unique;
+
+spdadd $HOMEDIR_IP[445] 0.0.0.0/0 tcp -P in ipsec
+  esp/tunnel/$IPSEC_GW-$IP/unique;
+spdadd 0.0.0.0/0 $HOMEDIR_IP[445] tcp -P out ipsec
+  esp/tunnel/$IP-$IPSEC_GW/unique;
+EOF
+
+  setkey -f $TEMP
+  rm -f $TEMP
+else
+  TEMP=$(mktemp)
+
+  cat <<EOF >$TEMP
+#!/usr/sbin/setkey -f
+
+flush;
+spdflush;
+EOF
+
+  setkey -f $TEMP
+  rm -f $TEMP
+fi
+
+exit 0

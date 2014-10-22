@@ -1,7 +1,45 @@
 # This file is sourced
 
-puavo_keyboard_layout=$(jq -r .keyboard_layout /etc/puavo/device.json)
+puavo_keyboard_layout=$( jq -r .keyboard_layout  /etc/puavo/device.json)
 puavo_keyboard_variant=$(jq -r .keyboard_variant /etc/puavo/device.json)
+
+puavo_get_dconf_keyboard_layouts() {
+  echo "$puavo_keyboard_layout" "$puavo_keyboard_variant" \
+    | awk "$(cat <<'EOF'
+        $1 ~ /^[a-zA-Z0-9]*/ && $2 ~ /^[a-zA-Z0-9]*/ {
+          layout = $1; variant = $2
+
+          if (layout == "" || layout == "null" || layout == "fi") {
+            print "['fi', 'ru', 'ru\\tphonetic', 'gb\\tdvorak']"
+          } else {
+            # this is actually not strictly necessary, because dconf picks
+            # up the system layout/variant as default
+            variant_string = (variant != "" && variant != "null") \
+                               ? ("\\t" variant)                  \
+                               : ""
+            printf "['%s%s']\n", layout, variant_string
+          }
+
+          exit(0)
+        }
+EOF
+)"
+}
+
+puavo_generate_dconf_keyboard_layouts() {
+  puavo_dconf_layouts=$1
+
+  mkdir -p /etc/dconf/db/keyboard.d || return 1
+  cat <<-EOF > /etc/dconf/db/keyboard.d/keyboard_profile || return 1
+[org/gnome/libgnomekbd/keyboard]
+layouts=${puavo_dconf_layouts}
+	EOF
+
+  rm -f /etc/dconf/db/keyboard || return 1
+  dconf update                 || return 1
+}
+
+# first do console setup
 
 for file in /etc/default/console-setup /etc/default/keyboard; do
   if [ -f "$file" ]; then
@@ -22,3 +60,10 @@ for file in /etc/default/console-setup /etc/default/keyboard; do
         && mv "$file.tmp" "$file"
   fi
 done
+
+# the dconf stuff must be setup as well
+
+puavo_dconf_layouts=$(puavo_get_dconf_keyboard_layouts)
+if [ -n "$puavo_dconf_layouts" ]; then
+  puavo_generate_dconf_keyboard_layouts "$puavo_dconf_layouts"
+fi

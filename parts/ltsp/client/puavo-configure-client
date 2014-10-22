@@ -57,11 +57,12 @@ end
 @puavo_domain      = read_file('/etc/puavo/domain')
 @puavo_topdomain   = read_file('/etc/puavo/topdomain')
 
-@device=Hash.new
+@device = {}
+@tags   = []
 
 if File.exists?("/etc/puavo/device.json")
-  @device = JSON.parse(File.read("/etc/puavo/device.json"))
-  @tags = @device["tags"]
+  @device = JSON.parse( File.read("/etc/puavo/device.json") )
+  @tags   = @device["tags"] || []
 
   append_tags_to_environment(@tags)
 end
@@ -177,6 +178,7 @@ case @puavo_device_type
     write_config("/etc/default/nfs-common")
     write_config("/etc/init/gssd.conf", "userprincipal")
     write_config("/etc/cups/client.conf")
+    write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
 
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
@@ -200,9 +202,12 @@ case @puavo_device_type
     write_config("/etc/init/gssd.conf", "userprincipal")
     write_config("/etc/cups/cupsd.conf")
     write_config("/etc/security/group.conf")
+    write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
 
-    # FIXME: Hack to get gnome fallback session
-#    `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
+    if @tags.include?("webkiosk") then
+      write_config("/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla")
+    end
+
     `cp /usr/lib/puavo-ltsp-client/puavo-thin-guest-account /usr/sbin/guest-account`
 #    `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
 
@@ -222,6 +227,7 @@ case @puavo_device_type
     write_config("/etc/ssh/sshd_config")
     write_config("/etc/cups/client.conf")
     write_config("/etc/ntp.conf")
+    write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
 
     @ldap_binddn       = read_file('/etc/puavo/ldap/dn')
     @ldap_bindpw       = read_file('/etc/puavo/ldap/password')
@@ -248,19 +254,15 @@ case @puavo_device_type
     write_config("/etc/lightdm/lightdm.conf")
     write_config("/etc/pam.d/lightdm", "laptop")
     write_config("/etc/pam.d/lightdm-autologin", "laptop")
-    write_config("/etc/network/if-up.d/ipsec")
-    File.chmod(0755, "/etc/network/if-up.d/ipsec")
-    write_config("/etc/network/if-post-down.d/ipsec")
-    File.chmod(0755, "/etc/network/if-post-down.d/ipsec")
-    write_config("/etc/network/if-up.d/sssd")
-    File.chmod(0755, "/etc/network/if-up.d/sssd")
     write_config("/etc/racoon/racoon.conf")
     write_config("/etc/security/group.conf")
     write_config("/etc/samba/smb.conf", "laptop")
     write_config("/etc/ntp.conf")
+    write_config("/var/lib/polkit-1/localauthority/10-vendor.d/com.ubuntu.desktop.pkla")
 
-    # FIXME: Hack to get gnome fallback session
-    `cp /usr/share/xsessions/gnome-fallback.desktop /usr/share/ltsp-lightdm/xsessions/ltsp-session.desktop`
+    if @tags.include?("webkiosk") then
+      write_config("/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla")
+    end
 
     @ldap_binddn       = read_file('/etc/puavo/ldap/dn')
     @ldap_bindpw       = read_file('/etc/puavo/ldap/password')
@@ -291,6 +293,17 @@ case @puavo_device_type
       wired_interfaces.each do |interface|
         file.write("\nauto #{ interface }\niface #{ interface } inet dhcp\n")
       end
+    end
+
+    # wirelessaccesspoints may be used as infotv devices depending on device
+    # tags.
+    write_config("/etc/lightdm/lightdm.conf")
+    write_config("/etc/pam.d/lightdm-autologin", "wirelessaccesspoint")
+    write_config("/etc/ntp.conf")
+
+    # turn infotv displays on and off
+    if @tags && @tags.include?('infotv') then
+      write_config("/etc/cron.d/infotv_display_control")
     end
 end
 

@@ -6,6 +6,7 @@ git clone git://github.com/opinsys/puavo-ltsp.git
 cd puavo-ltsp/bootserver/installer
 mount /dev/sdb1 /media/usbstick
 ./install.sh /media/usbstick
+cp /media/usbstick/menu.c32 /media/usbstick/vesamenu.c32
 umount /dev/sdb1
 
 Then just plug it in, boot and wait until the installation is finished.

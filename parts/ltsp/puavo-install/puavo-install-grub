@@ -54,6 +54,7 @@ tmp_grub_cfg_path="${grub_cfg_path}.tmp"
 
 cat <<'EOF' | sed "s|__HOSTTYPE_SPECIFIC__|$hosttype_specific|" > "$tmp_grub_cfg_path"
 set default="0"
+load_env
 
 function load_video {
   if [ x$feature_all_video_module = xy ]; then
@@ -82,23 +83,24 @@ set timeout=5
 ### END /usr/local/etc/grub.d/00_header ###
 
 function pathname { regexp -s 2:"$2" '^(\(.*\))?(/.*)$'    "$1"; }
-function devname  { regexp -s "$2"   '^(\(.*\)).*$'        "$1"; }
 
 function ltsp_image_entry {
   set imagefile="$1"
   set description="$2"
+  set kernelparameters="$3"
 
   pathname $imagefile imagepath
-  devname $imagefile dev
 
-  menuentry "${description} (${imagepath})" "$imagefile" "$dev" "$imagepath" {
+  # if changing menuentry description, update correspondingly on
+  # puavo-local-config configure_grub_default()
+
+  menuentry "${description} (${imagepath})" "$imagefile" "$imagepath" "$kernelparameters" {
     set imagefile="$2"
-    set dev="$3"
-    set imagepath="$4"
+    set imagepath="$3"
 
     # XXX fill in
     set kernelversion=""
-    set kernelparameters=""
+    set kernelparameters="$4"
 
     loopback loop "${imagefile}"
     set root='(loop)'
@@ -108,6 +110,21 @@ function ltsp_image_entry {
 
     loopback -d loop
   }
+}
+
+## Superlaptop mode = persistent image changes + local admins
+function ltsp_image_entry_superlaptop {
+  set imagefile="$1"
+  set description="$2"
+  set kernelparameters="$3"
+
+  if [ ! -d (lvm/puavo-imageoverlays) ]; then
+    return
+  fi
+
+  set kernelparameters="puavo.image.overlay=default puavo.local.enable_superusers=true $kernelparameters"
+
+  ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}"
 }
 
 insmod gzio
@@ -136,10 +153,12 @@ for dev in (lvm/puavo-images); do
   set backup_image_alias="${backup_alias_no_suffix}.img"
 
   if test -f "${default_image}"; then
-    ltsp_image_entry "${default_image}" "DEFAULT - ${default_image_alias}"
+    ltsp_image_entry "${default_image}" "Normaali käynnistys - ${default_image_alias}"
+    ltsp_image_entry_superlaptop "${default_image}" "Kehittäjätila - ${default_image_alias}"
   fi
   if test -f "${backup_image}"; then
-    ltsp_image_entry "${backup_image}" "BACKUP - ${backup_image_alias}"
+    ltsp_image_entry "${backup_image}" "Varajärjestelmä, normaali käynnistys - ${backup_image_alias}"
+    ltsp_image_entry_superlaptop "${backup_image}" "Varajärjestelmä, kehittäjätila - ${backup_image_alias}"
   fi
 
   for file in ${dev}/*.img; do
@@ -148,7 +167,8 @@ for dev in (lvm/puavo-images); do
     if test "${file}" = "${default_image_alias}"; then continue; fi
     if test "${file}" = "${backup_image_alias}";  then continue; fi
 
-    ltsp_image_entry "${file}" "OTHER"
+    ltsp_image_entry "${file}" "Muu järjestelmä, normaali käynnistys"
+    ltsp_image_entry_superlaptop "${file}" "Muu järjestelmä, kehittäjätila"
   done
 done
 EOF

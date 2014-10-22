@@ -1,4 +1,4 @@
-subdirs = bootserver client puavo-install
+subdirs = bootserver client puavo-install tools
 install-subdirs = $(subdirs:%=install-%)
 clean-subdirs = $(subdirs:%=clean-%)
 
@@ -22,3 +22,10 @@ $(clean-subdirs) :
 
 .PHONY : clean
 clean : $(clean-subdirs)
+
+.PHONY : deb
+deb :
+	rm -rf debian
+	cp -a debian.default debian
+	puavo-dch $(shell cat VERSION)
+	dpkg-buildpackage -us -uc

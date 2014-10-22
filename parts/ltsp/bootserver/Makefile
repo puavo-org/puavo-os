@@ -16,6 +16,7 @@ all :
 .PHONY : installdirs
 installdirs :
 	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/nginx/sites-available
 	mkdir -p $(DESTDIR)$(sysconfdir)/sudoers.d
 	mkdir -p $(DESTDIR)$(templatedir)/etc/apparmor.d/local
@@ -32,6 +33,9 @@ installdirs :
 
 .PHONY : install
 install : installdirs
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
+		upstart/puavo-redirect-freenx.conf
+
 	$(INSTALL) -m 440 -t $(DESTDIR)$(sysconfdir)/sudoers.d \
 		etc/sudoers.d/puavo-bootserver
 

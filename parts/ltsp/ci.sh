@@ -9,9 +9,19 @@ set -x
 sudo apt-get update
 sudo apt-get install -y --force-yes puavo-devscripts aptirepo-upload
 
-puavo-build-debian-dir
-sudo puavo-install-deps debian/control
-puavo-dch $(cat VERSION)
-puavo-debuild
+sudo puavo-install-deps debian.default/control
+make deb
 
-aptirepo-upload -r $APTIREPO_REMOTE -b "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)" ../puavo-ltsp*.changes
+git_branch=$(echo "${GIT_BRANCH}" | cut -d / -f 2)
+aptirepo_branch=git-"${git_branch}"
+
+version=$(dpkg-parsechangelog | sed -r -n 's/^Version: //p')
+[ -n "${version}" ] || {
+    echo "Could not parse package version" >&2
+    exit 1
+}
+
+build_arch=$(dpkg-architecture -qDEB_BUILD_ARCH)
+changes_file="../puavo-ltsp_${version}_${build_arch}.changes"
+
+aptirepo-upload -r "${APTIREPO_REMOTE}" -b "${aptirepo_branch}" "${changes_file}"

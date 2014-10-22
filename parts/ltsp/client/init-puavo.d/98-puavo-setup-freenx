@@ -1,0 +1,7 @@
+HOSTTYPE="$(cat /etc/puavo/hosttype)"
+
+case "$HOSTTYPE" in
+  ltspserver)
+    puavo-setup-freenx-server
+    ;;
+esac

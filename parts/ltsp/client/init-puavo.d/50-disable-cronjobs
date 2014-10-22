@@ -1,17 +1,7 @@
-# Disable several cronjobs that are usually present but that 
-# cause unnecessary load.
+# Disable all cronjobs (those mostly cause unnecessary load).
 
-while read job; do
-    rm -f "$job"
-done <<EOF
-/etc/cron.daily/apt
-/etc/cron.daily/dpkg
-/etc/cron.daily/logrotate
-/etc/cron.daily/mlocate
-/etc/cron.daily/passwd
-/etc/cron.daily/popularity-contest
-/etc/cron.daily/standard
-/etc/cron.daily/man-db
-/etc/cron.weekly/apt-xapian-index
-/etc/cron.weekly/man-db
-EOF
+rm -f /etc/cron.d/*       \
+      /etc/cron.hourly/*  \
+      /etc/cron.daily/*   \
+      /etc/cron.monthly/* \
+      /etc/cron.weekly/*

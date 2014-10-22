@@ -1,0 +1,14 @@
+#!/bin/sh
+
+export LANG=fi_FI.UTF-8
+export TERM=vt100
+setupcon
+clear
+
+while true; do
+    echo
+    echo
+    echo 'This host is a Puavo thinclient server.' | /usr/games/cowsay
+    echo
+    read answer
+done

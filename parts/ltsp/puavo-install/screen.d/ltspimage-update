@@ -13,12 +13,8 @@ until /usr/sbin/puavo-install-and-update-ltspimages \
   read answer
 done
 
-echo 'Updating grub settings.'
-until /usr/sbin/puavo-install-grub --only-update-config; do
-  echo 'Updating grub configuration FAILED!  Press ENTER to try again.'
-  read answer
-done
-
 echo 'Press ENTER to reboot.'
 read answer
 reboot
+
+sleep 600

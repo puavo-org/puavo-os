@@ -1,0 +1,83 @@
+#!/bin/sh
+#
+# ##############################################################################
+#
+# Copyright (C) 2014 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+
+set -eu
+
+. "${RESTRICTED_PKG_LIBDIR}/common"
+
+usage_error()
+{
+    echo "error $1" >&2
+    echo "Try 'puavo-restricted-package-tool list --help' for more information." >&2
+    return 1
+}
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            echo "Usage: puavo-restricted-package-tool list"
+            echo "Usage: puavo-restricted-package-tool list --help"
+            echo
+            echo "List restricted packages and their status."
+            echo
+            echo "Options:"
+            echo "    -h, --help                   print help and exit"
+            echo
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage_error "invalid argument '$1'"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -ne 0 ]; then
+    usage_error "invalid number of arguments ($#), expected 0"
+fi
+
+packages=$(find "$RESTRICTED_PKG_SHAREDIR" \
+    -mindepth 1 -maxdepth 1 -type d -printf '%P\n' | sort)
+
+# The length of the longest package name.
+col_width=$(echo "${packages}" | awk '{print length}' | sort -r -n | head -n1)
+
+for package in ${packages}; do
+    if has_install_link "$package"; then
+        status="INSTALLED"
+    elif [ -f "$(packagedir "$package")/upstream.pack" ]; then
+        status="DOWNLOADED"
+    else
+        status="PURGED"
+    fi
+    printf "%-${col_width}s | %s\n" "${package}" "${status}"
+done
+
+exit 0

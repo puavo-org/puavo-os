@@ -39,25 +39,8 @@ call_ltspfsmounter()
     for LDM_SOCKET in /var/run/ldm_socket_* /run/puavo/*/socket_* /run/user/*/socket_*; do
         if [ -S ${LDM_SOCKET} ]; then
             SERVER=${LDM_SOCKET##*_}
-            SSH_OPTS="-X"
-            # see if we have a command with DISPLAY matching our socket
-            IS_DIRECTX=$(pgrep -f -l ${LDM_SOCKET}.*DISPLAY)
-
-            unset DISPLAY_INFO
-            # get the DISPLAY info for ltspfsmounter
-            if [ -n "${IS_DIRECTX}" ];then
-                unset SSH_OPTS
-                for line in $IS_DIRECTX ; do
-                    case $line in
-                        DISPLAY*)
-                            DISPLAY_INFO="${line}"
-                        ;;
-                    esac
-                done
-            fi
-
-            /usr/bin/ssh $SSH_OPTS -S ${LDM_SOCKET} ${SERVER} \
-                "$DISPLAY_INFO /usr/sbin/ltspfsmounter ${MOUNTPOINT} $action"
+            /usr/bin/ssh -X -S ${LDM_SOCKET} ${SERVER} \
+                "/usr/sbin/ltspfsmounter ${MOUNTPOINT} $action"
         fi
     done
 
@@ -129,17 +112,6 @@ start_ltspfsd()
     fi
 }
 
-call_cdpinger(){
-    if [ -z $(pgrep -f -l -x "/usr/sbin/cdpinger $1") ]; then
-        /usr/sbin/cdpinger $1 & 
-        return 0
-    fi
-}
-
-kill_cdpinger(){
-    pkill -f -x "/usr/sbin/cdpinger $1"
-}
-
 verify_device() {
     DEVICENAME="$1"
     if [ -z "$ID_TYPE" ]; then
@@ -204,27 +176,7 @@ verify_device() {
     # Make sure we have a valid FSTYPE
     [ -z "${FSTYPE}" ] && FSTYPE="${ID_FS_TYPE}"   # Use udevinfo ID_FS_TYPE
     [ "${FSTYPE}" = "swap" ] && exit 1             # Don't mount swap partitions
-    if [ "${ID_TYPE}" != "cd" ]; then
-        [ -z "${FSTYPE}" ] && exit 1  # That's empty too, die.
-    fi
-}
-
-add_cdrom_device() {
-    DEVICENAME="$1"
-    # handle CDROM devices, which do not produce udev add/remove events
-    if [ "${ID_TYPE}" = "cd" ]; then
-        # started new cdpinger, which will handle the rest
-        call_cdpinger ${DEVICENAME} 
-        exit 0
-    fi
-}
-
-remove_cdrom_device() {
-    DEVICENAME="$1"
-    # handle CDROM devices, which do not produce udev add/remove events
-    if [ "${ID_TYPE}" = "cd" ]; then
-        kill_cdpinger ${DEVICENAME} 
-    fi
+    [ -z "${FSTYPE}" ] && exit 1  # That's empty too, die.
 }
 
 add_device() {
@@ -302,21 +254,12 @@ fi
 eval "export $($udevinfo -qenv -n ${DEVICENAME}|sed -e 's/=/="/' -e 's/$/"/')"
 
 case $MODE in
-    add_disc)
-        verify_device $DEVICENAME
-        add_device $DEVICENAME 
-        ;;
-    remove_disc)
-        remove_device $DEVICENAME 
-        ;;
     add*) 
         verify_device $DEVICENAME
         start_ltspfsd
-        add_cdrom_device $DEVICENAME
         add_device $DEVICENAME 
         ;;
     remove*) 
-        remove_cdrom_device $DEVICENAME
         remove_device $DEVICENAME 
         ;;
     *) exit 1 ;;

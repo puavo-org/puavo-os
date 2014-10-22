@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -eu
+
+if [ -n "${X2GO_SESSION:-}" ]; then
+    geometry=$(perl -F, -ane 'for (@F) { /^geometry=(.*)$/ && print $1 }' \
+	~/.x2go/C-${X2GO_SESSION}/options)
+
+    if [ -n "$geometry" ]; then
+        xrandr --output default --mode $geometry
+    fi
+else
+    ## Normal desktop session. Use display settings defined in Puavo iff
+    ## the user has not made local display configurations.
+    if [ ! -f "${HOME}/.config/monitors.xml" ]; then
+        /usr/lib/puavo-ltsp-client/puavo-run-xrandr
+    fi
+fi

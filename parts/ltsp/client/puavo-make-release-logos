@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -eu
+
+release=$(cat /etc/ltsp/this_ltspimage_release)
+hosttypes="fatclient laptop ltspserver thinclient wirelessaccesspoint"
+
+uppercase() { echo -n "$1" | tr [:lower:] [:upper:]; }
+
+if [ -f /usr/share/icons/vendor_logo.png ]; then
+  for hosttype in $hosttypes; do
+    hosttype_uppercased="$(uppercase $hosttype)"
+    convert -font Ubuntu-R -gravity center -background transparent \
+        -matte -bordercolor none -border 35 \
+        '(' -gravity center -resize 100x /usr/share/icons/vendor_logo.png ')' \
+        '(' pango:"<span foreground=\"#41786b\" font-size=\"x-small\">${hosttype_uppercased}</span>" ')' \
+        '(' pango:"<span foreground=\"#41786b\" font-size=\"x-small\">${release}</span>" ')' \
+        -append "/usr/share/icons/release_logo.${hosttype}.png"
+  done
+fi
+
+exit 0

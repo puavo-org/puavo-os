@@ -13,6 +13,12 @@
 
 set -e
 
+# nx user is the FreeNX user that does not have/need a real home directory, so
+# it should not be mounted
+if [ "${PAM_USER}" = "nx" ]; then
+  exit 0
+fi
+
 is_mounted() {
   mntpoint=$1
   mount | awk -v "mntpoint=$mntpoint" '

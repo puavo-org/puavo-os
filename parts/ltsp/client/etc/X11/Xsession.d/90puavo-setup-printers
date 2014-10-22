@@ -45,8 +45,7 @@ set_default_printer()
     local default_printer_name
 
     default_printer_name=$(jq -r .device.default_printer_name "${PUAVO_SESSION_PATH}")
-
-    lpadmin -d "${default_printer_name}"
+    [ "${default_printer_name}" != null ] && lpadmin -d "${default_printer_name}"
 }
 
 hosttype=$(cat /etc/puavo/hosttype)

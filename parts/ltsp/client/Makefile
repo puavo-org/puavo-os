@@ -26,6 +26,8 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
+	mkdir -p $(DESTDIR)$(sysconfdir)/network/if-up.d
+	mkdir -p $(DESTDIR)$(sysconfdir)/network/if-post-down.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/ssh
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
@@ -36,7 +38,11 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
+	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
+	mkdir -p $(DESTDIR)$(datarootdir)/pam-configs
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cron.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/dbus-1/system.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/init
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ldap
@@ -44,18 +50,24 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-up.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-post-down.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/polkit-1/localauthority/50-local.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/racoon
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/samba
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/security
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sssd
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/lib/udev
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/var/lib/polkit-1/localauthority/10-vendor.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d
+	mkdir -p $(DESTDIR)$(datarootdir)/xgreeters
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
 
 .PHONY : install
 install : installdirs
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/pam-configs \
+		pam/configs/puavo-local-access
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d \
 		init-puavo.d/*-*
 
@@ -71,6 +83,7 @@ install : installdirs
 		templates/etc/pam.d/lightdm-autologin-fatclient \
 		templates/etc/pam.d/lightdm-autologin-laptop \
 		templates/etc/pam.d/lightdm-autologin-thinclient \
+		templates/etc/pam.d/lightdm-autologin-wirelessaccesspoint \
 		templates/etc/pam.d/lightdm-fatclient \
 		templates/etc/pam.d/lightdm-laptop \
 		templates/etc/pam.d/lightdm-thinclient
@@ -82,12 +95,12 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/lightdm \
 		templates/etc/lightdm/lightdm.conf
 
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-up.d \
-		templates/etc/network/if-up.d/ipsec \
-		templates/etc/network/if-up.d/sssd
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/network/if-up.d \
+		etc/network/if-up.d/ipsec \
+		etc/network/if-up.d/sssd
 
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-post-down.d \
-		templates/etc/network/if-post-down.d/ipsec
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/network/if-post-down.d \
+		etc/network/if-post-down.d/ipsec
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
 		templates/etc/hosts \
@@ -100,12 +113,21 @@ install : installdirs
 		templates/etc/nsswitch.conf-sss-extrausers \
 		templates/etc/ntp.conf
 
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cron.d \
+		templates/etc/cron.d/infotv_display_control
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups \
 		templates/etc/cups/client.conf \
 		templates/etc/cups/cupsd.conf
 
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/dbus-1/system.d \
+		templates/etc/dbus-1/system.d/org.freedesktop.login1.conf
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default \
 		templates/etc/default/nfs-common
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/polkit-1/localauthority/50-local.d \
+		templates/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/racoon \
 		templates/etc/racoon/racoon.conf
@@ -122,6 +144,9 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/lib/udev \
 		templates/lib/udev/ltspfs_entry
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/var/lib/polkit-1/localauthority/10-vendor.d \
+		templates/var/lib/polkit-1/localauthority/10-vendor.d/com.ubuntu.desktop.pkla
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions \
 		xsessions/puavo-desktop-session.desktop
@@ -143,6 +168,7 @@ install : installdirs
 		puavo-ltsp-init-nfs \
 		puavo-ltsp-login \
 		puavo-ltspserver-create-guest \
+		puavo-unity-greeter \
 		puavo-update-nm-configurations
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/hooks/ \
@@ -154,6 +180,7 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
 		screen.d/lightdm \
+		screen.d/ltspserver \
 		screen.d/kdump \
 		screen.d/register \
 		screen.d/wirelessaccesspoint
@@ -161,6 +188,10 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d \
 		ltsp_config.d/00-puavoltsp-by-hosttype \
 		ltsp_config.d/02-find-puavo-ltsp-server
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d \
+		xinitrc.d/I10-puavo-xrandr \
+		xinitrc.d/I95-set-lightdm-state
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/default \
 		etc/default/ltspssh \
@@ -197,34 +228,43 @@ install : installdirs
 		udev/rules.d/95-monitor-hotplug.rules
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
+		etc/X11/Xsession.d/40puavo-infotv \
 		etc/X11/Xsession.d/40puavo-retrieve-thinclient-session \
 		etc/X11/Xsession.d/40puavo-webkiosk \
 		etc/X11/Xsession.d/41puavo-set-locale \
 		etc/X11/Xsession.d/42puavo-set-browser-homepage \
 		etc/X11/Xsession.d/43puavo-set-guest-session-quirks \
+		etc/X11/Xsession.d/44puavo-generate-dconf-profile \
 		etc/X11/Xsession.d/90puavo-setup-printers
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
 		greeter-setup \
-		make-release-logo \
 		puavo-desktop-session \
-		puavo-thin-guest-account \
+		puavo-desktop-session-cleanup \
+		puavo-display-setup \
 		puavo-ltspserver-create-guest \
-		puavo-webkiosk-restart-lightdm \
+		puavo-make-release-logos \
+		puavo-run-xrandr \
+		puavo-thin-guest-account \
 		udev/udev-hotplug-monitor \
 		udev/udev-jetpipe \
 		xinitrc
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/pam \
+		pam/check-if-account-is-locked \
 		pam/chown-session-dir \
 		pam/ltspserver-guest-login \
 		pam/make-session-dir \
 		pam/open-session \
 		pam/populate-extrausers \
+		pam/restrict-logins-by-local-config \
 		pam/setup-guest-session
 
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspguestsshd
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/xgreeters \
+		xgreeters/puavo-unity-greeter.desktop
 
 .PHONY : clean
 clean :

@@ -1,13 +1,16 @@
 PUAVO_HOSTTYPE=$(/bin/cat /etc/puavo/hosttype)
+PERSONALLY_ADMINISTERED=$(jq -r .personally_administered /etc/puavo/device.json)
 
 set_lts_var PUAVO_HOSTTYPE "$PUAVO_HOSTTYPE"
+
+puavo_automatic_image_updates=$(jq -r .automatic_image_updates /etc/puavo/device.json)
+puavo_personally_administered=$(jq -r .personally_administered /etc/puavo/device.json)
 
 puavo_common_unneeded_services='
   anacron
   apport
   atd
   avahi-daemon
-  cron
   cryptdisks-enable
   cryptdisks-udev
   epoptes
@@ -28,6 +31,13 @@ puavo_common_unneeded_services='
   winbind
 '
 
+# On personally administered devices we do not want to run fluentd and other
+# reporting services as the data is not comparable to other devices.
+
+if [ "${PERSONALLY_ADMINISTERED}" = "true" ]; then
+  puavo_common_unneeded_services="${puavo_common_unneeded_services} fluentd puavo-hw-log"
+fi
+
 puavo_nfs_services='gssd idmapd portmap rpcbind-boot'
 puavo_tty_services='tty3 tty4 tty5 tty6'
 
@@ -42,8 +52,14 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_nfs_services $puavo_tty_services lightdm"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
+    set_lts_var RM_SESSION_SERVICES "
+      nm-applet
+      puavo-client-updater-applet
+    "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      cron
+      laptop-mode
       ltspguestssh
       ltspssh
       network-manager
@@ -54,6 +70,7 @@ case "$PUAVO_HOSTTYPE" in
       puavo-update-client
       puavo-vpn-client
       puavo-vpn-dnsmasq
+      x2goserver
     "
     set_lts_var SCREEN_07     lightdm
     set_lts_var USE_NFS_HOMES True
@@ -80,12 +97,37 @@ case "$PUAVO_HOSTTYPE" in
     # the "ondemand" service makes the machines very unstable, so it should
     # be enabled with caution and perhaps on machine type basis.
 
-    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services $keep_system_services ondemand"
+    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services $keep_system_services ondemand laptop-mode"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
+
+    puavo_laptop_unneeded_session_services=""
+
+    # puavo-client-updater-applet is not needed except on
+    # personally administered laptops
+    if [ "$puavo_personally_administered" != "true" ]; then
+      puavo_laptop_unneeded_session_services="
+        puavo-client-updater-applet
+      "
+    fi
+
+    # do not start nm-applet on laptops when on webkiosk mode
+    if jq -r .tags[] /etc/puavo/device.json | grep -qx webkiosk; then
+      puavo_laptop_unneeded_session_services="
+        $puavo_laptop_unneeded_session_services
+        nm-applet
+      "
+    fi
+
+    set_lts_var RM_SESSION_SERVICES "
+      $puavo_laptop_unneeded_session_services
+    "
+
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
       $rm_system_services 
+      autopoweroff
+      cron
       hostapd
       jetty
       ltspguestssh
@@ -97,6 +139,7 @@ case "$PUAVO_HOSTTYPE" in
       puavo-wlanap
       umountnfs.sh
       vtun
+      x2goserver
     "
     ;;
   ltspserver)
@@ -107,14 +150,19 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var RM_SESSION_SERVICES "
       ebeam
       mimio-mimiosys
+      nm-applet
       polyvision-cdfnu
       polyvision-pvd
+      puavo-client-updater-applet
       smart_1-_Service
       smart_1-_Tools
     "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      cron
       eno
+      laptop-mode
+      lightdm
       network-manager
       nwfermi
       ondemand
@@ -124,6 +172,7 @@ case "$PUAVO_HOSTTYPE" in
       puavo-wlanap
       zram-config
     "
+    set_lts_var SCREEN_07            ltspserver
     set_lts_var USE_NFS_HOMES        True
     ;;
   thinclient)
@@ -133,11 +182,17 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LDM_SESSION          'gnome-session --session=gnome-fallback'
     set_lts_var LOCALDEV             True
     set_lts_var LTSP_FATCLIENT       False
+    set_lts_var RM_SESSION_SERVICES "
+      nm-applet
+      puavo-client-updater-applet
+    "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      cron
       eno
       fluentd
       gssd
+      laptop-mode
       ltspguestssh
       ltspssh
       network-manager
@@ -154,6 +209,7 @@ case "$PUAVO_HOSTTYPE" in
       sssd
       statd
       statd-mounting
+      x2goserver
       zram-config
     "
     set_lts_var SCREEN_07            lightdm
@@ -161,11 +217,17 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var X_COLOR_DEPTH        16
     ;;
   unregistered)
+    set_lts_var RM_SESSION_SERVICES "
+      nm-applet
+      puavo-client-updater-applet
+    "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      cron
       eno
       fluentd
       gssd
+      laptop-mode
       lightdm
       ltspguestssh
       ltspssh
@@ -184,6 +246,7 @@ case "$PUAVO_HOSTTYPE" in
       sssd
       statd
       statd-mounting
+      x2goserver
       zram-config
     "
     set_lts_var SCREEN_07          register
@@ -192,22 +255,34 @@ case "$PUAVO_HOSTTYPE" in
     if [ -n "$SERVER" ]; then
       # wirelessaccesspoint booted off from network, offer to update it
       set_lts_var SCREEN_07 ltspimage-update
+      puavo_wirelessaccesspoint_unneeded_services="lightdm"
+    elif jq -r .tags[] /etc/puavo/device.json | grep -qx infotv; then
+      # if we are an infotv, we do want the lightdm to start up
+      set_lts_var SCREEN_07 lightdm
+      puavo_wirelessaccesspoint_unneeded_services=""
     else
-      # wirelessaccesspoint booted from local disk, provide another screen
       set_lts_var SCREEN_07 wirelessaccesspoint
+      puavo_wirelessaccesspoint_unneeded_services="lightdm"
     fi
 
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
+    set_lts_var RM_SESSION_SERVICES "
+      nm-applet
+      puavo-client-updater-applet
+    "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
-      lightdm
+      $puavo_wirelessaccesspoint_unneeded_services
+      autopoweroff
+      laptop-mode
       ltspguestssh
       ltspssh
       network-manager
       ondemand
       puavo-load-balancer
+      x2goserver
     "
     set_lts_var USE_NFS_HOMES        False
     ;;

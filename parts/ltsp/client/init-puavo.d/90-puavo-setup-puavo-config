@@ -1,3 +1,9 @@
+if [ -z "$SERVER" ]; then
+  # if SERVER is not set, this device has not booted from network, thus
+  # it is pointless to do anything here because networking is not configured
+  return
+fi
+
 /usr/sbin/puavo-dns-client
 
 # fetch /etc/puavo/device.json

@@ -1,0 +1,175 @@
+#!/usr/bin/ruby1.9.1
+
+# Services activated by DBus service activation mechanism do not have
+# all necessary components in PATH
+ENV["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+require 'dbus'
+require 'open3'
+
+$configuration_update_thread = nil
+$image_update_thread         = nil
+
+class CancelledImageUpdate < RuntimeError; end
+
+class Updater < DBus::Object
+  def configuration_update
+    $configuration_update_thread = Thread.new do
+      begin
+	command = '/usr/lib/puavo-ltsp-install/update-configuration'
+
+	output, status = Open3.capture2e(command)
+	if not status.success? then
+	  raise "failed to update device configuration: #{ output }"
+	end
+
+	if !$image_update_thread then
+	  system('/usr/lib/puavo-ltsp-install/is-update-available')
+	  case $?.exitstatus
+	    when 0
+	      self.UpdateAvailable
+	    when 1
+	      self.UpdateIsUpToDate(false) # no reboot required
+	    when 2
+	      self.UpdateIsUpToDate(true)  # reboot *is* required
+	  end
+	end
+      ensure
+	$configuration_update_thread = nil
+      end
+    end
+  end
+
+  def image_update(use_rate_limit, delete_overlays)
+    $image_update_thread = Thread.new do
+      wait_thr, out_thr, err_thr = nil, nil, nil
+
+      begin
+	if not system('/usr/lib/puavo-ltsp-install/is-update-available') then
+	  return ''
+	end
+
+	self.UpdateStarted
+
+	stdin, stdout, stderr, wait_thr \
+	  = Open3.popen3('/usr/lib/puavo-ltsp-install/update-images',
+			 use_rate_limit  ? 'true' : 'false',
+			 delete_overlays ? 'true' : 'false',
+			 { :pgroup => true })
+
+	stdin.close
+	output, errput = '', ''
+	out_thr = Thread.new { output = stdout.read }
+	err_thr = Thread.new { errput = stderr.read }
+
+	status = wait_thr.value
+
+	[ out_thr, err_thr ].each { |t| t.join if t }
+
+	if not status.success? then
+	  self.UpdateFailed(output, errput)
+	  raise "failed to update device images: #{ errput }"
+	end
+	self.UpdateCompleted(output, errput)
+
+      rescue CancelledImageUpdate => e
+	if wait_thr then
+	  if wait_thr.alive? then
+	    Process.kill('-TERM', wait_thr.pid)
+	  end
+	  wait_thr.join
+
+	  [ out_thr, err_thr ].each { |t| t.join if t }
+
+	  self.UpdateCancelled(output, errput)
+	else
+	  self.UpdateCancelled('', '')
+	end
+
+      ensure
+	[ out_thr, err_thr ].each { |t| t.exit if t }
+	$image_update_thread = nil
+      end
+    end
+  end
+
+  dbus_interface "org.puavo.client.update" do
+    dbus_signal :UpdateAvailable
+    dbus_signal :UpdateCancelled,         'in outmsg:s, in errmsg:s'
+    dbus_signal :UpdateFailed,            'in outmsg:s, in errmsg:s'
+    dbus_signal :UpdateCompleted,         'in outmsg:s, in errmsg:s'
+    dbus_signal :UpdateProgressIndicator, 'in phase:s, in progress:i'
+    dbus_signal :UpdateStarted
+    dbus_signal :UpdateIsUpToDate,        'in reboot_required:b'
+
+    dbus_method :CancelImageUpdate, '' do
+      if $image_update_thread then
+        $image_update_thread.raise(CancelledImageUpdate, 'Cancel image update')
+      end
+    end
+
+    dbus_method :HasOldOverlays, "out b" do
+      output, errput, status \
+        = Open3.capture3('/usr/lib/puavo-ltsp-install/ls-old-imageoverlays',
+                         '/images',
+                         '/imageoverlays')
+      if not status.success? then
+        raise "failed to list old overlays: #{ errput }"
+      end
+      return !output.empty?
+    end
+
+    dbus_method :Update,
+                'in use_rate_limit:b, in delete_overlays:b, out s' do
+      |use_rate_limit, delete_overlays|
+        Thread.new do
+          ($configuration_update_thread || self.configuration_update()) \
+            .join
+          ($image_update_thread || self.image_update(use_rate_limit,
+                                                     delete_overlays)) \
+            .join
+        end
+
+        return "Configuration and image updates triggered.\n"
+    end
+
+    dbus_method :UpdateConfiguration, "out s" do
+      return "Configuration update is in progress.\n" \
+        if $configuration_update_thread
+      self.configuration_update()
+      return "Configuration update started.\n"
+    end
+
+    dbus_method :UpdateImages,
+                'in use_rate_limit:b, in delete_overlays:b, out s' do
+      |use_rate_limit, delete_overlays|
+        return "Image update is in progress.\n" if $image_update_thread
+        self.image_update(use_rate_limit, delete_overlays)
+        return "Image update started.\n"
+    end
+
+    dbus_method :UpdateProgress,
+                "in phase:s, in progress:i" do |phase, progress|
+      self.UpdateProgressIndicator(phase, progress)
+    end
+  end
+
+end
+
+bus = DBus::SystemBus.instance
+
+# Request a well-known name for the service. It can be denied if someone
+# has reserved the name (very unlikely, only if someone is playing
+# tricks with us) or we do not have permissions to own the name (missing
+# conf file in /etc/dbus-1/system.d).
+service = bus.request_service("org.puavo.client.Daemon")
+
+# Export all dbus-accessible objects. Currently we have only one, but
+# there isn't any reason why we wouldn't them more in future.
+updater = Updater.new("/updater")
+service.export(updater)
+
+# Run Forrest, run!
+loop = DBus::Main.new
+loop << bus
+loop.run

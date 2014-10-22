@@ -7,7 +7,7 @@ Most of these files originate from ltsp-upstream:
 
 https://launchpad.net/~ltsp-upstream
 
-Puavo files are copyright by Opinsys Oy 2012
+Puavo files are copyright by Opinsys Oy 2014
 
 ## Dependencies
 

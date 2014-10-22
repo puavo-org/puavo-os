@@ -5,18 +5,11 @@ NO_BACKLIGHT=$(jq -r '.tags[] | select(. == "no-intel-backlight")' /etc/puavo/de
 
 DMIDECODE=$(dmidecode)
 
-HP430G1=$(echo $DMIDECODE|grep "Product Name: HP ProBook 430 G1")
-HP820G1=$(echo $DMIDECODE|grep "Product Name: HP EliteBook 820 G1")
-
-if [ "${NO_BACKLIGHT}" != "no-intel-backlight" ]; then
-  if [ "${BACKLIGHT}" = "intel-backlight" -o \
-       "${HP430G1}" != "" -o \
-       "${HP820G1}" != "" ]; then
-    cat <<EOF >/usr/share/X11/xorg.conf.d/backlight.conf
+if [ "${BACKLIGHT}" = "intel-backlight" ]; then
+  cat <<EOF >/usr/share/X11/xorg.conf.d/backlight.conf
 Section "Device"
     Identifier  "Intel Graphics"
     Option      "Backlight"       "intel_backlight"
 EndSection
 EOF
-  fi
 fi

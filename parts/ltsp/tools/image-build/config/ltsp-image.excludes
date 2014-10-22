@@ -1,0 +1,15 @@
+etc/apt/apt.conf.d/00imagebuild-proxy
+run/.*
+run/*
+tmp/.*
+tmp/*
+var/cache/apt/archives/*.deb
+var/cache/apt/archives/partial/*
+var/run/.*
+var/run/*
+var/tmp/.*
+var/tmp/*
+
+# Remove build-time resolvconfs
+etc/resolvconf/resolv.conf.d/original
+etc/resolvconf/resolv.conf.d/tail

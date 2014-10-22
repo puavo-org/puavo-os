@@ -2,17 +2,81 @@
 
 set -e
 
-puavo-register --accepted-devicetypes \
-	       fatclient,laptop,ltspserver,thinclient,wirelessaccesspoint
+puavo_register_args=
+puavo_setup_filesystems_args=
+
+preseeds=$(ls -1 /usr/share/puavo-ltsp-install/preseeds | sort)
+preseed_count=$(echo "${preseeds}" | wc -l)
+
+# Ask the preferred preseed if there are some available.
+[ -n "${preseeds}" ] && while true; do
+    echo "Installer preseeds:"
+    # Print the list of preseeds.
+    echo "0\tNO PREESEDING"
+    echo "${preseeds}" | awk '{printf "%d\t%s\n", NR, $0}'
+
+    # The default preseed is the first item, number 0.
+    read -p "Select preseed number [0]: " preseed_nr
+    [ -n "${preseed_nr}" ] || preseed_nr=0
+
+    # Ensure the value is a valid integer.
+    case "${preseed_nr}" in
+        ''|*[!0-9]*)
+            echo "E: invalid preseed number" >&2
+            continue
+            ;;
+        *)
+            ;;
+    esac
+
+    # Ensure the integer has a valid value.
+    if [ 0 -gt "${preseed_nr}" -o "${preseed_nr}" -gt "${preseed_count}" ]; then
+        echo "E: invalid preseed number" >&2
+        continue
+    fi
+
+    # Preseed 0 always means no preseeding at all.
+    [ "${preseed_nr}" -eq 0 ] && break
+
+    # Apply preseeds and continue installation.
+    preseed=$(echo "${preseeds}" | sed -n "${preseed_nr}p")
+    puavo_register_args=$(cat "/usr/share/puavo-ltsp-install/preseeds/${preseed}/puavo_register_args")
+    puavo_setup_filesystems_args=$(cat "/usr/share/puavo-ltsp-install/preseeds/${preseed}/puavo_setup_filesystems_args")
+
+    gen_puavo_register_args="/usr/share/puavo-ltsp-install/preseeds/${preseed}/gen_puavo_register_args"
+    if [ -x "${gen_puavo_register_args}" ]; then
+        puavo_register_extra_args=$("${gen_puavo_register_args}")
+        puavo_register_args="${puavo_register_args} ${puavo_register_extra_args}"
+    fi
+
+    gen_puavo_setup_filesystems_args="/usr/share/puavo-ltsp-install/preseeds/${preseed}/gen_puavo_setup_filesystems_args"
+    if [ -x "${gen_puavo_setup_filesystems_args}" ]; then
+        puavo_setup_filesystems_extra_args=$("${gen_puavo_setup_filesystems_args}")
+        puavo_setup_filesystems_args="${puavo_setup_filesystems_args} ${puavo_setup_filesystems_extra_args}"
+    fi
+
+    break
+done
+
+puavo-register \
+    --accepted-devicetypes fatclient,laptop,ltspserver,thinclient,wirelessaccesspoint \
+    ${puavo_register_args}
 
 hosttype="$(cat /etc/puavo/hosttype)"
 
 case "$hosttype" in
   laptop|wirelessaccesspoint)
-    puavo-setup-filesystems
+    puavo-setup-filesystems ${puavo_setup_filesystems_args}
 
     mkdir -p /state/etc
     cp -aT /etc/puavo /state/etc/puavo
+
+    # Grub needs to be installed before images, because grub
+    # configuration is updated during image installation by
+    # puavo-image-preinst.
+    echo -n "Doing grub installation: "
+    puavo-install-grub
+    sync
 
     # install from nbd, the ltsp image must contain its name in this path
     ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
@@ -20,13 +84,12 @@ case "$hosttype" in
     puavo-install-and-update-ltspimages --install-from-nbd /dev/nbd0 \
 					"$ltspimage_name"
 
-    echo -n "Doing grub installation: "
-    puavo-install-grub
-    sync
-
     echo "Updating $hosttype configuration..."
-    if puavo-update-client; then
+    if /usr/lib/puavo-ltsp-install/update-configuration; then
       echo "  ... $hosttype configuration updated."
+      if /usr/lib/puavo-ltsp-install/update-images false false; then
+        echo "  ... image updated."
+      fi
     else
       echo "  ... a problem occurred (updating configuration later)."
     fi
@@ -41,7 +104,7 @@ case "$hosttype" in
     read answer
     ;;
   ltspserver)
-    puavo-setup-filesystems
+    puavo-setup-filesystems ${puavo_setup_filesystems_args}
     mkdir -p /state/etc
     cp -a /etc/puavo /state/etc
 

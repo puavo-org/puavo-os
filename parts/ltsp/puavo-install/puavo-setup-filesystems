@@ -1,8 +1,9 @@
-#!/usr/bin/ruby
+#!/usr/bin/ruby1.9.3
 #
 # Setup local filesystems for Puavo hosts
 
 require 'fileutils'
+require 'getoptlong'
 require 'highline/import'
 require 'open3'
 
@@ -36,30 +37,32 @@ end
 
 module DiskHandler
   Filesystems = {
-    'laptop' => [
-      { 'size' => '4G',       'name' => 'swap',   'type' => 'swap' },
-      { 'size' => '6G',       'name' => 'tmp',    'type' => 'ext4' },
-      { 'size' => '40G',      'name' => 'images', 'type' => 'ext4' },
-      { 'size' => '4G',       'name' => 'state',  'type' => 'ext4' },
-      { 'size' => '100%FREE', 'name' => 'home',   'type' => 'ext4' },
-    ],
-    'ltspserver' => [
-      { 'size' => '16G',      'name' => 'swap',   'type' => 'swap' },
-      { 'size' => '6G',       'name' => 'tmp',    'type' => 'ext4' },
-      { 'size' => '100%FREE', 'name' => 'state',  'type' => 'ext4' },
-    ],
-    'wirelessaccesspoint' => [
-      { 'size' => '2G',       'name' => 'swap',   'type' => 'swap' },
-      { 'size' => '3G',       'name' => 'tmp',    'type' => 'ext4' },
-      { 'size' => '2G',       'name' => 'state',  'type' => 'ext4' },
-      { 'size' => '100%FREE', 'name' => 'images', 'type' => 'ext4' },
-    ],
+    'laptop' => {
+      'swap'          => { 'size' => '4G',       'type' => 'swap' },
+      'tmp'           => { 'size' => '6G',       'type' => 'ext4' },
+      'images'        => { 'size' => '40G',      'type' => 'ext4' },
+      'state'         => { 'size' => '4G',       'type' => 'ext4' },
+      'imageoverlays' => { 'size' => '128M',     'type' => 'ext4' },
+      'home'          => { 'size' => '100%FREE', 'type' => 'ext4' },
+    },
+    'ltspserver' => {
+      'swap'          => { 'size' => '16G',      'type' => 'swap' },
+      'tmp'           => { 'size' => '6G',       'type' => 'ext4' },
+      'state'         => { 'size' => '100%FREE', 'type' => 'ext4' },
+    },
+    'wirelessaccesspoint' => {
+      'swap'          => { 'size' => '2G',       'type' => 'swap' },
+      'tmp'           => { 'size' => '3G',       'type' => 'ext4' },
+      'state'         => { 'size' => '2G',       'type' => 'ext4' },
+      'imageoverlays' => { 'size' => '128M',     'type' => 'ext4' },
+      'images'        => { 'size' => '100%FREE', 'type' => 'ext4' },
+    },
   }
 
   def self.cleanup_disk_environment(hosttype)
     # Unmount filesystems, if those are mounted.
-    non_swap_filesystems(hosttype).each do |fs|
-      run('umount', '-f', "/#{ fs['name'] }") rescue true
+    non_swap_filesystems(hosttype).each do |name, attrs|
+      run('umount', '-f', "/#{ name }") rescue true
     end
 
     # turn off swap partitions
@@ -105,13 +108,13 @@ module DiskHandler
     # create an lvm partition
     # see http://www.walkernews.net/2007/07/02/how-to-create-linux-lvm-in-3-minutes/
     IO.popen("fdisk #{ fs_conf['device'] }", 'w') do |f|
-      f.print "n\np\n1\n\n\nt\n8e\na\n1\np\nw\n"
+      f.print "n\np\n1\n#{ fs_conf['first_sector'] }\n#{ fs_conf['last_sector'] }\nt\n8e\na\n1\np\nw\n"
     end
   end
 
   def self.non_swap_filesystems(hosttype)
     Filesystems[ hosttype ] \
-      .select { |fs| fs['type'] != 'swap' }
+      .select { |name, attrs| attrs['type'] != 'swap' }
   end
 
   def self.puavo_filesystems(fs_conf)
@@ -122,8 +125,8 @@ module DiskHandler
     run('pvcreate', fs_conf['partition'])
     run('vgcreate', '-s', '64M', 'puavo', fs_conf['partition'])
 
-    Filesystems[ fs_conf['hosttype'] ].each do |fs|
-      mkfs(fs['size'], fs['name'], fs['type'])
+    Filesystems[ fs_conf['hosttype'] ].each do |name, attrs|
+      mkfs(attrs['size'], name, attrs['type'])
     end
   end
 
@@ -142,10 +145,10 @@ module DiskHandler
   end
 
   def self.mount_filesystems(fs_conf)
-    non_swap_filesystems( fs_conf['hosttype'] ).each do |fs|
-      mnt_path = "/#{ fs['name'] }"
+    non_swap_filesystems( fs_conf['hosttype'] ).each do |name, attrs|
+      mnt_path = "/#{ name }"
       FileUtils.mkdir_p(mnt_path)
-      run('mount', "/dev/mapper/puavo-#{ fs['name'] }", mnt_path)
+      run('mount', "/dev/mapper/puavo-#{ name }", mnt_path)
     end
   end
 end
@@ -170,7 +173,8 @@ module QueryDiskInfo
 
       puts "\nPossible disk devices are: #{ disk_devices.join(' ') }"
       chosen_disk_device = UI::ask_with_default('Choose a disk device:',
-					        chosen_disk_device)
+					        chosen_disk_device,
+                                                UI::DiskDevicePrompt)
     end
 
     chosen_disk_device
@@ -188,25 +192,71 @@ module QueryDiskInfo
 
     prompt = %q{Are you sure you want to proceed (write "yes" if this is okay?)}
 
-    UI::ask_with_default(prompt, 'no') == 'yes'
+    UI::ask_with_default(prompt, 'no', UI::ConfirmPartitionsPrompt) == 'yes'
+  end
+
+  def self.ask_last_sector(device, first_sector)
+    device_basename = File.basename(device)
+    sectors = File.read("/sys/block/#{device_basename}/size").strip().to_i()
+    sector_bytes = File.read("/sys/block/#{device_basename}/queue/logical_block_size").strip().to_i()
+
+    while true do
+      tailroom_size =
+        UI::ask_size_with_default('How much unpartitioned space '\
+                                  'should be left to the end of '\
+                                  'the device:', '0G', UI::UnpartitionedSpacePrompt)
+      tailroom_bytes = Size::to_bytes(tailroom_size)
+      tailroom_sectors = tailroom_bytes / sector_bytes
+      if tailroom_sectors > sectors - first_sector
+        UI::colormsg("The size of the tailroom exceeds the size of the device.",
+                     HighLine::RED)
+        next
+      end
+
+      last_sector = sectors - tailroom_sectors - 1
+      break
+
+    end
+    last_sector
   end
 
   def self.ask_device_and_partition_with_confirmation(hosttype)
-    do_it = false
-    device    = nil
-    partition = nil
+    do_it        = false
+    device       = nil
+    partition    = nil
+    first_sector = nil
+    last_sector  = nil
 
     until do_it do
       device    = QueryDiskInfo::ask_device()
       partition = QueryDiskInfo::ask_partition(device)
+      if partition == 'whole'
+        first_sector = 2048
+        last_sector  = QueryDiskInfo::ask_last_sector(device, first_sector)
+
+        # Let the user set the size of the following filesystems:
+        [
+         ['imageoverlays', UI::ImageoverlaySizePrompt],
+        ].each do |fs_name, prompt_key|
+          fs = DiskHandler::Filesystems[hosttype][fs_name]
+          next if fs.nil?
+          fs_size =
+            UI::ask_size_with_default("Filesystem size of #{ fs_name }:",
+                                      fs['size'], prompt_key)
+
+          fs['size'] = fs_size.join()
+        end
+      end
 
       do_it = QueryDiskInfo::ask_confirmation(device, partition)
     end
 
     {
-      'device'    => device,
-      'hosttype'  => hosttype,
-      'partition' => partition,
+      'device'       => device,
+      'first_sector' => first_sector,
+      'hosttype'     => hosttype,
+      'last_sector'  => last_sector,
+      'partition'    => partition,
     }
   end
 
@@ -235,32 +285,10 @@ module QueryDiskInfo
       puts "\nYou may choose 'fdisk' to partition this disk,"
       puts "or choose 'whole' to use the whole disk.\n"
       chosen_partition = UI::ask_with_default('Choose a partition:',
-					     chosen_partition)
-
-      if chosen_partition == 'whole' \
-	and device_has_unknown_partitions?(disk_device) then
-	  msg = %Q{\nDevice "/dev/#{ disk_device }" has unknown partitions,\n} \
-	        + %Q{remove those with "fdisk" (refusing to overwrite).\n}
-          UI::colormsg(msg, HighLine::RED)
-	  sleep(2)
-	  partitions = []
-          next
-      end
+					     chosen_partition,
+                                              UI::PartitionPrompt)
     end
-
     chosen_partition
-  end
-
-  def self.device_has_unknown_partitions?(device)
-    fdisk_cmd = [ 'env', 'LANG=C', 'fdisk', '-l', "/dev/#{ device }" ]
-    Open3.popen3(*fdisk_cmd) do |stdin, stdout, stderr|
-      stdout.readlines.each do |line|
-	return true if line.match(%r{^/dev/}) \
-			 && !line.match(/(Extended|Linux)/)
-      end
-    end
-
-    return false
   end
 
   def self.show_disk_devices(disk_devices)
@@ -272,9 +300,108 @@ module QueryDiskInfo
   end
 end
 
+module Size
+  UNIT_BYTES = {
+    'K' => 1024 ** 1,
+    'M' => 1024 ** 2,
+    'G' => 1024 ** 3,
+  }
+
+  def self.parse(str)
+    unit = str[-1]
+    if not UNIT_BYTES.include?(unit)
+      raise ArgumentError, "invalid unit, expected one from #{UNIT_BYTES.keys}"
+    end
+
+    number = str[0..-2]
+    value = Integer(number)
+    if value < 0
+      raise ArgumentError, "invalid size, expected a non-negative value"
+    end
+
+    [value, unit]
+  end
+
+  def self.to_bytes(size)
+    value, unit = size
+    value * UNIT_BYTES[unit]
+  end
+
+end
+
 # XXX could be shared with puavo-register
 module UI
-  def self.ask_with_default(question, default)
+
+  ConfirmPartitionsPrompt,
+  DiskDevicePrompt,
+  ImageoverlaySizePrompt,
+  PartitionPrompt,
+  UnpartitionedSpacePrompt,
+  = *(1..5)
+
+  @accept_defaults = false
+  @defaults = {}
+
+  def self.help_and_exit
+    puts <<-EOF
+puavo-setup-filesystems [OPTIONS]
+
+-h, --help                        show help
+
+    --accept-defaults             accept all prompts with default values
+    --default-confirm-partitions  default value for confirm partitions prompt
+    --default-disk-device         default value for disk device prompt
+    --default-imageoverlay-size   default value for imageoverlay size prompt
+    --default-partition           default value for partition prompt
+    --default-unpartitioned-space default value for partitioned space prompt
+
+EOF
+  end
+
+  def self.parse_args
+    begin
+      opts = GetoptLong.new(
+                            [ '--help', '-h'                 , GetoptLong::NO_ARGUMENT      ,],
+                            [ '--accept-defaults'            , GetoptLong::NO_ARGUMENT      ,],
+                            [ '--default-confirm-partitions' , GetoptLong::REQUIRED_ARGUMENT,],
+                            [ '--default-disk-device'        , GetoptLong::REQUIRED_ARGUMENT,],
+                            [ '--default-imageoverlay-size'  , GetoptLong::REQUIRED_ARGUMENT,],
+                            [ '--default-partition'          , GetoptLong::REQUIRED_ARGUMENT,],
+                            [ '--default-unpartitioned-space', GetoptLong::REQUIRED_ARGUMENT,],
+                            )
+
+      opts.each do |opt, arg|
+        case opt
+        when '--help'
+          help_and_exit
+          exit(0)
+        when '--accept-defaults'
+          @accept_defaults = true
+        when '--default-confirm-partitions'
+          @defaults[ConfirmPartitionsPrompt] = arg
+        when '--default-disk-device'
+          @defaults[DiskDevicePrompt] = arg
+        when '--default-imageoverlay-size'
+          @defaults[ImageoverlaySizePrompt] = arg
+        when '--default-partition'
+          @defaults[PartitionPrompt] = arg
+        when '--default-unpartitioned-space'
+          @defaults[UnpartitionedSpacePrompt] = arg
+        end
+      end
+    rescue GetoptLong::InvalidOption => e
+      help_and_exit
+      exit(1)
+    end
+  end
+
+  def self.ask_with_default(question, default, prompt_key=nil)
+    if @defaults.has_key?(prompt_key) then
+      default = @defaults[prompt_key]
+    end
+    if @accept_defaults then
+      return default
+    end
     prompt = "#{ question } [#{ default }] "
     answer = HighLine.ask(prompt) { |q| q.whitespace = nil }
 
@@ -283,10 +410,26 @@ module UI
          : answer.strip
   end
 
+  def self.ask_size_with_default(question, default, prompt_key=nil)
+    while true do
+      str = ask_with_default(question, default, prompt_key)
+      begin
+        size = Size::parse(str)
+      rescue ArgumentError => e
+        colormsg(e.message, HighLine::RED)
+        next
+      end
+      break
+    end
+    size
+  end
+
   def self.colormsg(msg, color)
     HighLine.say(HighLine.new.color(msg, color))
   end
 end
+
+UI::parse_args
 
 hosttype = PuavoFacts::get('puavo_hosttype')
 
