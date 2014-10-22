@@ -184,6 +184,25 @@ fi
 
 set -eu
 
+chown -R ci:ci /cirun
+
+git_dir="/cirun/${simple_job_name}"
+script_location="\${git_dir}/${script_name}"
+
+if [ ! -f "\$script_location" ]; then
+    # If script is not found from the workspace it is probably in a
+    # subdirectory set by Jenkins. Use shell globbing to autodetect the dirname
+    script_location=\$(ls -1 /cirun/${simple_job_name}/*/${script_name} || true)
+    git_dir=\$(dirname \$script_location || true)
+fi
+
+if [ ! -f "\$script_location" ]; then
+    echo
+    echo "No ci script found. Exiting..."
+    echo
+    exit 0
+fi
+
 for i in \$(seq 100); do
     ip="\$(ifconfig eth0 | sed -rn '2 s/^\s+inet addr:([0-9\.]+).*$/\1/p')"
     if [ "\$ip" != "" ]; then
@@ -197,18 +216,6 @@ done
 if [ "\$ip" = "" ]; then
     echo "Container failed to get network!"
     exit 1
-fi
-
-chown -R ci:ci /cirun
-
-git_dir="/cirun/${simple_job_name}"
-script_location="\${git_dir}/${script_name}"
-
-if [ ! -f "\$script_location" ]; then
-    # If script is not found from the workspace it is probably in a
-    # subdirectory set by Jenkins. Use shell globbing to autodetect the dirname
-    script_location=\$(ls -1 /cirun/${simple_job_name}/*/${script_name})
-    git_dir=\$(dirname \$script_location)
 fi
 
 echo
