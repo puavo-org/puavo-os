@@ -1,0 +1,5 @@
+#!/bin/sh
+
+GW=${route_vpn_gateway}
+
+/usr/lib/puavo-vpn-client/set-servers --query-services=${GW} --retries=5 --retry-delay=2 --post-script="/usr/lib/puavo-vpn-client/runme dns-up" > /dev/null 2>&1 &

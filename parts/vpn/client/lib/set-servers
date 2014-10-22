@@ -1,0 +1,209 @@
+#!/usr/bin/ruby
+
+require 'puavo/etc'
+require 'trollop'
+require 'dbus'
+require 'json'
+require 'syslog'
+require 'dnsruby'
+
+#Encoding.default_external = 'utf-8'
+ENV['LANG'] = "C"
+instance_id = "default"
+
+if ENV.has_key?('daemon_pid')
+  instance_id = ENV['daemon_pid']
+end
+
+def log(message)
+  Syslog.open("puavo-vpn-set-servers", Syslog::LOG_CONS) { |s| s.warning message }
+end
+
+# Query PTR record for _service._vpn.<puavo top domain> to find the fqdns and 
+# subnets that need to be directed to the DNS server running on the VPN 
+# gateway. If something goes wrong, this method raises an exception and the 
+# caller needs to call the method again.
+def query_vpn_services(dns_ip, puavo_topdomain)
+  hostnames = Array.new
+
+  begin
+    res   = Dnsruby::DNS.new({:nameserver=>[dns_ip]})
+
+    log "querying _service._vpn.#{puavo_topdomain} from #{dns_ip}"
+    method = "in ip:u"
+
+    res.each_resource("_service._vpn.#{puavo_topdomain}", 'PTR') do |rr|
+      hostnames << rr.rdata.to_s
+    end
+
+    return hostnames
+  rescue Exception => e
+    log "querying _service._vpn.#{puavo_topdomain} failed"
+
+    raise "querying _service._vpn.#{puavo_topdomain} failed: #{e}"
+  end
+end
+
+# Converts an IPv4 address to uint that dnsmasq uses in its DBUS interface
+def ip_to_num(ip)
+  tmp = ip.split(/\./)
+  return tmp[0].to_i*256*256*256 + tmp[1].to_i*256*256 + tmp[2].to_i*256 + tmp[3].to_i
+end
+
+# resolvconf package has interface-order file that lists interfaces
+# in the order that they should be used for nameserver queries. Use 
+# the list to find first nameservers that do not match to 127.0.1.1 
+# that puavo-vpn-dnsmasq uses for the local resolver.
+
+def determine_upstream_servers
+  servers = Array.new
+  done = false
+
+  order = File.read("/etc/resolvconf/interface-order").chomp
+
+  Dir.chdir("/run/resolvconf/interface")
+
+  order.split("\n").each do |pattern|
+    Dir.glob(pattern).each do |filename|
+      File.open(filename).each_line do |line|
+        if /nameserver.*?(\d+).(\d+).(\d+).(\d+)/.match(line)
+          server = "#{$1}.#{$2}.#{$3}.#{$4}"
+          if !server.eql?("127.0.1.1")
+            done = true
+
+            servers << server
+          end
+        end
+      end
+
+      if done
+        return servers
+      end
+    end
+  end
+end
+
+opts = Trollop::options do
+  opt :quiet, "Be quiet"
+  opt :query_services, "Query VPN gateway for services using the server", :type => String
+  opt :retries, "How many times the DNS query should be retried", :type => Integer
+  opt :retry_delay, "Time in seconds to wait between queries", :type => Integer
+  opt :post_script, "Run script after sending message to dnsmasq", :type => String
+end
+
+# Assemble a DBUS call to set dnsmasq's DNS server settings. Upstream nameserver
+# information is read from resolvconf files above.
+#
+# E.g. when upstream nameserver is 192.168.1.254 and hostnames test.example.org 
+# and test2.example.org should be queried from 10.10.10.254, 
+# /run/puavo-vpn-client/services should contain:
+#
+# {
+#  "10.10.10.254": ["test.example.org", "test2.example.org"]
+# }
+#
+# The JSON is written by puavo-vpn-query-redirect-hosts script that is called 
+# by OpenVPN when the VPN tunnel opens. It queries the tunnel to find out what
+# hostnames it provides.
+#
+# The assembled DBUS method looks then like this:
+#
+# in ip:u, in ip u, in hostname:s, in hostname:s
+#
+# And the values:
+#
+# 3157155484, 164518594, "test.example.org", "test2.example.org"
+#
+# The dnsmasq DBUS interface is documented in dnsmasq-base package 
+# in file /usr/share/doc/dnsmasq-base/DBus-interface.gz.
+
+query_services = true
+
+dbus_method = Array.new
+dbus_params = Array.new
+
+determine_upstream_servers.each do |server_ip|
+  dbus_method << "in ip:u"
+  dbus_params << ip_to_num(server_ip)
+end
+
+services = Hash.new
+
+# If --query-services=server has been set, send the PTR query. If queries 
+# are not wanted, read the cached entries from last time the gateway was
+# queried. The script should be run with --query-services when VPN 
+# connection comes up and without when other network information changes.
+if opts[:query_services]
+  puavo_topdomain = File.read("/etc/puavo/topdomain").chomp
+
+  retries = 1
+
+  if opts[:retries]
+    if opts[:retries].to_i > 0
+      retries = opts[:retries].to_i
+    end
+  end
+
+  done = false
+  delay = 0
+
+  if opts[:retry_delay] and opts[:retry_delay].to_i > 0
+    delay = opts[:retry_delay].to_i
+    puts delay
+  end
+
+  filename = "/run/puavo-vpn-client/services-#{instance_id}"
+
+  while (retries > 0) and !done
+    begin
+      services[opts[:query_services]] = query_vpn_services(opts[:query_services], puavo_topdomain)
+
+      File.open(filename, "w") do |f|
+        f.write services.to_json
+      end
+
+      done = true
+    rescue
+      retries = retries-1
+
+      log "Querying #{opts[:query_services]} failed, retries left=#{retries}, delay=#{delay}s"
+
+      if delay > 0
+        sleep(delay)
+      end
+    end
+  end
+else
+  Dir.glob("/run/puavo-vpn-client/services*").each do |filename|
+    tmp = JSON.parse(File.read(filename))
+    tmp.each_pair do |key, value|
+      services[key] = value
+    end
+  end
+end
+
+services.each_pair do |ip, hosts|
+  dbus_method << "in ip:u"
+  dbus_params << ip_to_num(ip)
+
+  hosts.each do |hostname|
+    dbus_method << "in hostname:s"
+    dbus_params << hostname
+  end
+end
+
+session_bus = DBus::SystemBus.instance
+ruby_srv = session_bus.service("org.puavo.VPN.dnsmasq")
+dnsmasq = ruby_srv.object("/uk/org/thekelleys/dnsmasq")
+
+dnsmasq.default_iface = "org.puavo.VPN.dnsmasq"
+
+proxy = DBus::ProxyObjectInterface.new(dnsmasq, "org.puavo.VPN.dnsmasq")
+proxy.define_method("SetServers", dbus_method.join(", "))
+proxy.SetServers(*dbus_params)
+
+if opts[:post_script]
+  log "Running script #{opts[:post_script]}"
+
+  system(opts[:post_script])
+end
