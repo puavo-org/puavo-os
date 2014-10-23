@@ -1,9 +1,41 @@
 #!/usr/bin/ruby1.9.1
 
+require 'getoptlong'
 require 'json'
 require 'shellwords'
 
-device = JSON.parse( File.read('/etc/puavo/device.json') )
+opts = GetoptLong.new(
+  ['--user-session', '-u', GetoptLong::NO_ARGUMENT],
+  )
+
+is_user_session = false
+
+opts.each do |opt, arg|
+  case opt
+  when '--user-session'
+    is_user_session = true
+  end
+end
+
+if ARGV.length != 0
+  STDERR.puts "invalid number of arguments"
+  exit 1
+end
+
+## This command can be run in two different situtations:
+##   1) when display manager has been started
+##   2) when desktop session has been started
+##
+## Now, in the case of a thinclient, the first run is executed on the
+## thinclient and the second run on the desktopserver. On the
+## desktopserver, using /etc/puavo/device.json for configuring the
+## xrandr of the thinclient is obviously wrong. Luckily, user session
+## contains also the information of the device the user is using.
+if is_user_session
+  device = JSON.parse(File.read(ENV['PUAVO_SESSION_PATH']))['device']
+else
+  device = JSON.parse(File.read('/etc/puavo/device.json'))
+end
 
 if device['xrandr_disable'] then
   exit 0

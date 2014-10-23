@@ -13,6 +13,6 @@ else
     ## Normal desktop session. Use display settings defined in Puavo iff
     ## the user has not made local display configurations.
     if [ ! -f "${HOME}/.config/monitors.xml" ]; then
-        /usr/lib/puavo-ltsp-client/puavo-run-xrandr
+        /usr/lib/puavo-ltsp-client/puavo-run-xrandr --user-session
     fi
 fi
