@@ -38,3 +38,10 @@ install: installdirs
 	$(INSTALL) -t $(DESTDIR)$(libdir)/puavo-autopilot \
 		lib/detect-png \
 		lib/move-mouse-to-png
+
+.PHONY : deb
+deb :
+	rm -rf debian
+	cp -a debian.default debian
+	puavo-dch $(shell cat VERSION)
+	dpkg-buildpackage -us -uc
