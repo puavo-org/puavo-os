@@ -13,6 +13,7 @@ olcTLSCertificateKeyFile: /etc/ssl/certs/slapd-server.key
 olcLocalSSF: 128
 olcSecurity: ssf=128
 olcSizeLimit: unlimited
+olcPasswordCryptSaltFormat: "$6$%.12s"
 
 dn: olcDatabase={-1}frontend,cn=config
 objectClass: olcDatabaseConfig
@@ -25,7 +26,6 @@ olcAccess: {0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,c
 olcAccess: {1}to dn.base="" by * read
 olcAccess: {2}to dn.base="cn=subschema" by * read
 olcPasswordHash: {CRYPT}
-olcPasswordCryptSaltFormat: "$6$%.12s"
 
 # Config db settings
 dn: olcDatabase=config,cn=config
