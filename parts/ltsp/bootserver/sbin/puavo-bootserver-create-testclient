@@ -71,13 +71,10 @@ EOF
 virsh define "${xmlfile}"
 
 read -p "Username: " username
-read -s -p "Password: " password
-
-echo
 
 puavo_domain=$(cat /etc/puavo/domain)
 
-curl --user "${username}:${password}" \
+curl --user "${username}" \
     --silent --show-error \
     "https://${puavo_domain}/users/schools.json" >"${tmpdir}/schools.json"
 
@@ -88,7 +85,7 @@ if [ -z "${school_id}" ]; then
     exit 1
 fi
 
-curl --user "${username}:${password}" \
+curl --user "${username}" \
     --silent --show-error \
     --max-time 3 \
     -H 'Content-Type: application/json' \
