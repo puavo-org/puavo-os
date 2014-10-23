@@ -75,6 +75,7 @@ read -p "Username: " username
 puavo_domain=$(cat /etc/puavo/domain)
 
 curl --user "${username}" \
+    --cacert /etc/puavo/certs/rootca.pem \
     --silent --show-error \
     "https://${puavo_domain}/users/schools.json" >"${tmpdir}/schools.json"
 
@@ -87,6 +88,7 @@ fi
 
 curl --user "${username}" \
     --silent --show-error \
+    --cacert /etc/puavo/certs/rootca.pem \
     --max-time 3 \
     -H 'Content-Type: application/json' \
     -H 'Accept: application/json' \
