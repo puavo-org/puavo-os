@@ -14,6 +14,7 @@ require 'highline/import'
 require 'json'
 require 'net/https'
 require 'securerandom'
+require 'set'
 require 'tempfile'
 
 def ask_school(schools)
@@ -47,9 +48,10 @@ def request_schools(https, username, password)
 end
 
 def request_register_device(https, username, password, school_id,
-                            hostname, mac, hosttype)
+                            hostname, mac, hosttype, tags=nil)
   register_json = JSON.generate("puavoHostname"   => hostname,
                                 "macAddress"      => mac,
+                                "puavoTag"        => tags,
                                 "puavoDeviceType" => hosttype,
                                 "classes"         => ["puavoNetbootDevice"])
 
@@ -69,6 +71,7 @@ bootserver_hostname = File.read('/etc/puavo/hostname').strip()
 testclient_hostname = "#{bootserver_hostname}-testclient2"
 testclient_hosttype = "fatclient"
 testclient_uuid = SecureRandom.uuid()
+testclient_tags = Set.new()
 
 testclient_mac = 'aa:cc'
 4.times { testclient_mac += ":#{SecureRandom.hex(1)}" }
@@ -77,6 +80,7 @@ opts = GetoptLong.new(
   ['--help', '-h', GetoptLong::NO_ARGUMENT],
   ['--hostname', GetoptLong::REQUIRED_ARGUMENT],
   ['--hosttype', GetoptLong::REQUIRED_ARGUMENT],
+  ['--tag', '-t', GetoptLong::REQUIRED_ARGUMENT],
 )
 
 opts.each do |opt, arg|
@@ -90,12 +94,15 @@ Create a libvirt virtual domain and register it to Puavo.
 -h, --help                       display this help and exit
     --hostname HOSTNAME          set testclient's hostname to HOSTNAME, defaults to '#{testclient_hostname}'
     --hosttype HOSTTYPE          set testclient's hosttype to HOSTTYPE, defaults to '#{testclient_hosttype}'
+-t, --tag TAG                    set tag TAG to device, can be given multiple times'
 EOF
     exit(0)
     when '--hostname'
       testclient_hostname = arg.to_s
     when '--hosttype'
       testclient_hosttype = arg.to_s
+    when '--tag'
+      testclient_tags << arg.to_s
   end
 end
 
@@ -197,7 +204,8 @@ school_name, school_id = ask_school(schools)
 
 begin
   request_register_device(https, username, password, school_id,
-                          testclient_hostname, testclient_mac, testclient_hosttype)
+                          testclient_hostname, testclient_mac,
+                          testclient_hosttype, testclient_tags.to_a)
 rescue Net::HTTPServerException => e
   STDERR.puts("Failed to register (error code #{e.response.code}) " \
               "'#{testclient_hostname}' to school '#{school_name}' " \
