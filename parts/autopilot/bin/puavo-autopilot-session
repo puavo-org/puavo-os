@@ -4,7 +4,7 @@
 #
 # Simulates system use by starting some programs and doing crazy things.
 # Takes no command line arguments, but can (and must) be configured with
-# tags from Puavo (reads tags from /etc/puavo/device.json).
+# tags from Puavo.
 # See README for more information.
 
 require 'json'
@@ -68,8 +68,8 @@ end
 # other functionality
 
 def get_autopilot_mode
-  conffile_path = '/etc/puavo/device.json'
-  conf = JSON.parse( IO.read(conffile_path) )
+  conffile_path = ENV['PUAVO_SESSION_PATH']
+  conf = JSON.parse( IO.read(conffile_path) )["device"]
 
   if not conf.has_key?('tags') then
     puts "No tags defined in #{ conffile_path }"
