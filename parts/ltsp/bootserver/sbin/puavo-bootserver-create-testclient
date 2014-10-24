@@ -1,28 +1,71 @@
-#!/bin/bash
+#!/usr/bin/env ruby1.9.3
 
-set -eu
+require 'highline/import'
+require 'json'
+require 'net/https'
+require 'securerandom'
+require 'tempfile'
 
-puavo_hostname=$(cat /etc/puavo/hostname)
-kvm_name="${puavo_hostname}-testclient"
-kvm_uuid=$(uuidgen)
-kvm_mac='aa:cc'
+def ask_school(schools)
+  school_names = []
+  school_ids   = []
 
-for _ in {1..4}; do
-    printf -v kvm_mac '%s:%02x' "${kvm_mac}" $(($RANDOM % 255))
-done
+  schools.each() do |school|
+    school_names << school['name']
+    school_ids   << school['puavo_id']
+  end
 
-tmpdir=
+  say("\nWhich school the device shall be registered to?")
+  choose() do |menu|
+    school_ids.each_with_index() do |id, i|
+      menu.choice(school_names[i]) { [school_names[i], id] }
+    end
+  end
 
-trap '[ -n "${tmpdir}" ] && rm -rf "${tmpdir}"' EXIT
+end
 
-tmpdir=$(mktemp -d --tmpdir)
+def request_schools(https, username, password)
+  schools = https.start() do |https|
+    request = Net::HTTP::Get.new('/users/schools.json')
+    request.basic_auth(username, password)
 
-xmlfile="${tmpdir}/${kvm_name}.xml"
+    response = https.request(request)
+    response.value()
 
-cat <<EOF >"${xmlfile}"
+    JSON.parse(response.body())
+  end
+end
+
+def request_register_device(https, username, password, school_id,
+                            hostname, mac, hosttype)
+  register_json = JSON.generate("puavoHostname"   => hostname,
+                                "macAddress"      => mac,
+                                "puavoDeviceType" => hosttype,
+                                "classes"         => ["puavoNetbootDevice"])
+
+  https.start() do |https|
+    request = Net::HTTP::Post.new("/devices/#{school_id}/devices.json")
+    request.basic_auth(username, password)
+    request['Content-Type'] = 'application/json'
+    request['Accept'] = 'application/json'
+    request.body = register_json
+
+    response = https.request(request)
+    response.value()
+  end
+end
+
+bootserver_hostname = File.read('/etc/puavo/hostname').strip()
+testclient_hostname = "#{bootserver_hostname}-testclient2"
+testclient_uuid = SecureRandom.uuid()
+
+testclient_mac = 'aa:cc'
+4.times { testclient_mac += ":#{SecureRandom.hex(1)}" }
+
+domain_xml = <<EOF
 <domain type='kvm'>
-  <name>${kvm_name}</name>
-  <uuid>${kvm_uuid}</uuid>
+  <name>#{testclient_hostname}</name>
+  <uuid>#{testclient_uuid}</uuid>
   <memory unit='KiB'>524288</memory>
   <currentMemory unit='KiB'>524288</currentMemory>
   <vcpu placement='static'>1</vcpu>
@@ -46,7 +89,7 @@ cat <<EOF >"${xmlfile}"
     <controller type='ide' index='0'>
     </controller>
     <interface type='bridge'>
-      <mac address='${kvm_mac}'/>
+      <mac address='#{testclient_mac}'/>
       <source bridge='ltsp0'/>
       <model type='e1000'/>
     </interface>
@@ -68,39 +111,44 @@ cat <<EOF >"${xmlfile}"
 </domain>
 EOF
 
-virsh define "${xmlfile}"
+tmpfile = Tempfile.new([testclient_hostname, '.xml'])
+begin
+  File.write(tmpfile.path, domain_xml)
+  virsh_success = system('virsh', '--quiet', 'define', "#{tmpfile.path}")
+ensure
+  tmpfile.close()
+  tmpfile.unlink()
+end
 
-read -p "Username: " username
+if !virsh_success
+  STDERR.puts("Failed to create virtual domain '#{testclient_hostname}'.")
+  exit(1)
+end
 
-puavo_domain=$(cat /etc/puavo/domain)
+puts("Created virtual domain '#{testclient_hostname}'")
 
-curl --user "${username}" \
-    --cacert /etc/puavo/certs/rootca.pem \
-    --silent --show-error \
-    "https://${puavo_domain}/users/schools.json" >"${tmpdir}/schools.json"
+puavo_domain = File.read('/etc/puavo/domain').strip()
 
-school_id=$(jq -r '.[] | select(.name == "Administration").puavo_id' "${tmpdir}/schools.json")
+say("\nAdministrator credentials for organization #{puavo_domain}")
+username = ask('Username: ')
+password = ask('Password: ') { |q| q.echo = '*' }
 
-if [ -z "${school_id}" ]; then
-    echo "error: could not resolve puavo_id of 'Administration' school" >&2
-    exit 1
-fi
+https              = Net::HTTP.new(puavo_domain, 443)
+https.use_ssl      = true
+https.ca_path      = '/etc/ssl/certs'
+https.verify_mode  = OpenSSL::SSL::VERIFY_PEER
+https.verify_depth = 5
 
-curl --user "${username}" \
-    --silent --show-error \
-    --cacert /etc/puavo/certs/rootca.pem \
-    --max-time 3 \
-    -H 'Content-Type: application/json' \
-    -H 'Accept: application/json' \
-    -X POST -d "
-{
-  \"puavoHostname\": \"${kvm_name}\",
-  \"macAddress\": \"${kvm_mac}\",
-  \"puavoDeviceType\": \"fatclient\",
-  \"classes\": [\"puavoNetbootDevice\"]
-}" "https://${puavo_domain}/devices/${school_id}/devices.json" >"${tmpdir}/device.json"
+schools = request_schools(https, username, password)
 
-if [ "${kvm_name}" != "$(jq -r .puavoHostname "${tmpdir}/device.json")" ]; then
-    echo "error: $(jq -r .puavoHostname[] "${tmpdir}/device.json")" >&2
-    exit 1
-fi
+school_name, school_id = ask_school(schools)
+
+begin
+  request_register_device(https, username, password, school_id,
+                          testclient_hostname, testclient_mac, "fatclient")
+rescue Net::HTTPServerException => e
+  STDERR.puts("Failed to register (error code #{e.response.code}) '#{testclient_hostname}' to school '#{school_name}' in organization '#{puavo_domain}'.")
+  exit(1)
+end
+
+puts("Device '#{testclient_hostname}' registered to school '#{school_name}' in organization '#{puavo_domain}'.")
