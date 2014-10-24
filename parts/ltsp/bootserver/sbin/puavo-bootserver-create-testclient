@@ -111,6 +111,16 @@ domain_xml = <<EOF
 </domain>
 EOF
 
+virsh_success = false
+exitvalue = 1
+
+at_exit do
+  if exitvalue != 0 && virsh_success
+    system('virsh', 'undefine', testclient_hostname)
+  end
+  exit(exitvalue)
+end
+
 tmpfile = Tempfile.new([testclient_hostname, '.xml'])
 begin
   File.write(tmpfile.path, domain_xml)
@@ -152,3 +162,5 @@ rescue Net::HTTPServerException => e
 end
 
 puts("Device '#{testclient_hostname}' registered to school '#{school_name}' in organization '#{puavo_domain}'.")
+
+exitvalue = 0
