@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby1.9.3
 
+require 'getoptlong'
 require 'highline/import'
 require 'json'
 require 'net/https'
@@ -61,6 +62,31 @@ testclient_uuid = SecureRandom.uuid()
 
 testclient_mac = 'aa:cc'
 4.times { testclient_mac += ":#{SecureRandom.hex(1)}" }
+
+opts = GetoptLong.new(
+  ['--help', '-h', GetoptLong::NO_ARGUMENT],
+  ['--hostname', GetoptLong::REQUIRED_ARGUMENT],
+)
+
+opts.each do |opt, arg|
+  case opt
+    when '--help'
+      puts <<EOF
+Usage: puavo-bootserver-create-testclient [OPTION]...
+
+-h, --help                       display this help and exit
+    --hostname HOSTNAME          set testclient's hostname to HOSTNAME, defaults to '#{testclient_hostname}'
+EOF
+    exit(0)
+    when '--hostname'
+      testclient_hostname = arg.to_s
+  end
+end
+
+if ARGV.length != 0
+  STDERR.puts "invalid number of arguments (#{ARGV.length}), expected 0"
+  exit 1
+end
 
 domain_xml = <<EOF
 <domain type='kvm'>
