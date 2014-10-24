@@ -183,10 +183,13 @@ begin
   request_register_device(https, username, password, school_id,
                           testclient_hostname, testclient_mac, "fatclient")
 rescue Net::HTTPServerException => e
-  STDERR.puts("Failed to register (error code #{e.response.code}) '#{testclient_hostname}' to school '#{school_name}' in organization '#{puavo_domain}'.")
+  STDERR.puts("Failed to register (error code #{e.response.code}) " \
+              "'#{testclient_hostname}' to school '#{school_name}' " \
+              "in organization '#{puavo_domain}'.")
   exit(1)
 end
 
-puts("Device '#{testclient_hostname}' registered to school '#{school_name}' in organization '#{puavo_domain}'.")
+puts("Device '#{testclient_hostname}' registered to school '#{school_name}' " \
+     "in organization '#{puavo_domain}'.")
 
 exitvalue = 0
