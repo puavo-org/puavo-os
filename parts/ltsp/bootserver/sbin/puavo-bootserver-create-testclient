@@ -58,6 +58,7 @@ end
 
 bootserver_hostname = File.read('/etc/puavo/hostname').strip()
 testclient_hostname = "#{bootserver_hostname}-testclient2"
+testclient_hosttype = "fatclient"
 testclient_uuid = SecureRandom.uuid()
 
 testclient_mac = 'aa:cc'
@@ -66,6 +67,7 @@ testclient_mac = 'aa:cc'
 opts = GetoptLong.new(
   ['--help', '-h', GetoptLong::NO_ARGUMENT],
   ['--hostname', GetoptLong::REQUIRED_ARGUMENT],
+  ['--hosttype', GetoptLong::REQUIRED_ARGUMENT],
 )
 
 opts.each do |opt, arg|
@@ -76,10 +78,13 @@ Usage: puavo-bootserver-create-testclient [OPTION]...
 
 -h, --help                       display this help and exit
     --hostname HOSTNAME          set testclient's hostname to HOSTNAME, defaults to '#{testclient_hostname}'
+    --hosttype HOSTTYPE          set testclient's hosttype to HOSTTYPE, defaults to '#{testclient_hosttype}'
 EOF
     exit(0)
     when '--hostname'
       testclient_hostname = arg.to_s
+    when '--hosttype'
+      testclient_hosttype = arg.to_s
   end
 end
 
@@ -181,7 +186,7 @@ school_name, school_id = ask_school(schools)
 
 begin
   request_register_device(https, username, password, school_id,
-                          testclient_hostname, testclient_mac, "fatclient")
+                          testclient_hostname, testclient_mac, testclient_hosttype)
 rescue Net::HTTPServerException => e
   STDERR.puts("Failed to register (error code #{e.response.code}) " \
               "'#{testclient_hostname}' to school '#{school_name}' " \
