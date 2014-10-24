@@ -68,7 +68,7 @@ def request_register_device(https, username, password, school_id,
 end
 
 bootserver_hostname = File.read('/etc/puavo/hostname').strip()
-testclient_hostname = "#{bootserver_hostname}-testclient2"
+testclient_hostname = "#{bootserver_hostname}-testclient"
 testclient_hosttype = "fatclient"
 testclient_uuid = SecureRandom.uuid()
 testclient_tags = Set.new()
