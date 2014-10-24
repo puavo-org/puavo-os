@@ -1,5 +1,14 @@
 #!/usr/bin/env ruby1.9.3
 
+##
+## This script creates a libvirt virtual domain (virsh define) and
+## registers it to Puavo either as a fatclient (default) or
+## thinclient. It asks user for the school which the device shall be
+## registered to.
+##
+## Usage: puavo-bootserver-create-testclient --help
+##
+
 require 'getoptlong'
 require 'highline/import'
 require 'json'
@@ -75,6 +84,8 @@ opts.each do |opt, arg|
     when '--help'
       puts <<EOF
 Usage: puavo-bootserver-create-testclient [OPTION]...
+
+Create a libvirt virtual domain and register it to Puavo.
 
 -h, --help                       display this help and exit
     --hostname HOSTNAME          set testclient's hostname to HOSTNAME, defaults to '#{testclient_hostname}'
