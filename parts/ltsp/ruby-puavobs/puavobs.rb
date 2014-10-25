@@ -32,6 +32,68 @@ module PuavoBS
   end
   private_class_method :get_school
 
+  def PuavoBS.get_school_and_device_ids(hostname)
+    uri = IO.popen('puavo-resolve-api-server') do |io|
+      output = io.read().strip()
+      io.close()
+      $?.success? ? URI(output) : nil
+    end
+
+    https = Net::HTTP.new(uri.host, uri.port)
+    https.use_ssl = true
+    https.verify_mode  = OpenSSL::SSL::VERIFY_PEER
+    https.verify_depth = 5
+
+    device_json = https.start() do |https|
+      request = Net::HTTP::Get.new("/v3/devices/#{hostname}")
+      request['Accept'] = 'application/json'
+
+      response = https.request(request)
+      response.value()
+
+      JSON.parse(response.body())
+    end
+
+    school_id = Integer(/^puavoId=([0-9]+),/.match(device_json['school_dn'])[1])
+    device_id = Integer(device_json['puavo_id'])
+    [school_id, device_id]
+  end
+  private_class_method :get_school_and_device_ids
+
+  def PuavoBS.get_school_ids(username, password)
+    puavo_id = Integer(File.read('/etc/puavo/id').strip())
+    server = File.read('/etc/puavo/domain').strip()
+
+    https              = Net::HTTP.new(server, 443)
+    https.use_ssl      = true
+    https.ca_path      = '/etc/ssl/certs'
+    https.verify_mode  = OpenSSL::SSL::VERIFY_PEER
+    https.verify_depth = 5
+
+    schools = https.start() do |https|
+      request = Net::HTTP::Get.new("/devices/servers/#{puavo_id}.xml")
+      request.basic_auth(username, password)
+      request['Accept'] = 'application/xml'
+
+      response = https.request(request)
+      response.value()
+
+      doc = REXML::Document.new(response.body())
+      doc.elements.collect('/server/puavoSchools/puavoSchool') do |element|
+        Integer(/^puavoId=([0-9]+),/.match(element.text())[1])
+      end
+    end
+  end
+  private_class_method :get_school_ids
+
+  def PuavoBS.ask_admin_credentials()
+    puavo_domain = File.read('/etc/puavo/domain').strip()
+    say("Administrator credentials for organization #{puavo_domain}")
+    username = ask('Username: ')
+    password = ask('Password: ') { |q| q.echo = '*' }
+    [username, password]
+  end
+
   def PuavoBS.ask_school(username, password)
     school_ids = PuavoBS.get_school_ids(username, password)
     school_names = school_ids.collect() do |school_id|
@@ -79,34 +141,6 @@ module PuavoBS
     end
   end
 
-  def PuavoBS.get_school_and_device_ids(hostname)
-    uri = IO.popen('puavo-resolve-api-server') do |io|
-      output = io.read().strip()
-      io.close()
-      $?.success? ? URI(output) : nil
-    end
-
-    https = Net::HTTP.new(uri.host, uri.port)
-    https.use_ssl = true
-    https.verify_mode  = OpenSSL::SSL::VERIFY_PEER
-    https.verify_depth = 5
-
-    device_json = https.start() do |https|
-      request = Net::HTTP::Get.new("/v3/devices/#{hostname}")
-      request['Accept'] = 'application/json'
-
-      response = https.request(request)
-      response.value()
-
-      JSON.parse(response.body())
-    end
-
-    school_id = Integer(/^puavoId=([0-9]+),/.match(device_json['school_dn'])[1])
-    device_id = Integer(device_json['puavo_id'])
-    [school_id, device_id]
-  end
-  private_class_method :get_school_and_device_ids
-
   def PuavoBS.unregister_device(username, password, hostname)
     school_id, device_id = PuavoBS.get_school_and_device_ids(hostname)
     puavo_domain = File.read('/etc/puavo/domain').strip()
@@ -126,32 +160,6 @@ module PuavoBS
       end
     end
   end
-
-  def PuavoBS.get_school_ids(username, password)
-    puavo_id = Integer(File.read('/etc/puavo/id').strip())
-    server = File.read('/etc/puavo/domain').strip()
-
-    https              = Net::HTTP.new(server, 443)
-    https.use_ssl      = true
-    https.ca_path      = '/etc/ssl/certs'
-    https.verify_mode  = OpenSSL::SSL::VERIFY_PEER
-    https.verify_depth = 5
-
-    schools = https.start() do |https|
-      request = Net::HTTP::Get.new("/devices/servers/#{puavo_id}.xml")
-      request.basic_auth(username, password)
-      request['Accept'] = 'application/xml'
-
-      response = https.request(request)
-      response.value()
-
-      doc = REXML::Document.new(response.body())
-      doc.elements.collect('/server/puavoSchools/puavoSchool') do |element|
-        Integer(/^puavoId=([0-9]+),/.match(element.text())[1])
-      end
-    end
-  end
-  private_class_method :get_school_ids
 
   def PuavoBS.virsh_define_testclient(hostname)
     uuid = SecureRandom.uuid()
@@ -216,14 +224,6 @@ EOF
       tmpfile.unlink()
     end
     success ? mac : nil
-  end
-
-  def PuavoBS.ask_admin_credentials()
-    puavo_domain = File.read('/etc/puavo/domain').strip()
-    say("Administrator credentials for organization #{puavo_domain}")
-    username = ask('Username: ')
-    password = ask('Password: ') { |q| q.echo = '*' }
-    [username, password]
   end
 
 end
