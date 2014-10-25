@@ -69,7 +69,12 @@ module PuavoBS
       request.body = register_json
 
       response = https.request(request)
-      response.value()
+      begin
+        response.value()
+        nil
+      rescue
+        response.code
+      end
     end
   end
 
