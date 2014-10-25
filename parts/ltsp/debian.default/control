@@ -24,6 +24,13 @@ Conflicts: ltsp-server, tftpd-hpa
 Description: Puavo LTSP bootserver runs infrastructure services for thin/fat
  clients and LTSP servers. No user sessions are run on the server itself.
 
+Package: ruby-puavobs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ruby1.9.3, ruby-highline
+Description: Puavo Bootserver library for Ruby
+ This library provides helper functions for common operations done in
+ Puavo Bootservers.
+
 Package: puavo-ltsp-client
 Architecture: all
 Conflicts: ltsp-lightdm
