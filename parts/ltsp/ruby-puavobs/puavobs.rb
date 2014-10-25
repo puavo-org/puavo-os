@@ -78,6 +78,54 @@ module PuavoBS
     end
   end
 
+  def PuavoBS.get_school_and_device_ids(hostname)
+    uri = IO.popen('puavo-resolve-api-server') do |io|
+      output = io.read().strip()
+      io.close()
+      $?.success? ? URI(output) : nil
+    end
+
+    https = Net::HTTP.new(uri.host, uri.port)
+    https.use_ssl = true
+    https.verify_mode  = OpenSSL::SSL::VERIFY_PEER
+    https.verify_depth = 5
+
+    device_json = https.start() do |https|
+      request = Net::HTTP::Get.new("/v3/devices/#{hostname}")
+      request['Accept'] = 'application/json'
+
+      response = https.request(request)
+      response.value()
+
+      JSON.parse(response.body())
+    end
+
+    school_id = Integer(/^puavoId=([0-9]+),/.match(device_json['school_dn'])[1])
+    device_id = Integer(device_json['puavo_id'])
+    [school_id, device_id]
+  end
+  private_class_method :get_school_and_device_ids
+
+  def PuavoBS.unregister_device(username, password, hostname)
+    school_id, device_id = PuavoBS.get_school_and_device_ids(hostname)
+    puavo_domain = File.read('/etc/puavo/domain').strip()
+
+    https = Net::HTTP.new(puavo_domain, 443)
+    https.use_ssl = true
+    https.verify_mode  = OpenSSL::SSL::VERIFY_PEER
+    https.verify_depth = 5
+
+    https.start() do |https|
+      request = Net::HTTP::Delete.new("/devices/#{school_id}/devices/#{device_id}")
+      request.basic_auth(username, password)
+
+      response = https.request(request)
+      if response.code != '302' then
+        response.value()
+      end
+    end
+  end
+
   def PuavoBS.get_schools_ids(username, password)
     puavo_id = Integer(File.read('/etc/puavo/id').strip())
     server = File.read('/etc/puavo/domain').strip()
