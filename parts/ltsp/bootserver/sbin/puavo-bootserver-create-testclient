@@ -11,7 +11,6 @@
 
 ## Standard libraries.
 require 'getoptlong'
-require 'net/https'
 require 'set'
 
 ## 3rd-party libraries.
@@ -54,7 +53,7 @@ EOF
 end
 
 if ARGV.length != 0
-  STDERR.puts "invalid number of arguments (#{ARGV.length}), expected 0"
+  STDERR.puts("error: invalid number of arguments (#{ARGV.length}), expected 0")
   exit 1
 end
 
@@ -69,13 +68,12 @@ at_exit do
 end
 
 testclient_mac = PuavoBS.virsh_define_testclient(testclient_hostname)
-
 if testclient_mac.nil?
-  STDERR.puts("Failed to create virtual domain '#{testclient_hostname}'.")
+  STDERR.puts("error: failed to create #{testclient_hostname}")
   exit(1)
 end
 
-puts("Created virtual domain '#{testclient_hostname}'")
+puts("#{testclient_hostname} created")
 
 puavo_domain = File.read('/etc/puavo/domain').strip()
 
@@ -85,18 +83,15 @@ password = ask('Password: ') { |q| q.echo = '*' }
 
 school_name, school_id = PuavoBS.ask_school(username, password)
 
-begin
-  PuavoBS.register_device(username, password, school_id,
-                          testclient_hostname, testclient_mac,
-                          testclient_hosttype, testclient_tags.to_a)
-rescue Net::HTTPServerException => e
-  STDERR.puts("Failed to register (error code #{e.response.code}) " \
-              "'#{testclient_hostname}' to school '#{school_name}' " \
-              "in organization '#{puavo_domain}'.")
+error_code = PuavoBS.register_device(username, password, school_id,
+                                     testclient_hostname, testclient_mac,
+                                     testclient_hosttype, testclient_tags.to_a)
+if !error_code.nil? then
+  STDERR.puts("error: failed to register #{testclient_hostname}: " \
+              "error code #{error_code}")
   exit(1)
 end
 
-puts("Device '#{testclient_hostname}' registered to school '#{school_name}' " \
-     "in organization '#{puavo_domain}'.")
+puts("#{testclient_hostname} registered")
 
 exitvalue = 0
