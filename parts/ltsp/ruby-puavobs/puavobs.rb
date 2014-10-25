@@ -2,6 +2,8 @@
 require 'json'
 require 'net/https'
 require 'rexml/document'
+require 'securerandom'
+require 'tempfile'
 
 ## 3rd-party libraries.
 require 'highline/import'
@@ -94,6 +96,71 @@ module PuavoBS
         Integer(/^puavoId=([0-9]+),/.match(element.text())[1])
       end
     end
+  end
+
+  def PuavoBS.virsh_define_testclient(hostname)
+    uuid = SecureRandom.uuid()
+    mac = 'aa:cc'
+    4.times { mac += ":#{SecureRandom.hex(1)}" }
+
+    xml = <<EOF
+<domain type='kvm'>
+  <name>#{hostname}</name>
+  <uuid>#{uuid}</uuid>
+  <memory unit='KiB'>524288</memory>
+  <currentMemory unit='KiB'>524288</currentMemory>
+  <vcpu placement='static'>1</vcpu>
+  <os>
+    <type arch='x86_64' machine='pc-1.0'>hvm</type>
+    <boot dev='network'/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+    <pae/>
+  </features>
+  <clock offset='utc'/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <devices>
+    <emulator>/usr/bin/kvm</emulator>
+    <controller type='usb' index='0'>
+    </controller>
+    <controller type='ide' index='0'>
+    </controller>
+    <interface type='bridge'>
+      <mac address='#{mac}'/>
+      <source bridge='ltsp0'/>
+      <model type='e1000'/>
+    </interface>
+    <serial type='pty'>
+      <target port='0'/>
+    </serial>
+    <console type='pty'>
+      <target type='serial' port='0'/>
+    </console>
+    <video>
+      <model type='vga' vram='8192' heads='1'>
+        <acceleration accel3d='no' accel2d='yes'/>
+      </model>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
+    </video>
+    <memballoon model='virtio'>
+    </memballoon>
+  </devices>
+</domain>
+EOF
+
+    tmpfile = Tempfile.new([hostname, '.xml'])
+    begin
+      File.write(tmpfile.path, xml)
+      success = system('virsh', '--quiet', 'define', "#{tmpfile.path}")
+    ensure
+      tmpfile.close()
+      tmpfile.unlink()
+    end
+    success ? mac : nil
   end
 
 end
