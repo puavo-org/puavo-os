@@ -75,11 +75,7 @@ end
 
 puts("#{testclient_hostname} created")
 
-puavo_domain = File.read('/etc/puavo/domain').strip()
-
-say("\nAdministrator credentials for organization #{puavo_domain}")
-username = ask('Username: ')
-password = ask('Password: ') { |q| q.echo = '*' }
+username, password = PuavoBS.ask_admin_credentials()
 
 school_name, school_id = PuavoBS.ask_school(username, password)
 
