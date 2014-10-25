@@ -11,11 +11,8 @@
 
 ## Standard libraries.
 require 'getoptlong'
-require 'json'
 require 'net/https'
-require 'securerandom'
 require 'set'
-require 'tempfile'
 
 ## 3rd-party libraries.
 require 'highline/import'
@@ -24,11 +21,7 @@ require 'puavobs'
 bootserver_hostname = File.read('/etc/puavo/hostname').strip()
 testclient_hostname = "#{bootserver_hostname}-testclient"
 testclient_hosttype = "fatclient"
-testclient_uuid = SecureRandom.uuid()
 testclient_tags = Set.new()
-
-testclient_mac = 'aa:cc'
-4.times { testclient_mac += ":#{SecureRandom.hex(1)}" }
 
 opts = GetoptLong.new(
   ['--help', '-h', GetoptLong::NO_ARGUMENT],
@@ -65,75 +58,19 @@ if ARGV.length != 0
   exit 1
 end
 
-domain_xml = <<EOF
-<domain type='kvm'>
-  <name>#{testclient_hostname}</name>
-  <uuid>#{testclient_uuid}</uuid>
-  <memory unit='KiB'>524288</memory>
-  <currentMemory unit='KiB'>524288</currentMemory>
-  <vcpu placement='static'>1</vcpu>
-  <os>
-    <type arch='x86_64' machine='pc-1.0'>hvm</type>
-    <boot dev='network'/>
-  </os>
-  <features>
-    <acpi/>
-    <apic/>
-    <pae/>
-  </features>
-  <clock offset='utc'/>
-  <on_poweroff>destroy</on_poweroff>
-  <on_reboot>restart</on_reboot>
-  <on_crash>restart</on_crash>
-  <devices>
-    <emulator>/usr/bin/kvm</emulator>
-    <controller type='usb' index='0'>
-    </controller>
-    <controller type='ide' index='0'>
-    </controller>
-    <interface type='bridge'>
-      <mac address='#{testclient_mac}'/>
-      <source bridge='ltsp0'/>
-      <model type='e1000'/>
-    </interface>
-    <serial type='pty'>
-      <target port='0'/>
-    </serial>
-    <console type='pty'>
-      <target type='serial' port='0'/>
-    </console>
-    <video>
-      <model type='vga' vram='8192' heads='1'>
-        <acceleration accel3d='no' accel2d='yes'/>
-      </model>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
-    </video>
-    <memballoon model='virtio'>
-    </memballoon>
-  </devices>
-</domain>
-EOF
-
-virsh_success = false
+testclient_mac = nil
 exitvalue = 1
 
 at_exit do
-  if exitvalue != 0 && virsh_success
+  if exitvalue != 0 && !testclient_mac.nil?
     system('virsh', 'undefine', testclient_hostname)
   end
   exit(exitvalue)
 end
 
-tmpfile = Tempfile.new([testclient_hostname, '.xml'])
-begin
-  File.write(tmpfile.path, domain_xml)
-  virsh_success = system('virsh', '--quiet', 'define', "#{tmpfile.path}")
-ensure
-  tmpfile.close()
-  tmpfile.unlink()
-end
+testclient_mac = PuavoBS.virsh_define_testclient(testclient_hostname)
 
-if !virsh_success
+if testclient_mac.nil?
   STDERR.puts("Failed to create virtual domain '#{testclient_hostname}'.")
   exit(1)
 end
