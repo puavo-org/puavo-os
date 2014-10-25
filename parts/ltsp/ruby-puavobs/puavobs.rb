@@ -30,7 +30,6 @@ module PuavoBS
       JSON.parse(response.body())
     end
   end
-  private_class_method :get_school
 
   def PuavoBS.get_school_and_device_ids(hostname)
     uri = IO.popen('puavo-resolve-api-server') do |io|
@@ -58,7 +57,6 @@ module PuavoBS
     device_id = Integer(device_json['puavo_id'])
     [school_id, device_id]
   end
-  private_class_method :get_school_and_device_ids
 
   def PuavoBS.get_school_ids(username, password)
     puavo_id = Integer(File.read('/etc/puavo/id').strip())
@@ -84,7 +82,6 @@ module PuavoBS
       end
     end
   end
-  private_class_method :get_school_ids
 
   def PuavoBS.ask_admin_credentials()
     puavo_domain = File.read('/etc/puavo/domain').strip()
