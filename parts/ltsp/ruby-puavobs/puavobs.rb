@@ -8,15 +8,31 @@ require 'highline/import'
 
 module PuavoBS
 
+  def PuavoBS.get_school(username, password, school_id)
+    server = File.read('/etc/puavo/domain').strip()
+
+    https              = Net::HTTP.new(server, 443)
+    https.use_ssl      = true
+    https.ca_path      = '/etc/ssl/certs'
+    https.verify_mode  = OpenSSL::SSL::VERIFY_PEER
+    https.verify_depth = 5
+
+    https.start() do |https|
+      request = Net::HTTP::Get.new("/users/schools/#{school_id}.json")
+      request.basic_auth(username, password)
+      request['Accept'] = 'application/json'
+
+      response = https.request(request)
+      response.value()
+
+      JSON.parse(response.body())
+    end
+  end
+
   def PuavoBS.ask_school(username, password)
-    schools = PuavoBS.get_schools(username, password)
-
-    school_names = []
-    school_ids   = []
-
-    schools.each() do |school|
-      school_names << school['name']
-      school_ids   << school['puavo_id']
+    school_ids = PuavoBS.get_schools_ids(username, password)
+    school_names = school_ids.collect() do |school_id|
+      PuavoBS.get_school(username, password, school_id)["name"]
     end
 
     say("\nWhich school the device shall be registered to?")
@@ -55,7 +71,7 @@ module PuavoBS
     end
   end
 
-  def PuavoBS.get_schools(username, password)
+  def PuavoBS.get_schools_ids(username, password)
     puavo_id = Integer(File.read('/etc/puavo/id').strip())
     server = File.read('/etc/puavo/domain').strip()
 
