@@ -134,9 +134,9 @@ module PuavoBS
       response = https.request(request)
       begin
         response.value()
-        nil
+        0
       rescue
-        response.code
+        Integer(response.code)
       end
     end
   end
@@ -155,8 +155,15 @@ module PuavoBS
       request.basic_auth(username, password)
 
       response = https.request(request)
-      if response.code != '302' then
+      if response.code == '302' then
+        return 0
+      end
+
+      begin
         response.value()
+        0
+      rescue
+        Integer(response.code)
       end
     end
   end
