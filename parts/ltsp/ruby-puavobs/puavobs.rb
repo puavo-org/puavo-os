@@ -168,4 +168,12 @@ EOF
     success ? mac : nil
   end
 
+  def PuavoBS.ask_admin_credentials()
+    puavo_domain = File.read('/etc/puavo/domain').strip()
+    say("Administrator credentials for organization #{puavo_domain}")
+    username = ask('Username: ')
+    password = ask('Password: ') { |q| q.echo = '*' }
+    [username, password]
+  end
+
 end
