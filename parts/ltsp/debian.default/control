@@ -26,7 +26,8 @@ Description: Puavo LTSP bootserver runs infrastructure services for thin/fat
 
 Package: ruby-puavobs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, ruby1.9.3, ruby-highline
+XS-Ruby-Versions: ruby1.9.1
+Depends: ${shlibs:Depends}, ${misc:Depends}, ruby1.9.1, ruby-highline
 Description: Puavo Bootserver library for Ruby
  This library provides helper functions for common operations done in
  Puavo Bootservers.

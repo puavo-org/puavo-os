@@ -1,6 +1,6 @@
 prefix = /usr/local
 
-libdir = $(prefix)/lib/ruby/vendor_ruby
+libdir = $(prefix)/lib/ruby/1.9.1
 
 INSTALL = install
 INSTALL_DATA = $(INSTALL) -m 644
