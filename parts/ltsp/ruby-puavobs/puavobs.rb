@@ -30,9 +30,10 @@ module PuavoBS
       JSON.parse(response.body())
     end
   end
+  private_class_method :get_school
 
   def PuavoBS.ask_school(username, password)
-    school_ids = PuavoBS.get_schools_ids(username, password)
+    school_ids = PuavoBS.get_school_ids(username, password)
     school_names = school_ids.collect() do |school_id|
       PuavoBS.get_school(username, password, school_id)["name"]
     end
@@ -126,7 +127,7 @@ module PuavoBS
     end
   end
 
-  def PuavoBS.get_schools_ids(username, password)
+  def PuavoBS.get_school_ids(username, password)
     puavo_id = Integer(File.read('/etc/puavo/id').strip())
     server = File.read('/etc/puavo/domain').strip()
 
@@ -150,6 +151,7 @@ module PuavoBS
       end
     end
   end
+  private_class_method :get_school_ids
 
   def PuavoBS.virsh_define_testclient(hostname)
     uuid = SecureRandom.uuid()
