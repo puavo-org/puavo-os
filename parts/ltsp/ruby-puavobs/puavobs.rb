@@ -85,7 +85,7 @@ module PuavoBS
 
   def PuavoBS.ask_admin_credentials()
     puavo_domain = File.read('/etc/puavo/domain').strip()
-    say("Administrator credentials for organization #{puavo_domain}")
+    say("Enter administrator credentials for organization #{puavo_domain}")
     username = ask('Username: ')
     password = ask('Password: ') { |q| q.echo = '*' }
     [username, password]
@@ -97,7 +97,7 @@ module PuavoBS
       PuavoBS.get_school(username, password, school_id)["name"]
     end
 
-    say("\nWhich school the device shall be registered to?")
+    say("Select the school which the device shall be registered to")
     choose() do |menu|
       school_ids.each_with_index() do |id, i|
         menu.choice(school_names[i]) { [school_names[i], id] }
