@@ -129,9 +129,8 @@ module PuavoBS
       request.body = register_json
 
       response = https.request(request)
-      response_code = Integer(response.code)
       response.value()
-      response_code
+      Integer(response.code)
     end
   end
 
@@ -150,9 +149,8 @@ module PuavoBS
       request.basic_auth(username, password)
 
       response = https.request(request)
-      response_code = Integer(response.code)
       response.value()
-      response_code
+      Integer(response.code)
     end
   end
 
