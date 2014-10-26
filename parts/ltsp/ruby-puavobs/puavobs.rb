@@ -145,15 +145,12 @@ module PuavoBS
     https.verify_depth = 5
 
     https.start() do |https|
-      request = Net::HTTP::Delete.new("/devices/#{school_id}/devices/#{device_id}")
+      path = "/devices/#{school_id}/devices/#{device_id}.xml"
+      request = Net::HTTP::Delete.new(path)
       request.basic_auth(username, password)
 
       response = https.request(request)
       response_code = Integer(response.code)
-      if response_code == 302 then
-        ## Puavo seems to make a redirection on success.
-        break response_code
-      end
       response.value()
       response_code
     end
