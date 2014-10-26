@@ -18,7 +18,7 @@ require 'puavobs'
 
 bootserver_hostname = File.read('/etc/puavo/hostname').strip()
 testclient_hostname = "#{bootserver_hostname}-testclient"
-testclient_hosttype = "fatclient"
+testclient_hosttype = 'fatclient'
 testclient_tags = Set.new()
 
 opts = GetoptLong.new(
