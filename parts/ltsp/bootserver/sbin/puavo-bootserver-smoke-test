@@ -1,0 +1,81 @@
+#!/usr/bin/env ruby1.9.1
+
+## Standard libraries.
+require 'getoptlong'
+
+## 3rd-party libraries.
+require 'highline/import'
+require 'puavobs'
+
+admin_username, admin_password = PuavoBS.ask_admin_credentials()
+school_name, school_id = PuavoBS.ask_school(admin_username, admin_password)
+bootserver_hostname = File.read('/etc/puavo/hostname').strip()
+testclient_hostname = "#{bootserver_hostname}-smoke-test"
+testclient_hosttype = 'fatclient'
+testclient_tags     = []
+
+### Create the test device and register the cleanup proc.
+testclient_mac = nil
+at_exit do
+  ## Try to remove the virtual domain if it was created.
+  if !testclient_mac.nil?
+    Process.wait(Process.spawn('virsh', 'undefine', testclient_hostname,
+                               :out => '/dev/null'))
+    exit(1) unless $?.success?
+  end
+end
+testclient_mac = PuavoBS.virsh_define_testclient(testclient_hostname)
+exit(1) if testclient_mac.nil?
+
+
+### Create the test user.
+## TODO: create a test user automatically, without asking
+## anything. Naturally, the test user must be removed afterwards.
+say('Enter test user credentials')
+testuser_username = ask('Username: ')
+testuser_password = ask('Password: ')
+autopilot_tag = "autopilot:smoke:#{testuser_username}:#{testuser_password}"
+testclient_tags << autopilot_tag
+
+
+### Register the test device and register the cleanup proc.
+register_status = nil
+at_exit do
+  if !register_status.nil?
+    PuavoBS.unregister_device(admin_username, admin_password, testclient_hostname)
+  end
+end
+register_status = PuavoBS.register_device(admin_username, admin_password,
+                                          school_id,
+                                          testclient_hostname, testclient_mac,
+                                          testclient_hosttype, testclient_tags)
+
+
+### Boot up the test device and register the cleanup proc.
+testclient_started = false
+at_exit do
+  ## Destroy the virtual domain if we started it.
+  if testclient_started
+    Process.wait(Process.spawn('virsh', 'destroy', testclient_hostname,
+                               :out => '/dev/null'))
+    exit(1) unless $?.success?
+  end
+end
+testclient_started = Process.wait2(Process.spawn('virsh', 'start',
+                                                 testclient_hostname,
+                                                 :out => '/dev/null'))[1].success?
+exit(1) unless testclient_started
+
+
+puts('Initialized the test client with following configuration:')
+puts("  Organization : #{File.read('/etc/puavo/domain').strip()}")
+puts("  School       : #{school_name}")
+puts("  Hostname     : #{testclient_hostname}")
+puts("  Hosttype     : #{testclient_hosttype}")
+puts("  MAC address  : #{testclient_mac}")
+puts("  Tags         : #{testclient_tags.join(' ')}")
+
+## TODO: implement smoke trace capturing and analysis to determine
+## success/failure of the test.
+
+puts('Test passed.')
