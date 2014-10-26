@@ -129,11 +129,12 @@ module PuavoBS
       request.body = register_json
 
       response = https.request(request)
+      response_code = Integer(response.code)
       begin
         response.value()
-        0
+        [true, response_code]
       rescue
-        Integer(response.code)
+        [false, response_code]
       end
     end
   end
@@ -152,15 +153,16 @@ module PuavoBS
       request.basic_auth(username, password)
 
       response = https.request(request)
-      if response.code == '302' then
-        return 0
+      response_code = Integer(response.code)
+      if response_code == 302 then
+        return [true, response_code]
       end
 
       begin
         response.value()
-        0
+        [true, response_code]
       rescue
-        Integer(response.code)
+        [false, response_code]
       end
     end
   end
