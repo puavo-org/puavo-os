@@ -37,9 +37,12 @@ Usage: puavo-bootserver-create-testclient [OPTION]...
 Create a libvirt virtual domain and register it to Puavo.
 
 -h, --help                       display this help and exit
-    --hostname HOSTNAME          set testclient's hostname to HOSTNAME, defaults to '#{testclient_hostname}'
-    --hosttype HOSTTYPE          set testclient's hosttype to HOSTTYPE, defaults to '#{testclient_hosttype}'
--t, --tag TAG                    set tag TAG to device, can be given multiple times'
+    --hostname HOSTNAME          set testclient's hostname to HOSTNAME,
+                                 defaults to '#{testclient_hostname}'
+    --hosttype HOSTTYPE          set testclient's hosttype to HOSTTYPE,
+                                 defaults to '#{testclient_hosttype}'
+-t, --tag TAG                    set tag TAG to device, can be given multiple
+                                 times'
 EOF
     exit(0)
     when '--hostname'
