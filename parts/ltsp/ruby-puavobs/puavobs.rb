@@ -222,7 +222,9 @@ EOF
     tmpfile = Tempfile.new([hostname, '.xml'])
     begin
       File.write(tmpfile.path, xml)
-      success = system('virsh', '--quiet', 'define', "#{tmpfile.path}")
+      pid = Process.spawn('virsh', 'define', tmpfile.path, STDOUT => '/dev/null')
+      Process.wait(pid)
+      success = $?.success?
     ensure
       tmpfile.close()
       tmpfile.unlink()
