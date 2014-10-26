@@ -14,7 +14,6 @@ require 'getoptlong'
 require 'set'
 
 ## 3rd-party libraries.
-require 'highline/import'
 require 'puavobs'
 
 bootserver_hostname = File.read('/etc/puavo/hostname').strip()
