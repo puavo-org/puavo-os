@@ -130,12 +130,8 @@ module PuavoBS
 
       response = https.request(request)
       response_code = Integer(response.code)
-      begin
-        response.value()
-        [true, response_code]
-      rescue
-        [false, response_code]
-      end
+      response.value()
+      response_code
     end
   end
 
@@ -155,15 +151,11 @@ module PuavoBS
       response = https.request(request)
       response_code = Integer(response.code)
       if response_code == 302 then
-        return [true, response_code]
+        ## Puavo seems to make a redirection on success.
+        break response_code
       end
-
-      begin
-        response.value()
-        [true, response_code]
-      rescue
-        [false, response_code]
-      end
+      response.value()
+      response_code
     end
   end
 

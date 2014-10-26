@@ -83,13 +83,9 @@ username, password = PuavoBS.ask_admin_credentials()
 
 school_name, school_id = PuavoBS.ask_school(username, password)
 
-ok, code = PuavoBS.register_device(username, password, school_id,
-                                   testclient_hostname, testclient_mac,
-                                   testclient_hosttype, testclient_tags.to_a)
-if !ok
-  STDERR.puts("error: failed to register #{testclient_hostname}: status #{code}")
-  exit(1)
-end
+PuavoBS.register_device(username, password, school_id,
+                        testclient_hostname, testclient_mac,
+                        testclient_hosttype, testclient_tags.to_a)
 
 puts("#{testclient_hostname} registered")
 
