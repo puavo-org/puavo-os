@@ -61,8 +61,10 @@ testclient_mac = nil
 exitvalue = 1
 
 at_exit do
-  if exitvalue != 0 && !testclient_mac.nil?
-    system('virsh', 'undefine', testclient_hostname)
+  if exitvalue != 0 && !testclient_mac.nil? then
+    pid = Process.spawn('virsh', 'undefine', testclient_hostname,
+                        STDOUT => '/dev/null')
+    Process.wait(pid)
   end
   exit(exitvalue)
 end
