@@ -54,7 +54,7 @@ Usage:
     --apt-proxy    [default is "localhost:3142", "no" may be used to turn off]
     --arch         [default is "i386"]
     --distribution [default is "trusty"]
-    --gitbranch    [default is "trusty"]
+    --gitbranch    [default is "master"]
     --mirror       [default is "fi.archive.ubuntu.com"]
 
 EOF
@@ -99,7 +99,7 @@ fi
 # defaults for these parameters (can be overridden on the command line args)
 arch=i386
 distribution=trusty
-gitbranch=trusty
+gitbranch=master
 
 imagetype=
 puppet_classes=
