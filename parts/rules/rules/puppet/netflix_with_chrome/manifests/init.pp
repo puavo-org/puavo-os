@@ -7,6 +7,9 @@ class netflix_with_chrome {
       require => Package['google-chrome-beta'],
       source  => 'puppet:///modules/netflix_with_chrome/netflix';
 
+    '/usr/local/share/applications':
+      ensure  => directory;
+
     '/usr/local/share/applications/netflix.desktop':
       require => File['/usr/local/bin/netflix'],
       source  => 'puppet:///modules/netflix_with_chrome/netflix.desktop';
