@@ -83,7 +83,7 @@ def get_autopilot_mode
 
   autopilot_tags = conf['tags'].select { |s| s.match(/^autopilot/) }
 
-  available_modes = %w(stress)
+  available_modes = %w(smoke stress)
   mode            = ''
 
   autopilot_tags.each do |autopilot_tag|
@@ -120,6 +120,19 @@ def get_random_command_string(sum, commands_with_cumulative_probability)
 end
 
 mode = get_autopilot_mode()
+
+if mode == 'smoke' then
+  begin
+    require 'net/http'
+    require 'uri'
+
+    log_uri = URI.parse('http://localhost:8888/puavo-autopilot.smoke')
+    log_json = JSON.generate({'msg' => 'desktop'})
+    Net::HTTP.post_form(log_uri, {'json' => log_json})
+  ensure
+    exit(logout())
+  end
+end
 
 if mode != 'stress' then
   exit 0
