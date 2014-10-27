@@ -66,16 +66,17 @@ update_kernel_version_and_arguments() {
   kernel_arguments=$(jq -r .kernel_arguments /state/etc/puavo/device.json)
 
   if [ -n "$kernel_version" -a "$kernel_version" != "null" ]; then
-    grub-editenv /images/boot/grub/grubenv set "kernel_version=$kernel_version"
+    grub-editenv /images/boot/grub/grubenv set \
+                 "puavo_kernel_version=$kernel_version"
   else
-    grub-editenv /images/boot/grub/grubenv unset kernel_version
+    grub-editenv /images/boot/grub/grubenv unset puavo_kernel_version
   fi
 
   if [ -n "$kernel_arguments" -a "$kernel_arguments" != "null" ]; then
     grub-editenv /images/boot/grub/grubenv set \
-		 "kernel_arguments=$kernel_arguments"
+		 "puavo_kernel_arguments=$kernel_arguments"
   else
-    grub-editenv /images/boot/grub/grubenv unset kernel_arguments
+    grub-editenv /images/boot/grub/grubenv unset puavo_kernel_arguments
   fi
 }
 
