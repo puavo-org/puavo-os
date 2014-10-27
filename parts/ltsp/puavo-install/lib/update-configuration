@@ -61,11 +61,30 @@ update_wlan_configurations() {
         /state/etc/puavo/wlan.json
 }
 
+update_kernel_version_and_arguments() {
+  kernel_version=$(  jq -r .kernel_version   /state/etc/puavo/device.json)
+  kernel_arguments=$(jq -r .kernel_arguments /state/etc/puavo/device.json)
+
+  if [ -n "$kernel_version" -a "$kernel_version" != "null" ]; then
+    grub-editenv /images/boot/grub/grubenv set "kernel_version=$kernel_version"
+  else
+    grub-editenv /images/boot/grub/grubenv unset kernel_version
+  fi
+
+  if [ -n "$kernel_arguments" -a "$kernel_arguments" != "null" ]; then
+    grub-editenv /images/boot/grub/grubenv set \
+		 "kernel_arguments=$kernel_arguments"
+  else
+    grub-editenv /images/boot/grub/grubenv unset kernel_arguments
+  fi
+}
+
 # Update several (different) things.  Even if one thing cannot be updated,
 # try to update others (order does not matter here, but do this sequentially
 # anyway).
 
-update_ltsconf             || true
-update_device_json         || true
-update_external_files      || true
-update_wlan_configurations || true
+update_ltsconf                      || true
+update_device_json                  || true
+update_external_files               || true
+update_wlan_configurations          || true
+update_kernel_version_and_arguments || true
