@@ -42,7 +42,7 @@ Depends: ${misc:Depends}, lightdm, lightdm-gtk-greeter,
  ltspfs, ltspfsd, rdate, puavo-vpn-client, libpam-envfeed, ruby-uuidtools,
  ruby-trollop, ruby-rest-client, ntp, imagemagick, cowsay, puavo-client,
  ratpoison, xautolock, nfs-common, gnome-session-flashback, jq, perl,
- libpam-runtime, puavo-hw-tools, ruby-json, daemon
+ libpam-runtime, puavo-hw-tools, ruby-json, daemon, nslcd, libnss-ldapd
 Suggests: webkiosk-language-selector
 Description: Bits and pieces needed inside the LTSP chroot image.
 
