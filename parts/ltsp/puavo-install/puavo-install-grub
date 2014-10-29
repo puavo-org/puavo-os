@@ -94,16 +94,28 @@ function ltsp_image_entry {
   # if changing menuentry description, update correspondingly on
   # puavo-local-config configure_grub_default()
 
+  # ${puavo_kernel_arguments} comes from a grub environment file
+  # (if it is defined there)
+  set kernelparameters="${kernelparameters} ${puavo_kernel_arguments}"
+
   menuentry "${description} (${imagepath})" "$imagefile" "$imagepath" "$kernelparameters" {
     set imagefile="$2"
     set imagepath="$3"
 
-    # XXX fill in
-    set kernelversion=""
-    set kernelparameters="$4"
-
     loopback loop "${imagefile}"
     set root='(loop)'
+
+    # ${puavo_kernel_version} comes from a grub environment file
+    # (if it is defined there)
+    if test -n "${puavo_kernel_version}" \
+         -a -e "(loop)/boot/vmlinuz-${puavo_kernel_version}" \
+         -a -e "(loop)/boot/initrd.img-${puavo_kernel_version}"; then
+      set kernelversion="-${puavo_kernel_version}"
+    else
+      set kernelversion=""
+    fi
+
+    set kernelparameters="$4"
 
     linux   /boot/vmlinuz${kernelversion} ro quiet splash init=/sbin/init-puavo __HOSTTYPE_SPECIFIC__ ${kernelparameters}
     initrd  /boot/initrd.img${kernelversion}
