@@ -1,5 +1,8 @@
 description "OpenLDAP standalone server"
 
+start on runlevel [23]
+stop on shutdown
+
 respawn
 
 kill signal SIGINT
