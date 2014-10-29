@@ -3,13 +3,7 @@
 SCRIPTSUBDIR=$1
 
 for script in /etc/puavo-vpn-client/scripts/$SCRIPTSUBDIR/*; do
-    case "${script}" in
-      *.dpkg-new | *.dpkg-dist | *.dpkg-old)
-      ;;
-    *)
-      test -x $script && timeout 30 $script "$@"
-      ;;
-    esac
+    test -x $script && timeout 30 $script "$@"
 done
 
 exit 0

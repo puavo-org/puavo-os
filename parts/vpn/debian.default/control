@@ -8,6 +8,5 @@ Homepage: https://github.com/opinsys/puavo-vpn
 
 Package: puavo-vpn-client
 Architecture: all
-Conflicts: dnsmasq
-Depends: ${misc:Depends}, coreutils, openvpn, libtrollop-ruby, ruby-dbus
+Depends: ${misc:Depends}, coreutils, openvpn
 Description: Puavo VPN client
