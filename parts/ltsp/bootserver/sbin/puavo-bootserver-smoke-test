@@ -71,6 +71,12 @@ register_status = PuavoBS.register_device(admin_username, admin_password,
                                           testclient_hosttype, testclient_tags)
 
 
+puts('Initialized an autopilot:')
+puts("  School       : #{school_name}")
+puts("  Hosttype     : #{testclient_hosttype}")
+puts("  Hostname     : #{testclient_hostname}")
+puts("  MAC address  : #{testclient_mac}")
+puts("  Username     : #{testuser_username}")
 
 puts('Starting the autopilot monitor.')
 server_socket = nil
@@ -100,14 +106,6 @@ testclient_started = Process.wait2(Process.spawn('virsh', 'start',
 exit(1) unless testclient_started
 
 puts('---')
-
-puts('Initialized the test client with following configuration:')
-puts("  Organization : #{File.read('/etc/puavo/domain').strip()}")
-puts("  School       : #{school_name}")
-puts("  Hostname     : #{testclient_hostname}")
-puts("  Hosttype     : #{testclient_hosttype}")
-puts("  MAC address  : #{testclient_mac}")
-puts("  Tags         : #{testclient_tags.join(' ')}")
 
 expected_stages = ['enter-display-manager-screen', 'try-display-manager-login', 'begin-user-session']
 
