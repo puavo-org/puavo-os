@@ -27,13 +27,22 @@ def open_server(path)
   server_socket
 end
 
+
+
+
+puts()
+print <<'EOF'
+             +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+
+             | ~= Puavo Bootserver Smoke Test =~ |
+             +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+
+EOF
+puts()
+
 admin_username, admin_password = PuavoBS.ask_admin_credentials()
 puts()
 
 school_name, school_id = PuavoBS.ask_school(admin_username, admin_password)
 puts()
-
-puts('Running a smoke test:')
 
 bootserver_hostname = File.read('/etc/puavo/hostname').strip()
 testclient_hostname = "#{bootserver_hostname}-smoke-test"
@@ -41,6 +50,7 @@ testclient_hosttype = 'fatclient'
 testclient_tags     = []
 
 ### Create the test device and register the cleanup proc.
+print('Create a test device ... ')
 testclient_mac = nil
 at_exit do
   ## Try to remove the virtual domain if it was created.
@@ -52,9 +62,10 @@ at_exit do
 end
 testclient_mac = PuavoBS.virsh_define_testclient(testclient_hostname)
 exit(1) if testclient_mac.nil?
-
+puts('OK')
 
 ### Create the test user.
+print('Create a test user ... ')
 testuser_username = nil
 testuser_password = nil
 at_exit do
@@ -67,9 +78,10 @@ testuser_username, testuser_password = PuavoBS.create_testuser(admin_username,
                                                                admin_password,
                                                                school_id)
 testclient_tags << "autopilot:smoke:#{testuser_username}:#{testuser_password}"
-
+puts('OK')
 
 ### Register the test device and register the cleanup proc.
+print('Register the test device ... ')
 register_status = nil
 at_exit do
   if !register_status.nil?
@@ -80,8 +92,10 @@ register_status = PuavoBS.register_device(admin_username, admin_password,
                                           school_id,
                                           testclient_hostname, testclient_mac,
                                           testclient_hosttype, testclient_tags)
+puts('OK')
 
 ## Start monitoring log messages.
+print('Start message monitor ... ')
 server_socket = nil
 at_exit do
   if !server_socket.nil? then
@@ -91,8 +105,10 @@ at_exit do
   end
 end
 server_socket = open_server('/tmp/puavo-bootserver-smoke-test.socket')
+puts('OK')
 
 ### Boot up the test device and register the cleanup proc.
+print('Boot up the test device ... ')
 testclient_started = false
 at_exit do
   ## Destroy the virtual domain if we started it.
@@ -106,13 +122,16 @@ testclient_started = Process.wait2(Process.spawn('virsh', 'start',
                                                  testclient_hostname,
                                                  :out => '/dev/null'))[1].success?
 exit(1) unless testclient_started
+puts('OK')
 
-puts("  School       : #{school_name}")
-puts("  Hosttype     : #{testclient_hosttype}")
-puts("  Hostname     : #{testclient_hostname}")
-puts("  MAC address  : #{testclient_mac}")
-puts("  Username     : #{testuser_username}")
 puts()
+puts('Initialized the test with the following configuration:')
+puts("  School      : #{school_name}")
+puts("  Hosttype    : #{testclient_hosttype}")
+puts("  Hostname    : #{testclient_hostname}")
+puts("  MAC address : #{testclient_mac}")
+puts("  Username    : #{testuser_username}")
+puts('')
 
 expected_msgs = ['enter-display-manager-screen',
                  'try-display-manager-login',
@@ -122,8 +141,8 @@ num_msgs = expected_msgs.length
 received_msgs = []
 
 expected_msgs.each_with_index() do |expected_msg, i|
-  padding = ' ' * (max_msg_name_length - expected_msg.length)
-  print("Stage #{i+1}/#{num_msgs}: Wait for '#{expected_msg}'#{padding} ... ")
+  padding = '.' * (max_msg_name_length - expected_msg.length)
+  print("Step #{i+1}/#{num_msgs}: Receive '#{expected_msg}' ...#{padding} ")
 
   ## If haven't received any messaged, wait for them and then fill
   ## received_msgs.
@@ -153,7 +172,7 @@ expected_msgs.each_with_index() do |expected_msg, i|
   ## Test messages in the order they were received.
   msg = received_msgs.shift()
   if msg != expected_msg then
-    puts("FAIL: got '#{msg}'")
+    puts("FAIL: received '#{msg}'")
     exit(1)
   end
   puts('OK')
