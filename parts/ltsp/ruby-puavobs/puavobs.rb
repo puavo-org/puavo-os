@@ -219,6 +219,31 @@ module PuavoBS
     [testuser_username, testuser_password]
   end
 
+  def PuavoBS.get_user_id(username, password, user_username)
+    uri = IO.popen('puavo-resolve-api-server') do |io|
+      output = io.read().strip()
+      io.close()
+      $?.success? ? URI(output) : nil
+    end
+
+    https = Net::HTTP.new(uri.host, uri.port)
+    https.use_ssl = true
+    https.verify_mode  = OpenSSL::SSL::VERIFY_PEER
+    https.verify_depth = 5
+
+    user_json = https.start() do |https|
+      request = Net::HTTP::Get.new("/v3/users/#{user_username}")
+      request.basic_auth(username, password)
+      request['Accept'] = 'application/json'
+
+      response = https.request(request)
+      response.value()
+
+      JSON.parse(response.body())
+    end
+    Integer(/^puavoId=([0-9]+),/.match(user_json['dn'])[1])
+  end
+
   def PuavoBS.virsh_define_testclient(hostname)
     uuid = SecureRandom.uuid()
     mac = 'aa:cc'
