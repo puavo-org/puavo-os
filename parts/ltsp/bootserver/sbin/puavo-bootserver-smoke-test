@@ -117,35 +117,45 @@ puts()
 expected_msgs = ['enter-display-manager-screen',
                  'try-display-manager-login',
                  'begin-user-session']
-
 max_msg_name_length = expected_msgs.map() { |s| s.length }.max()
 num_msgs = expected_msgs.length
+received_msgs = []
 
 expected_msgs.each_with_index() do |expected_msg, i|
   padding = ' ' * (max_msg_name_length - expected_msg.length)
   print("Stage #{i+1}/#{num_msgs}: Wait for '#{expected_msg}'#{padding} ... ")
-  result = IO.select([server_socket], [], [], 120)
-  if result.nil? then
-    puts('FAIL: timeout')
-    exit(1)
-  end
-  client_socket = nil
-  begin
-    client_socket, client_addrinfo = server_socket.accept()
-    client_socket.readlines().each() do |line|
-      log_entry = JSON.parse(line)
-      msg = log_entry['msg']
-      if msg != expected_msg then
-        puts("FAIL: got '#{msg}'")
-        exit(1)
-      else
-        puts('OK')
+
+  ## If haven't received any messaged, wait for them and then fill
+  ## received_msgs.
+  if received_msgs.empty? then
+    result = IO.select([server_socket], [], [], 120)
+    if result.nil? then
+      puts('FAIL: timeout')
+      exit(1)
+    end
+
+    ## Ensure client socket gets closed properly afterwards.
+    client_socket = nil
+    begin
+      client_socket, client_addrinfo = server_socket.accept()
+      received_msgs += client_socket.readlines().map() do |line|
+        JSON.parse(line)['msg']
+      end
+    ensure
+      if !client_socket.nil? then
+        client_socket.shutdown(Socket::SHUT_RDWR)
+        client_socket.close()
       end
     end
-  ensure
-    if !client_socket.nil? then
-      client_socket.shutdown(Socket::SHUT_RDWR)
-      client_socket.close()
-    end
+
   end
+
+  ## Test messages in the order they were received.
+  msg = received_msgs.shift()
+  if msg != expected_msg then
+    puts("FAIL: got '#{msg}'")
+    exit(1)
+  end
+  puts('OK')
+
 end
