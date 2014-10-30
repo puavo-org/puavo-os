@@ -1,11 +1,31 @@
 #!/usr/bin/env ruby1.9.1
 
 ## Standard libraries.
+require 'etc'
 require 'getoptlong'
+require 'json'
+require 'socket'
 
 ## 3rd-party libraries.
 require 'highline/import'
 require 'puavobs'
+
+def open_server(path)
+  server_socket = Socket.new(Socket::AF_UNIX, Socket::SOCK_STREAM)
+  old_umask = nil
+  begin
+    old_umask = File.umask(007)
+    server_socket.bind(Socket.sockaddr_un(path))
+  ensure
+    if !old_umask.nil? then
+      File.umask(old_umask)
+    end
+  end
+  puavo_gid = Etc.getgrnam('puavo').gid
+  File.chown(nil, puavo_gid, path)
+  server_socket.listen(1)
+  server_socket
+end
 
 admin_username, admin_password = PuavoBS.ask_admin_credentials()
 school_name, school_id = PuavoBS.ask_school(admin_username, admin_password)
@@ -51,6 +71,19 @@ register_status = PuavoBS.register_device(admin_username, admin_password,
                                           testclient_hosttype, testclient_tags)
 
 
+
+puts('Starting the autopilot monitor.')
+server_socket = nil
+at_exit do
+  if !server_socket.nil? then
+    server_socket.shutdown(Socket::SHUT_RDWR)
+    server_socket.close()
+    File.delete('/tmp/puavo-bootserver-smoke-test.socket')
+  end
+end
+server_socket = open_server('/tmp/puavo-bootserver-smoke-test.socket')
+
+puts('Launching the autopilot.')
 ### Boot up the test device and register the cleanup proc.
 testclient_started = false
 at_exit do
@@ -66,6 +99,7 @@ testclient_started = Process.wait2(Process.spawn('virsh', 'start',
                                                  :out => '/dev/null'))[1].success?
 exit(1) unless testclient_started
 
+puts('---')
 
 puts('Initialized the test client with following configuration:')
 puts("  Organization : #{File.read('/etc/puavo/domain').strip()}")
@@ -75,7 +109,33 @@ puts("  Hosttype     : #{testclient_hosttype}")
 puts("  MAC address  : #{testclient_mac}")
 puts("  Tags         : #{testclient_tags.join(' ')}")
 
-## TODO: implement smoke trace capturing and analysis to determine
-## success/failure of the test.
+expected_stages = ['enter-display-manager-screen', 'try-display-manager-login', 'begin-user-session']
 
-puts('Test passed.')
+expected_stages.each() do |expected_stage|
+  print("Stage '#{expected_stage}': ")
+  result = IO.select([server_socket], [], [], 120)
+  if result.nil? then
+    STDERR.puts('FAIL: timeout')
+    exit(1)
+  end
+  client_socket = nil
+  begin
+    client_socket, client_addrinfo = server_socket.accept()
+    client_socket.readlines().each() do |line|
+      log_entry = JSON.parse(line)
+      stage = log_entry['msg']
+      if stage != expected_stage then
+        STDERR.puts("FAIL: unexpected stage '#{stage}', " \
+                    "expected '#{expected_stage}'")
+        exit(1)
+      else
+        puts('DONE')
+      end
+    end
+  ensure
+    if !client_socket.nil? then
+      client_socket.shutdown(Socket::SHUT_RDWR)
+      client_socket.close()
+    end
+  end
+end
