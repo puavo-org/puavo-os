@@ -49,13 +49,18 @@ exit(1) if testclient_mac.nil?
 
 
 ### Create the test user.
-## TODO: create a test user automatically, without asking
-## anything. Naturally, the test user must be removed afterwards.
-say('Enter test user credentials')
-testuser_username = ask('Username: ')
-testuser_password = ask('Password: ')
-autopilot_tag = "autopilot:smoke:#{testuser_username}:#{testuser_password}"
-testclient_tags << autopilot_tag
+testuser_username = nil
+testuser_password = nil
+at_exit do
+  if !testuser_username.nil? then
+    PuavoBS.remove_user(admin_username, admin_password,
+                        school_id, testuser_username)
+  end
+end
+testuser_username, testuser_password = PuavoBS.create_testuser(admin_username,
+                                                               admin_password,
+                                                               school_id)
+testclient_tags << "autopilot:smoke:#{testuser_username}:#{testuser_password}"
 
 
 ### Register the test device and register the cleanup proc.
