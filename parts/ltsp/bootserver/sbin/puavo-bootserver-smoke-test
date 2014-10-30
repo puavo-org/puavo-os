@@ -112,7 +112,9 @@ exit(1) unless testclient_started
 
 puts('---')
 
-expected_stages = ['enter-display-manager-screen', 'try-display-manager-login', 'begin-user-session']
+expected_stages = ['enter-display-manager-screen',
+                   'try-display-manager-login',
+                   'begin-user-session']
 
 expected_stages.each() do |expected_stage|
   print("Stage '#{expected_stage}': ")
