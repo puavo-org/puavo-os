@@ -127,7 +127,7 @@ if mode == 'smoke' then
     require 'uri'
 
     log_uri = URI.parse('http://localhost:8888/puavo-autopilot.smoke')
-    log_json = JSON.generate({'msg' => 'desktop'})
+    log_json = JSON.generate({'msg' => 'begin-user-session'})
     Net::HTTP.post_form(log_uri, {'json' => log_json})
   ensure
     exit(logout())
