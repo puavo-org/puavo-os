@@ -244,6 +244,26 @@ module PuavoBS
     Integer(/^puavoId=([0-9]+),/.match(user_json['dn'])[1])
   end
 
+  def PuavoBS.remove_user(username, password, school_id, user_username)
+    user_id = PuavoBS.get_user_id(username, password, user_username)
+    puavo_domain = File.read('/etc/puavo/domain').strip()
+
+    https = Net::HTTP.new(puavo_domain, 443)
+    https.use_ssl = true
+    https.verify_mode  = OpenSSL::SSL::VERIFY_PEER
+    https.verify_depth = 5
+
+    https.start() do |https|
+      path = "/users/#{school_id}/users/#{user_id}.xml"
+      request = Net::HTTP::Delete.new(path)
+      request.basic_auth(username, password)
+
+      response = https.request(request)
+      response.value()
+      Integer(response.code)
+    end
+  end
+
   def PuavoBS.virsh_define_testclient(hostname)
     uuid = SecureRandom.uuid()
     mac = 'aa:cc'
