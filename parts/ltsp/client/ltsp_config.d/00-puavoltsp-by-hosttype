@@ -63,6 +63,8 @@ case "$PUAVO_HOSTTYPE" in
       ltspguestssh
       ltspssh
       network-manager
+      nscd
+      nslcd
       ntp
       ondemand
       puavo-load-balancer
@@ -133,6 +135,8 @@ case "$PUAVO_HOSTTYPE" in
       ltspguestssh
       ltspssh
       mountnfs.sh
+      nscd
+      nslcd
       puavo-load-balancer
       puavo-load-reporter
       puavo-monitor
@@ -196,6 +200,8 @@ case "$PUAVO_HOSTTYPE" in
       ltspguestssh
       ltspssh
       network-manager
+      nscd
+      nslcd
       ntp
       nwfermi
       ondemand
@@ -232,6 +238,8 @@ case "$PUAVO_HOSTTYPE" in
       ltspguestssh
       ltspssh
       network-manager
+      nscd
+      nslcd
       ntp
       nwfermi
       ondemand
@@ -280,6 +288,8 @@ case "$PUAVO_HOSTTYPE" in
       ltspguestssh
       ltspssh
       network-manager
+      nscd
+      nslcd
       ondemand
       puavo-load-balancer
       x2goserver
