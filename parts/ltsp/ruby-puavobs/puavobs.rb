@@ -154,6 +154,29 @@ module PuavoBS
     end
   end
 
+  def PuavoBS.get_role_ids(username, password, school_id)
+    puavo_domain = File.read('/etc/puavo/domain').strip()
+
+    https = Net::HTTP.new(puavo_domain, 443)
+    https.use_ssl = true
+    https.verify_mode  = OpenSSL::SSL::VERIFY_PEER
+    https.verify_depth = 5
+
+    https.start() do |https|
+      request = Net::HTTP::Get.new("/users/#{school_id}/roles.xml")
+      request.basic_auth(username, password)
+      request['Accept'] = 'application/xml'
+
+      response = https.request(request)
+      response.value()
+
+      doc = REXML::Document.new(response.body())
+      doc.elements.collect('/roles/role/dn') do |element|
+        Integer(/^puavoId=([0-9]+),/.match(element.text())[1])
+      end
+    end
+  end
+
   def PuavoBS.virsh_define_testclient(hostname)
     uuid = SecureRandom.uuid()
     mac = 'aa:cc'
