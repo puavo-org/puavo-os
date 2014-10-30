@@ -2,6 +2,7 @@
 
 require 'erb'
 require 'json'
+require 'fileutils'
 
 def delete_file(file)
   if File.exists?(file)
@@ -217,7 +218,7 @@ case @puavo_device_type
     try_writing_puavomounts()
   when "ltspserver"
     write_config("/etc/hosts", "ltspserver")
-    write_config("/etc/nsswitch.conf", "sss")
+    write_config("/etc/nsswitch.conf", "ldap")
     write_config("/etc/pam.d/ltspguestsshd")
     write_config("/etc/pam.d/ltspsshd")
     write_config("/etc/ldap/ldap.conf")
@@ -231,7 +232,10 @@ case @puavo_device_type
 
     @ldap_binddn       = read_file('/etc/puavo/ldap/dn')
     @ldap_bindpw       = read_file('/etc/puavo/ldap/password')
-    write_config("/etc/sssd/sssd.conf", nil, true)
+    write_config("/etc/nscd.conf")
+    write_config("/etc/nslcd.conf", nil, true)
+    File.chmod(0640, "/etc/nslcd.conf")
+    FileUtils.chown("root", "nslcd", "/etc/nslcd.conf")
 
     # http://askubuntu.com/questions/117127/flash-video-appears-blue
     # FIXME - do this in ruby instead of perl

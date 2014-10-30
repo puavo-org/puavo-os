@@ -108,7 +108,10 @@ install : installdirs
 		templates/etc/idmapd.conf \
 		templates/etc/krb5.conf \
 		templates/etc/krb5.conf-laptop \
+		templates/etc/nscd.conf \
+		templates/etc/nslcd.conf \
 		templates/etc/nsswitch.conf-extrausers \
+		templates/etc/nsswitch.conf-ldap \
 		templates/etc/nsswitch.conf-sss \
 		templates/etc/nsswitch.conf-sss-extrausers \
 		templates/etc/ntp.conf
