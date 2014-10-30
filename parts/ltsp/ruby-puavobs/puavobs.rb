@@ -177,6 +177,48 @@ module PuavoBS
     end
   end
 
+  def PuavoBS.create_testuser(username, password, school_id)
+    role_ids = PuavoBS.get_role_ids(username, password, school_id)
+    if role_ids.empty?
+      return []
+    end
+
+    testuser_role_id  = role_ids[0]
+    testuser_username = "test.user.#{SecureRandom.hex(10)}"
+    testuser_password = SecureRandom.hex(32)
+
+    puavo_domain = File.read('/etc/puavo/domain').strip()
+
+    https = Net::HTTP.new(puavo_domain, 443)
+    https.use_ssl = true
+    https.verify_mode  = OpenSSL::SSL::VERIFY_PEER
+    https.verify_depth = 5
+
+    https.start() do |https|
+      request = Net::HTTP::Post.new("/users/#{school_id}/users")
+      request.basic_auth(username, password)
+      form_data = {
+        "user[givenName]"                 => "test",
+        "user[sn]"                        => "user",
+        "user[uid]"                       => testuser_username,
+        "user[puavoEduPersonAffiliation]" => "testuser",
+        "user[role_ids][]"                => testuser_role_id,
+        "user[new_password]"              => testuser_password,
+        "user[new_password_confirmation]" => testuser_password,
+      }
+      request.set_form_data(form_data)
+
+      response = https.request(request)
+      response_code = Integer(response.code)
+      if response_code == 302 then
+        ## Puavo seems to redirect on success.
+        break
+      end
+      response.value()
+    end
+    [testuser_username, testuser_password]
+  end
+
   def PuavoBS.virsh_define_testclient(hostname)
     uuid = SecureRandom.uuid()
     mac = 'aa:cc'
