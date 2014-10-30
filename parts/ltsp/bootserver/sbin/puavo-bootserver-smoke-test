@@ -28,7 +28,13 @@ def open_server(path)
 end
 
 admin_username, admin_password = PuavoBS.ask_admin_credentials()
+puts()
+
 school_name, school_id = PuavoBS.ask_school(admin_username, admin_password)
+puts()
+
+puts('Running a smoke test:')
+
 bootserver_hostname = File.read('/etc/puavo/hostname').strip()
 testclient_hostname = "#{bootserver_hostname}-smoke-test"
 testclient_hosttype = 'fatclient'
@@ -75,15 +81,7 @@ register_status = PuavoBS.register_device(admin_username, admin_password,
                                           testclient_hostname, testclient_mac,
                                           testclient_hosttype, testclient_tags)
 
-
-puts('Initialized an autopilot:')
-puts("  School       : #{school_name}")
-puts("  Hosttype     : #{testclient_hosttype}")
-puts("  Hostname     : #{testclient_hostname}")
-puts("  MAC address  : #{testclient_mac}")
-puts("  Username     : #{testuser_username}")
-
-puts('Starting the autopilot monitor.')
+## Start monitoring log messages.
 server_socket = nil
 at_exit do
   if !server_socket.nil? then
@@ -94,7 +92,6 @@ at_exit do
 end
 server_socket = open_server('/tmp/puavo-bootserver-smoke-test.socket')
 
-puts('Launching the autopilot.')
 ### Boot up the test device and register the cleanup proc.
 testclient_started = false
 at_exit do
@@ -110,17 +107,26 @@ testclient_started = Process.wait2(Process.spawn('virsh', 'start',
                                                  :out => '/dev/null'))[1].success?
 exit(1) unless testclient_started
 
-puts('---')
+puts("  School       : #{school_name}")
+puts("  Hosttype     : #{testclient_hosttype}")
+puts("  Hostname     : #{testclient_hostname}")
+puts("  MAC address  : #{testclient_mac}")
+puts("  Username     : #{testuser_username}")
+puts()
 
-expected_stages = ['enter-display-manager-screen',
-                   'try-display-manager-login',
-                   'begin-user-session']
+expected_msgs = ['enter-display-manager-screen',
+                 'try-display-manager-login',
+                 'begin-user-session']
 
-expected_stages.each() do |expected_stage|
-  print("Stage '#{expected_stage}': ")
+max_msg_name_length = expected_msgs.map() { |s| s.length }.max()
+num_msgs = expected_msgs.length
+
+expected_msgs.each_with_index() do |expected_msg, i|
+  padding = ' ' * (max_msg_name_length - expected_msg.length)
+  print("Stage #{i+1}/#{num_msgs}: Wait for '#{expected_msg}'#{padding} ... ")
   result = IO.select([server_socket], [], [], 120)
   if result.nil? then
-    STDERR.puts('FAIL: timeout')
+    puts('FAIL: timeout')
     exit(1)
   end
   client_socket = nil
@@ -128,13 +134,12 @@ expected_stages.each() do |expected_stage|
     client_socket, client_addrinfo = server_socket.accept()
     client_socket.readlines().each() do |line|
       log_entry = JSON.parse(line)
-      stage = log_entry['msg']
-      if stage != expected_stage then
-        STDERR.puts("FAIL: unexpected stage '#{stage}', " \
-                    "expected '#{expected_stage}'")
+      msg = log_entry['msg']
+      if msg != expected_msg then
+        puts("FAIL: got '#{msg}'")
         exit(1)
       else
-        puts('DONE')
+        puts('OK')
       end
     end
   ensure
