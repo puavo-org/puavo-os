@@ -180,6 +180,12 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var USE_NFS_HOMES        True
     ;;
   thinclient)
+    if jq -r '.tags[]' /etc/puavo/device.json | grep -q '^autopilot:smoke:'; then
+      puavo_thinclient_unneeded_services=''
+    else
+      puavo_thinclient_unneeded_services='fluentd'
+    fi
+
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services lightdm"
     set_lts_var LDM_AUTOLOGIN        False
     set_lts_var LDM_DIRECTX          True
@@ -192,9 +198,9 @@ case "$PUAVO_HOSTTYPE" in
     "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      $puavo_thinclient_unneeded_services
       cron
       eno
-      fluentd
       gssd
       laptop-mode
       ltspguestssh
