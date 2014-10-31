@@ -14,14 +14,14 @@
 
   if [ -n "$user" -a -n "$password" ]; then
     if [ "${mode}" = "smoke" ]; then
-      curl -d 'json={"msg": "enter-display-manager-screen"}' \
+      curl -d "json={\"msg\": \"enter-display-manager-screen\", \"user\": \"$user\"}" \
         http://localhost:8888/puavo-autopilot.smoke || true
     fi
     sleep 15
     env PATH="/usr/lib/puavo-autopilot:$PATH" \
       puavo-autopilot-lightdm-login "$user" "$password"
     if [ "${mode}" = "smoke" ]; then
-      curl -d 'json={"msg": "try-display-manager-login"}' \
+      curl -d "json={\"msg\": \"try-display-manager-login\", \"user\": \"$user\"}" \
         http://localhost:8888/puavo-autopilot.smoke || true
     fi
   fi
