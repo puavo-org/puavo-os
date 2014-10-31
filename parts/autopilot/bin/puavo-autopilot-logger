@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby1.9.1
+
+require 'json'
+require 'net/http'
+require 'uri'
+
+log_entry = {}
+
+ARGV.each() do |arg|
+  parts = arg.partition('=')
+  if parts.map() {|p| p.empty?}.any? then
+    STDERR.puts("ERROR: invalid argument '#{arg}'")
+    exit(1)
+  end
+  key, sep, value = parts
+  log_entry[key] = value
+end
+
+log_uri = URI.parse('http://localhost:8888/puavo-autopilot.smoke')
+log_entry_json = JSON.generate(log_entry)
+Net::HTTP.post_form(log_uri, {'json' => log_entry_json})
