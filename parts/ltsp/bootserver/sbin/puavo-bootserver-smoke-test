@@ -140,9 +140,17 @@ puts("  MAC address : #{testclient_mac}")
 puts("  Username    : #{testuser_username}")
 puts('')
 
-expected_msgs = ['enter-display-manager-screen',
-                 'try-display-manager-login',
-                 'begin-user-session']
+expected_msgs = case testclient_hosttype
+                when 'fatclient'
+                  ['enter-display-manager-screen',
+                   'try-display-manager-login',
+                   'begin-user-session']
+                when 'thinclient'
+                  ['begin-user-session']
+                else
+                  []
+                end
+
 max_msg_name_length = expected_msgs.map() { |s| s.length }.max()
 num_msgs = expected_msgs.length
 received_msgs = []
