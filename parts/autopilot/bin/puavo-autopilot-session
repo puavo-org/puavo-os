@@ -123,16 +123,7 @@ mode = get_autopilot_mode()
 
 if mode == 'smoke' then
   begin
-    require 'net/http'
-    require 'uri'
-
-    log_uri = URI.parse('http://localhost:8888/puavo-autopilot.smoke')
-    log_entry = {
-      'msg' => 'begin-user-session',
-      'user' => ENV['USER'],
-    }
-    log_entry_json = JSON.generate(log_entry)
-    Net::HTTP.post_form(log_uri, {'json' => log_entry_json})
+    system('puavo-autopilot-logger', 'msg=begin-user-session')
   ensure
     exit(logout())
   end
