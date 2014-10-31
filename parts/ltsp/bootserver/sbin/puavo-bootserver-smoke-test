@@ -44,9 +44,16 @@ puts()
 school_name, school_id = PuavoBS.ask_school(admin_username, admin_password)
 puts()
 
+say("Select the test device type:")
+testclient_hosttype = choose() do |menu|
+  ['fatclient', 'thinclient'].each() do |hosttype|
+    menu.choice(hosttype) { hosttype }
+  end
+end
+puts()
+
 bootserver_hostname = File.read('/etc/puavo/hostname').strip()
 testclient_hostname = "#{bootserver_hostname}-smoke-test"
-testclient_hosttype = 'fatclient'
 testclient_tags     = []
 
 ### Create the test device and register the cleanup proc.
