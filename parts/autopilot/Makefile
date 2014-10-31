@@ -33,6 +33,7 @@ install: installdirs
 	$(INSTALL) -t $(DESTDIR)$(bindir) \
 		bin/puavo-autopilot-lightdm-login \
 		bin/puavo-autopilot-lightdm-login-guest \
+		bin/puavo-autopilot-logger \
 		bin/puavo-autopilot-session
 
 	$(INSTALL) -t $(DESTDIR)$(libdir)/puavo-autopilot \
