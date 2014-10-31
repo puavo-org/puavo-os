@@ -41,6 +41,12 @@ module PuavoBS
       request['Accept'] = 'application/json'
 
       response = https.request(request)
+      response_code = Integer(response.code)
+      if response_code == 302 then
+        ## Puavo seems to respond with 302 in some, yet successful
+        ## cases.
+        return JSON.parse(response.body())
+      end
       response.value()
 
       JSON.parse(response.body())
