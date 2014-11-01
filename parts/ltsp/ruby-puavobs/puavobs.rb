@@ -10,7 +10,7 @@ require 'highline/import'
 
 module PuavoBS
 
-  def PuavoBS.with_https(host, port, &block)
+  def self.with_https(host, port, &block)
     https              = Net::HTTP.new(host, port)
     https.use_ssl      = true
     https.verify_mode  = OpenSSL::SSL::VERIFY_PEER
@@ -18,24 +18,24 @@ module PuavoBS
     https.start(&block)
   end
 
-  def PuavoBS.with_puavo_https(&block)
+  def self.with_puavo_https(&block)
     server = File.read('/etc/puavo/domain').strip()
 
-    PuavoBS.with_https(server, 443, &block)
+    self.with_https(server, 443, &block)
   end
 
-  def PuavoBS.with_api_https(&block)
+  def self.with_api_https(&block)
     uri = IO.popen('puavo-resolve-api-server') do |io|
       output = io.read().strip()
       io.close()
       $?.success? ? URI(output) : nil
     end
 
-    PuavoBS.with_https(uri.host, uri.port, &block)
+    self.with_https(uri.host, uri.port, &block)
   end
 
-  def PuavoBS.get_school(username, password, school_id)
-    PuavoBS.with_puavo_https() do |https|
+  def self.get_school(username, password, school_id)
+    self.with_puavo_https() do |https|
       request = Net::HTTP::Get.new("/users/schools/#{school_id}.json")
       request.basic_auth(username, password)
       request['Accept'] = 'application/json'
@@ -53,8 +53,8 @@ module PuavoBS
     end
   end
 
-  def PuavoBS.get_school_and_device_ids(hostname)
-    device_json = PuavoBS.with_api_https() do |https|
+  def self.get_school_and_device_ids(hostname)
+    device_json = self.with_api_https() do |https|
       request = Net::HTTP::Get.new("/v3/devices/#{hostname}")
       request['Accept'] = 'application/json'
 
@@ -69,10 +69,10 @@ module PuavoBS
     [school_id, device_id]
   end
 
-  def PuavoBS.get_school_ids(username, password)
+  def self.get_school_ids(username, password)
     puavo_id = Integer(File.read('/etc/puavo/id').strip())
 
-    schools = PuavoBS.with_puavo_https() do |https|
+    schools = self.with_puavo_https() do |https|
       request = Net::HTTP::Get.new("/devices/servers/#{puavo_id}.xml")
       request.basic_auth(username, password)
       request['Accept'] = 'application/xml'
@@ -87,7 +87,7 @@ module PuavoBS
     end
   end
 
-  def PuavoBS.ask_admin_credentials()
+  def self.ask_admin_credentials()
     puavo_domain = File.read('/etc/puavo/domain').strip()
     say("Enter administrator credentials for organization #{puavo_domain}")
     username = ask('Username: ')
@@ -95,10 +95,10 @@ module PuavoBS
     [username, password]
   end
 
-  def PuavoBS.ask_school(username, password)
-    school_ids = PuavoBS.get_school_ids(username, password)
+  def self.ask_school(username, password)
+    school_ids = self.get_school_ids(username, password)
     school_names = school_ids.collect() do |school_id|
-      PuavoBS.get_school(username, password, school_id)["name"]
+      self.get_school(username, password, school_id)["name"]
     end
 
     say("Select the school which the device shall be registered to")
@@ -109,7 +109,7 @@ module PuavoBS
     end
   end
 
-  def PuavoBS.register_device(username, password, school_id,
+  def self.register_device(username, password, school_id,
                               hostname, mac, hosttype, tags)
     register_json = JSON.generate("puavoHostname"   => hostname,
                                   "macAddress"      => mac,
@@ -117,7 +117,7 @@ module PuavoBS
                                   "puavoDeviceType" => hosttype,
                                   "classes"         => ["puavoNetbootDevice"])
 
-    PuavoBS.with_puavo_https() do |https|
+    self.with_puavo_https() do |https|
       request = Net::HTTP::Post.new("/devices/#{school_id}/devices.json")
       request.basic_auth(username, password)
       request['Content-Type'] = 'application/json'
@@ -130,10 +130,10 @@ module PuavoBS
     end
   end
 
-  def PuavoBS.unregister_device(username, password, hostname)
-    school_id, device_id = PuavoBS.get_school_and_device_ids(hostname)
+  def self.unregister_device(username, password, hostname)
+    school_id, device_id = self.get_school_and_device_ids(hostname)
 
-    PuavoBS.with_puavo_https() do |https|
+    self.with_puavo_https() do |https|
       path = "/devices/#{school_id}/devices/#{device_id}.xml"
       request = Net::HTTP::Delete.new(path)
       request.basic_auth(username, password)
@@ -144,8 +144,8 @@ module PuavoBS
     end
   end
 
-  def PuavoBS.get_role_ids(username, password, school_id)
-    PuavoBS.with_puavo_https() do |https|
+  def self.get_role_ids(username, password, school_id)
+    self.with_puavo_https() do |https|
       request = Net::HTTP::Get.new("/users/#{school_id}/roles.xml")
       request.basic_auth(username, password)
       request['Accept'] = 'application/xml'
@@ -160,8 +160,8 @@ module PuavoBS
     end
   end
 
-  def PuavoBS.create_testuser(username, password, school_id)
-    role_ids = PuavoBS.get_role_ids(username, password, school_id)
+  def self.create_testuser(username, password, school_id)
+    role_ids = self.get_role_ids(username, password, school_id)
     if role_ids.empty? then
       return []
     end
@@ -170,7 +170,7 @@ module PuavoBS
     testuser_username = "test.user.#{SecureRandom.hex(10)}"
     testuser_password = SecureRandom.hex(32)
 
-    PuavoBS.with_puavo_https() do |https|
+    self.with_puavo_https() do |https|
       request = Net::HTTP::Post.new("/users/#{school_id}/users")
       request.basic_auth(username, password)
       form_data = {
@@ -195,8 +195,8 @@ module PuavoBS
     [testuser_username, testuser_password]
   end
 
-  def PuavoBS.get_user_id(username, password, user_username)
-    user_json = PuavoBS.with_api_https() do |https|
+  def self.get_user_id(username, password, user_username)
+    user_json = self.with_api_https() do |https|
       request = Net::HTTP::Get.new("/v3/users/#{user_username}")
       request.basic_auth(username, password)
       request['Accept'] = 'application/json'
@@ -209,10 +209,10 @@ module PuavoBS
     Integer(/^puavoId=([0-9]+),/.match(user_json['dn'])[1])
   end
 
-  def PuavoBS.remove_user(username, password, school_id, user_username)
-    user_id = PuavoBS.get_user_id(username, password, user_username)
+  def self.remove_user(username, password, school_id, user_username)
+    user_id = self.get_user_id(username, password, user_username)
 
-    PuavoBS.with_puavo_https() do |https|
+    self.with_puavo_https() do |https|
       path = "/users/#{school_id}/users/#{user_id}.xml"
       request = Net::HTTP::Delete.new(path)
       request.basic_auth(username, password)
@@ -223,7 +223,7 @@ module PuavoBS
     end
   end
 
-  def PuavoBS.virsh_define_testclient(hostname)
+  def self.virsh_define_testclient(hostname)
     uuid = SecureRandom.uuid()
     mac = 'aa:cc'
     4.times { mac += ":#{SecureRandom.hex(1)}" }
