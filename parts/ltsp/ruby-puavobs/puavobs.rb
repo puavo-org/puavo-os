@@ -162,7 +162,7 @@ module PuavoBS
 
   def PuavoBS.create_testuser(username, password, school_id)
     role_ids = PuavoBS.get_role_ids(username, password, school_id)
-    if role_ids.empty?
+    if role_ids.empty? then
       return []
     end
 

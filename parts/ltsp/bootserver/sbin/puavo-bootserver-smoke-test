@@ -61,7 +61,7 @@ print('Create a test device ... ')
 testclient_mac = nil
 at_exit do
   ## Try to remove the virtual domain if it was created.
-  if !testclient_mac.nil?
+  if !testclient_mac.nil? then
     Process.wait(Process.spawn('virsh', 'undefine', testclient_hostname,
                                :out => '/dev/null'))
     exit(1) unless $?.success?
@@ -91,7 +91,7 @@ puts('OK')
 print('Register the test device ... ')
 register_status = nil
 at_exit do
-  if !register_status.nil?
+  if !register_status.nil? then
     PuavoBS.unregister_device(admin_username, admin_password, testclient_hostname)
   end
 end
@@ -119,7 +119,7 @@ print('Boot up the test device ... ')
 testclient_started = false
 at_exit do
   ## Destroy the virtual domain if we started it.
-  if testclient_started
+  if testclient_started then
     Process.wait(Process.spawn('virsh', 'destroy', testclient_hostname,
                                :out => '/dev/null'))
     exit(1) unless $?.success?
