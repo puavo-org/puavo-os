@@ -27,8 +27,32 @@ def open_server(path)
   server_socket
 end
 
+has_colors = false
+begin
+  $has_colors = IO.popen(['tput', 'colors']) do |io|
+    Integer(io.read()) >= 8
+  end
+rescue
+  ## Just hide all errors, we do not care if color output support
+  ## could not be tested properly. Colors are just eye-candies,
+  ## nothing more.
+end
 
+def color(str, color_code)
+  if $has_colors then
+    "\e[#{color_code}m#{str}\e[0m"
+  else
+    str
+  end
+end
 
+def color_red(str)
+  color(str, 31)
+end
+
+def color_green(str)
+  color(str, 32)
+end
 
 puts()
 print <<'EOF'
@@ -69,7 +93,7 @@ at_exit do
 end
 testclient_mac = PuavoBS.virsh_define_testclient(testclient_hostname)
 exit(1) if testclient_mac.nil?
-puts('OK')
+puts(color_green('OK'))
 
 ### Create the test user.
 print('Create a test user ... ')
@@ -85,7 +109,7 @@ testuser_username, testuser_password = PuavoBS.create_testuser(admin_username,
                                                                admin_password,
                                                                school_id)
 testclient_tags << "autopilot:smoke:#{testuser_username}:#{testuser_password}"
-puts('OK')
+puts(color_green('OK'))
 
 ### Register the test device and register the cleanup proc.
 print('Register the test device ... ')
@@ -99,7 +123,7 @@ register_status = PuavoBS.register_device(admin_username, admin_password,
                                           school_id,
                                           testclient_hostname, testclient_mac,
                                           testclient_hosttype, testclient_tags)
-puts('OK')
+puts(color_green('OK'))
 
 ## Start monitoring log messages.
 print('Start message monitor ... ')
@@ -112,7 +136,7 @@ at_exit do
   end
 end
 server_socket = open_server('/tmp/puavo-bootserver-smoke-test.socket')
-puts('OK')
+puts(color_green('OK'))
 
 ### Boot up the test device and register the cleanup proc.
 print('Boot up the test device ... ')
@@ -129,7 +153,7 @@ testclient_started = Process.wait2(Process.spawn('virsh', 'start',
                                                  testclient_hostname,
                                                  :out => '/dev/null'))[1].success?
 exit(1) unless testclient_started
-puts('OK')
+puts(color_green('OK'))
 
 puts()
 puts('Initialized the test with the following configuration:')
@@ -164,7 +188,7 @@ expected_msgs.each_with_index() do |expected_msg, i|
   if received_msgs.empty? then
     result = IO.select([server_socket], [], [], 120)
     if result.nil? then
-      puts('FAIL: timeout')
+      puts(color_red('FAIL') + ': timeout')
       exit(1)
     end
 
@@ -187,9 +211,9 @@ expected_msgs.each_with_index() do |expected_msg, i|
   ## Test messages in the order they were received.
   msg = received_msgs.shift()
   if msg != expected_msg then
-    puts("FAIL: received '#{msg}'")
+    puts(color_red('FAIL') + ": received '#{msg}'")
     exit(1)
   end
-  puts('OK')
+  puts(color_green('OK'))
 
 end
