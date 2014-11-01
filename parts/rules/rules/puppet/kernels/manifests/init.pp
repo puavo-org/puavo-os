@@ -22,6 +22,16 @@ class kernels {
     }
   }
 
+  define legacy_kernel_link {
+    $filename = $title
+
+    file {
+      "/boot/$filename-legacy":
+       ensure => link,
+       target => "${filename}-${kernels::legacy_kernel}";
+    }
+  }
+
   define stable_kernel_link {
     $filename = $title
 
@@ -42,6 +52,11 @@ class kernels {
     'trusty'  => $default_kernel,
   }
 
+  $legacy_kernel = $lsbdistcodename ? {
+    'precise' => $default_kernel,
+    'trusty'  => '3.2.0-70-generic-pae',
+  }
+
   $stable_kernel = $lsbdistcodename ? {
     'precise' => $default_kernel,
     'trusty'  => $default_kernel,
@@ -60,6 +75,11 @@ class kernels {
           require => Packages::Kernels::Kernel_package[$edge_kernel];
       }
 
+      legacy_kernel_link {
+        [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
+          require => Packages::Kernels::Kernel_package[$legacy_kernel];
+      }
+
       stable_kernel_link {
         [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
           require => Packages::Kernels::Kernel_package[$stable_kernel];
@@ -67,6 +87,7 @@ class kernels {
 
       Packages::Kernels::Kernel_package <| title == $default_kernel |>
       Packages::Kernels::Kernel_package <| title == $edge_kernel    |>
+      Packages::Kernels::Kernel_package <| title == $legacy_kernel  |>
       Packages::Kernels::Kernel_package <| title == $stable_kernel  |>
     }
   }
