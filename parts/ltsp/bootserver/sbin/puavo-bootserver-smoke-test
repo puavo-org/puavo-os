@@ -54,19 +54,307 @@ def color_green(str)
   color(str, 32)
 end
 
-puts()
+class TestRunError < StandardError
+end
+
+class TestRun
+
+  def initialize(admin_username, admin_password,
+                 school_id, testclient_hosttype)
+    @admin_username             = admin_username
+    @admin_password             = admin_password
+    @school_id                  = school_id
+    @testclient_hosttype        = testclient_hosttype
+    bootserver_hostname         = File.read('/etc/puavo/hostname').strip()
+    @testclient_hostname        = "#{bootserver_hostname}-smoke-test"
+    @testclient_tags            = []
+    @testclient_mac             = nil
+    @testclient_register_status = nil
+    @testclient_started         = false
+    @testuser_username          = nil
+    @testuser_password          = nil
+    @server_socket              = nil
+
+  end
+
+  def prepare()
+    puts('---')
+    return false if !prepare_define_testclient()
+    return false if !prepare_add_testuser()
+    return false if !prepare_register_testclient()
+    return false if !prepare_open_socket()
+    return false if !prepare_start_testclient()
+    true
+  end
+
+  def execute()
+    puts('---')
+    expected_msgs = case @testclient_hosttype
+                    when 'fatclient'
+                      ['enter-display-manager-screen',
+                       'try-display-manager-login',
+                       'begin-user-session']
+                    when 'thinclient'
+                      ['begin-user-session']
+                    else
+                      []
+                    end
+
+    n = expected_msgs.length
+    received_msgs = []
+
+    expected_msgs.each_with_index() do |expected_msg, i|
+      print("Execute: receive #{i + 1}/#{n}: #{expected_msg} ... ")
+      begin
+        ## If haven't received any messaged, wait for them and then fill
+        ## received_msgs.
+        if received_msgs.empty? then
+          result = IO.select([@server_socket], [], [], 120)
+          raise TestRunError.new('timeout') if result.nil?
+
+          ## Ensure client socket gets closed properly afterwards.
+          client_socket = nil
+          begin
+            client_socket, client_addrinfo = @server_socket.accept()
+            received_msgs += client_socket.readlines().map() do |line|
+              JSON.parse(line)['msg']
+            end
+          ensure
+            if !client_socket.nil? then
+              client_socket.shutdown(Socket::SHUT_RDWR)
+              client_socket.close()
+            end
+          end
+        end
+
+        ## Test messages in the order they were received.
+        msg = received_msgs.shift()
+        raise TestRunError.new("got #{msg}") if msg != expected_msg
+      rescue TestRunError => e
+        puts(color_red('FAIL') + ": #{e.message}")
+        return false
+      rescue StandardError, Interrupt => e
+        puts(color_red('FAIL') + ': unexpected error')
+        raise
+      else
+        puts(color_green('OK'))
+      end
+    end
+
+    true
+  end
+
+  def cleanup()
+    puts('---')
+    cleanup_methods = [:cleanup_destroy_testclient,
+                       :cleanup_close_socket,
+                       :cleanup_unregister_testclient,
+                       :cleanup_remove_testuser,
+                       :cleanup_undefine_testclient,
+                      ]
+    first_exception = nil
+    cleanup_methods.each do |m|
+      begin
+        send(m)
+      rescue StandardError, Interrupt => e
+        if first_exception.nil? then
+          first_exception = e
+        end
+      end
+    end
+    raise first_exception unless first_exception.nil?
+  end
+
+  private
+
+  def prepare_define_testclient()
+    print('Prepare: define a virtual test device ... ')
+    begin
+      @testclient_mac = PuavoBS.virsh_define_testclient(@testclient_hostname)
+    rescue StandardError, Interrupt
+      puts(color_red('FAIL'))
+      raise
+    else
+      if @testclient_mac.nil? then
+        puts(color_red('FAIL'))
+        return false
+      end
+      puts(color_green('OK'))
+    end
+    true
+  end
+
+  def prepare_add_testuser()
+    print('Prepare: add a test user to Puavo ... ')
+    begin
+      (@testuser_username,
+       @testuser_password) = PuavoBS.create_testuser(@admin_username,
+                                                     @admin_password,
+                                                     @school_id)
+    rescue StandardError, Interrupt
+      puts(color_red('FAIL'))
+      raise
+    else
+      puts(color_green('OK'))
+      tag = "autopilot:smoke:#{@testuser_username}:#{@testuser_password}"
+      @testclient_tags << tag
+    end
+    true
+  end
+
+  def prepare_register_testclient()
+    print('Prepare: register the virtual test device to Puavo ... ')
+    begin
+      @testclient_register_status = PuavoBS.register_device(@admin_username,
+                                                            @admin_password,
+                                                            @school_id,
+                                                            @testclient_hostname,
+                                                            @testclient_mac,
+                                                            @testclient_hosttype,
+                                                            @testclient_tags)
+    rescue StandarError, Interrupt
+      puts(color_red('FAIL'))
+      raise
+    else
+      puts(color_green('OK'))
+    end
+    true
+  end
+
+  def prepare_open_socket()
+    print('Prepare: open a message socket ... ')
+    begin
+      @server_socket = open_server('/tmp/puavo-bootserver-smoke-test.socket')
+    rescue StandardError, Interrupt
+      puts(color_red('FAIL'))
+      raise
+    else
+      if @server_socket.nil? then
+        puts(color_red('FAIL'))
+        return false
+      end
+      puts(color_green('OK'))
+    end
+    true
+  end
+
+  def prepare_start_testclient()
+    print('Prepare: start the virtual test device ... ')
+    begin
+      Process.wait(Process.spawn('virsh', 'start',
+                                 @testclient_hostname,
+                                 :out => '/dev/null'))
+    rescue StandardError, Interrupt
+      puts(color_red('FAIL'))
+      raise
+    else
+      @testclient_started = $?.success?
+      if !@testclient_started then
+        puts(color_red('FAIL'))
+        return false
+      end
+      puts(color_green('OK'))
+    end
+    true
+  end
+
+  def cleanup_undefine_testclient()
+    if !@testclient_mac.nil? then
+      print('Cleanup: undefine the virtual test device ... ')
+      begin
+        Process.wait(Process.spawn('virsh', 'undefine', @testclient_hostname,
+                                   :out => '/dev/null'))
+      rescue StandardError, Interrupt
+        puts(color_red('FAIL'))
+        raise
+      else
+        if !$?.success? then
+          puts(color_red('FAIL'))
+          raise 'failed to undefine the virtual domain'
+        end
+        puts(color_green('OK'))
+      end
+    end
+  end
+
+  def cleanup_remove_testuser()
+    if !@testuser_username.nil? then
+      print('Cleanup: remove the test user from Puavo ... ')
+      begin
+        PuavoBS.remove_user(@admin_username, @admin_password,
+                            @school_id, @testuser_username)
+      rescue StandardError, Interrupt
+        puts(color_red('FAIL'))
+        raise
+      else
+        puts(color_green('OK'))
+      end
+    end
+  end
+
+  def cleanup_unregister_testclient()
+    if !@testclient_register_status.nil? then
+      print('Cleanup: unregister the virtual test device from Puavo ... ')
+      begin
+        PuavoBS.unregister_device(@admin_username, @admin_password,
+                                  @testclient_hostname)
+      rescue StandardError, Interrupt
+        puts(color_red('FAIL'))
+        raise
+      else
+        puts(color_green('OK'))
+      end
+    end
+  end
+
+  def cleanup_close_socket()
+    if !@server_socket.nil? then
+      print('Cleanup: close the message socket ... ')
+      begin
+        @server_socket.shutdown(Socket::SHUT_RDWR)
+        @server_socket.close()
+        File.delete('/tmp/puavo-bootserver-smoke-test.socket')
+      rescue StandardError, Interrupt
+        puts(color_red('FAIL'))
+        raise
+      else
+        puts(color_green('OK'))
+      end
+    end
+  end
+
+  def cleanup_destroy_testclient()
+    if @testclient_started then
+      print('Cleanup: destroy the virtual test device ... ')
+      begin
+        Process.wait(Process.spawn('virsh', 'destroy', @testclient_hostname,
+                                   :out => '/dev/null'))
+      rescue StandardError, Interrupt
+        puts(color_red('FAIL'))
+        raise
+      else
+        if !$?.success? then
+          puts(color_red('FAIL'))
+          raise 'failed to destroy the virtual domain'
+        end
+        puts(color_green('OK'))
+      end
+    end
+  end
+
+end
+
 print <<'EOF'
+
              +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+
              | ~= Puavo Bootserver Smoke Test =~ |
              +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+
+
 EOF
-puts()
 
 admin_username, admin_password = PuavoBS.ask_admin_credentials()
-puts()
 
 school_name, school_id = PuavoBS.ask_school(admin_username, admin_password)
-puts()
 
 say("Select the test device type:")
 testclient_hosttype = choose() do |menu|
@@ -74,146 +362,13 @@ testclient_hosttype = choose() do |menu|
     menu.choice(hosttype) { hosttype }
   end
 end
-puts()
 
-bootserver_hostname = File.read('/etc/puavo/hostname').strip()
-testclient_hostname = "#{bootserver_hostname}-smoke-test"
-testclient_tags     = []
+testrun = TestRun.new(admin_username, admin_password,
+                      school_id, testclient_hosttype)
 
-### Create the test device and register the cleanup proc.
-print('Create a test device ... ')
-testclient_mac = nil
-at_exit do
-  ## Try to remove the virtual domain if it was created.
-  if !testclient_mac.nil? then
-    Process.wait(Process.spawn('virsh', 'undefine', testclient_hostname,
-                               :out => '/dev/null'))
-    exit(1) unless $?.success?
-  end
-end
-testclient_mac = PuavoBS.virsh_define_testclient(testclient_hostname)
-exit(1) if testclient_mac.nil?
-puts(color_green('OK'))
-
-### Create the test user.
-print('Create a test user ... ')
-testuser_username = nil
-testuser_password = nil
-at_exit do
-  if !testuser_username.nil? then
-    PuavoBS.remove_user(admin_username, admin_password,
-                        school_id, testuser_username)
-  end
-end
-testuser_username, testuser_password = PuavoBS.create_testuser(admin_username,
-                                                               admin_password,
-                                                               school_id)
-testclient_tags << "autopilot:smoke:#{testuser_username}:#{testuser_password}"
-puts(color_green('OK'))
-
-### Register the test device and register the cleanup proc.
-print('Register the test device ... ')
-register_status = nil
-at_exit do
-  if !register_status.nil? then
-    PuavoBS.unregister_device(admin_username, admin_password, testclient_hostname)
-  end
-end
-register_status = PuavoBS.register_device(admin_username, admin_password,
-                                          school_id,
-                                          testclient_hostname, testclient_mac,
-                                          testclient_hosttype, testclient_tags)
-puts(color_green('OK'))
-
-## Start monitoring log messages.
-print('Start message monitor ... ')
-server_socket = nil
-at_exit do
-  if !server_socket.nil? then
-    server_socket.shutdown(Socket::SHUT_RDWR)
-    server_socket.close()
-    File.delete('/tmp/puavo-bootserver-smoke-test.socket')
-  end
-end
-server_socket = open_server('/tmp/puavo-bootserver-smoke-test.socket')
-puts(color_green('OK'))
-
-### Boot up the test device and register the cleanup proc.
-print('Boot up the test device ... ')
-testclient_started = false
-at_exit do
-  ## Destroy the virtual domain if we started it.
-  if testclient_started then
-    Process.wait(Process.spawn('virsh', 'destroy', testclient_hostname,
-                               :out => '/dev/null'))
-    exit(1) unless $?.success?
-  end
-end
-testclient_started = Process.wait2(Process.spawn('virsh', 'start',
-                                                 testclient_hostname,
-                                                 :out => '/dev/null'))[1].success?
-exit(1) unless testclient_started
-puts(color_green('OK'))
-
-puts()
-puts('Initialized the test with the following configuration:')
-puts("  School      : #{school_name}")
-puts("  Hosttype    : #{testclient_hosttype}")
-puts("  Hostname    : #{testclient_hostname}")
-puts("  MAC address : #{testclient_mac}")
-puts("  Username    : #{testuser_username}")
-puts('')
-
-expected_msgs = case testclient_hosttype
-                when 'fatclient'
-                  ['enter-display-manager-screen',
-                   'try-display-manager-login',
-                   'begin-user-session']
-                when 'thinclient'
-                  ['begin-user-session']
-                else
-                  []
-                end
-
-max_msg_name_length = expected_msgs.map() { |s| s.length }.max()
-num_msgs = expected_msgs.length
-received_msgs = []
-
-expected_msgs.each_with_index() do |expected_msg, i|
-  padding = '.' * (max_msg_name_length - expected_msg.length)
-  print("Step #{i+1}/#{num_msgs}: Receive '#{expected_msg}' ...#{padding} ")
-
-  ## If haven't received any messaged, wait for them and then fill
-  ## received_msgs.
-  if received_msgs.empty? then
-    result = IO.select([server_socket], [], [], 120)
-    if result.nil? then
-      puts(color_red('FAIL') + ': timeout')
-      exit(1)
-    end
-
-    ## Ensure client socket gets closed properly afterwards.
-    client_socket = nil
-    begin
-      client_socket, client_addrinfo = server_socket.accept()
-      received_msgs += client_socket.readlines().map() do |line|
-        JSON.parse(line)['msg']
-      end
-    ensure
-      if !client_socket.nil? then
-        client_socket.shutdown(Socket::SHUT_RDWR)
-        client_socket.close()
-      end
-    end
-
-  end
-
-  ## Test messages in the order they were received.
-  msg = received_msgs.shift()
-  if msg != expected_msg then
-    puts(color_red('FAIL') + ": received '#{msg}'")
-    exit(1)
-  end
-  puts(color_green('OK'))
-
+begin
+  exit(1) if !testrun.prepare()
+  exit(1) if !testrun.execute()
+ensure
+  testrun.cleanup()
 end
