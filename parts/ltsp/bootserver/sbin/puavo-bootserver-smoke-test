@@ -36,6 +36,16 @@ def color_green(str)
   color(str, 32)
 end
 
+def puts_ok(msg=nil)
+  extra_msg = msg.nil? ? '' : ": #{msg}"
+  puts(color_green('OK') + extra_msg)
+end
+
+def puts_fail(msg=nil)
+  extra_msg = msg.nil? ? '' : ": #{msg}"
+  puts(color_red('FAIL') + extra_msg)
+end
+
 class TestRunError < StandardError
 end
 
@@ -113,13 +123,13 @@ class TestRun
         msg = received_msgs.shift()
         raise TestRunError.new("got #{msg}") if msg != expected_msg
       rescue TestRunError => e
-        puts(color_red('FAIL') + ": #{e.message}")
+        puts_fail(e.message)
         return false
       rescue StandardError, Interrupt => e
-        puts(color_red('FAIL') + ': unexpected error')
+        puts_fail('unexpected error')
         raise
       else
-        puts(color_green('OK'))
+        puts_ok()
       end
     end
 
@@ -154,14 +164,14 @@ class TestRun
     begin
       @testclient_mac = PuavoBS.virsh_define_testclient(@testclient_hostname)
     rescue StandardError, Interrupt
-      puts(color_red('FAIL'))
+      puts_fail()
       raise
     else
       if @testclient_mac.nil? then
-        puts(color_red('FAIL'))
+        puts_fail()
         return false
       end
-      puts(color_green('OK'))
+      puts_ok()
     end
     true
   end
@@ -174,10 +184,10 @@ class TestRun
                                                      @admin_password,
                                                      @school_id)
     rescue StandardError, Interrupt
-      puts(color_red('FAIL'))
+      puts_fail()
       raise
     else
-      puts(color_green('OK'))
+      puts_ok()
       tag = "autopilot:smoke:#{@testuser_username}:#{@testuser_password}"
       @testclient_tags << tag
     end
@@ -195,10 +205,10 @@ class TestRun
                                                             @testclient_hosttype,
                                                             @testclient_tags)
     rescue StandarError, Interrupt
-      puts(color_red('FAIL'))
+      puts_fail()
       raise
     else
-      puts(color_green('OK'))
+      puts_ok()
     end
     true
   end
@@ -221,14 +231,14 @@ class TestRun
       server_socket.listen(1)
       @server_socket = server_socket
     rescue StandardError, Interrupt
-      puts(color_red('FAIL'))
+      puts_fail()
       raise
     else
       if @server_socket.nil? then
-        puts(color_red('FAIL'))
+        puts_fail()
         return false
       end
-      puts(color_green('OK'))
+      puts_ok()
     end
     true
   end
@@ -240,15 +250,15 @@ class TestRun
                                  @testclient_hostname,
                                  :out => '/dev/null'))
     rescue StandardError, Interrupt
-      puts(color_red('FAIL'))
+      puts_fail()
       raise
     else
       @testclient_started = $?.success?
       if !@testclient_started then
-        puts(color_red('FAIL'))
+        puts_fail()
         return false
       end
-      puts(color_green('OK'))
+      puts_ok()
     end
     true
   end
@@ -260,14 +270,14 @@ class TestRun
         Process.wait(Process.spawn('virsh', 'undefine', @testclient_hostname,
                                    :out => '/dev/null'))
       rescue StandardError, Interrupt
-        puts(color_red('FAIL'))
+        puts_fail()
         raise
       else
         if !$?.success? then
-          puts(color_red('FAIL'))
+          puts_fail()
           raise 'failed to undefine the virtual domain'
         end
-        puts(color_green('OK'))
+        puts_ok()
       end
     end
   end
@@ -279,10 +289,10 @@ class TestRun
         PuavoBS.remove_user(@admin_username, @admin_password,
                             @school_id, @testuser_username)
       rescue StandardError, Interrupt
-        puts(color_red('FAIL'))
+        puts_fail()
         raise
       else
-        puts(color_green('OK'))
+        puts_ok()
       end
     end
   end
@@ -294,10 +304,10 @@ class TestRun
         PuavoBS.unregister_device(@admin_username, @admin_password,
                                   @testclient_hostname)
       rescue StandardError, Interrupt
-        puts(color_red('FAIL'))
+        puts_fail()
         raise
       else
-        puts(color_green('OK'))
+        puts_ok()
       end
     end
   end
@@ -310,10 +320,10 @@ class TestRun
         @server_socket.close()
         File.delete(@server_socket_path)
       rescue StandardError, Interrupt
-        puts(color_red('FAIL'))
+        puts_fail()
         raise
       else
-        puts(color_green('OK'))
+        puts_ok()
       end
     end
   end
@@ -325,14 +335,14 @@ class TestRun
         Process.wait(Process.spawn('virsh', 'destroy', @testclient_hostname,
                                    :out => '/dev/null'))
       rescue StandardError, Interrupt
-        puts(color_red('FAIL'))
+        puts_fail()
         raise
       else
         if !$?.success? then
-          puts(color_red('FAIL'))
+          puts_fail()
           raise 'failed to destroy the virtual domain'
         end
-        puts(color_green('OK'))
+        puts_ok()
       end
     end
   end
