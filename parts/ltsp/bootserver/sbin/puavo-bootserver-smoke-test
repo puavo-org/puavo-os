@@ -10,40 +10,22 @@ require 'socket'
 require 'highline/import'
 require 'puavobs'
 
-def open_server(path)
-  server_socket = Socket.new(Socket::AF_UNIX, Socket::SOCK_STREAM)
-  old_umask = nil
-  begin
-    old_umask = File.umask(007)
-    server_socket.bind(Socket.sockaddr_un(path))
-  ensure
-    if !old_umask.nil? then
-      File.umask(old_umask)
+def color(str, color_code)
+  unless defined?($has_colors) then
+    $has_colors = false
+    begin
+      $has_colors = IO.popen(['tput', 'colors']) do |io|
+        Integer(io.read()) >= 8
+      end
+    rescue
+      ## Just hide all errors, we do not care if color output support
+      ## could not be tested properly. Colors are just eye-candies,
+      ## nothing more.
     end
   end
-  puavo_gid = Etc.getgrnam('puavo').gid
-  File.chown(nil, puavo_gid, path)
-  server_socket.listen(1)
-  server_socket
-end
 
-has_colors = false
-begin
-  $has_colors = IO.popen(['tput', 'colors']) do |io|
-    Integer(io.read()) >= 8
-  end
-rescue
-  ## Just hide all errors, we do not care if color output support
-  ## could not be tested properly. Colors are just eye-candies,
-  ## nothing more.
-end
-
-def color(str, color_code)
-  if $has_colors then
-    "\e[#{color_code}m#{str}\e[0m"
-  else
-    str
-  end
+  return "\e[#{color_code}m#{str}\e[0m" if $has_colors
+  str
 end
 
 def color_red(str)
@@ -74,7 +56,7 @@ class TestRun
     @testuser_username          = nil
     @testuser_password          = nil
     @server_socket              = nil
-
+    @server_socket_path         = '/tmp/puavo-bootserver-smoke-test.socket'
   end
 
   def prepare()
@@ -224,7 +206,20 @@ class TestRun
   def prepare_open_socket()
     print('Prepare: open a message socket ... ')
     begin
-      @server_socket = open_server('/tmp/puavo-bootserver-smoke-test.socket')
+      server_socket = Socket.new(Socket::AF_UNIX, Socket::SOCK_STREAM)
+      old_umask = nil
+      begin
+        old_umask = File.umask(007)
+        server_socket.bind(Socket.sockaddr_un(@server_socket_path))
+      ensure
+        if !old_umask.nil? then
+          File.umask(old_umask)
+        end
+      end
+      puavo_gid = Etc.getgrnam('puavo').gid
+      File.chown(nil, puavo_gid, @server_socket_path)
+      server_socket.listen(1)
+      @server_socket = server_socket
     rescue StandardError, Interrupt
       puts(color_red('FAIL'))
       raise
@@ -313,7 +308,7 @@ class TestRun
       begin
         @server_socket.shutdown(Socket::SHUT_RDWR)
         @server_socket.close()
-        File.delete('/tmp/puavo-bootserver-smoke-test.socket')
+        File.delete(@server_socket_path)
       rescue StandardError, Interrupt
         puts(color_red('FAIL'))
         raise
