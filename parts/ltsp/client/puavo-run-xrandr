@@ -4,30 +4,16 @@ require 'getoptlong'
 require 'json'
 require 'shellwords'
 
-## Execute `command` repeatedly until success or until the `max`
-## number of tries is reached. Return the number of failures. Caller
-## can compare it to `max` to check if the `command` was eventually
-## executed succesfully.
-def system_repeat_until_success(max, *args)
-  max.times do |i|
-    return i if system(*args)
-  end
-end
-
 opts = GetoptLong.new(
   ['--user-session', '-u', GetoptLong::NO_ARGUMENT],
-  ['--max-repeat-times', '-n', GetoptLong::REQUIRED_ARGUMENT],
   )
 
-max_repeat_times = 20
 is_user_session = false
 
 opts.each do |opt, arg|
   case opt
   when '--user-session'
     is_user_session = true
-  when '--max-repeat-times'
-    max_repeat_times = Integer(arg)
   end
 end
 
@@ -87,12 +73,10 @@ device['xrandr'].each do |xrandconf|
 
   if ! xrandr_args.empty? then
     if command_spec['output'] then
-      system_repeat_until_success(max_repeat_times,
-                                  'xrandr', *xrandr_args)
+      system('xrandr', * xrandr_args)
     else
       connected_displays.each do |display|
-        system_repeat_until_success(max_repeat_times,
-                                    'xrandr', '--output', display, *xrandr_args)
+	system('xrandr', '--output', display, * xrandr_args)
       end
     end
   end
@@ -101,7 +85,6 @@ device['xrandr'].each do |xrandconf|
     if xrandr_direct_command_args[0] == 'xrandr' then
       xrandr_direct_command_args.slice!(0)
     end
-    system_repeat_until_success(max_repeat_times,
-                                'xrandr', *xrandr_direct_command_args)
+    system('xrandr', * xrandr_direct_command_args)
   end
 end
