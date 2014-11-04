@@ -97,6 +97,8 @@ module PuavoBS
 
   def self.ask_school(username, password)
     school_ids = self.get_school_ids(username, password)
+    return nil if school_ids.empty?
+
     school_names = school_ids.collect() do |school_id|
       self.get_school(username, password, school_id)["name"]
     end
