@@ -26,7 +26,7 @@ puavo_dconf_profile_path="${puavo_user_desktopconf_path}/dconf_profile"
   if [ "$puavo_xrandr_settings" != "null" \
        -a "$puavo_xrandr_settings" != "[]" ]; then
     echo "system-db:turn_off_xrandrplugin"
-  esac
+  fi
 
   echo "system-db:keyboard"
   echo "system-db:puavodesktop"
