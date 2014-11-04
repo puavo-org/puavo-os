@@ -12,5 +12,4 @@
 export DISPLAY=:0.0
 export XAUTHORITY=/var/run/lightdm/root/:0
 
-. /usr/share/ltsp/ltsp_config
-. /usr/share/ltsp/xinitrc.d/I10-xrandr
+/usr/lib/puavo-ltsp-client/puavo-run-xrandr
