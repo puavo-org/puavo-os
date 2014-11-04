@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -eu
+
+if [ -e /tmp/puavo-bootserver-smoke-test.socket ]; then
+    nc -U /tmp/puavo-bootserver-smoke-test.socket <"$1" || true
+fi
