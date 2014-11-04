@@ -367,7 +367,13 @@ EOF
 
 admin_username, admin_password = PuavoBS.ask_admin_credentials()
 
-school_name, school_id = PuavoBS.ask_school(admin_username, admin_password)
+school = PuavoBS.ask_school(admin_username, admin_password)
+if school.nil? then
+  STDERR.puts('ERROR: this bootserver is not connected to any schools, ' \
+              'please connect it to some schools from Puavo and try again')
+  exit(1)
+end
+school_name, school_id = school
 
 say("Select the test device type:")
 testclient_hosttype = choose() do |menu|
