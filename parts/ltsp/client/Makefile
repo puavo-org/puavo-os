@@ -238,6 +238,7 @@ install : installdirs
 		etc/X11/Xsession.d/42puavo-set-browser-homepage \
 		etc/X11/Xsession.d/43puavo-set-guest-session-quirks \
 		etc/X11/Xsession.d/44puavo-generate-dconf-profile \
+		etc/X11/Xsession.d/45puavo-display-setup \
 		etc/X11/Xsession.d/90puavo-setup-printers
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
