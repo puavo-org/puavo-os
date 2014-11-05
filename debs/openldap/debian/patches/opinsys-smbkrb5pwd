@@ -1,6 +1,6 @@
 diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/LICENSE openldap/contrib/slapd-modules/smbkrb5pwd/LICENSE
---- openldap.orig/contrib/slapd-modules/smbkrb5pwd/LICENSE	1970-01-01 00:00:00.000000000 +0000
-+++ openldap/contrib/slapd-modules/smbkrb5pwd/LICENSE	2014-10-07 15:09:40.386104000 +0000
+--- openldap.orig/contrib/slapd-modules/smbkrb5pwd/LICENSE	1970-01-01 02:00:00.000000000 +0200
++++ openldap/contrib/slapd-modules/smbkrb5pwd/LICENSE	2014-11-06 12:13:01.184742656 +0200
 @@ -0,0 +1,47 @@
 +The OpenLDAP Public License
 +  Version 2.8, 17 August 2003
@@ -50,8 +50,8 @@ diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/LICENSE openldap/contri
 +California, USA.  All Rights Reserved.  Permission to copy and
 +distribute verbatim copies of this document is granted.
 diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/Makefile openldap/contrib/slapd-modules/smbkrb5pwd/Makefile
---- openldap.orig/contrib/slapd-modules/smbkrb5pwd/Makefile	1970-01-01 00:00:00.000000000 +0000
-+++ openldap/contrib/slapd-modules/smbkrb5pwd/Makefile	2014-10-07 15:10:10.058104000 +0000
+--- openldap.orig/contrib/slapd-modules/smbkrb5pwd/Makefile	1970-01-01 02:00:00.000000000 +0200
++++ openldap/contrib/slapd-modules/smbkrb5pwd/Makefile	2014-11-06 12:13:01.184742656 +0200
 @@ -0,0 +1,70 @@
 +# $OpenLDAP: pkg/ldap/contrib/slapd-modules/smbk5pwd/Makefile,v 1.1.6.4 2009/10/02 21:16:53 quanah Exp $
 +# This work is part of OpenLDAP Software <http://www.openldap.org/>.
@@ -124,8 +124,8 @@ diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/Makefile openldap/contr
 +	$(LIBTOOL) --mode=install cp smbkrb5pwd.la $(DESTDIR)$(moduledir)
 +	$(LIBTOOL) --mode=install cp smbkrb5pwd_srv.la $(DESTDIR)$(moduledir)
 diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/README openldap/contrib/slapd-modules/smbkrb5pwd/README
---- openldap.orig/contrib/slapd-modules/smbkrb5pwd/README	1970-01-01 00:00:00.000000000 +0000
-+++ openldap/contrib/slapd-modules/smbkrb5pwd/README	2014-10-07 15:09:40.386104000 +0000
+--- openldap.orig/contrib/slapd-modules/smbkrb5pwd/README	1970-01-01 02:00:00.000000000 +0200
++++ openldap/contrib/slapd-modules/smbkrb5pwd/README	2014-11-06 12:13:01.184742656 +0200
 @@ -0,0 +1,171 @@
 +Documentation is available at: https://github.com/opinsys/smbkrb5pwd/wiki
 +
@@ -299,9 +299,9 @@ diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/README openldap/contrib
 +top-level directory of the distribution or, alternatively, at
 +<http://www.OpenLDAP.org/license.html>.
 diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c openldap/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c
---- openldap.orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c	1970-01-01 00:00:00.000000000 +0000
-+++ openldap/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c	2014-10-07 15:09:40.386104000 +0000
-@@ -0,0 +1,918 @@
+--- openldap.orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c	1970-01-01 02:00:00.000000000 +0200
++++ openldap/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c	2014-11-06 12:13:01.184742656 +0200
+@@ -0,0 +1,931 @@
 +/* smbkrb5pwd.c - Overlay for managing Samba and MIT Kerberos passwords */
 +/* $OpenLDAP: pkg/ldap/contrib/slapd-modules/smbk5pwd/smbk5pwd.c,v 1.17.2.16 2009/08/17 21:49:00 quanah Exp $ */
 +/* This work is part of OpenLDAP Software <http://www.openldap.org/>.
@@ -522,6 +522,9 @@ diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c openldap/c
 +	char *user_uid = NULL, *user_password = NULL, *user_princstr = NULL;
 +	int rc;
 +	size_t user_princstr_size;
++	pid_t worker_pid = 0;
++	pid_t timeout_pid = 0;
++	int status = 0;
 +
 +	if (!access_allowed(op, e, slap_schema.si_ad_userPassword, NULL,
 +			    ACL_WRITE, NULL))
@@ -529,20 +532,32 @@ diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c openldap/c
 +
 +	rc = LDAP_LOCAL_ERROR;
 +
-+	if (ldap_pvt_thread_mutex_trylock(&pi->krb5_mutex)) {
-+		/* this should happen only very rarely,
-+		 * we want to track these */
-+		Log1(LDAP_DEBUG_ANY, LDAP_LEVEL_NOTICE,
-+	     	     "smbkrb5pwd %s : lock contention on kerberos mutex\n",
-+	     	     op->o_log_prefix);
-+		if (ldap_pvt_thread_mutex_lock(&pi->krb5_mutex)) {
-+			Log1(LDAP_DEBUG_ANY, LDAP_LEVEL_NOTICE,
-+			     "smbkrb5pwd %s : failed to grab kerberos mutex\n",
-+			     op->o_log_prefix);
-+			rc = LDAP_CONNECT_ERROR;
-+			goto finish;
++	/* The krb5 kadm5 libraries seem to use global variables that hold the 
++           master key for the realm and some other realm specific data. Mutexes
++	   did not seem to get rid of all the problems related to this and 
++	   some lockups still happened, so fork the process instead before 
++	   doing any krb5 operations. The process is forked and the child sets 
++	   an alarm that kills the forked process if the password change is not 
++	   finished in 2 seconds.
++	*/
++
++	worker_pid = fork();
++	if (worker_pid) {
++		waitpid(worker_pid, &status, 0);
++
++		if (status == SIGALRM) {
++			Log1(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
++			      "smbkrb5pwd %s : forked password change process did not complete in 2s\n",
++			      op->o_log_prefix);
++
++			return LDAP_LOCAL_ERROR;
 +		}
++
++		return status;
 +	}
++
++	signal(SIGALRM, SIG_DFL);
++	alarm(2);
 +
 +	kadm5_handle = NULL;
 +	memset(&princ, 0, sizeof(princ));
@@ -561,7 +576,7 @@ diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c openldap/c
 +		      op->o_log_prefix,
 +		      ldap_err2string(LDAP_NO_SUCH_ATTRIBUTE));
 +		rc = LDAP_NO_SUCH_ATTRIBUTE;
-+		goto mitkrb_error_with_mutex_lock;
++		goto finish;
 +	}
 +
 +	user_uid = calloc(a_uid->a_vals[0].bv_len + 1, 1);
@@ -577,7 +592,7 @@ diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c openldap/c
 +		     " for user %s: %s\n",
 +		     op->o_log_prefix, user_uid, error_message(retval));
 +		rc = LDAP_CONNECT_ERROR;
-+		goto mitkrb_error_with_mutex_lock;
++		goto finish;
 +	}
 +
 +	params.mask |= KADM5_CONFIG_REALM;
@@ -673,8 +688,6 @@ diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c openldap/c
 +	free(user_princstr);
 +mitkrb_error_with_context:
 +	krb5_free_context(context);
-+mitkrb_error_with_mutex_lock:
-+	ldap_pvt_thread_mutex_unlock(&pi->krb5_mutex);
 +finish:
 +	if (user_uid)
 +	  free(user_uid);
@@ -682,7 +695,7 @@ diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c openldap/c
 +	if (user_password)
 +	  free(user_password);
 +
-+	return rc;
++	_exit(rc);
 +}
 +
 +static int smbkrb5pwd_exop_passwd(
