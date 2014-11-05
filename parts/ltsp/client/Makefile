@@ -1,3 +1,7 @@
+subdirs = create_monitors_xml
+install-subdirs = $(subdirs:%=install-%)
+clean-subdirs = $(subdirs:%=clean-%)
+
 prefix = /usr/local
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
@@ -11,7 +15,15 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY : all
-all :
+all : $(subdirs)
+
+.PHONY : $(subdirs)
+$(subdirs) :
+	$(MAKE) -C $@
+
+.PHONY : $(install-subdirs)
+$(install-subdirs) :
+	$(MAKE) -C $(@:install-%=%) install
 
 .PHONY : installdirs
 installdirs :
@@ -64,7 +76,7 @@ installdirs :
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
 
 .PHONY : install
-install : installdirs
+install : installdirs $(install-subdirs)
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/pam-configs \
 		pam/configs/puavo-local-access
 
@@ -270,5 +282,9 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/xgreeters \
 		xgreeters/puavo-unity-greeter.desktop
 
+.PHONY : $(clean-subdirs)
+$(clean-subdirs) :
+	$(MAKE) -C $(@:clean-%=%) clean
+
 .PHONY : clean
-clean :
+clean : $(clean-subdirs)
