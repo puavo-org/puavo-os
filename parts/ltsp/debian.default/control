@@ -43,7 +43,7 @@ Depends: ${misc:Depends}, lightdm, lightdm-gtk-greeter,
  ruby-trollop, ruby-rest-client, ntp, imagemagick, cowsay, puavo-client,
  ratpoison, xautolock, nfs-common, gnome-session-flashback, jq, perl,
  libpam-runtime, puavo-hw-tools, ruby-json, daemon, nslcd, libnss-ldapd,
-Build-Depends: libgnome-desktop-3-dev
+Build-Depends: libgnome-desktop-3-dev, pkg-config
 Suggests: webkiosk-language-selector
 Description: Bits and pieces needed inside the LTSP chroot image.
 
