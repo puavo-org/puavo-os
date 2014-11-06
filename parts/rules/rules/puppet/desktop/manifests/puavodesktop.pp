@@ -1,7 +1,6 @@
 class desktop::puavodesktop {
   include desktop::dconf::laptop,
           desktop::dconf::puavodesktop,
-          desktop::dconf::turn_off_xrandrplugin,
           desktop::enable_indicator_power_service,
           desktop::mimedefaults,
           packages,
