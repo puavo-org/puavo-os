@@ -4,7 +4,7 @@ class lightdm::background {
           packages
 
   $image_path = $lsbdistcodename ? {
-    'precise' => '/usr/share/backgrounds/Precise_Pangolin_by_Vlad_Gerasimov.jpg',
+    'precise' => '/usr/share/backgrounds/Golden_Bloom_by_Twinmama.jpg',
     default   => '/usr/share/backgrounds/Nylon_Rainbow_by_Sam_Hewitt.jpg',
   }
 
