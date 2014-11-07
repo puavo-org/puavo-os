@@ -27,8 +27,12 @@ case "${PUAVO_HOSTTYPE}" in
     PREFERRED_SERVER=$(echo $PUAVO_SESSION | jq -r .ltsp_server.state.fqdn)
     REMOTE_SESSION="\"gnome-session --session=gnome-fallback\""
 
+    # Try to keep control socket path under 108 characters (should be under 91
+    # for ssh).  We do not need the domain name in control socket.
+    PREFERRED_SERVER_SHORT_FORM="$(echo "$PREFERRED_SERVER" | cut -d . -f 1)"
+    SOCKET="/run/user/${USER}/socket_${PREFERRED_SERVER_SHORT_FORM}"
+
     REMOTE_DISPLAY="${IPADDR}${DISPLAY}"
-    SOCKET="/run/user/${USER}/socket_$PREFERRED_SERVER"
     LOCALDEV="; /usr/sbin/ltspfsmounter all cleanup"
 
     XAUTH_PROTOCOL=$(xauth -f $XAUTHORITY list | head -1 | awk '{print $2}')
