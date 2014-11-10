@@ -9,12 +9,19 @@
 #
 # ACTION=="change", SUBSYSTEM=="drm", RUN+="/usr/bin/udev-hotplug-monitor"
 
-if pgrep -fx '/bin/sh /usr/lib/puavo-ltsp-client/puavo-desktop-session' \
-  >/dev/null; then
-   # There is a desktop session going on on this host.
-   # The gnome-settings-daemon xrandr plugin should be taking care of the
-   # displays, so do not mess with those here.
-   exit 0
+puavo_xrandr_settings_are_forced() {
+  jq -r .device.tags[] /etc/puavo/device.json | grep -qx force_puavo_xrandr
+}
+
+there_is_a_desktop_session() {
+  pgrep -fx '/bin/sh /usr/lib/puavo-ltsp-client/puavo-desktop-session' \
+    >/dev/null
+}
+
+if there_is_a_desktop_session && !puavo_xrandr_settings_are_forced; then
+  # if puavo xrandr settings are not forced and we are on a desktop session,
+  # we depend on the gnome-settings-daemon xrandr plugin to handle the displays
+  exit 0
 fi
 
 export DISPLAY=:0.0
