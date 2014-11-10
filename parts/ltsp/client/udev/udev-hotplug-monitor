@@ -10,7 +10,7 @@
 # ACTION=="change", SUBSYSTEM=="drm", RUN+="/usr/bin/udev-hotplug-monitor"
 
 puavo_xrandr_settings_are_forced() {
-  jq -r .device.tags[] /etc/puavo/device.json | grep -qx force_puavo_xrandr
+  jq -r .tags[] /etc/puavo/device.json | grep -qx force_puavo_xrandr
 }
 
 there_is_a_desktop_session() {
@@ -18,7 +18,7 @@ there_is_a_desktop_session() {
     >/dev/null
 }
 
-if there_is_a_desktop_session && !puavo_xrandr_settings_are_forced; then
+if there_is_a_desktop_session && ! puavo_xrandr_settings_are_forced; then
   # if puavo xrandr settings are not forced and we are on a desktop session,
   # we depend on the gnome-settings-daemon xrandr plugin to handle the displays
   exit 0
