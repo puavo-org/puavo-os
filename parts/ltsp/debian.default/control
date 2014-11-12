@@ -17,7 +17,7 @@ Depends: ${misc:Depends}, libsasl2-modules-gssapi-mit, isc-dhcp-server, bind9,
  libvirt-bin, ruby-ipaddress, syslinux, ruby-highline, ruby-dnsruby,
  openbsd-inetd, samba, cifs-utils, ipsec-tools, racoon, puavo-sharedir-manager,
  puavo-logrelay, nginx, puavo-rest-bootserver, jq, curl, ntp, puavo-client,
- ruby-puavobs
+ ruby-puavobs, rsyslog-relp, logrotate
 Recommends: tshark, git, emacs23-nox, sysstat, tmux, vim, openvpn, puavo-wlangw,
  etherwake, nmap, fping, w3m, hping3, screen, elinks, puavo-devscripts, ethtool,
  iperf, iftop, lynx
