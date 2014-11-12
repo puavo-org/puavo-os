@@ -158,11 +158,15 @@ def output_makefile(builder_confs, image_confs)
     rdiff_make_snippets = * get_rdiff_targets_info(image_confs)
 
   puts <<EOF
-IMAGES_DIR     = #{ images_dir }
-RDIFFS_DIR     = #{ rdiffs_dir }
-CKSUMS_DIR     = ${RDIFFS_DIR}/.cksums
-MIRROR_DIR     = ${RDIFFS_DIR}/.mirror
-SIGNATURES_DIR = ${RDIFFS_DIR}/.signatures
+IMAGES_DIR        = #{ images_dir }
+RDIFFS_DIR        = #{ rdiffs_dir }
+CKSUMS_DIR        = ${RDIFFS_DIR}/.cksums
+MIRROR_DIR        = ${RDIFFS_DIR}/.mirror
+SIGNATURES_DIR    = ${RDIFFS_DIR}/.signatures
+RDIFF_TARGET_DIRS = #{ rdiff_target_dirs.join(' ') }
+
+ALL_DIRS = ${CKSUMS_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs \\
+	   ${RDIFF_TARGET_DIRS} ${SIGNATURES_DIR}
 
 CHROOT_TARGETS = chroot cleanup-chroot dist-upgrade image install-packages \\
 		 puppet-chroot puppet-chroot-error-on-change puppet-local \\
@@ -180,8 +184,6 @@ IMAGE_SERIES_RDIFF_TARGETS = #{ image_series_rdiff_targets.join(' ') }
 
 RDIFF_FILES_AP = #{ all_rdiff_files.join(' ') }
 RDIFF_FILES = $(notdir ${RDIFF_FILES_AP})
-
-RDIFF_TARGET_DIRS = #{ rdiff_target_dirs.join(' ') }
 
 CKSUM_FILES = $(addsuffix .cksum,${IMAGE_FILES}) \\
               $(addsuffix .cksum,${RDIFF_FILES})
@@ -225,27 +227,27 @@ ${CHROOT_TARGETS}:
 ${IMAGE_SERIES}: images.json
 	sudo puavo-build-image --config-target $@ --images-config $<
 
-${CKSUMS_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs ${RDIFF_TARGET_DIRS} ${SIGNATURES_DIR}:
+${ALL_DIRS}:
 	mkdir -p $@
 
-${CKSUMS_DIR}/%.img.cksum: %.img ${CKSUMS_DIR}
+${CKSUMS_DIR}/%.img.cksum: %.img | ${CKSUMS_DIR}
 	cksum $< > $@
 
-${CKSUMS_DIR}/%.rdiff.cksum: %.rdiff ${CKSUMS_DIR}
+${CKSUMS_DIR}/%.rdiff.cksum: %.rdiff | ${CKSUMS_DIR}
 	cksum $< > $@
 
-${MIRROR_DIR}/CKSUMS: ${CKSUM_FILES_AP} ${MIRROR_DIR}
+${MIRROR_DIR}/CKSUMS: ${CKSUM_FILES_AP} | ${MIRROR_DIR}
 	awk '{ "basename " $$3 | getline $$3; print }' ${CKSUM_FILES_AP} > $@
 
 # link ${MIRROR_DIR_IMAGES}
-${MIRROR_DIR}/%.img: %.img ${MIRROR_DIR}
+${MIRROR_DIR}/%.img: %.img | ${MIRROR_DIR}
 	@ln -f $< $@
 
 # link ${MIRROR_DIR_RDIFFS}
-${MIRROR_DIR}/rdiffs/%.rdiff: %.rdiff ${MIRROR_DIR}/rdiffs
+${MIRROR_DIR}/rdiffs/%.rdiff: %.rdiff | ${MIRROR_DIR}/rdiffs
 	@ln -f $< $@
 
-${SIGNATURES_DIR}/%.rdiff_signature: %.img ${SIGNATURES_DIR}
+${SIGNATURES_DIR}/%.rdiff_signature: %.img | ${SIGNATURES_DIR}
 	rdiff signature $< $@
 
 #
