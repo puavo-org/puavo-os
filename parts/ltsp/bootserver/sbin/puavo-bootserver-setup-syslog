@@ -1,0 +1,24 @@
+#!/usr/bin/ruby1.9.1
+
+require 'erb'
+require 'fileutils'
+
+# setup /var/log/hosts (for client-specific log files)
+hosts_logdir = '/var/log/hosts'
+FileUtils.mkdir_p(hosts_logdir, :mode => 0750)
+FileUtils.chown('syslog', 'adm', hosts_logdir)
+
+# setup /etc/rsyslog.conf
+
+@puavo_hostname = File.read('/etc/puavo/hostname').chomp
+
+template_path = '/usr/share/puavo-ltsp-bootserver/templates/etc/rsyslog.conf'
+conf_template = File.read(template_path)
+conf = ERB.new(conf_template, 0, '%<>')
+
+File.open('/etc/rsyslog.conf', 'w', 0644) do |f|
+  f.write conf.result
+end
+
+system('service rsyslog restart') \
+  or raise 'Restarting rsyslog failed'
