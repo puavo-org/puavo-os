@@ -42,6 +42,12 @@ class Interface
   end
 end
 
+only_update_dnsmasq = false
+if ARGV[0] == '--only-update-dnsmasq' then
+  only_update_dnsmasq = true
+  ARGV.shift
+end
+
 puavo_device_type = ARGV[0]
 
 if (!puavo_device_type)
@@ -84,6 +90,15 @@ def write_config(filename, version=nil, secure=false)
   File.chmod(perm, filename)
 end
 
+@ltsp_iface = Interface.new("ltsp0")
+@wlan_iface = Interface.new("wlan0")
+
+if only_update_dnsmasq then
+  write_config('/etc/dnsmasq.conf')
+  system('/etc/init.d/dnsmasq restart') or raise 'Could not start dnsmasq'
+  exit(0)
+end
+
 `mkdir -p /etc/dhcp/ddns-keys/`
 `ddns-confgen -a hmac-md5 -q > /etc/dhcp/ddns-keys/nsupdate.key`
 `cp /etc/dhcp/ddns-keys/nsupdate.key /etc/bind/nsupdate.key`
@@ -101,9 +116,6 @@ delete_files.each do |file|
     File.delete(file)
   end
 end
-
-@ltsp_iface = Interface.new("ltsp0")
-@wlan_iface = Interface.new("wlan0")
 
 write_config("/etc/bind/named.conf.local")
 write_config("/etc/bind/named.conf.options")
