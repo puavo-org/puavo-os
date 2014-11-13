@@ -58,7 +58,7 @@ class TestRun
     @school_id                  = school_id
     @testclient_hosttype        = testclient_hosttype
     bootserver_hostname         = File.read('/etc/puavo/hostname').strip()
-    @testclient_hostname        = "#{bootserver_hostname}-smoke-test"
+    @testclient_hostname        = nil
     @testclient_tags            = []
     @testclient_mac             = nil
     @testclient_register_status = nil
@@ -162,15 +162,16 @@ class TestRun
   def prepare_define_testclient()
     print('Prepare: define a virtual test device ... ')
     begin
-      @testclient_mac = PuavoBS.virsh_define_testclient(@testclient_hostname)
+      results = PuavoBS.virsh_define_testclient()
     rescue StandardError, Interrupt
       puts_fail()
       raise
     else
-      if @testclient_mac.nil? then
+      if results.nil?
         puts_fail()
         return false
       end
+      @testclient_hostname, @testclient_mac = results
       puts_ok()
     end
     true
