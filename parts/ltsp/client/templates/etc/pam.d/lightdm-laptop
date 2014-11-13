@@ -60,7 +60,6 @@ session required                        pam_permit.so
 session optional                        pam_umask.so
 session optional                        pam_sss.so
 session	optional	pam_mkhomedir.so skel=/etc/skel/ umask=0077
-session optional        pam_exec.so /usr/sbin/puavo-update-sharedir-mounts
 
 session optional        pam_gnome_keyring.so auto_start
 session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/pam/chown-session-dir
