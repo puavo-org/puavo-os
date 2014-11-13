@@ -234,7 +234,7 @@ class TestRun
                                                             @testclient_mac,
                                                             @testclient_hosttype,
                                                             @testclient_tags)
-    rescue StandarError, Interrupt
+    rescue StandardError, Interrupt
       puts_fail()
       raise
     else
