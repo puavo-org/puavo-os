@@ -173,6 +173,8 @@ class TestRun
       end
       @testclient_hostname, @testclient_mac = results
       puts_ok()
+      puts("    Hostname: #{@testclient_hostname}")
+      puts("    MAC:      #{@testclient_mac}")
     end
     true
   end
@@ -189,6 +191,7 @@ class TestRun
       raise
     else
       puts_ok()
+      puts("    Username: #{@testuser_username}")
       tag = "autopilot:smoke:#{@testuser_username}:#{@testuser_password}"
       @testclient_tags << tag
     end
@@ -240,6 +243,7 @@ class TestRun
         return false
       end
       puts_ok()
+      puts("    Filepath: #{@server_socket_path}")
     end
     true
   end
