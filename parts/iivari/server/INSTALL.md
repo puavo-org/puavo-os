@@ -11,6 +11,8 @@ For example with LXC
 
     lxc-create -n iivari -t ubuntu -- --release lucid --arch amd64
 
+> If it does not boot try removing symlink `/dev/shm` from the container
+
 Continue on the Lucid machine.
 
 ## Configure LDAP connection
