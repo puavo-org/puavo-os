@@ -3,6 +3,7 @@
 ## Standard libraries.
 require 'etc'
 require 'getoptlong'
+require 'fileutils'
 require 'json'
 require 'socket'
 
@@ -36,6 +37,10 @@ def color_green(str)
   color(str, 32)
 end
 
+def color_yellow(str)
+  color(str, 33)
+end
+
 def puts_ok(msg=nil)
   extra_msg = msg.nil? ? '' : ": #{msg}"
   puts(color_green('OK') + extra_msg)
@@ -65,6 +70,7 @@ class TestRun
     @testclient_started         = false
     @testuser_username          = nil
     @testuser_password          = nil
+    @testuser_has_old_homedir   = true
     @server_socket              = nil
     @server_socket_path         = '/tmp/puavo-bootserver-smoke-test.socket'
   end
@@ -73,6 +79,7 @@ class TestRun
     puts('---')
     return false if !prepare_define_testclient()
     return false if !prepare_add_testuser()
+    return false if !prepare_assert_no_homedir()
     return false if !prepare_register_testclient()
     return false if !prepare_open_socket()
     return false if !prepare_start_testclient()
@@ -141,6 +148,7 @@ class TestRun
     cleanup_methods = [:cleanup_destroy_testclient,
                        :cleanup_close_socket,
                        :cleanup_unregister_testclient,
+                       :cleanup_remove_homedir,
                        :cleanup_remove_testuser,
                        :cleanup_undefine_testclient,
                       ]
@@ -194,6 +202,24 @@ class TestRun
       puts("    Username: #{@testuser_username}")
       tag = "autopilot:smoke:#{@testuser_username}:#{@testuser_password}"
       @testclient_tags << tag
+    end
+    true
+  end
+
+  def prepare_assert_no_homedir()
+    print('Prepare: assert the home directory of the test user does not yet exist ... ')
+    begin
+      homedir = Etc.getpwnam(@testuser_username)['dir']
+      @testuser_has_old_homedir = File.exists?(homedir)
+    rescue StandardError, Interrupt
+      puts_fail()
+      raise
+    else
+      if @testuser_has_old_homedir then
+        puts_fail("directory '#{homedir}' already exists")
+        return false
+      end
+      puts_ok()
     end
     true
   end
@@ -283,6 +309,26 @@ class TestRun
           raise 'failed to undefine the virtual domain'
         end
         puts_ok()
+      end
+    end
+  end
+
+  def cleanup_remove_homedir()
+    if !@testuser_has_old_homedir then
+      homedir = Etc.getpwnam(@testuser_username)['dir']
+      if Dir.exists?(homedir) then
+        prompt = color_yellow("Cleanup: remove the home directory '#{homedir}' of the test user?")
+        if agree("#{prompt} ") then
+          print('Cleanup: remove the home directory of the test user ... ')
+          begin
+            FileUtils.rm_rf(homedir)
+          rescue StandardError, Interrupt
+            puts_fail()
+            raise
+          else
+            puts_ok()
+          end
+        end
       end
     end
   end
