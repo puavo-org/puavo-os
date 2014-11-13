@@ -225,7 +225,11 @@ module PuavoBS
     end
   end
 
-  def self.virsh_define_testclient(hostname)
+  def self.virsh_define_testclient(orig_hostname=nil)
+    hostname = orig_hostname
+    if hostname.nil?
+      hostname = "test-device-#{SecureRandom.hex(10)}"
+    end
     uuid = SecureRandom.uuid()
     mac = 'aa:cc'
     4.times { mac += ":#{SecureRandom.hex(1)}" }
@@ -289,7 +293,11 @@ EOF
       tmpfile.close()
       tmpfile.unlink()
     end
-    success ? mac : nil
+    if orig_hostname.nil?
+      success ? [hostname, mac] : nil
+    else
+      success ? mac : nil
+    end
   end
 
 end
