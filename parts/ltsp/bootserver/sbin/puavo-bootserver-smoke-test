@@ -408,6 +408,30 @@ if !lockfile.flock(File::LOCK_NB|File::LOCK_EX) then
   exit(1)
 end
 
+opts = GetoptLong.new(
+  ['--help', '-h', GetoptLong::NO_ARGUMENT],
+)
+
+opts.each do |opt, arg|
+  case opt
+    when '--help'
+      puts <<EOF
+Usage: puavo-bootserver-smoke-test [OPTION]...
+
+Test the most critical functions of the system.
+
+-h, --help                       display this help and exit
+
+EOF
+    exit(0)
+  end
+end
+
+if ARGV.length != 0 then
+  STDERR.puts("ERROR: invalid number of arguments (#{ARGV.length}), expected 0")
+  exit 1
+end
+
 print <<'EOF'
 
              +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+
