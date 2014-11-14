@@ -2,7 +2,8 @@ Source: puavo-ltsp
 Section: admin
 Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
-Build-Depends: debhelper (>= 8.0.0), libgnome-desktop-3-dev, pkg-config, ruby-bundler
+Build-Depends: debhelper (>= 8.0.0), libgnome-desktop-3-dev, pkg-config,
+ ruby-bundler, ruby1.9.1-dev, ruby1.9.1
 Standards-Version: 3.9.3
 Homepage: https://github.com/opinsys/puavo-ltsp
 
