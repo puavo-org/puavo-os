@@ -1,0 +1,12 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    http (0.6.2)
+      http_parser.rb (~> 0.6.0)
+    http_parser.rb (0.6.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  http
