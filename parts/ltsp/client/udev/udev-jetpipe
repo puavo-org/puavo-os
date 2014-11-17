@@ -4,7 +4,7 @@ CMD=$1
 TYPE=$2
 
 if ! egrep -q thinclient\|fatclient /etc/puavo/hosttype; then
-  exit 0
+  jq -r .tags[] /etc/puavo/device.json | grep -q -x jetpipe || exit 0
 fi
 
 if [ ${CMD} = "add" ]; then
