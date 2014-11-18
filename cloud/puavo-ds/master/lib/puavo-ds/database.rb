@@ -43,7 +43,10 @@ class Database < ActiveLdap::Base
                        'cn,sn,mail,givenName pres,eq,approx,sub',
                        'objectClass eq',
                        'entryUUID eq',
-                       'entryCSN eq'
+                       'entryCSN eq',
+                       'macAddress eq',
+                       'memberUid eq',
+                       'uidNumber eq'
                        ]
     self.olcDbDirectory = "/var/lib/ldap/#{self.olcSuffix}"
 
