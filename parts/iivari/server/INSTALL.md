@@ -13,6 +13,8 @@ For example with LXC
 
 > If it does not boot try removing symlink `/dev/shm` from the container
 
+Add `iivari` ldap service with password `passwordpassword` from the puavo-web `http://<ip>:8081/users/ldap_services`
+
 Continue on the Lucid machine.
 
 ## Configure LDAP connection
@@ -87,6 +89,10 @@ hogwarts:
   ldap_method: tls
   # The number of seconds between update checks (data of slides)
   data_update_interval: 60
+  puavo_api_ssl: false
+  puavo_api_server: $PUAVO_STANDALONE_FQDN:8081
+  puavo_api_username: service/iivari
+  puavo_api_password: passwordpassword
 ```
 
 Replace `$IIVARI_IP` and `$PUAVO_STANDALONE_FQDN` with proper hostnames or IPs
