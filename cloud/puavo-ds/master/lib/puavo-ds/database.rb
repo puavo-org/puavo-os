@@ -24,7 +24,8 @@ class Database < ActiveLdap::Base
                         'set_lg_bsize 2097512',
                         'set_flags DB_LOG_AUTOREMOVE']
     self.olcDbCheckpoint = '64 5'
-    self.olcDbCachesize = '10000'
+    self.olcDbCachesize = '30000'
+    self.olcDbDNCachesize = '60000'
     self.olcLastMod = 'TRUE'
     self.olcDbCheckpoint = '512 30'
     self.olcDbIndex = ['uidNumber pres,eq',
@@ -43,7 +44,10 @@ class Database < ActiveLdap::Base
                        'cn,sn,mail,givenName pres,eq,approx,sub',
                        'objectClass eq',
                        'entryUUID eq',
-                       'entryCSN eq'
+                       'entryCSN eq',
+                       'macAddress eq',
+                       'memberUid eq',
+                       'uidNumber eq'
                        ]
     self.olcDbDirectory = "/var/lib/ldap/#{self.olcSuffix}"
 
