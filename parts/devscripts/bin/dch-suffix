@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+# python3-apt python3-debian
+
+import sys
+import os
+import argparse
+
+import debian
+from debian.changelog import Changelog
+from aptsources.distro import get_distro
+from email.utils import formatdate # generate rfc2822 date strings
+
+this_distro = get_distro()
+SCRIPT_NAME = os.path.basename(sys.argv[0])
+
+parser = argparse.ArgumentParser(description="""
+Generate new block for debian/changelog file. The block will get version
+number from the previous block with the VERSION_SUFFIX added
+""")
+
+parser.add_argument("changelog_filepath", metavar="CHANGELOG_FILE", help="Path to a Debian changelog file")
+parser.add_argument("version_suffix", metavar="VERSION_SUFFIX", help="Suffix to be added to the version")
+parser.add_argument("-a", "--author", metavar="AUTHOR", dest="author", help="author for the changelog entry")
+parser.add_argument("-c", "--change", default=[], metavar="CHANGE", nargs="*", dest="changes", help="add change line")
+parser.add_argument("-i", "--inplace", dest="inplace", action="store_true", help="modify changelog inplace instead of printing it to stdout")
+
+
+def error_message(*a):
+    print(*a, file=sys.stderr)
+
+def die(*a):
+    error_message(*a)
+    sys.exit(2)
+
+def main():
+    args = parser.parse_args()
+    if not args.author:
+        args.author = "{} <{}>".format(*debian.changelog.get_maintainer())
+
+    changelog = Changelog()
+    with open(args.changelog_filepath, "r") as f:
+        changelog.parse_changelog(f.read())
+
+    if changelog.full_version.endswith(args.version_suffix):
+        die("The current version already has this suffix")
+
+    changes = [ "Automatically generated changelog entry" ] + args.changes
+    changes = [ "  * {}".format(line) for line in changes]
+
+    changelog.new_block(
+        package=changelog.package,
+        author=args.author,
+        date=formatdate(),
+        urgency=changelog.urgency,
+        distributions=this_distro.codename,
+        changes=[""] + changes + [""],
+        version="{orig}{suffix}".format(
+            orig=changelog.full_version,
+            suffix=args.version_suffix,
+        )
+    )
+
+    if args.inplace:
+        with open(args.changelog_filepath, "w") as f:
+            f.write(str(changelog))
+    else:
+        print(changelog)
+
+if __name__ == "__main__":
+    main()

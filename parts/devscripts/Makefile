@@ -28,6 +28,10 @@ install-lxc-tools: installdirs
 		bin/puavo-lxc-run \
 		bin/puavo-lxc-run-sudo-wrap
 
+install-dch-suffix: installdirs
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
+		bin/dch-suffix
+
 clean:
 
 clean-deb:
