@@ -22,6 +22,7 @@ parser.add_argument("changelog_filepath", metavar="CHANGELOG_FILE", help="Path t
 parser.add_argument("version_suffix", metavar="VERSION_SUFFIX", help="Suffix to be added to the version")
 parser.add_argument("-a", "--author", metavar="AUTHOR", dest="author", help="author for the changelog entry")
 parser.add_argument("-c", "--change", default=[], metavar="CHANGE", nargs="*", dest="changes", help="add change line")
+parser.add_argument("-d", "--distribution", default=[], metavar="DISTRIBUTION", nargs="*", dest="distributions", help="distribution name. Defaults to current distribution codename.")
 parser.add_argument("-i", "--inplace", dest="inplace", action="store_true", help="modify changelog inplace instead of printing it to stdout")
 
 
@@ -36,6 +37,9 @@ def main():
     args = parser.parse_args()
     if not args.author:
         args.author = "{} <{}>".format(*debian.changelog.get_maintainer())
+
+    if not args.distributions:
+        args.distributions = this_distro.codename
 
     changelog = Changelog()
     with open(args.changelog_filepath, "r") as f:
@@ -52,7 +56,7 @@ def main():
         author=args.author,
         date=formatdate(),
         urgency=changelog.urgency,
-        distributions=this_distro.codename,
+        distributions=args.distributions,
         changes=[""] + changes + [""],
         version="{orig}{suffix}".format(
             orig=changelog.full_version,
