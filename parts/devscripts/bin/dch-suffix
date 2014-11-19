@@ -22,7 +22,7 @@ parser.add_argument("changelog_filepath", metavar="CHANGELOG_FILE", help="Path t
 parser.add_argument("version_suffix", metavar="VERSION_SUFFIX", help="Suffix to be added to the version")
 parser.add_argument("-a", "--author", metavar="AUTHOR", dest="author", help="author for the changelog entry")
 parser.add_argument("-c", "--change", default=[], metavar="CHANGE", nargs="*", dest="changes", help="add change line")
-parser.add_argument("-d", "--distribution", default=[], metavar="DISTRIBUTION", nargs="*", dest="distributions", help="distribution name. Defaults to current distribution codename.")
+parser.add_argument("-d", "--distribution", default=[], metavar="DISTRIBUTION", dest="distributions", help="distribution name. Defaults to current distribution codename.")
 parser.add_argument("-i", "--inplace", dest="inplace", action="store_true", help="modify changelog inplace instead of printing it to stdout")
 
 
