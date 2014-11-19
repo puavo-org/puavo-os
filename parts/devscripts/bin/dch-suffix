@@ -4,6 +4,7 @@
 import sys
 import os
 import argparse
+import re
 
 import debian
 from debian.changelog import Changelog
@@ -19,10 +20,11 @@ number from the previous block with the VERSION_SUFFIX added
 """)
 
 parser.add_argument("changelog_filepath", metavar="CHANGELOG_FILE", help="Path to a Debian changelog file")
-parser.add_argument("version_suffix", metavar="VERSION_SUFFIX", help="Suffix to be added to the version")
+parser.add_argument("version_suffix", metavar="VERSION_SUFFIX", nargs="?", help="Suffix to be added to the version")
+parser.add_argument("-j", "--jenkins", action="store_true", dest="jenkins", help="automatically generate version suffix from Jenkins environment variables. See https://wiki.jenkins-ci.org/display/JENKINS/Building+a+software+project")
 parser.add_argument("-a", "--author", metavar="AUTHOR", dest="author", help="author for the changelog entry")
 parser.add_argument("-c", "--change", default=[], metavar="CHANGE", nargs="*", dest="changes", help="add change line")
-parser.add_argument("-d", "--distribution", default=[], metavar="DISTRIBUTION", dest="distributions", help="distribution name. Defaults to current distribution codename.")
+parser.add_argument("-d", "--distribution", default=[], metavar="DISTRIBUTION", dest="distribution", help="distribution name. Defaults to current distribution codename.")
 parser.add_argument("-i", "--inplace", dest="inplace", action="store_true", help="modify changelog inplace instead of printing it to stdout")
 
 
@@ -33,13 +35,38 @@ def die(*a):
     error_message(*a)
     sys.exit(2)
 
+def get_env(key):
+    try:
+        return os.environ[key]
+    except KeyError:
+        die("--jenkins failed. Environment variable {} not set".format(key))
+
+def generate_jenkins_suffix(args):
+    branch = get_env("GIT_BRANCH").split("/")[-1]
+    branch = re.sub(r"[^a-z0-9]", "", branch.lower()) # remove non a-z chars
+    return "-{build_number}+{distribution}.{branch}.{commit}".format(
+        build_number=get_env("BUILD_NUMBER"),
+        branch=branch,
+        distribution=args.distribution,
+        commit=get_env("GIT_COMMIT")
+    )
+
+
 def main():
     args = parser.parse_args()
+    if not args.distribution:
+        args.distribution = this_distro.codename
+
     if not args.author:
         args.author = "{} <{}>".format(*debian.changelog.get_maintainer())
 
-    if not args.distributions:
-        args.distributions = this_distro.codename
+    if args.jenkins:
+        args.version_suffix = generate_jenkins_suffix(args)
+
+    if not args.version_suffix:
+        die("VERSION_SUFFIX or --jenkins must be set")
+
+
 
     changelog = Changelog()
     with open(args.changelog_filepath, "r") as f:
@@ -56,7 +83,7 @@ def main():
         author=args.author,
         date=formatdate(),
         urgency=changelog.urgency,
-        distributions=args.distributions,
+        distributions=args.distribution,
         changes=[""] + changes + [""],
         version="{orig}{suffix}".format(
             orig=changelog.full_version,
