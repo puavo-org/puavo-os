@@ -22,7 +22,7 @@ Description: Puavo lxc developer tools
 
 Package: dch-suffix
 Architecture: all
-Depends: ${misc:Depends}, python3-apt python3-debian
+Depends: ${misc:Depends}, python3-apt, python3-debian
 Description: Generate new block for debian/changelog file
  The block will get version number from the previous block with the
  VERSION_SUFFIX added
