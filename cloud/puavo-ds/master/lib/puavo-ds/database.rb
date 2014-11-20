@@ -24,8 +24,8 @@ class Database < ActiveLdap::Base
                         'set_lg_bsize 2097512',
                         'set_flags DB_LOG_AUTOREMOVE']
     self.olcDbCheckpoint = '64 5'
-    self.olcDbCachesize = '30000'
-    self.olcDbDNCachesize = '60000'
+    self.olcDbCacheSize = '30000'
+    self.olcDbDNCacheSize = '60000'
     self.olcLastMod = 'TRUE'
     self.olcDbCheckpoint = '512 30'
     self.olcDbIndex = ['uidNumber pres,eq',
