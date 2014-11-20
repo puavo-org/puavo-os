@@ -1,0 +1,32 @@
+#!/usr/bin/ruby
+#
+# Dump all databases and slapd configurations (cn=config)
+#
+# Usage: puavo-dump-all-databasesa [DUMP DIRECTORY]
+#
+
+dump_directory = ARGV[0]
+if dump_directory.nil? || dump_directory == "--help" || dump_directory == "-h"
+  puts "Set destination directory for dump files\n\n"
+  puts "Usage: puavo-dump-all-databasesa [DUMP DIRECTORY]\n\n"
+  exit 2
+end
+
+if not File.directory?(dump_directory)
+  puts "Cannot find destination directory: #{dump_directory}"
+
+  exit 2
+end
+
+# Dump cn=config database
+`slapcat -b cn=config 2> /dev/null > #{ File.join(dump_directory, "cn=config.ldif") }`
+
+# Find all databases
+databases = `slapcat -b cn=config 2> /dev/null |grep 'olcSuffix:'`
+
+databases.split("\n").each do |line|
+  suffix = line.match(/olcSuffix: (.*)/)[1]
+
+  puts "Dump #{suffix} database to #{ File.join(dump_directory, suffix + '.ldif') } file"
+  `slapcat -b #{suffix} 2> /dev/null > #{ File.join(dump_directory, suffix + '.ldif') }`
+end
