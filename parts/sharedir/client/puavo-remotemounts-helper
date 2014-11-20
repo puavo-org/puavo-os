@@ -1,0 +1,53 @@
+#!/bin/sh
+
+set -eu
+
+puavo_hosttype=$(cat /etc/puavo/hosttype)
+
+if [ "$puavo_hosttype" != "laptop" ]; then
+  exit 0
+fi
+
+has_device_tag() {
+  jq -r .tags[] /etc/puavo/device.json | grep -qx "$1"
+}
+
+use_sharedir_mounts() {
+  # Doing the sharedir mounts is the default,
+  # "no_sharedir_mounts"-tag will disable that,
+  # but then again "use_sharedir_mounts"-tag overrides it.
+  ! has_device_tag no_sharedir_mounts || has_device_tag use_sharedir_mounts
+}
+
+if ! use_sharedir_mounts; then
+  # Tags suggest we should do nothing... note that this also means that
+  # we do not do user home directory mounts either ("use_remotemounts"
+  # and "no_use_remotemounts" would have been more descriptive).
+  exit 0
+fi
+
+puavo_domain=$(cat /etc/puavo/domain)
+
+case "$(echo $LANG | cut -c 1-2)" in
+  fi) sharename='yhteiset'     ;;
+  sv) sharename='delade_filer' ;;
+  *)  sharename='share'        ;;
+esac
+
+gvfs_mounts="
+  smb://homedir.${puavo_domain}/${USER}
+  smb://homedir.${puavo_domain}/share/${sharename}
+"
+
+#
+# ensure mounts to remote directories come up and stay
+#
+
+while true; do
+  for mnt in $gvfs_mounts; do
+    timeout 30 gvfs-mount $mnt || true
+  done
+  sleep 10
+done
+
+exit 0
