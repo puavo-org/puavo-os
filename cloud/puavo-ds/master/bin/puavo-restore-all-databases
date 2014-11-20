@@ -1,0 +1,110 @@
+#!/usr/bin/ruby
+#
+# Destroy current slapd installation and restore all
+# databases and slapd configurations (cn=config) from
+# the dump files.
+#
+# Usage: puavo-restore-all-databases [DUMP DIRECTORY]
+#
+
+require 'fileutils'
+require 'puavo-ds'
+
+dump_directory = ARGV[0]
+if dump_directory.nil? || dump_directory == "--help" || dump_directory == "-h"
+  puts "Set source directory of dump files\n\n"
+  puts "Usage: puavo-restore-all-databases [DUMP DIRECTORY]\n\n"
+  exit 2
+end
+
+if not File.directory?(dump_directory)
+  puts "Cannot find dump directory: #{dump_directory}"
+
+  exit 2
+end
+
+##############################################################
+# Comment this out when you use this script
+##############################################################
+puts
+puts "Script is disable. See source code of #{ __FILE__} file"
+exit 2
+##############################################################
+##############################################################
+
+puts
+puts "This will destroy previous databases permanently and restore databases from the dump files!"
+
+while(true)
+  print "Type YES to continue> "
+  break if STDIN.gets.strip == "YES"
+end
+
+# FIXME: Database.new doesn't work if slapd is down. You have to run
+# puavo-init-ldap command before restore.
+example_database = Database.new("olcSuffix" => "dc=edu,dc=example,dc=fi")
+generic_olc_db_config = example_database.olcDbConfig
+generic_olc_db_index = example_database.olcDbIndex
+generic_olc_db_cache_size = example_database.olcDbCachesize
+generic_olc_db_dn_cache_size = example_database.olcDbDNCachesize
+
+# Stop slapd service
+`stop slapd`
+# Remove slapd configuration directory
+FileUtils.rm_r Dir.glob('/etc/ldap/slapd.d/cn=config*')
+# Remove all databases
+FileUtils.rm_r Dir.glob('/var/lib/ldap/*')
+
+File.open("/tmp/config.ldif", "w") do |cf|
+  File.open(File.join(dump_directory, "cn=config.ldif")) do |f|
+    f.each_line do |line|
+      if line.match(/dn: olcDatabase=.*hdb/)
+        cf.puts line
+
+        generic_olc_db_config.each do |config|
+          cf.puts "olcDbConfig: #{ config }"
+        end
+        generic_olc_db_index.each do |index|
+          cf.puts "olcDbIndex: #{ index }"
+        end
+
+        cf.puts "olcDbCacheSize: #{ generic_olc_db_cache_size }"
+        cf.puts "olcDbDNCacheSize: #{ generic_olc_db_dn_cache_size }"
+
+      elsif line.match(/olcDbConfig:/)
+        next # skip old value
+      elsif line.match(/olcDbIndex:/)
+        next # skip old value
+      elsif line.match(/olcDbCacheSize:/)
+        next # skip old value
+      elsif line.match(/olcDbDNCacheSize:/)
+        next # skip old value
+      elsif line.match(/olcDbDirectory:/)
+	cf.puts line
+        db_directory = line.match(/olcDbDirectory: (.*)/)[1]
+        # Create data directory for database
+        FileUtils.mkdir_p(db_directory)
+      else
+        cf.puts line
+      end
+    end
+  end
+end
+
+# Restore slapd configuration
+`slapadd -l /tmp/config.ldif -F /etc/ldap/slapd.d -b cn=config`
+
+Dir.foreach(dump_directory) do |filename|
+  next if filename == "cn=config.ldif"
+
+  if match_data = filename.match(/(.*)\.ldif$/)
+    base = match_data[1]
+
+    # Restore database
+    `slapadd -q -b #{base} -l #{ File.join(dump_directory, filename) } -F /etc/ldap/slapd.d`
+  end
+end
+
+# Fix permission of slapd files
+FileUtils.chown_R("openldap", "openldap", "/etc/ldap/slapd.d/")
+FileUtils.chown_R("openldap", "openldap", "/var/lib/ldap")
