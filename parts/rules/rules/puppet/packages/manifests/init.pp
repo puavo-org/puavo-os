@@ -830,6 +830,9 @@ class packages {
     , 'cmaptools' ]:
       tag => [ 'office', 'opinsys', 'extra', 'restricted' ];
 
+    [ 'tmcbeans' ]:
+      tag => [ 'programming', 'opinsys', 'extra', 'restricted' ];
+
     [ 'icaclient' ]:
       # icaclient has a hidden dependency on libmotif4
       require => Package['libmotif4'],
