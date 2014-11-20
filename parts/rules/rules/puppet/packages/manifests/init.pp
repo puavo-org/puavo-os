@@ -390,7 +390,6 @@ class packages {
     , 'kompare'
     , 'kturtle'
     , 'lokalize'
-    , 'netbeans'
     , 'pyqt4-dev-tools'
     , 'python-doc'
     , 'python-pygame'
