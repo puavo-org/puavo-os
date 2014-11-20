@@ -27,7 +27,6 @@ class Database < ActiveLdap::Base
     self.olcDbCacheSize = '30000'
     self.olcDbDNCacheSize = '60000'
     self.olcLastMod = 'TRUE'
-    self.olcDbCheckpoint = '512 30'
     self.olcDbIndex = ['uidNumber pres,eq',
                        'sambaSID pres,eq',
                        'sambaSIDList pres,eq',
