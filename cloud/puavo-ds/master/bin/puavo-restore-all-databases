@@ -40,14 +40,31 @@ while(true)
   break if STDIN.gets.strip == "YES"
 end
 
-# FIXME: Database.new doesn't work if slapd is down. You have to run
-# puavo-init-ldap command before restore.
-example_database = Database.new("olcSuffix" => "dc=edu,dc=example,dc=fi")
-generic_olc_db_config = example_database.olcDbConfig
-generic_olc_db_index = example_database.olcDbIndex
-generic_olc_db_cache_size = example_database.olcDbCachesize
-generic_olc_db_dn_cache_size = example_database.olcDbDNCachesize
-generic_olc_db_checkpoint = example_database.olcDbCheckpoint
+generic_olc_db_config = ['set_cachesize 0 10485760 0',
+                         'set_lg_bsize 2097512',
+                         'set_flags DB_LOG_AUTOREMOVE']
+generic_olc_db_index = ['uidNumber pres,eq',
+                        'sambaSID pres,eq',
+                        'sambaSIDList pres,eq',
+                        'sambaGroupType pres,eq',
+                        'member,memberUid pres,eq',
+                        'puavoSchool pres,eq',
+                        'puavoId pres,eq',
+                        'puavoTag pres,eq',
+                        'puavoDeviceType pres,eq',
+                        'puavoHostname pres,eq,sub',
+                        'displayName,puavoEduPersonReverseDisplayName pres,eq,sub',
+                        'uid pres,eq',
+                        'krbPrincipalName pres,eq',
+                        'cn,sn,mail,givenName pres,eq,approx,sub',
+                        'objectClass eq',
+                        'entryUUID eq',
+                        'entryCSN eq',
+                        'macAddress eq'
+                       ]
+generic_olc_db_cache_size = '30000'
+generic_olc_db_dn_cache_size = '60000'
+generic_olc_db_checkpoint = '64 5'
 
 # Stop slapd service
 `stop slapd`
