@@ -75,9 +75,9 @@ File.open("/tmp/config.ldif", "w") do |cf|
         next # skip old value
       elsif line.match(/olcDbIndex:/)
         next # skip old value
-      elsif line.match(/olcDbCacheSize:/)
+      elsif line.match(/olcDbCacheSize:/i)
         next # skip old value
-      elsif line.match(/olcDbDNCacheSize:/)
+      elsif line.match(/olcDbDNCacheSize:/i)
         next # skip old value
       elsif line.match(/olcDbDirectory:/)
 	cf.puts line
