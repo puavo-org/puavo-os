@@ -25,7 +25,7 @@ class Database < ActiveLdap::Base
                         'set_flags DB_LOG_AUTOREMOVE']
     self.olcDbCheckpoint = '64 5'
     self.olcDbCacheSize = '30000'
-    self.olcDbDNCacheSize = '60000'
+    self.olcDbDNcacheSize = '60000'
     self.olcLastMod = 'TRUE'
     self.olcDbIndex = ['uidNumber pres,eq',
                        'sambaSID pres,eq',
