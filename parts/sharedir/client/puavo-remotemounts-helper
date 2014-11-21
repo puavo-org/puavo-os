@@ -34,9 +34,11 @@ case "$(echo $LANG | cut -c 1-2)" in
   *)  sharename='share'        ;;
 esac
 
+primary_group=$(id -gn)
+
 gvfs_mounts="
   smb://homedir.${puavo_domain}/${USER}
-  smb://homedir.${puavo_domain}/share/${sharename}
+  smb://homedir.${puavo_domain}/share/${sharename}/${primary_group}
 "
 
 #
