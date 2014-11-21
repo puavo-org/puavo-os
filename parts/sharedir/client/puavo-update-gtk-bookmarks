@@ -59,20 +59,46 @@ update_bookmarks() {
 
 case "$(echo $LANG | cut -c 1-2)" in
   fi)
+    userdir_displayname='Verkkokansio'
     schooldir_displayname='Yhteiset'
     sharename='yhteiset'
     ;;
   sv)
+    userdir_displayname='Nätverksmapp'
     schooldir_displayname='Delade Filer'
     sharename='delade_filer'
     ;;
   *)
+    userdir_displayname='Network folder'
     schooldir_displayname='Share'
     sharename='share'
     ;;
 esac
 
-for bookmark_file in "${HOME}/.config/gtk-3.0/bookmarks" \
-                     "${HOME}/.gtk-bookmarks"; do
+for bookmark_file in ~/.config/gtk-3.0/bookmarks ~/.gtk-bookmarks; do
   update_bookmarks "$schooldir_displayname" "$sharename" "$bookmark_file"
 done
+
+
+# handle links from user home directory to gvfs-mounts for applications
+# that do not understand gvfs
+case "$puavo_hosttype" in
+  fatclient|ltspserver)
+    if use_sambahomes; then
+      ln -fns ~/.puavo-sharedir.schooldir ~/"${schooldir_displayname}"
+    else
+      rmdir ~/.puavo-sharedir.schooldir 2>/dev/null || true
+      ln -fns "/home/share/${sharename}/${user_primary_group}" \
+              ~/"${schooldir_displayname}"
+    fi
+    ;;
+  laptop)
+    rmdir ~/.puavo-sharedir.schooldir \
+          ~/.puavo-sharedir.userdir 2>/dev/null || true
+    user_id=$(id -u)
+    ln -fns "/run/user/${user_id}/gvfs/smb-share:server=homedir.${puavo_domain},share=${USER}" \
+            ~/"${userdir_displayname}"
+    ln -fns "/run/user/${user_id}/gvfs/smb-share:server=homedir.${puavo_domain},share=share" \
+            ~/"${schooldir_displayname}"
+    ;;
+esac
