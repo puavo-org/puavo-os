@@ -9,6 +9,18 @@ use_sambahomes() {
   jq -r '.tags[]' /etc/puavo/device.json | grep -qx sambahomes
 }
 
+filter_out_our_bookmarks() {
+    local domain_re_pattern
+    domain_re_pattern=$(echo "^smb://homedir.${puavo_domain}" \
+                          | sed 's/\./\\./g')
+
+    # Grep fails if the file is empty or missing, which is ok in this
+    # situation: it just means that there is not anything to preserve
+    # (or maybe means something else, but probably not serious).
+    egrep -v "\.puavo-sharedir|^file:///home/share/|${domain_re_pattern}" \
+      || true
+}
+
 update_bookmarks() {
     local bookmarksdir
     local bookmarksfile
@@ -25,10 +37,7 @@ update_bookmarks() {
 
     tmpfile="${bookmarksfile}.tmp"
 
-    # Grep fails if the file is empty or missing, which is ok in this
-    # situation: it just means that there is not anything to preserve.
-    egrep -v "\.puavo-sharedir|^file:///home/share/|^smb://homedir\.${puavo_domain}/" \
-      "${bookmarksfile}" > "${tmpfile}" || true
+    filter_out_our_bookmarks < "${bookmarksfile}" > "${tmpfile}"
 
     case "$puavo_hosttype" in
         fatclient|ltspserver)
