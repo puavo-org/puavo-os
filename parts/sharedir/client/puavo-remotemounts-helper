@@ -45,6 +45,9 @@ gvfs_mounts="
 # ensure mounts to remote directories come up and stay
 #
 
+# XXX we could also periodically check if we can read anything from the mount
+# XXX and if we can not, we could do "gvfs-mount -u" (unmount)
+
 while true; do
   for mnt in $gvfs_mounts; do
     timeout 30 gvfs-mount $mnt || true
