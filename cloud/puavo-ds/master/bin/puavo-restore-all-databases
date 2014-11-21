@@ -47,6 +47,7 @@ generic_olc_db_config = example_database.olcDbConfig
 generic_olc_db_index = example_database.olcDbIndex
 generic_olc_db_cache_size = example_database.olcDbCachesize
 generic_olc_db_dn_cache_size = example_database.olcDbDNCachesize
+generic_olc_db_checkpoint = example_database.olcDbCheckpoint
 
 # Stop slapd service
 `stop slapd`
@@ -70,6 +71,7 @@ File.open("/tmp/config.ldif", "w") do |cf|
 
         cf.puts "olcDbCacheSize: #{ generic_olc_db_cache_size }"
         cf.puts "olcDbDNCacheSize: #{ generic_olc_db_dn_cache_size }"
+        cf.puts "olcDbCheckpoint: #{ generic_olc_db_checkpoint }"
 
       elsif line.match(/olcDbConfig:/)
         next # skip old value
@@ -78,6 +80,8 @@ File.open("/tmp/config.ldif", "w") do |cf|
       elsif line.match(/olcDbCacheSize:/i)
         next # skip old value
       elsif line.match(/olcDbDNcacheSize:/i)
+        next # skip old value
+      elsif line.match(/olcDbCheckpoint:/i)
         next # skip old value
       elsif line.match(/olcDbDirectory:/)
 	cf.puts line
