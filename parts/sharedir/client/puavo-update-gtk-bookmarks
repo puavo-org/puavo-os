@@ -5,6 +5,8 @@ set -eu
 puavo_domain=$(cat /etc/puavo/domain)
 puavo_hosttype=$(cat /etc/puavo/hosttype)
 
+user_primary_group=$(id -gn)
+
 use_sambahomes() {
   jq -r '.tags[]' /etc/puavo/device.json | grep -qx sambahomes
 }
@@ -42,9 +44,8 @@ update_bookmarks() {
   case "$puavo_hosttype" in
     fatclient|ltspserver)
       if use_sambahomes; then
-	echo "file://${HOME}/.puavo-sharedir.schooldir/${sharename}/$(id -gn) ${schooldir_displayname}" >> "${tmpfile}"
+	echo "file://${HOME}/.puavo-sharedir.schooldir/${sharename}/${user_primary_group} ${schooldir_displayname}" >> "${tmpfile}"
       else
-	user_primary_group=$(id -gn)
 	echo "file:///home/share/${sharename}/${user_primary_group} ${schooldir_displayname}" >> "${tmpfile}"
       fi
       ;;
@@ -98,7 +99,7 @@ case "$puavo_hosttype" in
     user_id=$(id -u)
     ln -fns "/run/user/${user_id}/gvfs/smb-share:server=homedir.${puavo_domain},share=${USER}" \
             ~/"${userdir_displayname}"
-    ln -fns "/run/user/${user_id}/gvfs/smb-share:server=homedir.${puavo_domain},share=share" \
+    ln -fns "/run/user/${user_id}/gvfs/smb-share:server=homedir.${puavo_domain},share=share/${sharename}/${user_primary_group}" \
             ~/"${schooldir_displayname}"
     ;;
 esac
