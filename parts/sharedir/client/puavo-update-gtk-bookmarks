@@ -1,8 +1,13 @@
 #!/bin/sh
 
-set -eux
+set -eu
 
-SAMBAHOMES=$(jq -r '.tags[] | select(. == "sambahomes")' /etc/puavo/device.json)
+puavo_domain=$(cat /etc/puavo/domain)
+puavo_hosttype=$(cat /etc/puavo/hosttype)
+
+use_sambahomes() {
+  jq -r '.tags[]' /etc/puavo/device.json | grep -qx sambahomes
+}
 
 update_bookmarks() {
     local bookmarksdir
@@ -10,34 +15,33 @@ update_bookmarks() {
     local schooldir_displayname
     local sharename
     local tmpfile
-    local userdir_displayname
 
-    userdir_displayname=$1
-    schooldir_displayname=$2
-    sharename=$3
-    bookmarksfile=$4
+    schooldir_displayname=$1
+    sharename=$2
+    bookmarksfile=$3
 
     bookmarksdir=$(dirname "${bookmarksfile}")
     mkdir -p "${bookmarksdir}"
-    touch "${bookmarksfile}"
 
     tmpfile="${bookmarksfile}.tmp"
 
-    # Grep fails if the file is empty, which is ok in this situation: it
-    # just means that there is not anything to preserve.
-    egrep -v "\.puavo-sharedir|^file:///home/share/|^smb://homedir\.$(cat /etc/puavo/domain)/" "${bookmarksfile}" >"${tmpfile}" || true
+    # Grep fails if the file is empty or missing, which is ok in this
+    # situation: it just means that there is not anything to preserve.
+    egrep -v "\.puavo-sharedir|^file:///home/share/|^smb://homedir\.${puavo_domain}/" \
+      "${bookmarksfile}" > "${tmpfile}" || true
 
-    case "$(cat /etc/puavo/hosttype)" in
-        laptop)
-            echo "file://${HOME}/.puavo-sharedir.userdir ${userdir_displayname}" >>"${tmpfile}"
-            echo "file://${HOME}/.puavo-sharedir.schooldir/${sharename}/$(id -gn) ${schooldir_displayname}" >>"${tmpfile}"
-            ;;
-        *)
-            if [ -n "$SAMBAHOMES" ]; then
-                echo "file://${HOME}/.puavo-sharedir.schooldir/${sharename}/$(id -gn) ${schooldir_displayname}" >>"${tmpfile}"
+    case "$puavo_hosttype" in
+        fatclient|ltspserver)
+            if use_sambahomes; then
+                echo "file://${HOME}/.puavo-sharedir.schooldir/${sharename}/$(id -gn) ${schooldir_displayname}" >> "${tmpfile}"
             else
-                echo "file:///home/share/${sharename}/$(id -gn) ${schooldir_displayname}" >>"${tmpfile}"
+                user_primary_group=$(id -gn)
+                echo "file:///home/share/${sharename}/${user_primary_group} ${schooldir_displayname}" >> "${tmpfile}"
             fi
+            ;;
+        laptop)
+            # do nothing... we end up cleaning up old stuff from
+            # ${bookmarksfile}
             ;;
     esac
 
@@ -46,21 +50,20 @@ update_bookmarks() {
 
 case "$(echo $LANG | cut -c 1-2)" in
   fi)
-    userdir_displayname='Verkkokansio'
     schooldir_displayname='Yhteiset'
     sharename='yhteiset'
     ;;
   sv)
-    userdir_displayname='Nätverksmapp'
     schooldir_displayname='Delade Filer'
     sharename='delade_filer'
     ;;
   *)
-    userdir_displayname='Network folder'
     schooldir_displayname='Share'
     sharename='share'
     ;;
 esac
 
-update_bookmarks "${userdir_displayname}" "${schooldir_displayname}" "${sharename}" "${HOME}/.gtk-bookmarks"
-update_bookmarks "${userdir_displayname}" "${schooldir_displayname}" "${sharename}" "${HOME}/.config/gtk-3.0/bookmarks"
+for bookmark_file in "${HOME}/.config/gtk-3.0/bookmarks" \
+                     "${HOME}/.gtk-bookmarks"; do
+  update_bookmarks "$schooldir_displayname" "$sharename" "$bookmark_file"
+done
