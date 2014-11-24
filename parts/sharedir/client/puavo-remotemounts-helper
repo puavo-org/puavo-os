@@ -10,16 +10,63 @@ require 'timeout'
 
 @device = JSON.parse( IO.read('/etc/puavo/device.json') )
 
+def check_mount_state(gvfsmntpath)
+  begin
+    Timeout::timeout(5) do
+      puts "Doing stat for #{ gvfsmntpath }"
+      File.stat(gvfsmntpath)
+    end
+  rescue Errno::ENOENT => e
+    return 'not connected'
+  rescue Timeout::Error => e
+    return 'timeout'
+  end
+
+  return 'ok'
+end
+
+def errmsg(msg)
+  STDERR.puts "puavo-remotemounts-helper: #{ msg }"
+end
+
+def timeout_noex(seconds, &code)
+  begin
+    return Timeout::timeout(seconds, &code)
+  rescue Timeout::Error => e
+    return false
+  end
+end
+
 def ensure_mounts_to_remote_directory(gvfsmntpath)
-  # XXX we could also periodically check if we can read anything from the mount
-  # XXX and if we can not, we could do "gvfs-mount -u" (unmount)
+  checks_with_timeout = 0
+
   while true do
     begin
-      Timeout::timeout(30) do
-        system('gvfs-mount', gvfsmntpath)
+      case check_mount_state(gvfsmntpath)
+
+        when 'not connected'
+          puts "puavo-remotemounts-helper: mounting '#{ gvfsmntpath }'"
+          timeout_noex(30) { system('gvfs-mount', gvfsmntpath) } \
+            or errmsg "problem in mounting '#{ gvfsmntpath }'"
+          checks_with_timeout = 0
+
+        when 'ok'
+          checks_with_timeout = 0
+
+        when 'timeout'
+          checks_with_timeout += 1
+          if checks_with_timeout >= 5 then
+            puts "puavo-remotemounts-helper: unmounting '#{ gvfsmntpath }'"
+            timeout_noex(30) { system('gvfs-mount', '-u', gvfsmntpath) } \
+              or errmsg "problem in unmounting '#{ gvfsmntpath }'"
+            checks_with_timeout = 0
+          end
+
       end
-    rescue Timeout::Error => e
+    rescue StandardError => e
+      errmsg "Got some error: #{ e }, yet continuing..."
     end
+
     sleep(10)
   end
 end
