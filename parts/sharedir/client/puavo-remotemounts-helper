@@ -10,23 +10,12 @@ require 'timeout'
 
 @device = JSON.parse( IO.read('/etc/puavo/device.json') )
 
-def check_mount_state(gvfsmntpath)
-  begin
-    Timeout::timeout(5) do
-      puts "Doing stat for #{ gvfsmntpath }"
-      File.stat(gvfsmntpath)
-    end
-  rescue Errno::ENOENT => e
-    return 'not connected'
-  rescue Timeout::Error => e
-    return 'timeout'
-  end
-
-  return 'ok'
-end
-
 def errmsg(msg)
   STDERR.puts "puavo-remotemounts-helper: #{ msg }"
+end
+
+def has_device_tag(tag)
+  (@device['tags'] || []).include?(tag)
 end
 
 def timeout_noex(seconds, &code)
@@ -37,44 +26,6 @@ def timeout_noex(seconds, &code)
   end
 end
 
-def ensure_mounts_to_remote_directory(gvfsmntpath)
-  checks_with_timeout = 0
-
-  while true do
-    begin
-      case check_mount_state(gvfsmntpath)
-
-        when 'not connected'
-          puts "puavo-remotemounts-helper: mounting '#{ gvfsmntpath }'"
-          timeout_noex(30) { system('gvfs-mount', gvfsmntpath) } \
-            or errmsg "problem in mounting '#{ gvfsmntpath }'"
-          checks_with_timeout = 0
-
-        when 'ok'
-          checks_with_timeout = 0
-
-        when 'timeout'
-          checks_with_timeout += 1
-          if checks_with_timeout >= 5 then
-            puts "puavo-remotemounts-helper: unmounting '#{ gvfsmntpath }'"
-            timeout_noex(30) { system('gvfs-mount', '-u', gvfsmntpath) } \
-              or errmsg "problem in unmounting '#{ gvfsmntpath }'"
-            checks_with_timeout = 0
-          end
-
-      end
-    rescue StandardError => e
-      errmsg "Got some error: #{ e }, yet continuing..."
-    end
-
-    sleep(10)
-  end
-end
-
-def has_device_tag(tag)
-  (@device['tags'] || []).include?(tag)
-end
-
 def use_remotemounts
   # Doing the remote mounts is the default,
   # "no_use_remotemounts"-tag will disable that,
@@ -82,39 +33,98 @@ def use_remotemounts
   ! has_device_tag('no_use_remotemounts') || has_device_tag('use_remotemounts')
 end
 
+class GvfsMount
+  def initialize(url, mntpath, linkname)
+    @linkname = linkname
+    @mntpath  = mntpath
+    @url      = url
+  end
+
+  def check_mount_state(mntpath)
+    system('timeout', '-s', 'KILL', '5', 'stat', '-c', '%X', mntpath, \
+           { :out => '/dev/null', :err => '/dev/null' })
+
+    return 'timeout' if $?.termsig == 9
+    return 'ok'      if $?.exitstatus == 0
+
+    return 'not connected'
+  end
+
+  def ensure_mounts
+    checks_with_timeout = 0
+
+    while true do
+      begin
+        mount_state = check_mount_state(@mntpath)
+        puts "mount state for #{ @url } is #{ mount_state }"
+	case mount_state
+	  when 'not connected'
+	    puts "puavo-remotemounts-helper: mounting '#{ @mntpath }'"
+	    timeout_noex(30) { system('gvfs-mount', @url) } \
+	      or errmsg "problem in mounting '#{ @url }'"
+	    checks_with_timeout = 0
+
+	  when 'ok'
+	    checks_with_timeout = 0
+
+	  when 'timeout'
+	    checks_with_timeout += 1
+	    if checks_with_timeout >= 5 then
+	      puts "puavo-remotemounts-helper: unmounting '#{ @url }'"
+	      timeout_noex(30) { system('gvfs-mount', '-u', @url) } \
+		or errmsg "problem in unmounting '#{ @url }'"
+	      checks_with_timeout = 0
+	    end
+	end
+      rescue StandardError => e
+	errmsg "Got some error: #{ e }, yet continuing..."
+      end
+
+      sleep(10)
+    end
+  end
+end
+
+def get_our_gvfsmounts
+  puavo_domain = IO.read('/etc/puavo/domain').chomp
+  sharename \
+    = case (ENV['LANG'] || '')[0..1]
+	when 'fi' 'yhteiset'
+	when 'sv' 'delade_filer'
+	else      'share'
+      end
+
+  user_primary_group = %x(id -gn).chomp
+  raise('Problem running id -gn') unless $?.exitstatus == 0
+
+  raise('No USER environment set') unless ENV['USER'] && !ENV['USER'].empty?
+
+  user_id = Process.uid
+
+  [
+    GvfsMount.new(
+      "smb://homedir.#{ puavo_domain }/#{ ENV['USER'] }",
+      "/run/user/#{ user_id }/gvfs/smb-share:server=homedir.#{ puavo_domain },share=#{ ENV['USER'] }",
+      "Verkkohakemisto"),
+
+    GvfsMount.new(
+      "smb://homedir.#{ puavo_domain }/share/#{ sharename }/#{ user_primary_group }",
+      "/run/user/#{ user_id }/gvfs/smb-share:server=homedir.#{ puavo_domain },share=share/#{ sharename }/#{ user_primary_group }",
+      "Yhteiset"),
+  ]
+end
+
 if !use_remotemounts then
   # Tags suggest we should do nothing.
   exit(0)
 end
 
-puavo_domain = IO.read('/etc/puavo/domain').chomp
-
-sharename \
-  = case (ENV['LANG'] || '')[0..1]
-      when 'fi' 'yhteiset'
-      when 'sv' 'delade_filer'
-      else      'share'
-    end
-
-primary_group = %x(id -gn).chomp
-raise('Problem running id -gn') unless $?.exitstatus == 0
-
-raise('No USER environment set') unless ENV['USER'] && !ENV['USER'].empty?
-
-gvfs_mounts = [
-  "smb://homedir.#{ puavo_domain }/#{ ENV['USER'] }",
-  "smb://homedir.#{ puavo_domain }/share/#{ sharename }/#{ primary_group }",
-]
-
-#
 # ensure mounts to remote directories come up and stay
-#
 
-threads \
-  = gvfs_mounts.map do |gvfsmntpath|
-      Thread.new { ensure_mounts_to_remote_directory(gvfsmntpath) }
-    end
+gvfs_mounts = get_our_gvfsmounts()
 
-threads.each { |t| t.join }
+threads = gvfs_mounts.map { |gvfsmnt| Thread.new { gvfsmnt.ensure_mounts() } }
+
+threads.each &:join
 
 exit(0)
