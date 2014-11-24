@@ -356,7 +356,9 @@ class packages {
     , 'racoon' ]:
       tag => [ 'network', 'ubuntu', ];
 
-    [ 'librecad'
+    [ 'calibre'
+    , 'fbreader'
+    , 'librecad'
     , 'libreoffice'
     , 'libreoffice-base'
     , 'libreoffice-common'
