@@ -69,19 +69,19 @@ update_bookmarks() {
 
 case "$(echo $LANG | cut -c 1-2)" in
   fi)
-    userdir_displayname='Verkkokansio'
     schooldir_displayname='Yhteiset'
     sharename='yhteiset'
+    userdir_displayname='Verkkokansio'
     ;;
   sv)
-    userdir_displayname='Nätverksmapp'
     schooldir_displayname='Delade Filer'
     sharename='delade_filer'
+    userdir_displayname='Nätverksmapp'
     ;;
   *)
-    userdir_displayname='Network folder'
     schooldir_displayname='Share'
     sharename='share'
+    userdir_displayname='Network folder'
     ;;
 esac
 
@@ -103,16 +103,11 @@ case "$puavo_hosttype" in
     fi
     ;;
   laptop)
+    # old stuff, remove
     rmdir ~/.puavo-sharedir.schooldir \
           ~/.puavo-sharedir.userdir 2>/dev/null || true
-
-    if use_remotemounts; then
-      user_id=$(id -u)
-      ln -fns "/run/user/${user_id}/gvfs/smb-share:server=homedir.${puavo_domain},share=${USER}" \
-	      ~/"${userdir_displayname}"
-      ln -fns "/run/user/${user_id}/gvfs/smb-share:server=homedir.${puavo_domain},share=share/${sharename}/${user_primary_group}" \
-	      ~/"${schooldir_displayname}"
-    else
+    # maybe remove
+    if ! use_remotemounts; then
       rm -f ~/"${schooldir_displayname}" ~/"${userdir_displayname}"
     fi
     ;;

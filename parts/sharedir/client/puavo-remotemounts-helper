@@ -5,6 +5,7 @@ if puavo_hosttype != 'laptop' then
   exit(0)
 end
 
+require 'fileutils'
 require 'json'
 require 'timeout'
 
@@ -50,31 +51,47 @@ class GvfsMount
     return 'not connected'
   end
 
+  def ensure_link(shouldbe)
+    linksrc = "#{ ENV['HOME'] }/#{ @linkname }"
+
+    if shouldbe; then
+      system('ln', '-fns', @mntpath, linksrc) \
+        or errmsg("Could not create a link from '#{ linksrc }' to" \
+                    + " '#{ @mntpath }'")
+    else
+      FileUtils.rm_f(linksrc)
+    end
+  end
+
   def ensure_mounts
     checks_with_timeout = 0
 
     while true do
       begin
         mount_state = check_mount_state(@mntpath)
-        puts "mount state for #{ @url } is #{ mount_state }"
+
 	case mount_state
 	  when 'not connected'
+            ensure_link(false) rescue true
 	    puts "puavo-remotemounts-helper: mounting '#{ @mntpath }'"
 	    timeout_noex(30) { system('gvfs-mount', @url) } \
 	      or errmsg "problem in mounting '#{ @url }'"
 	    checks_with_timeout = 0
 
 	  when 'ok'
+            ensure_link(true) rescue true
 	    checks_with_timeout = 0
 
 	  when 'timeout'
 	    checks_with_timeout += 1
 	    if checks_with_timeout >= 5 then
+              ensure_link(false) rescue true
 	      puts "puavo-remotemounts-helper: unmounting '#{ @url }'"
 	      timeout_noex(30) { system('gvfs-mount', '-u', @url) } \
 		or errmsg "problem in unmounting '#{ @url }'"
 	      checks_with_timeout = 0
 	    end
+
 	end
       rescue StandardError => e
 	errmsg "Got some error: #{ e }, yet continuing..."
@@ -87,30 +104,46 @@ end
 
 def get_our_gvfsmounts
   puavo_domain = IO.read('/etc/puavo/domain').chomp
+
+  lang = (ENV['LANG'] || '')[0..1]
+
   sharename \
-    = case (ENV['LANG'] || '')[0..1]
-	when 'fi' 'yhteiset'
-	when 'sv' 'delade_filer'
-	else      'share'
+    = case lang
+	when 'fi'; 'yhteiset'
+	when 'sv'; 'delade_filer'
+	else       'share'
       end
 
-  user_primary_group = %x(id -gn).chomp
-  raise('Problem running id -gn') unless $?.exitstatus == 0
+  userdir_displayname \
+    = case lang
+	when 'fi'; 'Verkkokansio'
+	# when 'sv' 'Nätverksmapp'; # XXX encoding!!
+	else       'Network folder'
+      end
 
-  raise('No USER environment set') unless ENV['USER'] && !ENV['USER'].empty?
+  schooldir_displayname \
+    = case lang
+        when 'fi'; 'Yhteiset'
+        when 'sv'; 'Delade Filer'
+        else       'Share'
+      end
 
+  puts "schooldir_displayname=#{ schooldir_displayname } lang=#{ lang }"
+
+  user = Etc.getpwuid.name
   user_id = Process.uid
+  user_primary_group = Etc.getgrgid( Etc.getpwuid.gid ).name
 
   [
     GvfsMount.new(
-      "smb://homedir.#{ puavo_domain }/#{ ENV['USER'] }",
-      "/run/user/#{ user_id }/gvfs/smb-share:server=homedir.#{ puavo_domain },share=#{ ENV['USER'] }",
-      "Verkkohakemisto"),
+      "smb://homedir.#{ puavo_domain }/#{ user }",
+      "/run/user/#{ user_id }/gvfs/smb-share:server=homedir.#{ puavo_domain },share=#{ user }",
+      userdir_displayname),
 
     GvfsMount.new(
       "smb://homedir.#{ puavo_domain }/share/#{ sharename }/#{ user_primary_group }",
       "/run/user/#{ user_id }/gvfs/smb-share:server=homedir.#{ puavo_domain },share=share/#{ sharename }/#{ user_primary_group }",
-      "Yhteiset"),
+      schooldir_displayname),
   ]
 end
 
