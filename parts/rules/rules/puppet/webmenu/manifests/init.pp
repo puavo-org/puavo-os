@@ -31,6 +31,9 @@ class webmenu {
     '/opt/webmenu/menu.json':
       content => template('webmenu/menu.json');
 
+    '/usr/share/icons/webmenu/unelmakoulu.png':
+      content => template('webmenu/unelmakoulu.png');
+
     '/usr/local/bin/puavo-webmenu':
       content => template('webmenu/puavo-webmenu'),
       mode    => 755;
