@@ -58,5 +58,5 @@ Description: Bits and pieces needed inside the LTSP chroot image.
 
 Package: puavo-image-tools
 Architecture: all
-Depends: ${misc:Depends}, debootstrap, ruby1.9.3, ruby-json, squashfs-tools
+Depends: ${misc:Depends}, debootstrap, ruby1.9.3, ruby-json, squashfs-tools, git
 Description: Tools for building images.
