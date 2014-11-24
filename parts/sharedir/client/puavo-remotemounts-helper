@@ -1,11 +1,12 @@
 #!/usr/bin/ruby1.9.1
 
-require 'json'
-
 puavo_hosttype = IO.read('/etc/puavo/hosttype').chomp
 if puavo_hosttype != 'laptop' then
   exit(0)
 end
+
+require 'json'
+require 'timeout'
 
 @device = JSON.parse( IO.read('/etc/puavo/device.json') )
 
@@ -13,8 +14,12 @@ def ensure_mounts_to_remote_directory(gvfsmntpath)
   # XXX we could also periodically check if we can read anything from the mount
   # XXX and if we can not, we could do "gvfs-mount -u" (unmount)
   while true do
-    puts "gvfsmntpath = '#{ gvfsmntpath }'"
-    system('timeout', '30', 'gvfs-mount', gvfsmntpath)
+    begin
+      Timeout::timeout(30) do
+        system('gvfs-mount', gvfsmntpath)
+      end
+    rescue Timeout::Error => e
+    end
     sleep(10)
   end
 end
