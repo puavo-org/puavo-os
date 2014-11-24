@@ -13,6 +13,7 @@ has_device_tag() {
 }
 
 use_remotemounts() {
+  # NOTE: duplicate in puavo-update-gtk-bookmarks
   # Doing the remote mounts is the default,
   # "no_use_remotemounts"-tag will disable that,
   # but then again "use_remotemounts"-tag overrides it.
