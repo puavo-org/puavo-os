@@ -12,17 +12,15 @@ has_device_tag() {
   jq -r .tags[] /etc/puavo/device.json | grep -qx "$1"
 }
 
-use_sharedir_mounts() {
-  # Doing the sharedir mounts is the default,
-  # "no_sharedir_mounts"-tag will disable that,
-  # but then again "use_sharedir_mounts"-tag overrides it.
-  ! has_device_tag no_sharedir_mounts || has_device_tag use_sharedir_mounts
+use_remotemounts() {
+  # Doing the remote mounts is the default,
+  # "no_use_remotemounts"-tag will disable that,
+  # but then again "use_remotemounts"-tag overrides it.
+  ! has_device_tag no_use_remotemounts || has_device_tag use_remotemounts
 }
 
-if ! use_sharedir_mounts; then
-  # Tags suggest we should do nothing... note that this also means that
-  # we do not do user home directory mounts either ("use_remotemounts"
-  # and "no_use_remotemounts" would have been more descriptive).
+if ! use_remotemounts; then
+  # Tags suggest we should do nothing.
   exit 0
 fi
 
