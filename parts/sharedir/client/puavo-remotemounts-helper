@@ -1,57 +1,68 @@
-#!/bin/sh
+#!/usr/bin/ruby1.9.1
 
-set -eu
+require 'json'
 
-puavo_hosttype=$(cat /etc/puavo/hosttype)
+puavo_hosttype = IO.read('/etc/puavo/hosttype').chomp
+if puavo_hosttype != 'laptop' then
+  exit(0)
+end
 
-if [ "$puavo_hosttype" != "laptop" ]; then
-  exit 0
-fi
+@device = JSON.parse( IO.read('/etc/puavo/device.json') )
 
-has_device_tag() {
-  jq -r .tags[] /etc/puavo/device.json | grep -qx "$1"
-}
+def ensure_mounts_to_remote_directory(gvfsmntpath)
+  # XXX we could also periodically check if we can read anything from the mount
+  # XXX and if we can not, we could do "gvfs-mount -u" (unmount)
+  while true do
+    puts "gvfsmntpath = '#{ gvfsmntpath }'"
+    system('timeout', '30', 'gvfs-mount', gvfsmntpath)
+    sleep(10)
+  end
+end
 
-use_remotemounts() {
-  # NOTE: duplicate in puavo-update-gtk-bookmarks
+def has_device_tag(tag)
+  (@device['tags'] || []).include?(tag)
+end
+
+def use_remotemounts
   # Doing the remote mounts is the default,
   # "no_use_remotemounts"-tag will disable that,
   # but then again "use_remotemounts"-tag overrides it.
-  ! has_device_tag no_use_remotemounts || has_device_tag use_remotemounts
-}
+  ! has_device_tag('no_use_remotemounts') || has_device_tag('use_remotemounts')
+end
 
-if ! use_remotemounts; then
+if !use_remotemounts then
   # Tags suggest we should do nothing.
-  exit 0
-fi
+  exit(0)
+end
 
-puavo_domain=$(cat /etc/puavo/domain)
+puavo_domain = IO.read('/etc/puavo/domain').chomp
 
-case "$(echo $LANG | cut -c 1-2)" in
-  fi) sharename='yhteiset'     ;;
-  sv) sharename='delade_filer' ;;
-  *)  sharename='share'        ;;
-esac
+sharename \
+  = case (ENV['LANG'] || '')[0..1]
+      when 'fi' 'yhteiset'
+      when 'sv' 'delade_filer'
+      else      'share'
+    end
 
-primary_group=$(id -gn)
+primary_group = %x(id -gn).chomp
+raise('Problem running id -gn') unless $?.exitstatus == 0
 
-gvfs_mounts="
-  smb://homedir.${puavo_domain}/${USER}
-  smb://homedir.${puavo_domain}/share/${sharename}/${primary_group}
-"
+raise('No USER environment set') unless ENV['USER'] && !ENV['USER'].empty?
+
+gvfs_mounts = [
+  "smb://homedir.#{ puavo_domain }/#{ ENV['USER'] }",
+  "smb://homedir.#{ puavo_domain }/share/#{ sharename }/#{ primary_group }",
+]
 
 #
 # ensure mounts to remote directories come up and stay
 #
 
-# XXX we could also periodically check if we can read anything from the mount
-# XXX and if we can not, we could do "gvfs-mount -u" (unmount)
+threads \
+  = gvfs_mounts.map do |gvfsmntpath|
+      Thread.new { ensure_mounts_to_remote_directory(gvfsmntpath) }
+    end
 
-while true; do
-  for mnt in $gvfs_mounts; do
-    timeout 30 gvfs-mount $mnt || true
-  done
-  sleep 10
-done
+threads.each { |t| t.join }
 
-# should never be reached
+exit(0)
