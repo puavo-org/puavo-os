@@ -2,6 +2,11 @@ class webmenu {
   include dpkg,
           packages
 
+  dpkg::simpledivert {
+    '/opt/webmenu/menu.json':
+      before => File['/opt/webmenu/menu.json'];
+  }
+
   File { require => Package['webmenu'], }
   file {
     '/etc/puavo-external-files-actions.d/webmenu':
@@ -22,6 +27,9 @@ class webmenu {
     '/etc/xdg/autostart/webmenu.desktop':
       content => template('webmenu/webmenu.desktop'),
       require => File['/usr/local/bin/puavo-webmenu'];
+
+    '/opt/webmenu/menu.json':
+      content => template('webmenu/menu.json');
 
     '/usr/local/bin/puavo-webmenu':
       content => template('webmenu/puavo-webmenu'),
