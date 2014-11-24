@@ -1428,6 +1428,17 @@
           "type": "desktop",
           "inactiveByDeviceType": "thinclient",
           "source": "netflix"
+        },
+        {
+          "type": "web",
+          "name": {
+            "en": "Dreamschool",
+            "fi": "Unelmakoulu",
+            "sv": "Dreamschool",
+            "de": "Dreamschool"
+          },
+          "url": "http://dreamschool.fi",
+          "osIconPath": "/usr/share/icons/webmenu/unelmakoulu.png"
         }
       ]
     },
