@@ -128,8 +128,6 @@ def get_our_gvfsmounts
         else       'Share'
       end
 
-  puts "schooldir_displayname=#{ schooldir_displayname } lang=#{ lang }"
-
   user = Etc.getpwuid.name
   user_id = Process.uid
   user_primary_group = Etc.getgrgid( Etc.getpwuid.gid ).name
