@@ -703,8 +703,8 @@ class packages {
       tag => [ 'virtualization', 'ubuntu', ];
 
     [ 'bluefish'
+    , 'browser-plugin-vlc'
     , 'chromium-browser'
-    , 'gecko-mediaplayer'
     , 'icedtea-7-plugin'
     , 'liferea'
     , 'openjdk-6-jdk'
