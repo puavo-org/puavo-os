@@ -113,7 +113,7 @@ File.open("/tmp/config.ldif", "w") do |cf|
 end
 
 # Restore slapd configuration
-`slapadd -l /tmp/config.ldif -F /etc/ldap/slapd.d -b cn=config`
+puts `slapadd -l /tmp/config.ldif -F /etc/ldap/slapd.d -b cn=config`
 
 Dir.foreach(dump_directory) do |filename|
   next if filename == "cn=config.ldif"
@@ -122,7 +122,7 @@ Dir.foreach(dump_directory) do |filename|
     base = match_data[1]
 
     # Restore database
-    `slapadd -q -b #{base} -l #{ File.join(dump_directory, filename) } -F /etc/ldap/slapd.d`
+    puts `slapadd -q -b #{base} -l #{ File.join(dump_directory, filename) } -F /etc/ldap/slapd.d`
   end
 end
 
