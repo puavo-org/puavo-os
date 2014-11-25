@@ -56,9 +56,12 @@ class GvfsMount
     linksrc = "#{ ENV['HOME'] }/#{ @linkname }"
 
     if shouldbe; then
-      system('ln', '-fns', @mntpath, linksrc) \
-        or errmsg("Could not create a link from '#{ linksrc }' to" \
-                    + " '#{ @mntpath }'")
+      begin
+        return if File.readlink(linksrc) == @mntpath
+      rescue Errno::ENOENT
+      end
+      FileUtils.rm_f(linksrc)
+      FileUtils.symlink(@mntpath, linksrc)
     else
       FileUtils.rm_f(linksrc)
     end
