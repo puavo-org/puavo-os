@@ -2,7 +2,9 @@
 
 set -eu
 
-# if there is no smartboard license, remove the notebook .desktop file
+# if there is no smartboard license, remove the notebook and
+# SMARTBoeardTools .desktop files.
 if [ ! -e "/opt/SMART Technologies/common/data/.mp.1.1.dat" ]; then
-  rm -f /usr/share/applications/smarttech-notebook.desktop
+  rm -f /usr/local/share/applications/smarttech-notebook.desktop
+  rm -f /usr/local/share/applications/smarttech-SMARTBoardTools.desktop
 fi
