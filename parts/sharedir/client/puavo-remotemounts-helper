@@ -43,6 +43,7 @@ class GvfsMount
   end
 
   def check_mount_state(mntpath)
+    # wait for 5 seconds for stat operation to a remote path
     system('timeout', '-s', 'KILL', '5', 'stat', '-c', '%X', mntpath, \
            { :out => '/dev/null', :err => '/dev/null' })
 
@@ -89,6 +90,7 @@ class GvfsMount
 	  when 'timeout'
 	    checks_with_timeout += 1
 	    if checks_with_timeout >= 5 then
+              # with five timeouts in a row, unmount the thing!
               ensure_link(false) rescue true
 	      puts "puavo-remotemounts-helper: unmounting '#{ @url }'"
 	      timeout_noex(30) { system('gvfs-mount', '-u', @url) } \
@@ -106,31 +108,51 @@ class GvfsMount
   end
 end
 
+def cleanup_stale_homedir_links(stale_linknames)
+  stale_linknames.each do |linkname|
+    begin
+      linkpath = "#{ ENV['HOME'] }/#{ linkname }"
+      if File.readlink(linkpath).match(%r{^/run/user/}) then
+        FileUtils.rm_f(linkpath)
+      end
+    rescue
+    end
+  end
+end
+
 def get_our_gvfsmounts
-  puavo_domain = IO.read('/etc/puavo/domain').chomp
+  sharenames = {
+    'fi' => 'yhteiset',
+    'sv' => 'delade_filer',
+    'en' => 'share',
+  }
+
+  userdir_labels = {
+    'fi' => 'Verkkokansio',
+    'sv' => 'Nätverksmapp',
+    'en' => 'Network folder',
+  }
+
+  schooldir_labels = {
+    'fi' => 'Yhteiset',
+    'sv' => 'Delade Filer',
+    'en' => 'Share',
+  }
 
   lang = (ENV['LANG'] || '')[0..1]
 
-  sharename \
-    = case lang
-	when 'fi'; 'yhteiset'
-	when 'sv'; 'delade_filer'
-	else       'share'
-      end
+  sharename       = sharenames[lang]       || sharenames['en']
+  userdir_label   = userdir_labels[lang]   || userdir_labels['en']
+  schooldir_label = schooldir_labels[lang] || schooldir_labels['en']
 
-  userdir_displayname \
-    = case lang
-	when 'fi'; 'Verkkokansio'
-	when 'sv'; 'Nätverksmapp'
-	else       'Network folder'
-      end
+  stale_linknames \
+    = userdir_labels.select { |key| key != lang }.values \
+        + schooldir_labels.select { |key| key != lang }.values
 
-  schooldir_displayname \
-    = case lang
-        when 'fi'; 'Yhteiset'
-        when 'sv'; 'Delade Filer'
-        else       'Share'
-      end
+  cleanup_stale_homedir_links(stale_linknames)
+
+
+  puavo_domain = IO.read('/etc/puavo/domain').chomp
 
   user = Etc.getpwuid.name
   user_id = Process.uid
@@ -140,12 +162,12 @@ def get_our_gvfsmounts
     GvfsMount.new(
       "smb://homedir.#{ puavo_domain }/#{ user }",
       "/run/user/#{ user_id }/gvfs/smb-share:server=homedir.#{ puavo_domain },share=#{ user }",
-      userdir_displayname),
+      userdir_label),
 
     GvfsMount.new(
       "smb://homedir.#{ puavo_domain }/share/#{ sharename }/#{ user_primary_group }",
       "/run/user/#{ user_id }/gvfs/smb-share:server=homedir.#{ puavo_domain },share=share/#{ sharename }/#{ user_primary_group }",
-      schooldir_displayname),
+      schooldir_label),
   ]
 end
 
