@@ -2,10 +2,24 @@
 # Inject .desktop to menu structure
 
 path = require "path"
-dotdesktop = require "./dotdesktop"
+stringify = require "json-stable-stringify"
 fs = require "fs"
 execSync = require "execSync"
+crypto = require "crypto"
+
+dotdesktop = require "./dotdesktop"
 parseExec = require "./parseExec"
+
+# Generate unique hash from any json serializable object
+json2hash = (ob) ->
+  if typeof ob is "string"
+    str = ob
+  else
+    str = stringify(ob)
+  shasum = crypto.createHash("sha1")
+  shasum.update(str)
+  return shasum.digest("hex")
+
 
 findOsIcon = (iconSearchPaths, id, fallbackIcon) ->
   try
@@ -50,7 +64,6 @@ injectDesktopData = (menu, desktopFileSearchPaths, locale, iconSearchPaths, fall
     else
       throw new Error("Bad command in: #{ JSON.stringify(menu) }")
 
-    menu.id = "custom:#{command.join(" ")}"
 
     code = execSync.run("which '#{ command[0] }' > /dev/null 2>&1")
     if code isnt 0
@@ -76,7 +89,6 @@ injectDesktopData = (menu, desktopFileSearchPaths, locale, iconSearchPaths, fall
       catch err
         return
 
-      menu.id = "desktop:#{menu.source}"
       menu.name ?= desktopEntry.name
       menu.description ?= desktopEntry.description
       menu.command ?= desktopEntry.command
@@ -89,10 +101,11 @@ injectDesktopData = (menu, desktopFileSearchPaths, locale, iconSearchPaths, fall
       menu.broken = true
 
   if menu.type is "menu"
-    # XXX
-    menu.id = "menu:#{JSON.stringify(menu.name)}"
+    menu.id = json2hash(menu.name)
     for menu_ in menu.items
       injectDesktopData(menu_, desktopFileSearchPaths, locale, iconSearchPaths, fallbackIcon, hostType)
+  else
+    menu.id = json2hash(menu)
 
 module.exports =
   injectDesktopData: injectDesktopData
