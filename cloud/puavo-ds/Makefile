@@ -22,3 +22,10 @@ $(clean-subdirs) :
 
 .PHONY : clean
 clean : $(clean-subdirs)
+
+.PHONY : deb
+deb :
+	rm -rf debian
+	cp -a debian.default debian
+	puavo-dch $(shell cat VERSION)
+	dpkg-buildpackage -us -uc
