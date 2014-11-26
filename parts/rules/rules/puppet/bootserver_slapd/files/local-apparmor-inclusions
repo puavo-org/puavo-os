@@ -1,0 +1,16 @@
+# Site-specific additions and overrides for usr.sbin.slapd.
+# For more details, please see /etc/apparmor.d/local/README.
+
+# With our slapd + krb5 configuration, apparmor produces lot of
+# following kind of log messages:
+#
+# type=1400 audit(1416998949.859:2325): apparmor="DENIED"
+# operation="open" parent=25498 profile="/usr/sbin/slapd"
+# name="/etc/gss/mech.d/" pid=25503 comm="slapd" requested_mask="r"
+# denied_mask="r" fsuid=119 ouid=0
+#
+# Because we do not have any extra GSSAPI mechanisms, we just tell
+# apparmor that the denial is exactly the right thing to do, it keeps
+# quiet and does not inform us anymore.
+
+deny /etc/gss/mech.d/ r, # Silence noise.
