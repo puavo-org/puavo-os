@@ -1002,6 +1002,10 @@
         },
         {
           "type": "desktop",
+          "source": "calibre"
+        },
+        {
+          "type": "desktop",
           "source": "tellico",
           "name": {
             "en": "Tellico-collection manager",
@@ -1436,12 +1440,7 @@
         },
         {
           "type": "web",
-          "name": {
-            "en": "Dreamschool",
-            "fi": "Unelmakoulu",
-            "sv": "Dreamschool",
-            "de": "Dreamschool"
-          },
+          "name": "Unelmakoulu",
           "url": "http://dreamschool.fi",
           "osIconPath": "/usr/share/icons/webmenu/unelmakoulu.png"
         }
