@@ -108,18 +108,6 @@ class GvfsMount
   end
 end
 
-def cleanup_stale_homedir_links(stale_linknames)
-  stale_linknames.each do |linkname|
-    begin
-      linkpath = "#{ ENV['HOME'] }/#{ linkname }"
-      if File.readlink(linkpath).match(%r{^/run/user/}) then
-        FileUtils.rm_f(linkpath)
-      end
-    rescue
-    end
-  end
-end
-
 def get_our_gvfsmounts
   sharenames = {
     'fi' => 'yhteiset',
@@ -144,13 +132,6 @@ def get_our_gvfsmounts
   sharename       = sharenames[lang]       || sharenames['en']
   userdir_label   = userdir_labels[lang]   || userdir_labels['en']
   schooldir_label = schooldir_labels[lang] || schooldir_labels['en']
-
-  stale_linknames \
-    = userdir_labels.select { |key| key != lang }.values \
-        + schooldir_labels.select { |key| key != lang }.values
-
-  cleanup_stale_homedir_links(stale_linknames)
-
 
   puavo_domain = IO.read('/etc/puavo/domain').chomp
 

@@ -11,13 +11,6 @@ has_device_tag() {
   jq -r .tags[] /etc/puavo/device.json | grep -qx "$1"
 }
 
-use_remotemounts() {
-  # Doing the remote mounts is the default,
-  # "no_use_remotemounts"-tag will disable that,
-  # but then again "use_remotemounts"-tag overrides it.
-  ! has_device_tag no_use_remotemounts || has_device_tag use_remotemounts
-}
-
 use_sambahomes() { has_device_tag sambahomes; }
 
 filter_out_our_bookmarks() {
@@ -92,23 +85,26 @@ done
 
 # handle links from user home directory to gvfs-mounts for applications
 # that do not understand gvfs
+
+# remove stale links (maybe created later)
+for linkname in 'Yhteiset'     'Delade Filer' 'Share' \
+                'Verkkokansio' 'Nätverksmapp' 'Network folder'; do
+  [ -h ~/"$linkname" ] && rm -f ~/"$linkname"
+done
+
 case "$puavo_hosttype" in
   fatclient|ltspserver)
     if use_sambahomes; then
-      ln -fns ~/.puavo-sharedir.schooldir ~/"${schooldir_displayname}"
+      ln -ns ~/.puavo-sharedir.schooldir ~/"${schooldir_displayname}" || true
     else
       rmdir ~/.puavo-sharedir.schooldir 2>/dev/null || true
-      ln -fns "/home/share/${sharename}/${user_primary_group}" \
-              ~/"${schooldir_displayname}"
+      ln -ns "/home/share/${sharename}/${user_primary_group}" \
+             ~/"${schooldir_displayname}" || true
     fi
     ;;
   laptop)
     # old stuff, remove
     rmdir ~/.puavo-sharedir.schooldir \
           ~/.puavo-sharedir.userdir 2>/dev/null || true
-    # maybe remove
-    if ! use_remotemounts; then
-      rm -f ~/"${schooldir_displayname}" ~/"${userdir_displayname}"
-    fi
     ;;
 esac
