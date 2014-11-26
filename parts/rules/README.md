@@ -1,4 +1,4 @@
 puavo-image
 ===========
 
-Configurations for building puavo-images.
+Configurations for Puavo images and servers.
