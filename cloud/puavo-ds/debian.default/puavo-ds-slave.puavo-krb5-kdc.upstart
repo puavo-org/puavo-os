@@ -1,8 +1,4 @@
 description "puavo-krb5-kdc"
 
-start on started slapd
-stop on stopped slapd
-
-respawn
-exec /usr/sbin/krb5kdc -n
-post-stop exec sleep 10
+# This script has been deprecated. SLAPD+KDC -combination is now
+# configured in puavo-rules by Puppet.
