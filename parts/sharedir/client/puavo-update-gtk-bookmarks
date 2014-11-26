@@ -67,7 +67,7 @@ case "$(echo $LANG | cut -c 1-2)" in
     userdir_displayname='Verkkokansio'
     ;;
   sv)
-    schooldir_displayname='Delade Filer'
+    schooldir_displayname='Delade filer'
     sharename='delade_filer'
     userdir_displayname='Nätverksmapp'
     ;;
@@ -87,7 +87,7 @@ done
 # that do not understand gvfs
 
 # remove stale links (maybe created later)
-for linkname in 'Yhteiset'     'Delade Filer' 'Share' \
+for linkname in 'Yhteiset'     'Delade filer' 'Share' \
                 'Verkkokansio' 'Nätverksmapp' 'Network folder'; do
   [ -h ~/"$linkname" ] && rm -f ~/"$linkname"
 done
