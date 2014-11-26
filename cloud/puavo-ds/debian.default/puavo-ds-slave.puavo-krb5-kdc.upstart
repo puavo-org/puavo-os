@@ -1,7 +1,7 @@
 description "puavo-krb5-kdc"
 
-start on puavo-slapd-started
-stop on puavo-slapd-stopped
+start on started slapd
+stop on stopped slapd
 
 respawn
 exec /usr/sbin/krb5kdc -n
