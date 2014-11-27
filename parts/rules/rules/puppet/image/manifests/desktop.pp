@@ -13,6 +13,7 @@ class image::desktop {
 	      image::bundle::basic,
 	      kaffeine,
 	      keyutils,
+	      laptop_mode_tools,
 	      libreoffice,
 	      network_manager,
 	      packages::puavo,
