@@ -57,11 +57,13 @@ def exec_command(stop_when_error, *command_and_args)
   puts response[:stderr] if @debug
 
   if response[:exit_status] != 0
-    puts "\n\n" + "#" * 30
-    puts "Following command failed:"
+    puts "\n\n" + "#" * 40
+    puts "### Following command failed"
     puts command_and_args.join(" ")
-    puts "Error message:"
+    puts "### Error message"
     puts response[:stderr].split("\n").last(5)
+    puts "#" * 40 + "\n\n"
+
     exit if stop_when_error
   end
 
