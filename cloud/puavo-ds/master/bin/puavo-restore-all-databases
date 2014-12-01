@@ -8,7 +8,6 @@
 #
 
 require 'fileutils'
-require 'puavo-ds'
 
 dump_directory = ARGV[0]
 if dump_directory.nil? || dump_directory == "--help" || dump_directory == "-h"
