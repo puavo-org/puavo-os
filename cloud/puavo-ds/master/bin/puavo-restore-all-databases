@@ -42,8 +42,7 @@ while(true)
   break if STDIN.gets.strip == "YES"
 end
 
-def exec_command(*command_and_args)
-
+def exec_command(stop_when_error, *command_and_args)
   response = nil
   Open3.popen3(*command_and_args) do |stdin, stdout, stderr, wait_thr|
     wait_thr.join
@@ -63,7 +62,7 @@ def exec_command(*command_and_args)
     puts command_and_args.join(" ")
     puts "Error message:"
     puts response[:stderr].split("\n").last(5)
-    exit
+    exit if stop_when_error
   end
 
 end
@@ -143,6 +142,7 @@ end
 # Restore slapd configuration
 puts "Restore configurations (cn=config)"
 exec_command(
+  true,
   'slapadd',
   '-l', '/tmp/config.ldif',
   '-F', '/etc/ldap/slapd.d',
@@ -157,6 +157,7 @@ Dir.foreach(dump_directory) do |filename|
 
     # Restore database
     exec_command(
+      true,
       'slapadd',
       '-q',
       '-b', base,
