@@ -169,3 +169,5 @@ end
 # Fix permission of slapd files
 FileUtils.chown_R("openldap", "openldap", "/etc/ldap/slapd.d/")
 FileUtils.chown_R("openldap", "openldap", "/var/lib/ldap")
+
+puts "\nDatabases was successfully restored!\n\n"
