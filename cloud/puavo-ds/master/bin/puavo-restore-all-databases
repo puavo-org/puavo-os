@@ -7,7 +7,10 @@
 # Usage: puavo-restore-all-databases [DUMP DIRECTORY]
 #
 
+require 'open3'
 require 'fileutils'
+
+@debug = false
 
 dump_directory = ARGV[0]
 if dump_directory.nil? || dump_directory == "--help" || dump_directory == "-h"
@@ -37,6 +40,32 @@ puts "This will destroy previous databases permanently and restore databases fro
 while(true)
   print "Type YES to continue> "
   break if STDIN.gets.strip == "YES"
+end
+
+def exec_command(*command_and_args)
+
+  response = nil
+  Open3.popen3(*command_and_args) do |stdin, stdout, stderr, wait_thr|
+    wait_thr.join
+
+    response = {
+      :stdout => stdout.read,
+      :stderr => stderr.read,
+      :exit_status => wait_thr.value.exitstatus
+    }
+  end
+
+  puts response[:stderr] if @debug
+
+  if response[:exit_status] != 0
+    puts "\n\n" + "#" * 30
+    puts "Following command failed:"
+    puts command_and_args.join(" ")
+    puts "Error message:"
+    puts response[:stderr].split("\n").last(5)
+    exit
+  end
+
 end
 
 generic_olc_db_config = ['set_cachesize 0 10485760 0',
@@ -112,16 +141,27 @@ File.open("/tmp/config.ldif", "w") do |cf|
 end
 
 # Restore slapd configuration
-puts `slapadd -l /tmp/config.ldif -F /etc/ldap/slapd.d -b cn=config`
+puts "Restore configurations (cn=config)"
+exec_command(
+  'slapadd',
+  '-l', '/tmp/config.ldif',
+  '-F', '/etc/ldap/slapd.d',
+  '-b', 'cn=config')
 
 Dir.foreach(dump_directory) do |filename|
   next if filename == "cn=config.ldif"
 
   if match_data = filename.match(/(.*)\.ldif$/)
     base = match_data[1]
+    puts "Restore database: #{base}"
 
     # Restore database
-    puts `slapadd -q -b #{base} -l #{ File.join(dump_directory, filename) } -F /etc/ldap/slapd.d`
+    exec_command(
+      'slapadd',
+      '-q',
+      '-b', base,
+      '-l', File.join(dump_directory, filename),
+      '-F', '/etc/ldap/slapd.d')
   end
 end
 
