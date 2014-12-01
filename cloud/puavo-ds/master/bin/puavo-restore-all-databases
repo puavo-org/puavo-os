@@ -96,7 +96,7 @@ generic_olc_db_dn_cache_size = '60000'
 generic_olc_db_checkpoint = '64 5'
 
 # Stop slapd service
-`stop slapd`
+exec_command(false, "stop", "slapd")
 # Remove slapd configuration directory
 FileUtils.rm_r Dir.glob('/etc/ldap/slapd.d/cn=config*')
 # Remove all databases
