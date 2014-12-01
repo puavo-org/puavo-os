@@ -66,32 +66,32 @@ class GvfsMount
       begin
         mount_state = check_mount_state(@mntpath)
 
-	case mount_state
-	  when 'not connected'
+        case mount_state
+          when 'not connected'
             ensure_link(false) rescue true
-	    puts "puavo-remotemounts-helper: mounting '#{ @mntpath }'"
-	    system('timeout', '-k', '10', '20', 'gvfs-mount', @url) \
-	      or errmsg("problem in mounting '#{ @url }'")
-	    checks_with_timeout = 0
+            puts "puavo-remotemounts-helper: mounting '#{ @mntpath }'"
+            system('timeout', '-k', '10', '20', 'gvfs-mount', @url) \
+              or errmsg("problem in mounting '#{ @url }'")
+            checks_with_timeout = 0
 
-	  when 'ok'
+          when 'ok'
             ensure_link(true) rescue true
-	    checks_with_timeout = 0
+            checks_with_timeout = 0
 
-	  when 'timeout'
-	    checks_with_timeout += 1
-	    if checks_with_timeout >= 5 then
+          when 'timeout'
+            checks_with_timeout += 1
+            if checks_with_timeout >= 5 then
               # with five timeouts in a row, unmount the thing!
               ensure_link(false) rescue true
-	      puts "puavo-remotemounts-helper: unmounting '#{ @url }'"
-	      system('timeout', '-k', '10', '20', 'gvfs-mount', '-u', @url) \
-		or errmsg("problem in unmounting '#{ @url }'")
-	      checks_with_timeout = 0
-	    end
+              puts "puavo-remotemounts-helper: unmounting '#{ @url }'"
+              system('timeout', '-k', '10', '20', 'gvfs-mount', '-u', @url) \
+                or errmsg("problem in unmounting '#{ @url }'")
+              checks_with_timeout = 0
+            end
 
-	end
+        end
       rescue StandardError => e
-	errmsg "Got some error: #{ e }, yet continuing..."
+        errmsg "Got some error: #{ e }, yet continuing..."
       end
 
       sleep(10)
