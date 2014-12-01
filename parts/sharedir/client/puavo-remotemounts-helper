@@ -8,7 +8,6 @@ end
 
 require 'fileutils'
 require 'json'
-require 'timeout'
 
 @device = JSON.parse( IO.read('/etc/puavo/device.json') )
 
@@ -18,14 +17,6 @@ end
 
 def has_device_tag(tag)
   (@device['tags'] || []).include?(tag)
-end
-
-def timeout_noex(seconds, &code)
-  begin
-    return Timeout::timeout(seconds, &code)
-  rescue Timeout::Error => e
-    return false
-  end
 end
 
 def use_remotemounts
@@ -79,8 +70,8 @@ class GvfsMount
 	  when 'not connected'
             ensure_link(false) rescue true
 	    puts "puavo-remotemounts-helper: mounting '#{ @mntpath }'"
-	    timeout_noex(30) { system('gvfs-mount', @url) } \
-	      or errmsg "problem in mounting '#{ @url }'"
+	    system('timeout', '-k', '10', '20', 'gvfs-mount', @url) \
+	      or errmsg("problem in mounting '#{ @url }'")
 	    checks_with_timeout = 0
 
 	  when 'ok'
@@ -93,8 +84,8 @@ class GvfsMount
               # with five timeouts in a row, unmount the thing!
               ensure_link(false) rescue true
 	      puts "puavo-remotemounts-helper: unmounting '#{ @url }'"
-	      timeout_noex(30) { system('gvfs-mount', '-u', @url) } \
-		or errmsg "problem in unmounting '#{ @url }'"
+	      system('timeout', '-k', '10', '20', 'gvfs-mount', '-u', @url) \
+		or errmsg("problem in unmounting '#{ @url }'")
 	      checks_with_timeout = 0
 	    end
 
