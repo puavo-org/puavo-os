@@ -87,6 +87,9 @@ class packages {
     , 'notify-osd'
     , 'onboard'
     , 'overlay-scrollbar'               # needed by accessibility stuff
+    , 'python-appindicator'
+    , 'python-gtk2'
+    , 'python-notify'
     , 'ubuntu-standard'
     , 'xul-ext-mozvoikko' ]:
       tag => [ 'desktop', 'ubuntu', ];
@@ -762,7 +765,8 @@ class packages {
     [ 'faenza-icon-theme' ]:
       tag => [ 'themes', 'puavo', ];
 
-    [ 'xul-ext-flashblock' ]:
+    [ 'node-webkit'
+    , 'xul-ext-flashblock' ]:
       tag => [ 'web', 'puavo', ];
   }
 
