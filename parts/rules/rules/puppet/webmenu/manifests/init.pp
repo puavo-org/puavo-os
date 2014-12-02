@@ -2,11 +2,6 @@ class webmenu {
   include dpkg,
           packages
 
-  dpkg::simpledivert {
-    '/opt/webmenu/menu.json':
-      before => File['/opt/webmenu/menu.json'];
-  }
-
   File { require => Package['webmenu'], }
   file {
     '/etc/puavo-external-files-actions.d/webmenu':
@@ -21,15 +16,15 @@ class webmenu {
     '/etc/webmenu/config.json':
       content => template('webmenu/config.json');
 
+    '/etc/webmenu/menu.json':
+      content => template('webmenu/menu.json');
+
     '/etc/webmenu/personally-administered-device/menu.json':
       content => template('webmenu/personally-administered-device-menu.json');
 
     '/etc/xdg/autostart/webmenu.desktop':
       content => template('webmenu/webmenu.desktop'),
       require => File['/usr/local/bin/puavo-webmenu'];
-
-    '/opt/webmenu/menu.json':
-      content => template('webmenu/menu.json');
 
     '/usr/share/icons/webmenu/unelmakoulu.png':
       content => template('webmenu/unelmakoulu.png');
