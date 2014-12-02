@@ -1,0 +1,203 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import appindicator
+import errno
+import gobject
+import gtk
+import json
+import os
+import pynotify
+import sys
+
+class ChangelogNotifyApplet:
+    def __init__(self):
+        self.system_release_name = self.read_system_release_name()
+        self.system_version      = self.read_system_version()
+        self.user_puavo_dir      = os.path.join(os.environ['HOME'], '.puavo')
+        self.user_versions_path  = os.path.join(self.user_puavo_dir,
+                                               'used_image_versions')
+
+        self.used_image_versions = self.read_used_image_versions()
+
+
+    def add_applet_to_indicator(self):
+        icon = '/usr/share/icons/Breathe/32x32/emblems/emblem-important.png'
+        self.indicator \
+          = appindicator.Indicator('notifychangelog-indicator',
+                                   icon,
+                                   appindicator.CATEGORY_APPLICATION_STATUS)
+        self.indicator.set_status(appindicator.STATUS_ACTIVE)
+
+        menu = gtk.Menu()
+
+        buttonmsg = '%s (%s)' % (self.t('buttonmsg'),
+                                 self.system_release_name)
+
+        button = gtk.MenuItem(buttonmsg)
+        button.show()
+        menu.append(button)
+        button.connect('activate', self.button_callback)
+
+        self.indicator.set_menu(menu)
+
+
+    def button_callback(self, widget):
+        url = 'http://changelog.opinsys.fi/#%s' % self.system_version
+        cmd = [ '/usr/bin/nw',
+                '/usr/local/share/notify_puavoimage_changelog/node-webkit-app',
+                url ]
+
+        (pid, stdin, stdout, stderr) \
+           = gobject.spawn_async(cmd,
+                                 flags=gobject.SPAWN_STDERR_TO_DEV_NULL,
+                                 standard_output=True)
+
+        gobject.io_add_watch(stdout,
+                             gobject.IO_HUP|gobject.IO_IN,
+                             self.nw_stdout_callback,
+                             os.fdopen(stdout))
+
+
+    def nw_stdout_callback(self, fd, condition, channel):
+        if condition == gobject.IO_HUP:
+            channel.close()
+            return False
+        if condition == gobject.IO_IN:
+            line = channel.readline()
+            if line == "Changelog load OK.\n":
+                self.write_user_versions(True)
+
+        return True
+
+
+    def notify_user_on_update(self):
+        if not pynotify.init('New Opinsys system version'):
+            print >> sys.stderr, 'Problem initializing pynotify.'
+            return
+
+        version_subject = '%s (%s)' % (self.t('new_version_subject'),
+                                       self.system_release_name)
+
+        n = pynotify.Notification(version_subject,
+                                  self.t('new_version_message'))
+
+        if not n.show():
+            print >> sys.stderr, 'Problem showing notification.'
+            return
+
+
+    def read_firstline(self, pathname):
+        with open(pathname) as file:
+            return (file.readlines())[0].rstrip("\n")
+
+
+    def read_system_release_name(self):
+        release_name = self.read_firstline('/etc/ltsp/this_ltspimage_release')
+        if release_name == '':
+            raise Exception('Could not read system release name')
+        return release_name
+
+
+    def read_system_version(self):
+        version = self.read_firstline('/etc/ltsp/this_ltspimage_name')
+        if version == '':
+            raise Exception('Could not read system version')
+        return version
+
+
+    def read_used_image_versions(self):
+        try:
+            with open(self.user_versions_path) as file:
+                return json.load(file)
+        except:
+            return {} 
+
+    def t(self, msgid):
+        lang = os.environ['LANG'][0:2]
+
+        translations = {
+          'buttonmsg': {
+            'en': 'Information on the latest system update',
+            'fi': 'Tietoa järjestelmän viimeisimmästä päivityksestä',
+            'sv': 'Information om systemets senaste uppdatering',
+          },
+          'new_version_message': {
+            'en': 'The system has been updated to a new version.' \
+                  + ' Click the info-button in the panel' \
+                  + ' for more information.',
+            'fi': 'Järjestelmä on päivitetty uuteen versioon.' \
+                  + ' Paneelin info-napista saat lisätietoja.',
+            'sv': 'Systemet har uppdaterats till en ny version.' \
+                  + ' Klicka på info knappen i nedre' \
+                  + ' panelen för mera information.',
+          },
+          'new_version_subject': {
+            'en': 'New system version',
+            'fi': 'Uusi järjestelmäversio',
+            'sv': 'Ny version av systemet',
+          },
+        }
+
+        return translations[msgid][lang]
+
+
+    def changelog_notification_countdown(self):
+        try:
+            this_version_info = self.used_image_versions[self.system_version]
+            return this_version_info['changelog_notification_countdown']
+        except:
+            return 3
+
+
+    def user_has_been_notified_about_this_version(self):
+        return self.changelog_notification_countdown() == 0
+
+
+    def write_user_versions(self, user_has_seen_changelog):
+        try:
+            os.mkdir(self.user_puavo_dir)
+        except OSError, e:
+            if e.errno != errno.EEXIST:
+                raise e
+
+        if not type(self.used_image_versions) is dict:
+            self.used_image_versions = {}
+
+        if not self.system_version in self.used_image_versions \
+            or not type(self.used_image_versions[self.system_version]) is dict:
+                self.used_image_versions[self.system_version] = {}
+
+        this_version_info = self.used_image_versions[self.system_version]
+
+        if user_has_seen_changelog:
+          countdown = 0
+        else:
+          countdown = max(0, self.changelog_notification_countdown() - 1)
+
+        this_version_info['changelog_notification_countdown'] = countdown
+
+        tmpfile = '%s.tmp' % self.user_versions_path
+        with open(tmpfile, 'w') as file:
+            json.dump(self.used_image_versions, file)
+        os.rename(tmpfile, self.user_versions_path)
+
+        # update the self.used_image_versions from file
+        self.used_image_versions = self.read_used_image_versions()
+
+
+if __name__ == '__main__':
+    # do not run as anonymous users
+    try:
+        if os.environ['GUEST_SESSION'] == 'true':
+            exit(0)
+    except KeyError:
+        pass
+
+    applet = ChangelogNotifyApplet()
+
+    if not applet.user_has_been_notified_about_this_version():
+        applet.notify_user_on_update()
+        applet.add_applet_to_indicator()
+        applet.write_user_versions(False)
+        gtk.main()
