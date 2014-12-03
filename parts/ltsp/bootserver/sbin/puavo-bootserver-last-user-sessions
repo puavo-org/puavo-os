@@ -51,7 +51,7 @@ print_time_ago()
 	hours_delta=$((hours_delta - days_delta * 24))
     fi
 
-    printf "%dd %dh %dm %ds ago" "${days_delta}" "${hours_delta}" "${minutes_delta}" "${seconds_delta}"
+    printf "%dd %2dh %2dm %2ds ago" "${days_delta}" "${hours_delta}" "${minutes_delta}" "${seconds_delta}"
 }
 
 time_ago=false
