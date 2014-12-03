@@ -1,0 +1,35 @@
+#!/bin/sh
+
+## List NFS/NBD/SMB clients (ESTABLISHED TCP connections).
+
+set -eu
+
+if [ $# -ne 0 ]; then
+    echo "ERROR: invalid number of arguments ($#), expected 0" >&2
+    exit 1
+fi
+
+netstat -W -o \
+    | while read proto _ _ local_addr remote_addr state _ _; do
+    [ "${proto}" = tcp ] || continue
+    [ "${state}" = ESTABLISHED ] || continue
+    local_port=$(echo "${local_addr}" | cut -d: -f2)
+
+    case "${local_port}" in
+	nfs)
+	    conn_type="NFS"
+	    ;;
+	nbd)
+	    conn_type="NBD"
+	    ;;
+	microsoft-ds)
+	    conn_type="SMB"
+	    ;;
+	*)
+	    continue
+	    ;;
+    esac
+
+    remote_host=$(echo "${remote_addr}" | cut -d: -f1)
+    printf "%s\t%s\n" "${conn_type}" "${remote_host}"
+done | sort -u
