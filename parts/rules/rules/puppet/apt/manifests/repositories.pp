@@ -2,13 +2,13 @@ class apt::repositories {
   include apt
 
   $mirror = $lsbdistcodename ? {
-    'quantal'          => 'old-releases.ubuntu.com',
-    default            => 'archive.ubuntu.com',
+    'quantal' => 'old-releases.ubuntu.com',
+    default   => 'archive.ubuntu.com',
   }
 
   $securitymirror = $lsbdistcodename ? {
-    'quantal'          => 'old-releases.ubuntu.com',
-    default            => 'security.ubuntu.com',
+    'quantal' => 'old-releases.ubuntu.com',
+    default   => 'security.ubuntu.com',
   }
 
   file {
