@@ -3,7 +3,7 @@ class apt::repositories {
 
   $mirror = $lsbdistcodename ? {
     'quantal'          => 'old-releases.ubuntu.com',
-    default            => 'fi.archive.ubuntu.com',
+    default            => 'archive.ubuntu.com',
   }
 
   $securitymirror = $lsbdistcodename ? {
