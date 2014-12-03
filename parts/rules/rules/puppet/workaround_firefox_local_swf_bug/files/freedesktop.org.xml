@@ -18429,7 +18429,7 @@
     </magic>
     <glob pattern="*.sh"/>
   </mime-type>
-  <mime-type type="application/vnd.adobe.flash.movie">
+  <mime-type type="application/x-shockwave-flash">
     <comment>Shockwave Flash file</comment>
     <comment xml:lang="ar">ملف Shockwave Flash</comment>
     <comment xml:lang="ast">ficheru Shockwave Flash</comment>
@@ -18485,7 +18485,7 @@
     <comment xml:lang="vi">Tập tin Flash Shockwave</comment>
     <comment xml:lang="zh_CN">Shockwave Flash 文件</comment>
     <comment xml:lang="zh_TW">Shockwave Flash 檔</comment>
-    <alias type="application/x-shockwave-flash"/>
+    <alias type="application/vnd.adobe.flash.movie"/>
     <alias type="application/futuresplash"/>
     <generic-icon name="video-x-generic"/>
     <magic priority="50">
