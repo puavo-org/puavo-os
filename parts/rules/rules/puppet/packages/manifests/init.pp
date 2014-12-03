@@ -1,5 +1,5 @@
 class packages {
-  require apt::repositories,
+  require apt::default_repositories,
           opinsys_apt_repositories
 
   include packages::kernels,

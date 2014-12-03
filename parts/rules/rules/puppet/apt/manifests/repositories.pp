@@ -1,25 +1,16 @@
 class apt::repositories {
   include apt
 
-  $mirror = $lsbdistcodename ? {
-    'quantal' => 'old-releases.ubuntu.com',
-    default   => 'archive.ubuntu.com',
-  }
+  define setup ($mirror, $partnermirror, $securitymirror) {
+    file {
+      '/etc/apt/sources.list':
+	content => template('apt/sources.list'),
+	notify  => Exec['apt update'];
+    }
 
-  $securitymirror = $lsbdistcodename ? {
-    'quantal' => 'old-releases.ubuntu.com',
-    default   => 'security.ubuntu.com',
-  }
-
-  file {
-    '/etc/apt/sources.list':
-      content => template('apt/sources.list'),
-      notify  => Exec['apt update'];
-  }
-
-  # define some apt keys and repositories for use
-  @apt::repository {
-    'partner':
-      aptline => "http://archive.canonical.com/ubuntu $lsbdistcodename partner";
+    @apt::repository {
+      'partner':
+        aptline => "http://${partnermirror}/ubuntu $lsbdistcodename partner";
+    }
   }
 }
