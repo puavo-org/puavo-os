@@ -90,6 +90,7 @@ class packages {
     , 'python-appindicator'
     , 'python-gtk2'
     , 'python-notify'
+    , 'shared-mime-info'
     , 'ubuntu-standard'
     , 'xul-ext-mozvoikko' ]:
       tag => [ 'desktop', 'ubuntu', ];

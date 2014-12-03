@@ -21,6 +21,7 @@ class image::desktop {
 	      pycharm,
 	      tuxpaint,
 	      wacom,
+	      workaround_firefox_local_swf_bug,
 	      xexit
     }
   }

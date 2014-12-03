@@ -151,6 +151,10 @@ wacom
 webmenu
     Our own branding for webmenu.
 
+workaround_firefox_local_swf_bug
+    Do workaround a mime-types related Firefox Shockwafe Flash -bug (with
+    local swf-files only).
+
 xexit
     Configurations (a killing script) for xexit (xexit is triggered, if a
     connection to X is broken.  This is basically used to kill processes
