@@ -1,0 +1,82 @@
+#!/bin/sh
+
+set -eu
+
+usage_error()
+{
+    echo "ERROR: $1" >&2
+    echo "Try '$0 --help' for more information". >&2
+    return 1
+}
+
+n_sessions=5
+
+print_help()
+{
+    echo "Usage: $0 [OPTIONS]"
+    echo
+    echo 'Show information about last successfully authenticated Puavo'
+    echo 'user sessions.'
+    echo
+    echo 'Options:'
+    echo "    -n N                    print only the N last sessions, \
+default ${n_sessions}"
+    echo '    -h, --help              print help and exit'
+    echo
+}
+
+while [ $# -gt 0 ]; do
+    case $1 in
+	-h|--help)
+	    shift
+	    print_help
+	    exit 0
+	    ;;
+	-n)
+	    shift
+	    [ $# -gt 0 ] || usage_error 'option -n requires an argument'
+	    n_sessions=$1
+	    shift
+	    echo "${n_sessions}" | egrep -q '^[0-9]+$' || \
+		usage_error \
+		'invalid value for option -n, expected unsigned integer'
+	    ;;
+	--)
+	    shift
+	    break
+	    ;;
+	-*)
+	    usage_error "invalid argument '$1'"
+	    ;;
+	*)
+	    break
+	    ;;
+    esac
+done
+
+if [ $# -ne 0 ]; then
+    usage_error "invalid number of arguments ($#), expected 0"
+fi
+
+puavo_realm=$(cat /etc/puavo/kerberos/realm)
+puavo_hostname=$(cat /etc/puavo/hostname)
+puavo_domain=$(cat /etc/puavo/domain)
+
+session_pattern="HTTP/${puavo_hostname}\.${puavo_domain}@${puavo_realm}$"
+all_session_lines=$(grep "${session_pattern}" /var/log/kdc.log)
+
+echo "${all_session_lines}" | tail -n "${n_sessions}" | while read line; do
+    auth_unixtime=$(echo "${line}" \
+	| sed -r -n 's/^.* authtime ([0-9]+),.*$/\1/p')
+    auth_username=$(echo "${line}" \
+	| sed -r -n 's/^.*, etypes .*, ([^@]+)@.*$/\1/p')
+    auth_hostname=$(echo "${line}" \
+	| sed -r -n 's/^.*: TGS_REQ \(.*\) ([0-9.]+):.*$/\1/p')
+
+    auth_datetime=$(date --rfc-3339=seconds -d "@${auth_unixtime}")
+
+    printf "%s\t%s\t%s\n" \
+	"${auth_username}" "${auth_datetime}" "${auth_hostname}"
+done
+
+exit 0
