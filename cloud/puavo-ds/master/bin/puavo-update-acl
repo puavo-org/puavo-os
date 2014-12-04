@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/ruby1.9.3
 
 require "erb"
 require 'readline'
@@ -7,6 +7,7 @@ require 'yaml'
 
 require 'puavo/etc'
 require 'puavo-ds/database_acl'
+require 'puavo/execute'
 
 
 organisation_name = ARGV.first
@@ -75,7 +76,15 @@ def update_acls(suffix)
 
   }
 
-  puts `ldapmodify -c -h #{PUAVO_ETC.ldap_master} -x -D #{PUAVO_ETC.ldap_dn} -Z -w #{@bindpw} -f /tmp/acl.ldif`
+  Puavo::Execute.run(
+    [ "ldapmodify",
+      "-c",
+      "-h", PUAVO_ETC.ldap_master,
+      "-x",
+      "-D", PUAVO_ETC.ldap_dn,
+      "-Z",
+      "-w", @bindpw,
+      "-f", "/tmp/acl.ldif" ])
 end
 
 if organisation_name.eql?("--all")
