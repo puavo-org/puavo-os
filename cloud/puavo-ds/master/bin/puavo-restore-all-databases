@@ -4,7 +4,7 @@
 # databases and slapd configurations (cn=config) from
 # the dump files.
 #
-# Usage: puavo-restore-all-databases [DUMP DIRECTORY]
+# Usage: puavo-restore-all-databases [DUMP DIRECTORY] [debug]
 #
 
 require 'open3'
@@ -23,6 +23,10 @@ if not File.directory?(dump_directory)
   puts "Cannot find dump directory: #{dump_directory}"
 
   exit 2
+end
+
+if ARGV[1] == "debug"
+  @debug = true
 end
 
 ##############################################################
