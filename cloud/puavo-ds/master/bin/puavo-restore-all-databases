@@ -7,8 +7,8 @@
 # Usage: puavo-restore-all-databases [DUMP DIRECTORY] [debug]
 #
 
-require 'open3'
 require 'fileutils'
+require 'puavo/execute'
 
 @debug = false
 
@@ -46,33 +46,6 @@ while(true)
   break if STDIN.gets.strip == "YES"
 end
 
-def exec_command(stop_when_error, *command_and_args)
-  response = nil
-  Open3.popen3(*command_and_args) do |stdin, stdout, stderr, wait_thr|
-    wait_thr.join
-
-    response = {
-      :stdout => stdout.read,
-      :stderr => stderr.read,
-      :exit_status => wait_thr.value.exitstatus
-    }
-  end
-
-  puts response[:stderr] if @debug
-
-  if response[:exit_status] != 0
-    puts "\n\n" + "#" * 40
-    puts "### Following command failed"
-    puts command_and_args.join(" ")
-    puts "### Error message"
-    puts response[:stderr].split("\n").last(5)
-    puts "#" * 40 + "\n\n"
-
-    exit if stop_when_error
-  end
-
-end
-
 generic_olc_db_config = ['set_cachesize 0 10485760 0',
                          'set_lg_bsize 2097512',
                          'set_flags DB_LOG_AUTOREMOVE']
@@ -100,7 +73,14 @@ generic_olc_db_dn_cache_size = '60000'
 generic_olc_db_checkpoint = '64 5'
 
 # Stop slapd service
-exec_command(false, "stop", "slapd")
+begin
+  response = Puavo::Execute.run( ["stop", "slapd"] )
+  puts response.stderr if @debug
+rescue Puavo::ExitStatusError => exception
+  puts "\nCould't stop slapd service: " + exception.response.stderr.to_s
+  puts
+end
+
 # Remove slapd configuration directory
 FileUtils.rm_r Dir.glob('/etc/ldap/slapd.d/cn=config*')
 # Remove all databases
@@ -147,12 +127,13 @@ end
 
 # Restore slapd configuration
 puts "Restore configurations (cn=config)"
-exec_command(
-  true,
-  'slapadd',
-  '-l', '/tmp/config.ldif',
-  '-F', '/etc/ldap/slapd.d',
-  '-b', 'cn=config')
+response = Puavo::Execute.run(
+             [ 'slapadd',
+               '-l', '/tmp/config.ldif',
+               '-F', '/etc/ldap/slapd.d',
+               '-b', 'cn=config' ])
+puts response.stderr if @debug
+
 
 Dir.foreach(dump_directory) do |filename|
   next if filename == "cn=config.ldif"
@@ -162,13 +143,13 @@ Dir.foreach(dump_directory) do |filename|
     puts "Restore database: #{base}"
 
     # Restore database
-    exec_command(
-      true,
-      'slapadd',
-      '-q',
-      '-b', base,
-      '-l', File.join(dump_directory, filename),
-      '-F', '/etc/ldap/slapd.d')
+    response = Puavo::Execute.run(
+                 [ 'slapadd',
+                   '-q',
+                   '-b', base,
+                   '-l', File.join(dump_directory, filename),
+                   '-F', '/etc/ldap/slapd.d'])
+    puts response.stderr if @debug
   end
 end
 
