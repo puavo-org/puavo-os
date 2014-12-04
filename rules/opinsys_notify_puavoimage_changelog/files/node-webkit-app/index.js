@@ -1,15 +1,30 @@
+var fs = require('fs');
 var gui = require('nw.gui');
-
-gui.App.clearCache();
-
-var loaded = false;
-var changelog = document.querySelector('#changelog_iframe');
 
 url = gui.App.argv[0];
 if (!url) {
   process.stderr.write("Give url as an argument!\n");
   process.exit(1);
 }
+
+function read_a_line(filepath) {
+  return fs.readFileSync(filepath)
+           .toString()
+           .replace(/\n$/, '');
+}
+
+var this_ltspimage_name    = read_a_line('/etc/ltsp/this_ltspimage_name');
+var this_ltspimage_release = read_a_line('/etc/ltsp/this_ltspimage_release');
+
+gui.App.clearCache();
+
+var title_element = document.querySelector('title');
+title_element.textContent = this_ltspimage_release
+                              + " - "
+                              + this_ltspimage_name;
+
+var loaded = false;
+var changelog = document.querySelector('#changelog_iframe');
 
 changelog.src = url;
 
