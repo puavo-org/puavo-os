@@ -31,10 +31,12 @@ update_bookmarks() {
   local schooldir_displayname
   local sharename
   local tmpfile
+  local userdir_displayname
 
-  schooldir_displayname=$1
-  sharename=$2
-  bookmarksfile=$3
+  userdir_displayname=$1
+  schooldir_displayname=$2
+  sharename=$3
+  bookmarksfile=$4
 
   bookmarksdir=$(dirname "${bookmarksfile}")
   mkdir -p "${bookmarksdir}"
@@ -52,8 +54,10 @@ update_bookmarks() {
       fi
       ;;
     laptop)
-      # do nothing... we end up cleaning up old stuff from
-      # ${bookmarksfile}
+      {
+        echo "smb://homedir.${puavo_domain}/${USER} ${userdir_displayname}"
+        echo "smb://homedir.${puavo_domain}/share/${sharename}/${user_primary_group} ${schooldir_displayname}"
+      } >> "${tmpfile}"
       ;;
   esac
 
@@ -79,7 +83,10 @@ case "$(echo $LANG | cut -c 1-2)" in
 esac
 
 for bookmark_file in ~/.config/gtk-3.0/bookmarks ~/.gtk-bookmarks; do
-  update_bookmarks "$schooldir_displayname" "$sharename" "$bookmark_file"
+  update_bookmarks "$userdir_displayname"   \
+                   "$schooldir_displayname" \
+                   "$sharename"             \
+                   "$bookmark_file"
 done
 
 
