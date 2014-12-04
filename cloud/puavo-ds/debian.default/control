@@ -15,7 +15,7 @@ Description: Puavo LDAP setup tool
 
 Package: puavo-ds-master
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, ruby1.9.3, slapd, slapd-smbkrb5pwd, ldap-utils, krb5-admin-server, krb5-kdc-ldap, libsasl2-modules-gssapi-mit,  puavo-client (>= 1.4.2), ruby-activeldap
+Depends: ${shlibs:Depends}, ${misc:Depends}, ruby1.9.3, slapd, slapd-smbkrb5pwd, ldap-utils, krb5-admin-server, krb5-kdc-ldap, libsasl2-modules-gssapi-mit,  puavo-client (>= 1.4.3), ruby-activeldap
 Recommends: rng-tools
 Description: Puavo LDAP setup tool
  Builds LDAP for Puavo
