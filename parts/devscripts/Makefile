@@ -20,7 +20,8 @@ install: installdirs
 		bin/dpkg-diff-img \
 		bin/puavo-img-clone \
 		bin/puavo-img-chroot \
-		bin/puavo-passwd
+		bin/puavo-passwd \
+		bin/log2db.kdc
 
 install-lxc-tools: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \

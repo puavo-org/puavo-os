@@ -76,7 +76,7 @@ DATA_TYPES = {
 def main():
     if len(sys.argv) != 3:
         print("error: invalid number of arguments", file=sys.stderr)
-        print("usage: log2db LOG_FILE DB_FILE", file=sys.stderr)
+        print("usage: log2db.kdc LOG_FILE DB_FILE", file=sys.stderr)
         sys.exit(1)
 
     logfilepath = sys.argv[1]
