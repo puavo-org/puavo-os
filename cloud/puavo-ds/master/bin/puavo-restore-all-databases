@@ -20,7 +20,7 @@ if dump_directory.nil? || dump_directory == "--help" || dump_directory == "-h"
 end
 
 if not File.directory?(dump_directory)
-  puts "Cannot find dump directory: #{dump_directory}"
+  $stderr.puts "Cannot find dump directory: #{dump_directory}"
 
   exit 2
 end
@@ -75,10 +75,10 @@ generic_olc_db_checkpoint = '64 5'
 # Stop slapd service
 begin
   response = Puavo::Execute.run( ["stop", "slapd"] )
-  puts response.stderr if @debug
+  $stderr.puts response.stderr if @debug
 rescue Puavo::ExitStatusError => exception
-  puts "\nCould't stop slapd service: " + exception.response.stderr.to_s
-  puts
+  $stderr.puts "\nCould't stop slapd service: " + exception.response.stderr.to_s
+  $stderr.puts
 end
 
 # Remove slapd configuration directory
@@ -132,7 +132,7 @@ response = Puavo::Execute.run(
                '-l', '/tmp/config.ldif',
                '-F', '/etc/ldap/slapd.d',
                '-b', 'cn=config' ])
-puts response.stderr if @debug
+$stderr.puts response.stderr if @debug
 
 
 Dir.foreach(dump_directory) do |filename|
@@ -149,7 +149,7 @@ Dir.foreach(dump_directory) do |filename|
                    '-b', base,
                    '-l', File.join(dump_directory, filename),
                    '-F', '/etc/ldap/slapd.d'])
-    puts response.stderr if @debug
+    $stderr.puts response.stderr if @debug
   end
 end
 
