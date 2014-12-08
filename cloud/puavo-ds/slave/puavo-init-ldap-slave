@@ -72,3 +72,25 @@ system('service slapd start') \
   or raise 'slapd start failed'
 
 FileUtils.touch(Sentinel_file)
+
+puts 'Waiting for slapd to sync all data from ldap master.'
+puts 'This may take a while.'
+
+previous_linecount = -1
+current_linecount = 0
+while previous_linecount != current_linecount
+  if current_linecount > 0 then
+    puts "Still waiting... the magic number is #{current_linecount} now."
+  end
+
+  sleep 10
+  previous_linecount = current_linecount
+  IO::popen("slapcat") do |io|
+    current_linecount = io.readlines().count
+    io.close()
+    $?.success? or raise 'failed to query the database contents'
+  end
+end
+
+puts 'LDAP database in now in sync.'
+puts

@@ -4,28 +4,6 @@ set -e
 
 . puavo-ds-installdirs
 
-wait_for_slapd_sync() {
-  # it's a hack...
-
-  echo "Waiting for slapd to sync all data from ldap master."
-  echo "This may take a while."
-
-  _previous_linecount=-1
-  _current_linecount=0
-  while [ "$_previous_linecount" -ne "$_current_linecount" ]; do
-    if [ "$_current_linecount" -gt 0 ]; then
-      echo "Still waiting... the magic number is $_current_linecount now."
-    fi
-
-    sleep 10
-    _previous_linecount=$_current_linecount
-    _current_linecount=$(slapcat | wc -l)
-  done
-
-  echo "LDAP database in now in sync."
-  echo
-}
-
 install -o root -g root -m 644 \
   "$PUAVO_DS_TEMPLATEDIR/etc/default/slapd" /etc/default/slapd
 install -o root -g root -m 755 \
@@ -35,7 +13,6 @@ install -o root -g root -m 644 \
 install -o root -g root -m 755 \
   "$PUAVO_DS_TEMPLATEDIR/etc/init.d/krb5-kdc" /etc/init.d
 
-puavo-init-ldap-slave --force
 echo "Run following commands as a root in your LDAP-master:
 (if you have not already done so)
 
@@ -52,5 +29,5 @@ echo "Run following commands as a root in your LDAP-master:
 
 read ready
 
-wait_for_slapd_sync
+puavo-init-ldap-slave --force
 puavo-init-kdc-slave --force
