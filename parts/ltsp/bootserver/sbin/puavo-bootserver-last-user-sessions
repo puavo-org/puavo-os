@@ -114,7 +114,7 @@ echo "${all_session_lines}" | tail -n "${n_sessions}" | while read line; do
 	auth_datetime=$(date --rfc-3339=seconds -d "@${auth_unixtime}")
     fi
 
-    printf "%s\t%s\t%s\n" \
+    printf "%-35s  %-25s  %-15s\n" \
 	"${auth_username}" "${auth_datetime}" "${auth_hostname}"
 done
 
