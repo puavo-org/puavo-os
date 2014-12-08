@@ -4,29 +4,43 @@
 # databases and slapd configurations (cn=config) from
 # the dump files.
 #
-# Usage: puavo-restore-all-databases [DUMP DIRECTORY] [debug]
+# Usage: puavo-restore-all-databases [options]
 #
 
 require 'fileutils'
+require 'optparse'
 require 'puavo/execute'
 
 @debug = false
 
-dump_directory = ARGV[0]
-if dump_directory.nil? || dump_directory == "--help" || dump_directory == "-h"
-  puts "Set source directory of dump files\n\n"
-  puts "Usage: puavo-restore-all-databases [DUMP DIRECTORY]\n\n"
+options = {}
+options[:verbose] = false
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: puavo-restore-all-databases [options]"
+
+  opts.on("-d", "--dump-directory [DUMPDIR]", "source directory of dump files") do |directory|
+    options[:dumpdir] = directory
+  end
+
+  opts.on("-v", "--[no-]verbose", "Run verbosely. Print STDERR of shell command (eg. slapadd)") do |v|
+    options[:verbose] = v
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+end.parse!
+
+if options[:dumpdir].nil?
+  $stderr.puts "Missing argument --destination-directory"
   exit 2
 end
 
-if not File.directory?(dump_directory)
-  $stderr.puts "Cannot find dump directory: #{dump_directory}"
-
+if not File.directory?(options[:dumpdir])
+  $stderr.puts "Cannot find dump directory: #{options[:dumpdir]}"
   exit 2
-end
-
-if ARGV[1] == "debug"
-  @debug = true
 end
 
 ##############################################################
@@ -75,7 +89,7 @@ generic_olc_db_checkpoint = '64 5'
 # Stop slapd service
 begin
   response = Puavo::Execute.run( ["stop", "slapd"] )
-  $stderr.puts response.stderr if @debug
+  $stderr.puts response.stderr if options[:verbose]
 rescue Puavo::ExitStatusError => exception
   $stderr.puts "\nCould't stop slapd service: " + exception.response.stderr.to_s
   $stderr.puts
@@ -87,7 +101,7 @@ FileUtils.rm_r Dir.glob('/etc/ldap/slapd.d/cn=config*')
 FileUtils.rm_r Dir.glob('/var/lib/ldap/*')
 
 File.open("/tmp/config.ldif", "w") do |cf|
-  File.open(File.join(dump_directory, "cn=config.ldif")) do |f|
+  File.open(File.join(options[:dumpdir], "cn=config.ldif")) do |f|
     f.each_line do |line|
       if line.match(/dn: olcDatabase=.*hdb/)
         cf.puts line
@@ -132,10 +146,10 @@ response = Puavo::Execute.run(
                '-l', '/tmp/config.ldif',
                '-F', '/etc/ldap/slapd.d',
                '-b', 'cn=config' ])
-$stderr.puts response.stderr if @debug
+$stderr.puts response.stderr if options[:verbose]
 
 
-Dir.foreach(dump_directory) do |filename|
+Dir.foreach(options[:dumpdir]) do |filename|
   next if filename == "cn=config.ldif"
 
   if match_data = filename.match(/(.*)\.ldif$/)
@@ -147,9 +161,9 @@ Dir.foreach(dump_directory) do |filename|
                  [ 'slapadd',
                    '-q',
                    '-b', base,
-                   '-l', File.join(dump_directory, filename),
+                   '-l', File.join(options[:dumpdir], filename),
                    '-F', '/etc/ldap/slapd.d'])
-    $stderr.puts response.stderr if @debug
+    $stderr.puts response.stderr if options[:verbose]
   end
 end
 
