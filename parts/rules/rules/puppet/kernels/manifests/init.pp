@@ -44,7 +44,7 @@ class kernels {
 
   $default_kernel = $lsbdistcodename ? {
     'precise' => '3.2.0-69-generic',
-    'trusty'  => '3.13.0-36-generic',
+    'trusty'  => '3.13.0-41-generic',
   }
 
   $edge_kernel = $lsbdistcodename ? {
