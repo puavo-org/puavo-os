@@ -47,6 +47,7 @@ response = Puavo::Execute.run(
               "-b",
               "cn=config",
               "-l", File.join(options[:destdir], "cn=config.ldif")])
+$stderr.puts response.stderr if options[:verbose]
 
 # Find all databases
 conn = LDAP::SSLConn.new(host=PUAVO_ETC.ldap_master, port=636)
@@ -72,8 +73,10 @@ databases.each do |base|
 
   puts "Dump #{base} database to #{ backup_file } file"
 
-  Puavo::Execute.run(
-    ["slapcat",
-     "-b", base,
-     "-l", backup_file ])
+  response = Puavo::Execute.run(
+               ["slapcat",
+                "-b", base,
+                "-l", backup_file ])
+  $stderr.puts response.stderr if options[:verbose]
+
 end
