@@ -784,7 +784,8 @@ class packages {
         '3.2.0-70-generic-pae':
           package_tag => 'puavo',
           with_extra  => false;
-        '3.13.0-36-generic':
+
+        [ '3.13.0-36-generic', '3.13.0-41-generic', ]:
           package_tag => 'puavo';
       }
     }
