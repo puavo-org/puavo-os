@@ -34,7 +34,7 @@ OptionParser.new do |opts|
 end.parse!
 
 if options[:dumpdir].nil?
-  $stderr.puts "Missing argument --destination-directory"
+  $stderr.puts "Missing argument --dump-directory"
   exit 2
 end
 
