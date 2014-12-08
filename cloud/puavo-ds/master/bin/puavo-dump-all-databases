@@ -6,28 +6,47 @@
 #
 
 require 'ldap'
+require 'optparse'
 require 'puavo/etc'
 require 'puavo/execute'
 
-dump_directory = ARGV[0]
-if dump_directory.nil? || dump_directory == "--help" || dump_directory == "-h"
-  puts "Set destination directory for dump files\n\n"
-  puts "Usage: puavo-dump-all-databasesa [DUMP DIRECTORY]\n\n"
+options = {}
+options[:verbose] = false
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: puavo-restore-all-databases [options]"
+
+  opts.on("-d", "--destination-directory [DESTDIR]", "destination directory for dump files") do |directory|
+    options[:destdir] = directory
+  end
+
+  opts.on("-v", "--[no-]verbose", "Run verbosely. Print STDERR of shell command (eg. slapcat)") do |v|
+    options[:verbose] = v
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+end.parse!
+
+if options[:destdir].nil?
+  $stderr.puts "Missing argument --destination-directory"
   exit 2
 end
 
-if not File.directory?(dump_directory)
-  $stderr.puts "Can't find destination directory: #{dump_directory}"
+if not File.directory?(options[:destdir])
+  $stderr.puts "Can't find destination directory: #{options[:destdir]}"
   exit 2
 end
 
 # Dump cn=config database
-puts "Dump cn=config to " + File.join(dump_directory, "cn=config.ldif")
+puts "Dump cn=config to " + File.join(options[:destdir], "cn=config.ldif")
 response = Puavo::Execute.run(
              ["slapcat",
               "-b",
               "cn=config",
-              "-l", File.join(dump_directory, "cn=config.ldif")])
+              "-l", File.join(options[:destdir], "cn=config.ldif")])
 
 # Find all databases
 conn = LDAP::SSLConn.new(host=PUAVO_ETC.ldap_master, port=636)
@@ -49,7 +68,7 @@ raise "Can't find any databases: #{filter}" if databases.empty?
 
 # Backup all databases
 databases.each do |base|
-  backup_file = File.join(dump_directory, "#{base}.ldif")
+  backup_file = File.join(options[:destdir], "#{base}.ldif")
 
   puts "Dump #{base} database to #{ backup_file } file"
 
