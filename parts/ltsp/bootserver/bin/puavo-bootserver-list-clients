@@ -11,6 +11,7 @@ usage_error()
     return 1
 }
 
+interface=
 network=255.255.255.255/0
 
 print_help()
@@ -20,6 +21,7 @@ print_help()
     echo 'List NFS/NBD/SMB clients.'
     echo
     echo 'Options:'
+    echo '    -i, --interface IFACE   limit listing to interface'
     echo '    -n, --network CIDR      limit listing to network'
     echo '    -h, --help              print help and exit'
     echo
@@ -31,6 +33,12 @@ while [ $# -gt 0 ]; do
 	    shift
 	    print_help
 	    exit 0
+	    ;;
+	-i|--interface)
+	    shift
+	    [ $# -gt 0 ] || usage_error 'option -i requires an argument'
+	    interface=$1
+	    shift
 	    ;;
 	-n|--network)
 	    shift
@@ -54,6 +62,10 @@ done
 if [ $# -ne 0 ]; then
     echo "ERROR: invalid number of arguments ($#), expected 0" >&2
     exit 1
+fi
+
+if [ -n "${interface}" ]; then
+    network=$(ip route | awk -v "iface={interface}" '$3 == iface {print $1}')
 fi
 
 ss -t -r state established dst "${network}": | tail -n+2 \
