@@ -494,7 +494,7 @@ class LdapAcl
 					 puavoId
 					 objectClass)),													Rule.perms('+azrwsc', Set.owner_and_user),
 																			Rule.perms('+rwsc',   Set.school_admin_and_user),
-																			Rule.read(People.children, Hosts.subtree),
+																			Rule.read(People.children, Hosts.subtree, PuavoUid.puavo_ticket),
 																			RuleBreak.read(Set.sysgroup('getent')), ],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Groups.subtree,
@@ -534,12 +534,12 @@ class LdapAcl
 					 puavoTag
 					 puavoWlanChannel
 					 puavoWlanSSID)),		Rule.write(Set.school_admin_or_owner_and_user),
-														Rule.read(People.children, Hosts.subtree),
+														Rule.read(People.children, Hosts.subtree, PuavoUid.puavo_ticket),
 														RuleBreak.read(Set.sysgroup('getent')),						],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Groups.subtree,
 	  'filter=(objectClass=puavoSchool)',				Rule.write(Set.owner_and_user),							Rule.perms('+rscxd', Set.school_admin_and_user),
-																			Rule.read(Set.getent),			],
+																			Rule.read(Set.getent, PuavoUid.puavo_ticket),			],
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Desktops.exact,			attrs(%w(entry
 				                 ou
