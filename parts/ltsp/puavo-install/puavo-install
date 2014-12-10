@@ -12,7 +12,7 @@ preseed_count=$(echo "${preseeds}" | wc -l)
 [ -n "${preseeds}" ] && while true; do
     echo "Installer preseeds:"
     # Print the list of preseeds.
-    echo "0\tNO PREESEDING"
+    echo "0\tNO PRESEEDING"
     echo "${preseeds}" | awk '{printf "%d\t%s\n", NR, $0}'
 
     # The default preseed is the first item, number 0.
