@@ -2,6 +2,7 @@
 #include <string.h>
 #include <nss.h>
 #include <pwd.h>
+#include <grp.h>
 #include <jansson.h>
 
 enum nss_status _nss_puavoadmins_getpwuid_r(uid_t, struct passwd *, char *, size_t, int *);
@@ -9,6 +10,12 @@ enum nss_status _nss_puavoadmins_setpwent(void);
 enum nss_status _nss_puavoadmins_endpwent(void);
 enum nss_status _nss_puavoadmins_getpwnam_r(const char *, struct passwd *, char *, size_t, int *);
 enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *, char *, size_t, int *);
+
+enum nss_status _nss_puavoadmins_setgrent(void);
+enum nss_status _nss_puavoadmins_endgrent(void);
+enum nss_status _nss_puavoadmins_getgrent_r(struct group *gr, char *buffer, size_t buflen, int *errnop);
+enum nss_status _nss_puavoadmins_getgrnam_r(const char *name, struct group *gr, char *buffer, size_t buflen, int *errnop);
+enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid, struct group *gr, char *buffer, size_t buflen, int *errnop);
 
 static int ent_index;
 static json_t *json_root;
@@ -99,12 +106,15 @@ static enum nss_status init_json() {
 static enum nss_status free_json() {
     json_decref(json_root);
     json_root = NULL;
+    owners = NULL;
 }
 
 enum nss_status _nss_puavoadmins_getpwuid_r(uid_t uid, struct passwd *result, char *buf, size_t buflen, int *errnop) {
     json_t *user, *username, *uid_number, *gid_number, *first_name, *last_name;
     int gecos_len, home_len;
     char *gecos, *home;
+
+    *errnop = 0;
 
     init_json();
 
@@ -127,6 +137,8 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *name, struct passwd *res
     json_t *user, *username, *uid_number, *gid_number, *first_name, *last_name;
     int gecos_len, home_len;
     char *gecos, *home;
+
+    *errnop = 0;
 
     init_json();
 
@@ -178,4 +190,89 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *pw, char *buf, size_t
     }
 
     return NSS_STATUS_NOTFOUND;
+}
+
+
+static int group_called = 0;
+
+enum nss_status _nss_puavoadmins_setgrent(void) {
+    group_called = 0;
+
+    return NSS_STATUS_SUCCESS;
+}
+
+enum nss_status _nss_puavoadmins_endgrent(void) {
+    // We always return just one group, so no need to finalise anything
+
+    return NSS_STATUS_SUCCESS;
+}
+
+enum nss_status fill_group_members(struct group *gr, char *buffer, size_t buflen) {
+    enum nss_status e;
+    json_t *user, *username;
+    char **members;
+    char *member, *username_str;
+    int member_count, i, username_len;
+
+    init_json();
+
+    memset(buffer, 0, buflen);
+    member_count = json_array_size(owners);
+    members = (char **)buffer;
+    member = buffer + sizeof(char *) * (member_count + 1);
+
+    for (i=0; i < json_array_size(owners); i++) {
+        user = json_array_get(owners, i);
+        username = json_object_get(user, "username");
+
+        if (username && json_is_string(username)) {
+            username_str = json_string_value(username);
+            username_len = strlen(username_str);
+
+            // If we run out of buffer space, we need to return an error
+            if (member+username_len+1 > buffer+buflen)
+                return NSS_STATUS_TRYAGAIN;
+
+            strcpy(member, username_str);
+            members[i] = member;
+            member += username_len + 1;
+        }
+    }
+
+    gr->gr_name = "_puavoadmins";
+    gr->gr_gid = 555;
+    gr->gr_mem = members;
+
+    free_json();
+
+    return NSS_STATUS_SUCCESS;
+}
+
+enum nss_status _nss_puavoadmins_getgrent_r(struct group *gr, char *buffer, size_t buflen, int *errnop) {
+    *errnop = 0;
+
+    if (group_called)
+        return NSS_STATUS_NOTFOUND;
+
+    group_called = 1;
+
+    return fill_group_members(gr, buffer, buflen);
+}
+
+enum nss_status _nss_puavoadmins_getgrnam_r(const char *name, struct group *gr, char *buffer, size_t buflen, int *errnop) {
+    *errnop = 0;
+
+    if (strcmp(name, "_puavoadmins"))
+        return NSS_STATUS_NOTFOUND;
+
+    return fill_group_members(gr, buffer, buflen);
+}
+
+enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid, struct group *gr, char *buffer, size_t buflen, int *errnop) {
+    *errnop = 0;
+
+    if (gid != 555)
+        return NSS_STATUS_NOTFOUND;
+
+    return fill_group_members(gr, buffer, buflen);
 }
