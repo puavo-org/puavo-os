@@ -42,7 +42,7 @@ module Puavo
       Open3.popen3(*command_and_args) do |stdin, stdout, stderr, wait_thr|
         if wait_thr.nil?
           raise( RubyVersionError,
-                 "Probably you are using an older version of the Ruby. Method not supported in Ruby 1.8." )
+                 "Probably you are using an older version of Ruby. Method not supported in Ruby 1.8." )
         end
 
         response.stdout = stdout.read
