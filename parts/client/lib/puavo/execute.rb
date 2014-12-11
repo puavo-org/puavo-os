@@ -17,16 +17,16 @@ module Puavo
   end
 
   #
-  # Puavo::Execute.run is helper method for running shell program. Raise error if exit status is not 0.
+  # Puavo::Execute.run is helper method for running shell programs. Raises exception if the exit status is not 0.
   #
   # == Simple Examples
   #
-  #   # run method returns a response object with methods stdout, stderr and exit_status
+  #   # The run method returns a response object with stdout, stderr and exit_status methods
   #   response = Puavo::Execute.run(["echo", "Hello World"])
   #   puts response.stdout
   #
-  #   # Raise error (Puavo::ExitStatusError) if exit status is not 0
-  #   # response method of exception returns a response object.
+  #   # Raise exception (Puavo::ExitStatusError) if exit status is not 0
+  #   # The response method of the exception returns the response object.
   #   begin
   #     Puavo::Execute.run(["false"])
   #   rescue Puavo::ExitStatusError => exception
@@ -42,7 +42,7 @@ module Puavo
       Open3.popen3(*command_and_args) do |stdin, stdout, stderr, wait_thr|
         if wait_thr.nil?
           raise( RubyVersionError,
-                 "Probably you are using an older version of the Ruby. Method not support Ruby 1.8." )
+                 "Probably you are using an older version of the Ruby. Method not supported in Ruby 1.8." )
         end
 
         response.stdout = stdout.read
