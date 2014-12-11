@@ -58,6 +58,16 @@ preseed_count=$(echo "${preseeds}" | wc -l)
     break
 done
 
+# This might be "unregistered" or "installer" (which is unregistered in a
+# different way), so we read this now and use later.
+previous_hosttype="$(cat /etc/puavo/hosttype)"
+
+if ! [    "$previous_hosttype" = 'unregistered' \
+       -o "$previous_hosttype" = 'installer' ]; then
+  echo "'$previous_hosttype' is not a supported hosttype for installation" >&2
+  exit 1
+fi
+
 puavo-register \
     --accepted-devicetypes fatclient,laptop,ltspserver,thinclient,wirelessaccesspoint \
     ${puavo_register_args}
@@ -81,8 +91,18 @@ case "$hosttype" in
     # install from nbd, the ltsp image must contain its name in this path
     ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
 
-    puavo-install-and-update-ltspimages --install-from-nbd /dev/nbd0 \
-					"$ltspimage_name"
+    case "$previous_hosttype" in
+      installer)
+        puavo-install-and-update-ltspimages                      \
+          --install-from-file "/installimages/${ltspimage_name}" \
+          "$ltspimage_name"
+        ;;
+      *)
+        puavo-install-and-update-ltspimages --install-from-nbd /dev/nbd0 \
+					    "$ltspimage_name"
+        ;;
+    esac
+
 
     echo "Updating $hosttype configuration..."
     if /usr/lib/puavo-ltsp-install/update-configuration; then

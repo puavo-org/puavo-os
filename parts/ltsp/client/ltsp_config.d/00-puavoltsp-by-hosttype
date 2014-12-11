@@ -222,13 +222,22 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var SSH_OVERRIDE_PORT    222
     set_lts_var X_COLOR_DEPTH        16
     ;;
-  unregistered)
+  unregistered|installer)
+    if [ "$PUAVO_HOSTTYPE" = "installer" ]; then
+      # we are booting from an installer pseudo-hosttype
+      # so we need network-manager
+      puavo_unregistered_unneeded_session_services=""
+    else
+      puavo_unregistered_unneeded_session_services="network-manager"
+    fi
+
     set_lts_var RM_SESSION_SERVICES "
       nm-applet
       puavo-client-updater-applet
     "
     set_lts_var RM_SYSTEM_SERVICES "
       $puavo_common_unneeded_services
+      $puavo_unregistered_unneeded_session_services
       cron
       eno
       fluentd

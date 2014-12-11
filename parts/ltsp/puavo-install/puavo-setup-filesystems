@@ -37,6 +37,9 @@ end
 
 module DiskHandler
   Filesystems = {
+    'installer' => {
+      'installimages' => { 'size' => '100%FREE', 'type' => 'ext4' },
+    },
     'laptop' => {
       'swap'          => { 'size' => '4G',       'type' => 'swap' },
       'tmp'           => { 'size' => '6G',       'type' => 'ext4' },
@@ -59,23 +62,27 @@ module DiskHandler
     },
   }
 
-  def self.cleanup_disk_environment(hosttype)
+  def self.cleanup_disk_environment(hosttype, vgname)
     # Unmount filesystems, if those are mounted.
     non_swap_filesystems(hosttype).each do |name, attrs|
       run('umount', '-f', "/#{ name }") rescue true
     end
 
-    # turn off swap partitions
-    run('swapoff', '-a') rescue true
+    # If we are creating an installer, we do not want to mess with the
+    # running system in any way.
+    if hosttype != 'installer' then
+      # turn off swap partitions
+      run('swapoff', '-a') rescue true
 
-    # Remove dmsetup volumes as well, in case these are effective.
-    run('dmsetup', 'remove_all', '--force') rescue true
+      # Remove dmsetup volumes as well, in case these are effective.
+      run('dmsetup', 'remove_all', '--force') rescue true
+    end
 
     # switch off all volume groups that may interfere with following operations
-    run('vgchange', '-a', 'n') rescue true
+    run('vgchange', '-a', 'n', vgname) rescue true
   end
 
-  def self.do_fs_setup(conf)
+  def self.do_fs_setup(conf, vgname)
     fs_conf = conf.clone
 
     fs_setup_phases = []
@@ -93,7 +100,10 @@ module DiskHandler
 		     'partition' => "/dev/#{ fs_conf['partition'] }" })
 
     fs_setup_phases.each do |fn_sym|
-      method(fn_sym).call(fs_conf)
+      args = [ :mount_filesystems, :puavo_filesystems ].include?(fn_sym) \
+                ? [ fs_conf, vgname ]                                    \
+                : [ fs_conf         ]
+      method(fn_sym).call(*args)
     end
   end
 
@@ -117,38 +127,38 @@ module DiskHandler
       .select { |name, attrs| attrs['type'] != 'swap' }
   end
 
-  def self.puavo_filesystems(fs_conf)
+  def self.puavo_filesystems(fs_conf, vgname)
     # clean up possible confusing mess from the partition
     run('dd', 'if=/dev/zero', "of=#{ fs_conf['partition'] }", 'count=1K')
 
     # create LVM volume groups
     run('pvcreate', fs_conf['partition'])
-    run('vgcreate', '-s', '64M', 'puavo', fs_conf['partition'])
+    run('vgcreate', '-s', '64M', vgname, fs_conf['partition'])
 
     Filesystems[ fs_conf['hosttype'] ].each do |name, attrs|
-      mkfs(attrs['size'], name, attrs['type'])
+      mkfs(attrs['size'], name, attrs['type'], vgname)
     end
   end
 
-  def self.mkfs(size, name, type)
+  def self.mkfs(size, name, type, vgname)
     run('lvcreate',
 	(size.match(/%/) ? '-l' : '-L'), size,
 	'-n', name,
-	'puavo')
+	vgname)
 
     case type
       when 'ext4'
-        run('mkfs.ext4', '-v', "/dev/mapper/puavo-#{ name }")
+        run('mkfs.ext4', '-v', "/dev/mapper/#{ vgname }-#{ name }")
       when 'swap'
-        run('mkswap',    '-f', "/dev/mapper/puavo-#{ name }")
+        run('mkswap',    '-f', "/dev/mapper/#{ vgname }-#{ name }")
     end
   end
 
-  def self.mount_filesystems(fs_conf)
+  def self.mount_filesystems(fs_conf, vgname)
     non_swap_filesystems( fs_conf['hosttype'] ).each do |name, attrs|
       mnt_path = "/#{ name }"
       FileUtils.mkdir_p(mnt_path)
-      run('mount', "/dev/mapper/puavo-#{ name }", mnt_path)
+      run('mount', "/dev/mapper/#{ vgname }-#{ name }", mnt_path)
     end
   end
 end
@@ -341,6 +351,9 @@ module UI
 
   @accept_defaults = false
   @defaults = {}
+  @setup_for_installer = false
+
+  def self.setup_for_installer; @setup_for_installer end
 
   def self.help_and_exit
     puts <<-EOF
@@ -368,6 +381,7 @@ EOF
                             [ '--default-imageoverlay-size'  , GetoptLong::REQUIRED_ARGUMENT,],
                             [ '--default-partition'          , GetoptLong::REQUIRED_ARGUMENT,],
                             [ '--default-unpartitioned-space', GetoptLong::REQUIRED_ARGUMENT,],
+                            [ '--setup-for-installer'        , GetoptLong::NO_ARGUMENT      ,],
                             )
 
       opts.each do |opt, arg|
@@ -387,6 +401,8 @@ EOF
           @defaults[PartitionPrompt] = arg
         when '--default-unpartitioned-space'
           @defaults[UnpartitionedSpacePrompt] = arg
+        when '--setup-for-installer'
+          @setup_for_installer = true
         end
       end
     rescue GetoptLong::InvalidOption => e
@@ -431,14 +447,18 @@ end
 
 UI::parse_args
 
-hosttype = PuavoFacts::get('puavo_hosttype')
+hosttype = UI::setup_for_installer \
+             ? 'installer'    \
+             : PuavoFacts::get('puavo_hosttype')
 
-DiskHandler::cleanup_disk_environment(hosttype)
+vgname = (hosttype == 'installer') ? 'puavoinstaller' : 'puavo'
+
+DiskHandler::cleanup_disk_environment(hosttype, vgname)
 
 case hosttype
-  when 'laptop', 'ltspserver', 'wirelessaccesspoint'
+  when 'installer', 'laptop', 'ltspserver', 'wirelessaccesspoint'
     conf = QueryDiskInfo::ask_device_and_partition_with_confirmation(hosttype)
-    DiskHandler::do_fs_setup(conf)
+    DiskHandler::do_fs_setup(conf, vgname)
   else
     puts "Hosttype '#{ hosttype }' does not need to setup local filesystems."
 end

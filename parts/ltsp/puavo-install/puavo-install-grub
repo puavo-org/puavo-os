@@ -20,23 +20,29 @@ else
 fi
 
 images_dir=${1:-/images}
-diskdev=$2
+vgname=${2:-puavo}
 
-if [ -z "$diskdev" ]; then
-  diskdev=$(pvs | awk '$2 == "puavo" { print $1; exit }' \
-		| sed -E 's|[0-9]+$||')
-fi
-
-if [ -z "$images_dir" -o -z "$diskdev" ]; then
-  echo "Usage: $(basename $0) [--only-update-config] [images_dir] [diskdev]" \
-    > /dev/stderr
+if [ ! -d "$images_dir" ]; then
+  echo "'$images_dir' is not a directory" >&2
   exit 1
 fi
 
-hosttype=$(cat /etc/puavo/hosttype)
+diskdev=$(pvs | awk -v vgname="$vgname" '$2 == vgname { print $1; exit }' \
+              | sed -E 's|[0-9]+$||')
+
+if [ -z "$diskdev" ]; then
+  echo "Could not find the disk device where volume group '${vgname}' is" >&2
+  exit 1
+fi
+
+if [ "$vgname" = 'puavoinstaller' ]; then
+  hosttype=installer
+else
+  hosttype=$(cat /etc/puavo/hosttype)
+fi
 
 case "$hosttype" in
-  laptop|wirelessaccesspoint)
+  installer|laptop|wirelessaccesspoint)
     hosttype_specific="puavo.hosttype=${hosttype} root=/dev/mapper/puavo-images loop=\"\${imagepath}\""
     ;;
   *)

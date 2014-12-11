@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -eu
+
+images_dir=/installimages
+ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
+
+install_image() {
+  puavo-install-and-update-ltspimages --images-dir "$images_dir" \
+                                      --no-preinst-hook          \
+                                      "$@"                       \
+                                      "$ltspimage_name"
+}
+
+puavo-setup-filesystems --setup-for-installer
+
+puavo_hosttype=$(cat /etc/puavo/hosttype)
+
+case "$puavo_hosttype" in
+  fatclient|ltspserver|thinclient)
+    install_image --install-from-nbd /dev/nbd0
+    ;;
+  laptop|wirelessaccesspoint)
+    install_image --install-from-file "/images/${ltspimage_name}"
+    ;;
+  *)
+    echo 'Cannot create an install disk on this hosttype' >&2
+    exit 1
+    ;;
+esac
+
+puavo-install-grub "$images_dir" puavoinstaller
