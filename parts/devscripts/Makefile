@@ -21,7 +21,8 @@ install: installdirs
 		bin/puavo-img-clone \
 		bin/puavo-img-chroot \
 		bin/puavo-passwd \
-		bin/log2db.kdc
+		bin/log2db.kdc \
+		bin/db2fig.kdc
 
 install-lxc-tools: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \

@@ -141,7 +141,7 @@ def draw(dbfilepath):
 def main():
     if len(sys.argv) != 3:
         print("error: invalid number of arguments", file=sys.stderr)
-        print("usage: db2fig-kdc DB_FILE FIG_FILE", file=sys.stderr)
+        print("usage: db2fig.kdc DB_FILE FIG_FILE", file=sys.stderr)
         sys.exit(1)
 
     dbfilepath = sys.argv[1]
