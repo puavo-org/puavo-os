@@ -43,7 +43,7 @@ end
 # Dump cn=config database
 puts "Dump cn=config to " + File.join(options[:destdir], "cn=config.ldif")
 response = Puavo::Execute.run(
-             ["slapcat",
+             ["/usr/sbin/slapcat",
               "-b",
               "cn=config",
               "-l", File.join(options[:destdir], "cn=config.ldif")])
@@ -74,7 +74,7 @@ databases.each do |base|
   puts "Dump #{base} database to #{ backup_file } file"
 
   response = Puavo::Execute.run(
-               ["slapcat",
+               ["/usr/sbin/slapcat",
                 "-b", base,
                 "-l", backup_file ])
   $stderr.puts response.stderr if options[:verbose]

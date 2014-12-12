@@ -88,7 +88,7 @@ generic_olc_db_checkpoint = '64 5'
 
 # Stop slapd service
 begin
-  response = Puavo::Execute.run( ["stop", "slapd"] )
+  response = Puavo::Execute.run( ["/sbin/stop", "slapd"] )
   $stderr.puts response.stderr if options[:verbose]
 rescue Puavo::ExitStatusError => exception
   $stderr.puts "\nCould't stop slapd service: " + exception.response.stderr.to_s
@@ -142,7 +142,7 @@ end
 # Restore slapd configuration
 puts "Restore configurations (cn=config)"
 response = Puavo::Execute.run(
-             [ 'slapadd',
+             [ '/usr/sbin/slapadd',
                '-l', '/tmp/config.ldif',
                '-F', '/etc/ldap/slapd.d',
                '-b', 'cn=config' ])
@@ -158,7 +158,7 @@ Dir.foreach(options[:dumpdir]) do |filename|
 
     # Restore database
     response = Puavo::Execute.run(
-                 [ 'slapadd',
+                 [ '/usr/sbin/slapadd',
                    '-q',
                    '-b', base,
                    '-l', File.join(options[:dumpdir], filename),
