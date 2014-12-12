@@ -68,7 +68,7 @@ function ltsp_image_entry {
 
     set kernelparameters="$4"
 
-    linux   /boot/vmlinuz${kernelversion} ro quiet splash init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
+    linux   /boot/vmlinuz${kernelversion} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
     initrd  /boot/initrd.img${kernelversion}
 
     loopback -d loop
@@ -100,7 +100,7 @@ insmod loopback
 insmod usb_keyboard
 insmod lvm
 
-for dev in (__PUAVO_LVM_PARTITION__); do
+for dev in (lvm/__PUAVO_LVM_PARTITION__); do
   for file in ${dev}/*.default; do
     regexp -s default_alias_no_suffix '^(.*)\.default$' "${file}"
     break
@@ -176,21 +176,26 @@ else
   hosttype=$(cat /etc/puavo/hosttype)
 fi
 
+if [ "$hosttype" = 'installer' ]; then
+  puavo_lvm_partition='puavoinstaller-installimages'
+else
+  puavo_lvm_partition='puavo-images'
+fi
+
+common_kernel_arguments="puavo.hosttype=${hosttype} root=/dev/mapper/${puavo_lvm_partition} loop=\"\${imagepath}\""
+
 case "$hosttype" in
-  installer|laptop|wirelessaccesspoint)
-    puavo_kernel_arguments="puavo.hosttype=${hosttype} root=/dev/mapper/puavo-images loop=\"\${imagepath}\""
+  installer)
+    puavo_kernel_arguments="$common_kernel_arguments"
+    ;;
+  laptop|wirelessaccesspoint)
+    puavo_kernel_arguments="quiet splash ${common_kernel_arguments}"
     ;;
   *)
     echo "Hosttype '$hosttype' is not supported" > /dev/stderr
     exit 1
     ;;
 esac
-
-if [ "$hosttype" = 'installer' ]; then
-  puavo_lvm_partition='lvm/puavoinstaller-installimages'
-else
-  puavo_lvm_partition='lvm/puavo-images'
-fi
 
 if ! $only_update_config; then
   grub-install --root-directory=$images_dir "$diskdev"
