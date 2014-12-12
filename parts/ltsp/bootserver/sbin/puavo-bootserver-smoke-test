@@ -190,14 +190,18 @@ class TestRun
   def prepare_add_testuser()
     print('Prepare: add a test user to Puavo ... ')
     begin
-      (@testuser_username,
-       @testuser_password) = PuavoBS.create_testuser(@admin_username,
-                                                     @admin_password,
-                                                     @school_id)
+      userdata = PuavoBS.create_testuser(@admin_username,
+                                         @admin_password,
+                                         @school_id)
     rescue StandardError, Interrupt
       puts_fail()
       raise
     else
+      if userdata.empty? then
+        puts_fail("school #{@school_id} does not have any roles")
+        return false
+      end
+      @testuser_username, @testuser_password = userdata
       puts_ok()
       puts("    Username: #{@testuser_username}")
       tag = "autopilot:smoke:#{@testuser_username}:#{@testuser_password}"
