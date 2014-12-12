@@ -68,14 +68,28 @@ module DiskHandler
       run('umount', '-f', "/#{ name }") rescue true
     end
 
-    # If we are creating an installer, we do not want to mess with the
-    # running system in any way.
     if hosttype != 'installer' then
-      # turn off swap partitions
+      # Turn off swap partitions from the target device (and possibly some
+      # else...).  If our target hosttype is "installer", we do not need to
+      # do this because installer disks should not contain (active) swap
+      # partitions (and turning swap off from the current host is not
+      # appropriate).  (The really proper solution should disable swap
+      # selectively from the disk we are installing to.)
       run('swapoff', '-a') rescue true
+    end
 
-      # Remove dmsetup volumes as well, in case these are effective.
-      run('dmsetup', 'remove_all', '--force') rescue true
+    dm_device_list = \
+      case hosttype
+        when 'installer'
+          %w(puavoinstaller-installimages)
+        else
+          (Filesystems[hosttype] || []) \
+            .keys.map { |partname| "puavo-#{ partname }" }
+      end
+
+    # remove all dmsetup volumes which may exists on the target host
+    dm_device_list.each do |dm_device|
+      run('dmsetup', 'remove', '--force', dm_device) rescue true
     end
 
     # switch off all volume groups that may interfere with following operations
@@ -448,7 +462,7 @@ end
 UI::parse_args
 
 hosttype = UI::setup_for_installer \
-             ? 'installer'    \
+             ? 'installer'         \
              : PuavoFacts::get('puavo_hosttype')
 
 vgname = (hosttype == 'installer') ? 'puavoinstaller' : 'puavo'
