@@ -53,7 +53,7 @@ Package: puavo-ltsp-install
 Architecture: all
 Depends: ${misc:Depends}, ruby-highline, nbd-client, pv, rdiff, curl,
  puavo-client, ruby-dbus, python-gtk2, python-appindicator, python-dbus,
- expect-dev, python-notify, wget, jq
+ expect-dev, python-notify, wget, jq, m4
 Description: Bits and pieces needed inside the LTSP chroot image.
 
 Package: puavo-image-tools
