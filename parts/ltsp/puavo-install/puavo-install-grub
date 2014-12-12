@@ -186,6 +186,12 @@ case "$hosttype" in
     ;;
 esac
 
+if [ "$hosttype" = 'installer' ]; then
+  puavo_lvm_partition='lvm/puavoinstaller-installimages'
+else
+  puavo_lvm_partition='lvm/puavo-images'
+fi
+
 if ! $only_update_config; then
   grub-install --root-directory=$images_dir "$diskdev"
 fi
@@ -195,7 +201,7 @@ tmp_grub_cfg_path="${grub_cfg_path}.tmp"
 
 grub_m4_template                                              \
   | m4 -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments" \
-       -D__PUAVO_LVM_PARTITION__="lvm/puavo-images"           \
+       -D__PUAVO_LVM_PARTITION__="$puavo_lvm_partition"       \
   > "$tmp_grub_cfg_path"
 
 windows_partition_number=$(lookup_windows_partition_number "$diskdev")
