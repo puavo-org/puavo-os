@@ -2,62 +2,6 @@
 
 set -e
 
-lookup_windows_partition_number() {
-  # Presume that the first partition not containing "Linux"
-  # is a Windows-partition.
-  _diskdev=$1
-  env LANG=C fdisk -l "$_diskdev" \
-    | awk '$1 ~ "^/dev/" && !/(Extended|Linux)/ {
-	     if (match($1, /[0-9]+$/, _)) { print _[0]; exit }
-           }'
-}
-
-if [ "$1" = "--only-update-config" ]; then
-  only_update_config=true
-  shift
-else
-  only_update_config=false
-fi
-
-images_dir=${1:-/images}
-vgname=${2:-puavo}
-
-if [ ! -d "$images_dir" ]; then
-  echo "'$images_dir' is not a directory" >&2
-  exit 1
-fi
-
-diskdev=$(pvs | awk -v vgname="$vgname" '$2 == vgname { print $1; exit }' \
-              | sed -E 's|[0-9]+$||')
-
-if [ -z "$diskdev" ]; then
-  echo "Could not find the disk device where volume group '${vgname}' is" >&2
-  exit 1
-fi
-
-if [ "$vgname" = 'puavoinstaller' ]; then
-  hosttype=installer
-else
-  hosttype=$(cat /etc/puavo/hosttype)
-fi
-
-case "$hosttype" in
-  installer|laptop|wirelessaccesspoint)
-    puavo_kernel_arguments="puavo.hosttype=${hosttype} root=/dev/mapper/puavo-images loop=\"\${imagepath}\""
-    ;;
-  *)
-    echo "Hosttype '$hosttype' is not supported" > /dev/stderr
-    exit 1
-    ;;
-esac
-
-if ! $only_update_config; then
-  grub-install --root-directory=$images_dir "$diskdev"
-fi
-
-grub_cfg_path="${images_dir}/boot/grub/grub.cfg"
-tmp_grub_cfg_path="${grub_cfg_path}.tmp"
-
 grub_m4_template() {
   cat <<'EOF'
 set default="0"
@@ -192,6 +136,62 @@ for dev in (__PUAVO_LVM_PARTITION__); do
 done
 EOF
 }
+
+lookup_windows_partition_number() {
+  # Presume that the first partition not containing "Linux"
+  # is a Windows-partition.
+  _diskdev=$1
+  env LANG=C fdisk -l "$_diskdev" \
+    | awk '$1 ~ "^/dev/" && !/(Extended|Linux)/ {
+	     if (match($1, /[0-9]+$/, _)) { print _[0]; exit }
+           }'
+}
+
+if [ "$1" = "--only-update-config" ]; then
+  only_update_config=true
+  shift
+else
+  only_update_config=false
+fi
+
+images_dir=${1:-/images}
+vgname=${2:-puavo}
+
+if [ ! -d "$images_dir" ]; then
+  echo "'$images_dir' is not a directory" >&2
+  exit 1
+fi
+
+diskdev=$(pvs | awk -v vgname="$vgname" '$2 == vgname { print $1; exit }' \
+              | sed -E 's|[0-9]+$||')
+
+if [ -z "$diskdev" ]; then
+  echo "Could not find the disk device where volume group '${vgname}' is" >&2
+  exit 1
+fi
+
+if [ "$vgname" = 'puavoinstaller' ]; then
+  hosttype=installer
+else
+  hosttype=$(cat /etc/puavo/hosttype)
+fi
+
+case "$hosttype" in
+  installer|laptop|wirelessaccesspoint)
+    puavo_kernel_arguments="puavo.hosttype=${hosttype} root=/dev/mapper/puavo-images loop=\"\${imagepath}\""
+    ;;
+  *)
+    echo "Hosttype '$hosttype' is not supported" > /dev/stderr
+    exit 1
+    ;;
+esac
+
+if ! $only_update_config; then
+  grub-install --root-directory=$images_dir "$diskdev"
+fi
+
+grub_cfg_path="${images_dir}/boot/grub/grub.cfg"
+tmp_grub_cfg_path="${grub_cfg_path}.tmp"
 
 grub_m4_template                                              \
   | m4 -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments" \
