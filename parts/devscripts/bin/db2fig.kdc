@@ -143,6 +143,11 @@ def main():
         sys.exit(1)
 
     dbfilepath = sys.argv[1]
+    if not os.path.exists(dbfilepath):
+        print("error: database file '%s' does not exist" % dbfilepath,
+              file=sys.stderr)
+        sys.exit(1)
+
     fig = draw(dbfilepath)
 
     try:
