@@ -10,19 +10,19 @@ preseed_count=$(echo "${preseeds}" | wc -l)
 
 # Ask the preferred preseed if there are some available.
 [ -n "${preseeds}" ] && while true; do
-    echo "Installer preseeds:"
+    echo "Installation mode:"
     # Print the list of preseeds.
-    echo "0\tNO PRESEEDING"
-    echo "${preseeds}" | awk '{printf "%d\t%s\n", NR, $0}'
+    echo "0\tNormal installation"
+    echo "${preseeds}" | awk '{printf "%d\tPre-customized installation for %s\n", NR, $0}'
 
     # The default preseed is the first item, number 0.
-    read -p "Select preseed number [0]: " preseed_nr
+    read -p "Select mode [0]: " preseed_nr
     [ -n "${preseed_nr}" ] || preseed_nr=0
 
     # Ensure the value is a valid integer.
     case "${preseed_nr}" in
         ''|*[!0-9]*)
-            echo "E: invalid preseed number" >&2
+            echo "E: invalid mode" >&2
             continue
             ;;
         *)
@@ -31,7 +31,7 @@ preseed_count=$(echo "${preseeds}" | wc -l)
 
     # Ensure the integer has a valid value.
     if [ 0 -gt "${preseed_nr}" -o "${preseed_nr}" -gt "${preseed_count}" ]; then
-        echo "E: invalid preseed number" >&2
+        echo "E: invalid mode" >&2
         continue
     fi
 
