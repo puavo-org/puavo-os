@@ -87,7 +87,7 @@ def draw(dbfilepath):
     colors = "rygb"
     max_count = sum([max(v) for v in counts])
 
-    percentages = ([], [], [])
+    percentages = ([], [])
     for wrong_pass, wrong_user, auth_ok in zip(*counts):
         all_auths = wrong_pass + wrong_user + auth_ok
         if all_auths == 0:
@@ -96,7 +96,6 @@ def draw(dbfilepath):
         else:
             percentages[0].append(wrong_pass / all_auths * 100)
             percentages[1].append(wrong_user / all_auths * 100)
-            percentages[2].append(auth_ok / all_auths * 100)
 
     plots = []
     legends = []
