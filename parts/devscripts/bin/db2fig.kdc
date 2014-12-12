@@ -92,10 +92,7 @@ def draw(dbfilepath):
         all_auths = wrong_pass + wrong_user + auth_ok
         if all_auths == 0:
             for lst in percentages:
-                try:
-                    lst.append(lst[-1])
-                except IndexError:
-                    lst.append(np.nan)
+                lst.append(np.nan)
         else:
             percentages[0].append(wrong_pass / all_auths * 100)
             percentages[1].append(wrong_user / all_auths * 100)
