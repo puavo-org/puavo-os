@@ -32,3 +32,5 @@ esac
 puavo-install-grub "$images_dir" puavoinstaller
 
 umount "$images_dir"
+dmsetup remove puavoinstaller-installimages
+vgchange -a n puavoinstaller
