@@ -81,13 +81,12 @@ function ltsp_image_entry_superlaptop {
   set description="$2"
   set kernelparameters="$3"
 
-  if [ ! -d (lvm/puavo-imageoverlays) ]; then
-    return
+  if test "${puavo_show_imageoverlays}" = "true" \
+            -a -d (lvm/puavo-imageoverlays); then
+    set kernelparameters="puavo.image.overlay=default puavo.local.enable_superusers=true $kernelparameters"
+
+    ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}"
   fi
-
-  set kernelparameters="puavo.image.overlay=default puavo.local.enable_superusers=true $kernelparameters"
-
-  ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}"
 }
 
 insmod gzio
