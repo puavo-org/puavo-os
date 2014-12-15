@@ -83,8 +83,9 @@ module DiskHandler
         when 'installer'
           %w(puavoinstaller-installimages)
         else
-          (Filesystems[hosttype] || []) \
-            .keys.map { |partname| "puavo-#{ partname }" }
+          %w(swap0) \
+            + ((Filesystems[hosttype] || {}) \
+                .keys.map { |partname| "puavo-#{ partname }" })
       end
 
     # remove all dmsetup volumes which may exists on the target host
