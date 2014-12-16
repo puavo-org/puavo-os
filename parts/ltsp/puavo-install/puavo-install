@@ -58,12 +58,12 @@ preseed_count=$(echo "${preseeds}" | wc -l)
     break
 done
 
-# This might be "unregistered" or "installer" (which is unregistered in a
+# This might be "unregistered" or "diskinstaller" (which is unregistered in a
 # different way), so we read this now and use later.
 previous_hosttype="$(cat /etc/puavo/hosttype)"
 
 if ! [    "$previous_hosttype" = 'unregistered' \
-       -o "$previous_hosttype" = 'installer' ]; then
+       -o "$previous_hosttype" = 'diskinstaller' ]; then
   echo "'$previous_hosttype' is not a supported hosttype for installation" >&2
   exit 1
 fi
@@ -92,7 +92,7 @@ case "$hosttype" in
     ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
 
     case "$previous_hosttype" in
-      installer)
+      diskinstaller)
         puavo-install-and-update-ltspimages                      \
           --install-from-file "/installimages/${ltspimage_name}" \
           "$ltspimage_name"

@@ -79,19 +79,19 @@ puavo_mount_partition() {
 
 if [ -x "/sbin/vgchange" ]; then
   case "$PUAVO_HOSTTYPE" in
-    installer) vgchange -a y puavoinstaller ;;
-    *)         vgchange -a y puavo          ;;
+    diskinstaller) vgchange -a y puavoinstaller ;;
+    *)             vgchange -a y puavo          ;;
   esac
 
   case "$PUAVO_HOSTTYPE" in
+    diskinstaller)
+      puavo_mount_partition puavoinstaller-installimages /installimages
+      ;;
     fatclient)
       if [ -b "/dev/mapper/puavo-tmp" ]; then
         puavo_mount_partition puavo-tmp /tmp
         chmod 1777 /tmp
       fi
-      ;;
-    installer)
-      puavo_mount_partition puavoinstaller-installimages /installimages
       ;;
     laptop)
       puavo_mount_partition puavo-home   /home

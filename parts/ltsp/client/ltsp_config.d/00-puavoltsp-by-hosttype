@@ -222,9 +222,9 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var SSH_OVERRIDE_PORT    222
     set_lts_var X_COLOR_DEPTH        16
     ;;
-  unregistered|installer)
-    if [ "$PUAVO_HOSTTYPE" = "installer" ]; then
-      # we are booting from an installer pseudo-hosttype
+  unregistered|diskinstaller)
+    if [ "$PUAVO_HOSTTYPE" = "diskinstaller" ]; then
+      # we are booting from an diskinstaller pseudo-hosttype
       # so we need network-manager
       puavo_unregistered_unneeded_session_services=""
     else

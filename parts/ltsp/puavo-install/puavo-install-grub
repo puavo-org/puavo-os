@@ -170,12 +170,12 @@ if [ -z "$diskdev" ]; then
 fi
 
 if [ "$vgname" = 'puavoinstaller' ]; then
-  hosttype=installer
+  hosttype=diskinstaller
 else
   hosttype=$(cat /etc/puavo/hosttype)
 fi
 
-if [ "$hosttype" = 'installer' ]; then
+if [ "$hosttype" = 'diskinstaller' ]; then
   puavo_lvm_partition='puavoinstaller-installimages'
 else
   puavo_lvm_partition='puavo-images'
@@ -184,7 +184,7 @@ fi
 common_kernel_arguments="puavo.hosttype=${hosttype} root=/dev/mapper/${puavo_lvm_partition} loop=\"\${imagepath}\""
 
 case "$hosttype" in
-  installer)
+  diskinstaller)
     puavo_kernel_arguments="$common_kernel_arguments"
     ;;
   laptop|wirelessaccesspoint)

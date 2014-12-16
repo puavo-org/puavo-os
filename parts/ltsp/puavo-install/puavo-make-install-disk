@@ -12,7 +12,7 @@ install_image() {
                                       "$ltspimage_name"
 }
 
-puavo-setup-filesystems --setup-for-installer
+puavo-setup-filesystems --setup-for-diskinstaller
 
 puavo_hosttype=$(cat /etc/puavo/hosttype)
 

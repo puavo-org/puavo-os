@@ -37,7 +37,7 @@ end
 
 module DiskHandler
   Filesystems = {
-    'installer' => {
+    'diskinstaller' => {
       'installimages' => { 'size' => '100%FREE', 'type' => 'ext4' },
     },
     'laptop' => {
@@ -68,10 +68,10 @@ module DiskHandler
       run('umount', '-f', "/#{ name }") rescue true
     end
 
-    if hosttype != 'installer' then
+    if hosttype != 'diskinstaller' then
       # Turn off swap partitions from the target device (and possibly some
-      # else...).  If our target hosttype is "installer", we do not need to
-      # do this because installer disks should not contain (active) swap
+      # else...).  If our target hosttype is "diskinstaller", we do not need
+      # to do this because installer disks should not contain (active) swap
       # partitions (and turning swap off from the current host is not
       # appropriate).  (The really proper solution should disable swap
       # selectively from the disk we are installing to.)
@@ -80,7 +80,7 @@ module DiskHandler
 
     dm_device_list = \
       case hosttype
-        when 'installer'
+        when 'diskinstaller'
           %w(puavoinstaller-installimages)
         else
           %w(swap0) \
@@ -366,9 +366,9 @@ module UI
 
   @accept_defaults = false
   @defaults = {}
-  @setup_for_installer = false
+  @setup_for_diskinstaller = false
 
-  def self.setup_for_installer; @setup_for_installer end
+  def self.setup_for_diskinstaller; @setup_for_diskinstaller end
 
   def self.help_and_exit
     puts <<-EOF
@@ -396,7 +396,7 @@ EOF
                             [ '--default-imageoverlay-size'  , GetoptLong::REQUIRED_ARGUMENT,],
                             [ '--default-partition'          , GetoptLong::REQUIRED_ARGUMENT,],
                             [ '--default-unpartitioned-space', GetoptLong::REQUIRED_ARGUMENT,],
-                            [ '--setup-for-installer'        , GetoptLong::NO_ARGUMENT      ,],
+                            [ '--setup-for-diskinstaller'    , GetoptLong::NO_ARGUMENT      ,],
                             )
 
       opts.each do |opt, arg|
@@ -416,8 +416,8 @@ EOF
           @defaults[PartitionPrompt] = arg
         when '--default-unpartitioned-space'
           @defaults[UnpartitionedSpacePrompt] = arg
-        when '--setup-for-installer'
-          @setup_for_installer = true
+        when '--setup-for-diskinstaller'
+          @setup_for_diskinstaller = true
         end
       end
     rescue GetoptLong::InvalidOption => e
@@ -462,16 +462,16 @@ end
 
 UI::parse_args
 
-hosttype = UI::setup_for_installer \
-             ? 'installer'         \
+hosttype = UI::setup_for_diskinstaller \
+             ? 'diskinstaller'         \
              : PuavoFacts::get('puavo_hosttype')
 
-vgname = (hosttype == 'installer') ? 'puavoinstaller' : 'puavo'
+vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : 'puavo'
 
 DiskHandler::cleanup_disk_environment(hosttype, vgname)
 
 case hosttype
-  when 'installer', 'laptop', 'ltspserver', 'wirelessaccesspoint'
+  when 'diskinstaller', 'laptop', 'ltspserver', 'wirelessaccesspoint'
     conf = QueryDiskInfo::ask_device_and_partition_with_confirmation(hosttype)
     DiskHandler::do_fs_setup(conf, vgname)
   else
