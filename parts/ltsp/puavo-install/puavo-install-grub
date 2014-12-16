@@ -155,6 +155,7 @@ fi
 
 images_dir=${1:-/images}
 vgname=${2:-puavo}
+hosttype=$3
 
 if [ ! -d "$images_dir" ]; then
   echo "'$images_dir' is not a directory" >&2
@@ -169,10 +170,12 @@ if [ -z "$diskdev" ]; then
   exit 1
 fi
 
-if [ "$vgname" = 'puavoinstaller' ]; then
-  hosttype=diskinstaller
-else
-  hosttype=$(cat /etc/puavo/hosttype)
+if [ -z "$hosttype" ]; then
+  if [ "$vgname" = 'puavoinstaller' ]; then
+    hosttype=diskinstaller
+  else
+    hosttype=$(cat /etc/puavo/hosttype)
+  fi
 fi
 
 if [ "$hosttype" = 'diskinstaller' ]; then

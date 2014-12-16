@@ -102,7 +102,7 @@ case "$hosttype" in
 					    "$ltspimage_name"
         ;;
     esac
-
+    sync
 
     echo "Updating $hosttype configuration..."
     if /usr/lib/puavo-ltsp-install/update-configuration; then

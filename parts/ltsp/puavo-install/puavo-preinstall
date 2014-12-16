@@ -1,0 +1,73 @@
+#!/bin/sh
+
+set -eu
+
+mkdir -p /run/puavo
+if [ ! -e /run/puavo/install_hosttype ]; then
+  cp /etc/puavo/hosttype /run/puavo/install_hosttype
+fi
+
+# This might be "unregistered" or "diskinstaller" (which is unregistered in a
+# different way), so we read this now and use later.
+puavo_install_hosttype="$(cat /run/puavo/install_hosttype)"
+
+if ! [    "$puavo_install_hosttype" = 'unregistered' \
+       -o "$puavo_install_hosttype" = 'diskinstaller' ]; then
+  echo "'$puavo_install_hosttype' is not a supported hosttype for" \
+       "installation" >&2
+  exit 1
+fi
+
+echo 'Welcome to puavo device preinstallation!'
+echo
+
+choice=laptop
+while true; do
+  echo 'Choose hosttype (possible choices are: laptop wirelessaccesspoint)'
+  echo -n "  Target hosttype? [$choice]: "
+  read answer
+  [ -n "$answer" ] && choice=$answer
+
+  case "$choice" in
+    laptop|wirelessaccesspoint)
+      target_puavo_hosttype=$choice
+      break
+      ;;
+    *)
+      echo "'$answer' is not a supported hosttype\n" >&2
+      ;;
+  esac
+done
+
+echo
+puavo-setup-filesystems --hosttype "$target_puavo_hosttype"
+
+# Grub needs to be installed before images, because grub
+# configuration is updated during image installation by
+# puavo-image-preinst.
+echo -n "Doing grub installation: "
+puavo-install-grub /images puavo preinstalled
+sync
+
+# install from nbd, the ltsp image must contain its name in this path
+ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
+
+case "$puavo_install_hosttype" in
+  diskinstaller)
+    puavo-install-and-update-ltspimages                      \
+      --install-from-file "/installimages/${ltspimage_name}" \
+      "$ltspimage_name"
+    ;;
+  *)
+    puavo-install-and-update-ltspimages --install-from-nbd /dev/nbd0 \
+					"$ltspimage_name"
+    ;;
+esac
+sync
+
+echo "$target_puavo_hosttype" > /images/puavo_preinstalled
+
+case "$target_puavo_hosttype" in
+  laptop)              umount /state /images /imageoverlays /home ;;
+  wirelessaccesspoint) umount /state /images /imageoverlays       ;;
+esac

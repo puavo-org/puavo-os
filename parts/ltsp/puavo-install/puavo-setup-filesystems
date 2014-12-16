@@ -366,9 +366,9 @@ module UI
 
   @accept_defaults = false
   @defaults = {}
-  @setup_for_diskinstaller = false
+  @hosttype = nil
 
-  def self.setup_for_diskinstaller; @setup_for_diskinstaller end
+  def self.hosttype; @hosttype end
 
   def self.help_and_exit
     puts <<-EOF
@@ -396,7 +396,7 @@ EOF
                             [ '--default-imageoverlay-size'  , GetoptLong::REQUIRED_ARGUMENT,],
                             [ '--default-partition'          , GetoptLong::REQUIRED_ARGUMENT,],
                             [ '--default-unpartitioned-space', GetoptLong::REQUIRED_ARGUMENT,],
-                            [ '--setup-for-diskinstaller'    , GetoptLong::NO_ARGUMENT      ,],
+                            [ '--hosttype'                   , GetoptLong::REQUIRED_ARGUMENT,],
                             )
 
       opts.each do |opt, arg|
@@ -416,8 +416,8 @@ EOF
           @defaults[PartitionPrompt] = arg
         when '--default-unpartitioned-space'
           @defaults[UnpartitionedSpacePrompt] = arg
-        when '--setup-for-diskinstaller'
-          @setup_for_diskinstaller = true
+        when '--hosttype'
+          @hosttype = arg
         end
       end
     rescue GetoptLong::InvalidOption => e
@@ -462,9 +462,7 @@ end
 
 UI::parse_args
 
-hosttype = UI::setup_for_diskinstaller \
-             ? 'diskinstaller'         \
-             : PuavoFacts::get('puavo_hosttype')
+hosttype = UI::hosttype || PuavoFacts::get('puavo_hosttype')
 
 vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : 'puavo'
 
