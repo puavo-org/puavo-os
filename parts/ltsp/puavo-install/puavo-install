@@ -116,8 +116,8 @@ case "$hosttype" in
     sync
 
     case "$hosttype" in
-      laptop)              umount /state /images /home ;;
-      wirelessaccesspoint) umount /state /images       ;;
+      laptop)              umount /state /images /imageoverlays /home ;;
+      wirelessaccesspoint) umount /state /images /imageoverlays       ;;
     esac
 
     echo "Press ENTER to reboot"
