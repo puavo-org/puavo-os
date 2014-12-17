@@ -44,11 +44,10 @@ esac
 # Exit if an LTSP boot was not requested.
 grep -Eqsw "init=/sbin/init-puavo" /proc/cmdline || exit 0
 
-# Do not run for laptops!
-grep -Eqsw "puavo.hosttype=laptop" /proc/cmdline && exit 0
-
-# Do not run for wireless accesspoints!
-grep -Eqsw "puavo.hosttype=wirelessaccesspoint" /proc/cmdline && exit 0
+# Do not run for these hosttypes!
+for puavo_hosttype in diskinstaller laptop preinstalled wirelessaccesspoint; do
+  grep -Eqsw "puavo.hosttype=${puavo_hosttype}" /proc/cmdline && exit 0
+done
 
 bring_up_interfaces()
 {
