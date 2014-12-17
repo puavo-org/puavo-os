@@ -2,14 +2,12 @@
 
 set -eu
 
-puavo_register_args=
-puavo_setup_filesystems_args=
+ask_preseed() {
+  preseeds=$(ls -1 /usr/share/puavo-ltsp-install/preseeds | sort)
+  preseed_count=$(echo "${preseeds}" | wc -l)
 
-preseeds=$(ls -1 /usr/share/puavo-ltsp-install/preseeds | sort)
-preseed_count=$(echo "${preseeds}" | wc -l)
-
-# Ask the preferred preseed if there are some available.
-[ -n "${preseeds}" ] && while true; do
+  # Ask the preferred preseed if there are some available.
+  [ -n "${preseeds}" ] && while true; do
     echo "Installer preseeds:"
     # Print the list of preseeds.
     echo "0\tNO PRESEEDING"
@@ -30,7 +28,8 @@ preseed_count=$(echo "${preseeds}" | wc -l)
     esac
 
     # Ensure the integer has a valid value.
-    if [ 0 -gt "${preseed_nr}" -o "${preseed_nr}" -gt "${preseed_count}" ]; then
+    if [ 0 -gt "${preseed_nr}" \
+           -o "${preseed_nr}" -gt "${preseed_count}" ]; then
         echo "E: invalid preseed number" >&2
         continue
     fi
@@ -40,23 +39,24 @@ preseed_count=$(echo "${preseeds}" | wc -l)
 
     # Apply preseeds and continue installation.
     preseed=$(echo "${preseeds}" | sed -n "${preseed_nr}p")
-    puavo_register_args=$(cat "/usr/share/puavo-ltsp-install/preseeds/${preseed}/puavo_register_args")
-    puavo_setup_filesystems_args=$(cat "/usr/share/puavo-ltsp-install/preseeds/${preseed}/puavo_setup_filesystems_args")
+    puavo_preseed_register_args=$(cat "/usr/share/puavo-ltsp-install/preseeds/${preseed}/puavo_preseed_register_args")
+    puavo_preseed_setup_filesystems_args=$(cat "/usr/share/puavo-ltsp-install/preseeds/${preseed}/puavo_preseed_setup_filesystems_args")
 
-    gen_puavo_register_args="/usr/share/puavo-ltsp-install/preseeds/${preseed}/gen_puavo_register_args"
-    if [ -x "${gen_puavo_register_args}" ]; then
-        puavo_register_extra_args=$("${gen_puavo_register_args}")
-        puavo_register_args="${puavo_register_args} ${puavo_register_extra_args}"
+    gen_puavo_preseed_register_args="/usr/share/puavo-ltsp-install/preseeds/${preseed}/gen_puavo_preseed_register_args"
+    if [ -x "${gen_puavo_preseed_register_args}" ]; then
+      puavo_register_extra_args=$("${gen_puavo_preseed_register_args}")
+      puavo_preseed_register_args="${puavo_preseed_register_args} ${puavo_register_extra_args}"
     fi
 
-    gen_puavo_setup_filesystems_args="/usr/share/puavo-ltsp-install/preseeds/${preseed}/gen_puavo_setup_filesystems_args"
-    if [ -x "${gen_puavo_setup_filesystems_args}" ]; then
-        puavo_setup_filesystems_extra_args=$("${gen_puavo_setup_filesystems_args}")
-        puavo_setup_filesystems_args="${puavo_setup_filesystems_args} ${puavo_setup_filesystems_extra_args}"
+    gen_puavo_preseed_setup_filesystems_args="/usr/share/puavo-ltsp-install/preseeds/${preseed}/gen_puavo_preseed_setup_filesystems_args"
+    if [ -x "${gen_puavo_preseed_setup_filesystems_args}" ]; then
+      puavo_setup_filesystems_extra_args=$("${gen_puavo_preseed_setup_filesystems_args}")
+      puavo_preseed_setup_filesystems_args="${puavo_preseed_setup_filesystems_args} ${puavo_setup_filesystems_extra_args}"
     fi
 
     break
-done
+  done
+}
 
 mkdir -p /run/puavo
 if [ ! -e /run/puavo/install_hosttype ]; then
@@ -71,7 +71,7 @@ if ! [    "$puavo_install_hosttype" = 'diskinstaller' \
        -o "$puavo_install_hosttype" = 'preinstalled'  \
        -o "$puavo_install_hosttype" = 'unregistered' ]; then
   echo "'$puavo_install_hosttype' is not a supported hosttype for" \
-       " installation" >&2
+       "installation" >&2
   exit 1
 fi
 
@@ -86,15 +86,22 @@ if [ "$puavo_install_hosttype" = 'preinstalled' ]; then
   accepted_devicetypes=$preinstalled_hosttype
 fi
 
+puavo_preseed_register_args=
+puavo_preseed_setup_filesystems_args=
+
+# ask_preseed fills in $puavo_preseed_register_args and
+# $puavo_preseed_setup_filesystems_args
+ask_preseed
+
 puavo-register --accepted-devicetypes "$accepted_devicetypes" \
-               ${puavo_register_args}
+               ${puavo_preseed_register_args}
 
 hosttype="$(cat /etc/puavo/hosttype)"
 
 case "$hosttype" in
   laptop|wirelessaccesspoint)
     if [ "$puavo_install_hosttype" != 'preinstalled' ]; then
-      puavo-setup-filesystems ${puavo_setup_filesystems_args}
+      puavo-setup-filesystems ${puavo_preseed_setup_filesystems_args}
     else
       mkdir -p /state
       mount /dev/mapper/puavo-state /state
@@ -160,7 +167,7 @@ case "$hosttype" in
     read answer
     ;;
   ltspserver)
-    puavo-setup-filesystems ${puavo_setup_filesystems_args}
+    puavo-setup-filesystems ${puavo_preseed_setup_filesystems_args}
     mkdir -p /state/etc
     cp -a /etc/puavo /state/etc
 
