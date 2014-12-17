@@ -29,7 +29,9 @@ case "$puavo_hosttype" in
     ;;
 esac
 
-puavo-install-grub "$images_dir" puavoinstaller
+puavo-install-grub --hosttype   diskinstaller  \
+                   --images-dir "$images_dir"  \
+                   --vgname     puavoinstaller
 
 umount "$images_dir"
 dmsetup remove puavoinstaller-installimages

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -e
+set -eu
 
 grub_m4_template() {
   cat <<'EOF'
@@ -146,19 +146,52 @@ lookup_windows_partition_number() {
            }'
 }
 
-if [ "$1" = "--only-update-config" ]; then
-  only_update_config=true
-  shift
-else
-  only_update_config=false
+usage() {
+  cat <<EOF
+$(basename $0) [optional arguments]
+
+  $(basename $0) takes the following optional arguments:
+
+    --hosttype           hosttype
+    --images-dir         imagesdir
+    --only-update-config
+    --vgname             vgname
+EOF
+  exit 1
+}
+
+hosttype=$(cat /etc/puavo/hosttype 2>/dev/null || true)
+images_dir=/images
+only_update_config=false
+vgname=puavo
+
+if ! args=$(getopt -n "$0" -o +                                          \
+                   -l 'hosttype:,images-dir:,only-update-config,vgname:' \
+                   -- "$@"); then
+  usage
 fi
 
-images_dir=${1:-/images}
-vgname=${2:-puavo}
-hosttype=$3
+eval "set -- $args"
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --hosttype)           hosttype=$2;             shift; shift ;;
+    --images-dir)         images_dir=$2;           shift; shift ;;
+    --only-update-config) only_update_config=true; shift        ;;
+    --vgname)             vgname=$2;               shift; shift ;;
+    --) shift; break ;;
+    *)  usage ;;
+  esac
+done
+
+[ $# -eq 0 ] || usage
 
 if [ ! -d "$images_dir" ]; then
   echo "'$images_dir' is not a directory" >&2
+  exit 1
+fi
+
+if [ -z "$hosttype" ]; then
+  echo 'Hosttype is not set' >&2
   exit 1
 fi
 
@@ -168,14 +201,6 @@ diskdev=$(pvs | awk -v vgname="$vgname" '$2 == vgname { print $1; exit }' \
 if [ -z "$diskdev" ]; then
   echo "Could not find the disk device where volume group '${vgname}' is" >&2
   exit 1
-fi
-
-if [ -z "$hosttype" ]; then
-  if [ "$vgname" = 'puavoinstaller' ]; then
-    hosttype=diskinstaller
-  else
-    hosttype=$(cat /etc/puavo/hosttype)
-  fi
 fi
 
 if [ "$hosttype" = 'diskinstaller' ]; then

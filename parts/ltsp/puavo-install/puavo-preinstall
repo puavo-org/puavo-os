@@ -46,7 +46,7 @@ puavo-setup-filesystems --hosttype "$target_puavo_hosttype"
 # configuration is updated during image installation by
 # puavo-image-preinst.
 echo -n "Doing grub installation: "
-puavo-install-grub /images puavo preinstalled
+puavo-install-grub --hosttype preinstalled
 sync
 
 # install from nbd, the ltsp image must contain its name in this path
@@ -68,7 +68,7 @@ sync
 # puavo-install-and-update-ltspimages will update the grub configuration
 # but with the current hosttype ("diskinstaller" or "unregistered"), so we
 # will reconfigure it back to what it should be.
-puavo-install-grub --only-update-config /images puavo preinstalled
+puavo-install-grub --hosttype preinstalled --only-update-config
 
 echo "$target_puavo_hosttype" > /images/puavo_preinstalled
 
