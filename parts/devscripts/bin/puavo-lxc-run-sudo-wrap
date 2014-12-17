@@ -28,6 +28,7 @@ env_tmp=$(mktemp --suffix=-jenkinsenv)
 cat >$env_tmp<<EOF
 http_proxy="${http_proxy:-}"
 
+APTIREPO_BRANCH="${APTIREPO_BRANCH:-}"
 APTIREPO_REMOTE="${APTIREPO_REMOTE:-}"
 APT_REPOSITORY="${APT_REPOSITORY:-}"
 APT_REPOSITORY1="${APT_REPOSITORY1:-}"
