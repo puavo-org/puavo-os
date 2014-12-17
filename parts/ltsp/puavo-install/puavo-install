@@ -96,6 +96,7 @@ case "$hosttype" in
     if [ "$puavo_install_hosttype" != 'preinstalled' ]; then
       puavo-setup-filesystems ${puavo_setup_filesystems_args}
     else
+      mkdir -p /state
       mount /dev/mapper/puavo-state /state
     fi
 
@@ -137,6 +138,14 @@ case "$hosttype" in
       echo "  ... a problem occurred (updating configuration later)."
     fi
     sync
+
+    if [ "$puavo_install_hosttype" = 'preinstalled' ]; then
+      # The grub configuration must include the new hosttype and not
+      # "preinstalled".  From now on the host will boot as a fully installed
+      # host.
+      puavo-install-grub --only-update-config
+      rm -f /images/puavo_preinstalled
+    fi
 
     if [ "$puavo_install_hosttype" != 'preinstalled' ]; then
       case "$hosttype" in
