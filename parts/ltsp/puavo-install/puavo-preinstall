@@ -68,6 +68,6 @@ sync
 echo "$target_puavo_hosttype" > /images/puavo_preinstalled
 
 case "$target_puavo_hosttype" in
-  laptop)              umount /state /images /imageoverlays /home ;;
-  wirelessaccesspoint) umount /state /images /imageoverlays       ;;
+  laptop)              umount /state /images /imageoverlays /tmp /home ;;
+  wirelessaccesspoint) umount /state /images /imageoverlays /tmp       ;;
 esac

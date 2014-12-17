@@ -149,8 +149,8 @@ case "$hosttype" in
 
     if [ "$puavo_install_hosttype" != 'preinstalled' ]; then
       case "$hosttype" in
-        laptop)              umount /state /images /imageoverlays /home ;;
-        wirelessaccesspoint) umount /state /images /imageoverlays       ;;
+        laptop)              umount /state /images /imageoverlays /tmp /home ;;
+        wirelessaccesspoint) umount /state /images /imageoverlays /tmp       ;;
       esac
     else
       umount /state /images
