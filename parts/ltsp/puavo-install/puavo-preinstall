@@ -65,6 +65,11 @@ case "$puavo_install_hosttype" in
 esac
 sync
 
+# puavo-install-and-update-ltspimages will update the grub configuration
+# but with the current hosttype ("diskinstaller" or "unregistered"), so we
+# will reconfigure it back to what it should be.
+puavo-install-grub --only-update-config /images puavo preinstalled
+
 echo "$target_puavo_hosttype" > /images/puavo_preinstalled
 
 case "$target_puavo_hosttype" in
