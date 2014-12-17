@@ -50,6 +50,7 @@ install : installdirs
 		puavo-install-and-update-ltspimages \
 		puavo-install-grub \
 		puavo-make-install-disk \
+		puavo-preinstall \
 		puavo-setup-filesystems \
 		puavo-update-client
 
