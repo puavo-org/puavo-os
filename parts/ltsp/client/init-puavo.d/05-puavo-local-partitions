@@ -97,6 +97,9 @@ if [ -x "/sbin/vgchange" ]; then
       puavo_mount_partition puavo-home   /home
       puavo_mount_partition puavo-images /images
       ;;
+    preinstalled)
+      puavo_mount_partition puavo-images /images
+      ;;
     wirelessaccesspoint)
       puavo_mount_partition puavo-images /images
       ;;

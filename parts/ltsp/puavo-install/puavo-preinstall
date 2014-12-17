@@ -11,8 +11,8 @@ fi
 # different way), so we read this now and use later.
 puavo_install_hosttype="$(cat /run/puavo/install_hosttype)"
 
-if ! [    "$puavo_install_hosttype" = 'unregistered' \
-       -o "$puavo_install_hosttype" = 'diskinstaller' ]; then
+if ! [    "$puavo_install_hosttype" = 'diskinstaller' \
+       -o "$puavo_install_hosttype" = 'unregistered' ]; then
   echo "'$puavo_install_hosttype' is not a supported hosttype for" \
        "installation" >&2
   exit 1

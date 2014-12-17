@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -e
+set -eu
 
 puavo_register_args=
 puavo_setup_filesystems_args=
@@ -12,7 +12,7 @@ preseed_count=$(echo "${preseeds}" | wc -l)
 [ -n "${preseeds}" ] && while true; do
     echo "Installer preseeds:"
     # Print the list of preseeds.
-    echo "0\tNO PREESEDING"
+    echo "0\tNO PRESEEDING"
     echo "${preseeds}" | awk '{printf "%d\t%s\n", NR, $0}'
 
     # The default preseed is the first item, number 0.
@@ -58,51 +58,74 @@ preseed_count=$(echo "${preseeds}" | wc -l)
     break
 done
 
+mkdir -p /run/puavo
+if [ ! -e /run/puavo/install_hosttype ]; then
+  cp /etc/puavo/hosttype /run/puavo/install_hosttype
+fi
+
 # This might be "unregistered" or "diskinstaller" (which is unregistered in a
 # different way), so we read this now and use later.
-previous_hosttype="$(cat /etc/puavo/hosttype)"
+puavo_install_hosttype="$(cat /run/puavo/install_hosttype)"
 
-if ! [    "$previous_hosttype" = 'unregistered' \
-       -o "$previous_hosttype" = 'diskinstaller' ]; then
-  echo "'$previous_hosttype' is not a supported hosttype for installation" >&2
+if ! [    "$puavo_install_hosttype" = 'diskinstaller' \
+       -o "$puavo_install_hosttype" = 'preinstalled'  \
+       -o "$puavo_install_hosttype" = 'unregistered' ]; then
+  echo "'$puavo_install_hosttype' is not a supported hosttype for" \
+       " installation" >&2
   exit 1
 fi
 
-puavo-register \
-    --accepted-devicetypes fatclient,laptop,ltspserver,thinclient,wirelessaccesspoint \
-    ${puavo_register_args}
+accepted_devicetypes='fatclient,laptop,ltspserver,thinclient,wirelessaccesspoint'
+
+if [ "$puavo_install_hosttype" = 'preinstalled' ]; then
+  preinstalled_hosttype=$(cat /images/puavo_preinstalled 2>/dev/null || true)
+  if [ -z "$preinstalled_hosttype" ]; then
+    echo 'Hosttype is preinstalled, but could not determine its type' >&2
+    exit 1
+  fi
+  accepted_devicetypes=$preinstalled_hosttype
+fi
+
+puavo-register --accepted-devicetypes "$accepted_devicetypes" \
+               ${puavo_register_args}
 
 hosttype="$(cat /etc/puavo/hosttype)"
 
 case "$hosttype" in
   laptop|wirelessaccesspoint)
-    puavo-setup-filesystems ${puavo_setup_filesystems_args}
+    if [ "$puavo_install_hosttype" != 'preinstalled' ]; then
+      puavo-setup-filesystems ${puavo_setup_filesystems_args}
+    else
+      mount /dev/mapper/puavo-state /state
+    fi
 
     mkdir -p /state/etc
     cp -aT /etc/puavo /state/etc/puavo
 
-    # Grub needs to be installed before images, because grub
-    # configuration is updated during image installation by
-    # puavo-image-preinst.
-    echo -n "Doing grub installation: "
-    puavo-install-grub
-    sync
+    if [ "$puavo_install_hosttype" != 'preinstalled' ]; then
+      # Grub needs to be installed before images, because grub
+      # configuration is updated during image installation by
+      # puavo-image-preinst.
+      echo -n "Doing grub installation: "
+      puavo-install-grub
+      sync
 
-    # install from nbd, the ltsp image must contain its name in this path
-    ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
+      # install from nbd, the ltsp image must contain its name in this path
+      ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
 
-    case "$previous_hosttype" in
-      diskinstaller)
-        puavo-install-and-update-ltspimages                      \
-          --install-from-file "/installimages/${ltspimage_name}" \
-          "$ltspimage_name"
-        ;;
-      *)
-        puavo-install-and-update-ltspimages --install-from-nbd /dev/nbd0 \
-					    "$ltspimage_name"
-        ;;
-    esac
-    sync
+      case "$puavo_install_hosttype" in
+	diskinstaller)
+	  puavo-install-and-update-ltspimages                      \
+	    --install-from-file "/installimages/${ltspimage_name}" \
+	    "$ltspimage_name"
+	  ;;
+	*)
+	  puavo-install-and-update-ltspimages --install-from-nbd /dev/nbd0 \
+					      "$ltspimage_name"
+	  ;;
+      esac
+      sync
+    fi
 
     echo "Updating $hosttype configuration..."
     if /usr/lib/puavo-ltsp-install/update-configuration; then
@@ -115,10 +138,14 @@ case "$hosttype" in
     fi
     sync
 
-    case "$hosttype" in
-      laptop)              umount /state /images /imageoverlays /home ;;
-      wirelessaccesspoint) umount /state /images /imageoverlays       ;;
-    esac
+    if [ "$puavo_install_hosttype" != 'preinstalled' ]; then
+      case "$hosttype" in
+        laptop)              umount /state /images /imageoverlays /home ;;
+        wirelessaccesspoint) umount /state /images /imageoverlays       ;;
+      esac
+    else
+      umount /state /images
+    fi
 
     echo "Press ENTER to reboot"
     read answer
