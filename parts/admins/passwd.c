@@ -141,7 +141,7 @@ static enum nss_status init_json(void) {
     return NSS_STATUS_SUCCESS;
 }
 
-static enum nss_status free_json(void) {
+void free_json(void) {
     json_decref(json_root);
     json_root = NULL;
     owners = NULL;
