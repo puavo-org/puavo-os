@@ -4,6 +4,7 @@
 #include <nss.h>
 #include <pwd.h>
 #include <grp.h>
+#include <sys/types.h>
 
 // Third-party includes.
 #include <jansson.h>
