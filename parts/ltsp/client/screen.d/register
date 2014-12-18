@@ -17,6 +17,9 @@ until /usr/sbin/puavo-install; do
   read answer
 done
 
+echo 'Press enter to reboot'
+read answer
+
 echo
 echo -n rebooting...
 for i in $(seq 5 | tac); do

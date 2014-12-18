@@ -60,16 +60,18 @@ ask_preseed() {
 
 do_umounts() {
   puavo_install_hosttype=$1
-  hosttype=$2
+  puavo_hosttype=$2
 
   if [ "$puavo_install_hosttype" = 'preinstalled' ]; then
-    umount /state /images
+    # On preinstalled hosts /images should be mounted at boot and /state
+    # should have been mounted by this script.  Those are all we should need.
+    umount /images /state
     return 0
   fi
 
-  case "$hosttype" in
+  case "$puavo_hosttype" in
     laptop)              umount /state /images /imageoverlays /tmp /home ;;
-    ltspserver)          umount /state
+    ltspserver)          umount /state                                   ;;
     wirelessaccesspoint) umount /state /images /imageoverlays /tmp       ;;
   esac
 }
@@ -119,10 +121,6 @@ get_preinstalled_hosttype() {
 }
 
 install_grub() {
-  puavo_install_hosttype=$1
-
-  [ "$puavo_install_hosttype" = 'preinstalled' ] && return 0
-
   echo -n 'Doing grub installation: '
   puavo-install-grub
   sync
@@ -130,8 +128,6 @@ install_grub() {
 
 install_image() {
   puavo_install_hosttype=$1
-
-  [ "$puavo_install_hosttype" = 'preinstalled' ] && return 0
 
   ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name 2>/dev/null || true)
   if [ -z "$ltspimage_name" ]; then
@@ -158,12 +154,60 @@ install_image() {
   sync
 }
 
-register() {
+install_localbootdevice() {
+  puavo_install_hosttype=$1
+  puavo_hosttype=$2
+  puavo_preseed_setup_filesystems_args=$3
+
+  if ! is_preinstalled "$puavo_install_hosttype"; then
+    puavo-setup-filesystems ${puavo_preseed_setup_filesystems_args}
+  fi
+
+  setup_state_contents
+
+  if ! is_preinstalled "$puavo_install_hosttype"; then
+    # Grub needs to be installed before images, because grub
+    # configuration is updated during image installation by
+    # puavo-image-preinst.
+    install_grub
+    install_image "$puavo_install_hosttype"
+  fi
+
+  update_configuration
+
+  # If host was preinstalled, grub will boot the host as 'preinstalled' until
+  # we do this:
+  if is_preinstalled "$puavo_install_hosttype"; then
+    puavo-install-grub --hosttype "$puavo_hosttype" --only-update-config
+  fi
+
+  # From now on the host will boot as a fully installed host.
+
+  if is_preinstalled "$puavo_install_hosttype"; then
+    rm -f /images/puavo_preinstalled
+  fi
+
+  do_umounts "$puavo_install_hosttype" "$puavo_hosttype"
+}
+
+install_ltspserver() {
+  puavo_install_hosttype=$1
+  puavo_hosttype=$2
+  puavo_preseed_setup_filesystems_args=$3
+
+  puavo-setup-filesystems ${puavo_preseed_setup_filesystems_args}
+  setup_state
+  do_umounts "$puavo_install_hosttype" "$puavo_hosttype"
+}
+
+is_preinstalled() { [ "$1" = 'preinstalled' ]; }
+
+register_and_get_hosttype() {
   puavo_install_hosttype=$1
   accepted_hosttypes=$2
   puavo_preseed_register_args=$3
 
-  if [ "$puavo_install_hosttype" = 'preinstalled' ]; then
+  if is_preinstalled "$puavo_install_hosttype"; then
     get_preinstalled_hosttype
     return 0
   fi
@@ -174,30 +218,17 @@ register() {
   cat /etc/puavo/hosttype
 }
 
-setup_installation_filesystems() {
-  puavo_install_hosttype=$1
-  puavo_preseed_setup_filesystems_args=$2
-
-  if [ "$puavo_install_hosttype" != 'preinstalled' ]; then
-    puavo-setup-filesystems ${puavo_preseed_setup_filesystems_args}
-  else
-    mkdir -p /state
-    mount /dev/mapper/puavo-state /state
-  fi
-}
-
-setup_state_contents() {
+setup_state() {
   mkdir -p /state/etc
+  mount /dev/mapper/puavo-state /state
   cp -aT /etc/puavo /state/etc/puavo
   sync
 }
 
 update_configuration() {
-  hosttype=$1
-
-  echo "Updating $hosttype configuration..."
+  echo "Updating configuration..."
   if /usr/lib/puavo-ltsp-install/update-configuration; then
-    echo "  ... $hosttype configuration updated."
+    echo "  ... configuration updated."
     if /usr/lib/puavo-ltsp-install/update-images false false; then
       echo "  ... image updated."
     else
@@ -207,8 +238,7 @@ update_configuration() {
     echo "  ... a problem occurred (updating configuration later)."
   fi
 
-  # XXX exactly why is this necessary here? (it is? ... but I have to explain)
-  puavo-install-grub --hosttype "$hosttype" --only-update-config
+  install_grub
 
   sync
 }
@@ -225,43 +255,20 @@ puavo_preseed_register_args=
 puavo_preseed_setup_filesystems_args=
 ask_preseed
 
-hosttype=$(register "$puavo_install_hosttype"       \
-                    "$accepted_hosttypes"           \
-                    "$puavo_preseed_register_args")
+puavo_hosttype=$(register_and_get_hosttype "$puavo_install_hosttype"       \
+                                           "$accepted_hosttypes"           \
+                                           "$puavo_preseed_register_args")
 
-case "$hosttype" in
+
+case "$puavo_hosttype" in
   laptop|wirelessaccesspoint)
-    setup_installation_filesystems "$puavo_install_hosttype"               \
-                                   "$puavo_preseed_setup_filesystems_args"
-    setup_state_contents
-
-    # Grub needs to be installed before images, because grub
-    # configuration is updated during image installation by
-    # puavo-image-preinst.
-    install_grub  "$puavo_install_hosttype"
-    install_image "$puavo_install_hosttype"
-
-    update_configuration "$hosttype"
-
-    # From now on the host will boot as a fully installed host.
-
-    if [ "$puavo_install_hosttype" = 'preinstalled' ]; then
-      # The grub configuration must include the new hosttype and not
-      # "preinstalled".  Do this only after configuration update (may fail).
-      rm -f /images/puavo_preinstalled
-    fi
-
-    do_umounts "$puavo_install_hosttype" "$hosttype"
-
-    # XXX how does this script know that something is going to reboot this
-    # XXX host after this?
-    echo 'Press ENTER to reboot'
-    read answer
+    install_localbootdevice "$puavo_install_hosttype"               \
+                            "$puavo_hosttype"                       \
+                            "$puavo_preseed_setup_filesystems_args"
     ;;
   ltspserver)
-    setup_installation_filesystems "$puavo_install_hosttype"               \
-                                   "$puavo_preseed_setup_filesystems_args"
-    setup_state_contents
-    do_umounts "$puavo_install_hosttype" "$hosttype"
+    install_ltspserver "$puavo_install_hosttype"               \
+                       "$puavo_hosttype"                       \
+                       "$puavo_preseed_setup_filesystems_args"
     ;;
 esac
