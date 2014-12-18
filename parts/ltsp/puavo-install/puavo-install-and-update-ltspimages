@@ -45,6 +45,7 @@ fi
 images_dir=/images
 puavoinstall_libdir=/usr/lib/puavo-ltsp-install
 
+hosttype=""
 image_from_file=""
 image_from_nbd=""
 rate_limit_opts=""
@@ -57,6 +58,9 @@ while [ $# -ne 0 ]; do
   case "$1" in
     --delete-overlays)
       delete_overlays=true; shift
+      ;;
+    --hosttype)
+      hosttype="$2"; shift; shift
       ;;
     --images-dir)
       images_dir="$2"; shift; shift
@@ -592,7 +596,8 @@ run_image_preinst_hook() {
   mkdir -p "${images_dir}/mnt"
   umount -f "${images_dir}/mnt" 2>/dev/null || true
   mount -o ro "$imagepath" "${images_dir}/mnt"
-  "${images_dir}/mnt/${puavoinstall_libdir}/puavo-image-preinst"
+  "${images_dir}/mnt/${puavoinstall_libdir}/puavo-image-preinst" \
+    --hosttype "$hosttype"
   umount "${images_dir}/mnt" || true
 }
 

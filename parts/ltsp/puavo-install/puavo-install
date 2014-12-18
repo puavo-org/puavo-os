@@ -95,7 +95,7 @@ do_preinstall() {
   # configuration is updated during image installation by
   # puavo-image-preinst.
   install_grub --hosttype preinstalled
-  install_image "$puavo_install_hosttype"
+  install_image "$puavo_install_hosttype" --hosttype preinstalled
 
   echo "$puavo_install_target_hosttype" > /images/puavo_preinstalled
 
@@ -181,13 +181,13 @@ install_image() {
 
   case "$puavo_install_hosttype" in
     diskinstaller)
-      puavo-install-and-update-ltspimages                      \
+      puavo-install-and-update-ltspimages "$@"                 \
         --install-from-file "/installimages/${ltspimage_name}" \
         "$ltspimage_name"
       ;;
     unregistered)
-      puavo-install-and-update-ltspimages \
-        --install-from-nbd /dev/nbd0      \
+      puavo-install-and-update-ltspimages "$@" \
+        --install-from-nbd /dev/nbd0           \
         "$ltspimage_name"
       ;;
     *)
@@ -270,8 +270,6 @@ update_configuration() {
   else
     echo "  ... a problem occurred (updating configuration later)."
   fi
-
-  install_grub
 
   sync
 }
