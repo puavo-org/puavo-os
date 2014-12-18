@@ -263,7 +263,7 @@ enum nss_status fill_group_members(struct group *const gr,
     char *member;
     const char *username_str;
     int member_count;
-    int i;
+    size_t i;
     int username_len;
 
     init_json();
