@@ -116,7 +116,7 @@ static enum nss_status populate_passwd(json_t *const user,
     return NSS_STATUS_SUCCESS;
 }
 
-static enum nss_status init_json() {
+static enum nss_status init_json(void) {
     json_error_t error;
 
     if (json_root) {
@@ -140,7 +140,7 @@ static enum nss_status init_json() {
     return NSS_STATUS_SUCCESS;
 }
 
-static enum nss_status free_json() {
+static enum nss_status free_json(void) {
     json_decref(json_root);
     json_root = NULL;
     owners = NULL;
