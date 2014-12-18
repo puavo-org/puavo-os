@@ -77,6 +77,7 @@ ask_preseed() {
 
 do_preinstall() {
   puavo_install_hosttype=$1
+  puavo_preseed_setup_filesystems_args=$2
 
   if is_preinstalled "$puavo_install_hosttype"; then
     echo 'Can not do a preinstall from a preinstalled host' >&2
@@ -89,7 +90,8 @@ do_preinstall() {
   puavo_install_target_hosttype=$(ask_install_target_hosttype)
 
   echo
-  puavo-setup-filesystems --hosttype "$puavo_install_target_hosttype"
+  puavo-setup-filesystems --hosttype "$puavo_install_target_hosttype" \
+                          $puavo_preseed_setup_filesystems_args
 
   # Grub needs to be installed before images, because grub
   # configuration is updated during image installation by
@@ -204,7 +206,7 @@ install_localbootdevice() {
   puavo_hosttype=$2
   puavo_preseed_setup_filesystems_args=$3
 
-  puavo-setup-filesystems ${puavo_preseed_setup_filesystems_args}
+  puavo-setup-filesystems $puavo_preseed_setup_filesystems_args
   setup_state
 
   # Grub needs to be installed before images, because grub
@@ -223,7 +225,7 @@ install_ltspserver() {
   puavo_hosttype=$2
   puavo_preseed_setup_filesystems_args=$3
 
-  puavo-setup-filesystems ${puavo_preseed_setup_filesystems_args}
+  puavo-setup-filesystems $puavo_preseed_setup_filesystems_args
   setup_state
   do_umounts "$puavo_install_hosttype" "$puavo_hosttype"
 }
@@ -289,7 +291,8 @@ ask_preseed
 preinstall_only=false
 
 if $preinstall_only; then
-  do_preinstall "$puavo_install_hosttype"
+  do_preinstall "$puavo_install_hosttype" \
+                "$puavo_preseed_setup_filesystems_args"
   exit 0
 fi
 
