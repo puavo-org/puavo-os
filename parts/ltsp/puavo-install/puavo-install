@@ -87,6 +87,8 @@ do_preinstall() {
   echo 'Welcome to puavo device preinstallation!'
   echo
 
+  puavo-register --authenticate-only
+
   puavo_install_target_hosttype=$(ask_install_target_hosttype)
 
   echo
