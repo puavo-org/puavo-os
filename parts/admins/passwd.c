@@ -54,9 +54,9 @@ static enum nss_status populate_passwd(json_t *const user,
     json_t *gid_number;
     json_t *first_name;
     json_t *last_name;
-    int username_len;
-    int gecos_len;
-    int home_len;
+    size_t username_len;
+    size_t gecos_len;
+    size_t home_len;
     char *gecos;
     char *home;
 
