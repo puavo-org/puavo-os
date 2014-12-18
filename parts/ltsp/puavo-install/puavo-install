@@ -2,6 +2,23 @@
 
 set -eu
 
+ask_install_target_hosttype() {
+  puavo_install_target_hosttype=laptop
+  while true; do
+    echo 'Choose hosttype (possible choices are: laptop wirelessaccesspoint)'
+    echo -n "  Target hosttype? [$puavo_install_target_hosttype]: "
+    read answer
+    [ -n "$answer" ] && puavo_install_target_hosttype=$answer
+
+    case "$puavo_install_target_hosttype" in
+      laptop|wirelessaccesspoint) break                     ;;
+      *) echo "'$answer' is not a supported hosttype\n" >&2 ;;
+    esac
+  done
+
+  echo "$puavo_install_target_hosttype"
+}
+
 ask_preseed() {
   preseeds=$(ls -1 /usr/share/puavo-ltsp-install/preseeds | sort)
   preseed_count=$(echo "${preseeds}" | wc -l)
@@ -56,6 +73,33 @@ ask_preseed() {
 
     break
   done
+}
+
+do_preinstall() {
+  puavo_install_hosttype=$1
+
+  if is_preinstalled "$puavo_install_hosttype"; then
+    echo 'Can not do a preinstall from a preinstalled host' >&2
+    return 1
+  fi
+
+  echo 'Welcome to puavo device preinstallation!'
+  echo
+
+  puavo_install_target_hosttype=$(ask_install_target_hosttype)
+
+  echo
+  puavo-setup-filesystems --hosttype "$puavo_install_target_hosttype"
+
+  # Grub needs to be installed before images, because grub
+  # configuration is updated during image installation by
+  # puavo-image-preinst.
+  install_grub --hosttype preinstalled
+  install_image "$puavo_install_hosttype"
+
+  echo "$puavo_install_target_hosttype" > /images/puavo_preinstalled
+
+  do_umounts "$puavo_install_hosttype" "$puavo_install_target_hosttype"
 }
 
 do_umounts() {
@@ -122,12 +166,12 @@ get_preinstalled_hosttype() {
 
 install_grub() {
   echo -n 'Doing grub installation: '
-  puavo-install-grub
+  puavo-install-grub "$@"
   sync
 }
 
 install_image() {
-  puavo_install_hosttype=$1
+  puavo_install_hosttype=$1; shift
 
   ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name 2>/dev/null || true)
   if [ -z "$ltspimage_name" ]; then
@@ -142,8 +186,9 @@ install_image() {
         "$ltspimage_name"
       ;;
     unregistered)
-      puavo-install-and-update-ltspimages --install-from-nbd /dev/nbd0 \
-                                          "$ltspimage_name"
+      puavo-install-and-update-ltspimages \
+        --install-from-nbd /dev/nbd0      \
+        "$ltspimage_name"
       ;;
     *)
       echo 'I do not know from where to install an ltsp image' >&2
@@ -159,33 +204,16 @@ install_localbootdevice() {
   puavo_hosttype=$2
   puavo_preseed_setup_filesystems_args=$3
 
-  if ! is_preinstalled "$puavo_install_hosttype"; then
-    puavo-setup-filesystems ${puavo_preseed_setup_filesystems_args}
-  fi
+  puavo-setup-filesystems ${puavo_preseed_setup_filesystems_args}
+  setup_state
 
-  setup_state_contents
-
-  if ! is_preinstalled "$puavo_install_hosttype"; then
-    # Grub needs to be installed before images, because grub
-    # configuration is updated during image installation by
-    # puavo-image-preinst.
-    install_grub
-    install_image "$puavo_install_hosttype"
-  fi
+  # Grub needs to be installed before images, because grub
+  # configuration is updated during image installation by
+  # puavo-image-preinst.
+  install_grub
+  install_image "$puavo_install_hosttype"
 
   update_configuration
-
-  # If host was preinstalled, grub will boot the host as 'preinstalled' until
-  # we do this:
-  if is_preinstalled "$puavo_install_hosttype"; then
-    puavo-install-grub --hosttype "$puavo_hosttype" --only-update-config
-  fi
-
-  # From now on the host will boot as a fully installed host.
-
-  if is_preinstalled "$puavo_install_hosttype"; then
-    rm -f /images/puavo_preinstalled
-  fi
 
   do_umounts "$puavo_install_hosttype" "$puavo_hosttype"
 }
@@ -202,20 +230,25 @@ install_ltspserver() {
 
 is_preinstalled() { [ "$1" = 'preinstalled' ]; }
 
-register_and_get_hosttype() {
-  puavo_install_hosttype=$1
-  accepted_hosttypes=$2
-  puavo_preseed_register_args=$3
+setup_preinstalled_localbootdevice() {
+  puavo_hosttype=$1
 
-  if is_preinstalled "$puavo_install_hosttype"; then
-    get_preinstalled_hosttype
-    return 0
+  if ! [ "$puavo_hosttype" = 'laptop' \
+           -o "$puavo_hosttype" = 'wirelessaccesspoint' ]; then
+    echo "Setting up preinstalled '$puavo_hosttype' is not supported" >&2
+    return 1
   fi
 
-  puavo-register --accepted-devicetypes "$accepted_hosttypes" \
-                 ${puavo_preseed_register_args}
+  setup_state
+  update_configuration
 
-  cat /etc/puavo/hosttype
+  # If host was preinstalled, grub will boot the host as 'preinstalled' until
+  # we do this:
+  puavo-install-grub --hosttype "$puavo_hosttype" --only-update-config
+
+  # From now on the host will boot as a fully installed host.
+
+  rm -f /images/puavo_preinstalled
 }
 
 setup_state() {
@@ -247,7 +280,6 @@ update_configuration() {
 # main
 
 puavo_install_hosttype=$(get_install_hosttype)
-accepted_hosttypes=$(get_accepted_hosttypes "$puavo_install_hosttype")
 
 # ask_preseed fills in $puavo_preseed_register_args and
 # $puavo_preseed_setup_filesystems_args
@@ -255,10 +287,28 @@ puavo_preseed_register_args=
 puavo_preseed_setup_filesystems_args=
 ask_preseed
 
-puavo_hosttype=$(register_and_get_hosttype "$puavo_install_hosttype"       \
-                                           "$accepted_hosttypes"           \
-                                           "$puavo_preseed_register_args")
+# XXX preinstall_only=true
+preinstall_only=false
 
+if $preinstall_only; then
+  do_preinstall "$puavo_install_hosttype"
+  exit 0
+fi
+
+accepted_hosttypes=$(get_accepted_hosttypes "$puavo_install_hosttype")
+
+puavo-register --accepted-devicetypes "$accepted_hosttypes" \
+               ${puavo_preseed_register_args}
+
+puavo_hosttype=$(cat /etc/puavo/hosttype)
+
+if is_preinstalled "$puavo_install_hosttype"; then
+  setup_preinstalled_localbootdevice "$puavo_hosttype"
+  exit 0
+fi
+
+# Host is not preinstalled, so do the full install if hosttype so requires
+# (for thinclients/fatclients nothing needs to be done).
 
 case "$puavo_hosttype" in
   laptop|wirelessaccesspoint)
