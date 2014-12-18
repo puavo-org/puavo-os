@@ -54,9 +54,9 @@ static enum nss_status populate_passwd(json_t *const user,
     json_t *gid_number;
     json_t *first_name;
     json_t *last_name;
-    size_t username_len;
-    size_t gecos_len;
-    size_t home_len;
+    size_t username_size;
+    size_t gecos_size;
+    size_t home_size;
     char *gecos;
     char *home;
 
@@ -91,27 +91,27 @@ static enum nss_status populate_passwd(json_t *const user,
         return NSS_STATUS_UNAVAIL;
     }
 
-    username_len = strlen(json_string_value(username)) + 1;
-    gecos_len = strlen(json_string_value(first_name)) + 1
+    username_size = strlen(json_string_value(username)) + 1;
+    gecos_size = strlen(json_string_value(first_name)) + 1
             + strlen(json_string_value(last_name)) + 1;
-    home_len = 10 + strlen(json_string_value(username)) + 1;
+    home_size = 10 + strlen(json_string_value(username)) + 1;
 
-    if ((username_len + gecos_len + home_len) > buflen)
+    if ((username_size + gecos_size + home_size) > buflen)
         return NSS_STATUS_TRYAGAIN;
 
-    snprintf(buf, username_len, "%s", json_string_value(username));
-    snprintf(buf+username_len, gecos_len, "%s %s",
+    snprintf(buf, username_size, "%s", json_string_value(username));
+    snprintf(buf + username_size, gecos_size, "%s %s",
              json_string_value(first_name),
              json_string_value(last_name));
-    snprintf(buf + username_len+gecos_len, home_len, "/adm-home/%s",
+    snprintf(buf + username_size + gecos_size, home_size, "/adm-home/%s",
              json_string_value(username));
 
     pw->pw_name = buf;
     pw->pw_uid = json_integer_value(uid_number);
     pw->pw_gid = json_integer_value(gid_number);
     pw->pw_passwd = "x";
-    pw->pw_gecos = buf+username_len;
-    pw->pw_dir = buf+username_len+gecos_len;
+    pw->pw_gecos = buf + username_size;
+    pw->pw_dir = buf + username_size + gecos_size;
     pw->pw_shell = "/bin/bash";
 
     return NSS_STATUS_SUCCESS;
