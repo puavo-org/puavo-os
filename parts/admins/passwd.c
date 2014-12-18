@@ -49,6 +49,7 @@ static enum nss_status populate_passwd(json_t *const user,
                                        struct passwd *const pw,
                                        char *const buf,
                                        const size_t buflen) {
+    static const char *const ADM_HOME_PATH = "/adm-home/";
     json_t *username;
     json_t *uid_number;
     json_t *gid_number;
@@ -94,7 +95,8 @@ static enum nss_status populate_passwd(json_t *const user,
     username_size = strlen(json_string_value(username)) + 1;
     gecos_size = strlen(json_string_value(first_name)) + 1
             + strlen(json_string_value(last_name)) + 1;
-    home_size = 10 + strlen(json_string_value(username)) + 1;
+    home_size = strlen(ADM_HOME_PATH)
+            + strlen(json_string_value(username)) + 1;
 
     if ((username_size + gecos_size + home_size) > buflen)
         return NSS_STATUS_TRYAGAIN;
@@ -103,8 +105,8 @@ static enum nss_status populate_passwd(json_t *const user,
     snprintf(buf + username_size, gecos_size, "%s %s",
              json_string_value(first_name),
              json_string_value(last_name));
-    snprintf(buf + username_size + gecos_size, home_size, "/adm-home/%s",
-             json_string_value(username));
+    snprintf(buf + username_size + gecos_size, home_size, "%s%s",
+             ADM_HOME_PATH, json_string_value(username));
 
     pw->pw_name = buf;
     pw->pw_uid = json_integer_value(uid_number);
