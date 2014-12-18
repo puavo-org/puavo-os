@@ -1,8 +1,11 @@
+// Standard library includes.
 #include <stdio.h>
 #include <string.h>
 #include <nss.h>
 #include <pwd.h>
 #include <grp.h>
+
+// Third-party includes.
 #include <jansson.h>
 
 enum nss_status _nss_puavoadmins_getpwuid_r(uid_t,
