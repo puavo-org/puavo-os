@@ -45,9 +45,16 @@ static enum nss_status populate_passwd(json_t *const user,
                                        struct passwd *const pw,
                                        char *const buf,
                                        const size_t buflen) {
-    json_t *username, *uid_number, *gid_number, *first_name, *last_name;
-    int username_len, gecos_len, home_len;
-    char *gecos, *home;
+    json_t *username;
+    json_t *uid_number;
+    json_t *gid_number;
+    json_t *first_name;
+    json_t *last_name;
+    int username_len;
+    int gecos_len;
+    int home_len;
+    char *gecos;
+    char *home;
 
     username = json_object_get(user, "username");
     uid_number = json_object_get(user, "uid_number");
@@ -141,9 +148,16 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
                                             char *const buf,
                                             const size_t buflen,
                                             int *const errnop) {
-    json_t *user, *username, *uid_number, *gid_number, *first_name, *last_name;
-    int gecos_len, home_len;
-    char *gecos, *home;
+    json_t *user;
+    json_t *username;
+    json_t *uid_number;
+    json_t *gid_number;
+    json_t *first_name;
+    json_t *last_name;
+    int gecos_len;
+    int home_len;
+    char *gecos;
+    char *home;
 
     *errnop = 0;
 
@@ -169,9 +183,16 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
                                             char *const buf,
                                             const size_t buflen,
                                             int *const errnop) {
-    json_t *user, *username, *uid_number, *gid_number, *first_name, *last_name;
-    int gecos_len, home_len;
-    char *gecos, *home;
+    json_t *user;
+    json_t *username;
+    json_t *uid_number;
+    json_t *gid_number;
+    json_t *first_name;
+    json_t *last_name;
+    int gecos_len;
+    int home_len;
+    char *gecos;
+    char *home;
 
     *errnop = 0;
 
@@ -249,10 +270,14 @@ enum nss_status fill_group_members(struct group *const gr,
                                    char *const buffer,
                                    const size_t buflen) {
     enum nss_status e;
-    json_t *user, *username;
+    json_t *user;
+    json_t *username;
     char **members;
-    char *member, *username_str;
-    int member_count, i, username_len;
+    char *member;
+    char *username_str;
+    int member_count;
+    int i;
+    int username_len;
 
     init_json();
 
