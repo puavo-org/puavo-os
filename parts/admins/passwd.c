@@ -41,7 +41,7 @@ enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
                                             size_t buflen,
                                             int *errnop);
 
-static int ent_index;
+static size_t ent_index;
 static json_t *json_root;
 static json_t *owners;
 
