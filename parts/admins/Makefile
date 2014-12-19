@@ -2,7 +2,7 @@ modules = libnss_puavoadmins.so.0
 
 all: $(modules)
 
-libnss_puavoadmins.so.0: passwd.o
+libnss_puavoadmins.so.2: passwd.o
 	gcc -shared -o $@ -Wl,-soname,$@ $^
 
 %.o: %.c
