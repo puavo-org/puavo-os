@@ -1,4 +1,4 @@
-modules = libnss_puavoadmins.so.0
+modules = libnss_puavoadmins.so.2
 
 all: $(modules)
 
