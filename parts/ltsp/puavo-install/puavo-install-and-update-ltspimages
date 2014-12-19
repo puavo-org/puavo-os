@@ -37,7 +37,7 @@ usage() {
 }
 
 if ! args=$(getopt -n "$0" -o +f:n:r:q \
-		   -l 'install-from-file:,install-from-nbd:,rate-limit:,quiet,delete-overlays,images-dir:,no-preinst-hook' \
+		   -l 'hosttype:,install-from-file:,install-from-nbd:,rate-limit:,quiet,delete-overlays,images-dir:,no-preinst-hook' \
 		   -- "$@"); then
   usage
 fi
@@ -596,8 +596,14 @@ run_image_preinst_hook() {
   mkdir -p "${images_dir}/mnt"
   umount -f "${images_dir}/mnt" 2>/dev/null || true
   mount -o ro "$imagepath" "${images_dir}/mnt"
-  "${images_dir}/mnt/${puavoinstall_libdir}/puavo-image-preinst" \
-    --hosttype "$hosttype"
+
+  if [ -n "$hosttype" ]; then
+    "${images_dir}/mnt/${puavoinstall_libdir}/puavo-image-preinst" \
+      --hosttype "$hosttype"
+  else
+    "${images_dir}/mnt/${puavoinstall_libdir}/puavo-image-preinst"
+  fi
+
   umount "${images_dir}/mnt" || true
 }
 
