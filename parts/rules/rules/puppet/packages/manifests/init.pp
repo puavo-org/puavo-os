@@ -640,6 +640,7 @@ class packages {
     , 'rfkill'
     , 'rhythmbox'
     , 'rhythmbox-plugin-magnatune'
+    , 'rtmpdump'
     , 'seahorse'
     , 'shotwell'
     , 'simple-scan'
