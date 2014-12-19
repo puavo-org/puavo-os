@@ -542,6 +542,8 @@ class Control
   end
 
   def self.register(cmdline_params)
+    HighLine.say "\n\t-=< Puavo Devices Client >=-\n\n"
+
     if File.exists?(Puavo_hostname_path) && !cmdline_params['force']
       Tools.errmsg('Registration is already done and --force is not applied.')
       exit 1
@@ -632,8 +634,6 @@ class Control
 end
 
 raise 'run me as root' unless Process.uid == 0
-
-HighLine.say "\n\t-=< Puavo Devices Client >=-\n\n"
 
 cmdline_params = CmdLine.params(ARGV)
 
