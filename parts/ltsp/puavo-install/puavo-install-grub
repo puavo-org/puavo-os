@@ -195,8 +195,11 @@ if [ -z "$hosttype" ]; then
   exit 1
 fi
 
-diskdev=$(pvs | awk -v vgname="$vgname" '$2 == vgname { print $1; exit }' \
-              | sed -E 's|[0-9]+$||')
+# pvs and assorted utilities complain if we leak file descriptors, that is
+# why we do "3>&- 4>&-" (same with grub-install)
+diskdev=$(pvs 3>&- 4>&-                                                 \
+            | awk -v vgname="$vgname" '$2 == vgname { print $1; exit }' \
+            | sed -E 's|[0-9]+$||')
 
 if [ -z "$diskdev" ]; then
   echo "Could not find the disk device where volume group '${vgname}' is" >&2
@@ -225,7 +228,13 @@ case "$hosttype" in
 esac
 
 if ! $only_update_config; then
-  grub-install --root-directory=$images_dir "$diskdev"
+  if ! grub_msg=$(grub-install --root-directory=$images_dir "$diskdev" \
+                    3>&- 4>&- 2>&1); then
+    echo "Grub installation failed: $grub_msg" >&2
+    exit 1
+  fi
+
+  echo "Grub has been installed to ${diskdev}."
 fi
 
 grub_cfg_path="${images_dir}/boot/grub/grub.cfg"
