@@ -38,6 +38,8 @@ ask_install_mode_and_preseed() {
       *) echo "I did not understand your answer" >&2 ;;
     esac
   done
+
+  echo >&2
 }
 
 ask_install_target_hosttype() {
