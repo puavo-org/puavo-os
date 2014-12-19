@@ -141,7 +141,7 @@ static enum nss_status init_json(void) {
     return NSS_STATUS_SUCCESS;
 }
 
-void free_json(void) {
+static void free_json(void) {
     json_decref(json_root);
     json_root = NULL;
     owners = NULL;
@@ -256,7 +256,7 @@ enum nss_status _nss_puavoadmins_endgrent(void) {
     return NSS_STATUS_SUCCESS;
 }
 
-enum nss_status fill_group_members(struct group *const gr,
+static enum nss_status fill_group_members(struct group *const gr,
                                    char *const buffer,
                                    const size_t buflen) {
     json_t *user;
