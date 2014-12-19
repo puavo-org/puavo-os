@@ -16,7 +16,8 @@ until /usr/sbin/puavo-install; do
   read answer
 done
 
-echo 'Press enter to reboot'
+echo
+echo -n 'Press enter to reboot'
 read answer
 
 echo
