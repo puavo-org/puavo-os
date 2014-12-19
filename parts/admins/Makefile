@@ -23,3 +23,5 @@ install: installdirs all
 clean:
 	rm -rf *.o
 	rm -rf $(modules)
+
+.PHONY: all installdirs install clean
