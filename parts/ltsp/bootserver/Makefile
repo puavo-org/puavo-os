@@ -1,5 +1,6 @@
 prefix = /usr/local
 exec_prefix = $(prefix)
+bindir = $(exec_prefix)/bin
 sbindir = $(exec_prefix)/sbin
 datarootdir = $(prefix)/share
 templatedir = $(datarootdir)/puavo-ltsp-bootserver/templates
@@ -15,6 +16,7 @@ all :
 
 .PHONY : installdirs
 installdirs :
+	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/logrotate.d
@@ -70,6 +72,9 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/var/lib/bind \
 		templates/var/lib/bind/puavo_domain \
 		templates/var/lib/bind/puavo_domain_reverse
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
+		bin/*
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		sbin/*
