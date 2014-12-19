@@ -180,25 +180,44 @@ end
 
 module QueryDiskInfo
   def self.ask_device()
-    disk_devices = []
+    choosable_disk_devices = []
+
+    current_system_device = nil
+    begin
+      current_system_device = get_current_system_device()
+    rescue StandardError => e
+      msg = "Could not find the current system device: #{ e }\n"        \
+            + "It may appear on the list of devices to install to,\n"   \
+            + "but the install to it should fail (maybe it will not?)."
+      STDERR.puts msg
+    end
 
     chosen_disk_device = nil
-    until disk_devices.include?(chosen_disk_device) do
-      disk_devices = IO.readlines('/proc/partitions') \
-                     .map { |s| s.split(' ')[3] }     \
-                     .select { |s| s && s.match(/^[vs]d[a-z]$/) }
+    until choosable_disk_devices.include?(chosen_disk_device) do
+      all_disk_devices = IO.readlines('/proc/partitions') \
+                           .map { |s| s.split(' ')[3] }   \
+                           .select { |s| s && s.match(/^[vs]d[a-z]$/) }
 
-      puts '-----'
-      puts "This machine has the following disk devices:\n"
-      show_disk_devices(disk_devices)
+      # do not allow installation to the device where the currently running
+      # system resides
+      choosable_disk_devices \
+        = all_disk_devices - [ current_system_device ].compact
 
-      if chosen_disk_device.nil?
-        chosen_disk_device = disk_devices[0]
+      if choosable_disk_devices.empty? then
+        raise 'Could not find any disk device where we could install to'
       end
 
-      puts "\nPossible disk devices are: #{ disk_devices.join(' ') }"
+      puts '-----'
+      puts "We can install to the following disk devices:\n"
+      show_disk_devices(choosable_disk_devices)
+
+      if chosen_disk_device.nil?
+        chosen_disk_device = choosable_disk_devices[0]
+      end
+
+      puts "\nPossible disk devices are: #{ choosable_disk_devices.join(' ') }"
       chosen_disk_device = UI::ask_with_default('Choose a disk device:',
-					        chosen_disk_device,
+                                                chosen_disk_device,
                                                 UI::DiskDevicePrompt)
     end
 
@@ -314,6 +333,44 @@ module QueryDiskInfo
                                               UI::PartitionPrompt)
     end
     chosen_partition
+  end
+
+  def self.get_current_system_device
+    rootdev = nil
+    File.read('/proc/cmdline').split.each do |kernel_arg|
+      match = kernel_arg.match(/^root=(.*)$/)
+      if match then
+        rootdev = match[1]
+        break
+      end
+    end
+
+    raise 'Could not find root= argument in kernel command line' \
+      unless rootdev
+
+    match = rootdev.match(%r{^/dev/(nbd.*)$})
+    return match[1] if match
+
+    match = rootdev.match(%r{^/dev/mapper/(.*)$})
+    raise 'Did not understand the root= argument in kernel command line' \
+      unless match
+    dm_name_path = match[1]
+
+    images_dm_path = nil
+    Dir.glob('/sys/block/dm-*').each do |dm_name_path|
+      if File.read("#{ dm_name_path }/dm/name").chomp == 'puavo-images' then
+        images_dm_path = dm_name_path
+        break
+      end
+    end
+    raise 'Could not find the logical volume where the images are' \
+      unless images_dm_path
+
+    Dir.glob("#{ images_dm_path }/slaves/*") do |dm_slave|
+      return File.basename( File.dirname( File.readlink(dm_slave) ) )
+    end
+    raise 'Could not find the device where the images are' \
+      unless images_dm_path
   end
 
   def self.show_disk_devices(disk_devices)
