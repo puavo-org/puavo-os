@@ -209,6 +209,8 @@ enum nss_status _nss_puavoadmins_setpwent(void) {
 
 enum nss_status _nss_puavoadmins_endpwent(void) {
     free_json();
+
+    return NSS_STATUS_SUCCESS;
 }
 
 enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
