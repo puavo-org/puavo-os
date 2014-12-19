@@ -65,7 +65,7 @@ module DiskHandler
   def self.cleanup_disk_environment(hosttype, vgname)
     # Unmount filesystems, if those are mounted.
     non_swap_filesystems(hosttype).each do |name, attrs|
-      run('umount', '-f', "/#{ name }") rescue true
+      run('umount', '-f', "/#{ name }", { :err => :close }) rescue true
     end
 
     if hosttype != 'diskinstaller' then
@@ -75,7 +75,7 @@ module DiskHandler
       # partitions (and turning swap off from the current host is not
       # appropriate).  (The really proper solution should disable swap
       # selectively from the disk we are installing to.)
-      run('swapoff', '-a') rescue true
+      run('swapoff', '-a', { :err => :close }) rescue true
     end
 
     dm_device_list = \
@@ -90,11 +90,14 @@ module DiskHandler
 
     # remove all dmsetup volumes which may exists on the target host
     dm_device_list.each do |dm_device|
-      run('dmsetup', 'remove', '--force', dm_device) rescue true
+      run('dmsetup', 'remove', '--force', dm_device, { :err => :close }) \
+        rescue true
     end
 
     # switch off all volume groups that may interfere with following operations
-    run('vgchange', '-a', 'n', vgname) rescue true
+    run('vgchange', '-a', 'n', vgname,
+	{ :close_others => :true, :err => :close }) \
+      rescue true
   end
 
   def self.do_fs_setup(conf, vgname)
@@ -147,8 +150,9 @@ module DiskHandler
     run('dd', 'if=/dev/zero', "of=#{ fs_conf['partition'] }", 'count=1K')
 
     # create LVM volume groups
-    run('pvcreate', fs_conf['partition'])
-    run('vgcreate', '-s', '64M', vgname, fs_conf['partition'])
+    run('pvcreate', fs_conf['partition'], { :close_others => true })
+    run('vgcreate', '-s', '64M', vgname, fs_conf['partition'],
+	{ :close_others => true })
 
     Filesystems[ fs_conf['hosttype'] ].each do |name, attrs|
       mkfs(attrs['size'], name, attrs['type'], vgname)
@@ -159,7 +163,8 @@ module DiskHandler
     run('lvcreate',
 	(size.match(/%/) ? '-l' : '-L'), size,
 	'-n', name,
-	vgname)
+	vgname,
+	{ :close_others => true })
 
     case type
       when 'ext4'
