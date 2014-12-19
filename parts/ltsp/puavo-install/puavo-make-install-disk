@@ -18,14 +18,14 @@ install_image() {
 }
 
 case "$puavo_hosttype" in
-  fatclient|ltspserver|thinclient)
+  fatclient|ltspserver|thinclient|unregistered)
     install_args="--install-from-nbd /dev/nbd0"
     ;;
-  laptop|wirelessaccesspoint)
+  laptop|preinstalled|wirelessaccesspoint)
     install_args="--install-from-file /images/${ltspimage_name}"
     ;;
   *)
-    echo 'Cannot create an install disk on this hosttype' >&2
+    echo "Cannot create an install disk on hosttype: '${puavo_hosttype}'" >&2
     exit 1
     ;;
 esac

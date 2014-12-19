@@ -2,12 +2,49 @@
 
 set -eu
 
+ask_install_mode_and_preseed() {
+  puavo_install_hosttype=$1
+
+  if [ "$puavo_install_hosttype" = 'preinstalled' ]; then
+    prompt='This host is preinstalled, press enter to register: '
+  else
+    prompt='Press enter to begin installation: '
+  fi
+
+  while true; do
+    read -p "$prompt" answer
+    case "$answer" in
+      expert|xp) break                 ;;
+      '')        echo normal; return 0 ;;
+    esac
+  done
+
+  # expert mode
+
+  while true; do
+    cat >&2 <<-'EOF'
+
+	You chose the expert mode.  You may choose to:
+	  (m)ake install disk      (bootable usb flash drive or some such)
+	  (n)ormal installation    (with preseed)
+	  (p)reinstall             (install without registering)
+
+	EOF
+    read -p 'Your choice (type m, n or p): ' answer
+    case "$answer" in
+      m) echo make-install-disk  ; break ;;
+      n) echo normal-with-preseed; break ;;
+      p) echo preinstall         ; break ;;
+      *) echo "I did not understand your answer" >&2 ;;
+    esac
+  done
+}
+
 ask_install_target_hosttype() {
   puavo_install_target_hosttype=laptop
   while true; do
     echo 'Choose hosttype (possible choices are: laptop wirelessaccesspoint)'
-    echo -n "  Target hosttype? [$puavo_install_target_hosttype]: "
-    read answer
+    read -p "  Target hosttype? [$puavo_install_target_hosttype]: " answer
     [ -n "$answer" ] && puavo_install_target_hosttype=$answer
 
     case "$puavo_install_target_hosttype" in
@@ -25,19 +62,19 @@ ask_preseed() {
 
   # Ask the preferred preseed if there are some available.
   [ -n "${preseeds}" ] && while true; do
-    echo "Installation mode:"
+    echo "Installer preseeds:"
     # Print the list of preseeds.
-    echo "0\tNormal installation"
+    echo "0\tNO PRESEEDING"
     echo "${preseeds}" | awk '{printf "%d\tPre-customized installation for %s\n", NR, $0}'
 
     # The default preseed is the first item, number 0.
-    read -p "Select mode [0]: " preseed_nr
+    read -p "Select preseed number [0]: " preseed_nr
     [ -n "${preseed_nr}" ] || preseed_nr=0
 
     # Ensure the value is a valid integer.
     case "${preseed_nr}" in
       ''|*[!0-9]*)
-        echo "E: invalid mode" >&2
+        echo "E: invalid preseed number" >&2
         continue
         ;;
       *)
@@ -47,7 +84,7 @@ ask_preseed() {
     # Ensure the integer has a valid value.
     if [ 0 -gt "${preseed_nr}" \
            -o "${preseed_nr}" -gt "${preseed_count}" ]; then
-      echo "E: invalid mode" >&2
+      echo "E: invalid preseed number" >&2
       continue
     fi
 
@@ -86,8 +123,6 @@ do_preinstall() {
 
   echo 'Welcome to puavo device preinstallation!'
   echo
-
-  puavo-register --authenticate-only
 
   puavo_install_target_hosttype=$(ask_install_target_hosttype)
 
@@ -283,20 +318,38 @@ update_configuration() {
 
 puavo_install_hosttype=$(get_install_hosttype)
 
-# ask_preseed fills in $puavo_preseed_register_args and
-# $puavo_preseed_setup_filesystems_args
-puavo_preseed_register_args=
-puavo_preseed_setup_filesystems_args=
-ask_preseed
-
-# XXX preinstall_only=true
+preinstall_only=false
 preinstall_only=false
 
-if $preinstall_only; then
-  do_preinstall "$puavo_install_hosttype" \
-                "$puavo_preseed_setup_filesystems_args"
-  exit 0
-fi
+# these might be filled later by ask_preseed subroutine
+puavo_preseed_register_args=
+puavo_preseed_setup_filesystems_args=
+
+install_mode=$(ask_install_mode_and_preseed "$puavo_install_hosttype")
+
+case "$install_mode" in
+  make-install-disk)
+    puavo-register --authenticate-only
+    puavo-make-install-disk
+    exit 0
+    ;;
+  normal)
+    ;;
+  normal-with-preseed)
+    ask_preseed
+    ;;
+  preinstall)
+    puavo-register --authenticate-only
+    ask_preseed
+    do_preinstall "$puavo_install_hosttype" \
+                  "$puavo_preseed_setup_filesystems_args"
+    exit 0
+    ;;
+  *)
+    echo "Unknown installation mode: '${install_mode}'" >&2
+    exit 1
+    ;;
+esac
 
 accepted_hosttypes=$(get_accepted_hosttypes "$puavo_install_hosttype")
 
