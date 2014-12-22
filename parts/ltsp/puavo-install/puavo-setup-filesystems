@@ -361,11 +361,11 @@ module QueryDiskInfo
     match = rootdev.match(%r{^/dev/mapper/(.*)$})
     raise 'Did not understand the root= argument in kernel command line' \
       unless match
-    dm_name_path = match[1]
+    root_dm_name = match[1]
 
     images_dm_path = nil
     Dir.glob('/sys/block/dm-*').each do |dm_name_path|
-      if File.read("#{ dm_name_path }/dm/name").chomp == 'puavo-images' then
+      if File.read("#{ dm_name_path }/dm/name").chomp == root_dm_name then
         images_dm_path = dm_name_path
         break
       end
