@@ -45,7 +45,8 @@ ask_install_mode_and_preseed() {
 ask_install_target_hosttype() {
   puavo_install_target_hosttype=laptop
   while true; do
-    echo 'Choose hosttype (possible choices are: laptop wirelessaccesspoint)'
+    echo 'Choose hosttype (possible choices are: laptop wirelessaccesspoint)' \
+         >&2
     read -p "  Target hosttype? [$puavo_install_target_hosttype]: " answer
     [ -n "$answer" ] && puavo_install_target_hosttype=$answer
 
