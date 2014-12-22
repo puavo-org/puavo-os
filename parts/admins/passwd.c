@@ -121,14 +121,12 @@ static enum nss_status populate_passwd(json_t *const user,
 }
 
 static int init_json(void) {
-    json_error_t error;
-
     if (json_root) {
       json_decref(json_root);
       json_root = NULL;
     }
 
-    json_root = json_load_file("/etc/puavo/org.json", 0, &error);
+    json_root = json_load_file("/etc/puavo/org.json", 0, NULL);
 
     if (!json_root) {
         return -1;
