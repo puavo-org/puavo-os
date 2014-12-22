@@ -170,9 +170,9 @@ module DiskHandler
 
     case type
       when 'ext4'
-        run('mkfs.ext4', '-v', "/dev/mapper/#{ vgname }-#{ name }")
+        run('mkfs.ext4', "/dev/mapper/#{ vgname }-#{ name }")
       when 'swap'
-        run('mkswap',    '-f', "/dev/mapper/#{ vgname }-#{ name }")
+        run('mkswap', '-f', "/dev/mapper/#{ vgname }-#{ name }")
     end
   end
 
