@@ -65,7 +65,7 @@ module DiskHandler
   def self.cleanup_disk_environment(hosttype, vgname)
     # Unmount filesystems, if those are mounted.
     non_swap_filesystems(hosttype).each do |name, attrs|
-      run('umount', '-f', "/#{ name }", { :err => :close }) rescue true
+      run('umount', '-f', "/#{ name }", { :err => '/dev/null' }) rescue true
     end
 
     if hosttype != 'diskinstaller' then
@@ -75,7 +75,7 @@ module DiskHandler
       # partitions (and turning swap off from the current host is not
       # appropriate).  (The really proper solution should disable swap
       # selectively from the disk we are installing to.)
-      run('swapoff', '-a', { :err => :close }) rescue true
+      run('swapoff', '-a', { :err => '/dev/null' }) rescue true
     end
 
     dm_device_list = \
@@ -90,13 +90,13 @@ module DiskHandler
 
     # remove all dmsetup volumes which may exists on the target host
     dm_device_list.each do |dm_device|
-      run('dmsetup', 'remove', '--force', dm_device, { :err => :close }) \
+      run('dmsetup', 'remove', '--force', dm_device, { :err => '/dev/null' }) \
         rescue true
     end
 
     # switch off all volume groups that may interfere with following operations
     run('vgchange', '-a', 'n', vgname,
-	{ :close_others => :true, :err => :close }) \
+	{ :close_others => :true, :err => '/dev/null' }) \
       rescue true
   end
 
@@ -131,7 +131,8 @@ module DiskHandler
 
   def self.lvm_partition(fs_conf)
     # clean up possible confusing mess from the device
-    run('dd', 'if=/dev/zero', "of=#{ fs_conf['device'] }", 'count=2K')
+    run('dd', 'if=/dev/zero', "of=#{ fs_conf['device'] }", 'count=2K',
+        { :err => '/dev/null' })
 
     # create an lvm partition
     # see http://www.walkernews.net/2007/07/02/how-to-create-linux-lvm-in-3-minutes/
@@ -147,7 +148,8 @@ module DiskHandler
 
   def self.puavo_filesystems(fs_conf, vgname)
     # clean up possible confusing mess from the partition
-    run('dd', 'if=/dev/zero', "of=#{ fs_conf['partition'] }", 'count=1K')
+    run('dd', 'if=/dev/zero', "of=#{ fs_conf['partition'] }", 'count=2K',
+       { :err => '/dev/null' })
 
     # create LVM volume groups
     run('pvcreate', fs_conf['partition'], { :close_others => true })
