@@ -294,7 +294,7 @@ setup_preinstalled_localbootdevice() {
 
 setup_state() {
   mkdir -p /state/etc
-  mount /dev/mapper/puavo-state /state
+  mountpoint -q /state || mount /dev/mapper/puavo-state /state
   cp -aT /etc/puavo /state/etc/puavo
   sync
 }
