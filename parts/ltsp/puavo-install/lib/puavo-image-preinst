@@ -32,7 +32,7 @@ hosttype=
 # is that this might be called from an image that is far in the past or far in
 # the future, and we should do our best and just ignore whatever we do not
 # understand.
-while [ $# -eq 0 ]; do
+while [ $# -ge 2 ]; do
   case "$1" in
     --hosttype) hosttype=$2; shift; shift ;;
     --*)                     shift; shift ;;
