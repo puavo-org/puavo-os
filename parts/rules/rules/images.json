@@ -1,4 +1,10 @@
 {
+  "ltsp-builder-trusty": {
+    "distribution": "trusty",
+    "puppet-classes": "image::builder",
+    "release-name": "Development",
+    "images": []
+  },
   "ltsp-desktop-trusty": {
     "distribution": "trusty",
     "puppet-classes": "image::desktop",
