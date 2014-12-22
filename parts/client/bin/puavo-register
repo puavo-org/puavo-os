@@ -79,7 +79,8 @@ class CmdLine
 
     cmd_args.each do |i|
       case i
-        when /^--( | force
+        when /^--(   authenticate-only
+                   | force
                    | install
                    | update
                    | nocolor
@@ -530,7 +531,19 @@ class PuavoDevicesConnection
 end
 
 class Control
+  def self.authenticate_only(cmdline_params)
+    # XXX cert should not be needed in this case
+    cert = HostCertificate.new
+
+    rui = RegisterUserInterface.new(cmdline_params, cert)
+
+    # the authentication happens here
+    rui.connect_to_puavo()
+  end
+
   def self.register(cmdline_params)
+    HighLine.say "\n\t-=< Puavo Devices Client >=-\n\n"
+
     if File.exists?(Puavo_hostname_path) && !cmdline_params['force']
       Tools.errmsg('Registration is already done and --force is not applied.')
       exit 1
@@ -622,11 +635,11 @@ end
 
 raise 'run me as root' unless Process.uid == 0
 
-HighLine.say "\n\t-=< Puavo Devices Client >=-\n\n"
-
 cmdline_params = CmdLine.params(ARGV)
 
-if cmdline_params["update"]
+if cmdline_params['authenticate-only']
+  Control.authenticate_only(cmdline_params)
+elsif cmdline_params['update']
   Control.update()
 else
   Control.register(cmdline_params)
