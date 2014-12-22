@@ -9,6 +9,9 @@
 // Third-party includes.
 #include <jansson.h>
 
+#define PUAVOADMINS_GRNAM "_puavoadmins"
+#define PUAVOADMINS_GRGID 555
+
 enum nss_status _nss_puavoadmins_getpwuid_r(uid_t,
                                             struct passwd *,
                                             char *,
@@ -293,8 +296,8 @@ static enum nss_status fill_group_members(struct group *const gr,
         }
     }
 
-    gr->gr_name = "_puavoadmins";
-    gr->gr_gid = 555;
+    gr->gr_name = PUAVOADMINS_GRNAM;
+    gr->gr_gid = PUAVOADMINS_GRGID;
     gr->gr_mem = members;
 
     free_json();
@@ -323,7 +326,7 @@ enum nss_status _nss_puavoadmins_getgrnam_r(const char *const name,
                                             int *const errnop) {
     *errnop = 0;
 
-    if (strcmp(name, "_puavoadmins"))
+    if (strcmp(name, PUAVOADMINS_GRNAM))
         return NSS_STATUS_NOTFOUND;
 
     return fill_group_members(gr, buffer, buflen);
@@ -336,7 +339,7 @@ enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
                                             int *const errnop) {
     *errnop = 0;
 
-    if (gid != 555)
+    if (gid != PUAVOADMINS_GRGID)
         return NSS_STATUS_NOTFOUND;
 
     return fill_group_members(gr, buffer, buflen);
