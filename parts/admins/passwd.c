@@ -120,7 +120,7 @@ static enum nss_status populate_passwd(json_t *const user,
     return NSS_STATUS_SUCCESS;
 }
 
-static enum nss_status init_json(void) {
+static int init_json(void) {
     json_error_t error;
 
     if (json_root) {
@@ -131,17 +131,17 @@ static enum nss_status init_json(void) {
     json_root = json_load_file("/etc/puavo/org.json", 0, &error);
 
     if (!json_root) {
-        return NSS_STATUS_UNAVAIL;
+        return -1;
     }
 
     owners = json_object_get(json_root, "owners");
 
     if (!json_is_array(owners)) {
        json_decref(json_root);
-       return NSS_STATUS_UNAVAIL;
+       return -1;
     }
 
-    return NSS_STATUS_SUCCESS;
+    return 0;
 }
 
 static void free_json(void) {
@@ -207,7 +207,11 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
 enum nss_status _nss_puavoadmins_setpwent(void) {
     ent_index = 0;
 
-    return init_json();
+    if (init_json()) {
+	return NSS_STATUS_UNAVAIL;
+    }
+
+    return NSS_STATUS_SUCCESS;
 }
 
 enum nss_status _nss_puavoadmins_endpwent(void) {
