@@ -1,3 +1,10 @@
 class image::builder {
-  include image::bundle::basic
+  include image::bundle::basic,
+	  packages
+
+  Apt::Key        <| title == "opinsys-repo.gpgkey" |>
+  Apt::Repository <| title == repo |>
+
+  # apply only builder package definitions listed in packages
+  Package <| tag == builder |>
 }
