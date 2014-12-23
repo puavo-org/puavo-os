@@ -781,11 +781,15 @@ class packages {
       }
     }
     'trusty': {
-      packages::kernels::kernel_package {
-        '3.2.0-70-generic-pae':
-          package_tag => 'puavo',
-          with_extra  => false;
+      if $architecture == 'i386' {
+        packages::kernels::kernel_package {
+          '3.2.0-70-generic-pae':
+            package_tag => 'puavo',
+            with_extra  => false;
+        }
+      }
 
+      packages::kernels::kernel_package {
         [ '3.13.0-36-generic', '3.13.0-41-generic', ]:
           package_tag => 'puavo';
       }

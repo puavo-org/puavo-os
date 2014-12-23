@@ -37,7 +37,10 @@ class kernels {
 
   $legacy_kernel = $lsbdistcodename ? {
     'precise' => $default_kernel,
-    'trusty'  => '3.2.0-70-generic-pae',
+    'trusty'  => $architecture ? {
+                   'i386'  => '3.2.0-70-generic-pae',
+                   default => $default_kernel,
+                 }
   }
 
   $edge_kernel   = $default_kernel
