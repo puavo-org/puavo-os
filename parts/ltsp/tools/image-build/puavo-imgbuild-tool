@@ -452,7 +452,10 @@ run_in_chroot() {
 }
 
 run_with_setarch() {
-  setarch "$arch" "$@"
+  case "$arch" in
+    amd64) setarch x86_64  "$@" ;;
+    *    ) setarch "$arch" "$@" ;;
+  esac
 }
 
 set_root_password() {

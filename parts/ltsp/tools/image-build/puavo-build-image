@@ -23,12 +23,14 @@ def build_config_target(config_target, config_file)
     unless conf['distribution'].kind_of?(String) \
              && !conf['distribution'].empty?
 
+  arch_args    = imgbuild_args('--arch',           conf, 'arch')
   puppet_args  = imgbuild_args('--puppet-classes', conf, 'puppet-classes')
   release_args = imgbuild_args('--release-name',   conf, 'release-name')
 
   system('/usr/lib/puavo-image-tools/puavo-imgbuild-tool',
          '--build',        config_target,
          '--distribution', conf['distribution'],
+         *arch_args,
          *puppet_args,
          *release_args) \
     or raise "Problem in building '#{ config_target }'"
