@@ -194,31 +194,34 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
                                             char *const buf,
                                             const size_t buflen,
                                             int *const errnop) {
-    json_t *user;
-    json_t *uid_number;
+    struct ctx *ctx;
+    enum nss_status retval = NSS_STATUS_NOTFOUND;
 
-    *errnop = 0;
-
-    if (init_json()) {
-	*errnop = errno;
-	return NSS_STATUS_UNAVAIL;
+    ctx = init_ctx();
+    if (!ctx) {
+        *errnop = errno;
+        return NSS_STATUS_UNAVAIL;
     }
 
-    while (g_ent_index < json_array_size(g_owners)) {
-        user = json_array_get(g_owners, g_ent_index);
-        g_ent_index++;
+    for (size_t i = 0; i < json_array_size(ctx->json_owners); ++i) {
+	json_t *user;
+	json_t *uid_number;
+
+        user = json_array_get(ctx->json_owners, i);
 
         uid_number = json_object_get(user, "uid_number");
 
         if (json_integer_value(uid_number) != uid)
             continue;
 
-        return populate_passwd(user, result, buf, buflen);
+        retval = populate_passwd(user, result, buf, buflen);
+        break;
     }
 
-    free_json();
+    free_ctx(ctx);
+    ctx = NULL;
 
-    return NSS_STATUS_NOTFOUND;
+    return retval;
 }
 
 enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
