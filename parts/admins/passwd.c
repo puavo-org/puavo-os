@@ -217,6 +217,8 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
     }
 
     free_json();
+
+    return NSS_STATUS_NOTFOUND;
 }
 
 enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
@@ -247,6 +249,8 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
     }
 
     free_json();
+
+    return NSS_STATUS_NOTFOUND;
 }
 
 enum nss_status _nss_puavoadmins_setpwent(void) {
