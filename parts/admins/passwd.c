@@ -1,4 +1,5 @@
 // Standard library includes.
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <nss.h>
@@ -198,7 +199,10 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
 
     *errnop = 0;
 
-    init_json();
+    if (init_json()) {
+	*errnop = errno;
+	return NSS_STATUS_UNAVAIL;
+    }
 
     while (g_ent_index < json_array_size(g_owners)) {
         user = json_array_get(g_owners, g_ent_index);
@@ -225,7 +229,10 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
 
     *errnop = 0;
 
-    init_json();
+    if (init_json()) {
+	*errnop = errno;
+	return NSS_STATUS_UNAVAIL;
+    }
 
     while (g_ent_index < json_array_size(g_owners)) {
         user = json_array_get(g_owners, g_ent_index);
@@ -302,8 +309,9 @@ enum nss_status _nss_puavoadmins_endgrent(void) {
 }
 
 static enum nss_status fill_group_members(struct group *const gr,
-                                   char *const buffer,
-                                   const size_t buflen) {
+					  char *const buffer,
+					  const size_t buflen,
+					  int *const errnop) {
     json_t *user;
     json_t *username;
     char **members;
@@ -313,7 +321,10 @@ static enum nss_status fill_group_members(struct group *const gr,
     size_t i;
     int username_len;
 
-    init_json();
+    if (init_json()) {
+	*errnop = errno;
+	return NSS_STATUS_UNAVAIL;
+    }
 
     memset(buffer, 0, buflen);
     member_count = json_array_size(g_owners);
@@ -358,7 +369,7 @@ enum nss_status _nss_puavoadmins_getgrent_r(struct group *const gr,
 
     g_group_called = 1;
 
-    return fill_group_members(gr, buffer, buflen);
+    return fill_group_members(gr, buffer, buflen, errnop);
 }
 
 enum nss_status _nss_puavoadmins_getgrnam_r(const char *const name,
@@ -371,7 +382,7 @@ enum nss_status _nss_puavoadmins_getgrnam_r(const char *const name,
     if (strcmp(name, PUAVOADMINS_GRNAM))
         return NSS_STATUS_NOTFOUND;
 
-    return fill_group_members(gr, buffer, buflen);
+    return fill_group_members(gr, buffer, buflen, errnop);
 }
 
 enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
@@ -384,5 +395,5 @@ enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
     if (gid != PUAVOADMINS_GRGID)
         return NSS_STATUS_NOTFOUND;
 
-    return fill_group_members(gr, buffer, buflen);
+    return fill_group_members(gr, buffer, buflen, errnop);
 }
