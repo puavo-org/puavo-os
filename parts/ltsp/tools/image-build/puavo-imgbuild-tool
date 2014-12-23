@@ -332,7 +332,7 @@ set_debconf_seeds() {
       && debconf_seeding_ok=true
   done
 
-  if !$debconf_seeding_ok; then
+  if ! $debconf_seeding_ok; then
     echo "Could not find a debconf seed file for image '$(get_imagetype)'" >&2
     return 1
   fi
