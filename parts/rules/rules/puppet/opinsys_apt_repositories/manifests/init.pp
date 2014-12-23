@@ -2,6 +2,7 @@ class opinsys_apt_repositories {
   include apt
 
   $subdir = $lsbdistcodename ? {
+              'precise' => 'git-precise',
               'quantal' => 'git-legacy1',
               default   => "git-master",
             }
