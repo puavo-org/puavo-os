@@ -259,7 +259,7 @@ ask_and_set_image_information() {
 build_chroot() {
   wipe_chroot
 
-  run_with_setarch \
+  run_with_setarch "$arch" \
     debootstrap --arch="$arch" \
                 --components=main,restricted,universe,multiverse \
                 "$distribution" "$target_dir" "$mirror_maybe_proxied"
@@ -436,16 +436,23 @@ install_packages() {
 }
 
 run_in_chroot() {
-  do_mounts                                                        || return $?
-  run_with_setarch chroot "$target_dir" env DISABLE_DAEMONS=1 "$@" || return $?
-  do_umounts                                                       || return $?
+  do_mounts                                         || return $?
+  run_with_setarch_from_chroot \
+    chroot "$target_dir" env DISABLE_DAEMONS=1 "$@" || return $?
+  do_umounts                                        || return $?
 }
 
 run_with_setarch() {
-  case "$arch" in
-    amd64) setarch x86_64  "$@" ;;
-    *    ) setarch "$arch" "$@" ;;
+  setarch_arch=$1; shift
+  case "$setarch_arch" in
+    amd64) setarch x86_64          "$@" ;;
+    *    ) setarch "$setarch_arch" "$@" ;;
   esac
+}
+
+run_with_setarch_from_chroot() {
+  run_with_setarch "$(chroot "$target_dir" dpkg --print-architecture)" \
+                   "$@"
 }
 
 set_root_password() {
