@@ -2,43 +2,31 @@ class kernels {
   include kernels::grub_update
   require packages
 
-  define default_kernel_link {
-    $filename = $title
-
+  define kernel_link ($kernel, $linkname, $linksuffix) {
     file {
-      "/boot/$filename":
-       ensure => link,
-       target => "${filename}-${kernels::default_kernel}";
+      "/boot/${linkname}${linksuffix}":
+        ensure  => link,
+        require => Packages::Kernels::Kernel_package[$kernel],
+        target  => "${linkname}-${kernel}";
     }
+
+    Packages::Kernels::Kernel_package <| title == $kernel |>
   }
 
-  define edge_kernel_link {
-    $filename = $title
+  define all_kernel_links ($kernel='') {
+    $subname = $title
 
-    file {
-      "/boot/$filename-edge":
-       ensure => link,
-       target => "${filename}-${kernels::edge_kernel}";
-    }
-  }
+    $linksuffix = $subname ? { 'default' => '', default => "-$subname", }
 
-  define legacy_kernel_link {
-    $filename = $title
+    kernel_link {
+      "initrd.img-${kernel}-${subname}":
+        kernel => $kernel, linkname => 'initrd.img', linksuffix => $linksuffix;
 
-    file {
-      "/boot/$filename-legacy":
-       ensure => link,
-       target => "${filename}-${kernels::legacy_kernel}";
-    }
-  }
+      "nbi.img-${kernel}-${subname}":
+        kernel => $kernel, linkname => 'nbi.img', linksuffix => $linksuffix;
 
-  define stable_kernel_link {
-    $filename = $title
-
-    file {
-      "/boot/$filename-stable":
-       ensure => link,
-       target => "${filename}-${kernels::stable_kernel}";
+      "vmlinuz-${kernel}-${subname}":
+        kernel => $kernel, linkname => 'vmlinuz', linksuffix => $linksuffix;
     }
   }
 
@@ -47,48 +35,22 @@ class kernels {
     'trusty'  => '3.13.0-41-generic',
   }
 
-  $edge_kernel = $lsbdistcodename ? {
-    'precise' => $default_kernel,
-    'trusty'  => $default_kernel,
-  }
-
   $legacy_kernel = $lsbdistcodename ? {
     'precise' => $default_kernel,
     'trusty'  => '3.2.0-70-generic-pae',
   }
 
-  $stable_kernel = $lsbdistcodename ? {
-    'precise' => $default_kernel,
-    'trusty'  => $default_kernel,
-  }
+  $edge_kernel   = $default_kernel
+  $stable_kernel = $default_kernel
 
   case $lsbdistcodename {
     'precise', 'trusty': {
-
-      default_kernel_link {
-        [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
-          require => Packages::Kernels::Kernel_package[$default_kernel];
+      all_kernel_links {
+        'default': kernel => $default_kernel;
+        'edge':    kernel => $edge_kernel;
+        'legacy':  kernel => $legacy_kernel;
+        'stable':  kernel => $stable_kernel;
       }
-
-      edge_kernel_link {
-        [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
-          require => Packages::Kernels::Kernel_package[$edge_kernel];
-      }
-
-      legacy_kernel_link {
-        [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
-          require => Packages::Kernels::Kernel_package[$legacy_kernel];
-      }
-
-      stable_kernel_link {
-        [ 'initrd.img', 'nbi.img', 'vmlinuz', ]:
-          require => Packages::Kernels::Kernel_package[$stable_kernel];
-      }
-
-      Packages::Kernels::Kernel_package <| title == $default_kernel |>
-      Packages::Kernels::Kernel_package <| title == $edge_kernel    |>
-      Packages::Kernels::Kernel_package <| title == $legacy_kernel  |>
-      Packages::Kernels::Kernel_package <| title == $stable_kernel  |>
     }
   }
 }
