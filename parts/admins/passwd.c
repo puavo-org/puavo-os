@@ -44,9 +44,9 @@ enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
                                             size_t buflen,
                                             int *errnop);
 
-static size_t ent_index;
-static json_t *json_root;
-static json_t *owners;
+static size_t g_ent_index;
+static json_t *g_json_root;
+static json_t *g_owners;
 
 static enum nss_status populate_passwd(json_t *const user,
                                        struct passwd *const pw,
@@ -121,21 +121,21 @@ static enum nss_status populate_passwd(json_t *const user,
 }
 
 static int init_json(void) {
-    if (json_root) {
-      json_decref(json_root);
-      json_root = NULL;
+    if (g_json_root) {
+      json_decref(g_json_root);
+      g_json_root = NULL;
     }
 
-    json_root = json_load_file("/etc/puavo/org.json", 0, NULL);
+    g_json_root = json_load_file("/etc/puavo/org.json", 0, NULL);
 
-    if (!json_root) {
+    if (!g_json_root) {
         return -1;
     }
 
-    owners = json_object_get(json_root, "owners");
+    g_owners = json_object_get(g_json_root, "owners");
 
-    if (!json_is_array(owners)) {
-       json_decref(json_root);
+    if (!json_is_array(g_owners)) {
+       json_decref(g_json_root);
        return -1;
     }
 
@@ -143,9 +143,9 @@ static int init_json(void) {
 }
 
 static void free_json(void) {
-    json_decref(json_root);
-    json_root = NULL;
-    owners = NULL;
+    json_decref(g_json_root);
+    g_json_root = NULL;
+    g_owners = NULL;
 }
 
 enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
@@ -160,9 +160,9 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
 
     init_json();
 
-    while (ent_index < json_array_size(owners)) {
-        user = json_array_get(owners, ent_index);
-        ent_index++;
+    while (g_ent_index < json_array_size(g_owners)) {
+        user = json_array_get(g_owners, g_ent_index);
+        g_ent_index++;
 
         uid_number = json_object_get(user, "uid_number");
 
@@ -187,9 +187,9 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
 
     init_json();
 
-    while (ent_index < json_array_size(owners)) {
-        user = json_array_get(owners, ent_index);
-        ent_index++;
+    while (g_ent_index < json_array_size(g_owners)) {
+        user = json_array_get(g_owners, g_ent_index);
+        g_ent_index++;
 
         username = json_object_get(user, "username");
 
@@ -203,7 +203,7 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
 }
 
 enum nss_status _nss_puavoadmins_setpwent(void) {
-    ent_index = 0;
+    g_ent_index = 0;
 
     if (init_json()) {
 	return NSS_STATUS_UNAVAIL;
@@ -231,9 +231,9 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
         return NSS_STATUS_UNAVAIL;
     }
 
-    while (ent_index < json_array_size(owners)) {
-        user = json_array_get(owners, ent_index);
-        ent_index++;
+    while (g_ent_index < json_array_size(g_owners)) {
+        user = json_array_get(g_owners, g_ent_index);
+        g_ent_index++;
 
         ret = populate_passwd(user, pw, buf, buflen);
 
@@ -247,10 +247,10 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
 }
 
 
-static int group_called = 0;
+static int g_group_called = 0;
 
 enum nss_status _nss_puavoadmins_setgrent(void) {
-    group_called = 0;
+    g_group_called = 0;
 
     return NSS_STATUS_SUCCESS;
 }
@@ -276,12 +276,12 @@ static enum nss_status fill_group_members(struct group *const gr,
     init_json();
 
     memset(buffer, 0, buflen);
-    member_count = json_array_size(owners);
+    member_count = json_array_size(g_owners);
     members = (char **)buffer;
     member = buffer + sizeof(char *) * (member_count + 1);
 
-    for (i=0; i < json_array_size(owners); i++) {
-        user = json_array_get(owners, i);
+    for (i=0; i < json_array_size(g_owners); i++) {
+        user = json_array_get(g_owners, i);
         username = json_object_get(user, "username");
 
         if (username && json_is_string(username)) {
@@ -313,10 +313,10 @@ enum nss_status _nss_puavoadmins_getgrent_r(struct group *const gr,
                                             int *const errnop) {
     *errnop = 0;
 
-    if (group_called)
+    if (g_group_called)
         return NSS_STATUS_NOTFOUND;
 
-    group_called = 1;
+    g_group_called = 1;
 
     return fill_group_members(gr, buffer, buflen);
 }
