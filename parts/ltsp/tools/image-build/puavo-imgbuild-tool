@@ -54,7 +54,6 @@ Usage:
     --apt-proxy    [default is "localhost:3142", "no" may be used to turn off]
     --arch         [default is "i386"]
     --distribution [default is "trusty"]
-    --gitbranch    [default is "master"]
     --mirror       [default is "archive.ubuntu.com"]
 
 EOF
@@ -91,7 +90,7 @@ get_imagetype() {
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,install-packages,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,buildrules-dirs:,builds-dir:,distribution:,gitbranch:,images-dir:,mirror:,puppet-classes:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
+              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,install-packages,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,buildrules-dirs:,builds-dir:,distribution:,images-dir:,mirror:,puppet-classes:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
               -- "$@"); then
   usage
 fi
@@ -99,7 +98,6 @@ fi
 # defaults for these parameters (can be overridden on the command line args)
 arch=i386
 distribution=trusty
-gitbranch=master
 
 imagetype=
 puppet_classes=
@@ -154,9 +152,6 @@ while [ $# -ne 0 ]; do
       ;;
     --distribution)
       distribution=$2; shift; shift
-      ;;
-    --gitbranch)
-      gitbranch=$2; shift; shift
       ;;
     --imagebuild-sources-dir)
       imagebuild_sources_dir=$2; shift; shift
@@ -279,13 +274,6 @@ EOF
 deb http://${mirror}/ubuntu $distribution main restricted universe multiverse
 EOF
   fi
-
-  # setup apt sources list
-
-  cat <<EOF > "$target_dir/etc/apt/sources.list.d/archive.list"
-deb http://archive.opinsys.fi/git-$gitbranch $distribution main restricted universe multiverse
-deb-src http://archive.opinsys.fi/git-$gitbranch $distribution main restricted universe multiverse
-EOF
 
   # setup policy-rc.d (so that daemons are not started when installing)
 
