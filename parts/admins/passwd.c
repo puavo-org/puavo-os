@@ -120,6 +120,46 @@ static enum nss_status populate_passwd(json_t *const user,
     return NSS_STATUS_SUCCESS;
 }
 
+struct ctx {
+    json_t *json_root;
+    json_t *json_owners;
+};
+
+static struct ctx *init_ctx(void)
+{
+    struct ctx *ctx;
+
+    ctx = malloc(sizeof(struct ctx));
+    if (!ctx)
+        return NULL;
+
+    ctx->json_root = json_load_file("/etc/puavo/org.json", 0, NULL);
+    if (!ctx->json_root) {
+        free(ctx);
+        return NULL;
+    }
+
+    ctx->json_owners = json_object_get(ctx->json_root, "owners");
+    if (!json_is_array(ctx->json_owners)) {
+        json_decref(ctx->json_root);
+        free(ctx);
+        return NULL;
+    }
+
+    return ctx;
+}
+
+static void free_ctx(struct ctx *const ctx)
+{
+    if (!ctx)
+        return;
+
+    if (ctx->json_root)
+        json_decref(ctx->json_root);
+
+    free(ctx);
+}
+
 static int init_json(void) {
     if (g_json_root) {
       json_decref(g_json_root);
