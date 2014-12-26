@@ -80,6 +80,7 @@ static enum nss_status fill_group_members(json_t *json_owners,
     }
 
     gr->gr_name = PUAVOADMINS_GRNAM;
+    gr->gr_passwd = "x";
     gr->gr_gid = PUAVOADMINS_GRGID;
     gr->gr_mem = members;
 
