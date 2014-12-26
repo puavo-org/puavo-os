@@ -31,30 +31,20 @@ static enum nss_status populate_passwd(json_t *const user,
     first_name = json_object_get(user, "first_name");
     last_name = json_object_get(user, "last_name");
 
-    if (!json_is_string(username)) {
-//        fprintf(stderr, "error: username is not a string\n");
+    if (!json_is_string(username))
         return NSS_STATUS_UNAVAIL;
-    }
 
-    if (!json_is_integer(uid_number)) {
-//        fprintf(stderr, "error: uid_number is not an integer\n");
+    if (!json_is_integer(uid_number))
         return NSS_STATUS_UNAVAIL;
-    }
 
-    if (!json_is_integer(gid_number)) {
-//        fprintf(stderr, "error: gid_number is not an integer\n");
+    if (!json_is_integer(gid_number))
         return NSS_STATUS_UNAVAIL;
-    }
 
-    if (!json_is_string(first_name)) {
-//        fprintf(stderr, "error: first_name is not a string\n");
+    if (!json_is_string(first_name))
         return NSS_STATUS_UNAVAIL;
-    }
 
-    if (!json_is_string(last_name)) {
-//        fprintf(stderr, "error: last_name is not a string\n");
+    if (!json_is_string(last_name))
         return NSS_STATUS_UNAVAIL;
-    }
 
     username_size = strlen(json_string_value(username)) + 1;
     gecos_size = strlen(json_string_value(first_name)) + 1
