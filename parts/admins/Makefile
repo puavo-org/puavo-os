@@ -7,7 +7,7 @@ INSTALL_DATA = $(INSTALL) -m 644
 
 all: $(modules)
 
-libnss_puavoadmins.so.2: passwd.o
+libnss_puavoadmins.so.2: passwd.o group.o ctx.o
 	gcc -shared -o $@ -Wl,-soname,$@ $^ -ljansson
 
 %.o: %.c
