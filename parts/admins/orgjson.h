@@ -8,7 +8,9 @@ struct orgjson {
     json_t *owners;
 };
 
-struct orgjson *orgjson_load(void);
-void orgjson_free(struct orgjson *const orgjson);
+typedef struct orgjson orgjson_t;
+
+orgjson_t *orgjson_load(void);
+void orgjson_free(orgjson_t *const orgjson);
 
 #endif // ORGJSON_H

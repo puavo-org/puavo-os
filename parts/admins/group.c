@@ -75,7 +75,7 @@ enum nss_status _nss_puavoadmins_getgrent_r(struct group *const gr,
                                             const size_t buflen,
                                             int *const errnop) {
     enum nss_status retval;
-    struct orgjson *orgjson;
+    orgjson_t *orgjson;
 
     *errnop = 0;
 
@@ -104,7 +104,7 @@ enum nss_status _nss_puavoadmins_getgrnam_r(const char *const name,
                                             const size_t buflen,
                                             int *const errnop) {
     enum nss_status retval;
-    struct orgjson *orgjson;
+    orgjson_t *orgjson;
 
     *errnop = 0;
 
@@ -131,7 +131,7 @@ enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
                                             const size_t buflen,
                                             int *const errnop) {
     enum nss_status retval;
-    struct orgjson *orgjson;
+    orgjson_t *orgjson;
 
     *errnop = 0;
 

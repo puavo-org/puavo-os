@@ -9,7 +9,7 @@
 #include "orgjson.h"
 
 static size_t g_ent_index;
-static struct orgjson *g_orgjson;
+static orgjson_t *g_orgjson;
 
 static enum nss_status populate_passwd(json_t *const user,
                                        struct passwd *const pw,
@@ -88,7 +88,7 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
                                             char *const buf,
                                             const size_t buflen,
                                             int *const errnop) {
-    struct orgjson *orgjson;
+    orgjson_t *orgjson;
     enum nss_status retval = NSS_STATUS_NOTFOUND;
 
     orgjson = orgjson_load();
@@ -123,7 +123,7 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
                                             char *const buf,
                                             const size_t buflen,
                                             int *const errnop) {
-    struct orgjson *orgjson;
+    orgjson_t *orgjson;
     enum nss_status retval = NSS_STATUS_NOTFOUND;
 
     orgjson = orgjson_load();

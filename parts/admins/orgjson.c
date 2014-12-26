@@ -3,11 +3,11 @@
 
 #include "orgjson.h"
 
-struct orgjson *orgjson_load(void)
+orgjson_t *orgjson_load(void)
 {
-    struct orgjson *orgjson;
+    orgjson_t *orgjson;
 
-    orgjson = malloc(sizeof(struct orgjson));
+    orgjson = malloc(sizeof(orgjson_t));
     if (!orgjson)
         return NULL;
 
@@ -27,7 +27,7 @@ struct orgjson *orgjson_load(void)
     return orgjson;
 }
 
-void orgjson_free(struct orgjson *const orgjson)
+void orgjson_free(orgjson_t *const orgjson)
 {
     if (!orgjson)
         return;
