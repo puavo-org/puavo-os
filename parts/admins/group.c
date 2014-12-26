@@ -11,23 +11,6 @@
 #define PUAVOADMINS_GRNAM "_puavoadmins"
 #define PUAVOADMINS_GRGID 555
 
-enum nss_status _nss_puavoadmins_setgrent(void);
-enum nss_status _nss_puavoadmins_endgrent(void);
-enum nss_status _nss_puavoadmins_getgrent_r(struct group *gr,
-                                            char *buffer,
-                                            size_t buflen,
-                                            int *errnop);
-enum nss_status _nss_puavoadmins_getgrnam_r(const char *name,
-                                            struct group *gr,
-                                            char *buffer,
-                                            size_t buflen,
-                                            int *errnop);
-enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
-                                            struct group *gr,
-                                            char *buffer,
-                                            size_t buflen,
-                                            int *errnop);
-
 static int g_group_called = 0;
 
 enum nss_status _nss_puavoadmins_setgrent(void) {

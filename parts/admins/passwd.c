@@ -8,21 +8,6 @@
 
 #include "ctx.h"
 
-enum nss_status _nss_puavoadmins_getpwuid_r(uid_t,
-                                            struct passwd *,
-                                            char *,
-                                            size_t,
-                                            int *);
-enum nss_status _nss_puavoadmins_setpwent(void);
-enum nss_status _nss_puavoadmins_endpwent(void);
-enum nss_status _nss_puavoadmins_getpwnam_r(const char *,
-                                            struct passwd *,
-                                            char *,
-                                            size_t, int *);
-enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *,
-                                            char *,
-                                            size_t, int *);
-
 static size_t g_ent_index;
 static struct ctx *g_ctx;
 
