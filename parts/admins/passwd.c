@@ -6,10 +6,10 @@
 #include <grp.h>
 #include <sys/types.h>
 
-#include "ctx.h"
+#include "orgjson.h"
 
 static size_t g_ent_index;
-static struct ctx *g_ctx;
+static struct orgjson *g_orgjson;
 
 static enum nss_status populate_passwd(json_t *const user,
                                        struct passwd *const pw,
@@ -88,20 +88,20 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
                                             char *const buf,
                                             const size_t buflen,
                                             int *const errnop) {
-    struct ctx *ctx;
+    struct orgjson *orgjson;
     enum nss_status retval = NSS_STATUS_NOTFOUND;
 
-    ctx = init_ctx();
-    if (!ctx) {
+    orgjson = orgjson_load();
+    if (!orgjson) {
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
     }
 
-    for (size_t i = 0; i < json_array_size(ctx->json_owners); ++i) {
+    for (size_t i = 0; i < json_array_size(orgjson->owners); ++i) {
 	json_t *user;
 	json_t *uid_number;
 
-        user = json_array_get(ctx->json_owners, i);
+        user = json_array_get(orgjson->owners, i);
 
         uid_number = json_object_get(user, "uid_number");
 
@@ -112,8 +112,8 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
         break;
     }
 
-    free_ctx(ctx);
-    ctx = NULL;
+    orgjson_free(orgjson);
+    orgjson = NULL;
 
     return retval;
 }
@@ -123,20 +123,20 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
                                             char *const buf,
                                             const size_t buflen,
                                             int *const errnop) {
-    struct ctx *ctx;
+    struct orgjson *orgjson;
     enum nss_status retval = NSS_STATUS_NOTFOUND;
 
-    ctx = init_ctx();
-    if (!ctx) {
+    orgjson = orgjson_load();
+    if (!orgjson) {
 	*errnop = errno;
 	return NSS_STATUS_UNAVAIL;
     }
 
-    for (size_t i = 0; i < json_array_size(ctx->json_owners); ++i) {
+    for (size_t i = 0; i < json_array_size(orgjson->owners); ++i) {
 	json_t *user;
 	json_t *username;
 
-        user = json_array_get(ctx->json_owners, i);
+        user = json_array_get(orgjson->owners, i);
 
         username = json_object_get(user, "username");
 
@@ -147,8 +147,8 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
 	break;
     }
 
-    free_ctx(ctx);
-    ctx = NULL;
+    orgjson_free(orgjson);
+    orgjson = NULL;
 
     return retval;
 }
@@ -156,16 +156,16 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
 enum nss_status _nss_puavoadmins_setpwent(void) {
     g_ent_index = 0;
 
-    g_ctx = init_ctx();
-    if (!g_ctx)
+    g_orgjson = orgjson_load();
+    if (!g_orgjson)
 	return NSS_STATUS_UNAVAIL;
 
     return NSS_STATUS_SUCCESS;
 }
 
 enum nss_status _nss_puavoadmins_endpwent(void) {
-    free_ctx(g_ctx);
-    g_ctx = NULL;
+    orgjson_free(g_orgjson);
+    g_orgjson = NULL;
 
     return NSS_STATUS_SUCCESS;
 }
@@ -183,8 +183,8 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
         return NSS_STATUS_UNAVAIL;
     }
 
-    while (g_ent_index < json_array_size(g_ctx->json_owners)) {
-        user = json_array_get(g_ctx->json_owners, g_ent_index);
+    while (g_ent_index < json_array_size(g_orgjson->owners)) {
+        user = json_array_get(g_orgjson->owners, g_ent_index);
         g_ent_index++;
 
         ret = populate_passwd(user, pw, buf, buflen);

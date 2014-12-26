@@ -6,7 +6,7 @@
 #include <grp.h>
 #include <sys/types.h>
 
-#include "ctx.h"
+#include "orgjson.h"
 
 #define PUAVOADMINS_GRNAM "_puavoadmins"
 #define PUAVOADMINS_GRGID 555
@@ -75,25 +75,25 @@ enum nss_status _nss_puavoadmins_getgrent_r(struct group *const gr,
                                             const size_t buflen,
                                             int *const errnop) {
     enum nss_status retval;
-    struct ctx *ctx;
+    struct orgjson *orgjson;
 
     *errnop = 0;
 
     if (g_group_called)
         return NSS_STATUS_NOTFOUND;
 
-    ctx = init_ctx();
-    if (!ctx) {
+    orgjson = orgjson_load();
+    if (!orgjson) {
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
     }
 
     g_group_called = 1;
 
-    retval = fill_group_members(ctx->json_owners, gr, buffer, buflen, errnop);
+    retval = fill_group_members(orgjson->owners, gr, buffer, buflen, errnop);
 
-    free_ctx(ctx);
-    ctx = NULL;
+    orgjson_free(orgjson);
+    orgjson = NULL;
 
     return retval;
 }
@@ -104,23 +104,23 @@ enum nss_status _nss_puavoadmins_getgrnam_r(const char *const name,
                                             const size_t buflen,
                                             int *const errnop) {
     enum nss_status retval;
-    struct ctx *ctx;
+    struct orgjson *orgjson;
 
     *errnop = 0;
 
     if (strcmp(name, PUAVOADMINS_GRNAM))
         return NSS_STATUS_NOTFOUND;
 
-    ctx = init_ctx();
-    if (!ctx) {
+    orgjson = orgjson_load();
+    if (!orgjson) {
 	*errnop = errno;
 	return NSS_STATUS_UNAVAIL;
     }
 
-    retval = fill_group_members(ctx->json_owners, gr, buffer, buflen, errnop);
+    retval = fill_group_members(orgjson->owners, gr, buffer, buflen, errnop);
 
-    free_ctx(ctx);
-    ctx = NULL;
+    orgjson_free(orgjson);
+    orgjson = NULL;
 
     return retval;
 }
@@ -131,23 +131,23 @@ enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
                                             const size_t buflen,
                                             int *const errnop) {
     enum nss_status retval;
-    struct ctx *ctx;
+    struct orgjson *orgjson;
 
     *errnop = 0;
 
     if (gid != PUAVOADMINS_GRGID)
         return NSS_STATUS_NOTFOUND;
 
-    ctx = init_ctx();
-    if (!ctx) {
+    orgjson = orgjson_load();
+    if (!orgjson) {
 	*errnop = errno;
 	return NSS_STATUS_UNAVAIL;
     }
 
-    retval = fill_group_members(ctx->json_owners, gr, buffer, buflen, errnop);
+    retval = fill_group_members(orgjson->owners, gr, buffer, buflen, errnop);
 
-    free_ctx(ctx);
-    ctx = NULL;
+    orgjson_free(orgjson);
+    orgjson = NULL;
 
     return retval;
 }
