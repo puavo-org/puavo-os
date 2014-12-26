@@ -46,8 +46,7 @@ enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
                                             int *errnop);
 
 static size_t g_ent_index;
-static json_t *g_json_root;
-static json_t *g_owners;
+static struct ctx *g_ctx;
 
 static enum nss_status populate_passwd(json_t *const user,
                                        struct passwd *const pw,
@@ -161,34 +160,6 @@ static void free_ctx(struct ctx *const ctx)
     free(ctx);
 }
 
-static int init_json(void) {
-    if (g_json_root) {
-      json_decref(g_json_root);
-      g_json_root = NULL;
-    }
-
-    g_json_root = json_load_file("/etc/puavo/org.json", 0, NULL);
-
-    if (!g_json_root) {
-        return -1;
-    }
-
-    g_owners = json_object_get(g_json_root, "owners");
-
-    if (!json_is_array(g_owners)) {
-       json_decref(g_json_root);
-       return -1;
-    }
-
-    return 0;
-}
-
-static void free_json(void) {
-    json_decref(g_json_root);
-    g_json_root = NULL;
-    g_owners = NULL;
-}
-
 enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
                                             struct passwd *const result,
                                             char *const buf,
@@ -262,15 +233,16 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
 enum nss_status _nss_puavoadmins_setpwent(void) {
     g_ent_index = 0;
 
-    if (init_json()) {
+    g_ctx = init_ctx();
+    if (!g_ctx)
 	return NSS_STATUS_UNAVAIL;
-    }
 
     return NSS_STATUS_SUCCESS;
 }
 
 enum nss_status _nss_puavoadmins_endpwent(void) {
-    free_json();
+    free_ctx(g_ctx);
+    g_ctx = NULL;
 
     return NSS_STATUS_SUCCESS;
 }
@@ -288,8 +260,8 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
         return NSS_STATUS_UNAVAIL;
     }
 
-    while (g_ent_index < json_array_size(g_owners)) {
-        user = json_array_get(g_owners, g_ent_index);
+    while (g_ent_index < json_array_size(g_ctx->json_owners)) {
+        user = json_array_get(g_ctx->json_owners, g_ent_index);
         g_ent_index++;
 
         ret = populate_passwd(user, pw, buf, buflen);
