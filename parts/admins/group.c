@@ -25,7 +25,7 @@ enum nss_status _nss_puavoadmins_endgrent(void) {
     return NSS_STATUS_SUCCESS;
 }
 
-static enum nss_status fill_group_members(json_t *json_owners,
+static enum nss_status fill_group_members(json_t *const json_owners,
 					  struct group *const gr,
 					  char *const buffer,
 					  const size_t buflen,
