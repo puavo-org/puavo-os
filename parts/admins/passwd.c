@@ -11,60 +11,33 @@
 static size_t g_ent_index;
 static orgjson_t *g_orgjson;
 
-static enum nss_status populate_passwd(json_t *const user,
+static enum nss_status populate_passwd(struct orgjson_owner *owner,
                                        struct passwd *const pw,
                                        char *const buf,
                                        const size_t buflen) {
     static const char *const ADM_HOME_PATH = "/adm-home/";
-    json_t *username;
-    json_t *uid_number;
-    json_t *gid_number;
-    json_t *first_name;
-    json_t *last_name;
     size_t username_size;
     size_t gecos_size;
     size_t home_size;
 
-    username = json_object_get(user, "username");
-    uid_number = json_object_get(user, "uid_number");
-    gid_number = json_object_get(user, "gid_number");
-    first_name = json_object_get(user, "first_name");
-    last_name = json_object_get(user, "last_name");
-
-    if (!json_is_string(username))
-        return NSS_STATUS_UNAVAIL;
-
-    if (!json_is_integer(uid_number))
-        return NSS_STATUS_UNAVAIL;
-
-    if (!json_is_integer(gid_number))
-        return NSS_STATUS_UNAVAIL;
-
-    if (!json_is_string(first_name))
-        return NSS_STATUS_UNAVAIL;
-
-    if (!json_is_string(last_name))
-        return NSS_STATUS_UNAVAIL;
-
-    username_size = strlen(json_string_value(username)) + 1;
-    gecos_size = strlen(json_string_value(first_name)) + 1
-            + strlen(json_string_value(last_name)) + 1;
+    username_size = strlen(owner->username) + 1;
+    gecos_size = strlen(owner->first_name) + 1
+        + strlen(owner->last_name) + 1;
     home_size = strlen(ADM_HOME_PATH)
-            + strlen(json_string_value(username)) + 1;
+            + strlen(owner->username) + 1;
 
     if ((username_size + gecos_size + home_size) > buflen)
         return NSS_STATUS_TRYAGAIN;
 
-    snprintf(buf, username_size, "%s", json_string_value(username));
+    snprintf(buf, username_size, "%s", owner->username);
     snprintf(buf + username_size, gecos_size, "%s %s",
-             json_string_value(first_name),
-             json_string_value(last_name));
+             owner->first_name, owner->last_name);
     snprintf(buf + username_size + gecos_size, home_size, "%s%s",
-             ADM_HOME_PATH, json_string_value(username));
+             ADM_HOME_PATH, owner->username);
 
     pw->pw_name = buf;
-    pw->pw_uid = json_integer_value(uid_number);
-    pw->pw_gid = json_integer_value(gid_number);
+    pw->pw_uid = owner->uid_number;
+    pw->pw_gid = owner->gid_number;
     pw->pw_passwd = "x";
     pw->pw_gecos = buf + username_size;
     pw->pw_dir = buf + username_size + gecos_size;
@@ -88,17 +61,17 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
     }
 
     for (size_t i = 0; i < json_array_size(orgjson->owners); ++i) {
-	json_t *user;
-	json_t *uid_number;
+        struct orgjson_owner owner;
 
-        user = json_array_get(orgjson->owners, i);
+        if (!orgjson_get_owner(orgjson, i, &owner)) {
+            retval = NSS_STATUS_UNAVAIL;
+            break;
+        }
 
-        uid_number = json_object_get(user, "uid_number");
-
-        if (json_integer_value(uid_number) != uid)
+        if (owner.uid_number != uid)
             continue;
 
-        retval = populate_passwd(user, result, buf, buflen);
+        retval = populate_passwd(&owner, result, buf, buflen);
         break;
     }
 
@@ -123,18 +96,18 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
     }
 
     for (size_t i = 0; i < json_array_size(orgjson->owners); ++i) {
-	json_t *user;
-	json_t *username;
+        struct orgjson_owner owner;
 
-        user = json_array_get(orgjson->owners, i);
+        if (!orgjson_get_owner(orgjson, i, &owner)) {
+            retval = NSS_STATUS_UNAVAIL;
+            break;
+        }
 
-        username = json_object_get(user, "username");
-
-        if (strcmp(name, json_string_value(username)))
+        if (strcmp(name, owner.username))
             continue;
 
-        retval = populate_passwd(user, result, buf, buflen);
-	break;
+        retval = populate_passwd(&owner, result, buf, buflen);
+        break;
     }
 
     orgjson_free(orgjson);
@@ -164,7 +137,6 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
                                             char *const buf,
                                             const size_t buflen,
                                             int *const errnop) {
-    json_t *user;
     enum nss_status ret;
 
     *errnop = 0;
@@ -174,10 +146,12 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
     }
 
     while (g_ent_index < json_array_size(g_orgjson->owners)) {
-        user = json_array_get(g_orgjson->owners, g_ent_index);
-        g_ent_index++;
+        struct orgjson_owner owner;
 
-        ret = populate_passwd(user, pw, buf, buflen);
+        if (!orgjson_get_owner(g_orgjson, g_ent_index++, &owner))
+            continue;
+
+        ret = populate_passwd(&owner, pw, buf, buflen);
 
         if (ret == NSS_STATUS_UNAVAIL)
             continue;
