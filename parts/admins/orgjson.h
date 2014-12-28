@@ -3,8 +3,6 @@
 
 #include <sys/types.h>
 
-#include <jansson.h>
-
 struct orgjson_owner {
     const char *username;
     const char *first_name;
@@ -13,11 +11,7 @@ struct orgjson_owner {
     gid_t gid_number;
 };
 
-struct orgjson {
-    json_t *root;
-    json_t *owners;
-};
-
+// Opaque type representing parsed /etc/puavo/org.json.
 typedef struct orgjson orgjson_t;
 
 orgjson_t *orgjson_load(void);

@@ -1,7 +1,14 @@
 // Standard library includes.
 #include <stdlib.h>
 
+#include <jansson.h>
+
 #include "orgjson.h"
+
+struct orgjson {
+    json_t *root;
+    json_t *owners;
+};
 
 orgjson_t *orgjson_load(void)
 {
