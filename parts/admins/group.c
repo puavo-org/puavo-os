@@ -26,10 +26,10 @@ enum nss_status _nss_puavoadmins_endgrent(void) {
 }
 
 static enum nss_status fill_group_members(json_t *const json_owners,
-					  struct group *const gr,
-					  char *const buffer,
-					  const size_t buflen,
-					  int *const errnop) {
+                                          struct group *const gr,
+                                          char *const buffer,
+                                          const size_t buflen,
+                                          int *const errnop) {
     json_t *user;
     json_t *username;
     char **members;
@@ -113,8 +113,8 @@ enum nss_status _nss_puavoadmins_getgrnam_r(const char *const name,
 
     orgjson = orgjson_load();
     if (!orgjson) {
-	*errnop = errno;
-	return NSS_STATUS_UNAVAIL;
+        *errnop = errno;
+        return NSS_STATUS_UNAVAIL;
     }
 
     retval = fill_group_members(orgjson->owners, gr, buffer, buflen, errnop);
@@ -140,8 +140,8 @@ enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
 
     orgjson = orgjson_load();
     if (!orgjson) {
-	*errnop = errno;
-	return NSS_STATUS_UNAVAIL;
+        *errnop = errno;
+        return NSS_STATUS_UNAVAIL;
     }
 
     retval = fill_group_members(orgjson->owners, gr, buffer, buflen, errnop);

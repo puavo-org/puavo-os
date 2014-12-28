@@ -91,8 +91,8 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
 
     orgjson = orgjson_load();
     if (!orgjson) {
-	*errnop = errno;
-	return NSS_STATUS_UNAVAIL;
+        *errnop = errno;
+        return NSS_STATUS_UNAVAIL;
     }
 
     for (size_t i = 0; i < json_array_size(orgjson->owners); ++i) {
@@ -121,7 +121,7 @@ enum nss_status _nss_puavoadmins_setpwent(void) {
 
     g_orgjson = orgjson_load();
     if (!g_orgjson)
-	return NSS_STATUS_UNAVAIL;
+        return NSS_STATUS_UNAVAIL;
 
     return NSS_STATUS_SUCCESS;
 }
