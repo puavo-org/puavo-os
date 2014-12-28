@@ -15,7 +15,8 @@ static orgjson_t *g_orgjson;
 static enum nss_status populate_passwd(struct orgjson_owner *owner,
                                        struct passwd *const pw,
                                        char *const buf,
-                                       const size_t buflen) {
+                                       const size_t buflen,
+                                       int *const errnop) {
     static const char *const ADM_HOME_PATH = "/adm-home/";
     size_t username_size;
     size_t gecos_size;
@@ -27,8 +28,10 @@ static enum nss_status populate_passwd(struct orgjson_owner *owner,
     home_size = strlen(ADM_HOME_PATH)
             + strlen(owner->username) + 1;
 
-    if ((username_size + gecos_size + home_size) > buflen)
+    if ((username_size + gecos_size + home_size) > buflen) {
+        *errnop = ERANGE;
         return NSS_STATUS_TRYAGAIN;
+    }
 
     snprintf(buf, username_size, "%s", owner->username);
     snprintf(buf + username_size, gecos_size, "%s %s",
@@ -72,7 +75,7 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
         if (owner.uid_number != uid)
             continue;
 
-        retval = populate_passwd(&owner, result, buf, buflen);
+        retval = populate_passwd(&owner, result, buf, buflen, errnop);
         break;
     }
 
@@ -107,7 +110,7 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
         if (strcmp(name, owner.username))
             continue;
 
-        retval = populate_passwd(&owner, result, buf, buflen);
+        retval = populate_passwd(&owner, result, buf, buflen, errnop);
         break;
     }
 
@@ -152,7 +155,7 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
         if (!orgjson_get_owner(g_orgjson, g_ent_index++, &owner))
             continue;
 
-        ret = populate_passwd(&owner, pw, buf, buflen);
+        ret = populate_passwd(&owner, pw, buf, buflen, errnop);
 
         if (ret == NSS_STATUS_UNAVAIL)
             continue;

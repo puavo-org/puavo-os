@@ -48,8 +48,10 @@ static enum nss_status fill_group_members(orgjson_t *const orgjson,
 
         username_len = strlen(owner.username);
         // If we run out of buffer space, we need to return an error
-        if (member + username_len > buffer + buflen)
+        if (member + username_len > buffer + buflen) {
+            *errnop = ERANGE;
             return NSS_STATUS_TRYAGAIN;
+        }
 
         strcpy(member, owner.username);
         members[i] = member;
