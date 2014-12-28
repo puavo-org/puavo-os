@@ -25,41 +25,35 @@ enum nss_status _nss_puavoadmins_endgrent(void) {
     return NSS_STATUS_SUCCESS;
 }
 
-static enum nss_status fill_group_members(json_t *const json_owners,
+static enum nss_status fill_group_members(orgjson_t *const orgjson,
                                           struct group *const gr,
                                           char *const buffer,
                                           const size_t buflen,
                                           int *const errnop) {
-    json_t *user;
-    json_t *username;
     char **members;
     char *member;
-    const char *username_str;
-    int member_count;
-    size_t i;
-    int username_len;
+    size_t member_count;
 
     memset(buffer, 0, buflen);
-    member_count = json_array_size(json_owners);
+    member_count = orgjson_get_owner_count(orgjson);
     members = (char **)buffer;
     member = buffer + sizeof(char *) * (member_count + 1);
 
-    for (i=0; i < json_array_size(json_owners); ++i) {
-        user = json_array_get(json_owners, i);
-        username = json_object_get(user, "username");
+    for (size_t i = 0; i < member_count; ++i) {
+        struct orgjson_owner owner;
+        size_t username_len;
 
-        if (username && json_is_string(username)) {
-            username_str = json_string_value(username);
-            username_len = strlen(username_str);
+        if (!orgjson_get_owner(orgjson, i, &owner))
+            return NSS_STATUS_UNAVAIL;
 
-            // If we run out of buffer space, we need to return an error
-            if (member+username_len+1 > buffer+buflen)
-                return NSS_STATUS_TRYAGAIN;
+        username_len = strlen(owner.username);
+        // If we run out of buffer space, we need to return an error
+        if (member + username_len > buffer + buflen)
+            return NSS_STATUS_TRYAGAIN;
 
-            strcpy(member, username_str);
-            members[i] = member;
-            member += username_len + 1;
-        }
+        strcpy(member, owner.username);
+        members[i] = member;
+        member += username_len + 1;
     }
 
     gr->gr_name = PUAVOADMINS_GRNAM;
@@ -90,7 +84,7 @@ enum nss_status _nss_puavoadmins_getgrent_r(struct group *const gr,
 
     g_group_called = 1;
 
-    retval = fill_group_members(orgjson->owners, gr, buffer, buflen, errnop);
+    retval = fill_group_members(orgjson, gr, buffer, buflen, errnop);
 
     orgjson_free(orgjson);
     orgjson = NULL;
@@ -117,7 +111,7 @@ enum nss_status _nss_puavoadmins_getgrnam_r(const char *const name,
         return NSS_STATUS_UNAVAIL;
     }
 
-    retval = fill_group_members(orgjson->owners, gr, buffer, buflen, errnop);
+    retval = fill_group_members(orgjson, gr, buffer, buflen, errnop);
 
     orgjson_free(orgjson);
     orgjson = NULL;
@@ -144,7 +138,7 @@ enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
         return NSS_STATUS_UNAVAIL;
     }
 
-    retval = fill_group_members(orgjson->owners, gr, buffer, buflen, errnop);
+    retval = fill_group_members(orgjson, gr, buffer, buflen, errnop);
 
     orgjson_free(orgjson);
     orgjson = NULL;

@@ -25,5 +25,6 @@ void orgjson_free(orgjson_t *const orgjson);
 
 struct orgjson_owner *orgjson_get_owner(const orgjson_t *orgjson, size_t i,
 					struct orgjson_owner *owner);
+size_t orgjson_get_owner_count(const orgjson_t *orgjson);
 
 #endif // ORGJSON_H

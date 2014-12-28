@@ -60,7 +60,7 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
         return NSS_STATUS_UNAVAIL;
     }
 
-    for (size_t i = 0; i < json_array_size(orgjson->owners); ++i) {
+    for (size_t i = 0; i < orgjson_get_owner_count(orgjson); ++i) {
         struct orgjson_owner owner;
 
         if (!orgjson_get_owner(orgjson, i, &owner)) {
@@ -95,7 +95,7 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
         return NSS_STATUS_UNAVAIL;
     }
 
-    for (size_t i = 0; i < json_array_size(orgjson->owners); ++i) {
+    for (size_t i = 0; i < orgjson_get_owner_count(orgjson); ++i) {
         struct orgjson_owner owner;
 
         if (!orgjson_get_owner(orgjson, i, &owner)) {
@@ -145,7 +145,7 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
         return NSS_STATUS_UNAVAIL;
     }
 
-    while (g_ent_index < json_array_size(g_orgjson->owners)) {
+    while (g_ent_index < orgjson_get_owner_count(g_orgjson)) {
         struct orgjson_owner owner;
 
         if (!orgjson_get_owner(g_orgjson, g_ent_index++, &owner))

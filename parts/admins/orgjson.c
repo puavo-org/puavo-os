@@ -98,3 +98,8 @@ struct orgjson_owner *orgjson_get_owner(const orgjson_t *const orgjson, size_t i
   err:
     return NULL;
 }
+
+size_t orgjson_get_owner_count(const orgjson_t *const orgjson)
+{
+    return json_array_size(orgjson->owners);
+}
