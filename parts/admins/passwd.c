@@ -58,7 +58,7 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
     orgjson_t *orgjson;
     enum nss_status retval = NSS_STATUS_NOTFOUND;
 
-    orgjson = orgjson_load();
+    orgjson = orgjson_load(NULL);
     if (!orgjson) {
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
@@ -67,7 +67,7 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
     for (size_t i = 0; i < orgjson_get_owner_count(orgjson); ++i) {
         struct orgjson_owner owner;
 
-        if (!orgjson_get_owner(orgjson, i, &owner)) {
+        if (!orgjson_get_owner(orgjson, i, &owner, NULL)) {
             retval = NSS_STATUS_UNAVAIL;
             break;
         }
@@ -93,7 +93,7 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
     orgjson_t *orgjson;
     enum nss_status retval = NSS_STATUS_NOTFOUND;
 
-    orgjson = orgjson_load();
+    orgjson = orgjson_load(NULL);
     if (!orgjson) {
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
@@ -102,7 +102,7 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
     for (size_t i = 0; i < orgjson_get_owner_count(orgjson); ++i) {
         struct orgjson_owner owner;
 
-        if (!orgjson_get_owner(orgjson, i, &owner)) {
+        if (!orgjson_get_owner(orgjson, i, &owner, NULL)) {
             retval = NSS_STATUS_UNAVAIL;
             break;
         }
@@ -123,7 +123,7 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
 enum nss_status _nss_puavoadmins_setpwent(void) {
     g_ent_index = 0;
 
-    g_orgjson = orgjson_load();
+    g_orgjson = orgjson_load(NULL);
     if (!g_orgjson)
         return NSS_STATUS_UNAVAIL;
 
@@ -152,7 +152,7 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
     while (g_ent_index < orgjson_get_owner_count(g_orgjson)) {
         struct orgjson_owner owner;
 
-        if (!orgjson_get_owner(g_orgjson, g_ent_index++, &owner))
+        if (!orgjson_get_owner(g_orgjson, g_ent_index++, &owner, NULL))
             continue;
 
         ret = populate_passwd(&owner, pw, buf, buflen, errnop);

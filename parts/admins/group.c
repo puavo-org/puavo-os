@@ -43,7 +43,7 @@ static enum nss_status fill_group_members(orgjson_t *const orgjson,
         struct orgjson_owner owner;
         size_t username_len;
 
-        if (!orgjson_get_owner(orgjson, i, &owner))
+        if (!orgjson_get_owner(orgjson, i, &owner, NULL))
             return NSS_STATUS_UNAVAIL;
 
         username_len = strlen(owner.username);
@@ -78,7 +78,7 @@ enum nss_status _nss_puavoadmins_getgrent_r(struct group *const gr,
     if (g_group_called)
         return NSS_STATUS_NOTFOUND;
 
-    orgjson = orgjson_load();
+    orgjson = orgjson_load(NULL);
     if (!orgjson) {
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
@@ -107,7 +107,7 @@ enum nss_status _nss_puavoadmins_getgrnam_r(const char *const name,
     if (strcmp(name, PUAVOADMINS_GRNAM))
         return NSS_STATUS_NOTFOUND;
 
-    orgjson = orgjson_load();
+    orgjson = orgjson_load(NULL);
     if (!orgjson) {
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
@@ -134,7 +134,7 @@ enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
     if (gid != PUAVOADMINS_GRGID)
         return NSS_STATUS_NOTFOUND;
 
-    orgjson = orgjson_load();
+    orgjson = orgjson_load(NULL);
     if (!orgjson) {
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
