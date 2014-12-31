@@ -11,10 +11,10 @@ libnss_puavoadmins.so.2: passwd.o group.o orgjson.o
 	gcc -shared -o $@ -Wl,-soname,$@ $^ -ljansson
 
 %.o: %.c %.h
-	gcc -fPIC -std=c99 -pedantic -Wall -Wextra -c $< -o $@
+	gcc -fPIC -std=gnu99 -Wall -Wextra -c $< -o $@
 
 %.o: %.c
-	gcc -fPIC -std=c99 -pedantic -Wall -Wextra -c $< -o $@
+	gcc -fPIC -std=gnu99 -Wall -Wextra -c $< -o $@
 
 installdirs:
 	mkdir -p $(DESTDIR)$(prefix)/lib
