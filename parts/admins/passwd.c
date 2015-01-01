@@ -158,10 +158,6 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
                                             int *const errnop) {
     enum nss_status ret;
 
-    if (!pw) {
-        return NSS_STATUS_UNAVAIL;
-    }
-
     while (g_ent_index < orgjson_get_owner_count(g_orgjson)) {
         struct orgjson_owner owner;
         struct orgjson_error error;
@@ -172,12 +168,7 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
             continue;
         }
 
-        ret = populate_passwd(&owner, pw, buf, buflen, errnop);
-
-        if (ret == NSS_STATUS_UNAVAIL)
-            continue;
-
-        return ret;
+        return populate_passwd(&owner, pw, buf, buflen, errnop);
     }
 
     return NSS_STATUS_NOTFOUND;
