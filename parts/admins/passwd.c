@@ -24,10 +24,8 @@ static enum nss_status populate_passwd(const struct orgjson_owner *const owner,
     size_t home_size;
 
     username_size = strlen(owner->username) + 1;
-    gecos_size = strlen(owner->first_name) + 1
-        + strlen(owner->last_name) + 1;
-    home_size = strlen(ADM_HOME_PATH)
-            + strlen(owner->username) + 1;
+    gecos_size = strlen(owner->first_name) + 1 + strlen(owner->last_name) + 1;
+    home_size = strlen(ADM_HOME_PATH) + strlen(owner->username) + 1;
 
     if ((username_size + gecos_size + home_size) > buflen) {
         *errnop = ERANGE;
