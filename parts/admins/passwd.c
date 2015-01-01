@@ -19,43 +19,50 @@ static enum nss_status populate_passwd(const struct orgjson_owner *const owner,
                                        const size_t buflen,
                                        int *const errnop) {
     static const char *const ADM_HOME_PATH = "/adm-home/";
-    size_t username_size;
-    size_t gecos_size;
-    size_t home_size;
+    size_t pw_name_size;
+    size_t pw_gecos_size;
+    size_t pw_dir_size;
 
-    username_size = strlen(owner->username) + 1;
-    gecos_size = strlen(owner->first_name) + 1 + strlen(owner->last_name) + 1;
-    home_size = strlen(ADM_HOME_PATH) + strlen(owner->username) + 1;
+    char *pw_name;
+    char *pw_gecos;
+    char *pw_dir;
 
-    if ((username_size + gecos_size + home_size) > buflen) {
+    pw_name_size = strlen(owner->username) + 1;
+    pw_gecos_size = strlen(owner->first_name) + 1 + strlen(owner->last_name) + 1;
+    pw_dir_size = strlen(ADM_HOME_PATH) + strlen(owner->username) + 1;
+
+    if ((pw_name_size + pw_gecos_size + pw_dir_size) > buflen) {
         *errnop = ERANGE;
         return NSS_STATUS_TRYAGAIN;
     }
 
-    if (snprintf(buf, username_size, "%s", owner->username) < 0) {
+    pw_name = buf;
+    if (snprintf(pw_name, pw_name_size, "%s", owner->username) < 0) {
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
     }
 
-    if (snprintf(buf + username_size, gecos_size, "%s %s",
+    pw_gecos = pw_name + pw_name_size;
+    if (snprintf(pw_gecos, pw_gecos_size, "%s %s",
                  owner->first_name, owner->last_name) < 0) {
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
     }
 
-    if (snprintf(buf + username_size + gecos_size, home_size, "%s%s",
+    pw_dir = pw_gecos + pw_gecos_size;
+    if (snprintf(pw_dir, pw_dir_size, "%s%s",
                  ADM_HOME_PATH, owner->username) < 0) {
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
     }
 
-    pw->pw_name = buf;
-    pw->pw_uid = owner->uid_number;
-    pw->pw_gid = owner->gid_number;
+    pw->pw_name   = pw_name;
+    pw->pw_uid    = owner->uid_number;
+    pw->pw_gid    = owner->gid_number;
     pw->pw_passwd = "x";
-    pw->pw_gecos = buf + username_size;
-    pw->pw_dir = buf + username_size + gecos_size;
-    pw->pw_shell = "/bin/bash";
+    pw->pw_gecos  = pw_gecos;
+    pw->pw_dir    = pw_dir;
+    pw->pw_shell  = "/bin/bash";
 
     return NSS_STATUS_SUCCESS;
 }
