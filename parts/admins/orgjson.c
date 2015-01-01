@@ -64,7 +64,7 @@ void orgjson_free(struct orgjson *const orgjson)
 }
 
 struct orgjson_owner *orgjson_get_owner(const struct orgjson *const orgjson,
-                                        size_t i,
+                                        const size_t i,
                                         struct orgjson_owner *const owner,
                                         struct orgjson_error *const error)
 {

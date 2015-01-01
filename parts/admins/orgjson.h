@@ -27,7 +27,8 @@ typedef struct orgjson orgjson_t;
 orgjson_t *orgjson_load(struct orgjson_error *error);
 void orgjson_free(orgjson_t *const orgjson);
 
-struct orgjson_owner *orgjson_get_owner(const orgjson_t *orgjson, size_t i,
+struct orgjson_owner *orgjson_get_owner(const orgjson_t *orgjson,
+                                        const size_t i,
                                         struct orgjson_owner *owner,
                                         struct orgjson_error *error);
 size_t orgjson_get_owner_count(const orgjson_t *orgjson);

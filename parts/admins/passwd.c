@@ -13,7 +13,7 @@
 static size_t g_ent_index;
 static orgjson_t *g_orgjson;
 
-static enum nss_status populate_passwd(struct orgjson_owner *owner,
+static enum nss_status populate_passwd(const struct orgjson_owner *const owner,
                                        struct passwd *const pw,
                                        char *const buf,
                                        const size_t buflen,
