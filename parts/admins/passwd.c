@@ -90,6 +90,7 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
         if (!orgjson_get_owner(orgjson, i, &owner, &error)) {
             log(LOG_ERR, "failed to get puavoadmins passwd entry by uid %d: %s",
                 uid, error.text);
+            *errnop = errno;
             retval = NSS_STATUS_UNAVAIL;
             break;
         }
@@ -130,6 +131,7 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
         if (!orgjson_get_owner(orgjson, i, &owner, &error)) {
             log(LOG_ERR, "failed to get puavoadmins passwd entry by name '%s': %s",
                 name, error.text);
+            *errnop = errno;
             retval = NSS_STATUS_UNAVAIL;
             break;
         }
