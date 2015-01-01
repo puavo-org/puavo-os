@@ -90,7 +90,7 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
         if (!orgjson_get_owner(orgjson, i, &owner, &error)) {
             log(LOG_ERR, "failed to get puavoadmins passwd entry by uid %d: %s",
                 uid, error.text);
-            *errnop = errno;
+            *errnop = EINVAL;
             retval = NSS_STATUS_UNAVAIL;
             goto out;
         }
@@ -136,7 +136,7 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
         if (!orgjson_get_owner(orgjson, i, &owner, &error)) {
             log(LOG_ERR, "failed to get puavoadmins passwd entry by name '%s': %s",
                 name, error.text);
-            *errnop = errno;
+            *errnop = EINVAL;
             retval = NSS_STATUS_UNAVAIL;
             goto out;
         }
@@ -209,9 +209,11 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
         enum nss_status retval;
 
         if (!orgjson_get_owner(g_orgjson, g_ent_index, &owner, &error)) {
-            log(LOG_ERR, "failed to get next puavoadmins passwd entry: %s",
-                error.text);
-            continue;
+            log(LOG_ERR,
+                "failed to get puavoadmins passwd entry by index %ld: %s",
+                g_ent_index, error.text);
+            *errnop = EINVAL;
+            return NSS_STATUS_UNAVAIL;
         }
 
         retval = populate_passwd(&owner, pw, buf, buflen, errnop);
