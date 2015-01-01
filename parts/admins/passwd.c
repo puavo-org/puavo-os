@@ -78,8 +78,8 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
 
     orgjson = orgjson_load(&error);
     if (!orgjson) {
-        log(LOG_ERR, "failed to get puavoadmins passwd entry by uid %d: %s",
-            uid, error.text);
+        log(LOG_ERR, "failed to load puavoadmins passwd database: %s",
+            error.text);
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
     }
@@ -124,8 +124,8 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
 
     orgjson = orgjson_load(&error);
     if (!orgjson) {
-        log(LOG_ERR, "failed to get puavoadmins passwd entry by name '%s': %s",
-            name, error.text);
+        log(LOG_ERR, "failed to load puavoadmins passwd database: %s",
+            error.text);
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
     }
@@ -164,7 +164,7 @@ static inline int passwd_init(void) {
 
     g_orgjson = orgjson_load(&error);
     if (!g_orgjson) {
-        log(LOG_ERR, "failed to initialize puavoadmins passwd database: %s",
+        log(LOG_ERR, "failed to load puavoadmins passwd database: %s",
             error.text);
         return -1;
     }
