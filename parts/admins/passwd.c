@@ -32,11 +32,22 @@ static enum nss_status populate_passwd(const struct orgjson_owner *const owner,
         return NSS_STATUS_TRYAGAIN;
     }
 
-    snprintf(buf, username_size, "%s", owner->username);
-    snprintf(buf + username_size, gecos_size, "%s %s",
-             owner->first_name, owner->last_name);
-    snprintf(buf + username_size + gecos_size, home_size, "%s%s",
-             ADM_HOME_PATH, owner->username);
+    if (snprintf(buf, username_size, "%s", owner->username) < 0) {
+        *errnop = errno;
+        return NSS_STATUS_UNAVAIL;
+    }
+
+    if (snprintf(buf + username_size, gecos_size, "%s %s",
+                 owner->first_name, owner->last_name) < 0) {
+        *errnop = errno;
+        return NSS_STATUS_UNAVAIL;
+    }
+
+    if (snprintf(buf + username_size + gecos_size, home_size, "%s%s",
+                 ADM_HOME_PATH, owner->username) < 0) {
+        *errnop = errno;
+        return NSS_STATUS_UNAVAIL;
+    }
 
     pw->pw_name = buf;
     pw->pw_uid = owner->uid_number;
