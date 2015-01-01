@@ -176,14 +176,22 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
     while (g_ent_index < orgjson_get_owner_count(g_orgjson)) {
         struct orgjson_owner owner;
         struct orgjson_error error;
+        enum nss_status retval;
 
-        if (!orgjson_get_owner(g_orgjson, g_ent_index++, &owner, &error)) {
+        if (!orgjson_get_owner(g_orgjson, g_ent_index, &owner, &error)) {
             log(LOG_ERR, "failed to get next puavoadmins passwd entry: %s",
                 error.text);
             continue;
         }
 
-        return populate_passwd(&owner, pw, buf, buflen, errnop);
+        retval = populate_passwd(&owner, pw, buf, buflen, errnop);
+        if (retval == NSS_STATUS_SUCCESS) {
+            /* We can safely move to the next entry only after the
+             * current entry is returned succesfully. */
+            ++g_ent_index;
+        }
+
+        return retval;
     }
 
     /* Free all resources after going through all entries. */
