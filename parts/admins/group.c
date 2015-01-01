@@ -27,7 +27,6 @@ enum nss_status _nss_puavoadmins_endgrent(void) {
 }
 
 static enum nss_status fill_group_members(const orgjson_t *const orgjson,
-                                          struct orgjson_error *const error,
                                           struct group *const gr,
                                           char *const buffer,
                                           const size_t buflen,
@@ -43,10 +42,15 @@ static enum nss_status fill_group_members(const orgjson_t *const orgjson,
 
     for (size_t i = 0; i < member_count; ++i) {
         struct orgjson_owner owner;
+        struct orgjson_error error;
         size_t username_len;
 
-        if (!orgjson_get_owner(orgjson, i, &owner, error))
+        if (!orgjson_get_owner(orgjson, i, &owner, &error)) {
+            log(LOG_ERR, "failed to get puavoadmins group entry by index %ld: %s",
+                i, error.text);
+            *errnop = EINVAL;
             return NSS_STATUS_UNAVAIL;
+        }
 
         username_len = strlen(owner.username);
         // If we run out of buffer space, we need to return an error
@@ -76,12 +80,14 @@ enum nss_status _nss_puavoadmins_getgrent_r(struct group *const gr,
     orgjson_t *orgjson;
     struct orgjson_error error;
 
-    if (g_group_called)
+    if (g_group_called) {
+        *errnop = ENOENT;
         return NSS_STATUS_NOTFOUND;
+    }
 
     orgjson = orgjson_load(&error);
     if (!orgjson) {
-        log(LOG_ERR, "failed to get next puavoadmins group entry: %s",
+        log(LOG_ERR, "failed to load puavoadmins group database: %s",
             error.text);
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
@@ -89,10 +95,7 @@ enum nss_status _nss_puavoadmins_getgrent_r(struct group *const gr,
 
     g_group_called = 1;
 
-    retval = fill_group_members(orgjson, &error, gr, buffer, buflen, errnop);
-    if (retval == NSS_STATUS_UNAVAIL)
-        log(LOG_ERR, "failed to get next puavoadmins group entry: %s",
-            error.text);
+    retval = fill_group_members(orgjson, gr, buffer, buflen, errnop);
 
     orgjson_free(orgjson);
     orgjson = NULL;
@@ -109,21 +112,20 @@ enum nss_status _nss_puavoadmins_getgrnam_r(const char *const name,
     orgjson_t *orgjson;
     struct orgjson_error error;
 
-    if (strcmp(name, PUAVOADMINS_GRNAM))
+    if (strcmp(name, PUAVOADMINS_GRNAM)) {
+        *errnop = ENOENT;
         return NSS_STATUS_NOTFOUND;
+    }
 
     orgjson = orgjson_load(&error);
     if (!orgjson) {
-        log(LOG_ERR, "failed to get puavoadmins group entry by name '%s': %s",
-            name, error.text);
+        log(LOG_ERR, "failed to load puavoadmins group database: %s",
+            error.text);
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
     }
 
-    retval = fill_group_members(orgjson, &error, gr, buffer, buflen, errnop);
-    if (retval == NSS_STATUS_UNAVAIL)
-        log(LOG_ERR, "failed to get puavoadmins group entry by name '%s': %s",
-            name, error.text);
+    retval = fill_group_members(orgjson, gr, buffer, buflen, errnop);
 
     orgjson_free(orgjson);
     orgjson = NULL;
@@ -140,21 +142,20 @@ enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
     orgjson_t *orgjson;
     struct orgjson_error error;
 
-    if (gid != PUAVOADMINS_GRGID)
+    if (gid != PUAVOADMINS_GRGID) {
+        *errnop = ENOENT;
         return NSS_STATUS_NOTFOUND;
+    }
 
     orgjson = orgjson_load(&error);
     if (!orgjson) {
-        log(LOG_ERR, "failed to get puavoadmins group entry by gid %d: %s",
-            gid, error.text);
+        log(LOG_ERR, "failed to load puavoadmins group database: %s",
+            error.text);
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
     }
 
-    retval = fill_group_members(orgjson, &error, gr, buffer, buflen, errnop);
-    if (retval == NSS_STATUS_UNAVAIL)
-        log(LOG_ERR, "failed to get puavoadmins group entry by gid %d: %s",
-            gid, error.text);
+    retval = fill_group_members(orgjson, gr, buffer, buflen, errnop);
 
     orgjson_free(orgjson);
     orgjson = NULL;
