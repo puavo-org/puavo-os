@@ -73,7 +73,7 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
                                             const size_t buflen,
                                             int *const errnop) {
     orgjson_t *orgjson;
-    enum nss_status retval = NSS_STATUS_NOTFOUND;
+    enum nss_status retval;
     struct orgjson_error error;
 
     orgjson = orgjson_load(&error);
@@ -92,15 +92,20 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
                 uid, error.text);
             *errnop = errno;
             retval = NSS_STATUS_UNAVAIL;
-            break;
+            goto out;
         }
 
         if (owner.uid_number != uid)
             continue;
 
         retval = populate_passwd(&owner, result, buf, buflen, errnop);
-        break;
+        goto out;
     }
+
+    *errnop = ENOENT;
+    retval = NSS_STATUS_NOTFOUND;
+
+ out:
 
     orgjson_free(orgjson);
     orgjson = NULL;
@@ -114,7 +119,7 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
                                             const size_t buflen,
                                             int *const errnop) {
     orgjson_t *orgjson;
-    enum nss_status retval = NSS_STATUS_NOTFOUND;
+    enum nss_status retval;
     struct orgjson_error error;
 
     orgjson = orgjson_load(&error);
@@ -133,15 +138,20 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
                 name, error.text);
             *errnop = errno;
             retval = NSS_STATUS_UNAVAIL;
-            break;
+            goto out;
         }
 
         if (strcmp(name, owner.username))
             continue;
 
         retval = populate_passwd(&owner, result, buf, buflen, errnop);
-        break;
+        goto out;
     }
+
+    *errnop = ENOENT;
+    retval = NSS_STATUS_NOTFOUND;
+
+ out:
 
     orgjson_free(orgjson);
     orgjson = NULL;
@@ -217,5 +227,6 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
     /* Free all resources after going through all entries. */
     passwd_free();
 
+    *errnop = ENOENT;
     return NSS_STATUS_NOTFOUND;
 }
