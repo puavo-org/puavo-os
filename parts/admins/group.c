@@ -93,9 +93,9 @@ enum nss_status _nss_puavoadmins_getgrent_r(struct group *const gr,
         return NSS_STATUS_UNAVAIL;
     }
 
-    g_group_called = 1;
-
     retval = fill_group_members(orgjson, gr, buffer, buflen, errnop);
+    if (retval == NSS_STATUS_SUCCESS)
+      g_group_called = 1;
 
     orgjson_free(orgjson);
     orgjson = NULL;
