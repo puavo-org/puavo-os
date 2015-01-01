@@ -131,23 +131,35 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
     return retval;
 }
 
-enum nss_status _nss_puavoadmins_setpwent(void) {
-    g_ent_index = 0;
+static inline int passwd_init(void) {
     struct orgjson_error error;
 
     g_orgjson = orgjson_load(&error);
     if (!g_orgjson) {
-        log(LOG_ERR, "failed to rewind to the first puavoadmins passwd entry: %s",
+        log(LOG_ERR, "failed to initialize puavoadmins passwd database: %s",
             error.text);
-        return NSS_STATUS_UNAVAIL;
+        return -1;
     }
+
+    return 0;
+}
+
+enum nss_status _nss_puavoadmins_setpwent(void) {
+    g_ent_index = 0;
+
+    if (!g_orgjson && passwd_init())
+        return NSS_STATUS_UNAVAIL;
 
     return NSS_STATUS_SUCCESS;
 }
 
-enum nss_status _nss_puavoadmins_endpwent(void) {
+static inline void passwd_free(void) {
     orgjson_free(g_orgjson);
     g_orgjson = NULL;
+}
+
+enum nss_status _nss_puavoadmins_endpwent(void) {
+    passwd_free();
 
     return NSS_STATUS_SUCCESS;
 }
@@ -156,7 +168,12 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
                                             char *const buf,
                                             const size_t buflen,
                                             int *const errnop) {
-    enum nss_status ret;
+    /* On the very first run, ensure the database is initialized,
+     * because setpwent() might not have been called before. */
+    if (!g_ent_index && !g_orgjson && passwd_init()) {
+        *errnop = errno;
+        return NSS_STATUS_UNAVAIL;
+    }
 
     while (g_ent_index < orgjson_get_owner_count(g_orgjson)) {
         struct orgjson_owner owner;
@@ -170,6 +187,9 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
 
         return populate_passwd(&owner, pw, buf, buflen, errnop);
     }
+
+    /* Free all resources after going through all entries. */
+    passwd_free();
 
     return NSS_STATUS_NOTFOUND;
 }
