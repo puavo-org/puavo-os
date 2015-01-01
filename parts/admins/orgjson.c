@@ -5,6 +5,8 @@
 
 #include "orgjson.h"
 
+static const char ORGJSON_PATH[] = "/etc/puavo/org.json";
+
 struct orgjson {
     json_t *root;
     json_t *owners;
@@ -24,13 +26,13 @@ orgjson_t *orgjson_load(struct orgjson_error *const error)
         return NULL;
     }
 
-    orgjson->root = json_load_file("/etc/puavo/org.json", 0, &json_error);
+    orgjson->root = json_load_file(ORGJSON_PATH, 0, &json_error);
     if (!orgjson->root) {
         free(orgjson);
         if (error) {
             error->code = ORGJSON_ERROR_CODE_JSON;
             snprintf(error->text, ORGJSON_ERROR_TEXT_LEN,
-                     "failed to load /etc/puavo/org.json: %s", json_error.text);
+                     "failed to load %s: %s", ORGJSON_PATH, json_error.text);
         }
         return NULL;
     }
