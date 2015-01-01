@@ -12,12 +12,12 @@ struct orgjson {
     json_t *owners;
 };
 
-orgjson_t *orgjson_load(struct orgjson_error *const error)
+struct orgjson *orgjson_load(struct orgjson_error *const error)
 {
-    orgjson_t *orgjson;
+    struct orgjson *orgjson;
     json_error_t json_error;
 
-    orgjson = malloc(sizeof(orgjson_t));
+    orgjson = malloc(sizeof(struct orgjson));
     if (!orgjson) {
         if (error) {
             error->code = ORGJSON_ERROR_CODE_SYS;
@@ -52,7 +52,7 @@ orgjson_t *orgjson_load(struct orgjson_error *const error)
     return orgjson;
 }
 
-void orgjson_free(orgjson_t *const orgjson)
+void orgjson_free(struct orgjson *const orgjson)
 {
     if (!orgjson)
         return;
@@ -63,7 +63,8 @@ void orgjson_free(orgjson_t *const orgjson)
     free(orgjson);
 }
 
-struct orgjson_owner *orgjson_get_owner(const orgjson_t *const orgjson, size_t i,
+struct orgjson_owner *orgjson_get_owner(const struct orgjson *const orgjson,
+                                        size_t i,
                                         struct orgjson_owner *const owner,
                                         struct orgjson_error *const error)
 {
@@ -144,7 +145,7 @@ struct orgjson_owner *orgjson_get_owner(const orgjson_t *const orgjson, size_t i
     return owner;
 }
 
-size_t orgjson_get_owner_count(const orgjson_t *const orgjson)
+size_t orgjson_get_owner_count(const struct orgjson *const orgjson)
 {
     return json_array_size(orgjson->owners);
 }
