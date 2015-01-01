@@ -158,8 +158,6 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
                                             int *const errnop) {
     enum nss_status ret;
 
-    *errnop = 0;
-
     if (!pw) {
         return NSS_STATUS_UNAVAIL;
     }

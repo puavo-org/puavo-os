@@ -76,8 +76,6 @@ enum nss_status _nss_puavoadmins_getgrent_r(struct group *const gr,
     orgjson_t *orgjson;
     struct orgjson_error error;
 
-    *errnop = 0;
-
     if (g_group_called)
         return NSS_STATUS_NOTFOUND;
 
@@ -111,8 +109,6 @@ enum nss_status _nss_puavoadmins_getgrnam_r(const char *const name,
     orgjson_t *orgjson;
     struct orgjson_error error;
 
-    *errnop = 0;
-
     if (strcmp(name, PUAVOADMINS_GRNAM))
         return NSS_STATUS_NOTFOUND;
 
@@ -143,8 +139,6 @@ enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
     enum nss_status retval;
     orgjson_t *orgjson;
     struct orgjson_error error;
-
-    *errnop = 0;
 
     if (gid != PUAVOADMINS_GRGID)
         return NSS_STATUS_NOTFOUND;
