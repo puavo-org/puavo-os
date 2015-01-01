@@ -6,6 +6,7 @@
 #include <grp.h>
 #include <sys/types.h>
 
+#include "log.h"
 #include "orgjson.h"
 
 #define PUAVOADMINS_GRNAM "_puavoadmins"
@@ -26,6 +27,7 @@ enum nss_status _nss_puavoadmins_endgrent(void) {
 }
 
 static enum nss_status fill_group_members(orgjson_t *const orgjson,
+                                          struct orgjson_error *const error,
                                           struct group *const gr,
                                           char *const buffer,
                                           const size_t buflen,
@@ -43,7 +45,7 @@ static enum nss_status fill_group_members(orgjson_t *const orgjson,
         struct orgjson_owner owner;
         size_t username_len;
 
-        if (!orgjson_get_owner(orgjson, i, &owner, NULL))
+        if (!orgjson_get_owner(orgjson, i, &owner, error))
             return NSS_STATUS_UNAVAIL;
 
         username_len = strlen(owner.username);
@@ -72,21 +74,27 @@ enum nss_status _nss_puavoadmins_getgrent_r(struct group *const gr,
                                             int *const errnop) {
     enum nss_status retval;
     orgjson_t *orgjson;
+    struct orgjson_error error;
 
     *errnop = 0;
 
     if (g_group_called)
         return NSS_STATUS_NOTFOUND;
 
-    orgjson = orgjson_load(NULL);
+    orgjson = orgjson_load(&error);
     if (!orgjson) {
+        log(LOG_ERR, "failed to get next puavoadmins group entry: %s",
+            error.text);
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
     }
 
     g_group_called = 1;
 
-    retval = fill_group_members(orgjson, gr, buffer, buflen, errnop);
+    retval = fill_group_members(orgjson, &error, gr, buffer, buflen, errnop);
+    if (retval == NSS_STATUS_UNAVAIL)
+        log(LOG_ERR, "failed to get next puavoadmins group entry: %s",
+            error.text);
 
     orgjson_free(orgjson);
     orgjson = NULL;
@@ -101,19 +109,25 @@ enum nss_status _nss_puavoadmins_getgrnam_r(const char *const name,
                                             int *const errnop) {
     enum nss_status retval;
     orgjson_t *orgjson;
+    struct orgjson_error error;
 
     *errnop = 0;
 
     if (strcmp(name, PUAVOADMINS_GRNAM))
         return NSS_STATUS_NOTFOUND;
 
-    orgjson = orgjson_load(NULL);
+    orgjson = orgjson_load(&error);
     if (!orgjson) {
+        log(LOG_ERR, "failed to get puavoadmins group entry by name '%s': %s",
+            name, error.text);
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
     }
 
-    retval = fill_group_members(orgjson, gr, buffer, buflen, errnop);
+    retval = fill_group_members(orgjson, &error, gr, buffer, buflen, errnop);
+    if (retval == NSS_STATUS_UNAVAIL)
+        log(LOG_ERR, "failed to get puavoadmins group entry by name '%s': %s",
+            name, error.text);
 
     orgjson_free(orgjson);
     orgjson = NULL;
@@ -128,19 +142,25 @@ enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
                                             int *const errnop) {
     enum nss_status retval;
     orgjson_t *orgjson;
+    struct orgjson_error error;
 
     *errnop = 0;
 
     if (gid != PUAVOADMINS_GRGID)
         return NSS_STATUS_NOTFOUND;
 
-    orgjson = orgjson_load(NULL);
+    orgjson = orgjson_load(&error);
     if (!orgjson) {
+        log(LOG_ERR, "failed to get puavoadmins group entry by gid %d: %s",
+            gid, error.text);
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
     }
 
-    retval = fill_group_members(orgjson, gr, buffer, buflen, errnop);
+    retval = fill_group_members(orgjson, &error, gr, buffer, buflen, errnop);
+    if (retval == NSS_STATUS_UNAVAIL)
+        log(LOG_ERR, "failed to get puavoadmins group entry by gid %d: %s",
+            gid, error.text);
 
     orgjson_free(orgjson);
     orgjson = NULL;

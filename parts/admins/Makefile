@@ -10,10 +10,10 @@ all: $(modules)
 libnss_puavoadmins.so.2: passwd.o group.o orgjson.o
 	gcc -shared -o $@ -Wl,-soname,$@ $^ -ljansson
 
-%.o: %.c %.h
+%.o: %.c %.h log.h
 	gcc -fPIC -std=gnu99 -Wall -Wextra -c $< -o $@
 
-%.o: %.c
+%.o: %.c log.h
 	gcc -fPIC -std=gnu99 -Wall -Wextra -c $< -o $@
 
 installdirs:

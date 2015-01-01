@@ -7,6 +7,7 @@
 #include <grp.h>
 #include <sys/types.h>
 
+#include "log.h"
 #include "orgjson.h"
 
 static size_t g_ent_index;
@@ -57,9 +58,12 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
                                             int *const errnop) {
     orgjson_t *orgjson;
     enum nss_status retval = NSS_STATUS_NOTFOUND;
+    struct orgjson_error error;
 
-    orgjson = orgjson_load(NULL);
+    orgjson = orgjson_load(&error);
     if (!orgjson) {
+        log(LOG_ERR, "failed to get puavoadmins passwd entry by uid %d: %s",
+            uid, error.text);
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
     }
@@ -67,7 +71,9 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
     for (size_t i = 0; i < orgjson_get_owner_count(orgjson); ++i) {
         struct orgjson_owner owner;
 
-        if (!orgjson_get_owner(orgjson, i, &owner, NULL)) {
+        if (!orgjson_get_owner(orgjson, i, &owner, &error)) {
+            log(LOG_ERR, "failed to get puavoadmins passwd entry by uid %d: %s",
+                uid, error.text);
             retval = NSS_STATUS_UNAVAIL;
             break;
         }
@@ -92,9 +98,12 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
                                             int *const errnop) {
     orgjson_t *orgjson;
     enum nss_status retval = NSS_STATUS_NOTFOUND;
+    struct orgjson_error error;
 
-    orgjson = orgjson_load(NULL);
+    orgjson = orgjson_load(&error);
     if (!orgjson) {
+        log(LOG_ERR, "failed to get puavoadmins passwd entry by name '%s': %s",
+            name, error.text);
         *errnop = errno;
         return NSS_STATUS_UNAVAIL;
     }
@@ -102,7 +111,9 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
     for (size_t i = 0; i < orgjson_get_owner_count(orgjson); ++i) {
         struct orgjson_owner owner;
 
-        if (!orgjson_get_owner(orgjson, i, &owner, NULL)) {
+        if (!orgjson_get_owner(orgjson, i, &owner, &error)) {
+            log(LOG_ERR, "failed to get puavoadmins passwd entry by name '%s': %s",
+                name, error.text);
             retval = NSS_STATUS_UNAVAIL;
             break;
         }
@@ -122,10 +133,14 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
 
 enum nss_status _nss_puavoadmins_setpwent(void) {
     g_ent_index = 0;
+    struct orgjson_error error;
 
-    g_orgjson = orgjson_load(NULL);
-    if (!g_orgjson)
+    g_orgjson = orgjson_load(&error);
+    if (!g_orgjson) {
+        log(LOG_ERR, "failed to rewind to the first puavoadmins passwd entry: %s",
+            error.text);
         return NSS_STATUS_UNAVAIL;
+    }
 
     return NSS_STATUS_SUCCESS;
 }
@@ -151,9 +166,13 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
 
     while (g_ent_index < orgjson_get_owner_count(g_orgjson)) {
         struct orgjson_owner owner;
+        struct orgjson_error error;
 
-        if (!orgjson_get_owner(g_orgjson, g_ent_index++, &owner, NULL))
+        if (!orgjson_get_owner(g_orgjson, g_ent_index++, &owner, &error)) {
+            log(LOG_ERR, "failed to get next puavoadmins passwd entry: %s",
+                error.text);
             continue;
+        }
 
         ret = populate_passwd(&owner, pw, buf, buflen, errnop);
 
