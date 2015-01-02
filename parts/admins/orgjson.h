@@ -1,6 +1,7 @@
 #ifndef ORGJSON_H
 #define ORGJSON_H
 
+/* Standard library includes. */
 #include <sys/types.h>
 
 #define ORGJSON_ERROR_TEXT_SIZE 240
@@ -21,7 +22,7 @@ struct orgjson_owner {
     gid_t gid_number;
 };
 
-// Opaque type representing parsed /etc/puavo/org.json.
+/* Opaque type representing parsed /etc/puavo/org.json. */
 typedef struct orgjson orgjson_t;
 
 orgjson_t *orgjson_load(struct orgjson_error *error);
@@ -33,4 +34,4 @@ struct orgjson_owner *orgjson_get_owner(const orgjson_t *orgjson,
                                         struct orgjson_error *error);
 size_t orgjson_get_owner_count(const orgjson_t *orgjson);
 
-#endif // ORGJSON_H
+#endif /* ORGJSON_H */

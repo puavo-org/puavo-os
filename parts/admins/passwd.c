@@ -1,4 +1,4 @@
-// Standard library includes.
+/* Standard library includes. */
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -7,17 +7,18 @@
 #include <grp.h>
 #include <sys/types.h>
 
+/* Local includes. */
 #include "log.h"
 #include "orgjson.h"
 
 static size_t g_ent_index;
 static orgjson_t *g_orgjson;
 
-static enum nss_status populate_passwd(const struct orgjson_owner *const owner,
-                                       struct passwd *const pw,
-                                       char *const buf,
-                                       const size_t bufsize,
-                                       int *const errnop) {
+static enum nss_status fill_passwd(const struct orgjson_owner *const owner,
+                                   struct passwd *const pw,
+                                   char *const buf,
+                                   const size_t bufsize,
+                                   int *const errnop) {
     static const char *const ADM_HOME_PATH = "/adm-home/";
     size_t pw_name_size;
     size_t pw_gecos_size;
@@ -98,7 +99,7 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
         if (owner.uid_number != uid)
             continue;
 
-        retval = populate_passwd(&owner, result, buf, bufsize, errnop);
+        retval = fill_passwd(&owner, result, buf, bufsize, errnop);
         goto out;
     }
 
@@ -144,7 +145,7 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
         if (strcmp(name, owner.username))
             continue;
 
-        retval = populate_passwd(&owner, result, buf, bufsize, errnop);
+        retval = fill_passwd(&owner, result, buf, bufsize, errnop);
         goto out;
     }
 
@@ -216,7 +217,7 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
             return NSS_STATUS_UNAVAIL;
         }
 
-        retval = populate_passwd(&owner, pw, buf, bufsize, errnop);
+        retval = fill_passwd(&owner, pw, buf, bufsize, errnop);
         if (retval == NSS_STATUS_SUCCESS) {
             /* We can safely move to the next entry only after the
              * current entry is returned succesfully. */

@@ -1,8 +1,10 @@
-// Standard library includes.
+/* Standard library includes. */
 #include <stdlib.h>
 
+/* Third-party includes. */
 #include <jansson.h>
 
+/* Local includes. */
 #include "orgjson.h"
 
 static const char ORGJSON_PATH[] = "/etc/puavo/org.json";
