@@ -52,7 +52,7 @@ Usage:
   --build takes optional arguments:
 
     --apt-proxy    [default is "localhost:3142", "no" may be used to turn off]
-    --arch         [default is "i386"]
+    --arch         [default is chroot architecture or "i386"]
     --distribution [default is "trusty"]
     --mirror       [default is "archive.ubuntu.com"]
 
@@ -96,7 +96,7 @@ if ! args=$(getopt -n "$0" -o + \
 fi
 
 # defaults for these parameters (can be overridden on the command line args)
-arch=i386
+arch=
 distribution=trusty
 
 imagetype=
@@ -204,6 +204,18 @@ if [ -z "$target_dir" ]; then
   fi
 fi
 
+chroot_arch=$(chroot "$target_dir" dpkg --print-architecture 2>/dev/null \
+                || true)
+if [ -n "$chroot_arch" ]; then
+  if [ -n "$arch" -a "$chroot_arch" != "$arch" ]; then
+    echo "Requested arch ($arch) does not match chroot arch ($chroot_arch)" >&2
+    exit 1
+  fi
+  arch=$chroot_arch
+fi
+
+[ -z "$arch" ] && arch=i386
+
 
 do_mounts() {
   mount -o bind /dev     "$target_dir/dev"
@@ -259,7 +271,7 @@ ask_and_set_image_information() {
 build_chroot() {
   wipe_chroot
 
-  run_with_setarch "$arch" \
+  run_with_setarch \
     debootstrap --arch="$arch" \
                 --components=main,restricted,universe,multiverse \
                 "$distribution" "$target_dir" "$mirror_maybe_proxied"
@@ -436,23 +448,16 @@ install_packages() {
 }
 
 run_in_chroot() {
-  do_mounts                                         || return $?
-  run_with_setarch_from_chroot \
-    chroot "$target_dir" env DISABLE_DAEMONS=1 "$@" || return $?
-  do_umounts                                        || return $?
+  do_mounts                                                        || return $?
+  run_with_setarch chroot "$target_dir" env DISABLE_DAEMONS=1 "$@" || return $?
+  do_umounts                                                       || return $?
 }
 
 run_with_setarch() {
-  setarch_arch=$1; shift
-  case "$setarch_arch" in
-    amd64) setarch x86_64          "$@" ;;
-    *    ) setarch "$setarch_arch" "$@" ;;
+  case "$arch" in
+    amd64) setarch x86_64  "$@" ;;
+    *    ) setarch "$arch" "$@" ;;
   esac
-}
-
-run_with_setarch_from_chroot() {
-  run_with_setarch "$(chroot "$target_dir" dpkg --print-architecture)" \
-                   "$@"
 }
 
 set_root_password() {
