@@ -7,6 +7,7 @@ class image::bundle::basic {
 	  kernels,
 	  lightdm,
 	  motd,
+	  packages,
 	  ssh_client,
 	  udev,
 	  use_urandom
@@ -16,4 +17,6 @@ class image::bundle::basic {
       include packages::sssd_install_workaround
     }
   }
+
+  Package <| title == puavo-ltsp-client |>
 }
