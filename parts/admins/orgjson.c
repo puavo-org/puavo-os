@@ -21,7 +21,7 @@ struct orgjson *orgjson_load(struct orgjson_error *const error)
     if (!orgjson) {
         if (error) {
             error->code = ORGJSON_ERROR_CODE_SYS;
-            snprintf(error->text, ORGJSON_ERROR_TEXT_LEN, "malloc failed: %m");
+            snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE, "malloc failed: %m");
         }
         return NULL;
     }
@@ -31,7 +31,7 @@ struct orgjson *orgjson_load(struct orgjson_error *const error)
         free(orgjson);
         if (error) {
             error->code = ORGJSON_ERROR_CODE_JSON;
-            snprintf(error->text, ORGJSON_ERROR_TEXT_LEN,
+            snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
                      "failed to load %s: %s", ORGJSON_PATH, json_error.text);
         }
         return NULL;
@@ -43,7 +43,7 @@ struct orgjson *orgjson_load(struct orgjson_error *const error)
         free(orgjson);
         if (error) {
             error->code = ORGJSON_ERROR_CODE_JSON;
-            snprintf(error->text, ORGJSON_ERROR_TEXT_LEN,
+            snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
                      "owners field is missing or is not an array");
         }
         return NULL;
@@ -79,7 +79,7 @@ struct orgjson_owner *orgjson_get_owner(const struct orgjson *const orgjson,
     if (!user) {
         if (error) {
             error->code = ORGJSON_ERROR_CODE_JSON;
-            snprintf(error->text, ORGJSON_ERROR_TEXT_LEN,
+            snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
                      "owners array does not have item at i=%ld", i);
         }
         return NULL;
@@ -89,7 +89,7 @@ struct orgjson_owner *orgjson_get_owner(const struct orgjson *const orgjson,
     if (!username || !json_is_string(username)) {
         if (error) {
             error->code = ORGJSON_ERROR_CODE_JSON;
-            snprintf(error->text, ORGJSON_ERROR_TEXT_LEN,
+            snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
                      "owner (i=%ld) has invalid or missing username", i);
 
         }
@@ -100,7 +100,7 @@ struct orgjson_owner *orgjson_get_owner(const struct orgjson *const orgjson,
     if (!uid_number || !json_is_integer(uid_number)) {
         if (error) {
             error->code = ORGJSON_ERROR_CODE_JSON;
-            snprintf(error->text, ORGJSON_ERROR_TEXT_LEN,
+            snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
                      "owner (i=%ld) has invalid or missing uid_number", i);
         }
         return NULL;
@@ -110,7 +110,7 @@ struct orgjson_owner *orgjson_get_owner(const struct orgjson *const orgjson,
     if (!gid_number || !json_is_integer(gid_number)) {
         if (error) {
             error->code = ORGJSON_ERROR_CODE_JSON;
-            snprintf(error->text, ORGJSON_ERROR_TEXT_LEN,
+            snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
                      "owner (i=%ld) has invalid or missing gid_number", i);
         }
         return NULL;
@@ -120,7 +120,7 @@ struct orgjson_owner *orgjson_get_owner(const struct orgjson *const orgjson,
     if (!first_name || !json_is_string(first_name)) {
         if (error) {
             error->code = ORGJSON_ERROR_CODE_JSON;
-            snprintf(error->text, ORGJSON_ERROR_TEXT_LEN,
+            snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
                      "owner (i=%ld) has invalid or missing first_name", i);
         }
         return NULL;
@@ -130,7 +130,7 @@ struct orgjson_owner *orgjson_get_owner(const struct orgjson *const orgjson,
     if (!last_name || !json_is_string(last_name)) {
         if (error) {
             error->code = ORGJSON_ERROR_CODE_JSON;
-            snprintf(error->text, ORGJSON_ERROR_TEXT_LEN,
+            snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
                      "owner (i=%ld) has invalid or missing last_name", i);
         }
         return NULL;

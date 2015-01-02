@@ -16,7 +16,7 @@ static orgjson_t *g_orgjson;
 static enum nss_status populate_passwd(const struct orgjson_owner *const owner,
                                        struct passwd *const pw,
                                        char *const buf,
-                                       const size_t buflen,
+                                       const size_t bufsize,
                                        int *const errnop) {
     static const char *const ADM_HOME_PATH = "/adm-home/";
     size_t pw_name_size;
@@ -31,7 +31,7 @@ static enum nss_status populate_passwd(const struct orgjson_owner *const owner,
     pw_gecos_size = strlen(owner->first_name) + 1 + strlen(owner->last_name) + 1;
     pw_dir_size = strlen(ADM_HOME_PATH) + strlen(owner->username) + 1;
 
-    if ((pw_name_size + pw_gecos_size + pw_dir_size) > buflen) {
+    if ((pw_name_size + pw_gecos_size + pw_dir_size) > bufsize) {
         *errnop = ERANGE;
         return NSS_STATUS_TRYAGAIN;
     }
@@ -70,7 +70,7 @@ static enum nss_status populate_passwd(const struct orgjson_owner *const owner,
 enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
                                             struct passwd *const result,
                                             char *const buf,
-                                            const size_t buflen,
+                                            const size_t bufsize,
                                             int *const errnop) {
     orgjson_t *orgjson;
     enum nss_status retval;
@@ -98,7 +98,7 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
         if (owner.uid_number != uid)
             continue;
 
-        retval = populate_passwd(&owner, result, buf, buflen, errnop);
+        retval = populate_passwd(&owner, result, buf, bufsize, errnop);
         goto out;
     }
 
@@ -116,7 +116,7 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
 enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
                                             struct passwd *const result,
                                             char *const buf,
-                                            const size_t buflen,
+                                            const size_t bufsize,
                                             int *const errnop) {
     orgjson_t *orgjson;
     enum nss_status retval;
@@ -144,7 +144,7 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
         if (strcmp(name, owner.username))
             continue;
 
-        retval = populate_passwd(&owner, result, buf, buflen, errnop);
+        retval = populate_passwd(&owner, result, buf, bufsize, errnop);
         goto out;
     }
 
@@ -194,7 +194,7 @@ enum nss_status _nss_puavoadmins_endpwent(void) {
 
 enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
                                             char *const buf,
-                                            const size_t buflen,
+                                            const size_t bufsize,
                                             int *const errnop) {
     /* On the very first run, ensure the database is initialized,
      * because setpwent() might not have been called before. */
@@ -216,7 +216,7 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
             return NSS_STATUS_UNAVAIL;
         }
 
-        retval = populate_passwd(&owner, pw, buf, buflen, errnop);
+        retval = populate_passwd(&owner, pw, buf, bufsize, errnop);
         if (retval == NSS_STATUS_SUCCESS) {
             /* We can safely move to the next entry only after the
              * current entry is returned succesfully. */

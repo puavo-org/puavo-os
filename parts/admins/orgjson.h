@@ -3,14 +3,14 @@
 
 #include <sys/types.h>
 
-#define ORGJSON_ERROR_TEXT_LEN 240
+#define ORGJSON_ERROR_TEXT_SIZE 240
 
 struct orgjson_error {
     enum {
       ORGJSON_ERROR_CODE_SYS=1,
       ORGJSON_ERROR_CODE_JSON,
     } code;
-    char text[ORGJSON_ERROR_TEXT_LEN];
+    char text[ORGJSON_ERROR_TEXT_SIZE];
 };
 
 struct orgjson_owner {
