@@ -66,7 +66,6 @@ class packages {
     , 'bridge-utils'
     , 'gdebi-core'
     , 'grub-pc'
-    , 'laptop-mode-tools'
     , 'lvm2'
     , 'nfs-common'
     , 'openssh-client'
@@ -75,6 +74,7 @@ class packages {
     , 'pm-utils'
     , 'rng-tools'
     , 'udev'
+    , 'ubuntu-standard'
     , 'vlan' ]:
       tag => [ 'basic', 'ubuntu', ];
 
@@ -91,7 +91,6 @@ class packages {
     , 'python-gtk2'
     , 'python-notify'
     , 'shared-mime-info'
-    , 'ubuntu-standard'
     , 'xul-ext-mozvoikko' ]:
       tag => [ 'desktop', 'ubuntu', ];
 
@@ -311,6 +310,9 @@ class packages {
     , 'myspell-sv-se'
     , 'thunderbird-locale-sv' ]:
       tag => [ 'language-sv', 'ubuntu', ];
+
+    [ 'laptop-mode-tools' ]:
+      tag => [ 'laptop', 'ubuntu', ];
 
     [ 'banshee'
     , 'clam-chordata'
@@ -723,11 +725,9 @@ class packages {
 
   @package {
     [ 'nodejs-bundle'
+    , 'puavo-rules'
     , 'puavo-devscripts' ]:
       tag => [ 'devel', 'puavo', ];
-
-    [ 'puavo-rules' ]:
-      tag => [ 'builder', 'devel', 'puavo', ];
 
     [ 'autopoweroff'
     , 'ltsp-client'
@@ -743,6 +743,7 @@ class packages {
 
     [ 'iivari-client'
     , 'ltsp-server'
+    , 'puavo-image-tools'
     , 'puavo-load-reporter'
     , 'puavo-local-config'
     , 'puavo-sharedir-client'
@@ -752,9 +753,6 @@ class packages {
     , 'webkiosk-language-selector'
     , 'xexit' ]:
       tag => [ 'misc', 'puavo', ];
-
-    [ 'puavo-image-tools' ]:
-      tag => [ 'builder', 'misc', 'puavo', ];
 
     [ 'dymo-cups-drivers' ]:
       tag => [ 'printing', 'puavo', ];
