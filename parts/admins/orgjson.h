@@ -35,6 +35,7 @@ struct orgjson_owner {
         const char *username;
         const char *first_name;
         const char *last_name;
+        const char *ssh_public_key;
         uid_t uid_number;
         gid_t gid_number;
 };

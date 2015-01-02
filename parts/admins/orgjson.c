@@ -95,6 +95,7 @@ struct orgjson_owner *orgjson_get_owner(const struct orgjson *const orgjson,
         json_t *gid_number;
         json_t *first_name;
         json_t *last_name;
+        json_t *ssh_public_key;
 
         user = json_array_get(orgjson->owners, i);
         if (!user) {
@@ -162,11 +163,23 @@ struct orgjson_owner *orgjson_get_owner(const struct orgjson *const orgjson,
                 return NULL;
         }
 
+        ssh_public_key = json_object_get(user, "ssh_public_key");
+        if (!ssh_public_key || !json_is_string(ssh_public_key)) {
+                if (error) {
+                        error->code = ORGJSON_ERROR_CODE_JSON;
+                        snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
+                                 "owner (i=%ld) has invalid or missing "
+                                 "ssh_public_key", i);
+                }
+                return NULL;
+        }
+
         owner->username = json_string_value(username);
         owner->uid_number = json_integer_value(uid_number);
         owner->gid_number = json_integer_value(gid_number);
         owner->first_name = json_string_value(first_name);
         owner->last_name = json_string_value(last_name);
+        owner->ssh_public_key = json_string_value(ssh_public_key);
 
         return owner;
 }
