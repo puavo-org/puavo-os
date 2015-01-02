@@ -720,7 +720,7 @@ class packages {
   }
 
   #
-  # packages from the opinsys/puavo repository
+  # packages from the (Opinsys) puavo repository
   #
 
   @package {
@@ -812,95 +812,6 @@ class packages {
 
     [ 'adobe-flashplugin' ]:
       tag => [ 'web', 'partner', 'extra', 'restricted' ];
- }
-
-  #
-  # packages from the (private) opinsys repository
-  #
-
-  @package {
-    [ 'spotify-client'
-    , 'spotify-client-qt' ]:
-      tag => [ 'audio', 'opinsys', 'extra', 'restricted' ];
-
-    [ 'esci-interpreter-perfection-v330'
-    , 'iscan'
-    , 'iscan-data' ]:
-      tag => [ 'epson-scanner', 'opinsys', 'restricted' ];
-
-    [ 'ekapeli' ]:
-      tag => [ 'games', 'opinsys', 'restricted', ];
-
-    [ 'libdvdcss2'
-    , 'pipelight-multi' ]:
-      tag => [ 'mediaplayer', 'opinsys', ];
-
-    [ 'nautilus-dropbox' ]:
-      tag => [ 'misc', 'opinsys', ];
-
-    [ 'nautilus-dropbox-dist' ]:
-      tag => [ 'misc', 'opinsys', 'extra', 'restricted' ];
-
-    [ 'acroread'
-    , 'cmaptools' ]:
-      tag => [ 'office', 'opinsys', 'extra', 'restricted' ];
-
-    [ 'tmcbeans' ]:
-      tag => [ 'programming', 'opinsys', 'extra', 'restricted' ];
-
-    [ 'icaclient' ]:
-      # icaclient has a hidden dependency on libmotif4
-      require => Package['libmotif4'],
-      tag     => [ 'remote_access', 'opinsys', 'restricted' ];
-
-    [ 'av4kav' ]:
-      tag => [ 'science', 'opinsys', 'restricted' ];
-
-    [ 'geogebra'
-    , 'google-earth-stable'
-    , 'googleearth' ]:
-      tag => [ 'science', 'opinsys', 'extra', 'restricted' ];
-
-    [ 'vstloggerpro' ]:
-      tag => [ 'science', 'opinsys' ];
-
-    [ 'opinsys-theme' ]:
-      tag => [ 'themes', 'opinsys', ];
-
-    [ 'google-talkplugin' ]:
-      tag => [ 'web', 'opinsys', 'restricted' ];
-
-    [ 'google-chrome-beta'
-    , 'google-chrome-stable'
-    , 'oracle-java' ]:
-      tag => [ 'web', 'opinsys', 'extra', 'restricted' ];
-
-    [ 'eleet'
-    , 'leap' ]:
-      tag => [ 'whiteboard', 'whiteboard-leapmotion', 'opinsys', 'restricted' ];
-
-    [ 'ebeam-edu' ]:
-      tag => [ 'whiteboard', 'whiteboard-ebeam', 'opinsys', 'restricted' ];
-
-    [ 'mimio-studio' ]:
-      tag => [ 'whiteboard', 'whiteboard-mimio', 'opinsys', 'restricted' ];
-
-    # XXX this should not be here, but in a public repository:
-    [ 'open-sankore', ]:
-      tag => [ 'whiteboard', 'whiteboard-sankore', 'opinsys', ];
-
-    [ 'nwfermi'
-    , 'smart-activation'
-    , 'smart-common'
-    , 'smart-extreme-collaboration'
-    , 'smart-galleryfiles'
-    , 'smart-gallerysetup'
-    , 'smart-hwr'
-    , 'smart-languagesetup'
-    , 'smart-notebook'
-    , 'smart-product-drivers'
-    , 'xf86-input-nextwindow' ]:
-      tag => [ 'whiteboard', 'whiteboard-smartboard', 'opinsys', 'restricted' ];
   }
 
   # Packages which are not restricted per se, but which are required by
