@@ -21,7 +21,7 @@
 /* Standard library includes. */
 #include <syslog.h>
 
-#define log(level, format, args...)             \
-  syslog(level | LOG_AUTHPRIV, format, args);
+#define log(level, format, args...)                     \
+        syslog(level | LOG_AUTHPRIV, format, args);
 
 #endif /* COMMON_H */

@@ -24,19 +24,19 @@
 #define ORGJSON_ERROR_TEXT_SIZE 240
 
 struct orgjson_error {
-    enum {
-      ORGJSON_ERROR_CODE_SYS=1,
-      ORGJSON_ERROR_CODE_JSON,
-    } code;
-    char text[ORGJSON_ERROR_TEXT_SIZE];
+        enum {
+                ORGJSON_ERROR_CODE_SYS=1,
+                ORGJSON_ERROR_CODE_JSON,
+        } code;
+        char text[ORGJSON_ERROR_TEXT_SIZE];
 };
 
 struct orgjson_owner {
-    const char *username;
-    const char *first_name;
-    const char *last_name;
-    uid_t uid_number;
-    gid_t gid_number;
+        const char *username;
+        const char *first_name;
+        const char *last_name;
+        uid_t uid_number;
+        gid_t gid_number;
 };
 
 /* Opaque type representing parsed /etc/puavo/org.json. */
