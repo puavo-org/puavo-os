@@ -43,7 +43,7 @@ static enum nss_status fill_group_members(const orgjson_t *const orgjson,
     for (size_t i = 0; i < member_count; ++i) {
         struct orgjson_owner owner;
         struct orgjson_error error;
-        size_t username_len;
+        size_t username_size;
 
         if (!orgjson_get_owner(orgjson, i, &owner, &error)) {
             log(LOG_ERR, "failed to get puavoadmins group entry by index %ld: %s",
@@ -52,16 +52,16 @@ static enum nss_status fill_group_members(const orgjson_t *const orgjson,
             return NSS_STATUS_UNAVAIL;
         }
 
-        username_len = strlen(owner.username);
+        username_size = strlen(owner.username) + 1;
         // If we run out of buffer space, we need to return an error
-        if (member + username_len > buffer + buflen) {
+        if (member + username_size > buffer + buflen) {
             *errnop = ERANGE;
             return NSS_STATUS_TRYAGAIN;
         }
 
         strcpy(member, owner.username);
         members[i] = member;
-        member += username_len + 1;
+        member += username_size;
     }
 
     gr->gr_name = PUAVOADMINS_GRNAM;
