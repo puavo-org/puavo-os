@@ -743,7 +743,6 @@ class packages {
 
     [ 'iivari-client'
     , 'ltsp-server'
-    , 'puavo-image-tools'
     , 'puavo-load-reporter'
     , 'puavo-local-config'
     , 'puavo-sharedir-client'
@@ -753,6 +752,9 @@ class packages {
     , 'webkiosk-language-selector'
     , 'xexit' ]:
       tag => [ 'misc', 'puavo', ];
+
+    [ 'puavo-image-tools' ]:
+      tag => [ 'builder', 'misc', 'puavo', ];
 
     [ 'dymo-cups-drivers' ]:
       tag => [ 'printing', 'puavo', ];
