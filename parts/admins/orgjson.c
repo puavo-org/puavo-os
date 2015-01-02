@@ -164,7 +164,8 @@ struct orgjson_owner *orgjson_get_owner(const struct orgjson *const orgjson,
         }
 
         ssh_public_key = json_object_get(user, "ssh_public_key");
-        if (!ssh_public_key || !json_is_string(ssh_public_key)) {
+        if (!ssh_public_key ||
+            (!json_is_string(ssh_public_key) && !json_is_null(ssh_public_key))) {
                 if (error) {
                         error->code = ORGJSON_ERROR_CODE_JSON;
                         snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
