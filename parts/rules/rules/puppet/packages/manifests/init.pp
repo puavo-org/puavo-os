@@ -726,6 +726,9 @@ class packages {
     , 'puavo-devscripts' ]:
       tag => [ 'devel', 'puavo', ];
 
+    [ 'puavo-rules' ]:
+      tag => [ 'builder', 'devel', 'puavo', ];
+
     [ 'autopoweroff'
     , 'ltsp-client'
     , 'opinsys-ca-certificates'
