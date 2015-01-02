@@ -1,5 +1,5 @@
 class opinsys_notify_puavoimage_changelog {
-  include packages
+  include opinsyspackages
 
   $nw_dir = '/usr/local/share/notify_puavoimage_changelog/node-webkit-app'
 
