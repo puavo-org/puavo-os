@@ -18,6 +18,7 @@ class image::bundle::basic {
     }
   }
 
-  Package <| title == puavo-ltsp-client
+  Package <| title == ltsp-client
+          or title == puavo-ltsp-client
           or title == puavo-ltsp-install |>
 }
