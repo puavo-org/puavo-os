@@ -8,7 +8,9 @@ class image::builder {
                   or title == repo |>
 
   # apply only builder package definitions listed in packages
-  Package <| tag == basic
+  Package <| tag == admin
+          or tag == basic
+          or title == puavo-devscripts
           or title == puavo-image-tools
           or title == puavo-rules |>
 }
