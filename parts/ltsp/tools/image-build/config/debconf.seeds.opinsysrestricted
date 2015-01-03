@@ -1,7 +1,0 @@
-# Accept the citrix-client EULA.
-icaclient	icaclient/accepteula	boolean	true
-
-# In order to install this package, you must accept the license terms, the
-# "TrueType core fonts for the Web EULA ". Not accepting will cancel the
-# installation. Do you accept the EULA license terms?
-ttf-mscorefonts-installer	msttcorefonts/accepted-mscorefonts-eula	boolean	true
