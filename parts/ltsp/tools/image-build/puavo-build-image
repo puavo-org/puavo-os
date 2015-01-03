@@ -10,7 +10,7 @@ def imgbuild_args(cmdline_switch, conf, key)
     : []
 end
 
-def build_config_target(config_target, config_file)
+def build_config_target(config_target, config_file, puavo_imgbuild_args)
   image_confs = image_configuration(config_file)
 
   if !image_confs.has_key?(config_target) then
@@ -32,7 +32,8 @@ def build_config_target(config_target, config_file)
          '--distribution', conf['distribution'],
          *arch_args,
          *puppet_args,
-         *release_args) \
+         *release_args,
+         *puavo_imgbuild_args) \
     or raise "Problem in building '#{ config_target }'"
 end
 
@@ -261,6 +262,7 @@ EOF
 end
 
 def usage()
+  # XXX yes we do need better documentation...
   puts <<-EOF
 You use me wrong, use better!
 EOF
@@ -291,13 +293,17 @@ rescue GetoptLong::InvalidOption => e
   usage
 end
 
+# pass the rest of the command line arguments to puavo-imgbuild-tool
+# (the ones after "--")
+puavo_imgbuild_args = ARGV
+
 if output_makefile && config_file then
   builder_confs_path = "#{ ENV['HOME'] }/.config/puavo-build-image/defaults"
   builder_confs = builder_confs(builder_confs_path)
   output_makefile(builder_confs, image_configuration(config_file))
   exit(0)
 elsif config_file && config_target then
-  build_config_target(config_target, config_file)
+  build_config_target(config_target, config_file, puavo_imgbuild_args)
 else
   usage()
 end
