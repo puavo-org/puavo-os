@@ -1,0 +1,21 @@
+prefix ?= /usr
+datarootdir = $(prefix)/share
+
+all:
+
+.PHONY: installdirs
+installdirs:
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-rules/rules/debseeds \
+		 $(DESTDIR)$(datarootdir)/puavo-rules/rules/puppet
+		 
+
+.PHONY: install
+install: installdirs
+	cp -t $(DESTDIR)$(datarootdir)/puavo-rules/rules images.json
+	cp -R -t $(DESTDIR)$(datarootdir)/puavo-rules/rules/debseeds \
+		 debseeds/*
+	cp -R -t $(DESTDIR)$(datarootdir)/puavo-rules/rules/puppet \
+		 puppet/*
+
+.PHONY: clean
+clean:
