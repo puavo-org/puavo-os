@@ -5,29 +5,29 @@ set -eu
 usage() {
     cat <<EOF
 Usage:
-  puavo-build-image --build imagetype
-                    --buildrules-dirs buildrules-dirs
-                    --image-excludes-path image-excludes-path
-                    --puppet-classes puppet-classes
-                    --release-name release-name
-                    --set-root-password
-                    --target-dir target-dir
+  puavo-imgbuild-tool --build imagetype
+                      --buildrules-dirs buildrules-dirs
+                      --image-excludes-path image-excludes-path
+                      --puppet-classes puppet-classes
+                      --release-name release-name
+                      --set-root-password
+                      --target-dir target-dir
 
-  puavo-build-image --chroot         --target-dir target-dir
-  puavo-build-image --cleanup-chroot --target-dir target-dir
-  puavo-build-image --dist-upgrade   --target-dir target-dir
-  puavo-build-image --image --images-dir images-dir
-                            --release-name release-name
-                            --set-root-password
-                            --target-dir target-dir
+  puavo-imgbuild-tool --chroot         --target-dir target-dir
+  puavo-imgbuild-tool --cleanup-chroot --target-dir target-dir
+  puavo-imgbuild-tool --dist-upgrade   --target-dir target-dir
+  puavo-imgbuild-tool --image --images-dir images-dir
+                              --release-name release-name
+                              --set-root-password
+                              --target-dir target-dir
 
-  puavo-build-image --install-packages --buildrules-dirs buildrules-dirs
-                                       --target-dir target-dir
+  puavo-imgbuild-tool --install-packages --buildrules-dirs buildrules-dirs
+                                         --target-dir target-dir
 
-  puavo-build-image --puppet-chroot
-  puavo-build-image --puppet-chroot-error-on-change
-  puavo-build-image --puppet-local
-  puavo-build-image --update-chroot
+  puavo-imgbuild-tool --puppet-chroot
+  puavo-imgbuild-tool --puppet-chroot-error-on-change
+  puavo-imgbuild-tool --puppet-local
+  puavo-imgbuild-tool --update-chroot
 
   --puppet-chroot, --puppet-chroot-error-on-change, --puppet-local and
   --update-chroot take the following extra arguments:
