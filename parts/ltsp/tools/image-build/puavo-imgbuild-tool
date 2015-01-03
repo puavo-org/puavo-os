@@ -71,8 +71,10 @@ dirs_with_postfix() {
 }
 
 get_default_for() {
-  awk -v key="$1" '$1 == key { print $2 }' \
-    ~/.config/puavo-build-image/defaults
+  if [ -e ~/.config/puavo-build-image/defaults ]; then
+    awk -v key="$1" '$1 == key { print $2 }' \
+      ~/.config/puavo-build-image/defaults
+  fi
 }
 
 get_imagetype() {
