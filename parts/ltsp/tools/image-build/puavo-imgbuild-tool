@@ -7,7 +7,7 @@ usage() {
 Usage:
   puavo-build-image --build imagetype
                     --buildrules-dirs buildrules-dirs
-                    --imagebuild-sources-dir imagebuild-sources-dir
+                    --image-excludes-path image-excludes-path
                     --puppet-classes puppet-classes
                     --release-name release-name
                     --set-root-password
@@ -33,7 +33,7 @@ Usage:
   --update-chroot take the following extra arguments:
 
       --buildrules-dirs buildrules-dirs
-      --imagebuild-sources-dir imagebuild-sources-dir
+      --image-excludes-path image-excludes-path
       --puppet-classes puppet-classes
       --target-dir target-dir
 
@@ -41,7 +41,7 @@ Usage:
   --target-dir is not set but --builds-dir is, --target-dir is asked
   interactively.
 
-  --imagebuild-sources-dir defaults to current directory
+  --image-excludes-path defaults to /etc/puavo-image-tools/ltsp-image.excludes
 
   --puppet-classes is a comma-separated list of puppet classes to be applied
 
@@ -90,7 +90,7 @@ get_imagetype() {
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,install-packages,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,buildrules-dirs:,builds-dir:,distribution:,images-dir:,mirror:,puppet-classes:,release-name:,set-root-password,imagebuild-sources-dir:,target-dir:' \
+              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,install-packages,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,buildrules-dirs:,builds-dir:,distribution:,image-excludes-path:,images-dir:,mirror:,puppet-classes:,release-name:,set-root-password,target-dir:' \
               -- "$@"); then
   usage
 fi
@@ -109,15 +109,16 @@ target_dir=
 apt_proxy=$(get_default_for apt-proxy)
 buildrules_dirs=$(get_default_for buildrules-dirs)
 builds_dir=$(get_default_for builds-dir)
-imagebuild_sources_dir=$(get_default_for imagebuild-sources-dir)
+image_excludes_path=$(get_default_for image-excludes-path)
 images_dir="$(get_default_for images-dir)"
 mirror="$(get_default_for mirror)"
 puppet_modules_dirs="$(dirs_with_postfix "${buildrules_dirs}" /puppet)"
 
-[ -z "$apt_proxy"              ] && apt_proxy="localhost:3142"
-[ -z "$imagebuild_sources_dir" ] && imagebuild_sources_dir="$(pwd)"
-[ -z "$images_dir"             ] && images_dir="/opt/ltsp/images"
-[ -z "$mirror"                 ] && mirror="archive.ubuntu.com"
+[ -z "$apt_proxy"           ] && apt_proxy="localhost:3142"
+[ -z "$images_dir"          ] && images_dir="/opt/ltsp/images"
+[ -z "$mirror"              ] && mirror="archive.ubuntu.com"
+[ -z "$image_excludes_path" ] \
+  && image_excludes_path="/etc/puavo-image-tools/ltsp-image.excludes"
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
@@ -153,8 +154,8 @@ while [ $# -ne 0 ]; do
     --distribution)
       distribution=$2; shift; shift
       ;;
-    --imagebuild-sources-dir)
-      imagebuild_sources_dir=$2; shift; shift
+    --image-excludes-path)
+      image_excludes_path=$2; shift; shift
       ;;
     --images-dir)
       images_dir=$2; shift; shift
@@ -490,8 +491,8 @@ make_image() {
 
   mkdir -p "$images_dir"
   mksquashfs "$target_dir" "$images_dir/${ltspimage_name}.tmp" \
-             -noappend \
-             -ef ${imagebuild_sources_dir}/config/ltsp-image.excludes \
+             -noappend                                         \
+             -ef "${image_excludes_path}"                      \
              -wildcards
   mv "$images_dir/${ltspimage_name}.tmp" "$images_dir/${ltspimage_name}"
   echo "Successfully created a squashfs image: $images_dir/${ltspimage_name}"

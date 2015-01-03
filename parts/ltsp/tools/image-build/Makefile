@@ -17,9 +17,13 @@ all :
 installdirs :
 	mkdir -p $(DESTDIR)$(libdir)/puavo-image-tools
 	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-image-tools
 
 .PHONY : install
 install : installdirs
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-image-tools \
+		config/ltsp-image.excludes
+	
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-image-tools \
 		puavo-ask-buildtarget-dir \
 		puavo-imgbuild-tool
