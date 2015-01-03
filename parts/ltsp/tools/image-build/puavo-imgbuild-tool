@@ -202,8 +202,9 @@ if [ -z "$target_dir" ]; then
       target_dir=$(/usr/lib/puavo-image-tools/puavo-ask-buildtarget-dir \
                      "$builds_dir")
     fi
-    [ -z "$target_dir" ] && usage
-  else
+  fi
+  if [ -z "$target_dir" ]; then
+    echo 'Could not determine target dir' >&2
     usage
   fi
 fi
