@@ -1,16 +1,13 @@
-prefix = /usr/local
-datarootdir = $(prefix)/share
-
 .PHONY: all
 all:
 
 .PHONY: installdirs
 installdirs:
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-rules/rules
+	$(MAKE) -C rules -f Makefile.install installdirs
 
 .PHONY: install
 install: installdirs
-	cp -R -t $(DESTDIR)$(datarootdir)/puavo-rules/rules rules/*
+	$(MAKE) -C rules -f Makefile.install install
 
 .PHONY: clean
 clean:
