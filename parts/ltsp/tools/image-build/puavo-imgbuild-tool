@@ -114,7 +114,6 @@ builds_dir=$(get_default_for builds-dir)
 image_excludes_path=$(get_default_for image-excludes-path)
 images_dir="$(get_default_for images-dir)"
 mirror="$(get_default_for mirror)"
-puppet_modules_dirs="$(dirs_with_postfix "${buildrules_dirs}" /puppet)"
 
 [ -z "$apt_proxy"           ] && apt_proxy="localhost:3142"
 [ -z "$images_dir"          ] && images_dir="/opt/ltsp/images"
@@ -185,6 +184,8 @@ while [ $# -ne 0 ]; do
       ;;
   esac
 done
+
+puppet_modules_dirs="$(dirs_with_postfix "${buildrules_dirs}" /puppet)"
 
 [ "$apt_proxy" = "no" ] && apt_proxy=
 if [ -n "$apt_proxy" ]; then
