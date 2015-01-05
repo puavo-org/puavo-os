@@ -1,5 +1,6 @@
 #!/usr/bin/ruby1.9.1
 
+require 'fileutils'
 require 'getoptlong'
 require 'json'
 
@@ -262,6 +263,41 @@ ${SIGNATURES_DIR}/%.rdiff_signature: %.img | ${SIGNATURES_DIR}
 EOF
 end
 
+def setup_tmpfs(tmpfs_path, tmpfs_inode_count, tmpfs_size)
+  mountinfo = %x(mount)
+  raise 'Problem running mount' unless $?.exitstatus == 0
+
+  mntoptions = 'rw,uid=0,gid=0,mode=755,' \
+               + "size=#{ tmpfs_size },nr_inodes=#{ tmpfs_inode_count }"
+
+  current_mntoptions = nil
+  mountinfo.split("\n").each do |line|
+    fields = line.split
+    next if fields[2] != tmpfs_path
+    match = fields[5].match(/^\((.*)\)$/)
+    if match then
+      current_mntoptions = match[1]
+    end
+  end
+
+  if current_mntoptions && current_mntoptions != mntoptions then
+    # the partition is mounted, but not with the right options, so we umount
+    system('umount', tmpfs_path) \
+      or raise "Problem unmounting '#{ tmpfs_path }'"
+    current_mntoptions = nil
+  end
+    
+  if !current_mntoptions then
+    # we need to do mount
+    FileUtils.mkdir_p(tmpfs_path)
+    system('mount',
+           '-t', 'tmpfs',
+           '-o', mntoptions,
+           'tmpfs',
+           tmpfs_path)
+  end
+end
+
 def usage()
   # XXX yes we do need better documentation...
   puts <<-EOF
@@ -270,15 +306,21 @@ EOF
   exit(1)
 end
 
-config_files = []
-config_target = nil
-output_makefile = false
+config_files      = []
+config_target     = nil
+output_makefile   = false
+tmpfs_inode_count = nil
+tmpfs_path        = nil
+tmpfs_size        = nil
 
 begin
   opts = GetoptLong.new(
-           [ '--images-config',   '-i', GetoptLong::REQUIRED_ARGUMENT ],
-           [ '--output-makefile', '-m', GetoptLong::NO_ARGUMENT       ],
-           [ '--config-target',   '-t', GetoptLong::REQUIRED_ARGUMENT ])
+           [ '--config-target',     GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--images-config',     GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--output-makefile',   GetoptLong::NO_ARGUMENT       ],
+           [ '--tmpfs-inode-count', GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--tmpfs-path',        GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--tmpfs-size',        GetoptLong::REQUIRED_ARGUMENT ])
 
   opts.each do |opt, arg|
     case opt
@@ -288,6 +330,12 @@ begin
 	config_files << arg
       when '--output-makefile'
 	output_makefile = true
+      when '--tmpfs-inode-count'
+	tmpfs_inode_count = arg
+      when '--tmpfs-path'
+	tmpfs_path = arg
+      when '--tmpfs-size'
+	tmpfs_size = arg
     end
   end
 rescue GetoptLong::InvalidOption => e
@@ -299,12 +347,21 @@ end
 puavo_imgbuild_args = ARGV
 
 if output_makefile && !config_files.empty? then
+  # special --output-makefile mode was invoked
   builder_confs_path = "#{ ENV['HOME'] }/.config/puavo-build-image/defaults"
   builder_confs = builder_confs(builder_confs_path)
   output_makefile(builder_confs, image_configuration(config_files))
   exit(0)
-elsif !config_files.empty? && config_target then
-  build_config_target(config_target, config_files, puavo_imgbuild_args)
-else
-  usage()
 end
+
+if !config_files.empty? && config_target then
+  if tmpfs_path then
+    setup_tmpfs(tmpfs_path,
+                tmpfs_inode_count || '5m',
+                tmpfs_size || '28g')
+  end
+  build_config_target(config_target, config_files, puavo_imgbuild_args)
+  exit(0)
+end
+
+usage()
