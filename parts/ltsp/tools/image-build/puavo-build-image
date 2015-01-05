@@ -263,7 +263,7 @@ ${SIGNATURES_DIR}/%.rdiff_signature: %.img | ${SIGNATURES_DIR}
 EOF
 end
 
-def setup_tmpfs(tmpfs_path, tmpfs_inode_count, tmpfs_size)
+def setup_tmpfs(tmpfs_inode_count, tmpfs_path, tmpfs_size)
   mountinfo = %x(mount)
   raise 'Problem running mount' unless $?.exitstatus == 0
 
@@ -312,6 +312,7 @@ output_makefile   = false
 tmpfs_inode_count = nil
 tmpfs_path        = nil
 tmpfs_size        = nil
+use_tmpfs         = false
 
 begin
   opts = GetoptLong.new(
@@ -320,7 +321,8 @@ begin
            [ '--output-makefile',   GetoptLong::NO_ARGUMENT       ],
            [ '--tmpfs-inode-count', GetoptLong::REQUIRED_ARGUMENT ],
            [ '--tmpfs-path',        GetoptLong::REQUIRED_ARGUMENT ],
-           [ '--tmpfs-size',        GetoptLong::REQUIRED_ARGUMENT ])
+           [ '--tmpfs-size',        GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--use-tmpfs',         GetoptLong::NO_ARGUMENT       ])
 
   opts.each do |opt, arg|
     case opt
@@ -336,6 +338,8 @@ begin
 	tmpfs_path = arg
       when '--tmpfs-size'
 	tmpfs_size = arg
+      when '--use-tmpfs'
+	use_tmpfs = true
     end
   end
 rescue GetoptLong::InvalidOption => e
@@ -355,10 +359,10 @@ if output_makefile && !config_files.empty? then
 end
 
 if !config_files.empty? && config_target then
-  if tmpfs_path then
-    setup_tmpfs(tmpfs_path,
-                tmpfs_inode_count || '5m',
-                tmpfs_size || '28g')
+  if use_tmpfs then
+    setup_tmpfs(tmpfs_inode_count || '5m',
+                tmpfs_path        || '/virtualtmp',
+                tmpfs_size        || '28g')
   end
   build_config_target(config_target, config_files, puavo_imgbuild_args)
   exit(0)
