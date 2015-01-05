@@ -1,6 +1,6 @@
-diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/LICENSE openldap/contrib/slapd-modules/smbkrb5pwd/LICENSE
---- openldap.orig/contrib/slapd-modules/smbkrb5pwd/LICENSE	1970-01-01 02:00:00.000000000 +0200
-+++ openldap/contrib/slapd-modules/smbkrb5pwd/LICENSE	2014-11-06 12:13:01.184742656 +0200
+diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/LICENSE new/contrib/slapd-modules/smbkrb5pwd/LICENSE
+--- orig/contrib/slapd-modules/smbkrb5pwd/LICENSE	1970-01-01 02:00:00.000000000 +0200
++++ new/contrib/slapd-modules/smbkrb5pwd/LICENSE	2015-01-05 17:38:40.365210283 +0200
 @@ -0,0 +1,47 @@
 +The OpenLDAP Public License
 +  Version 2.8, 17 August 2003
@@ -49,9 +49,9 @@ diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/LICENSE openldap/contri
 +Copyright 1999-2003 The OpenLDAP Foundation, Redwood City,
 +California, USA.  All Rights Reserved.  Permission to copy and
 +distribute verbatim copies of this document is granted.
-diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/Makefile openldap/contrib/slapd-modules/smbkrb5pwd/Makefile
---- openldap.orig/contrib/slapd-modules/smbkrb5pwd/Makefile	1970-01-01 02:00:00.000000000 +0200
-+++ openldap/contrib/slapd-modules/smbkrb5pwd/Makefile	2014-11-06 12:13:01.184742656 +0200
+diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/Makefile new/contrib/slapd-modules/smbkrb5pwd/Makefile
+--- orig/contrib/slapd-modules/smbkrb5pwd/Makefile	1970-01-01 02:00:00.000000000 +0200
++++ new/contrib/slapd-modules/smbkrb5pwd/Makefile	2015-01-05 17:38:40.365210283 +0200
 @@ -0,0 +1,70 @@
 +# $OpenLDAP: pkg/ldap/contrib/slapd-modules/smbk5pwd/Makefile,v 1.1.6.4 2009/10/02 21:16:53 quanah Exp $
 +# This work is part of OpenLDAP Software <http://www.openldap.org/>.
@@ -123,9 +123,9 @@ diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/Makefile openldap/contr
 +	mkdir -p $(DESTDIR)$(moduledir)
 +	$(LIBTOOL) --mode=install cp smbkrb5pwd.la $(DESTDIR)$(moduledir)
 +	$(LIBTOOL) --mode=install cp smbkrb5pwd_srv.la $(DESTDIR)$(moduledir)
-diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/README openldap/contrib/slapd-modules/smbkrb5pwd/README
---- openldap.orig/contrib/slapd-modules/smbkrb5pwd/README	1970-01-01 02:00:00.000000000 +0200
-+++ openldap/contrib/slapd-modules/smbkrb5pwd/README	2014-11-06 12:13:01.184742656 +0200
+diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/README new/contrib/slapd-modules/smbkrb5pwd/README
+--- orig/contrib/slapd-modules/smbkrb5pwd/README	1970-01-01 02:00:00.000000000 +0200
++++ new/contrib/slapd-modules/smbkrb5pwd/README	2015-01-05 17:38:40.365210283 +0200
 @@ -0,0 +1,171 @@
 +Documentation is available at: https://github.com/opinsys/smbkrb5pwd/wiki
 +
@@ -298,10 +298,10 @@ diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/README openldap/contrib
 +A copy of this license is available in the file LICENSE in the
 +top-level directory of the distribution or, alternatively, at
 +<http://www.OpenLDAP.org/license.html>.
-diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c openldap/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c
---- openldap.orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c	1970-01-01 02:00:00.000000000 +0200
-+++ openldap/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c	2014-11-06 12:13:01.184742656 +0200
-@@ -0,0 +1,931 @@
+diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c new/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c
+--- orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c	1970-01-01 02:00:00.000000000 +0200
++++ new/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c	2015-01-05 18:08:35.609184556 +0200
+@@ -0,0 +1,962 @@
 +/* smbkrb5pwd.c - Overlay for managing Samba and MIT Kerberos passwords */
 +/* $OpenLDAP: pkg/ldap/contrib/slapd-modules/smbk5pwd/smbk5pwd.c,v 1.17.2.16 2009/08/17 21:49:00 quanah Exp $ */
 +/* This work is part of OpenLDAP Software <http://www.openldap.org/>.
@@ -332,6 +332,7 @@ diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c openldap/c
 +#include <netdb.h>
 +#include <stdlib.h>
 +#include <unistd.h>
++#include <errno.h>
 +
 +#ifndef SLAPD_OVER_SMBKRB5PWD
 +#define SLAPD_OVER_SMBKRB5PWD SLAPD_MOD_DYNAMIC
@@ -542,12 +543,42 @@ diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c openldap/c
 +	*/
 +
 +	worker_pid = fork();
++
++	if (worker_pid == -1) {
++		switch (errno) {
++			case EAGAIN:
++				Log1(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
++				      "smbkrb5pwd %s : failed to fork process for password change (EAGAIN)!\n",
++				      op->o_log_prefix);
++
++				return LDAP_LOCAL_ERROR;
++			case ENOMEM:
++				Log1(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
++				      "smbkrb5pwd %s : failed to fork process for password change (ENOMEM - No memory)!\n",
++				      op->o_log_prefix);
++
++				return LDAP_LOCAL_ERROR;
++			case ENOSYS:
++				Log1(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
++				      "smbkrb5pwd %s : failed to fork process for password change (ENOSYS - Not supported)!\n",
++				      op->o_log_prefix);
++
++				return LDAP_LOCAL_ERROR;
++			default:
++				Log1(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
++				      "smbkrb5pwd %s : failed to fork process for password change!\n",
++				      op->o_log_prefix);
++
++				return LDAP_LOCAL_ERROR;
++		}
++	}
++
 +	if (worker_pid) {
 +		waitpid(worker_pid, &status, 0);
 +
 +		if (status == SIGALRM) {
 +			Log1(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
-+			      "smbkrb5pwd %s : forked password change process did not complete in 2s\n",
++			      "smbkrb5pwd %s : forked password change process did not complete in 15s\n",
 +			      op->o_log_prefix);
 +
 +			return LDAP_LOCAL_ERROR;
@@ -557,7 +588,7 @@ diff -Nur openldap.orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c openldap/c
 +	}
 +
 +	signal(SIGALRM, SIG_DFL);
-+	alarm(2);
++	alarm(15);
 +
 +	kadm5_handle = NULL;
 +	memset(&princ, 0, sizeof(princ));
