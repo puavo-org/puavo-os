@@ -10,11 +10,12 @@ def imgbuild_args(cmdline_switch, conf, key)
     : []
 end
 
-def build_config_target(config_target, config_file, puavo_imgbuild_args)
-  image_confs = image_configuration(config_file)
+def build_config_target(config_target, config_files, puavo_imgbuild_args)
+  image_confs = config_files.map { |cf| image_configuration(cf) } \
+                            .reduce &:merge
 
   if !image_confs.has_key?(config_target) then
-    raise "No config target '#{ config_target }' in '#{ config_file }'"
+    raise "No config target '#{ config_target }' in config files"
   end
 
   conf = image_confs[config_target]
@@ -269,7 +270,7 @@ EOF
   exit(1)
 end
 
-config_file = nil
+config_files = []
 config_target = nil
 output_makefile = false
 
@@ -284,7 +285,7 @@ begin
       when '--config-target'
 	config_target = arg
       when '--images-config'
-	config_file = arg
+	config_files << arg
       when '--output-makefile'
 	output_makefile = true
     end
@@ -297,13 +298,13 @@ end
 # (the ones after "--")
 puavo_imgbuild_args = ARGV
 
-if output_makefile && config_file then
+if output_makefile && !config_files.empty? then
   builder_confs_path = "#{ ENV['HOME'] }/.config/puavo-build-image/defaults"
   builder_confs = builder_confs(builder_confs_path)
-  output_makefile(builder_confs, image_configuration(config_file))
+  output_makefile(builder_confs, image_configuration(config_files))
   exit(0)
-elsif config_file && config_target then
-  build_config_target(config_target, config_file, puavo_imgbuild_args)
+elsif !config_files.empty? && config_target then
+  build_config_target(config_target, config_files, puavo_imgbuild_args)
 else
   usage()
 end
