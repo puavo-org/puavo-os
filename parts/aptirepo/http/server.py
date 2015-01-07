@@ -119,6 +119,11 @@ def upload_deb():
     if "codename" in request.form and request.form["codename"] != "":
         codename = request.form["codename"]
 
+    section = ""
+
+    if "section" in request.form and request.form["section"] != "":
+        section = request.form["section"]
+
     reporoot = config["Repository-Parent"]
     repodir = os.path.join(
         reporoot,
@@ -142,7 +147,7 @@ def upload_deb():
             repo_kwargs["timeout_secs"] = int(repo_timeout)
 
         repo = aptirepo.Aptirepo(repodir, confdir, **repo_kwargs)
-        repo.import_deb(deb_package_path, codename)
+        repo.import_deb(deb_package_path, codename, section)
 
         _notify_updatedistsd(reporoot, repodir)
 
