@@ -198,6 +198,7 @@ install : installdirs $(install-subdirs)
 		initramfs/scripts/init-bottom/puavo_ltsp 
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
+		screen.d/builder \
 		screen.d/lightdm \
 		screen.d/ltspserver \
 		screen.d/kdump \
