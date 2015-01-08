@@ -26,9 +26,6 @@ class webmenu {
       content => template('webmenu/webmenu.desktop'),
       require => File['/usr/local/bin/puavo-webmenu'];
 
-    '/usr/share/icons/webmenu/unelmakoulu.png':
-      content => template('webmenu/unelmakoulu.png');
-
     '/usr/local/bin/puavo-webmenu':
       content => template('webmenu/puavo-webmenu'),
       mode    => 755;
