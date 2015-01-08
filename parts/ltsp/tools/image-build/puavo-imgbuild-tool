@@ -7,7 +7,8 @@ usage() {
 Usage:
   puavo-imgbuild-tool --build imagetype
                       --buildrules-dirs buildrules-dirs
-                      --image-excludes-path image-excludes-path
+                      --extra-packages-dir extra-packages-dir
+                      --image-excludes-file image-excludes-file
                       --puppet-classes puppet-classes
                       --release-name release-name
                       --set-root-password
@@ -16,7 +17,8 @@ Usage:
   puavo-imgbuild-tool --chroot         --target-dir target-dir
   puavo-imgbuild-tool --cleanup-chroot --target-dir target-dir
   puavo-imgbuild-tool --dist-upgrade   --target-dir target-dir
-  puavo-imgbuild-tool --image --images-dir images-dir
+  puavo-imgbuild-tool --image --image-excludes-file image-excludes-file
+                              --images-dir images-dir
                               --release-name release-name
                               --set-root-password
                               --target-dir target-dir
@@ -30,12 +32,12 @@ Usage:
   puavo-imgbuild-tool --puppet-chroot-error-on-change
   puavo-imgbuild-tool --puppet-local
   puavo-imgbuild-tool --update-chroot
+                      --extra-packages-dir extra-packages-dir
 
   --puppet-chroot, --puppet-chroot-error-on-change, --puppet-local and
   --update-chroot take the following extra arguments:
 
       --buildrules-dirs buildrules-dirs
-      --image-excludes-path image-excludes-path
       --puppet-classes puppet-classes
       --target-dir target-dir
 
@@ -43,7 +45,7 @@ Usage:
   --target-dir is not set but --builds-dir is, --target-dir is asked
   interactively.
 
-  --image-excludes-path defaults to /etc/puavo-image-tools/ltsp-image.excludes
+  --image-excludes-file defaults to /etc/puavo-image-tools/ltsp-image.excludes
 
   --puppet-classes is a comma-separated list of puppet classes to be applied
 
@@ -94,7 +96,7 @@ get_imagetype() {
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,install-packages,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,buildrules-dirs:,builds-dir:,distribution:,extra-packages-dir:,image-excludes-path:,images-dir:,mirror:,puppet-classes:,release-name:,set-root-password,target-dir:' \
+              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,install-packages,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,buildrules-dirs:,builds-dir:,distribution:,extra-packages-dir:,image-excludes-file:,images-dir:,mirror:,puppet-classes:,release-name:,set-root-password,target-dir:' \
               -- "$@"); then
   usage
 fi
@@ -114,15 +116,15 @@ target_dir=
 apt_proxy=$(get_default_for apt-proxy)
 buildrules_dirs=$(get_default_for buildrules-dirs)
 builds_dir=$(get_default_for builds-dir)
-image_excludes_path=$(get_default_for image-excludes-path)
+image_excludes_file=$(get_default_for image-excludes-file)
 images_dir="$(get_default_for images-dir)"
 mirror="$(get_default_for mirror)"
 
 [ -z "$apt_proxy"           ] && apt_proxy="localhost:3142"
 [ -z "$images_dir"          ] && images_dir="/opt/ltsp/images"
 [ -z "$mirror"              ] && mirror="archive.ubuntu.com"
-[ -z "$image_excludes_path" ] \
-  && image_excludes_path="/etc/puavo-image-tools/ltsp-image.excludes"
+[ -z "$image_excludes_file" ] \
+  && image_excludes_file="/etc/puavo-image-tools/ltsp-image.excludes"
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
@@ -161,8 +163,8 @@ while [ $# -ne 0 ]; do
     --extra-packages-dir)
       extra_packages_dir=$2; shift; shift
       ;;
-    --image-excludes-path)
-      image_excludes_path=$2; shift; shift
+    --image-excludes-file)
+      image_excludes_file=$2; shift; shift
       ;;
     --images-dir)
       images_dir=$2; shift; shift
@@ -503,7 +505,7 @@ make_image() {
   mkdir -p "$images_dir"
   mksquashfs "$target_dir" "$images_dir/${ltspimage_name}.tmp" \
              -noappend                                         \
-             -ef "${image_excludes_path}"                      \
+             -ef "${image_excludes_file}"                      \
              -wildcards
   mv "$images_dir/${ltspimage_name}.tmp" "$images_dir/${ltspimage_name}"
   echo "Successfully created a squashfs image: $images_dir/${ltspimage_name}"
@@ -530,20 +532,24 @@ case "$action" in
       exit 1
     fi
 
+    echo '>>>>> build'
+
     build_chroot
     set_debconf_seeds
     set_ltspimage_type
     prepare_puppet "$puppet_classes"
 
-    $0 --update-chroot                      \
-       --buildrules-dirs "$buildrules_dirs" \
-       --puppet-classes "$puppet_classes"   \
-       --target-dir "$target_dir"
+    $0 --update-chroot                            \
+       --buildrules-dirs    "$buildrules_dirs"    \
+       --extra-packages-dir "$extra_packages_dir" \
+       --puppet-classes     "$puppet_classes"     \
+       --target-dir         "$target_dir"
 
-    $0 --image --images-dir "$images_dir"     \
-               --release-name "$release_name" \
-               $set_root_password             \
-               --target-dir "$target_dir"
+    $0 --image --image-excludes-file "$image_excludes_file" \
+               --images-dir          "$images_dir"          \
+               --release-name        "$release_name"        \
+               $set_root_password                           \
+               --target-dir          "$target_dir"
     ;;
   chroot)
     run_in_chroot bash
@@ -552,37 +558,44 @@ case "$action" in
     rm -rf "$target_dir"
     ;;
   dist-upgrade)
+    echo '>>>>> dist-upgrade'
     run_in_chroot apt-get -y update
     run_in_chroot apt-get -y -o Dpkg::Options::="--force-confold" dist-upgrade
     run_in_chroot apt-get -y clean # to preserve space in build-chroot
     ;;
   image)
+    echo '>>>>> image'
     [ -n "$set_root_password" ] && set_root_password
     ask_and_set_image_information "$release_name"
     make_image
     ;;
   install-packages)
+    echo '>>>>> install-packages'
     install_packages
     ;;
   puppet-chroot)
+    echo '>>>>> puppet-chroot'
     apply_puppet chroot false
     ;;
   puppet-chroot-error-on-change)
+    echo '>>>>> puppet-chroot (error-on-change)'
     apply_puppet chroot true
     ;;
   puppet-local)
     apply_puppet local false
     ;;
   update-chroot)
+    echo '>>>>> update-chroot'
     run_in_chroot apt-get -y update
     for action_arg in --puppet-chroot                 \
                       --dist-upgrade                  \
                       --puppet-chroot                 \
                       --puppet-chroot-error-on-change \
                       --install-packages; do
-      $0 $action_arg --buildrules-dirs "$buildrules_dirs" \
-                     --puppet-classes "$puppet_classes"   \
-                     --target-dir "$target_dir"
+      $0 $action_arg --buildrules-dirs    "$buildrules_dirs"    \
+                     --extra-packages-dir "$extra_packages_dir" \
+                     --puppet-classes     "$puppet_classes"     \
+                     --target-dir         "$target_dir"
     done
 
     touch "${target_dir}/tmp/.chroot_build_done"
