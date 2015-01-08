@@ -299,9 +299,26 @@ def setup_tmpfs(tmpfs_inode_count, tmpfs_path, tmpfs_size)
 end
 
 def usage()
-  # XXX yes we do need better documentation...
   puts <<-EOF
-You use me wrong, use better!
+Usage:
+  puavo-build-image --config-target  config_target
+                    --images-config     images_config
+                    --tmpfs-inode-count tmpfs_inode_count
+                    --tmpfs-path        tmpfs_path
+                    --tmpfs-size        tmpfs_size
+                    --use-tmpfs
+                    -- (arguments for puavo-imgbuild-tool ...)
+
+  puavo-build-image --output-makefile
+                    --images-config images_config
+
+  --images-config with argument can be given many times, and all the image
+  config files will be combined/merged, later image targets override previous
+  targets if conflicts exist.
+
+  The last argument for puavo-build-image can be "--", after that all arguments
+  are passed to puavo-imgbuild-tool as they are, when --config-target is set
+  and --output-makefile is not set.
 EOF
   exit(1)
 end
