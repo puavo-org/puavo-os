@@ -1,0 +1,43 @@
+#!/bin/sh
+
+## Restrict kernel messages printed to console to levels emerg, alert
+## and crit. Less urgent messages are not printed. Some devices produce
+## lot of warnings and errors (e.g. mei_me module errors) which make
+## console registration almost impossible.
+dmesg -n2
+
+export LANG=en_US.UTF-8
+export TERM=vt100
+setupcon
+clear
+
+echo
+echo 'This host is a Puavo device image builder' | /usr/games/cowsay
+echo
+
+# XXX We should get build configuration from puavo-rest (should be in
+# XXX json-format), and use that to fill in the following values:
+puavo-build-image \
+  --config-target ltsp-opinsysbuilder-trusty                 \
+  --images-config /usr/share/opinsys-rules/rules/images.json \
+  --images-config /usr/share/puavo-rules/rules/images.json   \
+  --mount-device  10.0.70.1:/images                          \
+  --mount-dir     /opt/ltsp/images                           \
+  --use-tmpfs                                                \
+  --                                                         \
+  --apt-proxy          no                                    \
+  --builds-dir         /virtualtmp                           \
+  --extra-packages-dir /opt/ltsp/images/extradebs            \
+  --images-dir         /opt/ltsp/images                      \
+  --mirror             mirror.opinsys.fi                     \
+  --buildrules-dirs                                          \
+    "/usr/share/puavo-rules/rules,/usr/share/opinsys-rules/rules"
+
+echo -n rebooting...
+for i in $(seq 5 | tac); do
+  echo -n " $i"
+  sleep 1
+done
+
+echo
+reboot

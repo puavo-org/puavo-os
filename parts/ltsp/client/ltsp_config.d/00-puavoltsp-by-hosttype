@@ -298,6 +298,11 @@ case "$PUAVO_HOSTTYPE" in
     ;;
 esac
 
+# Whatever my hosttype is, if I have a "builder"-tag, I am an image build host!
+if jq -r .tags[] /etc/puavo/device.json | grep -qx builder; then
+  set_lts_var SCREEN_07 builder
+fi
+
 if grep -q puavo_kdump_kernel /proc/cmdline; then
     rm -f /etc/init/lightdm.conf
     rm -f /etc/init.d/lightdm
