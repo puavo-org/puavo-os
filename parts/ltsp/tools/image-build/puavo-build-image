@@ -263,15 +263,44 @@ ${SIGNATURES_DIR}/%.rdiff_signature: %.img | ${SIGNATURES_DIR}
 EOF
 end
 
-def setup_tmpfs(tmpfs_inode_count, tmpfs_path, tmpfs_size)
+def get_mountinfo()
   mountinfo = %x(mount)
   raise 'Problem running mount' unless $?.exitstatus == 0
+  mountinfo.split("\n")
+end
 
+def handle_mounts(mounts)
+  new_mounts = mounts.clone
+  mounts.each do |mntdir, mntdevice|
+    mountinfo = get_mountinfo()
+    mountinfo.each do |line|
+      fields = line.split
+      if fields[2] == mntdir then
+        if fields[0] == mntdevice then
+          # mount okay, nothing to do
+          new_mounts.delete(mntdir)
+        else
+          system('umount', mntdir) \
+            or raise "Problem unmounting '#{ mntdir }'"
+        end
+      end
+    end
+  end
+
+  new_mounts.each do |mntdir, mntdevice|
+    FileUtils.mkdir_p(mntdir)
+    system('mount', mntdevice, mntdir) \
+      or raise "Problem mounting '#{ mntdir }' to '#{ mntdevice }'"
+  end
+end
+
+def setup_tmpfs(tmpfs_inode_count, tmpfs_path, tmpfs_size)
+  mountinfo = get_mountinfo()
   mntoptions = 'rw,uid=0,gid=0,mode=755,' \
                + "size=#{ tmpfs_size },nr_inodes=#{ tmpfs_inode_count }"
 
   current_mntoptions = nil
-  mountinfo.split("\n").each do |line|
+  mountinfo.each do |line|
     fields = line.split
     next if fields[2] != tmpfs_path
     match = fields[5].match(/^\((.*)\)$/)
@@ -303,6 +332,8 @@ def usage()
 Usage:
   puavo-build-image --config-target  config_target
                     --images-config     images_config
+                    --mount-device      mount_device
+                    --mount-dir         mount_dir
                     --tmpfs-inode-count tmpfs_inode_count
                     --tmpfs-path        tmpfs_path
                     --tmpfs-size        tmpfs_size
@@ -325,16 +356,28 @@ end
 
 config_files      = []
 config_target     = nil
+mount_device      = nil
+mount_dir         = nil
+mounts            = {}
 output_makefile   = false
 tmpfs_inode_count = nil
 tmpfs_path        = nil
 tmpfs_size        = nil
 use_tmpfs         = false
 
+maybe_add_to_mounts = lambda do
+  if mount_device && mount_dir; then
+    mounts.merge!({ mount_dir => mount_device })
+    mount_device = mount_dir = nil
+  end
+end
+
 begin
   opts = GetoptLong.new(
            [ '--config-target',     GetoptLong::REQUIRED_ARGUMENT ],
            [ '--images-config',     GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--mount-device',      GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--mount-dir',         GetoptLong::REQUIRED_ARGUMENT ],
            [ '--output-makefile',   GetoptLong::NO_ARGUMENT       ],
            [ '--tmpfs-inode-count', GetoptLong::REQUIRED_ARGUMENT ],
            [ '--tmpfs-path',        GetoptLong::REQUIRED_ARGUMENT ],
@@ -347,6 +390,12 @@ begin
 	config_target = arg
       when '--images-config'
 	config_files << arg
+      when '--mount-device'
+	mount_device = arg
+        maybe_add_to_mounts.call()
+      when '--mount-dir'
+	mount_dir = arg
+        maybe_add_to_mounts.call()
       when '--output-makefile'
 	output_makefile = true
       when '--tmpfs-inode-count'
@@ -376,6 +425,7 @@ if output_makefile && !config_files.empty? then
 end
 
 if !config_files.empty? && config_target then
+  handle_mounts(mounts)
   if use_tmpfs then
     setup_tmpfs(tmpfs_inode_count || '5m',
                 tmpfs_path        || '/virtualtmp',
