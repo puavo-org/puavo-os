@@ -330,13 +330,13 @@ end
 def usage()
   puts <<-EOF
 Usage:
-  puavo-build-image --config-target  config_target
-                    --images-config     images_config
-                    --mount-device      mount_device
-                    --mount-dir         mount_dir
-                    --tmpfs-inode-count tmpfs_inode_count
-                    --tmpfs-path        tmpfs_path
-                    --tmpfs-size        tmpfs_size
+  puavo-build-image --config-target     config-target
+                    --images-config     images-config
+                    --mount-device      mount-device
+                    --mount-dir         mount-dir
+                    --tmpfs-inode-count tmpfs-inode_count
+                    --tmpfs-path        tmpfs-path
+                    --tmpfs-size        tmpfs-size
                     --use-tmpfs
                     -- (arguments for puavo-imgbuild-tool ...)
 

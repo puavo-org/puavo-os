@@ -21,8 +21,10 @@ Usage:
                               --set-root-password
                               --target-dir target-dir
 
-  puavo-imgbuild-tool --install-packages --buildrules-dirs buildrules-dirs
-                                         --target-dir target-dir
+  puavo-imgbuild-tool --install-packages
+                      --buildrules-dirs buildrules-dirs
+                      --extra-packages-dir extra-packages-dir
+                      --target-dir target-dir
 
   puavo-imgbuild-tool --puppet-chroot
   puavo-imgbuild-tool --puppet-chroot-error-on-change
@@ -92,7 +94,7 @@ get_imagetype() {
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,install-packages,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,buildrules-dirs:,builds-dir:,distribution:,image-excludes-path:,images-dir:,mirror:,puppet-classes:,release-name:,set-root-password,target-dir:' \
+              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,install-packages,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,buildrules-dirs:,builds-dir:,distribution:,extra-packages-dir:,image-excludes-path:,images-dir:,mirror:,puppet-classes:,release-name:,set-root-password,target-dir:' \
               -- "$@"); then
   usage
 fi
@@ -101,6 +103,7 @@ fi
 arch=
 distribution=trusty
 
+extra_packages_dir=
 imagetype=
 puppet_classes=
 release_name=
@@ -154,6 +157,9 @@ while [ $# -ne 0 ]; do
       ;;
     --distribution)
       distribution=$2; shift; shift
+      ;;
+    --extra-packages-dir)
+      extra_packages_dir=$2; shift; shift
       ;;
     --image-excludes-path)
       image_excludes_path=$2; shift; shift
@@ -430,6 +436,7 @@ apply_puppet() {
 install_packages() {
   package_dirs="$(dirs_with_postfix "${buildrules_dirs}" \
                                     "/packages/$(get_imagetype)")"
+  package_dirs="$package_dirs $extra_packages_dir"
 
   rm -f ${target_dir}/var/tmp/puavo-build-debs/*
 
@@ -438,7 +445,7 @@ install_packages() {
   for package_dir in $package_dirs; do
     mkdir -p "${target_dir}/var/tmp/puavo-build-debs"
     for deb in ${package_dir}/*.deb; do
-      [ ! -e "$deb" ] && continue
+      test -e "$deb" || continue
       cp "$deb" "${target_dir}/var/tmp/puavo-build-debs"
       there_are_packages_to_install=true
     done
