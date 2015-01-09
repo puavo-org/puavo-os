@@ -29,7 +29,7 @@ def get_image_build_configuration()
     f.print(image_build_configuration)
   end
 
-  puts 'done.'
+  puts ' done.'
 
   image_build_configuration
 end
@@ -57,7 +57,8 @@ begin
 
   conf = get_image_build_configuration()
 
-  cmdargs = [
+  cmd = [
+    'puavo-build-image',
     '--config-target',      conf['config-target'],
     '--images-config',      '/usr/share/opinsys-rules/rules/images.json' ,
     '--images-config',      '/usr/share/puavo-rules/rules/images.json',
@@ -73,10 +74,13 @@ begin
     '--buildrules-dirs',
        '/usr/share/puavo-rules/rules,/usr/share/opinsys-rules/rules' ]
 
-  system(cmdargs) \
+  system(*cmd) \
     or raise "Problem building an image '#{ conf['config-target'] }'"
 rescue StandardError => e
-  warn e
+  # XXX it would be better if did get the output of 'raise e' without
+  # XXX raising an exception
+  warn "Error in building image: #{ e.message }"
+  warn e.backtrace.join("\n")
   # do not run immediately again (screen.d/* scripts are restarted),
   # instead wait a while
   sleep 600
