@@ -1,10 +1,9 @@
-PUAVO_HOSTTYPE=$(/bin/cat /etc/puavo/hosttype)
-PERSONALLY_ADMINISTERED=$(jq -r .personally_administered /etc/puavo/device.json)
-
-set_lts_var PUAVO_HOSTTYPE "$PUAVO_HOSTTYPE"
+puavo_hosttype=$(/bin/cat /etc/puavo/hosttype)
 
 puavo_automatic_image_updates=$(jq -r .automatic_image_updates /etc/puavo/device.json)
 puavo_personally_administered=$(jq -r .personally_administered /etc/puavo/device.json)
+
+set_lts_var PUAVO_HOSTTYPE "$puavo_hosttype"
 
 puavo_common_unneeded_services='
   anacron
@@ -34,7 +33,7 @@ puavo_common_unneeded_services='
 # On personally administered devices we do not want to run fluentd and other
 # reporting services as the data is not comparable to other devices.
 
-if [ "${PERSONALLY_ADMINISTERED}" = "true" ]; then
+if [ "${puavo_personally_administered}" = "true" ]; then
   puavo_common_unneeded_services="${puavo_common_unneeded_services} fluentd puavo-hw-log"
 fi
 
@@ -47,7 +46,7 @@ set_lts_var SYSLOG         False
 set_lts_var USE_LOCAL_SWAP True
 set_lts_var XKBLAYOUT      fi    # XXX especially this is highly opinionated
 
-case "$PUAVO_HOSTTYPE" in
+case "$puavo_hosttype" in
   fatclient)
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_nfs_services $puavo_tty_services lightdm"
     set_lts_var LOCALDEV             False
