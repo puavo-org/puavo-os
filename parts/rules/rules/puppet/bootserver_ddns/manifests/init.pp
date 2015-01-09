@@ -5,6 +5,10 @@ class bootserver_ddns {
   }
 
   file {
+    '/etc/dhcp/dhcpd.conf':
+      notify  => Service['isc-dhcp-server'],
+      content => template('bootserver_ddns/dhcpd.conf');
+
     '/etc/dnsmasq.conf':
       notify  => Service['dnsmasq'],
       content => template('bootserver_ddns/dnsmasq.conf');
@@ -12,6 +16,10 @@ class bootserver_ddns {
 
   service {
     'dnsmasq':
+      enable => true,
+      ensure => 'running';
+
+    'isc-dhcp-server':
       enable => true,
       ensure => 'running';
   }

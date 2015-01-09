@@ -42,3 +42,59 @@ Facter.add('ltsp_iface_ip') do
     Interface.new('ltsp0').ip.to_s
   end
 end
+
+Facter.add('wlan_iface_ip') do
+  setcode do
+    Interface.new('wlan0').ip.to_s
+  end
+end
+
+Facter.add('ltsp_iface_subnet') do
+  setcode do
+    iface = Interface.new('ltsp0')
+    iface.ip.network.address
+  end
+end
+
+Facter.add('wlan_iface_subnet') do
+  setcode do
+    iface = Interface.new('wlan0')
+    iface.ip.network.address
+  end
+end
+
+Facter.add('ltsp_iface_netmask') do
+  setcode do
+    iface = Interface.new('ltsp0')
+    iface.ip.netmask
+  end
+end
+
+Facter.add('wlan_iface_netmask') do
+  setcode do
+    iface = Interface.new('wlan0')
+    iface.ip.netmask
+  end
+end
+
+Facter.add('ltsp_iface_ranges') do
+  setcode do
+    ranges = []
+    iface = Interface.new('ltsp0')
+    iface.ranges(24)[0..-2].each do |range|
+      ranges << range.join(':')
+    end
+    ranges.join(',')
+  end
+end
+
+Facter.add('wlan_iface_ranges') do
+  setcode do
+    ranges = []
+    iface = Interface.new('wlan0')
+    iface.ranges(24)[0..-2].each do |range|
+      ranges << range.join(':')
+    end
+    ranges.join(',')
+  end
+end
