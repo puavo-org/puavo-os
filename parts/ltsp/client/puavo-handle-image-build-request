@@ -1,0 +1,60 @@
+#!/usr/bin/ruby1.9.1
+
+require 'fileutils'
+require 'json'
+require 'socket'
+
+def get_image_build_configuration()
+  my_hostname = Socket.gethostname
+
+  print 'Getting the builder configuration...'
+
+  api_server = %x(puavo-resolve-api-server).chomp
+  raise 'Could not resolve api server' unless $?.exitstatus == 0
+
+  url = "#{ api_server }/v3/devices/#{ my_hostname }/imagebuildconfig"
+
+  image_build_configuration = ''
+
+  # XXX replace curl with native ruby call?
+  curlcmd = [ 'curl', '--cacert',   '/etc/puavo/certs/rootca.pem',
+                      '--header',   'Authorization: Bootserver',
+                      '--fail',  
+                      '--max-time', '30',
+                      '--silent',
+                      url ]
+  IO.popen(curlcmd, 'r') { |f| image_build_configuration = f.read }
+  raise "Could not retrieve image build conf for host '#{ my_hostname }'" \
+    unless $?.exitstatus == 0
+
+  # write configuration to filesystem mostly for transparency
+  File.open('/etc/puavo/imagebuildconfig.json', 'w') do |f|
+    f.print(image_build_configuration)
+  end
+
+  puts ' done.'
+
+  JSON.parse(image_build_configuration)
+end
+
+conf = get_image_build_configuration()
+
+cmd = [
+  'puavo-build-image',
+  '--config-target',      conf['config-target'],
+  '--images-config',      '/usr/share/opinsys-rules/rules/images.json' ,
+  '--images-config',      '/usr/share/puavo-rules/rules/images.json',
+  '--mount-device',       conf['nfs-mount-device'],
+  '--mount-dir',          '/opt/ltsp/images',
+  '--use-tmpfs',
+  '--',
+  '--apt-proxy',          'no',
+  '--builds-dir',         '/virtualtmp',
+  '--extra-packages-dir', conf['extra-packages-dir'],
+  '--images-dir',         '/opt/ltsp/images',
+  '--mirror',             conf['mirror'],
+  '--buildrules-dirs',
+     '/usr/share/puavo-rules/rules,/usr/share/opinsys-rules/rules' ]
+
+system(*cmd) \
+  or raise "Problem building an image '#{ conf['config-target'] }'"

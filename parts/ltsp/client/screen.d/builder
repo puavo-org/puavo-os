@@ -1,103 +1,40 @@
-#!/usr/bin/ruby1.9.1
+#!/bin/sh
 
-require 'fileutils'
-require 'json'
-require 'socket'
+set -eu
 
-def get_image_build_configuration()
-  my_hostname = Socket.gethostname
+## Restrict kernel messages printed to console to levels emerg, alert
+## and crit. Less urgent messages are not printed. Some devices produce
+## lot of warnings and errors (e.g. mei_me module errors) which make
+## console registration almost impossible.
+dmesg -n2
 
-  print 'Getting the builder configuration...'
+export LANG=en_US.UTF-8
+export TERM=vt100
 
-  api_server = %x(puavo-resolve-api-server).chomp
-  raise 'Could not resolve api server' unless $?.exitstatus == 0
+setupcon
+clear
 
-  url = "#{ api_server }/v3/devices/#{ my_hostname }/imagebuildconfig"
+echo
+echo 'This host is a Puavo device image builder' | /usr/games/cowsay
+echo
 
-  image_build_configuration = ''
-
-  # XXX replace curl with native ruby call?
-  curlcmd = [ 'curl', '--cacert',   '/etc/puavo/certs/rootca.pem',
-                      '--header',   'Authorization: Bootserver',
-                      '--fail',  
-                      '--max-time', '30',
-                      '--silent',
-                      url ]
-  IO.popen(curlcmd, 'r') { |f| image_build_configuration = f.read }
-  raise "Could not retrieve image build conf for host '#{ my_hostname }'" \
-    unless $?.exitstatus == 0
-
-  # write configuration to filesystem mostly for transparency
-  File.open('/etc/puavo/imagebuildconfig.json', 'w') do |f|
-    f.print(image_build_configuration)
-  end
-
-  puts ' done.'
-
-  JSON.parse(image_build_configuration)
-end
-
-begin
-  ## Restrict kernel messages printed to console to levels emerg, alert
-  ## and crit. Less urgent messages are not printed. Some devices produce
-  ## lot of warnings and errors (e.g. mei_me module errors) which make
-  ## console registration almost impossible.
-  system('dmesg', '-n2')
-
-  ENV['LANG']  = 'en_US.UTF-8'
-  ENV['TERM' ] = 'vt100'
-
-  system('setupcon')
-  system('clear')
-
-  puts ''
-  IO.popen('/usr/games/cowsay', 'r+') do |f|
-    f.puts 'This host is a Puavo device image builder'
-    f.close_write
-    puts f.read
-  end
-  puts ''
-
-  conf = get_image_build_configuration()
-
-  cmd = [
-    'puavo-build-image',
-    '--config-target',      conf['config-target'],
-    '--images-config',      '/usr/share/opinsys-rules/rules/images.json' ,
-    '--images-config',      '/usr/share/puavo-rules/rules/images.json',
-    '--mount-device',       conf['nfs-mount-device'],
-    '--mount-dir',          '/opt/ltsp/images',
-    '--use-tmpfs',
-    '--',
-    '--apt-proxy',          'no',
-    '--builds-dir',         '/virtualtmp',
-    '--extra-packages-dir', conf['extra-packages-dir'],
-    '--images-dir',         '/opt/ltsp/images',
-    '--mirror',             conf['mirror'],
-    '--buildrules-dirs',
-       '/usr/share/puavo-rules/rules,/usr/share/opinsys-rules/rules' ]
-
-  system(*cmd) \
-    or raise "Problem building an image '#{ conf['config-target'] }'"
-rescue StandardError => e
-  # XXX it would be better if did get the output of 'raise e' without
-  # XXX raising an exception
-  warn "Error in building image: #{ e.message }"
-  warn e.backtrace.join("\n")
-  # do not run immediately again (screen.d/* scripts are restarted),
-  # instead wait a while
-  sleep 600
+if ! /usr/lib/puavo-ltsp-client/puavo-handle-image-build-request; then
+  # if image build failed, wait five minutes and try again
+  # (this script should be called again on upper levels)
+  sleep 300
   exit 1
-end
+fi
 
-print 'shutting down...'
-(1..5).to_a.reverse.each do |i|
-  print " #{ i }"
+echo
+echo -n shutting down...
+for i in $(seq 5 | tac); do
+  echo -n " $i"
   sleep 1
-end
+done
 
-puts ''
-system('poweroff')
+echo
+poweroff
 
-# wait indefinitely
-while true do sleep 600; end
+while true; do
+  sleep 600
+done

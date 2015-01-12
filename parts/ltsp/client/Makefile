@@ -263,6 +263,7 @@ install : installdirs $(install-subdirs)
 		puavo-desktop-session \
 		puavo-desktop-session-cleanup \
 		puavo-display-setup \
+		puavo-handle-image-build-request \
 		puavo-ltspserver-create-guest \
 		puavo-make-release-logos \
 		puavo-run-xrandr \
