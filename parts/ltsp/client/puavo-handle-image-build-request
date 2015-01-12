@@ -2,7 +2,9 @@
 
 require 'fileutils'
 require 'json'
+require 'net/https'
 require 'socket'
+require 'uri'
 
 def get_image_build_configuration()
   my_hostname = Socket.gethostname
@@ -12,20 +14,8 @@ def get_image_build_configuration()
   api_server = %x(puavo-resolve-api-server).chomp
   raise 'Could not resolve api server' unless $?.exitstatus == 0
 
-  url = "#{ api_server }/v3/devices/#{ my_hostname }/imagebuildconfig"
-
-  image_build_configuration = ''
-
-  # XXX replace curl with native ruby call?
-  curlcmd = [ 'curl', '--cacert',   '/etc/puavo/certs/rootca.pem',
-                      '--header',   'Authorization: Bootserver',
-                      '--fail',  
-                      '--max-time', '30',
-                      '--silent',
-                      url ]
-  IO.popen(curlcmd, 'r') { |f| image_build_configuration = f.read }
-  raise "Could not retrieve image build conf for host '#{ my_hostname }'" \
-    unless $?.exitstatus == 0
+  image_build_configuration \
+    = get_url("#{ api_server }/v3/devices/#{ my_hostname }/imagebuildconfig")
 
   # write configuration to filesystem mostly for transparency
   File.open('/etc/puavo/imagebuildconfig.json', 'w') do |f|
@@ -35,6 +25,26 @@ def get_image_build_configuration()
   puts ' done.'
 
   JSON.parse(image_build_configuration)
+end
+
+def get_url(uri)
+  parsed_uri = URI.parse(uri)
+
+  http = Net::HTTP.new(parsed_uri.host, parsed_uri.port)
+  http.ca_file = '/etc/puavo/certs/rootca.pem'
+  http.use_ssl = true
+  http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+
+  request = Net::HTTP::Get.new(parsed_uri.request_uri)
+  request.add_field('Authorization', 'Bootserver')
+
+  response = http.request(request)
+  raise 'Did not get response object' unless response
+  
+  raise "Error in downloading '#{ uri }': response code #{ response.code }" \
+    unless response.code == '200'
+     
+  response.body 
 end
 
 conf = get_image_build_configuration()
