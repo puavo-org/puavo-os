@@ -1,6 +1,7 @@
 #!/usr/bin/ruby1.9.1
 
 require 'fileutils'
+require 'json'
 require 'socket'
 
 def get_image_build_configuration()
@@ -8,10 +9,12 @@ def get_image_build_configuration()
 
   print 'Getting the builder configuration...'
 
-  api_server = %x(puavo-resolve-api-server)
+  api_server = %x(puavo-resolve-api-server).chomp
   raise 'Could not resolve api server' unless $?.exitstatus == 0
 
   url = "#{ api_server }/v3/devices/#{ my_hostname }/imagebuildconfig"
+
+  image_build_configuration = ''
 
   # XXX replace curl with native ruby call?
   curlcmd = [ 'curl', '--cacert',   '/etc/puavo/certs/rootca.pem',
@@ -31,7 +34,7 @@ def get_image_build_configuration()
 
   puts ' done.'
 
-  image_build_configuration
+  JSON.parse(image_build_configuration)
 end
 
 begin
