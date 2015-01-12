@@ -2,7 +2,38 @@
 
 require 'erb'
 require 'fileutils'
+require 'getoptlong'
 require 'tempfile'
+
+use_force = false
+
+opts = GetoptLong.new(
+  ['--help', '-h', GetoptLong::NO_ARGUMENT],
+  ['--force', GetoptLong::NO_ARGUMENT]
+)
+
+opts.each do |opt, arg|
+  case opt
+  when '--help'
+    puts <<EOF
+Usage: puavo-init-ldap-slave [OPTION]...
+
+Configure and initialize slapd.
+
+-h, --help                       display this help and exit
+    --force                      clear and re-initialize the database
+
+EOF
+    exit(0)
+  when '--force'
+    use_force = true
+  end
+end
+
+if ARGV.length != 0 then
+  STDERR.puts("error: invalid number of arguments #{ARGV.length}, expected 0")
+  exit(1)
+end
 
 # Use SSL certificate that was acquired when the host was
 # registered to Puavo.
@@ -11,7 +42,7 @@ ENV["LDAPTLS_CACERT"] = "/etc/puavo/certs/rootca.pem"
 
 Sentinel_file = '/var/lib/ldap/init_ldap_slave_done'
 
-if File.exist?(Sentinel_file) and not ARGV[0] == '--force'
+if File.exist?(Sentinel_file) and not use_force
   puts "#{ Sentinel_file } exists, use the --force, Mikko!"
   exit 1
 end
