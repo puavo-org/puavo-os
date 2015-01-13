@@ -1,0 +1,19 @@
+# puavo-init-ldap-slave completion
+
+_puavoinitldapslave()
+{
+    local cur
+
+    COMPREPLY=()
+    cur=${COMP_WORDS[COMP_CWORD]}
+
+    case "$cur" in
+        *)
+            COMPREPLY=( $( compgen -W "--help --force --update-only-config" -- $cur ) )
+            ;;
+    esac
+
+    return 0
+}
+
+complete -F _puavoinitldapslave puavo-init-ldap-slave

@@ -20,6 +20,7 @@ installdirs:
 	mkdir -p $(DESTDIR)$(templatedir)/etc/default
 	mkdir -p $(DESTDIR)$(templatedir)/etc/init
 	mkdir -p $(DESTDIR)$(templatedir)/etc/init.d
+	mkdir -p $(DESTDIR)/etc/bash_completion.d
 
 .PHONY : bin/puavo-ds-installdirs
 bin/puavo-ds-installdirs:
@@ -48,6 +49,9 @@ install: bin/puavo-ds-installdirs installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
                 bin/*
+
+	$(INSTALL_DATA) -t $(DESTDIR)/etc/bash_completion.d \
+		bash_completion.d/*
 
 	rm -f bin/puavo-bootserver-installdirs
 
