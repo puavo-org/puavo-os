@@ -6,10 +6,12 @@ require 'getoptlong'
 require 'tempfile'
 
 use_force = false
+update_only_config = false
 
 opts = GetoptLong.new(
   ['--help', '-h', GetoptLong::NO_ARGUMENT],
-  ['--force', GetoptLong::NO_ARGUMENT]
+  ['--force', GetoptLong::NO_ARGUMENT],
+  ['--update-only-config', GetoptLong::NO_ARGUMENT]
 )
 
 opts.each do |opt, arg|
@@ -22,11 +24,14 @@ Configure and initialize slapd.
 
 -h, --help                       display this help and exit
     --force                      clear and re-initialize the database
+    --update-only-config         update only cn=config and restart slapd
 
 EOF
     exit(0)
   when '--force'
     use_force = true
+  when '--update-only-config'
+    update_only_config = true
   end
 end
 
@@ -41,6 +46,12 @@ ENV["LDAPTLS_REQCERT"] = "demand"
 ENV["LDAPTLS_CACERT"] = "/etc/puavo/certs/rootca.pem"
 
 Sentinel_file = '/var/lib/ldap/init_ldap_slave_done'
+
+if !File.exist?(Sentinel_file) and update_only_config
+  STDERR.puts('error: failed to update uninitialized slapd')
+  STDERR.puts('  Run again without --update-only-config to initialize it.')
+  exit(1)
+end
 
 if File.exist?(Sentinel_file) and not use_force
   puts "#{ Sentinel_file } exists, use the --force, Mikko!"
@@ -67,8 +78,8 @@ system('service slapd stop')
 sleep 3
 system('pkill -9 -x slapd')
 
-system('rm -rf /etc/ldap/slapd.d/* /var/lib/ldap/*') \
-  or raise 'could not remove old ldap configuration and database'
+system('rm -rf /etc/ldap/slapd.d/*') \
+  or raise 'could not remove old ldap configuration'
 
 @acls = `ldapsearch -LLL -x -H ldap://#{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b cn=config "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{ @suffix }))" olcAccess | grep -v dn:`
 if $?.exitstatus != 0
@@ -84,8 +95,20 @@ tempfile = parse_erb('init_ldap_slave')
 system("slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b 'cn=config'") \
   or raise 'Problem in making ldap configuration'
 
-system('chown -R openldap.openldap /etc/ldap/slapd.d /var/lib/ldap') \
-  or raise 'could not chown /etc/ldap/slapd.d /var/lib/ldap to openldap user'
+system('chown -R openldap.openldap /etc/ldap/slapd.d') \
+  or raise 'could not chown /etc/ldap/slapd.d to openldap user'
+
+if update_only_config
+  system('service slapd start') \
+    or raise 'slapd start failed'
+  exit(0)
+end
+
+system('rm -rf /var/lib/ldap/*') \
+  or raise 'could not remove old ldap database'
+
+system('chown -R openldap.openldap /var/lib/ldap') \
+  or raise 'could not chown /var/lib/ldap to openldap user'
 
 system('install -m 0644 -g openldap /etc/puavo/certs/host.crt /etc/ssl/certs/slapd-server.crt') \
   or raise "could not install /etc/puavo/certs/host.crt to /etc/ssl/certs/slapd-server.crt"
