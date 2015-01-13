@@ -73,15 +73,6 @@ def parse_erb(basename)
   tempfile
 end
 
-system('service slapd stop')
-sleep 3
-system('pkill -9 -x slapd')
-
-if !system('rm -rf /etc/ldap/slapd.d/*')
-  STDERR.puts('error: failed to remove old LDAP configuration')
-  exit(1)
-end
-
 @acls = `ldapsearch -LLL -x -H ldap://#{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b cn=config "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{ @suffix }))" olcAccess | grep -v dn:`
 if $?.exitstatus != 0
   STDERR.puts('error: failed to get ACLs from the master server')
@@ -95,6 +86,16 @@ if $?.exitstatus != 0
 end
 
 tempfile = parse_erb('init_ldap_slave')
+
+system('service slapd stop')
+sleep 3
+system('pkill -9 -x slapd')
+
+if !system('rm -rf /etc/ldap/slapd.d/*')
+  STDERR.puts('error: failed to remove old LDAP configuration')
+  exit(1)
+end
+
 if !system("slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b 'cn=config'")
   STDERR.puts('error: failed to update the configuration of the database')
   exit(1)
