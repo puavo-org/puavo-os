@@ -46,7 +46,7 @@ int main(const int argc, const char *const *const argv)
 
                 if (!orgjson_get_owner(orgjson, i, &owner, &error)) {
                         fprintf(stderr, "ERROR: failed to get entry from "
-                                "puavoadmin database by id %ld: %s\n",
+                                "puavoadmin database by id %zd: %s\n",
                                 i, error.text);
                         retval = 1;
                         goto out;

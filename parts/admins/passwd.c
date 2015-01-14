@@ -234,7 +234,7 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
                 if (!orgjson_get_owner(g_orgjson, g_ent_index, &owner, &error)) {
                         log(LOG_ERR,
                             "failed to get puavoadmins passwd entry "
-                            "by index %ld: %s", g_ent_index, error.text);
+                            "by index %zd: %s", g_ent_index, error.text);
                         *errnop = EINVAL;
                         return NSS_STATUS_UNAVAIL;
                 }

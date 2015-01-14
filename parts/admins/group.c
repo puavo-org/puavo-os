@@ -74,7 +74,7 @@ static enum nss_status fill_group(const orgjson_t *const orgjson,
 
                 if (!orgjson_get_owner(orgjson, i, &owner, &error)) {
                         log(LOG_ERR, "failed to get puavoadmins group entry "
-                            "by index %ld: %s", i, error.text);
+                            "by index %zd: %s", i, error.text);
                         *errnop = EINVAL;
                         return NSS_STATUS_UNAVAIL;
                 }
