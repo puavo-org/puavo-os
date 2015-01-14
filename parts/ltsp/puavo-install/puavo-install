@@ -14,17 +14,17 @@ ask_install_mode_and_preseed() {
   while true; do
     read -p "$prompt" answer
     case "$answer" in
-      expert|xp) break                 ;;
-      '')        echo normal; return 0 ;;
+      guru) break                 ;;
+      '')   echo normal; return 0 ;;
     esac
   done
 
-  # expert mode
+  # the guru mode
 
   while true; do
     cat >&2 <<-'EOF'
 
-	You chose the expert mode.  You may choose to:
+	You chose the guru mode.  You may choose to:
 	  (m)ake install disk      (bootable usb flash drive or some such)
 	  (n)ormal installation    (with preseed)
 	  (p)reinstall             (install without registering)
