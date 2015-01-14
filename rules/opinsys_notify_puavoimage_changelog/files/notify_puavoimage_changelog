@@ -67,6 +67,7 @@ class ChangelogNotifyApplet:
             line = channel.readline()
             if line == "Changelog load OK.\n":
                 self.write_user_versions(True)
+                sys.exit(0)
 
         return True
 
