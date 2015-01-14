@@ -31,4 +31,10 @@ clean:
 	rm -rf *.o
 	rm -rf $(binaries)
 
-.PHONY: all installdirs install clean
+deb :
+	rm -rf debian
+	cp -a debian.default debian
+	puavo-dch $(shell cat VERSION)
+	dpkg-buildpackage -us -uc
+
+.PHONY: all installdirs install clean deb
