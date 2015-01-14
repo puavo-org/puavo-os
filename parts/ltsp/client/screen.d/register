@@ -12,10 +12,13 @@ setupcon
 clear
 
 until /usr/sbin/puavo-install; do
-  echo 'Registration and installation failed, press ENTER to try again.' \
-    > /dev/stderr
+  echo 'Installation failed, press ENTER to try again.' > /dev/stderr
   read answer
 done
+
+echo
+echo -n 'Press enter to reboot'
+read answer
 
 echo
 echo -n rebooting...
@@ -26,3 +29,5 @@ done
 
 echo
 reboot
+
+sleep 600

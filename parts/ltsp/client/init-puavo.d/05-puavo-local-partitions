@@ -59,9 +59,11 @@ puavo_link_to_state() {
 }
 
 puavo_mount_partition() {
-  name=$1
-  if [ -b "/dev/mapper/puavo-$name" ]; then
-    mkdir -p /$name
+  puavo_partition=$1
+  puavo_mntpoint=$2
+
+  if [ -b "/dev/mapper/${puavo_partition}" ]; then
+    mkdir -p "$puavo_mntpoint"
 
     OPTIONS="-o noatime"
 
@@ -71,33 +73,42 @@ puavo_mount_partition() {
       fi
     fi
 
-    mount $OPTIONS /dev/mapper/puavo-$name /$name
+    mount $OPTIONS "/dev/mapper/${puavo_partition}" "$puavo_mntpoint"
   fi
 }
 
 if [ -x "/sbin/vgchange" ]; then
-  vgchange -a y puavo
+  case "$PUAVO_HOSTTYPE" in
+    diskinstaller) vgchange -a y puavoinstaller ;;
+    *)             vgchange -a y puavo          ;;
+  esac
 
   case "$PUAVO_HOSTTYPE" in
+    diskinstaller)
+      puavo_mount_partition puavoinstaller-installimages /installimages
+      ;;
     fatclient)
       if [ -b "/dev/mapper/puavo-tmp" ]; then
-        puavo_mount_partition tmp
+        puavo_mount_partition puavo-tmp /tmp
         chmod 1777 /tmp
       fi
       ;;
     laptop)
-      puavo_mount_partition home
-      puavo_mount_partition images
+      puavo_mount_partition puavo-home   /home
+      puavo_mount_partition puavo-images /images
+      ;;
+    preinstalled)
+      puavo_mount_partition puavo-images /images
       ;;
     wirelessaccesspoint)
-      puavo_mount_partition images
+      puavo_mount_partition puavo-images /images
       ;;
   esac
 
   case "$PUAVO_HOSTTYPE" in
     laptop|ltspserver|wirelessaccesspoint)
       if [ -b "/dev/mapper/puavo-state" ]; then
-	puavo_mount_partition state
+	puavo_mount_partition puavo-state /state
 
 	# must fix in case puavo gid has changed...
 	chgrp puavo /state/etc/puavo/ldap/password
@@ -132,7 +143,7 @@ if [ -x "/sbin/vgchange" ]; then
       fi
 
       if [ -b "/dev/mapper/puavo-tmp" ]; then
-        puavo_mount_partition tmp
+        puavo_mount_partition puavo-tmp /tmp
         chmod 1777 /tmp
       fi
       ;;

@@ -37,7 +37,7 @@ usage() {
 }
 
 if ! args=$(getopt -n "$0" -o +f:n:r:q \
-		   -l 'install-from-file:,install-from-nbd:,rate-limit:,quiet,delete-overlays' \
+		   -l 'hosttype:,install-from-file:,install-from-nbd:,rate-limit:,quiet,delete-overlays,images-dir:,no-preinst-hook' \
 		   -- "$@"); then
   usage
 fi
@@ -45,17 +45,28 @@ fi
 images_dir=/images
 puavoinstall_libdir=/usr/lib/puavo-ltsp-install
 
+hosttype=""
 image_from_file=""
 image_from_nbd=""
 rate_limit_opts=""
 quiet=false
 delete_overlays=false
+run_preinst_hook=true
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
     --delete-overlays)
       delete_overlays=true; shift
+      ;;
+    --hosttype)
+      hosttype="$2"; shift; shift
+      ;;
+    --images-dir)
+      images_dir="$2"; shift; shift
+      ;;
+    --no-preinst-hook)
+      run_preinst_hook=false; shift
       ;;
     -f|--install-from-file)
       image_from_file="$2"; shift; shift
@@ -573,6 +584,10 @@ EOF
 }
 
 run_image_preinst_hook() {
+  if ! $run_preinst_hook; then
+    return 0
+  fi
+
   imagename=$1
   imagepath="${images_dir}/${imagename}"
 
@@ -581,7 +596,14 @@ run_image_preinst_hook() {
   mkdir -p "${images_dir}/mnt"
   umount -f "${images_dir}/mnt" 2>/dev/null || true
   mount -o ro "$imagepath" "${images_dir}/mnt"
-  "${images_dir}/mnt/${puavoinstall_libdir}/puavo-image-preinst"
+
+  if [ -n "$hosttype" ]; then
+    "${images_dir}/mnt/${puavoinstall_libdir}/puavo-image-preinst" \
+      --hosttype "$hosttype"
+  else
+    "${images_dir}/mnt/${puavoinstall_libdir}/puavo-image-preinst"
+  fi
+
   umount "${images_dir}/mnt" || true
 }
 

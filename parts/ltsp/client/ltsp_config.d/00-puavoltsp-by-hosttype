@@ -223,15 +223,23 @@ case "$puavo_hosttype" in
       zram-config
     "
     ;;
-  unregistered)
-    set_lts_var SCREEN_07 register
+  diskinstaller|preinstalled|unregistered)
     set_lts_var RM_SESSION_SERVICES "
       nm-applet
       puavo-client-updater-applet
     "
+    set_lts_var SCREEN_07 register
+
+    if [ "$PUAVO_HOSTTYPE" = "unregistered" ]; then
+      # we are booting from network so no need for network-manager
+      puavo_unregistered_unneeded_system_services="network-manager"
+    else
+      puavo_unregistered_unneeded_system_services=""
+    fi
 
     puavo_rm_system_services="
       $puavo_rm_system_services
+      $puavo_unregistered_unneeded_system_services
       cron
       eno
       fluentd
@@ -240,7 +248,6 @@ case "$puavo_hosttype" in
       lightdm
       ltspguestssh
       ltspssh
-      network-manager
       nscd
       nslcd
       ntp
