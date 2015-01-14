@@ -1,0 +1,206 @@
+#!/bin/sh
+
+set -eu
+
+apply_debseeds() {
+  imagetype=$(get_imagetype)
+
+  debconf_seeds_file="/etc/puavo-image-build/rules/debseeds/${imagetype}" 
+  if [ ! -e "$debconf_seeds_file" ]; then
+    echo "Could not find a debconf seed file for image '${imagetype}'" >&2
+    return 1
+  fi
+
+  debconf-set-selections < "$debconf_seeds_file"
+}
+
+apply_puppet_rules() {
+  error_on_change=$1
+  puppet_classes=$2
+  
+  puppet_classes=$(get_and_cache_puppet_classes "$puppet_classes")
+
+  if [ "$error_on_change" = "true" ]; then
+    another_ok_puppetcode=0
+  else
+    another_ok_puppetcode=2
+  fi
+
+  logfile_path="/var/log/puppet/puavo-build-image-$(date +%Y-%m-%d-%H%M%S).log"
+  env LANG=en_US.UTF-8                                          \
+      puppet apply                                              \
+             --detailed-exitcodes                               \
+             --logdest console                                  \
+             --execute "include $puppet_classes"                \
+             --modulepath "/etc/puavo-image-build/rules/puppet" \
+    || [ $? -eq $another_ok_puppetcode ]
+}
+
+do_apply_buildrules() {
+  error_on_change=$1
+  puppet_classes=$2
+
+  apply_debseeds
+  apply_puppet_rules "$error_on_change" "$puppet_classes"
+}
+
+do_bootstrap() {
+  imagetype=$1
+
+  if [ -z "$imagetype" ]; then
+    echo 'Imagetype is not set' >&2
+    usage
+  fi
+
+  mkdir -p /etc/ltsp /etc/puavo-image-build/rules
+  apt-get -qq -y install language-pack-en puppet-common
+
+  echo "$imagetype" > /etc/puavo-image-build/imagetype
+}
+
+do_cleanup_buildrules() {
+  rm -rf /etc/puavo-image-build/rules/*
+}
+
+do_update_buildrules_from_buildhost() {
+  # read from stdin
+  tar --no-same-owner --no-same-permissions \
+      -C /etc/puavo-image-build/rules -kxf -
+}
+
+do_update_buildrules_from_packages() {
+  packages=$1
+  buildrules_dirs=$2
+
+  do_cleanup_buildrules
+
+  apt-get -y update
+  apt-get -y install $(strip_commas "$packages")
+
+  for dir in $(strip_commas "$buildrules_dirs"); do
+    for subdir in debseeds puppet; do
+      if [ -d "${dir}/${subdir}" ]; then
+        cp -nR "${dir}/${subdir}" /etc/puavo-image-build/rules/
+      fi
+    done
+  done
+}
+
+get_and_cache_puppet_classes() {
+  puppet_classes=$1
+
+  puppet_classes_cache_path=/etc/puavo-image-build/puppet_classes
+  if [ -z "$puppet_classes" ]; then
+    puppet_classes="$(cat "$puppet_classes_cache_path" 2>/dev/null || true)"
+    if [ -z "$puppet_classes" ]; then
+      echo 'Puppet classes are not set' >&2
+      return 1
+    fi
+  fi
+
+  echo "$puppet_classes" | tee "$puppet_classes_cache_path"
+}
+
+get_imagetype() {
+  if [ -z "$imagetype" ]; then
+    imagetype=$(cat /etc/puavo-image-build/imagetype 2>/dev/null || true)
+  fi
+
+  if [ -z "$imagetype" ]; then
+    echo 'Could not determine imagetype' >&2
+    return 1
+  fi
+
+  echo "$imagetype"
+}
+
+strip_commas() { echo "$1" | tr , ' '; }
+
+usage() {
+  cat <<'EOF'
+Usage:
+  puavo-configure-image --bootstrap --imagetype imagetype
+  puavo-configure-image --cleanup-buildrules
+  puavo-configure-image --update-buildrules-from-buildhost
+  puavo-configure-image --apply-buildrules
+                        --error-on-change
+                        --puppet-classes puppet-classes
+  puavo-configure-image --update-buildrules-from-packages packages
+                        --buildrules-dirs buildrules-dirs
+EOF
+  exit 1
+}
+
+if ! args=$(getopt -n "$0" -o + -l 'apply-buildrules,bootstrap,cleanup-buildrules,error-on-change,imagetype:,puppet-classes:,update-buildrules-from-buildhost,update-buildrules-from-packages:' -- "$@"); then
+  usage
+fi
+
+buildrules_dirs=
+buildrules_packages=
+error_on_change=false
+imagetype=
+mode=
+puppet_classes=
+
+eval "set -- $args"
+
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --apply-buildrules)
+      mode=apply-buildrules; shift
+      ;;
+    --bootstrap)
+      mode=bootstrap; shift
+      ;;
+    --buildrules-dirs)
+      buildrules_dirs=$2; shift; shift
+      ;;
+    --cleanup-buildrules)
+      mode=cleanup-buildrules; shift
+      ;;
+    --error-on-change)
+      error_on_change=true; shift
+      ;;
+    --imagetype)
+      imagetype=$2; shift; shift
+      ;;
+    --puppet-classes)
+      puppet_classes=$2; shift; shift
+      ;;
+    --update-buildrules-from-buildhost)
+      mode=update-buildrules-from-buildhost; shift
+      ;;
+    --update-buildrules-from-packages)
+      buildrules_packages=$2; shift; shift
+      mode=update-buildrules-from-packages
+      ;;
+    --)
+      shift; break
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+
+case "$mode" in
+  apply-buildrules)
+    do_apply_buildrules "$error_on_change" "$puppet_classes"
+    ;;
+  bootstrap)
+    do_bootstrap "$imagetype"
+    ;;
+  cleanup-buildrules)
+    do_cleanup_buildrules
+    ;;
+  update-buildrules-from-buildhost)
+    do_update_buildrules_from_buildhost
+    ;;
+  update-buildrules-from-packages)
+    do_update_buildrules_from_packages "$packages" "$buildrules_dirs"
+    ;;
+  *)
+    echo "Unknown mode: '$mode'" >&2
+    usage
+    ;;
+esac

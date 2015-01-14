@@ -1,0 +1,130 @@
+#!/bin/sh
+
+set -eu
+
+check_target_dir() {
+  target_dir=$1
+
+  test -n "$target_dir" || usage
+
+  if [ ! -d "$target_dir" ]; then
+    echo "There is no directory on path '${target_dir}'" >&2
+    return 1
+  fi
+}
+
+do_bootstrap() {
+  target_dir=$1; shift
+  configure_script=$1; shift
+
+  test -n "$configure_script" || usage
+
+  if [ ! -e "$configure_script" ]; then
+    echo "There is no configure script on path '${configure_script}'" >&2
+    return 1
+  fi
+
+  install -o root -g root -m 755 "$configure_script" \
+                                 "${target_dir}/root/puavo-configure-image"
+
+  puavo_configure_image "$target_dir" --bootstrap "$@"
+}
+
+do_update_buildrules_from_buildhost() {
+  target_dir=$1; shift
+  buildrules_dirs=$1; shift
+
+  puavo_configure_image "$target_dir" --cleanup-buildrules
+
+  for dir in $(echo "$buildrules_dirs" | tr , ' '); do
+    if [ -d "$dir" ]; then
+      tar -C "$dir" --exclude .gitignore -cf - debseeds puppet \
+        | puavo_configure_image "$target_dir"                      \
+                                --update-buildrules-from-buildhost \
+                                "$@"
+    fi
+  done
+}
+
+puavo_configure_image() {
+  target_dir=$1; shift
+  chroot "$target_dir" /root/puavo-configure-image "$@"
+}
+
+usage() {
+  cat <<'EOF' 
+Usage:
+  puavo-configure-chroot --bootstrap
+                         --target-dir target-dir
+                         --configure-script configure-script
+                         -- (configure-script args)
+  puavo-configure-chroot --update-buildrules-from-buildhost
+                         --target-dir target-dir
+                         --buildrules-dirs buildrules-dirs
+                         -- (configure-script args)
+  puavo-configure-chroot --run-configure
+                         --target-dir target-dir
+                         -- (configure-script args)
+EOF
+  exit 1
+}
+
+if ! args=$(getopt -n "$0" -o + \
+              -l 'bootstrap,buildrules-dirs:,configure-script:,run-configure,target-dir:,update-buildrules-from-buildhost' \
+              -- "$@"); then
+  usage
+fi
+
+buildrules_dirs=
+configure_script=
+mode=
+target_dir=
+
+eval "set -- $args"
+
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --bootstrap)
+      mode=bootstrap; shift
+      ;;
+    --buildrules-dirs)
+      buildrules_dirs=$2; shift; shift
+      ;;
+    --configure-script)
+      configure_script=$2; shift; shift
+      ;;
+    --run-configure)
+      mode=run-configure; shift
+      ;;
+    --target-dir)
+      target_dir=$2; shift; shift
+      ;;
+    --update-buildrules-from-buildhost)
+      mode=update-buildrules-from-buildhost; shift
+      ;;
+    --)
+      shift; break
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+
+check_target_dir "$target_dir"
+
+case "$mode" in
+  bootstrap)
+    do_bootstrap "$target_dir" "$configure_script" "$@"
+    ;;
+  run-configure)
+    puavo_configure_image "$target_dir" "$@"
+    ;;
+  update-buildrules-from-buildhost)
+    do_update_buildrules_from_buildhost "$target_dir" "$buildrules_dirs" "$@"
+    ;;
+  *)
+    echo "Unknown mode: '$mode'" >&2
+    usage
+    ;;
+esac
