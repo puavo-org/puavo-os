@@ -1,7 +1,12 @@
 class apt::repositories {
   include apt
 
-  define setup ($mirror, $partnermirror, $securitymirror) {
+  define setup ($mirror,
+                $mirror_path='',
+                $partnermirror,
+                $partnermirror_path='',
+                $securitymirror,
+                $securitymirror_path='') {
     file {
       '/etc/apt/sources.list':
 	content => template('apt/sources.list'),
@@ -10,7 +15,7 @@ class apt::repositories {
 
     @apt::repository {
       'partner':
-        aptline => "http://${partnermirror}/ubuntu $lsbdistcodename partner";
+        aptline => "http://${partnermirror}${partnermirror_path}/ubuntu $lsbdistcodename partner";
     }
   }
 }
