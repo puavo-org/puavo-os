@@ -6,40 +6,42 @@ usage() {
     cat <<EOF
 Usage:
   puavo-imgbuild-tool --build imagetype
-                      --buildrules-dirs buildrules-dirs
+                      --buildrule-args buildrule-args
+                      --buildrule-dirs buildrule-dirs
+                      --configure-script configure-script
                       --extra-packages-dir extra-packages-dir
                       --image-excludes-file image-excludes-file
-                      --puppet-classes puppet-classes
                       --release-name release-name
-                      --set-root-password
+                      --set-root-passwd
                       --target-dir target-dir
 
-  puavo-imgbuild-tool --chroot         --target-dir target-dir
-  puavo-imgbuild-tool --cleanup-chroot --target-dir target-dir
-  puavo-imgbuild-tool --dist-upgrade   --target-dir target-dir
+  puavo-imgbuild-tool --apply-buildrules
+                      --buildrule-args buildrule-args
+                      --buildrule-dirs buildrule-dirs
+                      --configure-script configure-script
+                      --target-dir target-dir
+
+  puavo-imgbuild-tool --install-packages
+                      --buildrule-dirs buildrule-dirs
+                      --configure-script configure-script
+                      --extra-packages-dir extra-packages-dir
+                      --target-dir target-dir
+
+  puavo-imgbuild-tool --update-chroot
+                      --buildrule-args buildrule-args
+                      --buildrule-dirs buildrule-dirs
+                      --configure-script configure-script
+                      --extra-packages-dir extra-packages-dir
+                      --target-dir target-dir
+
   puavo-imgbuild-tool --image --image-excludes-file image-excludes-file
                               --images-dir images-dir
                               --release-name release-name
-                              --set-root-password
+                              --set-root-passwd
                               --target-dir target-dir
 
-  puavo-imgbuild-tool --install-packages
-                      --buildrules-dirs buildrules-dirs
-                      --extra-packages-dir extra-packages-dir
-                      --target-dir target-dir
-
-  puavo-imgbuild-tool --puppet-chroot
-  puavo-imgbuild-tool --puppet-chroot-error-on-change
-  puavo-imgbuild-tool --puppet-local
-  puavo-imgbuild-tool --update-chroot
-                      --extra-packages-dir extra-packages-dir
-
-  --puppet-chroot, --puppet-chroot-error-on-change, --puppet-local and
-  --update-chroot take the following extra arguments:
-
-      --buildrules-dirs buildrules-dirs
-      --puppet-classes puppet-classes
-      --target-dir target-dir
+  puavo-imgbuild-tool --chroot         --target-dir target-dir
+  puavo-imgbuild-tool --cleanup-chroot --target-dir target-dir
 
   An optional --builds-dir argument can be given to all actions.  If
   --target-dir is not set but --builds-dir is, --target-dir is asked
@@ -47,11 +49,10 @@ Usage:
 
   --image-excludes-file defaults to /etc/puavo-image-tools/ltsp-image.excludes
 
-  --puppet-classes is a comma-separated list of puppet classes to be applied
+  --buildrule-args are special options for applying buildrules
 
-  --buildrules-dirs is a comma-separated list of directories
-  that contain rules for building images, such as debconf seeds, puppet
-  modules and packages
+  --buildrule-dirs is a comma-separated list of directories
+  that contain rules for building images
 
   --build takes optional arguments:
 
@@ -64,16 +65,6 @@ EOF
     exit 1
 }
 
-dirs_with_postfix() {
-  dirlist=$1
-  postfix=$2
-
-  echo "$dirlist" \
-    | awk -F, -v postfix="$postfix" '
-        { for (i = 1; i <= NF; i++) { print $i postfix } }
-      '
-}
-
 get_default_for() {
   if [ -e ~/.config/puavo-build-image/defaults ]; then
     awk -v key="$1" '$1 == key { print $2 }' \
@@ -81,22 +72,8 @@ get_default_for() {
   fi
 }
 
-get_imagetype() {
-  if [ -z "$imagetype" -a -n "$target_dir" ]; then
-    imagetype=$(cat "${target_dir}/etc/ltsp/this_ltspimage_type" \
-                  2>/dev/null || true)
-  fi
-
-  if [ -z "$imagetype" ]; then
-    echo 'Could not determine imagetype' >&2
-    return 1
-  fi
-
-  echo "$imagetype"
-}
-
 if ! args=$(getopt -n "$0" -o + \
-              -l 'build:,chroot,cleanup-chroot,dist-upgrade,image,install-packages,puppet-chroot,puppet-chroot-error-on-change,puppet-local,update-chroot,apt-proxy:,arch:,buildrules-dirs:,builds-dir:,distribution:,extra-packages-dir:,image-excludes-file:,images-dir:,mirror:,puppet-classes:,release-name:,set-root-password,target-dir:' \
+              -l 'apply-buildrules,apt-proxy:,arch:,build:,buildrule-args:,buildrule-dirs:,builds-dir:,chroot,cleanup-chroot,configure-script:,distribution:,extra-packages-dir:,image,image-excludes-file:,images-dir:,install-packages,mirror:,release-name:,set-root-passwd,target-dir:,update-chroot' \
               -- "$@"); then
   usage
 fi
@@ -105,17 +82,18 @@ fi
 arch=
 distribution=trusty
 
+buildrule_args=
 extra_packages_dir=
 imagetype=
-puppet_classes=
 release_name=
-set_root_password=
+set_root_passwd_args=
 target_dir=
 
 # parameters with config defaults
 apt_proxy=$(get_default_for apt-proxy)
-buildrules_dirs=$(get_default_for buildrules-dirs)
+buildrule_dirs=$(get_default_for buildrule-dirs)
 builds_dir=$(get_default_for builds-dir)
+configure_script=$(get_default_for configure-script)
 image_excludes_file=$(get_default_for image-excludes-file)
 images_dir="$(get_default_for images-dir)"
 mirror="$(get_default_for mirror)"
@@ -129,18 +107,14 @@ mirror="$(get_default_for mirror)"
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
-    --chroot                          \
-    | --cleanup-chroot                \
-    | --dist-upgrade                  \
-    | --image                         \
-    | --install-packages              \
-    | --puppet-chroot                 \
-    | --puppet-chroot-error-on-change \
-    | --puppet-local                  \
+    --apply-buildrules   \
+    | --chroot           \
+    | --cleanup-chroot   \
+    | --image            \
+    | --install-packages \
     | --update-chroot)
       action=${1#--}; shift
       ;;
-
     --build)
       action=${1#--}; imagetype=$2; shift; shift
       ;;
@@ -151,8 +125,11 @@ while [ $# -ne 0 ]; do
     --arch)
       arch=$2; shift; shift
       ;;
-    --buildrules-dirs)
-      buildrules_dirs=$2; shift; shift
+    --buildrule-args)
+      buildrule_args=$2; shift; shift
+      ;;
+    --buildrule-dirs)
+      buildrule_dirs=$2; shift; shift
       ;;
     --builds-dir)
       builds_dir=$2; shift; shift
@@ -172,14 +149,11 @@ while [ $# -ne 0 ]; do
     --mirror)
       mirror=$2; shift; shift
       ;;
-    --puppet-classes)
-      puppet_classes=$2; shift; shift
-      ;;
     --release-name)
       release_name=$2; shift; shift
       ;;
-    --set-root-password)
-      set_root_password=$1; shift;
+    --set-root-passwd)
+      set_root_passwd_args=$1; shift;
       ;;
     --target-dir)
       target_dir=$2; shift; shift
@@ -193,8 +167,6 @@ while [ $# -ne 0 ]; do
   esac
 done
 
-puppet_modules_dirs="$(dirs_with_postfix "${buildrules_dirs}" /puppet)"
-
 [ "$apt_proxy" = "no" ] && apt_proxy=
 if [ -n "$apt_proxy" ]; then
   mirror_maybe_proxied="http://${apt_proxy}/${mirror}/ubuntu/"
@@ -203,9 +175,9 @@ else
 fi
 
 if [ -z "$target_dir" ]; then
-  if [ -n "$builds_dir" ]; then
-    if [ "$action" = "build" ]; then
-      target_dir="${builds_dir}/$(get_imagetype)"
+  if [ "$action" = "build" -a -n "$builds_dir" ]; then
+    if [ -n "$imagetype" ]; then
+      target_dir="${builds_dir}/${imagetype}"
     else
       target_dir=$(/usr/lib/puavo-image-tools/puavo-ask-buildtarget-dir \
                      "$builds_dir")
@@ -230,6 +202,28 @@ fi
 [ -z "$arch" ] && arch=i386
 
 
+run_configure_chroot() {
+  if [ ! -x "$configure_script" ]; then
+    echo "Configure script '${configure_script}' not found or not executable" \
+      >&2
+    return 1
+  fi
+
+  do_mounts
+  run_with_setarch env DISABLE_DAEMONS=1 "$configure_script" "$@"
+  do_umounts
+}
+
+dirs_with_postfix() {
+  dirlist=$1
+  postfix=$2
+
+  echo "$dirlist" \
+    | awk -F, -v postfix="$postfix" '
+        { for (i = 1; i <= NF; i++) { print $i postfix } }
+      '
+}
+
 do_mounts() {
   mount -o bind /dev     "$target_dir/dev"
   mount -o bind /dev/pts "$target_dir/dev/pts"
@@ -246,225 +240,51 @@ do_umounts() {
 }
 
 wipe_chroot() {
+  log_phase 'wiping chroot'
   do_umounts 2>/dev/null || true
   rm -rf "$target_dir"
 }
 
-ask_and_set_image_information() {
-  release_name=$1
+get_imagetype() { run_configure_chroot -- --get-imagetype; }
 
-  distribution=$(run_in_chroot lsb_release -cs)
-  if [ -z "$distribution" ]; then
-    echo 'Could not figure out target image distribution' >&2
-    return 1
-  fi
-
-  build_date=$(date +%Y-%m-%d-%H%M%S)
-  build_version=$(get_imagetype)-$build_date
-  ltspimage_name="$build_version-$arch.img"
-
-  if [ -n "$release_name" ]; then
-    new_release_name=$release_name
-  else
-    old_release_name=$(
-      cat "$target_dir/etc/ltsp/this_ltspimage_release" 2>/dev/null || true)
-
-    while true; do
-      read -p "Release name [${old_release_name}]: " new_release_name
-      new_release_name=${new_release_name:-${old_release_name}}
-      [ -n "$new_release_name" ] && break
-      echo 'Give a release name!' >&2
-    done
-  fi
-
-  echo "$ltspimage_name"   > "$target_dir/etc/ltsp/this_ltspimage_name"
-  echo "$new_release_name" > "$target_dir/etc/ltsp/this_ltspimage_release"
-}
+log_phase() { echo ">>>>> IN PHASE: $1 <<<<<"; }
 
 build_chroot() {
   wipe_chroot
 
+  log_phase 'debootstrap'
   run_with_setarch \
     debootstrap --arch="$arch" \
                 --components=main,restricted,universe,multiverse \
                 "$distribution" "$target_dir" "$mirror_maybe_proxied"
-
-  # setup apt proxy (maybe)
-  if [ -n "$apt_proxy" ]; then
-    cat <<EOF > "$target_dir/etc/apt/apt.conf.d/00imagebuild-proxy"
-acquire::http::proxy "http://$apt_proxy";
-EOF
-    # url in sources.list may be with proxy-prefix, so now clean this up:
-    cat <<EOF > "$target_dir/etc/apt/sources.list"
-deb http://${mirror}/ubuntu $distribution main restricted universe multiverse
-EOF
-  fi
-
-  # setup policy-rc.d (so that daemons are not started when installing)
-
-  cat <<'EOF' > "$target_dir/usr/sbin/policy-rc.d"
-#!/bin/sh
-[ "$DISABLE_DAEMONS" != "" ] && exit 101
-EOF
-  chmod 755 "$target_dir/usr/sbin/policy-rc.d"
-
-  # the install script
-
-  cat <<'EOF' > "$target_dir/root/install.sh"
-#!/bin/sh
-
-set -eu
-
-export DEBIAN_FRONTEND=noninteractive
-export DISABLE_DAEMONS=1
-
-apt-get update
-apt-get -y install linux-image-generic
-
-cd /boot
-for vmlinuz in vmlinuz-*; do
-  test -e "$vmlinuz" || break
-  kernel_version=${vmlinuz##vmlinuz-}
-  ln -s "vmlinuz-$kernel_version"    vmlinuz
-  ln -s "initrd.img-$kernel_version" initrd.img
-done
-EOF
-  chmod 755 "$target_dir/root/install.sh"
-
-  run_in_chroot /root/install.sh
-  rm -f "$target_dir/root/install.sh"   # cleanup after
 }
 
-set_debconf_seeds() {
-  debconf_seeds_files="$(dirs_with_postfix "${buildrules_dirs}" \
-                                           "/debseeds/$(get_imagetype)")"
-
-  debconf_seeding_ok=false
-  for debconf_seeds_file in ${debconf_seeds_files}; do
-    if [ -e "$debconf_seeds_file" ]; then
-      run_in_chroot debconf-set-selections < "$debconf_seeds_file" \
-        && debconf_seeding_ok=true
-    fi
-  done
-
-  if ! $debconf_seeding_ok; then
-    echo "Could not find a debconf seed file for image '$(get_imagetype)'" >&2
-    return 1
-  fi
-}
-
-set_ltspimage_type() {
-  mkdir -p "$target_dir/etc/ltsp"
-  echo "$(get_imagetype)" > "${target_dir}/etc/ltsp/this_ltspimage_type"
-}
-
-prepare_puppet() {
-  if [ -n "$puppet_modules_dirs" -a -n "$puppet_classes" ]; then
-    # install puppet and also language-pack-en is so that puppet rules can
-    # use utf8-characters
-    run_in_chroot apt-get -qq -y install language-pack-en puppet-common
-
-    mkdir -p "$target_dir/etc/puppet/ltsp"
-  fi
-}
-
-apply_puppet() {
-  if [ -z "$puppet_modules_dirs" ]; then
-    return 0
-  fi
-
-  mode=$1
-  error_if_changed=$2
-
-  case "$mode" in
-    chroot)
-      puppet_target_dir="$target_dir"
-      run_command=run_in_chroot
-      ;;
-    local)
-      puppet_target_dir=/
-      run_command=
-      ;;
-    *)
-      return 1
-      ;;
-  esac
-
-  if [ "$error_if_changed" = "true" ]; then
-    another_ok_puppetcode=0
-  else
-    another_ok_puppetcode=2
-  fi
-
-  if [ -z "$puppet_classes" ]; then
-    puppet_classes="$(cat "${puppet_target_dir}/etc/puppet/ltsp/.classes" \
-                        2>/dev/null || true)"
-    if [ -z "$puppet_classes" ]; then
-      # sanity check to prevent mistakes such as running puppet where puppet
-      # should not be run (like, with --update-local)
-      echo 'Puppet is not initialized to the target directory' >&2
-      return 1
-    fi
-  fi
-
-  echo "$puppet_classes" > "${puppet_target_dir}/etc/puppet/ltsp/.classes"
-
-  rm -rf $puppet_target_dir/etc/puppet/ltsp/*
-  for puppet_dir in $puppet_modules_dirs; do
-    for puppet_module in ${puppet_dir}/*; do
-      if [ -d "$puppet_module" ]; then
-        puppet_module_target_path="${puppet_target_dir}/etc/puppet/ltsp/$(basename "$puppet_module")"
-        if [ -e "$puppet_module_target_path" ]; then
-          echo "Puppet module in $puppet_module overrides another module" >&2
-          return 1
-        fi
-
-        cp -R "$puppet_module" "$puppet_target_dir/etc/puppet/ltsp"
-      fi
-    done
-  done
-
-  logfile_path="/var/log/puppet/puavo-build-image-$(date +%Y-%m-%d-%H%M%S).log"
-  $run_command env LANG=en_US.UTF-8                   \
-                  puppet apply                        \
-                  --detailed-exitcodes                \
-                  --logdest console                   \
-                  --logdest "$logfile_path"           \
-                  --execute "include $puppet_classes" \
-                  --modulepath "/etc/puppet/ltsp"     \
-    || [ $? -eq $another_ok_puppetcode ]
+apply_buildrules() {
+  log_phase apply-buildrules
+  run_configure_chroot --update-buildrules-from-buildhost \
+                       --buildrule-dirs "$buildrule_dirs" \
+                       --target-dir     "$target_dir"
+  run_configure_chroot -- --apply-buildrules \
+                          --buildrule-args "$buildrule_args"
+  run_configure_chroot -- --apply-buildrules                 \
+                          --buildrule-args "$buildrule_args" \
+                          --error-on-change
 }
 
 install_packages() {
-  package_dirs="$(dirs_with_postfix "${buildrules_dirs}" \
+  log_phase install-packages
+
+  package_dirs="$(dirs_with_postfix "${buildrule_dirs}" \
                                     "/packages/$(get_imagetype)")"
   package_dirs="$package_dirs $extra_packages_dir"
 
-  rm -f ${target_dir}/var/tmp/puavo-build-debs/*
-
-  there_are_packages_to_install=false
-
-  for package_dir in $package_dirs; do
-    mkdir -p "${target_dir}/var/tmp/puavo-build-debs"
-    for deb in ${package_dir}/*.deb; do
-      test -e "$deb" || continue
-      cp "$deb" "${target_dir}/var/tmp/puavo-build-debs"
-      there_are_packages_to_install=true
-    done
-  done
-
-  if $there_are_packages_to_install; then
-    # use gdebi instead of dpkg, dpkg is dumb with dependencies
-    run_in_chroot apt-get -y install gdebi-core
-    run_in_chroot sh -c 'gdebi -n /var/tmp/puavo-build-debs/*'
-    rm -f ${target_dir}/var/tmp/puavo-build-debs/*
-  fi
+  run_configure_chroot --install-packages "$package_dirs"
 }
 
 run_in_chroot() {
-  do_mounts                                                        || return $?
-  run_with_setarch chroot "$target_dir" env DISABLE_DAEMONS=1 "$@" || return $?
-  do_umounts                                                       || return $?
+  do_mounts
+  run_with_setarch chroot "$target_dir" env DISABLE_DAEMONS=1 "$@"
+  do_umounts
 }
 
 run_with_setarch() {
@@ -474,41 +294,57 @@ run_with_setarch() {
   esac
 }
 
-set_root_password() {
-  while true; do
-    read -p 'Set root password [y/N] ? ' do_set_rootpw
-    case "$do_set_rootpw" in
-       '')                       break                       ;;
-      Y|y) run_in_chroot passwd; break                       ;;
-      N|n)                       break                       ;;
-        *) echo 'Simple question, simple answer please!' >&2 ;;
-    esac
-  done
+apt_dist_upgrade() {
+  log_phase dist-upgrade
+  run_configure_chroot -- --apt-dist-upgrade
 }
 
-make_release_logos() {
-  if [ -x "$target_dir/usr/lib/puavo-ltsp-client/puavo-make-release-logos" ]
-  then
-    echo "Making release logos..."
-    run_in_chroot /usr/lib/puavo-ltsp-client/puavo-make-release-logos
-  fi
+apt_update() {
+  log_phase apt-update
+  run_configure_chroot -- --apt-update
+}
+
+bootstrap_configure() {
+  run_configure_chroot --bootstrap                            \
+                       --target-dir "$target_dir"             \
+                       --configure-script "$configure_script" \
+                       -- --apt-proxy    "$apt_proxy"         \
+                          --distribution "$imagetype"         \
+                          --imagetype    "$imagetype"         \
+                          --mirror       "$mirror"
+}
+
+update_chroot() {
+  log_phase update-chroot
+
+  # XXX update buildrules
+  apt_update
+  apply_buildrules
+  apt_dist_upgrade
+  apply_buildrules
+  install_packages
+
+  touch "${target_dir}/tmp/.update_chroot_done"
 }
 
 make_image() {
-  if [ -x "$target_dir/usr/bin/updatedb" ]; then
-    echo 'Running updatedb in chroot'
-    run_in_chroot updatedb
+  log_phase image
+
+  if [ -n "$set_root_passwd_args" ]; then
+    run_configure_chroot -- $set_root_passwd_args
   fi
 
-  make_release_logos
+  run_configure_chroot -- --prepare-image
+
+  ltspimage_name=$(run_configure_chroot -- --get-imagename)
 
   mkdir -p "$images_dir"
-  mksquashfs "$target_dir" "$images_dir/${ltspimage_name}.tmp" \
+  mksquashfs "$target_dir" "${images_dir}/${ltspimage_name}.tmp" \
              -noappend                                         \
              -ef "${image_excludes_file}"                      \
              -wildcards
-  mv "$images_dir/${ltspimage_name}.tmp" "$images_dir/${ltspimage_name}"
-  echo "Successfully created a squashfs image: $images_dir/${ltspimage_name}"
+  mv "${images_dir}/${ltspimage_name}.tmp" "${images_dir}/${ltspimage_name}"
+  echo "Successfully created a squashfs image: ${images_dir}/${ltspimage_name}"
 }
 
 cleanup() {
@@ -523,8 +359,11 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 case "$action" in
+  apply-buildrules)
+    apply_buildrules
+    ;;
   build)
-    if [ -e "${target_dir}/tmp/.chroot_build_done" ]; then
+    if [ -e "${target_dir}/tmp/.update_chroot_done" ]; then
       {
         echo "Build for $(basename $target_dir) has already been successfully"
         echo "done.  Do --cleanup-chroot if you want to throw away the build."
@@ -532,24 +371,12 @@ case "$action" in
       exit 1
     fi
 
-    echo '>>>>> build'
+    log_phase build
 
     build_chroot
-    set_debconf_seeds
-    set_ltspimage_type
-    prepare_puppet "$puppet_classes"
-
-    $0 --update-chroot                            \
-       --buildrules-dirs    "$buildrules_dirs"    \
-       --extra-packages-dir "$extra_packages_dir" \
-       --puppet-classes     "$puppet_classes"     \
-       --target-dir         "$target_dir"
-
-    $0 --image --image-excludes-file "$image_excludes_file" \
-               --images-dir          "$images_dir"          \
-               --release-name        "$release_name"        \
-               $set_root_password                           \
-               --target-dir          "$target_dir"
+    bootstrap_configure
+    update_chroot
+    make_image
     ;;
   chroot)
     run_in_chroot bash
@@ -557,48 +384,14 @@ case "$action" in
   cleanup-chroot)
     rm -rf "$target_dir"
     ;;
-  dist-upgrade)
-    echo '>>>>> dist-upgrade'
-    run_in_chroot apt-get -y update
-    run_in_chroot apt-get -y -o Dpkg::Options::="--force-confold" dist-upgrade
-    run_in_chroot apt-get -y clean # to preserve space in build-chroot
-    ;;
   image)
-    echo '>>>>> image'
-    [ -n "$set_root_password" ] && set_root_password
-    ask_and_set_image_information "$release_name"
     make_image
     ;;
   install-packages)
-    echo '>>>>> install-packages'
     install_packages
     ;;
-  puppet-chroot)
-    echo '>>>>> puppet-chroot'
-    apply_puppet chroot false
-    ;;
-  puppet-chroot-error-on-change)
-    echo '>>>>> puppet-chroot (error-on-change)'
-    apply_puppet chroot true
-    ;;
-  puppet-local)
-    apply_puppet local false
-    ;;
   update-chroot)
-    echo '>>>>> update-chroot'
-    run_in_chroot apt-get -y update
-    for action_arg in --puppet-chroot                 \
-                      --dist-upgrade                  \
-                      --puppet-chroot                 \
-                      --puppet-chroot-error-on-change \
-                      --install-packages; do
-      $0 $action_arg --buildrules-dirs    "$buildrules_dirs"    \
-                     --extra-packages-dir "$extra_packages_dir" \
-                     --puppet-classes     "$puppet_classes"     \
-                     --target-dir         "$target_dir"
-    done
-
-    touch "${target_dir}/tmp/.chroot_build_done"
+    update_chroot
     ;;
 esac
 

@@ -60,6 +60,7 @@ cmd = [
   '--',
   '--apt-proxy',          'no',
   '--builds-dir',         '/virtualtmp',
+  '--configure-script',   '/usr/lib/puavo-rules/puavo-configure-chroot',
   '--extra-packages-dir', conf['extra-packages-dir'],
   '--images-dir',         '/opt/ltsp/images',
   '--mirror',             conf['mirror'],
