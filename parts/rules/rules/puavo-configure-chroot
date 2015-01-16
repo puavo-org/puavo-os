@@ -30,13 +30,36 @@ do_bootstrap() {
   puavo_configure_image "$target_dir" --bootstrap "$@"
 }
 
+do_install_packages() {
+  target_dir=$1; shift
+  package_dirs=$1; shift
+
+  rm -f ${target_dir}/var/tmp/puavo-build-debs/*
+
+  there_are_packages_to_install=false
+
+  for package_dir in $package_dirs; do
+    mkdir -p "${target_dir}/var/tmp/puavo-build-debs"
+    for deb in ${package_dir}/*.deb; do
+      test -e "$deb" || continue
+      cp "$deb" "${target_dir}/var/tmp/puavo-build-debs"
+      there_are_packages_to_install=true
+    done
+  done
+
+  if $there_are_packages_to_install; then
+    puavo_configure_image "$target_dir" -- --install-packages "$@"
+    rm -f ${target_dir}/var/tmp/puavo-build-debs/*
+  fi
+}
+
 do_update_buildrules_from_buildhost() {
   target_dir=$1; shift
-  buildrules_dirs=$1; shift
+  buildrule_dirs=$1; shift
 
-  puavo_configure_image "$target_dir" --cleanup-buildrules
+  puavo_configure_image "$target_dir" --cleanup-buildrules "$@"
 
-  for dir in $(echo "$buildrules_dirs" | tr , ' '); do
+  for dir in $(echo "$buildrule_dirs" | tr , ' '); do
     if [ -d "$dir" ]; then
       tar -C "$dir" --exclude .gitignore -cf - debseeds puppet \
         | puavo_configure_image "$target_dir"                      \
@@ -60,7 +83,10 @@ Usage:
                          -- (configure-script args)
   puavo-configure-chroot --update-buildrules-from-buildhost
                          --target-dir target-dir
-                         --buildrules-dirs buildrules-dirs
+                         --buildrule-dirs buildrule-dirs
+                         -- (configure-script args)
+  puavo-configure-chroot --install-packages package-dirs
+                         --target-dir target-dir
                          -- (configure-script args)
   puavo-configure-chroot --run-configure
                          --target-dir target-dir
@@ -70,14 +96,15 @@ EOF
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'bootstrap,buildrules-dirs:,configure-script:,run-configure,target-dir:,update-buildrules-from-buildhost' \
+              -l 'bootstrap,buildrule-dirs:,configure-script:,get-imagetype,install-packages:,run-configure,target-dir:,update-buildrules-from-buildhost' \
               -- "$@"); then
   usage
 fi
 
-buildrules_dirs=
+action=
+buildrule_dirs=
 configure_script=
-mode=
+package_dirs=
 target_dir=
 
 eval "set -- $args"
@@ -85,22 +112,26 @@ eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
     --bootstrap)
-      mode=bootstrap; shift
+      action=bootstrap; shift
       ;;
-    --buildrules-dirs)
-      buildrules_dirs=$2; shift; shift
+    --buildrule-dirs)
+      buildrule_dirs=$2; shift; shift
       ;;
     --configure-script)
       configure_script=$2; shift; shift
       ;;
+    --install-packages)
+      package_dirs=$2; shift; shift
+      action=install-packages
+      ;;
     --run-configure)
-      mode=run-configure; shift
+      action=run-configure; shift
       ;;
     --target-dir)
       target_dir=$2; shift; shift
       ;;
     --update-buildrules-from-buildhost)
-      mode=update-buildrules-from-buildhost; shift
+      action=update-buildrules-from-buildhost; shift
       ;;
     --)
       shift; break
@@ -113,18 +144,21 @@ done
 
 check_target_dir "$target_dir"
 
-case "$mode" in
+case "$action" in
   bootstrap)
     do_bootstrap "$target_dir" "$configure_script" "$@"
+    ;;
+  install-packages)
+    do_install_packages "$target_dir" "$package_dirs" "$@"
     ;;
   run-configure)
     puavo_configure_image "$target_dir" "$@"
     ;;
   update-buildrules-from-buildhost)
-    do_update_buildrules_from_buildhost "$target_dir" "$buildrules_dirs" "$@"
+    do_update_buildrules_from_buildhost "$target_dir" "$buildrule_dirs" "$@"
     ;;
   *)
-    echo "Unknown mode: '$mode'" >&2
+    echo "Unknown action: '$action'" >&2
     usage
     ;;
 esac
