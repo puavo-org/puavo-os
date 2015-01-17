@@ -213,7 +213,7 @@ run_configure_chroot() {
     return 1
   fi
 
-  "$chroot_configure_script" "$@"
+  "$chroot_configure_script" --target-dir "$target_dir" "$@"
 }
 
 chroot_arch=$(run_configure_chroot -- --get-arch 2>/dev/null || true)
@@ -242,7 +242,10 @@ get_imagetype() { run_configure_chroot -- --get-imagetype; }
 
 log_phase() { echo ">>>>> IN PHASE: $1 <<<<<"; }
 
-wipe_chroot() { run_configure_chroot --wipe-chroot "$target_dir"; }
+wipe_chroot() {
+  log_phase 'wipe-chroot'
+  run_configure_chroot --wipe-chroot
+}
 
 build_chroot() {
   wipe_chroot
@@ -254,19 +257,15 @@ build_chroot() {
 }
 
 apply_buildrules() {
-  log_phase apply-buildrules
+  log_phase 'apply-buildrules'
   run_configure_chroot --update-buildrules-from-buildhost \
-                       --buildrule-dirs "$buildrule_dirs" \
-                       --target-dir     "$target_dir"
+                       --buildrule-dirs "$buildrule_dirs"
   run_configure_chroot -- --apply-buildrules \
                           --buildrule-args "$buildrule_args"
-  run_configure_chroot -- --apply-buildrules                 \
-                          --buildrule-args "$buildrule_args" \
-                          --error-on-change
 }
 
 install_packages() {
-  log_phase install-packages
+  log_phase 'install-packages'
 
   package_dirs="$(dirs_with_postfix "${buildrule_dirs}" \
                                     "/packages/$(get_imagetype)")"
@@ -276,28 +275,25 @@ install_packages() {
 }
 
 apt_dist_upgrade() {
-  log_phase dist-upgrade
+  log_phase 'dist-upgrade'
   run_configure_chroot -- --apt-dist-upgrade
 }
 
 apt_update() {
-  log_phase apt-update
+  log_phase 'apt-update'
   run_configure_chroot -- --apt-update
 }
 
 bootstrap_configure() {
+  log_phase 'bootstrap-configure'
   run_configure_chroot --bootstrap                                        \
-                       --target-dir "$target_dir"                         \
                        --image-configure-script "$image_configure_script" \
-                       -- --apt-proxy    "$apt_proxy"                     \
-                          --distribution "$imagetype"                     \
-                          --imagetype    "$imagetype"                     \
-                          --mirror       "$mirror"
+                       -- --apt-proxy "$apt_proxy"                        \
+                          --imagetype "$imagetype"                        \
+                          --mirror    "$mirror"
 }
 
 update_chroot() {
-  log_phase update-chroot
-
   apt_update
   apply_buildrules
   apt_dist_upgrade
@@ -308,7 +304,7 @@ update_chroot() {
 }
 
 make_image() {
-  log_phase image
+  log_phase 'make-image'
 
   if $set_root_passwd; then
     until run_configure_chroot -- --set-root-passwd; do
@@ -347,12 +343,9 @@ case "$action" in
       exit 1
     fi
 
-    log_phase build
-
     build_chroot
     bootstrap_configure
     update_chroot
-    install_packages
     make_image
     ;;
   chroot)
