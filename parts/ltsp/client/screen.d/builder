@@ -14,6 +14,15 @@ export TERM=vt100
 setupcon
 clear
 
+if [ ! -x /usr/sbin/puavo-build-image ]; then
+  cat >&2 <<'EOF'
+This host has been configure as image build host, but puavo-image-tools
+are missing
+EOF
+  sleep 300
+  exit 1
+fi
+
 echo
 echo 'This host is a Puavo device image builder' | /usr/games/cowsay
 echo
