@@ -12,8 +12,7 @@ def imgbuild_args(cmdline_switch, conf, key)
 end
 
 def build_config_target(config_target, config_files, puavo_imgbuild_args)
-  image_confs = config_files.map { |cf| image_configuration(cf) } \
-                            .reduce &:merge
+  image_confs = image_configurations(config_files)
 
   if !image_confs.has_key?(config_target) then
     raise "No config target '#{ config_target }' in config files"
@@ -25,15 +24,15 @@ def build_config_target(config_target, config_files, puavo_imgbuild_args)
     unless conf['distribution'].kind_of?(String) \
              && !conf['distribution'].empty?
 
-  arch_args    = imgbuild_args('--arch',           conf, 'arch')
-  puppet_args  = imgbuild_args('--puppet-classes', conf, 'puppet-classes')
-  release_args = imgbuild_args('--release-name',   conf, 'release-name')
+  arch_args      = imgbuild_args('--arch',           conf, 'arch')
+  buildrule_args = imgbuild_args('--buildrule-args', conf, 'puppet-classes')
+  release_args   = imgbuild_args('--release-name',   conf, 'release-name')
 
   system('/usr/lib/puavo-image-tools/puavo-imgbuild-tool',
          '--build',        config_target,
          '--distribution', conf['distribution'],
          *arch_args,
-         *puppet_args,
+         *buildrule_args,
          *release_args,
          *puavo_imgbuild_args) \
     or raise "Problem in building '#{ config_target }'"
@@ -43,8 +42,10 @@ def builder_confs(builder_confs_path)
   Hash[ IO.readlines(builder_confs_path).map { |line| line.split } ]
 end
 
-def image_configuration(imagejson_path)
-  JSON.parse( File.read(imagejson_path) )
+
+def image_configurations(config_files)
+  config_files.map { |cf| JSON.parse( File.read(cf) ) } \
+              .reduce &:merge
 end
 
 def ensure_string_sanity(string)
@@ -81,8 +82,8 @@ end
 def validate_and_list_image_filenames(image_confs)
   image_confs.map do |image_series, series_settings|
     images = series_settings['images'].kind_of?(Array) \
-	       ? series_settings['images']             \
-	       : []
+               ? series_settings['images']             \
+               : []
     images.each { |s| ensure_string_sanity(s) }
     images
   end.flatten.uniq
@@ -130,8 +131,8 @@ def get_rdiff_targets_info(image_confs)
       rdiff_make_snippets << <<EOF
 #{ rdiff_full_path }: #{ image_signature_path } #{ target_image_path } #{ rdiff_target_dir }
 	rdiff delta "#{ image_signature_path }" \\
-		    "#{ target_image_path }" \\
-		    $@
+	            "#{ target_image_path }" \\
+	            $@
 EOF
     end
 
@@ -145,7 +146,9 @@ EOF
     rdiff_make_snippets ]
 end
 
-def output_makefile(builder_confs, image_confs)
+def output_makefile(builder_confs, config_files)
+  image_confs = image_configurations(config_files)
+
   image_series_list = image_confs.keys
   image_series_list.each { |image_series| ensure_string_sanity(image_series) }
 
@@ -171,11 +174,10 @@ SIGNATURES_DIR    = ${RDIFFS_DIR}/.signatures
 RDIFF_TARGET_DIRS = #{ rdiff_target_dirs.join(' ') }
 
 ALL_DIRS = ${CKSUMS_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs \\
-	   ${RDIFF_TARGET_DIRS} ${SIGNATURES_DIR}
+           ${RDIFF_TARGET_DIRS} ${SIGNATURES_DIR}
 
-CHROOT_TARGETS = chroot cleanup-chroot dist-upgrade image install-packages \\
-		 puppet-chroot puppet-chroot-error-on-change puppet-local \\
-		 update-chroot
+CHROOT_TARGETS = apply-buildrules chroot cleanup-chroot image \\
+                 install-packages update-chroot
 
 IMAGE_FILES = #{ image_files.join(' ') }
 
@@ -387,25 +389,25 @@ begin
   opts.each do |opt, arg|
     case opt
       when '--config-target'
-	config_target = arg
+        config_target = arg
       when '--images-config'
-	config_files << arg
+        config_files << arg
       when '--mount-device'
-	mount_device = arg
+        mount_device = arg
         maybe_add_to_mounts.call()
       when '--mount-dir'
-	mount_dir = arg
+        mount_dir = arg
         maybe_add_to_mounts.call()
       when '--output-makefile'
-	output_makefile = true
+        output_makefile = true
       when '--tmpfs-inode-count'
-	tmpfs_inode_count = arg
+        tmpfs_inode_count = arg
       when '--tmpfs-path'
-	tmpfs_path = arg
+        tmpfs_path = arg
       when '--tmpfs-size'
-	tmpfs_size = arg
+        tmpfs_size = arg
       when '--use-tmpfs'
-	use_tmpfs = true
+        use_tmpfs = true
     end
   end
 rescue GetoptLong::InvalidOption => e
@@ -420,7 +422,7 @@ if output_makefile && !config_files.empty? then
   # special --output-makefile mode was invoked
   builder_confs_path = "#{ ENV['HOME'] }/.config/puavo-build-image/defaults"
   builder_confs = builder_confs(builder_confs_path)
-  output_makefile(builder_confs, image_configuration(config_files))
+  output_makefile(builder_confs, config_files)
   exit(0)
 end
 

@@ -8,7 +8,8 @@ previous_buildtarget_file=~/.config/puavo-build-image/previous-ask-buildtarget
 
 get_dirs() {
   build_basedir=$1
-  for dir in $(ls -1 $build_basedir); do
+  test -d "$build_basedir" || return 0
+  for dir in $(ls -1 "$build_basedir"); do
     [ -d "${build_basedir}/${dir}" ] && echo "${dir}"
   done
 }
