@@ -304,6 +304,8 @@ update_chroot() {
 }
 
 make_image() {
+  release_name=$1
+
   log_phase 'make-image'
 
   if $set_root_passwd; then
@@ -312,7 +314,7 @@ make_image() {
     done
   fi
 
-  run_configure_chroot -- --prepare-image
+  run_configure_chroot -- --prepare-image --image-release "$release_name"
 
   ltspimage_name=$(run_configure_chroot -- --get-imagename)
 
@@ -346,7 +348,7 @@ case "$action" in
     build_chroot
     bootstrap_configure
     update_chroot
-    make_image
+    make_image "$release_name"
     ;;
   chroot)
     run_configure_chroot -- --shell
@@ -355,7 +357,7 @@ case "$action" in
     rm -rf "$target_dir"
     ;;
   image)
-    make_image
+    make_image "$release_name"
     ;;
   install-packages)
     install_packages
