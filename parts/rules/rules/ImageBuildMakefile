@@ -6,11 +6,10 @@ SIGNATURES_DIR    = ${RDIFFS_DIR}/.signatures
 RDIFF_TARGET_DIRS = 
 
 ALL_DIRS = ${CKSUMS_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs \
-	   ${RDIFF_TARGET_DIRS} ${SIGNATURES_DIR}
+           ${RDIFF_TARGET_DIRS} ${SIGNATURES_DIR}
 
-CHROOT_TARGETS = chroot cleanup-chroot dist-upgrade image install-packages \
-		 puppet-chroot puppet-chroot-error-on-change puppet-local \
-		 update-chroot
+CHROOT_TARGETS = apply-buildrules chroot cleanup-chroot image \
+                 install-packages update-chroot
 
 IMAGE_FILES = 
 
