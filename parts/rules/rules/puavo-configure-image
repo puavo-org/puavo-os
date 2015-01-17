@@ -20,7 +20,7 @@ apply_puppet_rules() {
   
   puppet_classes=$(get_and_cache_puppet_classes "$buildrule_args")
 
-  if [ "$error_on_change" = "true" ]; then
+  if $error_on_change; then
     another_ok_puppetcode=0
   else
     another_ok_puppetcode=2
@@ -37,11 +37,11 @@ apply_puppet_rules() {
 }
 
 do_apply_buildrules() {
-  error_on_change=$1
-  buildrule_args=$2
+  buildrule_args=$1
 
   apply_debseeds
-  apply_puppet_rules "$error_on_change" "$buildrule_args"
+  apply_puppet_rules false "$buildrule_args"
+  apply_puppet_rules true  "$buildrule_args"
 }
 
 do_apt_dist_upgrade() {
@@ -56,9 +56,8 @@ do_apt_update() {
 
 do_bootstrap() {
   apt_proxy=$1
-  distribution=$2
-  imagetype=$3
-  mirror=$4
+  imagetype=$2
+  mirror=$3
 
   if [ -z "$imagetype" ]; then
     echo 'Imagetype is not set' >&2
@@ -66,10 +65,8 @@ do_bootstrap() {
   fi
 
   if [ -n "$apt_proxy" ]; then
-    if [ -z "$distribution" ]; then
-      echo 'Distribution is not' >&2
-      usage
-    fi
+    distribution=$(lsb_release -cs)
+
     if [ -z "$mirror" ]; then
       echo 'Mirror is not set' >&2
       usage
@@ -138,13 +135,6 @@ run_updatedb() {
 
 set_image_release() {
   image_release_name=$1
-
-  distribution=$(lsb_release -cs)
-
-  if [ -z "$distribution" ]; then
-    echo 'Could not figure out target image distribution' >&2
-    return 1
-  fi
 
   build_date=$(date +%Y-%m-%d-%H%M%S)
   build_version="$(get_imagetype)-${build_date}"
@@ -244,7 +234,7 @@ get_imagetype() {
 strip_commas() { echo "$1" | tr , ' '; }
 
 usage() {
-  cat <<'EOF'
+  cat >&2 <<'EOF'
 Usage:
   puavo-configure-image --apply-buildrules
                         --buildrule-args buildrule-args
@@ -252,18 +242,15 @@ Usage:
   puavo-configure-image --apt-update
   puavo-configure-image --bootstrap --imagetype imagetype
                         --apt-proxy apt-proxy
-                        --distribution distribution
                         --mirror mirror
   puavo-configure-image --cleanup-buildrules
   puavo-configure-image --get-arch
   puavo-configure-image --get-imagename
   puavo-configure-image --get-imagetype
-  puavo-configure-image --image-release
   puavo-configure-image --install-packages
-  puavo-configure-image --prepare-image
+  puavo-configure-image --prepare-image [--image-release image-release]
   puavo-configure-image --set-root-passwd
   puavo-configure-image --update-buildrules-from-buildhost
-                        --error-on-change
   puavo-configure-image --update-buildrules-from-packages packages
                         --buildrule-dirs buildrule-dirs
 
@@ -271,18 +258,16 @@ EOF
   exit 1
 }
 
-if ! args=$(getopt -n "$0" -o + -l 'apply-buildrules,apt-dist-upgrade,apt-update,bootstrap,buildrule-args:,cleanup-buildrules,error-on-change,get-arch,get-imagename,get-imagetype,image-release:,imagetype:,install-packages,prepare-image,set-root-passwd,shell,update-buildrules-from-buildhost,update-buildrules-from-packages:' -- "$@"); then
+if ! args=$(getopt -n "$0" -o + -l 'apply-buildrules,apt-dist-upgrade,apt-proxy:,apt-update,bootstrap,buildrule-args:,cleanup-buildrules,get-arch,get-imagename,get-imagetype,image-release:,imagetype:,install-packages,mirror:,prepare-image,set-root-passwd,shell,update-buildrules-from-buildhost,update-buildrules-from-packages:' -- "$@"); then
   usage
 fi
 
 action=
 apt_proxy=
-distribution=
 buildrule_args=
 buildrule_dirs=
 buildrule_packages=
-error_on_change=false
-image_release=
+image_release_name=
 imagetype=
 mirror=
 
@@ -311,7 +296,7 @@ while [ $# -ne 0 ]; do
       ;;
 
     --apt-proxy)
-      apt_proxy=$2; shift
+      apt_proxy=$2; shift; shift
       ;;
     --buildrule-args)
       buildrule_args=$2; shift; shift
@@ -319,20 +304,14 @@ while [ $# -ne 0 ]; do
     --buildrule-dirs)
       buildrule_dirs=$2; shift; shift
       ;;
-    --distribution)
-      distribution=$2; shift
-      ;;
-    --error-on-change)
-      error_on_change=true; shift
-      ;;
     --image-release)
-      image_release=$2; shift; shift
+      image_release_name=$2; shift; shift
       ;;
     --imagetype)
       imagetype=$2; shift; shift
       ;;
     --mirror)
-      mirror=$2; shift
+      mirror=$2; shift; shift
       ;;
     --)
       shift; break
@@ -345,7 +324,7 @@ done
 
 case "$action" in
   apply-buildrules)
-    do_apply_buildrules "$error_on_change" "$buildrule_args"
+    do_apply_buildrules "$buildrule_args"
     ;;
   apt-dist-upgrade)
     do_apt_dist_upgrade
@@ -354,7 +333,7 @@ case "$action" in
     do_apt_update
     ;;
   bootstrap)
-    do_bootstrap "$apt_proxy" "$distribution" "$imagetype" "$mirror"
+    do_bootstrap "$apt_proxy" "$imagetype" "$mirror"
     ;;
   cleanup-buildrules)
     do_cleanup_buildrules

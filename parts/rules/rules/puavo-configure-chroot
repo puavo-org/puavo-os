@@ -2,23 +2,11 @@
 
 set -eu
 
-check_target_dir() {
-  target_dir=$1
-
-  test -n "$target_dir" || usage
-
-  if [ ! -d "$target_dir" ]; then
-    echo "There is no directory on path '${target_dir}'" >&2
-    return 1
-  fi
-}
-
 cleanup() {
   do_umounts 2>/dev/null || true
 }
 
 do_bootstrap() {
-  target_dir=$1; shift
   image_configure_script=$1; shift
 
   test -n "$image_configure_script" || usage
@@ -31,11 +19,10 @@ do_bootstrap() {
   install -o root -g root -m 755 "$image_configure_script" \
                                  "${target_dir}/root/puavo-configure-image"
 
-  puavo_configure_image "$target_dir" --bootstrap "$@"
+  puavo_configure_image --bootstrap "$@"
 }
 
 do_install_packages() {
-  target_dir=$1; shift
   package_dirs=$1; shift
 
   rm -f ${target_dir}/var/tmp/puavo-build-debs/*
@@ -52,46 +39,55 @@ do_install_packages() {
   done
 
   if $there_are_packages_to_install; then
-    puavo_configure_image "$target_dir" --install-packages "$@"
+    puavo_configure_image --install-packages "$@"
     rm -f ${target_dir}/var/tmp/puavo-build-debs/*
   fi
 }
 
 do_mounts() {
-  mount -o bind /dev     "$target_dir/dev"
-  mount -o bind /dev/pts "$target_dir/dev/pts"
-  mount -o bind /proc    "$target_dir/proc"
-  mount -o bind /sys     "$target_dir/sys"
+  test -d "$target_dir" || return 0
+
+  mount -o bind /dev     "${target_dir}/dev"
+  mount -o bind /dev/pts "${target_dir}/dev/pts"
+  mount -o bind /proc    "${target_dir}/proc"
+  mount -o bind /sys     "${target_dir}/sys"
 }
 
 do_umounts() {
+  test -d "$target_dir" || return 0
+
   # umount -l or -f ?  (XXX -f did not seem to work)
-  umount -l "$target_dir/dev/pts"
-  umount -l "$target_dir/dev"
-  umount -l "$target_dir/proc"
-  umount -l "$target_dir/sys"
+  umount -l "${target_dir}/dev/pts"
+  umount -l "${target_dir}/dev"
+  umount -l "${target_dir}/proc"
+  umount -l "${target_dir}/sys"
 }
 
 do_update_buildrules_from_buildhost() {
-  target_dir=$1; shift
   buildrule_dirs=$1; shift
 
-  puavo_configure_image "$target_dir" --cleanup-buildrules "$@"
+  puavo_configure_image --cleanup-buildrules "$@"
 
   for dir in $(echo "$buildrule_dirs" | tr , ' '); do
     if [ -d "$dir" ]; then
       tar -C "$dir" --exclude .gitignore -cf - debseeds puppet \
-        | puavo_configure_image "$target_dir"                      \
-                                --update-buildrules-from-buildhost \
+        | puavo_configure_image --update-buildrules-from-buildhost \
                                 "$@"
     fi
   done
 }
 
-run_with_setarch() {
-  target_dir=$1; shift
+ensure_target_dir() {
+  test -n "$target_dir" || usage
 
-  chroot_arch=$(chroot "$target_dir" /root/puavo_configure_image --get-arch)
+  if [ ! -d "$target_dir" ]; then
+    echo "There is no directory on path '${target_dir}'" >&2
+    return 1
+  fi
+}
+
+run_with_setarch() {
+  chroot_arch=$(chroot "$target_dir" /root/puavo-configure-image --get-arch)
 
   case "$chroot_arch" in
     amd64) setarch x86_64         "$@" ;;
@@ -100,16 +96,14 @@ run_with_setarch() {
 }
 
 puavo_configure_image() {
-  target_dir=$1; shift
-
   do_mounts
-  run_with_setarch "$target_dir" env DISABLE_DAEMONS=1 \
+  run_with_setarch env DEBIAN_FRONTEND=noninteractive DISABLE_DAEMONS=1 \
     chroot "$target_dir" /root/puavo-configure-image "$@"
   do_umounts
 }
 
 usage() {
-  cat <<'EOF' 
+  cat >&2 <<'EOF' 
 Usage:
   puavo-configure-chroot --bootstrap
                          --target-dir target-dir
@@ -122,8 +116,8 @@ Usage:
   puavo-configure-chroot --install-packages package-dirs
                          --target-dir target-dir
                          -- (image-configure-script args)
-  puavo-configure-chroot --run-configure
-                         --target-dir target-dir
+  puavo-configure-chroot --wipe-chroot --target-dir target-dir
+  puavo-configure-chroot --target-dir target-dir
                          -- (image-configure-script args)
 EOF
   exit 1
@@ -132,7 +126,7 @@ EOF
 trap cleanup 0 INT TERM
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'bootstrap,buildrule-dirs:,get-imagetype,image-configure-script:,install-packages:,run-configure,target-dir:,update-buildrules-from-buildhost,wipe-chroot' \
+              -l 'bootstrap,buildrule-dirs:,image-configure-script:,install-packages:,target-dir:,update-buildrules-from-buildhost,wipe-chroot' \
               -- "$@"); then
   usage
 fi
@@ -148,7 +142,6 @@ eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
     --bootstrap                          \
-    | --run-configure                    \
     | --update-buildrules-from-buildhost \
     | --wipe-chroot)
       action=${1#--}; shift
@@ -176,24 +169,28 @@ while [ $# -ne 0 ]; do
   esac
 done
 
-check_target_dir "$target_dir"
+if [ "$action" != 'wipe-chroot' ]; then
+  ensure_target_dir
+fi
 
 case "$action" in
+  '')
+    puavo_configure_image "$@"
+    ;;
   bootstrap)
-    do_bootstrap "$target_dir" "$image_configure_script" "$@"
+    do_bootstrap "$image_configure_script" "$@"
     ;;
   install-packages)
-    do_install_packages "$target_dir" "$package_dirs" "$@"
-    ;;
-  run-configure)
-    puavo_configure_image "$target_dir" "$@"
+    do_install_packages "$package_dirs" "$@"
     ;;
   update-buildrules-from-buildhost)
-    do_update_buildrules_from_buildhost "$target_dir" "$buildrule_dirs" "$@"
+    do_update_buildrules_from_buildhost "$buildrule_dirs" "$@"
     ;;
   wipe-chroot)
-    do_umounts 2>/dev/null || true
-    rm -rf "$target_dir"
+    if [ -d "$target_dir" ]; then
+      do_umounts 2>/dev/null || true
+      rm -rf "$target_dir"
+    fi
     ;;
   *)
     echo "Unknown action: '$action'" >&2
