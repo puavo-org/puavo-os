@@ -127,7 +127,8 @@ cat <<EOF > ~/.config/puavo-build-image/defaults
 apt-proxy $apt_proxy
 buildrules-dirs $buildrules_dirs
 builds-dir $builds_dir
-configure-script /usr/lib/puavo-rules/puavo-configure-chroot
+chroot-configure-script /usr/lib/puavo-rules/puavo-configure-chroot
+image-configure-script /usr/lib/puavo-rules/puavo-configure-image
 images-dir $images_dir
 mirror $mirror
 rdiffs-dir $rdiffs_dir

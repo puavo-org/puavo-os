@@ -8,7 +8,8 @@ Usage:
   puavo-imgbuild-tool --build imagetype
                       --buildrule-args buildrule-args
                       --buildrule-dirs buildrule-dirs
-                      --configure-script configure-script
+                      --chroot-configure-script chroot-configure-script
+                      --image-configure-script image-configure-script
                       --extra-packages-dir extra-packages-dir
                       --image-excludes-file image-excludes-file
                       --release-name release-name
@@ -18,27 +19,31 @@ Usage:
   puavo-imgbuild-tool --apply-buildrules
                       --buildrule-args buildrule-args
                       --buildrule-dirs buildrule-dirs
-                      --configure-script configure-script
+                      --chroot-configure-script chroot-configure-script
+                      --image-configure-script image-configure-script
                       --target-dir target-dir
 
   puavo-imgbuild-tool --install-packages
                       --buildrule-dirs buildrule-dirs
-                      --configure-script configure-script
+                      --chroot-configure-script chroot-configure-script
+                      --image-configure-script image-configure-script
                       --extra-packages-dir extra-packages-dir
                       --target-dir target-dir
 
   puavo-imgbuild-tool --update-chroot
                       --buildrule-args buildrule-args
                       --buildrule-dirs buildrule-dirs
-                      --configure-script configure-script
+                      --chroot-configure-script chroot-configure-script
+                      --image-configure-script image-configure-script
                       --extra-packages-dir extra-packages-dir
                       --target-dir target-dir
 
-  puavo-imgbuild-tool --image --image-excludes-file image-excludes-file
-                              --images-dir images-dir
-                              --release-name release-name
-                              --set-root-passwd
-                              --target-dir target-dir
+  puavo-imgbuild-tool --image
+                      --image-excludes-file image-excludes-file
+                      --images-dir images-dir
+                      --release-name release-name
+                      --set-root-passwd
+                      --target-dir target-dir
 
   puavo-imgbuild-tool --chroot         --target-dir target-dir
   puavo-imgbuild-tool --cleanup-chroot --target-dir target-dir
@@ -49,10 +54,11 @@ Usage:
 
   --image-excludes-file defaults to /etc/puavo-image-tools/ltsp-image.excludes
 
-  --buildrule-args are special options for applying buildrules
+  --buildrule-args are special arguments for applying buildrules
+    (currently a list of comma-separated puppet classes)
 
   --buildrule-dirs is a comma-separated list of directories
-  that contain rules for building images
+    that contain rules for building images
 
   --build takes optional arguments:
 
@@ -73,27 +79,29 @@ get_default_for() {
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'apply-buildrules,apt-proxy:,arch:,build:,buildrule-args:,buildrule-dirs:,builds-dir:,chroot,cleanup-chroot,configure-script:,distribution:,extra-packages-dir:,image,image-excludes-file:,images-dir:,install-packages,mirror:,release-name:,set-root-passwd,target-dir:,update-chroot' \
+              -l 'apply-buildrules,apt-proxy:,arch:,build:,buildrule-args:,buildrule-dirs:,builds-dir:,chroot,chroot-configure-script:,cleanup-chroot,distribution:,extra-packages-dir:,image,image-configure-script:,image-excludes-file:,images-dir:,install-packages,mirror:,release-name:,set-root-passwd,target-dir:,update-chroot' \
               -- "$@"); then
   usage
 fi
 
 # defaults for these parameters (can be overridden on the command line args)
 arch=
-distribution=trusty
+distribution=$(lsb_release -cs) # take the buildhost distribution as default
+                                # (precise, trusty, ...)
 
 buildrule_args=
 extra_packages_dir=
 imagetype=
 release_name=
-set_root_passwd_args=
+set_root_passwd=false
 target_dir=
 
 # parameters with config defaults
 apt_proxy=$(get_default_for apt-proxy)
 buildrule_dirs=$(get_default_for buildrule-dirs)
 builds_dir=$(get_default_for builds-dir)
-configure_script=$(get_default_for configure-script)
+chroot_configure_script=$(get_default_for chroot-configure-script)
+image_configure_script=$(get_default_for image-configure-script)
 image_excludes_file=$(get_default_for image-excludes-file)
 images_dir="$(get_default_for images-dir)"
 mirror="$(get_default_for mirror)"
@@ -134,11 +142,17 @@ while [ $# -ne 0 ]; do
     --builds-dir)
       builds_dir=$2; shift; shift
       ;;
+    --chroot-configure-script)
+      chroot_configure_script=$2; shift; shift
+      ;;
     --distribution)
       distribution=$2; shift; shift
       ;;
     --extra-packages-dir)
       extra_packages_dir=$2; shift; shift
+      ;;
+    --image-configure-script)
+      image_configure_script=$2; shift; shift
       ;;
     --image-excludes-file)
       image_excludes_file=$2; shift; shift
@@ -153,7 +167,7 @@ while [ $# -ne 0 ]; do
       release_name=$2; shift; shift
       ;;
     --set-root-passwd)
-      set_root_passwd_args=$1; shift;
+      set_root_passwd=true; shift;
       ;;
     --target-dir)
       target_dir=$2; shift; shift
@@ -175,22 +189,34 @@ else
 fi
 
 if [ -z "$target_dir" ]; then
-  if [ "$action" = "build" -a -n "$builds_dir" ]; then
-    if [ -n "$imagetype" ]; then
-      target_dir="${builds_dir}/${imagetype}"
-    else
-      target_dir=$(/usr/lib/puavo-image-tools/puavo-ask-buildtarget-dir \
-                     "$builds_dir")
-    fi
-  fi
-  if [ -z "$target_dir" ]; then
-    echo 'Could not determine target dir' >&2
+  if [ -z "$builds_dir" ]; then
+    echo 'Cannot determine target dir, set --target-dir or --builds-dir' >&2
     usage
+  fi
+
+  if [ "$action" = "build" ]; then
+    if [ -z "$imagetype" ]; then
+      echo 'Imagetype must be set' >&2
+      usage
+    fi
+    target_dir="${builds_dir}/${imagetype}"
+  else
+    target_dir=$(/usr/lib/puavo-image-tools/puavo-ask-buildtarget-dir \
+		 "$builds_dir")
   fi
 fi
 
-chroot_arch=$(chroot "$target_dir" dpkg --print-architecture 2>/dev/null \
-                || true)
+run_configure_chroot() {
+  if [ ! -x "$chroot_configure_script" ]; then
+    echo "Chroot configure script '${chroot_configure_script}' not found" \
+         "or not executable" >&2
+    return 1
+  fi
+
+  "$chroot_configure_script" "$@"
+}
+
+chroot_arch=$(run_configure_chroot -- --get-arch 2>/dev/null || true)
 if [ -n "$chroot_arch" ]; then
   if [ -n "$arch" -a "$chroot_arch" != "$arch" ]; then
     echo "Requested arch ($arch) does not match chroot arch ($chroot_arch)" >&2
@@ -202,18 +228,6 @@ fi
 [ -z "$arch" ] && arch=i386
 
 
-run_configure_chroot() {
-  if [ ! -x "$configure_script" ]; then
-    echo "Configure script '${configure_script}' not found or not executable" \
-      >&2
-    return 1
-  fi
-
-  do_mounts
-  run_with_setarch env DISABLE_DAEMONS=1 "$configure_script" "$@"
-  do_umounts
-}
-
 dirs_with_postfix() {
   dirlist=$1
   postfix=$2
@@ -224,39 +238,19 @@ dirs_with_postfix() {
       '
 }
 
-do_mounts() {
-  mount -o bind /dev     "$target_dir/dev"
-  mount -o bind /dev/pts "$target_dir/dev/pts"
-  mount -o bind /proc    "$target_dir/proc"
-  mount -o bind /sys     "$target_dir/sys"
-}
-
-do_umounts() {
-  # umount -l or -f ?  (XXX -f did not seem to work)
-  umount -l "$target_dir/dev/pts"
-  umount -l "$target_dir/dev"
-  umount -l "$target_dir/proc"
-  umount -l "$target_dir/sys"
-}
-
-wipe_chroot() {
-  log_phase 'wiping chroot'
-  do_umounts 2>/dev/null || true
-  rm -rf "$target_dir"
-}
-
 get_imagetype() { run_configure_chroot -- --get-imagetype; }
 
 log_phase() { echo ">>>>> IN PHASE: $1 <<<<<"; }
+
+wipe_chroot() { run_configure_chroot --wipe-chroot "$target_dir"; }
 
 build_chroot() {
   wipe_chroot
 
   log_phase 'debootstrap'
-  run_with_setarch \
-    debootstrap --arch="$arch" \
-                --components=main,restricted,universe,multiverse \
-                "$distribution" "$target_dir" "$mirror_maybe_proxied"
+  debootstrap --arch="$arch" \
+              --components=main,restricted,universe,multiverse \
+              "$distribution" "$target_dir" "$mirror_maybe_proxied"
 }
 
 apply_buildrules() {
@@ -281,19 +275,6 @@ install_packages() {
   run_configure_chroot --install-packages "$package_dirs"
 }
 
-run_in_chroot() {
-  do_mounts
-  run_with_setarch chroot "$target_dir" env DISABLE_DAEMONS=1 "$@"
-  do_umounts
-}
-
-run_with_setarch() {
-  case "$arch" in
-    amd64) setarch x86_64  "$@" ;;
-    *    ) setarch "$arch" "$@" ;;
-  esac
-}
-
 apt_dist_upgrade() {
   log_phase dist-upgrade
   run_configure_chroot -- --apt-dist-upgrade
@@ -305,19 +286,18 @@ apt_update() {
 }
 
 bootstrap_configure() {
-  run_configure_chroot --bootstrap                            \
-                       --target-dir "$target_dir"             \
-                       --configure-script "$configure_script" \
-                       -- --apt-proxy    "$apt_proxy"         \
-                          --distribution "$imagetype"         \
-                          --imagetype    "$imagetype"         \
+  run_configure_chroot --bootstrap                                        \
+                       --target-dir "$target_dir"                         \
+                       --image-configure-script "$image_configure_script" \
+                       -- --apt-proxy    "$apt_proxy"                     \
+                          --distribution "$imagetype"                     \
+                          --imagetype    "$imagetype"                     \
                           --mirror       "$mirror"
 }
 
 update_chroot() {
   log_phase update-chroot
 
-  # XXX update buildrules
   apt_update
   apply_buildrules
   apt_dist_upgrade
@@ -330,8 +310,10 @@ update_chroot() {
 make_image() {
   log_phase image
 
-  if [ -n "$set_root_passwd_args" ]; then
-    run_configure_chroot -- $set_root_passwd_args
+  if $set_root_passwd; then
+    until run_configure_chroot -- --set-root-passwd; do
+      sleep 1
+    done
   fi
 
   run_configure_chroot -- --prepare-image
@@ -346,12 +328,6 @@ make_image() {
   mv "${images_dir}/${ltspimage_name}.tmp" "${images_dir}/${ltspimage_name}"
   echo "Successfully created a squashfs image: ${images_dir}/${ltspimage_name}"
 }
-
-cleanup() {
-  do_umounts 2>/dev/null || true
-}
-
-trap cleanup 0 INT TERM
 
 if [ "$(id -u)" -ne 0 ]; then
   echo 'Run me as root' >&2
@@ -376,10 +352,11 @@ case "$action" in
     build_chroot
     bootstrap_configure
     update_chroot
+    install_packages
     make_image
     ;;
   chroot)
-    run_in_chroot bash
+    run_configure_chroot -- --shell
     ;;
   cleanup-chroot)
     rm -rf "$target_dir"
