@@ -12,8 +12,7 @@ def imgbuild_args(cmdline_switch, conf, key)
 end
 
 def build_config_target(config_target, config_files, puavo_imgbuild_args)
-  image_confs = config_files.map { |cf| image_configuration(cf) } \
-                            .reduce &:merge
+  image_confs = image_configurations(config_files)
 
   if !image_confs.has_key?(config_target) then
     raise "No config target '#{ config_target }' in config files"
@@ -43,8 +42,10 @@ def builder_confs(builder_confs_path)
   Hash[ IO.readlines(builder_confs_path).map { |line| line.split } ]
 end
 
-def image_configuration(imagejson_path)
-  JSON.parse( File.read(imagejson_path) )
+
+def image_configurations(config_files)
+  config_files.map { |cf| JSON.parse( File.read(cf) ) } \
+              .reduce &:merge
 end
 
 def ensure_string_sanity(string)
@@ -129,9 +130,9 @@ def get_rdiff_targets_info(image_confs)
 
       rdiff_make_snippets << <<EOF
 #{ rdiff_full_path }: #{ image_signature_path } #{ target_image_path } #{ rdiff_target_dir }
-        rdiff delta "#{ image_signature_path }" \\
-                    "#{ target_image_path }" \\
-                    $@
+	rdiff delta "#{ image_signature_path }" \\
+	            "#{ target_image_path }" \\
+	            $@
 EOF
     end
 
@@ -145,7 +146,9 @@ EOF
     rdiff_make_snippets ]
 end
 
-def output_makefile(builder_confs, image_confs)
+def output_makefile(builder_confs, config_files)
+  image_confs = image_configurations(config_files)
+
   image_series_list = image_confs.keys
   image_series_list.each { |image_series| ensure_string_sanity(image_series) }
 
@@ -200,14 +203,14 @@ vpath %.img   ${IMAGES_DIR}
 vpath %.rdiff ${RDIFF_TARGET_DIRS}
 
 help:
-        @echo "Available image series targets are:"
-        @echo "  ${IMAGE_SERIES}" | fmt
-        @echo
-        @echo "Available other targets are:"
-        @echo "  ${CHROOT_TARGETS}" | fmt
-        @echo
-        @echo "Available rdiff series targets are:"
-        @echo "  ${IMAGE_SERIES_RDIFF_TARGETS}" | fmt
+	@echo "Available image series targets are:"
+	@echo "  ${IMAGE_SERIES}" | fmt
+	@echo
+	@echo "Available other targets are:"
+	@echo "  ${CHROOT_TARGETS}" | fmt
+	@echo
+	@echo "Available rdiff series targets are:"
+	@echo "  ${IMAGE_SERIES_RDIFF_TARGETS}" | fmt
 
 .PHONY: all-new-images
 all-new-images: ${IMAGE_SERIES}
@@ -220,39 +223,39 @@ update-mirror: ${MIRROR_DIR}/CKSUMS ${MIRROR_DIR_IMAGES} ${MIRROR_DIR_RDIFFS}
 
 .PHONY: cleanup-mirror
 cleanup-mirror:
-        @test -d "${MIRROR_DIR}"
-        rm -rf ${MIRROR_DIR}/*
+	@test -d "${MIRROR_DIR}"
+	rm -rf ${MIRROR_DIR}/*
 
 .PHONY: ${CHROOT_TARGETS}
 ${CHROOT_TARGETS}:
-        sudo /usr/lib/puavo-image-tools/puavo-imgbuild-tool --$@
+	sudo /usr/lib/puavo-image-tools/puavo-imgbuild-tool --$@
 
 .PHONY: ${IMAGE_SERIES}
 ${IMAGE_SERIES}: images.json
-        sudo puavo-build-image --config-target $@ --images-config $<
+	sudo puavo-build-image --config-target $@ --images-config $<
 
 ${ALL_DIRS}:
-        mkdir -p $@
+	mkdir -p $@
 
 ${CKSUMS_DIR}/%.img.cksum: %.img | ${CKSUMS_DIR}
-        cksum $< > $@
+	cksum $< > $@
 
 ${CKSUMS_DIR}/%.rdiff.cksum: %.rdiff | ${CKSUMS_DIR}
-        cksum $< > $@
+	cksum $< > $@
 
 ${MIRROR_DIR}/CKSUMS: ${CKSUM_FILES_AP} | ${MIRROR_DIR}
-        awk '{ "basename " $$3 | getline $$3; print }' ${CKSUM_FILES_AP} > $@
+	awk '{ "basename " $$3 | getline $$3; print }' ${CKSUM_FILES_AP} > $@
 
 # link ${MIRROR_DIR_IMAGES}
 ${MIRROR_DIR}/%.img: %.img | ${MIRROR_DIR}
-        @ln -f $< $@
+	@ln -f $< $@
 
 # link ${MIRROR_DIR_RDIFFS}
 ${MIRROR_DIR}/rdiffs/%.rdiff: %.rdiff | ${MIRROR_DIR}/rdiffs
-        @ln -f $< $@
+	@ln -f $< $@
 
 ${SIGNATURES_DIR}/%.rdiff_signature: %.img | ${SIGNATURES_DIR}
-        rdiff signature $< $@
+	rdiff signature $< $@
 
 #
 # rdiff targets
@@ -419,7 +422,7 @@ if output_makefile && !config_files.empty? then
   # special --output-makefile mode was invoked
   builder_confs_path = "#{ ENV['HOME'] }/.config/puavo-build-image/defaults"
   builder_confs = builder_confs(builder_confs_path)
-  output_makefile(builder_confs, image_configuration(config_files))
+  output_makefile(builder_confs, config_files)
   exit(0)
 end
 
