@@ -127,9 +127,11 @@ do_prepare_image() {
   make_release_logos
 }
 
+get_arch() { dpkg --print-architecture; }
+
 run_updatedb() {
   if [ -x /usr/bin/updatedb ]; then
-    echo 'Running updatedb in chroot'
+    echo 'Running updatedb'
     updatedb
   fi
 }
@@ -146,7 +148,7 @@ set_image_release() {
 
   build_date=$(date +%Y-%m-%d-%H%M%S)
   build_version="$(get_imagetype)-${build_date}"
-  image_filename="${build_version}-${arch}.img"
+  image_filename="${build_version}-$(get_arch).img"
 
   if [ -n "$image_release_name" ]; then
     new_release_name=$image_release_name
@@ -253,6 +255,7 @@ Usage:
                         --distribution distribution
                         --mirror mirror
   puavo-configure-image --cleanup-buildrules
+  puavo-configure-image --get-arch
   puavo-configure-image --get-imagename
   puavo-configure-image --get-imagetype
   puavo-configure-image --image-release
@@ -268,7 +271,7 @@ EOF
   exit 1
 }
 
-if ! args=$(getopt -n "$0" -o + -l 'apply-buildrules,apt-dist-upgrade,apt-update,bootstrap,buildrule-args:,cleanup-buildrules,error-on-change,get-imagename,get-imagetype,image-release:,imagetype:,install-packages,prepare-image,set-root-passwd,update-buildrules-from-buildhost,update-buildrules-from-packages:' -- "$@"); then
+if ! args=$(getopt -n "$0" -o + -l 'apply-buildrules,apt-dist-upgrade,apt-update,bootstrap,buildrule-args:,cleanup-buildrules,error-on-change,get-arch,get-imagename,get-imagetype,image-release:,imagetype:,install-packages,prepare-image,set-root-passwd,shell,update-buildrules-from-buildhost,update-buildrules-from-packages:' -- "$@"); then
   usage
 fi
 
@@ -287,20 +290,28 @@ eval "set -- $args"
 
 while [ $# -ne 0 ]; do
   case "$1" in
-    --apply-buildrules)
-      action=apply-buildrules; shift
+    --apply-buildrules     \
+    | --apt-dist-upgrade   \
+    | --apt-update         \
+    | --bootstrap          \
+    | --cleanup-buildrules \
+    | --get-arch           \
+    | --get-imagename      \
+    | --get-imagetype      \
+    | --install-packages   \
+    | --prepare-image      \
+    | --set-root-passwd    \
+    | --shell              \
+    | --update-buildrules-from-buildhost)
+      action=${1#--}; shift
       ;;
-    --apt-dist-upgrade)
-      action=apt-dist-upgrade; shift
+    --update-buildrules-from-packages)
+      buildrule_packages=$2; shift; shift
+      action=update-buildrules-from-packages
       ;;
+
     --apt-proxy)
       apt_proxy=$2; shift
-      ;;
-    --apt-update)
-      action=apt-update; shift
-      ;;
-    --bootstrap)
-      action=bootstrap; shift
       ;;
     --buildrule-args)
       buildrule_args=$2; shift; shift
@@ -308,20 +319,11 @@ while [ $# -ne 0 ]; do
     --buildrule-dirs)
       buildrule_dirs=$2; shift; shift
       ;;
-    --cleanup-buildrules)
-      action=cleanup-buildrules; shift
-      ;;
     --distribution)
       distribution=$2; shift
       ;;
     --error-on-change)
       error_on_change=true; shift
-      ;;
-    --get-imagename)
-      action=get-imagename; shift
-      ;;
-    --get-imagetype)
-      action=get-imagetype; shift
       ;;
     --image-release)
       image_release=$2; shift; shift
@@ -329,24 +331,8 @@ while [ $# -ne 0 ]; do
     --imagetype)
       imagetype=$2; shift; shift
       ;;
-    --install-packages)
-      action=install-packages; shift
-      ;;
     --mirror)
       mirror=$2; shift
-      ;;
-    --prepare-image)
-      action=prepare-image; shift
-      ;;
-    --set-root-passwd)
-      action=set-root-passwd; shift
-      ;;
-    --update-buildrules-from-buildhost)
-      action=update-buildrules-from-buildhost; shift
-      ;;
-    --update-buildrules-from-packages)
-      buildrule_packages=$2; shift; shift
-      action=update-buildrules-from-packages
       ;;
     --)
       shift; break
@@ -373,6 +359,9 @@ case "$action" in
   cleanup-buildrules)
     do_cleanup_buildrules
     ;;
+  get-arch)
+    get_arch
+    ;;
   get-imagename)
     get_imagename
     ;;
@@ -384,6 +373,12 @@ case "$action" in
     ;;
   prepare-image)
     do_prepare_image "$image_release_name"
+    ;;
+  set-root-passwd)
+    do_set_root_passwd
+    ;;
+  shell)
+    bash
     ;;
   update-buildrules-from-buildhost)
     do_update_buildrules_from_buildhost
