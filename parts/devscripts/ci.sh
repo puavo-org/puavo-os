@@ -6,7 +6,7 @@ set -x
 env
 
 sudo apt-get update
-sudo apt-get install -y aptirepo-upload make equivs
+sudo apt-get install -y --force-yes aptirepo-upload make equivs
 
 sudo make install-deb-deps
 if [ "${CI_TARGET_ARCH}" = i386 ]; then
