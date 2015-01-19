@@ -42,5 +42,13 @@ clean-deb:
 	rm -f ../puavo-devscripts_*.dsc
 	rm -f ../puavo-devscripts_*.tar.gz
 
+debiandir:
+	rm -rf debian
+	cp -a debian.default debian
+	puavo-dch $(shell cat VERSION)
+
+deb: debiandir
+	dpkg-buildpackage -us -uc
+
 .PHONY : all installdirs install install-lxc-tools install-dch-suffix clean \
-	clean-deb
+	clean-deb debiandir deb
