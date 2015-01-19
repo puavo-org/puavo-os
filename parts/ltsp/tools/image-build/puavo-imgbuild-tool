@@ -358,7 +358,7 @@ case "$action" in
     rm -rf "$target_dir"
     ;;
   image)
-    make_image "$release_name"
+    make_image "$release_name" "$set_root_passwd"
     ;;
   install-packages)
     install_packages
