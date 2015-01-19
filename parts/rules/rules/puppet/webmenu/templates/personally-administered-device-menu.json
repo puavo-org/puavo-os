@@ -465,6 +465,27 @@
         },
         {
           "type": "desktop",
+          "osIconPath": "/usr/share/pixmaps/fritzing_icon.png",
+          "source": "fritzing"
+        },
+        {
+          "type": "desktop",
+          "inactiveByDeviceType": "thinclient",
+          "source": "Snap4Arduino",
+          "name": {
+            "en": "Teddy Bear programming",
+            "fi": "Nalle-ohjelmointi",
+            "sv": "Teddybjörn programmering",
+            "de": "Teddy-Programmierung"
+          }
+        },
+        {
+          "type": "desktop",
+          "osIconPath": "/usr/share/racket/collects/icons/plt-48x48.png",
+          "source": "drracket"
+        },
+        {
+          "type": "desktop",
           "source": "enchanting",
           "inactiveByDeviceType": "thinclient"
         },
