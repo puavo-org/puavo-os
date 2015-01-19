@@ -42,15 +42,5 @@ clean-deb:
 	rm -f ../puavo-devscripts_*.dsc
 	rm -f ../puavo-devscripts_*.tar.gz
 
-debiandir:
-	rm -rf debian
-	cp -a debian.default debian
-
-deb: debiandir
-	dpkg-buildpackage -us -uc
-
-install-deb-deps:
-	mk-build-deps -i -t 'apt-get -y' -r debian.default/control
-
 .PHONY : all installdirs install install-lxc-tools install-dch-suffix clean \
-	clean-deb debiandir deb install-deb-deps
+	clean-deb
