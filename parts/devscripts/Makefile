@@ -42,6 +42,9 @@ clean-deb:
 	rm -f ../puavo-devscripts_*.dsc
 	rm -f ../puavo-devscripts_*.tar.gz
 
+install-deb-debs:
+	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian.default/control
+
 debiandir:
 	rm -rf debian
 	cp -a debian.default debian
