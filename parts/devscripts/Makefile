@@ -48,7 +48,7 @@ install-deb-debs:
 debiandir:
 	rm -rf debian
 	cp -a debian.default debian
-	puavo-dch $(shell cat VERSION)
+	bin/puavo-dch $(shell cat VERSION)
 
 deb: debiandir
 	dpkg-buildpackage -us -uc
