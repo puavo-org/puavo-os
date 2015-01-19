@@ -50,7 +50,7 @@ deb: debiandir
 	dpkg-buildpackage -us -uc
 
 install-deb-deps:
-	mk-build-deps -i -t 'apt-get -yes' -r debian.default/control
+	mk-build-deps -i -t 'apt-get -y' -r debian.default/control
 
 .PHONY : all installdirs install install-lxc-tools install-dch-suffix clean \
 	clean-deb debiandir deb install-deb-deps
