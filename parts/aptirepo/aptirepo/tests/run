@@ -6,9 +6,10 @@ assert_find()
 {
     local path=$1
     local expected_listing=$2
+    local find_opts=$3
 
     local expected_output=$(echo "${expected_listing}" | sort -g) || return 2
-    local output=$(find "${path}" | sort -g) || return 2
+    local output=$(find "${path}" ${find_opts} | sort -g) || return 2
 
     [ "${expected_output}" = "${output}" ] || {
         echo "unexpected content in directory tree '${path}':" >&2

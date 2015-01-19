@@ -22,28 +22,21 @@ EOF
 APTIREPO_ROOTDIR=repo aptirepo updatedists --prune
 
 assert_find repo/dists \
-"repo/dists
-repo/dists/wheezy
-repo/dists/wheezy/contrib
-repo/dists/wheezy/contrib/binary-amd64
-repo/dists/wheezy/contrib/binary-amd64/Packages
+"repo/dists/wheezy/contrib/binary-amd64/Packages
 repo/dists/wheezy/contrib/binary-amd64/Packages.gz
-repo/dists/wheezy/contrib/binary-i386
 repo/dists/wheezy/contrib/binary-i386/Packages
 repo/dists/wheezy/contrib/binary-i386/Packages.gz
 repo/dists/wheezy/contrib/Contents.gz
-repo/dists/wheezy/main
-repo/dists/wheezy/main/binary-amd64
 repo/dists/wheezy/main/binary-amd64/Packages
 repo/dists/wheezy/main/binary-amd64/Packages.gz
-repo/dists/wheezy/main/binary-i386
 repo/dists/wheezy/main/binary-i386/Packages
 repo/dists/wheezy/main/binary-i386/Packages.gz
 repo/dists/wheezy/main/Contents.gz
-repo/dists/wheezy/Release"
+repo/dists/wheezy/Release" \
+'-type f'
 
 assert_find repo/pool \
-"repo/pool
-repo/pool/contrib
+"repo/pool/contrib
 repo/pool/main
-repo/pool/non-free"
+repo/pool/non-free" \
+'-type d -links 2'
