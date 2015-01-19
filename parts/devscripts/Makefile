@@ -53,5 +53,8 @@ debiandir:
 deb: debiandir
 	dpkg-buildpackage -us -uc
 
+deb-binary-arch: debiandir
+	dpkg-buildpackage -B -us -uc
+
 .PHONY : all installdirs install install-lxc-tools install-dch-suffix clean \
-	clean-deb debiandir deb
+	clean-deb debiandir deb deb-binary-arch
