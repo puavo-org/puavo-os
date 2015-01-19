@@ -488,6 +488,11 @@
         },
         {
           "type": "desktop",
+          "osIconPath": "/usr/share/racket/collects/icons/plt-48x48.png",
+          "source": "drracket"
+        },
+        {
+          "type": "desktop",
           "source": "enchanting",
           "inactiveByDeviceType": "thinclient"
         },
