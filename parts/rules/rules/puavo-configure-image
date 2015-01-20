@@ -184,13 +184,13 @@ do_update_buildrules_from_buildhost() {
 }
 
 do_update_buildrules_from_packages() {
-  packages=$1
+  buildrule_packages=$1
   buildrule_dirs=$2
 
   do_cleanup_buildrules
 
   apt-get -y update
-  apt-get -y install $(strip_commas "$packages")
+  apt-get -y install $(strip_commas "$buildrule_packages")
 
   for dir in $(strip_commas "$buildrule_dirs"); do
     for subdir in debseeds puppet; do
@@ -258,7 +258,7 @@ EOF
   exit 1
 }
 
-if ! args=$(getopt -n "$0" -o + -l 'apply-buildrules,apt-dist-upgrade,apt-proxy:,apt-update,bootstrap,buildrule-args:,cleanup-buildrules,get-arch,get-imagename,get-imagetype,image-release:,imagetype:,install-packages,mirror:,prepare-image,set-root-passwd,shell,update-buildrules-from-buildhost,update-buildrules-from-packages:' -- "$@"); then
+if ! args=$(getopt -n "$0" -o + -l 'apply-buildrules,apt-dist-upgrade,apt-proxy:,apt-update,bootstrap,buildrule-args:,buildrule-dirs:,cleanup-buildrules,get-arch,get-imagename,get-imagetype,image-release:,imagetype:,install-packages,mirror:,prepare-image,set-root-passwd,shell,update-buildrules-from-buildhost,update-buildrules-from-packages:' -- "$@"); then
   usage
 fi
 
@@ -363,7 +363,7 @@ case "$action" in
     do_update_buildrules_from_buildhost
     ;;
   update-buildrules-from-packages)
-    do_update_buildrules_from_packages "$packages" "$buildrule_dirs"
+    do_update_buildrules_from_packages "$buildrule_packages" "$buildrule_dirs"
     ;;
   *)
     echo "Unknown action: '$action'" >&2
