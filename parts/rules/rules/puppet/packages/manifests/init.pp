@@ -699,6 +699,8 @@ class packages {
     , 'kdepasswd'
     , 'keychain'
     , 'khelpcenter4'
+    , 'keepass2'
+    , 'keepassx'
     , 'rarian-compat'
     , 'screenlets'
     , 'unace'
