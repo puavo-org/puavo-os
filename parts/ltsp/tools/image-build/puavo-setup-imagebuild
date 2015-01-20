@@ -125,7 +125,7 @@ mkdir -p "$(dirname "$config_path")"
 
 cat <<EOF > ~/.config/puavo-build-image/defaults
 apt-proxy $apt_proxy
-buildrules-dirs $buildrules_dirs
+buildrule-dirs $buildrules_dirs
 builds-dir $builds_dir
 chroot-configure-script /usr/lib/puavo-rules/puavo-configure-chroot
 image-configure-script /usr/lib/puavo-rules/puavo-configure-image
