@@ -100,9 +100,9 @@ EOF
     done
   )
 
-  mkdir -p /etc/ltsp /etc/puavo-image-build/rules
   apt-get -qq -y install language-pack-en puppet-common
 
+  mkdir -p /etc/puavo-image-build
   echo "$imagetype" > /etc/puavo-image-build/imagetype
 }
 
@@ -154,6 +154,7 @@ set_image_release() {
     done
   fi
 
+  mkdir -p /etc/ltsp
   echo "$image_filename"   > /etc/ltsp/this_ltspimage_name
   echo "$new_release_name" > /etc/ltsp/this_ltspimage_release
 }
@@ -195,6 +196,7 @@ do_update_buildrules_from_packages() {
   for dir in $(strip_commas "$buildrule_dirs"); do
     for subdir in debseeds puppet; do
       if [ -d "${dir}/${subdir}" ]; then
+        mkdir -p /etc/puavo-image-build/rules
         cp -nR "${dir}/${subdir}" /etc/puavo-image-build/rules/
       fi
     done
