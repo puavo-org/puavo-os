@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -eu
+
+sudo env XAUTHORITY="$(echo /var/run/lightdm/root/:0)" DISPLAY=:0 "$@"

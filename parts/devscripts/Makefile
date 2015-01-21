@@ -13,16 +13,19 @@ installdirs:
 
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
-		bin/puavo-dch \
-		bin/puavo-install-deps \
-		bin/puavo-debuild \
-		bin/puavo-build-debian-dir \
+		bin/adm-x \
+		bin/adm-x11vnc \
+		bin/adm-xrandr \
+		bin/db2fig.kdc \
 		bin/dpkg-diff-img \
+		bin/log2db.kdc \
+		bin/puavo-build-debian-dir \
+		bin/puavo-dch \
+		bin/puavo-debuild \
 		bin/puavo-img-clone \
 		bin/puavo-img-chroot \
-		bin/puavo-passwd \
-		bin/log2db.kdc \
-		bin/db2fig.kdc
+		bin/puavo-install-deps \
+		bin/puavo-passwd
 
 install-lxc-tools: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
