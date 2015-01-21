@@ -446,27 +446,42 @@ EOF
 
 admin_username, admin_password = PuavoBS.ask_admin_credentials()
 
-school = PuavoBS.ask_school(admin_username, admin_password)
-if school.nil? then
-  STDERR.puts('ERROR: this bootserver is not connected to any schools, ' \
-              'please connect it to some schools from Puavo and try again')
-  exit(1)
-end
-school_name, school_id = school
+is_first_run = true
 
-say("Select the test device type:")
-testclient_hosttype = choose() do |menu|
-  ['fatclient', 'thinclient'].each() do |hosttype|
-    menu.choice(hosttype) { hosttype }
+while true do
+
+  break if !is_first_run && !agree('Run another test? ')
+  is_first_run = false
+
+  choose do |menu|
+    menu.prompt = "Please choose your favorite programming language? "
+    menu.choice :exit do break end
+    menu.choices(:python, :perl) do say("Not from around here, are you?") end
   end
-end
 
-testrun = TestRun.new(admin_username, admin_password,
-                      school_id, testclient_hosttype)
+  school = PuavoBS.ask_school(admin_username, admin_password)
+  if school.nil? then
+    STDERR.puts('ERROR: this bootserver is not connected to any schools, ' \
+                'please connect it to some schools from Puavo and try again')
+    next
+  end
+  school_name, school_id = school
 
-begin
-  exit(1) if !testrun.prepare()
-  exit(1) if !testrun.execute()
-ensure
-  testrun.cleanup()
+  say("Select the test device type:")
+  testclient_hosttype = choose() do |menu|
+    ['fatclient', 'thinclient'].each() do |hosttype|
+      menu.choice(hosttype) { hosttype }
+    end
+  end
+
+  testrun = TestRun.new(admin_username, admin_password,
+                        school_id, testclient_hosttype)
+
+  begin
+    exit(1) if !testrun.prepare()
+    exit(1) if !testrun.execute()
+  ensure
+    testrun.cleanup()
+  end
+
 end
