@@ -238,11 +238,13 @@ class TestRun
                                                             @testclient_mac,
                                                             @testclient_hosttype,
                                                             @testclient_tags)
+      boot_image = PuavoBS::get_preferred_boot_image(@testclient_hostname)
     rescue StandardError, Interrupt
       puts_fail()
       raise
     else
       puts_ok()
+      puts("    Boot image: #{boot_image}")
     end
     true
   end
