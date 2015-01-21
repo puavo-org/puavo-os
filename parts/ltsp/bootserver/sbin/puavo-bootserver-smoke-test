@@ -455,12 +455,6 @@ while true do
   break if !is_first_run && !agree('Run another test? ')
   is_first_run = false
 
-  choose do |menu|
-    menu.prompt = "Please choose your favorite programming language? "
-    menu.choice :exit do break end
-    menu.choices(:python, :perl) do say("Not from around here, are you?") end
-  end
-
   school = PuavoBS.ask_school(admin_username, admin_password)
   if school.nil? then
     STDERR.puts('ERROR: this bootserver is not connected to any schools, ' \
