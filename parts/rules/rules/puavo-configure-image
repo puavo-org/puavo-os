@@ -87,19 +87,6 @@ EOF
 EOF
   chmod 755 /usr/sbin/policy-rc.d
 
-  apt-get update
-  apt-get -y install linux-image-generic
-
-  (
-    cd /boot
-    for vmlinuz in vmlinuz-*; do
-      test -e "$vmlinuz" || break
-      kernel_version=${vmlinuz##vmlinuz-}
-      ln -s "vmlinuz-$kernel_version"    vmlinuz
-      ln -s "initrd.img-$kernel_version" initrd.img
-    done
-  )
-
   apt-get -qq -y install language-pack-en puppet-common
 
   mkdir -p /etc/puavo-image-build
