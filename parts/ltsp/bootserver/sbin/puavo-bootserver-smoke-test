@@ -474,8 +474,8 @@ while true do
                         school_id, testclient_hosttype)
 
   begin
-    exit(1) if !testrun.prepare()
-    exit(1) if !testrun.execute()
+    next if !testrun.prepare()
+    next if !testrun.execute()
   ensure
     testrun.cleanup()
   end
