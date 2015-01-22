@@ -22,5 +22,13 @@
     "release-name": "Development",
     "bootstrap-puppet-classes": "image::bundle::bootstrap_configure",
     "images": []
+  },
+  "ltsp-wirelessaccesspoint-trusty": {
+    "arch": "i386",
+    "distribution": "trusty",
+    "puppet-classes": "image::wirelessaccesspoint",
+    "release-name": "Development",
+    "bootstrap-puppet-classes": "image::bundle::bootstrap_configure",
+    "images": []
   }
 }
