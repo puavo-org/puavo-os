@@ -4,6 +4,7 @@
     "distribution": "trusty",
     "puppet-classes": "image::builder",
     "release-name": "Development",
+    "bootstrap-puppet-classes": "image::bundle::bootstrap_configure",
     "images": []
   },
   "ltsp-desktop-trusty": {
@@ -11,6 +12,7 @@
     "distribution": "trusty",
     "puppet-classes": "image::desktop",
     "release-name": "Development",
+    "bootstrap-puppet-classes": "image::bundle::bootstrap_configure",
     "images": []
   },
   "ltsp-thinclient-precise": {
@@ -18,6 +20,7 @@
     "distribution": "precise",
     "puppet-classes": "image::thinclient",
     "release-name": "Development",
+    "bootstrap-puppet-classes": "image::bundle::bootstrap_configure",
     "images": []
   }
 }

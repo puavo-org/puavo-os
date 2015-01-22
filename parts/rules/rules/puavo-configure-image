@@ -16,9 +16,9 @@ apply_debseeds() {
 
 apply_puppet_rules() {
   error_on_change=$1
-  buildrule_args=$2
+  buildrules=$2
   
-  puppet_classes=$(get_and_cache_puppet_classes "$buildrule_args")
+  puppet_classes=$(get_and_cache_puppet_classes "$buildrules")
 
   if $error_on_change; then
     another_ok_puppetcode=0
@@ -37,11 +37,11 @@ apply_puppet_rules() {
 }
 
 do_apply_buildrules() {
-  buildrule_args=$1
+  buildrules=$1
 
   apply_debseeds
-  apply_puppet_rules false "$buildrule_args"
-  apply_puppet_rules true  "$buildrule_args"
+  apply_puppet_rules false "$buildrules"
+  apply_puppet_rules true  "$buildrules"
 }
 
 do_apt_dist_upgrade() {
@@ -87,6 +87,7 @@ EOF
 EOF
   chmod 755 /usr/sbin/policy-rc.d
 
+  apt-get -qq -y update
   apt-get -qq -y install language-pack-en puppet-common
 
   mkdir -p /etc/puavo-image-build
@@ -167,18 +168,13 @@ do_set_root_passwd() {
 
 do_update_buildrules_from_buildhost() {
   # read from stdin
+  mkdir -p /etc/puavo-image-build/rules
   tar --no-same-owner --no-same-permissions \
       -C /etc/puavo-image-build/rules -kxf -
 }
 
-do_update_buildrules_from_packages() {
-  buildrule_packages=$1
-  buildrule_dirs=$2
-
-  do_cleanup_buildrules
-
-  apt-get -y update
-  apt-get -y install $(strip_commas "$buildrule_packages")
+do_update_buildrules_from_filesystem() {
+  buildrule_dirs=$1
 
   for dir in $(strip_commas "$buildrule_dirs"); do
     for subdir in debseeds puppet; do
@@ -225,8 +221,7 @@ strip_commas() { echo "$1" | tr , ' '; }
 usage() {
   cat >&2 <<'EOF'
 Usage:
-  puavo-configure-image --apply-buildrules
-                        --buildrule-args buildrule-args
+  puavo-configure-image --apply-buildrules --buildrules buildrules
   puavo-configure-image --apt-dist-upgrade
   puavo-configure-image --apt-update
   puavo-configure-image --bootstrap --imagetype imagetype
@@ -240,22 +235,23 @@ Usage:
   puavo-configure-image --prepare-image [--image-release image-release]
   puavo-configure-image --set-root-passwd
   puavo-configure-image --update-buildrules-from-buildhost
-  puavo-configure-image --update-buildrules-from-packages packages
+  puavo-configure-image --update-buildrules-from-filesystem
                         --buildrule-dirs buildrule-dirs
 
 EOF
   exit 1
 }
 
-if ! args=$(getopt -n "$0" -o + -l 'apply-buildrules,apt-dist-upgrade,apt-proxy:,apt-update,bootstrap,buildrule-args:,buildrule-dirs:,cleanup-buildrules,get-arch,get-imagename,get-imagetype,image-release:,imagetype:,install-packages,mirror:,prepare-image,set-root-passwd,shell,update-buildrules-from-buildhost,update-buildrules-from-packages:' -- "$@"); then
+if ! args=$(getopt -n "$0" -o + -l 'apply-buildrules,apt-dist-upgrade,apt-proxy:,apt-update,bootstrap,buildrule-dirs:,buildrules:,cleanup-buildrules,get-arch,get-config-value:,get-imagename,get-imagetype,image-release:,imagetype:,install-packages,mirror:,prepare-image,set-root-passwd,shell,update-buildrules-from-buildhost,update-buildrules-from-filesystem' -- "$@"); then
   usage
 fi
 
 action=
 apt_proxy=
-buildrule_args=
 buildrule_dirs=
 buildrule_packages=
+buildrules=
+config_key=
 image_release_name=
 imagetype=
 mirror=
@@ -264,31 +260,32 @@ eval "set -- $args"
 
 while [ $# -ne 0 ]; do
   case "$1" in
-    --apply-buildrules     \
-    | --apt-dist-upgrade   \
-    | --apt-update         \
-    | --bootstrap          \
-    | --cleanup-buildrules \
-    | --get-arch           \
-    | --get-imagename      \
-    | --get-imagetype      \
-    | --install-packages   \
-    | --prepare-image      \
-    | --set-root-passwd    \
-    | --shell              \
-    | --update-buildrules-from-buildhost)
+    --apply-buildrules                   \
+    | --apt-dist-upgrade                 \
+    | --apt-update                       \
+    | --bootstrap                        \
+    | --cleanup-buildrules               \
+    | --get-arch                         \
+    | --get-imagename                    \
+    | --get-imagetype                    \
+    | --install-packages                 \
+    | --prepare-image                    \
+    | --set-root-passwd                  \
+    | --shell                            \
+    | --update-buildrules-from-buildhost \
+    | --update-buildrules-from-filesystem)
       action=${1#--}; shift
       ;;
-    --update-buildrules-from-packages)
-      buildrule_packages=$2; shift; shift
-      action=update-buildrules-from-packages
+    --get-config-value)
+      config_key=$2; shift; shift
+      action=get-config-value
       ;;
 
     --apt-proxy)
       apt_proxy=$2; shift; shift
       ;;
-    --buildrule-args)
-      buildrule_args=$2; shift; shift
+    --buildrules)
+      buildrules=$2; shift; shift
       ;;
     --buildrule-dirs)
       buildrule_dirs=$2; shift; shift
@@ -313,7 +310,7 @@ done
 
 case "$action" in
   apply-buildrules)
-    do_apply_buildrules "$buildrule_args"
+    do_apply_buildrules "$buildrules"
     ;;
   apt-dist-upgrade)
     do_apt_dist_upgrade
@@ -329,6 +326,10 @@ case "$action" in
     ;;
   get-arch)
     get_arch
+    ;;
+  get-config-value)
+    awk -v config_key="$config_key" '$1 == config_key { print $2 }' \
+        /etc/puavo-image-build/config
     ;;
   get-imagename)
     get_imagename
@@ -351,8 +352,8 @@ case "$action" in
   update-buildrules-from-buildhost)
     do_update_buildrules_from_buildhost
     ;;
-  update-buildrules-from-packages)
-    do_update_buildrules_from_packages "$buildrule_packages" "$buildrule_dirs"
+  update-buildrules-from-filesystem)
+    do_update_buildrules_from_filesystem "$buildrule_dirs"
     ;;
   *)
     echo "Unknown action: '$action'" >&2
