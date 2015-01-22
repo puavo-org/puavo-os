@@ -17,7 +17,7 @@ IMAGE_SIGNATURE_FILES = $(patsubst %.img,%.rdiff_signature,${IMAGE_FILES})
 IMAGE_SIGNATURE_FILES_AP \
   = $(addprefix ${SIGNATURES_DIR}/,${IMAGE_SIGNATURE_FILES})
 
-IMAGE_SERIES = ltsp-builder-trusty ltsp-desktop-trusty ltsp-thinclient-precise
+IMAGE_SERIES = ltsp-builder-trusty ltsp-desktop-trusty ltsp-thinclient-precise ltsp-wirelessaccesspoint-trusty
 
 IMAGE_SERIES_RDIFF_TARGETS = 
 
