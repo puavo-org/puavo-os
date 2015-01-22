@@ -6,6 +6,27 @@ cleanup() {
   do_umounts 2>/dev/null || true
 }
 
+do_apply_buildrules() {
+  buildrule_dirs=$1; shift
+
+  puavo_configure_image --cleanup-buildrules "$@"
+
+  rule_updates=$(puavo_configure_image --get-config-value rule-updates \
+                   2>/dev/null || true)
+
+  case "$rule_updates" in
+    from-filesystem)
+      puavo_configure_image --update-buildrules-from-filesystem \
+                            --buildrule-dirs "$buildrule_dirs"
+      ;;
+    *)
+      do_update_buildrules_from_buildhost "$buildrule_dirs"
+      ;;
+  esac
+
+  puavo_configure_image --apply-buildrules "$@"
+}
+
 do_bootstrap() {
   image_configure_script=$1; shift
 
@@ -66,8 +87,6 @@ do_umounts() {
 do_update_buildrules_from_buildhost() {
   buildrule_dirs=$1; shift
 
-  puavo_configure_image --cleanup-buildrules "$@"
-
   for dir in $(echo "$buildrule_dirs" | tr , ' '); do
     if [ -d "$dir" ]; then
       tar -C "$dir" --exclude .gitignore -cf - debseeds puppet \
@@ -109,9 +128,10 @@ Usage:
                          --target-dir target-dir
                          --image-configure-script image-configure-script
                          -- (image-configure-script args)
-  puavo-configure-chroot --update-buildrules-from-buildhost
+  puavo-configure-chroot --apply-buildrules
                          --target-dir target-dir
                          --buildrule-dirs buildrule-dirs
+                         --buildrules buildrules
                          -- (image-configure-script args)
   puavo-configure-chroot --install-packages package-dirs
                          --target-dir target-dir
@@ -126,7 +146,7 @@ EOF
 trap cleanup 0 INT TERM
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'bootstrap,buildrule-dirs:,image-configure-script:,install-packages:,target-dir:,update-buildrules-from-buildhost,wipe-chroot' \
+              -l 'apply-buildrules,bootstrap,buildrule-dirs:,image-configure-script:,install-packages:,target-dir:,wipe-chroot' \
               -- "$@"); then
   usage
 fi
@@ -141,8 +161,8 @@ eval "set -- $args"
 
 while [ $# -ne 0 ]; do
   case "$1" in
-    --bootstrap                          \
-    | --update-buildrules-from-buildhost \
+    --apply-buildrules \
+    | --bootstrap      \
     | --wipe-chroot)
       action=${1#--}; shift
       ;;
@@ -177,14 +197,14 @@ case "$action" in
   '')
     puavo_configure_image "$@"
     ;;
+  apply-buildrules)
+    do_apply_buildrules "$buildrule_dirs" "$@"
+    ;;
   bootstrap)
     do_bootstrap "$image_configure_script" "$@"
     ;;
   install-packages)
     do_install_packages "$package_dirs" "$@"
-    ;;
-  update-buildrules-from-buildhost)
-    do_update_buildrules_from_buildhost "$buildrule_dirs" "$@"
     ;;
   wipe-chroot)
     if [ -d "$target_dir" ]; then
