@@ -43,10 +43,10 @@ module PuavoBS
     end
   end
 
-  def self.get_school(username, password, school_id)
+  def self.get_school(admin_username, admin_password, school_id)
     url = self.get_puavo_url("/users/schools/#{school_id}.json")
     response = HTTP
-      .auth(self.basic_auth(username, password))
+      .auth(self.basic_auth(admin_username, admin_password))
       .accept(:json)
       .get(url)
     self.check_response_code(response.code)
@@ -73,11 +73,11 @@ module PuavoBS
     device_json['preferred_boot_image']
   end
 
-  def self.get_school_ids(username, password)
+  def self.get_school_ids(admin_username, admin_password)
     puavo_id = Integer(File.read('/etc/puavo/id').strip())
     url = self.get_puavo_url("/devices/servers/#{puavo_id}.xml")
     response = HTTP
-      .auth(self.basic_auth(username, password))
+      .auth(self.basic_auth(admin_username, admin_password))
       .accept(:xml)
       .get(url)
     self.check_response_code(response.code)
@@ -95,12 +95,12 @@ module PuavoBS
     [username, password]
   end
 
-  def self.ask_school(username, password)
-    school_ids = self.get_school_ids(username, password)
+  def self.ask_school(admin_username, admin_password)
+    school_ids = self.get_school_ids(admin_username, admin_password)
     return nil if school_ids.empty?
 
     school_names = school_ids.collect() do |school_id|
-      self.get_school(username, password, school_id)["name"]
+      self.get_school(admin_username, admin_password, school_id)["name"]
     end
 
     say("Select the school which the device shall be registered to")
@@ -111,11 +111,11 @@ module PuavoBS
     end
   end
 
-  def self.register_device(username, password, school_id,
-                              hostname, mac, hosttype, tags)
+  def self.register_device(admin_username, admin_password, school_id,
+                           hostname, mac, hosttype, tags)
     url = self.get_puavo_url("/devices/#{school_id}/devices.json")
     response = HTTP
-      .auth(self.basic_auth(username, password))
+      .auth(self.basic_auth(admin_username, admin_password))
       .accept(:json)
       .post(url, :json => {
               "puavoHostname"   => hostname,
@@ -128,20 +128,20 @@ module PuavoBS
     response.code
   end
 
-  def self.unregister_device(username, password, hostname)
+  def self.unregister_device(admin_username, admin_password, hostname)
     school_id, device_id = self.get_school_and_device_ids(hostname)
     url = self.get_puavo_url("/devices/#{school_id}/devices/#{device_id}.xml")
     response = HTTP
-      .auth(self.basic_auth(username, password))
+      .auth(self.basic_auth(admin_username, admin_password))
       .delete(url)
     self.check_response_code(response.code)
     response.code
   end
 
-  def self.get_role_ids(username, password, school_id)
+  def self.get_role_ids(admin_username, admin_password, school_id)
     url = self.get_puavo_url("/users/#{school_id}/roles.xml")
     response = HTTP
-      .auth(self.basic_auth(username, password))
+      .auth(self.basic_auth(admin_username, admin_password))
       .accept(:xml)
       .get(url)
     self.check_response_code(response.code)
@@ -151,8 +151,8 @@ module PuavoBS
     end
   end
 
-  def self.create_testuser(username, password, school_id)
-    role_ids = self.get_role_ids(username, password, school_id)
+  def self.create_testuser(admin_username, admin_password, school_id)
+    role_ids = self.get_role_ids(admin_username, admin_password, school_id)
     if role_ids.empty? then
       return []
     end
@@ -163,7 +163,7 @@ module PuavoBS
 
     url = self.get_puavo_url("/users/#{school_id}/users")
     response = HTTP
-      .auth(self.basic_auth(username, password))
+      .auth(self.basic_auth(admin_username, admin_password))
       .post(url, :form => {
               "user[givenName]"                 => "test",
               "user[sn]"                        => "user",
@@ -177,9 +177,9 @@ module PuavoBS
     [testuser_username, testuser_password]
   end
 
-  def self.get_user_id(username, password, user_username)
+  def self.get_user_id(admin_username, admin_password, user_username)
     response = HTTP
-      .auth(self.basic_auth(username, password))
+      .auth(self.basic_auth(admin_username, admin_password))
       .accept(:json)
       .get(self.get_api_url("/v3/users/#{user_username}"))
     self.check_response_code(response.code)
@@ -187,12 +187,12 @@ module PuavoBS
     Integer(/^puavoId=([0-9]+),/.match(user_json['dn'])[1])
   end
 
-  def self.remove_user(username, password, school_id, user_username)
-    user_id = self.get_user_id(username, password, user_username)
+  def self.remove_user(admin_username, admin_password, school_id, user_username)
+    user_id = self.get_user_id(admin_username, admin_password, user_username)
 
     url = self.get_puavo_url("/users/#{school_id}/users/#{user_id}.xml")
     response = HTTP
-      .auth(self.basic_auth(username, password))
+      .auth(self.basic_auth(admin_username, admin_password))
       .delete(url)
     self.check_response_code(response.code)
     response.code
