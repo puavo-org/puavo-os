@@ -151,14 +151,15 @@ module PuavoBS
     end
   end
 
-  def self.create_testuser(admin_username, admin_password, school_id)
+  def self.create_testuser(admin_username, admin_password, school_id,
+                           testuser_username='test.user.**********')
     role_ids = self.get_role_ids(admin_username, admin_password, school_id)
     if role_ids.empty? then
       return []
     end
 
     testuser_role_id  = role_ids[0]
-    testuser_username = "test.user.#{SecureRandom.hex(10)}"
+    testuser_username.gsub!('*') { SecureRandom.hex(1) }
     testuser_password = SecureRandom.hex(32)
 
     url = self.get_puavo_url("/users/#{school_id}/users")
