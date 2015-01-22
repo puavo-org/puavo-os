@@ -6,9 +6,10 @@ usage() {
     cat <<EOF
 Usage:
   puavo-imgbuild-tool --build imagetype
-                      --buildrule-args buildrule-args
                       --buildrule-dirs buildrule-dirs
+                      --buildrules buildrules
                       --chroot-configure-script chroot-configure-script
+                      --configure-bootstrap-rules rule-classes
                       --image-configure-script image-configure-script
                       --extra-packages-dir extra-packages-dir
                       --image-excludes-file image-excludes-file
@@ -17,8 +18,8 @@ Usage:
                       --target-dir target-dir
 
   puavo-imgbuild-tool --apply-buildrules
-                      --buildrule-args buildrule-args
                       --buildrule-dirs buildrule-dirs
+                      --buildrules buildrules
                       --chroot-configure-script chroot-configure-script
                       --image-configure-script image-configure-script
                       --target-dir target-dir
@@ -31,8 +32,8 @@ Usage:
                       --target-dir target-dir
 
   puavo-imgbuild-tool --update-chroot
-                      --buildrule-args buildrule-args
                       --buildrule-dirs buildrule-dirs
+                      --buildrules buildrules
                       --chroot-configure-script chroot-configure-script
                       --image-configure-script image-configure-script
                       --extra-packages-dir extra-packages-dir
@@ -54,11 +55,11 @@ Usage:
 
   --image-excludes-file defaults to /etc/puavo-image-tools/ltsp-image.excludes
 
-  --buildrule-args are special arguments for applying buildrules
-    (currently a list of comma-separated puppet classes)
-
   --buildrule-dirs is a comma-separated list of directories
     that contain rules for building images
+
+  --buildrules is a comma-separated list of buildrules
+    (currently a list of puppet classes)
 
   --build takes optional arguments:
 
@@ -79,7 +80,7 @@ get_default_for() {
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'apply-buildrules,apt-proxy:,arch:,build:,buildrule-args:,buildrule-dirs:,builds-dir:,chroot,chroot-configure-script:,cleanup-chroot,distribution:,extra-packages-dir:,image,image-configure-script:,image-excludes-file:,images-dir:,install-packages,mirror:,release-name:,set-root-passwd,target-dir:,update-chroot' \
+              -l 'apply-buildrules,apt-proxy:,arch:,build:,buildrules:,buildrule-dirs:,builds-dir:,chroot,chroot-configure-script:,cleanup-chroot,configure-bootstrap-rules:,distribution:,extra-packages-dir:,image,image-configure-script:,image-excludes-file:,images-dir:,install-packages,mirror:,release-name:,set-root-passwd,target-dir:,update-chroot' \
               -- "$@"); then
   usage
 fi
@@ -89,7 +90,7 @@ arch=
 distribution=$(lsb_release -cs) # take the buildhost distribution as default
                                 # (precise, trusty, ...)
 
-buildrule_args=
+buildrules=
 extra_packages_dir=
 imagetype=
 release_name=
@@ -101,6 +102,7 @@ apt_proxy=$(get_default_for apt-proxy)
 buildrule_dirs=$(get_default_for buildrule-dirs)
 builds_dir=$(get_default_for builds-dir)
 chroot_configure_script=$(get_default_for chroot-configure-script)
+configure_bootstrap_rules=$(get_default_for configure-bootstrap-rules)
 image_configure_script=$(get_default_for image-configure-script)
 image_excludes_file=$(get_default_for image-excludes-file)
 images_dir="$(get_default_for images-dir)"
@@ -133,17 +135,20 @@ while [ $# -ne 0 ]; do
     --arch)
       arch=$2; shift; shift
       ;;
-    --buildrule-args)
-      buildrule_args=$2; shift; shift
-      ;;
     --buildrule-dirs)
       buildrule_dirs=$2; shift; shift
+      ;;
+    --buildrules)
+      buildrules=$2; shift; shift
       ;;
     --builds-dir)
       builds_dir=$2; shift; shift
       ;;
     --chroot-configure-script)
       chroot_configure_script=$2; shift; shift
+      ;;
+    --configure-bootstrap-rules)
+      configure_bootstrap_rules=$2; shift; shift
       ;;
     --distribution)
       distribution=$2; shift; shift
@@ -258,11 +263,13 @@ build_chroot() {
 }
 
 apply_buildrules() {
+  buildrules_to_be_applied=$1
+
   log_phase 'apply-buildrules'
-  run_configure_chroot --update-buildrules-from-buildhost \
-                       --buildrule-dirs "$buildrule_dirs"
-  run_configure_chroot -- --apply-buildrules \
-                          --buildrule-args "$buildrule_args"
+  run_configure_chroot --apply-buildrules                       \
+                       --buildrule-dirs "$buildrule_dirs"       \
+                       --                                       \
+                       --buildrules "$buildrules_to_be_applied"
 }
 
 install_packages() {
@@ -286,19 +293,27 @@ apt_update() {
 }
 
 bootstrap_configure() {
+  configure_bootstrap_rules=$1
+
   log_phase 'bootstrap-configure'
   run_configure_chroot --bootstrap                                        \
                        --image-configure-script "$image_configure_script" \
                        -- --apt-proxy "$apt_proxy"                        \
                           --imagetype "$imagetype"                        \
                           --mirror    "$mirror"
+
+  if [ -n "$configure_bootstrap_rules" ]; then
+    apply_buildrules "$configure_bootstrap_rules"
+  fi
 }
 
 update_chroot() {
+  buildrules=$1
+
   apt_update
-  apply_buildrules
+  apply_buildrules "$buildrules"
   apt_dist_upgrade
-  apply_buildrules
+  apply_buildrules "$buildrules"
   install_packages
 
   touch "${target_dir}/tmp/.update_chroot_done"
@@ -336,7 +351,7 @@ fi
 
 case "$action" in
   apply-buildrules)
-    apply_buildrules
+    apply_buildrules "$buildrules"
     ;;
   build)
     if [ -e "${target_dir}/tmp/.update_chroot_done" ]; then
@@ -348,8 +363,8 @@ case "$action" in
     fi
 
     build_chroot
-    bootstrap_configure
-    update_chroot
+    bootstrap_configure "$configure_bootstrap_rules"
+    update_chroot "$buildrules"
     make_image "$release_name" "$set_root_passwd"
     ;;
   chroot)
@@ -365,7 +380,7 @@ case "$action" in
     install_packages
     ;;
   update-chroot)
-    update_chroot
+    update_chroot "$buildrules"
     ;;
 esac
 

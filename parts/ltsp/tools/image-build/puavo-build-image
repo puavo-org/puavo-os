@@ -11,7 +11,10 @@ def imgbuild_args(cmdline_switch, conf, key)
     : []
 end
 
-def build_config_target(config_target, config_files, puavo_imgbuild_args)
+def build_config_target(config_target,
+                        config_files,
+                        puavo_imgbuild_args,
+                        apply_configure_bootstrap)
   image_confs = image_configurations(config_files)
 
   if !image_confs.has_key?(config_target) then
@@ -24,15 +27,22 @@ def build_config_target(config_target, config_files, puavo_imgbuild_args)
     unless conf['distribution'].kind_of?(String) \
              && !conf['distribution'].empty?
 
-  arch_args      = imgbuild_args('--arch',           conf, 'arch')
-  buildrule_args = imgbuild_args('--buildrule-args', conf, 'puppet-classes')
-  release_args   = imgbuild_args('--release-name',   conf, 'release-name')
+  arch_args       = imgbuild_args('--arch',         conf, 'arch')
+  buildrules_args = imgbuild_args('--buildrules',   conf, 'puppet-classes')
+  release_args    = imgbuild_args('--release-name', conf, 'release-name')
+
+  bootstrap_rules_args = apply_configure_bootstrap \
+                           ? imgbuild_args('--configure-bootstrap-rules',
+					   conf,
+					   'bootstrap-puppet-classes') \
+                           : []
 
   system('/usr/lib/puavo-image-tools/puavo-imgbuild-tool',
          '--build',        config_target,
          '--distribution', conf['distribution'],
          *arch_args,
-         *buildrule_args,
+         *bootstrap_rules_args,
+         *buildrules_args,
          *release_args,
          *puavo_imgbuild_args) \
     or raise "Problem in building '#{ config_target }'"
@@ -332,7 +342,8 @@ end
 def usage()
   puts <<-EOF
 Usage:
-  puavo-build-image --config-target     config-target
+  puavo-build-image --apply-configure-bootstrap
+                    --config-target     config-target
                     --images-config     images-config
                     --mount-device      mount-device
                     --mount-dir         mount-dir
@@ -356,16 +367,17 @@ EOF
   exit(1)
 end
 
-config_files      = []
-config_target     = nil
-mount_device      = nil
-mount_dir         = nil
-mounts            = {}
-output_makefile   = false
-tmpfs_inode_count = nil
-tmpfs_path        = nil
-tmpfs_size        = nil
-use_tmpfs         = false
+apply_configure_bootstrap = false
+config_files              = []
+config_target             = nil
+mount_device              = nil
+mount_dir                 = nil
+mounts                    = {}
+output_makefile           = false
+tmpfs_inode_count         = nil
+tmpfs_path                = nil
+tmpfs_size                = nil
+use_tmpfs                 = false
 
 maybe_add_to_mounts = lambda do
   if mount_device && mount_dir; then
@@ -376,18 +388,21 @@ end
 
 begin
   opts = GetoptLong.new(
-           [ '--config-target',     GetoptLong::REQUIRED_ARGUMENT ],
-           [ '--images-config',     GetoptLong::REQUIRED_ARGUMENT ],
-           [ '--mount-device',      GetoptLong::REQUIRED_ARGUMENT ],
-           [ '--mount-dir',         GetoptLong::REQUIRED_ARGUMENT ],
-           [ '--output-makefile',   GetoptLong::NO_ARGUMENT       ],
-           [ '--tmpfs-inode-count', GetoptLong::REQUIRED_ARGUMENT ],
-           [ '--tmpfs-path',        GetoptLong::REQUIRED_ARGUMENT ],
-           [ '--tmpfs-size',        GetoptLong::REQUIRED_ARGUMENT ],
-           [ '--use-tmpfs',         GetoptLong::NO_ARGUMENT       ])
+           [ '--apply-configure-bootstrap', GetoptLong::NO_ARGUMENT       ],
+           [ '--config-target',             GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--images-config',             GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--mount-device',              GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--mount-dir',                 GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--output-makefile',           GetoptLong::NO_ARGUMENT       ],
+           [ '--tmpfs-inode-count',         GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--tmpfs-path',                GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--tmpfs-size',                GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--use-tmpfs',                 GetoptLong::NO_ARGUMENT       ])
 
   opts.each do |opt, arg|
     case opt
+      when '--apply-configure-bootstrap'
+        apply_configure_bootstrap = true
       when '--config-target'
         config_target = arg
       when '--images-config'
@@ -433,7 +448,10 @@ if !config_files.empty? && config_target then
                 tmpfs_path        || '/virtualtmp',
                 tmpfs_size        || '28g')
   end
-  build_config_target(config_target, config_files, puavo_imgbuild_args)
+  build_config_target(config_target,
+                      config_files,
+                      puavo_imgbuild_args,
+                      apply_configure_bootstrap)
   exit(0)
 end
 

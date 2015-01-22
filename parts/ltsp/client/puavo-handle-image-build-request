@@ -51,6 +51,7 @@ conf = get_image_build_configuration()
 
 cmd = [
   'puavo-build-image',
+  '--apply-configure-bootstrap',
   '--config-target',      conf['config-target'],
   '--images-config',      '/usr/share/opinsys-rules/rules/images.json' ,
   '--images-config',      '/usr/share/puavo-rules/rules/images.json',
