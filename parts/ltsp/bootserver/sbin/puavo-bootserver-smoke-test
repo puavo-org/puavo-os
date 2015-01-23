@@ -492,7 +492,7 @@ if do_run_all_tests then
   max_school_name_length = all_results.keys.map{ |s| s.length }.max
   col1width = [col1hdr.length, max_school_name_length].max
   col2width = [col2hdr, 'thinclient', 'fatclient'].map{ |s| s.length }.max
-  col3width = [col3hdr, false.to_s, true.to_s].map{ |s| s.length }.max
+  col3width = [col3hdr, 'FAIL', 'OK'].map{ |s| s.length }.max
 
   fmt = "%-#{col1width}s  %-#{col2width}s  %-#{col3width}s\n"
   puts '---'
@@ -502,9 +502,9 @@ if do_run_all_tests then
   all_results.each do |school_name, results|
     results.each do |hosttype, result|
       if result then
-        printf fmt, school_name, hosttype, color_green(result)
+        printf fmt, school_name, hosttype, color_green('OK')
       else
-        printf fmt, school_name, hosttype, color_red(result)
+        printf fmt, school_name, hosttype, color_red('FAIL')
       end
     end
   end
