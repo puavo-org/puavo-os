@@ -154,18 +154,6 @@ make_release_logos() {
   fi
 }
 
-do_set_root_passwd() {
-  while true; do
-    read -p 'Set root password [y/N] ? ' do_set_rootpw
-    case "$do_set_rootpw" in
-       '')         break ;;
-      Y|y) passwd; break ;;
-      N|n)         break ;;
-        *) echo 'Simple question, simple answer please!' >&2 ;;
-    esac
-  done
-}
-
 do_update_buildrules_from_buildhost() {
   # read from stdin
   mkdir -p /etc/puavo-image-build/rules
@@ -233,7 +221,6 @@ Usage:
   puavo-configure-image --get-imagetype
   puavo-configure-image --install-packages
   puavo-configure-image --prepare-image [--image-release image-release]
-  puavo-configure-image --set-root-passwd
   puavo-configure-image --update-buildrules-from-buildhost
   puavo-configure-image --update-buildrules-from-filesystem
                         --buildrule-dirs buildrule-dirs
@@ -242,7 +229,7 @@ EOF
   exit 1
 }
 
-if ! args=$(getopt -n "$0" -o + -l 'apply-buildrules,apt-dist-upgrade,apt-proxy:,apt-update,bootstrap,buildrule-dirs:,buildrules:,cleanup-buildrules,get-arch,get-config-value:,get-imagename,get-imagetype,image-release:,imagetype:,install-packages,mirror:,prepare-image,set-root-passwd,shell,update-buildrules-from-buildhost,update-buildrules-from-filesystem' -- "$@"); then
+if ! args=$(getopt -n "$0" -o + -l 'apply-buildrules,apt-dist-upgrade,apt-proxy:,apt-update,bootstrap,buildrule-dirs:,buildrules:,cleanup-buildrules,get-arch,get-config-value:,get-imagename,get-imagetype,image-release:,imagetype:,install-packages,mirror:,prepare-image,shell,update-buildrules-from-buildhost,update-buildrules-from-filesystem' -- "$@"); then
   usage
 fi
 
@@ -270,7 +257,6 @@ while [ $# -ne 0 ]; do
     | --get-imagetype                    \
     | --install-packages                 \
     | --prepare-image                    \
-    | --set-root-passwd                  \
     | --shell                            \
     | --update-buildrules-from-buildhost \
     | --update-buildrules-from-filesystem)
@@ -342,9 +328,6 @@ case "$action" in
     ;;
   prepare-image)
     do_prepare_image "$image_release_name"
-    ;;
-  set-root-passwd)
-    do_set_root_passwd
     ;;
   shell)
     bash
