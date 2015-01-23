@@ -257,13 +257,14 @@ build_chroot() {
 }
 
 apply_buildrules() {
-  buildrules_to_be_applied=$1
+  buildrules_to_be_applied=$1; shift
 
   log_phase 'apply-buildrules'
   run_configure_chroot --apply-buildrules                       \
                        --buildrule-dirs "$buildrule_dirs"       \
                        --                                       \
-                       --buildrules "$buildrules_to_be_applied"
+                       --buildrules "$buildrules_to_be_applied" \
+                       "$@"
 }
 
 install_packages() {
@@ -307,7 +308,7 @@ update_chroot() {
   apt_update
   apply_buildrules "$buildrules"
   apt_dist_upgrade
-  apply_buildrules "$buildrules"
+  apply_buildrules "$buildrules" --verify-rule-stability
   install_packages
 
   touch "${target_dir}/tmp/.update_chroot_done"
@@ -338,7 +339,7 @@ fi
 
 case "$action" in
   apply-buildrules)
-    apply_buildrules "$buildrules"
+    apply_buildrules "$buildrules" --verify-rule-stability
     ;;
   build)
     if [ -e "${target_dir}/tmp/.update_chroot_done" ]; then
