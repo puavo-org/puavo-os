@@ -7,7 +7,6 @@ class image::builder {
                   or title == kernels
                   or title == repo |>
 
-  # apply only builder package definitions listed in packages
   Package <| tag == admin
           or tag == basic
           or title == puavo-devscripts
