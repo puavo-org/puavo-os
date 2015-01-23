@@ -1,34 +1,34 @@
 {
   "ltsp-builder-trusty": {
     "arch": "amd64",
+    "bootstrap-puppet-classes": "image::bundle::bootstrap_configure",
     "distribution": "trusty",
     "puppet-classes": "image::builder",
     "release-name": "Development",
-    "bootstrap-puppet-classes": "image::bundle::bootstrap_configure",
     "images": []
   },
   "ltsp-desktop-trusty": {
     "arch": "i386",
+    "bootstrap-puppet-classes": "image::bundle::bootstrap_configure",
     "distribution": "trusty",
     "puppet-classes": "image::desktop",
     "release-name": "Development",
-    "bootstrap-puppet-classes": "image::bundle::bootstrap_configure",
     "images": []
   },
   "ltsp-thinclient-precise": {
     "arch": "i386",
+    "bootstrap-puppet-classes": "image::bundle::bootstrap_configure",
     "distribution": "precise",
     "puppet-classes": "image::thinclient",
     "release-name": "Development",
-    "bootstrap-puppet-classes": "image::bundle::bootstrap_configure",
     "images": []
   },
   "ltsp-wirelessaccesspoint-trusty": {
     "arch": "i386",
+    "bootstrap-puppet-classes": "image::bundle::bootstrap_configure",
     "distribution": "trusty",
     "puppet-classes": "image::wirelessaccesspoint",
     "release-name": "Development",
-    "bootstrap-puppet-classes": "image::bundle::bootstrap_configure",
     "images": []
   }
 }
