@@ -215,10 +215,10 @@ fi
 common_kernel_arguments="puavo.hosttype=${hosttype} root=/dev/mapper/${puavo_lvm_partition} loop=\"\${imagepath}\""
 
 case "$hosttype" in
-  diskinstaller|preinstalled)
+  diskinstaller|preinstalled|wirelessaccesspoint)
     puavo_kernel_arguments="$common_kernel_arguments"
     ;;
-  laptop|wirelessaccesspoint)
+  laptop)
     puavo_kernel_arguments="quiet splash ${common_kernel_arguments}"
     ;;
   *)
