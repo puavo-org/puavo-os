@@ -7,7 +7,11 @@ class image::wirelessaccesspoint {
                   or title == kernels
                   or title == repo |>
 
-  # apply only builder package definitions listed in packages
+  # wirelessaccesspoint should be able to function as a wireless accesspoint
+  # (puavo-wlanap*) and as a digital signage system (iivari-client)
   Package <| tag == admin
-          or tag == basic |>
+          or tag == basic
+          or title == iivari-client
+          or title == puavo-wlanap
+          or title == puavo-wlanap-dnsproxy |>
 }
