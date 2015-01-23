@@ -74,13 +74,16 @@ module PuavoBS
     [school_id, device_id]
   end
 
-  def self.get_preferred_boot_image(hostname)
+  def self.get_device_json(hostname)
     response = HTTP
       .accept(:json)
       .get(self.get_api_url("/v3/devices/#{hostname}"))
     self.check_response_code(response.code)
-    device_json = JSON.parse(response.body)
-    device_json['preferred_boot_image']
+    JSON.parse(response.body)
+  end
+
+  def self.get_preferred_boot_image(hostname)
+    self.get_device_json['preferred_boot_image']
   end
 
   def self.get_school_ids(admin_username, admin_password)
