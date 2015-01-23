@@ -14,7 +14,6 @@ Usage:
                       --extra-packages-dir extra-packages-dir
                       --image-excludes-file image-excludes-file
                       --release-name release-name
-                      --set-root-passwd
                       --target-dir target-dir
 
   puavo-imgbuild-tool --apply-buildrules
@@ -43,7 +42,6 @@ Usage:
                       --image-excludes-file image-excludes-file
                       --images-dir images-dir
                       --release-name release-name
-                      --set-root-passwd
                       --target-dir target-dir
 
   puavo-imgbuild-tool --chroot         --target-dir target-dir
@@ -80,7 +78,7 @@ get_default_for() {
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'apply-buildrules,apt-proxy:,arch:,build:,buildrules:,buildrule-dirs:,builds-dir:,chroot,chroot-configure-script:,cleanup-chroot,configure-bootstrap-rules:,distribution:,extra-packages-dir:,image,image-configure-script:,image-excludes-file:,images-dir:,install-packages,mirror:,release-name:,set-root-passwd,target-dir:,update-chroot' \
+              -l 'apply-buildrules,apt-proxy:,arch:,build:,buildrules:,buildrule-dirs:,builds-dir:,chroot,chroot-configure-script:,cleanup-chroot,configure-bootstrap-rules:,distribution:,extra-packages-dir:,image,image-configure-script:,image-excludes-file:,images-dir:,install-packages,mirror:,release-name:,target-dir:,update-chroot' \
               -- "$@"); then
   usage
 fi
@@ -94,7 +92,6 @@ buildrules=
 extra_packages_dir=
 imagetype=
 release_name=
-set_root_passwd=false
 target_dir=
 
 # parameters with config defaults
@@ -170,9 +167,6 @@ while [ $# -ne 0 ]; do
       ;;
     --release-name)
       release_name=$2; shift; shift
-      ;;
-    --set-root-passwd)
-      set_root_passwd=true; shift;
       ;;
     --target-dir)
       target_dir=$2; shift; shift
@@ -321,15 +315,8 @@ update_chroot() {
 
 make_image() {
   release_name=$1
-  set_root_passwd=$2
 
   log_phase 'make-image'
-
-  if $set_root_passwd; then
-    until run_configure_chroot -- --set-root-passwd; do
-      sleep 1
-    done
-  fi
 
   run_configure_chroot -- --prepare-image --image-release "$release_name"
 
@@ -365,7 +352,7 @@ case "$action" in
     build_chroot
     bootstrap_configure "$configure_bootstrap_rules"
     update_chroot "$buildrules"
-    make_image "$release_name" "$set_root_passwd"
+    make_image "$release_name"
     ;;
   chroot)
     run_configure_chroot -- --shell
@@ -374,7 +361,7 @@ case "$action" in
     rm -rf "$target_dir"
     ;;
   image)
-    make_image "$release_name" "$set_root_passwd"
+    make_image "$release_name"
     ;;
   install-packages)
     install_packages
