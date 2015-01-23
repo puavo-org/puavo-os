@@ -53,6 +53,16 @@ module PuavoBS
     JSON.parse(response.body)
   end
 
+  def self.get_schools(admin_username, admin_password)
+    school_ids = self.get_school_ids(admin_username, admin_password)
+    return [] if school_ids.empty?
+
+    school_ids.collect() do |school_id|
+      school = self.get_school(admin_username, admin_password, school_id)
+      [school_id, school["name"]]
+    end
+  end
+
   def self.get_school_and_device_ids(hostname)
     response = HTTP
       .accept(:json)
