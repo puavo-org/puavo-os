@@ -1,6 +1,7 @@
 class image::wirelessaccesspoint {
   include image::bundle::basic,
-	  packages
+	  packages,
+	  puavo_wlan
 
   Apt::Key        <| title == "opinsys-repo.gpgkey" |>
   Apt::Repository <| title == archive
@@ -11,7 +12,5 @@ class image::wirelessaccesspoint {
   # (puavo-wlanap*) and as a digital signage system (iivari-client)
   Package <| tag == admin
           or tag == basic
-          or title == iivari-client
-          or title == puavo-wlanap
-          or title == puavo-wlanap-dnsproxy |>
+          or title == iivari-client |>
 }
