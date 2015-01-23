@@ -64,7 +64,6 @@ class TestRun
     @force_yes                  = force_yes
     @school_id                  = school_id
     @testclient_hosttype        = testclient_hosttype
-    bootserver_hostname         = File.read('/etc/puavo/hostname').strip()
     @testclient_hostname        = nil
     @testclient_tags            = []
     @testclient_mac             = nil
