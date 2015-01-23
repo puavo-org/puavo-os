@@ -57,9 +57,11 @@ end
 class TestRun
 
   def initialize(admin_username, admin_password,
-                 school_id, testclient_hosttype)
+                 school_id, testclient_hosttype,
+                 force_yes=false)
     @admin_username             = admin_username
     @admin_password             = admin_password
+    @force_yes                  = force_yes
     @school_id                  = school_id
     @testclient_hosttype        = testclient_hosttype
     bootserver_hostname         = File.read('/etc/puavo/hostname').strip()
@@ -324,7 +326,7 @@ class TestRun
       homedir = Etc.getpwnam(@testuser_username)['dir']
       if Dir.exists?(homedir) then
         prompt = color_yellow("Cleanup: remove the home directory '#{homedir}' of the test user?")
-        if agree("#{prompt} ") then
+        if @force_yes || agree("#{prompt} ") then
           print('Cleanup: remove the home directory of the test user ... ')
           begin
             FileUtils.rm_rf(homedir)
@@ -471,7 +473,8 @@ if do_run_all_tests then
     ['fatclient', 'thinclient'].each do |testclient_hosttype|
       school_results[testclient_hosttype] = false 
       testrun = TestRun.new(admin_username, admin_password,
-                            school_id, testclient_hosttype)
+                            school_id, testclient_hosttype,
+                            :force_yes => true)
       begin
         next if !testrun.prepare()
         next if !testrun.execute()
