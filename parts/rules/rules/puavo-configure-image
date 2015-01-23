@@ -38,10 +38,14 @@ apply_puppet_rules() {
 
 do_apply_buildrules() {
   buildrules=$1
+  verify_rule_stability=$2
 
   apply_debseeds
   apply_puppet_rules false "$buildrules"
-  apply_puppet_rules true  "$buildrules"
+
+  if $verify_rule_stability; then
+    apply_puppet_rules true "$buildrules"
+  fi
 }
 
 do_apt_dist_upgrade() {
@@ -229,7 +233,7 @@ EOF
   exit 1
 }
 
-if ! args=$(getopt -n "$0" -o + -l 'apply-buildrules,apt-dist-upgrade,apt-proxy:,apt-update,bootstrap,buildrule-dirs:,buildrules:,cleanup-buildrules,get-arch,get-config-value:,get-imagename,get-imagetype,image-release:,imagetype:,install-packages,mirror:,prepare-image,shell,update-buildrules-from-buildhost,update-buildrules-from-filesystem' -- "$@"); then
+if ! args=$(getopt -n "$0" -o + -l 'apply-buildrules,apt-dist-upgrade,apt-proxy:,apt-update,bootstrap,buildrule-dirs:,buildrules:,cleanup-buildrules,get-arch,get-config-value:,get-imagename,get-imagetype,image-release:,imagetype:,install-packages,mirror:,prepare-image,shell,update-buildrules-from-buildhost,update-buildrules-from-filesystem,verify-rule-stability' -- "$@"); then
   usage
 fi
 
@@ -242,6 +246,7 @@ config_key=
 image_release_name=
 imagetype=
 mirror=
+verify_rule_stability=false
 
 eval "set -- $args"
 
@@ -285,6 +290,9 @@ while [ $# -ne 0 ]; do
     --mirror)
       mirror=$2; shift; shift
       ;;
+    --verify-rule-stability)
+      verify_rule_stability=true; shift
+      ;;
     --)
       shift; break
       ;;
@@ -296,7 +304,7 @@ done
 
 case "$action" in
   apply-buildrules)
-    do_apply_buildrules "$buildrules"
+    do_apply_buildrules "$buildrules" "$verify_rule_stability"
     ;;
   apt-dist-upgrade)
     do_apt_dist_upgrade
