@@ -280,6 +280,47 @@ class TestRun
 
 end
 
+def run_test(admin_username, admin_password,
+             school_name, school_id, testclient_hosttype)
+  testrun = TestRun.new(admin_username, admin_password,
+                        school_id, testclient_hosttype)
+  begin
+    puts('---')
+    print('Prepare test run ... ')
+    testrun.prepare()
+    puts_ok()
+    puts("    School   : #{school_name}")
+    puts("    Hosttype : #{testrun.testclient_hosttype}")
+    puts("    Hostname : #{testrun.testclient_hostname}")
+    puts("    MAC      : #{testrun.testclient_mac}")
+    puts("    Image    : #{testrun.testclient_image}")
+    puts("    Username : #{testrun.testuser_username}")
+
+    print('Execute test run ... ')
+    testrun.execute()
+    puts_ok()
+  rescue TestRunError => e2
+    puts_fail(e2.message)
+    return false
+  rescue StandardError => e1
+    puts_fail(e1.message)
+    raise
+  rescue Interrupt
+    puts_fail('interrupted')
+    raise
+  ensure
+    begin
+      print('Cleanup test run ... ')
+      testrun.cleanup()
+      puts_ok()
+    rescue StandardError => e1
+      puts_fail(e1.message)
+      raise
+    end
+  end
+  true
+end
+
 lockfile = File.open('/run/puavo-bootserver-smoke-test.lock',
                      File::RDWR|File::CREAT, 0644)
 if !lockfile.flock(File::LOCK_NB|File::LOCK_EX) then
@@ -343,46 +384,16 @@ if do_run_all_tests then
   schools.each do |school_id, school_name|
     school_results = all_results[school_name] = {}
     ['fatclient', 'thinclient'].each do |testclient_hosttype|
-      school_results[testclient_hosttype] = false 
-      testrun = TestRun.new(admin_username, admin_password,
-                            school_id, testclient_hosttype)
+      school_results[testclient_hosttype] = false
+
       begin
-        puts('---')
-        print('Prepare test run ... ')
-        testrun.prepare()
-        puts_ok()
-        puts("    School   : #{school_name}")
-        puts("    Hosttype : #{testrun.testclient_hosttype}")
-        puts("    Hostname : #{testrun.testclient_hostname}")
-        puts("    MAC      : #{testrun.testclient_mac}")
-        puts("    Image    : #{testrun.testclient_image}")
-        puts("    Username : #{testrun.testuser_username}")
-
-        print('Execute test run ... ')
-        testrun.execute()
-        puts_ok()
-
-        school_results[testclient_hosttype] = true
-      rescue TestRunError => e2
-        puts_fail(e2.message)
-      rescue StandardError => e1
-        puts_fail(e1.message)
-        raise
+        school_results[testclient_hosttype] = run_test(admin_username,
+                                                       admin_password,
+                                                       school_name,
+                                                       school_id,
+                                                       testclient_hosttype)
       rescue Interrupt
-        puts_fail('interrupted')
         exit(1)
-      ensure
-        begin
-          print('Cleanup test run ... ')
-          testrun.cleanup()
-          puts_ok()
-        rescue StandardError => e1
-          puts_fail(e1.message)
-          raise
-        rescue Interrupt
-          puts_fail('interrupted')
-          exit(1)
-        end
       end
     end
   end
@@ -435,44 +446,11 @@ while true do
     end
   end
 
-  testrun = TestRun.new(admin_username, admin_password,
-                        school_id, testclient_hosttype)
-
   begin
-    puts('---')
-    print('Prepare test run ... ')
-    testrun.prepare()
-    puts_ok()
-    puts("    School    : #{school_name}")
-    puts("    Host type : #{testrun.testclient_hosttype}")
-    puts("    Host name : #{testrun.testclient_hostname}")
-    puts("    MAC       : #{testrun.testclient_mac}")
-    puts("    Image     : #{testrun.testclient_image}")
-    puts("    Username  : #{testrun.testuser_username}")
-
-    print('Execute test run ... ')
-    testrun.execute()
-    puts_ok()
-  rescue TestRunError => e2
-    puts_fail(e2.message)
-  rescue StandardError => e1
-    puts_fail(e1.message)
-    raise
+    run_test(admin_username, admin_password,
+             school_name, school_id, testclient_hosttype)
   rescue Interrupt
-    puts_fail('interrupted')
-    exit(1)
-  ensure
-    begin
-      print('Cleanup test run ... ')
-      testrun.cleanup()
-      puts_ok()
-    rescue StandardError => e1
-      puts_fail(e1.message)
-      raise
-    rescue Interrupt
-      puts_fail('interrupted')
-      exit(1)
-    end
+    next
   end
 
 end
