@@ -286,12 +286,14 @@ class TestRun
 end
 
 def run_test(admin_username, admin_password,
-             school_name, school_id, testclient_hosttype)
+             school_name, school_id, testclient_hosttype,
+             testrun_label)
   testrun = TestRun.new(admin_username, admin_password,
                         school_id, testclient_hosttype)
   begin
-    puts('---')
-    print('Prepare test run ...')
+    puts()
+    puts("=== Test run #{testrun_label} ===")
+    print('Prepare ...')
     testrun.prepare()
     puts_ok()
     puts("    School   : #{school_name}")
@@ -301,7 +303,7 @@ def run_test(admin_username, admin_password,
     puts("    Image    : #{testrun.testclient_image}")
     puts("    Username : #{testrun.testuser_username}")
 
-    print('Execute test run ...')
+    print('Execute ...')
     testrun.execute() do
       print('.')
     end
@@ -317,7 +319,7 @@ def run_test(admin_username, admin_password,
     raise
   ensure
     begin
-      print('Cleanup test run ...')
+      print('Cleanup ...')
       testrun.cleanup()
       puts_ok()
     rescue StandardError => e1
@@ -376,8 +378,6 @@ EOF
 
 admin_username, admin_password = PuavoBS.ask_admin_credentials()
 
-is_first_run = true
-
 if do_run_all_tests then
   schools = PuavoBS.get_schools(admin_username, admin_password)
   if schools.empty? then
@@ -387,6 +387,8 @@ if do_run_all_tests then
   end
 
   all_results = {}
+
+  testrun_number = 1
 
   schools.each do |school_id, school_name|
     school_results = all_results[school_name] = {}
@@ -398,10 +400,12 @@ if do_run_all_tests then
                                                        admin_password,
                                                        school_name,
                                                        school_id,
-                                                       testclient_hosttype)
+                                                       testclient_hosttype,
+                                                       "##{testrun_number}")
       rescue Interrupt
         exit(1)
       end
+      testrun_number += 1
     end
   end
 
@@ -433,10 +437,12 @@ if do_run_all_tests then
   exit 1
 end
 
+testrun_number = 0
+
 while true do
 
-  break if !is_first_run && !agree('Run another test? ')
-  is_first_run = false
+  testrun_number += 1
+  break if testrun_number > 1 && !agree('Run another test? ')
 
   school = PuavoBS.ask_school(admin_username, admin_password)
   if school.nil? then
@@ -455,7 +461,7 @@ while true do
 
   begin
     run_test(admin_username, admin_password,
-             school_name, school_id, testclient_hosttype)
+             school_name, school_id, testclient_hosttype, "##{testrun_number}")
   rescue Interrupt
     next
   end
