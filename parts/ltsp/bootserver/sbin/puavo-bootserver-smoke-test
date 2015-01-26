@@ -63,6 +63,7 @@ class TestRun
     @school_id                  = school_id
     @testclient_hosttype        = testclient_hosttype
     @testclient_hostname        = nil
+    @testclient_image           = nil
     @testclient_tags            = []
     @testclient_mac             = nil
     @testclient_register_status = nil
@@ -237,13 +238,13 @@ class TestRun
                                                             @testclient_mac,
                                                             @testclient_hosttype,
                                                             @testclient_tags)
-      image = PuavoBS.get_device_json(@testclient_hostname)['preferred_image']
+      @testclient_image = PuavoBS.get_device_json(@testclient_hostname)['preferred_image']
     rescue StandardError, Interrupt
       puts_fail()
       raise
     else
       puts_ok()
-      puts("    Image: #{image}")
+      puts("    Image: #{@testclient_image}")
     end
     true
   end
