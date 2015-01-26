@@ -75,6 +75,12 @@ class TestRun
     @server_socket_path         = '/tmp/puavo-bootserver-smoke-test.socket'
   end
 
+  attr_reader :testclient_hosttype
+  attr_reader :testclient_hostname
+  attr_reader :testclient_image
+  attr_reader :testclient_mac
+  attr_reader :testuser_username
+
   def prepare()
     puts('---')
     return false if !prepare_define_testclient()
