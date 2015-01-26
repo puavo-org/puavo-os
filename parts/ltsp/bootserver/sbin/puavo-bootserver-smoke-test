@@ -43,12 +43,12 @@ end
 
 def puts_ok(msg=nil)
   extra_msg = msg.nil? ? '' : ": #{msg}"
-  puts(color_green('OK') + extra_msg)
+  puts(' ' + color_green('OK') + extra_msg)
 end
 
 def puts_fail(msg=nil)
   extra_msg = msg.nil? ? '' : ": #{msg}"
-  puts(color_red('FAIL') + extra_msg)
+  puts(' ' + color_red('FAIL') + extra_msg)
 end
 
 class TestRunError < StandardError
@@ -109,8 +109,13 @@ class TestRun
       ## If haven't received any messaged, wait for them and then fill
       ## received_msgs.
       if received_msgs.empty? then
-        result = IO.select([@server_socket], [], [], 120)
-        raise TestRunError.new('timeout') if result.nil?
+        start_time = Time.now()
+        while true
+          result = IO.select([@server_socket], [], [], 2.5)
+          break if !result.nil?
+          raise TestRunError.new('timeout') if Time.now() >= start_time + 120
+          yield
+        end
 
         ## Ensure client socket gets closed properly afterwards.
         client_socket = nil
@@ -286,7 +291,7 @@ def run_test(admin_username, admin_password,
                         school_id, testclient_hosttype)
   begin
     puts('---')
-    print('Prepare test run ... ')
+    print('Prepare test run ...')
     testrun.prepare()
     puts_ok()
     puts("    School   : #{school_name}")
@@ -296,8 +301,10 @@ def run_test(admin_username, admin_password,
     puts("    Image    : #{testrun.testclient_image}")
     puts("    Username : #{testrun.testuser_username}")
 
-    print('Execute test run ... ')
-    testrun.execute()
+    print('Execute test run ...')
+    testrun.execute() do
+      print('.')
+    end
     puts_ok()
   rescue TestRunError => e2
     puts_fail(e2.message)
@@ -310,7 +317,7 @@ def run_test(admin_username, admin_password,
     raise
   ensure
     begin
-      print('Cleanup test run ... ')
+      print('Cleanup test run ...')
       testrun.cleanup()
       puts_ok()
     rescue StandardError => e1
