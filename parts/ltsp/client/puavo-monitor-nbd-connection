@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 # exit if our root is not an nbd device
 grep -qw root=/dev/nbd0 /proc/cmdline || exit 0
 
@@ -38,11 +40,11 @@ done
 # if our check_nbd_is_available -test seems to work, do wait for the
 # nbd-server to come up (for up to about eight hours before rebooting...)
 if $nbd_server_check_seems_ok; then
-  i=0
-  while [ $i -lt 28800 ]; do
+  wait_iters=0
+  while [ $wait_iters -lt 28800 ]; do
     check_nbd_is_available && break
     sleep 1
-    i=$(($i + 1))
+    wait_iters=$(($wait_iters + 1))
   done
 fi
 
@@ -53,7 +55,7 @@ sleep 5
 # we will try reboot even if we could not ensure nbd-server answers
 # (our test may have failed)
 logger -p syslog.emerg \
-       "Rebooting due to nbd failure (check_ok=$nbd_server_check_seems_ok)"
+       "Rebooting due to nbd failure (check_ok=$nbd_server_check_seems_ok, wait_iterations=$wait_iters)"
 sleep 2
 echo b > /proc/sysrq-trigger
 
