@@ -230,6 +230,7 @@ install : installdirs $(install-subdirs)
 		upstart/ltspssh.conf \
 		upstart/ltspguestssh.conf \
 		upstart/puavo-ltsp-client.conf \
+		upstart/puavo-monitor-nbd-connection.conf \
 		upstart/puavo-set-sane-date.conf \
 		upstart/puavo-sync-external-files.conf
 
@@ -266,6 +267,7 @@ install : installdirs $(install-subdirs)
 		puavo-handle-image-build-request \
 		puavo-ltspserver-create-guest \
 		puavo-make-release-logos \
+		puavo-monitor-nbd-connection \
 		puavo-run-xrandr \
 		puavo-thin-guest-account \
 		udev/udev-hotplug-monitor \
