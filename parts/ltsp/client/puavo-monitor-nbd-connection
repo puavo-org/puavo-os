@@ -14,48 +14,41 @@ if [ -z "$nbd_server_host" ]; then
 fi
 
 check_nbd_is_available() {
-  expr match "$(nc -w 10 "$nbd_server_host" 10809 < /dev/null)" '^NBDMAGIC' \
+  /usr/bin/expr "$(/bin/nc -w 10 "$nbd_server_host" 10809 < /dev/null)" \
+                : '^NBDMAGIC' \
     > /dev/null
 }
 
 has_nbd_connection() { nbd-client -c /dev/nbd0 > /dev/null; }
 
-nbd_server_check_seems_ok=false
+nbd_server_check_works=false
 
 while has_nbd_connection; do
-  # The point of running this check periodically is also making sure that
-  # the tools for checking nbd availability later are in filesystem cache,
-  # so that even if nbd is broken the check should work.  But if the check
-  # does not return true here (it should!), it is probably broken somehow
-  # and we do not rely on it later.
-  if check_nbd_is_available; then
-    nbd_server_check_seems_ok=true
-  else
-    nbd_server_check_seems_ok=false
+  # ensure these utilitities are and remain in filesystem cache so that
+  # we can use them later even if nbd breaks) (sleep not included because
+  # we constantly run it)
+  cat /bin/nc /usr/bin/expr /usr/bin/logger > /dev/null
+
+  if ! $nbd_server_check_works && check_nbd_is_available; then
+    nbd_server_check_works=true
   fi
 
   sleep 15
 done
 
-# if our check_nbd_is_available -test seems to work, do wait for the
-# nbd-server to come up (for up to about eight hours before rebooting...)
-if $nbd_server_check_seems_ok; then
-  wait_iters=0
-  while [ $wait_iters -lt 28800 ]; do
-    check_nbd_is_available && break
-    sleep 1
-    wait_iters=$(($wait_iters + 1))
-  done
-fi
+# we are not going to do any rebooting if it seems check_nbd_is_available does
+# not work
+$nbd_server_check_works || exit 1
 
-# nbd connection might be down due to reboot/poweroff, so allow for a little
-# time for that
-sleep 5
+while true; do
+  check_nbd_is_available && break
+  /usr/bin/logger -p syslog.emerg \
+            'nbd connection has been broken but nbd-server is not up'
+  sleep 15
+done
 
-# we will try reboot even if we could not ensure nbd-server answers
-# (our test may have failed)
-logger -p syslog.emerg \
-       "Rebooting due to nbd failure (check_ok=$nbd_server_check_seems_ok, wait_iterations=$wait_iters)"
+/usr/bin/logger -p syslog.emerg \
+                   'Rebooting due to nbd failure, nbd-server is up'
 sleep 2
 echo b > /proc/sysrq-trigger
 
