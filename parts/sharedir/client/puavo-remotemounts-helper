@@ -8,12 +8,16 @@ end
 
 require 'fileutils'
 require 'json'
+require 'resolv'
 
 @device = JSON.parse( IO.read('/etc/puavo/device.json') )
 
-def errmsg(msg)
-  STDERR.puts "puavo-remotemounts-helper: #{ msg }"
+def sendmsg(channel, msg)
+  channel.puts "puavo-remotemounts-helper #{ Time.now }: #{ msg }"
 end
+
+def errmsg(msg); sendmsg(STDERR, msg); end
+def outmsg(msg); sendmsg(STDOUT, msg); end
 
 def has_device_tag(tag)
   (@device['tags'] || []).include?(tag)
@@ -27,10 +31,11 @@ def use_remotemounts
 end
 
 class GvfsMount
-  def initialize(url, mntpath, linkname)
-    @linkname = linkname
-    @mntpath  = mntpath
-    @url      = url
+  def initialize(remote_host, url, mntpath, linkname)
+    @linkname    = linkname
+    @mntpath     = mntpath
+    @remote_host = remote_host
+    @url         = url
   end
 
   def check_mount_state(mntpath)
@@ -69,10 +74,19 @@ class GvfsMount
         case mount_state
           when 'not connected'
             ensure_link(false) rescue true
-            puts "puavo-remotemounts-helper: mounting '#{ @mntpath }'"
-            system('timeout', '-k', '10', '20', 'gvfs-mount', @url) \
-              or errmsg("problem in mounting '#{ @url }'")
-            checks_with_timeout = 0
+            begin
+              # make sure dns works, so we do not stress gvfs-mount,
+              # besides, it is not an error if gvfs-mount fails if not on the
+              # right network
+              Resolv::DNS.new.getaddress(@remote_host)
+
+              outmsg("mounting '#{ @mntpath }'")
+              system('timeout', '-k', '10', '20', 'gvfs-mount', @url) \
+                or errmsg("problem in mounting '#{ @url }'")
+              checks_with_timeout = 0
+            rescue Resolv::ResolvError
+              outmsg("did not find #{ @remote_host }, not mounting #{ @url }")
+            end
 
           when 'ok'
             ensure_link(true) rescue true
@@ -83,7 +97,7 @@ class GvfsMount
             if checks_with_timeout >= 5 then
               # with five timeouts in a row, unmount the thing!
               ensure_link(false) rescue true
-              puts "puavo-remotemounts-helper: unmounting '#{ @url }'"
+              outmsg("unmounting '#{ @url }'")
               system('timeout', '-k', '10', '20', 'gvfs-mount', '-u', @url) \
                 or errmsg("problem in unmounting '#{ @url }'")
               checks_with_timeout = 0
@@ -91,7 +105,7 @@ class GvfsMount
 
         end
       rescue StandardError => e
-        errmsg "Got some error: #{ e }, yet continuing..."
+        errmsg("Got some error: #{ e }, yet continuing...")
       end
 
       sleep(10)
@@ -130,14 +144,18 @@ def get_our_gvfsmounts
   user_id = Process.uid
   user_primary_group = Etc.getgrgid( Etc.getpwuid.gid ).name
 
+  remote_host = "homedir.#{ puavo_domain }"
+
   [
     GvfsMount.new(
-      "smb://homedir.#{ puavo_domain }/#{ user }",
+      remote_host,
+      "smb://#{ remote_host }/#{ user }",
       "/run/user/#{ user_id }/gvfs/smb-share:server=homedir.#{ puavo_domain },share=#{ user }",
       userdir_label),
 
     GvfsMount.new(
-      "smb://homedir.#{ puavo_domain }/share/#{ sharename }/#{ user_primary_group }",
+      remote_host,
+      "smb://#{ remote_host }/share/#{ sharename }/#{ user_primary_group }",
       "/run/user/#{ user_id }/gvfs/smb-share:server=homedir.#{ puavo_domain },share=share/#{ sharename }/#{ user_primary_group }",
       schooldir_label),
   ]
