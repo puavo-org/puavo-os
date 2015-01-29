@@ -1,5 +1,3 @@
 #!/bin/sh
 
-set -eu
-
-adm-x x11vnc
+exec adm-x x11vnc "$@"

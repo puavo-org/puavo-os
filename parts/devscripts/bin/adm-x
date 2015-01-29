@@ -2,4 +2,4 @@
 
 set -eu
 
-sudo env XAUTHORITY="$(echo /var/run/lightdm/root/:0)" DISPLAY=:0 "$@"
+sudo env DISPLAY=:0 XAUTHORITY="/var/run/lightdm/root/:0" "$@"
