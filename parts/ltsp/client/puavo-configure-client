@@ -69,6 +69,14 @@ if File.exists?("/etc/puavo/device.json")
   append_tags_to_environment(@tags)
 end
 
+@default_xsession = 'puavo-desktop-session'
+@tags.each() do |tag|
+  if tag.start_with? 'default_xsession:' then
+    @default_xsession = tag.sub(/^default_xsession:/, '')
+    break
+  end
+end
+
 def write_config(filename, version=nil, secure=false)
   begin
     template_file = filename
