@@ -198,6 +198,7 @@ install : installdirs $(install-subdirs)
 		initramfs/scripts/init-bottom/puavo_ltsp 
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
+		screen.d/builder \
 		screen.d/lightdm \
 		screen.d/ltspserver \
 		screen.d/kdump \
@@ -229,6 +230,7 @@ install : installdirs $(install-subdirs)
 		upstart/ltspssh.conf \
 		upstart/ltspguestssh.conf \
 		upstart/puavo-ltsp-client.conf \
+		upstart/puavo-monitor-nbd-connection.conf \
 		upstart/puavo-set-sane-date.conf \
 		upstart/puavo-sync-external-files.conf
 
@@ -262,8 +264,10 @@ install : installdirs $(install-subdirs)
 		puavo-desktop-session \
 		puavo-desktop-session-cleanup \
 		puavo-display-setup \
+		puavo-handle-image-build-request \
 		puavo-ltspserver-create-guest \
 		puavo-make-release-logos \
+		puavo-monitor-nbd-connection \
 		puavo-run-xrandr \
 		puavo-thin-guest-account \
 		udev/udev-hotplug-monitor \

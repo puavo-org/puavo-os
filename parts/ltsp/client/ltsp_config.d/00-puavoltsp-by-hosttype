@@ -1,12 +1,11 @@
-PUAVO_HOSTTYPE=$(/bin/cat /etc/puavo/hosttype)
-PERSONALLY_ADMINISTERED=$(jq -r .personally_administered /etc/puavo/device.json)
-
-set_lts_var PUAVO_HOSTTYPE "$PUAVO_HOSTTYPE"
+puavo_hosttype=$(/bin/cat /etc/puavo/hosttype)
 
 puavo_automatic_image_updates=$(jq -r .automatic_image_updates /etc/puavo/device.json)
 puavo_personally_administered=$(jq -r .personally_administered /etc/puavo/device.json)
 
-puavo_common_unneeded_services='
+set_lts_var PUAVO_HOSTTYPE "$puavo_hosttype"
+
+puavo_rm_system_services='
   anacron
   apport
   atd
@@ -34,8 +33,8 @@ puavo_common_unneeded_services='
 # On personally administered devices we do not want to run fluentd and other
 # reporting services as the data is not comparable to other devices.
 
-if [ "${PERSONALLY_ADMINISTERED}" = "true" ]; then
-  puavo_common_unneeded_services="${puavo_common_unneeded_services} fluentd puavo-hw-log"
+if [ "${puavo_personally_administered}" = "true" ]; then
+  puavo_rm_system_services="$puavo_rm_system_services fluentd puavo-hw-log"
 fi
 
 puavo_nfs_services='gssd idmapd portmap rpcbind-boot'
@@ -47,17 +46,20 @@ set_lts_var SYSLOG         False
 set_lts_var USE_LOCAL_SWAP True
 set_lts_var XKBLAYOUT      fi    # XXX especially this is highly opinionated
 
-case "$PUAVO_HOSTTYPE" in
+case "$puavo_hosttype" in
   fatclient)
-    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_nfs_services $puavo_tty_services lightdm"
+    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_nfs_services $puavo_tty_services"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
+    set_lts_var SCREEN_07            lightdm
+    set_lts_var USE_NFS_HOMES        True
     set_lts_var RM_SESSION_SERVICES "
       nm-applet
       puavo-client-updater-applet
     "
-    set_lts_var RM_SYSTEM_SERVICES "
-      $puavo_common_unneeded_services
+
+    puavo_rm_system_services="
+      $puavo_rm_system_services
       cron
       laptop-mode
       ltspguestssh
@@ -74,8 +76,6 @@ case "$PUAVO_HOSTTYPE" in
       puavo-vpn-dnsmasq
       x2goserver
     "
-    set_lts_var SCREEN_07     lightdm
-    set_lts_var USE_NFS_HOMES True
     ;;
   laptop)
     # If laptop is booted from network, it should be updated instead of
@@ -84,22 +84,13 @@ case "$PUAVO_HOSTTYPE" in
     if [ -n "$SERVER" ]; then
       # laptop booted off from network, offer to update it
       set_lts_var SCREEN_07 ltspimage-update
-      rm_system_services="lightdm"
+      puavo_rm_system_services="$puavo_rm_system_services lightdm"
     else
       # laptop booted from local disk, provide lightdm
       set_lts_var SCREEN_07 lightdm
-      keep_system_services="lightdm"
     fi
 
-    # Laptops will keep the "ondemand"-task, removed from others.
-    # A note about this: the service provides ondemand CPU frequency
-    # scaling, meaning less power usage.  It is disabled by default,
-    # but we want it for laptops.  However, on some machines, such as
-    # "ETC-3800 machines" with "CentaurHauls, VIA Nehemiah" 800MHz processors,
-    # the "ondemand" service makes the machines very unstable, so it should
-    # be enabled with caution and perhaps on machine type basis.
-
-    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services $keep_system_services ondemand laptop-mode"
+    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
 
@@ -125,9 +116,17 @@ case "$PUAVO_HOSTTYPE" in
       $puavo_laptop_unneeded_session_services
     "
 
-    set_lts_var RM_SYSTEM_SERVICES "
-      $puavo_common_unneeded_services
-      $rm_system_services 
+    # Laptops will keep the "ondemand"-task, removed from others.
+    # A note about this: the service provides ondemand CPU frequency
+    # scaling, meaning less power usage.  It is disabled by default,
+    # but we want it for laptops.  However, on some machines, such as
+    # "ETC-3800 machines" with "CentaurHauls, VIA Nehemiah" 800MHz processors,
+    # the "ondemand" service makes the machines very unstable, so it should
+    # be enabled with caution and perhaps on machine type basis.
+    # Laptops also keep the "laptop-mode"-task.
+
+    puavo_rm_system_services="
+      $puavo_rm_system_services
       autopoweroff
       cron
       hostapd
@@ -151,6 +150,8 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       False
     set_lts_var LTSP_SERVER          True
+    set_lts_var SCREEN_07            ltspserver
+    set_lts_var USE_NFS_HOMES        True
     set_lts_var RM_SESSION_SERVICES "
       ebeam
       mimio-mimiosys
@@ -161,8 +162,9 @@ case "$PUAVO_HOSTTYPE" in
       smart_1-_Service
       smart_1-_Tools
     "
-    set_lts_var RM_SYSTEM_SERVICES "
-      $puavo_common_unneeded_services
+
+    puavo_rm_system_services="
+      $puavo_rm_system_services
       cron
       eno
       laptop-mode
@@ -176,22 +178,24 @@ case "$PUAVO_HOSTTYPE" in
       puavo-wlanap
       zram-config
     "
-    set_lts_var SCREEN_07            ltspserver
-    set_lts_var USE_NFS_HOMES        True
     ;;
   thinclient)
-    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services lightdm"
+    set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
     set_lts_var LDM_AUTOLOGIN        False
     set_lts_var LDM_DIRECTX          True
     set_lts_var LDM_SESSION          'gnome-session --session=gnome-fallback'
     set_lts_var LOCALDEV             True
     set_lts_var LTSP_FATCLIENT       False
+    set_lts_var SCREEN_07            lightdm
+    set_lts_var SSH_OVERRIDE_PORT    222
+    set_lts_var X_COLOR_DEPTH        16
     set_lts_var RM_SESSION_SERVICES "
       nm-applet
       puavo-client-updater-applet
     "
-    set_lts_var RM_SYSTEM_SERVICES "
-      $puavo_common_unneeded_services
+
+    puavo_rm_system_services="
+      $puavo_rm_system_services
       cron
       eno
       fluentd
@@ -218,17 +222,24 @@ case "$PUAVO_HOSTTYPE" in
       x2goserver
       zram-config
     "
-    set_lts_var SCREEN_07            lightdm
-    set_lts_var SSH_OVERRIDE_PORT    222
-    set_lts_var X_COLOR_DEPTH        16
     ;;
-  unregistered)
+  diskinstaller|preinstalled|unregistered)
     set_lts_var RM_SESSION_SERVICES "
       nm-applet
       puavo-client-updater-applet
     "
-    set_lts_var RM_SYSTEM_SERVICES "
-      $puavo_common_unneeded_services
+    set_lts_var SCREEN_07 register
+
+    if [ "$PUAVO_HOSTTYPE" = "unregistered" ]; then
+      # we are booting from network so no need for network-manager
+      puavo_unregistered_unneeded_system_services="network-manager"
+    else
+      puavo_unregistered_unneeded_system_services=""
+    fi
+
+    puavo_rm_system_services="
+      $puavo_rm_system_services
+      $puavo_unregistered_unneeded_system_services
       cron
       eno
       fluentd
@@ -237,7 +248,6 @@ case "$PUAVO_HOSTTYPE" in
       lightdm
       ltspguestssh
       ltspssh
-      network-manager
       nscd
       nslcd
       ntp
@@ -257,7 +267,6 @@ case "$PUAVO_HOSTTYPE" in
       x2goserver
       zram-config
     "
-    set_lts_var SCREEN_07          register
     ;;
   wirelessaccesspoint)
     if [ -n "$SERVER" ]; then
@@ -276,12 +285,14 @@ case "$PUAVO_HOSTTYPE" in
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
     set_lts_var LOCALDEV             False
     set_lts_var LTSP_FATCLIENT       True
+    set_lts_var USE_NFS_HOMES        False
     set_lts_var RM_SESSION_SERVICES "
       nm-applet
       puavo-client-updater-applet
     "
-    set_lts_var RM_SYSTEM_SERVICES "
-      $puavo_common_unneeded_services
+
+    puavo_rm_system_services="
+      $puavo_rm_system_services
       $puavo_wirelessaccesspoint_unneeded_services
       autopoweroff
       laptop-mode
@@ -294,9 +305,16 @@ case "$PUAVO_HOSTTYPE" in
       puavo-load-balancer
       x2goserver
     "
-    set_lts_var USE_NFS_HOMES        False
     ;;
 esac
+
+# Whatever my hosttype is, if I have a "builder"-tag, I am an image build host!
+if jq -r .tags[] /etc/puavo/device.json | grep -qx builder; then
+  set_lts_var SCREEN_07 builder
+  puavo_rm_system_services="$puavo_rm_system_services lightdm"
+fi
+
+set_lts_var RM_SYSTEM_SERVICES "$puavo_rm_system_services"
 
 if grep -q puavo_kdump_kernel /proc/cmdline; then
     rm -f /etc/init/lightdm.conf

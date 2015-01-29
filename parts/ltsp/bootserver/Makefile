@@ -1,5 +1,6 @@
 prefix = /usr/local
 exec_prefix = $(prefix)
+bindir = $(exec_prefix)/bin
 sbindir = $(exec_prefix)/sbin
 datarootdir = $(prefix)/share
 templatedir = $(datarootdir)/puavo-ltsp-bootserver/templates
@@ -15,6 +16,7 @@ all :
 
 .PHONY : installdirs
 installdirs :
+	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/logrotate.d
@@ -28,6 +30,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(templatedir)/etc/init.d
 	mkdir -p $(DESTDIR)$(templatedir)/etc/network
 	mkdir -p $(DESTDIR)$(templatedir)/etc/pam.d
+	mkdir -p $(DESTDIR)$(templatedir)/etc/racoon
 	mkdir -p $(DESTDIR)$(templatedir)/etc/samba
 	mkdir -p $(DESTDIR)$(templatedir)/var/lib/bind
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-bootserver
@@ -64,12 +67,18 @@ install : installdirs
 		templates/etc/bind/named.conf.local \
 		templates/etc/bind/named.conf.options
 
+	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/racoon \
+		templates/etc/racoon/racoon.conf
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/samba \
 		templates/etc/samba/smb.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/var/lib/bind \
 		templates/var/lib/bind/puavo_domain \
 		templates/var/lib/bind/puavo_domain_reverse
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
+		bin/*
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		sbin/*

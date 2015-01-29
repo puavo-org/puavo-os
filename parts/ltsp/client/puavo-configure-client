@@ -40,10 +40,11 @@ if (!@puavo_device_type)
   end
 end
 
-if @puavo_device_type == 'unregistered'
-  `hostname unregistered`
-  `echo unregistered > /proc/sys/kernel/hostname`
-  `echo unregistered > /etc/hostname`
+Uninstalled_device_types = %w(diskinstaller preinstalled unregistered)
+if Uninstalled_device_types.include?(@puavo_device_type) then
+  `hostname #{ @puavo_device_type }`
+  `echo #{ @puavo_device_type } > /proc/sys/kernel/hostname`
+  `echo #{ @puavo_device_type } > /etc/hostname`
 
   exit(0)
 end

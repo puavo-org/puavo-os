@@ -43,12 +43,12 @@ end
 
 def puts_ok(msg=nil)
   extra_msg = msg.nil? ? '' : ": #{msg}"
-  puts(color_green('OK') + extra_msg)
+  puts(' ' + color_green('OK') + extra_msg)
 end
 
 def puts_fail(msg=nil)
   extra_msg = msg.nil? ? '' : ": #{msg}"
-  puts(color_red('FAIL') + extra_msg)
+  puts(' ' + color_red('FAIL') + extra_msg)
 end
 
 class TestRunError < StandardError
@@ -62,8 +62,8 @@ class TestRun
     @admin_password             = admin_password
     @school_id                  = school_id
     @testclient_hosttype        = testclient_hosttype
-    bootserver_hostname         = File.read('/etc/puavo/hostname').strip()
     @testclient_hostname        = nil
+    @testclient_image           = nil
     @testclient_tags            = []
     @testclient_mac             = nil
     @testclient_register_status = nil
@@ -75,19 +75,22 @@ class TestRun
     @server_socket_path         = '/tmp/puavo-bootserver-smoke-test.socket'
   end
 
+  attr_reader :testclient_hosttype
+  attr_reader :testclient_hostname
+  attr_reader :testclient_image
+  attr_reader :testclient_mac
+  attr_reader :testuser_username
+
   def prepare()
-    puts('---')
-    return false if !prepare_define_testclient()
-    return false if !prepare_add_testuser()
-    return false if !prepare_assert_no_homedir()
-    return false if !prepare_register_testclient()
-    return false if !prepare_open_socket()
-    return false if !prepare_start_testclient()
-    true
+    prepare_define_testclient()
+    prepare_add_testuser()
+    prepare_assert_no_homedir()
+    prepare_register_testclient()
+    prepare_open_socket()
+    prepare_start_testclient()
   end
 
   def execute()
-    puts('---')
     expected_msgs = case @testclient_hosttype
                     when 'fatclient'
                       ['enter-display-manager-screen',
@@ -103,48 +106,39 @@ class TestRun
     received_msgs = []
 
     expected_msgs.each_with_index() do |expected_msg, i|
-      print("Execute: receive #{i + 1}/#{n}: #{expected_msg} ... ")
-      begin
-        ## If haven't received any messaged, wait for them and then fill
-        ## received_msgs.
-        if received_msgs.empty? then
-          result = IO.select([@server_socket], [], [], 120)
-          raise TestRunError.new('timeout') if result.nil?
-
-          ## Ensure client socket gets closed properly afterwards.
-          client_socket = nil
-          begin
-            client_socket, client_addrinfo = @server_socket.accept()
-            received_msgs += client_socket.readlines().map() do |line|
-              JSON.parse(line)['msg']
-            end
-          ensure
-            if !client_socket.nil? then
-              client_socket.shutdown(Socket::SHUT_RDWR)
-              client_socket.close()
-            end
-          end
+      ## If haven't received any messaged, wait for them and then fill
+      ## received_msgs.
+      if received_msgs.empty? then
+        start_time = Time.now()
+        while true
+          result = IO.select([@server_socket], [], [], 2.5)
+          break if !result.nil?
+          raise TestRunError.new('timeout') if Time.now() >= start_time + 120
+          yield
         end
 
-        ## Test messages in the order they were received.
-        msg = received_msgs.shift()
-        raise TestRunError.new("got #{msg}") if msg != expected_msg
-      rescue TestRunError => e
-        puts_fail(e.message)
-        return false
-      rescue StandardError, Interrupt => e
-        puts_fail('unexpected error')
-        raise
-      else
-        puts_ok()
+        ## Ensure client socket gets closed properly afterwards.
+        client_socket = nil
+        begin
+          client_socket, client_addrinfo = @server_socket.accept()
+          received_msgs += client_socket.readlines().map() do |line|
+            JSON.parse(line)['msg']
+          end
+        ensure
+          if !client_socket.nil? then
+            client_socket.shutdown(Socket::SHUT_RDWR)
+            client_socket.close()
+          end
+        end
       end
-    end
 
-    true
+      ## Test messages in the order they were received.
+      msg = received_msgs.shift()
+      raise TestRunError.new("got #{msg}") if msg != expected_msg
+    end
   end
 
   def cleanup()
-    puts('---')
     cleanup_methods = [:cleanup_destroy_testclient,
                        :cleanup_close_socket,
                        :cleanup_unregister_testclient,
@@ -168,147 +162,82 @@ class TestRun
   private
 
   def prepare_define_testclient()
-    print('Prepare: define a virtual test device ... ')
-    begin
-      results = PuavoBS.virsh_define_testclient()
-    rescue StandardError, Interrupt
-      puts_fail()
-      raise
-    else
-      if results.nil?
-        puts_fail()
-        return false
-      end
-      @testclient_hostname, @testclient_mac = results
-      puts_ok()
-      puts("    Hostname: #{@testclient_hostname}")
-      puts("    MAC:      #{@testclient_mac}")
+    results = PuavoBS.virsh_define_testclient()
+    if results.nil?
+      raise TestRunError.new('failed to define a virtual test device')
     end
-    true
+    @testclient_hostname, @testclient_mac = results
   end
 
   def prepare_add_testuser()
-    print('Prepare: add a test user to Puavo ... ')
-    begin
-      (@testuser_username,
-       @testuser_password) = PuavoBS.create_testuser(@admin_username,
-                                                     @admin_password,
-                                                     @school_id)
-    rescue StandardError, Interrupt
-      puts_fail()
-      raise
-    else
-      puts_ok()
-      puts("    Username: #{@testuser_username}")
-      tag = "autopilot:smoke:#{@testuser_username}:#{@testuser_password}"
-      @testclient_tags << tag
+    userdata = PuavoBS.create_testuser(@admin_username,
+                                       @admin_password,
+                                       @school_id)
+    if userdata.empty? then
+      raise TestRunError.new('failed to create a test user')
     end
-    true
+    @testuser_username, @testuser_password = userdata
+    tag = "autopilot:smoke:#{@testuser_username}:#{@testuser_password}"
+    @testclient_tags << tag
   end
 
   def prepare_assert_no_homedir()
-    print('Prepare: assert the home directory of the test user does not yet exist ... ')
-    begin
-      homedir = Etc.getpwnam(@testuser_username)['dir']
-      @testuser_has_old_homedir = File.exists?(homedir)
-    rescue StandardError, Interrupt
-      puts_fail()
-      raise
-    else
-      if @testuser_has_old_homedir then
-        puts_fail("directory '#{homedir}' already exists")
-        return false
-      end
-      puts_ok()
+    homedir = Etc.getpwnam(@testuser_username)['dir']
+    @testuser_has_old_homedir = File.exists?(homedir)
+    if @testuser_has_old_homedir then
+      raise TestRunError.new('home directory already exists')
     end
-    true
   end
 
   def prepare_register_testclient()
-    print('Prepare: register the virtual test device to Puavo ... ')
-    begin
-      @testclient_register_status = PuavoBS.register_device(@admin_username,
-                                                            @admin_password,
-                                                            @school_id,
-                                                            @testclient_hostname,
-                                                            @testclient_mac,
-                                                            @testclient_hosttype,
-                                                            @testclient_tags)
-    rescue StandardError, Interrupt
-      puts_fail()
-      raise
-    else
-      puts_ok()
-    end
-    true
+    @testclient_register_status = PuavoBS.register_device(@admin_username,
+                                                          @admin_password,
+                                                          @school_id,
+                                                          @testclient_hostname,
+                                                          @testclient_mac,
+                                                          @testclient_hosttype,
+                                                          @testclient_tags)
+    @testclient_image = PuavoBS.get_device_json(@testclient_hostname)['preferred_image']
   end
 
   def prepare_open_socket()
-    print('Prepare: open a message socket ... ')
+    server_socket = Socket.new(Socket::AF_UNIX, Socket::SOCK_STREAM)
+    old_umask = nil
     begin
-      server_socket = Socket.new(Socket::AF_UNIX, Socket::SOCK_STREAM)
-      old_umask = nil
-      begin
-        old_umask = File.umask(007)
-        server_socket.bind(Socket.sockaddr_un(@server_socket_path))
-      ensure
-        if !old_umask.nil? then
-          File.umask(old_umask)
-        end
+      old_umask = File.umask(007)
+      server_socket.bind(Socket.sockaddr_un(@server_socket_path))
+    ensure
+      if !old_umask.nil? then
+        File.umask(old_umask)
       end
-      puavo_gid = Etc.getgrnam('puavo').gid
-      File.chown(nil, puavo_gid, @server_socket_path)
-      server_socket.listen(1)
-      @server_socket = server_socket
-    rescue StandardError, Interrupt
-      puts_fail()
-      raise
-    else
-      if @server_socket.nil? then
-        puts_fail()
-        return false
-      end
-      puts_ok()
-      puts("    Filepath: #{@server_socket_path}")
     end
-    true
+    puavo_gid = Etc.getgrnam('puavo').gid
+    File.chown(nil, puavo_gid, @server_socket_path)
+    server_socket.listen(1)
+    @server_socket = server_socket
+
+    if @server_socket.nil? then
+      raise TestRunError.new('failed to open message socket')
+    end
   end
 
   def prepare_start_testclient()
-    print('Prepare: start the virtual test device ... ')
-    begin
-      Process.wait(Process.spawn('virsh', 'start',
-                                 @testclient_hostname,
-                                 :out => '/dev/null'))
-    rescue StandardError, Interrupt
-      puts_fail()
-      raise
-    else
-      @testclient_started = $?.success?
-      if !@testclient_started then
-        puts_fail()
-        return false
-      end
-      puts_ok()
+    Process.wait(Process.spawn('virsh', 'start',
+                               @testclient_hostname,
+                               :out => '/dev/null'))
+
+    @testclient_started = $?.success?
+    if !@testclient_started then
+      raise TestRunError.new('failed to start the virtual test device')
     end
-    true
   end
 
   def cleanup_undefine_testclient()
     if !@testclient_mac.nil? then
-      print('Cleanup: undefine the virtual test device ... ')
-      begin
-        Process.wait(Process.spawn('virsh', 'undefine', @testclient_hostname,
-                                   :out => '/dev/null'))
-      rescue StandardError, Interrupt
-        puts_fail()
-        raise
-      else
-        if !$?.success? then
-          puts_fail()
-          raise 'failed to undefine the virtual domain'
-        end
-        puts_ok()
+      Process.wait(Process.spawn('virsh', 'undefine', @testclient_hostname,
+                                 :out => '/dev/null'))
+      if !$?.success? then
+        raise 'failed to undefine the virtual domain'
       end
     end
   end
@@ -317,87 +246,88 @@ class TestRun
     if !@testuser_has_old_homedir then
       homedir = Etc.getpwnam(@testuser_username)['dir']
       if Dir.exists?(homedir) then
-        prompt = color_yellow("Cleanup: remove the home directory '#{homedir}' of the test user?")
-        if agree("#{prompt} ") then
-          print('Cleanup: remove the home directory of the test user ... ')
-          begin
-            FileUtils.rm_rf(homedir)
-          rescue StandardError, Interrupt
-            puts_fail()
-            raise
-          else
-            puts_ok()
-          end
-        end
+        FileUtils.rm_rf(homedir)
       end
     end
   end
 
   def cleanup_remove_testuser()
     if !@testuser_username.nil? then
-      print('Cleanup: remove the test user from Puavo ... ')
-      begin
-        PuavoBS.remove_user(@admin_username, @admin_password,
-                            @school_id, @testuser_username)
-      rescue StandardError, Interrupt
-        puts_fail()
-        raise
-      else
-        puts_ok()
-      end
+      PuavoBS.remove_user(@admin_username, @admin_password,
+                          @school_id, @testuser_username)
     end
   end
 
   def cleanup_unregister_testclient()
     if !@testclient_register_status.nil? then
-      print('Cleanup: unregister the virtual test device from Puavo ... ')
-      begin
-        PuavoBS.unregister_device(@admin_username, @admin_password,
-                                  @testclient_hostname)
-      rescue StandardError, Interrupt
-        puts_fail()
-        raise
-      else
-        puts_ok()
-      end
+      PuavoBS.unregister_device(@admin_username, @admin_password,
+                                @testclient_hostname)
     end
   end
 
   def cleanup_close_socket()
     if !@server_socket.nil? then
-      print('Cleanup: close the message socket ... ')
-      begin
-        @server_socket.shutdown(Socket::SHUT_RDWR)
-        @server_socket.close()
-        File.delete(@server_socket_path)
-      rescue StandardError, Interrupt
-        puts_fail()
-        raise
-      else
-        puts_ok()
-      end
+      @server_socket.shutdown(Socket::SHUT_RDWR)
+      @server_socket.close()
+      File.delete(@server_socket_path)
     end
   end
 
   def cleanup_destroy_testclient()
     if @testclient_started then
-      print('Cleanup: destroy the virtual test device ... ')
-      begin
-        Process.wait(Process.spawn('virsh', 'destroy', @testclient_hostname,
-                                   :out => '/dev/null'))
-      rescue StandardError, Interrupt
-        puts_fail()
-        raise
-      else
-        if !$?.success? then
-          puts_fail()
+      Process.wait(Process.spawn('virsh', 'destroy', @testclient_hostname,
+                                 :out => '/dev/null'))
+      if !$?.success? then
           raise 'failed to destroy the virtual domain'
-        end
-        puts_ok()
       end
     end
   end
 
+end
+
+def run_test(admin_username, admin_password,
+             school_name, school_id, testclient_hosttype,
+             testrun_label)
+  testrun = TestRun.new(admin_username, admin_password,
+                        school_id, testclient_hosttype)
+  begin
+    puts()
+    puts("=== Test run #{testrun_label} ===")
+    print('Prepare ...')
+    testrun.prepare()
+    puts_ok()
+    puts("    School   : #{school_name}")
+    puts("    Hosttype : #{testrun.testclient_hosttype}")
+    puts("    Hostname : #{testrun.testclient_hostname}")
+    puts("    MAC      : #{testrun.testclient_mac}")
+    puts("    Image    : #{testrun.testclient_image}")
+    puts("    Username : #{testrun.testuser_username}")
+
+    print('Execute ...')
+    testrun.execute() do
+      print('.')
+    end
+    puts_ok()
+  rescue TestRunError => e2
+    puts_fail(e2.message)
+    return false
+  rescue StandardError => e1
+    puts_fail(e1.message)
+    raise
+  rescue Interrupt
+    puts_fail('interrupted')
+    raise
+  ensure
+    begin
+      print('Cleanup ...')
+      testrun.cleanup()
+      puts_ok()
+    rescue StandardError => e1
+      puts_fail(e1.message)
+      raise
+    end
+  end
+  true
 end
 
 lockfile = File.open('/run/puavo-bootserver-smoke-test.lock',
@@ -410,7 +340,10 @@ end
 
 opts = GetoptLong.new(
   ['--help', '-h', GetoptLong::NO_ARGUMENT],
+  ['--all', '-a', GetoptLong::NO_ARGUMENT],
 )
+
+do_run_all_tests = false
 
 opts.each do |opt, arg|
   case opt
@@ -421,9 +354,12 @@ Usage: puavo-bootserver-smoke-test [OPTION]...
 Test the most critical functions of the system.
 
 -h, --help                       display this help and exit
+-a, --all                        run all test combinations
 
 EOF
     exit(0)
+    when '--all'
+      do_run_all_tests = true
   end
 end
 
@@ -442,27 +378,92 @@ EOF
 
 admin_username, admin_password = PuavoBS.ask_admin_credentials()
 
-school = PuavoBS.ask_school(admin_username, admin_password)
-if school.nil? then
-  STDERR.puts('ERROR: this bootserver is not connected to any schools, ' \
-              'please connect it to some schools from Puavo and try again')
-  exit(1)
-end
-school_name, school_id = school
-
-say("Select the test device type:")
-testclient_hosttype = choose() do |menu|
-  ['fatclient', 'thinclient'].each() do |hosttype|
-    menu.choice(hosttype) { hosttype }
+if do_run_all_tests then
+  schools = PuavoBS.get_schools(admin_username, admin_password)
+  if schools.empty? then
+    STDERR.puts('ERROR: this bootserver is not connected to any schools, ' \
+                'please connect it to some schools from Puavo and try again')
+    exit 1
   end
+
+  all_results = {}
+
+  testrun_number = 1
+
+  schools.each do |school_id, school_name|
+    school_results = all_results[school_name] = {}
+    ['fatclient', 'thinclient'].each do |testclient_hosttype|
+      school_results[testclient_hosttype] = false
+
+      begin
+        school_results[testclient_hosttype] = run_test(admin_username,
+                                                       admin_password,
+                                                       school_name,
+                                                       school_id,
+                                                       testclient_hosttype,
+                                                       "##{testrun_number}")
+      rescue Interrupt
+        exit(1)
+      end
+      testrun_number += 1
+    end
+  end
+
+  col1hdr = 'School'
+  col2hdr = 'Hosttype'
+  col3hdr = 'Result'
+
+  max_school_name_length = all_results.keys.map{ |s| s.length }.max
+  col1width = [col1hdr.length, max_school_name_length].max
+  col2width = [col2hdr, 'thinclient', 'fatclient'].map{ |s| s.length }.max
+  col3width = [col3hdr, 'FAIL', 'OK'].map{ |s| s.length }.max
+
+  fmt = "%-#{col1width}s  %-#{col2width}s  %-#{col3width}s\n"
+  puts '---'
+  printf fmt, col1hdr, col2hdr, col3hdr
+  puts '=' * (col1width + col2width + col3width + 4)
+
+  all_results.each do |school_name, results|
+    results.each do |hosttype, result|
+      if result then
+        printf fmt, school_name, hosttype, color_green('OK')
+      else
+        printf fmt, school_name, hosttype, color_red('FAIL')
+      end
+    end
+  end
+
+  exit 0 if all_results.values.map { |s| s.values.all? }.all?
+  exit 1
 end
 
-testrun = TestRun.new(admin_username, admin_password,
-                      school_id, testclient_hosttype)
+testrun_number = 0
 
-begin
-  exit(1) if !testrun.prepare()
-  exit(1) if !testrun.execute()
-ensure
-  testrun.cleanup()
+while true do
+
+  testrun_number += 1
+  break if testrun_number > 1 && !agree('Run another test? ')
+
+  school = PuavoBS.ask_school(admin_username, admin_password)
+  if school.nil? then
+    STDERR.puts('ERROR: this bootserver is not connected to any schools, ' \
+                'please connect it to some schools from Puavo and try again')
+    next
+  end
+  school_name, school_id = school
+
+  say("Select the test device type:")
+  testclient_hosttype = choose() do |menu|
+    ['fatclient', 'thinclient'].each() do |hosttype|
+      menu.choice(hosttype) { hosttype }
+    end
+  end
+
+  begin
+    run_test(admin_username, admin_password,
+             school_name, school_id, testclient_hosttype, "##{testrun_number}")
+  rescue Interrupt
+    next
+  end
+
 end

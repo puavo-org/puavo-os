@@ -1,3 +1,6 @@
+# NOTE!  We do not actually have lts.conf variables available at this
+# point, but we need this for *-puavo-setup-puavo-config.
+
 # set to defaults from DHCP if not specified in lts.conf
 if [ -z "$DNS_SERVER" ]; then
     for dns in $IPV4DNS0 $IPV4DNS1 ; do

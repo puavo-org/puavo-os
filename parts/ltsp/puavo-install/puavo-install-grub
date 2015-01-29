@@ -1,58 +1,9 @@
 #!/bin/sh
 
-set -e
+set -eu
 
-lookup_windows_partition_number() {
-  # Presume that the first partition not containing "Linux"
-  # is a Windows-partition.
-  _diskdev=$1
-  env LANG=C fdisk -l "$_diskdev" \
-    | awk '$1 ~ "^/dev/" && !/(Extended|Linux)/ {
-	     if (match($1, /[0-9]+$/, _)) { print _[0]; exit }
-           }'
-}
-
-if [ "$1" = "--only-update-config" ]; then
-  only_update_config=true
-  shift
-else
-  only_update_config=false
-fi
-
-images_dir=${1:-/images}
-diskdev=$2
-
-if [ -z "$diskdev" ]; then
-  diskdev=$(pvs | awk '$2 == "puavo" { print $1; exit }' \
-		| sed -E 's|[0-9]+$||')
-fi
-
-if [ -z "$images_dir" -o -z "$diskdev" ]; then
-  echo "Usage: $(basename $0) [--only-update-config] [images_dir] [diskdev]" \
-    > /dev/stderr
-  exit 1
-fi
-
-hosttype=$(cat /etc/puavo/hosttype)
-
-case "$hosttype" in
-  laptop|wirelessaccesspoint)
-    hosttype_specific="puavo.hosttype=${hosttype} root=/dev/mapper/puavo-images loop=\"\${imagepath}\""
-    ;;
-  *)
-    echo "Hosttype '$hosttype' is not supported" > /dev/stderr
-    exit 1
-    ;;
-esac
-
-if ! $only_update_config; then
-  grub-install --root-directory=$images_dir "$diskdev"
-fi
-
-grub_cfg_path="${images_dir}/boot/grub/grub.cfg"
-tmp_grub_cfg_path="${grub_cfg_path}.tmp"
-
-cat <<'EOF' | sed "s|__HOSTTYPE_SPECIFIC__|$hosttype_specific|" > "$tmp_grub_cfg_path"
+grub_m4_template() {
+  cat <<'EOF'
 set default="0"
 load_env
 
@@ -117,7 +68,7 @@ function ltsp_image_entry {
 
     set kernelparameters="$4"
 
-    linux   /boot/vmlinuz${kernelversion} ro quiet splash init=/sbin/init-puavo __HOSTTYPE_SPECIFIC__ ${kernelparameters}
+    linux   /boot/vmlinuz${kernelversion} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
     initrd  /boot/initrd.img${kernelversion}
 
     loopback -d loop
@@ -130,13 +81,12 @@ function ltsp_image_entry_superlaptop {
   set description="$2"
   set kernelparameters="$3"
 
-  if [ ! -d (lvm/puavo-imageoverlays) ]; then
-    return
+  if test "${puavo_show_imageoverlays}" = "true" \
+            -a -d (lvm/puavo-imageoverlays); then
+    set kernelparameters="puavo.image.overlay=default puavo.local.enable_superusers=true $kernelparameters"
+
+    ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}"
   fi
-
-  set kernelparameters="puavo.image.overlay=default puavo.local.enable_superusers=true $kernelparameters"
-
-  ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}"
 }
 
 insmod gzio
@@ -149,7 +99,7 @@ insmod loopback
 insmod usb_keyboard
 insmod lvm
 
-for dev in (lvm/puavo-images); do
+for dev in (lvm/__PUAVO_LVM_PARTITION__); do
   for file in ${dev}/*.default; do
     regexp -s default_alias_no_suffix '^(.*)\.default$' "${file}"
     break
@@ -184,6 +134,116 @@ for dev in (lvm/puavo-images); do
   done
 done
 EOF
+}
+
+lookup_windows_partition_number() {
+  # Presume that the first partition not containing "Linux"
+  # is a Windows-partition.
+  _diskdev=$1
+  env LANG=C fdisk -l "$_diskdev" \
+    | awk '$1 ~ "^/dev/" && !/(Extended|Linux)/ {
+	     if (match($1, /[0-9]+$/, _)) { print _[0]; exit }
+           }'
+}
+
+usage() {
+  cat <<EOF
+$(basename $0) [optional arguments]
+
+  $(basename $0) takes the following optional arguments:
+
+    --hosttype           hosttype
+    --images-dir         imagesdir
+    --only-update-config
+    --vgname             vgname
+EOF
+  exit 1
+}
+
+hosttype=$(cat /etc/puavo/hosttype 2>/dev/null || true)
+images_dir=/images
+only_update_config=false
+vgname=puavo
+
+if ! args=$(getopt -n "$0" -o +                                          \
+                   -l 'hosttype:,images-dir:,only-update-config,vgname:' \
+                   -- "$@"); then
+  usage
+fi
+
+eval "set -- $args"
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --hosttype)           hosttype=$2;             shift; shift ;;
+    --images-dir)         images_dir=$2;           shift; shift ;;
+    --only-update-config) only_update_config=true; shift        ;;
+    --vgname)             vgname=$2;               shift; shift ;;
+    --) shift; break ;;
+    *)  usage ;;
+  esac
+done
+
+[ $# -eq 0 ] || usage
+
+if [ ! -d "$images_dir" ]; then
+  echo "'$images_dir' is not a directory" >&2
+  exit 1
+fi
+
+if [ -z "$hosttype" ]; then
+  echo 'Hosttype is not set' >&2
+  exit 1
+fi
+
+# pvs and assorted utilities complain if we leak file descriptors, that is
+# why we do "3>&- 4>&-" (same with grub-install)
+diskdev=$(pvs 3>&- 4>&-                                                 \
+            | awk -v vgname="$vgname" '$2 == vgname { print $1; exit }' \
+            | sed -E 's|[0-9]+$||')
+
+if [ -z "$diskdev" ]; then
+  echo "Could not find the disk device where volume group '${vgname}' is" >&2
+  exit 1
+fi
+
+if [ "$hosttype" = 'diskinstaller' ]; then
+  puavo_lvm_partition='puavoinstaller-installimages'
+else
+  puavo_lvm_partition='puavo-images'
+fi
+
+common_kernel_arguments="puavo.hosttype=${hosttype} root=/dev/mapper/${puavo_lvm_partition} loop=\"\${imagepath}\""
+
+case "$hosttype" in
+  diskinstaller|preinstalled|wirelessaccesspoint)
+    puavo_kernel_arguments="$common_kernel_arguments"
+    ;;
+  laptop)
+    puavo_kernel_arguments="quiet splash ${common_kernel_arguments}"
+    ;;
+  *)
+    echo "Hosttype '$hosttype' is not supported" > /dev/stderr
+    exit 1
+    ;;
+esac
+
+if ! $only_update_config; then
+  if ! grub_msg=$(grub-install --root-directory=$images_dir "$diskdev" \
+                    3>&- 4>&- 2>&1); then
+    echo "Grub installation failed: $grub_msg" >&2
+    exit 1
+  fi
+
+  echo "Grub has been installed to ${diskdev}."
+fi
+
+grub_cfg_path="${images_dir}/boot/grub/grub.cfg"
+tmp_grub_cfg_path="${grub_cfg_path}.tmp"
+
+grub_m4_template                                              \
+  | m4 -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments" \
+       -D__PUAVO_LVM_PARTITION__="$puavo_lvm_partition"       \
+  > "$tmp_grub_cfg_path"
 
 windows_partition_number=$(lookup_windows_partition_number "$diskdev")
 

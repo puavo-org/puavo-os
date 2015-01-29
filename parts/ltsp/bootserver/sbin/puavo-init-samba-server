@@ -26,6 +26,7 @@ sleep 5
 system("echo pkill -9 -x '(nmbd|smbd)'")
 
 template.write("/etc/samba/smb.conf")
+template.write("/etc/racoon/racoon.conf")
 
 if File.exists?("/etc/samba/cifs.keytab")
   File.delete("/etc/samba/cifs.keytab")

@@ -1,5 +1,6 @@
 #!/usr/bin/ruby1.9.1
 
+require 'fileutils'
 require 'getoptlong'
 require 'json'
 
@@ -10,11 +11,14 @@ def imgbuild_args(cmdline_switch, conf, key)
     : []
 end
 
-def build_config_target(config_target, config_file)
-  image_confs = image_configuration(config_file)
+def build_config_target(config_target,
+                        config_files,
+                        puavo_imgbuild_args,
+                        apply_configure_bootstrap)
+  image_confs = image_configurations(config_files)
 
   if !image_confs.has_key?(config_target) then
-    raise "No config target '#{ config_target }' in '#{ config_file }'"
+    raise "No config target '#{ config_target }' in config files"
   end
 
   conf = image_confs[config_target]
@@ -23,14 +27,24 @@ def build_config_target(config_target, config_file)
     unless conf['distribution'].kind_of?(String) \
              && !conf['distribution'].empty?
 
-  puppet_args  = imgbuild_args('--puppet-classes', conf, 'puppet-classes')
-  release_args = imgbuild_args('--release-name',   conf, 'release-name')
+  arch_args       = imgbuild_args('--arch',         conf, 'arch')
+  buildrules_args = imgbuild_args('--buildrules',   conf, 'puppet-classes')
+  release_args    = imgbuild_args('--release-name', conf, 'release-name')
+
+  bootstrap_rules_args = apply_configure_bootstrap \
+                           ? imgbuild_args('--configure-bootstrap-rules',
+					   conf,
+					   'bootstrap-puppet-classes') \
+                           : []
 
   system('/usr/lib/puavo-image-tools/puavo-imgbuild-tool',
          '--build',        config_target,
          '--distribution', conf['distribution'],
-         *puppet_args,
-         *release_args) \
+         *arch_args,
+         *bootstrap_rules_args,
+         *buildrules_args,
+         *release_args,
+         *puavo_imgbuild_args) \
     or raise "Problem in building '#{ config_target }'"
 end
 
@@ -38,8 +52,10 @@ def builder_confs(builder_confs_path)
   Hash[ IO.readlines(builder_confs_path).map { |line| line.split } ]
 end
 
-def image_configuration(imagejson_path)
-  JSON.parse( File.read(imagejson_path) )
+
+def image_configurations(config_files)
+  config_files.map { |cf| JSON.parse( File.read(cf) ) } \
+              .reduce &:merge
 end
 
 def ensure_string_sanity(string)
@@ -76,8 +92,8 @@ end
 def validate_and_list_image_filenames(image_confs)
   image_confs.map do |image_series, series_settings|
     images = series_settings['images'].kind_of?(Array) \
-	       ? series_settings['images']             \
-	       : []
+               ? series_settings['images']             \
+               : []
     images.each { |s| ensure_string_sanity(s) }
     images
   end.flatten.uniq
@@ -125,8 +141,8 @@ def get_rdiff_targets_info(image_confs)
       rdiff_make_snippets << <<EOF
 #{ rdiff_full_path }: #{ image_signature_path } #{ target_image_path } #{ rdiff_target_dir }
 	rdiff delta "#{ image_signature_path }" \\
-		    "#{ target_image_path }" \\
-		    $@
+	            "#{ target_image_path }" \\
+	            $@
 EOF
     end
 
@@ -140,7 +156,9 @@ EOF
     rdiff_make_snippets ]
 end
 
-def output_makefile(builder_confs, image_confs)
+def output_makefile(builder_confs, config_files)
+  image_confs = image_configurations(config_files)
+
   image_series_list = image_confs.keys
   image_series_list.each { |image_series| ensure_string_sanity(image_series) }
 
@@ -166,11 +184,10 @@ SIGNATURES_DIR    = ${RDIFFS_DIR}/.signatures
 RDIFF_TARGET_DIRS = #{ rdiff_target_dirs.join(' ') }
 
 ALL_DIRS = ${CKSUMS_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs \\
-	   ${RDIFF_TARGET_DIRS} ${SIGNATURES_DIR}
+           ${RDIFF_TARGET_DIRS} ${SIGNATURES_DIR}
 
-CHROOT_TARGETS = chroot cleanup-chroot dist-upgrade image install-packages \\
-		 puppet-chroot puppet-chroot-error-on-change puppet-local \\
-		 update-chroot
+CHROOT_TARGETS = apply-buildrules chroot cleanup-chroot image \\
+                 install-packages update-chroot
 
 IMAGE_FILES = #{ image_files.join(' ') }
 
@@ -258,44 +275,184 @@ ${SIGNATURES_DIR}/%.rdiff_signature: %.img | ${SIGNATURES_DIR}
 EOF
 end
 
+def get_mountinfo()
+  mountinfo = %x(mount)
+  raise 'Problem running mount' unless $?.exitstatus == 0
+  mountinfo.split("\n")
+end
+
+def handle_mounts(mounts)
+  new_mounts = mounts.clone
+  mounts.each do |mntdir, mntdevice|
+    mountinfo = get_mountinfo()
+    mountinfo.each do |line|
+      fields = line.split
+      if fields[2] == mntdir then
+        if fields[0] == mntdevice then
+          # mount okay, nothing to do
+          new_mounts.delete(mntdir)
+        else
+          system('umount', mntdir) \
+            or raise "Problem unmounting '#{ mntdir }'"
+        end
+      end
+    end
+  end
+
+  new_mounts.each do |mntdir, mntdevice|
+    FileUtils.mkdir_p(mntdir)
+    system('mount', mntdevice, mntdir) \
+      or raise "Problem mounting '#{ mntdir }' to '#{ mntdevice }'"
+  end
+end
+
+def setup_tmpfs(tmpfs_inode_count, tmpfs_path, tmpfs_size)
+  mountinfo = get_mountinfo()
+  mntoptions = 'rw,uid=0,gid=0,mode=755,' \
+               + "size=#{ tmpfs_size },nr_inodes=#{ tmpfs_inode_count }"
+
+  current_mntoptions = nil
+  mountinfo.each do |line|
+    fields = line.split
+    next if fields[2] != tmpfs_path
+    match = fields[5].match(/^\((.*)\)$/)
+    if match then
+      current_mntoptions = match[1]
+    end
+  end
+
+  if current_mntoptions && current_mntoptions != mntoptions then
+    # the partition is mounted, but not with the right options, so we umount
+    system('umount', tmpfs_path) \
+      or raise "Problem unmounting '#{ tmpfs_path }'"
+    current_mntoptions = nil
+  end
+    
+  if !current_mntoptions then
+    # we need to do mount
+    FileUtils.mkdir_p(tmpfs_path)
+    system('mount',
+           '-t', 'tmpfs',
+           '-o', mntoptions,
+           'tmpfs',
+           tmpfs_path)
+  end
+end
+
 def usage()
   puts <<-EOF
-You use me wrong, use better!
+Usage:
+  puavo-build-image --apply-configure-bootstrap
+                    --config-target     config-target
+                    --images-config     images-config
+                    --mount-device      mount-device
+                    --mount-dir         mount-dir
+                    --tmpfs-inode-count tmpfs-inode_count
+                    --tmpfs-path        tmpfs-path
+                    --tmpfs-size        tmpfs-size
+                    --use-tmpfs
+                    -- (arguments for puavo-imgbuild-tool ...)
+
+  puavo-build-image --output-makefile
+                    --images-config images_config
+
+  --images-config with argument can be given many times, and all the image
+  config files will be combined/merged, later image targets override previous
+  targets if conflicts exist.
+
+  The last argument for puavo-build-image can be "--", after that all arguments
+  are passed to puavo-imgbuild-tool as they are, when --config-target is set
+  and --output-makefile is not set.
 EOF
   exit(1)
 end
 
-config_file = nil
-config_target = nil
-output_makefile = false
+apply_configure_bootstrap = false
+config_files              = []
+config_target             = nil
+mount_device              = nil
+mount_dir                 = nil
+mounts                    = {}
+output_makefile           = false
+tmpfs_inode_count         = nil
+tmpfs_path                = nil
+tmpfs_size                = nil
+use_tmpfs                 = false
+
+maybe_add_to_mounts = lambda do
+  if mount_device && mount_dir; then
+    mounts.merge!({ mount_dir => mount_device })
+    mount_device = mount_dir = nil
+  end
+end
 
 begin
   opts = GetoptLong.new(
-           [ '--images-config',   '-i', GetoptLong::REQUIRED_ARGUMENT ],
-           [ '--output-makefile', '-m', GetoptLong::NO_ARGUMENT       ],
-           [ '--config-target',   '-t', GetoptLong::REQUIRED_ARGUMENT ])
+           [ '--apply-configure-bootstrap', GetoptLong::NO_ARGUMENT       ],
+           [ '--config-target',             GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--images-config',             GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--mount-device',              GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--mount-dir',                 GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--output-makefile',           GetoptLong::NO_ARGUMENT       ],
+           [ '--tmpfs-inode-count',         GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--tmpfs-path',                GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--tmpfs-size',                GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--use-tmpfs',                 GetoptLong::NO_ARGUMENT       ])
 
   opts.each do |opt, arg|
     case opt
+      when '--apply-configure-bootstrap'
+        apply_configure_bootstrap = true
       when '--config-target'
-	config_target = arg
+        config_target = arg
       when '--images-config'
-	config_file = arg
+        config_files << arg
+      when '--mount-device'
+        mount_device = arg
+        maybe_add_to_mounts.call()
+      when '--mount-dir'
+        mount_dir = arg
+        maybe_add_to_mounts.call()
       when '--output-makefile'
-	output_makefile = true
+        output_makefile = true
+      when '--tmpfs-inode-count'
+        tmpfs_inode_count = arg
+      when '--tmpfs-path'
+        tmpfs_path = arg
+      when '--tmpfs-size'
+        tmpfs_size = arg
+      when '--use-tmpfs'
+        use_tmpfs = true
     end
   end
 rescue GetoptLong::InvalidOption => e
   usage
 end
 
-if output_makefile && config_file then
+# pass the rest of the command line arguments to puavo-imgbuild-tool
+# (the ones after "--")
+puavo_imgbuild_args = ARGV
+
+if output_makefile && !config_files.empty? then
+  # special --output-makefile mode was invoked
   builder_confs_path = "#{ ENV['HOME'] }/.config/puavo-build-image/defaults"
   builder_confs = builder_confs(builder_confs_path)
-  output_makefile(builder_confs, image_configuration(config_file))
+  output_makefile(builder_confs, config_files)
   exit(0)
-elsif config_file && config_target then
-  build_config_target(config_target, config_file)
-else
-  usage()
 end
+
+if !config_files.empty? && config_target then
+  handle_mounts(mounts)
+  if use_tmpfs then
+    setup_tmpfs(tmpfs_inode_count || '5m',
+                tmpfs_path        || '/virtualtmp',
+                tmpfs_size        || '28g')
+  end
+  build_config_target(config_target,
+                      config_files,
+                      puavo_imgbuild_args,
+                      apply_configure_bootstrap)
+  exit(0)
+end
+
+usage()
