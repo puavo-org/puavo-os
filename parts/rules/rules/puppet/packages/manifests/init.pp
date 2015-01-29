@@ -646,6 +646,7 @@ class packages {
     , 'rhythmbox'
     , 'rhythmbox-plugin-magnatune'
     , 'rtmpdump'
+    , 'rxvt-unicode'
     , 'seahorse'
     , 'shotwell'
     , 'simple-scan'
