@@ -246,6 +246,7 @@ class packages {
     [ 'emesene'
     , 'gobby'
     , 'irssi'
+    , 'irssi-plugin-xmpp'
     , 'pidgin'
     , 'pidgin-libnotify'
     , 'pidgin-plugin-pack'
