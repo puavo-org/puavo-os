@@ -544,6 +544,7 @@ class packages {
     , 'gnome-color-manager'
     , 'gnome-contacts'
     , 'gnome-control-center'
+    , 'gnome-desktop-environment'
     , 'gnome-disk-utility'
     # , 'gnome-documents'	# forces tracker to be installed
 				# (tracker is purged elsewhere)
@@ -582,6 +583,7 @@ class packages {
     , 'gvfs-bin'
     , 'gvfs-fuse'
     , 'hplip'
+    , 'i3'
     , 'ibus'
     , 'ibus-gtk3'
     , 'ibus-pinyin'
@@ -675,6 +677,7 @@ class packages {
     , 'xdg-user-dirs-gtk'
     , 'xdg-utils'
     , 'xdiagnose'
+    , 'xfce4'
     , 'xkb-data'
     , 'xorg'
     , 'xterm'
