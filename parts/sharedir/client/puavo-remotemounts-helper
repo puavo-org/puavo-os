@@ -1,0 +1,177 @@
+#!/usr/bin/ruby1.9.1
+# encoding: UTF-8
+
+puavo_hosttype = IO.read('/etc/puavo/hosttype').chomp
+if puavo_hosttype != 'laptop' then
+  exit(0)
+end
+
+require 'fileutils'
+require 'json'
+require 'resolv'
+
+@device = JSON.parse( IO.read('/etc/puavo/device.json') )
+
+def sendmsg(channel, msg)
+  channel.puts "puavo-remotemounts-helper #{ Time.now }: #{ msg }"
+end
+
+def errmsg(msg); sendmsg(STDERR, msg); end
+def outmsg(msg); sendmsg(STDOUT, msg); end
+
+def has_device_tag(tag)
+  (@device['tags'] || []).include?(tag)
+end
+
+def use_remotemounts
+  # Doing the remote mounts is the default,
+  # "no_use_remotemounts"-tag will disable that,
+  # but then again "use_remotemounts"-tag overrides it.
+  ! has_device_tag('no_use_remotemounts') || has_device_tag('use_remotemounts')
+end
+
+class GvfsMount
+  def initialize(remote_host, url, mntpath, linkname)
+    @linkname    = linkname
+    @mntpath     = mntpath
+    @remote_host = remote_host
+    @url         = url
+  end
+
+  def check_mount_state(mntpath)
+    # wait for 5 seconds for stat operation to a remote path
+    system('timeout', '-s', 'KILL', '5', 'stat', '-c', '%X', mntpath, \
+           { :out => '/dev/null', :err => '/dev/null' })
+
+    return 'timeout' if $?.termsig == 9
+    return 'ok'      if $?.exitstatus == 0
+
+    return 'not connected'
+  end
+
+  def ensure_link(shouldbe)
+    linksrc = "#{ ENV['HOME'] }/#{ @linkname }"
+
+    if shouldbe; then
+      begin
+        return if File.readlink(linksrc) == @mntpath
+      rescue Errno::ENOENT
+      end
+      FileUtils.rm_f(linksrc)
+      FileUtils.symlink(@mntpath, linksrc)
+    else
+      FileUtils.rm_f(linksrc)
+    end
+  end
+
+  def ensure_mounts
+    checks_with_timeout = 0
+
+    while true do
+      begin
+        mount_state = check_mount_state(@mntpath)
+
+        case mount_state
+          when 'not connected'
+            ensure_link(false) rescue true
+            begin
+              # make sure dns works, so we do not stress gvfs-mount,
+              # besides, it is not an error if gvfs-mount fails if not on the
+              # right network
+              Resolv::DNS.new.getaddress(@remote_host)
+
+              outmsg("mounting '#{ @mntpath }'")
+              system('timeout', '-k', '10', '20', 'gvfs-mount', @url) \
+                or errmsg("problem in mounting '#{ @url }'")
+              checks_with_timeout = 0
+            rescue Resolv::ResolvError
+              outmsg("did not find #{ @remote_host }, not mounting #{ @url }")
+            end
+
+          when 'ok'
+            ensure_link(true) rescue true
+            checks_with_timeout = 0
+
+          when 'timeout'
+            checks_with_timeout += 1
+            if checks_with_timeout >= 5 then
+              # with five timeouts in a row, unmount the thing!
+              ensure_link(false) rescue true
+              outmsg("unmounting '#{ @url }'")
+              system('timeout', '-k', '10', '20', 'gvfs-mount', '-u', @url) \
+                or errmsg("problem in unmounting '#{ @url }'")
+              checks_with_timeout = 0
+            end
+
+        end
+      rescue StandardError => e
+        errmsg("Got some error: #{ e }, yet continuing...")
+      end
+
+      sleep(10)
+    end
+  end
+end
+
+def get_our_gvfsmounts
+  sharenames = {
+    'fi' => 'yhteiset',
+    'sv' => 'delade_filer',
+    'en' => 'share',
+  }
+
+  userdir_labels = {
+    'fi' => 'Verkkokansio',
+    'sv' => 'Nätverksmapp',
+    'en' => 'Network folder',
+  }
+
+  schooldir_labels = {
+    'fi' => 'Yhteiset',
+    'sv' => 'Delade filer',
+    'en' => 'Share',
+  }
+
+  lang = (ENV['LANG'] || '')[0..1]
+
+  sharename       = sharenames[lang]       || sharenames['en']
+  userdir_label   = userdir_labels[lang]   || userdir_labels['en']
+  schooldir_label = schooldir_labels[lang] || schooldir_labels['en']
+
+  puavo_domain = IO.read('/etc/puavo/domain').chomp
+
+  user = Etc.getpwuid.name
+  user_id = Process.uid
+  user_primary_group = Etc.getgrgid( Etc.getpwuid.gid ).name
+
+  remote_host = "homedir.#{ puavo_domain }"
+
+  [
+    GvfsMount.new(
+      remote_host,
+      "smb://#{ remote_host }/#{ user }",
+      "/run/user/#{ user_id }/gvfs/smb-share:server=homedir.#{ puavo_domain },share=#{ user }",
+      userdir_label),
+
+    GvfsMount.new(
+      remote_host,
+      "smb://#{ remote_host }/share/#{ sharename }/#{ user_primary_group }",
+      "/run/user/#{ user_id }/gvfs/smb-share:server=homedir.#{ puavo_domain },share=share/#{ sharename }/#{ user_primary_group }",
+      schooldir_label),
+  ]
+end
+
+if !use_remotemounts then
+  # Tags suggest we should do nothing.
+  exit(0)
+end
+
+# ensure mounts to remote directories come up and stay
+
+gvfs_mounts = get_our_gvfsmounts()
+
+threads = gvfs_mounts.map { |gvfsmnt| Thread.new { gvfsmnt.ensure_mounts() } }
+
+threads.each &:join
+
+exit(0)
