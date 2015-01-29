@@ -13,13 +13,13 @@ if [ -z "$nbd_server_host" ]; then
   exit 1
 fi
 
-check_nbd_is_available() {
+has_nbd_connection() { nbd-client -c /dev/nbd0 > /dev/null; }
+
+nbd_is_available() {
   /usr/bin/expr "$(/bin/nc -w 10 "$nbd_server_host" 10809 < /dev/null)" \
                 : '^NBDMAGIC' \
     > /dev/null
 }
-
-has_nbd_connection() { nbd-client -c /dev/nbd0 > /dev/null; }
 
 nbd_server_check_works=false
 
@@ -29,27 +29,28 @@ while has_nbd_connection; do
   # we constantly run it)
   cat /bin/nc /usr/bin/expr /usr/bin/logger > /dev/null
 
-  if ! $nbd_server_check_works && check_nbd_is_available; then
+  if ! $nbd_server_check_works && nbd_is_available; then
     nbd_server_check_works=true
   fi
 
   sleep 15
 done
 
-# we are not going to do any rebooting if it seems check_nbd_is_available does
+# we are not going to do any rebooting if it seems nbd_is_available does
 # not work
 $nbd_server_check_works || exit 1
 
-while true; do
-  check_nbd_is_available && break
+until nbd_is_available; do
   /usr/bin/logger -p syslog.emerg \
-            'nbd connection has been broken but nbd-server is not up'
+                  'nbd-connection has been broken but nbd-server is not up'
   sleep 15
 done
 
+# Sleep a little while before rebooting... in case nbd-connection has been
+# broken due to ongoing reboot/shutdown, with which we might interfere badly.
+sleep 7
 /usr/bin/logger -p syslog.emerg \
                    'Rebooting due to nbd failure, nbd-server is up'
-sleep 2
 echo b > /proc/sysrq-trigger
 
 exit 0
