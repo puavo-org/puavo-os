@@ -6,6 +6,8 @@ if puavo_hosttype != 'laptop' then
   exit(0)
 end
 
+exit(0) if ENV['GUEST_SESSION'] == 'true'
+
 require 'fileutils'
 require 'json'
 require 'resolv'
