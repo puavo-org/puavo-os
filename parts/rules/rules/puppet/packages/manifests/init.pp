@@ -545,7 +545,6 @@ class packages {
     , 'gnome-color-manager'
     , 'gnome-contacts'
     , 'gnome-control-center'
-    , 'gnome-desktop-environment'
     , 'gnome-disk-utility'
     # , 'gnome-documents'	# forces tracker to be installed
 				# (tracker is purged elsewhere)
