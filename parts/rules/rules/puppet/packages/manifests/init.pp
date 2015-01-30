@@ -501,6 +501,7 @@ class packages {
     , 'brltty'
     , 'ca-certificates'
     , 'cheese'
+    , 'compiz'
     , 'cups'
     , 'cups-bsd'
     , 'cups-client'
