@@ -9,7 +9,14 @@ PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 
 case "${PUAVO_HOSTTYPE}" in
   fatclient|laptop)
-    gnome-session --session=gnome-fallback
+    session=gnome-fallback
+    if jq -r .tags[] /etc/puavo/device.json | grep -q -x enable_compiz; then
+      session=gnome-flashback-compiz
+    fi
+    if jq -r .tags[] /etc/puavo/device.json | grep -q -x disable_compiz; then
+      session=gnome-fallback
+    fi
+    gnome-session --session="${session}"
     break
     ;;
   thinclient)
