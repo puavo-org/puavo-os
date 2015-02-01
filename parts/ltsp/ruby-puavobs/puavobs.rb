@@ -39,7 +39,7 @@ module PuavoBS
 
   def self.check_response_code(code)
     if !code.between?(200, 206) && code != 302 then
-      raise "request failed with status code #{response.code}"
+      raise "request failed with status code #{code}"
     end
   end
 
