@@ -83,7 +83,7 @@ module PuavoBS
   end
 
   def self.get_preferred_boot_image(hostname)
-    self.get_device_json['preferred_boot_image']
+    self.get_device_json(hostname)['preferred_boot_image']
   end
 
   def self.get_school_ids(admin_username, admin_password)
