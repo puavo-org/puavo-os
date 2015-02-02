@@ -248,10 +248,12 @@ ${ALL_DIRS}:
 	mkdir -p $@
 
 ${CKSUMS_DIR}/%.img.cksum: %.img | ${CKSUMS_DIR}
-	cksum $< > $@
+	cksum $< > $@.tmp
+	mv $@.tmp $@
 
 ${CKSUMS_DIR}/%.rdiff.cksum: %.rdiff | ${CKSUMS_DIR}
-	cksum $< > $@
+	cksum $< > $@.tmp
+	mv $@.tmp $@
 
 ${MIRROR_DIR}/CKSUMS: ${CKSUM_FILES_AP} | ${MIRROR_DIR}
 	awk '{ "basename " $$3 | getline $$3; print }' ${CKSUM_FILES_AP} > $@
