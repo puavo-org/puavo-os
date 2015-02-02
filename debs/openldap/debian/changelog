@@ -1,4 +1,17 @@
-openldap (2.4.40-1) unstable; urgency=high
+openldap (2.4.40-33) precise; urgency=medium
+
+  * Fix multiarch builds by not generating debian/changelog
+
+  * Version number is semantically wrong now: this package is not
+    packaged 33 times in Debian. It should be 2.4.40-0+opinsys2. But
+    previous production version was
+    2.4.40-32+precise+master.21fcec099230abffa0181ee8ac21e6f11630bb85
+    so this just tries to be a bit newer. Version number must be fixed
+    when a newer upstream version in packaged.
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 02 Feb 2015 11:01:42 +0200
+
+openldap (2.4.40-0+opinsys1) precise; urgency=high
 
   * New upstream version
   * debian/ based on Debian's 2.4.39 packaging
