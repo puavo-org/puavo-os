@@ -26,37 +26,12 @@ slapddir	:= $(CURDIR)/debian/slapd/usr/sbin
 
 MAKEVARS	:= STRIP=
 
-# These variables are used only by get-orig-source, which will normally only
-# be run by maintainers.
 VERSION = 2.4.40
-URL     = http://www.openldap.org/software/download/OpenLDAP/openldap-release/
-
-# Download the upstream source and make changes as required for DFSG reasons.
-# Assumes wget is available, as this is generally only used by the package
-# maintainers.
+URL     = http://ftp.debian.org/debian/pool/main/o/openldap
+TARBALL = openldap_$(VERSION).orig.tar.gz
 get-orig-source:
-	@if [ ! -d "debian/schema" ] ; then \
-	    echo 'Run this from the top directory of the Debian source' >&2; \
-	    exit 1; \
-	fi
-	wget $(URL)/openldap-$(VERSION).tgz
-	tar xzf openldap-$(VERSION).tgz
-	rm -r openldap-$(VERSION)/doc/drafts
-	rm -r openldap-$(VERSION)/doc/rfc
-	set -e; for schema in debian/schema/*.schema debian/schema/*.ldif ; do \
-	    file=`basename "$$schema"`; \
-	    rm openldap-$(VERSION)/servers/slapd/schema/$$file; \
-	done
-	tar --mtime \
-		"$(shell date --date \
-			@$(shell stat --format %Y openldap-$(VERSION).tgz) \
-			'+%F %H:%M')" \
-		-j -c -f openldap_$(VERSION).orig.tar.bz2 openldap-$(VERSION)
-	rm openldap-$(VERSION).tgz
-	rm -r openldap-$(VERSION)
-	mv openldap_$(VERSION).orig.tar.bz2 ..
-	tar xjvf ../openldap_$(VERSION).orig.tar.bz2 --strip-components=1 -C .
-
+	wget $(URL)/$(TARBALL) -O ../$(TARBALL)
+	tar xzf ../$(TARBALL) --strip-components=1 -C .
 
 %:
 	dh $@ --with quilt,autoreconf --builddirectory=$(builddir)
