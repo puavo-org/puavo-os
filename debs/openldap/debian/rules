@@ -47,7 +47,11 @@ get-orig-source:
 	    file=`basename "$$schema"`; \
 	    rm openldap-$(VERSION)/servers/slapd/schema/$$file; \
 	done
-	tar --mtime=openldap-$(VERSION).tgz -j -c -f openldap_$(VERSION).orig.tar.bz2 openldap-$(VERSION)
+	tar --mtime \
+		"$(shell date --date \
+			@$(shell stat --format %Y openldap-$(VERSION).tgz) \
+			'+%F %H:%M')" \
+		-j -c -f openldap_$(VERSION).orig.tar.bz2 openldap-$(VERSION)
 	rm openldap-$(VERSION).tgz
 	rm -r openldap-$(VERSION)
 	mv openldap_$(VERSION).orig.tar.bz2 ..
