@@ -1,4 +1,4 @@
-openldap (2.4.40-33) precise; urgency=medium
+openldap (2.4.40-33+opinsys1) precise; urgency=medium
 
   * Fix multiarch builds by not generating debian/changelog
 
@@ -7,7 +7,7 @@ openldap (2.4.40-33) precise; urgency=medium
     previous production version was
     2.4.40-32+precise+master.21fcec099230abffa0181ee8ac21e6f11630bb85
     so this just tries to be a bit newer. Version number must be fixed
-    when a newer upstream version in packaged.
+    when a newer upstream version is packaged.
 
  -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 02 Feb 2015 11:01:42 +0200
 
