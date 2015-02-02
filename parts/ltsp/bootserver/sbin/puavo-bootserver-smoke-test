@@ -197,7 +197,19 @@ class TestRun
                                                           @testclient_mac,
                                                           @testclient_hosttype,
                                                           @testclient_tags)
-    @testclient_image = PuavoBS.get_device_json(@testclient_hostname)['preferred_image']
+    error = nil
+    (0..4).each do |ntries|
+      sleep 0.5 if ntries > 0
+      begin
+        @testclient_image = PuavoBS.get_device_json(@testclient_hostname)['preferred_image']
+      rescue RuntimeError => e
+        error = e if error.nil?
+        next
+      end
+      error = nil
+      break
+    end
+    raise error if !error.nil?
   end
 
   def prepare_open_socket()
