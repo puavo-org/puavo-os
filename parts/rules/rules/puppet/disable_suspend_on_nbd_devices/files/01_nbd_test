@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+if grep -wq root=/dev/nbd0 /proc/cmdline; then
+  # This host has root on an nbd device, we do not support sleeping on those
+  # (sleep might be triggered by laptop lid closing or maybe some other event).
+  exit 1
+fi
+
+exit 0
