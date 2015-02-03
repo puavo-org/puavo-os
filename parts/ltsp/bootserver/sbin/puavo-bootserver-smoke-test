@@ -199,7 +199,7 @@ class TestRun
                                                           @testclient_tags)
     error = nil
     (0..4).each do |ntries|
-      sleep 0.5 if ntries > 0
+      sleep 1 if ntries > 0
       begin
         @testclient_image = PuavoBS.get_device_json(@testclient_hostname)['preferred_image']
       rescue RuntimeError => e
