@@ -2,6 +2,7 @@ class image::bundle::basic {
   include autopoweroff,
 	  console,
 	  disable_suspend_on_halt,
+	  disable_suspend_on_nbd_devices,
 	  disable_unclutter,
 	  disable_update_notifications,
 	  kernels,
