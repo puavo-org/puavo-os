@@ -27,7 +27,7 @@
 #include "log.h"
 #include "orgjson.h"
 
-#define PUAVOADMINS_GRNAM "_puavoadmins"
+#define PUAVOADMINS_GRNAM "puavoadmins"
 #define PUAVOADMINS_GRGID 555
 
 static int g_ent_index;
