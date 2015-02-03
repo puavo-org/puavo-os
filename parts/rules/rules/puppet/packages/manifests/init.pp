@@ -50,8 +50,8 @@ class packages {
 
     [ 'clusterssh'
     , 'dconf-tools'
-    , 'parallel',
-    , 'pssh',
+    , 'parallel'
+    , 'pssh'
     , 'terminator'
     , 'vinagre'
     , 'xbacklight' ]:
