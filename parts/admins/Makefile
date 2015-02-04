@@ -1,11 +1,16 @@
 prefix = /usr/local
-binaries = libnss_puavoadmins.so.2 puavoadmins-ssh-public-keys
+binaries = libnss_puavoadmins.so.2 \
+	puavoadmins-ssh-public-keys \
+	puavoadmins-validate-orgjson
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 all: $(binaries)
+
+puavoadmins-validate-orgjson: puavoadmins-validate-orgjson.o orgjson.o
+	gcc -o $@ $^ -ljansson
 
 puavoadmins-ssh-public-keys: puavoadmins-ssh-public-keys.o orgjson.o
 	gcc -o $@ $^ -ljansson
@@ -25,7 +30,8 @@ installdirs:
 install: installdirs all
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(prefix)/lib \
 		libnss_puavoadmins.so.2 \
-		puavoadmins-ssh-public-keys
+		puavoadmins-ssh-public-keys \
+		puavoadmins-validate-orgjson
 
 clean:
 	rm -rf *.o
