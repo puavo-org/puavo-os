@@ -44,6 +44,7 @@ struct orgjson_owner {
 typedef struct orgjson orgjson_t;
 
 orgjson_t *orgjson_load(struct orgjson_error *error);
+orgjson_t *orgjson_load2(const char *filepath, struct orgjson_error *error);
 void orgjson_free(orgjson_t *orgjson);
 
 struct orgjson_owner *orgjson_get_owner(const orgjson_t *orgjson,

@@ -31,7 +31,8 @@ struct orgjson {
         json_t *owners;
 };
 
-struct orgjson *orgjson_load(struct orgjson_error *const error)
+struct orgjson *orgjson_load2(const char *const filepath,
+                              struct orgjson_error *const error)
 {
         struct orgjson *orgjson;
         json_error_t json_error;
@@ -46,14 +47,14 @@ struct orgjson *orgjson_load(struct orgjson_error *const error)
                 return NULL;
         }
 
-        orgjson->root = json_load_file(ORGJSON_PATH, 0, &json_error);
+        orgjson->root = json_load_file(filepath, 0, &json_error);
         if (!orgjson->root) {
                 free(orgjson);
                 if (error) {
                         error->code = ORGJSON_ERROR_CODE_JSON;
                         snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
                                  "failed to load %s: %s",
-                                 ORGJSON_PATH, json_error.text);
+                                 filepath, json_error.text);
                 }
                 return NULL;
         }
@@ -71,6 +72,11 @@ struct orgjson *orgjson_load(struct orgjson_error *const error)
         }
 
         return orgjson;
+}
+
+struct orgjson *orgjson_load(struct orgjson_error *const error)
+{
+        return orgjson_load2(ORGJSON_PATH, error);
 }
 
 void orgjson_free(struct orgjson *const orgjson)
