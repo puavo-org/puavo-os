@@ -48,11 +48,11 @@ enum nss_status _nss_puavoadmins_endgrent(void)
         return NSS_STATUS_SUCCESS;
 }
 
-static enum nss_status fill_group(const orgjson_t *const orgjson,
-                                  struct group *const gr,
-                                  char *const buf,
-                                  const size_t bufsize,
-                                  int *const errnop)
+static enum nss_status fill_group_members(const orgjson_t *const orgjson,
+                                          struct group *const gr,
+                                          char *const buf,
+                                          const size_t bufsize,
+                                          int *const errnop)
 {
         char **members;
         char *member;
@@ -90,27 +90,29 @@ static enum nss_status fill_group(const orgjson_t *const orgjson,
                 member += member_size;
         }
 
-        gr->gr_name = PUAVOADMINS_GRNAM;
-        gr->gr_passwd = "x";
-        gr->gr_gid = PUAVOADMINS_GRGID;
         gr->gr_mem = members;
 
         return NSS_STATUS_SUCCESS;
 }
 
-enum nss_status _nss_puavoadmins_getgrent_r(struct group *const gr,
-                                            char *const buf,
-                                            const size_t bufsize,
-                                            int *const errnop)
+static enum nss_status fill_group(struct group *const gr,
+                                  char *const buf,
+                                  const size_t bufsize,
+                                  int *const errnop)
 {
         enum nss_status retval;
         orgjson_t *orgjson;
         struct orgjson_error error;
 
-        if (g_ent_index > 0) {
-                /* Currenly, there is only one puavoadmins group. */
-                *errnop = ENOENT;
-                return NSS_STATUS_NOTFOUND;
+        gr->gr_name = PUAVOADMINS_GRNAM;
+        gr->gr_passwd = "x";
+        gr->gr_gid = PUAVOADMINS_GRGID;
+
+        /* If the orgjson does not exist, puavoadmins is empty. */
+        if (!orgjson_exists()) {
+                memset(buf, 0, bufsize);
+                gr->gr_mem = (char **) buf;
+                return NSS_STATUS_SUCCESS;
         }
 
         orgjson = orgjson_load(&error);
@@ -121,12 +123,30 @@ enum nss_status _nss_puavoadmins_getgrent_r(struct group *const gr,
                 return NSS_STATUS_UNAVAIL;
         }
 
-        retval = fill_group(orgjson, gr, buf, bufsize, errnop);
-        if (retval == NSS_STATUS_SUCCESS)
-                ++g_ent_index;
+        retval = fill_group_members(orgjson, gr, buf, bufsize, errnop);
 
         orgjson_free(orgjson);
         orgjson = NULL;
+
+        return retval;
+}
+
+enum nss_status _nss_puavoadmins_getgrent_r(struct group *const gr,
+                                            char *const buf,
+                                            const size_t bufsize,
+                                            int *const errnop)
+{
+        enum nss_status retval;
+
+        if (g_ent_index > 0) {
+                /* Currenly, there is only one puavoadmins group. */
+                *errnop = ENOENT;
+                return NSS_STATUS_NOTFOUND;
+        }
+
+        retval = fill_group(gr, buf, bufsize, errnop);
+        if (retval == NSS_STATUS_SUCCESS)
+                ++g_ent_index;
 
         return retval;
 }
@@ -137,29 +157,12 @@ enum nss_status _nss_puavoadmins_getgrnam_r(const char *const name,
                                             const size_t bufsize,
                                             int *const errnop)
 {
-        enum nss_status retval;
-        orgjson_t *orgjson;
-        struct orgjson_error error;
-
         if (strcmp(name, PUAVOADMINS_GRNAM)) {
                 *errnop = ENOENT;
                 return NSS_STATUS_NOTFOUND;
         }
 
-        orgjson = orgjson_load(&error);
-        if (!orgjson) {
-                log(LOG_ERR, "failed to load puavoadmins group database: %s",
-                    error.text);
-                *errnop = errno;
-                return NSS_STATUS_UNAVAIL;
-        }
-
-        retval = fill_group(orgjson, gr, buf, bufsize, errnop);
-
-        orgjson_free(orgjson);
-        orgjson = NULL;
-
-        return retval;
+        return fill_group(gr, buf, bufsize, errnop);
 }
 
 enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
@@ -168,27 +171,10 @@ enum nss_status _nss_puavoadmins_getgrgid_r(const gid_t gid,
                                             const size_t bufsize,
                                             int *const errnop)
 {
-        enum nss_status retval;
-        orgjson_t *orgjson;
-        struct orgjson_error error;
-
         if (gid != PUAVOADMINS_GRGID) {
                 *errnop = ENOENT;
                 return NSS_STATUS_NOTFOUND;
         }
 
-        orgjson = orgjson_load(&error);
-        if (!orgjson) {
-                log(LOG_ERR, "failed to load puavoadmins group database: %s",
-                    error.text);
-                *errnop = errno;
-                return NSS_STATUS_UNAVAIL;
-        }
-
-        retval = fill_group(orgjson, gr, buf, bufsize, errnop);
-
-        orgjson_free(orgjson);
-        orgjson = NULL;
-
-        return retval;
+        return fill_group(gr, buf, bufsize, errnop);
 }
