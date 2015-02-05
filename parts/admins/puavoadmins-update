@@ -1,0 +1,78 @@
+#!/usr/bin/env ruby1.9.1
+
+## Copyright (C) 2014, 2015 Opinsys
+##
+## This program is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 2 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+##
+
+## Standard library modules.
+require 'fileutils'
+
+## Third-party modules.
+require 'puavobs'
+
+if !File.new('/run/puavoadmins.lock', 'w').flock(File::LOCK_NB | File::LOCK_EX) then
+  STDERR.puts('ERROR: puavoadmins-update is already running')
+  STDERR.puts('ERROR: only one instance of puavoadmins-update can be running')
+  exit(1)
+end
+
+org_json_filepath = '/etc/puavo/org.json'
+puavoadmins_home_root = '/puavoadmins'
+
+new_org_json = PuavoBS.get_org_json()
+
+new_org_json_filepath = "#{org_json_filepath}.new"
+
+begin
+  File.open(new_org_json_filepath, 'w') do |new_org_json_file|
+    new_org_json_file.write(new_org_json.to_json())
+  end
+  FileUtils.chown('root', 'root', new_org_json_filepath)
+  File.chmod(0644, new_org_json_filepath)
+
+  system('/usr/lib/puavoadmins-validate-orgjson', new_org_json_filepath)
+  if !$?.success? then
+    exit(1)
+  end
+
+  FileUtils.mkdir_p(puavoadmins_home_root)
+  FileUtils.chown(0, 'puavoadmins', puavoadmins_home_root)
+  File.chmod(0750, puavoadmins_home_root)
+
+  new_org_json['owners'].each do |owner|
+    uid_number = owner['uid_number']
+
+    home_dir = "#{puavoadmins_home_root}/#{uid_number}"
+    next if Dir.exists?(home_dir)
+
+    new_home_dir = "#{home_dir}.new"
+    begin
+      Dir.mkdir(new_home_dir, 0750)
+      FileUtils.cp(['/etc/skel/.bash_logout',
+                    '/etc/skel/.bashrc',
+                    '/etc/skel/.profile'],
+                   new_home_dir)
+      FileUtils.chown_R(uid_number, owner['gid_number'], new_home_dir)
+      File.rename(new_home_dir, home_dir)
+    ensure
+      FileUtils.rm_rf(new_home_dir)
+    end
+
+  end
+
+  File.rename(new_org_json_filepath, org_json_filepath)
+ensure
+  FileUtils.rm_f(new_org_json_filepath)
+end

@@ -31,6 +31,7 @@ install: installdirs all
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(prefix)/lib \
 		libnss_puavoadmins.so.2 \
 		puavoadmins-ssh-public-keys \
+		puavoadmins-update \
 		puavoadmins-validate-orgjson
 
 clean:

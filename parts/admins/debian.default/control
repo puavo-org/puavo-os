@@ -8,7 +8,7 @@ Homepage: http://github.com/opinsys/puavoadmins/
 
 Package: puavoadmins
 Architecture: any
-Depends: ${misc:Depends}, libjansson4
+Depends: ${misc:Depends}, libjansson4, ruby1.9.1, ruby-puavobs (>= 0.15.0)
 Description: Puavo admin intergration
   This project provides following components for intergrating Puavo
   organization admininstrators to the host:
