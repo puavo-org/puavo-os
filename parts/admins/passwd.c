@@ -37,7 +37,9 @@ static enum nss_status fill_passwd(const struct orgjson_owner *const owner,
                                    const size_t bufsize,
                                    int *const errnop)
 {
-        static const char *const ADM_HOME_PATH = "/adm-home/";
+        /* Must be /-terminated. */
+        static const char *const HOME_ROOT = "/puavoadmins/";
+
         size_t pw_name_size;
         size_t pw_gecos_size;
         size_t pw_dir_size;
@@ -49,7 +51,7 @@ static enum nss_status fill_passwd(const struct orgjson_owner *const owner,
         pw_name_size = strlen(owner->username) + 1;
         pw_gecos_size = (strlen(owner->first_name) + 1
                          + strlen(owner->last_name) + 1);
-        pw_dir_size = strlen(ADM_HOME_PATH) + strlen(owner->username) + 1;
+        pw_dir_size = strlen(HOME_ROOT) + strlen(owner->username) + 1;
 
         if ((pw_name_size + pw_gecos_size + pw_dir_size) > bufsize) {
                 *errnop = ERANGE;
@@ -71,7 +73,7 @@ static enum nss_status fill_passwd(const struct orgjson_owner *const owner,
 
         pw_dir = pw_gecos + pw_gecos_size;
         if (snprintf(pw_dir, pw_dir_size, "%s%s",
-                     ADM_HOME_PATH, owner->username) < 0) {
+                     HOME_ROOT, owner->username) < 0) {
                 *errnop = errno;
                 return NSS_STATUS_UNAVAIL;
         }
