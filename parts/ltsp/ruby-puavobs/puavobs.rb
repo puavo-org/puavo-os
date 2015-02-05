@@ -287,4 +287,16 @@ EOF
     end
   end
 
+  def self.get_org_json()
+    puavo_domain = File.read('/etc/puavo/domain').strip()
+    puavo_ldap_dn = File.read('/etc/puavo/ldap/dn').strip()
+    puavo_ldap_password = File.read('/etc/puavo/ldap/password').strip()
+    response = HTTP
+      .accept(:json)
+      .auth(self.basic_auth(puavo_ldap_dn, puavo_ldap_password))
+      .get(self.get_api_url("/v3/organisations/#{puavo_domain}"))
+    self.check_response_code(response.code)
+    JSON.parse(response.body)
+  end
+
 end
