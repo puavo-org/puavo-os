@@ -98,7 +98,8 @@ XS-Ruby-Versions: ruby1.9.1
 Depends: ${shlibs:Depends}, ${misc:Depends},
  ruby-bundler,
  ruby-highline,
- ruby1.9.1
+ ruby1.9.1,
+ puavo-client
 Description: Puavo Bootserver library for Ruby
  This library provides helper functions for common operations done in
  Puavo Bootservers.
