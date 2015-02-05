@@ -17,6 +17,7 @@
 
 /* Standard library includes. */
 #include <stdlib.h>
+#include <unistd.h>
 
 /* Third-party includes. */
 #include <jansson.h>
@@ -194,4 +195,9 @@ struct orgjson_owner *orgjson_get_owner(const struct orgjson *const orgjson,
 size_t orgjson_get_owner_count(const struct orgjson *const orgjson)
 {
         return json_array_size(orgjson->owners);
+}
+
+int orgjson_exists()
+{
+        return access(ORGJSON_PATH, F_OK) == 0;
 }

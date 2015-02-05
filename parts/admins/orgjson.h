@@ -53,4 +53,6 @@ struct orgjson_owner *orgjson_get_owner(const orgjson_t *orgjson,
                                         struct orgjson_error *error);
 size_t orgjson_get_owner_count(const orgjson_t *orgjson);
 
+int orgjson_exists();
+
 #endif /* ORGJSON_H */
