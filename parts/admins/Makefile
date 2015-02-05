@@ -10,13 +10,13 @@ INSTALL_DATA = $(INSTALL) -m 644
 all: $(binaries)
 
 puavoadmins-validate-orgjson: puavoadmins-validate-orgjson.o orgjson.o
-	gcc -o $@ $^ -ljansson
+	gcc -o $@ $^ -ljansson -lm
 
 puavoadmins-ssh-public-keys: puavoadmins-ssh-public-keys.o orgjson.o
-	gcc -o $@ $^ -ljansson
+	gcc -o $@ $^ -ljansson -lm
 
 libnss_puavoadmins.so.2: passwd.o group.o orgjson.o
-	gcc -shared -o $@ -Wl,-soname,$@ $^ -ljansson
+	gcc -shared -o $@ -Wl,-soname,$@ $^ -ljansson -lm
 
 %.o: %.c %.h log.h
 	gcc -g -fPIC -std=gnu99 -Wall -Wextra -c $< -o $@

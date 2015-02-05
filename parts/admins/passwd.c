@@ -17,6 +17,7 @@
 
 /* Standard library includes. */
 #include <errno.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <nss.h>
@@ -43,6 +44,7 @@ static enum nss_status fill_passwd(const struct orgjson_owner *const owner,
         size_t pw_name_size;
         size_t pw_gecos_size;
         size_t pw_dir_size;
+        size_t uid_len;
 
         char *pw_name;
         char *pw_gecos;
@@ -51,7 +53,8 @@ static enum nss_status fill_passwd(const struct orgjson_owner *const owner,
         pw_name_size = strlen(owner->username) + 1;
         pw_gecos_size = (strlen(owner->first_name) + 1
                          + strlen(owner->last_name) + 1);
-        pw_dir_size = strlen(HOME_ROOT) + strlen(owner->username) + 1;
+        uid_len = floor(log10(owner->uid_number)) + 1;
+        pw_dir_size = strlen(HOME_ROOT) + uid_len + 1;
 
         if ((pw_name_size + pw_gecos_size + pw_dir_size) > bufsize) {
                 *errnop = ERANGE;
@@ -72,8 +75,8 @@ static enum nss_status fill_passwd(const struct orgjson_owner *const owner,
         }
 
         pw_dir = pw_gecos + pw_gecos_size;
-        if (snprintf(pw_dir, pw_dir_size, "%s%s",
-                     HOME_ROOT, owner->username) < 0) {
+        if (snprintf(pw_dir, pw_dir_size, "%s%d",
+                     HOME_ROOT, owner->uid_number) < 0) {
                 *errnop = errno;
                 return NSS_STATUS_UNAVAIL;
         }
