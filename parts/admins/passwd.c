@@ -102,6 +102,12 @@ enum nss_status _nss_puavoadmins_getpwuid_r(const uid_t uid,
         enum nss_status retval;
         struct orgjson_error error;
 
+        /* If the orgjson does not exist, puavoadmins is empty. */
+        if (!orgjson_exists()) {
+                *errnop = ENOENT;
+                return NSS_STATUS_NOTFOUND;
+        }
+
         orgjson = orgjson_load(&error);
         if (!orgjson) {
                 log(LOG_ERR, "failed to load puavoadmins passwd database: %s",
@@ -149,6 +155,12 @@ enum nss_status _nss_puavoadmins_getpwnam_r(const char *const name,
         enum nss_status retval;
         struct orgjson_error error;
 
+        /* If the orgjson does not exist, puavoadmins is empty. */
+        if (!orgjson_exists()) {
+                *errnop = ENOENT;
+                return NSS_STATUS_NOTFOUND;
+        }
+
         orgjson = orgjson_load(&error);
         if (!orgjson) {
                 log(LOG_ERR, "failed to load puavoadmins passwd database: %s",
@@ -188,6 +200,12 @@ out:
 
 static inline int passwd_init(void) {
         struct orgjson_error error;
+
+        /* If the orgjson does not exist, puavoadmins is empty. */
+        if (!orgjson_exists()) {
+		g_orgjson = NULL;
+		return 0;
+        }
 
         g_orgjson = orgjson_load(&error);
         if (!g_orgjson) {
@@ -230,6 +248,14 @@ enum nss_status _nss_puavoadmins_getpwent_r(struct passwd *const pw,
                 *errnop = errno;
                 return NSS_STATUS_UNAVAIL;
         }
+
+	/* Even after a successful passwd_init(), g_orgjson can be
+	 * NULL if the database did not exists. Which means
+	 * puavoadmins is empty. */
+	if (!g_orgjson) {
+		*errnop = ENOENT;
+		return NSS_STATUS_NOTFOUND;
+	}
 
         while (g_ent_index < orgjson_get_owner_count(g_orgjson)) {
                 struct orgjson_owner owner;
