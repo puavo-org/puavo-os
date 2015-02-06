@@ -18,9 +18,17 @@
 
 ## Standard library modules.
 require 'fileutils'
+require 'set'
 
 ## Third-party modules.
+require 'highline/import'
 require 'puavobs'
+
+def diff_admins(org_json1, org_json2)
+  usernames1 = Set.new(org_json1['owners'].map { |o| o['username'] })
+  usernames2 = Set.new(org_json2['owners'].map { |o| o['username'] })
+  [usernames1 - usernames2, usernames2 - usernames1]
+end
 
 if !File.new('/run/puavoadmins.lock', 'w').flock(File::LOCK_NB | File::LOCK_EX) then
   STDERR.puts('ERROR: puavoadmins-update is already running')
@@ -50,6 +58,23 @@ begin
   FileUtils.mkdir_p(puavoadmins_home_root)
   FileUtils.chown(0, 'puavoadmins', puavoadmins_home_root)
   File.chmod(0750, puavoadmins_home_root)
+
+  if File.exists?(org_json_filepath) then
+    system('/usr/lib/puavoadmins-validate-orgjson', org_json_filepath)
+    if !$?.success? then
+      exit(1)
+    end
+    org_json = JSON.parse(File.read(org_json_filepath))
+    deleted_admins, new_admins = diff_admins(org_json, new_org_json)
+
+    exit(0) if deleted_admins.empty? and new_admins.empty?
+
+    puts "The list of Puavo administrators has changed:"
+    deleted_admins.each { |a| puts "\e[31m- #{a}\e[0m" }
+    new_admins.each { |a| puts "\e[32m+ #{a}\e[0m" }
+
+    exit(0) unless agree('Accept these changes? ')
+  end
 
   new_org_json['owners'].each do |owner|
     uid_number = owner['uid_number']
