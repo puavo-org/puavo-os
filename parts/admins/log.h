@@ -1,4 +1,4 @@
-/* nss-puavoadmins
+/* puavoadmins
  * Copyright (C) 2014, 2015 Opinsys
  *
  * This program is free software: you can redistribute it and/or modify
