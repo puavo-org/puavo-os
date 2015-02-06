@@ -404,10 +404,12 @@ class packages {
     , 'pyqt4-dev-tools'
     , 'python-doc'
     , 'python-pygame'
+    , 'python-renpy'
     , 'pythontracer'
     , 'qt4-designer'
     , 'qt4-doc'
     , 'racket'
+    , 'renpy'
     , 'scratch'
     , 'spe' ]:
       tag => [ 'programming', 'ubuntu', ];
