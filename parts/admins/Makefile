@@ -32,7 +32,7 @@ install: installdirs all
 		libnss_puavoadmins.so.2 \
 		puavoadmins-mkhomes \
 		puavoadmins-ssh-authorized-keys \
-		puavoadmins-update \
+		puavoadmins-update-orgjson \
 		puavoadmins-validate-orgjson
 
 clean:
