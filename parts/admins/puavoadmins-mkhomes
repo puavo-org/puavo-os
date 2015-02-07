@@ -1,0 +1,52 @@
+#!/usr/bin/env ruby1.9.1
+
+## Copyright (C) 2014, 2015 Opinsys
+##
+## This program is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 2 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+##
+
+## Standard library modules.
+require 'fileutils'
+
+## Third-party modules.
+require 'json'
+
+puavoadmins_home_root = '/puavoadmins'
+
+FileUtils.mkdir_p(puavoadmins_home_root)
+FileUtils.chown(0, 'puavoadmins', puavoadmins_home_root)
+File.chmod(0750, puavoadmins_home_root)
+
+org_json = JSON.parse(File.read('/etc/puavo/org.json'))
+
+org_json['owners'].each do |owner|
+  uid_number = owner['uid_number']
+
+  home_dir = "#{puavoadmins_home_root}/#{uid_number}"
+  next if Dir.exists?(home_dir)
+
+  new_home_dir = "#{home_dir}.new"
+  begin
+    Dir.mkdir(new_home_dir, 0750)
+    FileUtils.cp(['/etc/skel/.bash_logout',
+                  '/etc/skel/.bashrc',
+                  '/etc/skel/.profile'],
+                 new_home_dir)
+    FileUtils.chown_R(uid_number, owner['gid_number'], new_home_dir)
+    File.rename(new_home_dir, home_dir)
+  ensure
+    FileUtils.rm_rf(new_home_dir)
+  end
+
+end

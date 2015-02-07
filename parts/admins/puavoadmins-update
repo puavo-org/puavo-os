@@ -37,7 +37,6 @@ if !File.new('/run/puavoadmins.lock', 'w').flock(File::LOCK_NB | File::LOCK_EX) 
 end
 
 org_json_filepath = '/etc/puavo/org.json'
-puavoadmins_home_root = '/puavoadmins'
 
 new_org_json = PuavoBS.get_org_json()
 
@@ -55,10 +54,6 @@ begin
     exit(1)
   end
 
-  FileUtils.mkdir_p(puavoadmins_home_root)
-  FileUtils.chown(0, 'puavoadmins', puavoadmins_home_root)
-  File.chmod(0750, puavoadmins_home_root)
-
   if File.exists?(org_json_filepath) then
     system('/usr/lib/puavoadmins-validate-orgjson', org_json_filepath)
     if !$?.success? then
@@ -74,27 +69,6 @@ begin
     new_admins.each { |a| puts "\e[32m+ #{a}\e[0m" }
 
     exit(0) unless agree('Accept these changes? ')
-  end
-
-  new_org_json['owners'].each do |owner|
-    uid_number = owner['uid_number']
-
-    home_dir = "#{puavoadmins_home_root}/#{uid_number}"
-    next if Dir.exists?(home_dir)
-
-    new_home_dir = "#{home_dir}.new"
-    begin
-      Dir.mkdir(new_home_dir, 0750)
-      FileUtils.cp(['/etc/skel/.bash_logout',
-                    '/etc/skel/.bashrc',
-                    '/etc/skel/.profile'],
-                   new_home_dir)
-      FileUtils.chown_R(uid_number, owner['gid_number'], new_home_dir)
-      File.rename(new_home_dir, home_dir)
-    ensure
-      FileUtils.rm_rf(new_home_dir)
-    end
-
   end
 
   File.rename(new_org_json_filepath, org_json_filepath)

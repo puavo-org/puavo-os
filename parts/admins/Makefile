@@ -30,6 +30,7 @@ installdirs:
 install: installdirs all
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(prefix)/lib \
 		libnss_puavoadmins.so.2 \
+		puavoadmins-mkhomes \
 		puavoadmins-ssh-authorized-keys \
 		puavoadmins-update \
 		puavoadmins-validate-orgjson
