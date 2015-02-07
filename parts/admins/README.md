@@ -37,3 +37,19 @@ Compile and install
 
     make
     sudo make install prefix=/usr
+
+Configuration
+-------------
+
+1. Run /usr/lib/puavoadmins-update-orgjson to fetch
+   /etc/puavo/org.json
+
+2. Add puavoadmins to passwd and group databases sources by modifying
+   /etc/nsswitch.conf.
+
+3. Optionally add following options to /etc/ssh/sshd_config:
+
+     AuthorizedKeysCommand /usr/lib/puavoadmins-ssh-authorized-keys
+     AuthorizedKeysCommandUser nobody
+
+   And then restart/reload sshd.
