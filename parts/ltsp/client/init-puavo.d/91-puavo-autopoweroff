@@ -1,7 +1,7 @@
 puavo_autopoweroff_mode=$(jq -r .autopoweroff_mode /etc/puavo/device.json)
 
 case "$puavo_autopoweroff_mode" in
-  custom|default)
+  custom|default|null|'')
     puavo_daytime_start_hour=$(jq -r .daytime_start_hour \
                                       /etc/puavo/device.json)
     puavo_daytime_end_hour=$(jq -r .daytime_end_hour /etc/puavo/device.json)
@@ -33,6 +33,6 @@ case "$puavo_autopoweroff_mode" in
 	EOF
     ;;
   *)
-    # "null" or some such we do not understand, so do nothing
+    # something we do not understand, so do nothing
     ;;
 esac
