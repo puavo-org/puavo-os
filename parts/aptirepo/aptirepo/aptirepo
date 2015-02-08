@@ -34,10 +34,7 @@ def _importdeb(repo, args):
 
     repo.import_deb(args.debfile, codename=args.codename, section=args.section)
 
-    repo.update_dists()
-
-    if args.sign_releases:
-        repo.sign_releases()
+    repo.update_dists(do_sign=args.sign_releases)
 
 def _importchanges(repo, args):
     if not args.changesfile.endswith(".changes"):
@@ -48,15 +45,10 @@ def _importchanges(repo, args):
 
     repo.import_changes(args.changesfile, codename=args.codename)
 
-    repo.update_dists()
-
-    if args.sign_releases:
-        repo.sign_releases()
+    repo.update_dists(do_sign=args.sign_releases)
 
 def _updatedists(repo, args):
-    repo.update_dists(do_prune=args.prune)
-    if args.sign_releases:
-        repo.sign_releases()
+    repo.update_dists(do_prune=args.prune, do_sign=args.sign_releases)
 
 def main():
     parser = argparse.ArgumentParser()

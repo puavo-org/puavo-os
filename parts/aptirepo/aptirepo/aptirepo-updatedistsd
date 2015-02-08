@@ -67,8 +67,7 @@ def _work(repodirs, repodirs_rlock, **aptirepo_kwargs):
             # succesfully.
             print("Aptirepo repository '%s' was locked" % repodir, file=sys.stderr)
             continue
-        repo.update_dists()
-        repo.sign_releases()
+        repo.update_dists(do_sign=True)
 
         with repodirs_rlock:
             # Everything went fine, remove the just updated repodir

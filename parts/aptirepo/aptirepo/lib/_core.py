@@ -250,7 +250,7 @@ class Aptirepo:
 
             self.__copy_to_pool(filepath, codename, source_name, section)
 
-    def update_dists(self, do_prune=False):
+    def update_dists(self, do_prune=False, do_sign=False):
         try:
             old_dists_dirname = "dists"
             new_dists_dirname = "dists.tmp"
@@ -277,6 +277,9 @@ class Aptirepo:
                 self.__write_release(codename, comps, archs,
                                      new_dists_dirname)
 
+            if do_sign:
+                self.sign_releases(new_dists_dirname)
+
             # Finally, do the real updating.
             try:
                 shutil.rmtree(self.__join(old_dists_dirname))
@@ -298,9 +301,9 @@ class Aptirepo:
                 if e.errno != errno.ENOENT:
                     raise e
 
-    def sign_releases(self):
+    def sign_releases(self, dists_dirname="dists"):
         for codename in self.__dists:
-            release_path = self.__join("dists", codename, "Release")
+            release_path = self.__join(dists_dirname, codename, "Release")
             signature_path = release_path + ".gpg"
             tmp_signature_path = release_path + ".gpg.tmp"
             try:
