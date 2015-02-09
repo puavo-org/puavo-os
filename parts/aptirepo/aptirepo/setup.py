@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # aptirepo - Simple APT Repository Tool
-# Copyright (C) 2013 Tuomas Räsänen
+# Copyright (C) 2013,2014,2015 Opinsys
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
