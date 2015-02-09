@@ -21,3 +21,10 @@ homepage=getenv("HOMEPAGE");
 if (homepage) {
   lockPref("browser.startup.homepage", homepage);
 }
+
+gfx_xrender_enabled = getenv("FIREFOX_LOCKPREF_GFX_XRENDER_ENABLED");
+if (gfx_xrender_enabled === "false") {
+    lockPref("gfx.xrender.enabled", false);
+} else if (gfx_xrender_enabled === "true") {
+    lockPref("gfx.xrender.enabled", true);
+}
