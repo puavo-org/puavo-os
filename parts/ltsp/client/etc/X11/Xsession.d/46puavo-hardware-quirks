@@ -1,5 +1,5 @@
 firefox_gfx_xrender_incapables=$(
-    for pci_id in 8086:2572; do
+    for pci_id in 8086:2572 8086:2562; do
         lspci -d "${pci_id}"
     done
 )
