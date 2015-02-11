@@ -83,7 +83,7 @@ static enum nss_status fill_passwd(const struct orgjson_owner *const owner,
 
         pw->pw_name   = pw_name;
         pw->pw_uid    = owner->uid_number;
-        pw->pw_gid    = owner->gid_number;
+        pw->pw_gid    = PUAVOADMINS_GRGID;
         pw->pw_passwd = "x";
         pw->pw_gecos  = pw_gecos;
         pw->pw_dir    = pw_dir;
