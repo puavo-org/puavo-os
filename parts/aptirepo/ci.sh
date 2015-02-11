@@ -9,10 +9,12 @@ set -x
 sudo apt-get update
 sudo apt-get install -y --force-yes puavo-devscripts
 
-puavo-build-debian-dir
-sudo puavo-install-deps debian/control
-puavo-dch $(cat VERSION)
-puavo-debuild
+sudo puavo-install-deps debian.default/control
+if [ "${CI_TARGET_ARCH}" = i386 ]; then
+    make deb
+else
+    make deb-binary-arch
+fi
 
 sudo dpkg -i ../aptirepo-upload*.deb
 sudo apt-get install -f -y --force-yes
