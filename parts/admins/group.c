@@ -27,9 +27,6 @@
 #include "common.h"
 #include "orgjson.h"
 
-#define PUAVOADMINS_GRNAM "puavoadmins"
-#define PUAVOADMINS_GRGID 555
-
 static int g_ent_index;
 
 enum nss_status _nss_puavoadmins_setgrent(void)

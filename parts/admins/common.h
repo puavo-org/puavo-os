@@ -21,6 +21,9 @@
 /* Standard library includes. */
 #include <syslog.h>
 
+#define PUAVOADMINS_GRNAM "puavoadmins"
+#define PUAVOADMINS_GRGID 555
+
 #define log(level, format, args...)                     \
         syslog(level | LOG_AUTHPRIV, format, args);
 
