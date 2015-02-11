@@ -18,10 +18,10 @@ puavoadmins-ssh-authorized-keys: puavoadmins-ssh-authorized-keys.o orgjson.o
 libnss_puavoadmins.so.2: passwd.o group.o orgjson.o
 	gcc -shared -o $@ -Wl,-soname,$@ $^ -ljansson -lm
 
-%.o: %.c %.h log.h
+%.o: %.c %.h common.h
 	gcc -g -fPIC -std=gnu99 -Wall -Wextra -c $< -o $@
 
-%.o: %.c log.h
+%.o: %.c common.h
 	gcc -g -fPIC -std=gnu99 -Wall -Wextra -c $< -o $@
 
 installdirs:

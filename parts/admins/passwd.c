@@ -26,7 +26,7 @@
 #include <sys/types.h>
 
 /* Local includes. */
-#include "log.h"
+#include "common.h"
 #include "orgjson.h"
 
 static size_t g_ent_index;

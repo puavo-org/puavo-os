@@ -24,7 +24,7 @@
 #include <sys/types.h>
 
 /* Local includes. */
-#include "log.h"
+#include "common.h"
 #include "orgjson.h"
 
 #define PUAVOADMINS_GRNAM "puavoadmins"
