@@ -165,6 +165,7 @@ case "$puavo_hosttype" in
 
     puavo_rm_system_services="
       $puavo_rm_system_services
+      autopoweroff
       cron
       eno
       laptop-mode
