@@ -45,6 +45,7 @@ while getopts "r:b:" flag; do
                 exit 1
             fi
             APTIREPO_CODENAME="${OPTARG}"
+            ;;
         ?)
             exit 1
             ;;
