@@ -7,7 +7,7 @@ set -x
 . /etc/environment
 
 sudo apt-get update
-sudo apt-get install -y --force-yes puavo-devscripts
+sudo apt-get install -y --force-yes puavo-devscripts aptirepo-upload
 
 sudo puavo-install-deps debian.default/control
 if [ "${CI_TARGET_ARCH}" = i386 ]; then
