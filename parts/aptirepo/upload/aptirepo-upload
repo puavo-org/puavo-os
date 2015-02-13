@@ -23,6 +23,7 @@ parse_multiline()
 
 APTIREPO_REMOTE=${APTIREPO_REMOTE:-}
 APTIREPO_BRANCH=''
+APTIREPO_CODENAME=''
 
 while getopts "r:b:" flag; do
     case $flag in
@@ -38,6 +39,12 @@ while getopts "r:b:" flag; do
             # TODO: validate input
             APTIREPO_BRANCH="${OPTARG}"
             ;;
+        c)
+            if [ -n "${APTIREPO_CODENAME}" ]; then
+                echo '-c can be used only once' >&2
+                exit 1
+            fi
+            APTIREPO_CODENAME="${OPTARG}"
         ?)
             exit 1
             ;;
@@ -52,7 +59,7 @@ shift $((OPTIND-1))
 
 if [ $# -ne 1 ]; then
     echo "wrong number of arguments" >&2
-    echo "Usage: $(basename $0) [-r REMOTE] [-b BRANCH] FILE" >&2
+    echo "Usage: $(basename $0) [-r REMOTE] [-b BRANCH] [-c CODENAME] FILE" >&2
     exit 1
 fi
 
@@ -66,6 +73,10 @@ curl_args=""
 
 if [ "${APTIREPO_BRANCH}" != "" ]; then
     curl_args="$curl_args -F branch=${APTIREPO_BRANCH}"
+fi
+
+if [ "${APTIREPO_CODENAME}" != "" ]; then
+    curl_args="$curl_args -F codename=${APTIREPO_CODENAME}"
 fi
 
 cd $(dirname "${changes_file}")
