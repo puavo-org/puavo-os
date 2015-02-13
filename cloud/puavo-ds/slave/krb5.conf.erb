@@ -40,7 +40,7 @@
 		ldap_kadmind_dn = <%= @ldap_binddn %>
 		ldap_kdc_dn = <%= @ldap_binddn %>
 		ldap_kerberos_container_dn = ou=Kerberos Realms,<%= @ldap_base %>
-		ldap_servers = ldapi:///
+		ldap_servers = ldapi:/// ldaps://<%= @ldap_master %>
 		ldap_service_password_file = /etc/krb5.secrets
 	}
 
