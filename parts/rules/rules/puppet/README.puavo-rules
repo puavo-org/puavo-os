@@ -112,6 +112,10 @@ packages
 promethean
     Add support for Promethean whiteboards.
 
+puavo
+    Contains a plugin for getting some variables from /etc/puavo into
+    puppet variables.
+
 puavo_external_files
     Some helper definitions for setting up links to /state/external_files.
 
