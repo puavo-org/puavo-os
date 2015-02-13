@@ -1,5 +1,6 @@
 /var/log/hosts/*.log {
 	compress
+	copytruncate
 	missingok
 	nocreate
 	notifempty
