@@ -5,6 +5,7 @@ class bootserver_munin {
     '/etc/munin/munin-node.conf':
       content => template('bootserver_munin/munin-node.conf'),
       mode    => 0644,
+      notify  => Service['munin-node'],
       require => Package['munin-node'];
 
     '/etc/nginx/sites-available/munin':
