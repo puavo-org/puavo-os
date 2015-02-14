@@ -22,4 +22,9 @@ class bootserver_munin {
       ensure => present;
   }
 
+  service {
+    'munin-node':
+      ensure => running;
+  }
+
 }
