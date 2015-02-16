@@ -186,7 +186,7 @@ fi
 srcfile_G=$(readlink -e $1)
 dstfile_G=$(readlink -f $2)
 
-if $force_G || [ -f "${dstfile_G}" ]; then
+if ! $force_G && [ -f "${dstfile_G}" ]; then
     echo "error: destination file '${dstfile_G}' already exists, use --force to overwrite" >&2
     exit 1
 fi
