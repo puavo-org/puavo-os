@@ -189,6 +189,7 @@ case @puavo_device_type
     write_config("/etc/init/gssd.conf", "userprincipal")
     write_config("/etc/cups/client.conf")
     write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
+    write_config("/etc/rsyslog/rsyslog.conf")
     write_config("/etc/rsyslog.d/send_to_syslogserver.conf")
 
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
@@ -214,6 +215,7 @@ case @puavo_device_type
     write_config("/etc/cups/cupsd.conf")
     write_config("/etc/security/group.conf")
     write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
+    write_config("/etc/rsyslog/rsyslog.conf")
     write_config("/etc/rsyslog.d/send_to_syslogserver.conf")
 
     if @tags.include?("webkiosk") then
