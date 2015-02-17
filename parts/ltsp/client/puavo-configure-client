@@ -157,6 +157,12 @@ def try_writing_puavomounts()
     File.open('/var/lib/puavo-desktop/puavomounts', 'w') do |f|
       f.print(autofs_configuration)
     end
+
+    begin
+      Dir.mkdir('/etc/auto.master.d')
+    rescue Errno::EEXIST
+    end
+
     File.open('/etc/auto.master.d/puavomounts.autofs', 'w') do |f|
       f.print("/- /var/lib/puavo-desktop/puavomounts\n")
     end
