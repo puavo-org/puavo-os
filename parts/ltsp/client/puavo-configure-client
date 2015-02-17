@@ -27,7 +27,7 @@ def append_tags_to_environment(tags)
         end
       end
     end
-  rescue Exception => e
+  rescue StandardError => e
     warn "Could not append puavo tags to /etc/environment: #{ e.message }"
   end
 end
@@ -95,7 +95,7 @@ def write_config(filename, version=nil, secure=false)
     end
 
     File.chmod(perm, filename)
-  rescue Exception => e
+  rescue StandardError => e
     $stderr.puts "FAILED to write: #{filename} from /usr/share/puavo-ltsp-client/templates#{template_file}: #{e}"
   end
 end
@@ -166,7 +166,7 @@ def try_writing_puavomounts()
     File.open('/etc/auto.master.d/puavomounts.autofs', 'w') do |f|
       f.print("/- /var/lib/puavo-desktop/puavomounts\n")
     end
-  rescue Exception => e
+  rescue StandardError => e
     warn "Could not write puavomounts autofs configuration: #{ e.message }"
   end
 end
