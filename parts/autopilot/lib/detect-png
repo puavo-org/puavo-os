@@ -37,11 +37,10 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-png=$(readlink -e "$1")
-if [ $? -ne 0 ]; then
+png=$(readlink -e "$1") || {
     echo "E: image '$1' does not exist" >&2
     exit 1
-fi
+}
 
 exitval=1
 workdir=''
