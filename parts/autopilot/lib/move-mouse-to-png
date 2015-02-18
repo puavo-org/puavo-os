@@ -27,13 +27,14 @@ fi
 png=$1
 shift
 
-coords=$(detect-png "${png}" | head -n1)
+coords=$(detect-png "${png}")
 if [ -z "${coords}" ]; then
     echo "E: image '${png}' not detected" >&2
     exit 1
 fi
 
-xte "mousemove ${coords}" || {
+point=$(echo "${coords}" | head -n1)
+xte "mousemove ${point}" || {
     echo "E: failed to move the mouse cursor" >&2
     exit 1
 }
