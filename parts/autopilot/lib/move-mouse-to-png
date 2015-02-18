@@ -24,11 +24,8 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-png=$(readlink -e "$1")
-if [ $? -ne 0 ]; then
-    echo "E: image '$1' does not exist" >&2
-    exit 1
-fi
+png=$1
+shift
 
 coords=$(detect-png "${png}" | head -n1)
 if [ -z "${coords}" ]; then
