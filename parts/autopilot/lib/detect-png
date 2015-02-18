@@ -20,7 +20,9 @@ set -eu
 
 on_exit()
 {
-    local exitval=$?
+    ## No need to short-circuit exit on error anymore: we are already cleaning
+    ## up and exiting.
+    set +e
 
     if [ -n "${workdir}" ]; then
         rm -rf "${workdir}" || exitval=$?
@@ -41,6 +43,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+exitval=1
 workdir=''
 
 # After this point, we are going to make permanent changes, hence we
@@ -58,3 +61,5 @@ scrot screenshot.png || {
 }
 
 visgrep screenshot.png "${png}" | sed -nr 's/^([0-9]+),([0-9]+) .*$/\1 \2/p'
+
+exitval=0
