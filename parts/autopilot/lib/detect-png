@@ -41,6 +41,7 @@ png=$(readlink -e "$1") || {
     echo "E: image '$1' does not exist" >&2
     exit 1
 }
+shift
 
 exitval=1
 workdir=''
