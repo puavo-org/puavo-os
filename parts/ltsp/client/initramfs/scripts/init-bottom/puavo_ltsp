@@ -63,6 +63,11 @@ do_union_mount()
                 -o "upperdir=${cow}/rootdir,lowerdir=/rofs,workdir=${cow}/workdir" \
                 overlayfs "${rootmnt}"
         }
+    elif modprobe overlay; then
+        mkdir "${cow}/rootdir" "${cow}/workdir"
+        mount -t overlay \
+            -o "upperdir=${cow}/rootdir,lowerdir=/rofs,workdir=${cow}/workdir" \
+            overlay "${rootmnt}"
     elif modprobe aufs; then
         mount -t aufs -o "dirs=${cow}=rw:/rofs=ro" aufs "${rootmnt}"
     else
