@@ -16,6 +16,8 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+set -eu
+
 if [ $# -ne 1 ]; then
     echo "E: missing argument" >&2
     echo "Usage: $0 PNG" >&2
