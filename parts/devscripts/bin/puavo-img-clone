@@ -73,11 +73,13 @@ clone_to_ext4()
 
 clone_to_squashfs()
 {
-    rsync -a "${srcrootdir_G}/" "${dstrootdir_G}/" || return $?
     if $do_update_name_G; then
+        rsync -a "${srcrootdir_G}/" "${dstrootdir_G}/" || return $?
         echo "${imgname_G}" >"${dstrootdir_G}/etc/ltsp/this_ltspimage_name" || return $?
+        mksquashfs "${dstrootdir_G}" "${tmpdstfile_G}" -noappend -no-recovery || return $?
+    else
+        mksquashfs "${srcrootdir_G}" "${tmpdstfile_G}" -noappend -no-recovery || return $?
     fi
-    mksquashfs "${dstrootdir_G}" "${tmpdstfile_G}" -noappend -no-recovery || return $?
     mv "${tmpdstfile_G}" "${dstfile_G}"
 }
 
