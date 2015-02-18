@@ -201,7 +201,7 @@ dstdir_G=$(dirname "${dstfile_G}")
 trap on_exit EXIT
 
 srcrootdir_G=$(mktemp -d)
-dstrootdir_G=$(mktemp -d)
+dstrootdir_G=$(mktemp -d --tmpdir="${dstdir_G}")
 tmpdstfile_G=$(mktemp --tmpdir="${dstdir_G}")
 
 if $do_chmod_G; then
