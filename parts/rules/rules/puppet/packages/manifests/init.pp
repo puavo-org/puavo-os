@@ -726,7 +726,8 @@ class packages {
     , 'icedtea-7-plugin'
     , 'liferea'
     , 'openjdk-6-jdk'
-    , 'openjdk-6-jre' ]:
+    , 'openjdk-6-jre'
+    , 'php5-cli' ]:
       tag => [ 'web', 'ubuntu', ];
   }
 
