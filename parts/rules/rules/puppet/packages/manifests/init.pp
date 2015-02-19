@@ -727,7 +727,9 @@ class packages {
     , 'liferea'
     , 'openjdk-6-jdk'
     , 'openjdk-6-jre'
-    , 'php5-cli' ]:
+    , 'php5-cli'
+    , 'php5-sqlite'
+    , 'sqlite3' ]:
       tag => [ 'web', 'ubuntu', ];
   }
 
