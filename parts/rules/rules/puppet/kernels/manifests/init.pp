@@ -43,7 +43,14 @@ class kernels {
                  }
   }
 
-  $edge_kernel   = $default_kernel
+  $edge_kernel = $lsbdistcodename ? {
+    'precise' => $default_kernel,
+    'trusty'  => $architecture ? {
+                   'i386'  => '3.18.7.opinsys1',
+                   default => $default_kernel,
+                 }
+  }
+
   $stable_kernel = $default_kernel
 
   case $lsbdistcodename {
