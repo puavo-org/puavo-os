@@ -114,6 +114,7 @@ while [ "${ntries}" -lt "${try_times}" ]; do
 
     xy=$(visgrep "${screenshot}" "${png}") || {
         ntries=$((ntries + 1))
+        sleep 1
         continue
     }
 
