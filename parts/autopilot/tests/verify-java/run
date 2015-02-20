@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -eu
+
+this_file=$(readlink -e "$0")
+this_dir=$(dirname "${this_file}")
+
+## Ensure Firefox is visible to before searching images from the page.
+firefox 'https://www.java.com/en/download/installed.jsp?detect=jre' &
+timeout 10 xdotool search --sync --classname Navigator
+wmctrl -a firefox
+
+## The verification page requires activation of the Java plugin
+xy=$(pnggrep --center --try-times 10 "${this_dir}/activate-button.png")
+xdotool mousemove $(echo "${xy}" | head -n1) click 1
+
+## Firefox asks yet another confirmation before activating the Java plugin.
+xdotool sleep 2 key Tab Tab Tab Return
+
+## Java itself asks user to allow the verification applet to run.
+xy=$(pnggrep --try-times 10 "${this_dir}/run-button.png")
+xdotool mousemove $(echo "${xy}" | head -n1) click 1
+
+pnggrep --try-times 20 "${this_dir}/success.png"

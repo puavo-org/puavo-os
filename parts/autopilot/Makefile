@@ -18,6 +18,7 @@ all:
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-autopilot/tests
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
 .PHONY: install
@@ -34,6 +35,9 @@ install: installdirs
 		bin/puavo-autopilot-lightdm-login-guest \
 		bin/puavo-autopilot-logger \
 		bin/puavo-autopilot-session
+
+	cp -a -t $(DESTDIR)$(datarootdir)/puavo-autopilot/tests \
+		tests/*
 
 .PHONY : deb
 deb :
