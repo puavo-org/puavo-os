@@ -7,7 +7,7 @@ bindir = $(exec_prefix)/bin
 datarootdir = $(prefix)/share
 sysconfdir = $(prefix)/etc
 
-INSTALL = install
+INSTALL = install -p
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
