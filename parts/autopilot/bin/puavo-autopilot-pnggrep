@@ -132,9 +132,15 @@ while [ "${ntries}" -lt "${try_times}" ]; do
     }
 
     xy=$(visgrep "${screenshot}" "${png}") || {
-        ntries=$((ntries + 1))
-        sleep "${try_interval}s"
-        continue
+        case $? in
+            1)
+                ;;
+            *)
+                ntries=$((ntries + 1))
+                sleep "${try_interval}s"
+                continue
+                ;;
+        esac
     }
 
     echo "${xy}" | sed -n -r 's/^([0-9]+),([0-9]+) .*$/\1 \2/p'
