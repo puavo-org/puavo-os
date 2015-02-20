@@ -8,7 +8,10 @@ Homepage: https://github.com/opinsys/puavo-autopilot
 
 Package: puavo-autopilot
 Architecture: all
-Depends: ${misc:Depends}, ruby1.9.1, imagemagick, xautomation
+Depends: ${misc:Depends},
+ imagemagick,
+ ruby1.9.1,
+ xautomation
 Description: Automatic Puavo Desktop testing tool
  Provides scripts for testing various parts of Puavo desktop.
  .
