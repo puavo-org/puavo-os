@@ -40,6 +40,7 @@ usage_error()
     return 1
 }
 
+center=
 try_interval=
 try_times=
 
@@ -57,9 +58,15 @@ Options:
   -h, --help                     print help and exit
   -n N, --try-times N            try at most N times before giving up
   -i SECS, --try-interval SECS   try detection with SECS second intervals
+  -c, --center                   print center coordinates of the images
 
 EOF
             exit 0
+            ;;
+        -c|--center)
+            [ -z "${center}" ] || usage_error "option $1 is already given"
+            center=true
+            shift
             ;;
         -i|--try-interval)
             [ -z "${try_interval}" ] || usage_error "option $1 is already given"
@@ -101,6 +108,7 @@ EOF
 done
 
 ## Default values for parameters.
+[ -n "${center}" ] || center=false
 [ -n "${try_interval}" ] || try_interval=1
 [ -n "${try_times}" ] || try_times=1
 
@@ -113,6 +121,11 @@ png=$(readlink -e "$1") || {
     exit 1
 }
 shift
+
+if ${center}; then
+    png_width=$(identify -format %w "${png}")
+    png_height=$(identify -format %h "${png}")
+fi
 
 exitval=1
 screenshot=
@@ -142,8 +155,17 @@ while [ "${ntries}" -lt "${try_times}" ]; do
                 ;;
         esac
     }
+    xy=$(echo "${xy}" | sed -n -r 's/^([0-9]+),([0-9]+) .*$/\1 \2/p')
 
-    echo "${xy}" | sed -n -r 's/^([0-9]+),([0-9]+) .*$/\1 \2/p'
+    if ${center}; then
+        xy=$(echo "${xy}" | while read x y; do
+                                x=$(echo "${x} + ${png_width} / 2" | bc)
+                                y=$(echo "${y} + ${png_height} / 2" | bc)
+                                echo "${x} ${y}"
+                            done)
+    fi
+
+    echo "${xy}"
     break
 done
 
