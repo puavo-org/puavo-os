@@ -31,13 +31,13 @@ install: installdirs
 		puavo-autopilot-session.desktop
 
 	$(INSTALL) -t $(DESTDIR)$(bindir) \
+		bin/puavo-autopilot-detect-png \
 		bin/puavo-autopilot-lightdm-login \
 		bin/puavo-autopilot-lightdm-login-guest \
 		bin/puavo-autopilot-logger \
 		bin/puavo-autopilot-session
 
 	$(INSTALL) -t $(DESTDIR)$(libdir)/puavo-autopilot \
-		lib/detect-png \
 		lib/move-mouse-to-png
 
 .PHONY : deb
