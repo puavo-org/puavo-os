@@ -666,15 +666,9 @@ class LdapAcl
 															  Set.externalservice_orginfo),			Rule.perms('+sxd', '*'),		],
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ LdapDn.new.dn,		attrs(%w(owner)),			Rule.write(Set.owner_and_user),			  Rule.read(Set.all_admins,
-															  PuavoUid.puavo,
-															  PuavoUid.puavo_ticket,
-															  PuavoUid.puppet,
-															  PuavoUid.monitor,
-															  Set.externalservice_orginfo),								],
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ LdapDn.new.dn,		attrs(%w(puavoDomain
-					 puavoPuppetHost)),								  Rule.read(Set.all_admins,
+      [ LdapDn.new.dn,		attrs(%w(owner
+					 puavoDomain
+					 puavoPuppetHost)),							Rule.read(Set.all_admins,
 															  PuavoUid.puavo,
 															  PuavoUid.puavo_ticket,
 															  PuavoUid.puppet,
