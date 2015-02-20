@@ -69,7 +69,7 @@ if [ $# -ne 1 ]; then
 fi
 
 png=$(readlink -e "$1") || {
-    echo "E: image '$1' does not exist" >&2
+    echo "error: image '$1' does not exist" >&2
     exit 1
 }
 shift
@@ -87,7 +87,7 @@ workdir=$(mktemp -d)
 cd "${workdir}"
 
 escrotum screenshot.png >/dev/null || {
-    echo "E: failed to take a screenshot" >&2
+    echo "error: failed to take a screenshot" >&2
     exit 1
 }
 
