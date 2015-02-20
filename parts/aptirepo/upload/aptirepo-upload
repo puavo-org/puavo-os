@@ -25,7 +25,7 @@ APTIREPO_REMOTE=${APTIREPO_REMOTE:-}
 APTIREPO_BRANCH=''
 APTIREPO_CODENAME=''
 
-while getopts "r:b:" flag; do
+while getopts "r:b:c:" flag; do
     case $flag in
         r)
             # TODO: validate input
