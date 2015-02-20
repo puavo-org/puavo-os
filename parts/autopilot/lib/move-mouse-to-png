@@ -27,7 +27,7 @@ fi
 png=$1
 shift
 
-coords=$(puavo-autopilot-pnggrep "${png}")
+coords=$(pnggrep "${png}")
 if [ -z "${coords}" ]; then
     echo "E: image '${png}' not detected" >&2
     exit 1

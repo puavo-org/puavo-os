@@ -31,7 +31,7 @@ install: installdirs
 		puavo-autopilot-session.desktop
 
 	$(INSTALL) -t $(DESTDIR)$(bindir) \
-		bin/puavo-autopilot-pnggrep \
+		bin/pnggrep \
 		bin/puavo-autopilot-lightdm-login \
 		bin/puavo-autopilot-lightdm-login-guest \
 		bin/puavo-autopilot-logger \
