@@ -38,6 +38,7 @@ usage_error()
     return 1
 }
 
+try_interval=
 try_times=
 
 while [ $# -gt 0 ]; do
@@ -50,11 +51,25 @@ Usage: $0 PNG
 Try to find the given image from the current screen.
 
 Options:
-    -h, --help                   print help and exit
-    -n N, --try-times N          try at most N times before giving up
+  -h, --help                     print help and exit
+  -n N, --try-times N            try at most N times before giving up
+  -i SECS, --try-interval SECS   try detection with SECS second intervals
 
 EOF
             exit 0
+            ;;
+        -i|--try-interval)
+            [ -z "${try_interval}" ] || usage_error "option $1 is already given"
+            [ $# -ge 2 ] || usage_error "missing value for option $1"
+            case $2 in
+                ''|*[!0-9]*)
+                    usage_error "invalid value for option $1"
+                    ;;
+                *)
+                    ;;
+            esac
+            try_interval=$2
+            shift 2
             ;;
         -n|--try-times)
             [ -z "${try_times}" ] || usage_error "option $1 is already given"
@@ -83,6 +98,7 @@ EOF
 done
 
 ## Default values for parameters.
+[ -n "${try_interval}" ] || try_interval=1
 [ -n "${try_times}" ] || try_times=1
 
 if [ $# -ne 1 ]; then
@@ -114,7 +130,7 @@ while [ "${ntries}" -lt "${try_times}" ]; do
 
     xy=$(visgrep "${screenshot}" "${png}") || {
         ntries=$((ntries + 1))
-        sleep 1
+        sleep "${try_interval}s"
         continue
     }
 
