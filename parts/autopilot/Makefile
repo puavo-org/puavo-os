@@ -4,7 +4,6 @@ prefix = /usr/local
 
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
-libdir = $(prefix)/lib
 datarootdir = $(prefix)/share
 sysconfdir = $(prefix)/etc
 
@@ -18,7 +17,6 @@ all:
 .PHONY: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
-	mkdir -p $(DESTDIR)$(libdir)/puavo-autopilot
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
@@ -36,9 +34,6 @@ install: installdirs
 		bin/puavo-autopilot-lightdm-login-guest \
 		bin/puavo-autopilot-logger \
 		bin/puavo-autopilot-session
-
-	$(INSTALL) -t $(DESTDIR)$(libdir)/puavo-autopilot \
-		lib/move-mouse-to-png
 
 .PHONY : deb
 deb :
