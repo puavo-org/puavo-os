@@ -1,11 +1,9 @@
-# XXX why set prefix /usr/local when we know that it must be /usr to work?!?
-# XXX (ltsp/xinitrc.d)
-prefix = /usr/local
+prefix = /usr
 
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
 datarootdir = $(prefix)/share
-sysconfdir = $(prefix)/etc
+sysconfdir = /etc
 
 INSTALL = install -p
 INSTALL_PROGRAM = $(INSTALL)
