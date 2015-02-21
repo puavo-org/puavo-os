@@ -72,6 +72,8 @@ def upload():
     if "changes" not in request.files or request.files["changes"].filename == "":
         return ".changes file missing", 400
 
+    codename = request.form.get(codename, "")
+
     reporoot = config["Repository-Parent"]
     repodir = os.path.join(
         reporoot,
@@ -105,7 +107,7 @@ def upload():
         repo_kwargs["timeout_secs"] = int(repo_timeout)
 
     repo = aptirepo.Aptirepo(repodir, confdir, **repo_kwargs)
-    repo.import_changes(changes_filepath)
+    repo.import_changes(changes_filepath, codename=codename)
 
     _notify_updatedistsd(reporoot, repodir)
 
