@@ -6,6 +6,7 @@ sudo apt-get update
 sudo apt-get install -y --force-yes \
      aptirepo-upload \
      devscripts \
+     equivs
 
 sudo make install-deb-deps
 make deb
