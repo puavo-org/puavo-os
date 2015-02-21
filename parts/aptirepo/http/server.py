@@ -72,7 +72,7 @@ def upload():
     if "changes" not in request.files or request.files["changes"].filename == "":
         return ".changes file missing", 400
 
-    codename = request.form.get(codename, "")
+    codename = request.form.get("codename", "")
 
     reporoot = config["Repository-Parent"]
     repodir = os.path.join(
