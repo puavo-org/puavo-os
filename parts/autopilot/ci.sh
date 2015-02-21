@@ -1,13 +1,11 @@
-
 #!/bin/sh
 
 set -eu
-set -x
 
 sudo apt-get update
-sudo apt-get install -y --force-yes puavo-devscripts aptirepo-upload
+sudo apt-get install -y --force-yes aptirepo-upload
 
-sudo puavo-install-deps debian.default/control
+sudo make install-deb-deps
 make deb
 
-aptirepo-upload -r $APTIREPO_REMOTE -b "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)" ../puavo-autopilot*.changes
+aptirepo-upload -r "${APTIREPO_REMOTE}" -b "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)" ../puavo-autopilot*.changes
