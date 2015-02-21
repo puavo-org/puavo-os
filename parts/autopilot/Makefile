@@ -34,27 +34,18 @@ install: installdirs
 	cp -a -t $(DESTDIR)$(datarootdir)/puavo-autopilot/tests \
 		tests/*
 
-clean:
-	rm -rf debian
-
 install-deb-deps:
-	mk-build-deps -i -r debian.default/control
+	mk-build-deps -i -r debian/control
 
-debiandir:
-	rm -rf debian
-	cp -a debian.default debian
-
-deb-binary-arch: debiandir
+deb-binary-arch:
 	dpkg-buildpackage -B -us -uc
 
-deb: debiandir
+deb:
 	dpkg-buildpackage -us -uc
 
 .PHONY: all		 \
-	clean		 \
 	deb		 \
 	deb-binary-arch  \
-	debiandir	 \
 	install		 \
 	install-deb-deps \
 	installdirs
