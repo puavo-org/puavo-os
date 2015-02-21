@@ -9,6 +9,7 @@ Homepage: https://github.com/opinsys/puavo-autopilot
 Package: puavo-autopilot
 Architecture: all
 Depends: ${misc:Depends},
+ coreutils,
  escrotum,
  imagemagick,
  ruby1.9.1,
