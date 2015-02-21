@@ -17,8 +17,7 @@
       puavo-autopilot-logger 'msg=enter-display-manager-screen' "user=$user" || true
     fi
     sleep 15
-    env PATH="/usr/lib/puavo-autopilot:$PATH" \
-      puavo-autopilot-lightdm-login "$user" "$password"
+    puavo-autopilot-lightdm-login "$user" "$password"
     if [ "${mode}" = "smoke" ]; then
       puavo-autopilot-logger 'msg=try-display-manager-login' "user=$user" || true
     fi
