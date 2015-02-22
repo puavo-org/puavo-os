@@ -1,56 +1,57 @@
 puavo-autopilot (0.3.1) unstable; urgency=medium
 
-  * Fix changelog format.
+  * Git(ef1bd3f8eb03b6f572c67e71d103f7f06cfad1b0)
+  * Fix changelog format
 
  -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Sun, 22 Feb 2015 00:12:37 +0200
 
 puavo-autopilot (0.3) unstable; urgency=medium
 
-  * New release:
-    - d301e9c ci.sh: install equivs (required by mk-build-deps)
-    - efb7350 ci.sh: do not install make before hand, it is now a build dependency
-    - 0144889 Add make to build dependencies
-    - dc79e53 ci.sh: install devscripts and make
-    - 33b797c ci.sh: upload to build distribution -specific codename
-    - 3bb720a ci.sh: use the more capable Makefile to build things
-    - 2b1dc02 Fix shebang to use env from coreutils
-    - b5bbb91 Rename debian.default => debian
-    - b92cd97 Define PHONY targets at the end
-    - e65dfd9 Add Makefile target for building just binary-arch debs
-    - b6dc0a6 Include Debian changelog
-    - 9acbc27 Provide better build parameter defaults
-    - 25ce9f8 Use puavo-autopilot-sessions from PATH
-    - 27ac0cf Do not add libdir to PATH anymore
-    - c2ff1d1 Remove useless get-orig-source target from debian/rules
-    - 53d2df7 Add Makefile target for installing deb dependencies
-    - 8463a95 Try to preserve original timestamps of installed files
-    - d5f700f Add new test for verifying Java
-    - d00bfaa Remove useless and usused move-mouse-to-png
-    - 624f780 Drop puavo-autopilot- prefix from pnggrep
-    - 0a76a73 Make pnggrep exit 0 only if the image was found
-    - aef07fa Add --center to print the center coords of found images
-    - f0fe0fa Fix exit value handling of visgrep
-    - a22fbbc Update script description
-    - 4ea5ab6 Rename detect-png to pnggrep
-    - 2d638a1 Add --try-interval to control the detection interval length
-    - a1de8b9 Try detection with 1 second intervals
-    - 205c0f2 Add --try-times option to detect images at most N times
-    - 8651217 Trivial cleanup
-    - 6fef7fa Trivial stylistic change
-    - c98ebe9 Use uniform error message prefix
-    - d3c0f45 Add --help option
-    - aecf68c Install detect-png as a normal script
-    - 6c3522f Use escrotum instead of Imagemagick's import
-    - 5cf8b92 List dependencies one per line
-    - 6bc9586 Fix typo
-    - 3d32ad8 Use image magic import instead of scrot
-    - b4f0d57 Do not hide the exit value of detect-png
-    - f3581f3 Remove duplicate readlinking
-    - 8d5638f Use set -eu to exit early on errors
-    - f46729a Shift positional parameters after handling them
-    - 300e825 Fix readlink error handling
-    - 9ed8e9e Use bash instead of sh to get reliable EXIT traps
-    - 1c7c5fe Cleanup EXIT trap
+  * Git(d301e9c44131e2bfb49744a53f1d1c5fb5809c86)
+  * ci.sh: install equivs (required by mk-build-deps)
+  * ci.sh: do not install make before hand, it is now a build dependency
+  * Add make to build dependencies
+  * ci.sh: install devscripts and make
+  * ci.sh: upload to build distribution -specific codename
+  * ci.sh: use the more capable Makefile to build things
+  * Fix shebang to use env from coreutils
+  * Rename debian.default => debian
+  * Define PHONY targets at the end
+  * Add Makefile target for building just binary-arch debs
+  * Include Debian changelog
+  * Provide better build parameter defaults
+  * Use puavo-autopilot-sessions from PATH
+  * Do not add libdir to PATH anymore
+  * Remove useless get-orig-source target from debian/rules
+  * Add Makefile target for installing deb dependencies
+  * Try to preserve original timestamps of installed files
+  * Add new test for verifying Java
+  * Remove useless and usused move-mouse-to-png
+  * Drop puavo-autopilot- prefix from pnggrep
+  * Make pnggrep exit 0 only if the image was found
+  * Add --center to print the center coords of found images
+  * Fix exit value handling of visgrep
+  * Update script description
+  * Rename detect-png to pnggrep
+  * Add --try-interval to control the detection interval length
+  * Try detection with 1 second intervals
+  * Add --try-times option to detect images at most N times
+  * Trivial cleanup
+  * Trivial stylistic change
+  * Use uniform error message prefix
+  * Add --help option
+  * Install detect-png as a normal script
+  * Use escrotum instead of Imagemagick's import
+  * List dependencies one per line
+  * Fix typo
+  * Use image magic import instead of scrot
+  * Do not hide the exit value of detect-png
+  * Remove duplicate readlinking
+  * Use set -eu to exit early on errors
+  * Shift positional parameters after handling them
+  * Fix readlink error handling
+  * Use bash instead of sh to get reliable EXIT traps
+  * Cleanup EXIT trap
 
  -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Sun, 22 Feb 2015 00:05:35 +0200
 
