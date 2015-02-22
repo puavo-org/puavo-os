@@ -123,7 +123,7 @@ mode = get_autopilot_mode()
 
 if mode == 'smoke' then
   begin
-    system('puavo-autopilot-logger', 'msg=begin-user-session')
+    system('puavo-autopilot-logger', '--tag', 'smoke', 'msg=begin-user-session')
   ensure
     exit(logout())
   end

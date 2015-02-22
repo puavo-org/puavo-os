@@ -14,12 +14,20 @@
 
   if [ -n "$user" -a -n "$password" ]; then
     if [ "${mode}" = "smoke" ]; then
-      puavo-autopilot-logger 'msg=enter-display-manager-screen' "user=$user" || true
+      puavo-autopilot-logger --tag smoke                        \
+                             --                                 \
+                             'msg=enter-display-manager-screen' \
+                             "user=$user"                       \
+          || true
     fi
     sleep 15
     puavo-autopilot-lightdm-login "$user" "$password"
     if [ "${mode}" = "smoke" ]; then
-      puavo-autopilot-logger 'msg=try-display-manager-login' "user=$user" || true
+      puavo-autopilot-logger --tag smoke                     \
+                             --                              \
+                             'msg=try-display-manager-login' \
+                             "user=$user"                    \
+          || true
     fi
   fi
 ) &
