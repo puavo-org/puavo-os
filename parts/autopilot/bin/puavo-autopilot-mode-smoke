@@ -1,0 +1,4 @@
+#!/bin/sh
+
+puavo-autopilot-logger --tag smoke 'msg=begin-user-session'
+gnome-session-quit --force --no-prompt --logout

@@ -24,6 +24,8 @@ install: installdirs
 	$(INSTALL) -t $(DESTDIR)$(bindir) \
 		bin/pnggrep \
 		bin/puavo-autopilot-logger \
+		bin/puavo-autopilot-mode-smoke \
+		bin/puavo-autopilot-mode-stress \
 		bin/puavo-autopilot-session
 
 	cp -a -t $(DESTDIR)$(datarootdir)/puavo-autopilot/tests \
