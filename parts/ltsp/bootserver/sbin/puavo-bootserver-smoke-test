@@ -97,7 +97,7 @@ class TestRun
                   when 'thinclient'
                     'begin-user-session'
                   else
-                    nil
+                    raise 'unsupported hosttype #{@testclient_hosttype}'
                   end
 
     start_time = Time.now()
