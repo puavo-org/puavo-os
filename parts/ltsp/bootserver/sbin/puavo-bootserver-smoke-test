@@ -91,51 +91,45 @@ class TestRun
   end
 
   def execute()
-    expected_msgs = case @testclient_hosttype
-                    when 'fatclient'
-                      ['enter-display-manager-screen',
-                       'try-display-manager-login',
-                       'begin-user-session']
-                    when 'thinclient'
-                      ['begin-user-session']
-                    else
-                      []
-                    end
+    success_msg = case @testclient_hosttype
+                  when 'fatclient'
+                    'begin-user-session'
+                  when 'thinclient'
+                    'begin-user-session'
+                  else
+                    nil
+                  end
 
-    n = expected_msgs.length
-    received_msgs = []
+    start_time = Time.now()
+    while true
+      result = IO.select([@server_socket], [], [], 2.5)
 
-    expected_msgs.each_with_index() do |expected_msg, i|
-      ## If haven't received any messaged, wait for them and then fill
-      ## received_msgs.
-      if received_msgs.empty? then
-        start_time = Time.now()
-        while true
-          result = IO.select([@server_socket], [], [], 2.5)
-          break if !result.nil?
-          raise TestRunError.new('timeout') if Time.now() >= start_time + 120
-          yield
-        end
-
-        ## Ensure client socket gets closed properly afterwards.
-        client_socket = nil
-        begin
-          client_socket, client_addrinfo = @server_socket.accept()
-          received_msgs += client_socket.readlines().map() do |line|
-            JSON.parse(line)['msg']
-          end
-        ensure
-          if !client_socket.nil? then
-            client_socket.shutdown(Socket::SHUT_RDWR)
-            client_socket.close()
-          end
-        end
+      ## Periodical timeout check.
+      if result.nil?
+        raise TestRunError.new('timeout') if Time.now() >= start_time + 120
+        yield ## Tick the caller.
+        next
       end
 
-      ## Test messages in the order they were received.
-      msg = received_msgs.shift()
-      raise TestRunError.new("got #{msg}") if msg != expected_msg
+      ## We've got something, let's see if it is the message we are
+      ## waiting form.
+
+      ## Ensure client socket gets closed properly afterwards.
+      client_socket = nil
+      begin
+        client_socket, client_addrinfo = @server_socket.accept()
+        client_socket.readlines().each() do |line|
+          msg = JSON.parse(line)['msg']
+          return if msg == success_msg
+        end
+      ensure
+        if !client_socket.nil? then
+          client_socket.shutdown(Socket::SHUT_RDWR)
+          client_socket.close()
+        end
+      end
     end
+
   end
 
   def cleanup()
