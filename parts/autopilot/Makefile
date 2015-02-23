@@ -11,11 +11,8 @@ INSTALL_DATA = $(INSTALL) -m 644
 
 all:
 
-installdirs:
-	mkdir -p $(DESTDIR)$(bindir)
-	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-autopilot/tests
-	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
+deb:
+	dpkg-buildpackage -us -uc
 
 install: installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d \
@@ -37,8 +34,11 @@ install: installdirs
 install-deb-deps:
 	mk-build-deps -i -r debian/control
 
-deb:
-	dpkg-buildpackage -us -uc
+installdirs:
+	mkdir -p $(DESTDIR)$(bindir)
+	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-autopilot/tests
+	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
 .PHONY: all		 \
 	deb		 \
