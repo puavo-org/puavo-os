@@ -393,8 +393,7 @@ admin_username, admin_password = PuavoBS.ask_admin_credentials()
 if do_run_all_tests then
   schools = PuavoBS.get_schools(admin_username, admin_password)
   if schools.empty? then
-    STDERR.puts('ERROR: this bootserver is not connected to any schools, ' \
-                'please connect it to some schools from Puavo and try again')
+    STDERR.puts('ERROR: this bootserver is not affiliated with any school')
     exit 1
   end
 
@@ -458,8 +457,7 @@ while true do
 
   school = PuavoBS.ask_school(admin_username, admin_password)
   if school.nil? then
-    STDERR.puts('ERROR: this bootserver is not connected to any schools, ' \
-                'please connect it to some schools from Puavo and try again')
+    STDERR.puts('ERROR: this bootserver is not affiliated with any school')
     next
   end
   school_name, school_id = school
