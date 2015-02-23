@@ -91,15 +91,6 @@ class TestRun
   end
 
   def execute()
-    success_msg = case @testclient_hosttype
-                  when 'fatclient'
-                    'begin-user-session'
-                  when 'thinclient'
-                    'begin-user-session'
-                  else
-                    raise 'unsupported hosttype #{@testclient_hosttype}'
-                  end
-
     start_time = Time.now()
     while true
       result = IO.select([@server_socket], [], [], 2.5)
@@ -119,8 +110,7 @@ class TestRun
       begin
         client_socket, client_addrinfo = @server_socket.accept()
         client_socket.readlines().each() do |line|
-          msg = JSON.parse(line)['msg']
-          return if msg == success_msg
+          return if test(JSON.parse(line))
         end
       ensure
         if !client_socket.nil? then
@@ -130,6 +120,19 @@ class TestRun
       end
     end
 
+  end
+
+  def test(payload)
+    msg = payload['msg']
+    success_msg = case @testclient_hosttype
+                  when 'fatclient'
+                    'begin-user-session'
+                  when 'thinclient'
+                    'begin-user-session'
+                  else
+                    raise 'unsupported hosttype #{@testclient_hosttype}'
+                  end
+    msg == success_msg
   end
 
   def cleanup()
