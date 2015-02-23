@@ -5,6 +5,10 @@ class bootserver_fluentd {
       notify  => Service['fluentd'],
       source => 'puppet:///modules/bootserver_fluentd/puavo.conf';
 
+    '/usr/local/bin/puavo-bootserver-autopilot-cat':
+      mode   => 755,
+      source => 'puppet:///modules/bootserver_fluentd/puavo-bootserver-autopilot-cat';
+
     '/usr/local/bin/puavo-bootserver-smoke-test-cat':
       mode   => 755,
       source => 'puppet:///modules/bootserver_fluentd/puavo-bootserver-smoke-test-cat';
