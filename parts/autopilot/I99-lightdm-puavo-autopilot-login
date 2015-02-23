@@ -1,8 +1,8 @@
 (
   set -e
 
-  # pick one autopilot configuration randomly
-  # (if only one has been defined, that one will of course be picked)
+  ## Pick one autopilot configuration randomly. If only one has been
+  ## defined, that one will of course be picked.
   autopilot_line=$(jq --raw-output '.tags[]' /etc/puavo/device.json \
 		     | grep ^autopilot \
 		     | shuf \
