@@ -1,3 +1,16 @@
+puavo-autopilot (0.3.4) trusty; urgency=medium
+
+  * Git(bdd8d2671c064518a087113ed240380bc95610da)
+  * Rename mode scripts
+  * Add copyright headers
+  * Move mode implementations to separate scripts
+  * Fix comment formatting
+  * Inline all lightdm-specific login logic
+  * Move mode implementations to separate functions
+  * Sort Makefile targets alphabetically
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 23 Feb 2015 16:21:28 +0200
+
 puavo-autopilot (0.3.3) unstable; urgency=medium
 
   * Git(457a1da905b707a7f320b324a2fb4eea7e626c45)
