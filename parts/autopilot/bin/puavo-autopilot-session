@@ -62,10 +62,10 @@ end
 mode = get_autopilot_mode()
 case mode
 when 'smoke'
-  system('puavo-autopilot-mode-smoke')
+  system('puavo-autopilot-session-smoke')
   exit $?.exitstatus
 when 'stress'
-  system('puavo-autopilot-mode-stress')
+  system('puavo-autopilot-session-stress')
   exit $?.exitstatus
 else
   STDERR.puts("ignoring unknown Puavo autopilot mode '#{mode}'")
