@@ -71,8 +71,6 @@ class TestRun
     @testuser_username          = nil
     @testuser_password          = nil
     @testuser_has_old_homedir   = true
-    @server_socket              = nil
-    @server_socket_path         = '/tmp/puavo-bootserver-smoke-test.socket'
   end
 
   attr_reader :testclient_hosttype
@@ -86,40 +84,7 @@ class TestRun
     prepare_add_testuser()
     prepare_assert_no_homedir()
     prepare_register_testclient()
-    prepare_open_socket()
     prepare_start_testclient()
-  end
-
-  def execute()
-    start_time = Time.now()
-    while true
-      result = IO.select([@server_socket], [], [], 2.5)
-
-      ## Periodical timeout check.
-      if result.nil?
-        raise TestRunError.new('timeout') if Time.now() >= start_time + 120
-        yield ## Tick the caller.
-        next
-      end
-
-      ## We've got something, let's see if it is the message we are
-      ## waiting form.
-
-      ## Ensure client socket gets closed properly afterwards.
-      client_socket = nil
-      begin
-        client_socket, client_addrinfo = @server_socket.accept()
-        client_socket.readlines().each() do |line|
-          return if test(JSON.parse(line))
-        end
-      ensure
-        if !client_socket.nil? then
-          client_socket.shutdown(Socket::SHUT_RDWR)
-          client_socket.close()
-        end
-      end
-    end
-
   end
 
   def test(payload)
@@ -137,7 +102,6 @@ class TestRun
 
   def cleanup()
     cleanup_methods = [:cleanup_destroy_testclient,
-                       :cleanup_close_socket,
                        :cleanup_unregister_testclient,
                        :cleanup_remove_homedir,
                        :cleanup_remove_testuser,
@@ -209,27 +173,6 @@ class TestRun
     raise error if !error.nil?
   end
 
-  def prepare_open_socket()
-    server_socket = Socket.new(Socket::AF_UNIX, Socket::SOCK_STREAM)
-    old_umask = nil
-    begin
-      old_umask = File.umask(007)
-      server_socket.bind(Socket.sockaddr_un(@server_socket_path))
-    ensure
-      if !old_umask.nil? then
-        File.umask(old_umask)
-      end
-    end
-    puavo_gid = Etc.getgrnam('puavo').gid
-    File.chown(nil, puavo_gid, @server_socket_path)
-    server_socket.listen(1)
-    @server_socket = server_socket
-
-    if @server_socket.nil? then
-      raise TestRunError.new('failed to open message socket')
-    end
-  end
-
   def prepare_start_testclient()
     Process.wait(Process.spawn('virsh', 'start',
                                @testclient_hostname,
@@ -274,14 +217,6 @@ class TestRun
     end
   end
 
-  def cleanup_close_socket()
-    if !@server_socket.nil? then
-      @server_socket.shutdown(Socket::SHUT_RDWR)
-      @server_socket.close()
-      File.delete(@server_socket_path)
-    end
-  end
-
   def cleanup_destroy_testclient()
     if @testclient_started then
       Process.wait(Process.spawn('virsh', 'destroy', @testclient_hostname,
@@ -294,46 +229,107 @@ class TestRun
 
 end
 
+def open_server_socket(server_socket_path)
+  server_socket = Socket.new(Socket::AF_UNIX, Socket::SOCK_STREAM)
+  old_umask = nil
+  begin
+    old_umask = File.umask(007)
+    server_socket.bind(Socket.sockaddr_un(server_socket_path))
+  ensure
+    if !old_umask.nil? then
+      File.umask(old_umask)
+    end
+  end
+  puavo_gid = Etc.getgrnam('puavo').gid
+  File.chown(nil, puavo_gid, server_socket_path)
+  server_socket.listen(1)
+  server_socket
+end
+
+def execute(server_socket, testrun)
+  start_time = Time.now()
+  while true
+    result = IO.select([server_socket], [], [], 2.5)
+
+    ## Periodical timeout check.
+    if result.nil?
+      raise TestRunError.new('timeout') if Time.now() >= start_time + 120
+      yield ## Tick the caller.
+      next
+    end
+
+    ## We've got something, let's see if it is the message we are
+    ## waiting form.
+
+    ## Ensure client socket gets closed properly afterwards.
+    client_socket = nil
+    begin
+      client_socket, client_addrinfo = server_socket.accept()
+      client_socket.readlines().each() do |line|
+        return if testrun.test(JSON.parse(line))
+      end
+    ensure
+      if !client_socket.nil? then
+        client_socket.shutdown(Socket::SHUT_RDWR)
+        client_socket.close()
+      end
+    end
+  end
+
+end
+
 def run_test(admin_username, admin_password,
              school_name, school_id, testclient_hosttype,
              testrun_label)
-  testrun = TestRun.new(admin_username, admin_password,
-                        school_id, testclient_hosttype)
-  begin
-    puts()
-    puts("=== Test run #{testrun_label} ===")
-    print('Prepare ...')
-    testrun.prepare()
-    puts_ok()
-    puts("    School   : #{school_name}")
-    puts("    Hosttype : #{testrun.testclient_hosttype}")
-    puts("    Hostname : #{testrun.testclient_hostname}")
-    puts("    MAC      : #{testrun.testclient_mac}")
-    puts("    Image    : #{testrun.testclient_image}")
-    puts("    Username : #{testrun.testuser_username}")
 
-    print('Execute ...')
-    testrun.execute() do
-      print('.')
-    end
-    puts_ok()
-  rescue TestRunError => e2
-    puts_fail(e2.message)
-    return false
-  rescue StandardError => e1
-    puts_fail(e1.message)
-    raise
-  rescue Interrupt
-    puts_fail('interrupted')
-    raise
-  ensure
+  server_socket_path = '/tmp/puavo-bootserver-smoke-test.socket'
+  server_socket = open_server_socket(server_socket_path)
+
+  begin
+    testrun = TestRun.new(admin_username, admin_password,
+                          school_id, testclient_hosttype)
     begin
-      print('Cleanup ...')
-      testrun.cleanup()
+      puts()
+      puts("=== Test run #{testrun_label} ===")
+      print('Prepare ...')
+      testrun.prepare()
       puts_ok()
+      puts("    School   : #{school_name}")
+      puts("    Hosttype : #{testrun.testclient_hosttype}")
+      puts("    Hostname : #{testrun.testclient_hostname}")
+      puts("    MAC      : #{testrun.testclient_mac}")
+      puts("    Image    : #{testrun.testclient_image}")
+      puts("    Username : #{testrun.testuser_username}")
+
+      print('Execute ...')
+      execute(server_socket, testrun) do
+        print('.')
+      end
+      puts_ok()
+    rescue TestRunError => e2
+      puts_fail(e2.message)
+      return false
     rescue StandardError => e1
       puts_fail(e1.message)
       raise
+    rescue Interrupt
+      puts_fail('interrupted')
+      raise
+    ensure
+      begin
+        print('Cleanup ...')
+        testrun.cleanup()
+        puts_ok()
+      rescue StandardError => e1
+        puts_fail(e1.message)
+        raise
+      end
+    end
+  ensure
+    if !server_socket.nil? then
+      server_socket.shutdown(Socket::SHUT_RDWR)
+      server_socket.close()
+      File.delete(server_socket_path)
     end
   end
   true
