@@ -37,15 +37,11 @@ install: installdirs
 install-deb-deps:
 	mk-build-deps -i -r debian/control
 
-deb-binary-arch:
-	dpkg-buildpackage -B -us -uc
-
 deb:
 	dpkg-buildpackage -us -uc
 
 .PHONY: all		 \
 	deb		 \
-	deb-binary-arch  \
 	install		 \
 	install-deb-deps \
 	installdirs
