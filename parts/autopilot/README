@@ -4,7 +4,7 @@
 
 Automatic test tool for Puavo desktop sessions.
 
-Copyright: Opinsys Oy 2014
+Copyright: Opinsys Oy 2015
 License: GPLv2+
 Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
 
@@ -19,7 +19,6 @@ Runtime dependencies
 - ruby (>= 1.9)
 - scrot (>= 0.8)
 - xautomation (>= 1.07)
-
 
 This package can be used to simulate users.  It is integrated with
 Puavo, Lightdm and mostly excepts Gnome-environment.  The autopilot
