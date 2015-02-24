@@ -1,27 +1,23 @@
 {
   "ltsp": {
-    "arch": "i386",
     "bootstrap-puppet-classes": "image::bundle::bootstrap_configure",
-    "distribution": "trusty",
     "release-name": "Development",
     "series": {
       "builder": {
-        "arch": "amd64",
         "puppet-classes": "image::builder",
-        "images": []
+        "images": { "i386": { "trusty": [] } }
       },
       "desktop": {
-	"puppet-classes": "image::desktop",
-	"images": []
+        "puppet-classes": "image::desktop",
+        "images": { "i386": { "trusty": [] } }
       },
       "thinclient": {
-	"distribution": "precise",
-	"puppet-classes": "image::thinclient",
-	"images": []
+        "puppet-classes": "image::thinclient",
+        "images": { "i386": { "precise": [] } }
       },
       "wirelessaccesspoint": {
-	"puppet-classes": "image::wirelessaccesspoint",
-	"images": []
+        "puppet-classes": "image::wirelessaccesspoint",
+        "images": { "i386": { "trusty": [] } }
       }
     }
   }
