@@ -14,7 +14,11 @@ all:
 deb:
 	dpkg-buildpackage -us -uc
 
-install: installdirs
+bin/puavo-autopilot-env: Makefile
+	echo "#!/bin/sh" > $@
+	echo "export PUAVO_AUTOPILOT_SHAREDIR=$(datarootdir)/puavo-autopilot" >> $@
+
+install: bin/puavo-autopilot-env installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d \
 		I99-lightdm-puavo-autopilot-login
 
@@ -23,13 +27,17 @@ install: installdirs
 
 	$(INSTALL) -t $(DESTDIR)$(bindir) \
 		bin/pnggrep \
+		bin/puavo-autopilot-env \
 		bin/puavo-autopilot-logger \
 		bin/puavo-autopilot-session \
 		bin/puavo-autopilot-session-smoke \
-		bin/puavo-autopilot-session-stress
+		bin/puavo-autopilot-session-stress \
+		bin/puavo-autopilot-session-verify-java
 
-	cp -a -t $(DESTDIR)$(datarootdir)/puavo-autopilot/tests \
-		tests/*
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-autopilot \
+		share/*
+
+	rm -f bin/puavo-autopilot-env
 
 install-deb-deps:
 	mk-build-deps -i -r debian/control
@@ -37,11 +45,12 @@ install-deb-deps:
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-autopilot/tests
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-autopilot
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
-.PHONY: all		 \
-	deb		 \
-	install		 \
-	install-deb-deps \
+.PHONY: all			\
+        bin/puavo-autopilot-env \
+	deb			\
+	install			\
+	install-deb-deps	\
 	installdirs
