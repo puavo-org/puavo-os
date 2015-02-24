@@ -35,7 +35,7 @@ xdotool mousemove $(echo "${xy}" | head -n1) click 1
 xdotool sleep 2 key Tab Tab Tab Return
 
 ## Java itself asks user to allow the verification applet to run.
-xy=$(pnggrep --try-times 10 "${PUAVO_AUTOPILOT_SHAREDIR}/run-button.png")
+xy=$(pnggrep --center --try-times 10 "${PUAVO_AUTOPILOT_SHAREDIR}/run-button.png")
 xdotool mousemove $(echo "${xy}" | head -n1) click 1
 
-pnggrep --try-times 20 "${PUAVO_AUTOPILOT_SHAREDIR}/success.png"
+pnggrep --center --try-times 20 "${PUAVO_AUTOPILOT_SHAREDIR}/success.png"
