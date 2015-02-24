@@ -33,34 +33,31 @@ class kernels {
   $default_kernel = $lsbdistcodename ? {
     'precise' => '3.2.0-69-generic',
     'trusty'  => '3.13.0-41-generic',
+    'utopic'  => '3.16.0-30-generic',
   }
 
   $legacy_kernel = $lsbdistcodename ? {
-    'precise' => $default_kernel,
-    'trusty'  => $architecture ? {
-                   'i386'  => '3.2.0-70-generic-pae',
-                   default => $default_kernel,
-                 }
+    'trusty' => $architecture ? {
+                  'i386'  => '3.2.0-70-generic-pae',
+                  default => $default_kernel,
+                },
+    default => $default_kernel,
   }
 
   $edge_kernel = $lsbdistcodename ? {
-    'precise' => $default_kernel,
-    'trusty'  => $architecture ? {
-                   'i386'  => '3.18.7.opinsys1',
-                   default => $default_kernel,
-                 }
+    'trusty' => $architecture ? {
+                  'i386'  => '3.18.7.opinsys1',
+                  default => $default_kernel,
+                },
+    default => $default_kernel,
   }
 
   $stable_kernel = $default_kernel
 
-  case $lsbdistcodename {
-    'precise', 'trusty': {
-      all_kernel_links {
-        'default': kernel => $default_kernel;
-        'edge':    kernel => $edge_kernel;
-        'legacy':  kernel => $legacy_kernel;
-        'stable':  kernel => $stable_kernel;
-      }
-    }
+  all_kernel_links {
+    'default': kernel => $default_kernel;
+    'edge':    kernel => $edge_kernel;
+    'legacy':  kernel => $legacy_kernel;
+    'stable':  kernel => $stable_kernel;
   }
 }
