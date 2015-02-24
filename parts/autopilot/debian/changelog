@@ -1,3 +1,19 @@
+puavo-autopilot (0.3.5) trusty; urgency=medium
+
+  * Git(56a7b6a498e343edeeb534f3b1b1d894a4b505ac)
+  * Maxmimize Firefox window for the Java verification test
+  * Try to detect two different variant of Java run button
+  * Fix comments
+  * Java does not necessarily prompt user before running
+  * Run Java verification firefox with a dedicated profile dir
+  * Fix pnggrep detection failure looping
+  * Raise the minimum xautomation version to 1.05
+  * Navigate to the center of detected images
+  * Improve pnggrep --help
+  * Make verify-java a normal autopilot session script
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 24 Feb 2015 16:29:54 +0200
+
 puavo-autopilot (0.3.4) trusty; urgency=medium
 
   * Git(bdd8d2671c064518a087113ed240380bc95610da)
