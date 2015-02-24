@@ -23,7 +23,9 @@ set -eu
 . puavo-autopilot-env
 
 ## Ensure Firefox is visible to before searching images from the page.
-firefox 'https://www.java.com/en/download/installed.jsp?detect=jre' &
+profiledir=$(mktemp -d --tmpdir puavo-autopilot-session-verify-java.XXXXXXXX)
+firefox -profile "${profiledir}" -private-window \
+    'https://www.java.com/en/download/installed.jsp?detect=jre' &
 timeout 10 xdotool search --sync --classname Navigator
 wmctrl -a firefox
 
