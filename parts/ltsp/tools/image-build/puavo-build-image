@@ -53,9 +53,51 @@ def builder_confs(builder_confs_path)
 end
 
 
+def flatten_imageconfs(prefix, inherited_conf, imageconf)
+  imageconfs = []
+  imageconf.each do |next_prefix, next_prefix_conf|
+
+    concatenated_prefix                    \
+      = prefix                             \
+          ? "#{ prefix }-#{ next_prefix }" \
+          : next_prefix
+
+    merged_conf = inherited_conf.merge(next_prefix_conf)
+    merged_conf.delete('images')
+    merged_conf.delete('series')
+
+    if next_prefix_conf['series'].kind_of?(Hash) then
+      imageconfs += flatten_imageconfs(concatenated_prefix,
+                                       merged_conf,
+                                       next_prefix_conf['series'])
+    end
+
+    if next_prefix_conf['images'].kind_of?(Array) then
+      if !merged_conf['distribution'].kind_of?(String) then
+        raise "No distribution set for '#{ concatenated_prefix }'"
+      end
+
+      full_prefix = "#{ concatenated_prefix }-#{ merged_conf['distribution'] }"
+
+      next_imageconf = merged_conf
+      next_imageconf['images'] = next_prefix_conf['images']
+
+      imageconfs << [ full_prefix, next_imageconf ]
+    end
+  end
+
+  imageconfs
+end
+
 def image_configurations(config_files)
-  config_files.map { |cf| JSON.parse( File.read(cf) ) } \
-              .reduce &:merge
+  imageconfs = {}
+
+  config_files.map do |cf|
+    imageconf = flatten_imageconfs(nil, {}, JSON.parse( File.read(cf) ))
+    imageconfs.merge!( Hash[imageconf] )
+  end
+
+  imageconfs
 end
 
 def ensure_string_sanity(string)
