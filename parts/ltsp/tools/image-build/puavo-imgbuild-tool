@@ -187,34 +187,6 @@ else
   mirror_maybe_proxied="http://${mirror}/ubuntu/"
 fi
 
-if [ -z "$target_dir" ]; then
-  if [ -z "$builds_dir" ]; then
-    echo 'Cannot determine target dir, set --target-dir or --builds-dir' >&2
-    usage
-  fi
-
-  if [ "$action" = "build" ]; then
-    if [ -z "$imagetype" ]; then
-      echo 'Imagetype must be set' >&2
-      usage
-    fi
-    target_dir="${builds_dir}/${imagetype}"
-  else
-    target_dir=$(/usr/lib/puavo-image-tools/puavo-ask-buildtarget-dir \
-		 "$builds_dir")
-  fi
-fi
-
-run_configure_chroot() {
-  if [ ! -x "$chroot_configure_script" ]; then
-    echo "Chroot configure script '${chroot_configure_script}' not found" \
-         "or not executable" >&2
-    return 1
-  fi
-
-  "$chroot_configure_script" --target-dir "$target_dir" "$@"
-}
-
 chroot_arch=$(run_configure_chroot -- --get-arch 2>/dev/null || true)
 if [ -n "$chroot_arch" ]; then
   if [ -n "$arch" -a "$chroot_arch" != "$arch" ]; then
@@ -226,6 +198,34 @@ fi
 
 [ -z "$arch" ] && arch=i386
 
+if [ -z "$target_dir" ]; then
+  if [ -z "$builds_dir" ]; then
+    echo 'Cannot determine target dir, set --target-dir or --builds-dir' >&2
+    usage
+  fi
+
+  if [ "$action" = "build" ]; then
+    if [ -z "$imagetype" ]; then
+      echo 'Imagetype must be set' >&2
+      usage
+    fi
+    target_dir="${builds_dir}/${imagetype}-${distribution}-${arch}"
+  else
+    target_dir=$(/usr/lib/puavo-image-tools/puavo-ask-buildtarget-dir \
+		 "$builds_dir")
+  fi
+fi
+
+
+run_configure_chroot() {
+  if [ ! -x "$chroot_configure_script" ]; then
+    echo "Chroot configure script '${chroot_configure_script}' not found" \
+         "or not executable" >&2
+    return 1
+  fi
+
+  "$chroot_configure_script" --target-dir "$target_dir" "$@"
+}
 
 dirs_with_postfix() {
   dirlist=$1
