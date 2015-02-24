@@ -60,6 +60,13 @@ Options:
   -i SECS, --try-interval SECS   try detection with SECS second intervals
   -c, --center                   print center coordinates of the images
 
+If --try-times is not given, detection is tried only once.
+
+If --try-interval is not given, detection interval is one second.
+
+If --center is not given, print top left coordinates of the detected
+image.
+
 EOF
             exit 0
             ;;
