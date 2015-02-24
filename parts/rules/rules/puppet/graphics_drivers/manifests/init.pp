@@ -4,6 +4,11 @@ class graphics_drivers {
                         # because we run ldconfig and save its output for
                         # later use.
 
+  $machine = $architecture ? {
+               'amd64' => 'x86_64',
+               default => $architecture,
+             }
+
   define driver_alternatives ($gl_conf_target) {
     $driver      = $title
     $ld_so_cache = "/etc/ld.so.cache-$driver"
@@ -12,7 +17,8 @@ class graphics_drivers {
       "setup $driver alternatives":
         command =>
           "/usr/bin/update-alternatives \
-               --set ${architecture}-linux-gnu_gl_conf $gl_conf_target \
+               --set ${graphics_drivers::machine}-linux-gnu_gl_conf \
+                     $gl_conf_target \
              && /sbin/ldconfig \
              && /bin/cp -p /etc/ld.so.cache /etc/ld.so.cache-$driver",
         onlyif =>
@@ -25,7 +31,7 @@ class graphics_drivers {
       driver_alternatives {
        'mesa':
           gl_conf_target
-            => '/usr/lib/${architecture}-linux-gnu/mesa/ld.so.conf',
+            => '/usr/lib/${machine}-linux-gnu/mesa/ld.so.conf',
           require => [ Driver_alternatives['nvidia'],
                        Package['libgl1-mesa-glx'], ];
 
