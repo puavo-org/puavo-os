@@ -39,7 +39,12 @@ xdotool sleep 2 key Tab Tab Tab Return
 ## Java itself *might* ask user to allow the applet to run. If the user
 ## has previously accepted the application, the dialog is not shown
 ## anymore.
-xy=$(pnggrep --center --try-times 10 "${PUAVO_AUTOPILOT_SHAREDIR}/run-button.png") && \
+for i in $(seq 5); do
+    xy=$(pnggrep -c -n 2 "${PUAVO_AUTOPILOT_SHAREDIR}/run-button-swing-active.png") || \
+        xy=$(pnggrep -c -n 2 "${PUAVO_AUTOPILOT_SHAREDIR}/run-button-gtk-active.png") || \
+        continue
     xdotool mousemove $(echo "${xy}" | head -n1) click 1
+    break
+done
 
 pnggrep --center --try-times 20 "${PUAVO_AUTOPILOT_SHAREDIR}/success.png"
