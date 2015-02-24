@@ -27,6 +27,7 @@ profiledir=$(mktemp -d --tmpdir puavo-autopilot-session-verify-java.XXXXXXXX)
 firefox -profile "${profiledir}" -private-window \
     'https://www.java.com/en/download/installed.jsp?detect=jre' &
 timeout 10 xdotool search --sync --classname Navigator
+wmctrl -r firefox -b add,maximized_vert,maximized_horz
 wmctrl -a firefox
 
 ## The verification page requires activation of the Java plugin.
