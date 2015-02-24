@@ -33,12 +33,16 @@ def build_config_target(config_target,
 
   bootstrap_rules_args = apply_configure_bootstrap \
                            ? imgbuild_args('--configure-bootstrap-rules',
-					   conf,
-					   'bootstrap-puppet-classes') \
+                                           conf,
+                                           'bootstrap-puppet-classes') \
                            : []
 
+  if !conf['imageseries'].kind_of?(String) then
+    raise "Could not find imageseries for '#{ config_target }'"
+  end
+
   system('/usr/lib/puavo-image-tools/puavo-imgbuild-tool',
-         '--build',        config_target,
+         '--build',        conf['imageseries'],
          '--distribution', conf['distribution'],
          *arch_args,
          *bootstrap_rules_args,
@@ -72,17 +76,21 @@ def flatten_imageconfs(prefix, inherited_conf, imageconf)
                                        next_prefix_conf['series'])
     end
 
-    if next_prefix_conf['images'].kind_of?(Array) then
-      if !merged_conf['distribution'].kind_of?(String) then
-        raise "No distribution set for '#{ concatenated_prefix }'"
+    if next_prefix_conf['images'].kind_of?(Hash) then
+      next_prefix_conf['images'].each do |arch, archconf|
+        archconf.each do |distribution, images|
+          full_prefix = "#{ concatenated_prefix }-#{ distribution }-#{ arch }"
+
+          next_imageconf = merged_conf.merge({
+                             'arch'         => arch,
+                             'distribution' => distribution,
+                             'images'       => images,
+                             'imageseries'  => concatenated_prefix,
+                           })
+
+          imageconfs << [ full_prefix, next_imageconf ]
+        end
       end
-
-      full_prefix = "#{ concatenated_prefix }-#{ merged_conf['distribution'] }"
-
-      next_imageconf = merged_conf
-      next_imageconf['images'] = next_prefix_conf['images']
-
-      imageconfs << [ full_prefix, next_imageconf ]
     end
   end
 
