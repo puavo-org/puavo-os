@@ -162,7 +162,11 @@ while [ "${ntries}" -lt "${try_times}" ]; do
                 ;;
         esac
     }
-    [ -n "${xy}" ] || break
+    [ -n "${xy}" ] || {
+        ntries=$((ntries + 1))
+        sleep "${try_interval}s"
+        continue
+    }
 
     xy=$(echo "${xy}" | sed -n -r 's/^([0-9]+),([0-9]+) .*$/\1 \2/p')
 
