@@ -36,8 +36,9 @@ xdotool mousemove $(echo "${xy}" | head -n1) click 1
 ## Firefox asks yet another confirmation before activating the Java plugin.
 xdotool sleep 2 key Tab Tab Tab Return
 
-## Java itself asks user to allow the verification applet to run.
-xy=$(pnggrep --center --try-times 10 "${PUAVO_AUTOPILOT_SHAREDIR}/run-button.png")
-xdotool mousemove $(echo "${xy}" | head -n1) click 1
+## Java itself *might* ask user to allow the applet to run. If the user
+## has previously accepted the application, the dialog is not shown.
+xy=$(pnggrep --center --try-times 10 "${PUAVO_AUTOPILOT_SHAREDIR}/run-button.png") && \
+    xdotool mousemove $(echo "${xy}" | head -n1) click 1
 
 pnggrep --center --try-times 20 "${PUAVO_AUTOPILOT_SHAREDIR}/success.png"
