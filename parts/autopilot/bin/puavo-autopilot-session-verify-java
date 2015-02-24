@@ -22,14 +22,14 @@ set -eu
 
 . puavo-autopilot-env
 
-## Ensure Firefox is visible to before searching images from the page.
+## Ensure Firefox is visible before searching images from the page.
 profiledir=$(mktemp -d --tmpdir puavo-autopilot-session-verify-java.XXXXXXXX)
 firefox -profile "${profiledir}" -private-window \
     'https://www.java.com/en/download/installed.jsp?detect=jre' &
 timeout 10 xdotool search --sync --classname Navigator
 wmctrl -a firefox
 
-## The verification page requires activation of the Java plugin
+## The verification page requires activation of the Java plugin.
 xy=$(pnggrep --center --try-times 10 "${PUAVO_AUTOPILOT_SHAREDIR}/activate-button.png")
 xdotool mousemove $(echo "${xy}" | head -n1) click 1
 
@@ -37,7 +37,8 @@ xdotool mousemove $(echo "${xy}" | head -n1) click 1
 xdotool sleep 2 key Tab Tab Tab Return
 
 ## Java itself *might* ask user to allow the applet to run. If the user
-## has previously accepted the application, the dialog is not shown.
+## has previously accepted the application, the dialog is not shown
+## anymore.
 xy=$(pnggrep --center --try-times 10 "${PUAVO_AUTOPILOT_SHAREDIR}/run-button.png") && \
     xdotool mousemove $(echo "${xy}" | head -n1) click 1
 
