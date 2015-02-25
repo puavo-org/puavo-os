@@ -1,11 +1,18 @@
 class apt::multiarch {
   include apt
 
-  if $architecture == 'amd64' {
+  define addarch () {
+    $foreign_arch = $title
+
     exec {
-      '/usr/bin/dpkg --add-architecture i386':
+      "/usr/bin/dpkg --add-architecture $foreign_arch":
         notify => Exec['apt update'],
-        unless => '/usr/bin/dpkg --print-foreign-architectures | grep -qw i386';
+        unless => "/usr/bin/dpkg --print-foreign-architectures | grep -qw $foreign_arch";
     }
+  }
+
+  case $architecture {
+    'amd64': { addarch { 'i386':  ; } }
+    'i386':  { addarch { 'amd64': ; } }
   }
 }
