@@ -31,16 +31,16 @@ class graphics_drivers {
       driver_alternatives {
        'mesa':
           gl_conf_target
-            => '/usr/lib/${machine}-linux-gnu/mesa/ld.so.conf',
-          require => [ Driver_alternatives['nvidia'],
-                       Package['libgl1-mesa-glx'], ];
+            => "/usr/lib/${machine}-linux-gnu/mesa/ld.so.conf",
+          require => [ Driver_alternatives['nvidia']
+                     , Package['libgl1-mesa-glx'] ];
 
        'nvidia':
           before         => File['/etc/modprobe.d/nvidia-304_hybrid.conf'],
           gl_conf_target => '/usr/lib/nvidia-304/ld.so.conf',
           notify         => Driver_alternatives['mesa'],
-          require        => [ Package['nvidia-304'],
-                              Package['nvidia-settings'], ];
+          require        => [ Package['nvidia-304']
+                            , Package['nvidia-settings'] ];
       }
 
       file {
