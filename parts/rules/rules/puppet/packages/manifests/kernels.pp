@@ -1,19 +1,24 @@
 class packages::kernels {
-  define kernel_package ($package_tag='', $with_extra=true, $with_dbg=false) {
+  define kernel_package ($package_tag='',
+                         $with_extra=true,
+                         $with_dbg=false,
+                         $pkgarch='') {
     $version = $title
 
+    $pkgarch_postfix = $pkgarch ? { '' => '', default => ":$pkgarch", }
+
     $extra_packages = $with_extra ? {
-      true  => [ "linux-image-extra-$version" ],
+      true  => [ "linux-image-extra-${version}${pkgarch_postfix}" ],
       false => [],
     }
 
     $dbg_packages = $with_dbg ? {
-      true  => [ "linux-image-$version-dbg" ],
+      true  => [ "linux-image-${version}-dbg${pkgarch_postfix}" ],
       false => [],
     }
 
-    $packages = [ "linux-headers-$version"
-                , "linux-image-$version"
+    $packages = [ "linux-headers-${version}${pkgarch_postfix}"
+                , "linux-image-${version}${pkgarch_postfix}"
                 , $extra_packages
                 , $dbg_packages ]
 

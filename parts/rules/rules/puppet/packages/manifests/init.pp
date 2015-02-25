@@ -804,6 +804,9 @@ class packages {
           [ '3.2.0-70-generic-pae', '3.18.7.opinsys1', ]:
             package_tag => 'puavo',
             with_extra  => false;
+
+          [ '3.13.0-46-generic' ]:
+            pkgarch => 'amd64';
         }
       }
 
