@@ -49,6 +49,11 @@ class kernels {
                      default  => $default_kernel,
                    }
 
+  $amd64_kernel = $architecture ? {
+                    'i386'  => '3.13.0-46-generic',
+                    default => $default_kernel,
+                  }
+
   $edge_kernel = $lsbdistcodename ? {
     'trusty' => $architecture ? {
                   'i386'  => '3.18.7.opinsys1',
@@ -60,6 +65,7 @@ class kernels {
   $stable_kernel = $default_kernel
 
   all_kernel_links {
+    'amd64':   kernel => $amd64_kernel;
     'default': kernel => $default_kernel;
     'edge':    kernel => $edge_kernel;
     'legacy':  kernel => $legacy_kernel;
