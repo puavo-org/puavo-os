@@ -1,5 +1,6 @@
 class packages {
   require apt::default_repositories,
+          apt::multiarch,
           opinsys_apt_repositories
 
   include packages::kernels,
