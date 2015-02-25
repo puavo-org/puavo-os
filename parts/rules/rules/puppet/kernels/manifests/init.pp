@@ -44,6 +44,11 @@ class kernels {
     default => $default_kernel,
   }
 
+  $utopic_kernel = $lsbdistcodename ? {
+                     'trusty' => '3.16.0-30-generic',
+                     default  => $default_kernel,
+                   }
+
   $edge_kernel = $lsbdistcodename ? {
     'trusty' => $architecture ? {
                   'i386'  => '3.18.7.opinsys1',
@@ -59,5 +64,6 @@ class kernels {
     'edge':    kernel => $edge_kernel;
     'legacy':  kernel => $legacy_kernel;
     'stable':  kernel => $stable_kernel;
+    'utopic':  kernel => $utopic_kernel;
   }
 }
