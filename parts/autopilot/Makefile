@@ -3,6 +3,7 @@ prefix = /usr
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
 datarootdir = $(prefix)/share
+libdir = $(prefix)/lib
 sysconfdir = /etc
 
 INSTALL = install -p
@@ -17,6 +18,7 @@ deb:
 bin/puavo-autopilot-env: Makefile
 	echo "#!/bin/sh" > $@
 	echo "export PUAVO_AUTOPILOT_SHAREDIR=$(datarootdir)/puavo-autopilot" >> $@
+	echo "export PUAVO_AUTOPILOT_LIBDIR=$(libdir)/puavo-autopilot" >> $@
 
 install: bin/puavo-autopilot-env installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d \
@@ -30,9 +32,12 @@ install: bin/puavo-autopilot-env installdirs
 		bin/puavo-autopilot-env \
 		bin/puavo-autopilot-logger \
 		bin/puavo-autopilot-session \
+		bin/puavo-autopilot-session-releasetest \
 		bin/puavo-autopilot-session-smoke \
-		bin/puavo-autopilot-session-stress \
-		bin/puavo-autopilot-session-verify-java
+		bin/puavo-autopilot-session-stress
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir) \
+		lib/*
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-autopilot \
 		share/*
@@ -46,6 +51,7 @@ installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-autopilot
+	mkdir -p $(DESTDIR)$(libdir)/puavo-autopilot
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
 .PHONY: all			\
