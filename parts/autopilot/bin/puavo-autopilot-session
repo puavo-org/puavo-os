@@ -18,6 +18,8 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+AVAILABLE_MODES = %w(releasetest smoke stress)
+
 def get_autopilot_mode
   conffile_path = ENV['PUAVO_SESSION_PATH']
   conf = JSON.parse( IO.read(conffile_path) )["device"]
@@ -34,7 +36,6 @@ def get_autopilot_mode
 
   autopilot_tags = conf['tags'].select { |s| s.match(/^autopilot/) }
 
-  available_modes = %w(releasetest smoke stress)
   mode            = ''
 
   autopilot_tags.each do |autopilot_tag|
@@ -42,7 +43,7 @@ def get_autopilot_mode
       = * autopilot_tag.split(':')
 
     if autopilot_string != 'autopilot'                                  \
-         || maybe_mode.nil? || (! available_modes.include?(maybe_mode)) \
+         || maybe_mode.nil? || (! AVAILABLE_MODES.include?(maybe_mode)) \
          || username.nil?   || username.empty?                          \
          || password.nil?   || password.empty? then
       warn "Autopilot tag '#{ autopilot_tag }' is not sensible."
@@ -60,15 +61,9 @@ def get_autopilot_mode
 end
 
 mode = get_autopilot_mode()
-case mode
-when 'relasetest'
-  system('puavo-autopilot-session-releasetest')
-  exit $?.exitstatus
-when 'smoke'
-  system('puavo-autopilot-session-smoke')
-  exit $?.exitstatus
-when 'stress'
-  system('puavo-autopilot-session-stress')
+if AVAILABLE_MODES.include?(mode)
+  session_command = "puavo-autopilot-session-#{mode}"
+  system(session_command)
   exit $?.exitstatus
 else
   STDERR.puts("ignoring unknown Puavo autopilot mode '#{mode}'")
