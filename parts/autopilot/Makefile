@@ -28,13 +28,7 @@ install: bin/puavo-autopilot-env installdirs
 		puavo-autopilot-session.desktop
 
 	$(INSTALL) -t $(DESTDIR)$(bindir) \
-		bin/pnggrep \
-		bin/puavo-autopilot-env \
-		bin/puavo-autopilot-logger \
-		bin/puavo-autopilot-session \
-		bin/puavo-autopilot-session-releasetest \
-		bin/puavo-autopilot-session-smoke \
-		bin/puavo-autopilot-session-stress
+		bin/*
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir) \
 		lib/*
