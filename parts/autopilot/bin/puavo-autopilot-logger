@@ -31,7 +31,7 @@ EOF
     exit(0)
     when '--tag'
       if TAG_PATTERN.match(arg).nil? then
-        STDERR.puts("ERROR: invalid TAG #{arg}, "
+        STDERR.puts("ERROR: invalid TAG #{arg}, " \
                     "TAG must match #{TAG_PATTERN.source}")
         exit 1
       end
