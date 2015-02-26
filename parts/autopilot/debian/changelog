@@ -1,3 +1,15 @@
+puavo-autopilot (0.3.6) trusty; urgency=medium
+
+  * Git(5d9c7370781e7883aefacf5b592a177c7b8ae5fe)
+  * Fix libdir installation path
+  * Simplify session dispatching
+  * Simplify bin installation
+  * Add new session: releasetest
+  * Send autopilot log message if Java is verified
+  * Fix syntax error
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 26 Feb 2015 14:17:39 +0200
+
 puavo-autopilot (0.3.5) trusty; urgency=medium
 
   * Git(56a7b6a498e343edeeb534f3b1b1d894a4b505ac)
