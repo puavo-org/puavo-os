@@ -65,7 +65,6 @@ class PuavoWrapper
 
   def emit(tag, es, chain)
     es.each do |time, record|
-      $log.info "record: #{ tag }: #{ record.inspect }"
       inject_device_source(record)
     end
     @plugin.emit(tag, es, chain)
