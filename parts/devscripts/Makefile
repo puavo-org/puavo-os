@@ -10,11 +10,15 @@ INSTALL_DATA = $(INSTALL) -m 644
 
 all:
 
+bin/puavo-devscripts-env: Makefile
+	echo "#!/bin/sh" > $@
+	echo "export PUAVO_DEVSCRIPTS_SHAREDIR=$(sharedir)" >> $@
+
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sharedir)/git-hooks
 
-install: installdirs
+install: bin/puavo-devscripts-env installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		bin/adm-x \
 		bin/adm-x11vnc \
@@ -25,6 +29,7 @@ install: installdirs
 		bin/puavo-build-debian-dir \
 		bin/puavo-dch \
 		bin/puavo-debuild \
+		bin/puavo-devscripts-env \
 		bin/puavo-img-clone \
 		bin/puavo-img-chroot \
 		bin/puavo-install-deps \
@@ -32,6 +37,8 @@ install: installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sharedir)/git-hooks \
 		share/git-hooks/*
+
+	rm -f bin/puavo-devscripts-env
 
 install-lxc-tools: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
@@ -65,13 +72,14 @@ deb: debiandir
 deb-binary-arch: debiandir
 	dpkg-buildpackage -B -us -uc
 
-.PHONY: all			\
-	clean			\
-	clean-deb		\
-	deb			\
-	deb-binary-arch		\
-	debiandir		\
-	install			\
-	install-dch-suffix	\
-	install-lxc-tools	\
+.PHONY: all			 \
+	bin/puavo-devscripts-env \
+	clean			 \
+	clean-deb		 \
+	deb			 \
+	deb-binary-arch		 \
+	debiandir		 \
+	install			 \
+	install-dch-suffix	 \
+	install-lxc-tools	 \
 	installdirs
