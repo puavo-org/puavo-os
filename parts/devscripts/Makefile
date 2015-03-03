@@ -33,6 +33,7 @@ install: bin/puavo-devscripts-env installdirs
 		bin/puavo-img-clone \
 		bin/puavo-img-chroot \
 		bin/puavo-install-deps \
+		bin/puavo-install-git-hooks \
 		bin/puavo-passwd
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sharedir)/git-hooks \
