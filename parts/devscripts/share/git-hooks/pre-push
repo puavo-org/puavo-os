@@ -45,11 +45,6 @@ on_exit()
     exit $exitvalue
 }
 
-if git log -n1 --format='%s' | egrep -q '^Pre-push-release: '; then
-    ## No commits since the last release, nothing to do.
-    exit 0
-fi
-
 if git log -n1 --format='%s' | egrep -q '^RELEASE: '; then
     ## No commits since the last release, nothing to do.
     exit 0
@@ -72,9 +67,6 @@ cp -a debian/changelog "${tmpdir}"
 dch -U "Git(${head_commit})"
 echo "${lines}" \
     | while read line; do
-          if echo "${line}" | egrep -q '^Pre-push-release: '; then
-              break
-          fi
           if echo "${line}" | egrep -q '^RELEASE: '; then
               break
           fi
