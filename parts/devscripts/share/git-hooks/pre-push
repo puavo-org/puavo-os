@@ -45,6 +45,11 @@ on_exit()
     exit $exitvalue
 }
 
+if [ ! -d debian/changelog ]; then
+    echo 'error: debian/changelog is missing' >&2
+    exit 1
+fi
+
 if git log -n1 --format='%s' | egrep -q '^RELEASE: '; then
     ## No commits since the last release, nothing to do.
     exit 0
