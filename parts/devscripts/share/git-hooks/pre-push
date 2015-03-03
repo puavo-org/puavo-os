@@ -45,6 +45,11 @@ on_exit()
     exit $exitvalue
 }
 
+if [ -z "$(git ls-tree HEAD debian/changelog)" ]; then
+    echo 'error: debian/changelog is not part of the HEAD tree' >&2
+    exit 1
+fi
+
 if [ ! -d debian/changelog ]; then
     echo 'error: debian/changelog is missing' >&2
     exit 1
