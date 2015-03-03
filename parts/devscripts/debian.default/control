@@ -9,6 +9,7 @@ Homepage: https://github.com/opinsys/puavo-devscripts
 Package: puavo-devscripts
 Architecture: all
 Depends: ${misc:Depends},
+ bash,
  devscripts,
  equivs,
  git-core,
