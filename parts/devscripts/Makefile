@@ -1,6 +1,8 @@
 prefix = /usr/local
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
+datarootdir = $(prefix)/share
+sharedir = $(datarootdir)/puavo-devscripts
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -10,6 +12,7 @@ all:
 
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
+	mkdir -p $(DESTDIR)$(sharedir)/git-hooks
 
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
@@ -26,6 +29,9 @@ install: installdirs
 		bin/puavo-img-chroot \
 		bin/puavo-install-deps \
 		bin/puavo-passwd
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sharedir)/git-hooks \
+		share/git-hooks/*
 
 install-lxc-tools: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \

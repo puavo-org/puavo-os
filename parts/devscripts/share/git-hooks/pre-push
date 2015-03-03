@@ -1,0 +1,75 @@
+#!/bin/bash
+
+set -eu
+
+on_exit()
+{
+    if [ -n "${tmpdir}" ]; then
+        if [ -f "${tmpdir}/changelog" ]; then
+            cp -a "${tmpdir}/changelog" debian/changelog
+        fi
+        rm -rf "${tmpdir}"
+    fi
+
+    exit $exitvalue
+}
+
+if git log -n1 --format='%s' | egrep -q '^Pre-push-release: '; then
+    ## No commits since the last release, nothing to do.
+    exit 0
+fi
+
+if git log -n1 --format='%s' | egrep -q '^RELEASE: '; then
+    ## No commits since the last release, nothing to do.
+    exit 0
+fi
+
+## Update the changelog.
+commit=$(sed -r -n 's/^  \* Git\(([a-z0-9]+)\)$/\1/p' debian/changelog | head -n1)
+lines=$(git log --oneline --no-merges --format=format:'%s' "${commit}...HEAD")
+head_commit=$(git rev-parse HEAD)
+
+exitvalue=1
+tmpdir=
+
+trap on_exit EXIT
+
+tmpdir=$(mktemp -d)
+
+cp -a debian/changelog "${tmpdir}"
+
+dch -U "Git(${head_commit})"
+echo "${lines}" \
+    | while read line; do
+          if echo "${line}" | egrep -q '^Pre-push-release: '; then
+              break
+          fi
+          if echo "${line}" | egrep -q '^RELEASE: '; then
+              break
+          fi
+          dch "${line}"
+      done
+dch --release ''
+
+git diff
+
+## Ask for confirmation.
+exec < /dev/tty
+while true; do
+    read -p 'Add release commit? [y/n] ' answer || break
+    case "${answer}" in
+        y)
+            version=$(dpkg-parsechangelog | sed -r -n 's/^Version: //p')
+            git commit debian/changelog -m "RELEASE: ${version}"
+            break
+            ;;
+        n)
+            exitvalue=0
+            break
+            ;;
+        *)
+            echo "Please answer 'y' or 'n'." >&2
+            continue
+            ;;
+    esac
+done
