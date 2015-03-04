@@ -36,9 +36,6 @@ set -eu
 on_exit()
 {
     if [ -n "${tmpdir}" ]; then
-        if [ -f "${tmpdir}/changelog" ]; then
-            cp -a "${tmpdir}/changelog" debian/changelog
-        fi
         rm -rf "${tmpdir}"
     fi
 
@@ -46,6 +43,11 @@ on_exit()
 }
 
 echo "Executing $0"
+
+git diff-index --quiet HEAD -- debian/changelog || {
+    echo 'warning: there are uncommitted changes in debian/changelog, not creating a release commit' >&2
+    exit 0
+}
 
 if [ -z "$(git ls-tree HEAD debian/changelog)" ]; then
     echo 'error: debian/changelog is not part of the HEAD tree' >&2
@@ -76,24 +78,25 @@ tmpdir=$(mktemp -d)
 
 cp -a debian/changelog "${tmpdir}"
 
-dch -U "Git(${head_commit})"
+dch -c "${tmpdir}/changelog" -U "Git(${head_commit})"
 echo "${lines}" \
     | while read line; do
           if echo "${line}" | egrep -q '^RELEASE: '; then
               break
           fi
-          dch "${line}"
+          dch -c "${tmpdir}/changelog" "${line}"
       done
-dch --release ''
+dch -c "${tmpdir}/changelog" --release ''
 
-git diff
+dpkg-parsechangelog -l"${tmpdir}/changelog" -n1 | sed -n '/^Changes:/,$p'
 
 ## Ask for confirmation.
 exec < /dev/tty
 while true; do
-    read -p 'Add release commit? [y/n] ' answer || break
+    read -p 'Make a release? [y/n] ' answer || break
     case "${answer}" in
         y)
+            cp "${tmpdir}/changelog" debian/changelog
             version=$(dpkg-parsechangelog | sed -r -n 's/^Version: //p')
             git commit debian/changelog -m "RELEASE: ${version}"
             break
