@@ -1,8 +1,17 @@
-puavo-devscripts (0.6.0) UNRELEASED; urgency=medium
+puavo-devscripts (0.6.0) trusty; urgency=medium
 
   * Bump up the minor version.
+  * Append the git commit info to the end of the changelog entry
+  * Bump up the minor version
+  * Simplify building by fixing Makefile defaults
+  * Remove useless comments
+  * Remove debian/upstream, this is native package
+  * Remove get-orig-source target, this is native package
+  * Make install-dep-deps a .PHONY target
+  * Update maintainer
+  * Git(0dca376de7e7a82a2d9eee7ffb0f9f3f60ef88f7)
 
- -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 04 Mar 2015 15:26:34 +0200
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 04 Mar 2015 15:30:39 +0200
 
 puavo-devscripts (0.5.1) trusty; urgency=medium
 
