@@ -1,3 +1,12 @@
+puavo-devscripts (0.6.1) trusty; urgency=medium
+
+  * New release
+  * Fix debian/changelog version update
+  * ci.sh: upload to build distribution -specific codename
+  * Git(8e80600eab710179acc486643bb6b377c9df1415)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 04 Mar 2015 15:50:07 +0200
+
 puavo-devscripts (0.6.0) trusty; urgency=medium
 
   * Bump up the minor version.
