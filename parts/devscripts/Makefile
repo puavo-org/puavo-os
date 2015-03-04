@@ -72,5 +72,6 @@ deb:
 	deb			 \
 	install			 \
 	install-dch-suffix	 \
+	install-deb-deps	 \
 	install-lxc-tools	 \
 	installdirs
