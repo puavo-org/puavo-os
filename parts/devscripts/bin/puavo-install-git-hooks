@@ -49,14 +49,14 @@ if [ $# -ne 0 ]; then
     usage_error "invalid number of arguments ($#), expected 0"
 fi
 
-rootdir=$(git rev-parse --show-toplevel)
+rootdir=$(git rev-parse --show-cdup)
 
 src_hooks=$(find "${PUAVO_DEVSCRIPTS_SHAREDIR}/git-hooks" \
     -mindepth 1 -maxdepth 1 -type f)
 
 while read src_hook; do
     hook=$(basename "${src_hook}")
-    dst_hook="${rootdir}/.git/hooks/${hook}"
+    dst_hook="${rootdir}.git/hooks/${hook}"
     if $force; then
         cp -v "${src_hook}" "${dst_hook}"
     else
