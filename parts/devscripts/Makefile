@@ -1,8 +1,9 @@
-prefix = /usr/local
+prefix = /usr
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
 datarootdir = $(prefix)/share
 sharedir = $(datarootdir)/puavo-devscripts
+sysconfdir = /etc
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
