@@ -52,7 +52,7 @@ if [ -z "$(git ls-tree HEAD debian/changelog)" ]; then
     exit 1
 fi
 
-if [ ! -d debian/changelog ]; then
+if [ ! -f debian/changelog ]; then
     echo 'error: debian/changelog is missing' >&2
     exit 1
 fi
