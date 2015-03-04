@@ -60,26 +60,16 @@ clean-deb:
 	rm -f ../puavo-devscripts_*.tar.gz
 
 install-deb-debs:
-	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian.default/control
+	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
 
-debiandir:
-	rm -rf debian
-	cp -a debian.default debian
-	bin/puavo-dch $(shell cat VERSION)
-
-deb: debiandir
+deb:
 	dpkg-buildpackage -us -uc
-
-deb-binary-arch: debiandir
-	dpkg-buildpackage -B -us -uc
 
 .PHONY: all			 \
 	bin/puavo-devscripts-env \
 	clean			 \
 	clean-deb		 \
 	deb			 \
-	deb-binary-arch		 \
-	debiandir		 \
 	install			 \
 	install-dch-suffix	 \
 	install-lxc-tools	 \
