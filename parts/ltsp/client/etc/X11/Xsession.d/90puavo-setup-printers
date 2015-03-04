@@ -61,6 +61,12 @@ case "${hosttype}" in
         set_default_printer
         ;;
     *)
-        echo "hosttype '${hosttype}' does not support Puavo printer setup" >&2
+        if jq -r .tags[] /etc/puavo/device.json | grep -qx use_puavo_printer_permissions; then
+            remove_remote_printers
+            add_remote_printers
+            set_default_printer
+        else
+            echo "hosttype '${hosttype}' does not support Puavo printer setup" >&2
+        fi
         ;;
 esac
