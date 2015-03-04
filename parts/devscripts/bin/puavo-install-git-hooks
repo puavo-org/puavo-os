@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -eu
+
+. puavo-devscripts-env
+
+rootdir=$(git rev-parse --show-toplevel)
+
+src_hooks=$(find "${PUAVO_DEVSCRIPTS_SHAREDIR}/git-hooks" \
+    -mindepth 1 -maxdepth 1 -type f)
+
+while read src_hook; do
+    hook=$(basename "${src_hook}")
+    dst_hook="${rootdir}/.git/hooks/${hook}"
+    if [ -e "${dst_hook}" ]; then
+        echo "warning: destination '${dst_hook}' already exists, skipping" >&2
+        continue
+    fi
+    cp -v -n "${src_hook}" "${dst_hook}"
+done <<<"${src_hooks}"
