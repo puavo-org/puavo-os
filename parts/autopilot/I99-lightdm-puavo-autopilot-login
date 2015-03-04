@@ -31,7 +31,7 @@
     xte 'key Escape'
     sleep 1
 
-    xte "str ${username}"
+    xte "str ${user}"
     xte 'key Return'
     sleep 4 ## Password widget activates slowly.
 
