@@ -78,7 +78,6 @@ tmpdir=$(mktemp -d)
 
 cp -a debian/changelog "${tmpdir}"
 
-dch -c "${tmpdir}/changelog" -U "Git(${head_commit})"
 echo "${lines}" \
     | while read line; do
           if echo "${line}" | egrep -q '^RELEASE: '; then
@@ -86,6 +85,7 @@ echo "${lines}" \
           fi
           dch -c "${tmpdir}/changelog" "${line}"
       done
+dch -c "${tmpdir}/changelog" -U "Git(${head_commit})"
 dch -c "${tmpdir}/changelog" --release ''
 
 dpkg-parsechangelog -l"${tmpdir}/changelog" -n1 | sed -n '/^Changes:/,$p'
