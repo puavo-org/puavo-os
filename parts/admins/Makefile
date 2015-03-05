@@ -7,7 +7,15 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
+# For some reason ruby lib directory is different under /usr and /usr/local
+ifeq ($(prefix),/usr/local)
+	RUBY_LIB_DIR = $(prefix)/lib/site_ruby
+else
+	RUBY_LIB_DIR = $(prefix)/lib/ruby/vendor_ruby
+endif
+
 all: $(binaries)
+	bundle install --standalone --path lib/puavoadmins-vendor
 
 puavoadmins-validate-orgjson: puavoadmins-validate-orgjson.o orgjson.o
 	gcc -o $@ $^ -ljansson -lm
@@ -26,6 +34,7 @@ libnss_puavoadmins.so.2: passwd.o group.o orgjson.o
 
 installdirs:
 	mkdir -p $(DESTDIR)$(prefix)/lib
+	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
 
 install: installdirs all
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(prefix)/lib \
@@ -34,6 +43,8 @@ install: installdirs all
 		puavoadmins-ssh-authorized-keys \
 		puavoadmins-update-orgjson \
 		puavoadmins-validate-orgjson
+
+	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
 
 clean:
 	rm -rf *.o
