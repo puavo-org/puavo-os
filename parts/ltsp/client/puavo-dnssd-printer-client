@@ -101,21 +101,21 @@ def query_printer(printer, ipps=false)
     res.each_resource(printer, 'TXT') { |rr|
       rr.rdata.each do |data|
         if /rp=(.*)/.match(data)
-          path = $1
+          path = $1.tr('^A-Za-z0-9\-_/', '')
         end
 
         if /note=(.*)/.match(data)
-          name = $1
+          name = $1.tr('^A-Za-z0-9\-_\.', '')
         end
 
         if /URF=(.*)/.match(data)
-          urf = $1
+          urf = $1.tr('^A-Za-z0-9\-_', '')
         end
       end
     }
 
     res.each_resource(printer, 'SRV') { |rr|
-      server = rr.target.to_s
+      server = rr.target.to_s.tr('^A-Za-z0-9\-_.', '')
     }
 
     if ipps
