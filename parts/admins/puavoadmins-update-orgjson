@@ -16,6 +16,13 @@
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
+## Update orgjson safely.
+## Exit status:
+##   0 - orgjson was already up to date
+##   1 - an error occurred, orgjson was not updated
+##   2 - an update was available but user canceled
+##   3 - orgjson was updated succesfully
+
 ## Standard library modules.
 require 'fileutils'
 require 'set'
@@ -68,10 +75,12 @@ begin
     deleted_admins.each { |a| puts "\e[31m- #{a}\e[0m" }
     new_admins.each { |a| puts "\e[32m+ #{a}\e[0m" }
 
-    exit(0) unless agree('Accept these changes? ')
+    exit(2) unless agree('Accept these changes? ')
   end
 
   File.rename(new_org_json_filepath, org_json_filepath)
 ensure
   FileUtils.rm_f(new_org_json_filepath)
 end
+
+exit(3)
