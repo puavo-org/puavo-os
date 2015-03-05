@@ -35,6 +35,10 @@ This keeps printer lists stable e.g. when network connection is flaky.
 If the --delete-unmanaged option is specified, all unmanaged printers 
 are deleted always (even when --require-dns-records is defined).
 
+Normally DNS is queried once, but the number of retries can be set with 
+--retries=X option. The delay between retries is by default 15 seconds, but 
+it can be changed with --retry-delay=XX option.
+
 =end
 
 require 'etc'
@@ -178,10 +182,23 @@ opts = Trollop::options do
   opt :delete_unmanaged, "Delete unmanaged printers"
   opt :no_dns_query, "Do not query DNS records"
   opt :require_dns_records, "Require DNS records to exist before doing updates"
+  opt :retries, "Retry number of times if DNS query fails", :type => Integer
+  opt :retry_delay, "Delay between retries (default 15 seconds)", :type => Integer
 end
 
 if opts[:delay]
   sleep(opts[:delay])
+end
+
+retries = 1
+retry_delay = 15
+
+if opts[:retries]
+  retries = opts[:retries]
+end
+
+if opts[:retry_delay]
+  retry_delay = opts[:retry_delay]
 end
 
 dname = "b._dns-sd._udp"
@@ -216,24 +233,32 @@ printers = Hash.new
 ptr_records_ok = false
 
 if !opts[:no_dns_query]
-  begin
-    res   = Dnsruby::DNS.new
+  while retries > 0 and !ptr_records_ok
+    retries = retries-1
 
-    res.each_resource(dname, 'PTR') { |rr|
-      begin
-        printers.merge! query_domain(rr.rdata, false)
-        ptr_records_ok = true
-      rescue DNSException => e
-      end
+    begin
+      res   = Dnsruby::DNS.new
 
-      begin
-        printers.merge! query_domain(rr.rdata, true)
-        ptr_records_ok = true
-      rescue DNSException => e
-      end
-    }
-  rescue Exception => e
-    print "Can't find PTR records for #{dname}: ", e, "\n"
+      res.each_resource(dname, 'PTR') { |rr|
+        begin
+          printers.merge! query_domain(rr.rdata, false)
+          ptr_records_ok = true
+        rescue DNSException => e
+        end
+
+        begin
+          printers.merge! query_domain(rr.rdata, true)
+          ptr_records_ok = true
+        rescue DNSException => e
+        end
+      }
+    rescue Exception => e
+      print "Can't find PTR records for #{dname}: ", e, "\n"
+     end
+
+    if retries > 0 and !ptr_records_ok
+      sleep(retry_delay)
+    end
   end
 
   if opts[:require_dns_records] and !ptr_records_ok
