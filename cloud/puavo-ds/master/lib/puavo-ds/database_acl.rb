@@ -655,6 +655,7 @@ class LdapAcl
 					 puavoDeviceOnHour
 					 puavoDeviceOffHour
 					 puavoDeviceAutoPowerOffMode
+                                         puavoImageSeriesSourceURL
 					 puavoAutomaticImageUpdates)),	Rule.write(Set.owner_and_user),		Rule.read(Set.all_admins,
 															  PuavoUid.puavo,
 															  PuavoUid.puavo_ticket,
