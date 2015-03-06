@@ -143,8 +143,8 @@ begin
     new_admins.each_value do |admin|
       next unless news.include? admin[:username]
       puts color_green "  #{admin[:username]}"
-      puts color_green "    uid     : #{admin[:uid]}"
-      puts color_green "    SSH key : #{admin[:ssh_public_key_fingerprint]}"
+      puts color_green "    uid                 : #{admin[:uid]}"
+      puts color_green "    SSH key fingerprint : #{admin[:ssh_public_key_fingerprint]}"
       puts
     end
   end
@@ -162,15 +162,15 @@ begin
         old_uid = old_admin[:uid]
         new_uid = new_admin[:uid]
         if old_uid != new_uid
-          puts "    uid     < #{color_red(old_uid)}"
-          puts "            > #{color_green(new_uid)}"
+          puts "    uid                 < #{color_red(old_uid)}"
+          puts "                        > #{color_green(new_uid)}"
         end
 
         old_ssh = old_admin[:ssh_public_key_fingerprint]
         new_ssh = new_admin[:ssh_public_key_fingerprint]
         if old_ssh != new_ssh
-          puts "    SSH key < #{color_red(old_ssh)}"
-          puts "            > #{color_green(new_ssh)}"
+          puts "    SSH key fingerprint < #{color_red(old_ssh)}"
+          puts "                        > #{color_green(new_ssh)}"
         end
         puts
       end
