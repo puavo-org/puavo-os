@@ -98,6 +98,7 @@ begin
     exit(1)
   end
 
+  old_admins = {}
   if File.exists?(org_json_filepath) then
     system('/usr/lib/puavoadmins-validate-orgjson', org_json_filepath)
     if !$?.success? then
@@ -105,80 +106,79 @@ begin
     end
     org_json = JSON.parse(File.read(org_json_filepath))
 
-    old_admins = {}
     org_json['owners'].each do |owner|
       admin = owner_to_admin(owner)
       username = admin[:username]
       old_admins[username] = admin
     end
+  end
 
-    new_admins = {}
-    new_org_json['owners'].each do |owner|
-      admin = owner_to_admin(owner)
-      username = admin[:username]
-      new_admins[username] = admin
+  new_admins = {}
+  new_org_json['owners'].each do |owner|
+    admin = owner_to_admin(owner)
+    username = admin[:username]
+    new_admins[username] = admin
+  end
+
+  old_usernames = Set.new(old_admins.keys)
+  new_usernames = Set.new(new_admins.keys)
+  dels, news, olds = [old_usernames - new_usernames,
+                      new_usernames - old_usernames,
+                      old_usernames & new_usernames]
+
+  has_changes = false
+
+  if !dels.empty?
+    has_changes = true
+    puts "Removed Puavo administrators:"
+    dels.each do |username|
+      puts color_red "  #{username}"
     end
+    puts
+  end
 
-    old_usernames = Set.new(old_admins.keys)
-    new_usernames = Set.new(new_admins.keys)
-    dels, news, olds = [old_usernames - new_usernames,
-                        new_usernames - old_usernames,
-                        old_usernames & new_usernames]
-
-    has_changes = false
-
-    if !dels.empty?
-      has_changes = true
-      puts "Removed Puavo administrators:"
-      dels.each do |username|
-        puts color_red "  #{username}"
-      end
+  if !news.empty?
+    has_changes = true
+    puts "New Puavo administrators:"
+    new_admins.each_value do |admin|
+      next unless news.include? admin[:username]
+      puts color_green "  #{admin[:username]}"
+      puts color_green "    uid     : #{admin[:uid]}"
+      puts color_green "    SSH key : #{admin[:ssh_public_key_fingerprint]}"
       puts
     end
+  end
 
-    if !news.empty?
+  if !olds.empty?
+    mods = olds.select { |u| old_admins[u] != new_admins[u] }
+    if !mods.empty?
       has_changes = true
-      puts "New Puavo administrators:"
-      new_admins.each_value do |admin|
-        next unless news.include? admin[:username]
-        puts color_green "  #{admin[:username]}"
-        puts color_green "    uid     : #{admin[:uid]}"
-        puts color_green "    SSH key : #{admin[:ssh_public_key_fingerprint]}"
+      puts "Updated Puavo administrators:"
+      mods.each do |username|
+        puts "  #{username}"
+        old_admin = old_admins[username]
+        new_admin = new_admins[username]
+
+        old_uid = old_admin[:uid]
+        new_uid = new_admin[:uid]
+        if old_uid != new_uid
+          puts "    uid     < #{color_red(old_uid)}"
+          puts "            > #{color_green(new_uid)}"
+        end
+
+        old_ssh = old_admin[:ssh_public_key_fingerprint]
+        new_ssh = new_admin[:ssh_public_key_fingerprint]
+        if old_ssh != new_ssh
+          puts "    SSH key < #{color_red(old_ssh)}"
+          puts "            > #{color_green(new_ssh)}"
+        end
         puts
       end
     end
-
-    if !olds.empty?
-      mods = olds.select { |u| old_admins[u] != new_admins[u] }
-      if !mods.empty?
-        has_changes = true
-        puts "Updated Puavo administrators:"
-        mods.each do |username|
-          puts "  #{username}"
-          old_admin = old_admins[username]
-          new_admin = new_admins[username]
-
-          old_uid = old_admin[:uid]
-          new_uid = new_admin[:uid]
-          if old_uid != new_uid
-            puts "    uid     < #{color_red(old_uid)}"
-            puts "            > #{color_green(new_uid)}"
-          end
-
-          old_ssh = old_admin[:ssh_public_key_fingerprint]
-          new_ssh = new_admin[:ssh_public_key_fingerprint]
-          if old_ssh != new_ssh
-            puts "    SSH key < #{color_red(old_ssh)}"
-            puts "            > #{color_green(new_ssh)}"
-          end
-          puts
-        end
-      end
-    end
-
-    exit(0) if !has_changes
-    exit(2) unless agree('Accept these changes? [yes/no] ')
   end
+
+  exit(0) if !has_changes
+  exit(2) unless agree('Accept these changes? [yes/no] ')
 
   File.rename(new_org_json_filepath, org_json_filepath)
 ensure
