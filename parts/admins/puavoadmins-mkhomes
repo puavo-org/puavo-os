@@ -43,7 +43,7 @@ org_json['owners'].each do |owner|
                   '/etc/skel/.bashrc',
                   '/etc/skel/.profile'],
                  new_home_dir)
-    FileUtils.chown_R(uid_number, owner['gid_number'], new_home_dir)
+    FileUtils.chown_R(uid_number, 555, new_home_dir)
     File.rename(new_home_dir, home_dir)
   ensure
     FileUtils.rm_rf(new_home_dir)
