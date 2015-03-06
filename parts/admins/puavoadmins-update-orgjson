@@ -31,10 +31,47 @@ require 'set'
 require 'highline/import'
 require 'puavobs'
 
-def diff_admins(org_json1, org_json2)
-  usernames1 = Set.new(org_json1['owners'].map { |o| o['username'] })
-  usernames2 = Set.new(org_json2['owners'].map { |o| o['username'] })
-  [usernames1 - usernames2, usernames2 - usernames1]
+## Bundled modules.
+require 'puavoadmins-vendor/bundler/setup'
+require 'sshkey'
+
+def color(str, color_code)
+  unless defined?($has_colors) then
+    $has_colors = false
+    begin
+      $has_colors = IO.popen(['tput', 'colors']) do |io|
+        Integer(io.read()) >= 8
+      end
+    rescue
+      ## Just hide all errors, we do not care if color output support
+      ## could not be tested properly. Colors are just eye-candies,
+      ## nothing more.
+    end
+  end
+
+  return "\e[#{color_code}m#{str}\e[0m" if $has_colors
+  str
+end
+
+def color_red(str)
+  color(str, 31)
+end
+
+def color_green(str)
+  color(str, 32)
+end
+
+def owner_to_admin(owner)
+  ssh_public_key = owner['ssh_public_key']
+  ssh_public_key_fingerprint = nil
+  if SSHKey.valid_ssh_public_key? ssh_public_key
+    ssh_public_key_fingerprint = SSHKey.fingerprint ssh_public_key
+  end
+  {
+    :ssh_public_key_fingerprint => ssh_public_key_fingerprint,
+    :uid                        => owner['uid_number'],
+    :username                   => owner['username'],
+  }
 end
 
 if !File.new('/run/puavoadmins.lock', 'w').flock(File::LOCK_NB | File::LOCK_EX) then
@@ -67,14 +104,79 @@ begin
       exit(1)
     end
     org_json = JSON.parse(File.read(org_json_filepath))
-    deleted_admins, new_admins = diff_admins(org_json, new_org_json)
 
-    exit(0) if deleted_admins.empty? and new_admins.empty?
+    old_admins = {}
+    org_json['owners'].each do |owner|
+      admin = owner_to_admin(owner)
+      username = admin[:username]
+      old_admins[username] = admin
+    end
 
-    puts "The list of Puavo administrators has changed:"
-    deleted_admins.each { |a| puts "\e[31m- #{a}\e[0m" }
-    new_admins.each { |a| puts "\e[32m+ #{a}\e[0m" }
+    new_admins = {}
+    new_org_json['owners'].each do |owner|
+      admin = owner_to_admin(owner)
+      username = admin[:username]
+      new_admins[username] = admin
+    end
 
+    old_usernames = Set.new(old_admins.keys)
+    new_usernames = Set.new(new_admins.keys)
+    dels, news, olds = [old_usernames - new_usernames,
+                        new_usernames - old_usernames,
+                        old_usernames & new_usernames]
+
+    has_changes = false
+
+    if !dels.empty?
+      has_changes = true
+      puts "Removed Puavo administrators:"
+      dels.each do |username|
+        puts color_red "  #{username}"
+      end
+      puts
+    end
+
+    if !news.empty?
+      has_changes = true
+      puts "New Puavo administrators:"
+      new_admins.each_value do |admin|
+        next unless news.include? admin[:username]
+        puts color_green "  #{admin[:username]}"
+        puts color_green "    uid     : #{admin[:uid]}"
+        puts color_green "    SSH key : #{admin[:ssh_public_key_fingerprint]}"
+        puts
+      end
+    end
+
+    if !olds.empty?
+      mods = olds.select { |u| old_admins[u] != new_admins[u] }
+      if !mods.empty?
+        has_changes = true
+        puts "Updated Puavo administrators:"
+        mods.each do |username|
+          puts "  #{username}"
+          old_admin = old_admins[username]
+          new_admin = new_admins[username]
+
+          old_uid = old_admin[:uid]
+          new_uid = new_admin[:uid]
+          if old_uid != new_uid
+            puts "    uid     < #{color_red(old_uid)}"
+            puts "            > #{color_green(new_uid)}"
+          end
+
+          old_ssh = old_admin[:ssh_public_key_fingerprint]
+          new_ssh = new_admin[:ssh_public_key_fingerprint]
+          if old_ssh != new_ssh
+            puts "    SSH key < #{color_red(old_ssh)}"
+            puts "            > #{color_green(new_ssh)}"
+          end
+          puts
+        end
+      end
+    end
+
+    exit(0) if !has_changes
     exit(2) unless agree('Accept these changes? ')
   end
 
