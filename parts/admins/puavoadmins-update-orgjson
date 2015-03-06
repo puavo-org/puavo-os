@@ -177,7 +177,7 @@ begin
     end
 
     exit(0) if !has_changes
-    exit(2) unless agree('Accept these changes? ')
+    exit(2) unless agree('Accept these changes? [yes/no] ')
   end
 
   File.rename(new_org_json_filepath, org_json_filepath)
