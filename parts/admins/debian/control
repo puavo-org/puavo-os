@@ -2,7 +2,7 @@ Source: puavoadmins
 Section: utils
 Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
-Build-Depends: debhelper (>= 8.0.0), libjansson-dev
+Build-Depends: debhelper (>= 8.0.0), libjansson-dev, equivs, devscripts
 Standards-Version: 3.9.3
 Homepage: http://github.com/opinsys/puavoadmins/
 
