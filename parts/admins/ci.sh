@@ -5,7 +5,7 @@ set -eu
 sudo apt-get update
 sudo apt-get install -y --force-yes aptirepo-upload make devscripts equivs
 
-sudo make install-deb-debs
+sudo make install-deb-deps
 make deb
 
 aptirepo-upload \
