@@ -16,6 +16,7 @@
  */
 
 /* Standard library includes. */
+#include <sys/file.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -77,7 +78,44 @@ struct orgjson *orgjson_load2(const char *const filepath,
 
 struct orgjson *orgjson_load(struct orgjson_error *const error)
 {
-        return orgjson_load2(ORGJSON_PATH, error);
+        struct orgjson *retval;
+        int lockfd;
+
+        lockfd = open("/run/puavoadmins.lock", O_WRONLY);
+        if (lockfd < 0) {
+                if (error) {
+                        error->code = ORGJSON_ERROR_CODE_SYS;
+                        snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
+                                 "failed to open the lock file: %m");
+                }
+                return NULL;
+        }
+
+        if (flock(lockfd, LOCK_SH)) {
+                if (error) {
+                        error->code = ORGJSON_ERROR_CODE_SYS;
+                        snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
+                                 "failed to obtain a read-lock: %m");
+                }
+                close(lockfd);
+                return NULL;
+        }
+
+        retval = orgjson_load2(ORGJSON_PATH, error);
+
+        if (close(lockfd)) {
+                if (retval) {
+                        orgjson_free(retval);
+                }
+                if (error) {
+                        error->code = ORGJSON_ERROR_CODE_SYS;
+                        snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
+                                 "failed to close the lock file: %m");
+                }
+                return NULL;
+        }
+
+        return retval;
 }
 
 void orgjson_free(struct orgjson *const orgjson)
