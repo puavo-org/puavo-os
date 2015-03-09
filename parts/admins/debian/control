@@ -2,13 +2,18 @@ Source: puavoadmins
 Section: utils
 Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
-Build-Depends: debhelper (>= 8.0.0), libjansson-dev, ruby-bundler
+Build-Depends: debhelper (>= 8.0.0),
+ libjansson-dev,
+ ruby-bundler
 Standards-Version: 3.9.3
 Homepage: http://github.com/opinsys/puavoadmins/
 
 Package: puavoadmins
 Architecture: any
-Depends: ${misc:Depends}, libjansson4, ruby1.9.1, ruby-puavobs (>= 0.15.0)
+Depends: ${misc:Depends},
+ libjansson4,
+ ruby-puavobs (>= 0.15.0),
+ ruby1.9.1
 Description: Puavo admin intergration
   This project provides following components for intergrating Puavo
   organization admininstrators to the host:
