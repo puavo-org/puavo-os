@@ -42,7 +42,8 @@ install: installdirs all
 		puavoadmins-mkhomes \
 		puavoadmins-ssh-authorized-keys \
 		puavoadmins-update-orgjson \
-		puavoadmins-validate-orgjson
+		puavoadmins-validate-orgjson \
+		puavoadmins-validate-pam-user
 
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
 
