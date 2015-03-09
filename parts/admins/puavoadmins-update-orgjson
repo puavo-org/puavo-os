@@ -26,6 +26,7 @@
 ## Standard library modules.
 require 'fileutils'
 require 'set'
+require 'timeout'
 
 ## Third-party modules.
 require 'highline/import'
@@ -174,12 +175,14 @@ begin
   exit(0) if !has_changes
   exit(2) unless agree('Accept these changes? [yes/no] ')
 
-  if !File.new('/run/puavoadmins.lock', 'w').flock(File::LOCK_EX) then
-    STDERR.puts('ERROR: failed to obtain write lock')
-    STDERR.puts('ERROR: perhaps puavoadmins-update-orgjson is already running?')
-    exit(1)
-  end
-  File.rename(new_org_json_filepath, org_json_filepath)
+  Timeout::timeout(5) {
+    if !File.new('/run/puavoadmins.lock', 'w').flock(File::LOCK_EX) then
+      STDERR.puts('ERROR: failed to obtain write lock')
+      STDERR.puts('ERROR: perhaps puavoadmins-update-orgjson is already running?')
+      exit(1)
+    end
+    File.rename(new_org_json_filepath, org_json_filepath)
+  }
 ensure
   FileUtils.rm_f(new_org_json_filepath)
 end
