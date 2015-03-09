@@ -75,6 +75,19 @@ def owner_to_admin(owner)
   }
 end
 
+def read_orgjson(org_json_filepath)
+  ## Ensure no one is modifying the orgjson while we read it by blocking
+  ## until it is read-safe.
+  lockfile = File.new('/run/puavoadmins.lock', 'w')
+  if !lockfile.flock(File::LOCK_SH) then
+    STDERR.puts('ERROR: failed to obtain a read lock')
+    exit 1
+  end
+  org_json = JSON.parse(File.read(org_json_filepath))
+  lockfile.close()
+  org_json
+end
+
 org_json_filepath = '/etc/puavo/org.json'
 
 new_org_json = PuavoBS.get_org_json()
@@ -99,7 +112,7 @@ begin
     if !$?.success? then
       exit(1)
     end
-    org_json = JSON.parse(File.read(org_json_filepath))
+    org_json = read_orgjson(org_json_filepath)
 
     org_json['owners'].each do |owner|
       admin = owner_to_admin(owner)
