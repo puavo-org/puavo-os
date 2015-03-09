@@ -1,3 +1,13 @@
+puavoadmins (0.2.5) trusty; urgency=medium
+
+  * New release
+  * Add ruby-bundler to build dependencies
+  * Remove equivs and devscripts from build dependencies
+  * ci.sh: siplify building
+  * Git(39522a84bc8f90f186e5b2560bbd9ff86965a4f3)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 09 Mar 2015 10:06:47 +0200
+
 puavoadmins (0.2.4) trusty; urgency=medium
 
   * New release
