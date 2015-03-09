@@ -56,4 +56,9 @@ clean:
 deb :
 	dpkg-buildpackage -us -uc
 
-.PHONY: all installdirs install install-deb-deps clean deb
+.PHONY: all			\
+	clean			\
+	deb			\
+	install			\
+	install-deb-deps	\
+	installdirs
