@@ -1,4 +1,4 @@
-prefix = /usr/local
+prefix = /usr
 binaries = libnss_puavoadmins.so.2 \
 	puavoadmins-ssh-authorized-keys \
 	puavoadmins-validate-orgjson
@@ -46,14 +46,14 @@ install: installdirs all
 
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
 
+install-deb-deps:
+	mk-build-deps -i -r debian/control
+
 clean:
 	rm -rf *.o
 	rm -rf $(binaries)
 
 deb :
-	rm -rf debian
-	cp -a debian.default debian
-	puavo-dch $(shell cat VERSION)
 	dpkg-buildpackage -us -uc
 
-.PHONY: all installdirs install clean deb
+.PHONY: all installdirs install install-deb-deps clean deb

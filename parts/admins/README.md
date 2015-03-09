@@ -36,7 +36,7 @@ Compile and install
 -------------------
 
     make
-    sudo make install prefix=/usr
+    sudo make install # Implicitly defines prefix=/usr
 
 Configuration
 -------------
