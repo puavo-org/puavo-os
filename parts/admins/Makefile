@@ -35,6 +35,7 @@ libnss_puavoadmins.so.2: passwd.o group.o orgjson.o
 installdirs:
 	mkdir -p $(DESTDIR)$(prefix)/lib
 	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
+	mkdir -p $(DESTDIR)/var/lib/puavoadmins
 
 install: installdirs all
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(prefix)/lib \
@@ -44,6 +45,9 @@ install: installdirs all
 		puavoadmins-update-orgjson \
 		puavoadmins-validate-orgjson \
 		puavoadmins-validate-pam-user
+
+	$(INSTALL_DATA) -t $(DESTDIR)/var/lib/puavoadmins \
+		org.json.lock
 
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
 

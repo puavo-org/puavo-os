@@ -32,7 +32,7 @@ end
 
 ## Ensure no one is modifying the orgjson while we read it by blocking
 ## until it is read-safe.
-if !File.new('/run/puavoadmins.lock', 'w').flock(File::LOCK_SH) then
+if !File.new('/var/lib/puavoadmins/org.json.lock').flock(File::LOCK_SH) then
   STDERR.puts('ERROR: failed to obtain a read lock')
   exit 1
 end

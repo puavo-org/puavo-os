@@ -81,7 +81,7 @@ struct orgjson *orgjson_load(struct orgjson_error *const error)
         struct orgjson *retval;
         int lockfd;
 
-        lockfd = open("/run/puavoadmins.lock", O_WRONLY);
+        lockfd = open("/var/lib/puavoadmins/org.json.lock", O_RDONLY);
         if (lockfd < 0) {
                 if (error) {
                         error->code = ORGJSON_ERROR_CODE_SYS;
