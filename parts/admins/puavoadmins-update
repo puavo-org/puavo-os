@@ -199,7 +199,6 @@ def write_org_json(new_org_json)
     File.open(new_org_json_filepath, 'w') do |file|
       file.write(new_org_json.to_json())
     end
-    FileUtils.chown('root', 'root', new_org_json_filepath)
     File.chmod(0644, new_org_json_filepath)
 
     system('/usr/lib/puavoadmins-validate-orgjson', new_org_json_filepath)
@@ -232,6 +231,11 @@ def write_org_json(new_org_json)
     FileUtils.rm_f(new_org_json_filepath)
   end
 
+end
+
+if Process::UID.eid != 0
+  STDERR.puts('ERROR: this command must be run as root')
+  exit(1)
 end
 
 new_org_json = PuavoBS.get_org_json()
