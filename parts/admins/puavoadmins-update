@@ -19,6 +19,7 @@
 ## Standard library modules.
 require 'fileutils'
 require 'set'
+require 'tempfile'
 require 'timeout'
 
 ## Third-party modules.
@@ -197,15 +198,11 @@ def show_changes(old_admins, new_admins)
 end
 
 def write_org_json(new_org_json)
-  new_org_json_filepath = "#{ORG_JSON_FILEPATH}.new"
+  Tempfile.open("#{ORG_JSON_FILEPATH}.tmp") do |tmpfile|
+    tmpfile.write(new_org_json.to_json())
+    tmpfile.chmod(0644)
 
-  begin
-    File.open(new_org_json_filepath, 'w') do |file|
-      file.write(new_org_json.to_json())
-    end
-    File.chmod(0644, new_org_json_filepath)
-
-    system('/usr/lib/puavoadmins-validate-orgjson', new_org_json_filepath)
+    system('/usr/lib/puavoadmins-validate-orgjson', tmpfile.path)
     unless $?.success?
       raise Error.new 'the new org.json is invalid'
     end
@@ -228,11 +225,9 @@ def write_org_json(new_org_json)
         unless lockfile.flock(File::LOCK_EX) then
           raise Error.new 'failed to obtain a write lock'
         end
-        File.rename(new_org_json_filepath, ORG_JSON_FILEPATH)
+        File.rename(tmpfile.path, ORG_JSON_FILEPATH)
       end
     end
-  ensure
-    FileUtils.rm_f(new_org_json_filepath)
   end
 
 end
