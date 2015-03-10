@@ -1,12 +1,13 @@
-- download Ubuntu Precise Pangolin 12.04.1 Server install ISO 64bit
-- create a boot media with unetbootin
-- install preseed files:
+1. Download the latest Ubuntu Precise Pangolin Server 64bit install ISO image
 
-git clone git://github.com/opinsys/puavo-ltsp.git
-cd puavo-ltsp/bootserver/installer
-mount /dev/sdb1 /media/usbstick
-./install.sh /media/usbstick
-cp /media/usbstick/menu.c32 /media/usbstick/vesamenu.c32
-umount /dev/sdb1
+2. Create a boot media with unetbootin (/dev/sdb1 in this example)
+
+3. Install preseed files:
+
+  mkdir /media/usbstick
+  mount /dev/sdb1 /media/usbstick
+  ./install.sh /media/usbstick
+  cp /media/usbstick/menu.c32 /media/usbstick/vesamenu.c32
+  umount /dev/sdb1
 
 Then just plug it in, boot and wait until the installation is finished.
