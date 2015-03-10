@@ -104,6 +104,15 @@ def mkhomes(org_json)
 
 end
 
+def lock_org_json(type)
+  File.open(ORG_JSON_LOCK_FILEPATH) do |lockfile|
+    unless lockfile.flock(type) then
+      raise Error.new 'failed to obtain a lock'
+    end
+    yield
+  end
+end
+
 def read_org_json()
   ## Ensure no one (of our friends, its only advisory locking after
   ## all) is modifying ORG_JSON_FILEPATH while we read it by blocking
@@ -111,21 +120,24 @@ def read_org_json()
   ## scenario, we could get random parse errors if some one is
   ## updating it while we read it. In the worst case scenario, we
   ## would get valid but corrupted data.
-  File.open(ORG_JSON_LOCK_FILEPATH) do |lockfile|
-    unless lockfile.flock(File::LOCK_SH) then
-      raise Error.new 'failed to obtain a read lock'
+  lock_org_json(File::LOCK_SH) do
+    json_string = '{}'
+
+    if File.exists?(ORG_JSON_FILEPATH)
+      system('/usr/lib/puavoadmins-validate-orgjson', ORG_JSON_FILEPATH)
+      unless $?.success?
+        raise Error.new 'the current org.json is invalid'
+      end
+      json_string = File.read(ORG_JSON_FILEPATH, :external_encoding => 'utf-8')
     end
 
-    system('/usr/lib/puavoadmins-validate-orgjson', ORG_JSON_FILEPATH)
-    unless $?.success?
-      raise Error.new 'the current org.json is invalid'
-    end
-
-    JSON.parse(File.read(ORG_JSON_FILEPATH, :external_encoding => 'utf-8'))
+    JSON.parse(json_string)
   end
 end
 
 def collect_admins(org_json)
+  return {} unless org_json.has_key? 'owners'
+
   admins = {}
   org_json['owners'].each do |owner|
     admin = owner_to_admin(owner)
@@ -135,7 +147,7 @@ def collect_admins(org_json)
   admins
 end
 
-def show_changes(old_admins, new_admins)
+def diff_admins(old_admins, new_admins)
   old_usernames = Set.new(old_admins.keys)
   new_usernames = Set.new(new_admins.keys)
   dels, news, olds = [old_usernames - new_usernames,
@@ -197,7 +209,7 @@ def show_changes(old_admins, new_admins)
 
 end
 
-def write_org_json(new_org_json)
+def update_org_json(new_org_json)
   Tempfile.open("#{ORG_JSON_FILEPATH}.tmp") do |tmpfile|
     tmpfile.write(new_org_json.to_json())
     tmpfile.chmod(0644)
@@ -207,24 +219,18 @@ def write_org_json(new_org_json)
       raise Error.new 'the new org.json is invalid'
     end
 
-    old_admins = {}
-    if File.exists?(ORG_JSON_FILEPATH) then
-      org_json = read_org_json()
-      old_admins = collect_admins(org_json)
-    end
+    old_org_json = read_org_json()
 
+    old_admins = collect_admins(old_org_json)
     new_admins = collect_admins(new_org_json)
 
-    has_changes = show_changes(old_admins, new_admins)
+    has_changes = diff_admins(old_admins, new_admins)
 
     return unless has_changes
     return unless agree('Accept these changes? [yes/no] ')
 
     Timeout::timeout(5) do
-      File.open(ORG_JSON_LOCK_FILEPATH) do |lockfile|
-        unless lockfile.flock(File::LOCK_EX) then
-          raise Error.new 'failed to obtain a write lock'
-        end
+      lock_org_json(File::LOCK_EX) do
         File.rename(tmpfile.path, ORG_JSON_FILEPATH)
       end
     end
@@ -240,7 +246,7 @@ end
 new_org_json = PuavoBS.get_org_json()
 
 begin
-  write_org_json(new_org_json)
+  update_org_json(new_org_json)
   mkhomes(new_org_json)
 rescue Error => e
   STDERR.puts("ERROR: #{e.message}")
