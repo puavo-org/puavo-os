@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby1.9.1
 
-## Copyright (C) 2014, 2015 Opinsys
+## Copyright (C) 2015 Opinsys
 ##
 ## This program is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -16,13 +16,6 @@
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-## Update orgjson safely.
-## Exit status:
-##   0 - orgjson was already up to date
-##   1 - an error occurred, orgjson was not updated
-##   2 - an update was available but user canceled
-##   3 - orgjson was updated succesfully
-
 ## Standard library modules.
 require 'fileutils'
 require 'set'
@@ -35,6 +28,11 @@ require 'puavobs'
 ## Bundled modules.
 require 'puavoadmins-vendor/bundler/setup'
 require 'sshkey'
+
+ORG_JSON_FILEPATH      = '/etc/puavo/org.json'
+ORG_JSON_LOCK_FILEPATH = '/var/lib/puavoadmins/org.json.lock'
+PUAVOADMINS_HOME_ROOT  = '/puavoadmins'
+PUAVOADMINS_GID        = 555
 
 def color(str, color_code)
   unless defined?($has_colors) then
@@ -75,60 +73,64 @@ def owner_to_admin(owner)
   }
 end
 
-def read_orgjson(org_json_filepath)
-  ## Ensure no one is modifying the orgjson while we read it by blocking
-  ## until it is read-safe.
-  lockfile = File.new('/var/lib/puavoadmins/org.json.lock')
-  if !lockfile.flock(File::LOCK_SH) then
-    STDERR.puts('ERROR: failed to obtain a read lock')
-    exit 1
+def mkhomes(org_json)
+  FileUtils.mkdir_p(PUAVOADMINS_HOME_ROOT)
+  FileUtils.chown(0, 555, PUAVOADMINS_HOME_ROOT)
+  File.chmod(0750, PUAVOADMINS_HOME_ROOT)
+
+  org_json['owners'].each do |owner|
+    uid_number = owner['uid_number']
+
+    home_dir = "#{PUAVOADMINS_HOME_ROOT}/#{uid_number}"
+    next if Dir.exists?(home_dir)
+
+    new_home_dir = "#{home_dir}.new"
+    begin
+      Dir.mkdir(new_home_dir, 0750)
+      FileUtils.cp(['/etc/skel/.bash_logout',
+                    '/etc/skel/.bashrc',
+                    '/etc/skel/.profile'],
+                   new_home_dir)
+      FileUtils.chown_R(uid_number, 555, new_home_dir)
+      File.rename(new_home_dir, home_dir)
+    ensure
+      FileUtils.rm_rf(new_home_dir)
+    end
   end
-  org_json = JSON.parse(File.read(org_json_filepath,
-                                  :external_encoding => 'utf-8'))
-  lockfile.close()
-  org_json
+
 end
 
-org_json_filepath = '/etc/puavo/org.json'
-
-new_org_json = PuavoBS.get_org_json()
-
-new_org_json_filepath = "#{org_json_filepath}.new"
-
-begin
-  File.open(new_org_json_filepath, 'w') do |new_org_json_file|
-    new_org_json_file.write(new_org_json.to_json())
-  end
-  FileUtils.chown('root', 'root', new_org_json_filepath)
-  File.chmod(0644, new_org_json_filepath)
-
-  system('/usr/lib/puavoadmins-validate-orgjson', new_org_json_filepath)
-  if !$?.success? then
-    exit(1)
-  end
-
-  old_admins = {}
-  if File.exists?(org_json_filepath) then
-    system('/usr/lib/puavoadmins-validate-orgjson', org_json_filepath)
-    if !$?.success? then
+def read_org_json()
+  ## Ensure no one (of our friends, its only advisory locking after
+  ## all) is modifying ORG_JSON_FILEPATH while we read it by blocking
+  ## until it is read-safe. Without locking, in the best case
+  ## scenario, we could get random parse errors if some one is
+  ## updating it while we read it. In the worst case scenario, we
+  ## would get valid but corrupted data.
+  File.open(ORG_JSON_LOCK_FILEPATH) do |lockfile|
+    if !lockfile.flock(File::LOCK_SH) then
+      STDERR.puts('ERROR: failed to obtain a read lock')
       exit(1)
     end
-    org_json = read_orgjson(org_json_filepath)
 
-    org_json['owners'].each do |owner|
-      admin = owner_to_admin(owner)
-      username = admin[:username]
-      old_admins[username] = admin
-    end
+    system('/usr/lib/puavoadmins-validate-orgjson', ORG_JSON_FILEPATH)
+    exit(1) unless $?.success?
+
+    JSON.parse(File.read(ORG_JSON_FILEPATH, :external_encoding => 'utf-8'))
   end
+end
 
-  new_admins = {}
-  new_org_json['owners'].each do |owner|
+def collect_admins(org_json)
+  admins = {}
+  org_json['owners'].each do |owner|
     admin = owner_to_admin(owner)
     username = admin[:username]
-    new_admins[username] = admin
+    admins[username] = admin
   end
+  admins
+end
 
+def show_changes(old_admins, new_admins)
   old_usernames = Set.new(old_admins.keys)
   new_usernames = Set.new(new_admins.keys)
   dels, news, olds = [old_usernames - new_usernames,
@@ -186,19 +188,52 @@ begin
     end
   end
 
-  exit(0) if !has_changes
-  exit(2) unless agree('Accept these changes? [yes/no] ')
+  has_changes
 
-  Timeout::timeout(5) {
-    if !File.new('/var/lib/puavoadmins/org.json.lock').flock(File::LOCK_EX) then
-      STDERR.puts('ERROR: failed to obtain a write lock')
-      STDERR.puts('ERROR: perhaps puavoadmins-update-orgjson is already running?')
-      exit(1)
-    end
-    File.rename(new_org_json_filepath, org_json_filepath)
-  }
-ensure
-  FileUtils.rm_f(new_org_json_filepath)
 end
 
-exit(3)
+def write_org_json(new_org_json)
+  new_org_json_filepath = "#{ORG_JSON_FILEPATH}.new"
+
+  begin
+    File.open(new_org_json_filepath, 'w') do |file|
+      file.write(new_org_json.to_json())
+    end
+    FileUtils.chown('root', 'root', new_org_json_filepath)
+    File.chmod(0644, new_org_json_filepath)
+
+    system('/usr/lib/puavoadmins-validate-orgjson', new_org_json_filepath)
+    exit(1) unless $?.success?
+
+    old_admins = {}
+    if File.exists?(ORG_JSON_FILEPATH) then
+      org_json = read_org_json()
+      old_admins = collect_admins(org_json)
+    end
+
+    new_admins = collect_admins(new_org_json)
+
+    has_changes = show_changes(old_admins, new_admins)
+
+    return unless has_changes
+    return unless agree('Accept these changes? [yes/no] ')
+
+    Timeout::timeout(5) do
+      File.open(ORG_JSON_LOCK_FILEPATH) do |lockfile|
+        if !lockfile.flock(File::LOCK_EX) then
+          STDERR.puts('ERROR: failed to obtain a write lock')
+          STDERR.puts('ERROR: perhaps puavoadmins-update-orgjson is already running?')
+          exit(1)
+        end
+        File.rename(new_org_json_filepath, ORG_JSON_FILEPATH)
+      end
+    end
+  ensure
+    FileUtils.rm_f(new_org_json_filepath)
+  end
+
+end
+
+new_org_json = PuavoBS.get_org_json()
+write_org_json(new_org_json)
+mkhomes(new_org_json)

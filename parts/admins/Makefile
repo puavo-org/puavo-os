@@ -1,4 +1,5 @@
 prefix = /usr
+sbindir = $(prefix)/sbin
 binaries = libnss_puavoadmins.so.2 \
 	puavoadmins-ssh-authorized-keys \
 	puavoadmins-validate-orgjson
@@ -33,6 +34,7 @@ libnss_puavoadmins.so.2: passwd.o group.o orgjson.o
 	gcc -g -fPIC -std=gnu99 -Wall -Wextra -c $< -o $@
 
 installdirs:
+	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(prefix)/lib
 	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
 	mkdir -p $(DESTDIR)/var/lib/puavoadmins
@@ -40,11 +42,12 @@ installdirs:
 install: installdirs all
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(prefix)/lib \
 		libnss_puavoadmins.so.2 \
-		puavoadmins-mkhomes \
 		puavoadmins-ssh-authorized-keys \
-		puavoadmins-update-orgjson \
 		puavoadmins-validate-orgjson \
 		puavoadmins-validate-pam-user
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
+		puavoadmins-update
 
 	$(INSTALL_DATA) -t $(DESTDIR)/var/lib/puavoadmins \
 		org.json.lock
