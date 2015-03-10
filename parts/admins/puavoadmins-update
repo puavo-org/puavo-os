@@ -34,6 +34,9 @@ ORG_JSON_LOCK_FILEPATH = '/var/lib/puavoadmins/org.json.lock'
 PUAVOADMINS_HOME_ROOT  = '/puavoadmins'
 PUAVOADMINS_GID        = 555
 
+class Error < StandardError
+end
+
 def color(str, color_code)
   unless defined?($has_colors) then
     $has_colors = false
@@ -108,13 +111,14 @@ def read_org_json()
   ## updating it while we read it. In the worst case scenario, we
   ## would get valid but corrupted data.
   File.open(ORG_JSON_LOCK_FILEPATH) do |lockfile|
-    if !lockfile.flock(File::LOCK_SH) then
-      STDERR.puts('ERROR: failed to obtain a read lock')
-      exit(1)
+    unless lockfile.flock(File::LOCK_SH) then
+      raise Error.new 'failed to obtain a read lock'
     end
 
     system('/usr/lib/puavoadmins-validate-orgjson', ORG_JSON_FILEPATH)
-    exit(1) unless $?.success?
+    unless $?.success?
+      raise Error.new 'the current org.json is invalid'
+    end
 
     JSON.parse(File.read(ORG_JSON_FILEPATH, :external_encoding => 'utf-8'))
   end
@@ -202,7 +206,9 @@ def write_org_json(new_org_json)
     File.chmod(0644, new_org_json_filepath)
 
     system('/usr/lib/puavoadmins-validate-orgjson', new_org_json_filepath)
-    exit(1) unless $?.success?
+    unless $?.success?
+      raise Error.new 'the new org.json is invalid'
+    end
 
     old_admins = {}
     if File.exists?(ORG_JSON_FILEPATH) then
@@ -219,10 +225,8 @@ def write_org_json(new_org_json)
 
     Timeout::timeout(5) do
       File.open(ORG_JSON_LOCK_FILEPATH) do |lockfile|
-        if !lockfile.flock(File::LOCK_EX) then
-          STDERR.puts('ERROR: failed to obtain a write lock')
-          STDERR.puts('ERROR: perhaps puavoadmins-update-orgjson is already running?')
-          exit(1)
+        unless lockfile.flock(File::LOCK_EX) then
+          raise Error.new 'failed to obtain a write lock'
         end
         File.rename(new_org_json_filepath, ORG_JSON_FILEPATH)
       end
@@ -239,5 +243,11 @@ if Process::UID.eid != 0
 end
 
 new_org_json = PuavoBS.get_org_json()
-write_org_json(new_org_json)
-mkhomes(new_org_json)
+
+begin
+  write_org_json(new_org_json)
+  mkhomes(new_org_json)
+rescue Error => e
+  STDERR.puts("ERROR: #{e.message}")
+  exit(1)
+end
