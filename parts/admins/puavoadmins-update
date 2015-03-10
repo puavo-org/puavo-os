@@ -226,8 +226,8 @@ def update_org_json(new_org_json)
 
     has_changes = diff_admins(old_admins, new_admins)
 
-    return unless has_changes
-    return unless agree('Accept these changes? [yes/no] ')
+    return false unless has_changes
+    return false unless agree('Accept these changes? [yes/no] ')
 
     Timeout::timeout(5) do
       lock_org_json(File::LOCK_EX) do
@@ -235,7 +235,7 @@ def update_org_json(new_org_json)
       end
     end
   end
-
+  true
 end
 
 if Process::UID.eid != 0
@@ -246,8 +246,7 @@ end
 new_org_json = PuavoBS.get_org_json()
 
 begin
-  update_org_json(new_org_json)
-  mkhomes(new_org_json)
+  update_org_json(new_org_json) and mkhomes(new_org_json)
 rescue Error => e
   STDERR.puts("ERROR: #{e.message}")
   exit(1)
