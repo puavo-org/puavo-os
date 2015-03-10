@@ -35,7 +35,8 @@ FileUtils.mkdir_p(puavoadmins_home_root)
 FileUtils.chown(0, 'puavoadmins', puavoadmins_home_root)
 File.chmod(0750, puavoadmins_home_root)
 
-org_json = JSON.parse(File.read('/etc/puavo/org.json'))
+org_json = JSON.parse(File.read('/etc/puavo/org.json',
+                                :external_encoding => 'utf-8'))
 
 org_json['owners'].each do |owner|
   uid_number = owner['uid_number']

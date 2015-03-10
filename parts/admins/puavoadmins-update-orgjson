@@ -83,7 +83,8 @@ def read_orgjson(org_json_filepath)
     STDERR.puts('ERROR: failed to obtain a read lock')
     exit 1
   end
-  org_json = JSON.parse(File.read(org_json_filepath))
+  org_json = JSON.parse(File.read(org_json_filepath,
+                                  :external_encoding => 'utf-8'))
   lockfile.close()
   org_json
 end

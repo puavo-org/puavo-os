@@ -37,7 +37,9 @@ if !File.new('/var/lib/puavoadmins/org.json.lock').flock(File::LOCK_SH) then
   exit 1
 end
 
-JSON.parse(File.read('/etc/puavo/org.json'))['owners'].each do |owner|
+org_json_file = File.read('/etc/puavo/org.json', :external_encoding => 'utf-8')
+
+JSON.parse(org_json_file)['owners'].each do |owner|
   exit 0 if owner['username'] == ENV['PAM_USER']
 end
 
