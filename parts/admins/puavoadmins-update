@@ -241,21 +241,27 @@ end
 
 opts = GetoptLong.new(
   ['--help', '-h', GetoptLong::NO_ARGUMENT],
+  ['--no-create-homes', GetoptLong::NO_ARGUMENT],
 )
+
+do_create_homes = true
 
 opts.each do |opt, arg|
   case opt
-    when '--help'
-      puts <<EOF
+  when '--help'
+    puts <<EOF
 Usage: puavoadmins-update [OPTION]...
 
 Update local Puavo administrator database and create home directories
 for admin users.
 
 -h, --help                       display this help and exit
+    --no-create-homes            do not create home directories
 
 EOF
     exit(0)
+  when '--no-create-homes'
+    do_create_homes = false
   end
 end
 
@@ -272,7 +278,7 @@ end
 new_org_json = PuavoBS.get_org_json()
 
 begin
-  update_org_json(new_org_json) and mkhomes(new_org_json)
+  update_org_json(new_org_json) and do_create_homes and mkhomes(new_org_json)
 rescue Error => e
   STDERR.puts("ERROR: #{e.message}")
   exit(1)
