@@ -1,3 +1,24 @@
+puavoadmins (0.2.8) trusty; urgency=medium
+
+  * New release
+  * Create home dirs only if org.json was updated
+  * Refactor update script
+  * Use Tempfile
+  * Raise exceptions instead of exiting from the middle of functions
+  * Refuse to update if not run as root
+  * Combine org.json updating and home dir creation
+  * Assume org.json is UTF-8 encoded
+  * Provide a well-known lock file for org.json access synchronization
+  * Obtain read-lock before reading org.json during update
+  * Timeout org.json write after 5secs
+  * Minimize org.json rw-lock duration
+  * Fix an error message
+  * Require read-locking before reading org.json
+  * Add script for validating PAM_USERs
+  * Git(3fa57dd83ea0cfc8905fb81282462f6a3bb8eaa9)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 11 Mar 2015 09:50:17 +0200
+
 puavoadmins (0.2.7) trusty; urgency=medium
 
   * New release
