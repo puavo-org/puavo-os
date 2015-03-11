@@ -1,3 +1,15 @@
+puavoadmins (0.2.9) trusty; urgency=medium
+
+  * New release
+  * Improve puavoadmins-update --help
+  * Display help description at the beginning of the file
+  * Add --no-create-homes to puavoadmins-update
+  * Add --help to puavoadmins-update
+  * Use global constant gid 555
+  * Git(4a8e126c2a1562281f4a57f060dcb68532429f25)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 11 Mar 2015 11:35:43 +0200
+
 puavoadmins (0.2.8) trusty; urgency=medium
 
   * New release
