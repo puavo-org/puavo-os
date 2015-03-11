@@ -79,7 +79,7 @@ end
 
 def mkhomes(org_json)
   FileUtils.mkdir_p(PUAVOADMINS_HOME_ROOT)
-  FileUtils.chown(0, 555, PUAVOADMINS_HOME_ROOT)
+  FileUtils.chown(0, PUAVOADMINS_GID, PUAVOADMINS_HOME_ROOT)
   File.chmod(0750, PUAVOADMINS_HOME_ROOT)
 
   org_json['owners'].each do |owner|
@@ -95,7 +95,7 @@ def mkhomes(org_json)
                     '/etc/skel/.bashrc',
                     '/etc/skel/.profile'],
                    new_home_dir)
-      FileUtils.chown_R(uid_number, 555, new_home_dir)
+      FileUtils.chown_R(uid_number, PUAVOADMINS_GID, new_home_dir)
       File.rename(new_home_dir, home_dir)
     ensure
       FileUtils.rm_rf(new_home_dir)
