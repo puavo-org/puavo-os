@@ -22,8 +22,14 @@ Usage: puavoadmins-update [OPTION]...
 Update local Puavo administrator database and create home directories
 for admin users.
 
--h, --help                       display this help and exit
-    --no-create-homes            do not create home directories
+Options:
+  -h, --help                       display this help and exit
+      --no-create-homes            do not create home directories
+
+Files:
+  /etc/puavo/org.json                 the backend database file
+  /var/lib/puavoadmins/org.json.lock  lock file for synchronizing database access
+  /puavoadmins                        root for home directories
 
 EOF
 
