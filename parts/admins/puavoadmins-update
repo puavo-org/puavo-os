@@ -18,6 +18,7 @@
 
 ## Standard library modules.
 require 'fileutils'
+require 'getoptlong'
 require 'set'
 require 'tempfile'
 require 'timeout'
@@ -236,6 +237,31 @@ def update_org_json(new_org_json)
     end
   end
   true
+end
+
+opts = GetoptLong.new(
+  ['--help', '-h', GetoptLong::NO_ARGUMENT],
+)
+
+opts.each do |opt, arg|
+  case opt
+    when '--help'
+      puts <<EOF
+Usage: puavoadmins-update [OPTION]...
+
+Update local Puavo administrator database and create home directories
+for admin users.
+
+-h, --help                       display this help and exit
+
+EOF
+    exit(0)
+  end
+end
+
+if ARGV.length != 0 then
+  STDERR.puts("ERROR: invalid number of arguments (#{ARGV.length}), expected 0")
+  exit 1
 end
 
 if Process::UID.eid != 0
