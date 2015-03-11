@@ -173,11 +173,11 @@ def query_domain(domain, ipps)
 end
 
 def add_printer(printer)
-  `lpadmin -p "#{printer.name}" -E -v #{printer.path} -L "#{printer.location}" -D "#{printer.description}"`
+  `/usr/sbin/lpadmin -p "#{printer.name}" -E -v #{printer.path} -L "#{printer.location}" -D "#{printer.description}"`
 end
 
 def delete_printer(printer)
-  `lpadmin -x #{printer.name}`
+  `/usr/sbin/lpadmin -x #{printer.name}`
 end
 
 opts = Trollop::options do
@@ -325,4 +325,7 @@ begin
     sleep(continuous_delay)
   end
 
+rescue Exception => e
+  log "Error: #{e} - exiting"
+  exit(1)
 end while opts[:continuous]
