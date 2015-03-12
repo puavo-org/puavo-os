@@ -245,7 +245,7 @@ def update_org_json(new_org_json)
     has_changes = diff_admins(old_admins, new_admins)
 
     return false unless has_changes
-    return false unless agree('Accept these changes? [yes/no] ')
+    return false unless agree('Accept these changes to local Puavo administrators? [yes/no] ')
 
     Timeout::timeout(5) do
       lock_org_json(File::LOCK_EX) do
