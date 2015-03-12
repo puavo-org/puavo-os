@@ -191,8 +191,8 @@ def diff_admins(old_admins, new_admins)
       puts color_green "  #{admin[:username]}"
       puts color_green "    uid                 : #{admin[:uid]}"
       puts color_green "    SSH key fingerprint : #{admin[:ssh_public_key_fingerprint]}"
-      puts
     end
+    puts
   end
 
   if !olds.empty?
@@ -218,8 +218,8 @@ def diff_admins(old_admins, new_admins)
           puts "    SSH key fingerprint < #{color_red(old_ssh)}"
           puts "                        > #{color_green(new_ssh)}"
         end
-        puts
       end
+      puts
     end
   end
 
