@@ -1,3 +1,13 @@
+puavoadmins (0.2.11) trusty; urgency=medium
+
+  * New release
+  * Create /etc/puavoadmins/skel during install
+  * Mention /etc/puavoadmins/skel in --help
+  * Copy files from /etc/puavoadmins/skel to new home dirs
+  * Git(86d9c306cb288b493d22c0188e98f046fb8e95f1)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 16 Mar 2015 15:01:33 +0200
+
 puavoadmins (0.2.10) trusty; urgency=medium
 
   * New release
