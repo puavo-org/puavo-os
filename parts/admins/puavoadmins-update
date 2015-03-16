@@ -30,6 +30,7 @@ Files:
   /etc/puavo/org.json                 the backend database file
   /var/lib/puavoadmins/org.json.lock  lock file for synchronizing database access
   /puavoadmins                        root for home directories
+  /etc/puavoadmins/skel/*             copied to new home directories
 
 EOF
 
