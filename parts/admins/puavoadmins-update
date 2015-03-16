@@ -113,6 +113,7 @@ def mkhomes(org_json)
                     '/etc/skel/.bashrc',
                     '/etc/skel/.profile'],
                    new_home_dir)
+      FileUtils.cp(Dir.glob('/etc/puavoadmins/skel/*'), new_home_dir)
       FileUtils.chown_R(uid_number, PUAVOADMINS_GID, new_home_dir)
       File.rename(new_home_dir, home_dir)
     ensure
