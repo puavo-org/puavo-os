@@ -3,6 +3,7 @@ sbindir = $(prefix)/sbin
 binaries = libnss_puavoadmins.so.2 \
 	puavoadmins-ssh-authorized-keys \
 	puavoadmins-validate-orgjson
+sysconfdir = /etc
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -38,6 +39,7 @@ installdirs:
 	mkdir -p $(DESTDIR)$(prefix)/lib
 	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
 	mkdir -p $(DESTDIR)/var/lib/puavoadmins
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavoadmins/skel
 
 install: installdirs all
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(prefix)/lib \
