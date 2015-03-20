@@ -7,7 +7,7 @@ Standards-Version: 3.9.3
 Homepage: https://github.com/opinsys/fluent-plugin-puavo/
 
 Package: fluent-plugin-puavo
-Architecture: any
+Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, fluentd
 Description: Generic fluentd plugin for Puavo managed installations
  Generic fluentd plugin for Puavo managed installations
