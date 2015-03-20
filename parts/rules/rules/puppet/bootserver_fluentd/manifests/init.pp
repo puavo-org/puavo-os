@@ -1,9 +1,9 @@
 class bootserver_fluentd {
 
   file {
-    '/etc/fluent/conf.d/puavo.conf':
+    '/etc/fluent/conf.d/01-puavo.conf':
       notify  => Service['fluentd'],
-      source => 'puppet:///modules/bootserver_fluentd/puavo.conf';
+      source => 'puppet:///modules/bootserver_fluentd/01-puavo.conf';
 
     '/usr/local/bin/puavo-bootserver-autopilot-cat':
       mode   => 755,
