@@ -756,7 +756,8 @@ class packages {
     , 'puavo-vpn-client' ]:
       tag => [ 'misc', 'puavo', 'thinclient', ];
 
-    [ 'iivari-client'
+    [ 'fluent-plugin-puavo'
+    , 'iivari-client'
     , 'ltsp-server'
     , 'puavo-image-tools'
     , 'puavo-load-reporter'
