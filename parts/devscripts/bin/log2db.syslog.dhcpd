@@ -1,0 +1,130 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# ##############################################################################
+#
+# Copyright (C) 2015 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+#
+
+from __future__ import print_function
+
+import os.path
+import re
+import sys
+import datetime
+import sqlite3
+
+LINE_PATTERN = re.compile(r'^([A-Za-z]{3} \d{1,2} \d\d:\d\d:\d\d) '
+                          r'([^ ]+) ([^:]+): (.*)$')
+
+DATA_PATTERNS = {
+    "DHCPACK"     : re.compile(r'^DHCPACK on (.+) to (.+) \((.+)\) via (.+)$'),
+    "DHCPDISCOVER": re.compile(r'^DHCPDISCOVER from (.+) \((.+)\) via (.+)$'),
+    "DHCPNAK"     : re.compile(r'^DHCPNAK on (.+) to (.+) via (.+)$'),
+    "DHCPOFFER"   : re.compile(r'^DHCPOFFER on (.+) to (.+) \((.+)\) via (.+)$'),
+    "DHCPREQUEST" : re.compile(r'^DHCPREQUEST for (.+) from (.+) \((.+)\) via (.+)$'),
+}
+
+def dhcp(timestamp, ipaddr, macaddr, hostname, interface):
+    return timestamp, ipaddr, macaddr, hostname, interface
+
+def dhcp_discover(timestamp, macaddr, hostname, interface):
+    return dhcp(timestamp, None, macaddr, hostname, interface)
+
+def dhcp_nak(timestamp, ipaddr, macaddr, interface):
+    return dhcp(timestamp, ipaddr, macaddr, None, interface)
+
+DATA_TYPES = {
+    "DHCPACK"     : dhcp,
+    "DHCPDISCOVER": dhcp_discover,
+    "DHCPNAK"     : dhcp_nak,
+    "DHCPOFFER"   : dhcp,
+    "DHCPREQUEST" : dhcp,
+}
+
+def main():
+    if len(sys.argv) != 3:
+        print("error: invalid number of arguments", file=sys.stderr)
+        print("usage: log2db.syslog.dhcpd LOG_FILE DB_FILE", file=sys.stderr)
+        sys.exit(1)
+
+    logfilepath = sys.argv[1]
+    dbfilepath = sys.argv[2]
+
+    if not os.path.exists(logfilepath):
+        print("error: log file '%s' does not exist" % logfilepath,
+              file=sys.stderr)
+        sys.exit(1)
+
+    create_table = False
+    if not os.path.exists(dbfilepath):
+        create_table = True
+
+    conn = sqlite3.connect(dbfilepath)
+    curs = conn.cursor()
+
+    if create_table:
+        curs.execute('''
+    CREATE TABLE Event(
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    ipaddr TEXT,
+    macaddr TEXT NOT NULL,
+    hostname TEXT,
+    interface TEXT NOT NULL);
+    ''')
+        
+
+    with open(logfilepath) as logfile:
+        for i, line in enumerate(logfile):
+            line_match = LINE_PATTERN.match(line)
+            if not line_match:
+                continue
+
+            date, hostname, process, data = line_match.groups()
+
+            timestamp = datetime.datetime.strptime(date, "%b %d %H:%M:%S")
+
+            for name, pattern in DATA_PATTERNS.items():
+                data_match = pattern.match(data)
+                if data_match:
+                    break
+
+            if not data_match:
+                continue
+
+            data_type = DATA_TYPES[name]
+            data_object = data_type(timestamp, *data_match.groups())
+            timestamp, ipaddr, macaddr, hostname, interface = data_object
+
+            try:
+                curs.execute('''
+                INSERT INTO Event
+                VALUES(NULL, ?, ?, ?, ?, ?, ?);
+                ''', (name, timestamp, ipaddr, macaddr, hostname, interface))
+            except:
+                print(i, name, hostname, ipaddr, macaddr, interface, timestamp)
+                raise
+
+    conn.commit()
+
+if __name__ == "__main__":
+    main()

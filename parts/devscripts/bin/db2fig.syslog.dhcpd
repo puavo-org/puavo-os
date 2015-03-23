@@ -1,0 +1,106 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# ##############################################################################
+#
+# Copyright (C) 2015 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+#
+
+from __future__ import division
+from __future__ import print_function
+
+import datetime
+import os.path
+import sqlite3
+import sys
+
+import matplotlib
+matplotlib.use('Qt4Agg')
+import matplotlib.pyplot as plt
+
+def draw_hist_dhcpacks_all(subplot, conn, name, iface):
+    sql = '''
+SELECT strftime("%s", timestamp) FROM Event
+WHERE name == ?
+  AND interface == ?
+ORDER BY timestamp
+    '''
+    xs = [int(timestamp) for (timestamp,) in conn.execute(sql, (name, iface))]
+
+    xmin, xmax = min(xs), max(xs)
+    bins = (xmax - xmin) // 3600 # hours
+
+    subplot.hist(xs, histtype='bar', bins=bins, linewidth=0)
+    xticklabels = []
+    for timestamp in subplot.get_xticks():
+        xticklabels.append(datetime.datetime.utcfromtimestamp(timestamp)
+                           .strftime("%-d.%-m.\n%H:%M"))
+
+    subplot.set_xlim(xmin, xmax)
+    subplot.set_xticklabels(xticklabels)
+    subplot.set_title("The number of %ss grouped by hours" % name)
+
+def draw_hist_dhcpacks_uniqmacs(subplot, conn, name, iface):
+    sql = '''
+SELECT macaddr, count() as c FROM Event
+WHERE name == ?
+  AND interface == ?
+GROUP BY macaddr
+ORDER BY c
+    '''
+    xs, ys = zip(*conn.execute(sql, (name, iface)))
+        
+    subplot.vlines(range(len(xs)), 0, ys, linewidth=3)
+
+    xmin, xmax = -1, len(xs) + 1
+    yavg = sum(ys) / len(ys)
+    subplot.hlines(yavg, xmin, xmax, linestyles='dashed', color='g',
+                   label="average=%.2f" % yavg)
+    subplot.set_xlim(xmin, xmax)
+    subplot.legend(loc='upper left')
+    subplot.set_xticks([])
+    subplot.set_title("The number of %ss grouped by MAC addresses" % name)
+
+def main():
+    if len(sys.argv) != 4:
+        print("error: invalid number of arguments", file=sys.stderr)
+        print("usage: db2fig.syslog.dhcpd DB_FILE NAME IFACE", file=sys.stderr)
+        sys.exit(1)
+
+    dbfilepath = sys.argv[1]
+    if not os.path.exists(dbfilepath):
+        print("error: database file '%s' does not exist" % dbfilepath,
+              file=sys.stderr)
+        sys.exit(1)
+
+    name = sys.argv[2]
+    iface = sys.argv[3]
+
+    fig = plt.figure()
+
+    with sqlite3.connect(dbfilepath) as conn:
+        draw_hist_dhcpacks_all(fig.add_subplot(2, 1, 1), conn, name, iface)
+        draw_hist_dhcpacks_uniqmacs(fig.add_subplot(2, 1, 2), conn, name, iface)
+
+    plt.tight_layout()
+    plt.show()
+
+if __name__ == "__main__":
+    main()
