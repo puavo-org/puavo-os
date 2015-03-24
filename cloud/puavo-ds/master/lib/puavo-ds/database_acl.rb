@@ -365,6 +365,7 @@ class LdapAcl
       [ Hosts.exact,												Rule.read(Set.all_admins,
 															  PuavoUid.puppet,
 															  PuavoUid.monitor,
+															  PuavoUid.puavo_ticket,
 															  Hosts.subtree),
 														Rule.read(Set.externalservice_devices,
 															  Set.externalservice_servers,
@@ -375,12 +376,14 @@ class LdapAcl
 					 objectClass)),								Rule.read(Set.all_admins,
 															  PuavoUid.puppet,
 															  PuavoUid.monitor,
+															  PuavoUid.puavo_ticket,
 															  Set.externalservice_devices,
 															  People.children,
 															  Hosts.subtree),       	Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.devices.exact,	attrs(%w(children)),			Rule.write(Set.all_admins),		Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
+															  PuavoUid.puavo_ticket,
 															  Set.externalservice_devices,
 															  People.children,
 															  Hosts.subtree),							],
@@ -391,6 +394,7 @@ class LdapAcl
 					 puavoHostname
 					 puavoTag)),			Rule.write(Set.admin),			Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
+															  PuavoUid.puavo_ticket,
 															  Set.externalservice_devices,
 															  People.children,
 															  "self"),		Rule.perms('auth', 'anonymous'),	],
@@ -399,6 +403,7 @@ class LdapAcl
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.devices.children,						Rule.write(Set.admin),			Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
+															  PuavoUid.puavo_ticket,
 															  Set.externalservice_devices,
 															  "self"),			Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -407,15 +412,18 @@ class LdapAcl
 					 objectClass)),								Rule.read(Set.owner_and_user,
 															  PuavoUid.puppet,
 															  PuavoUid.monitor,
+															  PuavoUid.puavo_ticket,
 															  Set.school_admin,
 															  Set.externalservice_servers),			Rule.perms('auth', 'anonymous'),	],
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.servers.exact,	attrs(%w(children)),			Rule.write(Set.owner_and_user),		Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
+															  PuavoUid.puavo_ticket,
 															  Set.externalservice_servers),								],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.servers.children,						Rule.write(Set.owner_and_user),		Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
+															  PuavoUid.puavo_ticket,
 															  Set.externalservice_servers),
 														RuleBreak.none(Set.laptops,
                                                                                                                                Set.this_school_admin),	Rule.perms('auth', 'anonymous'),	],
