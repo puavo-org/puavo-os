@@ -458,9 +458,10 @@ class LdapAcl
       [ Groups.exact,		attrs(%w(entry
 					 ou
 					 objectClass)),								Rule.read(Set.all_admins,
+                                                                                                                          PuavoUid.puavo_ticket,
 															  Set.getent),								],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ Groups.exact,		attrs(%w(children)),			Rule.write(Set.all_admins),		Rule.read(Set.getent),								],
+      [ Groups.exact,		attrs(%w(children)),			Rule.write(Set.all_admins),		Rule.read(Set.getent, PuavoUid.puavo_ticket),								],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     %w(schools roles schoolroles classes).map do |subgroup_method|
@@ -470,20 +471,21 @@ class LdapAcl
       [[ subgroup.exact,	attrs(%w(entry
 					 ou
 					 objectClass)),								Rule.read(Set.all_admins,
+                                                                                                                          PuavoUid.puavo_ticket,
 															  Set.getent),								],
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-       [ subgroup.exact,	attrs(%w(children)),			Rule.write(Set.all_admins),		Rule.read(Set.getent),								],
+       [ subgroup.exact,	attrs(%w(children)),			Rule.write(Set.all_admins),		Rule.read(Set.getent,PuavoUid.puavo_ticket),								],
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
        # XXX is this a bug?  why are 'Schools' an exception?
        (subgroup_method == 'schools' \
           ? nil \
           : [ subgroup.subtree,	attrs(%w(member
-					 memberUid)),			Rule.write(Set.admin),			Rule.read(Set.getent),								]),
+					 memberUid)),			Rule.write(Set.admin),			Rule.read(Set.getent, PuavoUid.puavo_ticket),								]),
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
        [ subgroup.subtree,						Rule.write(
 									  subgroup_method == 'classes' \
 									    ? Set.admin \
-									    : Set.owner_and_user),		Rule.read(Set.getent),								]]
+									    : Set.owner_and_user),		Rule.read(Set.getent, PuavoUid.puavo_ticket),								]]
 
     end.flatten(1).compact,
 
@@ -493,7 +495,7 @@ class LdapAcl
 				attrs(%w(gidNumber
 					 cn
 					 puavoId
-					 objectClass)),			Rule.write(Set.admin),			Rule.read(Set.getent),								],
+					 objectClass)),			Rule.write(Set.admin),			Rule.read(Set.getent, PuavoUid.puavo_ticket),								],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Groups.subtree,
 	 'filter=(objectClass=puavoSchool)',
