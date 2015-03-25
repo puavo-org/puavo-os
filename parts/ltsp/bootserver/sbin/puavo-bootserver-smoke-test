@@ -143,7 +143,21 @@ class TestRun
   end
 
   def prepare_assert_no_homedir()
-    homedir = Etc.getpwnam(@testuser_username)['dir']
+    error = nil
+    homedir = nil
+    [0, 1, 1, 1, 1].each do |delay|
+      sleep delay
+      begin
+        homedir = Etc.getpwnam(@testuser_username)['dir']
+      rescue ArgumentError => e
+        error = e
+        next
+      end
+      error = nil
+      break
+    end
+    raise error if !error.nil?
+
     @testuser_has_old_homedir = File.exists?(homedir)
     if @testuser_has_old_homedir then
       raise TestRunError.new('home directory already exists')
