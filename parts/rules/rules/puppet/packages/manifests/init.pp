@@ -724,6 +724,7 @@ class packages {
     [ 'bluefish'
     , 'browser-plugin-vlc'
     , 'chromium-browser'
+    , 'epiphany-browser'
     , 'icedtea-7-plugin'
     , 'liferea'
     , 'openjdk-6-jdk'
