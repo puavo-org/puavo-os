@@ -656,6 +656,7 @@ class LdapAcl
                                          puavoKeyboardVariant
 					 eduOrgLegalName
 					 o
+					 owner
 					 eduOrgHomePageURI
                                          puavoWlanSSID
                                          puavoWlanChannel
