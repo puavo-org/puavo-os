@@ -1,5 +1,9 @@
 #!/bin/sh
 
+has_device_tag() {
+  jq -r .tags[] /etc/puavo/device.json | grep -qx "$1"
+}
+
 puavo_keyboard_layout=$(jq -r .keyboard_layout /etc/puavo/device.json)
 puavo_keyboard_variant=$(jq -r .keyboard_variant /etc/puavo/device.json)
 puavo_primary_user=$(jq -r .primary_user /etc/puavo/device.json)
@@ -47,17 +51,29 @@ if [ "${puavo_keyboard_layout}" != "" ]; then
   setxkbmap ${puavo_keyboard_layout} ${puavo_keyboard_variant}
 fi
 
-if [ "${puavo_primary_user}" != "" ]; then
+run_gsettings() {
   mkdir -p /var/lib/lightdm/.config/dconf
   chown -R lightdm: /var/lib/lightdm/.config/dconf
-  su -s /bin/sh lightdm -c "dbus-launch gsettings set com.canonical.unity-greeter default-user ${puavo_primary_user}"
-  su -s /bin/sh lightdm -c "dbus-launch gsettings set com.canonical.unity-greeter exclude-prefixes \"['adm-', 'opinsys']\""
+
+  su -s /bin/sh lightdm -c "dbus-launch gsettings $1"
+}
+
+if [ -n "${puavo_primary_user}" ]; then
+  run_gsettings \
+    "set com.canonical.unity-greeter default-user ${puavo_primary_user}"
+  run_gsettings \
+    "set com.canonical.unity-greeter exclude-prefixes \"['adm-', 'opinsys']\""
 fi
 
 if [ -n "${background}" ]; then
-  mkdir -p /var/lib/lightdm/.config/dconf
-  chown -R lightdm: /var/lib/lightdm/.config/dconf
-  su -s /bin/sh lightdm -c "dbus-launch gsettings set com.canonical.unity-greeter background ${background}"
+  run_gsettings "set com.canonical.unity-greeter background ${background}"
+fi
+
+if has_device_tag nolidsuspend && ! has_device_tag no_nolidsuspend; then
+  run_gsettings \
+    "set org.gnome.settings-daemon.plugins.power lid-close-battery-action nothing"
+  run_gsettings \
+    "set org.gnome.settings-daemon.plugins.power lid-close-ac-action nothing"
 fi
 
 exit 0
