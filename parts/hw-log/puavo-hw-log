@@ -199,18 +199,17 @@ end
 parser.parse!
 
 def send_data(msg, data)
-  http_body = {
-    "json" => {
-      "msg" => msg
-    }
-  }
-  http_body["json"][msg] = data
+  fluent_record = { msg: msg }
+  fluent_record[msg] = data
 
   if @options[:stdout]
-    puts JSON.pretty_generate(http_body["json"])
+    puts JSON.pretty_generate(fluent_record)
   else
 
-    Net::HTTP.post_form(URI(@options[:server] + "/puavo-hw-log"), http_body.to_json)
+    Net::HTTP.post_form(
+      URI(@options[:server] + "/puavo-hw-log"),
+      json: fluent_record.to_json
+    )
     puts "#{ Time.now } Data posted to #{ @options[:server] }"
   end
 end
