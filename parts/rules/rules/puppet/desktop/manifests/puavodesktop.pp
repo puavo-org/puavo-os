@@ -1,5 +1,6 @@
 class desktop::puavodesktop {
-  include desktop::dconf::laptop,
+  include desktop::dconf::disable_lidsuspend,
+          desktop::dconf::laptop,
           desktop::dconf::puavodesktop,
           desktop::dconf::turn_off_xrandrplugin,
           desktop::enable_indicator_power_service,
