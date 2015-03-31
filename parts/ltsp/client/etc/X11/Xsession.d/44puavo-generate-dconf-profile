@@ -32,6 +32,10 @@ has_device_tag() {
     echo "system-db:turn_off_xrandrplugin"
   fi
 
+  if has_device_tag nolidsuspend && ! has_device_tag no_nolidsuspend; then
+    echo "system-db:disable_lidsuspend"
+  fi
+
   echo "system-db:keyboard"
   echo "system-db:puavodesktop"
 } > $puavo_dconf_profile_path || return 1
