@@ -297,8 +297,9 @@ system_status["swap"] = {
 }
 
 
-loadavg = File.open("/proc/loadavg").read.split(" ").slice(0,3).map{|a| a.to_f}
-system_status["loadavg"] = loadavg
-system_status["loadavg_by_cpu"] = loadavg.map{|a| a / cpu_count.to_f}
+## XXX: Must not use arrays. Bad for elasticsearch
+# loadavg = File.open("/proc/loadavg").read.split(" ").slice(0,3).map{|a| a.to_f}
+# system_status["loadavg"] = loadavg
+# system_status["loadavg_by_cpu"] = loadavg.map{|a| a / cpu_count.to_f}
 
 send_data("system_status", system_status)
