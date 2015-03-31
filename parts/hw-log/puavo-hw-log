@@ -241,6 +241,7 @@ system_status = {}
 system = Ohai::System.new
 system.all_plugins
 
+system_status["uptime_seconds"] = system.uptime_seconds.to_i
 
 # Ohai reports data amounts in format of 11883080kB
 # Parse it to a Fixnum of bytes
