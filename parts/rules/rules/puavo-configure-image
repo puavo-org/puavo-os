@@ -171,10 +171,13 @@ do_update_buildrules_from_filesystem() {
 
   for dir in $(strip_commas "$buildrule_dirs"); do
     for subdir in debseeds puppet; do
-      if [ -d "${dir}/${subdir}" ]; then
-        mkdir -p /etc/puavo-image-build/rules
-        cp -nR "${dir}/${subdir}" /etc/puavo-image-build/rules/
+      if [ ! -d "${dir}/${subdir}" ]; then
+        echo "Could not find buildrule directory ${dir}/${subdir}" >&2
+        return 1
       fi
+
+      mkdir -p /etc/puavo-image-build/rules
+      cp -nR "${dir}/${subdir}" /etc/puavo-image-build/rules/
     done
   done
 }
