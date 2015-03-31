@@ -66,39 +66,10 @@ def assert_exec(cmd)
 end
 
 data = {}
-
-begin
-  data["lsusb_raw"] = assert_exec("lsusb")
-rescue
-end
-
-begin
-  data["df_raw"] = assert_exec("df")
-rescue
-end
-
-begin
-  data["free_raw"] = assert_exec("free")
-rescue
-end
-
-begin
-  data["xrandr_raw"] = assert_exec("xrandr")
-rescue
-end
-
-begin
-  data["fdisk_raw"] = assert_exec("fdisk -l")
-rescue
-end
-
 begin
   data["lshw"] = JSON.parse(assert_exec("lshw -quiet -json"))
 rescue
 end
-
-
-
 send_data("hwinfo", data)
 
 
