@@ -6,7 +6,7 @@ require "uri"
 require "json"
 require "optparse"
 
-options = {
+@options = {
   :server => "http://localhost:8888"
 }
 
@@ -17,12 +17,12 @@ parser = OptionParser.new do |opts|
   Log hardware information to fluentd
   "
 
-  opts.on("--server [URL]", "URL to fluentd HTTP server. Default: #{ options[:server] }") do |server|
-    options[:server] = server
+  opts.on("--server [URL]", "URL to fluentd HTTP server. Default: #{ @options[:server] }") do |server|
+    @options[:server] = server
   end
 
   opts.on("--stdout", "Print data to stdout as json instead of logging it to fluentd") do |server|
-    options[:stdout] = true
+    @options[:stdout] = true
   end
 
   opts.on_tail("-h", "--help", "Show this message") do
@@ -33,6 +33,23 @@ parser = OptionParser.new do |opts|
 end
 
 parser.parse!
+
+def send_data(msg, data)
+  http_body = {
+    "json" => {
+      "msg" => msg
+    }
+  }
+  http_body["json"][msg] = data
+
+  if @options[:stdout]
+    puts JSON.pretty_generate(http_body["json"])
+  else
+
+    Net::HTTP.post_form(URI(@options[:server] + "/puavo-hw-log"), http_body.to_json)
+    puts "#{ Time.now } Data posted to #{ @options[:server] }"
+  end
+end
 
 if Process.uid != 0
   STDERR.puts "Not root?"
@@ -80,15 +97,8 @@ begin
 rescue
 end
 
-if options[:stdout]
-  puts data.to_json
-else
-  Net::HTTP.post_form URI(options[:server] + "/puavo-hw-log"), {
-    "json" => {
-      "msg" => "hwinfo",
-      "hwinfo" => data
-    }.to_json
-  }
-  puts "#{ Time.now } Data posted to #{ options[:server] }"
-end
+
+
+send_data("hwinfo", data)
+
 
