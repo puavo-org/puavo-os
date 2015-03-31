@@ -8,6 +8,6 @@ Homepage: https://github.com/opinsys/puavo-hw-log
 
 Package: puavo-hw-log
 Architecture: any
-Depends: ${misc:Depends}, ruby1.9.1
+Depends: ${misc:Depends}, ruby1.9.1, ohai
 Description: Log hardware information to fluentd
  Log hardware information to fluentd
