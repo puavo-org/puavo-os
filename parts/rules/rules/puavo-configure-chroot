@@ -88,11 +88,14 @@ do_update_buildrules_from_buildhost() {
   buildrule_dirs=$1; shift
 
   for dir in $(echo "$buildrule_dirs" | tr , ' '); do
-    if [ -d "$dir" ]; then
-      tar -C "$dir" --exclude .gitignore -cf - debseeds puppet \
-        | puavo_configure_image --update-buildrules-from-buildhost \
-                                "$@"
+    if [ ! -d "$dir" ]; then
+      echo "Could not find buildrule directory ${dir}" >&2
+      return 1
     fi
+
+    tar -C "$dir" --exclude .gitignore -cf - debseeds puppet \
+      | puavo_configure_image --update-buildrules-from-buildhost \
+                              "$@"
   done
 }
 
