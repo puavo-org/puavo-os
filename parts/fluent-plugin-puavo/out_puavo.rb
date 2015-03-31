@@ -1,4 +1,5 @@
 require "net/http"
+require "socket"
 require "fluent/plugin/out_forward"
 
 module PuavoFluent
@@ -49,6 +50,7 @@ class PuavoWrapper
     record["meta"] ||= {}
     record["meta"]["timestamp"] ||= Time.now.to_s
     record["meta"]["device_source"] ||= {
+      "fqdn" => Socket.gethostbyname(Socket.gethostname).first,
       "host_type" => config["puavo_hosttype"],
       "hostname" => config["puavo_hostname"],
       "organisation_domain" => config["puavo_domain"],
