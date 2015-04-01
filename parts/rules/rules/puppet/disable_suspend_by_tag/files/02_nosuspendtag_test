@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+has_device_tag() {
+  jq -r .tags[] /etc/puavo/device.json | grep -qx "$1"
+}
+
+if has_device_tag nosuspend && ! has_device_tag no_nosuspend; then
+  exit 1
+fi

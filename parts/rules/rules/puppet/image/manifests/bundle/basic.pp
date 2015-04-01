@@ -1,7 +1,7 @@
 class image::bundle::basic {
   include autopoweroff,
 	  console,
-	  disable_suspend_by_tags,
+	  disable_suspend_by_tag,
 	  disable_suspend_on_halt,
 	  disable_suspend_on_nbd_devices,
 	  disable_unclutter,
