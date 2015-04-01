@@ -77,6 +77,10 @@ end
   end
 end
 
+@enable_lidsuspend = \
+  @puavo_device_type == 'laptop' \
+    && (! @tags.include?('nolidsuspend') || @tags.include?('no_nolidsuspend'))
+
 @enable_suspend = \
   @puavo_device_type == 'laptop' \
     && (! @tags.include?('nosuspend') || @tags.include?('no_nosuspend'))
@@ -286,6 +290,7 @@ case @puavo_device_type
     write_config("/etc/security/group.conf")
     write_config("/etc/samba/smb.conf", "laptop")
     write_config("/etc/ntp.conf")
+    write_config("/etc/systemd/logind.conf")
     write_config("/var/lib/polkit-1/localauthority/10-vendor.d/com.ubuntu.desktop.pkla")
 
     if @tags.include?("webkiosk") then
