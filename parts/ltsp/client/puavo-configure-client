@@ -274,6 +274,7 @@ case @puavo_device_type
     try_writing_puavomounts()
   when "laptop"
     write_config("/etc/cups/cupsd.conf")
+    write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
     write_config("/etc/nsswitch.conf", "sss-extrausers")
     write_config("/etc/krb5.conf", "laptop")
     write_config("/etc/idmapd.conf")
