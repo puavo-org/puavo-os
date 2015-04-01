@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -eu
+
+has_closed_lid() {
+  awk '
+    BEGIN { status = 1 }
+    $1 == "state:" && $2 == "closed" { status = 0 }
+    END { exit(status) }
+  ' /proc/acpi/button/lid/LID/state
+}
+
+has_device_tag() {
+  jq -r .tags[] /etc/puavo/device.json | grep -qx "$1"
+}
+
+if has_device_tag nolidsuspend && ! has_device_tag no_nolidsuspend \
+     && has_closed_lid; then
+  exit 1
+fi
+
+if has_device_tag nosuspend && ! has_device_tag no_nosuspend; then
+  exit 1
+fi
