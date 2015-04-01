@@ -77,13 +77,14 @@ end
   end
 end
 
-@enable_lidsuspend = \
-  @puavo_device_type == 'laptop' \
-    && (! @tags.include?('nolidsuspend') || @tags.include?('no_nolidsuspend'))
-
-@enable_suspend = \
+@enable_suspend =                \
   @puavo_device_type == 'laptop' \
     && (! @tags.include?('nosuspend') || @tags.include?('no_nosuspend'))
+
+@enable_lidsuspend =             \
+  @puavo_device_type == 'laptop' \
+    && @enable_suspend           \
+    && (! @tags.include?('nolidsuspend') || @tags.include?('no_nolidsuspend'))
 
 def write_config(filename, version=nil, secure=false)
   begin

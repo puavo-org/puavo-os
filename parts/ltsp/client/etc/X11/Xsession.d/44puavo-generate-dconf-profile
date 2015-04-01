@@ -37,6 +37,7 @@ has_device_tag() {
   fi
 
   if has_device_tag nosuspend && ! has_device_tag no_nosuspend; then
+    echo "system-db:disable_lidsuspend"
     echo "system-db:disable_suspend"
   fi
 
