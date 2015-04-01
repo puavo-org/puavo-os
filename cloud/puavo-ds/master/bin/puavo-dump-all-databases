@@ -20,6 +20,11 @@ OptionParser.new do |opts|
     options[:destdir] = directory
   end
 
+  # FIXME: this option is temporary
+  opts.on("--exclude-database [dc=edu,dc=example,dc=fi]", "Skip this database when dump all databases") do |database|
+    options[:excludedb] = database
+  end
+
   opts.on("-v", "--[no-]verbose", "Run verbosely. Print STDERR of shell command (eg. slapcat)") do |v|
     options[:verbose] = v
   end
@@ -69,6 +74,8 @@ raise "Can't find any databases: #{filter}" if databases.empty?
 
 # Backup all databases
 databases.each do |base|
+  next if base == options[:excludedb]
+
   backup_file = File.join(options[:destdir], "#{base}.ldif")
 
   puts "Dump #{base} database to #{ backup_file } file"
