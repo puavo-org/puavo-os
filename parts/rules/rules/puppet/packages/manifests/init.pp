@@ -426,6 +426,7 @@ class packages {
       tag => [ 'remote_access', 'ubuntu', ];
 
     [ 'atomix'
+    , 'avogadro'
     , 'celestia'
     , 'celestia-common-nonfree'
     , 'celestia-gnome'
