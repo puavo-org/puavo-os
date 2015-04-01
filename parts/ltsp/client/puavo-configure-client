@@ -77,6 +77,10 @@ end
   end
 end
 
+@enable_suspend = \
+  @puavo_device_type == 'laptop' \
+    && (! @tags.include?('nosuspend') || @tags.include?('no_nosuspend'))
+
 def write_config(filename, version=nil, secure=false)
   begin
     template_file = filename
