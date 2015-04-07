@@ -121,9 +121,22 @@ write_vtund_conf()
 
 setup_nets()
 {
-    local net auth ssid psk ap_ssid
+    local net auth ssid psk ap_ssid fetch_wait
 
-    "${PWAP_LIBDIR}/fetch-nets" >"${PWAP_RUNDIR}/nets"
+    # if we do not have a list of networks to setup, try again later
+    fetch_wait=1
+    while true; do
+      "${PWAP_LIBDIR}/fetch-nets" > "${PWAP_RUNDIR}/nets"
+      test -s "${PWAP_RUNDIR}/nets" && break
+      fetch_wait=$((2 * $fetch_wait))
+      if [ "$fetch_wait" -gt 3600 ]; then
+        fetch_wait=3600
+      fi
+      pwap_log "no networks to setup yet, refetching after $fetch_wait seconds"
+      sleep $fetch_wait
+    done
+
+    pwap_log "fetched networks successfully"
 
     # Magic SSID Mangling! The following Magic SSID is substituted with
     # a SSID derived from the hostname. This lets us configure
