@@ -104,6 +104,17 @@
           "source": "gnome-screenshot"
         },
         {
+          "type": "desktop",
+          "source": "simplescreenrecorder",
+          "inactiveByDeviceType": "thinclient",
+          "name": {
+            "en": "SimpleScreenRecorder",
+            "fi": "Työpöytänauhoitus",
+            "sv": "SimpleScreenRecorder",
+            "de": "SimpleScreenRecorder"
+          }
+        },
+        {
           "type": "custom",
           "name": {
             "en": "Java Control Panel",
