@@ -2,7 +2,14 @@
 
 set -eu
 
+if [ $# -ne 1 ]; then
+    echo "ERROR: invalid number of arguments ($#), expected 1" >&2
+    echo "Usage: $0 INSTALL_MEDIA_ROOT_DIR" >&2
+    exit 1
+fi
+
 installmediaroot="$1"
+shift
 
 mkdir -p "$installmediaroot/preseed"
 cp syslinux.cfg "$installmediaroot"
