@@ -5,6 +5,7 @@ class image::builder {
   Apt::Key        <| title == "opinsys-repo.gpgkey" |>
   Apt::Repository <| title == archive
                   or title == kernels
+                  or title == proposed
                   or title == repo |>
 
   Package <| tag == admin
