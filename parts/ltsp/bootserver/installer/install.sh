@@ -2,10 +2,41 @@
 
 set -eu
 
+usage_error()
+{
+    echo "ERROR: $1" >&2
+    echo "Try '$0 --help' for more information". >&2
+    return 1
+}
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            echo "Usage: $0 INSTALL_MEDIA_ROOT"
+            echo
+            echo "Create a bootserver installer USB disk."
+            echo
+            echo "Options:"
+            echo "    -h, --help                   print help and exit"
+            echo
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage_error "invalid argument '$1'"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
 if [ $# -ne 1 ]; then
-    echo "ERROR: invalid number of arguments ($#), expected 1" >&2
-    echo "Usage: $0 INSTALL_MEDIA_ROOT_DIR" >&2
-    exit 1
+    usage_error "invalid number of arguments ($#), expected 1"
 fi
 
 installmediaroot="$1"
