@@ -85,6 +85,7 @@ mkdir -p "$installmediaroot/preseed"
 cp syslinux.cfg "$installmediaroot"
 cp puavo-bootserver*.cfg "$installmediaroot/preseed"
 cp puavo-bootserver-fix-partitions "$installmediaroot"
+cp "${installmediaroot}/menu.c32" "${installmediaroot}/vesamenu.c32"
 
 echo -n "user-fullname: "
 read user_fullname
