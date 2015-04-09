@@ -63,6 +63,34 @@ if [ "$(id -u)" -ne 0 ]; then
     usage_error 'you must be root (euid=0) to run this command'
 fi
 
+while true; do
+    echo -n "Username of the target system: "
+    read user
+    [ -n "$user" ] || {
+        echo 'ERROR: empty username not allowed' >&2
+        continue
+    }
+    break
+done
+
+while true; do
+    echo -n "Password: "
+    read -s password1
+    echo
+    [ -n "$password1" ] || {
+        echo 'ERROR: empty password not allowed' >&2
+        continue
+    }
+    echo -n "Verify password: "
+    read -s password2
+    echo
+    [ "$password1" = "$password2" ] || {
+        echo 'ERROR: passwords do not match' >&2
+        continue
+    }
+    break
+done
+
 dd if=/dev/zero "of=${dev}" count=1 bs=1M
 
 sfdisk --unit S "${dev}" <<EOF
@@ -86,35 +114,6 @@ cp syslinux.cfg "$installmediaroot"
 cp puavo-bootserver*.cfg "$installmediaroot/preseed"
 cp puavo-bootserver-fix-partitions "$installmediaroot"
 cp "${installmediaroot}/menu.c32" "${installmediaroot}/vesamenu.c32"
-
-user=""
-while true; do
-    echo -n "user: "
-    read user
-    [ -n "$user" ] || {
-        echo 'empty username not allowed' >&2
-        continue
-    }
-    break
-done
-
-while true; do
-    echo -n "password: "
-    read -s password1
-    echo
-    [ -n "$password1" ] || {
-        echo 'empty password not allowed' >&2
-        continue
-    }
-    echo -n "verify password: "
-    read -s password2
-    echo
-    [ "$password1" = "$password2" ] || {
-        echo 'passwords do not match' >&2
-        continue
-    }
-    break
-done
 
 echo "d-i passwd/user-fullname string $user" >> "$installmediaroot/preseed/puavo-bootserver.cfg"
 echo "d-i passwd/username string $user" >> "$installmediaroot/preseed/puavo-bootserver.cfg"
