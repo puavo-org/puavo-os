@@ -596,6 +596,12 @@
             "de": "Qt4 - Grafischer UI Designer"
           },
           "osIconPath": "/usr/share/icons/Faenza/apps/96/qtdesigner.png"
+        },
+        {
+          "type": "custom",
+          "name": "Processing",
+          "command": "/opt/processing/processing",
+          "osIconPath": "/opt/processing/modes/java/reference/img/processing-logo.png"
         }
       ]
     },
