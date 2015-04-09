@@ -6,6 +6,7 @@ class image::wirelessaccesspoint {
   Apt::Key        <| title == "opinsys-repo.gpgkey" |>
   Apt::Repository <| title == archive
                   or title == kernels
+                  or title == proposed
                   or title == repo |>
 
   # wirelessaccesspoint should be able to function as a wireless accesspoint

@@ -5,6 +5,7 @@ class image::desktop {
   Apt::Key        <| title == "opinsys-repo.gpgkey" |>
   Apt::Repository <| title == archive
                   or title == kernels
+                  or title == proposed
                   or title == repo
                   or title == x2go |>
 
