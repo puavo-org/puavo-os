@@ -117,7 +117,7 @@ rsync --quiet --recursive "${isoroot}/" "${installmediaroot}/"
 
 mkdir -p "$installmediaroot/preseed"
 cp puavo-bootserver*.cfg "$installmediaroot/preseed"
-cp puavo-bootserver-fix-partitions "$installmediaroot"
+cp fix-dummy-partitions "$installmediaroot"
 {
     echo "d-i passwd/root-password password ${password1}"
     echo "d-i passwd/root-password-again password ${password1}"
