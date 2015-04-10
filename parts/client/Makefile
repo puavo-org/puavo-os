@@ -34,6 +34,12 @@ install: install-dirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-feed
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
 
+update-gemfile-lock: clean
+	rm -f Gemfile.lock
+	GEM_HOME=.tmpgem bundle install
+	rm -rf .tmpgem
+	bundle install --deployment
+
 clean:
 	rm -rf .bundle
 	rm -rf lib/puavo-client-vendor
