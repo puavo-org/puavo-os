@@ -11,6 +11,11 @@ on_exit()
         rmdir "${installmediaroot}"
     fi
 
+    if [ -n "${isoroot}" ]; then
+        umount "${isoroot}"
+        rmdir "${isoroot}"
+    fi
+
     exit $exitvalue
 }
 
@@ -103,21 +108,26 @@ EOF
 ## debian-installer assumes the installation media is iso9660 or fat32.
 mkfs.vfat "${dev}1"
 
+isoroot=
 installmediaroot=
 
 trap on_exit EXIT
 
+isoroot=$(mktemp -d)
 installmediaroot=$(mktemp -d)
 
 mount "${dev}1" "${installmediaroot}"
+mount -oloop,ro "${iso}" "${isoroot}"
 
-unetbootin method=diskimage "isofile=${iso}" installtype=USB "targetdrive=${dev}1" autoinstall=yes
+rsync --recursive --progress "${isoroot}/" "${installmediaroot}/"
+syslinux -i "${dev}1"
+dd conv=notrunc bs=440 count=1 if=/usr/lib/syslinux/mbr.bin "of=${dev}"
 
 mkdir -p "$installmediaroot/preseed"
 cp syslinux.cfg "$installmediaroot"
 cp puavo-bootserver*.cfg "$installmediaroot/preseed"
 cp puavo-bootserver-fix-partitions "$installmediaroot"
-cp "${installmediaroot}/menu.c32" "${installmediaroot}/vesamenu.c32"
+cp /usr/lib/syslinux/vesamenu.c32 "${installmediaroot}/vesamenu.c32"
 
 echo "d-i passwd/user-fullname string $user" >> "$installmediaroot/preseed/puavo-bootserver.cfg"
 echo "d-i passwd/username string $user" >> "$installmediaroot/preseed/puavo-bootserver.cfg"
