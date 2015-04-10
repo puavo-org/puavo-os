@@ -7,12 +7,12 @@ on_exit()
     set +e
 
     if [ -n "${installmediaroot}" ]; then
-        umount "${dev}1"
+        umount -l "${installmediaroot}"
         rmdir "${installmediaroot}"
     fi
 
     if [ -n "${isoroot}" ]; then
-        umount "${isoroot}"
+        umount -l "${isoroot}"
         rmdir "${isoroot}"
     fi
 
