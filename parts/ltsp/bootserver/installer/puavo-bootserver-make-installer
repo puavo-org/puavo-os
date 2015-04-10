@@ -69,17 +69,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 while true; do
-    echo -n "Username of the target system: "
-    read user
-    [ -n "$user" ] || {
-        echo 'ERROR: empty username not allowed' >&2
-        continue
-    }
-    break
-done
-
-while true; do
-    echo -n "Password: "
+    echo -n "Root password for the target system: "
     read -s password1
     echo
     [ -n "$password1" ] || {
@@ -128,10 +118,10 @@ rsync --quiet --recursive "${isoroot}/" "${installmediaroot}/"
 mkdir -p "$installmediaroot/preseed"
 cp puavo-bootserver*.cfg "$installmediaroot/preseed"
 cp puavo-bootserver-fix-partitions "$installmediaroot"
-echo "d-i passwd/user-fullname string $user" >> "$installmediaroot/preseed/puavo-bootserver.cfg"
-echo "d-i passwd/username string $user" >> "$installmediaroot/preseed/puavo-bootserver.cfg"
-echo "d-i passwd/user-password password $password1" >> "$installmediaroot/preseed/puavo-bootserver.cfg"
-echo "d-i passwd/user-password-again password $password1" >> "$installmediaroot/preseed/puavo-bootserver.cfg"
+{
+    echo "d-i passwd/root-password password ${password1}"
+    echo "d-i passwd/root-password-again password ${password1}"
+} >> "${installmediaroot}/preseed/puavo-bootserver.cfg"
 echo "OK"
 
 echo -n "Installing bootloader to ${dev} ... "
