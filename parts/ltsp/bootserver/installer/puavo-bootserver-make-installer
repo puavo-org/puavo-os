@@ -101,9 +101,10 @@ dd if=/dev/zero "of=${dev}" count=1 bs=1M
 ## Use the whole disk, otherwise debian-installer prompts a note
 ## mentioning that there is some free space:
 ## partman/installation_medium_mounted
-sfdisk --unit S "${dev}" <<EOF
-2048,,c,*
-EOF
+parted -s -a optimal "${dev}" -- \
+    mklabel msdos                \
+    mkpart primary fat32 1 -1    \
+    set 1 boot on
 
 ## debian-installer assumes the installation media is iso9660 or fat32.
 mkfs.vfat "${dev}1"
