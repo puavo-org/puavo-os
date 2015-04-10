@@ -6,9 +6,9 @@ on_exit()
 {
     set +e
 
-    if [ -n "${installmediaroot}" ]; then
-        umount -l "${installmediaroot}"
-        rmdir "${installmediaroot}"
+    if [ -n "${devroot}" ]; then
+        umount -l "${devroot}"
+        rmdir "${devroot}"
     fi
 
     if [ -n "${isoroot}" ]; then
@@ -72,14 +72,14 @@ while true; do
     echo -n "Root password for the target system: "
     read -s password1
     echo
-    [ -n "$password1" ] || {
+    [ -n "${password1}" ] || {
         echo 'ERROR: empty password not allowed' >&2
         continue
     }
     echo -n "Verify password: "
     read -s password2
     echo
-    [ "$password1" = "$password2" ] || {
+    [ "${password1}" = "${password2}" ] || {
         echo 'ERROR: passwords do not match' >&2
         continue
     }
@@ -103,32 +103,32 @@ mkfs.vfat -F 32 "${dev}1" >/dev/null
 echo "OK"
 
 isoroot=
-installmediaroot=
+devroot=
 
 trap on_exit EXIT
 
 isoroot=$(mktemp -d)
-installmediaroot=$(mktemp -d)
+devroot=$(mktemp -d)
 
 echo -n "Copying files to ${dev}1 ... "
-mount "${dev}1" "${installmediaroot}"
+mount "${dev}1" "${devroot}"
 mount -oloop,ro "${iso}" "${isoroot}"
-rsync --quiet --recursive "${isoroot}/" "${installmediaroot}/"
+rsync --quiet --recursive "${isoroot}/" "${devroot}/"
 
-mkdir -p "$installmediaroot/preseed"
-cp preseed/* "$installmediaroot/preseed"
-cp fix-dummy-partitions "$installmediaroot"
+mkdir -p "${devroot}/preseed"
+cp preseed/* "${devroot}/preseed"
+cp fix-dummy-partitions "${devroot}"
 {
     echo "d-i passwd/root-password password ${password1}"
     echo "d-i passwd/root-password-again password ${password1}"
-} >> "${installmediaroot}/preseed/puavo-bootserver.cfg"
+} >> "${devroot}/preseed/puavo-bootserver.cfg"
 echo "OK"
 
 echo -n "Installing bootloader to ${dev} ... "
 syslinux -i "${dev}1"
 dd status=none conv=notrunc bs=440 count=1 if=/usr/lib/syslinux/mbr.bin "of=${dev}"
-cp syslinux.cfg "$installmediaroot"
-cp /usr/lib/syslinux/vesamenu.c32 "${installmediaroot}/vesamenu.c32"
+cp syslinux.cfg "${devroot}"
+cp /usr/lib/syslinux/vesamenu.c32 "${devroot}/vesamenu.c32"
 echo "OK"
 
 exitvalue=0
