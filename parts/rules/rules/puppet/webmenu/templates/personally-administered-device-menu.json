@@ -37,10 +37,6 @@
         },
         {
           "type": "desktop",
-          "source": "eleet"
-        },
-        {
-          "type": "desktop",
           "source": "gedit",
           "name": {
             "en": "Gedit-text editor",
@@ -486,6 +482,11 @@
         },
         {
           "type": "desktop",
+          "osIconPath": "/usr/share/racket/collects/icons/plt-48x48.png",
+          "source": "drracket"
+        },
+        {
+          "type": "desktop",
           "source": "enchanting",
           "inactiveByDeviceType": "thinclient"
         },
@@ -582,6 +583,12 @@
             "de": "Qt4 - Grafischer UI Designer"
           },
           "osIconPath": "/usr/share/icons/Faenza/apps/96/qtdesigner.png"
+        },
+        {
+          "type": "custom",
+          "name": "Processing",
+          "command": "/opt/processing/processing",
+          "osIconPath": "/opt/processing/lib/icons/pde-48.png"
         }
       ]
     },
@@ -748,6 +755,10 @@
         },
         {
           "type": "desktop",
+          "source": "GlobiLab"
+        },
+        {
+          "type": "desktop",
           "keywords": [
             "digabi"
           ],
@@ -763,6 +774,10 @@
             "sv": "3D-Molekyler",
             "de": "3D-Moleküle"
           }
+        },
+        {
+          "type": "desktop",
+          "source": "avogadro"
         },
         {
           "type": "desktop",
@@ -965,6 +980,10 @@
         },
         {
           "type": "desktop",
+          "source": "calibre-gui"
+        },
+        {
+          "type": "desktop",
           "source": "tellico",
           "name": {
             "en": "Tellico-collection manager",
@@ -996,6 +1015,14 @@
             "digabi"
           ],
           "source": "dia"
+        },
+        {
+          "type": "desktop",
+          "source": "tilitin"
+        },
+        {
+          "type": "desktop",
+          "source": "t-lasku"
         }
       ]
     },
@@ -1504,6 +1531,18 @@
         {
           "type": "desktop",
           "source": "netflix"
+        },
+        {
+          "type": "web",
+          "name": "Edison",
+          "url": "http://app.edison.fi",
+          "osIconPath": "/usr/share/icons/Faenza/mimetypes/96/text-html.png"
+        },
+        {
+          "type": "web",
+          "name": "Unelmakoulu",
+          "url": "http://dreamschool.fi",
+          "osIconPath": "/usr/share/icons/webmenu/unelmakoulu.png"
         }
       ]
     },
