@@ -32,6 +32,7 @@ install: install-dirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-resolve-api-server
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-update-certificate
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-feed
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-rest-client
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
 
 update-gemfile-lock: clean
