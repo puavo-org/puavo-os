@@ -82,6 +82,20 @@ Register devices to Puavo from CLI
 
 ## Development
 
-    [sudo] ruby -Ilib/ bin/puavo-register [--update]
+Install build deps
+
+    sudo make install-build-dep
+
+Install deps
+
+    make
+
+Test
+
+    ruby1.9.1 -Ilib/ bin/puavo-rest-client
+
+Create package
+
+    make deb
 
 [Puavo registration]: https://github.com/opinsys/puavo-register
