@@ -45,7 +45,20 @@ clean:
 	rm -rf .bundle
 	rm -rf lib/puavo-client-vendor
 
+.PHONY: test
 test:
 	ruby test/*
 
-.PHONY: test
+install-build-dep:
+	mk-build-deps --install debian.default/control \
+		--tool "apt-get --yes --force-yes" --remove
+
+debiandir:
+	rm -rf debian
+	cp -a debian.default debian
+
+deb: debiandir
+	dpkg-buildpackage -us -uc
+
+deb-binary-arch: debiandir
+	dpkg-buildpackage -B -us -uc
