@@ -15,5 +15,5 @@ else
     make deb-binary-arch
 fi
 
-cp ../puavo-ticket_* $HOME/results
+cp ../puavo-client_* $HOME/results
 
