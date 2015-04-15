@@ -72,7 +72,9 @@ class PuavoRestClient
 
   def initialize(_options={})
     @options = _options.dup
-    @headers = {}
+    @headers = {
+      "User-Agent" => "puavo-rest-client"
+    }
     @header_overrides = (_options[:headers] || {}).dup
 
     if @options[:puavo_domain].nil?
