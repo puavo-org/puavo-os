@@ -155,12 +155,14 @@ class PuavoRestClient
     "#{ @options[:scheme] }://#{ @options[:server_host] }:#{ @options[:port] }#{ path }"
   end
 
-  def get(path)
-    url = to_full_url(path)
-    verbose("GET #{ url }")
-    res = client.get url
-    verbose("HTTP STATUS #{ res.status }")
-    return res
+  [:get, :post].each do |method|
+    define_method(method) do |path, *options|
+      url = to_full_url(path)
+      verbose("#{ method.to_s.upcase } #{ url }")
+      res = client.send(method, url, *options)
+      verbose("HTTP STATUS #{ res.status }")
+      res
+    end
   end
 
   private
