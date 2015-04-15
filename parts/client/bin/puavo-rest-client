@@ -79,7 +79,7 @@ def puavo_rest_client_cli
 
     opts.on("-HHEADER", "--header=HEADER", "Add custom header. Can be set multiple times. Example: --header 'Content-Type: application/json'") do |header|
       key, val = header.split(":")
-      options[:headers][key.strip] = val.strip
+      options[:headers][key.strip.downcase] = val.strip
     end
 
     opts.on("--domain=DOMAIN", "Use custom puavo domain. By default the domain is read from /etc/puavo/domain") do |domain|

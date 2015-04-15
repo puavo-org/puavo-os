@@ -73,7 +73,7 @@ class PuavoRestClient
   def initialize(_options={})
     @options = _options.dup
     @headers = {
-      "User-Agent" => "puavo-rest-client"
+      "user-agent" => "puavo-rest-client"
     }
     @header_overrides = (_options[:headers] || {}).dup
 
@@ -122,7 +122,7 @@ class PuavoRestClient
 
     # Set request header to puavo domain. Using this we can make requests to
     # api.opinsys.fi with basic auth and get the correct organisation
-    @headers["Host"] = @options[:puavo_domain]
+    @headers["host"] = @options[:puavo_domain]
 
 
     # Force usage of custom ca_file if set
@@ -139,7 +139,7 @@ class PuavoRestClient
     end
 
     if @options[:auth] == :bootserver
-      @headers["Authorization"] = "Bootserver"
+      @headers["authorization"] = "Bootserver"
     end
 
     if @options[:auth] == :etc
@@ -174,7 +174,7 @@ class PuavoRestClient
     if @options[:auth] == :kerberos
       gsscli = GSSAPI::Simple.new(@options[:server_host], "HTTP")
       token = gsscli.init_context(nil, :delegate => true)
-      headers["Authorization"] = "Negotiate #{Base64.strict_encode64(token)}"
+      headers["authorization"] = "Negotiate #{Base64.strict_encode64(token)}"
     end
 
     # Add custom header overrides given by the user
