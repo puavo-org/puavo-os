@@ -7,7 +7,13 @@ set -x
 sudo apt-get update
 sudo apt-get install -y wget make devscripts git equivs
 
+. /etc/lsb-release
+echo "deb http://archive.opinsys.fi/git-master ${DISTRIB_CODENAME} main" > /etc/apt/sources.list.d/archive.list
+wget -O - http://archive.opinsys.fi/key | sudo apt-key add -
+sudo apt-get update
+
 sudo make install-build-dep
+
 
 if [ "$(uname -p)" = "i686" ]; then
     make deb
