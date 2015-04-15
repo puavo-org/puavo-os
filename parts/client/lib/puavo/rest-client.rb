@@ -136,6 +136,10 @@ class PuavoRestClient
       @options[:ssl_context] ||= self.class.public_ssl
     end
 
+    if @options[:auth] == :bootserver
+      @headers["Authorization"] = "Bootserver"
+    end
+
     if @options[:auth] == :etc
       verbose("Using credendials from /etc/puavo/ldap/")
       @options[:basic_auth] = {
