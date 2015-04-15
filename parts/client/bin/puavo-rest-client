@@ -124,7 +124,13 @@ def puavo_rest_client_cli
     options[:apiserver] = ARGV.first
   end
   client = PuavoRestClient.new(options)
-  res = client.get(uri.path)
+
+  path = uri.path
+  if uri.query
+    path += "?#{ uri.query }"
+  end
+
+  res = client.get(path)
   puts res.to_s
   if res.code != 200
     exit 1
