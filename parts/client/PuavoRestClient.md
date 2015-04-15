@@ -30,7 +30,6 @@ CLI tool and Ruby library
     puavo-rest-client --data current_image=the_running_image /v3/devices/laptop1
     puavo-rest-client --data-json '{"available_images": ["img1", "img2"]}' /v3/boot_servers/boot2
 
-
     Options:
 
     -u, --user <user[:password]>     Use basic auth. If password is not set password prompt will be displayed. Password is also read from the PUAVO_REST_CLIENT_PASSWORD env
@@ -48,7 +47,6 @@ CLI tool and Ruby library
         --scheme=SCHEME              Force custom scheme (http or https)
     -v, --verbose                    Be verbose. PUAVO_REST_CLIENT_VERBOSE=1 env can be also used
     -h, --help                       Show this message
-
 
 ## Ruby library
 

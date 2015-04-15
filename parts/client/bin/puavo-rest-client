@@ -22,6 +22,8 @@ def puavo_rest_client_cli
 
     Examples:
 
+    GET requests
+
     #{script_name} /v3/about
     #{script_name} https://api.puavo.org/v3/about
     #{script_name} --user-krb /v3/whoami
@@ -29,6 +31,10 @@ def puavo_rest_client_cli
     #{script_name} --user uid=admin,o=puavo /v3/users
     #{script_name} --user uid=admin,o=puavo --domain other.opinsys.net --no-dns /v3/current_organisation
 
+    POST requests
+
+    #{script_name} --data current_image=the_running_image /v3/devices/laptop1
+    #{script_name} --data-json '{\"available_images\": [\"img1\", \"img2\"]}' /v3/boot_servers/boot2
 
     Options:
     "
