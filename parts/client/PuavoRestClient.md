@@ -99,9 +99,17 @@ puts res.headers
 # requested uri
 puts res.uri.to_s
 # => "https://boot2.org.opinsys.net/v3/whoami"
-
-
 ```
+
+`client.post(...)` can be used to issue POST requests
+
+```ruby
+client.post("/v3/boot_servers/laptop1", :json => {
+    "available_images" => ["img1", "img2"]
+})
+```
+The second argument is passed directly to http.rb's post method. See their
+[docs](https://github.com/httprb/http.rb#post-requests).
 
 
 [http.rb]: https://github.com/httprb/http.rb
