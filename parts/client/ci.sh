@@ -15,5 +15,6 @@ else
     make deb-binary-arch
 fi
 
+mkdir -p $HOME/results
 cp ../puavo-client_* $HOME/results
 
