@@ -36,17 +36,18 @@ CLI tool and Ruby library
         --user-etc                   Automatically load credendials from /etc/puavo/ldap
         --user-krb                   Use kerberos authentication
         --user-bootserver            Use bootserver authentication (aka no client authentication)
-        --cacert=FILE                Tells puavo-rest-client to use the specified certificate file to verify the peer
-    -d, --data=BODY                  Use POST method and use BODY as the request body using Content-type application/x-www-form-urlencoded
-        --data-json=JSON             POST JSON string with Content-Type application/json
-    -H, --header=HEADER              Add custom header. Can be set multiple times. Example: --header 'Content-Type: application/json'
-        --domain=DOMAIN              Use custom puavo domain. By default the domain is read from /etc/puavo/domain
+        --cacert FILE                Tells puavo-rest-client to use the specified certificate file to verify the peer
+    -d, --data BODY                  Use POST method and use BODY as the request body using Content-type application/x-www-form-urlencoded
+        --data-json JSON             POST JSON string with Content-Type application/json
+    -H, --header HEADER              Add custom header. Can be set multiple times. Example: --header 'Content-Type: application/json'
+        --domain DOMAIN              Use custom puavo domain. By default the domain is read from /etc/puavo/domain
         --no-dns                     Do not search for server from DNS
         --dns-only                   Force use server from DNS. If not found puavo-rest-client exits with a loud error
-        --port=PORT                  Force custom port
-        --scheme=SCHEME              Force custom scheme (http or https)
+        --port PORT                  Force custom port
+        --scheme SCHEME              Force custom scheme (http or https)
     -v, --verbose                    Be verbose. PUAVO_REST_CLIENT_VERBOSE=1 env can be also used
     -h, --help                       Show this message
+
 
 ## Ruby library
 

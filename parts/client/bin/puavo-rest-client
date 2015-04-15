@@ -80,26 +80,26 @@ def puavo_rest_client_cli
       options[:auth] = :bootserver
     end
 
-    opts.on("--cacert=FILE", "Tells puavo-rest-client to use the specified certificate file to verify the peer") do |path|
+    opts.on("--cacert FILE", "Tells puavo-rest-client to use the specified certificate file to verify the peer") do |path|
       options[:ca_file] = path
     end
 
-    opts.on("-d", "--data=BODY", "Use POST method and use BODY as the request body using Content-type application/x-www-form-urlencoded") do |body|
+    opts.on("-d", "--data BODY", "Use POST method and use BODY as the request body using Content-type application/x-www-form-urlencoded") do |body|
       post_request = { :body => body }
       implicit_headers["content-type"] = "application/x-www-form-urlencoded"
     end
 
-    opts.on("--data-json=JSON", "POST JSON string with Content-Type application/json") do |body|
+    opts.on("--data-json JSON", "POST JSON string with Content-Type application/json") do |body|
       post_request = { :body => body }
       implicit_headers["content-type"] = "application/json"
     end
 
-    opts.on("-H", "--header=HEADER", "Add custom header. Can be set multiple times. Example: --header 'Content-Type: application/json'") do |header|
+    opts.on("-H", "--header HEADER", "Add custom header. Can be set multiple times. Example: --header 'Content-Type: application/json'") do |header|
       key, val = header.split(":")
       options[:headers][key.strip.downcase] = val.strip
     end
 
-    opts.on("--domain=DOMAIN", "Use custom puavo domain. By default the domain is read from /etc/puavo/domain") do |domain|
+    opts.on("--domain DOMAIN", "Use custom puavo domain. By default the domain is read from /etc/puavo/domain") do |domain|
       options[:puavo_domain] = domain
     end
 
@@ -111,11 +111,11 @@ def puavo_rest_client_cli
       options[:dns] = :only
     end
 
-    opts.on("--port=PORT", "Force custom port") do |port|
+    opts.on("--port PORT", "Force custom port") do |port|
       options[:port] = port.to_i
     end
 
-    opts.on("--scheme=SCHEME", "Force custom scheme (http or https)") do |scheme|
+    opts.on("--scheme SCHEME", "Force custom scheme (http or https)") do |scheme|
       options[:scheme] = scheme
     end
 
