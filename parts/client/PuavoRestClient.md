@@ -43,6 +43,8 @@ CLI tool and Ruby library
         --domain DOMAIN              Use custom puavo domain. By default the domain is read from /etc/puavo/domain
         --no-dns                     Do not search for server from DNS
         --dns-only                   Force use server from DNS. If not found puavo-rest-client exits with a loud error
+        --retry-fallback             When DNS resolving is used and the resolved server is unreachable retry the request using /etc/puavo/apiserver or puavo domain as the server
+    -L, --location                   Follow location headers on 3XX status codes
         --port PORT                  Force custom port
         --scheme SCHEME              Force custom scheme (http or https)
     -v, --verbose                    Be verbose. PUAVO_REST_CLIENT_VERBOSE=1 env can be also used
@@ -70,6 +72,8 @@ The class constructor takes an options Hash with following keys (all optional):
 - `:auth<Symbol>` Use the specific authentication method. `:etc`, `:kerberos` or `:bootserver`
 - `:basic_auth<Hash>` Use custom basic auth: Example `{ :user => "username", :pass => "secret" }`
 - `:headers<Hash>` Add custom headers
+- `:location<Boolean>` Follow location header on 3XX status codes
+- `:retry_fallback<Boolean>` When DNS resolving is used and the resolved server is unreachable retry the request using /etc/puavo/apiserver or puavo domain as the server
 - `:port<FixNum>` Force custom port
 - `:scheme<String>` Force scheme (http or https)
 
