@@ -187,6 +187,7 @@ class PuavoRestClient
         else
           verbose("Response headers")
           verbose_log_headers(res.headers)
+          verbose("Final request URI: #{ res.uri }")
           verbose("Response HTTP status #{ res.status }")
           return res
         end
