@@ -69,6 +69,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/security
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sssd
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sudoers.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/systemd
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/xdg/autostart
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/lib/udev
@@ -166,6 +167,9 @@ install : installdirs $(install-subdirs)
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sssd \
 		templates/etc/sssd/sssd.conf \
 		templates/etc/sssd/sssd.conf-laptop
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sudoers.d \
+		templates/etc/sudoers.d/puavo-install-when-preinstalled
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/systemd \
 		templates/etc/systemd/logind.conf

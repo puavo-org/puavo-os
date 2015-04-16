@@ -319,6 +319,7 @@ case @puavo_device_type
     system('puavo-update-nm-configurations')
   when "preinstalled"
     write_config("/etc/lightdm/lightdm.conf")
+    write_config("/etc/sudoers.d/puavo-install-when-preinstalled")
     write_config("/etc/xdg/autostart/puavo-install.desktop")
   when "wirelessaccesspoint"
     wired_interfaces                                                 \
