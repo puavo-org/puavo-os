@@ -225,18 +225,26 @@ case "$puavo_hosttype" in
     "
     ;;
   diskinstaller|preinstalled|unregistered)
-    case "$PUAVO_HOSTTYPE" in
-      diskinstaller)
-        # booted from diskinstaller: no lightdm but yes network-manager
-        puavo_unregistered_unneeded_system_services="lightdm"
-        set_lts_var RM_SESSION_SERVICES "puavo-client-updater-applet"
-        set_lts_var SCREEN_07 register
-        ;;
-      preinstalled)
-        # preinstalled: yes lightdm and yes network-manager
+    if [ "$PUAVO_HOSTTYPE" = "preinstalled" ]; then
+      install_hosttype="preinstalled_$(cat /images/puavo_preinstalled \
+                                         2>/dev/null || true)"
+    else
+      install_hosttype="$PUAVO_HOSTTYPE"
+    fi
+
+    case "$install_hosttype" in
+      preinstalled_laptop)
+        # preinstalled laptop: yes lightdm and yes network-manager
         puavo_unregistered_unneeded_system_services=""
         set_lts_var RM_SESSION_SERVICES "puavo-client-updater-applet"
         set_lts_var SCREEN_07 lightdm
+        ;;
+      diskinstaller|preinstalled_*)
+        # booted from diskinstaller/preinstaller (but not preinstalled laptop):
+        #   no lightdm but yes network-manager
+        puavo_unregistered_unneeded_system_services="lightdm"
+        set_lts_var RM_SESSION_SERVICES "puavo-client-updater-applet"
+        set_lts_var SCREEN_07 register
         ;;
       unregistered)
         # booted from network: no lightdm and no network-manager
