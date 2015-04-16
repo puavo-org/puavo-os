@@ -111,6 +111,10 @@ def puavo_rest_client_cli
       options[:dns] = :only
     end
 
+    opts.on("--retry-fallback", "When DNS resolving is used and the resolved server is unreachable retry the request using /etc/puavo/apiserver or puavo domain as the server") do
+      options[:retry_fallback] = true
+    end
+
     opts.on("--port PORT", "Force custom port") do |port|
       options[:port] = port.to_i
     end
@@ -141,7 +145,7 @@ def puavo_rest_client_cli
 
   uri = Addressable::URI.parse(ARGV.first)
   if uri.host
-    options[:apiserver] = ARGV.first
+    options[:server] = ARGV.first
   end
   client = PuavoRestClient.new(options)
 
