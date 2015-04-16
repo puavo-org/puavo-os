@@ -115,6 +115,10 @@ def puavo_rest_client_cli
       options[:retry_fallback] = true
     end
 
+    opts.on("-L", "--location", "Follow location headers on 3XX status codes") do
+      options[:location] = true
+    end
+
     opts.on("--port PORT", "Force custom port") do |port|
       options[:port] = port.to_i
     end

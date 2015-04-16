@@ -219,6 +219,10 @@ class PuavoRestClient
       _client = _client.basic_auth(@options[:basic_auth])
     end
 
+    if @options[:location]
+      _client = _client.follow
+    end
+
     return _client
   end
 
