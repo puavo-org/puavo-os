@@ -317,6 +317,9 @@ case @puavo_device_type
     # and json modules, which would needlessly slow down this script for other
     # host types that do not need this.
     system('puavo-update-nm-configurations')
+  when "preinstalled"
+    write_config("/etc/lightdm/lightdm.conf")
+    write_config("/etc/xdg/autostart/puavo-install.desktop")
   when "wirelessaccesspoint"
     wired_interfaces                                                 \
       = Dir.glob('/sys/class/net/eth*')                              \
