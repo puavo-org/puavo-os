@@ -14,8 +14,9 @@ end
 class PuavoRestClient
 
   def self.verbose(*msg)
+    text, *args = msg
     if $puavo_rest_client_verbose
-      STDERR.puts(*msg)
+      STDERR.puts("puavo-rest-client: #{ text }", *args)
     end
   end
 
