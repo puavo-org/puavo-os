@@ -334,7 +334,6 @@ install_mode=$(ask_install_mode_and_preseed "$puavo_install_hosttype")
 
 case "$install_mode" in
   make-install-disk)
-    puavo-register --authenticate-only
     puavo-make-install-disk
     exit 0
     ;;
@@ -344,7 +343,6 @@ case "$install_mode" in
     ask_preseed
     ;;
   preinstall)
-    puavo-register --authenticate-only
     ask_preseed
     do_preinstall "$puavo_install_hosttype" \
                   "$puavo_preseed_setup_filesystems_args"
