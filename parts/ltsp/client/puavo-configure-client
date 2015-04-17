@@ -75,6 +75,7 @@ if Uninstalled_device_types.include?(@puavo_device_type) then
 
   if @puavo_device_type == 'preinstalled' then
     write_config("/etc/lightdm/lightdm.conf")
+    write_config("/etc/pam.d/lightdm-autologin", "preinstalled")
     write_config("/etc/sudoers.d/puavo-install-when-preinstalled")
     write_config("/etc/xdg/autostart/puavo-install.desktop")
   end

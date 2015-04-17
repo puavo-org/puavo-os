@@ -105,6 +105,7 @@ install : installdirs $(install-subdirs)
 		templates/etc/pam.d/ltspguestsshd \
 		templates/etc/pam.d/lightdm-autologin-fatclient \
 		templates/etc/pam.d/lightdm-autologin-laptop \
+		templates/etc/pam.d/lightdm-autologin-preinstalled \
 		templates/etc/pam.d/lightdm-autologin-thinclient \
 		templates/etc/pam.d/lightdm-autologin-wirelessaccesspoint \
 		templates/etc/pam.d/lightdm-fatclient \
