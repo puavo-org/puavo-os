@@ -168,6 +168,8 @@ class PuavoRestClient
     define_method(method) do |path, *args|
       options = args.first || {}
 
+      err = nil
+
       @servers.each do |server|
         uri = server[:uri].dup
         uri.path = path
@@ -181,9 +183,10 @@ class PuavoRestClient
         res = nil
         begin
           res = client(uri.host).send(method, uri, options)
-        rescue Errno::ENETUNREACH => err
-          raise err if @options[:retry_fallback].nil?
-          verbose("Request failed to #{ uri } #{ err }")
+        rescue Errno::ENETUNREACH => _err
+          raise _err if @options[:retry_fallback].nil?
+          verbose("Request failed to #{ uri } #{ _err }")
+          err = _err
         else
           verbose("Response headers")
           verbose_log_headers(res.headers)
@@ -192,6 +195,8 @@ class PuavoRestClient
           return res
         end
       end
+
+      raise err if err
     end
   end
 

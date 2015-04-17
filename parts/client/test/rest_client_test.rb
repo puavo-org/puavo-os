@@ -132,4 +132,46 @@ describe PuavoRestClient do
     end
   end
 
+  it "can retry on fallbacks" do
+    Resolv::DNS.stub_any_instance(:getresources, DNS_RES) do
+      PuavoRestClient.stub :read_apiserver_file, "http://api.example.net" do
+
+        stub_request(:get, "https://boot2.hogwarts.opinsys.net/foo").to_raise(Errno::ENETUNREACH)
+
+        stub_request(:get, "http://api.example.net/foo").
+          with(:headers => {'Connection'=>'close', 'Host'=>'hogwarts.opinsys.net', 'User-Agent'=>'puavo-rest-client'}).
+          to_return(:status => 200, :body => "", :headers => {})
+
+        client = PuavoRestClient.new({
+          :puavo_domain => "hogwarts.opinsys.net",
+          :retry_fallback => true
+        })
+
+        res = client.get("/foo")
+        assert_equal 200, res.status
+        assert_equal "http://api.example.net/foo", res.uri.to_s
+
+      end
+    end
+  end
+
+  it "errors when all servers fail" do
+    Resolv::DNS.stub_any_instance(:getresources, DNS_RES) do
+      PuavoRestClient.stub :read_apiserver_file, "http://api.example.net" do
+
+        stub_request(:get, "https://boot2.hogwarts.opinsys.net/foo").to_raise(Errno::ENETUNREACH)
+        stub_request(:get, "http://api.example.net/foo").to_raise(Errno::ENETUNREACH)
+
+        err = assert_raises PuavoRestClient::Errno::ENETUNREACH do
+          client = PuavoRestClient.new({
+            :puavo_domain => "hogwarts.opinsys.net",
+            :retry_fallback => true
+          })
+
+          client.get("/foo")
+        end
+      end
+    end
+  end
+
 end
