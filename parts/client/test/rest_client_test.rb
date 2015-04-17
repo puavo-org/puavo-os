@@ -1,9 +1,4 @@
-require 'minitest/mock'
-require 'minitest/autorun'
-require 'minitest/stub_any_instance'
-require 'webmock/minitest'
-
-require "puavo/rest-client"
+require_relative "./helper"
 
 WebMock.disable_net_connect!
 

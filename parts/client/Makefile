@@ -45,9 +45,15 @@ clean:
 	rm -rf .bundle
 	rm -rf lib/puavo-client-vendor
 
+test-rest-client:
+	bundle exec ruby1.9.1  -Ilib test/rest_client_test.rb
+
+
+test-etc:
+	ruby1.9.1  -Ilib test/etc_test.rb
+
 .PHONY: test
-test:
-	ruby test/*
+test: test-rest-client test-etc
 
 install-build-dep:
 	mk-build-deps --install debian.default/control \
