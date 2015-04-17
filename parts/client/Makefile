@@ -53,7 +53,7 @@ test-etc:
 	ruby1.9.1  -Ilib test/etc_test.rb
 
 .PHONY: test
-test: test-rest-client test-etc
+test: test-rest-client
 
 install-build-dep:
 	mk-build-deps --install debian.default/control \
