@@ -52,7 +52,7 @@ class PuavoRestClient
       end
 
       if res.nil? || res.empty?
-        raise ResolvFail, "Empty response"
+        raise ResolvFail, "Empty DNS response"
       end
 
       server_host = res.first.target.to_s
