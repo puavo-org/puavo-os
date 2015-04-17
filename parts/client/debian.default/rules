@@ -16,9 +16,6 @@
 # probably have no actual need for it. So skip.
 override_dh_usrlocal:
 
-# Test cannot be currently run in the build chroot
-override_dh_auto_test:
-
 # We vendor in every ruby dependency required by this package. Unfortunately
 # Ubuntu Precise Pangolin does not have recent enough version of Bundler to do
 # this (It's missing --standalone). So we have rubygems as build dependency
