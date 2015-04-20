@@ -1,13 +1,20 @@
-[Normal User Permissions]
+[Normal user permissions]
 Identity=unix-user:*
 Action=org.freedesktop.NetworkManager.settings.modify.system
 ResultAny=no
 ResultInactive=no
 ResultActive=yes
 
-[Login User Permissions]
+[Login user permissions]
 Identity=unix-user:lightdm
 Action=org.freedesktop.NetworkManager.settings.modify.own
 ResultAny=no
 ResultInactive=no
 ResultActive=yes
+
+[Login user unpermissions]
+Identity=unix-user:lightdm
+Action=org.freedesktop.NetworkManager.settings.modify.system
+ResultAny=no
+ResultInactive=no
+ResultActive=no
