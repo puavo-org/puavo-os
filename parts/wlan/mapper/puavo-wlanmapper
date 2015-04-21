@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+#
+# Copyright (C) 2015 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+from __future__ import division
+from __future__ import print_function
+
+import sys
+
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import *
+
+class MainWindow(QMainWindow):
+
+    def __init__(self, *args):
+        QMainWindow.__init__(self, *args)
+
+        self.view = QGraphicsView(self)
+        self.scene = QGraphicsScene(self)
+        self.layoutPixmap = None
+
+        self.view.setScene(self.scene)
+        
+        self.setCentralWidget(self.view)
+
+    def loadLayoutImage(self, filepath):
+        self.scene.clear()
+        self.layoutPixmap = QPixmap(filepath)
+        self.scene.addPixmap(self.layoutPixmap)
+
+def main():
+    app = QApplication(sys.argv)
+
+    if len(app.argv()) != 2:
+        error_message = "ERROR: invalid number of arguments ({}), expected 1"
+        print(error_message.format(app.argc() - 1), file=sys.stderr)
+        print("Usage: {} LAYOUT_PNG".format(sys.argv[0]), file=sys.stderr)
+        return 1
+
+    win = MainWindow()
+    win.loadLayoutImage(sys.argv[1])
+
+    win.show()
+
+    return app.exec_()
+
+if __name__ == "__main__":
+   sys.exit(main())
