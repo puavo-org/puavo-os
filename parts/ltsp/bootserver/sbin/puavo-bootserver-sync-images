@@ -1,0 +1,402 @@
+#!/usr/bin/ruby1.9.3
+
+# ##############################################################################
+#
+# Copyright (C) 2015 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Usage
+# puavo-bootserver-sync-images [options] [series] [series]
+#
+# --delete-unmanaged                Delete all image files that were not synced with this script
+# --delete-unused                   Delete images that are not currently used by any client
+# --url=<url>                       URL to load JSON series information
+# --file=<path>                     JSON series information file to read
+# --image-limit=<number>            Number of newest images to sync from all specified series.
+# --diff-limit=<number>             Number of newest diffs to sync for synced images even if 
+#                                   there are no clients using them. (Default: 2)
+# --sync-client-diffs=              Sync also diffs for images used by locally installed devices,
+#   <org|schools|none>              either for all organisation or for schools that the bootserver
+#                                   serves. Device information is queried from puavo-rest. 
+#                                   (Default: schools)
+# --download-path=<path>            Path where to store the downloaded files (default: /opt/ltsp/images)
+# --series=<series>                 Download only specified series instead of all series specified
+#                                   in the JSON files.
+# --image=<imagename>               Sync only the specified image
+# --config=<path>                   Config file path to specify settings instead of command line switches
+#
+#
+# Managed images
+#
+# Images downloaded by this script, data stored under /var/lib/puavo/images.json
+# Unmanaged images - other images
+#
+# By default the script handles only the managed images and unmanaged images
+# are lef untouched. The script can be asked to delete unmanaged images with 
+# command line option --delete-unmanaged. When asked, the script will delete 
+# all unknown files under /opt/ltsp/images and /opt/ltsp/images/rdiffs. Images 
+# do not need to have .img ending.
+#
+# Steps done by the script:
+#
+# 1. Check image series source URLs from device.json
+# 2. Load image series description JSON files from specified URLs
+# 3. Determine wanted full images oldest first and start syncing them one by one oldest first
+# 4. Check if there is an old image available that has a diff to wanted target image
+# 5. Download diffs needed by locally installed client devices
+# 6. Delete old unused managed images + rdiffs
+# 7. Delete unmanaged images if asked
+#
+# The managed images and rdiffs are stored under /var/lib/puavo/images.json. The 
+# contents of the file are the same as the last loaded image series json file. 
+
+require 'puavo'
+require 'rest-client'
+require 'json'
+require 'net/http'
+require "digest"
+require 'digest/sha2'
+
+class Series
+  def initialize(name, arch)
+    @name = name
+    @arch = arch
+    @images = Hash.new
+  end
+
+  def name
+    return @name
+  end
+
+  def arch
+    return @arch
+  end
+
+  def add_image(image)
+    @images[image.version] = image
+  end
+
+  def get_image(version)
+    return @images[version]
+  end
+
+  def add_diff(from_version, to_version, filename, size, sha256, urls)
+    baseimage = get_image(from_version)
+    targetimage = get_image(to_version)
+
+    if baseimage and targetimage
+      diff = Diff.new(baseimage, targetimage, filename, size, sha256, urls)
+      targetimage.add_diff(diff)
+#    else
+#      puts "ERROR: baseimage #{from_version} or targetimage #{to_version} missing!"
+    end
+  end
+
+  def images
+    return @images.values
+  end
+
+  # Returns specified number of newest images in an array. The images are
+  # sorted oldest first so that when fetching the images, newer images can 
+  # be created using diffs from older images.
+  def newest(limit)
+    versions = @images.keys.sort.reverse.slice(0,limit).reverse
+
+    images = Array.new
+
+    versions.each do |version|
+      images << @images[version]
+    end
+
+    images
+  end
+end
+
+class Image
+  attr_reader :version, :filename, :size, :sha256, :urls
+
+  def initialize(version, filename, size, sha256, urls)
+    @version = version
+    @filename = filename
+    @size = size
+    @sha256 = sha256
+    @urls = urls
+    @diffs_from_older = Hash.new
+    @diff_to_newer = Hash.new
+    @verified = false
+    @verify_result = false
+  end
+
+  def add_diff(diff)
+    # Not a diff for this?
+    if diff.targetimage.version != @version and diff.baseimage.version != @version
+      return
+    end
+
+    if diff.baseimage.version < @version
+      @diffs_from_older[diff.baseimage.version] = diff
+    end
+
+    if diff.baseimage.version == @version and diff.targetimage.version > @version
+      @diff_to_newer[diff.targetimage.version] = diff
+    end
+
+  end
+
+  def full_path
+    return "/opt/ltsp/images/#{@filename}"
+  end
+
+  # Checks if the file in the filesystem has the same sha256 as the metadata.
+  # To speed up things, the filesize needs to match before sha256 is 
+  # calculated. The results are cached and rechecked only if file mtime 
+  # changes.
+  def verify
+    if @verified and @mtime and File.mtime(full_path) == @mtime
+      return @verify_result
+    end
+
+    @verify_result = false
+
+    if File.exists?(full_path) and File.size(full_path)==@size
+      @mtime = File.mtime(full_path)
+      @verify_result = Digest::SHA2.file(full_path).hexdigest.eql?(@sha256)
+    end
+
+    return @verify_result
+  end
+
+  def download
+    download_file(@urls[0], full_path, size, sha256)
+  end
+
+  # Materialize 
+  def materialize
+    if verify
+      return true
+    end
+
+    if patch_from_old
+      return true
+    end
+
+    if download
+      return true
+    end
+
+    puts "Cannot materialize #{@filename}"
+  end
+
+  # Create the current image from an old image by using a patch. First 
+  # all the possible diffs are sorted by size and the list is scanned twice:
+  # first to check if there is an existing baseimage that has a patch 
+  # available and if none is found, then the smallest sized diff for an 
+  # existing baseimage is downloaded.
+  def patch_from_old
+    mindiffs = @diffs_from_older.sort_by do |version, diff|
+      diff.size
+    end
+
+    mindiffs.each do |version, diff|
+      if diff.baseimage.verify and diff.verify
+        diff.patch
+
+        return true
+      end
+    end
+
+    puts "No existing diff, downloading the smallest"
+
+    mindiffs.each do |version, diff|
+      if diff.baseimage.verify
+        diff.download
+
+        if diff.verify
+          diff.patch
+
+          puts "Patched image"
+          return true
+        end
+      end
+    end
+
+    return false
+  end
+end
+
+class Diff
+  attr_reader :baseimage, :targetimage, :filename, :size, :sha256, :urls
+
+  def initialize(baseimage, targetimage, filename, size, sha256, urls)
+    @baseimage = baseimage
+    @targetimage = targetimage
+    @filename = filename
+    @size = size
+    @sha256 = sha256
+    @urls = urls
+    @verified = false
+    @verify_result = false
+  end
+
+  def full_path
+    return "/opt/ltsp/images/rdiffs/#{@filename}"
+  end
+
+  def verify
+    if @verified and @mtime and File.mtime(full_path) == @mtime
+      return @verify_result
+    end
+
+    @verify_result = false
+
+    if File.exists?(full_path) and File.size(full_path)==@size
+      @mtime = File.mtime(full_path)
+      @verify_result = Digest::SHA2.file(full_path).hexdigest.eql?(@sha256)
+    end
+
+    return @verify_result
+  end
+
+  def patch
+#    puts "rdiff patch #{@baseimage.full_path} #{full_path} #{@targetimage.full_path}"
+    `rdiff patch #{@baseimage.full_path} #{full_path} #{@targetimage.full_path}`
+  end
+
+  def download
+    download_file(@urls[0], full_path, size, sha256)
+  end
+end
+
+# Number of newest images to download from series
+image_limit = 2
+# Maximum number of rdiffs to download for the newest images
+rdiff_limit = 10
+
+def load_managed_images
+  images = Hash.new
+
+  begin
+    if File.exists?("/var/lib/puavo/images.json")
+      json = JSON.parse(File.read("/var/lib/puavo/images.json"))
+
+    end
+  rescue Exception => e
+    puts "Reading /var/lib/puavo/images.json failed: #{e}"
+  end
+
+  images
+end
+
+def write_managed_images(images)
+  File.open("/var/lib/puavo/images.json", "w") do |f|
+    f.write(images.to_json)
+  end
+end
+
+# Download file from specified url and check that the sha256 checksum of 
+# the downloaded file matches the given sha256.
+#
+# If the file was downloaded successfully and the checksum matches, true 
+# is returned, otherwise false is returned.
+def download_file(url, dest_file, size, sha256)
+  uri = URI.parse(url)
+
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.ca_file = "/etc/puavo/certs/rootca.pem"
+#  http.ca_file = "/etc/ssl/certs/SecureTrust_CA.pem"
+  http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+  http.use_ssl = true
+
+  http.request_get(uri.path) do |response|
+    puts response.inspect
+    hash = Digest::SHA2.new
+
+    case response
+    when Net::HTTPNotFound
+      puts "404 - Not Found"
+      return false
+
+    when Net::HTTPClientError
+      puts "Error: Client Error: #{response.inspect}"
+      return false
+
+    when Net::HTTPOK
+      temp_file = File.new(dest_file, "w")
+      temp_file.binmode
+
+      size = 0
+      progress = 0
+      total = response.header["Content-Length"].to_i
+
+      response.read_body do |chunk|
+        hash << chunk
+
+        temp_file << chunk
+        size += chunk.size
+        new_progress = (size * 100) / total
+        unless new_progress == progress
+          puts "\rDownloading %s (%3d%%) " % [dest_file, new_progress]
+        end
+
+        progress = new_progress
+      end
+
+      temp_file.close()
+
+      if hash.to_s.eql?(sha256)
+        return true
+      end
+    end
+  end
+
+  return false
+end
+
+if File.exists?("dist.json")
+  json = JSON.parse(File.read("dist.json"))
+
+  json.each_pair do |key, data|
+    series = Series.new(key, data["architecture"])
+
+    data["images"].each do |image|
+      image = Image.new(image["version"], image["filename"], image["size"], image["sha256"],[ image["url"] ])
+      series.add_image(image)
+    end
+
+    data["images"].each do |image|
+      if image["diffs"]
+        image["diffs"].each do |data|
+          series.add_diff(data["version"], image["version"], data["filename"], data["size"], data["sha256"], [ data["url"] ])
+        end
+      end
+    end
+
+    newest = series.newest(image_limit)
+
+    newest.each do |image|
+      puts "IMAGE: #{image.filename}"
+
+      if image.materialize
+        puts "Image sync ok"
+      else
+        puts "Image sync failed"
+      end
+    end
+  end
+end
+
+exit 0
