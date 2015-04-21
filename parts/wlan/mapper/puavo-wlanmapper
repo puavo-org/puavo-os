@@ -77,6 +77,11 @@ class Item(QGraphicsEllipseItem):
         self.animation.setScaleAt(0.50, 3, 3)
         self.animation.setScaleAt(1.0, 1, 1)
 
+        self.setAcceptHoverEvents(True)
+
+    def hoverEnterEvent(self, event):
+        self.setCursor(QCursor(Qt.PointingHandCursor))
+
     def mouseDoubleClickEvent(self, event):
         if self.animation.timeLine().state() == QTimeLine.Running:
             self.animation.timeLine().stop()
