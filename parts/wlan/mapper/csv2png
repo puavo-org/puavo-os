@@ -72,12 +72,15 @@ def heatmap_single(img, xs, ys, zs, ylabel=''):
     plt.show()
 
 def main():
+    csvfilepath = sys.argv[1]
+    imgfilepath = sys.argv[2]
+
     bssid_rssi_map = {}
 
     xs = []
     ys = []
 
-    with open(sys.argv[1]) as csvfile:
+    with open(csvfilepath) as csvfile:
         columns = zip(*csv.reader(csvfile))
         xs = [int(v) for v in columns[0][1:]]
         ys = [int(v) for v in columns[1][1:]]
@@ -86,7 +89,7 @@ def main():
             rssis = [int(v) for v in column[1:]]
             bssid_rssi_map[bssid] = rssis
 
-    img = plt.imread(sys.argv[2])
+    img = plt.imread(imgfilepath)
 
     heatmap_grid(img, xs, ys, bssid_rssi_map, ylabel='dBm')
     heatmap_single(img, xs, ys, [max(v) for v in zip(*bssid_rssi_map.values())], ylabel='dBm')
