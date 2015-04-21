@@ -25,6 +25,25 @@ from PyQt4.QtGui import *
 
 MEASUREMENT_DOT_SIZE = 20
 
+class View(QGraphicsView):
+
+    def __init__(self, *args):
+        QGraphicsView.__init__(self, *args)
+
+    def wheelEvent(self, event):
+        if not event.modifiers() & Qt.ControlModifier:
+            QGraphicsView.wheelEvent(self, event)
+        else:
+            self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+
+            scaleFactor = 1.1
+            if event.delta() > 0:
+                self.scale(scaleFactor, scaleFactor)
+            else:
+                self.scale(1 / scaleFactor, 1 / scaleFactor)
+
+            event.accept()
+
 class Scene(QGraphicsScene):
 
     def __init__(self, *args):
@@ -46,7 +65,7 @@ class MainWindow(QMainWindow):
     def __init__(self, *args):
         QMainWindow.__init__(self, *args)
 
-        self.view = QGraphicsView(self)
+        self.view = View(self)
         self.scene = Scene(self)
         self.layoutPixmap = None
 
