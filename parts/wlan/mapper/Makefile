@@ -12,7 +12,7 @@ installdirs:
 
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-wlanmapper \
-		csv2png
+		lib/draw-heatmap
 
 .PHONY: all	    \
 	install	    \
