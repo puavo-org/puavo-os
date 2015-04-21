@@ -58,7 +58,7 @@ class Scene(QGraphicsScene):
                        MEASUREMENT_DOT_SIZE)
             self.addItem(dot)
             dot.setPos(event.scenePos())
-            dot.setFlag(QGraphicsItem.ItemIsMovable, True)
+            dot.setFlag(QGraphicsItem.ItemIsMovable)
 
             event.accept()
 
@@ -74,7 +74,7 @@ class Item(QGraphicsEllipseItem):
         self.animation.setItem(self)
         self.animation.setTimeLine(timer)
         self.animation.setScaleAt(0.0, 1, 1)
-        self.animation.setScaleAt(0.50, 3, 3)
+        self.animation.setScaleAt(0.5, 3, 3)
         self.animation.setScaleAt(1.0, 1, 1)
 
         self.setAcceptHoverEvents(True)
