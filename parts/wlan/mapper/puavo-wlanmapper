@@ -52,13 +52,41 @@ class Scene(QGraphicsScene):
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
         if not event.isAccepted() and event.button() == Qt.LeftButton:
-            dot = self.addEllipse(-MEASUREMENT_DOT_SIZE / 2,
-                                  -MEASUREMENT_DOT_SIZE / 2,
-                                  MEASUREMENT_DOT_SIZE,
-                                  MEASUREMENT_DOT_SIZE)
+            dot = Item(-MEASUREMENT_DOT_SIZE / 2,
+                       -MEASUREMENT_DOT_SIZE / 2,
+                       MEASUREMENT_DOT_SIZE,
+                       MEASUREMENT_DOT_SIZE)
+            self.addItem(dot)
             dot.setPos(event.scenePos())
             dot.setFlag(QGraphicsItem.ItemIsMovable, True)
+
             event.accept()
+
+class Item(QGraphicsEllipseItem):
+
+    def __init__(self, *args):
+        QGraphicsEllipseItem.__init__(self, *args)
+
+        timer = QTimeLine(2000)
+        timer.setLoopCount(0)
+
+        self.animation = QGraphicsItemAnimation()
+        self.animation.setItem(self)
+        self.animation.setTimeLine(timer)
+        self.animation.setScaleAt(0.0, 1, 1)
+        self.animation.setScaleAt(0.50, 3, 3)
+        self.animation.setScaleAt(1.0, 1, 1)
+
+    def mouseDoubleClickEvent(self, event):
+        if self.animation.timeLine().state() == QTimeLine.Running:
+            self.animation.timeLine().stop()
+            self.animation.setStep(0)
+            event.accept()
+            return
+
+        self.animation.timeLine().start()
+
+        event.accept()
 
 class MainWindow(QMainWindow):
 
