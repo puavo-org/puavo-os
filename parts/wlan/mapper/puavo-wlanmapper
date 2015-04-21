@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import sys
 
-from PyQt4.QtCore import Qt
+from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 MEASUREMENT_DOT_SIZE = 20
@@ -54,6 +54,40 @@ class MainWindow(QMainWindow):
         
         self.setCentralWidget(self.view)
 
+        self.setupActions()
+        self.setupMenus()
+
+    def setupActions(self):
+        self.loadAction = QAction(self)
+        self.loadAction.setText("&Load layout image...")
+        self.loadAction.setShortcut(QKeySequence("Ctrl+O"))
+        self.loadAction.triggered.connect(self.loadLayoutImageWithDialog)
+
+        self.quitAction = QAction(self)
+        self.quitAction.setText("&Quit")
+        self.quitAction.setShortcut(QKeySequence("Ctrl+Q"))
+        self.quitAction.triggered.connect(self.close)
+
+    def setupMenus(self):
+        menuBar = QMenuBar()
+
+        fileMenu = menuBar.addMenu("&File")
+        fileMenu.addAction(self.loadAction)
+        fileMenu.addSeparator()
+        fileMenu.addAction(self.quitAction)
+
+        self.setMenuBar(menuBar)
+
+    def loadLayoutImageWithDialog(self):
+        filepath = QFileDialog.getOpenFileName(self,
+                                               "Load layout image",
+                                               QDir.currentPath(),
+                                               "Images (*.png)")
+        if not filepath:
+            return
+
+        self.loadLayoutImage(filepath)
+
     def loadLayoutImage(self, filepath):
         self.layoutPixmap = QPixmap(filepath, "png")
         if self.layoutPixmap.isNull():
@@ -68,15 +102,17 @@ class MainWindow(QMainWindow):
 def main():
     app = QApplication(sys.argv)
 
-    if len(app.argv()) != 2:
-        error_message = "ERROR: invalid number of arguments ({}), expected 1"
+    if app.argc() > 2:
+        error_message = "ERROR: invalid number of arguments ({})"
         print(error_message.format(app.argc() - 1), file=sys.stderr)
-        print("Usage: {} LAYOUT_PNG".format(sys.argv[0]), file=sys.stderr)
+        print("Usage: {} [LAYOUT_PNG]".format(sys.argv[0]), file=sys.stderr)
         return 1
 
     win = MainWindow()
     win.show()
-    win.loadLayoutImage(sys.argv[1])
+
+    if app.argc() == 2:
+        win.loadLayoutImage(sys.argv[1])
 
     return app.exec_()
 
