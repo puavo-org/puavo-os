@@ -31,12 +31,15 @@ class Scene(QGraphicsScene):
         QGraphicsScene.__init__(self, *args)
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
+        QGraphicsScene.mousePressEvent(self, event)
+        if not event.isAccepted() and event.button() == Qt.LeftButton:
             dot = self.addEllipse(-MEASUREMENT_DOT_SIZE / 2,
                                   -MEASUREMENT_DOT_SIZE / 2,
                                   MEASUREMENT_DOT_SIZE,
                                   MEASUREMENT_DOT_SIZE)
             dot.setPos(event.scenePos())
+            dot.setFlag(QGraphicsItem.ItemIsMovable, True)
+            event.accept()
 
 class MainWindow(QMainWindow):
 
