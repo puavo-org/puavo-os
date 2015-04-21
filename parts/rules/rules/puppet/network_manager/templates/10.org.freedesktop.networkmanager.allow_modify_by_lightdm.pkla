@@ -1,0 +1,6 @@
+[Login user permissions]
+Identity=unix-user:lightdm
+Action=org.freedesktop.NetworkManager.settings.modify.own
+ResultAny=no
+ResultInactive=no
+ResultActive=yes
