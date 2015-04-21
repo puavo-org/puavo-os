@@ -51,7 +51,7 @@ class Scene(QGraphicsScene):
 
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
-        if not event.isAccepted() and event.button() == Qt.LeftButton:
+        if not event.isAccepted() and event.button() == Qt.LeftButton and not event.modifiers():
             dot = Item(-MEASUREMENT_DOT_SIZE / 2,
                        -MEASUREMENT_DOT_SIZE / 2,
                        MEASUREMENT_DOT_SIZE,
