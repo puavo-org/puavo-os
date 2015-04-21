@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#
+# -*- coding: utf-8 -*-
 # Copyright (C) 2015 Opinsys Oy
 #
 # This program is free software: you can redistribute it and/or modify
@@ -58,6 +58,10 @@ class MainWindow(QMainWindow):
         self.setupMenus()
 
     def setupActions(self):
+        self.aboutAction = QAction(self)
+        self.aboutAction.setText("&About...")
+        self.aboutAction.triggered.connect(self.showAboutDialog)
+
         self.loadAction = QAction(self)
         self.loadAction.setText("&Load layout image...")
         self.loadAction.setShortcut(QKeySequence("Ctrl+O"))
@@ -75,6 +79,9 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(self.loadAction)
         fileMenu.addSeparator()
         fileMenu.addAction(self.quitAction)
+
+        helpMenu = menuBar.addMenu("&Help")
+        helpMenu.addAction(self.aboutAction)
 
         self.setMenuBar(menuBar)
 
@@ -98,6 +105,23 @@ class MainWindow(QMainWindow):
         else:
             self.scene.clear()
             self.scene.addPixmap(self.layoutPixmap)
+
+    def showAboutDialog(self):
+        aboutText = QString.fromUtf8(
+            "<h1>Puavo WLAN Mapper</h1>"
+            "<p>Version 0.1.0</p>"
+            "<p>Copyright © 2015 <a href=\"http://opinsys.fi\">Opinsys Oy</a></p>"
+            "<p>This program is free software: you can redistribute it and/or "
+            "modify it under the terms of the GNU General Public License as "
+            "published by the Free Software Foundation, either version 2 of the "
+            "License, or (at your option) any later version.</p>"
+            "<p>This program is distributed in the hope that it will be useful, but"
+            " WITHOUT ANY WARRANTY; without even the implied warranty of "
+            "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</p>"
+            "<p>See the <a href=\"https://www.gnu.org/licenses/gpl-2.0.html\">GNU "
+            "General Public License</a> for more details.</p>")
+
+        QMessageBox.about(self, "About Puavo WLAN Mapper", aboutText)
 
 def main():
     app = QApplication(sys.argv)
