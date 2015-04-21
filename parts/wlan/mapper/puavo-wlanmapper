@@ -23,13 +23,28 @@ import sys
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import *
 
+MEASUREMENT_DOT_SIZE = 20
+
+class Scene(QGraphicsScene):
+
+    def __init__(self, *args):
+        QGraphicsScene.__init__(self, *args)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            dot = self.addEllipse(-MEASUREMENT_DOT_SIZE / 2,
+                                  -MEASUREMENT_DOT_SIZE / 2,
+                                  MEASUREMENT_DOT_SIZE,
+                                  MEASUREMENT_DOT_SIZE)
+            dot.setPos(event.scenePos())
+
 class MainWindow(QMainWindow):
 
     def __init__(self, *args):
         QMainWindow.__init__(self, *args)
 
         self.view = QGraphicsView(self)
-        self.scene = QGraphicsScene(self)
+        self.scene = Scene(self)
         self.layoutPixmap = None
 
         self.view.setScene(self.scene)
