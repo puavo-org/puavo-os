@@ -7,6 +7,7 @@ case "$PUAVO_HOSTTYPE" in
   laptop)
     if [ "$(puavo_get_device_param personal_device)" = "true" ]; then
       # A personal device, nothing to do!
+      true
     else
       # A shared laptop.
       #
