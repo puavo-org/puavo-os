@@ -27,20 +27,26 @@ import mpl_toolkits.axes_grid1
 import numpy as np
 import scipy.interpolate
 
+LEVELS = range(-95, -20, 5)
+
 def heatmap(subplot, img, xs, ys, zs):
     img_h, img_w, _ = img.shape
 
     ## Interpolate z-values throughout the 2D-space using linear radial
     ## basis function.
     rbf = scipy.interpolate.Rbf(xs, ys, zs, function='linear')
-    spc_xs, spc_ys = [v.flatten() for v in np.meshgrid(range(img_w), range(img_h))]
-    array2d = rbf(spc_xs, spc_ys).reshape((img_h, img_w))
+    spc_w = img_w / 10
+    spc_h = img_h / 10
+    spc_xs, spc_ys = [v.flatten() for v in np.meshgrid(np.linspace(0, img_w - 1, spc_w),
+                                                       np.linspace(0, img_h - 1, spc_h))]
+    array2d = rbf(spc_xs, spc_ys).reshape((spc_h, spc_w))
 
     heatmap_image = subplot.imshow(array2d,
+                                   vmin=min(LEVELS), vmax=max(LEVELS),
                                    extent=(0, img_w, img_h, 0),
                                    cmap='RdYlBu_r')
 
-    subplot.imshow(img, interpolation='bicubic')
+    subplot.imshow(img, interpolation='bicubic', vmin=min(LEVELS), vmax=max(LEVELS))
 
     return heatmap_image
 
@@ -62,12 +68,13 @@ def heatmap_grid(img, xs, ys, title_zs_map, ncols=3, ylabel=''):
 
     subplot_grid.cbar_axes[0].colorbar(heatmap_image)
     subplot_grid.cbar_axes[0].set_ylabel(ylabel)
+    subplot_grid.cbar_axes[0].set_yticks(LEVELS)
 
     plt.show()
 
 def heatmap_single(img, xs, ys, zs, ylabel=''):
     heatmap_image = heatmap(plt.subplot(), img, xs, ys, zs)
-    plt.colorbar(heatmap_image).set_label(ylabel)
+    plt.colorbar(heatmap_image, ticks=LEVELS).set_label(ylabel)
 
     plt.show()
 
