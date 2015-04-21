@@ -37,9 +37,15 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.view)
 
     def loadLayoutImage(self, filepath):
-        self.scene.clear()
-        self.layoutPixmap = QPixmap(filepath)
-        self.scene.addPixmap(self.layoutPixmap)
+        self.layoutPixmap = QPixmap(filepath, "png")
+        if self.layoutPixmap.isNull():
+            msg = "File {} could not be loaded as a layout image.\n\n" \
+                  "Please ensure the layout image is a valid PNG file."
+            QMessageBox.critical(self, "Failed to load a layout image",
+                                 msg.format(filepath))
+        else:
+            self.scene.clear()
+            self.scene.addPixmap(self.layoutPixmap)
 
 def main():
     app = QApplication(sys.argv)
@@ -51,9 +57,8 @@ def main():
         return 1
 
     win = MainWindow()
-    win.loadLayoutImage(sys.argv[1])
-
     win.show()
+    win.loadLayoutImage(sys.argv[1])
 
     return app.exec_()
 
