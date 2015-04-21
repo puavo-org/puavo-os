@@ -262,6 +262,12 @@ class LdapAcl
 															  PuavoUid.slave,
 															  Set.externalservice_printerqueues),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      [ Hosts.servers.children,	attrs(%w(puavoDeviceCurrentImage
+                                         puavoDeviceAvailableImage)),	Rule.write(Set.admin, 'self'),		Rule.read(PuavoUid.monitor,
+															  PuavoUid.puavo_ticket,
+															  Set.laptops,
+															  Set.externalservice_devices)	],
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ LdapDn.new.subtree,											Rule.read(Set.syncrepl),		RuleBreak.none('*'),			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.exact,		attrs(%w(entry
@@ -425,12 +431,6 @@ class LdapAcl
 															  PuavoUid.monitor,
 															  PuavoUid.puavo_ticket,
 															  Set.externalservice_servers),								],
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ Hosts.servers.children,	attrs(%w(puavoDeviceCurrentImage
-                                         puavoDeviceAvailableImage)),	Rule.write(Set.admin, 'self'),		Rule.read(PuavoUid.monitor,
-															  PuavoUid.puavo_ticket,
-															  Set.laptops,
-															  Set.externalservice_devices)	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.servers.children,						Rule.write(Set.owner_and_user),		Rule.read(PuavoUid.puppet,
 															  PuavoUid.monitor,
