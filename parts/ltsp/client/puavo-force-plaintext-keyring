@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# Enforce that the default gnome keyring is in plaintext format.
+# The rationale for this is that people generally do not know what keyring
+# is and how it works, and if user password is changed (from Puavo), the
+# keys in keyring will be locked and the user is repeatedly prompted to
+# open keyring, not knowing what that means (the old password should be
+# used for opening the keyring).  Only the default keyring will be forced
+# to plaintext, other keyrings can be used normally.
+
+set -eu
+
+keyringdir=~/.local/share/keyrings
+default_keyring_file="${keyringdir}/Default_keyring.keyring"
+
+mkdir -m 700 -p "$keyringdir"
+
+echo -n Default_keyring > "${keyringdir}/default"
+
+first_line="$(head -1 "$default_keyring_file" 2>/dev/null || true)"
+if [ "$first_line" != "[keyring]" ]; then
+  # $default_keyring_file is either missing or in wrong format, so we
+  # initialize it to provide plaintext saving of passwords.
+  (
+    umask 0077
+    mtime=$(date +%s)
+    cat <<EOF > "$default_keyring_file"
+[keyring]
+display-name=Default keyring
+ctime=0
+mtime=${mtime}
+lock-on-idle=false
+lock-after=false
+EOF
+  )
+fi
+
+exit 0

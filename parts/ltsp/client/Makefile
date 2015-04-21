@@ -270,6 +270,7 @@ install : installdirs $(install-subdirs)
 		etc/X11/Xsession.d/44puavo-generate-dconf-profile \
 		etc/X11/Xsession.d/45puavo-display-setup \
 		etc/X11/Xsession.d/46puavo-hardware-quirks \
+		etc/X11/Xsession.d/47puavo-force-plaintext-keyring \
 		etc/X11/Xsession.d/90puavo-setup-printers
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
@@ -277,6 +278,7 @@ install : installdirs $(install-subdirs)
 		puavo-desktop-session \
 		puavo-desktop-session-cleanup \
 		puavo-display-setup \
+		puavo-force-plaintext-keyring \
 		puavo-handle-image-build-request \
 		puavo-ltspserver-create-guest \
 		puavo-make-release-logos \

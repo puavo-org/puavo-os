@@ -69,4 +69,7 @@ if [ -n "${background}" ]; then
   run_gsettings "set com.canonical.unity-greeter background ${background}"
 fi
 
+su -s /bin/sh lightdm \
+   -c /usr/lib/puavo-ltsp-client/puavo-force-plaintext-keyring
+
 exit 0
