@@ -30,11 +30,6 @@ disable_accounts_service
 disable_geoclue
     Disable Ubuntu's geoclue-stuff.
 
-disable_gnome_keyring_autostart
-    Disable Gnome-keyring starting up automatically at desktop session.
-    This is confusing for people who do not know what it is.  But we do leave
-    the package in case someone needs it and knows how to use it.
-
 disable_suspend_by_tag
     Check out for device tag "nosuspend", and possibly block suspend.
 
