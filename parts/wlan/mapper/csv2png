@@ -27,21 +27,22 @@ import mpl_toolkits.axes_grid1
 import numpy as np
 import scipy.interpolate
 
-def heatmap(subplot, img, zs):
+def heatmap(subplot, img, xs, ys, zs):
     img_h, img_w, _ = img.shape
-    heatmap_image = subplot.imshow(zs,
+
+    ## Interpolate z-values throughout the 2D-space using linear radial
+    ## basis function.
+    rbf = scipy.interpolate.Rbf(xs, ys, zs, function='linear')
+    spc_xs, spc_ys = [v.flatten() for v in np.meshgrid(range(img_w), range(img_h))]
+    array2d = rbf(spc_xs, spc_ys).reshape((img_h, img_w))
+
+    heatmap_image = subplot.imshow(array2d,
                                    extent=(0, img_w, img_h, 0),
                                    cmap='RdYlBu_r')
 
     subplot.imshow(img, interpolation='bicubic')
 
     return heatmap_image
-
-def interpolate(xs, ys, zs, h, w):
-    rbf = scipy.interpolate.Rbf(xs, ys, zs, function='linear')
-    spc_xs, spc_ys = [v.flatten() for v in np.meshgrid(range(w), range(h))]
-
-    return rbf(spc_xs, spc_ys).reshape((h, w))
 
 def heatmap_grid(img, xs, ys, title_zs_map, ncols=3, ylabel=''):
     nrows = int(math.ceil(len(title_zs_map) / ncols))
@@ -57,8 +58,7 @@ def heatmap_grid(img, xs, ys, title_zs_map, ncols=3, ylabel=''):
         subplot.xaxis.set_visible(False)
         subplot.yaxis.set_visible(False)
         subplot.set_title(title)
-        zs = interpolate(xs, ys, title_zs_map[title], *img.shape[:2])
-        heatmap_image = heatmap(subplot, img, zs)
+        heatmap_image = heatmap(subplot, img, xs, ys, title_zs_map[title])
 
     subplot_grid.cbar_axes[0].colorbar(heatmap_image)
     subplot_grid.cbar_axes[0].set_ylabel(ylabel)
@@ -66,8 +66,7 @@ def heatmap_grid(img, xs, ys, title_zs_map, ncols=3, ylabel=''):
     plt.show()
 
 def heatmap_single(img, xs, ys, zs, ylabel=''):
-    zs = interpolate(xs, ys, zs, *img.shape[:2])
-    heatmap_image = heatmap(plt.subplot(), img, zs)
+    heatmap_image = heatmap(plt.subplot(), img, xs, ys, zs)
     plt.colorbar(heatmap_image).set_label(ylabel)
 
     plt.show()
