@@ -10,6 +10,7 @@ class image::bundle::desktop {
           image::bundle::basic,
           kaffeine,
           keyutils,
+          ktouch,
           laptop_mode_tools,
           libreoffice,
           network_manager,
