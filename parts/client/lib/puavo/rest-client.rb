@@ -175,6 +175,7 @@ class PuavoRestClient
 
   [:get, :post].each do |method|
     define_method(method) do |path, *args|
+      previous_attempt = nil
       options = args.first || {}
 
       err = nil
@@ -187,12 +188,19 @@ class PuavoRestClient
           options[:ssl_context] = server[:ssl_context]
         end
 
+        if previous_attempt
+          options[:headers] = (options[:headers] || {}).merge({
+            "x-puavo-rest-client-previous-attempt" => previous_attempt
+          })
+        end
+
         verbose("#{ method.to_s.upcase } #{ uri }")
 
         res = nil
         begin
           res = client(uri.host).send(method, uri, options)
         rescue Errno::ENETUNREACH => _err
+          previous_attempt = uri
           raise _err if @options[:retry_fallback].nil?
           verbose("Request failed to #{ uri } #{ _err }")
           err = _err

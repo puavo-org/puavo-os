@@ -134,7 +134,12 @@ describe PuavoRestClient do
         stub_request(:get, "https://boot2.hogwarts.opinsys.net/foo").to_raise(Errno::ENETUNREACH)
 
         stub_request(:get, "http://api.example.net/foo").
-          with(:headers => {'Connection'=>'close', 'Host'=>'hogwarts.opinsys.net', 'User-Agent'=>'puavo-rest-client'}).
+          with(:headers => {
+            'Connection' => 'close',
+            'Host' => 'hogwarts.opinsys.net',
+            'User-Agent'=>'puavo-rest-client',
+            'x-puavo-rest-client-previous-attempt' => 'https://boot2.hogwarts.opinsys.net:443/foo',
+          }).
           to_return(:status => 200, :body => "", :headers => {})
 
         client = PuavoRestClient.new({
