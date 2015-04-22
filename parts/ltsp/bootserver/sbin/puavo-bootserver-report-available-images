@@ -48,11 +48,12 @@ end
 
 etc = PuavoEtc.new
 
-client = PuavoRestClient.new :auth => :etc
-res = client.get("/v3/boot_servers/#{etc.hostname}")
+client = PuavoRestClient.new :auth => :etc, :retry_fallback => true
 
-if res.code != 200
-  log "puavo-rest query failed: #{res.code}"
+begin
+  res = client.get("/v3/boot_servers/#{etc.hostname}")
+rescue PuavoRestClient::BadStatusCode => _err
+  log "puavo-rest query /v3/boot_servers/#{etc.hostname} failed: #{_err.response}"
   exit 1
 end
 
@@ -64,13 +65,13 @@ images = list_existing_images()
 if Set.new(puavo_images) != Set.new(images)
   client = PuavoRestClient.new :auth => :etc, :dns => :no
 
-  res = client.post("/v3/boot_servers/#{etc.hostname}", :json => {
-    "available_images" => images
-  })
+  begin
+    res = client.post("/v3/boot_servers/#{etc.hostname}", :json => {
+      "available_images" => images
+    })
 
-  if res.code != 200
-    log "Image updating failed: #{res.code}"
-  else
     log "Images updated to puavo-rest: " + images.join(', ')
+  rescue PuavoRestClient::BadStatusCode => _err
+    log "Updating available images to puavo-rest /v3/boot_servers/#{etc.hostname} failed: #{_err.response}"
   end
 end
