@@ -96,8 +96,8 @@ class PuavoRestClient
     @header_overrides = (_options[:headers] || {}).dup
 
     if @options[:puavo_domain].nil?
-      verbose("Using puavo domain from /etc/puavo/domain")
       @options[:puavo_domain] = File.open("/etc/puavo/domain").read.strip
+      verbose("Using puavo domain '#{ @options[:puavo_domain] }' from /etc/puavo/domain")
     end
 
     if @options[:server]
