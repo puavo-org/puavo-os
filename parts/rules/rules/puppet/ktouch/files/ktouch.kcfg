@@ -29,14 +29,14 @@
     </entry>
     <entry name="RequiredStrokesPerMinute" type="Int">
       <label>The minimum required amount of strokes per minute to unlock the next lesson.</label>
-      <default>180</default>
+      <default>30</default>
       <min>0</min>
       <max>360</max>
     </entry>
     <entry name="RequiredAccuracy" type="Double">
       <label>The minimum required typing accuracy in percent to unlock the next lesson.</label>
-      <default>98</default>
-      <min>90</min>
+      <default>50</default>
+      <min>0</min>
       <max>100</max>
     </entry>
   </group>
