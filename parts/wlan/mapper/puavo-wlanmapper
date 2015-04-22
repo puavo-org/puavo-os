@@ -49,14 +49,7 @@ class Scene(QGraphicsScene):
     def __init__(self, *args):
         QGraphicsScene.__init__(self, *args)
 
-        timer = QTimeLine(2000)
-        timer.setLoopCount(0)
-        self.animation = QGraphicsItemAnimation()
-        self.animation.setTimeLine(timer)
-        self.animation.setScaleAt(0.0, 1, 1)
-        self.animation.setScaleAt(0.5, 3, 3)
-        self.animation.setScaleAt(1.0, 1, 1)
-        self.dotCount = 0
+        self.setupAnimation()
 
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
@@ -76,7 +69,9 @@ class Scene(QGraphicsScene):
 
     def clear(self):
         QGraphicsScene.clear(self)
+        self.setupAnimation()
 
+    def setupAnimation(self):
         timer = QTimeLine(2000)
         timer.setLoopCount(0)
         self.animation = QGraphicsItemAnimation()
