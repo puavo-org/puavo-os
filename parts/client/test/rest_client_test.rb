@@ -195,7 +195,7 @@ describe PuavoRestClient do
         stub_request(:get, "https://boot2.hogwarts.opinsys.net/foo").to_raise(Errno::ENETUNREACH)
         stub_request(:get, "http://api.example.net/foo").to_raise(Errno::ENETUNREACH)
 
-        err = assert_raises PuavoRestClient::Errno::ENETUNREACH do
+        err = assert_raises Errno::ENETUNREACH do
           client = PuavoRestClient.new({
             :puavo_domain => "hogwarts.opinsys.net",
             :retry_fallback => true
@@ -232,6 +232,29 @@ describe PuavoRestClient do
       assert_equal "bad", err.response.parse["error"]
 
     end
+  end
+
+  it "x-puavo-rest-warn response header is printed to STDERR" do
+
+    warn_msg = nil
+
+    PuavoRestClient.stub_any_instance(:warn, lambda{|m| warn_msg = m}) do
+
+      client = PuavoRestClient.new({
+        :dns => :no,
+        :puavo_domain => "hogwarts.opinsys.net",
+      })
+
+      stub_request(:get, "https://hogwarts.opinsys.net/route_with_warning").
+        to_return(:status => 200, :body => "", :headers => {
+          "x-puavo-rest-warn" => "A warning message from puavo-rest"
+        })
+
+      res = client.get("/route_with_warning")
+    end
+
+    assert_equal "puavo-rest-warn: A warning message from puavo-rest", warn_msg
+
   end
 
 end

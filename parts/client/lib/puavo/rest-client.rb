@@ -36,8 +36,20 @@ class PuavoRestClient
     end
   end
 
+  def warn(*msg)
+    return if @options[:silent]
+    text, *args = msg
+    STDERR.puts("WARN #{ text }", *args)
+  end
+
   def verbose(*msg)
     self.class.verbose(*msg)
+  end
+
+  def verbose_log_headers(headers)
+    headers.each do |k, v|
+      verbose("    #{k}: #{v}")
+    end
   end
 
 
@@ -225,6 +237,11 @@ class PuavoRestClient
     res = client(uri.host).send(method, uri, options)
     verbose("Response headers")
     verbose_log_headers(res.headers)
+
+    if !@options[:silent] && res.headers["x-puavo-rest-warn"]
+      warn "puavo-rest-warn: #{ res.headers["x-puavo-rest-warn"] }"
+    end
+
     verbose("Response HTTP status #{ res.status }")
     if !SUCCESS_STATUS_CODES.include?(res.code)
       raise BadStatusCode, res
@@ -260,12 +277,6 @@ class PuavoRestClient
     end
 
     return _client
-  end
-
-  def verbose_log_headers(headers)
-    headers.each do |k, v|
-      verbose("    #{k}: #{v}")
-    end
   end
 
 end

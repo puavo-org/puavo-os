@@ -127,6 +127,10 @@ def puavo_rest_client_cli
       options[:scheme] = scheme
     end
 
+    opts.on("--silent", "Suppress warning messages from puavo-rest") do
+      options[:silent] = true
+    end
+
     opts.on("-v", "--verbose", "Be verbose. PUAVO_REST_CLIENT_VERBOSE=1 env can be also used") do
       $puavo_rest_client_verbose = true
     end
