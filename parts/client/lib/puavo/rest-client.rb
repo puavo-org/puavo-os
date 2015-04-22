@@ -166,11 +166,11 @@ class PuavoRestClient
     end
 
     if @options[:auth] == :etc
-      verbose("Using credendials from /etc/puavo/ldap/")
       @options[:basic_auth] = {
         :user => File.open("/etc/puavo/ldap/dn").read.strip,
         :pass => File.open("/etc/puavo/ldap/password").read.strip
       }
+      verbose("Using credendials (dn: #{ @options[:basic_auth][:user] }) from /etc/puavo/ldap/")
     end
   end
 
