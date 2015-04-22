@@ -100,10 +100,12 @@ class Item(QGraphicsEllipseItem):
         if self.scene().animation.timeLine().state() == QTimeLine.Running:
             self.scene().animation.timeLine().stop()
             self.scene().animation.setStep(0)
+            if self.scene().animation.item() == self:
+                event.accept()
+                return
 
-        if self.scene().animation.item() != self:
-            self.scene().animation.setItem(self)
-            self.scene().animation.timeLine().start()
+        self.scene().animation.setItem(self)
+        self.scene().animation.timeLine().start()
 
         event.accept()
 
@@ -117,7 +119,7 @@ class MainWindow(QMainWindow):
         self.layoutPixmap = None
 
         self.view.setScene(self.scene)
-        
+
         self.setCentralWidget(self.view)
 
         self.setupActions()
