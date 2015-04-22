@@ -194,6 +194,7 @@ class PuavoRestClient
         end
 
         if previous_attempt
+          verbose "Attempting retry on fallback server"
           options[:headers] = (options[:headers] || {}).merge({
             "x-puavo-rest-client-previous-attempt" => previous_attempt
           })
@@ -207,13 +208,9 @@ class PuavoRestClient
         rescue *RETRY_FALLBACK_EXCEPTIONS => _err
           previous_attempt = uri
           raise _err if @options[:retry_fallback].nil?
-          verbose("Request failed to #{ uri } #{ _err }")
+          verbose("Request error: #{ _err }")
           err = _err
         else
-          verbose("Response headers")
-          verbose_log_headers(res.headers)
-          verbose("Final request URI: #{ res.uri }")
-          verbose("Response HTTP status #{ res.status }")
           return res
         end
       end
@@ -226,6 +223,9 @@ class PuavoRestClient
 
   def do_request(host, method, uri, options)
     res = client(uri.host).send(method, uri, options)
+    verbose("Response headers")
+    verbose_log_headers(res.headers)
+    verbose("Response HTTP status #{ res.status }")
     if !SUCCESS_STATUS_CODES.include?(res.code)
       raise BadStatusCode, res
     end
