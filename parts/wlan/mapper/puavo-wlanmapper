@@ -49,6 +49,14 @@ class Scene(QGraphicsScene):
     def __init__(self, *args):
         QGraphicsScene.__init__(self, *args)
 
+        timer = QTimeLine(2000)
+        timer.setLoopCount(0)
+        self.animation = QGraphicsItemAnimation()
+        self.animation.setTimeLine(timer)
+        self.animation.setScaleAt(0.0, 1, 1)
+        self.animation.setScaleAt(0.5, 3, 3)
+        self.animation.setScaleAt(1.0, 1, 1)
+
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
         if not event.isAccepted() and event.button() == Qt.LeftButton and not event.modifiers():
@@ -67,29 +75,19 @@ class Item(QGraphicsEllipseItem):
     def __init__(self, *args):
         QGraphicsEllipseItem.__init__(self, *args)
 
-        timer = QTimeLine(2000)
-        timer.setLoopCount(0)
-
-        self.animation = QGraphicsItemAnimation()
-        self.animation.setItem(self)
-        self.animation.setTimeLine(timer)
-        self.animation.setScaleAt(0.0, 1, 1)
-        self.animation.setScaleAt(0.5, 3, 3)
-        self.animation.setScaleAt(1.0, 1, 1)
-
         self.setAcceptHoverEvents(True)
 
     def hoverEnterEvent(self, event):
         self.setCursor(QCursor(Qt.PointingHandCursor))
 
     def mouseDoubleClickEvent(self, event):
-        if self.animation.timeLine().state() == QTimeLine.Running:
-            self.animation.timeLine().stop()
-            self.animation.setStep(0)
-            event.accept()
-            return
+        if self.scene().animation.timeLine().state() == QTimeLine.Running:
+            self.scene().animation.timeLine().stop()
+            self.scene().animation.setStep(0)
 
-        self.animation.timeLine().start()
+        if self.scene().animation.item() != self:
+            self.scene().animation.setItem(self)
+            self.scene().animation.timeLine().start()
 
         event.accept()
 
