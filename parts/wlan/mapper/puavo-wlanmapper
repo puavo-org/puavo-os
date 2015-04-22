@@ -50,17 +50,29 @@ class Scene(QGraphicsScene):
 
         self.setupAnimation()
 
+    def getDotId(self):
+        if self.freeDotIds:
+            return self.freeDotIds.pop()
+
+        self.maxDotId += 1
+        return self.maxDotId
+
+    def putDotId(self, dotId):
+        if dotId == self.maxDotId:
+            self.maxDotId -= 1
+        else:
+            self.freeDotIds.append(dotId)
+            self.freeDotIds = sorted(self.freeDotIds, reverse=True)
+
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
         if not event.isAccepted() and event.button() == Qt.LeftButton and not event.modifiers():
             dot = Item()
             self.addItem(dot)
-            self.dotCount += 1
 
             dot.setPos(event.scenePos())
             dot.setFlag(QGraphicsItem.ItemIsMovable)
-            QGraphicsTextItem("{}".format(self.dotCount), dot)
-
+            QGraphicsTextItem("{}".format(self.getDotId()), dot)
             event.accept()
 
     def clear(self):
@@ -75,7 +87,8 @@ class Scene(QGraphicsScene):
         self.animation.setScaleAt(0.0, 1, 1)
         self.animation.setScaleAt(0.5, 3, 3)
         self.animation.setScaleAt(1.0, 1, 1)
-        self.dotCount = 0
+        self.freeDotIds = []
+        self.maxDotId = 0
 
 class Item(QGraphicsEllipseItem):
 
@@ -95,6 +108,7 @@ class Item(QGraphicsEllipseItem):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton and not event.modifiers():
+            self.scene().putDotId(int(self.childItems()[0].toPlainText()))
             self.scene().removeItem(self)
             event.accept()
 
