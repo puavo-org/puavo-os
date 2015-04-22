@@ -26,7 +26,7 @@
 # --delete-unused                   Delete images that are not currently used by any client
 # --url=<url>                       URL to load JSON series information
 # --file=<path>                     JSON series information file to read
-# --image-limit=<number>            Number of newest images to sync from all specified series.
+# --image-limit=<number>            Number of newest images to sync from all specified series (Default: 1)
 # --diff-limit=<number>             Number of newest diffs to sync for synced images even if 
 #                                   there are no clients using them. (Default: 2)
 # --sync-client-diffs=              Sync also diffs for images used by locally installed devices,
@@ -51,6 +51,8 @@
 # all unknown files under /opt/ltsp/images and /opt/ltsp/images/rdiffs. Images 
 # do not need to have .img ending.
 #
+# Operation
+#
 # Steps done by the script:
 #
 # 1. Check image series source URLs from device.json
@@ -70,28 +72,49 @@ require 'json'
 require 'net/http'
 require "digest"
 require 'digest/sha2'
+require 'puavo/rest-client'
 
 class Series
+  attr_reader :name, :arch
+
   def initialize(name, arch)
     @name = name
     @arch = arch
     @images = Hash.new
-  end
-
-  def name
-    return @name
-  end
-
-  def arch
-    return @arch
+    @by_filename = Hash.new
+    @by_id = Hash.new
   end
 
   def add_image(image)
     @images[image.version] = image
+    @by_id[image.id] = image
   end
 
   def get_image(version)
     return @images[version]
+  end
+
+  def get_by_filename(imagename)
+    return @by_filename[imagename]
+  end
+
+  def mark_image_in_use(image_id)
+    image = @by_id[image_id]
+
+    if image
+      image.mark_in_use
+    end
+  end
+
+  def mark_diff_in_use(old_image_id, new_image_id)
+    old_image = @by_id[old_image_id]
+    new_image = @by_id[new_image_id]
+
+    if old_image and new_image
+      new_image.mark_diff_in_use(old_image)
+    else
+      # ERROR, ERROR
+    end
   end
 
   def add_diff(from_version, to_version, filename, size, sha256, urls)
@@ -127,9 +150,9 @@ class Series
 end
 
 class Image
-  attr_reader :version, :filename, :size, :sha256, :urls
+  attr_reader :version, :filename, :size, :sha256, :urls, :diffs_from_older, :in_use, :id
 
-  def initialize(version, filename, size, sha256, urls)
+  def initialize(version, filename, size, sha256, id, urls)
     @version = version
     @filename = filename
     @size = size
@@ -139,6 +162,27 @@ class Image
     @diff_to_newer = Hash.new
     @verified = false
     @verify_result = false
+    @in_use = false
+
+    if id
+      @id = id
+    else
+      if /(.*?)\.img/.match(filename)
+        @id = $1
+      end
+    end
+  end
+
+  def mark_in_use
+    @in_use = true
+  end
+
+  def mark_diff_in_use(from_image)
+    diff = @diffs_from_older[from_image.version]
+
+    if diff
+      diff.mark_in_use()
+    end
   end
 
   def add_diff(diff)
@@ -158,7 +202,13 @@ class Image
   end
 
   def full_path
-    return "/opt/ltsp/images/#{@filename}"
+    path = File.expand_path("/opt/ltsp/images/#{@filename}")
+
+    if (path.start_with?("/opt/ltsp/images/"))
+      return path
+    end
+
+    raise "Invalid image filename #{@filename}"
   end
 
   # Checks if the file in the filesystem has the same sha256 as the metadata.
@@ -177,11 +227,22 @@ class Image
       @verify_result = Digest::SHA2.file(full_path).hexdigest.eql?(@sha256)
     end
 
+    @verified = true
     return @verify_result
   end
 
   def download
     download_file(@urls[0], full_path, size, sha256)
+  end
+
+  def download_newest_diffs(limit=0)
+    @diffs_from_older.keys.sort.reverse.slice(0,limit).reverse.each do |key|
+      diff = @diffs_from_older[key]
+
+      if !diff.verify
+        diff.download
+      end
+    end
   end
 
   # Materialize 
@@ -239,7 +300,7 @@ class Image
 end
 
 class Diff
-  attr_reader :baseimage, :targetimage, :filename, :size, :sha256, :urls
+  attr_reader :baseimage, :targetimage, :filename, :size, :sha256, :urls, :in_use
 
   def initialize(baseimage, targetimage, filename, size, sha256, urls)
     @baseimage = baseimage
@@ -250,10 +311,17 @@ class Diff
     @urls = urls
     @verified = false
     @verify_result = false
+    @in_use = true
   end
 
   def full_path
-    return "/opt/ltsp/images/rdiffs/#{@filename}"
+    path = File.expand_path("/opt/ltsp/images/rdiffs/#{@filename}")
+
+    if (path.start_with?("/opt/ltsp/images/rdiffs/"))
+      return path
+    end
+
+    raise "Invalid rdiff filename #{@filename}"
   end
 
   def verify
@@ -268,16 +336,25 @@ class Diff
       @verify_result = Digest::SHA2.file(full_path).hexdigest.eql?(@sha256)
     end
 
+    @verified = true
     return @verify_result
   end
 
   def patch
-#    puts "rdiff patch #{@baseimage.full_path} #{full_path} #{@targetimage.full_path}"
-    `rdiff patch #{@baseimage.full_path} #{full_path} #{@targetimage.full_path}`
+    if !system("rdiff", "patch", @baseimage.full_path, full_path, @targetimage.full_path)
+      puts "rdiff failed with exit code: {$?.exitstatus}"
+      return false      
+    end
+
+    return true
   end
 
   def download
     download_file(@urls[0], full_path, size, sha256)
+  end
+
+  def mark_in_use
+    @in_use = true
   end
 end
 
@@ -366,37 +443,102 @@ def download_file(url, dest_file, size, sha256)
   return false
 end
 
-if File.exists?("dist.json")
-  json = JSON.parse(File.read("dist.json"))
+def load_series_data
+  series = nil
 
-  json.each_pair do |key, data|
-    series = Series.new(key, data["architecture"])
+  if File.exists?("dist.json")
+    json = JSON.parse(File.read("dist.json"))
 
-    data["images"].each do |image|
-      image = Image.new(image["version"], image["filename"], image["size"], image["sha256"],[ image["url"] ])
-      series.add_image(image)
-    end
+    json.each_pair do |key, data|
+      series = Series.new(key, data["architecture"])
 
-    data["images"].each do |image|
-      if image["diffs"]
-        image["diffs"].each do |data|
-          series.add_diff(data["version"], image["version"], data["filename"], data["size"], data["sha256"], [ data["url"] ])
+      data["images"].each do |image|
+        image = Image.new(image["version"], image["filename"], image["size"], image["sha256"], image["id"], [ image["url"] ])
+        series.add_image(image)
+      end
+
+      data["images"].each do |image|
+        if image["diffs"]
+          image["diffs"].each do |data|
+            series.add_diff(data["version"], image["version"], data["filename"], data["size"], data["sha256"], [ data["url"] ])
+          end
         end
       end
     end
+  end
 
-    newest = series.newest(image_limit)
+  return series
+end
 
-    newest.each do |image|
-      puts "IMAGE: #{image.filename}"
+def query_devices(series)
+  puts "query_devices"
 
-      if image.materialize
-        puts "Image sync ok"
-      else
-        puts "Image sync failed"
+  client = PuavoRestClient.new :auth => :etc
+  res = client.get("/v3/devices")
+
+  devices = res.parse()
+
+  devices.each do |device|
+    preferred_image = device["preferred_image"]
+    boot_image = device["preferred_boot_image"]
+    current_image = device["current_image"]
+
+    bootmode = device["boot_mode"]
+
+#    puts preferred_image
+#    puts boot_image
+
+    if bootmode and bootmode.eql?("netboot")
+      # Netboot devices do not need diffs
+      series.mark_image_in_use(preferred_image)
+      series.mark_image_in_use(boot_image)
+    else
+      # Other devices need diffs from current image to preferred 
+
+      if preferred_image and current_image and !preferred_image.eql?(current_image)
+        series.mark_diff_in_use(current_image, preferred_image)
       end
+
+      series.mark_image_in_use(preferred_image)
     end
   end
+
+  puts series.inspect
+  puts "JOO"
+end
+
+series = load_series_data
+query_devices(series)
+
+newest = series.newest(image_limit)
+
+newest.each do |image|
+  puts "IMAGE: #{image.filename}"
+
+  if image.materialize
+    puts "Image sync ok"
+  else
+    puts "Image sync failed"
+  end
+end
+
+puts "Downloading client diffs"
+
+series.images.each do |image|
+  image.diffs_from_older.values.each do |diff|
+    if diff.in_use and !diff.verify
+      diff.download
+    end
+  end
+end
+
+puts "Downloading newest diffs"
+limit = 1
+
+newest.each do |image|
+  puts "IMAGE: #{image.filename}"
+
+  image.download_newest_diffs(limit)
 end
 
 exit 0
