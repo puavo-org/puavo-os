@@ -179,7 +179,11 @@ describe PuavoRestClient do
       })
 
       stub_request(:get, "http://api.example.net/bad").
-        to_return(:status => 500, :body => {"error" => "bad"}.to_json)
+        to_return(
+          :status => 500,
+          :headers => { "Content-Type" => "application/json" },
+          :body => {"error" => "bad"}.to_json
+      )
 
       err = assert_raises PuavoRestClient::BadStatusCode do
         client.get("/bad")
@@ -187,6 +191,7 @@ describe PuavoRestClient do
 
       assert err.response
       assert_equal 500, err.response.code
+      assert_equal "bad", err.response.parse["error"]
 
     end
   end
