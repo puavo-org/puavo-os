@@ -155,6 +155,39 @@ describe PuavoRestClient do
     end
   end
 
+  it "retry fallback is used on 502 status code" do
+    Resolv::DNS.stub_any_instance(:getresources, DNS_RES) do
+      PuavoRestClient.stub :read_apiserver_file, "http://api.example.net" do
+
+        stub_request(:get, "https://boot2.hogwarts.opinsys.net/foo").
+          to_return(
+            :status => 502,
+            :headers => { "Content-Type" => "application/json" },
+            :body => {"error" => "bad"}.to_json
+        )
+
+        stub_request(:get, "http://api.example.net/foo").
+          with(:headers => {
+            'Connection' => 'close',
+            'Host' => 'hogwarts.opinsys.net',
+            'User-Agent'=>'puavo-rest-client',
+            'x-puavo-rest-client-previous-attempt' => 'https://boot2.hogwarts.opinsys.net:443/foo',
+          }).
+          to_return(:status => 200, :body => "", :headers => {})
+
+        client = PuavoRestClient.new({
+          :puavo_domain => "hogwarts.opinsys.net",
+          :retry_fallback => true
+        })
+
+        res = client.get("/foo")
+        assert_equal 200, res.status
+        assert_equal "http://api.example.net/foo", res.uri.to_s
+
+      end
+    end
+  end
+
   it "errors when all servers fail" do
     Resolv::DNS.stub_any_instance(:getresources, DNS_RES) do
       PuavoRestClient.stub :read_apiserver_file, "http://api.example.net" do

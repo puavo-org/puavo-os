@@ -24,6 +24,11 @@ class PuavoRestClient
 
   SUCCESS_STATUS_CODES = [200]
 
+  RETRY_FALLBACK_EXCEPTIONS = [
+    BadStatusCode,
+    Errno::ENETUNREACH
+  ]
+
   def self.verbose(*msg)
     text, *args = msg
     if $puavo_rest_client_verbose
@@ -198,8 +203,8 @@ class PuavoRestClient
 
         res = nil
         begin
-          res = client(uri.host).send(method, uri, options)
-        rescue Errno::ENETUNREACH => _err
+          res = do_request(uri.host, method, uri, options)
+        rescue *RETRY_FALLBACK_EXCEPTIONS => _err
           previous_attempt = uri
           raise _err if @options[:retry_fallback].nil?
           verbose("Request failed to #{ uri } #{ _err }")
@@ -209,10 +214,6 @@ class PuavoRestClient
           verbose_log_headers(res.headers)
           verbose("Final request URI: #{ res.uri }")
           verbose("Response HTTP status #{ res.status }")
-
-          if !SUCCESS_STATUS_CODES.include?(res.code)
-            raise BadStatusCode, res
-          end
           return res
         end
       end
@@ -222,6 +223,14 @@ class PuavoRestClient
   end
 
   private
+
+  def do_request(host, method, uri, options)
+    res = client(uri.host).send(method, uri, options)
+    if !SUCCESS_STATUS_CODES.include?(res.code)
+      raise BadStatusCode, res
+    end
+    return res
+  end
 
   # http.rb client getter. Must be called for each request in order to get new
   # kerberos ticket since one ticket can be used only for  one request
