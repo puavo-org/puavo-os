@@ -207,8 +207,8 @@ class PuavoRestClient
           res = do_request(uri.host, method, uri, options)
         rescue *RETRY_FALLBACK_EXCEPTIONS => _err
           previous_attempt = uri
-          raise _err if @options[:retry_fallback].nil?
           verbose("Request error: #{ _err }")
+          raise _err if @options[:retry_fallback].nil?
           err = _err
         else
           return res
