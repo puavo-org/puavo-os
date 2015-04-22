@@ -143,6 +143,7 @@ class MainWindow(QMainWindow):
 
         self.setupActions()
         self.setupMenus()
+        self.setupDockWidgets()
 
     def sizeHint(self):
         return QSize(800, 600)
@@ -174,6 +175,13 @@ class MainWindow(QMainWindow):
         helpMenu.addAction(self.aboutAction)
 
         self.setMenuBar(menuBar)
+
+    def setupDockWidgets(self):
+        self.measurementDockWidget = QDockWidget(self)
+        self.measurementWidget = QTableWidget(self.measurementDockWidget)
+        self.measurementDockWidget.setWidget(self.measurementWidget)
+        self.measurementDockWidget.setWindowTitle("Measurements")
+        self.addDockWidget(Qt.BottomDockWidgetArea, self.measurementDockWidget)
 
     def loadLayoutImageWithDialog(self):
         filepath = QFileDialog.getOpenFileName(self,
