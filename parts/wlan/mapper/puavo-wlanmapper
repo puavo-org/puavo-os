@@ -130,6 +130,9 @@ class MainWindow(QMainWindow):
         self.setupActions()
         self.setupMenus()
 
+    def sizeHint(self):
+        return QSize(800, 600)
+
     def setupActions(self):
         self.aboutAction = QAction(self)
         self.aboutAction.setText("&About...")
