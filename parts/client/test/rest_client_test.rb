@@ -169,4 +169,26 @@ describe PuavoRestClient do
     end
   end
 
+  it "raises error on non 200 status code" do
+    PuavoRestClient.stub :read_apiserver_file, "http://api.example.net" do
+
+      client = PuavoRestClient.new({
+        :dns => :no,
+        :puavo_domain => "hogwarts.opinsys.net",
+        :retry_fallback => true
+      })
+
+      stub_request(:get, "http://api.example.net/bad").
+        to_return(:status => 500, :body => {"error" => "bad"}.to_json)
+
+      err = assert_raises PuavoRestClient::BadStatusCode do
+        client.get("/bad")
+      end
+
+      assert err.response
+      assert_equal 500, err.response.code
+
+    end
+  end
+
 end

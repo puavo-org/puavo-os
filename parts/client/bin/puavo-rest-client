@@ -158,16 +158,21 @@ def puavo_rest_client_cli
     path += "?#{ uri.query }"
   end
 
-  if !post_request.empty?
-    res = client.post(path, post_request)
-  else
-    res = client.get(path)
+  res = nil
+  err = nil
+  begin
+    if !post_request.empty?
+      res = client.post(path, post_request)
+    else
+      res = client.get(path)
+    end
+  rescue PuavoRestClient::BadStatusCode => _err
+    res = _err.response
+    err = _err
   end
 
-  puts res.to_s
-  if res.code != 200
-    exit 1
-  end
+  STDOUT.puts res.to_s
+  exit 1 if err
 
 end
 

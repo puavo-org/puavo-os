@@ -13,6 +13,17 @@ end
 
 class PuavoRestClient
 
+  class Error < Exception; end
+  class ResolvFail < Error; end
+  class BadStatusCode < Error
+    attr_accessor :response
+    def initialize(response)
+      @response = response
+    end
+  end
+
+  SUCCESS_STATUS_CODES = [200]
+
   def self.verbose(*msg)
     text, *args = msg
     if $puavo_rest_client_verbose
@@ -39,8 +50,6 @@ class PuavoRestClient
     return ctx
   end
 
-  class ResolvFail < Exception
-  end
 
   def self.resolve_apiserver_dns(puavo_domain)
 
@@ -192,6 +201,10 @@ class PuavoRestClient
           verbose_log_headers(res.headers)
           verbose("Final request URI: #{ res.uri }")
           verbose("Response HTTP status #{ res.status }")
+
+          if !SUCCESS_STATUS_CODES.include?(res.code)
+            raise BadStatusCode, res
+          end
           return res
         end
       end
