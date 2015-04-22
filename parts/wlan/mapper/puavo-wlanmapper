@@ -115,6 +115,8 @@ class MainWindow(QMainWindow):
         self.scene = Scene(self)
         self.layoutPixmap = None
 
+        self.setWindowTitle("Puavo WLAN Mapper")
+
         self.view.setScene(self.scene)
 
         self.setCentralWidget(self.view)
