@@ -93,6 +93,11 @@ class Item(QGraphicsEllipseItem):
     def hoverEnterEvent(self, event):
         self.setCursor(QCursor(Qt.PointingHandCursor))
 
+    def mousePressEvent(self, event):
+        if event.button() == Qt.RightButton and not event.modifiers():
+            self.scene().removeItem(self)
+            event.accept()
+
     def mouseDoubleClickEvent(self, event):
         if self.scene().animation.timeLine().state() == QTimeLine.Running:
             self.scene().animation.timeLine().stop()
