@@ -23,10 +23,9 @@ import sys
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-MEASUREMENT_DOT_SIZE = 20
-ZOOM_FACTOR = 1.1
-
 class View(QGraphicsView):
+
+    ZOOM_FACTOR = 1.1
 
     def __init__(self, *args):
         QGraphicsView.__init__(self, *args)
@@ -38,9 +37,9 @@ class View(QGraphicsView):
             self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
 
             if event.delta() > 0:
-                self.scale(ZOOM_FACTOR, ZOOM_FACTOR)
+                self.scale(View.ZOOM_FACTOR, View.ZOOM_FACTOR)
             else:
-                self.scale(1 / ZOOM_FACTOR, 1 / ZOOM_FACTOR)
+                self.scale(1 / View.ZOOM_FACTOR, 1 / View.ZOOM_FACTOR)
 
             event.accept()
 
@@ -54,10 +53,7 @@ class Scene(QGraphicsScene):
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
         if not event.isAccepted() and event.button() == Qt.LeftButton and not event.modifiers():
-            dot = Item(-MEASUREMENT_DOT_SIZE / 2,
-                       -MEASUREMENT_DOT_SIZE / 2,
-                       MEASUREMENT_DOT_SIZE,
-                       MEASUREMENT_DOT_SIZE)
+            dot = Item()
             self.addItem(dot)
             self.dotCount += 1
 
@@ -83,8 +79,14 @@ class Scene(QGraphicsScene):
 
 class Item(QGraphicsEllipseItem):
 
-    def __init__(self, *args):
-        QGraphicsEllipseItem.__init__(self, *args)
+    MEASUREMENT_DOT_SIZE = 20
+
+    def __init__(self):
+        QGraphicsEllipseItem.__init__(self,
+                                      Item.MEASUREMENT_DOT_SIZE / -2,
+                                      Item.MEASUREMENT_DOT_SIZE / -2,
+                                      Item.MEASUREMENT_DOT_SIZE,
+                                      Item.MEASUREMENT_DOT_SIZE)
 
         self.setAcceptHoverEvents(True)
 
