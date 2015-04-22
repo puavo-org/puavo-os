@@ -141,9 +141,9 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self.view)
 
+        self.setupDockWidgets()
         self.setupActions()
         self.setupMenus()
-        self.setupDockWidgets()
 
     def sizeHint(self):
         return QSize(800, 600)
@@ -170,6 +170,10 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(self.loadAction)
         fileMenu.addSeparator()
         fileMenu.addAction(self.quitAction)
+
+        viewMenu = menuBar.addMenu("&View")
+        viewMenu.addAction(self.measurementDockWidget.toggleViewAction())
+        self.measurementDockWidget.toggleViewAction().setShortcut("Ctrl+M")
 
         helpMenu = menuBar.addMenu("&Help")
         helpMenu.addAction(self.aboutAction)
