@@ -1,31 +1,29 @@
 class ktouch {
-  include dpkg,
-          packages
+  include dpkg
+  require packages
 
-  File { require => Package['ktouch'], }
-
-  $ktouch_prefix = '/usr/share/kde4/apps/ktouch/courses'
+  $ktouch_dir = '/usr/share/kde4/apps/ktouch'
 
   dpkg::simpledivert {
-    [ '/usr/share/kde4/apps/ktouch/data.xml', '/usr/share/kde4/config.kcfg/ktouch.kcfg', ]: ;
+    [ "${ktouch_dir}/courses/fi.xml", "${ktouch_dir}/data.xml", ]: ;
   }
 
   file {
-    '/usr/share/kde4/apps/ktouch/data.xml':
-      require => Dpkg::Simpledivert['/usr/share/kde4/apps/ktouch/data.xml'],
+    "${ktouch_dir}/data.xml":
+      require => Dpkg::Simpledivert["${ktouch_dir}/data.xml"],
       source  => 'puppet:///modules/ktouch/data.xml';
 
-    '/usr/share/kde4/config.kcfg/ktouch.kcfg':
-      require => Dpkg::Simpledivert['/usr/share/kde4/config.kcfg/ktouch.kcfg'],
-      source  => 'puppet:///modules/ktouch/ktouch.kcfg';
-
-    "${ktouch_prefix}/en.junior.easy.ktouch.xml":
+    "${ktouch_dir}/courses/en.junior.easy.ktouch.xml":
       source => 'puppet:///modules/ktouch/en.junior.easy.ktouch.xml';
  
-    "${ktouch_prefix}/en.junior.hard.ktouch.xml":
+    "${ktouch_dir}/courses/en.junior.hard.ktouch.xml":
       source => 'puppet:///modules/ktouch/en.junior.hard.ktouch.xml';
  
-    "${ktouch_prefix}/fi.junior-remake.ktouch.xml":
+    "${ktouch_dir}/courses/fi.xml":
+      require => Dpkg::Simpledivert["${ktouch_dir}/courses/fi.xml"],
+      source => 'puppet:///modules/ktouch/fi.xml';
+ 
+    "${ktouch_dir}/courses/fi.junior-remake.ktouch.xml":
       source => 'puppet:///modules/ktouch/fi.junior-remake.ktouch.xml';
   }
 
