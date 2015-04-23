@@ -19,6 +19,8 @@ from __future__ import division
 from __future__ import print_function
 
 import collections
+import os
+import os.path
 import sys
 
 from PyQt4.QtCore import *
@@ -125,6 +127,13 @@ class Item(QGraphicsEllipseItem):
         self.scene().animation.timeLine().start()
 
         event.accept()
+
+def get_dot11_interfaces():
+    result = []
+    for iface in os.listdir('/sys/class/net'):
+        if os.path.exists(os.path.join('/sys/class/net/', iface, 'phy80211')):
+            result.append(iface)
+    return result
 
 Measurement = collections.namedtuple('Measurement', ['rssi', 'bssid', 'freq', 'chan'])
 
