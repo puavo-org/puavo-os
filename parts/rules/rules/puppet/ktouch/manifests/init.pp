@@ -6,9 +6,15 @@ class ktouch {
 
   $ktouch_prefix = '/usr/share/kde4/apps/ktouch/courses'
 
-  dpkg::simpledivert { '/usr/share/kde4/config.kcfg/ktouch.kcfg': ; }
+  dpkg::simpledivert {
+    [ '/usr/share/kde4/apps/ktouch/data.xml', '/usr/share/kde4/config.kcfg/ktouch.kcfg', ]: ;
+  }
 
   file {
+    '/usr/share/kde4/apps/ktouch/data.xml':
+      require => Dpkg::Simpledivert['/usr/share/kde4/apps/ktouch/data.xml'],
+      source  => 'puppet:///modules/ktouch/data.xml';
+
     '/usr/share/kde4/config.kcfg/ktouch.kcfg':
       require => Dpkg::Simpledivert['/usr/share/kde4/config.kcfg/ktouch.kcfg'],
       source  => 'puppet:///modules/ktouch/ktouch.kcfg';
