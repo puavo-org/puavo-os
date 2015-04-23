@@ -13,15 +13,14 @@ class ktouch {
       require => Dpkg::Simpledivert['/usr/share/kde4/config.kcfg/ktouch.kcfg'],
       source  => 'puppet:///modules/ktouch/ktouch.kcfg';
 
-# XXX modify these to fit the current format
-#   "${ktouch_prefix}/en.junior.easy.ktouch.xml":
-#     content => template('ktouch/en.junior.easy.ktouch.xml');
-#
-#   "${ktouch_prefix}/en.junior.hard.ktouch.xml":
-#     content => template('ktouch/en.junior.hard.ktouch.xml');
-#
-#   "${ktouch_prefix}/fi.junior-remake.ktouch.xml":
-#     content => template('ktouch/fi.junior-remake.ktouch.xml');
+    "${ktouch_prefix}/en.junior.easy.ktouch.xml":
+      source => 'puppet:///modules/ktouch/en.junior.easy.ktouch.xml';
+ 
+    "${ktouch_prefix}/en.junior.hard.ktouch.xml":
+      source => 'puppet:///modules/ktouch/en.junior.hard.ktouch.xml';
+ 
+    "${ktouch_prefix}/fi.junior-remake.ktouch.xml":
+      source => 'puppet:///modules/ktouch/fi.junior-remake.ktouch.xml';
   }
 
   Package <| title == ktouch |>
