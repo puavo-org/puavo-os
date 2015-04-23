@@ -50,7 +50,8 @@ Depends: ${misc:Depends},
  python-matplotlib,
  python-numpy,
  python-scipy,
- net-tools
+ net-tools,
+ wireless-tools
 Description: measure and visualize signal strengths of WLAN access points
  Monitor 802.11 channels and measure received signal strengths of beacon
  frames to visualize coverage areas of access points as heatmap overlays
