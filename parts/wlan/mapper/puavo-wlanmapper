@@ -153,6 +153,8 @@ class Monitor(QObject):
         self.__tshark = QProcess(self)
         self.__tshark.started.connect(self.started)
         tshark_args = ['-i', self.__iface,
+                       '-l', # Line-buffered mode, otherwise tshark
+                             # outputs frames in big lumps.
                        '-f', 'wlan[0] == 0x80',
                        '-T', 'fields',
                        '-E', 'separator=|',
