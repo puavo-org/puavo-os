@@ -292,6 +292,7 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(self.quitAction)
 
         viewMenu = menuBar.addMenu("&View")
+        viewMenu.addAction(self.monitorDockWidget.toggleViewAction())
         viewMenu.addAction(self.measurementDockWidget.toggleViewAction())
         self.measurementDockWidget.toggleViewAction().setShortcut("Ctrl+M")
 
@@ -301,6 +302,12 @@ class MainWindow(QMainWindow):
         self.setMenuBar(menuBar)
 
     def setupDockWidgets(self):
+        self.monitorDockWidget = QDockWidget(self)
+        self.monitorWidget = MonitorWidget(self)
+        self.monitorDockWidget.setWidget(self.monitorWidget)
+        self.monitorDockWidget.setWindowTitle("Monitor")
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.monitorDockWidget)
+
         self.measurementDockWidget = QDockWidget(self)
         self.measurementWidget = QTableWidget(self.measurementDockWidget)
         self.measurementDockWidget.setWidget(self.measurementWidget)
