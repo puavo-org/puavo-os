@@ -160,6 +160,7 @@ class Monitor(QObject):
         if self.__tshark is not None:
             return False
 
+        QProcess.execute('/sbin/ifconfig', [self.__iface, 'down'])
         QProcess.execute('/sbin/iwconfig', [self.__iface, 'mode', 'monitor'])
         QProcess.execute('/sbin/ifconfig', [self.__iface, 'up'])
 
