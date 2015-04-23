@@ -265,6 +265,9 @@ class MainWindow(QMainWindow):
         self.setupActions()
         self.setupMenus()
 
+    def closeEvent(self, event):
+        self.monitorWidget.startStopMonitor(False)
+
     def sizeHint(self):
         return QSize(800, 600)
 
