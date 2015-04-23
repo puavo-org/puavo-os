@@ -160,7 +160,8 @@ class Monitor(QObject):
                        '-E', 'separator=|',
                        '-e', 'radiotap.dbm_antsignal',
                        '-e', 'wlan.ta',
-                       '-e', 'radiotap.channel.freq']
+                       '-e', 'radiotap.channel.freq',
+                       '-e', 'wlan_mgt.ds.current_channel']
         self.__tshark.start('/usr/bin/tshark', tshark_args, QIODevice.ReadOnly)
         return True
 
