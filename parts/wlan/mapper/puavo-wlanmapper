@@ -125,6 +125,48 @@ class Item(QGraphicsEllipseItem):
 
         event.accept()
 
+class Monitor(QObject):
+
+    started = pyqtSignal()
+
+    def __init__(self, interface, *args):
+        QObject.__init__(self, *args)
+
+        self.__iface = interface
+        self.__tshark = None
+
+    def restart(self):
+        self.stop()
+        self.start()
+
+    def setChannel(self, channel):
+        args = [self.__iface, 'channel', '{}'.format(channel)]
+        return QProcess.execute('/sbin/iwconfig', args) == 0
+
+    def start(self):
+        if self.__tshark is not None:
+            return False
+
+        QProcess.execute('/sbin/iwconfig', [self.__iface, 'mode', 'monitor'])
+        QProcess.execute('/sbin/ifconfig', [self.__iface, 'up'])
+
+        self.__tshark = QProcess(self)
+        self.__tshark.started.connect(self.started)
+        tshark_args = ['-i', self.__iface,
+                       '-f', 'wlan[0] == 0x80',
+                       '-T', 'fields',
+                       '-E', 'separator=|',
+                       '-e', 'radiotap.dbm_antsignal',
+                       '-e', 'wlan.ta',
+                       '-e', 'radiotap.channel.freq']
+        self.__tshark.start('/usr/bin/tshark', tshark_args, QIODevice.ReadOnly)
+        return True
+
+    def stop(self):
+        if self.__tshark:
+            self.__tshark.close()
+            self.__tshark = None
+
 class MainWindow(QMainWindow):
 
     def __init__(self, *args):
