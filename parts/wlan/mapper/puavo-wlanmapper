@@ -201,6 +201,50 @@ class Monitor(QObject):
 
         return result
 
+class MonitorWidget(QWidget):
+
+    def __init__(self, *args):
+        QWidget.__init__(self, *args)
+
+        self.monitor = None
+
+        layout = QFormLayout()
+
+        self.startStopPushButton = QPushButton("Capture")
+        self.startStopPushButton.setCheckable(True)
+        self.startStopPushButton.setChecked(False)
+        self.startStopPushButton.toggled.connect(self.startStopMonitor)
+        layout.addRow(self.startStopPushButton)
+
+        self.interfaceComboBox = QComboBox()
+        self.interfaceComboBox.addItems(sorted(get_dot11_interfaces()))
+        self.startStopPushButton.setEnabled(self.interfaceComboBox.count() > 0)
+        layout.addRow(QLabel("Interface:"), self.interfaceComboBox)
+
+        self.channelComboBox = QComboBox()
+        self.channelComboBox.addItems([str(c) for c in range(1, 14)])
+        self.channelComboBox.currentIndexChanged.connect(self.channelChanged)
+        layout.addRow(QLabel("Channel:"), self.channelComboBox)
+
+        self.setLayout(layout)
+
+    def channelChanged(self):
+        self.monitor.setChannel(int(self.channelComboBox.currentText()))
+
+    def updateSeenList(self):
+        print(self.monitor.readMeasurements())
+
+    def startStopMonitor(self, toggled):
+        self.interfaceComboBox.setEnabled(not toggled)
+        if toggled:
+            if self.monitor is None:
+                self.monitor = Monitor(self.interfaceComboBox.currentText())
+                self.monitor.measurementsReady.connect(self.updateSeenList)
+
+            self.monitor.start()
+        else:
+            self.monitor.stop()
+
 class MainWindow(QMainWindow):
 
     def __init__(self, *args):
