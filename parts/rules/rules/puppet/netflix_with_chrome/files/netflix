@@ -2,7 +2,7 @@
 
 set -e
 
-google-chrome      --app="http://netflix.com" \
-                   --disable-translate \
-                   --no-first-run \
-                   --user-data-dir="${HOME}/.config/google-chrome-netflix"
+google-chrome --app="http://netflix.com" \
+              --disable-translate        \
+              --no-first-run             \
+              --user-data-dir="${HOME}/.config/google-chrome-netflix"

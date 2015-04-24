@@ -4,16 +4,16 @@ class netflix_with_chrome {
   file {
     '/usr/local/bin/netflix':
       mode    => 755,
-      require => Package['google-chrome-beta'],
+      require => Package['google-chrome-stable'],
       source  => 'puppet:///modules/netflix_with_chrome/netflix';
 
     '/usr/local/share/applications':
-      ensure  => directory;
+      ensure => directory;
 
     '/usr/local/share/applications/netflix.desktop':
       require => File['/usr/local/bin/netflix'],
       source  => 'puppet:///modules/netflix_with_chrome/netflix.desktop';
   }
 
-  Package <| title == google-chrome-beta |>
+  Package <| title == google-chrome-stable |>
 }
