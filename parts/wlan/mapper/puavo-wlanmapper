@@ -227,7 +227,6 @@ class MonitorWidget(QWidget):
 
         self.channelComboBox = QComboBox()
         self.channelComboBox.addItems([str(c) for c in range(1, 14)])
-        self.channelComboBox.currentIndexChanged.connect(self.setChannel)
         layout.addRow(QLabel("Channel:"), self.channelComboBox)
 
         self.setLayout(layout)
@@ -246,7 +245,9 @@ class MonitorWidget(QWidget):
         if toggled:
             self.monitor.start(self.interfaceComboBox.currentText())
             self.setChannel()
+            self.channelComboBox.currentIndexChanged.connect(self.setChannel)
         else:
+            self.channelComboBox.currentIndexChanged.disconnect()
             self.monitor.stop()
 
 class MainWindow(QMainWindow):
