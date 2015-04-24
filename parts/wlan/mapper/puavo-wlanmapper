@@ -232,7 +232,7 @@ class MonitorWidget(QWidget):
         channel = int(self.channelComboBox.currentText())
         interface = self.interfaceComboBox.currentText()
         args = [interface, 'channel', '{}'.format(channel)]
-        QProcess.execute('/sbin/iwconfig', args)
+        return QProcess.execute('/sbin/iwconfig', args) == 0
 
     def updateSeenList(self):
         print(self.monitor.readMeasurements())
@@ -241,8 +241,9 @@ class MonitorWidget(QWidget):
         self.interfaceComboBox.setEnabled(not toggled)
         if toggled:
             self.monitor.start(self.interfaceComboBox.currentText())
-            self.setChannel()
             self.channelComboBox.currentIndexChanged.connect(self.setChannel)
+            if not self.setChannel():
+                self.startStopPushButton.setChecked(False)
         else:
             self.channelComboBox.currentIndexChanged.disconnect()
             self.monitor.stop()
