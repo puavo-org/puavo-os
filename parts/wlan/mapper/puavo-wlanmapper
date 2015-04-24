@@ -214,20 +214,20 @@ class MonitorWidget(QWidget):
 
         layout = QFormLayout()
 
-        self.captureButton = QPushButton("Capture")
-        self.captureButton.setCheckable(True)
-        self.captureButton.setChecked(False)
-        self.captureButton.toggled.connect(self.captureToggled)
-        layout.addRow(self.captureButton)
-
         self.interfaceComboBox = QComboBox()
         self.interfaceComboBox.addItems(sorted(get_dot11_interfaces()))
-        self.captureButton.setEnabled(self.interfaceComboBox.count() > 0)
         layout.addRow(QLabel("Interface:"), self.interfaceComboBox)
 
         self.channelComboBox = QComboBox()
         self.channelComboBox.addItems([str(c) for c in range(1, 14)])
         layout.addRow(QLabel("Channel:"), self.channelComboBox)
+
+        self.captureButton = QPushButton("Capture")
+        self.captureButton.setCheckable(True)
+        self.captureButton.setChecked(False)
+        self.captureButton.setEnabled(self.interfaceComboBox.count() > 0)
+        self.captureButton.toggled.connect(self.captureToggled)
+        layout.addRow(self.captureButton)
 
         self.setLayout(layout)
 
