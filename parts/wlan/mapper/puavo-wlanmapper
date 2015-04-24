@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import collections
+import datetime
 import os
 import os.path
 import sys
@@ -135,7 +136,12 @@ def get_dot11_interfaces():
             result.append(iface)
     return result
 
-Measurement = collections.namedtuple('Measurement', ['rssi', 'bssid', 'freq', 'chan'])
+Measurement = collections.namedtuple('Measurement',
+                                     ['datetime',
+                                      'rssi',
+                                      'bssid',
+                                      'freq',
+                                      'chan'])
 
 class Monitor(QObject):
 
@@ -173,6 +179,7 @@ class Monitor(QObject):
                        '-f', 'wlan[0] == 0x80',
                        '-T', 'fields',
                        '-E', 'separator=|',
+                       '-e', 'frame.time_epoch',
                        '-e', 'radiotap.dbm_antsignal',
                        '-e', 'wlan.ta',
                        '-e', 'radiotap.channel.freq',
@@ -190,10 +197,11 @@ class Monitor(QObject):
 
         while self.__tshark.canReadLine():
             line = str(self.__tshark.readLine())
-            dbm, bssid, freq, chan = line.strip().split('|')
+            time_epoch, dbm, bssid, freq, chan = line.strip().split('|')
 
             result.append(
                 Measurement(
+                    datetime=datetime.datetime.fromtimestamp(float(time_epoch)),
                     rssi=int(dbm),
                     bssid=bssid,
                     freq=int(freq),
