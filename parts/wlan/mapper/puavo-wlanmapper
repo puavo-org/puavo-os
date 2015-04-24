@@ -52,6 +52,8 @@ class Scene(QGraphicsScene):
     def __init__(self, *args):
         QGraphicsScene.__init__(self, *args)
 
+        self.measurementsEnabled = False
+
         self.setupAnimation()
 
     def getSpotNum(self):
@@ -74,6 +76,12 @@ class Scene(QGraphicsScene):
             self.addSpotItem(event.scenePos())
             event.accept()
 
+    def enableMeasurements(self):
+        self.measurementsEnabled = True
+
+    def disableMeasurements(self):
+        self.measurementsEnabled = False
+
     def addSpotItem(self, pos):
         self.addItem(SpotItem(Spot(pos, self.getSpotNum())))
 
@@ -82,6 +90,9 @@ class Scene(QGraphicsScene):
         self.removeItem(spotItem)
 
     def toggleSpotItem(self, spotItem):
+        if not self.measurementsEnabled:
+            return
+
         if self.animation.timeLine().state() == QTimeLine.Running:
             self.animation.timeLine().stop()
             self.animation.setStep(0)
@@ -283,6 +294,9 @@ class MainWindow(QMainWindow):
         self.setupDockWidgets()
         self.setupActions()
         self.setupMenus()
+
+        self.monitor.started.connect(self.scene.enableMeasurements)
+        self.monitor.stopped.connect(self.scene.disableMeasurements)
 
     def closeEvent(self, event):
         self.monitor.stop()
