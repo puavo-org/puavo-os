@@ -245,7 +245,8 @@ class MonitorWidget(QWidget):
             if not self.setChannel():
                 self.startStopPushButton.setChecked(False)
         else:
-            self.channelComboBox.currentIndexChanged.disconnect()
+            if self.channelComboBox.receivers(SIGNAL("currentIndexChanged")) > 0:
+                self.channelComboBox.currentIndexChanged.disconnect()
             self.monitor.stop()
 
 class MainWindow(QMainWindow):
