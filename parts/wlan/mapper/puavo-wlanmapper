@@ -160,10 +160,17 @@ class Monitor(QObject):
         if self.__tshark is not None:
             return False
 
-        QProcess.execute('/sbin/ifconfig', [interface, 'down'])
-        QProcess.execute('/sbin/iwconfig', [interface, 'mode', 'monitor'])
-        QProcess.execute('/sbin/ifconfig', [interface, 'up'])
-        QProcess.execute('/sbin/iwconfig', [interface, 'channel', '{}'.format(channel)])
+        if QProcess.execute('/sbin/ifconfig', [interface, 'down']) != 0:
+            return False
+
+        if QProcess.execute('/sbin/iwconfig', [interface, 'mode', 'monitor']) != 0:
+            return False
+
+        if QProcess.execute('/sbin/ifconfig', [interface, 'up']) != 0:
+            return False
+
+        if QProcess.execute('/sbin/iwconfig', [interface, 'channel', '{}'.format(channel)]) != 0:
+            return False
 
         self.__tshark = QProcess(self)
         self.__tshark.readyReadStandardOutput.connect(self.measurementsReady)
