@@ -567,6 +567,56 @@ parser = OptionParser.new do |opts|
   opts.banner = "
   Image sync tool for bootservers to download client images from image server. This tool touches only files that have .img or rdiff ending.
 
+  Image series is a collection of images that are based on same underlying system. They are versioned and updates from older to newer versions are supported.
+
+  Images are downloaded from an image server. The series is defined by a JSON file that contains information about images and diffs.
+The image source URL is defined in bootserver settings in Puavo and the script queries the information from puavo-rest by default.
+Series information is parsed from the JSON files and by default the following images and diffs are downloaded:
+
+  * Newest image from each series
+  * Diffs from 2nd and 3rd newest image in the series
+  * All images used by netboot devices
+  * All preferred images used by non-netboot devices
+  * All diffs needed by non-netboot devices to update from the current image to preferred images
+
+  All files have checksums that are checked before they are actually used.
+  
+  An example that defines two images and a diff between them:
+
+{
+  "demo-trusty": {
+    "architecture": "i386"
+    "images": [
+      {
+        "size": 10146996224,
+        "sha256": "24e2f84a89a0b0126e0cfd457fe016016181e82f9e49d437fd465de69525b271",
+        "url": "https://imageserver.puavo.org/demo-trusty-2015-03-25-104000-i386.img",
+        "filename": "demo-trusty-2015-03-25-104000-i386.img",
+        "id": "demo-trusty-2015-03-25-104000-i386",
+        "version": 20150325104000
+      },
+      {
+        "diffs": [
+          {
+            "url": "https://imageserver.puavo.org/rdiffs/demo-trusty-2015-03-25-104000--2015-04-10-103142-i386.rdiff",
+            "sha256": "f00a308de2ad01e0a27507412faca5faed288318a225f40d4cd261b647f689fb",
+            "size": 735394218,
+            "version": 20150325104000,
+            "filename": "demo-trusty-2015-03-25-104000--2015-04-10-103142-i386.rdiff"
+          },
+        ],
+        "size": 10213441536,
+        "sha256": "432cb4055664d0c1dc3d9e6a58833ef7939dd5af24d9af2e47f6607ea88f5c60",
+        "url": "https://imageserver.puavo.org/demo-trusty-2015-04-10-103142-i386.img",
+        "filename": "demo-trusty-2015-04-10-103142-i386.img",
+        "id": "demo-trusty-2015-04-10-103142-i386",
+        "version": 20150410103142
+      },
+    ]
+  }
+}
+
+
   Usage: #{script_name} [options]
 
   Options:
