@@ -139,7 +139,7 @@ class SpotItem(QGraphicsEllipseItem):
         self.spot = spot
         self.setPos(spot.pos)
         self.setFlag(QGraphicsItem.ItemIsMovable)
-        QGraphicsTextItem("{}".format(spot.num), self)
+        QGraphicsTextItem("{}".format(spot.num), self).moveBy(5, 5)
 
         self.setAcceptHoverEvents(True)
 
