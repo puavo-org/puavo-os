@@ -271,6 +271,7 @@ install : installdirs $(install-subdirs)
 		etc/X11/Xsession.d/45puavo-display-setup \
 		etc/X11/Xsession.d/46puavo-hardware-quirks \
 		etc/X11/Xsession.d/47puavo-force-plaintext-keyring \
+		etc/X11/Xsession.d/47puavo-set-default-browser-in-panel \
 		etc/X11/Xsession.d/90puavo-setup-printers
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
