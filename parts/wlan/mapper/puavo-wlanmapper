@@ -109,6 +109,7 @@ class SpotItem(QGraphicsEllipseItem):
                                       SpotItem.SPOT_SIZE)
 
 
+        self.spot = spot
         self.setPos(spot.pos)
         self.setFlag(QGraphicsItem.ItemIsMovable)
         QGraphicsTextItem("{}".format(spot.num), self)
