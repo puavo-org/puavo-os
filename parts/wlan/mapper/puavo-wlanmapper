@@ -250,6 +250,7 @@ class MonitorWidget(QWidget):
                 self.monitor.measurementsReady.connect(self.updateSeenList)
 
             self.monitor.start()
+            self.monitor.setChannel(int(self.channelComboBox.currentText()))
         else:
             self.monitor.stop()
 
