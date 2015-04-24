@@ -160,6 +160,7 @@ Measurement = collections.namedtuple('Measurement',
 class Monitor(QObject):
 
     started = pyqtSignal()
+    stopped = pyqtSignal()
     measurementsReady = pyqtSignal()
 
     def __init__(self, *args):
@@ -186,6 +187,7 @@ class Monitor(QObject):
         self.__tshark = QProcess(self)
         self.__tshark.readyReadStandardOutput.connect(self.measurementsReady)
         self.__tshark.started.connect(self.started)
+        self.__tshark.finished.connect(self.stopped)
         tshark_args = ['-i', interface,
                        '-l', # Line-buffered mode, otherwise tshark
                              # outputs frames in big lumps.
