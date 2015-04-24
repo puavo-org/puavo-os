@@ -54,24 +54,24 @@ class Scene(QGraphicsScene):
 
         self.setupAnimation()
 
-    def getSpotId(self):
-        if self.freeSpotIds:
-            return self.freeSpotIds.pop()
+    def getSpotNum(self):
+        if self.freeSpotNums:
+            return self.freeSpotNums.pop()
 
-        self.maxSpotId += 1
-        return self.maxSpotId
+        self.maxSpotNum += 1
+        return self.maxSpotNum
 
-    def putSpotId(self, spotId):
-        if spotId == self.maxSpotId:
-            self.maxSpotId -= 1
+    def putSpotNum(self, spotNum):
+        if spotNum == self.maxSpotNum:
+            self.maxSpotNum -= 1
         else:
-            self.freeSpotIds.append(spotId)
-            self.freeSpotIds = sorted(self.freeSpotIds, reverse=True)
+            self.freeSpotNums.append(spotNum)
+            self.freeSpotNums = sorted(self.freeSpotNums, reverse=True)
 
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
         if not event.isAccepted() and event.button() == Qt.LeftButton and not event.modifiers():
-            self.addItem(SpotItem(Spot(event.scenePos(), self.getSpotId())))
+            self.addItem(SpotItem(Spot(event.scenePos(), self.getSpotNum())))
             event.accept()
 
     def clear(self):
@@ -86,32 +86,32 @@ class Scene(QGraphicsScene):
         self.animation.setScaleAt(0.0, 1, 1)
         self.animation.setScaleAt(0.5, 3, 3)
         self.animation.setScaleAt(1.0, 1, 1)
-        self.freeSpotIds = []
-        self.maxSpotId = 0
+        self.freeSpotNums = []
+        self.maxSpotNum = 0
 
 class Spot(QObject):
 
-    def __init__(self, pos, spotId, *args):
+    def __init__(self, pos, num, *args):
         QObject.__init__(self, *args)
 
         self.pos = pos
-        self.spotId = spotId
+        self.num = num
 
 class SpotItem(QGraphicsEllipseItem):
 
-    MEASUREMENT_SPOT_SIZE = 20
+    SPOT_SIZE = 20
 
     def __init__(self, spot):
         QGraphicsEllipseItem.__init__(self,
-                                      SpotItem.MEASUREMENT_SPOT_SIZE / -2,
-                                      SpotItem.MEASUREMENT_SPOT_SIZE / -2,
-                                      SpotItem.MEASUREMENT_SPOT_SIZE,
-                                      SpotItem.MEASUREMENT_SPOT_SIZE)
+                                      SpotItem.SPOT_SIZE / -2,
+                                      SpotItem.SPOT_SIZE / -2,
+                                      SpotItem.SPOT_SIZE,
+                                      SpotItem.SPOT_SIZE)
 
 
         self.setPos(spot.pos)
         self.setFlag(QGraphicsItem.ItemIsMovable)
-        QGraphicsTextItem("{}".format(spot.spotId), self)
+        QGraphicsTextItem("{}".format(spot.num), self)
 
         self.setAcceptHoverEvents(True)
 
@@ -120,7 +120,7 @@ class SpotItem(QGraphicsEllipseItem):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton and not event.modifiers():
-            self.scene().putSpotId(int(self.childItems()[0].toPlainText()))
+            self.scene().putSpotNum(int(self.childItems()[0].toPlainText()))
             self.scene().removeItem(self)
             event.accept()
 
