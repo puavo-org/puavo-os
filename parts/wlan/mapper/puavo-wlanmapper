@@ -54,29 +54,29 @@ class Scene(QGraphicsScene):
 
         self.setupAnimation()
 
-    def getDotId(self):
-        if self.freeDotIds:
-            return self.freeDotIds.pop()
+    def getSpotId(self):
+        if self.freeSpotIds:
+            return self.freeSpotIds.pop()
 
-        self.maxDotId += 1
-        return self.maxDotId
+        self.maxSpotId += 1
+        return self.maxSpotId
 
-    def putDotId(self, dotId):
-        if dotId == self.maxDotId:
-            self.maxDotId -= 1
+    def putSpotId(self, spotId):
+        if spotId == self.maxSpotId:
+            self.maxSpotId -= 1
         else:
-            self.freeDotIds.append(dotId)
-            self.freeDotIds = sorted(self.freeDotIds, reverse=True)
+            self.freeSpotIds.append(spotId)
+            self.freeSpotIds = sorted(self.freeSpotIds, reverse=True)
 
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
         if not event.isAccepted() and event.button() == Qt.LeftButton and not event.modifiers():
-            dot = Item()
-            self.addItem(dot)
+            spot = Item()
+            self.addItem(spot)
 
-            dot.setPos(event.scenePos())
-            dot.setFlag(QGraphicsItem.ItemIsMovable)
-            QGraphicsTextItem("{}".format(self.getDotId()), dot)
+            spot.setPos(event.scenePos())
+            spot.setFlag(QGraphicsItem.ItemIsMovable)
+            QGraphicsTextItem("{}".format(self.getSpotId()), spot)
             event.accept()
 
     def clear(self):
@@ -91,19 +91,19 @@ class Scene(QGraphicsScene):
         self.animation.setScaleAt(0.0, 1, 1)
         self.animation.setScaleAt(0.5, 3, 3)
         self.animation.setScaleAt(1.0, 1, 1)
-        self.freeDotIds = []
-        self.maxDotId = 0
+        self.freeSpotIds = []
+        self.maxSpotId = 0
 
 class Item(QGraphicsEllipseItem):
 
-    MEASUREMENT_DOT_SIZE = 20
+    MEASUREMENT_SPOT_SIZE = 20
 
     def __init__(self):
         QGraphicsEllipseItem.__init__(self,
-                                      Item.MEASUREMENT_DOT_SIZE / -2,
-                                      Item.MEASUREMENT_DOT_SIZE / -2,
-                                      Item.MEASUREMENT_DOT_SIZE,
-                                      Item.MEASUREMENT_DOT_SIZE)
+                                      Item.MEASUREMENT_SPOT_SIZE / -2,
+                                      Item.MEASUREMENT_SPOT_SIZE / -2,
+                                      Item.MEASUREMENT_SPOT_SIZE,
+                                      Item.MEASUREMENT_SPOT_SIZE)
 
         self.setAcceptHoverEvents(True)
 
@@ -112,7 +112,7 @@ class Item(QGraphicsEllipseItem):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton and not event.modifiers():
-            self.scene().putDotId(int(self.childItems()[0].toPlainText()))
+            self.scene().putSpotId(int(self.childItems()[0].toPlainText()))
             self.scene().removeItem(self)
             event.accept()
 
@@ -305,7 +305,6 @@ class MainWindow(QMainWindow):
         viewMenu = menuBar.addMenu("&View")
         viewMenu.addAction(self.monitorDockWidget.toggleViewAction())
         viewMenu.addAction(self.measurementDockWidget.toggleViewAction())
-        self.measurementDockWidget.toggleViewAction().setShortcut("Ctrl+M")
 
         helpMenu = menuBar.addMenu("&Help")
         helpMenu.addAction(self.aboutAction)
@@ -322,7 +321,7 @@ class MainWindow(QMainWindow):
         self.measurementDockWidget = QDockWidget(self)
         self.measurementWidget = QTableWidget(self.measurementDockWidget)
         self.measurementDockWidget.setWidget(self.measurementWidget)
-        self.measurementDockWidget.setWindowTitle("Measurements")
+        self.measurementDockWidget.setWindowTitle("Spots")
         self.addDockWidget(Qt.BottomDockWidgetArea, self.measurementDockWidget)
 
     def loadLayoutImageWithDialog(self):
