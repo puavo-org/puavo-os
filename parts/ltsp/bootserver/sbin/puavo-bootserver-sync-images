@@ -19,27 +19,6 @@
 #
 # ##############################################################################
 #
-# Usage
-# puavo-bootserver-sync-images [options] [series] [series]
-#
-# --delete-unmanaged                Delete all image files that were not synced with this script
-# --delete-unused                   Delete images that are not currently used by any client
-# --url=<url>                       URL to load JSON series information
-# --file=<path>                     JSON series information file to read
-# --image-limit=<number>            Number of newest images to sync from all specified series (Default: 1)
-# --diff-limit=<number>             Number of newest diffs to sync for synced images even if 
-#                                   there are no clients using them. (Default: 2)
-# --sync-client-diffs=              Sync also diffs for images used by locally installed devices,
-#   <org|schools|none>              either for all organisation or for schools that the bootserver
-#                                   serves. Device information is queried from puavo-rest. 
-#                                   (Default: schools)
-# --download-path=<path>            Path where to store the downloaded files (default: /opt/ltsp/images)
-# --series=<series>                 Download only specified series instead of all series specified
-#                                   in the JSON files.
-# --image=<imagename>               Sync only the specified image
-# --config=<path>                   Config file path to specify settings instead of command line switches
-#
-#
 # Managed images
 #
 # Images downloaded by this script, data stored under /var/lib/puavo/images.json
@@ -77,15 +56,15 @@ require 'puavo/etc'
 require 'puavo/rest-client'
 
 def debug(message)
-  Syslog.open("puavo-bootserver-report-available-images", Syslog::LOG_CONS) { |s| s.debug message }
+  Syslog.open("puavo-bootserver-sync-images", Syslog::LOG_CONS) { |s| s.debug message }
 end
 
 def info(message)
-  Syslog.open("puavo-bootserver-report-available-images", Syslog::LOG_CONS) { |s| s.info message }
+  Syslog.open("puavo-bootserver-sync-images", Syslog::LOG_CONS) { |s| s.info message }
 end
 
 def warning(message)
-  Syslog.open("puavo-bootserver-report-available-images", Syslog::LOG_CONS) { |s| s.warning message }
+  Syslog.open("puavo-bootserver-sync-images", Syslog::LOG_CONS) { |s| s.warning message }
 end
 
 class Result
@@ -120,6 +99,10 @@ class Series
 
   def get_by_filename(imagename)
     return @by_filename[imagename]
+  end
+
+  def get_by_id(id)
+    return @by_id[id]
   end
 
   def mark_image_in_use(image_id)
@@ -561,15 +544,12 @@ def query_devices(series)
   end
 end
 
-diff_limit=3
-
 options = Hash.new
 script_name = File.basename(__FILE__)
 
 parser = OptionParser.new do |opts|
   opts.banner = "
-  Image sync tool for bootservers to download client images from image
-  server. This tool touches only files that have .img ending.
+  Image sync tool for bootservers to download client images from image server. This tool touches only files that have .img or rdiff ending.
 
   Usage: #{script_name} [options]
 
@@ -602,11 +582,6 @@ parser = OptionParser.new do |opts|
     options[:diff_limit] = limit
   end
 
-  options[:sync_client_diffs] = "schools"
-  opts.on("--sync-client-diffs <org|schools|none>", "Sync also diffs for images used by locally installed devices, either for all organisation or for schools that the bootserver serves. Device information is queried from puavo-rest. (Default: schools)") do |scope|
-    options[:sync_client_diffs] = scope
-  end
-
   options[:download_path] = "/opt/ltsp/images"
   opts.on("--download_path PATH") do |path|
     options[:download_path] = path
@@ -628,6 +603,14 @@ end
 
 parser.parse!
 
+image_limit=options[:image_limit]
+diff_limit=[:diff_limit]
+sync_client_diffs=true
+
+if options[:image]
+  sync_client_diffs=false
+end
+
 begin
   # Load series information from sources specified in bootserver's
   # device information.
@@ -641,28 +624,33 @@ begin
 
   if options[:series]
     series_name = options[:series]
+    debug "Using only series #{series_name}"
 
     all_series.keep_if {|key, value| key.eql?(series_name)}
+  end
 
-    if all_series.empty?
-      warning "No series named #{series_name}, exiting"
-      exit 1
-    else
-      debug "Using only series #{series_name}"
-    end
+  if all_series.empty?
+    warning "No series information, exiting"
+    exit 1
   end
 
   all_series.values.each do |series|
     debug "Syncing series #{series.name}"
 
-    # Check which images and diffs are needed for non-netboot devices
-    query_devices(series)
+    if options[:image]
+      image_list = Array.new
+      image_list << series.get_by_id(options[:image])
+      diff_limit = 0
+    else
+      # Check which images and diffs are needed for non-netboot devices
+      query_devices(series)
 
-    # We want to always download X number of newest images with Y number 
-    # of diffs from newest images.
-    newest = series.newest(image_limit)
+      # We want to always download X number of newest images with Y number 
+      # of diffs from newest images.
+      image_list = series.newest(image_limit)
+    end
 
-    newest.each do |image|
+    image_list.each do |image|
       debug "#{image.id} - starting sync"
 
       result = image.materialize
@@ -676,25 +664,24 @@ begin
       image.download_newest_diffs(diff_limit)
     end
 
-    debug "Downloading client diffs"
+    if sync_client_diffs
+      debug "Downloading client diffs"
 
-    series.images.each do |image|
-      image.diffs_from_older.values.each do |diff|
-        if diff.in_use
-          if diff.verify
-            debug "#{diff.filename} - exists already"
-          else
-            if diff.download
-              info "#{diff.filename} - diff sync ok"
+      series.images.each do |image|
+        image.diffs_from_older.values.each do |diff|
+          if diff.in_use
+            if diff.verify
+              debug "#{diff.filename} - exists already"
             else
-              warning "#{diff.filename} - diff sync failed"
+              if diff.download
+                info "#{diff.filename} - diff sync ok"
+              else
+                warning "#{diff.filename} - diff sync failed"
+              end
             end
           end
         end
       end
-    end
-
-    newest.each do |image|
     end
   end
 rescue Exception => e
