@@ -207,7 +207,6 @@ class MonitorWidget(QWidget):
         QWidget.__init__(self, *args)
 
         self.monitor = monitor
-        self.monitor.measurementsReady.connect(self.updateSeenList)
 
         layout = QFormLayout()
 
@@ -233,9 +232,6 @@ class MonitorWidget(QWidget):
         interface = self.interfaceComboBox.currentText()
         args = [interface, 'channel', '{}'.format(channel)]
         return QProcess.execute('/sbin/iwconfig', args) == 0
-
-    def updateSeenList(self):
-        print(self.monitor.readMeasurements())
 
     def startStopMonitor(self, toggled):
         self.interfaceComboBox.setEnabled(not toggled)
