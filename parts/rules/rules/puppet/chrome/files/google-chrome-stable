@@ -1,0 +1,3 @@
+#!/bin/sh
+
+exec /opt/google/chrome/google-chrome --no-default-browser-check "$@"
