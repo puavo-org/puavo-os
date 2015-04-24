@@ -156,13 +156,14 @@ class Monitor(QObject):
         self.stop()
         self.start()
 
-    def start(self, interface):
+    def start(self, interface, channel):
         if self.__tshark is not None:
             return False
 
         QProcess.execute('/sbin/ifconfig', [interface, 'down'])
         QProcess.execute('/sbin/iwconfig', [interface, 'mode', 'monitor'])
         QProcess.execute('/sbin/ifconfig', [interface, 'up'])
+        QProcess.execute('/sbin/iwconfig', [interface, 'channel', '{}'.format(channel)])
 
         self.__tshark = QProcess(self)
         self.__tshark.readyReadStandardOutput.connect(self.measurementsReady)
@@ -227,26 +228,18 @@ class MonitorWidget(QWidget):
 
         self.setLayout(layout)
 
-    def setChannel(self):
-        channel = int(self.channelComboBox.currentText())
-        interface = self.interfaceComboBox.currentText()
-        args = [interface, 'channel', '{}'.format(channel)]
-        return QProcess.execute('/sbin/iwconfig', args) == 0
-
     def startStopMonitor(self, toggled):
         self.interfaceComboBox.setEnabled(not toggled)
+        self.channelComboBox.setEnabled(not toggled)
         if toggled:
-            self.monitor.start(self.interfaceComboBox.currentText())
-            self.channelComboBox.currentIndexChanged.connect(self.setChannel)
-            if not self.setChannel():
+            if not self.monitor.start(self.interfaceComboBox.currentText(),
+                                      int(self.channelComboBox.currentText())):
                 ## TODO: implement proper error message propagation.
                 QMessageBox.critical(self,
                                      "Failed to start capturing",
                                      "See console for details.")
                 self.startStopPushButton.setChecked(False)
         else:
-            if self.channelComboBox.receivers(SIGNAL("currentIndexChanged")) > 0:
-                self.channelComboBox.currentIndexChanged.disconnect()
             self.monitor.stop()
 
 class MainWindow(QMainWindow):
