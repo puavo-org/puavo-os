@@ -148,32 +148,27 @@ class Monitor(QObject):
     started = pyqtSignal()
     measurementsReady = pyqtSignal()
 
-    def __init__(self, interface, *args):
+    def __init__(self, *args):
         QObject.__init__(self, *args)
 
-        self.__iface = interface
         self.__tshark = None
 
     def restart(self):
         self.stop()
         self.start()
 
-    def setChannel(self, channel):
-        args = [self.__iface, 'channel', '{}'.format(channel)]
-        return QProcess.execute('/sbin/iwconfig', args) == 0
-
-    def start(self):
+    def start(self, interface):
         if self.__tshark is not None:
             return False
 
-        QProcess.execute('/sbin/ifconfig', [self.__iface, 'down'])
-        QProcess.execute('/sbin/iwconfig', [self.__iface, 'mode', 'monitor'])
-        QProcess.execute('/sbin/ifconfig', [self.__iface, 'up'])
+        QProcess.execute('/sbin/ifconfig', [interface, 'down'])
+        QProcess.execute('/sbin/iwconfig', [interface, 'mode', 'monitor'])
+        QProcess.execute('/sbin/ifconfig', [interface, 'up'])
 
         self.__tshark = QProcess(self)
         self.__tshark.readyReadStandardOutput.connect(self.measurementsReady)
         self.__tshark.started.connect(self.started)
-        tshark_args = ['-i', self.__iface,
+        tshark_args = ['-i', interface,
                        '-l', # Line-buffered mode, otherwise tshark
                              # outputs frames in big lumps.
                        '-f', 'wlan[0] == 0x80',
@@ -214,7 +209,8 @@ class MonitorWidget(QWidget):
     def __init__(self, *args):
         QWidget.__init__(self, *args)
 
-        self.monitor = None
+        self.monitor = Monitor(self)
+        self.monitor.measurementsReady.connect(self.updateSeenList)
 
         layout = QFormLayout()
 
@@ -231,13 +227,16 @@ class MonitorWidget(QWidget):
 
         self.channelComboBox = QComboBox()
         self.channelComboBox.addItems([str(c) for c in range(1, 14)])
-        self.channelComboBox.currentIndexChanged.connect(self.channelChanged)
+        self.channelComboBox.currentIndexChanged.connect(self.setChannel)
         layout.addRow(QLabel("Channel:"), self.channelComboBox)
 
         self.setLayout(layout)
 
-    def channelChanged(self):
-        self.monitor.setChannel(int(self.channelComboBox.currentText()))
+    def setChannel(self):
+        channel = int(self.channelComboBox.currentText())
+        interface = self.interfaceComboBox.currentText()
+        args = [interface, 'channel', '{}'.format(channel)]
+        QProcess.execute('/sbin/iwconfig', args)
 
     def updateSeenList(self):
         print(self.monitor.readMeasurements())
@@ -245,12 +244,8 @@ class MonitorWidget(QWidget):
     def startStopMonitor(self, toggled):
         self.interfaceComboBox.setEnabled(not toggled)
         if toggled:
-            if self.monitor is None:
-                self.monitor = Monitor(self.interfaceComboBox.currentText())
-                self.monitor.measurementsReady.connect(self.updateSeenList)
-
-            self.monitor.start()
-            self.monitor.setChannel(int(self.channelComboBox.currentText()))
+            self.monitor.start(self.interfaceComboBox.currentText())
+            self.setChannel()
         else:
             self.monitor.stop()
 
