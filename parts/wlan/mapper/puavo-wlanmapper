@@ -152,10 +152,6 @@ class Monitor(QObject):
 
         self.__tshark = None
 
-    def restart(self):
-        self.stop()
-        self.start()
-
     def start(self, interface, channel):
         if self.__tshark is not None:
             return False
