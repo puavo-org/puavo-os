@@ -604,7 +604,7 @@ end
 parser.parse!
 
 image_limit=options[:image_limit]
-diff_limit=[:diff_limit]
+diff_limit=options[:diff_limit]
 sync_client_diffs=true
 
 if options[:image]
