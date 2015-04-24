@@ -140,8 +140,7 @@ Measurement = collections.namedtuple('Measurement',
                                      ['datetime',
                                       'rssi',
                                       'bssid',
-                                      'freq',
-                                      'chan'])
+                                      'freq'])
 
 class Monitor(QObject):
 
@@ -177,8 +176,7 @@ class Monitor(QObject):
                        '-e', 'frame.time_epoch',
                        '-e', 'radiotap.dbm_antsignal',
                        '-e', 'wlan.ta',
-                       '-e', 'radiotap.channel.freq',
-                       '-e', 'wlan_mgt.ht.info.primarychannel']
+                       '-e', 'radiotap.channel.freq']
         self.__tshark.start('/usr/bin/tshark', tshark_args, QIODevice.ReadOnly)
         return True
 
@@ -192,15 +190,14 @@ class Monitor(QObject):
 
         while self.__tshark.canReadLine():
             line = str(self.__tshark.readLine())
-            time_epoch, dbm, bssid, freq, chan = line.strip().split('|')
+            time_epoch, dbm, bssid, freq = line.strip().split('|')
 
             result.append(
                 Measurement(
                     datetime=datetime.datetime.fromtimestamp(float(time_epoch)),
                     rssi=int(dbm),
                     bssid=bssid,
-                    freq=int(freq),
-                    chan=int(chan)))
+                    freq=int(freq)))
 
         return result
 
