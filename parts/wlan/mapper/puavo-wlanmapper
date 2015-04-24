@@ -243,6 +243,10 @@ class MonitorWidget(QWidget):
             self.monitor.start(self.interfaceComboBox.currentText())
             self.channelComboBox.currentIndexChanged.connect(self.setChannel)
             if not self.setChannel():
+                ## TODO: implement proper error message propagation.
+                QMessageBox.critical(self,
+                                     "Failed to start capturing",
+                                     "See console for details.")
                 self.startStopPushButton.setChecked(False)
         else:
             if self.channelComboBox.receivers(SIGNAL("currentIndexChanged")) > 0:
