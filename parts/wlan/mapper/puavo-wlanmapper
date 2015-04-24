@@ -214,15 +214,15 @@ class MonitorWidget(QWidget):
 
         layout = QFormLayout()
 
-        self.startStopPushButton = QPushButton("Capture")
-        self.startStopPushButton.setCheckable(True)
-        self.startStopPushButton.setChecked(False)
-        self.startStopPushButton.toggled.connect(self.startStopMonitor)
-        layout.addRow(self.startStopPushButton)
+        self.captureButton = QPushButton("Capture")
+        self.captureButton.setCheckable(True)
+        self.captureButton.setChecked(False)
+        self.captureButton.toggled.connect(self.captureToggled)
+        layout.addRow(self.captureButton)
 
         self.interfaceComboBox = QComboBox()
         self.interfaceComboBox.addItems(sorted(get_dot11_interfaces()))
-        self.startStopPushButton.setEnabled(self.interfaceComboBox.count() > 0)
+        self.captureButton.setEnabled(self.interfaceComboBox.count() > 0)
         layout.addRow(QLabel("Interface:"), self.interfaceComboBox)
 
         self.channelComboBox = QComboBox()
@@ -231,7 +231,7 @@ class MonitorWidget(QWidget):
 
         self.setLayout(layout)
 
-    def startStopMonitor(self, toggled):
+    def captureToggled(self, toggled):
         self.interfaceComboBox.setEnabled(not toggled)
         self.channelComboBox.setEnabled(not toggled)
         if toggled:
@@ -241,7 +241,7 @@ class MonitorWidget(QWidget):
                 QMessageBox.critical(self,
                                      "Failed to start capturing",
                                      "See console for details.")
-                self.startStopPushButton.setChecked(False)
+                self.captureButton.setChecked(False)
         else:
             self.monitor.stop()
 
