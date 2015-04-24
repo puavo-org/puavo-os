@@ -71,12 +71,7 @@ class Scene(QGraphicsScene):
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
         if not event.isAccepted() and event.button() == Qt.LeftButton and not event.modifiers():
-            spotItem = SpotItem()
-            self.addItem(spotItem)
-
-            spotItem.setPos(event.scenePos())
-            spotItem.setFlag(QGraphicsItem.ItemIsMovable)
-            QGraphicsTextItem("{}".format(self.getSpotId()), spotItem)
+            self.addItem(SpotItem(Spot(event.scenePos(), self.getSpotId())))
             event.accept()
 
     def clear(self):
@@ -94,16 +89,29 @@ class Scene(QGraphicsScene):
         self.freeSpotIds = []
         self.maxSpotId = 0
 
+class Spot(QObject):
+
+    def __init__(self, pos, spotId, *args):
+        QObject.__init__(self, *args)
+
+        self.pos = pos
+        self.spotId = spotId
+
 class SpotItem(QGraphicsEllipseItem):
 
     MEASUREMENT_SPOT_SIZE = 20
 
-    def __init__(self):
+    def __init__(self, spot):
         QGraphicsEllipseItem.__init__(self,
                                       SpotItem.MEASUREMENT_SPOT_SIZE / -2,
                                       SpotItem.MEASUREMENT_SPOT_SIZE / -2,
                                       SpotItem.MEASUREMENT_SPOT_SIZE,
                                       SpotItem.MEASUREMENT_SPOT_SIZE)
+
+
+        self.setPos(spot.pos)
+        self.setFlag(QGraphicsItem.ItemIsMovable)
+        QGraphicsTextItem("{}".format(spot.spotId), self)
 
         self.setAcceptHoverEvents(True)
 
