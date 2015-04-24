@@ -81,6 +81,16 @@ class Scene(QGraphicsScene):
         self.putSpotNum(spotItem.spot.num)
         self.removeItem(spotItem)
 
+    def toggleSpotItem(self, spotItem):
+        if self.animation.timeLine().state() == QTimeLine.Running:
+            self.animation.timeLine().stop()
+            self.animation.setStep(0)
+            if self.animation.item() == spotItem:
+                return
+
+        self.animation.setItem(spotItem)
+        self.animation.timeLine().start()
+
     def clear(self):
         QGraphicsScene.clear(self)
         self.setupAnimation()
@@ -115,7 +125,6 @@ class SpotItem(QGraphicsEllipseItem):
                                       SpotItem.SPOT_SIZE,
                                       SpotItem.SPOT_SIZE)
 
-
         self.spot = spot
         self.setPos(spot.pos)
         self.setFlag(QGraphicsItem.ItemIsMovable)
@@ -132,16 +141,7 @@ class SpotItem(QGraphicsEllipseItem):
             event.accept()
 
     def mouseDoubleClickEvent(self, event):
-        if self.scene().animation.timeLine().state() == QTimeLine.Running:
-            self.scene().animation.timeLine().stop()
-            self.scene().animation.setStep(0)
-            if self.scene().animation.item() == self:
-                event.accept()
-                return
-
-        self.scene().animation.setItem(self)
-        self.scene().animation.timeLine().start()
-
+        self.scene().toggleSpotItem(self)
         event.accept()
 
 def get_dot11_interfaces():
