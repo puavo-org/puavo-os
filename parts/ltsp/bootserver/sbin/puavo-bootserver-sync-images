@@ -241,6 +241,15 @@ class Image
     download_file(@urls[0], full_path, size, sha256)
   end
 
+  def newest_diffs(limit=0)
+    diffs = Array.new
+    versions = @diffs_from_older.keys.sort.reverse.slice(0,limit).reverse
+
+    versions.each {|version| diffs << @diffs_from_older[version] }
+
+    return diffs
+  end
+
   def download_newest_diffs(limit=0)
     @diffs_from_older.keys.sort.reverse.slice(0,limit).reverse.each do |key|
       diff = @diffs_from_older[key]
@@ -303,6 +312,14 @@ class Image
 
     return false
   end
+
+  def delete
+    @diffs_from_older.each do |diff|
+      diff.delete
+    end
+
+    File.delete(full_path)
+  end
 end
 
 class Diff
@@ -362,12 +379,11 @@ class Diff
   def mark_in_use
     @in_use = true
   end
-end
 
-# Number of newest images to download from series
-image_limit = 2
-# Maximum number of rdiffs to download for the newest images
-rdiff_limit = 10
+  def delete
+    File.delete(full_path)
+  end
+end
 
 def load_managed_images
   images = Hash.new
@@ -556,12 +572,8 @@ parser = OptionParser.new do |opts|
   Options:
   "
 
-  opts.on("--delete-unmanaged", "Delete all image files that were not synced with this script") do
-    options[:delete_unmanaged] = true
-  end
-
-  opts.on("--delete-unused", "Delete images that are not currently used by any client") do
-    options[:delete_unused] = true
+  opts.on("--keep-unused", "Do no delete images that are not currently used by any client.") do
+    options[:keep_unused] = true
   end
 
   opts.on("--url URL", "Source URL to load JSON series information") do |url|
@@ -611,6 +623,12 @@ if options[:image]
   sync_client_diffs=false
 end
 
+delete_unused = true
+
+if options[:keep_unused]
+  delete_unused = false
+end
+
 begin
   # Load series information from sources specified in bootserver's
   # device information.
@@ -654,11 +672,16 @@ begin
       debug "#{image.id} - starting sync"
 
       result = image.materialize
+      image.mark_in_use
 
       if result.succeeded
         info "#{image.id} - image sync ok: #{result.message}"
       else
         warning "#{image.id} - image sync failed: #{result.message}"
+      end
+
+      image.newest_diffs(diff_limit).each do |diff|
+        diff.mark_in_use
       end
 
       image.download_newest_diffs(diff_limit)
@@ -678,6 +701,29 @@ begin
               else
                 warning "#{diff.filename} - diff sync failed"
               end
+            end
+          end
+        end
+      end
+    end
+
+    # Delete all images and rdiffs that are not either newest or used by some client
+    if delete_unused
+      debug "Checking for old images and diffs to delete"
+
+      series.images.each do |image|
+        if !image.in_use
+          puts "Delete image and all diff for #{image.id}"
+
+          image.delete
+        else
+          image.diffs_from_older.values.each do |diff|
+            if !diff.in_use
+              puts diff.inspect
+
+              info "Delete diff :#{diff.filename}"
+
+              diff.delete
             end
           end
         end
