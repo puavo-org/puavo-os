@@ -71,8 +71,15 @@ class Scene(QGraphicsScene):
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
         if not event.isAccepted() and event.button() == Qt.LeftButton and not event.modifiers():
-            self.addItem(SpotItem(Spot(event.scenePos(), self.getSpotNum())))
+            self.addSpotItem(event.scenePos())
             event.accept()
+
+    def addSpotItem(self, pos):
+        self.addItem(SpotItem(Spot(pos, self.getSpotNum())))
+
+    def removeSpotItem(self, spotItem):
+        self.putSpotNum(spotItem.spot.num)
+        self.removeItem(spotItem)
 
     def clear(self):
         QGraphicsScene.clear(self)
@@ -121,8 +128,7 @@ class SpotItem(QGraphicsEllipseItem):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton and not event.modifiers():
-            self.scene().putSpotNum(int(self.childItems()[0].toPlainText()))
-            self.scene().removeItem(self)
+            self.scene().removeSpotItem(self)
             event.accept()
 
     def mouseDoubleClickEvent(self, event):
