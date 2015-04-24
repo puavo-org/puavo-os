@@ -5,10 +5,12 @@ autopoweroff
     Settings for autopoweroff.
 
 chrome
-    Do not activate the apt source for chrome.
+    Do not activate the apt source for chrome, and do not do the default
+    browser check.
 
-chromium_with_chrome_flash
-    Setup chromium to use flashplugin in chrome.
+chromium
+    Setup chromium to use flashplugin in chrome, and do not do the default
+    browser check.
 
 citrix
     Configurations for Citrix client.
