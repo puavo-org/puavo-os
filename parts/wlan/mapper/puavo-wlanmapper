@@ -203,10 +203,10 @@ class Monitor(QObject):
 
 class MonitorWidget(QWidget):
 
-    def __init__(self, *args):
+    def __init__(self, monitor, *args):
         QWidget.__init__(self, *args)
 
-        self.monitor = Monitor(self)
+        self.monitor = monitor
         self.monitor.measurementsReady.connect(self.updateSeenList)
 
         layout = QFormLayout()
@@ -257,6 +257,8 @@ class MainWindow(QMainWindow):
 
     def __init__(self, *args):
         QMainWindow.__init__(self, *args)
+
+        self.monitor = Monitor(self)
 
         self.view = View(self)
         self.scene = Scene(self)
@@ -313,7 +315,7 @@ class MainWindow(QMainWindow):
 
     def setupDockWidgets(self):
         self.monitorDockWidget = QDockWidget(self)
-        self.monitorWidget = MonitorWidget(self)
+        self.monitorWidget = MonitorWidget(self.monitor, self)
         self.monitorDockWidget.setWidget(self.monitorWidget)
         self.monitorDockWidget.setWindowTitle("Monitor")
         self.addDockWidget(Qt.LeftDockWidgetArea, self.monitorDockWidget)
