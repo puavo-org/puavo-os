@@ -168,17 +168,17 @@ def get_dot11_interfaces():
             result.append(iface)
     return result
 
-Measurement = collections.namedtuple('Measurement',
-                                     ['datetime',
-                                      'rssi',
-                                      'bssid',
-                                      'freq'])
+Beacon = collections.namedtuple('Beacon',
+                                ['datetime',
+                                 'rssi',
+                                 'bssid',
+                                 'freq'])
 
 class Monitor(QObject):
 
     started = pyqtSignal()
     stopped = pyqtSignal()
-    measurementsReady = pyqtSignal()
+    beaconsReceived = pyqtSignal()
 
     def __init__(self, interface, channel, *args):
         QObject.__init__(self, *args)
@@ -217,7 +217,7 @@ class Monitor(QObject):
             return False
 
         self.__tshark = QProcess(self)
-        self.__tshark.readyReadStandardOutput.connect(self.measurementsReady)
+        self.__tshark.readyReadStandardOutput.connect(self.beaconsReceived)
         self.__tshark.started.connect(self.started)
         self.__tshark.finished.connect(self.stopped)
         tshark_args = ['-i', self.__iface,
@@ -238,7 +238,7 @@ class Monitor(QObject):
             self.__tshark.close()
             self.__tshark = None
 
-    def readMeasurements(self):
+    def readBeacons(self):
         result = []
 
         while self.__tshark.canReadLine():
@@ -246,7 +246,7 @@ class Monitor(QObject):
             time_epoch, dbm, bssid, freq = line.strip().split('|')
 
             result.append(
-                Measurement(
+                Beacon(
                     datetime=datetime.datetime.fromtimestamp(float(time_epoch)),
                     rssi=int(dbm),
                     bssid=bssid,
