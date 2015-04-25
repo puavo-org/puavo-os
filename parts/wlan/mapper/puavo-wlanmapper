@@ -236,7 +236,7 @@ class MonitorWidget(QWidget):
         layout = QFormLayout()
 
         self.interfaceComboBox = QComboBox()
-        self.interfaceComboBox.addItems(sorted(get_dot11_interfaces()))
+        self.interfaceComboBox.addItems(sorted(INTERFACES))
         self.interfaceComboBox.activated.connect(self.saveInterface)
         layout.addRow(QLabel("Interface:"), self.interfaceComboBox)
 
@@ -372,6 +372,8 @@ class MainWindow(QMainWindow):
 
         QMessageBox.about(self, "About Puavo WLAN Mapper", aboutText)
 
+INTERFACES = get_dot11_interfaces()
+
 def main():
     app = QApplication(sys.argv)
 
@@ -380,6 +382,10 @@ def main():
         print(error_message.format(app.argc() - 1), file=sys.stderr)
         print("Usage: {} [LAYOUT_PNG]".format(sys.argv[0]), file=sys.stderr)
         return 1
+
+    if not INTERFACES:
+        QMessageBox.critical(None, "Startup failure", "Failed to find any 802.11 devices.")
+        sys.exit(1)
 
     win = MainWindow()
     win.show()
