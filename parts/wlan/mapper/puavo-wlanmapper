@@ -353,7 +353,7 @@ class MainWindow(QMainWindow):
             self.scene.clear()
             self.scene.addPixmap(self.layoutPixmap)
             self.statusBar().showMessage(
-                "Loaded layout image {!r}.".format(filepath), 5000)
+                "Loaded layout image '{}'.".format(filepath), 5000)
 
     def showAboutDialog(self):
         aboutText = QString.fromUtf8(
