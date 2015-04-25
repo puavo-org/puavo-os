@@ -107,14 +107,12 @@ class Scene(QGraphicsScene):
 
 class Spot(QGraphicsEllipseItem):
 
-    SPOT_SIZE = 20
+    RADIUS = 10
 
     def __init__(self):
         QGraphicsEllipseItem.__init__(self,
-                                      Spot.SPOT_SIZE / -2,
-                                      Spot.SPOT_SIZE / -2,
-                                      Spot.SPOT_SIZE,
-                                      Spot.SPOT_SIZE)
+                                      -Spot.RADIUS, -Spot.RADIUS,
+                                      2 * Spot.RADIUS, 2 * Spot.RADIUS)
 
         self.setFlag(QGraphicsItem.ItemIsMovable)
 
