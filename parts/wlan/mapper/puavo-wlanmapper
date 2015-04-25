@@ -76,16 +76,15 @@ class Scene(QGraphicsScene):
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
         if not event.isAccepted() and event.button() == Qt.LeftButton and not event.modifiers():
-            self.addSpotItem(event.scenePos())
+            item = SpotItem(self.getSpotNum())
+            item.setPos(event.scenePos())
+            self.addItem(item)
             event.accept()
-
-    def addSpotItem(self, pos):
-        self.addItem(SpotItem(Spot(pos, self.getSpotNum())))
 
     def removeSpotItem(self, spotItem):
         if spotItem == self.activeSpotItem:
             self.toggleSpotItem(spotItem)
-        self.putSpotNum(spotItem.spot.num)
+        self.putSpotNum(spotItem.num())
         self.removeItem(spotItem)
 
     def startAnimation(self):
@@ -123,31 +122,25 @@ class Scene(QGraphicsScene):
         self.freeSpotNums = []
         self.maxSpotNum = 0
 
-class Spot(QObject):
-
-    def __init__(self, pos, num, *args):
-        QObject.__init__(self, *args)
-
-        self.pos = pos
-        self.num = num
-
 class SpotItem(QGraphicsEllipseItem):
 
     SPOT_SIZE = 20
 
-    def __init__(self, spot):
+    def __init__(self, num):
         QGraphicsEllipseItem.__init__(self,
                                       SpotItem.SPOT_SIZE / -2,
                                       SpotItem.SPOT_SIZE / -2,
                                       SpotItem.SPOT_SIZE,
                                       SpotItem.SPOT_SIZE)
 
-        self.spot = spot
-        self.setPos(spot.pos)
         self.setFlag(QGraphicsItem.ItemIsMovable)
-        QGraphicsSimpleTextItem("{}".format(spot.num), self).moveBy(5, 5)
+        self.textItem = QGraphicsSimpleTextItem("{}".format(num), self)
+        self.textItem.moveBy(5, 5)
 
         self.setAcceptHoverEvents(True)
+
+    def num(self):
+        return int(self.textItem.text())
 
     def hoverEnterEvent(self, event):
         self.setCursor(QCursor(Qt.PointingHandCursor))
