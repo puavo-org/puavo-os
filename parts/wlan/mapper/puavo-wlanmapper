@@ -349,6 +349,7 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Failed to load a layout image",
                                  msg.format(filepath))
         else:
+            self.monitor.stop()
             self.scene.clear()
             self.scene.addPixmap(self.layoutPixmap)
             self.statusBar().showMessage(
