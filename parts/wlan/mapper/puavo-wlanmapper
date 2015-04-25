@@ -59,24 +59,10 @@ class Scene(QGraphicsScene):
 
         self.setupAnimation()
 
-    def getSpotNum(self):
-        if self.freeSpotNums:
-            return self.freeSpotNums.pop()
-
-        self.maxSpotNum += 1
-        return self.maxSpotNum
-
-    def putSpotNum(self, spotNum):
-        if spotNum == self.maxSpotNum:
-            self.maxSpotNum -= 1
-        else:
-            self.freeSpotNums.append(spotNum)
-            self.freeSpotNums = sorted(self.freeSpotNums, reverse=True)
-
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
         if not event.isAccepted() and event.button() == Qt.LeftButton and not event.modifiers():
-            item = Spot(self.getSpotNum())
+            item = Spot()
             item.setPos(event.scenePos())
             self.addItem(item)
             event.accept()
@@ -84,7 +70,6 @@ class Scene(QGraphicsScene):
     def removeSpot(self, spot):
         if spot == self.activeSpot:
             self.toggleSpot(spot)
-        self.putSpotNum(spot.num())
         self.removeItem(spot)
 
     def startAnimation(self):
@@ -119,14 +104,12 @@ class Scene(QGraphicsScene):
         self.animation.setScaleAt(0.0, 1, 1)
         self.animation.setScaleAt(0.5, 3, 3)
         self.animation.setScaleAt(1.0, 1, 1)
-        self.freeSpotNums = []
-        self.maxSpotNum = 0
 
 class Spot(QGraphicsEllipseItem):
 
     SPOT_SIZE = 20
 
-    def __init__(self, num):
+    def __init__(self):
         QGraphicsEllipseItem.__init__(self,
                                       Spot.SPOT_SIZE / -2,
                                       Spot.SPOT_SIZE / -2,
@@ -134,13 +117,8 @@ class Spot(QGraphicsEllipseItem):
                                       Spot.SPOT_SIZE)
 
         self.setFlag(QGraphicsItem.ItemIsMovable)
-        self.textItem = QGraphicsSimpleTextItem("{}".format(num), self)
-        self.textItem.moveBy(5, 5)
 
         self.setAcceptHoverEvents(True)
-
-    def num(self):
-        return int(self.textItem.text())
 
     def hoverEnterEvent(self, event):
         self.setCursor(QCursor(Qt.PointingHandCursor))
