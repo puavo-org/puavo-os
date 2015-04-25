@@ -67,10 +67,10 @@ class Scene(QGraphicsScene):
             self.addItem(item)
             event.accept()
 
-    def removeSpot(self, spot):
-        if spot == self.activeSpot:
-            self.toggleSpot(spot)
-        self.removeItem(spot)
+    def removeItem(self, item):
+        if item == self.activeSpot:
+            self.toggleSpot(item)
+        QGraphicsScene.removeItem(self, item)
 
     def startAnimation(self):
         self.animation.setItem(self.activeSpot)
@@ -125,7 +125,7 @@ class Spot(QGraphicsEllipseItem):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton and not event.modifiers():
-            self.scene().removeSpot(self)
+            self.scene().removeItem(self)
             event.accept()
 
     def mouseDoubleClickEvent(self, event):
