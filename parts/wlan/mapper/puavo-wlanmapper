@@ -49,10 +49,13 @@ class View(QGraphicsView):
 
 class Scene(QGraphicsScene):
 
-    def __init__(self, *args):
+    def __init__(self, monitor, *args):
         QGraphicsScene.__init__(self, *args)
 
-        self.measurementsEnabled = False
+        self.monitor = monitor
+        self.monitor.stopped.connect(self.stopAnimation)
+        self.monitor.started.connect(self.startAnimation)
+        self.activeSpotItem = None
 
         self.setupAnimation()
 
@@ -76,31 +79,34 @@ class Scene(QGraphicsScene):
             self.addSpotItem(event.scenePos())
             event.accept()
 
-    def enableMeasurements(self):
-        self.measurementsEnabled = True
-
-    def disableMeasurements(self):
-        self.measurementsEnabled = False
-
     def addSpotItem(self, pos):
         self.addItem(SpotItem(Spot(pos, self.getSpotNum())))
 
     def removeSpotItem(self, spotItem):
+        if spotItem == self.activeSpotItem:
+            self.toggleSpotItem(spotItem)
         self.putSpotNum(spotItem.spot.num)
         self.removeItem(spotItem)
 
-    def toggleSpotItem(self, spotItem):
-        if not self.measurementsEnabled:
-            return
+    def startAnimation(self):
+        self.animation.setItem(self.activeSpotItem)
+        self.animation.timeLine().start()
 
+    def stopAnimation(self):
         if self.animation.timeLine().state() == QTimeLine.Running:
             self.animation.timeLine().stop()
             self.animation.setStep(0)
-            if self.animation.item() == spotItem:
-                return
 
-        self.animation.setItem(spotItem)
-        self.animation.timeLine().start()
+    def toggleSpotItem(self, spotItem):
+        self.monitor.stop()
+
+        if self.activeSpotItem == spotItem:
+            self.activeSpotItem = None
+            return
+
+        self.activeSpotItem = spotItem
+
+        self.monitor.start()
 
     def clear(self):
         QGraphicsScene.clear(self)
@@ -174,32 +180,47 @@ class Monitor(QObject):
     stopped = pyqtSignal()
     measurementsReady = pyqtSignal()
 
-    def __init__(self, *args):
+    def __init__(self, interface, channel, *args):
         QObject.__init__(self, *args)
+
+        self.__iface = interface
+        self.__chan = channel
 
         self.__tshark = None
 
-    def start(self, interface, channel):
+    def interface(self):
+        return self.__iface
+
+    def setInterface(self, interface):
+        self.__iface = interface
+
+    def channel(self):
+        return self.__chan
+
+    def setChannel(self, channel):
+        self.__chan = channel
+
+    def start(self):
         if self.__tshark is not None:
             return False
 
-        if QProcess.execute('/sbin/ifconfig', [interface, 'down']) != 0:
+        if QProcess.execute('/sbin/ifconfig', [self.__iface, 'down']) != 0:
             return False
 
-        if QProcess.execute('/sbin/iwconfig', [interface, 'mode', 'monitor']) != 0:
+        if QProcess.execute('/sbin/iwconfig', [self.__iface, 'mode', 'monitor']) != 0:
             return False
 
-        if QProcess.execute('/sbin/ifconfig', [interface, 'up']) != 0:
+        if QProcess.execute('/sbin/ifconfig', [self.__iface, 'up']) != 0:
             return False
 
-        if QProcess.execute('/sbin/iwconfig', [interface, 'channel', '{}'.format(channel)]) != 0:
+        if QProcess.execute('/sbin/iwconfig', [self.__iface, 'channel', '{}'.format(self.__chan)]) != 0:
             return False
 
         self.__tshark = QProcess(self)
         self.__tshark.readyReadStandardOutput.connect(self.measurementsReady)
         self.__tshark.started.connect(self.started)
         self.__tshark.finished.connect(self.stopped)
-        tshark_args = ['-i', interface,
+        tshark_args = ['-i', self.__iface,
                        '-l', # Line-buffered mode, otherwise tshark
                              # outputs frames in big lumps.
                        '-f', 'wlan[0] == 0x80',
@@ -240,48 +261,44 @@ class MonitorWidget(QWidget):
 
         self.monitor = monitor
 
+        self.monitor.started.connect(self.disable)
+        self.monitor.stopped.connect(self.enable)
+
         layout = QFormLayout()
 
         self.interfaceComboBox = QComboBox()
         self.interfaceComboBox.addItems(sorted(get_dot11_interfaces()))
+        self.interfaceComboBox.activated.connect(self.saveInterface)
         layout.addRow(QLabel("Interface:"), self.interfaceComboBox)
 
         self.channelComboBox = QComboBox()
         self.channelComboBox.addItems([str(c) for c in range(1, 14)])
+        self.channelComboBox.activated.connect(self.saveChannel)
         layout.addRow(QLabel("Channel:"), self.channelComboBox)
-
-        self.captureButton = QPushButton("Capture")
-        self.captureButton.setCheckable(True)
-        self.captureButton.setChecked(False)
-        self.captureButton.setEnabled(self.interfaceComboBox.count() > 0)
-        self.captureButton.toggled.connect(self.captureToggled)
-        layout.addRow(self.captureButton)
 
         self.setLayout(layout)
 
-    def captureToggled(self, toggled):
-        self.interfaceComboBox.setEnabled(not toggled)
-        self.channelComboBox.setEnabled(not toggled)
-        if toggled:
-            if not self.monitor.start(self.interfaceComboBox.currentText(),
-                                      int(self.channelComboBox.currentText())):
-                ## TODO: implement proper error message propagation.
-                QMessageBox.critical(self,
-                                     "Failed to start capturing",
-                                     "See console for details.")
-                self.captureButton.setChecked(False)
-        else:
-            self.monitor.stop()
+    def disable(self):
+        self.setEnabled(False)
+
+    def enable(self):
+        self.setEnabled(True)
+
+    def saveChannel(self):
+        self.monitor.setChannel(int(self.channelComboBox.currentText()))
+
+    def saveInterface(self):
+        self.monitor.setInterface(self.interfaceComboBox.currentText())
 
 class MainWindow(QMainWindow):
 
     def __init__(self, *args):
         QMainWindow.__init__(self, *args)
 
-        self.monitor = Monitor(self)
+        self.monitor = Monitor("wlan0", 1, self)
 
         self.view = View(self)
-        self.scene = Scene(self)
+        self.scene = Scene(self.monitor, self)
         self.layoutPixmap = None
 
         self.setWindowTitle("Puavo WLAN Mapper")
@@ -294,9 +311,6 @@ class MainWindow(QMainWindow):
         self.setupDockWidgets()
         self.setupActions()
         self.setupMenus()
-
-        self.monitor.started.connect(self.scene.enableMeasurements)
-        self.monitor.stopped.connect(self.scene.disableMeasurements)
 
     def closeEvent(self, event):
         self.monitor.stop()
