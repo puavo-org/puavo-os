@@ -55,7 +55,7 @@ class Scene(QGraphicsScene):
         self.monitor = monitor
         self.monitor.stopped.connect(self.stopAnimation)
         self.monitor.started.connect(self.startAnimation)
-        self.activeSpotItem = None
+        self.activeSpot = None
 
         self.setupAnimation()
 
@@ -76,19 +76,19 @@ class Scene(QGraphicsScene):
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
         if not event.isAccepted() and event.button() == Qt.LeftButton and not event.modifiers():
-            item = SpotItem(self.getSpotNum())
+            item = Spot(self.getSpotNum())
             item.setPos(event.scenePos())
             self.addItem(item)
             event.accept()
 
-    def removeSpotItem(self, spotItem):
-        if spotItem == self.activeSpotItem:
-            self.toggleSpotItem(spotItem)
-        self.putSpotNum(spotItem.num())
-        self.removeItem(spotItem)
+    def removeSpot(self, spot):
+        if spot == self.activeSpot:
+            self.toggleSpot(spot)
+        self.putSpotNum(spot.num())
+        self.removeItem(spot)
 
     def startAnimation(self):
-        self.animation.setItem(self.activeSpotItem)
+        self.animation.setItem(self.activeSpot)
         self.animation.timeLine().start()
 
     def stopAnimation(self):
@@ -96,14 +96,14 @@ class Scene(QGraphicsScene):
             self.animation.timeLine().stop()
             self.animation.setStep(0)
 
-    def toggleSpotItem(self, spotItem):
+    def toggleSpot(self, spot):
         self.monitor.stop()
 
-        if self.activeSpotItem == spotItem:
-            self.activeSpotItem = None
+        if self.activeSpot == spot:
+            self.activeSpot = None
             return
 
-        self.activeSpotItem = spotItem
+        self.activeSpot = spot
 
         self.monitor.start()
 
@@ -122,16 +122,16 @@ class Scene(QGraphicsScene):
         self.freeSpotNums = []
         self.maxSpotNum = 0
 
-class SpotItem(QGraphicsEllipseItem):
+class Spot(QGraphicsEllipseItem):
 
     SPOT_SIZE = 20
 
     def __init__(self, num):
         QGraphicsEllipseItem.__init__(self,
-                                      SpotItem.SPOT_SIZE / -2,
-                                      SpotItem.SPOT_SIZE / -2,
-                                      SpotItem.SPOT_SIZE,
-                                      SpotItem.SPOT_SIZE)
+                                      Spot.SPOT_SIZE / -2,
+                                      Spot.SPOT_SIZE / -2,
+                                      Spot.SPOT_SIZE,
+                                      Spot.SPOT_SIZE)
 
         self.setFlag(QGraphicsItem.ItemIsMovable)
         self.textItem = QGraphicsSimpleTextItem("{}".format(num), self)
@@ -147,11 +147,11 @@ class SpotItem(QGraphicsEllipseItem):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton and not event.modifiers():
-            self.scene().removeSpotItem(self)
+            self.scene().removeSpot(self)
             event.accept()
 
     def mouseDoubleClickEvent(self, event):
-        self.scene().toggleSpotItem(self)
+        self.scene().toggleSpot(self)
         event.accept()
 
 def get_dot11_interfaces():
