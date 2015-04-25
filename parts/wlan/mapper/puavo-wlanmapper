@@ -229,7 +229,6 @@ class MonitorWidget(QWidget):
         QWidget.__init__(self, *args)
 
         self.monitor = monitor
-
         self.monitor.started.connect(self.disable)
         self.monitor.stopped.connect(self.enable)
 
@@ -261,10 +260,10 @@ class MonitorWidget(QWidget):
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, *args):
+    def __init__(self, monitor, *args):
         QMainWindow.__init__(self, *args)
 
-        self.monitor = Monitor("wlan0", 1, self)
+        self.monitor = monitor
 
         self.view = View(self)
         self.scene = Scene(self.monitor, self)
@@ -387,7 +386,9 @@ def main():
         QMessageBox.critical(None, "Startup failure", "Failed to find any 802.11 devices.")
         sys.exit(1)
 
-    win = MainWindow()
+    monitor = Monitor(INTERFACES[0], 1)
+
+    win = MainWindow(monitor)
     win.show()
 
     if app.argc() == 2:
