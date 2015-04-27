@@ -47,7 +47,11 @@ class View(QGraphicsView):
 
             event.accept()
 
+Measurement = collections.namedtuple('Measurement', ['pos', 'rssi'])
+
 class Scene(QGraphicsScene):
+
+    measurementsReady = pyqtSignal(Measurement)
 
     def __init__(self, monitor, *args):
         QGraphicsScene.__init__(self, *args)
@@ -55,9 +59,16 @@ class Scene(QGraphicsScene):
         self.monitor = monitor
         self.monitor.stopped.connect(self.stopAnimation)
         self.monitor.started.connect(self.startAnimation)
+        self.monitor.beaconsReceived.connect(self.readBeacons)
         self.activeSpot = None
+        self.activeSpotMeasurements = {}
 
         self.setupAnimation()
+
+    def readBeacons(self):
+        for beacon in self.monitor.readBeacons():
+            rssi = self.activeSpotMeasurements.get(beacon.bssid, beacon.rssi)
+            self.activeSpotMeasurements[beacon.bssid] = (beacon.rssi + rssi) / 2
 
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
@@ -86,9 +97,11 @@ class Scene(QGraphicsScene):
 
         if self.activeSpot == spot:
             self.activeSpot = None
+            self.activeSpotMeasurements = {}
             return
 
         self.activeSpot = spot
+        self.activeSpotMeasurements = {}
 
         self.monitor.start()
 
@@ -96,14 +109,25 @@ class Scene(QGraphicsScene):
         QGraphicsScene.clear(self)
         self.setupAnimation()
 
+    def measurements(self):
+        return self.activeSpotMeasurements
+
     def setupAnimation(self):
         timer = QTimeLine(2000)
-        timer.setLoopCount(0)
+        timer.setLoopCount(5)
+        timer.finished.connect(self.reportMeasurements)
         self.animation = QGraphicsItemAnimation()
         self.animation.setTimeLine(timer)
         self.animation.setScaleAt(0.0, 1, 1)
         self.animation.setScaleAt(0.5, 3, 3)
         self.animation.setScaleAt(1.0, 1, 1)
+
+    def reportMeasurements(self):
+        self.activeSpot.setBrush(QBrush(QColor("#66ff66")))
+        m = Measurement(pos=self.activeSpot.pos(),
+                        rssi=self.activeSpotMeasurements)
+        self.measurementsReady.emit(m)
+        self.toggleSpot(self.activeSpot)
 
 class Spot(QGraphicsEllipseItem):
 
@@ -265,8 +289,10 @@ class MainWindow(QMainWindow):
 
         self.monitor = monitor
 
+        self.measurements = []
         self.view = View(self)
         self.scene = Scene(self.monitor, self)
+        self.scene.measurementsReady.connect(self.printMeasurements)
         self.layoutPixmap = None
 
         self.setWindowTitle("Puavo WLAN Mapper")
@@ -279,6 +305,9 @@ class MainWindow(QMainWindow):
         self.setupDockWidgets()
         self.setupActions()
         self.setupMenus()
+
+    def printMeasurements(self, measurements):
+        self.measurements.append(measurements)
 
     def closeEvent(self, event):
         self.monitor.stop()
@@ -296,6 +325,10 @@ class MainWindow(QMainWindow):
         self.loadAction.setShortcut(QKeySequence("Ctrl+O"))
         self.loadAction.triggered.connect(self.loadLayoutImageWithDialog)
 
+        self.exportAction = QAction(self)
+        self.exportAction.setText("&Export measurements...")
+        self.exportAction.triggered.connect(self.exportMeasurementsWithDialog)
+
         self.quitAction = QAction(self)
         self.quitAction.setText("&Quit")
         self.quitAction.setShortcut(QKeySequence("Ctrl+Q"))
@@ -306,6 +339,7 @@ class MainWindow(QMainWindow):
 
         fileMenu = menuBar.addMenu("&File")
         fileMenu.addAction(self.loadAction)
+        fileMenu.addAction(self.exportAction)
         fileMenu.addSeparator()
         fileMenu.addAction(self.quitAction)
 
@@ -323,6 +357,37 @@ class MainWindow(QMainWindow):
         self.monitorDockWidget.setWidget(self.monitorWidget)
         self.monitorDockWidget.setWindowTitle("Monitor")
         self.addDockWidget(Qt.LeftDockWidgetArea, self.monitorDockWidget)
+
+    def exportMeasurementsWithDialog(self):
+        filepath = QFileDialog.getSaveFileName(self,
+                                               "Export measurements",
+                                               QDir.currentPath(),
+                                               "CSV (*.csv)")
+        if not filepath:
+            return
+
+        self.exportMeasurements(filepath)
+
+    def exportMeasurements(self, filepath):
+        xs = []
+        ys = []
+        bssid_rssi_map = {}
+        for measurement in self.measurements:
+            for bssid in measurement.rssi.keys():
+                bssid_rssi_map.setdefault(bssid, [])
+
+        for measurement in self.measurements:
+            xs.append(measurement.pos.x())
+            ys.append(measurement.pos.y())
+            for bssid, rssis in bssid_rssi_map.items():
+                rssis.append(measurement.rssi.get(bssid, -95))
+
+        with open(filepath, "w") as csvfile:
+            header = ",".join(['x', 'y'] + bssid_rssi_map.keys())
+            csvfile.write("%s\n" % header)
+            for vals in zip(xs, ys, *bssid_rssi_map.values()):
+                line = ",".join([str(int(v)) for v in vals])
+                csvfile.write("%s\n" % line)
 
     def loadLayoutImageWithDialog(self):
         filepath = QFileDialog.getOpenFileName(self,
