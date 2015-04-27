@@ -134,8 +134,8 @@ class Scene(QGraphicsScene):
 
         for spot in self.__spots:
 
-            xs.append(spot.pos().x())
-            ys.append(spot.pos().y())
+            xs.append(int(spot.pos().x()))
+            ys.append(int(spot.pos().y()))
 
             for bssid in spot.measurement.keys():
                 bssids.add(bssid)
@@ -143,7 +143,7 @@ class Scene(QGraphicsScene):
         for spot in self.__spots:
             for bssid in bssids:
                 values = result.setdefault(bssid, [])
-                values.append(spot.measurement.get(bssid, -95))
+                values.append(int(round(spot.measurement.get(bssid, -95))))
 
         return result
 
@@ -393,8 +393,8 @@ class MainWindow(QMainWindow):
             header = ",".join(measurements.keys())
             csvfile.write("%s\n" % header)
             for vals in zip(*measurements.values()):
-                line = ",".join([str(int(v)) for v in vals])
-                csvfile.write("%s\n" % line)
+                line = ",".join(['{}'.format(v) for v in vals])
+                csvfile.write('{}\n'.format(line))
 
     def __loadLayoutImageWithDialog(self):
         filepath = QFileDialog.getOpenFileName(self,
