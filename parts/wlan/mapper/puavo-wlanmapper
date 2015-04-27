@@ -52,21 +52,21 @@ class Scene(QGraphicsScene):
     def __init__(self, monitor, *args):
         QGraphicsScene.__init__(self, *args)
 
-        self.monitor = monitor
-        self.monitor.stopped.connect(self.stopAnimation)
-        self.monitor.started.connect(self.startAnimation)
-        self.monitor.beaconsReceived.connect(self.readBeacons)
-        self.activeSpot = None
-        self.activeSpotMeasurements = {}
+        self.__monitor = monitor
+        self.__monitor.stopped.connect(self.__stopAnimation)
+        self.__monitor.started.connect(self.__startAnimation)
+        self.__monitor.beaconsReceived.connect(self.__readBeacons)
+        self.__currentSpot = None
+        self.__currentSpotMeasurements = {}
 
         self.__spots = []
 
-        self.setupAnimation()
+        self.__setupAnimation()
 
-    def readBeacons(self):
-        for beacon in self.monitor.readBeacons():
-            rssi = self.activeSpotMeasurements.get(beacon.bssid, beacon.rssi)
-            self.activeSpotMeasurements[beacon.bssid] = (beacon.rssi + rssi) / 2
+    def __readBeacons(self):
+        for beacon in self.__monitor.readBeacons():
+            rssi = self.__currentSpotMeasurements.get(beacon.bssid, beacon.rssi)
+            self.__currentSpotMeasurements[beacon.bssid] = (beacon.rssi + rssi) / 2
 
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
@@ -79,50 +79,50 @@ class Scene(QGraphicsScene):
 
     def removeSpot(self, spot):
         self.__spots.remove(spot)
-        if spot == self.activeSpot:
+        if spot == self.__currentSpot:
             self.toggleSpot(spot)
         self.removeItem(spot)
 
-    def startAnimation(self):
-        self.animation.setItem(self.activeSpot)
-        self.animation.timeLine().start()
+    def __startAnimation(self):
+        self.__animation.setItem(self.__currentSpot)
+        self.__animation.timeLine().start()
 
-    def stopAnimation(self):
-        if self.animation.timeLine().state() == QTimeLine.Running:
-            self.animation.timeLine().stop()
-            self.animation.setStep(0)
+    def __stopAnimation(self):
+        if self.__animation.timeLine().state() == QTimeLine.Running:
+            self.__animation.timeLine().stop()
+            self.__animation.setStep(0)
 
     def toggleSpot(self, spot):
-        self.monitor.stop()
+        self.__monitor.stop()
 
-        if self.activeSpot == spot:
-            self.activeSpot = None
-            self.activeSpotMeasurements = {}
+        if self.__currentSpot == spot:
+            self.__currentSpot = None
+            self.__currentSpotMeasurements = {}
             return
 
-        self.activeSpot = spot
-        self.activeSpotMeasurements = {}
+        self.__currentSpot = spot
+        self.__currentSpotMeasurements = {}
 
-        self.monitor.start()
+        self.__monitor.start()
 
     def clear(self):
         QGraphicsScene.clear(self)
-        self.setupAnimation()
+        self.__setupAnimation()
 
-    def setupAnimation(self):
-        timer = QTimeLine(2000)
-        timer.setLoopCount(5)
-        timer.finished.connect(self.reportMeasurements)
-        self.animation = QGraphicsItemAnimation()
-        self.animation.setTimeLine(timer)
-        self.animation.setScaleAt(0.0, 1, 1)
-        self.animation.setScaleAt(0.5, 3, 3)
-        self.animation.setScaleAt(1.0, 1, 1)
+    def __setupAnimation(self):
+        timeLine = QTimeLine(2000)
+        timeLine.setLoopCount(5)
+        timeLine.finished.connect(self.__measurementFinished)
+        self.__animation = QGraphicsItemAnimation()
+        self.__animation.setTimeLine(timeLine)
+        self.__animation.setScaleAt(0.0, 1, 1)
+        self.__animation.setScaleAt(0.5, 3, 3)
+        self.__animation.setScaleAt(1.0, 1, 1)
 
-    def reportMeasurements(self):
-        self.activeSpot.setBrush(QBrush(QColor("#66ff66")))
-        self.activeSpot.measurement = self.activeSpotMeasurements
-        self.toggleSpot(self.activeSpot)
+    def __measurementFinished(self):
+        self.__currentSpot.setBrush(QBrush(QColor("#66ff66")))
+        self.__currentSpot.measurement = self.__currentSpotMeasurements
+        self.toggleSpot(self.__currentSpot)
 
     def measurements(self):
         xs = []
@@ -261,108 +261,108 @@ class MonitorWidget(QWidget):
     def __init__(self, monitor, *args):
         QWidget.__init__(self, *args)
 
-        self.monitor = monitor
-        self.monitor.started.connect(self.disable)
-        self.monitor.stopped.connect(self.enable)
+        self.__monitor = monitor
+        self.__monitor.started.connect(self.__disable)
+        self.__monitor.stopped.connect(self.__enable)
 
         layout = QFormLayout()
 
-        self.interfaceComboBox = QComboBox()
-        self.interfaceComboBox.addItems(sorted(INTERFACES))
-        self.interfaceComboBox.activated.connect(self.saveInterface)
-        layout.addRow(QLabel("Interface:"), self.interfaceComboBox)
+        self.__ifaceComboBox = QComboBox()
+        self.__ifaceComboBox.addItems(sorted(INTERFACES))
+        self.__ifaceComboBox.activated.connect(self.__saveInterface)
+        layout.addRow(QLabel("Interface:"), self.__ifaceComboBox)
 
-        self.channelComboBox = QComboBox()
-        self.channelComboBox.addItems([str(c) for c in range(1, 14)])
-        self.channelComboBox.activated.connect(self.saveChannel)
-        layout.addRow(QLabel("Channel:"), self.channelComboBox)
+        self.__chanComboBox = QComboBox()
+        self.__chanComboBox.addItems([str(c) for c in range(1, 14)])
+        self.__chanComboBox.activated.connect(self.__saveChannel)
+        layout.addRow(QLabel("Channel:"), self.__chanComboBox)
 
         self.setLayout(layout)
 
-    def disable(self):
+    def __disable(self):
         self.setEnabled(False)
 
-    def enable(self):
+    def __enable(self):
         self.setEnabled(True)
 
-    def saveChannel(self):
-        self.monitor.setChannel(int(self.channelComboBox.currentText()))
+    def __saveChannel(self):
+        self.__monitor.setChannel(int(self.__chanComboBox.currentText()))
 
-    def saveInterface(self):
-        self.monitor.setInterface(self.interfaceComboBox.currentText())
+    def __saveInterface(self):
+        self.__monitor.setInterface(self.__ifaceComboBox.currentText())
 
 class MainWindow(QMainWindow):
 
     def __init__(self, monitor, *args):
         QMainWindow.__init__(self, *args)
 
-        self.monitor = monitor
+        self.__monitor = monitor
 
-        self.view = View(self)
-        self.scene = Scene(self.monitor, self)
-        self.layoutPixmap = None
+        self.__view = View(self)
+        self.__scene = Scene(self.__monitor, self)
+        self.__layoutPixmap = None
 
         self.setWindowTitle("Puavo WLAN Mapper")
         self.setStatusBar(QStatusBar(self))
 
-        self.view.setScene(self.scene)
+        self.__view.setScene(self.__scene)
 
-        self.setCentralWidget(self.view)
+        self.setCentralWidget(self.__view)
 
-        self.setupDockWidgets()
-        self.setupActions()
-        self.setupMenus()
+        self.__setupDockWidgets()
+        self.__setupActions()
+        self.__setupMenus()
 
     def closeEvent(self, event):
-        self.monitor.stop()
+        self.__monitor.stop()
 
     def sizeHint(self):
         return QSize(800, 600)
 
-    def setupActions(self):
-        self.aboutAction = QAction(self)
-        self.aboutAction.setText("&About...")
-        self.aboutAction.triggered.connect(self.showAboutDialog)
+    def __setupActions(self):
+        self.__aboutAction = QAction(self)
+        self.__aboutAction.setText("&About...")
+        self.__aboutAction.triggered.connect(self.__showAboutDialog)
 
-        self.loadAction = QAction(self)
-        self.loadAction.setText("&Load layout image...")
-        self.loadAction.setShortcut(QKeySequence("Ctrl+O"))
-        self.loadAction.triggered.connect(self.loadLayoutImageWithDialog)
+        self.__loadAction = QAction(self)
+        self.__loadAction.setText("&Load layout image...")
+        self.__loadAction.setShortcut(QKeySequence("Ctrl+O"))
+        self.__loadAction.triggered.connect(self.__loadLayoutImageWithDialog)
 
-        self.exportAction = QAction(self)
-        self.exportAction.setText("&Export measurements...")
-        self.exportAction.triggered.connect(self.exportMeasurementsWithDialog)
+        self.__exportAction = QAction(self)
+        self.__exportAction.setText("&Export measurements...")
+        self.__exportAction.triggered.connect(self.__exportMeasurementsWithDialog)
 
-        self.quitAction = QAction(self)
-        self.quitAction.setText("&Quit")
-        self.quitAction.setShortcut(QKeySequence("Ctrl+Q"))
-        self.quitAction.triggered.connect(self.close)
+        self.__quitAction = QAction(self)
+        self.__quitAction.setText("&Quit")
+        self.__quitAction.setShortcut(QKeySequence("Ctrl+Q"))
+        self.__quitAction.triggered.connect(self.close)
 
-    def setupMenus(self):
+    def __setupMenus(self):
         menuBar = QMenuBar()
 
         fileMenu = menuBar.addMenu("&File")
-        fileMenu.addAction(self.loadAction)
-        fileMenu.addAction(self.exportAction)
+        fileMenu.addAction(self.__loadAction)
+        fileMenu.addAction(self.__exportAction)
         fileMenu.addSeparator()
-        fileMenu.addAction(self.quitAction)
+        fileMenu.addAction(self.__quitAction)
 
         viewMenu = menuBar.addMenu("&View")
-        viewMenu.addAction(self.monitorDockWidget.toggleViewAction())
+        viewMenu.addAction(self.__monitorDockWidget.toggleViewAction())
 
         helpMenu = menuBar.addMenu("&Help")
-        helpMenu.addAction(self.aboutAction)
+        helpMenu.addAction(self.__aboutAction)
 
         self.setMenuBar(menuBar)
 
-    def setupDockWidgets(self):
-        self.monitorDockWidget = QDockWidget(self)
-        self.monitorWidget = MonitorWidget(self.monitor, self)
-        self.monitorDockWidget.setWidget(self.monitorWidget)
-        self.monitorDockWidget.setWindowTitle("Monitor")
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.monitorDockWidget)
+    def __setupDockWidgets(self):
+        self.__monitorDockWidget = QDockWidget(self)
+        self.__monitorWidget = MonitorWidget(self.__monitor, self)
+        self.__monitorDockWidget.setWidget(self.__monitorWidget)
+        self.__monitorDockWidget.setWindowTitle("Monitor")
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.__monitorDockWidget)
 
-    def exportMeasurementsWithDialog(self):
+    def __exportMeasurementsWithDialog(self):
         filepath = QFileDialog.getSaveFileName(self,
                                                "Export measurements",
                                                QDir.currentPath(),
@@ -370,10 +370,10 @@ class MainWindow(QMainWindow):
         if not filepath:
             return
 
-        self.exportMeasurements(filepath)
+        self.__exportMeasurements(filepath)
 
-    def exportMeasurements(self, filepath):
-        measurements = self.scene.measurements()
+    def __exportMeasurements(self, filepath):
+        measurements = self.__scene.measurements()
 
         with open(filepath, "w") as csvfile:
             header = ",".join(measurements.keys())
@@ -382,7 +382,7 @@ class MainWindow(QMainWindow):
                 line = ",".join([str(int(v)) for v in vals])
                 csvfile.write("%s\n" % line)
 
-    def loadLayoutImageWithDialog(self):
+    def __loadLayoutImageWithDialog(self):
         filepath = QFileDialog.getOpenFileName(self,
                                                "Load layout image",
                                                QDir.currentPath(),
@@ -393,20 +393,20 @@ class MainWindow(QMainWindow):
         self.loadLayoutImage(filepath)
 
     def loadLayoutImage(self, filepath):
-        self.layoutPixmap = QPixmap(filepath, "png")
-        if self.layoutPixmap.isNull():
+        self.__layoutPixmap = QPixmap(filepath, "png")
+        if self.__layoutPixmap.isNull():
             msg = "File {} could not be loaded as a layout image.\n\n" \
                   "Please ensure the layout image is a valid PNG file."
             QMessageBox.critical(self, "Failed to load a layout image",
                                  msg.format(filepath))
         else:
-            self.monitor.stop()
-            self.scene.clear()
-            self.scene.addPixmap(self.layoutPixmap)
+            self.__monitor.stop()
+            self.__scene.clear()
+            self.__scene.addPixmap(self.__layoutPixmap)
             self.statusBar().showMessage(
                 "Loaded layout image '{}'.".format(filepath), 5000)
 
-    def showAboutDialog(self):
+    def __showAboutDialog(self):
         aboutText = QString.fromUtf8(
             "<h1>Puavo WLAN Mapper</h1>"
             "<p>Version 0.1.0</p>"
