@@ -311,7 +311,6 @@ class MainWindow(QMainWindow):
 
         viewMenu = menuBar.addMenu("&View")
         viewMenu.addAction(self.monitorDockWidget.toggleViewAction())
-        viewMenu.addAction(self.spotsDockWidget.toggleViewAction())
 
         helpMenu = menuBar.addMenu("&Help")
         helpMenu.addAction(self.aboutAction)
@@ -324,12 +323,6 @@ class MainWindow(QMainWindow):
         self.monitorDockWidget.setWidget(self.monitorWidget)
         self.monitorDockWidget.setWindowTitle("Monitor")
         self.addDockWidget(Qt.LeftDockWidgetArea, self.monitorDockWidget)
-
-        self.spotsDockWidget = QDockWidget(self)
-        self.spotsWidget = QTableWidget(self.spotsDockWidget)
-        self.spotsDockWidget.setWidget(self.spotsWidget)
-        self.spotsDockWidget.setWindowTitle("Spots")
-        self.addDockWidget(Qt.BottomDockWidgetArea, self.spotsDockWidget)
 
     def loadLayoutImageWithDialog(self):
         filepath = QFileDialog.getOpenFileName(self,
