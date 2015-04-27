@@ -313,13 +313,11 @@ class MainWindow(QMainWindow):
         self.__monitor = monitor
 
         self.__view = View(self)
-        self.__scene = Scene(self.__monitor, self)
+        self.__scene = None
         self.__layoutPixmap = None
 
         self.setWindowTitle("Puavo WLAN Mapper")
         self.setStatusBar(QStatusBar(self))
-
-        self.__view.setScene(self.__scene)
 
         self.setCentralWidget(self.__view)
 
@@ -414,6 +412,10 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Failed to load a layout image",
                                  msg.format(filepath))
         else:
+            if self.__scene is None:
+                self.__scene = Scene(self.__monitor, self)
+                self.__view.setScene(self.__scene)
+
             self.__monitor.stop()
             self.__scene.clear()
             self.__scene.addPixmap(self.__layoutPixmap)
