@@ -47,11 +47,7 @@ class View(QGraphicsView):
 
             event.accept()
 
-Measurement = collections.namedtuple('Measurement', ['pos', 'rssi'])
-
 class Scene(QGraphicsScene):
-
-    measurementsReady = pyqtSignal(Measurement)
 
     def __init__(self, monitor, *args):
         QGraphicsScene.__init__(self, *args)
@@ -62,6 +58,8 @@ class Scene(QGraphicsScene):
         self.monitor.beaconsReceived.connect(self.readBeacons)
         self.activeSpot = None
         self.activeSpotMeasurements = {}
+
+        self.__spots = []
 
         self.setupAnimation()
 
@@ -76,12 +74,14 @@ class Scene(QGraphicsScene):
             item = Spot()
             item.setPos(event.scenePos())
             self.addItem(item)
+            self.__spots.append(item)
             event.accept()
 
-    def removeItem(self, item):
-        if item == self.activeSpot:
-            self.toggleSpot(item)
-        QGraphicsScene.removeItem(self, item)
+    def removeSpot(self, spot):
+        self.__spots.remove(spot)
+        if spot == self.activeSpot:
+            self.toggleSpot(spot)
+        self.removeItem(spot)
 
     def startAnimation(self):
         self.animation.setItem(self.activeSpot)
@@ -109,9 +109,6 @@ class Scene(QGraphicsScene):
         QGraphicsScene.clear(self)
         self.setupAnimation()
 
-    def measurements(self):
-        return self.activeSpotMeasurements
-
     def setupAnimation(self):
         timer = QTimeLine(2000)
         timer.setLoopCount(5)
@@ -124,10 +121,31 @@ class Scene(QGraphicsScene):
 
     def reportMeasurements(self):
         self.activeSpot.setBrush(QBrush(QColor("#66ff66")))
-        m = Measurement(pos=self.activeSpot.pos(),
-                        rssi=self.activeSpotMeasurements)
-        self.measurementsReady.emit(m)
+        self.activeSpot.measurement = self.activeSpotMeasurements
         self.toggleSpot(self.activeSpot)
+
+    def measurements(self):
+        xs = []
+        ys = []
+
+        result = {}
+
+        for spot in self.__spots:
+            for bssid in spot.measurement.keys():
+                result.setdefault(bssid, [])
+
+        for spot in self.__spots:
+
+            xs.append(spot.pos().x())
+            ys.append(spot.pos().y())
+
+            for bssid, rssis in result.items():
+                rssis.append(spot.measurement.get(bssid, -95))
+
+        result['x'] = xs
+        result['y'] = ys
+
+        return result
 
 class Spot(QGraphicsEllipseItem):
 
@@ -142,12 +160,14 @@ class Spot(QGraphicsEllipseItem):
 
         self.setAcceptHoverEvents(True)
 
+        self.measurement = {}
+
     def hoverEnterEvent(self, event):
         self.setCursor(QCursor(Qt.PointingHandCursor))
 
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton and not event.modifiers():
-            self.scene().removeItem(self)
+            self.scene().removeSpot(self)
             event.accept()
 
     def mouseDoubleClickEvent(self, event):
@@ -289,10 +309,8 @@ class MainWindow(QMainWindow):
 
         self.monitor = monitor
 
-        self.measurements = []
         self.view = View(self)
         self.scene = Scene(self.monitor, self)
-        self.scene.measurementsReady.connect(self.printMeasurements)
         self.layoutPixmap = None
 
         self.setWindowTitle("Puavo WLAN Mapper")
@@ -305,9 +323,6 @@ class MainWindow(QMainWindow):
         self.setupDockWidgets()
         self.setupActions()
         self.setupMenus()
-
-    def printMeasurements(self, measurements):
-        self.measurements.append(measurements)
 
     def closeEvent(self, event):
         self.monitor.stop()
@@ -369,23 +384,12 @@ class MainWindow(QMainWindow):
         self.exportMeasurements(filepath)
 
     def exportMeasurements(self, filepath):
-        xs = []
-        ys = []
-        bssid_rssi_map = {}
-        for measurement in self.measurements:
-            for bssid in measurement.rssi.keys():
-                bssid_rssi_map.setdefault(bssid, [])
-
-        for measurement in self.measurements:
-            xs.append(measurement.pos.x())
-            ys.append(measurement.pos.y())
-            for bssid, rssis in bssid_rssi_map.items():
-                rssis.append(measurement.rssi.get(bssid, -95))
+        measurements = self.scene.measurements()
 
         with open(filepath, "w") as csvfile:
-            header = ",".join(['x', 'y'] + bssid_rssi_map.keys())
+            header = ",".join(measurements.keys())
             csvfile.write("%s\n" % header)
-            for vals in zip(xs, ys, *bssid_rssi_map.values()):
+            for vals in zip(*measurements.values()):
                 line = ",".join([str(int(v)) for v in vals])
                 csvfile.write("%s\n" % line)
 
