@@ -181,11 +181,7 @@ def get_dot11_interfaces():
             result.append(iface)
     return result
 
-Beacon = collections.namedtuple('Beacon',
-                                ['datetime',
-                                 'rssi',
-                                 'bssid',
-                                 'freq'])
+Beacon = collections.namedtuple('Beacon', ['rssi', 'bssid'])
 
 class Monitor(QObject):
 
@@ -239,10 +235,8 @@ class Monitor(QObject):
                        '-f', 'wlan[0] == 0x80',
                        '-T', 'fields',
                        '-E', 'separator=|',
-                       '-e', 'frame.time_epoch',
                        '-e', 'radiotap.dbm_antsignal',
-                       '-e', 'wlan.ta',
-                       '-e', 'radiotap.channel.freq']
+                       '-e', 'wlan.ta']
         self.__tshark.start('/usr/bin/tshark', tshark_args, QIODevice.ReadOnly)
         return True
 
@@ -256,14 +250,9 @@ class Monitor(QObject):
 
         while self.__tshark.canReadLine():
             line = str(self.__tshark.readLine())
-            time_epoch, dbm, bssid, freq = line.strip().split('|')
+            rssi, bssid = line.strip().split('|')
 
-            result.append(
-                Beacon(
-                    datetime=datetime.datetime.fromtimestamp(float(time_epoch)),
-                    rssi=int(dbm),
-                    bssid=bssid,
-                    freq=int(freq)))
+            result.append(Beacon(rssi=int(rssi), bssid=bssid))
 
         return result
 
