@@ -125,25 +125,25 @@ class Scene(QGraphicsScene):
         self.toggleSpot(self.__currentSpot)
 
     def measurements(self):
-        xs = []
-        ys = []
+        result = collections.OrderedDict()
 
-        result = {}
+        xs = result['x'] = []
+        ys = result['y'] = []
 
-        for spot in self.__spots:
-            for bssid in spot.measurement.keys():
-                result.setdefault(bssid, [])
+        bssids = set()
 
         for spot in self.__spots:
 
             xs.append(spot.pos().x())
             ys.append(spot.pos().y())
 
-            for bssid, rssis in result.items():
-                rssis.append(spot.measurement.get(bssid, -95))
+            for bssid in spot.measurement.keys():
+                bssids.add(bssid)
 
-        result['x'] = xs
-        result['y'] = ys
+        for spot in self.__spots:
+            for bssid in bssids:
+                values = result.setdefault(bssid, [])
+                values.append(spot.measurement.get(bssid, -95))
 
         return result
 
