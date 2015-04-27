@@ -162,17 +162,31 @@ class Spot(QGraphicsEllipseItem):
 
         self.measurement = {}
 
+        self.__removeAction = QAction("&Remove", None)
+        self.__removeAction.triggered.connect(self.__remove)
+
+        self.__toggleAction = QAction("&Toggle measurement", None)
+        self.__toggleAction.triggered.connect(self.__toggle)
+
+        self.__contextMenu = QMenu()
+        self.__contextMenu.addAction(self.__removeAction)
+        self.__contextMenu.addAction(self.__toggleAction)
+
+    def __toggle(self):
+        self.scene().toggleSpot(self)
+
+    def __remove(self):
+        self.scene().removeSpot(self)
+
     def hoverEnterEvent(self, event):
         self.setCursor(QCursor(Qt.PointingHandCursor))
 
-    def mousePressEvent(self, event):
-        if event.button() == Qt.RightButton and not event.modifiers():
-            self.scene().removeSpot(self)
-            event.accept()
-
     def mouseDoubleClickEvent(self, event):
-        self.scene().toggleSpot(self)
+        self.__toggle()
         event.accept()
+
+    def contextMenuEvent(self, event):
+        self.__contextMenu.exec_(event.screenPos())
 
 def get_dot11_interfaces():
     result = []
