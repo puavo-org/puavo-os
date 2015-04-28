@@ -87,7 +87,15 @@ class Scene(QGraphicsScene):
 
         self.__spots = []
 
+        self.__layoutPixmapItem = None
+
         self.__setupAnimation()
+
+    def setLayoutPixmap(self, pixmap):
+        if self.__layoutPixmapItem is not None:
+            self.removeItem(self.__layoutPixmapItem)
+        self.__layoutPixmapItem = self.addPixmap(pixmap)
+        self.__layoutPixmapItem.setZValue(-1)
 
     def __readBeacons(self):
         for beacon in self.__monitor.readBeacons():
@@ -340,7 +348,6 @@ class MainWindow(QMainWindow):
 
         self.__view = View(self)
         self.__scene = None
-        self.__layoutPixmap = None
 
         self.setWindowTitle("Puavo WLAN Mapper")
         self.setStatusBar(QStatusBar(self))
@@ -431,8 +438,8 @@ class MainWindow(QMainWindow):
         self.loadLayoutImage(filepath)
 
     def loadLayoutImage(self, filepath):
-        self.__layoutPixmap = QPixmap(filepath, "png")
-        if self.__layoutPixmap.isNull():
+        layoutPixmap = QPixmap(filepath, "png")
+        if layoutPixmap.isNull():
             msg = "File {} could not be loaded as a layout image.\n\n" \
                   "Please ensure the layout image is a valid PNG file."
             QMessageBox.critical(self, "Failed to load a layout image",
@@ -444,7 +451,7 @@ class MainWindow(QMainWindow):
 
             self.__monitor.stop()
             self.__scene.clear()
-            self.__scene.addPixmap(self.__layoutPixmap)
+            self.__scene.setLayoutPixmap(layoutPixmap)
             self.statusBar().showMessage(
                 "Loaded layout image '{}'.".format(filepath), 5000)
 
