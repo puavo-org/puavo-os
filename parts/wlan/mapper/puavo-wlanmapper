@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import collections
 import datetime
+import math
 import os
 import os.path
 import sys
@@ -150,8 +151,11 @@ class Scene(QGraphicsScene):
         self.__animation = QGraphicsItemAnimation()
         self.__animation.setTimeLine(timeLine)
         self.__animation.setScaleAt(0.0, 1, 1)
-        self.__animation.setScaleAt(0.5, 3, 3)
+        self.__animation.setScaleAt(0.5, 2, 2)
         self.__animation.setScaleAt(1.0, 1, 1)
+        self.__animation.setRotationAt(0.0, 0)
+        self.__animation.setRotationAt(0.5, 180)
+        self.__animation.setRotationAt(1.0, 360)
 
     def __measurementFinished(self):
         self.__currentSpot.setBrush(QBrush(QColor("#66ff66")))
@@ -195,16 +199,28 @@ class Scene(QGraphicsScene):
 
         return result
 
-class Spot(QGraphicsEllipseItem):
+class Spot(QGraphicsPolygonItem):
 
-    RADIUS = 10
+    SIZE = 30
 
     def __init__(self):
-        QGraphicsEllipseItem.__init__(self,
-                                      -Spot.RADIUS, -Spot.RADIUS,
-                                      2 * Spot.RADIUS, 2 * Spot.RADIUS)
+        QGraphicsPolygonItem.__init__(self)
 
+        points = []
+        for i in range(5):
+            point = QPointF(0.5 + 0.5 * math.cos(4 / 5 * math.pi * i),
+                            0.5 + 0.5 * math.sin(4 / 5 * math.pi * i))
+            points.append(point * Spot.SIZE)
+
+        self.setPolygon(QPolygonF(points).translated(-Spot.SIZE / 2,
+                                                     -Spot.SIZE / 2))
+        self.setFillRule(Qt.WindingFill)
+
+        dropShadowEffect = QGraphicsDropShadowEffect()
+        dropShadowEffect.setOffset(2)
+        self.setGraphicsEffect(dropShadowEffect)
         self.setFlag(QGraphicsItem.ItemIsMovable)
+        self.setBrush(QBrush(QColor("beige")))
 
         self.setAcceptHoverEvents(True)
 
