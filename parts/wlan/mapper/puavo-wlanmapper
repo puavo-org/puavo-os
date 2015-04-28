@@ -156,6 +156,20 @@ class Scene(QGraphicsScene):
     def __measurementFinished(self):
         self.__currentSpot.setBrush(QBrush(QColor("#66ff66")))
         self.__currentSpot.measurement = self.__currentSpotMeasurements
+
+        measurements = self.measurements()
+
+        xs = measurements.pop('x')
+        ys = measurements.pop('y')
+        zs = [max(v) for v in zip(*measurements.values())]
+
+        ## To RBF-interpolate, we need more than 1 measurement point.
+        if len(xs) > 1:
+            w = self.__layoutPixmapItem.pixmap().width()
+            h = self.__layoutPixmapItem.pixmap().height()
+            temporaryImageFile = saveTemporaryHeatmap(w, h, xs, ys, zs)
+            self.addPixmap(QPixmap(temporaryImageFile.fileName()).scaled(w, h)).setZValue(-2)
+
         self.toggleSpot(self.__currentSpot)
 
     def measurements(self):
@@ -177,7 +191,7 @@ class Scene(QGraphicsScene):
         for spot in self.__spots:
             for bssid in bssids:
                 values = result.setdefault(bssid, [])
-                values.append(int(round(spot.measurement.get(bssid, -95))))
+                values.append(int(round(spot.measurement.get(bssid, min(LEVELS)))))
 
         return result
 
