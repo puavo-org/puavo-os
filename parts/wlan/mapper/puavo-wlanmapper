@@ -347,6 +347,7 @@ class MainWindow(QMainWindow):
         self.__monitor = monitor
 
         self.__view = View(self)
+        self.__view.setRenderHints(QPainter.Antialiasing)
         self.__scene = None
 
         self.setWindowTitle("Puavo WLAN Mapper")
