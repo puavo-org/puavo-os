@@ -23,9 +23,35 @@ import datetime
 import os
 import os.path
 import sys
+import tempfile
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+
+import matplotlib.pyplot
+import scipy.interpolate
+import numpy
+
+LEVELS = range(-95, -20, 5)
+
+def saveTemporaryHeatmap(img_w, img_h, xs, ys, zs):
+    ## Interpolate z-values throughout the 2D-space using linear radial
+    ## basis function.
+    rbf = scipy.interpolate.Rbf(xs, ys, zs, function='linear')
+    spc_w = img_w / 10
+    spc_h = img_h / 10
+    spc_xs, spc_ys = [v.flatten() for v in numpy.meshgrid(numpy.linspace(0, img_w - 1, spc_w),
+                                                          numpy.linspace(0, img_h - 1, spc_h))]
+    array2d = rbf(spc_xs, spc_ys).reshape((spc_h, spc_w))
+
+    tmpfile = QTemporaryFile()
+    if not tmpfile.open():
+        return None
+
+    matplotlib.pyplot.imsave(str(tmpfile.fileName()), array2d, format='png',
+                             vmin=min(LEVELS), vmax=max(LEVELS), cmap='RdYlBu_r')
+
+    return tmpfile
 
 class View(QGraphicsView):
 
