@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# There are some machines such as "HP Compaq dc7900 Convertible Minitower"
+# and "HP Compaq dc7900 Ultra-Slim Desktop" that, when used in conjunction
+# with
+# "Bus 002 Device 002: ID 0b05:179d ASUSTek Computer, Inc. USB-N53 802.11abgn Network Adapter [Ralink RT3572]",
+# sometimes/rarily fail to shut down unless we do this trick:
+# (probably a kernel or a BIOS bug really)
+
+[ "$1" = 'stop' ] && /sbin/modprobe -r rt2800usb
