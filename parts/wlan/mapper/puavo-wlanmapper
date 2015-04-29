@@ -34,17 +34,15 @@ import scipy.interpolate
 import numpy
 
 LEVELS = range(-95, -20, 5)
-MAX_HEATMAP_DIM = 250
 
 _temporaryHeatmapFile = QTemporaryFile()
 _temporaryHeatmapFile.open()
 
-def save_heatmap(filepath, img_w, img_h, xs, ys, zs):
+def save_heatmap(filepath, img_w, img_h, xs, ys, zs, scale_factor=0.2):
     ## Interpolate z-values throughout the 2D-space using linear radial
     ## basis function.
     rbf = scipy.interpolate.Rbf(xs, ys, zs, function='linear')
 
-    scale_factor = MAX_HEATMAP_DIM / max(img_w, img_h)
     spc_w = img_w * scale_factor
     spc_h = img_h * scale_factor
 
