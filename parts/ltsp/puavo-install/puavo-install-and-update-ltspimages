@@ -48,7 +48,7 @@ puavoinstall_libdir=/usr/lib/puavo-ltsp-install
 hosttype=""
 image_from_file=""
 image_from_nbd=""
-rate_limit_opts=""
+rate_limit=""
 quiet=false
 delete_overlays=false
 run_preinst_hook=true
@@ -75,7 +75,9 @@ while [ $# -ne 0 ]; do
       image_from_nbd="$2"; shift; shift
       ;;
     -r|--rate-limit)
-      rate_limit_opts="--limit-rate=$2"; shift; shift
+      # NOTE: acceptable rate limit parameters must be something that both
+      #       rsync (--bwlimit) and wget (--limit-rate) understand
+      rate_limit="$2"; shift; shift
       ;;
     -q|--quiet)
       quiet=true; shift;
@@ -280,10 +282,15 @@ ensure_that_default_image_is_the_current_one() {
 }
 
 fetch_with_wget() {
-  extra_wget_opts=$1
+  rate_limit=$1
   output_path=$2  
   url=$3
   phase=$4
+
+  wgetopts=""
+  if [ -n "$rate_limit" ]; then
+    wgetopts="--limit-rate=$rate_limit"
+  fi
 
   wget_error_code=$(
     {
@@ -292,7 +299,7 @@ fetch_with_wget() {
 	     --continue                                   \
 	     --output-document=${output_path}             \
 	     --progress=dot                               \
-             $extra_wget_opts                             \
+             "$wgetopts"                                  \
 	     "$url" >/dev/null                            \
 	  || echo $?
       } 3>&1 1>&2 2>&3 3>&- \
@@ -323,12 +330,12 @@ fetch_with_wget() {
 }
 
 get_checksums_file() {
-  extra_wget_opts=$1
+  rate_limit=$1
   url=$2
 
   checksum_file_path="${images_dir}/CKSUMS"
 
-  fetch_with_wget "$extra_wget_opts"          \
+  fetch_with_wget "$rate_limit"               \
 		  "${checksum_file_path}.tmp" \
 		  "$url"                      \
                   checksums_fetch             \
@@ -340,7 +347,7 @@ get_checksums_file() {
 
 get_next_image() {
   next_image=$1
-  rate_limit_opts=$2
+  rate_limit=$2
 
   image_server_list=$(lookup_image_servers)
 
@@ -366,7 +373,7 @@ get_next_image() {
 
   for image_server in $image_server_list; do
     try_rdiff_update_from_imageserver "$image_server"    \
-				      "$rate_limit_opts" \
+				      "$rate_limit"      \
 				      "$rdiff_filename"  \
 				      "$rdiffs_dir"      \
 				      "$previous_image"  \
@@ -378,16 +385,50 @@ get_next_image() {
   # servers in $image_server_list.
 
   for image_server in $image_server_list; do
-    # XXX to be done
-    false && return 0
+    try_full_image_update_from_imageserver "$image_server" \
+					   "$rate_limit"   \
+				           "$next_image"   \
+      && return 0
   done
 
   return 1
 }
 
+try_full_image_update_from_imageserver() {
+  image_server=$1
+  rate_limit=$2
+  next_image=$3
+
+  checksums_file=$(
+    get_checksums_file "$rate_limit" \
+		       "https://${image_server}/rdiffs/CKSUMS") \
+      || return 1
+
+  next_image_tmppath="${images_dir}/${next_image}.tmp"
+
+  rsyncopts=""
+  if [ -n "$rate_limit" ]; then
+    rsyncopts="--bwlimit=$rate_limit"
+  fi
+
+  # XXX how to output progress data?
+
+  rsync --append                                \
+        --partial                               \
+        "$rsyncopts"                            \
+        "${image_server}::images/${next_image}" \
+        "${images_dir}/${next_image}.tmp"       \
+    || return 1
+
+  check_image_and_put_it_to_use "$next_image"         \
+                                "$next_image_tmppath" \
+                                "$checksums_file"     \
+    || return 1
+}
+
 get_rdiff() {
   rdiffs_dir=$1
-  extra_wget_opts=$2
+  rate_limit=$2
   rdiff_filename=$3
   rdiff_url=$4
   checksums_file=$5
@@ -402,7 +443,7 @@ get_rdiff() {
   log info "we are missing the full rdiff $rdiff_filename, going to get it"
 
   rdiff_tmp="${rdiff_path}.tmp"
-  fetch_with_wget "$extra_wget_opts" "$rdiff_tmp" "$rdiff_url" rdiff_fetch \
+  fetch_with_wget "$rate_limit" "$rdiff_tmp" "$rdiff_url" rdiff_fetch \
     || return 1
   check_with_cksum "$rdiff_filename" \
                    "$rdiff_tmp"      \
@@ -662,21 +703,21 @@ set_image_as_default_image() {
 
 try_rdiff_update_from_imageserver() {
   image_server=$1
-  rate_limit_opts=$2
+  rate_limit=$2
   rdiff_filename=$3
   rdiffs_dir=$4
   previous_image=$5
   next_image=$6
 
   checksums_file=$(
-    get_checksums_file "$rate_limit_opts" \
+    get_checksums_file "$rate_limit" \
 		       "https://${image_server}/rdiffs/CKSUMS") \
       || return 1
 
   rdiff_url="https://${image_server}/rdiffs/${rdiff_filename}"
 
   get_rdiff "$rdiffs_dir"      \
-	    "$rate_limit_opts" \
+	    "$rate_limit"      \
 	    "$rdiff_filename"  \
 	    "$rdiff_url"       \
 	    "$checksums_file"  \
@@ -692,13 +733,13 @@ try_rdiff_update_from_imageserver() {
 
 update_image() {
   next_image=$1
-  rate_limit_opts=$2
+  rate_limit=$2
 
   if [ ! -e "${images_dir}/${next_image}" ]; then
     ensure_that_default_image_is_the_current_one
 
     log info "we are missing $next_image, going to get it"
-    get_next_image "$next_image" "$rate_limit_opts"
+    get_next_image "$next_image" "$rate_limit"
   fi
 
   # must call /usr/bin/test because /bin/sh is broken regarding this test
@@ -763,7 +804,7 @@ if [ -n "$image_from_file" ]; then
 elif [ -n "$image_from_nbd" ]; then
   install_image "$next_image" -nbd  "$image_from_nbd"
 else
-  update_image "$next_image" "$rate_limit_opts"
+  update_image "$next_image" "$rate_limit"
 fi
 
 exit 0
