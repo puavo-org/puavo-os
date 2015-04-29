@@ -241,17 +241,18 @@ class UpdateIndicatorApplet:
             self.set_update_button_mode(mode)
             return
 
-	# It might be strange to have phase 2 two times, but image_download
-	# and rdiff_fetch/rdiff_checksum/image_patch are alternative routes
-	# to the same result.
+        # There are two possible image update paths: image_download and
+        # and rdiff_fetch/rdiff_checksum/image_patch are alternative routes
+        # to the same result.  We use the symbol pi "π" to denote that
+        # we are going through the image download phase.
         phases = {
-          'starting':        '0',
-          'checksums_fetch': '1',
-          'image_download':  '2',
-          'rdiff_fetch':     '2',
-          'rdiff_checksum':  '3',
-          'image_patch':     '4',
-          'image_checksum':  '5',
+          'starting':        u'0',
+          'checksums_fetch': u'1',
+          'rdiff_fetch':     u'2',
+          'rdiff_checksum':  u'3',
+          'image_download':  u'π',
+          'image_patch':     u'4',
+          'image_checksum':  u'5',
         }
 
         try:
