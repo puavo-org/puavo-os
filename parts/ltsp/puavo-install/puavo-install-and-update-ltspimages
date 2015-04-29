@@ -323,7 +323,7 @@ get_next_image() {
   next_image=$1
   rate_limit_opts=$2
 
-  image_server=$(lookup_image_server_from_dns)
+  image_server_list=$(lookup_image_servers)
 
   rdiffs_dir="${images_dir}/rdiffs"
   previous_image=$(lookup_ltspimage_name_by_alias ltsp.img || true)
@@ -345,23 +345,24 @@ get_next_image() {
 
   ensure_enough_available_diskspace "$rdiffs_dir"
 
-  checksums_file=$(
-    get_checksums_file "$rate_limit_opts" \
-		       "https://${image_server}/rdiffs/CKSUMS")
+  for image_server in $image_server_list; do
+    try_rdiff_update_from_imageserver "$image_server"    \
+				      "$rate_limit_opts" \
+				      "$rdiff_filename"  \
+				      "$rdiffs_dir"      \
+				      "$previous_image"  \
+				      "$next_image"      \
+      && return 0
+  done
 
-  rdiff_url="https://${image_server}/rdiffs/${rdiff_filename}"
+  # We have failed with updates through rdiff, we try rsync fallback to all
+  # servers in $image_server_list.
 
-  get_rdiff "$rdiffs_dir"      \
-	    "$rate_limit_opts" \
-	    "$rdiff_filename"  \
-	    "$rdiff_url"       \
-	    "$checksums_file"
+  for image_server in $image_server_list; do
+    : # XXX
+  done
 
-  patch_with_rdiff "$rdiffs_dir"     \
-		   "$previous_image" \
-		   "$next_image"     \
-		   "$rdiff_filename" \
-		   "$checksums_file"
+  return 1
 }
 
 get_rdiff() {
@@ -489,26 +490,35 @@ lookup_filesize_from_cksums() {
   ' "${images_dir}/CKSUMS"
 }
 
-lookup_image_server_from_dns() {
+lookup_image_servers() {
+  all_image_servers=
+
   puavo_domain=$(cat /etc/puavo/domain)
-  image_server=$(
+  image_server_by_dns=$(
     dig SRV "_imageserver._tcp.${puavo_domain}" +search +short \
       | awk '{ sub(/\.$/, ""); printf "%s:%s", $4, $3 }')
 
-  if [ -z "$image_server" ]; then
-    # XXX take only the first image_server from "imageservers"...
-    # XXX we are not yet capable of trying out several servers
-    image_server=$(jq -r '.imageservers[]' /etc/puavo/device.json \
-		     2>/dev/null | head -1) || true
-    if [ -z "$image_server" ]; then
-      image_server="images.$(cat /etc/puavo/topdomain)"
-      log info "$(printf "%s %s\n" \
-			 "could not find the image server from DNS, " \
-			 "falling back to $image_server")"
-    fi
+  if [ -z "$image_server_by_dns" ]; then
+    log info 'could not find the image server from DNS'
+  else
+    all_image_servers="$all_image_servers $image_server_by_dns"
   fi
 
-  echo "$image_server"
+  # XXX not used yet, it is unclear if this will ever be?
+  image_servers_by_devicejson=$(
+    jq -r '.imageservers[]' /etc/puavo/device.json 2>/dev/null || true)
+
+  if [ -n "$image_servers_by_devicejson" ]; then
+    all_image_servers="$all_image_servers $image_servers_by_devicejson"
+  fi
+
+  toplevel_image_server="images.$(cat /etc/puavo/topdomain)"
+
+  all_image_servers="$all_image_servers $toplevel_image_server"
+
+  log info "using image servers: $(echo "$all_image_servers" | xargs)"
+
+  echo "$all_image_servers"
 }
 
 lookup_ltspimage_name_by_alias() {
@@ -627,6 +637,33 @@ set_image_as_default_image() {
   log notice "new ltsp image $next_image has been set as default"
 
   update_stats finished 100
+}
+
+try_rdiff_update_from_imageserver() {
+  image_server=$1
+  rate_limit_opts=$2
+  rdiff_filename=$3
+  rdiffs_dir=$4
+  previous_image=$5
+  next_image=$6
+
+  checksums_file=$(
+    get_checksums_file "$rate_limit_opts" \
+		       "https://${image_server}/rdiffs/CKSUMS")
+
+  rdiff_url="https://${image_server}/rdiffs/${rdiff_filename}"
+
+  get_rdiff "$rdiffs_dir"      \
+	    "$rate_limit_opts" \
+	    "$rdiff_filename"  \
+	    "$rdiff_url"       \
+	    "$checksums_file"
+
+  patch_with_rdiff "$rdiffs_dir"     \
+		   "$previous_image" \
+		   "$next_image"     \
+		   "$rdiff_filename" \
+		   "$checksums_file"
 }
 
 update_image() {
