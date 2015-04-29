@@ -147,6 +147,24 @@ trap interrupted INT TERM
 # subroutines
 #
 
+check_image_and_put_it_to_use() {
+  next_image=$1
+  next_image_tmppath=$2
+  checksums_file=$3
+
+  check_with_cksum "$next_image"         \
+                   "$next_image_tmppath" \
+                   "$checksums_file"     \
+                   image_checksum        \
+    || return 1
+
+  sync                                                   || return 1
+  mv "$next_image_tmppath" "${images_dir}/${next_image}" || return 1
+  sync                                                   || return 1
+
+  log notice "new ltsp image $next_image has been put into its place"
+}
+
 check_with_cksum() {
   filename=$1
   actual_file_path=$2
@@ -313,10 +331,11 @@ get_checksums_file() {
   fetch_with_wget "$extra_wget_opts"          \
 		  "${checksum_file_path}.tmp" \
 		  "$url"                      \
-                  checksums_fetch
-  mv "${checksum_file_path}.tmp" "${checksum_file_path}"
+                  checksums_fetch             \
+    || return 1
+  mv "${checksum_file_path}.tmp" "${checksum_file_path}" || return 1
 
-  echo "${checksum_file_path}"
+  echo "${checksum_file_path}" || return 1
 }
 
 get_next_image() {
@@ -359,7 +378,8 @@ get_next_image() {
   # servers in $image_server_list.
 
   for image_server in $image_server_list; do
-    : # XXX
+    # XXX to be done
+    false && return 0
   done
 
   return 1
@@ -382,14 +402,16 @@ get_rdiff() {
   log info "we are missing the full rdiff $rdiff_filename, going to get it"
 
   rdiff_tmp="${rdiff_path}.tmp"
-  fetch_with_wget  "$extra_wget_opts" "$rdiff_tmp" "$rdiff_url" rdiff_fetch
+  fetch_with_wget "$extra_wget_opts" "$rdiff_tmp" "$rdiff_url" rdiff_fetch \
+    || return 1
   check_with_cksum "$rdiff_filename" \
                    "$rdiff_tmp"      \
                    "$checksums_file" \
-                   rdiff_checksum
+                   rdiff_checksum    \
+    || return 1
 
-  sync
-  mv "$rdiff_tmp" "$rdiff_path"
+  sync || return 1
+  mv "$rdiff_tmp" "$rdiff_path" || return 1
 
   log notice "new rdiff file $rdiff_filename has been put into its place"
 }
@@ -557,27 +579,26 @@ patch_with_rdiff() {
     return 1
   fi
 
+  next_image_tmppath="${images_dir}/${next_image}.tmp"
+
   # rdiff might fail due to a corrupt rdiff-file or for some other reason.
   # We let rdiff pass through in case of failure, and we check the correctness
   # of the output right after (removing the output if the checksum is bad).
+  # (Note that we do not use pipefail, so with pv the rdiff status code does
+  # not matter anyway).
   {
     rdiff patch "${images_dir}/${previous_image}" \
 		"${rdiffs_dir}/${rdiff_filename}" \
 		-                                 \
       | { pv -n -s "$next_image_filesize" 3>&1 1>&2 2>&3 3>&- \
             | update_stats_with_progress image_patch; } \
-      > "${images_dir}/${next_image}.tmp" 2>&1
+      > "$next_image_tmppath" 2>&1
   } || true
 
-  check_with_cksum "$next_image"                     \
-		   "${images_dir}/${next_image}.tmp" \
-		   "$checksums_file"                 \
-		   image_checksum
-
-  sync
-  mv "${images_dir}/${next_image}.tmp" "${images_dir}/${next_image}"
-
-  log notice "new ltsp image $next_image has been put into its place"
+  check_image_and_put_it_to_use "$next_image"         \
+                                "$next_image_tmppath" \
+                                "$checksums_file"     \
+    || return 1
 }
 
 query_update_confirmation() {
@@ -649,7 +670,8 @@ try_rdiff_update_from_imageserver() {
 
   checksums_file=$(
     get_checksums_file "$rate_limit_opts" \
-		       "https://${image_server}/rdiffs/CKSUMS")
+		       "https://${image_server}/rdiffs/CKSUMS") \
+      || return 1
 
   rdiff_url="https://${image_server}/rdiffs/${rdiff_filename}"
 
@@ -657,13 +679,15 @@ try_rdiff_update_from_imageserver() {
 	    "$rate_limit_opts" \
 	    "$rdiff_filename"  \
 	    "$rdiff_url"       \
-	    "$checksums_file"
+	    "$checksums_file"  \
+    || return 1
 
   patch_with_rdiff "$rdiffs_dir"     \
 		   "$previous_image" \
 		   "$next_image"     \
 		   "$rdiff_filename" \
-		   "$checksums_file"
+		   "$checksums_file" \
+    || return 1
 }
 
 update_image() {
