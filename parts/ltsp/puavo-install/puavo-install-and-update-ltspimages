@@ -394,38 +394,6 @@ get_next_image() {
   return 1
 }
 
-try_full_image_update_from_imageserver() {
-  image_server=$1
-  rate_limit=$2
-  next_image=$3
-
-  checksums_file=$(
-    get_checksums_file "$rate_limit" \
-		       "https://${image_server}/rdiffs/CKSUMS") \
-      || return 1
-
-  next_image_tmppath="${images_dir}/${next_image}.tmp"
-
-  rsyncopts=""
-  if [ -n "$rate_limit" ]; then
-    rsyncopts="--bwlimit=$rate_limit"
-  fi
-
-  # XXX how to output progress data?
-
-  rsync --append                                \
-        --partial                               \
-        "$rsyncopts"                            \
-        "${image_server}::images/${next_image}" \
-        "${images_dir}/${next_image}.tmp"       \
-    || return 1
-
-  check_image_and_put_it_to_use "$next_image"         \
-                                "$next_image_tmppath" \
-                                "$checksums_file"     \
-    || return 1
-}
-
 get_rdiff() {
   rdiffs_dir=$1
   rate_limit=$2
@@ -701,6 +669,64 @@ set_image_as_default_image() {
   update_stats finished 100
 }
 
+try_full_image_update_from_imageserver() {
+  image_server=$1
+  rate_limit=$2
+  next_image=$3
+
+  checksums_file=$(
+    get_checksums_file "$rate_limit" \
+		       "https://${image_server}/rdiffs/CKSUMS") \
+      || return 1
+
+  next_image_tmppath="${images_dir}/${next_image}.tmp"
+
+  rsyncopts=""
+  if [ -n "$rate_limit" ]; then
+    rsyncopts="--bwlimit=$rate_limit"
+  fi
+
+  remotepath="${image_server}::images/${next_image}"
+
+  rsync_error_code=$(
+    {
+      {
+	rsync --append                          \
+	      --partial                         \
+	      "$rsyncopts"                      \
+	      "$remotepath"                     \
+	      "${images_dir}/${next_image}.tmp" \
+	  || echo $?
+      } 3>&1 1>&2 2>&3 3>&- \
+	| unbuffer -p awk '
+            BEGIN { progress = -1 }
+            {
+              if (match($2, /^([[:digit:]]+)%$/, a)) {
+                new_progress = a[1]
+                if (progress != new_progress) {
+                  progress = new_progress
+                  print progress
+                }
+              }
+            }
+	  ' 2>/dev/null \
+	| update_stats_with_progress image_download
+    } 2>&1 || true
+  )
+
+  if [ -n "$rsync_error_code" ]; then
+    log err "error in syncing ${remotepath}: rsync returned $rsync_error_code"
+    return 1
+  fi
+
+  log info "rsync fetched the image $next_image with success"
+
+  check_image_and_put_it_to_use "$next_image"         \
+                                "$next_image_tmppath" \
+                                "$checksums_file"     \
+    || return 1
+}
+
 try_rdiff_update_from_imageserver() {
   image_server=$1
   rate_limit=$2
@@ -776,6 +802,7 @@ update_stats_with_progress() {
   #   rdiff_fetch
   #   rdiff_checksum
   #   image_patch
+  #   image_download
   #   image_checksum
   #   finished
   #   uptodate
