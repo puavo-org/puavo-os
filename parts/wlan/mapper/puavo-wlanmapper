@@ -142,8 +142,8 @@ class Scene(QGraphicsScene):
         self.__setupAnimation()
 
     def __setupAnimation(self):
-        timeLine = QTimeLine(2000)
-        timeLine.setLoopCount(5)
+        timeLine = QTimeLine(10000)
+        timeLine.setLoopCount(1)
         timeLine.finished.connect(self.__measurementFinished)
         self.__animation = QGraphicsItemAnimation()
         self.__animation.setTimeLine(timeLine)
@@ -151,8 +151,8 @@ class Scene(QGraphicsScene):
         self.__animation.setScaleAt(0.5, 2, 2)
         self.__animation.setScaleAt(1.0, 1, 1)
         self.__animation.setRotationAt(0.0, 0)
-        self.__animation.setRotationAt(0.5, 180)
-        self.__animation.setRotationAt(1.0, 360)
+        self.__animation.setRotationAt(0.5, 900)
+        self.__animation.setRotationAt(1.0, 1800)
 
     def __measurementFinished(self):
         self.__currentSpot.setBrush(QBrush(QColor("#66ff66")))
