@@ -686,15 +686,18 @@ try_full_image_update_from_imageserver() {
     rsyncopts="--bwlimit=$rate_limit"
   fi
 
-  remotepath="${image_server}::images/${next_image}"
+  # The possible port number in $image_server is for https only
+  rsyncserver="$(echo "$image_server" | cut -d: -f1)"
+  remote_rsyncpath="${rsyncserver}::images/${next_image}"
 
   rsync_error_code=$(
     {
       {
 	rsync --append                          \
+	      --fuzzy                           \
 	      --partial                         \
 	      "$rsyncopts"                      \
-	      "$remotepath"                     \
+	      "$remote_rsyncpath"               \
 	      "${images_dir}/${next_image}.tmp" \
 	  || echo $?
       } 3>&1 1>&2 2>&3 3>&- \
@@ -714,12 +717,18 @@ try_full_image_update_from_imageserver() {
     } 2>&1 || true
   )
 
-  if [ -n "$rsync_error_code" ]; then
-    log err "error in syncing ${remotepath}: rsync returned $rsync_error_code"
-    return 1
+  if [ -z "$rsync_error_code" ]; then
+    log info "rsync fetched the image $next_image with success"
+  else
+    log err "error in rsyncing ${remote_rsyncpath}: $rsync_error_code"
+    httpurl="https://${image_server}/${next_image}"
+    log info "falling back to fetching $httpurl"
+    fetch_with_wget "$rate_limit"         \
+		    "$next_image_tmppath" \
+		    "$httpurl"            \
+		    image_download        \
+      || return 1
   fi
-
-  log info "rsync fetched the image $next_image with success"
 
   check_image_and_put_it_to_use "$next_image"         \
                                 "$next_image_tmppath" \
