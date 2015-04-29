@@ -35,7 +35,10 @@ import numpy
 
 LEVELS = range(-95, -20, 5)
 
-def saveTemporaryHeatmap(img_w, img_h, xs, ys, zs):
+_temporaryHeatmapFile = QTemporaryFile()
+_temporaryHeatmapFile.open()
+
+def save_heatmap(filepath, img_w, img_h, xs, ys, zs):
     ## Interpolate z-values throughout the 2D-space using linear radial
     ## basis function.
     rbf = scipy.interpolate.Rbf(xs, ys, zs, function='linear')
@@ -45,14 +48,8 @@ def saveTemporaryHeatmap(img_w, img_h, xs, ys, zs):
                                                           numpy.linspace(0, img_h - 1, spc_h))]
     array2d = rbf(spc_xs, spc_ys).reshape((spc_h, spc_w))
 
-    tmpfile = QTemporaryFile()
-    if not tmpfile.open():
-        return None
-
-    matplotlib.pyplot.imsave(str(tmpfile.fileName()), array2d, format='png',
+    matplotlib.pyplot.imsave(filepath, array2d, format='png',
                              vmin=min(LEVELS), vmax=max(LEVELS), cmap='RdYlBu_r')
-
-    return tmpfile
 
 class View(QGraphicsView):
 
@@ -171,8 +168,8 @@ class Scene(QGraphicsScene):
         if len(xs) > 1:
             w = self.__layoutPixmapItem.pixmap().width()
             h = self.__layoutPixmapItem.pixmap().height()
-            temporaryImageFile = saveTemporaryHeatmap(w, h, xs, ys, zs)
-            self.addPixmap(QPixmap(temporaryImageFile.fileName()).scaled(w, h)).setZValue(-2)
+            save_heatmap(_temporaryHeatmapFile.fileName(), w, h, xs, ys, zs)
+            self.addPixmap(QPixmap(_temporaryHeatmapFile.fileName()).scaled(w, h)).setZValue(-2)
 
         self.toggleSpot(self.__currentSpot)
 
