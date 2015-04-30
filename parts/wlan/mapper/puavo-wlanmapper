@@ -439,10 +439,10 @@ class MainWindow(QMainWindow):
         self.__aboutAction.setText("&About...")
         self.__aboutAction.triggered.connect(self.__showAboutDialog)
 
-        self.__loadAction = QAction(self)
-        self.__loadAction.setText("&Load layout image...")
-        self.__loadAction.setShortcut(QKeySequence("Ctrl+O"))
-        self.__loadAction.triggered.connect(self.__loadLayoutImageWithDialog)
+        self.__newSceneAction = QAction(self)
+        self.__newSceneAction.setText("&New scene...")
+        self.__newSceneAction.setShortcut(QKeySequence("Ctrl+N"))
+        self.__newSceneAction.triggered.connect(self.__newSceneDialog)
 
         self.__exportAction = QAction(self)
         self.__exportAction.setText("&Export measurements...")
@@ -457,7 +457,7 @@ class MainWindow(QMainWindow):
         menuBar = QMenuBar()
 
         fileMenu = menuBar.addMenu("&File")
-        fileMenu.addAction(self.__loadAction)
+        fileMenu.addAction(self.__newSceneAction)
         fileMenu.addAction(self.__exportAction)
         fileMenu.addSeparator()
         fileMenu.addAction(self.__quitAction)
@@ -504,13 +504,12 @@ class MainWindow(QMainWindow):
                 line = ",".join(['{}'.format(v) for v in vals])
                 csvfile.write('{}\n'.format(line))
 
-    def __loadLayoutImageWithDialog(self):
-        filepath = QFileDialog.getOpenFileName(self,
-                                               "Load layout image",
-                                               QDir.currentPath(),
-                                               "Images (*.png)")
-        if not filepath:
+    def __newSceneDialog(self):
+        sceneDialog = SceneDialog()
+        if not sceneDialog.exec_():
             return
+
+        filepath = sceneDialog.layoutImageFilePath()
 
         layoutPixmap = QPixmap(filepath, "png")
         if layoutPixmap.isNull():
@@ -544,6 +543,71 @@ class MainWindow(QMainWindow):
             "General Public License</a> for more details.</p>")
 
         QMessageBox.about(self, "About Puavo WLAN Mapper", aboutText)
+
+class SceneDialog(QDialog):
+
+    def __init__(self, *args):
+        QDialog.__init__(self, *args)
+
+        self.setModal(True)
+        self.setWindowTitle("Create new scene")
+
+        imageLineEdit = QLineEdit()
+        imageLineEdit.textChanged.connect(self.__checkImageFilePath)
+        browseButton = QPushButton("&Browse")
+        browseButton.clicked.connect(self.__getLayoutImageFileName)
+
+        channelComboBox = QComboBox()
+        channelComboBox.addItems([str(c) for c in range(1, 14)])
+        channelComboBox.setCurrentIndex(0)
+
+        cancelButton = QPushButton("&Cancel")
+        cancelButton.clicked.connect(self.reject)
+        createButton = QPushButton("Create")
+        createButton.clicked.connect(self.accept)
+        createButton.setEnabled(False)
+
+        layout = QVBoxLayout(self)
+        formLayout = QFormLayout()
+        browseLayout = QHBoxLayout()
+        buttonLayout = QHBoxLayout()
+
+        browseLayout.addWidget(imageLineEdit)
+        browseLayout.addWidget(browseButton)
+
+        formLayout.addRow("Layout image:", browseLayout)
+        formLayout.addRow("Channel:", channelComboBox)
+
+        buttonLayout.addWidget(cancelButton)
+        buttonLayout.addWidget(createButton)
+
+        layout.addLayout(formLayout)
+        layout.addLayout(buttonLayout)
+
+        self.__imageLineEdit = imageLineEdit
+        self.__createButton = createButton
+        self.__channelComboBox = channelComboBox
+
+    def layoutImageFilePath(self):
+        return self.__imageLineEdit.text()
+
+    def channel(self):
+        return int(self.__channelComboBox.currentText())
+
+    def __checkImageFilePath(self):
+        self.__createButton.setEnabled(os.path.isfile(self.__imageLineEdit.text()))
+
+    def __getLayoutImageFileName(self):
+        filepath = QFileDialog.getOpenFileName(None,
+                                               "Load layout image",
+                                               QDir.currentPath(),
+                                               "Images (*.png)")
+        if filepath:
+            self.__imageLineEdit.setText(filepath)
+
+    def sizeHint(self):
+        s = QDialog.sizeHint(self)
+        return QSize(s.width() + self.__imageLineEdit.sizeHint().width() * 2, s.height())
 
 class SceneWidget(QWidget):
 
