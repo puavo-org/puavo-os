@@ -94,7 +94,17 @@ class Scene(QGraphicsScene):
         self.__heatmaps = {}
         self.__currentHeatmap = None
 
-        self.__setupAnimation()
+        timeLine = QTimeLine(10000)
+        timeLine.setLoopCount(1)
+        timeLine.finished.connect(self.__measurementFinished)
+        self.__animation = QGraphicsItemAnimation()
+        self.__animation.setTimeLine(timeLine)
+        self.__animation.setScaleAt(0.0, 1, 1)
+        self.__animation.setScaleAt(0.5, 2, 2)
+        self.__animation.setScaleAt(1.0, 1, 1)
+        self.__animation.setRotationAt(0.0, 0)
+        self.__animation.setRotationAt(0.5, 900)
+        self.__animation.setRotationAt(1.0, 1800)
 
     def channel(self):
         return self.__channel
@@ -156,19 +166,6 @@ class Scene(QGraphicsScene):
 
         set_dot11_chan(self.__monitor.interface(), self.__channel)
         self.__monitor.start()
-
-    def __setupAnimation(self):
-        timeLine = QTimeLine(10000)
-        timeLine.setLoopCount(1)
-        timeLine.finished.connect(self.__measurementFinished)
-        self.__animation = QGraphicsItemAnimation()
-        self.__animation.setTimeLine(timeLine)
-        self.__animation.setScaleAt(0.0, 1, 1)
-        self.__animation.setScaleAt(0.5, 2, 2)
-        self.__animation.setScaleAt(1.0, 1, 1)
-        self.__animation.setRotationAt(0.0, 0)
-        self.__animation.setRotationAt(0.5, 900)
-        self.__animation.setRotationAt(1.0, 1800)
 
     def __measurementFinished(self):
         self.__currentSpot.setBrush(QBrush(QColor("#66ff66")))
