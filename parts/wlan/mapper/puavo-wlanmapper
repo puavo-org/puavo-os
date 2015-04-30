@@ -74,6 +74,8 @@ class View(QGraphicsView):
 
 class Scene(QGraphicsScene):
 
+    heatmapsAdded = pyqtSignal(QStringList)
+
     def __init__(self, monitor, *args):
         QGraphicsScene.__init__(self, *args)
 
@@ -88,7 +90,19 @@ class Scene(QGraphicsScene):
 
         self.__layoutPixmapItem = None
 
+        self.__heatmaps = {}
+        self.__currentHeatmap = None
+
         self.__setupAnimation()
+
+    def setCurrentHeatmap(self, heatmapName):
+        if self.__currentHeatmap is not None:
+            self.__currentHeatmap.setVisible(False)
+        self.__currentHeatmap = self.__heatmaps[str(heatmapName)]
+        self.__currentHeatmap.setVisible(True)
+
+    def heatmaps(self):
+        return self.__heatmaps.keys()
 
     def setLayoutPixmap(self, pixmap):
         if self.__layoutPixmapItem is not None:
@@ -163,15 +177,32 @@ class Scene(QGraphicsScene):
 
         xs = measurements.pop('x')
         ys = measurements.pop('y')
-        zs = [max(v) for v in zip(*measurements.values())]
+
+        measurements['max'] = [max(v) for v in zip(*measurements.values())]
+
+        oldHeatmapNames = set(self.__heatmaps.keys())
 
         ## To RBF-interpolate, we need more than 1 measurement point.
         if len(xs) > 1:
             w = self.__layoutPixmapItem.pixmap().width()
             h = self.__layoutPixmapItem.pixmap().height()
-            heatmap_filepath = os.path.join(_tmpdir, "heatmap.png")
-            save_heatmap(heatmap_filepath, w, h, xs, ys, zs)
-            self.addPixmap(QPixmap(heatmap_filepath).scaled(w, h)).setZValue(-2)
+
+            for heatmap_name, zs in measurements.items():
+                heatmap_filepath = os.path.join(_tmpdir, "{}.png".format(heatmap_name))
+                save_heatmap(heatmap_filepath, w, h, xs, ys, zs)
+
+                pixmap = QPixmap(heatmap_filepath).scaled(w, h)
+                try:
+                    self.__heatmaps[heatmap_name].setPixmap(pixmap)
+                except KeyError:
+                    heatmap = self.addPixmap(pixmap)
+                    heatmap.setVisible(False)
+                    heatmap.setZValue(-2)
+                    self.__heatmaps[heatmap_name] = heatmap
+
+        newHeatmapNames = list(set(self.__heatmaps.keys()) - oldHeatmapNames)
+        if newHeatmapNames:
+            self.heatmapsAdded.emit(newHeatmapNames)
 
         self.toggleSpot(self.__currentSpot)
 
@@ -445,6 +476,12 @@ class MainWindow(QMainWindow):
         self.__monitorDockWidget.setWindowTitle("Monitor")
         self.addDockWidget(Qt.LeftDockWidgetArea, self.__monitorDockWidget)
 
+        self.__sceneDockWidget = QDockWidget(self)
+        self.__sceneWidget = SceneWidget(self)
+        self.__sceneDockWidget.setWidget(self.__sceneWidget)
+        self.__sceneDockWidget.setWindowTitle("Scene")
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.__sceneDockWidget)
+
     def __exportMeasurementsWithDialog(self):
         filepath = QFileDialog.getSaveFileName(self,
                                                "Export measurements",
@@ -457,6 +494,7 @@ class MainWindow(QMainWindow):
 
     def __exportMeasurements(self, filepath):
         measurements = self.__scene.measurements()
+        print(measurements)
 
         with open(filepath, "w") as csvfile:
             header = ",".join(measurements.keys())
@@ -483,6 +521,7 @@ class MainWindow(QMainWindow):
             if self.__scene is None:
                 self.__scene = Scene(self.__monitor, self)
                 self.__view.setScene(self.__scene)
+                self.__sceneWidget.setScene(self.__scene)
 
             self.__monitor.stop()
             self.__scene.clear()
@@ -504,6 +543,28 @@ class MainWindow(QMainWindow):
             "General Public License</a> for more details.</p>")
 
         QMessageBox.about(self, "About Puavo WLAN Mapper", aboutText)
+
+class SceneWidget(QWidget):
+
+    def __init__(self, *args):
+        QWidget.__init__(self, *args)
+
+        self.__heatmapListWidget = QListWidget()
+        self.__heatmapListWidget.setSortingEnabled(True)
+        self.__heatmapListWidget.sortItems(Qt.DescendingOrder)
+
+        layout = QFormLayout(self)
+        layout.addRow("Heatmap:", self.__heatmapListWidget)
+
+    def setScene(self, scene):
+        self.__scene = scene
+        self.__scene.heatmapsAdded.connect(self.__addHeatmaps)
+        self.__heatmapListWidget.currentTextChanged.connect(self.__scene.setCurrentHeatmap)
+
+    def __addHeatmaps(self, heatmaps):
+        self.__heatmapListWidget.addItems(heatmaps)
+        if self.__heatmapListWidget.currentRow() == -1:
+            self.__heatmapListWidget.setCurrentRow(0)
 
 INTERFACES = get_dot11_interfaces()
 
