@@ -27,12 +27,14 @@ log() {
 }
 
 usage() {
-  {
-    echo "Usage:"
-    echo "  $(basename $0) [--quiet] [--delete-overlays] [--install-from-file path] next_ltsp_image_name"
-    echo "  $(basename $0) [--quiet] [--delete-overlays] [--install-from-nbd path]  next_ltsp_image_name"
-    echo "  $(basename $0) [--quiet] [--delete-overlays] [--rate-limit rate]        next_ltsp_image_name"
-  } > /dev/stderr
+  cat <<EOF > /dev/stderr
+Usage:
+  $(basename $0) [--quiet] [--delete-overlays] [--install-from-file path] next_ltsp_image_name"
+  $(basename $0) [--quiet] [--delete-overlays] [--install-from-nbd path]  next_ltsp_image_name"
+  $(basename $0) [--quiet] [--delete-overlays] [--rate-limit rate]        next_ltsp_image_name"
+
+  -r / --rate-limit must match regexp [0-9]+[km] for kilobytes/megabytes per second
+EOF
   exit 1
 }
 
@@ -75,9 +77,13 @@ while [ $# -ne 0 ]; do
       image_from_nbd="$2"; shift; shift
       ;;
     -r|--rate-limit)
-      # NOTE: acceptable rate limit parameters must be something that both
-      #       rsync (--bwlimit) and wget (--limit-rate) understand
+      # Acceptable rate limit parameters must be something that both
+      # rsync (--bwlimit) and wget (--limit-rate) understand.
       rate_limit="$2"; shift; shift
+      if ! echo "$rate_limit" | grep -Eqx '[0-9]+[km]'; then
+        log err "The rate limit was not understood, got '$rate_limit'"
+        usage
+      fi
       ;;
     -q|--quiet)
       quiet=true; shift;
@@ -297,9 +303,9 @@ fetch_with_wget() {
       {
 	wget --ca-certificate=/etc/puavo/certs/rootca.pem \
 	     --continue                                   \
-	     --output-document=${output_path}             \
+	     --output-document="${output_path}"           \
 	     --progress=dot                               \
-             "$wgetopts"                                  \
+             $wgetopts                                    \
 	     "$url" >/dev/null                            \
 	  || echo $?
       } 3>&1 1>&2 2>&3 3>&- \
@@ -695,7 +701,7 @@ try_full_image_update_from_imageserver() {
 	rsync --append                          \
 	      --fuzzy                           \
 	      --partial                         \
-	      "$rsyncopts"                      \
+	      $rsyncopts                        \
 	      "$remote_rsyncpath"               \
 	      "${images_dir}/${next_image}.tmp" \
 	  || echo $?
