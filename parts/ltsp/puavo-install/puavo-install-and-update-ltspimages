@@ -328,7 +328,7 @@ fetch_with_wget() {
   )
 
   if [ -n "$wget_error_code" ]; then
-    log err "fetching $url, wget returned error code $wget_error_code"
+    log err "fetching $url, wget error code $wget_error_code"
     return 1
   fi
 
@@ -724,7 +724,7 @@ try_full_image_update_from_imageserver() {
   if [ -z "$rsync_error_code" ]; then
     log info "rsync fetched the image $next_image with success"
   else
-    log err "error in rsyncing ${remote_rsyncpath}: $rsync_error_code"
+    log err "rsyncing ${remote_rsyncpath}: rsync error code $rsync_error_code"
     httpurl="https://${image_server}/${next_image}"
     log info "falling back to fetching $httpurl"
     fetch_with_wget "$rate_limit"         \
