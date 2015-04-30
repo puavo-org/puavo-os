@@ -143,6 +143,7 @@ class Scene(QGraphicsScene):
         if spot == self.__currentSpot:
             self.toggleSpot(spot)
         self.removeItem(spot)
+        self.__updateHeatmaps()
 
     def __startAnimation(self):
         self.__animation.setItem(self.__currentSpot)
@@ -170,6 +171,12 @@ class Scene(QGraphicsScene):
     def __measurementFinished(self):
         self.__currentSpot.setBrush(QBrush(QColor("#66ff66")))
         self.__currentSpot.measurement = self.__currentSpotMeasurements
+
+        self.toggleSpot(self.__currentSpot)
+
+        self.__updateHeatmaps()
+
+    def __updateHeatmaps(self):
 
         measurements = self.measurements()
 
@@ -201,8 +208,6 @@ class Scene(QGraphicsScene):
         newHeatmapNames = list(set(self.__heatmaps.keys()) - oldHeatmapNames)
         if newHeatmapNames:
             self.heatmapsAdded.emit(newHeatmapNames)
-
-        self.toggleSpot(self.__currentSpot)
 
     def measurements(self):
         result = collections.OrderedDict()
