@@ -467,9 +467,6 @@ class MainWindow(QMainWindow):
         if not filepath:
             return
 
-        self.loadLayoutImage(filepath)
-
-    def loadLayoutImage(self, filepath):
         layoutPixmap = QPixmap(filepath, "png")
         if layoutPixmap.isNull():
             msg = "File {} could not be loaded as a layout image.\n\n" \
