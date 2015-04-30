@@ -1,8 +1,8 @@
 IMAGES_DIR        = /opt/ltsp/images
 RDIFFS_DIR        = /opt/ltsp/images/rdiffs
-CKSUMS_DIR        = ${RDIFFS_DIR}/.cksums
-MIRROR_DIR        = ${RDIFFS_DIR}/.mirror
-SIGNATURES_DIR    = ${RDIFFS_DIR}/.signatures
+CKSUMS_DIR        = ${IMAGES_DIR}/.cksums
+MIRROR_DIR        = ${IMAGES_DIR}/mirror
+SIGNATURES_DIR    = ${IMAGES_DIR}/.signatures
 RDIFF_TARGET_DIRS = 
 
 ALL_DIRS = ${CKSUMS_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs \
@@ -10,6 +10,8 @@ ALL_DIRS = ${CKSUMS_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs \
 
 CHROOT_TARGETS = apply-buildrules chroot cleanup-chroot image \
                  install-packages update-chroot
+
+COMMON_TARGETS = all-new-images all-rdiffs cksums cleanup-mirror update-mirror
 
 IMAGE_FILES = 
 
@@ -38,11 +40,14 @@ help:
 	@echo "Available image series targets are:"
 	@echo "  ${IMAGE_SERIES}" | fmt
 	@echo
-	@echo "Available other targets are:"
+	@echo "Available chroot targets are:"
 	@echo "  ${CHROOT_TARGETS}" | fmt
 	@echo
 	@echo "Available rdiff series targets are:"
 	@echo "  ${IMAGE_SERIES_RDIFF_TARGETS}" | fmt
+	@echo
+	@echo "Available common targets are:"
+	@echo "  ${COMMON_TARGETS}" | fmt
 
 .PHONY: all-new-images
 all-new-images: ${IMAGE_SERIES}
@@ -50,13 +55,15 @@ all-new-images: ${IMAGE_SERIES}
 .PHONY: all-rdiffs
 all-rdiffs: ${RDIFF_FILES_AP}
 
+.PHONY: cksums
+cksums: ${IMAGES_DIR}/CKSUMS
+
 .PHONY: update-mirror
 update-mirror: ${MIRROR_DIR}/CKSUMS ${MIRROR_DIR_IMAGES} ${MIRROR_DIR_RDIFFS}
 
 .PHONY: cleanup-mirror
 cleanup-mirror:
-	@test -d "${MIRROR_DIR}"
-	rm -rf ${MIRROR_DIR}/*
+	@if [ -d "${MIRROR_DIR}" ]; then 	  rm -rf ${MIRROR_DIR}/*; 	else 	  echo There is no mirror directory ${MIRROR_DIR}; 	fi
 
 .PHONY: ${CHROOT_TARGETS}
 ${CHROOT_TARGETS}:
@@ -77,8 +84,11 @@ ${CKSUMS_DIR}/%.rdiff.cksum: %.rdiff | ${CKSUMS_DIR}
 	cksum $< > $@.tmp
 	mv $@.tmp $@
 
-${MIRROR_DIR}/CKSUMS: ${CKSUM_FILES_AP} | ${MIRROR_DIR}
+${IMAGES_DIR}/CKSUMS: ${CKSUM_FILES_AP} | ${MIRROR_DIR}
 	awk '{ "basename " $$3 | getline $$3; print }' ${CKSUM_FILES_AP} > $@
+
+${MIRROR_DIR}/CKSUMS: ${IMAGES_DIR}/CKSUMS
+	cp $< $@
 
 # link ${MIRROR_DIR_IMAGES}
 ${MIRROR_DIR}/%.img: %.img | ${MIRROR_DIR}
