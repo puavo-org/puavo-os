@@ -382,7 +382,6 @@ class MainWindow(QMainWindow):
         self.__scene = None
 
         self.setWindowTitle("Puavo WLAN Mapper")
-        self.setStatusBar(QStatusBar(self))
 
         self.setCentralWidget(self.__view)
 
@@ -481,8 +480,6 @@ class MainWindow(QMainWindow):
             self.__monitor.stop()
             self.__scene.clear()
             self.__scene.setLayoutPixmap(layoutPixmap)
-            self.statusBar().showMessage(
-                "Loaded layout image '{}'.".format(filepath), 5000)
 
     def __showAboutDialog(self):
         aboutText = QString.fromUtf8(
