@@ -680,8 +680,7 @@ try_full_image_update_from_imageserver() {
   next_image=$3
 
   checksums_file=$(
-    get_checksums_file "$rate_limit" \
-		       "https://${image_server}/rdiffs/CKSUMS") \
+    get_checksums_file "$rate_limit" "https://${image_server}/CKSUMS") \
       || return 1
 
   next_image_tmppath="${images_dir}/${next_image}.tmp"
@@ -750,8 +749,7 @@ try_rdiff_update_from_imageserver() {
   next_image=$6
 
   checksums_file=$(
-    get_checksums_file "$rate_limit" \
-		       "https://${image_server}/rdiffs/CKSUMS") \
+    get_checksums_file "$rate_limit" "https://${image_server}/CKSUMS") \
       || return 1
 
   rdiff_url="https://${image_server}/rdiffs/${rdiff_filename}"
