@@ -481,7 +481,6 @@ class MainWindow(QMainWindow):
 
     def __exportMeasurements(self, filepath):
         measurements = self.__scene.measurements()
-        print(measurements)
 
         with open(filepath, "w") as csvfile:
             header = ",".join(measurements.keys())
