@@ -296,7 +296,7 @@ def get_dot11_interfaces():
             result.append(iface)
     return result
 
-Beacon = collections.namedtuple('Beacon', ['rssi', 'bssid'])
+Beacon = collections.namedtuple('Beacon', ['rssi', 'bssid', 'freq', 'ssid'])
 
 class Monitor(QObject):
 
@@ -365,9 +365,10 @@ class Monitor(QObject):
 
         while self.__tshark.canReadLine():
             line = str(self.__tshark.readLine())
-            rssi, bssid = line.strip().split('|')
+            rssi, bssid, freq, ssid = line.strip().split('|')
 
-            result.append(Beacon(rssi=int(rssi), bssid=bssid))
+            result.append(Beacon(rssi=int(rssi), bssid=bssid,
+                                 freq=int(freq), ssid=ssid))
 
         return result
 
