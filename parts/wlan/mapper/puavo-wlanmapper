@@ -185,6 +185,9 @@ class Scene(QGraphicsScene):
 
         for spot in self.__spots:
 
+            if spot.measurement is None:
+                continue
+
             xs.append(int(spot.pos().x()))
             ys.append(int(spot.pos().y()))
 
@@ -192,6 +195,10 @@ class Scene(QGraphicsScene):
                 bssids.add(bssid)
 
         for spot in self.__spots:
+
+            if spot.measurement is None:
+                continue
+
             for bssid in bssids:
                 values = result.setdefault(bssid, [])
                 values.append(int(round(spot.measurement.get(bssid, min(LEVELS)))))
@@ -223,7 +230,7 @@ class Spot(QGraphicsPolygonItem):
 
         self.setAcceptHoverEvents(True)
 
-        self.measurement = {}
+        self.measurement = None
 
         self.__removeAction = QAction("&Remove", None)
         self.__removeAction.triggered.connect(self.__remove)
