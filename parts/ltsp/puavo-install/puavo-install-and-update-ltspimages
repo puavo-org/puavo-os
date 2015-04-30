@@ -326,8 +326,7 @@ fetch_with_wget() {
 	    BEGIN { progress = -1 }
 
 	    {
-	      percentage = substr($0, 63, 4)
-	      if (match(percentage, /^[[:space:]]*([[:digit:]]+)%$/, a)) {
+	      if (match($7, /^([[:digit:]]+)%$/, a)) {
 		new_progress = a[1]
 		if (progress != new_progress) {
 		  progress = new_progress
