@@ -155,6 +155,19 @@ trap interrupted INT TERM
 # subroutines
 #
 
+check_checksums_exist_for() {
+  checksums_file=$1; shift
+  for file_to_check_checksum_for in "$@"; do
+    if ! lookup_size_from_cksums "$checksums_file" \
+                                 "$file_to_check_checksum_for" >/dev/null; then
+      log err "Could not find checksum for '$file_to_check_checksum_for'"
+      return 1
+    fi
+  done
+
+  return 0
+}
+
 check_image_and_put_it_to_use() {
   next_image=$1
   next_image_tmppath=$2
@@ -377,12 +390,12 @@ get_next_image() {
   ensure_enough_available_diskspace "$rdiffs_dir"
 
   for image_server in $image_server_list; do
-    try_rdiff_update_from_imageserver "$image_server"    \
-				      "$rate_limit"      \
-				      "$rdiff_filename"  \
-				      "$rdiffs_dir"      \
-				      "$previous_image"  \
-				      "$next_image"      \
+    try_rdiff_update_from_imageserver "$image_server"   \
+				      "$rate_limit"     \
+				      "$rdiff_filename" \
+				      "$rdiffs_dir"     \
+				      "$previous_image" \
+				      "$next_image"     \
       && return 0
   done
 
@@ -518,12 +531,15 @@ install_image() {
   echo "is now installed and set as default."
 }
 
-lookup_filesize_from_cksums() {
-  awk -v filename="$(basename "$1")" '
+lookup_size_from_cksums() {
+  checksums_file=$1
+  file_to_look_filesize_for=$2
+
+  awk -v filename="$file_to_look_filesize_for" '
     BEGIN { status = 1 }
     $3 == filename { print $2; status = 0 }
     END { exit(status) }
-  ' "${images_dir}/CKSUMS"
+  ' "$checksums_file"
 }
 
 lookup_image_servers() {
@@ -588,7 +604,8 @@ patch_with_rdiff() {
   rdiff_filename=$4
   checksums_file=$5
 
-  if ! next_image_filesize=$(lookup_filesize_from_cksums "$next_image"); then
+  if ! next_image_filesize=$(lookup_size_from_cksums "$checksums_file" \
+                                                     "$next_image"); then
     log err "Could not lookup image size from CKSUMS for '${next_image}'"
     return 1
   fi
@@ -683,6 +700,9 @@ try_full_image_update_from_imageserver() {
     get_checksums_file "$rate_limit" "https://${image_server}/CKSUMS") \
       || return 1
 
+  # it is not sensible to continue if the required checksum does not exist
+  check_checksums_exist_for "$checksums_file" "$next_image" || return 1
+
   next_image_tmppath="${images_dir}/${next_image}.tmp"
 
   rsyncopts=""
@@ -751,6 +771,10 @@ try_rdiff_update_from_imageserver() {
   checksums_file=$(
     get_checksums_file "$rate_limit" "https://${image_server}/CKSUMS") \
       || return 1
+
+  # it is not sensible to continue if the required checksums do not exist
+  check_checksums_exist_for "$checksums_file" "$rdiff_filename" "$next_image" \
+    || return 1
 
   rdiff_url="https://${image_server}/rdiffs/${rdiff_filename}"
 
