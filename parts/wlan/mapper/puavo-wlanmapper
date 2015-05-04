@@ -76,14 +76,12 @@ class Scene(QGraphicsScene):
 
     heatmapsAdded = pyqtSignal(QStringList)
 
-    def __init__(self, channel, monitor, *args):
+    def __init__(self, monitor, *args):
         QGraphicsScene.__init__(self, *args)
 
-        self.__channel = channel
         self.__monitor = monitor
         self.__monitor.stopped.connect(self.__stopAnimation)
         self.__monitor.started.connect(self.__startAnimation)
-        self.__monitor.beaconsReceived.connect(self.__readBeacons)
         self.__currentSpot = None
         self.__currentSpotMeasurements = {}
 
@@ -106,9 +104,6 @@ class Scene(QGraphicsScene):
         self.__animation.setRotationAt(0.5, 900)
         self.__animation.setRotationAt(1.0, 1800)
 
-    def channel(self):
-        return self.__channel
-
     def setCurrentHeatmap(self, heatmapName):
         if self.__currentHeatmap is not None:
             self.__currentHeatmap.setVisible(False)
@@ -123,11 +118,6 @@ class Scene(QGraphicsScene):
             self.removeItem(self.__layoutPixmapItem)
         self.__layoutPixmapItem = self.addPixmap(pixmap)
         self.__layoutPixmapItem.setZValue(-1)
-
-    def __readBeacons(self):
-        for beacon in self.__monitor.readBeacons():
-            rssi = self.__currentSpotMeasurements.get(beacon.bssid, beacon.rssi)
-            self.__currentSpotMeasurements[beacon.bssid] = (beacon.rssi + rssi) / 2
 
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
@@ -165,12 +155,16 @@ class Scene(QGraphicsScene):
         self.__currentSpot = spot
         self.__currentSpotMeasurements = {}
 
-        set_dot11_chan(self.__monitor.interface(), self.__channel)
         self.__monitor.start()
 
     def __measurementFinished(self):
         self.__currentSpot.setBrush(QBrush(QColor("#66ff66")))
         self.__currentSpot.measurement = self.__currentSpotMeasurements
+
+        for beacon in self.__monitor.readBeacons():
+            bssidmap = self.__currentSpotMeasurements.setdefault(beacon.freq, {})
+            rssi = bssidmap.get(beacon.bssid, beacon.rssi)
+            bssidmap[beacon.bssid] = (beacon.rssi + rssi) / 2
 
         self.toggleSpot(self.__currentSpot)
 
@@ -183,31 +177,34 @@ class Scene(QGraphicsScene):
         xs = measurements.pop('x')
         ys = measurements.pop('y')
 
-        measurements['max'] = [max(v) for v in zip(*measurements.values())]
+        for freq, bssidmap in measurements.items():
 
-        oldHeatmapNames = set(self.__heatmaps.keys())
+            bssidmap['max'] = [max(v) for v in zip(*bssidmap.values())]
 
-        ## To RBF-interpolate, we need more than 1 measurement point.
-        if len(xs) > 1:
-            w = self.__layoutPixmapItem.pixmap().width()
-            h = self.__layoutPixmapItem.pixmap().height()
+            oldHeatmapNames = set(self.__heatmaps.keys())
 
-            for heatmap_name, zs in measurements.items():
-                heatmap_filepath = os.path.join(_tmpdir, "{}.png".format(heatmap_name))
-                save_heatmap(heatmap_filepath, w, h, xs, ys, zs)
+            ## To RBF-interpolate, we need more than 1 measurement point.
+            if len(xs) > 1:
+                w = self.__layoutPixmapItem.pixmap().width()
+                h = self.__layoutPixmapItem.pixmap().height()
 
-                pixmap = QPixmap(heatmap_filepath).scaled(w, h)
-                try:
-                    self.__heatmaps[heatmap_name].setPixmap(pixmap)
-                except KeyError:
-                    heatmap = self.addPixmap(pixmap)
-                    heatmap.setVisible(False)
-                    heatmap.setZValue(-2)
-                    self.__heatmaps[heatmap_name] = heatmap
+                for bssid, zs in bssidmap.items():
+                    heatmap_name = "%dHz_%s" % (freq, bssid)
+                    heatmap_filepath = os.path.join(_tmpdir, "{}.png".format(heatmap_name))
+                    save_heatmap(heatmap_filepath, w, h, xs, ys, zs)
 
-        newHeatmapNames = list(set(self.__heatmaps.keys()) - oldHeatmapNames)
-        if newHeatmapNames:
-            self.heatmapsAdded.emit(newHeatmapNames)
+                    pixmap = QPixmap(heatmap_filepath).scaled(w, h)
+                    try:
+                        self.__heatmaps[heatmap_name].setPixmap(pixmap)
+                    except KeyError:
+                        heatmap = self.addPixmap(pixmap)
+                        heatmap.setVisible(False)
+                        heatmap.setZValue(-2)
+                        self.__heatmaps[heatmap_name] = heatmap
+
+            newHeatmapNames = list(set(self.__heatmaps.keys()) - oldHeatmapNames)
+            if newHeatmapNames:
+                self.heatmapsAdded.emit(newHeatmapNames)
 
     def measurements(self):
         result = collections.OrderedDict()
@@ -215,7 +212,7 @@ class Scene(QGraphicsScene):
         xs = result['x'] = []
         ys = result['y'] = []
 
-        bssids = set()
+        bssidsets = {}
 
         for spot in self.__spots:
 
@@ -225,17 +222,22 @@ class Scene(QGraphicsScene):
             xs.append(int(spot.pos().x()))
             ys.append(int(spot.pos().y()))
 
-            for bssid in spot.measurement.keys():
-                bssids.add(bssid)
+            for freq, bssids in spot.measurement.items():
+                bssidset = bssidsets.setdefault(freq, set())
+                for bssid in bssids:
+                    bssidset.add(bssid)
 
         for spot in self.__spots:
 
             if spot.measurement is None:
                 continue
 
-            for bssid in bssids:
-                values = result.setdefault(bssid, [])
-                values.append(int(round(spot.measurement.get(bssid, min(LEVELS)))))
+            for freq, bssidset in bssidsets.items():
+                bssidmap = result.setdefault(freq, {})
+                for bssid in bssidset:
+                    values = bssidmap.setdefault(bssid, [])
+                    value = spot.measurement.get(freq, {}).get(bssid, min(LEVELS))
+                    values.append(int(round(value)))
 
         return result
 
@@ -292,11 +294,6 @@ class Spot(QGraphicsPolygonItem):
     def contextMenuEvent(self, event):
         self.__contextMenu.exec_(event.screenPos())
 
-def set_dot11_chan(iface, chan):
-    if QProcess.execute('/sbin/iwconfig', [iface, 'channel', '{}'.format(chan)]) != 0:
-        return False
-    return True
-
 def get_dot11_interfaces():
     result = []
     for iface in os.listdir('/sys/class/net'):
@@ -310,14 +307,15 @@ class Monitor(QObject):
 
     started = pyqtSignal()
     stopped = pyqtSignal()
-    beaconsReceived = pyqtSignal()
 
     def __init__(self, interface, *args):
         QObject.__init__(self, *args)
 
         self.__iface = interface
 
-        self.__tshark = None
+        self.__process = None
+        self.__horst_outfile_path = os.path.join(_tmpdir, 'horst.out')
+        self.__horst_configfile_path = os.path.join(_tmpdir, 'horst.conf')
 
     def interface(self):
         return self.__iface
@@ -326,7 +324,7 @@ class Monitor(QObject):
         self.__iface = interface
 
     def start(self):
-        if self.__tshark is not None:
+        if self.__process is not None:
             return False
 
         if QProcess.execute('/sbin/ifconfig', [self.__iface, 'down']) != 0:
@@ -338,37 +336,43 @@ class Monitor(QObject):
         if QProcess.execute('/sbin/ifconfig', [self.__iface, 'up']) != 0:
             return False
 
-        self.__tshark = QProcess(self)
-        self.__tshark.readyReadStandardOutput.connect(self.beaconsReceived)
-        self.__tshark.started.connect(self.started)
-        self.__tshark.finished.connect(self.stopped)
-        tshark_args = ['-i', self.__iface,
-                       '-l', # Line-buffered mode, otherwise tshark
-                             # outputs frames in big lumps.
-                       '-f', 'wlan[0] == 0x80',
-                       '-T', 'fields',
-                       '-E', 'separator=|',
-                       '-e', 'radiotap.dbm_antsignal',
-                       '-e', 'wlan.ta',
-                       '-e', 'radiotap.channel.freq',
-                       '-e', 'wlan_mgt.ssid']
-        self.__tshark.start('/usr/bin/tshark', tshark_args, QIODevice.ReadOnly)
+        self.__process = QProcess(self)
+
+        self.__process.started.connect(self.started)
+        self.__process.finished.connect(self.stopped)
+
+        with open(self.__horst_configfile_path, 'w') as f:
+            f.write('quiet\n')
+            f.write('interface = {}\n'.format(self.__iface))
+            f.write('filter_packet = BEACON\n')
+            f.write('channel_upper = 48\n')
+            f.write('channel_scan\n')
+            f.write('outfile = {}\n'.format(self.__horst_outfile_path))
+
+        args = ['-c', self.__horst_configfile_path]
+
+        self.__process.start('/usr/sbin/horst', args, QIODevice.ReadOnly)
+
         return True
 
     def stop(self):
-        if self.__tshark:
-            self.__tshark.close()
-            self.__tshark = None
+        if self.__process:
+            self.__process.close()
+            self.__process = None
 
     def readBeacons(self):
         result = []
 
-        while self.__tshark.canReadLine():
-            line = str(self.__tshark.readLine())
-            rssi, bssid, freq, ssid = line.strip().split('|')
+        with open(self.__horst_outfile_path) as f:
+            for line in f:
+                fields = [s.strip() for s in line.strip().split(',')]
+                bssid = fields[1]
+                rssi = fields[5]
+                freq = fields[10]
+                ssid = fields[12]
 
-            result.append(Beacon(rssi=int(rssi), bssid=bssid,
-                                 freq=int(freq), ssid=ssid))
+                result.append(Beacon(rssi=int(rssi), bssid=bssid,
+                                     freq=int(freq), ssid=ssid))
 
         return result
 
@@ -500,7 +504,6 @@ class MainWindow(QMainWindow):
             return
 
         filepath = sceneDialog.layoutImageFilePath()
-        channel = sceneDialog.channel()
 
         layoutPixmap = QPixmap(filepath, "png")
         if layoutPixmap.isNull():
@@ -509,7 +512,7 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Failed to load a layout image",
                                  msg.format(filepath))
         else:
-            self.__scene = Scene(channel, self.__monitor)
+            self.__scene = Scene(self.__monitor)
             self.__view.setScene(self.__scene)
             self.__sceneWidget.setScene(self.__scene)
             self.__monitor.stop()
@@ -545,10 +548,6 @@ class SceneDialog(QDialog):
         browseButton = QPushButton("&Browse")
         browseButton.clicked.connect(self.__getLayoutImageFileName)
 
-        channelComboBox = QComboBox()
-        channelComboBox.addItems([str(c) for c in range(1, 14)])
-        channelComboBox.setCurrentIndex(0)
-
         cancelButton = QPushButton("&Cancel")
         cancelButton.clicked.connect(self.reject)
         createButton = QPushButton("Create")
@@ -564,7 +563,6 @@ class SceneDialog(QDialog):
         browseLayout.addWidget(browseButton)
 
         formLayout.addRow("Layout image:", browseLayout)
-        formLayout.addRow("Channel:", channelComboBox)
 
         buttonLayout.addWidget(cancelButton)
         buttonLayout.addWidget(createButton)
@@ -574,13 +572,9 @@ class SceneDialog(QDialog):
 
         self.__imageLineEdit = imageLineEdit
         self.__createButton = createButton
-        self.__channelComboBox = channelComboBox
 
     def layoutImageFilePath(self):
         return self.__imageLineEdit.text()
-
-    def channel(self):
-        return int(self.__channelComboBox.currentText())
 
     def __checkImageFilePath(self):
         self.__createButton.setEnabled(os.path.isfile(self.__imageLineEdit.text()))
@@ -610,11 +604,8 @@ class SceneWidget(QWidget):
         self.__heatmapListWidget.setSortingEnabled(True)
         self.__heatmapListWidget.sortItems(Qt.DescendingOrder)
 
-        self.__channelLabel = QLabel()
-
         layout = QFormLayout(self)
         layout.addRow("Heatmap:", self.__heatmapListWidget)
-        layout.addRow("Channel:", self.__channelLabel)
 
     def setScene(self, scene):
         if scene is self.__scene:
@@ -625,7 +616,6 @@ class SceneWidget(QWidget):
         if self.__scene is not None:
             self.__scene.heatmapsAdded.disconnect(self.__addHeatmaps)
             self.__heatmapListWidget.currentTextChanged.disconnect(self.__scene.setCurrentHeatmap)
-            self.__channelLabel.setText('')
             self.__heatmapListWidget.clear()
 
         self.__scene = scene
@@ -635,7 +625,6 @@ class SceneWidget(QWidget):
 
         self.__scene.heatmapsAdded.connect(self.__addHeatmaps)
         self.__heatmapListWidget.currentTextChanged.connect(self.__scene.setCurrentHeatmap)
-        self.__channelLabel.setText(str(self.__scene.channel()))
         self.__addHeatmaps(self.__scene.heatmaps())
 
     def __addHeatmaps(self, heatmaps):
