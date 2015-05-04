@@ -41,7 +41,7 @@ install_image $install_args
 umount "$images_dir"
 dmsetup remove puavoinstaller-installimages
 
-# do not leak file descriptors to vgchange, hence "3>&- 4>&-"
-vgchange -a n puavoinstaller 3>&- 4>&-
+# do not leak file descriptors to vgchange, hence "3>&- 4>&- 5>&- 6>&-"
+vgchange -a n puavoinstaller 3>&- 4>&- 5>&- 6>&-
 
 rmdir /installimages

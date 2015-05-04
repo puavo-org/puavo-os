@@ -3,14 +3,17 @@
 # obtain an exclusive lock on myself...
 # there should be only one instance of this program running
 
-exec 3<$0
-flock -nx 3 || { echo did not get a lock, exiting; exit 1; }
+exec 4<$0
+flock -nx 4 || { echo did not get a lock, exiting; exit 1; }
 
 #
 # argument parsing
 #
 
 set -eu
+
+exec 5>&1	# another way to write to stdout for log()
+exec 6>&2	# another way to write to stderr for log()
 
 log() {
   log_to_stdout=false
@@ -29,8 +32,8 @@ log() {
       ;;
   esac
 
-  $log_to_stdout && echo "$logmessage"
-  $log_to_stderr && echo "$logmessage" >&2
+  $log_to_stdout && echo "$logmessage" >&5
+  $log_to_stderr && echo "$logmessage" >&6
 
   echo "$logmessage" \
     | logger -p "$logpriority" -t puavo-install-and-update-ltspimages
