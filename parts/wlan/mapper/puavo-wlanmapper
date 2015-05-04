@@ -411,7 +411,29 @@ class MonitorWidget(QWidget):
         self.__dwellSpinBox.setSingleStep(10)
         self.__dwellSpinBox.setValue(monitor.channelDwellTime())
         self.__dwellSpinBox.valueChanged.connect(self.__saveDwell)
-        layout.addRow("Channel dwell time:", self.__dwellSpinBox)
+
+        dwellWhatsThis = """
+        <p>
+
+        <i>Channel dwell time</i> defines the time (in milliseconds) the
+        monitor stays on one channel while it is measuring and hopping channels.
+
+        </p>
+
+        <p>
+
+        The longer the dwell time the more complete the set of found BSS IDs,
+        because the monitor has more chances to hear beacons. To maximize the
+        chances of hearing beacons from all surrounding APs, the channel dwell
+        time should be set a bit higher than the shortest expected beacon
+        interval. In practice, 1100ms should be enough.
+
+        </p>"""
+
+        self.__dwellSpinBox.setWhatsThis(dwellWhatsThis)
+        dwellLabel = QLabel("Channel dwell time:")
+        dwellLabel.setWhatsThis(dwellWhatsThis)
+        layout.addRow(dwellLabel, self.__dwellSpinBox)
 
         self.setLayout(layout)
 
@@ -471,6 +493,8 @@ class MainWindow(QMainWindow):
         self.__quitAction.setShortcut(QKeySequence("Ctrl+Q"))
         self.__quitAction.triggered.connect(self.close)
 
+        self.__whatsThisAction = QWhatsThis.createAction()
+
     def __setupMenus(self):
         menuBar = QMenuBar()
 
@@ -484,6 +508,7 @@ class MainWindow(QMainWindow):
         viewMenu.addAction(self.__monitorDockWidget.toggleViewAction())
 
         helpMenu = menuBar.addMenu("&Help")
+        helpMenu.addAction(self.__whatsThisAction)
         helpMenu.addAction(self.__aboutAction)
 
         self.setMenuBar(menuBar)
