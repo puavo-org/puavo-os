@@ -179,8 +179,6 @@ class Scene(QGraphicsScene):
 
         for freq, bssidmap in measurements.items():
 
-            bssidmap['max'] = [max(v) for v in zip(*bssidmap.values())]
-
             oldHeatmapNames = set(self.__heatmaps.keys())
 
             ## To RBF-interpolate, we need more than 1 measurement point.
