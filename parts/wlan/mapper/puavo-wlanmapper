@@ -101,8 +101,8 @@ class Scene(QGraphicsScene):
         self.__animation.setScaleAt(0.5, 2, 2)
         self.__animation.setScaleAt(1.0, 1, 1)
         self.__animation.setRotationAt(0.0, 0)
-        self.__animation.setRotationAt(0.5, 900)
-        self.__animation.setRotationAt(1.0, 1800)
+        self.__animation.setRotationAt(0.5, 0.09 * timeLine.duration())
+        self.__animation.setRotationAt(1.0, 0.18 * timeLine.duration())
 
     def setCurrentHeatmap(self, heatmapName):
         if self.__currentHeatmap is not None:
