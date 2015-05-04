@@ -113,7 +113,9 @@ class UpdateIndicatorApplet:
                              + "\n"
 
         if not error:
-            self.log_buffer.insert_with_tags(end_iter, timestamped_text)
+            self.log_buffer.insert_with_tags(end_iter,
+                                             timestamped_text,
+                                             self.log_ok_tag)
             print(timestamped_text, end='')
         else:
             self.log_buffer.insert_with_tags(end_iter,
@@ -176,7 +178,7 @@ class UpdateIndicatorApplet:
         self.on_update_progress_indicator('interrupted')
         self.on_update_available()
 
-        self.append_text_to_log( _tr('Update cancelled.') + "\n" )
+        self.append_error_to_log( _tr('Update cancelled.') + "\n" )
         self.append_text_to_log(outmsg)
         self.append_error_to_log(errmsg)
 
@@ -202,7 +204,7 @@ class UpdateIndicatorApplet:
         self.indicator.set_attention_icon('update-error')
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
-        self.append_text_to_log( _tr('Update failed.') + "\n" )
+        self.append_error_to_log( _tr('Update failed.') + "\n" )
         self.append_text_to_log(outmsg)
         self.append_error_to_log(errmsg)
 
@@ -347,6 +349,8 @@ class UpdateIndicatorApplet:
 
         self.log_dialog.set_default_size(600, 300)
         self.log_buffer = gtk.TextBuffer()
+
+        self.log_ok_tag    = self.log_buffer.create_tag(foreground='green')
         self.log_error_tag = self.log_buffer.create_tag(foreground='red',
                                                         left_margin=20)
 
