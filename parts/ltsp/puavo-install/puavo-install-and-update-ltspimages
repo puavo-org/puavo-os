@@ -94,7 +94,7 @@ while [ $# -ne 0 ]; do
       # rsync (--bwlimit) and wget (--limit-rate) understand.
       rate_limit="$2"; shift; shift
       if ! echo "$rate_limit" | grep -Eqx '[0-9]+[km]'; then
-        log err "The rate limit was not understood, got '$rate_limit'"
+        log err "the rate limit was not understood, got '$rate_limit'"
         usage
       fi
       ;;
@@ -173,7 +173,7 @@ check_checksums_exist_for() {
   for file_to_check_checksum_for in "$@"; do
     if ! lookup_size_from_cksums "$checksums_file" \
                                  "$file_to_check_checksum_for" >/dev/null; then
-      log err "Could not find checksum for '$file_to_check_checksum_for'"
+      log err "could not find checksum for '$file_to_check_checksum_for'"
       return 1
     fi
   done
@@ -218,8 +218,7 @@ check_with_cksum() {
     log info "checksum for file $filename is okay"
     return 0
   else
-    log err \
-      "file $filename failed checksum check, removing $actual_file_path"
+    log err "file $filename failed checksum check, removing $actual_file_path"
     rm -f "$actual_file_path"
     return 1
   fi
@@ -297,18 +296,18 @@ ensure_that_default_image_is_the_current_one() {
   default_image=$(lookup_ltspimage_name_by_alias ltsp.img || true)
 
   if [ -z "$booted_image" ]; then
-    log err "Could not determine the current ltspimage"
+    log err "could not determine the current ltspimage"
     return 1
   fi
 
   if [ "$booted_image" != "$default_image" ]; then
     if [ ! -e "${images_dir}/${booted_image}" ]; then
-      log err "Booted from image '${booted_image}', but it does not exist!"
+      log err "booted from image '${booted_image}', but it does not exist!"
       return 1
     fi
 
     log notice \
-        "Not booted the default image, setting '${booted_image}' as default"
+        "not booted the default image, setting '${booted_image}' as default"
     set_image_as_default_image "$booted_image"
   fi
 }
@@ -386,7 +385,7 @@ get_next_image() {
   previous_image=$(lookup_ltspimage_name_by_alias ltsp.img || true)
 
   if [ -z "$previous_image" ]; then
-    log err 'Could not determine the current ltsp image name'
+    log err 'could not determine the current ltsp image name'
     return 1
   fi
 
@@ -504,7 +503,7 @@ install_from_file_or_nbd() {
 		       ')
       ;;
     *)
-      log err "Internal error in install_from_file_or_nbd()"
+      log err "internal error in install_from_file_or_nbd()"
       return 1
       ;;
   esac
@@ -618,7 +617,7 @@ patch_with_rdiff() {
 
   if ! next_image_filesize=$(lookup_size_from_cksums "$checksums_file" \
                                                      "$next_image"); then
-    log err "Could not lookup image size from CKSUMS for '${next_image}'"
+    log err "could not lookup image size from CKSUMS for '${next_image}'"
     return 1
   fi
 
