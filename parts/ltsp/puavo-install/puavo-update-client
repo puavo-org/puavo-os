@@ -79,7 +79,7 @@ dbus_cmd="
 
 if ! $do_image_update; then
     # do only the configuration update
-    if $dbus_cmd org.puavo.client.update.UpdateConfiguration; then
+    if $dbus_cmd org.puavo.client.update.UpdateConfiguration >/dev/null; then
         echo 'Configuration update started.'
     else
         echo 'Starting configuration update failed.' >&2
@@ -89,7 +89,7 @@ else
     # do the whole update (configuration update + image update)
     if $dbus_cmd org.puavo.client.update.Update \
                  "boolean:${use_rate_limit}"    \
-                 "boolean:${delete_overlays}"; then
+                 "boolean:${delete_overlays}" >/dev/null; then
         echo 'System update started.'
     else
         echo 'Starting system update failed.' >&2
