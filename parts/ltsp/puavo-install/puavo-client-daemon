@@ -46,7 +46,7 @@ class Updater < DBus::Object
 
       begin
 	if not system('/usr/lib/puavo-ltsp-install/is-update-available') then
-	  return ''
+	  Thread.exit
 	end
 
 	self.UpdateStarted
