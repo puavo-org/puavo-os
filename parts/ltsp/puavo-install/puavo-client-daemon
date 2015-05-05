@@ -112,7 +112,7 @@ class Updater < DBus::Object
       end
     end
 
-    dbus_method :HasOldOverlays, "out b" do
+    dbus_method :HasOldOverlays, 'out b' do
       output, errput, status \
         = Open3.capture3('/usr/lib/puavo-ltsp-install/ls-old-imageoverlays',
                          '/images',
@@ -124,7 +124,7 @@ class Updater < DBus::Object
     end
 
     dbus_method :Update,
-                'in use_rate_limit:b, in delete_overlays:b, out s' do
+                'in use_rate_limit:b, in delete_overlays:b, out b' do
       |use_rate_limit, delete_overlays|
         Thread.new do
           ($configuration_update_thread || self.configuration_update()) \
@@ -133,23 +133,17 @@ class Updater < DBus::Object
                                                      delete_overlays)) \
             .join
         end
-
-        return "Configuration and image updates triggered.\n"
     end
 
-    dbus_method :UpdateConfiguration, "out s" do
-      return "Configuration update is in progress.\n" \
-        if $configuration_update_thread
-      self.configuration_update()
-      return "Configuration update started.\n"
+    dbus_method :UpdateConfiguration, 'out b' do
+      self.configuration_update() unless $configuration_update_thread
     end
 
     dbus_method :UpdateImages,
-                'in use_rate_limit:b, in delete_overlays:b, out s' do
+                'in use_rate_limit:b, in delete_overlays:b, out b' do
       |use_rate_limit, delete_overlays|
-        return "Image update is in progress.\n" if $image_update_thread
-        self.image_update(use_rate_limit, delete_overlays)
-        return "Image update started.\n"
+        self.image_update(use_rate_limit, delete_overlays) \
+          unless $image_update_thread
     end
 
     dbus_method :UpdateProgress,

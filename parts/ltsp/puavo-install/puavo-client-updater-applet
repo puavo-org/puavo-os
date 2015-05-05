@@ -133,8 +133,9 @@ class UpdateIndicatorApplet:
         self.set_update_button_mode('checking')
 
         self.update_iface \
-            .UpdateConfiguration(reply_handler=self.append_text_to_log,
-                                 error_handler=self.append_error_to_log)
+            .UpdateConfiguration(
+               reply_handler=lambda: None,
+               error_handler=self.handle_dbus_error)
 
 
     def connect_to_dbus(self):
@@ -158,6 +159,11 @@ class UpdateIndicatorApplet:
                                             self.on_update_failed)
         self.update_iface.connect_to_signal('UpdateCompleted',
                                             self.on_update_completed)
+
+
+    def handle_dbus_error(dbusexception):
+        self.append_error_to_log('Unknown dbus error.')
+        self.on_update_failed()
 
 
     def notify(self, msg):
@@ -389,8 +395,8 @@ class UpdateIndicatorApplet:
         self.update_iface \
             .UpdateImages(False,
                           delete_overlays,
-                          reply_handler=self.append_text_to_log,
-                          error_handler=self.append_error_to_log)
+                          reply_handler=lambda: None,
+                          error_handler=self.handle_dbus_error)
 
         self.set_update_button_mode('updating')
         self.on_update_progress_indicator('starting')
