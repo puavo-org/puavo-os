@@ -178,6 +178,8 @@ class UpdateIndicatorApplet:
 
         # show only once after each login
         if not self.available_notice_shown:
+            self.append_text_to_log( _tr('A new system update is available.') \
+                                       + "\n" )
             self.notify( _tr('A new system update is available.') )
             self.available_notice_shown = True
 
@@ -223,11 +225,13 @@ class UpdateIndicatorApplet:
             self.indicator.set_icon('update-idle')
             self.indicator.set_status(appindicator.STATUS_ACTIVE)
 
+
     def on_update_message(self, msgtype, content):
         if msgtype == 'ok':
             self.append_text_to_log(content)
         elif msgtype == 'error':
             self.append_error_to_log(content)
+
 
     def on_update_progress_indicator(self, phase, progress=0):
         mode, text = None, None
@@ -289,6 +293,9 @@ class UpdateIndicatorApplet:
         self.set_update_button_mode('updating')
         self.indicator.set_attention_icon('update-downloading')
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
+
+        self.append_text_to_log( _tr('System update has been started.') \
+                                   + "\n" )
 
         self.notify( _tr('System update has been started.') )
 
