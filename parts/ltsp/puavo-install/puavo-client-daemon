@@ -109,6 +109,8 @@ class Updater < DBus::Object
     dbus_method :CancelImageUpdate, '' do
       if $image_update_thread then
         $image_update_thread.raise(CancelledImageUpdate, 'Cancel image update')
+      else
+        self.UpdateCancelled
       end
     end
 
