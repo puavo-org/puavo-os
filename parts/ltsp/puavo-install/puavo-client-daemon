@@ -58,19 +58,24 @@ class Updater < DBus::Object
 			 { :pgroup => true })
 
 	stdin.close
-	output, errput = '', ''
-	out_thr = Thread.new { output = stdout.read }
-	err_thr = Thread.new { errput = stderr.read }
+	out_thr = Thread.new do
+	  loop { self.UpdateMessage('ok', stdout.readline) } \
+	    rescue EOFError
+        end
+	err_thr = Thread.new do
+	  loop { self.UpdateMessage('error', stderr.readline) } \
+	    rescue EOFError
+	end
 
 	status = wait_thr.value
 
 	[ out_thr, err_thr ].each { |t| t.join if t }
 
 	if not status.success? then
-	  self.UpdateFailed(output, errput)
-	  raise "failed to update device images: #{ errput }"
+	  self.UpdateFailed
+	  raise "Failed to update device images"
 	end
-	self.UpdateCompleted(output, errput)
+	self.UpdateCompleted
 
       rescue CancelledImageUpdate => e
 	if wait_thr then
@@ -80,11 +85,9 @@ class Updater < DBus::Object
 	  wait_thr.join
 
 	  [ out_thr, err_thr ].each { |t| t.join if t }
-
-	  self.UpdateCancelled(output, errput)
-	else
-	  self.UpdateCancelled('', '')
 	end
+
+	self.UpdateCancelled
 
       ensure
 	[ out_thr, err_thr ].each { |t| t.exit if t }
@@ -95,12 +98,13 @@ class Updater < DBus::Object
 
   dbus_interface "org.puavo.client.update" do
     dbus_signal :UpdateAvailable
-    dbus_signal :UpdateCancelled,         'in outmsg:s, in errmsg:s'
-    dbus_signal :UpdateFailed,            'in outmsg:s, in errmsg:s'
-    dbus_signal :UpdateCompleted,         'in outmsg:s, in errmsg:s'
+    dbus_signal :UpdateCancelled
+    dbus_signal :UpdateCompleted
+    dbus_signal :UpdateFailed
+    dbus_signal :UpdateIsUpToDate,        'in reboot_required:b'
+    dbus_signal :UpdateMessage,           'in msgtype:s, in content:s'
     dbus_signal :UpdateProgressIndicator, 'in phase:s, in progress:i'
     dbus_signal :UpdateStarted
-    dbus_signal :UpdateIsUpToDate,        'in reboot_required:b'
 
     dbus_method :CancelImageUpdate, '' do
       if $image_update_thread then

@@ -146,6 +146,8 @@ class UpdateIndicatorApplet:
                                             self.on_update_isuptodate)
         self.update_iface.connect_to_signal('UpdateAvailable',
                                             self.on_update_available)
+        self.update_iface.connect_to_signal('UpdateMessage',
+                                            self.on_update_message)
         self.update_iface.connect_to_signal('UpdateStarted',
                                             self.on_update_started)
         self.update_iface.connect_to_signal('UpdateProgressIndicator',
@@ -174,39 +176,33 @@ class UpdateIndicatorApplet:
             self.available_notice_shown = True
 
 
-    def on_update_cancelled(self, outmsg, errmsg):
+    def on_update_cancelled(self):
         self.on_update_progress_indicator('interrupted')
         self.on_update_available()
 
         self.append_error_to_log( _tr('Update cancelled.') + "\n" )
-        self.append_text_to_log(outmsg)
-        self.append_error_to_log(errmsg)
 
         self.notify( _tr('System update has been cancelled.') )
 
 
-    def on_update_completed(self, outmsg, errmsg):
+    def on_update_completed(self):
         self.set_update_button_mode('check')
 
         self.on_update_isuptodate(True)
 
         self.append_text_to_log( _tr('Update completed.') + "\n" )
-        self.append_text_to_log(outmsg)
-        self.append_error_to_log(errmsg)
 
         self.available_notice_shown = False
         self.notify( _tr('System update is finished, reboot the computer.') )
 
 
-    def on_update_failed(self, outmsg, errmsg):
+    def on_update_failed(self):
         self.set_update_button_mode('update')
 
         self.indicator.set_attention_icon('update-error')
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
         self.append_error_to_log( _tr('Update failed.') + "\n" )
-        self.append_text_to_log(outmsg)
-        self.append_error_to_log(errmsg)
 
         self.notify( _tr('An error occurred when updating the system.') )
 
@@ -221,6 +217,11 @@ class UpdateIndicatorApplet:
             self.indicator.set_icon('update-idle')
             self.indicator.set_status(appindicator.STATUS_ACTIVE)
 
+    def on_update_message(self, msgtype, content):
+        if msgtype == 'ok':
+            self.append_text_to_log(content)
+        elif msgtype == 'error':
+            self.append_error_to_log(content)
 
     def on_update_progress_indicator(self, phase, progress=0):
         mode, text = None, None
