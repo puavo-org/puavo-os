@@ -227,7 +227,7 @@ class UpdateIndicatorApplet:
 
 
     def on_update_message(self, msgtype, content):
-        prefixed_message = '    > %s' % content
+        prefixed_message = '        > %s' % content
         if msgtype == 'ok':
             self.append_text_to_log(prefixed_message)
         elif msgtype == 'error':
@@ -366,8 +366,7 @@ class UpdateIndicatorApplet:
         self.log_buffer = gtk.TextBuffer()
 
         self.log_ok_tag    = self.log_buffer.create_tag(foreground='green')
-        self.log_error_tag = self.log_buffer.create_tag(foreground='red',
-                                                        left_margin=20)
+        self.log_error_tag = self.log_buffer.create_tag(foreground='red')
 
         self.log_view = gtk.TextView(self.log_buffer)
         self.log_view.set_editable(False)
