@@ -227,10 +227,11 @@ class UpdateIndicatorApplet:
 
 
     def on_update_message(self, msgtype, content):
+        prefixed_message = '    > %s' % content
         if msgtype == 'ok':
-            self.append_text_to_log(content)
+            self.append_text_to_log(prefixed_message)
         elif msgtype == 'error':
-            self.append_error_to_log(content)
+            self.append_error_to_log(prefixed_message)
 
 
     def on_update_progress_indicator(self, phase, progress=0):
