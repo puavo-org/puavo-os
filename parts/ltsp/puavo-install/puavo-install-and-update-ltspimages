@@ -238,7 +238,8 @@ cksum_with_progress() {
 
 cleanup_previous_runs() {
   rdiffs_dir=$1
-  preserve_filename=$2
+  preserve_imagefile=$2
+  preserve_rdifffile=$3
 
   old_imageoverlays=$(
     "${puavoinstall_libdir}/ls-old-imageoverlays" "${images_dir}" \
@@ -257,18 +258,23 @@ cleanup_previous_runs() {
   old_images=$("${puavoinstall_libdir}/ls-old-images" "${images_dir}")
   if [ -n "${old_images}" ]; then
     echo -n "${old_images}" \
-      | grep -vx "${images_dir}/${preserve_filename}" \
+      | fgrep -vx "${images_dir}/${preserve_imagefile}" \
       | xargs -r -d'\n' -L1 rm -f
   fi
 
   # cleanup old rdiff files, except those that we want to use right now
   if [ -d "$rdiffs_dir" ]; then
-    find "$rdiffs_dir" -maxdepth 1 -type f -a \
-      '(' '(' -name '*.rdiff' -o -name '*.rdiff.tmp' ')' \
-	  -a '!' '('    -name "${preserve_filename}" \
-		     -o -name "${preserve_filename}.tmp" ')' ')' \
-      -print0 \
-    | xargs -0 rm -f
+    if [ -z "$preserve_rdifffile" ]; then
+      find "$rdiffs_dir" -maxdepth 1 \
+             -type f -a '(' -name '*.rdiff' -o -name '*.rdiff.tmp' ')' -print0
+    else
+      find "$rdiffs_dir" -maxdepth 1                                     \
+             -type f -a '('                                              \
+               '(' -name '*.rdiff' -o -name '*.rdiff.tmp' ')'            \
+	          -a '!' '('   -name "${preserve_rdifffile}"             \
+		            -o -name "${preserve_rdifffile}.tmp" ')' ')' \
+        -print0
+    fi | xargs -0 rm -f
   fi
 }
 
@@ -396,7 +402,7 @@ get_next_image() {
 
   mkdir -p "$rdiffs_dir"
 
-  cleanup_previous_runs "$rdiffs_dir" "$rdiff_filename"
+  cleanup_previous_runs "$rdiffs_dir" "${next_image}.tmp" "$rdiff_filename"
 
   ensure_enough_available_diskspace "$rdiffs_dir"
 
@@ -491,12 +497,12 @@ install_from_file_or_nbd() {
   case "$type_opt" in
     -file)
       image_src_path=$type_arg
-      preserve_filename=$(basename "$image_src_path")
+      preserve_imagefile=$(basename "$image_src_path")
       total_size=$(du -k "$image_src_path" | awk '{ print $1 "k" }')
       ;;
     -nbd)
       image_src_path=$type_arg
-      preserve_filename=''
+      preserve_imagefile=''
       total_size=$(df "$image_src_path" \
 		     | awk -v image_src_path="$image_src_path" '
 			 $1 == image_src_path { print $2 "k" }
@@ -508,7 +514,7 @@ install_from_file_or_nbd() {
       ;;
   esac
 
-  cleanup_previous_runs "${images_dir}/rdiffs" "$preserve_filename"
+  cleanup_previous_runs "${images_dir}/rdiffs" "$preserve_imagefile" ''
 
   dd "if=$image_src_path" 2>/dev/null | pv -s "$total_size" \
     > "${imagepath}.tmp"
