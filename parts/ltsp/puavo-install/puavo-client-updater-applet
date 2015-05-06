@@ -163,7 +163,7 @@ class UpdateIndicatorApplet:
                                             self.on_update_completed)
 
 
-    def handle_dbus_error(dbusexception):
+    def handle_dbus_error(self, dbusexception):
         self.append_error_to_log('Unknown dbus error.')
         self.on_update_failed()
 
