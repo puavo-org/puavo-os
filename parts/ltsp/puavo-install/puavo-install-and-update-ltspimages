@@ -3,8 +3,8 @@
 # obtain an exclusive lock on myself...
 # there should be only one instance of this program running
 
-exec 4<$0
-flock -nx 4 || { echo did not get a lock, exiting; exit 1; }
+exec 3<$0
+flock -nx 3 || { echo did not get a lock, exiting; exit 1; }
 
 #
 # argument parsing
@@ -12,8 +12,8 @@ flock -nx 4 || { echo did not get a lock, exiting; exit 1; }
 
 set -eu
 
-exec 5>&1	# another way to write to stdout for log()
-exec 6>&2	# another way to write to stderr for log()
+exec 4>&1	# another way to write to stdout for log()
+exec 5>&2	# another way to write to stderr for log()
 
 log() {
   log_to_stdout=false
@@ -32,8 +32,8 @@ log() {
       ;;
   esac
 
-  $log_to_stdout && echo "$logmessage" >&5
-  $log_to_stderr && echo "$logmessage" >&6
+  $log_to_stdout && echo "$logmessage" >&4
+  $log_to_stderr && echo "$logmessage" >&5
 
   echo "$logmessage" \
     | logger -p "$logpriority" -t puavo-install-and-update-ltspimages
@@ -329,33 +329,32 @@ fetch_with_wget() {
     wgetopts="--limit-rate=$rate_limit"
   fi
 
-  wget_error_code=$(
+  wget_error_code=""
+  {
     {
-      {
-	wget --ca-certificate=/etc/puavo/certs/rootca.pem \
-	     --continue                                   \
-	     --output-document="${output_path}"           \
-	     --progress=dot:mega                          \
-	     $wgetopts                                    \
-	     "$url" >/dev/null                            \
-	  || echo $?
-      } 3>&1 1>&2 2>&3 3>&- \
-	| unbuffer -p awk '
-	    BEGIN { progress = -1 }
+      wget --ca-certificate=/etc/puavo/certs/rootca.pem \
+	   --continue                                   \
+	   --output-document="${output_path}"           \
+	   --progress=dot:mega                          \
+	   $wgetopts                                    \
+	   "$url" >/dev/null                            \
+	|| wget_error_code=$?
+    } 2>&1 \
+      | unbuffer -p awk '
+	  BEGIN { progress = -1 }
 
-	    {
-	      if (match($8, /^([[:digit:]]+)%$/, a)) {
-		new_progress = a[1]
-		if (progress != new_progress) {
-		  progress = new_progress
-		  print progress
-		}
+	  {
+	    if (match($8, /^([[:digit:]]+)%$/, a)) {
+	      new_progress = a[1]
+	      if (progress != new_progress) {
+		progress = new_progress
+		print progress
 	      }
 	    }
-	  ' 2>/dev/null \
-	| update_stats_with_progress "$phase"
-    } 2>&1 || true
-  )
+	  }
+	' 2>/dev/null \
+      | update_stats_with_progress "$phase"
+  } || true
 
   if [ -n "$wget_error_code" ]; then
     log err "fetching $url, wget error code $wget_error_code"
@@ -731,32 +730,34 @@ try_full_image_update_from_imageserver() {
   rsyncserver="$(echo "$image_server" | cut -d: -f1)"
   remote_rsyncpath="${rsyncserver}::images/${next_image}"
 
-  rsync_error_code=$(
+  # XXX Using --fuzzy might be nice... currently we do not benefit from rsync,
+  # XXX and we should be able to.
+
+  rsync_error_code=""
+  {
     {
-      {
-	rsync --append                          \
-	      --fuzzy                           \
-	      --partial                         \
-	      $rsyncopts                        \
-	      "$remote_rsyncpath"               \
-	      "${images_dir}/${next_image}.tmp" \
-	  || echo $?
-      } 3>&1 1>&2 2>&3 3>&- \
-	| unbuffer -p awk '
-            BEGIN { progress = -1 }
-            {
-              if (match($2, /^([[:digit:]]+)%$/, a)) {
-                new_progress = a[1]
-                if (progress != new_progress) {
-                  progress = new_progress
-                  print progress
-                }
-              }
-            }
-	  ' 2>/dev/null \
-	| update_stats_with_progress image_download
-    } 2>&1 || true
-  )
+      rsync --append                          \
+	    --partial                         \
+	    --progress                        \
+	    $rsyncopts                        \
+	    "$remote_rsyncpath"               \
+	    "${images_dir}/${next_image}.tmp" \
+          2>/dev/null                         \
+	|| rsync_error_code=$?
+    } | unbuffer -p awk '
+	  BEGIN { progress = -1 }
+	  {
+	    if (match($2, /^([[:digit:]]+)%$/, a)) {
+	      new_progress = a[1]
+	      if (progress != new_progress) {
+		progress = new_progress
+		print progress
+	      }
+	    }
+	  }
+	' \
+      | update_stats_with_progress image_download
+  } || true
 
   if [ -z "$rsync_error_code" ]; then
     log info "rsync fetched the image $next_image with success"
