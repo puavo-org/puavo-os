@@ -141,13 +141,6 @@ class Updater < DBus::Object
       self.configuration_update() unless $configuration_update_thread
     end
 
-    dbus_method :UpdateImages,
-                'in use_rate_limit:b, in delete_overlays:b, out b' do
-      |use_rate_limit, delete_overlays|
-        self.image_update(use_rate_limit, delete_overlays) \
-          unless $image_update_thread
-    end
-
     dbus_method :UpdateProgress,
                 "in phase:s, in progress:i" do |phase, progress|
       self.UpdateProgressIndicator(phase, progress)

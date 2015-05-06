@@ -393,19 +393,17 @@ class UpdateIndicatorApplet:
             self.delete_overlays_dialog.hide()
             if not delete_overlays:
                 # The user has just answered no, so we are not going
-                # to proceed. Returning here is not necessary,
-                # UpdateImages() fails if called with
-                # delete_overlays=False and there exists some
-                # overlays. By returning we avoid generating an
-                # user-visible error which would just confuse the
-                # user.
+                # to proceed.  Returning here is not necessary, because
+                # Update() fails if called with delete_overlays=False
+                # when some overlays exist.  By returning we avoid generating
+                # a user-visible error which would only confuse the user.
                 return
 
         self.update_iface \
-            .UpdateImages(False,
-                          delete_overlays,
-                          reply_handler=lambda reply: None,
-                          error_handler=self.handle_dbus_error)
+            .Update(False,
+                    delete_overlays,
+                    reply_handler=lambda reply: None,
+                    error_handler=self.handle_dbus_error)
 
         self.set_update_button_mode('updating')
         self.on_update_progress_indicator('starting')
