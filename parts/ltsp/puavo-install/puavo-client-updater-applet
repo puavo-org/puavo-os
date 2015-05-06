@@ -60,6 +60,8 @@ class UpdateIndicatorApplet:
 
         self.indicator.set_menu(menu)
 
+        self.check_for_updates()
+
 
     def add_disabled_widget(self, menu):
         msg = _tr('Updates are disabled in developer mode, boot to normal mode to update.')
@@ -129,12 +131,12 @@ class UpdateIndicatorApplet:
         self.update_iface.CancelImageUpdate()
 
 
-    def check_for_updates(self, widget):
+    def check_for_updates(self, widget=None):
         self.set_update_button_mode('checking')
 
         self.update_iface \
             .UpdateConfiguration(
-               reply_handler=lambda: None,
+               reply_handler=lambda reply: None,
                error_handler=self.handle_dbus_error)
 
 
@@ -402,7 +404,7 @@ class UpdateIndicatorApplet:
         self.update_iface \
             .UpdateImages(False,
                           delete_overlays,
-                          reply_handler=lambda: None,
+                          reply_handler=lambda reply: None,
                           error_handler=self.handle_dbus_error)
 
         self.set_update_button_mode('updating')
