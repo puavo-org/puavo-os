@@ -335,8 +335,8 @@ fetch_with_wget() {
 	wget --ca-certificate=/etc/puavo/certs/rootca.pem \
 	     --continue                                   \
 	     --output-document="${output_path}"           \
-	     --progress=dot                               \
-             $wgetopts                                    \
+	     --progress=dot:mega                          \
+	     $wgetopts                                    \
 	     "$url" >/dev/null                            \
 	  || echo $?
       } 3>&1 1>&2 2>&3 3>&- \
@@ -344,7 +344,7 @@ fetch_with_wget() {
 	    BEGIN { progress = -1 }
 
 	    {
-	      if (match($7, /^([[:digit:]]+)%$/, a)) {
+	      if (match($8, /^([[:digit:]]+)%$/, a)) {
 		new_progress = a[1]
 		if (progress != new_progress) {
 		  progress = new_progress
