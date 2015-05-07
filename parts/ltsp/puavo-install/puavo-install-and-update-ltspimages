@@ -732,7 +732,7 @@ try_full_image_update_from_imageserver() {
   remote_rsyncpath="${rsyncserver}::images/${next_image}"
 
   # rsync may take a little while before it outputs progress information
-  echo 0 | update_stats_with_progress image_download
+  echo 0 | update_stats_with_progress image_sync
 
   rsync_error_code=$(
     {
@@ -758,7 +758,7 @@ try_full_image_update_from_imageserver() {
 	      }
 	    }
 	  ' \
-	| update_stats_with_progress image_download
+	| update_stats_with_progress image_sync
     } 2>&1 || true
   )
 
@@ -860,6 +860,7 @@ update_stats_with_progress() {
   #   rdiff_checksum
   #   image_patch
   #   image_download
+  #   image_sync
   #   image_checksum
   #   finished
   #   uptodate
