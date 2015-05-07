@@ -174,12 +174,11 @@ class UpdateIndicatorApplet:
 
 
     def on_update_available(self):
+        self.stop_roll_progress()
         self.set_update_button_mode('update')
 
         self.indicator.set_attention_icon('update-available')
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
-
-        self.stop_roll_progress()
 
         # show only once after each login
         if not self.available_notice_shown:
@@ -190,6 +189,7 @@ class UpdateIndicatorApplet:
 
 
     def on_update_cancelled(self):
+        self.stop_roll_progress()
         self.on_update_progress_indicator('interrupted')
         self.on_update_available()
 
@@ -197,10 +197,9 @@ class UpdateIndicatorApplet:
 
         self.notify( _tr('System update has been cancelled.') )
 
-        self.stop_roll_progress()
-
 
     def on_update_completed(self):
+        self.stop_roll_progress()
         self.set_update_button_mode('check')
 
         self.on_update_isuptodate(True)
@@ -210,10 +209,9 @@ class UpdateIndicatorApplet:
         self.available_notice_shown = False
         self.notify( _tr('System update is finished, reboot the computer.') )
 
-        self.stop_roll_progress()
-
 
     def on_update_failed(self):
+        self.stop_roll_progress()
         self.set_update_button_mode('update')
 
         self.indicator.set_attention_icon('update-error')
@@ -223,10 +221,10 @@ class UpdateIndicatorApplet:
 
         self.notify( _tr('An error occurred when updating the system.') )
 
-        self.stop_roll_progress()
-
 
     def on_update_isuptodate(self, reboot_required):
+        self.stop_roll_progress()
+
         if reboot_required:
             self.on_update_progress_indicator('finished')
             self.indicator.set_attention_icon('update-installed')
@@ -235,8 +233,6 @@ class UpdateIndicatorApplet:
             self.on_update_progress_indicator('uptodate')
             self.indicator.set_icon('update-idle')
             self.indicator.set_status(appindicator.STATUS_ACTIVE)
-
-        self.stop_roll_progress()
 
 
     def on_update_message(self, msgtype, content):
@@ -264,9 +260,9 @@ class UpdateIndicatorApplet:
             text = _tr('Up to date.')
 
         if mode and text:
+            self.stop_roll_progress()
             self.set_progress_text(text)
             self.set_update_button_mode(mode)
-            self.stop_roll_progress()
             return
 
         progfn = lambda a, b: int(a + (b - a) * float(progress) / 100)
