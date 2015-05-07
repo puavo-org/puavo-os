@@ -258,11 +258,14 @@ class packages {
     , 'xchat' ]:
       tag => [ 'instant_messaging', 'ubuntu', ];
 
+    # de - German packages
+
     [ 'language-pack-gnome-de' ]:
       tag => [ 'language-de', 'thinclient', 'ubuntu', ];
 
     [ 'firefox-locale-de'
     , 'gimp-help-de'
+    , 'hyphen-de'
     , 'kde-l10n-de'
     , 'language-pack-kde-de'
     , 'language-pack-de'
@@ -270,8 +273,12 @@ class packages {
     , 'libreoffice-l10n-de'
     , 'myspell-de-ch'
     , 'myspell-de-de'
+    , 'mythes-de'
+    , 'mythes-de-ch'
     , 'thunderbird-locale-de' ]:
       tag => [ 'language-de', 'ubuntu', ];
+
+    # en - English packages
 
     [ 'language-pack-gnome-en' ]:
       tag => [ 'language-en', 'thinclient', 'ubuntu', ];
@@ -288,6 +295,8 @@ class packages {
     , 'mythes-en-us'
     , 'thunderbird-locale-en-gb' ]:
       tag => [ 'language-en', 'ubuntu', ];
+
+    # fi - Finnish packages
 
     [ 'language-pack-gnome-fi' ]:
       tag => [ 'language-fi', 'thinclient', 'ubuntu', ];
@@ -317,7 +326,7 @@ class packages {
     , 'libreoffice-l10n-fr'
     , 'myspell-fr'
     , 'mythes-fr'
-    , 'thunderbird-locale-fr' ]
+    , 'thunderbird-locale-fr' ]:
       tag => [ 'language-sv', 'ubuntu', ];
 
     # sv - Swedish packages
@@ -333,6 +342,7 @@ class packages {
     , 'libreoffice-help-sv'
     , 'libreoffice-l10n-sv'
     , 'myspell-sv-se'
+    , 'mythes-sv'
     , 'thunderbird-locale-sv' ]:
       tag => [ 'language-sv', 'ubuntu', ];
 
