@@ -731,34 +731,36 @@ try_full_image_update_from_imageserver() {
   rsyncserver="$(echo "$image_server" | cut -d: -f1)"
   remote_rsyncpath="${rsyncserver}::images/${next_image}"
 
-  # XXX Using --fuzzy might be nice... currently we do not benefit from rsync,
-  # XXX and we should be able to.
+  # rsync may take a little while before it outputs progress information
+  echo 0 | update_stats_with_progress image_download
 
-  rsync_error_code=""
-  {
+  rsync_error_code=$(
     {
-      rsync --append                          \
-	    --partial                         \
-	    --progress                        \
-	    $rsyncopts                        \
-	    "$remote_rsyncpath"               \
-	    "${images_dir}/${next_image}.tmp" \
-          2>/dev/null                         \
-	|| rsync_error_code=$?
-    } | unbuffer -p awk '
-	  BEGIN { progress = -1 }
-	  {
-	    if (match($2, /^([[:digit:]]+)%$/, a)) {
-	      new_progress = a[1]
-	      if (progress != new_progress) {
-		progress = new_progress
-		print progress
+      {
+	rsync --fuzzy                           \
+	      --inplace                         \
+	      --progress                        \
+	      $rsyncopts                        \
+	      "$remote_rsyncpath"               \
+	      "${images_dir}/${next_image}.tmp" \
+	    2>/dev/null                         \
+	  || echo $? >&2
+      } | unbuffer -p awk '
+	    BEGIN { progress = -1 }
+
+	    {
+	      if (match($2, /^([[:digit:]]+)%$/, a)) {
+		new_progress = a[1]
+		if (progress != new_progress) {
+		  progress = new_progress
+		  print progress
+		}
 	      }
 	    }
-	  }
-	' \
-      | update_stats_with_progress image_download
-  } || true
+	  ' \
+	| update_stats_with_progress image_download
+    } 2>&1 || true
+  )
 
   if [ -z "$rsync_error_code" ]; then
     log info "rsync fetched the image $next_image with success"
