@@ -329,32 +329,33 @@ fetch_with_wget() {
     wgetopts="--limit-rate=$rate_limit"
   fi
 
-  wget_error_code=""
-  {
+  wget_error_code=$(
     {
-      wget --ca-certificate=/etc/puavo/certs/rootca.pem \
-	   --continue                                   \
-	   --output-document="${output_path}"           \
-	   --progress=dot:mega                          \
-	   $wgetopts                                    \
-	   "$url" >/dev/null                            \
-	|| wget_error_code=$?
-    } 2>&1 \
-      | unbuffer -p awk '
-	  BEGIN { progress = -1 }
+      {
+	wget --ca-certificate=/etc/puavo/certs/rootca.pem \
+	     --continue                                   \
+	     --output-document="${output_path}"           \
+	     --progress=dot:mega                          \
+	     $wgetopts                                    \
+	     "$url" >/dev/null                            \
+	  || echo $?
+      } 3>&1 1>&2 2>&3 3>&- \
+	| unbuffer -p awk '
+	    BEGIN { progress = -1 }
 
-	  {
-	    if (match($8, /^([[:digit:]]+)%$/, a)) {
-	      new_progress = a[1]
-	      if (progress != new_progress) {
-		progress = new_progress
-		print progress
+	    {
+	      if (match($8, /^([[:digit:]]+)%$/, a)) {
+		new_progress = a[1]
+		if (progress != new_progress) {
+		  progress = new_progress
+		  print progress
+		}
 	      }
 	    }
-	  }
-	' 2>/dev/null \
-      | update_stats_with_progress "$phase"
-  } || true
+	  ' 2>/dev/null \
+	| update_stats_with_progress "$phase"
+    } 2>&1 || true
+  )
 
   if [ -n "$wget_error_code" ]; then
     log err "fetching $url, wget error code $wget_error_code"
