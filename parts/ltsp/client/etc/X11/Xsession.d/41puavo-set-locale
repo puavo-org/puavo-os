@@ -52,6 +52,7 @@ else
     de) LANG=de_DE.UTF-8 ;;
     en) LANG=en_GB.UTF-8 ;;
     fi) LANG=fi_FI.UTF-8 ;;
+    fr) LANG=fr_FR.UTF-8 ;;
     sv) LANG=sv_FI.UTF-8 ;;
      *)
         echo "unknown language '${puavo_language_short_form}', falling back to 'fi'" >&2
