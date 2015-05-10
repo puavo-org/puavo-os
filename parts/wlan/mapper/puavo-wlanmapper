@@ -347,6 +347,7 @@ class Monitor(QObject):
             return False
 
         self.__process = QProcess(self)
+        self.__process.setProcessChannelMode(QProcess.ForwardedChannels)
 
         self.__process.started.connect(self.started)
         self.__process.finished.connect(self.stopped)
