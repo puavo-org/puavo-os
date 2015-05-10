@@ -80,8 +80,8 @@ class Scene(QGraphicsScene):
         QGraphicsScene.__init__(self, *args)
 
         self.__monitor = monitor
-        self.__monitor.stopped.connect(self.__stopAnimation)
-        self.__monitor.started.connect(self.__startAnimation)
+        self.__monitor.stopped.connect(self.__stopMeasurement)
+        self.__monitor.started.connect(self.__startMeasurement)
         self.__currentSpot = None
         self.__currentSpotMeasurements = {}
 
@@ -92,17 +92,17 @@ class Scene(QGraphicsScene):
         self.__heatmaps = {}
         self.__currentHeatmap = None
 
-        timeLine = QTimeLine(10000)
-        timeLine.setLoopCount(1)
-        timeLine.finished.connect(self.__measurementFinished)
+        timeLine = QTimeLine(2500)
+        timeLine.setLoopCount(0)
+
         self.__animation = QGraphicsItemAnimation()
         self.__animation.setTimeLine(timeLine)
         self.__animation.setScaleAt(0.0, 1, 1)
         self.__animation.setScaleAt(0.5, 2, 2)
         self.__animation.setScaleAt(1.0, 1, 1)
         self.__animation.setRotationAt(0.0, 0)
-        self.__animation.setRotationAt(0.5, 0.09 * timeLine.duration())
-        self.__animation.setRotationAt(1.0, 0.18 * timeLine.duration())
+        self.__animation.setRotationAt(0.5, 180)
+        self.__animation.setRotationAt(1.0, 360)
 
     def setCurrentHeatmap(self, heatmapName):
         if self.__currentHeatmap is not None:
@@ -135,14 +135,27 @@ class Scene(QGraphicsScene):
         self.removeItem(spot)
         self.__updateHeatmaps()
 
-    def __startAnimation(self):
+    def __startMeasurement(self):
         self.__animation.setItem(self.__currentSpot)
         self.__animation.timeLine().start()
 
-    def __stopAnimation(self):
+    def __stopMeasurement(self, isSuccess):
         if self.__animation.timeLine().state() == QTimeLine.Running:
             self.__animation.timeLine().stop()
             self.__animation.setStep(0)
+
+        if isSuccess:
+            self.__currentSpot.setBrush(QBrush(QColor("#66ff66")))
+            self.__currentSpot.measurement = self.__currentSpotMeasurements
+
+            for beacon in self.__monitor.readBeacons():
+                bssidmap = self.__currentSpotMeasurements.setdefault(beacon.freq, {})
+                rssi = bssidmap.get(beacon.bssid, beacon.rssi)
+                bssidmap[beacon.bssid] = (beacon.rssi + rssi) / 2
+
+            self.toggleSpot(self.__currentSpot)
+
+            self.__updateHeatmaps()
 
     def toggleSpot(self, spot):
         self.__monitor.stop()
@@ -156,19 +169,6 @@ class Scene(QGraphicsScene):
         self.__currentSpotMeasurements = {}
 
         self.__monitor.start()
-
-    def __measurementFinished(self):
-        self.__currentSpot.setBrush(QBrush(QColor("#66ff66")))
-        self.__currentSpot.measurement = self.__currentSpotMeasurements
-
-        for beacon in self.__monitor.readBeacons():
-            bssidmap = self.__currentSpotMeasurements.setdefault(beacon.freq, {})
-            rssi = bssidmap.get(beacon.bssid, beacon.rssi)
-            bssidmap[beacon.bssid] = (beacon.rssi + rssi) / 2
-
-        self.toggleSpot(self.__currentSpot)
-
-        self.__updateHeatmaps()
 
     def __updateHeatmaps(self):
 
@@ -307,7 +307,7 @@ class Monitor(QObject):
     MAX_CHANNEL_DWELL_TIME = 5000
 
     started = pyqtSignal()
-    stopped = pyqtSignal()
+    stopped = pyqtSignal(bool)
 
     def __init__(self, interface, *args):
         QObject.__init__(self, *args)
@@ -350,7 +350,7 @@ class Monitor(QObject):
         self.__process.setProcessChannelMode(QProcess.ForwardedChannels)
 
         self.__process.started.connect(self.started)
-        self.__process.finished.connect(self.stopped)
+        self.__process.finished.connect(self.__emit_stopped)
 
         with open(self.__horst_configfile_path, 'w') as f:
             f.write('quiet\n')
@@ -359,6 +359,7 @@ class Monitor(QObject):
             f.write('channel_upper = 48\n')
             f.write('channel_dwell = {}\n'.format(self.__dwell))
             f.write('channel_scan\n')
+            f.write('channel_scan_rounds = 1\n')
             f.write('outfile = {}\n'.format(self.__horst_outfile_path))
 
         args = ['-c', self.__horst_configfile_path]
@@ -366,6 +367,12 @@ class Monitor(QObject):
         self.__process.start('/usr/sbin/horst', args, QIODevice.ReadOnly)
 
         return True
+
+    def __emit_stopped(self, exitCode, exitStatus):
+        if exitStatus == QProcess.CrashExit:
+            self.stopped.emit(False)
+        else:
+            self.stopped.emit(not bool(exitCode))
 
     def stop(self):
         if self.__process:
