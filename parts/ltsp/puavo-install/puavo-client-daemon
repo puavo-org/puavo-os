@@ -118,24 +118,21 @@ class Updater < DBus::Object
       current_image = IO.readlines('/etc/ltsp/this_ltspimage_name') \
 			.first.chomp
 
-      hostname = Socket.gethostname
-
-      # Set :dns => :no because we write stuff to Puavo and we have much
-      # better chances of finding the right server when not using DNS.
-      client = PuavoRestClient.new(:auth => :etc, :dns => :no)
-
-      restpath = "/v3/devices/#{ hostname }"
-
       deviceinfo = JSON.parse( File.read('/state/etc/puavo/device.json') )
 
       update_available_images \
 	= ((deviceinfo['available_images'] || []).sort != available_images)
       update_current_image = (deviceinfo['current_image'] != current_image)
 
-      puts 'Updating available images in Puavo'  if update_available_images
-      puts 'Updating the current image in Puavo' if update_current_image
-
       if update_available_images || update_current_image then
+        puts 'Updating available images in Puavo'  if update_available_images
+        puts 'Updating the current image in Puavo' if update_current_image
+
+        # Set :dns => :no because we write stuff to Puavo and we have much
+        # better chances of finding the right server when not using DNS.
+        client = PuavoRestClient.new(:auth => :etc, :dns => :no)
+
+        restpath = "/v3/devices/#{ Socket.gethostname }"
 	senddata = {
 	  'available_images' => available_images,
 	  'current_image'    => current_image,
