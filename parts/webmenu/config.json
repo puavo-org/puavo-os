@@ -108,9 +108,10 @@
           "dbus-send",
           "--system",
           "--print-reply",
-          "--dest=org.freedesktop.UPower",
-          "/org/freedesktop/UPower",
-          "org.freedesktop.UPower.Suspend"
+          "--dest=org.freedesktop.login1",
+          "/org/freedesktop/login1",
+          "org.freedesktop.login1.Manager.Suspend",
+          "boolean:true"
       ]
   },
   "hibernateCMD": [
