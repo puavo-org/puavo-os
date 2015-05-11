@@ -5,6 +5,7 @@
 ENV["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 require 'dbus'
+require 'json'
 require 'open3'
 require 'puavo/rest-client'
 require 'socket'
@@ -127,10 +128,7 @@ class Updater < DBus::Object
 
 	restpath = "/v3/devices/#{ hostname }"
 
-	gres = client.get(restpath)
-	raise "Response code for get-request was: #{ gres.code }" \
-	  unless gres.code == 200
-	deviceinfo = gres.parse()
+	deviceinfo = JSON.parse( File.read('/state/etc/puavo/device.json') )
 
 	update_available_images \
 	  = ((deviceinfo['available_images'] || []).sort != available_images)
