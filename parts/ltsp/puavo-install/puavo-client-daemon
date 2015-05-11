@@ -10,9 +10,8 @@ require 'open3'
 require 'puavo/rest-client'
 require 'socket'
 
-$configuration_update_thread   = nil
-$image_update_thread           = nil
-$notify_puavo_on_images_thread = nil
+$configuration_update_thread = nil
+$image_update_thread         = nil
 
 class CancelledImageUpdate < RuntimeError; end
 
@@ -20,6 +19,12 @@ class Updater < DBus::Object
   def configuration_update
     $configuration_update_thread = Thread.new do
       begin
+	# Notify Puavo on our current image situation.  It is good to do this
+	# on every image update, but also periodically, in case we have booted
+	# to a new image (there might be a better place for this, but at least
+	# the configuration update should be run periodically anyway).
+	notify_puavo_on_images()
+
 	command = '/usr/lib/puavo-ltsp-install/update-configuration'
 
 	output, status = Open3.capture2e(command)
@@ -38,12 +43,6 @@ class Updater < DBus::Object
 	      self.UpdateIsUpToDate(true)  # reboot *is* required
 	  end
 	end
-
-	# Notify Puavo on our current image situation.  It is good to do this
-	# on every image update, but also periodically, in case we have booted
-	# to a new image (there might be a better place for this, but at least
-	# the configuration update should be run periodically anyway).
-	notify_puavo_on_images()
       ensure
 	$configuration_update_thread = nil
       end
@@ -87,7 +86,10 @@ class Updater < DBus::Object
 	end
 	self.UpdateCompleted
 
-	notify_puavo_on_images()
+	# update device information in Puavo and in local disk as well
+	confthread = $configuration_update_thread
+	confthread.join if confthread
+	configuration_update().join
 
       rescue CancelledImageUpdate => e
 	if wait_thr then
@@ -109,50 +111,42 @@ class Updater < DBus::Object
   end
 
   def notify_puavo_on_images
-    Thread.kill($notify_puavo_on_images_thread) \
-      if $notify_puavo_on_images_thread
+    begin
+      available_images \
+	= (Dir.glob('/images/*.img').map { |p| File.basename(p) } \
+	     - %w(ltsp.img ltsp-backup.img)).sort
+      current_image = IO.readlines('/etc/ltsp/this_ltspimage_name') \
+			.first.chomp
 
-    $notify_puavo_on_images_thread = Thread.new do
-      begin
-	available_images \
-	  = (Dir.glob('/images/*.img').map { |p| File.basename(p) } \
-	       - %w(ltsp.img ltsp-backup.img)).sort
-	current_image = IO.readlines('/etc/ltsp/this_ltspimage_name') \
-			  .first.chomp
+      hostname = Socket.gethostname
 
-	hostname = Socket.gethostname
+      # Set :dns => :no because we write stuff to Puavo and we have much
+      # better chances of finding the right server when not using DNS.
+      client = PuavoRestClient.new(:auth => :etc, :dns => :no)
 
-	# Set :dns => :no because we write stuff to Puavo and we have much
-	# better chances of finding the right server when not using DNS.
-	client = PuavoRestClient.new(:auth => :etc, :dns => :no)
+      restpath = "/v3/devices/#{ hostname }"
 
-	restpath = "/v3/devices/#{ hostname }"
+      deviceinfo = JSON.parse( File.read('/state/etc/puavo/device.json') )
 
-	deviceinfo = JSON.parse( File.read('/state/etc/puavo/device.json') )
+      update_available_images \
+	= ((deviceinfo['available_images'] || []).sort != available_images)
+      update_current_image = (deviceinfo['current_image'] != current_image)
 
-	update_available_images \
-	  = ((deviceinfo['available_images'] || []).sort != available_images)
-	update_current_image = (deviceinfo['current_image'] != current_image)
+      puts 'Updating available images in Puavo'  if update_available_images
+      puts 'Updating the current image in Puavo' if update_current_image
 
-	puts 'Updating available images in Puavo'  if update_available_images
-	puts 'Updating the current image in Puavo' if update_current_image
-
-	if update_available_images || update_current_image then
-	  senddata = {
-	    'available_images' => available_images,
-	    'current_image'    => current_image,
-	  }
-	  pres = client.post(restpath, :json => senddata)
-	  raise "Response code for post-request was: #{ pres.code }" \
-	    unless pres.code == 200
-	end
-
-      rescue StandardError => e
-	raise "Could not update image information in Puavo: '#{ e.message }'"
-
-      ensure
-	$notify_puavo_on_images_thread = nil
+      if update_available_images || update_current_image then
+	senddata = {
+	  'available_images' => available_images,
+	  'current_image'    => current_image,
+	}
+	pres = client.post(restpath, :json => senddata)
+	raise "Response code for post-request was: #{ pres.code }" \
+	  unless pres.code == 200
       end
+
+    rescue StandardError => e
+      raise "Could not update image information in Puavo: '#{ e.message }'"
     end
   end
 
