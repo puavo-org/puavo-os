@@ -8,8 +8,10 @@ end
 
 exit(0) if ENV['GUEST_SESSION'] == 'true'
 
+require 'dbus'
 require 'fileutils'
 require 'json'
+require 'open3'
 require 'resolv'
 
 @device = JSON.parse( IO.read('/etc/puavo/device.json') )
@@ -32,21 +34,67 @@ def use_remotemounts
   ! has_device_tag('no_use_remotemounts') || has_device_tag('use_remotemounts')
 end
 
+def handle_dbus_signals(gvfs_mounts)
+  bus = DBus::SystemBus.instance
+
+  # if we are going to suspend, deactivate gvfs-mounts
+
+  service = bus.service('org.freedesktop.login1')
+  obj = service.object('/org/freedesktop/login1')
+  obj.introspect
+  obj.default_iface = 'org.freedesktop.login1.Manager'
+
+  obj.on_signal('PrepareForSleep') do |preparing_for_sleep|
+    gvfs_mounts.each do |gvfsmount|
+      if preparing_for_sleep then
+        gvfsmount.deactivate()
+      else
+        gvfsmount.activate()
+      end
+    end
+  end
+
+  loop = DBus::Main.new
+  loop << bus
+  loop.run
+end
+
 class GvfsMount
   def initialize(remote_host, url, mntpath, linkname)
+    @active      = true
     @linkname    = linkname
     @mntpath     = mntpath
     @remote_host = remote_host
     @url         = url
   end
 
-  def check_mount_state(mntpath)
+  def activate()
+    @active = true
+  end
+
+  def deactivate()
+    @active = false
+    unmount_gvfsmount()
+  end
+
+  def check_mount_state()
     # wait for 5 seconds for stat operation to a remote path
-    system('timeout', '-s', 'KILL', '5', 'stat', '-c', '%X', mntpath, \
+    system('timeout', '-s', 'KILL', '5', 'stat', '-c', '%X', @mntpath, \
            { :out => '/dev/null', :err => '/dev/null' })
 
     return 'timeout' if $?.termsig == 9
     return 'ok'      if $?.exitstatus == 0
+
+    # if stat fails, check explicitly with gvfs-mount if mount exists
+
+    output, s = Open3.capture2e('gvfs-mount', '-il')
+    raise "gvfs-mount -il returned error code #{ s.exitstatus }" \
+      unless s.exitstatus == 0
+
+    re = /^\s+default_location=#{ Regexp.quote(@url) }$/
+    output.split("\n").each do |line|
+      return 'ok' if line.match(re)
+    end
 
     return 'not connected'
   end
@@ -71,7 +119,7 @@ class GvfsMount
 
     while true do
       begin
-        mount_state = check_mount_state(@mntpath)
+        mount_state = @active ? check_mount_state() : 'remove'
 
         case mount_state
           when 'not connected'
@@ -94,24 +142,32 @@ class GvfsMount
             ensure_link(true) rescue true
             checks_with_timeout = 0
 
+          when 'remove'
+            unmount_gvfsmount()
+            checks_with_timeout = 0
+
           when 'timeout'
             checks_with_timeout += 1
-            if checks_with_timeout >= 5 then
-              # with five timeouts in a row, unmount the thing!
-              ensure_link(false) rescue true
-              outmsg("unmounting '#{ @url }'")
-              system('timeout', '-k', '10', '20', 'gvfs-mount', '-u', @url) \
-                or errmsg("problem in unmounting '#{ @url }'")
+            if checks_with_timeout >= 3 then
+              # with three timeouts in a row, unmount the thing!
+              unmount_gvfsmount()
               checks_with_timeout = 0
             end
-
         end
+
       rescue StandardError => e
         errmsg("Got some error: #{ e }, yet continuing...")
       end
 
-      sleep(10)
+      sleep(5)
     end
+  end
+
+  def unmount_gvfsmount()
+    ensure_link(false) rescue true
+    outmsg("unmounting '#{ @url }'")
+    system('timeout', '-k', '5', '10', 'gvfs-mount', '-u', @url) \
+      or errmsg("problem in unmounting '#{ @url }'")
   end
 end
 
@@ -151,13 +207,13 @@ def get_our_gvfsmounts
   [
     GvfsMount.new(
       remote_host,
-      "smb://#{ remote_host }/#{ user }",
+      "smb://#{ remote_host }/#{ user }/",
       "/run/user/#{ user_id }/gvfs/smb-share:server=homedir.#{ puavo_domain },share=#{ user }",
       userdir_label),
 
     GvfsMount.new(
       remote_host,
-      "smb://#{ remote_host }/share/#{ sharename }/#{ user_primary_group }",
+      "smb://#{ remote_host }/share/#{ sharename }/#{ user_primary_group }/",
       "/run/user/#{ user_id }/gvfs/smb-share:server=homedir.#{ puavo_domain },share=share/#{ sharename }/#{ user_primary_group }",
       schooldir_label),
   ]
@@ -172,8 +228,13 @@ end
 
 gvfs_mounts = get_our_gvfsmounts()
 
-threads = gvfs_mounts.map { |gvfsmnt| Thread.new { gvfsmnt.ensure_mounts() } }
+gvfs_threads = gvfs_mounts.map do |gvfsmnt|
+                 Thread.new { gvfsmnt.ensure_mounts() }
+               end
 
-threads.each &:join
+# we want to run this as long as the gvfs_threads are running
+Thread.new { handle_dbus_signals(gvfs_mounts) }
+
+gvfs_threads.each &:join
 
 exit(0)
