@@ -31,6 +31,7 @@ class packages {
     , 'lynx'
     , 'm4'
     , 'mlocate'
+    , 'moreutils'
     , 'nmap'
     , 'powertop'
     , 'pv'
@@ -52,7 +53,6 @@ class packages {
 
     [ 'clusterssh'
     , 'dconf-tools'
-    , 'parallel'
     , 'pssh'
     , 'terminator'
     , 'vinagre'
