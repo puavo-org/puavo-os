@@ -196,8 +196,8 @@ if [ -z "$hosttype" ]; then
 fi
 
 # pvs and assorted utilities complain if we leak file descriptors, that is
-# why we do "3>&- 4>&-" (same with grub-install)
-diskdev=$(pvs 3>&- 4>&-                                                 \
+# why we do "3>&- 4>&- 5>&-" (same with grub-install)
+diskdev=$(pvs 3>&- 4>&- 5>&-                                            \
             | awk -v vgname="$vgname" '$2 == vgname { print $1; exit }' \
             | sed -E 's|[0-9]+$||')
 
@@ -229,7 +229,7 @@ esac
 
 if ! $only_update_config; then
   if ! grub_msg=$(grub-install --root-directory=$images_dir "$diskdev" \
-                    3>&- 4>&- 2>&1); then
+                    3>&- 4>&- 5>&- 2>&1); then
     echo "Grub installation failed: $grub_msg" >&2
     exit 1
   fi

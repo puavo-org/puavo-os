@@ -12,6 +12,7 @@ _tr = gettext.gettext
 import appindicator
 import dbus
 import dbus.mainloop.glib
+import gobject
 import grp
 import gtk
 import os
@@ -41,14 +42,13 @@ class UpdateIndicatorApplet:
 
         if is_on_persistent_overlay():
             self.add_disabled_widget(menu)
-	    self.indicator.set_menu(menu)
+            self.indicator.set_menu(menu)
             return
 
         pynotify.init('puavo-client-updater-applet')
         self.available_notice_shown = False
         self.download_animation_icons \
-          = [ 'update-downloading' ] \
-              + [ 'update-downloading-%02d' % x for x in range(2, 14) ]
+          = [ 'update-downloading-%02d' % x for x in range(1, 14) ]
 
         self.add_update_button(menu)
         self.add_view_log_button(menu)
@@ -60,14 +60,16 @@ class UpdateIndicatorApplet:
 
         self.indicator.set_menu(menu)
 
+        self.check_for_updates()
+
 
     def add_disabled_widget(self, menu):
-	msg = _tr('Updates are disabled in developer mode, boot to normal mode to update.')
-	self.disabled_msg = gtk.MenuItem(msg)
-	self.disabled_msg.set_sensitive(False)
-	self.disabled_msg.show()
+        msg = _tr('Updates are disabled in developer mode, boot to normal mode to update.')
+        self.disabled_msg = gtk.MenuItem(msg)
+        self.disabled_msg.set_sensitive(False)
+        self.disabled_msg.show()
 
-	menu.append(self.disabled_msg)
+        menu.append(self.disabled_msg)
 
 
     def add_progress(self, menu):
@@ -75,6 +77,7 @@ class UpdateIndicatorApplet:
         self.set_progress_text( _tr('(No update progress.)') )
         self.progress.set_sensitive(False)
         self.progress.show()
+        self.roll_progress_id = None
 
         menu.append(self.progress)
 
@@ -113,7 +116,9 @@ class UpdateIndicatorApplet:
                              + "\n"
 
         if not error:
-            self.log_buffer.insert_with_tags(end_iter, timestamped_text)
+            self.log_buffer.insert_with_tags(end_iter,
+                                             timestamped_text,
+                                             self.log_ok_tag)
             print(timestamped_text, end='')
         else:
             self.log_buffer.insert_with_tags(end_iter,
@@ -127,12 +132,13 @@ class UpdateIndicatorApplet:
         self.update_iface.CancelImageUpdate()
 
 
-    def check_for_updates(self, widget):
+    def check_for_updates(self, widget=None):
         self.set_update_button_mode('checking')
 
         self.update_iface \
-            .UpdateConfiguration(reply_handler=self.append_text_to_log,
-                                 error_handler=self.append_error_to_log)
+            .UpdateConfiguration(
+               reply_handler=lambda reply: None,
+               error_handler=self.handle_dbus_error)
 
 
     def connect_to_dbus(self):
@@ -144,6 +150,8 @@ class UpdateIndicatorApplet:
                                             self.on_update_isuptodate)
         self.update_iface.connect_to_signal('UpdateAvailable',
                                             self.on_update_available)
+        self.update_iface.connect_to_signal('UpdateMessage',
+                                            self.on_update_message)
         self.update_iface.connect_to_signal('UpdateStarted',
                                             self.on_update_started)
         self.update_iface.connect_to_signal('UpdateProgressIndicator',
@@ -156,11 +164,17 @@ class UpdateIndicatorApplet:
                                             self.on_update_completed)
 
 
+    def handle_dbus_error(self, dbusexception):
+        self.append_error_to_log('Unknown dbus error.')
+        self.on_update_failed()
+
+
     def notify(self, msg):
         pynotify.Notification(msg).show()
 
 
     def on_update_available(self):
+        self.stop_roll_progress()
         self.set_update_button_mode('update')
 
         self.indicator.set_attention_icon('update-available')
@@ -168,48 +182,49 @@ class UpdateIndicatorApplet:
 
         # show only once after each login
         if not self.available_notice_shown:
+            self.append_text_to_log( _tr('A new system update is available.') \
+                                       + "\n" )
             self.notify( _tr('A new system update is available.') )
             self.available_notice_shown = True
 
 
-    def on_update_cancelled(self, outmsg, errmsg):
+    def on_update_cancelled(self):
+        self.stop_roll_progress()
         self.on_update_progress_indicator('interrupted')
         self.on_update_available()
 
-        self.append_text_to_log( _tr('Update cancelled.') + "\n" )
-        self.append_text_to_log(outmsg)
-        self.append_error_to_log(errmsg)
+        self.append_error_to_log( _tr('Update cancelled.') + "\n" )
 
         self.notify( _tr('System update has been cancelled.') )
 
 
-    def on_update_completed(self, outmsg, errmsg):
+    def on_update_completed(self):
+        self.stop_roll_progress()
         self.set_update_button_mode('check')
 
         self.on_update_isuptodate(True)
 
         self.append_text_to_log( _tr('Update completed.') + "\n" )
-        self.append_text_to_log(outmsg)
-        self.append_error_to_log(errmsg)
 
         self.available_notice_shown = False
         self.notify( _tr('System update is finished, reboot the computer.') )
 
 
-    def on_update_failed(self, outmsg, errmsg):
+    def on_update_failed(self):
+        self.stop_roll_progress()
         self.set_update_button_mode('update')
 
         self.indicator.set_attention_icon('update-error')
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
-        self.append_text_to_log( _tr('Update failed.') + "\n" )
-        self.append_text_to_log(outmsg)
-        self.append_error_to_log(errmsg)
+        self.append_error_to_log( _tr('Update failed.') + "\n" )
 
         self.notify( _tr('An error occurred when updating the system.') )
 
 
     def on_update_isuptodate(self, reboot_required):
+        self.stop_roll_progress()
+
         if reboot_required:
             self.on_update_progress_indicator('finished')
             self.indicator.set_attention_icon('update-installed')
@@ -218,6 +233,14 @@ class UpdateIndicatorApplet:
             self.on_update_progress_indicator('uptodate')
             self.indicator.set_icon('update-idle')
             self.indicator.set_status(appindicator.STATUS_ACTIVE)
+
+
+    def on_update_message(self, msgtype, content):
+        prefixed_message = '        > %s' % content
+        if msgtype == 'ok':
+            self.append_text_to_log(prefixed_message)
+        elif msgtype == 'error':
+            self.append_error_to_log(prefixed_message)
 
 
     def on_update_progress_indicator(self, phase, progress=0):
@@ -237,38 +260,46 @@ class UpdateIndicatorApplet:
             text = _tr('Up to date.')
 
         if mode and text:
+            self.stop_roll_progress()
             self.set_progress_text(text)
             self.set_update_button_mode(mode)
             return
 
-        phases = {
-          'starting':        '0',
-          'checksums_fetch': '1',
-          'rdiff_fetch':     '2',
-          'rdiff_checksum':  '3',
-          'image_patch':     '4',
-          'image_checksum':  '5',
-        }
+        progfn = lambda a, b: int(a + (b - a) * float(progress) / 100)
 
-        try:
-            phase_number = phases[phase]
-        except KeyError:
-            phase_number = '?'
+        # There are two possible image update paths: image_download/image_sync
+        # and rdiff_fetch+rdiff_checksum+image_patch are alternative routes
+        # to the same result.
 
-        text = '%s (%s/5) %s%%' \
-                 % (_tr('Update progress:'), phase_number, progress)
+        if phase == 'starting':
+            progresstext = '0% (starting)'
+        elif phase == 'checksums_fetch':
+            progresstext = '%d%% (fetch checksums)' % progfn(0, 1)
+        elif phase == 'rdiff_fetch':
+            progresstext = '%d%% (fetch rdiff)' % progfn(1, 75)
+        elif phase == 'rdiff_checksum':
+            progresstext = '%d%% (check rdiff)' % progfn(75, 80)
+        elif phase == 'image_patch':
+            progresstext = '%d%% (patch image)' % progfn(80, 90)
+        elif phase == 'image_download':
+            progresstext = '%d%% (download image)' % progfn(1, 90)
+        elif phase == 'image_sync':
+            progresstext = '%d%% (sync image)' % progfn(1, 90)
+        elif phase == 'image_checksum':
+            progresstext = '%d%% (check image)' % progfn(90, 100)
+        else:
+            # this should not happen, but show that to user anyway (so if a
+            # developer sees this, she can know there is something to fix)
+            progresstext = '???'
+
+        text = '%s %s' % (_tr('Update progress:'), progresstext)
 
         self.set_progress_text(text)
         self.set_update_button_mode('updating')
 
-        self.indicator.set_attention_icon(self.download_animation_icons[0])
-        self.indicator.set_status(appindicator.STATUS_ATTENTION)
-
-        # cycle attention icons
-        self.download_animation_icons \
-          = self.download_animation_icons[1:] \
-              + [ self.download_animation_icons[0] ]
-
+        if not self.roll_progress_id:
+            self.roll_progress_id \
+              = gobject.timeout_add(250, self.roll_progress_animation)
 
 
     def on_update_started(self):
@@ -276,7 +307,22 @@ class UpdateIndicatorApplet:
         self.indicator.set_attention_icon('update-downloading')
         self.indicator.set_status(appindicator.STATUS_ATTENTION)
 
+        self.append_text_to_log( _tr('System update has been started.') \
+                                   + "\n" )
+
         self.notify( _tr('System update has been started.') )
+
+
+    def roll_progress_animation(self):
+        self.indicator.set_attention_icon(self.download_animation_icons[0])
+        self.indicator.set_status(appindicator.STATUS_ATTENTION)
+
+        # cycle attention icons
+        self.download_animation_icons         \
+          = self.download_animation_icons[1:] \
+              + [ self.download_animation_icons[0] ]
+
+        return True
 
 
     def set_progress_text(self, text):
@@ -342,8 +388,9 @@ class UpdateIndicatorApplet:
 
         self.log_dialog.set_default_size(600, 300)
         self.log_buffer = gtk.TextBuffer()
-        self.log_error_tag = self.log_buffer.create_tag(foreground='red',
-                                                        left_margin=20)
+
+        self.log_ok_tag    = self.log_buffer.create_tag(foreground='green')
+        self.log_error_tag = self.log_buffer.create_tag(foreground='red')
 
         self.log_view = gtk.TextView(self.log_buffer)
         self.log_view.set_editable(False)
@@ -358,6 +405,12 @@ class UpdateIndicatorApplet:
         self.log_dialog.vbox.pack_start(log_scroll)
 
 
+    def stop_roll_progress(self):
+        if self.roll_progress_id:
+            gobject.source_remove(self.roll_progress_id)
+            self.roll_progress_id = None
+
+
     def update_image(self, widget):
         delete_overlays = False
 
@@ -368,19 +421,17 @@ class UpdateIndicatorApplet:
             self.delete_overlays_dialog.hide()
             if not delete_overlays:
                 # The user has just answered no, so we are not going
-                # to proceed. Returning here is not necessary,
-                # UpdateImages() fails if called with
-                # delete_overlays=False and there exists some
-                # overlays. By returning we avoid generating an
-                # user-visible error which would just confuse the
-                # user.
+                # to proceed.  Returning here is not necessary, because
+                # Update() fails if called with delete_overlays=False
+                # when some overlays exist.  By returning we avoid generating
+                # a user-visible error which would only confuse the user.
                 return
 
         self.update_iface \
-            .UpdateImages(False,
-                          delete_overlays,
-                          reply_handler=self.append_text_to_log,
-                          error_handler=self.append_error_to_log)
+            .Update(False,
+                    delete_overlays,
+                    reply_handler=lambda reply: None,
+                    error_handler=self.handle_dbus_error)
 
         self.set_update_button_mode('updating')
         self.on_update_progress_indicator('starting')

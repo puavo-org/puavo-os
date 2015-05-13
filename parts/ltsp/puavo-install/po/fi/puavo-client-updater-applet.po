@@ -9,85 +9,85 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: puavo-client-updater-applet:65
+#: puavo-client-updater-applet:67
 msgid "Updates are disabled in developer mode, boot to normal mode to update."
 msgstr ""
 "Päivittäminen ei ole mahdollista kehittäjätilassa, käynnistä normaalitilaan "
 "päivittääksesi."
 
-#: puavo-client-updater-applet:75
+#: puavo-client-updater-applet:77
 msgid "(No update progress.)"
 msgstr "(Ei päivityksen edistymistä.)"
 
-#: puavo-client-updater-applet:92
+#: puavo-client-updater-applet:95
 msgid "View log..."
 msgstr "Näytä loki..."
 
-#: puavo-client-updater-applet:171
+#: puavo-client-updater-applet:185 puavo-client-updater-applet:187
 msgid "A new system update is available."
 msgstr "Järjestelmän voi päivittää uuteen."
 
-#: puavo-client-updater-applet:179
+#: puavo-client-updater-applet:196
 msgid "Update cancelled."
 msgstr "Päivitys peruutettu."
 
-#: puavo-client-updater-applet:183
+#: puavo-client-updater-applet:198
 msgid "System update has been cancelled."
 msgstr "Järjestelmän päivitys on peruutettu."
 
-#: puavo-client-updater-applet:191
+#: puavo-client-updater-applet:207
 msgid "Update completed."
 msgstr "Päivitys on valmis."
 
-#: puavo-client-updater-applet:196
+#: puavo-client-updater-applet:210
 msgid "System update is finished, reboot the computer."
 msgstr "Järjestelmän päivitys on tehty, uudelleenkäynnistä tietokone."
 
-#: puavo-client-updater-applet:205 puavo-client-updater-applet:228
+#: puavo-client-updater-applet:220 puavo-client-updater-applet:251
 msgid "Update failed."
 msgstr "Päivitys epäonnistui."
 
-#: puavo-client-updater-applet:209
+#: puavo-client-updater-applet:222
 msgid "An error occurred when updating the system."
 msgstr "Virhe tapahtui päivitettäessä järjestelmää."
 
-#: puavo-client-updater-applet:231
+#: puavo-client-updater-applet:254
 msgid "Update done, reboot required to finish the update."
 msgstr "Päivitys tehty, käyttöönotto vaatii uudelleenkäynnistyksen."
 
-#: puavo-client-updater-applet:234
+#: puavo-client-updater-applet:257
 msgid "Update interrupted."
 msgstr "Päivitys keskeytetty."
 
-#: puavo-client-updater-applet:237
+#: puavo-client-updater-applet:260
 msgid "Up to date."
 msgstr "Päivitetty."
 
-#: puavo-client-updater-applet:259
+#: puavo-client-updater-applet:295
 msgid "Update progress:"
 msgstr "Päivityksen edistyminen:"
 
-#: puavo-client-updater-applet:279
+#: puavo-client-updater-applet:310 puavo-client-updater-applet:313
 msgid "System update has been started."
 msgstr "Järjestelmän päivitys on käynnistetty."
 
-#: puavo-client-updater-applet:292
+#: puavo-client-updater-applet:338
 msgid "Check for updates"
 msgstr "Tarkista päivitettävyys"
 
-#: puavo-client-updater-applet:295
+#: puavo-client-updater-applet:341
 msgid "(Checking for updates.)"
 msgstr "(Tarkistetaan päivitettävyyttä.)"
 
-#: puavo-client-updater-applet:299
+#: puavo-client-updater-applet:345
 msgid "Update"
 msgstr "Päivitä"
 
-#: puavo-client-updater-applet:302
+#: puavo-client-updater-applet:348
 msgid "Cancel update"
 msgstr "Peruuta päivitys"
 
-#: puavo-client-updater-applet:321
+#: puavo-client-updater-applet:367
 msgid ""
 "The old version of the system has been edited by the user. Updating the "
 "system causes all these changes to be lost. Do you want to proceed?"
@@ -95,10 +95,10 @@ msgstr ""
 "Vanha versio järjestelmästä sisältää käyttäjän tekemiä muutoksia, jotka "
 "tuhoutuvat päivityksessä. Haluatko jatkaa?"
 
-#: puavo-client-updater-applet:333
+#: puavo-client-updater-applet:379
 msgid "Continue updating?"
 msgstr "Jatka päivittämistä?"
 
-#: puavo-client-updater-applet:338
+#: puavo-client-updater-applet:384
 msgid "Update log"
 msgstr "Päivitysloki"

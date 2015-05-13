@@ -12,27 +12,42 @@ flock -nx 3 || { echo did not get a lock, exiting; exit 1; }
 
 set -eu
 
+exec 4>&1	# another way to write to stdout for log()
+exec 5>&2	# another way to write to stderr for log()
+
 log() {
-    case "$1" in
-      warn|err|crit|alert|emerg)
-        logger_flags="-s"
-        ;;
-      *)
-        if $quiet; then return 0; fi
-        logger_flags=""
-        ;;
-    esac
-    echo "$2" \
-      | logger -p "$1" $logger_flags -t puavo-install-and-update-ltspimages
+  log_to_stdout=false
+  log_to_stderr=false
+
+  logpriority=$1
+  logmessage=$2
+
+  case "$logpriority" in
+    warn|err|crit|alert|emerg)
+      log_to_stderr=true
+      ;;
+    *)
+      $quiet && return 0
+      log_to_stdout=true
+      ;;
+  esac
+
+  $log_to_stdout && echo "$logmessage" >&4
+  $log_to_stderr && echo "$logmessage" >&5
+
+  echo "$logmessage" \
+    | logger -p "$logpriority" -t puavo-install-and-update-ltspimages
 }
 
 usage() {
-  {
-    echo "Usage:"
-    echo "  $(basename $0) [--quiet] [--delete-overlays] [--install-from-file path] next_ltsp_image_name"
-    echo "  $(basename $0) [--quiet] [--delete-overlays] [--install-from-nbd path]  next_ltsp_image_name"
-    echo "  $(basename $0) [--quiet] [--delete-overlays] [--rate-limit rate]        next_ltsp_image_name"
-  } > /dev/stderr
+  cat <<EOF > /dev/stderr
+Usage:
+  $(basename $0) [--quiet] [--delete-overlays] [--install-from-file path] next_ltsp_image_name"
+  $(basename $0) [--quiet] [--delete-overlays] [--install-from-nbd path]  next_ltsp_image_name"
+  $(basename $0) [--quiet] [--delete-overlays] [--rate-limit rate]        next_ltsp_image_name"
+
+  -r / --rate-limit must match regexp [0-9]+[km] for kilobytes/megabytes per second
+EOF
   exit 1
 }
 
@@ -48,7 +63,7 @@ puavoinstall_libdir=/usr/lib/puavo-ltsp-install
 hosttype=""
 image_from_file=""
 image_from_nbd=""
-rate_limit_opts=""
+rate_limit=""
 quiet=false
 delete_overlays=false
 run_preinst_hook=true
@@ -75,7 +90,13 @@ while [ $# -ne 0 ]; do
       image_from_nbd="$2"; shift; shift
       ;;
     -r|--rate-limit)
-      rate_limit_opts="--limit-rate=$2"; shift; shift
+      # Acceptable rate limit parameters must be something that both
+      # rsync (--bwlimit) and wget (--limit-rate) understand.
+      rate_limit="$2"; shift; shift
+      if ! echo "$rate_limit" | grep -Eqx '[0-9]+[km]'; then
+        log err "the rate limit was not understood, got '$rate_limit'"
+        usage
+      fi
       ;;
     -q|--quiet)
       quiet=true; shift;
@@ -147,6 +168,37 @@ trap interrupted INT TERM
 # subroutines
 #
 
+check_checksums_exist_for() {
+  checksums_file=$1; shift
+  for file_to_check_checksum_for in "$@"; do
+    if ! lookup_size_from_cksums "$checksums_file" \
+                                 "$file_to_check_checksum_for" >/dev/null; then
+      log err "could not find checksum for '$file_to_check_checksum_for'"
+      return 1
+    fi
+  done
+
+  return 0
+}
+
+check_image_and_put_it_to_use() {
+  next_image=$1
+  next_image_tmppath=$2
+  checksums_file=$3
+
+  check_with_cksum "$next_image"         \
+                   "$next_image_tmppath" \
+                   "$checksums_file"     \
+                   image_checksum        \
+    || return 1
+
+  sync                                                   || return 1
+  mv "$next_image_tmppath" "${images_dir}/${next_image}" || return 1
+  sync                                                   || return 1
+
+  log notice "new ltsp image $next_image has been put into its place"
+}
+
 check_with_cksum() {
   filename=$1
   actual_file_path=$2
@@ -166,8 +218,7 @@ check_with_cksum() {
     log info "checksum for file $filename is okay"
     return 0
   else
-    log err \
-      "file $filename failed checksum check, removing $actual_file_path"
+    log err "file $filename failed checksum check, removing $actual_file_path"
     rm -f "$actual_file_path"
     return 1
   fi
@@ -187,37 +238,43 @@ cksum_with_progress() {
 
 cleanup_previous_runs() {
   rdiffs_dir=$1
-  preserve_filename=$2
+  preserve_imagefile=$2
+  preserve_rdifffile=$3
 
   old_imageoverlays=$(
     "${puavoinstall_libdir}/ls-old-imageoverlays" "${images_dir}" \
 						  /imageoverlays)
   if [ -n "${old_imageoverlays}" ]; then
-      if ${delete_overlays}; then
-          echo -n "${old_imageoverlays}" | xargs -r -d'\n' -L1 rm -rf
-      else
-          log err "cleanup failed: old images have existing overlays and --delete-overlays was not used" >&2
-          return 1
-      fi
+    if ${delete_overlays}; then
+      echo -n "${old_imageoverlays}" | xargs -r -d'\n' -L1 rm -rf
+    else
+      log err "cleanup failed: old images have existing overlays and --delete-overlays was not used" >&2
+      return 1
+    fi
   fi
 
   # cleanup old ltsp images (and their possible temporary *.tmp files).
   # The ltsp-backup.img is going to go too...
   old_images=$("${puavoinstall_libdir}/ls-old-images" "${images_dir}")
   if [ -n "${old_images}" ]; then
-      echo -n "${old_images}" \
-        | grep -vx "${images_dir}/${preserve_filename}" \
-        | xargs -r -d'\n' -L1 rm -f
+    echo -n "${old_images}" \
+      | fgrep -vx "${images_dir}/${preserve_imagefile}" \
+      | xargs -r -d'\n' -L1 rm -f
   fi
 
   # cleanup old rdiff files, except those that we want to use right now
   if [ -d "$rdiffs_dir" ]; then
-    find "$rdiffs_dir" -maxdepth 1 -type f -a \
-      '(' '(' -name '*.rdiff' -o -name '*.rdiff.tmp' ')' \
-	  -a '!' '('    -name "${preserve_filename}" \
-		     -o -name "${preserve_filename}.tmp" ')' ')' \
-      -print0 \
-    | xargs -0 rm -f
+    if [ -z "$preserve_rdifffile" ]; then
+      find "$rdiffs_dir" -maxdepth 1 \
+             -type f -a '(' -name '*.rdiff' -o -name '*.rdiff.tmp' ')' -print0
+    else
+      find "$rdiffs_dir" -maxdepth 1                                     \
+             -type f -a '('                                              \
+               '(' -name '*.rdiff' -o -name '*.rdiff.tmp' ')'            \
+	          -a '!' '('   -name "${preserve_rdifffile}"             \
+		            -o -name "${preserve_rdifffile}.tmp" ')' ')' \
+        -print0
+    fi | xargs -0 rm -f
   fi
 }
 
@@ -245,36 +302,41 @@ ensure_that_default_image_is_the_current_one() {
   default_image=$(lookup_ltspimage_name_by_alias ltsp.img || true)
 
   if [ -z "$booted_image" ]; then
-    log err "Could not determine the current ltspimage"
+    log err "could not determine the current ltspimage"
     return 1
   fi
 
   if [ "$booted_image" != "$default_image" ]; then
     if [ ! -e "${images_dir}/${booted_image}" ]; then
-      log err "Booted from image '${booted_image}', but it does not exist!"
+      log err "booted from image '${booted_image}', but it does not exist!"
       return 1
     fi
 
     log notice \
-        "Not booted the default image, setting '${booted_image}' as default"
+        "not booted the default image, setting '${booted_image}' as default"
     set_image_as_default_image "$booted_image"
   fi
 }
 
 fetch_with_wget() {
-  extra_wget_opts=$1
+  rate_limit=$1
   output_path=$2  
   url=$3
   phase=$4
+
+  wgetopts=""
+  if [ -n "$rate_limit" ]; then
+    wgetopts="--limit-rate=$rate_limit"
+  fi
 
   wget_error_code=$(
     {
       {
 	wget --ca-certificate=/etc/puavo/certs/rootca.pem \
 	     --continue                                   \
-	     --output-document=${output_path}             \
-	     --progress=dot                               \
-             $extra_wget_opts                             \
+	     --output-document="${output_path}"           \
+	     --progress=dot:mega                          \
+	     $wgetopts                                    \
 	     "$url" >/dev/null                            \
 	  || echo $?
       } 3>&1 1>&2 2>&3 3>&- \
@@ -282,8 +344,7 @@ fetch_with_wget() {
 	    BEGIN { progress = -1 }
 
 	    {
-	      percentage = substr($0, 63, 4)
-	      if (match(percentage, /^[[:space:]]*([[:digit:]]+)%$/, a)) {
+	      if (match($8, /^([[:digit:]]+)%$/, a)) {
 		new_progress = a[1]
 		if (progress != new_progress) {
 		  progress = new_progress
@@ -297,7 +358,7 @@ fetch_with_wget() {
   )
 
   if [ -n "$wget_error_code" ]; then
-    log err "fetching $url, wget returned error code $wget_error_code"
+    log err "fetching $url, wget error code $wget_error_code"
     return 1
   fi
 
@@ -305,68 +366,72 @@ fetch_with_wget() {
 }
 
 get_checksums_file() {
-  extra_wget_opts=$1
+  rate_limit=$1
   url=$2
 
   checksum_file_path="${images_dir}/CKSUMS"
 
-  fetch_with_wget "$extra_wget_opts"          \
+  fetch_with_wget "$rate_limit"               \
 		  "${checksum_file_path}.tmp" \
 		  "$url"                      \
-                  checksums_fetch
-  mv "${checksum_file_path}.tmp" "${checksum_file_path}"
+                  checksums_fetch             \
+    || return 1
+  mv "${checksum_file_path}.tmp" "${checksum_file_path}" || return 1
 
-  echo "${checksum_file_path}"
+  echo "${checksum_file_path}" || return 1
 }
 
 get_next_image() {
   next_image=$1
-  rate_limit_opts=$2
+  rate_limit=$2
 
-  image_server=$(lookup_image_server_from_dns)
+  image_server_list=$(lookup_image_servers)
 
   rdiffs_dir="${images_dir}/rdiffs"
   previous_image=$(lookup_ltspimage_name_by_alias ltsp.img || true)
 
   if [ -z "$previous_image" ]; then
-    log err 'Could not determine the current ltsp image name'
+    log err 'could not determine the current ltsp image name'
     return 1
   fi
 
-  rdiff_filename=$(get_rdiff_filename $previous_image $next_image) || {
-      log err "failed to determine the filename of rdiff between images \
-'${previous_image}' and '${next_image}'"
-      return 1
-  }
+  if ! rdiff_filename=$(get_rdiff_filename $previous_image $next_image); then
+    log err "failed to determine the rdiff filename between '${previous_image}' and '${next_image}'"
+    return 1
+  fi
 
   mkdir -p "$rdiffs_dir"
 
-  cleanup_previous_runs "$rdiffs_dir" "$rdiff_filename"
+  cleanup_previous_runs "$rdiffs_dir" "${next_image}.tmp" "$rdiff_filename"
 
   ensure_enough_available_diskspace "$rdiffs_dir"
 
-  checksums_file=$(
-    get_checksums_file "$rate_limit_opts" \
-		       "https://${image_server}/rdiffs/CKSUMS")
+  for image_server in $image_server_list; do
+    try_rdiff_update_from_imageserver "$image_server"   \
+				      "$rate_limit"     \
+				      "$rdiff_filename" \
+				      "$rdiffs_dir"     \
+				      "$previous_image" \
+				      "$next_image"     \
+      && return 0
+  done
 
-  rdiff_url="https://${image_server}/rdiffs/${rdiff_filename}"
+  # We have failed with updates through rdiff, we try rsync fallback to all
+  # servers in $image_server_list.
 
-  get_rdiff "$rdiffs_dir"      \
-	    "$rate_limit_opts" \
-	    "$rdiff_filename"  \
-	    "$rdiff_url"       \
-	    "$checksums_file"
+  for image_server in $image_server_list; do
+    try_full_image_update_from_imageserver "$image_server" \
+					   "$rate_limit"   \
+				           "$next_image"   \
+      && return 0
+  done
 
-  patch_with_rdiff "$rdiffs_dir"     \
-		   "$previous_image" \
-		   "$next_image"     \
-		   "$rdiff_filename" \
-		   "$checksums_file"
+  return 1
 }
 
 get_rdiff() {
   rdiffs_dir=$1
-  extra_wget_opts=$2
+  rate_limit=$2
   rdiff_filename=$3
   rdiff_url=$4
   checksums_file=$5
@@ -381,14 +446,16 @@ get_rdiff() {
   log info "we are missing the full rdiff $rdiff_filename, going to get it"
 
   rdiff_tmp="${rdiff_path}.tmp"
-  fetch_with_wget  "$extra_wget_opts" "$rdiff_tmp" "$rdiff_url" rdiff_fetch
+  fetch_with_wget "$rate_limit" "$rdiff_tmp" "$rdiff_url" rdiff_fetch \
+    || return 1
   check_with_cksum "$rdiff_filename" \
                    "$rdiff_tmp"      \
                    "$checksums_file" \
-                   rdiff_checksum
+                   rdiff_checksum    \
+    || return 1
 
-  sync
-  mv "$rdiff_tmp" "$rdiff_path"
+  sync || return 1
+  mv "$rdiff_tmp" "$rdiff_path" || return 1
 
   log notice "new rdiff file $rdiff_filename has been put into its place"
 }
@@ -430,24 +497,24 @@ install_from_file_or_nbd() {
   case "$type_opt" in
     -file)
       image_src_path=$type_arg
-      preserve_filename=$(basename "$image_src_path")
+      preserve_imagefile=$(basename "$image_src_path")
       total_size=$(du -k "$image_src_path" | awk '{ print $1 "k" }')
       ;;
     -nbd)
       image_src_path=$type_arg
-      preserve_filename=''
+      preserve_imagefile=''
       total_size=$(df "$image_src_path" \
 		     | awk -v image_src_path="$image_src_path" '
 			 $1 == image_src_path { print $2 "k" }
 		       ')
       ;;
     *)
-      log err "Internal error in install_from_file_or_nbd()"
+      log err "internal error in install_from_file_or_nbd()"
       return 1
       ;;
   esac
 
-  cleanup_previous_runs "${images_dir}/rdiffs" "$preserve_filename"
+  cleanup_previous_runs "${images_dir}/rdiffs" "$preserve_imagefile" ''
 
   dd "if=$image_src_path" 2>/dev/null | pv -s "$total_size" \
     > "${imagepath}.tmp"
@@ -481,34 +548,46 @@ install_image() {
   echo "is now installed and set as default."
 }
 
-lookup_filesize_from_cksums() {
-  awk -v filename="$(basename "$1")" '
+lookup_size_from_cksums() {
+  checksums_file=$1
+  file_to_look_filesize_for=$2
+
+  awk -v filename="$file_to_look_filesize_for" '
     BEGIN { status = 1 }
     $3 == filename { print $2; status = 0 }
     END { exit(status) }
-  ' "${images_dir}/CKSUMS"
+  ' "$checksums_file"
 }
 
-lookup_image_server_from_dns() {
+lookup_image_servers() {
+  all_image_servers=
+
   puavo_domain=$(cat /etc/puavo/domain)
-  image_server=$(
+  image_server_by_dns=$(
     dig SRV "_imageserver._tcp.${puavo_domain}" +search +short \
       | awk '{ sub(/\.$/, ""); printf "%s:%s", $4, $3 }')
 
-  if [ -z "$image_server" ]; then
-    # XXX take only the first image_server from "imageservers"...
-    # XXX we are not yet capable of trying out several servers
-    image_server=$(jq -r '.imageservers[]' /etc/puavo/device.json \
-		     2>/dev/null | head -1) || true
-    if [ -z "$image_server" ]; then
-      image_server="images.$(cat /etc/puavo/topdomain)"
-      log info "$(printf "%s %s\n" \
-			 "could not find the image server from DNS, " \
-			 "falling back to $image_server")"
-    fi
+  if [ -z "$image_server_by_dns" ]; then
+    log info 'could not find the image server from DNS'
+  else
+    all_image_servers="$all_image_servers $image_server_by_dns"
   fi
 
-  echo "$image_server"
+  # XXX not used yet, it is unclear if this will ever be?
+  image_servers_by_devicejson=$(
+    jq -r '.imageservers[]' /etc/puavo/device.json 2>/dev/null || true)
+
+  if [ -n "$image_servers_by_devicejson" ]; then
+    all_image_servers="$all_image_servers $image_servers_by_devicejson"
+  fi
+
+  toplevel_image_server="images.$(cat /etc/puavo/topdomain)"
+
+  all_image_servers="$all_image_servers $toplevel_image_server"
+
+  log info "using image servers: $(echo "$all_image_servers" | xargs)"
+
+  echo "$all_image_servers"
 }
 
 lookup_ltspimage_name_by_alias() {
@@ -542,32 +621,32 @@ patch_with_rdiff() {
   rdiff_filename=$4
   checksums_file=$5
 
-  if ! next_image_filesize=$(lookup_filesize_from_cksums "$next_image"); then
-    log err "Could not lookup image size from CKSUMS for '${next_image}'"
+  if ! next_image_filesize=$(lookup_size_from_cksums "$checksums_file" \
+                                                     "$next_image"); then
+    log err "could not lookup image size from CKSUMS for '${next_image}'"
     return 1
   fi
+
+  next_image_tmppath="${images_dir}/${next_image}.tmp"
 
   # rdiff might fail due to a corrupt rdiff-file or for some other reason.
   # We let rdiff pass through in case of failure, and we check the correctness
   # of the output right after (removing the output if the checksum is bad).
+  # (Note that we do not use pipefail, so with pv the rdiff status code does
+  # not matter anyway).
   {
     rdiff patch "${images_dir}/${previous_image}" \
 		"${rdiffs_dir}/${rdiff_filename}" \
 		-                                 \
       | { pv -n -s "$next_image_filesize" 3>&1 1>&2 2>&3 3>&- \
             | update_stats_with_progress image_patch; } \
-      > "${images_dir}/${next_image}.tmp" 2>&1
+      > "$next_image_tmppath" 2>&1
   } || true
 
-  check_with_cksum "$next_image"                     \
-		   "${images_dir}/${next_image}.tmp" \
-		   "$checksums_file"                 \
-		   image_checksum
-
-  sync
-  mv "${images_dir}/${next_image}.tmp" "${images_dir}/${next_image}"
-
-  log notice "new ltsp image $next_image has been put into its place"
+  check_image_and_put_it_to_use "$next_image"         \
+                                "$next_image_tmppath" \
+                                "$checksums_file"     \
+    || return 1
 }
 
 query_update_confirmation() {
@@ -629,15 +708,121 @@ set_image_as_default_image() {
   update_stats finished 100
 }
 
+try_full_image_update_from_imageserver() {
+  image_server=$1
+  rate_limit=$2
+  next_image=$3
+
+  checksums_file=$(
+    get_checksums_file "$rate_limit" "https://${image_server}/CKSUMS") \
+      || return 1
+
+  # it is not sensible to continue if the required checksum does not exist
+  check_checksums_exist_for "$checksums_file" "$next_image" || return 1
+
+  next_image_tmppath="${images_dir}/${next_image}.tmp"
+
+  rsyncopts=""
+  if [ -n "$rate_limit" ]; then
+    rsyncopts="--bwlimit=$rate_limit"
+  fi
+
+  # The possible port number in $image_server is for https only
+  rsyncserver="$(echo "$image_server" | cut -d: -f1)"
+  remote_rsyncpath="${rsyncserver}::images/${next_image}"
+
+  # rsync may take a little while before it outputs progress information
+  echo 0 | update_stats_with_progress image_sync
+
+  rsync_error_code=$(
+    {
+      {
+	rsync --fuzzy                           \
+	      --inplace                         \
+	      --progress                        \
+	      $rsyncopts                        \
+	      "$remote_rsyncpath"               \
+	      "${images_dir}/${next_image}.tmp" \
+	    2>/dev/null                         \
+	  || echo $? >&2
+      } | unbuffer -p awk '
+	    BEGIN { progress = -1 }
+
+	    {
+	      if (match($2, /^([[:digit:]]+)%$/, a)) {
+		new_progress = a[1]
+		if (progress != new_progress) {
+		  progress = new_progress
+		  print progress
+		}
+	      }
+	    }
+	  ' \
+	| update_stats_with_progress image_sync
+    } 2>&1 || true
+  )
+
+  if [ -z "$rsync_error_code" ]; then
+    log info "rsync fetched the image $next_image with success"
+  else
+    log err "rsyncing ${remote_rsyncpath}: rsync error code $rsync_error_code"
+    httpurl="https://${image_server}/${next_image}"
+    log info "falling back to fetching $httpurl"
+    fetch_with_wget "$rate_limit"         \
+		    "$next_image_tmppath" \
+		    "$httpurl"            \
+		    image_download        \
+      || return 1
+  fi
+
+  check_image_and_put_it_to_use "$next_image"         \
+                                "$next_image_tmppath" \
+                                "$checksums_file"     \
+    || return 1
+}
+
+try_rdiff_update_from_imageserver() {
+  image_server=$1
+  rate_limit=$2
+  rdiff_filename=$3
+  rdiffs_dir=$4
+  previous_image=$5
+  next_image=$6
+
+  checksums_file=$(
+    get_checksums_file "$rate_limit" "https://${image_server}/CKSUMS") \
+      || return 1
+
+  # it is not sensible to continue if the required checksums do not exist
+  check_checksums_exist_for "$checksums_file" "$rdiff_filename" "$next_image" \
+    || return 1
+
+  rdiff_url="https://${image_server}/rdiffs/${rdiff_filename}"
+
+  get_rdiff "$rdiffs_dir"      \
+	    "$rate_limit"      \
+	    "$rdiff_filename"  \
+	    "$rdiff_url"       \
+	    "$checksums_file"  \
+    || return 1
+
+  patch_with_rdiff "$rdiffs_dir"     \
+		   "$previous_image" \
+		   "$next_image"     \
+		   "$rdiff_filename" \
+		   "$checksums_file" \
+    || return 1
+}
+
 update_image() {
   next_image=$1
-  rate_limit_opts=$2
+  rate_limit=$2
 
   if [ ! -e "${images_dir}/${next_image}" ]; then
     ensure_that_default_image_is_the_current_one
 
     log info "we are missing $next_image, going to get it"
-    get_next_image "$next_image" "$rate_limit_opts"
+    get_next_image "$next_image" "$rate_limit"
   fi
 
   # must call /usr/bin/test because /bin/sh is broken regarding this test
@@ -674,6 +859,8 @@ update_stats_with_progress() {
   #   rdiff_fetch
   #   rdiff_checksum
   #   image_patch
+  #   image_download
+  #   image_sync
   #   image_checksum
   #   finished
   #   uptodate
@@ -702,7 +889,7 @@ if [ -n "$image_from_file" ]; then
 elif [ -n "$image_from_nbd" ]; then
   install_image "$next_image" -nbd  "$image_from_nbd"
 else
-  update_image "$next_image" "$rate_limit_opts"
+  update_image "$next_image" "$rate_limit"
 fi
 
 exit 0

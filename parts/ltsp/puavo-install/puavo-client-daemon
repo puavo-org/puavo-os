@@ -5,7 +5,10 @@
 ENV["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 require 'dbus'
+require 'json'
 require 'open3'
+require 'puavo/rest-client'
+require 'socket'
 
 $configuration_update_thread = nil
 $image_update_thread         = nil
@@ -16,6 +19,12 @@ class Updater < DBus::Object
   def configuration_update
     $configuration_update_thread = Thread.new do
       begin
+	# Notify Puavo on our current image situation.  It is good to do this
+	# on every image update, but also periodically, in case we have booted
+	# to a new image (there might be a better place for this, but at least
+	# the configuration update should be run periodically anyway).
+	notify_puavo_on_images()
+
 	command = '/usr/lib/puavo-ltsp-install/update-configuration'
 
 	output, status = Open3.capture2e(command)
@@ -46,7 +55,7 @@ class Updater < DBus::Object
 
       begin
 	if not system('/usr/lib/puavo-ltsp-install/is-update-available') then
-	  return ''
+	  Thread.exit
 	end
 
 	self.UpdateStarted
@@ -58,19 +67,29 @@ class Updater < DBus::Object
 			 { :pgroup => true })
 
 	stdin.close
-	output, errput = '', ''
-	out_thr = Thread.new { output = stdout.read }
-	err_thr = Thread.new { errput = stderr.read }
+	out_thr = Thread.new do
+	  loop { self.UpdateMessage('ok', stdout.readline) } \
+	    rescue EOFError
+        end
+	err_thr = Thread.new do
+	  loop { self.UpdateMessage('error', stderr.readline) } \
+	    rescue EOFError
+	end
 
 	status = wait_thr.value
 
 	[ out_thr, err_thr ].each { |t| t.join if t }
 
 	if not status.success? then
-	  self.UpdateFailed(output, errput)
-	  raise "failed to update device images: #{ errput }"
+	  self.UpdateFailed
+	  raise "Failed to update device images"
 	end
-	self.UpdateCompleted(output, errput)
+	self.UpdateCompleted
+
+	# update device information in Puavo and in local disk as well
+	confthread = $configuration_update_thread
+	confthread.join if confthread
+	configuration_update().join
 
       rescue CancelledImageUpdate => e
 	if wait_thr then
@@ -80,11 +99,9 @@ class Updater < DBus::Object
 	  wait_thr.join
 
 	  [ out_thr, err_thr ].each { |t| t.join if t }
-
-	  self.UpdateCancelled(output, errput)
-	else
-	  self.UpdateCancelled('', '')
 	end
+
+	self.UpdateCancelled
 
       ensure
 	[ out_thr, err_thr ].each { |t| t.exit if t }
@@ -93,22 +110,62 @@ class Updater < DBus::Object
     end
   end
 
+  def notify_puavo_on_images
+    begin
+      available_images \
+	= (Dir.glob('/images/*.img').map { |p| File.basename(p) } \
+	     - %w(ltsp.img ltsp-backup.img)).sort
+      current_image = IO.readlines('/etc/ltsp/this_ltspimage_name') \
+			.first.chomp
+
+      deviceinfo = JSON.parse( File.read('/state/etc/puavo/device.json') )
+
+      update_available_images \
+	= ((deviceinfo['available_images'] || []).sort != available_images)
+      update_current_image = (deviceinfo['current_image'] != current_image)
+
+      if update_available_images || update_current_image then
+        puts 'Updating available images in Puavo'  if update_available_images
+        puts 'Updating the current image in Puavo' if update_current_image
+
+        # Set :dns => :no because we write stuff to Puavo and we have much
+        # better chances of finding the right server when not using DNS.
+        client = PuavoRestClient.new(:auth => :etc, :dns => :no)
+
+        restpath = "/v3/devices/#{ Socket.gethostname }"
+	senddata = {
+	  'available_images' => available_images,
+	  'current_image'    => current_image,
+	}
+	pres = client.post(restpath, :json => senddata)
+	raise "Response code for post-request was: #{ pres.code }" \
+	  unless pres.code == 200
+      end
+
+    rescue StandardError => e
+      raise "Could not update image information in Puavo: '#{ e.message }'"
+    end
+  end
+
   dbus_interface "org.puavo.client.update" do
     dbus_signal :UpdateAvailable
-    dbus_signal :UpdateCancelled,         'in outmsg:s, in errmsg:s'
-    dbus_signal :UpdateFailed,            'in outmsg:s, in errmsg:s'
-    dbus_signal :UpdateCompleted,         'in outmsg:s, in errmsg:s'
+    dbus_signal :UpdateCancelled
+    dbus_signal :UpdateCompleted
+    dbus_signal :UpdateFailed
+    dbus_signal :UpdateIsUpToDate,        'in reboot_required:b'
+    dbus_signal :UpdateMessage,           'in msgtype:s, in content:s'
     dbus_signal :UpdateProgressIndicator, 'in phase:s, in progress:i'
     dbus_signal :UpdateStarted
-    dbus_signal :UpdateIsUpToDate,        'in reboot_required:b'
 
     dbus_method :CancelImageUpdate, '' do
       if $image_update_thread then
         $image_update_thread.raise(CancelledImageUpdate, 'Cancel image update')
+      else
+        self.UpdateCancelled
       end
     end
 
-    dbus_method :HasOldOverlays, "out b" do
+    dbus_method :HasOldOverlays, 'out b' do
       output, errput, status \
         = Open3.capture3('/usr/lib/puavo-ltsp-install/ls-old-imageoverlays',
                          '/images',
@@ -120,7 +177,7 @@ class Updater < DBus::Object
     end
 
     dbus_method :Update,
-                'in use_rate_limit:b, in delete_overlays:b, out s' do
+                'in use_rate_limit:b, in delete_overlays:b, out b' do
       |use_rate_limit, delete_overlays|
         Thread.new do
           ($configuration_update_thread || self.configuration_update()) \
@@ -129,23 +186,10 @@ class Updater < DBus::Object
                                                      delete_overlays)) \
             .join
         end
-
-        return "Configuration and image updates triggered.\n"
     end
 
-    dbus_method :UpdateConfiguration, "out s" do
-      return "Configuration update is in progress.\n" \
-        if $configuration_update_thread
-      self.configuration_update()
-      return "Configuration update started.\n"
-    end
-
-    dbus_method :UpdateImages,
-                'in use_rate_limit:b, in delete_overlays:b, out s' do
-      |use_rate_limit, delete_overlays|
-        return "Image update is in progress.\n" if $image_update_thread
-        self.image_update(use_rate_limit, delete_overlays)
-        return "Image update started.\n"
+    dbus_method :UpdateConfiguration, 'out b' do
+      self.configuration_update() unless $configuration_update_thread
     end
 
     dbus_method :UpdateProgress,
