@@ -493,10 +493,6 @@ class MainWindow(QMainWindow):
         self.__newSceneAction.setShortcut(QKeySequence("Ctrl+N"))
         self.__newSceneAction.triggered.connect(self.__newSceneDialog)
 
-        self.__exportAction = QAction(self)
-        self.__exportAction.setText("&Export measurements...")
-        self.__exportAction.triggered.connect(self.__exportMeasurementsWithDialog)
-
         self.__quitAction = QAction(self)
         self.__quitAction.setText("&Quit")
         self.__quitAction.setShortcut(QKeySequence("Ctrl+Q"))
@@ -509,7 +505,6 @@ class MainWindow(QMainWindow):
 
         fileMenu = menuBar.addMenu("&File")
         fileMenu.addAction(self.__newSceneAction)
-        fileMenu.addAction(self.__exportAction)
         fileMenu.addSeparator()
         fileMenu.addAction(self.__quitAction)
 
@@ -534,26 +529,6 @@ class MainWindow(QMainWindow):
         self.__sceneDockWidget.setWidget(self.__sceneWidget)
         self.__sceneDockWidget.setWindowTitle("Scene")
         self.addDockWidget(Qt.LeftDockWidgetArea, self.__sceneDockWidget)
-
-    def __exportMeasurementsWithDialog(self):
-        filepath = QFileDialog.getSaveFileName(self,
-                                               "Export measurements",
-                                               QDir.currentPath(),
-                                               "CSV (*.csv)")
-        if not filepath:
-            return
-
-        self.__exportMeasurements(filepath)
-
-    def __exportMeasurements(self, filepath):
-        measurements = self.__scene.measurements()
-
-        with open(filepath, "w") as csvfile:
-            header = ",".join(measurements.keys())
-            csvfile.write("%s\n" % header)
-            for vals in zip(*measurements.values()):
-                line = ",".join(['{}'.format(v) for v in vals])
-                csvfile.write('{}\n'.format(line))
 
     def __newSceneDialog(self):
         sceneDialog = SceneDialog()
