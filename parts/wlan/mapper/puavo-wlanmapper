@@ -358,6 +358,7 @@ class Monitor(QObject):
             f.write('filter_packet = BEACON\n')
             f.write('channel_upper = 48\n')
             f.write('channel_dwell = {}\n'.format(self.__dwell))
+            f.write('channel = 1\n')
             f.write('channel_scan\n')
             f.write('channel_scan_rounds = 1\n')
             f.write('outfile = {}\n'.format(self.__horst_outfile_path))
@@ -656,12 +657,17 @@ class SceneWidget(QWidget):
 
         self.setEnabled(False)
 
-        self.__heatmapListWidget = QListWidget()
-        self.__heatmapListWidget.setSortingEnabled(True)
-        self.__heatmapListWidget.sortItems(Qt.DescendingOrder)
+        self.__freqListWidget = QListWidget()
+        self.__freqListWidget.setSortingEnabled(True)
+        self.__freqListWidget.sortItems(Qt.AscendingOrder)
+
+        self.__bssidListWidget = QListWidget()
+        self.__bssidListWidget.setSortingEnabled(True)
+        self.__bssidListWidget.sortItems(Qt.AscendingOrder)
 
         layout = QFormLayout(self)
-        layout.addRow("Heatmap:", self.__heatmapListWidget)
+        layout.addRow("Frequency:", self.__freqListWidget)
+        layout.addRow("BSSID:", self.__bssidListWidget)
 
     def setScene(self, scene):
         if scene is self.__scene:
@@ -671,8 +677,10 @@ class SceneWidget(QWidget):
 
         if self.__scene is not None:
             self.__scene.heatmapsAdded.disconnect(self.__addHeatmaps)
-            self.__heatmapListWidget.currentTextChanged.disconnect(self.__scene.setCurrentHeatmap)
-            self.__heatmapListWidget.clear()
+            self.__freqListWidget.currentTextChanged.disconnect(self.__setFreq)
+            self.__bssidListWidget.currentTextChanged.disconnect(self.__setBSSID)
+            self.__freqListWidget.clear()
+            self.__bssidListWidget.clear()
 
         self.__scene = scene
 
@@ -680,13 +688,40 @@ class SceneWidget(QWidget):
             return
 
         self.__scene.heatmapsAdded.connect(self.__addHeatmaps)
-        self.__heatmapListWidget.currentTextChanged.connect(self.__scene.setCurrentHeatmap)
+        self.__freqListWidget.currentTextChanged.connect(self.__setFreq)
+        self.__bssidListWidget.currentTextChanged.connect(self.__setBSSID)
         self.__addHeatmaps(self.__scene.heatmaps())
 
     def __addHeatmaps(self, heatmaps):
-        self.__heatmapListWidget.addItems(heatmaps)
-        if self.__heatmapListWidget.currentRow() == -1 and self.__heatmapListWidget.count() > 0:
-            self.__heatmapListWidget.setCurrentRow(0)
+        freqs = set()
+        for i in range(self.__freqListWidget.count()):
+            freqs.add(str(self.__freqListWidget.item(i).text()))
+
+        for heatmap in heatmaps:
+            freq, _ = heatmap.split("Hz_")
+            freqs.add(freq)
+
+        self.__freqListWidget.clear()
+        self.__freqListWidget.addItems(list(freqs))
+
+        if self.__freqListWidget.currentRow() == -1 and self.__freqListWidget.count() > 0:
+            self.__freqListWidget.setCurrentRow(0)
+
+    def __setBSSID(self, bssid):
+        if not bssid.isNull():
+            freq = self.__freqListWidget.currentItem().text()
+            self.__scene.setCurrentHeatmap("%sHz_%s" % (freq, bssid))
+
+    def __setFreq(self, newFreq):
+        bssids = set()
+        for heatmap in self.__scene.heatmaps():
+            freq, bssid = heatmap.split("Hz_")
+            if freq == newFreq:
+                bssids.add(bssid)
+
+        self.__bssidListWidget.clear()
+        self.__bssidListWidget.addItems(list(bssids))
+        self.__bssidListWidget.setCurrentRow(0)
 
 INTERFACES = get_dot11_interfaces()
 
