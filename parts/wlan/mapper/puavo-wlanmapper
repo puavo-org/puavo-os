@@ -23,6 +23,7 @@ import errno
 import math
 import os
 import os.path
+import pickle
 import shutil
 import sys
 import tarfile
@@ -119,6 +120,16 @@ class Scene(QGraphicsScene):
         for heatmap_name, heatmap_item in self.__heatmaps.items():
             shutil.copy(os.path.join(_tmpdir, "{}.png".format(heatmap_name)),
                         scenedir)
+
+        data = []
+        for spot in self.__spots:
+            data.append({
+                'x': spot.x(),
+                'y': spot.y(),
+                'measurement': spot.measurement,
+            })
+        with open(os.path.join(scenedir, "spots.pickle"), "w") as f:
+            pickle.dump(data, f)
 
         shutil.copy(os.path.join(_tmpdir, "layout.png"), scenedir)
 
