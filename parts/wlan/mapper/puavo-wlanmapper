@@ -83,8 +83,9 @@ class Scene(QGraphicsScene):
         QGraphicsScene.__init__(self)
 
         self.__monitor = monitor
-        self.__monitor.stopped.connect(self.__stopMeasurement)
-        self.__monitor.started.connect(self.__startMeasurement)
+        self.__monitor.started.connect(self.__startAnimation)
+        self.__monitor.stopped.connect(self.__stopAnimation)
+        self.__monitor.stopped.connect(self.__measurementStopped)
         self.__currentSpot = None
         self.__currentSpotMeasurements = {}
 
@@ -186,15 +187,15 @@ class Scene(QGraphicsScene):
         self.removeItem(spot)
         self.__updateHeatmaps()
 
-    def __startMeasurement(self):
+    def __startAnimation(self):
         self.__animation.setItem(self.__currentSpot)
         self.__animation.timeLine().start()
 
-    def __stopMeasurement(self, isSuccess):
-        if self.__animation.timeLine().state() == QTimeLine.Running:
-            self.__animation.timeLine().stop()
-            self.__animation.setStep(0)
+    def __stopAnimation(self):
+        self.__animation.timeLine().stop()
+        self.__animation.setStep(0)
 
+    def __measurementStopped(self, isSuccess):
         if isSuccess:
             self.__currentSpot.setBrush(QBrush(QColor("#66ff66")))
             self.__currentSpot.measurement = self.__currentSpotMeasurements
