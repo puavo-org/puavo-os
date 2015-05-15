@@ -506,6 +506,7 @@ class MainWindow(QMainWindow):
 
         viewMenu = menuBar.addMenu("&View")
         viewMenu.addAction(self.__monitorDockWidget.toggleViewAction())
+        viewMenu.addAction(self.__sceneDockWidget.toggleViewAction())
 
         helpMenu = menuBar.addMenu("&Help")
         helpMenu.addAction(self.__whatsThisAction)
