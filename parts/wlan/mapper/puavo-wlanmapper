@@ -76,7 +76,7 @@ class Scene(QGraphicsScene):
 
     heatmapsAdded = pyqtSignal(QStringList)
 
-    def __init__(self, monitor, *args):
+    def __init__(self, monitor, layoutPixmap, *args):
         QGraphicsScene.__init__(self, *args)
 
         self.__monitor = monitor
@@ -87,7 +87,8 @@ class Scene(QGraphicsScene):
 
         self.__spots = []
 
-        self.__layoutPixmapItem = None
+        self.__layoutPixmap = layoutPixmap
+        self.addPixmap(self.__layoutPixmap).setZValue(-1)
 
         self.__heatmaps = {}
         self.__currentHeatmap = None
@@ -112,12 +113,6 @@ class Scene(QGraphicsScene):
 
     def heatmaps(self):
         return self.__heatmaps.keys()
-
-    def setLayoutPixmap(self, pixmap):
-        if self.__layoutPixmapItem is not None:
-            self.removeItem(self.__layoutPixmapItem)
-        self.__layoutPixmapItem = self.addPixmap(pixmap)
-        self.__layoutPixmapItem.setZValue(-1)
 
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
@@ -183,8 +178,8 @@ class Scene(QGraphicsScene):
 
             ## To RBF-interpolate, we need more than 1 measurement point.
             if len(xs) > 1:
-                w = self.__layoutPixmapItem.pixmap().width()
-                h = self.__layoutPixmapItem.pixmap().height()
+                w = self.__layoutPixmap.width()
+                h = self.__layoutPixmap.height()
 
                 for bssid, zs in bssidmap.items():
                     heatmap_name = "%dHz_%s" % (freq, bssid)
@@ -544,11 +539,10 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Failed to load a layout image",
                                  msg.format(filepath))
         else:
-            self.__scene = Scene(self.__monitor)
+            self.__scene = Scene(self.__monitor, layoutPixmap)
             self.__view.setScene(self.__scene)
             self.__sceneWidget.setScene(self.__scene)
             self.__monitor.stop()
-            self.__scene.setLayoutPixmap(layoutPixmap)
 
     def __showAboutDialog(self):
         aboutText = QString.fromUtf8(
