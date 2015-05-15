@@ -22,6 +22,15 @@ is_admin_user()
 	| grep -x -q "${PAM_USER}"
 }
 
+if [ "$(jq -r .personally_administered "$device_config_path")" != "true" ]; then
+  # no special restrictions on hosts which are not personally administered
+  exit 0
+fi
+
+#
+# this host is personally administered so special rules apply
+#
+
 # config does not exist or is not readable, so do not restrict anyone
 [ ! -r "$local_config_path" ] && exit 0
 
