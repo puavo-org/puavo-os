@@ -79,8 +79,8 @@ class Scene(QGraphicsScene):
 
     heatmapsAdded = pyqtSignal(QStringList)
 
-    def __init__(self, monitor, layoutPixmap, *args):
-        QGraphicsScene.__init__(self, *args)
+    def __init__(self, monitor, layoutPixmap=None):
+        QGraphicsScene.__init__(self)
 
         self.__monitor = monitor
         self.__monitor.stopped.connect(self.__stopMeasurement)
@@ -90,6 +90,8 @@ class Scene(QGraphicsScene):
 
         self.__spots = []
 
+        if layoutPixmap is None:
+            layoutPixmap = QPixmap()
         self.__layoutPixmap = layoutPixmap
         self.addPixmap(self.__layoutPixmap).setZValue(-1)
 
@@ -136,6 +138,25 @@ class Scene(QGraphicsScene):
         with tarfile.open(unicode(filepath), "w:gz") as f:
             f.add(scenedir, "scene")
 
+    def open(self, filepath):
+        with tarfile.open(unicode(filepath), "r:gz") as archive_file:
+
+            src_image = archive_file.extractfile("scene/layout.png")
+            with open(os.path.join(_tmpdir, "layout.png"), "wb") as dst_image:
+                shutil.copyfileobj(src_image, dst_image)
+            self.__layoutPixmap.load(os.path.join(_tmpdir, "layout.png"))
+
+            spots_picklefile = archive_file.extractfile("scene/spots.pickle")
+            spots_data = pickle.load(spots_picklefile)
+            for spot_data in spots_data:
+                x = spot_data['x']
+                y = spot_data['y']
+                measurement = spot_data['measurement']
+                item = self.__addSpot(QPointF(x, y))
+                item.measurement = measurement
+
+            self.__updateHeatmaps()
+
     def setCurrentHeatmap(self, heatmapName):
         if self.__currentHeatmap is not None:
             self.__currentHeatmap.setVisible(False)
@@ -145,13 +166,17 @@ class Scene(QGraphicsScene):
     def heatmaps(self):
         return self.__heatmaps.keys()
 
+    def __addSpot(self, pos):
+        item = Spot()
+        item.setPos(pos)
+        self.addItem(item)
+        self.__spots.append(item)
+        return item
+
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
         if not event.isAccepted() and event.button() == Qt.LeftButton and not event.modifiers():
-            item = Spot()
-            item.setPos(event.scenePos())
-            self.addItem(item)
-            self.__spots.append(item)
+            self.__addSpot(event.scenePos())
             event.accept()
 
     def removeSpot(self, spot):
@@ -197,7 +222,6 @@ class Scene(QGraphicsScene):
         self.__monitor.start()
 
     def __updateHeatmaps(self):
-
         measurements = self.measurements()
 
         xs = measurements.pop('x')
@@ -526,6 +550,11 @@ class MainWindow(QMainWindow):
         self.__saveSceneAsAction.triggered.connect(self.__saveSceneAsDialog)
         self.__saveSceneAsAction.setEnabled(False)
 
+        self.__openSceneAction = QAction(self)
+        self.__openSceneAction.setText("&Open scene...")
+        self.__openSceneAction.setShortcut(QKeySequence("Ctrl+O"))
+        self.__openSceneAction.triggered.connect(self.__openSceneDialog)
+
         self.__quitAction = QAction(self)
         self.__quitAction.setText("&Quit")
         self.__quitAction.setShortcut(QKeySequence("Ctrl+Q"))
@@ -538,6 +567,7 @@ class MainWindow(QMainWindow):
 
         fileMenu = menuBar.addMenu("&File")
         fileMenu.addAction(self.__newSceneAction)
+        fileMenu.addAction(self.__openSceneAction)
         fileMenu.addAction(self.__saveSceneAsAction)
         fileMenu.addSeparator()
         fileMenu.addAction(self.__quitAction)
@@ -564,6 +594,19 @@ class MainWindow(QMainWindow):
         self.__sceneDockWidget.setWidget(self.__sceneWidget)
         self.__sceneDockWidget.setWindowTitle("Scene")
         self.addDockWidget(Qt.LeftDockWidgetArea, self.__sceneDockWidget)
+
+    def __openSceneDialog(self):
+        filepath = QFileDialog.getOpenFileName(None,
+                                               "Open a scene",
+                                               QDir.currentPath(),
+                                               "Compressed Tar archives (*.tar.gz)")
+        if filepath:
+            self.__scene = Scene(self.__monitor)
+            self.__saveSceneAsAction.setEnabled(True)
+            self.__view.setScene(self.__scene)
+            self.__sceneWidget.setScene(self.__scene)
+            self.__monitor.stop()
+            self.__scene.open(filepath)
 
     def __saveSceneAsDialog(self):
         filepath = QFileDialog.getSaveFileName(None,
