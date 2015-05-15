@@ -172,21 +172,22 @@ class Scene(QGraphicsScene):
         xs = measurements.pop('x')
         ys = measurements.pop('y')
 
+        width = self.__layoutPixmap.width()
+        height = self.__layoutPixmap.height()
+
         for freq, bssidmap in measurements.items():
 
             oldHeatmapNames = set(self.__heatmaps.keys())
 
             ## To RBF-interpolate, we need more than 1 measurement point.
             if len(xs) > 1:
-                w = self.__layoutPixmap.width()
-                h = self.__layoutPixmap.height()
 
                 for bssid, zs in bssidmap.items():
                     heatmap_name = "%dHz_%s" % (freq, bssid)
                     heatmap_filepath = os.path.join(_tmpdir, "{}.png".format(heatmap_name))
-                    save_heatmap(heatmap_filepath, w, h, xs, ys, zs)
+                    save_heatmap(heatmap_filepath, width, height, xs, ys, zs)
 
-                    pixmap = QPixmap(heatmap_filepath).scaled(w, h)
+                    pixmap = QPixmap(heatmap_filepath).scaled(width, height)
                     try:
                         self.__heatmaps[heatmap_name].setPixmap(pixmap)
                     except KeyError:
