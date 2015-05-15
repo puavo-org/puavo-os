@@ -509,11 +509,11 @@ class MainWindow(QMainWindow):
         self.__newSceneAction.setShortcut(QKeySequence("Ctrl+N"))
         self.__newSceneAction.triggered.connect(self.__newSceneDialog)
 
-        self.__saveAsAction = QAction(self)
-        self.__saveAsAction.setText("&Save as...")
-        self.__saveAsAction.setShortcut(QKeySequence("Ctrl+S"))
-        self.__saveAsAction.triggered.connect(self.__saveAsDialog)
-        self.__saveAsAction.setEnabled(False)
+        self.__saveSceneAsAction = QAction(self)
+        self.__saveSceneAsAction.setText("&Save scene as...")
+        self.__saveSceneAsAction.setShortcut(QKeySequence("Ctrl+S"))
+        self.__saveSceneAsAction.triggered.connect(self.__saveSceneAsDialog)
+        self.__saveSceneAsAction.setEnabled(False)
 
         self.__quitAction = QAction(self)
         self.__quitAction.setText("&Quit")
@@ -527,7 +527,7 @@ class MainWindow(QMainWindow):
 
         fileMenu = menuBar.addMenu("&File")
         fileMenu.addAction(self.__newSceneAction)
-        fileMenu.addAction(self.__saveAsAction)
+        fileMenu.addAction(self.__saveSceneAsAction)
         fileMenu.addSeparator()
         fileMenu.addAction(self.__quitAction)
 
@@ -554,9 +554,9 @@ class MainWindow(QMainWindow):
         self.__sceneDockWidget.setWindowTitle("Scene")
         self.addDockWidget(Qt.LeftDockWidgetArea, self.__sceneDockWidget)
 
-    def __saveAsDialog(self):
+    def __saveSceneAsDialog(self):
         filepath = QFileDialog.getSaveFileName(None,
-                                               "Save scene",
+                                               "Save the scene as",
                                                QDir.currentPath(),
                                                "Compressed Tar archives (*.tar.gz)")
         if filepath:
@@ -578,7 +578,7 @@ class MainWindow(QMainWindow):
         else:
             shutil.copy(filepath, os.path.join(_tmpdir, "layout.png"))
             self.__scene = Scene(self.__monitor, layoutPixmap)
-            self.__saveAsAction.setEnabled(True)
+            self.__saveSceneAsAction.setEnabled(True)
             self.__view.setScene(self.__scene)
             self.__sceneWidget.setScene(self.__scene)
             self.__monitor.stop()
@@ -606,7 +606,7 @@ class SceneDialog(QDialog):
         QDialog.__init__(self, *args)
 
         self.setModal(True)
-        self.setWindowTitle("Create new scene")
+        self.setWindowTitle("Create a new scene")
 
         imageLineEdit = QLineEdit()
         imageLineEdit.textChanged.connect(self.__checkImageFilePath)
