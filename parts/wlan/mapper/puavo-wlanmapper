@@ -745,29 +745,30 @@ class SceneWidget(QWidget):
 INTERFACES = get_dot11_interfaces()
 
 def main():
-    app = QApplication(sys.argv)
-
-    if app.argc() > 1:
-        error_message = "ERROR: invalid number of arguments ({})"
-        print(error_message.format(app.argc() - 1), file=sys.stderr)
-        print("Usage: {}".format(sys.argv[0]), file=sys.stderr)
-        return 1
-
-    if not INTERFACES:
-        QMessageBox.critical(None, "Startup failure", "Failed to find any 802.11 devices.")
-        sys.exit(1)
-
-    monitor = Monitor(INTERFACES[0])
-
-    win = MainWindow(monitor)
-    win.show()
-
-    return app.exec_()
-
-if __name__ == "__main__":
+    global _tmpdir
     try:
         _tmpdir = tempfile.mkdtemp(prefix='puavo-wlanmapper.')
-        sys.exit(main())
+        app = QApplication(sys.argv)
+
+        if app.argc() > 1:
+            error_message = "ERROR: invalid number of arguments ({})"
+            print(error_message.format(app.argc() - 1), file=sys.stderr)
+            print("Usage: {}".format(sys.argv[0]), file=sys.stderr)
+            return 1
+
+        if not INTERFACES:
+            QMessageBox.critical(None, "Startup failure", "Failed to find any 802.11 devices.")
+            sys.exit(1)
+
+        monitor = Monitor(INTERFACES[0])
+
+        win = MainWindow(monitor)
+        win.show()
+
+        sys.exit(app.exec_())
     finally:
         if _tmpdir:
             shutil.rmtree(_tmpdir)
+
+if __name__ == "__main__":
+    main()
