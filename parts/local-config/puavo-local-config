@@ -69,12 +69,14 @@ def ensure_conf_sanity(conf, config_path)
 
   # this might include migration code if version should be greater
 
-  if conf['version'] == 1 && conf_version_1_ok?(conf) then
-    return conf
-  else
+  unless conf['version'] == 1 && conf_version_1_ok?(conf) then
     move_conf.call()
     return nil
   end
+
+  # all is OK!
+
+  conf
 end
 
 def search_and_replace_line(file, re, new_line)
@@ -239,6 +241,19 @@ def read_device()
   JSON.parse( IO.read('/state/etc/puavo/device.json') )
 end
 
+def reset_allow_remoteadmins(conf, config_path)
+  return conf if (conf.nil? || conf['allow_remoteadmins'] == false)
+
+  # if allow_remoteadmins were set to true, set it false
+
+  conf['allow_remoteadmins'] = false
+  tmpfile = "#{ config_path }.tmp"
+  File.open(tmpfile, 'w') { |f| f.write(conf.to_json) }
+  FileUtils.mv(tmpfile, config_path)
+
+  conf
+end
+
 def restricted_package_tool(*args)
   system('/usr/sbin/puavo-restricted-package-tool', *args)
 end
@@ -262,27 +277,31 @@ end
 
 config_path = '/state/etc/puavo/local/config.json'
 
-apply_configs      = []
-install_pkg_list   = []
-uninstall_pkg_list = []
+apply_configs        = []
+disable_remoteadmins = false
+install_pkg_list     = []
+uninstall_pkg_list   = []
 
 begin
   opts = GetoptLong.new(
-    [ '--config-path',   '-c', GetoptLong::REQUIRED_ARGUMENT, ],
-    [ '--help',          '-h', GetoptLong::NO_ARGUMENT,       ],
+    [ '--config-path',   '-c',  GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--help',          '-h',  GetoptLong::NO_ARGUMENT,       ],
 
-    [ '--admins',              GetoptLong::NO_ARGUMENT,       ],
-    [ '--grub-default',        GetoptLong::NO_ARGUMENT,       ],
-    [ '--local-users',         GetoptLong::NO_ARGUMENT,       ],
-    [ '--install-pkgs',        GetoptLong::REQUIRED_ARGUMENT, ],
-    [ '--setup-pkgs',          GetoptLong::NO_ARGUMENT,       ],
-    [ '--uninstall-pkgs',      GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--admins',               GetoptLong::NO_ARGUMENT,       ],
+    [ '--disable-remoteadmins', GetoptLong::NO_ARGUMENT,       ],
+    [ '--grub-default',         GetoptLong::NO_ARGUMENT,       ],
+    [ '--local-users',          GetoptLong::NO_ARGUMENT,       ],
+    [ '--install-pkgs',         GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--setup-pkgs',           GetoptLong::NO_ARGUMENT,       ],
+    [ '--uninstall-pkgs',       GetoptLong::REQUIRED_ARGUMENT, ],
   )
 
   opts.each do |opt, arg|
     case opt
       when '--config-path'
 	config_path = arg
+      when '--disable-remoteadmins'
+        disable_remoteadmins = true
       when '--help'
 	print_help()
 	exit(0)
@@ -320,6 +339,10 @@ rescue Exception => e
 end
 
 conf = ensure_conf_sanity(conf, config_path)
+
+if disable_remoteadmins then
+  conf = reset_allow_remoteadmins(conf, config_path)
+end
 
 dispatch_table = {
   '--admins'         => lambda { configure_admins()                 },

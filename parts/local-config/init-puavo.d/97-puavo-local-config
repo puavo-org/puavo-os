@@ -2,7 +2,8 @@ puavo_personally_administered=$(jq -r .personally_administered \
 				      /etc/puavo/device.json)
 
 if [ "$puavo_personally_administered" = "true" ]; then
-  /usr/sbin/puavo-local-config --admins       \
-                               --grub-default \
+  /usr/sbin/puavo-local-config --admins               \
+                               --disable-remoteadmins \
+                               --grub-default         \
                                --local-users
 fi
