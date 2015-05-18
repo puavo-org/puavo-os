@@ -365,9 +365,6 @@ function generate_allow_logins_input(form) {
 }
 
 function generate_allow_remoteadmins_input(form) {
-  // XXX disabled, we will figure out what we want to do with this:
-  return
-
   var div = document.createElement('div');
   var titletext
     = document.createTextNode( mc('Allow login from remote admins:') );
@@ -863,8 +860,7 @@ function write_config() {
           break;
       }
 
-      // XXX disabled, we will figure out what we want to do with this:
-      // new_config.allow_remoteadmins = response.allow_remoteadmins.checked;
+      new_config.allow_remoteadmins = response.allow_remoteadmins.checked;
 
       write_config_to_file(new_config);
     };
