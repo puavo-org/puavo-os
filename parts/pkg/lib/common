@@ -43,3 +43,7 @@ upstream_pack_cache_path() {
 upstream_pack_md5sum() {
   cat "${RESTRICTED_PKG_SHAREDIR}/$1/upstream.pack.md5sum"
 }
+
+check_upstream_pack_md5sum() {
+  echo "$1  $2" | md5sum --check --status 2>/dev/null
+}

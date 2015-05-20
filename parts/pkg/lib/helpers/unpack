@@ -66,12 +66,12 @@ mkdir "${prpdir}"
 cp -a -T "${RESTRICTED_PKG_SHAREDIR}/${package}" "${prpdir}"
 
 if [ ! -f "${upstream_pack_md5sum}.nocheck" ]; then
-  echo "${upstream_pack_md5sum}  ${upstream_pack}" | md5sum --check --status || {
-      echo "E: md5 checksum of the upstream pack '${upstream_pack}' does not" \
-          "match the known checksum ${upstream_pack_md5sum}," \
-          "perhaps you should purge the package and download it again?" >&2
-      exit 1
-  }
+    check_upstream_pack_md5sum "${upstream_pack_md5sum}" "${upstream_pack}" || {
+        echo "E: md5 checksum of the upstream pack '${upstream_pack}' does not" \
+            "match the known checksum ${upstream_pack_md5sum}," \
+            "perhaps you should purge the package and download it again?" >&2
+        exit 1
+    }
 fi
 
 # We own this directory!
