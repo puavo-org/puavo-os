@@ -22,7 +22,7 @@ export GNUPGHOME
 trap on_exit EXIT
 
 # Available from http://linux.dropbox.com/fedora/rpm-public-key.asc
-cat <<EOF >"${PUBFILE}"
+cat <<'EOF' >"${PUBFILE}"
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: SKS 1.1.0
 
