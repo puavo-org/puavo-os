@@ -84,7 +84,7 @@ def puavo_rest_client_cli
       options[:ca_file] = path
     end
 
-    opts.on("-d", "--data BODY", "Use POST method and use BODY as the request body using Content-type application/x-www-form-urlencoded") do |body|
+    opts.on("-d", "--data BODY", "Use POST method and use BODY as the request body using Content-type application/x-www-form-urlencoded. Set to - to read form STDIN") do |body|
       post_request = { :body => body }
       implicit_headers["content-type"] = "application/x-www-form-urlencoded"
     end
@@ -164,6 +164,10 @@ def puavo_rest_client_cli
   path = uri.path
   if uri.query
     path += "?#{ uri.query }"
+  end
+
+  if post_request[:body] == "-"
+    post_request[:body] = STDIN.read()
   end
 
   res = nil
