@@ -16,33 +16,20 @@ CACHE_FILE="${CACHE_DIR}/puavo_session.json"
 
 PUAVO_HOSTNAME=$(cat /etc/puavo/hostname)
 PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
-API_SERVER=$(puavo-resolve-api-server)
-
-if [ "x${API_SERVER}" = "x" ]; then
-  echo "could not determine the Puavo API server from dns" \
-      | logger -t puavo-open-session -p auth.error
-
-  exit 98
-fi
 
 if [ "$1" = "guest" ]; then
   if PUAVO_SESSION=$(
-      curl --cacert /etc/puavo/certs/rootca.pem \
-           --form "hostname=${PUAVO_HOSTNAME}" \
-           --header 'Authorization: Bootserver' \
-           --fail \
-           --max-time 5 \
-           --retry 5 \
-           --retry-delay 1 \
-           --header "Expect:" \
-           "${API_SERVER}/v3/sessions" 2>/dev/null); then
+      timeout 5                                                         \
+        /usr/sbin/puavo-rest-client --user-bootserver                   \
+                                    --data "hostname=${PUAVO_HOSTNAME}" \
+                                    v3/sessions 2>/dev/null); then
       echo "Received puavo guest session: ${PUAVO_SESSION}" \
           | logger -t puavo-open-session -p auth.info
 
       echo "${PUAVO_SESSION}" >"${CACHE_FILE}"
   else
       CODE=$?
-      echo "Failed to get guest session from puavo-rest (curl returned ${CODE})" \
+      echo "Failed to get guest session from puavo-rest (error code ${CODE})" \
           | logger -t puavo-open-session -p auth.error
 
       exit 96
@@ -53,17 +40,10 @@ else
   fi
 
   if PUAVO_SESSION=$(
-      curl --cacert /etc/puavo/certs/rootca.pem \
-           --negotiate \
-           --delegation always \
-           --user : \
-           --form "hostname=${PUAVO_HOSTNAME}" \
-           --fail \
-           --max-time 60 \
-           --retry 5 \
-           --retry-delay 1 \
-           --header "Expect:" \
-           "${API_SERVER}/v3/sessions" 2>/dev/null); then
+      timeout 20                                                        \
+        /usr/sbin/puavo-rest-client --user-krb                          \
+                                    --data "hostname=${PUAVO_HOSTNAME}" \
+                                    v3/sessions 2>/dev/null); then
     echo "Received puavo session: ${PUAVO_SESSION}" \
         | logger -t puavo-open-session -p auth.info
 
@@ -74,10 +54,10 @@ else
     if [ -f "${CACHE_FILE}" -a "${PUAVO_HOSTTYPE}" = "laptop" ]; then
       PUAVO_SESSION=$(cat $CACHE_FILE)
 
-      echo "Failed to get session from puavo-rest (curl returned ${CODE}), reusing old session: ${PUAVO_SESSION}" \
+      echo "Failed to get session from puavo-rest (error code ${CODE}), reusing old session: ${PUAVO_SESSION}" \
           | logger -t puavo-open-session -p auth.warn
     else
-      echo "Failed to get session from puavo-rest (curl returned ${CODE}), no old session to reuse" \
+      echo "Failed to get session from puavo-rest (error code ${CODE}), no old session to reuse" \
           | logger -t puavo-open-session -p auth.error
 
       exit 97
