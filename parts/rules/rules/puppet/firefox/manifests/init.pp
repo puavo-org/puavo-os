@@ -1,9 +1,6 @@
 class firefox {
   include packages
 
-  # XXX not ideal, but what could or should the api_server be?
-  $api_server = "api.opinsys.fi"
-
   # Firefox configuration system is still a mess... if there really is a more
   # straightforward way, I would like to hear about it.
   file {
@@ -14,6 +11,9 @@ class firefox {
     '/etc/firefox/syspref.js':
       content => template('firefox/syspref.js'),
       require => File['/usr/lib/firefox/firefox-puavodesktop.js'];
+
+    '/etc/X11/Xsession.d/48puavo-set-apiserver-envvar':
+      content => template('firefox/48puavo-set-apiserver-envvar');
 
     '/usr/lib/firefox/firefox-puavodesktop.js':
       content => template('firefox/firefox-puavodesktop.js'),
