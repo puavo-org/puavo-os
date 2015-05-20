@@ -51,8 +51,7 @@ if [ -e "$cache_path" -a ! "$cache_path" -ef "$upstream_pack" ]; then
   cp -u "$cache_path" "$upstream_pack"
 fi
 
-echo "${upstream_pack_md5sum}  ${upstream_pack}" \
-    | md5sum --check --status 2>/dev/null && {
+check_upstream_pack_md5sum "${upstream_pack_md5sum}" "${upstream_pack}" && {
     echo "I: upstream pack is already in place and has a correct checksum" >&2
     exit 0
 }
@@ -77,11 +76,10 @@ else
 fi
 
 if [ ! -f "${upstream_pack_md5sum}.nocheck" ]; then
-  echo "${upstream_pack_md5sum}  ${upstream_pack}.tmp" \
-      | md5sum --check --status 2>/dev/null || {
-      echo "E: downloaded upstream pack has incorrect checksum" >&2
-      exit 1
-  }
+    check_upstream_pack_md5sum "${upstream_pack_md5sum}" "${upstream_pack}.tmp" || {
+        echo "E: downloaded upstream pack has incorrect checksum" >&2
+        exit 1
+    }
 fi
 
 mv "${upstream_pack}.tmp" "${upstream_pack}"
