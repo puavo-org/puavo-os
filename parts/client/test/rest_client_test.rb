@@ -242,6 +242,7 @@ describe PuavoRestClient do
 
       client = PuavoRestClient.new({
         :dns => :no,
+        :server => "https://hogwarts.opinsys.net",
         :puavo_domain => "hogwarts.opinsys.net",
       })
 
