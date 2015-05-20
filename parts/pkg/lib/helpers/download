@@ -63,7 +63,8 @@ trap on_exit EXIT
 
 if [ -x "${custom_script}" ]; then
     "${custom_script}" "${url_file}" "${upstream_pack}.tmp" || {
-      echo "E: package downloader returned an error!"; exit 1;
+        echo "E: package downloader returned an error!" >&2
+        exit 1
     }
 else
     wget \
