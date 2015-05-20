@@ -253,7 +253,24 @@ class PuavoRestClient
   # kerberos ticket since one ticket can be used only for  one request
   def client(host)
     headers = @headers.dup
-    _client = HTTP::Client.new()
+
+
+    client_options = {}
+    if @options[:timeout]
+      # Global timeout options for http.rb are super weird. The global is the
+      # sum of write, connect and read.
+      # See: https://github.com/httprb/http.rb/blob/b5e79661e5f440e64ab6c90e4a2e08e8764686f2/lib/http/timeout/global.rb#L13
+      # So divide the time out by 3 and pass it to options
+      timeout = @options[:timeout] / 3.0
+      client_options[:timeout_options] = {
+        :write_timeout => timeout,
+        :connect_timeout => timeout,
+        :read_timeout => timeout
+      }
+      client_options[:timeout_class] = HTTP::Timeout::Global
+    end
+
+    _client = HTTP::Client.new(client_options)
 
     if @options[:auth] == :kerberos
       gsscli = GSSAPI::Simple.new(host, "HTTP")

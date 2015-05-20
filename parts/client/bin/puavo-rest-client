@@ -119,6 +119,10 @@ def puavo_rest_client_cli
       options[:location] = true
     end
 
+    opts.on("-m", "--max-time SEC", "Maximum time in seconds that you allow the whole operation to take") do |seconds|
+      options[:timeout] = seconds.to_f
+    end
+
     opts.on("--port PORT", "Force custom port") do |port|
       options[:port] = port.to_i
     end
