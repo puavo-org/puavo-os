@@ -8,8 +8,8 @@ upstream_pack=$2
 TMPDIR=$(mktemp -d)
 
 GNUPGHOME="${TMPDIR}/.gnupg"
-PUBFILE=${TMPDIR}/pack.pub
-GPGOUTPUT=${TMPDIR}/gpg.output
+PUBFILE="${TMPDIR}/pack.pub"
+GPGOUTPUT="${TMPDIR}/gpg.output"
 
 on_exit()
 {
@@ -22,7 +22,7 @@ export GNUPGHOME
 trap on_exit EXIT
 
 # Available from http://linux.dropbox.com/fedora/rpm-public-key.asc
-cat <<EOF >$PUBFILE
+cat <<EOF >"${PUBFILE}"
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: SKS 1.1.0
 
@@ -58,8 +58,8 @@ wget \
     --input-file "${url_file}" \
     --output-document "${upstream_pack}.part"
 
-gpg --import $PUBFILE || exit 1
-gpg --verify ${upstream_pack}.sig ${upstream_pack}.part || exit 1
+gpg --import "${PUBFILE}" || exit 1
+gpg --verify "${upstream_pack}.sig" "${upstream_pack}.part" || exit 1
 
 mv "${upstream_pack}.part" "${upstream_pack}"
 
