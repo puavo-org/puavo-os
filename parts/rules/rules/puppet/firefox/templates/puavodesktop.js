@@ -8,10 +8,6 @@ lockPref("browser.search.showOneOffButtons", false);
 lockPref("extensions.blocklist.enabled", false);
 lockPref("network.dns.disableIPv6", true);
 lockPref("network.seer.enabled", false);
-<% if not @api_server.nil? -%>
-lockPref("network.negotiate-auth.delegation-uris", "<%= @api_server %>");
-lockPref("network.negotiate-auth.trusted-uris", "<%= @api_server %>");
-<% end -%>
 lockPref("print.postscript.paper_size", "iso_a4");
 lockPref("toolkit.storage.synchronous", 1);
 pref("flashblock.html5video.blocked", false);
@@ -28,4 +24,10 @@ if (gfx_xrender_enabled === "false") {
     lockPref("gfx.xrender.enabled", false);
 } else if (gfx_xrender_enabled === "true") {
     lockPref("gfx.xrender.enabled", true);
+}
+
+apiserver = getenv("PUAVO_APISERVER");
+if (apiserver) {
+  lockPref("network.negotiate-auth.delegation-uris", apiserver);
+  lockPref("network.negotiate-auth.trusted-uris", apiserver);
 }
