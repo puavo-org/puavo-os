@@ -6,4 +6,4 @@ installdir=$1
 
 mkdir -p /var/lib/dropbox
 
-ln -sf "${installdir}/.dropbox-dist" /var/lib/dropbox/.dropbox-dist
+ln -sf -T "${installdir}/.dropbox-dist" /var/lib/dropbox/.dropbox-dist
