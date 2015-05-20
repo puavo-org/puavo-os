@@ -47,3 +47,7 @@ upstream_pack_md5sum() {
 check_upstream_pack_md5sum() {
   echo "$1  $2" | md5sum --check --status 2>/dev/null
 }
+
+is_md5sum_check_required() {
+  test ! -f "${RESTRICTED_PKG_SHAREDIR}/$1/upstream.pack.md5sum.nocheck"
+}

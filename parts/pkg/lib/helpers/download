@@ -75,7 +75,7 @@ else
         --output-document "${upstream_pack}.tmp"
 fi
 
-if [ ! -f "${upstream_pack_md5sum}.nocheck" ]; then
+if is_md5sum_check_required "${package}"; then
     check_upstream_pack_md5sum "${upstream_pack_md5sum}" "${upstream_pack}.tmp" || {
         echo "E: downloaded upstream pack has incorrect checksum" >&2
         exit 1
