@@ -42,20 +42,20 @@ else
   puavo_device_dn="$(cat /etc/puavo/ldap/dn 2>/dev/null || true)"
   puavo_device_password="$(cat /etc/puavo/ldap/password 2>/dev/null || true)"
   if [ -n "$puavo_device_dn" -a -n "$puavo_device_password" ]; then
-    jsondata=$(ruby -r json -e '
-                 puts({ "hostname"        => ARGV[0],
-                        "device_dn"       => ARGV[1],
-                        "device_password" => ARGV[2], }.to_json)
+    formdata=$(ruby -r uri -e '
+                 puts(URI.encode_www_form("hostname"        => ARGV[0],
+                                          "device_dn"       => ARGV[1],
+                                          "device_password" => ARGV[2]))
                ' "$PUAVO_HOSTNAME" "$puavo_device_dn" "$puavo_device_password")
   else
-    jsondata=$(ruby -r json -e 'puts({ "hostname" => ARGV[0] }.to_json)' \
+    formdata=$(ruby -r uri -e 'puts(URI.encode_www_form("hostname" => ARGV[0]))' \
                  "$PUAVO_HOSTNAME")
   fi
 
   if PUAVO_SESSION=$(
-      # use a pipe because $jsondata contains a password
-      echo "$jsondata" \
-        | /usr/sbin/puavo-rest-client --data-json - \
+      # use a pipe because $formdata contains a password
+      echo "$formdata" \
+        | /usr/sbin/puavo-rest-client --data -      \
                                       --max-time 20 \
                                       --user-krb    \
                                       v3/sessions 2>/dev/null); then
