@@ -19,10 +19,10 @@ PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 
 if [ "$1" = "guest" ]; then
   if PUAVO_SESSION=$(
-      timeout 5                                                         \
-        /usr/sbin/puavo-rest-client --user-bootserver                   \
-                                    --data "hostname=${PUAVO_HOSTNAME}" \
-                                    v3/sessions 2>/dev/null); then
+      /usr/sbin/puavo-rest-client --max-time 5                        \
+                                  --user-bootserver                   \
+                                  --data "hostname=${PUAVO_HOSTNAME}" \
+                                  v3/sessions 2>/dev/null); then
       echo "Received puavo guest session: ${PUAVO_SESSION}" \
           | logger -t puavo-open-session -p auth.info
 
@@ -40,10 +40,10 @@ else
   fi
 
   if PUAVO_SESSION=$(
-      timeout 20                                                        \
-        /usr/sbin/puavo-rest-client --user-krb                          \
-                                    --data "hostname=${PUAVO_HOSTNAME}" \
-                                    v3/sessions 2>/dev/null); then
+      /usr/sbin/puavo-rest-client --max-time 20                       \
+                                  --user-krb                          \
+                                  --data "hostname=${PUAVO_HOSTNAME}" \
+                                  v3/sessions 2>/dev/null); then
     echo "Received puavo session: ${PUAVO_SESSION}" \
         | logger -t puavo-open-session -p auth.info
 
