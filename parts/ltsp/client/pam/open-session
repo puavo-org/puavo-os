@@ -19,9 +19,9 @@ PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 
 if [ "$1" = "guest" ]; then
   if PUAVO_SESSION=$(
-      /usr/sbin/puavo-rest-client --max-time 5                        \
+      /usr/sbin/puavo-rest-client --data "hostname=${PUAVO_HOSTNAME}" \
+                                  --max-time 5                        \
                                   --user-bootserver                   \
-                                  --data "hostname=${PUAVO_HOSTNAME}" \
                                   v3/sessions 2>/dev/null); then
       echo "Received puavo guest session: ${PUAVO_SESSION}" \
           | logger -t puavo-open-session -p auth.info
@@ -39,11 +39,26 @@ else
     export KRB5CCNAME="${PAM_KRB5CCNAME}"
   fi
 
+  puavo_device_dn="$(cat /etc/puavo/ldap/dn 2>/dev/null || true)"
+  puavo_device_password="$(cat /etc/puavo/ldap/password 2>/dev/null || true)"
+  if [ -n "$puavo_device_dn" -a -n "$puavo_device_password" ]; then
+    jsondata=$(ruby -r json -e '
+                 puts({ "hostname"        => ARGV[0],
+                        "device_dn"       => ARGV[1],
+                        "device_password" => ARGV[2], }.to_json)
+               ' "$PUAVO_HOSTNAME" "$puavo_device_dn" "$puavo_device_password")
+  else
+    jsondata=$(ruby -r json -e 'puts({ "hostname" => ARGV[0] }.to_json)' \
+                 "$PUAVO_HOSTNAME")
+  fi
+
   if PUAVO_SESSION=$(
-      /usr/sbin/puavo-rest-client --max-time 20                       \
-                                  --user-krb                          \
-                                  --data "hostname=${PUAVO_HOSTNAME}" \
-                                  v3/sessions 2>/dev/null); then
+      # use a pipe because $jsondata contains a password
+      echo "$jsondata" \
+        | /usr/sbin/puavo-rest-client --data-json - \
+                                      --max-time 20 \
+                                      --user-krb    \
+                                      v3/sessions 2>/dev/null); then
     echo "Received puavo session: ${PUAVO_SESSION}" \
         | logger -t puavo-open-session -p auth.info
 
