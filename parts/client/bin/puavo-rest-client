@@ -84,12 +84,12 @@ def puavo_rest_client_cli
       options[:ca_file] = path
     end
 
-    opts.on("-d", "--data BODY", "Use POST method and use BODY as the request body using Content-type application/x-www-form-urlencoded. Set to - to read form STDIN") do |body|
+    opts.on("-d", "--data BODY", "Use POST method and use BODY as the request body using Content-type application/x-www-form-urlencoded. Set to - to read from STDIN") do |body|
       post_request = { :body => body }
       implicit_headers["content-type"] = "application/x-www-form-urlencoded"
     end
 
-    opts.on("--data-json JSON", "POST JSON string with Content-Type application/json") do |body|
+    opts.on("--data-json JSON", "POST JSON string with Content-Type application/json. Set to - to read from STDIN") do |body|
       post_request = { :body => body }
       implicit_headers["content-type"] = "application/json"
     end

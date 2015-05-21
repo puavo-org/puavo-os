@@ -37,8 +37,8 @@ CLI tool and Ruby library
         --user-krb                   Use kerberos authentication
         --user-bootserver            Use bootserver authentication (aka no client authentication)
         --cacert FILE                Tells puavo-rest-client to use the specified certificate file to verify the peer
-    -d, --data BODY                  Use POST method and use BODY as the request body using Content-type application/x-www-form-urlencoded
-        --data-json JSON             POST JSON string with Content-Type application/json
+    -d, --data BODY                  Use POST method and use BODY as the request body using Content-type application/x-www-form-urlencoded.  Set - to read from standard input.
+        --data-json JSON             POST JSON string with Content-Type application/json.  Set - to read from standard input.
     -H, --header HEADER              Add custom header. Can be set multiple times. Example: --header 'Content-Type: application/json'
         --domain DOMAIN              Use custom puavo domain. By default the domain is read from /etc/puavo/domain
         --no-dns                     Do not search for server from DNS
