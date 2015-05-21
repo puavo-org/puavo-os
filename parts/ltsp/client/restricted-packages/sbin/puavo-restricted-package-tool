@@ -45,32 +45,33 @@ usage_error()
     return 1
 }
 
+print_help_and_exit()
+{
+    echo "Usage: $0 [COMMAND] [COMMAND_OPTIONS]"
+    echo
+    echo "Manage restricted packages."
+    echo
+    echo "Commands:"
+    echo "    list                         list all packages and their status"
+    echo "    license                      show package license"
+    echo "    installedlicense             show license of installed package"
+    echo "    downloadlicense              download license text"
+    echo "    download                     download upstream pack"
+    echo "    install                      install package"
+    echo "    configure                    configure package"
+    echo "    unconfigure                  unconfigure package"
+    echo "    uninstall                    uninstall package"
+    echo "    unpack                       unpack package"
+
+    echo
+    exit 0
+}
+
 while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
             shift
-            echo "Usage: $0 COMMAND [COMMAND_OPTIONS]"
-            echo "Usage: $0 --help"
-            echo
-            echo "Manage restricted packages."
-            echo
-            echo "Options:"
-            echo "    -h, --help                   print help and exit"
-            echo
-            echo "Commands:"
-            echo "    list                         list all packages and their status"
-            echo "    license                      show package license"
-            echo "    installedlicense             show license of installed package"
-            echo "    downloadlicense              download license text"
-            echo "    download                     download upstream pack"
-            echo "    install                      install package"
-            echo "    configure                    configure package"
-            echo "    unconfigure                  unconfigure package"
-            echo "    uninstall                    uninstall package"
-            echo "    unpack                       unpack package"
-
-            echo
-            exit 0
+            print_help_and_exit
             ;;
         --)
             shift
@@ -86,7 +87,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ $# -lt 1 ]; then
-    usage_error "invalid number of arguments ($#), at least 1"
+    print_help_and_exit
 fi
 
 command=$1
