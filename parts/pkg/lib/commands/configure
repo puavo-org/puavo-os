@@ -76,7 +76,7 @@ fi
 exitval=0
 
 for package in "$@"; do
-    "${RESTRICTED_PKG_LIBDIR}/helpers/configure" "${package}" || {
+    configure_package "${package}" || {
         exitval=$?
         echo "E: failed to configure package '${package}'" >&2
         # Continue until we have tried to configure all given packages
