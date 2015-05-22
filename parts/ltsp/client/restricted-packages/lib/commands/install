@@ -77,7 +77,7 @@ exitval=0
 for package in "$@"; do
     {
         "${RESTRICTED_PKG_LIBDIR}/helpers/unpack"    "${package}"
-        "${RESTRICTED_PKG_LIBDIR}/helpers/configure" "${package}"
+        configure_package "${package}"
     } || {
 	exitval=$?
 	echo "E: failed to install package '${package}'" >&2

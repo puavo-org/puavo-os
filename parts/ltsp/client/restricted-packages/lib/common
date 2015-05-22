@@ -51,3 +51,24 @@ check_upstream_pack_md5sum() {
 is_md5sum_check_required() {
   test ! -f "${RESTRICTED_PKG_SHAREDIR}/$1/upstream.pack.md5sum.nocheck"
 }
+
+configure_package() {
+    local package=$1
+    local packagedir=$(packagedir "${package}") || return 1
+    local installdir="${packagedir}/i"
+    local prpdir="${packagedir}/PRP"
+
+    has_install_link "$package" || {
+        echo "E: failed to configure package '${package}' because it is not installed" >&2
+        return 1
+    }
+
+    if [ -x "${prpdir}/configure" ]; then
+        "${prpdir}/configure" "${installdir}" "${prpdir}" || {
+            echo "E: failed to configure package '${package}' because '${prpdir}/configure' failed" >&2
+            return 1
+        }
+    fi
+
+    return 0
+}
