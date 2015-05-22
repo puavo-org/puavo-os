@@ -114,3 +114,69 @@ uninstall_package()
 
     return 0
 }
+
+unpack_package()
+{
+    local package=$1
+    local packagedir=$(packagedir "$package") || return 1
+    local installdir="${packagedir}/i"
+    local prpdir="${packagedir}/PRP"
+    local upstream_pack_md5sum=$(upstream_pack_md5sum "$package") || return 1
+
+    has_install_link "$package" && return 0
+
+    if [ -d "${installdir}" ]; then
+        make_install_link "$packagedir" "$package" || return 1
+        return 0
+    fi
+
+    [ ! -f "${packagedir}/upstream.pack" ] && {
+        echo "E: cannot unpack package '${package}' because the upstream pack" \
+            "is missing, download it first" >&2
+        return 1
+    }
+
+    mkdir "${prpdir}"
+    cp -a -T "${RESTRICTED_PKG_SHAREDIR}/${package}" "${prpdir}" || {
+        rm -rf "${prpdir}"
+        return 1
+    }
+
+    if is_md5sum_check_required "${package}"; then
+        check_upstream_pack_md5sum "${upstream_pack_md5sum}" "${upstream_pack}" || {
+            echo "E: md5 checksum of the upstream pack '${upstream_pack}' does not" \
+                "match the known checksum ${upstream_pack_md5sum}," \
+                "perhaps you should purge the package and download it again?" >&2
+            rm -rf "${prpdir}"
+            return 1
+        }
+    fi
+
+    # We own this directory!
+    rm -rf "${installdir}.tmp"
+    mkdir "${installdir}.tmp" || {
+        rm -rf "${prpdir}"
+        return 1
+    }
+
+    if [ -x "${prpdir}/unpack" ]; then
+        "${prpdir}/unpack" "${upstream_pack}" "${installdir}.tmp" || {
+            rm -rf "${prpdir}"
+            rm -rf "${installdir}.tmp"
+            return 1
+        }
+    fi
+
+    mv -T "${installdir}.tmp" "${installdir}" || {
+        rm -rf "${prpdir}"
+        rm -rf "${installdir}.tmp"
+        return 1
+    }
+
+    make_install_link "$packagedir" "$package" || {
+        rm -rf "${prpdir}"
+        return 1
+    }
+
+    return 0
+}
