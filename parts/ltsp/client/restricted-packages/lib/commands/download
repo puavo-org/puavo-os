@@ -76,7 +76,7 @@ fi
 exitval=0
 
 for package in "$@"; do
-    "${RESTRICTED_PKG_LIBDIR}/helpers/download" "${package}" || {
+    download_package "${package}" || {
         exitval=$?
         echo "E: failed to download package '${package}'" >&2
         # Continue until we have tried to download all given packages
