@@ -180,3 +180,60 @@ unpack_package()
 
     return 0
 }
+
+download_package()
+{
+    local package=$1
+    local custom_script="${RESTRICTED_PKG_SHAREDIR}/${package}/download"
+    local packagedir=$(packagedir "$package") || return 1
+    local upstream_pack_md5sum=$(upstream_pack_md5sum "$package") || return 1
+    local upstream_pack="${packagedir}/upstream.pack"
+    local cache_path=$(upstream_pack_cache_path "$package") || return 1
+
+    mkdir -p "$packagedir"
+
+    if [ -e "$cache_path" -a ! "$cache_path" -ef "$upstream_pack" ]; then
+        cp -u "$cache_path" "$upstream_pack" || return 1
+    fi
+
+    check_upstream_pack_md5sum "${upstream_pack_md5sum}" "${upstream_pack}" && {
+        echo "I: upstream pack is already in place and has a correct checksum" >&2
+        return 0
+    }
+
+    local url_file="${RESTRICTED_PKG_SHAREDIR}/${package}/upstream.pack.url"
+
+    if [ -x "${custom_script}" ]; then
+        "${custom_script}" "${url_file}" "${upstream_pack}.tmp" || {
+            echo "E: package downloader returned an error!" >&2
+            rm -rf "${upstream_pack}.tmp"
+            return 1
+        }
+    else
+        wget \
+            --no-use-server-timestamps \
+            --no-verbose \
+            --no-check-certificate \
+            --no-cookies \
+            --input-file "${url_file}" \
+            --output-document "${upstream_pack}.tmp" || {
+            rm -rf "${upstream_pack}.tmp"
+            return 1
+        }
+    fi
+
+    if is_md5sum_check_required "${package}"; then
+        check_upstream_pack_md5sum "${upstream_pack_md5sum}" "${upstream_pack}.tmp" || {
+            echo "E: downloaded upstream pack has incorrect checksum" >&2
+            rm -rf "${upstream_pack}.tmp"
+            return 1
+        }
+    fi
+
+    mv "${upstream_pack}.tmp" "${upstream_pack}" || {
+        rm -rf "${upstream_pack}.tmp"
+        return 1
+    }
+
+    return 0
+}
