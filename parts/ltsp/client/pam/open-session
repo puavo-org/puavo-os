@@ -54,7 +54,7 @@ else
 
   if PUAVO_SESSION=$(
       # use a pipe because $formdata contains a password
-      echo "$formdata" \
+      echo -n "$formdata" \
         | /usr/sbin/puavo-rest-client --data -      \
                                       --max-time 20 \
                                       --user-krb    \
