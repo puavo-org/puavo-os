@@ -94,3 +94,23 @@ unconfigure_package()
 
     return 0
 }
+
+uninstall_package()
+{
+    local package=$1
+    local packagedir=$(packagedir "$package") || return 1
+    local installdir="${packagedir}/i"
+    local prpdir="${packagedir}/PRP"
+
+    remove_install_link "$package" || return 1
+
+    for imglink in $(packagebase "$package")/*.img; do
+        if [ ! -h "$imglink" ]; then
+            # last install link removed, garbage collect this
+            rm -rf "${installdir}" "${prpdir}"
+            break
+        fi
+    done
+
+    return 0
+}
