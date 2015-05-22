@@ -122,6 +122,7 @@ unpack_package()
     local installdir="${packagedir}/i"
     local prpdir="${packagedir}/PRP"
     local upstream_pack_md5sum=$(upstream_pack_md5sum "$package") || return 1
+    local upstream_pack="${packagedir}/upstream.pack"
 
     has_install_link "$package" && return 0
 
@@ -232,6 +233,60 @@ download_package()
 
     mv "${upstream_pack}.tmp" "${upstream_pack}" || {
         rm -rf "${upstream_pack}.tmp"
+        return 1
+    }
+
+    return 0
+}
+
+download_packagelicense()
+{
+    local package=$1
+    local custom_script="${RESTRICTED_PKG_SHAREDIR}/${package}/downloadlicense"
+    local packagedir=$(packagedir "$package") || return 1
+    local upstream_pack_md5sum=$(upstream_pack_md5sum "$package") || return 1
+    local upstream_license="${packagedir}/upstream.license"
+    local cache_path=$(upstream_license_cache_path "$package") || return 1
+
+    mkdir -p "$packagedir" || return 1
+
+    if [ -e "$cache_path" -a ! "$cache_path" -ef "$upstream_license" ]; then
+        cp -u "$cache_path" "$upstream_license" || return 1
+    fi
+
+    if [ -r "$upstream_license" ]; then
+        echo "License file is already in place for '${package}'" >&2
+        return 0
+    fi
+
+    local url="$(jq -r .url ${RESTRICTED_PKG_SHAREDIR}/${package}/license.json)" || return 1
+
+    if [ -z "$url" ]; then
+        echo "No license url could be found for '${package}'" >&2
+        return 1
+    fi
+
+    if [ -x "${custom_script}" ]; then
+        "${custom_script}" "${url}" "${upstream_license}.tmp" || {
+            rm -rf "${upstream_license}.tmp"
+            return 1
+        }
+    else
+        wget \
+            --no-use-server-timestamps \
+            --no-verbose \
+            --no-check-certificate \
+            --no-cookies \
+            --output-document "${upstream_license}.tmp" \
+            --quiet \
+            "${url}" || {
+            rm -rf "${upstream_license}.tmp"
+            return 1
+        }
+    fi
+
+    mv "${upstream_license}.tmp" "${upstream_license}" || {
+        rm -rf "${upstream_license}.tmp"
         return 1
     }
 
