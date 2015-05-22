@@ -6,6 +6,7 @@ has_device_tag() {
 
 puavo_keyboard_layout=$(jq -r .keyboard_layout /etc/puavo/device.json)
 puavo_keyboard_variant=$(jq -r .keyboard_variant /etc/puavo/device.json)
+puavo_personally_administered=$(jq -r .personally_administered /etc/puavo/device.json)
 puavo_primary_user=$(jq -r .primary_user /etc/puavo/device.json)
 puavo_greeter_background_mode=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background_mode://p' | tail -n1)
 puavo_greeter_background=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background://p' | tail -n1)
@@ -15,7 +16,15 @@ background=
 
 BACKGROUNDS_DIR=/usr/share/backgrounds/puavo-greeter
 
-case "${puavo_greeter_background_mode}" in
+if [ "$puavo_personally_administered" = 'true' \
+     -a ! -s /var/lib/extrausers/passwd        \
+     -a -e /usr/share/backgrounds/puavo-firstboot-loginscreen.jpg ]; then
+  # If this host is personally administered, and /var/lib/extrausers/passwd
+  # does not exist or is empty, then we put a special background to guide
+  # the user if that path exists.
+  background="/usr/share/backgrounds/puavo-firstboot-loginscreen.jpg"
+else
+  case "${puavo_greeter_background_mode}" in
     ''|static)
         ;;
     dynamic)
@@ -38,7 +47,8 @@ case "${puavo_greeter_background_mode}" in
     *)
         echo "unknown greeter background mode '${puavo_greeter_background_mode}'" >&2
         ;;
-esac
+  esac
+fi
 
 [ "${puavo_keyboard_layout}" = "null" ] && puavo_keyboard_layout=
 [ "${puavo_keyboard_variant}" = "null" ] && puavo_keyboard_variant=
@@ -67,6 +77,8 @@ fi
 
 if [ -n "${background}" ]; then
   run_gsettings "set com.canonical.unity-greeter background ${background}"
+else
+  run_gsettings "reset com.canonical.unity-greeter background"
 fi
 
 su -s /bin/sh lightdm \
