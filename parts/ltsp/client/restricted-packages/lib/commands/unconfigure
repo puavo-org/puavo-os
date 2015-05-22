@@ -75,7 +75,7 @@ fi
 exitval=0
 
 for package in "$@"; do
-    "${RESTRICTED_PKG_LIBDIR}/helpers/unconfigure" "${package}" || {
+    unconfigure_package "${package}" || {
         exitval=$?
         echo "E: failed to unconfigure package '${package}'" >&2
         # Continue until we have tried to unconfigure all given packages

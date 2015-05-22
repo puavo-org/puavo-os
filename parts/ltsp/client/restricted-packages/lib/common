@@ -72,3 +72,25 @@ configure_package() {
 
     return 0
 }
+
+unconfigure_package()
+{
+    local package=$1
+    local packagedir=$(packagedir "$package") || return 1
+    local installdir="${packagedir}/i"
+    local prpdir="${packagedir}/PRP"
+
+    has_install_link "$package" || {
+        echo "E: failed to unconfigure package '${package}' because it is not installed" >&2
+        return 1
+    }
+
+    if [ -x "${prpdir}/unconfigure" ]; then
+        "${prpdir}/unconfigure" "${installdir}" "${prpdir}" || {
+            echo "E: failed to unconfigure package '${package}' because '${prpdir}/unconfigure' failed" >&2
+            return 1
+        }
+    fi
+
+    return 0
+}
