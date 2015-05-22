@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # ##############################################################################
 #
@@ -23,7 +23,7 @@
 
 set -eu
 
-. "${RESTRICTED_PKG_LIBDIR}/common"
+. "${RESTRICTED_PKG_LIBDIR}/common.bash"
 
 usage_error()
 {

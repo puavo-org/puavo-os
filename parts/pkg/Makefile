@@ -22,7 +22,7 @@ installdirs :
 .PHONY : install
 install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/restricted-packages \
-		lib/common
+		lib/common.bash
 	
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/restricted-packages/commands \
 		lib/commands/*

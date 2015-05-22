@@ -23,7 +23,7 @@
 
 set -eu
 
-. "${RESTRICTED_PKG_LIBDIR}/common"
+. "${RESTRICTED_PKG_LIBDIR}/common.bash"
 
 on_exit()
 {
