@@ -21,17 +21,15 @@
 #
 # Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
 
-set -e
+set -eu
 
 RESTRICTED_PKG_LIBDIR=${RESTRICTED_PKG_LIBDIR:-/usr/lib/puavo-ltsp-client/restricted-packages}
 RESTRICTED_PKG_SHAREDIR=${RESTRICTED_PKG_SHAREDIR:-/usr/share/puavo-ltsp-client/restricted-packages}
 RESTRICTED_PKG_STATEDIR=${RESTRICTED_PKG_STATEDIR:-/state/restricted-packages}
 
-if [ -z "$PUAVOLTSP_IMAGE_NAME" ]; then
-  PUAVOLTSP_IMAGE_NAME=$(cat /etc/ltsp/this_ltspimage_name)
+if [ -z "${PUAVOLTSP_IMAGE_NAME:-}" ]; then
+    read PUAVOLTSP_IMAGE_NAME </etc/ltsp/this_ltspimage_name
 fi
-
-set -u
 
 export PUAVOLTSP_IMAGE_NAME    \
        RESTRICTED_PKG_LIBDIR   \
@@ -49,10 +47,10 @@ print_help_and_exit()
 {
     echo "Usage: $0 [COMMAND] [COMMAND_OPTIONS]"
     echo
-    echo "Manage restricted packages."
+    echo "Package manager for Puavo packages."
     echo
     echo "Commands:"
-    echo "    install                      install package"
+    echo "    install                      install a package"
 
     echo
     exit 0
