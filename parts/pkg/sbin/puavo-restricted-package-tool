@@ -52,16 +52,7 @@ print_help_and_exit()
     echo "Manage restricted packages."
     echo
     echo "Commands:"
-    echo "    list                         list all packages and their status"
-    echo "    license                      show package license"
-    echo "    installedlicense             show license of installed package"
-    echo "    downloadlicense              download license text"
-    echo "    download                     download upstream pack"
     echo "    install                      install package"
-    echo "    configure                    configure package"
-    echo "    unconfigure                  unconfigure package"
-    echo "    uninstall                    uninstall package"
-    echo "    unpack                       unpack package"
 
     echo
     exit 0
@@ -94,7 +85,7 @@ command=$1
 shift
 
 case "${command}" in
-    list|license|installedlicense|downloadlicense|download|install|configure|unconfigure|uninstall|unpack)
+    install)
         "${RESTRICTED_PKG_LIBDIR}/commands/${command}" "$@"
         ;;
     *)
