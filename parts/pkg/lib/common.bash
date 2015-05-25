@@ -1,4 +1,5 @@
-configure_package() {
+configure_package()
+{
     local package_path=$1
     local package_dir="${RESTRICTED_PKG_STATEDIR}/${package_path}"
     local upstream_pack="${package_dir}/upstream.pack"
@@ -31,7 +32,7 @@ unconfigure_package()
     return 0
 }
 
-unpack_package()
+unpack_upstream_pack()
 {
     local package_path=$1
     local package_dir="${RESTRICTED_PKG_STATEDIR}/${package_path}"
@@ -78,7 +79,7 @@ check_md5sum()
     md5sum --check --status 2>/dev/null <<<"${md5sum_str}  ${file}"
 }
 
-download_package()
+download_upstream_pack()
 {
     local package_path=$1
     local package_dir="${RESTRICTED_PKG_STATEDIR}/${package_path}"
@@ -169,12 +170,12 @@ install_package_file()
         return 1
     }
 
-    download_package "${package_path}" || {
+    download_upstream_pack "${package_path}" || {
         echo "E: failed to download the upstream pack of package '${package_path}'" >&2
         return 1
     }
 
-    unpack_package "${package_path}" || {
+    unpack_upstream_pack "${package_path}" || {
         echo "E: failed to unpack the upstream pack of package '${package_path}'" >&2
         return 1
     }
