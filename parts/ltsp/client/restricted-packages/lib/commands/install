@@ -36,25 +36,16 @@ while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
             shift
-            echo "Usage: puavo-restricted-package-tool install PACKAGE [PACKAGE]..."
-            echo "Usage: puavo-restricted-package-tool install --all"
+            echo "Usage: puavo-restricted-package-tool install PACKAGE_FILE"
             echo "Usage: puavo-restricted-package-tool install --help"
             echo
             echo "Install restricted packages."
             echo
             echo "Options:"
             echo "    -h, --help                   print help and exit"
-            echo "    --all                        install all downloaded packages"
             echo
             exit 0
             ;;
-	--all)
-	    shift
-	    packages=$(puavo-restricted-package-tool list \
-		| awk '{ if ($3 != "PURGED") print $1 }')
-	    set -- ${packages}
-	    break
-	    ;;
         --)
             shift
             break
@@ -72,18 +63,25 @@ if [ $# -lt 1 ]; then
     usage_error "invalid number of arguments ($#), expected at least 1"
 fi
 
-exitval=0
+package_file=$1
+shift
 
-for package in "$@"; do
-    {
-        unpack_package "${package}"
-        configure_package "${package}"
-    } || {
-	exitval=$?
-	echo "E: failed to install package '${package}'" >&2
-	# Continue until we have tried to install all given packages
-	# and then fail.
-    }
-done
+package_path=$(extract_package_file "${package_file}") || {
+    echo "E: failed to extract '${package_file}'" >&2
+    exit 1
+}
 
-exit $exitval
+download_package "${package_path}" || {
+    echo "E: failed to download the upstream pack of package '${package_path}'" >&2
+    exit 1
+}
+
+unpack_package "${package_path}" || {
+    echo "E: failed to unpack the upstream pack of package '${package_path}'" >&2
+    exit 1
+}
+
+configure_package "${package_path}" || {
+    echo "E: failed to configure package '${package_path}'" >&2
+    exit 1
+}

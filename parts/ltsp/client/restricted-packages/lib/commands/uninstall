@@ -75,10 +75,7 @@ fi
 exitval=0
 
 for package in "$@"; do
-    {
-        unconfigure_package "${package}"
-	uninstall_package "${package}"
-    } || {
+    unconfigure_package "${package}" || {
 	exitval=$?
 	echo "E: failed to uninstall package '${package}'" >&2
 	# Continue until we have tried to uninstall all given packages
