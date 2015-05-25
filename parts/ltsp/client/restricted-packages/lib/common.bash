@@ -187,3 +187,15 @@ install_package_file()
 
     return 0
 }
+
+remove_package()
+{
+    local package_name=$1
+
+    unconfigure_package "${package_name}" || {
+        echo "E: failed to unconfigure package '{package_name}'" >&2
+        return 1
+    }
+
+    rm -rf "${RESTRICTED_PKG_STATEDIR}/${package_name}"
+}
