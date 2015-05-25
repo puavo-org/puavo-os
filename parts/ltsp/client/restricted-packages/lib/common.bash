@@ -160,3 +160,29 @@ extract_package_file()
 
     echo "${package_path}"
 }
+
+install_package_file()
+{
+    local package_file=$1
+    local package_path=$(extract_package_file "${package_file}") || {
+        echo "E: failed to extract '${package_file}'" >&2
+        return 1
+    }
+
+    download_package "${package_path}" || {
+        echo "E: failed to download the upstream pack of package '${package_path}'" >&2
+        return 1
+    }
+
+    unpack_package "${package_path}" || {
+        echo "E: failed to unpack the upstream pack of package '${package_path}'" >&2
+        return 1
+    }
+
+    configure_package "${package_path}" || {
+        echo "E: failed to configure package '${package_path}'" >&2
+        return 1
+    }
+
+    return 0
+}

@@ -66,22 +66,7 @@ fi
 package_file=$1
 shift
 
-package_path=$(extract_package_file "${package_file}") || {
-    echo "E: failed to extract '${package_file}'" >&2
-    exit 1
-}
-
-download_package "${package_path}" || {
-    echo "E: failed to download the upstream pack of package '${package_path}'" >&2
-    exit 1
-}
-
-unpack_package "${package_path}" || {
-    echo "E: failed to unpack the upstream pack of package '${package_path}'" >&2
-    exit 1
-}
-
-configure_package "${package_path}" || {
-    echo "E: failed to configure package '${package_path}'" >&2
+install_package_file "${package_file}" || {
+    echo "E: failed to install '{package_file}'" >&2
     exit 1
 }
