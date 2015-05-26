@@ -16,6 +16,12 @@ list_configured_packages()
     done <<<"${package_dirs}"
 }
 
+get_package_link()
+{
+    local package_name=$1
+    echo "${RESTRICTED_PKG_STATEDIR}/${package_name}/${PUAVOLTSP_IMAGE_NAME}"
+}
+
 configure_package()
 {
     local package_path=$1
