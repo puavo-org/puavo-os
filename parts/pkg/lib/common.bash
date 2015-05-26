@@ -99,7 +99,6 @@ download_upstream_pack()
     else
         wget \
             --no-use-server-timestamps \
-            --no-verbose \
             --no-check-certificate \
             --no-cookies \
             --input-file "${package_dir}/PRP/upstream.pack.url" \
