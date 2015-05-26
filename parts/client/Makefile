@@ -9,19 +9,16 @@ sbindir = $(exec_prefix)/sbin
 
 INSTALL         = install
 INSTALL_PROGRAM = $(INSTALL)
-RUBY_VERSION    = 1.9.1
-RUBY            = ruby$(RUBY_VERSION)
-BUNDLE          = $(RUBY) /usr/bin/bundle
 
 # For some reason ruby lib directory is different under /usr and /usr/local
 ifeq ($(prefix),/usr/local)
 	RUBY_LIB_DIR = $(prefix)/lib/site_ruby
 else
-	RUBY_LIB_DIR = $(prefix)/usr/lib/ruby/$(RUBY_VERSION)
+	RUBY_LIB_DIR = $(prefix)/lib/ruby/vendor_ruby
 endif
 
 build:
-	$(BUNDLE) install --standalone --path lib/puavo-client-vendor
+	bundle install --standalone --path lib/puavo-client-vendor
 
 install-dirs:
 	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
@@ -40,16 +37,16 @@ install: install-dirs
 
 update-gemfile-lock: clean
 	rm -f Gemfile.lock
-	GEM_HOME=.tmpgem $(BUNDLE) install
+	GEM_HOME=.tmpgem bundle install
 	rm -rf .tmpgem
-	$(BUNDLE) install --deployment
+	bundle install --deployment
 
 clean:
 	rm -rf .bundle
 	rm -rf lib/puavo-client-vendor
 
 test-rest-client:
-	$(BUNDLE) exec $(RUBY)  -Ilib test/rest_client_test.rb
+	bundle exec ruby1.9.1  -Ilib test/rest_client_test.rb
 
 
 test-etc:
