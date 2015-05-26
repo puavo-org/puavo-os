@@ -80,6 +80,33 @@ def ensure_conf_sanity(conf, config_path)
   conf
 end
 
+$primary_user = nil
+def get_primary_user()
+  return $primary_user if $primary_user
+
+  begin
+    primary_user \
+      = IO.read('/state/etc/puavo/local/firstlogin_primary_user').chomp \
+          rescue nil
+
+    if !primary_user then
+      device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
+      primary_user = device.kind_of?(Hash) && device['primary_user']
+    end
+
+    if primary_user && primary_user.match(/^[A-Za-z0-9\.\-]+$/) then
+      $primary_user = primary_user
+    else
+      raise 'no suitable source found'
+    end
+  rescue StandardError => e
+    warn "Could not find primary user: #{ e.message }"
+    return nil
+  end
+
+  $primary_user
+end
+
 def search_and_replace_line(file, re, new_line)
   File.open(file, 'r') do |inputf|
     output_lines = []
@@ -114,8 +141,7 @@ def search_and_replace_line(file, re, new_line)
 end
 
 def configure_admins()
-  device = read_device()
-  admin  = device['primary_user'] || ''
+  admin = get_primary_user() || ''
 
   kernel_cmdline = IO.read('/proc/cmdline')
 
@@ -138,7 +164,7 @@ end
 def configure_local_users(conf)
   return if conf.nil?
 
-  device = read_device()
+  primary_user = get_primary_user()
 
   uid_min, uid_max = 3001, 3999
   group_id = Etc.getgrnam('users').gid
@@ -157,7 +183,7 @@ def configure_local_users(conf)
       next
     end
 
-    if device['primary_user'] == login then
+    if primary_user == login then
       warn "disabling login that is reserved for primary user: '#{ login }'"
       user['enabled'] = false
     end
@@ -225,13 +251,12 @@ def configure_grub_default()
 end
 
 def configure_nm_policy()
-  device = read_device()
-  admin  = device['primary_user']
+  admin = get_primary_user()
 
   confpath = '/etc/polkit-1/localauthority/50-local.d/10.org.freedesktop.networkmanager.allow_modify_by_primary_user.pkla'
 
   if admin then
-    conf = <<"EOF"
+    conf = <<EOF
 [Primary user permissions]
 Identity=unix-user:#{ admin }
 Action=org.freedesktop.NetworkManager.settings.modify.system
@@ -257,11 +282,6 @@ def parse_pkg_list(pkg_list)
     ? Dir.glob('/usr/share/puavo-ltsp-client/restricted-packages/*') \
          .map { |s| File.basename(s) } \
     : pkg_list.split(',')
-end
-
-$device = nil
-def read_device()
-  $device ||= JSON.parse( IO.read('/state/etc/puavo/device.json') )
 end
 
 def reset_allow_remoteadmins(conf, config_path)
