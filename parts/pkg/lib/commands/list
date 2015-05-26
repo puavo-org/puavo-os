@@ -37,9 +37,8 @@ while [ $# -gt 0 ]; do
         -h|--help)
             shift
             echo "Usage: puavo-restricted-package-tool list"
-            echo "Usage: puavo-restricted-package-tool list --help"
             echo
-            echo "List restricted packages and their status."
+            echo "List installed packages."
             echo
             echo "Options:"
             echo "    -h, --help                   print help and exit"
@@ -63,21 +62,4 @@ if [ $# -ne 0 ]; then
     usage_error "invalid number of arguments ($#), expected 0"
 fi
 
-packages=$(find "$RESTRICTED_PKG_SHAREDIR" \
-    -mindepth 1 -maxdepth 1 -type d -printf '%P\n' | sort)
-
-# The length of the longest package name.
-col_width=$(echo "${packages}" | awk '{print length}' | sort -r -n | head -n1)
-
-for package in ${packages}; do
-    if has_install_link "$package"; then
-        status="INSTALLED"
-    elif [ -f "$(packagedir "$package")/upstream.pack" ]; then
-        status="DOWNLOADED"
-    else
-        status="PURGED"
-    fi
-    printf "%-${col_width}s | %s\n" "${package}" "${status}"
-done
-
-exit 0
+list_configured_packages
