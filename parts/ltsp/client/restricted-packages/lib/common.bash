@@ -1,3 +1,21 @@
+list_configured_packages()
+{
+    local package_dirs=$(find "${RESTRICTED_PKG_STATEDIR}" \
+        -maxdepth 2 -mindepth 2                                   \
+        -name "${PUAVOLTSP_IMAGE_NAME}" -type l                   \
+        -exec readlink -e {} \;) || {
+        echo "E: package search failed for an unknown reason" >&2
+        return 1
+    }
+
+    while read package_dir; do
+        local package_basedir=$(dirname "${package_dir}") || return 1
+        local package_name=$(basename "${package_basedir}") || return 1
+
+        echo "${package_name}" || return 1
+    done <<<"${package_dirs}"
+}
+
 configure_package()
 {
     local package_path=$1
