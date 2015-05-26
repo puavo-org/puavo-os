@@ -51,6 +51,7 @@ print_help_and_exit()
     echo
     echo "Commands:"
     echo "    install                      install a package"
+    echo "    list                         list installed packages"
 
     echo
     exit 0
@@ -83,7 +84,7 @@ command=$1
 shift
 
 case "${command}" in
-    install)
+    install|list)
         "${RESTRICTED_PKG_LIBDIR}/commands/${command}" "$@"
         ;;
     *)
