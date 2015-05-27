@@ -40,6 +40,15 @@ get_configured_package_dir()
     readlink -e "${package_link}" || true
 }
 
+get_configured_package_version()
+{
+    local package_name=$1
+    local package_dir=$(get_configured_package_dir "${package_name}") || return 1
+    local package_version=$(basename "${package_dir}") || return 1
+
+    echo "${package_version}"
+}
+
 configure_package()
 {
     local package_name=$1
@@ -70,6 +79,14 @@ configure_package()
     }
 
     echo "I: ${package_name}: configured succesfully" >&2 || true
+}
+
+reconfigure_package()
+{
+    local package_name=$1
+    local package_version=$(get_configured_package_version "${package_name}") || return 1
+
+    configure_package "${package_name}" "${package_version}"
 }
 
 unconfigure_package()

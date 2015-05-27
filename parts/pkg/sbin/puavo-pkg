@@ -52,6 +52,7 @@ print_help_and_exit()
     echo "Commands:"
     echo "    install                      install a package"
     echo "    list                         list installed packages"
+    echo "    reconfigure                  reconfigure an installed package"
     echo "    remove                       remove an installed package"
 
     echo
@@ -85,7 +86,7 @@ command=$1
 shift
 
 case "${command}" in
-    install|list|remove)
+    install|list|reconfigure|remove)
         "${PUAVO_PKG_LIBDIR}/commands/${command}" "$@"
         ;;
     *)
