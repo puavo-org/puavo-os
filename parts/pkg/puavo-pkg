@@ -358,6 +358,17 @@ print_help_and_exit()
     exit 0
 }
 
+assert_args_count()
+{
+    local count=$1
+    shift
+
+    if [ $# -ne "${count}" ]; then
+        usage_error "invalid number of arguments ($#), expected ${count}"
+        return
+    fi
+}
+
 ## Main begins.
 
 set -eu
