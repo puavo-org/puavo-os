@@ -391,9 +391,6 @@ if [ -z "${PUAVOLTSP_IMAGE_NAME:-}" ]; then
     read PUAVOLTSP_IMAGE_NAME </etc/ltsp/this_ltspimage_name
 fi
 
-export PUAVOLTSP_IMAGE_NAME
-export PUAVO_PKG_STATEDIR
-
 mkdir -p "${PUAVO_PKG_STATEDIR}"
 
 while [ $# -gt 0 ]; do
