@@ -27,6 +27,15 @@ get_package_link()
     echo "${RESTRICTED_PKG_STATEDIR}/${package_name}/${PUAVOLTSP_IMAGE_NAME}"
 }
 
+get_package_dir()
+{
+    local package_name=$1
+    local package_version=$2
+    local package_basedir=$(get_package_basedir "${package_name}") || return 1
+
+    echo "${package_basedir}/${package_version}"
+}
+
 configure_package()
 {
     local package_path=$1
