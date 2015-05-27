@@ -34,6 +34,7 @@ class kernels {
     'precise' => '3.2.0-69-generic',
     'trusty'  => '3.13.0-41-generic',
     'utopic'  => '3.16.0-30-generic',
+    'vivid'   => '3.19.0-18-generic',
   }
 
   $legacy_kernel = $lsbdistcodename ? {
@@ -48,6 +49,11 @@ class kernels {
                      'trusty' => '3.16.0-30-generic',
                      default  => $default_kernel,
                    }
+
+  $vivid_kernel = $lsbdistcodename ? {
+                    'trusty' => '3.19.0-18-generic',
+                    default  => $default_kernel,
+                  }
 
   $edge_kernel = $lsbdistcodename ? {
     'trusty' => $architecture ? {
@@ -71,5 +77,6 @@ class kernels {
     'stable':       kernel => $stable_kernel;
     'stable-amd64': kernel => $stable_amd64_kernel;
     'utopic':       kernel => $utopic_kernel;
+    'vivid':        kernel => $vivid_kernel;
   }
 }
