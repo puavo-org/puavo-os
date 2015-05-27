@@ -36,6 +36,14 @@ get_package_dir()
     echo "${package_basedir}/${package_version}"
 }
 
+get_configured_package_dir()
+{
+    local package_name=$1
+    local package_link=$(get_package_link "${package_name}") || return 1
+
+    readlink -e "${package_link}" || true
+}
+
 configure_package()
 {
     local package_path=$1
