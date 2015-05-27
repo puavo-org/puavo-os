@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # ##############################################################################
 #
@@ -36,6 +36,8 @@ export PUAVOLTSP_IMAGE_NAME \
 
 mkdir -p "${PUAVO_PKG_STATEDIR}"
 
+. "${PUAVO_PKG_LIBDIR}/common.bash"
+
 usage_error()
 {
     echo "error $1" >&2
@@ -50,10 +52,10 @@ print_help_and_exit()
     echo "Package manager for Puavo packages."
     echo
     echo "Commands:"
-    echo "    install                      install a package"
-    echo "    list                         list installed packages"
-    echo "    reconfigure                  reconfigure an installed package"
-    echo "    remove                       remove an installed package"
+    echo "  install                      install packages"
+    echo "  list                         list installed packages"
+    echo "  reconfigure                  reconfigure installed packages"
+    echo "  remove                       remove installed packages"
 
     echo
     exit 0
@@ -86,8 +88,17 @@ command=$1
 shift
 
 case "${command}" in
-    install|list|reconfigure|remove)
-        "${PUAVO_PKG_LIBDIR}/commands/${command}" "$@"
+    install)
+        install_package_with_installer "$1"
+        ;;
+    list)
+        list_configured_packages
+        ;;
+    reconfigure)
+        reconfigure_package "$1"
+        ;;
+    remove)
+        remove_package "$1"
         ;;
     *)
         usage_error "unknown command '${command}'"
