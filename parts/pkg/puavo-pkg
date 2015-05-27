@@ -112,6 +112,18 @@ reconfigure_package()
     configure_package "${package_name}" "${package_version}"
 }
 
+reconfigure_all_packages()
+{
+    local packages=$(list_configured_packages) || return 1
+    local retval=0
+
+    for package in ${packages}; do
+        reconfigure_package "${package}" || retval=1
+    done
+
+    return ${retval}
+}
+
 unconfigure_package()
 {
     local package_name=$1
