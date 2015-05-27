@@ -254,7 +254,8 @@ extract_installer_file()
 
     mkdir -p "${package_tmpdir}" || return 1
 
-    tar -z -x -f "${installer_file}" -C "${package_tmpdir}" --strip-components=1 || {
+    tar --no-same-owner --no-same-permissions --strip-components=1 \
+        -z -x -f "${installer_file}" -C "${package_tmpdir}"  || {
         rm -rf "${package_tmpdir}"
         return 1
     }
