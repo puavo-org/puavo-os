@@ -14,6 +14,11 @@ list_configured_packages()
 
         echo "${package_name}" || return 1
     done <<<"${package_dirs}"
+
+get_package_basedir()
+{
+    local package_name=$1
+    echo "${RESTRICTED_PKG_STATEDIR}/${package_name}"
 }
 
 get_package_link()
