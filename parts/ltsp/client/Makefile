@@ -296,6 +296,7 @@ install : installdirs $(install-subdirs)
 		pam/ltspserver-guest-login \
 		pam/make-session-dir \
 		pam/open-session \
+		pam/puavo-local-config-setup \
 		pam/populate-extrausers \
 		pam/restrict-logins-by-local-config \
 		pam/setup-guest-session
