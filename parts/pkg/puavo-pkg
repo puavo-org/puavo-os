@@ -338,22 +338,29 @@ remove_all_packages()
 usage_error()
 {
     echo "error $1" >&2
-    echo "Try '$0 --help' for more information." >&2
+    echo "Try 'puavo-pkg --help' for more information." >&2
     return 1
 }
 
 print_help_and_exit()
 {
-    echo "Usage: $0 [COMMAND] [COMMAND_OPTIONS]"
+    echo "Usage: puavo-pkg [OPTIONS] [COMMAND] [COMMAND_ARGS]"
     echo
     echo "Package manager for Puavo packages."
     echo
+    echo "Options:"
+    echo "  -h, --help                   print this help and exit"
+    echo
     echo "Commands:"
-    echo "  install                      install packages"
+    echo "  install INSTALLER_FILE       install package with an installer"
+    echo
     echo "  list                         list installed packages"
-    echo "  reconfigure                  reconfigure installed packages"
-    echo "  remove                       remove installed packages"
-
+    echo
+    echo "  reconfigure PACKAGE          reconfigure installed PACKAGE"
+    echo "  reconfigure --all            reconfigure all installed packages"
+    echo
+    echo "  remove PACKAGE               remove installed PACKAGE"
+    echo "  remove --all                 remove all installed package"
     echo
     exit 0
 }
@@ -414,16 +421,28 @@ shift
 
 case "${command}" in
     install)
+        assert_args_count 1 "$@"
         install_package_with_installer "$1"
         ;;
     list)
+        assert_args_count 0 "$@"
         list_configured_packages
         ;;
     reconfigure)
-        reconfigure_package "$1"
+        assert_args_count 1 "$@"
+        if [ "$1" = '--all' ]; then
+            reconfigure_all_packages
+        else
+            reconfigure_package "$1"
+        fi
         ;;
     remove)
-        remove_package "$1"
+        assert_args_count 1 "$@"
+        if [ "$1" = '--all' ]; then
+            remove_all_packages
+        else
+            remove_package "$1"
+        fi
         ;;
     *)
         usage_error "unknown command '${command}'"
