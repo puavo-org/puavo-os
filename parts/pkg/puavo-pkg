@@ -1,3 +1,26 @@
+#!/bin/bash
+#
+# ##############################################################################
+#
+# Copyright (C) 2014 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+
 list_configured_packages()
 {
     find "${PUAVO_PKG_STATEDIR}" -maxdepth 2 -mindepth 2 -type l \
@@ -287,3 +310,88 @@ remove_package()
     echo "E: package '${package_name}' is not installed" >&2
     return 1
 }
+
+usage_error()
+{
+    echo "error $1" >&2
+    echo "Try '$0 --help' for more information." >&2
+    return 1
+}
+
+print_help_and_exit()
+{
+    echo "Usage: $0 [COMMAND] [COMMAND_OPTIONS]"
+    echo
+    echo "Package manager for Puavo packages."
+    echo
+    echo "Commands:"
+    echo "  install                      install packages"
+    echo "  list                         list installed packages"
+    echo "  reconfigure                  reconfigure installed packages"
+    echo "  remove                       remove installed packages"
+
+    echo
+    exit 0
+}
+
+## Main begins.
+
+set -eu
+
+PUAVO_PKG_LIBDIR=${PUAVO_PKG_LIBDIR:-/usr/lib/puavo-pkg}
+PUAVO_PKG_STATEDIR=${PUAVO_PKG_STATEDIR:-/state/puavo-pkg}
+
+if [ -z "${PUAVOLTSP_IMAGE_NAME:-}" ]; then
+    read PUAVOLTSP_IMAGE_NAME </etc/ltsp/this_ltspimage_name
+fi
+
+export PUAVOLTSP_IMAGE_NAME \
+       PUAVO_PKG_LIBDIR     \
+       PUAVO_PKG_STATEDIR
+
+mkdir -p "${PUAVO_PKG_STATEDIR}"
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            print_help_and_exit
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage_error "invalid argument '$1'"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -lt 1 ]; then
+    print_help_and_exit
+fi
+
+command=$1
+shift
+
+case "${command}" in
+    install)
+        install_package_with_installer "$1"
+        ;;
+    list)
+        list_configured_packages
+        ;;
+    reconfigure)
+        reconfigure_package "$1"
+        ;;
+    remove)
+        remove_package "$1"
+        ;;
+    *)
+        usage_error "unknown command '${command}'"
+esac
+
+exit 0
