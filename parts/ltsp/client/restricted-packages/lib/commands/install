@@ -36,10 +36,9 @@ while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
             shift
-            echo "Usage: puavo-restricted-package-tool install PACKAGE_FILE"
-            echo "Usage: puavo-restricted-package-tool install --help"
+            echo "Usage: puavo-restricted-package-tool install INSTALLER_FILE"
             echo
-            echo "Install restricted packages."
+            echo "Install a package."
             echo
             echo "Options:"
             echo "    -h, --help                   print help and exit"
@@ -63,10 +62,10 @@ if [ $# -lt 1 ]; then
     usage_error "invalid number of arguments ($#), expected at least 1"
 fi
 
-package_file=$1
+installer_file=$1
 shift
 
-install_package_file "${package_file}" || {
-    echo "E: failed to install '{package_file}'" >&2
+install_package_with_installer "${installer_file}" || {
+    echo "E: failed to install a package with installer '${installer_file}'" >&2
     exit 1
 }
