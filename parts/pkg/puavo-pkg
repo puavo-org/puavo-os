@@ -385,16 +385,14 @@ assert_args_count()
 
 set -eu
 
-PUAVO_PKG_LIBDIR=${PUAVO_PKG_LIBDIR:-/usr/lib/puavo-pkg}
 PUAVO_PKG_STATEDIR=${PUAVO_PKG_STATEDIR:-/state/puavo-pkg}
 
 if [ -z "${PUAVOLTSP_IMAGE_NAME:-}" ]; then
     read PUAVOLTSP_IMAGE_NAME </etc/ltsp/this_ltspimage_name
 fi
 
-export PUAVOLTSP_IMAGE_NAME \
-       PUAVO_PKG_LIBDIR     \
-       PUAVO_PKG_STATEDIR
+export PUAVOLTSP_IMAGE_NAME
+export PUAVO_PKG_STATEDIR
 
 mkdir -p "${PUAVO_PKG_STATEDIR}"
 
