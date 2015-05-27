@@ -1,0 +1,25 @@
+#!/bin/sh
+
+set -eu
+
+if [ -s /var/lib/extrausers/passwd -o -s /var/lib/extrausers/group ]; then
+  # not the first login on this host
+  # (note that this test means that this should be run before populate-users
+  # in puavo-ltsp-client, otherwise this just will not work)
+  exit 0
+fi
+
+personally_administered=$(jq -r .personally_administered \
+                                /etc/puavo/device.json)
+
+if [ "$personally_administered" != 'true' ]; then
+  # host is not personally administered
+  exit 0
+fi
+
+# first login on a personally administered host, setup this user as the
+# primary user
+
+echo "$PAM_USER" > /state/etc/puavo/local/firstlogin_primary_user
+
+/usr/sbin/puavo-local-config --admins --networkmanager-policy
