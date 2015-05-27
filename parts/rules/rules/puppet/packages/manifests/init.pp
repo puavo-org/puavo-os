@@ -850,11 +850,18 @@ class packages {
           package_tag => 'puavo';
 
         [ '3.16.0-30-generic', ]: ; # utopic backport from Ubuntu
+        [ '3.19.0-18-generic', ]: ; # vivid backport from Ubuntu
       }
     }
     'utopic': {
       packages::kernels::kernel_package {
         '3.16.0-30-generic':
+          package_tag => 'puavo';
+      }
+    }
+    'vivid': {
+      packages::kernels::kernel_package {
+        '3.19.0-18-generic':
           package_tag => 'puavo';
       }
     }
