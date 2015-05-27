@@ -23,18 +23,16 @@
 
 set -eu
 
-RESTRICTED_PKG_LIBDIR=${RESTRICTED_PKG_LIBDIR:-/usr/lib/puavo-ltsp-client/restricted-packages}
-RESTRICTED_PKG_SHAREDIR=${RESTRICTED_PKG_SHAREDIR:-/usr/share/puavo-ltsp-client/restricted-packages}
-RESTRICTED_PKG_STATEDIR=${RESTRICTED_PKG_STATEDIR:-/state/restricted-packages}
+PUAVO_PKG_LIBDIR=${PUAVO_PKG_LIBDIR:-/usr/lib/puavo-pkg}
+PUAVO_PKG_STATEDIR=${PUAVO_PKG_STATEDIR:-/state/puavo-pkg}
 
 if [ -z "${PUAVOLTSP_IMAGE_NAME:-}" ]; then
     read PUAVOLTSP_IMAGE_NAME </etc/ltsp/this_ltspimage_name
 fi
 
-export PUAVOLTSP_IMAGE_NAME    \
-       RESTRICTED_PKG_LIBDIR   \
-       RESTRICTED_PKG_SHAREDIR \
-       RESTRICTED_PKG_STATEDIR
+export PUAVOLTSP_IMAGE_NAME \
+       PUAVO_PKG_LIBDIR     \
+       PUAVO_PKG_STATEDIR
 
 usage_error()
 {
@@ -86,7 +84,7 @@ shift
 
 case "${command}" in
     install|list|remove)
-        "${RESTRICTED_PKG_LIBDIR}/commands/${command}" "$@"
+        "${PUAVO_PKG_LIBDIR}/commands/${command}" "$@"
         ;;
     *)
         usage_error "unknown command '${command}'"

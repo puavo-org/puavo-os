@@ -1,6 +1,6 @@
 list_configured_packages()
 {
-    find "${RESTRICTED_PKG_STATEDIR}" -maxdepth 2 -mindepth 2 -type l \
+    find "${PUAVO_PKG_STATEDIR}" -maxdepth 2 -mindepth 2 -type l \
         -name "${PUAVOLTSP_IMAGE_NAME}" -exec readlink -z -e {} \;    \
         | while read -d '' package_dir; do
         local package_basedir=$(dirname "${package_dir}") || return 1
@@ -12,7 +12,7 @@ list_configured_packages()
 get_package_basedir()
 {
     local package_name=$1
-    echo "${RESTRICTED_PKG_STATEDIR}/${package_name}"
+    echo "${PUAVO_PKG_STATEDIR}/${package_name}"
 }
 
 get_package_link()

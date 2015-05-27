@@ -23,12 +23,12 @@
 
 set -eu
 
-. "${RESTRICTED_PKG_LIBDIR}/common.bash"
+. "${PUAVO_PKG_LIBDIR}/common.bash"
 
 usage_error()
 {
     echo "error $1" >&2
-    echo "Try 'puavo-restricted-package-tool remove --help' for more information." >&2
+    echo "Try 'puavo-pkg remove --help' for more information." >&2
     return 1
 }
 
@@ -36,7 +36,7 @@ while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
             shift
-            echo "Usage: puavo-restricted-package-tool remove PACKAGE_NAME"
+            echo "Usage: puavo-pkg remove PACKAGE_NAME"
             echo
             echo "Remove an installed package."
             echo

@@ -23,12 +23,12 @@
 
 set -eu
 
-. "${RESTRICTED_PKG_LIBDIR}/common.bash"
+. "${PUAVO_PKG_LIBDIR}/common.bash"
 
 usage_error()
 {
     echo "error $1" >&2
-    echo "Try 'puavo-restricted-package-tool configure --help' for more information." >&2
+    echo "Try 'puavo-pkg configure --help' for more information." >&2
     return 1
 }
 
@@ -36,9 +36,9 @@ while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
             shift
-            echo "Usage: puavo-restricted-package-tool configure PACKAGE [PACKAGE]..."
-            echo "Usage: puavo-restricted-package-tool configure --all"
-            echo "Usage: puavo-restricted-package-tool configure --help"
+            echo "Usage: puavo-pkg configure PACKAGE [PACKAGE]..."
+            echo "Usage: puavo-pkg configure --all"
+            echo "Usage: puavo-pkg configure --help"
             echo
             echo "Configure restricted packages."
             echo
@@ -50,7 +50,7 @@ while [ $# -gt 0 ]; do
             ;;
         --all)
             shift
-            packages=$(puavo-restricted-package-tool list \
+            packages=$(puavo-pkg list \
                 | awk '{ if ($3 == "INSTALLED") print $1 }')
             set -- ${packages}
             [ $# -eq 0 ] && exit 0
