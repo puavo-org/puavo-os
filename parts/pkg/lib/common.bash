@@ -64,7 +64,7 @@ configure_package()
         }
     fi
 
-    ln -sf "${package_dir}" "${package_link}" || {
+    ln -sf "${package_version}" "${package_link}" || {
         echo "E: failed to create a package link" >&2
         return 1
     }
