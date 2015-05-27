@@ -323,6 +323,18 @@ remove_package()
     return 1
 }
 
+remove_all_packages()
+{
+    local packages=$(list_configured_packages) || return 1
+    local retval=0
+
+    for package in ${packages}; do
+        remove_package "${package}" || retval=1
+    done
+
+    return ${retval}
+}
+
 usage_error()
 {
     echo "error $1" >&2
