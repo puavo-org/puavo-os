@@ -286,11 +286,6 @@ install_package_with_installer()
     local package_name=$(basename "${package_basedir}") || return 1
     local package_version=$(basename "${package_dir}") || return 1
 
-    unconfigure_package "${package_name}" >/dev/null || {
-        echo "E: failed to unconfigure package '${package_name}'" >&2
-        return 1
-    }
-
     download_upstream_pack "${package_dir}" || {
         echo "E: failed to download the upstream pack of package '${package_name}'" >&2
         return 1
@@ -298,6 +293,11 @@ install_package_with_installer()
 
     unpack_upstream_pack "${package_dir}" || {
         echo "E: failed to unpack the upstream pack of package '${package_name}'" >&2
+        return 1
+    }
+
+    unconfigure_package "${package_name}" >/dev/null || {
+        echo "E: failed to unconfigure package '${package_name}'" >&2
         return 1
     }
 
