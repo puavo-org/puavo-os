@@ -153,7 +153,9 @@ unconfigure_package()
 
 unpack_upstream_pack()
 {
-    local package_dir=$1
+    local package_name=$1
+    local package_version=$2
+    local package_dir=$(get_package_dir "${package_name}" "${package_version}") || return 1
     local upstream_pack="${package_dir}/upstream.pack"
     local upstream_dir="${package_dir}/upstream"
     local upstream_tmpdir="${upstream_dir}.tmp"
@@ -182,6 +184,8 @@ unpack_upstream_pack()
         rm -rf "${upstream_tmpdir}"
         return 1
     }
+
+    echo "I: ${package_name}: unpacked upstream pack succesfully" >&2
 }
 
 check_md5sum()
@@ -292,7 +296,7 @@ install_package_with_installer()
         return 1
     }
 
-    unpack_upstream_pack "${package_dir}" || {
+    unpack_upstream_pack "${package_name}" "${package_version}" || {
         echo "E: failed to unpack the upstream pack of package '${package_name}'" >&2
         return 1
     }
