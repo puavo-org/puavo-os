@@ -1,0 +1,57 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+
+        update-alternatives \
+            --install /usr/lib/mozilla/plugins/libjavaplugin.so mozilla-javaplugin.so \
+            "${upstream_dir}/lib/i386/libnpjp2.so" 1100
+
+        update-alternatives \
+            --install /usr/bin/javaws javaws \
+            "${upstream_dir}/bin/javaws" 1100 \
+            --slave /usr/share/man/man1/javaws.1.gz javaws.1.gz \
+            "${upstream_dir}/man/man1/javaws.1"
+
+        if [ -x /opt/java/opinsys-add-cert ]; then
+            /opt/java/opinsys-add-cert "${upstream_dir}"
+            /opt/java/opinsys-create-signed-ruleset
+        fi
+        ;;
+
+    unconfigure)
+        upstream_dir=$1
+        update-alternatives \
+            --remove mozilla-javaplugin.so "${upstream_dir}/lib/i386/libnpjp2.so"
+
+        update-alternatives \
+            --remove javaws "${upstream_dir}/bin/javaws"
+        ;;
+
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        tar -z -x -f "${upstream_pack}" --strip-components=1 -C "${upstream_dir}"
+        ;;
+
+    download)
+        upstream_pack=$1
+        wget \
+            --no-use-server-timestamps \
+            --no-verbose \
+            --no-check-certificate \
+            --no-cookies \
+            --header "Cookie: oraclelicense=accept-securebackup-cookie" \
+            --output-document "${upstream_pack}" \
+            http://download.oracle.com/otn-pub/java/jdk/7u67-b01/jre-7u67-linux-i586.tar.gz
+        ;;
+
+    *)
+        ;;
+esac

@@ -1,6 +1,0 @@
-#!/bin/sh
-
-set -eu
-
-dpkg -x "$1" "$2"
-chmod 0755 "$2"

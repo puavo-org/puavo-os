@@ -108,12 +108,13 @@ configure_package()
         fi
     fi
 
-    if [ -x "${package_dir}/configure" ]; then
-        "${package_dir}/configure" "${upstream_dir}" "${package_dir}" || {
-            log_error "failed to configure package '${package_name}'"
-            return 1
-        }
-    fi
+    pushd "${package_dir}" >/dev/null || return 1
+    ./rules configure "${upstream_dir}" || {
+        popd >/dev/null || true
+        log_error "failed to configure package '${package_name}'"
+        return 1
+    }
+    popd >/dev/null || return 1
 
     ln -sf "${package_version}" "${package_link}" || {
         log_error "failed to create a package link"
@@ -152,12 +153,13 @@ unconfigure_package()
 
     [ -n "${package_dir}" ] || return 0
 
-    if [ -x "${package_dir}/unconfigure" ]; then
-        "${package_dir}/unconfigure" "${upstream_dir}" "${package_dir}" >/dev/null || {
-            log_error "failed to unconfigure package '${package_name}'"
-            return 1
-        }
-    fi
+    pushd "${package_dir}" >/dev/null || return 1
+    ./rules unconfigure "${upstream_dir}" >/dev/null || {
+        popd >/dev/null || true
+        log_error "failed to unconfigure package '${package_name}'"
+        return 1
+    }
+    popd >/dev/null || return 1
 
     rm -f "${package_link}" || return 1
 
@@ -187,12 +189,16 @@ unpack_upstream_pack()
     rm -rf "${upstream_tmpdir}"
     mkdir "${upstream_tmpdir}" || return 1
 
-    if [ -x "${package_dir}/unpack" ]; then
-        "${package_dir}/unpack" "${upstream_pack}" "${upstream_tmpdir}" || {
-            rm -rf "${upstream_tmpdir}"
-            return 1
-        }
-    fi
+    pushd "${package_dir}" >/dev/null || return 1
+    ./rules unpack "${upstream_pack}" "${upstream_tmpdir}" || {
+        popd >/dev/null || true
+        rm -rf "${upstream_tmpdir}"
+        return 1
+    }
+    popd >/dev/null || {
+        rm -rf "${upstream_tmpdir}"
+        return 1
+    }
 
     mv -T "${upstream_tmpdir}" "${upstream_dir}" || {
         rm -rf "${upstream_tmpdir}"
@@ -225,9 +231,15 @@ download_upstream_pack()
         return 0
     fi
 
-    if [ -x "${package_dir}/download" ]; then
-        "${package_dir}/download" "${package_dir}/upstream.pack.url" "${upstream_tmppack}" || {
+    if [ ! -r "${package_dir}/upstream.pack.url" ]; then
+        pushd "${package_dir}" >/dev/null || return 1
+        ./rules download "${upstream_tmppack}" || {
+            popd >/dev/null || true
+            rm -rf "${upstream_tmppack}" || true
             log_error "package downloader returned an error!"
+            return 1
+        }
+        popd >/dev/null || {
             rm -rf "${upstream_tmppack}"
             return 1
         }

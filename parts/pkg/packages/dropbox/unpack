@@ -1,5 +1,0 @@
-#!/bin/sh
-
-set -eu
-
-tar --no-same-owner -z -x -f "$1" -C "$2"

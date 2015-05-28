@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+        mkdir -p /var/lib/dropbox
+        ln -sf -T "${upstream_dir}/.dropbox-dist" /var/lib/dropbox/.dropbox-dist
+        ;;
+    unconfigure)
+        rm -f /var/lib/dropbox/.dropbox-dist
+        ;;
+    unpack)
+        tar --no-same-owner -z -x -f "$1" -C "$2"
+        ;;
+    *)
+        ;;
+esac

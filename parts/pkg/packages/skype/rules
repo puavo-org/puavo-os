@@ -1,0 +1,48 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+symlink_targets='
+/etc/dbus-1/system.d/skype.conf
+/usr/bin/skype
+/usr/share/applications/skype.desktop
+/usr/share/icons/hicolor/128x128/apps/skype.png
+/usr/share/icons/hicolor/16x16/apps/skype.png
+/usr/share/icons/hicolor/24x24/apps/skype.png
+/usr/share/icons/hicolor/256x256/apps/skype.png
+/usr/share/icons/hicolor/32x32/apps/skype.png
+/usr/share/icons/hicolor/48x48/apps/skype.png
+/usr/share/icons/hicolor/64x64/apps/skype.png
+/usr/share/pixmaps/skype.png
+/usr/share/skype
+'
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+
+        for symlink_target in ${symlink_targets}; do
+            mkdir -p $(dirname "${symlink_target}")
+            ln -sf -T "${upstream_dir}${symlink_target}" "${symlink_target}"
+        done
+        ;;
+
+    unconfigure)
+        for symlink_target in ${symlink_targets}; do
+            rm -f "${symlink_target}"
+        done
+        ;;
+
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        dpkg -x "${upstream_pack}" "${upstream_dir}"
+        chmod 0755 "${upstream_dir}"
+        ;;
+
+    *)
+        ;;
+esac

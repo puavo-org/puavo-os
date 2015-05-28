@@ -1,5 +1,0 @@
-#!/bin/sh
-
-set -eu
-
-tar -z -x -f "$1" --strip-components=1 -C "$2"

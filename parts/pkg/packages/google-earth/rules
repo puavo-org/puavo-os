@@ -1,0 +1,44 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+
+        mkdir -p /opt/google/earth
+        ln -sf -T "${upstream_dir}/opt/google/earth/free" /opt/google/earth/free
+
+        mkdir -p /usr/bin
+        ln -sf -T /opt/google/earth/free/googleearth /usr/bin/google-earth
+
+        for icon in /opt/google/earth/free/product_logo_*.png; do
+            icon_size="${icon##*/product_logo_}"
+            xdg-icon-resource install --size "${icon_size%.png}" "${icon}" google-earth
+        done
+
+        xdg-desktop-menu install /opt/google/earth/free/google-earth.desktop
+        ;;
+    unconfigure)
+        xdg-desktop-menu uninstall /opt/google/earth/free/google-earth.desktop
+
+        for icon in /opt/google/earth/free/product_logo_*.png; do
+            icon_size="${icon##*/product_logo_}"
+            xdg-icon-resource uninstall --size "${icon_size%.png}" google-earth
+        done
+
+        rm -f /usr/bin/google-earth
+        rm -f /opt/google/earth/free
+        ;;
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        dpkg -x "${upstream_pack}" "${upstream_dir}"
+        chmod 0755 "${upstream_dir}"
+        ;;
+    *)
+        ;;
+esac

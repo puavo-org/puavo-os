@@ -1,0 +1,49 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+
+        mkdir -p /opt/spotify
+        ln -sf -T "${upstream_dir}/opt/spotify/spotify-client" /opt/spotify/spotify-client
+
+        mkdir -p /usr/bin
+        ln -sf -T /opt/spotify/spotify-client/spotify /usr/bin/spotify
+
+        for icon in /opt/spotify/spotify-client/Icons/spotify-linux-*.png; do
+            icon_size="${icon##*/spotify-linux-}"
+            xdg-icon-resource install --size "${icon_size%.png}" "${icon}" spotify-client
+        done
+
+        # It seems the desktop file has to match the mpris name.
+        # I don't want to change that, so we use --novendor here
+        xdg-desktop-menu install --novendor /opt/spotify/spotify-client/spotify.desktop
+        ;;
+
+    unconfigure)
+        xdg-desktop-menu uninstall --novendor /opt/spotify/spotify-client/spotify.desktop
+
+        for icon in /opt/spotify/spotify-client/Icons/spotify-linux-*.png; do
+            icon_size="${icon##*/spotify-linux-}"
+            xdg-icon-resource uninstall --size "${icon_size%.png}" "${icon}" spotify-client
+        done
+
+        rm -f /usr/bin/spotify
+        rm -f /opt/spotify/spotify-client
+        ;;
+
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        dpkg -x "${upstream_pack}" "${upstream_dir}"
+        chmod 0755 "${upstream_dir}"
+        ;;
+
+    *)
+        ;;
+esac
