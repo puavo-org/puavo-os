@@ -71,9 +71,10 @@ get_configured_package_version()
 {
     local package_name=$1
     local package_dir=$(get_configured_package_dir "${package_name}") || return 1
-    local package_version=$(basename "${package_dir}") || return 1
 
-    echo "${package_version}"
+    [ -n "${package_dir}" ] || return 0
+
+    basename "${package_dir}"
 }
 
 configure_package()
