@@ -21,6 +21,20 @@
 #
 # Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
 
+log_error()
+{
+    local message=$1
+
+    echo "ERROR: $1" >&2
+}
+
+log_info()
+{
+    local message=$1
+
+    echo "INFO: $1" >&2
+}
+
 list_configured_packages()
 {
     find "${PUAVO_PKG_STATEDIR}"        \
@@ -88,25 +102,25 @@ configure_package()
 
     if [ -n "${configured_package_dir}" ]; then
         if [ "${configured_package_dir}" != "${package_dir}" ]; then
-            echo "E: another version of the package has already been configured, " \
-                "unconfigure it before proceeding" >&2
+            log_error "another version of the package has already been " \
+                "configured, unconfigure it before proceeding"
             return 1
         fi
     fi
 
     if [ -x "${package_dir}/configure" ]; then
         "${package_dir}/configure" "${upstream_dir}" "${package_dir}" || {
-            echo "E: failed to configure package '${package_name}'" >&2
+            log_error "failed to configure package '${package_name}'"
             return 1
         }
     fi
 
     ln -sf "${package_version}" "${package_link}" || {
-        echo "E: failed to create a package link" >&2
+        log_error "failed to create a package link"
         return 1
     }
 
-    echo "I: ${package_name}: configured succesfully" >&2 || true
+    log_info "${package_name}: configured succesfully" || true
 }
 
 reconfigure_package()
@@ -140,14 +154,14 @@ unconfigure_package()
 
     if [ -x "${package_dir}/unconfigure" ]; then
         "${package_dir}/unconfigure" "${upstream_dir}" "${package_dir}" >/dev/null || {
-            echo "E: failed to unconfigure package '${package_name}'" >&2
+            log_error "failed to unconfigure package '${package_name}'"
             return 1
         }
     fi
 
     rm -f "${package_link}" || return 1
 
-    echo "I: ${package_name}: unconfigured succesfully" >&2
+    log_info "${package_name}: unconfigured succesfully"
     echo "${package_dir}"
 }
 
@@ -165,8 +179,8 @@ unpack_upstream_pack()
     fi
 
     check_md5sum "${package_dir}/upstream.pack.md5sum" "${upstream_pack}" || {
-        echo "E: upstream pack has incorrect checksum, " \
-            "perhaps you should purge the package and download it again?" >&2
+        log_error "upstream pack has incorrect checksum, " \
+            "perhaps you should purge the package and download it again?"
         return 1
     }
 
@@ -185,7 +199,7 @@ unpack_upstream_pack()
         return 1
     }
 
-    echo "I: ${package_name}: unpacked upstream pack succesfully" >&2
+    log_info "${package_name}: unpacked upstream pack succesfully"
 }
 
 check_md5sum()
@@ -213,7 +227,7 @@ download_upstream_pack()
 
     if [ -x "${package_dir}/download" ]; then
         "${package_dir}/download" "${package_dir}/upstream.pack.url" "${upstream_tmppack}" || {
-            echo "E: package downloader returned an error!" >&2
+            log_error "package downloader returned an error!"
             rm -rf "${upstream_tmppack}"
             return 1
         }
@@ -230,7 +244,7 @@ download_upstream_pack()
     fi
 
     check_md5sum "${package_dir}/upstream.pack.md5sum" "${upstream_tmppack}" || {
-        echo "E: downloaded upstream pack has incorrect checksum" >&2
+        log_error "downloaded upstream pack has incorrect checksum"
         rm -rf "${upstream_tmppack}"
         return 1
     }
@@ -240,7 +254,7 @@ download_upstream_pack()
         return 1
     }
 
-    echo "I: ${package_name}: downloaded upstream pack succesfully" >&2
+    log_info "${package_name}: downloaded upstream pack succesfully"
 }
 
 get_md5sum()
@@ -278,7 +292,7 @@ extract_installer_file()
         return 1
     }
 
-    echo "I: ${package_name}: extracted installer file succesfully" >&2
+    log_info "${package_name}: extracted installer file succesfully"
 
     echo "${package_dir}"
 }
@@ -287,7 +301,7 @@ install_package_with_installer()
 {
     local installer_file=$1
     local package_dir=$(extract_installer_file "${installer_file}") || {
-        echo "E: failed to extract '${installer_file}'" >&2
+        log_error "failed to extract '${installer_file}'"
         return 1
     }
 
@@ -296,26 +310,26 @@ install_package_with_installer()
     local package_version=$(basename "${package_dir}") || return 1
 
     download_upstream_pack "${package_name}" "${package_version}" || {
-        echo "E: failed to download the upstream pack of package '${package_name}'" >&2
+        log_error "failed to download the upstream pack of package '${package_name}'"
         return 1
     }
 
     unpack_upstream_pack "${package_name}" "${package_version}" || {
-        echo "E: failed to unpack the upstream pack of package '${package_name}'" >&2
+        log_error "failed to unpack the upstream pack of package '${package_name}'"
         return 1
     }
 
     unconfigure_package "${package_name}" >/dev/null || {
-        echo "E: failed to unconfigure package '${package_name}'" >&2
+        log_error "failed to unconfigure package '${package_name}'"
         return 1
     }
 
     configure_package "${package_name}" "${package_version}" || {
-        echo "E: failed to configure package '${package_name}' of version '${package_version}'" >&2
+        log_error "failed to configure package '${package_name}' of version '${package_version}'"
         return 1
     }
 
-    echo "I: ${package_name}: installed succesfully" >&2
+    log_info "${package_name}: installed succesfully"
 }
 
 remove_package()
@@ -323,17 +337,17 @@ remove_package()
     local package_name=$1
 
     local package_dir=$(unconfigure_package "${package_name}") || {
-        echo "E: failed to unconfigure package '${package_name}'" >&2
+        log_error "failed to unconfigure package '${package_name}'"
         return 1
     }
 
     if [ -n "${package_dir}" ]; then
         rm -rf "${package_dir}" || return 1
-        echo "I: removed package '${package_name}'" >&2
+        log_info "removed package '${package_name}'"
         return 0
     fi
 
-    echo "E: package '${package_name}' is not installed" >&2
+    log_error "package '${package_name}' is not installed"
     return 1
 }
 
@@ -351,7 +365,9 @@ remove_all_packages()
 
 usage_error()
 {
-    echo "error $1" >&2
+    local message=$1
+
+    log_error "${message}"
     echo "Try 'puavo-pkg --help' for more information." >&2
     return 1
 }
