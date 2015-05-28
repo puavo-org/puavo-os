@@ -85,19 +85,13 @@ def get_primary_user()
   return $primary_user if $primary_user
 
   begin
-    primary_user \
-      = IO.read('/state/etc/puavo/local/firstlogin_primary_user').chomp \
-          rescue nil
-
-    if !primary_user then
-      device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
-      primary_user = device.kind_of?(Hash) && device['primary_user']
-    end
+    device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
+    primary_user = device.kind_of?(Hash) && device['primary_user']
 
     if primary_user && primary_user.match(/^[A-Za-z0-9\.\-]+$/) then
       $primary_user = primary_user
     else
-      raise 'no suitable source found'
+      raise 'Primary user is not set or is in invalid format'
     end
   rescue StandardError => e
     warn "Could not find primary user: #{ e.message }"
