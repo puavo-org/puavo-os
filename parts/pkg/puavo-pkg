@@ -213,6 +213,8 @@ check_md5sum()
     local md5sum_file=$1
     local file=$2
 
+    [ -r "${file}" ] || return 1
+
     [ -r "${md5sum_file}" ] || return 0
     local md5sum_str=$(cat "${md5sum_file}") || return 1
 
