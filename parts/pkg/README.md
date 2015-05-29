@@ -61,8 +61,8 @@ be executed by ``puavo-pkg`` which will pass an installer command as the
 first argument. There are four installer commands: ``download``,
 ``unpack``, ``configure`` and ``unconfigure``.
 
-Optionally, the installer file can have ``PACKAGE/upstream.pack.url``
-and ``PACKAGE/upstream.pack.md5sum`` files. The former must contain a
+Optionally, the installer file can have ``PACKAGE/upstream_pack_url``
+and ``PACKAGE/upstream_pack_md5sum`` files. The former must contain a
 valid URL pointing to the upstream package and the latter must contain
 the MD5 checksum of the upstream package.
 
@@ -71,7 +71,7 @@ like this:
 
     $ tar -tf mypackage.tar.gz
     mypackage/rules
-    mypackage/upstream.pack.url
-    mypackage/upstream.pack.md5sum
+    mypackage/upstream_pack_url
+    mypackage/upstream_pack_md5sum
 
 TBC

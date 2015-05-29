@@ -227,7 +227,7 @@ unpack_upstream_pack()
     local package_name=$1
     local package_version=$2
     local package_dir=$(get_package_dir "${package_name}" "${package_version}") || return 1
-    local upstream_pack="${package_dir}/upstream.pack"
+    local upstream_pack="${package_dir}/upstream_pack"
     local upstream_dir="${package_dir}/upstream"
     local upstream_tmpdir="${upstream_dir}.tmp"
 
@@ -235,7 +235,7 @@ unpack_upstream_pack()
         return 0
     fi
 
-    check_md5sum "${package_dir}/upstream.pack.md5sum" "${upstream_pack}" || {
+    check_md5sum "${package_dir}/upstream_pack_md5sum" "${upstream_pack}" || {
         log_error "upstream pack has incorrect checksum, " \
             "perhaps you should purge the package and download it again?"
         return 1
@@ -281,14 +281,14 @@ download_upstream_pack()
     local package_name=$1
     local package_version=$2
     local package_dir=$(get_package_dir "${package_name}" "${package_version}") || return 1
-    local upstream_pack="${package_dir}/upstream.pack"
+    local upstream_pack="${package_dir}/upstream_pack"
     local upstream_tmppack="${upstream_pack}.tmp"
 
-    if check_md5sum "${package_dir}/upstream.pack.md5sum" "${upstream_pack}"; then
+    if check_md5sum "${package_dir}/upstream_pack_md5sum" "${upstream_pack}"; then
         return 0
     fi
 
-    if [ ! -r "${package_dir}/upstream.pack.url" ]; then
+    if [ ! -r "${package_dir}/upstream_pack_url" ]; then
         pushd "${package_dir}" >/dev/null || return 1
         ./rules download "${upstream_tmppack}" || {
             popd >/dev/null || true
@@ -305,14 +305,14 @@ download_upstream_pack()
             --no-use-server-timestamps \
             --no-check-certificate \
             --no-cookies \
-            --input-file "${package_dir}/upstream.pack.url" \
+            --input-file "${package_dir}/upstream_pack_url" \
             --output-document "${upstream_tmppack}" || {
             rm -rf "${upstream_tmppack}"
             return 1
         }
     fi
 
-    check_md5sum "${package_dir}/upstream.pack.md5sum" "${upstream_tmppack}" || {
+    check_md5sum "${package_dir}/upstream_pack_md5sum" "${upstream_tmppack}" || {
         log_error "downloaded upstream pack has incorrect checksum"
         rm -rf "${upstream_tmppack}"
         return 1
