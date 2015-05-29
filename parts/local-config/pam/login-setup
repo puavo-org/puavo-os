@@ -24,7 +24,7 @@ if (device['primary_user'] || '').empty? then
   end
 
   device['primary_user'] = ENV['PAM_USER']
-  File.open('/state/etc/puavo/local/primary_user_override', 'w') do |f|
+  File.open('/state/etc/puavo/primary_user_override', 'w') do |f|
     f.puts(device['primary_user'])
   end
   tmpfile = "#{ device_json_path }.login-setup.tmp"
