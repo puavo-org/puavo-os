@@ -31,7 +31,7 @@ def grubedit(*args)
 end
 
 def send_changed_primary_user_to_puavo(primary_user)
-  puts "Sending overridden primary user '#{ primary_user }' to Puavo"
+  puts("Sending overridden primary user '#{ primary_user }' to Puavo")
 
   cloud_restclient = PuavoRestClient.new(:auth    => :etc,
                                          :dns     => :no,
