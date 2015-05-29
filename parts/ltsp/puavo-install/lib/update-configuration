@@ -40,19 +40,30 @@ end
 def update_device_json(restclient)
   puts('>>> Updating device json')
 
-  # XXX This should merge /state/etc/puavo/local/primary_user_override
-  # XXX into primary_user if it exists.  Also, the primary_user_override
-  # XXX should be sent to Puavo so that it could be removed if
-  # XXX device['primary_user'] == primary_user_override.
+  # We override the primary_user information in device.json from
+  # /state/etc/puavo/primary_user_override if that exists.
+
+  # XXX The primary_user_override should be sent to Puavo so that it could be
+  # XXX removed if device['primary_user'] == primary_user_override.
   # XXX (should that be done by puavo-client-daemon?).
 
   hostname = Socket.gethostname
   device_json_path = '/state/etc/puavo/device.json'
 
-  puavo_rest_request_and_replace(restclient,
-                                 "v3/devices/#{ hostname }",
-                                 device_json_path)
-  File.chmod(0644, device_json_path)
+  device = puavo_rest_request(restclient, "v3/devices/#{ hostname }") \
+             .parse()
+
+  primary_user_override \
+    = IO.read('/state/etc/puavo/primary_user_override').chomp rescue nil
+
+  if primary_user_override && !primary_user_override.empty? then
+    device['primary_user'] = primary_user_override
+  end
+
+  tmp_filepath = "#{ device_json_path }.tmp"
+  File.open(tmp_filepath, 'w') { |f| f.write(device.to_json) }
+
+  replace_if_changed(device_json_path, tmp_filepath)
 end
 
 def update_external_files(restclient)
