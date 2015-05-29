@@ -66,8 +66,11 @@ def update_device_json(restclient)
     else
       begin
         send_changed_primary_user_to_puavo(primary_user_override)
+      rescue PuavoRestClient::BadStatusCode => e
+        warn('Bad status code when sending primary user to Puavo: ' \
+               + e.response.to_s)
       rescue StandardError => e
-        warn "Problem sending primary user override to Puavo: #{ e.message }"
+        warn("Problem sending primary user override to Puavo: #{ e.message }")
       end
     end
     device['primary_user'] = primary_user_override
