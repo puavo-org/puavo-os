@@ -44,8 +44,7 @@ list_configured_packages()
         -name "${PUAVOLTSP_IMAGE_NAME}" \
         -exec readlink -z -e {} \;      \
         | while read -d '' package_dir; do
-        local package_basedir=$(dirname "${package_dir}") || return 1
-        local package_name=$(basename "${package_basedir}") || return 1
+        local package_name=$(get_package_name "${package_dir}") || return 1
         echo "${package_name}" || return 1
     done
 }
@@ -87,6 +86,21 @@ get_configured_package_version()
     local package_dir=$(get_configured_package_dir "${package_name}") || return 1
 
     [ -n "${package_dir}" ] || return 0
+
+    basename "${package_dir}"
+}
+
+get_package_name()
+{
+    local package_dir=$1
+    local package_basedir=$(dirname "${package_dir}") || return 1
+
+    basename "${package_basedir}"
+}
+
+get_package_version()
+{
+    local package_dir=$1
 
     basename "${package_dir}"
 }
@@ -319,9 +333,8 @@ install_package_with_installer()
         return 1
     }
 
-    local package_basedir=$(dirname "${package_dir}") || return 1
-    local package_name=$(basename "${package_basedir}") || return 1
-    local package_version=$(basename "${package_dir}") || return 1
+    local package_name=$(get_package_name "${package_dir}") || return 1
+    local package_version=$(get_package_version "${package_dir}") || return 1
 
     download_upstream_pack "${package_name}" "${package_version}" || {
         log_error "failed to download the upstream pack of package '${package_name}'"
