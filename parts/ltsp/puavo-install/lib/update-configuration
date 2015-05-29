@@ -5,15 +5,8 @@ require 'json'
 require 'puavo/rest-client'
 require 'socket'
 
-def puavo_rest_request(restclient, urlpath)
-  response = restclient.get(urlpath)
-  raise "Rest request returned status code: #{ response.code }" \
-    unless response.code == 200
-  response
-end
-
-def puavo_rest_request_and_replace(restclient, urlpath, filepath)
-  data = puavo_rest_request(restclient, urlpath).to_s
+def puavo_rest_request_and_replace(restclient, uripath, filepath)
+  data = restclient.get(uripath).to_s
 
   tmp_filepath = "#{ filepath }.tmp"
   File.open(tmp_filepath, 'w', 0600) { |f| f.write(data) }
@@ -37,26 +30,46 @@ def grubedit(*args)
   run('grub-editenv', '/images/boot/grub/grubenv', *args)
 end
 
+def send_changed_primary_user_to_puavo(primary_user)
+  puts "Sending overridden primary user '#{ primary_user }' to Puavo"
+
+  cloud_restclient = PuavoRestClient.new(:auth    => :etc,
+                                         :dns     => :no,
+                                         :timeout => 30)
+
+  senddata = { 'primary_user' => primary_user }
+
+  uripath = "/v3/devices/#{ Socket.gethostname }"
+  cloud_restclient.post(uripath, :json => senddata)
+end
+
 def update_device_json(restclient)
   puts('>>> Updating device json')
 
   # We override the primary_user information in device.json from
   # /state/etc/puavo/primary_user_override if that exists.
 
-  # XXX The primary_user_override should be sent to Puavo so that it could be
-  # XXX removed if device['primary_user'] == primary_user_override.
-  # XXX (should that be done by puavo-client-daemon?).
-
-  hostname = Socket.gethostname
   device_json_path = '/state/etc/puavo/device.json'
 
-  device = puavo_rest_request(restclient, "v3/devices/#{ hostname }") \
-             .parse()
+  uripath = "v3/devices/#{ Socket.gethostname }"
+  device = restclient.get(uripath).parse()
+
+  remove_primary_user_override = false
 
   primary_user_override \
     = IO.read('/state/etc/puavo/primary_user_override').chomp rescue nil
 
   if primary_user_override && !primary_user_override.empty? then
+    if primary_user_override == device['primary_user'] then
+      # remove override if we get the same information from Puavo
+      remove_primary_user_override = true
+    else
+      begin
+        send_changed_primary_user_to_puavo(primary_user_override)
+      rescue StandardError => e
+        warn "Problem sending primary user override to Puavo: #{ e.message }"
+      end
+    end
     device['primary_user'] = primary_user_override
   end
 
@@ -64,6 +77,10 @@ def update_device_json(restclient)
   File.open(tmp_filepath, 'w') { |f| f.write(device.to_json) }
 
   replace_if_changed(device_json_path, tmp_filepath)
+
+  if remove_primary_user_override then
+    FileUtils.rm_f('/state/etc/puavo/primary_user_override')
+  end
 end
 
 def update_external_files(restclient)
@@ -102,14 +119,13 @@ end
 def update_wlan_configurations(restclient)
   puts('>>> Updating wlan configurations')
 
-  hostname = Socket.gethostname
-  wlan_networks_uri = "v3/devices/#{ hostname }/wlan_networks"
+  wlan_networks_uri = "v3/devices/#{ Socket.gethostname }/wlan_networks"
   puavo_rest_request_and_replace(restclient,
                                  wlan_networks_uri,
                                  '/state/etc/puavo/wlan.json')
 end
 
-restclient = PuavoRestClient.new(:auth => :etc, :timeout => 60)
+restclient = PuavoRestClient.new(:auth => :etc, :timeout => 30)
 
 #
 # Update several (different) things.  Even if one thing cannot be updated,

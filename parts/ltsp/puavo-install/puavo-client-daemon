@@ -137,9 +137,7 @@ class Updater < DBus::Object
 	  'available_images' => available_images,
 	  'current_image'    => current_image,
 	}
-	pres = client.post(restpath, :json => senddata)
-	raise "Response code for post-request was: #{ pres.code }" \
-	  unless pres.code == 200
+	client.post(restpath, :json => senddata)
       end
 
     rescue StandardError => e
