@@ -49,6 +49,23 @@ list_configured_packages()
     done
 }
 
+get_license_url()
+{
+    local identifier=$1
+    local INSTALLER_REGEX='\.tar\.gz$'
+
+    if [[ "${identifier}" =~ ${INSTALLER_REGEX} ]]; then
+        local package_dir=$(extract_installer "${identifier}") || {
+            log_error "failed to extract installer '${identifier}'"
+            return 1
+        }
+    else
+        local package_dir=$(get_configured_package_dir "${identifier}") || return 1
+    fi
+
+    [ -f "${package_dir}/license" ] && echo "file://${package_dir}/license"
+}
+
 get_package_basedir()
 {
     local package_name=$1
@@ -411,6 +428,8 @@ print_help_and_exit()
     echo "Commands:"
     echo "  install INSTALLER            install package with an installer"
     echo
+    echo "  license INSTALLER|PACKAGE    print license URL"
+    echo
     echo "  list                         list installed packages"
     echo
     echo "  reconfigure PACKAGE          reconfigure installed PACKAGE"
@@ -475,6 +494,10 @@ case "${command}" in
     install)
         assert_args_count 1 "$@"
         install_package_with_installer "$1"
+        ;;
+    license)
+        assert_args_count 1 "$@"
+        get_license_url "$1"
         ;;
     list)
         assert_args_count 0 "$@"
