@@ -146,7 +146,7 @@ def configure_admins()
 
   search_and_replace_line('/etc/gshadow',
                          /^puavolocaladmins:/,
-                         'puavolocaladmins:!::')
+                         "puavolocaladmins:!::#{ admin }")
 
   File.open('/etc/sudoers.d/puavolocaladmins.pcltmp', 'w') do |f|
     if superlaptop_mode? then
