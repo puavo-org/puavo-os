@@ -22,6 +22,7 @@
 # Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
 
 g_puavo_pkg_rootdir=/var/lib/puavo-pkg/packages
+g_puavo_img_filename=noimage
 
 log_error()
 {
@@ -43,7 +44,7 @@ list_configured_packages()
         -maxdepth 2                     \
         -mindepth 2                     \
         -type l                         \
-        -name "${PUAVOLTSP_IMAGE_NAME}" \
+        -name "${g_puavo_img_filename}" \
         -exec readlink -z -e {} \;      \
         | while read -d '' package_dir; do
         local package_name=$(get_package_name "${package_dir}") || return 1
@@ -79,7 +80,7 @@ get_package_link()
     local package_name=$1
     local package_basedir=$(get_package_basedir "${package_name}") || return 1
 
-    echo "${package_basedir}/${g_puavoltsp_image_name}"
+    echo "${package_basedir}/${g_puavo_img_filename}"
 }
 
 get_package_dir()
@@ -462,10 +463,6 @@ assert_args_count()
 
 set -eu
 
-if [ -z "${PUAVOLTSP_IMAGE_NAME:-}" ]; then
-    read PUAVOLTSP_IMAGE_NAME </etc/ltsp/this_ltspimage_name
-fi
-
 while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
@@ -496,6 +493,10 @@ if [ $# -lt 1 ]; then
 fi
 
 mkdir -p "${g_puavo_pkg_rootdir}"
+
+if [ -f /etc/ltsp/this_ltspimage_name ]; then
+    read g_puavo_img_filename </etc/ltsp/this_ltspimage_name
+fi
 
 command=$1
 shift
