@@ -13,7 +13,7 @@ end
 
 class PuavoRestClient
 
-  class Error < Exception; end
+  class Error < StandardError; end
   class ResolvFail < Error; end
   class BadStatusCode < Error
     attr_accessor :response
