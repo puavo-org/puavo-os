@@ -424,6 +424,7 @@ print_help_and_exit()
     echo
     echo "Options:"
     echo "  -h, --help                   print this help and exit"
+    echo "      --package-root-dir DIR   use DIR as the root, defaults to /state/puavo-pkg"
     echo
     echo "Commands:"
     echo "  install INSTALLER            install package with an installer"
@@ -443,10 +444,11 @@ print_help_and_exit()
 
 assert_args_count()
 {
-    local count=$1
-    shift
+    local op=$1
+    local count=$2
+    shift 2
 
-    if [ $# -ne "${count}" ]; then
+    if [ ! $# ${op} "${count}" ]; then
         usage_error "invalid number of arguments ($#), expected ${count}"
         return
     fi
@@ -492,19 +494,19 @@ shift
 
 case "${command}" in
     install)
-        assert_args_count 1 "$@"
+        assert_args_count -eq 1 "$@"
         install_package_with_installer "$1"
         ;;
     license)
-        assert_args_count 1 "$@"
+        assert_args_count -eq 1 "$@"
         get_license_url "$1"
         ;;
     list)
-        assert_args_count 0 "$@"
+        assert_args_count -eq 0 "$@"
         list_configured_packages
         ;;
     reconfigure)
-        assert_args_count 1 "$@"
+        assert_args_count -eq 1 "$@"
         if [ "$1" = '--all' ]; then
             reconfigure_all_packages
         else
@@ -512,7 +514,7 @@ case "${command}" in
         fi
         ;;
     remove)
-        assert_args_count 1 "$@"
+        assert_args_count -eq 1 "$@"
         if [ "$1" = '--all' ]; then
             remove_all_packages
         else
