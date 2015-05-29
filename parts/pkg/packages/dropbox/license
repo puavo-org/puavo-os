@@ -1,0 +1,626 @@
+<!DOCTYPE html><html lang="en" xmlns:fb="http://ogp.me/ns/fb#" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" class="media-desktop"><head><script nonce="0H/8tmVwBIf030mTQTVN">
+window._goch_ = {};
+window.addEventListener('click', function(event) {
+    'use strict';
+    var elm = event.target, match;
+    while (elm) {
+        match = /\bcpyxl\d+\b/.exec(elm.className);
+        if (match !== null) {
+            match = match[0];
+            if (window._goch_.hasOwnProperty(match)) {
+                if (false === window._goch_[match].call(elm,event)) {
+                    event.preventDefault();
+                }
+
+            }
+        }
+        elm = elm.parentElement;
+    }
+}, true);
+</script><meta content="IE=edge, chrome=1" http-equiv="X-UA-Compatible" /><script type="text/javascript" nonce="0H/8tmVwBIf030mTQTVN">
+                window._document_observe_listeners = [];
+                document.observe = function(event, func) {
+                    window._document_observe_listeners.push({event: event, func: func});
+                };
+
+                window._jquery_ready_handlers = [];
+                jQuery = function(handler) {
+                    window._jquery_ready_handlers.push(handler);
+                };
+
+                function on_script_loaded(func) {
+                    (window.LoadedJsSuccessfully && document.loaded) ? func() : document.observe('script:loaded', func);
+                }
+                </script> <link href="https://cf.dropboxstatic.com/static/images/favicon-vflk5FiAC.ico" rel="shortcut icon" /><link href="https://cf.dropboxstatic.com/static/css/main-vflxzIUfF.css" type="text/css" rel="stylesheet" /><!--[if IE]><link href="https://cf.dropboxstatic.com/static/css/main_old_ie-vfltYB_kr.css" type="text/css" rel="stylesheet" /><![endif]--><link href="https://cf.dropboxstatic.com/static/css/web_sprites-vflwtQKzS.css" type="text/css" rel="stylesheet" /><link href="https://cf.dropboxstatic.com/static/images/dropbox_webclip_60-vflN_uQqB.png" rel="apple-touch-icon" /><link href="https://cf.dropboxstatic.com/static/images/dropbox_webclip_76-vflVDzAci.png" rel="apple-touch-icon" sizes="76x76" /><link href="https://cf.dropboxstatic.com/static/images/dropbox_webclip_120-vflppIksR.png" rel="apple-touch-icon" sizes="120x120" /><link href="https://cf.dropboxstatic.com/static/images/dropbox_webclip_152-vflnR85Xl.png" rel="apple-touch-icon" sizes="152x152" /><link href="/w3c/p3p.xml" rel="P3Pv1" /><link href="https://www.dropbox.com/da_DK/privacy" rel="alternate" hreflang="da-dk" /><link href="https://www.dropbox.com/de/privacy" rel="alternate" hreflang="de" /><link href="https://www.dropbox.com/es/privacy" rel="alternate" hreflang="es" /><link href="https://www.dropbox.com/es_ES/privacy" rel="alternate" hreflang="es-es" /><link href="https://www.dropbox.com/fr/privacy" rel="alternate" hreflang="fr" /><link href="https://www.dropbox.com/id/privacy" rel="alternate" hreflang="id" /><link href="https://www.dropbox.com/it/privacy" rel="alternate" hreflang="it" /><link href="https://www.dropbox.com/ja/privacy" rel="alternate" hreflang="ja" /><link href="https://www.dropbox.com/ko/privacy" rel="alternate" hreflang="ko" /><link href="https://www.dropbox.com/ms/privacy" rel="alternate" hreflang="ms" /><link href="https://www.dropbox.com/nb_NO/privacy" rel="alternate" hreflang="nb-no" /><link href="https://www.dropbox.com/nl_NL/privacy" rel="alternate" hreflang="nl-nl" /><link href="https://www.dropbox.com/pl/privacy" rel="alternate" hreflang="pl" /><link href="https://www.dropbox.com/pt_BR/privacy" rel="alternate" hreflang="pt-br" /><link href="https://www.dropbox.com/ru/privacy" rel="alternate" hreflang="ru" /><link href="https://www.dropbox.com/sv_SE/privacy" rel="alternate" hreflang="sv-se" /><link href="https://www.dropbox.com/th_TH/privacy" rel="alternate" hreflang="th-th" /><link href="https://www.dropbox.com/zh_CN/privacy" rel="alternate" hreflang="zh-cn" /><link href="https://www.dropbox.com/zh_TW/privacy" rel="alternate" hreflang="zh-tw" /><script type="text/javascript" nonce="0H/8tmVwBIf030mTQTVN">window.ST=+new Date();</script><meta content="text/html; charset=UTF-8" http-equiv="content-type" /><meta content="Terms of Service - Business Agreement - Privacy Policy - DMCA - Pricing Terms - Security Overview - Acceptable Use" name="description" /><meta content="online storage, free storage, file sharing, share files,
+    awesome, cloud storage, online backup, cross platform, sync, sharing, mac,
+    windows, os x, linux, backup, collaboration, file versioning, file revisions,
+    remote access, undelete" name="keywords" /><meta content="https://www.dropbox.com/privacy" property="og:url" /><meta content="Dropbox" property="og:site_name" /><meta content="website" property="og:type" /><meta content="Terms of Service - Business Agreement - Privacy Policy - DMCA - Pricing Terms - Security Overview - Acceptable Use" property="og:description" /><meta content="Dropbox - Terms" property="og:title" /><meta content="210019893730" property="fb:app_id" /><meta content="https://cf.dropboxstatic.com/static/images/brand/glyph@2x-vflJ1vxbq.png" property="og:image" /><meta content="summary" name="twitter:card" /><meta content="@Dropbox" name="twitter:site" /><meta content="https://www.dropbox.com/privacy" name="twitter:url" /><meta content="Dropbox - Terms" name="twitter:title" /><meta content="Terms of Service - Business Agreement - Privacy Policy - DMCA - Pricing Terms - Security Overview - Acceptable Use" name="twitter:description" /><meta content="https://cf.dropboxstatic.com/static/images/brand/twitter-card-glyph@2x-vflVqhKLO.png" name="twitter:image" /><meta content="TnuSyOnBMNmtugbpL1ZvW2PbSF9LKvoTzrvOGS9h-b0" name="google-site-verification" /><meta content="EZKIczQcM1-DVUMz8heu1dIhNtxNbLqbaA9-HbOnCQ4" name="google-site-verification" /><link href="https://chrome.google.com/webstore/detail/dpdmhfocilnekecfjgimjdeckachfbec" rel="chrome-webstore-item" /><meta content="tz8iotmk-pkhui406y41y5bfmfxdwmaa4a-yc0hm6r0fga7s6j0j27qmgqkmc7oovihzghbzhbdjk-uiyrz438nxsjdbj3fggwgl8oq2nf4ko8gi7j4z7t78kegbidl4" name="norton-safeweb-site-verification" /><meta content="https://cf.dropboxstatic.com/static/images/win8_web_tile-vfl8eyKFU.png" name="msapplication-TileImage" /><meta content="#ffffff" name="msapplication-TileColor" /><title>Dropbox - Terms</title><script type="text/javascript" nonce="0H/8tmVwBIf030mTQTVN">
+            var EnvConstants = {"LIVE_TRANSCODE_SERVER": "showbox-tr.dropbox.com", "DL_DOC_USER_CONTENT_DOMAIN": "dl-doc.dropboxusercontent.com", "BATCH_THUMB_ENDPOINTS": ["//photos-1.dropbox.com/btjb", "//photos-2.dropbox.com/btjb", "//photos-3.dropbox.com/btjb", "//photos-4.dropbox.com/btjb", "//photos-5.dropbox.com/btjb", "//photos-6.dropbox.com/btjb"], "PHOTO_CLUSTER": ["photos-1.dropbox.com", "photos-2.dropbox.com", "photos-3.dropbox.com", "photos-4.dropbox.com", "photos-5.dropbox.com", "photos-6.dropbox.com"], "BLOCK_CLUSTER": "dl-web.dropbox.com", "IS_PROD": 1, "PUBSERVER": "dl.dropboxusercontent.com", "SVN_REV": "907110888", "WEBSERVER": "www.dropbox.com", "CAROUSEL_WEBSERVER": "carousel.dropbox.com", "GSLB_ENABLED": 0, "WEB_STATIC_CDN_HOST": "cf.dropboxstatic.com", "WEB_STATIC_DROPBOX": "https://www.dropboxstatic.com"};
+            var RequestConstants = {"REQUEST_START_TIME": 1432883414236, "IS_SPDY": 0, "REQUEST_ID": "2741bde7ab34e2fe187bc3fdb4a4d87d", "REQUEST_TRACING_ENABLED": false, "JS_CSRF_COOKIE": "js_csrf"};
+            var DebugConstants = {"CPROFILE_PARAMETER": "", "CPROFILE_ENABLED": 0, "GANDALF_PANEL": 0};
+            var StaticConstants = {"static_url_moxie_swf": "https://cf.dropboxstatic.com/static/swf/Moxie-vflz978zN.swf", "static_url_video_overlay": "https://cf.dropboxstatic.com/static/images/icons/video_overlay_2x-vflbzjg-q.png", "static_url_pdfjs_hack_viewer": "https://www.dropboxstatic.com/static/javascript/external/pdf-js-hack/web/viewer-vflUD2h_K.html", "static_url_pdfjs_viewer": "https://www.dropboxstatic.com/static/javascript/external/pdf-js-e9072ac/web/viewer-vfll1hIL8.html", "static_url_copy_clipboard_swf": "https://cf.dropboxstatic.com/static/swf/copy_clipboard-vflvMcZTC.swf", "static_url_video_js_swf": "https://flash.dropboxstatic.com/video-js-vflQBwsej.swf", "static_url_syntax_js": "https://cf.dropboxstatic.com/static/javascript/external/syntax-vflpNqebu.js", "static_url_web_socket_swf": "https://dbxlocal.dropboxstatic.com/WebSocket-vfleddzBF.swf"};
+            var ViewerConstants = {"datetime_format": "M/d/yyyy h:mm a", "date_format": "M/d/yyyy", "ROLE_PHOTOS": "photos", "hls_debug_level": "off", "TIMEZONE_OFFSET": 0, "_viewer_properties": {"_user_data": []}, "time_format": "h:mm a", "USER_LOCALE": "en", "transcoder_hls4web": 1, "ROLE_PARAM": "role", "UID_PARAM_NAME": "_subject_uid", "ROLE_BOTH": "both", "ROLE_WORK": "work", "ROLE_PERSONAL": "personal"};
+            var DropboxConstants = {"DELETE_ON_UNLINK_UNSUPPORTED": 3, "protocol": "https", "DOC_PREVIEW_UNAVAILABLE_FAILED": 1, "DOC_PREVIEW_UNAVAILABLE_PROTECTED_DOC": 4, "DOC_PREVIEW_AVAILABLE": 0, "NOTIFICATION_TYPE_META": -1, "DISABLE_VIDEOS_IN_LIGHTBOX": false, "DOC_PREVIEW_IN_PROGRESS": 2, "MAX_PDF_FILE_SIZE_B": 41943040, "FILE_ACTIVITY_LOG_CLIENT_ORIGIN_TYPE": {"MAX_EVENT_TYPE": 7, "SUBSCRIBE_BUTTON": 2, "AT_SIGN_KEYPRESS": 6, "MODAL_TOGGLE_BUTTON": 3, "LITTLE_MAN_BUTTON": 5, "LIKE_BUTTON": 1, "FACEPILE_ADD_BUTTON": 4, "POST_BUTTON": 0}, "root_ns": 0, "DELETE_ON_UNLINK_OLD_CLIENT": 2, "PDF_PREVIEW_MODE": "pdf-js", "MAX_WEBHOOKS_PER_APP": 25, "DELETE_ON_UNLINK_SUPPORTED_PERSONAL_ONLY": 4, "DOC_PREVIEW_UNAVAILABLE_OTHER": 5, "FILE_ACTIVITY_LOG_EVENT_TYPE": {"DELETE_COMMENT": 4, "COMMENTS_OFF": 17, "SUBMITTED_FEEDBACK": 19, "NEW_COMMENT": 2, "CLIENT_SIGN_UP_SUCCESS": 16, "COMMENTS_ON": 18, "CLIENT_CONTACT_LIST_SELECTED": 21, "UNLIKE_FILE": 1, "MAX_EVENT_TYPE": 24, "MENTION": 9, "UNRESOLVE_COMMENT": 8, "CLIENT_COMMENTS_HIDDEN": 23, "CLIENT_SIGN_IN_MODAL": 13, "FILE_VIEW": 10, "CLIENT_CONTACT_LIST_SHOWN": 20, "CLIENT_SIGN_IN_SUCCESS": 15, "RESOLVE_COMMENT": 7, "CLIENT_COMMENTS_SHOWN": 22, "EDIT_COMMENT": 3, "UNLIKE_COMMENT": 6, "CLIENT_SIGN_UP_MODAL": 14, "FILE_UNSUBSCRIBE": 12, "LIKE_COMMENT": 5, "FILE_SUBSCRIBE": 11, "LIKE_FILE": 0}, "MAX_TEXT_FILE_SIZE_B": 4194304, "sess_id": "231755296842187897758520140298591844379", "DELETE_ON_UNLINK_SUPPORTED": 1, "PUBLIC_MODE_OVERRIDE": null, "DELETE_ON_UNLINK_SUPPORTED_TEAM_ONLY": 5, "DISABLE_VIDEO_ICONS": false, "referrer": "", "DOC_PREVIEW_UNAVAILABLE_BAD_FILE": 3, "FILE_ACTIVITY_ACTION_TYPE": {"UNRESOLVE_COMMENT": 8, "DELETE_COMMENT": 4, "COMMENTS_OFF": 11, "NEW_COMMENT": 2, "COMMENTS_ON": 12, "RESOLVE_COMMENT": 7, "UNLIKE_FILE": 1, "EDIT_COMMENT": 3, "UNLIKE_COMMENT": 6, "FILE_UNSUBSCRIBE": 10, "LIKE_COMMENT": 5, "FILE_SUBSCRIBE": 9, "LIKE_FILE": 0}, "WIT_VERSION": 6, "COUNTRY_OVERRIDE": null};
+            var GandalfConstants = {"gandalf": {"dw-comments-expanded-input": false, "unity-web-debug": false, "dw-comments-add-mention-dropdown": false, "dw-comments-notify-facepile": null, "pptx-commenting": false, "dw-comments-no-notify-hint": null, "carousel-image-editing": false, "comments-web-feedback": false, "dw-comments-responsive-width": false}};
+            var PythonConstants = {"THUMBNAIL_SIZES": ["640x384", "150x150", "750x500", "16x16", "318x416", "1024x1024", "122x122", "2048x2048", "154x154", "2048x1536", "178x178", "568x320", "320x640", "154x274", "80x80", "512x512", "1024x768", "456x256", "1250x500", "960x640", "128x128", "512x256", "640x1280", "1600x1200", "72x72", "154x308", "75x75", "32x32", "320x568", "320x480", "274x154", "308x154", "480x480", "1000x500", "256x256", "320x320", "256x456", "48x48", "640x1136", "100x100", "640x480", "480x320", "640x640", "1500x500", "1136x640", "470x300", "256x512", "200x200", "800x600", "1280x960", "70x70", "1750x500", "800x800", "2000x500", "320x240", "1280x1280", "478x267", "64x64", "1280x640", "640x320"], "ACTIVITY_LOADING_MODE": {"ALL": 1, "NO_FEEDBACK": 2}, "THUMBNAIL_SIZE_MODE": {"STRICT": 2, "FIT_ONE_RESTRICT": 9, "LEGACY": 6, "FIT_ONE_ABSTRACT": 7, "EXACT_NO_BACKGROUND": 10, "ABSTRACT": 3, "FIT_ONE": 4, "EXACT": 1, "ORIGINAL": 5, "CUSTOM": 8}};
+            var Constants = {"datetime_format": "M/d/yyyy h:mm a", "BATCH_THUMB_ENDPOINTS": ["//photos-1.dropbox.com/btjb", "//photos-2.dropbox.com/btjb", "//photos-3.dropbox.com/btjb", "//photos-4.dropbox.com/btjb", "//photos-5.dropbox.com/btjb", "//photos-6.dropbox.com/btjb"], "protocol": "https", "DELETE_ON_UNLINK_OLD_CLIENT": 2, "JS_CSRF_COOKIE": "js_csrf", "TIMEZONE_OFFSET": 0, "PDF_PREVIEW_MODE": "pdf-js", "_viewer_properties": {"_user_data": []}, "SVN_REV": "907110888", "DISABLE_VIDEOS_IN_LIGHTBOX": false, "DOC_PREVIEW_IN_PROGRESS": 2, "USER_LOCALE": "en", "MAX_PDF_FILE_SIZE_B": 41943040, "ROLE_PHOTOS": "photos", "DOC_PREVIEW_UNAVAILABLE_PROTECTED_DOC": 4, "GSLB_ENABLED": 0, "REQUEST_ID": "2741bde7ab34e2fe187bc3fdb4a4d87d", "static_url_video_js_swf": "https://flash.dropboxstatic.com/video-js-vflQBwsej.swf", "ROLE_PARAM": "role", "DOC_PREVIEW_AVAILABLE": 0, "FILE_ACTIVITY_LOG_EVENT_TYPE": {"DELETE_COMMENT": 4, "COMMENTS_OFF": 17, "SUBMITTED_FEEDBACK": 19, "NEW_COMMENT": 2, "CLIENT_SIGN_UP_SUCCESS": 16, "COMMENTS_ON": 18, "CLIENT_CONTACT_LIST_SELECTED": 21, "UNLIKE_FILE": 1, "MAX_EVENT_TYPE": 24, "MENTION": 9, "UNRESOLVE_COMMENT": 8, "CLIENT_COMMENTS_HIDDEN": 23, "CLIENT_SIGN_IN_MODAL": 13, "FILE_VIEW": 10, "CLIENT_CONTACT_LIST_SHOWN": 20, "CLIENT_SIGN_IN_SUCCESS": 15, "RESOLVE_COMMENT": 7, "CLIENT_COMMENTS_SHOWN": 22, "EDIT_COMMENT": 3, "UNLIKE_COMMENT": 6, "CLIENT_SIGN_UP_MODAL": 14, "FILE_UNSUBSCRIBE": 12, "LIKE_COMMENT": 5, "FILE_SUBSCRIBE": 11, "LIKE_FILE": 0}, "PHOTO_CLUSTER": ["photos-1.dropbox.com", "photos-2.dropbox.com", "photos-3.dropbox.com", "photos-4.dropbox.com", "photos-5.dropbox.com", "photos-6.dropbox.com"], "BLOCK_CLUSTER": "dl-web.dropbox.com", "DELETE_ON_UNLINK_SUPPORTED": 1, "hls_debug_level": "off", "PUBLIC_MODE_OVERRIDE": null, "WEBSERVER": "www.dropbox.com", "DISABLE_VIDEO_ICONS": false, "NOTIFICATION_TYPE_META": -1, "static_url_pdfjs_viewer": "https://www.dropboxstatic.com/static/javascript/external/pdf-js-e9072ac/web/viewer-vfll1hIL8.html", "DELETE_ON_UNLINK_SUPPORTED_TEAM_ONLY": 5, "static_url_copy_clipboard_swf": "https://cf.dropboxstatic.com/static/swf/copy_clipboard-vflvMcZTC.swf", "static_url_video_overlay": "https://cf.dropboxstatic.com/static/images/icons/video_overlay_2x-vflbzjg-q.png", "ROLE_PERSONAL": "personal", "FILE_ACTIVITY_ACTION_TYPE": {"UNRESOLVE_COMMENT": 8, "DELETE_COMMENT": 4, "COMMENTS_OFF": 11, "NEW_COMMENT": 2, "COMMENTS_ON": 12, "RESOLVE_COMMENT": 7, "UNLIKE_FILE": 1, "EDIT_COMMENT": 3, "UNLIKE_COMMENT": 6, "FILE_UNSUBSCRIBE": 10, "LIKE_COMMENT": 5, "FILE_SUBSCRIBE": 9, "LIKE_FILE": 0}, "DOC_PREVIEW_UNAVAILABLE_BAD_FILE": 3, "ROLE_BOTH": "both", "GANDALF_PANEL": 0, "LIVE_TRANSCODE_SERVER": "showbox-tr.dropbox.com", "DELETE_ON_UNLINK_UNSUPPORTED": 3, "time_format": "h:mm a", "CPROFILE_PARAMETER": "", "IS_PROD": 1, "PUBSERVER": "dl.dropboxusercontent.com", "REQUEST_START_TIME": 1432883414236, "CAROUSEL_WEBSERVER": "carousel.dropbox.com", "static_url_pdfjs_hack_viewer": "https://www.dropboxstatic.com/static/javascript/external/pdf-js-hack/web/viewer-vflUD2h_K.html", "IS_SPDY": 0, "gandalf": {"dw-comments-expanded-input": false, "unity-web-debug": false, "dw-comments-add-mention-dropdown": false, "dw-comments-notify-facepile": null, "pptx-commenting": false, "dw-comments-no-notify-hint": null, "carousel-image-editing": false, "comments-web-feedback": false, "dw-comments-responsive-width": false}, "MAX_WEBHOOKS_PER_APP": 25, "DELETE_ON_UNLINK_SUPPORTED_PERSONAL_ONLY": 4, "COUNTRY_OVERRIDE": null, "date_format": "M/d/yyyy", "DL_DOC_USER_CONTENT_DOMAIN": "dl-doc.dropboxusercontent.com", "MAX_TEXT_FILE_SIZE_B": 4194304, "REQUEST_TRACING_ENABLED": false, "static_url_moxie_swf": "https://cf.dropboxstatic.com/static/swf/Moxie-vflz978zN.swf", "ROLE_WORK": "work", "sess_id": "231755296842187897758520140298591844379", "DOC_PREVIEW_UNAVAILABLE_OTHER": 5, "referrer": "", "UID_PARAM_NAME": "_subject_uid", "WEB_STATIC_DROPBOX": "https://www.dropboxstatic.com", "transcoder_hls4web": 1, "static_url_syntax_js": "https://cf.dropboxstatic.com/static/javascript/external/syntax-vflpNqebu.js", "WEB_STATIC_CDN_HOST": "cf.dropboxstatic.com", "FILE_ACTIVITY_LOG_CLIENT_ORIGIN_TYPE": {"MAX_EVENT_TYPE": 7, "SUBSCRIBE_BUTTON": 2, "AT_SIGN_KEYPRESS": 6, "MODAL_TOGGLE_BUTTON": 3, "LITTLE_MAN_BUTTON": 5, "LIKE_BUTTON": 1, "FACEPILE_ADD_BUTTON": 4, "POST_BUTTON": 0}, "DOC_PREVIEW_UNAVAILABLE_FAILED": 1, "CPROFILE_ENABLED": 0, "static_url_web_socket_swf": "https://dbxlocal.dropboxstatic.com/WebSocket-vfleddzBF.swf", "WIT_VERSION": 6, "root_ns": 0};
+            </script><script type="text/javascript" nonce="0H/8tmVwBIf030mTQTVN">
+    window.LoadedJsSuccessfully = false;
+
+    if (window.addEventListener) {
+        window.addEventListener('load', function() {
+            window.setTimeout(function() {
+                if (!window.LoadedJsSuccessfully) {
+                    var url = encodeURIComponent(window.location.href);
+                    new Image().src = '/jse?e=failed+to+load+script&loc=' + url + '&f=' + url;
+                }
+            }, 5000);
+        }, false);
+    }
+</script><style type="text/css">.hny-dwrql { display: none; }</style> <link href="https://cf.dropboxstatic.com/static/css/packaged/components-vfla6dltL.css" type="text/css" rel="stylesheet" /><link href="https://cf.dropboxstatic.com/static/css/recaptcha_challenge-vflMWk0GE.css" type="text/css" rel="stylesheet" /><link href="https://cf.dropboxstatic.com/static/css/video-js-vflBkXNKb.css" type="text/css" rel="stylesheet" /><!--[if lt IE 9]><script src="/static/javascript/external/html5shiv.js"></script><![endif]--><script type="text/javascript" nonce="0H/8tmVwBIf030mTQTVN">
+                        window.REQUIREJS_PACKAGE_SHIM = {"jquery": {"exports": "JQuery"}, "connect_v3_mobile": {"deps": ["modules/core/controller_registry", "modules/clean/em_string", "modules/core/html", "modules/clean/viewer", "modules/core/exception", "modules/core/i18n", "jquery", "modules/core/ordered_dictionary", "modules/core/dom", "modules/core/browser", "modules/core/notify", "modules/core/uri", "modules/core/cookies"]}, "libs_mobile": {"deps": ["jquery", "external/security/cyberfend", "external/underscore"]}, "mobile": {"deps": ["modules/core/controller_registry", "modules/clean/datetime", "modules/core/i18n", "modules/clean/base64", "modules/core/dom", "modules/core/uri", "modules/core/cookies", "modules/clean/event_load", "libs_mobile", "modules/clean/image_size", "modules/clean/components/ajax_form", "modules/clean/viewer", "modules/core/ordered_dictionary", "modules/clean/uirequest", "jquery", "modules/core/exception", "modules/clean/analytics", "modules/clean/photos/legacy_thumb_loader", "modules/core/browser", "modules/clean/ajax", "modules/clean/sprite", "modules/clean/filepath", "modules/core/notify", "modules/core/html"]}, "libs": {"deps": ["jquery", "external/security/cyberfend", "external/underscore"]}, "dropbox": {"deps": ["modules/clean/undo", "modules/clean/react/modal", "modules/core/controller_registry", "modules/clean/contacts/list", "modules/clean/job_progress", "modules/clean/pagination_manager", "modules/clean/browse_interface", "modules/clean/contacts/cache", "modules/clean/multiaccount_login", "modules/clean/top_notif", "modules/clean/datetime", "modules/core/i18n", "modules/clean/uirequest", "modules/clean/em_string", "modules/clean/base64", "modules/core/dom", "modules/clean/web_timing_logger", "modules/clean/video_util", "modules/clean/account/email", "modules/clean/dbmodal", "modules/clean/teams/team_folder_modal", "modules/clean/sharing/share_inband", "modules/clean/contacts/importer", "modules/clean/payments/credit_card_util", "modules/clean/contacts/types", "external/react", "modules/clean/profile_services/profile_services_constants", "modules/clean/react/previews/preview_image", "modules/core/uri", "modules/core/cookies", "modules/clean/react/previews/preview_image_zoom", "modules/clean/dbmodal_loading", "modules/clean/display_format", "modules/clean/payments/cash", "modules/clean/event_load", "modules/clean/contacts/facebook_modal", "modules/clean/contacts/facebook_oauth", "modules/clean/react/previews/preview_video", "external/purify", "modules/clean/account/email_verify_reasons", "modules/clean/image_size", "modules/clean/react/hierarchical_nav_bar", "modules/clean/payments/dfb_util", "modules/clean/components/ajax_form", "modules/clean/viewer", "modules/core/ordered_dictionary", "libs", "modules/clean/frame_messenger", "jquery", "modules/core/exception", "modules/clean/components/bubble_picker", "modules/clean/history", "modules/clean/analytics", "modules/clean/photos/legacy_thumb_loader", "modules/core/browser", "modules/clean/react/previews/preview_blank", "modules/clean/ajax", "modules/clean/sso_login_checks", "modules/clean/sprite", "modules/clean/filepath", "modules/core/notify", "modules/clean/db_bubble", "modules/clean/clipboard", "modules/core/html"]}};
+                        window.REQUIREJS_CONFIG= {"waitSeconds": 30, "map": {"*": {"jquery": "jquery-security-patch"}, "jquery-security-patch": {"jquery": "jquery"}}, "baseUrl": "https://cf.dropboxstatic.com/static/coffee/compiled", "paths": {"modules/dirty/header_bubble": "packaged/pkg-i-vflOczuNS", "modules/dirty/groups/api": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/stop_watch": "packaged/pkg-c-vflypnnJ9", "modules/clean/photos/carousel_app/react_gallery_page": "packaged/pkg-c-vflypnnJ9", "modules/core/controller_registry": "packaged/pkg-a-vfl1KFj_r", "modules/clean/activity/activity_local_storage": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/sharing/sf_access_type": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/batch_thumb_loader": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/onboarding": "packaged/pkg-c-vflypnnJ9", "modules/clean/browse_interface": "packaged/pkg-a-vfl1KFj_r", "modules/clean/avatar/style": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/react/file_comments/shared_link_signup_modals": "packaged/pkg-a-vfl1KFj_r", "modules/clean/unity/flash_config": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/carousel_item": "packaged/pkg-c-vflypnnJ9", "modules/dirty/sharing/sharing_growth_email_experiments": "packaged/pkg-a-vfl1KFj_r", "modules/clean/top_notif": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/thumb_loading_manager": "packaged/pkg-c-vflypnnJ9", "modules/clean/components/login_form": "packaged/pkg-a-vfl1KFj_r", "modules/clean/typeahead": "packaged/pkg-a-vfl1KFj_r", "modules/clean/components/modal_helper": "packaged/pkg-h-vflubAnYZ", "modules/clean/photos/carousel_app/store_event": "packaged/pkg-c-vflypnnJ9", "modules/dirty/groups/util": "packaged/pkg-e-vflDhfvi4", "modules/clean/payments/validation": "packaged/pkg-a-vfl1KFj_r", "modules/clean/base64": "packaged/pkg-a-vfl1KFj_r", "modules/clean/payments/payment_form/payment_form_spec": "packaged/pkg-d-vflxjBXbH", "modules/clean/payments/payment_form/credit_card_label": "packaged/pkg-d-vflxjBXbH", "modules/dirty/streams/lib/event_emitter": "packaged/pkg-a-vfl1KFj_r", "modules/clean/sortable": "packaged/pkg-e-vflDhfvi4", "modules/clean/photos/carousel_app/react_event_to_merge_rows": "packaged/pkg-c-vflypnnJ9", "modules/clean/captcha": "packaged/pkg-a-vfl1KFj_r", "modules/clean/business/landing": "packaged/pkg-f-vfl0dRII9", "modules/clean/photos/carousel_app/selection_limit_modal": "packaged/pkg-c-vflypnnJ9", "modules/clean/photos/carousel_app/face_rec_utils": "packaged/pkg-c-vflypnnJ9", "modules/core/instantiate": "packaged/pkg-a-vfl1KFj_r", "modules/clean/shared_link_error": "packaged/pkg-a-vfl1KFj_r", "modules/clean/react/activity/users_to_notify": "packaged/pkg-a-vfl1KFj_r", "modules/clean/binary_search": "packaged/pkg-k-vfl_AjaAe", "modules/core/uri": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/settings_page": "packaged/pkg-c-vflypnnJ9", "modules/clean/components/bubble_dropdown": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/dropins/desktop_chooser_v2": "packaged/pkg-g-vflCFsvES", "modules/clean/activity/activity": "packaged/pkg-a-vfl1KFj_r", "modules/clean/dropins/desktop_saver": "packaged/pkg-g-vflCFsvES", "jquery": ["https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min", "https://cf.dropboxstatic.com/static/javascript/external/jquery.min-vfl4OBVkB", "https://www.dropboxstatic.com/static/javascript/external/jquery.min-vfl4OBVkB"], "modules/clean/react/activity/resolve_button": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/home": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/react_timeline_navigation": "packaged/pkg-c-vflypnnJ9", "modules/clean/em_string": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/react_timeline_navigation_marker": "packaged/pkg-c-vflypnnJ9", "modules/clean/react/select": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/gallery_context_menu": "packaged/pkg-c-vflypnnJ9", "modules/clean/sharing/namespace_conversion_alert_modal": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/streams/lib/constants": "packaged/pkg-a-vfl1KFj_r", "modules/clean/unity/check_file_cache": "packaged/pkg-a-vfl1KFj_r", "modules/clean/contacts/tokenizer": "packaged/pkg-a-vfl1KFj_r", "modules/core/exception": "packaged/pkg-a-vfl1KFj_r", "external/security/cyberfend": "../../javascript/external/security/cyberfend-vflGt5CW5", "libs": ["https://cf.dropboxstatic.com/static/javascript/compiled/libs-mini-vflcb8Axw", "https://www.dropboxstatic.com/static/javascript/compiled/libs-mini-vflcb8Axw"], "modules/dirty/upsell/header_bubble": "packaged/pkg-i-vflOczuNS", "modules/clean/uirequest": "packaged/pkg-a-vfl1KFj_r", "modules/clean/dropins/hostsite_generic": "packaged/pkg-g-vflCFsvES", "dropboxapi": ["https://cf.dropboxstatic.com/static/api/1/dropbox-vflx0X71y", "https://www.dropboxstatic.com/static/api/1/dropbox-vflx0X71y"], "modules/clean/photos/carousel_app/carousel_album": "packaged/pkg-c-vflypnnJ9", "modules/clean/react/util": "packaged/pkg-a-vfl1KFj_r", "modules/clean/history": "packaged/pkg-a-vfl1KFj_r", "modules/clean/sharing/shared_link_modal": "packaged/pkg-a-vfl1KFj_r", "external/underscore": "../../javascript/external/underscore-vfl7K8tzR", "modules/clean/help/article_mode_block": "packaged/pkg-j-vflW_SCaW", "modules/clean/ajax": "packaged/pkg-a-vfl1KFj_r", "modules/clean/sso_login_checks": "packaged/pkg-a-vfl1KFj_r", "modules/clean/react/context_menu": "packaged/pkg-c-vflypnnJ9", "modules/core/notify": "packaged/pkg-a-vfl1KFj_r", "modules/clean/account_photo_modal/ui": "packaged/pkg-a-vfl1KFj_r", "modules/clean/payments/payment_form/iframe_rpc": "packaged/pkg-d-vflxjBXbH", "modules/clean/business/components/snap_engage_link": "packaged/pkg-f-vfl0dRII9", "modules/clean/photos/carousel_app/email_verification": "packaged/pkg-c-vflypnnJ9", "modules/clean/photos/survey_response_logger": "packaged/pkg-c-vflypnnJ9", "external/swfobject": "../../javascript/external/swfobject-vfljC7EvC", "modules/clean/dropins/universal_saver": "packaged/pkg-g-vflCFsvES", "modules/clean/photos/carousel_app/item_actions": "packaged/pkg-c-vflypnnJ9", "modules/core/exception_tag_registry": "modules/core/exception_tag_registry-vfl0xQ-Wc", "modules/clean/activity/activity_store": "packaged/pkg-a-vfl1KFj_r", "modules/clean/account_photo_modal/mode_enum": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/app_manager": "packaged/pkg-c-vflypnnJ9", "modules/clean/photos/photos_engagement_logger": "packaged/pkg-a-vfl1KFj_r", "modules/clean/storage": "packaged/pkg-a-vfl1KFj_r", "modules/clean/job_progress": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/react/openwith/open_with_tooltip": "packaged/pkg-a-vfl1KFj_r", "modules/clean/pagination_manager": "modules/clean/pagination_manager-vflQsULVV", "modules/clean/components/expanding_section": "packaged/pkg-f-vfl0dRII9", "modules/clean/react/input": "packaged/pkg-a-vfl1KFj_r", "modules/clean/avatar/size": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/business_create": "packaged/pkg-d-vflxjBXbH", "modules/clean/snapengage": "packaged/pkg-f-vfl0dRII9", "modules/clean/growth/experiments/logger": "packaged/pkg-i-vflOczuNS", "modules/clean/components/register_form_validator": "packaged/pkg-d-vflxjBXbH", "modules/clean/activity/comment": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/reply_composer": "packaged/pkg-c-vflypnnJ9", "modules/clean/account/verify_email_modals": "packaged/pkg-a-vfl1KFj_r", "modules/clean/account/change_email_modals": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/flashback_page": "packaged/pkg-c-vflypnnJ9", "modules/clean/help/feedback_form": "packaged/pkg-j-vflW_SCaW", "modules/clean/upsell/ha_loader": "packaged/pkg-a-vfl1KFj_r", "modules/clean/unity/connection": "packaged/pkg-a-vfl1KFj_r", "modules/clean/activity/like": "packaged/pkg-a-vfl1KFj_r", "external/videojs/video": "../../javascript/external/videojs/video-vflrbm_AX", "modules/clean/account/email": "packaged/pkg-a-vfl1KFj_r", "modules/clean/dbmodal": "packaged/pkg-a-vfl1KFj_r", "external/zxcvbn": ["https://cf.dropboxstatic.com/static/javascript/external/zxcvbn-vflkO7PKd", "https://www.dropboxstatic.com/static/javascript/external/zxcvbn-vflkO7PKd"], "modules/clean/photos/carousel_app/conversations_page_old": "packaged/pkg-c-vflypnnJ9", "modules/clean/react/file_comments/comment_list_header": "packaged/pkg-a-vfl1KFj_r", "modules/clean/business/business_login_modal": "packaged/pkg-f-vfl0dRII9", "modules/dirty/search/search": "packaged/pkg-k-vfl_AjaAe", "modules/dirty/account/password_change": "packaged/pkg-e-vflDhfvi4", "modules/clean/profile": "packaged/pkg-e-vflDhfvi4", "modules/clean/react/previews/preview_image_zoom": "modules/clean/react/previews/preview_image_zoom-vflPq_Dxu", "modules/clean/payments/payment_form/payment_method_base": "packaged/pkg-d-vflxjBXbH", "modules/clean/display_format": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/react/activity/time_counter": "packaged/pkg-a-vfl1KFj_r", "modules/clean/event_load": "packaged/pkg-a-vfl1KFj_r", "modules/clean/contacts/facebook_modal": "packaged/pkg-a-vfl1KFj_r", "modules/clean/contacts/facebook_oauth": "packaged/pkg-a-vfl1KFj_r", "modules/clean/react/activity/like_bar": "packaged/pkg-a-vfl1KFj_r", "modules/clean/activity/activity_user": "packaged/pkg-a-vfl1KFj_r", "modules/clean/openwith/logger": "packaged/pkg-a-vfl1KFj_r", "javascript": "../../javascript", "modules/clean/react/previews/preview_video": "modules/clean/react/previews/preview_video-vflgzCus3", "modules/clean/image_size": "packaged/pkg-a-vfl1KFj_r", "modules/clean/react/button": "packaged/pkg-a-vfl1KFj_r", "external/keymaster": "../../javascript/external/keymaster-vflUgLHG5", "modules/clean/viewer": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/groups/group_list": "packaged/pkg-e-vflDhfvi4", "modules/clean/account/account_photo_square": "packaged/pkg-a-vfl1KFj_r", "modules/clean/sharing/non_namespace_manage_access_modal": "modules/clean/sharing/non_namespace_manage_access_modal-vflfEJCKg", "modules/clean/photos/carousel_app/add_to_album_modal": "packaged/pkg-c-vflypnnJ9", "modules/clean/photos/carousel_app/event_dispatcher": "packaged/pkg-c-vflypnnJ9", "external/videojs/videojs_hls": "../../javascript/external/videojs/videojs_hls-vflf1wdRu", "modules/clean/components/tooltip": "packaged/pkg-a-vfl1KFj_r", "modules/clean/components/tabs": "packaged/pkg-e-vflDhfvi4", "modules/clean/react/sprite_div": "packaged/pkg-a-vfl1KFj_r", "external/sha1": "../../javascript/external/sha1-vflgHBuGL", "modules/dirty/dropins/desktop_chooser": "packaged/pkg-g-vflCFsvES", "modules/clean/photos/carousel_app/share_cart": "packaged/pkg-c-vflypnnJ9", "modules/clean/components/tabbable": "packaged/pkg-a-vfl1KFj_r", "modules/clean/dropins/multi_login_iframe": "packaged/pkg-g-vflCFsvES", "modules/clean/react/form_error_mixin": "packaged/pkg-a-vfl1KFj_r", "modules/core/kwargs": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/emoji": "packaged/pkg-c-vflypnnJ9", "modules/clean/react/file_comments/logger": "packaged/pkg-a-vfl1KFj_r", "modules/clean/sprite": "packaged/pkg-a-vfl1KFj_r", "modules/clean/business/modal_helper": "packaged/pkg-f-vfl0dRII9", "modules/clean/photos/carousel_app/carousel_event_store": "packaged/pkg-c-vflypnnJ9", "modules/clean/dbmodal_loading": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/upsell/ha": "packaged/pkg-a-vfl1KFj_r", "modules/clean/fuzzy": "packaged/pkg-a-vfl1KFj_r", "external/jquery.fs.zoomer": "../../javascript/external/jquery.fs.zoomer-vfl2SRVeV", "modules/clean/photos/carousel_app/rooms_list": "packaged/pkg-c-vflypnnJ9", "modules/clean/dropins/tappable": "packaged/pkg-g-vflCFsvES", "modules/clean/photos/carousel_app/albums_page": "packaged/pkg-c-vflypnnJ9", "modules/clean/image_cache": "packaged/pkg-c-vflypnnJ9", "modules/clean/react/recaptcha_challenge": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/react/file_comments/comment_list_ui": "packaged/pkg-a-vfl1KFj_r", "modules/clean/undo": "packaged/pkg-a-vfl1KFj_r", "modules/clean/unity/web_socket": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/groups/groups_list": "packaged/pkg-e-vflDhfvi4", "modules/clean/photos/carousel_app/duplicates_page": "packaged/pkg-c-vflypnnJ9", "modules/dirty/streams/lib/user_queue": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/growth/shared_link_signup_modals": "packaged/pkg-a-vfl1KFj_r", "modules/clean/payments/dfb_buy_form": "packaged/pkg-d-vflxjBXbH", "modules/clean/static_resource_loader": "packaged/pkg-a-vfl1KFj_r", "modules/clean/payments/pci_input_base": "packaged/pkg-d-vflxjBXbH", "modules/clean/photos/carousel_app/conversations_page": "packaged/pkg-c-vflypnnJ9", "modules/clean/multiaccount_login": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/react/previews/preview_toolbar": "packaged/pkg-a-vfl1KFj_r", "modules/clean/growth/experiments/downloading_exp": "packaged/pkg-i-vflOczuNS", "mobile": ["https://cf.dropboxstatic.com/static/javascript/compiled/dropbox-mobile-mini-vfljlIH9N", "https://www.dropboxstatic.com/static/javascript/compiled/dropbox-mobile-mini-vfljlIH9N"], "modules/clean/unity/features": "packaged/pkg-a-vfl1KFj_r", "modules/clean/datetime": "packaged/pkg-a-vfl1KFj_r", "modules/clean/components/select_input": "packaged/pkg-d-vflxjBXbH", "modules/clean/frame_messenger": "packaged/pkg-a-vfl1KFj_r", "modules/clean/upsell/upsell_controller": "packaged/pkg-a-vfl1KFj_r", "modules/clean/activity/file_viewer_state": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/streams/lib/check": "packaged/pkg-a-vfl1KFj_r", "modules/clean/help/logger": "packaged/pkg-j-vflW_SCaW", "modules/dirty/get_mobile_app": "packaged/pkg-d-vflxjBXbH", "modules/clean/photos/carousel_app/lightbox": "packaged/pkg-c-vflypnnJ9", "modules/clean/contacts/data": "packaged/pkg-a-vfl1KFj_r", "modules/clean/video_util": "packaged/pkg-a-vfl1KFj_r", "modules/clean/components/modal_video_player": "packaged/pkg-h-vflubAnYZ", "connect_v3_mobile": ["https://cf.dropboxstatic.com/static/javascript/compiled/connect-v3-mobile-mini-vflK1FvCg", "https://www.dropboxstatic.com/static/javascript/compiled/connect-v3-mobile-mini-vflK1FvCg"], "modules/clean/user": "packaged/pkg-a-vfl1KFj_r", "modules/clean/mailcheck": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/react_timeline": "packaged/pkg-c-vflypnnJ9", "modules/dirty/groups/ui": "packaged/pkg-e-vflDhfvi4", "modules/clean/index_2015": "packaged/pkg-f-vfl0dRII9", "modules/clean/contacts/types": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/exclude_modal": "packaged/pkg-c-vflypnnJ9", "external/react": ["https://cf.dropboxstatic.com/static/javascript/external/react-0.12.0.min-vfl7pWXh9", "https://www.dropboxstatic.com/static/javascript/external/react-0.12.0.min-vfl7pWXh9"], "modules/clean/profile_services/profile_services_constants": "packaged/pkg-a-vfl1KFj_r", "modules/clean/dropins/universal_chooser": "packaged/pkg-g-vflCFsvES", "modules/clean/keycode": "packaged/pkg-a-vfl1KFj_r", "modules/clean/db_bubble": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/conversation_header": "packaged/pkg-c-vflypnnJ9", "packaged/pkg-f": "packaged/pkg-f-vfl0dRII9", "packaged/pkg-g": "packaged/pkg-g-vflCFsvES", "packaged/pkg-d": "packaged/pkg-d-vflxjBXbH", "packaged/pkg-e": "packaged/pkg-e-vflDhfvi4", "modules/clean/payments/payment_form/iframe_credit_card": "packaged/pkg-d-vflxjBXbH", "external/flash_detect": "../../javascript/external/flash_detect-vflLuenon", "packaged/pkg-a": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/conversation_settings": "packaged/pkg-c-vflypnnJ9", "external/purify": "../../javascript/external/purify-vflMRGGxe", "packaged/pkg-j": "packaged/pkg-j-vflW_SCaW", "packaged/pkg-k": "packaged/pkg-k-vfl_AjaAe", "packaged/pkg-h": "packaged/pkg-h-vflubAnYZ", "packaged/pkg-i": "packaged/pkg-i-vflOczuNS", "modules/clean/sharing/share_inband": "packaged/pkg-a-vfl1KFj_r", "external": "../../javascript/external", "modules/clean/react/tooltip": "packaged/pkg-a-vfl1KFj_r", "modules/clean/sharing/shared_folder_settings_modal": "modules/clean/sharing/shared_folder_settings_modal-vflfqu_9O", "modules/clean/react/image": "packaged/pkg-a-vfl1KFj_r", "modules/clean/tokenizer": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/unity_browse_interface": "packaged/pkg-a-vfl1KFj_r", "modules/core/ordered_dictionary": "packaged/pkg-a-vfl1KFj_r", "modules/clean/components/bubble_picker": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/react_marquee": "packaged/pkg-c-vflypnnJ9", "modules/clean/business/analytics": "packaged/pkg-h-vflubAnYZ", "modules/clean/react/help/bubble_picker": "packaged/pkg-a-vfl1KFj_r", "modules/clean/components/input": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/album_store": "packaged/pkg-c-vflypnnJ9", "modules/clean/photos/legacy_thumb_loader": "packaged/pkg-a-vfl1KFj_r", "modules/clean/teams/team_folder_modal": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/account/security_tab": "packaged/pkg-e-vflDhfvi4", "modules/clean/react/activity/mentions_controller": "packaged/pkg-a-vfl1KFj_r", "modules/clean/components/ajax_form": "packaged/pkg-a-vfl1KFj_r", "modules/clean/business/business_page": "packaged/pkg-f-vfl0dRII9", "modules/clean/dropins/login": "packaged/pkg-g-vflCFsvES", "modules/clean/sharing/shared_link_for_sf": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/react/growth/experiments/onboarding_progress_bar": "packaged/pkg-i-vflOczuNS", "modules/clean/react/sprite": "packaged/pkg-a-vfl1KFj_r", "modules/clean/react/modal": "packaged/pkg-a-vfl1KFj_r", "modules/clean/contacts/list": "packaged/pkg-a-vfl1KFj_r", "modules/clean/dropbox_nav": "packaged/pkg-a-vfl1KFj_r", "modules/clean/referrer_cleansing_redirect": "packaged/pkg-a-vfl1KFj_r", "modules/clean/contacts/typeahead": "packaged/pkg-a-vfl1KFj_r", "modules/clean/hi_res": "packaged/pkg-a-vfl1KFj_r", "modules/clean/components/locale_selector": "packaged/pkg-f-vfl0dRII9", "modules/clean/photos/carousel_app/item_store": "packaged/pkg-c-vflypnnJ9", "modules/clean/react/bubble_dropdown": "packaged/pkg-a-vfl1KFj_r", "modules/clean/teams/trial_buy_now": "packaged/pkg-a-vfl1KFj_r", "modules/clean/growth/download_arrows": "packaged/pkg-h-vflubAnYZ", "modules/clean/account_photo_modal/account_header": "packaged/pkg-a-vfl1KFj_r", "modules/clean/payments/payment_form_events": "packaged/pkg-d-vflxjBXbH", "modules/clean/open_with": "packaged/pkg-a-vfl1KFj_r", "modules/dirty/print": "packaged/pkg-a-vfl1KFj_r", "modules/core/i18n": "packaged/pkg-a-vfl1KFj_r", "modules/clean/contacts/bloodhound_contacts": "packaged/pkg-a-vfl1KFj_r", "packaged/pkg-c": "packaged/pkg-c-vflypnnJ9", "modules/clean/components/phone_number": "packaged/pkg-d-vflxjBXbH", "modules/clean/photos/carousel_app/carousel_room": "packaged/pkg-c-vflypnnJ9", "modules/dirty/account": "packaged/pkg-e-vflDhfvi4", "modules/clean/payments/payment_form/payment_form": "packaged/pkg-d-vflxjBXbH", "modules/core/dom": "packaged/pkg-a-vfl1KFj_r", "modules/clean/web_timing_logger": "packaged/pkg-a-vfl1KFj_r", "modules/clean/account_photo_modal/controller": "packaged/pkg-a-vfl1KFj_r", "modules/clean/payments/payment_form/credit_card": "packaged/pkg-d-vflxjBXbH", "modules/clean/validators/validators": "packaged/pkg-a-vfl1KFj_r", "modules/clean/contacts/importer": "packaged/pkg-a-vfl1KFj_r", "modules/clean/payments/credit_card_util": "packaged/pkg-a-vfl1KFj_r", "jquery-security-patch": "https://cf.dropboxstatic.com/static/javascript/jquery-security-patch-vfl79CTKP", "modules/clean/react/previews/preview_image": "modules/clean/react/previews/preview_image-vfl5mWons", "modules/clean/form": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/photos_tab_deprecation_modals": "packaged/pkg-c-vflypnnJ9", "modules/core/cookies": "packaged/pkg-a-vfl1KFj_r", "libs_mobile": ["https://cf.dropboxstatic.com/static/javascript/compiled/libs-mobile-mini-vflt_flMU", "https://www.dropboxstatic.com/static/javascript/compiled/libs-mobile-mini-vflt_flMU"], "modules/clean/clipboard": "packaged/pkg-a-vfl1KFj_r", "modules/clean/account/account_photo_settings": "packaged/pkg-e-vflDhfvi4", "modules/dirty/register_form": "packaged/pkg-a-vfl1KFj_r", "modules/clean/payments/cash": "packaged/pkg-a-vfl1KFj_r", "modules/clean/account/email_verify": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/shared_space_view": "packaged/pkg-c-vflypnnJ9", "modules/dirty/photos/carousel_app/share_composer": "packaged/pkg-c-vflypnnJ9", "modules/clean/payments/pro_trial_onboarding_tour": "packaged/pkg-a-vfl1KFj_r", "modules/clean/business/collaboration_page": "packaged/pkg-h-vflubAnYZ", "modules/clean/account/email_verify_reasons": "packaged/pkg-a-vfl1KFj_r", "modules/clean/escape": "packaged/pkg-c-vflypnnJ9", "modules/dirty/table_filter": "packaged/pkg-e-vflDhfvi4", "modules/clean/react/hierarchical_nav_bar": "modules/clean/react/hierarchical_nav_bar-vflPBH21M", "modules/clean/payments/dfb_util": "packaged/pkg-a-vfl1KFj_r", "modules/core/html": "packaged/pkg-a-vfl1KFj_r", "moment": ["https://cf.dropboxstatic.com/static/javascript/external/moment-vflM4ufeu", "https://www.dropboxstatic.com/static/javascript/external/moment-vflM4ufeu"], "modules/clean/components/login_or_register": "packaged/pkg-a-vfl1KFj_r", "external/jquery_ui": "../../javascript/external/jquery_ui-vfl8EzDoe", "modules/dirty/react/activity/comment_input": "packaged/pkg-a-vfl1KFj_r", "modules/clean/contacts/cache": "packaged/pkg-a-vfl1KFj_r", "dropbox": ["https://cf.dropboxstatic.com/static/javascript/compiled/dropbox-mini-vflPbLhL3", "https://www.dropboxstatic.com/static/javascript/compiled/dropbox-mini-vflPbLhL3"], "modules/clean/react/react_i18n": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/album_list": "packaged/pkg-c-vflypnnJ9", "modules/dirty/search/search_bar": "packaged/pkg-k-vfl_AjaAe", "modules/clean/photos/carousel_app/avatar": "packaged/pkg-c-vflypnnJ9", "modules/dirty/react/activity/comment_activity_ui": "packaged/pkg-a-vfl1KFj_r", "modules/clean/react/form_handlers_mixin": "packaged/pkg-j-vflW_SCaW", "modules/clean/growth/dropbox_client_download": "packaged/pkg-h-vflubAnYZ", "modules/clean/payments/billing_info_validator": "packaged/pkg-d-vflxjBXbH", "modules/clean/analytics": "packaged/pkg-a-vfl1KFj_r", "external/modernizr": "../../javascript/external/modernizr-vflWX4uUD", "modules/core/browser": "packaged/pkg-a-vfl1KFj_r", "modules/clean/react/previews/preview_blank": "modules/clean/react/previews/preview_blank-vflNXui30", "modules/dirty/react/file_comments/file_feedback_ui": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/react_item": "packaged/pkg-c-vflypnnJ9", "modules/clean/photos/carousel_app/carousel_event": "packaged/pkg-c-vflypnnJ9", "modules/clean/filepath": "packaged/pkg-a-vfl1KFj_r", "modules/clean/sharing/shared_link": "packaged/pkg-a-vfl1KFj_r", "modules/clean/react/activity/contacts_selector": "packaged/pkg-a-vfl1KFj_r", "modules/clean/marketing_tracker": "packaged/pkg-a-vfl1KFj_r", "modules/clean/photos/carousel_app/excluded_folders_modal": "packaged/pkg-c-vflypnnJ9", "external/jquery.mousewheel": "../../javascript/external/jquery.mousewheel-vflQm_0T9", "modules/dirty/photos/carousel_app/carousel_app": "packaged/pkg-c-vflypnnJ9", "modules/clean/db_select": "packaged/pkg-e-vflDhfvi4", "modules/clean/static_urls": "packaged/pkg-a-vfl1KFj_r"}};
+                        window.REQUIREJS_FALLBACK_URL = "https://www.dropboxstatic.com/static/coffee/compiled";
+                        </script><script src="https://cf.dropboxstatic.com/static/javascript/compiled/require-vflIRPv0M.js" type="text/javascript"></script><script type="text/javascript" nonce="0H/8tmVwBIf030mTQTVN">require(["dropbox"]);</script><script nonce="0H/8tmVwBIf030mTQTVN">
+                if (self != top) {
+                    top.location.replace(self.location.href);
+                    setTimeout(function() {
+                        document.body.innerHTML = (
+                            "<img src='https://www.dropbox.com/static/images/logo.png' onClick='top.location.href=window.location.href' />");
+                    }, 1);
+                }
+            
+
+        var _javascript_key = "k3mpvuSruqsYhUi5Wo8lpGYaJFSQRTXsaRYUZY2yWy8";
+        var _js_post = false;
+
+        var _cf = _cf || [];
+        _cf.push(['_setJsPost', _js_post]);
+        _cf.push(['_setJavaScriptKey', _javascript_key]);
+        var itv=0; if (Date.now) itv = Date.now(); else itv = +new Date();
+        _cf.push(['_setInitTime', itv]);
+        _cf.push(['_setSDFieldNames', 'login_sd']);
+        _cf.push(['_setSDFieldNames', 'login_sd_small']);
+        _cf.push(['_setSDFieldNames', 'signup_sd']);
+        _cf.push(['_setSDFieldNames', 'signup_sd_1']);
+        _cf.push(['_setSDFieldNames', 'signup_sd_2']);
+        _cf.push(['_setEnReadDocUrl', false]);
+    </script></head><body dir="ltr" class="en   "><div style="display: none;" id="modal-behind"></div><div style="display: none;" id="modal"><div id="modal-box"><a href="#" id="modal-x" class=" cpyxl886812593837849370"><script nonce="0H/8tmVwBIf030mTQTVN">window._goch_["cpyxl886812593837849370"] = function(event){INLINE_JS.Modal.hide(null, false, true); Event.stop(event); return false;;}</script></a><h2 id="modal-title"></h2><div id="modal-content"></div></div></div><div style="display: none;" id="modal-overlay"></div><div style="display:none" id="grave-yard"></div><div style="display:none" id="trash-can"></div><script type="text/template" id="tutorial_nav_bubble_tmpl" nonce="0H/8tmVwBIf030mTQTVN"><div class="tutorial-bubble-content"><a class="tutorial-bubble-x-link"><img src="/static/images/x-small-active.png" class="tutorial-bubble-x-img" /></a><h1 class="tutorial-bubble-title"><%= TEMPLATE_DATA.title %></h1><p class="tutorial-bubble-body"><%= TEMPLATE_DATA.body %></p><a class="tutorial-bubble-button <%= TEMPLATE_DATA.button_class %>"><%= TEMPLATE_DATA.button_text %></a></div></script><div id="floaters"></div><div style="display: none;" class="external-drop-indicator top"></div><div style="display: none;" class="external-drop-indicator right"></div><div style="display: none;" class="external-drop-indicator bottom"></div><div style="display: none;" class="external-drop-indicator left"></div><div id="page-header" class="page-header-border   "><div id="inner-page-header"><span class="home-icon-container"><div id="home-icon"><a href="/"><img data-js-component-id="component5074259898158802097" width="36" src="https://cf.dropboxstatic.com/static/images/icons/blue_dropbox_glyph-vflJ8-C5d.png" /></a></div></span><div id="account-header"><ul class="nav"><li id="top-login"><div id="top-login-wrapper"><a href="/login" id="login-hover-link">Sign in<img src="https://cf.dropboxstatic.com/static/images/icons/icon_spacer-vflN3BYt2.gif" style="padding: 0; margin-left: 5px; margin-top: -1px;" id="login-hover-dropdown-icon" class="s_web_arrow-down-blue link-img sprite sprite_web" /></a><div id="login-hover-cont" class="offscreen chat-bubble"><div data-js-component-id="component5818291393245046936" id="pyxl4581998220534243759" class="login-form-container  small"><form action="/ajax_login" novalidate="" method="POST" class="clearfix login-form"><input type="hidden" name="cont" value="https://www.dropbox.com/privacy" /><input type="hidden" name="require_role" /><input type="hidden" name="login_sd" id="login_sd_small" /><div data-js-component-id="component3266442264999120083" tabindex="-1" id="pyxl2596859642913022094" class="small text-input login-text-input"><div class="text-input-error-wrapper"><form:error name="login_email" /><div data-error-field-name="login_email"></div></div><div class="text-input-wrapper"><input type="email" name="login_email" id="pyxl707814886253790840" class="text-input-input" /><label for="pyxl707814886253790840">Email</label></div></div><div data-js-component-id="component6519015793296408388" tabindex="-1" id="pyxl3436735421184482805" class="small text-input login-password login-text-input"><div class="text-input-error-wrapper"><form:error name="login_password" /><div data-error-field-name="login_password"></div></div><div class="text-input-wrapper"><input type="password" id="pyxl2065150493996556575" name="login_password" class="password-input text-input-input" /><label for="pyxl2065150493996556575">Password</label></div></div><div id="react-login-recaptcha-challenge-div"></div><div class="clearfix"><div class="sso-description"><div class="sprite-div"><div class="sprite-frame small icon-left"><img src="https://cf.dropboxstatic.com/static/images/icons/icon_spacer-vflN3BYt2.gif" class=" sprite sprite_web s_web_lock" /></div><div class="sprite-text"><div class="sprite-text-inner">Single sign-on enabled</div></div></div></div><div class="small checkbox checkbox-inline remember-me"><div class="text-input-error-wrapper"><form:error name="remember_me" /><div data-error-field-name="remember_me"></div></div><input checked="checked" type="checkbox" name="remember_me" id="pyxl1586982841937607025" /><label for="pyxl1586982841937607025">Remember me</label></div><button disabled="True" data-js-component-id="component1218426210602734292" type="submit" class="login-button button-primary"><div class="sign-in-text">Sign in</div><div class="sso-text">Continue</div></button><span class="login-loading-indicator"><img data-js-component-id="component2169088811072210220" src="https://cf.dropboxstatic.com/static/images/icons/ajax-loading-small-vfl3Wt7C_.gif" data-hi-res="https://cf.dropboxstatic.com/static/images/icons/ajax-loading-small@2x-vflAxdZTP.gif" /></span></div><div class="sso-optout"><div>or <a href="#">Sign in with Dropbox credentials</a></div></div></form> <form action="/ajax_verify_code" style="display:none;" method="POST" class="two-factor-form clearfix"><input type="hidden" name="cont" value="https://www.dropbox.com/privacy" /><input type="hidden" name="require_role" /><input type="hidden" name="remember_me" /><div class="login-info two-factor-uses-sms">We sent a code to your phone number ending in <span class="last-four-digits"></span>.</div><div class="login-info two-factor-uses-authenticator">Enter the code generated by your authenticator app.</div><div data-js-component-id="component1220890796877979833" tabindex="-1" id="pyxl4486244014257492794" class="small text-input login-text-input"><div class="text-input-error-wrapper"><form:error name="code" /><div data-error-field-name="code"></div></div><div class="text-input-wrapper"><input autocomplete="off" type="text" name="code" id="pyxl6407962928138191861" class="text-input-input" /><label for="pyxl6407962928138191861">6-digit code</label></div></div><div class="checkbox checkbox-inline standard remember-me"><div class="text-input-error-wrapper"><form:error name="trusted" /><div data-error-field-name="trusted"></div></div><input type="checkbox" name="trusted" id="pyxl5389123022065678017" /><label for="pyxl5389123022065678017"><div data-js-component-id="component3639864416659525449" class="tooltip-wrapper info-icon"><div class="tooltip-bubble tooltip-tooltip"><div class="tooltip-inner"><div class="two-factor-trusted-info">Trusted computers will never ask you for a security code again. You should only trust this computer if you trust everyone who uses it.</div></div></div> <div class="tooltip-prompt sprite-div"><div class="sprite-text"><div class="sprite-text-inner">Trust this computer</div></div><div class="sprite-frame small icon-right"><img src="https://cf.dropboxstatic.com/static/images/icons/icon_spacer-vflN3BYt2.gif" class=" sprite sprite_web s_web_info" /></div></div></div></label></div><button data-js-component-id="component2170991907194222494" type="submit" class="login-button button-primary">Submit</button></form></div><p class="create-account"><a href="/register" id="login-create-an-account">Sign up for Dropbox</a></p><div class="chat-bubble-arrow-border"></div><div class="chat-bubble-arrow"></div></div></div></li></ul></div></div></div><div id="outer-frame"> <div style="display: none;" id="db-modal-locale-selector-modal" class="db-modal-wrapper"><div class="db-modal-overlay"></div><div class="db-modal"><div class="db-modal-box"><a href="#" class="db-modal-x"></a><h2 class="db-modal-title"><div class="db-modal-title-text">Choose a language</div></h2><div class="db-modal-content"><table><tr><td><ul><li><a data-locale="id" class="locale-option">Bahasa Indonesia</a></li><li><a data-locale="ms" class="locale-option">Bahasa Malaysia</a></li><li><a data-locale="da_DK" class="locale-option">Dansk</a></li><li><a data-locale="de" class="locale-option">Deutsch</a></li><li><a data-locale="en" class="locale-option">English</a></li><li><a data-locale="es_ES" class="locale-option">Español (España)</a></li><li><a data-locale="es" class="locale-option">Español (Latinoamérica)</a></li><li><a data-locale="fr" class="locale-option">Français</a></li><li><a data-locale="it" class="locale-option">Italiano</a></li><li><a data-locale="nl_NL" class="locale-option">Nederlands</a></li><li><a data-locale="nb_NO" class="locale-option">Norsk (bokmål)</a></li></ul></td><td><ul><li><a data-locale="pl" class="locale-option">Polski</a></li><li><a data-locale="pt_BR" class="locale-option">Português (Brasil)</a></li><li><a data-locale="ru" class="locale-option">Pусский</a></li><li><a data-locale="sv_SE" class="locale-option">Svenska</a></li><li><a data-locale="uk_UA" class="locale-option">Українська [Beta]</a></li><li><a data-locale="th_TH" class="locale-option">ไทย</a></li><li><a data-locale="zh_CN" class="locale-option">中文（简体）</a></li><li><a data-locale="zh_TW" class="locale-option">中文（繁體）</a></li><li><a data-locale="ja" class="locale-option">日本語</a></li><li><a data-locale="ko" class="locale-option">한국어</a></li></ul></td></tr></table></div></div></div></div><div id="page-content"><div data-js-component-id="component8422101506355036195" id="pyxl979074531284717355" class="tabs"><div class="tab-bar"><div data-id="pyxl398278291501846473" data-hash="terms" class="tab-tab">Terms of Service</div><div data-id="pyxl6911331958333409248" data-hash="privacy" class="tab-tab selected">Privacy Policy</div><div data-id="pyxl5122305947899336290" data-hash="business_agreement" class="tab-tab">Business Agreement</div><div data-id="pyxl7972381335941062855" data-hash="dmca" class="tab-tab">DMCA Policy</div><div data-id="pyxl6640490215030020584" data-hash="acceptable_use" class="tab-tab rightmost-tab">Acceptable Use</div></div><div class="tab-bar-border"></div><div id="pyxl398278291501846473" class="tab-content"><div> <p class="banner-yellow">We&rsquo;re updating our Terms of Service for users who live outside the US, Canada and Mexico. They&rsquo;re effective right away for users who sign up for Dropbox or upgrade to Dropbox Pro starting May 1st, 2015, and effective June 1st, 2015 for all other users. You can find out more <a href="https://www.dropbox.com/help/9063">here</a> and see the prior Terms <a href="https://www.dropbox.com/terms2014">here</a>.</p>  <div id="terms-of-service">
+    <h2>Dropbox Terms of Service</h2>
+    <p>Posted: May 1, 2015</p>
+
+    <p>
+        Thanks for using Dropbox! These terms of service ("Terms") cover your use and access to our services, client software and websites ("Services").  If you reside outside of the United States of America, Canada and Mexico (“North America”) your agreement is with Dropbox Ireland, and if you reside in North America your agreement is with Dropbox, Inc.  Our <a target="_blank" href="/privacy2014">Privacy Policy</a> explains how we collect and use your information while our <a target="_blank" href="/terms#acceptable_use">Acceptable Use Policy</a> outlines your responsibilities when using our Services. By using our Services, you're agreeing to be bound by these Terms, and to review our <a target="_blank" href="/privacy2014">Privacy</a> and <a target="_blank" href="/terms#acceptable_use">Acceptable Use</a> policies. If you're using our Services for an organization, you're agreeing to these Terms on behalf of that organization.
+    </p>
+
+    <h2>Your Stuff &amp; Your Permissions</h2>
+    <p>
+        When you use our Services, you provide us with things like your files, content, email messages, contacts and so on ("Your Stuff"). Your Stuff is yours. These Terms don't give us any rights to Your Stuff except for the limited rights that enable us to offer the Services.
+    </p>
+    <p>
+        We need your permission to do things like hosting Your Stuff, backing it up, and sharing it when you ask us to. Our Services also provide you with features like photo thumbnails, document previews, email organization, easy sorting, editing, sharing and searching. These and other features may require our systems to access, store and scan Your Stuff. You give us permission to do those things, and this permission extends to our affiliates and trusted third parties we work with.
+    </p>
+
+    <h2>Sharing Your Stuff</h2>
+    <p>
+        Our Services let you share Your Stuff with others, so please think carefully about what you share.
+    </p>
+
+    <h2>Your Responsibilities</h2>
+    <p>
+        You're responsible for your conduct, Your Stuff and you must comply with our <a target="_blank" href="/terms#acceptable_use">Acceptable Use Policy</a>.  Content in the Services may be protected by others' intellectual property rights. Please don't copy, upload, download or share content unless you have the right to do so.
+    </p>
+    <p>
+        We may review your conduct and content for compliance with these Terms and our <a target="_blank" href="/terms#acceptable_use">Acceptable Use Policy</a>. With that said, we have no obligation to do so. We aren't responsible for the content people post and share via the Services.
+    </p>
+    <p>
+        Please safeguard your password to the Services, make sure that others don't have access to it, and keep your account information current.
+    </p>
+    <p>
+        Finally, our Services are not intended for and may not be used by people under the age of 13. By using our Services, you are representing to us that you're over 13.
+    </p>
+
+    <h2>Software</h2>
+    <p>
+        Some of our Services allow you to download client software ("Software") which may update automatically. So long as you comply with these Terms, we give you a limited, nonexclusive, nontransferable, revocable license to use the Software, solely to access the Services. To the extent any component of the Software may be offered under an open source license, we'll make that license available to you and the provisions of that license may expressly override some of these Terms. Unless the following restrictions are prohibited by law, you agree not to reverse engineer or decompile the Services, attempt to do so, or assist anyone in doing so.
+    </p>
+
+    <h2>Our Stuff</h2>
+    <p>
+        The Services are protected by copyright, trademark, and other US and foreign laws. These Terms don't grant you any right, title or interest in the Services, others' content in the Services, Dropbox trademarks, logos and other brand features. We welcome feedback, but note that we may use comments or suggestions without any obligation to you.
+    </p>
+
+    <h2>Copyright</h2>
+    <p>
+        We respect the intellectual property of others and ask that you do too. We respond to notices of alleged copyright infringement if they comply with the law, and such notices should be reported using our <a target="_blank" href="/dmca">Copyright Policy</a>.  We reserve the right to delete or disable content alleged to be infringing and terminate accounts of repeat infringers. Our designated agent for notice of alleged copyright infringement on the Services is:
+    </p>
+    <p>
+        Copyright Agent<br/>
+        Dropbox, Inc.<br/>
+        185 Berry Street, Suite 400<br/>
+        San Francisco, CA 94107<br/>
+        copyright@dropbox.com
+    </p>
+
+    <h2>Paid Accounts</h2>
+    <p>
+        <em>Billing</em>.   You can increase your storage space and add paid features to your account (turning your account into a "Paid Account"). We'll automatically bill you from the date you convert to a Paid Account and on each periodic renewal until cancellation. You're responsible for all applicable taxes, and we'll charge tax when required to do so.
+    </p>
+    <p>
+        <em>No Refunds</em>. You may cancel your Dropbox Paid Account at any time but you won't be issued a refund <a target="_blank" href="https://www.dropbox.com/help/9069">unless it's legally required</a>.
+    </p>
+    <p>
+        <em>Downgrades</em>.  Your Paid Account will remain in effect until it's cancelled or terminated under these Terms.  If you don't pay for your Paid Account on time, we reserve the right to suspend it or reduce your storage to free space levels.
+    </p>
+
+    <p>
+        <em>Changes</em>.  We may change the fees in effect but will give you advance notice of these changes via a message to the email address associated with your account.
+    </p>
+
+    <h2>Dropbox for Business</h2>
+    <p>
+        <em>Email address</em>.  If you sign up for a Dropbox account with an email address provisioned by your employer, your employer may be able to block your use of Dropbox until you transition to a Dropbox for Business account or you associate your Dropbox account with a personal email address.
+    </p>
+    <p>
+        <em>Using Dropbox for Business</em>.  If you join a Dropbox for Business account, you must use it in compliance with your employer's terms and policies. Please note that Dropbox for Business accounts are subject to your employer's control. Your administrators may be able to access, disclose, restrict, or remove information in or from your Dropbox for Business account. They may also be able to restrict or terminate  your access to a Dropbox for Business account. If you convert an existing Dropbox account into a Dropbox for Business account, your administrators may prevent you from later disassociating your account from the Dropbox for Business account.
+    </p>
+
+    <h2>Termination</h2>
+    <p>
+        You're free to stop using our Services at any time. We also reserve the right to suspend or end the Services at any time at our discretion and without notice. For example, we may suspend or terminate your use of the Services if you're not complying with these Terms, or use the Services in a manner that would cause us legal liability, disrupt the Services or disrupt others' use of the Services. Except for Paid Accounts, we reserve the right to terminate and delete your account if you haven't accessed our Services for 12 consecutive months.  We'll of course provide you with notice via the email address associated with your account before we do so.
+    </p>
+
+    <h2>Services "AS IS"</h2>
+    <p>
+        We strive to provide great Services, but there are certain things that we can't guarantee.    TO THE FULLEST EXTENT PERMITTED BY LAW, DROPBOX AND ITS AFFILIATES, SUPPLIERS AND DISTRIBUTORS MAKE NO WARRANTIES, EITHER EXPRESS OR IMPLIED, ABOUT THE SERVICES.  THE SERVICES ARE PROVIDED "AS IS."  WE ALSO DISCLAIM ANY WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.  Some places don't allow the disclaimers in this paragraph, so they may not apply to you.
+    </p>
+    <h2>Limitation of Liability</h2>
+    <p>
+        TO THE FULLEST EXTENT PERMITTED BY LAW, EXCEPT FOR ANY LIABILITY FOR DROPBOX’S OR ITS AFFILIATES’ FRAUD, FRAUDULENT MISREPRESENTATION, OR GROSS NEGLIGENCE, IN NO EVENT WILL DROPBOX, ITS AFFILIATES, SUPPLIERS OR DISTRIBUTORS BE LIABLE FOR:
+    </p>
+    <p>
+        (A) ANY INDIRECT, SPECIAL, INCIDENTAL, PUNITIVE, EXEMPLARY OR CONSEQUENTIAL DAMAGES, OR
+    </p>
+    <p>
+        (B) ANY LOSS OF USE, DATA, BUSINESS, OR PROFITS, REGARDLESS OF LEGAL THEORY.
+    </p>
+    <p>
+        THIS WILL BE REGARDLESS OF WHETHER OR NOT DROPBOX OR ANY OF ITS AFFILIATES HAS BEEN WARNED OF THE POSSIBILITY OF SUCH DAMAGES, AND EVEN IF A REMEDY FAILS OF ITS ESSENTIAL PURPOSE.
+    </p>
+    <p>
+        ADDITIONALLY, DROPBOX, ITS AFFILIATES, SUPPLIERS AND DISTRIBUTORS WILL NOT BE LIABLE FOR AGGREGATE LIABILITY FOR ALL CLAIMS RELATING TO THE SERVICES FOR MORE THAN THE GREATER OF $20 OR THE AMOUNTS PAID BY YOU TO DROPBOX FOR THE PAST 12 MONTHS OF THE SERVICES IN QUESTION.
+    </p>
+    <p>
+        Some places don't allow the types of limitations in this paragraph, so they may not apply to you.
+    </p>
+
+    <h2>Resolving Disputes</h2>
+    <p>
+        <em>Let's Try To Sort Things Out First</em>. We want to address your concerns without needing a formal legal case. Before filing a claim against Dropbox, you agree to try to resolve the dispute informally by contacting dispute-notice@dropbox.com. We'll try to resolve the dispute informally by contacting you via email. If a dispute is not resolved within 15 days of submission, you or Dropbox may bring a formal proceeding.
+    </p>
+    <p>
+        <em>Judicial forum for disputes</em>. You and Dropbox agree that any judicial proceeding to resolve claims relating to these Terms or the Services will be brought in the federal or state courts of San Francisco County, California, subject to the mandatory arbitration provisions below. Both you and Dropbox consent to venue and personal jurisdiction in such courts.
+    </p>
+
+    <h2>IF YOU’RE A U.S. RESIDENT, YOU ALSO AGREE TO THE FOLLOWING MANDATORY ARBITRATION PROVISIONS:</h2>
+    <p style="margin-left: 40px">
+        <em>We Both Agree To Arbitrate</em>. You and Dropbox agree to resolve any claims relating to these Terms or the Services through final and binding arbitration, except as set forth under Exceptions to Agreement to Arbitrate below.
+    </p>
+    <p style="margin-left: 40px">
+        <em>Opt-out of Agreement to Arbitrate</em>.  You can decline this agreement to arbitrate by <a target="_blank" href="/arbitration_optout">clicking here</a> and submitting the opt-out form within 30 days of first accepting these Terms.
+    </p>
+    <p style="margin-left: 40px">
+        <em>Arbitration Procedures</em>.  The <a target="_blank" href="http://www.adr.org/">American Arbitration Association</a> (AAA) will administer the arbitration under its Commercial Arbitration Rules and the Supplementary Procedures for Consumer Related Disputes. The arbitration will be held in the United States county where you live or work, San Francisco (CA), or any other location we agree to.
+    </p>
+    <p style="margin-left: 40px">
+        <em>Arbitration Fees and Incentives</em>.  The AAA rules will govern payment of all arbitration fees.  Dropbox will pay all arbitration fees for claims less than $75,000.  If you receive an arbitration award that is more favorable than any offer we make to resolve the claim, we will pay you $1,000 in addition to the award. Dropbox will not seek its attorneys' fees and costs in arbitration unless the arbitrator determines that your claim is frivolous.
+    </p>
+    <p style="margin-left: 40px">
+        <em>Exceptions to Agreement to Arbitrate</em>. Either you or Dropbox may assert claims, if they qualify, in small claims court in San Francisco (CA) or any United States county where you live or work.  Either party may bring a lawsuit solely for injunctive relief to stop unauthorized use or abuse of the Services, or intellectual property infringement (for example, trademark, trade secret, copyright, or patent rights) without first engaging in arbitration or the informal dispute-resolution process described above. If the agreement to arbitrate is found not to apply to you or your claim, you agree to the exclusive jurisdiction of the state and federal courts in San Francisco County, California to resolve your claim.
+    </p>
+    <p style="margin-left: 40px">
+        <b><em>NO CLASS ACTIONS</em>.</b> You may only resolve disputes with us on an individual basis, and may not bring a claim as a plaintiff or a class member in a class, consolidated, or representative action.  Class arbitrations, class actions, private attorney general actions, and consolidation with other arbitrations aren't allowed.
+    </p>
+
+    <h2>Controlling Law</h2>
+    <p>These Terms will be governed by California law except for its conflicts of laws principles, unless otherwise required by a mandatory law of any other jurisdiction.</p>
+
+    <h2>Entire Agreement</h2>
+    <p>
+        These Terms constitute the entire agreement between you and Dropbox with respect to the subject matter of these Terms, and supersede and replace any other prior or contemporaneous agreements, or terms and conditions applicable to the subject matter of these Terms.  These Terms create no third party beneficiary rights.
+    </p>
+
+    <h2>Waiver, Severability &amp; Assignment</h2>
+    <p>
+        Dropbox's failure to enforce a provision is not a waiver of its right to do so later.  If a provision is found unenforceable, the remaining provisions of the Terms will remain in full effect and an enforceable term will be substituted reflecting our intent as closely as possible.  You may not assign any of your rights under these Terms, and any such attempt will be void.  Dropbox may assign its rights to any of its affiliates or subsidiaries, or to any successor in interest of any business associated with the Services.
+    </p>
+
+    <h2>Modifications</h2>
+    <p>
+        We may revise these Terms from time to time, and will always post the most current version on our website.  If a revision meaningfully reduces your rights, we will notify you (by, for example, sending a message to the email address associated with your account, posting on our blog or on this page).  By continuing to use or access the Services after the revisions come into effect, you agree to be bound by the revised Terms.
+    </p>
+</div></div></div><div id="pyxl6911331958333409248" class="tab-content selected"><div> <p class="banner-yellow">We&rsquo;re updating our Terms of Service for users who live outside the US, Canada and Mexico. They&rsquo;re effective right away for users who sign up for Dropbox or upgrade to Dropbox Pro starting May 1st, 2015, and effective June 1st, 2015 for all other users. You can find out more <a href="https://www.dropbox.com/help/9063">here</a> and see the prior Terms <a href="https://www.dropbox.com/terms2014">here</a>.</p>  <div id="privacy-policy">
+    <h2>Dropbox Privacy Policy</h2>
+
+    <p>Posted: February 13, 2015</p>
+
+    <p>
+        Thanks for using Dropbox!  Here we describe how we collect, use and handle your information when you use our websites, software and services ("Services").
+    </p>
+    <h2>What &amp; Why</h2>
+    <p>
+        We collect and use the following information to provide, improve and protect our Services:
+    </p>
+
+    <p>
+        <em>Account</em>. We collect, and associate with your account, information like your name, email address, phone number, payment info, and physical address.  Some of our services let you access your accounts and your information with other service providers.
+    </p>
+    <p>
+        <em>Services</em>. When you use our Services, we store, process and transmit your files (including stuff like your photos, <a target="_blank" href="/developers/datastore">structured data</a> and emails) and information related to them (for example, location tags in photos). If you give us access to your contacts, we'll store those contacts on our servers for you to use.  This will make it easy for you to do things like share your stuff, send emails, and invite others to use the Services.
+    </p>
+    <p>
+        <em>Usage</em>.   We collect information from and about the devices you use to access the Services. This includes things like IP addresses, the type of browser and device you use, the web page you visited before coming to our sites, and identifiers associated with your devices.  Your devices (depending on their settings) may also transmit location information to the Services.
+    </p>
+    <p>
+        <em>Cookies and other technologies</em>.  We use technologies like <a target="_blank" href="/terms/cookies">cookies and pixel tags</a> to provide, improve, protect and promote our Services.  For example, cookies help us with things like remembering your username for your next visit, understanding how you are interacting with our Services, and improving them based on that information.  You can set your browser to not accept cookies, but this may limit your ability to use the Services.  If our systems receive a DNT:1 signal from your browser, we'll respond to that signal as outlined <a target="_blank" href="/terms/cookies">here</a>.
+    </p>
+    <h2>With whom</h2>
+    <p>
+        We may share information as discussed below, but we won't sell it to advertisers or other third-parties.
+    </p>
+    <p>
+        <em>Others working for Dropbox</em>.  Dropbox uses certain trusted third parties to help us provide, improve, protect, and promote our Services.  These third parties will access your information only to perform tasks on our behalf and in compliance with this Privacy Policy.
+    </p>
+    <p>
+        <em>Other users</em>.  Our Services display information like your name and email address to other users in places like your user profile and sharing notifications.  Certain features let you make additional information available to other users.
+    </p>
+    <p>
+        <em>Other applications</em>.  You can also give third parties access to your information and account - for example, via <a target="_blank" href="/developers">Dropbox APIs</a>.  Just remember that their use of your information will be governed by their privacy policies and terms.
+    </p>
+    <p>
+        <em>Dropbox for Business Admins</em>.  If you are a Dropbox for Business user,  your administrator may have the ability to access and control your Dropbox for Business account.  Please refer to your employer's internal policies if you have questions about this.   If you are not a Dropbox for Business user but interact with a Dropbox for Business user (by, for example, joining a shared folder or accessing stuff shared by that user), members of that organization may be able to view the name, email address and IP address that were associated with your account at the time of that interaction.
+    </p>
+    <p>
+        <em>Law &amp; Order</em>.  We may disclose your information to third parties if we determine that such disclosure is reasonably necessary to (a) comply with the law; (b) protect any person from death or serious bodily injury; (c) prevent fraud or abuse of Dropbox or our users; or (d) protect Dropbox's property rights.
+    </p>
+    <p>
+        Stewardship of your data is critical to us and a responsibility that we embrace.  We believe that our users' data should receive the same legal protections regardless of whether it's stored on our services or on their home computer's hard drive.  We'll abide by the following <a target="_blank" href="/transparency/principles">Government Request Principles</a> when receiving,  scrutinizing and responding to government requests for our users' data:
+
+        <ul>
+            <li>Be transparent,</li>
+            <li>Fight blanket requests,</li>
+            <li>Protect all users, and</li>
+            <li>Provide trusted services.</li>
+        </ul>
+
+        Please visit our <a target="_blank" href="/transparency/principles">Government Request Principles</a> and <a target="_blank" href="/transparency">Transparency Report</a> for more detailed information.
+    </p>
+    <h2>How</h2>
+    <p>
+        <em>Security</em>.  We have a team dedicated to keeping your information secure and testing for vulnerabilities. We also continue to work on features to keep your information safe in addition to things like two-factor authentication, encryption of files at rest, and alerts when new devices and apps are linked to your account.
+    </p>
+    <p>
+        <em>Retention</em>.  We'll retain information you store on our Services for as long as  we need it to provide you the Services.  If you delete your account, we'll also delete this information.  But please note: (1) there might be some latency in deleting this information from our servers and back-up storage; and (2) we may retain this information if necessary to comply with our legal obligations, resolve disputes, or enforce our agreements.
+    </p>
+
+    <h2>Where</h2>
+    <p>
+        <em>Around the world</em>.  To provide you with the Services, we may store, process and transmit information in locations around the world - including those outside your country.  Information may also be stored locally on the devices you use to access the Services.
+    </p>
+    <p>
+        <em>Safe Harbor</em>.  Dropbox complies with the EU-U.S. and Swiss-U.S. Safe Harbor ("Safe Harbor") frameworks and principles.  We have certified our compliance, and you can view our certifications <a href="https://safeharbor.export.gov/list.aspx" target="_blank">here</a>.  You can learn more about Safe Harbor by visiting <a target="_blank" href="http://export.gov/safeharbor">http://export.gov/safeharbor</a>.  JAMS is the independent organization responsible for reviewing and resolving complaints about our Safe Harbor compliance. We ask that you first submit any such complaints directly to us via privacy@dropbox.com. If you aren't satisfied with our response, please contact JAMS at <a target="_blank" href="http://www.jamsinternational.com/rules-procedures/safeharbor/file-safe-harbor-claim">http://www.jamsinternational.com/rules-procedures/safeharbor/file-safe-harbor-claim</a>.
+    </p>
+    <h2>Changes</h2>
+    <p>
+        If we are involved in a reorganization, merger, acquisition or sale of our assets, your information may be transferred as part of that deal. We will notify you (for example, via a message to the email address associated with your account) of any such deal and outline your choices in that event.
+    </p>
+    <p>
+        We may revise this Privacy Policy from time to time, and will post the most current version on our website.  If a revision meaningfully reduces your rights, we will notify you.
+    </p>
+    <h2>Contact</h2>
+    <p>
+        Have questions or concerns about Dropbox, our Services and privacy?  Contact us at <a target="_blank" href="mailto:privacy@dropbox.com">privacy@dropbox.com</a>.
+    </p>
+</div>
+</div></div><div id="pyxl5122305947899336290" class="tab-content"><div><p class="banner-yellow">This section of the agreement only applies to <a href="/business">Dropbox for Business</a> customers.</p> <p class="banner-yellow">We&rsquo;re updating our Dropbox for Business Agreement for customers based outside the US, Canada and Mexico. They&rsquo;re effective right away for customers who sign up for Dropbox for Business starting May 1st, 2015 and effective June 1st, 2015 for all other customers. You can find out more <a href="https://www.dropbox.com/help/9063">here</a> and see the prior version of the Agreement <a href="https://www.dropbox.com/business_agreement2014">here</a>.</p>  <div id="teams-policy">
+    <h2>Dropbox for Business Agreement</h2>
+    <p>Posted: May 1, 2015</p>
+    <p>
+        This Dropbox for Business Agreement (the "Agreement") is between Dropbox Ireland if your organization is based outside of the United States, Canada and Mexico (“North America”) or, if your organization is based in North America, with Dropbox, Inc., a Delaware corporation (each, "Dropbox") and the organization agreeing to these terms ("Customer"). This Agreement governs access to and use of the Dropbox for Business client software ("Software") and services (together, the "Services" or "Dropbox for Business"). By clicking "I Agree," signing your contract for the Services or using the Services, you agree to this Agreement as a Customer. If you are agreeing to this Agreement for use of the Services by an organization, you are agreeing to this Agreement on behalf of that organization. You must have the authority to bind that organization to this Agreement, otherwise you must not sign up for the Services.
+    </p>
+    <ol>
+        <li>
+            <strong>Services</strong>.
+            <ol type="a">
+                <li>
+                    <strong>Provision of Services</strong>. Customer and users of Customer's Services account ("<strong>End Users</strong>") may access and use the Services in accordance with this Agreement.
+                </li>
+                <li>
+                    <strong>Facilities and Data Processing</strong>. Dropbox will use, at a minimum, industry standard technical and organizational security measures to transfer, store, and process Customer Data. These measures are designed to protect the integrity of Customer Data and guard against the unauthorized or unlawful access to, use, and processing of Customer Data. Customer agrees that Dropbox may transfer, store, and process Customer Data in locations other than Customer's country. Dropbox has certified that it adheres to the U.S.-E.U. and Swiss-U.S. Safe Harbor frameworks and their principles. "<strong>Customer Data</strong>" means Stored Data and Account Data. "<strong>Stored Data</strong>" means the files and structured data submitted to the Services by Customer or End Users. "<strong>Account Data</strong>" means the account and contact information submitted to the Services by Customer or End Users.
+                </li>
+                <li>
+                    <strong>Modifications to the Services</strong>. Dropbox may update the Services from time to time. If Dropbox changes the Services in a manner that materially reduces their functionality, Dropbox will inform Customer via the email address associated with the account.
+                </li>
+                <li>
+                    <strong>Software</strong>. Some Services allow Customer to download Dropbox Software which may update automatically. Customer may use the Software only to access the Services. If any component of the Software is offered under an open source license, Dropbox will make the license available to Customer and the provisions of that license may expressly override some of the terms of this Agreement.
+                </li>
+            </ol>
+        </li>
+        <li>
+            <strong>Customer Obligations</strong>.
+            <ol type="a">
+                <li>
+                    <strong>Compliance</strong>. Customer is responsible for use of the Services by its End Users. Customer and its End Users must use the Services in compliance with the <a target="_blank" href="/privacy#acceptable_use">Acceptable Use Policy</a>. Customer will obtain from End Users any consents necessary to allow Administrators to engage in the activities described in this Agreement and to allow Dropbox to provide the Services. Customer will comply with laws and regulations applicable to Customer's use of the Services, if any.
+                </li>
+                <li>
+                    <strong>Customer Administration of the Services</strong>. Customer may specify End Users as "<strong>Administrators</strong>" through the administrative console. Administrators may have the ability to access, disclose, restrict or remove Customer Data in or from Services accounts. Administrators may also have the ability to monitor, restrict, or terminate access to Services accounts. Dropbox's responsibilities do not extend to the internal management or administration of the Services. Customer is responsible for: (i) maintaining the confidentiality of passwords and Administrator accounts; (ii) managing access to Administrator accounts; and (iii) ensuring that Administrators' use of the Services complies with this Agreement.
+                </li>
+                <li>
+                    <strong>Unauthorized Use &amp; Access</strong>. Customer will prevent unauthorized use of the Services by its End Users and terminate any unauthorized use of or access to the Services. The Services are not intended for End Users under the age of 13. Customer will ensure that it does not allow any person under 13 to use the Services. Customer will promptly notify Dropbox of any unauthorized use of or access to the Services.
+                </li>
+                <li>
+                    <strong>Restricted Uses</strong>. Customer will not (i) sell, resell, or lease the Services; (ii) use the Services for activities where use or failure of the Services could lead to physical damage, death, or personal injury; or (iii) reverse engineer the Services, nor attempt nor assist anyone else to do so, unless this restriction is prohibited by law.
+                </li>
+                <li>
+                    <strong>Third Party Requests</strong>.
+                    <ol type="i">
+                        <li>
+                            "<strong>Third Party Request</strong>" means a request from a third party for records relating to an End User's use of the Services including information in or from an End User or Customer's Services account. Third Party Requests may include valid search warrants, court orders, or subpoenas, or any other request for which there is written consent from End Users permitting a disclosure.
+                        </li>
+                        <li>
+                            Customer is responsible for responding to Third Party Requests via its own access to information. Customer will seek to obtain information required to respond to Third Party Requests and will contact Dropbox only if it cannot obtain such information despite diligent efforts.
+                        </li>
+                        <li>
+                            Dropbox will make commercially reasonable efforts, to the extent allowed by law and by the terms of the Third Party Request, to: (A) promptly notify Customer of Dropbox's receipt of a Third Party Request; (B) comply with Customer's commercially reasonable requests regarding its efforts to oppose a Third Party Request; and (C) provide Customer with information or tools required for Customer to respond to the Third Party Request (if Customer is otherwise unable to obtain the information). If Customer fails to promptly respond to any Third Party Request, then Dropbox may, but will not be obligated to do so.
+                        </li>
+                    </ol>
+                </li>
+            </ol>
+        </li>
+        <li>
+            <strong>Third-Party Services</strong>. If Customer uses any third-party service (e.g., a service that uses a Dropbox API) with the Services, (a) Dropbox will not be responsible for any act or omission of the third party, including the third party's access to or use of Customer Data and (b) Dropbox does not warrant or support any service provided by the third party.
+        </li>
+        <li>
+            <strong>Suspension</strong>
+            <ol type="a">
+                <li>
+                    <strong>Of End User Accounts by Dropbox</strong>. If an End User (i) violates this Agreement or (ii) uses the Services in a manner that Dropbox reasonably believes will cause it liability, then Dropbox may request that Customer suspend or terminate the applicable End User account. If Customer fails to promptly suspend or terminate the End User account, then Dropbox may do so.
+                </li>
+                <li>
+                    <strong>Security Emergencies</strong>. Notwithstanding anything in this Agreement, if there is a Security Emergency then Dropbox may automatically suspend use of the Services. Dropbox will make commercially reasonable efforts to narrowly tailor the suspension as needed to prevent or terminate the Security Emergency. "<strong>Security Emergency</strong>" means: (i) use of the Services that do or could disrupt the Services, other customers' use of the Services, or the infrastructure used to provide the Services and (ii) unauthorized third-party access to the Services.
+                </li>
+            </ol>
+        </li>
+        <li>
+            <strong>Intellectual Property Rights</strong>.
+            <ol type="a">
+                <li>
+                    <strong>Reservation of Rights</strong>. Except as expressly set forth herein, this Agreement does not grant (i) Dropbox any Intellectual Property Rights in Customer Data or (ii) Customer any Intellectual Property Rights in the Services or Dropbox trademarks and brand features. "<strong>Intellectual Property Rights</strong>" means current and future worldwide rights under patent, copyright, trade secret, trademark, moral rights, and other similar rights.
+                </li>
+                <li>
+                    <strong>Limited Permission</strong>. Customer grants Dropbox only the limited rights that are reasonably necessary for Dropbox to offer the Services (e.g., hosting Stored Data). This permission also extends to our affiliates and trusted third parties Dropbox works with to offer the Services (e.g., payment provider used to process payment of fees).
+                </li>
+                <li>
+                    <strong>Suggestions</strong>. Dropbox may, at its discretion and for any purpose, use, modify, and incorporate into its products and services, license and sublicense, any feedback, comments, or suggestions Customer or End Users send Dropbox or post in Dropbox's forums without any obligation to Customer.
+                </li>
+                <li>
+                    <strong>Customer List</strong>. Dropbox may include Customer's name in a list of Dropbox customers on the Dropbox website or in promotional materials.
+                </li>
+            </ol>
+        </li>
+        <li>
+            <strong>Fees &amp; Payment</strong>.
+            <ol type="a">
+                <li>
+                    <strong>Fees</strong>. Customer will pay, and authorizes Dropbox to charge using Customer's selected payment method, for all applicable fees. Fees are non-refundable except as required by law. Customer is responsible for providing complete and accurate billing and contact information to Dropbox. Dropbox may suspend or terminate the Services if fees are past due.
+                </li>
+                <li>
+                    <strong>Auto Renewals and Trials</strong>. IF CUSTOMER'S ACCOUNT IS SET TO AUTO RENEWAL OR IS IN A TRIAL PERIOD, DROPBOX MAY AUTOMATICALLY CHARGE AT THE END OF THE TRIAL OR FOR THE RENEWAL, UNLESS CUSTOMER NOTIFIES DROPBOX THAT CUSTOMER WANTS TO CANCEL OR DISABLE AUTO RENEWAL. Dropbox may revise Service rates by providing Customer at least 30 days notice prior to the next charge.
+                </li>
+                <li>
+                    <strong>Taxes</strong>. Customer is responsible for all taxes. Dropbox will charge tax when required to do so. If Customer is required by law to withhold any taxes, Customer must provide Dropbox with an official tax receipt or other appropriate documentation.
+                </li>
+                <li>
+                    <strong>Purchase Orders</strong>. If Customer requires the use of a purchase order orpurchase order number, Customer (i) must provide the purchase order number at the time of purchase and (ii) agrees that any terms and conditions on a Customer purchase order will not apply to this Agreement and are null and void.
+                </li>
+            </ol>
+        </li>
+        <li>
+            <strong>Term &amp; Termination</strong>.
+            <ol type="a">
+                <li>
+                    <strong>Term</strong>. This Agreement will remain in effect until Customer's subscription to the Services expires or terminates, or until the Agreement is terminated.
+                </li>
+                <li>
+                    <strong>Termination for Breach</strong>. Either Dropbox or Customer may terminate this Agreement if: (i) the other party is in material breach of the Agreement and fails to cure that breach within 30 days after receipt of written notice or (ii) the other party ceases its business operations or becomes subject to insolvency proceedings and the proceedings are not dismissed within 90 days.
+                </li>
+                <li>
+                    <strong>Effects of Termination</strong>. If this Agreement terminates: (i) the rights granted by Dropbox to Customer will cease immediately (except as set forth in this section); (ii) Dropbox may provide Customer access to its account at then-current fees so that Customer may export its Stored Data; and (iii) after a commercially reasonable period of time, Dropbox may delete any Stored Data relating to Customer's account. The following sections will survive expiration or termination of this Agreement: 2(e) (Third Party Requests), 5 (Intellectual Property Rights), 6 (Fees & Payment), 7(c) (Effects of Termination), 8 (Indemnification), 9 (Disclaimers), 10 (Limitation of Liability), 11 (Disputes), and 12 (Miscellaneous).
+                </li>
+            </ol>
+        </li>
+        <li>
+            <strong>Indemnification</strong>.
+            <ol type="a">
+                <li>
+                    <strong>By Customer</strong>. Customer will indemnify, defend, and hold harmless Dropbox from and against all liabilities, damages, and costs (including settlement costs and reasonable attorneys' fees) arising out of any claim by a third party against Dropbox and its affiliates regarding: (i) Customer Data; (ii) Customer's use of the Services in violation of this Agreement; or (iii) End Users' use of the Services in violation of this Agreement.
+                </li>
+                <li>
+                    <strong>By Dropbox</strong>. Dropbox will indemnify, defend, and hold harmless Customer from and against all liabilities, damages, and costs (including settlement costs and reasonable attorneys' fees) arising out of any claim by a third party against Customer to the extent based on an allegation that Dropbox's technology used to provide the Services to the Customer infringes or misappropriates any copyright, trade secret, U.S. patent, or trademark right of the third party. In no event will Dropbox have any obligations or liability under this section arising from: (i) use of any Services in a modified form or in combination with materials not furnished by Dropbox and (ii) any content, information, or data provided by Customer, End Users, or other third parties.
+                </li>
+                <li>
+                    <strong>Possible Infringement</strong>. If Dropbox believes the Services infringe or may be alleged to infringe a third party's Intellectual Property Rights, then Dropbox may: (i) obtain the right for Customer, at Dropbox's expense, to continue using the Services; (ii) provide a non-infringing functionally equivalent replacement; or (iii) modify the Services so that they no longer infringe. If Dropbox does not believe the options described in this section are commercially reasonable then Dropbox may suspend or terminate Customer's use of the affected Services (with a pro-rata refund of prepaid fees for the Services).
+                </li>
+                <li>
+                    <strong>General</strong>. The party seeking indemnification will promptly notify the other party of the claim and cooperate with the other party in defending the claim. The indemnifying party will have full control and authority over the defense, except that: (i) any settlement requiring the party seeking indemnification to admit liability requires prior written consent, not to be unreasonably withheld or delayed and (ii) the other party may join in the defense with its own counsel at its own expense. THE INDEMNITIES ABOVE ARE DROPBOX AND CUSTOMER'S ONLY REMEDY UNDER THIS AGREEMENT FOR VIOLATION BY THE OTHER PARTY OF A THIRD PARTY'S INTELLECTUAL PROPERTY RIGHTS.
+                </li>
+            </ol>
+        </li>
+        <li>
+            <strong>Disclaimers</strong>. THE SERVICES ARE PROVIDED "AS IS." TO THE FULLEST EXTENT PERMITTED BY LAW, EXCEPT AS EXPRESSLY STATED IN THIS AGREEMENT, NEITHER CUSTOMER NOR DROPBOX AND ITS AFFILIATES, SUPPLIERS, AND DISTRIBUTORS MAKE ANY WARRANTY OF ANY KIND, WHETHER EXPRESS, IMPLIED, STATUTORY OR OTHERWISE, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR USE, OR NON-INFRINGEMENT. CUSTOMER IS RESPONSIBLE FOR MAINTAINING AND BACKING UP ANY STORED DATA.
+        </li>
+        <li>
+            <strong>Limitation of Liability</strong>.
+            <ol type="a">
+                <li>
+                    <strong>Limitation on Indirect Liability</strong>. TO THE FULLEST EXTENT PERMITTED BY LAW, EXCEPT FOR DROPBOX OR CUSTOMER'S INDEMNIFICATION OBLIGATIONS, NEITHER CUSTOMER NOR DROPBOX AND ITS AFFILIATES, SUPPLIERS, AND DISTRIBUTORS WILL BE LIABLE UNDER THIS AGREEMENT FOR (I) INDIRECT, SPECIAL, INCIDENTAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR (II) LOSS OF USE, DATA, BUSINESS, REVENUES, OR PROFITS (IN EACH CASE WHETHER DIRECT OR INDIRECT), EVEN IF THE PARTY KNEW OR SHOULD HAVE KNOWN THAT SUCH DAMAGES WERE POSSIBLE AND EVEN IF A REMEDY FAILS OF ITS ESSENTIAL PURPOSE.
+                </li>
+                <li>
+                    <strong>Limitation on Amount of Liability</strong>. TO THE FULLEST EXTENT PERMITTED BY LAW, DROPBOX'S AGGREGATE LIABILITY UNDER THIS AGREEMENT WILL NOT EXCEED THE LESSER OF $100,000 OR THE AMOUNT PAID BY CUSTOMER TO DROPBOX HEREUNDER DURING THE TWELVE MONTHS PRIOR TO THE EVENT GIVING RISE TO LIABILITY.
+                </li>
+            </ol>
+        </li>
+        <li>
+            <strong>Disputes</strong>.
+            <ol type="a">
+                <li>
+                    <strong>Informal Resolution</strong>. Dropbox wants to address your concerns without resorting to a formal legal case. Before filing a claim, each party agrees to try to resolve the dispute by contacting the other party through the notice procedures in section 12(e). If a dispute is not resolved within 30 days of notice, Customer or Dropbox may bring a formal proceeding.
+                </li>
+                <li>
+                    <strong>Agreement to Arbitrate</strong>. Customer and Dropbox agree to resolve any claims relating to this Agreement or the Services through final and binding arbitration, except as set forth below. The <a target="_blank" href="http://www.adr.org">American Arbitration Association</a> (AAA) will administer the arbitration under its Commercial Arbitration Rules. The arbitration will be held in San Francisco (CA), or any other location both parties agree to in writing.
+                </li>
+                <li>
+                    <strong>Exception to Agreement to Arbitrate</strong>. Either party may bring a lawsuit in the federal or state courts of San Francisco County, California solely for injunctive relief to stop unauthorized use or abuse of the Services or infringement of Intellectual Property Rights without first engaging in the informal dispute notice process described above. Both Customer and Dropbox consent to venue and personal jurisdiction there.
+                </li>
+                <li>
+                    <strong>NO CLASS ACTIONS</strong>. Customer may only resolve disputes with Dropbox on an individual basis and will not bring a claim in a class, consolidated, or representative action. Class arbitrations, class actions, private attorney general actions, and consolidation with other arbitrations are not allowed.
+                </li>
+            </ol>
+        </li>
+        <li>
+            <strong>Miscellaneous</strong>.
+            <ol type="a">
+                <li>
+                    <strong>Terms Modification</strong>. Dropbox may revise this Agreement from time to time and the most current version will always be posted on the Dropbox for Business website. If a revision, in Dropbox's sole discretion, is material, Dropbox will notify Customer (by, for example, sending an email to the email address associated with the applicable account). Other revisions may be posted to Dropbox's blog or terms page, and Customer is responsible for checking such postings regularly. By continuing to access or use the Services after revisions become effective, Customer agrees to be bound by the revised Agreement. If Customer does not agree to the revised Agreement terms, Customer may terminate the Services within 30 days of receiving notice of the change.
+                </li>
+                <li>
+                    <strong>Entire Agreement</strong>. This Agreement, including Customer's invoice and order form, constitutes the entire agreement between Customer and Dropbox with respect to the subject matter of this Agreement and supersedes and replaces any prior or contemporaneous understandings and agreements, whether written or oral, with respect to the subject matter of this Agreement. If there is a conflict between the documents that make up this Agreement, the documents will control in the following order: the invoice, the order form, the Agreement.
+                </li>
+                <li>
+                    <strong>Governing Law</strong>. THE AGREEMENT WILL BE GOVERNED BY CALIFORNIA LAW EXCEPT FOR ITS CONFLICTS OF LAWS PRINCIPLES.
+                </li>
+                <li>
+                    <strong>Severability</strong>. Unenforceable provisions will be modified to reflect the parties' intention and only to the extent necessary to make them enforceable, and the remaining provisions of the Agreement will remain in full effect.
+                </li>
+                <li>
+                    <strong>Notice</strong>. Notices must be sent via first class, airmail, or overnight courier and are deemed given when received. Notices to Customer may also be sent to the applicable account email address and are deemed given when sent. Notices to Dropbox must be sent to Dropbox, Inc., P.O. Box 77767, San Francisco, CA 94107, with a copy to the Legal Department.
+                </li>
+                <li>
+                    <strong>Waiver</strong>. A waiver of any default is not a waiver of any subsequent default.
+                </li>
+                <li>
+                    <strong>Assignment</strong>. Customer may not assign or transfer this Agreement or any rights or obligations under this Agreement without the written consent of Dropbox. Dropbox may not assign this Agreement without providing notice to Customer, except Dropbox may assign this Agreement or any rights or obligations under this Agreement to an affiliate or in connection with a merger, acquisition, corporate reorganization, or sale of all or substantially all of its assets without providing notice. Any other attempt to transfer or assign is void.
+                </li>
+                <li>
+                    <strong>No Agency</strong>. Dropbox and Customer are not legal partners or agents, but are independent contractors.
+                </li>
+                <li>
+                    <strong>Force Majeure</strong>. Except for payment obligations, neither Dropbox nor Customer will be liable for inadequate performance to the extent caused by a condition that was beyond the party's reasonable control (for example, natural disaster, act of war or terrorism, riot, labor condition, governmental action, and Internet disturbance).
+                </li>
+                <li>
+                    <strong>No Third-Party Beneficiaries</strong>. There are no third-party beneficiaries to this Agreement. Without limiting this section, a Customer's End Users are not third-party beneficiaries to Customer's rights under this Agreement.
+                </li>
+                <li>
+                    <strong>Export Restrictions</strong>. The export and re-export of Customer Data via the Services may be controlled by the United States Export Administration Regulations or other applicable export restrictions or embargo. The Services may not be used in Cuba; Iran; North Korea; Sudan; or Syria or any country that is subject to an embargo by the United States and Customer must not use the Services in violation of any export restriction or embargo by the United States or any other applicable jurisdiction. In addition, Customer must ensure that the Services are not provided to persons on the United States Table of Denial Orders, the Entity List, or the List of Specially Designated Nationals.
+                </li>
+            </ol>
+        </li>
+    </ol>
+</div></div></div><div id="pyxl7972381335941062855" class="tab-content"><div> <p class="banner-yellow">We&rsquo;re updating our Terms of Service for users who live outside the US, Canada and Mexico. They&rsquo;re effective right away for users who sign up for Dropbox or upgrade to Dropbox Pro starting May 1st, 2015, and effective June 1st, 2015 for all other users. You can find out more <a href="https://www.dropbox.com/help/9063">here</a> and see the prior Terms <a href="https://www.dropbox.com/terms2014">here</a>.</p>  <div id="dmca-policy">
+    <h2>Dropbox DMCA Policy</h2>
+    <p>
+    Dropbox (“<b><i>Dropbox</i></b>”) respects the intellectual property rights of others and expects its users to do the same.  In accordance with the Digital Millennium Copyright Act of 1998, the text of which may be found on the U.S. Copyright Office website at <a href="http://www.copyright.gov/legislation/dmca.pdf">http://www.copyright.gov/legislation/dmca.pdf</a>, Dropbox will respond expeditiously to claims of copyright infringement committed using the Dropbox service and/or the Dropbox website (the “<b><i>Site</i></b>”) if such claims are reported to Dropbox’s Designated Copyright Agent identified in the sample notice below.
+    </p>
+    <p>
+    If you are a copyright owner, authorized to act on behalf of one, or authorized to act under any exclusive right under copyright, please report alleged copyright infringements taking place on or through the Site by completing the following DMCA Notice of Alleged Infringement and delivering it to Dropbox’s Designated Copyright Agent.  Upon receipt of Notice as described below, Dropbox will take whatever action, in its sole discretion, it deems appropriate, including removal of the challenged content from the Site.
+    </p>
+
+    <div class="graybox">
+        <center><p class="clean">DMCA Notice of Alleged Infringement (“<b>Notice</b>”)</p></center>
+
+        <ol>
+            <li><p>Identify the copyrighted work that you claim has been infringed, or - if multiple copyrighted works are covered by this Notice - you may provide a representative list of the copyrighted works that you claim have been infringed.</p></li>
+            <li><p>Identify the material or link you claim is infringing (or the subject of infringing activity) and to which access is to be disabled, including at a minimum, if applicable, the URL of the link shown on the Site or the exact location where such material may be found.</p></li>
+            <li><p>Provide your company affiliation (if applicable), mailing address, telephone number, and, if available, email address.</p></li>
+
+            <li>Include both of the following statements in the body of the Notice:
+                <ul>
+                    <li><p>“I hereby state that I have a good faith belief that the disputed use of the copyrighted material is not authorized by the copyright owner, its agent, or the law (e.g., as a fair use).”</p></li>
+                    <li><p>“I hereby state that the information in this Notice is accurate and, under penalty of perjury, that I am the owner, or authorized to act on behalf of, the owner, of the copyright or of an exclusive right under the copyright that is allegedly infringed.”</p></li>
+                </ul>
+            </li>
+            <li><p>Provide your full legal name and your electronic or physical signature.</p></li>
+        </ol>
+
+        Deliver this Notice, with all items completed, to Dropbox’s Designated Copyright Agent:<br/><br/>
+
+        <div>
+            Copyright Agent<br/>
+            Dropbox Inc.<br/>
+            185 Berry Street, Suite 400<br/>
+            San Francisco, CA 94107<br/>
+            <a href="mailto:copyright@dropbox.com">copyright@dropbox.com</a>
+        </div>
+    </div>
+    <div style="text-align: center; padding-top: 40px;">
+        <a style="text-decoration: none;" class="freshbutton-blue" href="/copyright_complaint">Submit DMCA notice</a>
+    </div>
+
+</div>
+</div></div><div id="pyxl6640490215030020584" class="tab-content"><div> <p class="banner-yellow">We&rsquo;re updating our Terms of Service for users who live outside the US, Canada and Mexico. They&rsquo;re effective right away for users who sign up for Dropbox or upgrade to Dropbox Pro starting May 1st, 2015, and effective June 1st, 2015 for all other users. You can find out more <a href="https://www.dropbox.com/help/9063">here</a> and see the prior Terms <a href="https://www.dropbox.com/terms2014">here</a>.</p>  <style type='text/css'>
+
+  ul#the_list > li {
+    padding: 4px;
+  }
+
+</style>
+
+<div id="terms-of-service">
+    <h2>Dropbox Acceptable Use Policy</h2>
+     
+    <p>
+        Dropbox is used by millions of people, and we're proud of the trust placed in us. In exchange, we trust you to use our services responsibly.
+    </p>
+    <p>
+        You agree not to misuse the Dropbox services ("Services") or help anyone else to do so.  For example, you must not even try to do any of the following in connection with the Services:
+    </p>
+
+    <ul id='the_list'>
+        <li>probe, scan, or test the vulnerability of any system or network;</li>
+        <li>breach or otherwise circumvent any security or authentication measures;</li>
+        <li>access, tamper with, or use non-public areas or parts of the Services, or shared areas of the Services you haven't been invited to;</li>
+        <li>interfere with or disrupt any user, host, or network, for example by sending a virus, overloading, flooding, spamming, or mail-bombing any part of the Services;</li>
+        <li>access, search, or create accounts for the Services by any means other than our publicly supported interfaces (for example, "scraping" or creating accounts in bulk);</li>
+        <li>send unsolicited communications, promotions or advertisements, or spam;</li>
+        <li>send altered, deceptive or false source-identifying information, including "spoofing" or "phishing";</li>
+        <li>promote or advertise products or services other than your own without appropriate authorization;</li>
+        <li>abuse referrals or promotions to get more storage space than deserved;</li>
+        <li>circumvent storage space limits;</li>
+        <li>sell the Services unless specifically authorized to do so;</li>
+        <li>publish or share materials that are unlawfully pornographic or indecent, or that contain extreme acts of violence;</li>
+        <li>advocate bigotry or hatred against any person or group of people based on their race, religion, ethnicity, sex, gender identity, sexual preference, disability, or impairment;</li>
+        <li>violate the law in any way, including storing, publishing or sharing material that's fraudulent, defamatory, or misleading; or</li>
+        <li>violate the privacy or infringe the rights of others.</li>
+
+</div>
+</div></div></div></div><div id="page-prefooter"></div><div id="page-full-footer"><div id="footer-top-margin"></div><div id="footer-border"></div><div class="footer-col"><ul><li class="header">Dropbox</li><li><a href="/install">Install</a></li><li><a href="/mobile">Mobile</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/business">Business</a></li><li><a href="/tour">Tour</a></li></ul></div><div class="footer-col"><ul><li class="header">About us</li><li><a href="http://blog.dropbox.com/">Dropbox Blog</a></li><li><a href="/about">Our team</a></li><li><a href="/branding">Branding</a></li><li><a href="/news">News</a></li><li><a href="/jobs">Jobs</a></li></ul></div><div class="footer-col"><ul><li class="header">Support</li><li><a href="/help">Help Center</a></li><li><a href="/gs">Get Started</a></li><li><a href="/privacy">Privacy & Terms</a></li><li><a href="/dmca">Copyright</a></li><li><a href="/contact">Contact us</a></li></ul></div><div class="footer-col"><ul><li class="header">Community</li><li><a href="/referrals">Referrals</a></li><li><a href="https://www.dropboxforum.com">Forum</a></li><li><a href="http://twitter.com/dropbox" target="_blank">Twitter</a></li><li><a href="http://facebook.com/Dropbox" target="_blank">Facebook</a></li><li><a href="/developers">Developers</a></li></ul></div><div id="locale-container" class="ui-button"><div style="display: none;" id="db-modal-locale-selector-modal" class="db-modal-wrapper"><div class="db-modal-overlay"></div><div class="db-modal"><div class="db-modal-box"><a href="#" class="db-modal-x"></a><h2 class="db-modal-title"><div class="db-modal-title-text">Choose a language</div></h2><div class="db-modal-content"><table><tr><td><ul><li><a data-locale="id" class="locale-option">Bahasa Indonesia</a></li><li><a data-locale="ms" class="locale-option">Bahasa Malaysia</a></li><li><a data-locale="da_DK" class="locale-option">Dansk</a></li><li><a data-locale="de" class="locale-option">Deutsch</a></li><li><a data-locale="en" class="locale-option">English</a></li><li><a data-locale="es_ES" class="locale-option">Español (España)</a></li><li><a data-locale="es" class="locale-option">Español (Latinoamérica)</a></li><li><a data-locale="fr" class="locale-option">Français</a></li><li><a data-locale="it" class="locale-option">Italiano</a></li><li><a data-locale="nl_NL" class="locale-option">Nederlands</a></li><li><a data-locale="nb_NO" class="locale-option">Norsk (bokmål)</a></li></ul></td><td><ul><li><a data-locale="pl" class="locale-option">Polski</a></li><li><a data-locale="pt_BR" class="locale-option">Português (Brasil)</a></li><li><a data-locale="ru" class="locale-option">Pусский</a></li><li><a data-locale="sv_SE" class="locale-option">Svenska</a></li><li><a data-locale="uk_UA" class="locale-option">Українська [Beta]</a></li><li><a data-locale="th_TH" class="locale-option">ไทย</a></li><li><a data-locale="zh_CN" class="locale-option">中文（简体）</a></li><li><a data-locale="zh_TW" class="locale-option">中文（繁體）</a></li><li><a data-locale="ja" class="locale-option">日本語</a></li><li><a data-locale="ko" class="locale-option">한국어</a></li></ul></td></tr></table></div></div></div></div><span id="locale-link" class="link-span"><img src="https://cf.dropboxstatic.com/static/images/icons/icon_spacer-vflN3BYt2.gif" class=" sprite sprite_web s_web_globe_gray_20x20" />&nbsp;<a href="#" class="modal-locale-link">English<img src="https://cf.dropboxstatic.com/static/images/icons/icon_spacer-vflN3BYt2.gif" class="spacer s_web_downtick-spacer sprite sprite_web" /><img src="https://cf.dropboxstatic.com/static/images/icons/icon_spacer-vflN3BYt2.gif" class="sprite_web sprite arrow s_web_arrow-up-gray" /></a></span></div><div class="clear"></div></div><noscript><p class="center">The Dropbox website requires JavaScript.</p></noscript></div><div style="position: absolute; top: 0; left: 0; font-family: Courier" id="ieconsole"></div><div style="position:absolute; top:-10000px;width:0px; height:0px; left: 0;" id="FB_HiddenContainer"></div><script nonce="0H/8tmVwBIf030mTQTVN">requirejs(["jquery", "modules/core/i18n", "modules/core/controller_registry", "modules/clean/hi_res", "modules/clean/components/input", "modules/clean/components/tabbable", "modules/clean/web_timing_logger", "modules/core/notify", "modules/clean/marketing_tracker", "modules/clean/components/login_form", "dropbox", "modules/core/cookies", "modules/clean/components/tooltip", "modules/clean/components/tabs"], function(jquery, modules__core__i18n, modules__core__controller_registry, modules__clean__hi_res, modules__clean__components__input, modules__clean__components__tabbable, modules__clean__web_timing_logger, modules__core__notify, modules__clean__marketing_tracker, modules__clean__components__login_form, dropbox, modules__core__cookies, modules__clean__components__tooltip, modules__clean__components__tabs) { window.LoadedJsSuccessfully = true;
+(function (ControllerRegistry, modules__clean__components__tabs) { ControllerRegistry.register_controller("component8422101506355036195", modules__clean__components__tabs, []); }(modules__core__controller_registry, modules__clean__components__tabs));
+(function (ControllerRegistry, modules__clean__components__tabbable) { ControllerRegistry.register_controller("component2170991907194222494", modules__clean__components__tabbable, []); }(modules__core__controller_registry, modules__clean__components__tabbable));
+(function (modules__clean__components__tooltip, ControllerRegistry) { ControllerRegistry.register_controller("component3639864416659525449", modules__clean__components__tooltip.InfoTooltip, [null]); }(modules__clean__components__tooltip, modules__core__controller_registry));
+(function (modules__clean__components__input, ControllerRegistry) { ControllerRegistry.register_controller("component1220890796877979833", modules__clean__components__input.TextInput, []); }(modules__clean__components__input, modules__core__controller_registry));
+(function (modules__clean__hi_res, ControllerRegistry) { ControllerRegistry.register_controller("component2169088811072210220", modules__clean__hi_res, []); }(modules__clean__hi_res, modules__core__controller_registry));
+(function (ControllerRegistry, modules__clean__components__tabbable) { ControllerRegistry.register_controller("component1218426210602734292", modules__clean__components__tabbable, []); }(modules__core__controller_registry, modules__clean__components__tabbable));
+(function (modules__clean__components__input, ControllerRegistry) { ControllerRegistry.register_controller("component6519015793296408388", modules__clean__components__input.TextInput, []); }(modules__clean__components__input, modules__core__controller_registry));
+(function (modules__clean__components__input, ControllerRegistry) { ControllerRegistry.register_controller("component3266442264999120083", modules__clean__components__input.TextInput, []); }(modules__clean__components__input, modules__core__controller_registry));
+(function (modules__clean__components__login_form, ControllerRegistry) { ControllerRegistry.register_controller("component5818291393245046936", modules__clean__components__login_form, [false, "small"]); }(modules__clean__components__login_form, modules__core__controller_registry));
+(function (modules__clean__hi_res, ControllerRegistry) { ControllerRegistry.register_controller("component5074259898158802097", modules__clean__hi_res, []); }(modules__clean__hi_res, modules__core__controller_registry));
+(function ($j, modules__core__i18n, WebTimingLogger, Notify, dropbox, Cookies) { var _ = modules__core__i18n._;var Util = dropbox.Util;
+            $j(function() {
+                Util.focus("");
+                if (!Cookies.are_enabled()) {
+                    Notify.error(_("Please enable browser-cookies to use the Dropbox website."));
+                }
+                WebTimingLogger.init();
+            });
+             }(jquery, modules__core__i18n, modules__clean__web_timing_logger, modules__core__notify, dropbox, modules__core__cookies));
+(function (MarketingTracker) { MarketingTracker.push({src: "https://marketing.dropbox.com/privacy?referrer=", dataLayer: {"session_id": "AABbedbKf7DBXBU2kz3-q8zEcWFzdIyVKlwEnSEZepLPVg"}}); }(modules__clean__marketing_tracker)); });</script><img src="https://dropbox.com/hstsping" style="display:none;" /></body></html>
