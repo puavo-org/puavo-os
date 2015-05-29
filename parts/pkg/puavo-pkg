@@ -279,11 +279,11 @@ get_md5sum()
     awk '{print $1}' <<<"${output}"
 }
 
-extract_installer_file()
+extract_installer()
 {
-    local installer_file=$1
-    local package_name=$(basename "${installer_file}" .tar.gz) || return 1
-    local package_version=$(get_md5sum "${installer_file}") || return 1
+    local installer=$1
+    local package_name=$(basename "${installer}" .tar.gz) || return 1
+    local package_version=$(get_md5sum "${installer}") || return 1
 
     local package_dir=$(get_package_dir "${package_name}" "${package_version}")
     local package_tmpdir="${package_dir}.tmp"
@@ -296,7 +296,7 @@ extract_installer_file()
     mkdir -p "${package_tmpdir}" || return 1
 
     tar --no-same-owner --no-same-permissions --strip-components=1 \
-        -z -x -f "${installer_file}" -C "${package_tmpdir}"  || {
+        -z -x -f "${installer}" -C "${package_tmpdir}"  || {
         rm -rf "${package_tmpdir}"
         return 1
     }
@@ -313,9 +313,9 @@ extract_installer_file()
 
 install_package_with_installer()
 {
-    local installer_file=$1
-    local package_dir=$(extract_installer_file "${installer_file}") || {
-        log_error "failed to extract '${installer_file}'"
+    local installer=$1
+    local package_dir=$(extract_installer "${installer}") || {
+        log_error "failed to extract '${installer}'"
         return 1
     }
 
@@ -396,7 +396,7 @@ print_help_and_exit()
     echo "  -h, --help                   print this help and exit"
     echo
     echo "Commands:"
-    echo "  install INSTALLER_FILE       install package with an installer"
+    echo "  install INSTALLER            install package with an installer"
     echo
     echo "  list                         list installed packages"
     echo
