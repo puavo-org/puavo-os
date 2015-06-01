@@ -62,8 +62,8 @@ if [ "${puavo_keyboard_layout}" != "" ]; then
 fi
 
 run_gsettings() {
-  mkdir -p /var/lib/lightdm/.config/dconf
-  chown -R lightdm: /var/lib/lightdm/.config/dconf
+  install -d -o lightdm -g lightdm -m 700 /var/lib/lightdm/.config
+  install -d -o lightdm -g lightdm -m 700 /var/lib/lightdm/.config/dconf
 
   su -s /bin/sh lightdm -c "dbus-launch gsettings $1"
 }
