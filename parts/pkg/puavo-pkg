@@ -440,34 +440,6 @@ usage_error()
     return 1
 }
 
-print_help_and_exit()
-{
-    echo "Usage: puavo-pkg [OPTIONS] [COMMAND] [COMMAND_ARGS]"
-    echo
-    echo "Package manager for Puavo packages."
-    echo
-    echo "Options:"
-    echo "  -h, --help                   print this help and exit"
-    echo
-    echo "      --package-root-dir DIR   use DIR as the root, defaults"
-    echo "                               to ${g_puavo_pkg_rootdir}"
-    echo
-    echo "Commands:"
-    echo "  install INSTALLER            install package with an installer"
-    echo
-    echo "  license INSTALLER|PACKAGE    print license URL"
-    echo
-    echo "  list                         list installed packages"
-    echo
-    echo "  reconfigure PACKAGE          reconfigure installed PACKAGE"
-    echo "  reconfigure --all            reconfigure all installed packages"
-    echo
-    echo "  remove PACKAGE               remove installed PACKAGE"
-    echo "  remove --all                 remove all installed package"
-    echo
-    exit 0
-}
-
 assert_args_count()
 {
     local op=$1
