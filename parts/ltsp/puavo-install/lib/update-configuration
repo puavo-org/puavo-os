@@ -1,92 +1,181 @@
-#!/bin/sh
+#!/usr/bin/ruby1.9.1
 
-set -u
+require 'fileutils'
+require 'json'
+require 'puavo/rest-client'
+require 'socket'
+require 'syslog'
 
-puavo_rest_request() {
-    urlpath=$1
+def syslog(channel, priority, *args)
+  Syslog.log(priority, *args)
+  channel.printf(*args)
+end
 
-    puavo_rest_server=$(puavo-resolve-api-server) || return
-    curl --cacert /etc/puavo/certs/rootca.pem \
-        --config - \
-        --fail \
-        --max-time 60 \
-        --silent \
-        "${puavo_rest_server}/${urlpath}" <<EOF
-user=$(cat /etc/puavo/ldap/dn):$(cat /etc/puavo/ldap/password)
-EOF
-}
+def log(*args)   ; syslog(STDOUT, *args); end
+def logerr(*args); syslog(STDERR, *args); end
 
-puavo_rest_request_and_replace() {
-    urlpath=$1
-    filepath=$2
+def puavo_rest_request_and_replace(restclient, uripath, filepath)
+  data = restclient.get(uripath).to_s
 
-    tmp_filepath="${filepath}.tmp"
-    install -o root -g root -m 600 /dev/null "$tmp_filepath" || return
+  tmp_filepath = "#{ filepath }.tmp"
+  File.open(tmp_filepath, 'w', 0600) { |f| f.write(data) }
 
-    puavo_rest_request "$urlpath" > "$tmp_filepath" || return
-    replace_if_changed "$filepath"  "$tmp_filepath"
-}
+  replace_if_changed(filepath, tmp_filepath)
+end
 
-replace_if_changed() {
-    dest=$1
-    src=$2
+def replace_if_changed(dest, src)
+  if (FileUtils.cmp(dest, src) rescue false) then
+    FileUtils.rm_f(src)
+  else
+    File.rename(src, dest)
+  end
+end
 
-    if cmp "$src" "$dest" >/dev/null 2>&1; then
-        rm -f "$src"
+def run(*args)
+  system(*args) or raise "Running system command #{ args } returned failure"
+end
+
+def grubedit(*args)
+  run('grub-editenv', '/images/boot/grub/grubenv', *args)
+end
+
+def send_changed_primary_user_to_puavo(primary_user)
+  log(Syslog::LOG_NOTICE,
+      "Sending overridden primary user %s to Puavo\n",
+      primary_user)
+
+  cloud_restclient = PuavoRestClient.new(:auth    => :etc,
+                                         :dns     => :no,
+                                         :timeout => 30)
+
+  senddata = { 'primary_user' => primary_user }
+
+  uripath = "/v3/devices/#{ Socket.gethostname }"
+  cloud_restclient.post(uripath, :json => senddata)
+end
+
+def update_device_json(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating device json\n")
+
+  # We override the primary_user information in device.json from
+  # /state/etc/puavo/primary_user_override if that exists.
+
+  device_json_path = '/state/etc/puavo/device.json'
+
+  uripath = "v3/devices/#{ Socket.gethostname }"
+  device = restclient.get(uripath).parse()
+
+  remove_primary_user_override = false
+
+  primary_user_override \
+    = IO.read('/state/etc/puavo/primary_user_override').chomp rescue nil
+
+  if primary_user_override && !primary_user_override.empty? then
+    if primary_user_override == device['primary_user'] then
+      # remove override if we get the same information from Puavo
+      remove_primary_user_override = true
     else
-        mv "$src" "$dest"
-    fi
-}
+      begin
+        send_changed_primary_user_to_puavo(primary_user_override)
+      rescue PuavoRestClient::BadStatusCode => e
+        logerr(Syslog::LOG_ERR,
+               "Bad status code when sending primary user to Puavo: %s\n",
+               e.response.to_s)
+      rescue StandardError => e
+        logerr(Syslog::LOG_ERR,
+               "Problem sending primary user override to Puavo: %s\n",
+               e.message)
+      end
+    end
+    device['primary_user'] = primary_user_override
+  end
 
-update_device_json() {
-    puavo_rest_request_and_replace "v3/devices/$(cat /etc/puavo/hostname)" \
-        /state/etc/puavo/device.json || return
-    chmod 644 /state/etc/puavo/device.json
-}
+  tmp_filepath = "#{ device_json_path }.tmp"
+  File.open(tmp_filepath, 'w') { |f| f.write(device.to_json) }
 
-update_external_files() {
-    puavo-sync-external-files || return
-    puavo-handle-external-files-actions
-}
+  replace_if_changed(device_json_path, tmp_filepath)
 
-update_wlan_configurations() {
-    wlan_networks_uri="v3/devices/$(cat /etc/puavo/hostname)/wlan_networks"
-    puavo_rest_request_and_replace "$wlan_networks_uri" \
-        /state/etc/puavo/wlan.json
-}
+  if remove_primary_user_override then
+    FileUtils.rm_f('/state/etc/puavo/primary_user_override')
+  end
+end
 
-update_grub_environment() {
-  kernel_version=$(  jq -r .kernel_version   /state/etc/puavo/device.json)
-  kernel_arguments=$(jq -r .kernel_arguments /state/etc/puavo/device.json)
-  personally_administered=$(jq -r .personally_administered \
-				  /state/etc/puavo/device.json)
+def update_external_files(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating external files\n")
 
-  if [ -n "$kernel_version" -a "$kernel_version" != "null" ]; then
-    grub-editenv /images/boot/grub/grubenv set \
-                 "puavo_kernel_version=$kernel_version"
+  run('puavo-sync-external-files')
+  run('puavo-handle-external-files-actions')
+end
+
+def update_grub_environment(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating grub environment\n")
+
+  device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
+
+  kernel_version = device['kernel_version']
+  if kernel_version && !kernel_version.empty? then
+    grubedit('set', "puavo_kernel_version=#{ kernel_version }")
   else
-    grub-editenv /images/boot/grub/grubenv unset puavo_kernel_version
-  fi
+    grubedit('unset', 'puavo_kernel_version')
+  end
 
-  if [ "$personally_administered" = "true" ]; then
-    grub-editenv /images/boot/grub/grubenv set "puavo_show_imageoverlays=true"
+  if device['personally_administered'] == true then
+    grubedit('set', 'puavo_show_imageoverlays=true')
   else
-    grub-editenv /images/boot/grub/grubenv unset puavo_show_imageoverlays
-  fi
+    grubedit('unset', 'puavo_show_imageoverlays')
+  end
 
-  if [ -n "$kernel_arguments" -a "$kernel_arguments" != "null" ]; then
-    grub-editenv /images/boot/grub/grubenv set \
-		 "puavo_kernel_arguments=$kernel_arguments"
+  kernel_arguments = device['kernel_arguments']
+  if kernel_arguments && !kernel_arguments.empty? then
+    grubedit('set', "puavo_kernel_arguments=#{ kernel_arguments }")
   else
-    grub-editenv /images/boot/grub/grubenv unset puavo_kernel_arguments
-  fi
-}
+    grubedit('unset', 'puavo_kernel_arguments')
+  end
+end
 
+def update_wlan_configurations(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating wlan configurations\n")
+
+  wlan_networks_uri = "v3/devices/#{ Socket.gethostname }/wlan_networks"
+  puavo_rest_request_and_replace(restclient,
+                                 wlan_networks_uri,
+                                 '/state/etc/puavo/wlan.json')
+end
+
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
+
+restclient = PuavoRestClient.new(:auth => :etc, :timeout => 30)
+
+#
 # Update several (different) things.  Even if one thing cannot be updated,
 # try to update others (order does not matter here, but do this sequentially
-# anyway).
+# anyway).  Return errors on exitcodes (from exitcode one should be able
+# to figure out which parts failed).
+#
 
-update_device_json         || true
-update_external_files      || true
-update_wlan_configurations || true
-update_grub_environment    || true
+# For exitcode calculation to work properly, there should not be more than
+# sizeof(int) (32) functions here.  "device.json" should be updated first,
+# because others may depend on it.
+update_functions = [
+  :update_device_json,
+  :update_external_files,
+  :update_wlan_configurations,
+  :update_grub_environment,
+]
+
+exitcode = 0
+
+i = 0
+update_functions.each do |func|
+  begin
+    Object.send(func, restclient)
+  rescue StandardError => e
+    logerr(Syslog::LOG_ERR, "Problem in running %s: %s\n", func, e.message)
+    exitcode |= (1 << i)
+  end
+  i += 1
+end
+
+Syslog.close()
+
+exit(exitcode)
