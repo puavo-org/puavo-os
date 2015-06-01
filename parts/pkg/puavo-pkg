@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-g_opt_package_root_dir=
 g_puavo_pkg_rootdir=/var/lib/puavo-pkg/packages
 g_puavo_img_filename=noimage
 
@@ -26,8 +25,6 @@ print_help_and_exit()
     echo
     echo "Options:"
     echo "  -h, --help                   print this help and exit"
-    echo
-    echo "      --package-root-dir DIR   use DIR as the package root dir"
     echo
     echo "Commands:"
     echo "  install INSTALLER            install package with an installer"
@@ -464,12 +461,6 @@ while [ $# -gt 0 ]; do
             shift
             print_help_and_exit
             ;;
-        --package-root-dir)
-            shift
-            assert_args_count -ge 1 "$@"
-            g_opt_package_root_dir=$1
-            shift
-            ;;
         --)
             shift
             break
@@ -497,11 +488,6 @@ if [ -r /etc/puavo-pkg/config ]; then
     if [ -n "${PUAVO_PKG_ROOTDIR:-}" ]; then
         g_puavo_pkg_rootdir="${PUAVO_PKG_ROOTDIR}"
     fi
-fi
-
-## Override configuration with values from command line arguments.
-if [ -n "${g_opt_package_root_dir}" ]; then
-    g_puavo_pkg_rootdir="${g_opt_package_root_dir}"
 fi
 
 ## Validate configuration.
