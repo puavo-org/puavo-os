@@ -34,7 +34,9 @@ require 'syslog'
 require 'etc'
 
 def log(message)
-  Syslog.open("puavo-ltsp-client/populate-extrausers", Syslog::LOG_CONS) { |s| s.warning message }
+  Syslog.open("puavo-ltsp-client/populate-extrausers", Syslog::LOG_CONS) do |s|
+    s.warning('%s', message)
+  end
 end
 
 CACHE_DIR="/var/lib/puavo-desktop/users/#{ENV['PAM_USER']}"
