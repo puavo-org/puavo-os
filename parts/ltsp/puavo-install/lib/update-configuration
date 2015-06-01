@@ -4,6 +4,15 @@ require 'fileutils'
 require 'json'
 require 'puavo/rest-client'
 require 'socket'
+require 'syslog'
+
+def syslog(channel, priority, *args)
+  Syslog.log(priority, *args)
+  channel.printf(*args)
+end
+
+def log(*args)   ; syslog(STDOUT, *args); end
+def logerr(*args); syslog(STDERR, *args); end
 
 def puavo_rest_request_and_replace(restclient, uripath, filepath)
   data = restclient.get(uripath).to_s
@@ -31,7 +40,9 @@ def grubedit(*args)
 end
 
 def send_changed_primary_user_to_puavo(primary_user)
-  puts("Sending overridden primary user '#{ primary_user }' to Puavo")
+  log(Syslog::LOG_NOTICE,
+      "Sending overridden primary user %s to Puavo\n",
+      primary_user)
 
   cloud_restclient = PuavoRestClient.new(:auth    => :etc,
                                          :dns     => :no,
@@ -44,7 +55,7 @@ def send_changed_primary_user_to_puavo(primary_user)
 end
 
 def update_device_json(restclient)
-  puts('>>> Updating device json')
+  log(Syslog::LOG_INFO, ">>> Updating device json\n")
 
   # We override the primary_user information in device.json from
   # /state/etc/puavo/primary_user_override if that exists.
@@ -67,10 +78,13 @@ def update_device_json(restclient)
       begin
         send_changed_primary_user_to_puavo(primary_user_override)
       rescue PuavoRestClient::BadStatusCode => e
-        warn('Bad status code when sending primary user to Puavo: ' \
-               + e.response.to_s)
+        logerr(Syslog::LOG_ERR,
+               "Bad status code when sending primary user to Puavo: %s\n",
+               e.response.to_s)
       rescue StandardError => e
-        warn("Problem sending primary user override to Puavo: #{ e.message }")
+        logerr(Syslog::LOG_ERR,
+               "Problem sending primary user override to Puavo: %s\n",
+               e.message)
       end
     end
     device['primary_user'] = primary_user_override
@@ -87,14 +101,14 @@ def update_device_json(restclient)
 end
 
 def update_external_files(restclient)
-  puts('>>> Updating external files')
+  log(Syslog::LOG_INFO, ">>> Updating external files\n")
 
   run('puavo-sync-external-files')
   run('puavo-handle-external-files-actions')
 end
 
 def update_grub_environment(restclient)
-  puts('>>> Updating grub environment')
+  log(Syslog::LOG_INFO, ">>> Updating grub environment\n")
 
   device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
 
@@ -120,13 +134,15 @@ def update_grub_environment(restclient)
 end
 
 def update_wlan_configurations(restclient)
-  puts('>>> Updating wlan configurations')
+  log(Syslog::LOG_INFO, ">>> Updating wlan configurations\n")
 
   wlan_networks_uri = "v3/devices/#{ Socket.gethostname }/wlan_networks"
   puavo_rest_request_and_replace(restclient,
                                  wlan_networks_uri,
                                  '/state/etc/puavo/wlan.json')
 end
+
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
 restclient = PuavoRestClient.new(:auth => :etc, :timeout => 30)
 
@@ -154,10 +170,12 @@ update_functions.each do |func|
   begin
     Object.send(func, restclient)
   rescue StandardError => e
-    warn "Problem in running #{ func }: #{ e.message }"
+    logerr(Syslog::LOG_ERR, "Problem in running %s: %s\n", func, e.message)
     exitcode |= (1 << i)
   end
   i += 1
 end
+
+Syslog.close()
 
 exit(exitcode)
