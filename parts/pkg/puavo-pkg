@@ -15,7 +15,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 g_puavo_pkg_cachedir=/var/cache/puavo-pkg
-g_puavo_pkg_rootdir=/var/lib/puavo-pkg/packages
+g_puavo_pkg_rootdir=/var/lib/puavo-pkg
 g_puavo_img_filename=noimage
 
 print_help_and_exit()
@@ -68,12 +68,12 @@ log_warning()
 
 list_configured_packages()
 {
-    find "${g_puavo_pkg_rootdir}"       \
-        -maxdepth 2                     \
-        -mindepth 2                     \
-        -type l                         \
-        -name "${g_puavo_img_filename}" \
-        -exec readlink -z -e {} \;      \
+    find "${g_puavo_pkg_rootdir}/packages" \
+        -maxdepth 2                        \
+        -mindepth 2                        \
+        -type l                            \
+        -name "${g_puavo_img_filename}"    \
+        -exec readlink -z -e {} \;         \
         | while read -d '' package_dir; do
         local package_name=$(get_package_name "${package_dir}") || return 1
         echo "${package_name}" || return 1
@@ -100,7 +100,7 @@ get_license_url()
 get_package_basedir()
 {
     local package_name=$1
-    echo "${g_puavo_pkg_rootdir}/${package_name}"
+    echo "${g_puavo_pkg_rootdir}/packages/${package_name}"
 }
 
 get_package_link()
@@ -548,7 +548,7 @@ fi
 ## Validate configuration.
 [[ "${g_puavo_pkg_rootdir}" =~ ^/ ]] || usage_error "invalid root dir path"
 
-mkdir -p "${g_puavo_pkg_rootdir}"
+mkdir -p "${g_puavo_pkg_rootdir}/packages"
 
 command=$1
 shift
