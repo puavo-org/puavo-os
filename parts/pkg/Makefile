@@ -1,4 +1,4 @@
-prefix = /usr/local
+prefix = /usr
 exec_prefix = $(prefix)
 sbindir = $(exec_prefix)/sbin
 sysconfdir=/etc
@@ -25,3 +25,11 @@ install : installdirs
 
 .PHONY : clean
 clean :
+
+.PHONY : install-deb-deps
+install-deb-debs:
+	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
+
+.PHONY : install-deb
+deb:
+	dpkg-buildpackage -us -uc
