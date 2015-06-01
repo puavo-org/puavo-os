@@ -89,7 +89,9 @@ class Printer
 end
 
 def log(message)
-  Syslog.open("puavo-dnssd-printer-client", Syslog::LOG_CONS) { |s| s.warning message }
+  Syslog.open("puavo-dnssd-printer-client", Syslog::LOG_CONS) do |s|
+    s.warning('%s', message)
+  end
 end
 
 # Queries DNS SRV and TXT records for a single printer and
