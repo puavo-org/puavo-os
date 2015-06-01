@@ -15,6 +15,7 @@ require 'etc'
 require 'fileutils'
 require 'getoptlong'
 require 'json'
+require 'syslog'
 
 Ltspadmins_group_id = 3000
 
@@ -36,6 +37,14 @@ puavo-local-config [OPTIONS]
   EOF
 end
 
+def syslog(channel, priority, *args)
+  Syslog.log(priority, *args)
+  channel.printf(*args)
+end
+
+def log(*args)   ; syslog(STDOUT, *args); end
+def logerr(*args); syslog(STDERR, *args); end
+
 def conf_version_1_ok?(conf)
   is_boolean = lambda { |v| v.kind_of?(TrueClass) || v.kind_of?(FalseClass) }
 
@@ -56,7 +65,8 @@ end
 
 def ensure_conf_sanity(conf, config_path)
   move_conf = lambda {
-                warn 'Moving configuration file, because it is messed up'
+                logerr(Syslog::LOG_CRIT,
+                      "Moving configuration file, because it is messed up\n")
                 FileUtils.mv(config_path,
                              "#{ config_path }.backup-#{ Time.now().to_i }")
               }
@@ -94,7 +104,7 @@ def get_primary_user()
       raise 'Primary user is not set or is in invalid format'
     end
   rescue StandardError => e
-    warn "Could not find primary user: #{ e.message }"
+    logerr(Syslog::LOG_WARNING, "Could not find primary user: %s\n", e.message)
     return nil
   end
 
@@ -135,6 +145,8 @@ def search_and_replace_line(file, re, new_line)
 end
 
 def configure_admins()
+  log(Syslog::LOG_INFO, "configuring admins\n")
+
   admin = get_primary_user() || ''
 
   kernel_cmdline = IO.read('/proc/cmdline')
@@ -162,6 +174,8 @@ end
 def configure_local_users(conf)
   return if conf.nil?
 
+  log(Syslog::LOG_INFO, "configuring local users\n")
+
   primary_user = get_primary_user()
 
   uid_min, uid_max = 3001, 3999
@@ -171,18 +185,20 @@ def configure_local_users(conf)
 
   conf['local_users'].each do |login, user|
     if user['uid'] < uid_min then
-      warn "uid is below uid_min for '#{ login }'"
+      logerr(Syslog::LOG_WARNING, "uid is below uid_min for %s\n", login)
       problems = true
       next
     end
     if user['uid'] > uid_max
-      warn "uid is over uid_max for '#{ login }'"
+      logerr(Syslog::LOG_WARNING, "uid is over uid_max for %s\n", login)
       problems = true
       next
     end
 
     if primary_user == login then
-      warn "disabling login that is reserved for primary user: '#{ login }'"
+      logerr(Syslog::LOG_WARNING,
+             "disabling login that is reserved for primary user: %s\n",
+             login)
       user['enabled'] = false
     end
 
@@ -210,10 +226,12 @@ def configure_local_users(conf)
 end
 
 def configure_grub_default()
+  log(Syslog::LOG_INFO, "configuring grub default\n")
+
   kernel_cmdline = IO.read('/proc/cmdline')
 
   if kernel_cmdline.match(%r{root=/dev/nbd}) then
-    # booted from nbd, nothing to do
+    log(Syslog::LOG_INFO, "booted from nbd, nothing to do\n")
     return
   end
 
@@ -249,6 +267,8 @@ def configure_grub_default()
 end
 
 def configure_nm_policy()
+  log(Syslog::LOG_INFO, "configuring network manager policy\n")
+
   admin = get_primary_user()
 
   confpath = '/etc/polkit-1/localauthority/50-local.d/10.org.freedesktop.networkmanager.allow_modify_by_primary_user.pkla'
@@ -285,6 +305,8 @@ end
 def reset_allow_remoteadmins(conf, config_path)
   return conf if (conf.nil? || conf['allow_remoteadmins'] == false)
 
+  log(Syslog::LOG_NOTICE, "remoteadmins were allowed in, disallowing\n")
+
   # if allow_remoteadmins were set to true, set it false
 
   conf['allow_remoteadmins'] = false
@@ -315,6 +337,8 @@ def uninstall_pkgs(pkg_list)
   restricted_package_tool('uninstall', *pkg_list) \
     or raise "Problem in uninstalling: #{ pkg_list.join(', ') }"
 end
+
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
 config_path = '/state/etc/puavo/local/config.json'
 
@@ -378,7 +402,10 @@ begin
 rescue Errno::ENOENT
   conf = nil
 rescue Exception => e
-  warn "Could not read and interpret #{ config_path }: #{ e.message }"
+  logerr(Syslog::LOG_ERR,
+         "Could not read and interpret %s: %s\n",
+         config_path,
+         e.message)
   conf = nil
 end
 
@@ -404,9 +431,13 @@ apply_configs.each do |part|
   begin
     dispatch_table[part].call()
   rescue Exception => e
-    warn "Could not handle #{ part }: #{ e.message } / #{ e.backtrace }"
+    logerr(Syslog::LOG_ERR,
+           "%s\n",
+           "Could not handle #{ part }: #{ e.message } / #{ e.backtrace }")
     exit_code = 1
   end
 end
+
+Syslog.close()
 
 exit(exit_code)
