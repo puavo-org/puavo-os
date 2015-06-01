@@ -389,6 +389,12 @@ extract_installer()
 {
     local installer=$1
     local package_name=$(basename "${installer}" .tar.gz) || return 1
+
+    if [ ! -f "${installer}" ]; then
+        log_error "installer '${installer}' does not exist"
+        return 1
+    fi
+
     local package_version=$(get_md5sum "${installer}") || return 1
 
     local package_dir=$(get_package_dir "${package_name}" "${package_version}")
