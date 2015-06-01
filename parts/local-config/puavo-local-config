@@ -15,6 +15,7 @@ require 'etc'
 require 'fileutils'
 require 'getoptlong'
 require 'json'
+require 'syslog'
 
 Ltspadmins_group_id = 3000
 
@@ -22,18 +23,27 @@ def print_help()
   puts <<-EOF
 puavo-local-config [OPTIONS]
 
--c, --config-path      set configuration file path
--h, --help             show help
+-c, --config-path           set configuration file path
+-h, --help                  show help
 
-    --admins           configure admins
-    --grub-default     configure grub default
-    --local-users      configure local users
-    --setup-pkgs       configure installed (optional) packages
+    --admins                configure admins
+    --grub-default          configure grub default
+    --local-users           configure local users
+    --networkmanager-policy apply special networkmanager permissions
+    --setup-pkgs            configure installed (optional) packages
 
-    --install-pkgs     ["all" | a list of software separated with comma]
-    --uninstall-pkgs   ["all" | a list of software separated with comma]
+    --install-pkgs          ["all" | a list of software separated with comma]
+    --uninstall-pkgs        ["all" | a list of software separated with comma]
   EOF
 end
+
+def syslog(channel, priority, *args)
+  Syslog.log(priority, *args)
+  channel.printf(*args)
+end
+
+def log(*args)   ; syslog(STDOUT, *args); end
+def logerr(*args); syslog(STDERR, *args); end
 
 def conf_version_1_ok?(conf)
   is_boolean = lambda { |v| v.kind_of?(TrueClass) || v.kind_of?(FalseClass) }
@@ -55,7 +65,8 @@ end
 
 def ensure_conf_sanity(conf, config_path)
   move_conf = lambda {
-                warn 'Moving configuration file, because it is messed up'
+                logerr(Syslog::LOG_CRIT,
+                      "Moving configuration file, because it is messed up\n")
                 FileUtils.mv(config_path,
                              "#{ config_path }.backup-#{ Time.now().to_i }")
               }
@@ -77,6 +88,27 @@ def ensure_conf_sanity(conf, config_path)
   # all is OK!
 
   conf
+end
+
+$primary_user = nil
+def get_primary_user()
+  return $primary_user if $primary_user
+
+  begin
+    device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
+    primary_user = device.kind_of?(Hash) && device['primary_user']
+
+    if primary_user && primary_user.match(/^[A-Za-z0-9\.\-]+$/) then
+      $primary_user = primary_user
+    else
+      raise 'Primary user is not set or is in invalid format'
+    end
+  rescue StandardError => e
+    logerr(Syslog::LOG_WARNING, "Could not find primary user: %s\n", e.message)
+    return nil
+  end
+
+  $primary_user
 end
 
 def search_and_replace_line(file, re, new_line)
@@ -113,8 +145,9 @@ def search_and_replace_line(file, re, new_line)
 end
 
 def configure_admins()
-  device = read_device()
-  admin  = device['primary_user'] || ''
+  log(Syslog::LOG_INFO, "configuring admins\n")
+
+  admin = get_primary_user() || ''
 
   kernel_cmdline = IO.read('/proc/cmdline')
 
@@ -122,6 +155,10 @@ def configure_admins()
   search_and_replace_line('/etc/group',
                          /^puavolocaladmins:/,
                          new_line)
+
+  search_and_replace_line('/etc/gshadow',
+                         /^puavolocaladmins:/,
+                         "puavolocaladmins:!::#{ admin }")
 
   File.open('/etc/sudoers.d/puavolocaladmins.pcltmp', 'w') do |f|
     if superlaptop_mode? then
@@ -137,7 +174,9 @@ end
 def configure_local_users(conf)
   return if conf.nil?
 
-  device = read_device()
+  log(Syslog::LOG_INFO, "configuring local users\n")
+
+  primary_user = get_primary_user()
 
   uid_min, uid_max = 3001, 3999
   group_id = Etc.getgrnam('users').gid
@@ -146,18 +185,20 @@ def configure_local_users(conf)
 
   conf['local_users'].each do |login, user|
     if user['uid'] < uid_min then
-      warn "uid is below uid_min for '#{ login }'"
+      logerr(Syslog::LOG_WARNING, "uid is below uid_min for %s\n", login)
       problems = true
       next
     end
     if user['uid'] > uid_max
-      warn "uid is over uid_max for '#{ login }'"
+      logerr(Syslog::LOG_WARNING, "uid is over uid_max for %s\n", login)
       problems = true
       next
     end
 
-    if device['primary_user'] == login then
-      warn "disabling login that is reserved for primary user: '#{ login }'"
+    if primary_user == login then
+      logerr(Syslog::LOG_WARNING,
+             "disabling login that is reserved for primary user: %s\n",
+             login)
       user['enabled'] = false
     end
 
@@ -185,10 +226,12 @@ def configure_local_users(conf)
 end
 
 def configure_grub_default()
+  log(Syslog::LOG_INFO, "configuring grub default\n")
+
   kernel_cmdline = IO.read('/proc/cmdline')
 
   if kernel_cmdline.match(%r{root=/dev/nbd}) then
-    # booted from nbd, nothing to do
+    log(Syslog::LOG_INFO, "booted from nbd, nothing to do\n")
     return
   end
 
@@ -223,6 +266,28 @@ def configure_grub_default()
     or raise 'Problem in updating grub environment'
 end
 
+def configure_nm_policy()
+  log(Syslog::LOG_INFO, "configuring network manager policy\n")
+
+  admin = get_primary_user()
+
+  confpath = '/etc/polkit-1/localauthority/50-local.d/10.org.freedesktop.networkmanager.allow_modify_by_primary_user.pkla'
+
+  if admin then
+    conf = <<EOF
+[Primary user permissions]
+Identity=unix-user:#{ admin }
+Action=org.freedesktop.NetworkManager.settings.modify.system
+ResultAny=no
+ResultInactive=no
+ResultActive=yes
+EOF
+    File.open(confpath, 'w') { |f| f.print conf }
+  else
+    FileUtils.rm_f(confpath)
+  end
+end
+
 def install_pkgs(pkg_list)
   %w(download install).each do |action|
     restricted_package_tool(action, *pkg_list) \
@@ -237,12 +302,10 @@ def parse_pkg_list(pkg_list)
     : pkg_list.split(',')
 end
 
-def read_device()
-  JSON.parse( IO.read('/state/etc/puavo/device.json') )
-end
-
 def reset_allow_remoteadmins(conf, config_path)
   return conf if (conf.nil? || conf['allow_remoteadmins'] == false)
+
+  log(Syslog::LOG_NOTICE, "remoteadmins were allowed in, disallowing\n")
 
   # if allow_remoteadmins were set to true, set it false
 
@@ -275,6 +338,8 @@ def uninstall_pkgs(pkg_list)
     or raise "Problem in uninstalling: #{ pkg_list.join(', ') }"
 end
 
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
+
 config_path = '/state/etc/puavo/local/config.json'
 
 apply_configs        = []
@@ -284,16 +349,17 @@ uninstall_pkg_list   = []
 
 begin
   opts = GetoptLong.new(
-    [ '--config-path',   '-c',  GetoptLong::REQUIRED_ARGUMENT, ],
-    [ '--help',          '-h',  GetoptLong::NO_ARGUMENT,       ],
+    [ '--config-path',   '-c',   GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--help',          '-h',   GetoptLong::NO_ARGUMENT,       ],
 
-    [ '--admins',               GetoptLong::NO_ARGUMENT,       ],
-    [ '--disable-remoteadmins', GetoptLong::NO_ARGUMENT,       ],
-    [ '--grub-default',         GetoptLong::NO_ARGUMENT,       ],
-    [ '--local-users',          GetoptLong::NO_ARGUMENT,       ],
-    [ '--install-pkgs',         GetoptLong::REQUIRED_ARGUMENT, ],
-    [ '--setup-pkgs',           GetoptLong::NO_ARGUMENT,       ],
-    [ '--uninstall-pkgs',       GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--admins',                GetoptLong::NO_ARGUMENT,       ],
+    [ '--disable-remoteadmins',  GetoptLong::NO_ARGUMENT,       ],
+    [ '--grub-default',          GetoptLong::NO_ARGUMENT,       ],
+    [ '--local-users',           GetoptLong::NO_ARGUMENT,       ],
+    [ '--install-pkgs',          GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--networkmanager-policy', GetoptLong::NO_ARGUMENT,       ],
+    [ '--setup-pkgs',            GetoptLong::NO_ARGUMENT,       ],
+    [ '--uninstall-pkgs',        GetoptLong::REQUIRED_ARGUMENT, ],
   )
 
   opts.each do |opt, arg|
@@ -310,6 +376,8 @@ begin
       when '--install-pkgs'
 	apply_configs.push(opt)
 	install_pkg_list = parse_pkg_list(arg)
+      when '--networkmanager-policy'
+	apply_configs.push(opt)
       when '--setup-pkgs'
 	apply_configs.push(opt)
       when '--uninstall-pkgs'
@@ -334,7 +402,10 @@ begin
 rescue Errno::ENOENT
   conf = nil
 rescue Exception => e
-  warn "Could not read and interpret #{ config_path }: #{ e.message }"
+  logerr(Syslog::LOG_ERR,
+         "Could not read and interpret %s: %s\n",
+         config_path,
+         e.message)
   conf = nil
 end
 
@@ -345,12 +416,13 @@ if disable_remoteadmins then
 end
 
 dispatch_table = {
-  '--admins'         => lambda { configure_admins()                 },
-  '--grub-default'   => lambda { configure_grub_default()           },
-  '--local-users'    => lambda { configure_local_users(conf)        },
-  '--install-pkgs'   => lambda { install_pkgs(install_pkg_list)     },
-  '--setup-pkgs'     => lambda { setup_pkgs()                       },
-  '--uninstall-pkgs' => lambda { uninstall_pkgs(uninstall_pkg_list) },
+  '--admins'                => lambda { configure_admins()                 },
+  '--grub-default'          => lambda { configure_grub_default()           },
+  '--local-users'           => lambda { configure_local_users(conf)        },
+  '--install-pkgs'          => lambda { install_pkgs(install_pkg_list)     },
+  '--networkmanager-policy' => lambda { configure_nm_policy()              },
+  '--setup-pkgs'            => lambda { setup_pkgs()                       },
+  '--uninstall-pkgs'        => lambda { uninstall_pkgs(uninstall_pkg_list) },
 }
 
 exit_code = 0
@@ -359,9 +431,13 @@ apply_configs.each do |part|
   begin
     dispatch_table[part].call()
   rescue Exception => e
-    warn "Could not handle #{ part }: #{ e.message } / #{ e.backtrace }"
+    logerr(Syslog::LOG_ERR,
+           "%s\n",
+           "Could not handle #{ part }: #{ e.message } / #{ e.backtrace }")
     exit_code = 1
   end
 end
+
+Syslog.close()
 
 exit(exit_code)

@@ -20,6 +20,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d
 	mkdir -p $(DESTDIR)$(libdir)/puavo-local-config-ui
+	mkdir -p $(DESTDIR)$(libdir)/puavo-local-config/pam
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
 .PHONY : install
@@ -42,6 +43,9 @@ install : installdirs
 		plc-ui/package.json \
 		plc-ui/style.css    \
 		plc-ui/theme.css
+	
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-local-config/pam \
+		pam/login-setup
 	
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		puavo-local-config-ui-autostart.desktop
