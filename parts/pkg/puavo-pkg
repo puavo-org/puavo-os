@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+g_puavo_pkg_cachedir=/var/cache/puavo-pkg
 g_puavo_pkg_rootdir=/var/lib/puavo-pkg/packages
 g_puavo_img_filename=noimage
 
@@ -56,6 +57,13 @@ log_info()
     local message=$1
 
     echo "INFO: $1" >&2
+}
+
+log_warning()
+{
+    local message=$1
+
+    echo "WARNING: $1" >&2
 }
 
 list_configured_packages()
@@ -275,6 +283,42 @@ check_md5sum()
     md5sum --check --status 2>/dev/null <<<"${md5sum_str}  ${file}"
 }
 
+cache_load_upstream_pack()
+{
+    local package_name=$1
+    local package_version=$2
+    local package_dir=$(get_package_dir "${package_name}" "${package_version}") || return 1
+    local upstream_pack="${package_dir}/upstream_pack"
+    local md5sum_file="${package_dir}/upstream_pack_md5sum"
+
+    [ -r "${md5sum_file}"  ] || return 0
+    local md5sum_str=$(cat "${md5sum_file}") || return 1
+
+    [ -n "${md5sum_str}" ] || return 0
+
+    local cached_upstream_pack="${g_puavo_pkg_cachedir}/upstream_packs/${package_name}/${md5sum_str}"
+    if [ -r "${cached_upstream_pack}" ]; then
+        cp -a -T "${cached_upstream_pack}" "${upstream_pack}" || return 1
+        log_info "${package_name}: loaded upstream pack from the cache succesfully"
+    fi
+}
+
+cache_save_upstream_pack()
+{
+    local package_name=$1
+    local package_version=$2
+    local package_dir=$(get_package_dir "${package_name}" "${package_version}") || return 1
+    local upstream_pack="${package_dir}/upstream_pack"
+    local md5sum_str=$(md5sum "${upstream_pack}" | cut -d' ' -f1)
+
+    if [ -n "${md5sum_str}" ]; then
+        mkdir -p "${g_puavo_pkg_cachedir}/upstream_packs/${package_name}"
+        cp -a -T "${upstream_pack}" "${g_puavo_pkg_cachedir}/upstream_packs/${package_name}/${md5sum_str}" || return 1
+    fi
+
+    log_info "${package_name}: saved upstream pack to cache succesfully"
+}
+
 download_upstream_pack()
 {
     local package_name=$1
@@ -282,6 +326,10 @@ download_upstream_pack()
     local package_dir=$(get_package_dir "${package_name}" "${package_version}") || return 1
     local upstream_pack="${package_dir}/upstream_pack"
     local upstream_tmppack="${upstream_pack}.tmp"
+
+    cache_load_upstream_pack "${package_name}" "${package_version}" || {
+        log_warning "${package_name}: failed to load the upstream pack from the cache"
+    }
 
     if check_md5sum "${package_dir}/upstream_pack_md5sum" "${upstream_pack}"; then
         return 0
@@ -320,6 +368,10 @@ download_upstream_pack()
     mv -T "${upstream_tmppack}" "${upstream_pack}" || {
         rm -rf "${upstream_pack}"
         return 1
+    }
+
+    cache_save_upstream_pack "${package_name}" "${package_version}" || {
+        log_warning "${package_name}: failed to save upstream pack to the cache"
     }
 
     log_info "${package_name}: downloaded upstream pack succesfully"
@@ -487,6 +539,9 @@ if [ -r /etc/puavo-pkg/config ]; then
     . /etc/puavo-pkg/config
     if [ -n "${PUAVO_PKG_ROOTDIR:-}" ]; then
         g_puavo_pkg_rootdir="${PUAVO_PKG_ROOTDIR}"
+    fi
+    if [ -n "${PUAVO_PKG_CACHEDIR:-}" ]; then
+        g_puavo_pkg_cachedir="${PUAVO_PKG_CACHEDIR}"
     fi
 fi
 

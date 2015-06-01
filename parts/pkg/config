@@ -1,5 +1,8 @@
 ### This file is sourced by puavo-pkg Bash script. It must not contain
 ### anything else than the variable definitions described below.
 
-### Uncomment to set the root directory for the package tree.
+### Uncomment to change the default cache directory.
+#PUAVO_PKG_CACHEDIR=/var/cache/puavo-pkg
+
+### Uncomment to change the default root directory for the package tree.
 #PUAVO_PKG_ROOTDIR=/var/lib/puavo-pkg/packages
