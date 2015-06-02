@@ -11,15 +11,14 @@ The package manager tool is a simple standalone Bash script which does
 not necessarily need to be installed anywhere. However, ``Makefile`` is
 provided to make installation a breeze:
 
-To install it to ``/usr/local/sbin``, run:
+To install it to ``/usr/sbin``, run:
 
     make install
 
-Or to install it to ``/usr/sbin``, run:
+To build a ``.deb`` package and install it, run:
 
-    make install prefix=/usr
-
-
+    make deb
+    sudo dpkg -i ../puavo-pkg_0.1.0_all.deb
 
 ## Usage
 
@@ -49,35 +48,79 @@ For usage details, run:
 The default configuration can be changed by providing
 `/etc/puavo-pkg/config`. The following configuration options are recongized:
 
-- ``PUAVO_PKG_ROOTDIR``: the root directory of the package tree
+- ``PUAVO_PKG_ROOTDIR``: The root directory of the package
+  tree. Defaults to ``/var/lib/puavo-pkg``.
+
+
+- ``PUAVO_PKG_CACHEDIR``: Cache directory used for storing downloaded
+  upstream packs etc. Defaults to ``/var/cache/puavo-pkg``.
+
 
 ## Packaging
 
 ### Installer files
 
 Currently, ``puavo-pkg`` supports package installations only with
-installer files. Installer files are gzipped tar archives which must be
+installer files. Installer files are gzipped tar archives which **must** be
 named as ``PACKAGE.tar.gz`` where ``PACKAGE`` is the name of the package
-the installed by the installer file. All paths inside the archive must
+the installed by the installer file. All paths inside the archive **must**
 be prefixed by ``PACKAGE/``.
 
-The installer file must have an executable ``PACKAGE/rules`` file, which
-must accept one or more command line arguments. ``PACKAGE/rules`` will
-be executed by ``puavo-pkg`` which will pass an installer command as the
-first argument. There are four installer commands: ``download``,
-``unpack``, ``configure`` and ``unconfigure``.
+Mandatory files:
 
-Optionally, the installer file can have ``PACKAGE/upstream_pack_url``
-and ``PACKAGE/upstream_pack_md5sum`` files. The former must contain a
-valid URL pointing to the upstream package and the latter must contain
-the MD5 checksum of the upstream package.
+- ``PACKAGE/rules``
 
-An example installer file layout for ``mypackage`` package could look
+Optional files:
+
+- ``PACKAGE/license``
+- ``PACKAGE/upstream_pack_url``
+- ``PACKAGE/upstream_pack_md5sum``
+
+An example installer archive layout for ``mypackage`` package might look
 like this:
 
     $ tar -tf mypackage.tar.gz
+    mypackage/license
     mypackage/rules
     mypackage/upstream_pack_url
     mypackage/upstream_pack_md5sum
 
-TBC
+
+#### ``PACKAGE/rules``
+
+The installer archive **must** contain an executable ``PACKAGE/rules``
+file, which **must** accept one or more command line
+arguments. ``PACKAGE/rules`` will be executed by ``puavo-pkg`` which
+will pass an installer command (``download``, ``unpack``, ``configure``
+and ``unconfigure``) as the first argument.
+
+
+#### ``PACKAGE/license``
+
+Optionally, the installer archive **can** contain ``PACKAGE/license``
+file which must contain End User License Agreement or Terms of Service
+of the package. The format of the file can be anything, however a
+browser readable format (``text/plain``, ``text/html`` or
+``application/pdf``) is recommended, because ``puavo-pkg`` command
+``license`` can be used to print a file URL pointing the license file.
+
+#### ``PACKAGE/upstream_pack_url``
+
+Optionally, the installer archive **can** contain
+``PACKAGE/upstream_pack_url`` file which **must** contain a valid URL
+pointing to the upstream package. If the file exists, ``puavo-pkg``
+downloads the file pointed by the URL with a built-in download
+function. If the file does *not* exists, ``PACKAGE/rules`` must take
+care of downloading when ``download`` is passed to it as an installer
+command.
+
+
+#### ``PACKAGE/upstream_pack_md5sum``
+
+Optionally, the installer archive **can** contain
+``PACKAGE/upstream_pack_md5sum`` file which **must** contain the MD5
+checksum of the upstream package. If the file exists, ``puavo-pkg``
+verifies the downloaded upstream package by comparing the MD5 checksum
+of the upstream package with the one given in this file. The checksum is
+also used as a cache identifier. If this file does not exists, caching
+of the package is disabled.
