@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+while true; do
+    read -p "Primary user: " primary_user
+
+    echo "${primary_user}" | egrep -q '\s' && {
+        echo "E: primary user name cannot contain whitespace" >&2
+        continue
+    }
+
+    [ -z "${primary_user}" ] && {
+        echo "E: primary user name cannot be an empty string" >&2
+        continue
+    }
+
+    break
+done
+
+while true; do
+    read -p "Hostname: " puavo_hostname
+
+    echo "${puavo_hostname}" | egrep -q '\s' && {
+        echo "E: hostname name cannot contain whitespace" >&2
+        continue
+    }
+
+    [ -z "${puavo_hostname}" ] && {
+        echo "E: hostname name cannot be an empty string" >&2
+        continue
+    }
+
+    break
+done
+
+echo "--primary_user_uid ${primary_user} --puavoHostname ${puavo_hostname}"
