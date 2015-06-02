@@ -282,6 +282,10 @@ unpack_upstream_pack()
         return 1
     }
 
+    ## Remove the upstream pack, it is not needed anymore since we just
+    ## unpacked it successfully.
+    rm -f "${upstream_pack}"
+
     log_info "${package_name}: unpacked upstream pack successfully"
 }
 
