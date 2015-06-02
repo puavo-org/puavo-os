@@ -12,23 +12,44 @@ case "${command}" in
         mkdir -p /usr/bin
         ln -sf -T "${upstream_dir}/bin/CmapTools" /usr/bin/CmapTools
 
-        for icon in icons/*.png; do
-            icon_size="${icon##*/cmaptools-}"
-            xdg-icon-resource install --novendor --size "${icon_size%.png}" "${icon}" cmaptools
-        done
+        mkdir -p /usr/share/icons/hicolor/16x16/apps
+        mkdir -p /usr/share/icons/hicolor/22x22/apps
+        mkdir -p /usr/share/icons/hicolor/24x24/apps
+        mkdir -p /usr/share/icons/hicolor/32x32/apps
+        mkdir -p /usr/share/icons/hicolor/48x48/apps
+        mkdir -p /usr/share/icons/hicolor/64x64/apps
+        mkdir -p /usr/share/icons/hicolor/128x128/apps
 
-        xdg-desktop-menu install --novendor cmaptools.desktop
+        ln -s -f -T "$(readlink -e icons/cmaptools-16.png)"  \
+            /usr/share/icons/hicolor/16x16/apps/cmaptools.png
+        ln -s -f -T "$(readlink -e icons/cmaptools-22.png)"  \
+            /usr/share/icons/hicolor/22x22/apps/cmaptools.png
+        ln -s -f -T "$(readlink -e icons/cmaptools-24.png)"  \
+            /usr/share/icons/hicolor/24x24/apps/cmaptools.png
+        ln -s -f -T "$(readlink -e icons/cmaptools-32.png)"  \
+            /usr/share/icons/hicolor/32x32/apps/cmaptools.png
+        ln -s -f -T "$(readlink -e icons/cmaptools-48.png)"  \
+            /usr/share/icons/hicolor/48x48/apps/cmaptools.png
+        ln -s -f -T "$(readlink -e icons/cmaptools-64.png)"  \
+            /usr/share/icons/hicolor/64x64/apps/cmaptools.png
+        ln -s -f -T "$(readlink -e icons/cmaptools-128.png)" \
+            /usr/share/icons/hicolor/128x128/apps/cmaptools.png
+
+        mkdir -p /usr/share/applications
+        ln -s -f -T "$(readlink -e cmaptools.desktop)" \
+            /usr/share/applications/cmaptools.desktop
         ;;
 
     unconfigure)
-        xdg-desktop-menu uninstall --novendor cmaptools.desktop
-
-        for icon in icons/*.png; do
-            icon_size="${icon##*/cmaptools-}"
-            xdg-icon-resource uninstall --novendor --size "${icon_size%.png}" "${icon}" cmaptools
-        done
-
-        rm -f /usr/bin/CmapTools
+        rm -f /usr/bin/CmapTools                                \
+            /usr/share/applications/cmaptools.desktop           \
+            /usr/share/icons/hicolor/16x16/apps/cmaptools.png   \
+            /usr/share/icons/hicolor/22x22/apps/cmaptools.png   \
+            /usr/share/icons/hicolor/24x24/apps/cmaptools.png   \
+            /usr/share/icons/hicolor/32x32/apps/cmaptools.png   \
+            /usr/share/icons/hicolor/48x48/apps/cmaptools.png   \
+            /usr/share/icons/hicolor/64x64/apps/cmaptools.png   \
+            /usr/share/icons/hicolor/128x128/apps/cmaptools.png
         ;;
 
     unpack)
