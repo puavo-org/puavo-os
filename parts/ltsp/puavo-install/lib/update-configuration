@@ -87,6 +87,11 @@ def update_device_json(restclient)
                e.message)
       end
     end
+
+    log(Syslog::LOG_ERR,
+        "Applying primary user override: %s\n",
+        primary_user_override)
+
     device['primary_user'] = primary_user_override
   end
 
@@ -96,6 +101,8 @@ def update_device_json(restclient)
   replace_if_changed(device_json_path, tmp_filepath)
 
   if remove_primary_user_override then
+    log(Syslog::LOG_NOTICE,
+        "Removing primary user override (it is the same in Puavo)\n")
     FileUtils.rm_f('/state/etc/puavo/primary_user_override')
   end
 end
