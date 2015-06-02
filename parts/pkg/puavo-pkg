@@ -47,17 +47,17 @@ print_help_and_exit()
 
 log_error()
 {
-    echo "ERROR: $1" >&2
+    echo "ERROR: $@" >&2
 }
 
 log_info()
 {
-    echo "INFO: $1" >&2
+    echo "INFO: $@" >&2
 }
 
 log_warning()
 {
-    echo "WARNING: $1" >&2
+    echo "WARNING: $@" >&2
 }
 
 list_configured_packages()
