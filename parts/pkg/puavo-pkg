@@ -190,7 +190,7 @@ configure_package()
         return 1
     }
 
-    log_info "${package_name}: configured succesfully" || true
+    log_info "${package_name}: configured successfully" || true
 }
 
 reconfigure_package()
@@ -238,7 +238,7 @@ unconfigure_package()
 
     rm -f "${package_link}" || return 1
 
-    log_info "${package_name}: unconfigured succesfully"
+    log_info "${package_name}: unconfigured successfully"
     echo "${package_dir}"
 }
 
@@ -282,7 +282,7 @@ unpack_upstream_pack()
         return 1
     }
 
-    log_info "${package_name}: unpacked upstream pack succesfully"
+    log_info "${package_name}: unpacked upstream pack successfully"
 }
 
 check_md5sum()
@@ -318,7 +318,7 @@ cache_load_upstream_pack()
     cached_upstream_pack="${g_puavo_pkg_cachedir}/upstream_packs/${package_name}/${md5sum_str}"
     if [ -r "${cached_upstream_pack}" ]; then
         cp -a -T "${cached_upstream_pack}" "${upstream_pack}" || return 1
-        log_info "${package_name}: loaded upstream pack from the cache succesfully"
+        log_info "${package_name}: loaded upstream pack from the cache successfully"
     fi
 }
 
@@ -337,7 +337,7 @@ cache_save_upstream_pack()
         cp -a -T "${upstream_pack}" "${g_puavo_pkg_cachedir}/upstream_packs/${package_name}/${md5sum_str}" || return 1
     fi
 
-    log_info "${package_name}: saved upstream pack to cache succesfully"
+    log_info "${package_name}: saved upstream pack to cache successfully"
 }
 
 download_upstream_pack()
@@ -397,7 +397,7 @@ download_upstream_pack()
         log_warning "${package_name}: failed to save upstream pack to the cache"
     }
 
-    log_info "${package_name}: downloaded upstream pack succesfully"
+    log_info "${package_name}: downloaded upstream pack successfully"
 }
 
 get_md5sum()
@@ -445,7 +445,7 @@ extract_installer()
         return 1
     }
 
-    log_info "${package_name}: extracted installer file succesfully"
+    log_info "${package_name}: extracted installer file successfully"
 
     echo "${package_dir}"
 }
@@ -483,7 +483,7 @@ install_package_with_installer()
         return 1
     }
 
-    log_info "${package_name}: installed succesfully"
+    log_info "${package_name}: installed successfully"
 }
 
 remove_package()
