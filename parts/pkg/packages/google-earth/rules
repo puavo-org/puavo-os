@@ -15,23 +15,48 @@ case "${command}" in
         mkdir -p /usr/bin
         ln -sf -T /opt/google/earth/free/googleearth /usr/bin/google-earth
 
-        for icon in /opt/google/earth/free/product_logo_*.png; do
-            icon_size="${icon##*/product_logo_}"
-            xdg-icon-resource install --size "${icon_size%.png}" "${icon}" google-earth
-        done
+        mkdir -p /usr/share/icons/hicolor/16x16/apps
+        mkdir -p /usr/share/icons/hicolor/22x22/apps
+        mkdir -p /usr/share/icons/hicolor/24x24/apps
+        mkdir -p /usr/share/icons/hicolor/32x32/apps
+        mkdir -p /usr/share/icons/hicolor/48x48/apps
+        mkdir -p /usr/share/icons/hicolor/64x64/apps
+        mkdir -p /usr/share/icons/hicolor/128x128/apps
+        mkdir -p /usr/share/icons/hicolor/256x256/apps
 
-        xdg-desktop-menu install /opt/google/earth/free/google-earth.desktop
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/product_logo_16.png" \
+            /usr/share/icons/hicolor/16x16/apps/google-earth.png
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/product_logo_22.png" \
+            /usr/share/icons/hicolor/22x22/apps/google-earth.png
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/product_logo_24.png" \
+            /usr/share/icons/hicolor/24x24/apps/google-earth.png
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/product_logo_32.png" \
+            /usr/share/icons/hicolor/32x32/apps/google-earth.png
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/product_logo_48.png" \
+            /usr/share/icons/hicolor/48x48/apps/google-earth.png
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/product_logo_64.png" \
+            /usr/share/icons/hicolor/64x64/apps/google-earth.png
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/product_logo_128.png" \
+            /usr/share/icons/hicolor/128x128/apps/google-earth.png
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/product_logo_256.png" \
+            /usr/share/icons/hicolor/256x256/apps/google-earth.png
+
+        mkdir -p /usr/share/applications
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/google-earth.desktop" \
+            /usr/share/applications/google-earth.desktop
         ;;
     unconfigure)
-        xdg-desktop-menu uninstall /opt/google/earth/free/google-earth.desktop
-
-        for icon in /opt/google/earth/free/product_logo_*.png; do
-            icon_size="${icon##*/product_logo_}"
-            xdg-icon-resource uninstall --size "${icon_size%.png}" google-earth
-        done
-
-        rm -f /usr/bin/google-earth
-        rm -f /opt/google/earth/free
+        rm -f /opt/google/earth/free                               \
+            /usr/bin/google-earth                                  \
+            /usr/share/applications/google-earth.desktop           \
+            /usr/share/icons/hicolor/128x128/apps/google-earth.png \
+            /usr/share/icons/hicolor/16x16/apps/google-earth.png   \
+            /usr/share/icons/hicolor/22x22/apps/google-earth.png   \
+            /usr/share/icons/hicolor/24x24/apps/google-earth.png   \
+            /usr/share/icons/hicolor/256x256/apps/google-earth.png \
+            /usr/share/icons/hicolor/32x32/apps/google-earth.png   \
+            /usr/share/icons/hicolor/48x48/apps/google-earth.png   \
+            /usr/share/icons/hicolor/64x64/apps/google-earth.png
         ;;
     unpack)
         upstream_pack=$1
