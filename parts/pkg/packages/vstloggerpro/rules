@@ -1,0 +1,84 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+vstloggerpro_links='
+/usr/local/bin/loggerpro
+/usr/local/share/LoggerPro
+/usr/local/share/icons/hicolor/16x16/apps/loggerpro.png
+/usr/local/share/icons/hicolor/22x22/apps/loggerpro.png
+/usr/local/share/icons/hicolor/24x24/apps/loggerpro.png
+/usr/local/share/icons/hicolor/32x32/apps/loggerpro.png
+/usr/local/share/icons/hicolor/48x48/apps/loggerpro.png
+/usr/share/icons/hicolor/16x16/mimetypes/x-vernier-lldata.png
+/usr/share/icons/hicolor/16x16/mimetypes/x-vernier-lpdata.png
+/usr/share/icons/hicolor/16x16/mimetypes/x-vernier-lqdata.png
+/usr/share/icons/hicolor/22x22/mimetypes/x-vernier-lldata.png
+/usr/share/icons/hicolor/22x22/mimetypes/x-vernier-lpdata.png
+/usr/share/icons/hicolor/22x22/mimetypes/x-vernier-lqdata.png
+/usr/share/icons/hicolor/24x24/mimetypes/x-vernier-lldata.png
+/usr/share/icons/hicolor/24x24/mimetypes/x-vernier-lpdata.png
+/usr/share/icons/hicolor/24x24/mimetypes/x-vernier-lqdata.png
+/usr/share/icons/hicolor/32x32/mimetypes/x-vernier-lldata.png
+/usr/share/icons/hicolor/32x32/mimetypes/x-vernier-lpdata.png
+/usr/share/icons/hicolor/32x32/mimetypes/x-vernier-lqdata.png
+/usr/share/icons/hicolor/48x48/mimetypes/x-vernier-lldata.png
+/usr/share/icons/hicolor/48x48/mimetypes/x-vernier-lpdata.png
+/usr/share/icons/hicolor/48x48/mimetypes/x-vernier-lqdata.png
+/usr/share/mime/packages/loggerpro.xml
+'
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+
+        for f in ${vstloggerpro_links}; do
+            dir=$(dirname "${f}")
+            mkdir -p "${dir}"
+            ln -s -f -T "${upstream_dir}/vstloggerpro${f}" "${f}"
+        done
+
+        mkdir -p /usr/share/applications
+        desktop_file_path=$(readlink -e LoggerPro.desktop)
+        ln -s -f -T "${desktop_file_path}" /usr/share/applications/LoggerPro.desktop
+
+        ln -s -f -T "${upstream_dir}/vstdrivers/usr/lib/libGoIO.so.2.0.53" \
+            /usr/lib/libGoIO.so.2
+        ln -s -f -T "${upstream_dir}/vstdrivers/usr/lib/libGoIO.so.2.0.53" \
+            /usr/lib/libGoIO.so
+        ln -s -f -T "${upstream_dir}/vstdrivers/usr/lib/libNGIO.so.1.0.0"  \
+            /usr/lib/libNGIO.so.1
+        ln -s -f -T "${upstream_dir}/vstdrivers/usr/lib/libNGIO.so.1.0.0"  \
+            /usr/lib/libNGIO.so
+
+        mkdir -p /lib/udev/rules.d
+        udev_rules_file_path=$(readlink -e 40-vstdrivers.rules)
+        ln -s -f "${udev_rules_file_path}" /lib/udev/rules.d/40-vstdrivers.rules
+
+        ## WTF Vernier.
+        chmod 777 "${upstream_dir}/vstloggerpro/usr/local/share/LoggerPro/Linux/tmp"
+        chmod 777 "${upstream_dir}/vstloggerpro/usr/local/share/LoggerPro/Linux/VSTSupport"
+        ;;
+    unconfigure)
+        rm -f ${vstloggerpro_links}                           \
+            /lib/udev/rules.d/40-vstdrivers.rules             \
+            /usr/lib/libGoIO.so.2 /usr/lib/libGoIO.so         \
+            /usr/lib/libNGIO.so.1 /usr/lib/libNGIO.so         \
+            /usr/share/applications/LoggerPro.desktop
+
+        ;;
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        tar --no-same-owner -z -x -f "${upstream_pack}" -C "${upstream_dir}"
+        dpkg -x "${upstream_dir}/vstloggerpro_3.8.4.6_i386.deb" "${upstream_dir}/vstloggerpro"
+        dpkg -x "${upstream_dir}/vstdrivers_1.5.1.1_i386.deb" "${upstream_dir}/vstdrivers"
+        rm -f "${upstream_dir}/vstloggerpro_3.8.4.6_i386.deb"
+        rm -f "${upstream_dir}/vstdrivers_1.5.1.1_i386.deb"
+        ;;
+    *)
+        ;;
+esac
