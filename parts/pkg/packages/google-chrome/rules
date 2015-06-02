@@ -46,14 +46,14 @@ case "${command}" in
 
         export PEPPER_FLASH_VERSION=$(grep '"version":' "${upstream_dir}/opt/google/chrome/PepperFlash/manifest.json"| grep -Po '(?<=version": ")(?:\d|\.)*')
 
-        cat <<-EOF >/etc/chromium-browser/default
-            # Default settings for chromium-browser. This file is sourced by /bin/sh from
-            # /usr/bin/chromium-browser
-            
-            # Options to pass to chromium-browser
-            
-            CHROMIUM_FLAGS="--ppapi-flash-path=${upstream_dir}/opt/google/chrome/PepperFlash/libpepflashplayer.so --ppapi-flash-version=$PEPPER_FLASH_VERSION"
-            EOF
+        cat <<EOF >/etc/chromium-browser/default
+# Default settings for chromium-browser. This file is sourced by /bin/sh from
+# /usr/bin/chromium-browser
+
+# Options to pass to chromium-browser
+
+CHROMIUM_FLAGS="--ppapi-flash-path=${upstream_dir}/opt/google/chrome/PepperFlash/libpepflashplayer.so --ppapi-flash-version=$PEPPER_FLASH_VERSION"
+EOF
         ;;
     unconfigure)
         rm -f /usr/bin/google-chrome-stable
@@ -73,6 +73,28 @@ case "${command}" in
         upstream_dir=$2
         dpkg -x "${upstream_pack}" "${upstream_dir}"
         chmod 0755 "${upstream_dir}"
+        ;;
+    download)
+        upstream_pack=$1
+        baseurl="https://dl.google.com/linux/chrome/deb"
+        tmpfile=$(mktemp)
+        wget \
+            --no-use-server-timestamps \
+            --no-check-certificate \
+            --no-cookies \
+            --output-document "${tmpfile}" \
+            "${baseurl}/dists/stable/main/binary-i386/Packages" || {
+            rm -f "${tmpfile}"
+            exit 1
+        }
+        poolpath=$(sed -r '0,/^Package: google-chrome-stable$/ d' "${tmpfile}" | sed -r -n 's/^Filename: (.*)/\1/p' | head -n1)
+        rm -f "${tmpfile}"
+        wget \
+            --no-use-server-timestamps \
+            --no-check-certificate \
+            --no-cookies \
+            --output-document "${upstream_pack}" \
+            "${baseurl}/${poolpath}"
         ;;
     *)
         ;;
