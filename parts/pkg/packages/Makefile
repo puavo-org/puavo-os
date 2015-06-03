@@ -1,15 +1,15 @@
 packagedirs = $(sort $(dir $(wildcard */)))
 packagefiles = $(packagedirs:%/=%.tar.gz)
 
-all: $(packagefiles) installer-bundle.tar
+all: $(packagefiles) puavo-pkg-installers-bundle.tar
 
-installer-bundle.tar: $(packagefiles)
+puavo-pkg-installers-bundle.tar: $(packagefiles)
 	tar cvf "$@" $^
 
 %.tar.gz: %/ %/*
 	tar zcvf "$@" $<
 
 clean:
-	rm -rf $(packagefiles) installer-bundle.tar
+	rm -rf $(packagefiles) puavo-pkg-installers-bundle.tar
 
 .PHONY: all clean
