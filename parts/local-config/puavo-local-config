@@ -452,6 +452,11 @@ dispatch_table = {
 
 exit_code = 0
 
+if apply_configs.empty? then
+  print_help()
+  exit(1)
+end
+
 apply_configs.each do |part|
   begin
     dispatch_table[part].call()
