@@ -795,6 +795,7 @@ class packages {
     , 'puavo-image-tools'
     , 'puavo-load-reporter'
     , 'puavo-local-config'
+    , 'puavo-pkg'
     , 'puavo-sharedir-client'
     , 'puavo-wlanap'
     , 'puavo-wlanap-dnsproxy'
