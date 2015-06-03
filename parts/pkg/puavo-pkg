@@ -89,7 +89,7 @@ get_license_url()
             return 1
         }
     else
-        pkg_dir=$(get_configured_pkg_dir "${identifier}") || return 1
+        pkg_dir=$(get_installed_pkg_dir "${identifier}") || return 1
     fi
 
     [ -f "${pkg_dir}/license" ] && echo "file://${pkg_dir}/license"
@@ -121,7 +121,7 @@ get_pkg_dir()
     echo "${pkg_basedir}/${pkg_version}"
 }
 
-get_configured_pkg_dir()
+get_installed_pkg_dir()
 {
     local pkg_name pkg_link
 
@@ -131,12 +131,12 @@ get_configured_pkg_dir()
     readlink -e "${pkg_link}" || true
 }
 
-get_configured_pkg_version()
+get_installed_pkg_version()
 {
     local pkg_name pkg_dir
 
     pkg_name=$1
-    pkg_dir=$(get_configured_pkg_dir "${pkg_name}") || return 1
+    pkg_dir=$(get_installed_pkg_dir "${pkg_name}") || return 1
 
     [ -n "${pkg_dir}" ] || return 0
 
@@ -160,17 +160,17 @@ get_pkg_version()
 
 configure_pkg()
 {
-    local pkg_name pkg_version pkg_dir upstream_dir configured_pkg_dir pkg_link
+    local pkg_name pkg_version pkg_dir upstream_dir installed_pkg_dir pkg_link
 
     pkg_name=$1
     pkg_version=$2
     pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
     upstream_dir="${pkg_dir}/upstream"
-    configured_pkg_dir=$(get_configured_pkg_dir "${pkg_name}") || return 1
+    installed_pkg_dir=$(get_installed_pkg_dir "${pkg_name}") || return 1
     pkg_link=$(get_pkg_link "${pkg_name}") || return 1
 
-    if [ -n "${configured_pkg_dir}" ]; then
-        if [ "${configured_pkg_dir}" != "${pkg_dir}" ]; then
+    if [ -n "${installed_pkg_dir}" ]; then
+        if [ "${installed_pkg_dir}" != "${pkg_dir}" ]; then
             log_error "another version of the package has already been " \
                 "configured, unconfigure it before proceeding"
             return 1
@@ -198,7 +198,7 @@ reconfigure_pkg()
     local pkg_name pkg_version
 
     pkg_name=$1
-    pkg_version=$(get_configured_pkg_version "${pkg_name}") || return 1
+    pkg_version=$(get_installed_pkg_version "${pkg_name}") || return 1
 
     configure_pkg "${pkg_name}" "${pkg_version}"
 }
