@@ -239,7 +239,7 @@ unconfigure_package()
     rm -f "${package_link}" || return 1
 
     log_info "${package_name}: unconfigured successfully"
-    echo "${package_dir}"
+    basename "${package_dir}"
 }
 
 unpack_upstream_pack()
@@ -456,7 +456,7 @@ extract_installer()
 
 install_package_with_installer()
 {
-    local installer package_dir package_name package_version
+    local installer package_dir package_name package_version old_package_version
 
     installer=$1
     package_dir=$(extract_installer "${installer}") || {
@@ -477,13 +477,18 @@ install_package_with_installer()
         return 1
     }
 
-    unconfigure_package "${package_name}" >/dev/null || {
+    old_package_version=$(unconfigure_package "${package_name}") || {
         log_error "failed to unconfigure package '${package_name}'"
         return 1
     }
 
     configure_package "${package_name}" "${package_version}" || {
-        log_error "failed to configure package '${package_name}' of version '${package_version}'"
+        log_error "${package_name}: failed to configure package version '${package_version}'"
+        configure_package "${package_name}" "${old_package_version}" || {
+            log_error "${package_name}: failed to reconfigure the previous version '${old_package_version}'"
+            return 1
+        }
+        log_info "${package_name}: reconfigured the previous version '${old_package_version}' successfully"
         return 1
     }
 
@@ -492,16 +497,17 @@ install_package_with_installer()
 
 remove_package()
 {
-    local package_name package_dir
+    local package_name package_dir package_version
 
     package_name=$1
 
-    package_dir=$(unconfigure_package "${package_name}") || {
+    package_version=$(unconfigure_package "${package_name}") || {
         log_error "failed to unconfigure package '${package_name}'"
         return 1
     }
 
-    if [ -n "${package_dir}" ]; then
+    if [ -n "${package_version}" ]; then
+        package_dir=$(get_package_dir "${package_name}" "${package_version}") || return 1
         rm -rf "${package_dir}" || return 1
         log_info "removed package '${package_name}'"
         return 0
