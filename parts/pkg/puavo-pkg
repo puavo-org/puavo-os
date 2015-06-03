@@ -38,7 +38,7 @@ print_help_and_exit()
     echo "  reconfigure --all            reconfigure all installed packages"
     echo
     echo "  remove PACKAGE               remove installed PACKAGE"
-    echo "  remove --all                 remove all installed package"
+    echo "  remove --all                 remove all installed packages"
     echo
     echo "Files:"
     echo "  /etc/puavo-pkg/config        configuration file"
