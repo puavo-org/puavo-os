@@ -10,5 +10,6 @@ if [ "$puavo_hosttype" = "laptop" \
                                --grub-default          \
                                --local-users           \
                                --networkmanager-policy \
+                               --prepare-puavopkg      \
                                --setup-installed-pkgs
 fi

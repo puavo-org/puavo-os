@@ -30,6 +30,7 @@ puavo-local-config [OPTIONS]
     --grub-default          configure grub default
     --local-users           configure local users
     --networkmanager-policy apply special networkmanager permissions
+    --prepare-puavopkg      setup configurations for puavo-pkg
     --setup-installed-pkgs  configure installed (optional) packages
 
     --install-pkg           a package name
@@ -290,13 +291,6 @@ EOF
   end
 end
 
-def install_pkgs(packages)
-  packages.each do |pkg|
-    puavo_pkg('install', pkg) \
-      or raise "Problem in installing: #{ pkg }"
-  end
-end
-
 def reset_allow_remoteadmins(conf, config_path)
   return conf if (conf.nil? || conf['allow_remoteadmins'] == false)
 
@@ -312,20 +306,44 @@ def reset_allow_remoteadmins(conf, config_path)
   conf
 end
 
-def puavo_pkg(*args)
-  system('/usr/sbin/puavo-pkg', *args)
-end
-
-def setup_installed_pkgs()
-  puavo_pkg('reconfigure', '--all') \
-    or raise 'Problem in reconfiguring packages'
-end
-
 def superlaptop_mode?
   kernel_cmdline = IO.read('/proc/cmdline')
   superlaptop_mode_re \
     = /puavo.image.overlay=default puavo.local.enable_superusers=true/
   kernel_cmdline.match(superlaptop_mode_re) ? true : false
+end
+
+#
+# puavo-pkg related functions
+#
+
+def prepare_puavopkg()
+  FileUtils.mkdir_p('/images/puavo-pkg/cache')
+  FileUtils.mkdir_p('/images/puavo-pkg/root')
+
+  File.open('/etc/puavo-pkg/config', 'w') do |f|
+    f.print(<<'EOF')
+### This file is sourced by puavo-pkg Bash script. It must not contain
+### anything else than the variable definitions described below.
+
+### Uncomment to change the default cache directory.
+PUAVO_PKG_CACHEDIR=/images/puavo-pkg/cache
+
+### Uncomment to change the default root directory for the package tree.
+PUAVO_PKG_ROOTDIR=/images/puavo-pkg/root
+EOF
+  end
+end
+
+def puavo_pkg(*args)
+  system('/usr/sbin/puavo-pkg', *args)
+end
+
+def install_pkgs(packages)
+  packages.each do |pkg|
+    puavo_pkg('install', pkg) \
+      or raise "Problem in installing: #{ pkg }"
+  end
 end
 
 def remove_pkgs(packages)
@@ -334,6 +352,12 @@ def remove_pkgs(packages)
       or raise "Problem in removing: #{ pkg }"
   end
 end
+
+def setup_installed_pkgs()
+  puavo_pkg('reconfigure', '--all') \
+    or raise 'Problem in reconfiguring packages'
+end
+
 
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
@@ -356,6 +380,7 @@ begin
     [ '--local-users',           GetoptLong::NO_ARGUMENT,       ],
     [ '--networkmanager-policy', GetoptLong::NO_ARGUMENT,       ],
     [ '--remove-pkg',            GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--prepare-puavopkg',      GetoptLong::NO_ARGUMENT,       ],
     [ '--setup-installed-pkgs',  GetoptLong::NO_ARGUMENT,       ],
   )
 
@@ -374,6 +399,8 @@ begin
 	apply_configs.push(opt) unless apply_configs.include?(opt)
 	packages_to_install << arg
       when '--networkmanager-policy'
+	apply_configs.push(opt) unless apply_configs.include?(opt)
+      when '--prepare-puavopkg'
 	apply_configs.push(opt) unless apply_configs.include?(opt)
       when '--remove-pkg'
 	apply_configs.push(opt) unless apply_configs.include?(opt)
@@ -418,6 +445,7 @@ dispatch_table = {
   '--install-pkg'           => lambda { install_pkgs(packages_to_install)  },
   '--local-users'           => lambda { configure_local_users(conf)        },
   '--networkmanager-policy' => lambda { configure_nm_policy()              },
+  '--prepare-puavopkg'      => lambda { prepare_puavopkg()                 },
   '--remove-pkg'            => lambda { remove_pkgs(packages_to_remove)    },
   '--setup-installed-pkgs'  => lambda { setup_installed_pkgs()             },
 }
