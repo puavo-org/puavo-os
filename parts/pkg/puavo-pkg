@@ -310,6 +310,9 @@ cache_load_upstream_pack()
 
     pkg_name=$1
     pkg_version=$2
+
+    [ -n "${g_puavo_pkg_cachedir}" ] || return 0
+
     pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
     upstream_pack="${pkg_dir}/upstream_pack"
     md5sum_file="${pkg_dir}/upstream_pack_md5sum"
@@ -332,6 +335,9 @@ cache_save_upstream_pack()
 
     pkg_name=$1
     pkg_version=$2
+
+    [ -n "${g_puavo_pkg_cachedir}" ] || return 0
+
     pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
     upstream_pack="${pkg_dir}/upstream_pack"
     md5sum_str=$(md5sum "${upstream_pack}" | cut -d' ' -f1)
@@ -591,10 +597,10 @@ fi
 ## Override default configuration with values from the config file.
 if [ -r /etc/puavo-pkg/config ]; then
     . /etc/puavo-pkg/config
-    if [ -n "${PUAVO_PKG_ROOTDIR:-}" ]; then
+    if [ ! -z ${PUAVO_PKG_ROOTDIR+x} ]; then
         g_puavo_pkg_rootdir="${PUAVO_PKG_ROOTDIR}"
     fi
-    if [ -n "${PUAVO_PKG_CACHEDIR:-}" ]; then
+    if [ ! -z ${PUAVO_PKG_CACHEDIR+x} ]; then
         g_puavo_pkg_cachedir="${PUAVO_PKG_CACHEDIR}"
     fi
 fi
