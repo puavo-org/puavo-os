@@ -60,7 +60,7 @@ log_warning()
     echo "WARNING: $@" >&2
 }
 
-list_configured_pkgs()
+list_installed_pkgs()
 {
     local pkg_dir pkg_name
 
@@ -207,7 +207,7 @@ reconfigure_all_pkgs()
 {
     local pkgs retval
 
-    pkgs=$(list_configured_pkgs) || return 1
+    pkgs=$(list_installed_pkgs) || return 1
     retval=0
 
     for pkg in ${pkgs}; do
@@ -532,7 +532,7 @@ remove_all_pkgs()
 {
     local pkgs retval
 
-    pkgs=$(list_configured_pkgs) || return 1
+    pkgs=$(list_installed_pkgs) || return 1
     retval=0
 
     for pkg in ${pkgs}; do
@@ -624,7 +624,7 @@ case "${command}" in
         ;;
     list)
         assert_args_count -eq 0 "$@"
-        list_configured_pkgs
+        list_installed_pkgs
         ;;
     reconfigure)
         assert_args_count -eq 1 "$@"
