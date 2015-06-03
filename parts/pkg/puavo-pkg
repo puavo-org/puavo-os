@@ -70,7 +70,7 @@ list_configured_packages()
         -type l                            \
         -name "${g_puavo_img_filename}"    \
         -exec readlink -z -e {} \;         \
-        | while read -d '' package_dir; do
+        | sort -z | while read -d '' package_dir; do
         package_name=$(get_package_name "${package_dir}") || return 1
         echo "${package_name}" || return 1
     done
