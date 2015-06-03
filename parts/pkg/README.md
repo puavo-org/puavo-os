@@ -46,7 +46,7 @@ For usage details, run:
 ## Configuration
 
 The default configuration can be changed by providing
-`/etc/puavo-pkg/config`. The following configuration options are recongized:
+`/etc/puavo-pkg/config`. The following configuration options are recognized:
 
 - ``PUAVO_PKG_ROOTDIR``: The root directory of the package
   tree. Defaults to ``/var/lib/puavo-pkg``.
