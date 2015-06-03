@@ -9,5 +9,6 @@ if [ "$puavo_hosttype" = "laptop" \
                                --disable-remoteadmins  \
                                --grub-default          \
                                --local-users           \
-                               --networkmanager-policy
+                               --networkmanager-policy \
+                               --setup-installed-pkgs
 fi

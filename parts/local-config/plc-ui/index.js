@@ -599,7 +599,7 @@ function get_license_list() {
 }
 
 function handle_pkg(mode, license_key, errormsg_element, cb) {
-  cmd_mode = (mode === 'install' ? '--install-pkgs' : '--uninstall-pkgs');
+  cmd_mode = (mode === 'install' ? '--install-pkg' : '--remove-pkg');
   var cmd_args = [ '/usr/sbin/puavo-local-config', cmd_mode, license_key ]
 
   var handler

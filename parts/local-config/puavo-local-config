@@ -30,10 +30,12 @@ puavo-local-config [OPTIONS]
     --grub-default          configure grub default
     --local-users           configure local users
     --networkmanager-policy apply special networkmanager permissions
-    --setup-pkgs            configure installed (optional) packages
+    --setup-installed-pkgs  configure installed (optional) packages
 
-    --install-pkgs          ["all" | a list of software separated with comma]
-    --uninstall-pkgs        ["all" | a list of software separated with comma]
+    --install-pkg           a package name
+    --remove-pkg            ["--all" | a package name]
+
+  --install-pkg and --remove-pkg can be specified multiple times.
   EOF
 end
 
@@ -288,18 +290,11 @@ EOF
   end
 end
 
-def install_pkgs(pkg_list)
-  %w(download install).each do |action|
-    restricted_package_tool(action, *pkg_list) \
-      or raise "Problem in downloading: #{ pkg_list.join(', ') }"
+def install_pkgs(packages)
+  packages.each do |pkg|
+    puavo_pkg('install', pkg) \
+      or raise "Problem in installing: #{ pkg }"
   end
-end
-
-def parse_pkg_list(pkg_list)
-  pkg_list == 'all' \
-    ? Dir.glob('/usr/share/puavo-ltsp-client/restricted-packages/*') \
-         .map { |s| File.basename(s) } \
-    : pkg_list.split(',')
 end
 
 def reset_allow_remoteadmins(conf, config_path)
@@ -317,13 +312,13 @@ def reset_allow_remoteadmins(conf, config_path)
   conf
 end
 
-def restricted_package_tool(*args)
-  system('/usr/sbin/puavo-restricted-package-tool', *args)
+def puavo_pkg(*args)
+  system('/usr/sbin/puavo-pkg', *args)
 end
 
-def setup_pkgs()
-  restricted_package_tool('configure', '--all') \
-    or raise 'Problem in configuring packages'
+def setup_installed_pkgs()
+  puavo_pkg('reconfigure', '--all') \
+    or raise 'Problem in reconfiguring packages'
 end
 
 def superlaptop_mode?
@@ -333,9 +328,11 @@ def superlaptop_mode?
   kernel_cmdline.match(superlaptop_mode_re) ? true : false
 end
 
-def uninstall_pkgs(pkg_list)
-  restricted_package_tool('uninstall', *pkg_list) \
-    or raise "Problem in uninstalling: #{ pkg_list.join(', ') }"
+def remove_pkgs(packages)
+  packages.each do |pkg|
+    puavo_pkg('remove', pkg) \
+      or raise "Problem in removing: #{ pkg }"
+  end
 end
 
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
@@ -344,8 +341,8 @@ config_path = '/state/etc/puavo/local/config.json'
 
 apply_configs        = []
 disable_remoteadmins = false
-install_pkg_list     = []
-uninstall_pkg_list   = []
+packages_to_install  = []
+packages_to_remove   = []
 
 begin
   opts = GetoptLong.new(
@@ -355,11 +352,11 @@ begin
     [ '--admins',                GetoptLong::NO_ARGUMENT,       ],
     [ '--disable-remoteadmins',  GetoptLong::NO_ARGUMENT,       ],
     [ '--grub-default',          GetoptLong::NO_ARGUMENT,       ],
+    [ '--install-pkg',           GetoptLong::REQUIRED_ARGUMENT, ],
     [ '--local-users',           GetoptLong::NO_ARGUMENT,       ],
-    [ '--install-pkgs',          GetoptLong::REQUIRED_ARGUMENT, ],
     [ '--networkmanager-policy', GetoptLong::NO_ARGUMENT,       ],
-    [ '--setup-pkgs',            GetoptLong::NO_ARGUMENT,       ],
-    [ '--uninstall-pkgs',        GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--remove-pkg',            GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--setup-installed-pkgs',  GetoptLong::NO_ARGUMENT,       ],
   )
 
   opts.each do |opt, arg|
@@ -372,17 +369,17 @@ begin
 	print_help()
 	exit(0)
       when '--admins', '--grub-default', '--local-users'
-	apply_configs.push(opt)
-      when '--install-pkgs'
-	apply_configs.push(opt)
-	install_pkg_list = parse_pkg_list(arg)
+	apply_configs.push(opt) unless apply_configs.include?(opt)
+      when '--install-pkg'
+	apply_configs.push(opt) unless apply_configs.include?(opt)
+	packages_to_install << arg
       when '--networkmanager-policy'
-	apply_configs.push(opt)
-      when '--setup-pkgs'
-	apply_configs.push(opt)
-      when '--uninstall-pkgs'
-	apply_configs.push(opt)
-	uninstall_pkg_list = parse_pkg_list(arg)
+	apply_configs.push(opt) unless apply_configs.include?(opt)
+      when '--remove-pkg'
+	apply_configs.push(opt) unless apply_configs.include?(opt)
+	packages_to_remove << arg
+      when '--setup-installed-pkgs'
+	apply_configs.push(opt) unless apply_configs.include?(opt)
     end
   end
 
@@ -418,11 +415,11 @@ end
 dispatch_table = {
   '--admins'                => lambda { configure_admins()                 },
   '--grub-default'          => lambda { configure_grub_default()           },
+  '--install-pkg'           => lambda { install_pkgs(packages_to_install)  },
   '--local-users'           => lambda { configure_local_users(conf)        },
-  '--install-pkgs'          => lambda { install_pkgs(install_pkg_list)     },
   '--networkmanager-policy' => lambda { configure_nm_policy()              },
-  '--setup-pkgs'            => lambda { setup_pkgs()                       },
-  '--uninstall-pkgs'        => lambda { uninstall_pkgs(uninstall_pkg_list) },
+  '--remove-pkg'            => lambda { remove_pkgs(packages_to_remove)    },
+  '--setup-installed-pkgs'  => lambda { setup_installed_pkgs()             },
 }
 
 exit_code = 0
