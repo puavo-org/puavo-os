@@ -456,7 +456,7 @@ extract_installer()
 
 install_package_with_installer()
 {
-    local installer package_dir package_name package_version old_package_version
+    local installer package_dir package_name package_version old_package_version old_package_dir
 
     installer=$1
     package_dir=$(extract_installer "${installer}") || {
@@ -491,6 +491,11 @@ install_package_with_installer()
         log_info "${package_name}: reconfigured the previous version '${old_package_version}' successfully"
         return 1
     }
+
+    if [ -n "${old_package_version}" ]; then
+        old_package_dir=$(get_package_dir "${package_name}" "${old_package_version}") \
+            && rm -rf "${old_package_dir}" || true
+    fi
 
     log_info "${package_name}: installed successfully"
 }
