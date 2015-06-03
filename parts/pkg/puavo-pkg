@@ -60,9 +60,9 @@ log_warning()
     echo "WARNING: $@" >&2
 }
 
-list_configured_packages()
+list_configured_pkgs()
 {
-    local package_dir package_name
+    local pkg_dir pkg_name
 
     find "${g_puavo_pkg_rootdir}/packages" \
         -maxdepth 2                        \
@@ -70,194 +70,194 @@ list_configured_packages()
         -type l                            \
         -name "${g_puavo_img_filename}"    \
         -exec readlink -z -e {} \;         \
-        | sort -z | while read -d '' package_dir; do
-        package_name=$(get_package_name "${package_dir}") || return 1
-        echo "${package_name}" || return 1
+        | sort -z | while read -d '' pkg_dir; do
+        pkg_name=$(get_pkg_name "${pkg_dir}") || return 1
+        echo "${pkg_name}" || return 1
     done
 }
 
 get_license_url()
 {
-    local identifier INSTALLER_REGEX package_dir
+    local identifier INSTALLER_REGEX pkg_dir
 
     identifier=$1
     INSTALLER_REGEX='\.tar\.gz$'
 
     if [[ "${identifier}" =~ ${INSTALLER_REGEX} ]]; then
-        package_dir=$(extract_installer "${identifier}") || {
+        pkg_dir=$(extract_installer "${identifier}") || {
             log_error "failed to extract installer '${identifier}'"
             return 1
         }
     else
-        package_dir=$(get_configured_package_dir "${identifier}") || return 1
+        pkg_dir=$(get_configured_pkg_dir "${identifier}") || return 1
     fi
 
-    [ -f "${package_dir}/license" ] && echo "file://${package_dir}/license"
+    [ -f "${pkg_dir}/license" ] && echo "file://${pkg_dir}/license"
 }
 
-get_package_basedir()
+get_pkg_basedir()
 {
     echo "${g_puavo_pkg_rootdir}/packages/$1"
 }
 
-get_package_link()
+get_pkg_link()
 {
-    local package_name package_basedir
+    local pkg_name pkg_basedir
 
-    package_name=$1
-    package_basedir=$(get_package_basedir "${package_name}") || return 1
+    pkg_name=$1
+    pkg_basedir=$(get_pkg_basedir "${pkg_name}") || return 1
 
-    echo "${package_basedir}/${g_puavo_img_filename}"
+    echo "${pkg_basedir}/${g_puavo_img_filename}"
 }
 
-get_package_dir()
+get_pkg_dir()
 {
-    local package_name package_version package_basedir
+    local pkg_name pkg_version pkg_basedir
 
-    package_name=$1
-    package_version=$2
-    package_basedir=$(get_package_basedir "${package_name}") || return 1
+    pkg_name=$1
+    pkg_version=$2
+    pkg_basedir=$(get_pkg_basedir "${pkg_name}") || return 1
 
-    echo "${package_basedir}/${package_version}"
+    echo "${pkg_basedir}/${pkg_version}"
 }
 
-get_configured_package_dir()
+get_configured_pkg_dir()
 {
-    local package_name package_link
+    local pkg_name pkg_link
 
-    package_name=$1
-    package_link=$(get_package_link "${package_name}") || return 1
+    pkg_name=$1
+    pkg_link=$(get_pkg_link "${pkg_name}") || return 1
 
-    readlink -e "${package_link}" || true
+    readlink -e "${pkg_link}" || true
 }
 
-get_configured_package_version()
+get_configured_pkg_version()
 {
-    local package_name package_dir
+    local pkg_name pkg_dir
 
-    package_name=$1
-    package_dir=$(get_configured_package_dir "${package_name}") || return 1
+    pkg_name=$1
+    pkg_dir=$(get_configured_pkg_dir "${pkg_name}") || return 1
 
-    [ -n "${package_dir}" ] || return 0
+    [ -n "${pkg_dir}" ] || return 0
 
-    basename "${package_dir}"
+    basename "${pkg_dir}"
 }
 
-get_package_name()
+get_pkg_name()
 {
-    local package_dir package_basedir
+    local pkg_dir pkg_basedir
 
-    package_dir=$1
-    package_basedir=$(dirname "${package_dir}") || return 1
+    pkg_dir=$1
+    pkg_basedir=$(dirname "${pkg_dir}") || return 1
 
-    basename "${package_basedir}"
+    basename "${pkg_basedir}"
 }
 
-get_package_version()
+get_pkg_version()
 {
     basename "$1"
 }
 
-configure_package()
+configure_pkg()
 {
-    local package_name package_version package_dir upstream_dir configured_package_dir package_link
+    local pkg_name pkg_version pkg_dir upstream_dir configured_pkg_dir pkg_link
 
-    package_name=$1
-    package_version=$2
-    package_dir=$(get_package_dir "${package_name}" "${package_version}") || return 1
-    upstream_dir="${package_dir}/upstream"
-    configured_package_dir=$(get_configured_package_dir "${package_name}") || return 1
-    package_link=$(get_package_link "${package_name}") || return 1
+    pkg_name=$1
+    pkg_version=$2
+    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+    upstream_dir="${pkg_dir}/upstream"
+    configured_pkg_dir=$(get_configured_pkg_dir "${pkg_name}") || return 1
+    pkg_link=$(get_pkg_link "${pkg_name}") || return 1
 
-    if [ -n "${configured_package_dir}" ]; then
-        if [ "${configured_package_dir}" != "${package_dir}" ]; then
+    if [ -n "${configured_pkg_dir}" ]; then
+        if [ "${configured_pkg_dir}" != "${pkg_dir}" ]; then
             log_error "another version of the package has already been " \
                 "configured, unconfigure it before proceeding"
             return 1
         fi
     fi
 
-    pushd "${package_dir}" >/dev/null || return 1
+    pushd "${pkg_dir}" >/dev/null || return 1
     ./rules configure "${upstream_dir}" || {
         popd >/dev/null || true
-        log_error "failed to configure package '${package_name}'"
+        log_error "failed to configure package '${pkg_name}'"
         return 1
     }
     popd >/dev/null || return 1
 
-    ln -sf "${package_version}" "${package_link}" || {
+    ln -sf "${pkg_version}" "${pkg_link}" || {
         log_error "failed to create a package link"
         return 1
     }
 
-    log_info "${package_name}: configured successfully" || true
+    log_info "${pkg_name}: configured successfully" || true
 }
 
-reconfigure_package()
+reconfigure_pkg()
 {
-    local package_name package_version
+    local pkg_name pkg_version
 
-    package_name=$1
-    package_version=$(get_configured_package_version "${package_name}") || return 1
+    pkg_name=$1
+    pkg_version=$(get_configured_pkg_version "${pkg_name}") || return 1
 
-    configure_package "${package_name}" "${package_version}"
+    configure_pkg "${pkg_name}" "${pkg_version}"
 }
 
-reconfigure_all_packages()
+reconfigure_all_pkgs()
 {
-    local packages retval
+    local pkgs retval
 
-    packages=$(list_configured_packages) || return 1
+    pkgs=$(list_configured_pkgs) || return 1
     retval=0
 
-    for package in ${packages}; do
-        reconfigure_package "${package}" || retval=1
+    for pkg in ${pkgs}; do
+        reconfigure_pkg "${pkg}" || retval=1
     done
 
     return ${retval}
 }
 
-unconfigure_package()
+unconfigure_pkg()
 {
-    local package_name package_link package_dir upstream_dir
+    local pkg_name pkg_link pkg_dir upstream_dir
 
-    package_name=$1
-    package_link=$(get_package_link "${package_name}") || return 1
-    package_dir=$(readlink -e "${package_link}") || true
-    upstream_dir="${package_dir}/upstream"
+    pkg_name=$1
+    pkg_link=$(get_pkg_link "${pkg_name}") || return 1
+    pkg_dir=$(readlink -e "${pkg_link}") || true
+    upstream_dir="${pkg_dir}/upstream"
 
-    [ -n "${package_dir}" ] || return 0
+    [ -n "${pkg_dir}" ] || return 0
 
-    pushd "${package_dir}" >/dev/null || return 1
+    pushd "${pkg_dir}" >/dev/null || return 1
     ./rules unconfigure "${upstream_dir}" >/dev/null || {
         popd >/dev/null || true
-        log_error "failed to unconfigure package '${package_name}'"
+        log_error "failed to unconfigure package '${pkg_name}'"
         return 1
     }
     popd >/dev/null || return 1
 
-    rm -f "${package_link}" || return 1
+    rm -f "${pkg_link}" || return 1
 
-    log_info "${package_name}: unconfigured successfully"
-    basename "${package_dir}"
+    log_info "${pkg_name}: unconfigured successfully"
+    basename "${pkg_dir}"
 }
 
 unpack_upstream_pack()
 {
-    local package_name package_version package_dir upstream_pack upstream_dir upstream_tmpdir
+    local pkg_name pkg_version pkg_dir upstream_pack upstream_dir upstream_tmpdir
 
-    package_name=$1
-    package_version=$2
-    package_dir=$(get_package_dir "${package_name}" "${package_version}") || return 1
-    upstream_pack="${package_dir}/upstream_pack"
-    upstream_dir="${package_dir}/upstream"
+    pkg_name=$1
+    pkg_version=$2
+    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+    upstream_pack="${pkg_dir}/upstream_pack"
+    upstream_dir="${pkg_dir}/upstream"
     upstream_tmpdir="${upstream_dir}.tmp"
 
     if [ -d "${upstream_dir}" ]; then
         return 0
     fi
 
-    check_md5sum "${package_dir}/upstream_pack_md5sum" "${upstream_pack}" || {
+    check_md5sum "${pkg_dir}/upstream_pack_md5sum" "${upstream_pack}" || {
         log_error "upstream pack has incorrect checksum, " \
             "perhaps you should purge the package and download it again?"
         return 1
@@ -266,7 +266,7 @@ unpack_upstream_pack()
     rm -rf "${upstream_tmpdir}"
     mkdir "${upstream_tmpdir}" || return 1
 
-    pushd "${package_dir}" >/dev/null || return 1
+    pushd "${pkg_dir}" >/dev/null || return 1
     ./rules unpack "${upstream_pack}" "${upstream_tmpdir}" || {
         popd >/dev/null || true
         rm -rf "${upstream_tmpdir}"
@@ -286,7 +286,7 @@ unpack_upstream_pack()
     ## unpacked it successfully.
     rm -f "${upstream_pack}"
 
-    log_info "${package_name}: unpacked upstream pack successfully"
+    log_info "${pkg_name}: unpacked upstream pack successfully"
 }
 
 check_md5sum()
@@ -306,64 +306,64 @@ check_md5sum()
 
 cache_load_upstream_pack()
 {
-    local package_name package_version package_dir upstream_pack md5sum_file md5sum_str cached_upstream_pack
+    local pkg_name pkg_version pkg_dir upstream_pack md5sum_file md5sum_str cached_upstream_pack
 
-    package_name=$1
-    package_version=$2
-    package_dir=$(get_package_dir "${package_name}" "${package_version}") || return 1
-    upstream_pack="${package_dir}/upstream_pack"
-    md5sum_file="${package_dir}/upstream_pack_md5sum"
+    pkg_name=$1
+    pkg_version=$2
+    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+    upstream_pack="${pkg_dir}/upstream_pack"
+    md5sum_file="${pkg_dir}/upstream_pack_md5sum"
 
     [ -r "${md5sum_file}"  ] || return 0
     md5sum_str=$(cat "${md5sum_file}") || return 1
 
     [ -n "${md5sum_str}" ] || return 0
 
-    cached_upstream_pack="${g_puavo_pkg_cachedir}/upstream_packs/${package_name}/${md5sum_str}"
+    cached_upstream_pack="${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}/${md5sum_str}"
     if [ -r "${cached_upstream_pack}" ]; then
         cp -a -T "${cached_upstream_pack}" "${upstream_pack}" || return 1
-        log_info "${package_name}: loaded upstream pack from the cache successfully"
+        log_info "${pkg_name}: loaded upstream pack from the cache successfully"
     fi
 }
 
 cache_save_upstream_pack()
 {
-    local package_name package_version package_dir upstream_pack md5sum_str
+    local pkg_name pkg_version pkg_dir upstream_pack md5sum_str
 
-    package_name=$1
-    package_version=$2
-    package_dir=$(get_package_dir "${package_name}" "${package_version}") || return 1
-    upstream_pack="${package_dir}/upstream_pack"
+    pkg_name=$1
+    pkg_version=$2
+    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+    upstream_pack="${pkg_dir}/upstream_pack"
     md5sum_str=$(md5sum "${upstream_pack}" | cut -d' ' -f1)
 
     if [ -n "${md5sum_str}" ]; then
-        mkdir -p "${g_puavo_pkg_cachedir}/upstream_packs/${package_name}"
-        cp -a -T "${upstream_pack}" "${g_puavo_pkg_cachedir}/upstream_packs/${package_name}/${md5sum_str}" || return 1
+        mkdir -p "${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}"
+        cp -a -T "${upstream_pack}" "${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}/${md5sum_str}" || return 1
     fi
 
-    log_info "${package_name}: saved upstream pack to cache successfully"
+    log_info "${pkg_name}: saved upstream pack to cache successfully"
 }
 
 download_upstream_pack()
 {
-    local package_name package_version package_dir upstream_pack upstream_tmppack
+    local pkg_name pkg_version pkg_dir upstream_pack upstream_tmppack
 
-    package_name=$1
-    package_version=$2
-    package_dir=$(get_package_dir "${package_name}" "${package_version}") || return 1
-    upstream_pack="${package_dir}/upstream_pack"
+    pkg_name=$1
+    pkg_version=$2
+    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+    upstream_pack="${pkg_dir}/upstream_pack"
     upstream_tmppack="${upstream_pack}.tmp"
 
-    cache_load_upstream_pack "${package_name}" "${package_version}" || {
-        log_warning "${package_name}: failed to load the upstream pack from the cache"
+    cache_load_upstream_pack "${pkg_name}" "${pkg_version}" || {
+        log_warning "${pkg_name}: failed to load the upstream pack from the cache"
     }
 
-    if check_md5sum "${package_dir}/upstream_pack_md5sum" "${upstream_pack}"; then
+    if check_md5sum "${pkg_dir}/upstream_pack_md5sum" "${upstream_pack}"; then
         return 0
     fi
 
-    if [ ! -r "${package_dir}/upstream_pack_url" ]; then
-        pushd "${package_dir}" >/dev/null || return 1
+    if [ ! -r "${pkg_dir}/upstream_pack_url" ]; then
+        pushd "${pkg_dir}" >/dev/null || return 1
         ./rules download "${upstream_tmppack}" || {
             popd >/dev/null || true
             rm -rf "${upstream_tmppack}" || true
@@ -379,14 +379,14 @@ download_upstream_pack()
             --no-use-server-timestamps \
             --no-check-certificate \
             --no-cookies \
-            --input-file "${package_dir}/upstream_pack_url" \
+            --input-file "${pkg_dir}/upstream_pack_url" \
             --output-document "${upstream_tmppack}" || {
             rm -rf "${upstream_tmppack}"
             return 1
         }
     fi
 
-    check_md5sum "${package_dir}/upstream_pack_md5sum" "${upstream_tmppack}" || {
+    check_md5sum "${pkg_dir}/upstream_pack_md5sum" "${upstream_tmppack}" || {
         log_error "downloaded upstream pack has incorrect checksum"
         rm -rf "${upstream_tmppack}"
         return 1
@@ -397,11 +397,11 @@ download_upstream_pack()
         return 1
     }
 
-    cache_save_upstream_pack "${package_name}" "${package_version}" || {
-        log_warning "${package_name}: failed to save upstream pack to the cache"
+    cache_save_upstream_pack "${pkg_name}" "${pkg_version}" || {
+        log_warning "${pkg_name}: failed to save upstream pack to the cache"
     }
 
-    log_info "${package_name}: downloaded upstream pack successfully"
+    log_info "${pkg_name}: downloaded upstream pack successfully"
 }
 
 get_md5sum()
@@ -416,121 +416,121 @@ get_md5sum()
 
 extract_installer()
 {
-    local installer package_name package_version package_dir package_tmpdir
+    local installer pkg_name pkg_version pkg_dir pkg_tmpdir
 
     installer=$1
-    package_name=$(basename "${installer}" .tar.gz) || return 1
+    pkg_name=$(basename "${installer}" .tar.gz) || return 1
 
     if [ ! -f "${installer}" ]; then
         log_error "installer '${installer}' does not exist"
         return 1
     fi
 
-    package_version=$(get_md5sum "${installer}") || return 1
+    pkg_version=$(get_md5sum "${installer}") || return 1
 
-    package_dir=$(get_package_dir "${package_name}" "${package_version}")
-    package_tmpdir="${package_dir}.tmp"
+    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}")
+    pkg_tmpdir="${pkg_dir}.tmp"
 
-    if [ -d "${package_dir}" ]; then
-        echo "${package_dir}"
+    if [ -d "${pkg_dir}" ]; then
+        echo "${pkg_dir}"
         return
     fi
 
-    mkdir -p "${package_tmpdir}" || return 1
+    mkdir -p "${pkg_tmpdir}" || return 1
 
     tar --no-same-owner --no-same-permissions --strip-components=1 \
-        -z -x -f "${installer}" -C "${package_tmpdir}"  || {
-        rm -rf "${package_tmpdir}"
+        -z -x -f "${installer}" -C "${pkg_tmpdir}"  || {
+        rm -rf "${pkg_tmpdir}"
         return 1
     }
 
-    mv -T "${package_tmpdir}" "${package_dir}" || {
-        rm -rf "${package_tmpdir}"
+    mv -T "${pkg_tmpdir}" "${pkg_dir}" || {
+        rm -rf "${pkg_tmpdir}"
         return 1
     }
 
-    log_info "${package_name}: extracted installer file successfully"
+    log_info "${pkg_name}: extracted installer file successfully"
 
-    echo "${package_dir}"
+    echo "${pkg_dir}"
 }
 
-install_package_with_installer()
+install_pkg_with_installer()
 {
-    local installer package_dir package_name package_version old_package_version old_package_dir
+    local installer pkg_dir pkg_name pkg_version old_pkg_version old_pkg_dir
 
     installer=$1
-    package_dir=$(extract_installer "${installer}") || {
+    pkg_dir=$(extract_installer "${installer}") || {
         log_error "failed to extract '${installer}'"
         return 1
     }
 
-    package_name=$(get_package_name "${package_dir}") || return 1
-    package_version=$(get_package_version "${package_dir}") || return 1
+    pkg_name=$(get_pkg_name "${pkg_dir}") || return 1
+    pkg_version=$(get_pkg_version "${pkg_dir}") || return 1
 
-    download_upstream_pack "${package_name}" "${package_version}" || {
-        log_error "failed to download the upstream pack of package '${package_name}'"
+    download_upstream_pack "${pkg_name}" "${pkg_version}" || {
+        log_error "failed to download the upstream pack of package '${pkg_name}'"
         return 1
     }
 
-    unpack_upstream_pack "${package_name}" "${package_version}" || {
-        log_error "failed to unpack the upstream pack of package '${package_name}'"
+    unpack_upstream_pack "${pkg_name}" "${pkg_version}" || {
+        log_error "failed to unpack the upstream pack of package '${pkg_name}'"
         return 1
     }
 
-    old_package_version=$(unconfigure_package "${package_name}") || {
-        log_error "failed to unconfigure package '${package_name}'"
+    old_pkg_version=$(unconfigure_pkg "${pkg_name}") || {
+        log_error "failed to unconfigure package '${pkg_name}'"
         return 1
     }
 
-    configure_package "${package_name}" "${package_version}" || {
-        log_error "${package_name}: failed to configure package version '${package_version}'"
-        configure_package "${package_name}" "${old_package_version}" || {
-            log_error "${package_name}: failed to reconfigure the previous version '${old_package_version}'"
+    configure_pkg "${pkg_name}" "${pkg_version}" || {
+        log_error "${pkg_name}: failed to configure package version '${pkg_version}'"
+        configure_pkg "${pkg_name}" "${old_pkg_version}" || {
+            log_error "${pkg_name}: failed to reconfigure the previous version '${old_pkg_version}'"
             return 1
         }
-        log_info "${package_name}: reconfigured the previous version '${old_package_version}' successfully"
+        log_info "${pkg_name}: reconfigured the previous version '${old_pkg_version}' successfully"
         return 1
     }
 
-    if [ -n "${old_package_version}" ]; then
-        old_package_dir=$(get_package_dir "${package_name}" "${old_package_version}") \
-            && rm -rf "${old_package_dir}" || true
+    if [ -n "${old_pkg_version}" ]; then
+        old_pkg_dir=$(get_pkg_dir "${pkg_name}" "${old_pkg_version}") \
+            && rm -rf "${old_pkg_dir}" || true
     fi
 
-    log_info "${package_name}: installed successfully"
+    log_info "${pkg_name}: installed successfully"
 }
 
-remove_package()
+remove_pkg()
 {
-    local package_name package_dir package_version
+    local pkg_name pkg_dir pkg_version
 
-    package_name=$1
+    pkg_name=$1
 
-    package_version=$(unconfigure_package "${package_name}") || {
-        log_error "failed to unconfigure package '${package_name}'"
+    pkg_version=$(unconfigure_pkg "${pkg_name}") || {
+        log_error "failed to unconfigure package '${pkg_name}'"
         return 1
     }
 
-    if [ -n "${package_version}" ]; then
-        package_dir=$(get_package_dir "${package_name}" "${package_version}") || return 1
-        rm -rf "${package_dir}" || return 1
-        log_info "removed package '${package_name}'"
+    if [ -n "${pkg_version}" ]; then
+        pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+        rm -rf "${pkg_dir}" || return 1
+        log_info "removed package '${pkg_name}'"
         return 0
     fi
 
-    log_error "package '${package_name}' is not installed"
+    log_error "package '${pkg_name}' is not installed"
     return 1
 }
 
-remove_all_packages()
+remove_all_pkgs()
 {
-    local packages retval
+    local pkgs retval
 
-    packages=$(list_configured_packages) || return 1
+    pkgs=$(list_configured_pkgs) || return 1
     retval=0
 
-    for package in ${packages}; do
-        remove_package "${package}" || retval=1
+    for pkg in ${pkgs}; do
+        remove_pkg "${pkg}" || retval=1
     done
 
     return ${retval}
@@ -610,7 +610,7 @@ shift
 case "${command}" in
     install)
         assert_args_count -eq 1 "$@"
-        install_package_with_installer "$1"
+        install_pkg_with_installer "$1"
         ;;
     license)
         assert_args_count -eq 1 "$@"
@@ -618,22 +618,22 @@ case "${command}" in
         ;;
     list)
         assert_args_count -eq 0 "$@"
-        list_configured_packages
+        list_configured_pkgs
         ;;
     reconfigure)
         assert_args_count -eq 1 "$@"
         if [ "$1" = '--all' ]; then
-            reconfigure_all_packages
+            reconfigure_all_pkgs
         else
-            reconfigure_package "$1"
+            reconfigure_pkg "$1"
         fi
         ;;
     remove)
         assert_args_count -eq 1 "$@"
         if [ "$1" = '--all' ]; then
-            remove_all_packages
+            remove_all_pkgs
         else
-            remove_package "$1"
+            remove_pkg "$1"
         fi
         ;;
     *)
