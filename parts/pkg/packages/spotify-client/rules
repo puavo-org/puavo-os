@@ -10,31 +10,56 @@ case "${command}" in
         upstream_dir=$1
 
         mkdir -p /opt/spotify
-        ln -sf -T "${upstream_dir}/opt/spotify/spotify-client" /opt/spotify/spotify-client
+        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client" /opt/spotify/spotify-client
 
         mkdir -p /usr/bin
-        ln -sf -T /opt/spotify/spotify-client/spotify /usr/bin/spotify
+        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/spotify" /usr/bin/spotify
 
-        for icon in /opt/spotify/spotify-client/Icons/spotify-linux-*.png; do
-            icon_size="${icon##*/spotify-linux-}"
-            xdg-icon-resource install --size "${icon_size%.png}" "${icon}" spotify-client
-        done
+        mkdir -p /usr/share/icons/hicolor/16x16/apps
+        mkdir -p /usr/share/icons/hicolor/22x22/apps
+        mkdir -p /usr/share/icons/hicolor/24x24/apps
+        mkdir -p /usr/share/icons/hicolor/32x32/apps
+        mkdir -p /usr/share/icons/hicolor/48x48/apps
+        mkdir -p /usr/share/icons/hicolor/64x64/apps
+        mkdir -p /usr/share/icons/hicolor/128x128/apps
+        mkdir -p /usr/share/icons/hicolor/256x256/apps
 
-        # It seems the desktop file has to match the mpris name.
-        # I don't want to change that, so we use --novendor here
-        xdg-desktop-menu install --novendor /opt/spotify/spotify-client/spotify.desktop
+        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/Icons/spotify-linux-16.png" \
+            /usr/share/icons/hicolor/16x16/apps/spotify-client.png
+        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/Icons/spotify-linux-22.png" \
+            /usr/share/icons/hicolor/22x22/apps/spotify-client.png
+        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/Icons/spotify-linux-24.png" \
+            /usr/share/icons/hicolor/24x24/apps/spotify-client.png
+        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/Icons/spotify-linux-32.png" \
+            /usr/share/icons/hicolor/32x32/apps/spotify-client.png
+        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/Icons/spotify-linux-48.png" \
+            /usr/share/icons/hicolor/48x48/apps/spotify-client.png
+        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/Icons/spotify-linux-64.png" \
+            /usr/share/icons/hicolor/64x64/apps/spotify-client.png
+        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/Icons/spotify-linux-128.png" \
+            /usr/share/icons/hicolor/128x128/apps/spotify-client.png
+        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/Icons/spotify-linux-256.png" \
+            /usr/share/icons/hicolor/256x256/apps/spotify-client.png
+
+        mkdir -p /usr/share/applications
+        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/spotify.desktop" \
+            /usr/share/applications/spotify.desktop
         ;;
 
     unconfigure)
-        xdg-desktop-menu uninstall --novendor /opt/spotify/spotify-client/spotify.desktop
 
-        for icon in /opt/spotify/spotify-client/Icons/spotify-linux-*.png; do
-            icon_size="${icon##*/spotify-linux-}"
-            xdg-icon-resource uninstall --size "${icon_size%.png}" "${icon}" spotify-client
-        done
+        rm -f /usr/bin/spotify \
+            /opt/spotify/spotify-client \
+            /usr/share/applications/spotify.desktop \
+            /usr/share/icons/hicolor/16x16/apps/spotify-client.png \
+            /usr/share/icons/hicolor/22x22/apps/spotify-client.png \
+            /usr/share/icons/hicolor/24x24/apps/spotify-client.png \
+            /usr/share/icons/hicolor/32x32/apps/spotify-client.png \
+            /usr/share/icons/hicolor/48x48/apps/spotify-client.png \
+            /usr/share/icons/hicolor/64x64/apps/spotify-client.png \
+            /usr/share/icons/hicolor/128x128/apps/spotify-client.png \
+            /usr/share/icons/hicolor/256x256/apps/spotify-client.png
 
-        rm -f /usr/bin/spotify
-        rm -f /opt/spotify/spotify-client
         ;;
 
     unpack)
