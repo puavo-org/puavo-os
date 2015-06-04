@@ -301,12 +301,18 @@ USER_SHORTCUTS=Do Not Install
 EOF
 
         chmod +x "${upstream_pack}"
-        "${upstream_pack}" -f install.conf -i silent || true
+
+        # Execute the installer as nobody, the installer should not be
+        # trusted. This is not going to make it 100% safe (not even 50%,
+        # nobody is shared, so is namespace etc. ), but its far better
+        # than running it as root.
+        chown nobody "${upstream_dir}"
+        sudo -u nobody -g nogroup "${upstream_pack}" -f install.conf -i silent || true
 
         # The installer dumps lot of files with mode 777 XD
         chmod -R go-w "${upstream_dir}"
 
-        # The installer dumps some files with uid and gid 1000 XD
+        # Reclaim ownership of all files.
         chown -R root:root "${upstream_dir}"
         ;;
 
