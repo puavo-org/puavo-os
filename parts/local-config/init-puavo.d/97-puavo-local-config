@@ -5,11 +5,17 @@ puavo_hosttype=$(cat /etc/puavo/hosttype)
 
 if [ "$puavo_hosttype" = "laptop" \
      -a "$puavo_personally_administered" = "true" ]; then
-  /usr/sbin/puavo-local-config --admins                \
-                               --disable-remoteadmins  \
-                               --grub-default          \
-                               --local-users           \
-                               --networkmanager-policy \
-                               --prepare-puavopkg      \
-                               --setup-installed-pkgs
+
+  if [ -e /etc/puavo-pkg/installerbundlepath ]; then
+    puavo_local_config_moreargs="--prepare-puavopkg --setup-installed-pkgs"
+  else
+    puavo_local_config_moreargs=""
+  fi
+
+  /usr/sbin/puavo-local-config --admins                     \
+                               --disable-remoteadmins       \
+                               --grub-default               \
+                               --local-users                \
+                               --networkmanager-policy      \
+                               $puavo_local_config_moreargs
 fi
