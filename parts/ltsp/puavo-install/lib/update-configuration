@@ -211,20 +211,48 @@ def update_puavopkg_installers(restclient)
   if !File.readable?('/etc/puavo-pkg/installerbundlepath') then
     # If the image does not have installerbundlepath configured,
     # then we probably do not need to do anything.
+    log(Syslog::LOG_DEBUG,
+        "Not updating puavo-pkg installers, not configured.\n")
     return
   end
 
-  bundlepath = IO.read('/etc/puavo-pkg/installerbundlepath').chomp
-  targetpath = "/images/#{ bundlepath }"
+  log(Syslog::LOG_INFO, ">>> Updating puavo-pkg installers\n")
 
-  previously_changed = File.stat(targetpath).mtime rescue Time.at(0)
+  puavopkg_dir = '/images/puavo-pkg'
+
+  bundlepath = IO.read('/etc/puavo-pkg/installerbundlepath').chomp
+  targetpath = "#{ puavopkg_dir }/puavo-pkg-installers-bundle.tar"
 
   fetch_puavopkg_installer_bundle(bundlepath, targetpath)
 
-  currently_changed = File.stat(targetpath).mtime
+  latest_changetime = File.stat(targetpath).mtime
 
-  if previously_changed < currently_changed then
-    # XXX cleanup previous and unpack new tar
+  current_installersdir \
+    = "#{ puavopkg_dir }/installers.#{ latest_changetime.to_i }"
+
+  if !File.directory?(current_installersdir) then
+    log(Syslog::LOG_INFO, "Unpacking updated puavo-pkg installers\n")
+
+    current_installers_tmpdir = "#{ current_installersdir }.tmp"
+    FileUtils.mkdir_p(current_installers_tmpdir)
+    run('tar', '-C', current_installers_tmpdir, '-x', '-f', targetpath)
+    FileUtils.mv(current_installers_tmpdir, current_installersdir)
+  end
+
+  installerslinkpath = "#{ puavopkg_dir }/installers"
+  current_linktarget = File.readlink(installerslinkpath) rescue nil
+  new_linktarget = File.basename(current_installersdir)
+  if current_linktarget != new_linktarget then
+    log(Syslog::LOG_INFO, "Updating link to new puavo-pkg installers\n")
+    File.symlink(new_linktarget, "#{ installerslinkpath }.tmp")
+    File.rename("#{ installerslinkpath }.tmp", installerslinkpath)
+  end
+
+  # clean up old installer bundles
+  Dir.glob("#{ puavopkg_dir }/installers.*") do |dir|
+    next if dir == current_installersdir
+    log(Syslog::LOG_INFO, "Removing old installers at %s\n", dir)
+    FileUtils.remove_entry_secure(dir, true)
   end
 end
 
@@ -247,7 +275,7 @@ update_functions = [
   :update_external_files,
   :update_wlan_configurations,
   :update_grub_environment,
-  # :update_puavopkg_installers,	# XXX do not hook this in before ready
+  :update_puavopkg_installers,
 ]
 
 exitcode = 0
