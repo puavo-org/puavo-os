@@ -847,7 +847,7 @@ class packages {
       }
 
       packages::kernels::kernel_package {
-        [ '3.13.0-36-generic', '3.13.0-41-generic', ]:
+        [ '3.13.0-36-generic', '3.13.0-41-generic', '3.13.0-55.91-generic', ]:
           package_tag => 'puavo';
 
         [ '3.16.0-38-generic', ]: ; # utopic backport from Ubuntu
