@@ -318,6 +318,8 @@ end
 #
 
 def prepare_puavopkg()
+  log(Syslog::LOG_INFO, "preparing puavo-pkg\n")
+
   FileUtils.mkdir_p('/images/puavo-pkg/cache')
   FileUtils.mkdir_p('/images/puavo-pkg/root')
 
