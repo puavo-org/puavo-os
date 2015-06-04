@@ -69,6 +69,29 @@ case "${command}" in
         chmod 0755 "${upstream_dir}"
         ;;
 
+    download)
+        upstream_pack=$1
+        baseurl="http://repository-origin.spotify.com"
+        tmpfile=$(mktemp)
+        wget \
+            --no-use-server-timestamps \
+            --no-check-certificate \
+            --no-cookies \
+            --output-document "${tmpfile}" \
+            "${baseurl}/dists/stable/non-free/binary-amd64/Packages" || {
+            rm -f "${tmpfile}"
+            exit 1
+        }
+        poolpath=$(sed -r '0,/^Package: spotify-client$/ d' "${tmpfile}" | sed -r -n 's/^Filename: (.*)/\1/p' | head -n1)
+        rm -f "${tmpfile}"
+        wget \
+            --no-use-server-timestamps \
+            --no-check-certificate \
+            --no-cookies \
+            --output-document "${upstream_pack}" \
+            "${baseurl}/${poolpath}"
+        ;;
+
     *)
         ;;
 esac
