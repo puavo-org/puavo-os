@@ -6,49 +6,48 @@ has_device_tag() {
 
 puavo_keyboard_layout=$(jq -r .keyboard_layout /etc/puavo/device.json)
 puavo_keyboard_variant=$(jq -r .keyboard_variant /etc/puavo/device.json)
-puavo_personally_administered=$(jq -r .personally_administered /etc/puavo/device.json)
 puavo_primary_user=$(jq -r .primary_user /etc/puavo/device.json)
 puavo_greeter_background_mode=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background_mode://p' | tail -n1)
 puavo_greeter_background=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background://p' | tail -n1)
 puavo_greeter_background_random_subdir=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background_random_subdir://p' | tail -n1)
+puavo_greeter_firstlogin_background=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_firstlogin_background://p' | tail -n1)
 
 background=
 
 BACKGROUNDS_DIR=/usr/share/backgrounds/puavo-greeter
 
-if [ "$puavo_personally_administered" = 'true' \
-     -a ! -s /var/lib/extrausers/passwd        \
-     -a -e /usr/share/backgrounds/puavo-firstboot-loginscreen.jpg ]; then
-  # If this host is personally administered, and /var/lib/extrausers/passwd
-  # does not exist or is empty, then we put a special background to guide
-  # the user if that path exists.
-  background="/usr/share/backgrounds/puavo-firstboot-loginscreen.jpg"
-else
-  case "${puavo_greeter_background_mode}" in
-    ''|static)
-        ;;
-    dynamic)
-        if [ -n "${puavo_greeter_background}" ]; then
-            find "${BACKGROUNDS_DIR}" \( -type f -o -type l \) -printf '%P\n' \
-                | grep -q -x "${puavo_greeter_background}" && {
-                background="${BACKGROUNDS_DIR}/${puavo_greeter_background}"
-            }
-        fi
-        ;;
-    random)
-        if [ -n "${puavo_greeter_background_random_subdir}" ]; then
-            find "${BACKGROUNDS_DIR}" -mindepth 1 -type d -printf '%P\n' \
-                | grep -x -q "${puavo_greeter_background_random_subdir}" && {
-                BACKGROUNDS_DIR="${BACKGROUNDS_DIR}/${puavo_greeter_background_random_subdir}"
-            }
-        fi
-        background=$(find "${BACKGROUNDS_DIR}" -maxdepth 1 \( -type f -o -type l \) | sort -R | head -n1)
-        ;;
-    *)
-        echo "unknown greeter background mode '${puavo_greeter_background_mode}'" >&2
-        ;;
-  esac
+if [ -n "$puavo_greeter_firstlogin_background" \
+     -a ! -s /var/lib/extrausers/passwd ]; then
+  # If /var/lib/extrausers/passwd does not exist or is empty, then we put
+  # a special background to guide the user if that path exists
+  # (puavo_greeter_background_mode must be set to dynamic as well).
+  puavo_greeter_background="$puavo_greeter_firstlogin_background"
 fi
+
+case "${puavo_greeter_background_mode}" in
+  ''|static)
+      ;;
+  dynamic)
+      if [ -n "${puavo_greeter_background}" ]; then
+	  find "${BACKGROUNDS_DIR}" \( -type f -o -type l \) -printf '%P\n' \
+	      | grep -q -x "${puavo_greeter_background}" && {
+	      background="${BACKGROUNDS_DIR}/${puavo_greeter_background}"
+	  }
+      fi
+      ;;
+  random)
+      if [ -n "${puavo_greeter_background_random_subdir}" ]; then
+	  find "${BACKGROUNDS_DIR}" -mindepth 1 -type d -printf '%P\n' \
+	      | grep -x -q "${puavo_greeter_background_random_subdir}" && {
+	      BACKGROUNDS_DIR="${BACKGROUNDS_DIR}/${puavo_greeter_background_random_subdir}"
+	  }
+      fi
+      background=$(find "${BACKGROUNDS_DIR}" -maxdepth 1 \( -type f -o -type l \) | sort -R | head -n1)
+      ;;
+  *)
+      echo "unknown greeter background mode '${puavo_greeter_background_mode}'" >&2
+      ;;
+esac
 
 [ "${puavo_keyboard_layout}" = "null" ] && puavo_keyboard_layout=
 [ "${puavo_keyboard_variant}" = "null" ] && puavo_keyboard_variant=
