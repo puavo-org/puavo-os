@@ -343,8 +343,13 @@ end
 
 def install_pkgs(packages)
   packages.each do |pkg|
-    puavo_pkg('install', pkg) \
-      or raise "Problem in installing: #{ pkg }"
+    re = %r{\A[A-Za-z0-9\-]+\z}
+    raise "Package name '#{ pkg }' does not match regexp #{ re }" \
+      unless pkg.match(re)
+
+    pkgpath = "/images/puavo-pkg/installers/#{ pkg }.tar.gz"
+    puavo_pkg('install', pkgpath) \
+      or raise "Problem in installing: #{ pkgpath }"
   end
 end
 
