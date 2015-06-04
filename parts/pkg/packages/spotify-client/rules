@@ -82,7 +82,7 @@ case "${command}" in
             rm -f "${tmpfile}"
             exit 1
         }
-        poolpath=$(sed -r '0,/^Package: spotify-client$/ d' "${tmpfile}" | sed -r -n 's/^Filename: (.*)/\1/p' | head -n1)
+        poolpath=$(sed -r '0,/^Package: spotify-client-0.9.17$/ d' "${tmpfile}" | sed -r -n 's/^Filename: (.*)/\1/p' | head -n1)
         rm -f "${tmpfile}"
         wget \
             --no-use-server-timestamps \
