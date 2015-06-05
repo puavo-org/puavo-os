@@ -2,6 +2,8 @@ var child_process = require('child_process');
 var fs = require('fs');
 var gui = require('nw.gui');
 
+var gui_options;
+
 var config_json_dir  = '/state/etc/puavo/local';
 var config_json_path = config_json_dir + '/config.json';
 var old_config;
@@ -10,6 +12,7 @@ var device_json_path = '/state/etc/puavo/device.json';
 var device_config;
 
 var locale = process.env.LANG.substring(0, 2);
+
 var mc =
   function(msg) {
     translations = {
@@ -386,15 +389,16 @@ function generate_allow_remoteadmins_input(form) {
   form.appendChild( document.createElement('hr') );
 }
 
-function generate_form() {
+function generate_form(gui_options) {
   var form = document.querySelector('form[id=dynamic_form]');
 
   generate_login_users_input(form);
   generate_allow_logins_input(form);
   generate_allow_remoteadmins_input(form);
 
-  // XXX not enabled, we do not know what to do
-  // generate_software_installation_controls(form);
+  if (gui_options.puavopkg) {
+    generate_software_installation_controls(form);
+  }
 }
 
 function generate_login_users_input(form) {
@@ -771,6 +775,20 @@ function open_external_link(e) {
   child.unref();
 }
 
+function parse_args(argv) {
+  var gui_options = {};
+
+  gui_options.puavopkg = true;
+
+  for (var i in argv) {
+    if (argv[i] === '--disable-puavopkg-controls') {
+      gui_options.puavopkg = false;
+    }
+  }
+
+  return gui_options;
+}
+
 function read_config() {
   var config;
 
@@ -891,6 +909,8 @@ function write_config_to_file(conf) {
 
 check_access();         // will exit in case of errors
 
+gui_options = parse_args(gui.App.argv);
+
 old_config = read_config();
 if (!old_config) { process.exit(1); }
 
@@ -902,7 +922,7 @@ document.querySelector('title').innerText
 document.querySelector('h1').innerText
   = mc('Personal computer configuration tool');
 
-generate_form();
+generate_form(gui_options);
 
 gui.Window.get().on('close', configure_system_and_exit);
 
