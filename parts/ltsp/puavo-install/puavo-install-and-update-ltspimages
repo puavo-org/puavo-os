@@ -559,7 +559,7 @@ lookup_size_from_cksums() {
   ' "$checksums_file"
 }
 
-# this is mostly reimplemented in Ruby in update-configuration
+# this is mostly reimplemented in Ruby in puavo-pkg-updater
 lookup_image_servers() {
   all_image_servers=
 
