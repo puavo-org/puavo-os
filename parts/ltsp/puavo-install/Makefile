@@ -32,6 +32,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_128G
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_500G
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-install
 	mkdir -p $(DESTDIR)$(sbindir)
@@ -72,6 +73,9 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
 		screen.d/ltspimage-update
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_128G \
+		preseeds/personal_laptop_128G/*
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_500G \
 		preseeds/personal_laptop_500G/*
