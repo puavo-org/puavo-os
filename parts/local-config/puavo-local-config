@@ -320,10 +320,11 @@ end
 def prepare_puavopkg()
   log(Syslog::LOG_INFO, "preparing puavo-pkg\n")
 
-  FileUtils.mkdir_p('/images/puavo-pkg/cache')
-  FileUtils.mkdir_p('/images/puavo-pkg/root')
+  %w(/images/puavo-pkg/cache
+     /images/puavo-pkg/installers
+     /images/puavo-pkg/root).each { |dir| FileUtils.mkdir_p(dir) }
 
-  File.open('/etc/puavo-pkg/config', 'w') do |f|
+  File.open('/etc/puavo-pkg/puavo-pkg.conf', 'w') do |f|
     f.print(<<'EOF')
 ### This file is sourced by puavo-pkg Bash script. It must not contain
 ### anything else than the variable definitions described below.
@@ -333,6 +334,14 @@ PUAVO_PKG_CACHEDIR=/images/puavo-pkg/cache
 
 ### Uncomment to change the default root directory for the package tree.
 PUAVO_PKG_ROOTDIR=/images/puavo-pkg/root
+EOF
+  end
+
+  File.open('/etc/puavo-pkg/puavo-pkg-updater.conf', 'w') do |f|
+    f.print(<<'EOF')
+{
+  "installers_dir": "/images/puavo-pkg/installers"
+}
 EOF
   end
 end
