@@ -2,6 +2,7 @@
 
 require 'fileutils'
 require 'json'
+require 'open3'
 require 'resolv'
 require 'syslog'
 
@@ -48,14 +49,14 @@ def lookup_imageservers()
   imageservers
 end
 
-def fetch_puavopkg_installer_bundle(bundlepath, targetpath)
+def fetch_installer_bundle(remote_bundlepath, local_bundlepath)
   imageservers = lookup_imageservers()
 
   imageservers.each do |server|
-    uri = "https://#{ server }/#{ bundlepath }"
+    uri = "https://#{ server }/#{ remote_bundlepath }"
 
     wget_ok = system('wget', '--ca-certificate=/etc/puavo/certs/rootca.pem',
-                             "--output-document=#{ targetpath }",
+                             "--output-document=#{ local_bundlepath }",
                              '--timestamping',
                              uri,
                              { :out => '/dev/null',
@@ -63,16 +64,16 @@ def fetch_puavopkg_installer_bundle(bundlepath, targetpath)
     if !wget_ok then
       logerr(Syslog::LOG_WARNING,
              "failed to fetch %s from %s\n",
-             bundlepath,
+             remote_bundlepath,
              server)
       next
     end
 
-    log(Syslog::LOG_INFO, "fetched %s from %s\n", bundlepath, server)
+    log(Syslog::LOG_INFO, "fetched %s from %s\n", remote_bundlepath, server)
     return
   end
 
-  raise "Failed to fetch #{ bundlepath } from imageservers"
+  raise "Failed to fetch #{ remote_bundlepath } from imageservers"
 end
 
 def get_config()
@@ -88,15 +89,8 @@ def get_config()
   config
 end
 
-def update_puavopkg_installers(config)
-  bundlepath     = config['bundlepath']
-  installers_dir = config['installers_dir']
-
-  targetpath = "#{ installers_dir }/puavo-pkg-installers-bundle.tar"
-
-  fetch_puavopkg_installer_bundle(bundlepath, targetpath)
-
-  latest_changetime = File.stat(targetpath).mtime
+def unpack_installers(local_bundlepath, installers_dir)
+  latest_changetime = File.stat(local_bundlepath).mtime
 
   current_installersdir \
     = "#{ installers_dir }/installers.#{ latest_changetime.to_i }"
@@ -106,7 +100,7 @@ def update_puavopkg_installers(config)
 
     current_installers_tmpdir = "#{ current_installersdir }.tmp"
     FileUtils.mkdir_p(current_installers_tmpdir)
-    run('tar', '-C', current_installers_tmpdir, '-x', '-f', targetpath)
+    run('tar', '-C', current_installers_tmpdir, '-x', '-f', local_bundlepath)
     FileUtils.mv(current_installers_tmpdir, current_installersdir)
   end
 
@@ -127,11 +121,48 @@ def update_puavopkg_installers(config)
   end
 end
 
+def make_licenses_info_file(installers_dir)
+  licenses = {}
+
+  Dir.glob("#{ installers_dir }/installers/*.tar.gz") do |tarpath|
+    pkgname = File.basename(tarpath, '.tar.gz')
+    license_url, status = Open3.capture2('puavo-pkg', 'license', tarpath)
+    if status.exitstatus != 0 then
+      log(Syslog::LOG_ERR,
+          "puavo-pkg license %s returned error code: %d\n",
+          tarpath,
+          status.exitstatus)
+      next
+    end
+
+    licenses[pkgname] = license_url.chomp
+  end
+
+  licenses_path = "#{ installers_dir }/licenses.json"
+
+  tmpfile = "#{ licenses_path }.tmp"
+  File.open(tmpfile, 'w') { |f| f.print(licenses.to_json) }
+  File.rename(tmpfile, licenses_path)
+end
+
+def update_installers(config)
+  remote_bundlepath = config['bundlepath']
+  installers_dir    = config['installers_dir']
+
+  local_bundlepath = "#{ installers_dir }/puavo-pkg-installers-bundle.tar"
+
+  fetch_installer_bundle(remote_bundlepath, local_bundlepath)
+
+  unpack_installers(local_bundlepath, installers_dir)
+
+  make_licenses_info_file(installers_dir)
+end
+
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
 config = get_config()
 
-update_puavopkg_installers(config)
+update_installers(config)
 
 Syslog.close()
 
