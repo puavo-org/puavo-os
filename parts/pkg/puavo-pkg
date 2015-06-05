@@ -185,7 +185,7 @@ configure_pkg()
     }
     popd >/dev/null || return 1
 
-    ln -sf "${pkg_version}" "${pkg_link}" || {
+    ln -fns "${pkg_version}" "${pkg_link}" || {
         log_error "failed to create a package link"
         return 1
     }
