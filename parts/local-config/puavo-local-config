@@ -356,7 +356,7 @@ def install_pkgs(packages)
     raise "Package name '#{ pkg }' does not match regexp #{ re }" \
       unless pkg.match(re)
 
-    pkgpath = "/images/puavo-pkg/installers/#{ pkg }.tar.gz"
+    pkgpath = "/images/puavo-pkg/installers/installers/#{ pkg }.tar.gz"
     puavo_pkg('install', pkgpath) \
       or raise "Problem in installing: #{ pkgpath }"
   end

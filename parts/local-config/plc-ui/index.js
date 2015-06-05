@@ -102,7 +102,7 @@ var mc =
               || msg;
   };
 
-function add_action_button(license_key, errormsg_element, sw_state) {
+function add_action_button(pkgname, errormsg_element, sw_state) {
   var button = document.createElement('button');
 
   button_state = (sw_state !== 'INSTALLED')
@@ -111,35 +111,36 @@ function add_action_button(license_key, errormsg_element, sw_state) {
 
   create_action_button_with_initial_state(button,
                                           button_state,
-                                          license_key,
+                                          pkgname,
                                           errormsg_element);
 
   return button;
 }
 
-function add_licenses(table, license_list) {
-  check_software_state(function (sw_state) {
-                         for (var i in license_list) {
-                           var license = license_list[i];
-                           add_one_license(table,
-                                           license,
-                                           sw_state[license.key]);
-                         }
-                       });
+function add_licenses(table, licenses) {
+  var add_each_license
+    = function (sw_states) {
+        for (var pkgname in licenses) {
+          var license_url = licenses[pkgname];
+          add_one_license(table, pkgname, license_url, sw_states[pkgname]);
+        }
+      };
+
+  check_software_states(add_each_license, Object.keys(licenses));
 }
 
-function add_one_license(parentNode, license_info, sw_state) {
+function add_one_license(parentNode, pkgname, license_url, sw_state) {
   var tr = document.createElement('tr');
 
   // create license name element
-  var license_name_td = document.createElement('td');
-  license_name_td.textContent = license_info.name;
-  tr.appendChild(license_name_td);
+  var pkgname_td = document.createElement('td');
+  pkgname_td.textContent = pkgname;
+  tr.appendChild(pkgname_td);
 
   // create license url link
   var license_url_td = document.createElement('td');
   var a = document.createElement('a');
-  a.setAttribute('href', license_info.url);
+  a.setAttribute('href', license_url);
   a.addEventListener('click',
                      function(e) { e.preventDefault();
                                    open_external_link(a); });
@@ -149,7 +150,7 @@ function add_one_license(parentNode, license_info, sw_state) {
   // create action button and error element
   var action_td = document.createElement('td');
   var action_errormsg_element = document.createElement('td');
-  action_td.appendChild( add_action_button(license_info.key,
+  action_td.appendChild( add_action_button(pkgname,
                                            action_errormsg_element,
                                            sw_state) );
   tr.appendChild(action_td);
@@ -174,24 +175,28 @@ function check_access() {
   }
 }
 
-function check_software_state(cb) {
+function check_software_states(cb, available_packages) {
+  var sw_states = {};
+
+  // packages are uninstalled unless "puavo-pkg list" proves otherwise (below)
+  for (var i in available_packages) {
+    sw_states[ available_packages[i] ] = 'UNINSTALLED';
+  }
+
   var handler
     = function (error, stdout, stderr) {
         if (error) { throw(error); }
 
-        sw_state = {};
         stdout.toString()
               .split("\n")
               .forEach(function (line) {
-                         if (line !== '') {
-                           a = line.split(/\s+/);
-                           sw_state[ a[0] ] = a[2];
-                         }
+                         if (line !== '') { sw_states[line] = 'INSTALLED'; }
                        });
-        cb(sw_state);
+
+        cb(sw_states);
       };
 
-  child_process.execFile('puavo-restricted-package-tool',
+  child_process.execFile('puavo-pkg',
                          [ 'list' ],
                          {},
                          handler);
@@ -210,7 +215,7 @@ function configure_system_and_exit() {
 
 function create_action_button_with_initial_state(button,
                                                  initial_state,
-                                                 license_key,
+                                                 pkgname,
                                                  errormsg_element) {
   var styles = {
     install:        'background-color: orange',
@@ -271,7 +276,7 @@ function create_action_button_with_initial_state(button,
         setup_action(function(e) {
                        e.preventDefault();
                        handle_pkg('install',
-                                  license_key,
+                                  pkgname,
                                   errormsg_element,
                                   install_returned);
                        state_functions.installing();
@@ -284,7 +289,7 @@ function create_action_button_with_initial_state(button,
         setup_action(function(e) {
                        e.preventDefault();
                        handle_pkg('uninstall',
-                                  license_key,
+                                  pkgname,
                                   errormsg_element,
                                   uninstall_returned);
                        state_functions.uninstalling();
@@ -563,48 +568,26 @@ function generate_one_user_create_table(parentNode, local_users_list, user_i) {
 function generate_software_installation_controls(form) {
   var table = document.createElement('table');
 
-  add_licenses(table, get_license_list());
+  add_licenses(table, get_licenses());
 
   form.appendChild(table);
 }
 
-function get_license_list() {
-  var basedir = '/usr/share/puavo-ltsp-client/restricted-packages';
+function get_licenses() {
+  licenses_json_path = '/images/puavo-pkg/installers/licenses.json'
+
   try {
-    var software_directories = fs.readdirSync(basedir);
-  } catch (ex) {
+    return JSON.parse( fs.readFileSync(licenses_json_path) );
+  } catch(ex) {
+    // XXX how to appropriately tell if something is wrong?
     alert(ex);
-    return [];
-  };
-
-  var list = [];
-
-  for (var i in software_directories) {
-    var dir = software_directories[i];
-    var dir_fullpath = basedir + '/' + dir;
-    if (! fs.statSync(dir_fullpath).isDirectory())
-      continue;
-
-    var license_path = dir_fullpath + '/license.json';
-    try {
-      var license_info = JSON.parse(fs.readFileSync(license_path));
-    } catch(ex) { alert(ex); continue; }
-
-    if (license_info && license_info.name && license_info.url) {
-      license_info.key = dir;
-      list.push(license_info);
-    } else {
-      alert('License information was not in correct format in '
-              + license_path);
-    }
+    return {};
   }
-
-  return list;
 }
 
-function handle_pkg(mode, license_key, errormsg_element, cb) {
+function handle_pkg(mode, pkgname, errormsg_element, cb) {
   cmd_mode = (mode === 'install' ? '--install-pkg' : '--remove-pkg');
-  var cmd_args = [ '/usr/sbin/puavo-local-config', cmd_mode, license_key ]
+  var cmd_args = [ '/usr/sbin/puavo-local-config', cmd_mode, pkgname ]
 
   var handler
     = function(error, stdout, stderr) {
