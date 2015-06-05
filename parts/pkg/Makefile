@@ -18,10 +18,10 @@ installdirs :
 .PHONY : install
 install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
-		puavo-pkg
+		puavo-pkg puavo-pkg-updater
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-pkg \
-		config
+		puavo-pkg.conf puavo-pkg-updater.conf
 
 .PHONY : clean
 clean :

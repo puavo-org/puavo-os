@@ -1,0 +1,138 @@
+#!/usr/bin/ruby1.9.1
+
+require 'fileutils'
+require 'json'
+require 'resolv'
+require 'syslog'
+
+def syslog(channel, priority, *args)
+  Syslog.log(priority, *args)
+  channel.printf(*args)
+end
+
+def log(*args)   ; syslog(STDOUT, *args); end
+def logerr(*args); syslog(STDERR, *args); end
+
+def run(*args)
+  system(*args) or raise "Running system command #{ args } returned failure"
+end
+
+def lookup_imageservers()
+  imageservers = []
+
+  puavo_domain = IO.read('/etc/puavo/domain').chomp
+
+  begin
+    imageservers \
+      << Resolv::DNS.new.getresource("_imageserver._tcp.#{ puavo_domain }",
+                                    Resolv::DNS::Resource::IN::SRV) \
+           .target.to_s
+  rescue Resolv::ResolvError
+    log(Syslog::LOG_INFO, "could not find the image server from DNS\n")
+  end
+
+  device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
+
+  # XXX not used yet, it is unclear if this will ever be?
+  if device['imageservers'].kind_of?(Array) then
+    imageservers += device['imageservers']
+  end
+
+  topdomain = IO.read('/etc/puavo/topdomain').chomp
+  imageservers << "images.#{ topdomain }"
+
+  log(Syslog::LOG_INFO,
+      "using image servers: %s\n",
+      imageservers.join(' '))
+
+  imageservers
+end
+
+def fetch_puavopkg_installer_bundle(bundlepath, targetpath)
+  imageservers = lookup_imageservers()
+
+  imageservers.each do |server|
+    uri = "https://#{ server }/#{ bundlepath }"
+
+    wget_ok = system('wget', '--ca-certificate=/etc/puavo/certs/rootca.pem',
+                             "--output-document=#{ targetpath }",
+                             '--timestamping',
+                             uri,
+                             { :out => '/dev/null',
+                               :err => '/dev/null', })
+    if !wget_ok then
+      logerr(Syslog::LOG_WARNING,
+             "failed to fetch %s from %s\n",
+             bundlepath,
+             server)
+      next
+    end
+
+    log(Syslog::LOG_INFO, "fetched %s from %s\n", bundlepath, server)
+    return
+  end
+
+  raise "Failed to fetch #{ bundlepath } from imageservers"
+end
+
+def get_config()
+  config = {
+    'bundlepath' => IO.read('/etc/puavo-pkg/installerbundlepath').chomp,
+  }
+
+  configfilecontents \
+    = JSON.parse( IO.read('/etc/puavo-pkg/puavo-pkg-updater.conf') )
+
+  config['installers_dir'] = configfilecontents['installers_dir']
+
+  config
+end
+
+def update_puavopkg_installers(config)
+  bundlepath     = config['bundlepath']
+  installers_dir = config['installers_dir']
+
+  targetpath = "#{ installers_dir }/puavo-pkg-installers-bundle.tar"
+
+  fetch_puavopkg_installer_bundle(bundlepath, targetpath)
+
+  latest_changetime = File.stat(targetpath).mtime
+
+  current_installersdir \
+    = "#{ installers_dir }/installers.#{ latest_changetime.to_i }"
+
+  if !File.directory?(current_installersdir) then
+    log(Syslog::LOG_INFO, "Unpacking updated puavo-pkg installers\n")
+
+    current_installers_tmpdir = "#{ current_installersdir }.tmp"
+    FileUtils.mkdir_p(current_installers_tmpdir)
+    run('tar', '-C', current_installers_tmpdir, '-x', '-f', targetpath)
+    FileUtils.mv(current_installers_tmpdir, current_installersdir)
+  end
+
+  installerslinkpath = "#{ installers_dir }/installers"
+  current_linktarget = File.readlink(installerslinkpath) rescue nil
+  new_linktarget = File.basename(current_installersdir)
+  if current_linktarget != new_linktarget then
+    log(Syslog::LOG_INFO, "Updating link to new puavo-pkg installers\n")
+    File.symlink(new_linktarget, "#{ installerslinkpath }.tmp")
+    File.rename("#{ installerslinkpath }.tmp", installerslinkpath)
+  end
+
+  # clean up old installer bundles
+  Dir.glob("#{ installers_dir }/installers.*") do |dir|
+    next if dir == current_installersdir
+    log(Syslog::LOG_INFO, "Removing old installers at %s\n", dir)
+    FileUtils.remove_entry_secure(dir, true)
+  end
+end
+
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
+
+config = get_config()
+
+update_puavopkg_installers(config)
+
+Syslog.close()
+
+exit(0)

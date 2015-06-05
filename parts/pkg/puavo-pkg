@@ -25,23 +25,23 @@ print_help_and_exit()
     echo "Package manager for Puavo packages."
     echo
     echo "Options:"
-    echo "  -h, --help                   print this help and exit"
+    echo "  -h, --help                     print this help and exit"
     echo
     echo "Commands:"
-    echo "  install INSTALLER            install package with an installer"
+    echo "  install INSTALLER              install package with an installer"
     echo
-    echo "  license INSTALLER|PACKAGE    print license URL"
+    echo "  license INSTALLER|PACKAGE      print license URL"
     echo
-    echo "  list                         list installed packages"
+    echo "  list                           list installed packages"
     echo
-    echo "  reconfigure PACKAGE          reconfigure installed PACKAGE"
-    echo "  reconfigure --all            reconfigure all installed packages"
+    echo "  reconfigure PACKAGE            reconfigure installed PACKAGE"
+    echo "  reconfigure --all              reconfigure all installed packages"
     echo
-    echo "  remove PACKAGE               remove installed PACKAGE"
-    echo "  remove --all                 remove all installed packages"
+    echo "  remove PACKAGE                 remove installed PACKAGE"
+    echo "  remove --all                   remove all installed packages"
     echo
     echo "Files:"
-    echo "  /etc/puavo-pkg/config        configuration file"
+    echo "  /etc/puavo-pkg/puavo-pkg.conf  configuration file"
     exit 0
 }
 
@@ -601,8 +601,8 @@ if [ -f /etc/ltsp/this_ltspimage_name ]; then
 fi
 
 ## Override default configuration with values from the config file.
-if [ -r /etc/puavo-pkg/config ]; then
-    . /etc/puavo-pkg/config
+if [ -r /etc/puavo-pkg/puavo-pkg.conf ]; then
+    . /etc/puavo-pkg/puavo-pkg.conf
     if [ ! -z ${PUAVO_PKG_ROOTDIR+x} ]; then
         g_puavo_pkg_rootdir="${PUAVO_PKG_ROOTDIR}"
     fi
