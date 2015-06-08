@@ -1,6 +1,6 @@
 class image::desktop {
   include image::bundle::desktop,
-	  packages
+          packages
 
   Apt::Key        <| title == "opinsys-repo.gpgkey" |>
   Apt::Repository <| title == archive
@@ -13,8 +13,9 @@ class image::desktop {
   Package <| tag == puavo
           or tag == ubuntu |>
 
-  # keep the "opinsys", "partner" and "restricted" packages out
-  Package <| tag == opinsys
+  # keep the "extra", "opinsys", "partner" and "restricted" packages out
+  Package <| tag == extra
+          or tag == opinsys
           or tag == partner
           or tag == restricted |> { ensure => purged, }
 }
