@@ -340,6 +340,7 @@ EOF
   File.open('/etc/puavo-pkg/puavo-pkg-updater.conf', 'w') do |f|
     f.print(<<'EOF')
 {
+  "bundlepath": "puavo-pkg/puavo-pkg-installers-bundle.tar",
   "installers_dir": "/images/puavo-pkg/installers"
 }
 EOF
