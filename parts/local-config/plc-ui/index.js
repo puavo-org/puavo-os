@@ -2,7 +2,7 @@ var child_process = require('child_process');
 var fs = require('fs');
 var gui = require('nw.gui');
 
-var gui_options;
+var gui_config;
 
 var config_json_dir  = '/state/etc/puavo/local';
 var config_json_path = config_json_dir + '/config.json';
@@ -396,14 +396,17 @@ function generate_allow_remoteadmins_input(form) {
   form.appendChild( document.createElement('hr') );
 }
 
-function generate_form(gui_options) {
+function generate_form(gui_config) {
   var form = document.querySelector('form[id=dynamic_form]');
 
-  generate_login_users_input(form);
+  if (gui_config.show_local_users) {
+    generate_login_users_input(form);
+  }
+
   generate_allow_logins_input(form);
   generate_allow_remoteadmins_input(form);
 
-  if (gui_options.puavopkg) {
+  if (gui_config.show_puavopkg_controls) {
     generate_software_installation_controls(form);
   }
 }
@@ -760,18 +763,16 @@ function open_external_link(e) {
   child.unref();
 }
 
-function parse_args(argv) {
-  var gui_options = {};
+function parse_gui_config() {
+  gui_config_path = '/etc/puavo-local-config/puavo-local-config-ui.conf';
 
-  gui_options.puavopkg = true;
-
-  for (var i in argv) {
-    if (argv[i] === '--disable-puavopkg-controls') {
-      gui_options.puavopkg = false;
-    }
+  gui_config = { show_local_users: true, show_puavopkg_controls: true };
+  config_in_file = JSON.parse( fs.readFileSync(gui_config_path) );
+  for (var attr in config_in_file) {
+    gui_config[attr] = config_in_file[attr];
   }
 
-  return gui_options;
+  return gui_config;
 }
 
 function read_config() {
@@ -894,7 +895,7 @@ function write_config_to_file(conf) {
 
 check_access();         // will exit in case of errors
 
-gui_options = parse_args(gui.App.argv);
+gui_config = parse_gui_config();
 
 old_config = read_config();
 if (!old_config) { process.exit(1); }
@@ -907,7 +908,7 @@ document.querySelector('title').innerText
 document.querySelector('h1').innerText
   = mc('Personal computer configuration tool');
 
-generate_form(gui_options);
+generate_form(gui_config);
 
 gui.Window.get().on('close', configure_system_and_exit);
 
