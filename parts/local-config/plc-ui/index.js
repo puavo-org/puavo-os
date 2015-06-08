@@ -120,7 +120,9 @@ function add_action_button(pkgname, errormsg_element, sw_state) {
 function add_licenses(table, licenses) {
   var add_each_license
     = function (sw_states) {
-        for (var pkgname in licenses) {
+        sorted_pkgnames = Object.keys(licenses).sort();
+        for (var i in sorted_pkgnames) {
+          var pkgname = sorted_pkgnames[i];
           var license_url = licenses[pkgname];
           add_one_license(table, pkgname, license_url, sw_states[pkgname]);
         }
