@@ -3,7 +3,6 @@
 require 'fileutils'
 require 'json'
 require 'puavo/rest-client'
-require 'socket'
 require 'syslog'
 
 def syslog(channel, priority, *args)
@@ -13,6 +12,14 @@ end
 
 def log(*args)   ; syslog(STDOUT, *args); end
 def logerr(*args); syslog(STDERR, *args); end
+
+def get_hostname()
+  # Hostname must be read from here, and not from Socket.gethostname or some
+  # such, because this should also work when host in still name "unregistered"
+  # at install phase (another alternative would be to set hostname at install
+  # before this script is run).
+  IO.read('/etc/puavo/hostname').chomp
+end
 
 def puavo_rest_request_and_replace(restclient, uripath, filepath)
   data = restclient.get(uripath).to_s
@@ -50,7 +57,7 @@ def send_changed_primary_user_to_puavo(primary_user)
 
   senddata = { 'primary_user' => primary_user }
 
-  uripath = "/v3/devices/#{ Socket.gethostname }"
+  uripath = "/v3/devices/#{ get_hostname() }"
   cloud_restclient.post(uripath, :json => senddata)
 end
 
@@ -62,7 +69,7 @@ def update_device_json(restclient)
 
   device_json_path = '/state/etc/puavo/device.json'
 
-  uripath = "v3/devices/#{ Socket.gethostname }"
+  uripath = "v3/devices/#{ get_hostname() }"
   device = restclient.get(uripath).parse()
 
   remove_primary_user_override = false
@@ -143,7 +150,7 @@ end
 def update_wlan_configurations(restclient)
   log(Syslog::LOG_INFO, ">>> Updating wlan configurations\n")
 
-  wlan_networks_uri = "v3/devices/#{ Socket.gethostname }/wlan_networks"
+  wlan_networks_uri = "v3/devices/#{ get_hostname() }/wlan_networks"
   puavo_rest_request_and_replace(restclient,
                                  wlan_networks_uri,
                                  '/state/etc/puavo/wlan.json')
