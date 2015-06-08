@@ -579,7 +579,7 @@ function generate_software_installation_controls(form) {
 }
 
 function get_licenses() {
-  licenses_json_path = '/images/puavo-pkg/installers/licenses.json'
+  licenses_json_path = '/images/puavo-pkg/installers/installers/licenses.json'
 
   try {
     return JSON.parse( fs.readFileSync(licenses_json_path) );
