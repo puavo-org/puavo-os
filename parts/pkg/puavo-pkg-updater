@@ -77,16 +77,7 @@ def fetch_installer_bundle(remote_bundlepath, local_bundlepath)
 end
 
 def get_config()
-  config = {
-    'bundlepath' => IO.read('/etc/puavo-pkg/installerbundlepath').chomp,
-  }
-
-  configfilecontents \
-    = JSON.parse( IO.read('/etc/puavo-pkg/puavo-pkg-updater.conf') )
-
-  config['installers_dir'] = configfilecontents['installers_dir']
-
-  config
+  JSON.parse( IO.read('/etc/puavo-pkg/puavo-pkg-updater.conf') )
 end
 
 def unpack_installers(local_bundlepath, installers_dir)
@@ -160,10 +151,11 @@ end
 
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
-config = get_config()
-
-update_installers(config)
-
-Syslog.close()
+begin
+  config = get_config()
+  update_installers(config)
+ensure
+  Syslog.close()
+end
 
 exit(0)
