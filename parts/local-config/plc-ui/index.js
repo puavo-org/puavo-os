@@ -17,8 +17,7 @@ var mc =
   function(msg) {
     translations = {
       fi: {
-        'Personal computer configuration tool':
-          'Henkilökohtaisen tietokoneen asetustyökalu',
+        'Laptop configuration': 'Kannettavan asetukset',
 
         'Configuration needs corrections, no changes are saved.':
           'Asetukset vaativat korjausta, muutokset eivät tallennu.',
@@ -58,9 +57,8 @@ var mc =
           'Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön',
       },
       sv: {
-        'Personal computer configuration tool':
-          'Personliga datorns konfigurationsverktyg',
-          
+        'Laptop configuration': 'Laptop configuration', // XXX
+
         'Configuration needs corrections, no changes are saved.':
           'Inställningarna kräver korrigering, inga ändringar har sparats',
 
@@ -370,8 +368,6 @@ function generate_allow_logins_input(form) {
   title.appendChild(table);
 
   form.appendChild(title);
-
-  form.appendChild( document.createElement('hr') );
 }
 
 function generate_allow_remoteadmins_input(form) {
@@ -392,22 +388,26 @@ function generate_allow_remoteadmins_input(form) {
 
   div.appendChild(input);
   form.appendChild(div);
-
-  form.appendChild( document.createElement('hr') );
 }
 
 function generate_form(gui_config) {
   var form = document.querySelector('form[id=dynamic_form]');
 
-  if (gui_config.show_local_users) {
-    generate_login_users_input(form);
-  }
-
-  generate_allow_logins_input(form);
-  generate_allow_remoteadmins_input(form);
-
+  // software installation
   if (gui_config.show_puavopkg_controls) {
     generate_software_installation_controls(form);
+    form.appendChild( document.createElement('hr') );
+  }
+
+  // login-access control
+  generate_allow_logins_input(form);
+  form.appendChild( document.createElement('hr') );
+  generate_allow_remoteadmins_input(form);
+  form.appendChild( document.createElement('hr') );
+
+  // managing local users
+  if (gui_config.show_local_users) {
+    generate_login_users_input(form);
   }
 }
 
@@ -457,8 +457,6 @@ function generate_login_users_input(form) {
       };
 
   add_button.addEventListener('click', add_new_user);
-
-  form.appendChild( document.createElement('hr') );
 }
 
 function generate_one_user_create_table(parentNode, local_users_list, user_i) {
@@ -903,10 +901,8 @@ if (!old_config) { process.exit(1); }
 device_config = read_device_config();
 
 // set document titles
-document.querySelector('title').innerText
-  = mc('Personal computer configuration tool');
-document.querySelector('h1').innerText
-  = mc('Personal computer configuration tool');
+document.querySelector('title').innerText = mc('Laptop configuration');
+document.querySelector('h1'   ).innerText = mc('Laptop configuration');
 
 generate_form(gui_config);
 
