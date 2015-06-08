@@ -90,8 +90,12 @@ def unpack_installers(local_bundlepath, installers_dir)
     log(Syslog::LOG_INFO, "Unpacking updated puavo-pkg installers\n")
 
     current_installers_tmpdir = "#{ current_installersdir }.tmp"
+
     FileUtils.mkdir_p(current_installers_tmpdir)
     run('tar', '-C', current_installers_tmpdir, '-x', '-f', local_bundlepath)
+
+    make_licenses_info_file(current_installers_tmpdir)
+
     FileUtils.mv(current_installers_tmpdir, current_installersdir)
   end
 
@@ -112,10 +116,10 @@ def unpack_installers(local_bundlepath, installers_dir)
   end
 end
 
-def make_licenses_info_file(installers_dir)
+def make_licenses_info_file(current_installers_tmpdir)
   licenses = {}
 
-  Dir.glob("#{ installers_dir }/installers/*.tar.gz") do |tarpath|
+  Dir.glob("#{ current_installers_tmpdir }/*.tar.gz") do |tarpath|
     pkgname = File.basename(tarpath, '.tar.gz')
     license_url, status = Open3.capture2('puavo-pkg', 'license', tarpath)
     if status.exitstatus != 0 then
@@ -129,7 +133,7 @@ def make_licenses_info_file(installers_dir)
     licenses[pkgname] = license_url.chomp
   end
 
-  licenses_path = "#{ installers_dir }/licenses.json"
+  licenses_path = "#{ current_installers_tmpdir }/licenses.json"
 
   tmpfile = "#{ licenses_path }.tmp"
   File.open(tmpfile, 'w') { |f| f.print(licenses.to_json) }
@@ -145,8 +149,6 @@ def update_installers(config)
   fetch_installer_bundle(remote_bundlepath, local_bundlepath)
 
   unpack_installers(local_bundlepath, installers_dir)
-
-  make_licenses_info_file(installers_dir)
 end
 
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
