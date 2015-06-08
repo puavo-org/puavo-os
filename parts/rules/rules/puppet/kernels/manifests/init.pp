@@ -66,7 +66,7 @@ class kernels {
   $stable_kernel = $default_kernel
 
   $stable_amd64_kernel = $architecture ? {
-                           'i386'  => '3.13.0-55.91-generic',
+                           'i386'  => '3.13.0-46-generic',
                            default => $stable_kernel,
                          }
 

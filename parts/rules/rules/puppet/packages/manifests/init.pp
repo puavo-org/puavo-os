@@ -841,7 +841,7 @@ class packages {
             package_tag => 'puavo',
             with_extra  => false;
 
-          [ '3.13.0-55.91-generic' ]:
+          [ '3.13.0-46-generic' ]:
             pkgarch => 'amd64';
         }
       }
