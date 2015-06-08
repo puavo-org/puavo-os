@@ -1,3 +1,22 @@
+puavo-pkg (0.1.2) trusty; urgency=medium
+
+  * New release
+  * Configure puavo-pkg installer bundlepath in puavo-pkg-updater.conf.
+  * Create a license file with puavo-pkg-updater, for puavo-local-
+    config-ui.
+  * Do not dereference dirs when creating package link... prevents links
+    from link to itself (when run more than once).
+  * vstloggerpro: add license
+  * Moving puavo-pkg installer updates from puavo-ltsp (update-
+    configuration) to a new command, puavo-pkg-updater.
+  * cmaptools: run the installer as nobody
+  * spotify-client: download spotify-client-0.9.17
+  * spotify-client: provide customized indirect download mechansim
+  * spotify: fix icons and desktop file
+  * Git(d63932f8d9eed8ff7121a2d754e140a292e6a433)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 08 Jun 2015 15:39:37 +0300
+
 puavo-pkg (0.1.1) trusty; urgency=medium
 
   * New release

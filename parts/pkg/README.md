@@ -18,7 +18,7 @@ To install it to ``/usr/sbin``, run:
 To build a ``.deb`` package and install it, run:
 
     make deb
-    sudo dpkg -i ../puavo-pkg_0.1.1_all.deb
+    sudo dpkg -i ../puavo-pkg_0.1.2_all.deb
 
 ## Usage
 
