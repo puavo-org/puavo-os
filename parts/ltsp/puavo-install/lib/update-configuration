@@ -157,16 +157,7 @@ def update_wlan_configurations(restclient)
 end
 
 def update_puavopkg_installers(restclient)
-  if !File.readable?('/etc/puavo-pkg/installerbundlepath') then
-    # If the image does not have installerbundlepath configured,
-    # then we probably do not need to do anything.
-    log(Syslog::LOG_DEBUG,
-        "Not updating puavo-pkg installers, not configured.\n")
-    return
-  end
-
   log(Syslog::LOG_INFO, ">>> Updating puavo-pkg installers\n")
-
   run('puavo-pkg-updater')
 end
 
