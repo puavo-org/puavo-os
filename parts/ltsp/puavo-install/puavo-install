@@ -303,17 +303,32 @@ setup_state() {
 }
 
 update_configuration() {
-  echo "Updating configuration..."
-  if /usr/lib/puavo-ltsp-install/update-configuration; then
-    echo "  ... configuration updated."
-    if /usr/lib/puavo-ltsp-install/update-images false false; then
-      echo "  ... image updated."
-    else
-      echo "  ... image update failed (may update it later)."
+  configuration_ok=false
+
+  # Configuration update is almost mandatory for things to work properly
+  # on the first boot, so enforce it.  Image update should not be critical,
+  # at least usually.
+
+  until $configuration_ok; do
+    echo 'Updating configuration...'
+    if /usr/lib/puavo-ltsp-install/update-configuration; then
+      echo '  ... configuration updated.'
+      configuration_ok=true
     fi
-  else
-    echo "  ... a problem occurred (updating configuration later)."
-  fi
+
+    if $configuration_ok; then
+      echo 'Trying image update...'
+      if /usr/lib/puavo-ltsp-install/update-images false false; then
+        echo '  ... image updated.'
+      else
+        echo '  ... image update failed (may update it later).'
+      fi
+    else
+      echo '  ... a problem occurred when updating configuration.'
+      echo
+      read -p 'Press enter to try configuration update again.' answer
+    fi
+  done
 
   sync
 }
