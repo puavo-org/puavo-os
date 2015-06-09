@@ -157,7 +157,17 @@ def update_wlan_configurations(restclient)
 end
 
 def update_puavopkg_installers(restclient)
+  device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
+
+  unless device['personally_administered'] \
+           && File.executable?('/usr/sbin/puavo-local-config') then
+    log(Syslog::LOG_DEBUG,
+        "Not personally administered, so not updating puavo packages\n")
+    return
+  end
+
   log(Syslog::LOG_INFO, ">>> Updating puavo-pkg installers\n")
+  run('/usr/sbin/puavo-local-config', '--prepare-puavopkg')
   run('puavo-pkg-updater')
 end
 
