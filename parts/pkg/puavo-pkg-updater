@@ -55,6 +55,7 @@ def fetch_installer_bundle(remote_bundlepath, local_bundlepath)
   imageservers.each do |server|
     uri = "https://#{ server }/#{ remote_bundlepath }"
 
+    FileUtils.mkdir_p( File.dirname(local_bundlepath) )
     wget_ok = system('wget', '--ca-certificate=/etc/puavo/certs/rootca.pem',
                              "--output-document=#{ local_bundlepath }",
                              '--timestamping',
