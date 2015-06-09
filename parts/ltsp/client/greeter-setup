@@ -22,12 +22,13 @@ if [ -n "$puavo_greeter_firstlogin_background" \
   # a special background to guide the user if that path exists
   # (puavo_greeter_background_mode must be set to dynamic as well).
   puavo_greeter_background="$puavo_greeter_firstlogin_background"
+  puavo_greeter_background_mode="firstlogin"
 fi
 
 case "${puavo_greeter_background_mode}" in
   ''|static)
       ;;
-  dynamic)
+  dynamic|firstlogin)
       if [ -n "${puavo_greeter_background}" ]; then
 	  find "${BACKGROUNDS_DIR}" \( -type f -o -type l \) -printf '%P\n' \
 	      | grep -q -x "${puavo_greeter_background}" && {
