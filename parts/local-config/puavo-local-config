@@ -320,10 +320,6 @@ end
 def prepare_puavopkg()
   log(Syslog::LOG_INFO, "preparing puavo-pkg\n")
 
-  %w(/images/puavo-pkg/cache
-     /images/puavo-pkg/installers
-     /images/puavo-pkg/root).each { |dir| FileUtils.mkdir_p(dir) }
-
   File.open('/etc/puavo-pkg/puavo-pkg.conf', 'w') do |f|
     f.print(<<'EOF')
 ### This file is sourced by puavo-pkg Bash script. It must not contain
