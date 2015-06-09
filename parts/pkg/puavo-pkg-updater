@@ -92,7 +92,11 @@ def unpack_installers(local_bundlepath, installers_dir)
     current_installers_tmpdir = "#{ current_installersdir }.tmp"
 
     FileUtils.mkdir_p(current_installers_tmpdir)
-    run('tar', '-C', current_installers_tmpdir, '-x', '-f', local_bundlepath)
+    run('tar', '-C', current_installers_tmpdir,
+               '--no-same-owner',
+               '--no-same-permissions',
+               '-x',
+               '-f', local_bundlepath)
 
     make_licenses_info_file(current_installers_tmpdir)
 
