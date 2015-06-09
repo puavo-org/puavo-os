@@ -839,8 +839,10 @@ function make_local_users_config(response,
 }
 
 function open_external_link(e) {
-  var child = child_process.spawn('x-www-browser',
-                                  [ e.href ],
+  var child = child_process.spawn('chromium-browser',
+                                  [ '--app=' + e.href,
+                                    '--window-position=480,60',
+                                    '--window-size=640,580' ],
                                   { detached: true, stdio: 'ignore' });
   child.unref();
 }
