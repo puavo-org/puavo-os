@@ -4,7 +4,7 @@ module Puavo
   module Client
     module API
 
-      class Error < Exception
+      class Error < StandardError
         attr_accessor :response
         def initialize(response)
           @response = response

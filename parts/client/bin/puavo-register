@@ -100,7 +100,7 @@ class CmdLine
   end
 end
 
-class HttpAuthError < Exception; end
+class HttpAuthError < StandardError; end
 
 class HostCertificate
   def initialize

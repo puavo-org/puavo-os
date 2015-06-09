@@ -41,7 +41,7 @@ class PuavoEtc
   def write(attr, value)
     @cache[attr] = nil
     if not @@attr_paths[attr]
-      raise Exception, "Unknown Puavo Attribute #{ attr }"
+      raise "Unknown Puavo Attribute #{ attr }"
     end
     options = @@attr_paths[attr]
 

@@ -18,7 +18,7 @@ def resolv_puavo_server
                               Resolv::DNS::Resource::IN::SRV )
         "https://" + r[0].target.to_s
       end
-    rescue Exception => e
+    rescue StandardError => e
       puts "Could not lookup default puavoserver. (#{ e })"
       puts "Usage: puavo-update-certificate https://<server hostname>"
       exit
