@@ -19,8 +19,16 @@ var mc =
       fi: {
         'Laptop configuration': 'Kannettavan asetukset',
 
+        'Additional software installation': 'Lisäohjelmistojen asennus',
+
+        'The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.': 'Seuraavasta listasta voit asentaa ohjelmistoja joiden lisenssi ei mahdollista niiden esiasentamista.  Asentamalla ohjelmiston hyväksyt sen lisenssiehdot.',
+
+        'Access controls': 'Pääsyoikeudet',
+
         'Configuration needs corrections, no changes are saved.':
           'Asetukset vaativat korjausta, muutokset eivät tallennu.',
+
+        'Local user management': 'Paikallisten käyttäjien hallinta',
 
         'Add another user': 'Lisää uusi käyttäjä',
         'Local users:':     'Paikalliset käyttäjät:',
@@ -58,6 +66,14 @@ var mc =
       },
       sv: {
         'Laptop configuration': 'Laptop configuration', // XXX
+
+        'Additional software installation': 'Additional software installation', // XXX
+
+        'The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.': 'The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.', // XXX
+
+        'Access controls': 'Access controls', // XXX
+
+        'Local user management': 'Local user management', // XXX
 
         'Configuration needs corrections, no changes are saved.':
           'Inställningarna kräver korrigering, inga ändringar har sparats',
@@ -396,14 +412,10 @@ function generate_form(gui_config) {
   // software installation
   if (gui_config.show_puavopkg_controls) {
     generate_software_installation_controls(form);
-    form.appendChild( document.createElement('hr') );
   }
 
   // login-access control
-  generate_allow_logins_input(form);
-  form.appendChild( document.createElement('hr') );
-  generate_allow_remoteadmins_input(form);
-  form.appendChild( document.createElement('hr') );
+  generate_loginaccess_control(form);
 
   // managing local users
   if (gui_config.show_local_users) {
@@ -411,17 +423,32 @@ function generate_form(gui_config) {
   }
 }
 
+function generate_loginaccess_control(form) {
+  var title = document.createElement('h2');
+  title.textContent = mc('Access controls');
+  form.appendChild(title);
+
+  generate_allow_logins_input(form);
+  generate_allow_remoteadmins_input(form);
+}
+
 function generate_login_users_input(form) {
-  var title = document.createElement('div');
-  var titletext = document.createTextNode( mc('Local users:') );
+  var title = document.createElement('h2');
+  var titletext = document.createTextNode( mc('Local user management') );
   title.appendChild(titletext);
+
+  form.appendChild(title);
+
+  var subtitle = document.createElement('div');
+  var subtitletext = document.createTextNode( mc('Local users:') );
+  subtitle.appendChild(subtitletext);
 
   var add_button = document.createElement('input');
   add_button.setAttribute('type', 'button');
   add_button.setAttribute('value', mc('Add another user'));
-  title.appendChild(add_button);
+  subtitle.appendChild(add_button);
 
-  form.appendChild(title);
+  form.appendChild(subtitle);
 
   var user_inputs = document.createElement('div');
   form.appendChild(user_inputs);
@@ -569,10 +596,16 @@ function generate_one_user_create_table(parentNode, local_users_list, user_i) {
 }
 
 function generate_software_installation_controls(form) {
+  var title = document.createElement('h2');
+  title.textContent = mc('Additional software installation');
+  form.appendChild(title);
+
+  var textdiv = document.createElement('div');
+  textdiv.textContent = mc('The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.');
+  form.appendChild(textdiv);
+
   var table = document.createElement('table');
-
   add_licenses(table, get_licenses());
-
   form.appendChild(table);
 }
 
