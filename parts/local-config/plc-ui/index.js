@@ -23,6 +23,9 @@ var mc =
 
         'The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.': 'Seuraavasta listasta voit asentaa ohjelmistoja joiden lisenssi ei mahdollista niiden esiasentamista.  Asentamalla ohjelmiston hyväksyt sen lisenssiehdot.',
 
+        'ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE.':
+           'HYVÄKSY KAIKKI LISENSSIT JA ASENNA KAIKKI OHJELMAT.',
+
         'Access controls': 'Pääsyoikeudet',
 
         'Configuration needs corrections, no changes are saved.':
@@ -123,29 +126,38 @@ function add_action_button(pkgname, errormsg_element, sw_state) {
                     ? 'press_install'
                     : 'press_uninstall';
 
-  create_action_button_with_initial_state(button,
-                                          button_state,
-                                          pkgname,
-                                          errormsg_element);
+  var install_pkg_fn
+    = create_action_button_with_initial_state(button,
+                                              button_state,
+                                              pkgname,
+                                              errormsg_element);
 
-  return button;
+  return { button: button, install_pkg_fn: install_pkg_fn };
 }
 
-function add_licenses(table, licenses) {
-  var add_each_license
+function add_software_controls(table, licenses) {
+  var install_pkg_functions = [];
+
+  var add_each_pkgcontrol
     = function (sw_states) {
         sorted_pkgnames = Object.keys(licenses).sort();
         for (var i in sorted_pkgnames) {
           var pkgname = sorted_pkgnames[i];
           var license_url = licenses[pkgname];
-          add_one_license(table, pkgname, license_url, sw_states[pkgname]);
+          var install_pkg_fn = add_one_pkgcontrol(table,
+                                                  pkgname,
+                                                  license_url,
+                                                  sw_states[pkgname]);
+          install_pkg_functions.push(install_pkg_fn);
         }
       };
 
-  check_software_states(add_each_license, Object.keys(licenses));
+  check_software_states(add_each_pkgcontrol, Object.keys(licenses));
+
+  return install_pkg_functions;
 }
 
-function add_one_license(parentNode, pkgname, license_url, sw_state) {
+function add_one_pkgcontrol(parentNode, pkgname, license_url, sw_state) {
   var tr = document.createElement('tr');
 
   // create license name element
@@ -166,13 +178,17 @@ function add_one_license(parentNode, pkgname, license_url, sw_state) {
   // create action button and error element
   var action_td = document.createElement('td');
   var action_errormsg_element = document.createElement('td');
-  action_td.appendChild( add_action_button(pkgname,
-                                           action_errormsg_element,
-                                           sw_state) );
+  button_and_install_action = add_action_button(pkgname,
+                                                action_errormsg_element,
+                                                sw_state);
+  action_td.appendChild(button_and_install_action.button);
+
   tr.appendChild(action_td);
   tr.appendChild(action_errormsg_element);
 
   parentNode.appendChild(tr);
+
+  return button_and_install_action.install_pkg_fn;
 }
 
 function check_access() {
@@ -233,6 +249,8 @@ function create_action_button_with_initial_state(button,
                                                  initial_state,
                                                  pkgname,
                                                  errormsg_element) {
+  /* XXX we could make this a real class instead? */
+
   var styles = {
     install:        'background-color: orange',
     installing_a:   'background-color: yellow',
@@ -274,9 +292,12 @@ function create_action_button_with_initial_state(button,
         state_functions[ !error ? 'press_install' : 'press_uninstall' ]();
       };
 
+  var button_state = initial_state;
+
   var state_functions = {
     installing:
       function() {
+        button_state = 'installing';
         button.textContent = mc('Installing...');
         button.setAttribute('style', styles.installing_a);
         setup_action(function(e) { e.preventDefault(); });
@@ -285,34 +306,9 @@ function create_action_button_with_initial_state(button,
                                                    'installing_b'); },
                         500);
       },
-    press_install:
-      function() {
-        button.textContent = mc('INSTALL');
-        button.setAttribute('style', styles.install);
-        setup_action(function(e) {
-                       e.preventDefault();
-                       handle_pkg('install',
-                                  pkgname,
-                                  errormsg_element,
-                                  install_returned);
-                       state_functions.installing();
-                     });
-      },
-    press_uninstall:
-      function() {
-        button.textContent = mc('UNINSTALL');
-        button.setAttribute('style', styles.uninstall);
-        setup_action(function(e) {
-                       e.preventDefault();
-                       handle_pkg('uninstall',
-                                  pkgname,
-                                  errormsg_element,
-                                  uninstall_returned);
-                       state_functions.uninstalling();
-                     });
-      },
     uninstalling:
       function() {
+        button_state = 'uninstalling';
         button.textContent = mc('Uninstalling...');
         button.setAttribute('style', styles.uninstalling_a);
         setup_action(function(e) { e.preventDefault(); });
@@ -323,7 +319,45 @@ function create_action_button_with_initial_state(button,
       },
   };
 
+  var install_fn = function() {
+                     handle_pkg('install',
+                                pkgname,
+                                errormsg_element,
+                                install_returned);
+                     state_functions.installing();
+                   };
+
+  var uninstall_fn = function() {
+                       handle_pkg('uninstall',
+                                  pkgname,
+                                  errormsg_element,
+                                  uninstall_returned);
+                       state_functions.uninstalling();
+                     };
+
+  state_functions.press_install
+    = function() {
+        button_state = 'press_install';
+        button.textContent = mc('INSTALL');
+        button.setAttribute('style', styles.install);
+        setup_action(function(e) { e.preventDefault(); install_fn(); });
+      };
+  state_functions.press_uninstall
+    = function() {
+        button_state = 'press_uninstall';
+        button.textContent = mc('UNINSTALL');
+        button.setAttribute('style', styles.uninstall);
+        setup_action(function(e) { e.preventDefault(); uninstall_fn(); });
+      };
+
   state_functions[initial_state]();
+
+  // return a function that enables pressing "install" if in such a state
+  return function() {
+    if (button_state === 'press_install') {
+      install_fn();
+    }
+  }
 }
 
 function generate_allow_logins_input(form) {
@@ -596,6 +630,9 @@ function generate_one_user_create_table(parentNode, local_users_list, user_i) {
 }
 
 function generate_software_installation_controls(form) {
+  var licenses = get_licenses();
+  if (Object.keys(licenses).length === 0) { return; }
+
   var title = document.createElement('h2');
   title.textContent = mc('Additional software installation');
   form.appendChild(title);
@@ -604,19 +641,33 @@ function generate_software_installation_controls(form) {
   textdiv.textContent = mc('The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.');
   form.appendChild(textdiv);
 
-  var table = document.createElement('table');
-  add_licenses(table, get_licenses());
-  form.appendChild(table);
+  var pkgcontrols_table = document.createElement('table');
+  var install_pkg_functions = add_software_controls(pkgcontrols_table,
+                                                    licenses);
+
+  var install_all_button = document.createElement('button');
+  install_all_button.setAttribute('style', 'background-color: orange');
+  install_all_button.textContent
+    = mc('ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE.');
+  install_all_button.addEventListener(
+    'click',
+    function(e) { e.preventDefault();
+                  for (i in install_pkg_functions) {
+                    install_pkg_functions[i]();
+                  }
+                });
+
+  form.appendChild(install_all_button);
+  form.appendChild(pkgcontrols_table);
 }
 
 function get_licenses() {
-  licenses_json_path = '/images/puavo-pkg/installers/installers/licenses.json'
+  licenses_json_path = '/images/puavo-pkg/installers/installers/licenses.json';
 
   try {
     return JSON.parse( fs.readFileSync(licenses_json_path) );
   } catch(ex) {
-    // XXX how to appropriately tell if something is wrong?
-    alert(ex);
+    alert('Could not read the list of additional software packages: ' + ex);
     return {};
   }
 }
