@@ -1,4 +1,5 @@
-packagedirs = $(sort $(dir $(wildcard */)))
+packagedirs = adobe-flashplugin/ adobe-reader/ cmaptools/ dropbox/ \
+	google-chrome/ google-earth/ oracle-java/ skype/ vstloggerpro/
 packagefiles = $(packagedirs:%/=%.tar.gz)
 
 all: $(packagefiles) puavo-pkg-installers-bundle.tar
