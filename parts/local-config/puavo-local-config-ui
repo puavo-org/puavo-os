@@ -10,4 +10,24 @@ if [ "$1" = "--auto" ]; then
   test -r /state/etc/puavo/local/config.json && exit 0
 fi
 
-nw /usr/lib/puavo-local-config-ui/
+licenses_path='/images/puavo-pkg/installers/installers/licenses.json'
+
+run_nodewebkit() { nw /usr/lib/puavo-local-config-ui/; }
+
+if [ -e "$licenses_path" ]; then
+  (
+    # Wait for 15 seconds for puavo-pkg-updater to do its thing.  It should be
+    # fast, so if this flock fails, something is likely wrong.
+    if ! flock -s -w 15 3; then
+      echo "could not get flock on $licenses_path" >&2
+      exit 1
+    fi
+
+    # wrap puavo-local-config-ui around this flock so that licenses.json
+    # does not change underneath it.
+    run_nodewebkit
+  ) 3</images/puavo-pkg/installers/installers/licenses.json
+else
+  # puavo-local-config-ui can be used without licenses-stuff.
+  run_nodewebkit
+fi
