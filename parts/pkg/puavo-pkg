@@ -387,7 +387,8 @@ download_upstream_pack()
             --no-check-certificate \
             --no-cookies \
             --input-file "${pkg_dir}/upstream_pack_url" \
-            --output-document "${upstream_tmppack}" || {
+            --output-document "${upstream_tmppack}" \
+            --progress=dot:mega || {
             rm -rf "${upstream_tmppack}"
             return 1
         }

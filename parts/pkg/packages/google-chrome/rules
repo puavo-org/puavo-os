@@ -83,6 +83,7 @@ EOF
             --no-check-certificate \
             --no-cookies \
             --output-document "${tmpfile}" \
+            --progress=dot:mega \
             "${baseurl}/dists/stable/main/binary-i386/Packages" || {
             rm -f "${tmpfile}"
             exit 1

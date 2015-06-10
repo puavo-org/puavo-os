@@ -44,11 +44,11 @@ case "${command}" in
         upstream_pack=$1
         wget \
             --no-use-server-timestamps \
-            --no-verbose \
             --no-check-certificate \
             --no-cookies \
             --header "Cookie: oraclelicense=accept-securebackup-cookie" \
             --output-document "${upstream_pack}" \
+            --progress=dot:mega \
             http://download.oracle.com/otn-pub/java/jdk/7u67-b01/jre-7u67-linux-i586.tar.gz
         ;;
 

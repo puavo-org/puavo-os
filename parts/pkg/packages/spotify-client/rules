@@ -78,6 +78,7 @@ case "${command}" in
             --no-check-certificate \
             --no-cookies \
             --output-document "${tmpfile}" \
+            --progress=dot:mega \
             "${baseurl}/dists/stable/non-free/binary-amd64/Packages" || {
             rm -f "${tmpfile}"
             exit 1
