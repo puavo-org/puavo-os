@@ -222,7 +222,11 @@ function check_software_states(cb, available_packages) {
         stdout.toString()
               .split("\n")
               .forEach(function (line) {
-                         if (line !== '') { sw_states[line] = 'INSTALLED'; }
+                         if (line !== '') {
+                           fields = line.split(/\s+/);
+                           var pkgname = fields[0];
+                           sw_states[pkgname] = 'INSTALLED';
+                         }
                        });
 
         cb(sw_states);
