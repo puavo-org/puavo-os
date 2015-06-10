@@ -1,9 +1,0 @@
-#!/bin/sh
-
-set -eu
-
-installdir=$1
-
-update-alternatives \
-    --install /usr/lib/mozilla/plugins/flashplugin-alternative.so \
-    mozilla-flashplugin "${installdir}/libflashplayer.so" 50

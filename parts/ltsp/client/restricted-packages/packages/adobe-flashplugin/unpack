@@ -1,7 +1,0 @@
-#!/bin/sh
-
-set -eu
-
-upstream_pack=$1
-installdir=$2
-tar --no-same-owner -z -x -f "${upstream_pack}" -C "${installdir}"
