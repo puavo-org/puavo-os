@@ -81,11 +81,44 @@ def get_config()
   JSON.parse( IO.read('/etc/puavo-pkg/puavo-pkg-updater.conf') )
 end
 
+def flock_licenses_json(installers_dir)
+  licenses_json_path = "#{ installers_dir }/installers/licenses.json"
+
+  begin
+    licenses_json_file = File.open(licenses_json_path)
+
+    # Get exclusive lock on licenses.json, because we are going to update that.
+    if licenses_json_file.flock(File::LOCK_EX|File::LOCK_NB) then
+      return [ 'LOCK', licenses_json_file ]
+    end
+
+    # If someone else has a lock, we will exit with no failure, because
+    # even though we could not do an update, things should be okay.
+    log(Syslog::LOG_NOTICE,
+        "Something is holding a lock on %s,\n" \
+          + "not updating puavopkg installers.\n",
+        licenses_json_path)
+    licenses_json_file.close
+    [ 'LOCKHELD', nil ]
+  rescue Errno::ENOENT
+    # If file does not exist, we go without a lock,
+    # because we are going to create that file.
+  end
+
+  [ 'NOLOCK', nil ]
+end
+
 def unpack_installers(local_bundlepath, installers_dir)
   latest_changetime = File.stat(local_bundlepath).mtime
 
   current_installersdir \
     = "#{ installers_dir }/installers.#{ latest_changetime.to_i }"
+
+  # We flock the licenses.json file so that puavo-local-config-ui can depend on
+  # its software list and urls to be current with the contents of installer
+  # directories.
+  lockstatus, licenses_json_file = * flock_licenses_json(installers_dir)
+  return if lockstatus == 'LOCKHELD'
 
   if !File.directory?(current_installersdir) then
     log(Syslog::LOG_INFO, "Unpacking updated puavo-pkg installers\n")
@@ -111,6 +144,11 @@ def unpack_installers(local_bundlepath, installers_dir)
     log(Syslog::LOG_INFO, "Updating link to new puavo-pkg installers\n")
     File.symlink(new_linktarget, "#{ installerslinkpath }.tmp")
     File.rename("#{ installerslinkpath }.tmp", installerslinkpath)
+  end
+
+  if licenses_json_file then
+    # flock(File::LOCK_UN) as a side effect when needed
+    licenses_json_file.close
   end
 
   # clean up old installer bundles
