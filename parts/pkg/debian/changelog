@@ -1,3 +1,14 @@
+puavo-pkg (0.1.6) trusty; urgency=medium
+
+  * New release
+  * flock licenses.json with exclusive lock file before updating
+    installers.  This is so that puavo-local-config-ui would always have
+    accurate information about packages, and not have it changed
+    underneath it (like changing license urls, removed packages etc.).
+  * Git(b4e8ba56f76bb0df7c7dbdf6eaf82131929af78d)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Wed, 10 Jun 2015 12:44:11 +0300
+
 puavo-pkg (0.1.5) trusty; urgency=medium
 
   * New release
