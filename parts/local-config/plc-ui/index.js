@@ -682,7 +682,9 @@ function handle_pkg(mode, pkgname, errormsg_element, cb) {
         cb(error);
       };
 
-  child_process.execFile('sudo', cmd_args, {}, handler);
+  // buffer program output up to 2Mb (fails if there is more output)
+  options = { maxBuffer: (2 * 1024 * 1024) };
+  child_process.execFile('sudo', cmd_args, options, handler);
 }
 
 function hash_password(password, cb) {
