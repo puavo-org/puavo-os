@@ -205,7 +205,7 @@ reconfigure_pkg()
 
 reconfigure_all_pkgs()
 {
-    local pkgs retval
+    local pkg pkgs retval
 
     pkgs=$(list_installed_pkgs) || return 1
     retval=0
@@ -219,7 +219,7 @@ reconfigure_all_pkgs()
 
 unconfigure_pkg()
 {
-    local pkg_name pkg_link pkg_dir upstream_dir
+    local pkg_name pkg_link pkg_dir upstream_dir pkg_version
 
     pkg_name=$1
     pkg_version=$2
@@ -537,7 +537,7 @@ remove_pkg()
 
 remove_all_pkgs()
 {
-    local pkgs retval
+    local pkg pkgs retval
 
     pkgs=$(list_installed_pkgs) || return 1
     retval=0
