@@ -101,12 +101,16 @@ list_installed_pkgs()
 
 list_installed_pkgs_with_versions()
 {
-    local pkg_dir pkg_name pkg_version
+    local pkg_dir pkg_name pkg_version col1_len
+
+    col1_len=$(awk 'BEGIN { max = 0 }
+                          { max = (length($0) > max) ? length($0) : max }
+                    END   { print max }' < <(list_installed_pkgs)) || return 1
 
     while read -d '' pkg_dir; do
         pkg_name=$(get_pkg_name "${pkg_dir}") || return 1
         pkg_version=$(get_pkg_version "${pkg_dir}") || return 1
-        echo "${pkg_name} ${pkg_version}" || return 1
+        printf "%-${col1_len}s %s\n" "${pkg_name}" "${pkg_version}"
     done < <(list_installed_pkg_dirs)
 }
 
