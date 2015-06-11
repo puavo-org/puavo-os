@@ -11,7 +11,7 @@ puavo-pkg-installers-bundle.tar: $(packagefiles)
 # deterministically created and thus different only when their contents have
 # changed (we use tar-archive contents as installer versions).
 %.tar.gz: %/ %/*
-	tar --mtime='1970-01-01 02:00:00' -cv -f - $< | gzip -n > "$@"
+	tar --mtime='2000-01-01 00:00:00' -cv -f - $< | gzip -n > "$@"
 
 clean:
 	rm -rf $(packagefiles) puavo-pkg-installers-bundle.tar
