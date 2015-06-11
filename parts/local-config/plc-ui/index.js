@@ -135,15 +135,19 @@ function add_action_button(pkgname, errormsg_element, sw_state) {
   return { button: button, install_pkg_fn: install_pkg_fn };
 }
 
-function add_software_controls(table, licenses) {
+function add_software_controls(table, packages) {
   var install_pkg_functions = [];
 
   var add_each_pkgcontrol
     = function (sw_states) {
-        sorted_pkgnames = Object.keys(licenses).sort();
+        sorted_pkgnames = Object.keys(packages).sort();
         for (var i in sorted_pkgnames) {
           var pkgname = sorted_pkgnames[i];
-          var license_url = licenses[pkgname];
+          var license_url = packages[pkgname].license_url;
+          if (!license_url) {
+            alert('Package ' + pkgname + ' is missing license url');
+            continue;
+          }
           var install_pkg_fn = add_one_pkgcontrol(table,
                                                   pkgname,
                                                   license_url,
@@ -152,7 +156,7 @@ function add_software_controls(table, licenses) {
         }
       };
 
-  check_software_states(add_each_pkgcontrol, Object.keys(licenses));
+  check_software_states(add_each_pkgcontrol, Object.keys(packages));
 
   return install_pkg_functions;
 }
@@ -634,8 +638,8 @@ function generate_one_user_create_table(parentNode, local_users_list, user_i) {
 }
 
 function generate_software_installation_controls(form) {
-  var licenses = get_licenses();
-  if (Object.keys(licenses).length === 0) { return; }
+  var packages = get_packages();
+  if (Object.keys(packages).length === 0) { return; }
 
   var title = document.createElement('h2');
   title.textContent = mc('Additional software installation');
@@ -647,7 +651,7 @@ function generate_software_installation_controls(form) {
 
   var pkgcontrols_table = document.createElement('table');
   var install_pkg_functions = add_software_controls(pkgcontrols_table,
-                                                    licenses);
+                                                    packages);
 
   var install_all_button = document.createElement('button');
   install_all_button.setAttribute('style', 'background-color: orange');
@@ -665,11 +669,11 @@ function generate_software_installation_controls(form) {
   form.appendChild(pkgcontrols_table);
 }
 
-function get_licenses() {
-  licenses_json_path = '/images/puavo-pkg/installers/installers/licenses.json';
+function get_packages() {
+  packages_json_path = '/images/puavo-pkg/installers/installers/packages.json';
 
   try {
-    return JSON.parse( fs.readFileSync(licenses_json_path) );
+    return JSON.parse( fs.readFileSync(packages_json_path) );
   } catch(ex) {
     alert('Could not read the list of additional software packages: ' + ex);
     return {};
