@@ -18,6 +18,17 @@ g_puavo_pkg_cachedir=/var/cache/puavo-pkg
 g_puavo_pkg_rootdir=/var/lib/puavo-pkg
 g_puavo_img_filename=noimage
 
+LOG_EMERG=0
+LOG_ALERT=1
+LOG_CRIT=2
+LOG_ERR=3
+LOG_WARNING=4
+LOG_NOTICE=5
+LOG_INFO=6
+LOG_DEBUG=7
+
+g_log_level=${LOG_INFO}
+
 print_help_and_exit()
 {
     echo "Usage: puavo-pkg [OPTIONS] [COMMAND] [COMMAND_ARGS]"
@@ -26,6 +37,8 @@ print_help_and_exit()
     echo
     echo "Options:"
     echo "  -h, --help                     print this help and exit"
+    echo "  -q, --quiet                    less verbose output, can be given"
+    echo "                                 multiple times to silence puavo-pkg"
     echo
     echo "Commands:"
     echo "  install INSTALLER              install package with an installer"
@@ -47,17 +60,23 @@ print_help_and_exit()
 
 log_error()
 {
-    echo "ERROR: $@" >&2
+    if [ ${g_log_level} -ge ${LOG_ERR} ]; then
+        echo "ERROR: $@" >&2
+    fi
 }
 
 log_info()
 {
-    echo "INFO: $@" >&2
+    if [ ${g_log_level} -ge ${LOG_INFO} ]; then
+        echo "INFO: $@" >&2
+    fi
 }
 
 log_warning()
 {
-    echo "WARNING: $@" >&2
+    if [ ${g_log_level} -ge ${LOG_WARNING} ]; then
+        echo "WARNING: $@" >&2
+    fi
 }
 
 list_installed_pkgs()
@@ -596,6 +615,12 @@ while [ $# -gt 0 ]; do
         -h|--help)
             shift
             print_help_and_exit
+            ;;
+        -q|--quiet)
+            shift
+            if [ ${g_log_level} -gt 0 ]; then
+                g_log_level=$((g_log_level - 1))
+            fi
             ;;
         --)
             shift
