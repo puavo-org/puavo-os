@@ -1,3 +1,13 @@
+puavo-pkg (0.1.14) trusty; urgency=medium
+
+  * New release
+  * Add a new --check-for-upgrades switch to puavo-pkg-updater that can
+    be used to check if there are packages to upgrade (new versions of
+    installed packages exist).
+  * Git(d203da6daa1330b131da2f3ffb790fb25faa0eab)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 11 Jun 2015 13:41:33 +0300
+
 puavo-pkg (0.1.13) trusty; urgency=medium
 
   * New release
