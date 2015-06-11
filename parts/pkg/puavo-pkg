@@ -79,17 +79,21 @@ log_warning()
     fi
 }
 
-list_installed_pkgs()
+list_installed_pkg_dirs()
 {
-    local pkg_dir pkg_name
-
     find "${g_puavo_pkg_rootdir}/packages" \
         -maxdepth 2                        \
         -mindepth 2                        \
         -type l                            \
         -name "${g_puavo_img_filename}"    \
-        -exec readlink -z -e {} \;         \
-        | sort -z | while read -d '' pkg_dir; do
+        -exec readlink -z -e {} \; | sort -z
+}
+
+list_installed_pkgs()
+{
+    local pkg_dir pkg_name
+
+    list_installed_pkg_dirs | while read -d '' pkg_dir; do
         pkg_name=$(get_pkg_name "${pkg_dir}") || return 1
         echo "${pkg_name}" || return 1
     done
@@ -99,13 +103,7 @@ list_installed_pkgs_with_versions()
 {
     local pkg_dir pkg_name pkg_version
 
-    find "${g_puavo_pkg_rootdir}/packages" \
-        -maxdepth 2                        \
-        -mindepth 2                        \
-        -type l                            \
-        -name "${g_puavo_img_filename}"    \
-        -exec readlink -z -e {} \;         \
-        | sort -z | while read -d '' pkg_dir; do
+    list_installed_pkg_dirs | while read -d '' pkg_dir; do
         pkg_name=$(get_pkg_name "${pkg_dir}") || return 1
         pkg_version=$(get_pkg_version "${pkg_dir}") || return 1
         echo "${pkg_name} ${pkg_version}" || return 1
