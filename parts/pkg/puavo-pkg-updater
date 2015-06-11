@@ -1,10 +1,22 @@
 #!/usr/bin/ruby1.9.1
 
 require 'fileutils'
+require 'getoptlong'
 require 'json'
 require 'open3'
 require 'resolv'
 require 'syslog'
+
+def print_help()
+   puts <<-EOF
+puavo-pkg-updater [OPTIONS]
+
+-h, --help                 show help
+
+    --update-installers    fetch and extract new puavo-pkg installers bundle
+    --upgrade-packages     upgrade all installed (puavo-pkg) packages
+  EOF
+end
 
 def syslog(channel, priority, *args)
   Syslog.log(priority, *args)
@@ -194,11 +206,50 @@ def update_installers(config)
   unpack_installers(local_bundlepath, installers_dir)
 end
 
+def upgrade_packages(config)
+  # XXX unimplemented
+end
+
+update_installers = false
+upgrade_packages  = false
+
+begin
+  opts = GetoptLong.new(
+           [ '--help', '-h',        GetoptLong::NO_ARGUMENT, ],
+           [ '--update-installers', GetoptLong::NO_ARGUMENT, ],
+           [ '--upgrade-packages',  GetoptLong::NO_ARGUMENT, ])
+
+  opts.each do |opt, arg|
+    case opt
+      when '--help'
+        print_help()
+        exit(0)
+      when '--update-installers'
+        update_installers = true
+      when '--upgrade-packages'
+        upgrade_packages = true
+    end
+  end
+rescue GetoptLong::InvalidOption => e
+  print_help()
+  exit(1)
+end
+
+unless update_installers || upgrade_packages; then
+  print_help()
+  exit(1)
+end
+
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
 begin
   config = get_config()
-  update_installers(config)
+  if update_installers
+    update_installers(config)
+  end
+  if upgrade_packages
+    upgrade_packages(config)
+  end
 ensure
   Syslog.close()
 end
