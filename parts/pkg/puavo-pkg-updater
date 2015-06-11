@@ -1,5 +1,6 @@
 #!/usr/bin/ruby1.9.1
 
+require 'digest/md5'
 require 'fileutils'
 require 'getoptlong'
 require 'json'
@@ -175,7 +176,13 @@ def make_packages_info_file(current_installers_tmpdir)
   packages = {}
 
   Dir.glob("#{ current_installers_tmpdir }/*.tar.gz") do |tarpath|
-    pkgname = File.basename(tarpath, '.tar.gz')
+    begin
+      md5sum = Digest::MD5.hexdigest(IO.read(tarpath))
+    rescue StandardError => e
+      log(Syslog::LOG_ERR, "Problem in calculating md5sum of %s\n", tarpath)
+      next
+    end
+
     license_url, status = Open3.capture2('puavo-pkg', 'license', tarpath)
     if status.exitstatus != 0 then
       log(Syslog::LOG_ERR,
@@ -185,7 +192,11 @@ def make_packages_info_file(current_installers_tmpdir)
       next
     end
 
-    packages[pkgname] = { 'license_url' => license_url.chomp }
+    pkgname = File.basename(tarpath, '.tar.gz')
+    packages[pkgname] = {
+      'license_url' => license_url.chomp,
+      'md5sum'      => md5sum,
+    }
   end
 
   packages_info_path = "#{ current_installers_tmpdir }/packages.json"
