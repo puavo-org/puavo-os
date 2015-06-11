@@ -1,3 +1,13 @@
+puavo-pkg (0.1.13) trusty; urgency=medium
+
+  * New release
+  * Add option to --quiet output
+  * Change the tar timestamp to year 2000, because 1970 was "improbably
+    old".
+  * Git(0bad916f46d88910280a9b2c501cf6d445d832d4)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 11 Jun 2015 13:01:56 +0300
+
 puavo-pkg (0.1.12) trusty; urgency=medium
 
   * New release
