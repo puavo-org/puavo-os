@@ -1,3 +1,15 @@
+puavo-pkg (0.1.12) trusty; urgency=medium
+
+  * New release
+  * Create installer tar-archives with normalized/unset timestampes, so
+    that they are deterministically created.  Because we use tar-archive
+    contents as installer versions (or more exactly hashes calculated
+    from contents), we do not want the tar-archive contents to change
+    unless there are some actual changes in an installer.
+  * Git(7c2443dedc0a76e9da55bc44bcc542bed3a84cb0)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 11 Jun 2015 11:35:23 +0300
+
 puavo-pkg (0.1.11) trusty; urgency=medium
 
   * New release
