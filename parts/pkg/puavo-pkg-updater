@@ -218,7 +218,59 @@ def update_installers(config)
 end
 
 def upgrade_packages(config)
-  # XXX unimplemented
+  installed_packages, status = Open3.capture2('puavo-pkg', 'list')
+  if status.exitstatus != 0 then
+    log(Syslog::LOG_ERR,
+        "puavo-pkg list returned error code: %d\n",
+	status.exitstatus)
+    raise 'Failed to upgrade packages, ' \
+            + "'puavo-pkg list' returned error code #{ status.exitstatus }"
+  end
+
+  packages_json_path = "#{ config['installers_dir'] }/installers/packages.json"
+
+  available_packages = JSON.parse( IO.read(packages_json_path) )
+
+  packages_to_upgrade = []
+
+  installed_packages.split("\n").each do |line|
+    pkgname, md5sum = * line.split(/\s+/)
+    unless available_packages[pkgname] \
+             && available_packages[pkgname]['md5sum'] then
+      log(Syslog::LOG_NOTICE,
+          "Package %s is installed but has no installable version available\n",
+          pkgname)
+      next
+    end
+
+    available_package_md5sum = available_packages[pkgname]['md5sum']
+
+    if md5sum != available_package_md5sum then
+      packages_to_upgrade << pkgname
+    end
+  end
+
+  if packages_to_upgrade.empty? then
+    log(Syslog::LOG_INFO,
+        "Available package versions match currently installed packages, " \
+          + "not upgrading any packages.\n")
+    return
+  end
+
+  packages_to_upgrade.each do |pkgname|
+    tarball = "#{ config['installers_dir'] }/installers/#{ pkgname }.tar.gz"
+
+    begin
+      run('puavo-pkg', 'install', tarball)
+    rescue StandardError => e
+      log(Syslog::LOG_ERR,
+          "Failed to install a different version of %s from %s: %s\n",
+          pkgname,
+          tarball,
+          e.message)
+      next
+    end
+  end
 end
 
 update_installers = false
