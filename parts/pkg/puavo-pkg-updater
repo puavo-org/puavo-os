@@ -14,6 +14,9 @@ puavo-pkg-updater [OPTIONS]
 
 -h, --help                 show help
 
+    --check-for-upgrades   check if there are packages to upgrade
+                             (returns success if there is,
+                              conflicts with --upgrade-packages)
     --update-installers    fetch and extract new puavo-pkg installers bundle
     --upgrade-packages     upgrade all installed (puavo-pkg) packages
   EOF
@@ -217,13 +220,13 @@ def update_installers(config)
   unpack_installers(local_bundlepath, installers_dir)
 end
 
-def upgrade_packages(config)
+def get_packages_to_upgrade(config)
   installed_packages, status = Open3.capture2('puavo-pkg', 'list')
   if status.exitstatus != 0 then
     log(Syslog::LOG_ERR,
         "puavo-pkg list returned error code: %d\n",
-	status.exitstatus)
-    raise 'Failed to upgrade packages, ' \
+        status.exitstatus)
+    raise 'Failed to get a list of packages to upgrade, ' \
             + "'puavo-pkg list' returned error code #{ status.exitstatus }"
   end
 
@@ -250,6 +253,12 @@ def upgrade_packages(config)
     end
   end
 
+  packages_to_upgrade
+end
+
+def upgrade_packages(config)
+  packages_to_upgrade = get_packages_to_upgrade(config)
+
   if packages_to_upgrade.empty? then
     log(Syslog::LOG_INFO,
         "Available package versions match currently installed packages, " \
@@ -273,24 +282,34 @@ def upgrade_packages(config)
   end
 end
 
-update_installers = false
-upgrade_packages  = false
+def upgrades_available(config)
+  packages_to_upgrade = get_packages_to_upgrade(config)
+  !packages_to_upgrade.empty?
+end
+
+
+check_for_upgrades_flag = false
+update_installers_flag  = false
+upgrade_packages_flag   = false
 
 begin
   opts = GetoptLong.new(
-           [ '--help', '-h',        GetoptLong::NO_ARGUMENT, ],
-           [ '--update-installers', GetoptLong::NO_ARGUMENT, ],
-           [ '--upgrade-packages',  GetoptLong::NO_ARGUMENT, ])
+           [ '--help', '-h',         GetoptLong::NO_ARGUMENT, ],
+           [ '--check-for-upgrades', GetoptLong::NO_ARGUMENT, ],
+           [ '--update-installers',  GetoptLong::NO_ARGUMENT, ],
+           [ '--upgrade-packages',   GetoptLong::NO_ARGUMENT, ])
 
   opts.each do |opt, arg|
     case opt
       when '--help'
         print_help()
         exit(0)
+      when '--check-for-upgrades'
+        check_for_upgrades_flag = true
       when '--update-installers'
-        update_installers = true
+        update_installers_flag = true
       when '--upgrade-packages'
-        upgrade_packages = true
+        upgrade_packages_flag = true
     end
   end
 rescue GetoptLong::InvalidOption => e
@@ -298,7 +317,11 @@ rescue GetoptLong::InvalidOption => e
   exit(1)
 end
 
-unless update_installers || upgrade_packages; then
+action_flag_set = check_for_upgrades_flag     \
+                    || update_installers_flag \
+                    || upgrade_packages_flag
+
+if !action_flag_set || (check_for_upgrades_flag && upgrade_packages_flag) then
   print_help()
   exit(1)
 end
@@ -307,12 +330,14 @@ Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
 begin
   config = get_config()
-  if update_installers
-    update_installers(config)
+
+  if update_installers_flag then update_installers(config) end
+
+  if check_for_upgrades_flag then
+    exit( upgrades_available(config) ? 0 : 1 )
   end
-  if upgrade_packages
-    upgrade_packages(config)
-  end
+
+  if upgrade_packages_flag then upgrade_packages(config) end
 ensure
   Syslog.close()
 end
