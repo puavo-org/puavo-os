@@ -1,3 +1,16 @@
+puavo-pkg (0.1.11) trusty; urgency=medium
+
+  * New release
+  * Implement puavo-pkg-updater --upgrade-packages.
+  * Add md5sums of all puavo-packages to packages.json file (those
+    function as version strings of a kind).
+  * Install package information to packages.json (instead of
+    licenses.json), licenses urls are probably only one thing we want to
+    store there.
+  * Git(28c59903df9d75a0883d0f77e642221e406e03e9)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 11 Jun 2015 11:04:23 +0300
+
 puavo-pkg (0.1.10) trusty; urgency=medium
 
   * New release
