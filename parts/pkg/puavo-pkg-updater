@@ -93,15 +93,15 @@ def get_config()
   JSON.parse( IO.read('/etc/puavo-pkg/puavo-pkg-updater.conf') )
 end
 
-def flock_licenses_json(installers_dir)
-  licenses_json_path = "#{ installers_dir }/installers/licenses.json"
+def flock_packages_json(installers_dir)
+  packages_json_path = "#{ installers_dir }/installers/packages.json"
 
   begin
-    licenses_json_file = File.open(licenses_json_path)
+    packages_json_file = File.open(packages_json_path)
 
-    # Get exclusive lock on licenses.json, because we are going to update that.
-    if licenses_json_file.flock(File::LOCK_EX|File::LOCK_NB) then
-      return [ 'LOCK', licenses_json_file ]
+    # Get exclusive lock on packages.json, because we are going to update that.
+    if packages_json_file.flock(File::LOCK_EX|File::LOCK_NB) then
+      return [ 'LOCK', packages_json_file ]
     end
 
     # If someone else has a lock, we will exit with no failure, because
@@ -109,8 +109,8 @@ def flock_licenses_json(installers_dir)
     log(Syslog::LOG_NOTICE,
         "Something is holding a lock on %s,\n" \
           + "not updating puavopkg installers.\n",
-        licenses_json_path)
-    licenses_json_file.close
+        packages_json_path)
+    packages_json_file.close
     [ 'LOCKHELD', nil ]
   rescue Errno::ENOENT
     # If file does not exist, we go without a lock,
@@ -126,10 +126,10 @@ def unpack_installers(local_bundlepath, installers_dir)
   current_installersdir \
     = "#{ installers_dir }/installers.#{ latest_changetime.to_i }"
 
-  # We flock the licenses.json file so that puavo-local-config-ui can depend on
+  # We flock the packages.json file so that puavo-local-config-ui can depend on
   # its software list and urls to be current with the contents of installer
   # directories.
-  lockstatus, licenses_json_file = * flock_licenses_json(installers_dir)
+  lockstatus, packages_json_file = * flock_packages_json(installers_dir)
   return if lockstatus == 'LOCKHELD'
 
   if !File.directory?(current_installersdir) then
@@ -144,7 +144,7 @@ def unpack_installers(local_bundlepath, installers_dir)
                '-x',
                '-f', local_bundlepath)
 
-    make_licenses_info_file(current_installers_tmpdir)
+    make_packages_info_file(current_installers_tmpdir)
 
     FileUtils.mv(current_installers_tmpdir, current_installersdir)
   end
@@ -158,9 +158,9 @@ def unpack_installers(local_bundlepath, installers_dir)
     File.rename("#{ installerslinkpath }.tmp", installerslinkpath)
   end
 
-  if licenses_json_file then
+  if packages_json_file then
     # flock(File::LOCK_UN) as a side effect when needed
-    licenses_json_file.close
+    packages_json_file.close
   end
 
   # clean up old installer bundles
@@ -171,8 +171,8 @@ def unpack_installers(local_bundlepath, installers_dir)
   end
 end
 
-def make_licenses_info_file(current_installers_tmpdir)
-  licenses = {}
+def make_packages_info_file(current_installers_tmpdir)
+  packages = {}
 
   Dir.glob("#{ current_installers_tmpdir }/*.tar.gz") do |tarpath|
     pkgname = File.basename(tarpath, '.tar.gz')
@@ -185,14 +185,14 @@ def make_licenses_info_file(current_installers_tmpdir)
       next
     end
 
-    licenses[pkgname] = license_url.chomp
+    packages[pkgname] = { 'license_url' => license_url.chomp }
   end
 
-  licenses_path = "#{ current_installers_tmpdir }/licenses.json"
+  packages_info_path = "#{ current_installers_tmpdir }/packages.json"
 
-  tmpfile = "#{ licenses_path }.tmp"
-  File.open(tmpfile, 'w') { |f| f.print(licenses.to_json) }
-  File.rename(tmpfile, licenses_path)
+  tmpfile = "#{ packages_info_path }.tmp"
+  File.open(tmpfile, 'w') { |f| f.print(packages.to_json) }
+  File.rename(tmpfile, packages_info_path)
 end
 
 def update_installers(config)
