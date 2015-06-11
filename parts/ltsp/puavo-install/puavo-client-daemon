@@ -23,13 +23,17 @@ class Updater < DBus::Object
 	# on every image update, but also periodically, in case we have booted
 	# to a new image (there might be a better place for this, but at least
 	# the configuration update should be run periodically anyway).
-	notify_puavo_on_images()
+        begin
+	  notify_puavo_on_images()
+        rescue StandardError => e
+          warn(e.message)
+        end
 
 	command = '/usr/lib/puavo-ltsp-install/update-configuration'
 
 	output, status = Open3.capture2e(command)
 	if not status.success? then
-	  warn "failed to update device configuration: #{ output }"
+	  warn("failed to update device configuration: #{ output }")
 	end
 
 	if !$image_update_thread then
@@ -43,6 +47,8 @@ class Updater < DBus::Object
 	      self.UpdateIsUpToDate(true)  # reboot *is* required
 	  end
 	end
+      rescue StandardError => e
+        warn("could not do a configuration update: #{ e.message }")
       ensure
 	$configuration_update_thread = nil
       end
@@ -103,6 +109,8 @@ class Updater < DBus::Object
 
 	self.UpdateCancelled
 
+      rescue StandardError => e
+        warn("could not do an image update: #{ e.message }")
       ensure
 	[ out_thr, err_thr ].each { |t| t.exit if t }
 	$image_update_thread = nil
