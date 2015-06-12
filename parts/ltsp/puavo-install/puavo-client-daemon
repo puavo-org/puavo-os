@@ -22,12 +22,13 @@ def logerr(*args); syslog(STDERR, *args); end
 
 $configuration_update_thread = nil
 $image_update_thread         = nil
+$puavopkg_upgrade_thread     = nil
 
-class CancelledImageUpdate < RuntimeError; end
+class CancelledUpdate < RuntimeError; end
 
 class Updater < DBus::Object
   def configuration_update
-    $configuration_update_thread = Thread.new do
+    thread = $configuration_update_thread = Thread.new do
       log(Syslog::LOG_INFO, "Starting configuration update\n")
 
       begin
@@ -72,6 +73,7 @@ class Updater < DBus::Object
                      $?.exitstatus)
           end
         end
+
       rescue StandardError => e
         logerr(Syslog::LOG_ERR,
                "Could not do a configuration update: %s\n",
@@ -80,10 +82,12 @@ class Updater < DBus::Object
         $configuration_update_thread = nil
       end
     end
+
+    return thread
   end
 
   def image_update(use_rate_limit, delete_overlays)
-    $image_update_thread = Thread.new do
+    thread = $image_update_thread = Thread.new do
       wait_thr, out_thr, err_thr = nil, nil, nil
 
       begin
@@ -113,9 +117,6 @@ class Updater < DBus::Object
         end
 
         status = wait_thr.value
-
-        [ out_thr, err_thr ].each { |t| t.join if t }
-
         if not status.success? then
           self.UpdateFailed
           raise 'Failed to update system, update-images returned ' \
@@ -130,21 +131,14 @@ class Updater < DBus::Object
         if confthread then
           log(Syslog::LOG_DEBUG,
               "Configuration update in progress, waiting for it to finish\n")
-          confthread.join
+          confthread.join rescue nil
         end
         log(Syslog::LOG_INFO,
             "Starting post-system-update configuration update\n")
         configuration_update().join
 
-      rescue CancelledImageUpdate => e
-        if wait_thr then
-          if wait_thr.alive? then
-            Process.kill('-TERM', wait_thr.pid)
-          end
-          wait_thr.join
-
-          [ out_thr, err_thr ].each { |t| t.join if t }
-        end
+      rescue CancelledUpdate => e
+        Process.kill('-TERM', wait_thr.pid) if wait_thr && wait_thr.alive?
 
         logerr(Syslog::LOG_WARNING, "System update was cancelled\n")
         self.UpdateCancelled
@@ -153,11 +147,65 @@ class Updater < DBus::Object
         logerr(Syslog::LOG_ERR,
                "Error occurred when doing system update: %s\n",
                e.message)
+
       ensure
-        [ out_thr, err_thr ].each { |t| t.exit if t }
+        [ wait_thr, out_thr, err_thr ].each { |t| t.join if t rescue nil }
         $image_update_thread = nil
       end
     end
+
+    return thread
+  end
+
+  def puavopkg_upgrades()
+    thread = $puavopkg_upgrade_thread = Thread.new do
+      wait_thr, out_thr, err_thr = nil, nil, nil
+
+      begin
+        # puavo-pkg-updater --check-for-upgrades should always return fast,
+        # so we do not bother with a feature to cancel it.
+        upgrades_available = system('puavo-pkg-updater',
+                                    '--check-for-upgrades')
+
+        if !upgrades_available then
+          log(Syslog::LOG_INFO, "No puavo-pkg package upgrades to do.\n")
+          return
+        end
+
+        stdin, stdout, stderr, wait_thr \
+          = Open3.popen3('puavo-pkg-updater', '--upgrade-packages',
+                         { :pgroup => true })
+
+        stdin.close
+        out_thr = Thread.new { stdout.read }
+        err_thr = Thread.new { stderr.read }
+
+        status = wait_thr.value
+        if status.success? then
+          log(Syslog::LOG_NOTICE, "puavo-pkg upgrades done.\n")
+          return        # normal return when no failure,
+                        # otherwise come out with an exception
+        end
+
+        raise "Error in upgrading puavo-pkgs: puavo-pkg-updater returned " \
+                 + "error code #{ status.exitstatus }"
+
+      rescue CancelledUpdate => e
+        Process.kill('-TERM', wait_thr.pid) if wait_thr && wait_thr.alive?
+        logerr(Syslog::LOG_ERR, "Cancelled puavo-pkg upgrades\n")
+        raise e
+
+      rescue StandardError => e
+        logerr(Syslog::LOG_ERR, "%s\n", e.message)
+        raise e
+
+      ensure
+        [ wait_thr, out_thr, err_thr ].each { |t| t.join if t rescue nil }
+        $puavopkg_upgrade_thread = nil
+      end
+    end
+
+    return thread
   end
 
   def notify_puavo_on_images
@@ -206,7 +254,7 @@ class Updater < DBus::Object
 
     dbus_method :CancelImageUpdate, '' do
       if $image_update_thread then
-        $image_update_thread.raise(CancelledImageUpdate, 'Cancel image update')
+        $image_update_thread.raise(CancelledUpdate, 'Cancel image update')
       else
         self.UpdateCancelled
       end
