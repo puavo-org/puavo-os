@@ -9,6 +9,16 @@ require 'json'
 require 'open3'
 require 'puavo/rest-client'
 require 'socket'
+require 'syslog'
+
+def syslog(channel, priority, *args)
+  Syslog.log(priority, *args)
+  channel.printf(*args)
+end
+
+def log(*args)   ; syslog(STDOUT, *args); end
+def logerr(*args); syslog(STDERR, *args); end
+
 
 $configuration_update_thread = nil
 $image_update_thread         = nil
@@ -18,37 +28,54 @@ class CancelledImageUpdate < RuntimeError; end
 class Updater < DBus::Object
   def configuration_update
     $configuration_update_thread = Thread.new do
+      log(Syslog::LOG_INFO, "Starting configuration update\n")
+
       begin
 	# Notify Puavo on our current image situation.  It is good to do this
 	# on every image update, but also periodically, in case we have booted
 	# to a new image (there might be a better place for this, but at least
 	# the configuration update should be run periodically anyway).
         begin
-	  notify_puavo_on_images()
+          notify_puavo_on_images()
         rescue StandardError => e
-          warn(e.message)
+          logerr(Syslog::LOG_WARNING,
+                 "Could not update image information in Puavo: %s\n",
+                 e.message)
         end
 
 	command = '/usr/lib/puavo-ltsp-install/update-configuration'
 
 	output, status = Open3.capture2e(command)
 	if not status.success? then
-	  warn("failed to update device configuration: #{ output }")
+	  logerr(Syslog::LOG_WARNING,
+                 "Failed to update device configuration: %s\n",
+                 output)
 	end
 
 	if !$image_update_thread then
 	  system('/usr/lib/puavo-ltsp-install/is-update-available')
 	  case $?.exitstatus
 	    when 0
+	      log(Syslog::LOG_INFO, "There is an update available\n")
 	      self.UpdateAvailable
 	    when 1
-	      self.UpdateIsUpToDate(false) # no reboot required
+	      log(Syslog::LOG_INFO,
+                  "System is up-to-date, no reboot required\n")
+	      self.UpdateIsUpToDate(false) # false == no reboot required
 	    when 2
-	      self.UpdateIsUpToDate(true)  # reboot *is* required
+	      log(Syslog::LOG_INFO,
+                  "System is up-to-date, but reboot is required\n")
+	      self.UpdateIsUpToDate(true)  # true == reboot *is* required
+	    else
+	      logerr(Syslog::LOG_ERR,
+                     "Unknown exit code in is-update-available: %d\n",
+                     $?.exitstatus)
 	  end
 	end
       rescue StandardError => e
-        warn("could not do a configuration update: #{ e.message }")
+        logerr(Syslog::LOG_ERR,
+               "Could not do a configuration update: %s\n",
+               e.message)
       ensure
 	$configuration_update_thread = nil
       end
@@ -61,9 +88,12 @@ class Updater < DBus::Object
 
       begin
 	if not system('/usr/lib/puavo-ltsp-install/is-update-available') then
+          log(Syslog::LOG_INFO,
+              "Checked for system update, but no update is available\n")
 	  Thread.exit
 	end
 
+        log(Syslog::LOG_INFO, "Starting system update\n")
 	self.UpdateStarted
 
 	stdin, stdout, stderr, wait_thr \
@@ -88,13 +118,22 @@ class Updater < DBus::Object
 
 	if not status.success? then
 	  self.UpdateFailed
-	  raise "Failed to update device images"
+	  raise 'Failed to update system, update-images returned ' \
+                  + status.exitstatus.to_s
 	end
+
+        log(Syslog::LOG_INFO, "System update completed\n")
 	self.UpdateCompleted
 
 	# update device information in Puavo and in local disk as well
 	confthread = $configuration_update_thread
-	confthread.join if confthread
+        if confthread then
+          log(Syslog::LOG_DEBUG,
+              "Configuration update in progress, waiting for it to finish\n")
+	  confthread.join
+        end
+        log(Syslog::LOG_INFO,
+            "Starting post-system-update configuration update\n")
 	configuration_update().join
 
       rescue CancelledImageUpdate => e
@@ -107,10 +146,13 @@ class Updater < DBus::Object
 	  [ out_thr, err_thr ].each { |t| t.join if t }
 	end
 
+        logerr(Syslog::LOG_WARNING, "System update was cancelled\n")
 	self.UpdateCancelled
 
       rescue StandardError => e
-        warn("could not do an image update: #{ e.message }")
+        logerr(Syslog::LOG_ERR,
+               "Error occurred when doing system update: %s\n",
+               e.message)
       ensure
 	[ out_thr, err_thr ].each { |t| t.exit if t }
 	$image_update_thread = nil
@@ -119,37 +161,36 @@ class Updater < DBus::Object
   end
 
   def notify_puavo_on_images
-    begin
-      available_images \
-	= (Dir.glob('/images/*.img').map { |p| File.basename(p) } \
-	     - %w(ltsp.img ltsp-backup.img)).sort
-      current_image = IO.readlines('/etc/ltsp/this_ltspimage_name') \
-			.first.chomp
+    available_images \
+      = (Dir.glob('/images/*.img').map { |p| File.basename(p) } \
+	   - %w(ltsp.img ltsp-backup.img)).sort
+    current_image = IO.readlines('/etc/ltsp/this_ltspimage_name') \
+		      .first.chomp
 
-      deviceinfo = JSON.parse( File.read('/state/etc/puavo/device.json') )
+    deviceinfo = JSON.parse( File.read('/state/etc/puavo/device.json') )
 
-      update_available_images \
-	= ((deviceinfo['available_images'] || []).sort != available_images)
-      update_current_image = (deviceinfo['current_image'] != current_image)
+    update_available_images \
+      = ((deviceinfo['available_images'] || []).sort != available_images)
+    update_current_image = (deviceinfo['current_image'] != current_image)
 
-      if update_available_images || update_current_image then
-        puts 'Updating available images in Puavo'  if update_available_images
-        puts 'Updating the current image in Puavo' if update_current_image
-
-        # Set :dns => :no because we write stuff to Puavo and we have much
-        # better chances of finding the right server when not using DNS.
-        client = PuavoRestClient.new(:auth => :etc, :dns => :no)
-
-        restpath = "/v3/devices/#{ Socket.gethostname }"
-	senddata = {
-	  'available_images' => available_images,
-	  'current_image'    => current_image,
-	}
-	client.post(restpath, :json => senddata)
+    if update_available_images || update_current_image then
+      if update_available_images then
+        log(Syslog::LOG_NOTICE, "Updating available images in Puavo\n")
+      end
+      if update_current_image then
+        log(Syslog::LOG_NOTICE, "Updating the current image in Puavo\n")
       end
 
-    rescue StandardError => e
-      raise "Could not update image information in Puavo: '#{ e.message }'"
+      # Set :dns => :no because we write stuff to Puavo and we have much
+      # better chances of finding the right server when not using DNS.
+      client = PuavoRestClient.new(:auth => :etc, :dns => :no)
+
+      restpath = "/v3/devices/#{ Socket.gethostname }"
+      senddata = {
+	'available_images' => available_images,
+	'current_image'    => current_image,
+      }
+      client.post(restpath, :json => senddata)
     end
   end
 
@@ -172,14 +213,22 @@ class Updater < DBus::Object
     end
 
     dbus_method :HasOldOverlays, 'out b' do
-      output, errput, status \
-        = Open3.capture3('/usr/lib/puavo-ltsp-install/ls-old-imageoverlays',
-                         '/images',
-                         '/imageoverlays')
-      if not status.success? then
-        raise "failed to list old overlays: #{ errput }"
+      begin
+        output, errput, status \
+          = Open3.capture3('/usr/lib/puavo-ltsp-install/ls-old-imageoverlays',
+                           '/images',
+                           '/imageoverlays')
+        if not status.success? then
+          errmsg = 'Failed to list old overlays: error code ' \
+                     + "#{ status.exitstatus } / #{ errput }"
+          raise errmsg
+        end
+
+        return !output.empty?
+      rescue StandardError => e
+        logerr(Syslog::LOG_ERR, "%s\n", e.message)
+        raise e
       end
-      return !output.empty?
     end
 
     dbus_method :Update,
@@ -206,6 +255,8 @@ class Updater < DBus::Object
 
 end
 
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
+
 bus = DBus::SystemBus.instance
 
 # Request a well-known name for the service. It can be denied if someone
@@ -223,3 +274,5 @@ service.export(updater)
 loop = DBus::Main.new
 loop << bus
 loop.run
+
+Syslog.close()
