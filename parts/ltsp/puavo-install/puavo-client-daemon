@@ -31,10 +31,10 @@ class Updater < DBus::Object
       log(Syslog::LOG_INFO, "Starting configuration update\n")
 
       begin
-	# Notify Puavo on our current image situation.  It is good to do this
-	# on every image update, but also periodically, in case we have booted
-	# to a new image (there might be a better place for this, but at least
-	# the configuration update should be run periodically anyway).
+        # Notify Puavo on our current image situation.  It is good to do this
+        # on every image update, but also periodically, in case we have booted
+        # to a new image (there might be a better place for this, but at least
+        # the configuration update should be run periodically anyway).
         begin
           notify_puavo_on_images()
         rescue StandardError => e
@@ -43,41 +43,41 @@ class Updater < DBus::Object
                  e.message)
         end
 
-	command = '/usr/lib/puavo-ltsp-install/update-configuration'
+        command = '/usr/lib/puavo-ltsp-install/update-configuration'
 
-	output, status = Open3.capture2e(command)
-	if not status.success? then
-	  logerr(Syslog::LOG_WARNING,
+        output, status = Open3.capture2e(command)
+        if not status.success? then
+          logerr(Syslog::LOG_WARNING,
                  "Failed to update device configuration: %s\n",
                  output)
-	end
+        end
 
-	if !$image_update_thread then
-	  system('/usr/lib/puavo-ltsp-install/is-update-available')
-	  case $?.exitstatus
-	    when 0
-	      log(Syslog::LOG_INFO, "There is an update available\n")
-	      self.UpdateAvailable
-	    when 1
-	      log(Syslog::LOG_INFO,
+        if !$image_update_thread then
+          system('/usr/lib/puavo-ltsp-install/is-update-available')
+          case $?.exitstatus
+            when 0
+              log(Syslog::LOG_INFO, "There is an update available\n")
+              self.UpdateAvailable
+            when 1
+              log(Syslog::LOG_INFO,
                   "System is up-to-date, no reboot required\n")
-	      self.UpdateIsUpToDate(false) # false == no reboot required
-	    when 2
-	      log(Syslog::LOG_INFO,
+              self.UpdateIsUpToDate(false) # false == no reboot required
+            when 2
+              log(Syslog::LOG_INFO,
                   "System is up-to-date, but reboot is required\n")
-	      self.UpdateIsUpToDate(true)  # true == reboot *is* required
-	    else
-	      logerr(Syslog::LOG_ERR,
+              self.UpdateIsUpToDate(true)  # true == reboot *is* required
+            else
+              logerr(Syslog::LOG_ERR,
                      "Unknown exit code in is-update-available: %d\n",
                      $?.exitstatus)
-	  end
-	end
+          end
+        end
       rescue StandardError => e
         logerr(Syslog::LOG_ERR,
                "Could not do a configuration update: %s\n",
                e.message)
       ensure
-	$configuration_update_thread = nil
+        $configuration_update_thread = nil
       end
     end
   end
@@ -87,75 +87,75 @@ class Updater < DBus::Object
       wait_thr, out_thr, err_thr = nil, nil, nil
 
       begin
-	if not system('/usr/lib/puavo-ltsp-install/is-update-available') then
+        if not system('/usr/lib/puavo-ltsp-install/is-update-available') then
           log(Syslog::LOG_INFO,
               "Checked for system update, but no update is available\n")
-	  Thread.exit
-	end
+          Thread.exit
+        end
 
         log(Syslog::LOG_INFO, "Starting system update\n")
-	self.UpdateStarted
+        self.UpdateStarted
 
-	stdin, stdout, stderr, wait_thr \
-	  = Open3.popen3('/usr/lib/puavo-ltsp-install/update-images',
-			 use_rate_limit  ? 'true' : 'false',
-			 delete_overlays ? 'true' : 'false',
-			 { :pgroup => true })
+        stdin, stdout, stderr, wait_thr \
+          = Open3.popen3('/usr/lib/puavo-ltsp-install/update-images',
+                         use_rate_limit  ? 'true' : 'false',
+                         delete_overlays ? 'true' : 'false',
+                         { :pgroup => true })
 
-	stdin.close
-	out_thr = Thread.new do
-	  loop { self.UpdateMessage('ok', stdout.readline) } \
-	    rescue EOFError
+        stdin.close
+        out_thr = Thread.new do
+          loop { self.UpdateMessage('ok', stdout.readline) } \
+            rescue EOFError
         end
-	err_thr = Thread.new do
-	  loop { self.UpdateMessage('error', stderr.readline) } \
-	    rescue EOFError
-	end
+        err_thr = Thread.new do
+          loop { self.UpdateMessage('error', stderr.readline) } \
+            rescue EOFError
+        end
 
-	status = wait_thr.value
+        status = wait_thr.value
 
-	[ out_thr, err_thr ].each { |t| t.join if t }
+        [ out_thr, err_thr ].each { |t| t.join if t }
 
-	if not status.success? then
-	  self.UpdateFailed
-	  raise 'Failed to update system, update-images returned ' \
+        if not status.success? then
+          self.UpdateFailed
+          raise 'Failed to update system, update-images returned ' \
                   + status.exitstatus.to_s
-	end
+        end
 
         log(Syslog::LOG_INFO, "System update completed\n")
-	self.UpdateCompleted
+        self.UpdateCompleted
 
-	# update device information in Puavo and in local disk as well
-	confthread = $configuration_update_thread
+        # update device information in Puavo and in local disk as well
+        confthread = $configuration_update_thread
         if confthread then
           log(Syslog::LOG_DEBUG,
               "Configuration update in progress, waiting for it to finish\n")
-	  confthread.join
+          confthread.join
         end
         log(Syslog::LOG_INFO,
             "Starting post-system-update configuration update\n")
-	configuration_update().join
+        configuration_update().join
 
       rescue CancelledImageUpdate => e
-	if wait_thr then
-	  if wait_thr.alive? then
-	    Process.kill('-TERM', wait_thr.pid)
-	  end
-	  wait_thr.join
+        if wait_thr then
+          if wait_thr.alive? then
+            Process.kill('-TERM', wait_thr.pid)
+          end
+          wait_thr.join
 
-	  [ out_thr, err_thr ].each { |t| t.join if t }
-	end
+          [ out_thr, err_thr ].each { |t| t.join if t }
+        end
 
         logerr(Syslog::LOG_WARNING, "System update was cancelled\n")
-	self.UpdateCancelled
+        self.UpdateCancelled
 
       rescue StandardError => e
         logerr(Syslog::LOG_ERR,
                "Error occurred when doing system update: %s\n",
                e.message)
       ensure
-	[ out_thr, err_thr ].each { |t| t.exit if t }
-	$image_update_thread = nil
+        [ out_thr, err_thr ].each { |t| t.exit if t }
+        $image_update_thread = nil
       end
     end
   end
@@ -163,9 +163,9 @@ class Updater < DBus::Object
   def notify_puavo_on_images
     available_images \
       = (Dir.glob('/images/*.img').map { |p| File.basename(p) } \
-	   - %w(ltsp.img ltsp-backup.img)).sort
+           - %w(ltsp.img ltsp-backup.img)).sort
     current_image = IO.readlines('/etc/ltsp/this_ltspimage_name') \
-		      .first.chomp
+                      .first.chomp
 
     deviceinfo = JSON.parse( File.read('/state/etc/puavo/device.json') )
 
@@ -187,8 +187,8 @@ class Updater < DBus::Object
 
       restpath = "/v3/devices/#{ Socket.gethostname }"
       senddata = {
-	'available_images' => available_images,
-	'current_image'    => current_image,
+        'available_images' => available_images,
+        'current_image'    => current_image,
       }
       client.post(restpath, :json => senddata)
     end
