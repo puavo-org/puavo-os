@@ -182,16 +182,16 @@ def make_packages_info_file(current_installers_tmpdir)
     begin
       md5sum = Digest::MD5.hexdigest(IO.read(tarpath))
     rescue StandardError => e
-      log(Syslog::LOG_ERR, "Problem in calculating md5sum of %s\n", tarpath)
+      logerr(Syslog::LOG_ERR, "Problem in calculating md5sum of %s\n", tarpath)
       next
     end
 
     license_url, status = Open3.capture2('puavo-pkg', 'license', tarpath)
     if status.exitstatus != 0 then
-      log(Syslog::LOG_ERR,
-          "puavo-pkg license %s returned error code: %d\n",
-          tarpath,
-          status.exitstatus)
+      logerr(Syslog::LOG_ERR,
+             "puavo-pkg license %s returned error code: %d\n",
+             tarpath,
+             status.exitstatus)
       next
     end
 
@@ -223,9 +223,9 @@ end
 def get_packages_to_upgrade(config)
   installed_packages, status = Open3.capture2('puavo-pkg', 'list')
   if status.exitstatus != 0 then
-    log(Syslog::LOG_ERR,
-        "puavo-pkg list returned error code: %d\n",
-        status.exitstatus)
+    logerr(Syslog::LOG_ERR,
+           "puavo-pkg list returned error code: %d\n",
+           status.exitstatus)
     raise 'Failed to get a list of packages to upgrade, ' \
             + "'puavo-pkg list' returned error code #{ status.exitstatus }"
   end
@@ -272,11 +272,11 @@ def upgrade_packages(config)
     begin
       run('puavo-pkg', 'install', tarball)
     rescue StandardError => e
-      log(Syslog::LOG_ERR,
-          "Failed to install a different version of %s from %s: %s\n",
-          pkgname,
-          tarball,
-          e.message)
+      logerr(Syslog::LOG_ERR,
+             "Failed to install a different version of %s from %s: %s\n",
+             pkgname,
+             tarball,
+             e.message)
       next
     end
   end
