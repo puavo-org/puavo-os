@@ -123,7 +123,7 @@ class Updater < DBus::Object
         end
 
         log(Syslog::LOG_INFO, "System update completed\n")
-        self.UpdateCompleted
+        self.UpdateCompleted(true)
 
         # update device information in Puavo and in local disk as well
         confthread = $configuration_update_thread
@@ -197,7 +197,7 @@ class Updater < DBus::Object
   dbus_interface "org.puavo.client.update" do
     dbus_signal :UpdateAvailable
     dbus_signal :UpdateCancelled
-    dbus_signal :UpdateCompleted
+    dbus_signal :UpdateCompleted,         'in reboot_required:b'
     dbus_signal :UpdateFailed
     dbus_signal :UpdateIsUpToDate,        'in reboot_required:b'
     dbus_signal :UpdateMessage,           'in msgtype:s, in content:s'
