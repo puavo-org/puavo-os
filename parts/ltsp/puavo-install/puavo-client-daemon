@@ -27,7 +27,7 @@ $puavopkg_upgrade_thread     = nil
 class CancelledUpdate < RuntimeError; end
 
 class Updater < DBus::Object
-  def check_for_available_updates()
+  def check_for_available_image_updates()
     system('/usr/lib/puavo-ltsp-install/is-update-available')
     code = $?.exitstatus
     status = {
@@ -69,8 +69,8 @@ class Updater < DBus::Object
         end
 
         if !$image_update_thread then
-          available_updates = check_for_available_updates()
-          case available_updates
+          available_image_updates = check_for_available_image_updates()
+          case available_image_updates
             when :available
               log(Syslog::LOG_INFO, "There is an update available\n")
               self.UpdateAvailable
@@ -103,12 +103,6 @@ class Updater < DBus::Object
       wait_thr, out_thr, err_thr = nil, nil, nil
 
       begin
-        if not system('/usr/lib/puavo-ltsp-install/is-update-available') then
-          log(Syslog::LOG_INFO,
-              "Checked for system update, but no update is available\n")
-          Thread.exit
-        end
-
         log(Syslog::LOG_INFO, "Starting system update\n")
         self.UpdateStarted
 
@@ -130,7 +124,6 @@ class Updater < DBus::Object
 
         status = wait_thr.value
         if not status.success? then
-          self.UpdateFailed
           raise 'Failed to update system, update-images returned ' \
                   + status.exitstatus.to_s
         end
@@ -312,19 +305,38 @@ class Updater < DBus::Object
           ($configuration_update_thread || self.configuration_update()) \
             .join rescue nil
 
-          image_update_thread = ($image_update_thread \
-                                   || self.image_update(use_rate_limit,
-                                                        delete_overlays))
+          image_update_thread                                          \
+            = $image_update_thread                                     \
+                ? $image_update_thread                                 \
+                :                                                      \
+              (self.check_for_available_image_updates() == :available) \
+                ? self.image_update(use_rate_limit, delete_overlays)   \
+                : nil
+
           puavopkg_upgrade_thread = ($puavopkg_upgrade_thread \
                                        || self.puavopkg_upgrades())
 
-          image_update_thread.join
+          begin
+            if image_update_thread then
+              image_update_thread.join
+              # If we are doing an image update, we do not care when the
+              # puavopkg-upgrade is ready, so we do not wait for the
+              # puavopkg_upgrade_thread.
+            else
+              # In case there is no need for an image update,
+              # we wait for the puavopkg-upgrade to finish.
+              puavopkg_upgrade_thread.join
+            end
+          rescue CancelledUpdate => e
+            # no problemos torremolinos!
+            return
+          rescue StandardError => e
+            self.UpdateFailed
+            raise e
+          end
 
-          # this is not essential so it may fail
-          puavopkg_upgrade_thread.join rescue nil
-
-          reboot_required \
-            = (self.check_for_available_updates() == :uptodate_yes_reboot)
+          reboot_required = (self.check_for_available_image_updates() \
+                               == :uptodate_yes_reboot)
 
           self.UpdateCompleted(reboot_required)
         end
