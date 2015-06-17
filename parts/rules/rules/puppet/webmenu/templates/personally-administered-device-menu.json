@@ -104,17 +104,15 @@
           "source": "gnome-screenshot"
         },
         {
-          "type": "custom",
+          "type": "desktop",
+          "source": "simplescreenrecorder",
+          "inactiveByDeviceType": "thinclient",
           "name": {
-            "en": "Java Control Panel",
-            "fi": "Java-asetukset",
-            "sv": "Java-inställningar",
-            "de": "Java Einstellungen"
-          },
-          "command": [
-            "/opt/java/jdk1.7.0_51/jre/bin/ControlPanel"
-          ],
-          "osIcon": "openjdk-6"
+            "en": "SimpleScreenRecorder",
+            "fi": "Työpöytänauhoitus",
+            "sv": "SimpleScreenRecorder",
+            "de": "SimpleScreenRecorder"
+          }
         }
       ]
     },
@@ -137,6 +135,7 @@
         {
           "type": "desktop",
           "source": "kolourpaint",
+          "osIconPath": "/usr/share/icons/hicolor/48x48/apps/kolourpaint.png",
           "name": {
             "en": "KolourPaint"
           }
@@ -305,7 +304,13 @@
       "items": [
         {
           "type": "desktop",
-          "source": "google-chrome"
+          "source": "google-chrome",
+          "name": {
+            "en": "Chrome-browser",
+            "fi": "Chrome-selain",
+            "sv": "Chrome",
+            "de": "Chrome"
+          }
         },
         {
           "type": "desktop",
@@ -1561,10 +1566,10 @@
       "type": "custom",
       "command": "puavo-local-config-ui",
       "name": {
-        "fi": "Henkilökohtaisen tietokoneen asetukset",
-        "sv": "Personlig datorns inställningar",
-        "en": "Personal computer settings",
-        "de": "Personal computer einstellungen"
+        "fi": "Kannettavan asetukset",
+        "sv": "Bärbar datorns inställningar",
+        "en": "Laptop settings",
+        "de": "Laptop einstellungen"
       },
       "osIconPath": "/usr/share/icons/Faenza/devices/64/drive-harddisk-system.png"
     }
