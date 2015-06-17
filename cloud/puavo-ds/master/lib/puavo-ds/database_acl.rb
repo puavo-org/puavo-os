@@ -263,7 +263,6 @@ class LdapAcl
 															  Set.externalservice_printerqueues),							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.servers.children,	attrs(%w(puavoDeviceCurrentImage
-                                         puavoDevicePrimaryUser
                                          puavoDeviceAvailableImage)),	Rule.write(Set.admin, 'self'),		Rule.read(PuavoUid.monitor,
 															  PuavoUid.puavo_ticket,
 															  Set.laptops,
