@@ -31,7 +31,7 @@ class Updater < DBus::Object
     system('/usr/lib/puavo-ltsp-install/is-update-available')
     code = $?.exitstatus
     status = {
-               0 => :available,
+               0 => :update_available,
                1 => :uptodate_no_reboot,
                2 => :uptodate_yes_reboot,
              }[code]
@@ -61,28 +61,62 @@ class Updater < DBus::Object
                  e.message)
         end
 
+        # configuration update must be run before
+        # check_for_available_image_updates() so that it gives a proper result
         command = '/usr/lib/puavo-ltsp-install/update-configuration'
-
         output, status = Open3.capture2e(command)
         if not status.success? then
-          raise "Failed to update device configuration: #{ output }%"
+          raise "Failed to update device configuration: #{ output }"
         end
 
-        if !$image_update_thread then
+        version_state = :unknown
+
+        if $image_update_thread then
+          version_state = :updates_in_progress
+        else
           available_image_updates = check_for_available_image_updates()
           case available_image_updates
-            when :available
-              log(Syslog::LOG_INFO, "There is an update available\n")
-              self.UpdateAvailable
+            when :update_available
+              log(Syslog::LOG_INFO, "There is an image update available\n")
+              version_state = :update_available
             when :uptodate_no_reboot
               log(Syslog::LOG_INFO,
-                  "System is up-to-date, no reboot required\n")
-              self.UpdateIsUpToDate(false) # false == no reboot required
+                  "Current image is up-to-date, no reboot required\n")
+              version_state = :uptodate_no_reboot
             when :uptodate_yes_reboot
               log(Syslog::LOG_INFO,
-                  "System is up-to-date, but reboot is required\n")
-              self.UpdateIsUpToDate(true)  # true == reboot *is* required
+                  "Current image is up-to-date, but reboot is required\n")
+              version_state = :uptodate_yes_reboot
+            else
+              logerr(Syslog::LOG_WARNING,
+                     "Could not determine image up-to-dateness\n")
           end
+
+          if !$puavopkg_upgrade_thread then
+            puavopkg_upgrades_available \
+              = system('puavo-pkg-updater', '--check-for-upgrades')
+            if puavopkg_upgrades_available then
+              log(Syslog::LOG_INFO, "Puavopkg upgrades are available\n")
+              version_state = :update_available
+            end
+          end
+        end
+
+        case version_state
+          when :unknown
+            # we do not know what to do, so we do nothing
+          when :update_available
+            log(Syslog::LOG_INFO, "Notifying user about available upgrades\n")
+            self.UpdateAvailable
+          when :updates_in_progress
+            # no need to notify about anything
+          when :uptodate_no_reboot
+            log(Syslog::LOG_INFO, "Notifying user that we are up-to-date.\n")
+            self.UpdateIsUpToDate(false) # false == no reboot required
+          when :uptodate_yes_reboot
+            log(Syslog::LOG_INFO,
+                "Notifying user that we are up-to-date, but require reboot.\n")
+            self.UpdateIsUpToDate(true)  # true == reboot *is* required
         end
 
       rescue StandardError => e
@@ -305,12 +339,12 @@ class Updater < DBus::Object
           ($configuration_update_thread || self.configuration_update()) \
             .join rescue nil
 
-          image_update_thread                                          \
-            = $image_update_thread                                     \
-                ? $image_update_thread                                 \
-                :                                                      \
-              (self.check_for_available_image_updates() == :available) \
-                ? self.image_update(use_rate_limit, delete_overlays)   \
+          image_update_thread                                                 \
+            = $image_update_thread                                            \
+                ? $image_update_thread                                        \
+                :                                                             \
+              (self.check_for_available_image_updates() == :update_available) \
+                ? self.image_update(use_rate_limit, delete_overlays)          \
                 : nil
 
           puavopkg_upgrade_thread = ($puavopkg_upgrade_thread \
