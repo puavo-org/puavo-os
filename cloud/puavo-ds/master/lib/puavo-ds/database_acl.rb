@@ -408,6 +408,7 @@ class LdapAcl
       [ Hosts.devices.children,	attrs(%w(userPassword)),		Rule.write(Set.admin),			Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Hosts.devices.children,	attrs(%w(puavoDeviceCurrentImage
+                                         puavoDevicePrimaryUser
                                          puavoDeviceAvailableImage)),	Rule.write(Set.admin, 'self'),		Rule.read(PuavoUid.monitor,
 															  PuavoUid.puavo_ticket,
 															  Set.externalservice_devices)	],
