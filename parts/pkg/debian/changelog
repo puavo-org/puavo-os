@@ -1,3 +1,14 @@
+puavo-pkg (0.1.21) trusty; urgency=medium
+
+  * New release
+  * Remove ltsp image dependency from puavo-pkg.  Now package
+    "uninstallation" should not happen when system image gets updated,
+    but we are not sure what dragons may lurk in this dungeon (let's
+    see).
+  * Git(ea3a1e33a2d9814d42206f697d1faf879300e9ea)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 18 Jun 2015 12:35:54 +0300
+
 puavo-pkg (0.1.20) trusty; urgency=medium
 
   * New release
