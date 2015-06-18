@@ -75,12 +75,23 @@ safeRequire = (path) ->
         throw err if err.code isnt "MODULE_NOT_FOUND"
         return {}
 
+configJSONPaths = [
+    __dirname + "/../config.json",
+    "/etc/webmenu/config.json",
+    webmenuHome + "/config.json",
+]
+
+if process.env.WM_CONFIG_JSON_PATH
+    for configPath in process.env.WM_CONFIG_JSON_PATH.split(":")
+        configJSONPaths.push(configPath)
+
+
 # Merge config files. Last one overrides options from previous one
-config_data = _.extend({},
-    safeRequire(__dirname + "/../config.json"),
-    safeRequire("/etc/webmenu/config.json"),
-    safeRequire(webmenuHome + "/config.json"),
-)
+config_data = configJSONPaths.reduce((current, configPath) ->
+    console.log "reading #{ configPath }"
+    _.extend(current, safeRequire(configPath))
+, {})
+
 
 config = new Backbone.Model config_data
 config.set("hostType", require "./hosttype")
