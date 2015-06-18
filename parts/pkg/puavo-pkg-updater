@@ -270,15 +270,16 @@ def upgrade_packages(config)
     tarball = "#{ config['installers_dir'] }/installers/#{ pkgname }.tar.gz"
 
     begin
+      run('puavo-pkg', 'install', tarball)
       log(Syslog::LOG_NOTICE,
-          "Upgrading package %s to version %s (with puavo-pkg)\n",
+          "Upgraded package %s to version %s (with puavo-pkg)\n",
           pkgname,
           version)
-      run('puavo-pkg', 'install', tarball)
     rescue StandardError => e
       logerr(Syslog::LOG_ERR,
-             "Failed to install a different version of %s from %s: %s\n",
+             "Failed to upgrade %s to version %s from %s: %s\n",
              pkgname,
+             version,
              tarball,
              e.message)
       next
