@@ -1,3 +1,12 @@
+puavo-pkg (0.1.17) trusty; urgency=medium
+
+  * New release
+  * Use logerr() to log errors, so that we will write those also to
+    stderr (instead of stdout).
+  * Git(016b59ea734d32e5d738d6d1d111c79acba582da)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 18 Jun 2015 07:39:28 +0300
+
 puavo-pkg (0.1.16) trusty; urgency=medium
 
   * New release
