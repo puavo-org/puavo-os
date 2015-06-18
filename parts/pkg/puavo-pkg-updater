@@ -115,7 +115,7 @@ def flock_packages_json(installers_dir)
           + "not updating puavopkg installers.\n",
         packages_json_path)
     packages_json_file.close
-    [ 'LOCKHELD', nil ]
+    return [ 'LOCKHELD', nil ]
   rescue Errno::ENOENT
     # If file does not exist, we go without a lock,
     # because we are going to create that file.
