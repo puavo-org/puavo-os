@@ -16,7 +16,6 @@
 
 g_puavo_pkg_cachedir=/var/cache/puavo-pkg
 g_puavo_pkg_rootdir=/var/lib/puavo-pkg
-g_puavo_img_filename=noimage
 
 LOG_EMERG=0
 LOG_ALERT=1
@@ -85,7 +84,7 @@ list_installed_pkg_dirs()
         -maxdepth 2                        \
         -mindepth 2                        \
         -type l                            \
-        -name "${g_puavo_img_filename}"    \
+        -name installed                    \
         -exec readlink -z -e {} \; | sort -z
 }
 
@@ -145,7 +144,7 @@ get_pkg_link()
     pkg_name=$1
     pkg_basedir=$(get_pkg_basedir "${pkg_name}") || return 1
 
-    echo "${pkg_basedir}/${g_puavo_img_filename}"
+    echo "${pkg_basedir}/installed"
 }
 
 get_pkg_dir()
@@ -639,10 +638,6 @@ done
 
 if [ $# -lt 1 ]; then
     print_help_and_exit
-fi
-
-if [ -f /etc/ltsp/this_ltspimage_name ]; then
-    read g_puavo_img_filename </etc/ltsp/this_ltspimage_name
 fi
 
 ## Override default configuration with values from the config file.
