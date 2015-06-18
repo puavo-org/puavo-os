@@ -28,6 +28,8 @@ LOG_DEBUG=7
 
 g_log_level=${LOG_INFO}
 
+SUPPORTED_PKG_FORMAT=1
+
 print_help_and_exit()
 {
     echo "Usage: puavo-pkg [OPTIONS] [COMMAND] [COMMAND_ARGS]"
@@ -461,7 +463,7 @@ get_md5sum()
 
 extract_installer()
 {
-    local installer pkg_name pkg_version pkg_dir pkg_tmpdir
+    local installer pkg_name pkg_version pkg_dir pkg_tmpdir pkg_format
 
     installer=$1
     pkg_name=$(basename "${installer}" .tar.gz) || return 1
@@ -488,6 +490,22 @@ extract_installer()
         rm -rf "${pkg_tmpdir}"
         return 1
     }
+
+    ## Format file is optional in package format 1.
+    pkg_format=1
+    if [ -f "${pkg_tmpdir}/format" ]; then
+        pkg_format=$(cat "${pkg_tmpdir}/format") || {
+            log_error "failed to read installer format"
+            rm -rf "${pkg_tmpdir}"
+            return 1
+        }
+    fi
+
+    if [ "${pkg_format}" != "${SUPPORTED_PKG_FORMAT}" ]; then
+        log_error "installer has unsupported format"
+        rm -rf "${pkg_tmpdir}"
+        return 1
+    fi
 
     mv -T "${pkg_tmpdir}" "${pkg_dir}" || {
         rm -rf "${pkg_tmpdir}"

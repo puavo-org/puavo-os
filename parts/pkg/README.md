@@ -58,6 +58,8 @@ The default configuration can be changed by providing
 
 ## Packaging
 
+This section describes the package format of version 1.
+
 ### Installer files
 
 Currently, ``puavo-pkg`` supports package installations only with
@@ -72,6 +74,7 @@ Mandatory files:
 
 Optional files:
 
+- ``PACKAGE/format``
 - ``PACKAGE/license``
 - ``PACKAGE/upstream_pack_url``
 - ``PACKAGE/upstream_pack_md5sum``
@@ -80,6 +83,7 @@ An example installer archive layout for ``mypackage`` package might look
 like this:
 
     $ tar -tf mypackage.tar.gz
+    mypackage/format
     mypackage/license
     mypackage/rules
     mypackage/upstream_pack_url
@@ -95,6 +99,14 @@ will pass an installer command (``download``, ``unpack``, ``configure``
 and ``unconfigure``) as the first argument.
 
 
+#### ``PACKAGE/format``
+
+Optionally, the installer archive **can** contain ``PACKAGE/format``
+file which must contain the version number of the package format. If the
+``PACKAGE/format`` does not exist, the version of the package format is
+assumed to be 1.
+
+
 #### ``PACKAGE/license``
 
 Optionally, the installer archive **can** contain ``PACKAGE/license``
@@ -103,6 +115,7 @@ of the package. The format of the file can be anything, however a
 browser readable format (``text/plain``, ``text/html`` or
 ``application/pdf``) is recommended, because ``puavo-pkg`` command
 ``license`` can be used to print a file URL pointing the license file.
+
 
 #### ``PACKAGE/upstream_pack_url``
 
