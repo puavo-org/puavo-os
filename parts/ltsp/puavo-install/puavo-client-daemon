@@ -357,8 +357,14 @@ class Updater < DBus::Object
               # puavopkg-upgrade is ready, so we do not wait for the
               # puavopkg_upgrade_thread.
             else
-              # In case there is no need for an image update,
-              # we wait for the puavopkg-upgrade to finish.
+              # We have no need for an image update.
+              #
+              # Because progress indicators are not connected to
+              # puavo-pkg-update (yet?), we should tell that we really do not
+              # know how long this operation will take.
+              self.UpdateProgressIndicator('puavopkg', 0)
+
+              # Wait for the puavopkg-upgrade to finish.
               puavopkg_upgrade_thread.join
             end
           rescue CancelledUpdate => e

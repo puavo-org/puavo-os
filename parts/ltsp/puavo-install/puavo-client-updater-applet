@@ -295,6 +295,8 @@ class UpdateIndicatorApplet:
             progresstext = '%d%% (sync image)' % progfn(1, 90)
         elif phase == 'image_checksum':
             progresstext = '%d%% (check image)' % progfn(90, 100)
+        elif phase == 'puavopkg':
+            progresstext = '(extra packages)'
         else:
             # this should not happen, but show that to user anyway (so if a
             # developer sees this, she can know there is something to fix)
