@@ -207,7 +207,7 @@ class Updater < DBus::Object
 
         if !upgrades_available then
           log(Syslog::LOG_INFO, "No puavo-pkg package upgrades to do.\n")
-          return
+          Thread.exit
         end
 
         stdin, stdout, stderr, wait_thr \
@@ -221,8 +221,8 @@ class Updater < DBus::Object
         status = wait_thr.value
         if status.success? then
           log(Syslog::LOG_NOTICE, "puavo-pkg upgrades done.\n")
-          return        # normal return when no failure,
-                        # otherwise come out with an exception
+          # normal return when no failure, otherwise come out with an exception
+          Thread.exit
         end
 
         raise "Error in upgrading puavo-pkgs: puavo-pkg-updater returned " \
