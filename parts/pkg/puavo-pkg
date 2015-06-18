@@ -54,7 +54,8 @@ print_help_and_exit()
     echo "  remove PACKAGE                 remove installed PACKAGE"
     echo "  remove --all                   remove all installed packages"
     echo
-    echo "  show PACKAGE                   show details"
+    echo "  show PACKAGE                   show package details"
+    echo "  show -F|--field FIELD PACKAGE  show specific FIELD"
     echo
     echo "Files:"
     echo "  /etc/puavo-pkg/puavo-pkg.conf  configuration file"
@@ -608,9 +609,10 @@ remove_all_pkgs()
 
 show_pkg()
 {
-    local pkg_name pkg_dir pkg_version pkg_legend pkg_description
+    local pkg_name pkg_dir pkg_version pkg_legend pkg_description pkg_field
 
     pkg_name=$1
+    pkg_field=$2
 
     pkg_version=$(get_installed_pkg_version "${pkg_name}") || return 1
     if [ -z "${pkg_version}" ]; then
@@ -627,18 +629,41 @@ show_pkg()
 
     pkg_description=
     if [ -r "${pkg_dir}/description" ]; then
-        pkg_description=$(sed -r -e 's/^\s*$/./' -e 's/(.*)/ \1/' "${pkg_dir}/description") || return 1
+        pkg_description=$(cat "${pkg_dir}/description") || return 1
     fi
 
-    echo "Name: ${pkg_name}"
-    echo "Version: ${pkg_version}"
-    echo "Directory: ${pkg_dir}"
-    echo "Legend: ${pkg_legend}"
-    echo "Description:"
-    if [ -n "${pkg_description}" ]; then
+    case "${pkg_field}" in
+        Name)
+            echo "${pkg_name}"
+            ;;
+        Version)
+            echo "${pkg_version}"
+            ;;
+        Directory)
+            echo "${pkg_dir}"
+            ;;
+        Legend)
+            echo "${pkg_legend}"
+            ;;
+        Description)
             echo "${pkg_description}"
-            echo ' .'
-    fi
+            ;;
+        '')
+            echo "Name: ${pkg_name}"
+            echo "Version: ${pkg_version}"
+            echo "Directory: ${pkg_dir}"
+            echo "Legend: ${pkg_legend}"
+            echo "Description:"
+            if [ -n "${pkg_description}" ]; then
+                echo "${pkg_description}" | sed -r -e 's/^\s*$/./' -e 's/(.*)/ \1/'
+                echo ' .'
+            fi
+            ;;
+        *)
+            log_error "unknown field '${pkg_field}'"
+            return 1
+            ;;
+    esac
 }
 
 usage_error()
@@ -744,8 +769,18 @@ case "${command}" in
         fi
         ;;
     show)
-        assert_args_count -eq 1 "$@"
-        show_pkg "$1"
+        assert_args_count -ge 1 "$@"
+        case "$1" in
+            -F|--field)
+                shift
+                assert_args_count -eq 2 "$@"
+                show_pkg "$2" "$1"
+                ;;
+            *)
+                assert_args_count -eq 1 "$@"
+                show_pkg "$1" ""
+                ;;
+        esac
         ;;
     *)
         usage_error "unknown command '${command}'"
