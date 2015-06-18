@@ -220,7 +220,7 @@ class Updater < DBus::Object
 
         status = wait_thr.value
         if status.success? then
-          log(Syslog::LOG_NOTICE, "puavo-pkg upgrades done.\n")
+          log(Syslog::LOG_NOTICE, "Puavopkg upgrades done.\n")
           # normal return when no failure, otherwise come out with an exception
           Thread.exit
         end
