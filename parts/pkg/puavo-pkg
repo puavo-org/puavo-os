@@ -54,6 +54,8 @@ print_help_and_exit()
     echo "  remove PACKAGE                 remove installed PACKAGE"
     echo "  remove --all                   remove all installed packages"
     echo
+    echo "  show PACKAGE                   show details"
+    echo
     echo "Files:"
     echo "  /etc/puavo-pkg/puavo-pkg.conf  configuration file"
     exit 0
@@ -604,6 +606,25 @@ remove_all_pkgs()
     return ${retval}
 }
 
+show_pkg()
+{
+    local pkg_name pkg_dir pkg_version
+
+    pkg_name=$1
+
+    pkg_version=$(get_installed_pkg_version "${pkg_name}") || return 1
+    if [ -z "${pkg_version}" ]; then
+        log_error "package ${pkg_name} is not installed"
+        return 1
+    fi
+
+    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+
+    echo "Name: ${pkg_name}"
+    echo "Version: ${pkg_version}"
+    echo "Directory: ${pkg_dir}"
+}
+
 usage_error()
 {
     log_error "$1"
@@ -705,6 +726,10 @@ case "${command}" in
         else
             remove_pkg "$1"
         fi
+        ;;
+    show)
+        assert_args_count -eq 1 "$@"
+        show_pkg "$1"
         ;;
     *)
         usage_error "unknown command '${command}'"
