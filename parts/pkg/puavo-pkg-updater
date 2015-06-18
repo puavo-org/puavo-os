@@ -234,12 +234,12 @@ def get_packages_to_upgrade(config)
 
   available_packages = JSON.parse( IO.read(packages_json_path) )
 
-  packages_to_upgrade = []
+  packages_to_upgrade = {}
 
   installed_packages.split("\n").each do |line|
     pkgname, md5sum = * line.split(/\s+/)
     unless available_packages[pkgname] \
-             && available_packages[pkgname]['md5sum'] then
+             && available_packages[pkgname]['md5sum'].kind_of?(String) then
       log(Syslog::LOG_NOTICE,
           "Package %s is installed but has no installable version available\n",
           pkgname)
@@ -249,7 +249,7 @@ def get_packages_to_upgrade(config)
     available_package_md5sum = available_packages[pkgname]['md5sum']
 
     if md5sum != available_package_md5sum then
-      packages_to_upgrade << pkgname
+      packages_to_upgrade[pkgname] = available_package_md5sum
     end
   end
 
@@ -266,10 +266,14 @@ def upgrade_packages(config)
     return
   end
 
-  packages_to_upgrade.each do |pkgname|
+  packages_to_upgrade.each do |pkgname, version|
     tarball = "#{ config['installers_dir'] }/installers/#{ pkgname }.tar.gz"
 
     begin
+      log(Syslog::LOG_NOTICE,
+          "Upgrading package %s to version %s (with puavo-pkg)\n",
+          pkgname,
+          version)
       run('puavo-pkg', 'install', tarball)
     rescue StandardError => e
       logerr(Syslog::LOG_ERR,
