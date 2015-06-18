@@ -74,6 +74,7 @@ Mandatory files:
 
 Optional files:
 
+- ``PACKAGE/description``
 - ``PACKAGE/format``
 - ``PACKAGE/license``
 - ``PACKAGE/upstream_pack_url``
@@ -83,6 +84,7 @@ An example installer archive layout for ``mypackage`` package might look
 like this:
 
     $ tar -tf mypackage.tar.gz
+    mypackage/description
     mypackage/format
     mypackage/license
     mypackage/rules
@@ -97,6 +99,13 @@ file, which **must** accept one or more command line
 arguments. ``PACKAGE/rules`` will be executed by ``puavo-pkg`` which
 will pass an installer command (``download``, ``unpack``, ``configure``
 and ``unconfigure``) as the first argument.
+
+
+#### ``PACKAGE/description``
+
+Optionally, the installer archive **can** contain
+``PACKAGE/description`` file which must contain one or more lines long
+description of the package.
 
 
 #### ``PACKAGE/format``
