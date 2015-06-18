@@ -76,6 +76,7 @@ Optional files:
 
 - ``PACKAGE/description``
 - ``PACKAGE/format``
+- ``PACKAGE/legend``
 - ``PACKAGE/license``
 - ``PACKAGE/upstream_pack_url``
 - ``PACKAGE/upstream_pack_md5sum``
@@ -86,6 +87,7 @@ like this:
     $ tar -tf mypackage.tar.gz
     mypackage/description
     mypackage/format
+    mypackage/legend
     mypackage/license
     mypackage/rules
     mypackage/upstream_pack_url
@@ -106,6 +108,12 @@ and ``unconfigure``) as the first argument.
 Optionally, the installer archive **can** contain
 ``PACKAGE/description`` file which must contain one or more lines long
 description of the package.
+
+
+#### ``PACKAGE/legend``
+
+Optionally, the installer archive **can** contain ``PACKAGE/legend``
+file which must contain a short human readable name for the package.
 
 
 #### ``PACKAGE/format``

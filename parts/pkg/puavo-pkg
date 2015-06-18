@@ -608,7 +608,7 @@ remove_all_pkgs()
 
 show_pkg()
 {
-    local pkg_name pkg_dir pkg_version pkg_description
+    local pkg_name pkg_dir pkg_version pkg_legend pkg_description
 
     pkg_name=$1
 
@@ -620,6 +620,11 @@ show_pkg()
 
     pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
 
+    pkg_legend="${pkg_name}"
+    if [ -r "${pkg_dir}/legend" ]; then
+        pkg_legend=$(head -n1 "${pkg_dir}/legend") || return 1
+    fi
+
     pkg_description=
     if [ -r "${pkg_dir}/description" ]; then
         pkg_description=$(sed -r -e 's/^\s*$/./' -e 's/(.*)/ \1/' "${pkg_dir}/description") || return 1
@@ -628,6 +633,7 @@ show_pkg()
     echo "Name: ${pkg_name}"
     echo "Version: ${pkg_version}"
     echo "Directory: ${pkg_dir}"
+    echo "Legend: ${pkg_legend}"
     echo "Description:"
     if [ -n "${pkg_description}" ]; then
             echo "${pkg_description}"
