@@ -111,7 +111,7 @@ def flock_packages_json(installers_dir)
     # If someone else has a lock, we will exit with no failure, because
     # even though we could not do an update, things should be okay.
     log(Syslog::LOG_NOTICE,
-        "Something is holding a lock on %s,\n" \
+        "Something is holding a lock on %s, " \
           + "not updating puavopkg installers.\n",
         packages_json_path)
     packages_json_file.close
