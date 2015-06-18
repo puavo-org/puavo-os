@@ -21,7 +21,7 @@ var mc =
 
         'Additional software installation': 'Lisäohjelmistojen asennus',
 
-        'The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.': 'Seuraavasta listasta voit asentaa ohjelmistoja joiden lisenssi ei mahdollista niiden esiasentamista.  Asentamalla ohjelmiston hyväksyt sen lisenssiehdot.',
+        'The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.': 'Lisäohjelmistot ovat sovelluksia, joita ei ole lisenssiehtojen vuoksi voitu asentaa kannettavalle valmiiksi. Voit asentaa tarvitsemiasi ohjelmistoja tästä ja samalla hyväksyt niiden lisenssiehdot. Huom! Ohjelmistojen asennus vaatii verkkoyhteyden ja se voi kestää useita minuutteja. Ikkunan sulkeminen keskeyttää asennuksen.',
 
         'ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE.':
            'HYVÄKSY KAIKKI LISENSSIT JA ASENNA KAIKKI OHJELMAT.',
