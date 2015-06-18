@@ -1,3 +1,14 @@
+puavo-pkg (0.1.22) trusty; urgency=medium
+
+  * New release
+  * Add new field to package details: Legend
+  * Add new field to package details: Description
+  * Add command 'show' for displaying package details
+  * Add support for different package formats
+  * Git(7500b683bc6e1428eed7f52de31c17b478c31dae)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 18 Jun 2015 12:52:24 +0300
+
 puavo-pkg (0.1.21) trusty; urgency=medium
 
   * New release
