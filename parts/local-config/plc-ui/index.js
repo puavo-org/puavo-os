@@ -26,6 +26,12 @@ var mc =
         'ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE.':
            'HYVÄKSY KAIKKI LISENSSIT JA ASENNA KAIKKI OHJELMAT.',
 
+        'Error in installation, check network.':
+           'Asennus ei onnistunut, tarkista verkkoyhteys.',
+
+        'Error in installation, unknown reason.':
+           'Asennus ei onnistunut, tuntematon syy.',
+
         'Access controls': 'Pääsyoikeudet',
 
         'Configuration needs corrections, no changes are saved.':
@@ -73,6 +79,15 @@ var mc =
         'Additional software installation': 'Additional software installation', // XXX
 
         'The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.': 'The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.', // XXX
+
+        'ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE.':
+          'ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE.', // XXX
+
+        'Error in installation, check network.':
+          'Error in installation, check network.', // XXX
+
+        'Error in installation, unknown reason.':
+          'Error in installation, unknown reason.', // XXX
 
         'Access controls': 'Access controls', // XXX
 
@@ -366,6 +381,20 @@ function create_action_button_with_initial_state(button,
       install_fn();
     }
   }
+}
+
+function create_error_details(shorttext, message) {
+  var details = document.createElement('details');
+
+  var summary = document.createElement('summary');
+  summary.textContent = shorttext;
+  details.appendChild(summary);
+
+  var errmsgblock = document.createElement('pre');
+  errmsgblock.textContent = message;
+  details.appendChild(errmsgblock);
+
+  return details;
 }
 
 function generate_allow_logins_input(form) {
@@ -682,11 +711,27 @@ function get_packages() {
 
 function handle_pkg(mode, pkgname, errormsg_element, cb) {
   cmd_mode = (mode === 'install' ? '--install-pkg' : '--remove-pkg');
-  var cmd_args = [ '/usr/sbin/puavo-local-config', cmd_mode, pkgname ]
+  var cmd_args = [ '/usr/sbin/puavo-local-config', cmd_mode, pkgname ];
 
   var handler
     = function(error, stdout, stderr) {
-        errormsg_element.textContent = error ? stderr : '';
+        if (error) {
+          if (error.code === 2) {
+            var details
+              = create_error_details(
+                  mc('Error in installation, check network.'),
+                  stderr);
+            errormsg_element.appendChild(details);
+          } else {
+            var details
+              = create_error_details(
+                  mc('Error in installation, unknown reason.'),
+                  stderr);
+            errormsg_element.appendChild(details);
+          }
+        } else {
+          errormsg_element.textContent = '';
+        }
 
         // Error or not, some package may have been installed or uninstalled
         // now, so we trigger "puavo-webmenu --daemon --log" so that webmenu
@@ -708,6 +753,8 @@ function handle_pkg(mode, pkgname, errormsg_element, cb) {
 
         cb(error);
       };
+
+  errormsg_element.textContent = '';
 
   // buffer program output up to 2Mb (fails if there is more output)
   options = { maxBuffer: (2 * 1024 * 1024) };

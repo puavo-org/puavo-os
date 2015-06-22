@@ -35,8 +35,9 @@ code, pre {
   border: 1px solid #8F8F8F;
   border-radius: 3px;
   font-family: Consolas, "Liberation Mono", Courier, monospace;
-  font-size: 12px;
+  font-size: 10px;
   overflow-x: auto;
+  max-width: 30em;
 }
 pre code {
   border: 0px;
