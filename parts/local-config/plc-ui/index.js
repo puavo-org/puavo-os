@@ -748,7 +748,9 @@ function handle_pkg(mode, pkgname, errormsg_element, cb) {
           detached: true,
           stdio: 'ignore',
         }
-        var child = child_process.spawn('webmenu', [ '--daemon' ], opts);
+        var child = child_process.spawn('puavo-webmenu',
+                                        [ '--daemon', '--log' ],
+                                        opts);
         child.unref();
 
         cb(error);
