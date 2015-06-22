@@ -122,14 +122,14 @@ if puavoDomain
 
 desktopReadStarted = Date.now()
 # inject data from .desktop file to menuJSON.
-menutools.injectDesktopData(
-    menuJSON
-    config.get("dotDesktopSearchPaths")
-    locale
-    config.get("iconSearchPaths")
-    config.get("fallbackIcon")
-    config.get("hostType")
-)
+menutools.injectDesktopData(menuJSON, {
+    desktopFileSearchPaths: config.get("dotDesktopSearchPaths")
+    locale: locale
+    iconSearchPaths: config.get("iconSearchPaths")
+    fallbackIcon: config.get("fallbackIcon")
+    hostType: config.get("hostType")
+    installerIcon: config.get("installerIcon") || "kentoo"
+})
 
 desktopReadTook = (Date.now() - desktopReadStarted) / 1000
 console.log(".desktop files read took " + desktopReadTook + " seconds")

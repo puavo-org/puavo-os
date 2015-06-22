@@ -36,6 +36,8 @@ Attributes
 
   - `name`: {String, required} Name of the item
   - `command`: {Array, required} Command to execute
+  - `installer`: {String, optional} Path to an alternative executable. Used as
+    the `command` when it's not found from the PATH.
 
 ### `desktop`
 
@@ -48,7 +50,8 @@ locale.
 Desktop file locations are configured in `config.json`.
 
   - `source`: {String, required} Name of the .desktop file without the extension
-
+  - `installer`: {String, optional} Used as the command when the .desktop file
+    is not found from the system
 
 ### `web`
 

@@ -79,4 +79,8 @@ Item count in favorites list.
 Shell executable string which print array of json objects to stdout. The
 objects must contain a `message` field which is displayed on the Webmenu.
 
+### `installerIcon`
+
+Icon to be used for items when the alternative `installer` command is active.
+Defaults to `kentoo` (Faenza).
 

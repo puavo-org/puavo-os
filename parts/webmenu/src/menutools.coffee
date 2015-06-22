@@ -21,7 +21,8 @@ json2hash = (ob) ->
   return shasum.digest("hex")
 
 
-findOsIcon = (iconSearchPaths, id, fallbackIcon) ->
+findOsIcon = (id, options) ->
+
   try
     # Return if id is a real path
     r = fs.realpathSync(id)
@@ -29,9 +30,9 @@ findOsIcon = (iconSearchPaths, id, fallbackIcon) ->
   catch e
     # Otherwise just continue searching
 
-  osIconFilePath = fallbackIcon
+  osIconFilePath = options.fallbackIcon
 
-  iconSearchPaths.forEach (p) ->
+  options.iconSearchPaths.forEach (p) ->
     ["svg", "png", "jpg"].forEach (ext) ->
       filePath = "#{ p }/#{ id }.#{ ext }"
       if fs.existsSync(filePath)
@@ -53,7 +54,7 @@ normalizeIconPath = (p) ->
   return "file://" + path.join(__dirname, "..", p)
 
 
-injectDesktopData = (menu, desktopFileSearchPaths, locale, iconSearchPaths, fallbackIcon, hostType) ->
+injectDesktopData = (menu, options) ->
 
   if menu.type is "custom"
 
@@ -67,14 +68,21 @@ injectDesktopData = (menu, desktopFileSearchPaths, locale, iconSearchPaths, fall
 
     code = execSync.run("which '#{ command[0] }' > /dev/null 2>&1")
     if code isnt 0
+      if menu.installer
+        menu.useInstaller = true
+        menu.command = menu.installer
+        menu.osIconPath = findOsIcon(options.installerIcon, options)
+      else
         menu.broken = true
         console.warn("WARNING: Custom command broken: " + command)
+        return
+
 
   # Operating system icon
   if menu.osIcon
-    menu.osIconPath = findOsIcon(iconSearchPaths, menu.osIcon, fallbackIcon)
+    menu.osIconPath = findOsIcon(menu.osIcon, options)
 
-  if menu.inactiveByDeviceType and menu.inactiveByDeviceType is hostType
+  if menu.inactiveByDeviceType and menu.inactiveByDeviceType is options.hostType
     menu.status = "inactive"
 
   if menu.type is "desktop"
@@ -82,17 +90,23 @@ injectDesktopData = (menu, desktopFileSearchPaths, locale, iconSearchPaths, fall
       throw new Error("'desktop' item in menu.json item is missing " +
         "'source' attribute: #{ JSON.stringify(menu) }")
 
-    desktopFileSearchPaths.forEach (desktopDir) ->
+    options.desktopFileSearchPaths.forEach (desktopDir) ->
+      desktopEntry = {}
       filePath = desktopDir + "/#{ menu.source }.desktop"
       try
-        desktopEntry = dotdesktop.parseFileSync(filePath, locale)
+        desktopEntry = dotdesktop.parseFileSync(filePath, options.locale)
       catch err
-        return
+        return if not menu.installer
+        menu.useInstaller = true
+        menu.command = menu.installer
+        menu.osIconPath = findOsIcon(options.installerIcon, options)
+        menu.name ?= menu.source
+
 
       menu.name ?= desktopEntry.name
       menu.description ?= desktopEntry.description
       menu.command ?= desktopEntry.command
-      menu.osIconPath ?= findOsIcon(iconSearchPaths, desktopEntry.osIcon, fallbackIcon)
+      menu.osIconPath ?= findOsIcon(desktopEntry.osIcon, options)
       menu.upstreamName ?= desktopEntry.upstreamName
       menu.osIconPath = normalizeIconPath(menu.osIconPath)
 
@@ -103,7 +117,7 @@ injectDesktopData = (menu, desktopFileSearchPaths, locale, iconSearchPaths, fall
   if menu.type is "menu"
     menu.id = json2hash(menu.name)
     for menu_ in menu.items
-      injectDesktopData(menu_, desktopFileSearchPaths, locale, iconSearchPaths, fallbackIcon, hostType)
+      injectDesktopData(menu_, options)
   else
     menu.id = json2hash(menu)
 

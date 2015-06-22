@@ -18,7 +18,15 @@
     <img src="{{osIconPath}}">
   </div>
   {{/if}}
- <h1 class="item-name" >{{i18nPick name}}</h1>
+  <h1 class="item-name" >
+    {{#unless useInstaller}}
+      {{i18nPick name}}
+    {{/unless}}
+
+    {{#if useInstaller}}
+      {{ i18n "menuitem.install" }} {{ i18nPick name }}
+    {{/if}}
+  </h1>
 </div>
 
 {{#if status}}
