@@ -687,6 +687,25 @@ function handle_pkg(mode, pkgname, errormsg_element, cb) {
   var handler
     = function(error, stdout, stderr) {
         errormsg_element.textContent = error ? stderr : '';
+
+        // Error or not, some package may have been installed or uninstalled
+        // now, so we trigger "puavo-webmenu --daemon --log" so that webmenu
+        // will pick up the changes.
+        // XXX Note that perhaps we should actually confirm somehow that
+        // XXX webmenu is installed and active on the desktop...
+        // XXX (and this trigger probably does not belong to this level
+        // XXX anyway, in case installations/uninstallations happen without
+        // XXX this tool).
+        opts = {
+          cwd: '/',             // XXX Needed, because otherwise webmenu thinks
+                                // XXX it is running in development environment
+                                // XXX (fix webmenu).
+          detached: true,
+          stdio: 'ignore',
+        }
+        var child = child_process.spawn('webmenu', [ '--daemon' ], opts);
+        child.unref();
+
         cb(error);
       };
 
