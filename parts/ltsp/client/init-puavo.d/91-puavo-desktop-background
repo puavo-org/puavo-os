@@ -8,7 +8,8 @@ puavo_desktop_background=$(jq -r '.tags[]' /etc/puavo/device.json    \
                              | sed -r -n 's/^desktop_background://p' \
                              | tail -n1)
 
-if [ -n "$puavo_desktop_background" ]; then
+if [ -n "$puavo_desktop_background" \
+     -a -e "/usr/share/backgrounds/${puavo_desktop_background}" ]; then
   cat <<EOF > /etc/dconf/db/desktopbackground.d/background_profile
 [org/gnome/desktop/background]
 picture-uri='file:///usr/share/backgrounds/${puavo_desktop_background}'
