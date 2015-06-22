@@ -59,7 +59,7 @@ class MenuLayout extends ViewMaster
                 model: model
                 config: @config
 
-        # Lightbox is not the same DOM tree as the other view. So manually
+        # Lightbox is not the same DOM tree as the other views. So manually
         # proxy all message to it too
         @listenTo this, "all", (eventName, arg) =>
             if @lightbox
