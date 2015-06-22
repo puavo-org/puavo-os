@@ -80,7 +80,9 @@ case "${command}" in
             --output-document "${tmpfile}" \
             --progress=dot:mega \
             "${baseurl}/dists/stable/non-free/binary-amd64/Packages" || {
-            rm -f "${tmpfile}"
+            wget_err=$?
+            rm -f "${tmpfile}" || true
+            [ ${wget_err} -eq 4 ] && exit 2 ## Network failure.
             exit 1
         }
         poolpath=$(sed -r '0,/^Package: spotify-client-0.9.17$/ d' "${tmpfile}" | sed -r -n 's/^Filename: (.*)/\1/p' | head -n1)
@@ -90,7 +92,10 @@ case "${command}" in
             --no-check-certificate \
             --no-cookies \
             --output-document "${upstream_pack}" \
-            "${baseurl}/${poolpath}"
+            "${baseurl}/${poolpath}" || {
+            [ $? -eq 4 ] && exit 2 ## Network failure.
+            exit 1
+        }
         ;;
 
     *)

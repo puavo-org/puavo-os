@@ -85,7 +85,9 @@ EOF
             --output-document "${tmpfile}" \
             --progress=dot:mega \
             "${baseurl}/dists/stable/main/binary-i386/Packages" || {
-            rm -f "${tmpfile}"
+            wget_err=$?
+            rm -f "${tmpfile}" || true
+            [ ${wget_err} -eq 4 ] && exit 2 ## Network failure.
             exit 1
         }
         poolpath=$(sed -r '0,/^Package: google-chrome-stable$/ d' "${tmpfile}" | sed -r -n 's/^Filename: (.*)/\1/p' | head -n1)
@@ -95,7 +97,10 @@ EOF
             --no-check-certificate \
             --no-cookies \
             --output-document "${upstream_pack}" \
-            "${baseurl}/${poolpath}"
+            "${baseurl}/${poolpath}" || {
+            [ $? -eq 4 ] && exit 2 ## Network failure.
+            exit 1
+        }
         ;;
     *)
         ;;

@@ -32,6 +32,7 @@ SUPPORTED_PKG_FORMAT=1
 
 SC_OK=0
 SC_ERR=1
+SC_ERR_NET=2
 
 g_sc=${SC_ERR} ## Prime with a generic error.
 
@@ -425,6 +426,7 @@ download_upstream_pack()
     if [ ! -r "${pkg_dir}/upstream_pack_url" ]; then
         pushd "${pkg_dir}" >/dev/null || return 1
         ./rules download "${upstream_tmppack}" || {
+            [ $? -eq 2 ] && g_sc=${SC_ERR_NET}
             popd >/dev/null || true
             rm -rf "${upstream_tmppack}" || true
             log_error "package downloader returned an error!"
@@ -442,6 +444,7 @@ download_upstream_pack()
             --input-file "${pkg_dir}/upstream_pack_url" \
             --output-document "${upstream_tmppack}" \
             --progress=dot:mega || {
+            [ $? -eq 4 ] && g_sc=${SC_ERR_NET}
             rm -rf "${upstream_tmppack}"
             return 1
         }
