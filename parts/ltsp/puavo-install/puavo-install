@@ -99,19 +99,42 @@ ask_preseed() {
     puavo_preseed_register_args=$(cat "/usr/share/puavo-ltsp-install/preseeds/${preseed}/puavo_preseed_register_args")
     puavo_preseed_setup_filesystems_args=$(cat "/usr/share/puavo-ltsp-install/preseeds/${preseed}/puavo_preseed_setup_filesystems_args")
 
-    gen_puavo_preseed_register_args="/usr/share/puavo-ltsp-install/preseeds/${preseed}/gen_puavo_preseed_register_args"
-    if [ -x "${gen_puavo_preseed_register_args}" ]; then
-      puavo_register_extra_args=$("${gen_puavo_preseed_register_args}")
-      puavo_preseed_register_args="${puavo_preseed_register_args} ${puavo_register_extra_args}"
-    fi
-
-    gen_puavo_preseed_setup_filesystems_args="/usr/share/puavo-ltsp-install/preseeds/${preseed}/gen_puavo_preseed_setup_filesystems_args"
-    if [ -x "${gen_puavo_preseed_setup_filesystems_args}" ]; then
-      puavo_setup_filesystems_extra_args=$("${gen_puavo_preseed_setup_filesystems_args}")
-      puavo_preseed_setup_filesystems_args="${puavo_preseed_setup_filesystems_args} ${puavo_setup_filesystems_extra_args}"
-    fi
-
     break
+  done
+
+  ## Ask primary_user_uid and puavoHostname here before puavo-register
+  ## to avoid straying in the puavo-register question jungle; currently,
+  ## puavo-register forces the user to walk through all the
+  ## configuration options even if the user wants to modify just one
+  ## specific option.
+  while true; do
+      read -p "Primary user: " primary_user
+
+      echo "${primary_user}" | egrep -q '\s' && {
+          echo "E: primary user name cannot contain whitespace" >&2
+          continue
+      }
+
+      if [ -n "${primary_user}" ]; then
+          puavo_preseed_register_args="${puavo_preseed_register_args} --primary_user_uid ${primary_user}"
+      fi
+
+      break
+  done
+
+  while true; do
+      read -p "Hostname: " puavo_hostname
+
+      echo "${puavo_hostname}" | egrep -q '\s' && {
+          echo "E: hostname name cannot contain whitespace" >&2
+          continue
+      }
+
+      if [ -n "${puavo_hostname}" ]; then
+          puavo_preseed_register_args="${puavo_preseed_register_args} --puavoHostname ${puavo_hostname}"
+      fi
+
+      break
   done
 }
 
