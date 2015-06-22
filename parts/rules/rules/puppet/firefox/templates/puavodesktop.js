@@ -31,3 +31,5 @@ if (apiserver) {
   lockPref("network.negotiate-auth.delegation-uris", apiserver);
   lockPref("network.negotiate-auth.trusted-uris", apiserver);
 }
+
+lockPref("nglayout.enable_drag_images", false);
