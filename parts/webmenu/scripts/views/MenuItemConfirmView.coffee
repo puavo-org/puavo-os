@@ -13,6 +13,8 @@ class MenuItemConfirmView extends ViewMaster
         @timeout = opts.timeout || 5
         @updateInterval = opts.updateInterval || 1000
         @interval = null
+        @listenTo this, "hide-window", =>
+            @clearTimer()
 
 
     template: require "../templates/MenuItemConfirmView.hbs"

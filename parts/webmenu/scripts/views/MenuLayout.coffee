@@ -59,6 +59,11 @@ class MenuLayout extends ViewMaster
                 model: model
                 config: @config
 
+        # Lightbox is not the same DOM tree as the other view. So manually
+        # proxy all message to it too
+        @listenTo this, "all", (eventName, arg) =>
+            if @lightbox
+                @lightbox.broadcast(eventName, arg)
 
 
         # Connect search events to MenuListView
@@ -70,6 +75,7 @@ class MenuLayout extends ViewMaster
             @setView ".favorites-container", @favorites
             @setView ".search-container", @search
             @setView ".breadcrumbs-container", @breadcrumbs
+            @removeLightbox()
             @refreshViews()
 
         @listenTo this, "open-logout-view", =>
