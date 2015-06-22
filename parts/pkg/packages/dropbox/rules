@@ -16,6 +16,11 @@ case "${command}" in
         ;;
     unpack)
         tar --no-same-owner -z -x -f "$1" -C "$2"
+
+        ## Fix upstream pack: upstream distributes the file as only
+        ## owner-readable, but it needs to be readable by all, otherwise
+        ## dropbox fails to run as non-root (prompts for root password).
+        find "$2" -type f -name top_level.txt -exec chmod a+r {} \;
         ;;
     *)
         ;;
