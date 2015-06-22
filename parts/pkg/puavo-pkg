@@ -30,6 +30,16 @@ g_log_level=${LOG_INFO}
 
 SUPPORTED_PKG_FORMAT=1
 
+SC_OK=0
+SC_ERR=1
+
+g_sc=${SC_ERR} ## Prime with a generic error.
+
+on_exit()
+{
+    return ${g_sc}
+}
+
 print_help_and_exit()
 {
     echo "Usage: puavo-pkg [OPTIONS] [COMMAND] [COMMAND_ARGS]"
@@ -59,6 +69,7 @@ print_help_and_exit()
     echo
     echo "Files:"
     echo "  /etc/puavo-pkg/puavo-pkg.conf  configuration file"
+    g_sc=${SC_OK}
     exit 0
 }
 
@@ -691,6 +702,8 @@ assert_args_count()
 
 set -eu
 
+trap on_exit EXIT
+
 while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
@@ -786,4 +799,5 @@ case "${command}" in
         usage_error "unknown command '${command}'"
 esac
 
+g_sc=${SC_OK}
 exit 0
