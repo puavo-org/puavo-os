@@ -438,7 +438,7 @@ begin
   conf = JSON.parse( IO.read(config_path) )
 rescue Errno::ENOENT
   conf = nil
-rescue Exception => e
+rescue StandardError => e
   logerr(Syslog::LOG_ERR,
          "Could not read and interpret %s: %s\n",
          config_path,
@@ -473,7 +473,7 @@ end
 apply_configs.each do |part|
   begin
     dispatch_table[part].call()
-  rescue Exception => e
+  rescue StandardError => e
     logerr(Syslog::LOG_ERR,
            "%s\n",
            "Could not handle #{ part }: #{ e.message } / #{ e.backtrace }")
