@@ -29,6 +29,9 @@ begin
       exit(0)
     end
 
+    raise 'PAM_USER environment variable not set' \
+      unless ENV['PAM_USER'] && !ENV['PAM_USER'].empty?
+
     Syslog.notice('making %s the primary user by using the override mechanism',
                   ENV['PAM_USER'])
 
