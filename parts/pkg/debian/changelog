@@ -1,3 +1,22 @@
+puavo-pkg (0.1.25) trusty; urgency=medium
+
+  * New release
+  * Document exit status codes
+  * Exit with status code 2 in case of a network failure
+  * Exit with status code 0 on success, and with 1 on any error
+  * Add Geogebra
+  * adobe-flashplugin: add legend and description
+  * adobe-reader: add legend and description
+  * google-chrome: add legend and description
+  * cmaptools: add legend and description
+  * dropbox: add legend and description
+  * oracle-java: add legend and description
+  * skype: add legend and description
+  * vstloggerpro: add legend and description
+  * Git(1c2f06f6c88866d9690e34f751a05fcf7fc64066)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 22 Jun 2015 11:12:19 +0300
+
 puavo-pkg (0.1.24) trusty; urgency=medium
 
   * New release
