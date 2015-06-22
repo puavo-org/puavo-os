@@ -246,6 +246,25 @@
         },
         {
           "type": "desktop",
+          "source": "blender",
+          "inactiveByDeviceType": "thinclient",
+          "name": {
+            "fi": "Blender-3D-mallinnusohjelma",
+            "sv": "Blender-3D-modellering",
+            "de": "Blender-3D-Modellierung"
+          }
+        },
+        {
+          "type": "desktop",
+          "source": "photofilmstrip",
+          "name": {
+            "fi": "Photofilmstrip-kuvaesitys",
+            "sv": "Photofilmstrip",
+            "de": "Photofilmstrip"
+          }
+        },
+        {
+          "type": "desktop",
           "source": "simple-scan",
           "inactiveByDeviceType": "thinclient",
           "name": {
@@ -267,25 +286,6 @@
             "de": "Xsane Scannerwerkzeug"
           },
           "osIconPath": "/usr/share/icons/Faenza/devices/96/scanner.png"
-        },
-        {
-          "type": "desktop",
-          "source": "blender",
-          "inactiveByDeviceType": "thinclient",
-          "name": {
-            "fi": "Blender-3D-mallinnusohjelma",
-            "sv": "Blender-3D-modellering",
-            "de": "Blender-3D-Modellierung"
-          }
-        },
-        {
-          "type": "desktop",
-          "source": "photofilmstrip",
-          "name": {
-            "fi": "Photofilmstrip-kuvaesitys",
-            "sv": "Photofilmstrip",
-            "de": "Photofilmstrip"
-          }
         }
       ]
     },
@@ -305,11 +305,12 @@
         {
           "type": "desktop",
           "source": "google-chrome",
+          "installer": "puavo-local-config-ui",
           "name": {
-            "en": "Chrome-browser",
-            "fi": "Chrome-selain",
-            "sv": "Chrome",
-            "de": "Chrome"
+            "en": "Google Chrome-browser",
+            "fi": "Google Chrome-selain",
+            "sv": "Google Chrome",
+            "de": "Google Chrome"
           }
         },
         {
@@ -398,6 +399,7 @@
         {
           "type": "desktop",
           "source": "skype",
+          "installer": "puavo-local-config-ui",
           "name": {
             "en": "Skype"
           },
@@ -420,6 +422,7 @@
         {
           "type": "desktop",
           "source": "dropbox",
+          "installer": "puavo-local-config-ui",
           "name": {
             "en": "Dropbox"
           }
@@ -629,6 +632,7 @@
         {
           "type": "desktop",
           "source": "geogebra",
+          "installer": "puavo-local-config-ui",
           "keywords": [
             "digabi"
           ],
@@ -756,6 +760,7 @@
           "keywords": [
             "digabi"
           ],
+          "installer": "puavo-local-config-ui",
           "source": "LoggerPro"
         },
         {
@@ -939,6 +944,7 @@
         {
           "type": "desktop",
           "source": "cmaptools",
+          "installer": "puavo-local-config-ui",
           "name": {
             "en": "CmapTools-mindmap",
             "fi": "CmapTools-miellekartta",
