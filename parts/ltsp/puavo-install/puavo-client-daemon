@@ -248,10 +248,11 @@ class Updater < DBus::Object
 
   def notify_puavo_on_images
     available_images \
-      = (Dir.glob('/images/*.img').map { |p| File.basename(p) } \
-           - %w(ltsp.img ltsp-backup.img)).sort
-    current_image = IO.readlines('/etc/ltsp/this_ltspimage_name') \
-                      .first.chomp
+      = (Dir.glob('/images/*.img').map { |p| File.basename(p, '.img') } \
+           - %w(ltsp ltsp-backup)).sort
+    current_image_with_img = IO.readlines('/etc/ltsp/this_ltspimage_name') \
+                               .first.chomp
+    current_image = File.basename(current_image_with_img, '.img')
 
     deviceinfo = JSON.parse( File.read('/state/etc/puavo/device.json') )
 
