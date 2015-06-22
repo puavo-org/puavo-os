@@ -19,6 +19,8 @@ require 'syslog'
 
 Ltspadmins_group_id = 3000
 
+class NetworkError < RuntimeError; end
+
 def print_help()
   puts <<-EOF
 puavo-local-config [OPTIONS]
@@ -345,6 +347,15 @@ end
 
 def puavo_pkg(*args)
   system('/usr/sbin/puavo-pkg', *args)
+  status = $?.exitstatus
+  return if status == 0
+
+  if status == 2 then
+    raise NetworkError,
+          "puavo-pkg #{ args.join(' ') } reported network error (code 2)"
+  else
+    raise "puavo-pkg #{ args.join(' ') } returned error code: #{ status }"
+  end
 end
 
 def install_pkgs(packages)
@@ -354,21 +365,18 @@ def install_pkgs(packages)
       unless pkg.match(re)
 
     pkgpath = "/images/puavo-pkg/installers/installers/#{ pkg }.tar.gz"
-    puavo_pkg('install', pkgpath) \
-      or raise "Problem in installing: #{ pkgpath }"
+    puavo_pkg('install', pkgpath)
   end
 end
 
 def remove_pkgs(packages)
   packages.each do |pkg|
-    puavo_pkg('remove', pkg) \
-      or raise "Problem in removing: #{ pkg }"
+    puavo_pkg('remove', pkg)
   end
 end
 
 def setup_installed_pkgs()
-  puavo_pkg('reconfigure', '--all') \
-    or raise 'Problem in reconfiguring packages'
+  puavo_pkg('reconfigure', '--all')
 end
 
 
@@ -470,14 +478,28 @@ if apply_configs.empty? then
   exit(1)
 end
 
+
+
 apply_configs.each do |part|
+  logerr_fn = lambda do |part, e|
+                logerr(Syslog::LOG_ERR,
+                       "Could not handle %s: %s / %s\n",
+                       part,
+                       e.message,
+                       e.backtrace)
+              end
+
   begin
     dispatch_table[part].call()
+  rescue NetworkError => e
+    # If we have one network error, set the exit code to follow that.
+    exit_code = 2
+    logerr_fn.call(part, e)
   rescue StandardError => e
-    logerr(Syslog::LOG_ERR,
-           "%s\n",
-           "Could not handle #{ part }: #{ e.message } / #{ e.backtrace }")
-    exit_code = 1
+    # Use 1 as a generic error code unless a more specific error has occurred.
+    exit_code = 1 if exit_code == 0
+
+    logerr_fn.call(part, e)
   end
 end
 
