@@ -102,6 +102,10 @@ arguments. ``PACKAGE/rules`` will be executed by ``puavo-pkg`` which
 will pass an installer command (``download``, ``unpack``, ``configure``
 and ``unconfigure``) as the first argument.
 
+On success, ``PACKAGE/rules`` must exit with status code 0. If
+``download`` command fails because of a network failure,
+``PACKAGE/rules`` must exit with status code 2. Otherwise,
+``PACKAGE/rules`` must exit with status code 1.
 
 #### ``PACKAGE/description``
 

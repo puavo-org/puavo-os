@@ -30,9 +30,10 @@ g_log_level=${LOG_INFO}
 
 SUPPORTED_PKG_FORMAT=1
 
-SC_OK=0
-SC_ERR=1
-SC_ERR_NET=2
+## Exit status codes:
+SC_OK=0       ## Success
+SC_ERR=1      ## Generic error
+SC_ERR_NET=2  ## Network failure
 
 g_sc=${SC_ERR} ## Prime with a generic error.
 
@@ -70,6 +71,11 @@ print_help_and_exit()
     echo
     echo "Files:"
     echo "  /etc/puavo-pkg/puavo-pkg.conf  configuration file"
+    echo
+    echo "Exit status codes:"
+    echo "  0 - Success"
+    echo "  1 - Generic error"
+    echo "  2 - Network failure"
     g_sc=${SC_OK}
     exit 0
 }
