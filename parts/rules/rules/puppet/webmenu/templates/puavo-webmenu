@@ -11,8 +11,9 @@ puavo_personally_administered=$(jq -r .personally_administered \
 				      /etc/puavo/device.json)
 
 if [ "$puavo_personally_administered" = "true" ]; then
+  WM_CONFIG_JSON_PATH=/etc/webmenu/personally-administered-device
   WM_MENU_JSON_PATH=/etc/webmenu/personally-administered-device
-  export WM_MENU_JSON_PATH
+  export WM_CONFIG_JSON_PATH WM_MENU_JSON_PATH
 fi
 
 exec webmenu $webmenu_args "$@"

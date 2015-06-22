@@ -19,6 +19,9 @@ class webmenu {
     '/etc/webmenu/menu.json':
       content => template('webmenu/menu.json');
 
+    '/etc/webmenu/personally-administered-device/config.json':
+      content => template('webmenu/personally-administered-device-config.json');
+
     '/etc/webmenu/personally-administered-device/menu.json':
       content => template('webmenu/personally-administered-device-menu.json');
 
