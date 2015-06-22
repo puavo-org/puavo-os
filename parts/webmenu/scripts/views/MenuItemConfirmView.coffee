@@ -57,10 +57,8 @@ class MenuItemConfirmView extends ViewMaster
 
     events:
         "click .cancel": (e) ->
-            console.log("CLICK cancel")
             @bubble "cancel"
         "click .ok": (e) ->
-            console.log("CLICK OK")
             @bubble "open-app", @model
 
 
