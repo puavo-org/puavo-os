@@ -1,0 +1,113 @@
+#!/bin/bash
+
+set -eu
+
+command=$1
+shift
+
+URL_BASE=http://downloads.sourceforge.net/corefonts
+TTFONT_BASE=/usr/share/fonts/truetype
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+
+        mkdir -p "${TTFONT_BASE}"
+        ln -s -f -T "${upstream_dir}" "${TTFONT_BASE}/msttcorefonts"
+        ;;
+
+    unconfigure)
+        upstream_dir=$1
+        rm -f "${TTFONT_BASE}/msttcorefonts"
+        ;;
+
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        tar -x -f "${upstream_pack}" -C "${upstream_dir}"
+        ;;
+
+    download)
+        upstream_pack=$(readlink -f "$1")
+        tmpdir=
+        trap '[ -n "${tmpdir}" ] && rm -rf "${tmpdir}"' EXIT
+        tmpdir=$(mktemp -d)
+
+        (
+            cd "${tmpdir}"
+            while read sha256 fontexe; do
+                wget \
+                    --no-use-server-timestamps \
+                    --no-check-certificate \
+                    --no-cookies \
+                    --output-document "${fontexe}" \
+                    --progress=dot:mega \
+                    "${URL_BASE}/${fontexe}" || {
+                    [ $? -eq 4 ] && exit 2 ## Network failure.
+                    exit 1
+                }
+                echo "${sha256}  ${fontexe}" | sha256sum --check
+                cabextract "${fontexe}" 1>&2 || exit 1
+            done <<EOF
+0524fe42951adc3a7eb870e32f0920313c71f170c859b5f770d82b4ee111e970 andale32.exe
+85297a4d146e9c87ac6f74822734bdee5f4b2a722d7eaa584b7f2cbf76f478f6 arial32.exe
+a425f0ffb6a1a5ede5b979ed6177f4f4f4fdef6ae7c302a7b7720ef332fec0a8 arialb32.exe
+9c6df3feefde26d4e41d4a4fe5db2a89f9123a772594d7f59afd062625cd204e comic32.exe
+bb511d861655dde879ae552eb86b134d6fae67cb58502e6ff73ec5d9151f3384 courie32.exe
+2c2c7dcda6606ea5cf08918fb7cd3f3359e9e84338dc690013f20cd42e930301 georgi32.exe
+6061ef3b7401d9642f5dfdb5f2b376aa14663f6275e60a51207ad4facf2fccfb impact32.exe
+db56595ec6ef5d3de5c24994f001f03b2a13e37cee27bc25c58f6f43e8f807ab times32.exe
+5a690d9bb8510be1b8b4fe49f1f2319651fe51bbe54775ddddd8ef0bd07fdac9 trebuc32.exe
+c1cb61255e363166794e47664e2f21af8e3a26cb6346eb8d2ae2fa85dd5aad96 verdan32.exe
+64595b5abc1080fba8610c5c34fab5863408e806aafe84653ca8575bed17d75a webdin32.exe
+EOF
+
+            for x in *; do
+                y=`echo $x | tr '[A-Z]' '[a-z]'`
+                if [ "$x" != "$y" ]; then
+                    mv "$x" "$y"
+                fi
+            done
+
+            while read longname shortname; do
+                ln -s "${shortname}" "${longname}"
+            done <<EOF
+Andale_Mono.ttf                         andalemo.ttf
+Arial_Black.ttf                         ariblk.ttf
+Arial.ttf                               arial.ttf
+Arial_Bold.ttf                          arialbd.ttf
+Arial_Bold_Italic.ttf                   arialbi.ttf
+Arial_Italic.ttf                        ariali.ttf
+Comic_Sans_MS.ttf                       comic.ttf
+Comic_Sans_MS_Bold.ttf                  comicbd.ttf
+Courier_New.ttf                         cour.ttf
+Courier_New_Bold.ttf                    courbd.ttf
+Courier_New_Italic.ttf                  couri.ttf
+Courier_New_Bold_Italic.ttf             courbi.ttf
+Georgia.ttf                             georgia.ttf
+Georgia_Bold.ttf                        georgiab.ttf
+Georgia_Italic.ttf                      georgiai.ttf
+Georgia_Bold_Italic.ttf                 georgiaz.ttf
+Impact.ttf                              impact.ttf
+Times_New_Roman.ttf                     times.ttf
+Times_New_Roman_Bold.ttf                timesbd.ttf
+Times_New_Roman_Bold_Italic.ttf         timesbi.ttf
+Times_New_Roman_Italic.ttf              timesi.ttf
+Trebuchet_MS.ttf                        trebuc.ttf
+Trebuchet_MS_Bold.ttf                   trebucbd.ttf
+Trebuchet_MS_Italic.ttf                 trebucit.ttf
+Trebuchet_MS_Bold_Italic.ttf            trebucbi.ttf
+Verdana.ttf                             verdana.ttf
+Verdana_Bold.ttf                        verdanab.ttf
+Verdana_Italic.ttf                      verdanai.ttf
+Verdana_Bold_Italic.ttf                 verdanaz.ttf
+Webdings.ttf                            webdings.ttf
+EOF
+            tar -c -f "${upstream_pack}" *.ttf
+        )
+        
+        ;;
+
+    *)
+        ;;
+esac

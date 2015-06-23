@@ -1,5 +1,5 @@
 packagedirs = adobe-flashplugin/ adobe-reader/ cmaptools/ dropbox/ \
-	geogebra/ google-chrome/ google-earth/ oracle-java/ skype/ vstloggerpro/
+	geogebra/ google-chrome/ google-earth/ msttcorefonts/ oracle-java/ skype/ vstloggerpro/
 packagefiles = $(packagedirs:%/=%.tar.gz)
 
 all: $(packagefiles) puavo-pkg-installers-bundle.tar
