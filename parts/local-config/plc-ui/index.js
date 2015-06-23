@@ -21,7 +21,7 @@ var mc =
 
         'Additional software installation': 'Lisäohjelmistojen asennus',
 
-        'The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.': 'Lisäohjelmistot ovat sovelluksia, joita ei ole lisenssiehtojen vuoksi voitu asentaa kannettavalle valmiiksi. Voit asentaa tarvitsemiasi ohjelmistoja tästä ja samalla hyväksyt niiden lisenssiehdot. Huom! Ohjelmistojen asennus vaatii verkkoyhteyden ja se voi kestää useita minuutteja. Ikkunan sulkeminen keskeyttää asennuksen.',
+        'The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.  Note!  Software installation requires network connection.  Software installation may take several minutes.  Closing the window will interrupt installation.': 'Lisäohjelmistot ovat sovelluksia, joita ei ole lisenssiehtojen vuoksi voitu asentaa kannettavalle valmiiksi.  Voit asentaa tarvitsemiasi ohjelmistoja tästä ja samalla hyväksyt niiden lisenssiehdot.  Huom!  Ohjelmistojen asennus vaatii verkkoyhteyden.  Ohjelmistojen asentaminen voi kestää useita minuutteja.  Ikkunan sulkeminen keskeyttää asennuksen.',
 
         'ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE.':
            'HYVÄKSY KAIKKI LISENSSIT JA ASENNA KAIKKI OHJELMAT.',
@@ -78,7 +78,8 @@ var mc =
 
         'Additional software installation': 'Additional software installation', // XXX
 
-        'The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.': 'The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.', // XXX
+        'The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.  Note!  Software installation requires network connection.  Software installation may take several minutes.  Closing the window will interrupt installation.':
+         'The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.  Note!  Software installation requires network connection.  Software installation may take several minutes.  Closing the window will interrupt installation.', // XXX
 
         'ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE.':
           'ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE.', // XXX
@@ -675,7 +676,7 @@ function generate_software_installation_controls(form) {
   form.appendChild(title);
 
   var textdiv = document.createElement('div');
-  textdiv.textContent = mc('The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.');
+  textdiv.textContent = mc('The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.  Note!  Software installation requires network connection.  Software installation may take several minutes.  Closing the window will interrupt installation.');
   form.appendChild(textdiv);
 
   var pkgcontrols_table = document.createElement('table');
