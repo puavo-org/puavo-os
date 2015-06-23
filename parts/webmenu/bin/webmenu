@@ -22,6 +22,7 @@ help(){
     -x --use-xdg    Generating menu content using the Desktop Menu Specification
     --webkiosk      Enable webkiosk mode.
     -s --stop       Stop the running Webmenu process
+    -r --restart    Restart while preserving environment variables. Works only when mon is used.
     -n --no-build   Skip asset building in development mode
 
     Hacking options
@@ -71,17 +72,15 @@ done
 
 # https://github.com/visionmedia/mon
 mon_args=""
-pidfile="$WM_HOME/mon.pid"
+mon_pidfile="$WM_HOME/mon.pid"
+nw_pidfile="$WM_HOME/nw.pid"
 
 wm_args=""
 
 use_mon=true
 use_xdg=false
+stop_wm=false
 
-# Kill previous webmenu if any
-if [ -f "$pidfile" ]; then
-    kill $(cat $pidfile) || true
-fi
 
 while true; do
     case "${1:-}" in
@@ -92,6 +91,10 @@ while true; do
             # Enable error reporting to fluentd only in daemon mode
             mon_args="$mon_args --daemonize"
             shift
+        ;;
+        -r|--restart)
+            kill $(cat $nw_pidfile)
+            exit 0
         ;;
         -d)
             wm_args="$wm_args --devtools"
@@ -127,7 +130,8 @@ while true; do
             shift
         ;;
         -s|--stop)
-            exit 0
+            stop_wm=true
+            shift
         ;;
         "")
             break
@@ -138,6 +142,15 @@ while true; do
         ;;
     esac
 done
+
+# Kill previous webmenu if any
+if [ -f "$mon_pidfile" ]; then
+    kill $(cat $mon_pidfile) || true
+fi
+
+if $stop_wm; then
+    exit 0
+fi
 
 generated_menu_json="$WM_HOME/menu-generated.json"
 
@@ -176,11 +189,13 @@ if $use_mon; then
     exec mon $mon_args \
         --log $WM_LOG_FILE \
         --attempts 2 \
-        --mon-pidfile "$pidfile" \
+        --mon-pidfile "$mon_pidfile" \
+        --pidfile "$nw_pidfile" \
         --on-restart $restart_script \
         --on-error $error_script \
         "nw . $wm_args"
 else
-    echo $$ > "$pidfile"
+    echo $$ > "$nw_pidfile"
+    rm -f "$mon_pidfile"
     exec nw . $wm_args
 fi
