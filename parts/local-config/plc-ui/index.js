@@ -21,10 +21,17 @@ var mc =
 
         'Additional software installation': 'Lisäohjelmistojen asennus',
 
-        'The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.  Note!  Software installation requires network connection.  Software installation may take several minutes.  Closing the window will interrupt installation.': 'Lisäohjelmistot ovat sovelluksia, joita ei ole lisenssiehtojen vuoksi voitu asentaa kannettavalle valmiiksi.  Voit asentaa tarvitsemiasi ohjelmistoja tästä ja samalla hyväksyt niiden lisenssiehdot.  Huom!  Ohjelmistojen asennus vaatii verkkoyhteyden.  Ohjelmistojen asentaminen voi kestää useita minuutteja.  Ikkunan sulkeminen keskeyttää asennuksen.',
+        'The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.  Note!  Software installation requires network connection.  Software installation may take several minutes.  Closing the window will interrupt installation.':
+          'Lisäohjelmistot ovat sovelluksia, joita ei ole lisenssiehtojen vuoksi voitu asentaa kannettavalle valmiiksi.  Voit asentaa tarvitsemiasi ohjelmistoja tästä ja samalla hyväksyt niiden lisenssiehdot.  Huom!  Ohjelmistojen asennus vaatii verkkoyhteyden.  Ohjelmistojen asentaminen voi kestää useita minuutteja.  Ikkunan sulkeminen keskeyttää asennuksen.',
 
         'ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE.':
            'HYVÄKSY KAIKKI LISENSSIT JA ASENNA KAIKKI OHJELMAT.',
+
+        'INSTALL':         'ASENNA',
+        'Installing...':   'Asennetaan...',
+        'license terms':   'lisenssiehdot',
+        'Uninstalling...': 'Poistetaan...',
+        'UNINSTALL':       'POISTA',
 
         'Error in installation, check network.':
            'Asennus ei onnistunut, tarkista verkkoyhteys.',
@@ -33,6 +40,22 @@ var mc =
            'Asennus ei onnistunut, tuntematon syy.',
 
         'Access controls': 'Pääsyoikeudet',
+
+        'Access controls determine the login names that have access to this computer in addition to the primary user.  New login names can be created at www.lukiolaiskannettava.fi-webpage.':
+          'Pääsyoikeuksilla määritetään käyttäjätunnukset, joilla on laitteen pääkäyttäjän lisäksi pääsy tälle tietokoneelle.  Uusia käyttäjätunnuksia voit luoda www.lukiolaiskannettava.fi-sivustolla.',
+
+        'Allow all users from "lukiolaiskannettava"-domain.':
+          'Salli kaikkien lukiolaiskannettavatunnusten kirjautuminen',
+
+        'Allow only the following usernames:':
+          'Salli vain seuraavat lukiolaiskannettavatunnukset:',
+
+        'Remote assistance': 'Etätuki',
+
+        'If you want to allow Opinsys support service to remotely access your computer, you can do that with this option.  This setting will reset when computer reboots.':
+          'Mikäli haluat sallia Opinsysin tukipalvelun etäpääsyn tietokoneellesi tukitilanteessa, voit tehdä sen tällä valinnalla.  Tämä asetus nollautuu laitteen uudelleenkäynnistyksen yhteydessä.',
+
+        'Allow remote assistance:': 'Salli etätuki:',
 
         'Configuration needs corrections, no changes are saved.':
           'Asetukset vaativat korjausta, muutokset eivät tallennu.',
@@ -57,19 +80,6 @@ var mc =
         'Passwords do not match.':
           'Salasanat eivät täsmää.',
 
-        'Allow logins for:':        'Salli kirjautumiset käyttäjätunnuksille:',
-        'All puavo domain users':   'Kaikki puavo-domain käyttäjät',
-        'Some puavo domain users:': 'Jotkut puavo-domain käyttäjät:',
-
-        'Allow login from remote admins:':
-          'Salli kirjautumiset etäylläpitäjille:',
-
-        'INSTALL':         'ASENNA',
-        'Installing...':   'Asennetaan...',
-        'license terms':   'lisenssiehdot',
-        'Uninstalling...': 'Poistetaan...',
-        'UNINSTALL':       'POISTA',
-
         'You do not have permission to run this tool':
           'Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön',
       },
@@ -84,6 +94,12 @@ var mc =
         'ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE.':
           'ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE.', // XXX
 
+        'INSTALL':         'INSTALLERA',
+        'Installing...':   'Installering...',
+        'license terms':   'licensvillkor',
+        'Uninstalling...': 'Avinstallering...',
+        'UNINSTALL':       'AVINSTALLERA',
+
         'Error in installation, check network.':
           'Error in installation, check network.', // XXX
 
@@ -92,10 +108,26 @@ var mc =
 
         'Access controls': 'Access controls', // XXX
 
-        'Local user management': 'Local user management', // XXX
+        'Access controls determine the login names that have access to this computer in addition to the primary user.  New login names can be created at www.lukiolaiskannettava.fi-webpage.':
+          'Access controls determine the login names that have access to this computer in addition to the primary user.  New login names can be created at www.lukiolaiskannettava.fi-webpage.', // XXX
+
+        'Allow all users from "lukiolaiskannettava"-domain.':
+          'Allow all users from "lukiolaiskannettava"-domain.', // XXX
+
+        'Allow only the following usernames:':
+          'Allow only the following usernames:', // XXX
+
+        'Remote assistance': 'Remote assistance', // XXX
+
+        'If you want to allow Opinsys support service to remotely access your computer, you can do that with this option.  This setting will reset when computer reboots.':
+          'If you want to allow Opinsys support service to remotely access your computer, you can do that with this option.  This setting will reset when computer reboots.', // XXX
+
+        'Allow remote assistance:': 'Allow remote assistance:', // XXX
 
         'Configuration needs corrections, no changes are saved.':
           'Inställningarna kräver korrigering, inga ändringar har sparats',
+
+        'Local user management': 'Local user management', // XXX
 
         'Add another user': 'Lägg till en annan användare',
         'Local users:':     'Lokala användarna:',
@@ -106,25 +138,14 @@ var mc =
         'Password:':        'Lösenord:',
         'remove':           'ta bort',
 
+        'Login is the same one that primary user has.':
+          'Login is the same one that primary user has.', // XXX
         'Login is not in correct format.':
           'Inloggning är inte i rätt format.',
         'Name is not in correct format.':
           'Namnet är inte i rätt format.',
         'Passwords do not match.':
           'Lösenorden stämmer inte.',
-
-        'Allow logins for:':        'Tillåt inloggningar för:',
-        'All puavo domain users':   'Alla puavo domänanvändare',
-        'Some puavo domain users:': 'Några puavo domänanvändare:',
-
-        'Allow login from remote admins:':
-          'Tillåt inloggning för fjärradmins:',
-
-        'INSTALL':         'INSTALLERA',
-        'Installing...':   'Installering...',
-        'license terms':   'licensvillkor',
-        'Uninstalling...': 'Avinstallering...',
-        'UNINSTALL':       'AVINSTALLERA',
 
         'You do not have permission to run this tool':
           'Du har inte rättigheter för att köra det här verktyget',
@@ -402,7 +423,7 @@ function generate_allow_logins_input(form) {
   var table = document.createElement('table');
 
   var make_radiobutton
-    = function(tr, value, text, checked) {
+    = function(tr, value, text, checked, last_cell_spanvalue) {
         var input = document.createElement('input');
         if (checked) {
           input.setAttribute('checked', true);
@@ -416,9 +437,10 @@ function generate_allow_logins_input(form) {
 
         var tr = table.appendChild( document.createElement('tr') );
         var td = tr   .appendChild( document.createElement('td') );
+        if (last_cell_spanvalue !== 1) { td.colSpan = last_cell_spanvalue; }
+        td.appendChild(input);
 
         var textnode = document.createTextNode(text);
-        td.appendChild(input);
         td.appendChild(textnode);
 
         return tr;
@@ -428,12 +450,13 @@ function generate_allow_logins_input(form) {
 
   make_radiobutton(table,
                    'all_puavo_domain_users',
-                   mc('All puavo domain users'),
-                   all_is_chosen);
+                   mc('Allow all users from "lukiolaiskannettava"-domain.'),
+                   all_is_chosen,
+                   2);
 
   var rb_tr = make_radiobutton(table,
                                'some_puavo_domain_users',
-                               mc('Some puavo domain users:'),
+                               mc('Allow only the following usernames:'),
                                !all_is_chosen);
 
   var nonlocal_users_allowed_logins = [];
@@ -452,7 +475,7 @@ function generate_allow_logins_input(form) {
                    nonlocal_users_allowed_logins);
 
   var title = document.createElement('div');
-  title.textContent = mc('Allow logins for:');
+  title.textContent = mc('Access controls determine the login names that have access to this computer in addition to the primary user.  New login names can be created at www.lukiolaiskannettava.fi-webpage.');
   title.appendChild(table);
 
   form.appendChild(title);
@@ -460,9 +483,15 @@ function generate_allow_logins_input(form) {
 
 function generate_allow_remoteadmins_input(form) {
   var div = document.createElement('div');
-  var titletext
-    = document.createTextNode( mc('Allow login from remote admins:') );
-  div.appendChild(titletext);
+
+  var description_div = document.createElement('div');
+  var description_text
+    = document.createTextNode( mc('If you want to allow Opinsys support service to remotely access your computer, you can do that with this option.  This setting will reset when computer reboots.') );
+  description_div.appendChild(description_text);
+
+  var short_span = document.createElement('span');
+  short_span.textContent = mc('Allow remote assistance:');
+  short_span.setAttribute('style', 'margin-left: 1.5em;');
 
   var input = document.createElement('input');
   input.setAttribute('name', 'allow_remoteadmins');
@@ -474,7 +503,10 @@ function generate_allow_remoteadmins_input(form) {
   }
   input.addEventListener('click', write_config);
 
+  div.appendChild(description_div);
+  div.appendChild(short_span);
   div.appendChild(input);
+
   form.appendChild(div);
 }
 
@@ -487,7 +519,7 @@ function generate_form(gui_config) {
   }
 
   // login-access control
-  generate_loginaccess_control(form);
+  generate_loginaccess_controls(form);
 
   // managing local users
   if (gui_config.show_local_users) {
@@ -495,12 +527,17 @@ function generate_form(gui_config) {
   }
 }
 
-function generate_loginaccess_control(form) {
+function generate_loginaccess_controls(form) {
   var title = document.createElement('h2');
   title.textContent = mc('Access controls');
   form.appendChild(title);
 
   generate_allow_logins_input(form);
+
+  var subtitle = document.createElement('h3');
+  subtitle.textContent = mc('Remote assistance');
+  form.appendChild(subtitle);
+
   generate_allow_remoteadmins_input(form);
 }
 
@@ -677,6 +714,7 @@ function generate_software_installation_controls(form) {
 
   var textdiv = document.createElement('div');
   textdiv.textContent = mc('The following software have licenses that do not allow preinstallation.  You can install them from here, but by installing you accept the software license terms.  Note!  Software installation requires network connection.  Software installation may take several minutes.  Closing the window will interrupt installation.');
+  textdiv.setAttribute('style', 'margin-bottom: 0.6em; margin-top: 0.8em;');
   form.appendChild(textdiv);
 
   var pkgcontrols_table = document.createElement('table');
