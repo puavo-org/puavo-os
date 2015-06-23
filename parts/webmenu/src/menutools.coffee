@@ -90,27 +90,29 @@ injectDesktopData = (menu, options) ->
       throw new Error("'desktop' item in menu.json item is missing " +
         "'source' attribute: #{ JSON.stringify(menu) }")
 
-    options.desktopFileSearchPaths.forEach (desktopDir) ->
-      desktopEntry = {}
+    desktopEntry = null
+
+    for desktopDir in options.desktopFileSearchPaths
       filePath = desktopDir + "/#{ menu.source }.desktop"
       try
         desktopEntry = dotdesktop.parseFileSync(filePath, options.locale)
+        break
       catch err
-        return if not menu.installer
-        menu.useInstaller = true
-        menu.command = menu.installer
-        menu.osIconPath = findOsIcon(options.installerIcon, options)
-        menu.name ?= menu.source
+        throw err if err.code isnt "ENOENT"
 
-
+    if desktopEntry
       menu.name ?= desktopEntry.name
       menu.description ?= desktopEntry.description
       menu.command ?= desktopEntry.command
       menu.osIconPath ?= findOsIcon(desktopEntry.osIcon, options)
       menu.upstreamName ?= desktopEntry.upstreamName
       menu.osIconPath = normalizeIconPath(menu.osIconPath)
-
-    if not menu.name
+    else if menu.installer
+      menu.useInstaller = true
+      menu.command = menu.installer
+      menu.osIconPath = findOsIcon(options.installerIcon, options)
+      menu.name ?= menu.source
+    else
       console.error "WARNING: Cannot find name for .desktop entry: " + menu.source
       menu.broken = true
 
