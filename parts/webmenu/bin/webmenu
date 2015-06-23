@@ -125,10 +125,6 @@ while true; do
             use_xdg=true
             shift
         ;;
-        --no-mon)
-            use_mon=false
-            shift
-        ;;
         -s|--stop)
             stop_wm=true
             shift
