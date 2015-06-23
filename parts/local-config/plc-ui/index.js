@@ -651,14 +651,14 @@ function generate_one_user_create_table(parentNode, local_users_list, user_i) {
                      tr.appendChild( document.createElement('td') );
                    }
 
-		   var error_td = document.createElement('td');
-		   error_td.setAttribute('class', 'error');
-		   error_td.setAttribute('id',
-					 'localuser_'
-					   + user_i
-					   + '_error_'
-					   + fieldinfo.key);
-		   tr.appendChild(error_td);
+                   var error_td = document.createElement('td');
+                   error_td.setAttribute('class', 'error');
+                   error_td.setAttribute('id',
+                                         'localuser_'
+                                           + user_i
+                                           + '_error_'
+                                           + fieldinfo.key);
+                   tr.appendChild(error_td);
 
                    table.appendChild(tr);
                  });
