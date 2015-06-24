@@ -71,6 +71,11 @@ EOF
 
             while read longname shortname; do
                 ln -s "${shortname}" "${longname}"
+
+                ## Make the timestamps of symlinks identical to their
+                ## targets. This ensures we get identical upstream pack
+                ## each time (as long as target files remain unchanged).
+                touch -h -r "${shortname}" "${longname}"
             done <<EOF
 Andale_Mono.ttf                         andalemo.ttf
 Arial_Black.ttf                         ariblk.ttf
