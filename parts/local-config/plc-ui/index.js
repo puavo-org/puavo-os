@@ -421,11 +421,14 @@ function generate_allow_remoteadmins_input(form) {
     = document.createTextNode( mc('If you want to allow Opinsys support service to remotely access your computer, you can do that with this option.  This setting will reset when computer reboots.') );
   description_div.appendChild(description_text);
 
-  var short_span = document.createElement('span');
-  short_span.textContent = mc('Allow remote assistance:');
-  short_span.setAttribute('style', 'margin-left: 1.5em;');
+  var input_id = 'allow_remoteadmins_checkbox';
+  var label = document.createElement('label');
+  label.textContent = mc('Allow remote assistance:');
+  label.setAttribute('style', 'margin-left: 1.5em;');
+  label.setAttribute('for', input_id);
 
   var input = document.createElement('input');
+  input.setAttribute('id', input_id);
   input.setAttribute('name', 'allow_remoteadmins');
   input.setAttribute('type', 'checkbox');
   if (old_config.allow_remoteadmins) {
@@ -436,7 +439,7 @@ function generate_allow_remoteadmins_input(form) {
   input.addEventListener('click', write_config);
 
   div.appendChild(description_div);
-  div.appendChild(short_span);
+  div.appendChild(label);
   div.appendChild(input);
 
   form.appendChild(div);
