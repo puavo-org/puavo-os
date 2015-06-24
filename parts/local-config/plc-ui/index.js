@@ -157,6 +157,7 @@ function add_software_controls(table, packages) {
                                                   description,
                                                   legend,
                                                   license_url,
+                                                  pkgname,
                                                   sw_states[pkgname]);
           install_pkg_functions.push(install_pkg_fn);
         }
@@ -171,6 +172,7 @@ function add_one_pkgcontrol(parentNode,
                             description,
                             legend,
                             license_url,
+                            pkgname,
                             sw_state) {
   var tr = document.createElement('tr');
 
@@ -193,7 +195,7 @@ function add_one_pkgcontrol(parentNode,
   // create action button and error element
   var action_td = document.createElement('td');
   var action_errormsg_element = document.createElement('td');
-  button_and_install_action = add_action_button(legend,
+  button_and_install_action = add_action_button(pkgname,
                                                 action_errormsg_element,
                                                 sw_state);
   action_td.appendChild(button_and_install_action.button);
