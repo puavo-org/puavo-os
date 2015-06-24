@@ -1,15 +1,9 @@
 var child_process = require('child_process');
 var fs = require('fs');
-var gui = require('nw.gui');
-
-var gui_config;
 
 var config_json_dir  = '/state/etc/puavo/local';
 var config_json_path = config_json_dir + '/config.json';
 var old_config;
-
-var device_json_path = '/state/etc/puavo/device.json';
-var device_config;
 
 var locale = process.env.LANG.substring(0, 2);
 
@@ -60,26 +54,6 @@ var mc =
         'Configuration needs corrections, no changes are saved.':
           'Asetukset vaativat korjausta, muutokset eivät tallennu.',
 
-        'Local user management': 'Paikallisten käyttäjien hallinta',
-
-        'Add another user': 'Lisää uusi käyttäjä',
-        'Local users:':     'Paikalliset käyttäjät:',
-        'Login:':           'Käyttäjätunnus:',
-        'Name:':            'Nimi:',
-        'OK?':              'OK?',
-        'Password again:':  'Salasana uudestaan:',
-        'Password:':        'Salasana:',
-        'remove':           'poista',
-
-        'Login is the same one that primary user has.':
-          'Käyttäjätunnus on sama kuin ensisijaisella käyttäjällä.',
-        'Login is not in correct format.':
-          'Käyttäjätunnus ei ole oikean muotoinen',
-        'Name is not in correct format.':
-          'Nimi ei ole oikean muotoinen',
-        'Passwords do not match.':
-          'Salasanat eivät täsmää.',
-
         'You do not have permission to run this tool':
           'Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön',
       },
@@ -126,26 +100,6 @@ var mc =
 
         'Configuration needs corrections, no changes are saved.':
           'Inställningarna kräver korrigering, inga ändringar har sparats',
-
-        'Local user management': 'Local user management', // XXX
-
-        'Add another user': 'Lägg till en annan användare',
-        'Local users:':     'Lokala användarna:',
-        'Login:':           'Inloggning:',
-        'Name:':            'Namn:',
-        'OK?':              'OK?',
-        'Password again:':  'Lösenord igen:',
-        'Password:':        'Lösenord:',
-        'remove':           'ta bort',
-
-        'Login is the same one that primary user has.':
-          'Login is the same one that primary user has.', // XXX
-        'Login is not in correct format.':
-          'Inloggning är inte i rätt format.',
-        'Name is not in correct format.':
-          'Namnet är inte i rätt format.',
-        'Passwords do not match.':
-          'Lösenorden stämmer inte.',
 
         'You do not have permission to run this tool':
           'Du har inte rättigheter för att köra det här verktyget',
@@ -277,17 +231,6 @@ function check_software_states(cb, available_packages) {
                          [ 'list' ],
                          {},
                          handler);
-}
-
-function configure_system_and_exit() {
-  var cmd_args = [ '/usr/sbin/puavo-local-config', '--local-users' ];
-
-  var handler
-    = function(error, stdout, stderr) {
-        process.exit(error ? 1 : 0);
-      };
-
-  child_process.execFile('sudo', cmd_args, {}, handler);
 }
 
 function create_action_button_with_initial_state(button,
@@ -459,20 +402,9 @@ function generate_allow_logins_input(form) {
                                mc('Allow only the following usernames:'),
                                !all_is_chosen);
 
-  var nonlocal_users_allowed_logins = [];
-  if (!all_is_chosen) {
-    for (i in old_config.allow_logins_for) {
-      var user = old_config.allow_logins_for[i];
-      if (! (old_config.local_users[user]
-               && old_config.local_users[user].enabled)) {
-        nonlocal_users_allowed_logins.push(user);
-      }
-    }
-  }
-
-  make_listwidgets(rb_tr,
-                   'allowed_puavo_users',
-                   nonlocal_users_allowed_logins);
+  // .slice(0) clones a list (just in case)
+  var allowed_puavo_users = old_config.allow_logins_for.slice(0);
+  make_listwidgets(rb_tr, 'allowed_puavo_users', allowed_puavo_users);
 
   var title = document.createElement('div');
   title.textContent = mc('Access controls determine the login names that have access to this computer in addition to the primary user.  New login names can be created at www.lukiolaiskannettava.fi-webpage.');
@@ -510,21 +442,14 @@ function generate_allow_remoteadmins_input(form) {
   form.appendChild(div);
 }
 
-function generate_form(gui_config) {
+function generate_form() {
   var form = document.querySelector('form[id=dynamic_form]');
 
   // software installation
-  if (gui_config.show_puavopkg_controls) {
-    generate_software_installation_controls(form);
-  }
+  generate_software_installation_controls(form);
 
   // login-access control
   generate_loginaccess_controls(form);
-
-  // managing local users
-  if (gui_config.show_local_users) {
-    generate_login_users_input(form);
-  }
 }
 
 function generate_loginaccess_controls(form) {
@@ -539,169 +464,6 @@ function generate_loginaccess_controls(form) {
   form.appendChild(subtitle);
 
   generate_allow_remoteadmins_input(form);
-}
-
-function generate_login_users_input(form) {
-  var title = document.createElement('h2');
-  var titletext = document.createTextNode( mc('Local user management') );
-  title.appendChild(titletext);
-
-  form.appendChild(title);
-
-  var subtitle = document.createElement('div');
-  var subtitletext = document.createTextNode( mc('Local users:') );
-  subtitle.appendChild(subtitletext);
-
-  var add_button = document.createElement('input');
-  add_button.setAttribute('type', 'button');
-  add_button.setAttribute('value', mc('Add another user'));
-  subtitle.appendChild(add_button);
-
-  form.appendChild(subtitle);
-
-  var user_inputs = document.createElement('div');
-  form.appendChild(user_inputs);
-
-  var local_users_list = [];
-  for (login in old_config.local_users) {
-    if (old_config.local_users[login].enabled) {
-      local_users_list.push({
-                              login: login,
-                              name:  old_config.local_users[login].name,
-                            });
-    }
-  }
-
-  var append_empty_user
-    = function() { 
-        local_users_list.push({ hashed_password: '!',
-                                login:           '',
-                                name:            '', }); }
-
-  // create at least one empty user
-  if (local_users_list.length === 0) { append_empty_user(); }
-
-  for (i in local_users_list)
-    generate_one_user_create_table(user_inputs, local_users_list, i);
- 
-  var add_new_user
-    = function(e) {
-        e.preventDefault();
-        append_empty_user();
-        var last_i = local_users_list.length - 1;
-        generate_one_user_create_table(user_inputs, local_users_list, last_i);
-      };
-
-  add_button.addEventListener('click', add_new_user);
-}
-
-function generate_one_user_create_table(parentNode, local_users_list, user_i) {
-  var user_div = document.createElement('div');
-  parentNode.appendChild(user_div);
-
-  var table = document.createElement('table');
-
-  var old_user_data = local_users_list[user_i];
-  var login = old_user_data.login;
-
-  var fields = [
-    {
-      name:     mc('Login:'),
-      key:      'login',
-      type:     'text',
-      value_fn: function(input) { input.setAttribute('value', login) },
-    },
-    {
-      name:     mc('Name:'),
-      key:      'name',
-      type:     'text',
-      value_fn: function(input) {
-                  input.setAttribute('value', old_user_data.name) },
-    },
-    {
-      name: mc('Password:'),
-      key:  'password1',
-      type: 'password',
-    },
-    {
-      name: mc('Password again:'),
-      key:  'password2',
-      type: 'password',
-    },
-  ];
-
-  var make_input
-    = function(fieldinfo) {
-        input = document.createElement('input');
-        input.setAttribute('name',
-                           'localuser_' + user_i + '_' + fieldinfo.key);
-        input.setAttribute('type', fieldinfo.type);
-        if (fieldinfo.value_fn) { fieldinfo.value_fn(input); }
-        input.addEventListener('keyup', write_config);
-        input.addEventListener('focusout', write_config);
-        return input;
-      };
-
-  fields.forEach(function (fieldinfo) { 
-                   var tr = document.createElement('tr');
-
-                   var name_td = document.createElement('td');
-                   name_td.textContent = fieldinfo.name;
-                   tr.appendChild(name_td);
-
-                   var input_td = document.createElement('td');
-
-                   var input;
-                   if (fieldinfo.key === 'login' && login !== '') {
-                     input_td.appendChild( document.createTextNode(login) );
-                     input = make_input({
-                               key: 'login',
-                               type: 'hidden',
-                               value_fn: function(i) {
-                                 i.setAttribute('value', login) }
-                             });
-                   } else {
-                     input = make_input(fieldinfo);
-                   }
-
-                   input_td.appendChild(input);
-                   tr.appendChild(input_td);
-
-                   if (fieldinfo.key === 'login') {
-                     var delete_create_user_table
-                       = function(e) {
-                           e.preventDefault();
-                           var ok = (old_user_data.login === '')
-                                      || confirm( mc('OK?') );
-                           if (ok) { parentNode.removeChild(user_div); }
-                           write_config();
-                         };
-
-                     var remove_td = document.createElement('td');
-                     var input = document.createElement('input');
-                     input.setAttribute('type', 'button');
-                     input.setAttribute('value', mc('remove'));
-                     input.addEventListener('click', delete_create_user_table);
-                     remove_td.appendChild(input);
-                     tr.appendChild(remove_td);
-                   } else {
-                     tr.appendChild( document.createElement('td') );
-                   }
-
-                   var error_td = document.createElement('td');
-                   error_td.setAttribute('class', 'error');
-                   error_td.setAttribute('id',
-                                         'localuser_'
-                                           + user_i
-                                           + '_error_'
-                                           + fieldinfo.key);
-                   tr.appendChild(error_td);
-
-                   table.appendChild(tr);
-                 });
-
-  user_div.appendChild(table);
-  user_div.appendChild( document.createElement('hr') );
 }
 
 function generate_software_installation_controls(form) {
@@ -802,25 +564,6 @@ function handle_pkg(mode, pkgname, errormsg_element, cb) {
   child_process.execFile('sudo', cmd_args, options, handler);
 }
 
-function hash_password(password, cb) {
-  // if user did not provide a password,
-  // use the password from old configuration
-  if (password === '') { return cb(''); }
-
-  var handler
-    = function (error, stdout, stderr) {
-        if (error) { throw(error); }
-        cb(stdout.toString().replace(/\n$/, ''));
-      };
-
-  var child = child_process.execFile('mkpasswd',
-                                     [ '-m', 'sha-512', '-s' ],
-                                     {},
-                                     handler);
-
-  child.stdin.end(password);
-}
-
 function make_listwidgets(parentNode, fieldname, initial_values) {
   var listwidgets = [];
 
@@ -872,89 +615,6 @@ function make_listwidgets(parentNode, fieldname, initial_values) {
   update_listwidgets();
 }
 
-function make_local_users_config(response,
-                                 user_indexes,
-                                 new_config,
-                                 has_errors,
-                                 cb) {
-  if (user_indexes.length === 0)
-    return cb(has_errors);
-
-  var i = user_indexes.pop();
-
-  var login     = response['localuser_' + i + '_login'    ].value;
-  var name      = response['localuser_' + i + '_name'     ].value;
-  var password1 = response['localuser_' + i + '_password1'].value;
-  var password2 = response['localuser_' + i + '_password2'].value;
-
-  var errors = {
-    login: document.querySelector('td[id=localuser_' + i + '_error_login]'),
-    name:  document.querySelector('td[id=localuser_' + i + '_error_name]'),
-    password1:
-      document.querySelector('td[id=localuser_' + i + '_error_password1]'),
-  };
-
-  for (i in errors)
-    errors[i].innerText = '';
-
-  var next_user_fn = function() {
-                       make_local_users_config(response,
-                                               user_indexes,
-                                               new_config,
-                                               has_errors,
-                                               cb);
-                     };
-
-  if (login.match(/^\s*$/) && name.match(/^\s*$/))
-    return next_user_fn();
-
-  if (device_config.primary_user === login) {
-    errors.login.innerText = mc('Login is the same one that primary user has.');
-    has_errors = true;
-  } else if (!login.match(/^[a-z\.-]+$/)) {
-    errors.login.innerText = mc('Login is not in correct format.');
-    has_errors = true;
-  }
-
-  if (!name.match(/^[a-zA-Z\. -]+$/)) {
-    errors.name.innerText = mc('Name is not in correct format.');
-    has_errors = true;
-  }
-
-  if (password1 !== password2) {
-    errors.password1.innerText = mc('Passwords do not match.');
-    has_errors = true;
-  }
-
-  user = new_config.local_users[login];
-
-  var uid;
-  if (user && user.uid) {
-    uid = user.uid;
-  } else {
-    var uids = Object.keys(new_config.local_users)
-                     .map(function(key) {
-                            return new_config.local_users[key].uid; });
-    var max_fn = function(a,b) { return Math.max(a,b); };
-
-    uid = uids.reduce(max_fn, 3000) + 1;
-  }
-
-  hash_password(password1,
-                function(hp) {
-                  var pw = hp || (user && user.hashed_password) || '!';
-
-                  new_config.local_users[login] = {
-                    enabled:         true,
-                    hashed_password: pw,
-                    name:            name,
-                    uid:             uid,
-                  };
-
-                  next_user_fn();
-               });
-}
-
 function open_external_link(e) {
   var child = child_process.spawn('chromium-browser',
                                   [ '--app=' + e.href,
@@ -962,18 +622,6 @@ function open_external_link(e) {
                                     '--window-size=640,580' ],
                                   { detached: true, stdio: 'ignore' });
   child.unref();
-}
-
-function parse_gui_config() {
-  gui_config_path = '/etc/puavo-local-config/puavo-local-config-ui.conf';
-
-  gui_config = { show_local_users: true, show_puavopkg_controls: true };
-  config_in_file = JSON.parse( fs.readFileSync(gui_config_path) );
-  for (var attr in config_in_file) {
-    gui_config[attr] = config_in_file[attr];
-  }
-
-  return gui_config;
 }
 
 function read_config() {
@@ -987,7 +635,7 @@ function read_config() {
       config = {
         allow_logins_for:   [],
         allow_remoteadmins: false,
-        local_users:        {},
+        local_users:        {},      // historical leftover
         version:            1,
       };
       write_config_to_file(config);
@@ -1000,88 +648,41 @@ function read_config() {
   return config;
 }
 
-function read_device_config() {
-  try {
-    return JSON.parse( fs.readFileSync(device_json_path) );
-  } catch (ex) {
-    return {};
-  }
-}
-
 function write_config() {
   var response = document.forms[0].elements;
   var new_config = {
     allow_logins_for:   [],
     allow_remoteadmins: false,
     version:            1,
+
+    // local_users is a historical leftover that should always be empty...
+    // I do not want to change the configuration file version only to clean
+    // this up.
+    local_users: {},
   };
 
-  // Initialize new_config.local_users with old information,
-  // but disable all users (those will be enabled later, if given in user
-  // interface).
-  new_config.local_users = {};
-  for (user in old_config.local_users) {
-    var old = old_config.local_users[user];
-    new_config.local_users[user] = {
-                                     enabled:         false,
-                                     hashed_password: old.hashed_password,
-                                     name:            old.name,
-                                     uid:             old.uid,
-                                   };
-  }
-
-  var do_after_local_users_are_ok =
-    function(has_errors) {
-      document.querySelector('div[id=error_banner]').innerText
-        = has_errors
-            ? mc('Configuration needs corrections, no changes are saved.')
-            : '';
-
-      // make sure that disabled users have password '!'
-      for (user in new_config.local_users) {
-        if (new_config.local_users[user].enabled) {
+  switch(response.allow_logins_for.value) {
+    case 'all_puavo_domain_users':
+      new_config.allow_logins_for = [ '*' ];
+      break;
+    case 'some_puavo_domain_users':
+      allowed_puavo_users
+        = (response.allowed_puavo_users.constructor === HTMLInputElement)
+            ? [ response.allowed_puavo_users ]
+            : response.allowed_puavo_users;
+      for (i in allowed_puavo_users) {
+        var user = allowed_puavo_users[i].value;
+        if (user && user.match(/\S+/)) {
           new_config.allow_logins_for.push(user);
-        } else {
-          new_config.local_users[user].hashed_password = '!';
         }
       }
 
-      switch(response.allow_logins_for.value) {
-        case 'all_puavo_domain_users':
-          new_config.allow_logins_for = [ '*' ];
-          break;
-        case 'some_puavo_domain_users':
-          allowed_puavo_users
-            = (response.allowed_puavo_users.constructor === HTMLInputElement)
-                ? [ response.allowed_puavo_users ]
-                : response.allowed_puavo_users;
-          for (i in allowed_puavo_users) {
-            var user = allowed_puavo_users[i].value;
-            if (user && user.match(/\S+/)) {
-              new_config.allow_logins_for.push(user);
-            }
-          }
-
-          break;
-      }
-
-      new_config.allow_remoteadmins = response.allow_remoteadmins.checked;
-
-      write_config_to_file(new_config);
-    };
-
-  var user_indexes = [];
-  for (i in response) {
-    match = response[i].name
-              && response[i].name.match(/^localuser_(\d+)_login$/);
-    if (match) { user_indexes.push(match[1]); }
+      break;
   }
 
-  make_local_users_config(response,
-                          user_indexes,
-                          new_config,
-                          false,
-                          do_after_local_users_are_ok);
+  new_config.allow_remoteadmins = response.allow_remoteadmins.checked;
+
+  write_config_to_file(new_config);
 }
 
 function write_config_to_file(conf) {
@@ -1096,39 +697,11 @@ function write_config_to_file(conf) {
 
 check_access();         // will exit in case of errors
 
-gui_config = parse_gui_config();
-
 old_config = read_config();
 if (!old_config) { process.exit(1); }
-
-device_config = read_device_config();
 
 // set document titles
 document.querySelector('title').innerText = mc('Laptop configuration');
 document.querySelector('h1'   ).innerText = mc('Laptop configuration');
 
-generate_form(gui_config);
-
-gui.Window.get().on('close', configure_system_and_exit);
-
-var all_signals = [ 'SIGHUP'
-                  , 'SIGINT'
-                  , 'SIGQUIT'
-                  , 'SIGILL'
-                  , 'SIGABRT'
-                  , 'SIGFPE'
-                  , 'SIGSEGV'
-                  , 'SIGPIPE'
-                  , 'SIGALRM'
-                  , 'SIGTERM'
-                  , 'SIGUSR1'
-                  , 'SIGUSR2'
-                  , 'SIGTSTP'
-                  , 'SIGTTIN'
-                  , 'SIGTTOU' ];
-
-// XXX does not always run code in configure_system_and_exit :-(
-all_signals
-  .forEach(function(eventname) {
-             process.on(eventname, configure_system_and_exit);
-           });
+generate_form();
