@@ -1,15 +1,18 @@
 #!/bin/sh
 
 set -eu
-set -x
-
-# Load environment. Is missing on Trusty...
-. /etc/environment
 
 sudo apt-get update
-sudo apt-get install -y --force-yes puavo-devscripts aptirepo-upload
+sudo apt-get install -y --force-yes aptirepo-upload make devscripts equivs
 
-sudo puavo-install-deps debian.default/control
+sudo puavo-install-deps
 make deb
 
-aptirepo-upload -r $APTIREPO_REMOTE -b "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)" ../aptirepo*.changes
+version=$(dpkg-parsechangelog --show-field Version)
+arch=$(dpkg-architecture -qDEB_BUILD_ARCH)
+
+aptirepo-upload \
+    -c "${CI_TARGET_DIST}" \
+    -r "${APTIREPO_REMOTE}" \
+    -b "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)" \
+    "../aptirepo_${version}_${arch}.changes"

@@ -31,12 +31,10 @@ $(test-subdirs) :
 .PHONY : test
 test : $(test-subdirs)
 
-.PHONY : debiandir
-debiandir :
-	rm -rf debian
-	cp -a debian.default debian
-	puavo-dch $(shell cat VERSION)
+.PHONY : install-deb-deps
+install-deb-deps:
+	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
 
 .PHONY : deb
-deb : debiandir
+deb :
 	dpkg-buildpackage -us -uc
