@@ -35,8 +35,8 @@ var mc =
 
         'Access controls': 'Pääsyoikeudet',
 
-        'Access controls determine the login names that have access to this computer in addition to the primary user.  New login names can be created at www.lukiolaiskannettava.fi-webpage.':
-          'Pääsyoikeuksilla määritetään käyttäjätunnukset, joilla on laitteen pääkäyttäjän lisäksi pääsy tälle tietokoneelle.  Uusia käyttäjätunnuksia voit luoda www.lukiolaiskannettava.fi-sivustolla.',
+        'Access controls determine the login names that have access to this computer in addition to the primary user.  New login names can be created at ':
+          'Pääsyoikeuksilla määritetään käyttäjätunnukset, joilla on laitteen pääkäyttäjän lisäksi pääsy tälle tietokoneelle.  Uusia käyttäjätunnuksia voit luoda osoitteessa ',
 
         'Allow all users from "lukiolaiskannettava"-domain.':
           'Salli kaikkien lukiolaiskannettavatunnusten kirjautuminen',
@@ -82,8 +82,8 @@ var mc =
 
         'Access controls': 'Access controls', // XXX
 
-        'Access controls determine the login names that have access to this computer in addition to the primary user.  New login names can be created at www.lukiolaiskannettava.fi-webpage.':
-          'Access controls determine the login names that have access to this computer in addition to the primary user.  New login names can be created at www.lukiolaiskannettava.fi-webpage.', // XXX
+        'Access controls determine the login names that have access to this computer in addition to the primary user.  New login names can be created at ':
+          'Access controls determine the login names that have access to this computer in addition to the primary user.  New login names can be created at ', // XXX
 
         'Allow all users from "lukiolaiskannettava"-domain.':
           'Allow all users from "lukiolaiskannettava"-domain.', // XXX
@@ -411,7 +411,16 @@ function generate_allow_logins_input(form) {
   make_listwidgets(rb_tr, 'allowed_puavo_users', allowed_puavo_users);
 
   var title = document.createElement('div');
-  title.textContent = mc('Access controls determine the login names that have access to this computer in addition to the primary user.  New login names can be created at www.lukiolaiskannettava.fi-webpage.');
+  var link = document.createElement('a');
+  link.textContent = 'lukiolaiskannettava.opinsys.fi/accounts';
+  link.setAttribute('href', 'https://lukiolaiskannettava.opinsys.fi/accounts');
+  link.addEventListener('click',
+			function(e) { e.preventDefault();
+                                      open_external_link(link); });
+  var description = document.createTextNode(mc('Access controls determine the login names that have access to this computer in addition to the primary user.  New login names can be created at '));
+  title.appendChild(description);
+  title.appendChild(link);
+  title.appendChild(document.createTextNode('.'));
   title.appendChild(table);
 
   form.appendChild(title);
