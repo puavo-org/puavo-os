@@ -7,7 +7,7 @@ shift
 
 URL_BASE=http://downloads.sourceforge.net/corefonts
 TTFONT_BASE=/usr/share/fonts/truetype
-FONT_DIR="${TTFONT_BASE}/msttcorefonts"
+FONT_DIR="${TTFONT_BASE}/puavo-pkg-msttcorefonts"
 
 case "${command}" in
     configure)
