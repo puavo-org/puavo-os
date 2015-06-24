@@ -97,6 +97,15 @@ def get_config()
   JSON.parse( IO.read('/etc/puavo-pkg/puavo-pkg-updater.conf') )
 end
 
+def get_puavopkg_output(cmdargs, errormsg)
+  data, status = Open3.capture2('puavo-pkg', *cmdargs)
+  if status.exitstatus != 0 then
+    raise "#{ errormsg } (puavo-pkg error code: #{ status.exitstatus })"
+  end
+
+  data
+end
+
 def flock_packages_json(installers_dir)
   packages_json_path = "#{ installers_dir }/installers/packages.json"
 
@@ -180,23 +189,27 @@ def make_packages_info_file(current_installers_tmpdir)
 
   Dir.glob("#{ current_installers_tmpdir }/*.tar.gz") do |tarpath|
     begin
-      md5sum = Digest::MD5.hexdigest(IO.read(tarpath))
+      md5sum = Digest::MD5.hexdigest( IO.read(tarpath) )
     rescue StandardError => e
-      logerr(Syslog::LOG_ERR, "Problem in calculating md5sum of %s\n", tarpath)
-      next
+      raise "Problem in calculating the md5sum of #{ tarpath }: #{ e.message }"
     end
 
-    license_url, status = Open3.capture2('puavo-pkg', 'license', tarpath)
-    if status.exitstatus != 0 then
-      logerr(Syslog::LOG_ERR,
-             "puavo-pkg license %s returned error code: %d\n",
-             tarpath,
-             status.exitstatus)
-      next
-    end
+    description \
+      = get_puavopkg_output([ 'show', '-F', 'Description', tarpath ],
+                            %Q{Could not get "Description" from #{ tarpath }})
+
+    legend \
+      = get_puavopkg_output([ 'show', '-F', 'Legend', tarpath ],
+                            %Q{Could not get "Legend" from #{ tarpath }})
+
+    license_url \
+      = get_puavopkg_output([ 'license', tarpath ],
+                            "Could not get license from #{ tarpath }")
 
     pkgname = File.basename(tarpath, '.tar.gz')
     packages[pkgname] = {
+      'description' => description,
+      'legend'      => legend.chomp,
       'license_url' => license_url.chomp,
       'md5sum'      => md5sum,
     }
@@ -333,6 +346,8 @@ end
 
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
+exitcode = 0
+
 begin
   config = get_config()
 
@@ -343,8 +358,11 @@ begin
   end
 
   if upgrade_packages_flag then upgrade_packages(config) end
+rescue StandardError => e
+  logerr(Syslog::LOG_ERR, "%s\n", e.message)
+  exitcode = 1
 ensure
   Syslog.close()
 end
 
-exit(0)
+exit(exitcode)
