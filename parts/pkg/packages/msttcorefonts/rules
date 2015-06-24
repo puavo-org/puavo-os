@@ -7,18 +7,19 @@ shift
 
 URL_BASE=http://downloads.sourceforge.net/corefonts
 TTFONT_BASE=/usr/share/fonts/truetype
+FONT_DIR="${TTFONT_BASE}/msttcorefonts"
 
 case "${command}" in
     configure)
         upstream_dir=$1
 
         mkdir -p "${TTFONT_BASE}"
-        ln -s -f -T "${upstream_dir}" "${TTFONT_BASE}/msttcorefonts"
+        ln -s -f -T "${upstream_dir}" "${FONT_DIR}"
         ;;
 
     unconfigure)
         upstream_dir=$1
-        rm -f "${TTFONT_BASE}/msttcorefonts"
+        rm -f "${FONT_DIR}"
         ;;
 
     unpack)
