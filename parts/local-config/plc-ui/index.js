@@ -131,16 +131,31 @@ function add_software_controls(table, packages) {
 
   var add_each_pkgcontrol
     = function (sw_states) {
-        sorted_pkgnames = Object.keys(packages).sort();
+        sorted_pkgnames = Object.keys(packages).sort(
+          function (a, b) {
+            norm_a = (packages[a].legend || a).toLowerCase();
+            norm_b = (packages[b].legend || b).toLowerCase();
+            return (norm_a < norm_b) ? -1 : 1;
+          });
+
         for (var i in sorted_pkgnames) {
           var pkgname = sorted_pkgnames[i];
+
+          var description = packages[pkgname].description;
+          var legend      = packages[pkgname].legend;
+
+          if (!description || description.match(/^\s+$/)) { description = ''; }
+          if (!legend      || legend.match(/^\s+$/))      { legend      = ''; }
+
           var license_url = packages[pkgname].license_url;
           if (!license_url) {
             alert('Package ' + pkgname + ' is missing license url');
             continue;
           }
+
           var install_pkg_fn = add_one_pkgcontrol(table,
-                                                  pkgname,
+                                                  description,
+                                                  legend,
                                                   license_url,
                                                   sw_states[pkgname]);
           install_pkg_functions.push(install_pkg_fn);
@@ -152,13 +167,18 @@ function add_software_controls(table, packages) {
   return install_pkg_functions;
 }
 
-function add_one_pkgcontrol(parentNode, pkgname, license_url, sw_state) {
+function add_one_pkgcontrol(parentNode,
+                            description,
+                            legend,
+                            license_url,
+                            sw_state) {
   var tr = document.createElement('tr');
 
-  // create license name element
-  var pkgname_td = document.createElement('td');
-  pkgname_td.textContent = pkgname;
-  tr.appendChild(pkgname_td);
+  // create legend element
+  var legend_td = document.createElement('td');
+  legend_td.textContent = legend;
+  if (description !== '') { legend_td.setAttribute('tooltip', description); }
+  tr.appendChild(legend_td);
 
   // create license url link
   var license_url_td = document.createElement('td');
@@ -173,7 +193,7 @@ function add_one_pkgcontrol(parentNode, pkgname, license_url, sw_state) {
   // create action button and error element
   var action_td = document.createElement('td');
   var action_errormsg_element = document.createElement('td');
-  button_and_install_action = add_action_button(pkgname,
+  button_and_install_action = add_action_button(legend,
                                                 action_errormsg_element,
                                                 sw_state);
   action_td.appendChild(button_and_install_action.button);

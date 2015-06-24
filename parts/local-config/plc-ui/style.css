@@ -133,3 +133,28 @@ h2:hover a.anchor {
 }
 
 td.error { color: red; }
+
+[tooltip]:before {
+  background-color: lightgreen;
+  color: black;
+
+  border: 1px solid black;
+  padding-bottom: 0.5em;
+  padding-left: 1em;
+  padding-right: 1em;
+  padding-top: 0.5em;
+
+  content: attr(tooltip);
+  left: 14em;
+  opacity: 0;
+  position: absolute;
+  max-width: 30em;
+}
+
+[tooltip]:hover:before {
+  opacity: 1;
+}
+
+[tooltip]:not([tooltip-persistent]):before {
+  pointer-events: none;
+}
