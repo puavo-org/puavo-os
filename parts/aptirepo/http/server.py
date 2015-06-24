@@ -83,35 +83,37 @@ def upload():
     if not os.path.isdir(repodir):
         os.makedirs(repodir)
 
-    tmp_dirpath = tempfile.mkdtemp(".tmp", "aptirepo-upload-")
+    try:
+        tmp_dirpath = tempfile.mkdtemp(".tmp", "aptirepo-upload-")
 
-
-    changes_filepath = os.path.join(
-        tmp_dirpath,
-        request.files["changes"].filename
-    )
-
-    request.files["changes"].save(changes_filepath)
-
-    for file in request.files.getlist("file"):
-        file.save(
-            os.path.join(tmp_dirpath, file.filename)
+        changes_filepath = os.path.join(
+            tmp_dirpath,
+            request.files["changes"].filename
         )
 
-    repo_kwargs = {}
-    try:
-        repo_timeout = config["Repository-Lock-Timeout"]
-    except KeyError:
-        pass
-    else:
-        repo_kwargs["timeout_secs"] = int(repo_timeout)
+        request.files["changes"].save(changes_filepath)
 
-    repo = aptirepo.Aptirepo(repodir, confdir, **repo_kwargs)
-    repo.import_changes(changes_filepath, codename=codename)
+        for file in request.files.getlist("file"):
+            file.save(
+                os.path.join(tmp_dirpath, file.filename)
+            )
 
-    _notify_updatedistsd(reporoot, repodir)
+        repo_kwargs = {}
+        try:
+            repo_timeout = config["Repository-Lock-Timeout"]
+        except KeyError:
+            pass
+        else:
+            repo_kwargs["timeout_secs"] = int(repo_timeout)
 
-    shutil.rmtree(tmp_dirpath)
+        repo = aptirepo.Aptirepo(repodir, confdir, **repo_kwargs)
+        repo.import_changes(changes_filepath, codename=codename)
+
+        _notify_updatedistsd(reporoot, repodir)
+
+    finally:
+        shutil.rmtree(tmp_dirpath)
+
     return "ok"
 
 @app.route('/upload_deb', methods=["POST"])
@@ -136,24 +138,26 @@ def upload_deb():
         os.makedirs(repodir)
 
     for deb_file in request.files.getlist("deb"):
-        tmp_dirpath = tempfile.mkdtemp(".tmp", "aptirepo-upload-")
-        deb_package_path = os.path.join(tmp_dirpath, deb_file.filename)
-        deb_file.save(deb_package_path)
-
-        repo_kwargs = {}
         try:
-            repo_timeout = config["Repository-Lock-Timeout"]
-        except KeyError:
-            pass
-        else:
-            repo_kwargs["timeout_secs"] = int(repo_timeout)
+            tmp_dirpath = tempfile.mkdtemp(".tmp", "aptirepo-upload-")
+            deb_package_path = os.path.join(tmp_dirpath, deb_file.filename)
+            deb_file.save(deb_package_path)
 
-        repo = aptirepo.Aptirepo(repodir, confdir, **repo_kwargs)
-        repo.import_deb(deb_package_path, codename, section)
+            repo_kwargs = {}
+            try:
+                repo_timeout = config["Repository-Lock-Timeout"]
+            except KeyError:
+                pass
+            else:
+                repo_kwargs["timeout_secs"] = int(repo_timeout)
 
-        _notify_updatedistsd(reporoot, repodir)
+            repo = aptirepo.Aptirepo(repodir, confdir, **repo_kwargs)
+            repo.import_deb(deb_package_path, codename, section)
 
-        shutil.rmtree(tmp_dirpath)
+            _notify_updatedistsd(reporoot, repodir)
+
+        finally:
+            shutil.rmtree(tmp_dirpath)
 
     return "ok"
 
