@@ -49,7 +49,7 @@ var mc =
         'If you want to allow Opinsys support service to remotely access your computer, you can do that with this option.  This setting will reset when computer reboots.':
           'Mikäli haluat sallia Opinsysin tukipalvelun etäpääsyn tietokoneellesi tukitilanteessa, voit tehdä sen tällä valinnalla.  Tämä asetus nollautuu laitteen uudelleenkäynnistyksen yhteydessä.',
 
-        'Allow remote assistance:': 'Salli etätuki:',
+        'Allow remote assistance': 'Salli etätuki',
 
         'Configuration needs corrections, no changes are saved.':
           'Asetukset vaativat korjausta, muutokset eivät tallennu.',
@@ -96,7 +96,7 @@ var mc =
         'If you want to allow Opinsys support service to remotely access your computer, you can do that with this option.  This setting will reset when computer reboots.':
           'If you want to allow Opinsys support service to remotely access your computer, you can do that with this option.  This setting will reset when computer reboots.', // XXX
 
-        'Allow remote assistance:': 'Allow remote assistance:', // XXX
+        'Allow remote assistance': 'Allow remote assistance', // XXX
 
         'Configuration needs corrections, no changes are saved.':
           'Inställningarna kräver korrigering, inga ändringar har sparats',
@@ -436,8 +436,7 @@ function generate_allow_remoteadmins_input(form) {
 
   var input_id = 'allow_remoteadmins_checkbox';
   var label = document.createElement('label');
-  label.textContent = mc('Allow remote assistance:');
-  label.setAttribute('style', 'margin-left: 1.5em;');
+  label.textContent = mc('Allow remote assistance');
   label.setAttribute('for', input_id);
 
   var input = document.createElement('input');
@@ -452,8 +451,8 @@ function generate_allow_remoteadmins_input(form) {
   input.addEventListener('click', write_config);
 
   div.appendChild(description_div);
-  div.appendChild(label);
   div.appendChild(input);
+  div.appendChild(label);
 
   form.appendChild(div);
 }
