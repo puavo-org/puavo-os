@@ -373,6 +373,8 @@ function generate_allow_logins_input(form) {
         } else {
           input.removeAttribute('checked');
         }
+        var input_id = 'allow_logins_for_radio_' + value;
+        input.setAttribute('id', input_id);
         input.setAttribute('name', 'allow_logins_for');
         input.setAttribute('type', 'radio');
         input.setAttribute('value', value);
@@ -383,8 +385,10 @@ function generate_allow_logins_input(form) {
         if (last_cell_spanvalue !== 1) { td.colSpan = last_cell_spanvalue; }
         td.appendChild(input);
 
-        var textnode = document.createTextNode(text);
-        td.appendChild(textnode);
+        var label = document.createElement('label');
+        label.textContent = text;
+        label.setAttribute('for', input_id);
+        td.appendChild(label);
 
         return tr;
       };
