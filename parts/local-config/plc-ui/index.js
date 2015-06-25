@@ -606,19 +606,34 @@ function make_listwidgets(parentNode, fieldname, initial_values) {
 
   var make_listwidget
     = function(value) {
-        var table = document.createElement('table');
-        var tr    = table.appendChild( document.createElement('tr')    );
-        var td    = tr   .appendChild( document.createElement('td')    );
-        var input = td   .appendChild( document.createElement('input') );
+        var check_mark = '&#x2714';
+
+        var table    = document.createElement('table');
+        var tr       = table   .appendChild( document.createElement('tr')    );
+        var input_td = tr      .appendChild( document.createElement('td')    );
+        var ok_mark  = tr      .appendChild( document.createElement('td')    );
+        var input    = input_td.appendChild( document.createElement('input') );
+
         input.setAttribute('name', fieldname);
         input.setAttribute('type', 'text');
         input.setAttribute('value', value);
         input.addEventListener('focusout', function(e) {
                                              update_listwidgets();
                                              write_config(); });
-        input.addEventListener('keyup', function(e) {
-                                          update_listwidgets();
-                                          write_config(); });
+
+        if (input.value !== '') { ok_mark.innerHTML = check_mark; }
+
+        input.addEventListener('keyup',
+                               function(e) {
+                                 ok_mark.innerHTML = '';
+                                 write_config();
+                                 if (input.value !== '') {
+                                   ok_mark.innerHTML = check_mark;
+                                 }
+                                 update_listwidgets();
+                               });
+
+        ok_mark.setAttribute('style', 'color: green;');
 
         parentNode.appendChild(table);
 
