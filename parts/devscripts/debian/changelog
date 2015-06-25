@@ -1,3 +1,11 @@
+puavo-devscripts (0.6.4) trusty; urgency=medium
+
+  * New release
+  * Fix pre-push hook to set DEBFULLNAME and DEBEMAIL from git config
+  * Git(951c3c9496efb0744ac6ab76c355068de4e223b2)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 25 Jun 2015 15:30:26 +0300
+
 puavo-devscripts (0.6.3) trusty; urgency=medium
 
   * New release
