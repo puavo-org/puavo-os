@@ -634,6 +634,16 @@ function make_listwidgets(parentNode, fieldname, initial_values) {
 
         if (input.value !== '') { ok_mark.innerHTML = check_mark; }
 
+        // Do not activate the first button (might be "install all software"),
+        // when enter is pressed on some input field.
+        input.addEventListener('keypress',
+                               function(e) {
+                                 if (e.keyCode === 13) {
+                                   e.preventDefault();
+                                   input.blur();
+                                 }
+                               });
+
         input.addEventListener('keyup',
                                function(e) {
                                  ok_mark.innerHTML = '';
