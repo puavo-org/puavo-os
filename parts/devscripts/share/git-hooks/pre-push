@@ -78,6 +78,18 @@ tmpdir=$(mktemp -d)
 
 cp -a debian/changelog "${tmpdir}"
 
+user=$(git config user.name)
+if [ -n "${user}" -a -z "${DEBFULLNAME:-}" ]; then
+    DEBFULLNAME="${user}"
+    export DEBFULLNAME
+fi
+
+email=$(git config user.email)
+if [ -n "${email}" -a -z "${DEBEMAIL:-}" ]; then
+    DEBEMAIL="${email}"
+    export DEBEMAIL
+fi
+
 dch -c "${tmpdir}/changelog" -U 'New release'
 echo "${lines}" \
     | while read line; do
