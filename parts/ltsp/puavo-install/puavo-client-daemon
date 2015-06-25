@@ -11,6 +11,8 @@ require 'puavo/rest-client'
 require 'socket'
 require 'syslog'
 
+Encoding.default_external = 'utf-8'
+
 def syslog(channel, priority, *args)
   Syslog.log(priority, *args)
   channel.printf(*args)
