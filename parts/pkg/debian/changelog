@@ -1,3 +1,21 @@
+puavo-pkg (0.1.27) trusty; urgency=medium
+
+  * New release
+  * Fix msttcorefonts upstream md5sum.  There might be some stranger
+    issue here, but lets see if this is enough.
+  * Fix couple of typos
+  * Add "legend" and "description" to packages.json (for puavo-local-
+    config-ui).
+  * msttcorefonts: prefix the font dir name with puavo-pkg-
+  * msttcorefonts: trivial refactoring
+  * msttcorefonts: add upstream pack md5sum
+  * msttcorefonts: make upstream pack byte-by-byte reproducible
+  * ci.sh: make the uploaded changes file more explicit
+  * Add msttcorefonts
+  * Git(f94b11592070747e1ababececc7fb6072267af08)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 25 Jun 2015 08:30:59 +0300
+
 puavo-pkg (0.1.26) trusty; urgency=medium
 
   * New release
