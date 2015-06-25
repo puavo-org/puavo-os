@@ -109,7 +109,7 @@ Verdana_Italic.ttf                      verdanai.ttf
 Verdana_Bold_Italic.ttf                 verdanaz.ttf
 Webdings.ttf                            webdings.ttf
 EOF
-            tar --mtime='2000-01-01 00:00:00' -c -f "${upstream_pack}" *.ttf
+            tar --mtime='2000-01-01 00:00:00 +00:00' -c -f "${upstream_pack}" *.ttf
         )
         
         ;;
