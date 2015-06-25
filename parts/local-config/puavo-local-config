@@ -17,6 +17,8 @@ require 'getoptlong'
 require 'json'
 require 'syslog'
 
+Encoding.default_external = 'utf-8'
+
 Ltspadmins_group_id = 3000
 
 class NetworkError < RuntimeError; end
