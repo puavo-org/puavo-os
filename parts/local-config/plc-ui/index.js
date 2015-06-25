@@ -1,5 +1,6 @@
 var child_process = require('child_process');
 var fs = require('fs');
+var gui = require('nw.gui');
 
 var config_json_dir  = '/state/etc/puavo/local';
 var config_json_path = config_json_dir + '/config.json';
@@ -109,6 +110,16 @@ var mc =
     return (translations[locale] && translations[locale][msg])
               || msg;
   };
+
+function activate_window() {
+  var win = gui.Window.get();
+  win.show();
+  win.focus();
+
+  // This is a hack to get window to raise above other windows
+  // (I could not find other way with node-webkit 0.8.6).
+  win.enterFullscreen(); win.leaveFullscreen();
+}
 
 function add_action_button(pkgname, errormsg_element, sw_state) {
   var button = document.createElement('button');
@@ -757,3 +768,5 @@ document.querySelector('title').innerText = mc('Laptop configuration');
 document.querySelector('h1'   ).innerText = mc('Laptop configuration');
 
 generate_form();
+
+process.on('SIGHUP', activate_window);

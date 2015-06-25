@@ -10,6 +10,14 @@ if [ "$1" = "--auto" ]; then
   test -r /state/etc/puavo/local/config.json && exit 0
 fi
 
+# First check if we can simply HUP the currently running process (which should
+# raise itself when it receives HUP).  If this works, there is nothing more
+# to do, otherwise we must actually start the application.
+# (This should function as a control mechanism to ensure there are no
+# two instances of this application running at the same time).
+process_re='node-webkit.*--working-directory=/usr/lib/puavo-local-config-ui/'
+pkill -HUP -U "$USER" -f -- "$process_re" && exit 0
+
 packageinfo_path='/images/puavo-pkg/installers/installers/packages.json'
 
 run_nodewebkit() { nw /usr/lib/puavo-local-config-ui/; }
