@@ -74,6 +74,7 @@ class MenuLayout extends ViewMaster
         @listenTo this, "open-root-view", =>
             @setView ".favorites-container", @favorites
             @setView ".search-container", @search
+            @$(".search-container").empty()
             @setView ".breadcrumbs-container", @breadcrumbs
             @removeLightbox()
             @refreshViews()
@@ -84,7 +85,7 @@ class MenuLayout extends ViewMaster
             @breadcrumbs.detach()
             @menuListView.broadcast("open-logout-view")
             @$(".favorites-container").empty()
-            @$(".search-container").empty()
+            @$(".search-container").html("<div class=machine-hostname>#{@config.get("hostname")}</div>")
             @$(".breadcrumbs-container").empty()
             @refreshViews()
 
