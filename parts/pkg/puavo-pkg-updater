@@ -281,6 +281,8 @@ def upgrade_packages(config)
     return
   end
 
+  errors_occurred = false
+
   packages_to_upgrade.each do |pkgname, version|
     tarball = "#{ config['installers_dir'] }/installers/#{ pkgname }.tar.gz"
 
@@ -297,9 +299,11 @@ def upgrade_packages(config)
              version,
              tarball,
              e.message)
-      next
+      errors_occurred = true
     end
   end
+
+  raise 'An error has occured in package upgrade process' if errors_occurred
 end
 
 def upgrades_available(config)
