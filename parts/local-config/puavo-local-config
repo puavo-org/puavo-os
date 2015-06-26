@@ -276,12 +276,16 @@ end
 def configure_nm_policy()
   log(Syslog::LOG_INFO, "configuring network manager policy\n")
 
+  #
+  # Configure special rights of primary user.
+  #
+
   admin = get_primary_user()
 
-  confpath = '/etc/polkit-1/localauthority/50-local.d/10.org.freedesktop.networkmanager.allow_modify_by_primary_user.pkla'
+  primaryuserconf_path = '/etc/polkit-1/localauthority/50-local.d/10.org.freedesktop.networkmanager.allow_modify_by_primary_user.pkla'
 
   if admin then
-    conf = <<EOF
+    primaryuserconf = <<EOF
 [Primary user permissions]
 Identity=unix-user:#{ admin }
 Action=org.freedesktop.NetworkManager.settings.modify.system
@@ -289,9 +293,35 @@ ResultAny=no
 ResultInactive=no
 ResultActive=yes
 EOF
-    File.open(confpath, 'w') { |f| f.print conf }
+    File.open(primaryuserconf_path, 'w') { |f| f.print(primaryuserconf) }
   else
-    FileUtils.rm_f(confpath)
+    FileUtils.rm_f(primaryuserconf_path)
+  end
+
+  #
+  # In case no logins have happened yet on this host, give lightdm special
+  # permissions to system-wide network settings so that wireless network
+  # connections created in login screen are global and persistent.  This is
+  # reverted once logins have happened (to prevent possibility that wireless
+  # network passwords can be read from login screen).
+  #
+
+  lightdmsysconf_path = '/etc/polkit-1/localauthority/50-local.d/10.org.freedesktop.networkmanager.allow_modify_system_by_lightdm.pkla'
+
+  if test(?s, '/var/lib/extrausers/passwd') \
+      || test(?s, '/var/lib/extrausers/group') then
+    # not a first login, remove special permissions
+    FileUtils.rm_f(lightdmsysconf_path)
+  else
+    lightdmsysconf = <<EOF
+[Special lightdm firstlogin permissions]
+Identity=unix-user:lightdm
+Action=org.freedesktop.NetworkManager.settings.modify.system
+ResultAny=no
+ResultInactive=no
+ResultActive=yes
+EOF
+    File.open(lightdmsysconf_path, 'w') { |f| f.print(lightdmsysconf) }
   end
 end
 
