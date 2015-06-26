@@ -1,3 +1,12 @@
+puavo-pkg (0.1.30) trusty; urgency=medium
+
+  * New release
+  * puavo-pkg-updater: Add some error handling to
+    upgrade_packages(config)
+  * Git(4acab414cb8762069075a3ce6d1aa27b16642c27)
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Fri, 26 Jun 2015 13:45:38 +0300
+
 puavo-pkg (0.1.29) trusty; urgency=medium
 
   * New release
