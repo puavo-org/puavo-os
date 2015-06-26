@@ -12,6 +12,7 @@ import sys
 
 class ChangelogNotifyApplet:
     def __init__(self):
+        self.image_series_name   = self.read_imageseries_name()
         self.system_release_name = self.read_system_release_name()
         self.system_version      = self.read_system_version()
         self.user_puavo_dir      = os.path.join(os.environ['HOME'], '.puavo')
@@ -43,7 +44,8 @@ class ChangelogNotifyApplet:
 
 
     def button_callback(self, widget):
-        url = 'http://changelog.opinsys.fi/#%s' % self.system_version
+        url = 'http://changelog.opinsys.fi/%s/#%s' % (self.image_series_name,
+                                                      self.system_version)
         cmd = [ '/usr/bin/nw',
                 '/usr/local/share/notify_puavoimage_changelog/node-webkit-app',
                 url ]
@@ -91,6 +93,13 @@ class ChangelogNotifyApplet:
     def read_firstline(self, pathname):
         with open(pathname) as file:
             return (file.readlines())[0].rstrip("\n")
+
+
+    def read_imageseries_name(self):
+        series_name = self.read_firstline('/etc/ltsp/this_ltspimage_series')
+        if series_name == '':
+            raise Exception('Could not image series name')
+        return series_name
 
 
     def read_system_release_name(self):
