@@ -22,7 +22,7 @@ class ChangelogNotifyApplet:
 
 
     def add_applet_to_indicator(self):
-        icon = '/usr/share/icons/Breathe/32x32/emblems/emblem-important.png'
+        icon = '/usr/share/icons/Faenza/status/32/dialog-information.png'
         self.indicator \
           = appindicator.Indicator('notifychangelog-indicator',
                                    icon,

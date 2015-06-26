@@ -11,6 +11,7 @@ class opinsys_notify_puavoimage_changelog {
     '/usr/local/bin/notify_puavoimage_changelog':
       mode    => 755,
       require => [ File["${nw_dir}/package.json"]
+                 , Package['faenza-icon-theme']
                  , Package['python-appindicator']
                  , Package['python-gtk2']
                  , Package['python-notify'] ],
@@ -31,7 +32,8 @@ class opinsys_notify_puavoimage_changelog {
       source  => 'puppet:///modules/opinsys_notify_puavoimage_changelog/node-webkit-app/package.json';
   }
 
-  Package <| title == node-webkit
+  Package <| title == faenza-icon-theme
+          or title == node-webkit
           or title == python-appindicator
           or title == python-gtk2
           or title == python-notify |>
