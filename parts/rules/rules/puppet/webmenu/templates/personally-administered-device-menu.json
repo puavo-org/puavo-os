@@ -177,9 +177,16 @@
         {
           "type": "desktop",
           "keywords": [
-            "digabi"
+            "digabi",
+            "photoshop"
           ],
-          "source": "pinta"
+          "source": "pinta",
+          "name": {
+            "en": "Pinta",
+            "fi": "Pinta-kuvankäsittely",
+            "sv": "Pinta",
+            "de": "Pinta"
+          }
         },
         {
           "type": "desktop",
@@ -1350,8 +1357,14 @@
        },
        {
           "type": "desktop",
-          "source": "pinta"
-       },
+          "source": "pinta",
+          "name": {
+            "en": "Pinta",
+            "fi": "Pinta-kuvankäsittely",
+            "sv": "Pinta",
+            "de": "Pinta"
+          }
+        },
        {
           "type": "desktop",
           "source": "inkscape",
