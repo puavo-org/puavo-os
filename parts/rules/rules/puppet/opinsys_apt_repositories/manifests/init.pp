@@ -29,6 +29,9 @@ class opinsys_apt_repositories {
 
     'x2go':
       aptline => "http://archive.opinsys.fi/x2go $lsbdistcodename main restricted universe multiverse";
+
+    'xorg-updates':
+      aptline => "http://archive.opinsys.fi/git-xorg-updates $lsbdistcodename main restricted universe multiverse";
   }
 
   file {
