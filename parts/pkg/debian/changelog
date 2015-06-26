@@ -1,3 +1,15 @@
+puavo-pkg (0.1.29) trusty; urgency=medium
+
+  * New release
+  * Fix a locale-related issue in msttcorefonts-upstream-pack
+    generation.
+  * Fix changelog
+  * msttcorefonts: normalize also the timezone of mtimes of font files
+  * Normalize also the timezone of mtimes of installer files
+  * Git(d1d00ecdb3e16674b13e3beb68142bc63e32cea6)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Fri, 26 Jun 2015 08:29:31 +0300
+
 puavo-pkg (0.1.28) trusty; urgency=medium
 
   * New release
