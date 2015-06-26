@@ -109,7 +109,13 @@ Verdana_Italic.ttf                      verdanai.ttf
 Verdana_Bold_Italic.ttf                 verdanaz.ttf
 Webdings.ttf                            webdings.ttf
 EOF
-            tar --mtime='2000-01-01 00:00:00 +00:00' -c -f "${upstream_pack}" *.ttf
+            (
+                # Set LC_COLLATE=C so that *.ttf will always sort in the same
+                # way (so we get the same tar-archive independent of locales).
+                LC_COLLATE=C
+                tar --mtime='2000-01-01 00:00:00 +00:00' -c \
+                  -f "${upstream_pack}" *.ttf
+            )
         )
         
         ;;
