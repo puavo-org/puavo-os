@@ -63,12 +63,13 @@ else
   STDERR.puts "Failed to fetch feeds from puavo! #{ res }"
 end
 
+series = File.open("/etc/ltsp/this_ltspimage_series", "r").read rescue nil
 image = File.open("/etc/ltsp/this_ltspimage_name", "r").read rescue nil
 
-if image
+if image && series
   image = image.gsub(/\.img$/, "").strip
   feeds.push({
-    "message" => "Päivitystiedote http://changelog.opinsys.fi/##{ image }"
+    "message" => "Päivitystiedote http://changelog.opinsys.fi/#{ series.strip }/##{ image }"
   })
 end
 
