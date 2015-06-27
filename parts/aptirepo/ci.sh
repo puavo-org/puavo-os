@@ -5,7 +5,7 @@ set -eu
 sudo apt-get update
 sudo apt-get install -y --force-yes aptirepo-upload make devscripts equivs
 
-sudo puavo-install-deps
+sudo make install-deb-deps
 make deb
 
 version=$(dpkg-parsechangelog --show-field Version)
