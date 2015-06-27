@@ -1,3 +1,11 @@
+aptirepo (0.6.2) trusty; urgency=medium
+
+  * New release
+  * ci.sh: use install-deb-deps target to install, well, deb-deps
+  * Git(caf741552a87a87059dd793acf233bc06a097741)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Sat, 27 Jun 2015 16:22:15 +0300
+
 aptirepo (0.6.1) trusty; urgency=medium
 
   * New release
