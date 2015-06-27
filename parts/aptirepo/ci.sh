@@ -8,7 +8,7 @@ sudo apt-get install -y --force-yes aptirepo-upload make devscripts equivs
 sudo make install-deb-deps
 make deb
 
-version=$(dpkg-parsechangelog --show-field Version)
+version=$(dpkg-parsechangelog | sed -r -n 's/Version: //p')
 arch=$(dpkg-architecture -qDEB_BUILD_ARCH)
 
 aptirepo-upload \

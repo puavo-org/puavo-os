@@ -19,10 +19,11 @@
 from distutils.core import setup
 import os.path
 
+import re
 import subprocess
 
-version = subprocess.check_output(
-    ['dpkg-parsechangelog', '-SVersion', '-l../debian/changelog']).strip()
+version = re.search('Version: (.*)', subprocess.check_output(
+        ['dpkg-parsechangelog', '-l../debian/changelog'])).group(1)
 
 setup(name='aptirepo',
       version=version,
