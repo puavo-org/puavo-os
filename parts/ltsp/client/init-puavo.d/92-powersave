@@ -22,7 +22,8 @@ else
   system=$(dmidecode -s system-product-name)
 fi
 
-if [ "${system}" = "TravelMate B115-M" -o \
+if [ "${system}" = "Aspire ES1-111" -o \
+     "${system}" = "TravelMate B115-M" -o \
      "${system}" = "HP ProBook 430 G2" \
    ]; then
   disable_nmi=1
