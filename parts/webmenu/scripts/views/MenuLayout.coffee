@@ -11,6 +11,11 @@ MenuListView = require "./MenuListView.coffee"
 SidebarView = require "./SidebarView.coffee"
 Search = require "./Search.coffee"
 
+class HostnameView extends ViewMaster
+    template: (context) ->
+        "<div class=machine-hostname>#{context.hostname}</div>"
+
+
 class MenuLayout extends ViewMaster
 
     className: "bb-menu-layout"
@@ -33,6 +38,7 @@ class MenuLayout extends ViewMaster
         @setView ".menu-list-container", @menuListView
 
         @search = new Search
+        @hostnameView = new HostnameView model: @config
         @setView ".search-container", @search
 
         @breadcrumbs = new Breadcrumbs model: opts.initialMenu
@@ -73,8 +79,8 @@ class MenuLayout extends ViewMaster
 
         @listenTo this, "open-root-view", =>
             @setView ".favorites-container", @favorites
+            @hostnameView.detach()
             @setView ".search-container", @search
-            @$(".search-container").empty()
             @setView ".breadcrumbs-container", @breadcrumbs
             @removeLightbox()
             @refreshViews()
@@ -82,10 +88,10 @@ class MenuLayout extends ViewMaster
         @listenTo this, "open-logout-view", =>
             @favorites.detach()
             @search.detach()
+            @setView ".search-container", @hostnameView
             @breadcrumbs.detach()
             @menuListView.broadcast("open-logout-view")
             @$(".favorites-container").empty()
-            @$(".search-container").html("<div class=machine-hostname>#{@config.get("hostname")}</div>")
             @$(".breadcrumbs-container").empty()
             @refreshViews()
 
