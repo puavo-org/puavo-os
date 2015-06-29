@@ -34,6 +34,9 @@ var mc =
         'Error in installation, unknown reason.':
            'Asennus ei onnistunut, tuntematon syy.',
 
+        'Closing this application will interrupt software installation/uninstallation, are you sure you want to quit?':
+          'Tämän ohjelman sulkeminen keskeyttää sovelluksien asennuksien/poiston, haluatko varmasti sulkea ohjelman?',
+
         'Access controls': 'Pääsyoikeudet',
 
         'Access controls determine the login names that have access to this computer in addition to the primary user.  New login names can be created at ':
@@ -81,6 +84,9 @@ var mc =
         'Error in installation, unknown reason.':
           'Error in installation, unknown reason.', // XXX
 
+        'Closing this application will interrupt software installation/uninstallation, are you sure you want to quit?':
+          'Closing this application will interrupt software installation/uninstallation, are you sure you want to quit?',
+
         'Access controls': 'Access controls', // XXX
 
         'Access controls determine the login names that have access to this computer in addition to the primary user.  New login names can be created at ':
@@ -111,8 +117,163 @@ var mc =
               || msg;
   };
 
-function activate_window() {
-  var win = gui.Window.get();
+function PkgInstaller(button, initial_state, pkgname, errormsg_element) {
+  this.button           = button;
+  this.button_state     = initial_state;
+  this.errormsg_element = errormsg_element;
+  this.pkgname          = pkgname;
+
+  this.styles = {
+    install:        'background-color: orange',
+    installing_a:   'background-color: yellow',
+    installing_b:   'background-color: white',
+    uninstall:      'background-color: lightgreen',
+    uninstalling_a: 'background-color: red',
+    uninstalling_b: 'background-color: yellow',
+  };
+
+  this.flash_interval = null;
+  this.previous_eventhandler = null;
+
+  this.operation_in_progress = false;
+
+  if (this.button_state === 'press_install') {
+    this.button_state_press_install();
+  } else if (this.button_state === 'press_uninstall') {
+    this.button_state_press_uninstall();
+  }
+}
+
+PkgInstaller.prototype = {
+  // button state setup methods first
+  button_state_press_install:
+    function() {
+      var pkginstaller = this;
+      this.operation_in_progress = false;
+      this.button_state = 'press_install';
+      this.button.textContent = mc('INSTALL');
+      this.button.setAttribute('style', this.styles.install);
+      this.operation_in_progress = false;
+      this.setup_action(function(e) { e.preventDefault();
+                                      pkginstaller.install(); });
+    },
+
+  button_state_installing:
+    function() {
+      var pkginstaller = this;
+      this.button_state = 'installing';
+      this.button.textContent = mc('Installing...');
+      this.button.setAttribute('style', this.styles.installing_a);
+      this.operation_in_progress = true;
+      this.setup_action(function(e) { e.preventDefault(); });
+      this.flash_interval
+        = setInterval(function() {
+                        pkginstaller.make_flashes('installing_a',
+                                                  'installing_b'); },
+                      500);
+    },
+
+  button_state_press_uninstall:
+    function() {
+      var pkginstaller = this;
+      this.button_state = 'press_uninstall';
+      this.button.textContent = mc('UNINSTALL');
+      this.button.setAttribute('style', this.styles.uninstall);
+      this.operation_in_progress = false;
+      this.setup_action(function(e) { e.preventDefault();
+                                      pkginstaller.uninstall(); });
+    },
+
+  button_state_uninstalling:
+    function() {
+      var pkginstaller = this;
+      this.button_state = 'uninstalling';
+      this.button.textContent = mc('Uninstalling...');
+      this.button.setAttribute('style', this.styles.uninstalling_a);
+      this.operation_in_progress = true;
+      this.setup_action(function(e) { e.preventDefault(); });
+      this.flash_interval
+        = setInterval(function() {
+                        pkginstaller.make_flashes('uninstalling_a',
+                                                  'uninstalling_b'); },
+                      200);
+    },
+
+  // helper methods for dealing with UI
+
+  setup_action:
+    function(fn) {
+      if (this.flash_interval) {
+        clearInterval(this.flash_interval);
+        this.flash_interval = null;
+      }
+      if (this.previous_eventhandler) {
+        this.button.removeEventListener('click', this.previous_eventhandler);
+      }
+      this.button.addEventListener('click', fn);
+      this.previous_eventhandler = fn;
+    },
+
+  make_flashes:
+    function(a, b) {
+      if (this.button.getAttribute('style') === this.styles[a]) {
+        this.button.setAttribute('style', this.styles[b]);
+      } else if (this.button.getAttribute('style') === this.styles[b]) {
+        this.button.setAttribute('style', this.styles[a]);
+      }
+    },
+
+  // the install/uninstall methods
+
+  install:
+    function() {
+      // this might be called indirectly
+      if (this.button_state !== 'press_install') { return; }
+
+      var pkginstaller = this;
+      handle_pkg('install',
+                 this.pkgname,
+                 this.errormsg_element,
+                 function(error) { pkginstaller.install_returned(error); });
+      this.operation_in_progress = true;
+      this.button_state_installing();
+    },
+
+  uninstall:
+    function() {
+      if (this.button_state !== 'press_uninstall') { return; }
+
+      var pkginstaller = this;
+      handle_pkg('uninstall',
+                 this.pkgname,
+                 this.errormsg_element,
+                 function(error) { pkginstaller.uninstall_returned(error); });
+      this.operation_in_progress = true;
+      this.button_state_uninstalling();
+    },
+
+  // callback methods for install/uninstall
+
+  install_returned:
+    function(error) {
+      if (error) {
+        this.button_state_press_install();
+      } else {
+        this.button_state_press_uninstall();
+      }
+    },
+
+  uninstall_returned:
+    function(error) {
+      if (error) {
+        this.button_state_press_uninstall();
+      } else {
+        this.button_state_press_install();
+      }
+    },
+}
+
+function activate_window(win) {
   win.show();
   win.focus();
 
@@ -121,24 +282,56 @@ function activate_window() {
   win.enterFullscreen(); win.leaveFullscreen();
 }
 
-function add_action_button(pkgname, errormsg_element, sw_state) {
+function add_pkginstaller(pkgname, errormsg_element, sw_state) {
   var button = document.createElement('button');
 
   button_state = (sw_state !== 'INSTALLED')
                     ? 'press_install'
                     : 'press_uninstall';
 
-  var install_pkg_fn
-    = create_action_button_with_initial_state(button,
-                                              button_state,
-                                              pkgname,
-                                              errormsg_element);
-
-  return { button: button, install_pkg_fn: install_pkg_fn };
+  return new PkgInstaller(button, button_state, pkgname, errormsg_element);
 }
 
-function add_software_controls(table, packages) {
-  var install_pkg_functions = [];
+function add_one_pkginstaller(parentNode,
+                              description,
+                              legend,
+                              license_url,
+                              pkgname,
+                              sw_state) {
+  var tr = document.createElement('tr');
+
+  // create legend element
+  var legend_td = document.createElement('td');
+  legend_td.textContent = legend;
+  if (description !== '') { legend_td.setAttribute('tooltip', description); }
+  tr.appendChild(legend_td);
+
+  // create license url link
+  var license_url_td = document.createElement('td');
+  var a = document.createElement('a');
+  a.setAttribute('href', license_url);
+  a.addEventListener('click',
+                     function(e) { e.preventDefault();
+                                   open_external_link(a); });
+  a.textContent = mc('license terms');
+  tr.appendChild( license_url_td.appendChild(a) );
+
+  // create action button and error element
+  var action_td = document.createElement('td');
+  var action_errormsg_element = document.createElement('td');
+  pkginstaller = add_pkginstaller(pkgname, action_errormsg_element, sw_state);
+  action_td.appendChild(pkginstaller.button);
+
+  tr.appendChild(action_td);
+  tr.appendChild(action_errormsg_element);
+
+  parentNode.appendChild(tr);
+
+  return pkginstaller;
+}
+
+function add_pkginstallers(table, packages) {
+  var pkginstallers_list = [];
 
   var add_each_pkgcontrol
     = function (sw_states) {
@@ -164,59 +357,19 @@ function add_software_controls(table, packages) {
             continue;
           }
 
-          var install_pkg_fn = add_one_pkgcontrol(table,
+          var pkginstaller = add_one_pkginstaller(table,
                                                   description,
                                                   legend,
                                                   license_url,
                                                   pkgname,
                                                   sw_states[pkgname]);
-          install_pkg_functions.push(install_pkg_fn);
+          pkginstallers_list.push(pkginstaller);
         }
       };
 
   check_software_states(add_each_pkgcontrol, Object.keys(packages));
 
-  return install_pkg_functions;
-}
-
-function add_one_pkgcontrol(parentNode,
-                            description,
-                            legend,
-                            license_url,
-                            pkgname,
-                            sw_state) {
-  var tr = document.createElement('tr');
-
-  // create legend element
-  var legend_td = document.createElement('td');
-  legend_td.textContent = legend;
-  if (description !== '') { legend_td.setAttribute('tooltip', description); }
-  tr.appendChild(legend_td);
-
-  // create license url link
-  var license_url_td = document.createElement('td');
-  var a = document.createElement('a');
-  a.setAttribute('href', license_url);
-  a.addEventListener('click',
-                     function(e) { e.preventDefault();
-                                   open_external_link(a); });
-  a.textContent = mc('license terms');
-  tr.appendChild( license_url_td.appendChild(a) );
-
-  // create action button and error element
-  var action_td = document.createElement('td');
-  var action_errormsg_element = document.createElement('td');
-  button_and_install_action = add_action_button(pkgname,
-                                                action_errormsg_element,
-                                                sw_state);
-  action_td.appendChild(button_and_install_action.button);
-
-  tr.appendChild(action_td);
-  tr.appendChild(action_errormsg_element);
-
-  parentNode.appendChild(tr);
-
-  return button_and_install_action.install_pkg_fn;
+  return pkginstallers_list;
 }
 
 function check_access() {
@@ -264,121 +417,6 @@ function check_software_states(cb, available_packages) {
                          [ 'list' ],
                          {},
                          handler);
-}
-
-function create_action_button_with_initial_state(button,
-                                                 initial_state,
-                                                 pkgname,
-                                                 errormsg_element) {
-  /* XXX we could make this a real class instead? */
-
-  var styles = {
-    install:        'background-color: orange',
-    installing_a:   'background-color: yellow',
-    installing_b:   'background-color: white',
-    uninstall:      'background-color: lightgreen',
-    uninstalling_a: 'background-color: red',
-    uninstalling_b: 'background-color: yellow',
-  };
-
-  var flash_interval, previous_eventhandler;
-  var setup_action = function(fn) {
-    if (flash_interval) {
-      clearInterval(flash_interval);
-      flash_interval = null;
-    }
-    if (previous_eventhandler) {
-      button.removeEventListener('click', previous_eventhandler);
-    }
-    button.addEventListener('click', fn);
-    previous_eventhandler = fn;
-  };
-
-  var make_flashes
-    = function(a, b) {
-        if (button.getAttribute('style') === styles[a]) {
-          button.setAttribute('style', styles[b]);
-        } else if (button.getAttribute('style') === styles[b]) {
-          button.setAttribute('style', styles[a]);
-        };
-      };
-
-  var install_returned
-    = function(error) {
-        state_functions[ !error ? 'press_uninstall' : 'press_install' ]();
-      };
-
-  var uninstall_returned
-    = function(error) {
-        state_functions[ !error ? 'press_install' : 'press_uninstall' ]();
-      };
-
-  var button_state = initial_state;
-
-  var state_functions = {
-    installing:
-      function() {
-        button_state = 'installing';
-        button.textContent = mc('Installing...');
-        button.setAttribute('style', styles.installing_a);
-        setup_action(function(e) { e.preventDefault(); });
-        flash_interval
-          = setInterval(function () { make_flashes('installing_a',
-                                                   'installing_b'); },
-                        500);
-      },
-    uninstalling:
-      function() {
-        button_state = 'uninstalling';
-        button.textContent = mc('Uninstalling...');
-        button.setAttribute('style', styles.uninstalling_a);
-        setup_action(function(e) { e.preventDefault(); });
-        flash_interval
-          = setInterval(function () { make_flashes('uninstalling_a',
-                                                   'uninstalling_b'); },
-                        200);
-      },
-  };
-
-  var install_fn = function() {
-                     handle_pkg('install',
-                                pkgname,
-                                errormsg_element,
-                                install_returned);
-                     state_functions.installing();
-                   };
-
-  var uninstall_fn = function() {
-                       handle_pkg('uninstall',
-                                  pkgname,
-                                  errormsg_element,
-                                  uninstall_returned);
-                       state_functions.uninstalling();
-                     };
-
-  state_functions.press_install
-    = function() {
-        button_state = 'press_install';
-        button.textContent = mc('INSTALL');
-        button.setAttribute('style', styles.install);
-        setup_action(function(e) { e.preventDefault(); install_fn(); });
-      };
-  state_functions.press_uninstall
-    = function() {
-        button_state = 'press_uninstall';
-        button.textContent = mc('UNINSTALL');
-        button.setAttribute('style', styles.uninstall);
-        setup_action(function(e) { e.preventDefault(); uninstall_fn(); });
-      };
-
-  state_functions[initial_state]();
-
-  // return a function that enables pressing "install" if in such a state
-  return function() {
-    if (button_state === 'press_install') {
-      install_fn();
-    }
-  }
 }
 
 function create_error_details(shorttext, message) {
@@ -494,10 +532,12 @@ function generate_form() {
   var form = document.querySelector('form[id=dynamic_form]');
 
   // software installation
-  generate_software_installation_controls(form);
+  var pkginstallers = generate_software_installation_controls(form);
 
   // login-access control
   generate_loginaccess_controls(form);
+
+  return pkginstallers;
 }
 
 function generate_loginaccess_controls(form) {
@@ -528,8 +568,7 @@ function generate_software_installation_controls(form) {
   form.appendChild(textdiv);
 
   var pkgcontrols_table = document.createElement('table');
-  var install_pkg_functions = add_software_controls(pkgcontrols_table,
-                                                    packages);
+  var pkginstallers = add_pkginstallers(pkgcontrols_table, packages);
 
   var install_all_button = document.createElement('button');
   install_all_button.setAttribute('style', 'background-color: orange');
@@ -538,13 +577,15 @@ function generate_software_installation_controls(form) {
   install_all_button.addEventListener(
     'click',
     function(e) { e.preventDefault();
-                  for (i in install_pkg_functions) {
-                    install_pkg_functions[i]();
+                  for (i in pkginstallers) {
+                    pkginstallers[i].install();
                   }
                 });
 
   form.appendChild(install_all_button);
   form.appendChild(pkgcontrols_table);
+
+  return pkginstallers;
 }
 
 function get_packages() {
@@ -556,6 +597,27 @@ function get_packages() {
     alert('Could not read the list of additional software packages: ' + ex);
     return {};
   }
+}
+
+function handle_close_request(win) {
+  var some_pkginstallation_in_progress = false;
+
+  for (i in pkginstallers) {
+    var pkginstaller = pkginstallers[i];
+    if (pkginstaller.operation_in_progress) {
+      some_pkginstallation_in_progress = true;
+    }
+  }
+
+  if (some_pkginstallation_in_progress) {
+    var text = 'Closing this application will interrupt software installation/uninstallation, are you sure you want to quit?';
+    var we_have_confirmation = confirm(mc(text));
+    if (!we_have_confirmation) {
+      return;
+    }
+  }
+
+  win.close(true);
 }
 
 function handle_pkg(mode, pkgname, errormsg_element, cb) {
@@ -777,6 +839,9 @@ if (!old_config) { process.exit(1); }
 document.querySelector('title').innerText = mc('Laptop configuration');
 document.querySelector('h1'   ).innerText = mc('Laptop configuration');
 
-generate_form();
+var pkginstallers = generate_form();
 
-process.on('SIGHUP', activate_window);
+var win = gui.Window.get();
+
+process.on('SIGHUP', function() { activate_window(win) });
+win.on('close', function() { handle_close_request(win, pkginstallers); });
