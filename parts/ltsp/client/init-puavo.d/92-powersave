@@ -51,3 +51,23 @@ fi
 if [ $sata_alpm != 0 ]; then
   echo SATA_ALPM_ENABLE=${sata_alpm} > /etc/pm/config.d/sata_alpm
 fi
+
+# Wireless interface powersave
+
+if has_device_tag no-wifi-powersave; then
+  cat <<EOF >/etc/pm/power.d/wireless
+# Disabled
+EOF
+
+  cat <<EOF >/etc/udev/rules.d/80-wifi-powersave.rules
+KERNEL=="eth*|ath*|wlan*[0-9]|ra*|sta*", SUBSYSTEM=="net", ENV{DEVTYPE}=="wlan", ACTION=="add|change" RUN+="/usr/lib/puavo-ltsp-client/udev-disable-wifi-powersave"
+EOF
+
+  mkdir -p /etc/laptop-mode/conf.d/
+  cat > /etc/laptop-mode/conf.d/wireless-power.conf <<EOF
+CONTROL_WIRELESS_POWER_SAVING="auto"
+
+WIRELESS_AC_POWER_SAVING=0
+WIRELESS_BATT_POWER_SAVING=0
+EOF
+fi
