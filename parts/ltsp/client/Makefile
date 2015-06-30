@@ -286,6 +286,7 @@ install : installdirs $(install-subdirs)
 		puavo-monitor-nbd-connection \
 		puavo-run-xrandr \
 		puavo-thin-guest-account \
+		udev/udev-disable-wifi-powersave \
 		udev/udev-hotplug-monitor \
 		udev/udev-jetpipe \
 		xinitrc

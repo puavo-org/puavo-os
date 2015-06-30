@@ -1,11 +1,28 @@
-#!/bin/sh
+has_device_tag () {
+  jq -r .tags[] /etc/puavo/device.json | grep -qx "$1"
+}
 
-BACKLIGHT=$(jq -r '.tags[] | select(. == "intel-backlight")' /etc/puavo/device.json)
-NO_BACKLIGHT=$(jq -r '.tags[] | select(. == "no-intel-backlight")' /etc/puavo/device.json)
+intel_backlight=false
 
-DMIDECODE=$(dmidecode)
+if [ -f "/sys/devices/virtual/dmi/id/product_name" ]; then
+  system=$(cat /sys/devices/virtual/dmi/id/product_name)
+else
+  system=$(dmidecode -s system-product-name)
+fi
 
-if [ "${BACKLIGHT}" = "intel-backlight" ]; then
+if [ "${system}" = "Aspire ES1-111" ]; then
+  intel_backlight=true
+fi
+
+if has_device_tag intel-backlight; then
+  intel_backlight=true
+fi
+
+if has_device_tag no-intel-backlight; then
+  intel_backlight=false
+fi
+
+if [ ${intel_backlight} = true ]; then
   cat <<EOF >/usr/share/X11/xorg.conf.d/backlight.conf
 Section "Device"
     Identifier  "Intel Graphics"

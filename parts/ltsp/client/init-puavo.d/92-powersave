@@ -1,0 +1,73 @@
+has_device_tag () {
+  jq -r .tags[] /etc/puavo/device.json | grep -qx "$1"
+}
+
+# NMI watchdog
+
+disable_nmi=0
+enable_nmi=0
+sata_alpm=0
+
+if has_device_tag enable-nmi-watchdog; then
+  enable_nmi=1
+fi
+
+if has_device_tag disable-nmi-watchdog; then
+  disable_nmi=1
+fi
+
+if [ -f "/sys/devices/virtual/dmi/id/product_name" ]; then
+  system=$(cat /sys/devices/virtual/dmi/id/product_name)
+else
+  system=$(dmidecode -s system-product-name)
+fi
+
+if [ "${system}" = "Aspire ES1-111" -o \
+     "${system}" = "TravelMate B115-M" -o \
+     "${system}" = "HP ProBook 430 G2" \
+   ]; then
+  disable_nmi=1
+  sata_alpm=true
+fi
+
+if [ $enable_nmi != 0 ]; then
+  echo 1 > /proc/sys/kernel/nmi_watchdog
+else
+  if [ $disable_nmi != 0 ]; then
+    echo 0 > /proc/sys/kernel/nmi_watchdog
+  fi
+fi
+
+# SATA link power management
+
+if has_device_tag enable-sata-alpm; then
+  sata_alpm=true
+fi
+
+if has_device_tag disable-sata-alpm; then
+  sata_alpm=false
+fi
+
+if [ $sata_alpm != 0 ]; then
+  echo SATA_ALPM_ENABLE=${sata_alpm} > /etc/pm/config.d/sata_alpm
+fi
+
+# Wireless interface powersave
+
+if has_device_tag no-wifi-powersave; then
+  cat <<EOF >/etc/pm/power.d/wireless
+# Disabled
+EOF
+
+  cat <<EOF >/etc/udev/rules.d/80-wifi-powersave.rules
+KERNEL=="eth*|ath*|wlan*[0-9]|ra*|sta*", SUBSYSTEM=="net", ENV{DEVTYPE}=="wlan", ACTION=="add|change" RUN+="/usr/lib/puavo-ltsp-client/udev-disable-wifi-powersave"
+EOF
+
+  mkdir -p /etc/laptop-mode/conf.d/
+  cat > /etc/laptop-mode/conf.d/wireless-power.conf <<EOF
+CONTROL_WIRELESS_POWER_SAVING="auto"
+
+WIRELESS_AC_POWER_SAVING=0
+WIRELESS_BATT_POWER_SAVING=0
+EOF
+fi
