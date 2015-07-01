@@ -1,3 +1,15 @@
+puavo-pkg (0.1.32) trusty; urgency=medium
+
+  * New release
+  * I think we can be less verbose with tar.
+  * Add some instructions on how to maintain puavo-pkgs (the installer
+    packages).  Add puavo-update-remote-pkginstaller-bundle (I do not
+    know where this should belong, but I think it does not matter much
+    if it is here and gets installed everywhere).
+  * Git(e711138497ece2ce2a2f94e5b542f78b80aa08f6)
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Wed, 01 Jul 2015 13:13:43 +0300
+
 puavo-pkg (0.1.31) trusty; urgency=medium
 
   * New release
