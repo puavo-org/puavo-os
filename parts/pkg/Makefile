@@ -18,7 +18,9 @@ installdirs :
 .PHONY : install
 install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
-		puavo-pkg puavo-pkg-updater
+                puavo-pkg \
+                puavo-pkg-updater \
+                puavo-update-remote-pkginstaller-bundle
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-pkg \
 		puavo-pkg.conf puavo-pkg-updater.conf
