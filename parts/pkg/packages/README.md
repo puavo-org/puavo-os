@@ -14,7 +14,7 @@ The puavo-pkg package contains a script to update the
 ``puavo-pkg-installers-bundle.tar`` at ``images.${topdomain}``.
 It can be run with:
 
-  puavo-update-remote-pkginstaller-bundle
+    puavo-update-remote-pkginstaller-bundle
 
 It asks the necessary passwords to do this operation.
 
