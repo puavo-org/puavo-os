@@ -1,3 +1,14 @@
+puavo-pkg (0.1.31) trusty; urgency=medium
+
+  * New release
+  * If there is a checksum mismatch, report the actual and expected
+    checksums.
+  * Add forgotten legend for google earth.
+  * Add legend and description for Google Earth.
+  * Git(9fb3b992737af0a0abc637c4df89db53028d5041)
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Wed, 01 Jul 2015 12:14:37 +0300
+
 puavo-pkg (0.1.30) trusty; urgency=medium
 
   * New release
