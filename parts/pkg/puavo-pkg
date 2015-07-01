@@ -352,7 +352,7 @@ unpack_upstream_pack()
 
 check_md5sum()
 {
-    local md5sum_file md5sum_str file
+    local md5sum_file file actual_md5sum_str expected_md5sum_str
 
     md5sum_file=$1
     file=$2
@@ -360,9 +360,20 @@ check_md5sum()
     [ -r "${file}" ] || return 1
 
     [ -r "${md5sum_file}" ] || return 0
-    md5sum_str=$(cat "${md5sum_file}") || return 1
+    expected_md5sum_str=$(cat "${md5sum_file}") || return 1
 
-    md5sum --check --status 2>/dev/null <<<"${md5sum_str}  ${file}"
+    actual_md5sum_str=$(md5sum "${file}" 2>/dev/null | awk '{ print $1 }')
+
+    [ -n "$actual_md5sum_str"   ] || return 1
+    [ -n "$expected_md5sum_str" ] || return 1
+
+    if [ "$actual_md5sum_str" != "$expected_md5sum_str" ]; then
+        log_error "expected checksum '${expected_md5sum_str}' in '${file}'," \
+                  "yet actual checksum is '${actual_md5sum_str}'"
+        return 1
+    fi
+
+    return 0
 }
 
 cache_load_upstream_pack()
