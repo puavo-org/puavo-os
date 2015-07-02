@@ -73,7 +73,7 @@ Dir.glob("#{ dirpath }/*.tar.gz").each do |puavopkgtar|
   logfile = "#{ logdir }/#{ puavopkg }.log"
   colormsg("installing #{ puavopkg }, see #{ logfile }",
            HighLine::CYAN)
-  pid = spawn('timeout', '1m', 'puavo-pkg', 'install', puavopkgtar,
+  pid = spawn('timeout', '1h', 'puavo-pkg', 'install', puavopkgtar,
               { :out => logfile, :err => logfile })
   packages[pid] = puavopkg
 end
