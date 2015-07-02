@@ -20,6 +20,7 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
                 puavo-pkg \
                 puavo-pkg-updater \
+                puavo-test-puavo-pkg-installers \
                 puavo-update-remote-pkginstaller-bundle
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-pkg \
