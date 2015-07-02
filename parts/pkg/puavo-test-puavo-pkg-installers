@@ -12,16 +12,16 @@ def cleanup_old_installations()
     run('puavo-pkg', 'remove', pkg)
   end
 
-  cachedir       = nil
+  cachedir       = '/var/cache/puavo-pkg'
+  rootdir        = '/var/lib/puavo-pkg'
   installers_dir = nil
-  rootdir        = nil
 
   IO.readlines('/etc/puavo-pkg/puavo-pkg.conf').each do |line|
     if line.match(/^PUAVO_PKG_CACHEDIR=/) then
-      cachedir = line.split('=')[1].chomp
+      cachedir = (line.split('=')[1] || '').chomp
     end
     if line.match(/^PUAVO_PKG_ROOTDIR=/) then
-      rootdir = line.split('=')[1].chomp
+      rootdir = (line.split('=')[1] || '').chomp
     end
   end
 
