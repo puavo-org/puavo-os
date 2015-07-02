@@ -123,7 +123,8 @@ if [ -x "/sbin/vgchange" ]; then
 				/var/lib/extrausers \
 				/var/lib/puavo-desktop \
 				/var/lib/sss \
-				/var/log
+				/var/log \
+				/var/spool/anacron
 	    puavo_enable_utmp
 	    puavo_setup_cups_dir
 
@@ -136,7 +137,7 @@ if [ -x "/sbin/vgchange" ]; then
             done
 	    ;;
 	  ltspserver|wirelessaccesspoint)
-	    puavo_link_to_state /var/log
+	    puavo_link_to_state /var/log /var/spool/anacron
 	    puavo_enable_utmp
 	    ;;
 	esac

@@ -1,7 +1,21 @@
-# Disable all cronjobs (those mostly cause unnecessary load).
+# Disable most cronjobs (those mostly cause unnecessary load), but logrotate
+# is actually useful when /state is used.  On hosts that do not need cron
+# anacron+cron are disabled, so extra jobs should not matter.
 
-rm -f /etc/cron.d/*       \
-      /etc/cron.hourly/*  \
-      /etc/cron.daily/*   \
-      /etc/cron.monthly/* \
-      /etc/cron.weekly/*
+for cronjobfile in /etc/cron.d/*       \
+                   /etc/cron.hourly/*  \
+                   /etc/cron.daily/*   \
+                   /etc/cron.monthly/* \
+                   /etc/cron.weekly/*; do
+  test -e "$cronjobfile" || continue
+
+  case "$cronjobfile" in
+    /etc/cron.daily/logrotate)
+      # save the /etc/cron.daily/logrotate file
+      continue
+      ;;
+    *)
+      rm -f "$cronjobfile"
+      ;;
+  esac
+done

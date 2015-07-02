@@ -6,7 +6,6 @@ puavo_personally_administered=$(jq -r .personally_administered /etc/puavo/device
 set_lts_var PUAVO_HOSTTYPE "$puavo_hosttype"
 
 puavo_rm_system_services='
-  anacron
   apport
   atd
   avahi-daemon
@@ -60,6 +59,7 @@ case "$puavo_hosttype" in
 
     puavo_rm_system_services="
       $puavo_rm_system_services
+      anacron
       cron
       laptop-mode
       ltspguestssh
@@ -128,7 +128,6 @@ case "$puavo_hosttype" in
     puavo_rm_system_services="
       $puavo_rm_system_services
       autopoweroff
-      cron
       hostapd
       jetty
       ltspguestssh
@@ -166,7 +165,6 @@ case "$puavo_hosttype" in
     puavo_rm_system_services="
       $puavo_rm_system_services
       autopoweroff
-      cron
       eno
       laptop-mode
       lightdm
@@ -197,6 +195,7 @@ case "$puavo_hosttype" in
 
     puavo_rm_system_services="
       $puavo_rm_system_services
+      anacron
       cron
       eno
       fluentd
@@ -241,6 +240,7 @@ case "$puavo_hosttype" in
     puavo_rm_system_services="
       $puavo_rm_system_services
       $puavo_unregistered_unneeded_system_services
+      anacron
       cron
       eno
       fluentd
