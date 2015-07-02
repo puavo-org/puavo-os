@@ -1,3 +1,14 @@
+puavo-pkg (0.1.33) trusty; urgency=medium
+
+  * New release
+  * Add puavo-test-puavo-pkg-installers, that tests if puavo-pkg
+    installers work correctly.  puavo-pkg is trusted to return error, in
+    case there was an issue (the packaged software is not tested).
+  * Fix indent
+  * Git(52cd118903af8cda5390c0a3491c93bc1a0a71e0)
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Thu, 02 Jul 2015 08:36:49 +0300
+
 puavo-pkg (0.1.32) trusty; urgency=medium
 
   * New release
