@@ -1,0 +1,112 @@
+#!/usr/bin/ruby1.9.1
+
+require 'fileutils'
+require 'highline/import'
+require 'json'
+
+def cleanup_old_installations()
+  pkglist = get_pkglist()
+
+  pkglist.each do |pkg|
+    colormsg("removing #{ pkg }", HighLine::CYAN)
+    run('puavo-pkg', 'remove', pkg)
+  end
+
+  cachedir       = nil
+  installers_dir = nil
+  rootdir        = nil
+
+  IO.readlines('/etc/puavo-pkg/puavo-pkg.conf').each do |line|
+    if line.match(/^PUAVO_PKG_CACHEDIR=/) then
+      cachedir = line.split('=')[1].chomp
+    end
+    if line.match(/^PUAVO_PKG_ROOTDIR=/) then
+      rootdir = line.split('=')[1].chomp
+    end
+  end
+
+  puavo_pkg_updater_conf \
+    = JSON.parse( IO.read('/etc/puavo-pkg/puavo-pkg-updater.conf') )
+
+  installers_dir = puavo_pkg_updater_conf['installers_dir']
+
+  raise 'cachedir not set'       unless cachedir       && !cachedir.empty?
+  raise 'installers_dir not set' unless installers_dir && !installers_dir.empty?
+  raise 'rootdir not set'        unless rootdir        && !rootdir.empty?
+
+  [ cachedir, installers_dir, rootdir ].each do |dir|
+    colormsg("cleaning up #{ dir }", HighLine::CYAN)
+    FileUtils.remove_entry_secure(dir, true)
+  end
+end
+
+def colormsg(msg, color)
+  HighLine.say(HighLine.new.color(msg, color))
+end
+
+def get_pkglist()
+  output = %x(puavo-pkg list)
+  raise 'puavo-pkg list returned error' if $?.exitstatus != 0
+
+  output.split("\n").map { |line| (line.split(/\s+/))[0] }
+end
+
+def run(*args)
+  system(*args) \
+    or raise "error in running #{ args.inspect }"
+end
+
+cleanup_old_installations()
+
+colormsg('running puavo-pkg-updater --update-installers', HighLine::CYAN)
+run('puavo-pkg-updater', '--update-installers')
+
+logdir = 'puavo-test-puavo-pkg-installers-logs'
+
+FileUtils.mkdir_p(logdir)
+
+packages = {}
+
+dirpath = '/images/puavo-pkg/installers/installers/'
+Dir.glob("#{ dirpath }/*.tar.gz").each do |puavopkgtar|
+  puavopkg = File.basename(puavopkgtar, '.tar.gz')
+  logfile = "#{ logdir }/#{ puavopkg }.log"
+  colormsg("installing #{ puavopkg }, see #{ logfile }",
+           HighLine::CYAN)
+  pid = spawn('timeout', '1m', 'puavo-pkg', 'install', puavopkgtar,
+              { :out => logfile, :err => logfile })
+  packages[pid] = puavopkg
+end
+
+failed_packages = []
+
+begin
+  loop do
+    pid = Process.wait(-1)
+    status = $?.exitstatus
+
+    puavopkg = packages[pid]
+
+    if status == 0 then
+      msg = "#{ puavopkg } was installed OK!"
+      colormsg(msg, HighLine::GREEN)
+    else
+      failed_packages << puavopkg
+      logfile = "#{ logdir }/#{ puavopkg }.log"
+      msg = "An error occurred when installing #{ puavopkg }, " \
+              + "see #{ logfile } for details"
+      colormsg(msg, HighLine::RED)
+    end
+  end
+rescue Errno::ECHILD
+end
+
+if !failed_packages.empty? then
+  packages = failed_packages.sort.join(' ')
+  warn "The following packages returned errors: #{ packages }"
+  exit(1)
+end
+
+puts 'Everything was ok'
+
+exit(0)
