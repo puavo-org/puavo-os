@@ -10,18 +10,18 @@ puavo_primary_user=$(jq -r .primary_user /etc/puavo/device.json)
 puavo_greeter_background_mode=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background_mode://p' | tail -n1)
 puavo_greeter_background=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background://p' | tail -n1)
 puavo_greeter_background_random_subdir=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background_random_subdir://p' | tail -n1)
-puavo_greeter_firstlogin_background=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_firstlogin_background://p' | tail -n1)
+puavo_greeter_background_firstlogin=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background_firstlogin://p' | tail -n1)
 
 background=
 
 BACKGROUNDS_DIR=/usr/share/backgrounds/puavo-greeter
 
-if [ -n "$puavo_greeter_firstlogin_background" \
+if [ -n "$puavo_greeter_background_firstlogin" \
      -a ! -s /var/lib/extrausers/passwd ]; then
   # If /var/lib/extrausers/passwd does not exist or is empty, then we put
   # a special background to guide the user if that path exists
   # (puavo_greeter_background_mode must be set to dynamic as well).
-  puavo_greeter_background="$puavo_greeter_firstlogin_background"
+  puavo_greeter_background="$puavo_greeter_background_firstlogin"
   puavo_greeter_background_mode="firstlogin"
 fi
 
