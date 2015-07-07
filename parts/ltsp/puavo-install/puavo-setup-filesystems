@@ -106,9 +106,11 @@ module DiskHandler
     fs_setup_phases = []
 
     if fs_conf['partition'] == 'whole'
+      fs_setup_phases += [ :wipe_device ] if conf['wipe']
       fs_setup_phases += [ :lvm_partition, :puavo_filesystems ]
       fs_conf['partition'] = "#{ fs_conf['device'] }1"
     else
+      fs_setup_phases += [ :wipe_partition ] if conf['wipe']
       fs_setup_phases += [ :puavo_filesystems ]
     end
 
@@ -183,6 +185,17 @@ module DiskHandler
       run('mount', "/dev/mapper/#{ vgname }-#{ name }", mnt_path)
     end
   end
+
+  def self.wipe(device)
+    run('nwipe', '--autonuke',
+                 '--method=quick',
+                 '--nowait',
+                 '--verify=off',
+                 device)
+  end
+
+  def self.wipe_device(fs_conf)   ; wipe(fs_conf['device'])   ; end
+  def self.wipe_partition(fs_conf); wipe(fs_conf['partition']); end
 end
 
 module QueryDiskInfo
@@ -277,6 +290,7 @@ module QueryDiskInfo
     partition    = nil
     first_sector = nil
     last_sector  = nil
+    wipe         = false
 
     until do_it do
       device    = QueryDiskInfo::ask_device()
@@ -299,6 +313,21 @@ module QueryDiskInfo
         end
       end
 
+      msg = "\nIt is possible to wipe disk/partition before installing,\n" \
+              + "but this can take a rather long time.\n"                  \
+              + "Should we wipe the disk/partition before installing? (yes/no)"
+      while true do
+        wipe_answer = UI::ask_with_default(msg, 'no')
+        case wipe_answer
+          when 'yes'
+            wipe = true
+            break
+          when 'no'
+            wipe = false
+            break
+        end
+      end
+
       do_it = QueryDiskInfo::ask_confirmation(device, partition)
     end
 
@@ -308,6 +337,7 @@ module QueryDiskInfo
       'hosttype'     => hosttype,
       'last_sector'  => last_sector,
       'partition'    => partition,
+      'wipe'         => wipe,
     }
   end
 
@@ -336,7 +366,7 @@ module QueryDiskInfo
       puts "\nYou may choose 'fdisk' to partition this disk,"
       puts "or choose 'whole' to use the whole disk.\n"
       chosen_partition = UI::ask_with_default('Choose a partition:',
-					     chosen_partition,
+                                              chosen_partition,
                                               UI::PartitionPrompt)
     end
     chosen_partition
