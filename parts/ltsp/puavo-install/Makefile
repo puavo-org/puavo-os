@@ -75,7 +75,8 @@ install : installdirs
 		po/sv/puavo-client-updater-applet.mo
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
-		screen.d/ltspimage-update
+		screen.d/ltspimage-update \
+		screen.d/register
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_128G \
 		preseeds/personal_laptop_128G/*
