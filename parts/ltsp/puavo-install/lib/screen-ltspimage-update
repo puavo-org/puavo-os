@@ -1,0 +1,15 @@
+#!/bin/sh
+
+ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
+
+until /usr/sbin/puavo-install-and-update-ltspimages \
+	--install-from-nbd /dev/nbd0 "$ltspimage_name"; do
+  echo 'Installing ltsp image FAILED!  Press ENTER to try again.'
+  read answer
+done
+
+echo 'Press ENTER to reboot.'
+read answer
+reboot
+
+sleep 600

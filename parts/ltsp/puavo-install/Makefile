@@ -98,6 +98,8 @@ install : installdirs
 		lib/ls-old-imageoverlays \
 		lib/ls-old-images \
 		lib/puavo-image-preinst \
+		lib/screen-ltspimage-update \
+		lib/screen-register \
 		lib/update-configuration \
 		lib/update-images \
 		lib/update-ltspimage-update-stats

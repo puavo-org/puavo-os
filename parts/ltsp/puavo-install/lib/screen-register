@@ -1,0 +1,22 @@
+#!/bin/sh
+
+until /usr/sbin/puavo-install; do
+  echo 'Installation failed, press ENTER to try again.' > /dev/stderr
+  read answer
+done
+
+echo
+echo -n 'Press enter to reboot'
+read answer
+
+echo
+echo -n rebooting...
+for i in $(seq 5 | tac); do
+  echo -n " $i"
+  sleep 1
+done
+
+echo
+reboot
+
+sleep 600
