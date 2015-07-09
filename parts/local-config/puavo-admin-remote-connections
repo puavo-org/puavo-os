@@ -21,7 +21,7 @@ action=$1
 
 set -u
 
-config_file_path="/state/etc/puavo/local/puavo-admin-remote-connections.conf"
+config_file_path="/var/lib/puavo-desktop/shared/puavo-admin-remote-connections.conf"
 
 case "$action" in
   --accept-incoming)
