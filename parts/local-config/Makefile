@@ -44,6 +44,9 @@ install : installdirs
 		plc-ui/style.css    \
 		plc-ui/theme.css
 	
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-local-config \
+		puavo-admin-remote-connections
+
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-local-config/pam \
 		pam/login-setup
 	
