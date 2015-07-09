@@ -32,7 +32,6 @@ puavo-local-config [OPTIONS]
 
     --admins                configure admins
     --grub-default          configure grub default
-    --local-users           configure local users
     --networkmanager-policy apply special networkmanager permissions
     --prepare-puavopkg      setup configurations for puavo-pkg
     --setup-installed-pkgs  configure installed (optional) packages
@@ -55,19 +54,12 @@ def logerr(*args); syslog(STDERR, *args); end
 def conf_version_1_ok?(conf)
   is_boolean = lambda { |v| v.kind_of?(TrueClass) || v.kind_of?(FalseClass) }
 
+  # conf['local_users'] might exist but is not used anymore,
+  # so we do not check for its validity
+
   conf['allow_logins_for'].kind_of?(Array) \
     && conf['allow_logins_for'].map { |s| s.kind_of?(String) }.all? \
-    && is_boolean.call(conf['allow_remoteadmins']) \
-    && conf['local_users'].kind_of?(Hash) \
-    && conf['local_users'].map do |login, u|
-                                 login.kind_of?(String) \
-                                   && u.kind_of?(Hash) \
-                                   && u['hashed_password'].kind_of?(String) \
-                                   && u['name'].kind_of?(String) \
-                                   && u['uid'].kind_of?(Integer) \
-                                   && is_boolean.call(u['enabled'])
-                               end \
-                          .all?
+    && is_boolean.call(conf['allow_remoteadmins'])
 end
 
 def ensure_conf_sanity(conf, config_path)
@@ -176,60 +168,6 @@ def configure_admins()
   end
   File.rename('/etc/sudoers.d/puavolocaladmins.pcltmp',
               '/etc/sudoers.d/puavolocaladmins')
-end
-
-def configure_local_users(conf)
-  return if conf.nil?
-
-  log(Syslog::LOG_INFO, "configuring local users\n")
-
-  primary_user = get_primary_user()
-
-  uid_min, uid_max = 3001, 3999
-  group_id = Etc.getgrnam('users').gid
-
-  problems = false
-
-  conf['local_users'].each do |login, user|
-    if user['uid'] < uid_min then
-      logerr(Syslog::LOG_WARNING, "uid is below uid_min for %s\n", login)
-      problems = true
-      next
-    end
-    if user['uid'] > uid_max
-      logerr(Syslog::LOG_WARNING, "uid is over uid_max for %s\n", login)
-      problems = true
-      next
-    end
-
-    if primary_user == login then
-      logerr(Syslog::LOG_WARNING,
-             "disabling login that is reserved for primary user: %s\n",
-             login)
-      user['enabled'] = false
-    end
-
-    home = "/home/#{ login }"
-    passwd_line \
-      = user['enabled'] \
-          ? ("#{ login }:x:#{ user['uid'] }:#{ group_id }" \
-               + ":#{ user['name'] },,,:#{ home }:/bin/bash")
-          : nil
-
-    search_and_replace_line('/etc/passwd',
-			    /^#{ login }:/,
-			    passwd_line)
-
-    shadow_line = user['enabled'] \
-                    ? "#{ login }:#{ user['hashed_password'] }:::::::" \
-                    : nil
-
-    search_and_replace_line('/etc/shadow',
-                            /^#{ login }:/,
-                            shadow_line)
-  end
-
-  raise 'Problems in configure_local_users' if problems
 end
 
 def configure_grub_default()
@@ -430,7 +368,6 @@ begin
     [ '--disable-remoteadmins',  GetoptLong::NO_ARGUMENT,       ],
     [ '--grub-default',          GetoptLong::NO_ARGUMENT,       ],
     [ '--install-pkg',           GetoptLong::REQUIRED_ARGUMENT, ],
-    [ '--local-users',           GetoptLong::NO_ARGUMENT,       ],
     [ '--networkmanager-policy', GetoptLong::NO_ARGUMENT,       ],
     [ '--remove-pkg',            GetoptLong::REQUIRED_ARGUMENT, ],
     [ '--prepare-puavopkg',      GetoptLong::NO_ARGUMENT,       ],
@@ -446,7 +383,7 @@ begin
       when '--help'
 	print_help()
 	exit(0)
-      when '--admins', '--grub-default', '--local-users'
+      when '--admins', '--grub-default'
 	apply_configs.push(opt) unless apply_configs.include?(opt)
       when '--install-pkg'
 	apply_configs.push(opt) unless apply_configs.include?(opt)
@@ -496,7 +433,6 @@ dispatch_table = {
   '--admins'                => lambda { configure_admins()                 },
   '--grub-default'          => lambda { configure_grub_default()           },
   '--install-pkg'           => lambda { install_pkgs(packages_to_install)  },
-  '--local-users'           => lambda { configure_local_users(conf)        },
   '--networkmanager-policy' => lambda { configure_nm_policy()              },
   '--prepare-puavopkg'      => lambda { prepare_puavopkg()                 },
   '--remove-pkg'            => lambda { remove_pkgs(packages_to_remove)    },
