@@ -276,6 +276,7 @@ install : installdirs $(install-subdirs)
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
 		greeter-setup \
+		puavo-admin-remote-connections \
 		puavo-desktop-session \
 		puavo-desktop-session-cleanup \
 		puavo-display-setup \
