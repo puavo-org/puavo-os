@@ -1,0 +1,147 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import print_function
+
+import appindicator
+import fcntl
+import getpass
+import gtk
+import os
+import subprocess
+import sys
+
+class RemoteAccessHandler:
+    def accept_remote_access(self):
+        self.accept_gnome_remote_access()
+        self.call_puavo_admin_remote_connections([ '--accept-incoming' ])
+
+        subprocess.Popen([ '/usr/lib/vino/vino-server', '--sm-disable' ],
+                         close_fds=True)
+
+
+    def deny_remote_access(self):
+        self.deny_gnome_remote_access()
+        self.call_puavo_admin_remote_connections([ '--reject-incoming' ])
+
+        user = getpass.getuser()
+        subprocess.call([ 'pkill', '-x', '-U', user, 'vino-server' ])
+
+
+    def accept_gnome_remote_access(self):
+        dconf_values = {
+          '/org/gnome/desktop/remote-access/enabled':            "true",
+          '/org/gnome/desktop/remote-access/icon-visibility':    "'client'",
+          '/org/gnome/desktop/remote-access/network-interface':  "'tap0'",
+          '/org/gnome/desktop/remote-access/notify-on-connect':  "true",
+          '/org/gnome/desktop/remote-access/prompt-enabled':     "true",
+          '/org/gnome/desktop/remote-access/require-encryption': "true",
+          '/org/gnome/desktop/remote-access/view-only':          "false",
+        }
+
+        self.set_dconf_values(dconf_values)
+
+
+    def deny_gnome_remote_access(self):
+        dconf_values = {
+          '/org/gnome/desktop/remote-access/enabled':            "false",
+          '/org/gnome/desktop/remote-access/icon-visibility':    "'client'",
+          '/org/gnome/desktop/remote-access/network-interface':  "''",
+          '/org/gnome/desktop/remote-access/notify-on-connect':  "true",
+          '/org/gnome/desktop/remote-access/prompt-enabled':     "true",
+          '/org/gnome/desktop/remote-access/require-encryption': "true",
+          '/org/gnome/desktop/remote-access/view-only':          "true",
+        }
+
+        self.set_dconf_values(dconf_values)
+
+
+    def call_puavo_admin_remote_connections(self, cmdargs):
+        cmdpath = '/usr/lib/puavo-ltsp-client/puavo-admin-remote-connections'
+        subprocess.check_call([ cmdpath ] + cmdargs)
+
+
+    def set_dconf_values(self, dconf_values_dict):
+        for key, value in dconf_values.iteritems():
+            subprocess.check_call([ 'dconf', 'write', key, value ])
+
+
+
+class RemoteAssistanceApplet:
+    def __init__(self, access_handler, conffile_path):
+        self.access_handler = access_handler
+        self.conffile_path  = conffile_path
+
+        self.indicator \
+            = appindicator.Indicator('remote-assistance',
+                                     'vendor_favicon',
+                                     appindicator.CATEGORY_COMMUNICATIONS)
+
+        self.indicator.set_status(appindicator.STATUS_ACTIVE)
+
+        menu = gtk.Menu()
+
+        close_item = get.MenuItem('close')
+        close_item.connect('activate', self.close)
+        menu.append(close_item)
+
+        self.indicator.set_menu(menu)
+
+
+    def close(self):
+        try:
+            os.remove(self.conffile_path)
+        except OSError, e:
+            if e.errno != errno.EEXIST:
+                raise e
+
+        sys.exit(0)
+
+
+autostart = False
+
+access_handler = RemoteAccessHandler()
+
+# XXX
+for arg in sys.argv:
+    if arg == '--autostart':
+        autostart = True
+    elif arg == '--enable':
+        access_handler.accept_remote_access()
+    elif arg == '--disable':
+        access_handler.deny_remote_access()
+    else:
+        print('Unknown argument: %s' % arg, file=sys.stderr)
+        sys.exit(1)
+
+
+# This conffile is basically just autostarting control, but may take other
+# roles later (in which case the autostart information should be contained
+# in this file).  No point in changing to a new path later if functionality
+# changes...
+user_puavo_dir = os.path.join(os.environ['HOME'], '.puavo')
+conffile_path = os.path.join(user_puavo_dir,
+                             'puavo-remote-assistance-applet.conf')
+
+# Do not start the applet if autostarting and conffile does not exist.
+# Not that --enable and --disable may have had an effect already.
+if autostart and not os.path.exists(conffile_path):
+    sys.exit(0)
+
+try:
+   os.mkdir(user_puavo_dir)
+except OSError, e:
+   if e.errno != errno.EEXIST:
+      raise e
+
+# touch the conffile_path, making --autostart start the applet later
+conffile = open(conffile_path, 'w+')
+
+# if this fails, this applet is likely running and we should just fail here
+fcntl.flock(conffile,
+            fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+applet = RemoteAssistanceApplet(access_handler, conffile_path)
+gtk.main()
+
+conffile.close()
