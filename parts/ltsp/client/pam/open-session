@@ -52,7 +52,7 @@ else
                  "$PUAVO_HOSTNAME")
   fi
 
-  if PUAVO_SESSION=$(
+  if -s ${KRB5CCNAME} -a PUAVO_SESSION=$(
       # use a pipe because $formdata contains a password
       echo -n "$formdata" \
         | /usr/sbin/puavo-rest-client --data -      \
@@ -72,10 +72,32 @@ else
       echo "Failed to get session from puavo-rest (error code ${CODE}), reusing old session: ${PUAVO_SESSION}" \
           | logger -t puavo-open-session -p auth.warn
     else
-      echo "Failed to get session from puavo-rest (error code ${CODE}), no old session to reuse" \
-          | logger -t puavo-open-session -p auth.error
+      # If kerberos authentication fails for some reason, try again with
+      # basic auth.
+      echo "Trying basic auth with user credentials from master server"
 
-      exit 97
+      export PUAVO_REST_CLIENT_PASSWORD=$(cat /dev/stdin)
+
+      if [ -n "$PUAVO_REST_CLIENT_PASSWORD" ]; then
+        if PUAVO_SESSION=$(
+          /usr/sbin/puavo-rest-client --data "$formdata"      \
+                                      --max-time 20 \
+                                      --no-dns      \
+                                      --user $PAM_USER    \
+                                      v3/sessions </dev/null 2>/dev/null); then
+
+          echo "Received puavo session using basic auth: ${PUAVO_SESSION}" \
+              | logger -t puavo-open-session -p auth.info
+        else
+          echo "Failed to get session from puavo-rest (error code ${CODE}), no old session to reuse" \
+              | logger -t puavo-open-session -p auth.error
+
+          exit 97
+        fi
+      else
+        echo "Could not read user password from stdin for basic auth and no session to reuse" \
+            | logger -t puavo-open-session -p auth.error
+      fi
     fi
   fi
 fi
