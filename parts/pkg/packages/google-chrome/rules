@@ -75,6 +75,7 @@ EOF
         chmod 0755 "${upstream_dir}"
         ;;
     download)
+        # Tested with version 44.0.2403.125.
         upstream_pack=$1
         baseurl="https://dl.google.com/linux/chrome/deb"
         tmpfile=$(mktemp)
