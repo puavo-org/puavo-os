@@ -13,23 +13,12 @@ import subprocess
 import sys
 
 class RemoteAccessHandler:
-    def accept_remote_access(self):
-        self.accept_gnome_remote_access()
-        self.call_puavo_admin_remote_connections([ '--accept-incoming' ])
-
-        subprocess.Popen([ '/usr/lib/vino/vino-server', '--sm-disable' ],
-                         close_fds=True)
+    def enable_remote_access(self, widget=None):
+        self.enable_gnome_remote_access()
+        self.enable_ssh_remote_access()
 
 
-    def deny_remote_access(self):
-        self.deny_gnome_remote_access()
-        self.call_puavo_admin_remote_connections([ '--reject-incoming' ])
-
-        user = getpass.getuser()
-        subprocess.call([ 'pkill', '-x', '-U', user, 'vino-server' ])
-
-
-    def accept_gnome_remote_access(self):
+    def enable_gnome_remote_access(self):
         dconf_values = {
           '/org/gnome/desktop/remote-access/enabled':            "true",
           '/org/gnome/desktop/remote-access/icon-visibility':    "'client'",
@@ -40,10 +29,34 @@ class RemoteAccessHandler:
           '/org/gnome/desktop/remote-access/view-only':          "false",
         }
 
+        # starts vino-server as a side-effect
         self.set_dconf_values(dconf_values)
 
 
-    def deny_gnome_remote_access(self):
+    def enable_ssh_remote_access(self):
+        self.call_puavo_admin_remote_connections([ '--accept-incoming' ])
+
+
+    def check_gnome_remote_access_is_allowed(self):
+        dconf_key = '/org/gnome/desktop/remote-access/enabled'
+        out = subprocess.check_output([ 'dconf', 'read', dconf_key ])
+
+        return (out.rstrip(os.linesep) == 'true')
+
+
+    def check_ssh_remote_access_is_allowed(self):
+        args = [ '--is-incoming-accepted' ]
+        status = self.call_puavo_admin_remote_connections(args)
+
+        return (status.rstrip(os.linesep) == 'yes')
+
+
+    def disable_remote_access(self, widget=None):
+        self.disable_gnome_remote_access()
+        self.disable_ssh_remote_access()
+
+
+    def disable_gnome_remote_access(self):
         dconf_values = {
           '/org/gnome/desktop/remote-access/enabled':            "false",
           '/org/gnome/desktop/remote-access/icon-visibility':    "'client'",
@@ -57,9 +70,13 @@ class RemoteAccessHandler:
         self.set_dconf_values(dconf_values)
 
 
+    def disable_ssh_remote_access(self):
+        self.call_puavo_admin_remote_connections([ '--reject-incoming' ])
+
+
     def call_puavo_admin_remote_connections(self, cmdargs):
         cmdpath = '/usr/lib/puavo-ltsp-client/puavo-admin-remote-connections'
-        subprocess.check_call([ cmdpath ] + cmdargs)
+        return subprocess.check_output([ cmdpath ] + cmdargs)
 
 
     def set_dconf_values(self, dconf_values):
@@ -82,12 +99,35 @@ class RemoteAssistanceApplet:
 
         menu = gtk.Menu()
 
-        # XXX "close" means what?
-        close_item = gtk.MenuItem('close')
-        close_item.connect('activate', self.close)
-        close_item.show()
+        if self.access_handler.check_gnome_remote_access_is_allowed():
+            print("Gnome remote access is allowed")
+        else:
+            print("Gnome remote access is *NOT* allowed")
 
-        menu.append(close_item)
+        if self.access_handler.check_ssh_remote_access_is_allowed():
+            print("Ssh remote access is allowed")
+        else:
+            print("Ssh remote access is *NOT* allowed")
+
+        # XXX translations
+        enable_access_button = gtk.MenuItem('Enable remote access')
+        enable_access_button.connect('activate',
+                                     self.access_handler.enable_remote_access)
+        enable_access_button.show()
+        menu.append(enable_access_button)
+
+        # XXX translations
+        disable_access_button = gtk.MenuItem('Disable remote access')
+        disable_access_button.connect('activate',
+                                      self.access_handler.disable_remote_access)
+        disable_access_button.show()
+        menu.append(disable_access_button)
+
+        # XXX translations
+        close_button = gtk.MenuItem('Close')
+        close_button.connect('activate', self.close)
+        close_button.show()
+        menu.append(close_button)
 
         self.indicator.set_menu(menu)
 
@@ -110,9 +150,9 @@ for arg in sys.argv[1:]:
     if arg == '--autostart':
         autostart = True
     elif arg == '--enable':
-        access_handler.accept_remote_access()
+        access_handler.enable_remote_access()
     elif arg == '--disable':
-        access_handler.deny_remote_access()
+        access_handler.disable_remote_access()
     else:
         print('Unknown argument: %s' % arg, file=sys.stderr)
         sys.exit(1)
