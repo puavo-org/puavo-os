@@ -55,6 +55,7 @@ case "$puavo_hosttype" in
     set_lts_var RM_SESSION_SERVICES "
       nm-applet
       puavo-client-updater-applet
+      puavo-remote-assistance-applet
     "
 
     puavo_rm_system_services="
@@ -96,11 +97,12 @@ case "$puavo_hosttype" in
 
     puavo_laptop_unneeded_session_services=""
 
-    # puavo-client-updater-applet is not needed except on
-    # personally administered laptops
+    # puavo-client-updater-applet and puavo-remote-assistance-applet are not
+    # needed except on personally administered laptops
     if [ "$puavo_personally_administered" != "true" ]; then
       puavo_laptop_unneeded_session_services="
         puavo-client-updater-applet
+        puavo-remote-assistance-applet
       "
     fi
 
@@ -158,6 +160,7 @@ case "$puavo_hosttype" in
       polyvision-cdfnu
       polyvision-pvd
       puavo-client-updater-applet
+      puavo-remote-assistance-applet
       smart_1-_Service
       smart_1-_Tools
     "
@@ -191,6 +194,7 @@ case "$puavo_hosttype" in
     set_lts_var RM_SESSION_SERVICES "
       nm-applet
       puavo-client-updater-applet
+      puavo-remote-assistance-applet
     "
 
     puavo_rm_system_services="
@@ -227,6 +231,7 @@ case "$puavo_hosttype" in
     set_lts_var RM_SESSION_SERVICES "
       nm-applet
       puavo-client-updater-applet
+      puavo-remote-assistance-applet
     "
     set_lts_var SCREEN_07 register
 
@@ -290,6 +295,7 @@ case "$puavo_hosttype" in
     set_lts_var RM_SESSION_SERVICES "
       nm-applet
       puavo-client-updater-applet
+      puavo-remote-assistance-applet
     "
 
     puavo_rm_system_services="
