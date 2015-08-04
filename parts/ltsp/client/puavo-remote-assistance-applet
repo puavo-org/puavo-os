@@ -124,7 +124,7 @@ conffile_path = os.path.join(user_puavo_dir,
                              'puavo-remote-assistance-applet.conf')
 
 # Do not start the applet if autostarting and conffile does not exist.
-# Not that --enable and --disable may have had an effect already.
+# Note that --enable and --disable may have had an effect already.
 if autostart and not os.path.exists(conffile_path):
     sys.exit(0)
 
