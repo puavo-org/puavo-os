@@ -4,6 +4,7 @@
 from __future__ import print_function
 
 import appindicator
+import errno
 import fcntl
 import getpass
 import gtk
@@ -81,14 +82,17 @@ class RemoteAssistanceApplet:
 
         menu = gtk.Menu()
 
-        close_item = get.MenuItem('close')
+        # XXX "close" means what?
+        close_item = gtk.MenuItem('close')
         close_item.connect('activate', self.close)
+        close_item.show()
+
         menu.append(close_item)
 
         self.indicator.set_menu(menu)
 
 
-    def close(self):
+    def close(self, widget):
         try:
             os.remove(self.conffile_path)
         except OSError, e:
@@ -102,8 +106,7 @@ autostart = False
 
 access_handler = RemoteAccessHandler()
 
-# XXX
-for arg in sys.argv:
+for arg in sys.argv[1:]:
     if arg == '--autostart':
         autostart = True
     elif arg == '--enable':
