@@ -191,7 +191,7 @@ end
 
 write_config("/etc/hosts")
 
-# XXX This uglyness must be, because /var/lib/puavo-desktop/shared may reside
+# XXX This ugliness must be, because /var/lib/puavo-desktop/shared may reside
 # XXX on /state partition, and its concept of uids/gids may not match the
 # XXX current image (there should be some solution to this ugliness).
 FileUtils.chown('puavodesktop',
