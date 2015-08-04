@@ -45,6 +45,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 	mkdir -p $(DESTDIR)/lib/udev/rules.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
+	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/hooks
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount
@@ -83,6 +84,9 @@ installdirs :
 install : installdirs $(install-subdirs)
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/pam-configs \
 		pam/configs/puavo-local-access
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/applications \
+		share/applications/puavo-remote-assistance-applet.desktop
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d \
 		init-puavo.d/*-*

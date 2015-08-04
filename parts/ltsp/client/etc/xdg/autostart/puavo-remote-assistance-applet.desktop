@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=Puavo Remote Assistance Applet
+Comment=Puavo Remote Assistance Applet
+Exec=puavo-remote-assistance-applet --autostart
+Terminal=false
+Type=Application
+Categories=Utility;
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Phase=Application
