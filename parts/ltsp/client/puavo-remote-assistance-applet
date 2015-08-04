@@ -132,10 +132,10 @@ if autostart and not os.path.exists(conffile_path):
     sys.exit(0)
 
 try:
-   os.mkdir(user_puavo_dir)
+    os.mkdir(user_puavo_dir)
 except OSError, e:
-   if e.errno != errno.EEXIST:
-      raise e
+    if e.errno != errno.EEXIST:
+        raise e
 
 # touch the conffile_path, making --autostart start the applet later
 conffile = open(conffile_path, 'w+')
