@@ -38,14 +38,15 @@ fi
 allowed_logins | fgrep -qx "${PAM_USER}" && exit 0
 
 if is_admin_user; then
-    case $(jq -r .allow_remoteadmins "$local_config_path") in
-	true)
-	    exit 0
-	    ;;
-	*)
-	    deny
-	    ;;
-    esac
+    incoming_accepted=$(
+      /usr/lib/puavo-ltsp-client/puavo-admin-remote-connections \
+        --is-incoming-accepted)
+
+    if [ "$incoming_accepted" = 'yes' ]; then
+        exit 0
+    fi
+
+    deny
 fi
 
 # if configuration contains '*', allow all
