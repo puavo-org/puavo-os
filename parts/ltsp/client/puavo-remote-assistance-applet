@@ -62,7 +62,7 @@ class RemoteAccessHandler:
         subprocess.check_call([ cmdpath ] + cmdargs)
 
 
-    def set_dconf_values(self, dconf_values_dict):
+    def set_dconf_values(self, dconf_values):
         for key, value in dconf_values.iteritems():
             subprocess.check_call([ 'dconf', 'write', key, value ])
 
