@@ -96,9 +96,6 @@ install : installdirs $(install-subdirs)
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/pam-configs \
 		pam/configs/puavo-local-access
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/applications \
-		share/applications/puavo-remote-assistance-applet.desktop
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d \
 		init-puavo.d/*-*
 
