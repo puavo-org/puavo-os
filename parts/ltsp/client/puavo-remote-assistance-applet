@@ -35,8 +35,10 @@ class RemoteAccessHandler:
           '/org/gnome/desktop/remote-access/view-only':          "false",
         }
 
-        # starts vino-server as a side-effect
         self.set_dconf_values(dconf_values)
+
+        subprocess.Popen([ '/usr/lib/vino/vino-server', '--sm-disable' ],
+                         close_fds=True)
 
 
     def enable_ssh_remote_access(self):
@@ -74,6 +76,9 @@ class RemoteAccessHandler:
         }
 
         self.set_dconf_values(dconf_values)
+
+        user = getpass.getuser()
+        subprocess.call([ 'pkill', '-x', '-U', user, 'vino-server' ])
 
 
     def disable_ssh_remote_access(self):
