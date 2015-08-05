@@ -52,14 +52,11 @@ def log(*args)   ; syslog(STDOUT, *args); end
 def logerr(*args); syslog(STDERR, *args); end
 
 def conf_version_1_ok?(conf)
-  is_boolean = lambda { |v| v.kind_of?(TrueClass) || v.kind_of?(FalseClass) }
-
-  # conf['local_users'] might exist but is not used anymore,
-  # so we do not check for its validity
+  # conf['local_users'] and conf['allow_remoteadmins'] might exist but are not
+  # used anymore, so we do not check for their validity
 
   conf['allow_logins_for'].kind_of?(Array) \
-    && conf['allow_logins_for'].map { |s| s.kind_of?(String) }.all? \
-    && is_boolean.call(conf['allow_remoteadmins'])
+    && conf['allow_logins_for'].map { |s| s.kind_of?(String) }.all?
 end
 
 def ensure_conf_sanity(conf, config_path)
@@ -263,21 +260,6 @@ EOF
   end
 end
 
-def reset_allow_remoteadmins(conf, config_path)
-  return conf if (conf.nil? || conf['allow_remoteadmins'] == false)
-
-  log(Syslog::LOG_NOTICE, "remoteadmins were allowed in, disallowing\n")
-
-  # if allow_remoteadmins were set to true, set it false
-
-  conf['allow_remoteadmins'] = false
-  tmpfile = "#{ config_path }.tmp"
-  File.open(tmpfile, 'w') { |f| f.write(conf.to_json) }
-  FileUtils.mv(tmpfile, config_path)
-
-  conf
-end
-
 def superlaptop_mode?
   kernel_cmdline = IO.read('/proc/cmdline')
   superlaptop_mode_re \
@@ -355,7 +337,6 @@ Syslog.open(File.basename($0), Syslog::LOG_CONS)
 config_path = '/state/etc/puavo/local/config.json'
 
 apply_configs        = []
-disable_remoteadmins = false
 packages_to_install  = []
 packages_to_remove   = []
 
@@ -365,7 +346,6 @@ begin
     [ '--help',          '-h',   GetoptLong::NO_ARGUMENT,       ],
 
     [ '--admins',                GetoptLong::NO_ARGUMENT,       ],
-    [ '--disable-remoteadmins',  GetoptLong::NO_ARGUMENT,       ],
     [ '--grub-default',          GetoptLong::NO_ARGUMENT,       ],
     [ '--install-pkg',           GetoptLong::REQUIRED_ARGUMENT, ],
     [ '--networkmanager-policy', GetoptLong::NO_ARGUMENT,       ],
@@ -378,8 +358,6 @@ begin
     case opt
       when '--config-path'
 	config_path = arg
-      when '--disable-remoteadmins'
-        disable_remoteadmins = true
       when '--help'
 	print_help()
 	exit(0)
@@ -424,10 +402,6 @@ rescue StandardError => e
 end
 
 conf = ensure_conf_sanity(conf, config_path)
-
-if disable_remoteadmins then
-  conf = reset_allow_remoteadmins(conf, config_path)
-end
 
 dispatch_table = {
   '--admins'                => lambda { configure_admins()                 },
