@@ -50,10 +50,8 @@ var mc =
 
         'Remote assistance': 'Etätuki',
 
-        'If you want to allow Opinsys support service to remotely access your computer, you can do that with this option.  This setting will reset when computer reboots.':
-          'Mikäli haluat sallia Opinsysin tukipalvelun etäpääsyn tietokoneellesi tukitilanteessa, voit tehdä sen tällä valinnalla.  Tämä asetus nollautuu laitteen uudelleenkäynnistyksen yhteydessä.',
-
-        'Allow remote assistance': 'Salli etätuki',
+        'If you want to allow Opinsys support service to remotely access your computer, you can do that by pressing the button on the right.  You can also use the corresponding applet on the panel.':
+          'Mikäli haluat sallia Opinsysin tukipalvelun etäpääsyn tietokoneellesi tukitilanteessa, voit tehdä painamalla oikealla olevaa nappia.  Voit myös käyttää paneelissa olevaa vastaavaa sovelmaa.',
 
         'Configuration needs corrections, no changes are saved.':
           'Asetukset vaativat korjausta, muutokset eivät tallennu.',
@@ -100,10 +98,8 @@ var mc =
 
         'Remote assistance': 'Remote assistance', // XXX
 
-        'If you want to allow Opinsys support service to remotely access your computer, you can do that with this option.  This setting will reset when computer reboots.':
-          'If you want to allow Opinsys support service to remotely access your computer, you can do that with this option.  This setting will reset when computer reboots.', // XXX
-
-        'Allow remote assistance': 'Allow remote assistance', // XXX
+        'If you want to allow Opinsys support service to remotely access your computer, you can do that by pressing the button on the right.  You can also use the corresponding applet on the panel.':
+          'If you want to allow Opinsys support service to remotely access your computer, you can do that by pressing the button on the right.  You can also use the corresponding applet on the panel.', // XXX
 
         'Configuration needs corrections, no changes are saved.':
           'Inställningarna kräver korrigering, inga ändringar har sparats',
@@ -502,28 +498,32 @@ function generate_allow_remoteadmins_input(form) {
 
   var description_div = document.createElement('div');
   var description_text
-    = document.createTextNode( mc('If you want to allow Opinsys support service to remotely access your computer, you can do that with this option.  This setting will reset when computer reboots.') );
+    = document.createTextNode( mc('If you want to allow Opinsys support service to remotely access your computer, you can do that by pressing the button on the right.  You can also use the corresponding applet on the panel.') );
   description_div.appendChild(description_text);
 
-  var input_id = 'allow_remoteadmins_checkbox';
-  var label = document.createElement('label');
-  label.textContent = mc('Allow remote assistance');
-  label.setAttribute('for', input_id);
+  var image = document.createElement('input');
+  image.setAttribute('type', 'image');
+  image.setAttribute('src', 'file:///usr/share/icons/vendor_favicon.png');
 
-  var input = document.createElement('input');
-  input.setAttribute('id', input_id);
-  input.setAttribute('name', 'allow_remoteadmins');
-  input.setAttribute('type', 'checkbox');
-  if (old_config.allow_remoteadmins) {
-    input.setAttribute('checked', true);
-  } else {
-    input.removeAttribute('checked');
-  }
-  input.addEventListener('click', write_config);
+  var button = document.createElement('button');
+  button.setAttribute('style', 'float: right;');
+  button.appendChild(image);
 
+  var execute_applet
+    = function() {
+        var opts = { detached: true, stdio: 'ignore' };
+        var child = child_process.spawn('puavo-remote-assistance-applet',
+                                        [ '--enable' ],
+                                        opts);
+        child.unref();
+      };
+
+  button.addEventListener('click',
+                          function(e) {
+                            e.preventDefault(); execute_applet(); });
+
+  div.appendChild(button);
   div.appendChild(description_div);
-  div.appendChild(input);
-  div.appendChild(label);
 
   form.appendChild(div);
 }
@@ -769,7 +769,7 @@ function read_config() {
       // default config in case everything is missing
       config = {
         allow_logins_for:   [],
-        allow_remoteadmins: false,
+        allow_remoteadmins: false,   // historical leftover
         local_users:        {},      // historical leftover
         version:            1,
       };
@@ -787,12 +787,12 @@ function write_config() {
   var response = document.forms[0].elements;
   var new_config = {
     allow_logins_for:   [],
-    allow_remoteadmins: false,
     version:            1,
 
-    // local_users is a historical leftover that should always be empty...
-    // I do not want to change the configuration file version only to clean
-    // this up.
+    // allow_remoteadmins and local_users are historical leftovers that should
+    // always be empty...  I do not want to change the configuration file
+    // version only to clean these up.
+    allow_remoteadmins: false,
     local_users: {},
   };
 
@@ -814,8 +814,6 @@ function write_config() {
 
       break;
   }
-
-  new_config.allow_remoteadmins = response.allow_remoteadmins.checked;
 
   write_config_to_file(new_config);
 }
