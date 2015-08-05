@@ -7,6 +7,7 @@ import appindicator
 import errno
 import fcntl
 import getpass
+import gobject
 import gtk
 import os
 import subprocess
@@ -97,8 +98,37 @@ class RemoteAssistanceApplet:
 
         self.indicator.set_status(appindicator.STATUS_ACTIVE)
 
+        self.latest_gnome_enabled = None
+        self.latest_ssh_enabled   = None
+
         self.menu = None
-        self.create_menu()
+
+        # creates menu as a side effect
+        self.check_for_changed_settings()
+
+        gobject.timeout_add_seconds(5, self.check_for_changed_settings)
+
+
+    def check_for_changed_settings(self):
+        # XXX We poll because we may lack inotify (nfs, overlayfs)
+        # XXX and thus smarter solutions may not work.
+
+        old_latest_gnome_enabled = self.latest_gnome_enabled
+        old_latest_ssh_enabled   = self.latest_ssh_enabled
+
+        self.latest_gnome_enabled \
+          = self.access_handler.check_gnome_remote_access()
+        self.latest_ssh_enabled \
+          = self.access_handler.check_ssh_remote_access()
+
+        settings_changed \
+          = old_latest_gnome_enabled != self.latest_gnome_enabled \
+              or old_latest_ssh_enabled != self.latest_ssh_enabled
+
+        if settings_changed:
+            self.create_menu()
+
+        return True
 
 
     def create_menu(self):
