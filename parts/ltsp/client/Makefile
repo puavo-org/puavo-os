@@ -15,7 +15,7 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY : all
-all : $(subdirs)
+all : $(subdirs) po/fi/puavo-remote-assistance-applet.mo
 
 .PHONY : $(subdirs)
 $(subdirs) :
@@ -24,6 +24,16 @@ $(subdirs) :
 .PHONY : $(install-subdirs)
 $(install-subdirs) :
 	$(MAKE) -C $(@:install-%=%) install
+
+puavo-remote-assistance-applet.pot: puavo-remote-assistance-applet
+	xgettext --omit-header --language Python --keyword=_tr -o $@ $^
+
+%.po : po/puavo-client-updater-applet.pot
+	msgmerge --update --no-fuzzy-matching --backup=off $@ $<
+	touch $@
+
+%.mo : %.po
+	msgfmt $< --output-file $@
 
 .PHONY : installdirs
 installdirs :
@@ -49,6 +59,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/hooks
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount
+	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
@@ -213,7 +224,10 @@ install : installdirs $(install-subdirs)
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount \
 		initramfs/scripts/init-premount/puavo_udhcp
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom \
-		initramfs/scripts/init-bottom/puavo_ltsp 
+		initramfs/scripts/init-bottom/puavo_ltsp
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
+		po/fi/puavo-remote-assistance-applet.mo
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
 		screen.d/builder \
@@ -320,3 +334,5 @@ $(clean-subdirs) :
 
 .PHONY : clean
 clean : $(clean-subdirs)
+	rm -rf po/fi/*.mo
+	rm -rf po/*.pot
