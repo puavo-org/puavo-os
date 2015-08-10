@@ -104,13 +104,15 @@ else
       else
         echo "Could not read user password from stdin for basic auth and no session to reuse" \
             | logger -t puavo-open-session -p auth.error
+
+        exit 98
       fi
     fi
   fi
 fi
 
-if [ "x${PUAVO_SESSION}" = "x" ]; then
-  echo "No session information received from ${API_SERVER}" \
+if [ -z "${PUAVO_SESSION}" ]; then
+  echo "No session information received from puavo" \
       | logger -t puavo-open-session -p auth.error
 
   exit 99
