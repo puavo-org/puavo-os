@@ -388,7 +388,8 @@ class packages {
     , 'solfege'
     , 'soundconverter'
     , 'sweep'
-    , 'tuxguitar' ]:
+    , 'tuxguitar'
+    , 'tuxguitar-jsa' ]:
       tag => [ 'music_making', 'ubuntu', ];
 
     [ 'ipsec-tools'
