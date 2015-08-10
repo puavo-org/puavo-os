@@ -52,7 +52,7 @@ else
                  "$PUAVO_HOSTNAME")
   fi
 
-  CODE=0
+  CODE=107
   if [ -s "$KRB5CCNAME" ]; then
     # Try getting session with kerberos ticket.
     if PUAVO_SESSION=$(
@@ -62,9 +62,9 @@ else
                                            --max-time 20 \
                                            --user-krb    \
                                            v3/sessions 2>/dev/null); then
+      CODE=0
       echo "Received puavo session with kerberos ticket: ${PUAVO_SESSION}" \
           | logger -t puavo-open-session -p auth.info
-
       echo "${PUAVO_SESSION}" >"${CACHE_FILE}"
     else
       CODE=$?
