@@ -52,43 +52,50 @@ else
                  "$PUAVO_HOSTNAME")
   fi
 
-  if -s ${KRB5CCNAME} -a PUAVO_SESSION=$(
-      # use a pipe because $formdata contains a password
-      echo -n "$formdata" \
-        | /usr/sbin/puavo-rest-client --data -      \
-                                      --max-time 20 \
-                                      --user-krb    \
-                                      v3/sessions 2>/dev/null); then
-    echo "Received puavo session: ${PUAVO_SESSION}" \
-        | logger -t puavo-open-session -p auth.info
+  CODE=0
+  if [ -s "$KRB5CCNAME" ]; then
+    # Try getting session with kerberos ticket.
+    if PUAVO_SESSION=$(
+         # use a pipe because $formdata contains a password
+         echo -n "$formdata" \
+             | /usr/sbin/puavo-rest-client --data -      \
+                                           --max-time 20 \
+                                           --user-krb    \
+                                           v3/sessions 2>/dev/null); then
+      echo "Received puavo session with kerberos ticket: ${PUAVO_SESSION}" \
+          | logger -t puavo-open-session -p auth.info
 
-    echo "${PUAVO_SESSION}" >"${CACHE_FILE}"
-  else
-    CODE=$?
+      echo "${PUAVO_SESSION}" >"${CACHE_FILE}"
+    else
+      CODE=$?
+    fi
+  fi
 
+  if [ "${CODE}" -ne 0 ]; then
     if [ -f "${CACHE_FILE}" -a "${PUAVO_HOSTTYPE}" = "laptop" ]; then
       PUAVO_SESSION=$(cat $CACHE_FILE)
 
-      echo "Failed to get session from puavo-rest (error code ${CODE}), reusing old session: ${PUAVO_SESSION}" \
+      echo "Failed to get session from puavo-rest with kerberos ticket (error code ${CODE}), reusing old session: ${PUAVO_SESSION}" \
           | logger -t puavo-open-session -p auth.warn
     else
-      # If kerberos authentication fails for some reason, try again with
-      # basic auth.
+      # If kerberos authentication fails for some reason and cache does not
+      # exist, try again with basic auth.
       echo "Trying basic auth with user credentials from master server"
 
       export PUAVO_REST_CLIENT_PASSWORD=$(cat /dev/stdin)
 
       if [ -n "$PUAVO_REST_CLIENT_PASSWORD" ]; then
         if PUAVO_SESSION=$(
-          /usr/sbin/puavo-rest-client --data "$formdata"      \
-                                      --max-time 20 \
-                                      --no-dns      \
-                                      --user $PAM_USER    \
+          /usr/sbin/puavo-rest-client --data "$formdata" \
+                                      --max-time 20      \
+                                      --no-dns           \
+                                      --user $PAM_USER   \
                                       v3/sessions </dev/null 2>/dev/null); then
-
           echo "Received puavo session using basic auth: ${PUAVO_SESSION}" \
               | logger -t puavo-open-session -p auth.info
+          echo "${PUAVO_SESSION}" >"${CACHE_FILE}"
         else
+          CODE=$?
           echo "Failed to get session from puavo-rest (error code ${CODE}), no old session to reuse" \
               | logger -t puavo-open-session -p auth.error
 
