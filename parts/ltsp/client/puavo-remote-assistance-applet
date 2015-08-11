@@ -185,7 +185,7 @@ class RemoteAssistanceApplet:
             self.disable_access_button.show()
             self.menu.append(self.disable_access_button)
 
-        close_button = gtk.MenuItem( _tr('Close') )
+        close_button = gtk.MenuItem( _tr('Quit') )
         close_button.connect('activate', self.close)
         close_button.show()
         self.menu.append(close_button)
