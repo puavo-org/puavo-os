@@ -245,7 +245,7 @@ class packages {
       tag => [ 'graphics', 'ubuntu', ];
 
     [ 'kdump-tools' ]:
-      tag => [ 'kernel', 'ubuntu', ];
+      tag => [ 'kernelutils', 'ubuntu', ];
 
     [ 'emesene'
     , 'gobby'

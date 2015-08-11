@@ -16,7 +16,7 @@ class kernels::grub_update {
   }
 
   Package <| tag == kernel |> {
-    require => File[ $grub_update_files ],
+    require +> File[ $grub_update_files ],
   }
 
   Package <| title == grub-pc |>

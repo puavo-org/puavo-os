@@ -1,5 +1,6 @@
 class kernels {
-  include kernels::grub_update
+  include kernels::dkms,
+          kernels::grub_update
   require packages
 
   define kernel_link ($kernel, $linkname, $linksuffix) {

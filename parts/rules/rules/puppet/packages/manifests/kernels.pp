@@ -27,7 +27,7 @@ class packages::kernels {
         tag => $package_tag ? {
                  ''      => 'kernel',
                  default => [ 'kernel', $package_tag, ],
-               },
+               };
     }
   }
 }
