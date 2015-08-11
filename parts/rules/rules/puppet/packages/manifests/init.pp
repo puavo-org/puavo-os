@@ -734,6 +734,7 @@ class packages {
     [ 'bindfs'
     , 'desktop-file-utils'
     , 'devilspie'
+    , 'duplicity'
     , 'exfat-fuse'
     , 'exfat-utils'
     , 'fuse'
