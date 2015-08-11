@@ -50,9 +50,6 @@ var mc =
 
         'Remote assistance': 'Etätuki',
 
-        'If you want to allow Opinsys support service to remotely access your computer, you can do that by pressing the button on the right.  You can also use the corresponding applet on the panel.':
-          'Mikäli haluat sallia Opinsysin tukipalvelun etäpääsyn tietokoneellesi tukitilanteessa, voit tehdä painamalla oikealla olevaa nappia.  Voit myös käyttää paneelissa olevaa vastaavaa sovelmaa.',
-
         'Configuration needs corrections, no changes are saved.':
           'Asetukset vaativat korjausta, muutokset eivät tallennu.',
 
@@ -97,9 +94,6 @@ var mc =
           'Allow only the following usernames:', // XXX
 
         'Remote assistance': 'Remote assistance', // XXX
-
-        'If you want to allow Opinsys support service to remotely access your computer, you can do that by pressing the button on the right.  You can also use the corresponding applet on the panel.':
-          'If you want to allow Opinsys support service to remotely access your computer, you can do that by pressing the button on the right.  You can also use the corresponding applet on the panel.', // XXX
 
         'Configuration needs corrections, no changes are saved.':
           'Inställningarna kräver korrigering, inga ändringar har sparats',
@@ -493,41 +487,6 @@ function generate_allow_logins_input(form) {
   form.appendChild(title);
 }
 
-function generate_allow_remoteadmins_input(form) {
-  var div = document.createElement('div');
-
-  var description_div = document.createElement('div');
-  var description_text
-    = document.createTextNode( mc('If you want to allow Opinsys support service to remotely access your computer, you can do that by pressing the button on the right.  You can also use the corresponding applet on the panel.') );
-  description_div.appendChild(description_text);
-
-  var image = document.createElement('input');
-  image.setAttribute('type', 'image');
-  image.setAttribute('src', 'file:///usr/share/icons/vendor_favicon.png');
-
-  var button = document.createElement('button');
-  button.setAttribute('style', 'float: right;');
-  button.appendChild(image);
-
-  var execute_applet
-    = function() {
-        var opts = { detached: true, stdio: 'ignore' };
-        var child = child_process.spawn('puavo-remote-assistance-applet',
-                                        [ '--enable' ],
-                                        opts);
-        child.unref();
-      };
-
-  button.addEventListener('click',
-                          function(e) {
-                            e.preventDefault(); execute_applet(); });
-
-  div.appendChild(button);
-  div.appendChild(description_div);
-
-  form.appendChild(div);
-}
-
 function generate_form() {
   var form = document.querySelector('form[id=dynamic_form]');
 
@@ -546,12 +505,6 @@ function generate_loginaccess_controls(form) {
   form.appendChild(title);
 
   generate_allow_logins_input(form);
-
-  var subtitle = document.createElement('h3');
-  subtitle.textContent = mc('Remote assistance');
-  form.appendChild(subtitle);
-
-  generate_allow_remoteadmins_input(form);
 }
 
 function generate_software_installation_controls(form) {
