@@ -838,7 +838,7 @@ class packages {
     'trusty': {
       if $architecture == 'i386' {
         packages::kernels::kernel_package {
-          [ '3.2.0-70-generic-pae', '4.0.6.opinsys3', ]:
+          [ '3.2.0-70-generic-pae', '4.0.6.opinsys3', '4.1.4.opinsys1' ]:
             package_tag => 'puavo',
             with_extra  => false;
 
