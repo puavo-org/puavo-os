@@ -547,6 +547,7 @@ class packages {
     , 'dconf-editor'
     # , 'deja-dup'				# not needed
     # , 'deja-dup-backend-cloudfiles'
+    # , 'deja-dup-backend-gvfs'
     # , 'deja-dup-backend-s3'
     , 'empathy'
     , 'eog'
