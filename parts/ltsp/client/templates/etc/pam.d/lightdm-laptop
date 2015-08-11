@@ -42,7 +42,7 @@ auth    sufficient      pam_permit.so
 
 auth    optional        pam_exec.so quiet /usr/lib/puavo-ltsp-client/pam/puavo-local-config-setup
 auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/make-session-dir
-auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/open-session
+auth    required        pam_exec.so expose_authtok /usr/lib/puavo-ltsp-client/pam/open-session
 auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/populate-extrausers
 auth    optional        pam_sss.so use_first_pass
 auth    optional        pam_gnome_keyring.so
