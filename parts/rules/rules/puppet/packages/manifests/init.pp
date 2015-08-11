@@ -746,6 +746,7 @@ class packages {
     , 'keepassx'
     , 'keychain'
     , 'khelpcenter4'
+    , 'password-gorilla'
     , 'rarian-compat'
     , 'screenlets'
     , 'unace'
