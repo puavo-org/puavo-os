@@ -97,9 +97,8 @@ class RemoteAccessHandler:
 
 
 class RemoteAssistanceApplet:
-    def __init__(self, access_handler, conffile_path):
+    def __init__(self, access_handler):
         self.access_handler = access_handler
-        self.conffile_path  = conffile_path
 
         self.indicator \
             = appindicator.Indicator('remote-assistance',
@@ -198,24 +197,10 @@ class RemoteAssistanceApplet:
         self.create_menu()
 
 
-    def close(self, widget):
-        try:
-            os.remove(self.conffile_path)
-        except OSError, e:
-            if e.errno != errno.EEXIST:
-                raise e
-
-        sys.exit(0)
-
-
-autostart = False
-
 access_handler = RemoteAccessHandler()
 
 for arg in sys.argv[1:]:
-    if arg == '--autostart':
-        autostart = True
-    elif arg == '--enable':
+    if arg == '--enable':
         access_handler.enable_remote_access()
     elif arg == '--disable':
         access_handler.disable_remote_access()
@@ -223,34 +208,5 @@ for arg in sys.argv[1:]:
         print('Unknown argument: %s' % arg, file=sys.stderr)
         sys.exit(1)
 
-
-# This conffile is basically just autostarting control, but may take other
-# roles later (in which case the autostart information should be contained
-# in this file).  No point in changing to a new path later if functionality
-# changes...
-user_puavo_dir = os.path.join(os.environ['HOME'], '.puavo')
-conffile_path = os.path.join(user_puavo_dir,
-                             'puavo-remote-assistance-applet.conf')
-
-# Do not start the applet if autostarting and conffile does not exist.
-# Note that --enable and --disable may have had an effect already.
-if autostart and not os.path.exists(conffile_path):
-    sys.exit(0)
-
-try:
-    os.mkdir(user_puavo_dir)
-except OSError, e:
-    if e.errno != errno.EEXIST:
-        raise e
-
-# touch the conffile_path, making --autostart start the applet later
-conffile = open(conffile_path, 'w+')
-
-# if this fails, this applet is likely running and we should just fail here
-fcntl.flock(conffile,
-            fcntl.LOCK_EX | fcntl.LOCK_NB)
-
-applet = RemoteAssistanceApplet(access_handler, conffile_path)
+applet = RemoteAssistanceApplet(access_handler)
 gtk.main()
-
-conffile.close()
