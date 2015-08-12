@@ -11,8 +11,13 @@ class apt::multiarch {
     }
   }
 
-  case $architecture {
-    'amd64': { addarch { 'i386':  ; } }
-    'i386':  { addarch { 'amd64': ; } }
+  case $lsbdistcodename {
+    'precise': {}
+    default: {
+      case $architecture {
+        'amd64': { addarch { 'i386':  ; } }
+        'i386':  { addarch { 'amd64': ; } }
+      }
+    }
   }
 }
