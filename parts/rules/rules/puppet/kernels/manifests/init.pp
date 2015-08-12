@@ -74,10 +74,13 @@ class kernels {
 
   $stable_kernel = $default_kernel
 
-  $stable_amd64_kernel = $architecture ? {
-                           'i386'  => '3.13.0-46-generic',
-                           default => $stable_kernel,
-                         }
+  $stable_amd64_kernel = $lsbdistcodename ? {
+     'trusty' => $architecture ? {
+                   'i386'  => '3.13.0-46-generic',
+                   default => $stable_kernel,
+                 },
+     default => $stable_kernel,
+  }
 
   all_kernel_links {
     'default':      kernel => $default_kernel;
