@@ -180,21 +180,28 @@ class RemoteAssistanceApplet:
 
         if gnome_enabled:
            if ssh_enabled:
-               access_state_msg = _tr('Remote access allowed')
+               access_state_msg = _tr('Remote access allowed (SSH/VNC)')
+               to_disable_msg   = '(SSH/VNC)'
+               to_enable_msg    = '()'
                indicator_icon   = 'puavoremoteaccess-green'
            else:
-               access_state_msg = _tr('VNC allowed / SSH denied')
+               access_state_msg = _tr('SSH denied / VNC allowed')
+               to_disable_msg   = '(VNC)'
+               to_enable_msg    = '(SSH)'
                indicator_icon   = 'puavoremoteaccess-cyan'
         else:
            if ssh_enabled:
-               access_state_msg = _tr('VNC denied / SSH allowed')
+               access_state_msg = _tr('SSH allowed / VNC denied')
+               to_disable_msg   = '(SSH)'
+               to_enable_msg    = '(VNC)'
                indicator_icon   = 'puavoremoteaccess-yellow'
            else:
-               access_state_msg = _tr('Remote access denied')
+               access_state_msg = _tr('Remote access denied (SSH/VNC)')
+               to_disable_msg   = '()'
+               to_enable_msg    = '(SSH/VNC)'
                indicator_icon   = 'puavoremoteaccess-grey'
 
         self.indicator.set_icon(indicator_icon)
-
         self.access_status_label = gtk.MenuItem('-=> %s <=' % access_state_msg)
         self.access_status_label.set_sensitive(False)
         self.access_status_label.show()
@@ -204,16 +211,17 @@ class RemoteAssistanceApplet:
         show_enable_button  = not gnome_enabled or not ssh_enabled
 
         if show_enable_button:
-            self.enable_access_button \
-              = gtk.MenuItem( _tr('Enable remote access') )
+            enable_msg = '%s %s' % (_tr('Enable remote access'), to_enable_msg)
+            self.enable_access_button = gtk.MenuItem(enable_msg)
             self.enable_access_button.connect('activate',
                                               self.enable_remote_access)
             self.enable_access_button.show()
             self.menu.append(self.enable_access_button)
 
         if show_disable_button:
-            self.disable_access_button \
-              = gtk.MenuItem( _tr('Disable remote access') )
+            disable_msg = '%s %s' % (_tr('Disable remote access'),
+                                     to_disable_msg)
+            self.disable_access_button = gtk.MenuItem(disable_msg)
             self.disable_access_button.connect('activate',
                                                self.disable_remote_access)
             self.disable_access_button.show()
