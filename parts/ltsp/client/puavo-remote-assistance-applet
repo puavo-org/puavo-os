@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
-
 import appindicator
 import datetime
 import errno
@@ -103,7 +101,6 @@ class RemoteAccessHandler:
               = int(self.call_puavo_admin_remote_connections(args))
         except subprocess.CalledProcessError:
             # most probably ssh access is not enabled, so things are okay
-            print("most probably ssh access is not enabled, so things are okay")
             return
 
         timedelta = (datetime.datetime.now() \
