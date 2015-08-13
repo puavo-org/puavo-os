@@ -56,6 +56,7 @@ installdirs :
 	mkdir -p $(DESTDIR)/lib/udev/rules.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
+	mkdir -p $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/hooks
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount
@@ -135,6 +136,13 @@ install : installdirs $(install-subdirs)
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/network/if-post-down.d \
 		etc/network/if-post-down.d/ipsec
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status \
+		icons/puavoremoteaccess-cyan.svg \
+		icons/puavoremoteaccess-green.svg \
+		icons/puavoremoteaccess-grey.svg \
+		icons/puavoremoteaccess-original.svg \
+		icons/puavoremoteaccess-yellow.svg
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
 		templates/etc/hosts \

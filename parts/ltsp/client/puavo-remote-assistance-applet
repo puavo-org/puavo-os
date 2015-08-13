@@ -102,7 +102,7 @@ class RemoteAssistanceApplet:
 
         self.indicator \
             = appindicator.Indicator('remote-assistance',
-                                     'vendor_favicon',
+                                     'puavoremoteaccess-grey',
                                      appindicator.CATEGORY_COMMUNICATIONS)
 
         self.indicator.set_status(appindicator.STATUS_ACTIVE)
@@ -152,13 +152,19 @@ class RemoteAssistanceApplet:
         if gnome_enabled:
            if ssh_enabled:
                access_state_msg = _tr('Remote access allowed')
+               indicator_icon   = 'puavoremoteaccess-green'
            else:
                access_state_msg = _tr('VNC allowed / SSH denied')
+               indicator_icon   = 'puavoremoteaccess-cyan'
         else:
            if ssh_enabled:
                access_state_msg = _tr('VNC denied / SSH allowed')
+               indicator_icon   = 'puavoremoteaccess-yellow'
            else:
                access_state_msg = _tr('Remote access denied')
+               indicator_icon   = 'puavoremoteaccess-grey'
+
+        self.indicator.set_icon(indicator_icon)
 
         self.access_status_label = gtk.MenuItem('-=> %s <=' % access_state_msg)
         self.access_status_label.set_sensitive(False)
