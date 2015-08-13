@@ -45,6 +45,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/default
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-external-files-actions.d
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-remote-assistance-applet
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
@@ -252,6 +253,9 @@ install : installdirs $(install-subdirs)
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/default \
 		etc/default/ltspssh \
 		etc/default/ltspguestssh
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-remote-assistance-applet \
+		etc/puavo-remote-assistance-applet/config.json
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up \
 		etc/puavo-vpn-client/scripts/route-up/10-dnsmasq \

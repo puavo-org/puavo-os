@@ -10,6 +10,7 @@ import getpass
 import gettext
 import gobject
 import gtk
+import json
 import os
 import subprocess
 import sys
@@ -97,8 +98,9 @@ class RemoteAccessHandler:
 
 
 class RemoteAssistanceApplet:
-    def __init__(self, access_handler):
+    def __init__(self, access_handler, config):
         self.access_handler = access_handler
+        self.config         = config
 
         self.indicator \
             = appindicator.Indicator('remote-assistance',
@@ -190,6 +192,14 @@ class RemoteAssistanceApplet:
             self.disable_access_button.show()
             self.menu.append(self.disable_access_button)
 
+        make_bugreport_button = self.config['new-bugreport-browser'] \
+                                  and self.config['new-bugreport-url']
+        if make_bugreport_button:
+            self.new_ticket_button = gtk.MenuItem( _tr('New support request') )
+            self.new_ticket_button.connect('activate', self.make_bugreport)
+            self.new_ticket_button.show()
+            self.menu.append(self.new_ticket_button)
+
         self.indicator.set_menu(self.menu)
 
 
@@ -202,6 +212,20 @@ class RemoteAssistanceApplet:
         self.access_handler.enable_remote_access()
         self.create_menu()
 
+    def make_bugreport(self, widget):
+        browser = self.config['new-bugreport-browser']
+        url     = self.config['new-bugreport-url']
+
+        if browser == 'firefox':
+            cmd = [ browser, '-new-window', url ]
+        else:
+            cmd = [ browser, url ]
+
+        subprocess.Popen(cmd, close_fds=True)
+
+
+with open('/etc/puavo-remote-assistance-applet/config.json') as file:
+    config = json.load(file)
 
 access_handler = RemoteAccessHandler()
 
@@ -214,5 +238,5 @@ for arg in sys.argv[1:]:
         print('Unknown argument: %s' % arg, file=sys.stderr)
         sys.exit(1)
 
-applet = RemoteAssistanceApplet(access_handler)
+applet = RemoteAssistanceApplet(access_handler, config)
 gtk.main()
