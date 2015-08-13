@@ -4,6 +4,7 @@
 from __future__ import print_function
 
 import appindicator
+import datetime
 import errno
 import fcntl
 import getpass
@@ -84,6 +85,35 @@ class RemoteAccessHandler:
 
     def disable_ssh_remote_access(self):
         self.call_puavo_admin_remote_connections([ '--reject-incoming' ])
+
+
+    def disable_stale_ssh_remote_access(self, timeout_seconds):
+        # timeout_seconds can be null/None, in which case we do nothing
+        if timeout_seconds == None:
+            return
+
+        # zero timeout means that we always disable ssh access.
+        if timeout_seconds == 0:
+            self.disable_ssh_remote_access()
+            return
+
+        try:
+            args = [ '--show-enable-time' ]
+            time_when_enabled \
+              = int(self.call_puavo_admin_remote_connections(args))
+        except subprocess.CalledProcessError:
+            # most probably ssh access is not enabled, so things are okay
+            print("most probably ssh access is not enabled, so things are okay")
+            return
+
+        timedelta = (datetime.datetime.now() \
+                       - datetime.datetime.fromtimestamp(0))
+        time_in_seconds = int( timedelta.total_seconds() )
+
+        time_since_enabled = time_in_seconds - time_when_enabled
+
+        if time_since_enabled >= timeout_seconds:
+            self.disable_ssh_remote_access()
 
 
     def call_puavo_admin_remote_connections(self, cmdargs):
@@ -230,14 +260,11 @@ with open('/etc/puavo-remote-assistance-applet/config.json') as file:
 
 access_handler = RemoteAccessHandler()
 
-for arg in sys.argv[1:]:
-    if arg == '--enable':
-        access_handler.enable_remote_access()
-    elif arg == '--disable':
-        access_handler.disable_remote_access()
-    else:
-        print('Unknown argument: %s' % arg, file=sys.stderr)
-        sys.exit(1)
+# always disable gnome remote access
+access_handler.disable_gnome_remote_access()
+
+# disable ssh remote access if it has not been enabled for a while
+access_handler.disable_stale_ssh_remote_access(config['ssh_access_timeout'])
 
 applet = RemoteAssistanceApplet(access_handler, config)
 gtk.main()

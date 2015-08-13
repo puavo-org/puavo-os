@@ -5,7 +5,7 @@ if [ -e /etc/dconf/profile/lightdm ]; then
 fi
 
 if [ -e /etc/xdg/autostart/puavo-remote-assistance-applet.desktop ]; then
-  /usr/bin/puavo-remote-assistance-applet --disable &
+  /usr/bin/puavo-remote-assistance-applet &
 fi
 
 exec /usr/sbin/unity-greeter "$@"

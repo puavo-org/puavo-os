@@ -9,11 +9,12 @@ Usage:
   puavo-admin-remote-connections --accept-incoming
                                  --is-incoming-accepted
                                  --reject-incoming
+                                 --show-enable-time
 
-  Give one of "--accept-incoming", "--is-incoming-accepted" or
-   "--reject-incoming" options.  If connections are accepted,
-   "--is-incoming-accepted" prints "yes" to standard output,
-   and "no" if those are rejected.
+  Give one of "--accept-incoming", "--is-incoming-accepted",
+  "--reject-incoming" or "--show-enable-time" options.
+  If connections are accepted, "--is-incoming-accepted"
+  prints "yes" to standard output, and "no" if those are rejected.
 EOF
 }
 
@@ -40,6 +41,10 @@ case "$action" in
     ;;
   --reject-incoming)
     rm -f "$config_file_path"
+    ;;
+  --show-enable-time)
+    # if this fails, then we simply fail with an error
+    stat -c %Y "$config_file_path" 2>/dev/null
     ;;
   *)
     usage >&2
