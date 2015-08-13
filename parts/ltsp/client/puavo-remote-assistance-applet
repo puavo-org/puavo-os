@@ -192,8 +192,8 @@ class RemoteAssistanceApplet:
             self.disable_access_button.show()
             self.menu.append(self.disable_access_button)
 
-        make_bugreport_button = self.config['new-bugreport-browser'] \
-                                  and self.config['new-bugreport-url']
+        make_bugreport_button = self.config['new_bugreport_browser'] \
+                                  and self.config['new_bugreport_url']
         if make_bugreport_button:
             self.new_ticket_button = gtk.MenuItem( _tr('New support request') )
             self.new_ticket_button.connect('activate', self.make_bugreport)
@@ -212,9 +212,10 @@ class RemoteAssistanceApplet:
         self.access_handler.enable_remote_access()
         self.create_menu()
 
+
     def make_bugreport(self, widget):
-        browser = self.config['new-bugreport-browser']
-        url     = self.config['new-bugreport-url']
+        browser = self.config['new_bugreport_browser']
+        url     = self.config['new_bugreport_url']
 
         if browser == 'firefox':
             cmd = [ browser, '-new-window', url ]
