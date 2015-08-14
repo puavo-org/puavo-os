@@ -55,8 +55,8 @@ case "$action" in
     rm -f "$config_file_path"
     ;;
   --show-enable-time)
-    # if this fails, then we simply fail with an error
-    stat -c %Y "$config_file_path" 2>/dev/null
+    stat -c %Y "$config_file_path" 2>/dev/null \
+      || echo 'not enabled'
     ;;
   *)
     usage >&2
