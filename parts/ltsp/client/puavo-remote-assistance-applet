@@ -19,12 +19,11 @@ gettext.textdomain('puavo-remote-assistance-applet')
 _tr = gettext.gettext
 
 class RemoteAccessHandler:
-    def enable_remote_access(self):
-        self.enable_gnome_remote_access()
-        self.enable_ssh_remote_access()
+    def enable_ssh_remote_access(self):
+        self.call_puavo_admin_remote_connections([ '--accept-incoming' ])
 
 
-    def enable_gnome_remote_access(self):
+    def enable_vino_remote_access(self):
         dconf_values = {
           '/org/gnome/desktop/remote-access/enabled':            "true",
           '/org/gnome/desktop/remote-access/icon-visibility':    "'client'",
@@ -41,17 +40,6 @@ class RemoteAccessHandler:
                          close_fds=True)
 
 
-    def enable_ssh_remote_access(self):
-        self.call_puavo_admin_remote_connections([ '--accept-incoming' ])
-
-
-    def check_gnome_remote_access(self):
-        dconf_key = '/org/gnome/desktop/remote-access/enabled'
-        out = subprocess.check_output([ 'dconf', 'read', dconf_key ])
-
-        return (out.rstrip(os.linesep) == 'true')
-
-
     def check_ssh_remote_access(self):
         args = [ '--is-incoming-accepted' ]
         status = self.call_puavo_admin_remote_connections(args)
@@ -59,12 +47,18 @@ class RemoteAccessHandler:
         return (status.rstrip(os.linesep) == 'yes')
 
 
-    def disable_remote_access(self):
-        self.disable_gnome_remote_access()
-        self.disable_ssh_remote_access()
+    def check_vino_remote_access(self):
+        dconf_key = '/org/gnome/desktop/remote-access/enabled'
+        out = subprocess.check_output([ 'dconf', 'read', dconf_key ])
+
+        return (out.rstrip(os.linesep) == 'true')
 
 
-    def disable_gnome_remote_access(self):
+    def disable_ssh_remote_access(self):
+        self.call_puavo_admin_remote_connections([ '--reject-incoming' ])
+
+
+    def disable_vino_remote_access(self):
         dconf_values = {
           '/org/gnome/desktop/remote-access/enabled':            "false",
           '/org/gnome/desktop/remote-access/icon-visibility':    "'client'",
@@ -79,10 +73,6 @@ class RemoteAccessHandler:
 
         user = getpass.getuser()
         subprocess.call([ 'pkill', '-x', '-U', user, 'vino-server' ])
-
-
-    def disable_ssh_remote_access(self):
-        self.call_puavo_admin_remote_connections([ '--reject-incoming' ])
 
 
     def disable_stale_ssh_remote_access(self, timeout_seconds):
@@ -100,7 +90,8 @@ class RemoteAccessHandler:
             time_when_enabled \
               = int(self.call_puavo_admin_remote_connections(args))
         except subprocess.CalledProcessError:
-            # most probably ssh access is not enabled, so things are okay
+            # most probably ssh access is not enabled (or is unconditionally
+            # enabled), so things are okay
             return
 
         timedelta = (datetime.datetime.now() \
@@ -136,8 +127,8 @@ class RemoteAssistanceApplet:
 
         self.indicator.set_status(appindicator.STATUS_ACTIVE)
 
-        self.latest_gnome_enabled = None
-        self.latest_ssh_enabled   = None
+        self.latest_vino_enabled = None
+        self.latest_ssh_enabled  = None
 
         self.menu = None
 
@@ -151,16 +142,16 @@ class RemoteAssistanceApplet:
         # XXX We poll because we may lack inotify (nfs, overlayfs)
         # XXX and thus smarter solutions may not work.
 
-        old_latest_gnome_enabled = self.latest_gnome_enabled
-        old_latest_ssh_enabled   = self.latest_ssh_enabled
+        old_latest_ssh_enabled  = self.latest_ssh_enabled
+        old_latest_vino_enabled = self.latest_vino_enabled
 
-        self.latest_gnome_enabled \
-          = self.access_handler.check_gnome_remote_access()
         self.latest_ssh_enabled \
           = self.access_handler.check_ssh_remote_access()
+        self.latest_vino_enabled \
+          = self.access_handler.check_vino_remote_access()
 
         settings_changed \
-          = old_latest_gnome_enabled != self.latest_gnome_enabled \
+          = old_latest_vino_enabled != self.latest_vino_enabled \
               or old_latest_ssh_enabled != self.latest_ssh_enabled
 
         if settings_changed:
@@ -169,48 +160,48 @@ class RemoteAssistanceApplet:
         return True
 
 
-    def create_menu(self):
-        if self.menu:
-            self.menu.destroy()
+    def get_available_access_controls_string(self, ssh_wanted, vino_wanted):
+        available_list = []
 
-        self.menu = gtk.Menu()
+        if self.ssh_controls_available() and ssh_wanted:
+            available_list.append('SSH')
 
-        gnome_enabled = self.access_handler.check_gnome_remote_access()
-        ssh_enabled   = self.access_handler.check_ssh_remote_access()
+        if self.vino_controls_available() and vino_wanted:
+            available_list.append('VNC')
 
-        if gnome_enabled:
-           if ssh_enabled:
-               access_state_msg = _tr('Remote access allowed (SSH/VNC)')
-               to_disable_msg   = '(SSH/VNC)'
-               to_enable_msg    = '()'
-               indicator_icon   = 'puavoremoteaccess-green'
-           else:
-               access_state_msg = _tr('SSH denied / VNC allowed')
-               to_disable_msg   = '(VNC)'
-               to_enable_msg    = '(SSH)'
-               indicator_icon   = 'puavoremoteaccess-cyan'
+        if len(available_list) == 0:
+            return None
+
+        return ('(%s)' % ('/'.join(available_list)))
+
+
+    def create_access_controls(self):
+        ssh_enabled  = self.access_handler.check_ssh_remote_access()
+        vino_enabled = self.access_handler.check_vino_remote_access()
+
+        to_disable_msg = self.get_available_access_controls_string(
+                           ssh_enabled, vino_enabled)
+        to_enable_msg  = self.get_available_access_controls_string(
+                           not ssh_enabled, not vino_enabled)
+
+        if to_disable_msg:
+            access_state_msg = '%s %s' % (_tr('Remote access allowed'),
+                                          to_disable_msg)
+            indicator_icon = 'puavoremoteaccess-green'
+        elif to_enable_msg:
+            access_state_msg = '%s %s' % (_tr('Remote access denied'),
+                                          to_enable_msg)
+            indicator_icon = 'puavoremoteaccess-grey'
         else:
-           if ssh_enabled:
-               access_state_msg = _tr('SSH allowed / VNC denied')
-               to_disable_msg   = '(SSH)'
-               to_enable_msg    = '(VNC)'
-               indicator_icon   = 'puavoremoteaccess-yellow'
-           else:
-               access_state_msg = _tr('Remote access denied (SSH/VNC)')
-               to_disable_msg   = '()'
-               to_enable_msg    = '(SSH/VNC)'
-               indicator_icon   = 'puavoremoteaccess-grey'
+            # if there is nothing to enable/disable, just show nothing
+            return
 
-        self.indicator.set_icon(indicator_icon)
         self.access_status_label = gtk.MenuItem('-=> %s <=' % access_state_msg)
         self.access_status_label.set_sensitive(False)
         self.access_status_label.show()
         self.menu.append(self.access_status_label)
 
-        show_disable_button =     gnome_enabled or     ssh_enabled
-        show_enable_button  = not gnome_enabled or not ssh_enabled
-
-        if show_enable_button:
+        if to_enable_msg:
             enable_msg = '%s %s' % (_tr('Enable remote access'), to_enable_msg)
             self.enable_access_button = gtk.MenuItem(enable_msg)
             self.enable_access_button.connect('activate',
@@ -218,7 +209,7 @@ class RemoteAssistanceApplet:
             self.enable_access_button.show()
             self.menu.append(self.enable_access_button)
 
-        if show_disable_button:
+        if to_disable_msg:
             disable_msg = '%s %s' % (_tr('Disable remote access'),
                                      to_disable_msg)
             self.disable_access_button = gtk.MenuItem(disable_msg)
@@ -226,6 +217,17 @@ class RemoteAssistanceApplet:
                                                self.disable_remote_access)
             self.disable_access_button.show()
             self.menu.append(self.disable_access_button)
+
+        self.indicator.set_icon(indicator_icon)
+
+
+    def create_menu(self):
+        if self.menu:
+            self.menu.destroy()
+
+        self.menu = gtk.Menu()
+
+        self.create_access_controls()
 
         make_bugreport_button = self.config['new_bugreport_browser'] \
                                   and self.config['new_bugreport_url']
@@ -239,12 +241,22 @@ class RemoteAssistanceApplet:
 
 
     def disable_remote_access(self, widget):
-        self.access_handler.disable_remote_access()
+        if self.ssh_controls_available():
+            self.access_handler.disable_ssh_remote_access()
+
+        if self.vino_controls_available():
+            self.access_handler.disable_vino_remote_access()
+
         self.create_menu()
 
 
     def enable_remote_access(self, widget):
-        self.access_handler.enable_remote_access()
+        if self.ssh_controls_available():
+            self.access_handler.enable_ssh_remote_access()
+
+        if self.vino_controls_available():
+            self.access_handler.enable_vino_remote_access()
+
         self.create_menu()
 
 
@@ -260,13 +272,21 @@ class RemoteAssistanceApplet:
         subprocess.Popen(cmd, close_fds=True)
 
 
+    def ssh_controls_available(self):
+        return ('ssh' in self.config['show_accesscontrols_for'])
+
+
+    def vino_controls_available(self):
+        return ('vino' in self.config['show_accesscontrols_for'])
+
+
 with open('/etc/puavo-remote-assistance-applet/config.json') as file:
     config = json.load(file)
 
 access_handler = RemoteAccessHandler()
 
-# always disable gnome remote access
-access_handler.disable_gnome_remote_access()
+# always disable vino remote access
+access_handler.disable_vino_remote_access()
 
 # disable ssh remote access if it has not been enabled for a while
 access_handler.disable_stale_ssh_remote_access(config['ssh_access_timeout'])
