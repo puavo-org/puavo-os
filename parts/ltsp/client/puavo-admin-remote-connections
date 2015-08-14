@@ -15,12 +15,24 @@ Usage:
   "--reject-incoming" or "--show-enable-time" options.
   If connections are accepted, "--is-incoming-accepted"
   prints "yes" to standard output, and "no" if those are rejected.
+
+  This tool does nothing on hosts which are not personally administered.
 EOF
 }
 
 action=$1
 
 set -u
+
+# This tool is not currently effective on hosts which are not personally
+# administered, so return error if this script is called in that case.
+personally_administered=$(jq -r .personally_administered \
+                                /etc/puavo/device.json)
+
+if [ "$personally_administered" != "true" ]; then
+  echo 'This host is not personally administered, I can do nothing' >&2
+  exit 1
+fi
 
 config_file_path="/var/lib/puavo-desktop/shared/puavo-admin-remote-connections.conf"
 
