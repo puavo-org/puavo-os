@@ -307,11 +307,20 @@ class RemoteAssistanceApplet:
         return ('vino' in self.config['show_accesscontrols_for'])
 
 
-# XXX use default config in case some config keys are missing
-# XXX (or the whole config file is missing?)
+config = {
+  'new_bugreport_browser': None,
+  'new_bugreport_url': None,
+  'show_accesscontrols_for': [ "vino" ],
+  'ssh_access_timeout': None,
+  'vino_network_interface': None,
+}
 
-with open('/etc/puavo-remote-assistance-applet/config.json') as file:
-    config = json.load(file)
+try:
+    with open('/etc/puavo-remote-assistance-applet/config.json') as file:
+        config.update( json.load(file) )
+except IOError, e:
+    if e.errno != errno.ENOENT:
+        raise e
 
 access_handler = RemoteAccessHandler()
 
