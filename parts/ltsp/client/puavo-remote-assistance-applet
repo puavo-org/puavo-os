@@ -3,6 +3,16 @@
 
 from __future__ import print_function
 
+import os
+import sys
+
+# Before doing anything, check for environment variables
+# whether we should just exit (put this first to optimize startup in
+# this case).
+if os.environ.get('PUAVO_TAG_NOREMOTEASSISTANCEAPPLET') \
+     and not os.environ.get('PUAVO_TAG_NO_NOREMOTEASSISTANCEAPPLET'):
+  sys.exit(0)
+
 import appindicator
 import datetime
 import errno
@@ -12,9 +22,7 @@ import gettext
 import gobject
 import gtk
 import json
-import os
 import subprocess
-import sys
 
 gettext.bindtextdomain('puavo-remote-assistance-applet', '/usr/share/locale')
 gettext.textdomain('puavo-remote-assistance-applet')
