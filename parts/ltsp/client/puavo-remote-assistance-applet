@@ -25,16 +25,25 @@ class RemoteAccessHandler:
         self.call_puavo_admin_remote_connections([ '--accept-incoming' ])
 
 
-    def enable_vino_remote_access(self):
+    def enable_vino_remote_access(self, network_interface):
         dconf_values = {
           '/org/gnome/desktop/remote-access/enabled':            "true",
           '/org/gnome/desktop/remote-access/icon-visibility':    "'client'",
-          '/org/gnome/desktop/remote-access/network-interface':  "'tap0'",
           '/org/gnome/desktop/remote-access/notify-on-connect':  "true",
           '/org/gnome/desktop/remote-access/prompt-enabled':     "true",
           '/org/gnome/desktop/remote-access/require-encryption': "true",
           '/org/gnome/desktop/remote-access/view-only':          "false",
         }
+
+        # we may want to restrict remote access to a particular network
+        # interface
+        if network_interface:
+          network_interface_dconf_value = ("'%s'" % network_interface)
+        else:
+          network_interface_dconf_value = "''"
+
+        dconf_values['/org/gnome/desktop/remote-access/network-interface'] \
+          = network_interface_dconf_value
 
         self.set_dconf_values(dconf_values)
 
@@ -272,7 +281,8 @@ class RemoteAssistanceApplet:
             self.access_handler.enable_ssh_remote_access()
 
         if self.vino_controls_available():
-            self.access_handler.enable_vino_remote_access()
+            interface = self.config['vino_network_interface']
+            self.access_handler.enable_vino_remote_access(interface)
 
         self.create_menu()
 
@@ -296,6 +306,9 @@ class RemoteAssistanceApplet:
     def vino_controls_available(self):
         return ('vino' in self.config['show_accesscontrols_for'])
 
+
+# XXX use default config in case some config keys are missing
+# XXX (or the whole config file is missing?)
 
 with open('/etc/puavo-remote-assistance-applet/config.json') as file:
     config = json.load(file)
