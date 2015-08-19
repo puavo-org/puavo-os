@@ -233,6 +233,7 @@ def update_org_json(new_org_json)
   Tempfile.open("#{ORG_JSON_FILEPATH}.tmp") do |tmpfile|
     tmpfile.write(new_org_json.to_json())
     tmpfile.chmod(0644)
+    tmpfile.close
 
     system('/usr/lib/puavoadmins-validate-orgjson', tmpfile.path)
     unless $?.success?
