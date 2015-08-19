@@ -336,6 +336,9 @@ def setup_puavo_remote_assistance_applet()
   confpath = '/etc/puavo-remote-assistance-applet/config.json'
   applet_config = JSON.parse( IO.read(confpath) )
 
+  # show access controls for ssh (and vino)
+  applet_config['show_accesscontrols_for'] = %w(ssh vino)
+
   # limit ssh access enablement to eight hours
   applet_config['ssh_access_timeout'] = 28800
 
