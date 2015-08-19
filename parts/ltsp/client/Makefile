@@ -15,7 +15,7 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY : all
-all : $(subdirs)
+all : $(subdirs) po/fi/puavo-remote-assistance-applet.mo
 
 .PHONY : $(subdirs)
 $(subdirs) :
@@ -24,6 +24,16 @@ $(subdirs) :
 .PHONY : $(install-subdirs)
 $(install-subdirs) :
 	$(MAKE) -C $(@:install-%=%) install
+
+puavo-remote-assistance-applet.pot: puavo-remote-assistance-applet
+	xgettext --omit-header --language Python --keyword=_tr -o $@ $^
+
+%.po : po/puavo-client-updater-applet.pot
+	msgmerge --update --no-fuzzy-matching --backup=off $@ $<
+	touch $@
+
+%.mo : %.po
+	msgfmt $< --output-file $@
 
 .PHONY : installdirs
 installdirs :
@@ -35,6 +45,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/default
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-external-files-actions.d
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-remote-assistance-applet
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
@@ -45,9 +56,12 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 	mkdir -p $(DESTDIR)/lib/udev/rules.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
+	mkdir -p $(DESTDIR)$(datarootdir)/applications
+	mkdir -p $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/hooks
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount
+	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
@@ -76,6 +90,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d
 	mkdir -p $(DESTDIR)$(datarootdir)/xgreeters
 	mkdir -p $(DESTDIR)$(datarootdir)/xsessions
+	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/shared
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
 
 .PHONY : install
@@ -122,6 +137,13 @@ install : installdirs $(install-subdirs)
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/network/if-post-down.d \
 		etc/network/if-post-down.d/ipsec
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status \
+		icons/puavoremoteaccess-cyan.svg \
+		icons/puavoremoteaccess-green.svg \
+		icons/puavoremoteaccess-grey.svg \
+		icons/puavoremoteaccess-original.svg \
+		icons/puavoremoteaccess-yellow.svg
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
 		templates/etc/hosts \
@@ -187,7 +209,8 @@ install : installdirs $(install-subdirs)
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-ltsp-client-action \
 		puavo-pulseaudio-setup \
-		puavo-pulseaudio-list
+		puavo-pulseaudio-list \
+		puavo-remote-assistance-applet
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-configure-client \
@@ -207,7 +230,10 @@ install : installdirs $(install-subdirs)
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount \
 		initramfs/scripts/init-premount/puavo_udhcp
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom \
-		initramfs/scripts/init-bottom/puavo_ltsp 
+		initramfs/scripts/init-bottom/puavo_ltsp
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
+		po/fi/puavo-remote-assistance-applet.mo
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
 		screen.d/builder \
@@ -227,6 +253,9 @@ install : installdirs $(install-subdirs)
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/default \
 		etc/default/ltspssh \
 		etc/default/ltspguestssh
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-remote-assistance-applet \
+		etc/puavo-remote-assistance-applet/config.json
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up \
 		etc/puavo-vpn-client/scripts/route-up/10-dnsmasq \
@@ -275,6 +304,7 @@ install : installdirs $(install-subdirs)
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
 		greeter-setup \
+		puavo-admin-remote-connections \
 		puavo-desktop-session \
 		puavo-desktop-session-cleanup \
 		puavo-display-setup \
@@ -313,3 +343,5 @@ $(clean-subdirs) :
 
 .PHONY : clean
 clean : $(clean-subdirs)
+	rm -rf po/fi/*.mo
+	rm -rf po/*.pot

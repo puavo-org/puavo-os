@@ -4,4 +4,8 @@ if [ -e /etc/dconf/profile/lightdm ]; then
   export DCONF_PROFILE=lightdm
 fi
 
+if [ -e /etc/xdg/autostart/puavo-remote-assistance-applet.desktop ]; then
+  /usr/bin/puavo-remote-assistance-applet &
+fi
+
 exec /usr/sbin/unity-greeter "$@"

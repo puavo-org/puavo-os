@@ -96,8 +96,8 @@ case "$puavo_hosttype" in
 
     puavo_laptop_unneeded_session_services=""
 
-    # puavo-client-updater-applet is not needed except on
-    # personally administered laptops
+    # puavo-client-updater-applet is not needed except on personally
+    # administered laptops
     if [ "$puavo_personally_administered" != "true" ]; then
       puavo_laptop_unneeded_session_services="
         puavo-client-updater-applet

@@ -1,0 +1,18 @@
+PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+
+case "$PUAVO_HOSTTYPE" in
+  laptop|ltspserver|wirelessaccesspoint)
+    puavo_admin_tunnel_interface="tap0"
+    ;;
+  *)
+    puavo_admin_tunnel_interface="eth0"
+    ;;
+esac
+
+jq --arg interface "$puavo_admin_tunnel_interface"          \
+  '. + { vino_network_interface: $interface }'              \
+  /etc/puavo-remote-assistance-applet/config.json           \
+    > /etc/puavo-remote-assistance-applet/config.json.tmp   \
+  && mv /etc/puavo-remote-assistance-applet/config.json.tmp \
+        /etc/puavo-remote-assistance-applet/config.json
+
