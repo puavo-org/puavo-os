@@ -70,6 +70,7 @@ case "$puavo_hosttype" in
       ntp
       ondemand
       puavo-load-balancer
+      puavo-load-reporter
       puavo-set-sane-date
       puavo-update-client
       puavo-vpn-client
@@ -319,6 +320,7 @@ case "$puavo_hosttype" in
       nslcd
       ondemand
       puavo-load-balancer
+      puavo-load-reporter
       x2goserver
     "
     ;;
