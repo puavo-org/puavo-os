@@ -83,7 +83,9 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/security
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sssd
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sudoers.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/systemd
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/xdg/autostart
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/lib/udev
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/var/lib/polkit-1/localauthority/10-vendor.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions
@@ -118,6 +120,7 @@ install : installdirs $(install-subdirs)
 		templates/etc/pam.d/ltspguestsshd \
 		templates/etc/pam.d/lightdm-autologin-fatclient \
 		templates/etc/pam.d/lightdm-autologin-laptop \
+		templates/etc/pam.d/lightdm-autologin-preinstalled \
 		templates/etc/pam.d/lightdm-autologin-thinclient \
 		templates/etc/pam.d/lightdm-autologin-wirelessaccesspoint \
 		templates/etc/pam.d/lightdm-fatclient \
@@ -188,8 +191,14 @@ install : installdirs $(install-subdirs)
 		templates/etc/sssd/sssd.conf \
 		templates/etc/sssd/sssd.conf-laptop
 
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sudoers.d \
+		templates/etc/sudoers.d/puavo-install-when-preinstalled
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/systemd \
 		templates/etc/systemd/logind.conf
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/xdg/autostart \
+		templates/etc/xdg/autostart/puavo-install.desktop
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/lib/udev \
 		templates/lib/udev/ltspfs_entry

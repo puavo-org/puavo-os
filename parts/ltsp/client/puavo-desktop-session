@@ -17,7 +17,9 @@ case "${PUAVO_HOSTTYPE}" in
       session=gnome-fallback
     fi
     gnome-session --session="${session}"
-    break
+    ;;
+  preinstalled)
+    gnome-session --session="gnome-fallback"
     ;;
   thinclient)
     if [ "`echo $USER | grep guest-`" != "" ]; then
