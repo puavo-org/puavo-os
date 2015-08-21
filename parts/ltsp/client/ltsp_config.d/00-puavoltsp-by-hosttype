@@ -69,7 +69,6 @@ case "$puavo_hosttype" in
       nslcd
       ntp
       ondemand
-      puavo-load-balancer
       puavo-load-reporter
       puavo-set-sane-date
       puavo-update-client
@@ -136,7 +135,6 @@ case "$puavo_hosttype" in
       mountnfs.sh
       nscd
       nslcd
-      puavo-load-balancer
       puavo-load-reporter
       puavo-monitor
       puavo-wlanap
@@ -210,7 +208,6 @@ case "$puavo_hosttype" in
       ntp
       nwfermi
       ondemand
-      puavo-load-balancer
       puavo-load-reporter
       puavo-set-sane-date
       puavo-sync-external-files
@@ -270,7 +267,6 @@ case "$puavo_hosttype" in
       ntp
       nwfermi
       ondemand
-      puavo-load-balancer
       puavo-load-reporter
       puavo-set-sane-date
       puavo-sync-external-files
@@ -319,7 +315,6 @@ case "$puavo_hosttype" in
       nscd
       nslcd
       ondemand
-      puavo-load-balancer
       puavo-load-reporter
       x2goserver
     "
