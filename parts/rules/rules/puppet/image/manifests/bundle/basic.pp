@@ -10,6 +10,11 @@ class image::bundle::basic {
 	  lightdm,
 	  motd,
 	  packages,
+	  packages::languages::de,
+	  packages::languages::en,
+	  packages::languages::fi,
+	  packages::languages::fr,
+	  packages::languages::sv,
 	  ssh_client,
 	  udev,
 	  use_urandom

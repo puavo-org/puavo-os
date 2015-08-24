@@ -1,4 +1,4 @@
-class packages::languages::arabic {
+class packages::languages::ar {
   @package {
     [ 'language-pack-ar' ]:
       tag => [ 'language-ar', 'thinclient', 'ubuntu', ];
