@@ -514,8 +514,8 @@ class packages {
     , 'gnome-session'
     , 'gnome-session-canberra'
     , 'gnome-settings-daemon'
-    # , 'gnome-shell'				# not needed
-    # , 'gnome-shell-extensions'
+    , 'gnome-shell'
+    , 'gnome-shell-extensions'
     , 'gnome-sudoku'
     , 'gnome-sushi'
     , 'gnome-system-log'
