@@ -2,7 +2,7 @@
 Version=1.0
 Name=Puavo-install
 Comment=Puavo device installation
-Exec=x-terminal-emulator -geometry 80x24+100+100 -e 'sudo /usr/sbin/puavo-install'
+Exec=x-terminal-emulator -geometry 80x24+100+100 -e 'sudo /usr/share/ltsp/screen.d/register'
 Terminal=false
 Type=Application
 NoDisplay=true
