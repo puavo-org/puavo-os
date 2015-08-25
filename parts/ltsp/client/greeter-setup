@@ -57,8 +57,13 @@ esac
 export XAUTHORITY=/var/run/lightdm/root/:0
 export DISPLAY=:0
 
-if [ "${puavo_keyboard_layout}" != "" ]; then
-  setxkbmap ${puavo_keyboard_layout} ${puavo_keyboard_variant}
+if [ -n "${puavo_keyboard_layout}" ]; then
+  if [ -n "${puavo_keyboard_variant}" ]; then
+    setxkbmap -layout  "${puavo_keyboard_layout}"  \
+              -variant "${puavo_keyboard_variant}"
+  else
+    setxkbmap -layout "${puavo_keyboard_layout}"
+  fi
 fi
 
 run_gsettings() {

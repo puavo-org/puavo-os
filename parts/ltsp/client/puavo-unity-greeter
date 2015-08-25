@@ -8,4 +8,9 @@ if [ -e /etc/xdg/autostart/puavo-remote-assistance-applet.desktop ]; then
   /usr/bin/puavo-remote-assistance-applet &
 fi
 
+# Strangely, this is needed for the keyboard applet to show up
+# in unity-greeter panel, despite that these are set in dconf
+# settings for lightdm.
+dconf load / < /etc/dconf/db/keyboard.d/keyboard_profile
+
 exec /usr/sbin/unity-greeter "$@"
