@@ -28,6 +28,11 @@ def get_iface_driver(iface)
   nil
 end
 
+def has_supported_driver(iface)
+  driver = get_iface_driver iface
+  ['ath9k', 'rt2800pci', 'rt2800usb'].include? driver
+end
+
 def errexit(msg)
   STDERR.puts "ERROR: #{msg}"
   exit 1
