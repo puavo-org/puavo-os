@@ -18,6 +18,7 @@ class packages {
     [ 'cpufreqd'
     , 'elinks'
     , 'ethtool'
+    , 'expect'
     , 'fping'
     , 'gawk'
     , 'git'
