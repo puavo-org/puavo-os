@@ -18,6 +18,25 @@
 require 'fileutils'
 require 'getoptlong'
 
+CONF = {
+  :rundir       => '/run/puavo-wlanap',
+  :vtun_address => 'wlangw',
+  :vtun_port    => 45045,
+}
+
+HELP = <<EOF
+Usage: puavo-wlanap [OPTION]...
+
+Tunneled WLAN accesspoint.
+
+Options:
+ -h, --help                    display this help and exit
+     --rundir DIR              runtime directory, default: #{CONF[:rundir]}
+     --vtun-address ADDRESS    vtun server address, default: #{CONF[:vtun_address]}
+     --vtun-port PORT          vtun server port, default: #{CONF[:vtun_port]}
+
+EOF
+
 def get_iface_driver(iface)
   File.open(File.join('/sys/class/net', iface, 'device', 'uevent')) do |file|
     file.each_line do |line|
@@ -91,48 +110,39 @@ def errexit(msg)
   exit 1
 end
 
-opts = GetoptLong.new(
-                      ['--help', '-h', GetoptLong::NO_ARGUMENT],
-                      ['--rundir', GetoptLong::REQUIRED_ARGUMENT],
-                      ['--vtun-address', GetoptLong::REQUIRED_ARGUMENT],
-                      ['--vtun-port', GetoptLong::REQUIRED_ARGUMENT],
-)
+def parse_args(conf)
+  opts = GetoptLong.new(
+    ['--help', '-h', GetoptLong::NO_ARGUMENT],
+    ['--rundir', GetoptLong::REQUIRED_ARGUMENT],
+    ['--vtun-address', GetoptLong::REQUIRED_ARGUMENT],
+    ['--vtun-port', GetoptLong::REQUIRED_ARGUMENT],
+  )
 
-rundir = '/run/puavo-wlanap'
-vtun_address = 'wlangw'
-vtun_port = 45045
-
-opts.each do |opt, arg|
-  case opt
-  when '--help'
-    puts <<EOF
-    Usage: puavo-wlanap [OPTION]...
-
-    Tunneled WLAN accesspoint.
-
--h, --help                       display this help and exit
-    --rundir DIR                 runtime directory, default: #{rundir}
-    --vtun-address ADDRESS       vtun server address, default: #{vtun_address}
-    --vtun-port PORT             vtun server port, default: #{vtun_port}
-
-EOF
-    exit(0)
-  when '--rundir'
-    rundir = arg
-  when '--vtun-address'
-    vtun_address = arg
-  when '--vtun-port'
-    errexit "invalid port number (#{arg})" unless arg =~ /^[1-9][0-9]*$/
-    vtun_port = arg.to_i
+  opts.each do |opt, arg|
+    case opt
+    when '--help'
+      puts HELP
+      exit(0)
+    when '--rundir'
+      conf[:rundir] = arg
+    when '--vtun-address'
+      conf[:vtun_address] = arg
+    when '--vtun-port'
+      errexit "invalid port number (#{arg})" unless arg =~ /^[1-9][0-9]*$/
+      conf[:vtun_port] = arg.to_i
+    end
   end
+
+  if ARGV.length != 0 then
+    errexit "invalid number of arguments (#{ARGV.length}), expected 0"
+  end
+
 end
 
-if ARGV.length != 0 then
-  errexit "invalid number of arguments (#{ARGV.length}), expected 0"
-end
+parse_args CONF
 
 Signal.trap('EXIT') do
-  FileUtils.rm_rf rundir
+  FileUtils.rm_rf CONF[:rundir]
 end
 
-FileUtils.mkdir_p rundir
+FileUtils.mkdir_p CONF[:rundir]
