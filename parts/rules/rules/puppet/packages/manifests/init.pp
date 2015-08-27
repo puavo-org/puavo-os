@@ -15,14 +15,14 @@ class packages {
   #
 
   @package {
-    [ 'elinks'
+    [ 'cpufreqd'
+    , 'elinks'
     , 'ethtool'
-    , 'cpufreqd'
     , 'fping'
     , 'gawk'
     , 'git'
-    , 'initramfs-tools'
     , 'iftop'
+    , 'initramfs-tools'
     , 'inotify-tools'
     , 'iperf'
     , 'libstdc++5'
@@ -45,8 +45,8 @@ class packages {
     , 'sysstat'
     , 'tmux'
     , 'tshark'
-    , 'whois'
     , 'w3m'
+    , 'whois'
     , 'x11vnc'
     , 'xinput-calibrator' ]:
       tag => [ 'admin', 'thinclient', 'ubuntu', ];
@@ -77,8 +77,8 @@ class packages {
     , 'policykit-1'
     , 'pm-utils'
     , 'rng-tools'
-    , 'udev'
     , 'ubuntu-standard'
+    , 'udev'
     , 'vlan' ]:
       tag => [ 'basic', 'ubuntu', ];
 
@@ -102,8 +102,8 @@ class packages {
     , 'ubuntu-restricted-extras' ]:
       tag => [ 'desktop', 'restricted', 'ubuntu', ];
 
-    [ 'ack-grep'
-    , 'acct'
+    [ 'acct'
+    , 'ack-grep'
     , 'build-essential'
     , 'bvi'
     , 'cdbs'
@@ -118,8 +118,8 @@ class packages {
     , 'manpages-dev'
     , 'perl-doc'
     , 'pinfo'
-    , 'unetbootin'
     , 'translate-toolkit'
+    , 'unetbootin'
     , 'vim-nox' ]:
       tag => [ 'devel', 'ubuntu', ];
 
@@ -231,8 +231,8 @@ class packages {
     , 'nautilus-image-converter'
     , 'okular'
     , 'openshot'
-    , 'photofilmstrip'
     , 'pencil'
+    , 'photofilmstrip'
     , 'pinta'
     , 'pitivi'
     , 'python-lxml'
@@ -304,10 +304,10 @@ class packages {
     , 'tuxguitar-jsa' ]:
       tag => [ 'music_making', 'ubuntu', ];
 
-    [ 'ipsec-tools'
-    , 'amtterm'
-    , 'wsmancli'
-    , 'racoon' ]:
+    [ 'amtterm'
+    , 'ipsec-tools'
+    , 'racoon'
+    , 'wsmancli' ]:
       tag => [ 'network', 'ubuntu', ];
 
     [ 'calibre'
@@ -388,8 +388,8 @@ class packages {
     , 'kig'
     , 'kmplot'
     , 'kstars'
-    , 'marble-qt'
     , 'mandelbulber'
+    , 'marble-qt'
     , 'pspp'
     , 'qgis'
     , 'rkward'
@@ -414,8 +414,8 @@ class packages {
     , 'light-themes'
     , 'openclipart'
     , 'pidgin-themes'
-    , 'tangerine-icon-theme'
     , 'screensaver-default-images'
+    , 'tangerine-icon-theme'
     , 'ubuntu-wallpapers'
     , 'xscreensaver-data'
     , 'xscreensaver-data-extra' ]:
