@@ -3,10 +3,9 @@ class install_hp_plugins {
 
   exec {
     'puavo-download-hp-plugins':
-      command => '/usr/local/sbin/puavo-download-hp-plugins \
-                    && /bin/touch /tmp/.puavo-download-hp-plugins.done',
-      creates => '/tmp/.puavo-download-hp-plugins.done',
-      require => File['/usr/local/sbin/puavo-download-hp-plugins'];
+      command => '/usr/local/sbin/puavo-download-hp-plugins',
+      require => File['/usr/local/sbin/puavo-download-hp-plugins'],
+      unless  => '/bin/grep -qx "installed = 1" /var/lib/hp/hplip.state';
   }
 
   file {
