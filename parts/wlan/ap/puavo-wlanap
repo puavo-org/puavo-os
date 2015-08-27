@@ -20,9 +20,11 @@ require 'getoptlong'
 opts = GetoptLong.new(
                       ['--help', '-h', GetoptLong::NO_ARGUMENT],
                       ['--vtun-address', GetoptLong::REQUIRED_ARGUMENT],
+                      ['--vtun-port', GetoptLong::REQUIRED_ARGUMENT],
 )
 
 vtun_address = 'wlangw'
+vtun_port = 45045
 
 opts.each do |opt, arg|
   case opt
@@ -34,11 +36,18 @@ opts.each do |opt, arg|
 
 -h, --help                       display this help and exit
     --vtun-address ADDRESS       vtun server address, default: #{vtun_address}
+    --vtun-port PORT             vtun server port, default: #{vtun_port}
 
 EOF
     exit(0)
   when '--vtun-address'
     vtun_address = arg
+  when '--vtun-port'
+    unless arg =~ /^[1-9][0-9]*$/ then
+      STDERR.puts "ERROR: invalid port number (#{arg})"
+      exit 1
+    end
+    vtun_port = arg.to_i
   end
 end
 
