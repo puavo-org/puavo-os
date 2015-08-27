@@ -15,6 +15,7 @@ on_sigchld()
     while read critical_service_pid; do
         kill -0 "${critical_service_pid}" || {
             echo "fatal: a critical child service has died, exiting" >&2
+            trap '' CHLD
             on_exit
         }
     done <"${PWAP_RUNDIR}/critical_service.pids"
