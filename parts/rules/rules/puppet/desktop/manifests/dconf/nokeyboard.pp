@@ -6,7 +6,7 @@ class desktop::dconf::nokeyboard {
     , '/etc/dconf/db/nokeyboard.d/locks' ]:
       ensure => directory;
 
-    '/etc/dconf/db/puavodesktop.d/locks/nokeyboard_locks':
+    '/etc/dconf/db/nokeyboard.d/locks/nokeyboard_locks':
       content => template('desktop/dconf_nokeyboard_locks'),
       notify  => Exec['update dconf'];
 
