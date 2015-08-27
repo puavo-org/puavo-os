@@ -17,6 +17,11 @@
 
 require 'getoptlong'
 
+def errexit(msg)
+  STDERR.puts "ERROR: #{msg}"
+  exit 1
+end
+
 opts = GetoptLong.new(
                       ['--help', '-h', GetoptLong::NO_ARGUMENT],
                       ['--vtun-address', GetoptLong::REQUIRED_ARGUMENT],
@@ -43,15 +48,11 @@ EOF
   when '--vtun-address'
     vtun_address = arg
   when '--vtun-port'
-    unless arg =~ /^[1-9][0-9]*$/ then
-      STDERR.puts "ERROR: invalid port number (#{arg})"
-      exit 1
-    end
+    errexit "invalid port number (#{arg})" unless arg =~ /^[1-9][0-9]*$/
     vtun_port = arg.to_i
   end
 end
 
 if ARGV.length != 0 then
-  STDERR.puts "ERROR: invalid number of arguments (#{ARGV.length}), expected 0"
-  exit 1
+  errexit "invalid number of arguments (#{ARGV.length}), expected 0"
 end
