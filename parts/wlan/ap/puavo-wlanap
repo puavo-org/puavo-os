@@ -25,6 +25,7 @@ end
 
 opts = GetoptLong.new(
                       ['--help', '-h', GetoptLong::NO_ARGUMENT],
+                      ['--rundir', GetoptLong::REQUIRED_ARGUMENT],
                       ['--vtun-address', GetoptLong::REQUIRED_ARGUMENT],
                       ['--vtun-port', GetoptLong::REQUIRED_ARGUMENT],
 )
@@ -42,11 +43,14 @@ opts.each do |opt, arg|
     Tunneled WLAN accesspoint.
 
 -h, --help                       display this help and exit
+    --rundir DIR                 runtime directory, default: #{rundir}
     --vtun-address ADDRESS       vtun server address, default: #{vtun_address}
     --vtun-port PORT             vtun server port, default: #{vtun_port}
 
 EOF
     exit(0)
+  when '--rundir'
+    rundir = arg
   when '--vtun-address'
     vtun_address = arg
   when '--vtun-port'
