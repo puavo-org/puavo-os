@@ -51,7 +51,7 @@ on_exit()
 
 write_hostapd_conf()
 {
-    local radio channel iface ssid_count bssid net auth ssid psk bridge
+    local radio channel iface ssid_count bssid net auth ssid psk bridge hw_mode
 
     ## Configure one hostapd per radio.
     for radio in "${PWAP_RADIOS[@]}"; do
@@ -66,21 +66,37 @@ write_hostapd_conf()
 
         ht_capab=$("${PWAP_LIBDIR}/get-ht-capab" "${iface}" "${channel}")
 
-        ## Write interface-specific hostapd configuration to the
-        ## beginning of the file.
+        case "${channel}" in
+            36|40|44|48)
+                hw_mode=a
+                ;;
+            *)
+                hw_mode=g
+                ;;
+        esac
+
+        echo "### PHY-specific options ###" \
+            >"${PWAP_RUNDIR}/${iface}_hostapd.conf"
         sed -e "s|#{PWAP_IFACE}|${iface}|g" \
             -e "s|#{PWAP_BSSID}|${bssid}|g" \
+            -e "s|#{PWAP_CHANNEL}|${channel}|g" \
+            -e "s|#{PWAP_HW_MODE}|${hw_mode}|g" \
             -e "s|#{PWAP_RUNDIR}|${PWAP_RUNDIR}|g" \
             -e "s|#{PWAP_HT_CAPAB}|${ht_capab}|g" \
-            "${PWAP_DATADIR}/hostapd.conf.${channel}" \
-            >"${PWAP_RUNDIR}/${iface}_hostapd.conf"
+            "${PWAP_DATADIR}/common.conf" \
+            >>"${PWAP_RUNDIR}/${iface}_hostapd.conf"
 
         for net in "${PWAP_NETS[@]}"; do
             IFS=':' read auth ssid psk <<<"${net}"
 
             bridge=$("${PWAP_LIBDIR}/get-bridge" "${ssid}")
 
-            ## Append network-specific hostapd configuration to the end.
+            cat <<EOF >>"${PWAP_RUNDIR}/${iface}_hostapd.conf"
+
+### BSS-specific options ###
+EOF
+
+
             cat "${PWAP_DATADIR}/${auth}_hostapd.conf" \
                 >>"${PWAP_RUNDIR}/${iface}_hostapd.conf"
             sed -i \
