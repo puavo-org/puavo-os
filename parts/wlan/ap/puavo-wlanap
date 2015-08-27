@@ -96,11 +96,14 @@ write_hostapd_conf()
 ### BSS-specific options ###
 EOF
 
+            if [ "${ssid_count}" -gt 0 ]; then
+                echo "bss=${iface}_${ssid_count}" \
+                    >>"${PWAP_RUNDIR}/${iface}_hostapd.conf"
+            fi
 
             cat "${PWAP_DATADIR}/${auth}_hostapd.conf" \
                 >>"${PWAP_RUNDIR}/${iface}_hostapd.conf"
             sed -i \
-                -e "s|#{PWAP_BSS}|${iface}_${ssid_count}|g" \
                 -e "s|#{PWAP_SSID}|${ssid}|g" \
                 -e "s|#{PWAP_BRIDGE}|${bridge}|g" \
                 -e "s|#{PWAP_PSK}|${psk}|g" \
