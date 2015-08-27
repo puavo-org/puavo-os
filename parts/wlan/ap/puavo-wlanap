@@ -15,6 +15,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+require 'fileutils'
 require 'getoptlong'
 
 def errexit(msg)
@@ -28,6 +29,7 @@ opts = GetoptLong.new(
                       ['--vtun-port', GetoptLong::REQUIRED_ARGUMENT],
 )
 
+rundir = '/run/puavo-wlanap'
 vtun_address = 'wlangw'
 vtun_port = 45045
 
@@ -56,3 +58,5 @@ end
 if ARGV.length != 0 then
   errexit "invalid number of arguments (#{ARGV.length}), expected 0"
 end
+
+FileUtils.mkdir_p rundir
