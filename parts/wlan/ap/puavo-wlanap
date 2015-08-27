@@ -63,6 +63,24 @@ def iter_suitable_ifaces(hw_mode='')
   end
 end
 
+def scan_channels(iface)
+  IO.popen(['iwlist', iface, 'scan']) do |io|
+    io.each_line do |line|
+      next unless line =~ /^\s+Cell [0-9]+ - Address: .*$/
+
+      io.readline.strip =~ /^Channel:([0-9]+)$/
+      channel = $1.to_i
+
+      io.readline.strip # Ignore frequency line.
+
+      io.readline.strip =~ /^Quality=[0-9]+\/[0-9]+\s+Signal level=(-[0-9]+) dBm.*$/
+      signal_level = $1.to_i
+
+      yield channel, signal_level
+    end
+  end
+end
+
 def ifup(iface)
   system('ifconfig', iface, 'up')
   $?.success?
