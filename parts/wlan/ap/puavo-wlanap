@@ -63,4 +63,8 @@ if ARGV.length != 0 then
   errexit "invalid number of arguments (#{ARGV.length}), expected 0"
 end
 
+Signal.trap('EXIT') do
+  FileUtils.rm_rf rundir
+end
+
 FileUtils.mkdir_p rundir
