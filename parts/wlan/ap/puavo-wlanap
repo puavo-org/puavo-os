@@ -19,7 +19,10 @@ require 'getoptlong'
 
 opts = GetoptLong.new(
                       ['--help', '-h', GetoptLong::NO_ARGUMENT],
+                      ['--vtun-address', GetoptLong::REQUIRED_ARGUMENT],
 )
+
+vtun_address = 'wlangw'
 
 opts.each do |opt, arg|
   case opt
@@ -30,9 +33,12 @@ opts.each do |opt, arg|
     Tunneled WLAN accesspoint.
 
 -h, --help                       display this help and exit
+    --vtun-address ADDRESS       vtun server address, default: #{vtun_address}
 
 EOF
     exit(0)
+  when '--vtun-address'
+    vtun_address = arg
   end
 end
 
