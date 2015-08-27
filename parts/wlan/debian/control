@@ -8,7 +8,20 @@ Homepage: http://github.com/opinsys/puavo-wlan/
 
 Package: puavo-wlanap
 Architecture: all
-Depends: ${misc:Depends}, hostapd, bridge-utils, net-tools, netcat-openbsd, vtun, daemon, wireless-crda, wireless-regdb, bash, curl, socat, wireless-tools, iw
+Depends: ${misc:Depends},
+ bash,
+ bridge-utils,
+ curl,
+ daemon,
+ hostapd,
+ iw,
+ net-tools,
+ netcat-openbsd,
+ socat,
+ vtun,
+ wireless-crda,
+ wireless-regdb,
+ wireless-tools
 Description: host tunneled WLAN accesspoint
  puavo-wlanap glues together hostapd, vtun and bridge tools to make
  hosting a tunneled WLAN accespoint easy. Optionally, accesspoint can be
@@ -17,7 +30,10 @@ Description: host tunneled WLAN accesspoint
 
 Package: puavo-wlanap-dnsproxy
 Architecture: all
-Depends: ${misc:Depends}, dnsmasq-base, debianutils, daemon
+Depends: ${misc:Depends},
+ daemon,
+ debianutils,
+ dnsmasq-base
 Recommends: puavo-wlanap
 Description: DNS proxy responding to service list queries from WLAN networks
  puavo-wlanap-dnsmasq glues together puavo-wlanap, dnsmasq and iptables
@@ -28,7 +44,10 @@ Description: DNS proxy responding to service list queries from WLAN networks
 
 Package: puavo-wlanap-mdns
 Architecture: all
-Depends: ${misc:Depends}, debianutils, daemon, avahi-daemon
+Depends: ${misc:Depends},
+ avahi-daemon,
+ daemon,
+ debianutils
 Recommends: puavo-wlanap
 Description: mDNS daemon responding to queries from WLAN networks
  puavo-wlanap-mdns glues together puavo-wlanap, avahi and iptables to
@@ -38,7 +57,13 @@ Description: mDNS daemon responding to queries from WLAN networks
 
 Package: puavo-wlangw
 Architecture: all
-Depends: ${misc:Depends}, bridge-utils, net-tools, vtun, daemon, nmap, bash
+Depends: ${misc:Depends},
+ bash,
+ bridge-utils,
+ daemon,
+ net-tools,
+ nmap,
+ vtun
 Description: host tunneled WLAN accesspoint
  puavo-wlangw glues together vtun and bridge tools to make
  hosting a tunneled WLAN gateway easy.
