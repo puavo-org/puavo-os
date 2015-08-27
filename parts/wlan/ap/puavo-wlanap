@@ -33,6 +33,15 @@ def has_supported_driver(iface)
   ['ath9k', 'rt2800pci', 'rt2800usb'].include? driver
 end
 
+def is_wlan_iface(iface)
+  File.open(File.join('/sys/class/net', iface, 'uevent')) do |file|
+    file.each_line do |line|
+      return true if /^DEVTYPE=wlan$/ =~ line
+    end
+  end
+  false
+end
+
 def errexit(msg)
   STDERR.puts "ERROR: #{msg}"
   exit 1
