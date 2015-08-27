@@ -714,7 +714,6 @@ class packages {
     , 'puavo-pkg'
     , 'puavo-sharedir-client'
     , 'puavo-wlanap'
-    , 'puavo-wlanap-dnsproxy'
     , 'simplescreenrecorder'
     , 'webmenu'
     , 'webkiosk-language-selector'
