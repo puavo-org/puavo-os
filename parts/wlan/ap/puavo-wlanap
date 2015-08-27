@@ -53,11 +53,12 @@ def get_hw_mode(iface)
   end
 end
 
-def find_suitable_ifaces(hw_mode=:any)
+def iter_suitable_ifaces(hw_mode='')
   Dir.glob('/sys/class/net/*') do |path|
     iface = File.basename(path)
     next unless is_wlan_iface iface
     next unless has_supported_driver iface
+    next unless hw_mode.chars.map { |c| get_hw_mode(iface).include? c }.all?
     yield iface
   end
 end
