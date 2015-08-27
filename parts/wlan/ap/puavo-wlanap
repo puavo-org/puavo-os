@@ -63,6 +63,11 @@ def iter_suitable_ifaces(hw_mode='')
   end
 end
 
+def ifup(iface)
+  system('ifconfig', iface, 'up')
+  $?.success?
+end
+
 def errexit(msg)
   STDERR.puts "ERROR: #{msg}"
   exit 1
