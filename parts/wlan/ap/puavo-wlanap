@@ -42,6 +42,17 @@ def is_wlan_iface(iface)
   false
 end
 
+def get_hw_mode(iface)
+  IO.popen(['iwconfig', iface]) do |io|
+    line = io.gets
+    io.close
+    return nil if line.nil?
+    return nil if not $?.success?
+    line =~ /^.* IEEE 802.11([a-z]+).*$/
+    $1
+  end
+end
+
 def find_suitable_ifaces(hw_mode=:any)
   Dir.glob('/sys/class/net/*') do |path|
     iface = File.basename(path)
