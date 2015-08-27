@@ -18,6 +18,16 @@
 require 'fileutils'
 require 'getoptlong'
 
+def get_iface_driver(iface)
+  File.open(File.join('/sys/class/net', iface, 'device', 'uevent')) do |file|
+    file.each_line do |line|
+      next unless /^DRIVER=(.*)$/ =~ line
+      return $1
+    end
+  end
+  nil
+end
+
 def errexit(msg)
   STDERR.puts "ERROR: #{msg}"
   exit 1
