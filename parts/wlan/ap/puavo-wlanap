@@ -42,6 +42,15 @@ def is_wlan_iface(iface)
   false
 end
 
+def find_suitable_ifaces(hw_mode=:any)
+  Dir.glob('/sys/class/net/*') do |path|
+    iface = File.basename(path)
+    next unless is_wlan_iface iface
+    next unless has_supported_driver iface
+    yield iface
+  end
+end
+
 def errexit(msg)
   STDERR.puts "ERROR: #{msg}"
   exit 1
