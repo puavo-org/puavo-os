@@ -66,14 +66,12 @@ def is_wlan_iface(iface)
 end
 
 def get_hw_mode(iface)
-  IO.popen(['iwconfig', iface]) do |io|
-    line = io.gets
-    io.close
-    return nil if line.nil?
-    return nil if not $?.success?
-    line =~ /^.* IEEE 802.11([a-z]+).*$/
-    $1
+  hw_mode = IO.popen(['iwconfig', iface]) do |io|
+    io.gets =~ /^.* IEEE 802.11([a-z]+).*$/
+    break $1
   end
+  $?.success? or die 'failed to query hardware mode'
+  hw_mode
 end
 
 def get_supported_channels(iface)
@@ -109,7 +107,6 @@ def find_nodes(iface)
 
       yield channel, signal_level
     end
-    io.close
   end
   $?.success?
 end
