@@ -127,7 +127,7 @@ def get_preferred_channels(iface)
   Hash[results.sort_by { |ch, siglvl| siglvl }].keys
 end
 
-def fetch_nets()
+def get_nets_from_puavo()
   client = PuavoRestClient.new()
   res = client.get("/v3/devices/#{PUAVO_ETC.hostname}/wlan_networks")
   res.parse.select { |e| e['wlan_ap'] }
