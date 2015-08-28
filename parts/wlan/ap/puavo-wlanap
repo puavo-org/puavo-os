@@ -105,7 +105,7 @@ def ifup(iface)
   $?.success?
 end
 
-def errexit(msg)
+def die(msg)
   STDERR.puts "ERROR: #{msg}"
   exit 1
 end
@@ -128,13 +128,13 @@ def parse_args(conf)
     when '--vtun-address'
       conf[:vtun_address] = arg
     when '--vtun-port'
-      errexit "invalid port number (#{arg})" unless arg =~ /^[1-9][0-9]*$/
+      die "invalid port number (#{arg})" unless arg =~ /^[1-9][0-9]*$/
       conf[:vtun_port] = arg.to_i
     end
   end
 
   if ARGV.length != 0 then
-    errexit "invalid number of arguments (#{ARGV.length}), expected 0"
+    die "invalid number of arguments (#{ARGV.length}), expected 0"
   end
 
 end
