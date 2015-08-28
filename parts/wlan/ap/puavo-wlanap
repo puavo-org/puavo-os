@@ -194,41 +194,32 @@ def ifup(iface)
   $?.success?
 end
 
-def die(msg)
-  STDERR.puts "ERROR: #{msg}"
+GetoptLong.new(['--help', '-h', GetoptLong::NO_ARGUMENT],
+               ['--rundir', GetoptLong::REQUIRED_ARGUMENT],
+               ['--vtun-address', GetoptLong::REQUIRED_ARGUMENT],
+               ['--vtun-port', GetoptLong::REQUIRED_ARGUMENT],
+               ).each do |opt, arg|
+  case opt
+  when '--help'
+    puts HELP
+    exit(0)
+  when '--rundir'
+    CONF[:rundir] = arg
+  when '--vtun-address'
+    CONF[:vtun_address] = arg
+  when '--vtun-port'
+    unless arg =~ /^[1-9][0-9]*$/ then
+      STDERR.puts "ERROR: invalid port number (#{arg})"
+      exit 1
+    end
+    CONF[:vtun_port] = arg.to_i
+  end
+end
+
+if ARGV.length != 0 then
+  STDERR.puts "ERROR: invalid number of arguments (#{ARGV.length}), expected 0"
   exit 1
 end
-
-def parse_args(conf)
-  opts = GetoptLong.new(
-    ['--help', '-h', GetoptLong::NO_ARGUMENT],
-    ['--rundir', GetoptLong::REQUIRED_ARGUMENT],
-    ['--vtun-address', GetoptLong::REQUIRED_ARGUMENT],
-    ['--vtun-port', GetoptLong::REQUIRED_ARGUMENT],
-  )
-
-  opts.each do |opt, arg|
-    case opt
-    when '--help'
-      puts HELP
-      exit(0)
-    when '--rundir'
-      conf[:rundir] = arg
-    when '--vtun-address'
-      conf[:vtun_address] = arg
-    when '--vtun-port'
-      die "invalid port number (#{arg})" unless arg =~ /^[1-9][0-9]*$/
-      conf[:vtun_port] = arg.to_i
-    end
-  end
-
-  if ARGV.length != 0 then
-    die "invalid number of arguments (#{ARGV.length}), expected 0"
-  end
-
-end
-
-parse_args CONF
 
 Signal.trap('EXIT') do
   FileUtils.rm_rf CONF[:rundir]
