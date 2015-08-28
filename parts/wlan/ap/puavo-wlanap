@@ -22,24 +22,9 @@ require 'getoptlong'
 require 'puavo/etc'
 require 'puavo/rest-client'
 
-CONF = {
-  :rundir       => '/run/puavo-wlanap',
-  :vtun_address => 'wlangw',
-  :vtun_port    => 45045,
-}
-
-HELP = <<EOF
-Usage: puavo-wlanap [OPTION]...
-
-Tunneled WLAN accesspoint.
-
-Options:
- -h, --help                    display this help and exit
-     --rundir DIR              runtime directory, default: #{CONF[:rundir]}
-     --vtun-address ADDRESS    vtun server address, default: #{CONF[:vtun_address]}
-     --vtun-port PORT          vtun server port, default: #{CONF[:vtun_port]}
-
-EOF
+DEFAULT_RUNDIR       = '/run/puavo-wlanap'
+DEFAULT_VTUN_ADDRESS = 'wlangw'
+DEFAULT_VTUN_PORT    = 45045
 
 def get_iface_driver(iface)
   File.open(File.join('/sys/class/net', iface, 'device', 'uevent')) do |file|
@@ -194,35 +179,61 @@ def ifup(iface)
   $?.success?
 end
 
-GetoptLong.new(['--help', '-h', GetoptLong::NO_ARGUMENT],
-               ['--rundir', GetoptLong::REQUIRED_ARGUMENT],
-               ['--vtun-address', GetoptLong::REQUIRED_ARGUMENT],
-               ['--vtun-port', GetoptLong::REQUIRED_ARGUMENT],
-               ).each do |opt, arg|
-  case opt
-  when '--help'
-    puts HELP
-    exit(0)
-  when '--rundir'
-    CONF[:rundir] = arg
-  when '--vtun-address'
-    CONF[:vtun_address] = arg
-  when '--vtun-port'
-    unless arg =~ /^[1-9][0-9]*$/ then
-      STDERR.puts "ERROR: invalid port number (#{arg})"
-      exit 1
-    end
-    CONF[:vtun_port] = arg.to_i
+def run(kwargs = {})
+  rundir       = kwargs[:rundir]       || DEFAULT_RUNDIR
+  vtun_address = kwargs[:vtun_address] || DEFAULT_VTUN_ADDRESS
+  vtun_port    = kwargs[:vtun_port]    || DEFAULT_VTUN_PORT
+
+  Signal.trap('EXIT') do
+    FileUtils.rm_rf rundir
   end
+
+  FileUtils.mkdir_p rundir
 end
 
-if ARGV.length != 0 then
-  STDERR.puts "ERROR: invalid number of arguments (#{ARGV.length}), expected 0"
-  exit 1
+def main()
+  run_kwargs = {}
+
+  GetoptLong.new(
+    ['--help', '-h', GetoptLong::NO_ARGUMENT],
+    ['--rundir', GetoptLong::REQUIRED_ARGUMENT],
+    ['--vtun-address', GetoptLong::REQUIRED_ARGUMENT],
+    ['--vtun-port', GetoptLong::REQUIRED_ARGUMENT],
+  ).each do |opt, arg|
+    case opt
+    when '--help'
+      puts <<EOF
+Usage: puavo-wlanap [OPTION]...
+
+Tunneled WLAN accesspoint.
+
+Options:
+ -h, --help                    display this help and exit
+     --rundir DIR              runtime directory, default: #{DEFAULT_RUNDIR}
+     --vtun-address ADDRESS    vtun server address, default: #{DEFAULT_VTUN_ADDRESS}
+     --vtun-port PORT          vtun server port, default: #{DEFAULT_VTUN_PORT}
+
+EOF
+      exit(0)
+    when '--rundir'
+      run_kwargs[:rundir] = arg
+    when '--vtun-address'
+      run_kwargs[:vtun_address] = arg
+    when '--vtun-port'
+      unless arg =~ /^[1-9][0-9]*$/ then
+        STDERR.puts "ERROR: invalid port number (#{arg})"
+        exit 1
+      end
+      run_kwargs[:vtun_port] = arg.to_i
+    end
+  end
+
+  if ARGV.length != 0 then
+    STDERR.puts "ERROR: invalid number of arguments (#{ARGV.length}), expected 0"
+    exit 1
+  end
+
+  run(run_kwargs)
 end
 
-Signal.trap('EXIT') do
-  FileUtils.rm_rf CONF[:rundir]
-end
-
-FileUtils.mkdir_p CONF[:rundir]
+main
