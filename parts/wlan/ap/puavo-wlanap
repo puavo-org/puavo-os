@@ -110,6 +110,23 @@ def find_nodes(iface)
   $?.success?
 end
 
+def get_preferred_channels(iface)
+  channels = get_supported_channels iface
+
+  # Prime results with worst possible signal levels.
+  results = {}
+  channels.each { |ch| results[ch] = -999 }
+
+  # Update results with scan results.
+  find_nodes iface do |ch, siglvl|
+    next unless results.has_key? ch
+    results[ch] = siglvl if results[ch] < siglvl
+  end or die "failed to find nodes"
+
+  # Return channels in ascending signal level order.
+  Hash[results.sort_by { |ch, siglvl| siglvl }].keys
+end
+
 def ifup(iface)
   system('ifconfig', iface, 'up')
   $?.success?
