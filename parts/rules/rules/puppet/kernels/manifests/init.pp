@@ -34,8 +34,8 @@ class kernels {
   $default_kernel = $lsbdistcodename ? {
     'precise' => '3.2.0-69-generic',
     'trusty'  => '3.13.0-55.94-generic',
-    'utopic'  => '3.16.0-38-generic',
-    'vivid'   => '3.19.0-18-generic',
+    'utopic'  => '3.16.0-44-generic',
+    'vivid'   => '3.19.0-26-generic',
     'wily'    => '4.1.0-3-generic',
   }
 
@@ -56,12 +56,12 @@ class kernels {
   }
 
   $utopic_kernel = $lsbdistcodename ? {
-                     'trusty' => '3.16.0-38-generic',
+                     'trusty' => '3.16.0-44-generic',
                      default  => $default_kernel,
                    }
 
   $vivid_kernel = $lsbdistcodename ? {
-                    'trusty' => '3.19.0-18-generic',
+                    'trusty' => '3.19.0-26-generic',
                     default  => $default_kernel,
                   }
 
@@ -77,7 +77,7 @@ class kernels {
 
   $stable_amd64_kernel = $lsbdistcodename ? {
      'trusty' => $architecture ? {
-                   'i386'  => '3.13.0-46-generic',
+                   'i386'  => '3.13.0-62-generic',
                    default => $stable_kernel,
                  },
      default => $stable_kernel,
