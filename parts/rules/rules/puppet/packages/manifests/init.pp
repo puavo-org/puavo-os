@@ -782,6 +782,12 @@ class packages {
           package_tag => 'puavo';
       }
     }
+    'wily': {
+      packages::kernels::kernel_package {
+        '4.1.0-3-generic':
+          package_tag => 'puavo';
+      }
+    }
   }
 
   #
