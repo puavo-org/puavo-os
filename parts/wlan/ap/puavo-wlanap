@@ -15,6 +15,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+require 'digest'
 require 'fileutils'
 require 'getoptlong'
 
@@ -134,6 +135,12 @@ def fetch_nets()
   client = PuavoRestClient.new()
   res = client.get("/v3/devices/#{PUAVO_ETC.hostname}/wlan_networks")
   res.parse.select { |e| e['wlan_ap'] }
+end
+
+def hexdigest15(str)
+  md5sum = Digest::MD5.new
+  md5sum << str
+  md5sum.hexdigest[0..15]
 end
 
 def ifup(iface)
