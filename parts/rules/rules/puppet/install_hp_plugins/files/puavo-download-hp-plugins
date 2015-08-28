@@ -8,7 +8,7 @@
 # seconds, that is probably too short).
 set timeout 120
 
-spawn hp-plugin -i
+spawn env LANG=C hp-plugin -i
 
 expect {
   -ex "Enter option (d=download*, p=specify path, q=quit) ? " {
