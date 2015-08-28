@@ -133,7 +133,7 @@ end
 def fetch_nets()
   client = PuavoRestClient.new()
   res = client.get("/v3/devices/#{PUAVO_ETC.hostname}/wlan_networks")
-  res.parse
+  res.parse.select { |e| e['wlan_ap'] }
 end
 
 def ifup(iface)
