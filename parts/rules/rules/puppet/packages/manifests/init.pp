@@ -772,20 +772,17 @@ class packages {
     }
     'utopic': {
       packages::kernels::kernel_package {
-        '3.16.0-38-generic':
-          package_tag => 'puavo';
+        '3.16.0-38-generic': ;
       }
     }
     'vivid': {
       packages::kernels::kernel_package {
-        '3.19.0-18-generic':
-          package_tag => 'puavo';
+        '3.19.0-18-generic': ;
       }
     }
     'wily': {
       packages::kernels::kernel_package {
-        '4.1.0-3-generic':
-          package_tag => 'puavo';
+        '4.1.0-3-generic': ;
       }
     }
   }
