@@ -82,7 +82,7 @@ def iter_suitable_ifaces(hw_mode='')
   end
 end
 
-def scan_channels(iface)
+def find_nodes(iface)
   IO.popen(['iwlist', iface, 'scan']) do |io|
     io.each_line do |line|
       next unless line =~ /^\s+Cell [0-9]+ - Address: .*$/
