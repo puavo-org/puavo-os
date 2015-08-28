@@ -18,6 +18,9 @@
 require 'fileutils'
 require 'getoptlong'
 
+require 'puavo/etc'
+require 'puavo/rest-client'
+
 CONF = {
   :rundir       => '/run/puavo-wlanap',
   :vtun_address => 'wlangw',
@@ -125,6 +128,12 @@ def get_preferred_channels(iface)
 
   # Return channels in ascending signal level order.
   Hash[results.sort_by { |ch, siglvl| siglvl }].keys
+end
+
+def fetch_nets()
+  client = PuavoRestClient.new()
+  res = client.get("/v3/devices/#{PUAVO_ETC.hostname}/wlan_networks")
+  res.parse
 end
 
 def ifup(iface)
