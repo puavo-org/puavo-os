@@ -72,6 +72,14 @@ def get_hw_mode(iface)
   end
 end
 
+def get_supported_channels(iface)
+  channels = []
+  hw_mode = get_hw_mode iface
+  channels << 1 << 6 << 11 if hw_mode.include? 'g'
+  channels << 36 << 40 << 44 << 48 if hw_mode.include? 'a'
+  channels
+end
+
 def iter_suitable_ifaces(hw_mode='')
   Dir.glob('/sys/class/net/*') do |path|
     iface = File.basename(path)
