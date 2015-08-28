@@ -36,6 +36,7 @@ class kernels {
     'trusty'  => '3.13.0-55.94-generic',
     'utopic'  => '3.16.0-38-generic',
     'vivid'   => '3.19.0-18-generic',
+    'wily'    => '4.1.0-3-generic',
   }
 
   $hwgen2_kernel = $lsbdistcodename ? {
