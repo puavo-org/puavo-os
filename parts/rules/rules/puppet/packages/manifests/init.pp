@@ -757,7 +757,7 @@ class packages {
             package_tag => 'puavo',
             with_extra  => false;
 
-          [ '3.13.0-46-generic' ]:
+          [ '3.13.0-62-generic' ]:
             pkgarch => 'amd64';
         }
       }
@@ -766,18 +766,18 @@ class packages {
         [ '3.13.0-55.94-generic', ]:
           package_tag => 'puavo';
 
-        [ '3.16.0-38-generic', ]: ; # utopic backport from Ubuntu
-        [ '3.19.0-18-generic', ]: ; # vivid backport from Ubuntu
+        [ '3.16.0-44-generic', ]: ; # utopic backport from Ubuntu
+        [ '3.19.0-26-generic', ]: ; # vivid backport from Ubuntu
       }
     }
     'utopic': {
       packages::kernels::kernel_package {
-        '3.16.0-38-generic': ;
+        '3.16.0-44-generic': ;
       }
     }
     'vivid': {
       packages::kernels::kernel_package {
-        '3.19.0-18-generic': ;
+        '3.19.0-26-generic': ;
       }
     }
     'wily': {
