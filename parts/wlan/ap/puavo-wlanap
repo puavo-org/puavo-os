@@ -29,17 +29,27 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301 USA.
 
+# Standard library modules.
 require 'digest'
 require 'fileutils'
 require 'getoptlong'
 
+# Third-party modules.
 require 'puavo/etc'
 require 'puavo/rest-client'
 
+# Default runtime directory, use +--rundir+ to override.
 DEFAULT_RUNDIR       = '/run/puavo-wlanap'
+
+# Default vtun server address to connect to, use +--vtun-address+ to
+# override.
 DEFAULT_VTUN_ADDRESS = 'wlangw'
+
+# Default vtun server port to connect to, use +--vtun-port+ to
+# override.
 DEFAULT_VTUN_PORT    = 45045
 
+# Return the name of the interface driver.
 def get_iface_driver(iface)
   File.open(File.join('/sys/class/net', iface, 'device', 'uevent')) do |file|
     file.each_line do |line|
@@ -55,6 +65,7 @@ def has_supported_driver(iface)
   ['ath9k', 'rt2800pci', 'rt2800usb'].include? driver
 end
 
+# Return boolean indicating whether the interface is a WLAN interface.
 def is_wlan_iface(iface)
   File.open(File.join('/sys/class/net', iface, 'uevent')) do |file|
     file.each_line do |line|
@@ -64,6 +75,7 @@ def is_wlan_iface(iface)
   false
 end
 
+# Return the hardware mode string of the interface.
 def get_hw_mode(iface)
   hw_mode = IO.popen(['iwconfig', iface]) do |io|
     io.gets =~ /^.* IEEE 802.11([a-z]+).*$/
@@ -73,6 +85,7 @@ def get_hw_mode(iface)
   hw_mode
 end
 
+# Return a list of channels supported by the interface.
 def get_supported_channels(iface)
   channels = []
   hw_mode = get_hw_mode iface
@@ -81,6 +94,7 @@ def get_supported_channels(iface)
   channels
 end
 
+# Yield names of interfaces matching the given hardware mode.
 def iter_suitable_ifaces(hw_mode='')
   Dir.glob('/sys/class/net/*') do |path|
     iface = File.basename(path)
@@ -188,6 +202,7 @@ def get_ht_capab(iface, channel)
   end
 end
 
+# Bring interface up and return true on sucess and false otherwise.
 def ifup(iface)
   system('ifconfig', iface, 'up')
   $?.success?
