@@ -232,6 +232,23 @@ def get_phy_conf
   phy_conf
 end
 
+def get_bss_conf
+  nets_wait = 1
+
+  while true
+    nets = get_nets_from_puavo
+    break unless nets.empty?
+    nets_wait = [nets_wait * 2, 3600].min
+    sleep nets_wait
+  end
+
+  nets.each do |e|
+    next unless e['ssid'] =~ /^le8Yuek9Some5ee$/
+    e['ssid'] = PUAVO_ETC.hostname.tr(' ', '')
+  end
+
+end
+
 def run(kwargs = {})
   rundir       = kwargs[:rundir]       || DEFAULT_RUNDIR
   vtun_address = kwargs[:vtun_address] || DEFAULT_VTUN_ADDRESS
@@ -244,6 +261,7 @@ def run(kwargs = {})
   FileUtils.mkdir_p(rundir)
 
   phy_conf = get_phy_conf
+  bss_conf = get_bss_conf
 end
 
 def main
