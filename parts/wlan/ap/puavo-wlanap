@@ -47,6 +47,11 @@ DEFAULT_VTUN_ADDRESS = 'wlangw'
 # override.
 DEFAULT_VTUN_PORT    = 45045
 
+CHANNELS_2G = [ 1,  6, 11]
+CHANNELS_5G = [36, 40, 44, 48]
+
+CHANNELS = CHANNELS_2G + CHANNELS_5G
+
 # Return the name of the interface driver.
 def get_iface_driver(iface)
   File.open(File.join('/sys/class/net', iface, 'device', 'uevent')) do |file|
