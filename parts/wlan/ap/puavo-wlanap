@@ -145,14 +145,23 @@ def scan_channels(iface, channels)
 end
 
 def get_nets_from_puavo
-  client = PuavoRestClient.new
-  response = client.get("/v3/devices/#{PUAVO_ETC.hostname}/wlan_networks")
-  response.parse.select { |net| net['wlan_ap'] } .each do |net|
-    # Magic SSID Mangling! The following Magic SSID is substituted
-    # with a SSID derived from the hostname. This lets us configure
-    # AP-specific networks easily via Puavo.
-    next unless net['ssid'] =~ /^le8Yuek9Some5ee$/
-    net['ssid'] = PUAVO_ETC.hostname.tr(' ', '')
+  nets_wait = 1
+  while true
+    client = PuavoRestClient.new
+    response = client.get("/v3/devices/#{PUAVO_ETC.hostname}/wlan_networks")
+
+    nets = response.parse.select { |net| net['wlan_ap'] } .each do |net|
+      # Magic SSID Mangling! The following Magic SSID is substituted
+      # with a SSID derived from the hostname. This lets us configure
+      # AP-specific networks easily via Puavo.
+      next unless net['ssid'] =~ /^le8Yuek9Some5ee$/
+      net['ssid'] = PUAVO_ETC.hostname.tr(' ', '')
+    end
+
+    return nets unless nets.empty?
+
+    nets_wait = [nets_wait * 2, 3600].min
+    sleep nets_wait
   end
 end
 
@@ -239,18 +248,10 @@ def get_phy_conf
 end
 
 def get_bss_conf
-  nets_wait = 1
-
-  while true
-    nets = get_nets_from_puavo
-    break unless nets.empty?
-    nets_wait = [nets_wait * 2, 3600].min
-    sleep nets_wait
-  end
+  nets = get_nets_from_puavo
 
   # At most 4 BSSes are supported.
   nets.slice!(4..-1)
-
 end
 
 def run(kwargs = {})
