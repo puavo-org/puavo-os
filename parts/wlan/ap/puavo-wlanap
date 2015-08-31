@@ -242,6 +242,9 @@ def get_bss_conf
     sleep nets_wait
   end
 
+  # At most 4 BSSes are supported.
+  nets.slice!(4..-1)
+
   nets.each do |e|
     next unless e['ssid'] =~ /^le8Yuek9Some5ee$/
     e['ssid'] = PUAVO_ETC.hostname.tr(' ', '')
