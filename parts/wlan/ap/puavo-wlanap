@@ -74,7 +74,7 @@ ctrl_interface=<%= rundir %>/hostapd
 ieee80211n=1
 ht_capab=<%= phy[:ht_capab] %>
 wds_sta=1
-<% for bss in bss_conf %>
+<% for bss in bss_list %>
 
 ## BSS-specific options ##
 bss=<%= phy[:iface] %>_<%= bss[:index] %>
@@ -264,15 +264,15 @@ def ifup(iface)
   $?.success? or raise "failed to bring interface #{iface} up"
 end
 
-def fill_phy_conf(phy_conf, band)
+def fill_phy_list(phy_list, band)
   iter_suitable_ifaces(band) do |iface|
     ifup(iface)
     best_channels = scan_channels(iface, CHANNELS[band])
-    free_channels = best_channels - phy_conf.map { |phy| phy[:channel] }
+    free_channels = best_channels - phy_list.map { |phy| phy[:channel] }
     next if free_channels.empty?
     channel = free_channels[0]
 
-    phy_conf << {
+    phy_list << {
       :iface    => iface,
       :channel  => channel,
       :bssid    => get_bssid(iface),
@@ -282,17 +282,17 @@ def fill_phy_conf(phy_conf, band)
   end
 end
 
-def get_phy_conf
-  phy_conf = []
+def get_phy_list
+  phy_list = []
 
-  fill_phy_conf(phy_conf, BAND_5G)
-  fill_phy_conf(phy_conf, BAND_2G)
-  fill_phy_conf(phy_conf, BAND_5G | BAND_2G)
+  fill_phy_list(phy_list, BAND_5G)
+  fill_phy_list(phy_list, BAND_2G)
+  fill_phy_list(phy_list, BAND_5G | BAND_2G)
 
-  phy_conf
+  phy_list
 end
 
-def get_bss_conf
+def get_bss_list
   nets = get_nets_from_puavo
 
   # At most 4 BSSes are supported.
@@ -309,8 +309,8 @@ def get_bss_conf
   end
 end
 
-def write_hostapd_conf(phy_conf, bss_conf, rundir)
-  phy_conf.each do |phy|
+def write_hostapd_conf(phy_list, bss_list, rundir)
+  phy_list.each do |phy|
     conf = ERB.new(HOSTAPD_CONF_TEMPLATE, 3, '<>').result(binding)
     conf_filepath = File.join(rundir, "hostapd_#{phy[:iface]}.conf")
     File.write(conf_filepath, conf)
@@ -328,9 +328,9 @@ def run(kwargs = {})
 
   FileUtils.mkdir_p(rundir)
 
-  phy_conf = get_phy_conf
-  bss_conf = get_bss_conf
-  write_hostapd_conf(phy_conf, bss_conf, rundir)
+  phy_list = get_phy_list
+  bss_list = get_bss_list
+  write_hostapd_conf(phy_list, bss_list, rundir)
 end
 
 def main
