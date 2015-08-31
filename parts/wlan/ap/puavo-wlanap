@@ -29,6 +29,7 @@
 
 # Standard library modules.
 require 'digest'
+require 'erb'
 require 'fileutils'
 require 'getoptlong'
 
@@ -58,6 +59,43 @@ CHANNELS = {
   BAND_5G           => CHANNELS_5G,
   BAND_2G | BAND_5G => CHANNELS_2G + CHANNELS_5G,
 }
+
+HOSTAPD_CONF_TEMPLATE = <<'EOF'
+## PHY-specific options ##
+interface=<%= phy[:iface] %>
+bssid=<%= phy[:bssid] %>
+driver=nl80211
+country_code=FI
+hw_mode=<%= phy[:hw_mode] %>
+channel=<%= phy[:channel] %>
+max_num_sta=1000
+wmm_enabled=1
+ctrl_interface=<%= rundir %>/hostapd
+ieee80211n=1
+ht_capab=<%= phy[:ht_capab] %>
+wds_sta=1
+<% for bss in bss_conf %>
+
+## BSS-specific options ##
+bss=<%= phy[:iface] %>_<%= bss[:index] %>
+bridge=<%= bss[:bridge] %>
+<% if bss[:type] == 'open' %>
+wpa=0
+<% else %>
+wpa=2
+auth_algs=3
+wpa_passphrase=<%= bss[:psk] %>
+rsn_pairwise=CCMP
+wpa_key_mgmt=WPA-PSK
+eapol_version=1
+eapol_key_index_workaround=1
+eap_reauth_period=0
+wpa_strict_rekey=0
+wpa_group_rekey=0
+wpa_gmk_rekey=0
+<% end %>
+<% end %>
+EOF
 
 # Return the name of the interface driver.
 def get_iface_driver(iface)
@@ -228,17 +266,24 @@ end
 
 def fill_phy_conf(phy_conf, band)
   iter_suitable_ifaces(band) do |iface|
-    raise "interface #{iface} is already configured" if phy_conf.has_key?(iface)
     ifup(iface)
     best_channels = scan_channels(iface, CHANNELS[band])
-    free_channels = best_channels - phy_conf.values
+    free_channels = best_channels - phy_conf.map { |phy| phy[:channel] }
     next if free_channels.empty?
-    phy_conf[iface] = {:channel => free_channels[0]}
+    channel = free_channels[0]
+
+    phy_conf << {
+      :iface    => iface,
+      :channel  => channel,
+      :bssid    => get_bssid(iface),
+      :hw_mode  => CHANNELS_5G.include?(channel) ? 'a' : 'g',
+      :ht_capab => get_ht_capab(iface, channel),
+    }
   end
 end
 
 def get_phy_conf
-  phy_conf = {}
+  phy_conf = []
 
   fill_phy_conf(phy_conf, BAND_5G)
   fill_phy_conf(phy_conf, BAND_2G)
@@ -252,6 +297,24 @@ def get_bss_conf
 
   # At most 4 BSSes are supported.
   nets.slice!(4..-1)
+
+  nets.length.times.zip(nets).map do |i, net|
+    {
+      :index  => i,
+      :bridge => hexdigest15(net['ssid']),
+      :psk    => net['psk'],
+      :type   => net['type'],
+      :ssid   => net['ssid'],
+    }
+  end
+end
+
+def write_hostapd_conf(phy_conf, bss_conf, rundir)
+  phy_conf.each do |phy|
+    conf = ERB.new(HOSTAPD_CONF_TEMPLATE, 3, '<>').result(binding)
+    conf_filepath = File.join(rundir, "hostapd_#{phy[:iface]}.conf")
+    File.write(conf_filepath, conf)
+  end
 end
 
 def run(kwargs = {})
@@ -267,6 +330,7 @@ def run(kwargs = {})
 
   phy_conf = get_phy_conf
   bss_conf = get_bss_conf
+  write_hostapd_conf(phy_conf, bss_conf, rundir)
 end
 
 def main
