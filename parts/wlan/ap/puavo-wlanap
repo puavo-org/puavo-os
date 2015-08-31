@@ -71,8 +71,8 @@ def get_iface_driver(iface)
 end
 
 def has_supported_driver(iface)
-  driver = get_iface_driver iface
-  ['ath9k', 'rt2800pci', 'rt2800usb'].include? driver
+  driver = get_iface_driver(iface)
+  ['ath9k', 'rt2800pci', 'rt2800usb'].include?(driver)
 end
 
 # Return boolean indicating whether the interface is a WLAN interface.
@@ -93,8 +93,8 @@ def get_band(iface)
   raise 'failed to query supported bands' unless $?.success?
 
   band = 0
-  band |= BAND_5G if hw_mode.include? 'a'
-  band |= BAND_2G if hw_mode.include? 'g'
+  band |= BAND_5G if hw_mode.include?('a')
+  band |= BAND_2G if hw_mode.include?('g')
 
   band
 end
@@ -103,8 +103,8 @@ end
 def iter_suitable_ifaces(band)
   Dir.glob('/sys/class/net/*') do |path|
     iface = File.basename(path)
-    next unless is_wlan_iface iface
-    next unless has_supported_driver iface
+    next unless is_wlan_iface(iface)
+    next unless has_supported_driver(iface)
     next unless band == get_band(iface)
     yield iface
   end
@@ -136,7 +136,7 @@ def scan_channels(iface, channels)
 
   # Update results with scan results.
   scan iface do |ch, siglvl|
-    next unless results.has_key? ch
+    next unless results.has_key?(ch)
     results[ch] = siglvl if results[ch] < siglvl
   end
 
@@ -144,8 +144,8 @@ def scan_channels(iface, channels)
   Hash[results.sort_by { |ch, siglvl| siglvl }].keys
 end
 
-def get_nets_from_puavo()
-  client = PuavoRestClient.new()
+def get_nets_from_puavo
+  client = PuavoRestClient.new
   res = client.get("/v3/devices/#{PUAVO_ETC.hostname}/wlan_networks")
   res.parse.select { |e| e['wlan_ap'] }
 end
@@ -174,13 +174,13 @@ def get_bssid(iface)
   ## mask >= 00:00:00:00:00:03 to support at most 4 different
   ## BSSIDs. Mask 00:00:00:00:00:03 has been verified to work with
   ## devices in question.
-  if ['168c0030', '168c002b', '168c0037'].include? model_id then
+  if ['168c0030', '168c002b', '168c0037'].include?(model_id) then
     if mask.map { |v| v == 0 } .all? then
       mask = [0x00, 0x00, 0x00, 0x00, 0x00, 0x03]
     end
   end
 
-  addr.zip(mask).map { |(a, b)| "%02x" % (a &~ b) } .join ":"
+  addr.zip(mask).map { |(a, b)| "%02x" % (a &~ b) } .join(":")
 end
 
 def get_ht_capab(iface, channel)
@@ -212,22 +212,22 @@ def ifup(iface)
 end
 
 def fill_phy_conf(phy_conf, band)
-  iter_suitable_ifaces band do |iface|
-    raise "interface #{iface} is already configured" if phy_conf.has_key? iface
-    ifup iface
-    best_channels = scan_channels iface, CHANNELS[band]
+  iter_suitable_ifaces(band) do |iface|
+    raise "interface #{iface} is already configured" if phy_conf.has_key?(iface)
+    ifup(iface)
+    best_channels = scan_channels(iface, CHANNELS[band])
     free_channels = best_channels - phy_conf.values
     next if free_channels.empty?
     phy_conf[iface] = {:channel => free_channels[0]}
   end
 end
 
-def get_phy_conf()
+def get_phy_conf
   phy_conf = {}
 
-  fill_phy_conf phy_conf, BAND_5G
-  fill_phy_conf phy_conf, BAND_2G
-  fill_phy_conf phy_conf, BAND_5G | BAND_2G
+  fill_phy_conf(phy_conf, BAND_5G)
+  fill_phy_conf(phy_conf, BAND_2G)
+  fill_phy_conf(phy_conf, BAND_5G | BAND_2G)
 
   phy_conf
 end
@@ -238,15 +238,15 @@ def run(kwargs = {})
   vtun_port    = kwargs[:vtun_port]    || DEFAULT_VTUN_PORT
 
   Signal.trap('EXIT') do
-    FileUtils.rm_rf rundir
+    FileUtils.rm_rf(rundir)
   end
 
-  FileUtils.mkdir_p rundir
+  FileUtils.mkdir_p(rundir)
 
   phy_conf = get_phy_conf
 end
 
-def main()
+def main
   run_kwargs = {}
 
   GetoptLong.new(
@@ -276,16 +276,16 @@ EOF
       run_kwargs[:vtun_address] = arg
     when '--vtun-port'
       unless arg =~ /^[1-9][0-9]*$/ then
-        STDERR.puts "ERROR: invalid port number (#{arg})"
-        exit 1
+        STDERR.puts("ERROR: invalid port number (#{arg})")
+        exit(1)
       end
       run_kwargs[:vtun_port] = arg.to_i
     end
   end
 
   if ARGV.length != 0 then
-    STDERR.puts "ERROR: invalid number of arguments (#{ARGV.length}), expected 0"
-    exit 1
+    STDERR.puts("ERROR: invalid number of arguments (#{ARGV.length}), expected 0")
+    exit(1)
   end
 
   run(run_kwargs)
