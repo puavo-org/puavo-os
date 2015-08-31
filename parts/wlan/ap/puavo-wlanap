@@ -146,8 +146,14 @@ end
 
 def get_nets_from_puavo
   client = PuavoRestClient.new
-  res = client.get("/v3/devices/#{PUAVO_ETC.hostname}/wlan_networks")
-  res.parse.select { |e| e['wlan_ap'] }
+  response = client.get("/v3/devices/#{PUAVO_ETC.hostname}/wlan_networks")
+  response.parse.select { |net| net['wlan_ap'] } .each do |net|
+    # Magic SSID Mangling! The following Magic SSID is substituted
+    # with a SSID derived from the hostname. This lets us configure
+    # AP-specific networks easily via Puavo.
+    next unless net['ssid'] =~ /^le8Yuek9Some5ee$/
+    net['ssid'] = PUAVO_ETC.hostname.tr(' ', '')
+  end
 end
 
 def hexdigest15(str)
@@ -244,11 +250,6 @@ def get_bss_conf
 
   # At most 4 BSSes are supported.
   nets.slice!(4..-1)
-
-  nets.each do |e|
-    next unless e['ssid'] =~ /^le8Yuek9Some5ee$/
-    e['ssid'] = PUAVO_ETC.hostname.tr(' ', '')
-  end
 
 end
 
