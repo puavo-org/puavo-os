@@ -211,6 +211,27 @@ def ifup(iface)
   $?.success? or raise "failed to bring interface #{iface} up"
 end
 
+def fill_phy_conf(phy_conf, band)
+  iter_suitable_ifaces band do |iface|
+    raise "interface #{iface} is already configured" if phy_conf.has_key? iface
+    ifup iface
+    best_channels = scan_channels iface, CHANNELS[band]
+    free_channels = best_channels - phy_conf.values
+    next if free_channels.empty?
+    phy_conf[iface] = {:channel => free_channels[0]}
+  end
+end
+
+def get_phy_conf()
+  phy_conf = {}
+
+  fill_phy_conf phy_conf, BAND_5G
+  fill_phy_conf phy_conf, BAND_2G
+  fill_phy_conf phy_conf, BAND_5G | BAND_2G
+
+  phy_conf
+end
+
 def run(kwargs = {})
   rundir       = kwargs[:rundir]       || DEFAULT_RUNDIR
   vtun_address = kwargs[:vtun_address] || DEFAULT_VTUN_ADDRESS
@@ -221,6 +242,8 @@ def run(kwargs = {})
   end
 
   FileUtils.mkdir_p rundir
+
+  phy_conf = get_phy_conf
 end
 
 def main()
