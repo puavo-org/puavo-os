@@ -47,10 +47,17 @@ DEFAULT_VTUN_ADDRESS = 'wlangw'
 # override.
 DEFAULT_VTUN_PORT    = 45045
 
+BAND_2G = 1
+BAND_5G = 2
+
 CHANNELS_2G = [ 1,  6, 11]
 CHANNELS_5G = [36, 40, 44, 48]
 
-CHANNELS = CHANNELS_2G + CHANNELS_5G
+CHANNELS = {
+  BAND_2G           => CHANNELS_2G,
+  BAND_5G           => CHANNELS_5G,
+  BAND_2G | BAND_5G => CHANNELS_2G + CHANNELS_5G,
+}
 
 # Return the name of the interface driver.
 def get_iface_driver(iface)
@@ -84,8 +91,13 @@ def get_hw_mode(iface)
     io.gets =~ /^.* IEEE 802.11([a-z]+).*$/
     break $1
   end
-  $?.success? or raise 'failed to query hardware mode'
-  hw_mode
+  raise 'failed to query hardware mode' unless $?.success?
+
+  return 'ag' if hw_mode.include? 'a' && hw_mode.include? 'g'
+  return  'a' if hw_mode.include? 'a'
+  return  'g' if hw_mode.include? 'g'
+
+  nil
 end
 
 # Return a list of channels supported by the interface.
@@ -100,12 +112,12 @@ def get_supported_channels(iface)
 end
 
 # Yield names of interfaces matching the given hardware mode.
-def iter_suitable_ifaces(hw_mode='')
+def iter_suitable_ifaces(hw_mode)
   Dir.glob('/sys/class/net/*') do |path|
     iface = File.basename(path)
     next unless is_wlan_iface iface
     next unless has_supported_driver iface
-    next unless hw_mode.chars.map { |c| get_hw_mode(iface).include? c }.all?
+    next unless hw_mode == get_hw_mode iface
     yield iface
   end
 end
