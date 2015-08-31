@@ -85,39 +85,27 @@ def is_wlan_iface(iface)
   false
 end
 
-# Return the hardware mode string of the interface.
-def get_hw_mode(iface)
+def get_band(iface)
   hw_mode = IO.popen(['iwconfig', iface]) do |io|
     io.gets =~ /^.* IEEE 802.11([a-z]+).*$/
     break $1
   end
-  raise 'failed to query hardware mode' unless $?.success?
+  raise 'failed to query supported bands' unless $?.success?
 
-  return 'ag' if hw_mode.include? 'a' && hw_mode.include? 'g'
-  return  'a' if hw_mode.include? 'a'
-  return  'g' if hw_mode.include? 'g'
+  band = 0
+  band |= BAND_5G if hw_mode.include? 'a'
+  band |= BAND_2G if hw_mode.include? 'g'
 
-  nil
-end
-
-# Return a list of channels supported by the interface.
-def get_supported_channels(iface)
-  channels = []
-  hw_mode  = get_hw_mode iface
-
-  channels <<  1 <<  6 << 11       if hw_mode.include? 'g'
-  channels << 36 << 40 << 44 << 48 if hw_mode.include? 'a'
-
-  channels
+  band
 end
 
 # Yield names of interfaces matching the given hardware mode.
-def iter_suitable_ifaces(hw_mode)
+def iter_suitable_ifaces(band)
   Dir.glob('/sys/class/net/*') do |path|
     iface = File.basename(path)
     next unless is_wlan_iface iface
     next unless has_supported_driver iface
-    next unless hw_mode == get_hw_mode iface
+    next unless band == get_band(iface)
     yield iface
   end
 end
@@ -141,9 +129,7 @@ def scan(iface)
   $?.success? or raise "failed to scan with interface #{iface}"
 end
 
-def get_preferred_channels(iface)
-  channels = get_supported_channels iface
-
+def scan_channels(iface, channels)
   # Prime results with worst possible signal levels.
   results = {}
   channels.each { |ch| results[ch] = -999 }
