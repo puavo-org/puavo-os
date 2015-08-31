@@ -3,17 +3,15 @@
 
 # = Puavo's Tunneled WLAN Accesspoint
 #
-# Author::    Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
-# Copyright:: Copyright (C) 2015 Opinsys Oy
-# License::   GPLv2+
+# Author    :: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+# Copyright :: Copyright (C) 2015 Opinsys Oy
+# License   :: GPLv2+
 #
 # == Usage
 #
 # Get help:
 #   puavo-wlanap --help
-#
-# == License
-#
+
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -88,9 +86,11 @@ end
 # Return a list of channels supported by the interface.
 def get_supported_channels(iface)
   channels = []
-  hw_mode = get_hw_mode iface
-  channels << 1 << 6 << 11 if hw_mode.include? 'g'
+  hw_mode  = get_hw_mode iface
+
+  channels <<  1 <<  6 << 11       if hw_mode.include? 'g'
   channels << 36 << 40 << 44 << 48 if hw_mode.include? 'a'
+
   channels
 end
 
@@ -158,7 +158,7 @@ def get_bssid(iface)
   phydir = "#{sysdir}/phy80211"
   devdir = "#{sysdir}/device"
 
-  mac = File.read("#{phydir}/macaddress").split(':').map { |v| v.to_i(16) }
+  addr = File.read("#{phydir}/macaddress"  ).split(':').map { |v| v.to_i(16) }
   mask = File.read("#{phydir}/address_mask").split(':').map { |v| v.to_i(16) }
 
   uevent = File.read("#{devdir}/uevent")
@@ -177,7 +177,7 @@ def get_bssid(iface)
     end
   end
 
-  mac.zip(mask).map { |(a, b)| "%02x" % (a &~ b) } .join ":"
+  addr.zip(mask).map { |(a, b)| "%02x" % (a &~ b) } .join ":"
 end
 
 def get_ht_capab(iface, channel)
