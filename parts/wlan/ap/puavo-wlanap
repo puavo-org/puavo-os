@@ -285,15 +285,14 @@ def get_ht_capab(iface, channel)
   end
 end
 
-# Bring interface up and return true on sucess and false otherwise.
-def ifup(iface)
-  system('ifconfig', iface, 'up')
-  $?.success? or raise "failed to bring interface #{iface} up"
+def run_or_fail(cmd, *args)
+  system(cmd, *args)
+  $?.success? or raise "command '%s' failed" % ([cmd] + args).join(' ')
 end
 
 def fill_phy_list(phy_list, band)
   iter_suitable_ifaces(band) do |iface|
-    ifup(iface)
+    run_or_fail('ifconfig', iface, 'up')
     best_channels = scan_channels(iface, CHANNELS[band])
     free_channels = best_channels - phy_list.map { |phy| phy[:channel] }
     next if free_channels.empty?
