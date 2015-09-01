@@ -248,8 +248,9 @@ IMAGE_SIGNATURE_FILES_AP \\
   = $(addprefix ${SIGNATURES_DIR}/,${IMAGE_SIGNATURE_FILES})
 
 IMAGE_SERIES = #{ image_series_list.join(' ') }
-
 IMAGE_SERIES_RDIFF_TARGETS = #{ image_series_rdiff_targets.join(' ') }
+IMAGE_SERIES_METADATA_FILES_AP \\
+  = $(addsuffix .json,$(addprefix ${MIRROR_DIR}/,${IMAGE_SERIES}))
 
 RDIFF_FILES_AP = #{ all_rdiff_files.join(' ') }
 RDIFF_FILES = $(notdir ${RDIFF_FILES_AP})
@@ -257,6 +258,10 @@ RDIFF_FILES = $(notdir ${RDIFF_FILES_AP})
 CKSUM_FILES = $(addsuffix .cksum,${IMAGE_FILES}) \\
               $(addsuffix .cksum,${RDIFF_FILES})
 CKSUM_FILES_AP = $(addprefix ${CKSUMS_DIR}/,${CKSUM_FILES})
+
+SHA256SUM_FILES = $(addsuffix .sha256sum,${IMAGE_FILES}) \\
+                  $(addsuffix .sha256sum,${RDIFF_FILES})
+SHA256SUM_FILES_AP = $(addprefix ${CKSUMS_DIR}/,${SHA256SUM_FILES})
 
 MIRROR_DIR_IMAGES = $(addprefix ${MIRROR_DIR}/,${IMAGE_FILES})
 MIRROR_DIR_RDIFFS = $(addprefix ${MIRROR_DIR}/rdiffs/,${RDIFF_FILES})
@@ -297,6 +302,9 @@ cleanup-mirror:
 	  echo There is no mirror directory ${MIRROR_DIR}; \
 	fi
 
+.PHONY: update-metadata-files
+update-metadata-files: ${IMAGE_SERIES_METADATA_FILES_AP}
+
 .PHONY: ${CHROOT_TARGETS}
 ${CHROOT_TARGETS}:
 	sudo /usr/lib/puavo-image-tools/puavo-imgbuild-tool --$@
@@ -305,6 +313,10 @@ ${CHROOT_TARGETS}:
 ${IMAGE_SERIES}: images.json
 	sudo puavo-build-image --config-target $@ --images-config $<
 
+${IMAGE_SERIES_METADATA_FILES_AP}: ${SHA256SUM_FILES_AP}
+	@echo creating $@ from $^ is not implemented yet
+	@exit 1
+
 ${ALL_DIRS}:
 	mkdir -p $@
 
@@ -312,8 +324,16 @@ ${CKSUMS_DIR}/%.img.cksum: %.img | ${CKSUMS_DIR}
 	cksum $< > $@.tmp
 	mv $@.tmp $@
 
+${CKSUMS_DIR}/%.img.sha256sum: %.img | ${CKSUMS_DIR}
+	sha256sum $< > $@.tmp
+	mv $@.tmp $@
+
 ${CKSUMS_DIR}/%.rdiff.cksum: %.rdiff | ${CKSUMS_DIR}
 	cksum $< > $@.tmp
+	mv $@.tmp $@
+
+${CKSUMS_DIR}/%.rdiff.sha256sum: %.rdiff | ${CKSUMS_DIR}
+	sha256sum $< > $@.tmp
 	mv $@.tmp $@
 
 ${IMAGES_DIR}/CKSUMS: ${CKSUM_FILES_AP} | ${MIRROR_DIR}
