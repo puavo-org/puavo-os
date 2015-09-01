@@ -424,6 +424,11 @@ def run(kwargs = {})
 
   critical_service_pids.concat(start_services(phy_list, bss_list, rundir,
                                               vtun_address, vtun_port))
+
+  loop do
+    sleep 5
+    puts 'tick'
+  end
 end
 
 def main
