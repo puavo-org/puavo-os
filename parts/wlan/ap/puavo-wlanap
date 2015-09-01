@@ -34,11 +34,10 @@ require 'fileutils'
 require 'getoptlong'
 require 'pathname'
 
-# Third-party modules.
-require 'puavo/etc'
-require 'puavo/rest-client'
-
 THIS_SCRIPT = Pathname.new($0).realpath
+
+# Default value for Puavo usage switch.
+DEFAULT_USE_PUAVO    = true
 
 # Default runtime directory, use +--rundir+ to override.
 DEFAULT_RUNDIR       = '/run/puavo-wlanap'
@@ -210,6 +209,9 @@ def scan_channels(iface, channels)
 end
 
 def get_nets_from_puavo
+  require 'puavo/etc'
+  require 'puavo/rest-client'
+
   nets_wait = 1
   while true
     client = PuavoRestClient.new
@@ -318,8 +320,8 @@ def get_phy_list
   phy_list
 end
 
-def get_bss_list
-  nets = get_nets_from_puavo
+def get_bss_list(use_puavo)
+  nets = use_puavo ? get_nets_from_puavo : []
 
   # At most 4 BSSes are supported.
   nets.slice!(4..-1)
@@ -385,6 +387,7 @@ def start_services(phy_list, bss_list, rundir, vtun_address, vtun_port)
 end
 
 def run(kwargs = {})
+  use_puavo    = kwargs.fetch(:use_puavo,    DEFAULT_USE_PUAVO)
   rundir       = kwargs.fetch(:rundir,       DEFAULT_RUNDIR)
   vtun_address = kwargs.fetch(:vtun_address, DEFAULT_VTUN_ADDRESS)
   vtun_port    = kwargs.fetch(:vtun_port,    DEFAULT_VTUN_PORT)
@@ -408,7 +411,7 @@ def run(kwargs = {})
   FileUtils.mkdir_p(rundir)
 
   phy_list.concat(get_phy_list)
-  bss_list.concat(get_bss_list)
+  bss_list.concat(get_bss_list(use_puavo))
 
   write_hostapd_conf(phy_list, bss_list, rundir)
   write_vtund_conf(bss_list, rundir)
@@ -436,6 +439,7 @@ def main
 
   GetoptLong.new(
     ['--help', '-h', GetoptLong::NO_ARGUMENT],
+    ['--no-puavo', GetoptLong::NO_ARGUMENT],
     ['--rundir', GetoptLong::REQUIRED_ARGUMENT],
     ['--vtun-address', GetoptLong::REQUIRED_ARGUMENT],
     ['--vtun-port', GetoptLong::REQUIRED_ARGUMENT],
@@ -453,12 +457,15 @@ Tunneled WLAN accesspoint.
 
 Options:
  -h, --help                    display this help and exit
+     --no-puavo                do not communicate with Puavo
      --rundir DIR              runtime directory, default: #{DEFAULT_RUNDIR}
      --vtun-address ADDRESS    vtun server address, default: #{DEFAULT_VTUN_ADDRESS}
      --vtun-port PORT          vtun server port, default: #{DEFAULT_VTUN_PORT}
 
 EOF
       exit(0)
+    when '--no-puavo'
+      run_kwargs[:use_puavo] = false
     when '--rundir'
       run_kwargs[:rundir] = arg
     when '--vtun-address'
