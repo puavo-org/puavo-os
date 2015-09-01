@@ -390,16 +390,25 @@ def run(kwargs = {})
   vtun_port    = kwargs[:vtun_port]    || DEFAULT_VTUN_PORT
 
   critical_service_pids = []
+  phy_list              = []
+  bss_list              = []
 
   Signal.trap('EXIT') do
     Process.kill('-TERM', Process.getpgrp)
+
+    bss_list.each do |bss|
+      # Ignore errors, we are already exiting.
+      system('ifconfig', bss[:bridge], 'down')
+      system('brctl', 'delbr', bss[:bridge])
+    end
+
     FileUtils.rm_rf(rundir)
   end
 
   FileUtils.mkdir_p(rundir)
 
-  phy_list = get_phy_list
-  bss_list = get_bss_list
+  phy_list.concat(get_phy_list)
+  bss_list.concat(get_bss_list)
 
   write_hostapd_conf(phy_list, bss_list, rundir)
   write_vtund_conf(bss_list, rundir)
