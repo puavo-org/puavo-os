@@ -328,7 +328,7 @@ def get_bss_list
     {
       :index  => i,
       :bridge => hexdigest15(net['ssid']),
-      :psk    => net['psk'],
+      :psk    => net['password'],
       :type   => net['type'],
       :ssid   => net['ssid'],
     }
