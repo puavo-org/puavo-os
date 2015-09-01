@@ -351,6 +351,39 @@ def write_vtund_conf(bss_list, rundir)
   end
 end
 
+def start_services(phy_list, bss_list, rundir, vtun_address, vtun_port)
+  pids = []
+
+  bss_list.each do |bss|
+    run_or_fail('brctl', 'addbr', bss[:bridge])
+    run_or_fail('brctl', 'setfd', bss[:bridge], '0')
+    run_or_fail('ifconfig', bss[:bridge], 'up')
+
+    pids << spawn('dhclient', '-d', bss[:bridge])
+    pids << spawn('vtund', '-n', '-P', vtun_port.to_s,
+                  '-f', File.join(rundir, "vtund_#{bss[:bridge]}.conf"),
+                  'puavo-wlanap', vtun_address)
+
+  end
+
+  # Magical sleep to "ensure" that bridges and tunnels are all set
+  # before proceeding.
+  sleep 8
+
+  phy_list.each do |phy|
+
+    # Try to disable power saving, because it seems to cause flaky
+    # connection quality in some scenarios.
+    system('iw', 'dev', phy[:iface], 'set', 'power_save', 'off')
+
+    pids << spawn('hostapd',
+                  '-P', File.join(rundir, "hostapd_#{phy[:iface]}.pid"),
+                  File.join(rundir, "hostapd_#{phy[:iface]}.conf"))
+  end
+
+  pids
+end
+
 def run(kwargs = {})
   rundir       = kwargs[:rundir]       || DEFAULT_RUNDIR
   vtun_address = kwargs[:vtun_address] || DEFAULT_VTUN_ADDRESS
