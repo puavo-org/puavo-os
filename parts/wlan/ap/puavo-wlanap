@@ -425,6 +425,10 @@ def main
     ['--rundir', GetoptLong::REQUIRED_ARGUMENT],
     ['--vtun-address', GetoptLong::REQUIRED_ARGUMENT],
     ['--vtun-port', GetoptLong::REQUIRED_ARGUMENT],
+
+    # For internal use only.
+    ['--vtun-up', GetoptLong::REQUIRED_ARGUMENT],
+    ['--vtun-down', GetoptLong::REQUIRED_ARGUMENT],
   ).each do |opt, arg|
     case opt
     when '--help'
@@ -451,6 +455,12 @@ EOF
         exit(1)
       end
       run_kwargs[:vtun_port] = arg.to_i
+    when '--vtun-up'
+      STDERR.puts 'up'
+      exit(0)
+    when '--vtun-down'
+      STDERR.puts 'down'
+      exit(0)
     end
   end
 
