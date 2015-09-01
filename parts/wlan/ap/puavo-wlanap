@@ -385,9 +385,9 @@ def start_services(phy_list, bss_list, rundir, vtun_address, vtun_port)
 end
 
 def run(kwargs = {})
-  rundir       = kwargs[:rundir]       || DEFAULT_RUNDIR
-  vtun_address = kwargs[:vtun_address] || DEFAULT_VTUN_ADDRESS
-  vtun_port    = kwargs[:vtun_port]    || DEFAULT_VTUN_PORT
+  rundir       = kwargs.fetch(:rundir,       DEFAULT_RUNDIR)
+  vtun_address = kwargs.fetch(:vtun_address, DEFAULT_VTUN_ADDRESS)
+  vtun_port    = kwargs.fetch(:vtun_port,    DEFAULT_VTUN_PORT)
 
   critical_service_pids = []
   phy_list              = []
