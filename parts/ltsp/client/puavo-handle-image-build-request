@@ -3,19 +3,16 @@
 require 'fileutils'
 require 'json'
 require 'net/https'
+require 'puavo/rest-client'
 require 'socket'
 require 'uri'
 
 def get_image_build_configuration()
-  my_hostname = Socket.gethostname
-
   print 'Getting the builder configuration...'
 
-  api_server = %x(puavo-resolve-api-server).chomp
-  raise 'Could not resolve api server' unless $?.exitstatus == 0
-
+  client = PuavoRestClient.new(:auth => :bootserver)
   image_build_configuration \
-    = get_url("#{ api_server }/v3/devices/#{ my_hostname }/imagebuildconfig")
+    = client.get("v3/devices/#{ Socket.gethostname }/imagebuildconfig")
 
   # write configuration to filesystem mostly for transparency
   File.open('/etc/puavo/imagebuildconfig.json', 'w') do |f|
