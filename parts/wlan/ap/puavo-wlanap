@@ -32,10 +32,13 @@ require 'digest'
 require 'erb'
 require 'fileutils'
 require 'getoptlong'
+require 'pathname'
 
 # Third-party modules.
 require 'puavo/etc'
 require 'puavo/rest-client'
+
+THIS_SCRIPT = Pathname.new($0).realpath
 
 # Default runtime directory, use +--rundir+ to override.
 DEFAULT_RUNDIR       = '/run/puavo-wlanap'
@@ -95,6 +98,30 @@ wpa_group_rekey=0
 wpa_gmk_rekey=0
 <% end %>
 <% end %>
+EOF
+
+VTUND_CONF_TEMPLATE = <<'EOF'
+options {
+    syslog daemon;
+}
+
+puavo-wlanap {
+    passwd    wlan;
+    type      ether;
+    proto     udp;
+    speed     0;     # Full speed ahead! Aye aye, captain!
+    encrypt   no;
+    compress  no;
+    multi     yes;
+
+    up {
+        program "<%= THIS_SCRIPT %> --vtun-up '%%:<%= bss[:bridge]' %>";
+    };
+
+    down {
+        program "<%= THIS_SCRIPT %> --vtun-down '%%:<%= bss[:bridge]' %>";
+    };
+}
 EOF
 
 # Return the name of the interface driver.
@@ -317,6 +344,14 @@ def write_hostapd_conf(phy_list, bss_list, rundir)
   end
 end
 
+def write_vtund_conf(bss_list, rundir)
+  bss_list.each do |bss|
+    conf = ERB.new(VTUND_CONF_TEMPLATE, 3, '<>').result(binding)
+    conf_filepath = File.join(rundir, "vtund_#{bss[:bridge]}.conf")
+    File.write(conf_filepath, conf)
+  end
+end
+
 def run(kwargs = {})
   rundir       = kwargs[:rundir]       || DEFAULT_RUNDIR
   vtun_address = kwargs[:vtun_address] || DEFAULT_VTUN_ADDRESS
@@ -330,7 +365,9 @@ def run(kwargs = {})
 
   phy_list = get_phy_list
   bss_list = get_bss_list
+
   write_hostapd_conf(phy_list, bss_list, rundir)
+  write_vtund_conf(bss_list, rundir)
 end
 
 def main
