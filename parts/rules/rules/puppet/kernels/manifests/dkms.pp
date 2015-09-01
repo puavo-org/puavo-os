@@ -1,13 +1,18 @@
 class kernels::dkms {
+  include packages
+
   # Install dkms module packages before any kernels, that way we should get
   # them for all packages.
 
-  $dkms_module_packages = $lsbdistcodename ? {
-                            'precise' => [],
-                            default   => [ 'bcmwl-kernel-source', 'nvidia-304', ],
-                          }
+  $dkms_module_packages =
+    $lsbdistcodename ? {
+      'precise' => [],
+      default   => [ 'bcmwl-kernel-source', 'nvidia-304', ],
+    }
 
   Package <| tag == kernel |> {
-    require +> Package[ $dkms_module_packages ],
+    require +> Package[$dkms_module_packages],
   }
+
+  realize(Package[$dkms_module_packages])
 }
