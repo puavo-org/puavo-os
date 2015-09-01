@@ -357,6 +357,7 @@ def run(kwargs = {})
   vtun_port    = kwargs[:vtun_port]    || DEFAULT_VTUN_PORT
 
   Signal.trap('EXIT') do
+    Process.kill('-TERM', Process.getpgrp)
     FileUtils.rm_rf(rundir)
   end
 
