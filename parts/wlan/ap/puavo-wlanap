@@ -233,7 +233,7 @@ end
 def hexdigest15(str)
   md5sum = Digest::MD5.new
   md5sum << str
-  md5sum.hexdigest[0..15]
+  md5sum.hexdigest[0..14]
 end
 
 def get_bssid(iface)
