@@ -389,6 +389,8 @@ def run(kwargs = {})
   vtun_address = kwargs[:vtun_address] || DEFAULT_VTUN_ADDRESS
   vtun_port    = kwargs[:vtun_port]    || DEFAULT_VTUN_PORT
 
+  critical_service_pids = []
+
   Signal.trap('EXIT') do
     Process.kill('-TERM', Process.getpgrp)
     FileUtils.rm_rf(rundir)
@@ -401,6 +403,18 @@ def run(kwargs = {})
 
   write_hostapd_conf(phy_list, bss_list, rundir)
   write_vtund_conf(bss_list, rundir)
+
+  Signal.trap('SIGCHLD') do
+    begin
+      child_id = Process.wait(0, Process::WNOHANG)
+    rescue SystemCallError => e
+      raise e unless e.errno == Errno::ECHILD
+    end
+    exit(1) if critical_service_pids.include?(child_id)
+  end
+
+  critical_service_pids.concat(start_services(phy_list, bss_list, rundir,
+                                              vtun_address, vtun_port))
 end
 
 def main
