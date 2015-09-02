@@ -228,7 +228,8 @@ def get_rdiff_targets_info(image_confs)
 #{ rdiff_full_path }: #{ image_signature_path } #{ target_image_path } | #{ rdiff_target_dir }
 	rdiff delta "#{ image_signature_path }" \\
 	            "#{ target_image_path }" \\
-	            $@
+	            $@.tmp
+	mv $@.tmp $@
 EOF
     end
 
@@ -371,10 +372,13 @@ ${CKSUMS_DIR}/%.rdiff.sha256sum: %.rdiff | ${CKSUMS_DIR}
 	mv $@.tmp $@
 
 ${IMAGES_DIR}/CKSUMS: ${CKSUM_FILES_AP} | ${MIRROR_DIR}
-	awk '{ "basename " $$3 | getline $$3; print }' ${CKSUM_FILES_AP} > $@
+	awk '{ "basename " $$3 | getline $$3; print }' \\
+	  ${CKSUM_FILES_AP} > $@.tmp
+	mv $@.tmp $@
 
 ${MIRROR_DIR}/CKSUMS: ${IMAGES_DIR}/CKSUMS
-	cp $< $@
+	cp $< $@.tmp
+	mv $@.tmp $@
 
 # link ${MIRROR_DIR_IMAGES}
 ${MIRROR_DIR}/%.img: %.img | ${MIRROR_DIR}
@@ -385,7 +389,8 @@ ${MIRROR_DIR}/rdiffs/%.rdiff: %.rdiff | ${MIRROR_DIR}/rdiffs
 	@ln -f $< $@
 
 ${SIGNATURES_DIR}/%.rdiff_signature: %.img | ${SIGNATURES_DIR}
-	rdiff signature $< $@
+	rdiff signature $< $@.tmp
+	mv $@.tmp $@
 
 #
 # rdiff targets
