@@ -38,12 +38,11 @@ begin
   require 'puavo/etc'
   require 'puavo/rest-client'
 rescue LoadError
-  # Puavo modules are not available, disable Puavo-integration by
-  # default.
+  # Puavo-integration requires aforementioned modules, but puavo-wlanap
+  # can still operate without Puavo. This has the same effect as
+  # --no-puavo command line option.
   USE_PUAVO    = false
 else
-  # If Puavo modules are available, Puavo-integration is enabled by
-  # default, but it can be still disabled with --no-puavo option.
   USE_PUAVO    = true
 end
 
