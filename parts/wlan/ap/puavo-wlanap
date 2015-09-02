@@ -353,19 +353,19 @@ def write_vtund_conf(bss_list, rundir)
   end
 end
 
-def start_services(phy_list, bss_list, rundir, vtun_address, vtun_port)
-  pids = []
-
+def start_services(critical_service_pids, phy_list, bss_list, rundir,
+                   vtun_address, vtun_port)
   bss_list.each do |bss|
     run_or_fail('brctl', 'addbr', bss[:bridge])
     run_or_fail('brctl', 'setfd', bss[:bridge], '0')
     run_or_fail('ifconfig', bss[:bridge], 'up')
 
-    pids << spawn('dhclient', '-d', bss[:bridge])
-    pids << spawn('vtund', '-n', '-P', vtun_port.to_s,
-                  '-f', File.join(rundir, "vtund_#{bss[:bridge]}.conf"),
-                  'puavo-wlanap', vtun_address)
+    critical_service_pids << spawn('dhclient', '-d', bss[:bridge])
 
+    vtund_conffile = File.join(rundir, "vtund_#{bss[:bridge]}.conf")
+    critical_service_pids << spawn('vtund', '-n', '-P', vtun_port.to_s,
+                                   '-f', vtund_conffile,
+                                   'puavo-wlanap', vtun_address)
   end
 
   # Magical sleep to "ensure" that bridges and tunnels are all set
@@ -378,12 +378,11 @@ def start_services(phy_list, bss_list, rundir, vtun_address, vtun_port)
     # connection quality in some scenarios.
     system('iw', 'dev', phy[:iface], 'set', 'power_save', 'off')
 
-    pids << spawn('hostapd',
-                  '-P', File.join(rundir, "hostapd_#{phy[:iface]}.pid"),
-                  File.join(rundir, "hostapd_#{phy[:iface]}.conf"))
+    hostapd_pidfile = File.join(rundir, "hostapd_#{phy[:iface]}.pid")
+    hostapd_conffile = File.join(rundir, "hostapd_#{phy[:iface]}.conf")
+    critical_service_pids << spawn('hostapd', '-P', hostapd_pidfile,
+                                   hostapd_conffile)
   end
-
-  pids
 end
 
 def run(kwargs = {})
@@ -425,8 +424,9 @@ def run(kwargs = {})
     exit(1) if critical_service_pids.include?(child_id)
   end
 
-  critical_service_pids.concat(start_services(phy_list, bss_list, rundir,
-                                              vtun_address, vtun_port))
+  start_services(critical_service_pids,
+                 phy_list, bss_list, rundir,
+                 vtun_address, vtun_port)
 
   loop do
     sleep 5
