@@ -60,6 +60,8 @@ DEFAULT_VTUN_ADDRESS = 'wlangw'
 # override.
 DEFAULT_VTUN_PORT    = 45045
 
+DEFAULT_BACKHAUL = nil
+
 BAND_2G = 1
 BAND_5G = 2
 
@@ -363,18 +365,24 @@ def write_vtund_conf(bss_list, rundir)
 end
 
 def start_services(critical_service_pids, phy_list, bss_list, rundir,
-                   vtun_address, vtun_port)
+                   vtun_address, vtun_port, backhaul)
   bss_list.each do |bss|
     run_or_fail('brctl', 'addbr', bss[:bridge])
     run_or_fail('brctl', 'setfd', bss[:bridge], '0')
     run_or_fail('ifconfig', bss[:bridge], 'up')
 
+    if !backhaul.nil?
+      run_or_fail('brctl', 'addif', bss[:bridge], backhaul)
+    end
+
     critical_service_pids << spawn('dhclient', '-d', bss[:bridge])
 
-    vtund_conffile = File.join(rundir, "vtund_#{bss[:bridge]}.conf")
-    critical_service_pids << spawn('vtund', '-n', '-P', vtun_port.to_s,
-                                   '-f', vtund_conffile,
-                                   'puavo-wlanap', vtun_address)
+    if backhaul.nil?
+      vtund_conffile = File.join(rundir, "vtund_#{bss[:bridge]}.conf")
+      critical_service_pids << spawn('vtund', '-n', '-P', vtun_port.to_s,
+                                     '-f', vtund_conffile,
+                                     'puavo-wlanap', vtun_address)
+    end
   end
 
   # Magical sleep to "ensure" that bridges and tunnels are all set
@@ -395,6 +403,7 @@ def start_services(critical_service_pids, phy_list, bss_list, rundir,
 end
 
 def run(kwargs = {})
+  backhaul     = kwargs.fetch(:backhaul,     DEFAULT_BACKHAUL)
   nets         = kwargs.fetch(:nets,         [])
   use_puavo    = kwargs.fetch(:use_puavo,    DEFAULT_USE_PUAVO)
   rundir       = kwargs.fetch(:rundir,       DEFAULT_RUNDIR)
@@ -436,7 +445,7 @@ def run(kwargs = {})
 
   start_services(critical_service_pids,
                  phy_list, bss_list, rundir,
-                 vtun_address, vtun_port)
+                 vtun_address, vtun_port, backhaul)
 
   loop do
     sleep 5
@@ -448,6 +457,7 @@ def main
   run_kwargs = {}
 
   GetoptLong.new(
+    ['--backhaul', GetoptLong::REQUIRED_ARGUMENT],
     ['--help', '-h', GetoptLong::NO_ARGUMENT],
     ['--network-open', GetoptLong::REQUIRED_ARGUMENT],
     ['--no-puavo', GetoptLong::NO_ARGUMENT],
@@ -460,6 +470,8 @@ def main
     ['--vtun-down', GetoptLong::REQUIRED_ARGUMENT],
   ).each do |opt, arg|
     case opt
+    when '--backhaul'
+      run_kwargs[:backhaul] = arg
     when '--help'
       puts <<EOF
 Usage: puavo-wlanap [OPTION]...
@@ -467,6 +479,7 @@ Usage: puavo-wlanap [OPTION]...
 Tunneled WLAN accesspoint.
 
 Options:
+     --backhaul INTERFACE      backhaul interface
  -h, --help                    display this help and exit
      --network-open SSID       configure an open network
      --no-puavo                do not communicate with Puavo
