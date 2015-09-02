@@ -320,8 +320,10 @@ def get_phy_list
   phy_list
 end
 
-def get_bss_list(use_puavo)
-  nets = use_puavo ? get_nets_from_puavo : []
+def get_bss_list(use_puavo, nets)
+  if use_puavo
+    nets.concat(get_nets_from_puavo)
+  end
 
   # At most 4 BSSes are supported.
   nets.slice!(4..-1)
@@ -386,6 +388,7 @@ def start_services(critical_service_pids, phy_list, bss_list, rundir,
 end
 
 def run(kwargs = {})
+  nets         = kwargs.fetch(:nets,         [])
   use_puavo    = kwargs.fetch(:use_puavo,    DEFAULT_USE_PUAVO)
   rundir       = kwargs.fetch(:rundir,       DEFAULT_RUNDIR)
   vtun_address = kwargs.fetch(:vtun_address, DEFAULT_VTUN_ADDRESS)
@@ -410,7 +413,7 @@ def run(kwargs = {})
   FileUtils.mkdir_p(rundir)
 
   phy_list.concat(get_phy_list)
-  bss_list.concat(get_bss_list(use_puavo))
+  bss_list.concat(get_bss_list(use_puavo, nets))
 
   write_hostapd_conf(phy_list, bss_list, rundir)
   write_vtund_conf(bss_list, rundir)
@@ -439,6 +442,7 @@ def main
 
   GetoptLong.new(
     ['--help', '-h', GetoptLong::NO_ARGUMENT],
+    ['--network-open', GetoptLong::REQUIRED_ARGUMENT],
     ['--no-puavo', GetoptLong::NO_ARGUMENT],
     ['--rundir', GetoptLong::REQUIRED_ARGUMENT],
     ['--vtun-address', GetoptLong::REQUIRED_ARGUMENT],
@@ -457,6 +461,7 @@ Tunneled WLAN accesspoint.
 
 Options:
  -h, --help                    display this help and exit
+     --network-open SSID       configure an open network
      --no-puavo                do not communicate with Puavo
      --rundir DIR              runtime directory, default: #{DEFAULT_RUNDIR}
      --vtun-address ADDRESS    vtun server address, default: #{DEFAULT_VTUN_ADDRESS}
@@ -464,6 +469,13 @@ Options:
 
 EOF
       exit(0)
+    when '--network-open'
+      nets = run_kwargs[:nets] = run_kwargs.fetch(:nets, [])
+      nets << {
+        'type'     => 'open',
+        'ssid'     => arg,
+        'password' => '',
+      }
     when '--no-puavo'
       run_kwargs[:use_puavo] = false
     when '--rundir'
