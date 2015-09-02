@@ -502,7 +502,7 @@ def run(kwargs = {})
 
       if ready.nil?
         if !conn.nil?
-          STDERR.puts 'control socket connection timeout'
+          STDERR.puts('control socket connection timeout')
           recvbuf.clear
           conn.close
           conn = nil
@@ -522,9 +522,9 @@ def run(kwargs = {})
         begin
           line = conn.readline
         rescue EOFError
-          STDERR.puts 'WARNING: received invalid control message'
+          STDERR.puts('WARNING: received invalid control message')
         else
-          puts recvbuf if recvbuf.concat(line).end_with?("\n")
+          puts(recvbuf) if recvbuf.concat(line).end_with?("\n")
         ensure
           recvbuf.clear
           conn.close
@@ -539,14 +539,14 @@ def main
   run_kwargs = {}
 
   GetoptLong.new(
-    ['--backhaul', GetoptLong::REQUIRED_ARGUMENT],
-    ['--backhaul-single-interface', GetoptLong::REQUIRED_ARGUMENT],
-    ['--backhaul-vtun-address', GetoptLong::REQUIRED_ARGUMENT],
-    ['--backhaul-vtun-port', GetoptLong::REQUIRED_ARGUMENT],
-    ['--help', '-h', GetoptLong::NO_ARGUMENT],
-    ['--network-open', GetoptLong::REQUIRED_ARGUMENT],
-    ['--no-puavo', GetoptLong::NO_ARGUMENT],
-    ['--rundir', GetoptLong::REQUIRED_ARGUMENT],
+    ['--backhaul'                  , GetoptLong::REQUIRED_ARGUMENT],
+    ['--backhaul-single-interface' , GetoptLong::REQUIRED_ARGUMENT],
+    ['--backhaul-vtun-address'     , GetoptLong::REQUIRED_ARGUMENT],
+    ['--backhaul-vtun-port'        , GetoptLong::REQUIRED_ARGUMENT],
+    ['--help', '-h'                , GetoptLong::NO_ARGUMENT],
+    ['--network-open'              , GetoptLong::REQUIRED_ARGUMENT],
+    ['--no-puavo'                  , GetoptLong::NO_ARGUMENT],
+    ['--rundir'                    , GetoptLong::REQUIRED_ARGUMENT],
 
     # For internal use only.
     ['--ctrlmsg', GetoptLong::REQUIRED_ARGUMENT],
