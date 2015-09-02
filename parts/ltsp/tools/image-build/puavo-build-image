@@ -1,5 +1,14 @@
 #!/usr/bin/ruby1.9.1
 
+# puavo-build-image can be used to build images, as well as to create rdiffs
+# between images.  Depending on switches, it may invoke
+# /usr/lib/puavo-image-tools/puavo-imgbuild-tool for hard image building work,
+# or it may generate a Makefile (for GNU Make) to create images/rdiffs.
+#
+# XXX Note: instead of generating a makefile, it would probably more cleaner
+# XXX to split this into two scripts, and the other would be a Rakefile for
+# XXX rake (and generating Makefiles could be dropped from this).
+
 require 'fileutils'
 require 'getoptlong'
 require 'json'
