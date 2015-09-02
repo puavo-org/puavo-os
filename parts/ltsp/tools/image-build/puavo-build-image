@@ -478,9 +478,9 @@ Usage:
   puavo-build-image --output-makefile
                     --images-config images_config
 
-  --images-config with argument can be given many times, and all the image
-  config files will be combined/merged, later image targets override previous
-  targets if conflicts exist.
+  --images-config is mandatory.  It can also be given many times, and all the
+  image config files will be combined/merged, later image targets override
+  previous targets if conflicts exist.
 
   The last argument for puavo-build-image can be "--", after that all arguments
   are passed to puavo-imgbuild-tool as they are, when --config-target is set
@@ -551,11 +551,13 @@ rescue GetoptLong::InvalidOption => e
   usage
 end
 
+usage() if config_files.empty? || (config_target && output_makefile)
+
 # pass the rest of the command line arguments to puavo-imgbuild-tool
 # (the ones after "--")
 puavo_imgbuild_args = ARGV
 
-if output_makefile && !config_files.empty? then
+if output_makefile then
   # special --output-makefile mode was invoked
   builder_confs_path = "#{ ENV['HOME'] }/.config/puavo-build-image/defaults"
   builder_confs = builder_confs(builder_confs_path)
@@ -563,7 +565,7 @@ if output_makefile && !config_files.empty? then
   exit(0)
 end
 
-if !config_files.empty? && config_target then
+if config_target then
   handle_mounts(mounts)
   if use_tmpfs then
     setup_tmpfs(tmpfs_inode_count || '5m',
