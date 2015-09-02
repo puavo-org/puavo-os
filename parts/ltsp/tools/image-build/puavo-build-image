@@ -158,6 +158,33 @@ def validate_and_list_image_filenames(image_confs)
   end.flatten.uniq
 end
 
+def get_metadata_info(image_confs)
+  series_metadata_files_ap_list = []
+  series_metadata_make_snippets = []
+
+  image_confs.each do |image_series, series_settings|
+    series_metadata_file_ap = "${MIRROR_DIR}/#{ image_series }.json"
+    series_metadata_files_ap_list << series_metadata_file_ap
+ 
+    series_images = series_settings['images']
+    next unless series_images.kind_of?(Array)
+
+    rdiff_files = rdiff_files_for(series_images).values
+
+    checksum_files = [ series_images, rdiff_files ].flatten \
+                     .map { |file| "${CKSUMS_DIR}/#{ file }.sha256sum" }
+    
+    series_metadata_make_snippets << <<EOF
+#{ series_metadata_file_ap }: #{ series_images.join(' ') } #{ rdiff_files.join(' ') } #{ checksum_files.join(' ') } | ${MIRROR_DIR}
+	echo unimplemented, but we need $^ > $@.tmp
+	mv $@.tmp $@
+EOF
+  end
+
+  [ series_metadata_files_ap_list,
+    series_metadata_make_snippets ]
+end
+
 def get_rdiff_targets_info(image_confs)
   all_rdiff_files            = []
   image_series_rdiff_targets = []
@@ -234,6 +261,9 @@ def output_makefile(builder_confs, config_files)
     rdiff_target_dirs,
     rdiff_make_snippets = * get_rdiff_targets_info(image_confs)
 
+  series_metadata_files_ap_list,
+    series_metadata_make_snippets = * get_metadata_info(image_confs)
+
   puts <<EOF
 IMAGES_DIR        = #{ images_dir }
 RDIFFS_DIR        = #{ rdiffs_dir }
@@ -248,7 +278,8 @@ ALL_DIRS = ${CKSUMS_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs \\
 CHROOT_TARGETS = apply-buildrules chroot cleanup-chroot image \\
                  install-packages update-chroot
 
-COMMON_TARGETS = all-new-images all-rdiffs cksums cleanup-mirror update-mirror
+COMMON_TARGETS = all-new-images all-rdiffs cksums cleanup-mirror \\
+                 update-metadata-files update-mirror
 
 IMAGE_FILES = #{ image_files.join(' ') }
 
@@ -258,8 +289,7 @@ IMAGE_SIGNATURE_FILES_AP \\
 
 IMAGE_SERIES = #{ image_series_list.join(' ') }
 IMAGE_SERIES_RDIFF_TARGETS = #{ image_series_rdiff_targets.join(' ') }
-IMAGE_SERIES_METADATA_FILES_AP \\
-  = $(addsuffix .json,$(addprefix ${MIRROR_DIR}/,${IMAGE_SERIES}))
+IMAGE_SERIES_METADATA_FILES_AP = #{ series_metadata_files_ap_list.join(' ') }
 
 RDIFF_FILES_AP = #{ all_rdiff_files.join(' ') }
 RDIFF_FILES = $(notdir ${RDIFF_FILES_AP})
@@ -268,15 +298,13 @@ CKSUM_FILES = $(addsuffix .cksum,${IMAGE_FILES}) \\
               $(addsuffix .cksum,${RDIFF_FILES})
 CKSUM_FILES_AP = $(addprefix ${CKSUMS_DIR}/,${CKSUM_FILES})
 
-SHA256SUM_FILES = $(addsuffix .sha256sum,${IMAGE_FILES}) \\
-                  $(addsuffix .sha256sum,${RDIFF_FILES})
-SHA256SUM_FILES_AP = $(addprefix ${CKSUMS_DIR}/,${SHA256SUM_FILES})
-
 MIRROR_DIR_IMAGES = $(addprefix ${MIRROR_DIR}/,${IMAGE_FILES})
 MIRROR_DIR_RDIFFS = $(addprefix ${MIRROR_DIR}/rdiffs/,${RDIFF_FILES})
 
-vpath %.img   ${IMAGES_DIR}
-vpath %.rdiff ${RDIFF_TARGET_DIRS}
+vpath %.cksum     ${CKSUMS_DIR}
+vpath %.img       ${IMAGES_DIR}
+vpath %.rdiff     ${RDIFF_TARGET_DIRS}
+vpath %.sha256sum ${CKSUMS_DIR}
 
 help:
 	@echo "Available image series targets are:"
@@ -300,8 +328,12 @@ all-rdiffs: ${RDIFF_FILES_AP}
 .PHONY: cksums
 cksums: ${IMAGES_DIR}/CKSUMS
 
+.PHONY: update-metadata-files
+update-metadata-files: ${IMAGE_SERIES_METADATA_FILES_AP}
+
 .PHONY: update-mirror
-update-mirror: ${MIRROR_DIR}/CKSUMS ${MIRROR_DIR_IMAGES} ${MIRROR_DIR_RDIFFS}
+update-mirror: ${MIRROR_DIR}/CKSUMS ${MIRROR_DIR_IMAGES} \\
+               ${MIRROR_DIR_RDIFFS} ${IMAGE_SERIES_METADATA_FILES_AP}
 
 .PHONY: cleanup-mirror
 cleanup-mirror:
@@ -311,9 +343,6 @@ cleanup-mirror:
 	  echo There is no mirror directory ${MIRROR_DIR}; \
 	fi
 
-.PHONY: update-metadata-files
-update-metadata-files: ${IMAGE_SERIES_METADATA_FILES_AP}
-
 .PHONY: ${CHROOT_TARGETS}
 ${CHROOT_TARGETS}:
 	sudo /usr/lib/puavo-image-tools/puavo-imgbuild-tool --$@
@@ -321,10 +350,6 @@ ${CHROOT_TARGETS}:
 .PHONY: ${IMAGE_SERIES}
 ${IMAGE_SERIES}: images.json
 	sudo puavo-build-image --config-target $@ --images-config $<
-
-${IMAGE_SERIES_METADATA_FILES_AP}: ${SHA256SUM_FILES_AP}
-	@echo creating $@ from $^ is not implemented yet
-	@exit 1
 
 ${ALL_DIRS}:
 	mkdir -p $@
@@ -367,6 +392,8 @@ ${SIGNATURES_DIR}/%.rdiff_signature: %.img | ${SIGNATURES_DIR}
 #
 
 #{ rdiff_make_snippets.join("\n") }
+
+#{ series_metadata_make_snippets.join("\n") }
 EOF
 end
 
