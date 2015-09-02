@@ -434,7 +434,6 @@ def run(kwargs = {})
   bss_list              = []
 
   Signal.trap('EXIT') do
-    Signal.trap('SIGTERM', 'SIG_IGN')
     Process.kill('-SIGTERM', 0)
 
     bss_list.each do |bss|
@@ -454,17 +453,13 @@ def run(kwargs = {})
   write_hostapd_conf(phy_list, bss_list, rundir)
   write_vtund_conf(bss_list, rundir)
 
-  Signal.trap('SIGCHLD') do
-    begin
-      child_id = Process.wait(0, Process::WNOHANG)
-    rescue SystemCallError => e
-      raise e unless e.errno == Errno::ECHILD
-    end
-    if critical_service_pids.include?(child_id)
-      # We are not interested in terminating services anymore because we
-      # have already lost a critical service, time to exit.
-      Signal.trap('SIGCHLD', 'SIG_IGN')
-      exit(1)
+  sigqueue = []
+  sigpipe_r, sigpipe_w = IO.pipe
+
+  [:CHLD, :INT, :QUIT, :TERM].each do |signal|
+    Signal.trap(signal) do
+      sigpipe_w.write_nonblock('o')
+      sigqueue << signal
     end
   end
 
@@ -473,8 +468,32 @@ def run(kwargs = {})
                  vtun_address, vtun_port, backhaul, bh_iface)
 
   loop do
-    sleep 5
-    puts 'tick'
+    case sigqueue.pop
+    when :INT
+    when :QUIT
+    when :TERM
+      exit(1)
+    when :CHLD
+      begin
+        child_pid = Process.wait(0, Process::WNOHANG)
+      rescue SystemCallError => e
+        raise e unless e.errno == Errno::ECHILD
+      end
+      if critical_service_pids.include?(child_pid)
+        # We have lost a critical service, time to exit.
+        exit(1)
+      end
+    else
+      ready = IO.select([sigpipe_r], [], [], 5)
+
+      if ready.nil?
+        puts 'timeout'
+        next
+      end
+
+      sigpipe_r.read_nonblock(1) if ready[0].include?(sigpipe_r)
+
+    end
   end
 end
 
