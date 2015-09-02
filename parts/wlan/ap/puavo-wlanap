@@ -435,7 +435,7 @@ def run(kwargs = {})
 
   Signal.trap('EXIT') do
     Signal.trap('SIGTERM', 'SIG_IGN')
-    Process.kill('-TERM', Process.getpgrp)
+    Process.kill('-SIGTERM', 0)
 
     bss_list.each do |bss|
       # Ignore errors, we are already exiting.
