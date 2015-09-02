@@ -424,6 +424,7 @@ end
 def run(kwargs = {})
   backhaul     = kwargs.fetch(:backhaul,     BACKHAULS[0])
   bh_iface     = kwargs.fetch(:bh_iface,     get_default_interface)
+  ctrlmsg      = kwargs.fetch(:ctrlmsg,      nil)
   nets         = kwargs.fetch(:nets,         [])
   use_puavo    = kwargs.fetch(:use_puavo,    USE_PUAVO)
   rundir       = kwargs.fetch(:rundir,       RUNDIR)
@@ -433,6 +434,12 @@ def run(kwargs = {})
   critical_service_pids = []
   phy_list              = []
   bss_list              = []
+
+  if !ctrlmsg.nil?
+    ctrl = UNIXSocket.new(File.join(rundir, 'ctrlsocket'))
+    ctrl.puts(ctrlmsg)
+    exit(0)
+  end
 
   Signal.trap('EXIT') do
     Process.kill('-SIGTERM', 0)
@@ -630,8 +637,7 @@ EOF
       run_kwargs[:rundir] = arg
 
     when '--notify'
-      STDERR.puts "Got a notification: #{arg}"
-      exit(0)
+      run_kwargs[:ctrlmsg] = arg
 
     end
   end
