@@ -61,10 +61,10 @@ def build_config_target(config_target,
     or raise "Problem in building '#{ config_target }'"
 end
 
-def builder_confs(builder_confs_path)
+def get_builder_confs()
+  builder_confs_path = "#{ ENV['HOME'] }/.config/puavo-build-image/defaults"
   Hash[ IO.readlines(builder_confs_path).map { |line| line.split } ]
 end
-
 
 def flatten_imageconfs(prefix, inherited_conf, imageconf)
   imageconfs = []
@@ -124,11 +124,12 @@ def ensure_string_sanity(string)
 end
 
 def rdiff_files_for(imagelist)
-  target_image = imagelist.last
-
-  image_regexp = /^(.*?)-([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6})-(.*?).img$/
-
   rdiffs_by_source_image = {}
+
+  return rdiffs_by_source_image if imagelist.count == 0
+
+  target_image = imagelist.last
+  image_regexp = /^(.*?)-(\d{4}-\d{2}-\d{2}-\d{6})-(.*?).img$/
 
   imagelist[0 .. -2].map do |source_image|
     source_match = source_image.match(image_regexp)
@@ -244,6 +245,8 @@ EOF
 end
 
 def output_makefile(builder_confs, config_files)
+  builder_confs = get_builder_confs()
+
   image_confs = image_configurations(config_files)
 
   image_series_list = image_confs.keys
@@ -402,6 +405,90 @@ ${SIGNATURES_DIR}/%.rdiff_signature: %.img | ${SIGNATURES_DIR}
 EOF
 end
 
+def output_series_json(series_name, config_files)
+  builder_confs = get_builder_confs()
+
+  image_confs = image_configurations(config_files)
+
+  if !image_confs.has_key?(series_name) then
+    raise "No series name '#{ series_name }' in config files"
+  end
+
+  images_dir = builder_confs['images-dir']
+  raise 'Images directory is not set' if images_dir.nil? || images_dir.empty?
+
+  rdiffs_dir = builder_confs['rdiffs-dir']
+  raise 'Rdiffs directory is not set' if rdiffs_dir.nil? || rdiffs_dir.empty?
+
+  # XXX where should we get these from?
+  images_baseurl = 'https://images.opinsys.fi'
+  rdiffs_baseurl = "#{ images_baseurl }/rdiffs"
+
+  imageseries = image_confs[series_name]
+  imagenamelist = imageseries['images']
+
+  images \
+    = imagenamelist.map do |imagename|
+	rdiff_files = (imagename == imagenamelist.last)         \
+			? rdiff_files_for(imagenamelist).values \
+			: []
+
+	get_size = lambda do |path|
+	  begin
+	    File.size(path)
+	  rescue Errno::ENOENT
+	    raise "Image #{ path } does not exist"
+	  end
+	end
+
+	get_imagesize = lambda { |f| get_size.call("#{ images_dir }/#{ f }") }
+	get_rdiffsize = lambda { |f| get_size.call("#{ rdiffs_dir }/#{ f }") }
+
+	get_sha256 = lambda do |file|
+	  begin
+	    path = "#{ images_dir }/.cksums/#{ file }.sha256sum"
+	    (IO.read(path).split)[0]
+	  rescue Errno::ENOENT
+	    raise "Checksum file #{ path } does not exist"
+	  end
+	end
+
+	version_re = /-(\d+)-(\d+)-(\d+)-(\d+).*\.img\z/
+	versionmatch = imagename.match(version_re)
+	raise "Could not determine version from #{ imagename }" \
+	  unless versionmatch
+ 
+	version = versionmatch[1..4].join('')
+
+	diffs = rdiff_files.map do |rdiff_file|
+		  {
+                    'filename' => rdiff_file,
+	            'sha256'   => get_sha256.call(rdiff_file),
+                    'size'     => get_rdiffsize.call(rdiff_file),
+                    'url'      => "#{ rdiffs_baseurl }/#{ rdiff_file }",
+	            'version'  => 'XXX',
+                  }
+		end
+
+	{
+	  'diffs'    => diffs,
+	  'filename' => imagename,
+	  'sha256'   => get_sha256.call(imagename),
+	  'size'     => get_imagesize.call(imagename),
+	  'url'      => "#{ images_baseurl }/#{ imagename }",
+	  'version'  => version,
+	}
+      end
+
+  output = {
+    series_name => {
+      'images' => images,
+    }
+  }
+
+  puts(output.to_json)
+end
+
 def get_mountinfo()
   mountinfo = %x(mount)
   raise 'Problem running mount' unless $?.exitstatus == 0
@@ -480,6 +567,9 @@ Usage:
                     --use-tmpfs
                     -- (arguments for puavo-imgbuild-tool ...)
 
+  puavo-build-image --make-series-json series-name
+                    --images-config images_config
+
   puavo-build-image --output-makefile
                     --images-config images_config
 
@@ -488,8 +578,7 @@ Usage:
   previous targets if conflicts exist.
 
   The last argument for puavo-build-image can be "--", after that all arguments
-  are passed to puavo-imgbuild-tool as they are, when --config-target is set
-  and --output-makefile is not set.
+  are passed to puavo-imgbuild-tool as they are, when --config-target is set.
 EOF
   exit(1)
 end
@@ -497,6 +586,7 @@ end
 apply_configure_bootstrap = false
 config_files              = []
 config_target             = nil
+make_series_json_target   = nil
 mount_device              = nil
 mount_dir                 = nil
 mounts                    = {}
@@ -518,6 +608,7 @@ begin
            [ '--apply-configure-bootstrap', GetoptLong::NO_ARGUMENT       ],
            [ '--config-target',             GetoptLong::REQUIRED_ARGUMENT ],
            [ '--images-config',             GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--make-series-json',          GetoptLong::REQUIRED_ARGUMENT ],
            [ '--mount-device',              GetoptLong::REQUIRED_ARGUMENT ],
            [ '--mount-dir',                 GetoptLong::REQUIRED_ARGUMENT ],
            [ '--output-makefile',           GetoptLong::NO_ARGUMENT       ],
@@ -534,6 +625,8 @@ begin
         config_target = arg
       when '--images-config'
         config_files << arg
+      when '--make-series-json'
+        make_series_json_target = arg
       when '--mount-device'
         mount_device = arg
         maybe_add_to_mounts.call()
@@ -556,19 +649,17 @@ rescue GetoptLong::InvalidOption => e
   usage
 end
 
-usage() if config_files.empty? || (config_target && output_makefile)
+
+usage() if config_files.empty?
+
+mode_switch_count = [ config_target,
+                      output_makefile,
+                      make_series_json_target ].count { |x| x }
+usage() if mode_switch_count > 1
 
 # pass the rest of the command line arguments to puavo-imgbuild-tool
 # (the ones after "--")
 puavo_imgbuild_args = ARGV
-
-if output_makefile then
-  # special --output-makefile mode was invoked
-  builder_confs_path = "#{ ENV['HOME'] }/.config/puavo-build-image/defaults"
-  builder_confs = builder_confs(builder_confs_path)
-  output_makefile(builder_confs, config_files)
-  exit(0)
-end
 
 if config_target then
   handle_mounts(mounts)
@@ -581,7 +672,12 @@ if config_target then
                       config_files,
                       puavo_imgbuild_args,
                       apply_configure_bootstrap)
-  exit(0)
+elsif output_makefile then
+  output_makefile(config_files)
+elsif make_series_json_target then
+  output_series_json(make_series_json_target, config_files)
+else
+  usage()
 end
 
-usage()
+exit(0)
