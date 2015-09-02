@@ -460,7 +460,12 @@ def run(kwargs = {})
     rescue SystemCallError => e
       raise e unless e.errno == Errno::ECHILD
     end
-    exit(1) if critical_service_pids.include?(child_id)
+    if critical_service_pids.include?(child_id)
+      # We are not interested in terminating services anymore because we
+      # have already lost a critical service, time to exit.
+      Signal.trap('SIGCHLD', 'SIG_IGN')
+      exit(1)
+    end
   end
 
   start_services(critical_service_pids,
