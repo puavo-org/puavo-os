@@ -541,7 +541,7 @@ if !config_files.empty? && config_target then
   if use_tmpfs then
     setup_tmpfs(tmpfs_inode_count || '5m',
                 tmpfs_path        || '/virtualtmp',
-                tmpfs_size        || '28g')
+                tmpfs_size        || '32g')
   end
   build_config_target(config_target,
                       config_files,
