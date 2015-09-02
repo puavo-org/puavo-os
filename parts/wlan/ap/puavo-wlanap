@@ -34,10 +34,20 @@ require 'fileutils'
 require 'getoptlong'
 require 'pathname'
 
-THIS_SCRIPT = Pathname.new($0).realpath
+begin
+  require 'puavo/etc'
+  require 'puavo/rest-client'
+rescue LoadError
+  # Puavo modules are not available, disable Puavo-integration by
+  # default.
+  DEFAULT_USE_PUAVO    = false
+else
+  # If Puavo modules are available, Puavo-integration are enabled by
+  # default, but can be still disabled with --no-puavo option.
+  DEFAULT_USE_PUAVO    = true
+end
 
-# Default value for Puavo usage switch.
-DEFAULT_USE_PUAVO    = true
+THIS_SCRIPT = Pathname.new($0).realpath
 
 # Default runtime directory, use +--rundir+ to override.
 DEFAULT_RUNDIR       = '/run/puavo-wlanap'
@@ -209,9 +219,6 @@ def scan_channels(iface, channels)
 end
 
 def get_nets_from_puavo
-  require 'puavo/etc'
-  require 'puavo/rest-client'
-
   nets_wait = 1
   while true
     client = PuavoRestClient.new
