@@ -453,6 +453,8 @@ def run(kwargs = {})
   write_hostapd_conf(phy_list, bss_list, rundir)
   write_vtund_conf(bss_list, rundir)
 
+  [:HUP, :USR1, :USR2].each { |s| Signal.trap(s, 'SIG_IGN') }
+
   sigqueue = []
   sigpipe_r, sigpipe_w = IO.pipe
 
