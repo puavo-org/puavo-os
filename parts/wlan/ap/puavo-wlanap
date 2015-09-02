@@ -124,11 +124,11 @@ puavo-wlanap {
     multi     yes;
 
     up {
-        program "<%= THIS_SCRIPT %> --notify 'vtun-up:%%:<%= bss[:bridge] %>'";
+        program "<%= THIS_SCRIPT %> --ctrlmsg 'vtun-up:%%:<%= bss[:bridge] %>'";
     };
 
     down {
-        program "<%= THIS_SCRIPT %> --notify 'vtun-down:%%:<%= bss[:bridge] %>'";
+        program "<%= THIS_SCRIPT %> --ctrlmsg 'vtun-down:%%:<%= bss[:bridge] %>'";
     };
 }
 EOF
@@ -549,7 +549,7 @@ def main
     ['--rundir', GetoptLong::REQUIRED_ARGUMENT],
 
     # For internal use only.
-    ['--notify', GetoptLong::REQUIRED_ARGUMENT],
+    ['--ctrlmsg', GetoptLong::REQUIRED_ARGUMENT],
   ).each do |opt, arg|
     case opt
     when '--backhaul'
@@ -636,7 +636,7 @@ EOF
     when '--rundir'
       run_kwargs[:rundir] = arg
 
-    when '--notify'
+    when '--ctrlmsg'
       run_kwargs[:ctrlmsg] = arg
 
     end
