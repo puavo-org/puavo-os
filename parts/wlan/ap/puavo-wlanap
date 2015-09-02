@@ -40,28 +40,25 @@ begin
 rescue LoadError
   # Puavo modules are not available, disable Puavo-integration by
   # default.
-  DEFAULT_USE_PUAVO    = false
+  USE_PUAVO    = false
 else
-  # If Puavo modules are available, Puavo-integration are enabled by
-  # default, but can be still disabled with --no-puavo option.
-  DEFAULT_USE_PUAVO    = true
+  # If Puavo modules are available, Puavo-integration is enabled by
+  # default, but it can be still disabled with --no-puavo option.
+  USE_PUAVO    = true
 end
 
 THIS_SCRIPT = Pathname.new($0).realpath
 
-# Default runtime directory, use +--rundir+ to override.
-DEFAULT_RUNDIR       = '/run/puavo-wlanap'
+# Default runtime directory, use --rundir to override.
+RUNDIR       = '/run/puavo-wlanap'
 
-# Default vtun server address to connect to, use +--vtun-address+ to
-# override.
-DEFAULT_VTUN_ADDRESS = 'wlangw'
+# Default vtun server address, use --vtun-address to override.
+VTUN_ADDRESS = 'wlangw'
 
-# Default vtun server port to connect to, use +--vtun-port+ to
-# override.
-DEFAULT_VTUN_PORT    = 45045
+# Default vtun server port, use --vtun-port to override.
+VTUN_PORT    = 45045
 
-BACKHAULS            = [:single, :vtun]
-DEFAULT_BACKHAUL     = BACKHAULS[0]
+BACKHAULS    = [:single, :vtun]
 
 BAND_2G = 1
 BAND_5G = 2
@@ -425,13 +422,13 @@ def start_services(critical_service_pids, phy_list, bss_list, rundir,
 end
 
 def run(kwargs = {})
-  backhaul     = kwargs.fetch(:backhaul,     DEFAULT_BACKHAUL)
+  backhaul     = kwargs.fetch(:backhaul,     BACKHAULS[0])
   bh_iface     = kwargs.fetch(:bh_iface,     get_default_interface)
   nets         = kwargs.fetch(:nets,         [])
-  use_puavo    = kwargs.fetch(:use_puavo,    DEFAULT_USE_PUAVO)
-  rundir       = kwargs.fetch(:rundir,       DEFAULT_RUNDIR)
-  vtun_address = kwargs.fetch(:vtun_address, DEFAULT_VTUN_ADDRESS)
-  vtun_port    = kwargs.fetch(:vtun_port,    DEFAULT_VTUN_PORT)
+  use_puavo    = kwargs.fetch(:use_puavo,    USE_PUAVO)
+  rundir       = kwargs.fetch(:rundir,       RUNDIR)
+  vtun_address = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
+  vtun_port    = kwargs.fetch(:vtun_port,    VTUN_PORT)
 
   critical_service_pids = []
   phy_list              = []
@@ -514,7 +511,7 @@ Tunneled WLAN accesspoint.
 
 Options:
      --backhaul [#{BACKHAULS.join '|' }]
-         Set the backhaul type, default: #{DEFAULT_BACKHAUL}.
+         Set the backhaul type, default: #{BACKHAULS[0]}.
 
          single
 
@@ -555,7 +552,7 @@ Options:
          Disable all Puavo-extensions.
 
      --rundir DIR
-         Set the runtime directory, default: #{DEFAULT_RUNDIR}
+         Set the runtime directory, default: #{RUNDIR}
 
 EOF
       exit(0)
