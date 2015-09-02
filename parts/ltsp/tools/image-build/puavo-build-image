@@ -189,7 +189,7 @@ def get_rdiff_targets_info(image_confs)
       target_image_path = "${IMAGES_DIR}/#{ target_image }"
 
       rdiff_make_snippets << <<EOF
-#{ rdiff_full_path }: #{ image_signature_path } #{ target_image_path } #{ rdiff_target_dir }
+#{ rdiff_full_path }: #{ image_signature_path } #{ target_image_path } | #{ rdiff_target_dir }
 	rdiff delta "#{ image_signature_path }" \\
 	            "#{ target_image_path }" \\
 	            $@
