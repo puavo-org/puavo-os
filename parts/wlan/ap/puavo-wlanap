@@ -33,6 +33,7 @@ require 'erb'
 require 'fileutils'
 require 'getoptlong'
 require 'pathname'
+require 'socket'
 
 begin
   require 'puavo/etc'
@@ -465,6 +466,10 @@ def run(kwargs = {})
     end
   end
 
+  recvbuf = ''
+  serv = UNIXServer.new(File.join(rundir, 'ctrlsocket'))
+  conn = nil
+
   start_services(critical_service_pids,
                  phy_list, bss_list, rundir,
                  vtun_address, vtun_port, backhaul, bh_iface)
@@ -486,15 +491,39 @@ def run(kwargs = {})
         exit(1)
       end
     else
-      ready = IO.select([sigpipe_r], [], [], 5)
+      ready = IO.select([sigpipe_r, conn.nil? ? serv : conn], [], [], 5)
 
       if ready.nil?
-        puts 'timeout'
+        if !conn.nil?
+          STDERR.puts 'control socket connection timeout'
+          recvbuf.clear
+          conn.close
+          conn = nil
+        end
         next
       end
 
-      sigpipe_r.read_nonblock(1) if ready[0].include?(sigpipe_r)
+      if ready[0].include?(sigpipe_r)
+        sigpipe_r.read_nonblock(1)
+      end
 
+      if ready[0].include?(serv)
+        conn = serv.accept
+      end
+
+      if ready[0].include?(conn)
+        begin
+          line = conn.readline
+        rescue EOFError
+          STDERR.puts 'WARNING: received invalid control message'
+        else
+          puts recvbuf if recvbuf.concat(line).end_with?("\n")
+        ensure
+          recvbuf.clear
+          conn.close
+          conn = nil
+        end
+      end
     end
   end
 end
