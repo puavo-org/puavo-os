@@ -123,11 +123,11 @@ puavo-wlanap {
     multi     yes;
 
     up {
-        program "<%= THIS_SCRIPT %> --vtun-up '%%:<%= bss[:bridge] %>'";
+        program "<%= THIS_SCRIPT %> --notify 'vtun-up:%%:<%= bss[:bridge] %>'";
     };
 
     down {
-        program "<%= THIS_SCRIPT %> --vtun-down '%%:<%= bss[:bridge] %>'";
+        program "<%= THIS_SCRIPT %> --notify 'vtun-down:%%:<%= bss[:bridge] %>'";
     };
 }
 EOF
@@ -486,22 +486,25 @@ def main
     ['--rundir', GetoptLong::REQUIRED_ARGUMENT],
 
     # For internal use only.
-    ['--vtun-up', GetoptLong::REQUIRED_ARGUMENT],
-    ['--vtun-down', GetoptLong::REQUIRED_ARGUMENT],
+    ['--notify', GetoptLong::REQUIRED_ARGUMENT],
   ).each do |opt, arg|
     case opt
     when '--backhaul'
       run_kwargs[:backhaul] = arg
+
     when '--backhaul-single-interface'
       run_kwargs[:bg_iface] = arg
+
     when '--backhaul-vtun-address'
       run_kwargs[:vtun_address] = arg
+
     when '--backhaul-vtun-port'
       unless arg =~ /^[1-9][0-9]*$/ then
         STDERR.puts("ERROR: invalid port number (#{arg})")
         exit(1)
       end
       run_kwargs[:vtun_port] = arg.to_i
+
     when '--help'
       puts <<EOF
 Usage: puavo-wlanap [OPTION]...
@@ -555,6 +558,7 @@ Options:
 
 EOF
       exit(0)
+
     when '--network-open'
       nets = run_kwargs[:nets] = run_kwargs.fetch(:nets, [])
       nets << {
@@ -562,16 +566,17 @@ EOF
         'ssid'     => arg,
         'password' => '',
       }
+
     when '--no-puavo'
       run_kwargs[:use_puavo] = false
+
     when '--rundir'
       run_kwargs[:rundir] = arg
-    when '--vtun-up'
-      STDERR.puts 'up'
+
+    when '--notify'
+      STDERR.puts "Got a notification: #{arg}"
       exit(0)
-    when '--vtun-down'
-      STDERR.puts 'down'
-      exit(0)
+
     end
   end
 
