@@ -60,7 +60,8 @@ DEFAULT_VTUN_ADDRESS = 'wlangw'
 # override.
 DEFAULT_VTUN_PORT    = 45045
 
-DEFAULT_BACKHAUL = nil
+BACKHAULS            = [:single, :vtun]
+DEFAULT_BACKHAUL     = BACKHAULS[0]
 
 BAND_2G = 1
 BAND_5G = 2
@@ -386,19 +387,19 @@ def write_vtund_conf(bss_list, rundir)
 end
 
 def start_services(critical_service_pids, phy_list, bss_list, rundir,
-                   vtun_address, vtun_port, backhaul)
+                   vtun_address, vtun_port, backhaul, bh_iface)
   bss_list.each do |bss|
     run_or_fail('brctl', 'addbr', bss[:bridge])
     run_or_fail('brctl', 'setfd', bss[:bridge], '0')
     run_or_fail('ifconfig', bss[:bridge], 'up')
 
-    if !backhaul.nil?
-      run_or_fail('brctl', 'addif', bss[:bridge], backhaul)
+    if backhaul == :single
+      run_or_fail('brctl', 'addif', bss[:bridge], bh_iface)
     end
 
     critical_service_pids << spawn('dhclient', '-d', bss[:bridge])
 
-    if backhaul.nil?
+    if backhaul == :vtun
       vtund_conffile = File.join(rundir, "vtund_#{bss[:bridge]}.conf")
       critical_service_pids << spawn('vtund', '-n', '-P', vtun_port.to_s,
                                      '-f', vtund_conffile,
@@ -425,6 +426,7 @@ end
 
 def run(kwargs = {})
   backhaul     = kwargs.fetch(:backhaul,     DEFAULT_BACKHAUL)
+  bh_iface     = kwargs.fetch(:bh_iface,     get_default_interface)
   nets         = kwargs.fetch(:nets,         [])
   use_puavo    = kwargs.fetch(:use_puavo,    DEFAULT_USE_PUAVO)
   rundir       = kwargs.fetch(:rundir,       DEFAULT_RUNDIR)
@@ -466,7 +468,7 @@ def run(kwargs = {})
 
   start_services(critical_service_pids,
                  phy_list, bss_list, rundir,
-                 vtun_address, vtun_port, backhaul)
+                 vtun_address, vtun_port, backhaul, bh_iface)
 
   loop do
     sleep 5
@@ -479,12 +481,13 @@ def main
 
   GetoptLong.new(
     ['--backhaul', GetoptLong::REQUIRED_ARGUMENT],
+    ['--backhaul-single-interface', GetoptLong::REQUIRED_ARGUMENT],
+    ['--backhaul-vtun-address', GetoptLong::REQUIRED_ARGUMENT],
+    ['--backhaul-vtun-port', GetoptLong::REQUIRED_ARGUMENT],
     ['--help', '-h', GetoptLong::NO_ARGUMENT],
     ['--network-open', GetoptLong::REQUIRED_ARGUMENT],
     ['--no-puavo', GetoptLong::NO_ARGUMENT],
     ['--rundir', GetoptLong::REQUIRED_ARGUMENT],
-    ['--vtun-address', GetoptLong::REQUIRED_ARGUMENT],
-    ['--vtun-port', GetoptLong::REQUIRED_ARGUMENT],
 
     # For internal use only.
     ['--vtun-up', GetoptLong::REQUIRED_ARGUMENT],
@@ -493,6 +496,16 @@ def main
     case opt
     when '--backhaul'
       run_kwargs[:backhaul] = arg
+    when '--backhaul-single-interface'
+      run_kwargs[:bg_iface] = arg
+    when '--backhaul-vtun-address'
+      run_kwargs[:vtun_address] = arg
+    when '--backhaul-vtun-port'
+      unless arg =~ /^[1-9][0-9]*$/ then
+        STDERR.puts("ERROR: invalid port number (#{arg})")
+        exit(1)
+      end
+      run_kwargs[:vtun_port] = arg.to_i
     when '--help'
       puts <<EOF
 Usage: puavo-wlanap [OPTION]...
@@ -500,13 +513,49 @@ Usage: puavo-wlanap [OPTION]...
 Tunneled WLAN accesspoint.
 
 Options:
-     --backhaul INTERFACE      backhaul interface
- -h, --help                    display this help and exit
-     --network-open SSID       configure an open network
-     --no-puavo                do not communicate with Puavo
-     --rundir DIR              runtime directory, default: #{DEFAULT_RUNDIR}
-     --vtun-address ADDRESS    vtun server address, default: #{DEFAULT_VTUN_ADDRESS}
-     --vtun-port PORT          vtun server port, default: #{DEFAULT_VTUN_PORT}
+     --backhaul [#{BACKHAULS.join '|' }]
+         Set the backhaul type, default: #{DEFAULT_BACKHAUL}.
+
+         single
+
+           Use an existing network interface as the backhaul by adding
+           it to the BSS bridge.
+
+           This option requires following options:
+
+             --backhaul-single-interface INTERFACE
+
+         vtun
+
+           Create per-BSS 802.3 (Ethernet) tunnels over UDP and use them
+           as backhauls.
+
+           This option requires following options:
+
+             --backhaul-vtun-address ADDRESS
+             --backhaul-vtun-port    PORT
+
+     --backhaul-single-interface INTERFACE
+         Use INTERFACE as the backhaul network interface instead of the
+         default route interface.
+
+     --backhaul-vtun-address ADDRESS
+         Set the address of the vtun server.
+
+     --backhaul-vtun-port PORT
+         Set the port of the vtun server.
+
+ -h, --help
+         Display this help and exit.
+
+     --network-open SSID
+         Create an open network with the given SSID.
+
+     --no-puavo
+         Disable all Puavo-extensions.
+
+     --rundir DIR
+         Set the runtime directory, default: #{DEFAULT_RUNDIR}
 
 EOF
       exit(0)
@@ -521,14 +570,6 @@ EOF
       run_kwargs[:use_puavo] = false
     when '--rundir'
       run_kwargs[:rundir] = arg
-    when '--vtun-address'
-      run_kwargs[:vtun_address] = arg
-    when '--vtun-port'
-      unless arg =~ /^[1-9][0-9]*$/ then
-        STDERR.puts("ERROR: invalid port number (#{arg})")
-        exit(1)
-      end
-      run_kwargs[:vtun_port] = arg.to_i
     when '--vtun-up'
       STDERR.puts 'up'
       exit(0)
