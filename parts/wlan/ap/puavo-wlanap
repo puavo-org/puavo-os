@@ -434,6 +434,7 @@ def run(kwargs = {})
   bss_list              = []
 
   Signal.trap('EXIT') do
+    Signal.trap('SIGTERM', 'SIG_IGN')
     Process.kill('-TERM', Process.getpgrp)
 
     bss_list.each do |bss|
