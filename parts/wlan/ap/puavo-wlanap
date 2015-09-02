@@ -135,6 +135,27 @@ puavo-wlanap {
 }
 EOF
 
+def get_default_interface()
+  File.open('/proc/net/route') do |route_file|
+    route_file.readline # Ignore the first header line.
+
+    route_file.each_line do |line|
+      fields = line.strip.split
+
+      interface   = fields[0]
+      destination = fields[1].to_i(16)
+      flags       = fields[3].to_i(16)
+
+      next unless flags & 1 # Is up.
+      next unless destination == 0 # Is default.
+
+      return interface
+    end
+
+  end
+  nil
+end
+
 # Return the name of the interface driver.
 def get_iface_driver(iface)
   File.open(File.join('/sys/class/net', iface, 'device', 'uevent')) do |file|
