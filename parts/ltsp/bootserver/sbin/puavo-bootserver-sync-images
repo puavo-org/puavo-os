@@ -564,7 +564,7 @@ options = Hash.new
 script_name = File.basename(__FILE__)
 
 parser = OptionParser.new do |opts|
-  opts.banner = "
+  opts.banner = <<BANNER_EOF
   Image sync tool for bootservers to download client images from image server. This tool touches only files that have .img or rdiff ending.
 
   Image series is a collection of images that are based on same underlying system. They are versioned and updates from older to newer versions are supported.
@@ -620,7 +620,7 @@ Series information is parsed from the JSON files and by default the following im
   Usage: #{script_name} [options]
 
   Options:
-  "
+BANNER_EOF
 
   opts.on("--keep-unused", "Do no delete images that are not currently used by any client.") do
     options[:keep_unused] = true
