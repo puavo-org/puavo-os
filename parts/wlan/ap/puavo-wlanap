@@ -49,9 +49,149 @@ end
 
 THIS_SCRIPT = Pathname.new($0).realpath
 
-# Chips handled by following drivers seem to have pretty good chances to
-# work properly.
-SUPPORTED_DRIVERS = ['ath9k', 'rt2800pci', 'rt2800usb']
+module Dot11
+
+  # Chips handled by following drivers seem to have pretty good chances
+  # to work properly.
+  SUPPORTED_DRIVERS = ['ath9k', 'rt2800pci', 'rt2800usb']
+
+  BAND_2G = 1
+  BAND_5G = 2
+
+  CHANNELS_2G = [ 1,  6, 11]
+  CHANNELS_5G = [36, 40, 44, 48]
+
+  CHANNELS = {
+    BAND_2G           => CHANNELS_2G,
+    BAND_5G           => CHANNELS_5G,
+    BAND_2G | BAND_5G => CHANNELS_2G + CHANNELS_5G,
+  }
+
+  def self.get_interface_driver(iface)
+    File.open(File.join('/sys/class/net', iface, 'device', 'uevent')) do |file|
+      file.each_line do |line|
+        next unless /^DRIVER=(.*)$/ =~ line
+        return $1
+      end
+    end
+    nil
+  end
+
+  def self.has_supported_driver(iface)
+    driver = Dot11.get_interface_driver(iface)
+    Dot11::SUPPORTED_DRIVERS.include?(driver)
+  end
+
+  def self.is_wlan_interface(iface)
+    File.open(File.join('/sys/class/net', iface, 'uevent')) do |file|
+      file.each_line do |line|
+        return true if /^DEVTYPE=wlan$/ =~ line
+      end
+    end
+    false
+  end
+
+  def self.each_interface
+    Dir.glob('/sys/class/net/*') do |path|
+      iface = File.basename(path)
+      next unless Dot11.is_wlan_interface(iface)
+      next unless Dot11.has_supported_driver(iface)
+      yield iface
+    end
+  end
+
+  def self.get_band(iface)
+    hw_mode = IO.popen(['iwconfig', iface]) do |io|
+      io.gets =~ /^.* IEEE 802.11([a-z]+).*$/
+      break $1
+    end
+    raise 'failed to query supported bands' unless $?.success?
+
+    band = 0
+    band |= Dot11::BAND_5G if hw_mode.include?('a')
+    band |= Dot11::BAND_2G if hw_mode.include?('g')
+
+    band
+  end
+
+  def self.get_bssid(iface)
+    sysdir = "/sys/class/net/#{iface}"
+    phydir = "#{sysdir}/phy80211"
+    devdir = "#{sysdir}/device"
+
+    addr = File.read("#{phydir}/macaddress"  ).split(':').map { |v| v.to_i(16) }
+    mask = File.read("#{phydir}/address_mask").split(':').map { |v| v.to_i(16) }
+
+    uevent = File.read("#{devdir}/uevent")
+    uevent =~ /^PRODUCT=(.+)\/(.+)\/.*$/ or uevent =~ /^PCI_ID=(.+):(.+)$/
+
+    model_id = "%04x%04x" % [$1.to_i(16), $2.to_i(16)]
+
+    ## For some reason, at least with some driver versions, these device
+    ## models report empty address masks. However, hostapd requires that
+    ## mask >= 00:00:00:00:00:03 to support at most 4 different
+    ## BSSIDs. Mask 00:00:00:00:00:03 has been verified to work with
+    ## devices in question.
+    if ['168c0030', '168c002b', '168c0037'].include?(model_id) then
+      if mask.map { |v| v == 0 } .all? then
+        mask = [0x00, 0x00, 0x00, 0x00, 0x00, 0x03]
+      end
+    end
+
+    addr.zip(mask).map { |(a, b)| "%02x" % (a &~ b) } .join(":")
+  end
+
+  def self.get_ht_capab(iface, channel)
+    phyname = File.read("/sys/class/net/#{iface}/phy80211/name").strip
+
+    is_ht20sgi_capab = IO.popen(['iw', phyname, 'info']) do |io|
+      !io.grep(/^\s+RX HT20 SGI.*$/).empty?
+    end
+    $?.success? or raise 'failed to query HT capabilities'
+
+    case channel
+    when 1, 6
+      is_ht20sgi_capab ? '[HT20][SHORT-GI-20]' : '[HT40+]'
+    when 11
+      is_ht20sgi_capab ? '[HT20][SHORT-GI-20]' : '[HT40-]'
+    when 36, 44
+      '[HT40+]'
+    when 40, 48
+      '[HT40-]'
+    else
+      raise "unsupported channel #{channel}"
+    end
+  end
+
+  def self.scan(iface, band)
+    # Prime results with worst possible signal levels.
+    results = {}
+    Dot11::CHANNELS[band].each { |ch| results[ch] = -999 }
+
+    IO.popen(['iwlist', iface, 'scan']) do |io|
+      io.each_line do |line|
+        next unless line =~ /^\s+Cell [0-9]+ - Address: .*$/
+
+        io.readline.strip =~ /^Channel:([0-9]+)$/
+        channel = $1.to_i
+
+        io.readline.strip # Ignore frequency line.
+
+        io.readline.strip =~ /^Quality=[0-9]+\/[0-9]+\s+Signal level=(-[0-9]+) dBm.*$/
+        signal_level = $1.to_i
+
+        if results.has_key?(channel)
+          results[channel] = signal_level if results[channel] < signal_level
+        end
+      end
+    end
+    $?.success? or raise "failed to scan with interface #{iface}"
+
+    # Return channels in ascending signal level order.
+    Hash[results.sort_by { |channel, signal_level| signal_level }].keys
+  end
+
+end
 
 # Default runtime directory, use --rundir to override.
 RUNDIR       = '/run/puavo-wlanap'
@@ -63,18 +203,6 @@ VTUN_ADDRESS = 'wlangw'
 VTUN_PORT    = 45045
 
 BACKHAULS    = [:single, :vtun]
-
-BAND_2G = 1
-BAND_5G = 2
-
-CHANNELS_2G = [ 1,  6, 11]
-CHANNELS_5G = [36, 40, 44, 48]
-
-CHANNELS = {
-  BAND_2G           => CHANNELS_2G,
-  BAND_5G           => CHANNELS_5G,
-  BAND_2G | BAND_5G => CHANNELS_2G + CHANNELS_5G,
-}
 
 HOSTAPD_CONF_TEMPLATE = <<'EOF'
 ## PHY-specific options ##
@@ -158,91 +286,6 @@ def get_default_interface()
   nil
 end
 
-# Return the name of the interface driver.
-def get_interface_driver(iface)
-  File.open(File.join('/sys/class/net', iface, 'device', 'uevent')) do |file|
-    file.each_line do |line|
-      next unless /^DRIVER=(.*)$/ =~ line
-      return $1
-    end
-  end
-  nil
-end
-
-def has_supported_driver(iface)
-  driver = get_interface_driver(iface)
-  SUPPORTED_DRIVERS.include?(driver)
-end
-
-# Return boolean indicating whether the interface is a WLAN interface.
-def is_wlan_interface(iface)
-  File.open(File.join('/sys/class/net', iface, 'uevent')) do |file|
-    file.each_line do |line|
-      return true if /^DEVTYPE=wlan$/ =~ line
-    end
-  end
-  false
-end
-
-def get_band(iface)
-  hw_mode = IO.popen(['iwconfig', iface]) do |io|
-    io.gets =~ /^.* IEEE 802.11([a-z]+).*$/
-    break $1
-  end
-  raise 'failed to query supported bands' unless $?.success?
-
-  band = 0
-  band |= BAND_5G if hw_mode.include?('a')
-  band |= BAND_2G if hw_mode.include?('g')
-
-  band
-end
-
-# Yield names of interfaces matching the given hardware mode.
-def iter_suitable_interfaces(band)
-  Dir.glob('/sys/class/net/*') do |path|
-    iface = File.basename(path)
-    next unless is_wlan_interface(iface)
-    next unless has_supported_driver(iface)
-    next unless band == get_band(iface)
-    yield iface
-  end
-end
-
-def scan(iface)
-  IO.popen(['iwlist', iface, 'scan']) do |io|
-    io.each_line do |line|
-      next unless line =~ /^\s+Cell [0-9]+ - Address: .*$/
-
-      io.readline.strip =~ /^Channel:([0-9]+)$/
-      channel = $1.to_i
-
-      io.readline.strip # Ignore frequency line.
-
-      io.readline.strip =~ /^Quality=[0-9]+\/[0-9]+\s+Signal level=(-[0-9]+) dBm.*$/
-      signal_level = $1.to_i
-
-      yield channel, signal_level
-    end
-  end
-  $?.success? or raise "failed to scan with interface #{iface}"
-end
-
-def scan_channels(iface, channels)
-  # Prime results with worst possible signal levels.
-  results = {}
-  channels.each { |ch| results[ch] = -999 }
-
-  # Update results with scan results.
-  scan iface do |ch, siglvl|
-    next unless results.has_key?(ch)
-    results[ch] = siglvl if results[ch] < siglvl
-  end
-
-  # Return channels in ascending signal level order.
-  Hash[results.sort_by { |ch, siglvl| siglvl }].keys
-end
-
 def get_nets_from_puavo
   nets_wait = 1
   while true
@@ -270,64 +313,16 @@ def hexdigest15(str)
   md5sum.hexdigest[0..14]
 end
 
-def get_bssid(iface)
-  sysdir = "/sys/class/net/#{iface}"
-  phydir = "#{sysdir}/phy80211"
-  devdir = "#{sysdir}/device"
-
-  addr = File.read("#{phydir}/macaddress"  ).split(':').map { |v| v.to_i(16) }
-  mask = File.read("#{phydir}/address_mask").split(':').map { |v| v.to_i(16) }
-
-  uevent = File.read("#{devdir}/uevent")
-  uevent =~ /^PRODUCT=(.+)\/(.+)\/.*$/ or uevent =~ /^PCI_ID=(.+):(.+)$/
-
-  model_id = "%04x%04x" % [$1.to_i(16), $2.to_i(16)]
-
-  ## For some reason, at least with some driver versions, these device
-  ## models report empty address masks. However, hostapd requires that
-  ## mask >= 00:00:00:00:00:03 to support at most 4 different
-  ## BSSIDs. Mask 00:00:00:00:00:03 has been verified to work with
-  ## devices in question.
-  if ['168c0030', '168c002b', '168c0037'].include?(model_id) then
-    if mask.map { |v| v == 0 } .all? then
-      mask = [0x00, 0x00, 0x00, 0x00, 0x00, 0x03]
-    end
-  end
-
-  addr.zip(mask).map { |(a, b)| "%02x" % (a &~ b) } .join(":")
-end
-
-def get_ht_capab(iface, channel)
-  phyname = File.read("/sys/class/net/#{iface}/phy80211/name").strip
-
-  is_ht20sgi_capab = IO.popen(['iw', phyname, 'info']) do |io|
-    !io.grep(/^\s+RX HT20 SGI.*$/).empty?
-  end
-  $?.success? or raise 'failed to query HT capabilities'
-
-  case channel
-  when 1, 6
-    is_ht20sgi_capab ? '[HT20][SHORT-GI-20]' : '[HT40+]'
-  when 11
-    is_ht20sgi_capab ? '[HT20][SHORT-GI-20]' : '[HT40-]'
-  when 36, 44
-    '[HT40+]'
-  when 40, 48
-    '[HT40-]'
-  else
-    raise "unsupported channel #{channel}"
-  end
-end
-
 def run_or_fail(cmd, *args)
   system(cmd, *args)
   $?.success? or raise "command '%s' failed" % ([cmd] + args).join(' ')
 end
 
 def fill_phy_list(phy_list, band)
-  iter_suitable_interfaces(band) do |iface|
+  Dot11.each_interface do |iface|
+    next unless band == Dot11.get_band(iface)
     run_or_fail('ifconfig', iface, 'up')
-    best_channels = scan_channels(iface, CHANNELS[band])
+    best_channels = Dot11.scan(iface, band)
     free_channels = best_channels - phy_list.map { |phy| phy[:channel] }
     next if free_channels.empty?
     channel = free_channels[0]
@@ -335,9 +330,9 @@ def fill_phy_list(phy_list, band)
     phy_list << {
       :iface    => iface,
       :channel  => channel,
-      :bssid    => get_bssid(iface),
-      :hw_mode  => CHANNELS_5G.include?(channel) ? 'a' : 'g',
-      :ht_capab => get_ht_capab(iface, channel),
+      :bssid    => Dot11.get_bssid(iface),
+      :hw_mode  => Dot11::CHANNELS_5G.include?(channel) ? 'a' : 'g',
+      :ht_capab => Dot11.get_ht_capab(iface, channel),
     }
   end
 end
@@ -345,9 +340,9 @@ end
 def get_phy_list
   phy_list = []
 
-  fill_phy_list(phy_list, BAND_5G)
-  fill_phy_list(phy_list, BAND_2G)
-  fill_phy_list(phy_list, BAND_5G | BAND_2G)
+  fill_phy_list(phy_list, Dot11::BAND_5G)
+  fill_phy_list(phy_list, Dot11::BAND_2G)
+  fill_phy_list(phy_list, Dot11::BAND_5G | Dot11::BAND_2G)
 
   phy_list
 end
