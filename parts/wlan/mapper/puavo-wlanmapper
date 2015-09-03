@@ -171,7 +171,7 @@ class Scene(QGraphicsScene):
         self.__currentHeatmap = self.__heatmaps[str(heatmapName)]
         self.__currentHeatmap.setVisible(True)
 
-    def heatmaps(self):
+    def heatmapNames(self):
         return self.__heatmaps.keys()
 
     def __addSpot(self, pos):
@@ -750,7 +750,7 @@ class SceneWidget(QWidget):
         self.setEnabled(scene is not None)
 
         if self.__scene is not None:
-            self.__scene.heatmapsAdded.disconnect(self.__addHeatmaps)
+            self.__scene.heatmapsAdded.disconnect(self.__updateFreqList)
             self.__freqListWidget.currentTextChanged.disconnect(self.__setFreq)
             self.__bssidListWidget.currentTextChanged.disconnect(self.__setBSSID)
             self.__freqListWidget.clear()
@@ -761,18 +761,18 @@ class SceneWidget(QWidget):
         if self.__scene is None:
             return
 
-        self.__scene.heatmapsAdded.connect(self.__addHeatmaps)
+        self.__scene.heatmapsAdded.connect(self.__updateFreqList)
         self.__freqListWidget.currentTextChanged.connect(self.__setFreq)
         self.__bssidListWidget.currentTextChanged.connect(self.__setBSSID)
-        self.__addHeatmaps(self.__scene.heatmaps())
+        self.__updateFreqList(self.__scene.heatmapNames())
 
-    def __addHeatmaps(self, heatmaps):
+    def __updateFreqList(self, heatmapNames):
         freqs = set()
         for i in range(self.__freqListWidget.count()):
             freqs.add(str(self.__freqListWidget.item(i).text()))
 
-        for heatmap in heatmaps:
-            freq, _ = heatmap.split("Hz_")
+        for heatmapName in heatmapNames:
+            freq, _ = heatmapName.split("Hz_")
             freqs.add(freq)
 
         self.__freqListWidget.clear()
@@ -789,8 +789,8 @@ class SceneWidget(QWidget):
 
     def __setFreq(self, newFreq):
         bssids = set()
-        for heatmap in self.__scene.heatmaps():
-            freq, bssid = heatmap.split("Hz_")
+        for heatmapName in self.__scene.heatmapNames():
+            freq, bssid = heatmapName.split("Hz_")
             if freq == newFreq:
                 bssids.add(bssid)
 
