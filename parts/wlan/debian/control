@@ -2,7 +2,10 @@ Source: puavo-wlan
 Section: utils
 Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
-Build-Depends: debhelper (>= 8.0.0)
+Build-Depends: debhelper (>= 8.0.0),
+ libncurses5-dev,
+ libnl-3-dev,
+ libnl-genl-3-dev
 Standards-Version: 3.9.3
 Homepage: http://github.com/opinsys/puavo-wlan/
 
@@ -72,7 +75,10 @@ Description: host tunneled WLAN accesspoint
 Package: puavo-wlanmapper
 Architecture: any
 Depends: ${misc:Depends},
- horst (>= 4.3),
+ libncurses5,
+ libnl-3-200,
+ libnl-genl-3-200,
+ libtinfo5,
  python-matplotlib,
  python-numpy,
  python-scipy,
