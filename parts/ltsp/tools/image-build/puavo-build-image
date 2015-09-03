@@ -166,7 +166,7 @@ def get_metadata_info(image_confs)
   image_confs.each do |image_series, series_settings|
     ensure_string_sanity(image_series)
 
-    series_metadata_file_ap = "${MIRROR_DIR}/#{ image_series }.json"
+    series_metadata_file_ap = "${METADATA_DIR}/#{ image_series }.json"
     series_metadata_files_ap_list << series_metadata_file_ap
  
     series_images = series_settings['images']
@@ -178,7 +178,7 @@ def get_metadata_info(image_confs)
                      .map { |file| "${CKSUMS_DIR}/#{ file }.sha256sum" }
     
     series_metadata_make_snippets << <<EOF
-#{ series_metadata_file_ap }: images.json #{ series_images.join(' ') } #{ rdiff_files.join(' ') } #{ checksum_files.join(' ') } | ${MIRROR_DIR}
+#{ series_metadata_file_ap }: images.json #{ series_images.join(' ') } #{ rdiff_files.join(' ') } #{ checksum_files.join(' ') } | ${METADATA_DIR}
 	puavo-build-image --images-config images.json \\
                           --make-series-json #{ image_series } > $@.tmp
 	mv $@.tmp $@
@@ -276,10 +276,11 @@ IMAGES_DIR        = #{ images_dir }
 RDIFFS_DIR        = #{ rdiffs_dir }
 CKSUMS_DIR        = ${IMAGES_DIR}/.cksums
 MIRROR_DIR        = ${IMAGES_DIR}/mirror
+METADATA_DIR      = ${MIRROR_DIR}/meta
 SIGNATURES_DIR    = ${IMAGES_DIR}/.signatures
 RDIFF_TARGET_DIRS = #{ rdiff_target_dirs.join(' ') }
 
-ALL_DIRS = ${CKSUMS_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs \\
+ALL_DIRS = ${CKSUMS_DIR} ${METADATA_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs \\
            ${RDIFF_TARGET_DIRS} ${SIGNATURES_DIR}
 
 CHROOT_TARGETS = apply-buildrules chroot cleanup-chroot image \\
