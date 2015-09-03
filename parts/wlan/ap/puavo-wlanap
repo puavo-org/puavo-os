@@ -159,7 +159,7 @@ def get_default_interface()
 end
 
 # Return the name of the interface driver.
-def get_iface_driver(iface)
+def get_interface_driver(iface)
   File.open(File.join('/sys/class/net', iface, 'device', 'uevent')) do |file|
     file.each_line do |line|
       next unless /^DRIVER=(.*)$/ =~ line
@@ -170,12 +170,12 @@ def get_iface_driver(iface)
 end
 
 def has_supported_driver(iface)
-  driver = get_iface_driver(iface)
+  driver = get_interface_driver(iface)
   SUPPORTED_DRIVERS.include?(driver)
 end
 
 # Return boolean indicating whether the interface is a WLAN interface.
-def is_wlan_iface(iface)
+def is_wlan_interface(iface)
   File.open(File.join('/sys/class/net', iface, 'uevent')) do |file|
     file.each_line do |line|
       return true if /^DEVTYPE=wlan$/ =~ line
@@ -199,10 +199,10 @@ def get_band(iface)
 end
 
 # Yield names of interfaces matching the given hardware mode.
-def iter_suitable_ifaces(band)
+def iter_suitable_interfaces(band)
   Dir.glob('/sys/class/net/*') do |path|
     iface = File.basename(path)
-    next unless is_wlan_iface(iface)
+    next unless is_wlan_interface(iface)
     next unless has_supported_driver(iface)
     next unless band == get_band(iface)
     yield iface
@@ -325,7 +325,7 @@ def run_or_fail(cmd, *args)
 end
 
 def fill_phy_list(phy_list, band)
-  iter_suitable_ifaces(band) do |iface|
+  iter_suitable_interfaces(band) do |iface|
     run_or_fail('ifconfig', iface, 'up')
     best_channels = scan_channels(iface, CHANNELS[band])
     free_channels = best_channels - phy_list.map { |phy| phy[:channel] }
