@@ -55,17 +55,17 @@ require 'syslog'
 require 'puavo/etc'
 require 'puavo/rest-client'
 
-def debug(message)
-  Syslog.open("puavo-bootserver-sync-images", Syslog::LOG_CONS) { |s| s.debug message }
+def syslog(channel, priority, *args)
+  Syslog.log(priority, *args)
+  channel.printf(*args)
 end
 
-def info(message)
-  Syslog.open("puavo-bootserver-sync-images", Syslog::LOG_CONS) { |s| s.info message }
-end
+def log(*args)   ; syslog(STDOUT, *args); end
+def logerr(*args); syslog(STDERR, *args); end
 
-def warning(message)
-  Syslog.open("puavo-bootserver-sync-images", Syslog::LOG_CONS) { |s| s.warning message }
-end
+def debug(msg);   log(Syslog::LOG_DEBUG,   "%s\n", msg); end
+def info(msg);    log(Syslog::LOG_INFO,    "%s\n", msg); end
+def warning(msg); log(Syslog::LOG_WARNING, "%s\n", msg); end
 
 class Result
   attr_reader :succeeded, :message, :filename
@@ -564,8 +564,11 @@ def query_devices(series)
   end
 end
 
-options = Hash.new
 script_name = File.basename(__FILE__)
+
+Syslog.open(script_name, Syslog::LOG_CONS)
+
+options = Hash.new
 
 parser = OptionParser.new do |opts|
   opts.banner = <<BANNER_EOF
@@ -796,5 +799,7 @@ rescue StandardError => e
   warning "Error: #{e}"
   exit 1
 end
+
+Syslog.close()
 
 exit 0
