@@ -571,19 +571,25 @@ script_name = File.basename(__FILE__)
 
 parser = OptionParser.new do |opts|
   opts.banner = <<BANNER_EOF
-  Image sync tool for bootservers to download client images from image server. This tool touches only files that have .img or rdiff ending.
+  Image sync tool for bootservers to download client images from image server.
+  This tool touches only files that have .img or rdiff ending.
 
-  Image series is a collection of images that are based on same underlying system. They are versioned and updates from older to newer versions are supported.
+  Image series is a collection of images that are based on same underlying
+  system.  They are versioned and updates from older to newer versions are
+  supported.
 
-  Images are downloaded from an image server. The series is defined by a JSON file that contains information about images and diffs.
-The image source URL is defined in bootserver settings in Puavo and the script queries the information from puavo-rest by default.
-Series information is parsed from the JSON files and by default the following images and diffs are downloaded:
+  Images are downloaded from an image server. The series is defined by a JSON
+  file that contains information about images and diffs.  The image source
+  URL is defined in bootserver settings in Puavo and the script queries the
+  information from puavo-rest by default.  Series information is parsed from
+  the JSON files and by default the following images and diffs are downloaded:
 
   * Newest image from each series
   * Diffs from 2nd and 3rd newest image in the series
   * All images used by netboot devices
   * All preferred images used by non-netboot devices
-  * All diffs needed by non-netboot devices to update from the current image to preferred images
+  * All diffs needed by non-netboot devices to update from the current image
+    to preferred images
 
   All files have checksums that are checked before they are actually used.
   
