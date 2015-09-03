@@ -49,6 +49,10 @@ end
 
 THIS_SCRIPT = Pathname.new($0).realpath
 
+# Chips handled by following drivers seem to have pretty good chances to
+# work properly.
+SUPPORTED_DRIVERS = ['ath9k', 'rt2800pci', 'rt2800usb']
+
 # Default runtime directory, use --rundir to override.
 RUNDIR       = '/run/puavo-wlanap'
 
@@ -167,7 +171,7 @@ end
 
 def has_supported_driver(iface)
   driver = get_iface_driver(iface)
-  ['ath9k', 'rt2800pci', 'rt2800usb'].include?(driver)
+  SUPPORTED_DRIVERS.include?(driver)
 end
 
 # Return boolean indicating whether the interface is a WLAN interface.
