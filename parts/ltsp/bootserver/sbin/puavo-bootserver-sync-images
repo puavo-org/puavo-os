@@ -173,10 +173,8 @@ class Image
 
     if id
       @id = id
-    else
-      if /(.*?)\.img/.match(filename)
-        @id = $1
-      end
+    elsif /(.*?)\.img/.match(filename)
+      @id = $1
     end
   end
 
@@ -757,12 +755,10 @@ begin
           if diff.in_use
             if diff.verify
               debug "#{diff.filename} - exists already"
+            elsif diff.download
+              info "#{diff.filename} - diff sync ok"
             else
-              if diff.download
-                info "#{diff.filename} - diff sync ok"
-              else
-                warning "#{diff.filename} - diff sync failed"
-              end
+              warning "#{diff.filename} - diff sync failed"
             end
           end
         end
