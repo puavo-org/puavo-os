@@ -150,6 +150,15 @@ class Series
 end
 
 class SyncFile
+  def full_path
+    # The point of this is to check that filename does not get out of
+    # basedir by having ".." or some such.
+    path = File.expand_path("#{ basedir }/#{ @filename }")
+    return path if path.start_with?(basedir)
+
+    raise "Invalid filename #{ @filename }"
+  end
+
   # Checks if the file in the filesystem has the same sha256 as the metadata.
   # To speed up things, the filesize needs to match before sha256 is 
   # calculated. The results are cached and rechecked only if file mtime 
@@ -195,6 +204,8 @@ class Image < SyncFile
     end
   end
 
+  def basedir; '/opt/ltsp/images'; end
+
   def mark_in_use
     @in_use = true
   end
@@ -220,16 +231,6 @@ class Image < SyncFile
     if diff.baseimage.version == @version and diff.targetimage.version > @version
       @diff_to_newer[diff.targetimage.version] = diff
     end
-  end
-
-  def full_path
-    path = File.expand_path("/opt/ltsp/images/#{@filename}")
-
-    if (path.start_with?("/opt/ltsp/images/"))
-      return path
-    end
-
-    raise "Invalid image filename #{@filename}"
   end
 
   def download
@@ -332,15 +333,7 @@ class Diff < SyncFile
     @in_use = true
   end
 
-  def full_path
-    path = File.expand_path("/opt/ltsp/images/rdiffs/#{@filename}")
-
-    if (path.start_with?("/opt/ltsp/images/rdiffs/"))
-      return path
-    end
-
-    raise "Invalid rdiff filename #{@filename}"
-  end
+  def basedir; '/opt/ltsp/images/rdiffs'; end
 
   def patch
     if !system("rdiff", "patch", @baseimage.full_path, full_path, @targetimage.full_path)
