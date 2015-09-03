@@ -135,6 +135,9 @@ class Scene(QGraphicsScene):
         with open(os.path.join(scenedir, "spots.pickle"), "w") as f:
             pickle.dump(data, f)
 
+        with open(os.path.join(scenedir, "essids.pickle"), "w") as f:
+            pickle.dump(self.essids, f)
+
         shutil.copy(os.path.join(_tmpdir, "layout.png"), scenedir)
 
         with tarfile.open(unicode(filepath), "w:gz") as f:
@@ -147,6 +150,9 @@ class Scene(QGraphicsScene):
             with open(os.path.join(_tmpdir, "layout.png"), "wb") as dst_image:
                 shutil.copyfileobj(src_image, dst_image)
             self.__layoutPixmapItem.setPixmap(QPixmap(os.path.join(_tmpdir, "layout.png")))
+
+            essids_picklefile = archive_file.extractfile("scene/essids.pickle")
+            self.essids = pickle.load(essids_picklefile)
 
             spots_picklefile = archive_file.extractfile("scene/spots.pickle")
             spots_data = pickle.load(spots_picklefile)
