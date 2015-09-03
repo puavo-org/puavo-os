@@ -474,7 +474,7 @@ class MonitorWidget(QWidget):
         self.__dwellSpinBox.setSuffix("ms")
         self.__dwellSpinBox.setMinimum(Monitor.MIN_CHANNEL_DWELL_TIME)
         self.__dwellSpinBox.setMaximum(Monitor.MAX_CHANNEL_DWELL_TIME)
-        self.__dwellSpinBox.setSingleStep(10)
+        self.__dwellSpinBox.setSingleStep(50)
         self.__dwellSpinBox.setValue(monitor.channelDwellTime())
         self.__dwellSpinBox.valueChanged.connect(self.__saveDwell)
 
