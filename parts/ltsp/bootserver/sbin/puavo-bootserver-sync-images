@@ -173,8 +173,10 @@ class Image
 
     if id
       @id = id
-    elsif /(.*?)\.img/.match(filename)
+    elsif /\A(.*)\.img\z/.match(filename)
       @id = $1
+    else
+      raise "Could not determine id for '#{ filename }'"
     end
   end
 
