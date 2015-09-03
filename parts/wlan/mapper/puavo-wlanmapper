@@ -197,7 +197,6 @@ class Scene(QGraphicsScene):
 
     def __measurementStopped(self, isSuccess):
         if isSuccess:
-            self.__currentSpot.setBrush(QBrush(QColor("#66ff66")))
             self.__currentSpot.measurement = self.__currentSpotMeasurements
 
             for beacon in self.__monitor.readBeacons():
@@ -312,7 +311,6 @@ class Spot(QGraphicsPolygonItem):
         dropShadowEffect.setOffset(2)
         self.setGraphicsEffect(dropShadowEffect)
         self.setFlag(QGraphicsItem.ItemIsMovable)
-        self.setBrush(QBrush(QColor("beige")))
 
         self.setAcceptHoverEvents(True)
 
@@ -343,6 +341,18 @@ class Spot(QGraphicsPolygonItem):
 
     def contextMenuEvent(self, event):
         self.__contextMenu.exec_(event.screenPos())
+
+    @property
+    def measurement(self):
+        return self.__measurement
+
+    @measurement.setter
+    def measurement(self, measurement):
+        if measurement is None:
+            self.setBrush(QBrush(QColor("beige")))
+        else:
+            self.setBrush(QBrush(QColor("#66ff66")))
+        self.__measurement = measurement
 
 def get_dot11_interfaces():
     result = []
