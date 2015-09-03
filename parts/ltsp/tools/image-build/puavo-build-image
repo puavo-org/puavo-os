@@ -118,7 +118,7 @@ def image_configurations(config_files)
 end
 
 def ensure_string_sanity(string)
-  return if string.kind_of?(String) && string.match(/^[.a-zA-Z0-9-]+$/)
+  return if string.kind_of?(String) && string.match(/\A[.\w-]+\z/)
 
   raise "String '#{ string }' is not sane enough"
 end
@@ -164,6 +164,8 @@ def get_metadata_info(image_confs)
   series_metadata_make_snippets = []
 
   image_confs.each do |image_series, series_settings|
+    ensure_string_sanity(image_series)
+
     series_metadata_file_ap = "${MIRROR_DIR}/#{ image_series }.json"
     series_metadata_files_ap_list << series_metadata_file_ap
  
@@ -176,8 +178,9 @@ def get_metadata_info(image_confs)
                      .map { |file| "${CKSUMS_DIR}/#{ file }.sha256sum" }
     
     series_metadata_make_snippets << <<EOF
-#{ series_metadata_file_ap }: #{ series_images.join(' ') } #{ rdiff_files.join(' ') } #{ checksum_files.join(' ') } | ${MIRROR_DIR}
-	echo unimplemented, but we need $^ > $@.tmp
+#{ series_metadata_file_ap }: images.json #{ series_images.join(' ') } #{ rdiff_files.join(' ') } #{ checksum_files.join(' ') } | ${MIRROR_DIR}
+	puavo-build-image --images-config images.json \\
+                          --make-series-json #{ image_series } > $@.tmp
 	mv $@.tmp $@
 EOF
   end
@@ -244,7 +247,7 @@ EOF
     rdiff_make_snippets ]
 end
 
-def output_makefile(builder_confs, config_files)
+def output_makefile(config_files)
   builder_confs = get_builder_confs()
 
   image_confs = image_configurations(config_files)
@@ -441,8 +444,20 @@ def output_series_json(series_name, config_files)
 	  end
 	end
 
-	get_imagesize = lambda { |f| get_size.call("#{ images_dir }/#{ f }") }
-	get_rdiffsize = lambda { |f| get_size.call("#{ rdiffs_dir }/#{ f }") }
+        get_imagepath = lambda { "#{ images_dir }/#{ imagename }" }
+        get_rdiffpath = lambda do |rdiff|
+                          [ rdiffs_dir,
+                            series_name,
+                            File.basename(imagename, '.img'),
+                            rdiff,
+                          ].join('/')
+                        end
+	get_imagesize = lambda do
+                          get_size.call( get_imagepath.call() )
+                        end
+	get_rdiffsize = lambda do |rdiff|
+                          get_size.call( get_rdiffpath.call(rdiff) )
+                        end
 
 	get_sha256 = lambda do |file|
 	  begin
@@ -453,12 +468,20 @@ def output_series_json(series_name, config_files)
 	  end
 	end
 
-	version_re = /-(\d+)-(\d+)-(\d+)-(\d+).*\.img\z/
-	versionmatch = imagename.match(version_re)
-	raise "Could not determine version from #{ imagename }" \
-	  unless versionmatch
- 
-	version = versionmatch[1..4].join('')
+        get_version = lambda do |name, version_re|
+	  versionmatch = name.match(version_re)
+	  raise "Could not determine version for #{ name }" \
+	    unless versionmatch
+	  versionmatch[1..4].join('')
+        end
+
+        get_imageversion = lambda do
+	  get_version.call(imagename, /-(\d+)-(\d+)-(\d+)-(\d+).*\.img\z/)
+        end
+
+        get_rdiffversion = lambda do |rdiff_file|
+	  get_version.call(rdiff_file, /-(\d+)-(\d+)-(\d+)-(\d+)--.*\.rdiff\z/)
+        end
 
 	diffs = rdiff_files.map do |rdiff_file|
 		  {
@@ -466,7 +489,7 @@ def output_series_json(series_name, config_files)
 	            'sha256'   => get_sha256.call(rdiff_file),
                     'size'     => get_rdiffsize.call(rdiff_file),
                     'url'      => "#{ rdiffs_baseurl }/#{ rdiff_file }",
-	            'version'  => 'XXX',
+	            'version'  => get_rdiffversion.call(rdiff_file),
                   }
 		end
 
@@ -474,9 +497,9 @@ def output_series_json(series_name, config_files)
 	  'diffs'    => diffs,
 	  'filename' => imagename,
 	  'sha256'   => get_sha256.call(imagename),
-	  'size'     => get_imagesize.call(imagename),
+	  'size'     => get_imagesize.call(),
 	  'url'      => "#{ images_baseurl }/#{ imagename }",
-	  'version'  => version,
+	  'version'  => get_imageversion.call(),
 	}
       end
 
