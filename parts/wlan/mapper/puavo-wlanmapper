@@ -40,6 +40,11 @@ LEVELS = range(-95, -20, 5)
 
 _tmpdir = None
 
+FREQS = [2412 + i * 5 for i in range(13)] + [2484] + [5180, 5200, 5220, 5240]
+CHANS = range(1, 15) + [36, 40, 44, 48]
+
+FREQ_TO_CHAN = dict(zip(FREQS, CHANS))
+
 def save_heatmap(filepath, img_w, img_h, xs, ys, zs, scale_factor=0.2):
     ## Interpolate z-values throughout the 2D-space using linear radial
     ## basis function.
@@ -769,25 +774,31 @@ class SceneWidget(QWidget):
     def __updateFreqList(self, heatmapNames):
         freqs = set()
         for i in range(self.__freqListWidget.count()):
-            freqs.add(str(self.__freqListWidget.item(i).text()))
+            freqs.add(str(self.__freqListWidget.item(i).text()).split()[0])
 
         for heatmapName in heatmapNames:
             freq, _ = heatmapName.split("Hz_")
             freqs.add(freq)
 
+        items = ["%s (Channel %d)" % (f, FREQ_TO_CHAN[int(f)]) for f in freqs]
+
         self.__freqListWidget.clear()
-        self.__freqListWidget.addItems(list(freqs))
+        self.__freqListWidget.addItems(items)
 
         if self.__freqListWidget.currentRow() == -1 and self.__freqListWidget.count() > 0:
             self.__freqListWidget.setCurrentRow(0)
 
     def __setBSSID(self, bssid_essid):
         if not bssid_essid.isNull():
-            freq = self.__freqListWidget.currentItem().text()
+            freq = str(self.__freqListWidget.currentItem().text()).split()[0]
             bssid = str(bssid_essid).split()[0]
             self.__scene.setCurrentHeatmap("%sHz_%s" % (freq, bssid))
 
-    def __setFreq(self, newFreq):
+    def __setFreq(self, newFreqChan):
+        try:
+            newFreq = str(newFreqChan).split()[0]
+        except IndexError:
+            newFreq = ''
         bssids = set()
         for heatmapName in self.__scene.heatmapNames():
             freq, bssid = heatmapName.split("Hz_")
