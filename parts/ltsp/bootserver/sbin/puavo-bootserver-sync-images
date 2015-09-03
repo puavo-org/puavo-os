@@ -501,7 +501,13 @@ def fetch_source_urls
   res = client.get("/v3/boot_servers/#{etc.hostname}")
 
   data = res.parse()
-  return data["image_series_sources"]
+
+  source_urls = data["image_series_sources"]
+
+  raise 'Could not read sources urls from Puavo' \
+    unless source_urls.kind_of?(Array)
+
+  return source_urls
 end
 
 # Load series json definition files 
