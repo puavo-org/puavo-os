@@ -149,7 +149,29 @@ class Series
   end
 end
 
-class Image
+class SyncFile
+  # Checks if the file in the filesystem has the same sha256 as the metadata.
+  # To speed up things, the filesize needs to match before sha256 is 
+  # calculated. The results are cached and rechecked only if file mtime 
+  # changes.
+  def verify
+    if @verified and @mtime and File.mtime(full_path) == @mtime
+      return @verify_result
+    end
+
+    @verify_result = false
+
+    if File.exists?(full_path) and File.size(full_path)==@size
+      @mtime = File.mtime(full_path)
+      @verify_result = Digest::SHA2.file(full_path).hexdigest.eql?(@sha256)
+    end
+
+    @verified = true
+    return @verify_result
+  end
+end
+
+class Image < SyncFile
   attr_reader :version, :filename, :size, :sha256, :urls, :diffs_from_older, :in_use, :id
 
   def initialize(version, filename, size, sha256, id, urls)
@@ -208,26 +230,6 @@ class Image
     end
 
     raise "Invalid image filename #{@filename}"
-  end
-
-  # Checks if the file in the filesystem has the same sha256 as the metadata.
-  # To speed up things, the filesize needs to match before sha256 is 
-  # calculated. The results are cached and rechecked only if file mtime 
-  # changes.
-  def verify
-    if @verified and @mtime and File.mtime(full_path) == @mtime
-      return @verify_result
-    end
-
-    @verify_result = false
-
-    if File.exists?(full_path) and File.size(full_path)==@size
-      @mtime = File.mtime(full_path)
-      @verify_result = Digest::SHA2.file(full_path).hexdigest.eql?(@sha256)
-    end
-
-    @verified = true
-    return @verify_result
   end
 
   def download
@@ -315,7 +317,7 @@ class Image
   end
 end
 
-class Diff
+class Diff < SyncFile
   attr_reader :baseimage, :targetimage, :filename, :size, :sha256, :urls, :in_use
 
   def initialize(baseimage, targetimage, filename, size, sha256, urls)
@@ -338,22 +340,6 @@ class Diff
     end
 
     raise "Invalid rdiff filename #{@filename}"
-  end
-
-  def verify
-    if @verified and @mtime and File.mtime(full_path) == @mtime
-      return @verify_result
-    end
-
-    @verify_result = false
-
-    if File.exists?(full_path) and File.size(full_path)==@size
-      @mtime = File.mtime(full_path)
-      @verify_result = Digest::SHA2.file(full_path).hexdigest.eql?(@sha256)
-    end
-
-    @verified = true
-    return @verify_result
   end
 
   def patch
@@ -666,6 +652,7 @@ BANNER_EOF
     options[:diff_limit] = limit
   end
 
+  # XXX not used yet
   options[:download_path] = "/opt/ltsp/images"
   opts.on("--download_path PATH") do |path|
     options[:download_path] = path
