@@ -400,16 +400,16 @@ def write_managed_images(images)
 end
 
 # Download file from specified url and check that the sha256 checksum of 
-# the downloaded file matches the given sha256.
+# the downloaded file matches the given size and sha256.
 #
-# If the file was downloaded successfully and the checksum matches, true 
-# is returned, otherwise false is returned.
-def download_file(url, dest_file, size, sha256)
+# If the file was downloaded successfully and the size and the checksum
+# matches, true is returned, otherwise false is returned.
+def download_file(url, dest_file, expected_size, sha256)
   uri = URI.parse(url)
 
   http = Net::HTTP.new(uri.host, uri.port)
   http.ca_file = "/etc/puavo/certs/rootca.pem"
-#  http.ca_file = "/etc/ssl/certs/SecureTrust_CA.pem"
+#  http.ca_file = "/etc/ssl/certs/SecureTrust_CA.pem"	# XXX ?
   http.verify_mode = OpenSSL::SSL::VERIFY_PEER
   http.use_ssl = true
 
@@ -430,7 +430,7 @@ def download_file(url, dest_file, size, sha256)
       temp_file = File.new(dest_file, "w")
       temp_file.binmode
 
-      size = 0
+      received_size = 0
       progress = 0
       total = response.header["Content-Length"].to_i
 
@@ -438,7 +438,7 @@ def download_file(url, dest_file, size, sha256)
         hash << chunk
 
         temp_file << chunk
-        size += chunk.size
+        received_size += chunk.size
         new_progress = (size * 100) / total
         unless new_progress == progress
           puts "\rDownloading %s (%3d%%) " % [dest_file, new_progress]
@@ -448,6 +448,8 @@ def download_file(url, dest_file, size, sha256)
       end
 
       temp_file.close()
+
+      return false if expected_size != received_size
 
       if hash.to_s.eql?(sha256)
         return true
