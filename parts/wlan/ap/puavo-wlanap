@@ -128,11 +128,11 @@ puavo-wlanap {
     multi     yes;
 
     up {
-        program "<%= THIS_SCRIPT %> --ctrlmsg 'vtun-up:%%:<%= bss[:bridge] %>'";
+        program "<%= THIS_SCRIPT %> --rundir '<%= rundir %>' --ctrlmsg 'vtun-up:%%:<%= bss[:bridge] %>'";
     };
 
     down {
-        program "<%= THIS_SCRIPT %> --ctrlmsg 'vtun-down:%%:<%= bss[:bridge] %>'";
+        program "<%= THIS_SCRIPT %> --rundir '<%= rundir %>' --ctrlmsg 'vtun-down:%%:<%= bss[:bridge] %>'";
     };
 }
 EOF
