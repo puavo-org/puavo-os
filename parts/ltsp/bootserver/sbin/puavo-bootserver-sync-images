@@ -393,7 +393,7 @@ def load_managed_images
       json = JSON.parse(File.read("/var/lib/puavo/images.json"))
 
     end
-  rescue Exception => e
+  rescue StandardError => e
     puts "Reading /var/lib/puavo/images.json failed: #{e}"
   end
 
@@ -780,7 +780,7 @@ begin
       end
     end
   end
-rescue Exception => e
+rescue StandardError => e
   puts e.inspect
   warning "Error: #{e}"
   exit 1
