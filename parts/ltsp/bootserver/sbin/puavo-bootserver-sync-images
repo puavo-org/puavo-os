@@ -117,7 +117,7 @@ class Series
     old_image = @by_id[old_image_id]
     new_image = @by_id[new_image_id]
 
-    if old_image and new_image
+    if old_image && new_image
       new_image.mark_diff_in_use(old_image)
     else
       info "Series is missing diff from #{old_image_id} to #{new_image_id}"
@@ -128,7 +128,7 @@ class Series
     baseimage = get_image(from_version)
     targetimage = get_image(to_version)
 
-    if baseimage and targetimage
+    if baseimage && targetimage
       diff = Diff.new(baseimage, targetimage, filename, size, sha256, urls)
       targetimage.add_diff(diff)
 #    else
@@ -186,7 +186,7 @@ class SyncFile
       return false
     end
 
-    if @verified and @mtime and current_mtime == @mtime
+    if @verified && @mtime && current_mtime == @mtime
       return @verify_result
     end
 
@@ -239,7 +239,7 @@ class Image < SyncFile
 
   def add_diff(diff)
     # Not a diff for this?
-    if diff.targetimage.version != @version and diff.baseimage.version != @version
+    if diff.targetimage.version != @version && diff.baseimage.version != @version
       return
     end
 
@@ -247,7 +247,7 @@ class Image < SyncFile
       @diffs_from_older[diff.baseimage.version] = diff
     end
 
-    if diff.baseimage.version == @version and diff.targetimage.version > @version
+    if diff.baseimage.version == @version && diff.targetimage.version > @version
       @diff_to_newer[diff.targetimage.version] = diff
     end
   end
@@ -277,17 +277,13 @@ class Image < SyncFile
 
   # Figure out how to 
   def materialize
-    if verify
-      return Result.new(true, "Image exists already", @filename)
-    end
+    verify and return Result.new(true, "Image exists already", @filename)
 
-    if patch_from_old
-      return Result.new(true, "Patched from older image", @filename)
-    end
+    patch_from_old and return Result.new(true,
+                                         "Patched from older image",
+                                         @filename)
 
-    if download
-      return Result.new(true, "Downloaded full image", @filename)
-    end
+    download and return Result.new(true, "Downloaded full image", @filename)
 
     return Result.new(false, "Failed to patch or download image", @filename)
   end
@@ -303,7 +299,7 @@ class Image < SyncFile
     end
 
     mindiffs.each do |version, diff|
-      if diff.baseimage.verify and diff.verify
+      if diff.baseimage.verify && diff.verify
         diff.patch
 
         return true
@@ -551,14 +547,14 @@ def query_devices(series)
 
     bootmode = device["boot_mode"]
 
-    if bootmode and bootmode.eql?("netboot")
+    if bootmode && bootmode.eql?("netboot")
       # Netboot devices do not need diffs
       series.mark_image_in_use(preferred_image)
       series.mark_image_in_use(boot_image)
     else
       # Other devices need diffs from current image to preferred 
 
-      if preferred_image and current_image and !preferred_image.eql?(current_image)
+      if preferred_image && current_image && !preferred_image.eql?(current_image)
         series.mark_diff_in_use(current_image, preferred_image)
       end
 
