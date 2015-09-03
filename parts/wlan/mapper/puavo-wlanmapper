@@ -382,7 +382,7 @@ class Monitor(QObject):
         self.__horst_outfile_path = os.path.join(_tmpdir, 'horst.out')
         self.__horst_configfile_path = os.path.join(_tmpdir, 'horst.conf')
 
-        self.setChannelDwellTime(1100)
+        self.setChannelDwellTime(500)
 
     def channelDwellTime(self):
         return self.__dwell
@@ -492,7 +492,7 @@ class MonitorWidget(QWidget):
         because the monitor has more chances to hear beacons. To maximize the
         chances of hearing beacons from all surrounding APs, the channel dwell
         time should be set a bit higher than the shortest expected beacon
-        interval. In practice, 1100ms should be enough.
+        interval.
 
         </p>"""
 
