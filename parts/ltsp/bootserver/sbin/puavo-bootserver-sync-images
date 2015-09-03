@@ -469,14 +469,24 @@ def parse_series_data(series_data)
     series = Series.new(key, data["architecture"])
 
     data["images"].each do |image|
-      image = Image.new(image["version"], image["filename"], image["size"], image["sha256"], image["id"], [ image["url"] ])
+      image = Image.new(image["version"],
+                        image["filename"],
+                        image["size"],
+                        image["sha256"],
+                        image["id"],
+                        [ image["url"] ])
       series.add_image(image)
     end
 
     data["images"].each do |image|
       if image["diffs"]
         image["diffs"].each do |data|
-          series.add_diff(data["version"], image["version"], data["filename"], data["size"], data["sha256"], [ data["url"] ])
+          series.add_diff(data["version"],
+                          image["version"],
+                          data["filename"],
+                          data["size"],
+                          data["sha256"],
+                          [ data["url"] ])
         end
       end
     end
