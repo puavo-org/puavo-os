@@ -1,3 +1,24 @@
+puavo-wlan (0.9.1) trusty; urgency=medium
+
+  * New release
+  * mapper: show also channels numbers in the frequency list
+  * mapper: just renames
+  * mapper: save and load essids
+  * mapper: increase the default dwell time step to 50
+  * mapper: shorten the default dwell time to 500ms
+  * mapper: show ESSIDs too in the BSSID list
+  * mapper: fix layout pixmap setup when opening a existing scene file
+  * mapper: make Spot.measurement a property
+  * mapper: add debian dependencies due to horst bundling
+  * mapper: add clean target to Makefile
+  * mapper: build and used bundled horst
+  * Squashed 'mapper/horst/' content from commit d05ac43
+  * mapper: update horst output field parsing
+  * mapper: remove interface preparations, horst can do them nowadays
+  * Git(c7bcce625264001d2f3904b62e249875a03fe55a)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Fri, 04 Sep 2015 00:07:49 +0300
+
 puavo-wlan (0.9.0) trusty; urgency=medium
 
   * New release
