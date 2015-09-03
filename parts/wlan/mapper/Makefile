@@ -20,7 +20,12 @@ install: horst installdirs
 		puavo-wlanmapper \
 		puavo-wlanmapper-horst
 
+clean:
+	make -C horst clean
+	rm -f puavo-wlanmapper-horst
+
 .PHONY: all	    \
+	clean	    \
 	horst	    \
 	install	    \
 	installdirs
