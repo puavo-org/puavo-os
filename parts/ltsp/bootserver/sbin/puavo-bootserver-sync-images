@@ -378,6 +378,7 @@ class Diff
   end
 end
 
+# XXX not used yet, how should this be used?
 def load_managed_images
   images = Hash.new
 
@@ -393,6 +394,7 @@ def load_managed_images
   images
 end
 
+# XXX not used yet, how should this be used?
 def write_managed_images(images)
   File.open("/var/lib/puavo/images.json", "w") do |f|
     f.write(images.to_json)
