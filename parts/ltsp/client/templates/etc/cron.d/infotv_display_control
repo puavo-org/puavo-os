@@ -3,5 +3,17 @@
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
+<% if (Integer(@device['daytime_start_hour'], 10) rescue false) \
+        && 0 <= Integer(@device['daytime_start_hour'], 10) \
+        &&      Integer(@device['daytime_start_hour'], 10) <= 24
+%>0 <%= Integer(@device['daytime_start_hour'], 10) % 24 %> * * 1-5	root	iivari-display_on
+<% else %>
 0 7  * * 1-5	root	iivari-display_on
+<% end %>
+<% if (Integer(@device['daytime_end_hour'], 10) rescue false) \
+        && 0 <= Integer(@device['daytime_end_hour'], 10) \
+        &&      Integer(@device['daytime_end_hour'], 10) <= 24
+%>0 <%= Integer(@device['daytime_end_hour'], 10) % 24 %> * * 1-5	root	iivari-display_off
+<% else %>
 0 17 * * 1-5	root	iivari-display_off
+<% end %>
