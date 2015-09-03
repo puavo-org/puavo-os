@@ -90,6 +90,7 @@ class Scene(QGraphicsScene):
         self.__currentSpotMeasurements = {}
 
         self.__spots = []
+        self.essids = {}
 
         if layoutPixmap is None:
             layoutPixmap = QPixmap()
@@ -203,6 +204,7 @@ class Scene(QGraphicsScene):
                 bssidmap = self.__currentSpotMeasurements.setdefault(beacon.freq, {})
                 rssi = bssidmap.get(beacon.bssid, beacon.rssi)
                 bssidmap[beacon.bssid] = (beacon.rssi + rssi) / 2
+                self.essids[beacon.bssid] = beacon.ssid
 
             self.toggleSpot(self.__currentSpot)
 
@@ -773,9 +775,10 @@ class SceneWidget(QWidget):
         if self.__freqListWidget.currentRow() == -1 and self.__freqListWidget.count() > 0:
             self.__freqListWidget.setCurrentRow(0)
 
-    def __setBSSID(self, bssid):
-        if not bssid.isNull():
+    def __setBSSID(self, bssid_essid):
+        if not bssid_essid.isNull():
             freq = self.__freqListWidget.currentItem().text()
+            bssid = str(bssid_essid).split()[0]
             self.__scene.setCurrentHeatmap("%sHz_%s" % (freq, bssid))
 
     def __setFreq(self, newFreq):
@@ -785,8 +788,10 @@ class SceneWidget(QWidget):
             if freq == newFreq:
                 bssids.add(bssid)
 
+        items = ["%s (%s)" % (b, self.__scene.essids[b]) for b in bssids]
+
         self.__bssidListWidget.clear()
-        self.__bssidListWidget.addItems(list(bssids))
+        self.__bssidListWidget.addItems(items)
         self.__bssidListWidget.setCurrentRow(0)
 
 INTERFACES = get_dot11_interfaces()
