@@ -463,10 +463,10 @@ def download_file(url, dest_file, size, sha256)
   return false
 end
 
-def parse_series_data(json)
+def parse_series_data(series_data)
   result = Hash.new
 
-  json.each_pair do |key, data|
+  series_data.each_pair do |key, data|
     series = Series.new(key, data["architecture"])
 
     data["images"].each do |image|
@@ -692,13 +692,16 @@ end
 begin
   # Load series information from sources specified in bootserver's
   # device information.
-  if options[:url]
-    source_urls = [ options[:url] ]
+  if options[:file]
+    all_series = parse_series_data( JSON.parse( IO.read(options[:file]) ) )
   else
-    source_urls = fetch_source_urls()
+    if options[:url]
+      source_urls = [ options[:url] ]
+    else
+      source_urls = fetch_source_urls()
+    end
+    all_series = load_series_data(source_urls)
   end
-
-  all_series = load_series_data(source_urls)
 
   if options[:series]
     series_name = options[:series]
