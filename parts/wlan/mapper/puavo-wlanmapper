@@ -389,15 +389,6 @@ class Monitor(QObject):
         if self.__process is not None:
             return False
 
-        if QProcess.execute('/sbin/ifconfig', [self.__iface, 'down']) != 0:
-            return False
-
-        if QProcess.execute('/sbin/iwconfig', [self.__iface, 'mode', 'monitor']) != 0:
-            return False
-
-        if QProcess.execute('/sbin/ifconfig', [self.__iface, 'up']) != 0:
-            return False
-
         self.__process = QProcess(self)
         self.__process.setProcessChannelMode(QProcess.ForwardedChannels)
 
