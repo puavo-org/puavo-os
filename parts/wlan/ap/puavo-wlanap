@@ -367,23 +367,23 @@ def get_bss_list(use_puavo, nets)
   end
 end
 
+def write_conf(rundir, filename, conf)
+  File.open(File.join(rundir, filename), 'w', 0640) do |file|
+    file.write(conf)
+  end
+end
+
 def write_hostapd_conf(phy_list, bss_list, rundir)
   phy_list.each do |phy|
     conf = ERB.new(HOSTAPD_CONF_TEMPLATE, 3, '<>').result(binding)
-    conf_filepath = File.join(rundir, "hostapd_#{phy[:iface]}.conf")
-    File.open(conf_filepath, 'w', 0640) do |conf_file|
-      conf_file.write(conf)
-    end
+    write_conf(rundir, "hostapd_#{phy[:iface]}.conf", conf)
   end
 end
 
 def write_vtund_conf(bss_list, rundir)
   bss_list.each do |bss|
     conf = ERB.new(VTUND_CONF_TEMPLATE, 3, '<>').result(binding)
-    conf_filepath = File.join(rundir, "vtund_#{bss[:bridge]}.conf")
-    File.open(conf_filepath, 'w', 0640) do |conf_file|
-      conf_file.write(conf)
-    end
+    write_conf(rundir, "vtund_#{bss[:bridge]}.conf", conf)
   end
 end
 
