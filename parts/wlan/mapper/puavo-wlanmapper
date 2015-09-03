@@ -427,12 +427,13 @@ class Monitor(QObject):
         result = []
 
         with open(self.__horst_outfile_path) as f:
+            f.readline() # Ignore header
             for line in f:
                 fields = [s.strip() for s in line.strip().split(',')]
-                bssid = fields[1]
-                rssi = fields[5]
-                freq = fields[10]
-                ssid = fields[12]
+                bssid = fields[4]
+                rssi = fields[6]
+                freq = fields[9]
+                ssid = fields[11]
 
                 result.append(Beacon(rssi=int(rssi), bssid=bssid,
                                      freq=int(freq), ssid=ssid))
