@@ -83,18 +83,18 @@ class Series
   def initialize(name, arch)
     @name = name
     @arch = arch
-    @images = Hash.new
+    @images_by_version = Hash.new
     @by_filename = Hash.new
     @by_id = Hash.new
   end
 
   def add_image(image)
-    @images[image.version] = image
+    @images_by_version[image.version] = image
     @by_id[image.id] = image
   end
 
   def get_image(version)
-    return @images[version]
+    return @images_by_version[version]
   end
 
   def get_by_filename(imagename)
@@ -137,22 +137,15 @@ class Series
   end
 
   def images
-    return @images.values
+    return @images_by_version.values
   end
 
   # Returns specified number of newest images in an array. The images are
   # sorted oldest first so that when fetching the images, newer images can 
   # be created using diffs from older images.
   def newest(limit)
-    versions = @images.keys.sort.reverse.slice(0,limit).reverse
-
-    images = Array.new
-
-    versions.each do |version|
-      images << @images[version]
-    end
-
-    images
+    versions = @images_by_version.keys.sort.reverse.slice(0,limit).reverse
+    versions.map { |version| @images_by_version[version] }
   end
 end
 
