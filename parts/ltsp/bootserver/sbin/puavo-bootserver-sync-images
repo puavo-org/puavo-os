@@ -150,6 +150,17 @@ class Series
 end
 
 class SyncFile
+  def initialize(filename, sha256, size, urls)
+    @filename = filename
+    @sha256   = sha256
+    @size     = size
+    @urls     = urls
+
+    @mtime         = nil
+    @verified      = false
+    @verify_result = false
+  end
+
   def full_path
     # The point of this is to check that filename does not get out of
     # basedir by having ".." or some such.
@@ -176,6 +187,7 @@ class SyncFile
     end
 
     @verified = true
+
     return @verify_result
   end
 end
@@ -184,15 +196,11 @@ class Image < SyncFile
   attr_reader :version, :filename, :size, :sha256, :urls, :diffs_from_older, :in_use, :id
 
   def initialize(version, filename, size, sha256, id, urls)
+    super(filename, sha256, size, urls)
+
     @version = version
-    @filename = filename
-    @size = size
-    @sha256 = sha256
-    @urls = urls
     @diffs_from_older = Hash.new
     @diff_to_newer = Hash.new
-    @verified = false
-    @verify_result = false
     @in_use = false
 
     if id
@@ -322,14 +330,10 @@ class Diff < SyncFile
   attr_reader :baseimage, :targetimage, :filename, :size, :sha256, :urls, :in_use
 
   def initialize(baseimage, targetimage, filename, size, sha256, urls)
+    super(filename, sha256, size, urls)
+
     @baseimage = baseimage
     @targetimage = targetimage
-    @filename = filename
-    @size = size
-    @sha256 = sha256
-    @urls = urls
-    @verified = false
-    @verify_result = false
     @in_use = true
   end
 
