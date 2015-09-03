@@ -371,7 +371,9 @@ def write_hostapd_conf(phy_list, bss_list, rundir)
   phy_list.each do |phy|
     conf = ERB.new(HOSTAPD_CONF_TEMPLATE, 3, '<>').result(binding)
     conf_filepath = File.join(rundir, "hostapd_#{phy[:iface]}.conf")
-    File.write(conf_filepath, conf)
+    File.open(conf_filepath, 'w', 0640) do |conf_file|
+      conf_file.write(conf)
+    end
   end
 end
 
@@ -379,7 +381,9 @@ def write_vtund_conf(bss_list, rundir)
   bss_list.each do |bss|
     conf = ERB.new(VTUND_CONF_TEMPLATE, 3, '<>').result(binding)
     conf_filepath = File.join(rundir, "vtund_#{bss[:bridge]}.conf")
-    File.write(conf_filepath, conf)
+    File.open(conf_filepath, 'w', 0640) do |conf_file|
+      conf_file.write(conf)
+    end
   end
 end
 
