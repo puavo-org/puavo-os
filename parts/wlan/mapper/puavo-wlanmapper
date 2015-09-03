@@ -93,8 +93,8 @@ class Scene(QGraphicsScene):
 
         if layoutPixmap is None:
             layoutPixmap = QPixmap()
-        self.__layoutPixmap = layoutPixmap
-        self.addPixmap(self.__layoutPixmap).setZValue(-1)
+        self.__layoutPixmapItem = self.addPixmap(layoutPixmap)
+        self.__layoutPixmapItem.setZValue(-1)
 
         self.__heatmaps = {}
         self.__currentHeatmap = None
@@ -145,7 +145,7 @@ class Scene(QGraphicsScene):
             src_image = archive_file.extractfile("scene/layout.png")
             with open(os.path.join(_tmpdir, "layout.png"), "wb") as dst_image:
                 shutil.copyfileobj(src_image, dst_image)
-            self.__layoutPixmap.load(os.path.join(_tmpdir, "layout.png"))
+            self.__layoutPixmapItem.setPixmap(QPixmap(os.path.join(_tmpdir, "layout.png")))
 
             spots_picklefile = archive_file.extractfile("scene/spots.pickle")
             spots_data = pickle.load(spots_picklefile)
@@ -227,8 +227,8 @@ class Scene(QGraphicsScene):
         xs = measurements.pop('x')
         ys = measurements.pop('y')
 
-        width = self.__layoutPixmap.width()
-        height = self.__layoutPixmap.height()
+        width = self.__layoutPixmapItem.pixmap().width()
+        height = self.__layoutPixmapItem.pixmap().height()
 
         for freq, bssidmap in measurements.items():
 
