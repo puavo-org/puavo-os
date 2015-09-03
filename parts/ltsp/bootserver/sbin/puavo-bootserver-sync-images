@@ -175,14 +175,25 @@ class SyncFile
   # calculated. The results are cached and rechecked only if file mtime 
   # changes.
   def verify
-    if @verified and @mtime and File.mtime(full_path) == @mtime
+    begin
+      current_mtime = File.mtime(full_path)
+      current_size  = File.size(full_path)
+    rescue StandardError => e
+      warning("Problem in inspecting #{ full_path }: #{ e.message }")
+      # we can not verify something which evades even basic inspection
+      @verified = false
+      @verify_result = false
+      return false
+    end
+
+    if @verified and @mtime and current_mtime == @mtime
       return @verify_result
     end
 
     @verify_result = false
 
-    if File.exists?(full_path) and File.size(full_path)==@size
-      @mtime = File.mtime(full_path)
+    if current_size == @size
+      @mtime = current_mtime
       @verify_result = Digest::SHA2.file(full_path).hexdigest.eql?(@sha256)
     end
 
