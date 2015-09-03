@@ -408,7 +408,8 @@ class Monitor(QObject):
 
         args = ['-c', self.__horst_configfile_path]
 
-        self.__process.start('/usr/sbin/horst', args, QIODevice.ReadOnly)
+        self.__process.start("%s-horst" % os.path.abspath(__file__), args,
+                             QIODevice.ReadOnly)
 
         return True
 

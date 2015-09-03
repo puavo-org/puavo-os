@@ -6,15 +6,21 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
-all:
+all: horst
+
+horst:
+	make -C horst
+	cp horst/horst puavo-wlanmapper-horst
 
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 
-install: installdirs
+install: horst installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
-		puavo-wlanmapper
+		puavo-wlanmapper \
+		puavo-wlanmapper-horst
 
 .PHONY: all	    \
+	horst	    \
 	install	    \
 	installdirs
