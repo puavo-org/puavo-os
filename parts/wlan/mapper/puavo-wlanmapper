@@ -512,13 +512,20 @@ class MonitorWidget(QWidget):
         dwellLabel.setWhatsThis(dwellWhatsThis)
         layout.addRow(dwellLabel, self.__dwellSpinBox)
 
+        self.__statusLabel = QLabel("Ready")
+        layout.addRow("Status:", self.__statusLabel)
+
         self.setLayout(layout)
 
     def __disable(self):
-        self.setEnabled(False)
+        self.__statusLabel.setText("Scanning...")
+        self.__ifaceComboBox.setEnabled(False)
+        self.__dwellSpinBox.setEnabled(False)
 
     def __enable(self):
-        self.setEnabled(True)
+        self.__statusLabel.setText("Ready")
+        self.__ifaceComboBox.setEnabled(True)
+        self.__dwellSpinBox.setEnabled(True)
 
     def __saveInterface(self):
         self.__monitor.setInterface(self.__ifaceComboBox.currentText())
