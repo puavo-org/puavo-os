@@ -101,11 +101,8 @@ class Series
 
   def mark_image_in_use(image_id)
     image = @by_id[image_id]
-
     if image
       image.mark_in_use
-    else
-      warning "Series is missing image #{image_id}"
     end
   end
 
@@ -115,8 +112,6 @@ class Series
 
     if old_image && new_image
       new_image.mark_diff_in_use(old_image)
-    else
-      warning "Series is missing diff from #{old_image_id} to #{new_image_id}"
     end
   end
 
@@ -127,12 +122,6 @@ class Series
     if baseimage && targetimage
       diff = Diff.new(baseimage, targetimage, filename, size, sha256, urls)
       targetimage.add_diff(diff)
-    elsif !baseimage
-      warning "base image #{from_version} is missing"
-    elsif !targetimage
-      warning "target image #{to_version} is missing"
-    else
-      warning "base image #{from_version} and target image #{to_version} are missing"
     end
   end
 
