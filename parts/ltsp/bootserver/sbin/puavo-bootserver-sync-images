@@ -431,7 +431,7 @@ def download_file(url, dest_file, expected_size, sha256)
 
         temp_file << chunk
         received_size += chunk.size
-        new_progress = (size * 100) / total
+        new_progress = (received_size * 100) / total
         unless new_progress == progress
           puts "\rDownloading %s (%3d%%) " % [dest_file, new_progress]
         end
