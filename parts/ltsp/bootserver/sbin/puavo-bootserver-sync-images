@@ -78,11 +78,10 @@ class Result
 end
 
 class Series
-  attr_reader :name, :arch
+  attr_reader :name
 
-  def initialize(name, arch)
+  def initialize(name)
     @name = name
-    @arch = arch
 
     @by_id = Hash.new
     @by_version = Hash.new
@@ -480,7 +479,7 @@ def parse_series_data(series_data)
   result = Hash.new
 
   series_data.each_pair do |key, data|
-    series = Series.new(key, data["architecture"])
+    series = Series.new(key)
 
     data["images"].each do |image|
       image = Image.new(image["version"],
@@ -621,7 +620,6 @@ parser = OptionParser.new do |opts|
 
 {
   "demo-trusty": {
-    "architecture": "i386"
     "images": [
       {
         "size": 10146996224,
