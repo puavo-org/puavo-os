@@ -45,15 +45,16 @@
 # The managed images and rdiffs are stored under /var/lib/puavo/images.json. The 
 # contents of the file are the same as the last loaded image series json file. 
 
-require 'puavo'
-require 'rest-client'
-require 'json'
-require 'net/http'
 require "digest"
 require 'digest/sha2'
-require 'syslog'
+require 'fileutils'
+require 'json'
+require 'net/http'
+require 'puavo'
 require 'puavo/etc'
 require 'puavo/rest-client'
+require 'rest-client'
+require 'syslog'
 
 def syslog(channel, priority, *args)
   Syslog.log(priority, *args)
@@ -162,11 +163,14 @@ class SyncFile
   end
 
   def delete
-    begin
-      info "Deleting '#{ full_path }'"
-      File.delete(full_path)
-    rescue StandardError => e
-      warning "Could not delete '#{ full_path }': #{ e.message }"
+    all_possible_paths.each do |path|
+      next unless File.exists?(path)
+      info "Deleting '#{ path }'"
+      begin
+        File.delete(path)
+      rescue StandardError => e
+        warning "Could not delete '#{ path }': #{ e.message }"
+      end
     end
   end
 
@@ -203,7 +207,7 @@ class SyncFile
         hash = Digest::SHA2.new
         received_size = 0
 
-        File.open(full_path, "w") do |temp_file|
+        File.open(download_path, "w") do |temp_file|
           temp_file.binmode
 
           progress = 0
@@ -217,14 +221,19 @@ class SyncFile
             new_progress = (received_size * 100) / total
             if progress != new_progress
               progress = new_progress
-              info "Downloading %s (%3d%%)" % [full_path, progress]
+              info "Downloading %s (%3d%%)" % [download_path, progress]
             end
           end
         end
 
         return false unless received_size == @size
 
-        return true if hash.to_s == @sha256
+        if hash.to_s == @sha256
+          # verification happens while downloading, so no need to verify
+          # it later.
+          FileUtils.mv(download_path, final_path)
+          return true
+        end
       else
         warning "puavo-rest-client error, received response #{response.code}"
         return false
@@ -234,13 +243,34 @@ class SyncFile
     return false
   end
 
-  def full_path
+  def do_path_cleanup(path)
     # The point of this is to check that filename does not get out of
-    # basedir by having ".." or some such.
-    path = File.expand_path("#{ basedir }/#{ @filename }")
-    return path if path.start_with?(basedir)
+    # basedir by having ".." or some such, it must be under basedir
+    # (where the meaning of basedir is different for images and diffs).
+    cleaned_up_path = File.expand_path(path)
+    return cleaned_up_path if path.start_with?(basedir)
 
-    raise "Invalid filename #{ @filename }"
+    raise "Invalid filename #{ path }"
+  end
+
+  def all_possible_paths
+    [ download_path, unverified_path, final_path ]
+  end
+
+  def download_path
+    return do_path_cleanup("#{ unverified_path }.partial")
+  end
+
+  def final_path
+    return do_path_cleanup("#{ basedir }/#{ @filename }")
+  end
+
+  def unverified_path
+    return do_path_cleanup("#{ final_path }.unverified")
+  end
+
+  def file_inplace
+    return File.exists?(final_path)
   end
 
   # Checks if the file in the filesystem has the same sha256 as the metadata.
@@ -248,18 +278,21 @@ class SyncFile
   # calculated. The results are cached and rechecked only if file mtime 
   # changes.
   def verify
+    # XXX if --force-verify command-line option is given, this step should
+    # XXX be skipped:
+    file_inplace and return true
+
     begin
-      current_mtime = File.mtime(full_path)
-      current_size  = File.size(full_path)
+      current_mtime = File.mtime(unverified_path)
+      current_size  = File.size(unverified_path)
+    rescue Errno::ENOENT
+      return @verified = @verify_result = false
     rescue StandardError => e
-      warning "Problem in inspecting #{ full_path }: #{ e.message }"
-      # we can not verify something which evades even basic inspection
-      @verified = false
-      @verify_result = false
-      return false
+      warning "Problem in inspecting #{ unverified_path }: #{ e.message }"
+      return @verified = @verify_result = false
     end
 
-    if @verified && @mtime && current_mtime == @mtime
+    if @verified && @mtime && @mtime == current_mtime
       return @verify_result
     end
 
@@ -267,7 +300,11 @@ class SyncFile
 
     if current_size == @size
       @mtime = current_mtime
-      @verify_result = Digest::SHA2.file(full_path).hexdigest.eql?(@sha256)
+      digest = Digest::SHA2.file(unverified_path).hexdigest
+      @verify_result = (digest == @sha256)
+      if @verify_result
+        FileUtils.mv(unverified_path, final_path)
+      end
     end
 
     @verified = true
@@ -319,7 +356,7 @@ class Image < SyncFile
 
   def newest_diffs(limit=0)
     versions = @diffs_from_older.keys.sort.reverse.slice(0,limit).reverse
-    return versions.map {|version| @diffs_from_older[version] }
+    return versions.map { |version| @diffs_from_older[version] }
   end
 
   def download_newest_diffs(limit=0)
@@ -352,6 +389,7 @@ class Image < SyncFile
     apply_diffs = lambda do |download_wanted|
                     mindiffs.each do |diff|
                       diff.apply(:download_wanted => download_wanted) \
+                        and verify                                    \
                         and return true
                     end
                     return false
@@ -390,12 +428,12 @@ class Diff < SyncFile
   def do_patching
     return true if system("rdiff",
                           "patch",
-                          @baseimage.full_path,
-                          full_path,
-                          @targetimage.full_path)
+                          @baseimage.final_path,
+                          final_path,
+                          @targetimage.unverified_path)
 
     warning "rdiff failed with exit code: #{ $?.exitstatus } when using" \
-              + " '#{ full_path }'"
+              + " '#{ final_path }'"
     return false      
   end
 
@@ -403,9 +441,8 @@ class Diff < SyncFile
     download_wanted = opts[:download_wanted]
 
     @baseimage.verify \
-      and ((not download_wanted) or download) \
-      and verify                              \
-      and do_patching                         \
+      and ((download_wanted or verify) or download) \
+      and do_patching                               \
       and return true
 
     return false
@@ -770,10 +807,7 @@ begin
         else
           image.diffs_from_older.values.each do |diff|
             if !diff.in_use
-              puts diff.inspect
-
               info "Delete diff: #{diff.filename}"
-
               diff.delete
             end
           end
