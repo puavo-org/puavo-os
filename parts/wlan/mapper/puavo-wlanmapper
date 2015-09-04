@@ -630,7 +630,10 @@ class MainWindow(QMainWindow):
                                                "Save the scene as",
                                                QDir.currentPath(),
                                                "Compressed Tar archives (*.tar.gz)")
+        filepath = str(filepath)
         if filepath:
+            if not str(filepath).endswith('.tar.gz'):
+                filepath = '%s.tar.gz' % filepath
             self.__scene.saveAs(filepath)
 
     def __newSceneDialog(self):
