@@ -105,6 +105,8 @@ class Series
 
     if image
       image.mark_in_use
+    else
+      info "Series is missing image #{image_id}"
     end
   end
 
@@ -126,8 +128,12 @@ class Series
     if baseimage && targetimage
       diff = Diff.new(baseimage, targetimage, filename, size, sha256, urls)
       targetimage.add_diff(diff)
-#    else
-#      puts "ERROR: baseimage #{from_version} or targetimage #{to_version} missing!"
+    elsif !baseimage
+      warning "ERROR: base image #{from_version} is missing"
+    elsif !targetimage
+      warning "ERROR: target image #{to_version} is missing"
+    else
+      warning "ERROR: base image #{from_version} and target image #{to_version} are missing"
     end
   end
 
@@ -243,14 +249,14 @@ class Image < SyncFile
 
   def add_diff(diff)
     # Not a diff for this?
-    if diff.targetimage.version != @version && diff.baseimage.version != @version
-      return
-    end
+    return unless diff.targetimage.version == @version \
+                    || diff.baseimage.version == @version
 
     if diff.baseimage.version < @version
       @diffs_from_older[diff.baseimage.version] = diff
     end
 
+    # XXX remove unless something will use this
     if diff.baseimage.version == @version && diff.targetimage.version > @version
       @diffs_to_newer[diff.targetimage.version] = diff
     end
@@ -268,10 +274,7 @@ class Image < SyncFile
   def download_newest_diffs(limit=0)
     @diffs_from_older.keys.sort.reverse.slice(0,limit).reverse.each do |key|
       diff = @diffs_from_older[key]
-
-      if !diff.verify
-        diff.download
-      end
+      diff.verify or diff.download
     end
   end
 
@@ -294,17 +297,13 @@ class Image < SyncFile
   # available and if none is found, then the smallest sized diff for an 
   # existing baseimage is downloaded.
   def patch_from_old
-    mindiffs = @diffs_from_older.sort_by do |version, diff|
-      diff.size
-    end
+    mindiffs = @diffs_from_older.sort_by { |version, diff| diff.size }
 
     mindiffs.each do |version, diff|
-      if diff.baseimage.verify && diff.verify
-        # XXX the return value of patch is not dealt with
-        diff.patch
-
-        return true
-      end
+      diff.baseimage.verify \
+        and diff.verify     \
+        and diff.patch      \
+        and return true
     end
 
     debug "No existing diff, downloading the smallest"
@@ -737,9 +736,9 @@ begin
     image_list.each do |image|
       debug "#{image.id} - starting sync"
 
-      result = image.materialize
       image.mark_in_use
 
+      result = image.materialize
       if result.succeeded
         info "#{image.id} - image sync ok: #{result.message}"
       else
