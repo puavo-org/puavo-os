@@ -290,8 +290,6 @@ class Image < SyncFile
 
     @version = version
     @diffs_from_older = Hash.new
-    @diffs_to_newer = Hash.new	# XXX not used for anything yet,
-				# XXX remove if no use appears
     @in_use = false
 
     if id
@@ -318,17 +316,10 @@ class Image < SyncFile
   end
 
   def add_diff(diff)
-    # Not a diff for this?
-    return unless diff.targetimage.version == @version \
-                    || diff.baseimage.version == @version
+    return unless diff.targetimage.version == @version
 
     if diff.baseimage.version < @version
       @diffs_from_older[diff.baseimage.version] = diff
-    end
-
-    # XXX remove unless something will use this
-    if diff.baseimage.version == @version && diff.targetimage.version > @version
-      @diffs_to_newer[diff.targetimage.version] = diff
     end
   end
 
