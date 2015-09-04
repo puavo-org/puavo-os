@@ -801,16 +801,14 @@ begin
 
       series.images.each do |image|
         if !image.in_use
-          debug "Delete image and all diff for #{image.id}"
+          image.delete	# does delete all diffs to image as well
+          next
+        end
 
-          image.delete
-        else
-          image.diffs_from_older.values.each do |diff|
-            if !diff.in_use
-              info "Delete diff: #{diff.filename}"
-              diff.delete
-            end
-          end
+        unused_diffs = image.diffs_from_older.values \
+                            .select { |diff| !diff.in_use }
+        unused_diffs.each do |diff|
+          diff.delete
         end
       end
     end
