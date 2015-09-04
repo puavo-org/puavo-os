@@ -105,7 +105,7 @@ class Series
     if image
       image.mark_in_use
     else
-      info "Series is missing image #{image_id}"
+      warning "Series is missing image #{image_id}"
     end
   end
 
@@ -116,7 +116,7 @@ class Series
     if old_image && new_image
       new_image.mark_diff_in_use(old_image)
     else
-      info "Series is missing diff from #{old_image_id} to #{new_image_id}"
+      warning "Series is missing diff from #{old_image_id} to #{new_image_id}"
     end
   end
 
@@ -128,11 +128,11 @@ class Series
       diff = Diff.new(baseimage, targetimage, filename, size, sha256, urls)
       targetimage.add_diff(diff)
     elsif !baseimage
-      warning "ERROR: base image #{from_version} is missing"
+      warning "base image #{from_version} is missing"
     elsif !targetimage
-      warning "ERROR: target image #{to_version} is missing"
+      warning "target image #{to_version} is missing"
     else
-      warning "ERROR: base image #{from_version} and target image #{to_version} are missing"
+      warning "base image #{from_version} and target image #{to_version} are missing"
     end
   end
 
@@ -493,10 +493,10 @@ def fetch_source_urls
   etc = PuavoEtc.new
   client = PuavoRestClient.new :auth => :etc
 
-  debug "Loading bootserver data from puavo-rest /v3/boot_servers/#{etc.hostname}"
+  url = "/v3/boot_servers/#{ etc.hostname }"
 
-  res = client.get("/v3/boot_servers/#{etc.hostname}")
-
+  debug "Loading bootserver data from puavo-rest url: '#{ url }'"
+  res = client.get(url)
   data = res.parse()
 
   source_urls = data["image_series_sources"]
