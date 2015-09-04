@@ -138,6 +138,8 @@ class Series
 end
 
 class SyncFile
+  attr_reader :filename, :in_use, :size
+
   def initialize(filename, sha256, size, urls)
     @filename = filename
     @sha256   = sha256
@@ -306,7 +308,7 @@ class SyncFile
 end
 
 class Image < SyncFile
-  attr_reader :version, :filename, :size, :sha256, :urls, :in_use, :id
+  attr_reader :id, :version
 
   def initialize(version, filename, size, sha256, id, urls)
     super(filename, sha256, size, urls)
@@ -394,7 +396,7 @@ class Image < SyncFile
 end
 
 class Diff < SyncFile
-  attr_reader :baseimage, :targetimage, :filename, :size, :sha256, :urls, :in_use
+  attr_reader :baseimage, :targetimage
 
   def initialize(baseimage, targetimage, filename, size, sha256, urls)
     super(filename, sha256, size, urls)
