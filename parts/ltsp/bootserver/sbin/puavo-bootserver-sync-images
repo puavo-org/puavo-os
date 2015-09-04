@@ -259,7 +259,7 @@ class SyncFile
     return do_path_cleanup("#{ final_path }.unverified")
   end
 
-  def file_inplace
+  def inplace?
     return File.exists?(final_path)
   end
 
@@ -274,7 +274,7 @@ class SyncFile
   def verify
     # XXX if --force-verify command-line option is given, this step should
     # XXX be skipped:
-    file_inplace and return true
+    inplace? and return true
 
     begin
       current_mtime = File.mtime(unverified_path)
@@ -355,14 +355,12 @@ class Image < SyncFile
   end
 
   def materialize
-    verify and return Result.new(true, "Image exists already")
+    inplace?       and return Result.new(true, "image exists already")
+    verify         and return Result.new(true, "unverified image verified OK")
+    patch_from_old and return Result.new(true, "patched from older image")
+    download       and return Result.new(true, "downloaded full image")
 
-    patch_from_old and return Result.new(true,
-                                         "Patched from older image")
-
-    download and return Result.new(true, "Downloaded full image")
-
-    return Result.new(false, "Failed to patch or download image")
+    return Result.new(false, "failed to patch or download image")
   end
 
   # Create the current image from an old image by using a patch. First 
@@ -429,6 +427,14 @@ class Diff < SyncFile
       and return true
 
     return false
+  end
+
+  def materialize
+    inplace? and return Result.new(true, "diff exists already")
+    verify   and return Result.new(true, "unverified diff verified OK")
+    download and return Result.new(true, "downloaded diff")
+
+    Result.new(false, "Failed to get a diff file")
   end
 end
 
@@ -702,7 +708,7 @@ begin
   end
 
   all_series.values.each do |series|
-    debug "Syncing series #{series.name}"
+    info ">>> Syncing series #{series.name}"
 
     if options[:image]
       image_list = [ series.get_by_id(options[:image]) ]
@@ -717,33 +723,33 @@ begin
     end
 
     image_list.each do |image|
-      debug "#{image.id} - starting sync"
+      info ">>> Starting sync for #{image.id}"
 
       image.mark_in_use
 
       result = image.materialize
       if result.succeeded
-        info "#{image.id} - image sync ok: #{result.message}"
+        info "  > Image sync OK for #{image.id}: #{result.message}"
       else
-        warning "#{image.id} - image sync failed: #{result.message}"
+        warning "  > Image sync FAILED for #{image.id}: #{result.message}"
       end
 
       image.download_newest_diffs(diff_limit)
     end
 
     if sync_client_diffs
-      debug "Downloading client diffs"
+      info ">>> Downloading client diffs"
 
       series.images.each do |image|
         image.diffs.each do |diff|
           next unless diff.in_use
 
-          if diff.verify
-            debug "#{diff.filename} - exists already"
-          elsif diff.download
-            info "#{diff.filename} - diff sync ok"
+          result = diff.materialize
+          if result.succeeded
+            info "  > Diff sync OK for #{ diff.filename }: #{ result.message }"
           else
-            warning "#{diff.filename} - diff sync failed"
+            warning "  > Diff sync FAILED for #{ diff.filename }:" \
+                      + " #{ result.message }"
           end
         end
       end
@@ -752,7 +758,7 @@ begin
     # Delete all images and rdiffs that are not either newest
     # or used by some client
     if delete_unused
-      debug "Checking for old images and diffs to delete"
+      info ">>> Checking for old images and diffs to delete"
 
       series.images.each do |image|
         if !image.in_use
