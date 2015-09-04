@@ -189,51 +189,45 @@ class SyncFile
 
     http = Net::HTTP.new(uri.host, uri.port)
     http.ca_file = "/etc/puavo/certs/rootca.pem"
-  #  http.ca_file = "/etc/ssl/certs/SecureTrust_CA.pem"	# XXX ?
+  #  http.ca_file = "/etc/ssl/certs/SecureTrust_CA.pem" # XXX ?
     http.verify_mode = OpenSSL::SSL::VERIFY_PEER
     http.use_ssl = true
 
     http.request_get(uri.path) do |response|
-      puts response.inspect
-      hash = Digest::SHA2.new
-
       case response
       when Net::HTTPNotFound
-	warning "404 - Not Found (#{url})"
-	return false
-
-      when Net::HTTPClientError
-	warning "Error: Client Error: #{response.inspect}"
-	return false
+        warning "404 - Not Found (#{url})"
+        return false
 
       when Net::HTTPOK
-	temp_file = File.new(full_path, "w")
-	temp_file.binmode
+        hash = Digest::SHA2.new
+        received_size = 0
 
-	received_size = 0
-	progress = 0
-	total = response.header["Content-Length"].to_i
+        File.open(full_path, "w") do |temp_file|
+          temp_file.binmode
 
-	response.read_body do |chunk|
-	  hash << chunk
+          progress = 0
+          total = response.header["Content-Length"].to_i
 
-	  temp_file << chunk
-	  received_size += chunk.size
-	  new_progress = (received_size * 100) / total
-	  unless new_progress == progress
-	    puts "\rDownloading %s (%3d%%) " % [full_path, new_progress]
-	  end
+          response.read_body do |chunk|
+            hash      << chunk
+            temp_file << chunk
 
-	  progress = new_progress
-	end
+            received_size += chunk.size
+            new_progress = (received_size * 100) / total
+            if progress != new_progress
+              progress = new_progress
+              info "Downloading %s (%3d%%)" % [full_path, progress]
+            end
+          end
+        end
 
-	temp_file.close()
+        return false unless received_size == @size
 
-	return false if @size != received_size
-
-	if hash.to_s.eql?(@sha256)
-	  return true
-	end
+        return true if hash.to_s == @sha256
+      else
+        warning "puavo-rest-client error, received response #{response.code}"
+        return false
       end
     end
 
