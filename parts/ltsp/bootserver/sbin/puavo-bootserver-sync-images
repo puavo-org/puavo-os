@@ -297,29 +297,19 @@ class Image < SyncFile
   # available and if none is found, then the smallest sized diff for an 
   # existing baseimage is downloaded.
   def patch_from_old
-    mindiffs = @diffs_from_older.sort_by { |version, diff| diff.size }
+    mindiffs = @diffs_from_older.sort_by { |version, diff| diff.size }.values
 
-    mindiffs.each do |version, diff|
-      diff.baseimage.verify \
-        and diff.verify     \
-        and diff.patch      \
-        and return true
-    end
+    apply_diffs = lambda do |download_wanted|
+                    mindiffs.each do |diff|
+                      diff.apply(:download_wanted => download_wanted) \
+                        and return true
+                    end
+                    return false
+                  end
 
+    apply_diffs.call(false) and return true
     debug "No existing diff, downloading the smallest"
-
-    mindiffs.each do |version, diff|
-      if diff.baseimage.verify
-        diff.download
-
-        if diff.verify
-          diff.patch
-
-           debug "Patched image"
-          return true
-        end
-      end
-    end
+    apply_diffs.call(true)  and return true
 
     return false
   end
@@ -347,7 +337,7 @@ class Diff < SyncFile
 
   def basedir; '/opt/ltsp/images/rdiffs'; end
 
-  def patch
+  def do_patching
     return true if system("rdiff",
                           "patch",
                           @baseimage.full_path,
@@ -357,6 +347,18 @@ class Diff < SyncFile
     warning "rdiff failed with exit code: #{ $?.exitstatus } when using" \
               + " '#{ full_path }'"
     return false      
+  end
+
+  def apply(opts)
+    download_wanted = opts[:download_wanted]
+
+    @baseimage.verify \
+      and ((not download_wanted) or download) \
+      and verify                              \
+      and do_patching                         \
+      and return true
+
+    return false
   end
 
   def download
