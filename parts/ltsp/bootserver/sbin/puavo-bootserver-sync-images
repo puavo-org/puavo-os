@@ -145,7 +145,7 @@ class Series
   # be created using diffs from older images.
   def newest(limit)
     versions = @images_by_version.keys.sort.reverse.slice(0,limit).reverse
-    versions.map { |version| @images_by_version[version] }
+    return versions.map { |version| @images_by_version[version] }
   end
 end
 
@@ -159,6 +159,14 @@ class SyncFile
     @mtime         = nil
     @verified      = false
     @verify_result = false
+  end
+
+  def delete
+    begin
+      File.delete(full_path)
+    rescue StandardError => e
+      warning "Could not delete '#{ full_path }': #{ e.message }"
+    end
   end
 
   def full_path
@@ -179,7 +187,7 @@ class SyncFile
       current_mtime = File.mtime(full_path)
       current_size  = File.size(full_path)
     rescue StandardError => e
-      warning("Problem in inspecting #{ full_path }: #{ e.message }")
+      warning "Problem in inspecting #{ full_path }: #{ e.message }"
       # we can not verify something which evades even basic inspection
       @verified = false
       @verify_result = false
@@ -211,7 +219,8 @@ class Image < SyncFile
 
     @version = version
     @diffs_from_older = Hash.new
-    @diff_to_newer = Hash.new
+    @diffs_to_newer = Hash.new	# XXX not used for anything yet,
+				# XXX remove if no use appears
     @in_use = false
 
     if id
@@ -233,7 +242,7 @@ class Image < SyncFile
     diff = @diffs_from_older[from_image.version]
 
     if diff
-      diff.mark_in_use()
+      diff.mark_in_use
     end
   end
 
@@ -248,7 +257,7 @@ class Image < SyncFile
     end
 
     if diff.baseimage.version == @version && diff.targetimage.version > @version
-      @diff_to_newer[diff.targetimage.version] = diff
+      @diffs_to_newer[diff.targetimage.version] = diff
     end
   end
 
@@ -257,12 +266,8 @@ class Image < SyncFile
   end
 
   def newest_diffs(limit=0)
-    diffs = Array.new
     versions = @diffs_from_older.keys.sort.reverse.slice(0,limit).reverse
-
-    versions.each {|version| diffs << @diffs_from_older[version] }
-
-    return diffs
+    return versions.map {|version| @diffs_from_older[version] }
   end
 
   def download_newest_diffs(limit=0)
@@ -300,6 +305,7 @@ class Image < SyncFile
 
     mindiffs.each do |version, diff|
       if diff.baseimage.verify && diff.verify
+        # XXX the return value of patch is not dealt with
         diff.patch
 
         return true
@@ -329,7 +335,7 @@ class Image < SyncFile
       diff.delete
     end
 
-    File.delete(full_path)
+    super
   end
 end
 
@@ -339,20 +345,24 @@ class Diff < SyncFile
   def initialize(baseimage, targetimage, filename, size, sha256, urls)
     super(filename, sha256, size, urls)
 
-    @baseimage = baseimage
+    @baseimage   = baseimage
     @targetimage = targetimage
-    @in_use = true
+
+    @in_use = false
   end
 
   def basedir; '/opt/ltsp/images/rdiffs'; end
 
   def patch
-    if !system("rdiff", "patch", @baseimage.full_path, full_path, @targetimage.full_path)
-      puts "rdiff failed with exit code: {$?.exitstatus}"
-      return false      
-    end
+    return true if system("rdiff",
+                          "patch",
+                          @baseimage.full_path,
+                          full_path,
+                          @targetimage.full_path)
 
-    return true
+    warning "rdiff failed with exit code: #{ $?.exitstatus } when using" \
+              + " '#{ full_path }'"
+    return false      
   end
 
   def download
@@ -361,10 +371,6 @@ class Diff < SyncFile
 
   def mark_in_use
     @in_use = true
-  end
-
-  def delete
-    File.delete(full_path)
   end
 end
 
@@ -722,8 +728,7 @@ begin
     debug "Syncing series #{series.name}"
 
     if options[:image]
-      image_list = Array.new
-      image_list << series.get_by_id(options[:image])
+      image_list = [ series.get_by_id(options[:image]) ]
       diff_limit = 0
     else
       # Check which images and diffs are needed for non-netboot devices
@@ -771,13 +776,14 @@ begin
       end
     end
 
-    # Delete all images and rdiffs that are not either newest or used by some client
+    # Delete all images and rdiffs that are not either newest
+    # or used by some client
     if delete_unused
       debug "Checking for old images and diffs to delete"
 
       series.images.each do |image|
         if !image.in_use
-          puts "Delete image and all diff for #{image.id}"
+          debug "Delete image and all diff for #{image.id}"
 
           image.delete
         else
@@ -785,7 +791,7 @@ begin
             if !diff.in_use
               puts diff.inspect
 
-              info "Delete diff :#{diff.filename}"
+              info "Delete diff: #{diff.filename}"
 
               diff.delete
             end
@@ -795,9 +801,8 @@ begin
     end
   end
 rescue StandardError => e
-  puts e.inspect
-  warning "Error: #{e}"
-  exit 1
+  warning "Error: #{ e.message }"
+  raise e
 end
 
 Syslog.close()
