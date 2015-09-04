@@ -132,9 +132,8 @@ class Series
   # Returns specified number of newest images in an array. The images are
   # sorted oldest first so that when fetching the images, newer images can 
   # be created using diffs from older images.
-  def newest(limit)
-    versions = @by_version.keys.sort.reverse.slice(0,limit).reverse
-    return versions.map { |version| @by_version[version] }
+  def newest_images(limit)
+    newest_by_version(@by_version, limit)
   end
 end
 
@@ -145,6 +144,7 @@ class SyncFile
     @size     = size
     @urls     = urls
 
+    @in_use        = false
     @mtime         = nil
     @verified      = false
     @verify_result = false
@@ -261,6 +261,10 @@ class SyncFile
     return File.exists?(final_path)
   end
 
+  def mark_in_use
+    @in_use = true
+  end
+
   # Checks if the file in the filesystem has the same sha256 as the metadata.
   # To speed up things, the filesize needs to match before sha256 is 
   # calculated. The results are cached and rechecked only if file mtime 
@@ -302,14 +306,13 @@ class SyncFile
 end
 
 class Image < SyncFile
-  attr_reader :version, :filename, :size, :sha256, :urls, :diffs_from_older, :in_use, :id
+  attr_reader :version, :filename, :size, :sha256, :urls, :in_use, :id
 
   def initialize(version, filename, size, sha256, id, urls)
     super(filename, sha256, size, urls)
 
     @version = version
-    @diffs_from_older = Hash.new
-    @in_use = false
+    @diffs_from_by_version = Hash.new
 
     if id
       @id = id
@@ -322,13 +325,8 @@ class Image < SyncFile
 
   def basedir; '/opt/ltsp/images'; end
 
-  def mark_in_use
-    @in_use = true
-  end
-
   def mark_diff_in_use(from_image)
-    diff = @diffs_from_older[from_image.version]
-
+    diff = @diffs_from_by_version[from_image.version]
     if diff
       diff.mark_in_use
     end
@@ -337,19 +335,18 @@ class Image < SyncFile
   def add_diff(diff)
     return unless diff.targetimage.version == @version
 
-    if diff.baseimage.version < @version
-      @diffs_from_older[diff.baseimage.version] = diff
+    if diff.baseimage.version != @version
+      @diffs_from_by_version[diff.baseimage.version] = diff
     end
   end
 
-  def newest_diffs(limit=0)
-    versions = @diffs_from_older.keys.sort.reverse.slice(0,limit).reverse
-    return versions.map { |version| @diffs_from_older[version] }
+  def diffs
+    @diffs_from_by_version.values
   end
 
   def download_newest_diffs(limit=0)
-    @diffs_from_older.keys.sort.reverse.slice(0,limit).reverse.each do |key|
-      diff = @diffs_from_older[key]
+    newest_by_version(@diffs_from_by_version, limit).each do |diff|
+      diff.mark_in_use
       diff.verify or diff.download
     end
   end
@@ -372,7 +369,7 @@ class Image < SyncFile
   # available and if none is found, then the smallest sized diff for an 
   # existing baseimage is downloaded.
   def patch_from_old
-    mindiffs = @diffs_from_older.sort_by { |version, diff| diff.size }.values
+    mindiffs = diffs.sort_by { |diff| diff.size }
 
     apply_diffs = lambda do |download_wanted|
                     mindiffs.each do |diff|
@@ -391,10 +388,7 @@ class Image < SyncFile
   end
 
   def delete
-    @diffs_from_older.each do |diff|
-      diff.delete
-    end
-
+    diffs.each { |diff| diff.delete }
     super
   end
 end
@@ -435,10 +429,11 @@ class Diff < SyncFile
 
     return false
   end
+end
 
-  def mark_in_use
-    @in_use = true
-  end
+def newest_by_version(collection_by_version, limit)
+  versions = collection_by_version.keys.sort.reverse.slice(0,limit).reverse
+  return versions.map { |version| collection_by_version[version] }
 end
 
 # XXX not used yet, how should this be used?
@@ -559,14 +554,14 @@ def query_devices(series)
 
     bootmode = device["boot_mode"]
 
-    if bootmode && bootmode.eql?("netboot")
+    if bootmode && bootmode == "netboot"
       # Netboot devices do not need diffs
       series.mark_image_in_use(preferred_image)
       series.mark_image_in_use(boot_image)
     else
       # Other devices need diffs from current image to preferred 
 
-      if preferred_image && current_image && !preferred_image.eql?(current_image)
+      if preferred_image && current_image && preferred_image == current_image
         series.mark_diff_in_use(current_image, preferred_image)
       end
 
@@ -741,7 +736,7 @@ begin
 
       # We want to always download X number of newest images with Y number 
       # of diffs from newest images.
-      image_list = series.newest(image_limit)
+      image_list = series.newest_images(image_limit)
     end
 
     image_list.each do |image|
@@ -756,10 +751,6 @@ begin
         warning "#{image.id} - image sync failed: #{result.message}"
       end
 
-      image.newest_diffs(diff_limit).each do |diff|
-        diff.mark_in_use
-      end
-
       image.download_newest_diffs(diff_limit)
     end
 
@@ -767,15 +758,15 @@ begin
       debug "Downloading client diffs"
 
       series.images.each do |image|
-        image.diffs_from_older.values.each do |diff|
-          if diff.in_use
-            if diff.verify
-              debug "#{diff.filename} - exists already"
-            elsif diff.download
-              info "#{diff.filename} - diff sync ok"
-            else
-              warning "#{diff.filename} - diff sync failed"
-            end
+        image.diffs.each do |diff|
+          next unless diff.in_use
+
+          if diff.verify
+            debug "#{diff.filename} - exists already"
+          elsif diff.download
+            info "#{diff.filename} - diff sync ok"
+          else
+            warning "#{diff.filename} - diff sync failed"
           end
         end
       end
@@ -792,8 +783,7 @@ begin
           next
         end
 
-        unused_diffs = image.diffs_from_older.values \
-                            .select { |diff| !diff.in_use }
+        unused_diffs = image.diffs.select { |diff| !diff.in_use }
         unused_diffs.each do |diff|
           diff.delete
         end
