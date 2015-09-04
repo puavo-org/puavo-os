@@ -163,10 +163,81 @@ class SyncFile
 
   def delete
     begin
+      info "Deleting '#{ full_path }'"
       File.delete(full_path)
     rescue StandardError => e
       warning "Could not delete '#{ full_path }': #{ e.message }"
     end
+  end
+
+  def download
+    # go through all @urls in order and try to download from each in turn
+    # (we could also do some load balancing by first choosing one randomly?)
+    @urls.each do |url|
+      download_from_url(url) and return true
+    end
+
+    return false
+  end
+
+  # Download file from specified url and check that the sha256 checksum of 
+  # the downloaded file matches the given size and sha256.
+  # If the file was downloaded successfully and the size and the checksum
+  # matches, true is returned, otherwise false is returned.
+  def download_from_url(url)
+    uri = URI.parse(url)
+
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.ca_file = "/etc/puavo/certs/rootca.pem"
+  #  http.ca_file = "/etc/ssl/certs/SecureTrust_CA.pem"	# XXX ?
+    http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+    http.use_ssl = true
+
+    http.request_get(uri.path) do |response|
+      puts response.inspect
+      hash = Digest::SHA2.new
+
+      case response
+      when Net::HTTPNotFound
+	warning "404 - Not Found (#{url})"
+	return false
+
+      when Net::HTTPClientError
+	warning "Error: Client Error: #{response.inspect}"
+	return false
+
+      when Net::HTTPOK
+	temp_file = File.new(full_path, "w")
+	temp_file.binmode
+
+	received_size = 0
+	progress = 0
+	total = response.header["Content-Length"].to_i
+
+	response.read_body do |chunk|
+	  hash << chunk
+
+	  temp_file << chunk
+	  received_size += chunk.size
+	  new_progress = (received_size * 100) / total
+	  unless new_progress == progress
+	    puts "\rDownloading %s (%3d%%) " % [full_path, new_progress]
+	  end
+
+	  progress = new_progress
+	end
+
+	temp_file.close()
+
+	return false if @size != received_size
+
+	if hash.to_s.eql?(@sha256)
+	  return true
+	end
+      end
+    end
+
+    return false
   end
 
   def full_path
@@ -259,10 +330,6 @@ class Image < SyncFile
     if diff.baseimage.version == @version && diff.targetimage.version > @version
       @diffs_to_newer[diff.targetimage.version] = diff
     end
-  end
-
-  def download
-    download_file(@urls[0], full_path, size, sha256)
   end
 
   def newest_diffs(limit=0)
@@ -359,10 +426,6 @@ class Diff < SyncFile
     return false
   end
 
-  def download
-    download_file(@urls[0], full_path, size, sha256)
-  end
-
   def mark_in_use
     @in_use = true
   end
@@ -389,67 +452,6 @@ def write_managed_images(images)
   File.open("/var/lib/puavo/images.json", "w") do |f|
     f.write(images.to_json)
   end
-end
-
-# Download file from specified url and check that the sha256 checksum of 
-# the downloaded file matches the given size and sha256.
-#
-# If the file was downloaded successfully and the size and the checksum
-# matches, true is returned, otherwise false is returned.
-def download_file(url, dest_file, expected_size, sha256)
-  uri = URI.parse(url)
-
-  http = Net::HTTP.new(uri.host, uri.port)
-  http.ca_file = "/etc/puavo/certs/rootca.pem"
-#  http.ca_file = "/etc/ssl/certs/SecureTrust_CA.pem"	# XXX ?
-  http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-  http.use_ssl = true
-
-  http.request_get(uri.path) do |response|
-    puts response.inspect
-    hash = Digest::SHA2.new
-
-    case response
-    when Net::HTTPNotFound
-      warning "404 - Not Found (#{url})"
-      return false
-
-    when Net::HTTPClientError
-      warning "Error: Client Error: #{response.inspect}"
-      return false
-
-    when Net::HTTPOK
-      temp_file = File.new(dest_file, "w")
-      temp_file.binmode
-
-      received_size = 0
-      progress = 0
-      total = response.header["Content-Length"].to_i
-
-      response.read_body do |chunk|
-        hash << chunk
-
-        temp_file << chunk
-        received_size += chunk.size
-        new_progress = (received_size * 100) / total
-        unless new_progress == progress
-          puts "\rDownloading %s (%3d%%) " % [dest_file, new_progress]
-        end
-
-        progress = new_progress
-      end
-
-      temp_file.close()
-
-      return false if expected_size != received_size
-
-      if hash.to_s.eql?(sha256)
-        return true
-      end
-    end
-  end
-
-  return false
 end
 
 def parse_series_data(series_data)
