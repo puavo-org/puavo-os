@@ -83,26 +83,21 @@ class Series
   def initialize(name, arch)
     @name = name
     @arch = arch
-    @images_by_version = Hash.new
-    @by_filename = Hash.new
+
     @by_id = Hash.new
+    @by_version = Hash.new
   end
 
   def add_image(image)
-    @images_by_version[image.version] = image
-    @by_id[image.id] = image
-  end
-
-  def get_image(version)
-    return @images_by_version[version]
-  end
-
-  def get_by_filename(imagename)
-    return @by_filename[imagename]
+    @by_id[image.id] = @by_version[image.version] = image
   end
 
   def get_by_id(id)
     return @by_id[id]
+  end
+
+  def get_by_version(version)
+    return @by_version[version]
   end
 
   def mark_image_in_use(image_id)
@@ -125,8 +120,8 @@ class Series
   end
 
   def add_diff(from_version, to_version, filename, size, sha256, urls)
-    baseimage = get_image(from_version)
-    targetimage = get_image(to_version)
+    baseimage = get_by_version(from_version)
+    targetimage = get_by_version(to_version)
 
     if baseimage && targetimage
       diff = Diff.new(baseimage, targetimage, filename, size, sha256, urls)
@@ -137,15 +132,15 @@ class Series
   end
 
   def images
-    return @images_by_version.values
+    return @by_version.values
   end
 
   # Returns specified number of newest images in an array. The images are
   # sorted oldest first so that when fetching the images, newer images can 
   # be created using diffs from older images.
   def newest(limit)
-    versions = @images_by_version.keys.sort.reverse.slice(0,limit).reverse
-    return versions.map { |version| @images_by_version[version] }
+    versions = @by_version.keys.sort.reverse.slice(0,limit).reverse
+    return versions.map { |version| @by_version[version] }
   end
 end
 
