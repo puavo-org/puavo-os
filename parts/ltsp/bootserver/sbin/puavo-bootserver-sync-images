@@ -68,12 +68,11 @@ def info(msg);    log(Syslog::LOG_INFO,    "%s\n", msg); end
 def warning(msg); log(Syslog::LOG_WARNING, "%s\n", msg); end
 
 class Result
-  attr_reader :succeeded, :message, :filename
+  attr_reader :succeeded, :message
 
-  def initialize(succeeded, message, filename)
+  def initialize(succeeded, message)
     @succeeded = succeeded
-    @message = message
-    @filename = filename
+    @message   = message
   end
 end
 
@@ -280,15 +279,14 @@ class Image < SyncFile
 
   # Figure out how to 
   def materialize
-    verify and return Result.new(true, "Image exists already", @filename)
+    verify and return Result.new(true, "Image exists already")
 
     patch_from_old and return Result.new(true,
-                                         "Patched from older image",
-                                         @filename)
+                                         "Patched from older image")
 
-    download and return Result.new(true, "Downloaded full image", @filename)
+    download and return Result.new(true, "Downloaded full image")
 
-    return Result.new(false, "Failed to patch or download image", @filename)
+    return Result.new(false, "Failed to patch or download image")
   end
 
   # Create the current image from an old image by using a patch. First 
