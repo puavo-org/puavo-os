@@ -25,7 +25,7 @@
 # Unmanaged images - other images
 #
 # By default the script handles only the managed images and unmanaged images
-# are lef untouched. The script can be asked to delete unmanaged images with 
+# are left untouched. The script can be asked to delete unmanaged images with 
 # command line option --delete-unmanaged. When asked, the script will delete 
 # all unknown files under /opt/ltsp/images and /opt/ltsp/images/rdiffs. Images 
 # do not need to have .img ending.
