@@ -390,6 +390,7 @@ class Monitor(QObject):
         self.__iface = interface
 
         self.__process = None
+        self.__horst_errfile_path = os.path.join(_tmpdir, 'horst.err')
         self.__horst_outfile_path = os.path.join(_tmpdir, 'horst.out')
         self.__horst_configfile_path = os.path.join(_tmpdir, 'horst.conf')
 
@@ -413,7 +414,7 @@ class Monitor(QObject):
             return False
 
         self.__process = QProcess(self)
-        self.__process.setProcessChannelMode(QProcess.ForwardedChannels)
+        self.__process.setStandardErrorFile(self.__horst_errfile_path)
 
         self.__process.started.connect(self.started)
         self.__process.finished.connect(self.__emit_stopped)
@@ -435,6 +436,10 @@ class Monitor(QObject):
                              QIODevice.ReadOnly)
 
         return True
+
+    def errorLog(self):
+        with open(self.__horst_errfile_path) as errfile:
+            return errfile.read()
 
     def __emit_stopped(self, exitCode, exitStatus):
         if exitStatus == QProcess.CrashExit:
@@ -518,12 +523,18 @@ class MonitorWidget(QWidget):
         self.setLayout(layout)
 
     def __disable(self):
+        self.__statusLabel.setTextInteractionFlags(Qt.NoTextInteraction)
         self.__statusLabel.setText("Scanning...")
         self.__ifaceComboBox.setEnabled(False)
         self.__dwellSpinBox.setEnabled(False)
 
-    def __enable(self):
-        self.__statusLabel.setText("Ready")
+    def __enable(self, isSuccess):
+        if isSuccess:
+            self.__statusLabel.setTextInteractionFlags(Qt.NoTextInteraction)
+            self.__statusLabel.setText("Ready")
+        else:
+            self.__statusLabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            self.__statusLabel.setText(self.__monitor.errorLog())
         self.__ifaceComboBox.setEnabled(True)
         self.__dwellSpinBox.setEnabled(True)
 
