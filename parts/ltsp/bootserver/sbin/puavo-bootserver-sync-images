@@ -325,6 +325,7 @@ class Image < SyncFile
     end
   end
 
+  # XXX should be configurable
   def basedir; '/opt/ltsp/images'; end
 
   def mark_diff_in_use(from_image)
@@ -353,7 +354,6 @@ class Image < SyncFile
     end
   end
 
-  # Figure out how to 
   def materialize
     verify and return Result.new(true, "Image exists already")
 
@@ -403,10 +403,9 @@ class Diff < SyncFile
 
     @baseimage   = baseimage
     @targetimage = targetimage
-
-    @in_use = false
   end
 
+  # XXX should be configurable?
   def basedir; '/opt/ltsp/images/rdiffs'; end
 
   def do_patching
@@ -436,29 +435,6 @@ end
 def newest_by_version(collection_by_version, limit)
   versions = collection_by_version.keys.sort.reverse.slice(0,limit).reverse
   return versions.map { |version| collection_by_version[version] }
-end
-
-# XXX not used yet, how should this be used?
-def load_managed_images
-  images = Hash.new
-
-  begin
-    if File.exists?("/var/lib/puavo/images.json")
-      json = JSON.parse(File.read("/var/lib/puavo/images.json"))
-
-    end
-  rescue StandardError => e
-    puts "Reading /var/lib/puavo/images.json failed: #{e}"
-  end
-
-  images
-end
-
-# XXX not used yet, how should this be used?
-def write_managed_images(images)
-  File.open("/var/lib/puavo/images.json", "w") do |f|
-    f.write(images.to_json)
-  end
 end
 
 def parse_series_data(series_data)
@@ -495,7 +471,6 @@ def parse_series_data(series_data)
 
   result
 end
-
 
 #
 def fetch_source_urls
