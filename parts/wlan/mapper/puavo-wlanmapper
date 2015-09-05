@@ -117,58 +117,18 @@ class Scene(QGraphicsScene):
         self.__animation.setRotationAt(0.5, 180)
         self.__animation.setRotationAt(1.0, 360)
 
-    def saveAs(self, filepath):
-        scenedir = os.path.join(_tmpdir, "scene")
-        try:
-            shutil.rmtree(scenedir)
-        except OSError, e:
-            if e.errno != errno.ENOENT:
-                raise e
-        os.mkdir(scenedir)
+    def spots(self):
+        return self.__spots
 
-        for heatmap_name, heatmap_item in self.__heatmaps.items():
-            shutil.copy(os.path.join(_tmpdir, "{}.png".format(heatmap_name)),
-                        scenedir)
+    def addSpot(self, pos):
+        item = Spot()
+        item.setPos(pos)
+        self.addItem(item)
+        self.__spots.append(item)
+        return item
 
-        data = []
-        for spot in self.__spots:
-            data.append({
-                'x': spot.x(),
-                'y': spot.y(),
-                'measurement': spot.measurement,
-            })
-        with open(os.path.join(scenedir, "spots.pickle"), "w") as f:
-            pickle.dump(data, f)
-
-        with open(os.path.join(scenedir, "essids.pickle"), "w") as f:
-            pickle.dump(self.essids, f)
-
-        shutil.copy(os.path.join(_tmpdir, "layout.png"), scenedir)
-
-        with tarfile.open(unicode(filepath), "w:gz") as f:
-            f.add(scenedir, "scene")
-
-    def open(self, filepath):
-        with tarfile.open(unicode(filepath), "r:gz") as archive_file:
-
-            src_image = archive_file.extractfile("scene/layout.png")
-            with open(os.path.join(_tmpdir, "layout.png"), "wb") as dst_image:
-                shutil.copyfileobj(src_image, dst_image)
-            self.__layoutPixmapItem.setPixmap(QPixmap(os.path.join(_tmpdir, "layout.png")))
-
-            essids_picklefile = archive_file.extractfile("scene/essids.pickle")
-            self.essids = pickle.load(essids_picklefile)
-
-            spots_picklefile = archive_file.extractfile("scene/spots.pickle")
-            spots_data = pickle.load(spots_picklefile)
-            for spot_data in spots_data:
-                x = spot_data['x']
-                y = spot_data['y']
-                measurement = spot_data['measurement']
-                item = self.__addSpot(QPointF(x, y))
-                item.measurement = measurement
-
-            self.__updateHeatmaps()
+    def setLayoutPixmap(self, pixmap):
+        self.__layoutPixmapItem.setPixmap(pixmap)
 
     def setCurrentHeatmap(self, heatmapName):
         if self.__currentHeatmap is not None:
@@ -179,17 +139,10 @@ class Scene(QGraphicsScene):
     def heatmapNames(self):
         return self.__heatmaps.keys()
 
-    def __addSpot(self, pos):
-        item = Spot()
-        item.setPos(pos)
-        self.addItem(item)
-        self.__spots.append(item)
-        return item
-
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
         if not event.isAccepted() and event.button() == Qt.LeftButton and not event.modifiers():
-            self.__addSpot(event.scenePos())
+            self.addSpot(event.scenePos())
             event.accept()
 
     def removeSpot(self, spot):
@@ -197,7 +150,7 @@ class Scene(QGraphicsScene):
         if spot == self.__currentSpot:
             self.toggleSpot(spot)
         self.removeItem(spot)
-        self.__updateHeatmaps()
+        self.updateHeatmaps()
 
     def __startAnimation(self):
         self.__animation.setItem(self.__currentSpot)
@@ -219,7 +172,7 @@ class Scene(QGraphicsScene):
 
             self.toggleSpot(self.__currentSpot)
 
-            self.__updateHeatmaps()
+            self.updateHeatmaps()
 
     def toggleSpot(self, spot):
         self.__monitor.stop()
@@ -234,7 +187,7 @@ class Scene(QGraphicsScene):
 
         self.__monitor.start()
 
-    def __updateHeatmaps(self):
+    def updateHeatmaps(self):
         measurements = self.measurements()
 
         xs = measurements.pop('x')
@@ -574,21 +527,21 @@ class MainWindow(QMainWindow):
         self.__aboutAction.setText("&About...")
         self.__aboutAction.triggered.connect(self.__showAboutDialog)
 
-        self.__newSceneAction = QAction(self)
-        self.__newSceneAction.setText("&New scene...")
-        self.__newSceneAction.setShortcut(QKeySequence("Ctrl+N"))
-        self.__newSceneAction.triggered.connect(self.__newSceneDialog)
+        self.__newProjectAction = QAction(self)
+        self.__newProjectAction.setText("&New project...")
+        self.__newProjectAction.setShortcut(QKeySequence("Ctrl+N"))
+        self.__newProjectAction.triggered.connect(self.__newProjectDialog)
 
-        self.__saveSceneAsAction = QAction(self)
-        self.__saveSceneAsAction.setText("&Save scene as...")
-        self.__saveSceneAsAction.setShortcut(QKeySequence("Ctrl+S"))
-        self.__saveSceneAsAction.triggered.connect(self.__saveSceneAsDialog)
-        self.__saveSceneAsAction.setEnabled(False)
+        self.__saveProjectAsAction = QAction(self)
+        self.__saveProjectAsAction.setText("&Save project as...")
+        self.__saveProjectAsAction.setShortcut(QKeySequence("Ctrl+S"))
+        self.__saveProjectAsAction.triggered.connect(self.__saveProjectAsDialog)
+        self.__saveProjectAsAction.setEnabled(False)
 
-        self.__openSceneAction = QAction(self)
-        self.__openSceneAction.setText("&Open scene...")
-        self.__openSceneAction.setShortcut(QKeySequence("Ctrl+O"))
-        self.__openSceneAction.triggered.connect(self.__openSceneDialog)
+        self.__openProjectAction = QAction(self)
+        self.__openProjectAction.setText("&Open project...")
+        self.__openProjectAction.setShortcut(QKeySequence("Ctrl+O"))
+        self.__openProjectAction.triggered.connect(self.__openProjectDialog)
 
         self.__quitAction = QAction(self)
         self.__quitAction.setText("&Quit")
@@ -601,9 +554,9 @@ class MainWindow(QMainWindow):
         menuBar = QMenuBar()
 
         fileMenu = menuBar.addMenu("&File")
-        fileMenu.addAction(self.__newSceneAction)
-        fileMenu.addAction(self.__openSceneAction)
-        fileMenu.addAction(self.__saveSceneAsAction)
+        fileMenu.addAction(self.__newProjectAction)
+        fileMenu.addAction(self.__openProjectAction)
+        fileMenu.addAction(self.__saveProjectAsAction)
         fileMenu.addSeparator()
         fileMenu.addAction(self.__quitAction)
 
@@ -630,36 +583,89 @@ class MainWindow(QMainWindow):
         self.__sceneDockWidget.setWindowTitle("Scene")
         self.addDockWidget(Qt.LeftDockWidgetArea, self.__sceneDockWidget)
 
-    def __openSceneDialog(self):
+    def __openProjectDialog(self):
         filepath = QFileDialog.getOpenFileName(None,
-                                               "Open a scene",
+                                               "Open a project",
                                                QDir.currentPath(),
                                                "Compressed Tar archives (*.tar.gz)")
-        if filepath:
-            self.__scene = Scene(self.__monitor)
-            self.__saveSceneAsAction.setEnabled(True)
-            self.__view.setScene(self.__scene)
-            self.__sceneWidget.setScene(self.__scene)
-            self.__monitor.stop()
-            self.__scene.open(filepath)
+        if not filepath:
+            return
 
-    def __saveSceneAsDialog(self):
+        self.__scene = Scene(self.__monitor)
+        self.__saveProjectAsAction.setEnabled(True)
+        self.__view.setScene(self.__scene)
+        self.__sceneWidget.setScene(self.__scene)
+        self.__monitor.stop()
+
+        with tarfile.open(unicode(filepath), "r:gz") as archive_file:
+
+            src_image = archive_file.extractfile("scene/layout.png")
+            with open(os.path.join(_tmpdir, "layout.png"), "wb") as dst_image:
+                shutil.copyfileobj(src_image, dst_image)
+            self.__scene.setLayoutPixmap(QPixmap(os.path.join(_tmpdir, "layout.png")))
+
+            essids_picklefile = archive_file.extractfile("scene/essids.pickle")
+            self.__scene.essids = pickle.load(essids_picklefile)
+
+            spots_picklefile = archive_file.extractfile("scene/spots.pickle")
+            spots_data = pickle.load(spots_picklefile)
+            for spot_data in spots_data:
+                x = spot_data['x']
+                y = spot_data['y']
+                measurement = spot_data['measurement']
+                item = self.__scene.addSpot(QPointF(x, y))
+                item.measurement = measurement
+
+            self.__scene.updateHeatmaps()
+
+    def __saveProjectAsDialog(self):
         filepath = QFileDialog.getSaveFileName(None,
-                                               "Save the scene as",
+                                               "Save the project as",
                                                QDir.currentPath(),
                                                "Compressed Tar archives (*.tar.gz)")
         filepath = str(filepath)
-        if filepath:
-            if not str(filepath).endswith('.tar.gz'):
-                filepath = '%s.tar.gz' % filepath
-            self.__scene.saveAs(filepath)
-
-    def __newSceneDialog(self):
-        sceneDialog = SceneDialog()
-        if not sceneDialog.exec_():
+        if not filepath:
             return
 
-        filepath = sceneDialog.layoutImageFilePath()
+        if not str(filepath).endswith('.tar.gz'):
+            filepath = '%s.tar.gz' % filepath
+
+        scenedir = os.path.join(_tmpdir, "scene")
+        try:
+            shutil.rmtree(scenedir)
+        except OSError, e:
+            if e.errno != errno.ENOENT:
+                raise e
+        os.mkdir(scenedir)
+
+        for heatmapName in self.__scene.heatmapNames():
+            shutil.copy(os.path.join(_tmpdir, "{}.png".format(heatmapName)),
+                        scenedir)
+
+        data = []
+        for spot in self.__scene.spots():
+            data.append({
+                'x': spot.x(),
+                'y': spot.y(),
+                'measurement': spot.measurement,
+            })
+        with open(os.path.join(scenedir, "spots.pickle"), "w") as f:
+            pickle.dump(data, f)
+
+        with open(os.path.join(scenedir, "essids.pickle"), "w") as f:
+            pickle.dump(self.__scene.essids, f)
+
+        shutil.copy(os.path.join(_tmpdir, "layout.png"), scenedir)
+
+        with tarfile.open(unicode(filepath), "w:gz") as f:
+            f.add(scenedir, "scene")
+
+    def __newProjectDialog(self):
+        projectDialog = ProjectDialog()
+        if not projectDialog.exec_():
+            return
+
+        filepath = projectDialog.layoutImageFilePath()
 
         layoutPixmap = QPixmap(filepath, "png")
         if layoutPixmap.isNull():
@@ -670,7 +676,7 @@ class MainWindow(QMainWindow):
         else:
             shutil.copy(filepath, os.path.join(_tmpdir, "layout.png"))
             self.__scene = Scene(self.__monitor, layoutPixmap)
-            self.__saveSceneAsAction.setEnabled(True)
+            self.__saveProjectAsAction.setEnabled(True)
             self.__view.setScene(self.__scene)
             self.__sceneWidget.setScene(self.__scene)
             self.__monitor.stop()
@@ -692,13 +698,13 @@ class MainWindow(QMainWindow):
 
         QMessageBox.about(self, "About Puavo WLAN Mapper", aboutText)
 
-class SceneDialog(QDialog):
+class ProjectDialog(QDialog):
 
     def __init__(self, *args):
         QDialog.__init__(self, *args)
 
         self.setModal(True)
-        self.setWindowTitle("Create a new scene")
+        self.setWindowTitle("Create a new project")
 
         imageLineEdit = QLineEdit()
         imageLineEdit.textChanged.connect(self.__checkImageFilePath)
