@@ -571,7 +571,6 @@ class MainWindow(QMainWindow):
 
         viewMenu = menuBar.addMenu("&View")
         viewMenu.addAction(self.__monitorDockWidget.toggleViewAction())
-        viewMenu.addAction(self.__sceneDockWidget.toggleViewAction())
 
         helpMenu = menuBar.addMenu("&Help")
         helpMenu.addAction(self.__whatsThisAction)
@@ -586,12 +585,6 @@ class MainWindow(QMainWindow):
         self.__monitorDockWidget.setWindowTitle("Monitor")
         self.addDockWidget(Qt.LeftDockWidgetArea, self.__monitorDockWidget)
 
-        self.__sceneDockWidget = QDockWidget(self)
-        self.__sceneWidget = SceneWidget(self)
-        self.__sceneDockWidget.setWidget(self.__sceneWidget)
-        self.__sceneDockWidget.setWindowTitle("Scene")
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.__sceneDockWidget)
-
     def __openProjectDialog(self):
         filepath = QFileDialog.getOpenFileName(None,
                                                "Open a project",
@@ -603,7 +596,6 @@ class MainWindow(QMainWindow):
         self.__scene = MonitorScene(self.__monitor)
         self.__saveProjectAsAction.setEnabled(True)
         self.__monitorWidget.setScene(self.__scene)
-        self.__sceneWidget.setScene(self.__scene)
         self.__monitor.stop()
 
         with tarfile.open(unicode(filepath), "r:gz") as archive_file:
@@ -688,7 +680,6 @@ class MainWindow(QMainWindow):
             self.__scene.setLayoutPixmap(layoutPixmap)
             self.__saveProjectAsAction.setEnabled(True)
             self.__monitorWidget.setScene(self.__scene)
-            self.__sceneWidget.setScene(self.__scene)
             self.__monitor.stop()
 
     def __showAboutDialog(self):
@@ -762,90 +753,6 @@ class NewProjectDialog(QDialog):
     def sizeHint(self):
         s = QDialog.sizeHint(self)
         return QSize(s.width() + self.__imageLineEdit.sizeHint().width() * 2, s.height())
-
-class SceneWidget(QWidget):
-
-    def __init__(self, *args):
-        QWidget.__init__(self, *args)
-
-        self.__scene = None
-
-        self.setEnabled(False)
-
-        self.__freqListWidget = QListWidget()
-        self.__freqListWidget.setSortingEnabled(True)
-        self.__freqListWidget.sortItems(Qt.AscendingOrder)
-
-        self.__bssidListWidget = QListWidget()
-        self.__bssidListWidget.setSortingEnabled(True)
-        self.__bssidListWidget.sortItems(Qt.AscendingOrder)
-
-        layout = QFormLayout(self)
-        layout.addRow("Frequency:", self.__freqListWidget)
-        layout.addRow("BSSID:", self.__bssidListWidget)
-
-    def setScene(self, scene):
-        if scene is self.__scene:
-            return
-
-        self.setEnabled(scene is not None)
-
-        if self.__scene is not None:
-            self.__scene.heatmapsAdded.disconnect(self.__updateFreqList)
-            self.__freqListWidget.currentTextChanged.disconnect(self.__setFreq)
-            self.__bssidListWidget.currentTextChanged.disconnect(self.__setBSSID)
-            self.__freqListWidget.clear()
-            self.__bssidListWidget.clear()
-
-        self.__scene = scene
-
-        if self.__scene is None:
-            return
-
-        self.__scene.heatmapsAdded.connect(self.__updateFreqList)
-        self.__freqListWidget.currentTextChanged.connect(self.__setFreq)
-        self.__bssidListWidget.currentTextChanged.connect(self.__setBSSID)
-        self.__updateFreqList(self.__scene.heatmapNames())
-
-    def __updateFreqList(self, heatmapNames):
-        freqs = set()
-        for i in range(self.__freqListWidget.count()):
-            freqs.add(str(self.__freqListWidget.item(i).text()).split()[0])
-
-        for heatmapName in heatmapNames:
-            freq, _ = heatmapName.split("Hz_")
-            freqs.add(freq)
-
-        items = ["%s (Channel %d)" % (f, FREQ_TO_CHAN[int(f)]) for f in freqs]
-
-        self.__freqListWidget.clear()
-        self.__freqListWidget.addItems(items)
-
-        if self.__freqListWidget.currentRow() == -1 and self.__freqListWidget.count() > 0:
-            self.__freqListWidget.setCurrentRow(0)
-
-    def __setBSSID(self, bssid_essid):
-        if not bssid_essid.isNull():
-            freq = str(self.__freqListWidget.currentItem().text()).split()[0]
-            bssid = str(bssid_essid).split()[0]
-            self.__scene.setCurrentHeatmap("%sHz_%s" % (freq, bssid))
-
-    def __setFreq(self, newFreqChan):
-        try:
-            newFreq = str(newFreqChan).split()[0]
-        except IndexError:
-            newFreq = ''
-        bssids = set()
-        for heatmapName in self.__scene.heatmapNames():
-            freq, bssid = heatmapName.split("Hz_")
-            if freq == newFreq:
-                bssids.add(bssid)
-
-        items = ["%s (%s)" % (b, self.__scene.essids[b]) for b in bssids]
-
-        self.__bssidListWidget.clear()
-        self.__bssidListWidget.addItems(items)
-        self.__bssidListWidget.setCurrentRow(0)
 
 INTERFACES = get_dot11_interfaces()
 
