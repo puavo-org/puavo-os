@@ -86,7 +86,7 @@ class MonitorScene(QGraphicsScene):
 
     heatmapsAdded = pyqtSignal(QStringList)
 
-    def __init__(self, monitor, layoutPixmap=None):
+    def __init__(self, monitor):
         QGraphicsScene.__init__(self)
 
         self.__monitor = monitor
@@ -99,9 +99,7 @@ class MonitorScene(QGraphicsScene):
         self.__spots = []
         self.essids = {}
 
-        if layoutPixmap is None:
-            layoutPixmap = QPixmap()
-        self.__layoutPixmapItem = self.addPixmap(layoutPixmap)
+        self.__layoutPixmapItem = self.addPixmap(QPixmap())
         self.__layoutPixmapItem.setZValue(-1)
 
         self.__heatmaps = {}
@@ -677,7 +675,8 @@ class MainWindow(QMainWindow):
                                  msg.format(filepath))
         else:
             shutil.copy(filepath, os.path.join(_tmpdir, "layout.png"))
-            self.__scene = MonitorScene(self.__monitor, layoutPixmap)
+            self.__scene = MonitorScene(self.__monitor)
+            self.__scene.setLayoutPixmap(layoutPixmap)
             self.__saveProjectAsAction.setEnabled(True)
             self.__view.setScene(self.__scene)
             self.__sceneWidget.setScene(self.__scene)
