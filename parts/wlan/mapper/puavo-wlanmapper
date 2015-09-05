@@ -82,7 +82,7 @@ class ZoomableGraphicsView(QGraphicsView):
 
             event.accept()
 
-class Scene(QGraphicsScene):
+class MonitorScene(QGraphicsScene):
 
     heatmapsAdded = pyqtSignal(QStringList)
 
@@ -593,7 +593,7 @@ class MainWindow(QMainWindow):
         if not filepath:
             return
 
-        self.__scene = Scene(self.__monitor)
+        self.__scene = MonitorScene(self.__monitor)
         self.__saveProjectAsAction.setEnabled(True)
         self.__view.setScene(self.__scene)
         self.__sceneWidget.setScene(self.__scene)
@@ -677,7 +677,7 @@ class MainWindow(QMainWindow):
                                  msg.format(filepath))
         else:
             shutil.copy(filepath, os.path.join(_tmpdir, "layout.png"))
-            self.__scene = Scene(self.__monitor, layoutPixmap)
+            self.__scene = MonitorScene(self.__monitor, layoutPixmap)
             self.__saveProjectAsAction.setEnabled(True)
             self.__view.setScene(self.__scene)
             self.__sceneWidget.setScene(self.__scene)
