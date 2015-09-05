@@ -431,13 +431,14 @@ class MonitorWidget(QWidget):
         self.__monitor.started.connect(self.__disable)
         self.__monitor.stopped.connect(self.__enable)
 
-        layout = QFormLayout()
+        layout = QVBoxLayout()
+        formLayout = QFormLayout()
 
         self.__ifaceComboBox = QComboBox()
         self.__ifaceComboBox.addItems(sorted(INTERFACES))
         self.__ifaceComboBox.setCurrentIndex(len(INTERFACES) - 1)
         self.__ifaceComboBox.activated.connect(self.__saveInterface)
-        layout.addRow("Interface:", self.__ifaceComboBox)
+        formLayout.addRow("Interface:", self.__ifaceComboBox)
 
         self.__dwellSpinBox = QSpinBox()
         self.__dwellSpinBox.setSuffix("ms")
@@ -468,12 +469,20 @@ class MonitorWidget(QWidget):
         self.__dwellSpinBox.setWhatsThis(dwellWhatsThis)
         dwellLabel = QLabel("Channel dwell time:")
         dwellLabel.setWhatsThis(dwellWhatsThis)
-        layout.addRow(dwellLabel, self.__dwellSpinBox)
+        formLayout.addRow(dwellLabel, self.__dwellSpinBox)
 
         self.__statusLabel = QLabel("Ready")
-        layout.addRow("Status:", self.__statusLabel)
+        formLayout.addRow("Status:", self.__statusLabel)
+
+        layout.addLayout(formLayout)
+        self.__view = ZoomableGraphicsView(self)
+        self.__view.setRenderHints(QPainter.Antialiasing)
+        layout.addWidget(self.__view)
 
         self.setLayout(layout)
+
+    def setScene(self, scene):
+        self.__view.setScene(scene)
 
     def __disable(self):
         self.__statusLabel.setTextInteractionFlags(Qt.NoTextInteraction)
@@ -593,7 +602,7 @@ class MainWindow(QMainWindow):
 
         self.__scene = MonitorScene(self.__monitor)
         self.__saveProjectAsAction.setEnabled(True)
-        self.__view.setScene(self.__scene)
+        self.__monitorWidget.setScene(self.__scene)
         self.__sceneWidget.setScene(self.__scene)
         self.__monitor.stop()
 
@@ -678,7 +687,7 @@ class MainWindow(QMainWindow):
             self.__scene = MonitorScene(self.__monitor)
             self.__scene.setLayoutPixmap(layoutPixmap)
             self.__saveProjectAsAction.setEnabled(True)
-            self.__view.setScene(self.__scene)
+            self.__monitorWidget.setScene(self.__scene)
             self.__sceneWidget.setScene(self.__scene)
             self.__monitor.stop()
 
