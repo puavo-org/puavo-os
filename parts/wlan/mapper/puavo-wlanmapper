@@ -663,11 +663,11 @@ class MainWindow(QMainWindow):
             f.add(scenedir, "scene")
 
     def __newProjectDialog(self):
-        projectDialog = ProjectDialog()
-        if not projectDialog.exec_():
+        dialog = NewProjectDialog()
+        if not dialog.exec_():
             return
 
-        filepath = projectDialog.layoutImageFilePath()
+        filepath = dialog.layoutImageFilePath()
 
         layoutPixmap = QPixmap(filepath, "png")
         if layoutPixmap.isNull():
@@ -700,7 +700,7 @@ class MainWindow(QMainWindow):
 
         QMessageBox.about(self, "About Puavo WLAN Mapper", aboutText)
 
-class ProjectDialog(QDialog):
+class NewProjectDialog(QDialog):
 
     def __init__(self, *args):
         QDialog.__init__(self, *args)
