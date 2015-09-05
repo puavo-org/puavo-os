@@ -94,7 +94,6 @@ class MonitorScene(QGraphicsScene):
         self.__monitor.stopped.connect(self.__stopAnimation)
         self.__monitor.stopped.connect(self.__measurementStopped)
         self.__currentSpot = None
-        self.__currentSpotMeasurements = {}
 
         self.__spots = []
         self.essids = {}
@@ -162,13 +161,14 @@ class MonitorScene(QGraphicsScene):
 
     def __measurementStopped(self, isSuccess):
         if isSuccess:
-            self.__currentSpot.measurement = self.__currentSpotMeasurements
 
+            measurement = {}
             for beacon in self.__monitor.readBeacons():
-                bssidmap = self.__currentSpotMeasurements.setdefault(beacon.freq, {})
+                bssidmap = measurement.setdefault(beacon.freq, {})
                 rssi = bssidmap.get(beacon.bssid, beacon.rssi)
                 bssidmap[beacon.bssid] = (beacon.rssi + rssi) / 2
                 self.essids[beacon.bssid] = beacon.ssid
+            self.__currentSpot.measurement = measurement
 
             self.toggleSpot(self.__currentSpot)
 
@@ -179,11 +179,9 @@ class MonitorScene(QGraphicsScene):
 
         if self.__currentSpot == spot:
             self.__currentSpot = None
-            self.__currentSpotMeasurements = {}
             return
 
         self.__currentSpot = spot
-        self.__currentSpotMeasurements = {}
 
         self.__monitor.start()
 
