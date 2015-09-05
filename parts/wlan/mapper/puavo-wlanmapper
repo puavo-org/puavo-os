@@ -515,7 +515,7 @@ class MainWindow(QMainWindow):
 
         self.__view = ZoomableGraphicsView(self)
         self.__view.setRenderHints(QPainter.Antialiasing)
-        self.__scene = None
+        self.__monitorScene = None
 
         self.setWindowTitle("Puavo WLAN Mapper")
 
@@ -593,9 +593,9 @@ class MainWindow(QMainWindow):
         if not filepath:
             return
 
-        self.__scene = MonitorScene(self.__monitor)
+        self.__monitorScene = MonitorScene(self.__monitor)
         self.__saveProjectAsAction.setEnabled(True)
-        self.__monitorWidget.setScene(self.__scene)
+        self.__monitorWidget.setScene(self.__monitorScene)
         self.__monitor.stop()
 
         with tarfile.open(unicode(filepath), "r:gz") as archive_file:
@@ -603,10 +603,10 @@ class MainWindow(QMainWindow):
             src_image = archive_file.extractfile("scene/layout.png")
             with open(os.path.join(_tmpdir, "layout.png"), "wb") as dst_image:
                 shutil.copyfileobj(src_image, dst_image)
-            self.__scene.setLayoutPixmap(QPixmap(os.path.join(_tmpdir, "layout.png")))
+            self.__monitorScene.setLayoutPixmap(QPixmap(os.path.join(_tmpdir, "layout.png")))
 
             essids_picklefile = archive_file.extractfile("scene/essids.pickle")
-            self.__scene.essids = pickle.load(essids_picklefile)
+            self.__monitorScene.essids = pickle.load(essids_picklefile)
 
             spots_picklefile = archive_file.extractfile("scene/spots.pickle")
             spots_data = pickle.load(spots_picklefile)
@@ -614,10 +614,10 @@ class MainWindow(QMainWindow):
                 x = spot_data['x']
                 y = spot_data['y']
                 measurement = spot_data['measurement']
-                item = self.__scene.addSpot(QPointF(x, y))
+                item = self.__monitorScene.addSpot(QPointF(x, y))
                 item.measurement = measurement
 
-            self.__scene.updateHeatmaps()
+            self.__monitorScene.updateHeatmaps()
 
     def __saveProjectAsDialog(self):
         filepath = QFileDialog.getSaveFileName(None,
@@ -639,12 +639,12 @@ class MainWindow(QMainWindow):
                 raise e
         os.mkdir(scenedir)
 
-        for heatmapName in self.__scene.heatmapNames():
+        for heatmapName in self.__monitorScene.heatmapNames():
             shutil.copy(os.path.join(_tmpdir, "{}.png".format(heatmapName)),
                         scenedir)
 
         data = []
-        for spot in self.__scene.spots():
+        for spot in self.__monitorScene.spots():
             data.append({
                 'x': spot.x(),
                 'y': spot.y(),
@@ -654,7 +654,7 @@ class MainWindow(QMainWindow):
             pickle.dump(data, f)
 
         with open(os.path.join(scenedir, "essids.pickle"), "w") as f:
-            pickle.dump(self.__scene.essids, f)
+            pickle.dump(self.__monitorScene.essids, f)
 
         shutil.copy(os.path.join(_tmpdir, "layout.png"), scenedir)
 
@@ -676,10 +676,10 @@ class MainWindow(QMainWindow):
                                  msg.format(filepath))
         else:
             shutil.copy(filepath, os.path.join(_tmpdir, "layout.png"))
-            self.__scene = MonitorScene(self.__monitor)
-            self.__scene.setLayoutPixmap(layoutPixmap)
+            self.__monitorScene = MonitorScene(self.__monitor)
+            self.__monitorScene.setLayoutPixmap(layoutPixmap)
             self.__saveProjectAsAction.setEnabled(True)
-            self.__monitorWidget.setScene(self.__scene)
+            self.__monitorWidget.setScene(self.__monitorScene)
             self.__monitor.stop()
 
     def __showAboutDialog(self):
