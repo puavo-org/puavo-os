@@ -60,7 +60,7 @@ def save_heatmap(filepath, img_w, img_h, xs, ys, zs, scale_factor=0.2):
     matplotlib.pyplot.imsave(filepath, array2d, format='png',
                              vmin=min(LEVELS), vmax=max(LEVELS), cmap='RdYlBu_r')
 
-class View(QGraphicsView):
+class ZoomableGraphicsView(QGraphicsView):
 
     ZOOM_FACTOR = 1.1
 
@@ -74,9 +74,11 @@ class View(QGraphicsView):
             self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
 
             if event.delta() > 0:
-                self.scale(View.ZOOM_FACTOR, View.ZOOM_FACTOR)
+                self.scale(ZoomableGraphicsView.ZOOM_FACTOR,
+                           ZoomableGraphicsView.ZOOM_FACTOR)
             else:
-                self.scale(1 / View.ZOOM_FACTOR, 1 / View.ZOOM_FACTOR)
+                self.scale(1 / ZoomableGraphicsView.ZOOM_FACTOR,
+                           1 / ZoomableGraphicsView.ZOOM_FACTOR)
 
             event.accept()
 
@@ -504,7 +506,7 @@ class MainWindow(QMainWindow):
 
         self.__monitor = monitor
 
-        self.__view = View(self)
+        self.__view = ZoomableGraphicsView(self)
         self.__view.setRenderHints(QPainter.Antialiasing)
         self.__scene = None
 
