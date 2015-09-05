@@ -685,7 +685,6 @@ class MainWindow(QMainWindow):
     def __showAboutDialog(self):
         aboutText = QString.fromUtf8(
             "<h1>Puavo WLAN Mapper</h1>"
-            "<p>Version 0.1.0</p>"
             "<p>Copyright © 2015 <a href=\"http://opinsys.fi\">Opinsys Oy</a></p>"
             "<p>This program is free software: you can redistribute it and/or "
             "modify it under the terms of the GNU General Public License as "
