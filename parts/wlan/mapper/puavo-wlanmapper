@@ -370,7 +370,7 @@ class Monitor(QObject):
         self.__process.setStandardErrorFile(self.__horst_errfile_path)
 
         self.__process.started.connect(self.started)
-        self.__process.finished.connect(self.__emit_stopped)
+        self.__process.finished.connect(self.__emitStopped)
 
         with open(self.__horst_configfile_path, 'w') as f:
             f.write('quiet\n')
@@ -394,7 +394,7 @@ class Monitor(QObject):
         with open(self.__horst_errfile_path) as errfile:
             return errfile.read()
 
-    def __emit_stopped(self, exitCode, exitStatus):
+    def __emitStopped(self, exitCode, exitStatus):
         if exitStatus == QProcess.CrashExit:
             self.stopped.emit(False)
         else:
