@@ -390,7 +390,7 @@ class Monitor(QObject):
 
         return True
 
-    def errorLog(self):
+    def errorText(self):
         with open(self.__horst_errfile_path) as errfile:
             return errfile.read()
 
@@ -496,7 +496,7 @@ class MonitorWidget(QWidget):
             self.__statusLabel.setText("Ready")
         else:
             self.__statusLabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
-            self.__statusLabel.setText(self.__monitor.errorLog())
+            self.__statusLabel.setText(self.__monitor.errorText())
         self.__ifaceComboBox.setEnabled(True)
         self.__dwellSpinBox.setEnabled(True)
 
