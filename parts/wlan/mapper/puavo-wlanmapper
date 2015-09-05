@@ -513,13 +513,13 @@ class MainWindow(QMainWindow):
 
         self.__monitor = monitor
 
-        self.__view = ZoomableGraphicsView(self)
-        self.__view.setRenderHints(QPainter.Antialiasing)
         self.__monitorScene = None
 
         self.setWindowTitle("Puavo WLAN Mapper")
 
-        self.setCentralWidget(self.__view)
+        view = ZoomableGraphicsView(self)
+        view.setRenderHints(QPainter.Antialiasing)
+        self.setCentralWidget(view)
 
         self.__setupDockWidgets()
         self.__setupActions()
