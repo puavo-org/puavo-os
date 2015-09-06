@@ -187,9 +187,9 @@ class MonitorScene(QGraphicsScene):
                 self.essids[beacon.bssid] = beacon.ssid
             self.__monitoredSpot.measurement = measurement
 
-            self.toggleMonitoring(self.__monitoredSpot)
-
             self.updateHeatmaps()
+
+        self.toggleMonitoring(self.__monitoredSpot)
 
     def toggleMonitoring(self, spot):
         self.__monitor.terminate()
