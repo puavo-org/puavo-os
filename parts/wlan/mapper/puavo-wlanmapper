@@ -116,8 +116,23 @@ class MonitorScene(QGraphicsScene):
         self.__animation.setRotationAt(0.5, 180)
         self.__animation.setRotationAt(1.0, 360)
 
-    def spots(self):
-        return self.__spots
+    def setSpotData(self, spotData):
+        for spot in self.__spots:
+            self.removeSpot(spot)
+
+        for spotDatum in spotData:
+            item = self.addSpot(QPointF(spotDatum['x'], spotDatum['y']))
+            item.measurement = spotDatum['measurement']
+
+    def spotData(self):
+        data = []
+        for spot in self.__spots:
+            data.append({
+                'x': spot.x(),
+                'y': spot.y(),
+                'measurement': spot.measurement,
+            })
+        return data
 
     def addSpot(self, pos):
         item = Spot()
@@ -607,15 +622,7 @@ class MainWindow(QMainWindow):
             self.__monitorScene.essids = pickle.load(essids_picklefile)
 
             spots_picklefile = archive_file.extractfile("scene/spots.pickle")
-            spots_data = pickle.load(spots_picklefile)
-            for spot_data in spots_data:
-                x = spot_data['x']
-                y = spot_data['y']
-                measurement = spot_data['measurement']
-                item = self.__monitorScene.addSpot(QPointF(x, y))
-                item.measurement = measurement
-
-            self.__monitorScene.updateHeatmaps()
+            self.__monitorScene.setSpotData(pickle.load(spots_picklefile))
 
     def __saveProjectAsDialog(self):
         filepath = QFileDialog.getSaveFileName(None,
@@ -637,19 +644,8 @@ class MainWindow(QMainWindow):
                 raise e
         os.mkdir(scenedir)
 
-        for heatmapName in self.__monitorScene.heatmapNames():
-            shutil.copy(os.path.join(_tmpdir, "{}.png".format(heatmapName)),
-                        scenedir)
-
-        data = []
-        for spot in self.__monitorScene.spots():
-            data.append({
-                'x': spot.x(),
-                'y': spot.y(),
-                'measurement': spot.measurement,
-            })
         with open(os.path.join(scenedir, "spots.pickle"), "w") as f:
-            pickle.dump(data, f)
+            pickle.dump(self.__monitorScene.spotData(), f)
 
         with open(os.path.join(scenedir, "essids.pickle"), "w") as f:
             pickle.dump(self.__monitorScene.essids, f)
