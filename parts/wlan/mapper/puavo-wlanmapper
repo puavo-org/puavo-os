@@ -92,7 +92,7 @@ class MonitorScene(QGraphicsScene):
         self.__monitor = monitor
         self.__monitor.started.connect(self.__startAnimation)
         self.__monitor.stopped.connect(self.__stopAnimation)
-        self.__monitor.stopped.connect(self.__measurementStopped)
+        self.__monitor.stopped.connect(self.__monitorStopped)
         self.__currentSpot = None
 
         self.__spots = []
@@ -174,7 +174,7 @@ class MonitorScene(QGraphicsScene):
         self.__animation.timeLine().stop()
         self.__animation.setStep(0)
 
-    def __measurementStopped(self, isSuccess):
+    def __monitorStopped(self, isSuccess):
         if isSuccess:
 
             measurement = {}
