@@ -188,7 +188,7 @@ class MonitorScene(QGraphicsScene):
             self.updateHeatmaps()
 
     def toggleSpot(self, spot):
-        self.__monitor.stop()
+        self.__monitor.terminate()
 
         if self.__currentSpot == spot:
             self.__currentSpot = None
@@ -411,7 +411,7 @@ class Monitor(QObject):
         else:
             self.stopped.emit(not bool(exitCode))
 
-    def stop(self):
+    def terminate(self):
         if self.__process:
             self.__process.close()
             self.__process = None
@@ -537,7 +537,7 @@ class MainWindow(QMainWindow):
         self.__setupMenus()
 
     def closeEvent(self, event):
-        self.__monitor.stop()
+        self.__monitor.terminate()
 
     def sizeHint(self):
         return QSize(800, 600)
@@ -607,7 +607,7 @@ class MainWindow(QMainWindow):
         self.__monitorScene = MonitorScene(self.__monitor)
         self.__saveProjectAsAction.setEnabled(True)
         self.__monitorWidget.setScene(self.__monitorScene)
-        self.__monitor.stop()
+        self.__monitor.terminate()
 
         with tarfile.open(unicode(filepath), "r:gz") as archive_file:
 
@@ -672,7 +672,7 @@ class MainWindow(QMainWindow):
             self.__monitorScene.setLayoutPixmap(layoutPixmap)
             self.__saveProjectAsAction.setEnabled(True)
             self.__monitorWidget.setScene(self.__monitorScene)
-            self.__monitor.stop()
+            self.__monitor.terminate()
 
     def __showAboutDialog(self):
         aboutText = QString.fromUtf8(
