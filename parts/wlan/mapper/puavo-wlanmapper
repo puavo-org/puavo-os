@@ -90,8 +90,7 @@ class MonitorScene(QGraphicsScene):
         QGraphicsScene.__init__(self)
 
         self.__monitor = monitor
-        self.__monitor.started.connect(self.__startAnimation)
-        self.__monitor.stopped.connect(self.__stopAnimation)
+        self.__monitor.started.connect(self.__monitorStarted)
         self.__monitor.stopped.connect(self.__monitorStopped)
         self.__currentSpot = None
 
@@ -166,15 +165,14 @@ class MonitorScene(QGraphicsScene):
         self.removeItem(spot)
         self.updateHeatmaps()
 
-    def __startAnimation(self):
+    def __monitorStarted(self):
         self.__animation.setItem(self.__currentSpot)
         self.__animation.timeLine().start()
 
-    def __stopAnimation(self):
+    def __monitorStopped(self, isSuccess):
         self.__animation.timeLine().stop()
         self.__animation.setStep(0)
 
-    def __monitorStopped(self, isSuccess):
         if isSuccess:
 
             measurement = {}
