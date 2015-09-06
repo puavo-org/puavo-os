@@ -92,7 +92,7 @@ class MonitorScene(QGraphicsScene):
         self.__monitor = monitor
         self.__monitor.started.connect(self.__monitorStarted)
         self.__monitor.stopped.connect(self.__monitorStopped)
-        self.__currentSpot = None
+        self.__monitoredSpot = None
 
         self.__spots = []
         self.essids = {}
@@ -160,13 +160,13 @@ class MonitorScene(QGraphicsScene):
 
     def removeSpot(self, spot):
         self.__spots.remove(spot)
-        if spot == self.__currentSpot:
-            self.toggleSpot(spot)
+        if spot == self.__monitoredSpot:
+            self.toggleMonitoring(spot)
         self.removeItem(spot)
         self.updateHeatmaps()
 
     def __monitorStarted(self):
-        self.__animation.setItem(self.__currentSpot)
+        self.__animation.setItem(self.__monitoredSpot)
         self.__animation.timeLine().start()
 
     def __monitorStopped(self, isSuccess):
@@ -181,20 +181,20 @@ class MonitorScene(QGraphicsScene):
                 rssi = bssidmap.get(beacon.bssid, beacon.rssi)
                 bssidmap[beacon.bssid] = (beacon.rssi + rssi) / 2
                 self.essids[beacon.bssid] = beacon.ssid
-            self.__currentSpot.measurement = measurement
+            self.__monitoredSpot.measurement = measurement
 
-            self.toggleSpot(self.__currentSpot)
+            self.toggleMonitoring(self.__monitoredSpot)
 
             self.updateHeatmaps()
 
-    def toggleSpot(self, spot):
+    def toggleMonitoring(self, spot):
         self.__monitor.terminate()
 
-        if self.__currentSpot == spot:
-            self.__currentSpot = None
+        if self.__monitoredSpot == spot:
+            self.__monitoredSpot = None
             return
 
-        self.__currentSpot = spot
+        self.__monitoredSpot = spot
 
         self.__monitor.start()
 
@@ -296,15 +296,15 @@ class Spot(QGraphicsPolygonItem):
         self.__removeAction = QAction("&Remove", None)
         self.__removeAction.triggered.connect(self.__remove)
 
-        self.__toggleAction = QAction("&Toggle measurement", None)
-        self.__toggleAction.triggered.connect(self.__toggle)
+        self.__toggleMonitoringAction = QAction("&Toggle monitoring", None)
+        self.__toggleMonitoringAction.triggered.connect(self.__toggleMonitoring)
 
         self.__contextMenu = QMenu()
         self.__contextMenu.addAction(self.__removeAction)
-        self.__contextMenu.addAction(self.__toggleAction)
+        self.__contextMenu.addAction(self.__toggleMonitoringAction)
 
-    def __toggle(self):
-        self.scene().toggleSpot(self)
+    def __toggleMonitoring(self):
+        self.scene().toggleMonitoring(self)
 
     def __remove(self):
         self.scene().removeSpot(self)
@@ -313,7 +313,7 @@ class Spot(QGraphicsPolygonItem):
         self.setCursor(QCursor(Qt.PointingHandCursor))
 
     def mouseDoubleClickEvent(self, event):
-        self.__toggle()
+        self.__toggleMonitoring()
         event.accept()
 
     def contextMenuEvent(self, event):
