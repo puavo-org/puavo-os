@@ -449,6 +449,14 @@ class MonitorWidget(QWidget):
         layout = QVBoxLayout()
         formLayout = QFormLayout()
 
+        self.__errorMessageBox = QMessageBox(
+            QMessageBox.Critical,
+            "Monitor process terminated with error status",
+            "",
+            QMessageBox.Ok,
+            self)
+        self.__errorMessageBox.setModal(False)
+
         self.__ifaceComboBox = QComboBox()
         self.__ifaceComboBox.addItems(sorted(INTERFACES))
         self.__ifaceComboBox.setCurrentIndex(len(INTERFACES) - 1)
@@ -500,18 +508,18 @@ class MonitorWidget(QWidget):
         self.__view.setScene(scene)
 
     def __disable(self):
-        self.__statusLabel.setTextInteractionFlags(Qt.NoTextInteraction)
         self.__statusLabel.setText("Scanning...")
         self.__ifaceComboBox.setEnabled(False)
         self.__dwellSpinBox.setEnabled(False)
 
     def __enable(self, isSuccess):
-        if isSuccess:
-            self.__statusLabel.setTextInteractionFlags(Qt.NoTextInteraction)
-            self.__statusLabel.setText("Ready")
-        else:
-            self.__statusLabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
-            self.__statusLabel.setText(self.__monitor.errorText())
+        if not isSuccess:
+            self.__errorMessageBox.setText(self.__monitor.errorText())
+            self.__errorMessageBox.show()
+            self.__errorMessageBox.raise_()
+            self.__errorMessageBox.activateWindow()
+
+        self.__statusLabel.setText("Ready")
         self.__ifaceComboBox.setEnabled(True)
         self.__dwellSpinBox.setEnabled(True)
 
