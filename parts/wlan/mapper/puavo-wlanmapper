@@ -53,12 +53,14 @@ def save_heatmap(filepath, img_w, img_h, xs, ys, zs, scale_factor=0.2):
     spc_w = img_w * scale_factor
     spc_h = img_h * scale_factor
 
-    spc_xs, spc_ys = [v.flatten() for v in numpy.meshgrid(numpy.linspace(0, img_w - 1, spc_w),
-                                                          numpy.linspace(0, img_h - 1, spc_h))]
+    spc_xs, spc_ys = [v.flatten() for v in numpy.meshgrid(
+        numpy.linspace(0, img_w - 1, spc_w),
+        numpy.linspace(0, img_h - 1, spc_h))]
     array2d = rbf(spc_xs, spc_ys).reshape((spc_h, spc_w))
 
     matplotlib.pyplot.imsave(filepath, array2d, format='png',
-                             vmin=min(LEVELS), vmax=max(LEVELS), cmap='RdYlBu_r')
+                             vmin=min(LEVELS), vmax=max(LEVELS),
+                             cmap='RdYlBu_r')
 
 class ZoomableGraphicsView(QGraphicsView):
 
@@ -154,7 +156,9 @@ class MonitorScene(QGraphicsScene):
 
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
-        if not event.isAccepted() and event.button() == Qt.LeftButton and not event.modifiers():
+        if (not event.isAccepted()
+            and event.button() == Qt.LeftButton
+            and not event.modifiers()):
             self.addSpot(event.scenePos())
             event.accept()
 
@@ -215,18 +219,18 @@ class MonitorScene(QGraphicsScene):
             if len(xs) > 1:
 
                 for bssid, zs in bssidmap.items():
-                    heatmap_name = "%dHz_%s" % (freq, bssid)
-                    heatmap_filepath = os.path.join(_tmpdir, "{}.png".format(heatmap_name))
-                    save_heatmap(heatmap_filepath, width, height, xs, ys, zs)
+                    name = "%dHz_%s" % (freq, bssid)
+                    filepath = os.path.join(_tmpdir, "{}.png".format(name))
+                    save_heatmap(filepath, width, height, xs, ys, zs)
 
-                    pixmap = QPixmap(heatmap_filepath).scaled(width, height)
+                    pixmap = QPixmap(filepath).scaled(width, height)
                     try:
-                        self.__heatmaps[heatmap_name].setPixmap(pixmap)
+                        self.__heatmaps[name].setPixmap(pixmap)
                     except KeyError:
                         heatmap = self.addPixmap(pixmap)
                         heatmap.setVisible(False)
                         heatmap.setZValue(-2)
-                        self.__heatmaps[heatmap_name] = heatmap
+                        self.__heatmaps[name] = heatmap
 
             newHeatmapNames = list(set(self.__heatmaps.keys()) - oldHeatmapNames)
             if newHeatmapNames:
@@ -614,7 +618,8 @@ class MainWindow(QMainWindow):
             src_image = archive_file.extractfile("scene/layout.png")
             with open(os.path.join(_tmpdir, "layout.png"), "wb") as dst_image:
                 shutil.copyfileobj(src_image, dst_image)
-            self.__monitorScene.setLayoutPixmap(QPixmap(os.path.join(_tmpdir, "layout.png")))
+            self.__monitorScene.setLayoutPixmap(
+                QPixmap(os.path.join(_tmpdir, "layout.png")))
 
             essids_picklefile = archive_file.extractfile("scene/essids.pickle")
             self.__monitorScene.essids = pickle.load(essids_picklefile)
@@ -626,7 +631,7 @@ class MainWindow(QMainWindow):
         filepath = QFileDialog.getSaveFileName(None,
                                                "Save the project as",
                                                QDir.currentPath(),
-                                               "Compressed Tar archives (*.tar.gz)")
+                                               "GZipped Tar archives (*.tar.gz)")
         filepath = str(filepath)
         if not filepath:
             return
@@ -732,7 +737,8 @@ class NewProjectDialog(QDialog):
         return self.__imageLineEdit.text()
 
     def __checkImageFilePath(self):
-        self.__createButton.setEnabled(os.path.isfile(self.__imageLineEdit.text()))
+        self.__createButton.setEnabled(
+            os.path.isfile(self.__imageLineEdit.text()))
 
     def __getLayoutImageFileName(self):
         filepath = QFileDialog.getOpenFileName(None,
@@ -744,7 +750,8 @@ class NewProjectDialog(QDialog):
 
     def sizeHint(self):
         s = QDialog.sizeHint(self)
-        return QSize(s.width() + self.__imageLineEdit.sizeHint().width() * 2, s.height())
+        return QSize(s.width() + self.__imageLineEdit.sizeHint().width() * 2,
+                     s.height())
 
 INTERFACES = get_dot11_interfaces()
 
@@ -761,7 +768,8 @@ def main():
             return 1
 
         if not INTERFACES:
-            QMessageBox.critical(None, "Startup failure", "Failed to find any 802.11 devices.")
+            QMessageBox.critical(None, "Startup failure",
+                                 "Failed to find any 802.11 devices.")
             sys.exit(1)
 
         monitor = Monitor(INTERFACES[0])
