@@ -125,6 +125,35 @@ class Series
     end
   end
 
+  # Query puavo-rest for all devices and check used images.
+  # Images and diffs are marked.
+  def add_puavo_device_image_requests()
+    client = PuavoRestClient.new :auth => :etc
+
+    res = client.get("/v3/devices")
+    devices = res.parse()
+
+    devices.each do |device|
+      bootmode             = device["boot_mode"]
+      current_image        = device["current_image"]
+      preferred_boot_image = device["preferred_boot_image"]
+      preferred_image      = device["preferred_image"]
+
+      mark_image_in_use(preferred_image)
+
+      # Netboot devices do not need diffs, but want preferred boot images.
+      if bootmode == "netboot"
+        mark_image_in_use(preferred_boot_image)
+        next
+      end
+
+      # Other devices need diffs from current image to preferred 
+      if current_image && preferred_image && current_image != preferred_image
+	mark_diff_in_use(current_image, preferred_image)
+      end
+    end
+  end
+
   def images
     return @by_version.values
   end
@@ -604,37 +633,6 @@ def load_series_data(sources)
   all_series
 end
 
-# Query puavo-rest for all devices and check used images. Images and 
-# diffs are marked
-def query_devices(series)
-  client = PuavoRestClient.new :auth => :etc
-
-  res = client.get("/v3/devices")
-  devices = res.parse()
-
-  devices.each do |device|
-    preferred_image = device["preferred_image"]
-    boot_image = device["preferred_boot_image"]
-    current_image = device["current_image"]
-
-    bootmode = device["boot_mode"]
-
-    if bootmode && bootmode == "netboot"
-      # Netboot devices do not need diffs
-      series.mark_image_in_use(preferred_image)
-      series.mark_image_in_use(boot_image)
-    else
-      # Other devices need diffs from current image to preferred 
-
-      if preferred_image && current_image && preferred_image == current_image
-        series.mark_diff_in_use(current_image, preferred_image)
-      end
-
-      series.mark_image_in_use(preferred_image)
-    end
-  end
-end
-
 script_name = File.basename(__FILE__)
 
 Syslog.open(script_name, Syslog::LOG_CONS)
@@ -802,7 +800,7 @@ begin
       diff_limit = 0
     else
       # Check which images and diffs are needed for non-netboot devices
-      query_devices(series)
+      series.add_puavo_device_image_requests()
 
       # We want to always download X number of newest images with Y number 
       # of diffs from newest images.
