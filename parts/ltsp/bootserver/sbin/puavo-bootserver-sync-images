@@ -47,7 +47,6 @@
 
 require "digest"
 require 'digest/sha2'
-require 'fileutils'
 require 'json'
 require 'net/http'
 require 'puavo'
@@ -218,12 +217,20 @@ class SyncFile
 
         return false unless received_size == @size
 
-        if hash.to_s == @sha256
-          # verification happens while downloading, so no need to verify
-          # it later.
-          FileUtils.mv(download_path, final_path)
-          return true
+        if hash.to_s != @sha256
+          warning "Checksum mismatch for #{ download_path }" \
+                    + " (calculated while downloading)," \
+                    + " expected #{ @sha256 }, received #{ hash.to_s }"
+          File.delete(download_path)
+          info "Deleted #{ download_path }"
+          return false
         end
+
+        info "Checksum verified for #{ download_path }" \
+               + " (calculated while downloading)"
+        File.rename(download_path, final_path)
+        info "Moved #{ download_path } to #{ final_path }"
+        return true
       else
         warning "puavo-rest-client error, received response #{response.code}"
         return false
@@ -301,7 +308,14 @@ class SyncFile
       digest = Digest::SHA2.file(unverified_path).hexdigest
       @verify_result = (digest == @sha256)
       if @verify_result
-        FileUtils.mv(unverified_path, final_path)
+        info "Checksum verified for #{ unverified_path }"
+        File.rename(unverified_path, final_path)
+        info "Moved #{ unverified_path } to #{ final_path }"
+      else
+        warning "Checksum mismatch for #{ unverified_path }, "
+                  " expected #{ @sha256 }, received #{ digest }"
+        File.delete(unverified_path)
+        info "Deleted #{ unverified_path }"
       end
     end
 
