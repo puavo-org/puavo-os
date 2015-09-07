@@ -244,15 +244,19 @@ class SyncFile
   end
 
   def all_possible_paths
-    [ download_path, unverified_path, final_path ]
+    [ download_path, partial_unverified_path, unverified_path, final_path ]
   end
 
   def download_path
-    return do_path_cleanup("#{ unverified_path }.partial")
+    return do_path_cleanup("#{ final_path }.partial")
   end
 
   def final_path
     return do_path_cleanup("#{ basedir }/#{ @filename }")
+  end
+
+  def partial_unverified_path
+    return do_path_cleanup("#{ unverified_path }.partial")
   end
 
   def unverified_path
@@ -407,15 +411,19 @@ class Diff < SyncFile
   def basedir; '/opt/ltsp/images/rdiffs'; end
 
   def do_patching
-    return true if system("rdiff",
-                          "patch",
-                          @baseimage.final_path,
-                          final_path,
-                          @targetimage.unverified_path)
+    if !system("rdiff",
+               "patch",
+               @baseimage.final_path,
+               final_path,
+               @targetimage.partial_unverified_path)
+      warning "rdiff failed with exit code: #{ $?.exitstatus } when using" \
+                + " '#{ final_path }'"
+      return false      
+    end
 
-    warning "rdiff failed with exit code: #{ $?.exitstatus } when using" \
-              + " '#{ final_path }'"
-    return false      
+    File.mv(@targetimage.partial_unverified_path, @targetimage.unverified_path)
+
+    return true
   end
 
   def apply(opts)
