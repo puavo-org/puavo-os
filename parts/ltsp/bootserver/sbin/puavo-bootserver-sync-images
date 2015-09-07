@@ -242,6 +242,8 @@ class SyncFile
   # the downloaded file matches the given size and sha256.
   # If the file was downloaded successfully and the size and the checksum
   # matches, true is returned, otherwise false is returned.
+  # Development idea: it might be nice if this could support partial downloads
+  # (append to an existing file).
   def download_from_url(url)
     uri = URI.parse(url)
 
@@ -277,7 +279,7 @@ class SyncFile
             new_progress = (received_size * 100) / total
             if progress != new_progress
               progress = new_progress
-              debug(1, "Downloading %s (%3d%%)" % [download_path, progress])
+              debug(1, "Downloading %s (%3d%%)" % [url, progress])
             end
           end
         end
@@ -382,6 +384,8 @@ class SyncFile
     if @verified && @mtime && @mtime == current_mtime
       return @verify_result
     end
+
+    info(2, "Verifying #{ path_to_verify }")
 
     @verify_result = false
     @state.state = :unverified
@@ -519,25 +523,31 @@ class Diff < SyncFile
   def basedir; '/opt/ltsp/images/rdiffs'; end
 
   def do_patching
-    if !system("rdiff",
-               "patch",
-               @baseimage.final_path,
-               final_path,
-               @targetimage.partial_unverified_path)
+    source      = @baseimage.final_path
+    target      = @targetimage.unverified_path
+    temp_target = @targetimage.partial_unverified_path
+
+    info(2, "Starting patching from #{ source } to #{ temp_target }")
+
+    if !system("rdiff", "patch", source, final_path, temp_target)
       warning(2, "rdiff failed with exit code: #{ $?.exitstatus }" \
                    + "  when using #{ final_path }")
       return false      
     end
 
-    File.mv(@targetimage.partial_unverified_path, @targetimage.unverified_path)
+    info(3, "Patched #{ temp_target } successfully")
+
+    File.rename(temp_target, target)
+
+    info(2, "Moved #{ temp_target } to #{ target }")
 
     return true
   end
 
   def apply(download_wanted, force_verify)
-    @baseimage.verify(force_verify)                 \
-      and ((download_wanted or verify) or download) \
-      and do_patching                               \
+    @baseimage.verify(force_verify)                               \
+      and ((download_wanted or verify(force_verify)) or download) \
+      and do_patching                                             \
       and return true
 
     return false
@@ -810,6 +820,9 @@ begin
       # of diffs from newest images.
       image_list = series.newest_images(image_limit)
     end
+
+    info(5, "Syncing the following images:")
+    image_list.each { |image| info(4, "  #{ image.id }") }
 
     image_list.each do |image|
       info(4, "Starting sync for #{image.id}")
