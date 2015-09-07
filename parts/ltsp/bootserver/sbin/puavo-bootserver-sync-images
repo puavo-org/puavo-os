@@ -63,9 +63,19 @@ end
 def log(*args)   ; syslog(STDOUT, *args); end
 def logerr(*args); syslog(STDERR, *args); end
 
-def debug(msg);   log(Syslog::LOG_DEBUG,   "%s\n", msg); end
-def info(msg);    log(Syslog::LOG_INFO,    "%s\n", msg); end
-def warning(msg); log(Syslog::LOG_WARNING, "%s\n", msg); end
+def logprefix(level)
+  spacecount = [5, [5-level, 0].max ].min	# (5-level between [0,5])
+  arrowcount = [0, [  level, 5].min ].max	# (  level between [0,5])
+  return (" " * spacecount  +  ">" * arrowcount)
+end
+
+def info(level, msg)
+  log(Syslog::LOG_INFO, logprefix(level) + " %s\n", msg)
+end
+
+def warning(level, msg)
+  logerr(Syslog::LOG_WARNING, logprefix(level) + " %s\n", msg)
+end
 
 class Series
   attr_reader :name
@@ -173,11 +183,11 @@ class SyncFile
   def delete
     all_possible_paths.each do |path|
       next unless File.exists?(path)
-      info "Deleting '#{ path }'"
+      info(2, "Deleting '#{ path }'")
       begin
         File.delete(path)
       rescue StandardError => e
-        warning "Could not delete '#{ path }': #{ e.message }"
+        warning(2, "Could not delete '#{ path }': #{ e.message }")
       end
     end
     @state.state = :deleted
@@ -211,12 +221,14 @@ class SyncFile
     http.request_get(uri.path) do |response|
       case response
       when Net::HTTPNotFound
-        warning "404 - Not Found (#{url})"
+        warning(2, "404 - Not Found (#{url})")
         return false
 
       when Net::HTTPOK
         hash = Digest::SHA2.new
         received_size = 0
+
+        info(2, "Starting download from #{ url } to #{ download_path }")
 
         File.open(download_path, "w") do |temp_file|
           temp_file.binmode
@@ -232,7 +244,7 @@ class SyncFile
             new_progress = (received_size * 100) / total
             if progress != new_progress
               progress = new_progress
-              info "Downloading %s (%3d%%)" % [download_path, progress]
+              info(1, "Downloading %s (%3d%%)" % [download_path, progress])
             end
           end
         end
@@ -242,22 +254,23 @@ class SyncFile
         @state.state = :downloaded
 
         if hash.to_s != @sha256
-          warning "Checksum mismatch for #{ download_path }" \
-                    + " (calculated while downloading)," \
-                    + " expected #{ @sha256 }, received #{ hash.to_s }"
+          warning(2, "Checksum mismatch for #{ download_path }" \
+                       + " (calculated while downloading)," \
+                       + " expected #{ @sha256 }, received #{ hash.to_s }")
           File.delete(download_path)
-          info "Deleted #{ download_path }"
+          info(2, "Deleted #{ download_path }")
           return false
         end
 
-        info "Checksum verified for #{ download_path }" \
-               + " (calculated while downloading)"
+        info(2, "Checksum verified for #{ download_path }" \
+                  + " (calculated while downloading)")
         File.rename(download_path, final_path)
-        info "Moved #{ download_path } to #{ final_path }"
+        info(2, "Moved #{ download_path } to #{ final_path }")
         @state.state = :inplace
         return true
       else
-        warning "puavo-rest-client error, received response #{response.code}"
+        warning(2, "puavo-rest-client error, received response" \
+                     + " #{response.code}")
         return false
       end
     end
@@ -325,10 +338,10 @@ class SyncFile
     begin
       current_mtime = File.mtime(path_to_verify)
       current_size  = File.size(path_to_verify)
-    rescue Errno::ENOENT
-      return @verified = @verify_result = false
     rescue StandardError => e
-      warning "Problem in inspecting #{ path_to_verify }: #{ e.message }"
+      warning(2, "Problem in inspecting #{ path_to_verify }:" \
+                   + " #{ e.message }")                       \
+        unless e.kind_of?(Errno::ENOENT)
       @state.state = :unverified
       return @verified = @verify_result = false
     end
@@ -345,18 +358,18 @@ class SyncFile
       digest = Digest::SHA2.file(path_to_verify).hexdigest
       @verify_result = (digest == @sha256)
       if @verify_result
-        info "Checksum verified for #{ path_to_verify }"
+        info(2, "Checksum verified for #{ path_to_verify }")
         if path_to_verify != final_path
           File.rename(path_to_verify, final_path)
-          info "Moved #{ path_to_verify } to #{ final_path }"
+          info(2, "Moved #{ path_to_verify } to #{ final_path }")
         end
         @state.state = :inplace
       else
-        warning "Checksum mismatch for #{ path_to_verify }, "
-                  " expected #{ @sha256 }, received #{ digest }"
+        warning(2, "Checksum mismatch for #{ path_to_verify }, " \
+                     + " expected #{ @sha256 }, received #{ digest }")
         if path_to_verify == unverified_path
           File.delete(path_to_verify)
-          info "Deleted #{ path_to_verify }"
+          info(2, "Deleted #{ path_to_verify }")
         else
           # Do not delete in case the file is in final_path... even though
           # the file is probably broken, it is probably better to leave it
@@ -444,10 +457,12 @@ class Image < SyncFile
                     return false
                   end
 
+    info(3, "Trying to patch a new image from existing images and diffs")
     apply_diffs.call(false) and return true
-    debug "No existing diff, downloading the smallest"
+    info(3, "Trying to patch a new image by downloading rdiffs and patching")
     apply_diffs.call(true)  and return true
 
+    info(3, "(Did not succeed in patching from an old image)")
     return false
   end
 
@@ -476,8 +491,8 @@ class Diff < SyncFile
                @baseimage.final_path,
                final_path,
                @targetimage.partial_unverified_path)
-      warning "rdiff failed with exit code: #{ $?.exitstatus } when using" \
-                + " '#{ final_path }'"
+      warning(2, "rdiff failed with exit code: #{ $?.exitstatus }" \
+                   + "  when using #{ final_path }")
       return false      
     end
 
@@ -552,7 +567,7 @@ def fetch_source_urls
 
   url = "/v3/boot_servers/#{ etc.hostname }"
 
-  debug "Loading bootserver data from puavo-rest url: '#{ url }'"
+  info(5, "Loading bootserver data from puavo-rest url: '#{ url }'")
   res = client.get(url)
   data = res.parse()
 
@@ -568,8 +583,8 @@ end
 def load_series_data(sources)
   all_series = Hash.new
 
-  info "Using image series sources:"
-  sources.each { |url| info url }
+  info(5, "Using image series sources:")
+  sources.each { |url| info(4, url) }
 
   sources.each do |url|
     uri = URI.parse(url)
@@ -769,18 +784,18 @@ begin
 
   if options[:series]
     series_name = options[:series]
-    debug "Using only series #{series_name}"
+    info(5, "Using only series #{series_name}")
 
     all_series.keep_if {|key, value| key.eql?(series_name)}
   end
 
   if all_series.empty?
-    warning "No series information, exiting"
+    warning(5, "No series information, exiting")
     exit 1
   end
 
   all_series.values.each do |series|
-    info ">>> Syncing series #{series.name}"
+    info(5, "Syncing series #{series.name}")
 
     if options[:image]
       image_list = [ series.get_by_id(options[:image]) ]
@@ -795,19 +810,19 @@ begin
     end
 
     image_list.each do |image|
-      info ">>> Starting sync for #{image.id}"
+      info(4, "Starting sync for #{image.id}")
 
       if image.materialize(options[:force_verify])
-        info "  > Image sync OK: #{ image.statemsg }"
+        info(3, "Image sync OK: #{ image.statemsg }")
       else
-        warning "  > Image sync FAILED: #{ image.statemsg }"
+        warning(3, "Image sync FAILED: #{ image.statemsg }")
       end
 
       image.download_newest_diffs(diff_limit, options[:force_verify])
     end
 
     if sync_client_diffs
-      info ">>> Downloading client diffs"
+      info(5, "Downloading client diffs")
 
       series.images.each do |image|
         image.diffs.each do |diff|
@@ -815,9 +830,9 @@ begin
           # get only the diffs that are in use
 
           if diff.materialize(options[:force_verify])
-            info "  > Diff sync OK: #{ diff.statemsg }"
+            info(3, "Diff sync OK: #{ diff.statemsg }")
           else
-            warning "  > Diff sync FAILED: #{ diff.statemsg }"
+            warning(3, "Diff sync FAILED: #{ diff.statemsg }")
           end
         end
       end
@@ -826,7 +841,7 @@ begin
     # Delete all images and rdiffs that are not either newest
     # or used by some client
     if delete_unused
-      info ">>> Checking for old images and diffs to delete"
+      info(5, "Checking for old images and diffs to delete")
 
       series.images.each do |image|
         if !image.in_use
@@ -842,7 +857,7 @@ begin
     end
   end
 rescue StandardError => e
-  warning "Error: #{ e.message }"
+  warning(5, "Error: #{ e.message }")
   raise e
 end
 
