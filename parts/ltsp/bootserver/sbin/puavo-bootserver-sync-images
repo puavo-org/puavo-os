@@ -420,9 +420,9 @@ class Image < SyncFile
   def materialize(force_verify)
     mark_in_use
 
-    verify(force_verify) and return true
-    patch_from_old       and return true
-    download             and return true
+    verify(force_verify)         and return true
+    patch_from_old(force_verify) and return true
+    download                     and return true
 
     return false
   end
@@ -432,13 +432,13 @@ class Image < SyncFile
   # first to check if there is an existing baseimage that has a patch 
   # available and if none is found, then the smallest sized diff for an 
   # existing baseimage is downloaded.
-  def patch_from_old
+  def patch_from_old(force_verify)
     mindiffs = diffs.sort_by { |diff| diff.size }
 
     apply_diffs = lambda do |download_wanted|
                     mindiffs.each do |diff|
-                      diff.apply(:download_wanted => download_wanted) \
-                        and verify                                    \
+                      diff.apply(download_wanted, force_verify) \
+                        and verify(force_verify)                \
                         and return true
                     end
                     return false
@@ -486,10 +486,8 @@ class Diff < SyncFile
     return true
   end
 
-  def apply(opts)
-    download_wanted = opts[:download_wanted]
-
-    @baseimage.verify \
+  def apply(download_wanted, force_verify)
+    @baseimage.verify(force_verify)                 \
       and ((download_wanted or verify) or download) \
       and do_patching                               \
       and return true
