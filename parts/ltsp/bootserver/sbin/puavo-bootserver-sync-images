@@ -67,15 +67,6 @@ def debug(msg);   log(Syslog::LOG_DEBUG,   "%s\n", msg); end
 def info(msg);    log(Syslog::LOG_INFO,    "%s\n", msg); end
 def warning(msg); log(Syslog::LOG_WARNING, "%s\n", msg); end
 
-class Result
-  attr_reader :succeeded, :message
-
-  def initialize(succeeded, message)
-    @succeeded = succeeded
-    @message   = message
-  end
-end
-
 class Series
   attr_reader :name
 
@@ -136,6 +127,33 @@ class Series
   end
 end
 
+class SyncState
+  StatesAndMessages = {
+    :missing    => "%s is missing",
+    :downloaded => "%s has been downloaded",
+    :unverified => "%s is unverified",
+    :inplace    => "%s is inplace",
+    :deleted    => "%s has been deleted",
+    :unknown    => "%s state is unknown",
+  }
+
+  def initialize()
+    @state = :unknown
+  end
+
+  def message(filename)
+    return (StatesAndMessages[@state] || StatesAndMessages[:unknown]) \
+             % [ filename ]
+  end
+
+  def state=(new_state)
+    raise "Unsupported state #{ new_state }" \
+      unless StatesAndMessages.has_key?(new_state)
+
+    @state = new_state
+  end
+end
+
 class SyncFile
   attr_reader :filename, :in_use, :size
 
@@ -147,6 +165,7 @@ class SyncFile
 
     @in_use        = false
     @mtime         = nil
+    @state         = SyncState.new
     @verified      = false
     @verify_result = false
   end
@@ -161,9 +180,12 @@ class SyncFile
         warning "Could not delete '#{ path }': #{ e.message }"
       end
     end
+    @state.state = :deleted
   end
 
   def download
+    @state.state = :missing
+
     # go through all @urls in order and try to download from each in turn
     # (we could also do some load balancing by first choosing one randomly?)
     @urls.each do |url|
@@ -217,6 +239,8 @@ class SyncFile
 
         return false unless received_size == @size
 
+        @state.state = :downloaded
+
         if hash.to_s != @sha256
           warning "Checksum mismatch for #{ download_path }" \
                     + " (calculated while downloading)," \
@@ -230,6 +254,7 @@ class SyncFile
                + " (calculated while downloading)"
         File.rename(download_path, final_path)
         info "Moved #{ download_path } to #{ final_path }"
+        @state.state = :inplace
         return true
       else
         warning "puavo-rest-client error, received response #{response.code}"
@@ -278,22 +303,33 @@ class SyncFile
     @in_use = true
   end
 
+  def statemsg
+    return @state.message(@filename)
+  end
+
   # Checks if the file in the filesystem has the same sha256 as the metadata.
   # To speed up things, the filesize needs to match before sha256 is 
   # calculated. The results are cached and rechecked only if file mtime 
   # changes.
-  def verify
-    # XXX if --force-verify command-line option is given, this step should
-    # XXX be skipped:
-    inplace? and return true
+  def verify(force_verify)
+    # We can speed things up by assuming that all files in proper place have
+    # been verified before (but if force_verify is true we will verify anyway).
+    if inplace?
+      @state.state = :inplace
+      return true unless force_verify
+      path_to_verify = final_path
+    else
+      path_to_verify = unverified_path
+    end
 
     begin
-      current_mtime = File.mtime(unverified_path)
-      current_size  = File.size(unverified_path)
+      current_mtime = File.mtime(path_to_verify)
+      current_size  = File.size(path_to_verify)
     rescue Errno::ENOENT
       return @verified = @verify_result = false
     rescue StandardError => e
-      warning "Problem in inspecting #{ unverified_path }: #{ e.message }"
+      warning "Problem in inspecting #{ path_to_verify }: #{ e.message }"
+      @state.state = :unverified
       return @verified = @verify_result = false
     end
 
@@ -302,20 +338,30 @@ class SyncFile
     end
 
     @verify_result = false
+    @state.state = :unverified
 
     if current_size == @size
       @mtime = current_mtime
-      digest = Digest::SHA2.file(unverified_path).hexdigest
+      digest = Digest::SHA2.file(path_to_verify).hexdigest
       @verify_result = (digest == @sha256)
       if @verify_result
-        info "Checksum verified for #{ unverified_path }"
-        File.rename(unverified_path, final_path)
-        info "Moved #{ unverified_path } to #{ final_path }"
+        info "Checksum verified for #{ path_to_verify }"
+        if path_to_verify != final_path
+          File.rename(path_to_verify, final_path)
+          info "Moved #{ path_to_verify } to #{ final_path }"
+        end
+        @state.state = :inplace
       else
-        warning "Checksum mismatch for #{ unverified_path }, "
+        warning "Checksum mismatch for #{ path_to_verify }, "
                   " expected #{ @sha256 }, received #{ digest }"
-        File.delete(unverified_path)
-        info "Deleted #{ unverified_path }"
+        if path_to_verify == unverified_path
+          File.delete(path_to_verify)
+          info "Deleted #{ path_to_verify }"
+        else
+          # Do not delete in case the file is in final_path... even though
+          # the file is probably broken, it is probably better to leave it
+          # and try to patch/download a new one in its place.
+        end
       end
     end
 
@@ -365,20 +411,20 @@ class Image < SyncFile
     @diffs_from_by_version.values
   end
 
-  def download_newest_diffs(limit=0)
+  def download_newest_diffs(limit=0, force_verify=false)
     newest_by_version(@diffs_from_by_version, limit).each do |diff|
-      diff.mark_in_use
-      diff.verify or diff.download
+      diff.materialize(force_verify)
     end
   end
 
-  def materialize
-    inplace?       and return Result.new(true, "image exists already")
-    verify         and return Result.new(true, "unverified image verified OK")
-    patch_from_old and return Result.new(true, "patched from older image")
-    download       and return Result.new(true, "downloaded full image")
+  def materialize(force_verify)
+    mark_in_use
 
-    return Result.new(false, "failed to patch or download image")
+    verify(force_verify) and return true
+    patch_from_old       and return true
+    download             and return true
+
+    return false
   end
 
   # Create the current image from an old image by using a patch. First 
@@ -451,12 +497,13 @@ class Diff < SyncFile
     return false
   end
 
-  def materialize
-    inplace? and return Result.new(true, "diff exists already")
-    verify   and return Result.new(true, "unverified diff verified OK")
-    download and return Result.new(true, "downloaded diff")
+  def materialize(force_verify=false)
+    mark_in_use
 
-    Result.new(false, "Failed to get a diff file")
+    verify(force_verify) and return true
+    download             and return true
+
+    return false
   end
 end
 
@@ -657,6 +704,11 @@ BANNER_EOF
     options[:file] = file
   end
 
+  options[:force_verify] = false
+  opts.on("--force-verify", "Force verification of each image/rdiff") do
+    options[:force_verify] = true
+  end
+
   options[:image_limit] = 1
   opts.on("--image-limit NUMBER", "Number of newest images to sync from all specified series (Default: 1)") do |limit|
     options[:image_limit] = limit
@@ -747,16 +799,13 @@ begin
     image_list.each do |image|
       info ">>> Starting sync for #{image.id}"
 
-      image.mark_in_use
-
-      result = image.materialize
-      if result.succeeded
-        info "  > Image sync OK for #{image.id}: #{result.message}"
+      if image.materialize(options[:force_verify])
+        info "  > Image sync OK: #{ image.statemsg }"
       else
-        warning "  > Image sync FAILED for #{image.id}: #{result.message}"
+        warning "  > Image sync FAILED: #{ image.statemsg }"
       end
 
-      image.download_newest_diffs(diff_limit)
+      image.download_newest_diffs(diff_limit, options[:force_verify])
     end
 
     if sync_client_diffs
@@ -765,13 +814,12 @@ begin
       series.images.each do |image|
         image.diffs.each do |diff|
           next unless diff.in_use
+          # get only the diffs that are in use
 
-          result = diff.materialize
-          if result.succeeded
-            info "  > Diff sync OK for #{ diff.filename }: #{ result.message }"
+          if diff.materialize(options[:force_verify])
+            info "  > Diff sync OK: #{ diff.statemsg }"
           else
-            warning "  > Diff sync FAILED for #{ diff.filename }:" \
-                      + " #{ result.message }"
+            warning "  > Diff sync FAILED: #{ diff.statemsg }"
           end
         end
       end
