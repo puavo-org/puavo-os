@@ -724,8 +724,8 @@ BANNER_EOF
     options[:force_verify] = true
   end
 
-  options[:image_limit] = 1
-  opts.on("--image-limit NUMBER", "Number of newest images to sync from all specified series (Default: 1)") do |limit|
+  options[:image_limit] = 2
+  opts.on("--image-limit NUMBER", "Number of newest images to sync from all specified series (Default: 2)") do |limit|
     options[:image_limit] = limit
   end
 
