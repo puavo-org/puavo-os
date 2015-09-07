@@ -359,12 +359,13 @@ class SyncFile
   # To speed up things, the filesize needs to match before sha256 is 
   # calculated. The results are cached and rechecked only if file mtime 
   # changes.
-  def verify(force_verify)
+  def verify
     # We can speed things up by assuming that all files in proper place have
-    # been verified before (but if force_verify is true we will verify anyway).
+    # been verified before (but if $options[:force_verify] is true we will
+    # verify anyway).
     if inplace?
       @state.state = :inplace
-      return true unless force_verify
+      return true unless $options[:force_verify]
       path_to_verify = final_path
     else
       path_to_verify = unverified_path
@@ -461,18 +462,18 @@ class Image < SyncFile
     @diffs_from_by_version.values
   end
 
-  def download_newest_diffs(limit=0, force_verify=false)
+  def download_newest_diffs(limit=0)
     newest_by_version(@diffs_from_by_version, limit).each do |diff|
-      diff.materialize(force_verify)
+      diff.materialize
     end
   end
 
-  def materialize(force_verify)
+  def materialize
     mark_in_use
 
-    verify(force_verify)         and return true
-    patch_from_old(force_verify) and return true
-    download                     and return true
+    verify         and return true
+    patch_from_old and return true
+    download       and return true
 
     return false
   end
@@ -482,13 +483,13 @@ class Image < SyncFile
   # first to check if there is an existing baseimage that has a patch 
   # available and if none is found, then the smallest sized diff for an 
   # existing baseimage is downloaded.
-  def patch_from_old(force_verify)
+  def patch_from_old
     mindiffs = diffs.sort_by { |diff| diff.size }
 
     apply_diffs = lambda do |download_wanted|
                     mindiffs.each do |diff|
-                      diff.apply(download_wanted, force_verify) \
-                        and verify(force_verify)                \
+                      diff.apply(download_wanted) \
+                        and verify                \
                         and return true
                     end
                     return false
@@ -544,20 +545,20 @@ class Diff < SyncFile
     return true
   end
 
-  def apply(download_wanted, force_verify)
-    @baseimage.verify(force_verify)                               \
-      and ((download_wanted or verify(force_verify)) or download) \
-      and do_patching                                             \
+  def apply(download_wanted)
+    @baseimage.verify                               \
+      and ((download_wanted or verify) or download) \
+      and do_patching                               \
       and return true
 
     return false
   end
 
-  def materialize(force_verify=false)
+  def materialize
     mark_in_use
 
-    verify(force_verify) and return true
-    download             and return true
+    verify   and return true
+    download and return true
 
     return false
   end
@@ -651,7 +652,7 @@ script_name = File.basename(__FILE__)
 
 Syslog.open(script_name, Syslog::LOG_CONS)
 
-options = Hash.new
+$options = Hash.new
 
 parser = OptionParser.new do |opts|
   opts.banner = <<BANNER_EOF
@@ -718,44 +719,44 @@ parser = OptionParser.new do |opts|
 BANNER_EOF
 
   opts.on("--keep-unused", "Do no delete images that are not currently used by any client.") do
-    options[:keep_unused] = true
+    $options[:keep_unused] = true
   end
 
   opts.on("--url URL", "Source URL to load JSON series information") do |url|
-    options[:url] = url
+    $options[:url] = url
   end
 
   opts.on("--file PATH", "JSON series information file to read") do |file|
-    options[:file] = file
+    $options[:file] = file
   end
 
-  options[:force_verify] = false
+  $options[:force_verify] = false
   opts.on("--force-verify", "Force verification of each image/rdiff") do
-    options[:force_verify] = true
+    $options[:force_verify] = true
   end
 
-  options[:image_limit] = 2
+  $options[:image_limit] = 2
   opts.on("--image-limit NUMBER", "Number of newest images to sync from all specified series (Default: 2)") do |limit|
-    options[:image_limit] = limit
+    $options[:image_limit] = limit
   end
 
-  options[:diff_limit] = 2
+  $options[:diff_limit] = 2
   opts.on("--diff-limit NUMBER", "Number of newest diffs to sync for synced images even if there are no clients using them. (Default: 2)") do |limit|
-    options[:diff_limit] = limit
+    $options[:diff_limit] = limit
   end
 
   # XXX not used yet
-  options[:download_path] = "/opt/ltsp/images"
+  $options[:download_path] = "/opt/ltsp/images"
   opts.on("--download_path PATH") do |path|
-    options[:download_path] = path
+    $options[:download_path] = path
   end
 
   opts.on("--series NAME", "Download only specified series instead of all series specified by the sources.") do |series|
-    options[:series] = series
+    $options[:series] = series
   end
 
   opts.on("--image NAME", "Sync only the specified image") do |image|
-    options[:image] = image
+    $options[:image] = image
   end
 
   opts.on_tail("-h", "--help", "Show this message") do
@@ -766,36 +767,36 @@ end
 
 parser.parse!
 
-image_limit=options[:image_limit]
-diff_limit=options[:diff_limit]
+image_limit=$options[:image_limit]
+diff_limit=$options[:diff_limit]
 sync_client_diffs=true
 
-if options[:image]
+if $options[:image]
   sync_client_diffs=false
 end
 
 delete_unused = true
 
-if options[:keep_unused]
+if $options[:keep_unused]
   delete_unused = false
 end
 
 begin
   # Load series information from sources specified in bootserver's
   # device information.
-  if options[:file]
-    all_series = parse_series_data( JSON.parse( IO.read(options[:file]) ) )
+  if $options[:file]
+    all_series = parse_series_data( JSON.parse( IO.read($options[:file]) ) )
   else
-    if options[:url]
-      source_urls = [ options[:url] ]
+    if $options[:url]
+      source_urls = [ $options[:url] ]
     else
       source_urls = fetch_source_urls()
     end
     all_series = load_series_data(source_urls)
   end
 
-  if options[:series]
-    series_name = options[:series]
+  if $options[:series]
+    series_name = $options[:series]
     info(5, "Using only series #{series_name}")
 
     all_series.keep_if {|key, value| key.eql?(series_name)}
@@ -809,8 +810,8 @@ begin
   all_series.values.each do |series|
     info(5, "Syncing series #{series.name}")
 
-    if options[:image]
-      image_list = [ series.get_by_id(options[:image]) ]
+    if $options[:image]
+      image_list = [ series.get_by_id($options[:image]) ]
       diff_limit = 0
     else
       # Check which images and diffs are needed for non-netboot devices
@@ -827,13 +828,13 @@ begin
     image_list.each do |image|
       info(4, "Starting sync for #{image.id}")
 
-      if image.materialize(options[:force_verify])
+      if image.materialize
         info(3, "Image sync OK: #{ image.statemsg }")
       else
         warning(3, "Image sync FAILED: #{ image.statemsg }")
       end
 
-      image.download_newest_diffs(diff_limit, options[:force_verify])
+      image.download_newest_diffs(diff_limit)
     end
 
     if sync_client_diffs
@@ -844,7 +845,7 @@ begin
           next unless diff.in_use
           # get only the diffs that are in use
 
-          if diff.materialize(options[:force_verify])
+          if diff.materialize
             info(3, "Diff sync OK: #{ diff.statemsg }")
           else
             warning(3, "Diff sync FAILED: #{ diff.statemsg }")
