@@ -69,6 +69,10 @@ def logprefix(level)
   return (" " * spacecount  +  ">" * arrowcount)
 end
 
+def debug(level, msg)
+  log(Syslog::LOG_DEBUG, logprefix(level) + " %s\n", msg)
+end
+
 def info(level, msg)
   log(Syslog::LOG_INFO, logprefix(level) + " %s\n", msg)
 end
@@ -273,7 +277,7 @@ class SyncFile
             new_progress = (received_size * 100) / total
             if progress != new_progress
               progress = new_progress
-              info(1, "Downloading %s (%3d%%)" % [download_path, progress])
+              debug(1, "Downloading %s (%3d%%)" % [download_path, progress])
             end
           end
         end
