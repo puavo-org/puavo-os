@@ -47,6 +47,7 @@
 
 require "digest"
 require 'digest/sha2'
+require 'highline/import'
 require 'json'
 require 'net/http'
 require 'puavo'
@@ -55,13 +56,14 @@ require 'puavo/rest-client'
 require 'rest-client'
 require 'syslog'
 
-def syslog(channel, priority, *args)
-  Syslog.log(priority, *args)
-  channel.printf(*args)
-end
+def log(level, channel, priority, msg, color)
+  logmsg = "%s %s" % [ logprefix(level), msg ]
 
-def log(*args)   ; syslog(STDOUT, *args); end
-def logerr(*args); syslog(STDERR, *args); end
+  Syslog.log(priority, "%s", logmsg)
+
+  outmsg = color  ?  HighLine.new.color(logmsg, color)  :  logmsg
+  channel.puts(outmsg)
+end
 
 def logprefix(level)
   spacecount = [5, [5-level, 0].max ].min	# (5-level between [0,5])
@@ -69,16 +71,16 @@ def logprefix(level)
   return (" " * spacecount  +  ">" * arrowcount)
 end
 
-def debug(level, msg)
-  log(Syslog::LOG_DEBUG, logprefix(level) + " %s\n", msg)
+def debug(level, msg, color=nil)
+  log(level, STDOUT, Syslog::LOG_DEBUG, msg, color)
 end
 
-def info(level, msg)
-  log(Syslog::LOG_INFO, logprefix(level) + " %s\n", msg)
+def info(level, msg, color=nil)
+  log(level, STDOUT, Syslog::LOG_INFO, msg, color)
 end
 
 def warning(level, msg)
-  logerr(Syslog::LOG_WARNING, logprefix(level) + " %s\n", msg)
+  log(level, STDERR, Syslog::LOG_WARNING, msg, HighLine::RED)
 end
 
 class Series
@@ -187,7 +189,7 @@ class Series
       info(4, "Starting sync for #{ image.id }")
 
       if image.materialize
-        info(3, "Image sync OK: #{ image.statemsg }")
+        info(3, "Image sync OK: #{ image.statemsg }", HighLine::GREEN)
       else
         warning(3, "Image sync FAILED: #{ image.statemsg }")
       end
@@ -209,7 +211,7 @@ class Series
         next unless diff.in_use
 
         if diff.materialize
-          info(3, "Diff sync OK: #{ diff.statemsg }")
+          info(3, "Diff sync OK: #{ diff.statemsg }", HighLine::GREEN)
         else
           warning(3, "Diff sync FAILED: #{ diff.statemsg }")
         end
