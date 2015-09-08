@@ -162,28 +162,25 @@ class Series
     return @by_version.values
   end
 
-  # Returns specified number of newest images in an array. The images are
+  # Returns specified number of newest images in an array.  The images are
   # sorted oldest first so that when fetching the images, newer images can 
   # be created using diffs from older images.
-  def newest_images(limit)
-    newest_by_version(@by_version, limit)
+  def newest_images(options)
+    if options[:image]
+      return Array( get_by_id(options[:image]) )
+    end
+
+    # Check which images and diffs are needed for non-netboot devices
+    add_puavo_device_image_requests
+
+    # We want to always download X number of newest images with Y number 
+    # of diffs from newest images.
+    newest_by_version(@by_version, options[:image_limit])
   end
 
   def sync(options)
-    info(5, "Syncing series #{ @name }")
-
-    if options[:image]
-      image_list = [ get_by_id(options[:image]) ]
-    else
-      # Check which images and diffs are needed for non-netboot devices
-      add_puavo_device_image_requests
-
-      # We want to always download X number of newest images with Y number 
-      # of diffs from newest images.
-      image_list = newest_images(options[:image_limit])
-    end
-
-    info(5, "Syncing the following images:")
+    info(5, "Syncing series #{ @name } with the following images:")
+    image_list = newest_images(options)
     image_list.each { |image| info(5, "  #{ image.id }") }
 
     image_list.each do |image|
@@ -200,19 +197,21 @@ class Series
       end
     end
 
-    if !options[:image]
-      info(4, "Downloading client diffs")
+    # No more interesting things to do if --image was given
+    # (I guess we might not want to delete old stuff in this case).
+    return if options[:image]
 
-      images.each do |image|
-        image.diffs.each do |diff|
-          # we want only diffs that have been marked are in use
-          next unless diff.in_use
+    info(4, "Downloading client diffs")
 
-          if diff.materialize
-            info(3, "Diff sync OK: #{ diff.statemsg }")
-          else
-            warning(3, "Diff sync FAILED: #{ diff.statemsg }")
-          end
+    images.each do |image|
+      image.diffs.each do |diff|
+        # we want only diffs that have been marked are in use
+        next unless diff.in_use
+
+        if diff.materialize
+          info(3, "Diff sync OK: #{ diff.statemsg }")
+        else
+          warning(3, "Diff sync FAILED: #{ diff.statemsg }")
         end
       end
     end
@@ -234,6 +233,10 @@ class Series
         end
       end
     end
+  end
+
+  def cleanup_tempfiles
+    images.each { |image| image.cleanup_tempfiles }
   end
 end
 
@@ -281,7 +284,16 @@ class SyncFile
   end
 
   def delete
-    all_possible_paths.each do |path|
+    all_possible_paths = [ download_path,
+                           partial_unverified_path,
+                           unverified_path,
+                           final_path ]
+    delete_files(all_possible_paths)
+    @state.state = :deleted
+  end
+
+  def delete_files(filelist)
+    filelist.each do |path|
       next unless File.exists?(path)
       infolevel = (path == final_path) ? 3 : 2
       info(infolevel, "Deleting #{ path }")
@@ -291,7 +303,6 @@ class SyncFile
         warning(2, "Could not delete #{ path }: #{ e.message }")
       end
     end
-    @state.state = :deleted
   end
 
   def download
@@ -391,10 +402,6 @@ class SyncFile
     raise "Invalid filename #{ path }"
   end
 
-  def all_possible_paths
-    [ download_path, partial_unverified_path, unverified_path, final_path ]
-  end
-
   def download_path
     return do_path_cleanup("#{ final_path }.partial")
   end
@@ -488,6 +495,13 @@ class SyncFile
 
     return @verify_result
   end
+
+  def cleanup_tempfiles
+    tempfiles_to_delete = [ download_path, partial_unverified_path ]
+    tempfiles_to_delete << unverified_path if inplace?
+
+    delete_files(tempfiles_to_delete)
+  end
 end
 
 class Image < SyncFile
@@ -574,6 +588,11 @@ class Image < SyncFile
 
   def delete
     diffs.each { |diff| diff.delete }
+    super
+  end
+
+  def cleanup_tempfiles
+    diffs.each { |diff| diff.cleanup_tempfiles }
     super
   end
 end
@@ -883,9 +902,16 @@ parser.parse!
 
 begin
   all_series = get_all_series($options)
+
+  info(5, "Cleaning up temporary files")
+  all_series.each do |series|
+    series.cleanup_tempfiles
+  end
+
   all_series.each do |series|
     series.sync($options)
   end
+
 rescue StandardError => e
   warning(5, "Error: #{ e.message }")
   raise e
