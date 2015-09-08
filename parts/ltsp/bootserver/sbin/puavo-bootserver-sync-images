@@ -216,11 +216,11 @@ class SyncFile
   def delete
     all_possible_paths.each do |path|
       next unless File.exists?(path)
-      info(2, "Deleting '#{ path }'")
+      info(2, "Deleting #{ path }")
       begin
         File.delete(path)
       rescue StandardError => e
-        warning(2, "Could not delete '#{ path }': #{ e.message }")
+        warning(2, "Could not delete #{ path }: #{ e.message }")
       end
     end
     @state.state = :deleted
@@ -436,7 +436,7 @@ class Image < SyncFile
     elsif /\A(.*)\.img\z/.match(filename)
       @id = $1
     else
-      raise "Could not determine id for '#{ filename }'"
+      raise "Could not determine id for #{ filename }"
     end
   end
 
@@ -572,8 +572,8 @@ end
 def parse_series_data(series_data)
   result = Hash.new
 
-  series_data.each_pair do |key, data|
-    series = Series.new(key)
+  series_data.each_pair do |series_name, data|
+    series = Series.new(series_name)
 
     data["images"].each do |image|
       image = Image.new(image["version"],
@@ -598,7 +598,7 @@ def parse_series_data(series_data)
       end
     end
 
-    result[key] = series
+    result[series_name] = series
   end
 
   result
@@ -611,7 +611,7 @@ def fetch_source_urls
 
   url = "/v3/boot_servers/#{ etc.hostname }"
 
-  info(5, "Loading bootserver data from puavo-rest url: '#{ url }'")
+  info(5, "Loading bootserver data from puavo-rest url: #{ url }")
   res = client.get(url)
   data = res.parse()
 
@@ -624,28 +624,22 @@ def fetch_source_urls
 end
 
 # Load series json definition files 
-def load_series_data(sources)
-  all_series = Hash.new
+def fetch_and_parse_series_data(source_url)
+  info(4, "Using image series source url #{ source_url }")
 
-  info(5, "Using image series sources:")
-  sources.each { |url| info(4, url) }
+  uri = URI.parse(source_url)
 
-  sources.each do |url|
-    uri = URI.parse(url)
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.ca_file = "/etc/puavo/certs/rootca.pem"
+  http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+  http.use_ssl = true
 
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.ca_file = "/etc/puavo/certs/rootca.pem"
-    http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-    http.use_ssl = true
-
-    http.request_get(uri.path) do |response|
-      series = parse_series_data(JSON.parse(response.body))
-
-      all_series.merge!(series)
-    end
+  series_by_name = {}
+  http.request_get(uri.path) do |response|
+    series_by_name = parse_series_data( JSON.parse( response.body ) )
   end
 
-  all_series
+  return series_by_name
 end
 
 script_name = File.basename(__FILE__)
@@ -722,12 +716,14 @@ BANNER_EOF
     $options[:keep_unused] = true
   end
 
-  opts.on("--url URL", "Source URL to load JSON series information") do |url|
-    $options[:url] = url
+  $options[:file] = []
+  opts.on("--file PATH", "JSON series information file to read") do |file|
+    $options[:file] << file
   end
 
-  opts.on("--file PATH", "JSON series information file to read") do |file|
-    $options[:file] = file
+  $options[:url] = []
+  opts.on("--url URL", "Source URL to load JSON series information") do |url|
+    $options[:url] << url
   end
 
   $options[:force_verify] = false
@@ -784,22 +780,26 @@ end
 begin
   # Load series information from sources specified in bootserver's
   # device information.
-  if $options[:file]
-    all_series = parse_series_data( JSON.parse( IO.read($options[:file]) ) )
-  else
-    if $options[:url]
-      source_urls = [ $options[:url] ]
-    else
-      source_urls = fetch_source_urls()
-    end
-    all_series = load_series_data(source_urls)
+  all_series_list = []
+
+  series_urls = $options[:url]
+  if series_urls.empty?
+    series_urls = fetch_series_urls()
   end
+  series_urls.each do |series_url|
+    all_series_list << fetch_and_parse_series_data(series_url)
+  end
+
+  $options[:file].each do |series_file|
+    all_series_list << parse_series_data( JSON.parse( IO.read(series_file) ) )
+  end
+
+  all_series = all_series_list.reduce(&:merge)
 
   if $options[:series]
     series_name = $options[:series]
     info(5, "Using only series #{series_name}")
-
-    all_series.keep_if {|key, value| key.eql?(series_name)}
+    all_series.keep_if { |key, value| key == series_name }
   end
 
   if all_series.empty?
