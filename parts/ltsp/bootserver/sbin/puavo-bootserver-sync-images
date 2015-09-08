@@ -47,6 +47,7 @@
 
 require "digest"
 require 'digest/sha2'
+require 'fileutils'
 require 'highline/import'
 require 'json'
 require 'net/http'
@@ -184,6 +185,9 @@ class Series
     info(5, "Syncing series #{ @name } with the following images:")
     image_list = newest_images(options)
     image_list.each { |image| info(5, "  #{ image.id }") }
+
+    FileUtils.mkdir_p(Image.basedir)
+    FileUtils.mkdir_p(Diff.basedir)
 
     image_list.each do |image|
       info(4, "Starting sync for #{ image.id }")
@@ -399,7 +403,7 @@ class SyncFile
     # basedir by having ".." or some such, it must be under basedir
     # (where the meaning of basedir is different for images and diffs).
     cleaned_up_path = File.expand_path(path)
-    return cleaned_up_path if path.start_with?(basedir)
+    return cleaned_up_path if path.start_with?(self.class.basedir)
 
     raise "Invalid filename #{ path }"
   end
@@ -409,7 +413,7 @@ class SyncFile
   end
 
   def final_path
-    return do_path_cleanup("#{ basedir }/#{ @filename }")
+    return do_path_cleanup("#{ self.class.basedir }/#{ @filename }")
   end
 
   def partial_unverified_path
@@ -524,8 +528,7 @@ class Image < SyncFile
     end
   end
 
-  # XXX should be configurable
-  def basedir; '/opt/ltsp/images'; end
+  def self.basedir; $options[:download_path]; end
 
   def mark_diff_in_use(from_image)
     diff = @diffs_from_by_version[from_image.version]
@@ -609,8 +612,7 @@ class Diff < SyncFile
     @targetimage = targetimage
   end
 
-  # XXX should be configurable?
-  def basedir; '/opt/ltsp/images/rdiffs'; end
+  def self.basedir; "#{ $options[:download_path] }/rdiffs"; end
 
   def do_patching
     source      = @baseimage.final_path
@@ -872,9 +874,8 @@ BANNER_EOF
     $options[:diff_limit] = limit
   end
 
-  # XXX not used yet
   $options[:download_path] = "/opt/ltsp/images"
-  opts.on("--download_path PATH") do |path|
+  opts.on("--download-path PATH") do |path|
     $options[:download_path] = path
   end
 
