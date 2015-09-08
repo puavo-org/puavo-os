@@ -168,6 +168,73 @@ class Series
   def newest_images(limit)
     newest_by_version(@by_version, limit)
   end
+
+  def sync(options)
+    info(5, "Syncing series #{ @name }")
+
+    if options[:image]
+      image_list = [ get_by_id(options[:image]) ]
+    else
+      # Check which images and diffs are needed for non-netboot devices
+      add_puavo_device_image_requests
+
+      # We want to always download X number of newest images with Y number 
+      # of diffs from newest images.
+      image_list = newest_images(options[:image_limit])
+    end
+
+    info(5, "Syncing the following images:")
+    image_list.each { |image| info(5, "  #{ image.id }") }
+
+    image_list.each do |image|
+      info(4, "Starting sync for #{ image.id }")
+
+      if image.materialize
+        info(3, "Image sync OK: #{ image.statemsg }")
+      else
+        warning(3, "Image sync FAILED: #{ image.statemsg }")
+      end
+
+      if !options[:image]
+        image.download_newest_diffs(options[:diff_limit])
+      end
+    end
+
+    if !options[:image]
+      info(4, "Downloading client diffs")
+
+      images.each do |image|
+        image.diffs.each do |diff|
+          # we want only diffs that have been marked are in use
+          next unless diff.in_use
+
+          if diff.materialize
+            info(3, "Diff sync OK: #{ diff.statemsg }")
+          else
+            warning(3, "Diff sync FAILED: #{ diff.statemsg }")
+          end
+        end
+      end
+    end
+
+    if !options[:keep_unused]
+      # Delete all images and rdiffs that are not either newest
+      # or used by some client.
+      info(4, "Checking for old images and diffs to delete")
+
+      images.each do |image|
+        if !image.in_use
+          image.delete	# does delete all diffs to image as well
+          next
+        end
+
+        unused_diffs = image.diffs.select { |diff| !diff.in_use }
+        unused_diffs.each do |diff|
+          diff.delete
+        end
+      end
+    end
+  end
 end
 
 class SyncState
@@ -216,7 +283,8 @@ class SyncFile
   def delete
     all_possible_paths.each do |path|
       next unless File.exists?(path)
-      info(2, "Deleting #{ path }")
+      infolevel = (path == final_path) ? 3 : 2
+      info(infolevel, "Deleting #{ path }")
       begin
         File.delete(path)
       rescue StandardError => e
@@ -564,6 +632,46 @@ class Diff < SyncFile
   end
 end
 
+def get_all_series(options)
+  # Load series information from various sources: lookup --url parameters
+  # first, and if those are not given, lookup sources specified in bootserver
+  # information in Puavo.  Check out --file parameters as well (if some series
+  # is defined in --file parameters, these will override previous ones).
+  all_series_list = []
+
+  series_urls = options[:url]
+  if series_urls.empty? && !options[:no_puavo_series_url_lookup]
+    series_urls = fetch_series_urls()
+  end
+  series_urls.each do |series_url|
+    all_series_list << fetch_and_parse_series_data(series_url)
+  end
+
+  options[:file].each do |series_file|
+    info(5, "Using file #{ series_file }")
+    all_series_list << parse_series_data( JSON.parse( IO.read(series_file) ) )
+  end
+
+  all_series = all_series_list.reduce(&:merge)
+
+  if options[:series]
+    series_name = options[:series]
+    if all_series[series_name]
+      info(5, "Using only series #{series_name}")
+      return [ all_series[series_name] ]
+    end
+
+    raise "No series named #{ series_name } found" \
+            + " (given as --series parameter)"
+  end
+
+  if all_series.empty?
+    raise "No series information, can not do anything"
+  end
+
+  return all_series.values
+end
+
 def newest_by_version(collection_by_version, limit)
   versions = collection_by_version.keys.sort.reverse.slice(0,limit).reverse
   return versions.map { |version| collection_by_version[version] }
@@ -625,7 +733,7 @@ end
 
 # Load series json definition files 
 def fetch_and_parse_series_data(source_url)
-  info(4, "Using image series source url #{ source_url }")
+  info(5, "Using image series source url #{ source_url }")
 
   uri = URI.parse(source_url)
 
@@ -712,7 +820,9 @@ parser = OptionParser.new do |opts|
   Options:
 BANNER_EOF
 
-  opts.on("--keep-unused", "Do no delete images that are not currently used by any client.") do
+  $options[:keep_unused] = false
+  opts.on("--keep-unused",
+          "Do no delete images that are not currently used by any client.") do
     $options[:keep_unused] = true
   end
 
@@ -747,10 +857,18 @@ BANNER_EOF
     $options[:download_path] = path
   end
 
+  $options[:no_puavo_series_url_lookup] = false
+  opts.on("--no-puavo-series-url-lookup",
+          "Do not lookup series URLs from Puavo") do
+    $options[:no_puavo_series_url_lookup] = true
+  end
+
+  $options[:series] = nil
   opts.on("--series NAME", "Download only specified series instead of all series specified by the sources.") do |series|
     $options[:series] = series
   end
 
+  $options[:image] = nil
   opts.on("--image NAME", "Sync only the specified image") do |image|
     $options[:image] = image
   end
@@ -763,114 +881,10 @@ end
 
 parser.parse!
 
-image_limit=$options[:image_limit]
-diff_limit=$options[:diff_limit]
-sync_client_diffs=true
-
-if $options[:image]
-  sync_client_diffs=false
-end
-
-delete_unused = true
-
-if $options[:keep_unused]
-  delete_unused = false
-end
-
 begin
-  # Load series information from sources specified in bootserver's
-  # device information.
-  all_series_list = []
-
-  series_urls = $options[:url]
-  if series_urls.empty?
-    series_urls = fetch_series_urls()
-  end
-  series_urls.each do |series_url|
-    all_series_list << fetch_and_parse_series_data(series_url)
-  end
-
-  $options[:file].each do |series_file|
-    all_series_list << parse_series_data( JSON.parse( IO.read(series_file) ) )
-  end
-
-  all_series = all_series_list.reduce(&:merge)
-
-  if $options[:series]
-    series_name = $options[:series]
-    info(5, "Using only series #{series_name}")
-    all_series.keep_if { |key, value| key == series_name }
-  end
-
-  if all_series.empty?
-    warning(5, "No series information, exiting")
-    exit 1
-  end
-
-  all_series.values.each do |series|
-    info(5, "Syncing series #{series.name}")
-
-    if $options[:image]
-      image_list = [ series.get_by_id($options[:image]) ]
-      diff_limit = 0
-    else
-      # Check which images and diffs are needed for non-netboot devices
-      series.add_puavo_device_image_requests()
-
-      # We want to always download X number of newest images with Y number 
-      # of diffs from newest images.
-      image_list = series.newest_images(image_limit)
-    end
-
-    info(5, "Syncing the following images:")
-    image_list.each { |image| info(4, "  #{ image.id }") }
-
-    image_list.each do |image|
-      info(4, "Starting sync for #{image.id}")
-
-      if image.materialize
-        info(3, "Image sync OK: #{ image.statemsg }")
-      else
-        warning(3, "Image sync FAILED: #{ image.statemsg }")
-      end
-
-      image.download_newest_diffs(diff_limit)
-    end
-
-    if sync_client_diffs
-      info(5, "Downloading client diffs")
-
-      series.images.each do |image|
-        image.diffs.each do |diff|
-          next unless diff.in_use
-          # get only the diffs that are in use
-
-          if diff.materialize
-            info(3, "Diff sync OK: #{ diff.statemsg }")
-          else
-            warning(3, "Diff sync FAILED: #{ diff.statemsg }")
-          end
-        end
-      end
-    end
-
-    # Delete all images and rdiffs that are not either newest
-    # or used by some client
-    if delete_unused
-      info(5, "Checking for old images and diffs to delete")
-
-      series.images.each do |image|
-        if !image.in_use
-          image.delete	# does delete all diffs to image as well
-          next
-        end
-
-        unused_diffs = image.diffs.select { |diff| !diff.in_use }
-        unused_diffs.each do |diff|
-          diff.delete
-        end
-      end
-    end
+  all_series = get_all_series($options)
+  all_series.each do |series|
+    series.sync($options)
   end
 rescue StandardError => e
   warning(5, "Error: #{ e.message }")
