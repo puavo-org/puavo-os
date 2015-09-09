@@ -877,7 +877,7 @@ BANNER_EOF
 
   $options[:keep_unused] = false
   opts.on("--keep-unused",
-          "Do no delete images that are not currently used by any client.") do
+          "Do no delete images that are not currently used by any client") do
     $options[:keep_unused] = true
   end
 
@@ -920,7 +920,7 @@ BANNER_EOF
   end
 
   $options[:series] = nil
-  opts.on("--series NAME", "Download only specified series instead of all series specified by the sources.") do |series|
+  opts.on("--series NAME", "Download only specified series instead of all series specified by the sources") do |series|
     $options[:series] = series
   end
 
@@ -960,16 +960,16 @@ begin
   if $options[:image]
     if sync_successes.any?
       info(5,
-           "Image #{ $options[:image] } was synchronized successfully.",
+           "Image #{ $options[:image] } was synchronized successfully",
            HighLine::GREEN)
     else
       warning(5, "Failed to synchronize image #{ $options[:image] }")
       statuscode = 2
     end
   elsif sync_successes.all?
-    info(5, "All series synchronized without a problem.", HighLine::GREEN)
+    info(5, "All series synchronized without a problem", HighLine::GREEN)
   else
-    warning(5, "Some series could not be synchronized fully.")
+    warning(5, "Some series could not be synchronized fully")
     statuscode = 2
   end
 
