@@ -25,9 +25,9 @@
 # Unmanaged images - other images
 #
 # By default the script handles only the managed images and unmanaged images
-# are left untouched. The script can be asked to delete unmanaged images with 
-# command line option --delete-unmanaged. When asked, the script will delete 
-# all unknown files under /opt/ltsp/images and /opt/ltsp/images/rdiffs. Images 
+# are left untouched. The script can be asked to delete unmanaged images with
+# command line option --delete-unmanaged. When asked, the script will delete
+# all unknown files under /opt/ltsp/images and /opt/ltsp/images/rdiffs. Images
 # do not need to have .img ending.
 #
 # Operation
@@ -42,8 +42,8 @@
 # 6. Delete old unused managed images + rdiffs
 # 7. Delete unmanaged images if asked
 #
-# The managed images and rdiffs are stored under /var/lib/puavo/images.json. The 
-# contents of the file are the same as the last loaded image series json file. 
+# The managed images and rdiffs are stored under /var/lib/puavo/images.json. The
+# contents of the file are the same as the last loaded image series json file.
 
 require "digest"
 require 'digest/sha2'
@@ -67,8 +67,8 @@ def log(level, channel, priority, msg, color)
 end
 
 def prefixed_logmsg(level, msg)
-  spacecount = [5, [5-level, 0].max ].min	# (5-level between [0,5])
-  arrowcount = [0, [  level, 5].min ].max	# (  level between [0,5])
+  spacecount = [5, [5-level, 0].max ].min       # (5-level between [0,5])
+  arrowcount = [0, [  level, 5].min ].max       # (  level between [0,5])
   return "%s %s" % [ (" " * spacecount  +  ">" * arrowcount),
                      msg ]
 end
@@ -151,9 +151,9 @@ class Series
         next
       end
 
-      # Other devices need diffs from current image to preferred 
+      # Other devices need diffs from current image to preferred
       if current_image && preferred_image && current_image != preferred_image
-	mark_diff_in_use(current_image, preferred_image)
+        mark_diff_in_use(current_image, preferred_image)
       end
     end
   end
@@ -163,7 +163,7 @@ class Series
   end
 
   # Returns specified number of newest images in an array.  The images are
-  # sorted oldest first so that when fetching the images, newer images can 
+  # sorted oldest first so that when fetching the images, newer images can
   # be created using diffs from older images.
   def newest_images(options)
     if options[:image]
@@ -173,7 +173,7 @@ class Series
     # Check which images and diffs are needed for non-netboot devices
     add_puavo_device_image_requests
 
-    # We want to always download X number of newest images with Y number 
+    # We want to always download X number of newest images with Y number
     # of diffs from newest images.
     newest_by_version(@by_version, options[:image_limit])
   end
@@ -226,7 +226,7 @@ class Series
 
       images.each do |image|
         if !image.in_use
-          image.delete	# does delete all diffs to image as well
+          image.delete  # does delete all diffs to image as well
           next
         end
 
@@ -330,7 +330,7 @@ class SyncFile
     return false
   end
 
-  # Download file from specified url and check that the sha256 checksum of 
+  # Download file from specified url and check that the sha256 checksum of
   # the downloaded file matches the given size and sha256.
   # If the file was downloaded successfully and the size and the checksum
   # matches, true is returned, otherwise false is returned.
@@ -377,7 +377,7 @@ class SyncFile
           end
         end
 
-        puts ""	# output newline after Download progress has gone to 100%
+        puts "" # output newline after Download progress has gone to 100%
 
         return false unless received_size == @size
 
@@ -447,8 +447,8 @@ class SyncFile
   end
 
   # Checks if the file in the filesystem has the same sha256 as the metadata.
-  # To speed up things, the filesize needs to match before sha256 is 
-  # calculated. The results are cached and rechecked only if file mtime 
+  # To speed up things, the filesize needs to match before sha256 is
+  # calculated. The results are cached and rechecked only if file mtime
   # changes.
   def verify
     # We can speed things up by assuming that all files in proper place have
@@ -574,10 +574,10 @@ class Image < SyncFile
     return false
   end
 
-  # Create the current image from an old image by using a patch. First 
+  # Create the current image from an old image by using a patch. First
   # all the possible diffs are sorted by size and the list is scanned twice:
-  # first to check if there is an existing baseimage that has a patch 
-  # available and if none is found, then the smallest sized diff for an 
+  # first to check if there is an existing baseimage that has a patch
+  # available and if none is found, then the smallest sized diff for an
   # existing baseimage is downloaded.
   def patch_from_old
     mindiffs = diffs.sort_by { |diff| diff.size }
@@ -633,7 +633,7 @@ class Diff < SyncFile
     if !system("rdiff", "patch", source, final_path, temp_target)
       warning(2, "rdiff failed with exit code: #{ $?.exitstatus }" \
                    + " when using #{ final_path }")
-      return false      
+      return false
     end
 
     info(3, "Patched #{ temp_target } successfully")
@@ -763,7 +763,7 @@ def fetch_source_urls
   return source_urls
 end
 
-# Load series json definition files 
+# Load series json definition files
 def fetch_and_parse_series_data(source_url)
   info(5, "Using image series source url #{ source_url }")
 
@@ -811,7 +811,7 @@ parser = OptionParser.new do |opts|
     to preferred images
 
   All files have checksums that are checked before they are actually used.
-  
+
   An example that defines two images and a diff between them:
 
 {
