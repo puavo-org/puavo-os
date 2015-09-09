@@ -516,16 +516,10 @@ class Image < SyncFile
   def initialize(version, filename, size, sha256, id, urls)
     super(filename, sha256, size, urls)
 
+    @id = id
     @version = version
-    @diffs_from_by_version = Hash.new
 
-    if id
-      @id = id
-    elsif /\A(.*)\.img\z/.match(filename)
-      @id = $1
-    else
-      raise "Could not determine id for #{ filename }"
-    end
+    @diffs_from_by_version = Hash.new
   end
 
   def self.basedir; $options[:download_path]; end
