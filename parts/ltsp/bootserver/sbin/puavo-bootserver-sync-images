@@ -850,7 +850,7 @@ def fetch_series_urls
   res = client.get(url)
   data = res.parse()
 
-  source_urls = data["image_series_sources"]
+  source_urls = data["image_series_source_urls"]
 
   raise 'Could not read sources urls from Puavo' \
     unless source_urls.kind_of?(Array)
