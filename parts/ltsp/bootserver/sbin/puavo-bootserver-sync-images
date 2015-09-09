@@ -174,7 +174,7 @@ class Series
     newest_by_version(@by_version, options[:image_limit])
   end
 
-  def sync(options)
+  def sync(managed_images, options)
     if options[:image]
       image = get_by_id(options[:image])
       if !image
@@ -204,6 +204,7 @@ class Series
       info(4, "Syncing #{ image.id }")
 
       if image.materialize
+        managed_images.add_image(self, image)
         info(3, "Image sync OK: #{ image.statemsg }", HighLine::GREEN)
       else
         all_image_syncs_ok = false
@@ -228,6 +229,7 @@ class Series
         next unless diff.in_use
 
         if diff.materialize
+          managed_images.add_diff(self, image, diff)
           info(3, "Diff sync OK: #{ diff.statemsg }", HighLine::GREEN)
         else
           warning(3, "Diff sync FAILED: #{ diff.statemsg }")
@@ -688,6 +690,76 @@ class Diff < SyncFile
   end
 end
 
+class ManagedImages
+  Filepath = '/var/lib/puavo/images.json'
+
+  def initialize
+    @file   = open_file_with_lock(Filepath)
+    @images = JSON.parse( @file.read )
+  end
+
+  def add_diff(series, image, diff)
+    add_image(series, image)
+
+    @images[series.name][image.id]["diffs"] \
+      = (@images[series.name][image.id]["diffs"] + [ diff.final_path ]) \
+          .sort.uniq
+
+    update
+  end
+
+  def add_image(series, image)
+    @images[series.name] ||= {}
+    @images[series.name][image.id] ||= {}
+    @images[series.name][image.id]["diffs"] ||= []
+    @images[series.name][image.id]["images"] ||= []
+
+    @images[series.name][image.id]["images"] \
+      = (@images[series.name][image.id]["images"] + [ image.final_path ]) \
+          .sort.uniq
+
+    update
+  end
+
+  def close
+    # also releases flock
+    @file.close if @file
+  end
+
+  def open_file_with_lock(path)
+    FileUtils.mkdir_p( File.dirname(path) )
+    begin
+      file = File.open(path)
+    rescue Errno::ENOENT
+      raise "Unexpected problem opening #{ path }" if path != Filepath
+
+      # if path == Filepath and it does not exist we should initialize it
+      # with an empty hash/json
+      file = File.open(path, 'w')
+      file.write( {}.to_json )
+      file.close
+      file = File.open(path)
+    end
+
+    if !file.flock(File::LOCK_NB|File::LOCK_EX)
+      raise "Could not get a lock on #{ Filepath }"
+    end
+
+    return file
+  end
+
+  def update
+    tempfile_path = "#{ Filepath }.tmp"
+    File.open(tempfile_path, 'w') do |tempfile|
+      tempfile.write( @images.to_json )
+    end
+    newfile = open_file_with_lock(tempfile_path)
+    File.rename(tempfile_path, Filepath)
+    @file.close
+    @file = newfile
+  end
+end
+
 def get_all_series(options)
   # Load series information from various sources: lookup --url parameters
   # first, and if those are not given, lookup sources specified in bootserver
@@ -803,6 +875,44 @@ def fetch_and_parse_series_data(source_url)
   end
 
   return series_by_name
+end
+
+def sync_all_series(managed_images, options)
+  statuscode = 0
+  sync_successes = []
+
+  all_series = get_all_series(options)
+
+  info(5, "Cleaning up temporary files")
+  all_series.each do |series|
+    series.cleanup_tempfiles
+  end
+
+  all_series.each do |series|
+    result = series.sync(managed_images, options)
+    sync_successes << result
+    if !result && !options[:image]
+      warning(5, "Error occurred in syncing #{ series.name }")
+    end
+  end
+
+  if options[:image]
+    if sync_successes.any?
+      info(5,
+           "Image #{ options[:image] } was synchronized successfully",
+           HighLine::GREEN)
+    else
+      warning(5, "Failed to synchronize image #{ options[:image] }")
+      statuscode = 2
+    end
+  elsif sync_successes.all?
+    info(5, "All series synchronized without a problem", HighLine::GREEN)
+  else
+    warning(5, "Some series could not be synchronized fully")
+    statuscode = 2
+  end
+
+  return statuscode
 end
 
 # set a low priority for this script
@@ -941,44 +1051,17 @@ end
 
 parser.parse!
 
+managed_images = nil
 statuscode = 0
-sync_successes = []
 
 begin
-  all_series = get_all_series($options)
-
-  info(5, "Cleaning up temporary files")
-  all_series.each do |series|
-    series.cleanup_tempfiles
-  end
-
-  all_series.each do |series|
-    result = series.sync($options)
-    sync_successes << result
-    if !result && !$options[:image]
-      warning(5, "Error occurred in syncing #{ series.name }")
-    end
-  end
-
-  if $options[:image]
-    if sync_successes.any?
-      info(5,
-           "Image #{ $options[:image] } was synchronized successfully",
-           HighLine::GREEN)
-    else
-      warning(5, "Failed to synchronize image #{ $options[:image] }")
-      statuscode = 2
-    end
-  elsif sync_successes.all?
-    info(5, "All series synchronized without a problem", HighLine::GREEN)
-  else
-    warning(5, "Some series could not be synchronized fully")
-    statuscode = 2
-  end
-
+  managed_images = ManagedImages.new
+  statuscode = sync_all_series(managed_images, $options)
 rescue StandardError => e
   warning(5, "Error: #{ e.message }")
   raise e
+ensure
+  managed_images.close if managed_images
 end
 
 Syslog.close()
