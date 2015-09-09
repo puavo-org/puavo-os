@@ -706,7 +706,7 @@ def parse_series_data(series_data)
                         image["size"],
                         image["sha256"],
                         image["id"],
-                        [ image["url"] ])
+                        image["urls"])
       series.add_image(image)
     end
 
@@ -718,7 +718,7 @@ def parse_series_data(series_data)
                           data["filename"],
                           data["size"],
                           data["sha256"],
-                          [ data["url"] ])
+                          data["urls"])
         end
       end
     end

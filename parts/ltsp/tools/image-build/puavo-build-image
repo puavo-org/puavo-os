@@ -489,7 +489,7 @@ def output_series_json(series_name, config_files)
                     'filename' => rdiff_file,
 	            'sha256'   => get_sha256.call(rdiff_file),
                     'size'     => get_rdiffsize.call(rdiff_file),
-                    'url'      => "#{ rdiffs_baseurl }/#{ rdiff_file }",
+                    'urls'     => [ "#{ rdiffs_baseurl }/#{ rdiff_file }" ],
 	            'version'  => get_rdiffversion.call(rdiff_file),
                   }
 		end
@@ -500,7 +500,7 @@ def output_series_json(series_name, config_files)
 	  'id'       => File.basename(imagename, '.img'),
 	  'sha256'   => get_sha256.call(imagename),
 	  'size'     => get_imagesize.call(),
-	  'url'      => "#{ images_baseurl }/#{ imagename }",
+	  'urls'     => [ "#{ images_baseurl }/#{ imagename }" ],
 	  'version'  => get_imageversion.call(),
 	}
       end
