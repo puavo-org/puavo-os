@@ -497,6 +497,7 @@ def output_series_json(series_name, config_files)
 	{
 	  'diffs'    => diffs,
 	  'filename' => imagename,
+	  'id'       => File.basename(imagename, '.img'),
 	  'sha256'   => get_sha256.call(imagename),
 	  'size'     => get_imagesize.call(),
 	  'url'      => "#{ images_baseurl }/#{ imagename }",
