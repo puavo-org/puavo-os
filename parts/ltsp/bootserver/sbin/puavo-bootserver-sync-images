@@ -119,12 +119,12 @@ class Series
     end
   end
 
-  def add_diff(from_version, to_version, filename, size, sha256, urls)
+  def add_diff(from_version, to_version, filename, sha256, size, urls)
     baseimage = get_by_version(from_version)
     targetimage = get_by_version(to_version)
 
     if baseimage && targetimage
-      diff = Diff.new(baseimage, targetimage, filename, size, sha256, urls)
+      diff = Diff.new(baseimage, targetimage, filename, sha256, size, urls)
       targetimage.add_diff(diff)
     end
   end
@@ -274,6 +274,16 @@ class SyncFile
   attr_reader :filename, :in_use, :size
 
   def initialize(filename, sha256, size, urls)
+    raise 'filename is not set' \
+      unless filename && filename.kind_of?(String) && !filename.empty?
+    raise 'sha256 is not set' \
+      unless sha256 && sha256.kind_of?(String) && !sha256.empty?
+    raise 'size is not set' \
+      unless size && size.kind_of?(Integer)
+    raise 'urls are not set' \
+      unless urls && urls.kind_of?(Array) && !urls.empty? \
+                  && urls.all? { |url| url.kind_of?(String) }
+
     @filename = filename
     @sha256   = sha256
     @size     = size
@@ -513,8 +523,13 @@ end
 class Image < SyncFile
   attr_reader :id, :version
 
-  def initialize(version, filename, size, sha256, id, urls)
+  def initialize(filename, id, sha256, size, urls, version)
     super(filename, sha256, size, urls)
+
+    raise 'id is not set' \
+      unless id && id.kind_of?(String) && !id.empty?
+    raise 'version is not set' \
+      unless version && version.kind_of?(String) && !version.empty?
 
     @id = id
     @version = version
@@ -599,7 +614,7 @@ end
 class Diff < SyncFile
   attr_reader :baseimage, :targetimage
 
-  def initialize(baseimage, targetimage, filename, size, sha256, urls)
+  def initialize(baseimage, targetimage, filename, sha256, size, urls)
     super(filename, sha256, size, urls)
 
     @baseimage   = baseimage
@@ -700,25 +715,25 @@ def parse_series_data(series_data)
   series_data.each_pair do |series_name, data|
     series = Series.new(series_name)
 
-    data["images"].each do |image|
-      image = Image.new(image["version"],
-                        image["filename"],
-                        image["size"],
-                        image["sha256"],
-                        image["id"],
-                        image["urls"])
+    data["images"].each do |imagedata|
+      image = Image.new(imagedata["filename"],
+                        imagedata["id"],
+                        imagedata["sha256"],
+                        imagedata["size"],
+                        imagedata["urls"],
+                        imagedata["version"])
       series.add_image(image)
     end
 
     data["images"].each do |image|
       if image["diffs"]
-        image["diffs"].each do |data|
-          series.add_diff(data["version"],
+        image["diffs"].each do |diffdata|
+          series.add_diff(diffdata["version"],
                           image["version"],
-                          data["filename"],
-                          data["size"],
-                          data["sha256"],
-                          data["urls"])
+                          diffdata["filename"],
+                          diffdata["sha256"],
+                          diffdata["size"],
+                          diffdata["urls"])
         end
       end
     end
