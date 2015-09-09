@@ -166,10 +166,6 @@ class Series
   # sorted oldest first so that when fetching the images, newer images can
   # be created using diffs from older images.
   def newest_images(options)
-    if options[:image]
-      return Array( get_by_id(options[:image]) )
-    end
-
     # Check which images and diffs are needed for non-netboot devices
     add_puavo_device_image_requests
 
@@ -179,10 +175,21 @@ class Series
   end
 
   def sync(options)
-    image_list = newest_images(options)
-    if image_list.empty?
-      warning(5, "Image list for series #{ @name } is empty, doing nothing")
-      return
+    if options[:image]
+      image = get_by_id(options[:image])
+      if !image
+        info(4, "Could not find image #{ options[:image] }" \
+                  + " from series #{ @name }")
+        return false
+      end
+
+      image_list = [ image ]
+    else
+      image_list = newest_images(options)
+      if image_list.empty?
+        warning(5, "Image list for series #{ @name } is empty, doing nothing")
+        return false
+      end
     end
 
     info(5, "Syncing series #{ @name } with the following images:")
@@ -211,7 +218,7 @@ class Series
     # No more interesting things to do if --image was given
     # (I guess we might not want to download client diffs or delete old stuff
     # in this case).
-    return if options[:image]
+    return all_image_syncs_ok if options[:image]
 
     info(4, "Downloading client diffs")
 
@@ -232,7 +239,7 @@ class Series
       if !all_image_syncs_ok
         warning(4, "Some image sync failed for series #{ @name }," \
                      + " not deleting anything from that series")
-        return
+        return all_image_syncs_ok
       end
 
       # Delete all images and rdiffs that are not either newest
@@ -251,6 +258,8 @@ class Series
         end
       end
     end
+
+    return all_image_syncs_ok
   end
 
   def cleanup_tempfiles
@@ -873,12 +882,14 @@ BANNER_EOF
   end
 
   $options[:file] = []
-  opts.on("--file PATH", "JSON series information file to read") do |file|
+  opts.on("--file PATH",
+          "JSON series information file to read (many accepted)") do |file|
     $options[:file] << file
   end
 
   $options[:url] = []
-  opts.on("--url URL", "Source URL to load JSON series information") do |url|
+  opts.on("--url URL",
+          "Source URL to load JSON series information (many accepted)") do |url|
     $options[:url] << url
   end
 
@@ -914,7 +925,8 @@ BANNER_EOF
   end
 
   $options[:image] = nil
-  opts.on("--image NAME", "Sync only the specified image") do |image|
+  opts.on("--image IMAGEID",
+          "Sync only the specified image (no .img suffix)") do |image|
     $options[:image] = image
   end
 
@@ -926,6 +938,9 @@ end
 
 parser.parse!
 
+statuscode = 0
+sync_successes = []
+
 begin
   all_series = get_all_series($options)
 
@@ -935,7 +950,27 @@ begin
   end
 
   all_series.each do |series|
-    series.sync($options)
+    result = series.sync($options)
+    sync_successes << result
+    if !result && !$options[:image]
+      warning(5, "Error occurred in syncing #{ series.name }")
+    end
+  end
+
+  if $options[:image]
+    if sync_successes.any?
+      info(5,
+           "Image #{ $options[:image] } was synchronized successfully.",
+           HighLine::GREEN)
+    else
+      warning(5, "Failed to synchronize image #{ $options[:image] }")
+      statuscode = 2
+    end
+  elsif sync_successes.all?
+    info(5, "All series synchronized without a problem.", HighLine::GREEN)
+  else
+    warning(5, "Some series could not be synchronized fully.")
+    statuscode = 2
   end
 
 rescue StandardError => e
@@ -945,4 +980,4 @@ end
 
 Syslog.close()
 
-exit 0
+exit(statuscode)
