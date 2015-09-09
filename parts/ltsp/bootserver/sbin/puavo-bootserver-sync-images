@@ -805,6 +805,9 @@ def fetch_and_parse_series_data(source_url)
   return series_by_name
 end
 
+# set a low priority for this script
+Process.setpriority(Process::PRIO_PROCESS, 0, 19)
+
 script_name = File.basename(__FILE__)
 
 Syslog.open(script_name, Syslog::LOG_CONS)
