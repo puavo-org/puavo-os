@@ -406,13 +406,15 @@ class SyncFile
 
         puts "" # output newline after Download progress has gone to 100%
 
+        @state.state = :downloaded
+
         if received_size != @size
           warning(2, "Received size (#{ received_size }) did not match" \
-                       + " the expected size (#{ @size }")
+                       + " the expected size (#{ @size })")
+          File.delete(download_path)
+          info(2, "Deleted #{ download_path }")
           return false
         end
-
-        @state.state = :downloaded
 
         if hash.to_s != @sha256
           warning(2, "Checksum mismatch for #{ download_path }" \
