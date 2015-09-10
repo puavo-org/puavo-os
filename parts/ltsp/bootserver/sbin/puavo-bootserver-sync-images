@@ -174,7 +174,7 @@ class Series
     newest_by_version(@by_version, options[:image_limit])
   end
 
-  def sync(managed_images, options)
+  def sync(options)
     if options[:image]
       image = get_by_id(options[:image])
       if !image
@@ -204,7 +204,6 @@ class Series
       info(4, "Syncing #{ image.id }")
 
       if image.materialize
-        managed_images.add_image(self, image)
         info(3, "Image sync OK: #{ image.statemsg }", HighLine::GREEN)
       else
         all_syncs_ok = false
@@ -229,7 +228,6 @@ class Series
         next unless diff.in_use
 
         if diff.materialize
-          managed_images.add_diff(self, image, diff)
           info(3, "Diff sync OK: #{ diff.statemsg }", HighLine::GREEN)
         else
           all_syncs_ok = false
@@ -238,28 +236,9 @@ class Series
       end
     end
 
-    if !options[:keep_unused]
-      if !all_syncs_ok
-        warning(4, "Some image/diff sync failed for series #{ @name }," \
-                     + " not deleting anything from that series")
-        return all_syncs_ok
-      end
-
-      # Delete all images and rdiffs that are not either newest
-      # or used by some client.
-      info(4, "Checking for old images and diffs to delete")
-
-      images.each do |image|
-        if !image.in_use
-          image.delete  # does delete all diffs to image as well
-          next
-        end
-
-        unused_diffs = image.diffs.select { |diff| !diff.in_use }
-        unused_diffs.each do |diff|
-          diff.delete
-        end
-      end
+    if !all_syncs_ok
+      warning(4, "Some image/diff sync failed for series #{ @name }")
+      return false
     end
 
     return all_syncs_ok
@@ -298,11 +277,77 @@ class SyncState
 end
 
 class SyncFile
-  attr_reader :filename, :in_use, :size
-
-  def initialize(filename, sha256, size, urls)
+  def initialize(filename, dir=nil)
     raise 'filename is not set' \
       unless filename && filename.kind_of?(String) && !filename.empty?
+
+    @basedir  = dir || self.class.basedir
+    @filename = File.basename(filename)
+  end
+
+  def all_possible_paths
+    return [ download_path,
+             partial_unverified_path,
+             unverified_path,
+             final_path ]
+  end
+
+  def download_path
+    return "#{ final_path }.partial"
+  end
+
+  def final_path
+    return "#{ @basedir }/#{ @filename }"
+  end
+
+  def partial_unverified_path
+    return "#{ unverified_path }.partial"
+  end
+
+  def unverified_path
+    return "#{ final_path }.unverified"
+  end
+
+  def inplace?
+    return File.exists?(final_path)
+  end
+
+  def delete
+    return delete_files(all_possible_paths)
+  end
+
+  def delete_files(filelist)
+    all_deleted_ok = true
+
+    filelist.each do |path|
+      next unless File.exists?(path)
+      infolevel = (path == final_path) ? 3 : 2
+      info(infolevel, "Deleting #{ path }")
+      begin
+        File.delete(path)
+      rescue StandardError => e
+        all_deleted_ok = false
+        warning(2, "Could not delete #{ path }: #{ e.message }")
+      end
+    end
+
+    return all_deleted_ok
+  end
+
+  def cleanup_tempfiles
+    tempfiles_to_delete = [ download_path, partial_unverified_path ]
+    tempfiles_to_delete << unverified_path if inplace?
+
+    delete_files(tempfiles_to_delete)
+  end
+end
+
+class SyncFileWithMetadata < SyncFile
+  attr_reader :in_use, :size
+
+  def initialize(filename, sha256, size, urls)
+    super(filename)
+
     raise 'sha256 is not set' \
       unless sha256 && sha256.kind_of?(String) && !sha256.empty?
     raise 'size is not set' \
@@ -311,10 +356,9 @@ class SyncFile
       unless urls && urls.kind_of?(Array) && !urls.empty? \
                   && urls.all? { |url| url.kind_of?(String) }
 
-    @filename = filename
-    @sha256   = sha256
-    @size     = size
-    @urls     = urls
+    @sha256 = sha256
+    @size   = size
+    @urls   = urls
 
     @in_use        = false
     @mtime         = nil
@@ -324,25 +368,8 @@ class SyncFile
   end
 
   def delete
-    all_possible_paths = [ download_path,
-                           partial_unverified_path,
-                           unverified_path,
-                           final_path ]
-    delete_files(all_possible_paths)
+    super
     @state.state = :deleted
-  end
-
-  def delete_files(filelist)
-    filelist.each do |path|
-      next unless File.exists?(path)
-      infolevel = (path == final_path) ? 3 : 2
-      info(infolevel, "Deleting #{ path }")
-      begin
-        File.delete(path)
-      rescue StandardError => e
-        warning(2, "Could not delete #{ path }: #{ e.message }")
-      end
-    end
   end
 
   def download
@@ -441,38 +468,18 @@ class SyncFile
     return false
   end
 
-  def do_path_cleanup(path)
-    # The point of this is to check that filename does not get out of
-    # basedir by having ".." or some such, it must be under basedir
-    # (where the meaning of basedir is different for images and diffs).
-    cleaned_up_path = File.expand_path(path)
-    return cleaned_up_path if path.start_with?(self.class.basedir)
-
-    raise "Invalid filename #{ path }"
-  end
-
-  def download_path
-    return do_path_cleanup("#{ final_path }.partial")
-  end
-
-  def final_path
-    return do_path_cleanup("#{ self.class.basedir }/#{ @filename }")
-  end
-
-  def partial_unverified_path
-    return do_path_cleanup("#{ unverified_path }.partial")
-  end
-
-  def unverified_path
-    return do_path_cleanup("#{ final_path }.unverified")
-  end
-
-  def inplace?
-    return File.exists?(final_path)
-  end
-
   def mark_in_use
     @in_use = true
+  end
+
+  def materialize
+    mark_in_use
+
+    verify         and return true
+    patch_from_old and return true
+    download       and return true
+
+    return false
   end
 
   def statemsg
@@ -481,7 +488,7 @@ class SyncFile
 
   # Checks if the file in the filesystem has the same sha256 as the metadata.
   # To speed up things, the filesize needs to match before sha256 is
-  # calculated. The results are cached and rechecked only if file mtime
+  # calculated.  The results are cached and rechecked only if file mtime
   # changes.
   def verify
     # We can speed things up by assuming that all files in proper place have
@@ -544,16 +551,9 @@ class SyncFile
 
     return @verify_result
   end
-
-  def cleanup_tempfiles
-    tempfiles_to_delete = [ download_path, partial_unverified_path ]
-    tempfiles_to_delete << unverified_path if inplace?
-
-    delete_files(tempfiles_to_delete)
-  end
 end
 
-class Image < SyncFile
+class Image < SyncFileWithMetadata
   attr_reader :id, :version
 
   def initialize(filename, id, sha256, size, urls, version)
@@ -597,16 +597,6 @@ class Image < SyncFile
     end
   end
 
-  def materialize
-    mark_in_use
-
-    verify         and return true
-    patch_from_old and return true
-    download       and return true
-
-    return false
-  end
-
   # Create the current image from an old image by using a patch. First
   # all the possible diffs are sorted by size and the list is scanned twice:
   # first to check if there is an existing baseimage that has a patch
@@ -644,7 +634,7 @@ class Image < SyncFile
   end
 end
 
-class Diff < SyncFile
+class Diff < SyncFileWithMetadata
   attr_reader :baseimage, :targetimage
 
   def initialize(baseimage, targetimage, filename, sha256, size, urls)
@@ -655,6 +645,15 @@ class Diff < SyncFile
   end
 
   def self.basedir; "#{ $options[:download_path] }/rdiffs"; end
+
+  def apply(download_wanted)
+    @baseimage.verify                               \
+      and ((download_wanted or verify) or download) \
+      and do_patching                               \
+      and return true
+
+    return false
+  end
 
   def do_patching
     source      = @baseimage.final_path
@@ -678,21 +677,8 @@ class Diff < SyncFile
     return true
   end
 
-  def apply(download_wanted)
-    @baseimage.verify                               \
-      and ((download_wanted or verify) or download) \
-      and do_patching                               \
-      and return true
-
-    return false
-  end
-
-  def materialize
-    mark_in_use
-
-    verify   and return true
-    download and return true
-
+  def patch_from_old
+    # diff can not be patched from old, so just return failure
     return false
   end
 end
@@ -701,31 +687,13 @@ class ManagedImages
   Filepath = '/var/lib/puavo/images.json'
 
   def initialize
-    @file   = open_file_with_lock(Filepath)
-    @images = JSON.parse( @file.read )
+    @file      = open_file_with_lock(Filepath)
+    @by_series = JSON.parse( @file.read )
   end
 
-  def add_diff(series, image, diff)
-    add_image(series, image)
-
-    @images[series.name][image.id]["diffs"] \
-      = (@images[series.name][image.id]["diffs"] + [ diff.final_path ]) \
-          .sort.uniq
-
-    update
-  end
-
-  def add_image(series, image)
-    @images[series.name] ||= {}
-    @images[series.name][image.id] ||= {}
-    @images[series.name][image.id]["diffs"] ||= []
-    @images[series.name][image.id]["images"] ||= []
-
-    @images[series.name][image.id]["images"] \
-      = (@images[series.name][image.id]["images"] + [ image.final_path ]) \
-          .sort.uniq
-
-    update
+  def add_syncfile(by_series, series_name, syncfile)
+    by_series[series_name] ||= {}
+    by_series[series_name][syncfile.final_path] = true
   end
 
   def close
@@ -755,10 +723,71 @@ class ManagedImages
     return file
   end
 
+  # Removing files deals with all series at once... this is important,
+  # because some image may be in several series... that image should not be
+  # removed even if one series is removed where it is within.
+  # (The images that may be in several series may be "branching" or "merging"
+  # images... for example some image might be in the middle of series "Ubuntu",
+  # yet at the same time be at the beginning of a series "Gentoo").
+  def remove_unused(all_series, synced_series)
+    old_by_series = @by_series.clone
+
+    info(5, "Removing all unused images/diffs from series")
+    failed_series_names = (all_series.map &:name) - (synced_series.map &:name)
+
+    failed_series_names.each do |series_name|
+      warning(4, "Not removing anything from series #{ series_name }" \
+                    + " because of failed sync")
+    end
+
+    new_by_series = {}
+    all_series.images.each do |image|
+      add_syncfile(new_by_series, series.name, image) if image.in_use
+      image.diffs.each do |diff|
+        add_syncfile(new_by_series, series.name, diff) if diff.in_use
+      end
+    end
+
+    deletable_series_names = old_by_series.keys - failed_series_names
+
+    get_files = lambda do |series|
+                  deletable_series_names.map { |name| series[name].keys }
+                end
+    old_files = get_files.call(old_by_series)
+    new_files = get_files.call(new_by_series)
+
+    files_to_delete = (old_files - new_files).uniq
+
+    all_deleted_ok = true
+    files_to_delete.each do |filepath|
+      # these paths we trust, so we pass the dirname as well
+      syncfile = SyncFile.new(File.basename(filepath), File.dirname(filepath))
+      info(3, "Removing #{ syncfile.final_path } and related tempfiles")
+      if !syncfile.delete
+        all_deleted_ok = false
+      end
+    end
+
+    # XXX update should actually be called after each successful sync...
+    # XXX otherwise we might "lose" some stuff we sync... ?
+
+    if !all_deleted_ok || !failed_series_names.empty?
+      # if we failed at deleting some stuff, try again later, only after
+      # success we are ready to remove stuff from Filepath
+      warning(4, "Not updating #{ Filepath } due to sync/deletion errors")
+      return
+    end
+
+    info(4, "Updating #{ Filepath } with new managed images/diffs")
+    @by_series = new_by_series
+    update
+  end
+
   def update
+    # update Filepath safely without releasing lock on Filepath
     tempfile_path = "#{ Filepath }.tmp"
     File.open(tempfile_path, 'w') do |tempfile|
-      tempfile.write( @images.to_json )
+      tempfile.write( @by_series.to_json )
     end
     newfile = open_file_with_lock(tempfile_path)
     File.rename(tempfile_path, Filepath)
@@ -893,7 +922,7 @@ end
 
 def sync_all_series(managed_images, options)
   statuscode = 0
-  sync_successes = []
+  synced_series = []
 
   all_series = get_all_series(options)
 
@@ -903,27 +932,32 @@ def sync_all_series(managed_images, options)
   end
 
   all_series.each do |series|
-    result = series.sync(managed_images, options)
-    sync_successes << result
-    if !result && !options[:image]
+    result = series.sync(options)
+    if result
+      synced_series << series
+    elsif !options[:image]
       warning(5, "Error occurred in syncing #{ series.name }")
     end
   end
 
   if options[:image]
-    if sync_successes.any?
+    if !synced_series.empty?
       info(5,
            "Image #{ options[:image] } was synchronized successfully",
            HighLine::GREEN)
     else
       warning(5, "Failed to synchronize image #{ options[:image] }")
-      statuscode = 2
+      statuscode = 1
     end
-  elsif sync_successes.all?
+  elsif all_series.count == synced_series.count
     info(5, "All series synchronized without a problem", HighLine::GREEN)
   else
     warning(5, "Some series could not be synchronized fully")
     statuscode = 2
+  end
+
+  if !managed_images.remove_unused(all_series, synced_series)
+    statuscode = 3
   end
 
   return statuscode
@@ -1026,13 +1060,15 @@ BANNER_EOF
   end
 
   $options[:image_limit] = 2
-  opts.on("--image-limit NUMBER", "Number of newest images to sync from all specified series (Default: 2)") do |limit|
-    $options[:image_limit] = limit
+  opts.on("--image-limit NUMBER",
+          "Number of newest images to sync from all specified series (Default: 2)") do |limit|
+    $options[:image_limit] = Integer(limit)
   end
 
   $options[:diff_limit] = 2
-  opts.on("--diff-limit NUMBER", "Number of newest diffs to sync for synced images even if there are no clients using them. (Default: 2)") do |limit|
-    $options[:diff_limit] = limit
+  opts.on("--diff-limit NUMBER",
+          "Number of newest diffs to sync for synced images even if there are no clients using them. (Default: 2)") do |limit|
+    $options[:diff_limit] = Integer(limit)
   end
 
   $options[:download_path] = "/opt/ltsp/images"
