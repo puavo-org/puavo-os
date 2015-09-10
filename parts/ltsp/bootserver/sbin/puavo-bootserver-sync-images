@@ -198,7 +198,7 @@ class Series
     FileUtils.mkdir_p(Image.basedir)
     FileUtils.mkdir_p(Diff.basedir)
 
-    all_image_syncs_ok = true
+    all_syncs_ok = true
 
     image_list.each do |image|
       info(4, "Syncing #{ image.id }")
@@ -207,7 +207,7 @@ class Series
         managed_images.add_image(self, image)
         info(3, "Image sync OK: #{ image.statemsg }", HighLine::GREEN)
       else
-        all_image_syncs_ok = false
+        all_syncs_ok = false
         warning(3, "Image sync FAILED: #{ image.statemsg }")
       end
 
@@ -219,7 +219,7 @@ class Series
     # No more interesting things to do if --image was given
     # (I guess we might not want to download client diffs or delete old stuff
     # in this case).
-    return all_image_syncs_ok if options[:image]
+    return all_syncs_ok if options[:image]
 
     info(4, "Downloading client diffs")
 
@@ -232,16 +232,17 @@ class Series
           managed_images.add_diff(self, image, diff)
           info(3, "Diff sync OK: #{ diff.statemsg }", HighLine::GREEN)
         else
+          all_syncs_ok = false
           warning(3, "Diff sync FAILED: #{ diff.statemsg }")
         end
       end
     end
 
     if !options[:keep_unused]
-      if !all_image_syncs_ok
-        warning(4, "Some image sync failed for series #{ @name }," \
+      if !all_syncs_ok
+        warning(4, "Some image/diff sync failed for series #{ @name }," \
                      + " not deleting anything from that series")
-        return all_image_syncs_ok
+        return all_syncs_ok
       end
 
       # Delete all images and rdiffs that are not either newest
@@ -261,7 +262,7 @@ class Series
       end
     end
 
-    return all_image_syncs_ok
+    return all_syncs_ok
   end
 
   def cleanup_tempfiles
