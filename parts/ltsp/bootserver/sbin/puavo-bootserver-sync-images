@@ -876,6 +876,13 @@ def fetch_and_parse_series_data(source_url)
 
   series_by_name = {}
   http.request_get(uri.path) do |response|
+    if !response.kind_of?(Net::HTTPOK)
+      # do not let this out as empty series... otherwise temporary download
+      # failure might result in removing all images/diffs in this series
+      raise "Error in fetching #{ source_url }," \
+              + " response code #{ response.code }"
+    end
+
     series_by_name = parse_series_data( JSON.parse( response.body ) )
   end
 
