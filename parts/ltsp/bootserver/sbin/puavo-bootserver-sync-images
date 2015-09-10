@@ -406,7 +406,11 @@ class SyncFile
 
         puts "" # output newline after Download progress has gone to 100%
 
-        return false unless received_size == @size
+        if received_size != @size
+          warning(2, "Received size (#{ received_size }) did not match" \
+                       + " the expected size (#{ @size }")
+          return false
+        end
 
         @state.state = :downloaded
 
