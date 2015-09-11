@@ -324,7 +324,15 @@ class SyncFile
 
     filelist.each do |path|
       next unless File.exists?(path)
+
       infolevel = (path == final_path) ? 3 : 2
+
+      if File.exists?("#{ path }.lock")
+        info(infolevel, "Not deleting #{ path } because it has .lock")
+        all_deleted_ok = false
+        next
+      end
+
       info(infolevel, "Deleting #{ path }")
       begin
         File.delete(path)
