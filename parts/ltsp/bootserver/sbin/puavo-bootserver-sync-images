@@ -785,7 +785,7 @@ class ManagedImages
   # (The images that may be in several series may be "branching" or "merging"
   # images... for example some image might be in the middle of series "Ubuntu",
   # yet at the same time be at the beginning of a series "Gentoo").
-  def remove_unused(all_series, synced_series)
+  def remove_unused(all_series, synced_series, force_delete_unmanaged)
     info(5, "Removing all unused images/diffs from series")
     failed_series_names \
       = (all_series.map &:series_name) - (synced_series.map &:series_name)
@@ -797,15 +797,14 @@ class ManagedImages
 
     deletable_series_names = @old_by_series.keys - failed_series_names
 
-    get_files = lambda do |by_series|
-                  deletable_series_names.map { |name| by_series[name] }.flatten
-                end
-    old_files = get_files.call(@old_by_series)
-    new_files = get_files.call(@new_by_series)
+    old_files = deletable_series_names.map { |name| @old_by_series[name] } \
+                  .flatten
+    new_files = @new_by_series.values.flatten
 
     files_to_delete = (old_files - new_files).uniq
 
     all_deleted_ok = true
+
     files_to_delete.each do |filepath|
       # these paths we trust, so we pass the dirname as well
       syncfile = SyncFile.new(File.basename(filepath), File.dirname(filepath))
@@ -818,11 +817,61 @@ class ManagedImages
       # if we failed at deleting some stuff, try again later, only after
       # success we are ready to remove stuff from Filepath
       warning(4, "Not updating #{ Filepath } due to sync/deletion errors")
-      return
+      return false
     end
 
     info(4, "Removing old filepaths from #{ Filepath }")
     update(@new_by_series)
+
+    if force_delete_unmanaged && !delete_unmanaged(false)
+      all_deleted_ok = false
+    end
+
+    return all_deleted_ok
+  end
+
+  def delete_unmanaged(ask_interactively)
+    managed_files = @current_by_series.values.flatten.uniq
+
+    error_occurred = false
+
+    ask_and_delete = lambda do |path|
+      return true if managed_files.include?(path)
+
+      answer = "yes"
+      if ask_interactively
+        answer = HighLine.ask("Delete #{ path }? [yes/no] ").strip
+      end
+
+      if !answer.empty? && "yes".start_with?(answer)
+        syncfile = SyncFile.new(File.basename(path), File.dirname(path))
+        if !syncfile.delete then
+          error_occurred = true
+        end
+        return true
+      elsif !answer.empty? && "no".start_with?(answer)
+        return true
+      else
+        puts "Please answer yes or no"
+        return false
+      end
+    end
+
+    info(5, "Deleting unmanaged images")
+    Dir.glob("#{ Image.basedir }/*.img").sort.each do |imagepath|
+      until ask_and_delete.call(imagepath)
+        true
+      end
+    end
+
+    info(5, "Deleting unmanaged diffs")
+    Dir.glob("#{ Diff.basedir }/*.rdiff").sort.each do |rdiffpath|
+      until ask_and_delete.call(rdiffpath)
+        true
+      end
+    end
+
+    return error_occurred
   end
 
   def update(by_series)
@@ -1008,7 +1057,9 @@ def sync_all_series(managed_images, options)
   elsif options[:series]
     info(5, "Given --series option, not removing unused images/diffs")
   else
-    if !managed_images.remove_unused(all_series, synced_series)
+    if !managed_images.remove_unused(all_series,
+                                     synced_series,
+                                     options[:force_delete_unmanaged])
       statuscode = 3
     end
   end
@@ -1135,6 +1186,18 @@ BANNER_EOF
     $options[:no_puavo_series_url_lookup] = true
   end
 
+  $options[:delete_unmanaged_interactively] = false
+  opts.on("--delete-unmanaged-interactively",
+          "Delete unmanaged images/diffs (interactively)") do
+    $options[:delete_unmanaged_interactively] = true
+  end
+
+  $options[:force_delete_unmanaged] = false
+  opts.on("--force-delete-unmanaged",
+          "Delete unmanaged images/diffs without asking") do
+    $options[:force_delete_unmanaged] = true
+  end
+
   $options[:series] = nil
   opts.on("--series NAME", "Download only specified series instead of all series specified by the sources") do |series|
     $options[:series] = series
@@ -1159,7 +1222,15 @@ statuscode = 0
 
 begin
   managed_images = ManagedImages.new
-  statuscode = sync_all_series(managed_images, $options)
+
+  if $options[:delete_unmanaged_interactively]
+    if !managed_images.delete_unmanaged(true)
+      statuscode = 4
+    end
+  else
+    statuscode = sync_all_series(managed_images, $options)
+  end
+
 rescue StandardError => e
   warning(5, "Error: #{ e.message }")
   raise e
