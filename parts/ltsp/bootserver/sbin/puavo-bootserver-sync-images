@@ -963,8 +963,19 @@ def sync_all_series(managed_images, options)
     statuscode = 2
   end
 
-  if !managed_images.remove_unused(all_series, synced_series)
-    statuscode = 3
+  if options[:keep_unused]
+    info(5, "Given --keep-unused option, not removing unused images/diffs")
+  elsif options[:image]
+    info(5, "Given --image option, not removing unused images/diffs")
+  elsif options[:no_puavo_series_url_lookup]
+    info(5, "Given --no-puavo-series-url-lookup option," \
+              + " not removing unused images/diffs")
+  elsif options[:series]
+    info(5, "Given --series option, not removing unused images/diffs")
+  else
+    if !managed_images.remove_unused(all_series, synced_series)
+      statuscode = 3
+    end
   end
 
   return statuscode
