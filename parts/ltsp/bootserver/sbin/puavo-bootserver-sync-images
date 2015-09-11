@@ -328,7 +328,7 @@ class SyncFile
       infolevel = (path == final_path) ? 3 : 2
 
       if File.exists?("#{ path }.lock")
-        info(infolevel, "Not deleting #{ path } because it has .lock")
+        warning(infolevel, "Not deleting #{ path } because it has .lock")
         all_deleted_ok = false
         next
       end
@@ -774,7 +774,6 @@ class ManagedImages
     files_to_delete.each do |filepath|
       # these paths we trust, so we pass the dirname as well
       syncfile = SyncFile.new(File.basename(filepath), File.dirname(filepath))
-      info(3, "Removing #{ syncfile.final_path } and related tempfiles")
       if !syncfile.delete
         all_deleted_ok = false
       end
