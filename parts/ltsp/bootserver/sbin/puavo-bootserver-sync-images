@@ -82,10 +82,10 @@ def warning(level, msg)
 end
 
 class Series
-  attr_reader :name
+  attr_reader :series_name
 
   def initialize(name)
-    @name = name
+    @series_name = name
 
     @by_id = Hash.new
     @by_version = Hash.new
@@ -103,19 +103,19 @@ class Series
     return @by_version[version]
   end
 
-  def mark_image_in_use(image_id)
+  def mark_image_in_use(image_id, managed_images)
     image = @by_id[image_id]
     if image
-      image.mark_in_use
+      image.mark_in_use(@series_name, managed_images)
     end
   end
 
-  def mark_diff_in_use(old_image_id, new_image_id)
+  def mark_imagediff_in_use(old_image_id, new_image_id, managed_images)
     old_image = @by_id[old_image_id]
     new_image = @by_id[new_image_id]
 
     if old_image && new_image
-      new_image.mark_diff_in_use(old_image)
+      new_image.mark_diff_in_use(old_image, @series_name, managed_images)
     end
   end
 
@@ -131,7 +131,7 @@ class Series
 
   # Query puavo-rest for all devices and check used images.
   # Images and diffs are marked.
-  def add_puavo_device_image_requests()
+  def add_puavo_device_image_requests(managed_images)
     client = PuavoRestClient.new :auth => :etc
 
     res = client.get("/v3/devices")
@@ -143,17 +143,17 @@ class Series
       preferred_boot_image = device["preferred_boot_image"]
       preferred_image      = device["preferred_image"]
 
-      mark_image_in_use(preferred_image)
+      mark_image_in_use(preferred_image, managed_images)
 
       # Netboot devices do not need diffs, but want preferred boot images.
       if bootmode == "netboot"
-        mark_image_in_use(preferred_boot_image)
+        mark_image_in_use(preferred_boot_image, managed_images)
         next
       end
 
       # Other devices need diffs from current image to preferred
       if current_image && preferred_image && current_image != preferred_image
-        mark_diff_in_use(current_image, preferred_image)
+        mark_imagediff_in_use(current_image, preferred_image, managed_images)
       end
     end
   end
@@ -165,34 +165,35 @@ class Series
   # Returns specified number of newest images in an array.  The images are
   # sorted oldest first so that when fetching the images, newer images can
   # be created using diffs from older images.
-  def newest_images(options)
+  def newest_images(managed_images, options)
     # Check which images and diffs are needed for non-netboot devices
-    add_puavo_device_image_requests
+    add_puavo_device_image_requests(managed_images)
 
     # We want to always download X number of newest images with Y number
     # of diffs from newest images.
     newest_by_version(@by_version, options[:image_limit])
   end
 
-  def sync(options)
+  def sync(managed_images, options)
     if options[:image]
       image = get_by_id(options[:image])
       if !image
         info(4, "Could not find image #{ options[:image] }" \
-                  + " from series #{ @name }")
+                  + " from series #{ @series_name }")
         return false
       end
 
       image_list = [ image ]
     else
-      image_list = newest_images(options)
+      image_list = newest_images(managed_images, options)
       if image_list.empty?
-        warning(5, "Image list for series #{ @name } is empty, doing nothing")
+        warning(5, "Image list for series #{ @series_name } is empty," \
+                     + " doing nothing")
         return false
       end
     end
 
-    info(5, "Syncing series #{ @name } with the following images:")
+    info(5, "Syncing series #{ @series_name } with the following images:")
     image_list.each { |image| info(5, "  #{ image.id }") }
 
     FileUtils.mkdir_p(Image.basedir)
@@ -203,7 +204,7 @@ class Series
     image_list.each do |image|
       info(4, "Syncing #{ image.id }")
 
-      if image.materialize
+      if image.materialize(@series_name, managed_images)
         info(3, "Image sync OK: #{ image.statemsg }", HighLine::GREEN)
       else
         all_syncs_ok = false
@@ -211,7 +212,9 @@ class Series
       end
 
       if !options[:image]
-        image.download_newest_diffs(options[:diff_limit])
+        image.download_newest_diffs(@series_name,
+                                    managed_images,
+                                    options[:diff_limit])
       end
     end
 
@@ -227,7 +230,7 @@ class Series
         # we want only diffs that have been marked are in use
         next unless diff.in_use
 
-        if diff.materialize
+        if diff.materialize(@series_name, managed_images)
           info(3, "Diff sync OK: #{ diff.statemsg }", HighLine::GREEN)
         else
           all_syncs_ok = false
@@ -237,7 +240,7 @@ class Series
     end
 
     if !all_syncs_ok
-      warning(4, "Some image/diff sync failed for series #{ @name }")
+      warning(4, "Some image/diff sync failed for series #{ @series_name }")
       return false
     end
 
@@ -468,12 +471,13 @@ class SyncFileWithMetadata < SyncFile
     return false
   end
 
-  def mark_in_use
+  def mark_in_use(series_name, managed_images)
     @in_use = true
+    managed_images.add_syncfile(series_name, self)
   end
 
-  def materialize
-    mark_in_use
+  def materialize(series_name, managed_images)
+    mark_in_use(series_name, managed_images)
 
     verify         and return true
     patch_from_old and return true
@@ -572,10 +576,10 @@ class Image < SyncFileWithMetadata
 
   def self.basedir; $options[:download_path]; end
 
-  def mark_diff_in_use(from_image)
+  def mark_diff_in_use(from_image, series_name, managed_images)
     diff = @diffs_from_by_version[from_image.version]
     if diff
-      diff.mark_in_use
+      diff.mark_in_use(series_name, managed_images)
     end
   end
 
@@ -591,9 +595,9 @@ class Image < SyncFileWithMetadata
     @diffs_from_by_version.values
   end
 
-  def download_newest_diffs(limit=0)
+  def download_newest_diffs(series_name, managed_images, limit=0)
     newest_by_version(@diffs_from_by_version, limit).each do |diff|
-      diff.materialize
+      diff.materialize(series_name, managed_images)
     end
   end
 
@@ -687,13 +691,22 @@ class ManagedImages
   Filepath = '/var/lib/puavo/images.json'
 
   def initialize
-    @file      = open_file_with_lock(Filepath)
-    @by_series = JSON.parse( @file.read )
+    @file = open_file_with_lock(Filepath)
+    @old_by_series = JSON.parse( @file.read )
+    @current_by_series = @old_by_series.clone
+
+    @new_by_series = {}
   end
 
-  def add_syncfile(by_series, series_name, syncfile)
-    by_series[series_name] ||= {}
-    by_series[series_name][syncfile.final_path] = true
+  def add_syncfile(series_name, syncfile)
+    [ @current_by_series, @new_by_series ].each do |by_series|
+      by_series[series_name] ||= []
+      by_series[series_name] \
+        = (by_series[series_name] + [ syncfile.final_path ]) \
+            .sort.uniq
+    end
+
+    update(@current_by_series)
   end
 
   def close
@@ -730,31 +743,22 @@ class ManagedImages
   # images... for example some image might be in the middle of series "Ubuntu",
   # yet at the same time be at the beginning of a series "Gentoo").
   def remove_unused(all_series, synced_series)
-    old_by_series = @by_series.clone
-
     info(5, "Removing all unused images/diffs from series")
-    failed_series_names = (all_series.map &:name) - (synced_series.map &:name)
+    failed_series_names \
+      = (all_series.map &:series_name) - (synced_series.map &:series_name)
 
     failed_series_names.each do |series_name|
       warning(4, "Not removing anything from series #{ series_name }" \
                     + " because of failed sync")
     end
 
-    new_by_series = {}
-    all_series.images.each do |image|
-      add_syncfile(new_by_series, series.name, image) if image.in_use
-      image.diffs.each do |diff|
-        add_syncfile(new_by_series, series.name, diff) if diff.in_use
-      end
-    end
+    deletable_series_names = @old_by_series.keys - failed_series_names
 
-    deletable_series_names = old_by_series.keys - failed_series_names
-
-    get_files = lambda do |series|
-                  deletable_series_names.map { |name| series[name].keys }
+    get_files = lambda do |by_series|
+                  deletable_series_names.map { |name| by_series[name] }.flatten
                 end
-    old_files = get_files.call(old_by_series)
-    new_files = get_files.call(new_by_series)
+    old_files = get_files.call(@old_by_series)
+    new_files = get_files.call(@new_by_series)
 
     files_to_delete = (old_files - new_files).uniq
 
@@ -768,9 +772,6 @@ class ManagedImages
       end
     end
 
-    # XXX update should actually be called after each successful sync...
-    # XXX otherwise we might "lose" some stuff we sync... ?
-
     if !all_deleted_ok || !failed_series_names.empty?
       # if we failed at deleting some stuff, try again later, only after
       # success we are ready to remove stuff from Filepath
@@ -778,16 +779,15 @@ class ManagedImages
       return
     end
 
-    info(4, "Updating #{ Filepath } with new managed images/diffs")
-    @by_series = new_by_series
-    update
+    info(4, "Removing old filepaths from #{ Filepath }")
+    update(@new_by_series)
   end
 
-  def update
+  def update(by_series)
     # update Filepath safely without releasing lock on Filepath
     tempfile_path = "#{ Filepath }.tmp"
     File.open(tempfile_path, 'w') do |tempfile|
-      tempfile.write( @by_series.to_json )
+      tempfile.write( by_series.to_json )
     end
     newfile = open_file_with_lock(tempfile_path)
     File.rename(tempfile_path, Filepath)
@@ -932,11 +932,11 @@ def sync_all_series(managed_images, options)
   end
 
   all_series.each do |series|
-    result = series.sync(options)
+    result = series.sync(managed_images, options)
     if result
       synced_series << series
     elsif !options[:image]
-      warning(5, "Error occurred in syncing #{ series.name }")
+      warning(5, "Error occurred in syncing #{ series.series_name }")
     end
   end
 
