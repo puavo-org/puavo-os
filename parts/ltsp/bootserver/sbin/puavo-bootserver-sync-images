@@ -51,6 +51,7 @@ require 'fileutils'
 require 'highline/import'
 require 'json'
 require 'net/http'
+require 'open3'
 require 'puavo'
 require 'puavo/etc'
 require 'puavo/rest-client'
@@ -386,6 +387,8 @@ class SyncFileWithMetadata < SyncFile
   def download
     @state.state = :missing
 
+    ensure_enough_diskspace or return false
+
     # go through all @urls in order and try to download from each in turn
     # (we could also do some load balancing by first choosing one randomly?)
     @urls.each do |url|
@@ -477,6 +480,36 @@ class SyncFileWithMetadata < SyncFile
     end
 
     return false
+  end
+
+  def ensure_enough_diskspace
+    directory = File.dirname(final_path)
+
+    block_size, bs_status \
+      = Open3.capture2("stat", "--file-system", "--format", "%S", directory)
+    free_blocks, fb_status \
+      = Open3.capture2("stat", "--file-system", "--format", "%a", directory)
+
+    unless bs_status.success? && fb_status.success?
+      warning(2, "Could not stat directory for #{ final_path }" \
+                   + " when checking disk space")
+      return false
+    end
+
+    begin
+      diskspace = Integer(block_size) * Integer(free_blocks)
+    rescue StandardError => e
+      warning(2, "Could not determine free disk space for #{ final_path }")
+      return false
+    end
+
+    if @size > diskspace
+      warning(2, "Not enough available disk space for #{ final_path }:" \
+                   + " needing #{ @size } bytes, #{ diskspace } available")
+      return false
+    end
+
+    return true
   end
 
   def mark_in_use(series_name, managed_images)
@@ -668,6 +701,8 @@ class Diff < SyncFileWithMetadata
   end
 
   def do_patching
+    @targetimage.ensure_enough_diskspace or return false
+
     source      = @baseimage.final_path
     target      = @targetimage.unverified_path
     temp_target = @targetimage.partial_unverified_path
