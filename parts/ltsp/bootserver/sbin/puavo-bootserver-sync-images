@@ -172,7 +172,8 @@ class Series
 
     # We want to always download X number of newest images with Y number
     # of diffs from newest images.
-    newest_by_version(@by_version, options[:image_limit])
+    return @by_version.sort.map { |version, image| image } \
+             .reverse.slice(0, options[:image_limit]).reverse
   end
 
   def sync(managed_images, options)
@@ -648,7 +649,10 @@ class Image < SyncFileWithMetadata
   end
 
   def download_newest_diffs(series_name, managed_images, limit=0)
-    newest_by_version(@diffs_from_by_version, limit).each do |diff|
+    newest_diffs = @diffs_from_by_version.sort.map { |version, diff| diff } \
+                     .reverse.slice(0, limit).reverse
+
+    newest_diffs.each do |diff|
       diff.materialize(series_name, managed_images)
     end
   end
@@ -956,11 +960,6 @@ def get_all_series(options)
   end
 
   return all_series.values
-end
-
-def newest_by_version(collection_by_version, limit)
-  versions = collection_by_version.keys.sort.reverse.slice(0,limit).reverse
-  return versions.map { |version| collection_by_version[version] }
 end
 
 def parse_series_data(series_data)
