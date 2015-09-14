@@ -1248,6 +1248,22 @@ BANNER_EOF
   end
 end
 
+at_exit do
+  if !$options[:delete_unmanaged_interactively]
+    status_stampfile \
+      = "#{ $options[:download_path] }/.puavo-bootserver-sync-images-ok"
+    all_okay = ($!.kind_of?(SystemExit) && $!.success?)
+    if all_okay
+      FileUtils.touch(status_stampfile)
+    else
+      begin
+        File.delete(status_stampfile)
+      rescue Errno::ENOENT
+      end
+    end
+  end
+end
+
 parser.parse!
 
 managed_images = nil
@@ -1270,7 +1286,7 @@ begin
 
 rescue StandardError => e
   warning(5, "ERROR: #{ e.message }")
-  raise e
+  statuscode = 1
 ensure
   managed_images.close if managed_images
 end
