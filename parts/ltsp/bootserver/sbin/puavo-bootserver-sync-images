@@ -1046,6 +1046,8 @@ module SeriesControl
     data = res.parse()
 
     source_urls = data["image_series_source_urls"]
+    # XXX sources_urls might be nil?
+    p sources_urls
 
     raise 'Could not read sources urls from Puavo' \
       unless source_urls.kind_of?(Array)
@@ -1118,6 +1120,8 @@ end
 
 # set a low priority for this script
 Process.setpriority(Process::PRIO_PROCESS, 0, 19)
+system('ionice', '-c', '3', '-p', $$.to_s) \
+  or warning(5, 'Could not set process I/O scheduling class to Idle')
 
 script_name = File.basename(__FILE__)
 
