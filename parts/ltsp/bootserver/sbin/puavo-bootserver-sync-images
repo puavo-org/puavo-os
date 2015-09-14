@@ -1005,8 +1005,13 @@ module SeriesControl
     if !options[:no_puavo_series_url_lookup]
       series_urls += fetch_series_urls()
     end
-    series_urls.each do |series_url|
-      all_series_list << fetch_and_parse_series_data(series_url)
+
+    if series_urls.empty?
+      info(5, "No series urls were defined")
+    else
+      series_urls.each do |series_url|
+        all_series_list << fetch_and_parse_series_data(series_url)
+      end
     end
 
     options[:file].each do |series_file|
@@ -1015,7 +1020,7 @@ module SeriesControl
       all_series_list << parse_series_data( JSON.parse(series_data_json) )
     end
 
-    all_series = all_series_list.reduce(&:merge)
+    all_series = all_series_list.reduce(&:merge) || []
 
     if options[:series]
       series_name = options[:series]
@@ -1045,9 +1050,7 @@ module SeriesControl
     res = client.get(url)
     data = res.parse()
 
-    source_urls = data["image_series_source_urls"]
-    # XXX sources_urls might be nil?
-    p sources_urls
+    source_urls = data["image_series_source_urls"] || []
 
     raise 'Could not read sources urls from Puavo' \
       unless source_urls.kind_of?(Array)
@@ -1313,7 +1316,7 @@ begin
 
 rescue StandardError => e
   warning(5, "ERROR: #{ e.message }")
-  statuscode = 1
+  raise e
 ensure
   managed_images.close if managed_images
 end
