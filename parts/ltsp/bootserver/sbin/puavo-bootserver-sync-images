@@ -79,7 +79,7 @@ def info(level, msg, color=nil)
 end
 
 def warning(level, msg)
-  log(level, STDERR, Syslog::LOG_WARNING, msg, HighLine::RED)
+  log(level, STDERR, Syslog::LOG_WARNING, "WARNING: #{ msg }", HighLine::RED)
 end
 
 class Series
@@ -1269,7 +1269,7 @@ begin
   end
 
 rescue StandardError => e
-  warning(5, "Error: #{ e.message }")
+  warning(5, "ERROR: #{ e.message }")
   raise e
 ensure
   managed_images.close if managed_images
