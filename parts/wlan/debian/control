@@ -79,9 +79,9 @@ Depends: ${misc:Depends},
  libnl-3-200,
  libnl-genl-3-200,
  libtinfo5,
- python-matplotlib,
- python-numpy,
- python-scipy,
+ python3-matplotlib,
+ python3-numpy,
+ python3-scipy,
  net-tools,
  wireless-tools
 Description: measure and visualize signal strengths of WLAN access points

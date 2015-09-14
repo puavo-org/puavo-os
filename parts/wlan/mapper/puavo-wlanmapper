@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2015 Opinsys Oy
 #
@@ -41,7 +41,7 @@ LEVELS = range(-95, -20, 5)
 _tmpdir = None
 
 FREQS = [2412 + i * 5 for i in range(13)] + [2484] + [5180, 5200, 5220, 5240]
-CHANS = range(1, 15) + [36, 40, 44, 48]
+CHANS = [i for i in range(1, 15)] + [36, 40, 44, 48]
 
 FREQ_TO_CHAN = dict(zip(FREQS, CHANS))
 
@@ -86,7 +86,7 @@ class ZoomableGraphicsView(QGraphicsView):
 
 class MonitorScene(QGraphicsScene):
 
-    heatmapsAdded = pyqtSignal(QStringList)
+    heatmapsAdded = pyqtSignal(list)
 
     def __init__(self, monitor):
         QGraphicsScene.__init__(self)
@@ -621,7 +621,7 @@ class MainWindow(QMainWindow):
         self.__monitorWidget.setScene(self.__monitorScene)
         self.__monitor.terminate()
 
-        with tarfile.open(unicode(filepath), "r:gz") as archive_file:
+        with tarfile.open(str(filepath), "r:gz") as archive_file:
 
             src_image = archive_file.extractfile("scene/layout.png")
             with open(os.path.join(_tmpdir, "layout.png"), "wb") as dst_image:
@@ -650,7 +650,7 @@ class MainWindow(QMainWindow):
         scenedir = os.path.join(_tmpdir, "scene")
         try:
             shutil.rmtree(scenedir)
-        except OSError, e:
+        except OSError as e:
             if e.errno != errno.ENOENT:
                 raise e
         os.mkdir(scenedir)
@@ -663,7 +663,7 @@ class MainWindow(QMainWindow):
 
         shutil.copy(os.path.join(_tmpdir, "layout.png"), scenedir)
 
-        with tarfile.open(unicode(filepath), "w:gz") as f:
+        with tarfile.open(str(filepath), "w:gz") as f:
             f.add(scenedir, "scene")
 
     def __newProjectDialog(self):
