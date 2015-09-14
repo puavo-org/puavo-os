@@ -142,7 +142,7 @@ class Series
 
   # Query puavo-rest for all devices and check used images.
   # Images and diffs are marked.
-  def add_puavo_device_image_requests(managed_images)
+  def mark_syncfiles_used_by_puavo_devices(managed_images)
     client = PuavoRestClient.new :auth => :etc
 
     res = client.get("/v3/devices")
@@ -177,9 +177,6 @@ class Series
   # sorted oldest first so that when fetching the images, newer images can
   # be created using diffs from older images.
   def newest_images(managed_images, options)
-    # Check which images and diffs are needed for non-netboot devices
-    add_puavo_device_image_requests(managed_images)
-
     # We want to always download X number of newest images with Y number
     # of diffs from newest images.
     return @by_version.sort.map { |version, image| image } \
@@ -197,6 +194,9 @@ class Series
 
       image_list = [ image ]
     else
+      # Check which images and diffs are needed by devices in Puavo.
+      mark_syncfiles_used_by_puavo_devices(managed_images)
+
       image_list = newest_images(managed_images, options)
       if image_list.empty?
         warning(5, "Image list for series #{ @series_name } is empty," \
