@@ -1,6 +1,6 @@
 #!/usr/bin/ruby1.9.3
 
-# ##############################################################################
+###############################################################################
 #
 # Copyright (C) 2015 Opinsys Oy
 #
@@ -17,33 +17,43 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
-# ##############################################################################
+###############################################################################
 #
-# Managed images
+# This script manages system images on a bootserver for use with thinclients,
+# fatclients, and for locally installed clients such as laptops that can
+# download images/diffs for their use.
 #
-# Images downloaded by this script, data stored under /var/lib/puavo/images.json
-# Unmanaged images - other images
+# Managed images and diffs are images/diffs downloaded by this script.
+# Their paths are stored in /var/lib/puavo/images.json.  This script may
+# delete the images/diffs specified there once those are no longer needed.
+#
+# Unmanaged images/diffs are other images and diffs in download paths
+# ("/opt/ltsp/images" and "/opt/ltsp/images/rdiffs" by default).
 #
 # By default the script handles only the managed images and unmanaged images
-# are left untouched. The script can be asked to delete unmanaged images with
-# command line option --delete-unmanaged. When asked, the script will delete
-# all unknown files under /opt/ltsp/images and /opt/ltsp/images/rdiffs. Images
-# do not need to have .img ending.
-#
-# Operation
+# are left untouched.  The script can be asked to delete unmanaged images with
+# two command line options: "--delete-unmanaged-interactively" asks for each
+# unmanaged image/diff if it can be deleted, and "--force-delete-unmanaged"
+# removes those unconditionally after images/diffs are synced.
+# Note that these options are not needed to delete unused _managed_ images,
+# which happens automatically.
 #
 # Steps done by the script:
 #
-# 1. Check image series source URLs from device.json
+# 1. Check image series source URLs from Puavo (or given as --url parameter)
 # 2. Load image series description JSON files from specified URLs
-# 3. Determine wanted full images oldest first and start syncing them one by one oldest first
-# 4. Check if there is an old image available that has a diff to wanted target image
-# 5. Download diffs needed by locally installed client devices
-# 6. Delete old unused managed images + rdiffs
-# 7. Delete unmanaged images if asked
+#    (or from paths given by --file parameter)
+# 3. Determine wanted full images and start syncing them one by one,
+#    going from oldest to newest
+#      3.1 For each image, check if there is an older image available and
+#          a diff which can be used to create the target image from
+#          the old one: use those to create the target image
+# 3. Download diffs needed by locally installed client devices
+#    (laptops and such)
+# 4. Delete old unused managed images and diffs
+# 5. If asked with ----force-delete-unmanaged, delete unmanaged images/diffs
 #
-# The managed images and rdiffs are stored under /var/lib/puavo/images.json. The
-# contents of the file are the same as the last loaded image series json file.
+###############################################################################
 
 require "digest"
 require 'digest/sha2'
@@ -152,7 +162,7 @@ class Series
         next
       end
 
-      # Other devices need diffs from current image to preferred
+      # Other devices need diffs from current image to preferred.
       if current_image && preferred_image && current_image != preferred_image
         mark_imagediff_in_use(current_image, preferred_image, managed_images)
       end
@@ -220,16 +230,14 @@ class Series
       end
     end
 
-    # No more interesting things to do if --image was given
-    # (I guess we might not want to download client diffs or delete old stuff
-    # in this case).
+    # Do not download client diffs if --image was given.
     return all_syncs_ok if options[:image]
 
     info(4, "Downloading client diffs")
 
     images.each do |image|
       image.diffs.each do |diff|
-        # we want only diffs that have been marked are in use
+        # We want only diffs that have been marked are in use.
         next unless diff.in_use
 
         if diff.materialize(@series_name, managed_images)
@@ -390,8 +398,8 @@ class SyncFileWithMetadata < SyncFile
 
     ensure_enough_diskspace or return false
 
-    # go through all @urls in order and try to download from each in turn
-    # (we could also do some load balancing by first choosing one randomly?)
+    # Go through all @urls in order and try to download from each in turn
+    # (we could also do some load balancing by first choosing one randomly?).
     @urls.each do |url|
       download_from_url(url) and return true
     end
@@ -399,18 +407,17 @@ class SyncFileWithMetadata < SyncFile
     return false
   end
 
-  # Download file from specified url and check that the sha256 checksum of
-  # the downloaded file matches the given size and sha256.
-  # If the file was downloaded successfully and the size and the checksum
-  # matches, true is returned, otherwise false is returned.
+  # Download file from specified url and check that the size and the checksum
+  # of the downloaded file matches what we expect.  If the file was downloaded
+  # successfully and those checks are okay, true is returned, otherwise false
+  # is returned.
   # Development idea: it might be nice if this could support partial downloads
-  # (append to an existing file).
+  # (appending to an existing file on later download attempts).
   def download_from_url(url)
     uri = URI.parse(url)
 
     http = Net::HTTP.new(uri.host, uri.port)
     http.ca_file = "/etc/puavo/certs/rootca.pem"
-  #  http.ca_file = "/etc/ssl/certs/SecureTrust_CA.pem" # XXX ?
     http.verify_mode = OpenSSL::SSL::VERIFY_PEER
     http.use_ssl = true
 
@@ -472,7 +479,8 @@ class SyncFileWithMetadata < SyncFile
         File.rename(download_path, final_path)
         info(1, "Moved #{ download_path } to #{ final_path }")
 
-        # this can fail, does not matter (normally we'll try later anyway)
+        # This can fail and that might be only a temporary error,
+        # so ignore errors.
         self.class.run_syncfile_install_hooks
 
         @state.state = :inplace
@@ -533,7 +541,7 @@ class SyncFileWithMetadata < SyncFile
   end
 
   def self.run_syncfile_install_hooks
-    # by default do nothing... (subclasses can override)
+    # by default do nothing... (subclasses can override this)
   end
 
   def statemsg
@@ -586,7 +594,8 @@ class SyncFileWithMetadata < SyncFile
           File.rename(path_to_verify, final_path)
           info(1, "Moved #{ path_to_verify } to #{ final_path }")
 
-          # this can fail, does not matter (normally we'll try later anyway)
+          # This can fail and that might be only a temporary error,
+          # so ignore errors.
           self.class.run_syncfile_install_hooks
         end
         @state.state = :inplace
@@ -600,6 +609,7 @@ class SyncFileWithMetadata < SyncFile
           # Do not delete in case the file is in final_path... even though
           # the file is probably broken, it is probably better to leave it
           # and try to patch/download a new one in its place.
+          # (Verified this might happen if --force-verify option was given.)
         end
       end
     end
@@ -657,7 +667,7 @@ class Image < SyncFileWithMetadata
     end
   end
 
-  # Create the current image from an old image by using a patch. First
+  # Create the current image from an old image by using a patch.  First
   # all the possible diffs are sorted by size and the list is scanned twice:
   # first to check if there is an existing baseimage that has a patch
   # available and if none is found, then the smallest sized diff for an
@@ -697,6 +707,8 @@ class Image < SyncFileWithMetadata
       end
     end
 
+    # These are needed to run for each image so that those can be used by
+    # netboot (diskless) clients.
     run_command.call('/usr/sbin/puavo-bootserver-generate-nbd-exports')
     run_command.call('/usr/sbin/puavo-bootserver-update-tftpboot --prune')
 
@@ -760,7 +772,7 @@ class Diff < SyncFileWithMetadata
   end
 
   def patch_from_old
-    # diff can not be patched from old, so just return failure
+    # Diffs can not be patched from old/anything, so just return failure.
     return false
   end
 end
@@ -799,8 +811,8 @@ class ManagedImages
     rescue Errno::ENOENT
       raise "Unexpected problem opening #{ path }" if path != Filepath
 
-      # if path == Filepath and it does not exist we should initialize it
-      # with an empty hash/json
+      # If path == Filepath and it does not exist we should initialize it
+      # with an empty hash/json.
       file = File.open(path, 'w')
       file.write( {}.to_json )
       file.close
@@ -819,7 +831,8 @@ class ManagedImages
   # removed even if one series is removed where it is within.
   # (The images that may be in several series may be "branching" or "merging"
   # images... for example some image might be in the middle of series "Ubuntu",
-  # yet at the same time be at the beginning of a series "Gentoo").
+  # yet at the same time be at the beginning of a series "Gentoo", or
+  # some production image series might contain a subset of development images).
   def remove_unused(all_series, synced_series, force_delete_unmanaged)
     info(5, "Removing all unused images/diffs from series")
     failed_series_names \
@@ -849,8 +862,8 @@ class ManagedImages
     end
 
     if !all_deleted_ok || !failed_series_names.empty?
-      # if we failed at deleting some stuff, try again later, only after
-      # success we are ready to remove stuff from Filepath
+      # If we failed at deleting some stuff, do not remove any paths from
+      # Filepath, we should try again some later time.
       warning(4, "Not updating #{ Filepath } due to sync/deletion errors")
       return false
     end
@@ -959,7 +972,9 @@ module SeriesControl
       statuscode = 1
     end
 
-    if options[:keep_unused]
+    if options[:image]
+      info(5, "Given --image option, not removing unused images/diffs")
+    elsif options[:keep_unused]
       info(5, "Given --keep-unused option, not removing unused images/diffs")
     elsif options[:image]
       info(5, "Given --image option, not removing unused images/diffs")
@@ -980,15 +995,15 @@ module SeriesControl
   end
 
   def self.get_all_series(options)
-    # Load series information from various sources: lookup --url parameters
-    # first, and if those are not given, lookup sources specified in bootserver
-    # information in Puavo.  Check out --file parameters as well (if some series
-    # is defined in --file parameters, these will override previous ones).
+    # Load series information from various sources: lookup urls from
+    # --url parameters and from Puavo, and fetch series information from those
+    # urls.   Check series information from --file parameters as well,
+    # and add up all these sources.
     all_series_list = []
 
     series_urls = options[:url]
-    if series_urls.empty? && !options[:no_puavo_series_url_lookup]
-      series_urls = fetch_series_urls()
+    if !options[:no_puavo_series_url_lookup]
+      series_urls += fetch_series_urls()
     end
     series_urls.each do |series_url|
       all_series_list << fetch_and_parse_series_data(series_url)
@@ -1052,8 +1067,9 @@ module SeriesControl
     series_by_name = {}
     http.request_get(uri.path) do |response|
       if !response.kind_of?(Net::HTTPOK)
-        # do not let this out as empty series... otherwise temporary download
-        # failure might result in removing all images/diffs in this series
+        # Do not let a failed fetch slip out as empty series... otherwise
+        # temporary download failure might result in removing all images/diffs
+        # in this series.
         raise "Error in fetching #{ source_url }," \
                 + " response code #{ response.code }"
       end
@@ -1112,19 +1128,19 @@ $options = Hash.new
 parser = OptionParser.new do |opts|
   opts.banner = <<BANNER_EOF
   Image sync tool for bootservers to download client images from image server.
-  This tool touches only files that have .img or rdiff ending.
+  This tool touches only files that have .img or .rdiff ending.
 
   Image series is a collection of images that are based on same underlying
   system.  They are versioned and updates from older to newer versions are
   supported.
 
-  Images are downloaded from an image server. The series is defined by a JSON
+  Images are downloaded from an image server.  The series is defined by a JSON
   file that contains information about images and diffs.  The image source
   URL is defined in bootserver settings in Puavo and the script queries the
   information from puavo-rest by default.  Series information is parsed from
   the JSON files and by default the following images and diffs are downloaded:
 
-  * Newest image from each series
+  * Two newest images from each series
   * Diffs from 2nd and 3rd newest image in the series
   * All images used by netboot devices
   * All preferred images used by non-netboot devices
@@ -1136,37 +1152,43 @@ parser = OptionParser.new do |opts|
   An example that defines two images and a diff between them:
 
 {
-  "demo-trusty": {
+  "ltsp-lukiolaiskannettava-trusty-i386": {
     "images": [
       {
-        "size": 10146996224,
-        "sha256": "24e2f84a89a0b0126e0cfd457fe016016181e82f9e49d437fd465de69525b271",
-        "url": "https://imageserver.puavo.org/demo-trusty-2015-03-25-104000-i386.img",
-        "filename": "demo-trusty-2015-03-25-104000-i386.img",
-        "id": "demo-trusty-2015-03-25-104000-i386",
-        "version": 20150325104000
+        "version": "20150811123012",
+        "urls": [
+          "https://images.opinsys.fi/ltsp-lukiolaiskannettava-trusty-2015-08-11-123012-i386.img"
+        ],
+        "size": 7375872000,
+        "sha256": "e46708056a43e85280b2e6544d080697762e2c6efd0bb1d287439747758ffa5b",
+        "id": "ltsp-lukiolaiskannettava-trusty-2015-08-11-123012-i386",
+        "filename": "ltsp-lukiolaiskannettava-trusty-2015-08-11-123012-i386.img",
+        "diffs": []
       },
       {
+        "version": "20150828091345",
+        "urls": [
+          "https://images.opinsys.fi/ltsp-lukiolaiskannettava-trusty-2015-08-28-091345-i386.img"
+        ],
+        "size": 7558434816,
+        "sha256": "08970fb71ce87d676729c6f6ecf8be9092558d2e55e2c09bc20c404389b35d94",
+        "id": "ltsp-lukiolaiskannettava-trusty-2015-08-28-091345-i386",
+        "filename": "ltsp-lukiolaiskannettava-trusty-2015-08-28-091345-i386.img",
         "diffs": [
           {
-            "url": "https://imageserver.puavo.org/rdiffs/demo-trusty-2015-03-25-104000--2015-04-10-103142-i386.rdiff",
-            "sha256": "f00a308de2ad01e0a27507412faca5faed288318a225f40d4cd261b647f689fb",
-            "size": 735394218,
-            "version": 20150325104000,
-            "filename": "demo-trusty-2015-03-25-104000--2015-04-10-103142-i386.rdiff"
-          },
-        ],
-        "size": 10213441536,
-        "sha256": "432cb4055664d0c1dc3d9e6a58833ef7939dd5af24d9af2e47f6607ea88f5c60",
-        "url": "https://imageserver.puavo.org/demo-trusty-2015-04-10-103142-i386.img",
-        "filename": "demo-trusty-2015-04-10-103142-i386.img",
-        "id": "demo-trusty-2015-04-10-103142-i386",
-        "version": 20150410103142
-      },
+            "version": "20150811123012",
+            "urls": [
+              "https://images.opinsys.fi/rdiffs/ltsp-lukiolaiskannettava-trusty-2015-08-11-123012--2015-08-28-091345-i386.rdiff"
+            ],
+            "size": 984242918,
+            "sha256": "1e7a67e554e74df6fcc651dec2ccf26be9949b25e951656f9043d43bc269f51f",
+            "filename": "ltsp-lukiolaiskannettava-trusty-2015-08-11-123012--2015-08-28-091345-i386.rdiff"
+          }
+        ]
+      }
     ]
   }
 }
-
 
   Usage: #{script_name} [options]
 
@@ -1232,7 +1254,8 @@ BANNER_EOF
   end
 
   $options[:series] = nil
-  opts.on("--series NAME", "Download only specified series instead of all series specified by the sources") do |series|
+  opts.on("--series NAME",
+          "Download only specified series instead of all series specified by the sources") do |series|
     $options[:series] = series
   end
 
@@ -1243,10 +1266,12 @@ BANNER_EOF
   end
 
   opts.on_tail("-h", "--help", "Show this message") do
-    STDERR.puts opts
+    puts opts
     exit
   end
 end
+
+parser.parse!
 
 at_exit do
   if !$options[:delete_unmanaged_interactively]
@@ -1263,8 +1288,6 @@ at_exit do
     end
   end
 end
-
-parser.parse!
 
 managed_images = nil
 statuscode = 0
