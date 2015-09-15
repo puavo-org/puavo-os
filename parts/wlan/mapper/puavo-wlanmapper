@@ -462,6 +462,7 @@ class MonitorWidget(QWidget):
         self.__ifaceComboBox.setCurrentIndex(len(INTERFACES) - 1)
         self.__ifaceComboBox.activated.connect(self.__saveInterface)
         formLayout.addRow("Interface:", self.__ifaceComboBox)
+        self.__monitor.setInterface(self.__ifaceComboBox.currentText())
 
         self.__dwellSpinBox = QSpinBox()
         self.__dwellSpinBox.setSuffix("ms")
