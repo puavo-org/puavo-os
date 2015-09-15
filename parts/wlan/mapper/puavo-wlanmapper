@@ -362,6 +362,7 @@ class Monitor(QObject):
         self.__horst_outfile_path = os.path.join(_tmpdir, 'horst.out')
         self.__horst_configfile_path = os.path.join(_tmpdir, 'horst.conf')
 
+        self.__isTerminated = False
         self.setChannelDwellTime(500)
 
     def channelDwellTime(self):
@@ -400,6 +401,7 @@ class Monitor(QObject):
 
         args = ['-c', self.__horst_configfile_path]
 
+        self.__isTerminated = False
         self.__process.start("%s-horst" % os.path.abspath(__file__), args,
                              QIODevice.ReadOnly)
 
@@ -417,8 +419,13 @@ class Monitor(QObject):
 
     def terminate(self):
         if self.__process:
+            self.__isTerminated = True
             self.__process.close()
             self.__process = None
+
+    @property
+    def isTerminated(self):
+        return self.__isTerminated
 
     def readBeacons(self):
         result = []
@@ -530,7 +537,7 @@ class MonitorWidget(QWidget):
         self.__progressTimer.stop()
         self.__progressBar.setFormat("Ready")
         self.__progressBar.setValue(0)
-        if not isSuccess:
+        if not isSuccess and not self.__monitor.isTerminated:
             self.__errorMessageBox.setText(self.__monitor.errorText())
             self.__errorMessageBox.show()
             self.__errorMessageBox.raise_()
