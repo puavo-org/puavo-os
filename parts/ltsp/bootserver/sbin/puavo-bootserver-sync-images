@@ -116,18 +116,17 @@ class Series
 
   def mark_image_in_use(image_id, managed_images)
     image = @by_id[image_id]
-    if image
-      image.mark_in_use(@series_name, managed_images)
-    end
+    return nil unless image
+
+    return image.mark_in_use(@series_name, managed_images)
   end
 
   def mark_imagediff_in_use(old_image_id, new_image_id, managed_images)
     old_image = @by_id[old_image_id]
     new_image = @by_id[new_image_id]
+    return nil unless old_image && new_image
 
-    if old_image && new_image
-      new_image.mark_diff_in_use(old_image, @series_name, managed_images)
-    end
+    return new_image.mark_diff_in_use(old_image, @series_name, managed_images)
   end
 
   def add_diff(from_version, to_version, filename, sha256, size, urls)
@@ -143,29 +142,57 @@ class Series
   # Query puavo-rest for all devices and check used images.
   # Images and diffs are marked.
   def mark_syncfiles_used_by_puavo_devices(managed_images)
+    info(5, "Checking which images/diffs are needed by Puavo devices")
+
     client = PuavoRestClient.new :auth => :etc
 
     res = client.get("/v3/devices")
     devices = res.parse()
 
+    devices_for_syncfiles = {}
+
     devices.each do |device|
       bootmode             = device["boot_mode"]
       current_image        = device["current_image"]
+      hostname             = device["hostname"]
       preferred_boot_image = device["preferred_boot_image"]
       preferred_image      = device["preferred_image"]
 
-      mark_image_in_use(preferred_image, managed_images)
+      add_to_devices_for_syncfiles = lambda do |syncfile|
+        return unless hostname
+        devices_for_syncfiles[syncfile.filename] ||= {}
+        devices_for_syncfiles[syncfile.filename][ hostname ] = 1
+      end
+
+      syncfile = mark_image_in_use(preferred_image, managed_images)
+      add_to_devices_for_syncfiles.call(syncfile) if syncfile
 
       # Netboot devices do not need diffs, but want preferred boot images.
       if bootmode == "netboot"
-        mark_image_in_use(preferred_boot_image, managed_images)
+        syncfile = mark_image_in_use(preferred_boot_image, managed_images)
+        add_to_devices_for_syncfiles.call(syncfile) if syncfile
         next
       end
 
       # Other devices need diffs from current image to preferred.
       if current_image && preferred_image && current_image != preferred_image
-        mark_imagediff_in_use(current_image, preferred_image, managed_images)
+        syncfile = mark_imagediff_in_use(current_image,
+                                         preferred_image,
+                                         managed_images)
+        add_to_devices_for_syncfiles.call(syncfile) if syncfile
       end
+    end
+
+    devices_for_syncfiles.keys.sort.each do |syncfilename|
+      hostnames = devices_for_syncfiles[syncfilename]
+      hostcount = hostnames.keys.count
+      first_hostnames = hostnames.keys.sort.slice(0,3)
+      if hostcount > 3
+        first_hostnames << "..."
+      end
+      hostnames_string = first_hostnames.join(", ")
+      info(5, "  #{ syncfilename } is in use by" \
+                + " #{ hostcount } devices (#{ hostnames_string }).")
     end
   end
 
@@ -290,6 +317,8 @@ class SyncState
 end
 
 class SyncFile
+  attr_reader :filename
+
   def initialize(filename, dir=nil)
     raise 'filename is not set' \
       unless filename && filename.kind_of?(String) && !filename.empty?
@@ -528,6 +557,7 @@ class SyncFileWithMetadata < SyncFile
   def mark_in_use(series_name, managed_images)
     @in_use = true
     managed_images.add_syncfile(series_name, self)
+    return self
   end
 
   def materialize(series_name, managed_images)
@@ -641,9 +671,9 @@ class Image < SyncFileWithMetadata
 
   def mark_diff_in_use(from_image, series_name, managed_images)
     diff = @diffs_from_by_version[from_image.version]
-    if diff
-      diff.mark_in_use(series_name, managed_images)
-    end
+    return false unless diff
+
+    return diff.mark_in_use(series_name, managed_images)
   end
 
   def add_diff(diff)
