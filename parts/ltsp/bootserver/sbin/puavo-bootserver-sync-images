@@ -1232,33 +1232,10 @@ parser = OptionParser.new do |opts|
   Options:
 BANNER_EOF
 
-  $options[:keep_unused] = false
-  opts.on("--keep-unused",
-          "Do no delete images that are not currently used by any client") do
-    $options[:keep_unused] = true
-  end
-
-  $options[:file] = []
-  opts.on("--file PATH",
-          "JSON series information file to read (many accepted)") do |file|
-    $options[:file] << file
-  end
-
-  $options[:url] = []
-  opts.on("--url URL",
-          "Source URL to load JSON series information (many accepted)") do |url|
-    $options[:url] << url
-  end
-
-  $options[:force_verify] = false
-  opts.on("--force-verify", "Force verification of each image/rdiff") do
-    $options[:force_verify] = true
-  end
-
-  $options[:image_limit] = 2
-  opts.on("--image-limit NUMBER",
-          "Number of newest images to sync from all specified series (Default: 2)") do |limit|
-    $options[:image_limit] = Integer(limit)
+  $options[:delete_unmanaged_interactively] = false
+  opts.on("--delete-unmanaged-interactively",
+          "Delete unmanaged images/diffs (interactively)") do
+    $options[:delete_unmanaged_interactively] = true
   end
 
   $options[:diff_limit] = 2
@@ -1272,16 +1249,10 @@ BANNER_EOF
     $options[:download_path] = path
   end
 
-  $options[:no_puavo_series_url_lookup] = false
-  opts.on("--no-puavo-series-url-lookup",
-          "Do not lookup series URLs from Puavo") do
-    $options[:no_puavo_series_url_lookup] = true
-  end
-
-  $options[:delete_unmanaged_interactively] = false
-  opts.on("--delete-unmanaged-interactively",
-          "Delete unmanaged images/diffs (interactively)") do
-    $options[:delete_unmanaged_interactively] = true
+  $options[:file] = []
+  opts.on("--file PATH",
+          "JSON series information file to read (many accepted)") do |file|
+    $options[:file] << file
   end
 
   $options[:force_delete_unmanaged] = false
@@ -1290,16 +1261,45 @@ BANNER_EOF
     $options[:force_delete_unmanaged] = true
   end
 
-  $options[:series] = nil
-  opts.on("--series NAME",
-          "Download only specified series instead of all series specified by the sources") do |series|
-    $options[:series] = series
+  $options[:force_verify] = false
+  opts.on("--force-verify", "Force verification of each image/rdiff") do
+    $options[:force_verify] = true
   end
 
   $options[:image] = nil
   opts.on("--image IMAGEID",
           "Sync only the specified image (no .img suffix)") do |image|
     $options[:image] = image
+  end
+
+  $options[:image_limit] = 2
+  opts.on("--image-limit NUMBER",
+          "Number of newest images to sync from all specified series (Default: 2)") do |limit|
+    $options[:image_limit] = Integer(limit)
+  end
+
+  $options[:keep_unused] = false
+  opts.on("--keep-unused",
+          "Do no delete images that are not currently used by any client") do
+    $options[:keep_unused] = true
+  end
+
+  $options[:no_puavo_series_url_lookup] = false
+  opts.on("--no-puavo-series-url-lookup",
+          "Do not lookup series URLs from Puavo") do
+    $options[:no_puavo_series_url_lookup] = true
+  end
+
+  $options[:series] = nil
+  opts.on("--series NAME",
+          "Download only specified series instead of all series specified by the sources") do |series|
+    $options[:series] = series
+  end
+
+  $options[:url] = []
+  opts.on("--url URL",
+          "Source URL to load JSON series information (many accepted)") do |url|
+    $options[:url] << url
   end
 
   opts.on_tail("-h", "--help", "Show this message") do
