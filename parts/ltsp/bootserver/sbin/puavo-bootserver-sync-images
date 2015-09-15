@@ -140,15 +140,18 @@ class Series
   end
 
   # Query puavo-rest for all devices and check used images.
-  # Images and diffs are marked.
-  def mark_syncfiles_used_by_puavo_devices(managed_images)
+  # Images and diffs are marked, required images returned.
+  def get_images_used_by_puavo_devices(managed_images)
     info(5, "Checking which images/diffs are needed by Puavo devices")
+
+    needed_images = []
 
     client = PuavoRestClient.new :auth => :etc
 
     res = client.get("/v3/devices")
     devices = res.parse()
 
+    # devices_for_syncfiles this is for logging purposes only
     devices_for_syncfiles = {}
 
     devices.each do |device|
@@ -158,28 +161,37 @@ class Series
       preferred_boot_image = device["preferred_boot_image"]
       preferred_image      = device["preferred_image"]
 
+      # XXX should also check that schools match the ones served by this
+      # XXX bootserver... also should check the bootserver settings itself
+      # XXX for images to download/keep
+
       add_to_devices_for_syncfiles = lambda do |syncfile|
         return unless hostname
         devices_for_syncfiles[syncfile.filename] ||= {}
         devices_for_syncfiles[syncfile.filename][ hostname ] = 1
       end
 
-      syncfile = mark_image_in_use(preferred_image, managed_images)
-      add_to_devices_for_syncfiles.call(syncfile) if syncfile
-
-      # Netboot devices do not need diffs, but want preferred boot images.
+      # Netboot devices do not need diffs, but want preferred
+      # boot/desktop images.
+      # XXX THIS NETBOOT TEST IS NOT RELIABLE!  SOME LAPTOPS CAN CURRENTLY
+      # XXX BE NETBOOT DEVICES!!!
       if bootmode == "netboot"
-        syncfile = mark_image_in_use(preferred_boot_image, managed_images)
-        add_to_devices_for_syncfiles.call(syncfile) if syncfile
+        [ preferred_boot_image, preferred_image ].each do |image_id|
+          image = mark_image_in_use(image_id, managed_images)
+          if image
+            needed_images << image
+            add_to_devices_for_syncfiles.call(image)
+          end
+        end
         next
       end
 
       # Other devices need diffs from current image to preferred.
       if current_image && preferred_image && current_image != preferred_image
-        syncfile = mark_imagediff_in_use(current_image,
-                                         preferred_image,
-                                         managed_images)
-        add_to_devices_for_syncfiles.call(syncfile) if syncfile
+        diff = mark_imagediff_in_use(current_image,
+                                     preferred_image,
+                                     managed_images)
+        add_to_devices_for_syncfiles.call(diff) if diff
       end
     end
 
@@ -194,6 +206,8 @@ class Series
       info(5, "  #{ syncfilename } is wanted by" \
                 + " #{ hostcount } devices (#{ hostnames_string }).")
     end
+
+    return needed_images
   end
 
   def images
@@ -221,10 +235,14 @@ class Series
 
       image_list = [ image ]
     else
-      # Check which images and diffs are needed by devices in Puavo.
-      mark_syncfiles_used_by_puavo_devices(managed_images)
+      # Check latest images.
+      newest_images = newest_images(managed_images, options)
 
-      image_list = newest_images(managed_images, options)
+      # Check which images (and diffs) are needed by devices in Puavo.
+      used_images = get_images_used_by_puavo_devices(managed_images)
+
+      image_list = (newest_images + used_images).uniq
+
       if image_list.empty?
         warning(5, "Image list for series #{ @series_name } is empty," \
                      + " doing nothing")
