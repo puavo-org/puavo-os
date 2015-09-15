@@ -9,57 +9,19 @@ case "${command}" in
     configure)
         upstream_dir=$1
 
-        mkdir -p /opt/spotify
-        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client" /opt/spotify/spotify-client
-
-        mkdir -p /usr/bin
-        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/spotify" /usr/bin/spotify
-
-        mkdir -p /usr/share/icons/hicolor/16x16/apps
-        mkdir -p /usr/share/icons/hicolor/22x22/apps
-        mkdir -p /usr/share/icons/hicolor/24x24/apps
-        mkdir -p /usr/share/icons/hicolor/32x32/apps
-        mkdir -p /usr/share/icons/hicolor/48x48/apps
-        mkdir -p /usr/share/icons/hicolor/64x64/apps
-        mkdir -p /usr/share/icons/hicolor/128x128/apps
-        mkdir -p /usr/share/icons/hicolor/256x256/apps
-
-        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/Icons/spotify-linux-16.png" \
-            /usr/share/icons/hicolor/16x16/apps/spotify-client.png
-        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/Icons/spotify-linux-22.png" \
-            /usr/share/icons/hicolor/22x22/apps/spotify-client.png
-        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/Icons/spotify-linux-24.png" \
-            /usr/share/icons/hicolor/24x24/apps/spotify-client.png
-        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/Icons/spotify-linux-32.png" \
-            /usr/share/icons/hicolor/32x32/apps/spotify-client.png
-        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/Icons/spotify-linux-48.png" \
-            /usr/share/icons/hicolor/48x48/apps/spotify-client.png
-        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/Icons/spotify-linux-64.png" \
-            /usr/share/icons/hicolor/64x64/apps/spotify-client.png
-        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/Icons/spotify-linux-128.png" \
-            /usr/share/icons/hicolor/128x128/apps/spotify-client.png
-        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/Icons/spotify-linux-256.png" \
-            /usr/share/icons/hicolor/256x256/apps/spotify-client.png
-
-        mkdir -p /usr/share/applications
-        ln -s -f -T "${upstream_dir}/opt/spotify/spotify-client/spotify.desktop" \
-            /usr/share/applications/spotify.desktop
+        ln -s -f -T "${upstream_dir}/usr/bin/spotify"   /usr/bin/spotify
+        ln -s -f -T "${upstream_dir}/usr/share/spotify" /usr/share/spotify
+        ln -s -f -T "${upstream_dir}/usr/share/doc/spotify-client" \
+                    /usr/share/doc/spotify-client
+        sed 's/^Icon=.*$/Icon=spotify/' /usr/share/spotify/spotify.desktop \
+            > /usr/share/applications/spotify.desktop
         ;;
 
     unconfigure)
-
-        rm -f /usr/bin/spotify \
-            /opt/spotify/spotify-client \
-            /usr/share/applications/spotify.desktop \
-            /usr/share/icons/hicolor/16x16/apps/spotify-client.png \
-            /usr/share/icons/hicolor/22x22/apps/spotify-client.png \
-            /usr/share/icons/hicolor/24x24/apps/spotify-client.png \
-            /usr/share/icons/hicolor/32x32/apps/spotify-client.png \
-            /usr/share/icons/hicolor/48x48/apps/spotify-client.png \
-            /usr/share/icons/hicolor/64x64/apps/spotify-client.png \
-            /usr/share/icons/hicolor/128x128/apps/spotify-client.png \
-            /usr/share/icons/hicolor/256x256/apps/spotify-client.png
-
+        rm -f /usr/bin/spotify                        \
+              /usr/share/applications/spotify.desktop \
+              /usr/share/doc/spotify-client           \
+              /usr/share/spotify
         ;;
 
     unpack)
@@ -79,13 +41,14 @@ case "${command}" in
             --no-cookies \
             --output-document "${tmpfile}" \
             --progress=dot:mega \
-            "${baseurl}/dists/stable/non-free/binary-amd64/Packages" || {
+            "${baseurl}/dists/testing/non-free/binary-i386/Packages" || {
             wget_err=$?
             rm -f "${tmpfile}" || true
             [ ${wget_err} -eq 4 ] && exit 2 ## Network failure.
             exit 1
         }
-        poolpath=$(sed -r '0,/^Package: spotify-client-0.9.17$/ d' "${tmpfile}" | sed -r -n 's/^Filename: (.*)/\1/p' | head -n1)
+        poolpath=$(sed -r '0,/^Package: spotify-client$/ d' "${tmpfile}" \
+                     | sed -r -n 's/^Filename: (.*)/\1/p' | head -n1)
         rm -f "${tmpfile}"
         wget \
             --no-use-server-timestamps \
