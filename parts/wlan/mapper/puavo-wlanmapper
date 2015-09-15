@@ -494,8 +494,9 @@ class MonitorWidget(QWidget):
         dwellLabel.setWhatsThis(dwellWhatsThis)
         formLayout.addRow(dwellLabel, self.__dwellSpinBox)
 
-        self.__statusLabel = QLabel("Ready")
-        formLayout.addRow("Status:", self.__statusLabel)
+        self.__progressBar = QProgressBar()
+        self.__progressBar.setAlignment(Qt.AlignCenter)
+        formLayout.addRow("Status:", self.__progressBar)
 
         layout.addLayout(formLayout)
         self.__view = ZoomableGraphicsView(self)
@@ -504,22 +505,37 @@ class MonitorWidget(QWidget):
 
         self.setLayout(layout)
 
+        self.__progressTimer = QTimer()
+        self.__progressTimer.timeout.connect(self.__updateProgressBar)
+        self.__progressBar.setFormat("Ready")
+        self.__progressBar.setValue(0)
+
+    def __updateProgressBar(self):
+        self.__progressBar.setValue(self.__progressBar.value() +
+                                    self.__monitor.channelDwellTime())
+
     def setScene(self, scene):
         self.__view.setScene(scene)
 
     def __disable(self):
-        self.__statusLabel.setText("Scanning...")
         self.__ifaceComboBox.setEnabled(False)
         self.__dwellSpinBox.setEnabled(False)
+        self.__progressTimer.start(self.__monitor.channelDwellTime())
+        self.__progressBar.setMaximum(self.__monitor.channelDwellTime() * len(CHANS))
+        self.__progressBar.setFormat("Scanning...")
+        self.__progressBar.setValue(0)
 
     def __enable(self, isSuccess):
+        self.__progressTimer.stop()
+        self.__progressBar.setFormat("Ready")
+        self.__progressBar.setValue(0)
         if not isSuccess:
             self.__errorMessageBox.setText(self.__monitor.errorText())
             self.__errorMessageBox.show()
             self.__errorMessageBox.raise_()
             self.__errorMessageBox.activateWindow()
 
-        self.__statusLabel.setText("Ready")
+        self.__progressBar.setFormat("Ready")
         self.__ifaceComboBox.setEnabled(True)
         self.__dwellSpinBox.setEnabled(True)
 
