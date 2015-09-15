@@ -191,7 +191,7 @@ class Series
         first_hostnames << "..."
       end
       hostnames_string = first_hostnames.join(", ")
-      info(5, "  #{ syncfilename } is in use by" \
+      info(5, "  #{ syncfilename } is wanted by" \
                 + " #{ hostcount } devices (#{ hostnames_string }).")
     end
   end
