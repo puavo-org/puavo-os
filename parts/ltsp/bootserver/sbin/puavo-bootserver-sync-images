@@ -730,7 +730,7 @@ class Image < SyncFileWithMetadata
 
     run_command = lambda do |cmd|
       if system(cmd)
-        info(3, %Q{"#{ cmd }" run successfully})
+        info(3, %Q{"#{ cmd }" ran successfully})
       else
         all_ok = false
         warning(3, %Q{"#{ cmd }" returned error code #{ $?.exitstatus }})
