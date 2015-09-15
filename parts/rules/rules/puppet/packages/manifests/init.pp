@@ -160,6 +160,7 @@ class packages {
     , 'gcompris-sound-sv'
     , 'gnibbles'
     , 'gnotski'
+    , 'gnubg'
     , 'gnuchess'
     , 'icebreaker'
     , 'kanagram'
@@ -639,6 +640,7 @@ class packages {
     , 'yelp'
     , 'yelp-tools'
     , 'yelp-xsl'
+    , 'youtube-dl'
     , 'zenity'
     , 'zip'
     , 'zsync' ]:
