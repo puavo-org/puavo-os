@@ -141,7 +141,7 @@ class Series
 
   # Query puavo-rest for all devices and check used images.
   # Images and diffs are marked, required images returned.
-  def get_images_used_by_puavo_devices(managed_images)
+  def get_images_used_by_puavo_devices(bootserver_data, managed_images)
     info(5, "Checking which images/diffs are needed by Puavo devices")
 
     needed_images = []
@@ -154,19 +154,34 @@ class Series
     # devices_for_syncfiles this is for logging purposes only
     devices_for_syncfiles = {}
 
+    bootserver_school_dn_list = Array(bootserver_data["school_dns"])
+
+    # XXX we also should check the bootserver settings itself for images
+    # XXX to download/keep
+
     devices.each do |device|
       bootmode             = device["boot_mode"]
       current_image        = device["current_image"]
       hostname             = device["hostname"]
       preferred_boot_image = device["preferred_boot_image"]
       preferred_image      = device["preferred_image"]
+      school_dn            = device["school_dn"]
 
-      # XXX should also check that schools match the ones served by this
-      # XXX bootserver... also should check the bootserver settings itself
-      # XXX for images to download/keep
+      if !hostname || hostname.empty?
+        warning(3, "There is a device in Puavo that does not have a hostname")
+        next
+      end
+
+      if !school_dn || school_dn.empty?
+        warning(3, "Host #{ hostname } is not associated with any school," \
+                     + " ignoring.")
+        next
+      end
+
+      # Skip hosts that are not served by this bootserver.
+      next unless bootserver_school_dn_list.include?(school_dn)
 
       add_to_devices_for_syncfiles = lambda do |syncfile|
-        return unless hostname
         devices_for_syncfiles[syncfile.filename] ||= {}
         devices_for_syncfiles[syncfile.filename][ hostname ] = 1
       end
@@ -177,6 +192,7 @@ class Series
       # XXX BE NETBOOT DEVICES!!!
       if bootmode == "netboot"
         [ preferred_boot_image, preferred_image ].each do |image_id|
+          next unless image_id
           image = mark_image_in_use(image_id, managed_images)
           if image
             needed_images << image
@@ -203,8 +219,9 @@ class Series
         first_hostnames << "..."
       end
       hostnames_string = first_hostnames.join(", ")
-      info(5, "  #{ syncfilename } is wanted by" \
-                + " #{ hostcount } devices (#{ hostnames_string }).")
+      info(5, "  #{ syncfilename } is wanted by #{ hostcount }" \
+                + (hostcount == 1 ? " device" : " devices")     \
+                + " (#{ hostnames_string }).")
     end
 
     return needed_images
@@ -224,7 +241,7 @@ class Series
              .reverse.slice(0, options[:image_limit]).reverse
   end
 
-  def sync(managed_images, options)
+  def sync(bootserver_data, managed_images, options)
     if options[:image]
       image = get_by_id(options[:image])
       if !image
@@ -239,9 +256,11 @@ class Series
       newest_images = newest_images(managed_images, options)
 
       # Check which images (and diffs) are needed by devices in Puavo.
-      used_images = get_images_used_by_puavo_devices(managed_images)
+      used_images = get_images_used_by_puavo_devices(bootserver_data,
+                                                     managed_images)
 
-      image_list = (newest_images + used_images).uniq
+      image_list = (newest_images + used_images) \
+                     .uniq.sort_by { |image| image.version }
 
       if image_list.empty?
         warning(5, "Image list for series #{ @series_name } is empty," \
@@ -988,7 +1007,9 @@ module SeriesControl
     statuscode = 0
     synced_series = []
 
-    all_series = get_all_series(options)
+    bootserver_data = get_bootserver_data()
+
+    all_series = get_all_series(bootserver_data, options)
 
     info(5, "Cleaning up temporary files")
     all_series.each do |series|
@@ -996,7 +1017,7 @@ module SeriesControl
     end
 
     all_series.each do |series|
-      result = series.sync(managed_images, options)
+      result = series.sync(bootserver_data, managed_images, options)
       if result
         synced_series << series
       elsif !options[:image]
@@ -1042,7 +1063,7 @@ module SeriesControl
     return statuscode
   end
 
-  def self.get_all_series(options)
+  def self.get_all_series(bootserver_data, options)
     # Load series information from various sources: lookup urls from
     # --url parameters and from Puavo, and fetch series information from those
     # urls.   Check series information from --file parameters as well,
@@ -1051,7 +1072,12 @@ module SeriesControl
 
     series_urls = options[:url]
     if !options[:no_puavo_series_url_lookup]
-      series_urls += fetch_series_urls()
+      bootserver_series_urls \
+        = Array(bootserver_data["image_series_source_urls"])
+      raise "Sources urls from Puavo has a bad type" \
+        unless bootserver_series_urls.kind_of?(Array)
+
+      series_urls += bootserver_series_urls
     end
 
     if series_urls.empty?
@@ -1088,7 +1114,7 @@ module SeriesControl
     return all_series.values
   end
 
-  def self.fetch_series_urls
+  def self.get_bootserver_data
     etc = PuavoEtc.new
     client = PuavoRestClient.new :auth => :etc
 
@@ -1096,14 +1122,7 @@ module SeriesControl
 
     info(5, "Loading bootserver data from puavo-rest url: #{ url }")
     res = client.get(url)
-    data = res.parse()
-
-    source_urls = data["image_series_source_urls"] || []
-
-    raise 'Could not read sources urls from Puavo' \
-      unless source_urls.kind_of?(Array)
-
-    return source_urls
+    return res.parse()
   end
 
   # Load series json definition files
