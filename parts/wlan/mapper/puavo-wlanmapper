@@ -181,7 +181,7 @@ class MonitorScene(QGraphicsScene):
         if isSuccess:
 
             measurement = {}
-            for beacon in self.__monitor.readBeacons():
+            for beacon in self.__monitor.beacons:
                 bssidmap = measurement.setdefault(beacon.freq, {})
                 rssi = bssidmap.get(beacon.bssid, beacon.rssi)
                 bssidmap[beacon.bssid] = (beacon.rssi + rssi) / 2
@@ -359,13 +359,15 @@ class Monitor(QObject):
 
         self.__process = None
         self.__horst_errfile_path = os.path.join(_tmpdir, 'horst.err')
-        self.__horst_outfile_path = os.path.join(_tmpdir, 'horst.out')
         self.__horst_configfile_path = os.path.join(_tmpdir, 'horst.conf')
 
         self.__isTerminated = False
         self.setChannelDwellTime(500)
 
         self.__spotNumber = None
+
+        self.__output = ''
+        self.__beacons = None
 
     def channelDwellTime(self):
         return self.__dwell
@@ -389,6 +391,7 @@ class Monitor(QObject):
 
         self.__process.started.connect(self.__emitStarted)
         self.__process.finished.connect(self.__emitStopped)
+        self.__process.readyReadStandardOutput.connect(self.__outputReady)
 
         with open(self.__horst_configfile_path, 'w') as f:
             f.write('quiet\n')
@@ -399,16 +402,37 @@ class Monitor(QObject):
             f.write('channel = 1\n')
             f.write('channel_scan\n')
             f.write('channel_scan_rounds = 1\n')
-            f.write('outfile = {}\n'.format(self.__horst_outfile_path))
+            f.write('outfile = /dev/stdout\n')
 
         args = ['-c', self.__horst_configfile_path]
 
+        self.__beacons = None
         self.__isTerminated = False
         self.__spotNumber = spotNumber
         self.__process.start("%s-horst" % os.path.abspath(__file__), args,
                              QIODevice.ReadOnly)
 
         return True
+
+    def __outputReady(self):
+        self.__output += bytes(self.__process.readAllStandardOutput()).decode()
+        while self.__output:
+            line, sep, self.__output = self.__output.partition('\n')
+            if not sep:
+                self.__output = line
+                break
+
+            if self.__beacons is None:
+                self.__beacons = []
+                continue
+
+            fields = [s.strip() for s in line.strip().split(',')]
+            bssid = fields[4]
+            rssi = fields[6]
+            freq = fields[9]
+            ssid = fields[11]
+            self.__beacons.append(Beacon(rssi=int(rssi), bssid=bssid,
+                                         freq=int(freq), ssid=ssid))
 
     def errorText(self):
         with open(self.__horst_errfile_path) as errfile:
@@ -438,22 +462,9 @@ class Monitor(QObject):
     def spotNumber(self):
         return self.__spotNumber
 
-    def readBeacons(self):
-        result = []
-
-        with open(self.__horst_outfile_path) as f:
-            f.readline() # Ignore header
-            for line in f:
-                fields = [s.strip() for s in line.strip().split(',')]
-                bssid = fields[4]
-                rssi = fields[6]
-                freq = fields[9]
-                ssid = fields[11]
-
-                result.append(Beacon(rssi=int(rssi), bssid=bssid,
-                                     freq=int(freq), ssid=ssid))
-
-        return result
+    @property
+    def beacons(self):
+        return self.__beacons
 
 class MonitorWidget(QWidget):
 
