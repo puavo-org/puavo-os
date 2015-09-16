@@ -359,13 +359,13 @@ class Monitor(QObject):
         self.__horst_errfile_path = os.path.join(_tmpdir, 'horst.err')
         self.__horst_configfile_path = os.path.join(_tmpdir, 'horst.conf')
 
-        self.__isTerminated = False
+        self.isTerminated = False
         self.setChannelDwellTime(500)
 
-        self.__spotNumber = None
+        self.spotNumber = None
 
         self.__output = ''
-        self.__beacons = None
+        self.beacons = None
 
         self.essids = {}
 
@@ -406,9 +406,9 @@ class Monitor(QObject):
 
         args = ['-c', self.__horst_configfile_path]
 
-        self.__beacons = None
-        self.__isTerminated = False
-        self.__spotNumber = spotNumber
+        self.beacons = None
+        self.isTerminated = False
+        self.spotNumber = spotNumber
         self.__process.start("%s-horst" % os.path.abspath(__file__), args,
                              QIODevice.ReadOnly)
 
@@ -422,8 +422,8 @@ class Monitor(QObject):
                 self.__output = line
                 break
 
-            if self.__beacons is None:
-                self.__beacons = []
+            if self.beacons is None:
+                self.beacons = []
                 continue
 
             fields = [s.strip() for s in line.strip().split(',')]
@@ -432,40 +432,28 @@ class Monitor(QObject):
             freq = fields[9]
             ssid = fields[11]
             self.essids[bssid] = ssid
-            self.__beacons.append(Beacon(rssi=int(rssi), bssid=bssid,
-                                         freq=int(freq), ssid=ssid))
+            self.beacons.append(Beacon(rssi=int(rssi), bssid=bssid,
+                                       freq=int(freq), ssid=ssid))
 
     def errorText(self):
         with open(self.__horst_errfile_path) as errfile:
             return errfile.read()
 
     def __emitStarted(self):
-        self.started.emit(self.__spotNumber)
+        self.started.emit(self.spotNumber)
 
     def __emitStopped(self, exitCode, exitStatus):
         if exitStatus == QProcess.CrashExit:
-            self.stopped.emit(self.__spotNumber, False)
+            self.stopped.emit(self.spotNumber, False)
         else:
-            self.stopped.emit(self.__spotNumber, not bool(exitCode))
+            self.stopped.emit(self.spotNumber, not bool(exitCode))
 
     def terminate(self):
         if self.__process:
-            self.__isTerminated = True
-            self.__spotNumber = None
+            self.isTerminated = True
+            self.spotNumber = None
             self.__process.close()
             self.__process = None
-
-    @property
-    def isTerminated(self):
-        return self.__isTerminated
-
-    @property
-    def spotNumber(self):
-        return self.__spotNumber
-
-    @property
-    def beacons(self):
-        return self.__beacons
 
 class MonitorWidget(QWidget):
 
