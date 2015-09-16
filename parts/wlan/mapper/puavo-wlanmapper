@@ -116,13 +116,15 @@ class MonitorScene(QGraphicsScene):
         self.__animation.setRotationAt(0.5, 180)
         self.__animation.setRotationAt(1.0, 360)
 
+        self.__measurements = {}
+
     def setSpotData(self, spotData):
         for spotNumber in self.__spots.keys():
             self.removeSpot(spotNumber)
 
         for spotDatum in spotData:
-            item = self.addSpot(QPointF(spotDatum['x'], spotDatum['y']))
-            item.measurement = spotDatum['measurement']
+            spot = self.addSpot(QPointF(spotDatum['x'], spotDatum['y']))
+            self.__measurements[spot.number] = spotDatum['measurement']
 
     def spotData(self):
         data = []
@@ -130,7 +132,7 @@ class MonitorScene(QGraphicsScene):
             data.append({
                 'x': spot.x(),
                 'y': spot.y(),
-                'measurement': spot.measurement,
+                'measurement': self.__measurements[spot.number],
             })
         return data
 
@@ -185,7 +187,7 @@ class MonitorScene(QGraphicsScene):
                 bssidmap[beacon.bssid] = (beacon.rssi + rssi) / 2
                 self.essids[beacon.bssid] = beacon.ssid
 
-            self.__spots[spotNumber].measurement = measurement
+            self.__measurements[spotNumber] = measurement
 
             self.updateHeatmaps()
 
@@ -244,27 +246,29 @@ class MonitorScene(QGraphicsScene):
 
         for spot in self.__spots.values():
 
-            if spot.measurement is None:
+            measurement = self.__measurements.get(spot.number, None)
+            if measurement is None:
                 continue
 
             xs.append(int(spot.pos().x()))
             ys.append(int(spot.pos().y()))
 
-            for freq, bssids in spot.measurement.items():
+            for freq, bssids in measurement.items():
                 bssidset = bssidsets.setdefault(freq, set())
                 for bssid in bssids:
                     bssidset.add(bssid)
 
         for spot in self.__spots.values():
 
-            if spot.measurement is None:
+            measurement = self.__measurements.get(spot.number, None)
+            if measurement is None:
                 continue
 
             for freq, bssidset in bssidsets.items():
                 bssidmap = result.setdefault(freq, {})
                 for bssid in bssidset:
                     values = bssidmap.setdefault(bssid, [])
-                    value = spot.measurement.get(freq, {}).get(bssid, min(LEVELS))
+                    value = measurement.get(freq, {}).get(bssid, min(LEVELS))
                     values.append(int(round(value)))
 
         return result
@@ -325,25 +329,11 @@ class Spot(QGraphicsPolygonItem):
 
         self.setAcceptHoverEvents(True)
 
-        self.measurement = None
-
         Spot.__number += 1
         self.number = Spot.__number
 
     def hoverEnterEvent(self, event):
         self.setCursor(QCursor(Qt.PointingHandCursor))
-
-    @property
-    def measurement(self):
-        return self.__measurement
-
-    @measurement.setter
-    def measurement(self, measurement):
-        if measurement is None:
-            self.setBrush(QBrush(QColor("beige")))
-        else:
-            self.setBrush(QBrush(QColor("#66ff66")))
-        self.__measurement = measurement
 
 def get_dot11_interfaces():
     result = []
