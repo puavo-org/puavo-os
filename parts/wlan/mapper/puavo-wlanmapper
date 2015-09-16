@@ -679,10 +679,10 @@ class MainWindow(QMainWindow):
                 raise e
         os.mkdir(scenedir)
 
-        with open(os.path.join(scenedir, "spots.pickle"), "w") as f:
+        with open(os.path.join(scenedir, "spots.pickle"), "wb") as f:
             pickle.dump(self.__monitorScene.spotData(), f)
 
-        with open(os.path.join(scenedir, "essids.pickle"), "w") as f:
+        with open(os.path.join(scenedir, "essids.pickle"), "wb") as f:
             pickle.dump(self.__monitorScene.essids, f)
 
         shutil.copy(os.path.join(_tmpdir, "layout.png"), scenedir)
