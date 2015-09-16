@@ -275,7 +275,9 @@ end
 def prepare_puavopkg()
   log(Syslog::LOG_INFO, "preparing puavo-pkg\n")
 
-  File.open('/etc/puavo-pkg/puavo-pkg.conf', 'w') do |f|
+  confpath = '/etc/puavo-pkg/puavo-pkg.conf'
+  temp_confpath = "#{ confpath }.tmp"
+  File.open(temp_confpath, 'w') do |f|
     f.print(<<'EOF')
 ### This file is sourced by puavo-pkg Bash script. It must not contain
 ### anything else than the variable definitions described below.
@@ -287,8 +289,11 @@ PUAVO_PKG_CACHEDIR=/images/puavo-pkg/cache
 PUAVO_PKG_ROOTDIR=/images/puavo-pkg/root
 EOF
   end
+  File.rename(temp_confpath, confpath)
 
-  File.open('/etc/puavo-pkg/puavo-pkg-updater.conf', 'w') do |f|
+  confpath = '/etc/puavo-pkg/puavo-pkg-updater.conf'
+  temp_confpath = "#{ confpath }.tmp"
+  File.open(temp_confpath, 'w') do |f|
     f.print(<<'EOF')
 {
   "bundlepath": "puavo-pkg/puavo-pkg-installers-bundle.tar",
@@ -296,6 +301,7 @@ EOF
 }
 EOF
   end
+  File.rename(temp_confpath, confpath)
 end
 
 def puavo_pkg(*args)
