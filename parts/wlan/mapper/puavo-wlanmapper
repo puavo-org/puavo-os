@@ -164,8 +164,7 @@ class MonitorScene(QGraphicsScene):
 
     def removeSpot(self, spot):
         self.__spots.remove(spot)
-        if spot == self.__monitoredSpot:
-            self.toggleMonitoring(spot)
+        self.stopMonitoring(spot)
         self.removeItem(spot)
         self.updateHeatmaps()
 
@@ -189,18 +188,19 @@ class MonitorScene(QGraphicsScene):
 
             self.updateHeatmaps()
 
-        self.toggleMonitoring(self.__monitoredSpot)
+        self.__monitoredSpot = None
+
+    def stopMonitoring(self, spot):
+        if spot is self.__monitoredSpot:
+            self.__monitor.terminate()
+            return True
+        return False
 
     def toggleMonitoring(self, spot):
-        self.__monitor.terminate()
-
-        if self.__monitoredSpot == spot:
-            self.__monitoredSpot = None
-            return
-
-        self.__monitoredSpot = spot
-
-        self.__monitor.start()
+        if not self.stopMonitoring(spot):
+            self.__monitor.terminate()
+            self.__monitoredSpot = spot
+            self.__monitor.start()
 
     def updateHeatmaps(self):
         measurements = self.measurements()
@@ -271,6 +271,36 @@ class MonitorScene(QGraphicsScene):
 
         return result
 
+    def mouseDoubleClickEvent(self, event):
+        spot = self.itemAt(event.scenePos())
+        if spot is None:
+            return
+
+        self.toggleMonitoring(spot)
+
+        event.accept()
+
+    def contextMenuEvent(self, event):
+        spot = self.itemAt(event.scenePos())
+        if spot is None:
+            return
+
+
+        menu = QMenu()
+        removeAction = menu.addAction("&Remove")
+        toggleAction = menu.addAction("&Toggle monitoring")
+
+        action = menu.exec_(event.screenPos())
+        if action is None:
+            return
+
+        if action is removeAction:
+            self.removeSpot(spot)
+        elif action is toggleAction:
+            self.toggleMonitoring(spot)
+
+        event.accept()
+
 class Spot(QGraphicsPolygonItem):
 
     SIZE = 30
@@ -297,31 +327,8 @@ class Spot(QGraphicsPolygonItem):
 
         self.measurement = None
 
-        self.__removeAction = QAction("&Remove", None)
-        self.__removeAction.triggered.connect(self.__remove)
-
-        self.__toggleMonitoringAction = QAction("&Toggle monitoring", None)
-        self.__toggleMonitoringAction.triggered.connect(self.__toggleMonitoring)
-
-        self.__contextMenu = QMenu()
-        self.__contextMenu.addAction(self.__removeAction)
-        self.__contextMenu.addAction(self.__toggleMonitoringAction)
-
-    def __toggleMonitoring(self):
-        self.scene().toggleMonitoring(self)
-
-    def __remove(self):
-        self.scene().removeSpot(self)
-
     def hoverEnterEvent(self, event):
         self.setCursor(QCursor(Qt.PointingHandCursor))
-
-    def mouseDoubleClickEvent(self, event):
-        self.__toggleMonitoring()
-        event.accept()
-
-    def contextMenuEvent(self, event):
-        self.__contextMenu.exec_(event.screenPos())
 
     @property
     def measurement(self):
