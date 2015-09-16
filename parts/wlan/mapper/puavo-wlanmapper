@@ -96,7 +96,6 @@ class MonitorScene(QGraphicsScene):
         self.__monitor.stopped.connect(self.__monitorStopped)
 
         self.__spots = {}
-        self.essids = {}
 
         self.__layoutPixmapItem = self.addPixmap(QPixmap())
         self.__layoutPixmapItem.setZValue(-1)
@@ -185,7 +184,6 @@ class MonitorScene(QGraphicsScene):
                 bssidmap = measurement.setdefault(beacon.freq, {})
                 rssi = bssidmap.get(beacon.bssid, beacon.rssi)
                 bssidmap[beacon.bssid] = (beacon.rssi + rssi) / 2
-                self.essids[beacon.bssid] = beacon.ssid
 
             self.__measurements[spotNumber] = measurement
 
@@ -369,6 +367,8 @@ class Monitor(QObject):
         self.__output = ''
         self.__beacons = None
 
+        self.essids = {}
+
     def channelDwellTime(self):
         return self.__dwell
 
@@ -431,6 +431,7 @@ class Monitor(QObject):
             rssi = fields[6]
             freq = fields[9]
             ssid = fields[11]
+            self.essids[bssid] = ssid
             self.__beacons.append(Beacon(rssi=int(rssi), bssid=bssid,
                                          freq=int(freq), ssid=ssid))
 
@@ -676,7 +677,7 @@ class MainWindow(QMainWindow):
                 QPixmap(os.path.join(_tmpdir, "layout.png")))
 
             essids_picklefile = archive_file.extractfile("scene/essids.pickle")
-            self.__monitorScene.essids = pickle.load(essids_picklefile)
+            self.__monitor.essids = pickle.load(essids_picklefile)
 
             spots_picklefile = archive_file.extractfile("scene/spots.pickle")
             self.__monitorScene.setSpotData(pickle.load(spots_picklefile))
@@ -705,7 +706,7 @@ class MainWindow(QMainWindow):
             pickle.dump(self.__monitorScene.spotData(), f)
 
         with open(os.path.join(scenedir, "essids.pickle"), "wb") as f:
-            pickle.dump(self.__monitorScene.essids, f)
+            pickle.dump(self.__monitor.essids, f)
 
         shutil.copy(os.path.join(_tmpdir, "layout.png"), scenedir)
 
