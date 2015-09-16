@@ -142,7 +142,7 @@ class Series
   # Query puavo-rest for all devices and check used images.
   # Images and diffs are marked, required images returned.
   def get_images_used_by_puavo_devices(bootserver_data, managed_images)
-    info(5, "Checking which images/diffs are needed by Puavo devices")
+    info(5, "Checking which images/diffs are needed by bootserver/devices")
 
     needed_images = []
 
@@ -156,8 +156,14 @@ class Series
 
     bootserver_school_dn_list = Array(bootserver_data["school_dns"])
 
-    # XXX we also should check the bootserver settings itself for images
-    # XXX to download/keep
+    if bootserver_data["preferred_image"]
+      image = mark_image_in_use(bootserver_data["preferred_image"],
+                                managed_images)
+      if image
+        info(5, "  #{ image.filename } is wanted by this bootserver itself.")
+        needed_images << image
+      end
+    end
 
     devices.each do |device|
       bootmode             = device["boot_mode"]
