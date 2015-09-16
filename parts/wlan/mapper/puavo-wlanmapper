@@ -94,9 +94,8 @@ class MonitorScene(QGraphicsScene):
         self.__monitor = monitor
         self.__monitor.started.connect(self.__monitorStarted)
         self.__monitor.stopped.connect(self.__monitorStopped)
-        self.__monitoredSpot = None
 
-        self.__spots = []
+        self.__spots = {}
         self.essids = {}
 
         self.__layoutPixmapItem = self.addPixmap(QPixmap())
@@ -118,8 +117,8 @@ class MonitorScene(QGraphicsScene):
         self.__animation.setRotationAt(1.0, 360)
 
     def setSpotData(self, spotData):
-        for spot in self.__spots:
-            self.removeSpot(spot)
+        for spotNumber in self.__spots.keys():
+            self.removeSpot(spotNumber)
 
         for spotDatum in spotData:
             item = self.addSpot(QPointF(spotDatum['x'], spotDatum['y']))
@@ -127,7 +126,7 @@ class MonitorScene(QGraphicsScene):
 
     def spotData(self):
         data = []
-        for spot in self.__spots:
+        for spot in self.__spots.values():
             data.append({
                 'x': spot.x(),
                 'y': spot.y(),
@@ -136,11 +135,11 @@ class MonitorScene(QGraphicsScene):
         return data
 
     def addSpot(self, pos):
-        item = Spot()
-        item.setPos(pos)
-        self.addItem(item)
-        self.__spots.append(item)
-        return item
+        spot = Spot()
+        spot.setPos(pos)
+        self.addItem(spot)
+        self.__spots[spot.number] = spot
+        return spot
 
     def setLayoutPixmap(self, pixmap):
         self.__layoutPixmapItem.setPixmap(pixmap)
@@ -162,17 +161,18 @@ class MonitorScene(QGraphicsScene):
             self.addSpot(event.scenePos())
             event.accept()
 
-    def removeSpot(self, spot):
-        self.__spots.remove(spot)
-        self.stopMonitoring(spot)
+    def removeSpot(self, spotNumber):
+        spot = self.__spots.pop(spotNumber)
+        self.stopMonitoring(spotNumber)
         self.removeItem(spot)
         self.updateHeatmaps()
 
-    def __monitorStarted(self):
-        self.__animation.setItem(self.__monitoredSpot)
+    def __monitorStarted(self, spotNumber):
+        spot = self.__spots[spotNumber]
+        self.__animation.setItem(spot)
         self.__animation.timeLine().start()
 
-    def __monitorStopped(self, isSuccess):
+    def __monitorStopped(self, spotNumber, isSuccess):
         self.__animation.timeLine().stop()
         self.__animation.setStep(0)
 
@@ -184,23 +184,21 @@ class MonitorScene(QGraphicsScene):
                 rssi = bssidmap.get(beacon.bssid, beacon.rssi)
                 bssidmap[beacon.bssid] = (beacon.rssi + rssi) / 2
                 self.essids[beacon.bssid] = beacon.ssid
-            self.__monitoredSpot.measurement = measurement
+
+            self.__spots[spotNumber].measurement = measurement
 
             self.updateHeatmaps()
 
-        self.__monitoredSpot = None
-
-    def stopMonitoring(self, spot):
-        if spot is self.__monitoredSpot:
+    def stopMonitoring(self, spotNumber):
+        if spotNumber == self.__monitor.spotNumber:
             self.__monitor.terminate()
             return True
         return False
 
-    def toggleMonitoring(self, spot):
-        if not self.stopMonitoring(spot):
+    def toggleMonitoring(self, spotNumber):
+        if not self.stopMonitoring(spotNumber):
             self.__monitor.terminate()
-            self.__monitoredSpot = spot
-            self.__monitor.start()
+            self.__monitor.start(spotNumber)
 
     def updateHeatmaps(self):
         measurements = self.measurements()
@@ -244,7 +242,7 @@ class MonitorScene(QGraphicsScene):
 
         bssidsets = {}
 
-        for spot in self.__spots:
+        for spot in self.__spots.values():
 
             if spot.measurement is None:
                 continue
@@ -257,7 +255,7 @@ class MonitorScene(QGraphicsScene):
                 for bssid in bssids:
                     bssidset.add(bssid)
 
-        for spot in self.__spots:
+        for spot in self.__spots.values():
 
             if spot.measurement is None:
                 continue
@@ -276,7 +274,7 @@ class MonitorScene(QGraphicsScene):
         if spot is None:
             return
 
-        self.toggleMonitoring(spot)
+        self.toggleMonitoring(spot.number)
 
         event.accept()
 
@@ -295,15 +293,17 @@ class MonitorScene(QGraphicsScene):
             return
 
         if action is removeAction:
-            self.removeSpot(spot)
+            self.removeSpot(spot.number)
         elif action is toggleAction:
-            self.toggleMonitoring(spot)
+            self.toggleMonitoring(spot.number)
 
         event.accept()
 
 class Spot(QGraphicsPolygonItem):
 
     SIZE = 30
+
+    __number = 1
 
     def __init__(self):
         QGraphicsPolygonItem.__init__(self)
@@ -326,6 +326,9 @@ class Spot(QGraphicsPolygonItem):
         self.setAcceptHoverEvents(True)
 
         self.measurement = None
+
+        Spot.__number += 1
+        self.number = Spot.__number
 
     def hoverEnterEvent(self, event):
         self.setCursor(QCursor(Qt.PointingHandCursor))
@@ -356,8 +359,8 @@ class Monitor(QObject):
     MIN_CHANNEL_DWELL_TIME = 100
     MAX_CHANNEL_DWELL_TIME = 5000
 
-    started = pyqtSignal()
-    stopped = pyqtSignal(bool)
+    started = pyqtSignal(int)
+    stopped = pyqtSignal(int, bool)
 
     def __init__(self, interface, *args):
         QObject.__init__(self, *args)
@@ -372,6 +375,8 @@ class Monitor(QObject):
         self.__isTerminated = False
         self.setChannelDwellTime(500)
 
+        self.__spotNumber = None
+
     def channelDwellTime(self):
         return self.__dwell
 
@@ -385,14 +390,14 @@ class Monitor(QObject):
     def setInterface(self, interface):
         self.__iface = interface
 
-    def start(self):
+    def start(self, spotNumber):
         if self.__process is not None:
             return False
 
         self.__process = QProcess(self)
         self.__process.setStandardErrorFile(self.__horst_errfile_path)
 
-        self.__process.started.connect(self.started)
+        self.__process.started.connect(self.__emitStarted)
         self.__process.finished.connect(self.__emitStopped)
 
         with open(self.__horst_configfile_path, 'w') as f:
@@ -409,6 +414,7 @@ class Monitor(QObject):
         args = ['-c', self.__horst_configfile_path]
 
         self.__isTerminated = False
+        self.__spotNumber = spotNumber
         self.__process.start("%s-horst" % os.path.abspath(__file__), args,
                              QIODevice.ReadOnly)
 
@@ -418,21 +424,29 @@ class Monitor(QObject):
         with open(self.__horst_errfile_path) as errfile:
             return errfile.read()
 
+    def __emitStarted(self):
+        self.started.emit(self.__spotNumber)
+
     def __emitStopped(self, exitCode, exitStatus):
         if exitStatus == QProcess.CrashExit:
-            self.stopped.emit(False)
+            self.stopped.emit(self.__spotNumber, False)
         else:
-            self.stopped.emit(not bool(exitCode))
+            self.stopped.emit(self.__spotNumber, not bool(exitCode))
 
     def terminate(self):
         if self.__process:
             self.__isTerminated = True
+            self.__spotNumber = None
             self.__process.close()
             self.__process = None
 
     @property
     def isTerminated(self):
         return self.__isTerminated
+
+    @property
+    def spotNumber(self):
+        return self.__spotNumber
 
     def readBeacons(self):
         result = []
@@ -540,7 +554,7 @@ class MonitorWidget(QWidget):
         self.__progressBar.setFormat("Scanning...")
         self.__progressBar.setValue(0)
 
-    def __enable(self, isSuccess):
+    def __enable(self, spotNumber, isSuccess):
         self.__progressTimer.stop()
         self.__progressBar.setFormat("Ready")
         self.__progressBar.setValue(0)
