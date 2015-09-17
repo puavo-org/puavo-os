@@ -169,7 +169,7 @@ class MonitorScene(QGraphicsScene):
         self.__animation.setItem(self.__currentSpot)
         self.__animation.timeLine().start()
 
-    def __monitorStopped(self, spotNumber, isSuccess):
+    def __monitorStopped(self, isSuccess):
         self.__animation.timeLine().stop()
         self.__animation.setStep(0)
 
@@ -268,7 +268,7 @@ class Monitor(QObject):
     MAX_CHANNEL_DWELL_TIME = 5000
 
     started = pyqtSignal(int)
-    stopped = pyqtSignal(int, bool)
+    stopped = pyqtSignal(bool)
 
     def __init__(self, interface, *args):
         QObject.__init__(self, *args)
@@ -371,7 +371,7 @@ class Monitor(QObject):
             self.measurements[self.spotNumber] = self.__measurement
             self.__measurement = None
 
-        self.stopped.emit(self.spotNumber, isSuccess)
+        self.stopped.emit(isSuccess)
 
     def terminate(self):
         if self.__process:
@@ -469,7 +469,7 @@ class MonitorWidget(QWidget):
         self.__progressBar.setFormat("Scanning...")
         self.__progressBar.setValue(0)
 
-    def __enable(self, spotNumber, isSuccess):
+    def __enable(self, isSuccess):
         self.__progressTimer.stop()
         self.__progressBar.setFormat("Ready")
         self.__progressBar.setValue(0)
