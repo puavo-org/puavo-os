@@ -189,6 +189,7 @@ class MonitorSpot(QGraphicsPolygonItem):
         dropShadowEffect.setBlurRadius(5)
         self.setGraphicsEffect(dropShadowEffect)
         self.setFlag(QGraphicsItem.ItemIsMovable)
+        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges)
 
         self.setAcceptHoverEvents(True)
 
@@ -205,6 +206,13 @@ class MonitorSpot(QGraphicsPolygonItem):
         self.__animation.setItem(self)
 
         self.__hasMonitor = False
+
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.ItemPositionHasChanged:
+            if self.scene() is not None:
+                QCoreApplication.postEvent(self.scene(), SpotModifiedEvent())
+            return
+        return QGraphicsPolygonItem.itemChange(self, change, value)
 
     def mouseDoubleClickEvent(self, event):
         self.toggleMonitor()
@@ -250,9 +258,17 @@ class MonitorSpot(QGraphicsPolygonItem):
     def setMeasurement(self, measurement):
         self.__measurement = measurement
         self.setBrush(QBrush(QColor("lightgreen")))
+        if self.scene() is not None:
+            QCoreApplication.postEvent(self.scene(), SpotModifiedEvent())
 
     def measurement(self):
         return self.__measurement
+
+class SpotModifiedEvent(QEvent):
+    TYPE = QEvent.registerEventType()
+
+    def __init__(self):
+        QEvent.__init__(self, SpotModifiedEvent.TYPE)
 
 def get_dot11_interfaces():
     result = []
