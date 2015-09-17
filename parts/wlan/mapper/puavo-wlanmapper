@@ -178,15 +178,7 @@ class MonitorScene(QGraphicsScene):
         self.__animation.setStep(0)
 
         if isSuccess:
-
-            measurement = {}
-            for beacon in self.__monitor.beacons:
-                bssidmap = measurement.setdefault(beacon.freq, {})
-                rssi = bssidmap.get(beacon.bssid, beacon.rssi)
-                bssidmap[beacon.bssid] = (beacon.rssi + rssi) / 2
-
-            self.__measurements[spotNumber] = measurement
-
+            self.__measurements[spotNumber] = self.__monitor.measurements[spotNumber]
             self.updateHeatmaps()
 
     def stopMonitoring(self, spotNumber):
@@ -340,8 +332,6 @@ def get_dot11_interfaces():
             result.append(iface)
     return result
 
-Beacon = collections.namedtuple('Beacon', ['rssi', 'bssid', 'freq', 'ssid'])
-
 class Monitor(QObject):
 
     MIN_CHANNEL_DWELL_TIME = 100
@@ -365,9 +355,10 @@ class Monitor(QObject):
         self.spotNumber = None
 
         self.__output = ''
-        self.beacons = None
+        self.__measurement = None
 
         self.essids = {}
+        self.measurements = {}
 
     def channelDwellTime(self):
         return self.__dwell
@@ -406,7 +397,7 @@ class Monitor(QObject):
 
         args = ['-c', self.__horst_configfile_path]
 
-        self.beacons = None
+        self.__measurement = None
         self.isTerminated = False
         self.spotNumber = spotNumber
         self.__process.start("%s-horst" % os.path.abspath(__file__), args,
@@ -422,18 +413,19 @@ class Monitor(QObject):
                 self.__output = line
                 break
 
-            if self.beacons is None:
-                self.beacons = []
+            if self.__measurement is None:
+                self.__measurement = {}
                 continue
 
             fields = [s.strip() for s in line.strip().split(',')]
             bssid = fields[4]
-            rssi = fields[6]
-            freq = fields[9]
+            rssi = int(fields[6])
+            freq = int(fields[9])
             ssid = fields[11]
             self.essids[bssid] = ssid
-            self.beacons.append(Beacon(rssi=int(rssi), bssid=bssid,
-                                       freq=int(freq), ssid=ssid))
+
+            bssidmap = self.__measurement.setdefault(freq, {})
+            bssidmap[bssid] = (rssi + bssidmap.get(bssid, rssi)) / 2
 
     def errorText(self):
         with open(self.__horst_errfile_path) as errfile:
@@ -443,10 +435,13 @@ class Monitor(QObject):
         self.started.emit(self.spotNumber)
 
     def __emitStopped(self, exitCode, exitStatus):
-        if exitStatus == QProcess.CrashExit:
-            self.stopped.emit(self.spotNumber, False)
-        else:
-            self.stopped.emit(self.spotNumber, not bool(exitCode))
+        isSuccess = exitStatus == QProcess.NormalExit and exitCode == 0
+
+        if isSuccess:
+            self.measurements[self.spotNumber] = self.__measurement
+            self.__measurement = None
+
+        self.stopped.emit(self.spotNumber, isSuccess)
 
     def terminate(self):
         if self.__process:
