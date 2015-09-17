@@ -498,7 +498,7 @@ class MainWindow(QMainWindow):
 
         self.__monitor = monitor
 
-        self.__monitorScene = None
+        self.__monitorScene = MonitorScene(monitor)
 
         self.setWindowTitle("Puavo WLAN Mapper")
 
@@ -566,6 +566,7 @@ class MainWindow(QMainWindow):
     def __setupDockWidgets(self):
         self.__monitorDockWidget = QDockWidget(self)
         self.__monitorWidget = MonitorWidget(self.__monitor, self)
+        self.__monitorWidget.setScene(self.__monitorScene)
         self.__monitorDockWidget.setWidget(self.__monitorWidget)
         self.__monitorDockWidget.setWindowTitle("Monitor")
         self.addDockWidget(Qt.LeftDockWidgetArea, self.__monitorDockWidget)
@@ -578,9 +579,7 @@ class MainWindow(QMainWindow):
         if not filepath:
             return
 
-        self.__monitorScene = MonitorScene(self.__monitor)
         self.__saveProjectAsAction.setEnabled(True)
-        self.__monitorWidget.setScene(self.__monitorScene)
         self.__monitor.terminate()
 
         with tarfile.open(str(filepath), "r:gz") as archive_file:
@@ -643,10 +642,9 @@ class MainWindow(QMainWindow):
                                  msg.format(filepath))
         else:
             shutil.copy(filepath, os.path.join(_tmpdir, "layout.png"))
-            self.__monitorScene = MonitorScene(self.__monitor)
+            self.__monitorScene.setSpotData(())
             self.__monitorScene.setLayoutPixmap(layoutPixmap)
             self.__saveProjectAsAction.setEnabled(True)
-            self.__monitorWidget.setScene(self.__monitorScene)
             self.__monitor.terminate()
 
     def __showAboutDialog(self):
