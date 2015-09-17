@@ -86,8 +86,6 @@ class ZoomableGraphicsView(QGraphicsView):
 
 class MonitorScene(QGraphicsScene):
 
-    heatmapsAdded = pyqtSignal(list)
-
     def __init__(self, monitor):
         QGraphicsScene.__init__(self)
 
@@ -99,9 +97,6 @@ class MonitorScene(QGraphicsScene):
 
         self.__layoutPixmapItem = self.addPixmap(QPixmap())
         self.__layoutPixmapItem.setZValue(-1)
-
-        self.__heatmaps = {}
-        self.__currentHeatmap = None
 
         timeLine = QTimeLine(2500)
         timeLine.setLoopCount(0)
@@ -144,15 +139,6 @@ class MonitorScene(QGraphicsScene):
 
     def setLayoutPixmap(self, pixmap):
         self.__layoutPixmapItem.setPixmap(pixmap)
-
-    def setCurrentHeatmap(self, heatmapName):
-        if self.__currentHeatmap is not None:
-            self.__currentHeatmap.setVisible(False)
-        self.__currentHeatmap = self.__heatmaps[str(heatmapName)]
-        self.__currentHeatmap.setVisible(True)
-
-    def heatmapNames(self):
-        return self.__heatmaps.keys()
 
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
