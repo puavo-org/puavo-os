@@ -194,11 +194,8 @@ class MonitorSpot(QGraphicsPolygonItem):
 
         self.__measurement = None
 
-        timeLine = QTimeLine(2500)
-        timeLine.setLoopCount(0)
-
         self.__animation = QGraphicsItemAnimation()
-        self.__animation.setTimeLine(timeLine)
+        self.__animation.setTimeLine(QTimeLine())
         self.__animation.setScaleAt(0.0, 1, 1)
         self.__animation.setScaleAt(0.5, 2, 2)
         self.__animation.setScaleAt(1.0, 1, 1)
@@ -213,6 +210,7 @@ class MonitorSpot(QGraphicsPolygonItem):
         self.toggleMonitor()
 
     def __monitorStarted(self):
+        self.__animation.timeLine().setDuration(self.__monitor.channelDwellTime() * len(CHANS))
         self.__animation.timeLine().start()
 
     def __monitorStopped(self, isSuccess):
