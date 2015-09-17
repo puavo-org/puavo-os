@@ -20,7 +20,6 @@ fi
 
 use_rate_limit=false
 do_image_update=true
-delete_overlays=false
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -31,16 +30,11 @@ while [ $# -gt 0 ]; do
             echo "Update device configuration and images."
             echo
             echo "Options:"
-            echo "    --delete-overlays            delete attached overlays when deleting old images"
-            echo "    --use-rate-limit             limit the image download rate"
-            echo "    --no-image-update            do not update images, only configurations"
-            echo "    -h, --help                   print help and exit"
+            echo "    --use-rate-limit   limit the image download rate"
+            echo "    --no-image-update  do not update images, only configurations"
+            echo "    -h, --help         print help and exit"
             echo
             exit 0
-            ;;
-        --delete-overlays)
-            shift
-            delete_overlays=true
             ;;
         --use-rate-limit)
             shift
@@ -88,8 +82,7 @@ if ! $do_image_update; then
 else
     # do the whole update (configuration update + image update)
     if $dbus_cmd org.puavo.client.update.Update \
-                 "boolean:${use_rate_limit}"    \
-                 "boolean:${delete_overlays}" >/dev/null; then
+                 "boolean:${use_rate_limit}" >/dev/null; then
         echo 'System update started.'
     else
         echo 'Starting system update failed.' >&2

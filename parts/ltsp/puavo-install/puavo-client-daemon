@@ -134,7 +134,7 @@ class Updater < DBus::Object
     return thread
   end
 
-  def image_update(use_rate_limit, delete_overlays)
+  def image_update(use_rate_limit)
     thread = $image_update_thread = Thread.new do
       wait_thr, out_thr, err_thr = nil, nil, nil
 
@@ -144,8 +144,7 @@ class Updater < DBus::Object
 
         stdin, stdout, stderr, wait_thr \
           = Open3.popen3('/usr/lib/puavo-ltsp-install/update-images',
-                         use_rate_limit  ? 'true' : 'false',
-                         delete_overlays ? 'true' : 'false',
+                         use_rate_limit ? 'true' : 'false',
                          { :pgroup => true })
 
         stdin.close
@@ -312,28 +311,8 @@ class Updater < DBus::Object
       self.UpdateCancelled
     end
 
-    dbus_method :HasOldOverlays, 'out b' do
-      begin
-        output, errput, status \
-          = Open3.capture3('/usr/lib/puavo-ltsp-install/ls-old-imageoverlays',
-                           '/images',
-                           '/imageoverlays')
-        if not status.success? then
-          errmsg = 'Failed to list old overlays: error code ' \
-                     + "#{ status.exitstatus } / #{ errput }"
-          raise errmsg
-        end
-
-        return !output.empty?
-      rescue StandardError => e
-        logerr(Syslog::LOG_ERR, "%s\n", e.message)
-        raise e
-      end
-    end
-
-    dbus_method :Update,
-                'in use_rate_limit:b, in delete_overlays:b, out b' do
-      |use_rate_limit, delete_overlays|
+    dbus_method :Update, 'in use_rate_limit:b, out b' do |use_rate_limit|
+        # XXX FIX INDENT!
         Thread.new do
           # Configuration update updates our information about what should be
           # our current image (may be the one we are running or another that
@@ -347,7 +326,7 @@ class Updater < DBus::Object
                 ? $image_update_thread                                        \
                 :                                                             \
               (self.check_for_available_image_updates() == :update_available) \
-                ? self.image_update(use_rate_limit, delete_overlays)          \
+                ? self.image_update(use_rate_limit)                           \
                 : nil
 
           puavopkg_upgrade_thread = ($puavopkg_upgrade_thread \

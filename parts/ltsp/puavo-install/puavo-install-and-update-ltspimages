@@ -42,9 +42,9 @@ log() {
 usage() {
   cat <<EOF > /dev/stderr
 Usage:
-  $(basename $0) [--quiet] [--delete-overlays] [--install-from-file path] next_ltsp_image_name"
-  $(basename $0) [--quiet] [--delete-overlays] [--install-from-nbd path]  next_ltsp_image_name"
-  $(basename $0) [--quiet] [--delete-overlays] [--rate-limit rate]        next_ltsp_image_name"
+  $(basename $0) [--quiet] [--install-from-file path] next_ltsp_image_name"
+  $(basename $0) [--quiet] [--install-from-nbd path]  next_ltsp_image_name"
+  $(basename $0) [--quiet] [--rate-limit rate]        next_ltsp_image_name"
 
   -r / --rate-limit must match regexp [0-9]+[km] for kilobytes/megabytes per second
 EOF
@@ -52,7 +52,7 @@ EOF
 }
 
 if ! args=$(getopt -n "$0" -o +f:n:r:q \
-		   -l 'hosttype:,install-from-file:,install-from-nbd:,rate-limit:,quiet,delete-overlays,images-dir:,no-preinst-hook' \
+		   -l 'hosttype:,install-from-file:,install-from-nbd:,rate-limit:,quiet,images-dir:,no-preinst-hook' \
 		   -- "$@"); then
   usage
 fi
@@ -65,15 +65,11 @@ image_from_file=""
 image_from_nbd=""
 rate_limit=""
 quiet=false
-delete_overlays=false
 run_preinst_hook=true
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
-    --delete-overlays)
-      delete_overlays=true; shift
-      ;;
     --hosttype)
       hosttype="$2"; shift; shift
       ;;
@@ -240,18 +236,6 @@ cleanup_previous_runs() {
   rdiffs_dir=$1
   preserve_imagefile=$2
   preserve_rdifffile=$3
-
-  old_imageoverlays=$(
-    "${puavoinstall_libdir}/ls-old-imageoverlays" "${images_dir}" \
-						  /imageoverlays)
-  if [ -n "${old_imageoverlays}" ]; then
-    if ${delete_overlays}; then
-      echo -n "${old_imageoverlays}" | xargs -r -d'\n' -L1 rm -rf
-    else
-      log err "cleanup failed: old images have existing overlays and --delete-overlays was not used" >&2
-      return 1
-    fi
-  fi
 
   # cleanup old ltsp images (and their possible temporary *.tmp files).
   # The ltsp-backup.img is going to go too...

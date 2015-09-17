@@ -56,7 +56,6 @@ class UpdateIndicatorApplet:
 
         self.connect_to_dbus()
         self.setup_log()
-        self.setup_delete_overlays_dialog()
 
         self.indicator.set_menu(menu)
 
@@ -372,23 +371,6 @@ class UpdateIndicatorApplet:
         self.update_button.set_sensitive(sensitivity)
 
 
-    def setup_delete_overlays_dialog(self):
-        delete_overlays_message \
-          = _tr('The old version of the system has been edited '
-                'by the user. Updating the system causes '
-                'all these changes to be lost. '
-                'Do you want to proceed?')
-
-        self.delete_overlays_dialog \
-          = gtk.MessageDialog(None,
-                              gtk.DIALOG_MODAL,
-                              gtk.MESSAGE_QUESTION,
-                              gtk.BUTTONS_YES_NO,
-                              delete_overlays_message)
-
-        self.delete_overlays_dialog.set_title( _tr('Continue updating?') )
-
-
     def setup_log(self):
         self.log_dialog \
           = gtk.Dialog(title=_tr('Update log'),
@@ -422,24 +404,8 @@ class UpdateIndicatorApplet:
 
 
     def update_image(self, widget):
-        delete_overlays = False
-
-        if self.update_iface.HasOldOverlays():
-            delete_overlays \
-              = self.delete_overlays_dialog.run() == gtk.RESPONSE_YES
-
-            self.delete_overlays_dialog.hide()
-            if not delete_overlays:
-                # The user has just answered no, so we are not going
-                # to proceed.  Returning here is not necessary, because
-                # Update() fails if called with delete_overlays=False
-                # when some overlays exist.  By returning we avoid generating
-                # a user-visible error which would only confuse the user.
-                return
-
         self.update_iface \
             .Update(False,
-                    delete_overlays,
                     reply_handler=lambda reply: None,
                     error_handler=self.handle_dbus_error)
 
