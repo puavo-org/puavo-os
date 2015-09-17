@@ -5,6 +5,7 @@
 ENV["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 require 'dbus'
+require 'fileutils'
 require 'json'
 require 'open3'
 require 'puavo/rest-client'
@@ -22,11 +23,86 @@ def log(*args)   ; syslog(STDOUT, *args); end
 def logerr(*args); syslog(STDERR, *args); end
 
 
-$configuration_update_thread = nil
-$image_update_thread         = nil
-$puavopkg_upgrade_thread     = nil
+$configuration_update_thread  = nil
+$delete_image_overlays_thread = nil
+$image_update_thread          = nil
+$puavopkg_upgrade_thread      = nil
 
 class CancelledUpdate < RuntimeError; end
+
+class OverlayHandler < DBus::Object
+  dbus_interface "org.puavo.client.overlayhandler" do
+    dbus_signal :DeleteImageOverlaysFailed, 'in errormsg:s'
+    dbus_signal :DeleteImageOverlaysCompleted
+
+    dbus_method :DeleteImageOverlays do
+      return if $delete_image_overlays_thread
+
+      $delete_image_overlays_thread = Thread.new do
+        begin
+          # Under "/imageoverlays" is image-specific directories, under
+          # that is "default", remove directories under that but do not
+          # remove "default" (it might be currently mounted as part of
+          # overlay-mount).
+          Dir.glob("/imageoverlays/*/*/*").each do |dir|
+            FileUtils.remove_entry_secure(dir)
+          end
+          self.DeleteImageOverlaysCompleted
+        rescue StandardError => e
+          logerr(Syslog::LOG_ERR,
+                 "Error in deleting imageoverlays: %s\n",
+                 e.message)
+          self.DeleteImageOverlaysFailed(e.message)
+        ensure
+          $delete_image_overlays_thread = nil
+        end
+      end
+    end
+
+    dbus_method :ImageOverlaysState, 'out i' do
+      mntpath = '/imageoverlays'
+
+      begin
+        # ruby-filesystem module might help here instead of this
+
+        if !system('mountpoint', '-q', mntpath)
+          logerr(Syslog::LOG_ERR,
+                 "Checking %s but it is not a mountpoint\n",
+                 imageoverlays_path)
+          return -1
+        end
+
+        free_blocks, fb_status \
+          = Open3.capture2("stat", "--file-system", "--format", "%f", mntpath)
+        if !fb_status.success?
+          logerr(Syslog::LOG_ERR,
+                 "Could not get free block count for %s\n",
+                 mntpath)
+          return -1
+        end
+
+        total_blocks, tb_status \
+          = Open3.capture2("stat", "--file-system", "--format", "%b", mntpath)
+        if !tb_status.success?
+          logerr(Syslog::LOG_ERR,
+                 "Could not get total block count for %s\n",
+                 mntpath)
+          return -1
+        end
+
+        free_percentage = 100.0 * Integer(free_blocks) / Integer(total_blocks)
+        return [ (100-free_percentage).round, 0 ].max
+
+      rescue StandardError => e
+        logerr(Syslog::LOG_ERR,
+               "Could not calculate %s utilization percentage: %s\n",
+               mntpath,
+               e.message)
+        return -1
+      end
+    end
+  end
+end
 
 class Updater < DBus::Object
   def check_for_available_image_updates()
@@ -385,10 +461,9 @@ bus = DBus::SystemBus.instance
 # conf file in /etc/dbus-1/system.d).
 service = bus.request_service("org.puavo.client.Daemon")
 
-# Export all dbus-accessible objects. Currently we have only one, but
-# there isn't any reason why we wouldn't them more in future.
-updater = Updater.new("/updater")
-service.export(updater)
+# Export all dbus-accessible objects.
+service.export(OverlayHandler.new('/overlayhandler'))
+service.export(Updater.new("/updater"))
 
 # Run Forrest, run!
 loop = DBus::Main.new
