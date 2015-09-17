@@ -84,17 +84,25 @@ class ZoomableGraphicsView(QGraphicsView):
 
             event.accept()
 
-class MonitorScene(QGraphicsScene):
+class LayoutScene(QGraphicsScene):
+
+    def __init__(self):
+        QGraphicsScene.__init__(self)
+
+        self.__layoutPixmapItem = self.addPixmap(QPixmap())
+        self.__layoutPixmapItem.setZValue(-1)
+
+    def setLayoutPixmap(self, pixmap):
+        self.__layoutPixmapItem.setPixmap(pixmap)
+
+class MonitorScene(LayoutScene):
 
     def __init__(self, monitor):
-        QGraphicsScene.__init__(self)
+        LayoutScene.__init__(self)
 
         self.__monitor = monitor
 
         self.__spots = []
-
-        self.__layoutPixmapItem = self.addPixmap(QPixmap())
-        self.__layoutPixmapItem.setZValue(-1)
 
     def setSpotData(self, spotData):
         for spot in self.__spots:
@@ -120,9 +128,6 @@ class MonitorScene(QGraphicsScene):
         self.addItem(spot)
         self.__spots.append(spot)
         return spot
-
-    def setLayoutPixmap(self, pixmap):
-        self.__layoutPixmapItem.setPixmap(pixmap)
 
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
