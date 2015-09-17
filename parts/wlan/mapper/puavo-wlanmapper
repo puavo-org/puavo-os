@@ -305,9 +305,10 @@ class Spot(QGraphicsPolygonItem):
         points = []
 
         corners = 5
+        corner_angle = math.pi / corners
         spoke_ratio = 0.33
         for i in range(corners * 2):
-            a = math.pi / corners * i
+            a = corner_angle * i - corner_angle / 2
             point = QPointF(math.cos(a), math.sin(a))
             if i % 2:
                 point *= spoke_ratio
