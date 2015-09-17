@@ -295,7 +295,7 @@ class MonitorScene(QGraphicsScene):
 
 class Spot(QGraphicsPolygonItem):
 
-    SIZE = 30
+    SIZE = 20
 
     __number = 1
 
@@ -303,14 +303,18 @@ class Spot(QGraphicsPolygonItem):
         QGraphicsPolygonItem.__init__(self)
 
         points = []
-        for i in range(5):
-            point = QPointF(0.5 + 0.5 * math.cos(4 / 5 * math.pi * i),
-                            0.5 + 0.5 * math.sin(4 / 5 * math.pi * i))
+
+        corners = 5
+        spoke_ratio = 0.33
+        for i in range(corners * 2):
+            a = math.pi / corners * i
+            point = QPointF(math.cos(a), math.sin(a))
+            if i % 2:
+                point *= spoke_ratio
             points.append(point * Spot.SIZE)
 
-        self.setPolygon(QPolygonF(points).translated(-Spot.SIZE / 2,
-                                                     -Spot.SIZE / 2))
-        self.setFillRule(Qt.WindingFill)
+        self.setPolygon(QPolygonF(points))
+        self.setBrush(QBrush(QColor("beige")))
 
         dropShadowEffect = QGraphicsDropShadowEffect()
         dropShadowEffect.setOffset(2)
