@@ -164,7 +164,7 @@ class MonitorScene(QGraphicsScene):
 
     def removeSpot(self, spot):
         self.__spots.pop(spot.number)
-        self.stopMonitoring(spot.number)
+        self.stopMonitoring(spot)
         self.removeItem(spot)
         self.updateHeatmaps()
 
@@ -180,14 +180,14 @@ class MonitorScene(QGraphicsScene):
             self.__measurements[spotNumber] = self.__monitor.measurements[spotNumber]
             self.updateHeatmaps()
 
-    def stopMonitoring(self, spotNumber):
-        if spotNumber == self.__monitor.spotNumber:
+    def stopMonitoring(self, spot):
+        if spot.number == self.__monitor.spotNumber:
             self.__monitor.terminate()
             return True
         return False
 
     def toggleMonitoring(self, spot):
-        if not self.stopMonitoring(spot.number):
+        if not self.stopMonitoring(spot):
             self.__monitor.terminate()
             self.__monitor.start(spot.number)
 
