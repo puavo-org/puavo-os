@@ -318,7 +318,8 @@ class Spot(QGraphicsPolygonItem):
         self.setBrush(QBrush(QColor("beige")))
 
         dropShadowEffect = QGraphicsDropShadowEffect()
-        dropShadowEffect.setOffset(2)
+        dropShadowEffect.setOffset(4)
+        dropShadowEffect.setBlurRadius(5)
         self.setGraphicsEffect(dropShadowEffect)
         self.setFlag(QGraphicsItem.ItemIsMovable)
 
