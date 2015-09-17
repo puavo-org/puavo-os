@@ -131,7 +131,7 @@ class MonitorScene(QGraphicsScene):
         return data
 
     def addSpot(self, pos):
-        spot = Spot()
+        spot = MonitorSpot()
         spot.setPos(pos)
         self.addItem(spot)
         self.__spots.append(spot)
@@ -206,7 +206,7 @@ class MonitorScene(QGraphicsScene):
 
         event.accept()
 
-class Spot(QGraphicsPolygonItem):
+class MonitorSpot(QGraphicsPolygonItem):
 
     SIZE = 20
 
@@ -226,7 +226,7 @@ class Spot(QGraphicsPolygonItem):
             if i % 2:
                 point *= spoke_ratio
 
-            polygon << point * Spot.SIZE;
+            polygon << point * MonitorSpot.SIZE;
 
         self.setPolygon(polygon)
         self.setBrush(QBrush(QColor("beige")))
