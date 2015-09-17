@@ -115,15 +115,13 @@ class MonitorScene(QGraphicsScene):
         self.__animation.setRotationAt(0.5, 180)
         self.__animation.setRotationAt(1.0, 360)
 
-        self.__measurements = {}
-
     def setSpotData(self, spotData):
         for spotNumber in self.__spots.values():
             self.removeSpot(spot)
 
         for spotDatum in spotData:
             spot = self.addSpot(QPointF(spotDatum['x'], spotDatum['y']))
-            self.__measurements[spot.number] = spotDatum['measurement']
+            self.__monitor.measurements[spot.number] = spotDatum['measurement']
 
     def spotData(self):
         data = []
@@ -131,7 +129,7 @@ class MonitorScene(QGraphicsScene):
             data.append({
                 'x': spot.x(),
                 'y': spot.y(),
-                'measurement': self.__measurements[spot.number],
+                'measurement': self.__monitor.measurements[spot.number],
             })
         return data
 
@@ -166,7 +164,6 @@ class MonitorScene(QGraphicsScene):
         self.__spots.pop(spot.number)
         self.stopMonitoring(spot)
         self.removeItem(spot)
-        self.updateHeatmaps()
 
     def __monitorStarted(self):
         self.__animation.setItem(self.__currentSpot)
@@ -175,10 +172,6 @@ class MonitorScene(QGraphicsScene):
     def __monitorStopped(self, spotNumber, isSuccess):
         self.__animation.timeLine().stop()
         self.__animation.setStep(0)
-
-        if isSuccess:
-            self.__measurements[spotNumber] = self.__monitor.measurements[spotNumber]
-            self.updateHeatmaps()
 
     def stopMonitoring(self, spot):
         if spot.number == self.__monitor.spotNumber:
@@ -190,77 +183,6 @@ class MonitorScene(QGraphicsScene):
         if not self.stopMonitoring(spot):
             self.__monitor.terminate()
             self.__monitor.start(spot.number)
-
-    def updateHeatmaps(self):
-        measurements = self.measurements()
-
-        xs = measurements.pop('x')
-        ys = measurements.pop('y')
-
-        width = self.__layoutPixmapItem.pixmap().width()
-        height = self.__layoutPixmapItem.pixmap().height()
-
-        for freq, bssidmap in measurements.items():
-
-            oldHeatmapNames = set(self.__heatmaps.keys())
-
-            ## To RBF-interpolate, we need more than 1 measurement point.
-            if len(xs) > 1:
-
-                for bssid, zs in bssidmap.items():
-                    name = "%dHz_%s" % (freq, bssid)
-                    filepath = os.path.join(_tmpdir, "{}.png".format(name))
-                    save_heatmap(filepath, width, height, xs, ys, zs)
-
-                    pixmap = QPixmap(filepath).scaled(width, height)
-                    try:
-                        self.__heatmaps[name].setPixmap(pixmap)
-                    except KeyError:
-                        heatmap = self.addPixmap(pixmap)
-                        heatmap.setVisible(False)
-                        heatmap.setZValue(-2)
-                        self.__heatmaps[name] = heatmap
-
-            newHeatmapNames = list(set(self.__heatmaps.keys()) - oldHeatmapNames)
-            if newHeatmapNames:
-                self.heatmapsAdded.emit(newHeatmapNames)
-
-    def measurements(self):
-        result = collections.OrderedDict()
-
-        xs = result['x'] = []
-        ys = result['y'] = []
-
-        bssidsets = {}
-
-        for spot in self.__spots.values():
-
-            measurement = self.__measurements.get(spot.number, None)
-            if measurement is None:
-                continue
-
-            xs.append(int(spot.pos().x()))
-            ys.append(int(spot.pos().y()))
-
-            for freq, bssids in measurement.items():
-                bssidset = bssidsets.setdefault(freq, set())
-                for bssid in bssids:
-                    bssidset.add(bssid)
-
-        for spot in self.__spots.values():
-
-            measurement = self.__measurements.get(spot.number, None)
-            if measurement is None:
-                continue
-
-            for freq, bssidset in bssidsets.items():
-                bssidmap = result.setdefault(freq, {})
-                for bssid in bssidset:
-                    values = bssidmap.setdefault(bssid, [])
-                    value = measurement.get(freq, {}).get(bssid, min(LEVELS))
-                    values.append(int(round(value)))
-
-        return result
 
     def mouseDoubleClickEvent(self, event):
         spot = self.itemAt(event.scenePos())
