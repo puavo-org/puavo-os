@@ -302,19 +302,22 @@ class Spot(QGraphicsPolygonItem):
     def __init__(self):
         QGraphicsPolygonItem.__init__(self)
 
-        points = []
-
-        corners = 5
-        corner_angle = math.pi / corners
-        spoke_ratio = 0.33
+        polygon       = QPolygonF()
+        corners       = 5
+        corner_angle  = math.pi / corners
+        spoke_ratio   = 1 / 3
         for i in range(corners * 2):
-            a = corner_angle * i - corner_angle / 2
-            point = QPointF(math.cos(a), math.sin(a))
+            a     = corner_angle * i - corner_angle / 2
+            x     = math.cos(a)
+            y     = math.sin(a)
+            point = QPointF(x, y)
+
             if i % 2:
                 point *= spoke_ratio
-            points.append(point * Spot.SIZE)
 
-        self.setPolygon(QPolygonF(points))
+            polygon << point * Spot.SIZE;
+
+        self.setPolygon(polygon)
         self.setBrush(QBrush(QColor("beige")))
 
         dropShadowEffect = QGraphicsDropShadowEffect()
