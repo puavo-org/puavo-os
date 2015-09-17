@@ -386,7 +386,7 @@ class UpdateIndicatorApplet:
                               gtk.BUTTONS_YES_NO,
                               dialogmsg)
 
-        self.reset_devstate_dialog.set_title( _tr('Reset development state?') )
+        self.reset_devstate_dialog.set_title( _tr('Reset development state') )
 
         response = self.reset_devstate_dialog.run()
         self.reset_devstate_dialog.destroy()
