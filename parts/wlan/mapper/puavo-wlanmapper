@@ -118,8 +118,8 @@ class MonitorScene(QGraphicsScene):
         self.__measurements = {}
 
     def setSpotData(self, spotData):
-        for spotNumber in self.__spots.keys():
-            self.removeSpot(spotNumber)
+        for spotNumber in self.__spots.values():
+            self.removeSpot(spot)
 
         for spotDatum in spotData:
             spot = self.addSpot(QPointF(spotDatum['x'], spotDatum['y']))
@@ -162,15 +162,14 @@ class MonitorScene(QGraphicsScene):
             self.addSpot(event.scenePos())
             event.accept()
 
-    def removeSpot(self, spotNumber):
-        spot = self.__spots.pop(spotNumber)
-        self.stopMonitoring(spotNumber)
+    def removeSpot(self, spot):
+        self.__spots.pop(spot.number)
+        self.stopMonitoring(spot.number)
         self.removeItem(spot)
         self.updateHeatmaps()
 
-    def __monitorStarted(self, spotNumber):
-        spot = self.__spots[spotNumber]
-        self.__animation.setItem(spot)
+    def __monitorStarted(self):
+        self.__animation.setItem(self.__currentSpot)
         self.__animation.timeLine().start()
 
     def __monitorStopped(self, spotNumber, isSuccess):
@@ -287,7 +286,7 @@ class MonitorScene(QGraphicsScene):
             return
 
         if action is removeAction:
-            self.removeSpot(spot.number)
+            self.removeSpot(spot)
         elif action is toggleAction:
             self.toggleMonitoring(spot.number)
 
