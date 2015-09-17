@@ -312,56 +312,55 @@ class Updater < DBus::Object
     end
 
     dbus_method :Update, 'in use_rate_limit:b, out b' do |use_rate_limit|
-        # XXX FIX INDENT!
-        Thread.new do
-          # Configuration update updates our information about what should be
-          # our current image (may be the one we are running or another that
-          # should be updated to).  And it should also update our puavo-pkg
-          # installers.
-          ($configuration_update_thread || self.configuration_update()) \
-            .join rescue nil
+      Thread.new do
+        # Configuration update updates our information about what should be
+        # our current image (may be the one we are running or another that
+        # should be updated to).  And it should also update our puavo-pkg
+        # installers.
+        ($configuration_update_thread || self.configuration_update()) \
+          .join rescue nil
 
-          image_update_thread                                                 \
-            = $image_update_thread                                            \
-                ? $image_update_thread                                        \
-                :                                                             \
-              (self.check_for_available_image_updates() == :update_available) \
-                ? self.image_update(use_rate_limit)                           \
-                : nil
+        image_update_thread                                                 \
+          = $image_update_thread                                            \
+              ? $image_update_thread                                        \
+              :                                                             \
+            (self.check_for_available_image_updates() == :update_available) \
+              ? self.image_update(use_rate_limit)                           \
+              : nil
 
-          puavopkg_upgrade_thread = ($puavopkg_upgrade_thread \
-                                       || self.puavopkg_upgrades())
+        puavopkg_upgrade_thread = ($puavopkg_upgrade_thread \
+                                     || self.puavopkg_upgrades())
 
-          begin
-            if image_update_thread then
-              image_update_thread.join
-              # If we are doing an image update, we do not care when the
-              # puavopkg-upgrade is ready, so we do not wait for the
-              # puavopkg_upgrade_thread.
-            else
-              # We have no need for an image update.
-              #
-              # Because progress indicators are not connected to
-              # puavo-pkg-update (yet?), we should tell that we really do not
-              # know how long this operation will take.
-              self.UpdateProgressIndicator('puavopkg', 0)
+        begin
+          if image_update_thread then
+            image_update_thread.join
+            # If we are doing an image update, we do not care when the
+            # puavopkg-upgrade is ready, so we do not wait for the
+            # puavopkg_upgrade_thread.
+          else
+            # We have no need for an image update.
+            #
+            # Because progress indicators are not connected to
+            # puavo-pkg-update (yet?), we should tell that we really do not
+            # know how long this operation will take.
+            self.UpdateProgressIndicator('puavopkg', 0)
 
-              # Wait for the puavopkg-upgrade to finish.
-              puavopkg_upgrade_thread.join
-            end
-          rescue CancelledUpdate => e
-            # no problemos torremolinos!
-            return
-          rescue StandardError => e
-            self.UpdateFailed
-            raise e
+            # Wait for the puavopkg-upgrade to finish.
+            puavopkg_upgrade_thread.join
           end
-
-          reboot_required = (self.check_for_available_image_updates() \
-                               == :uptodate_yes_reboot)
-
-          self.UpdateCompleted(reboot_required)
+        rescue CancelledUpdate => e
+          # no problemos torremolinos!
+          return
+        rescue StandardError => e
+          self.UpdateFailed
+          raise e
         end
+
+        reboot_required = (self.check_for_available_image_updates() \
+                             == :uptodate_yes_reboot)
+
+        self.UpdateCompleted(reboot_required)
+      end
     end
 
     dbus_method :UpdateConfiguration, 'out b' do
