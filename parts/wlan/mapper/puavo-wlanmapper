@@ -90,27 +90,11 @@ class MonitorScene(QGraphicsScene):
         QGraphicsScene.__init__(self)
 
         self.__monitor = monitor
-        self.__monitor.started.connect(self.__monitorStarted)
-        self.__monitor.stopped.connect(self.__monitorStopped)
 
         self.__spots = []
 
         self.__layoutPixmapItem = self.addPixmap(QPixmap())
         self.__layoutPixmapItem.setZValue(-1)
-
-        timeLine = QTimeLine(2500)
-        timeLine.setLoopCount(0)
-
-        self.__animation = QGraphicsItemAnimation()
-        self.__animation.setTimeLine(timeLine)
-        self.__animation.setScaleAt(0.0, 1, 1)
-        self.__animation.setScaleAt(0.5, 2, 2)
-        self.__animation.setScaleAt(1.0, 1, 1)
-        self.__animation.setRotationAt(0.0, 0)
-        self.__animation.setRotationAt(0.5, 180)
-        self.__animation.setRotationAt(1.0, 360)
-
-        self.__monitoredSpot = None
 
     def setSpotData(self, spotData):
         for spot in self.__spots:
@@ -131,7 +115,7 @@ class MonitorScene(QGraphicsScene):
         return data
 
     def addSpot(self, pos):
-        spot = MonitorSpot()
+        spot = MonitorSpot(self.__monitor)
         spot.setPos(pos)
         self.addItem(spot)
         self.__spots.append(spot)
@@ -150,46 +134,13 @@ class MonitorScene(QGraphicsScene):
 
     def removeSpot(self, spot):
         self.__spots.remove(spot)
-        if self.__monitoredSpot is spot:
-            self.__monitor.terminate()
+        spot.stopMonitor()
         self.removeItem(spot)
-
-    def __monitorStarted(self):
-        self.__monitoredSpot = self.__requestedSpot
-        self.__animation.setItem(self.__monitoredSpot)
-        self.__animation.timeLine().start()
-
-    def __monitorStopped(self, isSuccess):
-        self.__animation.timeLine().stop()
-        self.__animation.setStep(0)
-
-        if isSuccess:
-            self.__monitoredSpot.setMeasurement(self.__monitor.measurement)
-
-        self.__monitoredSpot = None
-
-    def requestMonitoring(self, spot):
-        if spot is self.__monitoredSpot:
-            return False
-
-        self.__monitor.terminate()
-        self.__requestedSpot = spot
-        self.__monitor.start()
-
-    def mouseDoubleClickEvent(self, event):
-        spot = self.itemAt(event.scenePos())
-        if spot is None:
-            return
-
-        self.requestMonitoring(spot)
-
-        event.accept()
 
     def contextMenuEvent(self, event):
         spot = self.itemAt(event.scenePos())
         if spot is None:
             return
-
 
         menu = QMenu()
         removeAction = menu.addAction("&Remove")
@@ -202,7 +153,7 @@ class MonitorScene(QGraphicsScene):
         if action is removeAction:
             self.removeSpot(spot)
         elif action is toggleAction:
-            self.requestMonitoring(spot)
+            spot.toggleMonitor()
 
         event.accept()
 
@@ -210,8 +161,10 @@ class MonitorSpot(QGraphicsPolygonItem):
 
     SIZE = 20
 
-    def __init__(self):
+    def __init__(self, monitor):
         QGraphicsPolygonItem.__init__(self)
+
+        self.__monitor = monitor
 
         polygon       = QPolygonF()
         corners       = 5
@@ -240,6 +193,58 @@ class MonitorSpot(QGraphicsPolygonItem):
         self.setAcceptHoverEvents(True)
 
         self.__measurement = None
+
+        timeLine = QTimeLine(2500)
+        timeLine.setLoopCount(0)
+
+        self.__animation = QGraphicsItemAnimation()
+        self.__animation.setTimeLine(timeLine)
+        self.__animation.setScaleAt(0.0, 1, 1)
+        self.__animation.setScaleAt(0.5, 2, 2)
+        self.__animation.setScaleAt(1.0, 1, 1)
+        self.__animation.setRotationAt(0.0, 0)
+        self.__animation.setRotationAt(0.5, 180)
+        self.__animation.setRotationAt(1.0, 360)
+        self.__animation.setItem(self)
+
+        self.__hasMonitor = False
+
+    def mouseDoubleClickEvent(self, event):
+        self.toggleMonitor()
+
+    def __monitorStarted(self):
+        self.__animation.timeLine().start()
+
+    def __monitorStopped(self, isSuccess):
+        self.__animation.timeLine().stop()
+        self.__animation.setStep(0)
+
+        if isSuccess:
+            self.setMeasurement(self.__monitor.measurement)
+
+        self.__monitor.started.disconnect(self.__monitorStarted)
+        self.__monitor.stopped.disconnect(self.__monitorStopped)
+
+        self.__hasMonitor = False
+
+    def startMonitor(self):
+        self.__monitor.terminate()
+        self.__hasMonitor = True
+
+        self.__monitor.started.connect(self.__monitorStarted)
+        self.__monitor.stopped.connect(self.__monitorStopped)
+
+        self.__monitor.start()
+
+    def stopMonitor(self):
+        if self.__hasMonitor:
+            self.__monitor.terminate()
+
+    def toggleMonitor(self):
+        if self.__hasMonitor:
+            self.stopMonitor()
+        else:
+            self.startMonitor()
 
     def hoverEnterEvent(self, event):
         self.setCursor(QCursor(Qt.PointingHandCursor))
