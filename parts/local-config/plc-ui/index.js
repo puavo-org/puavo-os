@@ -813,7 +813,7 @@ function write_config() {
       break;
   }
 
-  new_config.automatic_image_updates \
+  new_config.automatic_image_updates
      = response.automatic_image_updates.checked;
 
   write_config_to_file(new_config);
