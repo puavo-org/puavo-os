@@ -256,7 +256,9 @@ ResultAny=no
 ResultInactive=no
 ResultActive=yes
 EOF
-    File.open(primaryuserconf_path, 'w') { |f| f.print(primaryuserconf) }
+    tmpfile = "#{ primaryuserconf_path }.tmp"
+    File.open(tmpfile, 'w') { |f| f.print(primaryuserconf) }
+    File.rename(tmpfile, primaryuserconf_path)
   else
     FileUtils.rm_f(primaryuserconf_path)
   end
@@ -284,7 +286,9 @@ ResultAny=no
 ResultInactive=no
 ResultActive=yes
 EOF
-    File.open(lightdmsysconf_path, 'w') { |f| f.print(lightdmsysconf) }
+    tmpfile = "#{ lightdmsysconf_path }.tmp"
+    File.open(tmpfile, 'w') { |f| f.print(lightdmsysconf) }
+    File.rename(tmpfile, lightdmsysconf_path)
   end
 end
 
