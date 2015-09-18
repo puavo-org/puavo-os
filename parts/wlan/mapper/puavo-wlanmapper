@@ -180,6 +180,43 @@ class MonitorScene(LayoutScene):
         if event.type() == SpotModifiedEvent.TYPE:
             self.measurementsChanged.emit()
 
+    def measurements(self):
+        result = {}
+
+        xs = result['x'] = []
+        ys = result['y'] = []
+
+        bssidsets = {}
+
+        for spot in self.__spots:
+
+            measurement = spot.measurement()
+            if measurement is None:
+                continue
+
+            xs.append(int(spot.pos().x()))
+            ys.append(int(spot.pos().y()))
+
+            for freq, bssids in measurement.items():
+                bssidset = bssidsets.setdefault(freq, set())
+                for bssid in bssids:
+                    bssidset.add(bssid)
+
+        for spot in self.__spots:
+
+            measurement = spot.measurement()
+            if measurement is None:
+                continue
+
+            for freq, bssidset in bssidsets.items():
+                bssidmap = result.setdefault(freq, {})
+                for bssid in bssidset:
+                    values = bssidmap.setdefault(bssid, [])
+                    value = measurement.get(freq, {}).get(bssid, min(LEVELS))
+                    values.append(int(round(value)))
+
+        return result
+
     def setSpotData(self, spotData):
         for spot in self.__spots:
             self.removeSpot(spot)
