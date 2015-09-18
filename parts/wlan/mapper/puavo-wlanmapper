@@ -62,6 +62,40 @@ def save_heatmap(filepath, img_w, img_h, xs, ys, zs, scale_factor=0.2):
                              vmin=min(LEVELS), vmax=max(LEVELS),
                              cmap='RdYlBu_r')
 
+class DrawHeatmapsThread(QThread):
+
+    heatmapReady = pyqtSignal(int, str, QImage)
+
+    def __init__(self):
+        QThread.__init__(self)
+
+        self.__doCancel    = False
+        self.__heatmapData = []
+
+    def drawHeatmaps(self, heatmapData):
+        if not heatmapData:
+            return
+
+        self.__doCancel = True
+        self.wait()
+
+        self.__heatmapData = list(heatmapData)
+        self.__doCancel    = False
+
+        QThread.start(self)
+
+    def run(self):
+        while self.__heatmapData and not self.__doCancel:
+            freq, bssid, *rest = self.__heatmapData.pop()
+
+            filepath = os.path.join(_tmpdir, "%dHz_%s.png" % (freq, bssid))
+            save_heatmap(filepath, *rest)
+
+            img = QImage()
+            img.load(filepath)
+
+            self.heatmapReady.emit(freq, bssid, img)
+
 class ZoomableGraphicsView(QGraphicsView):
 
     ZOOM_FACTOR = 1.1
