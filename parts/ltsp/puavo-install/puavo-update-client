@@ -2,24 +2,28 @@
 
 set -e
 
-usage_error()
-{
+on_persistent_overlay() {
+    grep -q "puavo.image.overlay=" /proc/cmdline
+}
+
+usage_error() {
     echo "error: $1" >&2
-    echo "Try '$0 --help' for more information". >&2
+    echo "Try '$0 --help' for more information." >&2
     exit 1
 }
 
 hosttype=$(cat /etc/puavo/hosttype)
 
 if [ "$hosttype" != "laptop" -a \
-    "$hosttype" != "wirelessaccesspoint" ]; then
-    echo 'This script should be run only for laptops and wirelessaccesspoints!' \
-        > /dev/stderr
+     "$hosttype" != "wirelessaccesspoint" ]; then
+    echo 'This script should be run only for laptops' \
+         'and wirelessaccesspoints!' >&2
     exit 1
 fi
 
+force_image_update=false
+no_image_update=false
 use_rate_limit=false
-do_image_update=true
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -30,19 +34,25 @@ while [ $# -gt 0 ]; do
             echo "Update device configuration and images."
             echo
             echo "Options:"
-            echo "    --use-rate-limit   limit the image download rate"
-            echo "    --no-image-update  do not update images, only configurations"
-            echo "    -h, --help         print help and exit"
+            echo "    --force-image-update   update image, no matter what"
+            echo "                           (overrides --no-image-update)"
+            echo "    --no-image-update      do not update images, only configurations"
+            echo "    --use-rate-limit       limit the image download rate"
+            echo "    -h, --help             print help and exit"
             echo
             exit 0
+            ;;
+        --force-image-update)
+            shift
+            force_image_update=true
+            ;;
+        --no-image-update)
+            shift
+            no_image_update=true
             ;;
         --use-rate-limit)
             shift
             use_rate_limit=true
-            ;;
-        --no-image-update)
-            shift
-            do_image_update=false
             ;;
         --)
             shift
@@ -62,6 +72,32 @@ if [ $# -ne 0 ]; then
 fi
 
 set -u
+
+if $force_image_update; then
+    do_image_update=true
+elif $no_image_update; then
+    do_image_update=false
+elif on_persistent_overlay; then
+    # we are on persistent overlay (development mode),
+    # do not do an image update
+    do_image_update=false
+else
+    personally_administered=$(jq .personally_administered \
+                                 /etc/puavo/device.json)
+    if [ "$personally_administered" != "true" ]; then
+        automatic_image_updates=$(jq .automatic_image_updates \
+                                     /etc/puavo/device.json)
+    else
+        automatic_image_updates=$(jq .automatic_image_updates \
+                                     /state/etc/puavo/local/config.json)
+    fi
+
+    if [ "$automatic_image_updates" = "false" ]; then
+        do_image_update=false
+    else
+        do_image_update=true
+    fi
+fi
 
 dbus_cmd="
   dbus-send --dest=org.puavo.client.Daemon
