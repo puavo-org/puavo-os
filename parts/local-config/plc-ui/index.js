@@ -48,10 +48,14 @@ var mc =
         'Allow only the following usernames:':
           'Salli vain seuraavat lukiolaiskannettavatunnukset:',
 
-        'Remote assistance': 'Etätuki',
+        'Automatic updates':
+          'Järjestelmäpäivitykset',
 
-        'Configuration needs corrections, no changes are saved.':
-          'Asetukset vaativat korjausta, muutokset eivät tallennu.',
+        'Automatic system updates keep your systems up-to-date and secure.  You can also update manually.':
+          'Automaattiset järjestelmäpäivitykset pitävät tietokoneesi ajan tasalla ja tietoturvallisena.  Voit päivittää myös käsin.',
+
+        'Enable automatic updates':
+          'Tee järjestelmäpäivitykset automaattisesti',
 
         'You do not have permission to run this tool':
           'Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön',
@@ -93,10 +97,14 @@ var mc =
         'Allow only the following usernames:':
           'Allow only the following usernames:', // XXX
 
-        'Remote assistance': 'Remote assistance', // XXX
+        'Automatic updates':
+          'Automatic updates', // XXX
 
-        'Configuration needs corrections, no changes are saved.':
-          'Inställningarna kräver korrigering, inga ändringar har sparats',
+        'Automatic system updates keep your systems up-to-date and secure.  You can also update manually.':
+          'Automatic system updates keep your systems up-to-date and secure.  You can also update manually.', // XXX
+
+        'Enable automatic updates':
+          'Enable automatic updates', // XXX
 
         'You do not have permission to run this tool':
           'Du har inte rättigheter för att köra det här verktyget',
@@ -496,7 +504,45 @@ function generate_form() {
   // login-access control
   generate_loginaccess_controls(form);
 
+  // automatic-updates controls
+  generate_automatic_update_controls(form);
+
   return pkginstallers;
+}
+
+function generate_automatic_update_controls(form) {
+  var title = document.createElement('h2');
+  title.textContent = mc('Automatic updates');
+  form.appendChild(title);
+
+  var div = document.createElement('div');
+
+  var description_div = document.createElement('div');
+  var description_text
+    = document.createTextNode( mc('Automatic system updates keep your systems up-to-date and secure.  You can also update manually.') );
+  description_div.appendChild(description_text);
+
+  var input_id = 'automatic_updates_checkbox';
+  var label = document.createElement('label');
+  label.textContent = mc('Enable automatic updates');
+  label.setAttribute('for', input_id);
+
+  var input = document.createElement('input');
+  input.setAttribute('id', input_id);
+  input.setAttribute('name', 'automatic_updates');
+  input.setAttribute('type', 'checkbox');
+  if (old_config.automatic_updates) {
+    input.setAttribute('checked', true);
+  } else {
+    input.removeAttribute('checked');
+  }
+  input.addEventListener('click', write_config);
+
+  div.appendChild(description_div);
+  div.appendChild(input);
+  div.appendChild(label);
+
+  form.appendChild(div);
 }
 
 function generate_loginaccess_controls(form) {
@@ -766,6 +812,8 @@ function write_config() {
 
       break;
   }
+
+  new_config.automatic_updates = response.automatic_updates.checked;
 
   write_config_to_file(new_config);
 }
