@@ -167,12 +167,18 @@ class HeatmapScene(QGraphicsScene):
 
 class MonitorScene(LayoutScene):
 
+    measurementsChanged = pyqtSignal()
+
     def __init__(self, monitor):
         LayoutScene.__init__(self)
 
         self.__monitor = monitor
 
         self.__spots = []
+
+    def customEvent(self, event):
+        if event.type() == SpotModifiedEvent.TYPE:
+            self.measurementsChanged.emit()
 
     def setSpotData(self, spotData):
         for spot in self.__spots:
@@ -211,6 +217,7 @@ class MonitorScene(LayoutScene):
         self.__spots.remove(spot)
         spot.stopMonitor()
         self.removeItem(spot)
+        self.measurementsChanged.emit()
 
     def contextMenuEvent(self, event):
         spot = self.itemAt(event.scenePos())
