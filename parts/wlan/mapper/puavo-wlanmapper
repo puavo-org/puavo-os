@@ -129,6 +129,9 @@ class LayoutScene(QGraphicsScene):
     def setLayoutPixmap(self, pixmap):
         self.__layoutPixmapItem.setPixmap(pixmap)
 
+    def layoutPixmap(self):
+        return self.__layoutPixmapItem.pixmap()
+
 class MonitorScene(LayoutScene):
 
     def __init__(self, monitor):
