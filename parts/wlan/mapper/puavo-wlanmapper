@@ -281,6 +281,8 @@ class HeatmapScene(QGraphicsScene):
             heatmap = self.__heatmaps[(freq, bssid)]
         except KeyError:
             heatmap = self.addPixmap(pixmap)
+            heatmap.setToolTip("Channel: %d (%d MHz)\nBSS ID: %s"
+                               % (FREQ_TO_CHAN[freq], freq, bssid))
             layout = self.addPixmap(self.__layoutPixmap.scaled(pixmap.size()))
             try:
                 x_offset = self.__freqs.index(freq)
