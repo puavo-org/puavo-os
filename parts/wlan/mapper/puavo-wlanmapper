@@ -123,13 +123,21 @@ class LayoutScene(QGraphicsScene):
     def __init__(self):
         QGraphicsScene.__init__(self)
 
-        self.__layoutPixmapItem = self.addPixmap(QPixmap())
-        self.__layoutPixmapItem.setZValue(-1)
+        self.__layoutPixmapItem = None
+
+    def clear(self):
+        self.__layoutPixmapItem = None
+        QGraphicsScene.clear(self)
 
     def setLayoutPixmap(self, pixmap):
+        if self.__layoutPixmapItem is None:
+            self.__layoutPixmapItem = self.addPixmap(QPixmap())
+            self.__layoutPixmapItem.setZValue(-1)
         self.__layoutPixmapItem.setPixmap(pixmap)
 
     def layoutPixmap(self):
+        if self.__layoutPixmapItem is None:
+            return None
         return self.__layoutPixmapItem.pixmap()
 
 class HeatmapScene(QGraphicsScene):
@@ -142,6 +150,12 @@ class HeatmapScene(QGraphicsScene):
         self.__bssids   = []
 
         self.__layoutPixmap = None
+
+    def clear(self):
+        self.__heatmaps = {}
+        self.__freqs    = []
+        self.__bssids   = []
+        QGraphicsScene.clear(self)
 
     def setLayoutPixmap(self, pixmap):
         self.__layoutPixmap = pixmap
@@ -184,6 +198,10 @@ class MonitorScene(LayoutScene):
         self.__monitor = monitor
 
         self.__spots = []
+
+    def clear(self):
+        self.__spots = []
+        LayoutScene.clear(self)
 
     def customEvent(self, event):
         if event.type() == SpotModifiedEvent.TYPE:
@@ -743,8 +761,11 @@ class MainWindow(QMainWindow):
             with open(os.path.join(_tmpdir, "layout.png"), "wb") as dst_image:
                 shutil.copyfileobj(src_image, dst_image)
             pixmap = QPixmap(os.path.join(_tmpdir, "layout.png"))
-            self.__monitorScene.setLayoutPixmap(pixmap)
+            self.__heatmapScene.clear()
             self.__heatmapScene.setLayoutPixmap(pixmap)
+
+            self.__monitorScene.clear()
+            self.__monitorScene.setLayoutPixmap(pixmap)
 
             essids_picklefile = archive_file.extractfile("scene/essids.pickle")
             self.__monitor.essids = pickle.load(essids_picklefile)
@@ -798,9 +819,12 @@ class MainWindow(QMainWindow):
                                  msg.format(filepath))
         else:
             shutil.copy(filepath, os.path.join(_tmpdir, "layout.png"))
-            self.__monitorScene.setSpotData(())
-            self.__monitorScene.setLayoutPixmap(layoutPixmap)
+            self.__heatmapScene.clear()
             self.__heatmapScene.setLayoutPixmap(layoutPixmap)
+
+            self.__monitorScene.clear()
+            self.__monitorScene.setLayoutPixmap(layoutPixmap)
+
             self.__saveProjectAsAction.setEnabled(True)
             self.__monitor.terminate()
 
