@@ -522,16 +522,16 @@ function generate_automatic_update_controls(form) {
     = document.createTextNode( mc('Automatic system updates keep your systems up-to-date and secure.  You can also update manually.') );
   description_div.appendChild(description_text);
 
-  var input_id = 'automatic_updates_checkbox';
+  var input_id = 'automatic_image_updates_checkbox';
   var label = document.createElement('label');
   label.textContent = mc('Enable automatic updates');
   label.setAttribute('for', input_id);
 
   var input = document.createElement('input');
   input.setAttribute('id', input_id);
-  input.setAttribute('name', 'automatic_updates');
+  input.setAttribute('name', 'automatic_image_updates');
   input.setAttribute('type', 'checkbox');
-  if (old_config.automatic_updates) {
+  if (old_config.automatic_image_updates) {
     input.setAttribute('checked', true);
   } else {
     input.removeAttribute('checked');
@@ -772,9 +772,9 @@ function read_config() {
     if (ex.code === 'ENOENT') {
       // default config in case everything is missing
       config = {
-        allow_logins_for:  [],
-        automatic_updates: true,
-        version:           2,
+        allow_logins_for:        [],
+        automatic_image_updates: true,
+        version:                 2,
       };
       write_config_to_file(config);
     } else {
@@ -789,9 +789,9 @@ function read_config() {
 function write_config() {
   var response = document.forms[0].elements;
   var new_config = {
-    allow_logins_for:  [],
-    automatic_updates: true,
-    version:           2,
+    allow_logins_for:        [],
+    automatic_image_updates: true,
+    version:                 2,
   };
 
   switch(response.allow_logins_for.value) {
@@ -813,7 +813,8 @@ function write_config() {
       break;
   }
 
-  new_config.automatic_updates = response.automatic_updates.checked;
+  new_config.automatic_image_updates \
+     = response.automatic_image_updates.checked;
 
   write_config_to_file(new_config);
 }

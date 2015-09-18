@@ -64,14 +64,14 @@ def conf_version_2_ok?(conf)
 
   conf['allow_logins_for'].kind_of?(Array) \
     && conf['allow_logins_for'].map { |s| s.kind_of?(String) }.all? \
-    && is_boolean.call(conf['automatic_updates'])
+    && is_boolean.call(conf['automatic_image_updates'])
 end
 
 def migrate_to_conf_version_2(conf, config_path)
   new_conf = {
-               'allow_logins_for'  => conf['allow_logins_for'],
-               'automatic_updates' => true,
-               'version'           => 2,
+               'allow_logins_for'        => conf['allow_logins_for'],
+               'automatic_image_updates' => true,
+               'version'                 => 2,
              }
   tmpfile = "#{ config_path }.tmp"
   File.open(tmpfile, 'w') { |f| f.print(new_conf.to_json) }
