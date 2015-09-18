@@ -132,6 +132,39 @@ class LayoutScene(QGraphicsScene):
     def layoutPixmap(self):
         return self.__layoutPixmapItem.pixmap()
 
+class HeatmapScene(QGraphicsScene):
+
+    def __init__(self):
+        QGraphicsScene.__init__(self)
+
+        self.__heatmaps = {}
+        self.__freqs    = []
+        self.__bssids   = []
+
+    def addHeatmap(self, freq, bssid, img):
+        pixmap = QPixmap.fromImage(img)
+        try:
+            heatmap = self.__heatmaps[(freq, bssid)]
+        except KeyError:
+            heatmap = self.addPixmap(pixmap)
+            try:
+                x_offset = self.__freqs.index(freq)
+            except ValueError:
+                x_offset = len(self.__freqs)
+                self.__freqs.append(freq)
+            try:
+                y_offset = self.__bssids.index(bssid)
+            except ValueError:
+                y_offset = len(self.__bssids)
+                self.__bssids.append(bssid)
+            margin = max(0.1 * pixmap.width(), 0.1 * pixmap.height())
+            heatmap.moveBy(margin, margin)
+            heatmap.moveBy(x_offset * (margin + pixmap.width()),
+                           y_offset * (margin + pixmap.height()))
+            self.__heatmaps[(freq, bssid)] = heatmap
+        else:
+            heatmap.setPixmap(pixmap)
+
 class MonitorScene(LayoutScene):
 
     def __init__(self, monitor):
