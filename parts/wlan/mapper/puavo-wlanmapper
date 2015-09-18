@@ -141,12 +141,18 @@ class HeatmapScene(QGraphicsScene):
         self.__freqs    = []
         self.__bssids   = []
 
+        self.__layoutPixmap = None
+
+    def setLayoutPixmap(self, pixmap):
+        self.__layoutPixmap = pixmap
+
     def addHeatmap(self, freq, bssid, img):
         pixmap = QPixmap.fromImage(img)
         try:
             heatmap = self.__heatmaps[(freq, bssid)]
         except KeyError:
             heatmap = self.addPixmap(pixmap)
+            layout = self.addPixmap(self.__layoutPixmap.scaled(pixmap.size()))
             try:
                 x_offset = self.__freqs.index(freq)
             except ValueError:
@@ -161,6 +167,9 @@ class HeatmapScene(QGraphicsScene):
             heatmap.moveBy(margin, margin)
             heatmap.moveBy(x_offset * (margin + pixmap.width()),
                            y_offset * (margin + pixmap.height()))
+            layout.moveBy(margin, margin)
+            layout.moveBy(x_offset * (margin + pixmap.width()),
+                          y_offset * (margin + pixmap.height()))
             self.__heatmaps[(freq, bssid)] = heatmap
         else:
             heatmap.setPixmap(pixmap)
@@ -733,8 +742,9 @@ class MainWindow(QMainWindow):
             src_image = archive_file.extractfile("scene/layout.png")
             with open(os.path.join(_tmpdir, "layout.png"), "wb") as dst_image:
                 shutil.copyfileobj(src_image, dst_image)
-            self.__monitorScene.setLayoutPixmap(
-                QPixmap(os.path.join(_tmpdir, "layout.png")))
+            pixmap = QPixmap(os.path.join(_tmpdir, "layout.png"))
+            self.__monitorScene.setLayoutPixmap(pixmap)
+            self.__heatmapScene.setLayoutPixmap(pixmap)
 
             essids_picklefile = archive_file.extractfile("scene/essids.pickle")
             self.__monitor.essids = pickle.load(essids_picklefile)
@@ -790,6 +800,7 @@ class MainWindow(QMainWindow):
             shutil.copy(filepath, os.path.join(_tmpdir, "layout.png"))
             self.__monitorScene.setSpotData(())
             self.__monitorScene.setLayoutPixmap(layoutPixmap)
+            self.__heatmapScene.setLayoutPixmap(layoutPixmap)
             self.__saveProjectAsAction.setEnabled(True)
             self.__monitor.terminate()
 
