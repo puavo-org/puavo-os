@@ -118,28 +118,6 @@ class ZoomableGraphicsView(QGraphicsView):
 
             event.accept()
 
-class LayoutScene(QGraphicsScene):
-
-    def __init__(self):
-        QGraphicsScene.__init__(self)
-
-        self.__layoutPixmapItem = None
-
-    def clear(self):
-        self.__layoutPixmapItem = None
-        QGraphicsScene.clear(self)
-
-    def setLayoutPixmap(self, pixmap):
-        if self.__layoutPixmapItem is None:
-            self.__layoutPixmapItem = self.addPixmap(QPixmap())
-            self.__layoutPixmapItem.setZValue(-1)
-        self.__layoutPixmapItem.setPixmap(pixmap)
-
-    def layoutPixmap(self):
-        if self.__layoutPixmapItem is None:
-            return None
-        return self.__layoutPixmapItem.pixmap()
-
 class HeatmapScene(QGraphicsScene):
 
     def __init__(self):
@@ -188,20 +166,34 @@ class HeatmapScene(QGraphicsScene):
         else:
             heatmap.setPixmap(pixmap)
 
-class MonitorScene(LayoutScene):
+class MonitorScene(QGraphicsScene):
 
     measurementsChanged = pyqtSignal()
 
     def __init__(self, monitor):
-        LayoutScene.__init__(self)
+        QGraphicsScene.__init__(self)
 
         self.__monitor = monitor
 
-        self.__spots = []
+        self.__spots            = []
+        self.__layoutPixmapItem = None
 
     def clear(self):
-        self.__spots = []
-        LayoutScene.clear(self)
+        self.__spots            = []
+        self.__layoutPixmapItem = None
+        QGraphicsScene.clear(self)
+
+    def setLayoutPixmap(self, pixmap):
+        if self.__layoutPixmapItem is None:
+            self.__layoutPixmapItem = self.addPixmap(pixmap)
+            self.__layoutPixmapItem.setZValue(-1)
+            return
+        self.__layoutPixmapItem.setPixmap(pixmap)
+
+    def layoutPixmap(self):
+        if self.__layoutPixmapItem is None:
+            return None
+        return self.__layoutPixmapItem.pixmap()
 
     def customEvent(self, event):
         if event.type() == SpotModifiedEvent.TYPE:
