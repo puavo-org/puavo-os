@@ -619,6 +619,7 @@ class MainWindow(QMainWindow):
 
         self.__heatmapScene = HeatmapScene()
         self.__monitorScene = MonitorScene(monitor)
+        self.__monitorScene.measurementsChanged.connect(self.updateHeatmaps)
 
         self.setWindowTitle("Puavo WLAN Mapper")
 
@@ -630,6 +631,30 @@ class MainWindow(QMainWindow):
         self.__setupDockWidgets()
         self.__setupActions()
         self.__setupMenus()
+
+        self.__drawHeatmapsThread = DrawHeatmapsThread()
+        self.__drawHeatmapsThread.heatmapReady.connect(self.__heatmapScene.addHeatmap)
+
+    def updateHeatmaps(self):
+        measurements = self.__monitorScene.measurements()
+
+        xs = measurements.pop('x')
+        ys = measurements.pop('y')
+
+        width = self.__monitorScene.layoutPixmap().width()
+        height = self.__monitorScene.layoutPixmap().height()
+
+        heatmapData = []
+
+        for freq, bssidmap in measurements.items():
+
+            ## To RBF-interpolate, we need more than 1 measurement point.
+            if len(xs) > 1:
+
+                for bssid, zs in bssidmap.items():
+                    heatmapData.append((freq, bssid, width, height, xs, ys, zs))
+
+        self.__drawHeatmapsThread.drawHeatmaps(heatmapData)
 
     def closeEvent(self, event):
         self.__monitor.terminate()
