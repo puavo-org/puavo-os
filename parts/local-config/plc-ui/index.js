@@ -717,14 +717,18 @@ function read_config() {
 
   try {
     config = JSON.parse( fs.readFileSync(config_json_path) );
+    if (!config.version || config.version != 2) {
+      alert('Configuration file ' + config_json_path
+              + ' is on an unknown version, refusing to do anything.')
+      return false;
+    }
   } catch (ex) {
     if (ex.code === 'ENOENT') {
       // default config in case everything is missing
       config = {
-        allow_logins_for:   [],
-        allow_remoteadmins: false,   // historical leftover
-        local_users:        {},      // historical leftover
-        version:            1,
+        allow_logins_for:  [],
+        automatic_updates: true,
+        version:           2,
       };
       write_config_to_file(config);
     } else {
@@ -739,14 +743,9 @@ function read_config() {
 function write_config() {
   var response = document.forms[0].elements;
   var new_config = {
-    allow_logins_for:   [],
-    version:            1,
-
-    // allow_remoteadmins and local_users are historical leftovers that should
-    // always be empty...  I do not want to change the configuration file
-    // version only to clean these up.
-    allow_remoteadmins: false,
-    local_users: {},
+    allow_logins_for:  [],
+    automatic_updates: true,
+    version:           2,
   };
 
   switch(response.allow_logins_for.value) {

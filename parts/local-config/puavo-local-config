@@ -55,17 +55,37 @@ def logerr(*args); syslog(STDERR, *args); end
 def conf_version_1_ok?(conf)
   # conf['local_users'] and conf['allow_remoteadmins'] might exist but are not
   # used anymore, so we do not check for their validity
-
   conf['allow_logins_for'].kind_of?(Array) \
     && conf['allow_logins_for'].map { |s| s.kind_of?(String) }.all?
+end
+
+def conf_version_2_ok?(conf)
+  is_boolean = lambda { |v| v.kind_of?(TrueClass) || v.kind_of?(FalseClass) }
+
+  conf['allow_logins_for'].kind_of?(Array) \
+    && conf['allow_logins_for'].map { |s| s.kind_of?(String) }.all? \
+    && is_boolean.call(conf['automatic_updates'])
+end
+
+def migrate_to_conf_version_2(conf, config_path)
+  new_conf = {
+               'allow_logins_for'  => conf['allow_logins_for'],
+               'automatic_updates' => true,
+               'version'           => 2,
+             }
+  tmpfile = "#{ config_path }.tmp"
+  File.open(tmpfile, 'w') { |f| f.print(new_conf.to_json) }
+  File.rename(tmpfile, config_path)
+
+  new_conf
 end
 
 def ensure_conf_sanity(conf, config_path)
   move_conf = lambda {
                 logerr(Syslog::LOG_CRIT,
                       "Moving configuration file, because it is messed up\n")
-                FileUtils.mv(config_path,
-                             "#{ config_path }.backup-#{ Time.now().to_i }")
+                File.rename(config_path,
+                            "#{ config_path }.backup-#{ Time.now().to_i }")
               }
 
   if conf.nil? then
@@ -75,16 +95,23 @@ def ensure_conf_sanity(conf, config_path)
     return nil
   end
 
-  # this might include migration code if version should be greater
+  # check conf and do possible migration to newer version
 
-  unless conf['version'] == 1 && conf_version_1_ok?(conf) then
-    move_conf.call()
-    return nil
+  # If configuration version is higher than what we know, do not try to
+  # use it and also do not mess up the configuration file.
+  return nil if conf['version'].to_i > 2
+
+  if conf['version'] == 2 && conf_version_2_ok?(conf)
+    return conf
   end
 
-  # all is OK!
+  if conf['version'] == 1 && conf_version_1_ok?(conf) then
+    return migrate_to_conf_version_2(conf, config_path)
+  end
 
-  conf
+  # something is bad, move configuration to backup and return nil
+  move_conf.call()
+  return nil
 end
 
 $primary_user = nil
@@ -350,7 +377,7 @@ def setup_puavo_remote_assistance_applet()
 
   tmp_confpath = "#{ confpath }.tmp"
   File.open(tmp_confpath, 'w') { |f| f.print(applet_config.to_json) }
-  FileUtils.mv(tmp_confpath, confpath)
+  File.rename(tmp_confpath, confpath)
 end
 
 
@@ -423,6 +450,8 @@ rescue StandardError => e
   conf = nil
 end
 
+# conf actually not used here now, but we are responsible for keeping it
+# in correct format (and we might have some direct use for it later).
 conf = ensure_conf_sanity(conf, config_path)
 
 dispatch_table = {
@@ -443,8 +472,6 @@ if apply_configs.empty? then
   print_help()
   exit(1)
 end
-
-
 
 apply_configs.each do |part|
   logerr_fn = lambda do |part, e|
