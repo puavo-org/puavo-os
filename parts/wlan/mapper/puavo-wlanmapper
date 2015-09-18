@@ -400,11 +400,19 @@ class MonitorScene(QGraphicsScene):
 
     def mousePressEvent(self, event):
         QGraphicsScene.mousePressEvent(self, event)
-        if (not event.isAccepted()
-            and event.button() == Qt.LeftButton
-            and not event.modifiers()):
+        if event.isAccepted():
+            return
+
+        if self.__layoutPixmapItem is None:
+            return
+
+        if not self.__layoutPixmapItem.boundingRect().contains(event.scenePos()):
+            return
+
+        if (event.button() == Qt.LeftButton and not event.modifiers()):
             self.addSpot(event.scenePos())
             event.accept()
+            return
 
     def removeSpot(self, spot):
         self.__spots.remove(spot)
