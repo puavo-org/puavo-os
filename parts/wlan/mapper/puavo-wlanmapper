@@ -772,6 +772,9 @@ class MonitorWidget(QWidget):
         self.__progressBar.setFormat("Ready")
         self.__progressBar.setValue(0)
 
+    def minimumSizeHint(self):
+        return QSize(500, 500)
+
     def __updateProgressBar(self):
         self.__progressBar.setValue(self.__progressBar.value() +
                                     self.__monitor.channelDwellTime())
