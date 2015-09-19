@@ -320,7 +320,8 @@ class HeatmapScene(QGraphicsScene):
                             -item.boundingRect().height())
 
             if isFirstBssid:
-                item = self.addText(bssid, HeatmapScene.FONT)
+                item = self.addText("%s\n%s" % (bssid, ESSIDS[bssid]),
+                                    HeatmapScene.FONT)
                 item.moveBy(-item.boundingRect().width(),
                             y_offset * (margin + pixmap.height()) + margin)
         else:
