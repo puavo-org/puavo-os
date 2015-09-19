@@ -782,6 +782,9 @@ class MonitorWidget(QWidget):
     def setScene(self, scene):
         self.__view.setScene(scene)
 
+    def fitAllInMonitorView(self):
+        self.__view.fitAllInView()
+
     def __disable(self):
         self.__ifaceComboBox.setEnabled(False)
         self.__dwellSpinBox.setEnabled(False)
@@ -947,6 +950,8 @@ class MainWindow(QMainWindow):
             spots_picklefile = archive_file.extractfile("scene/spots.pickle")
             self.__monitorScene.setSpotData(pickle.load(spots_picklefile))
 
+        self.__monitorWidget.fitAllInMonitorView()
+
     def __saveProjectAsDialog(self):
         filepath = QFileDialog.getSaveFileName(None,
                                                "Save the project as",
@@ -1001,6 +1006,7 @@ class MainWindow(QMainWindow):
 
             self.__saveProjectAsAction.setEnabled(True)
             self.__monitor.terminate()
+            self.__monitorWidget.fitAllInMonitorView()
 
     def __showAboutDialog(self):
         aboutText =  (
