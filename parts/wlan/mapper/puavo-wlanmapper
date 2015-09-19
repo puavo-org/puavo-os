@@ -837,6 +837,7 @@ class MainWindow(QMainWindow):
 
         self.__drawHeatmapsThread = DrawHeatmapsThread()
         self.__drawHeatmapsThread.heatmapReady.connect(self.__heatmapScene.addHeatmap)
+        self.__drawHeatmapsThread.heatmapReady.connect(self.centralWidget().fitAllInView)
 
     def updateHeatmaps(self):
         measurements = self.__monitorScene.measurements()
