@@ -169,6 +169,7 @@ resource_struct = b"\
 
 qRegisterResourceData(0x01, resource_struct, resource_name, resource_data)
 
+ESSIDS = {}
 LEVELS = range(-95, -20, 5)
 
 _tmpdir = None
@@ -608,8 +609,6 @@ class Monitor(QObject):
         self.__output = ''
         self.measurement = None
 
-        self.essids = {}
-
     def channelDwellTime(self):
         return self.__dwell
 
@@ -671,7 +670,8 @@ class Monitor(QObject):
             rssi = int(fields[6])
             freq = int(fields[9])
             ssid = fields[11]
-            self.essids[bssid] = ssid
+
+            ESSIDS[bssid] = ssid
 
             bssidmap = self.measurement.setdefault(freq, {})
             bssidmap[bssid] = (rssi + bssidmap.get(bssid, rssi)) / 2
@@ -937,7 +937,8 @@ class MainWindow(QMainWindow):
             self.__monitorScene.setLayoutPixmap(pixmap)
 
             essids_picklefile = archive_file.extractfile("scene/essids.pickle")
-            self.__monitor.essids = pickle.load(essids_picklefile)
+            global ESSIDS
+            ESSIDS = pickle.load(essids_picklefile)
 
             spots_picklefile = archive_file.extractfile("scene/spots.pickle")
             self.__monitorScene.setSpotData(pickle.load(spots_picklefile))
@@ -966,7 +967,7 @@ class MainWindow(QMainWindow):
             pickle.dump(self.__monitorScene.spotData(), f)
 
         with open(os.path.join(scenedir, "essids.pickle"), "wb") as f:
-            pickle.dump(self.__monitor.essids, f)
+            pickle.dump(ESSIDS, f)
 
         shutil.copy(os.path.join(_tmpdir, "layout.png"), scenedir)
 
