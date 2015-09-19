@@ -257,6 +257,8 @@ class ZoomableGraphicsView(QGraphicsView):
 
 class HeatmapScene(QGraphicsScene):
 
+    FONT = QFont("Monospace", 56)
+
     def __init__(self):
         QGraphicsScene.__init__(self)
 
@@ -281,19 +283,27 @@ class HeatmapScene(QGraphicsScene):
             heatmap = self.__heatmaps[(freq, bssid)]
         except KeyError:
             heatmap = self.addPixmap(pixmap)
+            channel = FREQ_TO_CHAN[freq]
             heatmap.setToolTip("Channel: %d (%d MHz)\nBSS ID: %s"
-                               % (FREQ_TO_CHAN[freq], freq, bssid))
+                               % (channel, freq, bssid))
             layout = self.addPixmap(self.__layoutPixmap.scaled(pixmap.size()))
+
+            isFirstFreq = False
             try:
                 x_offset = self.__freqs.index(freq)
             except ValueError:
+                isFirstFreq = True
                 x_offset = len(self.__freqs)
                 self.__freqs.append(freq)
+
+            isFirstBssid = False
             try:
                 y_offset = self.__bssids.index(bssid)
             except ValueError:
+                isFirstBssid = True
                 y_offset = len(self.__bssids)
                 self.__bssids.append(bssid)
+
             margin = max(0.1 * pixmap.width(), 0.1 * pixmap.height())
             heatmap.moveBy(margin, margin)
             heatmap.moveBy(x_offset * (margin + pixmap.width()),
@@ -302,6 +312,16 @@ class HeatmapScene(QGraphicsScene):
             layout.moveBy(x_offset * (margin + pixmap.width()),
                           y_offset * (margin + pixmap.height()))
             self.__heatmaps[(freq, bssid)] = heatmap
+
+            if isFirstFreq:
+                item = self.addText("%d" % channel, HeatmapScene.FONT)
+                item.moveBy(x_offset * (margin + pixmap.width()) + margin,
+                            -item.boundingRect().height())
+
+            if isFirstBssid:
+                item = self.addText(bssid, HeatmapScene.FONT)
+                item.moveBy(-item.boundingRect().width(),
+                            y_offset * (margin + pixmap.height()) + margin)
         else:
             heatmap.setPixmap(pixmap)
 
