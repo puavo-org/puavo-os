@@ -213,7 +213,7 @@ class DrawHeatmapsThread(QThread):
         self.__doCancel = True
         self.wait()
 
-        self.__heatmapData = list(heatmapData)
+        self.__heatmapData = list(reversed(sorted(heatmapData)))
         self.__doCancel    = False
 
         QThread.start(self)
