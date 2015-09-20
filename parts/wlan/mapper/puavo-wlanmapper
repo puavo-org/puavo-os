@@ -628,9 +628,11 @@ class MonitorWidget(QWidget):
         layout.addWidget(self.__view)
 
         self.__toolBar = QToolBar()
-        self.__toolBar.addAction(
+        self.__zoomToFitAction = self.__toolBar.addAction(
             QIcon(":icons/zoom_to_fit"),
-            "Zoom to fit").triggered.connect(self.__view.fitAllInView)
+            "Zoom to fit")
+        self.__zoomToFitAction.triggered.connect(self.__view.fitAllInView)
+        self.__zoomToFitAction.setShortcut(QKeySequence("Ctrl+="))
 
         layout.addWidget(self.__toolBar)
 
