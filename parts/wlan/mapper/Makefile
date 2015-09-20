@@ -6,18 +6,21 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
-all: horst
+all: horst puavowlanmapper/icons.py
 
 horst:
 	make -C horst
 	cp horst/horst puavo-wlanmapper-horst
 
+puavowlanmapper/icons.py: icons.qrc icons/*.png
+	pyrcc4 -py3 $< -o $@
+
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 
 install: horst installdirs
+	python3 setup.py install --install-layout=deb --root=$(DESTDIR)
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
-		puavo-wlanmapper \
 		puavo-wlanmapper-horst
 
 clean:

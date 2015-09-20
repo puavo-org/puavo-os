@@ -5,7 +5,8 @@ Maintainer: Opinsys Developers <dev@opinsys.fi>
 Build-Depends: debhelper (>= 8.0.0),
  libncurses5-dev,
  libnl-3-dev,
- libnl-genl-3-dev
+ libnl-genl-3-dev,
+ pyqt4-dev-tools
 Standards-Version: 3.9.3
 Homepage: http://github.com/opinsys/puavo-wlan/
 
