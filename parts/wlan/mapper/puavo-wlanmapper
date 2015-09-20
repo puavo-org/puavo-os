@@ -154,8 +154,9 @@ class HeatmapScene(QGraphicsScene):
         except KeyError:
             heatmap = self.addPixmap(pixmap)
             channel = FREQ_TO_CHAN[freq]
-            heatmap.setToolTip("Channel: %d (%d MHz)\nBSS ID: %s"
-                               % (channel, freq, bssid))
+            essid = ESSIDS[bssid]
+            heatmap.setToolTip("Channel: %d (%d MHz)\nBSSID: %s\nESSID: %s"
+                               % (channel, freq, bssid, essid))
             layout = self.addPixmap(self.__layoutPixmap.scaled(pixmap.size()))
 
             isFirstFreq = False
@@ -189,8 +190,7 @@ class HeatmapScene(QGraphicsScene):
                             -item.boundingRect().height())
 
             if isFirstBssid:
-                item = self.addText("%s\n%s" % (bssid, ESSIDS[bssid]),
-                                    HeatmapScene.FONT)
+                item = self.addText("%s\n%s" % (bssid, essid), HeatmapScene.FONT)
                 item.moveBy(-item.boundingRect().width(),
                             y_offset * (margin + pixmap.height()) + margin)
         else:
