@@ -24,7 +24,6 @@ import math
 import os
 import os.path
 import pickle
-import shutil
 import sys
 import tarfile
 import tempfile
@@ -40,8 +39,6 @@ import puavowlanmapper.icons
 
 ESSIDS = {}
 LEVELS = range(-95, -20, 5)
-
-_tmpdir = None
 
 FREQS = [2412 + i * 5 for i in range(13)] + [2484] + [5180, 5200, 5220, 5240]
 CHANS = [i for i in range(1, 15)] + [36, 40, 44, 48]
@@ -91,11 +88,10 @@ class DrawHeatmapsThread(QThread):
         while self.__heatmapData and not self.__doCancel:
             freq, bssid, *rest = self.__heatmapData.pop()
 
-            filepath = os.path.join(_tmpdir, "%dHz_%s.png" % (freq, bssid))
-            save_heatmap(filepath, *rest)
-
-            img = QImage()
-            img.load(filepath)
+            with tempfile.TemporaryDirectory() as tmpdir:
+                filepath = os.path.join(tmpdir, "%dHz_%s.png" % (freq, bssid))
+                save_heatmap(filepath, *rest)
+                img = QImage(filepath, "png")
 
             self.heatmapReady.emit(freq, bssid, img)
 
@@ -470,8 +466,9 @@ class Monitor(QObject):
         self.__iface = interface
 
         self.__process = None
-        self.__horst_errfile_path = os.path.join(_tmpdir, 'horst.err')
-        self.__horst_configfile_path = os.path.join(_tmpdir, 'horst.conf')
+        self.__tmpdir = tempfile.TemporaryDirectory()
+        self.__horst_errfile_path = os.path.join(self.__tmpdir.name, 'horst.err')
+        self.__horst_configfile_path = os.path.join(self.__tmpdir.name, 'horst.conf')
 
         self.isTerminated = False
         self.setChannelDwellTime(500)
@@ -799,9 +796,8 @@ class MainWindow(QMainWindow):
         with tarfile.open(str(filepath), "r:gz") as archive_file:
 
             src_image = archive_file.extractfile("scene/layout.png")
-            with open(os.path.join(_tmpdir, "layout.png"), "wb") as dst_image:
-                shutil.copyfileobj(src_image, dst_image)
-            pixmap = QPixmap(os.path.join(_tmpdir, "layout.png"))
+            pixmap = QPixmap()
+            pixmap.loadFromData(src_image.read(), "PNG")
             self.__heatmapScene.clear()
             self.__heatmapScene.setLayoutPixmap(pixmap)
 
@@ -829,24 +825,21 @@ class MainWindow(QMainWindow):
         if not str(filepath).endswith('.tar.gz'):
             filepath = '%s.tar.gz' % filepath
 
-        scenedir = os.path.join(_tmpdir, "scene")
-        try:
-            shutil.rmtree(scenedir)
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                raise e
-        os.mkdir(scenedir)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            scenedir = os.path.join(tmpdir, "scene")
+            os.mkdir(scenedir)
 
-        with open(os.path.join(scenedir, "spots.pickle"), "wb") as f:
-            pickle.dump(self.__monitorScene.spotData(), f)
+            with open(os.path.join(scenedir, "spots.pickle"), "wb") as f:
+                pickle.dump(self.__monitorScene.spotData(), f)
 
-        with open(os.path.join(scenedir, "essids.pickle"), "wb") as f:
-            pickle.dump(ESSIDS, f)
+            with open(os.path.join(scenedir, "essids.pickle"), "wb") as f:
+                pickle.dump(ESSIDS, f)
 
-        shutil.copy(os.path.join(_tmpdir, "layout.png"), scenedir)
+            self.__monitorScene.layoutPixmap().save(
+                os.path.join(scenedir, "layout.png"))
 
-        with tarfile.open(str(filepath), "w:gz") as f:
-            f.add(scenedir, "scene")
+            with tarfile.open(str(filepath), "w:gz") as f:
+                f.add(scenedir, "scene")
 
     def __newProjectDialog(self):
         dialog = NewProjectDialog()
@@ -862,7 +855,6 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Failed to load a layout image",
                                  msg.format(filepath))
         else:
-            shutil.copy(filepath, os.path.join(_tmpdir, "layout.png"))
             self.__heatmapScene.clear()
             self.__heatmapScene.setLayoutPixmap(layoutPixmap)
 
@@ -949,31 +941,25 @@ class NewProjectDialog(QDialog):
 INTERFACES = get_dot11_interfaces()
 
 def main():
-    global _tmpdir
-    try:
-        _tmpdir = tempfile.mkdtemp(prefix='puavo-wlanmapper.')
-        app = QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
-        if app.argc() > 1:
-            error_message = "ERROR: invalid number of arguments ({})"
-            print(error_message.format(app.argc() - 1), file=sys.stderr)
-            print("Usage: {}".format(sys.argv[0]), file=sys.stderr)
-            return 1
+    if app.argc() > 1:
+        error_message = "ERROR: invalid number of arguments ({})"
+        print(error_message.format(app.argc() - 1), file=sys.stderr)
+        print("Usage: {}".format(sys.argv[0]), file=sys.stderr)
+        return 1
 
-        if not INTERFACES:
-            QMessageBox.critical(None, "Startup failure",
-                                 "Failed to find any 802.11 devices.")
-            sys.exit(1)
+    if not INTERFACES:
+        QMessageBox.critical(None, "Startup failure",
+                             "Failed to find any 802.11 devices.")
+        sys.exit(1)
 
-        monitor = Monitor(INTERFACES[0])
+    monitor = Monitor(INTERFACES[0])
 
-        win = MainWindow(monitor)
-        win.show()
+    win = MainWindow(monitor)
+    win.show()
 
-        sys.exit(app.exec_())
-    finally:
-        if _tmpdir:
-            shutil.rmtree(_tmpdir)
+    sys.exit(app.exec_())
 
 if __name__ == "__main__":
     main()
