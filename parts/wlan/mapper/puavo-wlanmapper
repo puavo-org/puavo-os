@@ -907,7 +907,7 @@ class NewProjectDialog(QDialog):
 
         imageLineEdit = QLineEdit()
         imageLineEdit.textChanged.connect(self.__checkImageFilePath)
-        browseButton = QPushButton("&Browse")
+        browseButton = QPushButton("&Browse...")
         browseButton.clicked.connect(self.__getLayoutImageFileName)
 
         cancelButton = QPushButton("&Cancel")
@@ -918,13 +918,19 @@ class NewProjectDialog(QDialog):
 
         layout = QVBoxLayout(self)
         formLayout = QFormLayout()
-        browseLayout = QHBoxLayout()
+        self.__browseLayout = QVBoxLayout()
         buttonLayout = QHBoxLayout()
 
-        browseLayout.addWidget(imageLineEdit)
-        browseLayout.addWidget(browseButton)
+        browseLayout2 = QHBoxLayout()
+        browseLayout2.addWidget(imageLineEdit)
+        browseLayout2.addWidget(browseButton)
+        self.__browseLayout.addLayout(browseLayout2)
 
-        formLayout.addRow("Layout image:", browseLayout)
+        self.__imageLabel = QLabel()
+        self.__imageLabel.hide()
+        self.__browseLayout.addWidget(self.__imageLabel)
+
+        formLayout.addRow("Layout image:", self.__browseLayout)
 
         buttonLayout.addWidget(cancelButton)
         buttonLayout.addWidget(createButton)
@@ -939,8 +945,12 @@ class NewProjectDialog(QDialog):
         return self.__imageLineEdit.text()
 
     def __checkImageFilePath(self):
-        self.__createButton.setEnabled(
-            os.path.isfile(self.__imageLineEdit.text()))
+        filepath = self.__imageLineEdit.text()
+        pixmap = QPixmap(filepath, "png")
+        self.__createButton.setEnabled(not pixmap.isNull())
+        self.__imageLabel.setVisible(not pixmap.isNull())
+        if not pixmap.isNull():
+            self.__imageLabel.setPixmap(pixmap.scaledToWidth(self.__browseLayout.geometry().width()))
 
     def __getLayoutImageFileName(self):
         filepath = QFileDialog.getOpenFileName(None,
