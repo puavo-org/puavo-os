@@ -221,6 +221,9 @@ class MonitorScene(QGraphicsScene):
             return None
         return self.__layoutPixmapItem.pixmap()
 
+    def spots(self):
+        return list(self.__spots)
+
     def customEvent(self, event):
         if event.type() == SpotModifiedEvent.TYPE:
             self.measurementsChanged.emit()
@@ -261,24 +264,6 @@ class MonitorScene(QGraphicsScene):
                     values.append(int(round(value)))
 
         return result
-
-    def setSpotData(self, spotData):
-        for spot in self.__spots:
-            self.removeSpot(spot)
-
-        for spotDatum in spotData:
-            spot = self.addSpot(QPointF(spotDatum['x'], spotDatum['y']))
-            spot.setMeasurement(spotDatum['measurement'])
-
-    def spotData(self):
-        data = []
-        for spot in self.__spots:
-            data.append({
-                'x': spot.x(),
-                'y': spot.y(),
-                'measurement': spot.measurement(),
-            })
-        return data
 
     def addSpot(self, pos):
         spot = MonitorSpot(self.__monitor)
@@ -809,7 +794,12 @@ class MainWindow(QMainWindow):
             ESSIDS = pickle.load(essids_picklefile)
 
             spots_picklefile = archive_file.extractfile("scene/spots.pickle")
-            self.__monitorScene.setSpotData(pickle.load(spots_picklefile))
+            spotData = pickle.load(spots_picklefile)
+
+            for spotDatum in spotData:
+                spot = self.__monitorScene.addSpot(QPointF(spotDatum['x'],
+                                                           spotDatum['y']))
+                spot.setMeasurement(spotDatum['measurement'])
 
         self.__monitorWidget.fitAllInMonitorView()
 
@@ -830,7 +820,14 @@ class MainWindow(QMainWindow):
             os.mkdir(scenedir)
 
             with open(os.path.join(scenedir, "spots.pickle"), "wb") as f:
-                pickle.dump(self.__monitorScene.spotData(), f)
+                spotData = []
+                for spot in self.__monitorScene.spots():
+                    spotData.append({
+                        'x': spot.x(),
+                        'y': spot.y(),
+                        'measurement': spot.measurement(),
+                    })
+                pickle.dump(spotData, f)
 
             with open(os.path.join(scenedir, "essids.pickle"), "wb") as f:
                 pickle.dump(ESSIDS, f)
