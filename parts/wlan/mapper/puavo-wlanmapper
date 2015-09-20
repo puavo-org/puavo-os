@@ -905,8 +905,7 @@ class NewProjectDialog(QDialog):
         self.setModal(True)
         self.setWindowTitle("Create a new project")
 
-        imageLineEdit = QLineEdit()
-        imageLineEdit.textChanged.connect(self.__checkImageFilePath)
+        self.__imageLabel = QLabel()
         browseButton = QPushButton("&Browse...")
         browseButton.clicked.connect(self.__getLayoutImageFileName)
 
@@ -918,19 +917,15 @@ class NewProjectDialog(QDialog):
 
         layout = QVBoxLayout(self)
         formLayout = QFormLayout()
-        self.__browseLayout = QVBoxLayout()
+        browseLayout = QVBoxLayout()
         buttonLayout = QHBoxLayout()
 
-        browseLayout2 = QHBoxLayout()
-        browseLayout2.addWidget(imageLineEdit)
-        browseLayout2.addWidget(browseButton)
-        self.__browseLayout.addLayout(browseLayout2)
+        browseLayout = QHBoxLayout()
+        browseLayout.addWidget(self.__imageLabel)
+        browseLayout.addStretch()
+        browseLayout.addWidget(browseButton)
 
-        self.__imageLabel = QLabel()
-        self.__imageLabel.hide()
-        self.__browseLayout.addWidget(self.__imageLabel)
-
-        formLayout.addRow("Layout image:", self.__browseLayout)
+        formLayout.addRow("Layout image:", browseLayout)
 
         buttonLayout.addWidget(cancelButton)
         buttonLayout.addWidget(createButton)
@@ -938,19 +933,12 @@ class NewProjectDialog(QDialog):
         layout.addLayout(formLayout)
         layout.addLayout(buttonLayout)
 
-        self.__imageLineEdit = imageLineEdit
         self.__createButton = createButton
 
-    def layoutImageFilePath(self):
-        return self.__imageLineEdit.text()
+        self.__layoutImageFilePath = None
 
-    def __checkImageFilePath(self):
-        filepath = self.__imageLineEdit.text()
-        pixmap = QPixmap(filepath, "png")
-        self.__createButton.setEnabled(not pixmap.isNull())
-        self.__imageLabel.setVisible(not pixmap.isNull())
-        if not pixmap.isNull():
-            self.__imageLabel.setPixmap(pixmap.scaledToWidth(self.__browseLayout.geometry().width()))
+    def layoutImageFilePath(self):
+        return self.__layoutImageFilePath
 
     def __getLayoutImageFileName(self):
         filepath = QFileDialog.getOpenFileName(None,
@@ -958,12 +946,12 @@ class NewProjectDialog(QDialog):
                                                QDir.currentPath(),
                                                "Images (*.png)")
         if filepath:
-            self.__imageLineEdit.setText(filepath)
-
-    def sizeHint(self):
-        s = QDialog.sizeHint(self)
-        return QSize(s.width() + self.__imageLineEdit.sizeHint().width() * 2,
-                     s.height())
+            pixmap = QPixmap(filepath, "png")
+            if not pixmap.isNull():
+                self.__imageLabel.setPixmap(pixmap.scaledToWidth(320))
+                self.__imageLabel.setToolTip(filepath)
+                self.__layoutImageFilePath = filepath
+            self.__createButton.setEnabled(not pixmap.isNull())
 
 INTERFACES = get_dot11_interfaces()
 
