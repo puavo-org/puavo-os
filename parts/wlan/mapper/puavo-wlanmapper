@@ -702,9 +702,57 @@ class MainWindow(QMainWindow):
         view.setScene(self.__heatmapScene)
         self.setCentralWidget(view)
 
-        self.__setupDockWidgets()
-        self.__setupActions()
-        self.__setupMenus()
+        self.__monitorDockWidget = QDockWidget(self)
+        self.__monitorWidget = MonitorWidget(self.__monitor, self)
+        self.__monitorWidget.setScene(self.__monitorScene)
+        self.__monitorDockWidget.setWidget(self.__monitorWidget)
+        self.__monitorDockWidget.setWindowTitle("Monitor")
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.__monitorDockWidget)
+
+        self.__aboutAction = QAction(self)
+        self.__aboutAction.setText("&About...")
+        self.__aboutAction.triggered.connect(self.__showAboutDialog)
+
+        self.__newProjectAction = QAction(self)
+        self.__newProjectAction.setText("&New project...")
+        self.__newProjectAction.setShortcut(QKeySequence("Ctrl+N"))
+        self.__newProjectAction.triggered.connect(self.__newProjectDialog)
+
+        self.__saveProjectAsAction = QAction(self)
+        self.__saveProjectAsAction.setText("&Save project as...")
+        self.__saveProjectAsAction.setShortcut(QKeySequence("Ctrl+S"))
+        self.__saveProjectAsAction.triggered.connect(self.__saveProjectAsDialog)
+        self.__saveProjectAsAction.setEnabled(False)
+
+        self.__openProjectAction = QAction(self)
+        self.__openProjectAction.setText("&Open project...")
+        self.__openProjectAction.setShortcut(QKeySequence("Ctrl+O"))
+        self.__openProjectAction.triggered.connect(self.__openProjectDialog)
+
+        self.__quitAction = QAction(self)
+        self.__quitAction.setText("&Quit")
+        self.__quitAction.setShortcut(QKeySequence("Ctrl+Q"))
+        self.__quitAction.triggered.connect(self.close)
+
+        self.__whatsThisAction = QWhatsThis.createAction()
+
+        menuBar = QMenuBar()
+
+        fileMenu = menuBar.addMenu("&File")
+        fileMenu.addAction(self.__newProjectAction)
+        fileMenu.addAction(self.__openProjectAction)
+        fileMenu.addAction(self.__saveProjectAsAction)
+        fileMenu.addSeparator()
+        fileMenu.addAction(self.__quitAction)
+
+        viewMenu = menuBar.addMenu("&View")
+        viewMenu.addAction(self.__monitorDockWidget.toggleViewAction())
+
+        helpMenu = menuBar.addMenu("&Help")
+        helpMenu.addAction(self.__whatsThisAction)
+        helpMenu.addAction(self.__aboutAction)
+
+        self.setMenuBar(menuBar)
 
         self.__drawHeatmapsThread = DrawHeatmapsThread()
         self.__drawHeatmapsThread.heatmapReady.connect(self.__heatmapScene.addHeatmap)
@@ -736,61 +784,6 @@ class MainWindow(QMainWindow):
 
     def sizeHint(self):
         return QSize(800, 600)
-
-    def __setupActions(self):
-        self.__aboutAction = QAction(self)
-        self.__aboutAction.setText("&About...")
-        self.__aboutAction.triggered.connect(self.__showAboutDialog)
-
-        self.__newProjectAction = QAction(self)
-        self.__newProjectAction.setText("&New project...")
-        self.__newProjectAction.setShortcut(QKeySequence("Ctrl+N"))
-        self.__newProjectAction.triggered.connect(self.__newProjectDialog)
-
-        self.__saveProjectAsAction = QAction(self)
-        self.__saveProjectAsAction.setText("&Save project as...")
-        self.__saveProjectAsAction.setShortcut(QKeySequence("Ctrl+S"))
-        self.__saveProjectAsAction.triggered.connect(self.__saveProjectAsDialog)
-        self.__saveProjectAsAction.setEnabled(False)
-
-        self.__openProjectAction = QAction(self)
-        self.__openProjectAction.setText("&Open project...")
-        self.__openProjectAction.setShortcut(QKeySequence("Ctrl+O"))
-        self.__openProjectAction.triggered.connect(self.__openProjectDialog)
-
-        self.__quitAction = QAction(self)
-        self.__quitAction.setText("&Quit")
-        self.__quitAction.setShortcut(QKeySequence("Ctrl+Q"))
-        self.__quitAction.triggered.connect(self.close)
-
-        self.__whatsThisAction = QWhatsThis.createAction()
-
-    def __setupMenus(self):
-        menuBar = QMenuBar()
-
-        fileMenu = menuBar.addMenu("&File")
-        fileMenu.addAction(self.__newProjectAction)
-        fileMenu.addAction(self.__openProjectAction)
-        fileMenu.addAction(self.__saveProjectAsAction)
-        fileMenu.addSeparator()
-        fileMenu.addAction(self.__quitAction)
-
-        viewMenu = menuBar.addMenu("&View")
-        viewMenu.addAction(self.__monitorDockWidget.toggleViewAction())
-
-        helpMenu = menuBar.addMenu("&Help")
-        helpMenu.addAction(self.__whatsThisAction)
-        helpMenu.addAction(self.__aboutAction)
-
-        self.setMenuBar(menuBar)
-
-    def __setupDockWidgets(self):
-        self.__monitorDockWidget = QDockWidget(self)
-        self.__monitorWidget = MonitorWidget(self.__monitor, self)
-        self.__monitorWidget.setScene(self.__monitorScene)
-        self.__monitorDockWidget.setWidget(self.__monitorWidget)
-        self.__monitorDockWidget.setWindowTitle("Monitor")
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.__monitorDockWidget)
 
     def __openProjectDialog(self):
         filepath = QFileDialog.getOpenFileName(None,
