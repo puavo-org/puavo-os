@@ -98,21 +98,20 @@ class Project:
         self.__isLoadOk = False
         with tarfile.open(str(filePath), "r:gz") as archive_file:
 
-            pixmap_file = archive_file.extractfile("scene/layout.png")
-            pixmap = QPixmap()
-            pixmap.loadFromData(pixmap_file.read(), "PNG")
-            if not self.__setLayoutImagePixmap(pixmap):
-                return False
+            with archive_file.extractfile("scene/layout.png") as f:
+                pixmap = QPixmap()
+                pixmap.loadFromData(f.read(), "PNG")
+                if not self.__setLayoutImagePixmap(pixmap):
+                    return False
 
-            essids_picklefile = archive_file.extractfile("scene/essids.pickle")
-            self.essids = pickle.load(essids_picklefile)
+            with archive_file.extractfile("scene/essids.pickle") as f:
+                self.essids = pickle.load(f)
 
-            spots_picklefile = archive_file.extractfile("scene/spots.pickle")
-
-            self.__spotData = []
-            for spotDatum in pickle.load(spots_picklefile):
-                pos = QPointF(spotDatum['x'], spotDatum['y'])
-                self.__spotData.append((pos, spotDatum['measurement']))
+            with archive_file.extractfile("scene/spots.pickle") as f:
+                self.__spotData = []
+                for spotDatum in pickle.load(f):
+                    pos = QPointF(spotDatum['x'], spotDatum['y'])
+                    self.__spotData.append((pos, spotDatum['measurement']))
 
         self.__isLoadOk = True
         return True
