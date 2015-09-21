@@ -94,6 +94,11 @@ elif on_persistent_overlay; then
     # we are on persistent overlay (development mode),
     # do not do an image update
     do_image_update=false
+elif [ -e /var/lib/puavo-client-daemon/image_update_requested ]; then
+    # This file may be set up by puavo-client-daemon... it means that an
+    # image update was requested but that request has not yet been
+    # completed/cancelled, so continue from that.
+    do_image_update=true
 else
     if $personally_administered; then
         automatic_image_updates=$(jq .automatic_image_updates \

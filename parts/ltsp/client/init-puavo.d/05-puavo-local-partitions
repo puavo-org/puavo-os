@@ -122,6 +122,7 @@ if [ -x "/sbin/vgchange" ]; then
 	    puavo_link_to_state /etc/NetworkManager/system-connections \
 				/var/lib/extrausers \
 				/var/lib/logrotate \
+				/var/lib/puavo-client-daemon \
 				/var/lib/puavo-desktop \
 				/var/lib/sss \
 				/var/log \
@@ -137,8 +138,15 @@ if [ -x "/sbin/vgchange" ]; then
               fi
             done
 	    ;;
-	  ltspserver|wirelessaccesspoint)
+	  ltspserver)
 	    puavo_link_to_state /var/lib/logrotate /var/log /var/spool/anacron
+	    puavo_enable_utmp
+	    ;;
+	  wirelessaccesspoint)
+	    puavo_link_to_state /var/lib/logrotate \
+				/var/lib/puavo-client-daemon \
+				/var/log \
+				/var/spool/anacron
 	    puavo_enable_utmp
 	    ;;
 	esac

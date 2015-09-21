@@ -92,6 +92,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d
 	mkdir -p $(DESTDIR)$(datarootdir)/xgreeters
 	mkdir -p $(DESTDIR)$(datarootdir)/xsessions
+	mkdir -p $(DESTDIR)/var/lib/puavo-client-daemon
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/shared
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
 
