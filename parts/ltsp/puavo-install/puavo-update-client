@@ -89,7 +89,8 @@ else
                                      /etc/puavo/device.json)
     else
         automatic_image_updates=$(jq .automatic_image_updates \
-                                     /state/etc/puavo/local/config.json)
+                                     /state/etc/puavo/local/config.json \
+                                   2>/dev/null) || true
     fi
 
     if [ "$automatic_image_updates" = "false" ]; then
