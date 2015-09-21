@@ -2,25 +2,29 @@
 
 set -e
 
-usage_error()
-{
+on_persistent_overlay() {
+    grep -q "puavo.image.overlay=" /proc/cmdline
+}
+
+usage_error() {
     echo "error: $1" >&2
-    echo "Try '$0 --help' for more information". >&2
+    echo "Try '$0 --help' for more information." >&2
     exit 1
 }
 
 hosttype=$(cat /etc/puavo/hosttype)
 
 if [ "$hosttype" != "laptop" -a \
-    "$hosttype" != "wirelessaccesspoint" ]; then
-    echo 'This script should be run only for laptops and wirelessaccesspoints!' \
-        > /dev/stderr
+     "$hosttype" != "wirelessaccesspoint" ]; then
+    echo 'This script should be run only for laptops' \
+         'and wirelessaccesspoints!' >&2
     exit 1
 fi
 
+automatically_triggered=false
+force_image_update=false
+no_image_update=false
 use_rate_limit=false
-do_image_update=true
-delete_overlays=false
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -31,24 +35,30 @@ while [ $# -gt 0 ]; do
             echo "Update device configuration and images."
             echo
             echo "Options:"
-            echo "    --delete-overlays            delete attached overlays when deleting old images"
-            echo "    --use-rate-limit             limit the image download rate"
-            echo "    --no-image-update            do not update images, only configurations"
-            echo "    -h, --help                   print help and exit"
+            echo "    --auto                 automatically scheduled update"
+            echo "    --force-image-update   update image, no matter what"
+            echo "                           (overrides --no-image-update)"
+            echo "    --no-image-update      do not update images, only configurations"
+            echo "    --use-rate-limit       limit the image download rate"
+            echo "    -h, --help             print help and exit"
             echo
             exit 0
             ;;
-        --delete-overlays)
+        --auto)
             shift
-            delete_overlays=true
+            automatically_triggered=true
+            ;;
+        --force-image-update)
+            shift
+            force_image_update=true
+            ;;
+        --no-image-update)
+            shift
+            no_image_update=true
             ;;
         --use-rate-limit)
             shift
             use_rate_limit=true
-            ;;
-        --no-image-update)
-            shift
-            do_image_update=false
             ;;
         --)
             shift
@@ -69,6 +79,51 @@ fi
 
 set -u
 
+if [ "$(jq .personally_administered /etc/puavo/device.json)" = "true" ]; then
+  personally_administered=true
+else
+  personally_administered=false
+fi
+
+# figure out the value of do_image_update
+if $force_image_update; then
+    do_image_update=true
+elif $no_image_update; then
+    do_image_update=false
+elif on_persistent_overlay; then
+    # we are on persistent overlay (development mode),
+    # do not do an image update
+    do_image_update=false
+elif [ -e /var/lib/puavo-client-daemon/image_update_requested ]; then
+    # This file may be set up by puavo-client-daemon... it means that an
+    # image update was requested but that request has not yet been
+    # completed/cancelled, so continue from that.
+    do_image_update=true
+else
+    if $personally_administered; then
+        automatic_image_updates=$(jq .automatic_image_updates \
+                                     /state/etc/puavo/local/config.json \
+                                   2>/dev/null) || true
+    else
+        automatic_image_updates=$(jq .automatic_image_updates \
+                                     /etc/puavo/device.json)
+    fi
+
+    if [ "$automatic_image_updates" = "false" ]; then
+        do_image_update=false
+    else
+        # empty/missing value for $automatic_image_updates --> true
+        do_image_update=true
+    fi
+fi
+
+# If automatically triggered (with --auto from upstart script), use rate
+# limit for image downloads but not on personally administered hosts (because
+# the primary user may block automatic updates or interrupt them at any time).
+if $automatically_triggered && ! $personally_administered; then
+  use_rate_limit=true
+fi
+
 dbus_cmd="
   dbus-send --dest=org.puavo.client.Daemon
             --print-reply=literal
@@ -88,8 +143,7 @@ if ! $do_image_update; then
 else
     # do the whole update (configuration update + image update)
     if $dbus_cmd org.puavo.client.update.Update \
-                 "boolean:${use_rate_limit}"    \
-                 "boolean:${delete_overlays}" >/dev/null; then
+                 "boolean:${use_rate_limit}" >/dev/null; then
         echo 'System update started.'
     else
         echo 'Starting system update failed.' >&2

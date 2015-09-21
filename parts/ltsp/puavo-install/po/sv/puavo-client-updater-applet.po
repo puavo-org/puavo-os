@@ -9,103 +9,113 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: puavo-client-updater-applet:67
+#: puavo-client-updater-applet:69
 msgid "Updates are disabled in developer mode, boot to normal mode to update."
 msgstr ""
 
-#: puavo-client-updater-applet:77
+#: puavo-client-updater-applet:76 puavo-client-updater-applet:389
+msgid "Reset development state"
+msgstr ""
+
+#: puavo-client-updater-applet:91
 msgid "(No update progress.)"
 msgstr ""
 
-#: puavo-client-updater-applet:95
+#: puavo-client-updater-applet:109
 msgid "View log..."
 msgstr "Visa logg..."
 
-#: puavo-client-updater-applet:185 puavo-client-updater-applet:187
+#: puavo-client-updater-applet:210
+msgid "Reset development state is now done, consider rebooting the system."
+msgstr ""
+
+#: puavo-client-updater-applet:216
+msgid "An error occurred when resetting development state"
+msgstr ""
+
+#: puavo-client-updater-applet:229 puavo-client-updater-applet:231
 msgid "A new system update is available."
 msgstr ""
 
-#: puavo-client-updater-applet:196
+#: puavo-client-updater-applet:240
 msgid "Update cancelled."
 msgstr ""
 
-#: puavo-client-updater-applet:198
+#: puavo-client-updater-applet:242
 msgid "System update has been cancelled."
 msgstr ""
 
-#: puavo-client-updater-applet:209
+#: puavo-client-updater-applet:253
 msgid "Update completed, reboot required to finish the update."
 msgstr ""
 
-#: puavo-client-updater-applet:210
+#: puavo-client-updater-applet:254
 msgid "System update is finished, reboot the computer."
 msgstr ""
 
-#: puavo-client-updater-applet:212
+#: puavo-client-updater-applet:256
 msgid "Update completed."
 msgstr ""
 
-#: puavo-client-updater-applet:213
+#: puavo-client-updater-applet:257
 msgid "System update is finished."
 msgstr ""
 
-#: puavo-client-updater-applet:228 puavo-client-updater-applet:259
+#: puavo-client-updater-applet:272 puavo-client-updater-applet:303
 msgid "Update failed."
 msgstr ""
 
-#: puavo-client-updater-applet:230
+#: puavo-client-updater-applet:274
 msgid "An error occurred when updating the system."
 msgstr ""
 
-#: puavo-client-updater-applet:262
+#: puavo-client-updater-applet:306
 msgid "Update done, reboot required to finish the update."
 msgstr ""
 
-#: puavo-client-updater-applet:265
+#: puavo-client-updater-applet:309
 msgid "Update interrupted."
 msgstr ""
 
-#: puavo-client-updater-applet:268
+#: puavo-client-updater-applet:312
 msgid "Up to date."
 msgstr ""
 
-#: puavo-client-updater-applet:305
+#: puavo-client-updater-applet:349
 msgid "Update progress:"
 msgstr "Uppdateringens framsteg:"
 
-#: puavo-client-updater-applet:320 puavo-client-updater-applet:323
+#: puavo-client-updater-applet:364 puavo-client-updater-applet:367
 msgid "System update has been started."
 msgstr ""
 
-#: puavo-client-updater-applet:348
+#: puavo-client-updater-applet:377
+msgid "Development state space utilization is"
+msgstr ""
+
+#: puavo-client-updater-applet:379
+msgid ""
+"Do you want to reset the development state? All your custom system changes "
+"will be lost."
+msgstr ""
+
+#: puavo-client-updater-applet:425
 msgid "Check for updates"
 msgstr ""
 
-#: puavo-client-updater-applet:351
+#: puavo-client-updater-applet:428
 msgid "(Checking for updates.)"
 msgstr ""
 
-#: puavo-client-updater-applet:355
+#: puavo-client-updater-applet:432
 msgid "Update"
 msgstr "Uppdatera"
 
-#: puavo-client-updater-applet:358
+#: puavo-client-updater-applet:435
 msgid "Cancel update"
 msgstr ""
 
-#: puavo-client-updater-applet:377
-msgid ""
-"The old version of the system has been edited by the user. Updating the "
-"system causes all these changes to be lost. Do you want to proceed?"
-msgstr ""
-"Den gamla versionen av systemet innehåller konfigurationer som användaren "
-"har gjort, dessa förstörs i uppdateringen. Vill du fortsätta?"
-
-#: puavo-client-updater-applet:389
-msgid "Continue updating?"
-msgstr "Fortsät uppdateringen"
-
-#: puavo-client-updater-applet:394
+#: puavo-client-updater-applet:454
 msgid "Update log"
 msgstr "Uppdateringslogg"
 

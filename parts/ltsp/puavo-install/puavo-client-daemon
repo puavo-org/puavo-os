@@ -5,6 +5,7 @@
 ENV["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 require 'dbus'
+require 'fileutils'
 require 'json'
 require 'open3'
 require 'puavo/rest-client'
@@ -22,11 +23,86 @@ def log(*args)   ; syslog(STDOUT, *args); end
 def logerr(*args); syslog(STDERR, *args); end
 
 
-$configuration_update_thread = nil
-$image_update_thread         = nil
-$puavopkg_upgrade_thread     = nil
+$configuration_update_thread  = nil
+$delete_image_overlays_thread = nil
+$image_update_thread          = nil
+$puavopkg_upgrade_thread      = nil
 
 class CancelledUpdate < RuntimeError; end
+
+class OverlayHandler < DBus::Object
+  dbus_interface "org.puavo.client.overlayhandler" do
+    dbus_signal :DeleteImageOverlaysFailed, 'in errormsg:s'
+    dbus_signal :DeleteImageOverlaysCompleted
+
+    dbus_method :DeleteImageOverlays do
+      return if $delete_image_overlays_thread
+
+      $delete_image_overlays_thread = Thread.new do
+        begin
+          # Under "/imageoverlays" is image-specific directories, under
+          # that is "default", remove directories under that but do not
+          # remove "default" (it might be currently mounted as part of
+          # overlay-mount).
+          Dir.glob("/imageoverlays/*/*/*").each do |dir|
+            FileUtils.remove_entry_secure(dir)
+          end
+          self.DeleteImageOverlaysCompleted
+        rescue StandardError => e
+          logerr(Syslog::LOG_ERR,
+                 "Error in deleting imageoverlays: %s\n",
+                 e.message)
+          self.DeleteImageOverlaysFailed(e.message)
+        ensure
+          $delete_image_overlays_thread = nil
+        end
+      end
+    end
+
+    dbus_method :ImageOverlaysState, 'out i' do
+      mntpath = '/imageoverlays'
+
+      begin
+        # ruby-filesystem module might help here instead of this
+
+        if !system('mountpoint', '-q', mntpath)
+          logerr(Syslog::LOG_ERR,
+                 "Checking %s but it is not a mountpoint\n",
+                 imageoverlays_path)
+          return -1
+        end
+
+        free_blocks, fb_status \
+          = Open3.capture2("stat", "--file-system", "--format", "%f", mntpath)
+        if !fb_status.success?
+          logerr(Syslog::LOG_ERR,
+                 "Could not get free block count for %s\n",
+                 mntpath)
+          return -1
+        end
+
+        total_blocks, tb_status \
+          = Open3.capture2("stat", "--file-system", "--format", "%b", mntpath)
+        if !tb_status.success?
+          logerr(Syslog::LOG_ERR,
+                 "Could not get total block count for %s\n",
+                 mntpath)
+          return -1
+        end
+
+        free_percentage = 100.0 * Integer(free_blocks) / Integer(total_blocks)
+        return [ (100-free_percentage).round, 0 ].max
+
+      rescue StandardError => e
+        logerr(Syslog::LOG_ERR,
+               "Could not calculate %s utilization percentage: %s\n",
+               mntpath,
+               e.message)
+        return -1
+      end
+    end
+  end
+end
 
 class Updater < DBus::Object
   def check_for_available_image_updates()
@@ -134,8 +210,10 @@ class Updater < DBus::Object
     return thread
   end
 
-  def image_update(use_rate_limit, delete_overlays)
+  def image_update(use_rate_limit)
     thread = $image_update_thread = Thread.new do
+      set_image_update_request_file_status(true) rescue true
+
       wait_thr, out_thr, err_thr = nil, nil, nil
 
       begin
@@ -144,8 +222,7 @@ class Updater < DBus::Object
 
         stdin, stdout, stderr, wait_thr \
           = Open3.popen3('/usr/lib/puavo-ltsp-install/update-images',
-                         use_rate_limit  ? 'true' : 'false',
-                         delete_overlays ? 'true' : 'false',
+                         use_rate_limit ? 'true' : 'false',
                          { :pgroup => true })
 
         stdin.close
@@ -164,6 +241,8 @@ class Updater < DBus::Object
                   + status.exitstatus.to_s
         end
 
+        set_image_update_request_file_status(false) rescue true
+
         log(Syslog::LOG_INFO, "System update completed\n")
 
         # update device information in Puavo and in local disk as well
@@ -180,6 +259,7 @@ class Updater < DBus::Object
       rescue CancelledUpdate => e
         Process.kill('-TERM', wait_thr.pid) if wait_thr && wait_thr.alive?
         logerr(Syslog::LOG_WARNING, "System update was cancelled\n")
+        set_image_update_request_file_status(false) rescue true
         raise e
 
       rescue StandardError => e
@@ -248,6 +328,23 @@ class Updater < DBus::Object
     return thread
   end
 
+  # Setup this file to signify that there has been an image update request,
+  # and that has not resulted (yet) in a successful update.  This can be used
+  # to trigger new attempts to update.  Cancelled image updates should trigger
+  # the removal of this file.
+  def set_image_update_request_file_status(status)
+    statusfilepath = '/var/lib/puavo-client-daemon/image_update_requested'
+
+    if status
+      FileUtils.touch(statusfilepath)
+    else
+      begin
+        File.delete(statusfilepath)
+      rescue Errno::ENOENT
+      end
+    end
+  end
+
   def notify_puavo_on_images
     available_images \
       = (Dir.glob('/images/*.img').map { |p| File.basename(p, '.img') } \
@@ -312,77 +409,56 @@ class Updater < DBus::Object
       self.UpdateCancelled
     end
 
-    dbus_method :HasOldOverlays, 'out b' do
-      begin
-        output, errput, status \
-          = Open3.capture3('/usr/lib/puavo-ltsp-install/ls-old-imageoverlays',
-                           '/images',
-                           '/imageoverlays')
-        if not status.success? then
-          errmsg = 'Failed to list old overlays: error code ' \
-                     + "#{ status.exitstatus } / #{ errput }"
-          raise errmsg
-        end
+    dbus_method :Update, 'in use_rate_limit:b, out b' do |use_rate_limit|
+      Thread.new do
+        # Configuration update updates our information about what should be
+        # our current image (may be the one we are running or another that
+        # should be updated to).  And it should also update our puavo-pkg
+        # installers.
+        ($configuration_update_thread || self.configuration_update()) \
+          .join rescue nil
 
-        return !output.empty?
-      rescue StandardError => e
-        logerr(Syslog::LOG_ERR, "%s\n", e.message)
-        raise e
-      end
-    end
+        image_update_thread                                                 \
+          = $image_update_thread                                            \
+              ? $image_update_thread                                        \
+              :                                                             \
+            (self.check_for_available_image_updates() == :update_available) \
+              ? self.image_update(use_rate_limit)                           \
+              : nil
 
-    dbus_method :Update,
-                'in use_rate_limit:b, in delete_overlays:b, out b' do
-      |use_rate_limit, delete_overlays|
-        Thread.new do
-          # Configuration update updates our information about what should be
-          # our current image (may be the one we are running or another that
-          # should be updated to).  And it should also update our puavo-pkg
-          # installers.
-          ($configuration_update_thread || self.configuration_update()) \
-            .join rescue nil
+        puavopkg_upgrade_thread = ($puavopkg_upgrade_thread \
+                                     || self.puavopkg_upgrades())
 
-          image_update_thread                                                 \
-            = $image_update_thread                                            \
-                ? $image_update_thread                                        \
-                :                                                             \
-              (self.check_for_available_image_updates() == :update_available) \
-                ? self.image_update(use_rate_limit, delete_overlays)          \
-                : nil
+        begin
+          if image_update_thread then
+            image_update_thread.join
+            # If we are doing an image update, we do not care when the
+            # puavopkg-upgrade is ready, so we do not wait for the
+            # puavopkg_upgrade_thread.
+          else
+            # We have no need for an image update.
+            #
+            # Because progress indicators are not connected to
+            # puavo-pkg-update (yet?), we should tell that we really do not
+            # know how long this operation will take.
+            self.UpdateProgressIndicator('puavopkg', 0)
 
-          puavopkg_upgrade_thread = ($puavopkg_upgrade_thread \
-                                       || self.puavopkg_upgrades())
-
-          begin
-            if image_update_thread then
-              image_update_thread.join
-              # If we are doing an image update, we do not care when the
-              # puavopkg-upgrade is ready, so we do not wait for the
-              # puavopkg_upgrade_thread.
-            else
-              # We have no need for an image update.
-              #
-              # Because progress indicators are not connected to
-              # puavo-pkg-update (yet?), we should tell that we really do not
-              # know how long this operation will take.
-              self.UpdateProgressIndicator('puavopkg', 0)
-
-              # Wait for the puavopkg-upgrade to finish.
-              puavopkg_upgrade_thread.join
-            end
-          rescue CancelledUpdate => e
-            # no problemos torremolinos!
-            return
-          rescue StandardError => e
-            self.UpdateFailed
-            raise e
+            # Wait for the puavopkg-upgrade to finish.
+            puavopkg_upgrade_thread.join
           end
-
-          reboot_required = (self.check_for_available_image_updates() \
-                               == :uptodate_yes_reboot)
-
-          self.UpdateCompleted(reboot_required)
+        rescue CancelledUpdate => e
+          # no problemos torremolinos!
+          return
+        rescue StandardError => e
+          self.UpdateFailed
+          raise e
         end
+
+        reboot_required = (self.check_for_available_image_updates() \
+                             == :uptodate_yes_reboot)
+
+        self.UpdateCompleted(reboot_required)
+      end
     end
 
     dbus_method :UpdateConfiguration, 'out b' do
@@ -407,10 +483,9 @@ bus = DBus::SystemBus.instance
 # conf file in /etc/dbus-1/system.d).
 service = bus.request_service("org.puavo.client.Daemon")
 
-# Export all dbus-accessible objects. Currently we have only one, but
-# there isn't any reason why we wouldn't them more in future.
-updater = Updater.new("/updater")
-service.export(updater)
+# Export all dbus-accessible objects.
+service.export(OverlayHandler.new('/overlayhandler'))
+service.export(Updater.new("/updater"))
 
 # Run Forrest, run!
 loop = DBus::Main.new
