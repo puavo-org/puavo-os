@@ -37,7 +37,6 @@ import numpy
 
 import puavowlanmapper.icons
 
-ESSIDS = {}
 LEVELS = range(-95, -20, 5)
 
 FREQS = [2412 + i * 5 for i in range(13)] + [2484] + [5180, 5200, 5220, 5240]
@@ -61,6 +60,96 @@ def save_heatmap(filepath, img_w, img_h, xs, ys, zs, scale_factor=0.2):
     matplotlib.pyplot.imsave(filepath, array2d, format='png',
                              vmin=min(LEVELS), vmax=max(LEVELS),
                              cmap='RdYlBu_r')
+
+class Project:
+
+    def __init__(self):
+        self.essids                = {}
+        self.__layoutImagePixmap   = None
+        self.__lastErrorMessage    = ''
+        self.__spotData            = []
+        self.__isLoadOk            = True
+
+    def isValid(self):
+        return (self.__isLoadOk
+                and self.__layoutImagePixmap is not None
+                and not self.__layoutImagePixmap.isNull())
+
+    def lastErrorMessage(self):
+        return self.__lastErrorMessage
+
+    def loadLayoutImage(self, filePath):
+        pixmap = QPixmap(filePath, "PNG")
+        return self.__setLayoutImagePixmap(pixmap)
+
+    def __setLayoutImagePixmap(self, pixmap):
+        if pixmap.isNull():
+            self.__lastErrorMessage = (
+                "File {} could not be loaded as a layout image.\n\n" \
+                "Please ensure the layout image is a valid PNG file.".format(
+                    str(filePath)))
+            return False
+
+        self.__layoutImagePixmap = pixmap
+
+        return True
+
+    def load(self, filePath):
+        self.__isLoadOk = False
+        with tarfile.open(str(filePath), "r:gz") as archive_file:
+
+            pixmap_file = archive_file.extractfile("scene/layout.png")
+            pixmap = QPixmap()
+            pixmap.loadFromData(pixmap_file.read(), "PNG")
+            if not self.__setLayoutImagePixmap(pixmap):
+                return False
+
+            essids_picklefile = archive_file.extractfile("scene/essids.pickle")
+            self.essids = pickle.load(essids_picklefile)
+
+            spots_picklefile = archive_file.extractfile("scene/spots.pickle")
+
+            self.__spotData = []
+            for spotDatum in pickle.load(spots_picklefile):
+                pos = QPointF(spotDatum['x'], spotDatum['y'])
+                self.__spotData.append((pos, spotDatum['measurement']))
+
+        self.__isLoadOk = True
+        return True
+
+    def save(self, filePath):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            scenedir = os.path.join(tmpdir, "scene")
+            os.mkdir(scenedir)
+
+            with open(os.path.join(scenedir, "spots.pickle"), "wb") as f:
+                spotData = []
+                for pos, measurement in self.__spotData:
+                    spotData.append({
+                        'x': float(pos.x()),
+                        'y': float(pos.y()),
+                        'measurement': measurement,
+                    })
+                pickle.dump(spotData, f)
+
+            with open(os.path.join(scenedir, "essids.pickle"), "wb") as f:
+                pickle.dump(self.essids, f)
+
+            self.__layoutImagePixmap.save(os.path.join(scenedir, "layout.png"))
+
+            with tarfile.open(str(filePath), "w:gz") as f:
+                f.add(scenedir, "scene")
+
+        return True
+
+    def layoutImagePixmap(self):
+        return self.__layoutImagePixmap
+
+    def setSpotData(self, spotData):
+        self.__spotData = spotData
+
+    def spotData(self):
+        return self.__spotData
 
 class DrawHeatmapsThread(QThread):
 
@@ -131,17 +220,14 @@ class HeatmapScene(QGraphicsScene):
         self.__heatmaps = {}
         self.__freqs    = []
         self.__bssids   = []
+        self.__project  = None
 
-        self.__layoutPixmap = None
-
-    def clear(self):
+    def setProject(self, project):
         self.__heatmaps = {}
         self.__freqs    = []
         self.__bssids   = []
-        QGraphicsScene.clear(self)
-
-    def setLayoutPixmap(self, pixmap):
-        self.__layoutPixmap = pixmap
+        self.__project  = project
+        self.clear()
 
     def addHeatmap(self, freq, bssid, img):
         pixmap = QPixmap.fromImage(img)
@@ -150,10 +236,10 @@ class HeatmapScene(QGraphicsScene):
         except KeyError:
             heatmap = self.addPixmap(pixmap)
             channel = FREQ_TO_CHAN[freq]
-            essid = ESSIDS[bssid]
+            essid = self.__project.essids[bssid]
             heatmap.setToolTip("Channel: %d (%d MHz)\nBSSID: %s\nESSID: %s"
                                % (channel, freq, bssid, essid))
-            layout = self.addPixmap(self.__layoutPixmap.scaled(pixmap.size()))
+            layout = self.addPixmap(self.__project.layoutImagePixmap().scaled(pixmap.size()))
 
             isFirstFreq = False
             try:
@@ -204,22 +290,20 @@ class MonitorScene(QGraphicsScene):
         self.__spots            = []
         self.__layoutPixmapItem = None
 
-    def clear(self):
+        self.__project          = None
+
+    def setProject(self, project):
         self.__spots            = []
         self.__layoutPixmapItem = None
-        QGraphicsScene.clear(self)
+        self.__project          = project
 
-    def setLayoutPixmap(self, pixmap):
-        if self.__layoutPixmapItem is None:
-            self.__layoutPixmapItem = self.addPixmap(pixmap)
-            self.__layoutPixmapItem.setZValue(-1)
-            return
-        self.__layoutPixmapItem.setPixmap(pixmap)
+        self.clear()
 
-    def layoutPixmap(self):
-        if self.__layoutPixmapItem is None:
-            return None
-        return self.__layoutPixmapItem.pixmap()
+        self.__layoutPixmapItem = self.addPixmap(project.layoutImagePixmap())
+        self.__layoutPixmapItem.setZValue(-1)
+
+        for pos, measurement in project.spotData():
+            self.addSpot(pos).setMeasurement(measurement)
 
     def spots(self):
         return list(self.__spots)
@@ -266,7 +350,7 @@ class MonitorScene(QGraphicsScene):
         return result
 
     def addSpot(self, pos):
-        spot = MonitorSpot(self.__monitor)
+        spot = MonitorSpot(self.__monitor, self.__project)
         spot.setPos(pos)
         self.addItem(spot)
         self.__spots.append(spot)
@@ -318,7 +402,7 @@ class MonitorSpot(QGraphicsPolygonItem):
 
     SIZE = 20
 
-    def __init__(self, monitor):
+    def __init__(self, monitor, project):
         QGraphicsPolygonItem.__init__(self)
 
         self.__monitor = monitor
@@ -364,6 +448,8 @@ class MonitorSpot(QGraphicsPolygonItem):
         self.__hasMonitor = False
         self.__lastMousePressPos = None
 
+        self.__project = project
+
     def mousePressEvent(self, event):
         self.__lastMousePressPos = event.scenePos()
         QGraphicsPolygonItem.mousePressEvent(self, event)
@@ -387,6 +473,7 @@ class MonitorSpot(QGraphicsPolygonItem):
 
         if isSuccess:
             self.setMeasurement(self.__monitor.measurement)
+            self.__project.essids.update(self.__monitor.essids)
 
         self.__monitor.started.disconnect(self.__monitorStarted)
         self.__monitor.stopped.disconnect(self.__monitorStopped)
@@ -463,6 +550,8 @@ class Monitor(QObject):
         self.setChannelDwellTime(500)
 
         self.__output = ''
+
+        self.essids = None
         self.measurement = None
 
     def availableInterfaces(self):
@@ -505,6 +594,7 @@ class Monitor(QObject):
 
         args = ['-c', self.__horst_configfile_path]
 
+        self.essids = None
         self.measurement = None
         self.isTerminated = False
         self.__process.start("%s-horst" % os.path.abspath(__file__), args,
@@ -521,6 +611,7 @@ class Monitor(QObject):
                 break
 
             if self.measurement is None:
+                self.essids = {}
                 self.measurement = {}
                 continue
 
@@ -530,7 +621,7 @@ class Monitor(QObject):
             freq = int(fields[9])
             ssid = fields[11]
 
-            ESSIDS[bssid] = ssid
+            self.essids[bssid] = ssid
 
             bssidmap = self.measurement.setdefault(freq, {})
             bssidmap[bssid] = (rssi + bssidmap.get(bssid, rssi)) / 2
@@ -747,8 +838,8 @@ class MainWindow(QMainWindow):
         xs = measurements.pop('x')
         ys = measurements.pop('y')
 
-        width = self.__monitorScene.layoutPixmap().width()
-        height = self.__monitorScene.layoutPixmap().height()
+        width = self.__project.layoutImagePixmap().width()
+        height = self.__project.layoutImagePixmap().height()
 
         heatmapData = []
 
@@ -776,33 +867,14 @@ class MainWindow(QMainWindow):
         if not filepath:
             return
 
-        self.__saveProjectAsAction.setEnabled(True)
-        self.__monitor.terminate()
+        project = Project()
 
-        with tarfile.open(str(filepath), "r:gz") as archive_file:
+        if not project.load(filepath):
+            QMessageBox.critical(self, "Failed to open a project",
+                                 project.lastErrorMessage())
+            return
 
-            src_image = archive_file.extractfile("scene/layout.png")
-            pixmap = QPixmap()
-            pixmap.loadFromData(src_image.read(), "PNG")
-            self.__heatmapScene.clear()
-            self.__heatmapScene.setLayoutPixmap(pixmap)
-
-            self.__monitorScene.clear()
-            self.__monitorScene.setLayoutPixmap(pixmap)
-
-            essids_picklefile = archive_file.extractfile("scene/essids.pickle")
-            global ESSIDS
-            ESSIDS = pickle.load(essids_picklefile)
-
-            spots_picklefile = archive_file.extractfile("scene/spots.pickle")
-            spotData = pickle.load(spots_picklefile)
-
-            for spotDatum in spotData:
-                spot = self.__monitorScene.addSpot(QPointF(spotDatum['x'],
-                                                           spotDatum['y']))
-                spot.setMeasurement(spotDatum['measurement'])
-
-        self.__monitorWidget.fitAllInMonitorView()
+        self.__setProject(project)
 
     def __saveProjectAsDialog(self):
         filepath = QFileDialog.getSaveFileName(None,
@@ -816,52 +888,41 @@ class MainWindow(QMainWindow):
         if not str(filepath).endswith('.tar.gz'):
             filepath = '%s.tar.gz' % filepath
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            scenedir = os.path.join(tmpdir, "scene")
-            os.mkdir(scenedir)
+        spotData = []
+        for spot in self.__monitorScene.spots():
+            spotData.append((spot.pos(), spot.measurement()))
+        self.__project.setSpotData(spotData)
 
-            with open(os.path.join(scenedir, "spots.pickle"), "wb") as f:
-                spotData = []
-                for spot in self.__monitorScene.spots():
-                    spotData.append({
-                        'x': spot.x(),
-                        'y': spot.y(),
-                        'measurement': spot.measurement(),
-                    })
-                pickle.dump(spotData, f)
-
-            with open(os.path.join(scenedir, "essids.pickle"), "wb") as f:
-                pickle.dump(ESSIDS, f)
-
-            self.__monitorScene.layoutPixmap().save(
-                os.path.join(scenedir, "layout.png"))
-
-            with tarfile.open(str(filepath), "w:gz") as f:
-                f.add(scenedir, "scene")
+        if not self.__project.save(filepath):
+            QMessageBox.critical(self, "Failed to save the project",
+                                 project.lastErrorMessage())
+            return
 
     def __newProjectDialog(self):
         dialog = NewProjectDialog()
         if not dialog.exec_():
             return
 
-        filepath = dialog.layoutImageFilePath()
+        layoutImageFilePath = dialog.layoutImageFilePath()
 
-        layoutPixmap = QPixmap(filepath, "png")
-        if layoutPixmap.isNull():
-            msg = "File {} could not be loaded as a layout image.\n\n" \
-                  "Please ensure the layout image is a valid PNG file."
-            QMessageBox.critical(self, "Failed to load a layout image",
-                                 msg.format(filepath))
-        else:
-            self.__heatmapScene.clear()
-            self.__heatmapScene.setLayoutPixmap(layoutPixmap)
+        project = Project()
+        if not project.loadLayoutImage(layoutImageFilePath):
+            QMessageBox.critical(self, "Failed to create a new project",
+                                 project.lastErrorMessage())
+            return
 
-            self.__monitorScene.clear()
-            self.__monitorScene.setLayoutPixmap(layoutPixmap)
+        self.__setProject(project)
 
-            self.__saveProjectAsAction.setEnabled(True)
-            self.__monitor.terminate()
-            self.__monitorWidget.fitAllInMonitorView()
+    def __setProject(self, project):
+        self.__monitor.terminate()
+
+        self.__project = project
+
+        self.__heatmapScene.setProject(self.__project)
+        self.__monitorScene.setProject(self.__project)
+
+        self.__saveProjectAsAction.setEnabled(True)
+        self.__monitorWidget.fitAllInMonitorView()
 
     def __showAboutDialog(self):
         aboutText =  (
