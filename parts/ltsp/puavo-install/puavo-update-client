@@ -21,6 +21,7 @@ if [ "$hosttype" != "laptop" -a \
     exit 1
 fi
 
+automatically_triggered=false
 force_image_update=false
 no_image_update=false
 use_rate_limit=false
@@ -34,6 +35,7 @@ while [ $# -gt 0 ]; do
             echo "Update device configuration and images."
             echo
             echo "Options:"
+            echo "    --auto                 automatically scheduled update"
             echo "    --force-image-update   update image, no matter what"
             echo "                           (overrides --no-image-update)"
             echo "    --no-image-update      do not update images, only configurations"
@@ -41,6 +43,10 @@ while [ $# -gt 0 ]; do
             echo "    -h, --help             print help and exit"
             echo
             exit 0
+            ;;
+        --auto)
+            shift
+            automatically_triggered=true
             ;;
         --force-image-update)
             shift
@@ -73,6 +79,13 @@ fi
 
 set -u
 
+if [ "$(jq .personally_administered /etc/puavo/device.json)" = "true" ]; then
+  personally_administered=true
+else
+  personally_administered=false
+fi
+
+# figure out the value of do_image_update
 if $force_image_update; then
     do_image_update=true
 elif $no_image_update; then
@@ -82,22 +95,28 @@ elif on_persistent_overlay; then
     # do not do an image update
     do_image_update=false
 else
-    personally_administered=$(jq .personally_administered \
-                                 /etc/puavo/device.json)
-    if [ "$personally_administered" != "true" ]; then
-        automatic_image_updates=$(jq .automatic_image_updates \
-                                     /etc/puavo/device.json)
-    else
+    if $personally_administered; then
         automatic_image_updates=$(jq .automatic_image_updates \
                                      /state/etc/puavo/local/config.json \
                                    2>/dev/null) || true
+    else
+        automatic_image_updates=$(jq .automatic_image_updates \
+                                     /etc/puavo/device.json)
     fi
 
     if [ "$automatic_image_updates" = "false" ]; then
         do_image_update=false
     else
+        # empty/missing value for $automatic_image_updates --> true
         do_image_update=true
     fi
+fi
+
+# If automatically triggered (with --auto from upstart script), use rate
+# limit for image downloads but not on personally administered hosts (because
+# the primary user may block automatic updates or interrupt them at any time).
+if $automatically_triggered && ! $personally_administered; then
+  use_rate_limit=true
 fi
 
 dbus_cmd="
