@@ -238,7 +238,9 @@ class HeatmapScene(QGraphicsScene):
             essid = self.__project.essids[bssid]
             heatmap.setToolTip("Channel: %d (%d MHz)\nBSSID: %s\nESSID: %s"
                                % (channel, freq, bssid, essid))
-            layout = self.addPixmap(self.__project.layoutImagePixmap().scaled(pixmap.size()))
+
+            layoutPixmap = self.__project.layoutImagePixmap().scaled(pixmap.size())
+            QGraphicsPixmapItem(layoutPixmap, heatmap)
 
             isFirstFreq = False
             try:
@@ -260,9 +262,6 @@ class HeatmapScene(QGraphicsScene):
             heatmap.moveBy(margin, margin)
             heatmap.moveBy(x_offset * (margin + pixmap.width()),
                            y_offset * (margin + pixmap.height()))
-            layout.moveBy(margin, margin)
-            layout.moveBy(x_offset * (margin + pixmap.width()),
-                          y_offset * (margin + pixmap.height()))
             self.__heatmaps[(freq, bssid)] = heatmap
 
             if isFirstFreq:
