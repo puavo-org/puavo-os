@@ -125,8 +125,8 @@ class HeatmapScene(QGraphicsScene):
 
     FONT = QFont("Monospace", 56)
 
-    def __init__(self):
-        QGraphicsScene.__init__(self)
+    def __init__(self, parent):
+        QGraphicsScene.__init__(self, parent)
 
         self.__heatmaps = {}
         self.__freqs    = []
@@ -196,8 +196,8 @@ class MonitorScene(QGraphicsScene):
 
     measurementsChanged = pyqtSignal()
 
-    def __init__(self, monitor):
-        QGraphicsScene.__init__(self)
+    def __init__(self, monitor, parent):
+        QGraphicsScene.__init__(self, parent)
 
         self.__monitor = monitor
 
@@ -673,8 +673,8 @@ class MainWindow(QMainWindow):
 
         self.__monitor = monitor
 
-        self.__heatmapScene = HeatmapScene()
-        self.__monitorScene = MonitorScene(monitor)
+        self.__heatmapScene = HeatmapScene(self)
+        self.__monitorScene = MonitorScene(monitor, self)
         self.__monitorScene.measurementsChanged.connect(self.updateHeatmaps)
 
         self.setWindowTitle("Puavo WLAN Mapper")
