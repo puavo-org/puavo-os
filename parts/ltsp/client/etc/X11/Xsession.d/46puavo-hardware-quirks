@@ -1,9 +1,0 @@
-firefox_gfx_xrender_incapables=$(
-    for pci_id in 8086:2572 8086:2562; do
-        lspci -d "${pci_id}"
-    done
-)
-
-if [ -n "${firefox_gfx_xrender_incapables}" ]; then
-    export FIREFOX_LOCKPREF_GFX_XRENDER_ENABLED=false
-fi
