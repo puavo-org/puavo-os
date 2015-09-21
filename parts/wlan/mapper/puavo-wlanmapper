@@ -445,10 +445,14 @@ class Monitor(QObject):
     started = pyqtSignal()
     stopped = pyqtSignal(bool)
 
-    def __init__(self, interface, *args):
-        QObject.__init__(self, *args)
+    def __init__(self, parent):
+        QObject.__init__(self, parent)
 
-        self.__iface = interface
+        self.__availableInterfaces = get_dot11_interfaces()
+        try:
+            self.__iface = self.__availableInterfaces[0]
+        except IndexError:
+            self.__iface = None
 
         self.__process = None
         self.__tmpdir = tempfile.TemporaryDirectory()
@@ -461,6 +465,9 @@ class Monitor(QObject):
         self.__output = ''
         self.measurement = None
 
+    def availableInterfaces(self):
+        return self.__availableInterfaces
+
     def channelDwellTime(self):
         return self.__dwell
 
@@ -468,11 +475,11 @@ class Monitor(QObject):
         self.__dwell = max(Monitor.MIN_CHANNEL_DWELL_TIME,
                            min(millisecs, Monitor.MAX_CHANNEL_DWELL_TIME))
 
-    def interface(self):
-        return self.__iface
+    def interfaceIndex(self):
+        return self.__availableInterfaces.index(self.__iface)
 
-    def setInterface(self, interface):
-        self.__iface = interface
+    def setInterfaceIndex(self, index):
+        self.__iface = self.__availableInterfaces[index]
 
     def start(self):
         if self.__process is not None:
@@ -563,11 +570,11 @@ class MonitorWidget(QWidget):
         self.__errorMessageBox.setModal(False)
 
         self.__ifaceComboBox = QComboBox()
-        self.__ifaceComboBox.addItems(sorted(INTERFACES))
-        self.__ifaceComboBox.setCurrentIndex(len(INTERFACES) - 1)
-        self.__ifaceComboBox.activated.connect(self.__saveInterface)
+        self.__ifaceComboBox.addItems(self.__monitor.availableInterfaces())
+        self.__ifaceComboBox.setCurrentIndex(self.__monitor.interfaceIndex())
+        self.__ifaceComboBox.activated.connect(self.__monitor.setInterfaceIndex)
         formLayout.addRow("Interface:", self.__ifaceComboBox)
-        self.__monitor.setInterface(self.__ifaceComboBox.currentText())
+        self.__monitor.setInterfaceIndex(self.__ifaceComboBox.currentIndex())
 
         self.__dwellSpinBox = QSpinBox()
         self.__dwellSpinBox.setSuffix("ms")
@@ -660,21 +667,18 @@ class MonitorWidget(QWidget):
         self.__ifaceComboBox.setEnabled(True)
         self.__dwellSpinBox.setEnabled(True)
 
-    def __saveInterface(self):
-        self.__monitor.setInterface(self.__ifaceComboBox.currentText())
-
     def __saveDwell(self, value):
         self.__monitor.setChannelDwellTime(value)
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, monitor, *args):
-        QMainWindow.__init__(self, *args)
+    def __init__(self):
+        QMainWindow.__init__(self)
 
-        self.__monitor = monitor
+        self.__monitor = Monitor(self)
 
         self.__heatmapScene = HeatmapScene(self)
-        self.__monitorScene = MonitorScene(monitor, self)
+        self.__monitorScene = MonitorScene(self.__monitor, self)
         self.__monitorScene.measurementsChanged.connect(self.updateHeatmaps)
 
         self.setWindowTitle("Puavo WLAN Mapper")
@@ -935,8 +939,6 @@ class NewProjectDialog(QDialog):
                 self.__layoutImageFilePath = filepath
             self.__createButton.setEnabled(not pixmap.isNull())
 
-INTERFACES = get_dot11_interfaces()
-
 def main():
     app = QApplication(sys.argv)
 
@@ -946,14 +948,7 @@ def main():
         print("Usage: {}".format(sys.argv[0]), file=sys.stderr)
         return 1
 
-    if not INTERFACES:
-        QMessageBox.critical(None, "Startup failure",
-                             "Failed to find any 802.11 devices.")
-        sys.exit(1)
-
-    monitor = Monitor(INTERFACES[0])
-
-    win = MainWindow(monitor)
+    win = MainWindow()
     win.show()
 
     sys.exit(app.exec_())
