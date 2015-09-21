@@ -18,7 +18,7 @@ puavowlanmapper/icons.py: icons.qrc icons/*.png
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 
-install: horst installdirs
+install: horst installdirs puavowlanmapper/icons.py
 	python3 setup.py install --install-layout=deb --root=$(DESTDIR)
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-wlanmapper-horst
