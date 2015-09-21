@@ -267,6 +267,14 @@ class HeatmapScene(QGraphicsScene):
 
             if isFirstFreq:
                 item = self.addText("%d" % channel, HeatmapScene.FONT)
+                item.setTextWidth(pixmap.width())
+                textFormat = QTextBlockFormat()
+                textFormat.setAlignment(Qt.AlignHCenter)
+                textCursor = item.textCursor()
+                textCursor.select(QTextCursor.Document)
+                textCursor.mergeBlockFormat(textFormat)
+                textCursor.clearSelection()
+                item.setTextCursor(textCursor)
                 item.moveBy(x_offset * (margin + pixmap.width()) + margin,
                             -item.boundingRect().height())
 
