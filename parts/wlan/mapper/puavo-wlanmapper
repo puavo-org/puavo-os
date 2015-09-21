@@ -940,7 +940,7 @@ def main():
     app = QApplication(sys.argv)
 
     if app.argc() > 1:
-        error_message = "ERROR: invalid number of arguments ({})"
+        error_message = "ERROR: invalid number of arguments ({}), expected 0"
         print(error_message.format(app.argc() - 1), file=sys.stderr)
         print("Usage: {}".format(sys.argv[0]), file=sys.stderr)
         return 1
@@ -948,7 +948,7 @@ def main():
     win = MainWindow()
     win.show()
 
-    sys.exit(app.exec_())
+    return app.exec_()
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
