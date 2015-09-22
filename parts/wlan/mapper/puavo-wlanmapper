@@ -44,7 +44,9 @@ CHANS = [i for i in range(1, 15)] + [36, 40, 44, 48]
 
 FREQ_TO_CHAN = dict(zip(FREQS, CHANS))
 
-def save_heatmap(filepath, img_w, img_h, xs, ys, zs, scale_factor=0.2):
+HEATMAP_SCALE = 0.2
+
+def save_heatmap(filepath, img_w, img_h, xs, ys, zs, scale_factor=HEATMAP_SCALE):
     ## Interpolate z-values throughout the 2D-space using linear radial
     ## basis function.
     rbf = scipy.interpolate.Rbf(xs, ys, zs, function='linear')
@@ -163,10 +165,11 @@ class DrawHeatmapsThread(QThread):
     def __init__(self):
         QThread.__init__(self)
 
-        self.__doCancel    = False
-        self.__heatmapData = []
+        self.__doCancel     = False
+        self.__heatmapData  = []
+        self.__drawKwargs   = {}
 
-    def drawHeatmaps(self, heatmapData):
+    def drawHeatmaps(self, heatmapData, **kwargs):
         if not heatmapData:
             return
 
@@ -175,6 +178,7 @@ class DrawHeatmapsThread(QThread):
 
         self.__heatmapData = list(reversed(sorted(heatmapData)))
         self.__doCancel    = False
+        self.__drawKwargs  = kwargs
 
         QThread.start(self)
 
@@ -184,7 +188,7 @@ class DrawHeatmapsThread(QThread):
 
             with tempfile.TemporaryDirectory() as tmpdir:
                 filepath = os.path.join(tmpdir, "%dHz_%s.png" % (freq, bssid))
-                save_heatmap(filepath, *rest)
+                save_heatmap(filepath, *rest, **self.__drawKwargs)
                 img = QImage(filepath, "png")
 
             self.heatmapReady.emit(freq, bssid, img)
@@ -234,6 +238,7 @@ class HeatmapScene(QGraphicsScene):
         self.__heatmapItems    = {}
         self.__floorPlanItems  = {}
         self.__bssids          = []
+        self.__colHeadingItems = []
         self.__rowHeadingItems = []
         self.__project         = project
 
@@ -248,19 +253,20 @@ class HeatmapScene(QGraphicsScene):
         chan  = FREQ_TO_CHAN[freq]
         essid = self.__project.essids[bssid]
 
-        if len(self.items()) == 0:
-            for col in range(len(CHANS)):
+        for col in range(len(CHANS)):
+            try:
+                colHeadingItem = self.__colHeadingItems[col]
+            except IndexError:
                 colHeadingItem = self.addText("%d" % CHANS[col],
                                               HeatmapScene.FONT)
-
                 colHeadingItem.setTextWidth(heatmapPixmap.width())
                 alignTextItem(colHeadingItem, Qt.AlignHCenter)
+                self.__colHeadingItems.append(colHeadingItem)
+            else:
+                colHeadingItem.setTextWidth(heatmapPixmap.width())
 
-                colHeadingItemOffsetX = col * offsetPerCol + heatmapMargin
-                colHeadingItemOffsetY = -colHeadingItem.boundingRect().height()
-
-                colHeadingItem.moveBy(colHeadingItemOffsetX,
-                                      colHeadingItemOffsetY)
+            colHeadingItem.setPos(col * offsetPerCol + heatmapMargin,
+                                  -colHeadingItem.boundingRect().height())
 
         col = CHANS.index(chan)
         try:
@@ -277,24 +283,24 @@ class HeatmapScene(QGraphicsScene):
             heatmapItem.setToolTip("Channel: %d (%d MHz)\nBSSID: %s\nESSID: %s"
                                    % (chan, freq, bssid, essid))
             self.__heatmapItems[(freq, bssid)] = heatmapItem
-
-            heatmapItem.moveBy(col * offsetPerCol + heatmapMargin,
-                               row * offsetPerRow + heatmapMargin)
         else:
             heatmapItem.setPixmap(heatmapPixmap)
 
+        heatmapItem.setPos(col * offsetPerCol + heatmapMargin,
+                           row * offsetPerRow + heatmapMargin)
+
         # Ensure a row heading exists.
         try:
-            self.__rowHeadingItems[row]
+            rowHeadingItem = self.__rowHeadingItems[row]
         except IndexError:
             rowHeadingItem = self.addText("%s\n%s" % (bssid, essid),
                                           HeatmapScene.FONT)
-            rowHeadingItemWidth = rowHeadingItem.boundingRect().width()
-            rowHeadingItem.setTextWidth(rowHeadingItemWidth)
+            rowHeadingItem.setTextWidth(rowHeadingItem.boundingRect().width())
             alignTextItem(rowHeadingItem, Qt.AlignRight)
-            rowHeadingItem.moveBy(-rowHeadingItemWidth,
-                                  row * offsetPerRow + heatmapMargin)
             self.__rowHeadingItems.append(rowHeadingItem)
+
+        rowHeadingItem.setPos(-rowHeadingItem.boundingRect().width(),
+                              row * offsetPerRow + heatmapMargin)
 
         # Ensure a partially transparent floor plan is rendered on top
         # of the heatmap.
@@ -304,6 +310,9 @@ class HeatmapScene(QGraphicsScene):
             floorPlanPixmap = self.__project.floorPlanPixmap().scaled(heatmapPixmap.size())
             floorPlanItem = QGraphicsPixmapItem(floorPlanPixmap, heatmapItem)
             self.__floorPlanItems[(freq, bssid)] = floorPlanItem
+        else:
+            if floorPlanItem.pixmap().size() != heatmapPixmap.size():
+                floorPlanItem.setPixmap(self.__project.floorPlanPixmap().scaled(heatmapPixmap.size()))
 
 class MonitorScene(QGraphicsScene):
 
@@ -667,6 +676,32 @@ class Monitor(QObject):
             self.__process.close()
             self.__process = None
 
+class SettingsWidget(QWidget):
+
+    settingsChanged = pyqtSignal()
+
+    def __init__(self, *args):
+        QWidget.__init__(self, *args)
+
+        self.__applyButton = QPushButton("&Apply", self)
+        self.__applyButton.clicked.connect(lambda : self.__applyButton.setEnabled(False))
+        self.__applyButton.clicked.connect(self.settingsChanged)
+        self.__applyButton.setEnabled(False)
+
+        self.__heatmapScaleSpinBox = QDoubleSpinBox(self)
+        self.__heatmapScaleSpinBox.setMinimum(0.05)
+        self.__heatmapScaleSpinBox.setMaximum(1.0)
+        self.__heatmapScaleSpinBox.setValue(HEATMAP_SCALE)
+        self.__heatmapScaleSpinBox.setSingleStep(0.05)
+        self.__heatmapScaleSpinBox.valueChanged.connect(lambda : self.__applyButton.setEnabled(True))
+
+        layout = QFormLayout(self)
+        layout.addRow("Heatmap scale:", self.__heatmapScaleSpinBox)
+        layout.addRow(self.__applyButton)
+
+    def heatmapScale(self):
+        return self.__heatmapScaleSpinBox.value()
+
 class MonitorWidget(QWidget):
 
     def __init__(self, monitor, *args):
@@ -821,6 +856,14 @@ class MainWindow(QMainWindow):
         self.__monitorDockWidget.setVisible(False)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.__monitorDockWidget)
 
+        self.__settingsDockWidget = QDockWidget(self)
+        self.__settingsWidget = SettingsWidget(self)
+        self.__settingsWidget.settingsChanged.connect(self.updateHeatmaps)
+        self.__settingsDockWidget.setWidget(self.__settingsWidget)
+        self.__settingsDockWidget.setWindowTitle("Settings")
+        self.__settingsDockWidget.setVisible(False)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.__settingsDockWidget)
+
         self.__aboutAction = QAction(self)
         self.__aboutAction.setText("&About...")
         self.__aboutAction.triggered.connect(self.__showAboutDialog)
@@ -866,6 +909,7 @@ class MainWindow(QMainWindow):
 
         viewMenu = menuBar.addMenu("&View")
         viewMenu.addAction(self.__monitorDockWidget.toggleViewAction())
+        viewMenu.addAction(self.__settingsDockWidget.toggleViewAction())
 
         helpMenu = menuBar.addMenu("&Help")
         helpMenu.addAction(self.__whatsThisAction)
@@ -884,6 +928,9 @@ class MainWindow(QMainWindow):
             self.__openProjectAction.trigger()
 
     def updateHeatmaps(self):
+        if self.__monitorScene is None:
+            return
+
         measurements = self.__monitorScene.measurements()
 
         xs = measurements.pop('x')
@@ -902,7 +949,8 @@ class MainWindow(QMainWindow):
                 for bssid, zs in bssidmap.items():
                     heatmapData.append((freq, bssid, width, height, xs, ys, zs))
 
-        self.__drawHeatmapsThread.drawHeatmaps(heatmapData)
+        self.__drawHeatmapsThread.drawHeatmaps(heatmapData,
+                                               scale_factor=self.__settingsWidget.heatmapScale())
 
     def closeEvent(self, event):
         self.__monitor.terminate()
