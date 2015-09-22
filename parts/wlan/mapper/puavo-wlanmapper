@@ -795,6 +795,7 @@ class MainWindow(QMainWindow):
         self.__monitorWidget.setEnabled(False)
         self.__monitorDockWidget.setWidget(self.__monitorWidget)
         self.__monitorDockWidget.setWindowTitle("Monitor")
+        self.__monitorDockWidget.setVisible(False)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.__monitorDockWidget)
 
         self.__aboutAction = QAction(self)
@@ -936,6 +937,7 @@ class MainWindow(QMainWindow):
         self.__monitorScene.setProject(self.__project)
 
         self.__saveProjectAsAction.setEnabled(True)
+        self.__monitorDockWidget.setVisible(True)
         self.__monitorWidget.setEnabled(True)
         self.__monitorWidget.fitAllInMonitorView()
 
