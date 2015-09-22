@@ -69,6 +69,7 @@ class Project:
         self.__lastErrorMessage    = ''
         self.__spotData            = []
         self.__isLoadOk            = True
+        self.__filePath            = None
 
     def isValid(self):
         return (self.__isLoadOk
@@ -113,6 +114,7 @@ class Project:
                     pos = QPointF(spotDatum['x'], spotDatum['y'])
                     self.__spotData.append((pos, spotDatum['measurement']))
 
+        self.__filePath = filePath
         self.__isLoadOk = True
         return True
 
@@ -139,6 +141,7 @@ class Project:
             with tarfile.open(str(filePath), "w:gz") as f:
                 f.add(scenedir, "scene")
 
+        self.__filePath = filePath
         return True
 
     def layoutImagePixmap(self):
@@ -149,6 +152,9 @@ class Project:
 
     def spotData(self):
         return self.__spotData
+
+    def filePath(self):
+        return self.__filePath
 
 class DrawHeatmapsThread(QThread):
 
@@ -806,18 +812,24 @@ class MainWindow(QMainWindow):
         self.__aboutAction.triggered.connect(self.__showAboutDialog)
 
         self.__newProjectAction = QAction(self)
-        self.__newProjectAction.setText("&New project...")
+        self.__newProjectAction.setText("&New...")
         self.__newProjectAction.setShortcut(QKeySequence("Ctrl+N"))
         self.__newProjectAction.triggered.connect(self.__newProjectDialog)
 
+        self.__saveProjectAction = QAction(self)
+        self.__saveProjectAction.setText("&Save")
+        self.__saveProjectAction.setShortcut(QKeySequence("Ctrl+S"))
+        self.__saveProjectAction.triggered.connect(self.__saveProject)
+        self.__saveProjectAction.setEnabled(False)
+
         self.__saveProjectAsAction = QAction(self)
-        self.__saveProjectAsAction.setText("&Save project as...")
-        self.__saveProjectAsAction.setShortcut(QKeySequence("Ctrl+S"))
+        self.__saveProjectAsAction.setText("Save &As...")
+        self.__saveProjectAsAction.setShortcut(QKeySequence("Ctrl+Shift+S"))
         self.__saveProjectAsAction.triggered.connect(self.__saveProjectAsDialog)
         self.__saveProjectAsAction.setEnabled(False)
 
         self.__openProjectAction = QAction(self)
-        self.__openProjectAction.setText("&Open project...")
+        self.__openProjectAction.setText("&Open...")
         self.__openProjectAction.setShortcut(QKeySequence("Ctrl+O"))
         self.__openProjectAction.triggered.connect(self.__openProjectDialog)
 
@@ -833,6 +845,7 @@ class MainWindow(QMainWindow):
         fileMenu = menuBar.addMenu("&File")
         fileMenu.addAction(self.__newProjectAction)
         fileMenu.addAction(self.__openProjectAction)
+        fileMenu.addAction(self.__saveProjectAction)
         fileMenu.addAction(self.__saveProjectAsAction)
         fileMenu.addSeparator()
         fileMenu.addAction(self.__quitAction)
@@ -900,10 +913,19 @@ class MainWindow(QMainWindow):
 
         self.__setProject(project)
 
+    def __saveProject(self):
+        if self.__project.filePath() is None:
+            self.__saveProjectAsDialog()
+            return
+        self.__save(self.__project.filePath())
+
     def __saveProjectAsDialog(self):
+        proposedFilePath = self.__project.filePath()
+        if proposedFilePath is None:
+            proposedFilePath = QDir.currentPath() + "/untitled_project.tar.gz"
         filepath = QFileDialog.getSaveFileName(None,
                                                "Save the project as",
-                                               QDir.currentPath(),
+                                               proposedFilePath,
                                                "GZipped Tar archives (*.tar.gz)")
         filepath = str(filepath)
         if not filepath:
@@ -912,6 +934,9 @@ class MainWindow(QMainWindow):
         if not str(filepath).endswith('.tar.gz'):
             filepath = '%s.tar.gz' % filepath
 
+        self.__save(filepath)
+
+    def __save(self, filepath):
         spotData = []
         for spot in self.__monitorScene.spots():
             spotData.append((spot.pos(), spot.measurement()))
@@ -956,6 +981,7 @@ class MainWindow(QMainWindow):
         self.__monitorWidget.setScene(self.__monitorScene)
         self.__monitorScene.setProject(project)
 
+        self.__saveProjectAction.setEnabled(True)
         self.__saveProjectAsAction.setEnabled(True)
         self.__monitorDockWidget.setVisible(True)
         self.__monitorWidget.setEnabled(True)
