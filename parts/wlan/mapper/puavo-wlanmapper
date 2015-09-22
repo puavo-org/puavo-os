@@ -213,20 +213,13 @@ class HeatmapScene(QGraphicsScene):
 
     FONT = QFont("Monospace", 56)
 
-    def __init__(self, parent):
+    def __init__(self, project, parent):
         QGraphicsScene.__init__(self, parent)
 
         self.__heatmaps = {}
         self.__freqs    = []
         self.__bssids   = []
-        self.__project  = None
-
-    def setProject(self, project):
-        self.__heatmaps = {}
-        self.__freqs    = []
-        self.__bssids   = []
         self.__project  = project
-        self.clear()
 
     def addHeatmap(self, freq, bssid, img):
         pixmap = QPixmap.fromImage(img)
@@ -779,16 +772,26 @@ class MainWindow(QMainWindow):
 
         self.__monitor = Monitor(self)
 
-        self.__heatmapScene = HeatmapScene(self)
-        self.__monitorScene = MonitorScene(self.__monitor, self)
-        self.__monitorScene.measurementsChanged.connect(self.updateHeatmaps)
+        self.__heatmapScene = None
+        self.__monitorScene = None
 
         self.setWindowTitle("Puavo WLAN Mapper")
 
-        view = ZoomableGraphicsView(self)
-        view.setRenderHints(QPainter.Antialiasing)
-        view.setScene(self.__heatmapScene)
-        self.setCentralWidget(view)
+        centralWidget = QWidget(self)
+        centralWidgetLayout = QHBoxLayout(centralWidget)
+
+        self.__heatmapView = ZoomableGraphicsView(self)
+        self.__heatmapView.setRenderHints(QPainter.Antialiasing)
+        self.__heatmapView.setVisible(False)
+        centralWidgetLayout.addWidget(self.__heatmapView)
+
+        self.__hintLabel = QLabel('<a href="create">Create</a> or <a href="open">open</a> a project to begin.', self)
+        self.__hintLabel.linkActivated.connect(self.__hintLabelLinkActivated)
+        self.__hintLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.__hintLabel.setWordWrap(True)
+        centralWidgetLayout.addWidget(self.__hintLabel)
+
+        self.setCentralWidget(centralWidget)
 
         self.__monitorDockWidget = QDockWidget(self)
         self.__monitorWidget = MonitorWidget(self.__monitor, self)
@@ -844,8 +847,14 @@ class MainWindow(QMainWindow):
         self.setMenuBar(menuBar)
 
         self.__drawHeatmapsThread = DrawHeatmapsThread()
-        self.__drawHeatmapsThread.heatmapReady.connect(self.__heatmapScene.addHeatmap)
-        self.__drawHeatmapsThread.heatmapReady.connect(self.centralWidget().fitAllInView)
+        self.__drawHeatmapsThread.heatmapReady.connect(self.__addHeatmap)
+        self.__drawHeatmapsThread.heatmapReady.connect(self.__heatmapView.fitAllInView)
+
+    def __hintLabelLinkActivated(self, href):
+        if href == 'create':
+            self.__newProjectAction.trigger()
+        elif href == 'open':
+            self.__openProjectAction.trigger()
 
     def updateHeatmaps(self):
         measurements = self.__monitorScene.measurements()
@@ -933,13 +942,29 @@ class MainWindow(QMainWindow):
 
         self.__project = project
 
-        self.__heatmapScene.setProject(self.__project)
-        self.__monitorScene.setProject(self.__project)
+        self.__heatmapScene = HeatmapScene(project, self)
+        self.__heatmapView.setScene(self.__heatmapScene)
+        self.__hintLabel.setVisible(True)
+        self.__heatmapView.setVisible(False)
+        self.__hintLabel.setText("Heatmaps will be rendered when two or more measurements have been taken.")
+
+        if self.__monitorScene is not None:
+            self.__monitorScene.measurementsChanged.disconnect(self.updateHeatmaps)
+
+        self.__monitorScene = MonitorScene(self.__monitor, self)
+        self.__monitorScene.measurementsChanged.connect(self.updateHeatmaps)
+        self.__monitorWidget.setScene(self.__monitorScene)
+        self.__monitorScene.setProject(project)
 
         self.__saveProjectAsAction.setEnabled(True)
         self.__monitorDockWidget.setVisible(True)
         self.__monitorWidget.setEnabled(True)
         self.__monitorWidget.fitAllInMonitorView()
+
+    def __addHeatmap(self, *args):
+        self.__hintLabel.setVisible(False)
+        self.__heatmapView.setVisible(True)
+        self.__heatmapScene.addHeatmap(*args)
 
     def __showAboutDialog(self):
         aboutText =  (
