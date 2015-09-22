@@ -792,7 +792,7 @@ class MainWindow(QMainWindow):
 
         self.__monitorDockWidget = QDockWidget(self)
         self.__monitorWidget = MonitorWidget(self.__monitor, self)
-        self.__monitorWidget.setScene(self.__monitorScene)
+        self.__monitorWidget.setEnabled(False)
         self.__monitorDockWidget.setWidget(self.__monitorWidget)
         self.__monitorDockWidget.setWindowTitle("Monitor")
         self.addDockWidget(Qt.LeftDockWidgetArea, self.__monitorDockWidget)
@@ -936,6 +936,7 @@ class MainWindow(QMainWindow):
         self.__monitorScene.setProject(self.__project)
 
         self.__saveProjectAsAction.setEnabled(True)
+        self.__monitorWidget.setEnabled(True)
         self.__monitorWidget.fitAllInMonitorView()
 
     def __showAboutDialog(self):
