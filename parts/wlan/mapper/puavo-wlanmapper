@@ -65,7 +65,7 @@ class Project:
 
     def __init__(self):
         self.essids                = {}
-        self.__layoutImagePixmap   = None
+        self.__floorPlanPixmap     = None
         self.__lastErrorMessage    = ''
         self.__spotData            = []
         self.__isLoadOk            = True
@@ -73,25 +73,25 @@ class Project:
 
     def isValid(self):
         return (self.__isLoadOk
-                and self.__layoutImagePixmap is not None
-                and not self.__layoutImagePixmap.isNull())
+                and self.__floorPlanPixmap is not None
+                and not self.__floorPlanPixmap.isNull())
 
     def lastErrorMessage(self):
         return self.__lastErrorMessage
 
-    def loadLayoutImage(self, filePath):
+    def loadFloorPlan(self, filePath):
         pixmap = QPixmap(filePath, "PNG")
-        return self.__setLayoutImagePixmap(pixmap)
+        return self.__setFloorPlanPixmap(pixmap)
 
-    def __setLayoutImagePixmap(self, pixmap):
+    def __setFloorPlanPixmap(self, pixmap):
         if pixmap.isNull():
             self.__lastErrorMessage = (
-                "File {} could not be loaded as a layout image.\n\n" \
-                "Please ensure the layout image is a valid PNG file.".format(
+                "File {} could not be loaded as a floor plan.\n\n" \
+                "Please ensure the floor plan is a valid PNG file.".format(
                     str(filePath)))
             return False
 
-        self.__layoutImagePixmap = pixmap
+        self.__floorPlanPixmap = pixmap
 
         return True
 
@@ -102,7 +102,7 @@ class Project:
             with archive_file.extractfile("scene/layout.png") as f:
                 pixmap = QPixmap()
                 pixmap.loadFromData(f.read(), "PNG")
-                if not self.__setLayoutImagePixmap(pixmap):
+                if not self.__setFloorPlanPixmap(pixmap):
                     return False
 
             with archive_file.extractfile("scene/essids.pickle") as f:
@@ -136,7 +136,7 @@ class Project:
             with open(os.path.join(scenedir, "essids.pickle"), "wb") as f:
                 pickle.dump(self.essids, f)
 
-            self.__layoutImagePixmap.save(os.path.join(scenedir, "layout.png"))
+            self.__floorPlanPixmap.save(os.path.join(scenedir, "layout.png"))
 
             with tarfile.open(str(filePath), "w:gz") as f:
                 f.add(scenedir, "scene")
@@ -144,8 +144,8 @@ class Project:
         self.__filePath = filePath
         return True
 
-    def layoutImagePixmap(self):
-        return self.__layoutImagePixmap
+    def floorPlanPixmap(self):
+        return self.__floorPlanPixmap
 
     def setSpotData(self, spotData):
         self.__spotData = spotData
@@ -238,8 +238,8 @@ class HeatmapScene(QGraphicsScene):
             heatmap.setToolTip("Channel: %d (%d MHz)\nBSSID: %s\nESSID: %s"
                                % (channel, freq, bssid, essid))
 
-            layoutPixmap = self.__project.layoutImagePixmap().scaled(pixmap.size())
-            QGraphicsPixmapItem(layoutPixmap, heatmap)
+            floorPlanPixmap = self.__project.floorPlanPixmap().scaled(pixmap.size())
+            QGraphicsPixmapItem(floorPlanPixmap, heatmap)
 
             isFirstFreq = False
             try:
@@ -301,19 +301,19 @@ class MonitorScene(QGraphicsScene):
         self.__monitor = monitor
 
         self.__spots            = []
-        self.__layoutPixmapItem = None
+        self.__floorPlanItem    = None
 
         self.__project          = None
 
     def setProject(self, project):
         self.__spots            = []
-        self.__layoutPixmapItem = None
+        self.__floorPlanItem    = None
         self.__project          = project
 
         self.clear()
 
-        self.__layoutPixmapItem = self.addPixmap(project.layoutImagePixmap())
-        self.__layoutPixmapItem.setZValue(-1)
+        self.__floorPlanItem = self.addPixmap(project.floorPlanPixmap())
+        self.__floorPlanItem.setZValue(-1)
 
         for pos, measurement in project.spotData():
             self.addSpot(pos).setMeasurement(measurement)
@@ -374,10 +374,10 @@ class MonitorScene(QGraphicsScene):
         if event.isAccepted():
             return
 
-        if self.__layoutPixmapItem is None:
+        if self.__floorPlanItem is None:
             return
 
-        if not self.__layoutPixmapItem.boundingRect().contains(event.scenePos()):
+        if not self.__floorPlanItem.boundingRect().contains(event.scenePos()):
             return
 
         if (event.button() == Qt.LeftButton and not event.modifiers()):
@@ -875,8 +875,8 @@ class MainWindow(QMainWindow):
         xs = measurements.pop('x')
         ys = measurements.pop('y')
 
-        width = self.__project.layoutImagePixmap().width()
-        height = self.__project.layoutImagePixmap().height()
+        width = self.__project.floorPlanPixmap().width()
+        height = self.__project.floorPlanPixmap().height()
 
         heatmapData = []
 
@@ -952,10 +952,10 @@ class MainWindow(QMainWindow):
         if not dialog.exec_():
             return
 
-        layoutImageFilePath = dialog.layoutImageFilePath()
+        floorPlanFilePath = dialog.floorPlanFilePath()
 
         project = Project()
-        if not project.loadLayoutImage(layoutImageFilePath):
+        if not project.loadFloorPlan(floorPlanFilePath):
             QMessageBox.critical(self, "Failed to create a new project",
                                  project.lastErrorMessage())
             return
@@ -1019,7 +1019,7 @@ class NewProjectDialog(QDialog):
 
         self.__imageLabel = QLabel()
         browseButton = QPushButton("&Browse...")
-        browseButton.clicked.connect(self.__getLayoutImageFileName)
+        browseButton.clicked.connect(self.__getFloorPlanFileName)
 
         cancelButton = QPushButton("&Cancel")
         cancelButton.clicked.connect(self.reject)
@@ -1037,7 +1037,7 @@ class NewProjectDialog(QDialog):
         browseLayout.addStretch()
         browseLayout.addWidget(browseButton)
 
-        formLayout.addRow("Layout image:", browseLayout)
+        formLayout.addRow("Floor plan:", browseLayout)
 
         buttonLayout.addWidget(cancelButton)
         buttonLayout.addWidget(createButton)
@@ -1047,14 +1047,14 @@ class NewProjectDialog(QDialog):
 
         self.__createButton = createButton
 
-        self.__layoutImageFilePath = None
+        self.__floorPlanFilePath = None
 
-    def layoutImageFilePath(self):
-        return self.__layoutImageFilePath
+    def floorPlanFilePath(self):
+        return self.__floorPlanFilePath
 
-    def __getLayoutImageFileName(self):
+    def __getFloorPlanFileName(self):
         filepath = QFileDialog.getOpenFileName(None,
-                                               "Load layout image",
+                                               "Load floor plan",
                                                QDir.currentPath(),
                                                "Images (*.png)")
         if filepath:
@@ -1062,7 +1062,7 @@ class NewProjectDialog(QDialog):
             if not pixmap.isNull():
                 self.__imageLabel.setPixmap(pixmap.scaledToWidth(320))
                 self.__imageLabel.setToolTip(filepath)
-                self.__layoutImageFilePath = filepath
+                self.__floorPlanFilePath = filepath
             self.__createButton.setEnabled(not pixmap.isNull())
 
 def main():
