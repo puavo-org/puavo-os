@@ -968,6 +968,9 @@ class MainWindow(QMainWindow):
                 for bssid, zs in bssidmap.items():
                     heatmapData.append((freq, bssid, width, height, xs, ys, zs))
 
+            else:
+                self.__hideHeatmaps()
+
         heatmapScale = self.__settingsWidget.heatmapScale()
         self.__drawHeatmapsThread.drawHeatmaps(heatmapData, scale=heatmapScale)
 
@@ -1045,6 +1048,12 @@ class MainWindow(QMainWindow):
 
         self.__setProject(project)
 
+    def __hideHeatmaps(self):
+        self.__hintLabel.setVisible(True)
+        self.__heatmapView.setVisible(False)
+        self.__hintLabel.setText("Heatmaps will be rendered when two or more "
+                                 "spots have been succesfully monitored.")
+
     def __setProject(self, project):
         self.__monitor.terminate()
 
@@ -1052,10 +1061,7 @@ class MainWindow(QMainWindow):
 
         self.__heatmapScene = HeatmapScene(project, self)
         self.__heatmapView.setScene(self.__heatmapScene)
-        self.__hintLabel.setVisible(True)
-        self.__heatmapView.setVisible(False)
-        self.__hintLabel.setText("Heatmaps will be rendered when two or more "
-                                 "spots have been succesfully monitored.")
+        self.__hideHeatmaps()
 
         if self.__monitorScene is not None:
             self.__monitorScene.measurementsChanged.disconnect(
