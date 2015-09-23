@@ -37,30 +37,30 @@ import numpy
 
 import puavowlanmapper.icons
 
-LEVELS = range(-95, -20, 5)
-
-FREQS = [2412 + i * 5 for i in range(13)] + [2484] + [5180, 5200, 5220, 5240]
-CHANS = [i for i in range(1, 15)] + [36, 40, 44, 48]
-
-FREQ_TO_CHAN = dict(zip(FREQS, CHANS))
-
+RSSI_MIN      = -95
+RSSI_MAX      = -20
+FREQS         = [2412 + i * 5 for i in range(13)] + [2484] + [5180, 5200, 5220, 5240]
+CHANS         = [i for i in range(1, 15)] + [36, 40, 44, 48]
+FREQ_TO_CHAN  = dict(zip(FREQS, CHANS))
+FREQ_TO_INDEX = dict(zip(FREQS, range(len(FREQS))))
 HEATMAP_SCALE = 0.2
 
-def save_heatmap(filepath, img_w, img_h, xs, ys, zs, scale_factor=HEATMAP_SCALE):
-    ## Interpolate z-values throughout the 2D-space using linear radial
-    ## basis function.
+def drawHeatmap(filepath, imageWidth, imageHeight, xs, ys, zs,
+                scale=HEATMAP_SCALE):
+    ## Interpolate z-values throughout the 2D-space using linear
+    ## radial basis function.
     rbf = scipy.interpolate.Rbf(xs, ys, zs, function='linear')
 
-    spc_w = img_w * scale_factor
-    spc_h = img_h * scale_factor
+    spaceWidth  = imageWidth  * scale
+    spaceHeight = imageHeight * scale
 
-    spc_xs, spc_ys = [v.flatten() for v in numpy.meshgrid(
-        numpy.linspace(0, img_w - 1, spc_w),
-        numpy.linspace(0, img_h - 1, spc_h))]
-    array2d = rbf(spc_xs, spc_ys).reshape((spc_h, spc_w))
+    spaceCoords = [v.flatten() for v in numpy.meshgrid(
+        numpy.linspace(0, imageWidth  - 1, spaceWidth),
+        numpy.linspace(0, imageHeight - 1, spaceHeight))]
+    array2d = rbf(*spaceCoords).reshape((spaceHeight, spaceWidth))
 
     matplotlib.pyplot.imsave(filepath, array2d, format='png',
-                             vmin=min(LEVELS), vmax=max(LEVELS),
+                             vmin=RSSI_MIN, vmax=RSSI_MAX,
                              cmap='RdYlBu_r')
 
 class Project:
@@ -188,10 +188,10 @@ class DrawHeatmapsThread(QThread):
 
             with tempfile.TemporaryDirectory() as tmpdir:
                 filepath = os.path.join(tmpdir, "%dHz_%s.png" % (freq, bssid))
-                save_heatmap(filepath, *rest, **self.__drawKwargs)
-                img = QImage(filepath, "png")
+                drawHeatmap(filepath, *rest, **self.__drawKwargs)
+                image = QImage(filepath, "png")
 
-            self.heatmapReady.emit(freq, bssid, img)
+            self.heatmapReady.emit(freq, bssid, image)
 
 class ZoomableGraphicsView(QGraphicsView):
 
@@ -245,11 +245,11 @@ class HeatmapScene(QGraphicsScene):
     def __updateColumnHeadingItems(self, size):
         margin = max(0.1 * size.width(), 0.1 * size.height())
 
-        for col in range(len(CHANS)):
+        for col, chan in enumerate(CHANS):
             try:
                 item = self.__colHeadingItems[col]
             except IndexError:
-                item = self.addText("%d" % CHANS[col], HeatmapScene.FONT)
+                item = self.addText("%d" % chan, HeatmapScene.FONT)
                 item.setTextWidth(size.width())
                 alignTextItem(item, Qt.AlignHCenter)
                 self.__colHeadingItems.append(item)
@@ -260,10 +260,10 @@ class HeatmapScene(QGraphicsScene):
                         -item.boundingRect().height())
 
     def __updateFloorPlanItem(self, col, row, heatmapItem):
-        chan          = CHANS[col]
-        freq          = FREQS[col]
-        bssid         = self.__bssids[row]
-        size          = heatmapItem.pixmap().size()
+        chan  = CHANS[col]
+        freq  = FREQS[col]
+        bssid = self.__bssids[row]
+        size  = heatmapItem.pixmap().size()
 
         try:
             item = self.__floorPlanItems[(freq, bssid)]
@@ -318,7 +318,7 @@ class HeatmapScene(QGraphicsScene):
         pixmap     = QPixmap.fromImage(image)
         pixmapSize = pixmap.size()
         chan       = FREQ_TO_CHAN[freq]
-        col        = CHANS.index(chan)
+        col        = FREQ_TO_INDEX[freq]
         try:
             row = self.__bssids.index(bssid)
         except ValueError:
@@ -336,17 +336,15 @@ class MonitorScene(QGraphicsScene):
     def __init__(self, monitor, parent):
         QGraphicsScene.__init__(self, parent)
 
-        self.__monitor = monitor
-
-        self.__spots            = []
-        self.__floorPlanItem    = None
-
-        self.__project          = None
+        self.__monitor       = monitor
+        self.__spots         = []
+        self.__floorPlanItem = None
+        self.__project       = None
 
     def setProject(self, project):
-        self.__spots            = []
-        self.__floorPlanItem    = None
-        self.__project          = project
+        self.__spots         = []
+        self.__floorPlanItem = None
+        self.__project       = project
 
         self.clear()
 
@@ -364,11 +362,9 @@ class MonitorScene(QGraphicsScene):
             self.measurementsChanged.emit()
 
     def measurements(self):
-        result = {}
-
-        xs = result['x'] = []
-        ys = result['y'] = []
-
+        result    = {}
+        xs        = result['x'] = []
+        ys        = result['y'] = []
         bssidsets = {}
 
         for spot in self.__spots:
@@ -394,9 +390,9 @@ class MonitorScene(QGraphicsScene):
             for freq, bssidset in bssidsets.items():
                 bssidmap = result.setdefault(freq, {})
                 for bssid in bssidset:
-                    values = bssidmap.setdefault(bssid, [])
-                    value = measurement.get(freq, {}).get(bssid, min(LEVELS))
-                    values.append(int(round(value)))
+                    rssis = bssidmap.setdefault(bssid, [])
+                    rssi = measurement.get(freq, {}).get(bssid, RSSI_MIN)
+                    rssis.append(int(round(rssi)))
 
         return result
 
@@ -434,11 +430,11 @@ class MonitorScene(QGraphicsScene):
         if spot is None:
             return
 
-        menu = QMenu()
+        menu         = QMenu()
         removeAction = menu.addAction("&Remove")
         toggleAction = menu.addAction("&Toggle monitoring")
+        action       = menu.exec_(event.screenPos())
 
-        action = menu.exec_(event.screenPos())
         if action is None:
             return
 
@@ -458,18 +454,18 @@ class MonitorSpot(QGraphicsPolygonItem):
 
         self.__monitor = monitor
 
-        polygon       = QPolygonF()
-        corners       = 5
-        corner_angle  = math.pi / corners
-        spoke_ratio   = 1 / 3
+        polygon     = QPolygonF()
+        corners     = 5
+        cornerAngle = math.pi / corners
+        spokeRatio  = 1 / 3
         for i in range(corners * 2):
-            a     = corner_angle * i - 0.5 * corner_angle * (corners % 2)
+            a     = cornerAngle * i - 0.5 * cornerAngle * (corners % 2)
             x     = math.cos(a)
             y     = math.sin(a)
             point = QPointF(x, y)
 
             if i % 2:
-                point *= spoke_ratio
+                point *= spokeRatio
 
             polygon << point * MonitorSpot.SIZE;
 
@@ -515,7 +511,8 @@ class MonitorSpot(QGraphicsPolygonItem):
         self.toggleMonitor()
 
     def __monitorStarted(self):
-        self.__animation.timeLine().setDuration(self.__monitor.channelDwellTime() * len(CHANS))
+        self.__animation.timeLine().setDuration(
+            self.__monitor.dwellTime() * len(CHANS))
         self.__animation.timeLine().start()
 
     def __monitorStopped(self, isSuccess):
@@ -594,11 +591,13 @@ class Monitor(QObject):
 
         self.__process = None
         self.__tmpdir = tempfile.TemporaryDirectory()
-        self.__horst_errfile_path = os.path.join(self.__tmpdir.name, 'horst.err')
-        self.__horst_configfile_path = os.path.join(self.__tmpdir.name, 'horst.conf')
+        self.__horst_errfile_path = os.path.join(
+            self.__tmpdir.name, 'horst.err')
+        self.__horst_configfile_path = os.path.join(
+            self.__tmpdir.name, 'horst.conf')
 
         self.isTerminated = False
-        self.setChannelDwellTime(500)
+        self.setDwellTime(500)
 
         self.__output = ''
 
@@ -608,10 +607,10 @@ class Monitor(QObject):
     def availableInterfaces(self):
         return self.__availableInterfaces
 
-    def channelDwellTime(self):
+    def dwellTime(self):
         return self.__dwell
 
-    def setChannelDwellTime(self, millisecs):
+    def setDwellTime(self, millisecs):
         self.__dwell = max(Monitor.MIN_CHANNEL_DWELL_TIME,
                            min(millisecs, Monitor.MAX_CHANNEL_DWELL_TIME))
 
@@ -699,7 +698,8 @@ class SettingsWidget(QWidget):
         QWidget.__init__(self, *args)
 
         self.__applyButton = QPushButton("&Apply", self)
-        self.__applyButton.clicked.connect(lambda : self.__applyButton.setEnabled(False))
+        self.__applyButton.clicked.connect(
+            lambda : self.__applyButton.setEnabled(False))
         self.__applyButton.clicked.connect(self.settingsChanged)
         self.__applyButton.setEnabled(False)
 
@@ -708,7 +708,8 @@ class SettingsWidget(QWidget):
         self.__heatmapScaleSpinBox.setMaximum(1.0)
         self.__heatmapScaleSpinBox.setValue(HEATMAP_SCALE)
         self.__heatmapScaleSpinBox.setSingleStep(0.05)
-        self.__heatmapScaleSpinBox.valueChanged.connect(lambda : self.__applyButton.setEnabled(True))
+        self.__heatmapScaleSpinBox.valueChanged.connect(
+            lambda : self.__applyButton.setEnabled(True))
 
         layout = QFormLayout(self)
         layout.addRow("Heatmap scale:", self.__heatmapScaleSpinBox)
@@ -749,8 +750,8 @@ class MonitorWidget(QWidget):
         self.__dwellSpinBox.setMinimum(Monitor.MIN_CHANNEL_DWELL_TIME)
         self.__dwellSpinBox.setMaximum(Monitor.MAX_CHANNEL_DWELL_TIME)
         self.__dwellSpinBox.setSingleStep(50)
-        self.__dwellSpinBox.setValue(monitor.channelDwellTime())
-        self.__dwellSpinBox.valueChanged.connect(self.__monitor.setChannelDwellTime)
+        self.__dwellSpinBox.setValue(monitor.dwellTime())
+        self.__dwellSpinBox.valueChanged.connect(self.__monitor.setDwellTime)
 
         dwellWhatsThis = """
         <p>
@@ -805,7 +806,7 @@ class MonitorWidget(QWidget):
 
     def __updateProgressBar(self):
         self.__progressBar.setValue(self.__progressBar.value() +
-                                    self.__monitor.channelDwellTime())
+                                    self.__monitor.dwellTime())
 
     def setScene(self, scene):
         self.__view.setScene(scene)
@@ -816,8 +817,8 @@ class MonitorWidget(QWidget):
     def __disable(self):
         self.__ifaceComboBox.setEnabled(False)
         self.__dwellSpinBox.setEnabled(False)
-        self.__progressTimer.start(self.__monitor.channelDwellTime())
-        self.__progressBar.setMaximum(self.__monitor.channelDwellTime() * len(CHANS))
+        self.__progressTimer.start(self.__monitor.dwellTime())
+        self.__progressBar.setMaximum(self.__monitor.dwellTime() * len(CHANS))
         self.__progressBar.setFormat("Scanning...")
         self.__progressBar.setValue(0)
 
@@ -855,7 +856,9 @@ class MainWindow(QMainWindow):
         self.__heatmapView.setVisible(False)
         centralWidgetLayout.addWidget(self.__heatmapView)
 
-        self.__hintLabel = QLabel('<a href="create">Create</a> or <a href="open">open</a> a project to begin.', self)
+        self.__hintLabel = QLabel('<a href="create">Create</a> or '
+                                  '<a href="open">open</a> a project to begin.',
+                                  self)
         self.__hintLabel.linkActivated.connect(self.__hintLabelLinkActivated)
         self.__hintLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         self.__hintLabel.setWordWrap(True)
@@ -934,7 +937,8 @@ class MainWindow(QMainWindow):
 
         self.__drawHeatmapsThread = DrawHeatmapsThread()
         self.__drawHeatmapsThread.heatmapReady.connect(self.__addHeatmap)
-        self.__drawHeatmapsThread.heatmapReady.connect(self.__heatmapView.fitAllInView)
+        self.__drawHeatmapsThread.heatmapReady.connect(
+            self.__heatmapView.fitAllInView)
 
     def __hintLabelLinkActivated(self, href):
         if href == 'create':
@@ -964,8 +968,8 @@ class MainWindow(QMainWindow):
                 for bssid, zs in bssidmap.items():
                     heatmapData.append((freq, bssid, width, height, xs, ys, zs))
 
-        self.__drawHeatmapsThread.drawHeatmaps(heatmapData,
-                                               scale_factor=self.__settingsWidget.heatmapScale())
+        heatmapScale = self.__settingsWidget.heatmapScale()
+        self.__drawHeatmapsThread.drawHeatmaps(heatmapData, scale=heatmapScale)
 
     def closeEvent(self, event):
         self.__monitor.terminate()
@@ -977,7 +981,8 @@ class MainWindow(QMainWindow):
         filepath = QFileDialog.getOpenFileName(None,
                                                "Open a project",
                                                QDir.currentPath(),
-                                               "Compressed Tar archives (*.tar.gz)")
+                                               "Compressed Tar archives "
+                                               "(*.tar.gz)")
         if not filepath:
             return
 
@@ -1003,7 +1008,8 @@ class MainWindow(QMainWindow):
         filepath = QFileDialog.getSaveFileName(None,
                                                "Save the project as",
                                                proposedFilePath,
-                                               "GZipped Tar archives (*.tar.gz)")
+                                               "GZipped Tar archives "
+                                               "(*.tar.gz)")
         filepath = str(filepath)
         if not filepath:
             return
@@ -1048,10 +1054,12 @@ class MainWindow(QMainWindow):
         self.__heatmapView.setScene(self.__heatmapScene)
         self.__hintLabel.setVisible(True)
         self.__heatmapView.setVisible(False)
-        self.__hintLabel.setText("Heatmaps will be rendered when two or more measurements have been taken.")
+        self.__hintLabel.setText("Heatmaps will be rendered when two or more "
+                                 "spots have been succesfully monitored.")
 
         if self.__monitorScene is not None:
-            self.__monitorScene.measurementsChanged.disconnect(self.updateHeatmaps)
+            self.__monitorScene.measurementsChanged.disconnect(
+                self.updateHeatmaps)
 
         self.__monitorScene = MonitorScene(self.__monitor, self)
         self.__monitorScene.measurementsChanged.connect(self.updateHeatmaps)
