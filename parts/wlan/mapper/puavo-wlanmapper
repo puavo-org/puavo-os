@@ -931,6 +931,7 @@ class MainWindow(QMainWindow):
 
         helpMenu = menuBar.addMenu("&Help")
         helpMenu.addAction(self.__whatsThisAction)
+        helpMenu.addSeparator()
         helpMenu.addAction(self.__aboutAction)
 
         self.setMenuBar(menuBar)
