@@ -242,77 +242,92 @@ class HeatmapScene(QGraphicsScene):
         self.__rowHeadingItems = []
         self.__project         = project
 
-    def addHeatmap(self, freq, bssid, img):
-        heatmapPixmap = QPixmap.fromImage(img)
-        heatmapMargin = max(0.1 * heatmapPixmap.width(),
-                            0.1 * heatmapPixmap.height())
-
-        offsetPerCol = heatmapMargin + heatmapPixmap.width()
-        offsetPerRow = heatmapMargin + heatmapPixmap.height()
-
-        chan  = FREQ_TO_CHAN[freq]
-        essid = self.__project.essids[bssid]
+    def __updateColumnHeadingItems(self, size):
+        margin = max(0.1 * size.width(), 0.1 * size.height())
 
         for col in range(len(CHANS)):
             try:
-                colHeadingItem = self.__colHeadingItems[col]
+                item = self.__colHeadingItems[col]
             except IndexError:
-                colHeadingItem = self.addText("%d" % CHANS[col],
-                                              HeatmapScene.FONT)
-                colHeadingItem.setTextWidth(heatmapPixmap.width())
-                alignTextItem(colHeadingItem, Qt.AlignHCenter)
-                self.__colHeadingItems.append(colHeadingItem)
+                item = self.addText("%d" % CHANS[col], HeatmapScene.FONT)
+                item.setTextWidth(size.width())
+                alignTextItem(item, Qt.AlignHCenter)
+                self.__colHeadingItems.append(item)
             else:
-                colHeadingItem.setTextWidth(heatmapPixmap.width())
+                item.setTextWidth(size.width())
 
-            colHeadingItem.setPos(col * offsetPerCol + heatmapMargin,
-                                  -colHeadingItem.boundingRect().height())
+            item.setPos(col * (margin + size.width()) + margin,
+                        -item.boundingRect().height())
 
-        col = CHANS.index(chan)
+    def __updateFloorPlanItem(self, col, row, heatmapItem):
+        chan          = CHANS[col]
+        freq          = FREQS[col]
+        bssid         = self.__bssids[row]
+        size          = heatmapItem.pixmap().size()
+
+        try:
+            item = self.__floorPlanItems[(freq, bssid)]
+        except KeyError:
+            pixmap = self.__project.floorPlanPixmap().scaled(size)
+            item = QGraphicsPixmapItem(pixmap, heatmapItem)
+            self.__floorPlanItems[(freq, bssid)] = item
+        else:
+            if item.pixmap().size() != size:
+                item.setPixmap(self.__project.floorPlanPixmap().scaled(size))
+
+    def __updateHeatmapItem(self, col, row, pixmap):
+        chan   = CHANS[col]
+        freq   = FREQS[col]
+        bssid  = self.__bssids[row]
+        essid  = self.__project.essids[bssid]
+        margin = max(0.1 * pixmap.width(), 0.1 * pixmap.height())
+
+        try:
+            item = self.__heatmapItems[(freq, bssid)]
+        except KeyError:
+            item = self.addPixmap(pixmap)
+            item.setToolTip("Channel: %d (%d MHz)\nBSSID: %s\nESSID: %s"
+                            % (chan, freq, bssid, essid))
+            self.__heatmapItems[(freq, bssid)] = item
+        else:
+            item.setPixmap(pixmap)
+
+        item.setPos(col * (margin + pixmap.width()) + margin,
+                    row * (margin + pixmap.height()) + margin)
+
+        self.__updateFloorPlanItem(col, row, item)
+
+    def __updateRowHeadingItem(self, row, size):
+        bssid  = self.__bssids[row]
+        essid  = self.__project.essids[bssid]
+        margin = max(0.1 * size.width(), 0.1 * size.height())
+
+        try:
+            item = self.__rowHeadingItems[row]
+        except IndexError:
+            item = self.addText("%s\n%s" % (bssid, essid),
+                                HeatmapScene.FONT)
+            item.setTextWidth(item.boundingRect().width())
+            alignTextItem(item, Qt.AlignRight)
+            self.__rowHeadingItems.append(item)
+
+        item.setPos(-item.boundingRect().width(),
+                    row * (margin + size.height()) + margin)
+
+    def addHeatmap(self, freq, bssid, image):
+        pixmap     = QPixmap.fromImage(image)
+        pixmapSize = pixmap.size()
+        chan       = FREQ_TO_CHAN[freq]
+        col        = CHANS.index(chan)
         try:
             row = self.__bssids.index(bssid)
         except ValueError:
             row = len(self.__bssids)
             self.__bssids.append(bssid)
 
-        # Create or update a heatmap item.
-        try:
-            heatmapItem = self.__heatmapItems[(freq, bssid)]
-        except KeyError:
-            heatmapItem = self.addPixmap(heatmapPixmap)
-            heatmapItem.setToolTip("Channel: %d (%d MHz)\nBSSID: %s\nESSID: %s"
-                                   % (chan, freq, bssid, essid))
-            self.__heatmapItems[(freq, bssid)] = heatmapItem
-        else:
-            heatmapItem.setPixmap(heatmapPixmap)
-
-        heatmapItem.setPos(col * offsetPerCol + heatmapMargin,
-                           row * offsetPerRow + heatmapMargin)
-
-        # Ensure a row heading exists.
-        try:
-            rowHeadingItem = self.__rowHeadingItems[row]
-        except IndexError:
-            rowHeadingItem = self.addText("%s\n%s" % (bssid, essid),
-                                          HeatmapScene.FONT)
-            rowHeadingItem.setTextWidth(rowHeadingItem.boundingRect().width())
-            alignTextItem(rowHeadingItem, Qt.AlignRight)
-            self.__rowHeadingItems.append(rowHeadingItem)
-
-        rowHeadingItem.setPos(-rowHeadingItem.boundingRect().width(),
-                              row * offsetPerRow + heatmapMargin)
-
-        # Ensure a partially transparent floor plan is rendered on top
-        # of the heatmap.
-        try:
-            floorPlanItem = self.__floorPlanItems[(freq, bssid)]
-        except KeyError:
-            floorPlanPixmap = self.__project.floorPlanPixmap().scaled(heatmapPixmap.size())
-            floorPlanItem = QGraphicsPixmapItem(floorPlanPixmap, heatmapItem)
-            self.__floorPlanItems[(freq, bssid)] = floorPlanItem
-        else:
-            if floorPlanItem.pixmap().size() != heatmapPixmap.size():
-                floorPlanItem.setPixmap(self.__project.floorPlanPixmap().scaled(heatmapPixmap.size()))
+        self.__updateColumnHeadingItems(pixmapSize)
+        self.__updateRowHeadingItem(row, pixmapSize)
+        self.__updateHeatmapItem(col, row, pixmap)
 
 class MonitorScene(QGraphicsScene):
 
