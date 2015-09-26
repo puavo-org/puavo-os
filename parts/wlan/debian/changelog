@@ -1,3 +1,134 @@
+puavo-wlan (0.9.2) trusty; urgency=medium
+
+  * New release
+  * Squashed 'mapper/horst/' changes from d05ac43..697f849
+  * mapper: add separator to Help menu before About
+  * mapper: hide heatmaps (and show hint) whenver less than two spots
+  * mapper: refactor (formatting, renames, wrap long lines, etc.)
+  * mapper: refactor addHeatmap()
+  * mapper: add support for resizing heatmaps
+  * mapper: fix heatmap grid layout
+  * mapper: let's talk about floor plans instead of layouts
+  * mapper: add support for saving previously saved project quickly
+    without prompting
+  * mapper: improve UX by displaying usage hints in the central widget
+  * mapper: hide monitor dock window initially until a project is opened
+    or created
+  * mapper: disable monitor widget until a project is created or opened
+  * mapper: simplify heatmap adding
+  * mapper: center heatmap column headings horizontally
+  * mapper: align heatmap row headings with the right edge
+  * mapper: extract files from tar archives using with-statement
+  * mapper: encapsulate all saveable/loadable data in a project class
+  * mapper: make horst exit with an error if initial channel selection
+    fails
+  * mapper: exit with error if given invalid number of command line args
+  * mapper: remove useless MonitorWidget.__saveDwell()
+  * mapper: get rid of global interfaces list
+  * mapper: make mainwindow the parent of graphics scenes
+  * mapper: make icons module install target's prerequisite
+  * mapper: remove old unused file
+  * mapper: move spot data marshalling from MonitorScene to MainWindow
+  * mapper: get rid of global _tmpdir
+  * mapper: inline __setup* methods
+  * mapper: simplify new project dialog
+  * mapper: show layout image preview in new project dialog
+  * mapper: add puavowlanmapper/__init__.py
+  * mapper: show ESSID in heatmap tooltips
+  * mapper: update icons
+  * mapper: use Ctrl+= shortcut for zoom to fit action
+  * mapper: use setup.py and compile icon resources to a module
+  * mapper: show heatmap channels columns in ascending order
+  * mapper: keep all heatmaps fited in the heatmap view continuously
+  * mapper: make the layout pixmap fit in the monitor view initially
+  * mapper: provide reasonable minimum size hint for the monitor widget
+  * mapper: show essids in heamap scene row headings
+  * mapper: store essids in a global dict
+  * mapper: do not send SpotModifiedEvents while spot is being moved
+  * mapper: add headings for heatmap rows and columns
+  * mapper: show heatmap info in tooltips
+  * mapper: do not allow user to place spots outside the layout pixmap
+  * mapper: move zoom-to-fit -capability to ZoomableGraphicsView
+  * mapper: add zoom to fit action for the monitor view
+  * mapper: remove useless LayoutScene class
+  * mapper: clear scenes properly when creating/opening a project
+  * mapper: add layouts to heatmaps
+  * mapper: do not post SpotModifiedEvents if measurement is None
+  * mapper: update heatmaps whenever measurements have changed
+  * mapper: add MonitorScene.measurements() for collection measurements
+    from spots
+  * mapper: emit MonitorScene.measurementsChanged when any spot has been
+    modified
+  * mapper: show the heatmap scene in the central widget
+  * mapper: add class HeatmapScene for managing heatmaps
+  * mapper: add LayoutScene.layoutPixmap()
+  * mapper: add class for drawing heatmaps in a thread
+  * mapper: move generic background pixmap things to a super class
+  * mapper: create just once monitor scene
+  * mapper: send custom events every time a spot is modified
+  * mapper: make the star animation last approx as long as the
+    measurement
+  * mapper: move the responsibility of monitor control from scene to
+    spots
+  * mapper: rename Spot => MonitorSpot
+  * mapper: remove the rest of the heatmap stuff from the monitor scene
+  * mapper: remove all spot numbering crap
+  * mapper: Monitor.started does not convey the spot number anymore
+  * mapper: remove the rest of the measurement handling from the scene
+  * mapper: make stopMonitoring() accept spot instead of a spot number
+  * mapper: make toggleMonitoring() accept spot instead of a spot number
+  * mapper: make removeSpot() accept spot instead of a spot number
+  * mapper: make stars stand straight initially, no matter how many
+    corners they have
+  * mapper: refactor star generation
+  * mapper: improve spot star's drop shadow
+  * mapper: make spot stars stand straight initially
+  * mapper: make spot stars isotoxal (yay wikipedia)
+  * mapper: make monitor collect and build a complete measurement, not
+    just beacons
+  * mapper: get rid of Python properties, they are pretty in this case
+  * mapper: make monitor maintain a list of essids
+  * mapper: make horst output results to stdout instead of a file
+  * mapper: make scene household all measurement results
+  * mapper: make monitor track the current spot/measurement handle
+  * mapper: move monitor toggling logic from spots to the scene
+  * mapper: fix pickling to dump data as a byte stream
+  * mapper: fix about text
+  * mapper: do not show error dialog if the monitor was user-terminated
+  * mapper: set the initial monitor interface
+  * mapper: visualize scanning progress with a progress bar
+  * mapper: depend on python3-pyqt4
+  * mapper: depend on python3
+  * mapper: switch to Python 3
+  * mapper: display horst's error messages in a message box
+  * mapper: reset monitored spot also in case of an error
+  * mapper: wrap long lines
+  * mapper: just internal renames
+  * mapper: rename Monitor.stop() => Monitor.terminate()
+  * mapper: simplify monitor stopped/started actions
+  * mapper: rename MonitorScene.__measurementStopped() =>
+    MonitorScene.__monitorStopped()
+  * mapper: simplify spot data pickling
+  * mapper: remove useless internal measurement copy
+  * mapper: rename Monitor.__emit_stopped() => Monitor.__emitStopped()
+  * mapper: rename Monitor.errorLog() => Monitor.errorText()
+  * mapper: QMainWindow owns the central widget
+  * mapper: rename MainWindow.__scene => MainWindow.__monitorScene
+  * mapper: remove SceneWidget
+  * mapper: show the monitor scene in the monitor widget
+  * mapper: remove version number from the About text
+  * mapper: layout pixmap is always set via setLayoutPixmap() method
+  * mapper: rename ProjectDialog => NewProjectDialog
+  * mapper: rename Scene => MonitorScene
+  * mapper: rename View => ZoomableGraphicsView
+  * mapper: separate project ops (new/open/save) from scene ops
+  * mapper: show error log if horst fails
+  * mapper: show monitor status
+  * mapper: ensure the saved file has .tar.gz extension
+  * Git(e3317ec123ebb730f4e8de2e1d5e4c11dfdaf3f5)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Sat, 26 Sep 2015 20:54:27 +0300
+
 puavo-wlan (0.9.1) trusty; urgency=medium
 
   * New release
