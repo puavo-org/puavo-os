@@ -45,6 +45,16 @@ FREQ_TO_CHAN  = dict(zip(FREQS, CHANS))
 FREQ_TO_INDEX = dict(zip(FREQS, range(len(FREQS))))
 HEATMAP_SCALE = 0.2
 
+# The space of Optimal Column Heading Font Size Factors (OCHFSF) was
+# studied in an comprehensive long-term empirical research
+# project. The most aesthetically pleasing row heading font can
+# obtained by multiplying the height of the row (in pixels) by
+# OCHFSF. The OCHFSF used by this software is normalized against 12pt
+# font size. If you still don't understand what the heck OCHFSF is,
+# don't worry. I don't know either. It is just a number which makes
+# row headings scale with cell widths.
+OCHFSF_12PT = 0.4347826086956522
+
 def drawHeatmap(filepath, imageWidth, imageHeight, xs, ys, zs,
                 scale=HEATMAP_SCALE):
     ## Interpolate z-values throughout the 2D-space using linear
@@ -230,8 +240,6 @@ def alignTextItem(item, alignment):
 
 class HeatmapScene(QGraphicsScene):
 
-    FONT = QFont("Monospace", 56)
-
     def __init__(self, project, parent):
         QGraphicsScene.__init__(self, parent)
 
@@ -249,7 +257,9 @@ class HeatmapScene(QGraphicsScene):
             try:
                 item = self.__colHeadingItems[col]
             except IndexError:
-                item = self.addText("%d" % chan, HeatmapScene.FONT)
+                font = QFont("Monospace", 12)
+                font.setPixelSize(size.width() / max([len(str(c)) for c in CHANS]))
+                item = self.addText("%d" % chan, font)
                 item.setTextWidth(size.width())
                 alignTextItem(item, Qt.AlignHCenter)
                 self.__colHeadingItems.append(item)
@@ -305,8 +315,9 @@ class HeatmapScene(QGraphicsScene):
         try:
             item = self.__rowHeadingItems[row]
         except IndexError:
-            item = self.addText("%s\n%s" % (bssid, essid),
-                                HeatmapScene.FONT)
+            font = QFont("Monospace", 12)
+            font.setPixelSize(size.height() * OCHFSF_12PT)
+            item = self.addText("%s\n%s" % (bssid, essid), font)
             item.setTextWidth(item.boundingRect().width())
             alignTextItem(item, Qt.AlignRight)
             self.__rowHeadingItems.append(item)
