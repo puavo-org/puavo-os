@@ -257,14 +257,14 @@ class HeatmapScene(QGraphicsScene):
             try:
                 item = self.__colHeadingItems[col]
             except IndexError:
-                font = QFont("Monospace", 12)
-                font.setPixelSize(size.width() / max([len(str(c)) for c in CHANS]))
-                item = self.addText("%d" % chan, font)
-                item.setTextWidth(size.width())
-                alignTextItem(item, Qt.AlignHCenter)
+                item = self.addText("%d" % chan)
                 self.__colHeadingItems.append(item)
-            else:
-                item.setTextWidth(size.width())
+
+            font = QFont("Monospace", 12)
+            font.setPixelSize(size.width() / max([len(str(c)) for c in CHANS]))
+            item.setFont(font)
+            item.setTextWidth(size.width())
+            alignTextItem(item, Qt.AlignHCenter)
 
             item.setPos(col * (margin + size.width()) + margin,
                         -item.boundingRect().height())
@@ -315,12 +315,15 @@ class HeatmapScene(QGraphicsScene):
         try:
             item = self.__rowHeadingItems[row]
         except IndexError:
-            font = QFont("Monospace", 12)
-            font.setPixelSize(size.height() * OCHFSF_12PT)
-            item = self.addText("%s\n%s" % (bssid, essid), font)
-            item.setTextWidth(item.boundingRect().width())
-            alignTextItem(item, Qt.AlignRight)
+            item = self.addText("%s\n%s" % (bssid, essid))
             self.__rowHeadingItems.append(item)
+
+        font = QFont("Monospace", 12)
+        font.setPixelSize(size.height() * OCHFSF_12PT)
+        item.setFont(font)
+        fontMetrics = QFontMetrics(font)
+        item.setTextWidth(fontMetrics.boundingRect(item.toPlainText()).width())
+        alignTextItem(item, Qt.AlignRight)
 
         item.setPos(-item.boundingRect().width(),
                     row * (margin + size.height()) + margin)
