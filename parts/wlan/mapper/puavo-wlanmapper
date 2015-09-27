@@ -315,14 +315,12 @@ class HeatmapScene(QGraphicsScene):
         try:
             item = self.__rowHeadingItems[row]
         except IndexError:
-            item = self.addText("%s\n%s" % (bssid, essid))
+            item = self.addText(essid)
             self.__rowHeadingItems.append(item)
 
         font = QFont("Monospace", 12)
-        font.setPixelSize(size.height() * OCHFSF_12PT)
+        font.setPixelSize(size.height() * OCHFSF_12PT * 2)
         item.setFont(font)
-        fontMetrics = QFontMetrics(font)
-        item.setTextWidth(fontMetrics.boundingRect(item.toPlainText()).width())
         alignTextItem(item, Qt.AlignRight)
 
         item.setPos(-item.boundingRect().width(),
