@@ -1108,6 +1108,15 @@ class MainWindow(QMainWindow):
 "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</p>"
 "<p>See the <a href=\"https://www.gnu.org/licenses/gpl-2.0.html\">GNU "
 "General Public License</a> for more details.</p>"
+"<h2>Software used by Puavo WLAN Mapper</h2>"
+"<ul>"
+'<li><a href="http://matplotlib.org/">matplotlib</a></li>'
+'<li><a href="https://www.scipy.org/">SciPy</a></li>'
+'<li><a href="http://www.numpy.org/">Numpy</a></li>'
+'<li><a href="http://br1.einfach.org/tech/horst/">horst</a></li>'
+'<li><a href="https://www.riverbankcomputing.com/software/pyqt">PyQt4</a></li>'
+'<li><a href="https://www.python.org/">Python3</a></li>'
+"</ul>"
         )
 
         QMessageBox.about(self, "About Puavo WLAN Mapper", aboutText)
