@@ -44,6 +44,8 @@ CHANS         = [i for i in range(1, 15)] + [36, 40, 44, 48]
 FREQ_TO_CHAN  = dict(zip(FREQS, CHANS))
 FREQ_TO_INDEX = dict(zip(FREQS, range(len(FREQS))))
 HEATMAP_SCALE = 0.2
+FILE_EXT      = '.puavo-wlanmapper.tar.gz'
+DIALOG_FILTER = "Project archives (*%s)" % FILE_EXT
 
 # The space of Optimal Column Heading Font Size Factors (OCHFSF) was
 # studied in an comprehensive long-term empirical research
@@ -997,8 +999,7 @@ class MainWindow(QMainWindow):
         filepath = QFileDialog.getOpenFileName(None,
                                                "Open a project",
                                                QDir.currentPath(),
-                                               "Compressed Tar archives "
-                                               "(*.tar.gz)")
+                                               DIALOG_FILTER)
         if not filepath:
             return
 
@@ -1020,18 +1021,17 @@ class MainWindow(QMainWindow):
     def __saveProjectAsDialog(self):
         proposedFilePath = self.__project.filePath()
         if proposedFilePath is None:
-            proposedFilePath = QDir.currentPath() + "/untitled_project.tar.gz"
+            proposedFilePath = QDir.currentPath() + "/untitled_project%s" % FILE_EXT
         filepath = QFileDialog.getSaveFileName(None,
                                                "Save the project as",
                                                proposedFilePath,
-                                               "GZipped Tar archives "
-                                               "(*.tar.gz)")
+                                               DIALOG_FILTER)
         filepath = str(filepath)
         if not filepath:
             return
 
-        if not str(filepath).endswith('.tar.gz'):
-            filepath = '%s.tar.gz' % filepath
+        if not str(filepath).endswith(FILE_EXT):
+            filepath = '%s%s' % (filepath, FILE_EXT)
 
         self.__save(filepath)
 
