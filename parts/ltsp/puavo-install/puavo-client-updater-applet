@@ -208,7 +208,7 @@ class UpdateIndicatorApplet:
     def on_delete_overlays_completed(self):
         self.reset_devstate_button.set_sensitive(True)
         self.notify( _tr('Reset development state is now done,'
-                         ' consider rebooting the system.') )
+                         ' rebooting the system.') )
 
 
     def on_delete_overlays_failed(self, errmsg):
@@ -377,7 +377,9 @@ class UpdateIndicatorApplet:
         dialogmsg = _tr('Development state space utilization is') \
                       + (" %s.\n\n" % statepercent)               \
                       + _tr('Do you want to reset the development state?'
-                            ' All your custom system changes will be lost.')
+                            ' All your custom system changes will be lost.'
+                            ' System will also reboot itself after this'
+                            ' operation.')
 
         self.reset_devstate_dialog \
           = gtk.MessageDialog(None,

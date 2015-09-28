@@ -48,6 +48,16 @@ class OverlayHandler < DBus::Object
             FileUtils.remove_entry_secure(dir)
           end
           self.DeleteImageOverlaysCompleted
+
+          # We will reboot after this operation, because we know that
+          # deleting an overlay that is in use will likely result in a system
+          # that does not work correctly (give some time show the "completed"
+          # message on desktop, though).
+          system('sync')
+          sleep(8)
+          system('sync')
+          system('reboot', '-f')
+
         rescue StandardError => e
           logerr(Syslog::LOG_ERR,
                  "Error in deleting imageoverlays: %s\n",
