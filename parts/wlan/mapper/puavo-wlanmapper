@@ -188,7 +188,7 @@ class DrawHeatmapsThread(QThread):
         self.__doCancel = True
         self.wait()
 
-        self.__heatmapData = list(reversed(sorted(heatmapData)))
+        self.__heatmapData = list(reversed(sorted(heatmapData, key=lambda v: (v[0], v[1].lower()))))
         self.__doCancel    = False
         self.__drawKwargs  = kwargs
 
@@ -196,7 +196,7 @@ class DrawHeatmapsThread(QThread):
 
     def run(self):
         while self.__heatmapData and not self.__doCancel:
-            freq, bssid, *rest = self.__heatmapData.pop()
+            freq, essid, bssid, *rest = self.__heatmapData.pop()
 
             with tempfile.TemporaryDirectory() as tmpdir:
                 filepath = os.path.join(tmpdir, "%dHz_%s.png" % (freq, bssid))
@@ -981,7 +981,8 @@ class MainWindow(QMainWindow):
             if len(xs) > 1:
 
                 for bssid, zs in bssidmap.items():
-                    heatmapData.append((freq, bssid, width, height, xs, ys, zs))
+                    essid = self.__project.essids[bssid]
+                    heatmapData.append((freq, essid, bssid, width, height, xs, ys, zs))
 
             else:
                 self.__hideHeatmaps()
