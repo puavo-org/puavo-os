@@ -1004,6 +1004,9 @@ class MainWindow(QMainWindow):
         if not filepath:
             return
 
+        self.openProject(filepath)
+
+    def openProject(self, filepath):
         project = Project()
 
         if not project.load(filepath):
@@ -1182,14 +1185,17 @@ class NewProjectDialog(QDialog):
 def main():
     app = QApplication(sys.argv)
 
-    if app.argc() > 1:
-        error_message = "ERROR: invalid number of arguments ({}), expected 0"
+    if app.argc() > 2:
+        error_message = "ERROR: invalid number of arguments ({}), expected at most 1"
         print(error_message.format(app.argc() - 1), file=sys.stderr)
-        print("Usage: {}".format(sys.argv[0]), file=sys.stderr)
+        print("Usage: {} [FILE]".format(sys.argv[0]), file=sys.stderr)
         return 1
 
     win = MainWindow()
     win.show()
+
+    if app.argc() == 2:
+        win.openProject(sys.argv[1])
 
     return app.exec_()
 
