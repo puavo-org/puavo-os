@@ -1,0 +1,23 @@
+# Make sure that modprobe.blacklist=r8168 and modprobe.blacklist=r8169
+# kernel parameters work in such a way that if r8168 is blacklisted
+# r8169 is used, and the other way around, allowing choosing between them.
+# (The code could be simplified probably, removing the alias is essential
+# when using r8169, some other stuff is done for clarity).
+
+puavo_make_orig_file() { [ -e "${1}.orig" ] || cp -p "$1" "${1}.orig"; }
+
+if [ -e /etc/modprobe.d/r8168-dkms.conf ]; then
+  if grep -qw modprobe.blacklist=r8169 /proc/cmdline; then
+    puavo_make_orig_file /etc/modprobe.d/r8168-dkms.conf
+    # do blacklist r8169, we want to use r8168
+    sed -r -i '/^(#|)blacklist/s/.*/blacklist r8169/; /^alias/s/^/#/' \
+      /etc/modprobe.d/r8168-dkms.conf
+  elif grep -qw modprobe.blacklist=r8168 /proc/cmdline; then
+    puavo_make_orig_file /etc/modprobe.d/r8168-dkms.conf
+    # do blacklist r8168, we want to use r8169
+    sed -r -i '/^(#|)blacklist/s/.*/blacklist r8168/; /^alias/s/^/#/' \
+      /etc/modprobe.d/r8168-dkms.conf
+  elif [ -e /etc/modprobe.d/r8168-dkms.conf.orig ]; then
+    mv /etc/modprobe.d/r8168-dkms.conf.orig /etc/modprobe.d/r8168-dkms.conf
+  fi
+fi
