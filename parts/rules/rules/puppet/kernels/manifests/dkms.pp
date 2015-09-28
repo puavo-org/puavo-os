@@ -7,7 +7,7 @@ class kernels::dkms {
   $dkms_module_packages =
     $lsbdistcodename ? {
       'precise' => [],
-      default   => [ 'bcmwl-kernel-source', 'nvidia-304', ],
+      default   => [ 'bcmwl-kernel-source', 'nvidia-304', 'r8168-dkms', ],
     }
 
   Package <| tag == kernel |> {

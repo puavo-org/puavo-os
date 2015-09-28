@@ -130,6 +130,7 @@ class packages {
     , 'linux-firmware'
     , 'nvidia-304'
     , 'nvidia-settings'
+    , 'r8168-dkms'
     , 'xserver-xorg-video-all' ]:
       tag => [ 'drivers', 'ubuntu', ];
 
