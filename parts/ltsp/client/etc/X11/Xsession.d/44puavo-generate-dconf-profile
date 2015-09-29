@@ -47,6 +47,7 @@ has_device_tag() {
 
   echo "system-db:keyboard"
   echo "system-db:desktopbackground"
+  echo "system-db:scalingfactor"
   echo "system-db:puavodesktop"
 } > $puavo_dconf_profile_path || return 1
 
