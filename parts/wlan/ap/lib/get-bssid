@@ -30,7 +30,7 @@ printf -v model_id '%04x%04x' ${model_id}
 
 ## Model-specific quirks.
 case "${model_id}" in
-    168c0030|168c002b|168c0037)
+    168c0029|168c0030|168c002b|168c0037)
         ## For some reason, at least with some driver versions, this
         ## device model reports empty adress mask. However, hostapd
         ## requires that mask >= 00:00:00:00:00:03 to support at most 4
