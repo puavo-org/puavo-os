@@ -5,8 +5,8 @@
 mkdir -p /etc/dconf/db/desktopbackground.d
 
 puavo_desktop_background=$(jq -r '.tags[]' /etc/puavo/device.json    \
-                             | sed -r -n 's/^desktop_background://p' \
-                             | tail -n1)
+                             | sed -n 's/^desktop_background://p' \
+                             | head -n1)
 
 if [ -n "$puavo_desktop_background" \
      -a -e "/usr/share/backgrounds/${puavo_desktop_background}" ]; then
