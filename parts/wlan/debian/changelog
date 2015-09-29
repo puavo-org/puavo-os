@@ -1,3 +1,15 @@
+puavo-wlan (0.9.6) trusty; urgency=medium
+
+  * New release
+  * ap: address mask quirk for Qualcomm Atheros AR9287 Wireless Network
+    Adapter (PCI-Express)
+  * ap: address mask quirk for Qualcomm Atheros AR922X Wireless Network
+    Adapter
+  * ap: do not set txpower on laptops
+  * Git(7a266c7f8ef4dd6fd7a3bb56619fa194c7db7f77)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 29 Sep 2015 15:30:19 +0300
+
 puavo-wlan (0.9.5) trusty; urgency=medium
 
   * New release
