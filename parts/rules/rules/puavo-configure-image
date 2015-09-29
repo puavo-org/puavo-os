@@ -26,13 +26,13 @@ apply_puppet_rules() {
     another_ok_puppetcode=2
   fi
 
-  logfile_path="/var/log/puppet/puavo-build-image-$(date +%Y-%m-%d-%H%M%S).log"
-  env LANG=en_US.UTF-8                                          \
-      puppet apply                                              \
-             --detailed-exitcodes                               \
-             --logdest console                                  \
-             --execute "include $puppet_classes"                \
-             --modulepath "/etc/puavo-image-build/rules/puppet" \
+  env LANG=en_US.UTF-8                                           \
+      puppet apply                                               \
+             --detailed-exitcodes                                \
+             --execute "include $puppet_classes"                 \
+             --logdest console                                   \
+             --logdest /var/log/puppet/puavo-configure-image.log \
+             --modulepath "/etc/puavo-image-build/rules/puppet"  \
     || [ $? -eq $another_ok_puppetcode ]
 }
 
