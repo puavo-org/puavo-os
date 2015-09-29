@@ -1,3 +1,16 @@
+puavo-wlan (0.9.5) trusty; urgency=medium
+
+  * New release
+  * mapper: sort heatmaps first by SSID, then by BSSID and then by
+    frequency
+  * mapper: open a project file if given in command line args
+  * mapper: sort heatmap rows by frequency and SSID
+  * mapper: change the project file extension to .puavo-
+    wlanmapper.tar.gz
+  * Git(2fdd36fde556f6ecb445e6b1caa3dea909210225)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 29 Sep 2015 10:06:56 +0300
+
 puavo-wlan (0.9.4) trusty; urgency=medium
 
   * New release
