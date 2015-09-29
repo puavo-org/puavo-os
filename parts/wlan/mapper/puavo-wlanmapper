@@ -170,6 +170,10 @@ class Project:
     def filePath(self):
         return self.__filePath
 
+def heatmapDatumSortKey(heatmapDatum):
+    freq, essid, bssid, *rest = heatmapDatum
+    return essid.lower(), bssid.lower(), freq
+
 class DrawHeatmapsThread(QThread):
 
     heatmapReady = pyqtSignal(int, str, QImage)
@@ -188,7 +192,9 @@ class DrawHeatmapsThread(QThread):
         self.__doCancel = True
         self.wait()
 
-        self.__heatmapData = list(reversed(sorted(heatmapData, key=lambda v: (v[0], v[1].lower()))))
+        self.__heatmapData = list(sorted(heatmapData,
+                                         key=heatmapDatumSortKey,
+                                         reverse=True))
         self.__doCancel    = False
         self.__drawKwargs  = kwargs
 
