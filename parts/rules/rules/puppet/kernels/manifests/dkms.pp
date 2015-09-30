@@ -1,18 +1,28 @@
 class kernels::dkms {
   include packages
 
-  # Install dkms module packages before any kernels, that way we should get
-  # them for all packages.
+  define install_dkms_module_for_kernel ($kernel_version) {
+    $titlearray  = split($title, ' ')
+    $dkms_module = $titlearray[0]
 
-  $dkms_module_packages =
-    $lsbdistcodename ? {
-      'precise' => [],
-      default   => [ 'bcmwl-kernel-source', 'nvidia-304', 'r8168-dkms', ],
+    case $dkms_module {
+      /^bcmwl\//:      { $dkms_module_package = 'bcmwl-kernel-source' }
+      /^nvidia-304\//: { $dkms_module_package = 'nvidia-304'          }
+      /^r8168\//:      { $dkms_module_package = 'r8168-dkms'          }
+      default: {
+        fail("Unknown package dependency for dkms module ${dkms_module}")
+      }
     }
 
-  Package <| tag == kernel |> {
-    require +> Package[$dkms_module_packages],
-  }
+    $ok_filepath = "/var/lib/dkms/${dkms_module}/${kernel_version}.puppetok"
 
-  realize(Package[$dkms_module_packages])
+    exec {
+      "install dkms module ${dkms_module} for ${kernel_version}":
+        command => "/usr/sbin/dkms install ${dkms_module} -k ${kernel_version} && /bin/rm -f /boot/*.old-dkms && /bin/touch ${ok_filepath}",
+        creates => $ok_filepath,
+        require => [ Package['dkms'], Package[$dkms_module_package], ];
+    }
+
+    Package <| title == dkms or title == $dkms_package |>
+  }
 }
