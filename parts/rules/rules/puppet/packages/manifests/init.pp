@@ -125,6 +125,7 @@ class packages {
       tag => [ 'devel', 'ubuntu', ];
 
     [ 'bcmwl-kernel-source'
+    , 'dkms'
     , 'firmware-b43-installer'
     , 'libgl1-mesa-glx'
     , 'linux-firmware'
@@ -745,47 +746,66 @@ class packages {
       tag => [ 'web', 'puavo', ];
   }
 
+  $bcmwl_dkms_module  = 'bcmwl/6.30.223.248+bdcom'
+  $nvidia_dkms_module = 'nvidia-304/304.128'
+  $r8168_dkms_module  = 'r8168/8.040.00'
+  $all_dkms_modules   = [ $bcmwl_dkms_module
+                        , $nvidia_dkms_module
+                        , $r8168_dkms_module ]
+
   case $lsbdistcodename {
     'precise': {
       packages::kernels::kernel_package {
         '3.2.0-69-generic':
-          package_tag => 'puavo',
-          with_extra  => false;
+          dkms_modules => $all_dkms_modules,
+          package_tag  => 'puavo',
+          with_extra   => false;
       }
     }
     'trusty': {
       if $architecture == 'i386' {
         packages::kernels::kernel_package {
           [ '3.2.0-70-generic-pae', '4.0.6.opinsys3', '4.1.4.opinsys1' ]:
-            package_tag => 'puavo',
-            with_extra  => false;
+            dkms_modules => $all_dkms_modules,
+            package_tag  => 'puavo',
+            with_extra   => false;
 
           [ '3.13.0-62-generic' ]:
-            pkgarch => 'amd64';
+            # $bcmwl_dkms_module and $nvidia_dkms_module do not compile
+            # for this kernel (arch issue?)
+            dkms_modules => [ $r8168_dkms_module ],
+            pkgarch      => 'amd64';
         }
       }
 
       packages::kernels::kernel_package {
         [ '3.13.0-55.94-generic', ]:
-          package_tag => 'puavo';
+          dkms_modules => $all_dkms_modules,
+          package_tag  => 'puavo';
 
-        [ '3.16.0-50-generic', ]: ; # utopic backport from Ubuntu
-        [ '3.19.0-30-generic', ]: ; # vivid backport from Ubuntu
+        [ '3.16.0-50-generic', ]: # utopic backport from Ubuntu
+          dkms_modules => $all_dkms_modules;
+
+        [ '3.19.0-30-generic', ]: # vivid backport from Ubuntu
+          dkms_modules => $all_dkms_modules;
       }
     }
     'utopic': {
       packages::kernels::kernel_package {
-        '3.16.0-50-generic': ;
+        '3.16.0-50-generic':
+          dkms_modules => $all_dkms_modules;
       }
     }
     'vivid': {
       packages::kernels::kernel_package {
-        '3.19.0-30-generic': ;
+        '3.19.0-30-generic':
+          dkms_modules => $all_dkms_modules;
       }
     }
     'wily': {
       packages::kernels::kernel_package {
-        '4.1.0-3-generic': ;
+        '4.1.0-3-generic':
+          dkms_modules => $all_dkms_modules;
       }
     }
   }
