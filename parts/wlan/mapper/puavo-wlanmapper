@@ -42,7 +42,7 @@ RSSI_MAX      = -35
 FREQS         = [2412 + i * 5 for i in range(13)] + [2484] + [5180, 5200, 5220, 5240]
 CHANS         = [i for i in range(1, 15)] + [36, 40, 44, 48]
 FREQ_TO_CHAN  = dict(zip(FREQS, CHANS))
-FREQ_TO_INDEX = dict(zip(FREQS, range(len(FREQS))))
+CHAN_TO_INDEX = dict(zip(CHANS, range(len(CHANS))))
 HEATMAP_SCALE = 0.1
 FILE_EXT      = '.puavo-wlanmapper.tar.gz'
 DIALOG_FILTER = "Project archives (*%s)" % FILE_EXT
@@ -171,8 +171,8 @@ class Project:
         return self.__filePath
 
 def heatmapDatumSortKey(heatmapDatum):
-    freq, essid, bssid, *rest = heatmapDatum
-    return essid.lower(), bssid.lower(), freq
+    chan, essid, bssid, *rest = heatmapDatum
+    return essid.lower(), bssid.lower(), chan
 
 class DrawHeatmapsThread(QThread):
 
@@ -202,14 +202,14 @@ class DrawHeatmapsThread(QThread):
 
     def run(self):
         while self.__heatmapData and not self.__doCancel:
-            freq, essid, bssid, *rest = self.__heatmapData.pop()
+            chan, essid, bssid, *rest = self.__heatmapData.pop()
 
             with tempfile.TemporaryDirectory() as tmpdir:
-                filepath = os.path.join(tmpdir, "%dHz_%s.png" % (freq, bssid))
+                filepath = os.path.join(tmpdir, "%d_%s.png" % (chan, bssid))
                 drawHeatmap(filepath, *rest, **self.__drawKwargs)
                 image = QImage(filepath, "png")
 
-            self.heatmapReady.emit(freq, bssid, image)
+            self.heatmapReady.emit(chan, bssid, image)
 
 class ZoomableGraphicsView(QGraphicsView):
 
@@ -279,34 +279,32 @@ class HeatmapScene(QGraphicsScene):
 
     def __updateFloorPlanItem(self, col, row, heatmapItem):
         chan  = CHANS[col]
-        freq  = FREQS[col]
         bssid = self.__bssids[row]
         size  = heatmapItem.pixmap().size()
 
         try:
-            item = self.__floorPlanItems[(freq, bssid)]
+            item = self.__floorPlanItems[(chan, bssid)]
         except KeyError:
             pixmap = self.__project.floorPlanPixmap().scaled(size)
             item = QGraphicsPixmapItem(pixmap, heatmapItem)
-            self.__floorPlanItems[(freq, bssid)] = item
+            self.__floorPlanItems[(chan, bssid)] = item
         else:
             if item.pixmap().size() != size:
                 item.setPixmap(self.__project.floorPlanPixmap().scaled(size))
 
     def __updateHeatmapItem(self, col, row, pixmap):
         chan   = CHANS[col]
-        freq   = FREQS[col]
         bssid  = self.__bssids[row]
         essid  = self.__project.essids[bssid]
         margin = max(0.1 * pixmap.width(), 0.1 * pixmap.height())
 
         try:
-            item = self.__heatmapItems[(freq, bssid)]
+            item = self.__heatmapItems[(chan, bssid)]
         except KeyError:
             item = self.addPixmap(pixmap)
-            item.setToolTip("Channel: %d (%d MHz)\nBSSID: %s\nESSID: %s"
-                            % (chan, freq, bssid, essid))
-            self.__heatmapItems[(freq, bssid)] = item
+            item.setToolTip("Channel: %d\nBSSID: %s\nESSID: %s"
+                            % (chan, bssid, essid))
+            self.__heatmapItems[(chan, bssid)] = item
         else:
             item.setPixmap(pixmap)
 
@@ -334,11 +332,10 @@ class HeatmapScene(QGraphicsScene):
         item.setPos(-item.boundingRect().width(),
                     row * (margin + size.height()) + margin)
 
-    def addHeatmap(self, freq, bssid, image):
+    def addHeatmap(self, chan, bssid, image):
         pixmap     = QPixmap.fromImage(image)
         pixmapSize = pixmap.size()
-        chan       = FREQ_TO_CHAN[freq]
-        col        = FREQ_TO_INDEX[freq]
+        col        = CHAN_TO_INDEX[chan]
         try:
             row = self.__bssids.index(bssid)
         except ValueError:
@@ -396,8 +393,8 @@ class MonitorScene(QGraphicsScene):
             xs.append(int(spot.pos().x()))
             ys.append(int(spot.pos().y()))
 
-            for freq, bssids in measurement.items():
-                bssidset = bssidsets.setdefault(freq, set())
+            for chan, bssids in measurement.items():
+                bssidset = bssidsets.setdefault(chan, set())
                 for bssid in bssids:
                     bssidset.add(bssid)
 
@@ -407,11 +404,11 @@ class MonitorScene(QGraphicsScene):
             if measurement is None:
                 continue
 
-            for freq, bssidset in bssidsets.items():
-                bssidmap = result.setdefault(freq, {})
+            for chan, bssidset in bssidsets.items():
+                bssidmap = result.setdefault(chan, {})
                 for bssid in bssidset:
                     rssis = bssidmap.setdefault(bssid, [])
-                    rssi = measurement.get(freq, {}).get(bssid, RSSI_MIN)
+                    rssi = measurement.get(chan, {}).get(bssid, RSSI_MIN)
                     rssis.append(int(round(rssi)))
 
         return result
@@ -690,10 +687,14 @@ class Monitor(QObject):
             rssi = int(fields[6])
             freq = int(fields[9])
             ssid = fields[11]
+            chan = int(fields[13])
 
             self.essids[bssid] = ssid
 
-            bssidmap = self.measurement.setdefault(freq, {})
+            if FREQ_TO_CHAN[freq] != chan:
+                continue
+
+            bssidmap = self.measurement.setdefault(chan, {})
             bssidmap[bssid] = (rssi + bssidmap.get(bssid, rssi)) / 2
 
     def errorText(self):
@@ -981,14 +982,14 @@ class MainWindow(QMainWindow):
 
         heatmapData = []
 
-        for freq, bssidmap in measurements.items():
+        for chan, bssidmap in measurements.items():
 
             ## To RBF-interpolate, we need more than 1 measurement point.
             if len(xs) > 1:
 
                 for bssid, zs in bssidmap.items():
                     essid = self.__project.essids[bssid]
-                    heatmapData.append((freq, essid, bssid, width, height, xs, ys, zs))
+                    heatmapData.append((chan, essid, bssid, width, height, xs, ys, zs))
 
             else:
                 self.__hideHeatmaps()
