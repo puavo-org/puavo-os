@@ -1,7 +1,7 @@
 class kernels::dkms {
   include packages
 
-  define install_dkms_module_for_kernel ($kernel_version) {
+  define install_dkms_module_for_kernel ($kernel_packages, $kernel_version) {
     $titlearray  = split($title, ' ')
     $dkms_module = $titlearray[0]
 
@@ -20,9 +20,13 @@ class kernels::dkms {
       "install dkms module ${dkms_module} for ${kernel_version}":
         command => "/usr/sbin/dkms install ${dkms_module} -k ${kernel_version} && /bin/rm -f /boot/*.old-dkms && /bin/touch ${ok_filepath}",
         creates => $ok_filepath,
-        require => [ Package['dkms'], Package[$dkms_module_package], ];
+        require => [ Package['dkms']
+                   , Package[$dkms_module_package]
+                   , Package[$kernel_packages] ];
     }
 
-    Package <| title == dkms or title == $dkms_package |>
+    Package <| title == dkms
+            or title == $dkms_package
+            or title == $kernel_packages |>
   }
 }

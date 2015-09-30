@@ -33,7 +33,8 @@ class packages::kernels {
                                             " for ${version}")
     kernels::dkms::install_dkms_module_for_kernel {
       $dkms_modules_install_titles:
-        kernel_version => $version;
+        kernel_packages => $packages,
+        kernel_version  => $version;
     }
 
     @package {
