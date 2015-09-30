@@ -43,7 +43,7 @@ FREQS         = [2412 + i * 5 for i in range(13)] + [2484] + [5180, 5200, 5220, 
 CHANS         = [i for i in range(1, 15)] + [36, 40, 44, 48]
 FREQ_TO_CHAN  = dict(zip(FREQS, CHANS))
 FREQ_TO_INDEX = dict(zip(FREQS, range(len(FREQS))))
-HEATMAP_SCALE = 0.2
+HEATMAP_SCALE = 0.1
 FILE_EXT      = '.puavo-wlanmapper.tar.gz'
 DIALOG_FILTER = "Project archives (*%s)" % FILE_EXT
 
