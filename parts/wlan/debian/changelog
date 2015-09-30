@@ -1,3 +1,14 @@
+puavo-wlan (0.9.7) trusty; urgency=medium
+
+  * New release
+  * mapper: reduce the default size of heatmaps
+  * mapper: decreate RSSI_MAX from -25dBm to -35dBm
+  * mapper: change the RSSI_MIN from -95dBm to -99dBm
+  * Squashed 'mapper/horst/' changes from 697f849..7ba1416
+  * Git(60a5643e8b5fca46d3c784b2505f8992dadddd5f)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 30 Sep 2015 17:07:52 +0300
+
 puavo-wlan (0.9.6) trusty; urgency=medium
 
   * New release
