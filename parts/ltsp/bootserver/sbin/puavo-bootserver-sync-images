@@ -166,7 +166,6 @@ class Series
     end
 
     devices.each do |device|
-      bootmode             = device["boot_mode"]
       current_image        = device["current_image"]
       hostname             = device["hostname"]
       preferred_boot_image = device["preferred_boot_image"]
@@ -177,6 +176,19 @@ class Series
         warning(3, "There is a device in Puavo that does not have a hostname")
         next
       end
+
+      # XXX It should be possible to lookup bootmode from device["boot_mode"]
+      # XXX and it should be either netboot or localboot, but because of
+      # XXX bugs in Puavo some localboot devices may be set to "netboot".
+      # XXX Thus, check out object classes to figure out the correct bootmode.
+      object_classes = device["object_classes"]
+      if !object_classes.kind_of?(Array)
+        warning(3, "Could not determine object classes for #{ hostname }")
+        next
+      end
+      bootmode = object_classes.include?("puavoNetbootDevice") \
+                   ? "netboot"                                           \
+                   : "localboot"
 
       if !school_dn || school_dn.empty?
         warning(3, "Host #{ hostname } is not associated with any school," \
@@ -194,8 +206,6 @@ class Series
 
       # Netboot devices do not need diffs, but want preferred
       # boot/desktop images.
-      # XXX THIS NETBOOT TEST IS NOT RELIABLE!  SOME LAPTOPS CAN CURRENTLY
-      # XXX BE NETBOOT DEVICES!!!
       if bootmode == "netboot"
         [ preferred_boot_image, preferred_image ].each do |image_id|
           next unless image_id
