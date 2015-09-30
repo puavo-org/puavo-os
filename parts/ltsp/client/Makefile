@@ -61,6 +61,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/hooks
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount
+	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-top
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
@@ -241,6 +242,8 @@ install : installdirs $(install-subdirs)
 		initramfs/scripts/init-premount/puavo_udhcp
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom \
 		initramfs/scripts/init-bottom/puavo_ltsp
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-top \
+		initramfs/scripts/init-top/blacklist-r816x
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-remote-assistance-applet.mo
