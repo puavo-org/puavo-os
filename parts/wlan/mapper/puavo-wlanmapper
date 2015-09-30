@@ -37,7 +37,7 @@ import numpy
 
 import puavowlanmapper.icons
 
-RSSI_MIN      = -95
+RSSI_MIN      = -99
 RSSI_MAX      = -20
 FREQS         = [2412 + i * 5 for i in range(13)] + [2484] + [5180, 5200, 5220, 5240]
 CHANS         = [i for i in range(1, 15)] + [36, 40, 44, 48]
