@@ -658,6 +658,7 @@ class packages {
     , 'gconf-editor'
     , 'gkbd-capplet'
     , 'gpointing-device-settings'
+    , 'ibus-libpinyin'
     , 'kdepasswd'
     , 'keepass2'
     , 'keepassx'
