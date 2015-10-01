@@ -86,7 +86,8 @@ Depends: ${misc:Depends},
  vim,
  w3m
 Recommends:
- ifenslave
+ ifenslave,
+ smartmontools
 Conflicts:
  ltsp-server,
  tftpd-hpa
