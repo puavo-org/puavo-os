@@ -1,3 +1,16 @@
+puavoadmins (0.2.12) trusty; urgency=medium
+
+  * New release
+  * In update_org_json, tmpfile should be closed (or flushed) before it
+    is read, otherwise /usr/lib/puavoadmins-validate-orgjson might fail
+    (with an empty file or some such).  This closes the file, which I
+    think is more correct, but doing "tmpfile.flush" should be enough as
+    well.  See http://stackoverflow.com/questions/6685724/weird-ruby-io-
+    with-tempfile, for example.
+  * Git(6c0ab5760588af3bf208f67d70a62997919249b9)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 01 Oct 2015 11:12:49 +0300
+
 puavoadmins (0.2.11) trusty; urgency=medium
 
   * New release
