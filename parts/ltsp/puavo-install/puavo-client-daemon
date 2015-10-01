@@ -222,8 +222,6 @@ class Updater < DBus::Object
 
   def image_update(use_rate_limit)
     thread = $image_update_thread = Thread.new do
-      set_image_update_request_file_status(true) rescue true
-
       wait_thr, out_thr, err_thr = nil, nil, nil
 
       begin
@@ -251,8 +249,6 @@ class Updater < DBus::Object
                   + status.exitstatus.to_s
         end
 
-        set_image_update_request_file_status(false) rescue true
-
         log(Syslog::LOG_INFO, "System update completed\n")
 
         # update device information in Puavo and in local disk as well
@@ -269,7 +265,6 @@ class Updater < DBus::Object
       rescue CancelledUpdate => e
         Process.kill('-TERM', wait_thr.pid) if wait_thr && wait_thr.alive?
         logerr(Syslog::LOG_WARNING, "System update was cancelled\n")
-        set_image_update_request_file_status(false) rescue true
         raise e
 
       rescue StandardError => e
@@ -336,23 +331,6 @@ class Updater < DBus::Object
     end
 
     return thread
-  end
-
-  # Setup this file to signify that there has been an image update request,
-  # and that has not resulted (yet) in a successful update.  This can be used
-  # to trigger new attempts to update.  Cancelled image updates should trigger
-  # the removal of this file.
-  def set_image_update_request_file_status(status)
-    statusfilepath = '/var/lib/puavo-client-daemon/image_update_requested'
-
-    if status
-      FileUtils.touch(statusfilepath)
-    else
-      begin
-        File.delete(statusfilepath)
-      rescue Errno::ENOENT
-      end
-    end
   end
 
   def notify_puavo_on_images
