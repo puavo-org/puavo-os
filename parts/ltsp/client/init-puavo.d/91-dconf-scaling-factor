@@ -12,7 +12,7 @@ puavo_dconf_scaling_factor=$(jq -r '.tags[]' /etc/puavo/device.json   \
 if [ -n "$puavo_dconf_scaling_factor" ]; then
   cat <<EOF > /etc/dconf/db/scalingfactor.d/scalingfactor_profile
 [org/gnome/desktop/interface]
-scaling-factor=${puavo_dconf_scaling_factor}
+scaling-factor=uint32 ${puavo_dconf_scaling_factor}
 EOF
   cat <<EOF > /etc/dconf/db/scalingfactor.d/locks/scalingfactor_locks
 /org/gnome/desktop/interface/scaling-factor
