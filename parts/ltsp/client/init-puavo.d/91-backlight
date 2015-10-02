@@ -10,7 +10,9 @@ else
   system=$(dmidecode -s system-product-name)
 fi
 
-if [ "${system}" = "Aspire ES1-111" ]; then
+# 20D9S01U00 is "Lenovo Thinkpad 11e"
+if [ "${system}" = "Aspire ES1-111" \
+     -o "${system}" = "20D9S01U00" ]; then
   intel_backlight=true
 fi
 

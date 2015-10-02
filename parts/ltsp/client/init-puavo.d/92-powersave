@@ -22,9 +22,11 @@ else
   system=$(dmidecode -s system-product-name)
 fi
 
+# 20D9S01U00 is "Lenovo Thinkpad 11e"
 if [ "${system}" = "Aspire ES1-111" -o \
      "${system}" = "TravelMate B115-M" -o \
-     "${system}" = "HP ProBook 430 G2" \
+     "${system}" = "HP ProBook 430 G2" -o \
+     "${system}" = "20D9S01U00" \
    ]; then
   disable_nmi=1
   sata_alpm=true
