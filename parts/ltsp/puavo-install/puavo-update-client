@@ -95,11 +95,18 @@ elif on_persistent_overlay; then
     # do not do an image update
     do_image_update=false
 else
+    automatic_image_updates=""
     if $personally_administered; then
         automatic_image_updates=$(jq .automatic_image_updates \
                                      /state/etc/puavo/local/config.json \
                                    2>/dev/null) || true
-    else
+    fi
+
+    # If we have no sensible value for automatic_image_updates at this point
+    # (not personally administered or lacking value), look up the setting
+    # in Puavo.
+    if [ "$automatic_image_updates" != "true" \
+           -a "$automatic_image_updates" != "false" ]; then
         automatic_image_updates=$(jq .automatic_image_updates \
                                      /etc/puavo/device.json)
     fi
@@ -107,7 +114,8 @@ else
     if [ "$automatic_image_updates" = "false" ]; then
         do_image_update=false
     else
-        # empty/missing value for $automatic_image_updates --> true
+        # empty/missing or nonsensical value for $automatic_image_updates
+        #   --> default to true
         do_image_update=true
     fi
 fi
