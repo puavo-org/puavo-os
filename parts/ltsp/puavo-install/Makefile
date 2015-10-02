@@ -32,11 +32,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_128G
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_500G
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_Acer_Aspire_ES1-111_500G
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_Acer_TravelMate_B115-M_128G_SSD
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_HP_ProBook_430_G2_128G_SSD
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-install
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-install
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/dbus-1/system.d
@@ -79,20 +75,7 @@ install : installdirs
 		screen.d/ltspimage-update \
 		screen.d/register
 
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_128G \
-		preseeds/personal_laptop_128G/*
-
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_500G \
-		preseeds/personal_laptop_500G/*
-
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_Acer_Aspire_ES1-111_500G \
-		preseeds/personal_laptop_Acer_Aspire_ES1-111_500G/*
-
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_Acer_TravelMate_B115-M_128G_SSD \
-		preseeds/personal_laptop_Acer_TravelMate_B115-M_128G_SSD/*
-
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-install/preseeds/personal_laptop_HP_ProBook_430_G2_128G_SSD \
-		preseeds/personal_laptop_HP_ProBook_430_G2_128G_SSD/*
+	cp -R preseeds $(DESTDIR)$(datarootdir)/puavo-ltsp-install/
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-install \
 		lib/is-update-available \
