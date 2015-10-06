@@ -1,3 +1,18 @@
+puavo-wlan (0.9.8) trusty; urgency=medium
+
+  * New release
+  * mapper: add "Reset to default settings" button
+  * mapper: control spinboxes with sliders
+  * mapper: add option for thresholding measurements
+  * mapper: remove __future__ imports
+  * mapper: remove unused imports
+  * mapper: make the last available interface the default
+  * mapper: set the default channel dwell time to 250ms
+  * mapper: get rid of unnecessary freq => chan workout
+  * Git(edba9675a32b6f7c30eae525320b207b2ee551a2)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 06 Oct 2015 15:57:40 +0300
+
 puavo-wlan (0.9.7) trusty; urgency=medium
 
   * New release
