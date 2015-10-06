@@ -383,8 +383,8 @@ class MonitorScene(QGraphicsScene):
 
     def measurements(self):
         result    = {}
-        xs        = result['x'] = []
-        ys        = result['y'] = []
+        xs        = []
+        ys        = []
         bssidsets = {}
 
         for spot in self.__spots:
@@ -414,7 +414,7 @@ class MonitorScene(QGraphicsScene):
                     rssi = measurement.get(chan, {}).get(bssid, RSSI_MIN)
                     rssis.append(int(round(rssi)))
 
-        return result
+        return xs, ys, result
 
     def addSpot(self, pos):
         spot = MonitorSpot(self.__monitor, self.__project)
@@ -1033,10 +1033,7 @@ class MainWindow(QMainWindow):
 
         self.__heatmapScene.clear()
 
-        measurements = self.__monitorScene.measurements()
-
-        xs = measurements.pop('x')
-        ys = measurements.pop('y')
+        xs, ys, measurements = self.__monitorScene.measurements()
 
         width = self.__project.floorPlanPixmap().width()
         height = self.__project.floorPlanPixmap().height()
