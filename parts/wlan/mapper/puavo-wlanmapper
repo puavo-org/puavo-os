@@ -614,7 +614,7 @@ class Monitor(QObject):
             self.__tmpdir.name, 'horst.conf')
 
         self.isTerminated = False
-        self.setDwellTime(500)
+        self.setDwellTime(250)
 
         self.__output = ''
 
