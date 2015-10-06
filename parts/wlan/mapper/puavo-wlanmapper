@@ -253,6 +253,14 @@ class HeatmapScene(QGraphicsScene):
         self.__rowHeadingItems = []
         self.__project         = project
 
+    def clear(self):
+        self.__heatmapItems    = {}
+        self.__floorPlanItems  = {}
+        self.__bssids          = []
+        self.__colHeadingItems = []
+        self.__rowHeadingItems = []
+        QGraphicsScene.clear(self)
+
     def __updateColumnHeadingItems(self, size):
         margin = max(0.1 * size.width(), 0.1 * size.height())
 
@@ -727,12 +735,25 @@ class SettingsWidget(QWidget):
         self.__heatmapScaleSpinBox.valueChanged.connect(
             lambda : self.__applyButton.setEnabled(True))
 
+        self.__minRssiSpinBox = QSpinBox(self)
+        self.__minRssiSpinBox.setMinimum(RSSI_MIN)
+        self.__minRssiSpinBox.setMaximum(RSSI_MAX)
+        self.__minRssiSpinBox.setValue(RSSI_MIN)
+        self.__minRssiSpinBox.setSuffix('dBm')
+        self.__minRssiSpinBox.setSingleStep(1)
+        self.__minRssiSpinBox.valueChanged.connect(
+            lambda : self.__applyButton.setEnabled(True))
+
         layout = QFormLayout(self)
         layout.addRow("Heatmap scale:", self.__heatmapScaleSpinBox)
+        layout.addRow("Signal strength threshold:", self.__minRssiSpinBox)
         layout.addRow(self.__applyButton)
 
     def heatmapScale(self):
         return self.__heatmapScaleSpinBox.value()
+
+    def minRssi(self):
+        return self.__minRssiSpinBox.value()
 
 class MonitorWidget(QWidget):
 
@@ -894,7 +915,7 @@ class MainWindow(QMainWindow):
         self.__settingsWidget = SettingsWidget(self)
         self.__settingsWidget.settingsChanged.connect(self.updateHeatmaps)
         self.__settingsDockWidget.setWidget(self.__settingsWidget)
-        self.__settingsDockWidget.setWindowTitle("Settings")
+        self.__settingsDockWidget.setWindowTitle("Heatmap view settings")
         self.__settingsDockWidget.setVisible(False)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.__settingsDockWidget)
 
@@ -967,6 +988,8 @@ class MainWindow(QMainWindow):
         if self.__monitorScene is None:
             return
 
+        self.__heatmapScene.clear()
+
         measurements = self.__monitorScene.measurements()
 
         xs = measurements.pop('x')
@@ -984,6 +1007,9 @@ class MainWindow(QMainWindow):
 
                 for bssid, zs in bssidmap.items():
                     essid = self.__project.essids[bssid]
+                    zs = [RSSI_MIN if z < self.__settingsWidget.minRssi() else z for z in zs]
+                    if max(zs) < self.__settingsWidget.minRssi():
+                        continue
                     heatmapData.append((chan, essid, bssid, width, height, xs, ys, zs))
 
             else:
