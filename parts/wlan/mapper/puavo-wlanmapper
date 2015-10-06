@@ -721,47 +721,52 @@ class SettingsWidget(QWidget):
     def __init__(self, *args):
         QWidget.__init__(self, *args)
 
+        self.__resetToDefaultsButton = QPushButton("&Reset to defaults", self)
+        self.__resetToDefaultsButton.clicked.connect(self.__resetToDefaults)
+
         self.__applyButton = QPushButton("&Apply", self)
         self.__applyButton.clicked.connect(
             lambda : self.__applyButton.setEnabled(False))
         self.__applyButton.clicked.connect(self.settingsChanged)
-        self.__applyButton.setEnabled(False)
 
         self.__heatmapScaleSpinBox = QSpinBox(self)
         self.__heatmapScaleSpinBox.setMinimum(1)
         self.__heatmapScaleSpinBox.setMaximum(100)
-        self.__heatmapScaleSpinBox.setValue(HEATMAP_SCALE * 100)
         self.__heatmapScaleSpinBox.setSingleStep(5)
         self.__heatmapScaleSpinBox.setSuffix("%")
         self.__heatmapScaleSpinBox.setReadOnly(True)
         self.__heatmapScaleSpinBox.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.__heatmapScaleSpinBox.valueChanged.connect(
             lambda : self.__applyButton.setEnabled(True))
+        self.__heatmapScaleSpinBox.valueChanged.connect(
+            lambda : self.__resetToDefaultsButton.setEnabled(True))
 
         self.__heatmapScaleSlider = QSlider(self)
         self.__heatmapScaleSlider.setMinimum(1)
         self.__heatmapScaleSlider.setMaximum(100)
-        self.__heatmapScaleSlider.setValue(HEATMAP_SCALE * 100)
         self.__heatmapScaleSlider.setOrientation(Qt.Horizontal)
         self.__heatmapScaleSlider.valueChanged.connect(self.__heatmapScaleSpinBox.setValue)
 
         self.__minRssiSpinBox = QSpinBox(self)
         self.__minRssiSpinBox.setMinimum(RSSI_MIN)
         self.__minRssiSpinBox.setMaximum(RSSI_MAX)
-        self.__minRssiSpinBox.setValue(RSSI_MIN)
         self.__minRssiSpinBox.setSuffix('dBm')
         self.__minRssiSpinBox.setSingleStep(1)
         self.__minRssiSpinBox.setReadOnly(True)
         self.__minRssiSpinBox.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.__minRssiSpinBox.valueChanged.connect(
             lambda : self.__applyButton.setEnabled(True))
+        self.__minRssiSpinBox.valueChanged.connect(
+            lambda : self.__resetToDefaultsButton.setEnabled(True))
 
         self.__minRssiSlider = QSlider(self)
         self.__minRssiSlider.setMinimum(RSSI_MIN)
         self.__minRssiSlider.setMaximum(RSSI_MAX)
-        self.__minRssiSlider.setValue(RSSI_MIN)
         self.__minRssiSlider.setOrientation(Qt.Horizontal)
         self.__minRssiSlider.valueChanged.connect(self.__minRssiSpinBox.setValue)
+
+        self.__resetToDefaults()
+        self.__applyButton.setEnabled(False)
 
         heatmapScaleLayout = QHBoxLayout()
         heatmapScaleLayout.addWidget(self.__heatmapScaleSlider)
@@ -775,7 +780,17 @@ class SettingsWidget(QWidget):
         layout.setLabelAlignment(Qt.AlignCenter)
         layout.addRow("Heatmap scale:", heatmapScaleLayout)
         layout.addRow("Signal strength threshold:", minRssiLayout)
-        layout.addRow(self.__applyButton)
+
+        buttonRowLayout = QHBoxLayout()
+        buttonRowLayout.addWidget(self.__resetToDefaultsButton)
+        buttonRowLayout.addWidget(self.__applyButton)
+
+        layout.addRow(buttonRowLayout)
+
+    def __resetToDefaults(self):
+        self.__heatmapScaleSlider.setValue(HEATMAP_SCALE * 100)
+        self.__minRssiSlider.setValue(RSSI_MIN)
+        self.__resetToDefaultsButton.setEnabled(False)
 
     def heatmapScale(self):
         return self.__heatmapScaleSpinBox.value() / 100
