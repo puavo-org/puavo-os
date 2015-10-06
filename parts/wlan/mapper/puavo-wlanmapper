@@ -602,7 +602,7 @@ class Monitor(QObject):
 
         self.__availableInterfaces = get_dot11_interfaces()
         try:
-            self.__iface = self.__availableInterfaces[0]
+            self.__iface = self.__availableInterfaces[-1]
         except IndexError:
             self.__iface = None
 
