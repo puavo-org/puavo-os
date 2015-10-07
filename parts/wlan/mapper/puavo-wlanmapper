@@ -171,7 +171,7 @@ def heatmapDatumSortKey(heatmapDatum):
 
 class DrawHeatmapsThread(QThread):
 
-    heatmapReady = pyqtSignal(int, str, QImage)
+    heatmapReady = pyqtSignal(int, str, QImage, list, list, list)
 
     def __init__(self):
         QThread.__init__(self)
@@ -204,7 +204,8 @@ class DrawHeatmapsThread(QThread):
                 drawHeatmap(filepath, *rest, **self.__drawKwargs)
                 image = QImage(filepath, "png")
 
-            self.heatmapReady.emit(chan, bssid, image)
+            imageWidth, imageHeight, xs, ys, zs = rest
+            self.heatmapReady.emit(chan, bssid, image, xs, ys, zs)
 
 class ZoomableGraphicsView(QGraphicsView):
 
@@ -212,6 +213,7 @@ class ZoomableGraphicsView(QGraphicsView):
 
     def __init__(self, *args):
         QGraphicsView.__init__(self, *args)
+        self.setDragMode(QGraphicsView.RubberBandDrag)
 
     def wheelEvent(self, event):
         if not event.modifiers() & Qt.ControlModifier:
@@ -240,6 +242,14 @@ def alignTextItem(item, alignment):
     textCursor.mergeBlockFormat(textFormat)
     textCursor.clearSelection()
     item.setTextCursor(textCursor)
+
+class HeatmapItem(QGraphicsPixmapItem):
+
+    def __init__(self, pixmap, xs, ys, zs):
+        QGraphicsPixmapItem.__init__(self, pixmap)
+        self.xs = xs
+        self.ys = ys
+        self.zs = zs
 
 class HeatmapScene(QGraphicsScene):
 
@@ -295,7 +305,7 @@ class HeatmapScene(QGraphicsScene):
             if item.pixmap().size() != size:
                 item.setPixmap(self.__project.floorPlanPixmap().scaled(size))
 
-    def __updateHeatmapItem(self, col, row, pixmap):
+    def __updateHeatmapItem(self, col, row, pixmap, xs, ys, zs):
         chan   = CHANS[col]
         bssid  = self.__bssids[row]
         essid  = self.__project.essids[bssid]
@@ -304,7 +314,9 @@ class HeatmapScene(QGraphicsScene):
         try:
             item = self.__heatmapItems[(chan, bssid)]
         except KeyError:
-            item = self.addPixmap(pixmap)
+            item = HeatmapItem(pixmap, xs, ys, zs)
+            self.addItem(item)
+            item.setFlag(QGraphicsItem.ItemIsSelectable)
             item.setToolTip("Channel: %d\nBSSID: %s\nESSID: %s"
                             % (chan, bssid, essid))
             self.__heatmapItems[(chan, bssid)] = item
@@ -335,7 +347,7 @@ class HeatmapScene(QGraphicsScene):
         item.setPos(-item.boundingRect().width(),
                     row * (margin + size.height()) + margin)
 
-    def addHeatmap(self, chan, bssid, image):
+    def addHeatmap(self, chan, bssid, image, xs, ys, zs):
         pixmap     = QPixmap.fromImage(image)
         pixmapSize = pixmap.size()
         col        = CHAN_TO_INDEX[chan]
@@ -347,7 +359,7 @@ class HeatmapScene(QGraphicsScene):
 
         self.__updateColumnHeadingItems(pixmapSize)
         self.__updateRowHeadingItem(row, pixmapSize)
-        self.__updateHeatmapItem(col, row, pixmap)
+        self.__updateHeatmapItem(col, row, pixmap, xs, ys, zs)
 
 class MonitorScene(QGraphicsScene):
 
@@ -359,11 +371,13 @@ class MonitorScene(QGraphicsScene):
         self.__monitor       = monitor
         self.__spots         = []
         self.__floorPlanItem = None
+        self.__heatmapItem   = None
         self.__project       = None
 
     def setProject(self, project):
         self.__spots         = []
         self.__floorPlanItem = None
+        self.__heatmapItem   = None
         self.__project       = project
 
         self.clear()
@@ -371,8 +385,19 @@ class MonitorScene(QGraphicsScene):
         self.__floorPlanItem = self.addPixmap(project.floorPlanPixmap())
         self.__floorPlanItem.setZValue(-1)
 
+        self.__heatmapItem = self.addPixmap(QPixmap())
+        self.__heatmapItem.setZValue(-2)
+
         for pos, measurement in project.spotData():
             self.addSpot(pos).setMeasurement(measurement)
+
+    def setHeatmap(self, pixmap):
+        if pixmap.isNull():
+            self.__heatmapItem.setPixmap(pixmap)
+            return
+        w = self.__floorPlanItem.pixmap().width()
+        h = self.__floorPlanItem.pixmap().height()
+        self.__heatmapItem.setPixmap(pixmap.scaled(w, h))
 
     def spots(self):
         return list(self.__spots)
@@ -1144,9 +1169,15 @@ class MainWindow(QMainWindow):
 
         self.__project = project
 
+        if self.__heatmapScene is not None:
+            self.__heatmapScene.selectionChanged.disconnect(
+                self.__updateCombinedHeatmap)
+
         self.__heatmapScene = HeatmapScene(project, self)
         self.__heatmapView.setScene(self.__heatmapScene)
         self.__hideHeatmaps()
+        self.__heatmapScene.selectionChanged.connect(
+            self.__updateCombinedHeatmap)
 
         if self.__monitorScene is not None:
             self.__monitorScene.measurementsChanged.disconnect(
@@ -1162,6 +1193,29 @@ class MainWindow(QMainWindow):
         self.__monitorDockWidget.setVisible(True)
         self.__monitorWidget.setEnabled(True)
         self.__monitorWidget.fitAllInMonitorView()
+
+    def __updateCombinedHeatmap(self):
+        if not self.__heatmapScene.selectedItems():
+            self.__monitorScene.setHeatmap(QPixmap())
+            return
+
+        zs = None
+
+        for item in self.__heatmapScene.selectedItems():
+            if zs is None:
+                zs = item.zs
+            else:
+                zs = [max(v1, v2) for v1, v2 in zip(zs, item.zs)]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            filepath = os.path.join(tmpdir, "combined.png")
+            drawHeatmap(filepath,
+                        self.__project.floorPlanPixmap().width(),
+                        self.__project.floorPlanPixmap().height(),
+                        item.xs, item.ys, zs)
+            pixmap = QPixmap(filepath, "png")
+
+        self.__monitorScene.setHeatmap(pixmap)
 
     def __addHeatmap(self, *args):
         self.__hintLabel.setVisible(False)
