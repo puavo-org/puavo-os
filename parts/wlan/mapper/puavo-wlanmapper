@@ -762,8 +762,8 @@ class SettingsWidget(QWidget):
         self.__minRssiSlider.valueChanged.connect(self.__minRssiSpinBox.setValue)
 
         minRssiLayout = QHBoxLayout()
-        minRssiLayout.addWidget(self.__minRssiSlider)
         minRssiLayout.addWidget(self.__minRssiSpinBox)
+        minRssiLayout.addWidget(self.__minRssiSlider)
 
         layout = QFormLayout(self)
         layout.setLabelAlignment(Qt.AlignCenter)
