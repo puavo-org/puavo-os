@@ -178,9 +178,8 @@ class DrawHeatmapsThread(QThread):
 
         self.__doCancel     = False
         self.__heatmapData  = []
-        self.__drawKwargs   = {}
 
-    def drawHeatmaps(self, heatmapData, **kwargs):
+    def drawHeatmaps(self, heatmapData):
         if not heatmapData:
             return
 
@@ -191,20 +190,18 @@ class DrawHeatmapsThread(QThread):
                                          key=heatmapDatumSortKey,
                                          reverse=True))
         self.__doCancel    = False
-        self.__drawKwargs  = kwargs
 
         QThread.start(self)
 
     def run(self):
         while self.__heatmapData and not self.__doCancel:
-            chan, essid, bssid, *rest = self.__heatmapData.pop()
+            chan, essid, bssid, w, h, xs, ys, zs = self.__heatmapData.pop()
 
             with tempfile.TemporaryDirectory() as tmpdir:
                 filepath = os.path.join(tmpdir, "%d_%s.png" % (chan, bssid))
-                drawHeatmap(filepath, *rest, **self.__drawKwargs)
+                drawHeatmap(filepath, w, h, xs, ys, zs)
                 image = QImage(filepath, "png")
 
-            imageWidth, imageHeight, xs, ys, zs = rest
             self.heatmapReady.emit(chan, bssid, image, xs, ys, zs)
 
 class ZoomableGraphicsView(QGraphicsView):
@@ -768,25 +765,6 @@ class SettingsWidget(QWidget):
             lambda : self.__applyButton.setEnabled(False))
         self.__applyButton.clicked.connect(self.settingsChanged)
 
-        self.__heatmapScaleSpinBox = QSpinBox(self)
-        self.__heatmapScaleSpinBox.setMinimum(1)
-        self.__heatmapScaleSpinBox.setMaximum(100)
-        self.__heatmapScaleSpinBox.setSingleStep(5)
-        self.__heatmapScaleSpinBox.setSuffix("%")
-        self.__heatmapScaleSpinBox.setReadOnly(True)
-        self.__heatmapScaleSpinBox.setButtonSymbols(QAbstractSpinBox.NoButtons)
-        self.__heatmapScaleSpinBox.valueChanged.connect(
-            lambda : self.__applyButton.setEnabled(True))
-        self.__heatmapScaleSpinBox.valueChanged.connect(
-            lambda : self.__resetToDefaultsButton.setEnabled(True))
-
-        self.__heatmapScaleSlider = MySlider(self)
-        self.__heatmapScaleSlider.setMinimum(1)
-        self.__heatmapScaleSlider.setMaximum(100)
-        self.__heatmapScaleSlider.setOrientation(Qt.Horizontal)
-        self.__heatmapScaleSlider.valueChanged.connect(self.__heatmapScaleSpinBox.setValue)
-        self.__heatmapScaleSlider.sliderReleased.connect(self.settingsChanged)
-
         self.__minRssiSpinBox = QSpinBox(self)
         self.__minRssiSpinBox.setMinimum(RSSI_MIN)
         self.__minRssiSpinBox.setMaximum(RSSI_MAX)
@@ -809,17 +787,12 @@ class SettingsWidget(QWidget):
         self.__resetToDefaults()
         self.__applyButton.setEnabled(False)
 
-        heatmapScaleLayout = QHBoxLayout()
-        heatmapScaleLayout.addWidget(self.__heatmapScaleSlider)
-        heatmapScaleLayout.addWidget(self.__heatmapScaleSpinBox)
-
         minRssiLayout = QHBoxLayout()
         minRssiLayout.addWidget(self.__minRssiSlider)
         minRssiLayout.addWidget(self.__minRssiSpinBox)
 
         layout = QFormLayout(self)
         layout.setLabelAlignment(Qt.AlignCenter)
-        layout.addRow("Heatmap scale:", heatmapScaleLayout)
         layout.addRow("Signal strength threshold:", minRssiLayout)
 
         buttonRowLayout = QHBoxLayout()
@@ -829,12 +802,8 @@ class SettingsWidget(QWidget):
         layout.addRow(buttonRowLayout)
 
     def __resetToDefaults(self):
-        self.__heatmapScaleSlider.setValue(HEATMAP_SCALE * 100)
         self.__minRssiSlider.setValue(RSSI_MIN)
         self.__resetToDefaultsButton.setEnabled(False)
-
-    def heatmapScale(self):
-        return self.__heatmapScaleSpinBox.value() / 100
 
     def minRssi(self):
         return self.__minRssiSpinBox.value()
@@ -1092,8 +1061,7 @@ class MainWindow(QMainWindow):
             else:
                 self.__hideHeatmaps()
 
-        heatmapScale = self.__settingsWidget.heatmapScale()
-        self.__drawHeatmapsThread.drawHeatmaps(heatmapData, scale=heatmapScale)
+        self.__drawHeatmapsThread.drawHeatmaps(heatmapData)
 
     def closeEvent(self, event):
         self.__monitor.terminate()
