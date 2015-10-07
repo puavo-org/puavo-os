@@ -760,11 +760,6 @@ class SettingsWidget(QWidget):
         self.__resetToDefaultsButton = QPushButton("&Reset to defaults", self)
         self.__resetToDefaultsButton.clicked.connect(self.__resetToDefaults)
 
-        self.__applyButton = QPushButton("&Apply", self)
-        self.__applyButton.clicked.connect(
-            lambda : self.__applyButton.setEnabled(False))
-        self.__applyButton.clicked.connect(self.settingsChanged)
-
         self.__minRssiSpinBox = QSpinBox(self)
         self.__minRssiSpinBox.setMinimum(RSSI_MIN)
         self.__minRssiSpinBox.setMaximum(RSSI_MAX)
@@ -773,19 +768,16 @@ class SettingsWidget(QWidget):
         self.__minRssiSpinBox.setReadOnly(True)
         self.__minRssiSpinBox.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.__minRssiSpinBox.valueChanged.connect(
-            lambda : self.__applyButton.setEnabled(True))
-        self.__minRssiSpinBox.valueChanged.connect(
             lambda : self.__resetToDefaultsButton.setEnabled(True))
+        self.__minRssiSpinBox.valueChanged.connect(self.settingsChanged)
 
-        self.__minRssiSlider = MySlider(self)
+        self.__minRssiSlider = QSlider(self)
         self.__minRssiSlider.setMinimum(RSSI_MIN)
         self.__minRssiSlider.setMaximum(RSSI_MAX)
         self.__minRssiSlider.setOrientation(Qt.Horizontal)
         self.__minRssiSlider.valueChanged.connect(self.__minRssiSpinBox.setValue)
-        self.__minRssiSlider.sliderReleased.connect(self.settingsChanged)
 
         self.__resetToDefaults()
-        self.__applyButton.setEnabled(False)
 
         minRssiLayout = QHBoxLayout()
         minRssiLayout.addWidget(self.__minRssiSlider)
@@ -797,7 +789,6 @@ class SettingsWidget(QWidget):
 
         buttonRowLayout = QHBoxLayout()
         buttonRowLayout.addWidget(self.__resetToDefaultsButton)
-        buttonRowLayout.addWidget(self.__applyButton)
 
         layout.addRow(buttonRowLayout)
 
@@ -942,7 +933,7 @@ class MainWindow(QMainWindow):
         centralWidgetLayout = QVBoxLayout(centralWidget)
 
         self.__settingsWidget = SettingsWidget(self)
-        self.__settingsWidget.settingsChanged.connect(self.updateHeatmaps)
+        self.__settingsWidget.settingsChanged.connect(self.updateHeatmapsWithDelay)
         self.__settingsWidget.setVisible(False)
         centralWidgetLayout.addWidget(self.__settingsWidget)
 
@@ -1027,11 +1018,19 @@ class MainWindow(QMainWindow):
         self.__drawHeatmapsThread.heatmapReady.connect(
             self.__heatmapView.fitAllInView)
 
+        self.__updateHeatmapsTimer = QTimer(self)
+        self.__updateHeatmapsTimer.setInterval(700)
+        self.__updateHeatmapsTimer.setSingleShot(True)
+        self.__updateHeatmapsTimer.timeout.connect(self.updateHeatmaps)
+
     def __hintLabelLinkActivated(self, href):
         if href == 'create':
             self.__newProjectAction.trigger()
         elif href == 'open':
             self.__openProjectAction.trigger()
+
+    def updateHeatmapsWithDelay(self):
+        self.__updateHeatmapsTimer.start()
 
     def updateHeatmaps(self):
         if self.__monitorScene is None:
