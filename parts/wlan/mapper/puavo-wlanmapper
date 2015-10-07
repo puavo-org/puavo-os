@@ -958,6 +958,7 @@ class MainWindow(QMainWindow):
 
         self.__settingsWidget = SettingsWidget(self)
         self.__settingsWidget.settingsChanged.connect(self.updateHeatmaps)
+        self.__settingsWidget.setVisible(False)
         centralWidgetLayout.addWidget(self.__settingsWidget)
 
         self.__heatmapView = ZoomableGraphicsView(self)
@@ -1156,6 +1157,7 @@ class MainWindow(QMainWindow):
     def __hideHeatmaps(self):
         self.__hintLabel.setVisible(True)
         self.__heatmapView.setVisible(False)
+        self.__settingsWidget.setVisible(False)
         self.__hintLabel.setText("Heatmaps will be rendered when two or more "
                                  "spots have been succesfully monitored.")
 
@@ -1215,6 +1217,7 @@ class MainWindow(QMainWindow):
     def __addHeatmap(self, *args):
         self.__hintLabel.setVisible(False)
         self.__heatmapView.setVisible(True)
+        self.__settingsWidget.setVisible(True)
         self.__heatmapScene.addHeatmap(*args)
 
     def __showAboutDialog(self):
