@@ -749,7 +749,6 @@ class SettingsWidget(QWidget):
         self.__minRssiSpinBox.setValue(RSSI_MIN)
         self.__minRssiSpinBox.setSuffix('dBm')
         self.__minRssiSpinBox.setSingleStep(1)
-        self.__minRssiSpinBox.setReadOnly(True)
         self.__minRssiSpinBox.setButtonSymbols(QAbstractSpinBox.NoButtons)
 
         self.__minRssiSlider = QSlider(self)
@@ -759,6 +758,7 @@ class SettingsWidget(QWidget):
         self.__minRssiSlider.setOrientation(Qt.Horizontal)
 
         self.__minRssiSpinBox.valueChanged.connect(self.settingsChanged)
+        self.__minRssiSpinBox.valueChanged.connect(self.__minRssiSlider.setValue)
         self.__minRssiSlider.valueChanged.connect(self.__minRssiSpinBox.setValue)
 
         minRssiLayout = QHBoxLayout()
