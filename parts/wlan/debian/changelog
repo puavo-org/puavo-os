@@ -1,3 +1,16 @@
+puavo-wlan (0.9.9) trusty; urgency=medium
+
+  * New release
+  * mapper: update heatmap view immediately when sliders are released
+  * mapper: make settings widget's visibility follow heatmap view's
+    visiblity
+  * mapper: move settings widget to the central widget
+  * mapper: render a combined heatmap from selected heatmaps
+  * mapper: trivial refactoring
+  * Git(4a7e75a33b4933ba93620f82f5b7fc85b2bd470d)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 07 Oct 2015 17:18:23 +0300
+
 puavo-wlan (0.9.8) trusty; urgency=medium
 
   * New release
