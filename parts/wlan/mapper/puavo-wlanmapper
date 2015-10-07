@@ -954,7 +954,11 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Puavo WLAN Mapper")
 
         centralWidget = QWidget(self)
-        centralWidgetLayout = QHBoxLayout(centralWidget)
+        centralWidgetLayout = QVBoxLayout(centralWidget)
+
+        self.__settingsWidget = SettingsWidget(self)
+        self.__settingsWidget.settingsChanged.connect(self.updateHeatmaps)
+        centralWidgetLayout.addWidget(self.__settingsWidget)
 
         self.__heatmapView = ZoomableGraphicsView(self)
         self.__heatmapView.setRenderHints(QPainter.Antialiasing)
@@ -978,14 +982,6 @@ class MainWindow(QMainWindow):
         self.__monitorDockWidget.setWindowTitle("Monitor")
         self.__monitorDockWidget.setVisible(False)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.__monitorDockWidget)
-
-        self.__settingsDockWidget = QDockWidget(self)
-        self.__settingsWidget = SettingsWidget(self)
-        self.__settingsWidget.settingsChanged.connect(self.updateHeatmaps)
-        self.__settingsDockWidget.setWidget(self.__settingsWidget)
-        self.__settingsDockWidget.setWindowTitle("Heatmap view settings")
-        self.__settingsDockWidget.setVisible(False)
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.__settingsDockWidget)
 
         self.__aboutAction = QAction(self)
         self.__aboutAction.setText("&About...")
@@ -1032,7 +1028,6 @@ class MainWindow(QMainWindow):
 
         viewMenu = menuBar.addMenu("&View")
         viewMenu.addAction(self.__monitorDockWidget.toggleViewAction())
-        viewMenu.addAction(self.__settingsDockWidget.toggleViewAction())
 
         helpMenu = menuBar.addMenu("&Help")
         helpMenu.addAction(self.__whatsThisAction)
