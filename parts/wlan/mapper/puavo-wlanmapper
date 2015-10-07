@@ -757,27 +757,23 @@ class SettingsWidget(QWidget):
     def __init__(self, *args):
         QWidget.__init__(self, *args)
 
-        self.__resetToDefaultsButton = QPushButton("&Reset to defaults", self)
-        self.__resetToDefaultsButton.clicked.connect(self.__resetToDefaults)
-
         self.__minRssiSpinBox = QSpinBox(self)
         self.__minRssiSpinBox.setMinimum(RSSI_MIN)
         self.__minRssiSpinBox.setMaximum(RSSI_MAX)
+        self.__minRssiSpinBox.setValue(RSSI_MIN)
         self.__minRssiSpinBox.setSuffix('dBm')
         self.__minRssiSpinBox.setSingleStep(1)
         self.__minRssiSpinBox.setReadOnly(True)
         self.__minRssiSpinBox.setButtonSymbols(QAbstractSpinBox.NoButtons)
-        self.__minRssiSpinBox.valueChanged.connect(
-            lambda : self.__resetToDefaultsButton.setEnabled(True))
-        self.__minRssiSpinBox.valueChanged.connect(self.settingsChanged)
 
         self.__minRssiSlider = QSlider(self)
         self.__minRssiSlider.setMinimum(RSSI_MIN)
         self.__minRssiSlider.setMaximum(RSSI_MAX)
+        self.__minRssiSlider.setValue(RSSI_MIN)
         self.__minRssiSlider.setOrientation(Qt.Horizontal)
-        self.__minRssiSlider.valueChanged.connect(self.__minRssiSpinBox.setValue)
 
-        self.__resetToDefaults()
+        self.__minRssiSpinBox.valueChanged.connect(self.settingsChanged)
+        self.__minRssiSlider.valueChanged.connect(self.__minRssiSpinBox.setValue)
 
         minRssiLayout = QHBoxLayout()
         minRssiLayout.addWidget(self.__minRssiSlider)
@@ -786,15 +782,6 @@ class SettingsWidget(QWidget):
         layout = QFormLayout(self)
         layout.setLabelAlignment(Qt.AlignCenter)
         layout.addRow("Signal strength threshold:", minRssiLayout)
-
-        buttonRowLayout = QHBoxLayout()
-        buttonRowLayout.addWidget(self.__resetToDefaultsButton)
-
-        layout.addRow(buttonRowLayout)
-
-    def __resetToDefaults(self):
-        self.__minRssiSlider.setValue(RSSI_MIN)
-        self.__resetToDefaultsButton.setEnabled(False)
 
     def minRssi(self):
         return self.__minRssiSpinBox.value()
