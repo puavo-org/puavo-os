@@ -736,20 +736,6 @@ class Monitor(QObject):
             self.__process.close()
             self.__process = None
 
-class MySlider(QSlider):
-
-    def __init__(self, parent):
-        QSlider.__init__(self, parent)
-
-    def keyPressEvent(self, event):
-        pass
-
-    def keyReleaseEvent(self, event):
-        pass
-
-    def mouseReleaseEvent(self, event):
-        self.sliderReleased.emit()
-
 class SettingsWidget(QWidget):
 
     settingsChanged = pyqtSignal()
