@@ -10,10 +10,16 @@ for cronjobfile in /etc/cron.d/*       \
   test -e "$cronjobfile" || continue
 
   case "$cronjobfile" in
-    /etc/cron.daily/logrotate)
-      # save the /etc/cron.daily/logrotate file
-      continue
-      ;;
+    /etc/cron.daily/0anacron       \
+      | /etc/cron.daily/logrotate  \
+      | /etc/cron.d/anacron        \
+      | /etc/cron.monthly/0anacron \
+      | /etc/cron.weekly/0anacron)
+        # Save these files, anacron/cron need the *cron files for proper
+        # functioning and we want to run logrotate to prevent /state from
+        # filling up.
+        continue
+        ;;
     *)
       rm -f "$cronjobfile"
       ;;
