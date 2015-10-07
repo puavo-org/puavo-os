@@ -739,6 +739,20 @@ class Monitor(QObject):
             self.__process.close()
             self.__process = None
 
+class MySlider(QSlider):
+
+    def __init__(self, parent):
+        QSlider.__init__(self, parent)
+
+    def keyPressEvent(self, event):
+        pass
+
+    def keyReleaseEvent(self, event):
+        pass
+
+    def mouseReleaseEvent(self, event):
+        self.sliderReleased.emit()
+
 class SettingsWidget(QWidget):
 
     settingsChanged = pyqtSignal()
@@ -766,11 +780,12 @@ class SettingsWidget(QWidget):
         self.__heatmapScaleSpinBox.valueChanged.connect(
             lambda : self.__resetToDefaultsButton.setEnabled(True))
 
-        self.__heatmapScaleSlider = QSlider(self)
+        self.__heatmapScaleSlider = MySlider(self)
         self.__heatmapScaleSlider.setMinimum(1)
         self.__heatmapScaleSlider.setMaximum(100)
         self.__heatmapScaleSlider.setOrientation(Qt.Horizontal)
         self.__heatmapScaleSlider.valueChanged.connect(self.__heatmapScaleSpinBox.setValue)
+        self.__heatmapScaleSlider.sliderReleased.connect(self.settingsChanged)
 
         self.__minRssiSpinBox = QSpinBox(self)
         self.__minRssiSpinBox.setMinimum(RSSI_MIN)
@@ -784,11 +799,12 @@ class SettingsWidget(QWidget):
         self.__minRssiSpinBox.valueChanged.connect(
             lambda : self.__resetToDefaultsButton.setEnabled(True))
 
-        self.__minRssiSlider = QSlider(self)
+        self.__minRssiSlider = MySlider(self)
         self.__minRssiSlider.setMinimum(RSSI_MIN)
         self.__minRssiSlider.setMaximum(RSSI_MAX)
         self.__minRssiSlider.setOrientation(Qt.Horizontal)
         self.__minRssiSlider.valueChanged.connect(self.__minRssiSpinBox.setValue)
+        self.__minRssiSlider.sliderReleased.connect(self.settingsChanged)
 
         self.__resetToDefaults()
         self.__applyButton.setEnabled(False)
