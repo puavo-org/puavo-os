@@ -78,13 +78,7 @@ class Project:
         self.__floorPlanPixmap     = None
         self.__lastErrorMessage    = ''
         self.__spotData            = []
-        self.__isLoadOk            = True
         self.__filePath            = None
-
-    def isValid(self):
-        return (self.__isLoadOk
-                and self.__floorPlanPixmap is not None
-                and not self.__floorPlanPixmap.isNull())
 
     def lastErrorMessage(self):
         return self.__lastErrorMessage
@@ -106,7 +100,6 @@ class Project:
         return True
 
     def load(self, filePath):
-        self.__isLoadOk = False
         with tarfile.open(str(filePath), "r:gz") as archive_file:
 
             with archive_file.extractfile("%s/layout.png" % ARCHIVE_PREFIX) as f:
@@ -125,7 +118,6 @@ class Project:
                     self.__spotData.append((pos, spotDatum['measurement']))
 
         self.__filePath = filePath
-        self.__isLoadOk = True
         return True
 
     def save(self, filePath):
