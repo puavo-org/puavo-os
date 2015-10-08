@@ -49,9 +49,6 @@ install : installdirs
 	
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		puavo-local-config-ui-autostart.desktop
-	
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
-		puavo-local-config-ui-autostart.desktop
 
 .PHONY : clean
 clean :
