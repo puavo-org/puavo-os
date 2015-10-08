@@ -737,6 +737,29 @@ class Monitor(QObject):
             self.__process.close()
             self.__process = None
 
+class Measurement:
+
+    def __init__(self, x, y, channelDwellTime):
+        self.x                = x
+        self.y                = y
+        self.channelDwellTime = channelDwellTime
+        self.frames           = []
+
+class Frame:
+
+    def __init__(self, line):
+        fields         = [s.strip() for s in line.strip().split(',')]
+        timestamp      = dateutil.parser.parse(fields[0])
+        localTimestamp = timestamp.replace(tzinfo=dateutil.tz.tzlocal())
+        self.line      = line
+        self.timestamp = localTimestamp.astimezone(dateutil.tz.tzutc())
+        self.bssid     = fields[4]
+        self.rssi      = int(fields[6])
+        self.rate      = int(fields[8])
+        self.freq      = int(fields[9])
+        self.ssid      = fields[11]
+        self.chan      = int(fields[13])
+
 class SettingsWidget(QWidget):
 
     settingsChanged = pyqtSignal()
