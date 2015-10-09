@@ -498,8 +498,8 @@ function generate_allow_logins_input(form) {
                                mc('Allow only the following usernames:'),
                                !all_is_chosen);
 
-  // .slice(0) clones a list (just in case)
-  var allowed_puavo_users = old_config.allow_logins_for.slice(0);
+  var allowed_puavo_users = old_config.allow_logins_for
+                              .filter(function(s) { return s !== '*'; });
   make_listwidgets(rb_tr, 'allowed_puavo_users', allowed_puavo_users);
 
   var title = document.createElement('div');
