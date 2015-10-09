@@ -587,7 +587,7 @@ def main
       end
 
     when '--backhaul-single-interface'
-      run_kwargs[:bg_iface] = arg
+      run_kwargs[:bh_iface] = arg
 
     when '--backhaul-vtun-address'
       run_kwargs[:vtun_address] = arg
