@@ -471,7 +471,7 @@ def run(kwargs = {})
 
       if ready.nil?
         if !conn.nil?
-          STDERR.puts('control socket connection timeout')
+          STDERR.puts('WARNING: control socket connection timeout')
           conn.close
           conn = nil
         end
@@ -513,6 +513,7 @@ def run(kwargs = {})
           conn = nil
         end
       end
+
     end
   end
 end
