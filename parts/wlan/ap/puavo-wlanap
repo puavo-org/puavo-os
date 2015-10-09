@@ -241,7 +241,7 @@ wpa=0
 <% else %>
 wpa=2
 auth_algs=3
-wpa_passphrase=<%= bss[:psk] %>
+wpa_passphrase=<%= bss[:password] %>
 rsn_pairwise=CCMP
 wpa_key_mgmt=WPA-PSK
 eapol_version=1
@@ -345,11 +345,11 @@ def get_bss_list(use_puavo, nets)
 
   nets.length.times.zip(nets).map do |i, net|
     {
-      :index  => i,
-      :bridge => hexdigest15(net['ssid']),
-      :psk    => net['password'],
-      :type   => net['type'],
-      :ssid   => net['ssid'],
+      :index    => i,
+      :bridge   => hexdigest15(net['ssid']),
+      :password => net['password'],
+      :type     => net['type'],
+      :ssid     => net['ssid'],
     }
   end
 end
