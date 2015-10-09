@@ -35,14 +35,27 @@ require 'getoptlong'
 require 'pathname'
 require 'socket'
 
+def log(priority, msg)
+  STDERR.puts("puavo-wlanap[#{Process.pid}]: #{priority}: #{msg}")
+end
+
+def warning(msg)
+  log(:WARNING, msg)
+end
+
+def error(msg)
+  log(:ERROR, msg)
+end
+
 begin
   require 'puavo/etc'
   require 'puavo/rest-client'
-rescue LoadError
+rescue LoadError => e
   # Puavo-integration requires aforementioned modules, but puavo-wlanap
   # can still operate without Puavo. This has the same effect as
   # --no-puavo command line option.
   USE_PUAVO = false
+  warning("Puavo integration is disabled: #{e}")
 else
   USE_PUAVO = true
 end
@@ -260,18 +273,6 @@ puavo-wlanap {
     };
 }
 EOF
-
-def log(priority, msg)
-  STDERR.puts("puavo-wlanap[#{Process.pid}]: #{priority}: #{msg}")
-end
-
-def warning(msg)
-  log(:WARNING, msg)
-end
-
-def error(msg)
-  log(:ERROR, msg)
-end
 
 def get_nets_from_puavo
   nets_wait = 1
