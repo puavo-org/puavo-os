@@ -202,8 +202,6 @@ VTUN_ADDRESS = 'wlangw'
 # Default vtun server port, use --vtun-port to override.
 VTUN_PORT    = 45045
 
-BACKHAULS    = [:single, :vtun]
-
 HOSTAPD_CONF_TEMPLATE = <<'EOF'
 ## PHY-specific options ##
 interface=<%= phy[:iface] %>
@@ -391,28 +389,17 @@ def write_vtund_conf(bss_list, rundir)
   end
 end
 
-def spawn_dhclient(iface)
-  spawn('dhclient', '-d', iface)
-end
-
 def start_services(critical_service_pids, phy_list, bss_list, rundir,
-                   vtun_address, vtun_port, backhaul, bh_iface)
+                   vtun_address, vtun_port)
   bss_list.each do |bss|
     run_or_fail('brctl', 'addbr', bss[:bridge])
     run_or_fail('brctl', 'setfd', bss[:bridge], '0')
     run_or_fail('ifconfig', bss[:bridge], 'up')
 
-    if backhaul == :single
-      run_or_fail('brctl', 'addif', bss[:bridge], bh_iface)
-      critical_service_pids << spawn_dhclient(bss[:bridge])
-    end
-
-    if backhaul == :vtun
-      vtund_conffile = File.join(rundir, "vtund_#{bss[:bridge]}.conf")
-      critical_service_pids << spawn('vtund', '-n', '-P', vtun_port.to_s,
-                                     '-f', vtund_conffile,
-                                     'puavo-wlanap', vtun_address)
-    end
+    vtund_conffile = File.join(rundir, "vtund_#{bss[:bridge]}.conf")
+    critical_service_pids << spawn('vtund', '-n', '-P', vtun_port.to_s,
+                                   '-f', vtund_conffile,
+                                   'puavo-wlanap', vtun_address)
   end
 
   # Magical sleep to "ensure" that bridges and tunnels are all set
@@ -433,8 +420,6 @@ def start_services(critical_service_pids, phy_list, bss_list, rundir,
 end
 
 def run(kwargs = {})
-  backhaul     = kwargs.fetch(:backhaul,     BACKHAULS[0])
-  bh_iface     = kwargs.fetch(:bh_iface,     get_default_interface)
   ctrlmsg      = kwargs.fetch(:ctrlmsg,      nil)
   nets         = kwargs.fetch(:nets,         [])
   use_puavo    = kwargs.fetch(:use_puavo,    USE_PUAVO)
@@ -489,7 +474,7 @@ def run(kwargs = {})
 
   start_services(critical_service_pids,
                  phy_list, bss_list, rundir,
-                 vtun_address, vtun_port, backhaul, bh_iface)
+                 vtun_address, vtun_port)
 
   loop do
     case sigqueue.pop
@@ -542,7 +527,7 @@ def run(kwargs = {})
               bridge = bridge[0]
               run_or_fail('ifconfig', iface, 'up')
               run_or_fail('brctl', 'addif', bridge, iface)
-              critical_service_pids << spawn_dhclient(bridge)
+              critical_service_pids << spawn('dhclient', '-d', bridge)
             else
               STDERR.puts("WARNING: received invalid vtun-up command: #{line}")
             end
@@ -562,10 +547,8 @@ def main
   run_kwargs = {}
 
   GetoptLong.new(
-    ['--backhaul'                  , GetoptLong::REQUIRED_ARGUMENT],
-    ['--backhaul-single-interface' , GetoptLong::REQUIRED_ARGUMENT],
-    ['--backhaul-vtun-address'     , GetoptLong::REQUIRED_ARGUMENT],
-    ['--backhaul-vtun-port'        , GetoptLong::REQUIRED_ARGUMENT],
+    ['--vtun-address'              , GetoptLong::REQUIRED_ARGUMENT],
+    ['--vtun-port'                 , GetoptLong::REQUIRED_ARGUMENT],
     ['--help', '-h'                , GetoptLong::NO_ARGUMENT],
     ['--network-open'              , GetoptLong::REQUIRED_ARGUMENT],
     ['--no-puavo'                  , GetoptLong::NO_ARGUMENT],
@@ -575,24 +558,10 @@ def main
     ['--ctrlmsg', GetoptLong::REQUIRED_ARGUMENT],
   ).each do |opt, arg|
     case opt
-    when '--backhaul'
-      case arg
-      when :vtun.to_s
-        run_kwargs[:backhaul] = :vtun
-      when :single.to_s
-        run_kwargs[:backhaul] = :single
-      else
-        STDERR.puts("ERROR: invalid backhaul mode (#{arg})")
-        exit(1)
-      end
-
-    when '--backhaul-single-interface'
-      run_kwargs[:bh_iface] = arg
-
-    when '--backhaul-vtun-address'
+    when '--vtun-address'
       run_kwargs[:vtun_address] = arg
 
-    when '--backhaul-vtun-port'
+    when '--vtun-port'
       unless arg =~ /^[1-9][0-9]*$/ then
         STDERR.puts("ERROR: invalid port number (#{arg})")
         exit(1)
@@ -606,36 +575,10 @@ Usage: puavo-wlanap [OPTION]...
 Tunneled WLAN accesspoint.
 
 Options:
-     --backhaul [#{BACKHAULS.join '|' }]
-         Set the backhaul type, default: #{BACKHAULS[0]}.
-
-         single
-
-           Use an existing network interface as the backhaul by adding
-           it to the BSS bridge.
-
-           This option requires following options:
-
-             --backhaul-single-interface INTERFACE
-
-         vtun
-
-           Create per-BSS 802.3 (Ethernet) tunnels over UDP and use them
-           as backhauls.
-
-           This option requires following options:
-
-             --backhaul-vtun-address ADDRESS
-             --backhaul-vtun-port    PORT
-
-     --backhaul-single-interface INTERFACE
-         Use INTERFACE as the backhaul network interface instead of the
-         default route interface.
-
-     --backhaul-vtun-address ADDRESS
+     --vtun-address ADDRESS
          Set the address of the vtun server.
 
-     --backhaul-vtun-port PORT
+     --vtun-port PORT
          Set the port of the vtun server.
 
  -h, --help
