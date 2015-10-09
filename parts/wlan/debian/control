@@ -16,6 +16,7 @@ Architecture: all
 Depends: ${misc:Depends},
  bridge-utils,
  hostapd (>= 2.1),
+ isc-dhcp-client,
  iw,
  net-tools,
  puavo-client (>= 2.1.0),
