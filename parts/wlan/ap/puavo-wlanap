@@ -42,9 +42,9 @@ rescue LoadError
   # Puavo-integration requires aforementioned modules, but puavo-wlanap
   # can still operate without Puavo. This has the same effect as
   # --no-puavo command line option.
-  USE_PUAVO    = false
+  USE_PUAVO = false
 else
-  USE_PUAVO    = true
+  USE_PUAVO = true
 end
 
 THIS_SCRIPT = Pathname.new($0).realpath
