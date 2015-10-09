@@ -464,10 +464,8 @@ def run(kwargs = {})
   loop do
     signal = sigqueue.pop
     case signal
-    when :INT
-    when :QUIT
-    when :TERM
-      error("received signal #{signal}, exiting")
+    when :INT, :QUIT, :TERM
+      error("received fatal signal #{signal}, exiting")
       exit(1)
     when :CHLD
       begin
