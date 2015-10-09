@@ -141,19 +141,10 @@ module Dot11
     addr.zip(mask).map { |(a, b)| "%02x" % (a &~ b) } .join(":")
   end
 
-  def self.get_ht_capab(iface, channel)
-    phyname = File.read("/sys/class/net/#{iface}/phy80211/name").strip
-
-    is_ht20sgi_capab = IO.popen(['iw', phyname, 'info']) do |io|
-      !io.grep(/^\s+RX HT20 SGI.*$/).empty?
-    end
-    $?.success? or raise 'failed to query HT capabilities'
-
+  def self.get_ht_capab(channel)
     case channel
-    when 1, 6
-      is_ht20sgi_capab ? '[HT20][SHORT-GI-20]' : '[HT40+]'
-    when 11
-      is_ht20sgi_capab ? '[HT20][SHORT-GI-20]' : '[HT40-]'
+    when 1, 6, 11
+      '[HT20][SHORT-GI-20]'
     when 36, 44
       '[HT40+]'
     when 40, 48
