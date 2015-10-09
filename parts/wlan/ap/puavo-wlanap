@@ -332,7 +332,7 @@ def fill_phy_list(phy_list, band)
       :channel  => channel,
       :bssid    => Dot11.get_bssid(iface),
       :hw_mode  => Dot11::CHANNELS_5G.include?(channel) ? 'a' : 'g',
-      :ht_capab => Dot11.get_ht_capab(iface, channel),
+      :ht_capab => Dot11.get_ht_capab(channel),
     }
   end
 end
