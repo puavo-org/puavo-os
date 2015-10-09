@@ -434,6 +434,10 @@ def run(kwargs = {})
   FileUtils.mkdir_p(rundir)
 
   phy_list.concat(get_phy_list)
+  if phy_list.empty?
+    error('no suitable physical interfaces available, aborting')
+    exit(1)
+  end
 
   if use_puavo
     nets.concat(get_nets_from_puavo)
