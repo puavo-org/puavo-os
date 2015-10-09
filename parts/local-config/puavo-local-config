@@ -11,6 +11,7 @@
 # arguments, but puavo-local-config also intends to prepare the system for
 # configuration (by puavo-local-config-ui).
 
+require 'erb'
 require 'etc'
 require 'fileutils'
 require 'getoptlong'
@@ -33,9 +34,11 @@ puavo-local-config [OPTIONS]
     --admins                configure admins
     --grub-default          configure grub default
     --networkmanager-policy apply special networkmanager permissions
+    --powersave-settings    setup powersave configurations
     --prepare-puavopkg      setup configurations for puavo-pkg
     --setup-installed-pkgs  configure installed (optional) packages
     --setup-puavo-remote-assistance-applet
+    --system-boot           tell we are running at system boot
 
     --install-pkg           a package name
     --remove-pkg            ["--all" | a package name]
@@ -67,17 +70,33 @@ def conf_version_2_ok?(conf)
     && is_boolean.call(conf['automatic_image_updates'])
 end
 
-def migrate_to_conf_version_2(conf, config_path)
-  new_conf = {
-               'allow_logins_for'        => conf['allow_logins_for'],
-               'automatic_image_updates' => true,
-               'version'                 => 2,
-             }
-  tmpfile = "#{ config_path }.tmp"
-  File.open(tmpfile, 'w') { |f| f.print(new_conf.to_json) }
-  File.rename(tmpfile, config_path)
+def conf_version_3_ok?(conf)
+  conf_version_2_ok?(conf) \
+    && conf['battery_powersave_thresholds'].kind_of?(Array) \
+    && conf['battery_powersave_thresholds'].count == 3      \
+    && conf['battery_powersave_thresholds'].map { |s| s.kind_of?(Integer) }
+end
 
-  new_conf
+def conf_version_1_to_2(conf)
+  {
+    'allow_logins_for'        => conf['allow_logins_for'],
+    'automatic_image_updates' => true,
+    'version'                 => 2,
+  }
+end
+
+def conf_version_2_to_3(conf)
+  conf.merge({
+    'battery_powersave_thresholds' => [ 30, 70, 90 ],
+    'version'                      => 3
+  })
+end
+
+def update_conf(conf, config_path)
+  tmpfile = "#{ config_path }.tmp"
+  File.open(tmpfile, 'w') { |f| f.print(conf.to_json) }
+  File.rename(tmpfile, config_path)
+  conf
 end
 
 def ensure_conf_sanity(conf, config_path)
@@ -99,19 +118,23 @@ def ensure_conf_sanity(conf, config_path)
 
   # If configuration version is higher than what we know, do not try to
   # use it and also do not mess up the configuration file.
-  return nil if conf['version'].to_i > 2
-
-  if conf['version'] == 2 && conf_version_2_ok?(conf)
-    return conf
-  end
+  return nil if conf['version'].to_i > 3
 
   if conf['version'] == 1 && conf_version_1_ok?(conf) then
-    return migrate_to_conf_version_2(conf, config_path)
+    conf = update_conf(conf_version_1_to_2(conf), config_path)
   end
 
-  # something is bad, move configuration to backup and return nil
-  move_conf.call()
-  return nil
+  if conf['version'] == 2 && conf_version_2_ok?(conf) then
+    conf = update_conf(conf_version_2_to_3(conf), config_path)
+  end
+
+  if conf['version'] != 3 then
+    # something is bad, move configuration to backup and return nil
+    move_conf.call()
+    return nil
+  end
+
+  return conf
 end
 
 $primary_user = nil
@@ -292,6 +315,25 @@ EOF
   end
 end
 
+def configure_powersave_settings(conf, system_boot)
+  return if conf.nil?
+
+  @ac_off_low_mid_level, @ac_off_mid_high_level, @ac_off_high_top_level \
+    = * conf['battery_powersave_thresholds']
+
+  template_path = '/usr/share/puavo-local-config/templates/etc/cpufreqd.conf'
+  template = File.read(template_path)
+
+  cpufreqd_conf = ERB.new(template, 0, '%<>').result
+
+  targetfile = '/etc/cpufreqd.conf'
+  tmpfile = "#{ targetfile }.plctmp"
+  File.open(tmpfile, 'w') { |f| f.print(cpufreqd_conf) }
+  File.rename(tmpfile, targetfile)
+
+  system('service cpufreqd restart') unless system_boot
+end
+
 def superlaptop_mode?
   kernel_cmdline = IO.read('/proc/cmdline')
   superlaptop_mode_re \
@@ -392,6 +434,7 @@ config_path = '/state/etc/puavo/local/config.json'
 apply_configs        = []
 packages_to_install  = []
 packages_to_remove   = []
+system_boot          = false
 
 begin
   opts = GetoptLong.new(
@@ -402,10 +445,12 @@ begin
     [ '--grub-default',          GetoptLong::NO_ARGUMENT,                ],
     [ '--install-pkg',           GetoptLong::REQUIRED_ARGUMENT,          ],
     [ '--networkmanager-policy', GetoptLong::NO_ARGUMENT,                ],
+    [ '--powersave-settings',    GetoptLong::NO_ARGUMENT,                ],
     [ '--remove-pkg',            GetoptLong::REQUIRED_ARGUMENT,          ],
     [ '--prepare-puavopkg',      GetoptLong::NO_ARGUMENT,                ],
     [ '--setup-installed-pkgs',  GetoptLong::NO_ARGUMENT,                ],
     [ '--setup-puavo-remote-assistance-applet', GetoptLong::NO_ARGUMENT, ],
+    [ '--system-boot',           GetoptLong::NO_ARGUMENT,                ],
   )
 
   opts.each do |opt, arg|
@@ -418,6 +463,7 @@ begin
       when '--admins',
            '--grub-default',
            '--networkmanager-policy',
+           '--powersave-settings',
            '--prepare-puavopkg',
            '--setup-installed-pkgs',
            '--setup-puavo-remote-assistance-applet'
@@ -428,6 +474,8 @@ begin
       when '--remove-pkg'
 	apply_configs.push(opt) unless apply_configs.include?(opt)
 	packages_to_remove << arg
+      when '--system-boot'
+        system_boot = true
     end
   end
 
@@ -463,6 +511,8 @@ dispatch_table = {
   '--grub-default'          => lambda { configure_grub_default()           },
   '--install-pkg'           => lambda { install_pkgs(packages_to_install)  },
   '--networkmanager-policy' => lambda { configure_nm_policy()              },
+  '--powersave-settings' \
+    => lambda { configure_powersave_settings(conf, system_boot) },
   '--prepare-puavopkg'      => lambda { prepare_puavopkg()                 },
   '--remove-pkg'            => lambda { remove_pkgs(packages_to_remove)    },
   '--setup-installed-pkgs'  => lambda { setup_installed_pkgs()             },

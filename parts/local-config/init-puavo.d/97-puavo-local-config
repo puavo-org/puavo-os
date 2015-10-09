@@ -8,7 +8,9 @@ if [ "$puavo_hosttype" = "laptop" \
   /usr/sbin/puavo-local-config --admins                               \
                                --grub-default                         \
                                --networkmanager-policy                \
+                               --powersave-settings                   \
                                --prepare-puavopkg                     \
                                --setup-installed-pkgs                 \
-                               --setup-puavo-remote-assistance-applet
+                               --setup-puavo-remote-assistance-applet \
+                               --system-boot
 fi

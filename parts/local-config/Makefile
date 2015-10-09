@@ -18,6 +18,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-local-config/templates/etc
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d
 	mkdir -p $(DESTDIR)$(libdir)/puavo-local-config-ui
 	mkdir -p $(DESTDIR)$(libdir)/puavo-local-config/pam
@@ -33,6 +34,9 @@ install : installdirs
 	
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/applications \
 		puavo-local-config-ui.desktop
+	
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-local-config/templates/etc \
+		templates/etc/cpufreqd.conf
 	
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d \
 		init-puavo.d/*-*
