@@ -258,10 +258,6 @@ puavo-wlanap {
     up {
         program "<%= THIS_SCRIPT %> --rundir '<%= rundir %>' --ctrlmsg 'vtun-up:%%:<%= bss[:bridge] %>'";
     };
-
-    down {
-        program "<%= THIS_SCRIPT %> --rundir '<%= rundir %>' --ctrlmsg 'vtun-down:%%:<%= bss[:bridge] %>'";
-    };
 }
 EOF
 
