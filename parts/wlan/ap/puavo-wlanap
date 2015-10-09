@@ -443,6 +443,11 @@ def run(kwargs = {})
     nets.concat(get_nets_from_puavo)
   end
 
+  if nets.empty?
+    error('no networks defined, aborting')
+    exit(1)
+  end
+
   bss_list.concat(get_bss_list(nets))
 
   write_hostapd_conf(phy_list, bss_list, rundir)
