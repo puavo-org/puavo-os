@@ -1,9 +1,0 @@
-#!/bin/bash
-
-set -eu
-
-source puavo-wlanap-dnsproxy-env
-source "${PWAP_DNSPROXY_DATADIR}/config"
-source "${PWAP_DNSPROXY_CONFDIR}/config" || true
-
-echo "vtun-up $1 $2" | nc -U "${PWAP_DNSPROXY_RUNDIR}/control.socket"

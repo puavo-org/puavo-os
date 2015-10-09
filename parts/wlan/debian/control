@@ -30,33 +30,6 @@ Description: host tunneled WLAN accesspoint
  configured from Puavo.
  .
 
-Package: puavo-wlanap-dnsproxy
-Architecture: all
-Depends: ${misc:Depends},
- daemon,
- debianutils,
- dnsmasq-base
-Recommends: puavo-wlanap
-Description: DNS proxy responding to service list queries from WLAN networks
- puavo-wlanap-dnsmasq glues together puavo-wlanap, dnsmasq and iptables
- to respond to DNS service list queries from WLAN networks and forward
- all other DNS queries to upstream servers. Accesspoint-specific service
- lists are gathered from Puavo via its REST API.
- .
-
-Package: puavo-wlanap-mdns
-Architecture: all
-Depends: ${misc:Depends},
- avahi-daemon,
- daemon,
- debianutils
-Recommends: puavo-wlanap
-Description: mDNS daemon responding to queries from WLAN networks
- puavo-wlanap-mdns glues together puavo-wlanap, avahi and iptables to
- respond to mDNS queries from WLAN networks.Accesspoint-specific service
- lists are gathered from Puavo via its REST API.
- .
-
 Package: puavo-wlangw
 Architecture: all
 Depends: ${misc:Depends},
