@@ -1,6 +1,0 @@
-#!/bin/sh
-
-set -eu
-
-url="$(puavo-resolve-api-server)/v3/devices/$(cat /etc/puavo/hostname)/wlan_networks"
-curl -s --cacert /etc/puavo/certs/rootca.pem --header 'Authorization: Bootserver' "${url}" | jq -r '.[] | select(.wlan_ap == true) | if (.password == null) then "\(.type):\(.ssid)" else "\(.type):\(.ssid):\(.password)" end'

@@ -14,16 +14,11 @@ Homepage: http://github.com/opinsys/puavo-wlan/
 Package: puavo-wlanap
 Architecture: all
 Depends: ${misc:Depends},
- bash,
  bridge-utils,
- curl,
- daemon,
  hostapd (>= 2.1),
  iw,
  net-tools,
- netcat-openbsd,
  puavo-client (>= 2.1.0),
- socat,
  vtun,
  wireless-crda,
  wireless-regdb,

@@ -1,6 +1,0 @@
-All executables found in this directory are run whenever a vtun
-connection to the gateway is established. Files are run in the lexical
-sort order of their filenames.
-
-Two arguments will be passed to executables: the name of the bridge
-interface and the name of the TUN interface.
