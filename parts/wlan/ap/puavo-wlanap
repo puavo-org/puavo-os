@@ -392,7 +392,7 @@ def write_vtund_conf(bss_list, rundir)
 end
 
 def spawn_dhclient(iface)
-  spawn('dhclient', '-d', bss[:bridge])
+  spawn('dhclient', '-d', iface)
 end
 
 def start_services(critical_service_pids, phy_list, bss_list, rundir,
