@@ -391,6 +391,10 @@ def write_vtund_conf(bss_list, rundir)
   end
 end
 
+def spawn_dhclient(iface)
+  spawn('dhclient', '-d', bss[:bridge])
+end
+
 def start_services(critical_service_pids, phy_list, bss_list, rundir,
                    vtun_address, vtun_port, backhaul, bh_iface)
   bss_list.each do |bss|
@@ -400,7 +404,7 @@ def start_services(critical_service_pids, phy_list, bss_list, rundir,
 
     if backhaul == :single
       run_or_fail('brctl', 'addif', bss[:bridge], bh_iface)
-      critical_service_pids << spawn('dhclient', '-d', bss[:bridge])
+      critical_service_pids << spawn_dhclient(bss[:bridge])
     end
 
     if backhaul == :vtun
@@ -538,7 +542,7 @@ def run(kwargs = {})
               bridge = bridge[0]
               run_or_fail('ifconfig', iface, 'up')
               run_or_fail('brctl', 'addif', bridge, iface)
-              critical_service_pids << spawn('dhclient', '-d', bridge)
+              critical_service_pids << spawn_dhclient(bridge)
             else
               STDERR.puts("WARNING: received invalid vtun-up command: #{line}")
             end
