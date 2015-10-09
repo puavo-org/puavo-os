@@ -400,9 +400,8 @@ def start_services(critical_service_pids, phy_list, bss_list, rundir,
 
     if backhaul == :single
       run_or_fail('brctl', 'addif', bss[:bridge], bh_iface)
+      critical_service_pids << spawn('dhclient', '-d', bss[:bridge])
     end
-
-    critical_service_pids << spawn('dhclient', '-d', bss[:bridge])
 
     if backhaul == :vtun
       vtund_conffile = File.join(rundir, "vtund_#{bss[:bridge]}.conf")
@@ -530,7 +529,22 @@ def run(kwargs = {})
         rescue EOFError
           STDERR.puts('WARNING: received invalid control message')
         else
-          puts(line)
+          line.strip!
+          cmd, sep, args = line.partition ':'
+          case cmd
+          when 'vtun-up'
+            iface, *bridge = args.split ':'
+            if bridge.length == 1
+              bridge = bridge[0]
+              run_or_fail('ifconfig', iface, 'up')
+              run_or_fail('brctl', 'addif', bridge, iface)
+              critical_service_pids << spawn('dhclient', '-d', bridge)
+            else
+              STDERR.puts("WARNING: received invalid vtun-up command: #{line}")
+            end
+          else
+            STDERR.puts("WARNING: received unknown control message: #{line}")
+          end
         ensure
           conn.close
           conn = nil
