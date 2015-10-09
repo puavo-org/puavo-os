@@ -481,7 +481,6 @@ def run(kwargs = {})
     end
   end
 
-  recvbuf = ''
   serv = UNIXServer.new(File.join(rundir, 'ctrlsocket'))
   conn = nil
 
@@ -511,7 +510,6 @@ def run(kwargs = {})
       if ready.nil?
         if !conn.nil?
           STDERR.puts('control socket connection timeout')
-          recvbuf.clear
           conn.close
           conn = nil
         end
@@ -532,9 +530,8 @@ def run(kwargs = {})
         rescue EOFError
           STDERR.puts('WARNING: received invalid control message')
         else
-          puts(recvbuf) if recvbuf.concat(line).end_with?("\n")
+          puts(line)
         ensure
-          recvbuf.clear
           conn.close
           conn = nil
         end
