@@ -4,7 +4,7 @@ var gui = require('nw.gui');
 
 var config_json_dir  = '/state/etc/puavo/local';
 var config_json_path = config_json_dir + '/config.json';
-var old_config;
+var old_config, prev_config;
 
 var locale = process.env.LANG.substring(0, 2);
 
@@ -887,6 +887,21 @@ function write_config() {
                                               : [  1,  2,  3 ];
 
   write_config_to_file(new_config);
+
+  if (! compare_integer_arrays(prev_config.battery_powersave_thresholds,
+                               new_config.battery_powersave_thresholds)) {
+    // if battery_powersave_thresholds has changed, trigger this:
+    var cmdargs = [ '/usr/sbin/puavo-local-config', '--powersave-settings' ];
+    var handler = function(error, stdout, stderr) {
+                    if (error) {
+                      alert('error running /usr/sbin/puavo-local-config'
+                              + ' --powersave-settings');
+                    }
+                  };
+    child_process.execFile('sudo', cmdargs, {}, handler);
+  }
+
+  prev_config = new_config;
 }
 
 function write_config_to_file(conf) {
@@ -901,7 +916,7 @@ function write_config_to_file(conf) {
 
 check_access();         // will exit in case of errors
 
-old_config = read_config();
+old_config = prev_config = read_config();
 if (!old_config) { process.exit(1); }
 
 // set document titles
