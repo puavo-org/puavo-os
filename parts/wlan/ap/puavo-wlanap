@@ -554,10 +554,10 @@ Tunneled WLAN accesspoint.
 
 Options:
      --vtun-address ADDRESS
-         Set the address of the vtun server.
+         Set the address of the vtun server, default: #{VTUN_ADDRESS}
 
      --vtun-port PORT
-         Set the port of the vtun server.
+         Set the port of the vtun server, default: #{VTUN_PORT}
 
  -h, --help
          Display this help and exit.
