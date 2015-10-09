@@ -7,5 +7,5 @@ homepage_args() {
   fi
 }
 
-exec /opt/google/chrome/google-chrome --no-default-browser-check \
+exec /usr/bin/chromium-browser.distrib --no-default-browser-check \
        $(homepage_args) "$@"

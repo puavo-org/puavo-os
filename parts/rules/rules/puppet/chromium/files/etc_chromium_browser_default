@@ -12,5 +12,3 @@ if [ -n "$PEPPER_FLASH_VERSION" ]; then
 else
   CHROMIUM_FLAGS=""
 fi
-
-CHROMIUM_FLAGS="$CHROMIUM_FLAGS --no-default-browser-check"
