@@ -132,7 +132,7 @@ module Dot11
     ## mask >= 00:00:00:00:00:03 to support at most 4 different
     ## BSSIDs. Mask 00:00:00:00:00:03 has been verified to work with
     ## devices in question.
-    if ['168c0030', '168c002b', '168c0037'].include?(model_id) then
+    if ['168c0029', '168c0030', '168c002b', '168c002e', '168c0037'].include?(model_id) then
       if mask.map { |v| v == 0 } .all? then
         mask = [0x00, 0x00, 0x00, 0x00, 0x00, 0x03]
       end
