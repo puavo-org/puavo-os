@@ -556,7 +556,15 @@ def main
   ).each do |opt, arg|
     case opt
     when '--backhaul'
-      run_kwargs[:backhaul] = arg
+      case arg
+      when :vtun.to_s
+        run_kwargs[:backhaul] = :vtun
+      when :single.to_s
+        run_kwargs[:backhaul] = :single
+      else
+        STDERR.puts("ERROR: invalid backhaul mode (#{arg})")
+        exit(1)
+      end
 
     when '--backhaul-single-interface'
       run_kwargs[:bg_iface] = arg
