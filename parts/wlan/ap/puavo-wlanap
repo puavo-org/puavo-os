@@ -388,10 +388,6 @@ def start_services(critical_service_pids, phy_list, bss_list, rundir,
                                    'puavo-wlanap', vtun_address)
   end
 
-  # Magical sleep to "ensure" that bridges and tunnels are all set
-  # before proceeding.
-  sleep 8
-
   phy_list.each do |phy|
 
     # Try to disable power saving, because it seems to cause flaky
