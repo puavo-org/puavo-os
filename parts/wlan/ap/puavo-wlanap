@@ -335,11 +335,7 @@ def get_phy_list
   phy_list
 end
 
-def get_bss_list(use_puavo, nets)
-  if use_puavo
-    nets.concat(get_nets_from_puavo)
-  end
-
+def get_bss_list(nets)
   # At most 4 BSSes are supported.
   nets.slice!(4..-1)
 
@@ -438,7 +434,12 @@ def run(kwargs = {})
   FileUtils.mkdir_p(rundir)
 
   phy_list.concat(get_phy_list)
-  bss_list.concat(get_bss_list(use_puavo, nets))
+
+  if use_puavo
+    nets.concat(get_nets_from_puavo)
+  end
+
+  bss_list.concat(get_bss_list(nets))
 
   write_hostapd_conf(phy_list, bss_list, rundir)
   write_vtund_conf(bss_list, rundir)
