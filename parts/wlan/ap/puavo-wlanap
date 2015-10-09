@@ -140,8 +140,8 @@ module Dot11
 
     model_id = "%04x%04x" % [$1.to_i(16), $2.to_i(16)]
 
-    if Dot11::MASK_QUIRK_MODEL_IDS.include?(model_id) then
-      if mask.map { |v| v == 0 } .all? then
+    if Dot11::MASK_QUIRK_MODEL_IDS.include?(model_id)
+      if mask.map { |v| v == 0 } .all?
         mask = [0x00, 0x00, 0x00, 0x00, 0x00, 0x03]
       end
     end
@@ -561,7 +561,7 @@ def main
       run_kwargs[:vtun_address] = arg
 
     when '--vtun-port'
-      unless arg =~ /^[1-9][0-9]*$/ then
+      unless arg =~ /^[1-9][0-9]*$/
         STDERR.puts("ERROR: invalid port number (#{arg})")
         exit(1)
       end
@@ -615,7 +615,7 @@ EOF
     end
   end
 
-  if ARGV.length != 0 then
+  if ARGV.length != 0
     STDERR.puts("ERROR: invalid number of arguments (#{ARGV.length}), expected 0")
     exit(1)
   end
