@@ -735,9 +735,9 @@ class Measurement:
         self.x                = x
         self.y                = y
         self.channelDwellTime = channelDwellTime
-        self.frames           = []
+        self.beacons          = []
 
-class Frame:
+class Beacon:
 
     def __init__(self, line):
         fields         = [s.strip() for s in line.strip().split(',')]
