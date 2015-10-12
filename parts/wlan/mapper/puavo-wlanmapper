@@ -164,7 +164,7 @@ def heatmapDatumSortKey(heatmapDatum):
 
 class DrawHeatmapsThread(QThread):
 
-    heatmapReady = pyqtSignal(int, str, QImage, list, list, list)
+    heatmapReady = pyqtSignal(int, str, str, QImage, list, list, list)
 
     def __init__(self):
         QThread.__init__(self)
@@ -195,7 +195,7 @@ class DrawHeatmapsThread(QThread):
                 drawHeatmap(filepath, w, h, xs, ys, zs)
                 image = QImage(filepath, "png")
 
-            self.heatmapReady.emit(chan, bssid, image, xs, ys, zs)
+            self.heatmapReady.emit(chan, essid, bssid, image, xs, ys, zs)
 
 class ZoomableGraphicsView(QGraphicsView):
 
@@ -280,9 +280,7 @@ class HeatmapScene(QGraphicsScene):
             item.setPos(col * (margin + size.width()) + margin,
                         -item.boundingRect().height())
 
-    def __updateFloorPlanItem(self, col, row, heatmapItem):
-        chan  = CHANS[col]
-        bssid = self.__bssids[row]
+    def __updateFloorPlanItem(self, col, row, heatmapItem, chan, bssid):
         size  = heatmapItem.pixmap().size()
 
         try:
@@ -295,10 +293,7 @@ class HeatmapScene(QGraphicsScene):
             if item.pixmap().size() != size:
                 item.setPixmap(self.__project.floorPlanPixmap().scaled(size))
 
-    def __updateHeatmapItem(self, col, row, pixmap, xs, ys, zs):
-        chan   = CHANS[col]
-        bssid  = self.__bssids[row]
-        essid  = self.__project.essids[bssid]
+    def __updateHeatmapItem(self, col, row, pixmap, chan, essid, bssid, xs, ys, zs):
         margin = max(0.1 * pixmap.width(), 0.1 * pixmap.height())
 
         try:
@@ -316,11 +311,9 @@ class HeatmapScene(QGraphicsScene):
         item.setPos(col * (margin + pixmap.width()) + margin,
                     row * (margin + pixmap.height()) + margin)
 
-        self.__updateFloorPlanItem(col, row, item)
+        self.__updateFloorPlanItem(col, row, item, chan, bssid)
 
-    def __updateRowHeadingItem(self, row, size):
-        bssid  = self.__bssids[row]
-        essid  = self.__project.essids[bssid]
+    def __updateRowHeadingItem(self, row, size, essid):
         margin = max(0.1 * size.width(), 0.1 * size.height())
 
         try:
@@ -337,7 +330,7 @@ class HeatmapScene(QGraphicsScene):
         item.setPos(-item.boundingRect().width(),
                     row * (margin + size.height()) + margin)
 
-    def addHeatmap(self, chan, bssid, image, xs, ys, zs):
+    def addHeatmap(self, chan, essid, bssid, image, xs, ys, zs):
         pixmap     = QPixmap.fromImage(image)
         pixmapSize = pixmap.size()
         col        = CHAN_TO_INDEX[chan]
@@ -348,8 +341,8 @@ class HeatmapScene(QGraphicsScene):
             self.__bssids.append(bssid)
 
         self.__updateColumnHeadingItems(pixmapSize)
-        self.__updateRowHeadingItem(row, pixmapSize)
-        self.__updateHeatmapItem(col, row, pixmap, xs, ys, zs)
+        self.__updateRowHeadingItem(row, pixmapSize, essid)
+        self.__updateHeatmapItem(col, row, pixmap, chan, essid, bssid, xs, ys, zs)
 
 class MonitorScene(QGraphicsScene):
 
