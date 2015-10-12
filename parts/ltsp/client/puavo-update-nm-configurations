@@ -62,8 +62,12 @@ class Wlan
         end
       end
     rescue
-      nil
+      nil       # return nil in case we there was an error
+                # (could be limited to Errno::ENOENT perhaps?)
     end
+
+    nil         # return nil in case there was file but we could not find
+                # uuid in it
   end
 
   def update_file
