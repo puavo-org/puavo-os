@@ -724,11 +724,19 @@ class Monitor(QObject):
 
 class Measurement:
 
-    def __init__(self, x, y, channelDwellTime):
-        self.x                = x
-        self.y                = y
+    def __init__(self, channelDwellTime):
+        self.pos              = None
         self.channelDwellTime = channelDwellTime
         self.beacons          = []
+
+    @property
+    def pos(self):
+        x, y = self.pos
+        return QPointF(x, y)
+
+    @pos.setter
+    def pos(self, value):
+        pos = value.x(), value.y()
 
 class Beacon:
 
