@@ -694,20 +694,15 @@ class Monitor(QObject):
                 self.measurement = {}
                 continue
 
-            fields = [s.strip() for s in line.strip().split(',')]
-            bssid = fields[4]
-            rssi = int(fields[6])
-            freq = int(fields[9])
-            ssid = fields[11]
-            chan = int(fields[13])
+            beacon = Beacon(line)
 
-            self.essids[bssid] = ssid
+            self.essids[beacon.bssid] = beacon.ssid
 
-            if FREQ_TO_CHAN[freq] != chan:
+            if FREQ_TO_CHAN[beacon.freq] != beacon.chan:
                 continue
 
-            bssidmap = self.measurement.setdefault(chan, {})
-            bssidmap[bssid] = (rssi + bssidmap.get(bssid, rssi)) / 2
+            bssidmap = self.measurement.setdefault(beacon.chan, {})
+            bssidmap[beacon.bssid] = (beacon.rssi + bssidmap.get(beacon.bssid, beacon.rssi)) / 2
 
     def errorText(self):
         with open(self.__horst_errfile_path) as errfile:
