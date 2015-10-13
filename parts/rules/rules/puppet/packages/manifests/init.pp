@@ -319,7 +319,6 @@ class packages {
     , 'librecad'
     , 'libreoffice'
     , 'libreoffice-base'
-    , 'libreoffice-common'
     , 'scribus'
     , 'scribus-doc'
     , 'tellico'
