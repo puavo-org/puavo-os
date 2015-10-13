@@ -452,7 +452,8 @@ class MonitorScene(QGraphicsScene):
         self.__spots.remove(spot)
         spot.stopMonitor()
         self.removeItem(spot)
-        self.measurementsChanged.emit()
+        if spot.measurement() is not None:
+            self.measurementsChanged.emit()
 
     def contextMenuEvent(self, event):
         spot = self.itemAt(event.scenePos())
