@@ -533,7 +533,8 @@ class MonitorSpot(QGraphicsPolygonItem):
 
     def mouseReleaseEvent(self, event):
         if (self.__lastMousePressPos is not None
-            and event.scenePos() != self.__lastMousePressPos):
+            and event.scenePos() != self.__lastMousePressPos
+            and self.__measurement is not None):
             QCoreApplication.postEvent(self.scene(), SpotModifiedEvent())
         QGraphicsPolygonItem.mouseReleaseEvent(self, event)
 
