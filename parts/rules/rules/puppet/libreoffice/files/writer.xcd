@@ -146,7 +146,7 @@
         </node>
         <node oor:name=".uno:InsertEndnote" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Insert Endnote Directly</value>
+            <value xml:lang="en-US">Insert Endnote</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -168,6 +168,9 @@
         <node oor:name=".uno:InsertMultiIndex" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">~Indexes and Tables...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:InsertAuthoritiesEntry" oor:op="replace">
@@ -208,21 +211,27 @@
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">Current ~Index</value>
           </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
         </node>
         <node oor:name=".uno:RemoveTableOf" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">Delete index</value>
           </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
         </node>
         <node oor:name=".uno:ProtectTraceChangeMode" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">~Protect Records...</value>
+            <value xml:lang="en-US">~Protect Changes...</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
           </prop>
         </node>
-        <node oor:name=".uno:RejectTracedChange" oor:op="replace">
+        <node oor:name=".uno:RejectTrackedChange" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">Reject Change</value>
           </prop>
@@ -230,7 +239,7 @@
             <value>1</value>
           </prop>
         </node>
-        <node oor:name=".uno:AcceptTracedChange" oor:op="replace">
+        <node oor:name=".uno:AcceptTrackedChange" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">Accept Change</value>
           </prop>
@@ -242,10 +251,16 @@
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">~Next Change</value>
           </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
         </node>
         <node oor:name=".uno:PreviousTrackedChange" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">Pr~evious Change</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:UpdateAllLinks" oor:op="replace">
@@ -255,7 +270,7 @@
         </node>
         <node oor:name=".uno:TrackChanges" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">~Record</value>
+            <value xml:lang="en-US">~Record Changes</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -263,7 +278,7 @@
         </node>
         <node oor:name=".uno:ShowTrackedChanges" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">~Show</value>
+            <value xml:lang="en-US">~Show Changes</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -276,7 +291,7 @@
         </node>
         <node oor:name=".uno:CommentChangeTracking" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">~Comment...</value>
+            <value xml:lang="en-US">~Comment on Change...</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -294,7 +309,7 @@
         </node>
         <node oor:name=".uno:AcceptTrackedChanges" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">~Accept or Reject...</value>
+            <value xml:lang="en-US">~Manage Changes...</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -330,16 +345,6 @@
             <value xml:lang="en-US">Copy Hyperlink Location</value>
           </prop>
         </node>
-        <node oor:name=".uno:AcceptChange" oor:op="replace">
-          <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Accept Change</value>
-          </prop>
-        </node>
-        <node oor:name=".uno:RejectChange" oor:op="replace">
-          <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Reject Change</value>
-          </prop>
-        </node>
         <node oor:name=".uno:InsertBookmark" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">Bookmar~k...</value>
@@ -365,7 +370,7 @@
         </node>
         <node oor:name=".uno:InsertField" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">~Other...</value>
+            <value xml:lang="en-US">~More Fields...</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>7</value>
@@ -420,7 +425,10 @@
         </node>
         <node oor:name=".uno:InsertPagebreak" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Insert Manual Page Break</value>
+            <value xml:lang="en-US">Insert Page Break</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:InsertAnnotation" oor:op="replace">
@@ -433,7 +441,7 @@
         </node>
         <node oor:name=".uno:InsertTable" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">~Table...</value>
+            <value xml:lang="en-US">Insert ~Table...</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -457,7 +465,7 @@
         </node>
         <node oor:name=".uno:InsertIndexesEntry" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">~Entry...</value>
+            <value xml:lang="en-US">~Index Entry...</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -560,7 +568,7 @@
         </node>
         <node oor:name=".uno:InsertFieldCtrl" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Insert Fields</value>
+            <value xml:lang="en-US">Insert Field</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>9</value>
@@ -629,7 +637,7 @@
         </node>
         <node oor:name=".uno:InsertFootnote" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Insert Footnote/Endnote Directly</value>
+            <value xml:lang="en-US">Insert Footnote</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -655,7 +663,10 @@
         </node>
         <node oor:name=".uno:Grow" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Increase Font</value>
+            <value xml:lang="en-US">Increase Font Size</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
+            <value xml:lang="en-US">Increase Size</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -663,7 +674,10 @@
         </node>
         <node oor:name=".uno:Shrink" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Reduce Font</value>
+            <value xml:lang="en-US">Decrease Font Size</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
+            <value xml:lang="en-US">Decrease Size</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -809,6 +823,22 @@
             <value>1</value>
           </prop>
         </node>
+        <node oor:name=".uno:ChangePicture" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">~Replace Image...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
+        <node oor:name=".uno:CompressGraphic" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Co~mpress Image...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
         <node oor:name=".uno:NewHtmlDoc" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">Create ~HTML Document</value>
@@ -934,6 +964,9 @@
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">Co~lumns...</value>
           </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
         </node>
         <node oor:name=".uno:FormatDropcap" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
@@ -953,10 +986,13 @@
         </node>
         <node oor:name=".uno:GraphicDialog" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Image...</value>
+            <value xml:lang="en-US">Image Properties...</value>
           </prop>
           <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">~Image...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:TableDialog" oor:op="replace">
@@ -975,6 +1011,9 @@
         <node oor:name=".uno:ResetAttributes" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">Clear ~Direct Formatting</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:WrapOff" oor:op="replace">
@@ -995,7 +1034,15 @@
         </node>
         <node oor:name=".uno:ShowTwoPages" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Page Preview: Two Pages</value>
+            <value xml:lang="en-US">Two Pages Preview</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
+        <node oor:name=".uno:ShowSinglePage" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Single Page Preview</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1011,7 +1058,7 @@
         </node>
         <node oor:name=".uno:ShowMultiplePages" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Page Preview: Multiple Pages</value>
+            <value xml:lang="en-US">Multiple Pages Preview</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1036,6 +1083,9 @@
         <node oor:name=".uno:ClosePreview" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">Close Preview</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:AlignRight" oor:op="replace">
@@ -1125,10 +1175,35 @@
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">~Rows...</value>
           </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
+        <node oor:name=".uno:InsertRowsBefore" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Insert Rows Above</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
+            <value xml:lang="en-US">Rows ~Above</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
         </node>
         <node oor:name=".uno:InsertRows" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Insert Row</value>
+            <value xml:lang="en-US">Insert Row Below</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
+        <node oor:name=".uno:InsertRowsAfter" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Insert Rows Below</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
+            <value xml:lang="en-US">Rows ~Below</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1138,18 +1213,38 @@
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">~Columns...</value>
           </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
         </node>
-        <node oor:name=".uno:InsertColumns" oor:op="replace">
+        <node oor:name=".uno:InsertColumnsBefore" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Insert Column</value>
+            <value xml:lang="en-US">Insert Columns Left</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
+            <value xml:lang="en-US">Columns ~Left</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
           </prop>
         </node>
-        <node oor:name=".uno:PasteUnformatted" oor:op="replace">
+        <node oor:name=".uno:InsertColumns" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Paste Unformatted Text</value>
+            <value xml:lang="en-US">Insert Column Right</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
+        <node oor:name=".uno:InsertColumnsAfter" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Insert Columns Right</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
+            <value xml:lang="en-US">Columns R~ight</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:PasteSpecial" oor:op="replace">
@@ -1159,7 +1254,7 @@
         </node>
         <node oor:name=".uno:DeleteRows" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Delete Row</value>
+            <value xml:lang="en-US">Delete Rows</value>
           </prop>
           <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">~Rows</value>
@@ -1170,7 +1265,7 @@
         </node>
         <node oor:name=".uno:DeleteColumns" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Delete Column</value>
+            <value xml:lang="en-US">Delete Columns</value>
           </prop>
           <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">~Columns</value>
@@ -1181,7 +1276,13 @@
         </node>
         <node oor:name=".uno:DeleteTable" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Delete Table</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">~Table</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:SplitCell" oor:op="replace">
@@ -1243,10 +1344,10 @@
         </node>
         <node oor:name=".uno:EntireRow" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Select Rows</value>
+            <value xml:lang="en-US">Select Row</value>
           </prop>
           <prop oor:name="ContextLabel" oor:type="xs:string">
-            <value xml:lang="en-US">~Rows</value>
+            <value xml:lang="en-US">~Row</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1254,7 +1355,7 @@
         </node>
         <node oor:name=".uno:EntireCell" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">C~ells</value>
+            <value xml:lang="en-US">C~ell</value>
           </prop>
         </node>
         <node oor:name=".uno:GoUp" oor:op="replace">
@@ -1267,7 +1368,7 @@
             <value xml:lang="en-US">Select Column</value>
           </prop>
           <prop oor:name="ContextLabel" oor:type="xs:string">
-            <value xml:lang="en-US">~Columns</value>
+            <value xml:lang="en-US">~Column</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1677,6 +1778,9 @@
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">Number Format: Decimal</value>
           </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
         </node>
         <node oor:name=".uno:GotoPrevObject" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
@@ -1698,7 +1802,7 @@
         </node>
         <node oor:name=".uno:NumberFormatDate" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Number Format : Date</value>
+            <value xml:lang="en-US">Number Format: Date</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1934,7 +2038,7 @@
         </node>
         <node oor:name=".uno:DistributeColumns" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">~Distribute Columns Evenly</value>
+            <value xml:lang="en-US">~Distribute Columns Equally</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1979,14 +2083,6 @@
             <value xml:lang="en-US">To Previous Paragraph</value>
           </prop>
         </node>
-        <node oor:name=".uno:CellVertTop" oor:op="replace">
-          <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Top</value>
-          </prop>
-          <prop oor:name="Properties" oor:type="xs:int">
-            <value>1</value>
-          </prop>
-        </node>
         <node oor:name=".uno:RowSplit" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">Allow Row to Break Across Pages and Columns</value>
@@ -2005,25 +2101,9 @@
             <value xml:lang="en-US">To Next Paragraph</value>
           </prop>
         </node>
-        <node oor:name=".uno:CellVertCenter" oor:op="replace">
-          <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Center ( vertical )</value>
-          </prop>
-          <prop oor:name="Properties" oor:type="xs:int">
-            <value>1</value>
-          </prop>
-        </node>
         <node oor:name=".uno:GotoNextPlacemarker" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">To Next Placeholder</value>
-          </prop>
-        </node>
-        <node oor:name=".uno:CellVertBottom" oor:op="replace">
-          <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Bottom</value>
-          </prop>
-          <prop oor:name="Properties" oor:type="xs:int">
-            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:GotoPrevPlacemarker" oor:op="replace">
@@ -2133,7 +2213,7 @@
         </node>
         <node oor:name=".uno:Graphic" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Images On/Off</value>
+            <value xml:lang="en-US">Hide ~Images</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -2219,7 +2299,7 @@
         </node>
         <node oor:name=".uno:ControlCodes" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">~Nonprinting Characters</value>
+            <value xml:lang="en-US">~Non-printing Characters</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>9</value>
@@ -2359,6 +2439,25 @@
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">~Wrap</value>
           </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
+        <node oor:name=".uno:AlignFrameMenu" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Alignment</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
+        <node oor:name=".uno:ArrangeFrameMenu" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Arrange</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
         </node>
         <node oor:name=".uno:AutoFormatMenu" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
@@ -2377,12 +2476,36 @@
         </node>
         <node oor:name=".uno:SaveGraphic" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Save Images...</value>
+            <value xml:lang="en-US">Save Image...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:ContinueNumbering" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">Continue previous numbering</value>
+          </prop>
+        </node>
+        <node oor:name=".uno:NavigationPopup" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Navigate by</value>
+          </prop>
+        </node>
+        <node oor:name=".uno:ScrollToPrevious" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Previous Element</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
+        <node oor:name=".uno:ScrollToNext" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Next Element</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:NavigateBack" oor:op="replace">
@@ -2785,7 +2908,7 @@
             <value>true</value>
           </prop>
           <prop oor:name="UIName" oor:type="xs:string">
-            <value xml:lang="en-US">Page Preview</value>
+            <value xml:lang="en-US">Print Preview</value>
           </prop>
           <prop oor:name="HideFromToolbarMenu" oor:type="xs:boolean">
             <value>true</value>
@@ -2988,20 +3111,6 @@
             <value>false</value>
           </prop>
           <prop oor:name="HideFromToolbarMenu" oor:type="xs:boolean">
-            <value>true</value>
-          </prop>
-        </node>
-        <node oor:name="private:resource/toolbar/changes" oor:op="replace">
-          <prop oor:name="UIName" oor:type="xs:string">
-            <value xml:lang="en-US">Changes</value>
-          </prop>
-          <prop oor:name="DockingArea" oor:type="xs:int">
-            <value>2</value>
-          </prop>
-          <prop oor:name="DockPos" oor:type="xs:string">
-            <value>0,0</value>
-          </prop>
-          <prop oor:name="Visible" oor:type="xs:boolean">
             <value>true</value>
           </prop>
         </node>
@@ -3389,7 +3498,7 @@
             <value>true</value>
           </prop>
           <prop oor:name="UIName" oor:type="xs:string">
-            <value xml:lang="en-US">Page Preview</value>
+            <value xml:lang="en-US">Print Preview</value>
           </prop>
           <prop oor:name="HideFromToolbarMenu" oor:type="xs:boolean">
             <value>true</value>
@@ -3610,17 +3719,6 @@
           </prop>
           <prop oor:name="ContextSensitive" oor:type="xs:boolean">
             <value>true</value>
-          </prop>
-        </node>
-        <node oor:name="private:resource/toolbar/changes" oor:op="replace">
-          <prop oor:name="UIName" oor:type="xs:string">
-            <value xml:lang="en-US">Changes</value>
-          </prop>
-          <prop oor:name="Docked" oor:type="xs:boolean">
-            <value>false</value>
-          </prop>
-          <prop oor:name="Visible" oor:type="xs:boolean">
-            <value>false</value>
           </prop>
         </node>
       </node>
@@ -4004,7 +4102,7 @@
             <value>true</value>
           </prop>
           <prop oor:name="UIName" oor:type="xs:string">
-            <value xml:lang="en-US">Page Preview</value>
+            <value xml:lang="en-US">Print Preview</value>
           </prop>
           <prop oor:name="HideFromToolbarMenu" oor:type="xs:boolean">
             <value>true</value>
@@ -4207,20 +4305,6 @@
             <value>false</value>
           </prop>
           <prop oor:name="HideFromToolbarMenu" oor:type="xs:boolean">
-            <value>true</value>
-          </prop>
-        </node>
-        <node oor:name="private:resource/toolbar/changes" oor:op="replace">
-          <prop oor:name="UIName" oor:type="xs:string">
-            <value xml:lang="en-US">Changes</value>
-          </prop>
-          <prop oor:name="DockingArea" oor:type="xs:int">
-            <value>2</value>
-          </prop>
-          <prop oor:name="DockPos" oor:type="xs:string">
-            <value>0,0</value>
-          </prop>
-          <prop oor:name="Visible" oor:type="xs:boolean">
             <value>true</value>
           </prop>
         </node>
@@ -4605,7 +4689,7 @@
             <value>true</value>
           </prop>
           <prop oor:name="UIName" oor:type="xs:string">
-            <value xml:lang="en-US">Page Preview</value>
+            <value xml:lang="en-US">Print Preview</value>
           </prop>
           <prop oor:name="NoClose" oor:type="xs:boolean">
             <value>true</value>
@@ -4747,17 +4831,6 @@
           </prop>
           <prop oor:name="HideFromToolbarMenu" oor:type="xs:boolean">
             <value>true</value>
-          </prop>
-        </node>
-        <node oor:name="private:resource/toolbar/changes" oor:op="replace">
-          <prop oor:name="UIName" oor:type="xs:string">
-            <value xml:lang="en-US">Changes</value>
-          </prop>
-          <prop oor:name="Docked" oor:type="xs:boolean">
-            <value>false</value>
-          </prop>
-          <prop oor:name="Visible" oor:type="xs:boolean">
-            <value>false</value>
           </prop>
         </node>
       </node>
@@ -5076,13 +5149,13 @@
         </node>
         <node oor:name="private:resource/toolbar/graphicobjectbar" oor:op="replace">
           <prop oor:name="DockPos" oor:type="xs:string">
-            <value>0,0</value>
+            <value>1,1</value>
           </prop>
           <prop oor:name="DockingArea" oor:type="xs:int">
-            <value>1</value>
+            <value>0</value>
           </prop>
           <prop oor:name="UIName" oor:type="xs:string">
-            <value xml:lang="en-US">Picture</value>
+            <value xml:lang="en-US">Image</value>
           </prop>
           <prop oor:name="Visible" oor:type="xs:boolean">
             <value>true</value>
@@ -5144,7 +5217,7 @@
             <value>true</value>
           </prop>
           <prop oor:name="UIName" oor:type="xs:string">
-            <value xml:lang="en-US">Page Preview</value>
+            <value xml:lang="en-US">Print Preview</value>
           </prop>
           <prop oor:name="HideFromToolbarMenu" oor:type="xs:boolean">
             <value>true</value>
@@ -5697,7 +5770,7 @@
             <value>1</value>
           </prop>
           <prop oor:name="UIName" oor:type="xs:string">
-            <value xml:lang="en-US">Picture</value>
+            <value xml:lang="en-US">Image</value>
           </prop>
           <prop oor:name="Visible" oor:type="xs:boolean">
             <value>true</value>
@@ -5770,7 +5843,7 @@
             <value>true</value>
           </prop>
           <prop oor:name="UIName" oor:type="xs:string">
-            <value xml:lang="en-US">Page Preview</value>
+            <value xml:lang="en-US">Print Preview</value>
           </prop>
           <prop oor:name="HideFromToolbarMenu" oor:type="xs:boolean">
             <value>true</value>
@@ -6002,10 +6075,13 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.GlobalDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Text - Choose Encoding (Master Document)</value>
+        </prop>
       </node>
       <node oor:name="writer_globaldocument_StarOffice_XML_Writer" oor:op="replace">
         <prop oor:name="Flags">
-          <value>EXPORT TEMPLATE ALIEN ENCRYPTION</value>
+          <value>TEMPLATE ALIEN ENCRYPTION</value>
         </prop>
         <prop oor:name="UIComponent"/>
         <prop oor:name="FilterService"/>
@@ -6022,10 +6098,13 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.GlobalDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">OpenOffice.org 1.0 Text Document</value>
+        </prop>
       </node>
       <node oor:name="writer_globaldocument_StarOffice_XML_Writer_GlobalDocument" oor:op="replace">
         <prop oor:name="Flags">
-          <value>IMPORT EXPORT TEMPLATE OWN ALIEN PREFERRED ENCRYPTION</value>
+          <value>IMPORT TEMPLATE OWN ALIEN PREFERRED ENCRYPTION</value>
         </prop>
         <prop oor:name="UIComponent"/>
         <prop oor:name="FilterService"/>
@@ -6041,6 +6120,9 @@
         <prop oor:name="TemplateName"/>
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.GlobalDocument</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">OpenOffice.org 1.0 Master Document</value>
         </prop>
       </node>
       <node oor:name="writer_globaldocument_pdf_Export" oor:op="replace">
@@ -6089,6 +6171,32 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.GlobalDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">ODF Master Document</value>
+        </prop>
+      </node>
+      <node oor:name="writerglobal8_template" oor:op="replace">
+        <prop oor:name="Flags">
+          <value>IMPORT EXPORT TEMPLATE TEMPLATEPATH OWN ENCRYPTION PASSWORDTOMODIFY</value>
+        </prop>
+        <prop oor:name="UIComponent"/>
+        <prop oor:name="FilterService"/>
+        <prop oor:name="UserData">
+          <value>CXMLV</value>
+        </prop>
+        <prop oor:name="FileFormatVersion">
+          <value>6800</value>
+        </prop>
+        <prop oor:name="Type">
+          <value>writerglobal8_template</value>
+        </prop>
+        <prop oor:name="TemplateName"/>
+        <prop oor:name="DocumentService">
+          <value>com.sun.star.text.GlobalDocument</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">ODF Master Document Template</value>
+        </prop>
       </node>
       <node oor:name="writerglobal8_writer" oor:op="replace">
         <prop oor:name="Flags">
@@ -6108,6 +6216,9 @@
         <prop oor:name="TemplateName"/>
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.GlobalDocument</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">ODF Text Document</value>
         </prop>
       </node>
       <node oor:name="writerglobal8_HTML" oor:op="replace">
@@ -6158,7 +6269,7 @@
       </node>
       <node oor:name="writer_StarOffice_XML_Writer" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.text.FormatDetector</value>
+          <value>com.sun.star.comp.filters.StorageFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern"/>
         <prop oor:name="Extensions">
@@ -6182,7 +6293,7 @@
       </node>
       <node oor:name="writer_globaldocument_StarOffice_XML_Writer_GlobalDocument" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.text.FormatDetector</value>
+          <value>com.sun.star.comp.filters.StorageFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern"/>
         <prop oor:name="Extensions">
@@ -6224,7 +6335,7 @@
       </node>
       <node oor:name="writerglobal8" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.text.FormatDetector</value>
+          <value>com.sun.star.comp.filters.StorageFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern">
           <value>private:factory/swriter/GlobalDocument*</value>
@@ -6236,7 +6347,7 @@
           <value>application/vnd.oasis.opendocument.text-master</value>
         </prop>
         <prop oor:name="Preferred">
-          <value>false</value>
+          <value>true</value>
         </prop>
         <prop oor:name="PreferredFilter">
           <value>writerglobal8</value>
@@ -6246,6 +6357,32 @@
         </prop>
         <prop oor:name="ClipboardFormat">
           <value>Writer/Global 8</value>
+        </prop>
+      </node>
+      <node oor:name="writerglobal8_template" oor:op="replace">
+        <prop oor:name="DetectService">
+          <value>com.sun.star.comp.filters.StorageFilterDetect</value>
+        </prop>
+        <prop oor:name="URLPattern">
+          <value>private:factory/swriter/GlobalDocument*</value>
+        </prop>
+        <prop oor:name="Extensions">
+          <value>otm</value>
+        </prop>
+        <prop oor:name="MediaType">
+          <value>application/vnd.oasis.opendocument.text-master-template</value>
+        </prop>
+        <prop oor:name="Preferred">
+          <value>true</value>
+        </prop>
+        <prop oor:name="PreferredFilter">
+          <value>writerglobal8_template</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Writer 8 Master Document Template</value>
+        </prop>
+        <prop oor:name="ClipboardFormat">
+          <value>Writer/Global 8 Template</value>
         </prop>
       </node>
     </node>
@@ -6271,6 +6408,9 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.WebDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">HTML Document</value>
+        </prop>
       </node>
       <node oor:name="Text (StarWriter/Web)" oor:op="replace">
         <prop oor:name="Flags">
@@ -6293,6 +6433,9 @@
         <prop oor:name="TemplateName"/>
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.WebDocument</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Text (Writer/Web)</value>
         </prop>
       </node>
       <node oor:name="Text (encoded) (StarWriter/Web)" oor:op="replace">
@@ -6318,6 +6461,9 @@
         <prop oor:name="TemplateName"/>
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.WebDocument</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Text - Choose Encoding (Writer/Web)</value>
         </prop>
       </node>
       <node oor:name="writer_web_HTML_help" oor:op="replace">
@@ -6362,10 +6508,13 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.WebDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">OpenOffice.org 1.0 Text Document (Writer/Web)</value>
+        </prop>
       </node>
       <node oor:name="writer_web_StarOffice_XML_Writer_Web_Template" oor:op="replace">
         <prop oor:name="Flags">
-          <value>IMPORT EXPORT TEMPLATE TEMPLATEPATH OWN ALIEN ENCRYPTION</value>
+          <value>IMPORT TEMPLATE TEMPLATEPATH OWN ALIEN ENCRYPTION</value>
         </prop>
         <prop oor:name="UIComponent"/>
         <prop oor:name="FilterService"/>
@@ -6381,6 +6530,9 @@
         <prop oor:name="TemplateName"/>
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.WebDocument</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">OpenOffice.org 1.0 HTML Template</value>
         </prop>
       </node>
       <node oor:name="writer_web_pdf_Export" oor:op="replace">
@@ -6429,6 +6581,9 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.WebDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">HTML Document Template</value>
+        </prop>
       </node>
       <node oor:name="writerweb8_writer" oor:op="replace">
         <prop oor:name="Flags">
@@ -6449,6 +6604,9 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.WebDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Text (Writer/Web)</value>
+        </prop>
       </node>
     </node>
   </oor:component-data>
@@ -6456,7 +6614,7 @@
     <node oor:name="Types">
       <node oor:name="generic_HTML" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.text.FormatDetector</value>
+          <value>com.sun.star.comp.filters.PlainTextFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern">
           <value>private:factory/swriter/web*</value>
@@ -6519,7 +6677,7 @@
       </node>
       <node oor:name="writer_StarOffice_XML_Writer" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.text.FormatDetector</value>
+          <value>com.sun.star.comp.filters.StorageFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern"/>
         <prop oor:name="Extensions">
@@ -6543,7 +6701,7 @@
       </node>
       <node oor:name="writer_web_StarOffice_XML_Writer_Web_Template" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.text.FormatDetector</value>
+          <value>com.sun.star.comp.filters.StorageFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern"/>
         <prop oor:name="Extensions">
@@ -6585,7 +6743,7 @@
       </node>
       <node oor:name="writerweb8_writer_template" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.text.FormatDetector</value>
+          <value>com.sun.star.comp.filters.StorageFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern"/>
         <prop oor:name="Extensions">
@@ -6630,6 +6788,9 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.TextDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">HTML Document (Writer)</value>
+        </prop>
       </node>
       <node oor:name="MS WinWord 5" oor:op="replace">
         <prop oor:name="Flags">
@@ -6641,7 +6802,7 @@
           <value>WW6</value>
         </prop>
         <prop oor:name="UIName">
-          <value xml:lang="en-US">Microsoft WinWord 5</value>
+          <value xml:lang="en-US">Microsoft WinWord 1/2/5</value>
         </prop>
         <prop oor:name="FileFormatVersion">
           <value>0</value>
@@ -6719,6 +6880,9 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.TextDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Microsoft Word 95 Template</value>
+        </prop>
       </node>
       <node oor:name="MS Word 97" oor:op="replace">
         <prop oor:name="Flags">
@@ -6730,7 +6894,7 @@
           <value>CWW8</value>
         </prop>
         <prop oor:name="UIName">
-          <value xml:lang="en-US">Microsoft Word 97/2000/XP/2003</value>
+          <value xml:lang="en-US">Microsoft Word 97-2003</value>
         </prop>
         <prop oor:name="FileFormatVersion">
           <value>0</value>
@@ -6762,6 +6926,34 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.TextDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Microsoft Word 97-2003 Template</value>
+        </prop>
+      </node>
+      <node oor:name="OpenDocument Text Flat XML" oor:op="replace">
+        <prop oor:name="FileFormatVersion">
+          <value>0</value>
+        </prop>
+        <prop oor:name="Type">
+          <value>writer_ODT_FlatXML</value>
+        </prop>
+        <prop oor:name="DocumentService">
+          <value>com.sun.star.text.TextDocument</value>
+        </prop>
+        <prop oor:name="UIComponent"/>
+        <prop oor:name="UserData">
+          <value oor:separator=",">com.sun.star.comp.filter.OdfFlatXml,,com.sun.star.comp.Writer.XMLOasisImporter,com.sun.star.comp.Writer.XMLOasisExporter,,,true</value>
+        </prop>
+        <prop oor:name="FilterService">
+          <value>com.sun.star.comp.Writer.XmlFilterAdaptor</value>
+        </prop>
+        <prop oor:name="TemplateName"/>
+        <prop oor:name="UIName">
+          <value>Flat XML ODF Text Document</value>
+        </prop>
+        <prop oor:name="Flags">
+          <value>IMPORT EXPORT OWN 3RDPARTYFILTER</value>
+        </prop>
       </node>
       <node oor:name="Rich Text Format" oor:op="replace">
         <prop oor:name="Flags">
@@ -6790,7 +6982,7 @@
       </node>
       <node oor:name="StarOffice XML (Writer)" oor:op="replace">
         <prop oor:name="Flags">
-          <value>IMPORT EXPORT TEMPLATE OWN ALIEN PREFERRED ENCRYPTION</value>
+          <value>IMPORT TEMPLATE OWN ALIEN PREFERRED ENCRYPTION</value>
         </prop>
         <prop oor:name="UIComponent"/>
         <prop oor:name="FilterService"/>
@@ -6806,6 +6998,9 @@
         <prop oor:name="TemplateName"/>
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.TextDocument</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">OpenOffice.org 1.0 Text Document</value>
         </prop>
       </node>
       <node oor:name="WordPerfect" oor:op="replace">
@@ -6866,7 +7061,7 @@
           <value>com.sun.star.comp.Writer.MWAWImportFilter</value>
         </prop>
         <prop oor:name="UIName">
-          <value xml:lang="en-US">BeagleWorks/WordPerfect Works v1 Document</value>
+          <value xml:lang="en-US">BeagleWorks/WordPerfect Works v1 Text Document</value>
         </prop>
         <prop oor:name="FileFormatVersion">
           <value>0</value>
@@ -6890,7 +7085,7 @@
           <value/>
         </prop>
         <prop oor:name="UIName">
-          <value xml:lang="en-US">ClarisWorks/AppleWorks Document</value>
+          <value xml:lang="en-US">ClarisWorks/AppleWorks Text Document</value>
         </prop>
         <prop oor:name="FileFormatVersion">
           <value>0</value>
@@ -6986,7 +7181,7 @@
           <value>com.sun.star.comp.Writer.MWAWImportFilter</value>
         </prop>
         <prop oor:name="UIName">
-          <value xml:lang="en-US">GreatWorks Document</value>
+          <value xml:lang="en-US">GreatWorks Text Document</value>
         </prop>
         <prop oor:name="FileFormatVersion">
           <value>0</value>
@@ -7113,6 +7308,26 @@
           <value>com.sun.star.text.TextDocument</value>
         </prop>
       </node>
+      <node oor:name="Mac_RagTime" oor:op="replace">
+        <prop oor:name="Flags">
+          <value>IMPORT ALIEN USESOPTIONS 3RDPARTYFILTER PREFERRED</value>
+        </prop>
+        <prop oor:name="FilterService">
+          <value>com.sun.star.comp.Writer.MWAWImportFilter</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">RagTime Mac v2-3 Document</value>
+        </prop>
+        <prop oor:name="FileFormatVersion">
+          <value>0</value>
+        </prop>
+        <prop oor:name="Type">
+          <value>writer_Mac_RagTime</value>
+        </prop>
+        <prop oor:name="DocumentService">
+          <value>com.sun.star.text.TextDocument</value>
+        </prop>
+      </node>
       <node oor:name="Mac_Word" oor:op="replace">
         <prop oor:name="Flags">
           <value>IMPORT ALIEN USESOPTIONS 3RDPARTYFILTER PREFERRED</value>
@@ -7150,7 +7365,7 @@
           <value/>
         </prop>
         <prop oor:name="UIName">
-          <value xml:lang="en-US">Microsoft Works for Mac Document (v1 - v4)</value>
+          <value xml:lang="en-US">Microsoft Works for Mac Text Document (v1 - v4)</value>
         </prop>
         <prop oor:name="FileFormatVersion">
           <value>0</value>
@@ -7528,6 +7743,9 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.TextDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Text</value>
+        </prop>
       </node>
       <node oor:name="Text (encoded)" oor:op="replace">
         <prop oor:name="Flags">
@@ -7552,6 +7770,9 @@
         <prop oor:name="TemplateName"/>
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.TextDocument</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Text - Choose Encoding</value>
         </prop>
       </node>
       <node oor:name="writer_MIZI_Hwp_97" oor:op="replace">
@@ -7581,7 +7802,7 @@
       </node>
       <node oor:name="writer_StarOffice_XML_Writer_Template" oor:op="replace">
         <prop oor:name="Flags">
-          <value>IMPORT EXPORT TEMPLATE TEMPLATEPATH OWN ALIEN ENCRYPTION</value>
+          <value>IMPORT TEMPLATE TEMPLATEPATH OWN ALIEN ENCRYPTION</value>
         </prop>
         <prop oor:name="UIComponent"/>
         <prop oor:name="FilterService"/>
@@ -7597,6 +7818,9 @@
         <prop oor:name="TemplateName"/>
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.TextDocument</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">OpenOffice.org 1.0 Text Document Template</value>
         </prop>
       </node>
       <node oor:name="writer_pdf_Export" oor:op="replace">
@@ -7645,6 +7869,9 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.TextDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">ODF Text Document</value>
+        </prop>
       </node>
       <node oor:name="writer8_template" oor:op="replace">
         <prop oor:name="Flags">
@@ -7665,27 +7892,8 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.text.TextDocument</value>
         </prop>
-      </node>
-      <node oor:name="MS Word 2003 XML" oor:op="replace">
-        <prop oor:name="Flags">
-          <value>IMPORT EXPORT ALIEN 3RDPARTYFILTER</value>
-        </prop>
-        <prop oor:name="UIComponent"/>
-        <prop oor:name="FilterService">
-          <value>com.sun.star.comp.Writer.XmlFilterAdaptor</value>
-        </prop>
-        <prop oor:name="UserData">
-          <value oor:separator=",">com.sun.star.documentconversion.XSLTFilter,,com.sun.star.comp.Writer.XMLOasisImporter,com.sun.star.comp.Writer.XMLOasisExporter,../share/xslt/import/wordml/wordml2ooo.xsl,../share/xslt/export/wordml/ooo2wordml.xsl</value>
-        </prop>
-        <prop oor:name="FileFormatVersion">
-          <value>0</value>
-        </prop>
-        <prop oor:name="Type">
-          <value>writer_MS_Word_2003_XML</value>
-        </prop>
-        <prop oor:name="TemplateName"/>
-        <prop oor:name="DocumentService">
-          <value>com.sun.star.text.TextDocument</value>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">ODF Text Document Template</value>
         </prop>
       </node>
       <node oor:name="MS Word 2007 XML" oor:op="replace">
@@ -7700,7 +7908,7 @@
           <value>OXML</value>
         </prop>
         <prop oor:name="UIName">
-          <value xml:lang="en-US">Microsoft Word 2007/2010/2013 XML</value>
+          <value xml:lang="en-US">Microsoft Word 2007-2013 XML</value>
         </prop>
         <prop oor:name="FileFormatVersion">
           <value>0</value>
@@ -7725,7 +7933,7 @@
           <value>OXML</value>
         </prop>
         <prop oor:name="UIName">
-          <value xml:lang="en-US">Microsoft Word 2007/2010/2013 XML Template</value>
+          <value xml:lang="en-US">Microsoft Word 2007-2013 XML Template</value>
         </prop>
         <prop oor:name="FileFormatVersion">
           <value>0</value>
@@ -7953,13 +8161,33 @@
           <value>com.sun.star.text.TextDocument</value>
         </prop>
       </node>
+      <node oor:name="Apple Pages" oor:op="replace">
+        <prop oor:name="Flags">
+          <value>IMPORT ALIEN USESOPTIONS 3RDPARTYFILTER PREFERRED</value>
+        </prop>
+        <prop oor:name="FilterService">
+          <value>org.libreoffice.comp.Writer.PagesImportFilter</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Apple Pages 4</value>
+        </prop>
+        <prop oor:name="FileFormatVersion">
+          <value>0</value>
+        </prop>
+        <prop oor:name="Type">
+          <value>writer_ApplePages</value>
+        </prop>
+        <prop oor:name="DocumentService">
+          <value>com.sun.star.text.TextDocument</value>
+        </prop>
+      </node>
     </node>
   </oor:component-data>
   <oor:component-data oor:package="org.openoffice.TypeDetection" oor:name="Types">
     <node oor:name="Types">
       <node oor:name="generic_HTML" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.text.FormatDetector</value>
+          <value>com.sun.star.comp.filters.PlainTextFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern">
           <value>private:factory/swriter/web*</value>
@@ -8069,7 +8297,7 @@
           <value>MS WinWord 5</value>
         </prop>
         <prop oor:name="UIName">
-          <value>Microsoft WinWord 5</value>
+          <value>Microsoft WinWord 1/2/5</value>
         </prop>
         <prop oor:name="ClipboardFormat">
           <value>MSWordDoc</value>
@@ -8165,7 +8393,7 @@
           <value>MS Word 97</value>
         </prop>
         <prop oor:name="UIName">
-          <value>Microsoft Word 97/2000/XP/2003</value>
+          <value>Microsoft Word 97-2003</value>
         </prop>
         <prop oor:name="ClipboardFormat">
           <value>MSWordDoc</value>
@@ -8195,6 +8423,30 @@
           <value>MSWordDoc</value>
         </prop>
       </node>
+      <node oor:name="writer_ODT_FlatXML" oor:op="replace">
+        <prop oor:name="DetectService">
+          <value>com.sun.star.comp.filters.XMLFilterDetect</value>
+        </prop>
+        <prop oor:name="URLPattern"/>
+        <prop oor:name="Extensions">
+          <value>fodt odt xml</value>
+        </prop>
+        <prop oor:name="MediaType">
+          <value>application/vnd.oasis.opendocument.text-flat-xml</value>
+        </prop>
+        <prop oor:name="Preferred">
+          <value>false</value>
+        </prop>
+        <prop oor:name="PreferredFilter">
+          <value>OpenDocument Text Flat XML</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">OpenDocument Text (Flat XML)</value>
+        </prop>
+        <prop oor:name="ClipboardFormat">
+          <value>doctype:office:mimetype="application/vnd.oasis.opendocument.text"</value>
+        </prop>
+      </node>
       <node oor:name="writer_Rich_Text_Format" oor:op="replace">
         <prop oor:name="DetectService">
           <value>com.sun.star.text.FormatDetector</value>
@@ -8219,7 +8471,7 @@
       </node>
       <node oor:name="writer_StarOffice_XML_Writer" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.text.FormatDetector</value>
+          <value>com.sun.star.comp.filters.StorageFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern"/>
         <prop oor:name="Extensions">
@@ -8513,6 +8765,26 @@
         </prop>
         <prop oor:name="UIName">
           <value>More Mac v2-3 Document</value>
+        </prop>
+      </node>
+      <node oor:name="writer_Mac_RagTime" oor:op="replace">
+        <prop oor:name="DetectService">
+          <value>com.sun.star.comp.Writer.MWAWImportFilter</value>
+        </prop>
+        <prop oor:name="Extensions">
+          <value>dummy</value>
+        </prop>
+        <prop oor:name="MediaType">
+          <value/>
+        </prop>
+        <prop oor:name="Preferred">
+          <value>true</value>
+        </prop>
+        <prop oor:name="PreferredFilter">
+          <value>Mac_RagTime</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value>RagTime Mac v2-3 Document</value>
         </prop>
       </node>
       <node oor:name="writer_Mac_Word" oor:op="replace">
@@ -8815,7 +9087,7 @@
           <value>AbiWord</value>
         </prop>
         <prop oor:name="UIName">
-          <value>Microsoft Works Document</value>
+          <value>AbiWord Document</value>
         </prop>
         <prop oor:name="ClipboardFormat"/>
       </node>
@@ -8906,7 +9178,7 @@
       </node>
       <node oor:name="writer_StarOffice_XML_Writer_Template" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.text.FormatDetector</value>
+          <value>com.sun.star.comp.filters.StorageFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern"/>
         <prop oor:name="Extensions">
@@ -8948,7 +9220,7 @@
       </node>
       <node oor:name="writer8_template" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.text.FormatDetector</value>
+          <value>com.sun.star.comp.filters.StorageFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern"/>
         <prop oor:name="Extensions">
@@ -8972,7 +9244,7 @@
       </node>
       <node oor:name="writer8" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.text.FormatDetector</value>
+          <value>com.sun.star.comp.filters.StorageFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern">
           <value>private:factory/swriter</value>
@@ -8984,7 +9256,7 @@
           <value>application/vnd.oasis.opendocument.text</value>
         </prop>
         <prop oor:name="Preferred">
-          <value>false</value>
+          <value>true</value>
         </prop>
         <prop oor:name="PreferredFilter">
           <value>writer8</value>
@@ -8994,28 +9266,6 @@
         </prop>
         <prop oor:name="ClipboardFormat">
           <value>Writer 8</value>
-        </prop>
-      </node>
-      <node oor:name="writer_MS_Word_2003_XML" oor:op="replace">
-        <prop oor:name="DetectService">
-          <value>com.sun.star.comp.filters.XMLFilterDetect</value>
-        </prop>
-        <prop oor:name="URLPattern"/>
-        <prop oor:name="Extensions">
-          <value>xml doc</value>
-        </prop>
-        <prop oor:name="MediaType"/>
-        <prop oor:name="Preferred">
-          <value>false</value>
-        </prop>
-        <prop oor:name="PreferredFilter">
-          <value>MS Word 2003 XML</value>
-        </prop>
-        <prop oor:name="UIName">
-          <value xml:lang="en-US">Microsoft Word 2003 XML</value>
-        </prop>
-        <prop oor:name="ClipboardFormat">
-          <value>doctype:wordDocument</value>
         </prop>
       </node>
       <node oor:name="writer_MS_Word_2007" oor:op="replace">
@@ -9036,7 +9286,7 @@
           <value>MS Word 2007 XML</value>
         </prop>
         <prop oor:name="UIName">
-          <value xml:lang="en-US">Microsoft Word 2007/2010/2013 XML</value>
+          <value xml:lang="en-US">Microsoft Word 2007-2013 XML</value>
         </prop>
         <prop oor:name="ClipboardFormat">
           <value>MSWordDoc</value>
@@ -9060,7 +9310,7 @@
           <value>MS Word 2007 XML Template</value>
         </prop>
         <prop oor:name="UIName">
-          <value xml:lang="en-US">Microsoft Word 2007/2010/2013 XML Template</value>
+          <value xml:lang="en-US">Microsoft Word 2007-2013 XML Template</value>
         </prop>
         <prop oor:name="ClipboardFormat">
           <value>MSWordDoc</value>
@@ -9270,6 +9520,26 @@
           <value>zTXT eBook</value>
         </prop>
       </node>
+      <node oor:name="writer_ApplePages" oor:op="replace">
+        <prop oor:name="DetectService">
+          <value>org.libreoffice.comp.Writer.PagesImportFilter</value>
+        </prop>
+        <prop oor:name="Extensions">
+          <value>pages</value>
+        </prop>
+        <prop oor:name="MediaType">
+          <value>application/x-iwork-pages-sffpages</value>
+        </prop>
+        <prop oor:name="Preferred">
+          <value>true</value>
+        </prop>
+        <prop oor:name="PreferredFilter">
+          <value>Apple Pages</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value>Apple Pages</value>
+        </prop>
+      </node>
     </node>
   </oor:component-data>
   <oor:component-data xmlns:install="http://openoffice.org/2004/installation" oor:name="Common" oor:package="org.openoffice.Office">
@@ -9459,11 +9729,13 @@
             <value>WriterCommands</value>
           </prop>
           <prop oor:name="ooSetupFactoryActualFilter" oor:finalized="true">
-            <value>MS Word 97</value>
+            <value>writerglobal8</value>
           </prop>
-          <prop oor:name="ooSetupFactoryActualTemplateFilter" oor:finalized="true"/>
+          <prop oor:name="ooSetupFactoryActualTemplateFilter" oor:finalized="true">
+            <value>writerglobal8_template</value>
+          </prop>
           <prop oor:name="ooSetupFactoryDefaultFilter">
-            <value>MS Word 97</value>
+            <value>writerglobal8</value>
           </prop>
           <prop oor:name="ooSetupFactoryEmptyDocumentURL" oor:finalized="true">
             <value>private:factory/swriter/GlobalDocument</value>

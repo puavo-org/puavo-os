@@ -77,6 +77,9 @@
           <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">~Split</value>
           </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
         </node>
         <node oor:name=".uno:ClearArrowDependents" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
@@ -85,10 +88,13 @@
         </node>
         <node oor:name=".uno:FreezePanes" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">~Freeze Window</value>
+            <value xml:lang="en-US">~Freeze Panes</value>
           </prop>
           <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">~Freeze</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:ShowErrors" oor:op="replace">
@@ -151,6 +157,9 @@
         <node oor:name=".uno:ProtectTraceChangeMode" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">~Protect Records...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:InsertExternalDataSource" oor:op="replace">
@@ -451,30 +460,63 @@
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">C~onditional Formatting</value>
           </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
         </node>
         <node oor:name=".uno:ConditionalFormatDialog" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Conditional Formatting: Condition</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">Condition...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:ColorScaleFormatDialog" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Conditional Formatting: Color Scale</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">Color Scale...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:DataBarFormatDialog" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Conditional Formatting: Data Bar</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">Data Bar...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:IconSetFormatDialog" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Conditional Formatting: Icon Set</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">Icon Set...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:CondDateFormatDialog" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Conditional Formatting: Date</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">Date...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:ConditionalFormatManagerDialog" oor:op="replace">
@@ -534,7 +576,10 @@
         </node>
         <node oor:name=".uno:WrapText" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Automatic Row Break</value>
+            <value xml:lang="en-US">Wrap Text</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:DefinePrintArea" oor:op="replace">
@@ -550,10 +595,10 @@
         </node>
         <node oor:name=".uno:DeletePrintArea" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">~Remove Print Area</value>
+            <value xml:lang="en-US">~Clear Print Area</value>
           </prop>
           <prop oor:name="ContextLabel" oor:type="xs:string">
-            <value xml:lang="en-US">~Remove</value>
+            <value xml:lang="en-US">~Clear</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -599,6 +644,9 @@
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">~Delete...</value>
           </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
         </node>
         <node oor:name=".uno:FillDown" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
@@ -632,6 +680,14 @@
             <value xml:lang="en-US">~Left</value>
           </prop>
         </node>
+        <node oor:name=".uno:FillSingleEdit" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Fill Single ~Edit</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
+            <value xml:lang="en-US">Single ~Edit</value>
+          </prop>
+        </node>
         <node oor:name=".uno:FillTable" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">Fill ~Sheets...</value>
@@ -658,7 +714,7 @@
         </node>
         <node oor:name=".uno:StatisticsMenu" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">~Statistics</value>
+            <value xml:lang="en-US">Statistics</value>
           </prop>
         </node>
         <node oor:name=".uno:SamplingDialog" oor:op="replace">
@@ -717,6 +773,38 @@
             <value>1</value>
           </prop>
         </node>
+        <node oor:name=".uno:TTestDialog" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">~t-test...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
+        <node oor:name=".uno:FTestDialog" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">~F-test...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
+        <node oor:name=".uno:ZTestDialog" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">~z-test...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
+        <node oor:name=".uno:ChiSquareTestDialog" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">~Chi-square Test...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
         <node oor:name=".uno:EditHeaderAndFooter" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">~Headers &amp; Footers...</value>
@@ -766,8 +854,8 @@
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">~Record Changes</value>
           </prop>
-          <prop oor:name="ContextLabel" oor:type="xs:string">
-            <value xml:lang="en-US">~Record</value>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:InsObjCtrl" oor:op="replace">
@@ -780,10 +868,10 @@
         </node>
         <node oor:name=".uno:ShowChanges" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Sho~w Changes...</value>
+            <value xml:lang="en-US">~Show Changes...</value>
           </prop>
-          <prop oor:name="ContextLabel" oor:type="xs:string">
-            <value xml:lang="en-US">Sho~w...</value>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:DefineLabelRange" oor:op="replace">
@@ -887,10 +975,10 @@
         </node>
         <node oor:name=".uno:AcceptChanges" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">~Accept or Reject Changes...</value>
+            <value xml:lang="en-US">~Manage Changes...</value>
           </prop>
-          <prop oor:name="ContextLabel" oor:type="xs:string">
-            <value xml:lang="en-US">~Accept or Reject...</value>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:UnderlineDouble" oor:op="replace">
@@ -903,7 +991,10 @@
         </node>
         <node oor:name=".uno:CommentChange" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">~Comments...</value>
+            <value xml:lang="en-US">~Comment on Change...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:UnderlineDotted" oor:op="replace">
@@ -922,6 +1013,9 @@
           </prop>
           <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">~Row Break</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:AddPrintArea" oor:op="replace">
@@ -984,7 +1078,7 @@
         </node>
         <node oor:name=".uno:InsertRows" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Insert ~Rows</value>
+            <value xml:lang="en-US">Insert ~Rows Above</value>
           </prop>
           <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">~Rows</value>
@@ -995,7 +1089,7 @@
         </node>
         <node oor:name=".uno:InsertColumns" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Insert Co~lumns</value>
+            <value xml:lang="en-US">Insert Co~lumns Left</value>
           </prop>
           <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">Co~lumns</value>
@@ -1010,6 +1104,9 @@
           </prop>
           <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">~Sheet...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:InsertSheetFromFile" oor:op="replace">
@@ -1161,6 +1258,9 @@
           <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">~Hide</value>
           </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
         </node>
         <node oor:name=".uno:Show" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
@@ -1236,6 +1336,9 @@
           </prop>
           <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">~Sheet...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:ToolProtectionDocument" oor:op="replace">
@@ -1330,6 +1433,9 @@
         <node oor:name=".uno:DataSort" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
             <value xml:lang="en-US">~Sort...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:DataFilterStandardFilter" oor:op="replace">
@@ -1443,6 +1549,9 @@
           <prop oor:name="ContextLabel" oor:type="xs:string">
             <value xml:lang="en-US">~Move/Copy...</value>
           </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
         </node>
         <node oor:name=".uno:TableSelectAll" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
@@ -1477,7 +1586,7 @@
         </node>
         <node oor:name=".uno:AlignHorizontalCenter" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Align Center Horizontally</value>
+            <value xml:lang="en-US">Center Horizontally</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1509,7 +1618,7 @@
         </node>
         <node oor:name=".uno:AlignVCenter" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Align Center Vertically</value>
+            <value xml:lang="en-US">Center Vertically</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1533,9 +1642,20 @@
             <value>1</value>
           </prop>
         </node>
+        <node oor:name=".uno:NumberFormatMenu" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Number Format</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
         <node oor:name=".uno:NumberFormatCurrency" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Number Format: Currency</value>
+            <value xml:lang="en-US">Format as Currency</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
+            <value xml:lang="en-US">Currency</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1543,7 +1663,10 @@
         </node>
         <node oor:name=".uno:NumberFormatPercent" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Number Format: Percent</value>
+            <value xml:lang="en-US">Format as Percent</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
+            <value xml:lang="en-US">Percent</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1551,7 +1674,10 @@
         </node>
         <node oor:name=".uno:NumberFormatStandard" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Number Format: Standard</value>
+            <value xml:lang="en-US">Format as General</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
+            <value xml:lang="en-US">General</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1559,7 +1685,10 @@
         </node>
         <node oor:name=".uno:NumberFormatDate" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Number Format : Date</value>
+            <value xml:lang="en-US">Format as Date</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
+            <value xml:lang="en-US">Date</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1567,7 +1696,10 @@
         </node>
         <node oor:name=".uno:NumberFormatDecimal" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Number Format: Decimal</value>
+            <value xml:lang="en-US">Format as Number</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
+            <value xml:lang="en-US">Number</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1575,7 +1707,10 @@
         </node>
         <node oor:name=".uno:NumberFormatScientific" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Number Format: Exponential</value>
+            <value xml:lang="en-US">Format as Scientific</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
+            <value xml:lang="en-US">Scientific</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1583,12 +1718,18 @@
         </node>
         <node oor:name=".uno:NumberFormatTime" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Number Format: Time</value>
+            <value xml:lang="en-US">Format as Time</value>
+          </prop>
+          <prop oor:name="ContextLabel" oor:type="xs:string">
+            <value xml:lang="en-US">Time</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
           </prop>
         </node>
         <node oor:name=".uno:NumberFormatIncDecimals" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Number Format: Add Decimal Place</value>
+            <value xml:lang="en-US">Add Decimal Place</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1596,7 +1737,7 @@
         </node>
         <node oor:name=".uno:NumberFormatDecDecimals" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Number Format: Delete Decimal Place</value>
+            <value xml:lang="en-US">Delete Decimal Place</value>
           </prop>
           <prop oor:name="Properties" oor:type="xs:int">
             <value>1</value>
@@ -1685,6 +1826,14 @@
             <value>1</value>
           </prop>
         </node>
+        <node oor:name=".uno:ConvertFormulaToValue" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Formula to Value</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
       </node>
       <node oor:name="Popups">
         <node oor:name=".uno:AuditMenu" oor:op="replace">
@@ -1709,7 +1858,7 @@
         </node>
         <node oor:name=".uno:FillCellsMenu" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Fill</value>
+            <value xml:lang="en-US">F~ill</value>
           </prop>
         </node>
         <node oor:name=".uno:CellContentsMenu" oor:op="replace">
@@ -1782,9 +1931,9 @@
             <value xml:lang="en-US">Pri~nt Ranges</value>
           </prop>
         </node>
-        <node oor:name=".uno:DrawGraphicMenu" oor:op="replace">
+        <node oor:name=".uno:FormatObjectMenu" oor:op="replace">
           <prop oor:name="Label" oor:type="xs:string">
-            <value xml:lang="en-US">Graph~ic</value>
+            <value xml:lang="en-US">O~bject</value>
           </prop>
         </node>
         <node oor:name=".uno:ToggleFormula" oor:op="replace">
@@ -1862,6 +2011,30 @@
             <value xml:lang="en-US">Paste Only Value</value>
           </prop>
         </node>
+        <node oor:name=".uno:CompressGraphic" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Co~mpress Image...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
+        <node oor:name=".uno:SaveGraphic" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">Save Image...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
+        <node oor:name=".uno:ChangePicture" oor:op="replace">
+          <prop oor:name="Label" oor:type="xs:string">
+            <value xml:lang="en-US">~Replace Image...</value>
+          </prop>
+          <prop oor:name="Properties" oor:type="xs:int">
+            <value>1</value>
+          </prop>
+        </node>
       </node>
     </node>
   </oor:component-data>
@@ -1890,7 +2063,7 @@
             <value>0</value>
           </prop>
           <prop oor:name="UIName" oor:type="xs:string">
-            <value xml:lang="en-US">Picture</value>
+            <value xml:lang="en-US">Image</value>
           </prop>
           <prop oor:name="Visible" oor:type="xs:boolean">
             <value>true</value>
@@ -1935,7 +2108,7 @@
             <value>true</value>
           </prop>
           <prop oor:name="UIName" oor:type="xs:string">
-            <value xml:lang="en-US">Page Preview</value>
+            <value xml:lang="en-US">Print Preview</value>
           </prop>
           <prop oor:name="HideFromToolbarMenu" oor:type="xs:boolean">
             <value>true</value>
@@ -2414,6 +2587,34 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.sheet.SpreadsheetDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">HTML Document (Calc)</value>
+        </prop>
+      </node>
+      <node oor:name="OpenDocument Spreadsheet Flat XML" oor:op="replace">
+        <prop oor:name="FileFormatVersion">
+          <value>0</value>
+        </prop>
+        <prop oor:name="Type">
+          <value>calc_ODS_FlatXML</value>
+        </prop>
+        <prop oor:name="DocumentService">
+          <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        </prop>
+        <prop oor:name="UIComponent"/>
+        <prop oor:name="UserData">
+          <value oor:separator=",">com.sun.star.comp.filter.OdfFlatXml,,com.sun.star.comp.Calc.XMLOasisImporter,com.sun.star.comp.Calc.XMLOasisExporter,,,true</value>
+        </prop>
+        <prop oor:name="FilterService">
+          <value>com.sun.star.comp.Writer.XmlFilterAdaptor</value>
+        </prop>
+        <prop oor:name="TemplateName"/>
+        <prop oor:name="UIName">
+          <value>Flat XML ODF Spreadsheet</value>
+        </prop>
+        <prop oor:name="Flags">
+          <value>IMPORT EXPORT OWN 3RDPARTYFILTER</value>
+        </prop>
       </node>
       <node oor:name="Lotus" oor:op="replace">
         <prop oor:name="Flags">
@@ -2499,6 +2700,9 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.sheet.SpreadsheetDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Microsoft Excel 4.0 Template</value>
+        </prop>
       </node>
       <node oor:name="MS Excel 5.0/95" oor:op="replace">
         <prop oor:name="Flags">
@@ -2537,6 +2741,9 @@
         <prop oor:name="TemplateName"/>
         <prop oor:name="DocumentService">
           <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Microsoft Excel 5.0 Template</value>
         </prop>
       </node>
       <node oor:name="MS Excel 95" oor:op="replace">
@@ -2577,6 +2784,9 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.sheet.SpreadsheetDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Microsoft Excel 95 Template</value>
+        </prop>
       </node>
       <node oor:name="MS Excel 97" oor:op="replace">
         <prop oor:name="Flags">
@@ -2586,7 +2796,7 @@
         <prop oor:name="FilterService"/>
         <prop oor:name="UserData"/>
         <prop oor:name="UIName">
-          <value xml:lang="en-US">Microsoft Excel 97/2000/XP/2003</value>
+          <value xml:lang="en-US">Microsoft Excel 97-2003</value>
         </prop>
         <prop oor:name="FileFormatVersion">
           <value>0</value>
@@ -2615,6 +2825,9 @@
         <prop oor:name="TemplateName"/>
         <prop oor:name="DocumentService">
           <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Microsoft Excel 97-2003 Template</value>
         </prop>
       </node>
       <node oor:name="Rich Text Format (StarCalc)" oor:op="replace">
@@ -2665,7 +2878,7 @@
       </node>
       <node oor:name="StarOffice XML (Calc)" oor:op="replace">
         <prop oor:name="Flags">
-          <value>IMPORT EXPORT TEMPLATE OWN ALIEN ENCRYPTION</value>
+          <value>IMPORT TEMPLATE OWN ALIEN ENCRYPTION</value>
         </prop>
         <prop oor:name="UIComponent"/>
         <prop oor:name="FilterService"/>
@@ -2681,6 +2894,9 @@
         <prop oor:name="TemplateName"/>
         <prop oor:name="DocumentService">
           <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">OpenOffice.org 1.0 Spreadsheet</value>
         </prop>
       </node>
       <node oor:name="Text - txt - csv (StarCalc)" oor:op="replace">
@@ -2707,6 +2923,9 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.sheet.SpreadsheetDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Text CSV</value>
+        </prop>
       </node>
       <node oor:name="calc_HTML_WebQuery" oor:op="replace">
         <prop oor:name="Flags">
@@ -2729,10 +2948,13 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.sheet.SpreadsheetDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Web Page Query (Calc)</value>
+        </prop>
       </node>
       <node oor:name="calc_StarOffice_XML_Calc_Template" oor:op="replace">
         <prop oor:name="Flags">
-          <value>IMPORT EXPORT TEMPLATE TEMPLATEPATH OWN ALIEN ENCRYPTION</value>
+          <value>IMPORT TEMPLATE TEMPLATEPATH OWN ALIEN ENCRYPTION</value>
         </prop>
         <prop oor:name="UIComponent"/>
         <prop oor:name="FilterService"/>
@@ -2748,6 +2970,9 @@
         <prop oor:name="TemplateName"/>
         <prop oor:name="DocumentService">
           <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">OpenOffice.org 1.0 Spreadsheet Template</value>
         </prop>
       </node>
       <node oor:name="calc_pdf_Export" oor:op="replace">
@@ -2821,6 +3046,9 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.sheet.SpreadsheetDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">ODF Spreadsheet</value>
+        </prop>
       </node>
       <node oor:name="calc8_template" oor:op="replace">
         <prop oor:name="Flags">
@@ -2841,27 +3069,8 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.sheet.SpreadsheetDocument</value>
         </prop>
-      </node>
-      <node oor:name="MS Excel 2003 XML" oor:op="replace">
-        <prop oor:name="Flags">
-          <value>IMPORT EXPORT ALIEN 3RDPARTYFILTER</value>
-        </prop>
-        <prop oor:name="UIComponent"/>
-        <prop oor:name="FilterService">
-          <value>com.sun.star.comp.Writer.XmlFilterAdaptor</value>
-        </prop>
-        <prop oor:name="UserData">
-          <value oor:separator=",">com.sun.star.documentconversion.XSLTFilter,,com.sun.star.comp.Calc.XMLOasisImporter,com.sun.star.comp.Calc.XMLOasisExporter,../share/xslt/import/spreadsheetml/spreadsheetml2ooo.xsl,../share/xslt/export/spreadsheetml/ooo2spreadsheetml.xsl</value>
-        </prop>
-        <prop oor:name="FileFormatVersion">
-          <value>0</value>
-        </prop>
-        <prop oor:name="Type">
-          <value>calc_MS_Excel_2003_XML</value>
-        </prop>
-        <prop oor:name="TemplateName"/>
-        <prop oor:name="DocumentService">
-          <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">ODF Spreadsheet Template</value>
         </prop>
       </node>
       <node oor:name="Calc MS Excel 2007 XML" oor:op="replace">
@@ -2881,6 +3090,9 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.sheet.SpreadsheetDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Microsoft Excel 2007-2013 XML</value>
+        </prop>
       </node>
       <node oor:name="Calc MS Excel 2007 XML Template" oor:op="replace">
         <prop oor:name="Flags">
@@ -2899,6 +3111,9 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.sheet.SpreadsheetDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Microsoft Excel 2007-2013 XML Template</value>
+        </prop>
       </node>
       <node oor:name="Calc MS Excel 2007 Binary" oor:op="replace">
         <prop oor:name="Flags">
@@ -2916,6 +3131,9 @@
         <prop oor:name="TemplateName"/>
         <prop oor:name="DocumentService">
           <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Microsoft Excel 2007 Binary</value>
         </prop>
       </node>
       <node oor:name="Calc Office Open XML" oor:op="replace">
@@ -2939,6 +3157,9 @@
         <prop oor:name="DocumentService">
           <value>com.sun.star.sheet.SpreadsheetDocument</value>
         </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Office Open XML Spreadsheet</value>
+        </prop>
       </node>
       <node oor:name="Calc Office Open XML Template" oor:op="replace">
         <prop oor:name="Flags">
@@ -2958,6 +3179,244 @@
           <value>Office Open XML Spreadsheet Template</value>
         </prop>
         <prop oor:name="TemplateName"/>
+        <prop oor:name="DocumentService">
+          <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Office Open XML Spreadsheet Template</value>
+        </prop>
+      </node>
+      <node oor:name="MS_Works_Calc" oor:op="replace">
+        <prop oor:name="Flags">
+          <value>IMPORT ALIEN USESOPTIONS 3RDPARTYFILTER</value>
+        </prop>
+        <prop oor:name="UIComponent"/>
+        <prop oor:name="FilterService">
+          <value>com.sun.star.comp.Calc.MSWorksCalcImportFilter</value>
+        </prop>
+        <prop oor:name="UserData">
+          <value/>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Microsoft Works Document</value>
+        </prop>
+        <prop oor:name="FileFormatVersion">
+          <value>0</value>
+        </prop>
+        <prop oor:name="Type">
+          <value>calc_MS_Works_Document</value>
+        </prop>
+        <prop oor:name="TemplateName"/>
+        <prop oor:name="DocumentService">
+          <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        </prop>
+      </node>
+      <node oor:name="WPS_Lotus_Calc" oor:op="replace">
+        <prop oor:name="Flags">
+          <value>IMPORT ALIEN USESOPTIONS 3RDPARTYFILTER</value>
+        </prop>
+        <prop oor:name="UIComponent"/>
+        <prop oor:name="FilterService">
+          <value>com.sun.star.comp.Calc.MSWorksCalcImportFilter</value>
+        </prop>
+        <prop oor:name="UserData">
+          <value/>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Lotus Document</value>
+        </prop>
+        <prop oor:name="FileFormatVersion">
+          <value>0</value>
+        </prop>
+        <prop oor:name="Type">
+          <value>calc_WPS_Lotus_Document</value>
+        </prop>
+        <prop oor:name="TemplateName"/>
+        <prop oor:name="DocumentService">
+          <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        </prop>
+      </node>
+      <node oor:name="WPS_QPro_Calc" oor:op="replace">
+        <prop oor:name="Flags">
+          <value>IMPORT ALIEN USESOPTIONS 3RDPARTYFILTER</value>
+        </prop>
+        <prop oor:name="UIComponent"/>
+        <prop oor:name="FilterService">
+          <value>com.sun.star.comp.Calc.MSWorksCalcImportFilter</value>
+        </prop>
+        <prop oor:name="UserData">
+          <value/>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">QuattroPro Document</value>
+        </prop>
+        <prop oor:name="FileFormatVersion">
+          <value>0</value>
+        </prop>
+        <prop oor:name="Type">
+          <value>calc_WPS_QPro_Document</value>
+        </prop>
+        <prop oor:name="TemplateName"/>
+        <prop oor:name="DocumentService">
+          <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        </prop>
+      </node>
+      <node oor:name="Beagle_Works_Calc" oor:op="replace">
+        <prop oor:name="Flags">
+          <value>IMPORT ALIEN USESOPTIONS 3RDPARTYFILTER PREFERRED</value>
+        </prop>
+        <prop oor:name="FilterService">
+          <value>com.sun.star.comp.Calc.MWAWCalcImportFilter</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">BeagleWorks/WordPerfect Works v1 Spreadsheet</value>
+        </prop>
+        <prop oor:name="FileFormatVersion">
+          <value>0</value>
+        </prop>
+        <prop oor:name="Type">
+          <value>calc_Beagle_Works</value>
+        </prop>
+        <prop oor:name="DocumentService">
+          <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        </prop>
+      </node>
+      <node oor:name="ClarisWorks_Calc" oor:op="replace">
+        <prop oor:name="Flags">
+          <value>IMPORT ALIEN USESOPTIONS 3RDPARTYFILTER PREFERRED</value>
+        </prop>
+        <prop oor:name="UIComponent"/>
+        <prop oor:name="FilterService">
+          <value>com.sun.star.comp.Calc.MWAWCalcImportFilter</value>
+        </prop>
+        <prop oor:name="UserData">
+          <value/>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">ClarisWorks/AppleWorks Spreadsheet</value>
+        </prop>
+        <prop oor:name="FileFormatVersion">
+          <value>0</value>
+        </prop>
+        <prop oor:name="Type">
+          <value>calc_ClarisWorks</value>
+        </prop>
+        <prop oor:name="TemplateName"/>
+        <prop oor:name="DocumentService">
+          <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        </prop>
+      </node>
+      <node oor:name="Claris_Resolve_Calc" oor:op="replace">
+        <prop oor:name="Flags">
+          <value>IMPORT ALIEN USESOPTIONS 3RDPARTYFILTER PREFERRED</value>
+        </prop>
+        <prop oor:name="UIComponent"/>
+        <prop oor:name="FilterService">
+          <value>com.sun.star.comp.Calc.MWAWCalcImportFilter</value>
+        </prop>
+        <prop oor:name="UserData">
+          <value/>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">ClarisResolve Document</value>
+        </prop>
+        <prop oor:name="FileFormatVersion">
+          <value>0</value>
+        </prop>
+        <prop oor:name="Type">
+          <value>calc_Claris_Resolve</value>
+        </prop>
+        <prop oor:name="TemplateName"/>
+        <prop oor:name="DocumentService">
+          <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        </prop>
+      </node>
+      <node oor:name="Great_Works_Calc" oor:op="replace">
+        <prop oor:name="Flags">
+          <value>IMPORT ALIEN USESOPTIONS 3RDPARTYFILTER PREFERRED</value>
+        </prop>
+        <prop oor:name="FilterService">
+          <value>com.sun.star.comp.Calc.MWAWCalcImportFilter</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">GreatWorks Spreadsheet</value>
+        </prop>
+        <prop oor:name="FileFormatVersion">
+          <value>0</value>
+        </prop>
+        <prop oor:name="Type">
+          <value>calc_Great_Works</value>
+        </prop>
+        <prop oor:name="DocumentService">
+          <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        </prop>
+      </node>
+      <node oor:name="Mac_Wingz_Calc" oor:op="replace">
+        <prop oor:name="Flags">
+          <value>IMPORT ALIEN USESOPTIONS 3RDPARTYFILTER PREFERRED</value>
+        </prop>
+        <prop oor:name="UIComponent"/>
+        <prop oor:name="FilterService">
+          <value>com.sun.star.comp.Calc.MWAWCalcImportFilter</value>
+        </prop>
+        <prop oor:name="UserData">
+          <value/>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Wingz for Mac Document</value>
+        </prop>
+        <prop oor:name="FileFormatVersion">
+          <value>0</value>
+        </prop>
+        <prop oor:name="Type">
+          <value>calc_Mac_Wingz</value>
+        </prop>
+        <prop oor:name="TemplateName"/>
+        <prop oor:name="DocumentService">
+          <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        </prop>
+      </node>
+      <node oor:name="Mac_Works_Calc" oor:op="replace">
+        <prop oor:name="Flags">
+          <value>IMPORT ALIEN USESOPTIONS 3RDPARTYFILTER PREFERRED</value>
+        </prop>
+        <prop oor:name="UIComponent"/>
+        <prop oor:name="FilterService">
+          <value>com.sun.star.comp.Calc.MWAWCalcImportFilter</value>
+        </prop>
+        <prop oor:name="UserData">
+          <value/>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Microsoft Works for Mac Spreadsheet (v1 - v4)</value>
+        </prop>
+        <prop oor:name="FileFormatVersion">
+          <value>0</value>
+        </prop>
+        <prop oor:name="Type">
+          <value>calc_Mac_Works</value>
+        </prop>
+        <prop oor:name="TemplateName"/>
+        <prop oor:name="DocumentService">
+          <value>com.sun.star.sheet.SpreadsheetDocument</value>
+        </prop>
+      </node>
+      <node oor:name="Apple Numbers" oor:op="replace">
+        <prop oor:name="Flags">
+          <value>IMPORT ALIEN USESOPTIONS 3RDPARTYFILTER PREFERRED</value>
+        </prop>
+        <prop oor:name="FilterService">
+          <value>org.libreoffice.comp.Calc.NumbersImportFilter</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">Apple Numbers 2</value>
+        </prop>
+        <prop oor:name="FileFormatVersion">
+          <value>0</value>
+        </prop>
+        <prop oor:name="Type">
+          <value>calc_AppleNumbers</value>
+        </prop>
         <prop oor:name="DocumentService">
           <value>com.sun.star.sheet.SpreadsheetDocument</value>
         </prop>
@@ -2986,9 +3445,53 @@
         </prop>
         <prop oor:name="ClipboardFormat"/>
       </node>
+      <node oor:name="calc_ODS_FlatXML" oor:op="replace">
+        <prop oor:name="DetectService">
+          <value>com.sun.star.comp.filters.XMLFilterDetect</value>
+        </prop>
+        <prop oor:name="URLPattern"/>
+        <prop oor:name="Extensions">
+          <value>fods ods xml</value>
+        </prop>
+        <prop oor:name="MediaType">
+          <value>application/vnd.oasis.opendocument.spreadsheet-flat-xml</value>
+        </prop>
+        <prop oor:name="Preferred">
+          <value>false</value>
+        </prop>
+        <prop oor:name="PreferredFilter">
+          <value>OpenDocument Spreadsheet Flat XML</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value xml:lang="en-US">OpenDocument Spreadsheet (Flat XML)</value>
+        </prop>
+        <prop oor:name="ClipboardFormat">
+          <value>doctype:office:mimetype="application/vnd.oasis.opendocument.spreadsheet"</value>
+        </prop>
+      </node>
+      <node oor:name="calc_HTML" oor:op="replace">
+        <prop oor:name="DetectService">
+          <value>com.sun.star.comp.filters.PlainTextFilterDetect</value>
+        </prop>
+        <prop oor:name="URLPattern"/>
+        <prop oor:name="Extensions">
+          <value>xls</value>
+        </prop>
+        <prop oor:name="MediaType">
+          <value>text/html</value>
+        </prop>
+        <prop oor:name="Preferred">
+          <value>false</value>
+        </prop>
+        <prop oor:name="PreferredFilter"/>
+        <prop oor:name="UIName">
+          <value>HTML Table</value>
+        </prop>
+        <prop oor:name="ClipboardFormat"/>
+      </node>
       <node oor:name="generic_HTML" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.text.FormatDetector</value>
+          <value>com.sun.star.comp.filters.PlainTextFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern">
           <value>private:factory/swriter/web*</value>
@@ -3223,13 +3726,13 @@
           <value>application/vnd.ms-excel</value>
         </prop>
         <prop oor:name="Preferred">
-          <value>false</value>
+          <value>true</value>
         </prop>
         <prop oor:name="PreferredFilter">
           <value>MS Excel 97</value>
         </prop>
         <prop oor:name="UIName">
-          <value>Microsoft Excel 97/2000/XP/2003</value>
+          <value>Microsoft Excel 97-2003</value>
         </prop>
         <prop oor:name="ClipboardFormat">
           <value>Biff8</value>
@@ -3305,7 +3808,7 @@
       </node>
       <node oor:name="calc_StarOffice_XML_Calc" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.comp.calc.FormatDetector</value>
+          <value>com.sun.star.comp.filters.StorageFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern"/>
         <prop oor:name="Extensions">
@@ -3329,7 +3832,7 @@
       </node>
       <node oor:name="calc_StarOffice_XML_Calc_Template" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.comp.calc.FormatDetector</value>
+          <value>com.sun.star.comp.filters.StorageFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern"/>
         <prop oor:name="Extensions">
@@ -3391,7 +3894,7 @@
       </node>
       <node oor:name="calc8" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.comp.calc.FormatDetector</value>
+          <value>com.sun.star.comp.filters.StorageFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern">
           <value>private:factory/scalc*</value>
@@ -3403,7 +3906,7 @@
           <value>application/vnd.oasis.opendocument.spreadsheet</value>
         </prop>
         <prop oor:name="Preferred">
-          <value>false</value>
+          <value>true</value>
         </prop>
         <prop oor:name="PreferredFilter">
           <value>calc8</value>
@@ -3417,7 +3920,7 @@
       </node>
       <node oor:name="calc8_template" oor:op="replace">
         <prop oor:name="DetectService">
-          <value>com.sun.star.comp.calc.FormatDetector</value>
+          <value>com.sun.star.comp.filters.StorageFilterDetect</value>
         </prop>
         <prop oor:name="URLPattern"/>
         <prop oor:name="Extensions">
@@ -3439,28 +3942,6 @@
           <value>Calc 8 Template</value>
         </prop>
       </node>
-      <node oor:name="calc_MS_Excel_2003_XML" oor:op="replace">
-        <prop oor:name="DetectService">
-          <value>com.sun.star.comp.filters.XMLFilterDetect</value>
-        </prop>
-        <prop oor:name="URLPattern"/>
-        <prop oor:name="Extensions">
-          <value>xml xls</value>
-        </prop>
-        <prop oor:name="MediaType"/>
-        <prop oor:name="Preferred">
-          <value>false</value>
-        </prop>
-        <prop oor:name="PreferredFilter">
-          <value>MS Excel 2003 XML</value>
-        </prop>
-        <prop oor:name="UIName">
-          <value xml:lang="en-US">Microsoft Excel 2003 XML</value>
-        </prop>
-        <prop oor:name="ClipboardFormat">
-          <value>doctype:Workbook</value>
-        </prop>
-      </node>
       <node oor:name="MS Excel 2007 XML" oor:op="replace">
         <prop oor:name="DetectService">
           <value>com.sun.star.comp.oox.FormatDetector</value>
@@ -3479,7 +3960,7 @@
           <value>Calc MS Excel 2007 XML</value>
         </prop>
         <prop oor:name="UIName">
-          <value xml:lang="en-US">Microsoft Excel 2007/2010/2013 XML</value>
+          <value xml:lang="en-US">Microsoft Excel 2007-2013 XML</value>
         </prop>
         <prop oor:name="ClipboardFormat"/>
       </node>
@@ -3501,7 +3982,7 @@
           <value>Calc MS Excel 2007 XML Template</value>
         </prop>
         <prop oor:name="UIName">
-          <value xml:lang="en-US">Microsoft Excel 2007/2010/2013 XML Template</value>
+          <value xml:lang="en-US">Microsoft Excel 2007-2013 XML Template</value>
         </prop>
         <prop oor:name="ClipboardFormat"/>
       </node>
@@ -3569,6 +4050,212 @@
         </prop>
         <prop oor:name="ClipboardFormat"/>
       </node>
+      <node oor:name="calc_MS_Works_Document" oor:op="replace">
+        <prop oor:name="DetectService">
+          <value>com.sun.star.comp.Calc.MSWorksCalcImportFilter</value>
+        </prop>
+        <prop oor:name="URLPattern"/>
+        <prop oor:name="Extensions">
+          <value>wks wdb</value>
+        </prop>
+        <prop oor:name="MediaType"/>
+        <prop oor:name="Preferred">
+          <value>true</value>
+        </prop>
+        <prop oor:name="PreferredFilter">
+          <value>MS_Works_Calc</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value>Microsoft Works Document</value>
+        </prop>
+        <prop oor:name="ClipboardFormat"/>
+      </node>
+      <node oor:name="calc_WPS_Lotus_Document" oor:op="replace">
+        <prop oor:name="DetectService">
+          <value>com.sun.star.comp.Calc.MSWorksCalcImportFilter</value>
+        </prop>
+        <prop oor:name="URLPattern"/>
+        <prop oor:name="Extensions">
+          <value>wk1 wk3</value>
+        </prop>
+        <prop oor:name="MediaType"/>
+        <prop oor:name="Preferred">
+          <value>true</value>
+        </prop>
+        <prop oor:name="PreferredFilter">
+          <value>WPS_Lotus_Calc</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value>Lotus Wk1-Wk3</value>
+        </prop>
+        <prop oor:name="ClipboardFormat"/>
+      </node>
+      <node oor:name="calc_WPS_QPro_Document" oor:op="replace">
+        <prop oor:name="DetectService">
+          <value>com.sun.star.comp.Calc.MSWorksCalcImportFilter</value>
+        </prop>
+        <prop oor:name="URLPattern"/>
+        <prop oor:name="Extensions">
+          <value>wq1 wq2</value>
+        </prop>
+        <prop oor:name="MediaType"/>
+        <prop oor:name="Preferred">
+          <value>true</value>
+        </prop>
+        <prop oor:name="PreferredFilter">
+          <value>WPS_QPro_Calc</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value>QuattroPro Document</value>
+        </prop>
+        <prop oor:name="ClipboardFormat"/>
+      </node>
+      <node oor:name="calc_Beagle_Works" oor:op="replace">
+        <prop oor:name="DetectService">
+          <value>com.sun.star.comp.Calc.MWAWCalcImportFilter</value>
+        </prop>
+        <prop oor:name="Extensions">
+          <value>dummy</value>
+        </prop>
+        <prop oor:name="MediaType">
+          <value/>
+        </prop>
+        <prop oor:name="Preferred">
+          <value>true</value>
+        </prop>
+        <prop oor:name="PreferredFilter">
+          <value>Beagle_Works_Calc</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value>BeagleWorks/WordPerfect Works Document</value>
+        </prop>
+      </node>
+      <node oor:name="calc_ClarisWorks" oor:op="replace">
+        <prop oor:name="DetectService">
+          <value>com.sun.star.comp.Calc.MWAWCalcImportFilter</value>
+        </prop>
+        <prop oor:name="URLPattern"/>
+        <prop oor:name="Extensions">
+          <value>cwk</value>
+        </prop>
+        <prop oor:name="MediaType">
+          <value>application/clarisworks</value>
+        </prop>
+        <prop oor:name="Preferred">
+          <value>true</value>
+        </prop>
+        <prop oor:name="PreferredFilter">
+          <value>ClarisWorks_Calc</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value>ClarisWorks/AppleWorks Document</value>
+        </prop>
+        <prop oor:name="ClipboardFormat"/>
+      </node>
+      <node oor:name="calc_Claris_Resolve" oor:op="replace">
+        <prop oor:name="DetectService">
+          <value>com.sun.star.comp.Calc.MWAWCalcImportFilter</value>
+        </prop>
+        <prop oor:name="URLPattern"/>
+        <prop oor:name="Extensions">
+          <value>cwk</value>
+        </prop>
+        <prop oor:name="MediaType">
+          <value>application/clarisworks</value>
+        </prop>
+        <prop oor:name="Preferred">
+          <value>true</value>
+        </prop>
+        <prop oor:name="PreferredFilter">
+          <value>Claris_Resolve_Calc</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value>ClarisResolve Document</value>
+        </prop>
+        <prop oor:name="ClipboardFormat"/>
+      </node>
+      <node oor:name="calc_Great_Works" oor:op="replace">
+        <prop oor:name="DetectService">
+          <value>com.sun.star.comp.Calc.MWAWCalcImportFilter</value>
+        </prop>
+        <prop oor:name="Extensions">
+          <value>dummy</value>
+        </prop>
+        <prop oor:name="MediaType">
+          <value/>
+        </prop>
+        <prop oor:name="Preferred">
+          <value>true</value>
+        </prop>
+        <prop oor:name="PreferredFilter">
+          <value>Great_Works_Calc</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value>GreatWorks Document</value>
+        </prop>
+      </node>
+      <node oor:name="calc_Mac_Works" oor:op="replace">
+        <prop oor:name="DetectService">
+          <value>com.sun.star.comp.Calc.MWAWCalcImportFilter</value>
+        </prop>
+        <prop oor:name="URLPattern"/>
+        <prop oor:name="Extensions">
+          <value>wps</value>
+        </prop>
+        <prop oor:name="MediaType">
+          <value>application/vnd.ms-works</value>
+        </prop>
+        <prop oor:name="Preferred">
+          <value>true</value>
+        </prop>
+        <prop oor:name="PreferredFilter">
+          <value>Mac_Works_Calc</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value>Microsoft Works for Mac Document (v1 - v4)</value>
+        </prop>
+        <prop oor:name="ClipboardFormat"/>
+      </node>
+      <node oor:name="calc_Mac_Wingz" oor:op="replace">
+        <prop oor:name="DetectService">
+          <value>com.sun.star.comp.Calc.MWAWCalcImportFilter</value>
+        </prop>
+        <prop oor:name="URLPattern"/>
+        <prop oor:name="Extensions">
+          <value>dummy</value>
+        </prop>
+        <prop oor:name="MediaType"/>
+        <prop oor:name="Preferred">
+          <value>true</value>
+        </prop>
+        <prop oor:name="PreferredFilter">
+          <value>Mac_Wingz_Calc</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value>Wingz for Mac Document</value>
+        </prop>
+        <prop oor:name="ClipboardFormat"/>
+      </node>
+      <node oor:name="calc_AppleNumbers" oor:op="replace">
+        <prop oor:name="DetectService">
+          <value>org.libreoffice.comp.Calc.NumbersImportFilter</value>
+        </prop>
+        <prop oor:name="Extensions">
+          <value>numbers</value>
+        </prop>
+        <prop oor:name="MediaType">
+          <value>application/x-iwork-numbers-sffnumbers</value>
+        </prop>
+        <prop oor:name="Preferred">
+          <value>true</value>
+        </prop>
+        <prop oor:name="PreferredFilter">
+          <value>Apple Numbers</value>
+        </prop>
+        <prop oor:name="UIName">
+          <value>Apple Numbers</value>
+        </prop>
+      </node>
     </node>
   </oor:component-data>
   <oor:component-data xmlns:install="http://openoffice.org/2004/installation" oor:name="Common" oor:package="org.openoffice.Office">
@@ -3625,13 +4312,13 @@
             <value>CalcCommands</value>
           </prop>
           <prop oor:name="ooSetupFactoryActualFilter" oor:finalized="true">
-            <value>MS Excel 97</value>
+            <value>calc8</value>
           </prop>
           <prop oor:name="ooSetupFactoryActualTemplateFilter" oor:finalized="true">
             <value>calc8_template</value>
           </prop>
           <prop oor:name="ooSetupFactoryDefaultFilter">
-            <value>MS Excel 97</value>
+            <value>calc8</value>
           </prop>
           <prop oor:name="ooSetupFactoryEmptyDocumentURL" oor:finalized="true">
             <value>private:factory/scalc</value>
