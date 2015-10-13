@@ -666,7 +666,7 @@ class Monitor(QObject):
             f.write('filter_packet = BEACON\n')
             f.write('channel_upper = {}\n'.format(CHANS[-1]))
             f.write('channel_dwell = {}\n'.format(self.__dwell))
-            f.write('channel = 1\n')
+            f.write('channel = {}\n'.format(CHANS[0]))
             f.write('channel_scan\n')
             f.write('channel_scan_rounds = 1\n')
             f.write('outfile = /dev/stdout\n')
