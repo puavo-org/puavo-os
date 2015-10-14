@@ -371,7 +371,7 @@ class Updater < DBus::Object
   dbus_interface "org.puavo.client.update" do
     dbus_signal :UpdateAvailable
     dbus_signal :UpdateCancelled
-    dbus_signal :UpdateCompleted,         'in reboot_required:b'
+    dbus_signal :UpdateCompleted, 'in image_update_done:b, reboot_required:b'
     dbus_signal :UpdateFailed
     dbus_signal :UpdateIsUpToDate,        'in reboot_required:b'
     dbus_signal :UpdateMessage,           'in msgtype:s, in content:s'
@@ -442,10 +442,14 @@ class Updater < DBus::Object
           raise e
         end
 
+        # Update might result only in configuration update, but possibly
+        # an image update was also done.   Send UpdateCompleted-dbus-signal
+        # and tell also if an image update was done
+        # and if a reboot is required.
+        image_update_done = image_update_thread ? true : false
         reboot_required = (self.check_for_available_image_updates() \
                              == :uptodate_yes_reboot)
-
-        self.UpdateCompleted(reboot_required)
+        self.UpdateCompleted(image_update_done, reboot_required)
       end
     end
 

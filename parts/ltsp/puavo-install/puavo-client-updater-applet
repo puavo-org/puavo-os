@@ -242,19 +242,22 @@ class UpdateIndicatorApplet:
         self.notify( _tr('System update has been cancelled.') )
 
 
-    def on_update_completed(self, reboot_required):
+    def on_update_completed(self, image_update_done, reboot_required):
         self.stop_roll_progress()
         self.set_update_button_mode('check')
 
         self.on_update_isuptodate(reboot_required)
 
+        if not image_update_done:
+            return
+
         if reboot_required:
-           log_msg \
-             = _tr('Update completed, reboot required to finish the update.')
-           notify_msg = _tr('System update is finished, reboot the computer.')
+            log_msg \
+              = _tr('Update completed, reboot required to finish the update.')
+            notify_msg = _tr('System update is finished, reboot the computer.')
         else:
-           log_msg    = _tr('Update completed.')
-           notify_msg = _tr('System update is finished.')
+            log_msg    = _tr('Update completed.')
+            notify_msg = _tr('System update is finished.')
 
         self.append_text_to_log( log_msg + "\n" )
 
