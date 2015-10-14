@@ -162,17 +162,24 @@ module Dot11
     addr.zip(mask).map { |(a, b)| "%02x" % (a &~ b) } .join(":")
   end
 
-  def self.get_ht_capab(channel)
+  def self.get_ht_capab(iface, channel)
+    phyname = File.read("/sys/class/net/#{iface}/phy80211/name").strip
+
+    is_ht20sgi_capab = IO.popen(['iw', phyname, 'info']) do |io|
+      !io.grep(/^\s+RX HT20 SGI.*$/).empty?
+    end
+    $?.success? or raise 'failed to query HT20 SGI capability'
+
     case channel
     when 1, 6, 11
-      '[HT20][SHORT-GI-20]'
+      '[HT20]'
     when 36, 44
       '[HT40+]'
     when 40, 48
       '[HT40-]'
     else
       raise "unsupported channel #{channel}"
-    end
+    end + (is_ht20sgi_capab ? '[SHORT-GI-20]' : '')
   end
 
   def self.scan(iface, band)
@@ -320,7 +327,7 @@ def fill_phy_list(phy_list, band)
       :channel  => channel,
       :bssid    => Dot11.get_bssid(iface),
       :hw_mode  => Dot11::CHANNELS_5G.include?(channel) ? 'a' : 'g',
-      :ht_capab => Dot11.get_ht_capab(channel),
+      :ht_capab => Dot11.get_ht_capab(iface, channel),
     }
   end
 end
