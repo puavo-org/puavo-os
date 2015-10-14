@@ -170,13 +170,18 @@ module Dot11
     end
     $?.success? or raise 'failed to query HT20 SGI capability'
 
+    is_ht40sgi_capab = IO.popen(['iw', phyname, 'info']) do |io|
+      !io.grep(/^\s+RX HT40 SGI.*$/).empty?
+    end
+    $?.success? or raise 'failed to query HT40 SGI capability'
+
     case channel
     when 1, 6, 11
       '[HT20]'
     when 36, 44
-      '[HT40+]'
+      '[HT40+]' + (is_ht40sgi_capab ? '[SHORT-GI-40]' : '')
     when 40, 48
-      '[HT40-]'
+      '[HT40-]' + (is_ht40sgi_capab ? '[SHORT-GI-40]' : '')
     else
       raise "unsupported channel #{channel}"
     end + (is_ht20sgi_capab ? '[SHORT-GI-20]' : '')
