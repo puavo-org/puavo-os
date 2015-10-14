@@ -1,3 +1,30 @@
+puavo-wlan (0.9.10) trusty; urgency=medium
+
+  * New release
+  * mapper: do not emit measurementsChanged if empty spot is moved
+  * mapper: do not emit measurementsChanged if empty spot is removed
+  * mapper: get the initial channel number from the global channel list
+  * mapper: get the upper channel limit from the global channel list
+  * mapper: add python3-dateutil to dependencies
+  * mapper: use Beacon class to parse horst output
+  * mapper: add missing import
+  * mapper: make Measurement.pos appear as QPointF, but store it as
+    tuple
+  * mapper: get as much data as possible from the heatmap generator
+  * mapper: rename Frame => Beacon
+  * mapper: remove unused code
+  * mapper: add classes to represent a measurement and individual frames
+  * mapper: change archive prefix
+  * mapper: put RSSI spinbox left of the slider
+  * mapper: make RSSI spinbox writable
+  * mapper: remove unused code
+  * mapper: remove "Reset to default settings" button
+  * mapper: apply settings automatically after a short delay
+  * mapper: remove heatmap scale option
+  * Git(36ca74fb7e77c3f540f6bc1e1b4fcbcd1009bd1c)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 14 Oct 2015 10:30:43 +0300
+
 puavo-wlan (0.9.9) trusty; urgency=medium
 
   * New release
