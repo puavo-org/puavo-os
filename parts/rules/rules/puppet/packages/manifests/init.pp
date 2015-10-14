@@ -334,6 +334,9 @@ class packages {
     , 'sound-juicer' ]:
       tag => [ 'optical_media', 'ubuntu', ];
 
+    [ 'gtklp' ]:
+      tag => [ 'printing', 'ubuntu', ];
+
     [ 'arduino'
     , 'arduino-mk'
     , 'avr-libc'
