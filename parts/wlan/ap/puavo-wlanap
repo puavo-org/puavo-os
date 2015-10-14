@@ -302,6 +302,28 @@ def get_nets_from_puavo
   end
 end
 
+def get_conf_from_puavo
+  client = PuavoRestClient.new
+  response = client.get("/v3/devices/#{PUAVO_ETC.hostname}")
+
+  conf = {}
+  response.parse['tags'].each do |tag|
+    if /^txpower:([0-9]+)$/ =~ tag
+      txpower = $1.to_i
+      ## Multiple tags starting with txpower: might be given, let's
+      ## take the most restrictive.
+      conf[:txpower] = [conf.fetch(:txpower, txpower), txpower].min
+    elsif /^txpower5:([0-9]+)$/ =~ tag
+      txpower5 = $1.to_i
+      ## Multiple tags starting with txpower5: might be given, let's
+      ## take the most restrictive.
+      conf[:txpower5] = [conf.fetch(:txpower5, txpower5), txpower5].min
+    end
+  end
+
+  conf
+end
+
 def hexdigest15(str)
   md5sum = Digest::MD5.new
   md5sum << str
@@ -400,6 +422,10 @@ def start_services(critical_services, phy_list, bss_list, rundir,
     # connection quality in some scenarios.
     system('iw', 'dev', phy[:iface], 'set', 'power_save', 'off')
 
+    unless phy[:txpower].nil?
+      system('iwconfig', phy[:iface], 'txpower', phy[:txpower].to_s)
+    end
+
     hostapd_name = "hostapd_#{phy[:iface]}"
     hostapd_pidfile = File.join(rundir, "#{hostapd_name}.pid")
     hostapd_conffile = File.join(rundir, "#{hostapd_name}.conf")
@@ -419,6 +445,7 @@ def run(kwargs = {})
   critical_services = {}
   phy_list          = []
   bss_list          = []
+  conf              = {}
 
   if !ctrlmsg.nil?
     ctrl = UNIXSocket.new(File.join(rundir, 'ctrlsocket'))
@@ -447,7 +474,15 @@ def run(kwargs = {})
   end
 
   if use_puavo
+    conf.update(get_conf_from_puavo)
     nets.concat(get_nets_from_puavo)
+  end
+
+  phy_list.each do |phy|
+    phy[:txpower] = conf[:txpower]
+    if Dot11::CHANNELS_5G.include? phy[:channel]
+      phy[:txpower] = conf.fetch(:txpower5, phy[:txpower])
+    end
   end
 
   if nets.empty?
