@@ -4,8 +4,8 @@ class tuxpaint {
   file {
     '/etc/tuxpaint/tuxpaint.conf':
       content => template('tuxpaint/tuxpaint.conf'),
-      require => Package['tuxpaint'];
+      require => [ Package['gtklp'], Package['tuxpaint'], ];
   }
 
-  Package <| title == tuxpaint |>
+  Package <| title == gtklp or title == tuxpaint |>
 }
