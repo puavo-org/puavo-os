@@ -51,8 +51,6 @@ module Log
 
 end
 
-THIS_SCRIPT = Pathname.new($0).realpath
-
 module Dot11
 
   ## For some reason, at least with some driver versions, these device
@@ -207,6 +205,9 @@ module Dot11
   end
 
 end
+
+# The real path of this script.
+THIS_SCRIPT  = Pathname.new($0).realpath
 
 # Default runtime directory, use --rundir to override.
 RUNDIR       = '/run/puavo-wlanap'
