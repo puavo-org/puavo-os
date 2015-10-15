@@ -35,16 +35,20 @@ require 'getoptlong'
 require 'pathname'
 require 'socket'
 
-def log(priority, msg)
-  STDERR.puts("puavo-wlanap[#{Process.pid}]: #{priority}: #{msg}")
-end
+module Log
 
-def warning(msg)
-  log(:WARNING, msg)
-end
+  def self.log(priority, msg)
+    STDERR.puts("puavo-wlanap[#{Process.pid}]: #{priority}: #{msg}")
+  end
 
-def error(msg)
-  log(:ERROR, msg)
+  def self.warning(msg)
+    Log.log(:WARNING, msg)
+  end
+
+  def self.error(msg)
+    Log.log(:ERROR, msg)
+  end
+
 end
 
 THIS_SCRIPT = Pathname.new($0).realpath
@@ -475,7 +479,7 @@ class AccessPoint
 
     phy_list.concat(get_phy_list)
     if phy_list.empty?
-      error('no suitable physical interfaces available, aborting')
+      Log.error('no suitable physical interfaces available, aborting')
       exit(1)
     end
 
@@ -492,7 +496,7 @@ class AccessPoint
     end
 
     if @nets.empty?
-      error('no networks defined, aborting')
+      Log.error('no networks defined, aborting')
       exit(1)
     end
 
@@ -524,7 +528,7 @@ class AccessPoint
       signal = sigqueue.pop
       case signal
       when :INT, :QUIT, :TERM
-        error("received fatal signal #{signal}, exiting")
+        Log.error("received fatal signal #{signal}, exiting")
         exit(1)
       when :CHLD
         begin
@@ -534,7 +538,7 @@ class AccessPoint
         end
         if critical_services.has_key?(child_pid)
           child_name = critical_services[child_pid]
-          error("critical child service #{child_name} died, exiting")
+          Log.error("critical child service #{child_name} died, exiting")
           exit(1)
         end
       else
@@ -542,7 +546,7 @@ class AccessPoint
 
         if ready.nil?
           if !conn.nil?
-            warning('control socket connection timeout')
+            Log.warning('control socket connection timeout')
             conn.close
             conn = nil
           end
@@ -561,7 +565,7 @@ class AccessPoint
           begin
             line = conn.readline
           rescue EOFError
-            warning('received invalid control message')
+            Log.warning('received invalid control message')
           else
             line.strip!
             cmd, sep, args = line.partition ':'
@@ -575,10 +579,10 @@ class AccessPoint
                 dhclient_pid = spawn('dhclient', '-d', bridge)
                 critical_services[dhclient_pid] = "dhclient_#{bridge}"
               else
-                warning("received invalid vtun-up command: #{line}")
+                Log.warning("received invalid vtun-up command: #{line}")
               end
             else
-              warning("received unknown control message: #{line}")
+              Log.warning("received unknown control message: #{line}")
             end
           ensure
             conn.close
@@ -602,7 +606,7 @@ def main
     # can still operate without Puavo. This has the same effect as
     # --no-puavo command line option.
     ap.use_puavo = false
-    warning("Puavo integration is disabled: #{e}")
+    Log.warning("Puavo integration is disabled: #{e}")
   end
 
   GetoptLong.new(
@@ -622,7 +626,7 @@ def main
 
     when '--vtun-port'
       unless arg =~ /^[1-9][0-9]*$/
-        error("invalid port number (#{arg})")
+        Log.error("invalid port number (#{arg})")
         exit(1)
       end
       ap.vtun_port = arg.to_i
@@ -672,7 +676,7 @@ EOF
   end
 
   if ARGV.length != 0
-    error("invalid number of arguments (#{ARGV.length}), expected 0")
+    Log.error("invalid number of arguments (#{ARGV.length}), expected 0")
     exit(1)
   end
 
