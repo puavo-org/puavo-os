@@ -1,21 +1,10 @@
 prefix = /usr/local
-exec_prefix = $(prefix)
-sbindir = $(exec_prefix)/sbin
 
-INSTALL = install
-INSTALL_PROGRAM = $(INSTALL)
-INSTALL_DATA = $(INSTALL) -m 644
+all:
 
-.PHONY : all
-all :
+clean:
 
-.PHONY : installdirs
-installdirs :
-	mkdir -p $(DESTDIR)$(sbindir)
+install:
+	install -D -m 755 -t '$(DESTDIR)$(prefix)/sbin' puavo-wlanap
 
-.PHONY : install
-install : installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) puavo-wlanap
-
-.PHONY : clean
-clean :
+.PHONY: all clean install
