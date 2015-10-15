@@ -4,7 +4,7 @@ var gui = require('nw.gui');
 
 var config_json_dir  = '/state/etc/puavo/local';
 var config_json_path = config_json_dir + '/config.json';
-var old_config;
+var old_config, prev_config;
 
 var locale = process.env.LANG.substring(0, 2);
 
@@ -57,6 +57,15 @@ var mc =
         'Enable automatic updates':
           'Tee järjestelmäpäivitykset automaattisesti',
 
+        'Powersave settings':
+          'Virransäästöasetukset',
+
+        'When running on battery, saving power allows using the computer longer at the expense of performance.':
+          'Akkua käytettäessä virransäästö mahdollistaa tietokoneen pitempiaikaisen käytön nopeuden kustannuksella.',
+
+        'Save power when low on battery':
+          'Säästä virtaa kun akun varaus on matala',
+
         'You do not have permission to run this tool':
           'Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön',
       },
@@ -105,6 +114,15 @@ var mc =
 
         'Enable automatic updates':
           'Enable automatic updates', // XXX
+
+        'Powersave settings':
+          'Powersave settings', // XXX
+
+        'When running on battery, saving power allows using the computer longer at the expense of performance.':
+          'When running on battery, saving power allows using the computer longer at the expense of performance.', // XXX
+
+        'Save power when low on battery':
+          'Save power when low on battery', // XXX
 
         'You do not have permission to run this tool':
           'Du har inte rättigheter för att köra det här verktyget',
@@ -417,6 +435,11 @@ function check_software_states(cb, available_packages) {
                          handler);
 }
 
+function compare_integer_arrays(a, b) {
+  return a.length === b.length
+           && a.every(function (v,i) { return v === b[i] })
+}
+
 function create_error_details(shorttext, message) {
   var details = document.createElement('details');
 
@@ -507,6 +530,9 @@ function generate_form() {
   // automatic-updates controls
   generate_automatic_update_controls(form);
 
+  // powersave-settings controls
+  generate_powersave_settings_controls(form);
+
   return pkginstallers;
 }
 
@@ -545,6 +571,44 @@ function generate_automatic_update_controls(form) {
   form.appendChild(div);
 }
 
+function generate_powersave_settings_controls(form) {
+  var title = document.createElement('h2');
+  title.textContent = mc('Powersave settings');
+  form.appendChild(title);
+
+  var div = document.createElement('div');
+
+  var description_div = document.createElement('div');
+  var description_text
+    = document.createTextNode( mc('When running on battery, saving power allows using the computer longer at the expense of performance.') );
+  description_div.appendChild(description_text);
+
+  var input_id = 'powersave_settings_checkbox';
+  var label = document.createElement('label');
+  label.textContent = mc('Save power when low on battery');
+  label.setAttribute('for', input_id);
+
+  var input = document.createElement('input');
+  input.setAttribute('id', input_id);
+  input.setAttribute('name', 'powersave_enabled');
+  input.setAttribute('type', 'checkbox');
+
+  checked_state = [ 30, 70, 90 ]
+  var compret = compare_integer_arrays(old_config.battery_powersave_thresholds,
+                                       checked_state);
+  if (compret) {
+    input.setAttribute('checked', true);
+  } else {
+    input.removeAttribute('checked');
+  }
+  input.addEventListener('click', write_config);
+
+  div.appendChild(description_div);
+  div.appendChild(input);
+  div.appendChild(label);
+
+  form.appendChild(div);
+}
 function generate_loginaccess_controls(form) {
   var title = document.createElement('h2');
   title.textContent = mc('Access controls');
@@ -763,7 +827,7 @@ function read_config() {
 
   try {
     config = JSON.parse( fs.readFileSync(config_json_path) );
-    if (!config.version || config.version != 2) {
+    if (!config.version || config.version != 3) {
       alert('Configuration file ' + config_json_path
               + ' is on an unknown version, refusing to do anything.')
       return false;
@@ -772,9 +836,10 @@ function read_config() {
     if (ex.code === 'ENOENT') {
       // default config in case everything is missing
       config = {
-        allow_logins_for:        [],
-        automatic_image_updates: true,
-        version:                 2,
+        allow_logins_for:             [],
+        automatic_image_updates:      true,
+        battery_powersave_thresholds: [ 30, 70, 90 ],
+        version:                      3,
       };
       write_config_to_file(config);
     } else {
@@ -789,9 +854,10 @@ function read_config() {
 function write_config() {
   var response = document.forms[0].elements;
   var new_config = {
-    allow_logins_for:        [],
-    automatic_image_updates: true,
-    version:                 2,
+    allow_logins_for:             [],
+    automatic_image_updates:      true,
+    battery_powersave_thresholds: [ 30, 70, 90 ],
+    version:                      3,
   };
 
   switch(response.allow_logins_for.value) {
@@ -816,7 +882,26 @@ function write_config() {
   new_config.automatic_image_updates
      = response.automatic_image_updates.checked;
 
+  new_config.battery_powersave_thresholds = response.powersave_enabled.checked
+                                              ? [ 30, 70, 90 ]
+                                              : [  1,  2,  3 ];
+
   write_config_to_file(new_config);
+
+  if (! compare_integer_arrays(prev_config.battery_powersave_thresholds,
+                               new_config.battery_powersave_thresholds)) {
+    // if battery_powersave_thresholds has changed, trigger this:
+    var cmdargs = [ '/usr/sbin/puavo-local-config', '--powersave-settings' ];
+    var handler = function(error, stdout, stderr) {
+                    if (error) {
+                      alert('error running /usr/sbin/puavo-local-config'
+                              + ' --powersave-settings');
+                    }
+                  };
+    child_process.execFile('sudo', cmdargs, {}, handler);
+  }
+
+  prev_config = new_config;
 }
 
 function write_config_to_file(conf) {
@@ -831,7 +916,7 @@ function write_config_to_file(conf) {
 
 check_access();         // will exit in case of errors
 
-old_config = read_config();
+old_config = prev_config = read_config();
 if (!old_config) { process.exit(1); }
 
 // set document titles
