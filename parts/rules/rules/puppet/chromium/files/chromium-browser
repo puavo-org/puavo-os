@@ -7,5 +7,13 @@ homepage_args() {
   fi
 }
 
-exec /usr/bin/chromium-browser.distrib --no-default-browser-check \
-       $(homepage_args) "$@"
+default_args="--new-window --no-default-browser-check"
+
+# we do not try to pass --homepage args when we get command line options,
+# because it is likely we have an url and chromium-browser will open also
+# --homepage args to tabs... we do not want to open all of those.
+if [ $# -gt 0 ]; then
+  exec /usr/bin/chromium-browser.distrib $default_args "$@"
+else
+  exec /usr/bin/chromium-browser.distrib $default_args $(homepage_args)
+fi
