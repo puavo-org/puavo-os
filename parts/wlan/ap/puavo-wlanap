@@ -594,17 +594,6 @@ end
 def main
   ap = AccessPoint.new
 
-  begin
-    require 'puavo/etc'
-    require 'puavo/rest-client'
-  rescue LoadError => e
-    # Puavo-integration requires aforementioned modules, but puavo-wlanap
-    # can still operate without Puavo. This has the same effect as
-    # --no-puavo command line option.
-    ap.use_puavo = false
-    Log.warning("Puavo integration is disabled: #{e}")
-  end
-
   GetoptLong.new(
     ['--ctrlmsg'                   , GetoptLong::REQUIRED_ARGUMENT],
     ['--help', '-h'                , GetoptLong::NO_ARGUMENT],
@@ -672,6 +661,19 @@ EOF
   if ARGV.length != 0
     Log.error("invalid number of arguments (#{ARGV.length}), expected 0")
     exit(1)
+  end
+
+  if ap.use_puavo
+    begin
+      require 'puavo/etc'
+      require 'puavo/rest-client'
+    rescue LoadError => e
+      # Puavo-integration requires aforementioned modules, but puavo-wlanap
+      # can still operate without Puavo. This has the same effect as
+      # --no-puavo command line option.
+      ap.use_puavo = false
+      Log.warning("Puavo integration is disabled: #{e}")
+    end
   end
 
   ap.run()
