@@ -439,158 +439,173 @@ def start_services(critical_services, phy_list, bss_list, rundir,
   end
 end
 
-def run(kwargs = {})
-  ctrlmsg      = kwargs.fetch(:ctrlmsg,      nil)
-  nets         = kwargs.fetch(:nets,         [])
-  use_puavo    = kwargs.fetch(:use_puavo,    USE_PUAVO)
-  rundir       = kwargs.fetch(:rundir,       RUNDIR)
-  vtun_address = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
-  vtun_port    = kwargs.fetch(:vtun_port,    VTUN_PORT)
+class AccessPoint
 
-  critical_services = {}
-  phy_list          = []
-  bss_list          = []
-  conf              = {}
+  attr_accessor :rundir
+  attr_accessor :use_puavo
+  attr_accessor :vtun_address
+  attr_accessor :vtun_port
 
-  if !ctrlmsg.nil?
-    ctrl = UNIXSocket.new(File.join(rundir, 'ctrlsocket'))
-    ctrl.puts(ctrlmsg)
-    exit(0)
+  def initialize()
+    @nets         = []
+    @rundir       = RUNDIR
+    @use_puavo    = USE_PUAVO
+    @vtun_address = VTUN_ADDRESS
+    @vtun_port    = VTUN_PORT
   end
 
-  Signal.trap('EXIT') do
-    Process.kill('-SIGTERM', 0)
+  def add_net(type, ssid, password='')
+    @nets << {
+      'type'     => type,
+      'ssid'     => ssid,
+      'password' => password,
+    }
+  end
 
-    bss_list.each do |bss|
-      # Ignore errors, we are already exiting.
-      system('ifconfig', bss[:bridge], 'down')
-      system('brctl', 'delbr', bss[:bridge])
+  def send_ctrlmsg(msg)
+    UNIXSocket.new(File.join(@rundir, 'ctrlsocket')).puts(msg)
+  end
+
+  def run()
+    critical_services = {}
+    phy_list          = []
+    bss_list          = []
+    conf              = {}
+
+    Signal.trap('EXIT') do
+      Process.kill('-SIGTERM', 0)
+
+      bss_list.each do |bss|
+        # Ignore errors, we are already exiting.
+        system('ifconfig', bss[:bridge], 'down')
+        system('brctl', 'delbr', bss[:bridge])
+      end
+
+      FileUtils.rm_rf(@rundir)
     end
 
-    FileUtils.rm_rf(rundir)
-  end
+    FileUtils.mkdir_p(@rundir)
 
-  FileUtils.mkdir_p(rundir)
-
-  phy_list.concat(get_phy_list)
-  if phy_list.empty?
-    error('no suitable physical interfaces available, aborting')
-    exit(1)
-  end
-
-  if use_puavo
-    conf.update(get_conf_from_puavo)
-    nets.concat(get_nets_from_puavo)
-  end
-
-  phy_list.each do |phy|
-    phy[:txpower] = conf[:txpower]
-    if Dot11::CHANNELS_5G.include? phy[:channel]
-      phy[:txpower] = conf.fetch(:txpower5, phy[:txpower])
-    end
-  end
-
-  if nets.empty?
-    error('no networks defined, aborting')
-    exit(1)
-  end
-
-  bss_list.concat(get_bss_list(nets))
-
-  write_hostapd_conf(phy_list, bss_list, rundir)
-  write_vtund_conf(bss_list, rundir)
-
-  [:HUP, :USR1, :USR2].each { |s| Signal.trap(s, 'SIG_IGN') }
-
-  sigqueue = []
-  sigpipe_r, sigpipe_w = IO.pipe
-
-  [:CHLD, :INT, :QUIT, :TERM].each do |signal|
-    Signal.trap(signal) do
-      sigqueue << signal
-      sigpipe_w.write_nonblock('o')
-    end
-  end
-
-  serv = UNIXServer.new(File.join(rundir, 'ctrlsocket'))
-  conn = nil
-
-  start_services(critical_services,
-                 phy_list, bss_list, rundir,
-                 vtun_address, vtun_port)
-
-  loop do
-    signal = sigqueue.pop
-    case signal
-    when :INT, :QUIT, :TERM
-      error("received fatal signal #{signal}, exiting")
+    phy_list.concat(get_phy_list)
+    if phy_list.empty?
+      error('no suitable physical interfaces available, aborting')
       exit(1)
-    when :CHLD
-      begin
-        child_pid = Process.wait(0, Process::WNOHANG)
-      rescue SystemCallError => e
-        raise e unless e.errno == Errno::ECHILD
+    end
+
+    if @use_puavo
+      conf.update(get_conf_from_puavo)
+      @nets.concat(get_nets_from_puavo)
+    end
+
+    phy_list.each do |phy|
+      phy[:txpower] = conf[:txpower]
+      if Dot11::CHANNELS_5G.include? phy[:channel]
+        phy[:txpower] = conf.fetch(:txpower5, phy[:txpower])
       end
-      if critical_services.has_key?(child_pid)
-        child_name = critical_services[child_pid]
-        error("critical child service #{child_name} died, exiting")
+    end
+
+    if @nets.empty?
+      error('no networks defined, aborting')
+      exit(1)
+    end
+
+    bss_list.concat(get_bss_list(@nets))
+
+    write_hostapd_conf(phy_list, bss_list, @rundir)
+    write_vtund_conf(bss_list, @rundir)
+
+    [:HUP, :USR1, :USR2].each { |s| Signal.trap(s, 'SIG_IGN') }
+
+    sigqueue = []
+    sigpipe_r, sigpipe_w = IO.pipe
+
+    [:CHLD, :INT, :QUIT, :TERM].each do |signal|
+      Signal.trap(signal) do
+        sigqueue << signal
+        sigpipe_w.write_nonblock('o')
+      end
+    end
+
+    serv = UNIXServer.new(File.join(@rundir, 'ctrlsocket'))
+    conn = nil
+
+    start_services(critical_services,
+                   phy_list, bss_list, @rundir,
+                   @vtun_address, @vtun_port)
+
+    loop do
+      signal = sigqueue.pop
+      case signal
+      when :INT, :QUIT, :TERM
+        error("received fatal signal #{signal}, exiting")
         exit(1)
-      end
-    else
-      ready = IO.select([sigpipe_r, conn.nil? ? serv : conn], [], [], 5)
-
-      if ready.nil?
-        if !conn.nil?
-          warning('control socket connection timeout')
-          conn.close
-          conn = nil
-        end
-        next
-      end
-
-      if ready[0].include?(sigpipe_r)
-        sigpipe_r.read_nonblock(1)
-      end
-
-      if ready[0].include?(serv)
-        conn = serv.accept
-      end
-
-      if ready[0].include?(conn)
+      when :CHLD
         begin
-          line = conn.readline
-        rescue EOFError
-          warning('received invalid control message')
-        else
-          line.strip!
-          cmd, sep, args = line.partition ':'
-          case cmd
-          when 'vtun-up'
-            iface, *bridge = args.split ':'
-            if bridge.length == 1
-              bridge = bridge[0]
-              run_or_fail('ifconfig', iface, 'up')
-              run_or_fail('brctl', 'addif', bridge, iface)
-              dhclient_pid = spawn('dhclient', '-d', bridge)
-              critical_services[dhclient_pid] = "dhclient_#{bridge}"
-            else
-              warning("received invalid vtun-up command: #{line}")
-            end
-          else
-            warning("received unknown control message: #{line}")
-          end
-        ensure
-          conn.close
-          conn = nil
+          child_pid = Process.wait(0, Process::WNOHANG)
+        rescue SystemCallError => e
+          raise e unless e.errno == Errno::ECHILD
         end
-      end
+        if critical_services.has_key?(child_pid)
+          child_name = critical_services[child_pid]
+          error("critical child service #{child_name} died, exiting")
+          exit(1)
+        end
+      else
+        ready = IO.select([sigpipe_r, conn.nil? ? serv : conn], [], [], 5)
 
+        if ready.nil?
+          if !conn.nil?
+            warning('control socket connection timeout')
+            conn.close
+            conn = nil
+          end
+          next
+        end
+
+        if ready[0].include?(sigpipe_r)
+          sigpipe_r.read_nonblock(1)
+        end
+
+        if ready[0].include?(serv)
+          conn = serv.accept
+        end
+
+        if ready[0].include?(conn)
+          begin
+            line = conn.readline
+          rescue EOFError
+            warning('received invalid control message')
+          else
+            line.strip!
+            cmd, sep, args = line.partition ':'
+            case cmd
+            when 'vtun-up'
+              iface, *bridge = args.split ':'
+              if bridge.length == 1
+                bridge = bridge[0]
+                run_or_fail('ifconfig', iface, 'up')
+                run_or_fail('brctl', 'addif', bridge, iface)
+                dhclient_pid = spawn('dhclient', '-d', bridge)
+                critical_services[dhclient_pid] = "dhclient_#{bridge}"
+              else
+                warning("received invalid vtun-up command: #{line}")
+              end
+            else
+              warning("received unknown control message: #{line}")
+            end
+          ensure
+            conn.close
+            conn = nil
+          end
+        end
+
+      end
     end
   end
 end
 
 def main
-  run_kwargs = {}
+  ap = AccessPoint.new
 
   GetoptLong.new(
     ['--vtun-address'              , GetoptLong::REQUIRED_ARGUMENT],
@@ -605,14 +620,14 @@ def main
   ).each do |opt, arg|
     case opt
     when '--vtun-address'
-      run_kwargs[:vtun_address] = arg
+      ap.vtun_address = arg
 
     when '--vtun-port'
       unless arg =~ /^[1-9][0-9]*$/
         error("invalid port number (#{arg})")
         exit(1)
       end
-      run_kwargs[:vtun_port] = arg.to_i
+      ap.vtun_port = arg.to_i
 
     when '--help'
       puts <<EOF
@@ -643,21 +658,17 @@ EOF
       exit(0)
 
     when '--network-open'
-      nets = run_kwargs[:nets] = run_kwargs.fetch(:nets, [])
-      nets << {
-        'type'     => 'open',
-        'ssid'     => arg,
-        'password' => '',
-      }
+      ap.add_net('open', arg)
 
     when '--no-puavo'
-      run_kwargs[:use_puavo] = false
+      ap.use_puavo = false
 
     when '--rundir'
-      run_kwargs[:rundir] = arg
+      ap.rundir = arg
 
     when '--ctrlmsg'
-      run_kwargs[:ctrlmsg] = arg
+      ap.send_ctrlmsg(arg)
+      exit(0)
 
     end
   end
@@ -667,7 +678,7 @@ EOF
     exit(1)
   end
 
-  run(run_kwargs)
+  ap.run()
 end
 
 main
