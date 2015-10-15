@@ -606,26 +606,18 @@ def main
   end
 
   GetoptLong.new(
-    ['--vtun-address'              , GetoptLong::REQUIRED_ARGUMENT],
-    ['--vtun-port'                 , GetoptLong::REQUIRED_ARGUMENT],
+    ['--ctrlmsg'                   , GetoptLong::REQUIRED_ARGUMENT],
     ['--help', '-h'                , GetoptLong::NO_ARGUMENT],
     ['--network-open'              , GetoptLong::REQUIRED_ARGUMENT],
     ['--no-puavo'                  , GetoptLong::NO_ARGUMENT],
     ['--rundir'                    , GetoptLong::REQUIRED_ARGUMENT],
-
-    # For internal use only.
-    ['--ctrlmsg', GetoptLong::REQUIRED_ARGUMENT],
+    ['--vtun-address'              , GetoptLong::REQUIRED_ARGUMENT],
+    ['--vtun-port'                 , GetoptLong::REQUIRED_ARGUMENT],
   ).each do |opt, arg|
     case opt
-    when '--vtun-address'
-      ap.vtun_address = arg
-
-    when '--vtun-port'
-      unless arg =~ /^[1-9][0-9]*$/
-        Log.error("invalid port number (#{arg})")
-        exit(1)
-      end
-      ap.vtun_port = arg.to_i
+    when '--ctrlmsg'
+      ap.send_ctrlmsg(arg)
+      exit(0)
 
     when '--help'
       puts <<EOF
@@ -634,12 +626,6 @@ Usage: puavo-wlanap [OPTION]...
 Tunneled WLAN accesspoint.
 
 Options:
-     --vtun-address ADDRESS
-         Set the address of the vtun server, default: #{AccessPoint::VTUN_ADDRESS}
-
-     --vtun-port PORT
-         Set the port of the vtun server, default: #{AccessPoint::VTUN_PORT}
-
  -h, --help
          Display this help and exit.
 
@@ -651,6 +637,12 @@ Options:
 
      --rundir DIR
          Set the runtime directory, default: #{AccessPoint::RUNDIR}
+
+     --vtun-address ADDRESS
+         Set the address of the vtun server, default: #{AccessPoint::VTUN_ADDRESS}
+
+     --vtun-port PORT
+         Set the port of the vtun server, default: #{AccessPoint::VTUN_PORT}
 
 EOF
       exit(0)
@@ -664,9 +656,15 @@ EOF
     when '--rundir'
       ap.rundir = arg
 
-    when '--ctrlmsg'
-      ap.send_ctrlmsg(arg)
-      exit(0)
+    when '--vtun-address'
+      ap.vtun_address = arg
+
+    when '--vtun-port'
+      unless arg =~ /^[1-9][0-9]*$/
+        Log.error("invalid port number (#{arg})")
+        exit(1)
+      end
+      ap.vtun_port = arg.to_i
 
     end
   end
