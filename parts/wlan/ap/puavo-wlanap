@@ -47,19 +47,6 @@ def error(msg)
   log(:ERROR, msg)
 end
 
-begin
-  require 'puavo/etc'
-  require 'puavo/rest-client'
-rescue LoadError => e
-  # Puavo-integration requires aforementioned modules, but puavo-wlanap
-  # can still operate without Puavo. This has the same effect as
-  # --no-puavo command line option.
-  USE_PUAVO = false
-  warning("Puavo integration is disabled: #{e}")
-else
-  USE_PUAVO = true
-end
-
 THIS_SCRIPT = Pathname.new($0).realpath
 
 module Dot11
@@ -449,7 +436,7 @@ class AccessPoint
   def initialize()
     @nets         = []
     @rundir       = RUNDIR
-    @use_puavo    = USE_PUAVO
+    @use_puavo    = true
     @vtun_address = VTUN_ADDRESS
     @vtun_port    = VTUN_PORT
   end
@@ -606,6 +593,17 @@ end
 
 def main
   ap = AccessPoint.new
+
+  begin
+    require 'puavo/etc'
+    require 'puavo/rest-client'
+  rescue LoadError => e
+    # Puavo-integration requires aforementioned modules, but puavo-wlanap
+    # can still operate without Puavo. This has the same effect as
+    # --no-puavo command line option.
+    ap.use_puavo = false
+    warning("Puavo integration is disabled: #{e}")
+  end
 
   GetoptLong.new(
     ['--vtun-address'              , GetoptLong::REQUIRED_ARGUMENT],
