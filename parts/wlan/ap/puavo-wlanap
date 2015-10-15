@@ -209,15 +209,6 @@ end
 # The real path of this script.
 THIS_SCRIPT  = Pathname.new($0).realpath
 
-# Default runtime directory, use --rundir to override.
-RUNDIR       = '/run/puavo-wlanap'
-
-# Default vtun server address, use --vtun-address to override.
-VTUN_ADDRESS = 'wlangw'
-
-# Default vtun server port, use --vtun-port to override.
-VTUN_PORT    = 45045
-
 HOSTAPD_CONF_TEMPLATE = <<'EOF'
 ## PHY-specific options ##
 interface=<%= phy[:iface] %>
@@ -438,6 +429,10 @@ class AccessPoint
   attr_accessor :vtun_address
   attr_accessor :vtun_port
 
+  RUNDIR       = '/run/puavo-wlanap'
+  VTUN_ADDRESS = 'wlangw'
+  VTUN_PORT    = 45045
+
   def initialize()
     @nets         = []
     @rundir       = RUNDIR
@@ -640,10 +635,10 @@ Tunneled WLAN accesspoint.
 
 Options:
      --vtun-address ADDRESS
-         Set the address of the vtun server, default: #{VTUN_ADDRESS}
+         Set the address of the vtun server, default: #{AccessPoint::VTUN_ADDRESS}
 
      --vtun-port PORT
-         Set the port of the vtun server, default: #{VTUN_PORT}
+         Set the port of the vtun server, default: #{AccessPoint::VTUN_PORT}
 
  -h, --help
          Display this help and exit.
@@ -655,7 +650,7 @@ Options:
          Disable all Puavo-extensions.
 
      --rundir DIR
-         Set the runtime directory, default: #{RUNDIR}
+         Set the runtime directory, default: #{AccessPoint::RUNDIR}
 
 EOF
       exit(0)
