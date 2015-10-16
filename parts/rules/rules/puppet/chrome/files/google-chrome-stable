@@ -7,5 +7,13 @@ homepage_args() {
   fi
 }
 
-exec /opt/google/chrome/google-chrome --no-default-browser-check \
-       $(homepage_args) "$@"
+default_args="--new-window --no-default-browser-check"
+
+# we do not try to pass --homepage args when we get command line options,
+# because it is likely we have an url and google-chrome will open also
+# --homepage args to tabs... we do not want to open all of those.
+if [ $# -gt 0 ]; then
+  exec /opt/google/chrome/google-chrome $default_args "$@"
+else
+  exec /opt/google/chrome/google-chrome $default_args $(homepage_args)
+fi
