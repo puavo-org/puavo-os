@@ -1,19 +1,16 @@
 #!/bin/sh
 
-homepage_args() {
-  if [ -n "$HOMEPAGE" ]; then
-    echo "$HOMEPAGE" \
-      | awk -F\| '{ for (i = 1; i <= NF; i++) { print "--homepage", $i } }'
-  fi
+browser_running() {
+  pgrep -f -U "$USER" '^/opt/google/chrome/chrome' >/dev/null
 }
 
-default_args="--new-window --no-default-browser-check"
+homepage_args() { echo "$HOMEPAGE" | sed 's/|/ /g'; }
 
-# we do not try to pass --homepage args when we get command line options,
-# because it is likely we have an url and google-chrome will open also
-# --homepage args to tabs... we do not want to open all of those.
-if [ $# -gt 0 ]; then
-  exec /opt/google/chrome/google-chrome $default_args "$@"
+default_args="--no-default-browser-check"
+
+if ! browser_running || [ $# -eq 0 ]; then
+  exec /opt/google/chrome/google-chrome --new-window $default_args \
+                                        $(homepage_args) "$@"
 else
-  exec /opt/google/chrome/google-chrome $default_args $(homepage_args)
+  exec /opt/google/chrome/google-chrome $default_args "$@"
 fi
