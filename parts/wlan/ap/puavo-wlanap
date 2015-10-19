@@ -545,7 +545,7 @@ class AccessPoint
         ready = IO.select([sigpipe_r, conn.nil? ? serv : conn], [], [], 5)
 
         if ready.nil?
-          if !conn.nil?
+          unless conn.nil?
             Log.warning('control socket connection timeout')
             conn.close
             conn = nil
