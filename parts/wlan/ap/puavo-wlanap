@@ -536,16 +536,7 @@ class AccessPoint
             cmd, sep, args = line.partition ':'
             case cmd
             when 'vtun-up'
-              iface, *bridge = args.split ':'
-              if bridge.length == 1
-                bridge = bridge[0]
-                run_or_fail('ifconfig', iface, 'up')
-                run_or_fail('brctl', 'addif', bridge, iface)
-                dhclient_pid = spawn('dhclient', '-d', bridge)
-                @services[dhclient_pid] = "dhclient_#{bridge}"
-              else
-                Log.warning("received invalid vtun-up command: #{line}")
-              end
+              handle_ctrlmsg_vtun_up(args)
             else
               Log.warning("received unknown control message: #{line}")
             end
@@ -559,6 +550,19 @@ class AccessPoint
   end
 
   private
+
+  def handle_ctrlmsg_vtun_up(args)
+    iface, *bridge = args.split ':'
+    if bridge.length == 1
+      bridge = bridge[0]
+      run_or_fail('ifconfig', iface, 'up')
+      run_or_fail('brctl', 'addif', bridge, iface)
+      dhclient_pid = spawn('dhclient', '-d', bridge)
+      @services[dhclient_pid] = "dhclient_#{bridge}"
+    else
+      Log.warning("received invalid vtun-up command: #{line}")
+    end
+  end
 
   def start_services()
     @bss_list.each do |bss|
