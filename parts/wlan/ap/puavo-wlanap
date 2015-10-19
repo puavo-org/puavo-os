@@ -558,6 +558,8 @@ class AccessPoint
     end
   end
 
+  private
+
   def start_services()
     @bss_list.each do |bss|
       run_or_fail('brctl', 'addbr', bss[:bridge])
@@ -587,6 +589,7 @@ class AccessPoint
       @services[hostapd_pid] = hostapd_name
     end
   end
+
 end
 
 def main
