@@ -446,8 +446,8 @@ class AccessPoint
 
     @phy_list.concat(get_phy_list)
     if @phy_list.empty?
-      Log.error('no suitable physical interfaces available, aborting')
-      exit(1)
+      Log.error('no suitable physical interfaces available')
+      return 1
     end
 
     if @use_puavo
@@ -463,8 +463,8 @@ class AccessPoint
     end
 
     if @nets.empty?
-      Log.error('no networks defined, aborting')
-      exit(1)
+      Log.error('no networks defined')
+      return 1
     end
 
     @bss_list.concat(get_bss_list(@nets))
@@ -493,8 +493,8 @@ class AccessPoint
       signal = sigqueue.pop
       case signal
       when :INT, :QUIT, :TERM
-        Log.error("received fatal signal #{signal}, exiting")
-        exit(1)
+        Log.error("received fatal signal #{signal}")
+        return 1
       when :CHLD
         begin
           child_pid = Process.wait(0, Process::WNOHANG)
@@ -503,8 +503,8 @@ class AccessPoint
         end
         if @services.has_key?(child_pid)
           child_name = @services[child_pid]
-          Log.error("child service #{child_name} died, exiting")
-          exit(1)
+          Log.error("child service #{child_name} died")
+          return 1
         end
       else
         ready = IO.select([sigpipe_r, conn.nil? ? serv : conn], [], [], 5)
@@ -607,7 +607,7 @@ def main
     case opt
     when '--ctrlmsg'
       ap.send_ctrlmsg(arg)
-      exit(0)
+      return 0
 
     when '--help'
       puts <<EOF
@@ -635,7 +635,7 @@ Options:
          Set the port of the vtun server, default: #{AccessPoint::VTUN_PORT}
 
 EOF
-      exit(0)
+      return 0
 
     when '--network-open'
       ap.add_net('open', arg)
@@ -652,7 +652,7 @@ EOF
     when '--vtun-port'
       unless arg =~ /^[1-9][0-9]*$/
         Log.error("invalid port number (#{arg})")
-        exit(1)
+        return 1
       end
       ap.vtun_port = arg.to_i
 
@@ -661,7 +661,7 @@ EOF
 
   if ARGV.length != 0
     Log.error("invalid number of arguments (#{ARGV.length}), expected 0")
-    exit(1)
+    return 1
   end
 
   if ap.use_puavo
@@ -680,4 +680,4 @@ EOF
   ap.run()
 end
 
-main
+exit(main())
