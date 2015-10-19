@@ -10,7 +10,7 @@ default_args="--no-default-browser-check"
 
 if ! browser_running || [ $# -eq 0 ]; then
   exec /opt/google/chrome/google-chrome --new-window $default_args \
-                                        $(homepage_args) "$@"
+                                        "$@" $(homepage_args)
 else
   exec /opt/google/chrome/google-chrome $default_args "$@"
 fi
