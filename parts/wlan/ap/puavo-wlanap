@@ -393,39 +393,6 @@ def write_vtund_conf(bss_list, rundir)
   end
 end
 
-def start_services(critical_services, phy_list, bss_list, rundir,
-                   vtun_address, vtun_port)
-  bss_list.each do |bss|
-    run_or_fail('brctl', 'addbr', bss[:bridge])
-    run_or_fail('brctl', 'setfd', bss[:bridge], '0')
-    run_or_fail('ifconfig', bss[:bridge], 'up')
-
-    vtund_name = "vtund_#{bss[:bridge]}"
-    vtund_conffile = File.join(rundir, "#{vtund_name}.conf")
-    vtund_pid = spawn('vtund', '-n', '-P', vtun_port.to_s,
-                      '-f', vtund_conffile,
-                      'puavo-wlanap', vtun_address)
-    critical_services[vtund_pid] = vtund_name
-  end
-
-  phy_list.each do |phy|
-
-    # Try to disable power saving, because it seems to cause flaky
-    # connection quality in some scenarios.
-    system('iw', 'dev', phy[:iface], 'set', 'power_save', 'off')
-
-    unless phy[:txpower].nil?
-      system('iwconfig', phy[:iface], 'txpower', phy[:txpower].to_s)
-    end
-
-    hostapd_name = "hostapd_#{phy[:iface]}"
-    hostapd_pidfile = File.join(rundir, "#{hostapd_name}.pid")
-    hostapd_conffile = File.join(rundir, "#{hostapd_name}.conf")
-    hostapd_pid = spawn('hostapd', '-P', hostapd_pidfile, hostapd_conffile)
-    critical_services[hostapd_pid] = hostapd_name
-  end
-end
-
 class AccessPoint
 
   attr_accessor :rundir
@@ -443,6 +410,9 @@ class AccessPoint
     @use_puavo    = true
     @vtun_address = VTUN_ADDRESS
     @vtun_port    = VTUN_PORT
+    @services     = {}
+    @phy_list     = []
+    @bss_list     = []
   end
 
   def add_net(type, ssid, password='')
@@ -458,15 +428,12 @@ class AccessPoint
   end
 
   def run()
-    critical_services = {}
-    phy_list          = []
-    bss_list          = []
-    conf              = {}
+    conf = {}
 
     Signal.trap('EXIT') do
       Process.kill('-SIGTERM', 0)
 
-      bss_list.each do |bss|
+      @bss_list.each do |bss|
         # Ignore errors, we are already exiting.
         system('ifconfig', bss[:bridge], 'down')
         system('brctl', 'delbr', bss[:bridge])
@@ -477,8 +444,8 @@ class AccessPoint
 
     FileUtils.mkdir_p(@rundir)
 
-    phy_list.concat(get_phy_list)
-    if phy_list.empty?
+    @phy_list.concat(get_phy_list)
+    if @phy_list.empty?
       Log.error('no suitable physical interfaces available, aborting')
       exit(1)
     end
@@ -488,7 +455,7 @@ class AccessPoint
       @nets.concat(PuavoAPI.get_nets)
     end
 
-    phy_list.each do |phy|
+    @phy_list.each do |phy|
       phy[:txpower] = conf[:txpower]
       if Dot11::CHANNELS_5G.include? phy[:channel]
         phy[:txpower] = conf.fetch(:txpower5, phy[:txpower])
@@ -500,10 +467,10 @@ class AccessPoint
       exit(1)
     end
 
-    bss_list.concat(get_bss_list(@nets))
+    @bss_list.concat(get_bss_list(@nets))
 
-    write_hostapd_conf(phy_list, bss_list, @rundir)
-    write_vtund_conf(bss_list, @rundir)
+    write_hostapd_conf(@phy_list, @bss_list, @rundir)
+    write_vtund_conf(@bss_list, @rundir)
 
     [:HUP, :USR1, :USR2].each { |s| Signal.trap(s, 'SIG_IGN') }
 
@@ -520,9 +487,7 @@ class AccessPoint
     serv = UNIXServer.new(File.join(@rundir, 'ctrlsocket'))
     conn = nil
 
-    start_services(critical_services,
-                   phy_list, bss_list, @rundir,
-                   @vtun_address, @vtun_port)
+    start_services()
 
     loop do
       signal = sigqueue.pop
@@ -536,9 +501,9 @@ class AccessPoint
         rescue SystemCallError => e
           raise e unless e.errno == Errno::ECHILD
         end
-        if critical_services.has_key?(child_pid)
-          child_name = critical_services[child_pid]
-          Log.error("critical child service #{child_name} died, exiting")
+        if @services.has_key?(child_pid)
+          child_name = @services[child_pid]
+          Log.error("child service #{child_name} died, exiting")
           exit(1)
         end
       else
@@ -577,7 +542,7 @@ class AccessPoint
                 run_or_fail('ifconfig', iface, 'up')
                 run_or_fail('brctl', 'addif', bridge, iface)
                 dhclient_pid = spawn('dhclient', '-d', bridge)
-                critical_services[dhclient_pid] = "dhclient_#{bridge}"
+                @services[dhclient_pid] = "dhclient_#{bridge}"
               else
                 Log.warning("received invalid vtun-up command: #{line}")
               end
@@ -589,8 +554,37 @@ class AccessPoint
             conn = nil
           end
         end
-
       end
+    end
+  end
+
+  def start_services()
+    @bss_list.each do |bss|
+      run_or_fail('brctl', 'addbr', bss[:bridge])
+      run_or_fail('brctl', 'setfd', bss[:bridge], '0')
+      run_or_fail('ifconfig', bss[:bridge], 'up')
+      vtund_name = "vtund_#{bss[:bridge]}"
+      vtund_conffile = File.join(@rundir, "#{vtund_name}.conf")
+      vtund_pid = spawn('vtund', '-n', '-P', @vtun_port.to_s,
+                        '-f', vtund_conffile,
+                        'puavo-wlanap', @vtun_address)
+      @services[vtund_pid] = vtund_name
+    end
+
+    @phy_list.each do |phy|
+      # Try to disable power saving, because it seems to cause flaky
+      # connection quality in some scenarios.
+      system('iw', 'dev', phy[:iface], 'set', 'power_save', 'off')
+
+      unless phy[:txpower].nil?
+        system('iwconfig', phy[:iface], 'txpower', phy[:txpower].to_s)
+      end
+
+      hostapd_name = "hostapd_#{phy[:iface]}"
+      hostapd_pidfile = File.join(@rundir, "#{hostapd_name}.pid")
+      hostapd_conffile = File.join(@rundir, "#{hostapd_name}.conf")
+      hostapd_pid = spawn('hostapd', '-P', hostapd_pidfile, hostapd_conffile)
+      @services[hostapd_pid] = hostapd_name
     end
   end
 end
