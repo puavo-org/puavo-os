@@ -486,6 +486,7 @@ class AccessPoint
 
     serv = UNIXServer.new(File.join(@rundir, 'ctrlsocket'))
     conn = nil
+    conn_time = nil
 
     start_services()
 
@@ -507,13 +508,15 @@ class AccessPoint
           return 1
         end
       else
-        ready = IO.select([sigpipe_r, conn.nil? ? serv : conn], [], [], 5)
+        ready = IO.select([sigpipe_r, conn.nil? ? serv : conn], [], [],
+                          conn.nil? ? nil : max(0, 5 - (Time.now - conn_time)))
 
         if ready.nil?
-          unless conn.nil?
+          if conn && Time.now - conn_time > 5
             Log.warning('control socket connection timeout')
             conn.close
             conn = nil
+            conn_time = nil
           end
           next
         end
@@ -524,6 +527,7 @@ class AccessPoint
 
         if ready[0].include?(serv)
           conn = serv.accept
+          conn_time = Time.now
         end
 
         if ready[0].include?(conn)
@@ -536,6 +540,7 @@ class AccessPoint
           ensure
             conn.close
             conn = nil
+            conn_time = nil
           end
         end
       end
