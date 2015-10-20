@@ -532,14 +532,7 @@ class AccessPoint
           rescue EOFError
             Log.warning('received invalid control message')
           else
-            line.strip!
-            cmd, sep, args = line.partition ':'
-            case cmd
-            when 'vtun-up'
-              handle_ctrlmsg_vtun_up(args)
-            else
-              Log.warning("received unknown control message: #{line}")
-            end
+            handle_ctrlmsg(line)
           ensure
             conn.close
             conn = nil
@@ -550,6 +543,17 @@ class AccessPoint
   end
 
   private
+
+  def handle_ctrlmsg(line)
+    line.strip!
+    cmd, sep, args = line.partition ':'
+    case cmd
+    when 'vtun-up'
+      handle_ctrlmsg_vtun_up(args)
+    else
+      Log.warning("received unknown control message: #{line}")
+    end
+  end
 
   def handle_ctrlmsg_vtun_up(args)
     iface, *bridge = args.split ':'
