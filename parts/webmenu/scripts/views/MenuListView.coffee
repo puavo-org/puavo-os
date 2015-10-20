@@ -5,6 +5,7 @@ Navigation = require "../utils/Navigation.coffee"
 MenuItemView = require "./MenuItemView.coffee"
 FeedbackModel = require "../models/FeedbackModel.coffee"
 Feedback = require "./Feedback.coffee"
+FolderTitle = require "./FolderTitle.coffee"
 
 class MenuListView extends ViewMaster
 
@@ -24,6 +25,9 @@ class MenuListView extends ViewMaster
 
         @initial = @model
         @setCurrent()
+
+        @folderTitle = new FolderTitle model: @model
+        @setView ".folder-title-container", @folderTitle
 
         @navigation = new Navigation @getMenuItemViews(), @itemCols()
 
@@ -54,6 +58,9 @@ class MenuListView extends ViewMaster
             @navigation.deactivate()
 
         @listenTo this, "open-menu", (model) =>
+            # Rebroadcast message to the sibling title
+            @folderTitle.broadcast("open-menu", model)
+
             @model = model
             @setCurrent()
             @refreshViews()

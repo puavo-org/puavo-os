@@ -6,7 +6,6 @@ Application = require "../Application.coffee"
 Favorites = require "./Favorites.coffee"
 Lightbox = require "./Lightbox.coffee"
 MenuItemConfirmView = require "./MenuItemConfirmView.coffee"
-Breadcrumbs = require "./Breadcrumbs.coffee"
 MenuListView = require "./MenuListView.coffee"
 SidebarView = require "./SidebarView.coffee"
 Search = require "./Search.coffee"
@@ -41,8 +40,6 @@ class MenuLayout extends ViewMaster
         @hostnameView = new HostnameView model: @config
         @setView ".search-container", @search
 
-        @breadcrumbs = new Breadcrumbs model: opts.initialMenu
-        @setView ".breadcrumbs-container", @breadcrumbs
 
         @sidebarView = new SidebarView(opts)
         @setView ".sidebar-container", @sidebarView
@@ -51,14 +48,6 @@ class MenuLayout extends ViewMaster
             collection: @allItems
             config: @config
         @setView ".favorites-container", @favorites
-
-        @listenTo this, "open-menu", (model, sender) =>
-            # Update MenuListView when user navigates from breadcrumbs
-            if sender is @breadcrumbs
-                @menuListView.broadcast("open-menu", model)
-            # Update breadcrums when user navigates from menu tree
-            if sender isnt @breadcrumbs
-                @breadcrumbs.broadcast("open-menu", model)
 
         @listenTo this, "open-confirm", (model) =>
             @displayViewInLightbox new MenuItemConfirmView
@@ -81,7 +70,6 @@ class MenuLayout extends ViewMaster
             @setView ".favorites-container", @favorites
             @hostnameView.detach()
             @setView ".search-container", @search
-            @setView ".breadcrumbs-container", @breadcrumbs
             @removeLightbox()
             @refreshViews()
 
@@ -89,10 +77,8 @@ class MenuLayout extends ViewMaster
             @favorites.detach()
             @search.detach()
             @setView ".search-container", @hostnameView
-            @breadcrumbs.detach()
             @menuListView.broadcast("open-logout-view")
             @$(".favorites-container").empty()
-            @$(".breadcrumbs-container").empty()
             @refreshViews()
 
 

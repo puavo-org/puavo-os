@@ -100,12 +100,3 @@ describe "MenuLayout", ->
             expect(layout.$(".bb-menu-list .bb-menu-item")).to.not.contain('Subitem')
             layout.$(".bb-menu-item.type-menu").trigger("click")
             expect(layout.$(".bb-menu-list .bb-menu-item")).to.contain('Subitem')
-
-        it "can go back using breadcrumbs", ->
-            layout.$(".bb-menu-item.type-menu").trigger("click")
-            layout.$(".bb-breadcrumbs li a").filter( (i, el) ->
-                el.innerText.trim() is "Top"
-            ).trigger("click")
-            expect(layout.$(".bb-menu-list .bb-menu-item")).to.not.contain('Subitem')
-
-
