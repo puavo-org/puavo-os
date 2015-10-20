@@ -526,8 +526,7 @@ class AccessPoint
         end
 
         if ready[0].include?(serv)
-          @conn = serv.accept
-          @conn_time = Time.now
+          accept_conn(serv)
         end
 
         if ready[0].include?(@conn)
@@ -538,6 +537,11 @@ class AccessPoint
   end
 
   private
+
+  def accept_conn(serv)
+    @conn = serv.accept
+    @conn_time = Time.now
+  end
 
   def handle_conn
     if @conn.eof?
