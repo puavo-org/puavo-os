@@ -564,7 +564,7 @@ class AccessPoint
       dhclient_pid = spawn('dhclient', '-d', bridge)
       @services[dhclient_pid] = "dhclient_#{bridge}"
     else
-      Log.warning("received invalid vtun-up command: #{line}")
+      Log.warning("received invalid vtun-up arguments #{args}")
     end
   end
 
