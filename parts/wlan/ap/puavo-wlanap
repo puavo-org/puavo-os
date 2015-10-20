@@ -531,23 +531,25 @@ class AccessPoint
         end
 
         if ready[0].include?(@conn)
-          begin
-            line = @conn.readline
-          rescue EOFError
-            Log.warning('received invalid control message')
-          else
-            handle_ctrlmsg(line)
-          ensure
-            @conn.close
-            @conn = nil
-            @conn_time = nil
-          end
+          handle_conn
         end
       end
     end
   end
 
   private
+
+  def handle_conn
+    if @conn.eof?
+      Log.warning('received invalid control message')
+    else
+      handle_ctrlmsg(@conn.readline)
+    end
+  ensure
+    @conn.close
+    @conn = nil
+    @conn_time = nil
+  end
 
   def handle_ctrlmsg(line)
     line.strip!
