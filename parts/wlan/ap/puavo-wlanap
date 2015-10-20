@@ -405,6 +405,8 @@ class AccessPoint
   VTUN_PORT    = 45045
 
   def initialize()
+    @conn         = nil
+    @conn_time    = nil
     @nets         = []
     @rundir       = RUNDIR
     @use_puavo    = true
@@ -485,8 +487,6 @@ class AccessPoint
     end
 
     serv = UNIXServer.new(File.join(@rundir, 'ctrlsocket'))
-    conn = nil
-    conn_time = nil
 
     start_services()
 
@@ -508,15 +508,15 @@ class AccessPoint
           return 1
         end
       else
-        ready = IO.select([selfpipe_r, conn.nil? ? serv : conn], [], [],
-                          conn.nil? ? nil : max(0, 5 - (Time.now - conn_time)))
+        ready = IO.select([selfpipe_r, @conn.nil? ? serv : @conn], [], [],
+                          @conn.nil? ? nil : max(0, 5 - (Time.now - @conn_time)))
 
         if ready.nil?
-          if conn && Time.now - conn_time > 5
+          if @conn && Time.now - @conn_time > 5
             Log.warning('control socket connection timeout')
-            conn.close
-            conn = nil
-            conn_time = nil
+            @conn.close
+            @conn = nil
+            @conn_time = nil
           end
           next
         end
@@ -526,21 +526,21 @@ class AccessPoint
         end
 
         if ready[0].include?(serv)
-          conn = serv.accept
-          conn_time = Time.now
+          @conn = serv.accept
+          @conn_time = Time.now
         end
 
-        if ready[0].include?(conn)
+        if ready[0].include?(@conn)
           begin
-            line = conn.readline
+            line = @conn.readline
           rescue EOFError
             Log.warning('received invalid control message')
           else
             handle_ctrlmsg(line)
           ensure
-            conn.close
-            conn = nil
-            conn_time = nil
+            @conn.close
+            @conn = nil
+            @conn_time = nil
           end
         end
       end
