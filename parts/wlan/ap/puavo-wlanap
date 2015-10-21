@@ -400,17 +400,17 @@ class AccessPoint
   VTUN_PORT    = 45045
 
   def initialize(kwargs = {})
+    @bss_list      = []
     @ctrlconn      = nil
     @ctrlconn_time = nil
     @ctrlserv      = nil
     @nets          = kwargs.fetch(:nets, [])
-    @rundir        = kwargs.fetch(:rundir, RUNDIR)
     @no_puavo      = kwargs.fetch(:no_puavo, false)
+    @phy_list      = []
+    @rundir        = kwargs.fetch(:rundir, RUNDIR)
+    @services      = {}
     @vtun_address  = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
     @vtun_port     = kwargs.fetch(:vtun_port, VTUN_PORT)
-    @services      = {}
-    @phy_list      = []
-    @bss_list      = []
   end
 
   def run
