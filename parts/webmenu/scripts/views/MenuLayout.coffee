@@ -9,6 +9,7 @@ MenuItemConfirmView = require "./MenuItemConfirmView.coffee"
 MenuListView = require "./MenuListView.coffee"
 SidebarView = require "./SidebarView.coffee"
 Search = require "./Search.coffee"
+Tabs = require "./Tabs.coffee"
 
 class HostnameView extends ViewMaster
     template: (context) ->
@@ -30,7 +31,7 @@ class MenuLayout extends ViewMaster
         @lightbox = null
 
         @menuListView = new MenuListView
-            model: opts.initialMenu
+            model: opts.initialMenu.items.at(1)
             collection: opts.allItems
             config: opts.config
 
@@ -40,6 +41,9 @@ class MenuLayout extends ViewMaster
         @hostnameView = new HostnameView model: @config
         @setView ".search-container", @search
 
+        @tabs = new Tabs
+            collection: opts.initialMenu.items
+        @setView ".tabs-container", @tabs
 
         @sidebarView = new SidebarView(opts)
         @setView ".sidebar-container", @sidebarView
@@ -64,6 +68,9 @@ class MenuLayout extends ViewMaster
         # Connect search events to MenuListView
         @listenTo this, "search", (searchString) =>
             @menuListView.broadcast("search", searchString)
+
+        @listenTo this, "select-tab", (model) =>
+            @menuListView.broadcast("open-menu", model)
 
 
         @listenTo this, "open-root-view", =>
