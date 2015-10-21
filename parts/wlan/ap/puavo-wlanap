@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby1.9.1
 # coding: utf-8
 
-# = Puavo's Tunneled WLAN Accesspoint
+# = Puavo's Tunneled WLAN Access Point
 #
 # Author    :: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
 # Copyright :: Copyright (C) 2015 Opinsys Oy
@@ -634,7 +634,7 @@ def main
       puts <<EOF
 Usage: puavo-wlanap [OPTION]...
 
-Tunneled WLAN accesspoint.
+Puavo's Tunneled WLAN Access Point.
 
 Options:
  -h, --help
