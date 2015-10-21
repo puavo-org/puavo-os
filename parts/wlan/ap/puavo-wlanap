@@ -483,11 +483,7 @@ class AccessPoint
         return 1
 
       when :CHLD
-        begin
-          child_pid = Process.wait(0, Process::WNOHANG)
-        rescue SystemCallError => e
-          raise e unless e.errno == Errno::ECHILD
-        end
+        child_pid = Process.wait(0, Process::WNOHANG)
         if @services.has_key?(child_pid)
           child_name = @services[child_pid]
           Log.error("child service #{child_name} died")
