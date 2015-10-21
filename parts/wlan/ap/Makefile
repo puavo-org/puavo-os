@@ -5,6 +5,6 @@ all:
 clean:
 
 install:
-	install -D -m 755 -t '$(DESTDIR)$(prefix)/sbin' puavo-wlanap
+	install -D -m 755 puavo-wlanap '$(DESTDIR)$(prefix)/sbin/puavo-wlanap'
 
 .PHONY: all clean install
