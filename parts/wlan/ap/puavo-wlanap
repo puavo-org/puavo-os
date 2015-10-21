@@ -120,7 +120,7 @@ module Dot11
       io.gets =~ /^.* IEEE 802.11([a-z]+).*$/
       break $1
     end
-    raise 'failed to query supported bands' unless $?.success?
+    fail 'failed to query supported bands' unless $?.success?
 
     band = 0
     band |= Dot11::BAND_5G if hw_mode.include?('a')
@@ -157,12 +157,12 @@ module Dot11
     is_ht20sgi_capab = IO.popen(['iw', phyname, 'info']) do |io|
       !io.grep(/^\s+RX HT20 SGI.*$/).empty?
     end
-    $?.success? or raise 'failed to query HT20 SGI capability'
+    $?.success? or fail 'failed to query HT20 SGI capability'
 
     is_ht40sgi_capab = IO.popen(['iw', phyname, 'info']) do |io|
       !io.grep(/^\s+RX HT40 SGI.*$/).empty?
     end
-    $?.success? or raise 'failed to query HT40 SGI capability'
+    $?.success? or fail 'failed to query HT40 SGI capability'
 
     case channel
     when 1, 6, 11
@@ -172,7 +172,7 @@ module Dot11
     when 40, 48
       '[HT40-]' + (is_ht40sgi_capab ? '[SHORT-GI-40]' : '')
     else
-      raise "unsupported channel #{channel}"
+      fail "unsupported channel #{channel}"
     end + (is_ht20sgi_capab ? '[SHORT-GI-20]' : '')
   end
 
@@ -198,7 +198,7 @@ module Dot11
         end
       end
     end
-    $?.success? or raise "failed to scan with interface #{iface}"
+    $?.success? or fail "failed to scan with interface #{iface}"
 
     # Return channels in ascending signal level order.
     Hash[results.sort_by { |channel, signal_level| signal_level }].keys
@@ -324,7 +324,7 @@ end
 
 def run_or_fail(cmd, *args)
   system(cmd, *args)
-  $?.success? or raise "command '%s' failed" % ([cmd] + args).join(' ')
+  $?.success? or fail "command '%s' failed" % ([cmd] + args).join(' ')
 end
 
 def fill_phy_list(phy_list, band)
