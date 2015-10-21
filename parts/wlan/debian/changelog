@@ -1,3 +1,12 @@
+puavo-wlan (0.10.2) trusty; urgency=medium
+
+  * New release
+  * ap: fix udev rules to try starting before restarting
+  * ap: limit udev rules to just wlan devtypes
+  * Git(6e5c5b1202aee025390f77ada9fbd2e43829dec9)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 21 Oct 2015 16:57:18 +0300
+
 puavo-wlan (0.10.1) trusty; urgency=medium
 
   * New release
