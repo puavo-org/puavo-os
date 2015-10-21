@@ -1,3 +1,170 @@
+puavo-wlan (0.10.0) trusty; urgency=medium
+
+  * New release
+  * ap: split start_services() to start_vtunds() and start_hostapds()
+  * ap: inline nets to bss list conversion
+  * ap: make conf file writers to AccessPoint's private methods
+  * ap: simplify sigchld handler
+  * ap: write to the control socket inside block
+  * ap: sort instance variable definitions alphabetically
+  * ap: create ap instance only after all args have been parsed
+  * ap: simplify upstart job
+  * ap: unify description
+  * ap: fix udev rules
+  * ap: fix make install
+  * ap: remove useless files
+  * ap: formatting and renames
+  * ap: use fail instead of raise
+  * ap: replace pythonism with rubyism
+  * ap: move connection closing to a separate private method
+  * ap: move connection establishment to a separate private method
+  * ap: move connection handling to a separate private method
+  * ap: make control socket connection an instance variable
+  * ap: rename sigpipe => selfpipe to avoid confusion with SIGPIPE
+  * ap: fix control socket timeout
+  * ap: fix invalid variable reference
+  * ap: move ctrlmsg dispatching to a separate private method
+  * ap: handle vtun-up control message in a private method
+  * ap: call exit() only from the top-level
+  * ap: declare private methods
+  * ap: make start_services() an instance method of AccessPoint
+  * ap: prefer unless over if ! in simple statements
+  * ap: move all Puavo-specific methods to a separate module
+  * ap: require Puavo modules after parsing command line options
+  * ap: sort command line options alphabetically
+  * ap: move acces point -specific constant to class AccessPoint
+  * ap: move all constants close to each other
+  * ap: move all logging methods to Log module
+  * ap: require recommended Puavo modules in main
+  * ap: reformat Makefile
+  * ap: begin encapsulating operation logic inside AccessPoint class
+  * ap: use HT40 SGI capability if hw supports it
+  * ap: remove old txpower setting cruft
+  * ap: control txpowers via Puavo tags
+  * ap: use HT20 SGI capability if hw supports it
+  * ap: exit with error if not networks defined
+  * ap: exit with error if no interfaces found
+  * ap: move use_puavo conditional one step higher
+  * ap: rename :psk => :password
+  * ap: print warning if Puavo integration is disabled due to LoadError
+  * ap: fix fatal signal matching
+  * ap: notify mainloop via sigpipe *after* signal has been pushed to
+    sigqueue
+  * Add mapper back to subdir list
+  * ap: log the name of critical service when it dies
+  * ap: no need for black magic anymore
+  * ap: use error() and warning() to log all messages
+  * ap: add WARNING prefix to control socket timeout warning message
+  * ap: do not run vtun-down commands
+  * ap: show the default vtun address and port in --help
+  * ap: remove unused function
+  * Remove ap-dnsproxy and ap-mdns
+  * ap: add dhclient to dependencies
+  * ap: remove all old cruft
+  * ap: fix trivial function call error
+  * ap: do not use then keyword
+  * ap: trivial refactoring
+  * ap: add address mask quirks for models 168c0029 and 168c002e
+  * ap: fix HT capability deduction
+  * ap: get rid of single interface backhaul option
+  * ap: fix invalid variable reference
+  * ap: trivial formatting
+  * ap: fix typo
+  * ap: trivial refactoring
+  * ap: spawn dhclient also when vtun backhaul is used
+  * ap: control messages are oneliners
+  * ap: fix hostapd conf templating
+  * ap: validate --backhaul arg
+  * ap: move all 802.11-specific stuff to Dot11 module
+  * ap: just few renames
+  * ap: fix vtund to run puavo-wlanap with same rundir on up/down events
+  * ap: make the list of supported drivers a global constant
+  * ap: move common conf file writing to a separate method
+  * ap: write conf files with 0640 permissions
+  * ap: just formatting fixes
+  * ap: rename --notify => --ctrlmsg
+  * ap: send notifications via ctrlsocket
+  * ap: receive control message via unix domain socket
+  * ap: ignore SIGHUP, SIGUSR1 and SIGUSR2
+  * ap: make signal handling much more robust
+  * ap: ignore SIGCHLD after a critical service has died
+  * ap: simplify process group termination
+  * ap: ignore SIGTERM before killing the whole process group
+  * ap: use generic --notify instead of --vtun-up/--vtun-down options
+  * ap: update USE_PUAVO comments
+  * ap: strip useless DEFAULT_ -prefix from global constants
+  * ap: streamline backhaul configuration
+  * ap: add function for getting the default interface
+  * ap: add --backhaul option
+  * ap: disable Puavo-integration if Puavo modules are not available
+  * ap: add --network-open option to add an open network
+  * ap: fix critical service pid tracking
+  * ap: add --no-puavo option to disable all communication with Puavo
+  * ap: fix kwargs handling
+  * ap: serve forever
+  * ap: burn bridges on exit
+  * ap: add simple handlers for --vtun-up/down options
+  * ap: exit if one of the critical child services dies
+  * ap: add function for starting all services
+  * ap: kill children on exit
+  * ap: fix network conf password reference
+  * ap: fix off-by-one in hexdigest15()
+  * ap: fix vtun up/down commands
+  * ap: convert ifup() to generic run_or_fail()
+  * ap: add vtund.conf templating
+  * ap: rename variables and methods
+  * ap: add hostapd.conf templating
+  * ap: move Puavo-specific network fetching loop to
+    get_nets_from_puavo()
+  * ap: do Puavo-specific magic SSID mangling in get_nets_from_puavo()
+  * ap: ignore all but 4 first network conf entries
+  * ap: add function for generating BSS-specific configurations
+  * ap: always use parens in methods calls when passing arguments
+  * ap: add function for deducing optimal phy configurations
+  * ap: use band ids instead of hw mode chars internally
+  * ap: define all supported channels in a hash per band
+  * ap: define suitable channels with global constants
+  * ap: rename find_nodes() => scan()
+  * ap: raise RuntimeError if a command execution fails
+  * ap: just formatting fixes
+  * ap: add some comments
+  * ap: rename fetch_nets() => get_nets_from_puavo()
+  * ap: add rdoc markup to the comment header
+  * ap: minimize the code in top-level scope
+  * ap: move command line handling to the top level
+  * ap: raise instead of die
+  * ap: simplify IO.popens
+  * ap: add function for querying HT capabilities
+  * ap: add function for generating bssids
+  * ap: add function for getting 15 char hex digest of a string
+  * ap: select only "wlan_ap" networks
+  * ap: add function for getting WLAN networks from Puavo
+  * ap: add function for getting channels in preferred order
+  * ap: add function for getting supported channels of an interface
+  * ap: rename scan_channels() -> find_nodes()
+  * ap: fix scan_channels() to return the success status
+  * ap: rename errexit() -> die()
+  * ap: refactor arg parsing
+  * ap: add function for scanning channels
+  * ap: add function for bringing up interfaces
+  * ap: add function for iterating through all suitable interfaces
+  * ap: add function for getting the HW mode of an interface
+  * ap: add function for finding suitable interfaces
+  * ap: add function for checking if the interface is wlan interface
+  * ap: add function for checking whether an interface has a supported
+    driver or not
+  * ap: add function for getting the driver name of an interface
+  * ap: use EXIT trap to remove the runtime directory
+  * ap: use --rundir to change the default runtime directory
+  * ap: create runtime directory, /run/puavo-wlanap, on startup
+  * ap: use errexit() to exit with an error and a message
+  * ap: add --vtun-port option
+  * ap: add --vtun-address option
+  * ap: begin rewriting in Ruby
+  * Git(0f1486f5a5b9be30a7c683825f6a1dae9a78aeee)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 21 Oct 2015 15:24:26 +0300
+
 puavo-wlan (0.9.10) trusty; urgency=medium
 
   * New release
