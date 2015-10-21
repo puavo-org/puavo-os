@@ -673,7 +673,9 @@ EOF
   end
 
   unless ctrlmsg.nil?
-    UNIXSocket.new(File.join(opts[:rundir], 'ctrlsocket')).puts(ctrlmsg)
+    UNIXSocket.open(File.join(opts[:rundir], 'ctrlsocket')) do |ctrlsocket|
+      ctrlsocket.puts(ctrlmsg)
+    end
     return 0
   end
 
