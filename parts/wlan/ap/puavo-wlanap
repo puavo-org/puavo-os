@@ -356,21 +356,6 @@ def get_phy_list
   phy_list
 end
 
-def get_bss_list(nets)
-  # At most 4 BSSes are supported.
-  nets.slice!(4..-1)
-
-  nets.length.times.zip(nets).map do |i, net|
-    {
-      :index    => i,
-      :bridge   => hexdigest15(net['ssid']),
-      :password => net['password'],
-      :type     => net['type'],
-      :ssid     => net['ssid'],
-    }
-  end
-end
-
 class AccessPoint
 
   RUNDIR       = '/run/puavo-wlanap'
@@ -431,7 +416,22 @@ class AccessPoint
       return 1
     end
 
-    @bss_list.concat(get_bss_list(@nets))
+    # At most 4 BSSes are supported.
+    ignored_nets = @nets.slice!(4..-1)
+    if !ignored_nets.nil? && !ignored_nets.empty?
+      Log.warning("more than 4 networks defined, ignoring " +
+                  ignored_nets.map{ |n| n['ssid'] }.join(', '))
+    end
+
+    @nets.length.times.zip(@nets).map do |i, net|
+      @bss_list << {
+        :index    => i,
+        :bridge   => hexdigest15(net['ssid']),
+        :password => net['password'],
+        :type     => net['type'],
+        :ssid     => net['ssid'],
+      }
+    end
 
     write_hostapd_conf
     write_vtund_conf
