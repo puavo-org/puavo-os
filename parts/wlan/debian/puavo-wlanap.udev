@@ -1,1 +1,1 @@
-SUBSYSTEM=="ieee80211", RUN+="/sbin/restart puavo-wlanap"
+SUBSYSTEM=="net", ENV{DEVTYPE}=="wlan", RUN+="/sbin/restart puavo-wlanap"
