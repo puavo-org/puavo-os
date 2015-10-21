@@ -266,11 +266,11 @@ hw_mode=<%= phy[:hw_mode] %>
 channel=<%= phy[:channel] %>
 max_num_sta=1000
 wmm_enabled=1
-ctrl_interface=<%= rundir %>/hostapd
+ctrl_interface=<%= @rundir %>/hostapd
 ieee80211n=1
 ht_capab=<%= phy[:ht_capab] %>
 wds_sta=1
-<% for bss in bss_list %>
+<% for bss in @bss_list %>
 
 ## BSS-specific options ##
 <% if bss[:index] > 0 %>
@@ -311,7 +311,7 @@ puavo-wlanap {
     multi     yes;
 
     up {
-        program "<%= THIS_SCRIPT %> --rundir '<%= rundir %>' --ctrlmsg 'vtun-up:%%:<%= bss[:bridge] %>'";
+        program "<%= THIS_SCRIPT %> --rundir '<%= @rundir %>' --ctrlmsg 'vtun-up:%%:<%= bss[:bridge] %>'";
     };
 }
 EOF
@@ -368,28 +368,6 @@ def get_bss_list(nets)
       :type     => net['type'],
       :ssid     => net['ssid'],
     }
-  end
-end
-
-def write_conf(rundir, filename, conf)
-  File.open(File.join(rundir, filename), 'w', 0640) do |file|
-    file.write(conf)
-  end
-end
-
-def write_hostapd_conf(phy_list, bss_list, rundir)
-  phy_list.each do |phy|
-    bss_list.each do |bss|
-      conf = ERB.new(HOSTAPD_CONF_TEMPLATE, 3, '<>').result(binding)
-      write_conf(rundir, "hostapd_#{phy[:iface]}.conf", conf)
-    end
-  end
-end
-
-def write_vtund_conf(bss_list, rundir)
-  bss_list.each do |bss|
-    conf = ERB.new(VTUND_CONF_TEMPLATE, 3, '<>').result(binding)
-    write_conf(rundir, "vtund_#{bss[:bridge]}.conf", conf)
   end
 end
 
@@ -455,8 +433,8 @@ class AccessPoint
 
     @bss_list.concat(get_bss_list(@nets))
 
-    write_hostapd_conf(@phy_list, @bss_list, @rundir)
-    write_vtund_conf(@bss_list, @rundir)
+    write_hostapd_conf
+    write_vtund_conf
 
     [:HUP, :USR1, :USR2].each { |s| Signal.trap(s, 'SIG_IGN') }
 
@@ -587,6 +565,28 @@ class AccessPoint
       hostapd_conffile = File.join(@rundir, "#{hostapd_name}.conf")
       hostapd_pid = spawn('hostapd', '-P', hostapd_pidfile, hostapd_conffile)
       @services[hostapd_pid] = hostapd_name
+    end
+  end
+
+  def write_conf(filename, conf)
+    File.open(File.join(@rundir, filename), 'w', 0640) do |file|
+      file.write(conf)
+    end
+  end
+
+  def write_hostapd_conf
+    @phy_list.each do |phy|
+      @bss_list.each do |bss|
+        conf = ERB.new(HOSTAPD_CONF_TEMPLATE, 3, '<>').result(binding)
+        write_conf("hostapd_#{phy[:iface]}.conf", conf)
+      end
+    end
+  end
+
+  def write_vtund_conf
+    @bss_list.each do |bss|
+      conf = ERB.new(VTUND_CONF_TEMPLATE, 3, '<>').result(binding)
+      write_conf("vtund_#{bss[:bridge]}.conf", conf)
     end
   end
 
