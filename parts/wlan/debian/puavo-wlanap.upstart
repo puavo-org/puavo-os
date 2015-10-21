@@ -2,14 +2,6 @@ description "Puavo's Tunneled WLAN Access Point"
 
 start on (local-filesystems and net-device-up IFACE!=lo)
 
-# Retain the same behavior as in SySV init script: start automatically
-# only if enabled in /etc/default/puavo-wlanap
-pre-start script
-    [ -f "/etc/default/puavo-wlanap" ] && . "/etc/default/puavo-wlanap"
-    [ -n "$PWAP_AUTOSTART" ] || exit 0
-    [ "$PWAP_AUTOSTART" -ne 0 ] || exit 0
-end script
-
 exec puavo-wlanap
 
 respawn
