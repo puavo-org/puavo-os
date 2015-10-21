@@ -433,8 +433,8 @@ class AccessPoint
       }
     end
 
-    write_hostapd_conf
-    write_vtund_conf
+    write_hostapd_confs
+    write_vtund_confs
 
     [:HUP, :USR1, :USR2].each { |s| Signal.trap(s, 'SIG_IGN') }
 
@@ -450,7 +450,8 @@ class AccessPoint
 
     @ctrlserv = UNIXServer.new(File.join(@rundir, 'ctrlsocket'))
 
-    start_services
+    start_vtunds
+    start_hostapds
 
     loop do
       signal = sigqueue.pop
@@ -538,7 +539,7 @@ class AccessPoint
     end
   end
 
-  def start_services
+  def start_vtunds
     @bss_list.each do |bss|
       run_or_fail('brctl', 'addbr', bss[:bridge])
       run_or_fail('brctl', 'setfd', bss[:bridge], '0')
@@ -550,7 +551,9 @@ class AccessPoint
                         'puavo-wlanap', @vtun_address)
       @services[vtund_pid] = vtund_name
     end
+  end
 
+  def start_hostapds
     @phy_list.each do |phy|
       # Try to disable power saving, because it seems to cause flaky
       # connection quality in some scenarios.
@@ -574,7 +577,7 @@ class AccessPoint
     end
   end
 
-  def write_hostapd_conf
+  def write_hostapd_confs
     @phy_list.each do |phy|
       @bss_list.each do |bss|
         conf = ERB.new(HOSTAPD_CONF_TEMPLATE, 3, '<>').result(binding)
@@ -583,7 +586,7 @@ class AccessPoint
     end
   end
 
-  def write_vtund_conf
+  def write_vtund_confs
     @bss_list.each do |bss|
       conf = ERB.new(VTUND_CONF_TEMPLATE, 3, '<>').result(binding)
       write_conf("vtund_#{bss[:bridge]}.conf", conf)
