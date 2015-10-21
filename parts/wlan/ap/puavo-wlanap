@@ -1,419 +1,697 @@
-#!/bin/bash
+#!/usr/bin/env ruby1.9.1
+# coding: utf-8
 
-set -eubm
+# = Puavo's Tunneled WLAN Access Point
+#
+# Author    :: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+# Copyright :: Copyright (C) 2015 Opinsys Oy
+# License   :: GPLv2+
+#
+# == Usage
+#
+# Get help:
+#   puavo-wlanap --help
 
-on_sigchld()
-{
-    if [ ! -f "${PWAP_RUNDIR}/critical_service.pids" ]; then
-        return
-    fi
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
 
-    # We track our "critical child services" by appending their PIDs to
-    # a list after a successful spawn (see start_services()) and then
-    # whenever any of our child processes dies, check if any of the
-    # critical child services is dead, make a suicide.
-    while read critical_service_pid; do
-        kill -0 "${critical_service_pid}" || {
-            echo "fatal: a critical child service has died, exiting" >&2
-            trap '' CHLD
-            on_exit
-        }
-    done <"${PWAP_RUNDIR}/critical_service.pids"
-}
+# Standard library modules.
+require 'digest'
+require 'erb'
+require 'fileutils'
+require 'getoptlong'
+require 'pathname'
+require 'socket'
 
-on_exit()
-{
-    local -r exitval=$?
-    local net ssid bridge
+module Log
 
-    ## Do not exit or terminate on error or signal anymore. We are
-    ## already exiting and it would be shame to exit while exiting, yo
-    ## dawg.
-    set +eu
-    trap '' EXIT HUP INT QUIT ABRT ALRM TERM USR1 USR2 CHLD
+  def self.log(priority, msg)
+    STDERR.puts("puavo-wlanap[#{Process.pid}]: #{priority}: #{msg}")
+  end
 
-    ## Kill our child processes. There is no reason to let Init adopt
-    ## them when puavo-wlanap dies.
-    pkill -TERM -P $$
+  def self.warning(msg)
+    Log.log(:WARNING, msg)
+  end
 
-    ## Burn the bridges.
-    for net in "${PWAP_NETS[@]}"; do
-        IFS=':' read _ ssid _ <<<"${net}"
-        bridge=$("${PWAP_LIBDIR}/get-bridge" "${ssid}")
-        ifconfig "${bridge}" down
-        brctl delbr "${bridge}"
-    done
+  def self.error(msg)
+    Log.log(:ERROR, msg)
+  end
 
-    rm -rf "${PWAP_RUNDIR}"
+end
 
-    echo "exit $exitval" >&2
-    exit $exitval
-}
+module Dot11
 
-write_hostapd_conf()
-{
-    local radio channel iface ssid_count bssid net auth ssid psk bridge hw_mode
+  ## For some reason, at least with some driver versions, these device
+  ## models report empty address masks. However, hostapd requires that
+  ## mask >= 00:00:00:00:00:03 to support at most 4 different
+  ## BSSIDs. Mask 00:00:00:00:00:03 has been verified to work with
+  ## devices in question.
+  MASK_QUIRK_MODEL_IDS = [
+                          '168c0029',
+                          '168c0030',
+                          '168c002b',
+                          '168c002e',
+                          '168c0037',
+                         ]
 
-    ## Configure one hostapd per radio.
-    for radio in "${PWAP_RADIOS[@]}"; do
-        IFS=':' read channel iface <<<"${radio}"
-        ssid_count=0
-        bssid=$("${PWAP_LIBDIR}/get-bssid" "${iface}")
+  # Chips handled by following drivers seem to have pretty good chances
+  # to work properly.
+  SUPPORTED_DRIVERS = ['ath9k', 'rt2800pci', 'rt2800usb']
 
-        [ -n "${bssid}" ] || {
-            pwap_log "failed to find the first address in the block"
-            return 1
-        }
+  BAND_2G = 1
+  BAND_5G = 2
 
-        ht_capab=$("${PWAP_LIBDIR}/get-ht-capab" "${iface}" "${channel}")
+  CHANNELS_2G = [ 1,  6, 11]
+  CHANNELS_5G = [36, 40, 44, 48]
 
-        case "${channel}" in
-            36|40|44|48)
-                hw_mode=a
-                ;;
-            *)
-                hw_mode=g
-                ;;
-        esac
+  CHANNELS = {
+    BAND_2G           => CHANNELS_2G,
+    BAND_5G           => CHANNELS_5G,
+    BAND_2G | BAND_5G => CHANNELS_2G + CHANNELS_5G,
+  }
 
-        echo "### PHY-specific options ###" \
-            >"${PWAP_RUNDIR}/${iface}_hostapd.conf"
-        sed -e "s|#{PWAP_IFACE}|${iface}|g" \
-            -e "s|#{PWAP_BSSID}|${bssid}|g" \
-            -e "s|#{PWAP_CHANNEL}|${channel}|g" \
-            -e "s|#{PWAP_HW_MODE}|${hw_mode}|g" \
-            -e "s|#{PWAP_RUNDIR}|${PWAP_RUNDIR}|g" \
-            -e "s|#{PWAP_HT_CAPAB}|${ht_capab}|g" \
-            "${PWAP_DATADIR}/common.conf" \
-            >>"${PWAP_RUNDIR}/${iface}_hostapd.conf"
+  def self.get_interface_driver(iface)
+    File.open(File.join('/sys/class/net', iface, 'device', 'uevent')) do |file|
+      file.each_line do |line|
+        next unless /^DRIVER=(.*)$/ =~ line
+        return $1
+      end
+    end
+    nil
+  end
 
-        for net in "${PWAP_NETS[@]}"; do
-            IFS=':' read auth ssid psk <<<"${net}"
+  def self.has_supported_driver(iface)
+    driver = Dot11.get_interface_driver(iface)
+    Dot11::SUPPORTED_DRIVERS.include?(driver)
+  end
 
-            bridge=$("${PWAP_LIBDIR}/get-bridge" "${ssid}")
+  def self.is_wlan_interface(iface)
+    File.open(File.join('/sys/class/net', iface, 'uevent')) do |file|
+      file.each_line do |line|
+        return true if /^DEVTYPE=wlan$/ =~ line
+      end
+    end
+    false
+  end
 
-            cat <<EOF >>"${PWAP_RUNDIR}/${iface}_hostapd.conf"
+  def self.each_interface
+    Dir.glob('/sys/class/net/*') do |path|
+      iface = File.basename(path)
+      next unless Dot11.is_wlan_interface(iface)
+      next unless Dot11.has_supported_driver(iface)
+      yield iface
+    end
+  end
 
-### BSS-specific options ###
+  def self.get_band(iface)
+    hw_mode = IO.popen(['iwconfig', iface]) do |io|
+      io.gets =~ /^.* IEEE 802.11([a-z]+).*$/
+      break $1
+    end
+    fail 'failed to query supported bands' unless $?.success?
+
+    band = 0
+    band |= Dot11::BAND_5G if hw_mode.include?('a')
+    band |= Dot11::BAND_2G if hw_mode.include?('g')
+
+    band
+  end
+
+  def self.get_bssid(iface)
+    sysdir = "/sys/class/net/#{iface}"
+    phydir = "#{sysdir}/phy80211"
+    devdir = "#{sysdir}/device"
+
+    addr = File.read("#{phydir}/macaddress"  ).split(':').map { |v| v.to_i(16) }
+    mask = File.read("#{phydir}/address_mask").split(':').map { |v| v.to_i(16) }
+
+    uevent = File.read("#{devdir}/uevent")
+    uevent =~ /^PRODUCT=(.+)\/(.+)\/.*$/ or uevent =~ /^PCI_ID=(.+):(.+)$/
+
+    model_id = "%04x%04x" % [$1.to_i(16), $2.to_i(16)]
+
+    if Dot11::MASK_QUIRK_MODEL_IDS.include?(model_id)
+      if mask.map { |v| v == 0 } .all?
+        mask = [0x00, 0x00, 0x00, 0x00, 0x00, 0x03]
+      end
+    end
+
+    addr.zip(mask).map { |(a, b)| "%02x" % (a &~ b) } .join(":")
+  end
+
+  def self.get_ht_capab(iface, channel)
+    phyname = File.read("/sys/class/net/#{iface}/phy80211/name").strip
+
+    is_ht20sgi_capab = IO.popen(['iw', phyname, 'info']) do |io|
+      !io.grep(/^\s+RX HT20 SGI.*$/).empty?
+    end
+    $?.success? or fail 'failed to query HT20 SGI capability'
+
+    is_ht40sgi_capab = IO.popen(['iw', phyname, 'info']) do |io|
+      !io.grep(/^\s+RX HT40 SGI.*$/).empty?
+    end
+    $?.success? or fail 'failed to query HT40 SGI capability'
+
+    case channel
+    when 1, 6, 11
+      '[HT20]'
+    when 36, 44
+      '[HT40+]' + (is_ht40sgi_capab ? '[SHORT-GI-40]' : '')
+    when 40, 48
+      '[HT40-]' + (is_ht40sgi_capab ? '[SHORT-GI-40]' : '')
+    else
+      fail "unsupported channel #{channel}"
+    end + (is_ht20sgi_capab ? '[SHORT-GI-20]' : '')
+  end
+
+  def self.scan(iface, band)
+    # Prime results with worst possible signal levels.
+    results = {}
+    Dot11::CHANNELS[band].each { |ch| results[ch] = -999 }
+
+    IO.popen(['iwlist', iface, 'scan']) do |io|
+      io.each_line do |line|
+        next unless line =~ /^\s+Cell [0-9]+ - Address: .*$/
+
+        io.readline.strip =~ /^Channel:([0-9]+)$/
+        channel = $1.to_i
+
+        io.readline.strip # Ignore frequency line.
+
+        io.readline.strip =~ /^Quality=[0-9]+\/[0-9]+\s+Signal level=(-[0-9]+) dBm.*$/
+        signal_level = $1.to_i
+
+        if results.has_key?(channel)
+          results[channel] = signal_level if results[channel] < signal_level
+        end
+      end
+    end
+    $?.success? or fail "failed to scan with interface #{iface}"
+
+    # Return channels in ascending signal level order.
+    Hash[results.sort_by { |channel, signal_level| signal_level }].keys
+  end
+
+end
+
+module PuavoAPI
+
+  def self.get_nets
+    nets_wait = 1
+    while true
+      client = PuavoRestClient.new
+      response = client.get("/v3/devices/#{PUAVO_ETC.hostname}/wlan_networks")
+
+      nets = response.parse.select { |net| net['wlan_ap'] } .each do |net|
+        # Magic SSID Mangling! The following Magic SSID is substituted
+        # with a SSID derived from the hostname. This lets us configure
+        # AP-specific networks easily via Puavo.
+        next unless net['ssid'] =~ /^le8Yuek9Some5ee$/
+        net['ssid'] = PUAVO_ETC.hostname.tr(' ', '')
+      end
+
+      return nets unless nets.empty?
+
+      nets_wait = [nets_wait * 2, 3600].min
+      sleep nets_wait
+    end
+  end
+
+  def self.get_conf
+    client = PuavoRestClient.new
+    response = client.get("/v3/devices/#{PUAVO_ETC.hostname}")
+
+    conf = {}
+    response.parse['tags'].each do |tag|
+      if /^txpower:([0-9]+)$/ =~ tag
+        txpower = $1.to_i
+        ## Multiple tags starting with txpower: might be given, let's
+        ## take the most restrictive.
+        conf[:txpower] = [conf.fetch(:txpower, txpower), txpower].min
+      elsif /^txpower5:([0-9]+)$/ =~ tag
+        txpower5 = $1.to_i
+        ## Multiple tags starting with txpower5: might be given, let's
+        ## take the most restrictive.
+        conf[:txpower5] = [conf.fetch(:txpower5, txpower5), txpower5].min
+      end
+    end
+
+    conf
+  end
+
+end
+
+# The real path of this script.
+THIS_SCRIPT  = Pathname.new($0).realpath
+
+HOSTAPD_CONF_TEMPLATE = <<'EOF'
+## PHY-specific options ##
+interface=<%= phy[:iface] %>
+bssid=<%= phy[:bssid] %>
+driver=nl80211
+country_code=FI
+hw_mode=<%= phy[:hw_mode] %>
+channel=<%= phy[:channel] %>
+max_num_sta=1000
+wmm_enabled=1
+ctrl_interface=<%= @rundir %>/hostapd
+ieee80211n=1
+ht_capab=<%= phy[:ht_capab] %>
+wds_sta=1
+<% for bss in @bss_list %>
+
+## BSS-specific options ##
+<% if bss[:index] > 0 %>
+bss=<%= phy[:iface] %>_<%= bss[:index] %>
+<% end %>
+ssid=<%= bss[:ssid] %>
+bridge=<%= bss[:bridge] %>
+<% if bss[:type] == 'open' %>
+wpa=0
+<% else %>
+wpa=2
+auth_algs=3
+wpa_passphrase=<%= bss[:password] %>
+rsn_pairwise=CCMP
+wpa_key_mgmt=WPA-PSK
+eapol_version=1
+eapol_key_index_workaround=1
+eap_reauth_period=0
+wpa_strict_rekey=0
+wpa_group_rekey=0
+wpa_gmk_rekey=0
+<% end %>
+<% end %>
 EOF
 
-            if [ "${ssid_count}" -gt 0 ]; then
-                echo "bss=${iface}_${ssid_count}" \
-                    >>"${PWAP_RUNDIR}/${iface}_hostapd.conf"
-            fi
-
-            cat "${PWAP_DATADIR}/${auth}_hostapd.conf" \
-                >>"${PWAP_RUNDIR}/${iface}_hostapd.conf"
-            sed -i \
-                -e "s|#{PWAP_SSID}|${ssid}|g" \
-                -e "s|#{PWAP_BRIDGE}|${bridge}|g" \
-                -e "s|#{PWAP_PSK}|${psk}|g" \
-                "${PWAP_RUNDIR}/${iface}_hostapd.conf"
-            ssid_count=$((ssid_count + 1))
-        done
-    done
+VTUND_CONF_TEMPLATE = <<'EOF'
+options {
+    syslog daemon;
 }
 
-write_vtund_conf()
-{
-    local net ssid session bridge
+puavo-wlanap {
+    passwd    wlan;
+    type      ether;
+    proto     udp;
+    speed     0;     # Full speed ahead! Aye aye, captain!
+    encrypt   no;
+    compress  no;
+    multi     yes;
 
-    ## Configure one vtund client per network.
-    for net in "${PWAP_NETS[@]}"; do
-        IFS=':' read _ ssid _ <<<"${net}"
-
-        bridge=$("${PWAP_LIBDIR}/get-bridge" "${ssid}")
-
-        if [ ${PWAP_LEGACY_MODE} -eq 0 ]; then
-            session="${ssid}"
-        else
-            session="puavo-wlanap"
-        fi
-
-        sed -e "s|#{PWAP_LIBDIR}|${PWAP_LIBDIR}|g" \
-            -e "s|#{PWAP_BRIDGE}|${bridge}|g" \
-            -e "s|#{PWAP_RUNDIR}|${PWAP_RUNDIR}|g" \
-            -e "s|#{PWAP_SESSION}|${session}|g" \
-            "${PWAP_DATADIR}/vtund.conf" \
-            >"${PWAP_RUNDIR}/${ssid}_vtund.conf"
-    done
+    up {
+        program "<%= THIS_SCRIPT %> --rundir '<%= @rundir %>' --ctrlmsg 'vtun-up:%%:<%= bss[:bridge] %>'";
+    };
 }
-
-setup_nets()
-{
-    local net auth ssid psk ap_ssid fetch_wait
-
-    # if we do not have a list of networks to setup, try again later
-    fetch_wait=1
-    while true; do
-      "${PWAP_LIBDIR}/fetch-nets" > "${PWAP_RUNDIR}/nets"
-      test -s "${PWAP_RUNDIR}/nets" && break
-      fetch_wait=$((2 * $fetch_wait))
-      if [ "$fetch_wait" -gt 3600 ]; then
-        fetch_wait=3600
-      fi
-      pwap_log "no networks to setup yet, refetching after $fetch_wait seconds"
-      sleep $fetch_wait
-    done
-
-    pwap_log "fetched networks successfully"
-
-    # Magic SSID Mangling! The following Magic SSID is substituted with
-    # a SSID derived from the hostname. This lets us configure
-    # AP-specific networks easily via Puavo.
-    ap_ssid=$(hostname | tr -d [:space:] | tail -c15)
-    sed -i -r "s/:le8Yuek9Some5ee:/:${ap_ssid}:/" "${PWAP_RUNDIR}/nets"
-
-    readarray -n4 -t PWAP_NETS <"${PWAP_RUNDIR}/nets"
-
-    if [ ${#PWAP_NETS[@]} -eq 0 ]; then
-        pwap_log "no networks defined"
-        return 1
-    fi
-
-    for net in "${PWAP_NETS[@]}"; do
-        IFS=':' read auth ssid psk <<<"${net}"
-        case "${auth}" in
-            open)
-                if [ -n "${psk}" ]; then
-                    pwap_log "auth type is 'open', but psk was defined"
-                fi
-                ;;
-            psk)
-                if [ "${#psk}" -lt 8 -o "${#psk}" -gt 63 ]; then
-                    pwap_log "psk must be 8-63 characters long"
-                    return 1
-                fi
-                ;;
-            *)
-                pwap_log "unknown auth type '${auth}'"
-                return 1
-                ;;
-        esac
-    done
-
-    if [ ${PWAP_LEGACY_MODE} -eq 0 ]; then
-        ## Tell gateway which networks we are going to provide.
-        for net in "${PWAP_NETS[@]}"; do
-            IFS=':' read _ ssid _ <<<"${net}"
-            echo "${ssid}" | nc "${PWAP_GWADDR}" "${PWAP_GWPORT_CTRL}"
-        done
-    fi
-}
-
-setup_radios()
-{
-    local i
-
-    local channel
-    local channels_ag
-    local channels_a
-    local channels_g
-
-    local iface
-    local ifaces_ag
-    local ifaces_a
-    local ifaces_g
-
-    local used_channels=()
-    used_channels[1]=0
-    used_channels[6]=0
-    used_channels[11]=0
-    used_channels[36]=0
-    used_channels[40]=0
-    used_channels[44]=0
-    used_channels[48]=0
-
-    PWAP_RADIOS=()
-
-    "${PWAP_LIBDIR}/find-ifaces" | while read iface; do
-        ifconfig "${iface}" up
-    done
-
-    channels=($("${PWAP_LIBDIR}/scan-channels" 1 6 11 36 40 44 48))
-    if [ ${#channels[@]} -ne 7 ]; then
-        echo "Failed to scan channels, falling back to random channel selection" >&2
-        channels=($(printf '%d\n' 1 6 11 36 40 44 48 | sort -R))
-    fi
-
-    echo ${channels[@]} >"${PWAP_RUNDIR}/channels"
-
-    channels_a=($(printf '%s\n' ${channels[@]} | sed -r -n 's/^(36|40|44|48)$/\1/p'))
-    channels_g=($(printf '%s\n' ${channels[@]} | sed -r -n 's/^(1|6|11)$/\1/p'))
-
-    ifaces_a=$({ "${PWAP_LIBDIR}/find-ifaces" a; "${PWAP_LIBDIR}/find-ifaces" g; "${PWAP_LIBDIR}/find-ifaces" g; } | sort | uniq -u | head -n4)
-    ifaces_g=$({ "${PWAP_LIBDIR}/find-ifaces" a; "${PWAP_LIBDIR}/find-ifaces" a; "${PWAP_LIBDIR}/find-ifaces" g; } | sort | uniq -u | head -n3)
-    ifaces_ag=$({ "${PWAP_LIBDIR}/find-ifaces" a; "${PWAP_LIBDIR}/find-ifaces" g; } | sort | uniq -d | head -n7)
-
-    ## Add radios which support only 5GHz frequency...
-    i=0
-    for iface in ${ifaces_a}; do
-        channel=${channels_a[i]}
-        PWAP_RADIOS+=("${channel}:${iface}")
-        used_channels[$channel]=1
-        ((++i))
-    done
-
-    ## ...then radios supporting only 2.4GHz frequency...
-    i=0
-    for iface in ${ifaces_g}; do
-        channel=${channels_g[i]}
-        PWAP_RADIOS+=("${channel}:${iface}")
-        used_channels[$channel]=1
-        ((++i))
-    done
-
-    ## ..and then radios which support both frequencies.
-    for iface in ${ifaces_ag}; do
-
-        ## Ensure there is at least one 2.4GHz radio.
-        if [ ${#PWAP_RADIOS[@]} -eq 0 ]; then
-            channel=${channels_g[0]}
-            PWAP_RADIOS+=("${channel}:${iface}")
-            used_channels[$channel]=1
-            continue
-        fi
-
-        ## Pick the best free channel.
-        for channel in ${channels[@]}; do
-            if [ ${used_channels[$channel]} -eq 0 ]; then
-                PWAP_RADIOS+=("${channel}:${iface}")
-                used_channels[$channel]=1
-                break
-            fi
-        done
-    done
-    if [ ${#PWAP_RADIOS[@]} -eq 0 ]; then
-        echo "No suitable radios found" >&2
-        return 1
-    fi
-}
-
-start_services()
-{
-    local net ssid radio iface session bridge
-
-    ## Start one vtund client per network.
-    for net in "${PWAP_NETS[@]}"; do
-        IFS=':' read _ ssid _ <<<"${net}"
-
-        if [ ${PWAP_LEGACY_MODE} -eq 0 ]; then
-            session="${ssid}"
-        else
-            session="puavo-wlanap"
-        fi
-
-        ## Setup the bridge.
-        bridge=$("${PWAP_LIBDIR}/get-bridge" "${ssid}")
-        brctl addbr "${bridge}"
-        brctl setfd "${bridge}" 0
-        ifconfig "${bridge}" up
-        dhclient -d "${bridge}" &
-        echo $! >>"${PWAP_RUNDIR}/critical_service.pids"
-
-        vtund -n -f "${PWAP_RUNDIR}/${ssid}_vtund.conf" \
-            -P "${PWAP_GWPORT_DATA}" \
-            "${session}" "${PWAP_GWADDR}" &
-        echo $! >>"${PWAP_RUNDIR}/critical_service.pids"
-    done
-
-    ## Magical sleep to "ensure" that bridges and tunnels are all set
-    ## before proceeding.
-    sleep 8 & wait $!
-
-    ## Start one hostapd per radio.
-    for radio in "${PWAP_RADIOS[@]}"; do
-        IFS=':' read _ iface <<<"${radio}"
-
-        ## Try to disable power saving, because it seems to cause flaky
-        ## connection quality in some scenarios. However, if something
-        ## goes wrong, just log it and keep going; disabled power save
-        ## is not a strict requirement.
-        iw dev "${iface}" set power_save off || {
-            echo "failed to disable power saving" >&2
-        }
-
-        hostapd -P "${PWAP_RUNDIR}/${iface}_hostapd.pid" \
-            "${PWAP_RUNDIR}/${iface}_hostapd.conf" &
-        echo $! >>"${PWAP_RUNDIR}/critical_service.pids"
-    done
-}
-
-parse_args()
-{
-    PWAP_ARGS_DAEMON=0
-
-    if [ $# -eq 1 ]; then
-        if [ "$1" = "--daemon" ]; then
-            PWAP_ARGS_DAEMON=1
-            return 0
-        fi
-        pwap_log "unexpected argument '$1'"
-        echo "Usage: $(basename $0) [--daemon]" >&2
-        return 1
-    elif [ $# -gt 2 ]; then
-        pwap_log "too many arguments"
-        echo "Usage: $(basename $0) [--daemon]" >&2
-        return 1
-    fi
-}
-
-report_status()
-{
-    local -r output=$(hostapd_cli -p "${PWAP_RUNDIR}/hostapd" all_sta)
-    local -r devices=$(echo -n "${output}" | sed -n 's/^dot11RSNAStatsSTAAddress=//p' | tr '\n' ',')
-
-    pwap_report <<EOF
-wlan_event:hotspot_state
-connected_devices:[${devices}]
 EOF
-}
 
-read_config()
-{
-    . "${PWAP_DATADIR}/config"
+def hexdigest15(str)
+  md5sum = Digest::MD5.new
+  md5sum << str
+  md5sum.hexdigest[0..14]
+end
 
-    ## The user might have deleted the configuration file, that's ok.
-    [ -r "${PWAP_CONFDIR}/config" ] && . "${PWAP_CONFDIR}/config"
-}
+def run_or_fail(cmd, *args)
+  system(cmd, *args)
+  $?.success? or fail "command '%s' failed" % ([cmd] + args).join(' ')
+end
 
-## We don't know yet where our data, libs and configs have been
-## installed, but we do know that the following script knows it and we do
-## know where the following script is (its in PATH!).
-. puavo-wlanap-env
+def fill_phy_list(phy_list, band)
+  Dot11.each_interface do |iface|
+    next unless band == Dot11.get_band(iface)
+    run_or_fail('ifconfig', iface, 'up')
+    best_channels = Dot11.scan(iface, band)
+    free_channels = best_channels - phy_list.map { |phy| phy[:channel] }
+    next if free_channels.empty?
+    channel = free_channels[0]
 
-## Import library routines.
-. "${PWAP_LIBDIR}/common.sh"
+    phy_list << {
+      :iface    => iface,
+      :channel  => channel,
+      :bssid    => Dot11.get_bssid(iface),
+      :hw_mode  => Dot11::CHANNELS_5G.include?(channel) ? 'a' : 'g',
+      :ht_capab => Dot11.get_ht_capab(iface, channel),
+    }
+  end
+end
 
-read_config
+def get_phy_list
+  phy_list = []
 
-parse_args "$@"
+  fill_phy_list(phy_list, Dot11::BAND_5G)
+  fill_phy_list(phy_list, Dot11::BAND_2G)
+  fill_phy_list(phy_list, Dot11::BAND_5G | Dot11::BAND_2G)
 
-if [ "${PWAP_ARGS_DAEMON}" -ne 0 ]; then
-    daemon --noconfig --stderr='daemon.info' --name='puavo-wlanap' -- puavo-wlanap
-    exit 0
-fi
+  phy_list
+end
 
-## After this point the process is getting hot and starts taking actions
-## which might have persistent side-effects (files, directories,
-## bridges, other processes, etc.). The trap is set to ensure that
-## everything gets cleaned up properly afterwards.
-trap on_exit EXIT
+class AccessPoint
 
-mkdir -p "${PWAP_RUNDIR}"
+  RUNDIR       = '/run/puavo-wlanap'
+  VTUN_ADDRESS = 'wlangw'
+  VTUN_PORT    = 45045
 
-setup_radios
-setup_nets
-write_hostapd_conf
-write_vtund_conf
+  def initialize(kwargs = {})
+    @bss_list      = []
+    @ctrlconn      = nil
+    @ctrlconn_time = nil
+    @ctrlserv      = nil
+    @nets          = kwargs.fetch(:nets, [])
+    @no_puavo      = kwargs.fetch(:no_puavo, false)
+    @phy_list      = []
+    @rundir        = kwargs.fetch(:rundir, RUNDIR)
+    @services      = {}
+    @vtun_address  = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
+    @vtun_port     = kwargs.fetch(:vtun_port, VTUN_PORT)
+  end
 
-trap on_sigchld SIGCHLD
-start_services
+  def run
+    conf = {}
 
-## Serve forever.
-while true; do
-    sleep 3 & wait $!
+    Signal.trap('EXIT') do
+      Process.kill('-SIGTERM', 0)
 
-    ## Keep going even if reporting fails.
-    report_status || true
-done
+      @bss_list.each do |bss|
+        # Ignore errors, we are already exiting.
+        system('ifconfig', bss[:bridge], 'down')
+        system('brctl', 'delbr', bss[:bridge])
+      end
+
+      FileUtils.rm_rf(@rundir)
+    end
+
+    FileUtils.mkdir_p(@rundir)
+
+    @phy_list.concat(get_phy_list)
+    if @phy_list.empty?
+      Log.error('no suitable physical interfaces available')
+      return 1
+    end
+
+    unless @no_puavo
+      conf.update(PuavoAPI.get_conf)
+      @nets.concat(PuavoAPI.get_nets)
+    end
+
+    @phy_list.each do |phy|
+      phy[:txpower] = conf[:txpower]
+      if Dot11::CHANNELS_5G.include? phy[:channel]
+        phy[:txpower] = conf.fetch(:txpower5, phy[:txpower])
+      end
+    end
+
+    if @nets.empty?
+      Log.error('no networks defined')
+      return 1
+    end
+
+    # At most 4 BSSes are supported.
+    ignored_nets = @nets.slice!(4..-1)
+    if !ignored_nets.nil? && !ignored_nets.empty?
+      Log.warning("more than 4 networks defined, ignoring " +
+                  ignored_nets.map{ |n| n['ssid'] }.join(', '))
+    end
+
+    @nets.length.times.zip(@nets).map do |i, net|
+      @bss_list << {
+        :index    => i,
+        :bridge   => hexdigest15(net['ssid']),
+        :password => net['password'],
+        :type     => net['type'],
+        :ssid     => net['ssid'],
+      }
+    end
+
+    write_hostapd_confs
+    write_vtund_confs
+
+    [:HUP, :USR1, :USR2].each { |s| Signal.trap(s, 'SIG_IGN') }
+
+    sigqueue = []
+    selfpipe_r, selfpipe_w = IO.pipe
+
+    [:CHLD, :INT, :QUIT, :TERM].each do |signal|
+      Signal.trap(signal) do
+        sigqueue << signal
+        selfpipe_w.write_nonblock('o')
+      end
+    end
+
+    @ctrlserv = UNIXServer.new(File.join(@rundir, 'ctrlsocket'))
+
+    start_vtunds
+    start_hostapds
+
+    loop do
+      signal = sigqueue.pop
+      case signal
+
+      when :INT, :QUIT, :TERM
+        Log.error("received fatal signal #{signal}")
+        return 1
+
+      when :CHLD
+        child_pid = Process.wait(0, Process::WNOHANG)
+        if @services.has_key?(child_pid)
+          child_name = @services[child_pid]
+          Log.error("child service #{child_name} died")
+          return 1
+        end
+
+      else
+        reads   = [selfpipe_r, @ctrlconn.nil? ? @ctrlserv : @ctrlconn]
+        timeout = @ctrlconn.nil? ? nil : [0, 5 - (Time.now - @ctrlconn_time)].max
+
+        ready = IO.select(reads, [], [], timeout)
+
+        if ready.nil?
+          if @ctrlconn && Time.now - @ctrlconn_time > 5
+            Log.warning('control socket connection timeout')
+            close_ctrlconn
+          end
+          next
+        end
+
+        selfpipe_r.read_nonblock(1) if ready[0].include?(selfpipe_r)
+        accept_ctrlconn             if ready[0].include?(@ctrlserv)
+        handle_ctrlconn             if ready[0].include?(@ctrlconn)
+
+      end
+    end
+  end
+
+  private
+
+  def accept_ctrlconn
+    @ctrlconn      = @ctrlserv.accept
+    @ctrlconn_time = Time.now
+  end
+
+  def close_ctrlconn
+    @ctrlconn.close
+
+    @ctrlconn      = nil
+    @ctrlconn_time = nil
+  end
+
+  def handle_ctrlconn
+    if @ctrlconn.eof?
+      Log.warning('received invalid control message')
+    else
+      handle_ctrlmsg(@ctrlconn.readline)
+    end
+  ensure
+    close_ctrlconn
+  end
+
+  def handle_ctrlmsg(line)
+    line.strip!
+    cmd, sep, args = line.partition(':')
+    case cmd
+    when 'vtun-up'
+      handle_ctrlmsg_vtun_up(args)
+    else
+      Log.warning("received unknown control message: #{line}")
+    end
+  end
+
+  def handle_ctrlmsg_vtun_up(args)
+    iface, *bridge = args.split(':')
+    if bridge.length == 1
+      bridge = bridge[0]
+      run_or_fail('ifconfig', iface, 'up')
+      run_or_fail('brctl', 'addif', bridge, iface)
+      dhclient_pid = spawn('dhclient', '-d', bridge)
+      @services[dhclient_pid] = "dhclient_#{bridge}"
+    else
+      Log.warning("received invalid vtun-up arguments #{args}")
+    end
+  end
+
+  def start_vtunds
+    @bss_list.each do |bss|
+      run_or_fail('brctl', 'addbr', bss[:bridge])
+      run_or_fail('brctl', 'setfd', bss[:bridge], '0')
+      run_or_fail('ifconfig', bss[:bridge], 'up')
+      vtund_name = "vtund_#{bss[:bridge]}"
+      vtund_conffile = File.join(@rundir, "#{vtund_name}.conf")
+      vtund_pid = spawn('vtund', '-n', '-P', @vtun_port.to_s,
+                        '-f', vtund_conffile,
+                        'puavo-wlanap', @vtun_address)
+      @services[vtund_pid] = vtund_name
+    end
+  end
+
+  def start_hostapds
+    @phy_list.each do |phy|
+      # Try to disable power saving, because it seems to cause flaky
+      # connection quality in some scenarios.
+      system('iw', 'dev', phy[:iface], 'set', 'power_save', 'off')
+
+      unless phy[:txpower].nil?
+        system('iwconfig', phy[:iface], 'txpower', phy[:txpower].to_s)
+      end
+
+      hostapd_name = "hostapd_#{phy[:iface]}"
+      hostapd_pidfile = File.join(@rundir, "#{hostapd_name}.pid")
+      hostapd_conffile = File.join(@rundir, "#{hostapd_name}.conf")
+      hostapd_pid = spawn('hostapd', '-P', hostapd_pidfile, hostapd_conffile)
+      @services[hostapd_pid] = hostapd_name
+    end
+  end
+
+  def write_conf(filename, conf)
+    File.open(File.join(@rundir, filename), 'w', 0640) do |file|
+      file.write(conf)
+    end
+  end
+
+  def write_hostapd_confs
+    @phy_list.each do |phy|
+      @bss_list.each do |bss|
+        conf = ERB.new(HOSTAPD_CONF_TEMPLATE, 3, '<>').result(binding)
+        write_conf("hostapd_#{phy[:iface]}.conf", conf)
+      end
+    end
+  end
+
+  def write_vtund_confs
+    @bss_list.each do |bss|
+      conf = ERB.new(VTUND_CONF_TEMPLATE, 3, '<>').result(binding)
+      write_conf("vtund_#{bss[:bridge]}.conf", conf)
+    end
+  end
+
+end
+
+def main
+  opts    = {}
+  ctrlmsg = nil
+
+  GetoptLong.new(
+    ['--ctrlmsg'                   , GetoptLong::REQUIRED_ARGUMENT],
+    ['--help', '-h'                , GetoptLong::NO_ARGUMENT],
+    ['--network-open'              , GetoptLong::REQUIRED_ARGUMENT],
+    ['--no-puavo'                  , GetoptLong::NO_ARGUMENT],
+    ['--rundir'                    , GetoptLong::REQUIRED_ARGUMENT],
+    ['--vtun-address'              , GetoptLong::REQUIRED_ARGUMENT],
+    ['--vtun-port'                 , GetoptLong::REQUIRED_ARGUMENT],
+  ).each do |opt, arg|
+    case opt
+    when '--ctrlmsg'
+      ctrlmsg = arg
+
+    when '--help'
+      puts <<EOF
+Usage: puavo-wlanap [OPTION]...
+
+Puavo's Tunneled WLAN Access Point.
+
+Options:
+ -h, --help
+         Display this help and exit.
+
+     --network-open SSID
+         Create an open network with the given SSID.
+
+     --no-puavo
+         Disable all Puavo-extensions.
+
+     --rundir DIR
+         Set the runtime directory, default: #{AccessPoint::RUNDIR}
+
+     --vtun-address ADDRESS
+         Set the address of the vtun server, default: #{AccessPoint::VTUN_ADDRESS}
+
+     --vtun-port PORT
+         Set the port of the vtun server, default: #{AccessPoint::VTUN_PORT}
+
+EOF
+      return 0
+
+    when '--network-open'
+      (opts[:nets] or opts[:nets] = []) << {
+        'type'     => 'open',
+        'ssid'     => arg,
+        'password' => '',
+      }
+
+    when '--no-puavo'
+      opts[:no_puavo] = true
+
+    when '--rundir'
+      opts[:rundir] = arg
+
+    when '--vtun-address'
+      opts[:vtun_address] = arg
+
+    when '--vtun-port'
+      unless arg =~ /^[1-9][0-9]*$/
+        Log.error("invalid port number (#{arg})")
+        return 1
+      end
+      opts[:vtun_port] = arg.to_i
+
+    end
+  end
+
+  if ARGV.length != 0
+    Log.error("invalid number of arguments (#{ARGV.length}), expected 0")
+    return 1
+  end
+
+  unless ctrlmsg.nil?
+    UNIXSocket.open(File.join(opts[:rundir], 'ctrlsocket')) do |ctrlsocket|
+      ctrlsocket.puts(ctrlmsg)
+    end
+    return 0
+  end
+
+  unless opts[:no_puavo]
+    begin
+      require 'puavo/etc'
+      require 'puavo/rest-client'
+    rescue LoadError => e
+      # Puavo-integration requires aforementioned modules, but puavo-wlanap
+      # can still operate without Puavo. This has the same effect as
+      # --no-puavo command line option.
+      opts[:no_puavo] = true
+      Log.warning("Puavo integration is disabled: #{e}")
+    end
+  end
+
+  AccessPoint.new(opts).run
+end
+
+exit(main())

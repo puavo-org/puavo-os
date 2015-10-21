@@ -6,8 +6,6 @@
 override_dh_auto_install:
 	$(MAKE) -C ap install prefix=/usr sysconfdir=/etc DESTDIR=$(CURDIR)/debian/puavo-wlanap
 	$(MAKE) -C gw install prefix=/usr sysconfdir=/etc DESTDIR=$(CURDIR)/debian/puavo-wlangw
-	$(MAKE) -C ap-dnsproxy install prefix=/usr sysconfdir=/etc DESTDIR=$(CURDIR)/debian/puavo-wlanap-dnsproxy
-	$(MAKE) -C ap-mdns install prefix=/usr sysconfdir=/etc DESTDIR=$(CURDIR)/debian/puavo-wlanap-mdns
 	$(MAKE) -C mapper install DESTDIR=$(CURDIR)/debian/puavo-wlanmapper
 
 override_dh_install:

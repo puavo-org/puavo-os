@@ -1,2 +1,0 @@
-SUBSYSTEM=="ieee80211", RUN+="/usr/sbin/service puavo-wlanap restart"
-ACTION=="add" SUBSYSTEM=="net", ENV{DEVTYPE}=="wlan", RUN+="/usr/lib/puavo-wlanap/set-txpower"
