@@ -395,39 +395,22 @@ end
 
 class AccessPoint
 
-  attr_accessor :rundir
-  attr_accessor :use_puavo
-  attr_accessor :vtun_address
-  attr_accessor :vtun_port
-
   RUNDIR       = '/run/puavo-wlanap'
   VTUN_ADDRESS = 'wlangw'
   VTUN_PORT    = 45045
 
-  def initialize
+  def initialize(kwargs = {})
     @ctrlconn      = nil
     @ctrlconn_time = nil
     @ctrlserv      = nil
-    @nets          = []
-    @rundir        = RUNDIR
-    @use_puavo     = true
-    @vtun_address  = VTUN_ADDRESS
-    @vtun_port     = VTUN_PORT
+    @nets          = kwargs.fetch(:nets, [])
+    @rundir        = kwargs.fetch(:rundir, RUNDIR)
+    @no_puavo      = kwargs.fetch(:no_puavo, false)
+    @vtun_address  = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
+    @vtun_port     = kwargs.fetch(:vtun_port, VTUN_PORT)
     @services      = {}
     @phy_list      = []
     @bss_list      = []
-  end
-
-  def add_net(type, ssid, password='')
-    @nets << {
-      'type'     => type,
-      'ssid'     => ssid,
-      'password' => password,
-    }
-  end
-
-  def send_ctrlmsg(msg)
-    UNIXSocket.new(File.join(@rundir, 'ctrlsocket')).puts(msg)
   end
 
   def run
@@ -453,7 +436,7 @@ class AccessPoint
       return 1
     end
 
-    if @use_puavo
+    unless @no_puavo
       conf.update(PuavoAPI.get_conf)
       @nets.concat(PuavoAPI.get_nets)
     end
@@ -614,7 +597,8 @@ class AccessPoint
 end
 
 def main
-  ap = AccessPoint.new
+  opts    = {}
+  ctrlmsg = nil
 
   GetoptLong.new(
     ['--ctrlmsg'                   , GetoptLong::REQUIRED_ARGUMENT],
@@ -627,8 +611,7 @@ def main
   ).each do |opt, arg|
     case opt
     when '--ctrlmsg'
-      ap.send_ctrlmsg(arg)
-      return 0
+      ctrlmsg = arg
 
     when '--help'
       puts <<EOF
@@ -659,23 +642,27 @@ EOF
       return 0
 
     when '--network-open'
-      ap.add_net('open', arg)
+      (opts[:nets] or opts[:nets] = []) << {
+        'type'     => 'open',
+        'ssid'     => arg,
+        'password' => '',
+      }
 
     when '--no-puavo'
-      ap.use_puavo = false
+      opts[:no_puavo] = true
 
     when '--rundir'
-      ap.rundir = arg
+      opts[:rundir] = arg
 
     when '--vtun-address'
-      ap.vtun_address = arg
+      opts[:vtun_address] = arg
 
     when '--vtun-port'
       unless arg =~ /^[1-9][0-9]*$/
         Log.error("invalid port number (#{arg})")
         return 1
       end
-      ap.vtun_port = arg.to_i
+      opts[:vtun_port] = arg.to_i
 
     end
   end
@@ -685,7 +672,12 @@ EOF
     return 1
   end
 
-  if ap.use_puavo
+  unless ctrlmsg.nil?
+    UNIXSocket.new(File.join(opts[:rundir], 'ctrlsocket')).puts(ctrlmsg)
+    return 0
+  end
+
+  unless opts[:no_puavo]
     begin
       require 'puavo/etc'
       require 'puavo/rest-client'
@@ -693,12 +685,12 @@ EOF
       # Puavo-integration requires aforementioned modules, but puavo-wlanap
       # can still operate without Puavo. This has the same effect as
       # --no-puavo command line option.
-      ap.use_puavo = false
+      opts[:no_puavo] = true
       Log.warning("Puavo integration is disabled: #{e}")
     end
   end
 
-  ap.run
+  AccessPoint.new(opts).run
 end
 
 exit(main())
