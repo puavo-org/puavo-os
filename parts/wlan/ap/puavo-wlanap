@@ -509,7 +509,7 @@ class AccessPoint
         end
       else
         ready = IO.select([selfpipe_r, @conn.nil? ? serv : @conn], [], [],
-                          @conn.nil? ? nil : max(0, 5 - (Time.now - @conn_time)))
+                          @conn.nil? ? nil : [0, 5 - (Time.now - @conn_time)].max)
 
         if ready.nil?
           if @conn && Time.now - @conn_time > 5
