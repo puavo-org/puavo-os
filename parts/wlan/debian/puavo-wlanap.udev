@@ -1,1 +1,1 @@
-SUBSYSTEM=="net", ENV{DEVTYPE}=="wlan", RUN+="/sbin/restart puavo-wlanap"
+SUBSYSTEM=="net", ENV{DEVTYPE}=="wlan", RUN+="/bin/sh -c '/sbin/start puavo-wlanap || /sbin/restart puavo-wlanap'"
