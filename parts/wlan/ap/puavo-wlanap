@@ -208,7 +208,7 @@ end
 
 module PuavoAPI
 
-  def self.get_nets()
+  def self.get_nets
     nets_wait = 1
     while true
       client = PuavoRestClient.new
@@ -229,7 +229,7 @@ module PuavoAPI
     end
   end
 
-  def self.get_conf()
+  def self.get_conf
     client = PuavoRestClient.new
     response = client.get("/v3/devices/#{PUAVO_ETC.hostname}")
 
@@ -404,17 +404,18 @@ class AccessPoint
   VTUN_ADDRESS = 'wlangw'
   VTUN_PORT    = 45045
 
-  def initialize()
-    @conn         = nil
-    @conn_time    = nil
-    @nets         = []
-    @rundir       = RUNDIR
-    @use_puavo    = true
-    @vtun_address = VTUN_ADDRESS
-    @vtun_port    = VTUN_PORT
-    @services     = {}
-    @phy_list     = []
-    @bss_list     = []
+  def initialize
+    @ctrlconn      = nil
+    @ctrlconn_time = nil
+    @ctrlserv      = nil
+    @nets          = []
+    @rundir        = RUNDIR
+    @use_puavo     = true
+    @vtun_address  = VTUN_ADDRESS
+    @vtun_port     = VTUN_PORT
+    @services      = {}
+    @phy_list      = []
+    @bss_list      = []
   end
 
   def add_net(type, ssid, password='')
@@ -429,7 +430,7 @@ class AccessPoint
     UNIXSocket.new(File.join(@rundir, 'ctrlsocket')).puts(msg)
   end
 
-  def run()
+  def run
     conf = {}
 
     Signal.trap('EXIT') do
@@ -486,16 +487,18 @@ class AccessPoint
       end
     end
 
-    serv = UNIXServer.new(File.join(@rundir, 'ctrlsocket'))
+    @ctrlserv = UNIXServer.new(File.join(@rundir, 'ctrlsocket'))
 
-    start_services()
+    start_services
 
     loop do
       signal = sigqueue.pop
       case signal
+
       when :INT, :QUIT, :TERM
         Log.error("received fatal signal #{signal}")
         return 1
+
       when :CHLD
         begin
           child_pid = Process.wait(0, Process::WNOHANG)
@@ -507,59 +510,56 @@ class AccessPoint
           Log.error("child service #{child_name} died")
           return 1
         end
+
       else
-        ready = IO.select([selfpipe_r, @conn.nil? ? serv : @conn], [], [],
-                          @conn.nil? ? nil : [0, 5 - (Time.now - @conn_time)].max)
+        reads   = [selfpipe_r, @ctrlconn.nil? ? @ctrlserv : @ctrlconn]
+        timeout = @ctrlconn.nil? ? nil : [0, 5 - (Time.now - @ctrlconn_time)].max
+
+        ready = IO.select(reads, [], [], timeout)
 
         if ready.nil?
-          if @conn && Time.now - @conn_time > 5
+          if @ctrlconn && Time.now - @ctrlconn_time > 5
             Log.warning('control socket connection timeout')
-            close_conn
+            close_ctrlconn
           end
           next
         end
 
-        if ready[0].include?(selfpipe_r)
-          selfpipe_r.read_nonblock(1)
-        end
+        selfpipe_r.read_nonblock(1) if ready[0].include?(selfpipe_r)
+        accept_ctrlconn             if ready[0].include?(@ctrlserv)
+        handle_ctrlconn             if ready[0].include?(@ctrlconn)
 
-        if ready[0].include?(serv)
-          accept_conn(serv)
-        end
-
-        if ready[0].include?(@conn)
-          handle_conn
-        end
       end
     end
   end
 
   private
 
-  def accept_conn(serv)
-    @conn = serv.accept
-    @conn_time = Time.now
+  def accept_ctrlconn
+    @ctrlconn      = @ctrlserv.accept
+    @ctrlconn_time = Time.now
   end
 
-  def close_conn
-    @conn.close
-    @conn = nil
-    @conn_time = nil
+  def close_ctrlconn
+    @ctrlconn.close
+
+    @ctrlconn      = nil
+    @ctrlconn_time = nil
   end
 
-  def handle_conn
-    if @conn.eof?
+  def handle_ctrlconn
+    if @ctrlconn.eof?
       Log.warning('received invalid control message')
     else
-      handle_ctrlmsg(@conn.readline)
+      handle_ctrlmsg(@ctrlconn.readline)
     end
   ensure
-    close_conn
+    close_ctrlconn
   end
 
   def handle_ctrlmsg(line)
     line.strip!
-    cmd, sep, args = line.partition ':'
+    cmd, sep, args = line.partition(':')
     case cmd
     when 'vtun-up'
       handle_ctrlmsg_vtun_up(args)
@@ -569,7 +569,7 @@ class AccessPoint
   end
 
   def handle_ctrlmsg_vtun_up(args)
-    iface, *bridge = args.split ':'
+    iface, *bridge = args.split(':')
     if bridge.length == 1
       bridge = bridge[0]
       run_or_fail('ifconfig', iface, 'up')
@@ -581,7 +581,7 @@ class AccessPoint
     end
   end
 
-  def start_services()
+  def start_services
     @bss_list.each do |bss|
       run_or_fail('brctl', 'addbr', bss[:bridge])
       run_or_fail('brctl', 'setfd', bss[:bridge], '0')
@@ -698,7 +698,7 @@ EOF
     end
   end
 
-  ap.run()
+  ap.run
 end
 
 exit(main())
