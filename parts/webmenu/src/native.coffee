@@ -3,6 +3,7 @@
 # "browser" in scripts/start.js.
 ###
 
+require "../polyfills"
 os = require "os"
 posix = require "posix"
 mkdirp = require "mkdirp"

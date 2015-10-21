@@ -29,8 +29,8 @@ getMenuJSONPaths = (webmenuHome) ->
     menu_json_paths = []
     for dir in dirs
         for suffix in suffixes
-            filename = "menu#{ suffix }.json"
-            menu_json_paths.push(path.join(dir, filename))
+            menu_json_paths.push(path.join(dir, "menu#{ suffix }.yaml"))
+            menu_json_paths.push(path.join(dir, "menu#{ suffix }.json"))
 
     return menu_json_paths
 
