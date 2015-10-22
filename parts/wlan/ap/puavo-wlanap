@@ -286,6 +286,7 @@ module PuavoAPI
 end
 
 RUNDIR       = '/run/puavo-wlanap'
+CTRLSOCKET   = File.join(RUNDIR, 'ctrlsocket')
 
 # The real path of this script.
 THIS_SCRIPT  = Pathname.new($0).realpath
@@ -456,7 +457,7 @@ class AccessPoint
       end
     end
 
-    @ctrlserv = UNIXServer.new(File.join(RUNDIR, 'ctrlsocket'))
+    @ctrlserv = UNIXServer.new(CTRLSOCKET)
 
     start_vtunds
     start_hostapds
@@ -665,7 +666,7 @@ EOF
   end
 
   unless ctrlmsg.nil?
-    UNIXSocket.open(File.join(RUNDIR, 'ctrlsocket')) do |ctrlsocket|
+    UNIXSocket.open(CTRLSOCKET) do |ctrlsocket|
       ctrlsocket.puts(ctrlmsg)
     end
     return 0
