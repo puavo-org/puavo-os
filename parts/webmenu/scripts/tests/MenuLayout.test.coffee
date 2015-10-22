@@ -8,28 +8,32 @@ data =
     type: "menu"
     name: "Top"
     items: [
-        type: "desktop"
-        name: "Gimp"
-        command: ["gimp"]
-    ,
-        type: "desktop"
-        name: "Shotwell"
-        command: ["shotwell"]
-    ,
-        type: "web"
-        name: "Flickr"
-        url: "http://flickr.com"
-    ,
-        type: "web"
-        name: "Picasa"
-        url: "http://picasa.com"
-    ,
         type: "menu"
-        name: "submenu"
+        name: "Tabs"
         items: [
+            type: "desktop"
+            name: "Gimp"
+            command: ["gimp"]
+        ,
+            type: "desktop"
+            name: "Shotwell"
+            command: ["shotwell"]
+        ,
             type: "web"
-            name: "Subitem"
-            url: "http://example.com"
+            name: "Flickr"
+            url: "http://flickr.com"
+        ,
+            type: "web"
+            name: "Picasa"
+            url: "http://picasa.com"
+        ,
+            type: "menu"
+            name: "submenu"
+            items: [
+                type: "web"
+                name: "Subitem"
+                url: "http://example.com"
+            ]
         ]
     ]
 
