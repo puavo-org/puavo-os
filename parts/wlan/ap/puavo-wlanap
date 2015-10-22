@@ -118,6 +118,35 @@ module Dot11
     end
   end
 
+  def self.fill_phy_list(phy_list, band)
+    Dot11.each_interface do |iface|
+      next unless band == Dot11.get_band(iface)
+      run_or_fail('ifconfig', iface, 'up')
+      best_channels = Dot11.scan(iface, band)
+      free_channels = best_channels - phy_list.map { |phy| phy[:channel] }
+      next if free_channels.empty?
+      channel = free_channels[0]
+
+      phy_list << {
+        :iface    => iface,
+        :channel  => channel,
+        :bssid    => Dot11.get_bssid(iface),
+        :hw_mode  => Dot11::CHANNELS_5G.include?(channel) ? 'a' : 'g',
+        :ht_capab => Dot11.get_ht_capab(iface, channel),
+      }
+    end
+  end
+
+  def self.find_phys
+    phy_list = []
+
+    Dot11.fill_phy_list(phy_list, Dot11::BAND_5G)
+    Dot11.fill_phy_list(phy_list, Dot11::BAND_2G)
+    Dot11.fill_phy_list(phy_list, Dot11::BAND_5G | Dot11::BAND_2G)
+
+    phy_list
+  end
+
   def self.get_band(iface)
     hw_mode = IO.popen(['iwconfig', iface]) do |io|
       io.gets =~ /^.* IEEE 802.11([a-z]+).*$/
@@ -330,35 +359,6 @@ def run_or_fail(cmd, *args)
   $?.success? or fail "command '%s' failed" % ([cmd] + args).join(' ')
 end
 
-def fill_phy_list(phy_list, band)
-  Dot11.each_interface do |iface|
-    next unless band == Dot11.get_band(iface)
-    run_or_fail('ifconfig', iface, 'up')
-    best_channels = Dot11.scan(iface, band)
-    free_channels = best_channels - phy_list.map { |phy| phy[:channel] }
-    next if free_channels.empty?
-    channel = free_channels[0]
-
-    phy_list << {
-      :iface    => iface,
-      :channel  => channel,
-      :bssid    => Dot11.get_bssid(iface),
-      :hw_mode  => Dot11::CHANNELS_5G.include?(channel) ? 'a' : 'g',
-      :ht_capab => Dot11.get_ht_capab(iface, channel),
-    }
-  end
-end
-
-def get_phy_list
-  phy_list = []
-
-  fill_phy_list(phy_list, Dot11::BAND_5G)
-  fill_phy_list(phy_list, Dot11::BAND_2G)
-  fill_phy_list(phy_list, Dot11::BAND_5G | Dot11::BAND_2G)
-
-  phy_list
-end
-
 class AccessPoint
 
   RUNDIR       = '/run/puavo-wlanap'
@@ -392,7 +392,7 @@ class AccessPoint
 
     FileUtils.mkdir_p(@rundir)
 
-    @phy_list.concat(get_phy_list)
+    @phy_list = Dot11.find_phys
     if @phy_list.empty?
       Log.error('no suitable physical interfaces available')
       return 1
