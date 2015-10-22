@@ -14,6 +14,8 @@ parseExec = require "./parseExec"
 
 # Generate unique hash from any json serializable object
 json2hash = (ob) ->
+  if ob and ob.type is "desktop" and ob.source
+    return ob.source
   if typeof ob is "string"
     str = ob
   else
@@ -93,6 +95,7 @@ injectDesktopData = (menu, options) ->
     if not menu.source
       throw new Error("'desktop' item in menu.json item is missing " +
         "'source' attribute: #{ JSON.stringify(menu) }")
+
 
     desktopEntry = null
 
