@@ -8,18 +8,24 @@ class Tabs extends ViewMaster
 
     className: "bb-tabs"
 
+    constructor: ->
+        super
+        @currentTab = 0
+
     template: require "../templates/Tabs.hbs"
 
     events:
         "click a": "selectTab"
 
     selectTab: (e) ->
-        @bubble "select-tab", @collection.at($(e.target).data("index"))
+        @currentTab = parseInt($(e.target).data("index"), 10)
+        @bubble "select-tab", @collection.at(@currentTab)
+        @render()
 
     context: ->
         return {
-            tabs: @collection.map (coll, index) ->
-                _.extend(coll.toJSON(), {index: index})
+            tabs: @collection.map (tab, index) =>
+                _.extend(tab.toJSON(), {index: index, active: index is @currentTab})
         }
 
 

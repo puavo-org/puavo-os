@@ -31,7 +31,7 @@ class MenuLayout extends ViewMaster
         @lightbox = null
 
         @menuListView = new MenuListView
-            model: opts.initialMenu.items.at(1)
+            model: opts.initialMenu.items.at(0)
             collection: opts.allItems
             config: opts.config
 
