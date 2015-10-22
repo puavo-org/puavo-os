@@ -370,7 +370,6 @@ class AccessPoint
     @ctrlconn      = nil
     @ctrlconn_time = nil
     @ctrlserv      = nil
-    @nets          = kwargs.fetch(:nets, [])
     @phy_list      = []
     @rundir        = kwargs.fetch(:rundir, RUNDIR)
     @services      = {}
@@ -400,7 +399,7 @@ class AccessPoint
     end
 
     conf = PuavoAPI.get_conf
-    @nets.concat(PuavoAPI.get_nets)
+    nets = PuavoAPI.get_nets
 
     @phy_list.each do |phy|
       phy[:txpower] = conf[:txpower]
@@ -409,19 +408,19 @@ class AccessPoint
       end
     end
 
-    if @nets.empty?
+    if nets.empty?
       Log.error('no networks defined')
       return 1
     end
 
     # At most 4 BSSes are supported.
-    ignored_nets = @nets.slice!(4..-1)
+    ignored_nets = nets.slice!(4..-1)
     if !ignored_nets.nil? && !ignored_nets.empty?
       Log.warning("more than 4 networks defined, ignoring " +
                   ignored_nets.map{ |n| n['ssid'] }.join(', '))
     end
 
-    @nets.length.times.zip(@nets).map do |i, net|
+    nets.length.times.zip(nets).map do |i, net|
       @bss_list << {
         :index    => i,
         :bridge   => hexdigest15(net['ssid']),
@@ -600,7 +599,6 @@ def main
   GetoptLong.new(
     ['--ctrlmsg'                   , GetoptLong::REQUIRED_ARGUMENT],
     ['--help', '-h'                , GetoptLong::NO_ARGUMENT],
-    ['--network-open'              , GetoptLong::REQUIRED_ARGUMENT],
     ['--rundir'                    , GetoptLong::REQUIRED_ARGUMENT],
     ['--vtun-address'              , GetoptLong::REQUIRED_ARGUMENT],
     ['--vtun-port'                 , GetoptLong::REQUIRED_ARGUMENT],
@@ -623,9 +621,6 @@ Options:
  -h, --help
          Display this help and exit.
 
-     --network-open SSID
-         Create an open network with the given SSID.
-
      --rundir DIR
          Set the runtime directory, default: #{AccessPoint::RUNDIR}
 
@@ -637,13 +632,6 @@ Options:
 
 EOF
       return 0
-
-    when '--network-open'
-      (opts[:nets] or opts[:nets] = []) << {
-        'type'     => 'open',
-        'ssid'     => arg,
-        'password' => '',
-      }
 
     when '--rundir'
       opts[:rundir] = arg
