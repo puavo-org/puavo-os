@@ -672,7 +672,9 @@ EOF
   end
 
   unless ctrlmsg.nil?
-    UNIXSocket.open(File.join(opts[:rundir], 'ctrlsocket')) do |ctrlsocket|
+    rundir = opts.fetch(:rundir, AccessPoint::RUNDIR)
+    ctrlsocket_filepath = File.join(rundir, 'ctrlsocket')
+    UNIXSocket.open(ctrlsocket_filepath) do |ctrlsocket|
       ctrlsocket.puts(ctrlmsg)
     end
     return 0
