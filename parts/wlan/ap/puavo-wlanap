@@ -634,6 +634,10 @@ EOF
       return 0
 
     when '--rundir'
+      if opts.has_key? :rundir
+        Log.error('--rundir can be given only once')
+        return 1
+      end
       opts[:rundir] = arg
 
     when '--vtun-address'
