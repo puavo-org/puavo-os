@@ -123,6 +123,23 @@ if puavoDomain
         expandVariables(config.get("profileCMD"), "url")
 
 
+desktopItems = [
+    "/etc/webmenu/desktop.d",
+    webmenuHome + "/desktop.d",
+].reduce((memo, dirPath) ->
+    try
+        for filename in fs.readdirSync(dirPath).sort()
+            try
+                memo = _.extend({}, memo, requirefallback(path.join(dirPath, filename)))
+            catch err
+                throw err if err.code isnt "ENOENT"
+    catch err
+        throw err if err.code isnt "ENOENT"
+
+    return memo
+, {})
+
+
 desktopReadStarted = Date.now()
 # inject data from .desktop file to menuJSON.
 menutools.injectDesktopData(menuJSON, {
@@ -132,6 +149,7 @@ menutools.injectDesktopData(menuJSON, {
     fallbackIcon: config.get("fallbackIcon")
     hostType: config.get("hostType")
     installerIcon: config.get("installerIcon") || "kentoo"
+    desktopItems: desktopItems
 })
 
 desktopReadTook = (Date.now() - desktopReadStarted) / 1000

@@ -7,6 +7,8 @@ fs = require "fs"
 execSync = require "execSync"
 crypto = require "crypto"
 
+_ = require "underscore"
+
 dotdesktop = require "./dotdesktop"
 parseExec = require "./parseExec"
 
@@ -53,6 +55,8 @@ normalizeIconPath = (p) ->
 
   return "file://" + path.join(__dirname, "..", p)
 
+
+isValidMenuLauncher = (o) -> o.name && o.command
 
 injectDesktopData = (menu, options) ->
 
@@ -107,13 +111,17 @@ injectDesktopData = (menu, options) ->
       menu.osIconPath ?= findOsIcon(desktopEntry.osIcon, options)
       menu.upstreamName ?= desktopEntry.upstreamName
       menu.osIconPath = normalizeIconPath(menu.osIconPath)
-    else if menu.installer
+
+    _.extend(menu, options.desktopItems[menu.source])
+
+    if not isValidMenuLauncher(menu) and menu.installer
       menu.useInstaller = true
       menu.command = menu.installer
       menu.osIconPath = findOsIcon(options.installerIcon, options)
       menu.name ?= menu.source
-    else
-      console.error "WARNING: Cannot find name for .desktop entry: " + menu.source
+
+    if not isValidMenuLauncher(menu)
+      console.error "WARNING: Cannot make proper .desktop entry: " + menu.source
       menu.broken = true
 
   if menu.type is "menu"
