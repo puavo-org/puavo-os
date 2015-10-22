@@ -641,6 +641,10 @@ EOF
       opts[:rundir] = arg
 
     when '--vtun-address'
+      if opts.has_key? :vtun_address
+        Log.error('--vtun-address can be given only once')
+        return 1
+      end
       opts[:vtun_address] = arg
 
     when '--vtun-port'
