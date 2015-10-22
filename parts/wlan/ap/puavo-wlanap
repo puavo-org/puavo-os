@@ -610,6 +610,10 @@ def main
   ).each do |opt, arg|
     case opt
     when '--ctrlmsg'
+      unless ctrlmsg.nil?
+        Log.error('--ctrlmsg can be given only once')
+        return 1
+      end
       ctrlmsg = arg
 
     when '--help'
