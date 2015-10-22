@@ -285,6 +285,8 @@ module PuavoAPI
 
 end
 
+RUNDIR       = '/run/puavo-wlanap'
+
 # The real path of this script.
 THIS_SCRIPT  = Pathname.new($0).realpath
 
@@ -298,7 +300,7 @@ hw_mode=<%= phy[:hw_mode] %>
 channel=<%= phy[:channel] %>
 max_num_sta=1000
 wmm_enabled=1
-ctrl_interface=<%= @rundir %>/hostapd
+ctrl_interface=<%= RUNDIR %>/hostapd
 ieee80211n=1
 ht_capab=<%= phy[:ht_capab] %>
 wds_sta=1
@@ -343,7 +345,7 @@ puavo-wlanap {
     multi     yes;
 
     up {
-        program "<%= THIS_SCRIPT %> --rundir '<%= @rundir %>' --ctrlmsg 'vtun-up:%%:<%= bss[:bridge] %>'";
+        program "<%= THIS_SCRIPT %> --ctrlmsg 'vtun-up:%%:<%= bss[:bridge] %>'";
     };
 }
 EOF
@@ -361,7 +363,6 @@ end
 
 class AccessPoint
 
-  RUNDIR       = '/run/puavo-wlanap'
   VTUN_ADDRESS = 'wlangw'
   VTUN_PORT    = 45045
 
@@ -371,17 +372,16 @@ class AccessPoint
     @ctrlconn_time = nil
     @ctrlserv      = nil
     @phy_list      = []
-    @rundir        = kwargs.fetch(:rundir, RUNDIR)
     @services      = {}
     @vtun_address  = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
     @vtun_port     = kwargs.fetch(:vtun_port, VTUN_PORT)
   end
 
   def run
-    FileUtils.mkdir_p(@rundir)
-    File.open(File.join(@rundir, 'lock'), File::RDWR | File::CREAT, 0640) do |lockfile|
+    FileUtils.mkdir_p(RUNDIR)
+    File.open(File.join(RUNDIR, 'lock'), File::RDWR | File::CREAT, 0640) do |lockfile|
       unless lockfile.flock(File::LOCK_EX | File::LOCK_NB)
-        Log.error("another instance of puavo-wlanap is already running in #{@rundir}")
+        Log.error("another instance of puavo-wlanap is already running in #{RUNDIR}")
         return 1
       end
       run_locked
@@ -438,7 +438,7 @@ class AccessPoint
         system('brctl', 'delbr', bss[:bridge])
       end
 
-      FileUtils.rm_rf(@rundir)
+      FileUtils.rm_rf(RUNDIR)
     end
 
     write_hostapd_confs
@@ -456,7 +456,7 @@ class AccessPoint
       end
     end
 
-    @ctrlserv = UNIXServer.new(File.join(@rundir, 'ctrlsocket'))
+    @ctrlserv = UNIXServer.new(File.join(RUNDIR, 'ctrlsocket'))
 
     start_vtunds
     start_hostapds
@@ -551,7 +551,7 @@ class AccessPoint
       run_or_fail('brctl', 'setfd', bss[:bridge], '0')
       run_or_fail('ifconfig', bss[:bridge], 'up')
       vtund_name = "vtund_#{bss[:bridge]}"
-      vtund_conffile = File.join(@rundir, "#{vtund_name}.conf")
+      vtund_conffile = File.join(RUNDIR, "#{vtund_name}.conf")
       vtund_pid = spawn('vtund', '-n', '-P', @vtun_port.to_s,
                         '-f', vtund_conffile,
                         'puavo-wlanap', @vtun_address)
@@ -570,15 +570,15 @@ class AccessPoint
       end
 
       hostapd_name = "hostapd_#{phy[:iface]}"
-      hostapd_pidfile = File.join(@rundir, "#{hostapd_name}.pid")
-      hostapd_conffile = File.join(@rundir, "#{hostapd_name}.conf")
+      hostapd_pidfile = File.join(RUNDIR, "#{hostapd_name}.pid")
+      hostapd_conffile = File.join(RUNDIR, "#{hostapd_name}.conf")
       hostapd_pid = spawn('hostapd', '-P', hostapd_pidfile, hostapd_conffile)
       @services[hostapd_pid] = hostapd_name
     end
   end
 
   def write_conf(filename, conf)
-    File.open(File.join(@rundir, filename), 'w', 0640) do |file|
+    File.open(File.join(RUNDIR, filename), 'w', 0640) do |file|
       file.write(conf)
     end
   end
@@ -608,7 +608,6 @@ def main
   GetoptLong.new(
     ['--ctrlmsg'                   , GetoptLong::REQUIRED_ARGUMENT],
     ['--help', '-h'                , GetoptLong::NO_ARGUMENT],
-    ['--rundir'                    , GetoptLong::REQUIRED_ARGUMENT],
     ['--vtun-address'              , GetoptLong::REQUIRED_ARGUMENT],
     ['--vtun-port'                 , GetoptLong::REQUIRED_ARGUMENT],
   ).each do |opt, arg|
@@ -630,9 +629,6 @@ Options:
  -h, --help
          Display this help and exit.
 
-     --rundir DIR
-         Set the runtime directory, default: #{AccessPoint::RUNDIR}
-
      --vtun-address ADDRESS
          Set the address of the vtun server, default: #{AccessPoint::VTUN_ADDRESS}
 
@@ -641,13 +637,6 @@ Options:
 
 EOF
       return 0
-
-    when '--rundir'
-      if opts.has_key? :rundir
-        Log.error('--rundir can be given only once')
-        return 1
-      end
-      opts[:rundir] = arg
 
     when '--vtun-address'
       if opts.has_key? :vtun_address
@@ -676,9 +665,7 @@ EOF
   end
 
   unless ctrlmsg.nil?
-    rundir = opts.fetch(:rundir, AccessPoint::RUNDIR)
-    ctrlsocket_filepath = File.join(rundir, 'ctrlsocket')
-    UNIXSocket.open(ctrlsocket_filepath) do |ctrlsocket|
+    UNIXSocket.open(File.join(RUNDIR, 'ctrlsocket')) do |ctrlsocket|
       ctrlsocket.puts(ctrlmsg)
     end
     return 0
