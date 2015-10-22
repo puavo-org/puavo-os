@@ -12,6 +12,11 @@ class Tabs extends ViewMaster
         super
         @currentTab = 0
 
+        @listenTo this, "reset", =>
+            @currentTab = 0
+            @render()
+
+
     template: require "../templates/Tabs.hbs"
 
     events:
