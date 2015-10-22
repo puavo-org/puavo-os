@@ -648,6 +648,10 @@ EOF
       opts[:vtun_address] = arg
 
     when '--vtun-port'
+      if opts.has_key? :vtun_port
+        Log.error('--vtun-port can be given only once')
+        return 1
+      end
       unless arg =~ /^[1-9][0-9]*$/
         Log.error("invalid port number (#{arg})")
         return 1
