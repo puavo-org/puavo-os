@@ -378,20 +378,19 @@ class AccessPoint
   end
 
   def run
-    Signal.trap('EXIT') do
-      Process.kill('-SIGTERM', 0)
-
-      @bss_list.each do |bss|
-        # Ignore errors, we are already exiting.
-        system('ifconfig', bss[:bridge], 'down')
-        system('brctl', 'delbr', bss[:bridge])
-      end
-
-      FileUtils.rm_rf(@rundir)
-    end
-
     FileUtils.mkdir_p(@rundir)
+    File.open(File.join(@rundir, 'lock'), File::RDWR | File::CREAT, 0640) do |lockfile|
+      unless lockfile.flock(File::LOCK_EX | File::LOCK_NB)
+        Log.error("another instance of puavo-wlanap is already running in #{@rundir}")
+        return 1
+      end
+      run_locked
+    end
+  end
 
+  private
+
+  def run_locked
     @phy_list = Dot11.find_phys
     if @phy_list.empty?
       Log.error('no suitable physical interfaces available')
@@ -428,6 +427,18 @@ class AccessPoint
         :type     => net['type'],
         :ssid     => net['ssid'],
       }
+    end
+
+    Signal.trap('EXIT') do
+      Process.kill('-SIGTERM', 0)
+
+      @bss_list.each do |bss|
+        # Ignore errors, we are already exiting.
+        system('ifconfig', bss[:bridge], 'down')
+        system('brctl', 'delbr', bss[:bridge])
+      end
+
+      FileUtils.rm_rf(@rundir)
     end
 
     write_hostapd_confs
@@ -487,8 +498,6 @@ class AccessPoint
       end
     end
   end
-
-  private
 
   def accept_ctrlconn
     @ctrlconn      = @ctrlserv.accept
