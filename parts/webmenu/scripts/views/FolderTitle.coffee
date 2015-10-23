@@ -15,16 +15,17 @@ class FolderTitle extends ViewMaster
     constructor: ->
         super
         @initial = @model
-        @previous = null
+        @prevStack = []
         @searchActive = false
 
-        @listenTo this, "open-menu", (model) =>
-            @previous = @model
+        @listenTo this, "open-menu", (model, sender) =>
+            if sender isnt this
+                @prevStack.push(@model)
             @model = model
             @render()
 
         @listenTo this, "reset", =>
-            @previous = null
+            @prevStack = []
             @model = @initial
             @render()
 
@@ -37,8 +38,8 @@ class FolderTitle extends ViewMaster
     events:
         "click a": (e) ->
             e.preventDefault()
-            if @previous
-                @bubble "open-menu", @previous, this
+            if @prevStack.length isnt 0
+                @bubble "open-menu", @prevStack.pop(), this
 
     isTab: -> !@model.parent?.parent
 

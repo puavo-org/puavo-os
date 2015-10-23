@@ -56,9 +56,9 @@ class MenuListView extends ViewMaster
             @refreshViews()
             @navigation.deactivate()
 
-        @listenTo this, "open-menu", (model) =>
+        @listenTo this, "open-menu", (model, sender) =>
             # Rebroadcast message to the sibling title
-            @folderTitle.broadcast("open-menu", model)
+            @folderTitle.broadcast("open-menu", model, sender)
 
             @model = model
             @setCurrent()
