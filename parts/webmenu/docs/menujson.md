@@ -1,22 +1,29 @@
-# menu.json
+# menu files
 
-Menu content is created from a menu.json file. Webmenu will look it from
+Menu content is created from JSON and YAML files. The files are read from
 following locations:
 
-  1. ~/.config/webmenu/menu.json
-  2. /etc/webmenu/menu.json
-  3. the bundled menu.json
+  1. `~/.config/webmenu/menu.{json,yaml}`
+  2. `/etc/webmenu/menu.{json,yaml}`
+  3. the bundled `menu.json`
 
-Use these paths to customize Webmenu content.
+The first one found will be used as the menu content.
 
-In future Webmenu will be able to fetch it from a web service.
+Webmenu can also have tabs. The tabs can be defined in following locations:
+
+  1. `~/.config/webmenu/tab.d/*.{json,yaml}`
+    - Ex. `~/.config/webmenu/tab.d/mytab.yaml`
+  2. `/etc/webmenu/tab.d/*.{json,yaml}`
+
+
+Each file will represent a single tab. The data structure is exactly the same
+in every file.
 
 ## Structure
 
-menu.json is a nested object presentation of menus and launchable items.
+Menu file is a nested object presentation of menus and launchable items.
 
 Every object must have a `type` attribute which can be one of following:
-
 
 ### `menu`
 
@@ -27,6 +34,8 @@ Attributes
 
   - `name`: {String, required} Name of the item
   - `items`: {Array, required} Array of launcher object and/or menu objects
+  - `weight`: {Number} Set tab order. Tabs are sorted as ascending by the
+    weight. Relevant only in the top level menu items.
 
 ### `custom`
 
