@@ -41,6 +41,8 @@ class FolderTitle extends ViewMaster
             if @prevStack.length isnt 0
                 @bubble "open-menu", @prevStack.pop(), this
 
+    # Top level menu is the tab menu. So a menu item without grandparent is a
+    # tab item
     isTab: -> !@model.parent?.parent
 
 
