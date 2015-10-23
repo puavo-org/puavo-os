@@ -1,3 +1,27 @@
+puavo-wlan (0.11.0) trusty; urgency=medium
+
+  * New release
+  * ap: prepend all log messages with a timestamp
+  * ap: add some logging
+  * ap: wait max 5sec for hostapd sockets before spawning hostapd_clis
+  * ap: define hostapd control interface dir in a global constant
+  * ap: add handler stubs for hostapd events
+  * ap: add script for translating hostapd actions to control messages
+  * ap: define control socket filepath in a global constant
+  * ap: remove --rundir
+  * ap: use File.flock() to ensure only one instance running
+  * ap: allow --vtun-port only once
+  * ap: allow --vtun-address only once
+  * ap: allow --rundir only once
+  * ap: move the function for finding suitable PHYs to Dot11 module
+  * ap: remove --network-open
+  * ap: remove --no-puavo
+  * ap: allow --ctrlmsg only once
+  * ap: use the default rundir if --ctrlmsg is used without --rundir
+  * Git(a6b524348d85ed2aa12826d4ba1d74b621935056)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Fri, 23 Oct 2015 14:39:35 +0300
+
 puavo-wlan (0.10.2) trusty; urgency=medium
 
   * New release
