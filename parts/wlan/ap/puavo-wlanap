@@ -285,10 +285,11 @@ module PuavoAPI
 
 end
 
-RUNDIR                = '/run/puavo-wlanap'
-CTRLSOCKET            = File.join(RUNDIR, 'ctrlsocket')
-THIS_SCRIPT           = Pathname.new($0).realpath
-HOSTAPD_ACTION_SCRIPT = THIS_SCRIPT.dirname.join('puavo-wlanap-hostapd-action')
+RUNDIR                     = '/run/puavo-wlanap'
+CTRLSOCKET                 = File.join(RUNDIR, 'ctrlsocket')
+THIS_SCRIPT                = Pathname.new($0).realpath
+HOSTAPD_ACTION_SCRIPT      = THIS_SCRIPT.dirname.join('puavo-wlanap-hostapd-action')
+HOSTAPD_CTRL_INTERFACE_DIR = File.join(RUNDIR, 'hostapd')
 
 HOSTAPD_CONF_TEMPLATE = <<'EOF'
 ## PHY-specific options ##
@@ -300,7 +301,7 @@ hw_mode=<%= phy[:hw_mode] %>
 channel=<%= phy[:channel] %>
 max_num_sta=1000
 wmm_enabled=1
-ctrl_interface=<%= RUNDIR %>/hostapd
+ctrl_interface=<%= HOSTAPD_CTRL_INTERFACE_DIR %>
 ieee80211n=1
 ht_capab=<%= phy[:ht_capab] %>
 wds_sta=1
@@ -609,7 +610,7 @@ class AccessPoint
 
       hostapd_cli_pid = spawn('hostapd_cli',
                               "-i#{phy[:iface]}",
-                              "-p#{RUNDIR}/hostapd",
+                              "-p#{HOSTAPD_CTRL_INTERFACE_DIR}",
                               "-a#{HOSTAPD_ACTION_SCRIPT}")
       @services[hostapd_cli_pid] = "hostapd_cli_#{phy[:iface]}"
     end
