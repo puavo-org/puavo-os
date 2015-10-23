@@ -131,7 +131,11 @@ desktopItems = readDirectoryD(
     "/etc/webmenu/desktop.d",
     webmenuHome + "/desktop.d"
 ).reduce (memo, filePath) ->
-    return _.extend({}, memo, load(filePath))
+    try
+        return _.extend({}, memo, load(filePath))
+    catch err
+        console.error("Invalid desktop.d file: #{ filePath }")
+        return memo
 , {}
 
 
