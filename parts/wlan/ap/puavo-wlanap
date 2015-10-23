@@ -285,11 +285,10 @@ module PuavoAPI
 
 end
 
-RUNDIR       = '/run/puavo-wlanap'
-CTRLSOCKET   = File.join(RUNDIR, 'ctrlsocket')
-
-# The real path of this script.
-THIS_SCRIPT  = Pathname.new($0).realpath
+RUNDIR                = '/run/puavo-wlanap'
+CTRLSOCKET            = File.join(RUNDIR, 'ctrlsocket')
+THIS_SCRIPT           = Pathname.new($0).realpath
+HOSTAPD_ACTION_SCRIPT = THIS_SCRIPT.dirname.join('puavo-wlanap-hostapd-action')
 
 HOSTAPD_CONF_TEMPLATE = <<'EOF'
 ## PHY-specific options ##
@@ -526,11 +525,43 @@ class AccessPoint
     line.strip!
     cmd, sep, args = line.partition(':')
     case cmd
+    when 'hostapd-event'
+      handle_ctrlmsg_hostapd_event(args)
     when 'vtun-up'
       handle_ctrlmsg_vtun_up(args)
     else
       Log.warning("received unknown control message: #{line}")
     end
+  end
+
+  def handle_ctrlmsg_hostapd_event(args)
+    iface, sep, tail = args.partition(':')
+    if sep.empty?
+      Log.warning("received invalid hostapd-event: #{args}")
+      return false
+    end
+
+    event, sep, tail = tail.partition(':')
+    if sep.empty?
+      Log.warning("received invalid hostapd-event: #{args}")
+      return false
+    end
+
+    case event
+
+    when 'AP-STA-CONNECTED'
+      mac = tail
+
+    when 'AP-STA-DISCONNECTED'
+      mac = tail
+
+    else
+      Log.warning("received unhandled hostapd-event: #{args}")
+      return false
+
+    end
+
+    true
   end
 
   def handle_ctrlmsg_vtun_up(args)
@@ -575,6 +606,12 @@ class AccessPoint
       hostapd_conffile = File.join(RUNDIR, "#{hostapd_name}.conf")
       hostapd_pid = spawn('hostapd', '-P', hostapd_pidfile, hostapd_conffile)
       @services[hostapd_pid] = hostapd_name
+
+      hostapd_cli_pid = spawn('hostapd_cli',
+                              "-i#{phy[:iface]}",
+                              "-p#{RUNDIR}/hostapd",
+                              "-a#{HOSTAPD_ACTION_SCRIPT}")
+      @services[hostapd_cli_pid] = "hostapd_cli_#{phy[:iface]}"
     end
   end
 
