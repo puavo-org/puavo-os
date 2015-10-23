@@ -24,10 +24,9 @@ class MenuListView extends ViewMaster
             config: @config
 
         @initial = @model
-        @setCurrent()
 
         @folderTitle = new FolderTitle model: @model
-        @setView ".folder-title-container", @folderTitle
+        @setCurrent()
 
         @navigation = new Navigation @getMenuItemViews(), @itemCols()
 
@@ -47,7 +46,7 @@ class MenuListView extends ViewMaster
 
         @listenTo this, "open-logout-view", =>
             @releaseKeys()
-
+            @folderTitle.detach()
             if @config.get("feedback")
                 @setView ".app-list-container", @feedbackView
             else
@@ -98,6 +97,8 @@ class MenuListView extends ViewMaster
 
     setCurrent: ->
         @setItems(@model.items.toArray())
+        @setView ".folder-title-container", @folderTitle
+
 
     setItems: (models) ->
         @feedbackView.detach()
