@@ -25,4 +25,3 @@ export DISPLAY=:99
 puavo-debuild
 
 aptirepo-upload -r $APTIREPO_REMOTE -b "git-$(echo "$GIT_BRANCH" | cut -d / -f 2)" ../webmenu*.changes
-
