@@ -53,7 +53,7 @@ Attributes
 Launcher item from a .desktop file. It auto populates `id`, `name`,
 `description`, `command` and `osIcon` attributes. Any auto populated field can
 be overridden by specifying it directly to this object. If the requested
-.desktop file is not found the item will not be displayed. Respects the current
+`.desktop` file is not found the item will not be displayed. Respects the current
 locale.
 
 Desktop file locations are configured in `config.json`.
@@ -61,6 +61,50 @@ Desktop file locations are configured in `config.json`.
   - `source`: {String, required} Name of the .desktop file without the extension
   - `installer`: {String, optional} Used as the command when the .desktop file
     is not found from the system
+
+#### `desktop.d` directories
+
+As of Webmenu `0.8.0` the desktop entries can be defined in following
+`desktop.d` directories as JSON and YAML:
+
+  1. `~/.config/webmenu/desktop.d/*.{json,yaml}`
+  2. `/etc/webmenu/desktop.d/*.{json,yaml}`
+
+Each file must have a object of `.desktop` filenames (without an extension) as
+keys. It can be used to override some or all the values of a desktop file – or
+create completely new entries.
+
+Files are read alphabetically. Entries in latter ones will override any
+existing entries.
+
+Example: Override the name in `gedit.desktop`
+
+`~/.config/webmenu/desktop.d/gedit-override.json`
+
+```js
+{
+  "gedit": {
+    "name": {
+      "en": "Simple editor",
+      "fi": "Yksinkertainen editori"
+  }
+}
+```
+
+Example: Create completely new entry
+
+`~/.config/webmenu/desktop.d/myapps.json`
+
+```js
+{
+  "eyes": {
+    "name": "Show some eyes",
+    "osIcon": "myicon",
+    "command": "xeyes"
+  }
+}
+```
+
 
 ### `web`
 
