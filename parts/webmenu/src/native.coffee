@@ -18,7 +18,7 @@ Backbone = require "backbone"
 FeedCollection = require "./FeedCollection"
 launchCommand = require "./launchcommand"
 menutools = require "./menutools"
-requirefallback = require "./requirefallback"
+{load, loadFallback} = require "./load"
 logStartTime = require "./logStartTime"
 dbusRegister = require "./dbusRegister"
 forceFocus = require "./forceFocus"
@@ -68,7 +68,7 @@ if sp = process.env.PUAVO_SESSION_PATH
 
 locale = process.env.LANG
 locale ||= "fi_FI.UTF-8"
-menuJSON = requirefallback(getMenuJSONPaths(webmenuHome))
+menuJSON = loadFallback(getMenuJSONPaths(webmenuHome))
 
 safeRequire = (path) ->
     try
@@ -127,14 +127,16 @@ desktopItems = [
     "/etc/webmenu/desktop.d",
     webmenuHome + "/desktop.d",
 ].reduce((memo, dirPath) ->
+    files = null
+
     try
-        for filename in fs.readdirSync(dirPath).sort()
-            try
-                memo = _.extend({}, memo, requirefallback(path.join(dirPath, filename)))
-            catch err
-                throw err if err.code isnt "ENOENT"
+        files = fs.readdirSync(dirPath)
     catch err
         throw err if err.code isnt "ENOENT"
+        return memo
+
+    for filename in files.sort()
+        memo = _.extend({}, memo, load(path.join(dirPath, filename), {error: false}))
 
     return memo
 , {})
