@@ -2,6 +2,7 @@
 ViewMaster = require "../vendor/backbone.viewmaster"
 _ = require "underscore"
 $ = window.jQuery
+template = require "../templates/Tabs.hbs"
 
 
 class Tabs extends ViewMaster
@@ -17,7 +18,11 @@ class Tabs extends ViewMaster
             @render()
 
 
-    template: require "../templates/Tabs.hbs"
+    template: ->
+        if @collection.size() < 2
+            return ""
+        else
+            template(@context())
 
     events:
         "click a": "selectTab"
