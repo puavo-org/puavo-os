@@ -58,7 +58,7 @@ getMenuJSONPaths = (webmenuHome) ->
             console.error("Invalid tab file: #{ tabFile }")
 
     tabs.sort (a, b) -> getWeight(a) - getWeight(b)
-    return tabs
+    return tabs.filter(Boolean)
 
 
 module.exports = loadTabs

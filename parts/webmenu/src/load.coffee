@@ -6,19 +6,13 @@ fs = require "fs"
 {join} = require "path"
 
 
-load = (path, options) ->
-    try
-        if path.endsWith(".json")
-            return JSON.parse(fs.readFileSync(path).toString())
-        else if path.endsWith(".yaml")
-            return YAML.parse(fs.readFileSync(path).toString())
-        else
-            return require(path)
-    catch err
-        if options?.error isnt false
-            throw err
-        else
-            return null
+load = (path) ->
+    if path.endsWith(".json")
+        return JSON.parse(fs.readFileSync(path).toString())
+    else if path.endsWith(".yaml")
+        return YAML.parse(fs.readFileSync(path).toString())
+
+    throw new Error "Unknown file type: #{ path }"
 
 # Get array of paths for files in given directories
 readDirectoryD = (dirs...) ->
@@ -42,13 +36,12 @@ readDirectoryD = (dirs...) ->
 
 loadFallback = (paths...) ->
     paths = _.flatten(paths)
-    err = null
     while path = paths.shift()
         try
             return load(path)
-        catch e
-            err = e
-    throw err
+        catch err
+            console.log "Cannot load file: #{ path }"
+            console.log "Error: #{ err.message }"
 
 
 module.exports = {
