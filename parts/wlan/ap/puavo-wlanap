@@ -41,6 +41,10 @@ require 'puavo/rest-client'
 
 module Log
 
+  def self.info(msg)
+    Log.log(:INFO, msg)
+  end
+
   def self.log(priority, msg)
     STDERR.puts("puavo-wlanap[#{Process.pid}]: #{priority}: #{msg}")
   end
@@ -359,8 +363,9 @@ def hexdigest15(str)
 end
 
 def run_or_fail(cmd, *args)
+  cmd_string = ([cmd] + args).join(' ')
   system(cmd, *args)
-  $?.success? or fail "command '%s' failed" % ([cmd] + args).join(' ')
+  $?.success? or fail "command '#{cmd_string}' failed"
 end
 
 class AccessPoint
@@ -380,6 +385,7 @@ class AccessPoint
   end
 
   def run
+    Log.info('starting')
     FileUtils.mkdir_p(RUNDIR)
     File.open(File.join(RUNDIR, 'lock'), File::RDWR | File::CREAT, 0640) do |lockfile|
       unless lockfile.flock(File::LOCK_EX | File::LOCK_NB)
@@ -432,6 +438,7 @@ class AccessPoint
     end
 
     Signal.trap('EXIT') do
+      Log.info('exiting')
       Process.kill('-SIGTERM', 0)
 
       @bss_list.each do |bss|
@@ -441,6 +448,7 @@ class AccessPoint
       end
 
       FileUtils.rm_rf(RUNDIR)
+      Log.info('bye')
     end
 
     write_hostapd_confs
@@ -463,6 +471,7 @@ class AccessPoint
     start_vtunds
     start_hostapds
 
+    Log.info('started')
     loop do
       signal = sigqueue.pop
       case signal
@@ -590,6 +599,7 @@ class AccessPoint
                         '-f', vtund_conffile,
                         'puavo-wlanap', @vtun_address)
       @services[vtund_pid] = vtund_name
+      Log.info("spawned #{vtund_name}")
     end
   end
 
@@ -608,13 +618,18 @@ class AccessPoint
       hostapd_conffile = File.join(RUNDIR, "#{hostapd_name}.conf")
       hostapd_pid = spawn('hostapd', '-P', hostapd_pidfile, hostapd_conffile)
       @services[hostapd_pid] = hostapd_name
+      Log.info("spawned #{hostapd_name}")
 
       Timeout.timeout(5) do
         loop do
           break if File.exists?("#{HOSTAPD_CTRL_INTERFACE_DIR}/#{phy[:iface]}")
+          Log.info("waiting for hostapd control socket " \
+                   "#{HOSTAPD_CTRL_INTERFACE_DIR}/#{phy[:iface]}")
           sleep 0.5
         end
       end
+      Log.info("found hostapd control socket " \
+               "#{HOSTAPD_CTRL_INTERFACE_DIR}/#{phy[:iface]}")
 
       hostapd_cli_pid = spawn('hostapd_cli',
                               "-i#{phy[:iface]}",
