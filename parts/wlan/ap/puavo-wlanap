@@ -34,6 +34,7 @@ require 'fileutils'
 require 'getoptlong'
 require 'pathname'
 require 'socket'
+require 'timeout'
 
 require 'puavo/etc'
 require 'puavo/rest-client'
@@ -607,6 +608,13 @@ class AccessPoint
       hostapd_conffile = File.join(RUNDIR, "#{hostapd_name}.conf")
       hostapd_pid = spawn('hostapd', '-P', hostapd_pidfile, hostapd_conffile)
       @services[hostapd_pid] = hostapd_name
+
+      Timeout.timeout(5) do
+        loop do
+          break if File.exists?("#{HOSTAPD_CTRL_INTERFACE_DIR}/#{phy[:iface]}")
+          sleep 0.5
+        end
+      end
 
       hostapd_cli_pid = spawn('hostapd_cli',
                               "-i#{phy[:iface]}",
