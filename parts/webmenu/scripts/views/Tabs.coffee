@@ -17,6 +17,9 @@ class Tabs extends ViewMaster
             @currentTab = 0
             @render()
 
+        @listenTo this, "open-logout-view", =>
+            @currentTab = -1
+            @render()
 
     template: ->
         if @collection.size() < 2

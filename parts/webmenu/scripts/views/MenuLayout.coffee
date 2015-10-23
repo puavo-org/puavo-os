@@ -85,6 +85,7 @@ class MenuLayout extends ViewMaster
             @search.detach()
             @setView ".search-container", @hostnameView
             @menuListView.broadcast("open-logout-view")
+            @tabs.broadcast("open-logout-view")
             @$(".favorites-container").empty()
             @refreshViews()
 
