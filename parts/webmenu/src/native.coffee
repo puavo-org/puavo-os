@@ -18,14 +18,14 @@ Backbone = require "backbone"
 FeedCollection = require "./FeedCollection"
 launchCommand = require "./launchcommand"
 menutools = require "./menutools"
-{load, loadFallback, readDirectoryD} = require "./load"
+{load, readDirectoryD} = require "./load"
 logStartTime = require "./logStartTime"
 dbusRegister = require "./dbusRegister"
 forceFocus = require "./forceFocus"
 createSpawnSocket = require "./createSpawnSocket"
 logger = require "./fluent-logger"
 pkg = require "../package.json"
-getMenuJSONPaths = require "./getMenuJSONPaths"
+loadTabs = require "./loadTabs"
 
 
 if process.env.WM_HOME
@@ -68,7 +68,11 @@ if sp = process.env.PUAVO_SESSION_PATH
 
 locale = process.env.LANG
 locale ||= "fi_FI.UTF-8"
-menuJSON = loadFallback(getMenuJSONPaths(webmenuHome))
+
+menuJSON =
+    type: "menu"
+    name: "Tabs"
+    items: loadTabs(webmenuHome)
 
 safeRequire = (path) ->
     try
