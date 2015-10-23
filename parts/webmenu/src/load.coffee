@@ -15,7 +15,7 @@ load = (path, options) ->
         else
             return require(path)
     catch err
-        if options.error isnt false
+        if options?.error isnt false
             throw err
         else
             return null
@@ -34,7 +34,7 @@ readDirectoryD = (dirs...) ->
             continue
 
         if files
-            for name in files
+            for name in files when name[0] isnt "."
                 paths.push(join(dir, name))
 
     return paths
