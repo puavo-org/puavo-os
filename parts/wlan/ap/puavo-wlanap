@@ -46,7 +46,8 @@ module Log
   end
 
   def self.log(priority, msg)
-    STDERR.puts("puavo-wlanap[#{Process.pid}]: #{priority}: #{msg}")
+    STDERR.puts("#{Time.now.utc} puavo-wlanap[#{Process.pid}]: " \
+                "#{priority}: #{msg}")
   end
 
   def self.warning(msg)
