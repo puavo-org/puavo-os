@@ -18,7 +18,7 @@ Backbone = require "backbone"
 FeedCollection = require "./FeedCollection"
 launchCommand = require "./launchcommand"
 menutools = require "./menutools"
-{load, loadFallback} = require "./load"
+{load, loadFallback, readDirectoryD} = require "./load"
 logStartTime = require "./logStartTime"
 dbusRegister = require "./dbusRegister"
 forceFocus = require "./forceFocus"
@@ -123,23 +123,12 @@ if puavoDomain
         expandVariables(config.get("profileCMD"), "url")
 
 
-desktopItems = [
+desktopItems = readDirectoryD(
     "/etc/webmenu/desktop.d",
-    webmenuHome + "/desktop.d",
-].reduce((memo, dirPath) ->
-    files = null
-
-    try
-        files = fs.readdirSync(dirPath)
-    catch err
-        throw err if err.code isnt "ENOENT"
-        return memo
-
-    for filename in files.sort()
-        memo = _.extend({}, memo, load(path.join(dirPath, filename), {error: false}))
-
-    return memo
-, {})
+    webmenuHome + "/desktop.d"
+).reduce (memo, filePath) ->
+    return _.extend({}, memo, load(filePath))
+, {}
 
 
 desktopReadStarted = Date.now()

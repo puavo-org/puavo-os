@@ -3,6 +3,7 @@
 _ = require "underscore"
 YAML = require "yamljs"
 fs = require "fs"
+{join} = require "path"
 
 
 load = (path, options) ->
@@ -19,6 +20,24 @@ load = (path, options) ->
         else
             return null
 
+# Get array of paths for files in given directories
+readDirectoryD = (dirs...) ->
+    dirs = _.flatten(dirs)
+    paths = []
+
+    for dir in dirs
+        files = null
+        try
+            files = fs.readdirSync(dir)
+        catch err
+            throw err if err.code isnt "ENOENT"
+            continue
+
+        if files
+            for name in files
+                paths.push(join(dir, name))
+
+    return paths
 
 
 loadFallback = (paths...) ->
@@ -34,5 +53,6 @@ loadFallback = (paths...) ->
 
 module.exports = {
     load: load
+    readDirectoryD: readDirectoryD
     loadFallback: loadFallback
 }
