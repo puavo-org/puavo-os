@@ -97,7 +97,7 @@ injectDesktopData = (menu, options) ->
         "'source' attribute: #{ JSON.stringify(menu) }")
 
 
-    desktopEntry = null
+    desktopEntry = {}
 
     for desktopDir in options.desktopFileSearchPaths
       filePath = desktopDir + "/#{ menu.source }.desktop"
@@ -107,15 +107,15 @@ injectDesktopData = (menu, options) ->
       catch err
         throw err if err.code isnt "ENOENT"
 
-    if desktopEntry
-      menu.name ?= desktopEntry.name
-      menu.description ?= desktopEntry.description
-      menu.command ?= desktopEntry.command
-      menu.osIconPath ?= findOsIcon(desktopEntry.osIcon, options)
-      menu.upstreamName ?= desktopEntry.upstreamName
-      menu.osIconPath = normalizeIconPath(menu.osIconPath)
+    _.extend(desktopEntry, options.desktopItems[menu.source])
 
-    _.extend(menu, options.desktopItems[menu.source])
+    menu.name ?= desktopEntry.name
+    menu.description ?= desktopEntry.description
+    menu.command ?= desktopEntry.command
+    menu.osIconPath ?= findOsIcon(desktopEntry.osIcon, options)
+    menu.upstreamName ?= desktopEntry.upstreamName
+    menu.osIconPath = normalizeIconPath(menu.osIconPath)
+
 
     if not isValidMenuLauncher(menu) and menu.installer
       menu.useInstaller = true
