@@ -16,14 +16,14 @@ class webmenu {
     '/etc/webmenu/config.json':
       content => template('webmenu/config.json');
 
-    '/etc/webmenu/menu.json':
-      content => template('webmenu/menu.json');
+    '/etc/webmenu/menu.yaml':
+      content => template('webmenu/menu.yaml');
 
     '/etc/webmenu/personally-administered-device/config.json':
       content => template('webmenu/personally-administered-device-config.json');
 
-    '/etc/webmenu/personally-administered-device/menu.json':
-      content => template('webmenu/personally-administered-device-menu.json');
+    '/etc/webmenu/personally-administered-device/menu.yaml':
+      content => template('webmenu/personally-administered-device-menu.yaml');
 
     '/etc/xdg/autostart/webmenu.desktop':
       content => template('webmenu/webmenu.desktop'),
