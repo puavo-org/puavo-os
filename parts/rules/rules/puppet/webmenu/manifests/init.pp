@@ -10,11 +10,15 @@ class webmenu {
       mode    => 755;
 
     [ '/etc/webmenu'
+    , '/etc/webmenu/desktop.d'
     , '/etc/webmenu/personally-administered-device' ]:
       ensure => directory;
 
     '/etc/webmenu/config.json':
       content => template('webmenu/config.json');
+
+    '/etc/webmenu/desktop.d/default-overrides.yaml':
+      content => template('desktop.d/default-overrides.yaml');
 
     '/etc/webmenu/menu.yaml':
       content => template('webmenu/menu.yaml');
