@@ -1,0 +1,1092 @@
+---
+type: menu
+name:
+  en: Categories
+  fi: Kategoriat
+  sv: Kategorier
+  de: Kategorie
+items:
+- type: menu
+  id: tools
+  name:
+    en: Tools
+    fi: Apuohjelmat
+    sv: Verktyg
+    de: Werkzeuge
+  description:
+    en: Tools
+    fi: Apuohjelmia
+    sv: Verktyg
+    de: Werkzeuge
+  osIcon: applications-accessories
+  items:
+  - type: desktop
+    keywords:
+    - leapmotion
+    source: eleet
+  - type: desktop
+    source: gcalctool
+  - type: desktop
+    source: gedit
+    name:
+      en: Gedit-text editor
+      fi: Gedit-tekstieditori
+      sv: Gedit- tekstredigerare
+      de: Gedit-Texteditor
+  - type: desktop
+    source: gucharmap
+  - type: desktop
+    source: onboard
+  - type: desktop
+    source: brasero
+    inactiveByDeviceType: thinclient
+    name:
+      en: Brasero - CD/DVD -writer
+      fi: Brasero - CD/DVD -kirjoitus
+      sv: Brasero - CD/DVD -brännare
+      de: Brasero - CD/DVD -brennen
+  - type: desktop
+    source: sound-juicer
+  - type: desktop
+    source: gnome-search-tool
+    osIconPath: /usr/share/icons/Faenza/apps/96/logviewer.png
+  - type: desktop
+    source: file-roller
+    name:
+      en: Archive Manager
+      fi: Pakettienkäsittely-ohjelma
+      sv: Pakethanterare
+      de: Archiv Verwaltung
+  - type: desktop
+    source: gnome-terminal
+  - type: desktop
+    source: seahorse
+  - type: desktop
+    source: system-config-printer
+  - type: desktop
+    source: vino-preferences
+  - type: desktop
+    source: gnome-screenshot
+  - type: desktop
+    source: simplescreenrecorder
+    inactiveByDeviceType: thinclient
+    name:
+      en: SimpleScreenRecorder
+      fi: Työpöytänauhoitus
+      sv: SimpleScreenRecorder
+      de: SimpleScreenRecorder
+- type: menu
+  name:
+    en: Graphics
+    fi: Grafiikka
+    sv: Grafik
+    de: Grafik
+  description:
+    en: Graphic applications
+    fi: Graafiset Internet-sovellukset
+    sv: Ritprogram
+    de: Grafikprogramme
+  osIcon: applications-graphics
+  items:
+  - type: desktop
+    source: kolourpaint
+    osIconPath: /usr/share/icons/hicolor/48x48/apps/kolourpaint.png
+    name:
+      en: KolourPaint
+  - type: desktop
+    source: tuxpaint
+    name:
+      en: Tuxpaint-drawing program
+      fi: Tuxpaint-piirto-ohjelma
+      sv: Tuxpaint
+      de: Tuxpaint
+  - type: desktop
+    source: mypaint
+    name:
+      en: MyPaint
+      fi: MyPaint-taideohjelma
+      sv: MyPaint
+      de: MyPaint
+  - type: desktop
+    source: gimp
+    keywords:
+    - photoshop
+    - digabi
+    name:
+      en: Gimp - GNU Image Manipulation Program
+      fi: Gimp-kuvankäsittely
+      sv: Gimp
+      de: Gimp
+  - type: desktop
+    keywords:
+    - digabi
+    - photoshop
+    source: pinta
+    name:
+      en: Pinta
+      fi: Pinta-kuvankäsittely
+      sv: Pinta
+      de: Pinta
+  - type: desktop
+    source: gthumb
+    name:
+      en: gThumb-image viewer
+      fi: gThumb-kuvakatselin
+      sv: gThumb-bildvisare
+      de: gThumb-Bildbetrachter
+    osIconPath: /usr/share/icons/hicolor/48x48/apps/gthumb.png
+  - type: desktop
+    source: eog
+    name:
+      en: Image Viewer
+      fi: Kuvakatselin
+      sv: Bildvisare
+      de: Bildbetrachter
+  - type: desktop
+    source: shotwell
+    name:
+      en: Shotwell-photo organizer
+      fi: Shotwell-kuva-albumi
+      sv: Shotwell-foto-album
+      de: Shotwell Fotos verwalten
+  - type: desktop
+    source: f-spot
+    name:
+      en: F-spot-photo management application
+      fi: F-spot-kuvaohjelma
+      sv: F-spot
+      de: F-Spot
+  - type: desktop
+    source: inkscape
+    keywords:
+    - digabi
+    name:
+      en: Inkscape-vector graphics editor
+      fi: Inkscape-vektorigrafiikka
+      sv: Inkscape-vektorgrafik
+      de: Inkscape-Vektorgrafik
+  - type: desktop
+    source: picasa
+    name:
+      fi: Picasa-verkkoalbumit
+      sv: Picasa-fotoalbum
+      de: Picasa-Fotoalbum
+  - type: desktop
+    source: blender
+    inactiveByDeviceType: thinclient
+    name:
+      fi: Blender-3D-mallinnusohjelma
+      sv: Blender-3D-modellering
+      de: Blender-3D-Modellierung
+  - type: desktop
+    source: photofilmstrip
+    name:
+      fi: Photofilmstrip-kuvaesitys
+      sv: Photofilmstrip
+      de: Photofilmstrip
+  - type: desktop
+    source: simple-scan
+    inactiveByDeviceType: thinclient
+    name:
+      en: Simple Scan
+      fi: Yksinkertainen skannausohjelma
+      sv: Enkelt scanningsverktyg
+      de: Einfaches Scanner Werkzeug
+    osIconPath: /usr/share/icons/Faenza/devices/96/scanner.png
+  - type: desktop
+    source: xsane
+    inactiveByDeviceType: thinclient
+    name:
+      en: XSane-graphical scanning
+      fi: Xsane-skannausohjelma
+      sv: Xsane-scanningsverktyg
+      de: Xsane Scannerwerkzeug
+    osIconPath: /usr/share/icons/Faenza/devices/96/scanner.png
+- type: menu
+  name:
+    en: Internet
+  description:
+    en: Internet-applications
+    fi: Internet-sovellukset
+    sv: Internet-program
+    de: Interent Programme
+  osIcon: applications-internet
+  items:
+  - type: desktop
+    source: google-chrome
+    installer: puavo-local-config-ui
+    name:
+      en: Google Chrome-browser
+      fi: Google Chrome-selain
+      sv: Google Chrome
+      de: Google Chrome
+  - type: desktop
+    source: firefox
+    name:
+      en: Firefox-browser
+      fi: Firefox-selain
+      sv: Firefox
+      de: Firefox
+  - type: desktop
+    source: chromium-browser
+    name:
+      en: Chromium-browser
+      fi: Chromium-selain
+      sv: Chromium
+      de: Chromium-Browser
+  - type: desktop
+    source: thunderbird
+    name:
+      en: Thunderbird-email
+      fi: Thunderbird-sähköposti
+      sv: Thundebird-e-post
+      de: Thunderbird-Email
+  - type: desktop
+    source: evolution
+    name:
+      en: Evolution-email
+      fi: Evolution-sähköposti
+      sv: Evolution-e-post
+      de: Evolution-Email
+  - type: desktop
+    source: pidgin
+    name:
+      en: Pidgin-chat client
+      fi: Pidgin-pikaviestin
+      sv: Pidgin-IM-klient
+      de: Pidgin-Chat-Client
+  - type: desktop
+    source: gftp
+    osIconPath: /usr/share/icons/Faenza/apps/96/preferences-system-windows.png
+  - type: desktop
+    source: liferea
+    name:
+      en: Liferea-feed reader
+      fi: Livesyötteiden lukija
+      sv: Liferea
+      de: Liferea Feadreader
+  - type: desktop
+    source: googleearth
+    inactiveByDeviceType: thinclient
+    name:
+      en: Google Earth - Legacy
+    osIconPath: /usr/share/icons/Faenza/apps/96/googleearth.png
+  - type: desktop
+    source: google-earth
+    inactiveByDeviceType: thinclient
+    name:
+      en: Google Earth
+    osIconPath: /usr/share/icons/Faenza/apps/96/googleearth.png
+  - type: desktop
+    source: skype
+    installer: puavo-local-config-ui
+    name:
+      en: Skype
+    osIconPath: /usr/share/icons/Faenza/apps/32/skype.png
+  - type: desktop
+    source: empathy
+    name:
+      en: Empathy-chat client
+      fi: Empathy-pikaviestin
+      sv: Empathy-IM-klient
+      de: Empathy-Chat-Client
+  - type: desktop
+    source: vinagre
+  - type: desktop
+    source: dropbox
+    installer: puavo-local-config-ui
+    name:
+      en: Dropbox
+  - type: desktop
+    source: tsclient
+  - type: desktop
+    source: vmware-view-client
+    name:
+      en: Vmware client
+  - type: desktop
+    source: VidyoDesktop
+    osIconPath: /opt/vidyo/VidyoDesktop/vidyo-icon.png
+- type: menu
+  name:
+    en: Programming
+    fi: Ohjelmointi
+    sv: Programmering
+    de: Programmierung
+  description: IDE-sovelluksia ohjelmointiin
+  osIcon: gnome-devel
+  items:
+  - type: desktop
+    source: tmcbeans
+    name:
+      en: NetBeans IDE with TMC plugin
+    osIconPath: /usr/share/icons/Faenza/apps/96/netbeans.png
+  - type: desktop
+    source: arduino
+    name:
+      en: Arduino IDE
+    inactiveByDeviceType: thinclient
+  - type: desktop
+    osIconPath: /usr/share/pixmaps/fritzing_icon.png
+    source: fritzing
+  - type: desktop
+    inactiveByDeviceType: thinclient
+    source: Snap4Arduino
+    name:
+      en: Teddy Bear programming
+      fi: Nalle-ohjelmointi
+      sv: Teddybjörn programmering
+      de: Teddy-Programmierung
+  - type: desktop
+    osIconPath: /usr/share/racket/pkgs/icons/plt-48x48.png
+    source: drracket
+  - type: desktop
+    source: enchanting
+    inactiveByDeviceType: thinclient
+  - type: desktop
+    source: bluegriffon
+  - type: desktop
+    source: eclipse
+  - type: desktop
+    source: eric
+    osIconPath: /usr/share/eric/icons/default/eric.png
+  - type: desktop
+    source: pycharm
+  - type: desktop
+    source: spe
+    name:
+      en: SPE - Python IDE
+      fi: Stanin python-editori
+      sv: Stanis python-editor
+      de: Stanis Python IDE
+  - type: desktop
+    source: idle-python2.7
+    name:
+      en: IDLE
+    osIconPath: /usr/share/icons/Faenza/mimetypes/96/text-x-python.png
+  - type: desktop
+    source: geany
+    name:
+      en: Geany - text editor
+      fi: Geany - monikielinen editori
+      sv: Geany - utvecklingsmiljö
+      de: Geany - Textverarbeitung
+  - type: desktop
+    source: kturtle
+    name:
+      en: KTurtle - easy programming
+      fi: Konna logo-ohjelmointi
+      sv: KTurtle - logoprogrammering
+      de: KTurtle - Programieren mit Logo
+    command:
+    - kturtle
+  - type: desktop
+    source: scratch
+    inactiveByDeviceType: thinclient
+    name:
+      en: Scratch
+      fi: Scratch hahmo-ohjelmointi
+      sv: Scratch
+      de: Scratch
+  - type: desktop
+    source: kompozer
+  - type: desktop
+    source: bluefish
+    name:
+      en: Bluefish html-editor
+      fi: Bluefish html-editori
+      sv: Bluefish html-redigerare
+      de: Bluefish Htmleditor
+  - type: desktop
+    source: designer-qt4
+    name:
+      en: Qt4 - graphical UI designer
+      fi: Käyttöliittymä-suunnittelija
+      sv: Användargränssnitt-designer
+      de: Qt4 - Grafischer UI Designer
+    osIconPath: /usr/share/icons/Faenza/apps/96/qtdesigner.png
+  - type: custom
+    name: Processing
+    command: /opt/processing/processing
+    osIconPath: /opt/processing/lib/icons/pde-48.png
+- type: menu
+  name:
+    en: Education
+    fi: Opetusohjelmat
+    sv: Undervisningsprogram
+    de: Bildung
+  description:
+    en: Educational applications
+    fi: Sovelluksia oppimisen tueksi
+    sv: Pedagogiska program
+    de: Bildungs Programme
+  osIcon: gnome-joystick
+  items:
+  - type: desktop
+    source: kbruch
+    command:
+    - kbruch
+    name:
+      en: KBruch-fractions
+      fi: KBruch-murtoluvut
+      sv: KBruch-bråktal
+      de: KBruch - Rechnen mit Brüchen
+  - type: desktop
+    source: geogebra
+    installer: puavo-local-config-ui
+    keywords:
+    - digabi
+    name: Geogebra
+  - type: desktop
+    source: kmplot
+    name:
+      en: KmPlot-function plotter
+      fi: KmPlot-kuvaajat
+      sv: KmPlot
+      de: KmPlot
+  - type: desktop
+    source: marble-qt
+    name:
+      en: Marble-virtual world
+      fi: Marble-maapallo
+      sv: Marble-jordglob
+      de: Marble virtueller Globus
+  - type: desktop
+    source: kanagram
+    name:
+      en: Kanagram - anagrams
+      fi: Anagrammit
+      sv: Anagram
+      de: Anagramme
+  - type: desktop
+    source: kwordquiz
+    name:
+      en: KWordQuiz-vocabulary learning
+      fi: Sanastoharjoitus
+      sv: Ordförrådsövningar
+      de: Kreuzworträtsel
+    command:
+    - kwordquiz
+  - type: desktop
+    source: khangman
+    name:
+      en: KHangMan-hangman game
+      fi: Hirsipuu
+      sv: KHangMan
+      de: KHangman
+    command:
+    - khangman
+  - type: desktop
+    source: ktouch
+    name:
+      en: KTouch-touch typing
+      fi: KTouch-konekirjoitus
+      sv: KTouch-maskinskrivning
+      de: KTouch-Schreibmaschine
+    command:
+    - ktouch
+  - type: desktop
+    source: celestia
+    inactiveByDeviceType: thinclient
+    name:
+      en: Celestia-space simulation
+      fi: Avaruussimulaattori
+      sv: Rymdsimulator
+      de: Celestia Weltraum Simulator
+  - type: desktop
+    source: stellarium
+    inactiveByDeviceType: thinclient
+    name:
+      en: Stellarium-planetarium
+      fi: Stellarium-planetaario
+      sv: Stellarium-planetarium
+      de: Stellaruim-Planetarium
+  - type: desktop
+    source: kstars
+    name:
+      en: KStars-astronomy
+      fi: KStars-tähtitaivas
+      sv: KStars-stjärnhimlen
+      de: KStars-Astronomie
+    command:
+    - kstars
+  - type: desktop
+    source: step
+    name:
+      en: Step-physics simulator
+      fi: Step-fysiikan simulaattori
+      sv: Step-fysik simulator
+      de: Step Physik Simulator
+    command:
+    - step
+  - type: desktop
+    keywords:
+    - digabi
+    installer: puavo-local-config-ui
+    source: LoggerPro
+  - type: desktop
+    source: GlobiLab
+  - type: desktop
+    keywords:
+    - digabi
+    source: wxmaxima
+  - type: desktop
+    source: ghemical
+    inactiveByDeviceType: thinclient
+    name:
+      en: Ghemical-3D-molecules
+      fi: 3D-Molekyylit
+      sv: 3D-Molekyler
+      de: 3D-Moleküle
+  - type: desktop
+    source: avogadro
+  - type: desktop
+    source: kalzium
+    name:
+      en: Kalzium-periodic system
+      fi: Jaksollinen järjestelmä
+      sv: Periodsystem
+      de: Periodensystem
+    command:
+    - kalzium
+  - type: desktop
+    source: mandelbulber
+    name:
+      en: Mandelbulber
+      fi: Mandelbulber
+      sv: Mandelbulber
+      de: Mandelbulber
+  - type: desktop
+    source: qgis
+- type: menu
+  name:
+    en: Office
+    fi: Toimisto
+    sv: Kontor
+    de: Büro
+  description:
+    en: Office applications
+    fi: Toimisto-ohjelmat
+    sv: Kontorsprogram
+    de: Büroprogramme
+  osIcon: applications-office
+  items:
+  - type: desktop
+    source: libreoffice-writer
+    keywords:
+    - openoffice
+    - word
+    - digabi
+    name:
+      en: LibreOffice Writer
+      fi: LibreOffice Tekstinkäsittely
+      sv: LibreOffice Textbehandling
+      de: LibreOffice Textverarbeitung
+  - type: desktop
+    source: libreoffice-calc
+    keywords:
+    - openoffice
+    - excel
+    - digabi
+    name:
+      en: LibreOffice Calc
+      fi: LibreOffice Taulukkolaskenta
+      sv: LibreOffice kalkylblad
+      de: LibreOffice Tabellenkalkulation
+  - type: desktop
+    source: libreoffice-impress
+    keywords:
+    - openoffice
+    - powerpoint
+    - digabi
+    name:
+      en: LibreOffice Impress
+      fi: LibreOffice Esitys
+      sv: LibreOffice Presentation
+      de: LibreOffice Präsentaionenen
+  - type: desktop
+    source: libreoffice-draw
+    keywords:
+    - openoffice
+    - digabi
+    name:
+      en: LibreOffice Draw
+      fi: LibreOffice Piirros
+      sv: LibreOffice Rita
+      de: LibreOffice Zeichnen
+  - type: desktop
+    source: libreoffice-base
+    keywords:
+    - openoffice
+    - digabi
+    name:
+      en: LibreOffice Base
+      fi: LibreOffice Tietokanta
+      sv: LibreOffice Databas
+      de: LibreOffice Datenbank
+  - type: desktop
+    source: libreoffice-math
+    keywords:
+    - openoffice
+    - digabi
+    name:
+      en: LibreOffice Math
+      fi: LibreOffice Kaava
+      sv: LibreOffice Ekvation
+      de: LibreOffice Mathematik
+  - type: desktop
+    source: scribus
+    name:
+      en: Scribus-desktop publishing
+      fi: Scribus-julkaisuohjelma
+      sv: Scribus Layout
+      de: Scribus Seitengestaltung
+  - type: desktop
+    source: vym
+    name:
+      en: VYM-mindmap
+      fi: Miellekarttasovellus
+      sv: Mindmap
+      de: Mindmap
+  - type: desktop
+    source: cmaptools
+    installer: puavo-local-config-ui
+    name:
+      en: CmapTools-mindmap
+      fi: CmapTools-miellekartta
+      sv: CmapTools-mindmap
+      de: CmapTools-Mindmap
+  - type: desktop
+    source: acroread
+    keywords:
+    - pdf
+    name: Acroread-asiakirjakatselin
+  - type: desktop
+    source: okular
+    keywords:
+    - pdf
+    name:
+      en: Okular-document viewer
+      fi: Okular-asiakirjakatselin
+      sv: Okular-dokumentläsare
+      de: Okular Dokumentenbetrachter
+    command:
+    - okular
+  - type: desktop
+    source: evince
+    keywords:
+    - pdf
+    name:
+      en: Evince-document viewer
+      fi: Evince-asiakirjakatselin
+      sv: Evince-dokumentläsare
+      de: Evince Dokumentenbetrachter
+  - type: desktop
+    source: calibre-gui
+  - type: desktop
+    source: tellico
+    name:
+      en: Tellico-collection manager
+      fi: Kirjasto-ohjelma
+      sv: Biblotek
+      de: Tellico Sammlungs-Verwalter
+    command:
+    - tellico
+  - type: desktop
+    source: Open-Sankore
+    keywords:
+    - smart
+    - notebook
+    name:
+      en: Open-Sankore
+      fi: Open-Sankoré-älytauluohjelmisto
+      sv: Open-Sankore
+      de: Open-Sankore
+  - type: desktop
+    keywords:
+    - digabi
+    source: dia
+  - type: desktop
+    source: tilitin
+  - type: desktop
+    source: t-lasku
+- type: menu
+  name:
+    en: Audio and video
+    fi: Ääni ja video
+    sv: Ljud och Video
+    de: Audio und Video
+  description:
+    en: Internet-applications
+    fi: Internet-sovellukset
+    sv: Internet -applikationer
+    de: Interent Programme
+  osIcon: applications-multimedia
+  items:
+  - type: desktop
+    source: gnome-sound-recorder
+    name:
+      en: Sound Recorder
+      fi: Ääninauhuri
+      sv: Ljudinspelare
+      de: Tonaufnahmen
+  - type: desktop
+    source: audacity
+    name:
+      en: Audacity-audio editor
+      fi: Audacity-äänieditori
+      sv: Audacity-ljudredigerare
+      de: Audacity Audio bearbeiten
+  - type: desktop
+    source: goobox
+  - type: desktop
+    source: omgrip
+  - type: desktop
+    source: thoggen
+  - type: desktop
+    source: vlc
+    name:
+      en: VLC-media player
+      fi: VLC-mediasoitin
+      sv: VLC-mediaspelare
+      de: VLC Medienspieler
+  - type: desktop
+    source: gnome-mplayer
+    name:
+      en: MPlayer-media player
+      fi: MPlayer-mediasoitin
+      sv: MPlayer-mediaspelare
+      de: MPlayer Medienspieler
+  - type: desktop
+    source: kaffeine
+    name:
+      fi: Kaffeine-mediasoitin
+      sv: Kaffeine-mediaspelare
+      de: Kaffeine Medienspieler
+  - type: desktop
+    source: banshee
+    name:
+      en: Banshee-music player
+      fi: Banshee-musiikkisoitin
+      sv: Banshee-mediaspelare
+      de: Banshee Medienspieler
+  - type: desktop
+    source: spotify
+    installer: puavo-local-config-ui
+    osIconPath: /usr/share/icons/Faenza/apps/96/spotify.png
+    name: Spotify
+  - type: desktop
+    source: cheese
+    osIconPath: /usr/share/icons/Faenza/devices/96/camera-web.png
+    inactiveByDeviceType: thinclient
+  - type: desktop
+    source: openshot
+    name:
+      en: OpenShot-video editor
+      fi: OpenShot-videoeditori
+      sv: OpenShot-videoredigerare
+      de: OpenShot Videoeditor
+  - type: desktop
+    source: kdenlive
+    name:
+      en: Kdenlive-video editor
+      fi: Kdenlive-videoeditori
+      sv: Kdenlive-videoredigerare
+      de: Kdenlive Videoeditor
+    command:
+    - kdenlive
+  - type: custom
+    name:
+      en: Kino-non-linear DV editor
+      fi: Kino-videoeditori
+      sv: Kino-videoredigerare
+      de: Kino Filme bearbeiten
+    command:
+    - kino
+    description:
+      en: Edit videos
+      fi: Muokkaa videoita
+      sv: Redigera videon
+      de: Video bearbeiten
+    osIcon: kino
+  - type: desktop
+    source: pitivi
+    name:
+      en: Pitivi-video editor
+      fi: Pitivi-videoeditori
+      sv: Pitivi-videoredigerare
+      de: Pitivi Filme bearbeiten
+  - type: desktop
+    source: solfege
+    name:
+      en: Solfege-ear training program
+      fi: Korvanharjoitus-ohjelma
+      sv: Gehör-övningar
+      de: Hörbildung
+  - type: desktop
+    source: mscore
+    name:
+      en: MuseScore-music composition & notation
+      fi: Nuotinnusohjelma
+      sv: Notering
+      de: Musik-Notensatz
+  - type: desktop
+    source: denemo
+    name:
+      en: Denemo-music notation
+      fi: Denemo-nuotinnus
+      sv: Denemo-notering
+      de: Denemo Notizen
+  - type: desktop
+    source: hydrogen
+    name:
+      en: Hydrogen-drum machine
+      fi: Hydrogen-rumpukone
+      sv: Hydrogen-trummaskin
+      de: Hydrogen Drum Machine
+  - type: desktop
+    source: rosegarden
+    name:
+      en: Rosegarden-sequencer
+      fi: Rosegarden-sekvensseri
+      sv: Rosegarden-sekvenser
+      de: Rosegarden Sequencer
+  - type: desktop
+    source: tuxguitar
+    name:
+      en: TuxGuitar-multitrack tablature editor
+      fi: Kitaranuotinnus
+      sv: Noter för gitarr
+      de: Tabulaturen für Gitarre
+    osIconPath: extra/icons/apps/overlord59-tux-guitar-1434.png
+  - type: desktop
+    source: fmit
+    name:
+      en: Fmit-instrument tuner
+      fi: Viritinohjelma
+      sv: Stämmningsprogram
+      de: Stimmprogramm
+  - type: desktop
+    source: luciole
+    name:
+      en: Luciole-stopmotion software
+      fi: Stopmotion-animaatio-ohjelma
+      sv: Stopmotion-animationsprogram
+      de: Stopmotion Animationsprogramm
+    osIconPath: /usr/share/luciole/images/luciole.png
+- type: menu
+  name:
+    en: Games
+    fi: Pelit
+    sv: Spel
+    de: Spiele
+  description:
+    en: Games
+    fi: Pelit
+    sv: Spel
+    de: Spiele
+  osIcon: applications-cardgames
+  items:
+  - type: desktop
+    name: Tux Racer
+    osIconPath: /usr/share/pixmaps/etracericon.svg
+    source: extremetuxracer
+  - type: desktop
+    name: SuperTuxKart
+    source: supertuxkart
+  - type: desktop
+    source: freeciv-gtk3
+  - type: desktop
+    source: freecol
+  - type: desktop
+    source: neverball
+  - type: desktop
+    source: neverputt
+  - type: desktop
+    osIcon: applications-boardgames
+    source: luola
+  - type: desktop
+    source: openttd
+  - type: desktop
+    name: XMoto
+    osIcon: applications-boardgames
+    source: xmoto
+  - type: desktop
+    source: steam
+- type: menu
+  name: Digabi
+  description: Digabi
+  osIcon: /usr/share/icons/oxygen/64x64/categories/applications-education.png
+  items:
+  - type: desktop
+    source: gimp
+    name:
+      en: Gimp - GNU Image Manipulation Program
+      fi: Gimp-kuvankäsittely
+      sv: Gimp
+      de: Gimp
+  - type: desktop
+    source: pinta
+    name:
+      en: Pinta
+      fi: Pinta-kuvankäsittely
+      sv: Pinta
+      de: Pinta
+  - type: desktop
+    source: inkscape
+    name:
+      en: Inkscape-vector graphics editor
+      fi: Inkscape-vektorigrafiikka
+      sv: Inkscape-vektorgrafik
+      de: Inkscape-Vektorgrafik
+  - type: desktop
+    source: geogebra
+    name: Geogebra
+  - type: desktop
+    source: wxmaxima
+  - type: desktop
+    source: LoggerPro
+  - type: desktop
+    source: dia
+  - type: desktop
+    source: libreoffice-writer
+    name:
+      en: LibreOffice Writer
+      fi: LibreOffice Tekstinkäsittely
+      sv: LibreOffice Textbehandling
+      de: LibreOffice Textverarbeitung
+  - type: desktop
+    source: libreoffice-calc
+    name:
+      en: LibreOffice Calc
+      fi: LibreOffice Taulukkolaskenta
+      sv: LibreOffice kalkylblad
+      de: LibreOffice Tabellenkalkulation
+  - type: desktop
+    source: libreoffice-impress
+    name:
+      en: LibreOffice Impress
+      fi: LibreOffice Esitys
+      sv: LibreOffice Presentation
+      de: LibreOffice Präsentaionenen
+  - type: desktop
+    source: libreoffice-draw
+    name:
+      en: LibreOffice Draw
+      fi: LibreOffice Piirros
+      sv: LibreOffice Rita
+      de: LibreOffice Zeichnen
+  - type: desktop
+    source: libreoffice-base
+    name:
+      en: LibreOffice Base
+      fi: LibreOffice Tietokanta
+      sv: LibreOffice Databas
+      de: LibreOffice Datenbank
+  - type: desktop
+    source: libreoffice-math
+    name:
+      en: LibreOffice Math
+      fi: LibreOffice Kaava
+      sv: LibreOffice Ekvation
+      de: LibreOffice Mathematik
+- type: menu
+  name:
+    en: Web applications
+    fi: Web-sovellukset
+    sv: Web applikationer
+    de: Web Anwendungen
+  description:
+    en: Web applications
+    fi: Web-sovellukset
+    sv: Web applikationer
+    de: Web Anwendungen
+  osIconPath: extra/icons/apps/webapps.png
+  items:
+  - type: desktop
+    source: walma-screenshot
+  - type: web
+    name: Youtube
+    url: http://youtube.com
+    description:
+      en: YouTube
+      fi: YouTube-videopalvelu
+      sv: YouTube
+      de: YouTube
+    osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
+  - type: web
+    name: Wikipedia
+    url: http://www.wikipedia.com
+    description:
+      en: Wikipedia encyclopedia
+      fi: Wikipedia-tietosanakirja
+      sv: Wikipedia uppslagsverk
+      de: Wikipedia Enziklopädie
+    osIconPath: /usr/share/icons/Faenza/apps/96/wikipedia.png
+  - type: web
+    name: Yle Areena
+    url: http://areena.yle.fi
+    description:
+      en: Yle Areena-online videos
+      fi: Yle Areena-videopalvelu
+      sv: Yle Arena
+      de: Yle Arena - Online Videos
+    osIconPath: /usr/share/icons/Faenza/apps/96/me-tv.png
+  - type: web
+    name: Ylen Elävä arkisto
+    url: http://yle.fi/elavaarkisto/index.html
+    description: Ylen Eläväarkisto-videopalvelu
+    osIconPath: /usr/share/icons/Faenza/apps/96/me-tv.png
+  - type: web
+    name: Sumopaint
+    url: http://www.sumopaint.com
+    description:
+      en: Sumopaint-online graphics editor
+      fi: Sumopaint-webkuvankäsittely
+      sv: Sumopaint-bildbehandling
+      de: Sumopaint Online Bildbearbeitung
+    osIconPath: /usr/share/icons/Faenza/apps/96/gimp.png
+  - type: web
+    name: Walma
+    keywords:
+    - photoshop
+    url: http://walmademo.opinsys.fi
+    description:
+      en: Collaborative whiteboard
+      fi: Yhteistoiminnallinen piirtotaulu
+      sv: Kollaborativ whiteboard
+      de: Mit dem Whiteboard zusammenarbweiten
+    osIconPath: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - type: web
+    name: Pahvi
+    url: http://pahvidemo.opinsys.fi/
+    osIconPath: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - type: web
+    name: SanomaPro
+    url: http://sanomapro.fi/
+    osIconPath: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - type: desktop
+    source: netflix
+  - type: web
+    name: Edison
+    url: http://app.edison.fi
+    osIconPath: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - type: web
+    name: Unelmakoulu
+    url: http://dreamschool.fi
+    osIconPath: /usr/share/icons/webmenu/unelmakoulu.png
+- type: desktop
+  source: nautilus-home
+  name:
+    fi: Kotikansio
+    sv: Hemmapp
+    en: Home folder
+    de: Home Verzeichnis
+  osIconPath: /usr/share/icons/Faenza/places/96/folder_home.png
+- type: custom
+  command: puavo-local-config-ui
+  name:
+    fi: Kannettavan asetukset
+    sv: Bärbar datorns inställningar
+    en: Laptop settings
+    de: Laptop einstellungen
+  osIconPath: /usr/share/icons/Faenza/devices/64/drive-harddisk-system.png
