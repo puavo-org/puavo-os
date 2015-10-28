@@ -25,6 +25,7 @@ class FolderTitle extends ViewMaster
             @render()
 
         @listenTo this, "reset", =>
+            @searchActive = false
             @prevStack = []
             @model = @initial
             @render()
