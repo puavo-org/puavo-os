@@ -32,6 +32,7 @@ items:
     type: desktop
   - source: brasero
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: sound-juicer
     type: desktop
   - source: gnome-search-tool
@@ -50,6 +51,7 @@ items:
     type: desktop
   - source: simplescreenrecorder
     type: desktop
+    inactiveByDeviceType: thinclient
 - type: menu
   name:
     en: Graphics
@@ -87,12 +89,15 @@ items:
     type: desktop
   - source: blender
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: photofilmstrip
     type: desktop
   - source: simple-scan
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: xsane
     type: desktop
+    inactiveByDeviceType: thinclient
 - type: menu
   name:
     en: Internet
@@ -121,8 +126,10 @@ items:
     type: desktop
   - source: googleearth
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: google-earth
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: skype
     type: desktop
   - source: empathy
@@ -150,14 +157,17 @@ items:
     type: desktop
   - source: arduino
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: fritzing
     type: desktop
   - source: Snap4Arduino
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: drracket
     type: desktop
   - source: enchanting
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: bluegriffon
     type: desktop
   - source: eclipse
@@ -176,6 +186,7 @@ items:
     type: desktop
   - source: scratch
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: kompozer
     type: desktop
   - source: bluefish
@@ -217,8 +228,10 @@ items:
     type: desktop
   - source: celestia
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: stellarium
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: kstars
     type: desktop
   - source: step
@@ -231,12 +244,14 @@ items:
     type: desktop
   - source: ghemical
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: avogadro
     type: desktop
   - source: kalzium
     type: desktop
   - source: mandelbulber
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: qgis
     type: desktop
 - type: menu
@@ -323,6 +338,7 @@ items:
     type: desktop
   - source: cheese
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: openshot
     type: desktop
   - source: kdenlive
@@ -500,6 +516,7 @@ items:
     osIconPath: /usr/share/icons/Faenza/mimetypes/96/text-html.png
   - source: netflix
     type: desktop
+    inactiveByDeviceType: thinclient
   - type: web
     name: Edison
     url: http://app.edison.fi
