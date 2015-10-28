@@ -11,7 +11,8 @@ class webmenu {
 
     [ '/etc/webmenu'
     , '/etc/webmenu/desktop.d'
-    , '/etc/webmenu/personally-administered-device' ]:
+    , '/etc/webmenu/personally-administered-device'
+    , '/etc/webmenu/tab.d' ]:
       ensure => directory;
 
     '/etc/webmenu/config.json':
@@ -28,6 +29,9 @@ class webmenu {
 
     '/etc/webmenu/personally-administered-device/menu.yaml':
       content => template('webmenu/personally-administered-device-menu.yaml');
+
+    '/etc/webmenu/tab.d/ops.yaml':
+      content => template('tab.d/ops.yaml');
 
     '/etc/xdg/autostart/webmenu.desktop':
       content => template('webmenu/webmenu.desktop'),
