@@ -1,0 +1,156 @@
+---
+type: menu
+name: Oppiaineet
+items:
+ - type: menu
+   name:
+     en: Physics & Chemistry
+     fi: Fysiikka & kemia
+   items:
+    - type: desktop
+      source: step
+    - type: desktop
+      source: kalzium
+    - type: desktop
+      source: ghemical
+    - type: desktop
+      source: LoggerPro
+ - type: menu
+   name:
+     en: Mathematics
+     fi: Matematiikka
+   items:
+    - type: desktop
+      source: tuxmath
+    - type: desktop
+      source: kbruch
+    - type: desktop
+      source: geogebra
+    - type: desktop
+      source: kmplot
+    - type: desktop
+      source: gcalctool
+    - type: desktop
+      source: Snap4Arduino
+    - type: desktop
+      source: scratch
+    - type: desktop
+      source: kturtle
+    - type: desktop
+      source: arduino
+    - type: desktop
+      source: libreoffice-calc
+    - type: desktop
+      source: libreoffice-math
+    - type: desktop
+      source: wxmaxima
+ - type: menu
+   name:
+     en: Geography & Environmental Science
+     fi: Maantieto & ympäristöoppi
+   osIcon:
+   items:
+    - type: desktop
+      source: marble
+    - type: desktop
+      source: kgeography
+    - type: desktop
+      source: celestia
+    - type: desktop
+      source: stellarium
+    - type: desktop
+      source: kstars
+    - type: desktop
+      source: qgis
+ - type: menu
+   name:
+     en: History & Social Sciences
+     fi: Historia & yhteiskuntaoppi
+   osIcon:
+   items:
+    - type: desktop
+      source: marble
+    - type: desktop
+      source: google-earth
+    - type: desktop
+      source: googleearth
+ - type: menu
+   name:
+     en: English & Literature
+     fi: Äidinkieli & kirjallisuus
+   osIcon:
+   items:
+    - type: desktop
+      source: gcompris
+    - type: desktop
+      source: khangman
+    - type: desktop
+      source: kanagram
+    - type: desktop
+      source: kwordquiz
+    - type: desktop
+      source: libreoffice-writer
+    - type: desktop
+      source: ktouch
+    - type: desktop
+      source: libreoffice-impress
+ - type: menu
+   name:
+     en: Foreign languages
+     fi: Vieraat kielet
+   osIcon:
+   items:
+    - type: desktop
+      source: kwordquiz
+    - type: desktop
+      source: khangman
+ - type: menu
+   name:
+     en: Music
+     fi: Musiikki
+   osIcon:
+   items:
+    - type: desktop
+      source: audacity
+    - type: desktop
+      source: solfege
+    - type: desktop
+      source: hydrogen
+    - type: desktop
+      source: mscore
+    - type: desktop
+      source: denemo
+ - type: menu
+   name:
+     en: Arts
+     fi: Kuvataide
+   osIcon:
+   items:
+    - type: desktop
+      source: tuxpaint
+    - type: desktop
+      source: kolourpaint
+    - type: desktop
+      source: mypaint
+    - type: desktop
+      source: pinta
+    - type: desktop
+      source: gimp
+    - type: desktop
+      source: inkscape
+    - type: desktop
+      source: simple-scan
+ - type: menu
+   name:
+     en: Handicraft
+     fi: Käsityö
+   osIcon:
+   items:
+    - type: desktop
+      source: fritzing
+    - type: desktop
+      source: inkscape
+    - type: desktop
+      source: gimp
+    - type: desktop
+      source: arduino
