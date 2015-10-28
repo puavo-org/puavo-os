@@ -32,6 +32,7 @@ items:
     type: desktop
   - source: brasero
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: sound-juicer
     type: desktop
   - source: gnome-search-tool
@@ -50,6 +51,7 @@ items:
     type: desktop
   - source: simplescreenrecorder
     type: desktop
+    inactiveByDeviceType: thinclient
   - type: custom
     name:
       en: Java Control Panel
@@ -96,10 +98,13 @@ items:
     type: desktop
   - source: simple-scan
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: xsane
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: blender
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: photofilmstrip
     type: desktop
 - type: menu
@@ -130,8 +135,10 @@ items:
     type: desktop
   - source: googleearth
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: google-earth
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: skype
     type: desktop
   - source: empathy
@@ -159,14 +166,17 @@ items:
     type: desktop
   - source: arduino
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: fritzing
     type: desktop
   - source: Snap4Arduino
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: drracket
     type: desktop
   - source: enchanting
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: bluegriffon
     type: desktop
   - source: eclipse
@@ -185,6 +195,7 @@ items:
     type: desktop
   - source: scratch
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: kompozer
     type: desktop
   - source: bluefish
@@ -210,16 +221,21 @@ items:
   items:
   - source: ekapeli
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: spelett
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: ekapeli-maahanmuuttaja
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: ekapeli-alku
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: gcompris
     type: desktop
   - source: tuxmath
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: kbruch
     type: desktop
   - source: geogebra
@@ -240,8 +256,10 @@ items:
     type: desktop
   - source: celestia
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: stellarium
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: kstars
     type: desktop
   - source: step
@@ -254,12 +272,14 @@ items:
     type: desktop
   - source: ghemical
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: avogadro
     type: desktop
   - source: kalzium
     type: desktop
   - source: mandelbulber
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: qgis
     type: desktop
   - source: gnubg
@@ -348,6 +368,7 @@ items:
     type: desktop
   - source: cheese
     type: desktop
+    inactiveByDeviceType: thinclient
   - type: custom
     name: Kena Vision Microscope
     command: /opt/av4kav/lib/av4.sh
@@ -391,8 +412,10 @@ items:
     type: desktop
   - source: qsynth
     type: desktop
+    inactiveByDeviceType: thinclient
   - source: qjackctl
     type: desktop
+    inactiveByDeviceType: thinclient
 - type: menu
   name:
     en: Interactive whiteboards
@@ -497,6 +520,7 @@ items:
     osIconPath: /usr/share/icons/Faenza/categories/96/gnome-joystick.png
   - source: netflix
     type: desktop
+    inactiveByDeviceType: thinclient
   - type: web
     name: Edison
     url: http://app.edison.fi

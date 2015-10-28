@@ -12,7 +12,6 @@ Open-Sankore:
     sv: Open-Sankore
     de: Open-Sankore
 Snap4Arduino:
-  inactiveByDeviceType: thinclient
   name:
     en: Teddy Bear programming
     fi: Nalle-ohjelmointi
@@ -27,7 +26,6 @@ acroread:
 arduino:
   name:
     en: Arduino IDE
-  inactiveByDeviceType: thinclient
 audacity:
   name:
     en: Audacity-audio editor
@@ -41,7 +39,6 @@ banshee:
     sv: Banshee-mediaspelare
     de: Banshee Medienspieler
 blender:
-  inactiveByDeviceType: thinclient
   name:
     fi: Blender-3D-mallinnusohjelma
     sv: Blender-3D-modellering
@@ -53,14 +50,12 @@ bluefish:
     sv: Bluefish html-redigerare
     de: Bluefish Htmleditor
 brasero:
-  inactiveByDeviceType: thinclient
   name:
     en: Brasero - CD/DVD -writer
     fi: Brasero - CD/DVD -kirjoitus
     sv: Brasero - CD/DVD -brännare
     de: Brasero - CD/DVD -brennen
 celestia:
-  inactiveByDeviceType: thinclient
   name:
     en: Celestia-space simulation
     fi: Avaruussimulaattori
@@ -68,7 +63,6 @@ celestia:
     de: Celestia Weltraum Simulator
 cheese:
   osIcon: /usr/share/icons/Faenza/devices/96/camera-web.png
-  inactiveByDeviceType: thinclient
 chromium-browser:
   name:
     en: Chromium-browser
@@ -102,12 +96,6 @@ dropbox:
     en: Dropbox
 drracket:
   osIcon: /usr/share/racket/pkgs/icons/plt-48x48.png
-ekapeli:
-  inactiveByDeviceType: thinclient
-ekapeli-alku:
-  inactiveByDeviceType: thinclient
-ekapeli-maahanmuuttaja:
-  inactiveByDeviceType: thinclient
 eleet:
   keywords:
   - leapmotion
@@ -117,8 +105,6 @@ empathy:
     fi: Empathy-pikaviestin
     sv: Empathy-IM-klient
     de: Empathy-Chat-Client
-enchanting:
-  inactiveByDeviceType: thinclient
 eog:
   name:
     en: Image Viewer
@@ -195,7 +181,6 @@ geogebra:
 gftp:
   osIcon: /usr/share/icons/Faenza/apps/96/preferences-system-windows.png
 ghemical:
-  inactiveByDeviceType: thinclient
   name:
     en: Ghemical-3D-molecules
     fi: 3D-Molekyylit
@@ -231,12 +216,10 @@ google-chrome:
     sv: Chrome
     de: Chrome
 google-earth:
-  inactiveByDeviceType: thinclient
   name:
     en: Google Earth
   osIcon: /usr/share/icons/Faenza/apps/96/googleearth.png
 googleearth:
-  inactiveByDeviceType: thinclient
   name:
     en: Google Earth - Legacy
   osIcon: /usr/share/icons/Faenza/apps/96/googleearth.png
@@ -430,7 +413,6 @@ luciole:
 luola:
   osIcon: applications-boardgames
 mandelbulber:
-  inactiveByDeviceType: thinclient
   name:
     en: Mandelbulber
     fi: Mandelbulber
@@ -463,8 +445,6 @@ nautilus-home:
     en: Home folder
     de: Home Verzeichnis
   osIcon: /usr/share/icons/Faenza/places/96/folder_home.png
-netflix:
-  inactiveByDeviceType: thinclient
 okular:
   keywords:
   - pdf
@@ -509,10 +489,7 @@ pitivi:
 primusclient:
   name: Primus
 qjackctl:
-  inactiveByDeviceType: thinclient
   osIcon: /usr/share/icons/hicolor/32x32/apps/qjackctl.png
-qsynth:
-  inactiveByDeviceType: thinclient
 rosegarden:
   name:
     en: Rosegarden-sequencer
@@ -520,7 +497,6 @@ rosegarden:
     sv: Rosegarden-sekvenser
     de: Rosegarden Sequencer
 scratch:
-  inactiveByDeviceType: thinclient
   name:
     en: Scratch
     fi: Scratch hahmo-ohjelmointi
@@ -539,7 +515,6 @@ shotwell:
     sv: Shotwell-foto-album
     de: Shotwell Fotos verwalten
 simple-scan:
-  inactiveByDeviceType: thinclient
   name:
     en: Simple Scan
     fi: Yksinkertainen skannausohjelma
@@ -547,7 +522,6 @@ simple-scan:
     de: Einfaches Scanner Werkzeug
   osIcon: /usr/share/icons/Faenza/devices/96/scanner.png
 simplescreenrecorder:
-  inactiveByDeviceType: thinclient
   name:
     en: SimpleScreenRecorder
     fi: Työpöytänauhoitus
@@ -573,13 +547,10 @@ spe:
     fi: Stanin python-editori
     sv: Stanis python-editor
     de: Stanis Python IDE
-spelett:
-  inactiveByDeviceType: thinclient
 spotify:
   name: Spotify
   osIcon: /usr/share/icons/Faenza/apps/96/spotify.png
 stellarium:
-  inactiveByDeviceType: thinclient
   name:
     en: Stellarium-planetarium
     fi: Stellarium-planetaario
@@ -621,7 +592,6 @@ tuxguitar:
     de: Tabulaturen für Gitarre
   osIcon: extra/icons/apps/overlord59-tux-guitar-1434.png
 tuxmath:
-  inactiveByDeviceType: thinclient
   name:
     en: TuxMath-math game
     fi: TuxMath-matikkapeli
@@ -655,7 +625,6 @@ xmoto:
   name: XMoto
   osIcon: applications-boardgames
 xsane:
-  inactiveByDeviceType: thinclient
   name:
     en: XSane-graphical scanning
     fi: Xsane-skannausohjelma
