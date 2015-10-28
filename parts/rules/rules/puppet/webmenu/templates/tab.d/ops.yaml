@@ -13,6 +13,7 @@ items:
       source: kalzium
     - type: desktop
       source: ghemical
+      inactiveByDeviceType: thinclient
     - type: desktop
       source: LoggerPro
  - type: menu
@@ -22,6 +23,7 @@ items:
    items:
     - type: desktop
       source: tuxmath
+      inactiveByDeviceType: thinclient
     - type: desktop
       source: kbruch
     - type: desktop
@@ -32,8 +34,10 @@ items:
       source: gcalctool
     - type: desktop
       source: Snap4Arduino
+      inactiveByDeviceType: thinclient
     - type: desktop
       source: scratch
+      inactiveByDeviceType: thinclient
     - type: desktop
       source: kturtle
     - type: desktop
@@ -56,8 +60,10 @@ items:
       source: kgeography
     - type: desktop
       source: celestia
+      inactiveByDeviceType: thinclient
     - type: desktop
       source: stellarium
+      inactiveByDeviceType: thinclient
     - type: desktop
       source: kstars
     - type: desktop
@@ -72,8 +78,10 @@ items:
       source: marble
     - type: desktop
       source: google-earth
+      inactiveByDeviceType: thinclient
     - type: desktop
       source: googleearth
+      inactiveByDeviceType: thinclient
  - type: menu
    name:
      en: English & Literature
@@ -142,6 +150,7 @@ items:
       source: inkscape
     - type: desktop
       source: simple-scan
+      inactiveByDeviceType: thinclient
  - type: menu
    name:
      en: Handicraft
@@ -156,3 +165,4 @@ items:
       source: gimp
     - type: desktop
       source: arduino
+      inactiveByDeviceType: thinclient
