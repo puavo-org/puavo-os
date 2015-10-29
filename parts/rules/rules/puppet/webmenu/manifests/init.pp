@@ -19,7 +19,8 @@ class webmenu {
       content => template('webmenu/config.json');
 
     '/etc/webmenu/desktop.d/default-overrides.yaml':
-      content => template('desktop.d/default-overrides.yaml');
+      content => template('desktop.d/default-overrides.yaml'),
+      rqeuire => [ Package['gnome-themes-extras'], Package['webmenu'], ];
 
     '/etc/webmenu/menu.yaml':
       content => template('webmenu/menu.yaml');
