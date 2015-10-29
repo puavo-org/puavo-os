@@ -120,6 +120,18 @@ module Dot11
       band
     end
 
+    def driver
+      uevent_path = File.join('/sys/class/ieee80211',
+                              @phy, 'device', 'uevent')
+      File.open(uevent_path) do |file|
+        file.each_line do |line|
+          next unless /^DRIVER=(.*)$/ =~ line
+          return $1
+        end
+      end
+      nil
+    end
+
   end
 
   def self.get_interface_driver(iface)
