@@ -1,0 +1,172 @@
+---
+type: menu
+name:
+  en: Subjects
+  fi: Oppiaineet
+items:
+ - type: menu
+   name:
+     en: Physics & Chemistry
+     fi: Fysiikka & kemia
+   osIcon: /usr/share/icons/Faenza/categories/64/applications-science.png
+   items:
+    - type: desktop
+      source: step
+    - type: desktop
+      source: kalzium
+    - type: desktop
+      source: ghemical
+      inactiveByDeviceType: thinclient
+    - type: desktop
+      source: LoggerPro
+ - type: menu
+   name:
+     en: Mathematics
+     fi: Matematiikka
+   osIcon: /usr/share/icons/Faenza/categories/64/applications-interfacedesign.png
+   items:
+    - type: desktop
+      source: tuxmath
+      inactiveByDeviceType: thinclient
+    - type: desktop
+      source: kbruch
+    - type: desktop
+      source: geogebra
+    - type: desktop
+      source: kmplot
+    - type: desktop
+      source: gcalctool
+    - type: desktop
+      source: Snap4Arduino
+      inactiveByDeviceType: thinclient
+    - type: desktop
+      source: scratch
+      inactiveByDeviceType: thinclient
+    - type: desktop
+      source: kturtle
+    - type: desktop
+      source: arduino
+    - type: desktop
+      source: libreoffice-calc
+    - type: desktop
+      source: libreoffice-math
+    - type: desktop
+      source: wxmaxima
+ - type: menu
+   name:
+     en: Geography & Environmental Science
+     fi: Maantieto & ympäristöoppi
+   osIcon: /usr/share/tuxpaint/stamps/space/planets/3_earth.png
+   items:
+    - type: desktop
+      source: marble
+    - type: desktop
+      source: kgeography
+    - type: desktop
+      source: celestia
+      inactiveByDeviceType: thinclient
+    - type: desktop
+      source: stellarium
+      inactiveByDeviceType: thinclient
+    - type: desktop
+      source: kstars
+    - type: desktop
+      source: qgis
+ - type: menu
+   name:
+     en: History & Social Sciences
+     fi: Historia & yhteiskuntaoppi
+   osIcon: /usr/share/tuxpaint/stamps/town/monuments/cartoon/statue.png
+   items:
+    - type: desktop
+      source: marble
+    - type: desktop
+      source: google-earth
+      inactiveByDeviceType: thinclient
+    - type: desktop
+      source: googleearth
+      inactiveByDeviceType: thinclient
+ - type: menu
+   name:
+     en: English & Literature
+     fi: Äidinkieli & kirjallisuus
+   osIcon: /usr/share/icons/Faenza/apps/64/gnome-dictionary.png
+   items:
+    - type: desktop
+      source: gcompris
+    - type: desktop
+      source: khangman
+    - type: desktop
+      source: kanagram
+    - type: desktop
+      source: kwordquiz
+    - type: desktop
+      source: libreoffice-writer
+    - type: desktop
+      source: ktouch
+    - type: desktop
+      source: libreoffice-impress
+ - type: menu
+   name:
+     en: Foreign languages
+     fi: Vieraat kielet
+   osIcon: /usr/share/icons/oxygen/64x64/categories/applications-education-language.png
+   items:
+    - type: desktop
+      source: kwordquiz
+    - type: desktop
+      source: khangman
+ - type: menu
+   name:
+     en: Music
+     fi: Musiikki
+   osIcon: /usr/share/tuxpaint/stamps/symbols/music/note_012_a.png
+   items:
+    - type: desktop
+      source: audacity
+    - type: desktop
+      source: solfege
+    - type: desktop
+      source: hydrogen
+    - type: desktop
+      source: lmms
+    - type: desktop
+      source: mscore
+    - type: desktop
+      source: denemo
+ - type: menu
+   name:
+     en: Arts
+     fi: Kuvataide
+   osIcon: /usr/share/icons/Faenza/categories/64/applications-painting.png
+   items:
+    - type: desktop
+      source: tuxpaint
+    - type: desktop
+      source: kolourpaint
+    - type: desktop
+      source: mypaint
+    - type: desktop
+      source: pinta
+    - type: desktop
+      source: gimp
+    - type: desktop
+      source: inkscape
+    - type: desktop
+      source: simple-scan
+      inactiveByDeviceType: thinclient
+ - type: menu
+   name:
+     en: Handicraft
+     fi: Käsityö
+   osIcon: /usr/share/icons/Breathe/48x48/categories/applications-accessories.png
+   items:
+    - type: desktop
+      source: fritzing
+    - type: desktop
+      source: inkscape
+    - type: desktop
+      source: gimp
+    - type: desktop
+      source: arduino
+      inactiveByDeviceType: thinclient
