@@ -8,6 +8,7 @@ items:
    name:
      en: Physics & Chemistry
      fi: Fysiikka & kemia
+   osIcon: /usr/share/icons/Faenza/categories/64/applications-science.png
    items:
     - type: desktop
       source: step
@@ -22,6 +23,7 @@ items:
    name:
      en: Mathematics
      fi: Matematiikka
+   osIcon: /usr/share/icons/Faenza/categories/64/applications-interfacedesign.png
    items:
     - type: desktop
       source: tuxmath
@@ -54,7 +56,7 @@ items:
    name:
      en: Geography & Environmental Science
      fi: Maantieto & ympäristöoppi
-   osIcon:
+   osIcon: /usr/share/tuxpaint/stamps/space/planets/3_earth.png
    items:
     - type: desktop
       source: marble
@@ -74,7 +76,7 @@ items:
    name:
      en: History & Social Sciences
      fi: Historia & yhteiskuntaoppi
-   osIcon:
+   osIcon: /usr/share/tuxpaint/stamps/town/monuments/cartoon/statue.png
    items:
     - type: desktop
       source: marble
@@ -88,7 +90,7 @@ items:
    name:
      en: English & Literature
      fi: Äidinkieli & kirjallisuus
-   osIcon:
+   osIcon: /usr/share/icons/Faenza/apps/64/gnome-dictionary.png
    items:
     - type: desktop
       source: gcompris
@@ -108,7 +110,7 @@ items:
    name:
      en: Foreign languages
      fi: Vieraat kielet
-   osIcon:
+   osIcon: /usr/share/icons/oxygen/64x64/categories/applications-education-language.png
    items:
     - type: desktop
       source: kwordquiz
@@ -118,7 +120,7 @@ items:
    name:
      en: Music
      fi: Musiikki
-   osIcon:
+   osIcon: /usr/share/tuxpaint/stamps/symbols/music/note_012_a.png
    items:
     - type: desktop
       source: audacity
@@ -136,7 +138,7 @@ items:
    name:
      en: Arts
      fi: Kuvataide
-   osIcon:
+   osIcon: /usr/share/icons/Faenza/categories/64/applications-painting.png
    items:
     - type: desktop
       source: tuxpaint
@@ -157,7 +159,7 @@ items:
    name:
      en: Handicraft
      fi: Käsityö
-   osIcon:
+   osIcon: /usr/share/icons/Breathe/48x48/categories/applications-accessories.png
    items:
     - type: desktop
       source: fritzing
