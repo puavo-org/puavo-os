@@ -136,6 +136,30 @@ module Dot11
       Dot11::SUPPORTED_DRIVERS.include?(self.driver)
     end
 
+    def ht_capab(channel)
+      is_ht20sgi_capab = IO.popen(['iw', @phy, 'info']) do |io|
+        !io.grep(/^\s+RX HT20 SGI.*$/).empty?
+      end
+      $?.success? or fail 'failed to query HT20 SGI capability'
+
+      is_ht40sgi_capab = IO.popen(['iw', @phy, 'info']) do |io|
+        !io.grep(/^\s+RX HT40 SGI.*$/).empty?
+      end
+      $?.success? or fail 'failed to query HT40 SGI capability'
+
+      case channel
+      when 1, 6, 11
+        '[HT20]'
+      when 36, 44
+        '[HT40+]' + (is_ht40sgi_capab ? '[SHORT-GI-40]' : '')
+      when 40, 48
+        '[HT40-]' + (is_ht40sgi_capab ? '[SHORT-GI-40]' : '')
+      else
+        fail "unsupported channel #{channel}"
+      end + (is_ht20sgi_capab ? '[SHORT-GI-20]' : '')
+
+    end
+
   end
 
   def self.get_interface_driver(iface)
