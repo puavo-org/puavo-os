@@ -132,6 +132,10 @@ module Dot11
       nil
     end
 
+    def has_supported_driver?
+      Dot11::SUPPORTED_DRIVERS.include?(self.driver)
+    end
+
   end
 
   def self.get_interface_driver(iface)
