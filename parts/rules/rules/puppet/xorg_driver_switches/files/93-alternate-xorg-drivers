@@ -9,4 +9,4 @@ if has_device_tag trusty_xorg_drivers \
              xserver-xorg-video-intel_2.99.910-0ubuntu1.6_i386.deb; do
     dpkg-deb -x "/var/opt/altdebs/${deb}" /
   done
-end
+fi
