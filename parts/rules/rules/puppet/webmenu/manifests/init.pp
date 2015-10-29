@@ -31,7 +31,11 @@ class webmenu {
       content => template('webmenu/personally-administered-device-menu.yaml');
 
     '/etc/webmenu/tab.d/ops.yaml':
-      content => template('tab.d/ops.yaml');
+      content => template('tab.d/ops.yaml'),
+      require +> [ Package['breathe-icon-theme']
+                 , Package['faenza-icon-theme']
+                 , Package['tuxpaint-stamps-default']
+                 , Package['oxygen-icon-theme'] ];
 
     '/etc/xdg/autostart/webmenu.desktop':
       content => template('webmenu/webmenu.desktop'),
@@ -42,5 +46,11 @@ class webmenu {
       mode    => 755;
   }
 
-  Package <| title == webmenu |>
+  Package <|
+       title == breathe-icon-theme
+    or title == faenza-icon-theme
+    or title == oxygen-icon-theme
+    or title == tuxpaint-stamps-default
+    or title == webmenu
+  |>
 }
