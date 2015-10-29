@@ -91,6 +91,37 @@ module Dot11
     BAND_2G | BAND_5G => CHANNELS_2G + CHANNELS_5G,
   }
 
+  class Phy
+
+    def initialize(phy)
+      @phy = phy
+    end
+
+    def band
+      band = 0
+
+      IO.popen(['iw', 'phy', @phy, 'info']) do |io|
+        until io.eof? do
+          next unless io.gets =~ /^\s+Frequencies:$/
+
+          io.gets =~ /^\s+\* (\d+) MHz .*$/
+          case $1
+          when '2412'
+            band |= Dot1::BAND_2G
+          when '5180'
+            band |= Dot1::BAND_5G
+          else
+            Log.warning("phy {@phy} has an unsupported band")
+          end
+        end
+      end
+      fail 'failed to query supported bands' unless $?.success?
+
+      band
+    end
+
+  end
+
   def self.get_interface_driver(iface)
     File.open(File.join('/sys/class/net', iface, 'device', 'uevent')) do |file|
       file.each_line do |line|
