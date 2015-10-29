@@ -19,8 +19,8 @@ class webmenu {
       content => template('webmenu/config.json');
 
     '/etc/webmenu/desktop.d/default-overrides.yaml':
-      content => template('desktop.d/default-overrides.yaml'),
-      rqeuire => [ Package['gnome-themes-extras'], Package['webmenu'], ];
+      content => template('webmenu/desktop.d/default-overrides.yaml'),
+      require => [ Package['gnome-themes-extras'], Package['webmenu'], ];
 
     '/etc/webmenu/menu.yaml':
       content => template('webmenu/menu.yaml');
@@ -32,11 +32,12 @@ class webmenu {
       content => template('webmenu/personally-administered-device-menu.yaml');
 
     '/etc/webmenu/tab.d/ops.yaml':
-      content => template('tab.d/ops.yaml'),
-      require +> [ Package['breathe-icon-theme']
+      content => template('webmenu/tab.d/ops.yaml'),
+      require => [ Package['breathe-icon-theme']
                  , Package['faenza-icon-theme']
                  , Package['tuxpaint-stamps-default']
-                 , Package['oxygen-icon-theme'] ];
+                 , Package['oxygen-icon-theme']
+                 , Package['webmenu'] ];
 
     '/etc/xdg/autostart/webmenu.desktop':
       content => template('webmenu/webmenu.desktop'),
