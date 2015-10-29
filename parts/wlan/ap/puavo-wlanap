@@ -162,6 +162,13 @@ module Dot11
 
   end
 
+  def self.each_phy
+    Dir.glob('/sys/class/ieee80211/*') do |phy_path|
+      phy_name = File.basename(phy_path)
+      yield Phy.new(phy_name)
+    end
+  end
+
   def self.get_interface_driver(iface)
     File.open(File.join('/sys/class/net', iface, 'device', 'uevent')) do |file|
       file.each_line do |line|
