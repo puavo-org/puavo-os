@@ -147,8 +147,9 @@ injectDesktopData = (menu, options) ->
       console.error "WARNING: Cannot make proper .desktop entry: " + menu.source
       menu.hidden = true
 
-    if not menu.hidden
-      menu.hidden = not isConditionOk(menu)
+
+  if not menu.hidden
+    menu.hidden = not isConditionOk(menu)
 
   if menu.type is "menu"
     menu.id = json2hash(menu.name)
