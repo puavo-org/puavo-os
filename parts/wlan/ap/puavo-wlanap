@@ -95,6 +95,36 @@ module Dot11
 
     def initialize(phy)
       @phy = phy
+      @phy_path = File.join('/sys/class/ieee80211', @phy)
+      @index = File.read(File.join(@phy_path), 'index').to_i
+    end
+
+    def each_vif
+      retval    = nil
+      phy_found = false
+
+      IO.popen(['iw', 'dev']) do |io|
+        io.each_line do |line|
+
+          is_phy_line = line =~ /^phy#(\d+)$/
+          unless phy_found
+            phy_found = $1.to_i == @index
+            next
+          end
+
+          # Encountering another phy line ends the current phy section.
+          break if is_phy_line
+
+          # Ignore all but interface lines.
+          if line =~ /^\s+Interface (.*)$/
+            retval = yield Vif.new($1)
+          end
+
+        end
+      end
+
+      fail 'failed to list interfaces' unless $?.success?
+      retval
     end
 
     def band
