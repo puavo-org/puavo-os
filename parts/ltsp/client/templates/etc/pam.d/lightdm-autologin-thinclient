@@ -3,6 +3,7 @@
 auth    requisite       pam_nologin.so
 auth    required        pam_env.so readenv=1
 auth    required        pam_env.so readenv=1 envfile=/etc/default/locale
+auth    required        pam_env.so readenv=1 envfile=/etc/environment.puavo
 auth    required        pam_permit.so
 
 auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/make-session-dir

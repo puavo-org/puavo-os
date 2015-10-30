@@ -5,6 +5,7 @@
 auth    requisite       pam_nologin.so
 auth    required        pam_env.so readenv=1
 auth    required        pam_env.so readenv=1 envfile=/etc/default/locale
+auth    required        pam_env.so readenv=1 envfile=/etc/environment.puavo
 auth    sufficient      pam_succeed_if.so user ingroup nopasswdlogin
 auth    optional        pam_group.so
 

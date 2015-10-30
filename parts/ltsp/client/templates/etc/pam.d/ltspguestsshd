@@ -6,6 +6,7 @@ auth       required     pam_env.so # [1]
 # In Debian 4.0 (etch), locale-related environment variables were moved to
 # /etc/default/locale, so read that as well.
 auth       required     pam_env.so envfile=/etc/default/locale
+auth       required     pam_env.so readenv=1 envfile=/etc/environment.puavo
 
 # Standard Un*x authentication.
 auth	required	pam_exec.so /usr/lib/puavo-ltsp-client/pam/ltspserver-guest-login
