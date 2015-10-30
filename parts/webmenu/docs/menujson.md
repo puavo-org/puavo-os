@@ -162,8 +162,8 @@ These attributes can be added to any object
     search strings.
   - `condition`: {String, optional} Javascript expression. When present the
   condition is executed and the item will appear only when the expression
-  evalutes to a truthty value. The expresstion has to values in scope. `env`
-  which contains all the environment values and `item` which is the current
+  evaluates to a truthty value. The expression has two values in scope. `env`
+  which contains all the environment environment and `item` which is the current
   menu item.
 
 ### Translations
