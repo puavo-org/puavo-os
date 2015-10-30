@@ -576,6 +576,41 @@ EOF
 
 end
 
+class VtundConf
+
+  TEMPLATE = <<'EOF'
+options {
+    syslog daemon;
+}
+
+puavo-wlanap {
+    passwd    wlan;
+    type      ether;
+    proto     udp;
+    speed     0;
+    encrypt   no;
+    compress  no;
+    multi     yes;
+
+    up {
+        program "<%= THIS_SCRIPT %> --ctrlmsg 'vtun-up:%%:<%= @bridge %>'";
+    };
+}
+EOF
+
+  def initialize(kwargs = {})
+    @bridge = kwargs.fetch(:bridge)
+  end
+
+  def write(filepath, mode=0640)
+    File.open(filepath, 'w', mode) do |file|
+      conf = ERB.new(VtundConf::TEMPLATE).result(binding)
+      file.write(conf)
+    end
+  end
+
+end
+
 class AccessPoint
 
   VTUN_ADDRESS = 'wlangw'
