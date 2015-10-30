@@ -405,6 +405,27 @@ class Dhclient
 
 end
 
+class Vtund
+
+  attr_reader :args
+  attr_reader :command
+  attr_reader :name
+
+  def initialize(kwargs = {})
+    @address = kwargs.fetch(:address)
+    @bridge  = kwargs.fetch(:bridge)
+    @port    = kwargs.fetch(:port)
+
+    @command  = 'vtund'
+    @name     = "#{@command}_#{@bridge}"
+    @conffile = File.join(RUNDIR, "#{@name}.conf")
+    @args     = ['-n', '-P', @port.to_s, '-f', @conffile, 'puavo-wlanap', @address]
+
+    VtundConf.new(:bridge => @bridge).write(@conffile)
+
+  end
+end
+
 class AccessPoint
 
   VTUN_ADDRESS = 'wlangw'
