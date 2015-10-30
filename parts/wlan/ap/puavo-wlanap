@@ -93,10 +93,10 @@ module Dot11
 
   class Phy
 
-    def initialize(phy)
-      @phy = phy
-      @phy_path = File.join('/sys/class/ieee80211', @phy)
-      @index = File.read(File.join(@phy_path), 'index').to_i
+    def initialize(name)
+      @name = name
+      path = File.join('/sys/class/ieee80211', @name)
+      @index = File.read(File.join(path), 'index').to_i
     end
 
     def each_vif
@@ -130,7 +130,7 @@ module Dot11
     def band
       band = 0
 
-      IO.popen(['iw', 'phy', @phy, 'info']) do |io|
+      IO.popen(['iw', 'phy', @name, 'info']) do |io|
         until io.eof? do
           next unless io.gets =~ /^\s+Frequencies:$/
 
@@ -141,7 +141,7 @@ module Dot11
           when '5180'
             band |= Dot1::BAND_5G
           else
-            Log.warning("phy {@phy} has an unsupported band")
+            Log.warning("phy {@name} has an unsupported band")
           end
         end
       end
@@ -152,7 +152,7 @@ module Dot11
 
     def driver
       uevent_path = File.join('/sys/class/ieee80211',
-                              @phy, 'device', 'uevent')
+                              @name, 'device', 'uevent')
       File.open(uevent_path) do |file|
         file.each_line do |line|
           next unless /^DRIVER=(.*)$/ =~ line
@@ -167,12 +167,12 @@ module Dot11
     end
 
     def ht_capab(channel)
-      is_ht20sgi_capab = IO.popen(['iw', @phy, 'info']) do |io|
+      is_ht20sgi_capab = IO.popen(['iw', @name, 'info']) do |io|
         !io.grep(/^\s+RX HT20 SGI.*$/).empty?
       end
       $?.success? or fail 'failed to query HT20 SGI capability'
 
-      is_ht40sgi_capab = IO.popen(['iw', @phy, 'info']) do |io|
+      is_ht40sgi_capab = IO.popen(['iw', @name, 'info']) do |io|
         !io.grep(/^\s+RX HT40 SGI.*$/).empty?
       end
       $?.success? or fail 'failed to query HT40 SGI capability'
