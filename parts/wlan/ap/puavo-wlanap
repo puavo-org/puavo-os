@@ -388,100 +388,101 @@ EOF
 
 end
 
-class Dhclient
+module Services
 
-  attr_reader :args
-  attr_reader :comand
-  attr_reader :name
+  module Spawnable
+    attr_reader :name
 
-  def initialize(kwargs = {})
-    @bridge  = kwargs.fetch(:bridge)
-
-    @args    = ['-d', @bridge]
-    @command = 'dhclient'
-    @name    = "#{@command}_#{@bridge}"
-
-  end
-
-end
-
-class Hostapd
-
-  attr_reader :args
-  attr_reader :comand
-  attr_reader :name
-
-  def initialize(kwargs = {})
-    @bridge = kwargs.fetch(:bridge)
-    @net    = kwargs.fetch(:net)
-    @phy    = kwargs.fetch(:phy)
-    @vif    = kwargs.fetch(:vif)
-
-    @command  = 'hostapd'
-    @name     = "#{@command}_#{@vif.name}"
-    @conffile = File.join(RUNDIR, "#{@name}.conf")
-    @args     = [@conffile]
-
-    HostapdConf.new(:bridge         => @bridge,
-                    :channel        => @phy.channel,
-                    :ctrl_interface => HOSTAPD_CTRL_INTERFACE_DIR,
-                    :ht_capab       => @phy.ht_capab(@phy.channel),
-                    :hw_mode        => Dot11::CHANNELS_5G.include?(@phy.channel) ? 'a' : 'g',
-                    :interface      => @vif.name,
-                    :ssid           => @net['ssid'],
-                    :wpa            => @net['type'] == 'open' ? 0 : 2,
-                    :wpa_passphrase => @net['password']).write(@conffile)
-  end
-
-end
-
-class HostapdCli
-
-  attr_reader :args
-  attr_reader :comand
-  attr_reader :name
-
-  def initialize(kwargs = {})
-    @vif = kwargs.fetch(:vif)
-
-    @command = 'hostapd_cli'
-    @name    = "#{@command}_#{@vif.name}"
-    @args    = ["-i#{@vif.name}",
-                "-p#{HOSTAPD_CTRL_INTERFACE_DIR}",
-                "-a#{HOSTAPD_ACTION_SCRIPT}"]
-
-    hostapd_socket = "#{HOSTAPD_CTRL_INTERFACE_DIR}/#{@vif.name}"
-    Timeout.timeout(5) do
-      loop do
-        break if File.exists?(hostapd_socket)
-        Log.info("waiting for hostapd control socket #{hostapd_socket}")
-        sleep 0.5
-      end
+    def spawn
+      Process.spawn(@command, *@args)
     end
-    Log.info("found hostapd control socket #{hostapd_socket}")
-  end
-
-end
-
-class Vtund
-
-  attr_reader :args
-  attr_reader :command
-  attr_reader :name
-
-  def initialize(kwargs = {})
-    @address = kwargs.fetch(:address)
-    @bridge  = kwargs.fetch(:bridge)
-    @port    = kwargs.fetch(:port)
-
-    @command  = 'vtund'
-    @name     = "#{@command}_#{@bridge}"
-    @conffile = File.join(RUNDIR, "#{@name}.conf")
-    @args     = ['-n', '-P', @port.to_s, '-f', @conffile, 'puavo-wlanap', @address]
-
-    VtundConf.new(:bridge => @bridge).write(@conffile)
 
   end
+
+  class Dhclient
+    include Services::Spawnable
+
+    def initialize(kwargs = {})
+      @bridge  = kwargs.fetch(:bridge)
+
+      @args    = ['-d', @bridge]
+      @command = 'dhclient'
+      @name    = "#{@command}_#{@bridge}"
+
+    end
+
+  end
+
+  class Hostapd
+    include Services::Spawnable
+
+    def initialize(kwargs = {})
+      @bridge = kwargs.fetch(:bridge)
+      @net    = kwargs.fetch(:net)
+      @phy    = kwargs.fetch(:phy)
+      @vif    = kwargs.fetch(:vif)
+
+      @command  = 'hostapd'
+      @name     = "#{@command}_#{@vif.name}"
+      @conffile = File.join(RUNDIR, "#{@name}.conf")
+      @args     = [@conffile]
+
+      HostapdConf.new(:bridge         => @bridge,
+                      :channel        => @phy.channel,
+                      :ctrl_interface => HOSTAPD_CTRL_INTERFACE_DIR,
+                      :ht_capab       => @phy.ht_capab(@phy.channel),
+                      :hw_mode        => Dot11::CHANNELS_5G.include?(@phy.channel) ? 'a' : 'g',
+                      :interface      => @vif.name,
+                      :ssid           => @net['ssid'],
+                      :wpa            => @net['type'] == 'open' ? 0 : 2,
+                      :wpa_passphrase => @net['password']).write(@conffile)
+    end
+
+  end
+
+  class HostapdCli
+    include Services::Spawnable
+
+    def initialize(kwargs = {})
+      @vif = kwargs.fetch(:vif)
+
+      @command = 'hostapd_cli'
+      @name    = "#{@command}_#{@vif.name}"
+      @args    = ["-i#{@vif.name}",
+                  "-p#{HOSTAPD_CTRL_INTERFACE_DIR}",
+                  "-a#{HOSTAPD_ACTION_SCRIPT}"]
+
+      hostapd_socket = "#{HOSTAPD_CTRL_INTERFACE_DIR}/#{@vif.name}"
+      Timeout.timeout(5) do
+        loop do
+          break if File.exists?(hostapd_socket)
+          Log.info("waiting for hostapd control socket #{hostapd_socket}")
+          sleep 0.5
+        end
+      end
+      Log.info("found hostapd control socket #{hostapd_socket}")
+    end
+
+  end
+
+  class Vtund
+    include Services::Spawnable
+
+    def initialize(kwargs = {})
+      @address = kwargs.fetch(:address)
+      @bridge  = kwargs.fetch(:bridge)
+      @port    = kwargs.fetch(:port)
+
+      @command  = 'vtund'
+      @name     = "#{@command}_#{@bridge}"
+      @conffile = File.join(RUNDIR, "#{@name}.conf")
+      @args     = ['-n', '-P', @port.to_s, '-f', @conffile, 'puavo-wlanap', @address]
+
+      VtundConf.new(:bridge => @bridge).write(@conffile)
+
+    end
+  end
+
 end
 
 class AccessPoint
@@ -674,14 +675,14 @@ class AccessPoint
       bridge = bridge[0]
       run_or_fail('ifconfig', iface, 'up')
       run_or_fail('brctl', 'addif', bridge, iface)
-      spawn_service(Dhclient.new(:bridge => bridge))
+      spawn_service(Services::Dhclient.new(:bridge => bridge))
     else
       Log.warning("received invalid vtun-up arguments #{args}")
     end
   end
 
   def spawn_service(service)
-    pid = spawn(service.command, *service.args)
+    pid = service.spawn
     @services[pid] = service
     Log.info("spawned #{service.name}")
   end
@@ -715,16 +716,16 @@ class AccessPoint
         run_or_fail('brctl', 'setfd', bridge, '0')
         run_or_fail('ifconfig', bridge, 'up')
 
-        spawn_service(Vtund.new(:bridge  => bridge,
-                                :address => @vtun_address,
-                                :port    => @vtun_port))
+        spawn_service(Services::Vtund.new(:bridge  => bridge,
+                                          :address => @vtun_address,
+                                          :port    => @vtun_port))
 
-        spawn_service(Hostapd.new(:bridge => bridge,
-                                  :phy    => phy,
-                                  :vif    => vif,
-                                  :net    => net))
+        spawn_service(Services::Hostapd.new(:bridge => bridge,
+                                            :phy    => phy,
+                                            :vif    => vif,
+                                            :net    => net))
 
-        spawn_service(HostapdCli.new(:vif => vif))
+        spawn_service(Services::HostapdCli.new(:vif => vif))
 
       end
     end
