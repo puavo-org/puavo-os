@@ -88,7 +88,6 @@ module Dot11
 
     def add_vif(name)
       run_or_fail('iw', 'phy', @name, 'interface', 'add', name, 'type', 'managed')
-      run_or_fail('ifconfig', name, 'up')
       Vif.new(name)
     end
 
@@ -227,6 +226,10 @@ module Dot11
 
       # Return channels in ascending signal level order.
       Hash[results.sort_by { |channel, signal_level| signal_level }].keys
+    end
+
+    def up
+      run_or_fail('ifconfig', @name, 'up')
     end
 
   end
@@ -600,6 +603,7 @@ class AccessPoint
         @vifs << vif
 
         if phy.channel.nil?
+          vif.up
           channels = vif.scan(phy.band)
           phy.channel = channels[0]
         end
