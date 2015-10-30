@@ -426,7 +426,7 @@ class AccessPoint
       return 1
     end
 
-    # At most 4 BSSes are supported.
+    # At most 4 BSSes per radio are supported.
     ignored_nets = @nets.slice!(4..-1)
     if !ignored_nets.nil? && !ignored_nets.empty?
       Log.warning("more than 4 networks defined, ignoring " +
