@@ -388,6 +388,23 @@ EOF
 
 end
 
+class Dhclient
+
+  attr_reader :args
+  attr_reader :comand
+  attr_reader :name
+
+  def initialize(kwargs = {})
+    @bridge  = kwargs.fetch(:bridge)
+
+    @args    = ['-d', @bridge]
+    @command = 'dhclient'
+    @name    = "#{@command}_#{@bridge}"
+
+  end
+
+end
+
 class AccessPoint
 
   VTUN_ADDRESS = 'wlangw'
