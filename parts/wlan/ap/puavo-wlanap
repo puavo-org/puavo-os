@@ -205,6 +205,10 @@ module Dot11
       @name = name
     end
 
+    def del
+      run_or_fail('iw', 'dev', @name, 'del')
+    end
+
     def scan(band)
       # Prime results with worst possible signal levels.
       results = {}
