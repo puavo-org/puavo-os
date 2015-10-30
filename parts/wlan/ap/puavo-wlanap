@@ -162,6 +162,42 @@ module Dot11
 
   end
 
+  class Vif
+
+    def initialize(name)
+      @name = name
+    end
+
+    def scan(band)
+      # Prime results with worst possible signal levels.
+      results = {}
+      Dot11::CHANNELS[band].each { |ch| results[ch] = -999 }
+
+      IO.popen(['iwlist', @name, 'scan']) do |io|
+        io.each_line do |line|
+          next unless line =~ /^\s+Cell [0-9]+ - Address: .*$/
+
+          io.readline.strip =~ /^Channel:([0-9]+)$/
+          channel = $1.to_i
+
+          io.readline.strip # Ignore frequency line.
+
+          io.readline.strip =~ /^Quality=[0-9]+\/[0-9]+\s+Signal level=(-[0-9]+) dBm.*$/
+          signal_level = $1.to_i
+
+          if results.has_key?(channel)
+            results[channel] = signal_level if results[channel] < signal_level
+          end
+        end
+      end
+      $?.success? or fail "failed to scan with interface #{@name}"
+
+      # Return channels in ascending signal level order.
+      Hash[results.sort_by { |channel, signal_level| signal_level }].keys
+    end
+
+  end
+
   def self.each_phy
     Dir.glob('/sys/class/ieee80211/*') do |phy_path|
       phy_name = File.basename(phy_path)
