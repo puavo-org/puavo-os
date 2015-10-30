@@ -95,8 +95,6 @@ module Dot11
 
     def initialize(name)
       @name = name
-      path = File.join('/sys/class/ieee80211', @name)
-      @index = File.read(File.join(path), 'index').to_i
     end
 
     def add_vif(name)
@@ -113,7 +111,7 @@ module Dot11
 
           is_phy_line = line =~ /^phy#(\d+)$/
           unless phy_found
-            phy_found = $1.to_i == @index
+            phy_found = "phy#{$1}" == @name
             next
           end
 
