@@ -526,6 +526,56 @@ def run_or_fail(cmd, *args)
   $?.success? or fail "command '#{cmd_string}' failed"
 end
 
+class HostapdConf
+
+  TEMPLATE = <<'EOF'
+interface=<%= @interface %>
+driver=nl80211
+country_code=FI
+hw_mode=<%= @hw_mode %>
+channel=<%= @channel %>
+max_num_sta=1000
+wmm_enabled=1
+ctrl_interface=<%= @ctrl_interface %>
+ieee80211n=1
+ht_capab=<%= @ht_capab %>
+wds_sta=1
+ssid=<%= @ssid %>
+bridge=<%= @bridge %>
+wpa=<%= @wpa %><% if @wpa != 0 %>
+auth_algs=3
+wpa_passphrase=<%= @wpa_passphrase %>
+rsn_pairwise=CCMP
+wpa_key_mgmt=WPA-PSK
+eapol_version=1
+eapol_key_index_workaround=1
+eap_reauth_period=0
+wpa_strict_rekey=0
+wpa_group_rekey=0
+wpa_gmk_rekey=0<% end %>
+EOF
+
+  def initialize(kwargs = {})
+    @bridge         = kwargs.fetch(:bridge)
+    @channel        = kwargs.fetch(:channel)
+    @ctrl_interface = kwargs.fetch(:ctrl_interface)
+    @ht_capab       = kwargs.fetch(:ht_capab)
+    @hw_mode        = kwargs.fetch(:hw_mode)
+    @interface      = kwargs.fetch(:interface)
+    @ssid           = kwargs.fetch(:ssid)
+    @wpa            = kwargs.fetch(:wpa)
+    @wpa_passphrase = kwargs.fetch(:wpa_passphrase)
+  end
+
+  def write(filepath, mode=0640)
+    File.open(filepath, 'w', mode) do |file|
+      conf = ERB.new(HostapdConf::TEMPLATE).result(binding)
+      file.write(conf)
+    end
+  end
+
+end
+
 class AccessPoint
 
   VTUN_ADDRESS = 'wlangw'
