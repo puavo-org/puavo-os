@@ -6,6 +6,7 @@ stringify = require "json-stable-stringify"
 fs = require "fs"
 execSync = require "execSync"
 crypto = require "crypto"
+vm = require "vm"
 
 _ = require "underscore"
 
@@ -59,6 +60,25 @@ normalizeIconPath = (p) ->
 
 
 isValidMenuLauncher = (o) -> o.name && o.command
+
+isConditionOk = (item) ->
+  if typeof item.condition isnt "string"
+    return true
+
+  # Use JSON to ensure copies and only data. The condition code cannot be
+  # trusted
+  context = {
+    env: JSON.parse(JSON.stringify(process.env))
+    item: JSON.parse(JSON.stringify(item))
+  }
+
+  try
+    # https://nodejs.org/docs/latest-v0.10.x/api/vm.html#vm_vm_runinnewcontext_code_sandbox_filename
+    return !!vm.runInNewContext(item.condition, context)
+  catch error
+    console.error "Invalid item.condition #{ item.condition }", item, error
+    return false
+
 
 injectDesktopData = (menu, options) ->
 
@@ -125,7 +145,10 @@ injectDesktopData = (menu, options) ->
 
     if not isValidMenuLauncher(menu)
       console.error "WARNING: Cannot make proper .desktop entry: " + menu.source
-      menu.broken = true
+      menu.hidden = true
+
+    if not menu.hidden
+      menu.hidden = not isConditionOk(menu)
 
   if menu.type is "menu"
     menu.id = json2hash(menu.name)

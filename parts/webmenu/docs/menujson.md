@@ -160,6 +160,11 @@ These attributes can be added to any object
     Overrides `osIcon`
   - `keywords`: {Array} Array of strings. Make item appear also when on these
     search strings.
+  - `condition`: {String, optional} Javascript expression. When present the
+  condition is executed and the item will appear only when the expression
+  evalutes to a truthty value. The expresstion has to values in scope. `env`
+  which contains all the environment values and `item` which is the current
+  menu item.
 
 ### Translations
 

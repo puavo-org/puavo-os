@@ -10,7 +10,7 @@ class AbstractItemModel extends Backbone.Model
             @allItems = allItems
             @allItems.add this
 
-    isOk: -> !@get("broken")
+    isOk: -> !@get("hidden")
 
     # Return menu items contents as translated on those parts that can be
     # translated
