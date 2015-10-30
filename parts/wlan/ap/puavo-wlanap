@@ -405,6 +405,36 @@ class Dhclient
 
 end
 
+class Hostapd
+
+  attr_reader :args
+  attr_reader :comand
+  attr_reader :name
+
+  def initialize(kwargs = {})
+    @bridge = kwargs.fetch(:bridge)
+    @net    = kwargs.fetch(:net)
+    @phy    = kwargs.fetch(:phy)
+    @vif    = kwargs.fetch(:vif)
+
+    @command  = 'hostapd'
+    @name     = "#{@command}_#{@vif.name}"
+    @conffile = File.join(RUNDIR, "#{@name}.conf")
+    @args     = [@conffile]
+
+    HostapdConf.new(:bridge         => @bridge,
+                    :channel        => @phy.channel,
+                    :ctrl_interface => HOSTAPD_CTRL_INTERFACE_DIR,
+                    :ht_capab       => @phy.ht_capab(@phy.channel),
+                    :hw_mode        => Dot11::CHANNELS_5G.include?(@phy.channel) ? 'a' : 'g',
+                    :interface      => @vif.name,
+                    :ssid           => @net['ssid'],
+                    :wpa            => @net['type'] == 'open' ? 0 : 2,
+                    :wpa_passphrase => @net['password']).write(@conffile)
+  end
+
+end
+
 class Vtund
 
   attr_reader :args
