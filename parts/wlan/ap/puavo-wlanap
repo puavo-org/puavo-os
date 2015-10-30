@@ -99,6 +99,11 @@ module Dot11
       @index = File.read(File.join(path), 'index').to_i
     end
 
+    def add_vif(name)
+      run_or_fail('iw', 'phy', @name, 'interface', 'add', name, 'type', 'managed')
+      Vif.new(name)
+    end
+
     def each_vif
       retval    = nil
       phy_found = false
