@@ -435,6 +435,34 @@ class Hostapd
 
 end
 
+class HostapdCli
+
+  attr_reader :args
+  attr_reader :comand
+  attr_reader :name
+
+  def initialize(kwargs = {})
+    @vif = kwargs.fetch(:vif)
+
+    @command = 'hostapd_cli'
+    @name    = "#{@command}_#{@vif.name}"
+    @args    = ["-i#{@vif.name}",
+                "-p#{HOSTAPD_CTRL_INTERFACE_DIR}",
+                "-a#{HOSTAPD_ACTION_SCRIPT}"]
+
+    hostapd_socket = "#{HOSTAPD_CTRL_INTERFACE_DIR}/#{@vif.name}"
+    Timeout.timeout(5) do
+      loop do
+        break if File.exists?(hostapd_socket)
+        Log.info("waiting for hostapd control socket #{hostapd_socket}")
+        sleep 0.5
+      end
+    end
+    Log.info("found hostapd control socket #{hostapd_socket}")
+  end
+
+end
+
 class Vtund
 
   attr_reader :args
