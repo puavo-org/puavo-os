@@ -62,19 +62,6 @@ end
 
 module Dot11
 
-  ## For some reason, at least with some driver versions, these device
-  ## models report empty address masks. However, hostapd requires that
-  ## mask >= 00:00:00:00:00:03 to support at most 4 different
-  ## BSSIDs. Mask 00:00:00:00:00:03 has been verified to work with
-  ## devices in question.
-  MASK_QUIRK_MODEL_IDS = [
-                          '168c0029',
-                          '168c0030',
-                          '168c002b',
-                          '168c002e',
-                          '168c0037',
-                         ]
-
   # Chips handled by following drivers seem to have pretty good chances
   # to work properly.
   SUPPORTED_DRIVERS = ['ath9k', 'rt2800pci', 'rt2800usb']
@@ -93,12 +80,15 @@ module Dot11
 
   class Phy
 
+    attr_accessor :channel
+
     def initialize(name)
       @name = name
     end
 
     def add_vif(name)
       run_or_fail('iw', 'phy', @name, 'interface', 'add', name, 'type', 'managed')
+      run_or_fail('ifconfig', name, 'up')
       Vif.new(name)
     end
 
@@ -140,9 +130,9 @@ module Dot11
           io.gets =~ /^\s+\* (\d+) MHz .*$/
           case $1
           when '2412'
-            band |= Dot1::BAND_2G
+            band |= Dot11::BAND_2G
           when '5180'
-            band |= Dot1::BAND_5G
+            band |= Dot11::BAND_5G
           else
             Log.warning("phy {@name} has an unsupported band")
           end
@@ -248,157 +238,6 @@ module Dot11
     end
   end
 
-  def self.get_interface_driver(iface)
-    File.open(File.join('/sys/class/net', iface, 'device', 'uevent')) do |file|
-      file.each_line do |line|
-        next unless /^DRIVER=(.*)$/ =~ line
-        return $1
-      end
-    end
-    nil
-  end
-
-  def self.has_supported_driver(iface)
-    driver = Dot11.get_interface_driver(iface)
-    Dot11::SUPPORTED_DRIVERS.include?(driver)
-  end
-
-  def self.is_wlan_interface(iface)
-    File.open(File.join('/sys/class/net', iface, 'uevent')) do |file|
-      file.each_line do |line|
-        return true if /^DEVTYPE=wlan$/ =~ line
-      end
-    end
-    false
-  end
-
-  def self.each_interface
-    Dir.glob('/sys/class/net/*') do |path|
-      iface = File.basename(path)
-      next unless Dot11.is_wlan_interface(iface)
-      next unless Dot11.has_supported_driver(iface)
-      yield iface
-    end
-  end
-
-  def self.fill_phy_list(phy_list, band)
-    Dot11.each_interface do |iface|
-      next unless band == Dot11.get_band(iface)
-      run_or_fail('ifconfig', iface, 'up')
-      best_channels = Dot11.scan(iface, band)
-      free_channels = best_channels - phy_list.map { |phy| phy[:channel] }
-      next if free_channels.empty?
-      channel = free_channels[0]
-
-      phy_list << {
-        :iface    => iface,
-        :channel  => channel,
-        :bssid    => Dot11.get_bssid(iface),
-        :hw_mode  => Dot11::CHANNELS_5G.include?(channel) ? 'a' : 'g',
-        :ht_capab => Dot11.get_ht_capab(iface, channel),
-      }
-    end
-  end
-
-  def self.find_phys
-    phy_list = []
-
-    Dot11.fill_phy_list(phy_list, Dot11::BAND_5G)
-    Dot11.fill_phy_list(phy_list, Dot11::BAND_2G)
-    Dot11.fill_phy_list(phy_list, Dot11::BAND_5G | Dot11::BAND_2G)
-
-    phy_list
-  end
-
-  def self.get_band(iface)
-    hw_mode = IO.popen(['iwconfig', iface]) do |io|
-      io.gets =~ /^.* IEEE 802.11([a-z]+).*$/
-      break $1
-    end
-    fail 'failed to query supported bands' unless $?.success?
-
-    band = 0
-    band |= Dot11::BAND_5G if hw_mode.include?('a')
-    band |= Dot11::BAND_2G if hw_mode.include?('g')
-
-    band
-  end
-
-  def self.get_bssid(iface)
-    sysdir = "/sys/class/net/#{iface}"
-    phydir = "#{sysdir}/phy80211"
-    devdir = "#{sysdir}/device"
-
-    addr = File.read("#{phydir}/macaddress"  ).split(':').map { |v| v.to_i(16) }
-    mask = File.read("#{phydir}/address_mask").split(':').map { |v| v.to_i(16) }
-
-    uevent = File.read("#{devdir}/uevent")
-    uevent =~ /^PRODUCT=(.+)\/(.+)\/.*$/ or uevent =~ /^PCI_ID=(.+):(.+)$/
-
-    model_id = "%04x%04x" % [$1.to_i(16), $2.to_i(16)]
-
-    if Dot11::MASK_QUIRK_MODEL_IDS.include?(model_id)
-      if mask.map { |v| v == 0 } .all?
-        mask = [0x00, 0x00, 0x00, 0x00, 0x00, 0x03]
-      end
-    end
-
-    addr.zip(mask).map { |(a, b)| "%02x" % (a &~ b) } .join(":")
-  end
-
-  def self.get_ht_capab(iface, channel)
-    phyname = File.read("/sys/class/net/#{iface}/phy80211/name").strip
-
-    is_ht20sgi_capab = IO.popen(['iw', phyname, 'info']) do |io|
-      !io.grep(/^\s+RX HT20 SGI.*$/).empty?
-    end
-    $?.success? or fail 'failed to query HT20 SGI capability'
-
-    is_ht40sgi_capab = IO.popen(['iw', phyname, 'info']) do |io|
-      !io.grep(/^\s+RX HT40 SGI.*$/).empty?
-    end
-    $?.success? or fail 'failed to query HT40 SGI capability'
-
-    case channel
-    when 1, 6, 11
-      '[HT20]'
-    when 36, 44
-      '[HT40+]' + (is_ht40sgi_capab ? '[SHORT-GI-40]' : '')
-    when 40, 48
-      '[HT40-]' + (is_ht40sgi_capab ? '[SHORT-GI-40]' : '')
-    else
-      fail "unsupported channel #{channel}"
-    end + (is_ht20sgi_capab ? '[SHORT-GI-20]' : '')
-  end
-
-  def self.scan(iface, band)
-    # Prime results with worst possible signal levels.
-    results = {}
-    Dot11::CHANNELS[band].each { |ch| results[ch] = -999 }
-
-    IO.popen(['iwlist', iface, 'scan']) do |io|
-      io.each_line do |line|
-        next unless line =~ /^\s+Cell [0-9]+ - Address: .*$/
-
-        io.readline.strip =~ /^Channel:([0-9]+)$/
-        channel = $1.to_i
-
-        io.readline.strip # Ignore frequency line.
-
-        io.readline.strip =~ /^Quality=[0-9]+\/[0-9]+\s+Signal level=(-[0-9]+) dBm.*$/
-        signal_level = $1.to_i
-
-        if results.has_key?(channel)
-          results[channel] = signal_level if results[channel] < signal_level
-        end
-      end
-    end
-    $?.success? or fail "failed to scan with interface #{iface}"
-
-    # Return channels in ascending signal level order.
-    Hash[results.sort_by { |channel, signal_level| signal_level }].keys
-  end
-
 end
 
 module PuavoAPI
@@ -453,72 +292,6 @@ CTRLSOCKET                 = File.join(RUNDIR, 'ctrlsocket')
 THIS_SCRIPT                = Pathname.new($0).realpath
 HOSTAPD_ACTION_SCRIPT      = THIS_SCRIPT.dirname.join('puavo-wlanap-hostapd-action')
 HOSTAPD_CTRL_INTERFACE_DIR = File.join(RUNDIR, 'hostapd')
-
-HOSTAPD_CONF_TEMPLATE = <<'EOF'
-## PHY-specific options ##
-interface=<%= phy[:iface] %>
-bssid=<%= phy[:bssid] %>
-driver=nl80211
-country_code=FI
-hw_mode=<%= phy[:hw_mode] %>
-channel=<%= phy[:channel] %>
-max_num_sta=1000
-wmm_enabled=1
-ctrl_interface=<%= HOSTAPD_CTRL_INTERFACE_DIR %>
-ieee80211n=1
-ht_capab=<%= phy[:ht_capab] %>
-wds_sta=1
-<% for bss in @bss_list %>
-
-## BSS-specific options ##
-<% if bss[:index] > 0 %>
-bss=<%= phy[:iface] %>_<%= bss[:index] %>
-<% end %>
-ssid=<%= bss[:ssid] %>
-bridge=<%= bss[:bridge] %>
-<% if bss[:type] == 'open' %>
-wpa=0
-<% else %>
-wpa=2
-auth_algs=3
-wpa_passphrase=<%= bss[:password] %>
-rsn_pairwise=CCMP
-wpa_key_mgmt=WPA-PSK
-eapol_version=1
-eapol_key_index_workaround=1
-eap_reauth_period=0
-wpa_strict_rekey=0
-wpa_group_rekey=0
-wpa_gmk_rekey=0
-<% end %>
-<% end %>
-EOF
-
-VTUND_CONF_TEMPLATE = <<'EOF'
-options {
-    syslog daemon;
-}
-
-puavo-wlanap {
-    passwd    wlan;
-    type      ether;
-    proto     udp;
-    speed     0;     # Full speed ahead! Aye aye, captain!
-    encrypt   no;
-    compress  no;
-    multi     yes;
-
-    up {
-        program "<%= THIS_SCRIPT %> --ctrlmsg 'vtun-up:%%:<%= bss[:bridge] %>'";
-    };
-}
-EOF
-
-def hexdigest15(str)
-  md5sum = Digest::MD5.new
-  md5sum << str
-  md5sum.hexdigest[0..14]
-end
 
 def run_or_fail(cmd, *args)
   cmd_string = ([cmd] + args).join(' ')
@@ -617,12 +390,14 @@ class AccessPoint
   VTUN_PORT    = 45045
 
   def initialize(kwargs = {})
-    @bss_list      = []
+    @bridges       = []
+    @conf          = nil
     @ctrlconn      = nil
     @ctrlconn_time = nil
     @ctrlserv      = nil
-    @phy_list      = []
+    @nets          = nil
     @services      = {}
+    @vifs          = []
     @vtun_address  = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
     @vtun_port     = kwargs.fetch(:vtun_port, VTUN_PORT)
   end
@@ -642,60 +417,36 @@ class AccessPoint
   private
 
   def run_locked
-    @phy_list = Dot11.find_phys
-    if @phy_list.empty?
-      Log.error('no suitable physical interfaces available')
-      return 1
-    end
+    @conf = PuavoAPI.get_conf
+    @nets = PuavoAPI.get_nets
 
-    conf = PuavoAPI.get_conf
-    nets = PuavoAPI.get_nets
-
-    @phy_list.each do |phy|
-      phy[:txpower] = conf[:txpower]
-      if Dot11::CHANNELS_5G.include? phy[:channel]
-        phy[:txpower] = conf.fetch(:txpower5, phy[:txpower])
-      end
-    end
-
-    if nets.empty?
+    if @nets.empty?
       Log.error('no networks defined')
       return 1
     end
 
     # At most 4 BSSes are supported.
-    ignored_nets = nets.slice!(4..-1)
+    ignored_nets = @nets.slice!(4..-1)
     if !ignored_nets.nil? && !ignored_nets.empty?
       Log.warning("more than 4 networks defined, ignoring " +
                   ignored_nets.map{ |n| n['ssid'] }.join(', '))
-    end
-
-    nets.length.times.zip(nets).map do |i, net|
-      @bss_list << {
-        :index    => i,
-        :bridge   => hexdigest15(net['ssid']),
-        :password => net['password'],
-        :type     => net['type'],
-        :ssid     => net['ssid'],
-      }
     end
 
     Signal.trap('EXIT') do
       Log.info('exiting')
       Process.kill('-SIGTERM', 0)
 
-      @bss_list.each do |bss|
+      @vifs.each { |vif| vif.del }
+
+      @bridges.each do |bridge|
         # Ignore errors, we are already exiting.
-        system('ifconfig', bss[:bridge], 'down')
-        system('brctl', 'delbr', bss[:bridge])
+        system('ifconfig', bridge, 'down')
+        system('brctl', 'delbr', bridge)
       end
 
       FileUtils.rm_rf(RUNDIR)
       Log.info('bye')
     end
-
-    write_hostapd_confs
-    write_vtund_confs
 
     [:HUP, :USR1, :USR2].each { |s| Signal.trap(s, 'SIG_IGN') }
 
@@ -711,8 +462,7 @@ class AccessPoint
 
     @ctrlserv = UNIXServer.new(CTRLSOCKET)
 
-    start_vtunds
-    start_hostapds
+    start_services
 
     Log.info('started')
     loop do
@@ -831,73 +581,77 @@ class AccessPoint
     end
   end
 
-  def start_vtunds
-    @bss_list.each do |bss|
-      run_or_fail('brctl', 'addbr', bss[:bridge])
-      run_or_fail('brctl', 'setfd', bss[:bridge], '0')
-      run_or_fail('ifconfig', bss[:bridge], 'up')
-      vtund_name = "vtund_#{bss[:bridge]}"
-      vtund_conffile = File.join(RUNDIR, "#{vtund_name}.conf")
-      vtund_pid = spawn('vtund', '-n', '-P', @vtun_port.to_s,
-                        '-f', vtund_conffile,
-                        'puavo-wlanap', @vtun_address)
-      @services[vtund_pid] = vtund_name
-      Log.info("spawned #{vtund_name}")
-    end
-  end
+  def start_services
+    bss_index = -1
+    Dot11.each_phy do |phy|
 
-  def start_hostapds
-    @phy_list.each do |phy|
-      unless phy[:txpower].nil?
-        system('iwconfig', phy[:iface], 'txpower', phy[:txpower].to_s)
+      unless phy.has_supported_driver?
+        Log.warning('ignoring phy #{phy.name} due to unsupported driver')
+        next
       end
 
-      hostapd_name = "hostapd_#{phy[:iface]}"
-      hostapd_pidfile = File.join(RUNDIR, "#{hostapd_name}.pid")
-      hostapd_conffile = File.join(RUNDIR, "#{hostapd_name}.conf")
-      hostapd_pid = spawn('hostapd', '-P', hostapd_pidfile, hostapd_conffile)
-      @services[hostapd_pid] = hostapd_name
-      Log.info("spawned #{hostapd_name}")
+      phy.each_vif { |vif| vif.del }
 
-      Timeout.timeout(5) do
-        loop do
-          break if File.exists?("#{HOSTAPD_CTRL_INTERFACE_DIR}/#{phy[:iface]}")
-          Log.info("waiting for hostapd control socket " \
-                   "#{HOSTAPD_CTRL_INTERFACE_DIR}/#{phy[:iface]}")
-          sleep 0.5
+      @nets.each do |net|
+        bss_index += 1
+
+        vif = phy.add_vif("hostapd#{bss_index}")
+        @vifs << vif
+
+        if phy.channel.nil?
+          channels = vif.scan(phy.band)
+          phy.channel = channels[0]
         end
+
+        bridge = "puavo-wlan#{bss_index}"
+        run_or_fail('brctl', 'addbr', bridge)
+        @bridges << bridge
+        run_or_fail('brctl', 'setfd', bridge, '0')
+        run_or_fail('ifconfig', bridge, 'up')
+
+        vtund_name = "vtund_#{bridge}"
+        vtund_conffile = File.join(RUNDIR, "#{vtund_name}.conf")
+        VtundConf.new(:bridge => bridge).write(vtund_conffile)
+        vtund_pid = spawn('vtund', '-n', '-P', @vtun_port.to_s,
+                          '-f', vtund_conffile,
+                          'puavo-wlanap', @vtun_address)
+        @services[vtund_pid] = vtund_name
+        Log.info("spawned #{vtund_name}")
+
+        hostapd_name = "hostapd_#{vif.name}"
+        hostapd_conffile = File.join(RUNDIR, "#{hostapd_name}.conf")
+        HostapdConf.new(:bridge         => bridge,
+                        :channel        => phy.channel,
+                        :ctrl_interface => HOSTAPD_CTRL_INTERFACE_DIR,
+                        :ht_capab       => phy.ht_capab(phy.channel),
+                        :hw_mode        => Dot11::CHANNELS_5G.include?(phy.channel) ? 'a' : 'g',
+                        :interface      => vif.name,
+                        :ssid           => net['ssid'],
+                        :wpa            => net['type'] == 'open' ? 0 : 2,
+                        :wpa_passphrase => net['password']).write(hostapd_conffile)
+        hostapd_pid = spawn('hostapd', hostapd_conffile)
+        @services[hostapd_pid] = hostapd_name
+        Log.info("spawned #{hostapd_name}")
+
+        hostapd_socket = "#{HOSTAPD_CTRL_INTERFACE_DIR}/#{vif.name}"
+        Timeout.timeout(5) do
+          loop do
+            break if File.exists?(hostapd_socket)
+            Log.info("waiting for hostapd control socket #{hostapd_socket}")
+            sleep 0.5
+          end
+        end
+        Log.info("found hostapd control socket #{hostapd_socket}")
+
+        hostapd_cli_pid = spawn('hostapd_cli',
+                                "-i#{vif.name}",
+                                "-p#{HOSTAPD_CTRL_INTERFACE_DIR}",
+                                "-a#{HOSTAPD_ACTION_SCRIPT}")
+        @services[hostapd_cli_pid] = "hostapd_cli_#{vif.name}"
+
       end
-      Log.info("found hostapd control socket " \
-               "#{HOSTAPD_CTRL_INTERFACE_DIR}/#{phy[:iface]}")
-
-      hostapd_cli_pid = spawn('hostapd_cli',
-                              "-i#{phy[:iface]}",
-                              "-p#{HOSTAPD_CTRL_INTERFACE_DIR}",
-                              "-a#{HOSTAPD_ACTION_SCRIPT}")
-      @services[hostapd_cli_pid] = "hostapd_cli_#{phy[:iface]}"
     end
-  end
 
-  def write_conf(filename, conf)
-    File.open(File.join(RUNDIR, filename), 'w', 0640) do |file|
-      file.write(conf)
-    end
-  end
-
-  def write_hostapd_confs
-    @phy_list.each do |phy|
-      @bss_list.each do |bss|
-        conf = ERB.new(HOSTAPD_CONF_TEMPLATE, 3, '<>').result(binding)
-        write_conf("hostapd_#{phy[:iface]}.conf", conf)
-      end
-    end
-  end
-
-  def write_vtund_confs
-    @bss_list.each do |bss|
-      conf = ERB.new(VTUND_CONF_TEMPLATE, 3, '<>').result(binding)
-      write_conf("vtund_#{bss[:bridge]}.conf", conf)
-    end
   end
 
 end
