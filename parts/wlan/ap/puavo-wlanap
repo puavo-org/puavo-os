@@ -576,7 +576,7 @@ class AccessPoint
       when :CHLD
         child_pid = Process.wait(0, Process::WNOHANG)
         if @services.has_key?(child_pid)
-          child_name = @services[child_pid]
+          child_name = @services[child_pid].name
           Log.error("child service #{child_name} died")
           return 1
         end
@@ -674,11 +674,16 @@ class AccessPoint
       bridge = bridge[0]
       run_or_fail('ifconfig', iface, 'up')
       run_or_fail('brctl', 'addif', bridge, iface)
-      dhclient_pid = spawn('dhclient', '-d', bridge)
-      @services[dhclient_pid] = "dhclient_#{bridge}"
+      spawn_service(Dhclient.new(:bridge => bridge))
     else
       Log.warning("received invalid vtun-up arguments #{args}")
     end
+  end
+
+  def spawn_service(service)
+    pid = spawn(service.command, *service.args)
+    @services[pid] = service
+    Log.info("spawned #{service.name}")
   end
 
   def start_services
@@ -710,45 +715,16 @@ class AccessPoint
         run_or_fail('brctl', 'setfd', bridge, '0')
         run_or_fail('ifconfig', bridge, 'up')
 
-        vtund_name = "vtund_#{bridge}"
-        vtund_conffile = File.join(RUNDIR, "#{vtund_name}.conf")
-        VtundConf.new(:bridge => bridge).write(vtund_conffile)
-        vtund_pid = spawn('vtund', '-n', '-P', @vtun_port.to_s,
-                          '-f', vtund_conffile,
-                          'puavo-wlanap', @vtun_address)
-        @services[vtund_pid] = vtund_name
-        Log.info("spawned #{vtund_name}")
+        spawn_service(Vtund.new(:bridge  => bridge,
+                                :address => @vtun_address,
+                                :port    => @vtun_port))
 
-        hostapd_name = "hostapd_#{vif.name}"
-        hostapd_conffile = File.join(RUNDIR, "#{hostapd_name}.conf")
-        HostapdConf.new(:bridge         => bridge,
-                        :channel        => phy.channel,
-                        :ctrl_interface => HOSTAPD_CTRL_INTERFACE_DIR,
-                        :ht_capab       => phy.ht_capab(phy.channel),
-                        :hw_mode        => Dot11::CHANNELS_5G.include?(phy.channel) ? 'a' : 'g',
-                        :interface      => vif.name,
-                        :ssid           => net['ssid'],
-                        :wpa            => net['type'] == 'open' ? 0 : 2,
-                        :wpa_passphrase => net['password']).write(hostapd_conffile)
-        hostapd_pid = spawn('hostapd', hostapd_conffile)
-        @services[hostapd_pid] = hostapd_name
-        Log.info("spawned #{hostapd_name}")
+        spawn_service(Hostapd.new(:bridge => bridge,
+                                  :phy    => phy,
+                                  :vif    => vif,
+                                  :net    => net))
 
-        hostapd_socket = "#{HOSTAPD_CTRL_INTERFACE_DIR}/#{vif.name}"
-        Timeout.timeout(5) do
-          loop do
-            break if File.exists?(hostapd_socket)
-            Log.info("waiting for hostapd control socket #{hostapd_socket}")
-            sleep 0.5
-          end
-        end
-        Log.info("found hostapd control socket #{hostapd_socket}")
-
-        hostapd_cli_pid = spawn('hostapd_cli',
-                                "-i#{vif.name}",
-                                "-p#{HOSTAPD_CTRL_INTERFACE_DIR}",
-                                "-a#{HOSTAPD_ACTION_SCRIPT}")
-        @services[hostapd_cli_pid] = "hostapd_cli_#{vif.name}"
+        spawn_service(HostapdCli.new(:vif => vif))
 
       end
     end
