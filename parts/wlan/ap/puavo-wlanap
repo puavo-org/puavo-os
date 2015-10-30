@@ -750,10 +750,6 @@ class AccessPoint
 
   def start_hostapds
     @phy_list.each do |phy|
-      # Try to disable power saving, because it seems to cause flaky
-      # connection quality in some scenarios.
-      system('iw', 'dev', phy[:iface], 'set', 'power_save', 'off')
-
       unless phy[:txpower].nil?
         system('iwconfig', phy[:iface], 'txpower', phy[:txpower].to_s)
       end
