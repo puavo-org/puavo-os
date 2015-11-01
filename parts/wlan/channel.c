@@ -21,41 +21,12 @@
 
 #include "main.h"
 #include "util.h"
-#include "wext.h"
+#include "ifctrl.h"
 #include "channel.h"
 
 
 static struct chan_freq channels[MAX_CHANNELS];
-
-
-#if defined(__APPLE__)
-
-int
-channel_change(__attribute__((unused)) int idx)
-{
-	return 0;
-}
-
-int
-channel_auto_change(void)
-{
-	return 0;
-}
-
-int
-channel_get_current_chan() {
-	return -1;
-}
-
-int
-channel_init(void) {
-	return 1;
-}
-
-#else
-
 static struct timeval last_channelchange;
-extern int mon; /* monitoring socket */
 
 
 long
@@ -71,28 +42,29 @@ channel_get_remaining_dwell_time(void)
 		+ last_channelchange.tv_usec;
 }
 
-int
+
+bool
 channel_change(int idx)
 {
-	if (wext_set_freq(mon, conf.ifname, channels[idx].freq) == 0) {
+	if (!ifctrl_iwset_freq(conf.ifname, channels[idx].freq)) {
 		printlog("ERROR: could not set channel %d", channels[idx].chan);
-		return 0;
+		return false;
 	}
 	conf.channel_idx = idx;
 	last_channelchange = the_time;
-	return 1;
+	return true;
 }
 
 
-int
+bool
 channel_auto_change(void)
 {
 	int new_idx;
-	int ret = 1;
+	bool ret = true;
 	int start_idx;
 
 	if (conf.channel_idx == -1)
-		return 0; /* The current channel is still unknown for some
+		return false; /* The current channel is still unknown for some
 			   * reason (mac80211 bug, busy physical interface,
 			   * etc.), it will be fixed when the first packet
 			   * arrives, see fixup_packet_channel().
@@ -106,7 +78,7 @@ channel_auto_change(void)
 			   * initialized properly. */
 
 	if (channel_get_remaining_dwell_time() > 0)
-		return 0; /* too early */
+		return false; /* too early */
 
 	if (conf.do_change_channel) {
 		start_idx = new_idx = conf.channel_idx;
@@ -136,40 +108,21 @@ channel_get_current_chan() {
 }
 
 
-static int
-get_current_wext_channel_idx(int mon)
-{
-	int freq, ch;
-
-	/* get current channel &  map to our channel array */
-	freq = wext_get_freq(mon, conf.ifname);
-	if (freq == 0)
-		return -1;
-
-	ch = channel_find_index_from_freq(freq);
-
-	DEBUG("***%d\n", ch);
-	return ch;
-}
-
-
-int
+bool
 channel_init(void) {
 	/* get available channels */
-	conf.num_channels = wext_get_channels(mon, conf.ifname, channels);
-	conf.channel_idx = get_current_wext_channel_idx(mon);
+	ifctrl_iwget_freqlist(conf.if_phy, channels);
+	conf.channel_idx = channel_find_index_from_freq(conf.if_freq);
+
 	if (conf.channel_num_initial > 0) {
 	    if (!channel_change(channel_find_index_from_chan(conf.channel_num_initial)))
-	        return 0;
+	        return false;
 	} else {
 	    conf.channel_num_initial = channel_get_chan_from_idx(conf.channel_idx);
 	}
 	conf.channel_initialized = 1;
-	return 1;
+	return true;
 }
-
-
-#endif
 
 
 int

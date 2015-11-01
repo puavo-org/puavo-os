@@ -34,7 +34,7 @@ update_channel_win(WINDOW *win)
 	print_centered(win, 0, 39, " Channel Settings ");
 
 	mvwprintw(win, 2, 2, "a: [%c] Automatically change channel",
-		  conf.do_change_channel ? '*' : ' ');
+		  CHECKED(conf.do_change_channel));
 	mvwprintw(win, 3, 2, "d: Channel dwell time: %d ms   ",
 		  conf.channel_time/1000);
 	mvwprintw(win, 4, 2, "u: Upper channel limit: %d  ", conf.channel_max);
@@ -47,7 +47,7 @@ update_channel_win(WINDOW *win)
 }
 
 
-int
+bool
 channel_input(WINDOW *win, int c)
 {
 	char buf[6];
@@ -95,11 +95,11 @@ channel_input(WINDOW *win, int c)
 		break;
 
 	default:
-		return 0; /* didn't handle input */
+		return false; /* didn't handle input */
 	}
 
 	net_send_channel_config();
 
 	update_channel_win(win);
-	return 1;
+	return true;
 }

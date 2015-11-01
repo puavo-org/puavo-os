@@ -19,7 +19,8 @@
 # build options
 DEBUG=1
 PCAP=0
-LIBNL_VERSION=3.0
+WEXT=0
+LIBNL=3.0
 
 NAME=horst
 OBJS=						   \
@@ -39,7 +40,7 @@ OBJS=						   \
 	display.o				   \
 	essid.o					   \
 	ieee80211_util.o			   \
-	ifctrl-nl80211.o			   \
+	ifctrl-ioctl.o			   	   \
 	listsort.o				   \
 	main.o					   \
 	network.o				   \
@@ -48,24 +49,33 @@ OBJS=						   \
 	protocol_parser_wlan.o			   \
 	radiotap/radiotap.o			   \
 	util.o					   \
-	wext.o					   \
 	wlan_util.o
 LIBS=-lncurses -lm
-CFLAGS+=-Wall -Wextra -g -I.
+CFLAGS+=-std=gnu99 -Wall -Wextra -g -I.
 
 ifeq ($(DEBUG),1)
-CFLAGS+=-DDO_DEBUG
+  CFLAGS+=-DDO_DEBUG
 endif
 
 ifeq ($(PCAP),1)
-CFLAGS+=-DPCAP
-LIBS+=-lpcap
+  CFLAGS+=-DPCAP
+  LIBS+=-lpcap
 endif
 
-ifeq ($(LIBNL_VERSION),tiny)
-LIBS+=-lnl-tiny
+ifeq ($(WEXT),1)
+  OBJS += ifctrl-wext.o
 else
-LIBS+=-lnl-3 -lnl-genl-3
+  ifeq ($(LIBNL),0)
+    OBJS += ifctrl-dummy.o
+  else
+    OBJS += ifctrl-nl80211.o
+    CFLAGS += $(shell pkg-config --cflags libnl-$(LIBNL))
+    ifeq ($(LIBNL),tiny)
+      LIBS+=-lnl-tiny
+    else
+      LIBS+=-lnl-3 -lnl-genl-3
+    endif
+  endif
 endif
 
 .PHONY: all check clean force
@@ -82,10 +92,6 @@ $(NAME): $(OBJS)
 
 $(OBJS): .buildflags
 
-# libnl-tiny header files somehow pollute, so just include them for this file:
-ifctrl-nl80211.o:
-	$(CC) -c $(CFLAGS) $(shell pkg-config --cflags libnl-$(LIBNL_VERSION)) -o $@ $<
-
 check:
 	sparse *.[ch]
 
@@ -93,6 +99,7 @@ clean:
 	-rm -f *.o radiotap/*.o *~
 	-rm -f $(NAME)
 	-rm -f .buildflags
+	-rm -f .objdeps.mk
 
 .buildflags: force
 	echo '$(CFLAGS)' | cmp -s - $@ || echo '$(CFLAGS)' > $@

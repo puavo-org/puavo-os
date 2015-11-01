@@ -21,11 +21,17 @@
 #define _WLAN_UTIL_H_
 
 struct pkt_name {
-	char c;
+	const char c;
 	const char* name;
-	u_int16_t fc;
+	const u_int16_t fc;
 	const char* desc;
 };
+
+/*
+ * Names and abbreviations for all WLAN frame types (2 bit, but only MGMT, CTRL
+ * and DATA defined) and subtypes (4 bit)
+ */
+struct pkt_name stype_names[WLAN_NUM_TYPES][WLAN_NUM_STYPES];
 
 struct pkt_name
 get_packet_struct(u_int16_t type);
