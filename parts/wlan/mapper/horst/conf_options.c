@@ -24,6 +24,7 @@
 
 #include "main.h"
 #include "util.h"
+#include "wlan_util.h"
 #include "control.h"
 
 struct conf_option {
@@ -31,43 +32,52 @@ struct conf_option {
 	const char*	name;
 	int		value_required;
 	const char*	default_value;
-	int		(*func)(const char* value);
+	bool		(*func)(const char* value);
 };
 
-static int conf_quiet(__attribute__((unused)) const char* value) {
+static bool conf_quiet(__attribute__((unused)) const char* value) {
 	conf.quiet = 1;
-	return 1;
+	return true;
 }
 
 #if DO_DEBUG
-static int conf_debug(__attribute__((unused)) const char* value) {
+static bool conf_debug(__attribute__((unused)) const char* value) {
 	conf.debug = 1;
-	return 1;
+	return true;
 }
 #endif
 
-static int conf_interface(const char* value) {
-	strncpy(conf.ifname, value, MAX_CONF_VALUE_STRLEN);
-	conf.ifname[MAX_CONF_VALUE_STRLEN] = '\0';
-	return 1;
+static bool conf_interface(const char* value) {
+	strncpy(conf.ifname, value, IF_NAMESIZE);
+	conf.ifname[IF_NAMESIZE] = '\0';
+	return true;
 }
 
-static int conf_outfile(const char* value) {
+static bool conf_add_monitor(const char* value) {
+	if (value != NULL && strcmp(value, "0") == 0)
+		conf.add_monitor = 0;
+	else {
+		conf.add_monitor = 1;
+	}
+	return true;
+}
+
+static bool conf_outfile(const char* value) {
 	dumpfile_open(value);
-	return 1;
+	return true;
 }
 
-static int conf_node_timeout(const char* value) {
+static bool conf_node_timeout(const char* value) {
 	conf.node_timeout = atoi(value);
-	return 1;
+	return true;
 }
 
-static int conf_receive_buffer(const char* value) {
+static bool conf_receive_buffer(const char* value) {
 	conf.recv_buffer_size = atoi(value);
-	return 1;
+	return true;
 }
 
-static int conf_channel_set(const char* value) {
+static bool conf_channel_set(const char* value) {
 	int n = atoi(value);
 	if (conf.channel_initialized)
 	    channel_change(channel_find_index_from_chan(n));
@@ -75,17 +85,17 @@ static int conf_channel_set(const char* value) {
 	    /* We have not yet initialized the channel module, channel will be
 	     * changed in channel_init(). */
 	    conf.channel_num_initial = n;
-	return 1;
+	return true;
 }
 
-static int conf_channel_scan(const char* value) {
+static bool conf_channel_scan(const char* value) {
 	if (value != NULL && strcmp(value, "0") == 0)
 		conf.do_change_channel = 0;
 	else {
 		conf.do_change_channel = 1;
 		conf.display_view = 's'; // show spectrum view
 	}
-	return 1;
+	return true;
 }
 
 /*
@@ -95,27 +105,27 @@ static int conf_channel_scan(const char* value) {
  * the current channel is changed back to the initial channel. When horst goes
  * out of scan rounds, it quits.
  */
-static int conf_channel_scan_rounds(const char* value) {
+static bool conf_channel_scan_rounds(const char* value) {
 	conf.channel_scan_rounds = atoi(value);
-	return 1;
+	return true;
 }
 
-static int conf_channel_dwell(const char* value) {
+static bool conf_channel_dwell(const char* value) {
 	conf.channel_time = atoi(value) * 1000;
-	return 1;
+	return true;
 }
 
-static int conf_channel_upper(const char* value) {
+static bool conf_channel_upper(const char* value) {
 	conf.channel_max = atoi(value);
-	return 1;
+	return true;
 }
 
-static int conf_display_interval(const char* value) {
+static bool conf_display_interval(const char* value) {
 	conf.display_interval = atoi(value) * 1000;
-	return 1;
+	return true;
 }
 
-static int conf_display_view(const char* value) {
+static bool conf_display_view(const char* value) {
 	if (strcasecmp(value, "history") == 0 || strcasecmp(value, "hist") == 0)
 		conf.display_view = 'h';
 	else if (strcasecmp(value, "essid") == 0)
@@ -124,29 +134,29 @@ static int conf_display_view(const char* value) {
 		conf.display_view = 'a';
 	else if (strcasecmp(value, "spectrum") == 0 || strcasecmp(value, "spec") == 0)
 		conf.display_view = 's';
-	return 1;
+	return true;
 }
 
-static int conf_server(const char* value) {
+static bool conf_server(const char* value) {
 	if (value != NULL && strcmp(value, "0") == 0)
 		conf.allow_client = 0;
 	else
 		conf.allow_client = 1;
-	return 1;
+	return true;
 }
 
-static int conf_client(const char* value) {
+static bool conf_client(const char* value) {
 	strncpy(conf.serveraddr, value, MAX_CONF_VALUE_STRLEN);
 	conf.serveraddr[MAX_CONF_VALUE_STRLEN] = '\0';
-	return 1;
+	return true;
 }
 
-static int conf_port(const char* value) {
+static bool conf_port(const char* value) {
 	conf.port = atoi(value);
-	return 1;
+	return true;
 }
 
-static int conf_control_pipe(const char* value) {
+static bool conf_control_pipe(const char* value) {
 	/*
 	 * Here it's a bit difficult because -X is used for two purposes:
 	 * 1) allow control pipe (-X with or without argument)
@@ -161,29 +171,29 @@ static int conf_control_pipe(const char* value) {
 		strncpy(conf.control_pipe, DEFAULT_CONTROL_PIPE, MAX_CONF_VALUE_STRLEN);
 	conf.control_pipe[MAX_CONF_VALUE_STRLEN] = '\0';
 	conf.allow_control = 1;
-	return 1;
+	return true;
 }
 
-static int conf_filter_mac(const char* value) {
+static bool conf_filter_mac(const char* value) {
 	static int n;
 	if (n >= MAX_FILTERMAC) {
 		printlog("Can only handle %d MAC filters", MAX_FILTERMAC);
-		return 0;
+		return false;
 	}
 
 	conf.do_macfilter = 1;
 	convert_string_to_mac(value, conf.filtermac[n]);
 	conf.filtermac_enabled[n] = 1;
 	n++;
-	return 1;
+	return true;
 }
 
-static int conf_filter_bssid(const char* value) {
+static bool conf_filter_bssid(const char* value) {
 	convert_string_to_mac(value, conf.filterbssid);
-	return 1;
+	return true;
 }
 
-static int conf_filter_mode(const char* value) {
+static bool conf_filter_mode(const char* value) {
 	if (conf.filter_mode == WLAN_MODE_ALL)
 		conf.filter_mode = 0;
 	if (strcmp(value, "ALL") == 0)
@@ -200,38 +210,34 @@ static int conf_filter_mode(const char* value) {
 		conf.filter_mode |= WLAN_MODE_4ADDR;
 	else if (strcmp(value, "UNKNOWN") == 0)
 		conf.filter_mode |= WLAN_MODE_UNKNOWN;
-	return 1;
+	return true;
 }
 
-static int conf_filter_pkt(const char* value) {
-	if (conf.filter_pkt == PKT_TYPE_ALL)
+static bool conf_filter_pkt(const char* value) {
+	int t, i;
+
+	if (conf.filter_pkt == PKT_TYPE_ALL) {
 		conf.filter_pkt = 0;
-	if (strcmp(value, "ALL") == 0)
+		conf.filter_badfcs = 0;
+		conf.filter_stype[WLAN_FRAME_TYPE_MGMT] = 0;
+		conf.filter_stype[WLAN_FRAME_TYPE_CTRL] = 0;
+		conf.filter_stype[WLAN_FRAME_TYPE_DATA] = 0;
+	}
+	if (strcmp(value, "ALL") == 0) {
 		conf.filter_pkt = PKT_TYPE_ALL;
-	else if (strcmp(value, "CTRL") == 0 || strcmp(value, "CONTROL") == 0)
-		conf.filter_pkt |= PKT_TYPE_CTRL | PKT_TYPE_ALL_CTRL;
-	else if (strcmp(value, "MGMT") == 0 || strcmp(value, "MANAGEMENT") == 0)
-		conf.filter_pkt |= PKT_TYPE_MGMT | PKT_TYPE_ALL_MGMT;
-	else if (strcmp(value, "DATA") == 0)
-		conf.filter_pkt |= PKT_TYPE_DATA | PKT_TYPE_ALL_DATA;
+		conf.filter_badfcs = 1;
+		conf.filter_stype[WLAN_FRAME_TYPE_MGMT] = 0xffff;
+		conf.filter_stype[WLAN_FRAME_TYPE_CTRL] = 0xffff;
+		conf.filter_stype[WLAN_FRAME_TYPE_DATA] = 0xffff;
+	}
 	else if (strcmp(value, "BADFCS") == 0)
-		conf.filter_pkt |= PKT_TYPE_BADFCS;
-	else if (strcmp(value, "BEACON") == 0)
-		conf.filter_pkt |= PKT_TYPE_BEACON;
-	else if (strcmp(value, "PROBE") == 0)
-		conf.filter_pkt |= PKT_TYPE_PROBE;
-	else if (strcmp(value, "ASSOC") == 0)
-		conf.filter_pkt |= PKT_TYPE_ASSOC;
-	else if (strcmp(value, "AUTH") == 0)
-		conf.filter_pkt |= PKT_TYPE_AUTH;
-	else if (strcmp(value, "RTS") == 0)
-		conf.filter_pkt |= PKT_TYPE_RTSCTS;
-	else if (strcmp(value, "ACK") == 0)
-		conf.filter_pkt |= PKT_TYPE_ACK;
-	else if (strcmp(value, "NULL") == 0)
-		conf.filter_pkt |= PKT_TYPE_NULL;
-	else if (strcmp(value, "QDATA") == 0)
-		conf.filter_pkt |= PKT_TYPE_QDATA;
+		conf.filter_badfcs = 1;
+	else if (strcmp(value, "CTRL") == 0 || strcmp(value, "CONTROL") == 0)
+		conf.filter_stype[WLAN_FRAME_TYPE_CTRL] = 0xffff;
+	else if (strcmp(value, "MGMT") == 0 || strcmp(value, "MANAGEMENT") == 0)
+		conf.filter_stype[WLAN_FRAME_TYPE_MGMT] = 0xffff;
+	else if (strcmp(value, "DATA") == 0)
+		conf.filter_stype[WLAN_FRAME_TYPE_DATA] = 0xffff;
 	else if (strcmp(value, "ARP") == 0)
 		conf.filter_pkt |= PKT_TYPE_ARP;
 	else if (strcmp(value, "IP") == 0)
@@ -248,24 +254,26 @@ static int conf_filter_pkt(const char* value) {
 		conf.filter_pkt |= PKT_TYPE_BATMAN;
 	else if (strcmp(optarg, "MESHZ") == 0)
 		conf.filter_pkt |= PKT_TYPE_MESHZ;
-	/* if one of the individual subtype frames is selected we enable the general frame type */
-	if (conf.filter_pkt & PKT_TYPE_ALL_MGMT)
-		conf.filter_pkt |= PKT_TYPE_MGMT;
-	if (conf.filter_pkt & PKT_TYPE_ALL_CTRL)
-		conf.filter_pkt |= PKT_TYPE_CTRL;
-	if (conf.filter_pkt & PKT_TYPE_ALL_DATA)
-		conf.filter_pkt |= PKT_TYPE_DATA;
-	return 1;
+
+	for (t = 0; t < WLAN_NUM_TYPES; t++) {
+		for (i = 0; i < WLAN_NUM_STYPES; i++) {
+			if (strcasecmp(stype_names[t][i].name, value) == 0) {
+				conf.filter_stype[t] |= BIT(i);
+				return true;
+			}
+		}
+	}
+	return true;
 }
 
-static int conf_mac_names(const char* value) {
+static bool conf_mac_names(const char* value) {
 	if (value != NULL)
 		strncpy(conf.mac_name_file, value, MAX_CONF_VALUE_STRLEN);
 	else
 		strncpy(conf.mac_name_file, DEFAULT_MAC_NAME_FILE, MAX_CONF_VALUE_STRLEN);
 	conf.mac_name_file[MAX_CONF_VALUE_STRLEN] = '\0';
 	conf.mac_name_lookup = 1;
-	return 1;
+	return true;
 }
 
 
@@ -276,6 +284,7 @@ static struct conf_option conf_options[] = {
 	{ 'D', "debug", 		0, NULL,	conf_debug },		// NOT dynamic
 #endif
 	{ 'i', "interface", 		1, "wlan0",	conf_interface },	// NOT dynamic
+	{ 'a', "add_monitor",		0, NULL,	conf_add_monitor },
 	{ 'd', "display_interval",	1, "100", 	conf_display_interval },
 	{ 'V', "display_view",		1, NULL, 	conf_display_view },
 	{ 'o', "outfile", 		1, NULL,	conf_outfile },
@@ -314,7 +323,7 @@ static struct conf_option conf_options[] = {
  * In the second case 'c' is 0 and name is set
  * Value may be null in all cases
  */
-int
+bool
 config_handle_option(int c, const char* name, const char* value) {
 	unsigned int i;
 	char* end;
@@ -343,7 +352,7 @@ config_handle_option(int c, const char* name, const char* value) {
 	}
 	if (name != NULL)
 		printlog("Ignoring unknown config option '%s' = '%s'", name, value);
-	return -1;
+	return false;
 }
 
 
@@ -429,7 +438,7 @@ config_get_getopt_string(char* buf, size_t maxlen, const char* add) {
 
 
 void print_usage(const char* name) {
-	printf("\nUsage: %s [-h] [-q] [-D] [-c file] [-i interface] [-t sec] [-d ms] [-V view] [-b bytes]\n"
+	printf("\nUsage: %s [-h] [-q] [-D] [-a] [-c file] [-i interface] [-t sec] [-d ms] [-V view] [-b bytes]\n"
 		"\t\t[-s] [-u] [-N] [-n IP] [-p port] [-o file] [-X[name]] [-x command]\n"
 		"\t\t[][-e MAC] [-f PKT_NAME] [-m MODE] [-B BSSID]\n\n"
 
@@ -439,6 +448,7 @@ void print_usage(const char* name) {
 #if DO_DEBUG
 		"  -D\t\tShow lots of debug output, no UI\n"
 #endif
+		"  -a\t\tAlways add virtual monitor interface\n"
 		"  -c <file>\tConfig file (" CONFIG_FILE ")\n"
 		"  -C <chan>\tSet initial channel\n"
 		"  -i <intf>\tInterface name (wlan0)\n"

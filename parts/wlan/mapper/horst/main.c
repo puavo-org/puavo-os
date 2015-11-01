@@ -89,7 +89,6 @@ static fd_set excpt_fds;
 
 static volatile sig_atomic_t is_sigint_caught;
 
-static int is_interface_added;
 
 void __attribute__ ((format (printf, 1, 2)))
 printlog(const char *fmt, ...)
@@ -218,7 +217,7 @@ update_spectrum_durations(void)
 }
 
 
-static void 
+static void
 write_to_file(struct packet_info* p)
 {
 	char buf[40];
@@ -246,48 +245,66 @@ write_to_file(struct packet_info* p)
 }
 
 
-/* return 1 if packet is filtered */
-static int
+/* return true if packet is filtered */
+static bool
 filter_packet(struct packet_info* p)
 {
 	int i;
 
 	if (conf.filter_off)
-		return 0;
+		return false;
 
+	/* if packets with bad FCS are not filtered, still we can not trust any
+	 * other header, so in any case return */
+	if (p->phy_flags & PHY_FLAG_BADFCS) {
+		if (!conf.filter_badfcs) {
+			stats.filtered_packets++;
+			return true;
+		}
+		return false;
+	}
+
+	/* filter by WLAN frame type and also type 3 which is not defined */
+	i = WLAN_FRAME_TYPE(p->wlan_type);
+	if (i == 3 || !(conf.filter_stype[i] & BIT(WLAN_FRAME_STYPE(p->wlan_type)))) {
+		stats.filtered_packets++;
+		return true;
+	}
+
+	/* filter by MODE (AP, IBSS, ...) this also filters packets where we
+	 * cannot associate a mode (ACK, RTS/CTS) */
+	if (conf.filter_mode != WLAN_MODE_ALL && ((p->wlan_mode & ~conf.filter_mode) || p->wlan_mode == 0)) {
+		stats.filtered_packets++;
+		return true;
+	}
+
+	/* filter higher level packet types */
 	if (conf.filter_pkt != PKT_TYPE_ALL && (p->pkt_types & ~conf.filter_pkt)) {
 		stats.filtered_packets++;
-		return 1;
+		return true;
 	}
 
-	/* cannot trust anything if FCS is bad */
-	if (p->phy_flags & PHY_FLAG_BADFCS)
-		return 0;
-
-	if (conf.filter_mode != WLAN_MODE_ALL && ((p->wlan_mode & ~conf.filter_mode) || p->wlan_mode == 0)) {
-		/* this also filters out packets where we cannot associate a mode (ACK, RTS/CTS) */
-		stats.filtered_packets++;
-		return 1;
-	}
-
+	/* filter BSSID */
 	if (MAC_NOT_EMPTY(conf.filterbssid) &&
 	    memcmp(p->wlan_bssid, conf.filterbssid, MAC_LEN) != 0) {
 		stats.filtered_packets++;
-		return 1;
+		return true;
 	}
 
+	/* filter MAC adresses */
 	if (conf.do_macfilter) {
 		for (i = 0; i < MAX_FILTERMAC; i++) {
 			if (MAC_NOT_EMPTY(p->wlan_src) &&
 			    conf.filtermac_enabled[i] &&
 			    memcmp(p->wlan_src, conf.filtermac[i], MAC_LEN) == 0) {
-				return 0;
+				return false;
 			}
 		}
 		stats.filtered_packets++;
-		return 1;
+		return true;
 	}
-	return 0;
+
+	return false;
 }
 
 
@@ -342,11 +359,10 @@ handle_packet(struct packet_info* p)
 	if (conf.paused)
 		return;
 
-	DEBUG("handle %s\n", get_packet_type_name(p->wlan_type));
-
+	/* we can't trust any fields except phy_* of packets with bad FCS */
 	if (!(p->phy_flags & PHY_FLAG_BADFCS)) {
-		/* we can't trust any fields except phy_* of packets with bad FCS,
-		 * so we can't do all this here */
+		DEBUG("handle %s\n", get_packet_type_name(p->wlan_type));
+
 		n = node_update(p);
 
 		if (n)
@@ -501,13 +517,14 @@ exit_handler(void)
 {
 	free_lists();
 
-	if (!conf.serveraddr[0] != '\0')
-		close_packet_socket(mon, conf.ifname);
-
-	if (is_interface_added) {
-		ifctrl_ifdown(conf.ifname);
-		ifctrl_iwdel(conf.ifname);
+	if (!conf.serveraddr[0] != '\0') {
+		close_packet_socket(mon);
 	}
+
+	ifctrl_flags(conf.ifname, false, false);
+
+	if (conf.monitor_added)
+		ifctrl_iwdel(conf.ifname);
 
 	if (DF != NULL) {
 		fclose(DF);
@@ -522,6 +539,8 @@ exit_handler(void)
 
 	if (!conf.quiet && !conf.debug)
 		finish_display();
+
+	ifctrl_finish();
 }
 
 
@@ -612,12 +631,12 @@ static void generate_mon_ifname(char *const buf, const size_t buf_size)
 
 		len = snprintf(buf, buf_size, "horst%d", i);
 		if (len < 0)
-			err(1, "failed to generate a monitor interface name");
+			err(1, "failed to generate monitor interface name");
 		if ((unsigned int) len >= buf_size)
 			errx(1, "failed to generate a sufficiently short "
 			     "monitor interface name");
 		if (!if_nametoindex(buf))
-			break;
+			break;  /* interface does not exist yet, done */
 	}
 }
 
@@ -663,29 +682,28 @@ main(int argc, char** argv)
 	if (conf.serveraddr[0] != '\0')
 		mon = net_open_client_socket(conf.serveraddr, conf.port);
 	else {
-		/* Try to set the interface to monitor mode or create a virtual
-		 * monitor interface as a fallback. */
-		if (ifctrl_iwset_monitor(conf.ifname)) {
+		ifctrl_init();
+		ifctrl_iwget_interface_info(conf.ifname);
+
+		/* if the interface is not already in monitor mode, try to set
+		 * it to monitor or create an additional virtual monitor interface */
+		if (conf.add_monitor || (!ifctrl_is_monitor() &&
+					 !ifctrl_iwset_monitor(conf.ifname))) {
 			char mon_ifname[IF_NAMESIZE];
-
-			warnx("failed to set interface '%s' to monitor mode, "
-			      "adding a virtual monitor interface",
-			      conf.ifname);
-
 			generate_mon_ifname(mon_ifname, IF_NAMESIZE);
-			if (ifctrl_iwadd_monitor(conf.ifname, mon_ifname))
-				err(1, "failed to add a virtual monitor "
-				    "interface");
+			if (!ifctrl_iwadd_monitor(conf.ifname, mon_ifname))
+				err(1, "failed to add virtual monitor interface");
 
 			printlog("INFO: A virtual interface '%s' will be used "
 				 "instead of '%s'.", mon_ifname, conf.ifname);
-			config_handle_option(0, "interface", mon_ifname);
-			is_interface_added = 1;
+
+			strncpy(conf.ifname, mon_ifname, IF_NAMESIZE);
+			conf.monitor_added = 1;
 			/* Now we have a new monitor interface, proceed
 			 * normally. The interface will be deleted at exit. */
 		}
 
-		if (ifctrl_ifup(conf.ifname))
+		if (!ifctrl_flags(conf.ifname, true, true))
 			err(1, "failed to bring interface '%s' up",
 			    conf.ifname);
 

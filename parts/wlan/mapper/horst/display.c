@@ -26,6 +26,7 @@
 #include <signal.h>
 #include <sys/ioctl.h>
 
+#include "util.h"
 #include "display.h"
 #include "main.h"
 #include "wlan80211.h"
@@ -46,7 +47,7 @@ void init_display_main(void);
 void clear_display_main(void);
 void update_main_win(struct packet_info *pkt);
 void update_dump_win(struct packet_info* pkt);
-int main_input(int c);
+bool main_input(int c);
 void print_dump_win(const char *str, int refresh);
 void resize_display_main(void);
 static void resize_display_all(void);
@@ -54,8 +55,8 @@ static void resize_display_all(void);
 /* smaller config windows */
 void update_filter_win(WINDOW *win);
 void update_channel_win(WINDOW *win);
-int filter_input(WINDOW *win, int c);
-int channel_input(WINDOW *win, int c);
+bool filter_input(WINDOW *win, int c);
+bool channel_input(WINDOW *win, int c);
 
 /* "standard" windows */
 void update_spectrum_win(WINDOW *win);
@@ -63,7 +64,7 @@ void update_statistics_win(WINDOW *win);
 void update_essid_win(WINDOW *win);
 void update_history_win(WINDOW *win);
 void update_help_win(WINDOW *win);
-int spectrum_input(WINDOW *win, int c);
+bool spectrum_input(WINDOW *win, int c);
 
 /******************* HELPERS *******************/
 
@@ -122,7 +123,7 @@ get_packet_type_color(int type)
 {
 	if (type == 1) /* special case for bad FCS */
 		return RED;
-	switch (type & WLAN_FRAME_FC_TYPE_MASK) {
+	switch (WLAN_FRAME_TYPE(type)) {
 		case WLAN_FRAME_TYPE_DATA: return BLUE;
 		case WLAN_FRAME_TYPE_CTRL: return WHITE;
 		case WLAN_FRAME_TYPE_MGMT: return CYAN;
@@ -289,7 +290,7 @@ static void
 show_conf_window(int key)
 {
 	if (conf_win != NULL &&
-	    (conf_win_current == key || key == '\r' || key == KEY_ENTER)) {
+	    (conf_win_current == key || key == '\r' || key == KEY_ENTER || key == 27)) {
 		delwin(conf_win);
 		conf_win = NULL;
 		conf_win_current = 0;
@@ -297,7 +298,8 @@ show_conf_window(int key)
 	}
 	if (conf_win == NULL) {
 		if (key == 'f') {
-			conf_win = newwin(27, 57, LINES/2-13, COLS/2-28);
+			conf_win = newwin(FILTER_WIN_HEIGHT, FILTER_WIN_WIDTH,
+					  LINES/2-13, COLS/2-28);
 			update_filter_win(conf_win);
 		}
 		else if (key == 'c') {
@@ -461,6 +463,7 @@ handle_user_input(void)
 	case 'f': case 'F':
 	case 'c': case 'C':
 	case '\r': case KEY_ENTER: /* used to close win */
+	case 27 : /* ESC */
 		show_conf_window(tolower(key));
 		break;
 	}
@@ -483,6 +486,7 @@ init_display(void)
 	curs_set(0);	/* don't show cursor */
 	noecho();
 	nodelay(stdscr, TRUE);
+	ESCDELAY = 25;	/* we don't use ESC sequences */
 
 	init_pair(1, COLOR_WHITE, COLOR_BLACK);
 	init_pair(2, COLOR_GREEN, COLOR_BLACK);

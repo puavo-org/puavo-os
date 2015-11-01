@@ -24,89 +24,74 @@
 
 /* lists of packet names */
 
-static struct pkt_name mgmt_names[] = {
+struct pkt_name stype_names[WLAN_NUM_TYPES][WLAN_NUM_STYPES] = {
+{
 	{ 'a', "ASOCRQ", WLAN_FRAME_ASSOC_REQ, "Association request" },
 	{ 'A', "ASOCRP", WLAN_FRAME_ASSOC_RESP, "Association response" },
-	{ 'a', "REASRQ", WLAN_FRAME_REASSOC_REQ, "Reassociation request" },
-	{ 'A', "REASRP", WLAN_FRAME_REASSOC_RESP, "Reassociation response" },
+	{ 'o', "REASRQ", WLAN_FRAME_REASSOC_REQ, "Reassociation request" },
+	{ 'O', "REASRP", WLAN_FRAME_REASSOC_RESP, "Reassociation response" },
 	{ 'p', "PROBRQ", WLAN_FRAME_PROBE_REQ, "Probe request" },
 	{ 'P', "PROBRP", WLAN_FRAME_PROBE_RESP, "Probe response" },
 	{ 'T', "TIMING", WLAN_FRAME_TIMING, "Timing Advertisement" },
 	{ '-', "-RESV-", 0x0070, "RESERVED" },
 	{ 'B', "BEACON", WLAN_FRAME_BEACON, "Beacon" },
 	{ 't', "ATIM",   WLAN_FRAME_ATIM, "ATIM" },
-	{ 'D', "DISASC", WLAN_FRAME_DISASSOC, "Disassociation" },
+	{ 'S', "DISASC", WLAN_FRAME_DISASSOC, "Disassociation" },
 	{ 'u', "AUTH",   WLAN_FRAME_AUTH, "Authentication" },
 	{ 'U', "DEAUTH", WLAN_FRAME_DEAUTH, "Deauthentication" },
-	{ 'C', "ACTION", WLAN_FRAME_ACTION, "Action" },
-	{ 'c', "ACTNOA", WLAN_FRAME_ACTION_NOACK, "Action No Ack" },
-};
-
-static struct pkt_name ctrl_names[] = {
+	{ 'X', "ACTION", WLAN_FRAME_ACTION, "Action" },
+	{ 'x', "ACTNOA", WLAN_FRAME_ACTION_NOACK, "Action No Ack" },
+	{ '-', "-RESV-", 0x0070, "RESERVED" },
+}, {
+	{ '-', "-RESV-", 0x0004, "RESERVED" },
+	{ '-', "-RESV-", 0x0014, "RESERVED" },
+	{ '-', "-RESV-", 0x0024, "RESERVED" },
+	{ '-', "-RESV-", 0x0034, "RESERVED" },
+	{ 'b', "BEAMRP", WLAN_FRAME_BEAM_REP, "Beamforming Report Poll" },
+	{ 'v', "VHTNDP", WLAN_FRAME_VHT_NDP, "VHT NDP Announcement" },
+	{ '-', "-RESV-", 0x0064, "RESERVED" },
 	{ 'w', "CTWRAP", WLAN_FRAME_CTRL_WRAP, "Control Wrapper" },
-	{ 'b', "BACKRQ", WLAN_FRAME_BLKACK_REQ, "Block Ack Request" },
-	{ 'B', "BACK",   WLAN_FRAME_BLKACK, "Block Ack" },
+	{ 'l', "BACKRQ", WLAN_FRAME_BLKACK_REQ, "Block Ack Request" },
+	{ 'L', "BACK",   WLAN_FRAME_BLKACK, "Block Ack" },
 	{ 's', "PSPOLL", WLAN_FRAME_PSPOLL, "PS-Poll" },
 	{ 'R', "RTS",    WLAN_FRAME_RTS, "RTS" },
 	{ 'C', "CTS",    WLAN_FRAME_CTS, "CTS" },
-	{ 'K', "ACK",    WLAN_FRAME_ACK, "ACK" },
-	{ 'f', "CFEND",  WLAN_FRAME_CF_END, "CF-End" },
-	{ 'f', "CFENDK", WLAN_FRAME_CF_END_ACK, "CF-End + CF-Ack" },
-};
-
-static struct pkt_name data_names[] = {
+	{ 'k', "ACK",    WLAN_FRAME_ACK, "ACK" },
+	{ 'e', "CFEND",  WLAN_FRAME_CF_END, "CF-End" },
+	{ 'E', "CFENDK", WLAN_FRAME_CF_END_ACK, "CF-End + CF-Ack" },
+}, {
 	{ 'D', "DATA",   WLAN_FRAME_DATA, "Data" },
 	{ 'F', "DCFACK", WLAN_FRAME_DATA_CF_ACK, "Data + CF-Ack" },
-	{ 'F', "DCFPLL", WLAN_FRAME_DATA_CF_POLL, "Data + CF-Poll" },
-	{ 'F', "DCFKPL", WLAN_FRAME_DATA_CF_ACKPOLL, "Data + CF-Ack + CF-Poll" },
+	{ 'g', "DCFPLL", WLAN_FRAME_DATA_CF_POLL, "Data + CF-Poll" },
+	{ 'G', "DCFKPL", WLAN_FRAME_DATA_CF_ACKPOLL, "Data + CF-Ack + CF-Poll" },
 	{ 'n', "NULL",   WLAN_FRAME_NULL, "Null (no data)" },
-	{ 'f', "CFACK",  WLAN_FRAME_CF_ACK, "CF-Ack (no data)" },
-	{ 'f', "CFPOLL",  WLAN_FRAME_CF_POLL, "CF-Poll (no data)" },
-	{ 'f', "CFCKPL", WLAN_FRAME_CF_ACKPOLL, "CF-Ack + CF-Poll (no data)" },
+	{ 'h', "CFACK",  WLAN_FRAME_CF_ACK, "CF-Ack (no data)" },
+	{ 'H', "CFPOLL",  WLAN_FRAME_CF_POLL, "CF-Poll (no data)" },
+	{ 'j', "CFCKPL", WLAN_FRAME_CF_ACKPOLL, "CF-Ack + CF-Poll (no data)" },
 	{ 'Q', "QDATA",  WLAN_FRAME_QDATA, "QoS Data" },
-	{ 'F', "QDCFCK", WLAN_FRAME_QDATA_CF_ACK, "QoS Data + CF-Ack" },
-	{ 'F', "QDCFPL", WLAN_FRAME_QDATA_CF_POLL, "QoS Data + CF-Poll" },
-	{ 'F', "QDCFKP", WLAN_FRAME_QDATA_CF_ACKPOLL, "QoS Data + CF-Ack + CF-Poll" },
+	{ 'q', "QDCFCK", WLAN_FRAME_QDATA_CF_ACK, "QoS Data + CF-Ack" },
+	{ 'K', "QDCFPL", WLAN_FRAME_QDATA_CF_POLL, "QoS Data + CF-Poll" },
+	{ 'y', "QDCFKP", WLAN_FRAME_QDATA_CF_ACKPOLL, "QoS Data + CF-Ack + CF-Poll" },
 	{ 'N', "QDNULL", WLAN_FRAME_QOS_NULL, "QoS Null (no data)" },
 	{ '-', "-RESV-", 0x00D0, "RESERVED" },
-	{ 'f', "QCFPLL", WLAN_FRAME_QOS_CF_POLL, "QoS CF-Poll (no data)" },
-	{ 'f', "QCFKPL", WLAN_FRAME_QOS_CF_ACKPOLL, "QoS CF-Ack + CF-Poll (no data)" },
-};
+	{ 'Y', "QCFPLL", WLAN_FRAME_QOS_CF_POLL, "QoS CF-Poll (no data)" },
+	{ 'z', "QCFKPL", WLAN_FRAME_QOS_CF_ACKPOLL, "QoS CF-Ack + CF-Poll (no data)" },
+} };
 
-static struct pkt_name unknow = { '?', "UNKNOW", 0 , "Unknown" };
-static struct pkt_name badfcs = { '*', "BADFCS", 0 , "Bad FCS" };
-
-#define DATA_NAME_INDEX(_i) (((_i) & WLAN_FRAME_FC_STYPE_MASK)>>4)
-#define MGMT_NAME_INDEX(_i) (((_i) & WLAN_FRAME_FC_STYPE_MASK)>>4)
-#define CTRL_NAME_INDEX(_i) ((((_i) & WLAN_FRAME_FC_STYPE_MASK)>>4)-7)
-
+static struct pkt_name unknow = { '?', "UNKNOW", 0, "Unknown" };
+static struct pkt_name badfcs = { '*', "BADFCS", 0, "Bad FCS" };
 
 struct pkt_name
 get_packet_struct(u_int16_t type) {
-	u_int16_t index;
+	int t = WLAN_FRAME_TYPE(type);
 
 	if (type == 1) /* special case for bad FCS */
 		return badfcs;
+	if (t == 3)
+		return unknow;
+	else
+		return stype_names[WLAN_FRAME_TYPE(type)][WLAN_FRAME_STYPE(type)];
 
-	if (WLAN_FRAME_IS_MGMT(type)) {
-		index = MGMT_NAME_INDEX(type);
-		if (index < sizeof(mgmt_names)/sizeof(struct pkt_name)) {
-			if (mgmt_names[index].c)
-				return mgmt_names[index];
-		}
-	} else if (WLAN_FRAME_IS_CTRL(type)) {
-		index = CTRL_NAME_INDEX(type);
-		if (index < sizeof(ctrl_names)/sizeof(struct pkt_name)) {
-			if (ctrl_names[index].c)
-				return ctrl_names[index];
-		}
-	} else if (WLAN_FRAME_IS_DATA(type)) {
-		index = DATA_NAME_INDEX(type);
-		if (index < sizeof(data_names)/sizeof(struct pkt_name)) {
-			if (data_names[index].c)
-				return data_names[index];
-		}
-	}
 	return unknow;
 }
 
@@ -235,6 +220,13 @@ wlan_parse_information_elements(unsigned char *buf, int len, struct packet_info 
 
 		case WLAN_IE_ID_RSN:
 			p->wlan_rsn = 1;
+			break;
+
+		case WLAN_IE_ID_VHT_CAPAB:
+		case WLAN_IE_ID_VHT_OPER:
+		case WLAN_IE_ID_VHT_OMN:
+			DEBUG("VHT\n");
+			p->wlan_vht = 1;
 			break;
 
 		case WLAN_IE_ID_VENDOR:
