@@ -28,9 +28,6 @@ class webmenu {
     '/etc/webmenu/personally-administered-device/config.json':
       content => template('webmenu/personally-administered-device-config.json');
 
-    '/etc/webmenu/personally-administered-device/menu.yaml':
-      content => template('webmenu/personally-administered-device-menu.yaml');
-
     '/etc/webmenu/tab.d/ops.yaml':
       content => template('webmenu/tab.d/ops.yaml'),
       require => [ Package['breathe-icon-theme']
