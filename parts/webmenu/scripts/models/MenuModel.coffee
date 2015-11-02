@@ -7,7 +7,7 @@ LauncherModel = require "./LauncherModel.coffee"
 class WebItemModel extends LauncherModel
 
     isOk: ->
-        !!@get("url") and !@get("broken")
+        !!@get("url") and !@get("hidden")
 
 class DesktopItemModel extends LauncherModel
 
