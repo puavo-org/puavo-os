@@ -451,7 +451,9 @@ module Services
       @args    = ["-i#{@vif.name}",
                   "-p#{HOSTAPD_CTRL_INTERFACE_DIR}",
                   "-a#{HOSTAPD_ACTION_SCRIPT}"]
+    end
 
+    def spawn
       hostapd_socket = "#{HOSTAPD_CTRL_INTERFACE_DIR}/#{@vif.name}"
       Timeout.timeout(5) do
         loop do
@@ -461,6 +463,7 @@ module Services
         end
       end
       Log.info("found hostapd control socket #{hostapd_socket}")
+      super
     end
 
   end
