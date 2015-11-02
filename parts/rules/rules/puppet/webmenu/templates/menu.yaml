@@ -608,7 +608,6 @@ items:
   - source: netflix
     type: desktop
     inactiveByDeviceType: thinclient
-    condition: "env.PUAVO_PERSONALLY_ADMINISTERED"
   - type: web
     name: Edison
     url: http://app.edison.fi
