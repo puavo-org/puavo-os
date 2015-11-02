@@ -682,6 +682,9 @@ class AccessPoint
 
     case event
 
+    when 'AP-ENABLED'
+      @spawn_time = Time.at(0)
+
     when 'AP-STA-CONNECTED'
       mac = tail
 
