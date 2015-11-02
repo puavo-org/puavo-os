@@ -501,6 +501,8 @@ class AccessPoint
     @ctrlserv      = nil
     @nets          = nil
     @services      = {}
+    @spawn_queue   = []
+    @spawn_time    = Time.at(0)
     @vifs          = []
     @vtun_address  = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
     @vtun_port     = kwargs.fetch(:vtun_port, VTUN_PORT)
@@ -586,16 +588,33 @@ class AccessPoint
         end
 
       else
-        reads   = [selfpipe_r, @ctrlconn.nil? ? @ctrlserv : @ctrlconn]
-        timeout = @ctrlconn.nil? ? nil : [0, 5 - (Time.now - @ctrlconn_time)].max
+        reads    = [selfpipe_r, @ctrlconn.nil? ? @ctrlserv : @ctrlconn]
+        timeouts = []
+
+        unless @ctrlconn.nil?
+          timeouts << 5 - (Time.now - @ctrlconn_time)
+        end
+
+        unless @spawn_queue.empty?
+          timeouts << 5 - (Time.now - @spawn_time)
+        end
+
+        timeout = timeouts.empty? ? nil : [0, timeouts.min].max
 
         ready = IO.select(reads, [], [], timeout)
 
         if ready.nil?
+
           if @ctrlconn && Time.now - @ctrlconn_time > 5
             Log.warning('control socket connection timeout')
             close_ctrlconn
           end
+
+          if !@spawn_queue.empty? && Time.now - @spawn_time > 5
+            @spawn_queue.shift.each { |service| spawn_service(service) }
+            @spawn_time = Time.now
+          end
+
           next
         end
 
@@ -723,13 +742,12 @@ class AccessPoint
                                           :address => @vtun_address,
                                           :port    => @vtun_port))
 
-        spawn_service(Services::Hostapd.new(:bridge => bridge,
+        hostapd     = Services::Hostapd.new(:bridge => bridge,
                                             :phy    => phy,
                                             :vif    => vif,
-                                            :net    => net))
-
-        spawn_service(Services::HostapdCli.new(:vif => vif))
-
+                                            :net    => net)
+        hostapd_cli = Services::HostapdCli.new(:vif => vif)
+        @spawn_queue << [hostapd, hostapd_cli]
       end
     end
 
