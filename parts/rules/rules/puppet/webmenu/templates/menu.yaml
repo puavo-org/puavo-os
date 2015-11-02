@@ -52,15 +52,6 @@ items:
   - source: simplescreenrecorder
     type: desktop
     inactiveByDeviceType: thinclient
-  - type: custom
-    name:
-      en: Java Control Panel
-      fi: Java-asetukset
-      sv: Java-inställningar
-      de: Java Einstellungen
-    command:
-    - /opt/java/jdk1.7.0_51/jre/bin/ControlPanel
-    osIcon: openjdk-6
 - type: menu
   name:
     en: Graphics
@@ -222,20 +213,26 @@ items:
   - source: ekapeli
     type: desktop
     inactiveByDeviceType: thinclient
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
   - source: spelett
     type: desktop
     inactiveByDeviceType: thinclient
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
   - source: ekapeli-maahanmuuttaja
     type: desktop
     inactiveByDeviceType: thinclient
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
   - source: ekapeli-alku
     type: desktop
     inactiveByDeviceType: thinclient
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
   - source: gcompris
     type: desktop
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
   - source: tuxmath
     type: desktop
     inactiveByDeviceType: thinclient
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
   - source: kbruch
     type: desktop
   - source: geogebra
@@ -246,6 +243,7 @@ items:
     type: desktop
   - source: kgeography
     type: desktop
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
   - source: kanagram
     type: desktop
   - source: kwordquiz
@@ -281,8 +279,6 @@ items:
     type: desktop
     inactiveByDeviceType: thinclient
   - source: qgis
-    type: desktop
-  - source: gnubg
     type: desktop
 - type: menu
   name:
@@ -325,8 +321,11 @@ items:
     type: desktop
   - source: tellico
     type: desktop
+  - source: Open-Sankore
+    type: desktop
   - source: primusclient
     type: desktop
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
   - source: dia
     type: desktop
   - source: tilitin
@@ -420,6 +419,90 @@ items:
     inactiveByDeviceType: thinclient
 - type: menu
   name:
+    en: Games
+    fi: Pelit
+    sv: Spel
+    de: Spiele
+  description:
+    en: Games
+    fi: Pelit
+    sv: Spel
+    de: Spiele
+  osIcon: applications-cardgames
+  condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+  items:
+  - source: gnubg
+    type: desktop
+- type: menu
+  name:
+    en: Games
+    fi: Pelit
+    sv: Spel
+    de: Spiele
+  description:
+    en: Games
+    fi: Pelit
+    sv: Spel
+    de: Spiele
+  osIcon: applications-cardgames
+  condition: "env.PUAVO_PERSONALLY_ADMINISTERED"
+  items:
+  - source: extremetuxracer
+    type: desktop
+  - source: supertuxkart
+    type: desktop
+  - source: freeciv-gtk3
+    type: desktop
+  - source: freecol
+    type: desktop
+  - source: neverball
+    type: desktop
+  - source: neverputt
+    type: desktop
+  - source: luola
+    type: desktop
+  - source: openttd
+    type: desktop
+  - source: xmoto
+    type: desktop
+  - source: steam
+    type: desktop
+  - source: gnubg
+    type: desktop
+- type: menu
+  name: Digabi
+  description: Digabi
+  osIcon: /usr/share/icons/oxygen/64x64/categories/applications-education.png
+  condition: "env.PUAVO_PERSONALLY_ADMINISTERED"
+  items:
+  - source: gimp
+    type: desktop
+  - source: pinta
+    type: desktop
+  - source: inkscape
+    type: desktop
+  - source: geogebra
+    type: desktop
+  - source: wxmaxima
+    type: desktop
+  - source: LoggerPro
+    type: desktop
+  - source: dia
+    type: desktop
+  - source: libreoffice-writer
+    type: desktop
+  - source: libreoffice-calc
+    type: desktop
+  - source: libreoffice-impress
+    type: desktop
+  - source: libreoffice-draw
+    type: desktop
+  - source: libreoffice-base
+    type: desktop
+  - source: libreoffice-math
+    type: desktop
+- type: menu
+  name:
     en: Interactive whiteboards
     fi: Älytaulut
     sv: Interaktiva tavlor
@@ -430,6 +513,7 @@ items:
     sv: Internet-applikationer
     de: Internet Programme
   osIconPath: /usr/share/icons/hicolor/128x128/apps/SMART_Tools.png
+  condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
   items:
   - source: smarttech-notebook
     type: desktop
@@ -520,9 +604,11 @@ items:
     name: Ekapeli (websivu)
     url: http://www.lukimat.fi/lukeminen/materiaalit/ekapeli
     osIconPath: /usr/share/icons/Faenza/categories/96/gnome-joystick.png
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
   - source: netflix
     type: desktop
     inactiveByDeviceType: thinclient
+    condition: "env.PUAVO_PERSONALLY_ADMINISTERED"
   - type: web
     name: Edison
     url: http://app.edison.fi
@@ -537,3 +623,12 @@ items:
     osIconPath: /usr/share/icons/Faenza/mimetypes/96/text-html.png
 - source: nautilus-home
   type: desktop
+- type: custom
+  command: puavo-local-config-ui
+  name:
+    fi: Kannettavan asetukset
+    sv: Bärbar datorns inställningar
+    en: Laptop settings
+    de: Laptop einstellungen
+  osIconPath: /usr/share/icons/Faenza/devices/64/drive-harddisk-system.png
+  condition: "env.PUAVO_PERSONALLY_ADMINISTERED"

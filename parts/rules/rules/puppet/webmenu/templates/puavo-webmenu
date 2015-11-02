@@ -11,9 +11,12 @@ puavo_personally_administered=$(jq -r .personally_administered \
 				      /etc/puavo/device.json)
 
 if [ "$puavo_personally_administered" = "true" ]; then
+  PUAVO_PERSONALLY_ADMINISTERED=true
   WM_CONFIG_JSON_PATH=/etc/webmenu/personally-administered-device/config.json
-  WM_MENU_JSON_PATH=/etc/webmenu/personally-administered-device
-  export WM_CONFIG_JSON_PATH WM_MENU_JSON_PATH
+  export PUAVO_PERSONALLY_ADMINISTERED WM_CONFIG_JSON_PATH
+else
+  : # Do not set PUAVO_PERSONALLY_ADMINISTERED at all (to 0 or false),
+    # webmenu/menu.yaml only checks if variable is set and not at its value.
 fi
 
 exec webmenu $webmenu_args "$@"
