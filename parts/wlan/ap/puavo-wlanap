@@ -459,7 +459,7 @@ module Services
         loop do
           break if File.exists?(hostapd_socket)
           Log.info("waiting for hostapd control socket #{hostapd_socket}")
-          sleep 0.5
+          sleep 0.1
         end
       end
       Log.info("found hostapd control socket #{hostapd_socket}")
