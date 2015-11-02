@@ -302,6 +302,12 @@ def run_or_fail(cmd, *args)
   $?.success? or fail "command '#{cmd_string}' failed"
 end
 
+def hexdigest15(str)
+  md5sum = Digest::MD5.new
+  md5sum << str
+  md5sum.hexdigest[0..14]
+end
+
 class Conf
 
   def write(filepath, mode=0640)
@@ -494,7 +500,7 @@ class AccessPoint
   VTUN_PORT    = 45045
 
   def initialize(kwargs = {})
-    @bridges       = []
+    @bridges       = {}
     @conf          = nil
     @ctrlconn      = nil
     @ctrlconn_time = nil
@@ -544,7 +550,7 @@ class AccessPoint
 
       @vifs.each { |vif| vif.del }
 
-      @bridges.each do |bridge|
+      @bridges.each_value do |bridge|
         # Ignore errors, we are already exiting.
         system('ifconfig', bridge, 'down')
         system('brctl', 'delbr', bridge)
@@ -732,15 +738,7 @@ class AccessPoint
           phy.channel = channels[0]
         end
 
-        bridge = "puavo-wlan#{bss_index}"
-        run_or_fail('brctl', 'addbr', bridge)
-        @bridges << bridge
-        run_or_fail('brctl', 'setfd', bridge, '0')
-        run_or_fail('ifconfig', bridge, 'up')
-
-        spawn_service(Services::Vtund.new(:bridge  => bridge,
-                                          :address => @vtun_address,
-                                          :port    => @vtun_port))
+        bridge = setup_bridge(net['ssid'])
 
         hostapd     = Services::Hostapd.new(:bridge => bridge,
                                             :phy    => phy,
@@ -751,6 +749,20 @@ class AccessPoint
       end
     end
 
+  end
+
+  def setup_bridge(ssid)
+    return @bridges[ssid] if @bridges.has_key?(ssid)
+    bridge = hexdigest15(ssid)
+    run_or_fail('brctl', 'addbr', bridge)
+    @bridges[ssid] = bridge
+    run_or_fail('brctl', 'setfd', bridge, '0')
+    run_or_fail('ifconfig', bridge, 'up')
+
+    spawn_service(Services::Vtund.new(:bridge  => bridge,
+                                      :address => @vtun_address,
+                                      :port    => @vtun_port))
+    bridge
   end
 
 end
