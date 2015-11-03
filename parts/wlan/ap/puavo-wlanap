@@ -574,7 +574,7 @@ class AccessPoint
 
     @ctrlserv = UNIXServer.new(CTRLSOCKET)
 
-    start_services
+    setup
 
     Log.info('started')
     loop do
@@ -724,7 +724,7 @@ class AccessPoint
     Log.info("spawned #{service.name}")
   end
 
-  def start_services
+  def setup
     bss_index = -1
     Dot11.each_phy do |phy|
 
