@@ -379,9 +379,10 @@ module Services
 
   module Spawnable
     attr_reader :name
+    attr_reader :pid
 
     def spawn
-      Process.spawn(@command, *@args)
+      @pid = Process.spawn(@command, *@args)
     end
 
   end
