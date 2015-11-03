@@ -434,6 +434,8 @@ module Services
   class HostapdCli
     include Services::Spawnable
 
+    attr_reader :hostapd
+
     def initialize(kwargs = {})
       @hostapd = kwargs.fetch(:hostapd)
 
