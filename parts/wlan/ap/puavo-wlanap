@@ -481,6 +481,7 @@ class AccessPoint
 
   def initialize(kwargs = {})
     @bridges       = {}
+    @bss_index     = -1
     @conf          = nil
     @ctrlconn      = nil
     @ctrlconn_time = nil
@@ -705,15 +706,14 @@ class AccessPoint
   end
 
   def setup
-    bss_index = -1
     Dot11.each_phy do |phy|
 
       phy.each_vif { |vif| vif.del }
 
       @nets.each do |net|
-        bss_index += 1
+        @bss_index += 1
 
-        vif = phy.add_vif("hostapd#{bss_index}")
+        vif = phy.add_vif("hostapd#{@bss_index}")
         @vifs << vif
 
         if phy.channel.nil?
