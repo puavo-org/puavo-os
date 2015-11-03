@@ -127,14 +127,14 @@ injectDesktopData = (menu, options) ->
       catch err
         throw err if err.code isnt "ENOENT"
 
+    # Override system .desktop file entries with Webmenu specific exceptions
     _.extend(desktopEntry, options.desktopItems[menu.source])
 
-    menu.name ?= desktopEntry.name
-    menu.description ?= desktopEntry.description
-    menu.command ?= desktopEntry.command
-    menu.osIconPath ?= findOsIcon(desktopEntry.osIcon, options)
-    menu.upstreamName ?= desktopEntry.upstreamName
-    menu.osIconPath = normalizeIconPath(menu.osIconPath)
+    # Use the desktop entry data as the default. Anything in menu.json will
+    # override those
+    _.defaults(menu, desktopEntry)
+
+    menu.osIconPath = normalizeIconPath(findOsIcon(desktopEntry.osIcon, options))
 
 
     if not isValidMenuLauncher(menu) and menu.installer
