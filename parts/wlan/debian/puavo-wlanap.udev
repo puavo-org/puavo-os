@@ -1,1 +1,2 @@
-SUBSYSTEM=="net", ENV{DEVTYPE}=="wlan", RUN+="/bin/sh -c '/sbin/start puavo-wlanap || /sbin/restart puavo-wlanap'"
+ACTION=="add",    SUBSYSTEM=="ieee80211", RUN+="/bin/sh -c '/sbin/start puavo-wlanap || /usr/sbin/puavo-wlanap-udev-action'"
+ACTION=="remove", SUBSYSTEM=="ieee80211", RUN+="/usr/sbin/puavo-wlanap-udev-action"

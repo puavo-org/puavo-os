@@ -660,6 +660,8 @@ class AccessPoint
     case cmd
     when 'hostapd-event'
       handle_ctrlmsg_hostapd_event(args)
+    when 'udev-event'
+      handle_ctrlmsg_udev_event(args)
     when 'vtun-up'
       handle_ctrlmsg_vtun_up(args)
     else
@@ -698,6 +700,10 @@ class AccessPoint
     end
 
     true
+  end
+
+  def handle_ctrlmsg_udev_event(args)
+    Log.info("udev-event #{args}")
   end
 
   def handle_ctrlmsg_vtun_up(args)
