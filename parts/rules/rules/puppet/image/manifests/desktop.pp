@@ -1,7 +1,6 @@
 class image::desktop {
   include image::bundle::desktop,
-          packages,
-          xorg_driver_switches
+          packages
 
   Apt::Key        <| title == "opinsys-repo.gpgkey" |>
   Apt::Repository <| title == archive

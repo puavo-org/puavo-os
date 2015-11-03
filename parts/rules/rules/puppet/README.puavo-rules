@@ -69,6 +69,10 @@ graphics_drivers
     Setup proprietary nvidia drivers in a such a way they can be used
     (without breaking everything else).
 
+graphics_stack_hacks
+    Different hacks, alternative debs for X drivers and such, to fix
+    graphics bugs.
+
 image
     Collections of other modules.
 
@@ -156,7 +160,3 @@ xexit
     Configurations (a killing script) for xexit (xexit is triggered, if a
     connection to X is broken.  This is basically used to kill processes
     that stay behind when they should not).
-
-xorg_driver_switches
-    Allow switching different X drivers through tags or some other such
-    mechanism.
