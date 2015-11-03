@@ -62,10 +62,6 @@ end
 
 module Dot11
 
-  # Chips handled by following drivers seem to have pretty good chances
-  # to work properly.
-  SUPPORTED_DRIVERS = ['ath9k', 'rt2800pci', 'rt2800usb']
-
   BAND_2G = 1
   BAND_5G = 2
 
@@ -140,22 +136,6 @@ module Dot11
       fail 'failed to query supported bands' unless $?.success?
 
       band
-    end
-
-    def driver
-      uevent_path = File.join('/sys/class/ieee80211',
-                              @name, 'device', 'uevent')
-      File.open(uevent_path) do |file|
-        file.each_line do |line|
-          next unless /^DRIVER=(.*)$/ =~ line
-          return $1
-        end
-      end
-      nil
-    end
-
-    def has_supported_driver?
-      Dot11::SUPPORTED_DRIVERS.include?(self.driver)
     end
 
     def ht_capab(channel)
@@ -727,11 +707,6 @@ class AccessPoint
   def setup
     bss_index = -1
     Dot11.each_phy do |phy|
-
-      unless phy.has_supported_driver?
-        Log.warning('ignoring phy #{phy.name} due to unsupported driver')
-        next
-      end
 
       phy.each_vif { |vif| vif.del }
 
