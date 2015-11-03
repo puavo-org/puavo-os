@@ -402,6 +402,8 @@ module Services
   class Hostapd
     include Services::Spawnable
 
+    attr_reader :vif
+
     def initialize(kwargs = {})
       @bridge = kwargs.fetch(:bridge)
       @net    = kwargs.fetch(:net)
@@ -430,8 +432,9 @@ module Services
     include Services::Spawnable
 
     def initialize(kwargs = {})
-      @vif = kwargs.fetch(:vif)
+      @hostapd = kwargs.fetch(:hostapd)
 
+      @vif     = @hostapd.vif
       @command = 'hostapd_cli'
       @name    = "#{@command}_#{@vif.name}"
       @args    = ["-i#{@vif.name}",
@@ -746,7 +749,7 @@ class AccessPoint
                                           :phy    => phy,
                                           :vif    => vif,
                                           :net    => net)
-      hostapd_cli = Services::HostapdCli.new(:vif => vif)
+      hostapd_cli = Services::HostapdCli.new(:hostapd => hostapd)
       @spawn_queue << [hostapd, hostapd_cli]
     end
   end
