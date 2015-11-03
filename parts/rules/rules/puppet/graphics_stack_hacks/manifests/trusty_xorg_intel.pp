@@ -15,7 +15,7 @@ class graphics_stack_hacks::trusty_xorg_intel {
   file {
     '/usr/share/puavo-ltsp/init-puavo.d/93-alternate-xorg-drivers':
       require => Package['puavo-ltsp-client'],
-      source  => 'puppet:///modules/graphics_stack_hacks/93-alternate-xorg-drivers',
+      source  => 'puppet:///modules/graphics_stack_hacks/93-alternate-xorg-drivers';
   }
 
   Package <| title == puavo-ltsp-client |>

@@ -1,5 +1,6 @@
 class graphics_stack_hacks {
-  include graphics_stack_hacks::trusty_xorg_intel,
+  include graphics_stack_hacks::edgers_mesa_dri,
+          graphics_stack_hacks::trusty_xorg_intel,
           packages
 
   $altdebdir = '/var/opt/altdebs'
