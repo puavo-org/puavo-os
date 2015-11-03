@@ -1,7 +1,6 @@
 class image::thinclient {
   include image::bundle::basic,
-          packages,
-          xorg_driver_switches
+          packages
 
   Apt::Key        <| title == "opinsys-repo.gpgkey" |>
   Apt::Repository <| title == archive
