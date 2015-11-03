@@ -404,6 +404,7 @@ module Services
   class Hostapd
     include Services::Spawnable
 
+    attr_reader :phy
     attr_reader :vif
 
     def initialize(kwargs = {})
