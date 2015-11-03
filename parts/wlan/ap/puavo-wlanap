@@ -707,32 +707,8 @@ class AccessPoint
 
   def setup
     Dot11.each_phy do |phy|
-
-      phy.each_vif { |vif| vif.del }
-
-      @nets.each do |net|
-        @bss_index += 1
-
-        vif = phy.add_vif("hostapd#{@bss_index}")
-        @vifs << vif
-
-        if phy.channel.nil?
-          vif.up
-          channels = vif.scan(phy.band)
-          phy.channel = channels[0]
-        end
-
-        bridge = setup_bridge(net['ssid'])
-
-        hostapd     = Services::Hostapd.new(:bridge => bridge,
-                                            :phy    => phy,
-                                            :vif    => vif,
-                                            :net    => net)
-        hostapd_cli = Services::HostapdCli.new(:vif => vif)
-        @spawn_queue << [hostapd, hostapd_cli]
-      end
+      setup_phy(phy)
     end
-
   end
 
   def setup_bridge(ssid)
@@ -747,6 +723,32 @@ class AccessPoint
                                       :address => @vtun_address,
                                       :port    => @vtun_port))
     bridge
+  end
+
+  def setup_phy(phy)
+    phy.each_vif { |vif| vif.del }
+
+    @nets.each do |net|
+      @bss_index += 1
+
+      vif = phy.add_vif("hostapd#{@bss_index}")
+      @vifs << vif
+
+      if phy.channel.nil?
+        vif.up
+        channels = vif.scan(phy.band)
+        phy.channel = channels[0]
+      end
+
+      bridge = setup_bridge(net['ssid'])
+
+      hostapd     = Services::Hostapd.new(:bridge => bridge,
+                                          :phy    => phy,
+                                          :vif    => vif,
+                                          :net    => net)
+      hostapd_cli = Services::HostapdCli.new(:vif => vif)
+      @spawn_queue << [hostapd, hostapd_cli]
+    end
   end
 
 end
