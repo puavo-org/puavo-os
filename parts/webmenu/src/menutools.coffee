@@ -134,7 +134,8 @@ injectDesktopData = (menu, options) ->
     # override those
     _.defaults(menu, desktopEntry)
 
-    menu.osIconPath = normalizeIconPath(findOsIcon(desktopEntry.osIcon, options))
+    menu.osIconPath ?= findOsIcon(menu.osIcon, options)
+    menu.osIconPath = normalizeIconPath(menu.osIconPath)
 
 
     if not isValidMenuLauncher(menu) and menu.installer
