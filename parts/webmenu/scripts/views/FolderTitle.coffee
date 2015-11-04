@@ -1,4 +1,5 @@
 ViewMaster = require "../vendor/backbone.viewmaster"
+_ = require "underscore"
 
 template = require "../templates/FolderTitle.hbs"
 class FolderTitle extends ViewMaster
@@ -8,9 +9,12 @@ class FolderTitle extends ViewMaster
     template: (context) ->
         if @searchActive
             return ""
-        if @isTab()
-            return ""
         return template(context)
+
+    context: ->
+        console.error "Conxted is tab: #{ @isTab() }"
+        return _.extend({}, super(), isTab: @isTab())
+
 
     constructor: ->
         super
