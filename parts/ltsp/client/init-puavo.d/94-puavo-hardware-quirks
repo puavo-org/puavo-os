@@ -17,8 +17,7 @@ done
 # blacklist yenta_socket by default, it causes boot failures on some hardware
 if has_device_tag no_blacklist_yenta_socket \
      && ! has_device_tag no_no_blacklist_yenta_socket; then
-  cat <<'EOF' > /etc/modprobe.d/blacklist-yenta_socket.conf
-EOF
+  rm -f /etc/modprobe.d/blacklist-yenta_socket.conf
 else
   cat <<'EOF' > /etc/modprobe.d/blacklist-yenta_socket.conf
 blacklist yenta_socket
