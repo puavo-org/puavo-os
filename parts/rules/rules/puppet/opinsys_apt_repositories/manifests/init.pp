@@ -24,6 +24,9 @@ class opinsys_apt_repositories {
     'kernels':
       aptline => "http://archive.opinsys.fi/kernels $lsbdistcodename main restricted universe multiverse";
 
+    'libreoffice-5-0':
+      aptline => "http://archive.opinsys.fi/libreoffice-5-0 $lsbdistcodename main restricted universe multiverse";
+
     'repo':
       aptline => "http://archive.opinsys.fi/blobs $lsbdistcodename main restricted universe multiverse";
 

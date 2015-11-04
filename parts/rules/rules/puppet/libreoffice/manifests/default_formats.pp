@@ -24,10 +24,6 @@ class libreoffice::default_formats {
     '/usr/lib/libreoffice/share/registry/impress.xcd':
       source => 'puppet:///modules/libreoffice/impress.xcd';
 
-    # Use Gnome print dialog
-    '/usr/lib/libreoffice/share/registry/print.xcd':
-      source => 'puppet:///modules/libreoffice/print.xcd';
-
     '/usr/lib/libreoffice/share/registry/writer.xcd':
       source => 'puppet:///modules/libreoffice/writer.xcd';
   }
