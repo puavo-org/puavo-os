@@ -10,6 +10,7 @@ MenuListView = require "./MenuListView.coffee"
 SidebarView = require "./SidebarView.coffee"
 Search = require "./Search.coffee"
 Tabs = require "./Tabs.coffee"
+FolderTitle = require "./FolderTitle.coffee"
 
 class HostnameView extends ViewMaster
     template: (context) ->
@@ -29,6 +30,9 @@ class MenuLayout extends ViewMaster
         @user = opts.user
         @config = opts.config
         @lightbox = null
+
+        @folderTitle = new FolderTitle model: opts.initialMenu.items.at(0)
+        @setView ".folder-title-container", @folderTitle
 
         @menuListView = new MenuListView
             model: opts.initialMenu.items.at(0)
@@ -69,11 +73,12 @@ class MenuLayout extends ViewMaster
         @listenTo this, "search", (searchString) =>
             @menuListView.broadcast("search", searchString)
 
-        @listenTo this, "select-tab", (model) =>
-            @menuListView.broadcast("open-menu", model)
-
+        @listenTo this, "open-menu", (model, sender) =>
+            @menuListView.broadcast("open-menu", model, sender)
+            @folderTitle.broadcast("open-menu", model, sender)
 
         @listenTo this, "open-root-view", =>
+            @setView ".folder-title-container", @folderTitle
             @setView ".favorites-container", @favorites
             @hostnameView.detach()
             @setView ".search-container", @search
@@ -81,6 +86,7 @@ class MenuLayout extends ViewMaster
             @refreshViews()
 
         @listenTo this, "open-logout-view", =>
+            @folderTitle.detach()
             @favorites.detach()
             @search.detach()
             @setView ".search-container", @hostnameView

@@ -32,7 +32,7 @@ class Tabs extends ViewMaster
 
     selectTab: (e) ->
         @currentTab = parseInt($(e.target).data("index"), 10)
-        @bubble "select-tab", @collection.at(@currentTab)
+        @bubble "open-menu", @collection.at(@currentTab), this
         @render()
 
     context: ->
