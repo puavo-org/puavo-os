@@ -13,11 +13,6 @@ items:
     fi: Apuohjelmat
     sv: Verktyg
     de: Werkzeuge
-  description:
-    en: Tools
-    fi: Apuohjelmia
-    sv: Verktyg
-    de: Werkzeuge
   osIcon: applications-accessories
   items:
   - source: eleet
@@ -59,8 +54,8 @@ items:
     sv: Grafik
     de: Grafik
   description:
-    en: Graphic applications
-    fi: Graafiset Internet-sovellukset
+    en: Graphics applications
+    fi: Piirto- ja kuvankäsittelyohjelmia
     sv: Ritprogram
     de: Grafikprogramme
   osIcon: applications-graphics
@@ -150,7 +145,11 @@ items:
     fi: Ohjelmointi
     sv: Programmering
     de: Programmierung
-  description: IDE-sovelluksia ohjelmointiin
+  description:
+    en: " "
+    fi: Ohjelmointiympäristöjä
+    sv: " "
+    de: " "
   osIcon: gnome-devel
   items:
   - source: tmcbeans
@@ -338,11 +337,6 @@ items:
     fi: Ääni ja video
     sv: Ljud och Video
     de: Audio und Video
-  description:
-    en: Internet-applications
-    fi: Internet-sovellukset
-    sv: Internet -applikationer
-    de: Interent Programme
   osIcon: applications-multimedia
   items:
   - source: gnome-sound-recorder
@@ -423,11 +417,6 @@ items:
     fi: Pelit
     sv: Spel
     de: Spiele
-  description:
-    en: Games
-    fi: Pelit
-    sv: Spel
-    de: Spiele
   osIcon: applications-cardgames
   condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
   items:
@@ -435,11 +424,6 @@ items:
     type: desktop
 - type: menu
   name:
-    en: Games
-    fi: Pelit
-    sv: Spel
-    de: Spiele
-  description:
     en: Games
     fi: Pelit
     sv: Spel
@@ -471,7 +455,11 @@ items:
     type: desktop
 - type: menu
   name: Digabi
-  description: Digabi
+  description:
+    en: " "
+    fi: Sovelluksia sähköiseen ylioppilastutkintoon
+    sv: " "
+    de: " "
   osIcon: /usr/share/icons/oxygen/64x64/categories/applications-education.png
   condition: "env.PUAVO_PERSONALLY_ADMINISTERED"
   items:
@@ -507,11 +495,6 @@ items:
     fi: Älytaulut
     sv: Interaktiva tavlor
     de: Interaktive Wandtafeln
-  description:
-    en: Internet-applications
-    fi: Internet-sovellukset
-    sv: Internet-applikationer
-    de: Internet Programme
   osIconPath: /usr/share/icons/hicolor/128x128/apps/SMART_Tools.png
   condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
   items:
@@ -527,11 +510,6 @@ items:
     type: desktop
 - type: menu
   name:
-    en: Web applications
-    fi: Web-sovellukset
-    sv: Web applikationer
-    de: Web Anwendungen
-  description:
     en: Web applications
     fi: Web-sovellukset
     sv: Web applikationer
