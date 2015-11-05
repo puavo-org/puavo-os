@@ -184,7 +184,7 @@ module Dot11
     end
 
     def del
-      run_or_faile('iw', 'dev', @name, 'del')
+      run_or_fail('iw', 'dev', @name, 'del')
     end
 
     def scan(band)
