@@ -84,7 +84,7 @@ module Dot11
     end
 
     def add_vif(name)
-      run_or_fail('iw', 'phy', @name, 'interface', 'add', name, 'type', 'managed')
+      system('iw', 'phy', @name, 'interface', 'add', name, 'type', 'managed') or return nil
       Vif.new(name)
     end
 
@@ -746,6 +746,11 @@ class AccessPoint
       @bss_index += 1
 
       vif = phy.add_vif("hostapd#{@bss_index}")
+      if vif.nil?
+        Log.error("failed to add vif to phy #{phy.name}, " \
+                  "ignoring phy #{phy.name}")
+        return
+      end
       @vifs << vif
 
       if phy.channel.nil?
