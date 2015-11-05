@@ -99,7 +99,7 @@ injectDesktopData = (menu, options) ->
         menu.command = menu.installer
         menu.osIconPath = findOsIcon(options.installerIcon, options)
       else
-        menu.broken = true
+        menu.hidden = true
         console.warn("WARNING: Custom command broken: " + command)
         return
 
