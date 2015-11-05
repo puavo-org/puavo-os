@@ -784,6 +784,28 @@ class AccessPoint
     end
   end
 
+  def remove_phy(phy)
+    dying_hostapds     = []
+    dying_hostapd_clis = []
+
+    # Remove all soon-to-be-killed services from the array before
+    # killing any to avoid dependent services to die and interrupt us.
+    @services.reject! do |pid, service|
+      if service.class == Services::Hostapd && phy.name == service.phy.name
+        dying_hostapds << service
+        true
+      elsif service.class == Services::HostapdCli && phy.name == service.hostapd.phy.name
+        dying_hostapd_clis << service
+        true
+      else
+        false
+      end
+    end
+
+    dying_hostapd_clis.each { |hostapd_cli| hostapd_cli.kill }
+    dying_hostapds.each { |hostapd| hostapd.kill }
+  end
+
   def setup_phys
     Dot11.each_phy do |phy|
       begin
