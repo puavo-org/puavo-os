@@ -391,6 +391,18 @@ module Services
       @pid = Process.spawn(@command, *@args)
     end
 
+    def kill(sigterm_timeout=3)
+      Process.kill('SIGTERM', @pid)
+      begin
+        Timeout.timeout(sigterm_timeout) do
+          Process.waitpid(@pid)
+        end
+      rescue Timeout::Error
+        Process.kill('SIGKILL', @pid)
+        Process.waitpid(@pid)
+      end
+    end
+
   end
 
   class Dhclient
