@@ -563,7 +563,9 @@ class AccessPoint
 
     @ctrlserv = UNIXServer.new(CTRLSOCKET)
 
-    setup
+    Dot11.each_phy do |phy|
+      setup_phy(phy)
+    end
 
     Log.info('started')
     loop do
@@ -711,12 +713,6 @@ class AccessPoint
     pid = service.spawn
     @services[pid] = service
     Log.info("spawned #{service.name}")
-  end
-
-  def setup
-    Dot11.each_phy do |phy|
-      setup_phy(phy)
-    end
   end
 
   def setup_bridge(ssid)
