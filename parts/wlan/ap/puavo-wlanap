@@ -564,10 +564,7 @@ class AccessPoint
     @ctrlserv = UNIXServer.new(CTRLSOCKET)
 
     setup_bridges
-
-    Dot11.each_phy do |phy|
-      setup_phy(phy)
-    end
+    setup_phys
 
     Log.info('started')
     loop do
@@ -773,6 +770,10 @@ class AccessPoint
       hostapd_cli = Services::HostapdCli.new(:hostapd => hostapd)
       @spawn_queue << [hostapd, hostapd_cli]
     end
+  end
+
+  def setup_phys
+    Dot11.each_phy { |phy| setup_phy(phy) }
   end
 
 end
