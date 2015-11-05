@@ -210,7 +210,7 @@ module Dot11
     end
 
     def up
-      run_or_fail('ifconfig', @name, 'up')
+      system('ifconfig', @name, 'up')
     end
 
   end
@@ -754,7 +754,12 @@ class AccessPoint
       @vifs << vif
 
       if phy.channel.nil?
-        vif.up
+        vif.up or begin
+                    Log.error("failed to interface #{vif.name} up", \
+                              "ignoring phy #{phy.name}")
+                    @vifs.pop.del
+                    return
+                  end
         channels = vif.scan(phy.band)
         phy.channel = channels[0]
       end
