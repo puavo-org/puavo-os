@@ -794,10 +794,10 @@ class packages {
           dkms_modules => $all_dkms_modules,
           package_tag  => 'puavo';
 
-        [ '3.16.0-50-generic', ]: # utopic backport from Ubuntu
+        [ '3.16.0-52-generic', ]: # utopic backport from Ubuntu
           dkms_modules => $all_dkms_modules;
 
-        [ '3.19.0-30-generic', ]: # vivid backport from Ubuntu
+        [ '3.19.0-32-generic', ]: # vivid backport from Ubuntu
           dkms_modules => $all_dkms_modules;
       }
     }
@@ -809,7 +809,7 @@ class packages {
     }
     'vivid': {
       packages::kernels::kernel_package {
-        '3.19.0-30-generic':
+        '3.19.0-32-generic':
           dkms_modules => $all_dkms_modules;
       }
     }
