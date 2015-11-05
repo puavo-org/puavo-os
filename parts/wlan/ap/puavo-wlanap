@@ -749,7 +749,7 @@ class AccessPoint
     @nets.each { |net| setup_bridge(net['ssid']) }
   end
 
-  def setup_phy(phy)
+  def add_phy(phy)
     phy.each_vif do |vif|
       vif.del or begin
                    Log.error("failed to delete vif #{vif.name}")
@@ -790,7 +790,7 @@ class AccessPoint
   def setup_phys
     Dot11.each_phy do |phy|
       begin
-        setup_phy(phy)
+        add_phy(phy)
       rescue StandardError => e
         Log.exception("failed to setup phy #{phy.name}, ignoring it", e)
       end
