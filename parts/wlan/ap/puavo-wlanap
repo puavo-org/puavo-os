@@ -563,7 +563,7 @@ class AccessPoint
 
     @ctrlserv = UNIXServer.new(CTRLSOCKET)
 
-    @nets.each { |net| setup_bridge(net['ssid']) }
+    setup_bridges
 
     Dot11.each_phy do |phy|
       setup_phy(phy)
@@ -728,6 +728,10 @@ class AccessPoint
                                       :address => @vtun_address,
                                       :port    => @vtun_port))
     bridge
+  end
+
+  def setup_bridges
+    @nets.each { |net| setup_bridge(net['ssid']) }
   end
 
   def setup_phy(phy)
