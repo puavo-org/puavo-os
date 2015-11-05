@@ -90,7 +90,7 @@ module Dot11
     end
 
     def add_vif(name)
-      system('iw', 'phy', @name, 'interface', 'add', name, 'type', 'managed') or return nil
+      run_or_fail('iw', 'phy', @name, 'interface', 'add', name, 'type', 'managed')
       Vif.new(name)
     end
 
@@ -184,7 +184,7 @@ module Dot11
     end
 
     def del
-      system('iw', 'dev', @name, 'del')
+      run_or_faile('iw', 'dev', @name, 'del')
     end
 
     def scan(band)
@@ -216,7 +216,7 @@ module Dot11
     end
 
     def up
-      system('ifconfig', @name, 'up')
+      run_or_fail('ifconfig', @name, 'up')
     end
 
   end
@@ -555,7 +555,13 @@ class AccessPoint
       Log.info('exiting')
       Process.kill('-SIGTERM', 0)
 
-      @vifs.each { |vif| vif.del }
+      @vifs.each do |vif|
+        begin
+          vif.del
+        rescue StandardError => e
+          Log.exception("failed to delete vif #{vif.name}", e)
+        end
+      end
 
       @bridges.each_value do |bridge|
         # Ignore errors, we are already exiting.
@@ -750,12 +756,7 @@ class AccessPoint
   end
 
   def add_phy(phy)
-    phy.each_vif do |vif|
-      vif.del or begin
-                   Log.error("failed to delete vif #{vif.name}")
-                   return
-                 end
-    end
+    phy.each_vif { |vif| vif.del }
 
     @nets.each do |net|
       @bss_index += 1
@@ -768,11 +769,7 @@ class AccessPoint
       @vifs << vif
 
       if phy.channel.nil?
-        vif.up or begin
-                    Log.error("failed to interface #{vif.name} up")
-                    @vifs.pop.del
-                    return
-                  end
+        vif.up
         channels = vif.scan(phy.band)
         phy.channel = channels[0]
       end
