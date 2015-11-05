@@ -58,6 +58,12 @@ module Log
     Log.log(:ERROR, msg)
   end
 
+  def self.exception(msg, e)
+    Log.error(msg)
+    Log.error("#{e.exception}: #{e.message}")
+    e.backtrace.each { |line| Log.error("\tfrom: #{line}") }
+  end
+
 end
 
 module Dot11
@@ -734,8 +740,7 @@ class AccessPoint
   def setup_phy(phy)
     phy.each_vif do |vif|
       vif.del or begin
-                   Log.error("failed to delete vif #{vif.name}, " \
-                             "ignoring phy #{phy.name}")
+                   Log.error("failed to delete vif #{vif.name}")
                    return
                  end
     end
@@ -745,16 +750,14 @@ class AccessPoint
 
       vif = phy.add_vif("hostapd#{@bss_index}")
       if vif.nil?
-        Log.error("failed to add vif to phy #{phy.name}, " \
-                  "ignoring phy #{phy.name}")
+        Log.error("failed to add vif to phy #{phy.name}")
         return
       end
       @vifs << vif
 
       if phy.channel.nil?
         vif.up or begin
-                    Log.error("failed to interface #{vif.name} up", \
-                              "ignoring phy #{phy.name}")
+                    Log.error("failed to interface #{vif.name} up")
                     @vifs.pop.del
                     return
                   end
@@ -773,7 +776,13 @@ class AccessPoint
   end
 
   def setup_phys
-    Dot11.each_phy { |phy| setup_phy(phy) }
+    Dot11.each_phy do |phy|
+      begin
+        setup_phy(phy)
+      rescue StandardError => e
+        Log.exception("failed to setup phy #{phy.name}, ignoring it", e)
+      end
+    end
   end
 
 end
