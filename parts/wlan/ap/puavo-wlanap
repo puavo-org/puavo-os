@@ -717,7 +717,17 @@ class AccessPoint
   end
 
   def handle_ctrlmsg_udev_event(args)
-    Log.info("udev-event #{args}")
+    action, phy_name = args.split(':')
+    Log.info("udev action: #{action} phy #{phy_name}")
+    case action
+    when 'add'
+      add_phy(Dot11::Phy.new(phy_name))
+    when 'remove'
+      remove_phy(Dot11::Phy.new(phy_name))
+    else
+      Log.warning("ignoring unexpected udev action: #{action}")
+      return
+    end
   end
 
   def handle_ctrlmsg_vtun_up(args)
