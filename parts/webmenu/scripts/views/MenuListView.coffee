@@ -29,6 +29,11 @@ class MenuListView extends ViewMaster
         @navigation = new Navigation @getMenuItemViews(), @itemCols()
 
         @keyHandler = (e) =>
+            LEFT_ARROW = 37
+            if @model.get("type") is "menu" and e.which is LEFT_ARROW and e.altKey and not @model.isTab()
+                @bubble "open-menu", @model.parent, this
+                return
+
             @navigation.cols = @itemCols()
             @navigation.handleKeyEvent(e)
 

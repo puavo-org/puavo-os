@@ -39,4 +39,6 @@ class MenuModel extends AbstractItemModel
     isOk: ->
         super() and @items and @items.size() > 0 and !@get("hidden")
 
+    isTab: -> !@parent?.parent
+
 module.exports = MenuModel
