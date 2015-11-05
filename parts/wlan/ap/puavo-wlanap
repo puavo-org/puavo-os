@@ -178,7 +178,7 @@ module Dot11
     end
 
     def del
-      run_or_fail('iw', 'dev', @name, 'del')
+      system('iw', 'dev', @name, 'del')
     end
 
     def scan(band)
@@ -734,7 +734,13 @@ class AccessPoint
   end
 
   def setup_phy(phy)
-    phy.each_vif { |vif| vif.del }
+    phy.each_vif do |vif|
+      vif.del or begin
+                   Log.error("failed to delete vif #{vif.name}, " \
+                             "ignoring phy #{phy.name}")
+                   return
+                 end
+    end
 
     @nets.each do |net|
       @bss_index += 1
