@@ -563,6 +563,8 @@ class AccessPoint
 
     @ctrlserv = UNIXServer.new(CTRLSOCKET)
 
+    @nets.each { |net| setup_bridge(net['ssid']) }
+
     Dot11.each_phy do |phy|
       setup_phy(phy)
     end
@@ -716,7 +718,6 @@ class AccessPoint
   end
 
   def setup_bridge(ssid)
-    return @bridges[ssid] if @bridges.has_key?(ssid)
     bridge = hexdigest15(ssid)
     run_or_fail('brctl', 'addbr', bridge)
     @bridges[ssid] = bridge
@@ -760,8 +761,7 @@ class AccessPoint
         phy.channel = channels[0]
       end
 
-      bridge = setup_bridge(net['ssid'])
-
+      bridge = @bridges.fetch(net['ssid'])
       hostapd     = Services::Hostapd.new(:bridge => bridge,
                                           :phy    => phy,
                                           :vif    => vif,
