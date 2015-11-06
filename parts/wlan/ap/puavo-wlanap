@@ -217,7 +217,7 @@ module Dot11
     end
 
     def up
-      run_or_fail('ifconfig', @name, 'up')
+      run_or_fail('ip', 'link', 'set', 'dev', @name, 'up')
     end
 
   end
@@ -566,7 +566,7 @@ class AccessPoint
 
       @bridges.each_value do |bridge|
         # Ignore errors, we are already exiting.
-        system('ifconfig', bridge, 'down')
+        system('ip', 'link', 'set', 'dev', bridge, 'down')
         system('brctl', 'delbr', bridge)
       end
 
@@ -735,7 +735,7 @@ class AccessPoint
     iface, *bridge = args.split(':')
     if bridge.length == 1
       bridge = bridge[0]
-      run_or_fail('ifconfig', iface, 'up')
+      run_or_fail('ip', 'link', 'set', 'dev', iface, 'up')
       run_or_fail('brctl', 'addif', bridge, iface)
       spawn_service(Services::Dhclient.new(:bridge => bridge))
     else
@@ -754,7 +754,7 @@ class AccessPoint
     run_or_fail('brctl', 'addbr', bridge)
     @bridges[ssid] = bridge
     run_or_fail('brctl', 'setfd', bridge, '0')
-    run_or_fail('ifconfig', bridge, 'up')
+    run_or_fail('ip', 'link', 'set', 'dev', bridge, 'up')
 
     spawn_service(Services::Vtund.new(:bridge  => bridge,
                                       :address => @vtun_address,
