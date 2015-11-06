@@ -91,7 +91,7 @@ module Dot11
 
     def add_vif(name)
       run_or_fail('iw', 'phy', @name, 'interface', 'add', name, 'type', 'managed')
-      Vif.new(name)
+      Vif.new(name, self)
     end
 
     def each_vif
@@ -112,7 +112,7 @@ module Dot11
 
           # Ignore all but interface lines.
           if line =~ /^\s+Interface (.*)$/
-            retval = yield Vif.new($1)
+            retval = yield Vif.new($1, self)
           end
 
         end
@@ -122,8 +122,8 @@ module Dot11
       retval
     end
 
-    def band
-      band = 0
+    def bands
+      retval = 0
 
       IO.popen(['iw', 'phy', @name, 'info']) do |io|
         until io.eof? do
@@ -132,9 +132,9 @@ module Dot11
           io.gets =~ /^\s+\* (\d+) MHz .*$/
           case $1
           when '2412'
-            band |= Dot11::BAND_2G
+            retval |= Dot11::BAND_2G
           when '5180'
-            band |= Dot11::BAND_5G
+            retval |= Dot11::BAND_5G
           else
             Log.warning("phy {@name} has an unsupported band")
           end
@@ -142,7 +142,7 @@ module Dot11
       end
       fail 'failed to query supported bands' unless $?.success?
 
-      band
+      retval
     end
 
     def ht_capab(channel)
@@ -181,18 +181,19 @@ module Dot11
 
     attr_reader :name
 
-    def initialize(name)
+    def initialize(name, phy)
       @name = name
+      @phy  = phy
     end
 
     def del
       run_or_fail('iw', 'dev', @name, 'del')
     end
 
-    def scan(band)
+    def scan
       # Prime results with worst possible signal levels.
       results = {}
-      Dot11::CHANNELS[band].each { |ch| results[ch] = -999 }
+      Dot11::CHANNELS[@phy.bands].each { |ch| results[ch] = -999 }
 
       IO.popen(['iwlist', @name, 'scan']) do |io|
         io.each_line do |line|
@@ -782,7 +783,7 @@ class AccessPoint
 
       if phy.channel.nil?
         vif.up
-        channels = vif.scan(phy.band)
+        channels = vif.scan
         phy.channel = channels[0]
       end
 
