@@ -68,17 +68,24 @@ end
 
 module Dot11
 
-  BAND_2G = 1
-  BAND_5G = 2
+  class Band
+    attr_reader   :channels
+    attr_reader   :hw_mode
 
-  CHANNELS_2G = [ 1,  6, 11]
-  CHANNELS_5G = [36, 40, 44, 48]
+    def initialize(start_frequency)
+      case start_frequency
+      when 2412
+        @channels = [ 1, 6, 11]
+        @hw_mode  = 'g'
+      when 5180
+        @channels = [36, 40, 44, 48]
+        @hw_mode  = 'a'
+      else
+        raise ArgumentError.new("invalid start frequency #{start_frequency}")
+      end
+    end
 
-  CHANNELS = {
-    BAND_2G           => CHANNELS_2G,
-    BAND_5G           => CHANNELS_5G,
-    BAND_2G | BAND_5G => CHANNELS_2G + CHANNELS_5G,
-  }
+  end
 
   class Phy
 
@@ -122,30 +129,35 @@ module Dot11
       retval
     end
 
-    def bands
-      retval = 0
+    def each_channel
+      each_band do |band|
+        band.channels.each do |channel|
+          yield channel
+        end
+      end
+    end
 
+    def band
+      each_band do |band|
+        return band if band.channels.include?(@channel)
+      end
+      nil
+    end
+
+    def each_band
       IO.popen(['iw', 'phy', @name, 'info']) do |io|
         until io.eof? do
           next unless io.gets =~ /^\s+Frequencies:$/
 
           io.gets =~ /^\s+\* (\d+) MHz .*$/
-          case $1
-          when '2412'
-            retval |= Dot11::BAND_2G
-          when '5180'
-            retval |= Dot11::BAND_5G
-          else
-            Log.warning("phy {@name} has an unsupported band")
-          end
+          start_frequency = $1.to_i
+          yield Band.new(start_frequency)
         end
       end
       fail 'failed to query supported bands' unless $?.success?
-
-      retval
     end
 
-    def ht_capab(channel)
+    def ht_capab
       is_ht20sgi_capab = IO.popen(['iw', @name, 'info']) do |io|
         !io.grep(/^\s+RX HT20 SGI.*$/).empty?
       end
@@ -156,7 +168,7 @@ module Dot11
       end
       $?.success? or fail 'failed to query HT40 SGI capability'
 
-      case channel
+      case @channel
       when 1, 6, 11
         '[HT20]'
       when 36, 44
@@ -164,14 +176,14 @@ module Dot11
       when 40, 48
         '[HT40-]' + (is_ht40sgi_capab ? '[SHORT-GI-40]' : '')
       else
-        fail "unsupported channel #{channel}"
+        fail "unsupported channel #{@channel}"
       end + (is_ht20sgi_capab ? '[SHORT-GI-20]' : '')
 
     end
 
     def set_txpower_limit(txpower_dBm)
-      Log.info("limit txpower of phy #{@name} to #{txpower_dBm}dBm")
-      txpower = (txpower_dBm * 100).to_s
+      txpower = (txpower_dBm.nil? ? 2000 : txpower_dBm * 100).to_s
+      Log.info("limit txpower of phy #{@name} to #{txpower}mBm")
       run_or_fail('iw', 'phy', @name, 'set', 'txpower', 'limit', txpower)
     end
 
@@ -193,7 +205,7 @@ module Dot11
     def scan
       # Prime results with worst possible signal levels.
       results = {}
-      Dot11::CHANNELS[@phy.bands].each { |ch| results[ch] = -999 }
+      @phy.each_channel { |ch| results[ch] = -999 }
 
       IO.popen(['iwlist', @name, 'scan']) do |io|
         io.each_line do |line|
@@ -442,8 +454,8 @@ module Services
       HostapdConf.new(:bridge         => @bridge,
                       :channel        => @phy.channel,
                       :ctrl_interface => HOSTAPD_CTRL_INTERFACE_DIR,
-                      :ht_capab       => @phy.ht_capab(@phy.channel),
-                      :hw_mode        => Dot11::CHANNELS_5G.include?(@phy.channel) ? 'a' : 'g',
+                      :ht_capab       => @phy.ht_capab,
+                      :hw_mode        => @phy.band.hw_mode,
                       :interface      => @vif.name,
                       :ssid           => @net['ssid'],
                       :wpa            => @net['type'] == 'open' ? 0 : 2,
@@ -796,8 +808,8 @@ class AccessPoint
       @spawn_queue << [hostapd, hostapd_cli]
     end
 
-    phy.set_txpower_limit(@conf.fetch(:txpower, 20))
-    if Dot11::CHANNELS_5G.include?(phy.channel) && @conf.has_key?(:txpower5)
+    phy.set_txpower_limit(@conf[:txpower])
+    if @conf.has_key?(:txpower5) && phy.band.channels[0] == 36
       phy.set_txpower_limit(@conf[:txpower5])
     end
 
