@@ -170,6 +170,7 @@ module Dot11
     end
 
     def set_txpower_limit(txpower_dBm)
+      Log.info("limit txpower of phy #{@name} to #{txpower_dBm}dBm")
       txpower = (txpower_dBm * 100).to_s
       run_or_fail('iw', 'phy', @name, 'set', 'txpower', 'limit', txpower)
     end
