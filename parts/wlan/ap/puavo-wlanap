@@ -169,7 +169,7 @@ module Dot11
 
     end
 
-    def set_txpower(txpower_dBm)
+    def set_txpower_limit(txpower_dBm)
       run_or_fail('iw', 'phy', @name, 'set', 'txpower', 'limit', dBm * 100)
     end
 
