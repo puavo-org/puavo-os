@@ -170,7 +170,8 @@ module Dot11
     end
 
     def set_txpower_limit(txpower_dBm)
-      run_or_fail('iw', 'phy', @name, 'set', 'txpower', 'limit', dBm * 100)
+      txpower = (txpower_dBm * 100).to_s
+      run_or_fail('iw', 'phy', @name, 'set', 'txpower', 'limit', txpower)
     end
 
   end
@@ -792,6 +793,12 @@ class AccessPoint
       hostapd_cli = Services::HostapdCli.new(:hostapd => hostapd)
       @spawn_queue << [hostapd, hostapd_cli]
     end
+
+    phy.set_txpower_limit(@conf.fetch(:txpower, 20))
+    if Dot11::CHANNELS_5G.include?(phy.channel) && @conf.has_key?(:txpower5)
+      phy.set_txpower_limit(@conf[:txpower5])
+    end
+
   end
 
   def remove_phy(phy)
