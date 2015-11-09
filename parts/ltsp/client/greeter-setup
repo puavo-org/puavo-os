@@ -14,7 +14,8 @@ puavo_greeter_background_firstlogin=$(jq -r '.tags[]' /etc/puavo/device.json | s
 
 background=
 
-BACKGROUNDS_DIR=/usr/share/backgrounds/puavo-greeter
+BACKGROUNDS_BASEDIR=/usr/share/backgrounds/puavo-greeter
+BACKGROUNDS_RANDOMDIR="${BACKGROUNDS_BASEDIR}/default"
 
 if [ -n "$puavo_greeter_background_firstlogin" \
      -a ! -s /var/lib/extrausers/passwd ]; then
@@ -30,20 +31,20 @@ case "${puavo_greeter_background_mode}" in
       ;;
   dynamic|firstlogin)
       if [ -n "${puavo_greeter_background}" ]; then
-	  find "${BACKGROUNDS_DIR}" \( -type f -o -type l \) -printf '%P\n' \
+	  find "${BACKGROUNDS_BASEDIR}" \( -type f -o -type l \) -printf '%P\n' \
 	      | grep -q -x "${puavo_greeter_background}" && {
-	      background="${BACKGROUNDS_DIR}/${puavo_greeter_background}"
+	      background="${BACKGROUNDS_BASEDIR}/${puavo_greeter_background}"
 	  }
       fi
       ;;
   random)
       if [ -n "${puavo_greeter_background_random_subdir}" ]; then
-	  find "${BACKGROUNDS_DIR}" -mindepth 1 -type d -printf '%P\n' \
+	  find "${BACKGROUNDS_BASEDIR}" -mindepth 1 -type d -printf '%P\n' \
 	      | grep -x -q "${puavo_greeter_background_random_subdir}" && {
-	      BACKGROUNDS_DIR="${BACKGROUNDS_DIR}/${puavo_greeter_background_random_subdir}"
+	      BACKGROUNDS_RANDOMDIR="${BACKGROUNDS_BASEDIR}/${puavo_greeter_background_random_subdir}"
 	  }
       fi
-      background=$(find "${BACKGROUNDS_DIR}" \( -type f -o -type l \) | sort -R | head -n1)
+      background=$(find "${BACKGROUNDS_RANDOMDIR}" \( -type f -o -type l \) | sort -R | head -n1)
       ;;
   *)
       echo "unknown greeter background mode '${puavo_greeter_background_mode}'" >&2
