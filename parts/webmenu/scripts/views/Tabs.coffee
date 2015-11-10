@@ -22,7 +22,7 @@ class Tabs extends ViewMaster
             @render()
 
     template: ->
-        if @collection.size() < 2
+        if @collection.size() < 2 or @currentTab is -1
             return ""
         else
             template(@context())
