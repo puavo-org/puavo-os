@@ -47,6 +47,14 @@ class kernels {
     default => $default_kernel,
   }
 
+  $hwgen3_kernel = $lsbdistcodename ? {
+    'trusty' => $architecture ? {
+                  'i386'  => '4.2.5.opinsys1',
+                  default => $default_kernel,
+                },
+    default => $default_kernel,
+  }
+
   $legacy_kernel = $lsbdistcodename ? {
     'trusty' => $architecture ? {
                   'i386'  => '3.2.0-70-generic-pae',
@@ -87,6 +95,7 @@ class kernels {
     'default':      kernel => $default_kernel;
     'edge':         kernel => $edge_kernel;
     'hwgen2':       kernel => $hwgen2_kernel;
+    'hwgen3':       kernel => $hwgen3_kernel;
     'legacy':       kernel => $legacy_kernel;
     'stable':       kernel => $stable_kernel;
     'stable-amd64': kernel => $stable_amd64_kernel;
