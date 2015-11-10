@@ -2,8 +2,15 @@ has_device_tag() {
   jq -r .tags[] /etc/puavo/device.json 2>/dev/null | grep -qx "$1"
 }
 
-if { has_device_tag edgers_mesa_dri || [ -n "$(lspci -d 8086:2992)" ]; } \
-     && ! has_device_tag no_edgers_mesa_dri; then
+lookup_pci_device() {
+  lspci -n | awk '
+    BEGIN { found = 0 }
+    $3 == "8086:2992" || $3 == "8086:2a02" || $3 == "8086:2a03" { found = 1 }
+    END { if (found) { exit(0) } else { exit(1) } }
+  '
+}
+
+if { has_device_tag edgers_mesa_dri || lookup_pci_device; }; then \
   # we just unpack for speed
   for deb in libdrm-amdgpu1_2.4.65+git20151026.c745e541-0ubuntu0ricotz~trusty_i386.deb \
              libgl1-mesa-dri_11.0.4~git20151026+11.0.ec14e6f8-0ubuntu0ricotz~trusty_i386.deb \
