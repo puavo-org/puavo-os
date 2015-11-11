@@ -1,0 +1,6 @@
+source "http://rubygems.org"
+
+gem "puma", "2.11.3"
+gem "redis"
+gem "sinatra"
+gem "sqlite3"
