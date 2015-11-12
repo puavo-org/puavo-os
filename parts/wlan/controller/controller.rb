@@ -46,7 +46,8 @@ class Controller < Sinatra::Base
     <title>Puavo's WLAN Controller - Status</title>
   </head
   <body>
-    <h1>Status</h1><% unless accesspoints.empty? %>
+    <h1>Status</h1>
+    <h2>Access points (<%= accesspoints.length %>)</h2><% unless accesspoints.empty? %>
     <ul><% accesspoints.each do |ap| %>
         <li><%= ap %></li><% end %>
     </ul><% end %>
