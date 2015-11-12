@@ -22,7 +22,30 @@ class Controller < Sinatra::Base
   end
 
   get '/v1/status' do
-    TempStore.get_accesspoints.to_json
+    accesspoints = TempStore.get_accesspoints
+
+    case request.preferred_type.entry
+    when 'text/html'
+      content_type 'text/html'
+      ERB.new(<<'EOF'
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Puavo's WLAN Controller - Status</title>
+  </head
+  <body>
+    <h1>Status</h1>
+    <ul><% accesspoints.each do |ap| %>
+        <li><%= ap %></li><% end %>
+    </ul>
+  </body>
+</html>
+EOF
+              ).result(binding)
+    else
+      accesspoints.to_json
+    end
   end
 
 end
