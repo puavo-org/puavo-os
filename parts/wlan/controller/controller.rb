@@ -25,6 +25,8 @@ class Controller < Sinatra::Base
     accesspoints = TempStore.get_accesspoints
 
     case request.preferred_type.entry
+    when 'application/json'
+      accesspoints.to_json
     when 'text/html'
       content_type 'text/html'
       ERB.new(<<'EOF'
@@ -44,7 +46,8 @@ class Controller < Sinatra::Base
 EOF
               ).result(binding)
     else
-      accesspoints.to_json
+      content_type 'text/plain'
+      accesspoints.join('\n')
     end
   end
 
