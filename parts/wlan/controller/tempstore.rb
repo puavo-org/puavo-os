@@ -4,14 +4,16 @@ module TempStore
 
   REDIS = Redis.new
 
-  KEY_ACCESSPOINTS = 'puavo-wlancontroller:accesspoints'
+  KEY_PREFIX_AP = 'puavo-wlancontroller:ap:'
 
   def self.add_accesspoint(hostname)
-    REDIS.sadd(KEY_ACCESSPOINTS, hostname)
+    key = "#{KEY_PREFIX_AP}#{hostname}"
+    REDIS.set(key, hostname)
   end
 
   def self.get_accesspoints
-    REDIS.smembers(KEY_ACCESSPOINTS)
+    ap_keys = REDIS.keys("#{KEY_PREFIX_AP}*")
+    ap_keys.empty? ? [] : REDIS.mget(ap_keys)
   end
 
 end
