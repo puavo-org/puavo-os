@@ -11,6 +11,11 @@ module TempStore
     REDIS.set(key, hostname)
   end
 
+  def self.expire_accesspoint(hostname, expire_seconds)
+    key = "#{KEY_PREFIX_AP}#{hostname}"
+    REDIS.expire(key, expire_seconds)
+  end
+
   def self.del_accesspoint(hostname)
     key = "#{KEY_PREFIX_AP}#{hostname}"
     REDIS.del(key)

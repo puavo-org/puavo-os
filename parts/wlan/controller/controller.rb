@@ -20,8 +20,11 @@ class Controller < Sinatra::Base
     PermStore.add_report(name, host, json)
 
     case name
+    when 'ap_hearbeat'
+      TempStore.expire_accesspoint(host, 20)
     when 'ap_start'
       TempStore.add_accesspoint(host)
+      TempStore.expire_accesspoint(host, 20)
     when 'ap_stop'
       TempStore.del_accesspoint(host)
     end
