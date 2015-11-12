@@ -11,6 +11,11 @@ module TempStore
     REDIS.set(key, hostname)
   end
 
+  def self.del_accesspoint(hostname)
+    key = "#{KEY_PREFIX_AP}#{hostname}"
+    REDIS.del(key)
+  end
+
   def self.get_accesspoints
     ap_keys = REDIS.keys("#{KEY_PREFIX_AP}*")
     ap_keys.empty? ? [] : REDIS.mget(ap_keys)

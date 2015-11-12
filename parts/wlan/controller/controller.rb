@@ -22,6 +22,8 @@ class Controller < Sinatra::Base
     case name
     when 'ap_start'
       TempStore.add_accesspoint(host)
+    when 'ap_stop'
+      TempStore.del_accesspoint(host)
     end
   end
 
