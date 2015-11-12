@@ -37,10 +37,10 @@ class Controller < Sinatra::Base
     <title>Puavo's WLAN Controller - Status</title>
   </head
   <body>
-    <h1>Status</h1>
+    <h1>Status</h1><% unless accesspoints.empty? %>
     <ul><% accesspoints.each do |ap| %>
         <li><%= ap %></li><% end %>
-    </ul>
+    </ul><% end %>
   </body>
 </html>
 EOF
