@@ -18,7 +18,11 @@ class Controller < Sinatra::Base
     host = params[:host]
     name = params[:name]
     PermStore.add_report(name, host, json)
-    TempStore.add_accesspoint(host)
+
+    case name
+    when 'ap_start'
+      TempStore.add_accesspoint(host)
+    end
   end
 
   get '/v1/status' do
