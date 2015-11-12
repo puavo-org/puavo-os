@@ -34,6 +34,7 @@ require_relative './tempstore.rb'
 
 module PuavoWlanController
 
+  PERMSTORE = PermStore.new
   TEMPSTORE = TempStore.new
 
   class Root < Sinatra::Base
@@ -47,7 +48,7 @@ module PuavoWlanController
       json = data.empty? ? {}.to_json : JSON.parse(data).to_json
       host = params[:host]
       name = params[:name]
-      PermStore.add_report(name, host, json)
+      PERMSTORE.add_report(name, host, json)
 
       case name
       when 'ap_hearbeat'
