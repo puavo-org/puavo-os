@@ -34,6 +34,8 @@ require_relative './tempstore.rb'
 
 module PuavoWlanController
 
+  TEMPSTORE = TempStore.new
+
   class Root < Sinatra::Base
 
     before do
@@ -49,17 +51,17 @@ module PuavoWlanController
 
       case name
       when 'ap_hearbeat'
-        TempStore.expire_accesspoint(host, 20)
+        TEMPSTORE.expire_accesspoint(host, 20)
       when 'ap_start'
-        TempStore.add_accesspoint(host)
-        TempStore.expire_accesspoint(host, 20)
+        TEMPSTORE.add_accesspoint(host)
+        TEMPSTORE.expire_accesspoint(host, 20)
       when 'ap_stop'
-        TempStore.del_accesspoint(host)
+        TEMPSTORE.del_accesspoint(host)
       end
     end
 
     get '/v1/status' do
-      accesspoints = TempStore.get_accesspoints
+      accesspoints = TEMPSTORE.get_accesspoints
 
       case request.preferred_type.entry
       when 'application/json'
