@@ -32,39 +32,41 @@ require 'sinatra'
 require_relative './permstore.rb'
 require_relative './tempstore.rb'
 
-class Controller < Sinatra::Base
+module PuavoWlanController
 
-  before do
-    content_type 'application/json'
-  end
+  class Root < Sinatra::Base
 
-  put '/v1/report/:name/:host' do
-    data = request.body.read
-    json = data.empty? ? {}.to_json : JSON.parse(data).to_json
-    host = params[:host]
-    name = params[:name]
-    PermStore.add_report(name, host, json)
-
-    case name
-    when 'ap_hearbeat'
-      TempStore.expire_accesspoint(host, 20)
-    when 'ap_start'
-      TempStore.add_accesspoint(host)
-      TempStore.expire_accesspoint(host, 20)
-    when 'ap_stop'
-      TempStore.del_accesspoint(host)
+    before do
+      content_type 'application/json'
     end
-  end
 
-  get '/v1/status' do
-    accesspoints = TempStore.get_accesspoints
+    put '/v1/report/:name/:host' do
+      data = request.body.read
+      json = data.empty? ? {}.to_json : JSON.parse(data).to_json
+      host = params[:host]
+      name = params[:name]
+      PermStore.add_report(name, host, json)
 
-    case request.preferred_type.entry
-    when 'application/json'
-      accesspoints.to_json
-    when 'text/html'
-      content_type 'text/html'
-      ERB.new(<<'EOF'
+      case name
+      when 'ap_hearbeat'
+        TempStore.expire_accesspoint(host, 20)
+      when 'ap_start'
+        TempStore.add_accesspoint(host)
+        TempStore.expire_accesspoint(host, 20)
+      when 'ap_stop'
+        TempStore.del_accesspoint(host)
+      end
+    end
+
+    get '/v1/status' do
+      accesspoints = TempStore.get_accesspoints
+
+      case request.preferred_type.entry
+      when 'application/json'
+        accesspoints.to_json
+      when 'text/html'
+        content_type 'text/html'
+        ERB.new(<<'EOF'
 <!doctype html>
 <html>
   <head>
@@ -80,11 +82,13 @@ class Controller < Sinatra::Base
   </body>
 </html>
 EOF
-              ).result(binding)
-    else
-      content_type 'text/plain'
-      accesspoints.join('\n')
+                ).result(binding)
+      else
+        content_type 'text/plain'
+        accesspoints.join('\n')
+      end
     end
+
   end
 
 end

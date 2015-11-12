@@ -23,6 +23,6 @@
 
 # Third-party modules.
 
-require './controller'
+require './root'
 
-run Controller
+run PuavoWlanController::Root
