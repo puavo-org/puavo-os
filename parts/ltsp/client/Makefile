@@ -231,6 +231,7 @@ install : installdirs $(install-subdirs)
 		puavo-ltsp-init-nfs \
 		puavo-ltsp-login \
 		puavo-ltspserver-create-guest \
+		puavo-report-system-version \
 		puavo-unity-greeter \
 		puavo-update-nm-configurations
 
@@ -283,6 +284,7 @@ install : installdirs $(install-subdirs)
 		upstart/ltspguestssh.conf \
 		upstart/puavo-ltsp-client.conf \
 		upstart/puavo-monitor-nbd-connection.conf \
+		upstart/puavo-report-system-version.conf \
 		upstart/puavo-set-sane-date.conf \
 		upstart/puavo-sync-external-files.conf
 
