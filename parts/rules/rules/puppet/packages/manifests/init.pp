@@ -770,7 +770,7 @@ class packages {
     'trusty': {
       if $architecture == 'i386' {
         packages::kernels::kernel_package {
-          [ '3.2.0-70-generic-pae', '4.0.6.opinsys4' ]:
+          [ '3.2.0-70-generic-pae', '4.0.6.opinsys4', '4.2.5.opinsys1' ]:
             dkms_modules => $all_dkms_modules,
             package_tag  => 'puavo',
             with_extra   => false;
@@ -780,12 +780,6 @@ class packages {
             # for this kernel (arch issue?)
             dkms_modules => [ $r8168_dkms_module ],
             pkgarch      => 'amd64';
-
-          [ '4.2.5.opinsys1' ]:
-            # $bcmwl_dkms_module does not compile for this kernel
-            dkms_modules => [ $nvidia_dkms_module, $r8168_dkms_module, ],
-            package_tag  => 'puavo',
-            with_extra   => false;
         }
       }
 
