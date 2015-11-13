@@ -3,8 +3,10 @@ description "puavo-wlancontroller"
 start on runlevel [23]
 stop on shutdown
 
-chdir /var/opt/puavo-wlancontroller
+chdir /opt/puavo-wlancontroller
+env RACK_ENV=production
+env PUAVO_WLANCONTROLLER_DB_SQLITE3=/var/opt/puavo-wlancontroller/db.sqlite3
 
-exec sudo -u puavo-wlancontroller RACK_ENV=production bundle exec puma --workers 2 --port 45046
+exec sudo -E -u puavo-wlancontroller  bundle exec puma --workers 2 --port 45046
 
 respawn
