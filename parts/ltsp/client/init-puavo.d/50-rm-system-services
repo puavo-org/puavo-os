@@ -68,4 +68,12 @@ fi
 
 for service in $rm_services; do
     rm -f /etc/rc?.d/???"$service" "/etc/init.d/$service" "/etc/init/$service.conf"
+
+    # special case "laptop-mode"-service, because removing
+    # /etc/init.d/laptop-mode is not enough
+    case "$service" in
+        laptop-mode)
+            rm -f /lib/udev/rules.d/99-laptop-mode.rules
+            ;;
+    esac
 done
