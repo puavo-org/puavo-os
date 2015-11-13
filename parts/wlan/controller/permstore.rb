@@ -28,7 +28,7 @@ module PuavoWlanController
   class PermStore
 
     def initialize
-      @db = SQLite3::Database.new('controller.sqlite3')
+      @db = SQLite3::Database.new(ENV.fetch('PUAVO_WLANCONTROLLER_DB_SQLITE3', 'controller.sqlite3'))
       begin
         @db.execute <<'EOF'
 CREATE TABLE IF NOT EXISTS Report (
