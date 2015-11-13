@@ -10,6 +10,8 @@ all:
 install: all installdirs
 	cp -r .bundle vendor $(DESTDIR)$(appdir)
 	$(INSTALL_DATA) -t $(DESTDIR)$(appdir)	\
+		Gemfile				\
+		Gemfile.lock			\
 		config.ru			\
 		permstore.rb			\
 		root.rb				\
