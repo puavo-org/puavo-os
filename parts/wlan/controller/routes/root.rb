@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby1.9.1
 # coding: utf-8
+
 # = Puavo's WLAN Controller
 #
 # Author    :: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
@@ -21,8 +22,39 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301 USA.
 
-# Third-party modules.
+module PuavoWlanController
+  module Routes
+    module Root
 
-require './app'
+      PREFIX = ''
 
-run PuavoWlanController::App
+      def self.registered(app)
+        root = lambda do
+          content_type 'text/html'
+          accesspoints = TEMPSTORE.get_accesspoints
+
+          ERB.new(<<'EOF'
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Puavo's WLAN Controller - Status</title>
+  </head
+  <body>
+    <h1>Status</h1>
+    <h2>Access points (<%= accesspoints.length %>)</h2><% unless accesspoints.empty? %>
+    <ul><% accesspoints.each do |ap| %>
+        <li><%= ap %></li><% end %>
+    </ul><% end %>
+  </body>
+</html>
+EOF
+                  ).result(binding)
+        end
+
+        app.get("#{PREFIX}/", &root)
+      end
+
+    end
+  end
+end

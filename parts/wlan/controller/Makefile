@@ -14,7 +14,7 @@ install: all installdirs
 		Gemfile.lock			\
 		config.ru			\
 		permstore.rb			\
-		root.rb				\
+		app.rb				\
 		tempstore.rb
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(appdir)/routes	\

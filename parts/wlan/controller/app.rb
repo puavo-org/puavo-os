@@ -32,6 +32,7 @@ require 'sinatra'
 require_relative './permstore.rb'
 require_relative './tempstore.rb'
 
+require_relative './routes/root.rb'
 require_relative './routes/v1.rb'
 
 module PuavoWlanController
@@ -41,31 +42,9 @@ module PuavoWlanController
 
   AP_EXPIRATION_TIME = 20
 
-  class Root < Sinatra::Base
+  class App < Sinatra::Base
 
-    get '/' do
-      accesspoints = TEMPSTORE.get_accesspoints
-
-      content_type 'text/html'
-      ERB.new(<<'EOF'
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Puavo's WLAN Controller - Status</title>
-  </head
-  <body>
-    <h1>Status</h1>
-    <h2>Access points (<%= accesspoints.length %>)</h2><% unless accesspoints.empty? %>
-    <ul><% accesspoints.each do |ap| %>
-        <li><%= ap %></li><% end %>
-    </ul><% end %>
-  </body>
-</html>
-EOF
-              ).result(binding)
-    end
-
+    register PuavoWlanController::Routes::Root
     register PuavoWlanController::Routes::V1
 
   end
