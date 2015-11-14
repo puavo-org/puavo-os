@@ -37,6 +37,8 @@ module PuavoWlanController
   PERMSTORE = PermStore.new
   TEMPSTORE = TempStore.new
 
+  AP_EXPIRATION_TIME = 20
+
   class Root < Sinatra::Base
 
     before do
@@ -52,10 +54,10 @@ module PuavoWlanController
 
       case name
       when 'ap_hearbeat'
-        TEMPSTORE.expire_accesspoint(host, 20)
+        TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
       when 'ap_start'
         TEMPSTORE.add_accesspoint(host)
-        TEMPSTORE.expire_accesspoint(host, 20)
+        TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
       when 'ap_stop'
         TEMPSTORE.del_accesspoint(host)
       end
