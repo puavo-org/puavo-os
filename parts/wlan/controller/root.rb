@@ -32,6 +32,8 @@ require 'sinatra'
 require_relative './permstore.rb'
 require_relative './tempstore.rb'
 
+require_relative './routes/v1.rb'
+
 module PuavoWlanController
 
   PERMSTORE = PermStore.new
@@ -41,38 +43,11 @@ module PuavoWlanController
 
   class Root < Sinatra::Base
 
-    before do
-      content_type 'application/json'
-    end
-
-    put '/v1/report/:name/:host' do
-      data = request.body.read
-      json = data.empty? ? {}.to_json : JSON.parse(data).to_json
-      host = params[:host]
-      name = params[:name]
-      PERMSTORE.add_report(name, host, json)
-
-      case name
-      when 'ap_hearbeat'
-        TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
-      when 'ap_start'
-        TEMPSTORE.add_accesspoint(host)
-        TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
-        { :ap_expiration_time => AP_EXPIRATION_TIME }.to_json
-      when 'ap_stop'
-        TEMPSTORE.del_accesspoint(host)
-      end
-    end
-
-    get '/v1/status' do
+    get '/' do
       accesspoints = TEMPSTORE.get_accesspoints
 
-      case request.preferred_type.entry
-      when 'application/json'
-        accesspoints.to_json
-      when 'text/html'
-        content_type 'text/html'
-        ERB.new(<<'EOF'
+      content_type 'text/html'
+      ERB.new(<<'EOF'
 <!doctype html>
 <html>
   <head>
@@ -88,12 +63,10 @@ module PuavoWlanController
   </body>
 </html>
 EOF
-                ).result(binding)
-      else
-        content_type 'text/plain'
-        accesspoints.join('\n')
-      end
+              ).result(binding)
     end
+
+    register PuavoWlanController::Routes::V1
 
   end
 
