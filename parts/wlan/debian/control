@@ -38,6 +38,7 @@ Description: host tunneled WLAN accesspoint
 Package: puavo-wlancontroller
 Architecture: all
 Depends: ${misc:Depends},
+ adduser,
  ruby-bundler,
  ruby1.9.1
 Description: Puavo's WLAN controller
