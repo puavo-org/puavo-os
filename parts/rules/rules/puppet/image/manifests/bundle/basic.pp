@@ -8,6 +8,7 @@ class image::bundle::basic {
 	  disable_update_notifications,
 	  graphics_stack_hacks,
 	  kernels,
+	  keyboard_hw_quirks,
 	  lightdm,
 	  motd,
 	  packages,
