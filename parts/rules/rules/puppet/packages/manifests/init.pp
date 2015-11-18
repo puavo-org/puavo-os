@@ -61,6 +61,7 @@ class packages {
       tag => [ 'admin', 'ubuntu', ];
 
     [ 'libasound2-plugins'
+    , 'mumble'
     , 'pavucontrol'
     , 'pavumeter'
     , 'pulseaudio-esound-compat'
