@@ -45,6 +45,11 @@ has_device_tag() {
     echo "system-db:nokeyboard"
   fi
 
+  if has_device_tag desktopbackgroundlock \
+       && ! has_device_tag no_desktopbackgroundlock; then
+    echo "system-db:desktopbackgroundlock"
+  fi
+
   echo "system-db:keyboard"
   echo "system-db:desktopbackground"
   echo "system-db:scalingfactor"
