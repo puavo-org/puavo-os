@@ -1,5 +1,6 @@
 class desktop::puavodesktop {
-  include desktop::dconf::disable_lidsuspend,
+  include desktop::dconf::desktopbackgroundlock,
+          desktop::dconf::disable_lidsuspend,
           desktop::dconf::disable_suspend,
           desktop::dconf::laptop,
           desktop::dconf::nokeyboard,
