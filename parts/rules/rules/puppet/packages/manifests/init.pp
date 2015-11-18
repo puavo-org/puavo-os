@@ -349,6 +349,8 @@ class packages {
     , 'gcc-avr'
     , 'geany'
     , 'idle'
+    , 'idle-python2.7'
+    , 'idle-python3.4'
     , 'kompare'
     , 'kturtle'
     , 'lokalize'
