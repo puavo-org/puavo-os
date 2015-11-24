@@ -24,6 +24,7 @@ help(){
     -s --stop       Stop the running Webmenu process
     -r --restart    Restart while preserving environment variables. Works only when mon is used.
     -n --no-build   Skip asset building in development mode
+    --first-run     Remove existing pid files if any. Use when starting from login script
 
     Hacking options
 
@@ -127,6 +128,10 @@ while true; do
         ;;
         -s|--stop)
             stop_wm=true
+            shift
+        ;;
+        --first-run)
+            rm -f "$mon_pidfile" "$nw_pidfile"
             shift
         ;;
         "")
