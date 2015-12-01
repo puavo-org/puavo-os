@@ -299,6 +299,7 @@ case @puavo_device_type
     write_config("/etc/idmapd.conf")
     write_config("/etc/ldap/ldap.conf", "laptop")
     write_config("/etc/lightdm/lightdm.conf")
+    write_config("/etc/pam.d/gnome-screensaver", "laptop")
     write_config("/etc/pam.d/lightdm", "laptop")
     write_config("/etc/pam.d/lightdm-autologin", "laptop")
     write_config("/etc/racoon/racoon.conf")
