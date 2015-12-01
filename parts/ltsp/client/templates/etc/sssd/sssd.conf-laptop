@@ -49,6 +49,9 @@ dns_discovery_domain=<%= @puavo_domain %>
 krb5_server = kerberos.<%= @puavo_domain %>,<%= @kerberos_master %>
 krb5_realm = <%= @kerberos_realm %>
 krb5_validate = false
+krb5_lifetime = 7d
+krb5_renewable_lifetime = 7d
+krb5_renew_interval = 3d
 #ldap_krb5_init_creds = true
 #ldap_sasl_mech = gssapi
 #ldap_id_use_start_tls = true
