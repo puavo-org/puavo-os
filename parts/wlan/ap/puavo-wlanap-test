@@ -32,7 +32,7 @@ while true; do
 	echo "${iface}  -  ${descr}"
     done
 
-    read -p "Interfce > " iface
+    read -p "Interface > " iface
     echo "${ifaces}" | grep -q -x "${iface}" && break
     echo "E: interface ${iface} not available" >&2
 done
