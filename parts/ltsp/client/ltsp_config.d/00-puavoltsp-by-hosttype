@@ -330,7 +330,5 @@ fi
 set_lts_var RM_SYSTEM_SERVICES "$puavo_rm_system_services"
 
 if grep -q puavo_kdump_kernel /proc/cmdline; then
-    rm -f /etc/init/lightdm.conf
-    rm -f /etc/init.d/lightdm
     set_lts_var SCREEN_07 kdump
 fi
