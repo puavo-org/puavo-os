@@ -20,6 +20,10 @@ case "$PUAVO_HOSTTYPE" in
       }' /etc/NetworkManager/system-connections/* \
       | xargs -0 rm -f
 
+    # Remove all crash dumps except the latest.
+    find /var/crash/ -mindepth 1 -maxdepth 1 -type d \
+        -regex '^/var/crash/[0-9]+$' | sort | head -n-1 | xargs rm -rf
+
     if [ "$(puavo_get_device_param personal_device)" = "true" ]; then
       # A personal device, nothing to do!
       true
