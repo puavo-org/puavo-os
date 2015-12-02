@@ -280,6 +280,7 @@ install : installdirs $(install-subdirs)
 		etc/init.d/ltspguestssh
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
+		upstart/lightdm.override \
 		upstart/ltspssh.conf \
 		upstart/ltspguestssh.conf \
 		upstart/puavo-kdump-plymouth-message.conf \

@@ -328,7 +328,3 @@ if jq -r .tags[] /etc/puavo/device.json | grep -qx builder; then
 fi
 
 set_lts_var RM_SYSTEM_SERVICES "$puavo_rm_system_services"
-
-if grep -q puavo_kdump_kernel /proc/cmdline; then
-    set_lts_var SCREEN_07 kdump
-fi
