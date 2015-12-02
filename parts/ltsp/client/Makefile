@@ -252,7 +252,6 @@ install : installdirs $(install-subdirs)
 		screen.d/builder \
 		screen.d/lightdm \
 		screen.d/ltspserver \
-		screen.d/kdump \
 		screen.d/wirelessaccesspoint
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d \
