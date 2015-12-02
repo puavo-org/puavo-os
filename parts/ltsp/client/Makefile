@@ -282,6 +282,7 @@ install : installdirs $(install-subdirs)
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
 		upstart/ltspssh.conf \
 		upstart/ltspguestssh.conf \
+		upstart/puavo-kdump-plymouth-message.conf \
 		upstart/puavo-ltsp-client.conf \
 		upstart/puavo-monitor-nbd-connection.conf \
 		upstart/puavo-report-system-version.conf \
