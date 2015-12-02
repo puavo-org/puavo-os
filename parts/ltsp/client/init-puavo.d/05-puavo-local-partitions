@@ -120,6 +120,7 @@ if [ -x "/sbin/vgchange" ]; then
 	case "$PUAVO_HOSTTYPE" in
 	  laptop)
 	    puavo_link_to_state /etc/NetworkManager/system-connections \
+				/var/crash \
 				/var/lib/extrausers \
 				/var/lib/logrotate \
 				/var/lib/puavo-desktop \
