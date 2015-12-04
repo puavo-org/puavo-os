@@ -70,9 +70,10 @@ module PuavoWlanController
           body = request.body.read
           data = body.empty? ? {} : JSON.parse(body)
           host = params[:hostname]
+          mac  = params[:mac]
 
           PERMSTORE.add_report('sta_associate', host, data.to_json)
-          TEMPSTORE.add_station(host, data.fetch('mac'))
+          TEMPSTORE.add_station(host, mac)
           TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
         end
 
@@ -82,9 +83,10 @@ module PuavoWlanController
           body = request.body.read
           data = body.empty? ? {} : JSON.parse(body)
           host = params[:hostname]
+          mac  = params[:mac]
 
           PERMSTORE.add_report('sta_disassociate', host, data.to_json)
-          TEMPSTORE.del_station(host, data.fetch('mac'))
+          TEMPSTORE.del_station(host, mac)
           TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
         end
 
