@@ -28,8 +28,9 @@ module PuavoWlanController
   class TempStore
 
     def initialize
-      @key_prefix_ap = 'puavo-wlancontroller:ap:'
-      @redis         = Redis.new
+      @key_prefix_ap  = 'puavo-wlancontroller:ap:'
+      @key_prefix_sta = 'puavo-wlancontroller:sta:'
+      @redis          = Redis.new
     end
 
     def add_accesspoint(hostname)
@@ -50,6 +51,16 @@ module PuavoWlanController
     def get_accesspoints
       ap_keys = @redis.keys("#{@key_prefix_ap}*")
       ap_keys.empty? ? [] : @redis.mget(ap_keys)
+    end
+
+    def add_station(hostname, mac)
+      key = "#{@key_prefix_sta}#{hostname}:#{mac}"
+      @redis.set(key, mac)
+    end
+
+    def del_station(hostname, mac)
+      key = "#{@key_prefix_sta}#{hostname}:#{mac}"
+      @redis.del(key)
     end
 
   end

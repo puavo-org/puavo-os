@@ -46,6 +46,12 @@ module PuavoWlanController
             { :ap_expiration_time => AP_EXPIRATION_TIME }.to_json
           when 'ap_stop'
             TEMPSTORE.del_accesspoint(host)
+          when 'sta_associate'
+            TEMPSTORE.add_station(host, data.fetch('mac'))
+            TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
+          when 'sta_disassociate'
+            TEMPSTORE.del_station(host, data.fetch('mac'))
+            TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
           end
         end
 
