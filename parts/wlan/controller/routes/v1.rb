@@ -31,11 +31,11 @@ module PuavoWlanController
       def self.registered(app)
         report = lambda do
           content_type 'application/json'
-          data = request.body.read
-          json = data.empty? ? {}.to_json : JSON.parse(data).to_json
+          body = request.body.read
+          data = body.empty? ? {} : JSON.parse(body)
           host = params[:host]
           name = params[:name]
-          PERMSTORE.add_report(name, host, json)
+          PERMSTORE.add_report(name, host, data.to_json)
 
           case name
           when 'ap_hearbeat'
