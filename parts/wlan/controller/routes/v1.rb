@@ -39,7 +39,7 @@ module PuavoWlanController
           PERMSTORE.add_report('ap_start', host, data.to_json)
           TEMPSTORE.add_accesspoint(host)
           TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
-          { :ap_expiration_time => AP_EXPIRATION_TIME }.to_json
+          { :ping_interval_seconds => AP_EXPIRATION_TIME }.to_json
         end
 
         ap_stop_route = "#{PREFIX}/ap/:hostname"
@@ -110,7 +110,7 @@ module PuavoWlanController
     <p>Content-Type: application/json</p>
     <pre><code>
 {
-  "ap_expiration_time": INT,
+  "ping_interval_seconds": INT,
 }
     </code></pre>
     <h2>DELETE <%= ap_stop_route %></h2>
