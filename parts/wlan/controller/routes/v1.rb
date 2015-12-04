@@ -126,7 +126,7 @@ module PuavoWlanController
       <dd>Hostname of the access point.</dd>
     </dl>
     <h2>PUT <%= sta_associate_route %></h2>
-    <p>Create a station entry. Must be called when a station associates with an access point</p>
+    <p>Create a station entry. Must be called when a station associates with an access point.</p>
     <dl>
       <dt>:hostname</dt>
       <dd>Hostname of the access point.</dd>
@@ -134,7 +134,7 @@ module PuavoWlanController
       <dd>MAC address of the station.</dd>
     </dl>
     <h2>DELETE <%= sta_disassociate_route %></h2>
-    <p>Delete a station entry. Must be called when a station disassociates with an access point</p>
+    <p>Delete a station entry. Must be called when a station disassociates with an access point.</p>
     <dl>
       <dt>:hostname</dt>
       <dd>Hostname of the access point.</dd>
