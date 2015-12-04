@@ -47,6 +47,8 @@ module PuavoWlanController
 
     def del_accesspoint(hostname)
       key = "#{@key_prefix_ap}#{hostname}"
+      sta_keys = @redis.keys("#{@key_prefix_sta}#{hostname}:*")
+      sta_keys.each { |sta_key| @redis.del(sta_key) }
       @redis.del(key)
     end
 
