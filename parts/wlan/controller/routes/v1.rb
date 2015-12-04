@@ -29,33 +29,68 @@ module PuavoWlanController
       PREFIX = '/v1'
 
       def self.registered(app)
-        report = lambda do
+        ap_start = lambda do
           content_type 'application/json'
           body = request.body.read
           data = body.empty? ? {} : JSON.parse(body)
           host = params[:host]
-          name = params[:name]
-          PERMSTORE.add_report(name, host, data.to_json)
 
-          case name
-          when 'ap_hearbeat'
-            TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
-          when 'ap_start'
-            TEMPSTORE.add_accesspoint(host)
-            TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
-            { :ap_expiration_time => AP_EXPIRATION_TIME }.to_json
-          when 'ap_stop'
-            TEMPSTORE.del_accesspoint(host)
-          when 'sta_associate'
-            TEMPSTORE.add_station(host, data.fetch('mac'))
-            TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
-          when 'sta_disassociate'
-            TEMPSTORE.del_station(host, data.fetch('mac'))
-            TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
-          end
+          PERMSTORE.add_report('ap_start', host, data.to_json)
+          TEMPSTORE.add_accesspoint(host)
+          TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
+          { :ap_expiration_time => AP_EXPIRATION_TIME }.to_json
         end
 
-        app.put("#{PREFIX}/report/:name/:host", &report)
+        ap_stop = lambda do
+          content_type 'application/json'
+          body = request.body.read
+          data = body.empty? ? {} : JSON.parse(body)
+          host = params[:host]
+
+          PERMSTORE.add_report('ap_stop', host, data.to_json)
+          TEMPSTORE.del_accesspoint(host)
+        end
+
+        ap_ping = lambda do
+          content_type 'application/json'
+          body = request.body.read
+          data = body.empty? ? {} : JSON.parse(body)
+          host = params[:host]
+
+          PERMSTORE.add_report('ap_ping', host, data.to_json)
+          TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
+        end
+
+        sta_associate = lambda do
+          content_type 'application/json'
+          body = request.body.read
+          data = body.empty? ? {} : JSON.parse(body)
+          host = params[:host]
+
+          PERMSTORE.add_report('sta_associate', host, data.to_json)
+          TEMPSTORE.add_station(host, data.fetch('mac'))
+          TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
+        end
+
+        sta_disassociate = lambda do
+          content_type 'application/json'
+          body = request.body.read
+          data = body.empty? ? {} : JSON.parse(body)
+          host = params[:host]
+
+          PERMSTORE.add_report('sta_disassociate', host, data.to_json)
+          TEMPSTORE.del_station(host, data.fetch('mac'))
+          TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
+        end
+
+        app.delete("#{PREFIX}/ap/:host"          , &ap_stop)
+        app.delete("#{PREFIX}/ap/:host/sta/:mac" , &sta_disassociate)
+
+        app.post("#{PREFIX}/ap/:host/ping"       , &ap_ping)
+
+        app.put("#{PREFIX}/ap/:host"             , &ap_start)
+        app.put("#{PREFIX}/ap/:host/sta/:mac"    , &sta_associate)
+
       end
 
     end
