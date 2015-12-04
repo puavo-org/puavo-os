@@ -29,12 +29,12 @@ module PuavoWlanController
       PREFIX = '/v1'
 
       def self.registered(app)
-        ap_start_route = "#{PREFIX}/ap/:host"
+        ap_start_route = "#{PREFIX}/ap/:hostname"
         ap_start = lambda do
           content_type 'application/json'
           body = request.body.read
           data = body.empty? ? {} : JSON.parse(body)
-          host = params[:host]
+          host = params[:hostname]
 
           PERMSTORE.add_report('ap_start', host, data.to_json)
           TEMPSTORE.add_accesspoint(host)
@@ -42,46 +42,46 @@ module PuavoWlanController
           { :ap_expiration_time => AP_EXPIRATION_TIME }.to_json
         end
 
-        ap_stop_route = "#{PREFIX}/ap/:host"
+        ap_stop_route = "#{PREFIX}/ap/:hostname"
         ap_stop = lambda do
           content_type 'application/json'
           body = request.body.read
           data = body.empty? ? {} : JSON.parse(body)
-          host = params[:host]
+          host = params[:hostname]
 
           PERMSTORE.add_report('ap_stop', host, data.to_json)
           TEMPSTORE.del_accesspoint(host)
         end
 
-        ap_ping_route = "#{PREFIX}/ap/:host/ping"
+        ap_ping_route = "#{PREFIX}/ap/:hostname/ping"
         ap_ping = lambda do
           content_type 'application/json'
           body = request.body.read
           data = body.empty? ? {} : JSON.parse(body)
-          host = params[:host]
+          host = params[:hostname]
 
           PERMSTORE.add_report('ap_ping', host, data.to_json)
           TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
         end
 
-        sta_associate_route = "#{PREFIX}/ap/:host/sta/:mac"
+        sta_associate_route = "#{PREFIX}/ap/:hostname/sta/:mac"
         sta_associate = lambda do
           content_type 'application/json'
           body = request.body.read
           data = body.empty? ? {} : JSON.parse(body)
-          host = params[:host]
+          host = params[:hostname]
 
           PERMSTORE.add_report('sta_associate', host, data.to_json)
           TEMPSTORE.add_station(host, data.fetch('mac'))
           TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
         end
 
-        sta_disassociate_route = "#{PREFIX}/ap/:host/sta/:mac"
+        sta_disassociate_route = "#{PREFIX}/ap/:hostname/sta/:mac"
         sta_disassociate = lambda do
           content_type 'application/json'
           body = request.body.read
           data = body.empty? ? {} : JSON.parse(body)
-          host = params[:host]
+          host = params[:hostname]
 
           PERMSTORE.add_report('sta_disassociate', host, data.to_json)
           TEMPSTORE.del_station(host, data.fetch('mac'))
@@ -103,7 +103,7 @@ module PuavoWlanController
     <h2>PUT <%= ap_start_route %></h2>
     <p>Create an access point entry. Must be call when an access point starts.</p>
     <dl>
-      <dt>:host</dt>
+      <dt>:hostname</dt>
       <dd>Hostname of the access point.</dd>
     </dl>
     <h3>Response data</h3>
@@ -116,19 +116,19 @@ module PuavoWlanController
     <h2>DELETE <%= ap_stop_route %></h2>
     <p>Delete an access point entry. Must be called when an access point stops.</p>
     <dl>
-      <dt>:host</dt>
+      <dt>:hostname</dt>
       <dd>Hostname of the access point.</dd>
     </dl>
     <h2>POST <%= ap_ping_route %></h2>
     <p>Inform the controller that the access point is still alive. Must be called periodically.</p>
     <dl>
-      <dt>:host</dt>
+      <dt>:hostname</dt>
       <dd>Hostname of the access point.</dd>
     </dl>
     <h2>PUT <%= sta_associate_route %></h2>
     <p>Create a station entry. Must be called when a station associates with an access point</p>
     <dl>
-      <dt>:host</dt>
+      <dt>:hostname</dt>
       <dd>Hostname of the access point.</dd>
       <dt>:mac</dt>
       <dd>MAC address of the station.</dd>
@@ -136,7 +136,7 @@ module PuavoWlanController
     <h2>DELETE <%= sta_disassociate_route %></h2>
     <p>Delete a station entry. Must be called when a station disassociates with an access point</p>
     <dl>
-      <dt>:host</dt>
+      <dt>:hostname</dt>
       <dd>Hostname of the access point.</dd>
       <dt>:mac</dt>
       <dd>MAC address of the station.</dd>
