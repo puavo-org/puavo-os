@@ -29,6 +29,7 @@ module PuavoWlanController
       PREFIX = '/v1'
 
       def self.registered(app)
+        ap_start_route = "#{PREFIX}/ap/:host"
         ap_start = lambda do
           content_type 'application/json'
           body = request.body.read
@@ -41,6 +42,7 @@ module PuavoWlanController
           { :ap_expiration_time => AP_EXPIRATION_TIME }.to_json
         end
 
+        ap_stop_route = "#{PREFIX}/ap/:host"
         ap_stop = lambda do
           content_type 'application/json'
           body = request.body.read
@@ -51,6 +53,7 @@ module PuavoWlanController
           TEMPSTORE.del_accesspoint(host)
         end
 
+        ap_ping_route = "#{PREFIX}/ap/:host/ping"
         ap_ping = lambda do
           content_type 'application/json'
           body = request.body.read
@@ -61,6 +64,7 @@ module PuavoWlanController
           TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
         end
 
+        sta_associate_route = "#{PREFIX}/ap/:host/sta/:mac"
         sta_associate = lambda do
           content_type 'application/json'
           body = request.body.read
@@ -72,6 +76,7 @@ module PuavoWlanController
           TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
         end
 
+        sta_disassociate_route = "#{PREFIX}/ap/:host/sta/:mac"
         sta_disassociate = lambda do
           content_type 'application/json'
           body = request.body.read
@@ -83,13 +88,75 @@ module PuavoWlanController
           TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
         end
 
-        app.delete("#{PREFIX}/ap/:host"          , &ap_stop)
-        app.delete("#{PREFIX}/ap/:host/sta/:mac" , &sta_disassociate)
+        root = lambda do
+          content_type 'text/html'
 
-        app.post("#{PREFIX}/ap/:host/ping"       , &ap_ping)
+          ERB.new(<<'EOF'
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Puavo's WLAN Controller - <%= PREFIX %></title>
+  </head
+  <body>
+    <h1>API</h1>
+    <h2>PUT <%= ap_start_route %></h2>
+    <p>Create an access point entry. Must be call when an access point starts.</p>
+    <dl>
+      <dt>:host</dt>
+      <dd>Hostname of the access point.</dd>
+    </dl>
+    <h3>Response data</h3>
+    <p>Content-Type: application/json</p>
+    <pre><code>
+{
+  "ap_expiration_time": INT,
+}
+    </code></pre>
+    <h2>DELETE <%= ap_stop_route %></h2>
+    <p>Delete an access point entry. Must be called when an access point stops.</p>
+    <dl>
+      <dt>:host</dt>
+      <dd>Hostname of the access point.</dd>
+    </dl>
+    <h2>POST <%= ap_ping_route %></h2>
+    <p>Inform the controller that the access point is still alive. Must be called periodically.</p>
+    <dl>
+      <dt>:host</dt>
+      <dd>Hostname of the access point.</dd>
+    </dl>
+    <h2>PUT <%= sta_associate_route %></h2>
+    <p>Create a station entry. Must be called when a station associates with an access point</p>
+    <dl>
+      <dt>:host</dt>
+      <dd>Hostname of the access point.</dd>
+      <dt>:mac</dt>
+      <dd>MAC address of the station.</dd>
+    </dl>
+    <h2>DELETE <%= sta_disassociate_route %></h2>
+    <p>Delete a station entry. Must be called when a station disassociates with an access point</p>
+    <dl>
+      <dt>:host</dt>
+      <dd>Hostname of the access point.</dd>
+      <dt>:mac</dt>
+      <dd>MAC address of the station.</dd>
+    </dl>
+  </body>
+</html>
+EOF
+                  ).result(binding)
+        end
 
-        app.put("#{PREFIX}/ap/:host"             , &ap_start)
-        app.put("#{PREFIX}/ap/:host/sta/:mac"    , &sta_associate)
+        app.delete(ap_stop_route          , &ap_stop)
+        app.delete(sta_disassociate_route , &sta_disassociate)
+
+        app.get("#{PREFIX}"               , &root)
+        app.get("#{PREFIX}/"              , &root)
+
+        app.post(ap_ping_route            , &ap_ping)
+
+        app.put(ap_start_route            , &ap_start)
+        app.put(sta_associate_route       , &sta_associate)
 
       end
 
