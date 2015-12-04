@@ -40,6 +40,8 @@ module PuavoWlanController
 
     def expire_accesspoint(hostname, expire_seconds)
       key = "#{@key_prefix_ap}#{hostname}"
+      sta_keys = @redis.keys("#{@key_prefix_sta}#{hostname}:*")
+      sta_keys.each { |sta_key| @redis.expire(sta_key, expire_seconds) }
       @redis.expire(key, expire_seconds)
     end
 
