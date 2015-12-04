@@ -44,29 +44,28 @@ module PuavoWlanController
 
         ap_stop_route = "#{PREFIX}/ap/:hostname"
         ap_stop = lambda do
-          content_type 'application/json'
           body = request.body.read
           data = body.empty? ? {} : JSON.parse(body)
           host = params[:hostname]
 
           PERMSTORE.add_report('ap_stop', host, data.to_json)
           TEMPSTORE.del_accesspoint(host)
+          nil
         end
 
         ap_ping_route = "#{PREFIX}/ap/:hostname/ping"
         ap_ping = lambda do
-          content_type 'application/json'
           body = request.body.read
           data = body.empty? ? {} : JSON.parse(body)
           host = params[:hostname]
 
           PERMSTORE.add_report('ap_ping', host, data.to_json)
           TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
+          nil
         end
 
         sta_associate_route = "#{PREFIX}/ap/:hostname/sta/:mac"
         sta_associate = lambda do
-          content_type 'application/json'
           body = request.body.read
           data = body.empty? ? {} : JSON.parse(body)
           host = params[:hostname]
@@ -75,11 +74,11 @@ module PuavoWlanController
           PERMSTORE.add_report('sta_associate', host, data.to_json)
           TEMPSTORE.add_station(host, mac)
           TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
+          nil
         end
 
         sta_disassociate_route = "#{PREFIX}/ap/:hostname/sta/:mac"
         sta_disassociate = lambda do
-          content_type 'application/json'
           body = request.body.read
           data = body.empty? ? {} : JSON.parse(body)
           host = params[:hostname]
@@ -88,6 +87,7 @@ module PuavoWlanController
           PERMSTORE.add_report('sta_disassociate', host, data.to_json)
           TEMPSTORE.del_station(host, mac)
           TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
+          nil
         end
 
         root = lambda do
