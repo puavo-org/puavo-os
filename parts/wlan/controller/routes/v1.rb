@@ -55,13 +55,7 @@ module PuavoWlanController
           end
         end
 
-        status = lambda do
-          content_type 'application/json'
-          TEMPSTORE.get_accesspoints.to_json
-        end
-
         app.put("#{PREFIX}/report/:name/:host", &report)
-        app.get("#{PREFIX}/status"            , &status)
       end
 
     end
