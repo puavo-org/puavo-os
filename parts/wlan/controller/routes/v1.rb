@@ -110,7 +110,7 @@ module PuavoWlanController
     <p>Content-Type: application/json</p>
     <pre><code>
 {
-  "ping_interval_seconds": INT,
+  "ping_interval_seconds": Number,
 }
     </code></pre>
     <h2>DELETE <%= ap_stop_route %></h2>
