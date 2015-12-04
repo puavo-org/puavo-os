@@ -42,10 +42,13 @@ module PuavoWlanController
   </head
   <body>
     <h1>Status</h1>
-    <h2>Access points (<%= accesspoints.length %>)</h2><% unless accesspoints.empty? %>
-    <ul><% accesspoints.each do |ap| %>
-        <li><%= ap %></li><% end %>
-    </ul><% end %>
+    <h2>Access points (<%= accesspoints.length %>)</h2>
+    <% accesspoints.each do |ap_hostname| %>
+    <h3><%= ap_hostname %></h3>
+    <% TEMPSTORE.get_stations(ap_hostname).each do |sta_mac| %>
+    <h4><%= sta_mac %></h4>
+    <% end %>
+    <% end %>
   </body>
 </html>
 EOF

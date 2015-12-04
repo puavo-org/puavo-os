@@ -57,6 +57,11 @@ module PuavoWlanController
       ap_keys.empty? ? [] : @redis.mget(ap_keys)
     end
 
+    def get_stations(hostname)
+      sta_keys = @redis.keys("#{@key_prefix_sta}#{hostname}:*")
+      sta_keys.empty? ? [] : @redis.mget(sta_keys)
+    end
+
     def add_station(hostname, mac)
       key = "#{@key_prefix_sta}#{hostname}:#{mac}"
       @redis.set(key, mac)
