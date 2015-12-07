@@ -40,7 +40,6 @@ class packages {
     , 'pwman3'
     , 'screen'
     , 'setserial'
-    , 'sl'
     , 'strace'
     , 'sudo'
     , 'sysstat'
