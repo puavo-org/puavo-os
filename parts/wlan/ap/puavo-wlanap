@@ -863,21 +863,30 @@ class AccessPoint
     end
   end
 
+  def controller_send(method, path)
+    begin
+      return @controller.send_request(method, path)
+    rescue StandardError => e
+      Log.exception('failed to send a request to the controller', e)
+    end
+    nil
+  end
+
   def controller_ping
-    @controller.send_request('POST', "/v1/ap/#{PUAVO_ETC.hostname}/ping")
+    controller_send('POST', "/v1/ap/#{PUAVO_ETC.hostname}/ping")
     @ping_time = Time.now
   end
 
   def controller_report_start
-    @controller.send_request('PUT', "/v1/ap/#{PUAVO_ETC.hostname}")
+    controller_send('PUT', "/v1/ap/#{PUAVO_ETC.hostname}")
   end
 
   def controller_report_assoc(mac)
-    @controller.send_request('PUT', "/v1/ap/#{PUAVO_ETC.hostname}/sta/#{mac}")
+    controller_send('PUT', "/v1/ap/#{PUAVO_ETC.hostname}/sta/#{mac}")
   end
 
   def controller_report_disassoc(mac)
-    @controller.send_request('DELETE', "/v1/ap/#{PUAVO_ETC.hostname}/sta/#{mac}")
+    controller_send('DELETE', "/v1/ap/#{PUAVO_ETC.hostname}/sta/#{mac}")
   end
 
 end
