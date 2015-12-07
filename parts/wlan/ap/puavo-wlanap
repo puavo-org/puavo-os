@@ -636,6 +636,10 @@ class AccessPoint
         reads    = [selfpipe_r, @ctrlconn.nil? ? @ctrlserv : @ctrlconn]
         timeouts = []
 
+        unless ping_interval.nil?
+          timeouts << ping_interval - (Time.now - @ping_time)
+        end
+
         unless @ctrlconn.nil?
           timeouts << 5 - (Time.now - @ctrlconn_time)
         end
@@ -650,7 +654,7 @@ class AccessPoint
 
         if ready.nil?
 
-          if Time.now - @ping_time > ping_interval
+          if ping_interval && Time.now - @ping_time > ping_interval
             controller_ping
           end
 
@@ -878,7 +882,9 @@ class AccessPoint
   end
 
   def controller_report_start
-    controller_send('PUT', "/v1/ap/#{PUAVO_ETC.hostname}")
+    response = controller_send('PUT', "/v1/ap/#{PUAVO_ETC.hostname}")
+    return nil if response.nil?
+    JSON.parse(response.body)['ping_interval_seconds']
   end
 
   def controller_report_assoc(mac)
