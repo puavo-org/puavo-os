@@ -32,6 +32,7 @@ require 'digest'
 require 'erb'
 require 'fileutils'
 require 'getoptlong'
+require 'net/http'
 require 'pathname'
 require 'socket'
 require 'timeout'
@@ -517,17 +518,24 @@ end
 
 class AccessPoint
 
-  VTUN_ADDRESS = 'wlangw'
-  VTUN_PORT    = 45045
+  CONTROLLER_ADDRESS = 'wlangw'
+  CONTROLLER_PORT    = 45046
+  VTUN_ADDRESS       = 'wlangw'
+  VTUN_PORT          = 45045
 
   def initialize(kwargs = {})
     @bridges       = {}
     @bss_index     = -1
     @conf          = nil
+    @controller    = Net::HTTP.new(kwargs.fetch(:controller_address,
+                                                CONTROLLER_ADDRESS),
+                                   kwargs.fetch(:controller_port,
+                                                CONTROLLER_PORT))
     @ctrlconn      = nil
     @ctrlconn_time = nil
     @ctrlserv      = nil
     @nets          = nil
+    @ping_time     = Time.at(0)
     @services      = {}
     @spawn_queue   = []
     @spawn_time    = Time.at(0)
@@ -606,6 +614,8 @@ class AccessPoint
     setup_phys
 
     Log.info('started')
+    ping_interval = controller_report_start
+
     loop do
       signal = sigqueue.pop
       case signal
@@ -639,6 +649,10 @@ class AccessPoint
         ready = IO.select(reads, [], [], timeout)
 
         if ready.nil?
+
+          if Time.now - @ping_time > ping_interval
+            controller_ping
+          end
 
           if @ctrlconn && Time.now - @ctrlconn_time > 5
             Log.warning('control socket connection timeout')
@@ -718,9 +732,11 @@ class AccessPoint
 
     when 'AP-STA-CONNECTED'
       mac = tail
+      controller_report_assoc(mac)
 
     when 'AP-STA-DISCONNECTED'
       mac = tail
+      controller_report_disassoc(mac)
 
     else
       Log.warning("received unhandled hostapd-event: #{args}")
@@ -847,6 +863,23 @@ class AccessPoint
     end
   end
 
+  def controller_ping
+    @controller.send_request('POST', "/v1/ap/#{PUAVO_ETC.hostname}/ping")
+    @ping_time = Time.now
+  end
+
+  def controller_report_start
+    @controller.send_request('PUT', "/v1/ap/#{PUAVO_ETC.hostname}")
+  end
+
+  def controller_report_assoc(mac)
+    @controller.send_request('PUT', "/v1/ap/#{PUAVO_ETC.hostname}/sta/#{mac}")
+  end
+
+  def controller_report_disassoc(mac)
+    @controller.send_request('DELETE', "/v1/ap/#{PUAVO_ETC.hostname}/sta/#{mac}")
+  end
+
 end
 
 def main
@@ -854,6 +887,8 @@ def main
   ctrlmsg = nil
 
   GetoptLong.new(
+    ['--controller-address'        , GetoptLong::REQUIRED_ARGUMENT],
+    ['--controller-port'           , GetoptLong::REQUIRED_ARGUMENT],
     ['--ctrlmsg'                   , GetoptLong::REQUIRED_ARGUMENT],
     ['--help', '-h'                , GetoptLong::NO_ARGUMENT],
     ['--vtun-address'              , GetoptLong::REQUIRED_ARGUMENT],
@@ -877,6 +912,12 @@ Options:
  -h, --help
          Display this help and exit.
 
+     --controller-address ADDRESS
+         Set the address of the controller, default: #{AccessPoint::CONTROLLER_ADDRESS}
+
+     --controller-port PORT
+         Set the port of the controller, default: #{AccessPoint::CONTROLLER_PORT}
+
      --vtun-address ADDRESS
          Set the address of the vtun server, default: #{AccessPoint::VTUN_ADDRESS}
 
@@ -885,6 +926,24 @@ Options:
 
 EOF
       return 0
+
+    when '--controller-address'
+      if opts.has_key? :controller_address
+        Log.error('--controller-address can be given only once')
+        return 1
+      end
+      opts[:controller_address] = arg
+
+    when '--controller-port'
+      if opts.has_key? :controller_port
+        Log.error('--controller-port can be given only once')
+        return 1
+      end
+      unless arg =~ /^[1-9][0-9]*$/
+        Log.error("invalid port number (#{arg})")
+        return 1
+      end
+      opts[:controller_port] = arg.to_i
 
     when '--vtun-address'
       if opts.has_key? :vtun_address
