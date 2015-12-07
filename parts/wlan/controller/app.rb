@@ -40,7 +40,8 @@ module PuavoWlanController
   PERMSTORE = PermStore.new
   TEMPSTORE = TempStore.new
 
-  AP_EXPIRATION_TIME = 20
+  AP_PING_INTERVAL = 20
+  AP_EXPIRATION_TIME = AP_PING_INTERVAL * 2
 
   class App < Sinatra::Base
 
