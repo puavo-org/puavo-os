@@ -48,6 +48,26 @@ module PuavoWlanController
     register PuavoWlanController::Routes::Root
     register PuavoWlanController::Routes::V1
 
+    def prettify_seconds(seconds)
+      seconds = seconds.to_i
+
+      minutes = seconds / 60
+      seconds = seconds % 60
+      result = "#{seconds}s"
+
+      hours = minutes / 60
+      minutes = minutes % 60
+      result.prepend("#{minutes}m ") if minutes > 0
+
+      days = hours / 24
+      hours = hours % 24
+      result.prepend("#{hours}h ") if hours > 0
+
+      result.prepend("#{days}d ") if days > 0
+
+      result
+    end
+
   end
 
 end

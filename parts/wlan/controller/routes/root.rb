@@ -55,6 +55,7 @@ module PuavoWlanController
             <th>Channel</th>
             <th>SSID</th>
             <th>Last ping</th>
+            <th>Age</th>
             <th>Stations</th>
             <th>Rx</th>
             <th>Tx</th>
@@ -68,6 +69,7 @@ module PuavoWlanController
             <td><%= interface.fetch('channel') %></td>
             <td><%= interface.fetch('ssid') %></td>
             <td><%= TEMPSTORE.seconds_since_last_ping(ap_status.fetch('hostname')) %>s ago</td>
+            <td><%= prettify_seconds(interface.fetch('age')) %></td>
             <td><%= interface.fetch('stations').length %></td>
             <td><%= interface.fetch('rx_bytes') %></td>
             <td><%= interface.fetch('tx_bytes') %></td>
@@ -76,7 +78,7 @@ module PuavoWlanController
         </tbody>
         <tfoot>
           <tr>
-          <th colspan="5">Totals</th>
+          <th colspan="6">Totals</th>
           <td><%= ap_status.fetch('interfaces').map { |interface| interface.fetch('stations').length }.reduce(:+) %></td>
           <td><%= ap_status.fetch('interfaces').map { |interface| interface.fetch('rx_bytes') }.reduce(:+) %></td>
           <td><%= ap_status.fetch('interfaces').map { |interface| interface.fetch('tx_bytes') }.reduce(:+) %></td>
