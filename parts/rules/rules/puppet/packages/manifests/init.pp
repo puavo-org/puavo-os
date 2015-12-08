@@ -144,7 +144,9 @@ class packages {
     [ 'wine' ]:
       tag => [ 'emulation', 'ubuntu', ];
 
-    [ 'ttf-freefont' ]:
+    [ 'fontconfig'
+    , 'ttf-freefont'
+    , 'xfonts-utils' ]:
       tag => [ 'fonts', 'ubuntu', ];
 
     # needs debconf seeds or such to set license accepted,
