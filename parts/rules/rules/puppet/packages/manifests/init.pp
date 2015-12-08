@@ -662,6 +662,7 @@ class packages {
     , 'exfat-utils'
     , 'fuse'
     , 'gconf-editor'
+    , 'ginn'
     , 'gkbd-capplet'
     , 'gpointing-device-settings'
     , 'ibus-libpinyin'
@@ -673,6 +674,7 @@ class packages {
     , 'password-gorilla'
     , 'rarian-compat'
     , 'screenlets'
+    , 'touchegg'
     , 'unace'
     , 'unionfs-fuse'
     , 'unrar' ]:
