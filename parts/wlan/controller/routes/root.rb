@@ -54,7 +54,7 @@ module PuavoWlanController
             <th>BSSID</th>
             <th>Channel</th>
             <th>SSID</th>
-            <th>Last seen</th>
+            <th>Last ping</th>
             <th>Stations</th>
             <th>Rx</th>
             <th>Tx</th>
@@ -67,7 +67,7 @@ module PuavoWlanController
             <td><%= interface.fetch('bssid') %></td>
             <td><%= interface.fetch('channel') %></td>
             <td><%= interface.fetch('ssid') %></td>
-            <td><%= TEMPSTORE.last_seen(ap_status.fetch('hostname')) %></td>
+            <td><%= TEMPSTORE.seconds_since_last_ping(ap_status.fetch('hostname')) %>s ago</td>
             <td><%= interface.fetch('stations').length %></td>
             <td><%= interface.fetch('rx_bytes') %></td>
             <td><%= interface.fetch('tx_bytes') %></td>
