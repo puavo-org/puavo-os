@@ -20,6 +20,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301 USA.
 
+require 'json'
+
 # Third-party modules.
 require 'redis'
 
@@ -33,9 +35,9 @@ module PuavoWlanController
       @redis          = Redis.new
     end
 
-    def add_accesspoint(hostname)
+    def add_accesspoint(hostname, status)
       key = "#{@key_prefix_ap}#{hostname}"
-      @redis.set(key, hostname)
+      @redis.set(key, status.to_json)
     end
 
     def expire_accesspoint(hostname, expire_seconds)
@@ -54,7 +56,8 @@ module PuavoWlanController
 
     def get_accesspoints
       ap_keys = @redis.keys("#{@key_prefix_ap}*")
-      ap_keys.empty? ? [] : @redis.mget(ap_keys)
+      values = ap_keys.empty? ? [] : @redis.mget(ap_keys)
+      values.map { |item| JSON.parse(item) }
     end
 
     def get_stations(hostname)

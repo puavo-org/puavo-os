@@ -37,7 +37,7 @@ module PuavoWlanController
           host = params[:hostname]
 
           PERMSTORE.add_report('ap_start', host, data)
-          TEMPSTORE.add_accesspoint(host)
+          TEMPSTORE.add_accesspoint(host, data)
           TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
           { :ping_interval_seconds => AP_PING_INTERVAL }.to_json
         end
@@ -60,6 +60,7 @@ module PuavoWlanController
           host = params[:hostname]
 
           PERMSTORE.add_report('ap_ping', host, data)
+          TEMPSTORE.add_accesspoint(host, data)
           TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
           nil
         end
