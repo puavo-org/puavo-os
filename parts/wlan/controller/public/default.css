@@ -1,0 +1,24 @@
+table#interfaces {
+    border: 1px solid black;
+    text-align: center;
+}
+
+table#interfaces th, td {
+    border: 1px solid black;
+    padding: 0.5em;
+}
+
+table.sortable thead {
+    font-weight: bold;
+    cursor: default;
+}
+
+table.sortable thead th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):not(.sorttable_nosort):after {
+    color: #cccccc;
+    content: " \25BE"
+}
+
+td.hep {
+    display: hidden;
+    border: none;
+}
