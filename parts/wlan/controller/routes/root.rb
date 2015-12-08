@@ -33,15 +33,25 @@ module PuavoWlanController
           content_type 'text/html'
           ap_statuses = TEMPSTORE.get_ap_statuses
 
+          total_stations = 0
+          total_rx_bytes = 0
+          total_tx_bytes = 0
           stations = []
+          interfaces = []
           ap_statuses.each do |ap_status|
             ap_status['interfaces'].each do |interface|
+              total_stations += interface['stations'].length
+              total_rx_bytes += interface['rx_bytes']
+              total_tx_bytes += interface['tx_bytes']
+              interface['hostname'] = ap_status['hostname']
+              interface['last_ping'] = TEMPSTORE.seconds_since_last_ping(ap_status.fetch('hostname'))
               interface['stations'].each do |station|
                 station['channel'] = interface['channel']
                 station['bssid'] = interface['bssid']
                 station['ssid'] = interface['ssid']
                 stations << station
               end
+              interfaces << interface
             end
           end
 
@@ -58,76 +68,77 @@ module PuavoWlanController
   <body>
     <h1>Status</h1>
     <p><%= Time.now %></p>
-    <% ap_statuses.each do |ap_status| %>
-      <table class="sortable" id="interfaces">
-        <thead>
-          <tr>
-            <th>Host</th>
-            <th>BSSID</th>
-            <th>Channel</th>
-            <th>SSID</th>
-            <th>Last ping</th>
-            <th>Age</th>
-            <th>Stations</th>
-            <th>Rx</th>
-            <th>Tx</th>
-          </tr>
-        </thead>
-        <tbody>
-        <% ap_status.fetch('interfaces').each do |interface| %>
-          <tr>
-            <td><%= ap_status.fetch('hostname') %></td>
-            <td><%= interface.fetch('bssid') %></td>
-            <td><%= interface.fetch('channel') %></td>
-            <td><%= interface.fetch('ssid') %></td>
-            <td><%= TEMPSTORE.seconds_since_last_ping(ap_status.fetch('hostname')) %>s ago</td>
-            <td><%= prettify_seconds(interface.fetch('age')) %></td>
-            <td><%= interface.fetch('stations').length %></td>
-            <td><%= prettify_bytes(interface.fetch('rx_bytes')) %></td>
-            <td><%= prettify_bytes(interface.fetch('tx_bytes')) %></td>
-          </tr>
-        <% end %>
-        </tbody>
-        <tfoot>
-          <tr>
-          <th colspan="6">Totals</th>
-          <td><%= ap_status.fetch('interfaces').map { |interface| interface.fetch('stations').length }.reduce(:+) %></td>
-          <td><%= prettify_bytes(ap_status.fetch('interfaces').map { |interface| interface.fetch('rx_bytes') }.reduce(:+)) %></td>
-          <td><%= prettify_bytes(ap_status.fetch('interfaces').map { |interface| interface.fetch('tx_bytes') }.reduce(:+)) %></td>
-          </tr>
-        </tfoot>
-      </table>
+    <% unless interfaces.empty? %>
+    <h2>Access points</h2>
+    <table class="sortable" id="interfaces">
+      <thead>
+        <tr>
+          <th>Host</th>
+          <th>BSSID</th>
+          <th>Channel</th>
+          <th>SSID</th>
+          <th>Last ping</th>
+          <th>Age</th>
+          <th>Stations</th>
+          <th>Rx</th>
+          <th>Tx</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% interfaces.each do |interface| %>
+        <tr>
+          <td><%= interface.fetch('hostname') %></td>
+          <td><%= interface.fetch('bssid') %></td>
+          <td><%= interface.fetch('channel') %></td>
+          <td><%= interface.fetch('ssid') %></td>
+          <td><%= interface.fetch('last_ping') %>s ago</td>
+          <td><%= prettify_seconds(interface.fetch('age')) %></td>
+          <td><%= interface.fetch('stations').length %></td>
+          <td><%= prettify_bytes(interface.fetch('rx_bytes')) %></td>
+          <td><%= prettify_bytes(interface.fetch('tx_bytes')) %></td>
+        </tr>
+      <% end %>
+      </tbody>
+      <tfoot>
+        <tr>
+        <th colspan="6">Totals</th>
+        <td><%= total_stations %></td>
+        <td><%= prettify_bytes(total_rx_bytes) %></td>
+        <td><%= prettify_bytes(total_tx_bytes) %></td>
+        </tr>
+      </tfoot>
+    </table>
     <% end %>
 
-      <% unless stations.empty? %>
-      <h2>Stations</h2>
-      <table class="sortable" id="interfaces">
-        <thead>
-          <tr>
-            <th>MAC</th>
-            <th>BSSID</th>
-            <th>Channel</th>
-            <th>SSID</th>
-            <th>Rx</th>
-            <th>Tx</th>
-            <th>Connection age</th>
-          </tr>
-        </thead>
-        <tbody>
-        <% stations.each do |station| %>
-          <tr>
-            <td><%= station.fetch('mac') %></td>
-            <td><%= station.fetch('bssid') %></td>
-            <td><%= station.fetch('channel') %></td>
-            <td><%= station.fetch('ssid') %></td>
-            <td><%= prettify_bytes(station.fetch('rx_bytes')) %></td>
-            <td><%= prettify_bytes(station.fetch('tx_bytes')) %></td>
-            <td><%= prettify_seconds(station.fetch('connected_time')) %></td>
-          </tr>
-        <% end %>
-        </tbody>
-      </table>
+    <% unless stations.empty? %>
+    <h2>Stations</h2>
+    <table class="sortable" id="interfaces">
+      <thead>
+        <tr>
+          <th>MAC</th>
+          <th>BSSID</th>
+          <th>Channel</th>
+          <th>SSID</th>
+          <th>Rx</th>
+          <th>Tx</th>
+          <th>Connection age</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% stations.each do |station| %>
+        <tr>
+          <td><%= station.fetch('mac') %></td>
+          <td><%= station.fetch('bssid') %></td>
+          <td><%= station.fetch('channel') %></td>
+          <td><%= station.fetch('ssid') %></td>
+          <td><%= prettify_bytes(station.fetch('rx_bytes')) %></td>
+          <td><%= prettify_bytes(station.fetch('tx_bytes')) %></td>
+          <td><%= prettify_seconds(station.fetch('connected_time')) %></td>
+        </tr>
       <% end %>
+      </tbody>
+    </table>
+    <% end %>
   </body>
 </html>
 EOF
