@@ -56,6 +56,8 @@ module PuavoWlanController
             <th>SSID</th>
             <th>Last seen</th>
             <th>Stations</th>
+            <th>Rx</th>
+            <th>Tx</th>
           </tr>
         </thead>
         <tbody>
@@ -67,6 +69,8 @@ module PuavoWlanController
             <td><%= interface.fetch('ssid') %></td>
             <td><%= TEMPSTORE.last_seen(ap_status.fetch('hostname')) %></td>
             <td><%= interface.fetch('stations').length %></td>
+            <td><%= interface.fetch('rx_bytes') %></td>
+            <td><%= interface.fetch('tx_bytes') %></td>
           </tr>
         <% end %>
         </tbody>
@@ -74,6 +78,8 @@ module PuavoWlanController
           <tr>
           <th colspan="5">Totals</th>
           <td><%= ap_status.fetch('interfaces').map { |interface| interface.fetch('stations').length }.reduce(:+) %></td>
+          <td><%= ap_status.fetch('interfaces').map { |interface| interface.fetch('rx_bytes') }.reduce(:+) %></td>
+          <td><%= ap_status.fetch('interfaces').map { |interface| interface.fetch('tx_bytes') }.reduce(:+) %></td>
           </tr>
         </tfoot>
       </table>
