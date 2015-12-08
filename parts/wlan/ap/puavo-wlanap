@@ -926,10 +926,13 @@ class AccessPoint
         rx_bytes = $1.split[0].to_i
         tx_bytes = $1.split[9].to_i
 
+        age = Time.now - File.mtime("#{HOSTAPD_CTRL_INTERFACE_DIR}/#{vif.name}")
+
       rescue StandardError => e
         Log.exception("failed to query hostapd status (#{vif.name})", e)
       else
         interfaces << {
+          :age      => age.to_i,
           :bssid    => bssid,
           :channel  => channel,
           :rx_bytes => rx_bytes,
