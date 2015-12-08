@@ -890,6 +890,8 @@ class AccessPoint
       ssid     = nil
       stations = []
       begin
+
+        # Get access point stats
         IO.popen(['wpa_cli', '-i', vif.name,
                   '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'status']) do |io|
           io.each_line do |line|
@@ -898,6 +900,8 @@ class AccessPoint
             line =~ /^ssid\[0\]=(.*)$/    and ssid    = $1
           end
         end
+
+        # Get station stats
         IO.popen(['hostapd_cli', '-i', vif.name,
                   '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'all_sta']) do |io|
           sta = nil
@@ -916,14 +920,22 @@ class AccessPoint
           end
           stations << sta unless sta.nil?
         end
+
+        # Get interface stats
+        File.read('/proc/net/dev') =~ /^\s*#{vif.name}:(.*)$/
+        rx_bytes = $1.split[0].to_i
+        tx_bytes = $1.split[9].to_i
+
       rescue StandardError => e
-        Log.exception('failed to query hostapd status (#{vif.name})', e)
+        Log.exception("failed to query hostapd status (#{vif.name})", e)
       else
         interfaces << {
           :bssid    => bssid,
           :channel  => channel,
+          :rx_bytes => rx_bytes,
           :ssid     => ssid,
           :stations => stations,
+          :tx_bytes => tx_bytes,
         }
       end
     end
