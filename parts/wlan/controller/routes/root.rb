@@ -60,7 +60,6 @@ module PuavoWlanController
 <html>
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="refresh" content="5" >
     <link rel="stylesheet" type="text/css" href="default.css">
     <title>Puavo's WLAN Controller - Status</title>
     <script src="sorttable.js"></script>
