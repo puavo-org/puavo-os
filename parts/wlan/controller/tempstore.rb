@@ -47,6 +47,12 @@ module PuavoWlanController
       @redis.mget(keys).map { |ap_status_json| JSON.parse(ap_status_json) }
     end
 
+    def last_seen(ap_hostname)
+      key = "#{@key_prefix_ap_status}:#{ap_hostname}"
+      ttl = @redis.ttl(key)
+      "#{AP_STATUS_EXPIRATION_TIME - ttl}s ago"
+    end
+
   end
 
 end
