@@ -910,7 +910,6 @@ class AccessPoint
               mac = $1
               stations << sta unless sta.nil?
               sta = {
-                :interface => vif.name,
                 :mac       => mac,
               }
             end
