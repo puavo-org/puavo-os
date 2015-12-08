@@ -868,9 +868,10 @@ class AccessPoint
     end
   end
 
-  def controller_send(method, path)
+  def controller_send(method, path, data={})
     begin
-      return @controller.send_request(method, path)
+      return @controller.send_request(method, path, data.to_json,
+                                      {'Content-Type' => 'application/json'})
     rescue StandardError => e
       Log.exception('failed to send a request to the controller', e)
     end
