@@ -5,6 +5,7 @@ class image::bundle::desktop {
           disable_accounts_service,
           disable_geoclue,
           firefox,
+          fontconfig,
           gnome_terminal,
           graphics_drivers,
           image::bundle::basic,
