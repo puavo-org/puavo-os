@@ -30,49 +30,21 @@ module PuavoWlanController
   class TempStore
 
     def initialize
-      @key_prefix_ap  = 'puavo-wlancontroller:ap:'
-      @key_prefix_sta = 'puavo-wlancontroller:sta:'
-      @redis          = Redis.new
+      @key_prefix_ap_status  = 'puavo-wlancontroller:ap-status'
+      @redis                 = Redis.new
     end
 
-    def add_accesspoint(hostname, status)
-      key = "#{@key_prefix_ap}#{hostname}"
-      @redis.set(key, status.to_json)
+    def update_ap_status(ap_status)
+      ap_hostname = ap_status.fetch('hostname')
+      key = "#{@key_prefix_ap_status}:#{ap_hostname}"
+      @redis.set(key, ap_status.to_json)
+      @redis.expire(key, AP_STATUS_EXPIRATION_TIME)
     end
 
-    def expire_accesspoint(hostname, expire_seconds)
-      key = "#{@key_prefix_ap}#{hostname}"
-      sta_keys = @redis.keys("#{@key_prefix_sta}#{hostname}:*")
-      sta_keys.each { |sta_key| @redis.expire(sta_key, expire_seconds) }
-      @redis.expire(key, expire_seconds)
-    end
-
-    def del_accesspoint(hostname)
-      key = "#{@key_prefix_ap}#{hostname}"
-      sta_keys = @redis.keys("#{@key_prefix_sta}#{hostname}:*")
-      sta_keys.each { |sta_key| @redis.del(sta_key) }
-      @redis.del(key)
-    end
-
-    def get_accesspoints
-      ap_keys = @redis.keys("#{@key_prefix_ap}*")
-      values = ap_keys.empty? ? [] : @redis.mget(ap_keys)
-      values.map { |item| JSON.parse(item) }
-    end
-
-    def get_stations(hostname)
-      sta_keys = @redis.keys("#{@key_prefix_sta}#{hostname}:*")
-      sta_keys.empty? ? [] : @redis.mget(sta_keys)
-    end
-
-    def add_station(hostname, mac)
-      key = "#{@key_prefix_sta}#{hostname}:#{mac}"
-      @redis.set(key, mac)
-    end
-
-    def del_station(hostname, mac)
-      key = "#{@key_prefix_sta}#{hostname}:#{mac}"
-      @redis.del(key)
+    def get_ap_statuses
+      keys = @redis.keys("#{@key_prefix_ap_status}:*")
+      return [] if keys.empty?
+      @redis.mget(keys).map { |ap_status_json| JSON.parse(ap_status_json) }
     end
 
   end

@@ -29,66 +29,14 @@ module PuavoWlanController
       PREFIX = '/v1'
 
       def self.registered(app)
-        ap_start_route = "#{PREFIX}/ap/:hostname"
-        ap_start = lambda do
-          content_type 'application/json'
+
+        ping_route = "#{PREFIX}/ping"
+        ping = lambda do
           body = request.body.read
-          data = body.empty? ? {} : JSON.parse(body)
-          host = params[:hostname]
+          data = JSON.parse(body)
 
-          PERMSTORE.add_report('ap_start', host, data)
-          TEMPSTORE.add_accesspoint(host, data)
-          TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
-          { :ping_interval_seconds => AP_PING_INTERVAL }.to_json
-        end
-
-        ap_stop_route = "#{PREFIX}/ap/:hostname"
-        ap_stop = lambda do
-          body = request.body.read
-          data = body.empty? ? {} : JSON.parse(body)
-          host = params[:hostname]
-
-          PERMSTORE.add_report('ap_stop', host, data)
-          TEMPSTORE.del_accesspoint(host)
-          nil
-        end
-
-        ap_ping_route = "#{PREFIX}/ap/:hostname/ping"
-        ap_ping = lambda do
-          body = request.body.read
-          data = body.empty? ? {} : JSON.parse(body)
-          host = params[:hostname]
-
-          PERMSTORE.add_report('ap_ping', host, data)
-          TEMPSTORE.add_accesspoint(host, data)
-          TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
-          nil
-        end
-
-        sta_associate_route = "#{PREFIX}/ap/:hostname/sta/:mac"
-        sta_associate = lambda do
-          body = request.body.read
-          data = body.empty? ? {} : JSON.parse(body)
-          host = params[:hostname]
-          mac  = params[:mac]
-
-          PERMSTORE.add_report('sta_associate', host, data)
-          TEMPSTORE.add_station(host, mac)
-          TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
-          nil
-        end
-
-        sta_disassociate_route = "#{PREFIX}/ap/:hostname/sta/:mac"
-        sta_disassociate = lambda do
-          body = request.body.read
-          data = body.empty? ? {} : JSON.parse(body)
-          host = params[:hostname]
-          mac  = params[:mac]
-
-          PERMSTORE.add_report('sta_disassociate', host, data)
-          TEMPSTORE.del_station(host, mac)
-          TEMPSTORE.expire_accesspoint(host, AP_EXPIRATION_TIME)
-          nil
+          TEMPSTORE.update_ap_status(data)
+          { :ping_interval_seconds => PING_INTERVAL_SECONDS }.to_json
         end
 
         root = lambda do
@@ -103,63 +51,49 @@ module PuavoWlanController
   </head
   <body>
     <h1>API</h1>
-    <h2>PUT <%= ap_start_route %></h2>
-    <p>Create an access point entry. Must be call when an access point starts.</p>
-    <dl>
-      <dt>:hostname</dt>
-      <dd>Hostname of the access point.</dd>
-    </dl>
-    <h3>Response data</h3>
+    <h2>POST <%= ping_route %></h2>
+    <p>Send a status notification to the controller. Must be called periodically.</p>
+    <h3>Request data</h3>
     <p>Content-Type: application/json</p>
+    <h4>Example</h4>
     <pre><code>
 {
-  "ping_interval_seconds": Number,
+  "hostname": "accesspoint-01",
+  "interfaces": [
+    {
+      "bssid": "01:02:03:04:05:06",
+      "channel": 11,
+      "ssid": "MyNet",
+      "stations": [
+        {
+          "mac": "06:05:04:03:02:01",
+          "connected_time": 232,
+          "rx_bytes": 32322,
+          "tx_bytes": 11323,
+        }
+      ]
+    }
+  ]
 }
     </code></pre>
-    <h2>DELETE <%= ap_stop_route %></h2>
-    <p>Delete an access point entry. Must be called when an access point stops.</p>
-    <dl>
-      <dt>:hostname</dt>
-      <dd>Hostname of the access point.</dd>
-    </dl>
-    <h2>POST <%= ap_ping_route %></h2>
-    <p>Inform the controller that the access point is still alive. Must be called periodically.</p>
-    <dl>
-      <dt>:hostname</dt>
-      <dd>Hostname of the access point.</dd>
-    </dl>
-    <h2>PUT <%= sta_associate_route %></h2>
-    <p>Create a station entry. Must be called when a station associates with an access point.</p>
-    <dl>
-      <dt>:hostname</dt>
-      <dd>Hostname of the access point.</dd>
-      <dt>:mac</dt>
-      <dd>MAC address of the station.</dd>
-    </dl>
-    <h2>DELETE <%= sta_disassociate_route %></h2>
-    <p>Delete a station entry. Must be called when a station disassociates with an access point.</p>
-    <dl>
-      <dt>:hostname</dt>
-      <dd>Hostname of the access point.</dd>
-      <dt>:mac</dt>
-      <dd>MAC address of the station.</dd>
-    </dl>
+    <h3>Response data</h3>
+    <p>Content-Type: application/json</p>
+    <h4>Example</h4>
+    <pre><code>
+{
+  "ping_interval_seconds": 20
+}
+    </code></pre>
   </body>
 </html>
 EOF
                   ).result(binding)
         end
 
-        app.delete(ap_stop_route          , &ap_stop)
-        app.delete(sta_disassociate_route , &sta_disassociate)
+        app.get("#{PREFIX}"  , &root)
+        app.get("#{PREFIX}/" , &root)
 
-        app.get("#{PREFIX}"               , &root)
-        app.get("#{PREFIX}/"              , &root)
-
-        app.post(ap_ping_route            , &ap_ping)
-
-        app.put(ap_start_route            , &ap_start)
-        app.put(sta_associate_route       , &sta_associate)
+        app.post(ping_route  , &ping)
 
       end
 

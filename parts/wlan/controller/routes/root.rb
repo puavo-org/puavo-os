@@ -31,7 +31,7 @@ module PuavoWlanController
       def self.registered(app)
         root = lambda do
           content_type 'text/html'
-          accesspoints = TEMPSTORE.get_accesspoints
+          ap_statuses = TEMPSTORE.get_ap_statuses
 
           ERB.new(<<'EOF'
 <!doctype html>
@@ -46,7 +46,7 @@ module PuavoWlanController
   <body>
     <h1>Status</h1>
     <p><%= Time.now %></p>
-    <% accesspoints.each do |ap| %>
+    <% ap_statuses.each do |ap_status| %>
       <table class="sortable" id="interfaces">
         <thead>
           <tr>
@@ -58,20 +58,20 @@ module PuavoWlanController
           </tr>
         </thead>
         <tbody>
-        <% ap.fetch('interfaces').each_with_index do |iface, i| %>
+        <% ap_status.fetch('interfaces').each do |interface| %>
           <tr>
-            <td><%= ap.fetch('hostname') %></td>
-            <td><%= iface.fetch('bssid') %></td>
-            <td><%= iface.fetch('channel') %></td>
-            <td><%= iface.fetch('ssid') %></td>
-            <td><%= iface.fetch('num_sta') %></td>
+            <td><%= ap_status.fetch('hostname') %></td>
+            <td><%= interface.fetch('bssid') %></td>
+            <td><%= interface.fetch('channel') %></td>
+            <td><%= interface.fetch('ssid') %></td>
+            <td><%= interface.fetch('num_sta') %></td>
           </tr>
         <% end %>
         </tbody>
         <tfoot>
           <tr>
           <th colspan="4">Totals</th>
-          <td><%= ap.fetch('interfaces').map { |i| i.fetch('num_sta') }.reduce(:+) %></td>
+          <td><%= ap_status.fetch('interfaces').map { |interface| interface.fetch('num_sta') }.reduce(:+) %></td>
           </tr>
         </tfoot>
       </table>

@@ -535,6 +535,7 @@ class AccessPoint
     @ctrlconn_time = nil
     @ctrlserv      = nil
     @nets          = nil
+    @ping_interval = nil
     @ping_time     = Time.at(0)
     @services      = {}
     @spawn_queue   = []
@@ -576,7 +577,6 @@ class AccessPoint
 
     Signal.trap('EXIT') do
       Log.info('exiting')
-      controller_report_stop
       Process.kill('-SIGTERM', 0)
 
       @vifs.each do |vif|
@@ -636,8 +636,8 @@ class AccessPoint
         reads    = [selfpipe_r, @ctrlconn.nil? ? @ctrlserv : @ctrlconn]
         timeouts = []
 
-        unless ping_interval.nil?
-          timeouts << ping_interval - (Time.now - @ping_time)
+        unless @ping_interval.nil?
+          timeouts << @ping_interval - (Time.now - @ping_time)
         end
 
         unless @ctrlconn.nil?
@@ -654,7 +654,7 @@ class AccessPoint
 
         if ready.nil?
 
-          if ping_interval && Time.now - @ping_time > ping_interval
+          if @ping_interval.nil? || Time.now - @ping_time > @ping_interval
             controller_ping
           end
 
@@ -736,11 +736,9 @@ class AccessPoint
 
     when 'AP-STA-CONNECTED'
       mac = tail
-      controller_report_assoc(mac)
 
     when 'AP-STA-DISCONNECTED'
       mac = tail
-      controller_report_disassoc(mac)
 
     else
       Log.warning("received unhandled hostapd-event: #{args}")
@@ -878,26 +876,10 @@ class AccessPoint
   end
 
   def controller_ping
-    controller_send('POST', "/v1/ap/#{PUAVO_ETC.hostname}/ping", get_status)
-    @ping_time = Time.now
-  end
-
-  def controller_report_start
-    response = controller_send('PUT', "/v1/ap/#{PUAVO_ETC.hostname}")
+    response = controller_send('POST', "/v1/ping", get_status)
     return nil if response.nil?
-    JSON.parse(response.body)['ping_interval_seconds']
-  end
-
-  def controller_report_stop
-    controller_send('DELETE', "/v1/ap/#{PUAVO_ETC.hostname}")
-  end
-
-  def controller_report_assoc(mac)
-    controller_send('PUT', "/v1/ap/#{PUAVO_ETC.hostname}/sta/#{mac}")
-  end
-
-  def controller_report_disassoc(mac)
-    controller_send('DELETE', "/v1/ap/#{PUAVO_ETC.hostname}/sta/#{mac}")
+    @ping_interval = JSON.parse(response.body)['ping_interval_seconds']
+    @ping_time = Time.now
   end
 
   def get_status
