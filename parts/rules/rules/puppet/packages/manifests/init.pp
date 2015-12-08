@@ -782,7 +782,7 @@ class packages {
           [ '4.0.6.opinsys4', '4.2.5.opinsys1' ]:
             dkms_modules => $all_dkms_modules,
             package_tag  => 'puavo',
-            with_dbg     => true;
+            with_dbg     => true,
             with_extra   => false;
 
           [ '3.13.0-62-generic' ]:
