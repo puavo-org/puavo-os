@@ -615,7 +615,6 @@ class AccessPoint
     setup_phys
 
     Log.info('started')
-    ping_interval = controller_report_start
 
     loop do
       signal = sigqueue.pop
@@ -879,7 +878,7 @@ class AccessPoint
   end
 
   def controller_ping
-    controller_send('POST', "/v1/ap/#{PUAVO_ETC.hostname}/ping")
+    controller_send('POST', "/v1/ap/#{PUAVO_ETC.hostname}/ping", get_status)
     @ping_time = Time.now
   end
 
@@ -899,6 +898,60 @@ class AccessPoint
 
   def controller_report_disassoc(mac)
     controller_send('DELETE', "/v1/ap/#{PUAVO_ETC.hostname}/sta/#{mac}")
+  end
+
+  def get_status
+    interfaces = []
+    @vifs.each do |vif|
+      bssid    = nil
+      channel  = nil
+      num_sta  = nil
+      ssid     = nil
+      stations = []
+      begin
+        IO.popen(['wpa_cli', '-i', vif.name,
+                  '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'status']) do |io|
+          io.each_line do |line|
+            line =~ /^bssid\[0\]=(.*)$/   and bssid   = $1
+            line =~ /^channel=(.*)$/      and channel = $1.to_i
+            line =~ /^num_sta\[0\]=(.*)$/ and num_sta = $1.to_i
+            line =~ /^ssid\[0\]=(.*)$/    and ssid    = $1
+          end
+        end
+        IO.popen(['hostapd_cli', '-i', vif.name,
+                  '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'all_sta']) do |io|
+          sta = nil
+          io.each_line do |line|
+            if line =~ /^(([0-9a-f]{2}:){5}([0-9a-f]{2}))$/
+              mac = $1
+              stations << sta unless sta.nil?
+              sta = {
+                :interface => vif.name,
+                :mac       => mac,
+              }
+            end
+            line =~ /^connected_time=(.*)$/ and sta[:connected_time] = $1.to_i
+            line =~ /^rx_bytes=(.*)$/       and sta[:rx_bytes]       = $1.to_i
+            line =~ /^tx_bytes=(.*)$/       and sta[:tx_bytes]       = $1.to_i
+          end
+          stations << sta unless sta.nil?
+        end
+      rescue StandardError => e
+        Log.exception('failed to query hostapd status (#{vif.name})', e)
+      else
+        interfaces << {
+          :bssid    => bssid,
+          :channel  => channel,
+          :num_sta  => num_sta,
+          :ssid     => ssid,
+          :stations => stations,
+        }
+      end
+    end
+    {
+      :hostname   => PUAVO_ETC.hostname,
+      :interfaces => interfaces,
+    }
   end
 
 end
