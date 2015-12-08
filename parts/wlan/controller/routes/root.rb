@@ -75,7 +75,7 @@ module PuavoWlanController
           <th>BSSID</th>
           <th>Channel</th>
           <th>SSID</th>
-          <th>Age</th>
+          <th>Start time</th>
           <th>Stations</th>
           <th>Rx</th>
           <th>Tx</th>
@@ -88,7 +88,7 @@ module PuavoWlanController
           <td><%= interface.fetch('bssid') %></td>
           <td><%= interface.fetch('channel') %></td>
           <td><%= interface.fetch('ssid') %></td>
-          <td><%= prettify_seconds(interface.fetch('age')) %></td>
+          <td><%= interface.fetch('start_time') %></td>
           <td><%= interface.fetch('stations').length %></td>
           <td><%= prettify_bytes(interface.fetch('rx_bytes')) %></td>
           <td><%= prettify_bytes(interface.fetch('tx_bytes')) %></td>
