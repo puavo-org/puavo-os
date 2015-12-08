@@ -71,8 +71,8 @@ module PuavoWlanController
             <td><%= TEMPSTORE.seconds_since_last_ping(ap_status.fetch('hostname')) %>s ago</td>
             <td><%= prettify_seconds(interface.fetch('age')) %></td>
             <td><%= interface.fetch('stations').length %></td>
-            <td><%= interface.fetch('rx_bytes') %></td>
-            <td><%= interface.fetch('tx_bytes') %></td>
+            <td><%= prettify_bytes(interface.fetch('rx_bytes')) %></td>
+            <td><%= prettify_bytes(interface.fetch('tx_bytes')) %></td>
           </tr>
         <% end %>
         </tbody>
@@ -80,8 +80,8 @@ module PuavoWlanController
           <tr>
           <th colspan="6">Totals</th>
           <td><%= ap_status.fetch('interfaces').map { |interface| interface.fetch('stations').length }.reduce(:+) %></td>
-          <td><%= ap_status.fetch('interfaces').map { |interface| interface.fetch('rx_bytes') }.reduce(:+) %></td>
-          <td><%= ap_status.fetch('interfaces').map { |interface| interface.fetch('tx_bytes') }.reduce(:+) %></td>
+          <td><%= prettify_bytes(ap_status.fetch('interfaces').map { |interface| interface.fetch('rx_bytes') }.reduce(:+)) %></td>
+          <td><%= prettify_bytes(ap_status.fetch('interfaces').map { |interface| interface.fetch('tx_bytes') }.reduce(:+)) %></td>
           </tr>
         </tfoot>
       </table>
