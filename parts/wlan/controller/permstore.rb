@@ -20,6 +20,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301 USA.
 
+require 'json'
+
 # Third-party modules.
 require 'sqlite3'
 
@@ -44,9 +46,9 @@ EOF
       end
     end
 
-    def add_report(name, host, json)
+    def add_report(name, host, data)
       sql = 'INSERT INTO Report(name, host, json) VALUES (?, ?, ?);'
-      @db.execute(sql, name, host, json)
+      @db.execute(sql, name, host, data.to_json)
     end
 
   end
