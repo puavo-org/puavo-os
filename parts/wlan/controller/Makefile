@@ -17,11 +17,15 @@ install: all installdirs
 		app.rb				\
 		tempstore.rb
 
+	$(INSTALL_DATA) -t $(DESTDIR)$(appdir)/public	\
+		public/*
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(appdir)/routes	\
 		routes/*
 
 installdirs:
 	mkdir -p $(DESTDIR)$(appdir)
+	mkdir -p $(DESTDIR)$(appdir)/public
 	mkdir -p $(DESTDIR)$(appdir)/routes
 	mkdir -p $(DESTDIR)$(vardir)
 

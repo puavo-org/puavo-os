@@ -38,16 +38,43 @@ module PuavoWlanController
 <html>
   <head>
     <meta charset="utf-8">
+    <meta http-equiv="refresh" content="5" >
+    <link rel="stylesheet" type="text/css" href="default.css">
     <title>Puavo's WLAN Controller - Status</title>
+    <script src="sorttable.js"></script>
   </head
   <body>
     <h1>Status</h1>
-    <h2>Access points (<%= accesspoints.length %>)</h2>
-    <% accesspoints.each do |ap_hostname| %>
-    <h3><%= ap_hostname %></h3>
-    <% TEMPSTORE.get_stations(ap_hostname).each do |sta_mac| %>
-    <h4><%= sta_mac %></h4>
-    <% end %>
+    <p><%= Time.now %></p>
+    <% accesspoints.each do |ap| %>
+      <table class="sortable" id="interfaces">
+        <thead>
+          <tr>
+            <th>Host</th>
+            <th>BSSID</th>
+            <th>Channel</th>
+            <th>SSID</th>
+            <th>Stations</th>
+          </tr>
+        </thead>
+        <tbody>
+        <% ap.fetch('interfaces').each_with_index do |iface, i| %>
+          <tr>
+            <td><%= ap.fetch('hostname') %></td>
+            <td><%= iface.fetch('bssid') %></td>
+            <td><%= iface.fetch('channel') %></td>
+            <td><%= iface.fetch('ssid') %></td>
+            <td><%= iface.fetch('num_sta') %></td>
+          </tr>
+        <% end %>
+        </tbody>
+        <tfoot>
+          <tr>
+          <th colspan="4">Totals</th>
+          <td><%= ap.fetch('interfaces').map { |i| i.fetch('num_sta') }.reduce(:+) %></td>
+          </tr>
+        </tfoot>
+      </table>
     <% end %>
   </body>
 </html>
