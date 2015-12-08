@@ -887,7 +887,6 @@ class AccessPoint
     @vifs.each do |vif|
       bssid    = nil
       channel  = nil
-      num_sta  = nil
       ssid     = nil
       stations = []
       begin
@@ -896,7 +895,6 @@ class AccessPoint
           io.each_line do |line|
             line =~ /^bssid\[0\]=(.*)$/   and bssid   = $1
             line =~ /^channel=(.*)$/      and channel = $1.to_i
-            line =~ /^num_sta\[0\]=(.*)$/ and num_sta = $1.to_i
             line =~ /^ssid\[0\]=(.*)$/    and ssid    = $1
           end
         end
@@ -924,7 +922,6 @@ class AccessPoint
         interfaces << {
           :bssid    => bssid,
           :channel  => channel,
-          :num_sta  => num_sta,
           :ssid     => ssid,
           :stations => stations,
         }
