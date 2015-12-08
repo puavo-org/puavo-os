@@ -117,6 +117,7 @@ install : installdirs $(install-subdirs)
 		templates/etc/ssh/sshd_config
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d \
+		templates/etc/pam.d/gnome-screensaver-laptop \
 		templates/etc/pam.d/ltspsshd \
 		templates/etc/pam.d/ltspguestsshd \
 		templates/etc/pam.d/lightdm-autologin-fatclient \
