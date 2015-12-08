@@ -44,7 +44,6 @@ module PuavoWlanController
               total_rx_bytes += interface['rx_bytes']
               total_tx_bytes += interface['tx_bytes']
               interface['hostname'] = ap_status['hostname']
-              interface['last_ping'] = TEMPSTORE.seconds_since_last_ping(ap_status.fetch('hostname'))
               interface['stations'].each do |station|
                 station['channel'] = interface['channel']
                 station['bssid'] = interface['bssid']
@@ -76,7 +75,6 @@ module PuavoWlanController
           <th>BSSID</th>
           <th>Channel</th>
           <th>SSID</th>
-          <th>Last ping</th>
           <th>Age</th>
           <th>Stations</th>
           <th>Rx</th>
@@ -90,7 +88,6 @@ module PuavoWlanController
           <td><%= interface.fetch('bssid') %></td>
           <td><%= interface.fetch('channel') %></td>
           <td><%= interface.fetch('ssid') %></td>
-          <td><%= interface.fetch('last_ping') %>s ago</td>
           <td><%= prettify_seconds(interface.fetch('age')) %></td>
           <td><%= interface.fetch('stations').length %></td>
           <td><%= prettify_bytes(interface.fetch('rx_bytes')) %></td>
@@ -100,7 +97,7 @@ module PuavoWlanController
       </tbody>
       <tfoot>
         <tr>
-        <th colspan="6">Totals</th>
+        <th colspan="5">Totals</th>
         <td><%= total_stations %></td>
         <td><%= prettify_bytes(total_rx_bytes) %></td>
         <td><%= prettify_bytes(total_tx_bytes) %></td>
