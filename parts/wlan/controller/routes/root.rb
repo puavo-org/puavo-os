@@ -33,6 +33,18 @@ module PuavoWlanController
           content_type 'text/html'
           ap_statuses = TEMPSTORE.get_ap_statuses
 
+          stations = []
+          ap_statuses.each do |ap_status|
+            ap_status['interfaces'].each do |interface|
+              interface['stations'].each do |station|
+                station['channel'] = interface['channel']
+                station['bssid'] = interface['bssid']
+                station['ssid'] = interface['ssid']
+                stations << station
+              end
+            end
+          end
+
           ERB.new(<<'EOF'
 <!doctype html>
 <html>
@@ -86,6 +98,36 @@ module PuavoWlanController
         </tfoot>
       </table>
     <% end %>
+
+      <% unless stations.empty? %>
+      <h2>Stations</h2>
+      <table class="sortable" id="interfaces">
+        <thead>
+          <tr>
+            <th>MAC</th>
+            <th>BSSID</th>
+            <th>Channel</th>
+            <th>SSID</th>
+            <th>Rx</th>
+            <th>Tx</th>
+            <th>Connection age</th>
+          </tr>
+        </thead>
+        <tbody>
+        <% stations.each do |station| %>
+          <tr>
+            <td><%= station.fetch('mac') %></td>
+            <td><%= station.fetch('bssid') %></td>
+            <td><%= station.fetch('channel') %></td>
+            <td><%= station.fetch('ssid') %></td>
+            <td><%= prettify_bytes(station.fetch('rx_bytes')) %></td>
+            <td><%= prettify_bytes(station.fetch('tx_bytes')) %></td>
+            <td><%= prettify_seconds(station.fetch('connected_time')) %></td>
+          </tr>
+        <% end %>
+        </tbody>
+      </table>
+      <% end %>
   </body>
 </html>
 EOF
