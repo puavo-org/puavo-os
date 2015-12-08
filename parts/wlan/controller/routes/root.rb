@@ -64,14 +64,14 @@ module PuavoWlanController
             <td><%= interface.fetch('bssid') %></td>
             <td><%= interface.fetch('channel') %></td>
             <td><%= interface.fetch('ssid') %></td>
-            <td><%= interface.fetch('num_sta') %></td>
+            <td><%= interface.fetch('stations').length %></td>
           </tr>
         <% end %>
         </tbody>
         <tfoot>
           <tr>
           <th colspan="4">Totals</th>
-          <td><%= ap_status.fetch('interfaces').map { |interface| interface.fetch('num_sta') }.reduce(:+) %></td>
+          <td><%= ap_status.fetch('interfaces').map { |interface| interface.fetch('stations').length }.reduce(:+) %></td>
           </tr>
         </tfoot>
       </table>
