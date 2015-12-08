@@ -54,6 +54,7 @@ class packages {
     [ 'clusterssh'
     , 'dconf-tools'
     , 'pssh'
+    , 'smartmontools'
     , 'terminator'
     , 'vinagre'
     , 'xbacklight' ]:
