@@ -127,7 +127,8 @@ install : installdirs $(install-subdirs)
 		templates/etc/pam.d/lightdm-autologin-wirelessaccesspoint \
 		templates/etc/pam.d/lightdm-fatclient \
 		templates/etc/pam.d/lightdm-laptop \
-		templates/etc/pam.d/lightdm-thinclient
+		templates/etc/pam.d/lightdm-thinclient \
+		templates/etc/pam.d/sudo-laptop
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ldap \
 		templates/etc/ldap/ldap.conf \

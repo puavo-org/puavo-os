@@ -302,6 +302,7 @@ case @puavo_device_type
     write_config("/etc/pam.d/gnome-screensaver", "laptop")
     write_config("/etc/pam.d/lightdm", "laptop")
     write_config("/etc/pam.d/lightdm-autologin", "laptop")
+    write_config("/etc/pam.d/sudo", "laptop")
     write_config("/etc/racoon/racoon.conf")
     write_config("/etc/security/group.conf")
     write_config("/etc/samba/smb.conf", "laptop")
