@@ -84,7 +84,9 @@ class packages {
     , 'vlan' ]:
       tag => [ 'basic', 'ubuntu', ];
 
-    [ 'indicator-power'
+    [ 'compizconfig-settings-manager'
+    , 'compiz-plugins-extra'
+    , 'indicator-power'
     , 'indicator-session'
     , 'lightdm'
     , 'lightdm-gtk-greeter'
