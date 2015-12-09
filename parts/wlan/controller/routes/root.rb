@@ -35,6 +35,19 @@ module PuavoWlanController
           content_type 'text/html'
           ap_statuses = TEMPSTORE.get_ap_statuses
 
+          arp_table = {}
+          IO.popen(['arp', '-a']) do |io|
+            io.each_line do |line|
+              fields = line.split
+              fqdn = fields[0]
+              ipaddr = fields[1][1..-2] # Omit leading and trailing parens.
+              mac = fields[3]
+              next if mac == '<incomplete>'
+              hostname = fqdn == '?' ? '?' : fqdn.split('.')[0]
+              arp_table[mac] = [hostname, fqdn, ipaddr]
+            end
+          end
+
           total_stations = 0
           total_ap_rx_bytes = 0
           total_ap_tx_bytes = 0
@@ -58,6 +71,7 @@ module PuavoWlanController
                 station['channel'] = interface['channel']
                 station['bssid'] = interface['bssid']
                 station['ssid'] = interface['ssid']
+                station['hostname'], station['fqdn'], station['ipaddr'] = arp_table.fetch(station['mac'], [nil, nil, nil])
                 total_sta_rx_bytes += station['rx_bytes']
                 total_sta_tx_bytes += station['tx_bytes']
                 stations << station
@@ -122,11 +136,12 @@ module PuavoWlanController
       <caption>Stations</caption>
       <thead>
         <tr>
+          <th>Host</th>
           <th>MAC</th>
           <th>BSSID</th>
           <th>Channel</th>
           <th>SSID</th>
-          <th>Connection age</th>
+          <th>Uptime</th>
           <th>Rx</th>
           <th>Tx</th>
         </tr>
@@ -134,7 +149,8 @@ module PuavoWlanController
       <tbody>
       <% stations.each do |station| %>
         <tr>
-          <td><%= station.fetch('mac') %></td>
+          <td><%= station.fetch('hostname') %></td>
+          <td><a href="#<%= station.fetch('mac') %>"><%= station.fetch('mac') %></a></td>
           <td><a href="#<%= station.fetch('bssid') %>"><%= station.fetch('bssid') %></a></td>
           <td><%= station.fetch('channel') %></td>
           <td><%= station.fetch('ssid') %></td>
@@ -146,7 +162,7 @@ module PuavoWlanController
       </tbody>
       <tfoot>
         <tr>
-        <th colspan="5">Totals</th>
+        <th colspan="6">Totals</th>
         <td><%= prettify_bytes(total_sta_rx_bytes) %></td>
         <td><%= prettify_bytes(total_sta_tx_bytes) %></td>
         </tr>
@@ -181,6 +197,24 @@ module PuavoWlanController
     <% end %>
     <% end %>
 
+    <h3>Stations</h3>
+    <% stations.each do |station| %>
+    <h4 id="<%= station.fetch('mac') %>"><%= station.fetch('mac') %></h4>
+    <table class="infotable">
+      <% unless station['fqdn'].nil? %>
+      <tr>
+        <th>FQDN:</th>
+        <td><%= station['fqdn'] %></td>
+      </tr>
+      <% end %>
+      <% unless station['ipaddr'].nil? %>
+      <tr>
+        <th>IPv4 address:</th>
+        <td><%= station['ipaddr'] %></td>
+      </tr>
+      <% end %>
+    </table>
+    <% end %>
   </body>
 </html>
 EOF
