@@ -176,6 +176,7 @@ module PuavoWlanController
         <tr>
           <th>Host</th>
           <th>MAC</th>
+          <th>IPv4 address</th>
           <th>BSSID</th>
           <th>Channel</th>
           <th>SSID</th>
@@ -189,6 +190,7 @@ module PuavoWlanController
         <tr id="sta-<%= station.fetch('mac') %>">
           <td><%= station.fetch('hostname') %></td>
           <td><%= station.fetch('mac') %></td>
+          <td><%= station.fetch('ipaddr') %></td>
           <td><a href="#ap-<%= station.fetch('bssid') %>"><%= station.fetch('bssid') %></a></td>
           <td><%= station.fetch('channel') %></td>
           <td><%= station.fetch('ssid') %></td>
@@ -200,7 +202,7 @@ module PuavoWlanController
       </tbody>
       <tfoot>
         <tr>
-        <th colspan="6">Totals</th>
+        <th colspan="7">Totals</th>
         <td><%= prettify_bytes(total_sta_rx_bytes) %></td>
         <td><%= prettify_bytes(total_sta_tx_bytes) %></td>
         </tr>
