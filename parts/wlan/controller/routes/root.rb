@@ -92,8 +92,8 @@ module PuavoWlanController
           <td><%= interface.fetch('channel') %></td>
           <td><%= interface.fetch('ssid') %></td>
           <td><%= interface.fetch('stations').length %></td>
-          <td><%= prettify_bytes(interface.fetch('rx_bytes')) %></td>
-          <td><%= prettify_bytes(interface.fetch('tx_bytes')) %></td>
+          <td sorttable_customkey="<%= interface.fetch('rx_bytes') %>"><%= prettify_bytes(interface.fetch('rx_bytes')) %></td>
+          <td sorttable_customkey="<%= interface.fetch('tx_bytes') %>"><%= prettify_bytes(interface.fetch('tx_bytes')) %></td>
         </tr>
       <% end %>
       </tbody>
@@ -129,9 +129,9 @@ module PuavoWlanController
           <td><%= station.fetch('bssid') %></td>
           <td><%= station.fetch('channel') %></td>
           <td><%= station.fetch('ssid') %></td>
-          <td><%= prettify_seconds(station.fetch('connected_time')) %></td>
-          <td><%= prettify_bytes(station.fetch('rx_bytes')) %></td>
-          <td><%= prettify_bytes(station.fetch('tx_bytes')) %></td>
+          <td sorttable_customkey="<%= station.fetch('connected_time') %>"><%= prettify_seconds(station.fetch('connected_time')) %></td>
+          <td sorttable_customkey="<%= station.fetch('rx_bytes') %>"><%= prettify_bytes(station.fetch('rx_bytes')) %></td>
+          <td sorttable_customkey="<%= station.fetch('tx_bytes') %>"><%= prettify_bytes(station.fetch('tx_bytes')) %></td>
         </tr>
       <% end %>
       </tbody>
