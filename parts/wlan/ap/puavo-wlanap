@@ -923,7 +923,7 @@ class AccessPoint
         # Get interface stats
         File.read('/proc/net/dev') =~ /^\s*#{vif.name}:(.*)$/
         rx_bytes = $1.split[0].to_i
-        tx_bytes = $1.split[9].to_i
+        tx_bytes = $1.split[8].to_i
 
         start_time = File.mtime("#{HOSTAPD_CTRL_INTERFACE_DIR}/#{vif.name}")
 
