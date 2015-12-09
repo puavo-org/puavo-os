@@ -201,18 +201,14 @@ module PuavoWlanController
     <% stations.each do |station| %>
     <h4 id="<%= station.fetch('mac') %>"><%= station.fetch('mac') %></h4>
     <table class="infotable">
-      <% unless station['fqdn'].nil? %>
       <tr>
         <th>FQDN:</th>
         <td><%= station['fqdn'] %></td>
       </tr>
-      <% end %>
-      <% unless station['ipaddr'].nil? %>
       <tr>
         <th>IPv4 address:</th>
         <td><%= station['ipaddr'] %></td>
       </tr>
-      <% end %>
     </table>
     <% end %>
   </body>
