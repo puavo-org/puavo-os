@@ -1,7 +1,10 @@
+body {
+    font-size: small;
+}
+
 table#interfaces {
     border: 1px solid black;
     text-align: center;
-    margin: 1em;
 }
 
 table#interfaces th, table#interfaces td {

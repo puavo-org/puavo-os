@@ -94,8 +94,8 @@ module PuavoWlanController
     <p><%= Time.now %></p>
     <h2>Summary</h2>
     <% unless interfaces.empty? %>
+    <h3>Access points</h3>
     <table class="sortable" id="interfaces">
-      <caption>Access points</caption>
       <thead>
         <tr>
           <th>Host</th>
@@ -132,8 +132,8 @@ module PuavoWlanController
     <% end %>
 
     <% unless stations.empty? %>
+    <h3>Stations</h3>
     <table class="sortable" id="interfaces">
-      <caption>Stations</caption>
       <thead>
         <tr>
           <th>Host</th>
