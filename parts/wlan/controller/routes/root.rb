@@ -34,20 +34,24 @@ module PuavoWlanController
           ap_statuses = TEMPSTORE.get_ap_statuses
 
           total_stations = 0
-          total_rx_bytes = 0
-          total_tx_bytes = 0
+          total_ap_rx_bytes = 0
+          total_ap_tx_bytes = 0
+          total_sta_rx_bytes = 0
+          total_sta_tx_bytes = 0
           stations = []
           interfaces = []
           ap_statuses.each do |ap_status|
             ap_status['interfaces'].each do |interface|
               total_stations += interface['stations'].length
-              total_rx_bytes += interface['rx_bytes']
-              total_tx_bytes += interface['tx_bytes']
+              total_ap_rx_bytes += interface['rx_bytes']
+              total_ap_tx_bytes += interface['tx_bytes']
               interface['hostname'] = ap_status['hostname']
               interface['stations'].each do |station|
                 station['channel'] = interface['channel']
                 station['bssid'] = interface['bssid']
                 station['ssid'] = interface['ssid']
+                total_sta_rx_bytes += station['rx_bytes']
+                total_sta_tx_bytes += station['tx_bytes']
                 stations << station
               end
               interfaces << interface
@@ -97,8 +101,8 @@ module PuavoWlanController
         <tr>
         <th colspan="4">Totals</th>
         <td><%= total_stations %></td>
-        <td><%= prettify_bytes(total_rx_bytes) %></td>
-        <td><%= prettify_bytes(total_tx_bytes) %></td>
+        <td><%= prettify_bytes(total_ap_rx_bytes) %></td>
+        <td><%= prettify_bytes(total_ap_tx_bytes) %></td>
         </tr>
       </tfoot>
     </table>
@@ -113,9 +117,9 @@ module PuavoWlanController
           <th>BSSID</th>
           <th>Channel</th>
           <th>SSID</th>
+          <th>Connection age</th>
           <th>Rx</th>
           <th>Tx</th>
-          <th>Connection age</th>
         </tr>
       </thead>
       <tbody>
@@ -125,12 +129,19 @@ module PuavoWlanController
           <td><%= station.fetch('bssid') %></td>
           <td><%= station.fetch('channel') %></td>
           <td><%= station.fetch('ssid') %></td>
+          <td><%= prettify_seconds(station.fetch('connected_time')) %></td>
           <td><%= prettify_bytes(station.fetch('rx_bytes')) %></td>
           <td><%= prettify_bytes(station.fetch('tx_bytes')) %></td>
-          <td><%= prettify_seconds(station.fetch('connected_time')) %></td>
         </tr>
       <% end %>
       </tbody>
+      <tfoot>
+        <tr>
+        <th colspan="5">Totals</th>
+        <td><%= prettify_bytes(total_sta_rx_bytes) %></td>
+        <td><%= prettify_bytes(total_sta_tx_bytes) %></td>
+        </tr>
+      </tfoot>
     </table>
     <% end %>
   </body>
