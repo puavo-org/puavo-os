@@ -18,8 +18,3 @@ table.sortable thead th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):no
     color: #cccccc;
     content: " \25BE"
 }
-
-td.hep {
-    display: hidden;
-    border: none;
-}
