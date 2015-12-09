@@ -926,17 +926,22 @@ class AccessPoint
         tx_bytes = $1.split[9].to_i
 
         start_time = File.mtime("#{HOSTAPD_CTRL_INTERFACE_DIR}/#{vif.name}")
+
+        tx_power_limit_dBm = IO.popen(['iwconfig', vif.name]) do |io|
+          io.readline =~ /^.* Tx-Power=(.*) dBm\s*$/ and $1.to_i
+        end
       rescue StandardError => e
         Log.exception("failed to query hostapd status (#{vif.name})", e)
       else
         interfaces << {
-          :start_time => start_time,
-          :bssid      => bssid,
-          :channel    => channel,
-          :rx_bytes   => rx_bytes,
-          :ssid       => ssid,
-          :stations   => stations,
-          :tx_bytes   => tx_bytes,
+          :start_time         => start_time,
+          :bssid              => bssid,
+          :channel            => channel,
+          :rx_bytes           => rx_bytes,
+          :ssid               => ssid,
+          :stations           => stations,
+          :tx_bytes           => tx_bytes,
+          :tx_power_limit_dBm => tx_power_limit_dBm,
         }
       end
     end
