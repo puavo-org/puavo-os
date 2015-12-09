@@ -230,6 +230,7 @@ class packages {
     , 'kdenlive'
     , 'kino'
     , 'kolourpaint4'
+    , 'krita'
     , 'libav-tools'
     , 'libsane'
     , 'libsane-extras'
