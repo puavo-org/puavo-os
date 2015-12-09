@@ -23,10 +23,14 @@ install: all installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(appdir)/routes	\
 		routes/*
 
+	$(INSTALL_DATA) -t $(DESTDIR)$(appdir)/views	\
+		views/*
+
 installdirs:
 	mkdir -p $(DESTDIR)$(appdir)
 	mkdir -p $(DESTDIR)$(appdir)/public
 	mkdir -p $(DESTDIR)$(appdir)/routes
+	mkdir -p $(DESTDIR)$(appdir)/views
 	mkdir -p $(DESTDIR)$(vardir)
 
 clean:

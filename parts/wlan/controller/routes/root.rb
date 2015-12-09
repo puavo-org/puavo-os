@@ -86,128 +86,18 @@ module PuavoWlanController
             }
           end
 
-          ERB.new(<<'EOF'
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="default.css">
-    <title>Puavo's WLAN Controller - Status</title>
-    <script src="sorttable.js"></script>
-  </head
-  <body>
-    <h1>Status</h1>
-    <% unless hosts.empty? %>
-    <h2>Hosts</h2>
-    <table class="sortable">
-      <thead>
-        <tr>
-          <th>Host</th>
-          <th>Access points</th>
-          <th>Rx</th>
-          <th>Tx</th>
-        </tr>
-      </thead>
-      <tbody>
-      <% hosts.each do |host| %>
-        <tr id="host-<%= host.fetch('hostname') %>">
-          <td><%= host.fetch('hostname') %></td>
-          <td><%= host.fetch('interface_count') %></td>
-          <td sorttable_customkey="<%= host.fetch('rx_bytes') %>"><%= prettify_bytes(host.fetch('rx_bytes')) %></td>
-          <td sorttable_customkey="<%= host.fetch('tx_bytes') %>"><%= prettify_bytes(host.fetch('tx_bytes')) %></td>
-        </tr>
-      <% end %>
-      </tbody>
-      <tfoot>
-        <tr>
-        <th colspan="1">Totals</th>
-        <td><%= total_interface_count %></td>
-        <td><%= prettify_bytes(total_ap_rx_bytes) %></td>
-        <td><%= prettify_bytes(total_ap_tx_bytes) %></td>
-        </tr>
-      </tfoot>
-    </table>
-    <% end %>
+          erb :index, :locals => {
+            :hosts                 => hosts,
+            :interfaces            => interfaces,
+            :stations              => stations,
+            :total_ap_rx_bytes     => total_ap_rx_bytes,
+            :total_ap_tx_bytes     => total_ap_tx_bytes,
+            :total_interface_count => total_interface_count,
+            :total_sta_rx_bytes    => total_sta_rx_bytes,
+            :total_sta_tx_bytes    => total_sta_tx_bytes,
+            :total_station_count   => total_station_count,
+          }
 
-    <% unless interfaces.empty? %>
-    <h2>Access points</h2>
-    <table class="sortable">
-      <thead>
-        <tr>
-          <th>Host</th>
-          <th>BSSID</th>
-          <th>Channel</th>
-          <th>SSID</th>
-          <th>Stations</th>
-          <th>Rx</th>
-          <th>Tx</th>
-        </tr>
-      </thead>
-      <tbody>
-      <% interfaces.each do |interface| %>
-        <tr id="ap-<%= interface.fetch('bssid') %>">
-          <td><a href="#host-<%= interface.fetch('hostname') %>"><%= interface.fetch('hostname') %></a></td>
-          <td><%= interface.fetch('bssid') %></td>
-          <td><%= interface.fetch('channel') %></td>
-          <td><%= interface.fetch('ssid') %></td>
-          <td><%= interface.fetch('stations').length %></td>
-          <td sorttable_customkey="<%= interface.fetch('rx_bytes') %>"><%= prettify_bytes(interface.fetch('rx_bytes')) %></td>
-          <td sorttable_customkey="<%= interface.fetch('tx_bytes') %>"><%= prettify_bytes(interface.fetch('tx_bytes')) %></td>
-        </tr>
-      <% end %>
-      </tbody>
-      <tfoot>
-        <tr>
-        <th colspan="4">Totals</th>
-        <td><%= total_station_count %></td>
-        <td><%= prettify_bytes(total_ap_rx_bytes) %></td>
-        <td><%= prettify_bytes(total_ap_tx_bytes) %></td>
-        </tr>
-      </tfoot>
-    </table>
-    <% end %>
-
-    <% unless stations.empty? %>
-    <h2>Stations</h2>
-    <table class="sortable">
-      <thead>
-        <tr>
-          <th>Host</th>
-          <th>MAC</th>
-          <th>IPv4 address</th>
-          <th>BSSID</th>
-          <th>Uptime</th>
-          <th>Rx</th>
-          <th>Tx</th>
-        </tr>
-      </thead>
-      <tbody>
-      <% stations.each do |station| %>
-        <tr id="sta-<%= station.fetch('mac') %>">
-          <td><%= station.fetch('hostname') %></td>
-          <td><%= station.fetch('mac') %></td>
-          <td><%= station.fetch('ipaddr') %></td>
-          <td><a href="#ap-<%= station.fetch('bssid') %>"><%= station.fetch('bssid') %></a></td>
-          <td sorttable_customkey="<%= station.fetch('connected_time') %>"><%= prettify_seconds(station.fetch('connected_time')) %></td>
-          <td sorttable_customkey="<%= station.fetch('rx_bytes') %>"><%= prettify_bytes(station.fetch('rx_bytes')) %></td>
-          <td sorttable_customkey="<%= station.fetch('tx_bytes') %>"><%= prettify_bytes(station.fetch('tx_bytes')) %></td>
-        </tr>
-      <% end %>
-      </tbody>
-      <tfoot>
-        <tr>
-        <th colspan="5">Totals</th>
-        <td><%= prettify_bytes(total_sta_rx_bytes) %></td>
-        <td><%= prettify_bytes(total_sta_tx_bytes) %></td>
-        </tr>
-      </tfoot>
-    </table>
-    <% end %>
-    <p id="timestamp"><%= Time.now %></p>
-  </body>
-</html>
-EOF
-                  ).result(binding)
         end
 
         app.get("#{PREFIX}/", &root)
