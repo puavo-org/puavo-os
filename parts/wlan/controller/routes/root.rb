@@ -70,9 +70,7 @@ module PuavoWlanController
               interface['hostname'] = ap_status['hostname']
               interface['uptime'] = Time.now - Time.parse(interface.fetch('start_time'))
               interface['stations'].each do |station|
-                station['channel'] = interface['channel']
                 station['bssid'] = interface['bssid']
-                station['ssid'] = interface['ssid']
                 station['hostname'], station['fqdn'], station['ipaddr'] = arp_table.fetch(station['mac'], [nil, nil, nil])
                 total_sta_rx_bytes += station['rx_bytes']
                 total_sta_tx_bytes += station['tx_bytes']
@@ -178,8 +176,6 @@ module PuavoWlanController
           <th>MAC</th>
           <th>IPv4 address</th>
           <th>BSSID</th>
-          <th>Channel</th>
-          <th>SSID</th>
           <th>Uptime</th>
           <th>Rx</th>
           <th>Tx</th>
@@ -192,8 +188,6 @@ module PuavoWlanController
           <td><%= station.fetch('mac') %></td>
           <td><%= station.fetch('ipaddr') %></td>
           <td><a href="#ap-<%= station.fetch('bssid') %>"><%= station.fetch('bssid') %></a></td>
-          <td><%= station.fetch('channel') %></td>
-          <td><%= station.fetch('ssid') %></td>
           <td sorttable_customkey="<%= station.fetch('connected_time') %>"><%= prettify_seconds(station.fetch('connected_time')) %></td>
           <td sorttable_customkey="<%= station.fetch('rx_bytes') %>"><%= prettify_bytes(station.fetch('rx_bytes')) %></td>
           <td sorttable_customkey="<%= station.fetch('tx_bytes') %>"><%= prettify_bytes(station.fetch('tx_bytes')) %></td>
@@ -202,7 +196,7 @@ module PuavoWlanController
       </tbody>
       <tfoot>
         <tr>
-        <th colspan="7">Totals</th>
+        <th colspan="5">Totals</th>
         <td><%= prettify_bytes(total_sta_rx_bytes) %></td>
         <td><%= prettify_bytes(total_sta_tx_bytes) %></td>
         </tr>
