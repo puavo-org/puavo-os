@@ -79,6 +79,22 @@ module PuavoWlanController
       result
     end
 
+    def get_arp_table
+      arp_table = {}
+      IO.popen(['arp', '-a']) do |io|
+        io.each_line do |line|
+          fields = line.split
+          fqdn = fields[0]
+          ipaddr = fields[1][1..-2] # Omit leading and trailing parens.
+          mac = fields[3]
+          next if mac == '<incomplete>'
+          hostname = fqdn == '?' ? '?' : fqdn.split('.')[0]
+          arp_table[mac] = [hostname, fqdn, ipaddr]
+        end
+      end
+      arp_table
+    end
+
   end
 
 end

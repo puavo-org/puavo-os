@@ -35,18 +35,7 @@ module PuavoWlanController
           content_type 'text/html'
           ap_statuses = TEMPSTORE.get_ap_statuses
 
-          arp_table = {}
-          IO.popen(['arp', '-a']) do |io|
-            io.each_line do |line|
-              fields = line.split
-              fqdn = fields[0]
-              ipaddr = fields[1][1..-2] # Omit leading and trailing parens.
-              mac = fields[3]
-              next if mac == '<incomplete>'
-              hostname = fqdn == '?' ? '?' : fqdn.split('.')[0]
-              arp_table[mac] = [hostname, fqdn, ipaddr]
-            end
-          end
+          arp_table = get_arp_table
 
           total_station_count = 0
           total_interface_count = 0
