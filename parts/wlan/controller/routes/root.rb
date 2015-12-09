@@ -22,6 +22,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301 USA.
 
+require 'time'
+
 module PuavoWlanController
   module Routes
     module Root
@@ -40,12 +42,18 @@ module PuavoWlanController
           total_sta_tx_bytes = 0
           stations = []
           interfaces = []
+          hosts = []
           ap_statuses.each do |ap_status|
+            hosts << {
+              'hostname'   => ap_status['hostname'],
+              'interfaces' => ap_status['interfaces'],
+            }
             ap_status['interfaces'].each do |interface|
               total_stations += interface['stations'].length
               total_ap_rx_bytes += interface['rx_bytes']
               total_ap_tx_bytes += interface['tx_bytes']
               interface['hostname'] = ap_status['hostname']
+              interface['uptime'] = Time.now - Time.parse(interface.fetch('start_time'))
               interface['stations'].each do |station|
                 station['channel'] = interface['channel']
                 station['bssid'] = interface['bssid']
@@ -70,9 +78,10 @@ module PuavoWlanController
   <body>
     <h1>Status</h1>
     <p><%= Time.now %></p>
+    <h2>Summary</h2>
     <% unless interfaces.empty? %>
-    <h2>Access points</h2>
     <table class="sortable" id="interfaces">
+      <caption>Access points</caption>
       <thead>
         <tr>
           <th>Host</th>
@@ -87,8 +96,8 @@ module PuavoWlanController
       <tbody>
       <% interfaces.each do |interface| %>
         <tr>
-          <td><%= interface.fetch('hostname') %></td>
-          <td><%= interface.fetch('bssid') %></td>
+          <td><a href="#<%= interface.fetch('hostname') %>"><%= interface.fetch('hostname') %></a></td>
+          <td><a href="#<%= interface.fetch('bssid') %>"><%= interface.fetch('bssid') %></a></td>
           <td><%= interface.fetch('channel') %></td>
           <td><%= interface.fetch('ssid') %></td>
           <td><%= interface.fetch('stations').length %></td>
@@ -109,8 +118,8 @@ module PuavoWlanController
     <% end %>
 
     <% unless stations.empty? %>
-    <h2>Stations</h2>
     <table class="sortable" id="interfaces">
+      <caption>Stations</caption>
       <thead>
         <tr>
           <th>MAC</th>
@@ -126,7 +135,7 @@ module PuavoWlanController
       <% stations.each do |station| %>
         <tr>
           <td><%= station.fetch('mac') %></td>
-          <td><%= station.fetch('bssid') %></td>
+          <td><a href="#<%= station.fetch('bssid') %>"><%= station.fetch('bssid') %></a></td>
           <td><%= station.fetch('channel') %></td>
           <td><%= station.fetch('ssid') %></td>
           <td sorttable_customkey="<%= station.fetch('connected_time') %>"><%= prettify_seconds(station.fetch('connected_time')) %></td>
@@ -144,6 +153,34 @@ module PuavoWlanController
       </tfoot>
     </table>
     <% end %>
+
+    <h2>Details</h2>
+    <h3>Access point hosts</h3>
+    <% hosts.each do |host| %>
+    <h4 id="<%= host.fetch('hostname') %>"><%= host.fetch('hostname') %></h4>
+    <% host['interfaces'].each do |interface| %>
+    <h5 id="<%= interface['bssid'] %>"><%= interface['bssid'] %></h5>
+    <table class="infotable">
+      <tr>
+        <th>Uptime:</th>
+        <td><%= prettify_seconds(interface['uptime']) %></td>
+      </tr>
+      <tr>
+        <th>Channel:</th>
+        <td><%= interface['channel'] %></td>
+      </tr>
+      <tr>
+        <th>SSID:</th>
+        <td><%= interface['ssid'] %></td>
+      </tr>
+      <tr>
+        <th>Tx power limit:</th>
+        <td><%= interface['tx_power_limit_dBm'] %> dBm</td>
+      </tr>
+    </table>
+    <% end %>
+    <% end %>
+
   </body>
 </html>
 EOF
