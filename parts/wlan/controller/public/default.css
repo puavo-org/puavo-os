@@ -1,15 +1,23 @@
+#timestamp {
+    float: right;
+}
+
 body {
     font-size: small;
 }
 
-table#interfaces {
+table {
     border: 1px solid black;
     text-align: center;
 }
 
-table#interfaces th, table#interfaces td {
+td, th {
     border: 1px solid black;
-    padding: 0.5em;
+    padding: 0.3em;
+}
+
+th {
+    background-color: #dfdfdf;
 }
 
 table.sortable thead {
@@ -18,15 +26,6 @@ table.sortable thead {
 }
 
 table.sortable thead th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):not(.sorttable_nosort):after {
-    color: #cccccc;
+    color: #888888;
     content: " \25BE"
-}
-
-table.infotable {
-    margin-left: 1em;
-    border-left: 2px ridge black;
-}
-
-table.infotable th {
-    text-align: left;
 }

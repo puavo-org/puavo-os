@@ -48,7 +48,8 @@ module PuavoWlanController
             end
           end
 
-          total_stations = 0
+          total_station_count = 0
+          total_interface_count = 0
           total_ap_rx_bytes = 0
           total_ap_tx_bytes = 0
           total_sta_rx_bytes = 0
@@ -57,14 +58,15 @@ module PuavoWlanController
           interfaces = []
           hosts = []
           ap_statuses.each do |ap_status|
-            hosts << {
-              'hostname'   => ap_status['hostname'],
-              'interfaces' => ap_status['interfaces'],
-            }
+            host_rx_bytes = 0
+            host_tx_bytes = 0
+            total_interface_count += ap_status['interfaces'].length
             ap_status['interfaces'].each do |interface|
-              total_stations += interface['stations'].length
+              total_station_count += interface['stations'].length
               total_ap_rx_bytes += interface['rx_bytes']
               total_ap_tx_bytes += interface['tx_bytes']
+              host_rx_bytes += interface['rx_bytes']
+              host_tx_bytes += interface['tx_bytes']
               interface['hostname'] = ap_status['hostname']
               interface['uptime'] = Time.now - Time.parse(interface.fetch('start_time'))
               interface['stations'].each do |station|
@@ -78,6 +80,12 @@ module PuavoWlanController
               end
               interfaces << interface
             end
+            hosts << {
+              'hostname'        => ap_status['hostname'],
+              'interface_count' => ap_status['interfaces'].length,
+              'rx_bytes'        => host_rx_bytes,
+              'tx_bytes'        => host_tx_bytes,
+            }
           end
 
           ERB.new(<<'EOF'
@@ -91,11 +99,41 @@ module PuavoWlanController
   </head
   <body>
     <h1>Status</h1>
-    <p><%= Time.now %></p>
-    <h2>Summary</h2>
+    <% unless hosts.empty? %>
+    <h2>Hosts</h2>
+    <table class="sortable">
+      <thead>
+        <tr>
+          <th>Host</th>
+          <th>Access points</th>
+          <th>Rx</th>
+          <th>Tx</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% hosts.each do |host| %>
+        <tr id="host-<%= host.fetch('hostname') %>">
+          <td><%= host.fetch('hostname') %></td>
+          <td><%= host.fetch('interface_count') %></td>
+          <td sorttable_customkey="<%= host.fetch('rx_bytes') %>"><%= prettify_bytes(host.fetch('rx_bytes')) %></td>
+          <td sorttable_customkey="<%= host.fetch('tx_bytes') %>"><%= prettify_bytes(host.fetch('tx_bytes')) %></td>
+        </tr>
+      <% end %>
+      </tbody>
+      <tfoot>
+        <tr>
+        <th colspan="1">Totals</th>
+        <td><%= total_interface_count %></td>
+        <td><%= prettify_bytes(total_ap_rx_bytes) %></td>
+        <td><%= prettify_bytes(total_ap_tx_bytes) %></td>
+        </tr>
+      </tfoot>
+    </table>
+    <% end %>
+
     <% unless interfaces.empty? %>
-    <h3>Access points</h3>
-    <table class="sortable" id="interfaces">
+    <h2>Access points</h2>
+    <table class="sortable">
       <thead>
         <tr>
           <th>Host</th>
@@ -109,9 +147,9 @@ module PuavoWlanController
       </thead>
       <tbody>
       <% interfaces.each do |interface| %>
-        <tr>
-          <td><a href="#<%= interface.fetch('hostname') %>"><%= interface.fetch('hostname') %></a></td>
-          <td><a href="#<%= interface.fetch('bssid') %>"><%= interface.fetch('bssid') %></a></td>
+        <tr id="ap-<%= interface.fetch('bssid') %>">
+          <td><a href="#host-<%= interface.fetch('hostname') %>"><%= interface.fetch('hostname') %></a></td>
+          <td><%= interface.fetch('bssid') %></td>
           <td><%= interface.fetch('channel') %></td>
           <td><%= interface.fetch('ssid') %></td>
           <td><%= interface.fetch('stations').length %></td>
@@ -123,7 +161,7 @@ module PuavoWlanController
       <tfoot>
         <tr>
         <th colspan="4">Totals</th>
-        <td><%= total_stations %></td>
+        <td><%= total_station_count %></td>
         <td><%= prettify_bytes(total_ap_rx_bytes) %></td>
         <td><%= prettify_bytes(total_ap_tx_bytes) %></td>
         </tr>
@@ -132,8 +170,8 @@ module PuavoWlanController
     <% end %>
 
     <% unless stations.empty? %>
-    <h3>Stations</h3>
-    <table class="sortable" id="interfaces">
+    <h2>Stations</h2>
+    <table class="sortable">
       <thead>
         <tr>
           <th>Host</th>
@@ -148,10 +186,10 @@ module PuavoWlanController
       </thead>
       <tbody>
       <% stations.each do |station| %>
-        <tr>
+        <tr id="sta-<%= station.fetch('mac') %>">
           <td><%= station.fetch('hostname') %></td>
-          <td><a href="#<%= station.fetch('mac') %>"><%= station.fetch('mac') %></a></td>
-          <td><a href="#<%= station.fetch('bssid') %>"><%= station.fetch('bssid') %></a></td>
+          <td><%= station.fetch('mac') %></td>
+          <td><a href="#ap-<%= station.fetch('bssid') %>"><%= station.fetch('bssid') %></a></td>
           <td><%= station.fetch('channel') %></td>
           <td><%= station.fetch('ssid') %></td>
           <td sorttable_customkey="<%= station.fetch('connected_time') %>"><%= prettify_seconds(station.fetch('connected_time')) %></td>
@@ -169,48 +207,7 @@ module PuavoWlanController
       </tfoot>
     </table>
     <% end %>
-
-    <h2>Details</h2>
-    <h3>Access point hosts</h3>
-    <% hosts.each do |host| %>
-    <h4 id="<%= host.fetch('hostname') %>"><%= host.fetch('hostname') %></h4>
-    <% host['interfaces'].each do |interface| %>
-    <h5 id="<%= interface['bssid'] %>"><%= interface['bssid'] %></h5>
-    <table class="infotable">
-      <tr>
-        <th>Uptime:</th>
-        <td><%= prettify_seconds(interface['uptime']) %></td>
-      </tr>
-      <tr>
-        <th>Channel:</th>
-        <td><%= interface['channel'] %></td>
-      </tr>
-      <tr>
-        <th>SSID:</th>
-        <td><%= interface['ssid'] %></td>
-      </tr>
-      <tr>
-        <th>Tx power limit:</th>
-        <td><%= interface['tx_power_limit_dBm'] %> dBm</td>
-      </tr>
-    </table>
-    <% end %>
-    <% end %>
-
-    <h3>Stations</h3>
-    <% stations.each do |station| %>
-    <h4 id="<%= station.fetch('mac') %>"><%= station.fetch('mac') %></h4>
-    <table class="infotable">
-      <tr>
-        <th>FQDN:</th>
-        <td><%= station['fqdn'] %></td>
-      </tr>
-      <tr>
-        <th>IPv4 address:</th>
-        <td><%= station['ipaddr'] %></td>
-      </tr>
-    </table>
-    <% end %>
+    <p id="timestamp"><%= Time.now %></p>
   </body>
 </html>
 EOF
