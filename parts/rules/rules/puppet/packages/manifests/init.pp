@@ -683,7 +683,8 @@ class packages {
     , 'touchegg'
     , 'unace'
     , 'unionfs-fuse'
-    , 'unrar' ]:
+    , 'unrar'
+    , 'x-tile' ]:
       tag => [ 'utils', 'ubuntu', ];
 
     [ 'qemu-kvm' ]:
