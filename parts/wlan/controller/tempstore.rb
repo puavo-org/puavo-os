@@ -61,6 +61,10 @@ module PuavoWlanController
       end
     end
 
+    def delete_host(hostname)
+      @redis.del("#{@key_prefix_host_status}:#{hostname}")
+    end
+
   end
 
 end

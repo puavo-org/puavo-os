@@ -39,6 +39,13 @@ module PuavoWlanController
           { :ping_interval_seconds => PING_INTERVAL_SECONDS }.to_json
         end
 
+        delete_host = lambda do
+          hostname = params[:hostname]
+
+          TEMPSTORE.delete_host(hostname)
+          nil
+        end
+
         root = lambda do
           content_type 'text/html'
 
@@ -46,6 +53,8 @@ module PuavoWlanController
             :ping_route => ping_route,
           }
         end
+
+        app.delete("#{PREFIX}/host/:hostname", &delete_host)
 
         app.get("#{PREFIX}"  , &root)
         app.get("#{PREFIX}/" , &root)
