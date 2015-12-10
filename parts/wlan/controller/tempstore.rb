@@ -47,6 +47,20 @@ module PuavoWlanController
       @redis.mget(keys).map { |host_status_json| JSON.parse(host_status_json) }
     end
 
+    def get_host_status_state(hostname)
+      key = "#{@key_prefix_host_status}:#{hostname}"
+      ttl = @redis.ttl(key)
+
+      case ttl
+      when -1
+        nil
+      when -2
+        'dead'
+      else
+        HOST_STATUS_EXPIRATION_TIME - ttl > PING_INTERVAL_SECONDS * 5 ? 'dying' : 'alive'
+      end
+    end
+
   end
 
 end

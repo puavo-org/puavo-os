@@ -22,6 +22,21 @@ th {
     background-color: #dfdfdf;
 }
 
+.statemark-alive:before {
+    content: "\25FC    ";
+    color: #00ff00;
+}
+
+.statemark-dead:before {
+    content: "\271D    ";
+    color: #000000;
+}
+
+.statemark-dying:before {
+    content: "\25FC    ";
+    color: #ff0000;
+}
+
 table.sortable thead {
     font-weight: bold;
     cursor: default;

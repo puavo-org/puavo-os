@@ -22,7 +22,7 @@
          <tbody>
            <% hosts.each do |host| %>
            <tr id="host-<%= host[:hostname] %>">
-             <td><%= host[:hostname] %></td>
+             <td><span class="statemark-<%= host[:state] %>"><%= host[:hostname] %></span></td>
              <td><%= host[:ap_count] %></td>
              <td sorttable_customkey="<%= host[:rx_bytes] %>"><%= prettify_bytes(host[:rx_bytes]) %></td>
              <td sorttable_customkey="<%= host[:tx_bytes] %>"><%= prettify_bytes(host[:tx_bytes]) %></td>

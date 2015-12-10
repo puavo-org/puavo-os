@@ -99,6 +99,7 @@ module PuavoWlanController
             erb_locals[:hosts] << {
               :ap_count => host_accesspoints.length,
               :hostname => host_hostname,
+              :state    => TEMPSTORE.get_host_status_state(host_hostname),
               :rx_bytes => host_rx_bytes,
               :tx_bytes => host_tx_bytes,
             }
