@@ -904,7 +904,10 @@ class AccessPoint
               mac = $1
               stations << sta unless sta.nil?
               sta = {
-                :mac       => mac,
+                :connected_time => 0,
+                :mac            => mac,
+                :rx_bytes       => 0,
+                :tx_bytes       => 0,
               }
             end
             line =~ /^connected_time=(.*)$/ and sta[:connected_time] = $1.to_i
