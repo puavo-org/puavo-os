@@ -577,6 +577,7 @@ class AccessPoint
 
     Signal.trap('EXIT') do
       Log.info('exiting')
+      controller_bye
       Process.kill('-SIGTERM', 0)
 
       @vifs.each do |vif|
@@ -864,6 +865,14 @@ class AccessPoint
       rescue StandardError => e
         Log.exception("failed to setup phy #{phy.name}, ignoring it", e)
       end
+    end
+  end
+
+  def controller_bye
+    begin
+      @controller.send_request('DELETE', "/v1/host/#{PUAVO_ETC.hostname}")
+    rescue StandardError => e
+      Log.exception('failed to ping the controller', e)
     end
   end
 
