@@ -655,7 +655,11 @@ class AccessPoint
         if ready.nil?
 
           if @ping_interval.nil? || Time.now - @ping_time > @ping_interval
-            controller_ping
+            begin
+              controller_ping
+            rescue StandardError => e
+              Log.exception('failed to ping the controller', e)
+            end
           end
 
           if @ctrlconn && Time.now - @ctrlconn_time > 5
@@ -865,21 +869,11 @@ class AccessPoint
     end
   end
 
-  def controller_send(method, path, data={})
-    begin
-      return @controller.send_request(method, path, data.to_json,
-                                      {'Content-Type' => 'application/json'})
-    rescue StandardError => e
-      Log.exception('failed to send a request to the controller', e)
-    end
-    nil
-  end
-
   def controller_ping
-    response = controller_send('POST', "/v1/ping", get_status)
-    return nil if response.nil?
-    @ping_interval = JSON.parse(response.body)['ping_interval_seconds']
     @ping_time = Time.now
+    response = @controller.send_request('POST', '/v1/ping', get_status.to_json,
+                                        {'Content-Type' => 'application/json'})
+    @ping_interval = JSON.parse(response.body)['ping_interval_seconds']
   end
 
   def get_status
