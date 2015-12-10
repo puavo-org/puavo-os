@@ -47,9 +47,9 @@ module PuavoWlanController
             :total_sta_tx_bytes => 0,
           }
 
-          TEMPSTORE.get_host_statuses.each do |host_status|
-            host_accesspoints = host_status.fetch('accesspoints')
-            host_hostname     = host_status.fetch('hostname')
+          TEMPSTORE.get_hosts.each do |host|
+            host_accesspoints = host.fetch('accesspoints')
+            host_hostname     = host.fetch('hostname')
             host_rx_bytes     = 0
             host_tx_bytes     = 0
 
@@ -99,7 +99,7 @@ module PuavoWlanController
             erb_locals[:hosts] << {
               :ap_count => host_accesspoints.length,
               :hostname => host_hostname,
-              :state    => TEMPSTORE.get_host_status_state(host_hostname),
+              :state    => TEMPSTORE.get_host_state(host_hostname),
               :rx_bytes => host_rx_bytes,
               :tx_bytes => host_tx_bytes,
             }

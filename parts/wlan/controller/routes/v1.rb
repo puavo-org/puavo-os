@@ -30,12 +30,14 @@ module PuavoWlanController
 
       def self.registered(app)
 
-        ping_route = "#{PREFIX}/ping"
-        ping = lambda do
-          body = request.body.read
-          data = JSON.parse(body)
+        host_route = "#{PREFIX}/host/:hostname"
 
-          TEMPSTORE.update_host_status(data)
+        put_host = lambda do
+          body     = request.body.read
+          data     = JSON.parse(body)
+          hostname = params[:hostname]
+
+          TEMPSTORE.update_host(hostname, data)
           { :ping_interval_seconds => PING_INTERVAL_SECONDS }.to_json
         end
 
@@ -54,12 +56,12 @@ module PuavoWlanController
           }
         end
 
-        app.delete("#{PREFIX}/host/:hostname", &delete_host)
+        app.delete(host_route, &delete_host)
 
         app.get("#{PREFIX}"  , &root)
         app.get("#{PREFIX}/" , &root)
 
-        app.post(ping_route  , &ping)
+        app.put(host_route   , &put_host)
 
       end
 

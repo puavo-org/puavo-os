@@ -30,25 +30,24 @@ module PuavoWlanController
   class TempStore
 
     def initialize
-      @key_prefix_host_status  = 'puavo-wlancontroller:host-status'
-      @redis                   = Redis.new
+      @key_prefix_host = 'puavo-wlancontroller:host'
+      @redis           = Redis.new
     end
 
-    def update_host_status(host_status)
-      ap_hostname = host_status.fetch('hostname')
-      key = "#{@key_prefix_host_status}:#{ap_hostname}"
-      @redis.set(key, host_status.to_json)
-      @redis.expire(key, HOST_STATUS_EXPIRATION_TIME)
+    def update_host(hostname, data)
+      key = "#{@key_prefix_host}:#{hostname}"
+      @redis.set(key, data.to_json)
+      @redis.expire(key, HOST_EXPIRATION_TIME)
     end
 
-    def get_host_statuses
-      keys = @redis.keys("#{@key_prefix_host_status}:*")
+    def get_hosts
+      keys = @redis.keys("#{@key_prefix_host}:*")
       return [] if keys.empty?
-      @redis.mget(keys).map { |host_status_json| JSON.parse(host_status_json) }
+      @redis.mget(keys).map { |host_data_json| JSON.parse(host_data_json) }
     end
 
-    def get_host_status_state(hostname)
-      key = "#{@key_prefix_host_status}:#{hostname}"
+    def get_host_state(hostname)
+      key = "#{@key_prefix_host}:#{hostname}"
       ttl = @redis.ttl(key)
 
       case ttl
@@ -57,12 +56,12 @@ module PuavoWlanController
       when -2
         'dead'
       else
-        HOST_STATUS_EXPIRATION_TIME - ttl > PING_INTERVAL_SECONDS + 5 ? 'dying' : 'alive'
+        HOST_EXPIRATION_TIME - ttl > PING_INTERVAL_SECONDS + 5 ? 'dying' : 'alive'
       end
     end
 
     def delete_host(hostname)
-      @redis.del("#{@key_prefix_host_status}:#{hostname}")
+      @redis.del("#{@key_prefix_host}:#{hostname}")
     end
 
   end
