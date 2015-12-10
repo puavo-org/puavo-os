@@ -35,7 +35,7 @@ module PuavoWlanController
           body = request.body.read
           data = JSON.parse(body)
 
-          TEMPSTORE.update_ap_status(data)
+          TEMPSTORE.update_host_status(data)
           { :ping_interval_seconds => PING_INTERVAL_SECONDS }.to_json
         end
 

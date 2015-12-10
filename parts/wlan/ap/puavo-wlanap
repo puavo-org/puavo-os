@@ -883,7 +883,7 @@ class AccessPoint
   end
 
   def get_status
-    interfaces = []
+    accesspoints = []
     @vifs.each do |vif|
       bssid    = nil
       channel  = nil
@@ -933,7 +933,7 @@ class AccessPoint
       rescue StandardError => e
         Log.exception("failed to query hostapd status (#{vif.name})", e)
       else
-        interfaces << {
+        accesspoints << {
           :start_time         => start_time,
           :bssid              => bssid,
           :channel            => channel,
@@ -946,8 +946,8 @@ class AccessPoint
       end
     end
     {
-      :hostname   => PUAVO_ETC.hostname,
-      :interfaces => interfaces,
+      :hostname     => PUAVO_ETC.hostname,
+      :accesspoints => accesspoints,
     }
   end
 

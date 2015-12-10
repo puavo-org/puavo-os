@@ -30,21 +30,21 @@ module PuavoWlanController
   class TempStore
 
     def initialize
-      @key_prefix_ap_status  = 'puavo-wlancontroller:ap-status'
-      @redis                 = Redis.new
+      @key_prefix_host_status  = 'puavo-wlancontroller:host-status'
+      @redis                   = Redis.new
     end
 
-    def update_ap_status(ap_status)
-      ap_hostname = ap_status.fetch('hostname')
-      key = "#{@key_prefix_ap_status}:#{ap_hostname}"
-      @redis.set(key, ap_status.to_json)
-      @redis.expire(key, AP_STATUS_EXPIRATION_TIME)
+    def update_host_status(host_status)
+      ap_hostname = host_status.fetch('hostname')
+      key = "#{@key_prefix_host_status}:#{ap_hostname}"
+      @redis.set(key, host_status.to_json)
+      @redis.expire(key, HOST_STATUS_EXPIRATION_TIME)
     end
 
-    def get_ap_statuses
-      keys = @redis.keys("#{@key_prefix_ap_status}:*")
+    def get_host_statuses
+      keys = @redis.keys("#{@key_prefix_host_status}:*")
       return [] if keys.empty?
-      @redis.mget(keys).map { |ap_status_json| JSON.parse(ap_status_json) }
+      @redis.mget(keys).map { |host_status_json| JSON.parse(host_status_json) }
     end
 
   end

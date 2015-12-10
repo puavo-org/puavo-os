@@ -33,60 +33,78 @@ module PuavoWlanController
       def self.registered(app)
         root = lambda do
           content_type 'text/html'
-          ap_statuses = TEMPSTORE.get_ap_statuses
 
           arp_table = get_arp_table
+          time_now  = Time.now
 
-          total_station_count = 0
-          total_interface_count = 0
-          total_ap_rx_bytes = 0
-          total_ap_tx_bytes = 0
-          total_sta_rx_bytes = 0
-          total_sta_tx_bytes = 0
-          stations = []
-          interfaces = []
-          hosts = []
-          ap_statuses.each do |ap_status|
-            host_rx_bytes = 0
-            host_tx_bytes = 0
-            total_interface_count += ap_status['interfaces'].length
-            ap_status['interfaces'].each do |interface|
-              total_station_count += interface['stations'].length
-              total_ap_rx_bytes += interface['rx_bytes']
-              total_ap_tx_bytes += interface['tx_bytes']
-              host_rx_bytes += interface['rx_bytes']
-              host_tx_bytes += interface['tx_bytes']
-              interface['hostname'] = ap_status['hostname']
-              interface['uptime'] = Time.now - Time.parse(interface.fetch('start_time'))
-              interface['stations'].each do |station|
-                station['bssid'] = interface['bssid']
-                station['hostname'], station['fqdn'], station['ipaddr'] = arp_table.fetch(station['mac'], [nil, nil, nil])
-                total_sta_rx_bytes += station['rx_bytes']
-                total_sta_tx_bytes += station['tx_bytes']
-                stations << station
+          erb_locals = {
+            :accesspoints       => [],
+            :hosts              => [],
+            :stations           => [],
+            :total_ap_rx_bytes  => 0,
+            :total_ap_tx_bytes  => 0,
+            :total_sta_rx_bytes => 0,
+            :total_sta_tx_bytes => 0,
+          }
+
+          TEMPSTORE.get_host_statuses.each do |host_status|
+            host_accesspoints = host_status.fetch('accesspoints')
+            host_hostname     = host_status.fetch('hostname')
+            host_rx_bytes     = 0
+            host_tx_bytes     = 0
+
+            host_accesspoints.each do |accesspoint|
+              ap_bssid      = accesspoint.fetch('bssid')
+              ap_start_time = Time.parse(accesspoint.fetch('start_time'))
+              ap_stations   = accesspoint.fetch('stations')
+              ap_rx_bytes   = accesspoint.fetch('rx_bytes')
+              ap_tx_bytes   = accesspoint.fetch('tx_bytes')
+
+              host_rx_bytes                  += ap_rx_bytes
+              host_tx_bytes                  += ap_tx_bytes
+              erb_locals[:total_ap_rx_bytes] += ap_rx_bytes
+              erb_locals[:total_ap_tx_bytes] += ap_tx_bytes
+
+              ap_stations.each do |station|
+                sta_mac                            = station.fetch('mac')
+                sta_hostname, sta_fqdn, sta_ipaddr = arp_table.fetch(sta_mac, [nil, nil, nil])
+                sta_rx_bytes                       = station.fetch('rx_bytes')
+                sta_tx_bytes                       = station.fetch('tx_bytes')
+
+                erb_locals[:total_sta_rx_bytes] += sta_rx_bytes
+                erb_locals[:total_sta_tx_bytes] += sta_tx_bytes
+
+                erb_locals[:stations] << {
+                  :bssid          => ap_bssid,
+                  :connected_time => station.fetch('connected_time'),
+                  :fqdn           => sta_fqdn,
+                  :hostname       => sta_hostname,
+                  :ipaddr         => sta_ipaddr,
+                  :mac            => sta_mac,
+                  :rx_bytes       => sta_rx_bytes,
+                  :tx_bytes       => sta_tx_bytes,
+                }
               end
-              interfaces << interface
+              erb_locals[:accesspoints] << {
+                :bssid     => ap_bssid,
+                :channel   => accesspoint.fetch('channel'),
+                :hostname  => host_hostname,
+                :rx_bytes  => ap_rx_bytes,
+                :tx_bytes  => ap_tx_bytes,
+                :ssid      => accesspoint.fetch('ssid'),
+                :sta_count => ap_stations.length,
+                :uptime    => time_now - ap_start_time,
+              }
             end
-            hosts << {
-              'hostname'        => ap_status['hostname'],
-              'interface_count' => ap_status['interfaces'].length,
-              'rx_bytes'        => host_rx_bytes,
-              'tx_bytes'        => host_tx_bytes,
+            erb_locals[:hosts] << {
+              :ap_count => host_accesspoints.length,
+              :hostname => host_hostname,
+              :rx_bytes => host_rx_bytes,
+              :tx_bytes => host_tx_bytes,
             }
           end
 
-          erb :index, :locals => {
-            :hosts                 => hosts,
-            :interfaces            => interfaces,
-            :stations              => stations,
-            :total_ap_rx_bytes     => total_ap_rx_bytes,
-            :total_ap_tx_bytes     => total_ap_tx_bytes,
-            :total_interface_count => total_interface_count,
-            :total_sta_rx_bytes    => total_sta_rx_bytes,
-            :total_sta_tx_bytes    => total_sta_tx_bytes,
-            :total_station_count   => total_station_count,
-          }
-
+          erb :index, :locals => erb_locals
         end
 
         app.get("#{PREFIX}/", &root)
