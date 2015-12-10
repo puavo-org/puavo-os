@@ -900,23 +900,20 @@ class AccessPoint
         # Get station stats
         IO.popen(['hostapd_cli', '-i', vif.name,
                   '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'all_sta']) do |io|
-          sta = nil
+          sta = {}
           io.each_line do |line|
-            if line =~ /^(([0-9a-f]{2}:){5}([0-9a-f]{2}))$/
-              mac = $1
-              stations << sta unless sta.nil?
-              sta = {
-                :connected_time => 0,
-                :mac            => mac,
-                :rx_bytes       => 0,
-                :tx_bytes       => 0,
-              }
+            line =~ /^(([0-9a-f]{2}:){5}([0-9a-f]{2}))$/ and sta[:mac]            = $1
+            line =~ /^connected_time=(.*)$/              and sta[:connected_time] = $1.to_i
+            line =~ /^rx_bytes=(.*)$/                    and sta[:rx_bytes]       = $1.to_i
+            line =~ /^tx_bytes=(.*)$/                    and sta[:tx_bytes]       = $1.to_i
+            if Set.new(sta.keys) == Set.new([:mac, :connected_time, :rx_bytes, :tx_bytes])
+              # Add only complete/valid station entries. In some cases
+              # (probably when STA has just disassociated),
+              # hostapd_cli all_sta does not print all fields.
+              stations << sta
+              sta = {}
             end
-            line =~ /^connected_time=(.*)$/ and sta[:connected_time] = $1.to_i
-            line =~ /^rx_bytes=(.*)$/       and sta[:rx_bytes]       = $1.to_i
-            line =~ /^tx_bytes=(.*)$/       and sta[:tx_bytes]       = $1.to_i
           end
-          stations << sta unless sta.nil?
         end
 
         # Get interface stats
