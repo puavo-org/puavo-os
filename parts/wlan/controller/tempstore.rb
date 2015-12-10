@@ -57,7 +57,7 @@ module PuavoWlanController
       when -2
         'dead'
       else
-        HOST_STATUS_EXPIRATION_TIME - ttl > PING_INTERVAL_SECONDS * 5 ? 'dying' : 'alive'
+        HOST_STATUS_EXPIRATION_TIME - ttl > PING_INTERVAL_SECONDS + 5 ? 'dying' : 'alive'
       end
     end
 
