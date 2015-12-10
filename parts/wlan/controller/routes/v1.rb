@@ -42,52 +42,9 @@ module PuavoWlanController
         root = lambda do
           content_type 'text/html'
 
-          ERB.new(<<'EOF'
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Puavo's WLAN Controller - <%= PREFIX %></title>
-  </head
-  <body>
-    <h1>API</h1>
-    <h2>POST <%= ping_route %></h2>
-    <p>Send a status notification to the controller. Must be called periodically.</p>
-    <h3>Request data</h3>
-    <p>Content-Type: application/json</p>
-    <h4>Example</h4>
-    <pre><code>
-{
-  "hostname": "accesspoint-01",
-  "interfaces": [
-    {
-      "bssid": "01:02:03:04:05:06",
-      "channel": 11,
-      "ssid": "MyNet",
-      "stations": [
-        {
-          "mac": "06:05:04:03:02:01",
-          "connected_time": 232,
-          "rx_bytes": 32322,
-          "tx_bytes": 11323,
-        }
-      ]
-    }
-  ]
-}
-    </code></pre>
-    <h3>Response data</h3>
-    <p>Content-Type: application/json</p>
-    <h4>Example</h4>
-    <pre><code>
-{
-  "ping_interval_seconds": 20
-}
-    </code></pre>
-  </body>
-</html>
-EOF
-                  ).result(binding)
+          erb :v1_index, :locals => {
+            :ping_route => ping_route,
+          }
         end
 
         app.get("#{PREFIX}"  , &root)
