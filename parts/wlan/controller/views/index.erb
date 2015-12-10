@@ -4,10 +4,12 @@
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="default.css">
     <title>Puavo's WLAN Controller - Status</title>
+    <script src="autoreload.js"></script>
     <script src="sorttable.js"></script>
-  </head
-     <body>
+  </head>
+     <body onload="checkAutoReload();">
        <h1>Status</h1>
+       <input id="autoreload_checkbox" type="checkbox" onclick="toggleAutoReload();">Reload automatically</input>
        <% unless hosts.empty? %>
        <h2>Hosts</h2>
        <table class="sortable">
