@@ -6,13 +6,12 @@
   </head
   <body>
     <h1>API</h1>
-    <h2>POST <%= ping_route %></h2>
-    <p>Send a status notification to the controller. Must be called periodically.</p>
+    <h2>PUT <%= host_route %></h2>
+    <p>Create or update a host resource. Must be called periodically.</p>
     <h3>Request data</h3>
     <p>Content-Type: application/json</p>
     <h4>Example</h4>
-    <pre><code>
-{
+    <pre><code>{
   "hostname": "accesspoint-01",
   "interfaces": [
     {
@@ -28,20 +27,20 @@
           "mac": "06:05:04:03:02:01",
           "connected_time": 232,
           "rx_bytes": 32322,
-          "tx_bytes": 11323,
+          "tx_bytes": 11323
         }
       ]
     }
   ]
-}
-    </code></pre>
+}</code></pre>
     <h3>Response data</h3>
     <p>Content-Type: application/json</p>
     <h4>Example</h4>
-    <pre><code>
-{
+    <pre><code>{
   "ping_interval_seconds": 20
-}
-    </code></pre>
+}</code></pre>
+
+    <h2>DELETE <%= host_route %></h2>
+    <p>Delete a host resource. Should be called when a host terminates.</p>
   </body>
 </html>

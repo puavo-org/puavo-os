@@ -48,18 +48,18 @@ module PuavoWlanController
           nil
         end
 
-        root = lambda do
+        get_index = lambda do
           content_type 'text/html'
 
           erb :v1_index, :locals => {
-            :ping_route => ping_route,
+            :host_route => host_route,
           }
         end
 
         app.delete(host_route, &delete_host)
 
-        app.get("#{PREFIX}"  , &root)
-        app.get("#{PREFIX}/" , &root)
+        app.get("#{PREFIX}"  , &get_index)
+        app.get("#{PREFIX}/" , &get_index)
 
         app.put(host_route   , &put_host)
 
