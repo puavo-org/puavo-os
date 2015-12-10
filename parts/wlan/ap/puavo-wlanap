@@ -655,11 +655,7 @@ class AccessPoint
         if ready.nil?
 
           if @ping_interval.nil? || Time.now - @ping_time > @ping_interval
-            begin
-              controller_ping
-            rescue StandardError => e
-              Log.exception('failed to ping the controller', e)
-            end
+            controller_ping
           end
 
           if @ctrlconn && Time.now - @ctrlconn_time > 5
@@ -740,9 +736,11 @@ class AccessPoint
 
     when 'AP-STA-CONNECTED'
       mac = tail
+      controller_ping
 
     when 'AP-STA-DISCONNECTED'
       mac = tail
+      controller_ping
 
     else
       Log.warning("received unhandled hostapd-event: #{args}")
@@ -870,10 +868,14 @@ class AccessPoint
   end
 
   def controller_ping
-    @ping_time = Time.now
-    response = @controller.send_request('POST', '/v1/ping', get_status.to_json,
-                                        {'Content-Type' => 'application/json'})
-    @ping_interval = JSON.parse(response.body)['ping_interval_seconds']
+    begin
+      @ping_time = Time.now
+      response = @controller.send_request('POST', '/v1/ping', get_status.to_json,
+                                          {'Content-Type' => 'application/json'})
+      @ping_interval = JSON.parse(response.body)['ping_interval_seconds']
+    rescue StandardError => e
+      Log.exception('failed to ping the controller', e)
+    end
   end
 
   def get_status
