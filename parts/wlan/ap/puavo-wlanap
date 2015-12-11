@@ -40,6 +40,8 @@ require 'timeout'
 require 'puavo/etc'
 require 'puavo/rest-client'
 
+require 'puavowlan'
+
 module Log
 
   def self.info(msg)
@@ -953,6 +955,7 @@ class AccessPoint
     {
       :hostname     => PUAVO_ETC.hostname,
       :accesspoints => accesspoints,
+      :version      => PuavoWLAN::VERSION,
     }
   end
 
