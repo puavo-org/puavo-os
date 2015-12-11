@@ -102,6 +102,7 @@ module PuavoWlanController
               :state    => TEMPSTORE.get_host_state(host_hostname),
               :rx_bytes => host_rx_bytes,
               :tx_bytes => host_tx_bytes,
+              :version  => host.fetch('version'),
             }
           end
 
