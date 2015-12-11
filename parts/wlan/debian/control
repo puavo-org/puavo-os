@@ -80,3 +80,13 @@ Description: measure and visualize signal strengths of WLAN access points
  frames to visualize coverage areas of access points as heatmap overlays
  on top of layout images.
  .
+
+Package: ruby-puavowlan
+Architecture: all
+XS-Ruby-Versions: ruby1.9.1
+Depends: ${shlibs:Depends}, ${misc:Depends},
+ ruby1.9.1
+Description: Puavo's WLAN library for Ruby
+ This library provides common library utilities for Puavo's WLAN
+ software.
+ .
