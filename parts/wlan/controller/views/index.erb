@@ -109,7 +109,7 @@
              <td><%= station[:mac] %></td>
              <td><%= station[:ipaddr] %></td>
              <td><a href="#ap-<%= station[:bssid] %>"><%= station[:bssid] %></a></td>
-             <td sorttable_customkey="<%= station[:connected_time] %>"><%= prettify_seconds(station[:connected_time]) %></td>
+             <td sorttable_customkey="<%= station[:uptime] %>"><%= prettify_seconds(station[:uptime]) %></td>
              <td sorttable_customkey="<%= station[:rx_bytes] %>"><%= prettify_bytes(station[:rx_bytes]) %></td>
              <td sorttable_customkey="<%= station[:tx_bytes] %>"><%= prettify_bytes(station[:tx_bytes]) %></td>
            </tr>

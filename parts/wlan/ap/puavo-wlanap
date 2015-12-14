@@ -918,10 +918,10 @@ class AccessPoint
           sta = {}
           io.each_line do |line|
             line =~ /^(([0-9a-f]{2}:){5}([0-9a-f]{2}))$/ and sta[:mac]            = $1
-            line =~ /^connected_time=(.*)$/              and sta[:connected_time] = $1.to_i
+            line =~ /^connected_time=(.*)$/              and sta[:start_time]     = Time.now - $1.to_i
             line =~ /^rx_bytes=(.*)$/                    and sta[:rx_bytes]       = $1.to_i
             line =~ /^tx_bytes=(.*)$/                    and sta[:tx_bytes]       = $1.to_i
-            if Set.new(sta.keys) == Set.new([:mac, :connected_time, :rx_bytes, :tx_bytes])
+            if Set.new(sta.keys) == Set.new([:mac, :start_time, :rx_bytes, :tx_bytes])
               # Add only complete/valid station entries. In some cases
               # (probably when STA has just disassociated),
               # hostapd_cli all_sta does not print all fields.

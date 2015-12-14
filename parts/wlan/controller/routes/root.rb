@@ -73,19 +73,20 @@ module PuavoWlanController
                 sta_hostname, sta_fqdn, sta_ipaddr = arp_table.fetch(sta_mac, [nil, nil, nil])
                 sta_rx_bytes                       = station.fetch('rx_bytes')
                 sta_tx_bytes                       = station.fetch('tx_bytes')
+                sta_start_time                     = Time.parse(station.fetch('start_time'))
 
                 erb_locals[:total_sta_rx_bytes] += sta_rx_bytes
                 erb_locals[:total_sta_tx_bytes] += sta_tx_bytes
 
                 erb_locals[:stations] << {
-                  :bssid          => ap_bssid,
-                  :connected_time => station.fetch('connected_time'),
-                  :fqdn           => sta_fqdn,
-                  :hostname       => sta_hostname,
-                  :ipaddr         => sta_ipaddr,
-                  :mac            => sta_mac,
-                  :rx_bytes       => sta_rx_bytes,
-                  :tx_bytes       => sta_tx_bytes,
+                  :bssid    => ap_bssid,
+                  :uptime   => time_now - sta_start_time,
+                  :fqdn     => sta_fqdn,
+                  :hostname => sta_hostname,
+                  :ipaddr   => sta_ipaddr,
+                  :mac      => sta_mac,
+                  :rx_bytes => sta_rx_bytes,
+                  :tx_bytes => sta_tx_bytes,
                 }
               end
               erb_locals[:accesspoints] << {
