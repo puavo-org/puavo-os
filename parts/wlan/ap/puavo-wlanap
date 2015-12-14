@@ -957,9 +957,10 @@ class AccessPoint
       end
     end
     {
-      :hostname     => PUAVO_ETC.hostname,
-      :accesspoints => accesspoints,
-      :version      => PuavoWLAN::VERSION,
+      :hostname          => PUAVO_ETC.hostname,
+      :accesspoints      => accesspoints,
+      :version           => PuavoWLAN::VERSION,
+      :system_start_time => Time.now - IO.read('/proc/uptime').split[0].to_i,
     }
   end
 
