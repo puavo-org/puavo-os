@@ -195,6 +195,7 @@ module Dot11
   class Vif
 
     attr_reader :name
+    attr_reader :phy
 
     def initialize(name, phy)
       @name = name
@@ -842,6 +843,8 @@ class AccessPoint
   def remove_phy(phy)
     dying_hostapds     = []
     dying_hostapd_clis = []
+
+    @vifs.delete_if { |vif| vif.phy.name == phy.name }
 
     # Remove all soon-to-be-killed services from the array before
     # killing any to avoid dependent services to die and interrupt us.
