@@ -961,6 +961,7 @@ class AccessPoint
       :accesspoints      => accesspoints,
       :version           => PuavoWLAN::VERSION,
       :system_start_time => Time.now - IO.read('/proc/uptime').split[0].to_i,
+      :uname             => IO.popen(['uname', '-snrvmpio']).read,
     }
   end
 
