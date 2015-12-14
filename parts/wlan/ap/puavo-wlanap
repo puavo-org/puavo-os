@@ -762,6 +762,7 @@ class AccessPoint
       add_phy(Dot11::Phy.new(phy_name))
     when 'remove'
       remove_phy(Dot11::Phy.new(phy_name))
+      controller_ping
     else
       Log.warning("ignoring unexpected udev action: #{action}")
       return
