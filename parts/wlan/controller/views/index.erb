@@ -19,6 +19,7 @@
              <th>Host</th>
 	     <th>Version</th>
              <th>Access points</th>
+             <th>Stations</th>
              <th>Rx</th>
              <th>Tx</th>
            </tr>
@@ -29,6 +30,7 @@
              <td><span class="statemark-<%= host[:state] %>"><%= host[:hostname] %></span></td>
              <td><%= host[:version] %></td>
              <td><%= host[:ap_count] %></td>
+             <td><%= host[:sta_count] %></td>
              <td sorttable_customkey="<%= host[:rx_bytes] %>"><%= prettify_bytes(host[:rx_bytes]) %></td>
              <td sorttable_customkey="<%= host[:tx_bytes] %>"><%= prettify_bytes(host[:tx_bytes]) %></td>
            </tr>
@@ -38,6 +40,7 @@
            <tr>
              <th colspan="2">Totals</th>
              <td><%= accesspoints.length %></td>
+             <td><%= stations.length %></td>
              <td><%= prettify_bytes(total_ap_rx_bytes) %></td>
              <td><%= prettify_bytes(total_ap_tx_bytes) %></td>
            </tr>

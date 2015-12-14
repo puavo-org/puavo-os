@@ -53,6 +53,7 @@ module PuavoWlanController
             host_hostname     = host.fetch('hostname')
             host_rx_bytes     = 0
             host_tx_bytes     = 0
+            host_sta_count    = 0
 
             host_accesspoints.each do |accesspoint|
               ap_bssid      = accesspoint.fetch('bssid')
@@ -62,6 +63,7 @@ module PuavoWlanController
               ap_tx_bytes   = accesspoint.fetch('tx_bytes')
               ap_uptime     = time_now - ap_start_time
 
+              host_sta_count                 += ap_stations.length
               host_rx_bytes                  += ap_rx_bytes
               host_tx_bytes                  += ap_tx_bytes
               erb_locals[:total_ap_rx_bytes] += ap_rx_bytes
@@ -100,12 +102,13 @@ module PuavoWlanController
               }
             end
             erb_locals[:hosts] << {
-              :ap_count => host_accesspoints.length,
-              :hostname => host_hostname,
-              :state    => TEMPSTORE.get_host_state(host_hostname),
-              :rx_bytes => host_rx_bytes,
-              :tx_bytes => host_tx_bytes,
-              :version  => host.fetch('version'),
+              :ap_count  => host_accesspoints.length,
+              :hostname  => host_hostname,
+              :state     => TEMPSTORE.get_host_state(host_hostname),
+              :sta_count => host_sta_count,
+              :rx_bytes  => host_rx_bytes,
+              :tx_bytes  => host_tx_bytes,
+              :version   => host.fetch('version'),
             }
           end
 
