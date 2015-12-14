@@ -43,7 +43,6 @@ module PuavoWlanController
             :stations           => [],
             :total_ap_rx_bytes  => 0,
             :total_ap_tx_bytes  => 0,
-            :total_ap_uptime    => 0,
             :total_sta_rx_bytes => 0,
             :total_sta_tx_bytes => 0,
           }
@@ -68,7 +67,6 @@ module PuavoWlanController
               host_tx_bytes                  += ap_tx_bytes
               erb_locals[:total_ap_rx_bytes] += ap_rx_bytes
               erb_locals[:total_ap_tx_bytes] += ap_tx_bytes
-              erb_locals[:total_ap_uptime]   += ap_uptime
 
               ap_stations.each do |station|
                 sta_mac                            = station.fetch('mac')
