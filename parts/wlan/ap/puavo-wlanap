@@ -904,12 +904,26 @@ class AccessPoint
   end
 
   def get_status
-    accesspoints = []
+    radios       = {}
     @vifs.each do |vif|
       bssid    = nil
       channel  = nil
       ssid     = nil
       stations = []
+
+      if radios.has_key?(vif.phy.mac)
+        radio = radios.fetch(vif.phy.mac)
+      else
+        radio = {
+          :accesspoints => [],
+          :driver       => vif.phy.driver,
+          :product      => vif.phy.product,
+          :mac          => vif.phy.mac,
+          :name         => vif.phy.name,
+        }
+        radios[vif.phy.mac] = radio
+      end
+
       begin
 
         # Get access point stats
@@ -954,7 +968,8 @@ class AccessPoint
       rescue StandardError => e
         Log.exception("failed to query hostapd status (#{vif.name})", e)
       else
-        accesspoints << {
+        radio[:accesspoints] << {
+          :radio_mac          => vif.phy.mac,
           :start_time         => start_time,
           :bssid              => bssid,
           :channel            => channel,
@@ -969,7 +984,7 @@ class AccessPoint
     l1, l5, l15 = IO.read('/proc/loadavg').split.take(3).map { |s| s.to_f }
     {
       :hostname          => PUAVO_ETC.hostname,
-      :accesspoints      => accesspoints,
+      :radios            => radios.values,
       :version           => PuavoWLAN::VERSION,
       :system_start_time => Time.now - IO.read('/proc/uptime').split[0].to_i,
       :uname             => IO.popen(['uname', '-snrvmpio']).read,
