@@ -146,6 +146,7 @@ module PuavoWlanController
               :loadavg1       => host.fetch('loadavg1'),
               :loadavg5       => host.fetch('loadavg5'),
               :loadavg15      => host.fetch('loadavg15'),
+              :phy_count      => host_radios.length,
             }
           end
 
