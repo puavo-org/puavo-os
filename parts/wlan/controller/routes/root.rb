@@ -65,6 +65,8 @@ module PuavoWlanController
               radio_ap_count     = radio_accesspoints.length
               radio_rx_bytes     = 0
               radio_tx_bytes     = 0
+              radio_channel      = 0
+              radio_tx_power     = 0
 
               host_ap_count += radio_ap_count
 
@@ -75,6 +77,8 @@ module PuavoWlanController
                 ap_rx_bytes   = accesspoint.fetch('rx_bytes')
                 ap_tx_bytes   = accesspoint.fetch('tx_bytes')
                 ap_uptime     = time_now - ap_start_time
+                radio_channel = accesspoint.fetch('channel')
+                radio_tx_power = accesspoint.fetch('tx_power_limit_dBm')
 
                 host_sta_count                 += ap_stations.length
                 host_rx_bytes                  += ap_rx_bytes
@@ -108,14 +112,12 @@ module PuavoWlanController
                 erb_locals[:accesspoints] << {
                   :radio_mac => accesspoint.fetch('radio_mac'),
                   :bssid     => ap_bssid,
-                  :channel   => accesspoint.fetch('channel'),
                   :hostname  => host_hostname,
                   :rx_bytes  => ap_rx_bytes,
                   :tx_bytes  => ap_tx_bytes,
                   :ssid      => accesspoint.fetch('ssid'),
                   :sta_count => ap_stations.length,
                   :uptime    => ap_uptime,
-                  :tx_power_limit_dBm => accesspoint.fetch('tx_power_limit_dBm'),
                 }
               end
               erb_locals[:radios] << {
@@ -126,6 +128,9 @@ module PuavoWlanController
                 :ap_count => radio_ap_count,
                 :rx_bytes => radio_rx_bytes,
                 :tx_bytes => radio_tx_bytes,
+                :channel  => radio_channel,
+                :tx_power => radio_tx_power,
+
               }
             end
             erb_locals[:hosts] << {
