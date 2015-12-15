@@ -93,10 +93,20 @@ module Dot11
   class Phy
 
     attr_accessor :channel
+    attr_reader   :driver
+    attr_reader   :mac
     attr_reader   :name
+    attr_reader   :product
 
     def initialize(name)
       @name = name
+      sysfs_dir = "/sys/class/ieee80211/#{name}"
+      @mac = IO.read("#{sysfs_dir}/macaddress").strip
+      device_info = IO.read("#{sysfs_dir}/device/uevent")
+      device_info =~ /^DRIVER=(.*)$/
+      @driver = $1.strip
+      device_info =~ /^PRODUCT=(.*)$/
+      @product = $1.strip
     end
 
     def add_vif(name)
