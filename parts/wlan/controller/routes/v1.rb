@@ -30,21 +30,21 @@ module PuavoWlanController
 
       def self.registered(app)
 
-        host_route = "#{PREFIX}/host/:hostname"
+        status_route = "#{PREFIX}/status/:hostname"
 
-        put_host = lambda do
+        put_status = lambda do
           body     = request.body.read
           data     = JSON.parse(body)
           hostname = params[:hostname]
 
-          TEMPSTORE.update_host(hostname, data)
+          TEMPSTORE.update_status(hostname, data)
           { :ping_interval_seconds => PING_INTERVAL_SECONDS }.to_json
         end
 
-        delete_host = lambda do
+        delete_status = lambda do
           hostname = params[:hostname]
 
-          TEMPSTORE.delete_host(hostname)
+          TEMPSTORE.delete_status(hostname)
           nil
         end
 
@@ -52,16 +52,16 @@ module PuavoWlanController
           content_type 'text/html'
 
           erb :v1_index, :locals => {
-            :host_route => host_route,
+            :status_route => status_route,
           }
         end
 
-        app.delete(host_route, &delete_host)
+        app.delete(status_route, &delete_status)
 
-        app.get("#{PREFIX}"  , &get_index)
-        app.get("#{PREFIX}/" , &get_index)
+        app.get("#{PREFIX}",     &get_index)
+        app.get("#{PREFIX}/",    &get_index)
 
-        app.put(host_route   , &put_host)
+        app.put(status_route,    &put_status)
 
       end
 

@@ -886,7 +886,7 @@ class AccessPoint
 
   def controller_bye
     begin
-      @controller.send_request('DELETE', "/v1/host/#{PUAVO_ETC.hostname}")
+      @controller.send_request('DELETE', "/v1/status/#{PUAVO_ETC.hostname}")
     rescue StandardError => e
       Log.exception('failed to ping the controller', e)
     end
@@ -895,7 +895,7 @@ class AccessPoint
   def controller_ping
     begin
       @ping_time = Time.now
-      response = @controller.send_request('PUT', "/v1/host/#{PUAVO_ETC.hostname}", get_status.to_json,
+      response = @controller.send_request('PUT', "/v1/status/#{PUAVO_ETC.hostname}", get_status.to_json,
                                           {'Content-Type' => 'application/json'})
       @ping_interval = JSON.parse(response.body)['ping_interval_seconds']
     rescue StandardError => e
