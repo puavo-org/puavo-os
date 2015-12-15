@@ -20,6 +20,9 @@
 	     <th>Version</th>
 	     <th>System uptime</th>
 	     <th>Service uptime</th>
+	     <th>Load 1min</th>
+	     <th>Load 5min</th>
+	     <th>Load 15min</th>
              <th>Access points</th>
              <th>Stations</th>
              <th>Rx</th>
@@ -33,6 +36,9 @@
              <td><%= host[:version] %></td>
              <td sorttable_customkey="<%= host[:system_uptime] %>"><%= prettify_seconds(host[:system_uptime]) %></td>
              <td sorttable_customkey="<%= host[:service_uptime] %>"><%= prettify_seconds(host[:service_uptime]) %></td>
+             <td><%= host[:loadavg1] %></td>
+             <td><%= host[:loadavg5] %></td>
+             <td><%= host[:loadavg15] %></td>
              <td><%= host[:ap_count] %></td>
              <td><%= host[:sta_count] %></td>
              <td sorttable_customkey="<%= host[:rx_bytes] %>"><%= prettify_bytes(host[:rx_bytes]) %></td>
@@ -42,7 +48,7 @@
          </tbody>
          <tfoot>
            <tr>
-             <th colspan="4">Totals</th>
+             <th colspan="7">Totals</th>
              <td><%= accesspoints.length %></td>
              <td><%= stations.length %></td>
              <td><%= prettify_bytes(total_ap_rx_bytes) %></td>

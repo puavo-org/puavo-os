@@ -137,6 +137,9 @@ module PuavoWlanController
               :rx_bytes       => host_rx_bytes,
               :tx_bytes       => host_tx_bytes,
               :version        => host.fetch('version'),
+              :loadavg1       => host.fetch('loadavg1'),
+              :loadavg5       => host.fetch('loadavg5'),
+              :loadavg15      => host.fetch('loadavg15'),
             }
           end
 
