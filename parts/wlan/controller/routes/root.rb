@@ -67,6 +67,7 @@ module PuavoWlanController
               radio_tx_bytes     = 0
               radio_channel      = 0
               radio_tx_power     = 0
+              radio_sta_count    = 0
 
               host_ap_count += radio_ap_count
 
@@ -87,6 +88,7 @@ module PuavoWlanController
                 radio_tx_bytes                 += ap_tx_bytes
                 erb_locals[:total_ap_rx_bytes] += ap_rx_bytes
                 erb_locals[:total_ap_tx_bytes] += ap_tx_bytes
+                radio_sta_count                += ap_stations.length
 
                 ap_stations.each do |station|
                   sta_mac                            = station.fetch('mac')
@@ -130,6 +132,7 @@ module PuavoWlanController
                 :tx_bytes => radio_tx_bytes,
                 :channel  => radio_channel,
                 :tx_power => radio_tx_power,
+                :sta_count => radio_sta_count,
 
               }
             end

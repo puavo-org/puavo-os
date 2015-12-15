@@ -73,6 +73,7 @@
           <th>Channel</th>
           <th>Tx power</th>
           <th>APs</th>
+          <th>STAs</th>
           <th>Rx</th>
           <th>Tx</th>
         </tr>
@@ -87,6 +88,7 @@
           <td><%= radio[:channel] %></td>
           <td sorttable_customkey="<%= radio[:tx_power] %>"><%= radio[:tx_power] %> dBm</td>
           <td><%= radio[:ap_count] %></td>
+          <td><%= radio[:sta_count] %></td>
           <td sorttable_customkey="<%= radio[:rx_bytes] %>"><%= prettify_bytes(radio[:rx_bytes]) %></td>
           <td sorttable_customkey="<%= radio[:tx_bytes] %>"><%= prettify_bytes(radio[:tx_bytes]) %></td>
         </tr>
@@ -96,6 +98,7 @@
         <tr>
           <th colspan="6">Totals</th>
           <td><%= accesspoints.length %></td>
+          <td><%= stations.length %></td>
           <td><%= prettify_bytes(total_ap_rx_bytes) %></td>
           <td><%= prettify_bytes(total_ap_tx_bytes) %></td>
         </tr>
