@@ -1,3 +1,216 @@
+puavo-wlan (0.12.0) trusty; urgency=medium
+
+  * New release
+  * controller/ui: display the number of stations in Radios table
+  * controller/ui: display the number of radios in Host table
+  * controller/ui: fix indentation of the index template
+  * controller/ui: rename few column headers
+  * controller/ui: switch station's rx and tx
+  * controller/ui: display channel and tx power limit in Radios table
+  * controller/ui: rename column header
+  * controller/ui: use stable sorting
+  * controller/ui: display all totals with bold font
+  * controller/ui: display tx power limit column
+  * controller/ui: display load average columns
+  * controller: trivial formatting
+  * controller/ui: display service uptime column
+  * ap: trivial formatting
+  * ap: report service start time to the controller
+  * controller, ap: include PHYs in status reports
+  * ap: collect driver, product and mac info from each PHY
+  * ap: report load averages to the controller
+  * ap: report uname to the controller
+  * controller/ui: display system uptime column
+  * ap: report system start time
+  * controller, ap: report connection start time instead of uptime
+  * controller/ui: do not show AP uptime totals
+  * ap: remove corresponding vifs when phy is removed
+  * controller/ui: display station counts per host
+  * ap: send status report whenever a PHY is removed
+  * controller/ui: display accesspoint uptime column
+  * controller/ui: display host version column
+  * ap: report the current version to the controller
+  * Add new package: ruby-puavowlan
+  * controller/ui: highlight the current anchor element
+  * controller: update v1 API documentation
+  * controller, ap: make API more conventional/RESTful
+  * ap: notify controller on exit
+  * controller: add route for deleting host resources
+  * ap: do not include incomplete station objects into status report
+  * ap: send controller pings whenever station associates/disassociates
+  * ap: ensure status report always has all fields
+  * ap: defend properly against controller communication failures
+  * controller/ui: add label for auto reload checkbox
+  * controller: fix typo
+  * controller/ui: add optional auto reloading
+  * controller: update API doc example
+  * controller: move API doc page template to a separate ERB file
+  * controller/ui: visualize host state with a small color mark
+  * controller: refactoring, renames, etc.
+  * controller: move arp table parsing to separate method
+  * controller/ui: move root page template to a separate ERB file
+  * controller/ui: remove channel and ssid from Station table
+  * controller/ui: use sans-serif fonts
+  * controller/ui: show ip addresses of stations
+  * controller/ui: make tables 100% wide
+  * controller/ui: make the status view more compact
+  * controller/ui: use small font to save screen estate
+  * controller/ui: show empty fields if arp cache did not contain the
+    station mac
+  * ap: fix Tx byte count extraction
+  * controller/ui: extract station address info form arp cache
+  * controller/ui: show access point details in a separate section
+  * controller/ui: remove cruft from the CSS file
+  * controller/ui: add 1em margin to tables
+  * controller: fix status view sorting with custom sort keys
+  * ap: report current tx power limits to the controller
+  * controller: add total station rx/tx counts to the status view
+  * controller: do not show interface start_time on the summary table
+  * Report interface start_time instead of age
+  * controller: remove 'Last ping' field from the status view
+  * controller: remove auto refresh of the status page
+  * controller: show all access points in the same table
+  * controller: show all connected stations in a separate table
+  * ap: remove unnecessary field from station status reports
+  * controller: prettify rx/tx byte counts
+  * controller: show the age of interfaces in the status view
+  * ap: report interface age to the controller
+  * controller: rename 'Last seen' => 'Last ping'
+  * ap: report rx/tx byte counts
+  * controller: add Rx/Tx cumulative byte counters to the status view
+  * controller: add 'Last seen' column to the status view
+  * ap: do not report num_sta anymore, stations array is enough
+  * controller: use the length of stations array instead of num_sta
+    field
+  * controller: add missing static files
+  * controller: simplify API a lot, allow only status updates via ping
+    route
+  * ap: send full status report in ping requests
+  * controller: revise status view
+  * controller: accept full status report in ping requests
+  * controller: make data serialization permstore's implementation
+    detail
+  * ap: always send JSON data to controller
+  * ap: send stop report to the controller on shutdown
+  * ap: fix ping_interval setup
+  * ap: just log controller report errors, do not fail
+  * ap: send reports to the controller
+  * controller: make APs expiration time twice the ping interval
+  * controller: make route handlers return nil by default
+  * controller: get mac from the query string instead of body json
+  * controller: fix typos in API doc
+  * controller: fix the documented type of ping_interval_seconds
+  * controller: rename ap_expiration_time => ping_interval_seconds
+  * controller: rename route variables
+  * controller: show apidoc at /v1
+  * controller: make /v1 routes more restful
+  * controller: remove /v1/status because it is unused
+  * controller: display stations on the status page
+  * controller: delete sta keys when ap key is deleted
+  * controller: expire sta keys when ap key expires
+  * controller: accept sta_associate and sta_disassociate reports
+  * controller: rename few local variables
+  * controller: move the / route to a separate module
+  * controller: move /v1 routes to a separate module
+  * Add adduser to puavo-wlancontroller's dependencies
+  * controller: respond with AP_EXPIRATION_TIME when ap_start is
+    received
+  * controller: add constant for AP_EXPIRATION_TIME
+  * controller: fix upstart job
+  * controller: use PUAVO_WLANCONTROLLER_DB_SQLITE3 env if given
+  * controller: install Gemfiles too
+  * Add python3 to build deps, mapper needs it
+  * controller: add debian stuff
+  * controller: add install target to Makefile
+  * controller: make PermStore a class instead of a module
+  * controller: make TempStore a class instead of a module
+  * controller: put everything into a common namespace
+  * controller: add license headers
+  * controller/ui: show the number of controller accesspoints
+  * controller: make tempstored ap expire in 20s unless ap_hearbeat is
+    received
+  * controller: delete ap from tempstore when ap_stop report is received
+  * controller: add ap to tempstore only when ap_start report is
+    received
+  * controller: tempstore accesspoints as a separate entries instead of
+    one set
+  * controller: do not render ul-tag if no accesspoints exist
+  * controller: fall back to text/plain if Accept header is not given
+  * controller: respond to text/html GET requests with a complete page
+  * controller: initial version
+  * ap: fix typo in puavo-wlanap-test.
+  * ap: add a helper script for conducting basic adapter tests
+  * ap: represent frequency band as a class instead arrays, hashes and
+    ints
+  * ap: add a phy reference to all vifs
+  * ap: add info-level tracing to Dot11::Phy.set_txpower_limit
+  * ap: use ip instead of ifconfig
+  * ap: limit txpowers to values defined in Puavo
+  * ap: rename method Dot11::Phy.set_txpower => set_txpower_limit
+  * ap: fix typo
+  * ap: handle udev events
+  * ap: add method AccessPoint.remove_phy
+  * ap: let most commands just fail but catch errors in EXIT trap
+  * ap: rename AccessPoint.setup_phy => AccessPoint.add_phy
+  * ap: add method Services::Spawnable.kill
+  * ap: ignore phys we fail to setup
+  * ap: add dedicated method for setting up phys
+  * ap: add dedicated method for setting up bridges
+  * ap: separate bridge setup from phy setup
+  * ap: inline a private function
+  * ap: ignore phy if we fail to bring vif up at setup phase
+  * ap: ignore phy if we fail to add a vif to it at setup phase
+  * ap: ignore phy if we fail to del it's vifs at setup phase
+  * ap: add Services::Spawnable.hostapd attr_reader
+  * ap: add Services::Spawnable.phy attr_reader
+  * ap: add Services::Spawnable.pid attr_reader
+  * ap: add Dot11::Phy.name attr_reader
+  * ap: pass Hostapd references to HostapdCli constructors
+  * ap: move PHY setup to a separate method
+  * ap: make bss_index AccessPoint's instance variable
+  * ap: remove PHY driver whitelisting
+  * ap: rename AccessPoint.start_services => AccessPoint.setup
+  * ap: translate udev events to puavo-wlanap control messages
+  * ap: speed up hostapd spawnin in case we do get AP-ENABLED
+  * ap: use one bridge/vtun per ESS to retain the old behavior
+  * ap: make hostapds queue up before spawning to avoid PHY usage
+    collisions
+  * ap: make hostapd_cli poll for control socket once per 100ms
+  * ap: make hostapd_cli wait for hostapd when spawned, not when
+    configured
+  * Squashed 'mapper/horst/' changes from b3aa265..2dc78a3
+  * Squashed 'mapper/horst/' changes from a29bf8e..b3aa265
+  * ap: move all service classes to Service module and use Spawnable
+    mixin
+  * ap: use new service classes for spawning
+  * ap: add class HostapdCli
+  * ap: add class Hostapd
+  * ap: add class Vtund
+  * ap: add class Dhclient
+  * ap: add method Dot11::Vif.up
+  * ap: make a comment more precise
+  * ap: inherit HostapdConf and VtundConf from Conf
+  * ap: spawn one hostapd per bss per radio
+  * ap: add class VtundConf
+  * ap: add class HostapdConf
+  * ap: remove unnecessary variable Dot11.Phy.index
+  * ap: add method Dot11.Phy.set_txpower
+  * ap: add method Dot11.Vif.del
+  * ap: add method Dot11.Phy.add_vif
+  * ap: add attr_reader for Dot11::Vif.name
+  * ap: remove really suspicious power save disabling quirk
+  * ap: rename Dot11::Phy.phy => Dot11::Phy.name
+  * ap: add method Dot11::Phy.each_vif
+  * ap: add class Dot11::Vif
+  * ap: add method Dot11.each_phy
+  * ap: add method Dot11::Phy.ht_capab
+  * ap: add method Dot11::Phy.has_supported_driver?
+  * ap: add method Dot11::Phy.driver
+  * ap: add class Dot11::Phy
+  * Git(88d309a21767d3d1561e16f18be6d5baa86fb289)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 15 Dec 2015 14:45:14 +0200
+
 puavo-wlan (0.11.0) trusty; urgency=medium
 
   * New release
