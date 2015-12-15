@@ -49,16 +49,16 @@ module PuavoWlanController
           }
 
           TEMPSTORE.get_hosts.each do |host|
-            host_hostname          = host.fetch('hostname')
-            host_radios            = host.fetch('radios')
-            host_rx_bytes          = 0
-            host_tx_bytes          = 0
-            host_sta_count         = 0
-            host_system_start_time = Time.parse(host.fetch('system_start_time'))
+            host_hostname           = host.fetch('hostname')
+            host_radios             = host.fetch('radios')
+            host_rx_bytes           = 0
+            host_tx_bytes           = 0
+            host_sta_count          = 0
+            host_system_start_time  = Time.parse(host.fetch('system_start_time'))
             host_service_start_time = Time.parse(host.fetch('service_start_time'))
-            host_system_uptime     = time_now - host_system_start_time
-            host_service_uptime    = time_now - host_service_start_time
-            host_ap_count          = 0
+            host_system_uptime      = time_now - host_system_start_time
+            host_service_uptime     = time_now - host_service_start_time
+            host_ap_count           = 0
 
             host_radios.each do |radio|
               radio_accesspoints = radio.fetch('accesspoints')
@@ -128,15 +128,15 @@ module PuavoWlanController
               }
             end
             erb_locals[:hosts] << {
-              :ap_count      => host_ap_count,
-              :hostname      => host_hostname,
-              :state         => TEMPSTORE.get_host_state(host_hostname),
-              :sta_count     => host_sta_count,
-              :system_uptime => host_system_uptime,
+              :ap_count       => host_ap_count,
+              :hostname       => host_hostname,
+              :state          => TEMPSTORE.get_host_state(host_hostname),
+              :sta_count      => host_sta_count,
+              :system_uptime  => host_system_uptime,
               :service_uptime => host_service_uptime,
-              :rx_bytes      => host_rx_bytes,
-              :tx_bytes      => host_tx_bytes,
-              :version       => host.fetch('version'),
+              :rx_bytes       => host_rx_bytes,
+              :tx_bytes       => host_tx_bytes,
+              :version        => host.fetch('version'),
             }
           end
 
