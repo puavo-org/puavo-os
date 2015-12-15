@@ -22,6 +22,10 @@ td, th {
     padding: 0.3em;
 }
 
+tfoot td {
+    font-weight: bold;
+}
+
 th {
     background-color: #dfdfdf;
 }
