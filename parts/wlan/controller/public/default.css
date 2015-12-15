@@ -1,0 +1,56 @@
+:target {
+   background-color: #d3dc9a;
+}
+
+#timestamp {
+    float: right;
+}
+
+body {
+    font-size: small;
+    font-family: sans-serif;
+}
+
+table {
+    border: 1px solid black;
+    text-align: center;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid black;
+    padding: 0.3em;
+}
+
+tfoot td {
+    font-weight: bold;
+}
+
+th {
+    background-color: #dfdfdf;
+}
+
+.statemark-alive:before {
+    content: "\25FC    ";
+    color: #00ff00;
+}
+
+.statemark-dead:before {
+    content: "\271D    ";
+    color: #000000;
+}
+
+.statemark-dying:before {
+    content: "\25FC    ";
+    color: #ff0000;
+}
+
+table.sortable thead {
+    font-weight: bold;
+    cursor: default;
+}
+
+table.sortable thead th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):not(.sorttable_nosort):after {
+    color: #888888;
+    content: " \25BE"
+}

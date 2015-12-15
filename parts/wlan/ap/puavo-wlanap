@@ -32,12 +32,15 @@ require 'digest'
 require 'erb'
 require 'fileutils'
 require 'getoptlong'
+require 'net/http'
 require 'pathname'
 require 'socket'
 require 'timeout'
 
 require 'puavo/etc'
 require 'puavo/rest-client'
+
+require 'puavowlan'
 
 module Log
 
@@ -90,10 +93,20 @@ module Dot11
   class Phy
 
     attr_accessor :channel
+    attr_reader   :driver
+    attr_reader   :mac
     attr_reader   :name
+    attr_reader   :product
 
     def initialize(name)
       @name = name
+      sysfs_dir = "/sys/class/ieee80211/#{name}"
+      @mac = IO.read("#{sysfs_dir}/macaddress").strip
+      device_info = IO.read("#{sysfs_dir}/device/uevent")
+      device_info =~ /^DRIVER=(.*)$/
+      @driver = $1.strip
+      device_info =~ /^PRODUCT=(.*)$/
+      @product = $1.strip
     end
 
     def add_vif(name)
@@ -192,6 +205,7 @@ module Dot11
   class Vif
 
     attr_reader :name
+    attr_reader :phy
 
     def initialize(name, phy)
       @name = name
@@ -517,17 +531,25 @@ end
 
 class AccessPoint
 
-  VTUN_ADDRESS = 'wlangw'
-  VTUN_PORT    = 45045
+  CONTROLLER_ADDRESS = 'wlangw'
+  CONTROLLER_PORT    = 45046
+  VTUN_ADDRESS       = 'wlangw'
+  VTUN_PORT          = 45045
 
   def initialize(kwargs = {})
     @bridges       = {}
     @bss_index     = -1
     @conf          = nil
+    @controller    = Net::HTTP.new(kwargs.fetch(:controller_address,
+                                                CONTROLLER_ADDRESS),
+                                   kwargs.fetch(:controller_port,
+                                                CONTROLLER_PORT))
     @ctrlconn      = nil
     @ctrlconn_time = nil
     @ctrlserv      = nil
     @nets          = nil
+    @ping_interval = nil
+    @ping_time     = Time.at(0)
     @services      = {}
     @spawn_queue   = []
     @spawn_time    = Time.at(0)
@@ -568,6 +590,7 @@ class AccessPoint
 
     Signal.trap('EXIT') do
       Log.info('exiting')
+      controller_bye
       Process.kill('-SIGTERM', 0)
 
       @vifs.each do |vif|
@@ -606,6 +629,7 @@ class AccessPoint
     setup_phys
 
     Log.info('started')
+
     loop do
       signal = sigqueue.pop
       case signal
@@ -626,6 +650,10 @@ class AccessPoint
         reads    = [selfpipe_r, @ctrlconn.nil? ? @ctrlserv : @ctrlconn]
         timeouts = []
 
+        unless @ping_interval.nil?
+          timeouts << @ping_interval - (Time.now - @ping_time)
+        end
+
         unless @ctrlconn.nil?
           timeouts << 5 - (Time.now - @ctrlconn_time)
         end
@@ -639,6 +667,10 @@ class AccessPoint
         ready = IO.select(reads, [], [], timeout)
 
         if ready.nil?
+
+          if @ping_interval.nil? || Time.now - @ping_time > @ping_interval
+            controller_ping
+          end
 
           if @ctrlconn && Time.now - @ctrlconn_time > 5
             Log.warning('control socket connection timeout')
@@ -718,9 +750,11 @@ class AccessPoint
 
     when 'AP-STA-CONNECTED'
       mac = tail
+      controller_ping
 
     when 'AP-STA-DISCONNECTED'
       mac = tail
+      controller_ping
 
     else
       Log.warning("received unhandled hostapd-event: #{args}")
@@ -739,6 +773,7 @@ class AccessPoint
       add_phy(Dot11::Phy.new(phy_name))
     when 'remove'
       remove_phy(Dot11::Phy.new(phy_name))
+      controller_ping
     else
       Log.warning("ignoring unexpected udev action: #{action}")
       return
@@ -819,6 +854,8 @@ class AccessPoint
     dying_hostapds     = []
     dying_hostapd_clis = []
 
+    @vifs.delete_if { |vif| vif.phy.name == phy.name }
+
     # Remove all soon-to-be-killed services from the array before
     # killing any to avoid dependent services to die and interrupt us.
     @services.reject! do |pid, service|
@@ -847,6 +884,117 @@ class AccessPoint
     end
   end
 
+  def controller_bye
+    begin
+      @controller.send_request('DELETE', "/v1/host/#{PUAVO_ETC.hostname}")
+    rescue StandardError => e
+      Log.exception('failed to ping the controller', e)
+    end
+  end
+
+  def controller_ping
+    begin
+      @ping_time = Time.now
+      response = @controller.send_request('PUT', "/v1/host/#{PUAVO_ETC.hostname}", get_status.to_json,
+                                          {'Content-Type' => 'application/json'})
+      @ping_interval = JSON.parse(response.body)['ping_interval_seconds']
+    rescue StandardError => e
+      Log.exception('failed to ping the controller', e)
+    end
+  end
+
+  def get_status
+    radios       = {}
+    @vifs.each do |vif|
+      bssid    = nil
+      channel  = nil
+      ssid     = nil
+      stations = []
+
+      if radios.has_key?(vif.phy.mac)
+        radio = radios.fetch(vif.phy.mac)
+      else
+        radio = {
+          :accesspoints => [],
+          :driver       => vif.phy.driver,
+          :product      => vif.phy.product,
+          :mac          => vif.phy.mac,
+          :name         => vif.phy.name,
+        }
+        radios[vif.phy.mac] = radio
+      end
+
+      begin
+
+        # Get access point stats
+        IO.popen(['wpa_cli', '-i', vif.name,
+                  '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'status']) do |io|
+          io.each_line do |line|
+            line =~ /^bssid\[0\]=(.*)$/   and bssid   = $1
+            line =~ /^channel=(.*)$/      and channel = $1.to_i
+            line =~ /^ssid\[0\]=(.*)$/    and ssid    = $1
+          end
+        end
+
+        # Get station stats
+        IO.popen(['hostapd_cli', '-i', vif.name,
+                  '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'all_sta']) do |io|
+          sta = {}
+          io.each_line do |line|
+            line =~ /^(([0-9a-f]{2}:){5}([0-9a-f]{2}))$/ and sta[:mac]            = $1
+            line =~ /^connected_time=(.*)$/              and sta[:start_time]     = Time.now - $1.to_i
+            line =~ /^rx_bytes=(.*)$/                    and sta[:rx_bytes]       = $1.to_i
+            line =~ /^tx_bytes=(.*)$/                    and sta[:tx_bytes]       = $1.to_i
+            if Set.new(sta.keys) == Set.new([:mac, :start_time, :rx_bytes, :tx_bytes])
+              # Add only complete/valid station entries. In some cases
+              # (probably when STA has just disassociated),
+              # hostapd_cli all_sta does not print all fields.
+              stations << sta
+              sta = {}
+            end
+          end
+        end
+
+        # Get interface stats
+        File.read('/proc/net/dev') =~ /^\s*#{vif.name}:(.*)$/
+        rx_bytes = $1.split[0].to_i
+        tx_bytes = $1.split[8].to_i
+
+        start_time = File.mtime("#{HOSTAPD_CTRL_INTERFACE_DIR}/#{vif.name}")
+
+        tx_power_limit_dBm = IO.popen(['iwconfig', vif.name]) do |io|
+          io.readline =~ /^.* Tx-Power=(.*) dBm\s*$/ and $1.to_i
+        end
+      rescue StandardError => e
+        Log.exception("failed to query hostapd status (#{vif.name})", e)
+      else
+        radio[:accesspoints] << {
+          :radio_mac          => vif.phy.mac,
+          :start_time         => start_time,
+          :bssid              => bssid,
+          :channel            => channel,
+          :rx_bytes           => rx_bytes,
+          :ssid               => ssid,
+          :stations           => stations,
+          :tx_bytes           => tx_bytes,
+          :tx_power_limit_dBm => tx_power_limit_dBm,
+        }
+      end
+    end
+    l1, l5, l15 = IO.read('/proc/loadavg').split.take(3).map { |s| s.to_f }
+    {
+      :hostname           => PUAVO_ETC.hostname,
+      :radios             => radios.values,
+      :version            => PuavoWLAN::VERSION,
+      :system_start_time  => Time.now - IO.read('/proc/uptime').split[0].to_i,
+      :service_start_time => Time.parse(IO.popen(['ps', '-p', $$.to_s, '-o', 'lstart=']).read),
+      :uname              => IO.popen(['uname', '-snrvmpio']).read,
+      :loadavg1           => l1,
+      :loadavg5           => l5,
+      :loadavg15          => l15,
+    }
+  end
+
 end
 
 def main
@@ -854,6 +1002,8 @@ def main
   ctrlmsg = nil
 
   GetoptLong.new(
+    ['--controller-address'        , GetoptLong::REQUIRED_ARGUMENT],
+    ['--controller-port'           , GetoptLong::REQUIRED_ARGUMENT],
     ['--ctrlmsg'                   , GetoptLong::REQUIRED_ARGUMENT],
     ['--help', '-h'                , GetoptLong::NO_ARGUMENT],
     ['--vtun-address'              , GetoptLong::REQUIRED_ARGUMENT],
@@ -877,6 +1027,12 @@ Options:
  -h, --help
          Display this help and exit.
 
+     --controller-address ADDRESS
+         Set the address of the controller, default: #{AccessPoint::CONTROLLER_ADDRESS}
+
+     --controller-port PORT
+         Set the port of the controller, default: #{AccessPoint::CONTROLLER_PORT}
+
      --vtun-address ADDRESS
          Set the address of the vtun server, default: #{AccessPoint::VTUN_ADDRESS}
 
@@ -885,6 +1041,24 @@ Options:
 
 EOF
       return 0
+
+    when '--controller-address'
+      if opts.has_key? :controller_address
+        Log.error('--controller-address can be given only once')
+        return 1
+      end
+      opts[:controller_address] = arg
+
+    when '--controller-port'
+      if opts.has_key? :controller_port
+        Log.error('--controller-port can be given only once')
+        return 1
+      end
+      unless arg =~ /^[1-9][0-9]*$/
+        Log.error("invalid port number (#{arg})")
+        return 1
+      end
+      opts[:controller_port] = arg.to_i
 
     when '--vtun-address'
       if opts.has_key? :vtun_address

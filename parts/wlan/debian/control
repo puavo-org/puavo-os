@@ -6,8 +6,13 @@ Build-Depends: debhelper (>= 8.0.0),
  libncurses5-dev,
  libnl-3-dev,
  libnl-genl-3-dev,
+ libsqlite3-dev,
+ libssl-dev,
  pkg-config,
- pyqt4-dev-tools
+ pyqt4-dev-tools,
+ python3,
+ ruby-bundler,
+ ruby1.9.1
 Standards-Version: 3.9.3
 Homepage: http://github.com/opinsys/puavo-wlan/
 
@@ -20,6 +25,7 @@ Depends: ${misc:Depends},
  iproute2,
  iw,
  puavo-client (>= 2.1.0),
+ ruby-puavowlan,
  vtun,
  wireless-crda,
  wireless-regdb,
@@ -28,6 +34,17 @@ Description: host tunneled WLAN accesspoint
  puavo-wlanap glues together hostapd, vtun and bridge tools to make
  hosting a tunneled WLAN accespoint easy. Optionally, accesspoint can be
  configured from Puavo.
+ .
+
+Package: puavo-wlancontroller
+Architecture: all
+Depends: ${misc:Depends},
+ adduser,
+ ruby-bundler,
+ ruby1.9.1
+Description: Puavo's WLAN controller
+ puavo-wlancontroller monitors and controls a swarm of puavo-wlanap
+ instances.
  .
 
 Package: puavo-wlangw
@@ -63,4 +80,14 @@ Description: measure and visualize signal strengths of WLAN access points
  Monitor 802.11 channels and measure received signal strengths of beacon
  frames to visualize coverage areas of access points as heatmap overlays
  on top of layout images.
+ .
+
+Package: ruby-puavowlan
+Architecture: all
+XS-Ruby-Versions: ruby1.9.1
+Depends: ${shlibs:Depends}, ${misc:Depends},
+ ruby1.9.1
+Description: Puavo's WLAN library for Ruby
+ This library provides common library utilities for Puavo's WLAN
+ software.
  .
