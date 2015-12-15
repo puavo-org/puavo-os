@@ -107,6 +107,7 @@
              <th>Channel</th>
              <th>SSID</th>
 	     <th>Uptime</th>
+	     <th>Tx power limit</th>
              <th>Stations</th>
              <th>Rx</th>
              <th>Tx</th>
@@ -121,6 +122,7 @@
              <td><%= accesspoint[:channel] %></td>
              <td><%= accesspoint[:ssid] %></td>
              <td sorttable_customkey="<%= accesspoint[:uptime] %>"><%= prettify_seconds(accesspoint[:uptime]) %></td>
+             <td sorttable_customkey="<%= accesspoint[:tx_power_limit_dBm] %>"><%= accesspoint[:tx_power_limit_dBm] %> dBm</td>
              <td><%= accesspoint[:sta_count] %></td>
              <td sorttable_customkey="<%= accesspoint[:rx_bytes] %>"><%= prettify_bytes(accesspoint[:rx_bytes]) %></td>
              <td sorttable_customkey="<%= accesspoint[:tx_bytes] %>"><%= prettify_bytes(accesspoint[:tx_bytes]) %></td>
@@ -129,7 +131,7 @@
          </tbody>
          <tfoot>
            <tr>
-             <th colspan="6">Totals</th>
+             <th colspan="7">Totals</th>
              <td><%= stations.length %></td>
              <td><%= prettify_bytes(total_ap_rx_bytes) %></td>
              <td><%= prettify_bytes(total_ap_tx_bytes) %></td>

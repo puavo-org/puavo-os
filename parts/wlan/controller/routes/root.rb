@@ -115,6 +115,7 @@ module PuavoWlanController
                   :ssid      => accesspoint.fetch('ssid'),
                   :sta_count => ap_stations.length,
                   :uptime    => ap_uptime,
+                  :tx_power_limit_dBm => accesspoint.fetch('tx_power_limit_dBm'),
                 }
               end
               erb_locals[:radios] << {
