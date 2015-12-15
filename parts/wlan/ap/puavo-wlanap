@@ -983,15 +983,15 @@ class AccessPoint
     end
     l1, l5, l15 = IO.read('/proc/loadavg').split.take(3).map { |s| s.to_f }
     {
-      :hostname          => PUAVO_ETC.hostname,
-      :radios            => radios.values,
-      :version           => PuavoWLAN::VERSION,
-      :system_start_time => Time.now - IO.read('/proc/uptime').split[0].to_i,
+      :hostname           => PUAVO_ETC.hostname,
+      :radios             => radios.values,
+      :version            => PuavoWLAN::VERSION,
+      :system_start_time  => Time.now - IO.read('/proc/uptime').split[0].to_i,
       :service_start_time => Time.parse(IO.popen(['ps', '-p', $$.to_s, '-o', 'lstart=']).read),
-      :uname             => IO.popen(['uname', '-snrvmpio']).read,
-      :loadavg1          => l1,
-      :loadavg5          => l5,
-      :loadavg15         => l15,
+      :uname              => IO.popen(['uname', '-snrvmpio']).read,
+      :loadavg1           => l1,
+      :loadavg5           => l5,
+      :loadavg15          => l15,
     }
   end
 
