@@ -770,63 +770,9 @@ class packages {
                         , $r8168_dkms_module ]
 
   case $lsbdistcodename {
-    'precise': {
+    'jessie': {
       packages::kernels::kernel_package {
-        '3.2.0-69-generic':
-          dkms_modules => $all_dkms_modules,
-          package_tag  => 'puavo',
-          with_extra   => false;
-      }
-    }
-    'trusty': {
-      if $architecture == 'i386' {
-        packages::kernels::kernel_package {
-          [ '3.2.0-70-generic-pae' ]:
-            dkms_modules => $all_dkms_modules,
-            package_tag  => 'puavo',
-            with_extra   => false;
-
-          [ '4.0.6.opinsys4', '4.2.5.opinsys1' ]:
-            dkms_modules => $all_dkms_modules,
-            package_tag  => 'puavo',
-            with_dbg     => true,
-            with_extra   => false;
-
-          [ '3.13.0-62-generic' ]:
-            # $bcmwl_dkms_module and $nvidia_dkms_module do not compile
-            # for this kernel (arch issue?)
-            dkms_modules => [ $r8168_dkms_module ],
-            pkgarch      => 'amd64';
-        }
-      }
-
-      packages::kernels::kernel_package {
-        [ '3.13.0-55.94-generic', ]:
-          dkms_modules => $all_dkms_modules,
-          package_tag  => 'puavo';
-
-        [ '3.16.0-52-generic', ]: # utopic backport from Ubuntu
-          dkms_modules => $all_dkms_modules;
-
-        [ '3.19.0-32-generic', ]: # vivid backport from Ubuntu
-          dkms_modules => $all_dkms_modules;
-      }
-    }
-    'utopic': {
-      packages::kernels::kernel_package {
-        '3.16.0-50-generic':
-          dkms_modules => $all_dkms_modules;
-      }
-    }
-    'vivid': {
-      packages::kernels::kernel_package {
-        '3.19.0-32-generic':
-          dkms_modules => $all_dkms_modules;
-      }
-    }
-    'wily': {
-      packages::kernels::kernel_package {
-        '4.1.0-3-generic':
+        '3.16.0-4-amd64':
           dkms_modules => $all_dkms_modules;
       }
     }
