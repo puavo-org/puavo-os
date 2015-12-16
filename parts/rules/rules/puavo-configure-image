@@ -26,6 +26,10 @@ apply_puppet_rules() {
     another_ok_puppetcode=2
   fi
 
+  # Must use some UTF-8 locale because default puavo-rules contain
+  # UTF-8 characters.  We use en_US.UTF-8 which is our safest bet,
+  # but this means that support for that must be installed and configured.
+  # Maybe we could also check and report proper error if that is not the case?
   env LANG=en_US.UTF-8                                           \
       puppet apply                                               \
              --detailed-exitcodes                                \
