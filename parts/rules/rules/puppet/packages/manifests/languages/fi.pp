@@ -1,16 +1,11 @@
 class packages::languages::fi {
   @package {
-    [ 'language-pack-gnome-fi' ]:
-      tag => [ 'language-fi', 'thinclient', 'ubuntu', ];
-
-    [ 'firefox-locale-fi'
+    [ 'icedove-l10n-fi'
+    , 'iceweasel-l10n-fi'
     , 'kde-l10n-fi'
-    , 'language-pack-fi'
-    , 'language-pack-kde-fi'
     , 'libreoffice-help-fi'
     , 'libreoffice-l10n-fi'
-    , 'libreoffice-voikko'
-    , 'thunderbird-locale-fi' ]:
+    , 'libreoffice-voikko' ]:
       tag => [ 'language-fi', 'ubuntu', ];
   }
 }
