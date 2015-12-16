@@ -1,6 +1,5 @@
 class image::bundle::desktop {
   include acroread,
-          crash_reporting,
           ::desktop,
           disable_accounts_service,
           disable_geoclue,

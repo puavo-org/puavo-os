@@ -611,7 +611,6 @@ class packages {
     , 'python3-aptdaemon.pkcompat'
     , 'rfkill'
     , 'rhythmbox'
-    , 'rhythmbox-plugin-magnatune'
     , 'rtmpdump'
     , 'rxvt-unicode'
     , 'seahorse'
@@ -626,7 +625,6 @@ class packages {
     , 'totem'
     # , 'tracker'				# (purged elsewhere)
     , 'transmission-gtk'
-    , 'ttf-indic-fonts-core'
     , 'ttf-punjabi-fonts'
     , 'ttf-ubuntu-font-family'
     , 'ubuntu-drivers-common'
@@ -639,7 +637,6 @@ class packages {
     # , 'update-notifier'			# (purged elsewhere)
     , 'usb-creator-gtk'
     , 'vino'
-    , 'whoopsie'
     , 'wireless-tools'
     , 'wpasupplicant'
     , 'xdg-user-dirs'
@@ -696,8 +693,8 @@ class packages {
     , 'epiphany-browser'
     , 'icedtea-7-plugin'
     , 'liferea'
-    , 'openjdk-6-jdk'
-    , 'openjdk-6-jre'
+    , 'openjdk-7-jdk'
+    , 'openjdk-7-jre'
     , 'php5-cli'
     , 'php5-sqlite'
     , 'sqlite3' ]:
@@ -714,17 +711,18 @@ class packages {
     , 'puavo-devscripts' ]:
       tag => [ 'devel', 'puavo', ];
 
-    [ 'autopoweroff'
-    , 'ltsp-client'
-    , 'opinsys-ca-certificates'
-    , 'puavo-autopilot'
-    , 'puavo-client'
-    , 'puavo-hw-log'
-    , 'puavo-ltsp-client'
-    , 'puavo-ltsp-install'
-    , 'puavo-monitor'
-    , 'puavo-vpn-client' ]:
-      tag => [ 'misc', 'puavo', 'thinclient', ];
+    # XXX not yet packaged for Debian (except ltsp-client)
+    # [ 'autopoweroff'
+    # , 'ltsp-client'
+    # , 'opinsys-ca-certificates'
+    # , 'puavo-autopilot'
+    # , 'puavo-client'
+    # , 'puavo-hw-log'
+    # , 'puavo-ltsp-client'
+    # , 'puavo-ltsp-install'
+    # , 'puavo-monitor'
+    # , 'puavo-vpn-client' ]:
+    #   tag => [ 'misc', 'puavo', 'thinclient', ];
 
     [ 'fluent-plugin-puavo'
     , 'iivari-client'
@@ -744,8 +742,8 @@ class packages {
     [ 'dymo-cups-drivers' ]:
       tag => [ 'printing', 'puavo', ];
 
-    [ 'bluegriffon'
-    , 'enchanting'
+    # [ 'bluegriffon'	# XXX missing from Debian
+    [ 'enchanting'
     , 'pycharm'
     , 'snap4arduino' ]:
       tag => [ 'programming', 'puavo', ];
@@ -783,11 +781,13 @@ class packages {
   #
 
   @package {
-    [ 'skype' ]:
-      tag => [ 'instant_messaging', 'partner', 'extra', 'restricted' ];
+    # XXX missing from Debian
+    # [ 'skype' ]:
+    #   tag => [ 'instant_messaging', 'partner', 'extra', 'restricted' ];
 
-    [ 'vmware-view-client' ]:
-      tag => [ 'remote_access', 'partner', 'restricted' ];
+    # XXX missing from Debian
+    # [ 'vmware-view-client' ]:
+    #   tag => [ 'remote_access', 'partner', 'restricted' ];
 
     [ 'adobe-flashplugin' ]:
       tag => [ 'web', 'partner', 'extra', 'restricted' ];
