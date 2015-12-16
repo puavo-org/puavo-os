@@ -1,14 +1,14 @@
 class image::bundle::basic {
-  include autopoweroff,
+  include # autopoweroff,	# XXX needs packaging for Debian
 	  console,
 	  disable_suspend_by_tag,
 	  disable_suspend_on_halt,
 	  disable_suspend_on_nbd_devices,
 	  disable_unclutter,
 	  disable_update_notifications,
-	  graphics_stack_hacks,
+	  # graphics_stack_hacks,	# XXX do we need this for Debian?
 	  kernels,
-	  keyboard_hw_quirks,
+	  # keyboard_hw_quirks,		# XXX do we need this for Debian?
 	  lightdm,
 	  motd,
 	  packages,

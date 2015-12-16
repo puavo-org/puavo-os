@@ -3,7 +3,7 @@ class image::bundle::desktop {
           ::desktop,
           disable_accounts_service,
           disable_geoclue,
-          firefox,
+          # firefox,	# XXX iceweasel in Debian
           fontconfig,
           gnome_terminal,
           graphics_drivers,
@@ -18,6 +18,6 @@ class image::bundle::desktop {
           pycharm,
           tuxpaint,
           wacom,
-          workaround_firefox_local_swf_bug,
-          xexit
+          workaround_firefox_local_swf_bug
+          # xexit	# XXX requires puavo-ltsp-client
 }
