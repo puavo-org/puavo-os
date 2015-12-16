@@ -2,9 +2,8 @@ class opinsys_apt_repositories {
   include apt
 
   $subdir = $lsbdistcodename ? {
-              'precise' => 'git-precise',
-              'quantal' => 'git-legacy1',
-              default   => "git-master",
+              'jessie' => 'git-jessie',
+              default  => "git-master",
             }
 
   # define some apt keys and repositories for use
@@ -17,25 +16,26 @@ class opinsys_apt_repositories {
   }
 
   Apt::Repository { require => Apt::Key['opinsys-repo.gpgkey'], }
-  @apt::repository {
-    'archive':
-      aptline => "http://archive.opinsys.fi/$subdir $lsbdistcodename main restricted universe multiverse";
-
-    'kernels':
-      aptline => "http://archive.opinsys.fi/kernels $lsbdistcodename main restricted universe multiverse";
-
-    'libreoffice-5-0':
-      aptline => "http://archive.opinsys.fi/libreoffice-5-0 $lsbdistcodename main restricted universe multiverse";
-
-    'repo':
-      aptline => "http://archive.opinsys.fi/blobs $lsbdistcodename main restricted universe multiverse";
-
-    'x2go':
-      aptline => "http://archive.opinsys.fi/x2go $lsbdistcodename main restricted universe multiverse";
-
-    'xorg-updates':
-      aptline => "http://archive.opinsys.fi/git-xorg-updates $lsbdistcodename main restricted universe multiverse";
-  }
+# XXX disable until we have some of these archives for Debian or just remove
+# @apt::repository {
+#     'archive':
+#       aptline => "http://archive.opinsys.fi/$subdir $lsbdistcodename main contrib non-free";
+#
+#     'kernels':
+#       aptline => "http://archive.opinsys.fi/kernels $lsbdistcodename main contrib non-free";
+#
+#     'libreoffice-5-0':
+#       aptline => "http://archive.opinsys.fi/libreoffice-5-0 $lsbdistcodename main contrib non-free";
+#
+#     'repo':
+#       aptline => "http://archive.opinsys.fi/blobs $lsbdistcodename main contrib non-free";
+#
+#     'x2go':
+#       aptline => "http://archive.opinsys.fi/x2go $lsbdistcodename main contrib non-free";
+#
+#     'xorg-updates':
+#       aptline => "http://archive.opinsys.fi/git-xorg-updates $lsbdistcodename main contrib non-free";
+# }
 
   file {
     '/etc/apt/preferences.d/opinsys.pref':
