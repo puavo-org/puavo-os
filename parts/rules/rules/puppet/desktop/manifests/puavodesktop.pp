@@ -19,9 +19,9 @@ class desktop::puavodesktop {
     '/etc/dconf/db/puavodesktop.d/session_profile':
       content => template('desktop/dconf_session_profile'),
       notify  => Exec['update dconf'],
-      require => [ Package['faenza-icon-theme']
-                 , Package['light-themes'] ];
-                 # , Package['webmenu'] ]; # XXX needs packaging for Debian
+      require => [ Package['faenza-icon-theme'] ];
+                 # , Package['light-themes'] ];	# XXX needs packaging
+                 # , Package['webmenu'] ];	# XXX for Debian
 
     # webmenu takes care of the equivalent functionality
     '/etc/xdg/autostart/indicator-session.desktop':

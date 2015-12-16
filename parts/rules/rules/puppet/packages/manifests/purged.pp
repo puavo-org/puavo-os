@@ -17,9 +17,7 @@ class packages::purged {
     , 'samba'				# not needed, gets into system as
 					# some recommendation through winbind
 
-    , 'software-properties-gtk'
     , 'synaptic'
-    , 'ubuntu-release-upgrader-core'
 
     , 'tftpd-hpa'               # this is suggested by ltsp-server, but
                                 # we do not actually use tftpd on ltsp-server

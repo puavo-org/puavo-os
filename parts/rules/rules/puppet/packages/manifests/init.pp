@@ -84,26 +84,22 @@ class packages {
     , 'vlan' ]:
       tag => [ 'basic', 'debian', ];
 
-    [ 'compizconfig-settings-manager'
-    , 'compiz-plugins-extra'
-    , 'indicator-power'
+    # 'compizconfig-settings-manager'	# XXX missing from Debian
+    # 'compiz-plugins-extra'		# XXX missing from Debian
+    [ 'indicator-power'
     , 'indicator-session'
     , 'lightdm'
     , 'lightdm-gtk-greeter'
     , 'lsb-invalid-mta'
     , 'network-manager-openvpn-gnome'
     , 'notify-osd'
-    , 'onboard'
-    , 'overlay-scrollbar'               # needed by accessibility stuff
+    # , 'onboard'			# XXX missing from Debian (Jessie)
     , 'python-appindicator'
     , 'python-gtk2'
     , 'python-notify'
     , 'shared-mime-info'
     , 'xul-ext-mozvoikko' ]:
       tag => [ 'desktop', 'debian', ];
-
-    [ 'ubuntu-restricted-addons' ]:
-      tag => [ 'desktop', 'restricted', 'debian', ];
 
     [ 'acct'
     , 'ack-grep'
@@ -127,12 +123,10 @@ class packages {
 
     # [ 'bcmwl-kernel-source'	# XXX missing from Debian
     [ 'dkms'
-    , 'firmware-b43-installer'
     , 'libgl1-mesa-glx'
-    , 'linux-firmware'
     , 'nvidia-304'
     , 'nvidia-settings'
-    , 'r8168-dkms'
+    # , 'r8168-dkms'		# XXX missing from Debian
     , 'xserver-xorg-video-all' ]:
       tag => [ 'drivers', 'debian', ];
 
@@ -141,6 +135,12 @@ class packages {
 
     [ 'wine' ]:
       tag => [ 'emulation', 'debian', ];
+
+    [ 'firmware-b43-installer'
+    , 'firmware-linux'
+    , 'firmware-linux-free'
+    , 'firmware-linux-nonfree ']:
+      tag => [ 'firmware', 'debian', ];
 
     [ 'fontconfig'
     , 'ttf-freefont'
@@ -206,14 +206,12 @@ class packages {
     , 'libunity-core-6.0-9'
 
     , 'notification-daemon'
-    , 'thunderbird-gnome-support'
-    , 'ubuntu-docs' ]:
+    , 'thunderbird-gnome-support' ]:
       tag => [ 'gnome', 'debian', ];
 
     [ 'blender'
     , 'dia'
     , 'dvgrab'
-    , 'f-spot'
     , 'gimp'
     , 'gimp-data-extras'
     , 'gimp-gap'
@@ -232,8 +230,7 @@ class packages {
     , 'libav-tools'
     , 'libsane'
     , 'libsane-extras'
-    , 'luciole'
-    , 'mencoder'
+    # , 'luciole'		# XXX missing from Debian
     , 'mjpegtools'
     , 'mypaint'
     , 'nautilus-image-converter'
@@ -252,8 +249,9 @@ class packages {
     , 'xzoom' ]:
       tag => [ 'graphics', 'debian', ];
 
-    [ 'kdump-tools' ]:
-      tag => [ 'kernelutils', 'debian', ];
+    # XXX some issue on Debian
+    # [ 'kdump-tools' ]:
+    #   tag => [ 'kernelutils', 'debian', ];
 
     [ 'emesene'
     , 'gobby'
@@ -270,7 +268,7 @@ class packages {
       tag => [ 'laptop', 'debian', ];
 
     [ 'banshee'
-    , 'clam-chordata'
+    , 'clam-chordata'		# XXX missing from Debian Jessie
     , 'gnome-mplayer'
     , 'goobox'
     , 'gstreamer1.0-clutter'
@@ -318,19 +316,19 @@ class packages {
 
     [ 'amtterm'
     , 'ipsec-tools'
-    , 'racoon'
-    , 'wsmancli' ]:
+    , 'racoon' ]:
+    # , 'wsmancli' ]:	# XXX missing from Debian
       tag => [ 'network', 'debian', ];
 
     [ 'calibre'
     , 'fbreader'
+    , 'icedove'
     , 'librecad'
     , 'libreoffice'
     , 'libreoffice-base'
     , 'scribus'
     , 'scribus-doc'
     , 'tellico'
-    , 'thunderbird'
     , 'vym' ]:
       tag => [ 'office', 'debian', ];
 
@@ -348,7 +346,7 @@ class packages {
     [ 'arduino'
     , 'arduino-mk'
     , 'avr-libc'
-    , 'basic256'
+    # 'basic256'		# XXX missing from Debian Jessie
     , 'eclipse'
     , 'emacs24'
     , 'eric'
@@ -420,18 +418,16 @@ class packages {
     [ 'ubuntu-mono' ]:
       tag => [ 'themes', 'thinclient', 'debian', ];
 
-    [ 'breathe-icon-theme'
-    , 'gnome-icon-theme'
+    # 'breathe-icon-theme'		# XXX missing from Debian
+    [ 'gnome-icon-theme'
     , 'gnome-themes-extras'
-    , 'gnome-themes-ubuntu'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
     , 'human-theme'
-    , 'light-themes'
+    # , 'light-themes'			# XXX missing from Debian
     , 'openclipart'
     , 'oxygen-icon-theme'
     , 'pidgin-themes'
-    , 'screensaver-default-images'
     , 'tangerine-icon-theme'
     , 'xscreensaver-data'
     , 'xscreensaver-data-extra' ]:
@@ -450,7 +446,6 @@ class packages {
     , 'alsa-base'
     , 'alsa-utils'
     , 'anacron'
-    , 'app-install-data-partner'
     , 'apport-gtk'
     , 'at-spi2-core'
     , 'avahi-autoipd'
@@ -514,7 +509,6 @@ class packages {
 				# (tracker is purged elsewhere)
     , 'gnome-font-viewer'
     , 'gnome-icon-theme-extras'
-    , 'gnome-icon-theme-full'
     , 'gnome-icon-theme-symbolic'
     , 'gnome-keyring'
     , 'gnome-mahjongg'
@@ -554,7 +548,6 @@ class packages {
     , 'iceweasel'
     , 'inputattach'
     , 'itstool'
-    , 'kerneloops-daemon'
     , 'laptop-detect'
     , 'libatk-adaptor'
     , 'libgail-common'
@@ -575,7 +568,6 @@ class packages {
     , 'libreoffice-style-tango'
     , 'libreoffice-writer'
     , 'libsasl2-modules'
-    , 'libwmf0.2-7-gtk'
     , 'libxp6'
     , 'make'
     , 'mcp-account-manager-goa'
@@ -592,7 +584,6 @@ class packages {
     , 'pcmciautils'
     # , 'plymouth-theme-ubuntu-gnome-logo'	# not needed
     # , 'plymouth-theme-ubuntu-gnome-text'	# not needed
-    , 'policykit-desktop-privileges'
     , 'printer-driver-c2esp'
     , 'printer-driver-foo2zjs'
     , 'printer-driver-min12xxw'
@@ -612,7 +603,6 @@ class packages {
     , 'seahorse'
     , 'shotwell'
     , 'simple-scan'
-    , 'software-center'
     # , 'software-properties-gtk'		# (purged elsewhere)
     , 'speech-dispatcher'
     , 'ssh-askpass-gnome'
@@ -620,10 +610,6 @@ class packages {
     , 'totem'
     # , 'tracker'				# (purged elsewhere)
     , 'transmission-gtk'
-    , 'ubuntu-extras-keyring'
-    , 'ubuntu-gnome-default-settings'
-    , 'ubuntu-gnome-wallpapers'
-    # , 'ubuntu-release-upgrader-gtk'		# (purged elsewhere)
     , 'unzip'
     # , 'update-manager'			# (purged elsewhere)
     # , 'update-notifier'			# (purged elsewhere)
@@ -656,7 +642,6 @@ class packages {
     , 'exfat-utils'
     , 'fuse'
     , 'gconf-editor'
-    , 'ginn'
     , 'gkbd-capplet'
     , 'gpointing-device-settings'
     , 'ibus-libpinyin'
@@ -680,8 +665,9 @@ class packages {
 
     [ 'bluefish'
     , 'browser-plugin-vlc'
-    , 'chromium-browser'
+    , 'chromium'
     , 'epiphany-browser'
+    , 'flashplugin-nonfree'
     , 'icedtea-7-plugin'
     , 'liferea'
     , 'openjdk-7-jdk'
@@ -730,13 +716,14 @@ class packages {
     # , 'xexit' ]:
     #   tag => [ 'misc', 'puavo', ];
 
-    [ 'dymo-cups-drivers' ]:
-      tag => [ 'printing', 'puavo', ];
+    # XXX needs packaging for Debian
+    # [ 'dymo-cups-drivers' ]:
+    #   tag => [ 'printing', 'puavo', ];
 
-    # [ 'bluegriffon'	# XXX missing from Debian
-    [ 'enchanting'
-    , 'pycharm'
-    , 'snap4arduino' ]:
+    # [ 'bluegriffon'		# XXX needs packaging for Debian
+    [ 'enchanting' ]:
+    # , 'pycharm'		# XXX needs packaging for Debian
+    # , 'snap4arduino' ]:	# XXX needs packaging for Debian
       tag => [ 'programming', 'puavo', ];
 
     [ 'x2goclient'
@@ -754,8 +741,9 @@ class packages {
   $bcmwl_dkms_module  = 'bcmwl/6.30.223.248+bdcom'
   $nvidia_dkms_module = 'nvidia-304/304.128'
   $r8168_dkms_module  = 'r8168/8.040.00'
-  $all_dkms_modules   = [ $nvidia_dkms_module, $r8168_dkms_module ]
-			# $bcmwl_dkms_module	# XXX missing from Debian
+  $all_dkms_modules   = [ $nvidia_dkms_module ]
+			# XXX $bcmwl_dkms_module # XXX missing from Debian
+			# XXX $r8168_dkms_module # XXX missing from Debian
 
   case $lsbdistcodename {
     'jessie': {
@@ -770,18 +758,15 @@ class packages {
   # packages from the canonical/ubuntu partner repository
   #
 
-  @package {
-    # XXX missing from Debian
-    # [ 'skype' ]:
-    #   tag => [ 'instant_messaging', 'partner', 'extra', 'restricted' ];
-
-    # XXX missing from Debian
-    # [ 'vmware-view-client' ]:
-    #   tag => [ 'remote_access', 'partner', 'restricted' ];
-
-    [ 'adobe-flashplugin' ]:
-      tag => [ 'web', 'partner', 'extra', 'restricted' ];
-  }
+  # XXX missing from Debian
+  # @package {
+  #   [ 'skype' ]:
+  #     tag => [ 'instant_messaging', 'partner', 'extra', 'restricted' ];
+  #
+  #   XXX missing from Debian
+  #   [ 'vmware-view-client' ]:
+  #     tag => [ 'remote_access', 'partner', 'restricted' ];
+  # }
 
   # Packages which are not restricted per se, but which are required by
   # restricted packages. These need to be installed and distributed in
