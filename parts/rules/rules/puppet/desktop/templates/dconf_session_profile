@@ -1,27 +1,9 @@
-[com/canonical/desktop/interface]
-scrollbar-mode='normal'
-
-[com/canonical/indicator/datetime]
-show-events=false
-show-week-numbers=true
-
-[com/canonical/indicator/sound]
-interested-media-players=['spotify', 'banshee']
-preferred-media-players=['']
-
-[com/ubuntu/update-notifier]
-auto-launch=false
-
 [org/gnome/desktop/background]
-draw-background=false
 show-desktop-icons=true
 
 [org/gnome/desktop/interface]
 document-font-name='Sans 10'
-font-name='Ubuntu 10'
-gtk-theme='Radiance-opinsys'
 icon-theme='Faenza'
-monospace-font-name='Ubuntu Mono 10'
 
 [org/gnome/desktop/lockdown]
 disable-lock-screen=false
@@ -40,8 +22,6 @@ idle-delay=uint32 0
 [org/gnome/desktop/wm/preferences]
 button-layout='menu:minimize,maximize,close'
 num-workspaces=2
-theme='Radiance-opinsys'
-titlebar-font='Ubuntu Medium 10'
 
 [org/gnome/desktop/wm/keybindings]
 panel-main-menu=['']
@@ -106,7 +86,7 @@ pack-index=4
 object-iid='PanelInternalFactory::Launcher'
 
 [org/gnome/gnome-panel/layout/objects/object-0/instance-config]
-location='/usr/share/applications/firefox.desktop'
+location='/usr/share/applications/iceweasel.desktop'
 
 [org/gnome/gnome-panel/layout/objects/indicators]
 pack-type='end'
@@ -161,7 +141,7 @@ toplevel-id-list=['bottom-panel']
 locked-down=true
 
 [org/gnome/gnome-panel/run-dialog]
-history=['webmenu', 'firefox', 'chromium-browser']
+history=['webmenu', 'iceweasel', 'chromium']
 
 [org/gnome/nautilus/desktop]
 computer-icon-name='Tietokone'
@@ -191,9 +171,6 @@ name='Webmenu'
 binding='<Primary><Super>z'
 command='xzoom'
 name='XZoom'
-
-[org/gnome/settings-daemon/plugins/ubuntuone]
-active=false
 
 [org/gnome/settings-daemon/plugins/xrandr]
 active=true
