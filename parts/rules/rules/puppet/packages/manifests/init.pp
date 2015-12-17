@@ -357,8 +357,8 @@ class packages {
     , 'lokalize'
     , 'pyqt4-dev-tools'
     , 'python-doc'
-    , 'python-jsonpickle', # a dependency for
-                           # http://meetedison.com/robot-programming-software/
+    , 'python-jsonpickle' # a dependency for
+                          # http://meetedison.com/robot-programming-software/
     , 'python-pygame'
     , 'python-renpy'
     , 'pythontracer'
