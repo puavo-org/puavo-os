@@ -1,5 +1,5 @@
 class image::bundle::desktop {
-  include acroread,
+  include # acroread,			# XXX needs fixing for Debian
           ::desktop,
           disable_accounts_service,
           disable_geoclue,
@@ -12,7 +12,7 @@ class image::bundle::desktop {
           keyutils,
           ktouch,
           laptop_mode_tools,
-          libreoffice,
+          # libreoffice,		# XXX needs fixing for Debian
           network_manager,
           puavo_wlan,
           # pycharm,	# XXX pycharm needs to be packaged for Debian

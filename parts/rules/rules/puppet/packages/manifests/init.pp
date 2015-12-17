@@ -388,7 +388,7 @@ class packages {
     # , 'drgeo'		# XXX missing from Debian
     , 'drgeo-doc'
     , 'gchempaint'
-    , 'ghemical'
+    # , 'ghemical'	# XXX missing from Debian
     , 'gnucap'
     , 'gnuplot'
     , 'gnuplot-x11'
@@ -731,9 +731,10 @@ class packages {
   $bcmwl_dkms_module  = 'bcmwl/6.30.223.248+bdcom'
   $nvidia_dkms_module = 'nvidia-304/304.128'
   $r8168_dkms_module  = 'r8168/8.040.00'
-  $all_dkms_modules   = [ $nvidia_dkms_module ]
-			# XXX $bcmwl_dkms_module # XXX missing from Debian
-			# XXX $r8168_dkms_module # XXX missing from Debian
+  $all_dkms_modules   = []
+			# XXX $nvidia_dkms_module # XXX needs fixing
+			# XXX $bcmwl_dkms_module  # XXX missing from Debian
+			# XXX $r8168_dkms_module  # XXX missing from Debian
 
   case $lsbdistcodename {
     'jessie': {
