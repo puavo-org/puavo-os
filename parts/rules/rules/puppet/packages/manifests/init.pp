@@ -79,15 +79,14 @@ class packages {
     , 'policykit-1'
     , 'pm-utils'
     , 'rng-tools'
-    , 'ubuntu-standard'
     , 'udev'
     , 'vlan' ]:
       tag => [ 'basic', 'debian', ];
 
     # 'compizconfig-settings-manager'	# XXX missing from Debian
     # 'compiz-plugins-extra'		# XXX missing from Debian
-    [ 'indicator-power'
-    , 'indicator-session'
+    # 'indicator-power'			# XXX missing from Debian
+    [ 'indicator-session'
     , 'lightdm'
     , 'lightdm-gtk-greeter'
     , 'lsb-invalid-mta'
@@ -124,7 +123,7 @@ class packages {
     # [ 'bcmwl-kernel-source'	# XXX missing from Debian
     [ 'dkms'
     , 'libgl1-mesa-glx'
-    , 'nvidia-304'
+    , 'nvidia-legacy-304xx-driver'
     , 'nvidia-settings'
     # , 'r8168-dkms'		# XXX missing from Debian
     , 'xserver-xorg-video-all' ]:
@@ -139,7 +138,7 @@ class packages {
     [ 'firmware-b43-installer'
     , 'firmware-linux'
     , 'firmware-linux-free'
-    , 'firmware-linux-nonfree ']:
+    , 'firmware-linux-nonfree' ]:
       tag => [ 'firmware', 'debian', ];
 
     [ 'fontconfig'
@@ -201,12 +200,7 @@ class packages {
     , 'libgnome2-perl'
     , 'libgnomevfs2-bin'
     , 'libgnomevfs2-extra'
-
-    # needed by (gnome|unity)-control-center accessibility settings
-    , 'libunity-core-6.0-9'
-
-    , 'notification-daemon'
-    , 'thunderbird-gnome-support' ]:
+    , 'notification-daemon' ]:
       tag => [ 'gnome', 'debian', ];
 
     [ 'blender'
@@ -236,8 +230,8 @@ class packages {
     , 'nautilus-image-converter'
     , 'okular'
     , 'openshot'
-    , 'pencil'
-    , 'photofilmstrip'
+    # , 'pencil'		# XXX missing from Debian
+    # , 'photofilmstrip'	# XXX missing from Debian
     , 'pinta'
     , 'pitivi'
     , 'python-lxml'
@@ -268,7 +262,7 @@ class packages {
       tag => [ 'laptop', 'debian', ];
 
     [ 'banshee'
-    , 'clam-chordata'		# XXX missing from Debian Jessie
+    # , 'clam-chordata'		# XXX missing from Debian Jessie
     , 'gnome-mplayer'
     , 'goobox'
     , 'gstreamer1.0-clutter'
@@ -283,7 +277,7 @@ class packages {
     , 'kscd'
     , 'libdvdread4'
     , 'me-tv'
-    , 'ogmrip'
+    # , 'ogmrip'		# XXX missing from Debian
     , 'python-gst0.10'
     , 'vlc'
     , 'vlc-plugin-pulse'
@@ -340,8 +334,9 @@ class packages {
     , 'sound-juicer' ]:
       tag => [ 'optical_media', 'debian', ];
 
-    [ 'gtklp' ]:
-      tag => [ 'printing', 'debian', ];
+    # XXX missing from Debian
+    # [ 'gtklp' ]:
+    #   tag => [ 'printing', 'debian', ];
 
     [ 'arduino'
     , 'arduino-mk'
@@ -373,8 +368,8 @@ class packages {
     , 'spe' ]:
       tag => [ 'programming', 'debian', ];
 
-    [ 'gftp-gtk'
-    , 'libmotif4'	# required by icaclient
+    # 'gftp-gtk'	# XXX missing from Debian
+    [ 'libmotif4'	# required by icaclient
     , 'lftp'
     , 'remmina'
     , 'smbclient'
@@ -388,7 +383,7 @@ class packages {
     , 'celestia'
     , 'celestia-common-nonfree'
     , 'celestia-gnome'
-    , 'drgeo'
+    # , 'drgeo'		# XXX missing from Debian
     , 'drgeo-doc'
     , 'gchempaint'
     , 'ghemical'
@@ -415,15 +410,12 @@ class packages {
     , 'wxmaxima' ]:
       tag => [ 'science', 'debian', ];
 
-    [ 'ubuntu-mono' ]:
-      tag => [ 'themes', 'thinclient', 'debian', ];
-
     # 'breathe-icon-theme'		# XXX missing from Debian
     [ 'gnome-icon-theme'
     , 'gnome-themes-extras'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
-    , 'human-theme'
+    # , 'human-theme'			# XXX missing from Debian
     # , 'light-themes'			# XXX missing from Debian
     , 'openclipart'
     , 'oxygen-icon-theme'
@@ -446,14 +438,12 @@ class packages {
     , 'alsa-base'
     , 'alsa-utils'
     , 'anacron'
-    , 'apport-gtk'
     , 'at-spi2-core'
     , 'avahi-autoipd'
     , 'avahi-daemon'
     , 'baobab'
     , 'bc'
     , 'bluez'
-    , 'bluez-alsa'
     , 'bluez-cups'
     , 'brasero'
     , 'brltty'
@@ -480,7 +470,6 @@ class packages {
     , 'fonts-freefont-ttf'
     , 'fonts-guru'
     , 'fonts-kacst-one'
-    , 'fonts-khmeros-core'
     , 'fonts-lao'
     , 'fonts-liberation'
     , 'fonts-lklug-sinhala'
@@ -570,7 +559,6 @@ class packages {
     , 'libsasl2-modules'
     , 'libxp6'
     , 'make'
-    , 'mcp-account-manager-goa'
     , 'memtest86+'
     , 'mousetweaks'
     , 'mutter'
@@ -624,7 +612,6 @@ class packages {
     , 'xkb-data'
     , 'xorg'
     , 'xterm'
-    , 'xul-ext-ubufox'
     , 'yelp'
     , 'yelp-tools'
     , 'yelp-xsl'
@@ -642,8 +629,8 @@ class packages {
     , 'exfat-utils'
     , 'fuse'
     , 'gconf-editor'
+    # , 'ginn'			# XXX needs packaging for Debian ?
     , 'gkbd-capplet'
-    , 'gpointing-device-settings'
     , 'ibus-libpinyin'
     , 'kdepasswd'
     , 'keepass2'
@@ -653,7 +640,7 @@ class packages {
     , 'password-gorilla'
     , 'rarian-compat'
     , 'screenlets'
-    , 'touchegg'
+    # , 'touchegg'		# XXX needs packaging for Debian ?
     , 'unace'
     , 'unionfs-fuse'
     , 'unrar'
@@ -683,14 +670,14 @@ class packages {
   #
 
   @package {
-    [ 'nodejs-bundle'
-    , 'puavo-rules'
-    , 'puavo-devscripts' ]:
-      tag => [ 'devel', 'puavo', ];
+    # XXX not yet packaged for Debian
+    # [ 'nodejs-bundle'
+    # , 'puavo-rules'
+    # , 'puavo-devscripts' ]:
+    #   tag => [ 'devel', 'puavo', ];
 
-    # XXX not yet packaged for Debian (except ltsp-client)
+    # XXX not yet packaged for Debian
     # [ 'autopoweroff'
-    # , 'ltsp-client'
     # , 'opinsys-ca-certificates'
     # , 'puavo-autopilot'
     # , 'puavo-client'
@@ -701,7 +688,7 @@ class packages {
     # , 'puavo-vpn-client' ]:
     #   tag => [ 'misc', 'puavo', 'thinclient', ];
 
-    # XXX needs packaging for Debian
+    # XXX not yet packaged for Debian
     # [ 'fluent-plugin-puavo'
     # , 'iivari-client'
     # , 'puavo-image-tools'
@@ -716,24 +703,25 @@ class packages {
     # , 'xexit' ]:
     #   tag => [ 'misc', 'puavo', ];
 
-    # XXX needs packaging for Debian
+    # XXX not yet packaged for Debian
     # [ 'dymo-cups-drivers' ]:
     #   tag => [ 'printing', 'puavo', ];
 
-    # [ 'bluegriffon'		# XXX needs packaging for Debian
-    [ 'enchanting' ]:
-    # , 'pycharm'		# XXX needs packaging for Debian
-    # , 'snap4arduino' ]:	# XXX needs packaging for Debian
-      tag => [ 'programming', 'puavo', ];
+    # XXX not yet packaged for Debian
+    # [ 'bluegriffon'
+    # , 'enchanting'
+    # , 'pycharm'
+    # , 'snap4arduino' ]:
+    #   tag => [ 'programming', 'puavo', ];
 
-    [ 'x2goclient'
-    , 'x2goserver' ]:
+    [ 'x2goclient' ]:
+    # , 'x2goserver'	# XXX not yet packaged for Debian
       tag => [ 'remote_access', 'puavo', ];
 
     [ 'faenza-icon-theme' ]:
       tag => [ 'themes', 'puavo', ];
 
-    # [ 'node-webkit'
+    # 'node-webkit'	# XXX not yet packaged for Debian
     [ 'xul-ext-flashblock' ]:
       tag => [ 'web', 'puavo', ];
   }

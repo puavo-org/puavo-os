@@ -6,7 +6,7 @@ class desktop::puavodesktop {
           desktop::dconf::nokeyboard,
           desktop::dconf::puavodesktop,
           desktop::dconf::turn_off_xrandrplugin,
-          desktop::enable_indicator_power_service,
+          # desktop::enable_indicator_power_service,	# XXX needs fixing
           desktop::mimedefaults,
           packages
           # webmenu	# XXX needs packaging for Debian

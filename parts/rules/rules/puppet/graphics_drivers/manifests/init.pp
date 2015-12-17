@@ -39,7 +39,7 @@ class graphics_drivers {
           before         => File['/etc/modprobe.d/nvidia-304_hybrid.conf'],
           gl_conf_target => '/usr/lib/nvidia-304/ld.so.conf',
           notify         => Driver_alternatives['mesa'],
-          require        => [ Package['nvidia-304']
+          require        => [ Package['nvidia-legacy-304xx-driver']
                             , Package['nvidia-settings'] ];
       }
 
@@ -51,7 +51,7 @@ class graphics_drivers {
       }
 
       Package <| title == libgl1-mesa-glx
-              or title == nvidia-304
+              or title == nvidia-legacy-304xx-driver
               or title == nvidia-settings |>
     }
   }
