@@ -7,7 +7,7 @@ Standards-Version: 3.9.3
 Homepage: http://github.com/opinsys/webmenu
 
 Package: webmenu
-Architecture: i386
-Depends: ${misc:Depends}, node-webkit (>= 0.8.5), wmctrl, gnome-themes-extras, socat, netcat-openbsd, libnotify-bin, faenza-icon-theme, zenity, visionmedia-mon, fluentd, ruby1.9.1
+Architecture: all
+Depends: ${misc:Depends}, node-webkit (>= 0.8.5), wmctrl, gnome-themes-extras, socat, netcat-openbsd, libnotify-bin, faenza-icon-theme, zenity, visionmedia-mon, fluentd, ruby2.1
 Description: Webmenu
  Next generation desktop menu
