@@ -206,10 +206,33 @@ module Dot11
 
     attr_reader :name
     attr_reader :phy
+    attr_reader :rx_bytes
+    attr_reader :tx_bytes
+    attr_reader :rx_rate
+    attr_reader :tx_rate
 
     def initialize(name, phy)
-      @name = name
-      @phy  = phy
+      @name              = name
+      @phy               = phy
+      @rx_rate           = 0
+      @tx_rate           = 0
+      @rx_bytes          = 0
+      @tx_bytes          = 0
+      @stats_update_time = Time.at(0)
+    end
+
+    def update_stats
+      File.read('/proc/net/dev') =~ /^\s*#{@name}:(.*)$/
+
+      stats_update_time  = Time.now
+      secs               = stats_update_time - @stats_update_time
+      rx_bytes           = $1.split[0].to_i
+      tx_bytes           = $1.split[8].to_i
+      @rx_rate           = (rx_bytes - @rx_bytes) / secs
+      @tx_rate           = (tx_bytes - @tx_bytes) / secs
+      @rx_bytes          = rx_bytes
+      @tx_bytes          = tx_bytes
+      @stats_update_time = stats_update_time
     end
 
     def del
@@ -669,6 +692,7 @@ class AccessPoint
         if ready.nil?
 
           if @ping_interval.nil? || Time.now - @ping_time > @ping_interval
+            @vifs.each { |vif| vif.update_stats }
             controller_ping
           end
 
@@ -955,11 +979,6 @@ class AccessPoint
           end
         end
 
-        # Get interface stats
-        File.read('/proc/net/dev') =~ /^\s*#{vif.name}:(.*)$/
-        rx_bytes = $1.split[0].to_i
-        tx_bytes = $1.split[8].to_i
-
         start_time = File.mtime("#{HOSTAPD_CTRL_INTERFACE_DIR}/#{vif.name}")
 
         tx_power_limit_dBm = IO.popen(['iwconfig', vif.name]) do |io|
@@ -973,11 +992,13 @@ class AccessPoint
           :start_time         => start_time,
           :bssid              => bssid,
           :channel            => channel,
-          :rx_bytes           => rx_bytes,
+          :rx_bytes           => vif.rx_bytes,
+          :rx_rate            => vif.rx_rate,
           :ssid               => ssid,
           :stations           => stations,
-          :tx_bytes           => tx_bytes,
+          :tx_bytes           => vif.tx_bytes,
           :tx_power_limit_dBm => tx_power_limit_dBm,
+          :tx_rate            => vif.tx_rate,
         }
       end
     end
