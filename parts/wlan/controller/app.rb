@@ -56,7 +56,7 @@ module PuavoWlanController
       return "#{(bytes / 1024.0**2).round(1)} MiB" if bytes >= 1024**2
       return "#{(bytes / 1024.0**1).round(1)} KiB" if bytes >= 1024**1
 
-      "#{bytes} B"
+      "#{bytes.round(1)} B"
     end
 
     def prettify_seconds(seconds)
