@@ -75,7 +75,7 @@ class kernels {
 
   $edge_kernel = $lsbdistcodename ? {
     'trusty' => $architecture ? {
-                  'i386'  => '4.2.5.opinsys1',
+                  'i386'  => '4.3.3.opinsys1',
                   default => $default_kernel,
                 },
     default => $default_kernel,
