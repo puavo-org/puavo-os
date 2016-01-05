@@ -1,3 +1,14 @@
+puavo-wlan (0.12.3) trusty; urgency=medium
+
+  * New release
+  * controller/ui: show AP Rx/Tx rates instead of sums
+  * controller: round prettified bytes
+  * ap: report current Rx/Tx rates to the controller
+  * controller, ap: rename /v1/host => /v1/status
+  * Git(bf6019c897ea6e320c9ee05e9967ebd42f45511f)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 05 Jan 2016 09:54:31 +0200
+
 puavo-wlan (0.12.2) trusty; urgency=medium
 
   * New release
