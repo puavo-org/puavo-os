@@ -8,6 +8,6 @@ Homepage: http://github.com/opinsys/webmenu
 
 Package: webmenu
 Architecture: all
-Depends: ${misc:Depends}, node-webkit (>= 0.8.5), wmctrl, gnome-themes-standard, socat, netcat-openbsd, libnotify-bin, faenza-icon-theme, zenity, visionmedia-mon, fluentd, ruby
+Depends: ${misc:Depends}, node-webkit (>= 0.8.5), wmctrl, gnome-themes-standard, socat, netcat-openbsd, libnotify-bin, faenza-icon-theme, zenity, visionmedia-mon, fluentd, ruby, libgettextpo0
 Description: Webmenu
  Next generation desktop menu
