@@ -55,6 +55,8 @@ module PuavoWlanController
             host_radios             = host.fetch('radios')
             host_rx_bytes           = 0
             host_tx_bytes           = 0
+            host_rx_rate            = 0
+            host_tx_rate            = 0
             host_sta_count          = 0
             host_system_start_time  = Time.parse(host.fetch('system_start_time'))
             host_service_start_time = Time.parse(host.fetch('service_start_time'))
@@ -88,6 +90,8 @@ module PuavoWlanController
                 host_sta_count                 += ap_stations.length
                 host_rx_bytes                  += ap_rx_bytes
                 host_tx_bytes                  += ap_tx_bytes
+                host_rx_rate                   += ap_rx_rate
+                host_tx_rate                   += ap_tx_rate
                 radio_rx_bytes                 += ap_rx_bytes
                 radio_tx_bytes                 += ap_tx_bytes
                 erb_locals[:total_ap_rx_bytes] += ap_rx_bytes
@@ -153,6 +157,8 @@ module PuavoWlanController
               :service_uptime => host_service_uptime,
               :rx_bytes       => host_rx_bytes,
               :tx_bytes       => host_tx_bytes,
+              :rx_rate        => host_rx_rate,
+              :tx_rate        => host_tx_rate,
               :version        => host.fetch('version'),
               :loadavg1       => host.fetch('loadavg1'),
               :loadavg5       => host.fetch('loadavg5'),

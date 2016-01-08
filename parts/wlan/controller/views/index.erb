@@ -26,8 +26,8 @@
           <th>PHYs</th>
           <th>APs</th>
           <th>STAs</th>
-          <th>Rx</th>
-          <th>Tx</th>
+          <th>Rx rate</th>
+          <th>Tx rate</th>
         </tr>
       </thead>
       <tbody>
@@ -43,8 +43,8 @@
           <td><%= host[:phy_count] %></td>
           <td><%= host[:ap_count] %></td>
           <td><%= host[:sta_count] %></td>
-          <td sorttable_customkey="<%= host[:rx_bytes] %>"><%= prettify_bytes(host[:rx_bytes]) %></td>
-          <td sorttable_customkey="<%= host[:tx_bytes] %>"><%= prettify_bytes(host[:tx_bytes]) %></td>
+          <td sorttable_customkey="<%= host[:rx_rate] %>"><%= prettify_bytes(host[:rx_rate]) %>/s</td>
+          <td sorttable_customkey="<%= host[:tx_rate] %>"><%= prettify_bytes(host[:tx_rate]) %>/s</td>
         </tr>
         <% end %>
       </tbody>
@@ -54,8 +54,8 @@
           <td><%= radios.length %></td>
           <td><%= accesspoints.length %></td>
           <td><%= stations.length %></td>
-          <td><%= prettify_bytes(total_ap_rx_bytes) %></td>
-          <td><%= prettify_bytes(total_ap_tx_bytes) %></td>
+          <td><%= prettify_bytes(total_ap_rx_rate) %></td>
+          <td><%= prettify_bytes(total_ap_tx_rate) %></td>
         </tr>
       </tfoot>
     </table>
@@ -139,8 +139,8 @@
         <tr>
           <th colspan="5">Totals</th>
           <td><%= stations.length %></td>
-          <td><%= prettify_bytes(total_ap_rx_rate) %></td>
-          <td><%= prettify_bytes(total_ap_tx_rate) %></td>
+          <td><%= prettify_bytes(total_ap_rx_rate) %>/s</td>
+          <td><%= prettify_bytes(total_ap_tx_rate) %>/s</td>
         </tr>
       </tfoot>
     </table>
