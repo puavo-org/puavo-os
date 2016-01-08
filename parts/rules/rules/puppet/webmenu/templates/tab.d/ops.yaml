@@ -2,16 +2,35 @@
 type: menu
 name:
   en: Subjects
-  fi: Oppiaineet
+  fi: OPS2016
 items:
  - type: menu
    name:
-     en: Physics & Chemistry
-     fi: Fysiikka & kemia
-   osIcon: /usr/share/icons/Faenza/categories/64/applications-science.png
+     en: Physics
+     fi: Fysiikka
+   osIcon: /usr/share/icons/hicolor/64x64/apps/step.png
    items:
     - type: desktop
       source: step
+    - type: desktop
+      source: LoggerPro
+    - type: desktop
+      source: libreoffice-writer
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
+ - type: menu
+   name:
+     en: Chemistry
+     fi: Kemia
+   osIcon: /usr/share/icons/hicolor/48x48/apps/kalzium.png
+   items:
     - type: desktop
       source: kalzium
     - type: desktop
@@ -19,6 +38,26 @@ items:
       inactiveByDeviceType: thinclient
     - type: desktop
       source: LoggerPro
+    - type: desktop
+      source: libreoffice-writer
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
  - type: menu
    name:
      en: Mathematics
@@ -51,11 +90,31 @@ items:
     - type: desktop
       source: libreoffice-math
     - type: desktop
+      source: libreoffice-writer
+    - type: desktop
       source: wxmaxima
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
  - type: menu
    name:
-     en: Geography & Environmental Science
-     fi: Maantieto & ympäristöoppi
+     en: Geography
+     fi: Maantieto
    osIcon: /usr/share/tuxpaint/stamps/space/planets/3_earth.png
    items:
     - type: desktop
@@ -72,11 +131,170 @@ items:
       source: kstars
     - type: desktop
       source: qgis
+    - type: desktop
+      source: libreoffice-writer
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
  - type: menu
    name:
-     en: History & Social Sciences
-     fi: Historia & yhteiskuntaoppi
-   osIcon: /usr/share/tuxpaint/stamps/town/monuments/cartoon/statue.png
+     en: Environmental Science
+     fi: Ympäristöoppi
+   osIcon: /usr/share/icons/Faenza/apps/64/tracker.png
+   items:
+    - type: desktop
+      source: marble
+    - type: desktop
+      source: kgeography
+    - type: desktop
+      source: celestia
+      inactiveByDeviceType: thinclient
+    - type: desktop
+      source: stellarium
+      inactiveByDeviceType: thinclient
+    - type: desktop
+      source: kstars
+    - type: desktop
+      source: libreoffice-writer
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
+ - type: menu
+   name:
+     en: Biology
+     fi: Biologia
+   osIcon: /usr/share/icons/Humanity/categories/48/applications-biology.svg
+   items:
+    - type: web
+      name: Luontobongari
+      url: http://www.perunakellari.fi/bongari.html
+      description:
+        en: Luontobongari
+        fi: Luontobongari
+        sv: Luontobongari
+        de: Luontobongari
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Luontobongari
+      url: http://www.perunakellari.fi/viljely.htm
+      description:
+        en: Viljely                   
+        fi: Viljely
+        sv: Viljely
+        de: Viljely
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+      source: stellarium
+      inactiveByDeviceType: thinclient
+    - type: desktop
+      source: kstars
+    - type: desktop
+      source: libreoffice-writer
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
+ - type: menu
+   name:
+     en: Social Sciences
+     fi: Yhteiskuntaoppi
+   osIcon: /usr/share/icons/Faenza/emblems/64/emblem-sales.png
+   items:
+    - source: ekapeli
+      type: desktop
+      inactiveByDeviceType: thinclient
+      condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+    - source: ekapeli-maahanmuuttaja
+      type: desktop
+      inactiveByDeviceType: thinclient
+      condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+    - source: ekapeli-alku
+      type: desktop
+      inactiveByDeviceType: thinclient
+      condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+    - type: desktop
+      source: google-earth
+      inactiveByDeviceType: thinclient
+    - type: desktop
+      source: googleearth
+      inactiveByDeviceType: thinclient
+    - type: web
+      name: YLE Elävä arkisto
+      url: http://yle.fi/aihe/elava-arkisto
+      description:
+        en: Yle Elävä arkisto
+        fi: Yle Elävä arkisto
+        sv: Yle Elävä arkisto
+        de: Yle Elävä arkisto
+      osIconPath: /usr/share/icons/Faenza/apps/96/gimp.png
+    - type: desktop
+      source: libreoffice-writer
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
+ - type: menu
+   name:
+     en: History
+     fi: Historia
+   osIcon: /usr/share/icons/hicolor/128x128/apps/freeciv-client.png
    items:
     - type: desktop
       source: marble
@@ -86,12 +304,55 @@ items:
     - type: desktop
       source: googleearth
       inactiveByDeviceType: thinclient
+    - type: web
+      name: YLE Elävä arkisto
+      url: http://yle.fi/aihe/elava-arkisto
+      description:
+        en: Yle Elävä arkisto
+        fi: Yle Elävä arkisto
+        sv: Yle Elävä arkisto
+        de: Yle Elävä arkisto
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: desktop
+      source: libreoffice-writer
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
  - type: menu
    name:
-     en: English & Literature
-     fi: Äidinkieli & kirjallisuus
+     en: English and literature
+     fi: Äidinkieli ja kirjallisuus
    osIcon: /usr/share/icons/Faenza/apps/64/gnome-dictionary.png
    items:
+    - source: ekapeli
+      type: desktop
+      inactiveByDeviceType: thinclient
+      condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+    - source: ekapeli-maahanmuuttaja
+      type: desktop
+      inactiveByDeviceType: thinclient
+      condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+    - source: ekapeli-alku
+      type: desktop
+      inactiveByDeviceType: thinclient
+      condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+    - type: desktop
+      source: libreoffice-writer
     - type: desktop
       source: gcompris
     - type: desktop
@@ -101,11 +362,36 @@ items:
     - type: desktop
       source: kwordquiz
     - type: desktop
-      source: libreoffice-writer
-    - type: desktop
       source: ktouch
     - type: desktop
       source: libreoffice-impress
+    - type: web
+      name: YLE Elävä arkisto
+      url: http://yle.fi/aihe/elava-arkisto
+      description:
+        en: Yle Elävä arkisto
+        fi: Yle Elävä arkisto
+        sv: Yle Elävä arkisto
+        de: Yle Elävä arkisto
+      osIconPath: /usr/share/icons/Faenza/apps/96/gimp.png
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
  - type: menu
    name:
      en: Foreign languages
@@ -113,14 +399,76 @@ items:
    osIcon: /usr/share/icons/oxygen/64x64/categories/applications-education-language.png
    items:
     - type: desktop
+      source: libreoffice-writer
+    - type: desktop
       source: kwordquiz
     - type: desktop
       source: khangman
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
+ - type: menu
+   name:
+     en: Foreign languages
+     fi: Toinen kotimainen
+   osIcon: /usr/share/icons/Faenza/apps/64/config-language.png
+   items:
+    - source: ekapeli
+      type: desktop
+      inactiveByDeviceType: thinclient
+      condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+    - source: ekapeli-maahanmuuttaja
+      type: desktop
+      inactiveByDeviceType: thinclient
+      condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+    - source: ekapeli-alku
+      type: desktop
+      inactiveByDeviceType: thinclient
+      condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+    - type: desktop
+      source: libreoffice-writer
+    - type: desktop
+      source: kwordquiz
+    - type: desktop
+      source: khangman
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
  - type: menu
    name:
      en: Music
      fi: Musiikki
-   osIcon: /usr/share/tuxpaint/stamps/symbols/music/note_012_a.png
+   osIcon: /usr/share/icons/Faenza/apps/64/gmusicbrowser.png
    items:
     - type: desktop
       source: audacity
@@ -134,11 +482,81 @@ items:
       source: mscore
     - type: desktop
       source: denemo
+    - source: spotify
+      type: desktop
+    - type: desktop
+      source: libreoffice-writer
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
+ - type: menu
+   name:
+     en: Handicrafts
+     fi: Käsityö
+   osIcon: /usr/share/icons/Neu/128x128/categories/kcontrol.png
+   items:
+    - type: desktop
+      source: pinta
+    - type: desktop
+      source: gimp
+    - type: desktop
+      source: inkscape
+    - type: web
+      name: Sumopaint
+      url: http://www.sumopaint.com
+      description:
+        en: Sumopaint-online graphics editor
+        fi: Sumopaint-webkuvankäsittely
+        sv: Sumopaint-bildbehandling
+        de: Sumopaint Online Bildbearbeitung
+      osIconPath: /usr/share/icons/Faenza/apps/96/gimp.png
+    - type: desktop
+      source: fritzing
+    - type: desktop
+      source: arduino
+      inactiveByDeviceType: thinclient
+    - type: desktop
+      source: Snap4Arduino
+    - type: desktop
+      source: libreoffice-writer
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
  - type: menu
    name:
      en: Arts
      fi: Kuvataide
-   osIcon: /usr/share/icons/Faenza/categories/64/applications-painting.png
+   osIcon: /usr/share/icons/Faenza/apps/64/mypaint.png
    items:
     - type: desktop
       source: tuxpaint
@@ -152,21 +570,217 @@ items:
       source: gimp
     - type: desktop
       source: inkscape
+    - type: web
+      name: Sumopaint
+      url: http://www.sumopaint.com
+      description:
+        en: Sumopaint-online graphics editor
+        fi: Sumopaint-webkuvankäsittely
+        sv: Sumopaint-bildbehandling
+        de: Sumopaint Online Bildbearbeitung
+      osIconPath: /usr/share/icons/Faenza/apps/96/gimp.png
     - type: desktop
       source: simple-scan
       inactiveByDeviceType: thinclient
- - type: menu
-   name:
-     en: Handicraft
-     fi: Käsityö
-   osIcon: /usr/share/icons/Breathe/48x48/categories/applications-accessories.png
-   items:
-    - type: desktop
-      source: fritzing
     - type: desktop
       source: inkscape
     - type: desktop
       source: gimp
     - type: desktop
-      source: arduino
-      inactiveByDeviceType: thinclient
+      source: libreoffice-writer
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
+ - type: menu
+   name:
+     en: student counceling
+     fi: Oppilaanohjaus
+   osIcon: /usr/share/icons/oxygen/128x128/apps/system-users.png
+   items:
+    - type: desktop
+      source: libreoffice-writer
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
+ - type: menu
+   name:
+     en: Home economics
+     fi: Kotitalous
+   osIcon: /usr/share/icons/Humanity/categories/48/applications-java.svg
+   items:
+    - type: desktop
+      source: libreoffice-writer
+    - type: web
+      name: Amme
+      url: https://www11.edu.fi/materiaali/index.php?id=2
+      description:
+        en: Sumopaint-online graphics editor
+        fi: Sumopaint-webkuvankäsittely
+        sv: Sumopaint-bildbehandling
+        de: Sumopaint Online Bildbearbeitung
+      osIconPath: /usr/share/icons/Faenza/apps/96/gimp.png
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
+ - type: menu
+   name:
+     en: Sports
+     fi: Liikunta
+   osIcon: /usr/share/icons/Humanity/categories/48/applications-sports.svg
+   items:
+    - type: desktop
+      source: libreoffice-writer
+    - type: desktop
+      source: google-earth
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
+ - type: menu
+   name:
+     en: Health
+     fi: Terveystieto
+   osIcon: /usr/share/icons/gnome/48x48/emblems/emblem-favorite.png
+   items:
+    - type: desktop
+      source: libreoffice-writer
+    - type: desktop
+      source: google-earth
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
+ - type: menu
+   name:
+     en: Ethics
+     fi: Elämänkatsomustieto
+   osIcon: /usr/share/icons/oxygen/128x128/status/meeting-participant.png
+   items:
+    - type: desktop
+      source: libreoffice-writer
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
+ - type: menu
+   name:
+     en: Religion
+     fi: Uskonto
+   osIcon: /usr/share/icons/oxygen/128x128/places/user-identity.png
+   items:
+    - type: desktop
+      source: libreoffice-writer
+    - type: web
+      name: YLE Elävä arkisto
+      url: http://yle.fi/aihe/elava-arkisto
+      description:
+        en: Yle Elävä arkisto
+        fi: Yle Elävä arkisto
+        sv: Yle Elävä arkisto
+        de: Yle Elävä arkisto
+      osIconPath: /usr/share/icons/Faenza/apps/96/gimp.png
+    - type: web
+      name: Kahoot!
+      url: https://getkahoot.com/
+      description:
+        en: Kahoot
+        fi: Kahoot
+        sv: Kahoot
+        de: Kahoot
+      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
+    - type: web
+      name: Youtube
+      url: http://youtube.com
+      description:
+        en: YouTube
+        fi: YouTube-videopalvelu
+        sv: YouTube
+        de: YouTube
+      osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
