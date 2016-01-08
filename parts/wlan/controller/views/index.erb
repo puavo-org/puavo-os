@@ -156,8 +156,8 @@
           <th>IPv4 address</th>
           <th>BSSID</th>
           <th>Uptime</th>
-          <th>Rx</th>
-          <th>Tx</th>
+          <th>Rx rate</th>
+          <th>Tx rate</th>
         </tr>
       </thead>
       <tbody>
@@ -169,8 +169,8 @@
           <td><a href="#ap-<%= station[:bssid] %>"><%= station[:bssid] %></a></td>
           <td sorttable_customkey="<%= station[:uptime] %>"><%= prettify_seconds(station[:uptime]) %></td>
           <!-- Tx and Rx switched, because station's Rx is Access point's Tx. -->
-          <td sorttable_customkey="<%= station[:tx_bytes] %>"><%= prettify_bytes(station[:tx_bytes]) %></td>
-          <td sorttable_customkey="<%= station[:rx_bytes] %>"><%= prettify_bytes(station[:rx_bytes]) %></td>
+          <td sorttable_customkey="<%= station[:tx_rate] %>"><%= prettify_bytes(station[:tx_rate]) %>/s</td>
+          <td sorttable_customkey="<%= station[:rx_rate] %>"><%= prettify_bytes(station[:rx_rate]) %>/s</td>
         </tr>
         <% end %>
       </tbody>
@@ -178,8 +178,8 @@
         <tr>
           <th colspan="5">Totals</th>
           <!-- Tx and Rx switched, because station's Rx is Access point's Tx. -->
-          <td><%= prettify_bytes(total_sta_tx_bytes) %></td>
-          <td><%= prettify_bytes(total_sta_rx_bytes) %></td>
+          <td><%= prettify_bytes(total_sta_tx_rate) %>/s</td>
+          <td><%= prettify_bytes(total_sta_rx_rate) %>/s</td>
         </tr>
       </tfoot>
     </table>

@@ -48,6 +48,8 @@ module PuavoWlanController
             :total_ap_tx_rate   => 0,
             :total_sta_rx_bytes => 0,
             :total_sta_tx_bytes => 0,
+            :total_sta_rx_rate  => 0,
+            :total_sta_tx_rate  => 0,
           }
 
           TEMPSTORE.get_statuses.each do |host|
@@ -109,10 +111,14 @@ module PuavoWlanController
                   sta_hostname, sta_fqdn, sta_ipaddr = arp_table.fetch(sta_mac, [nil, nil, nil])
                   sta_rx_bytes                       = station.fetch('rx_bytes')
                   sta_tx_bytes                       = station.fetch('tx_bytes')
+                  sta_rx_rate                        = station.fetch('rx_rate')
+                  sta_tx_rate                        = station.fetch('tx_rate')
                   sta_start_time                     = Time.parse(station.fetch('start_time'))
 
                   erb_locals[:total_sta_rx_bytes] += sta_rx_bytes
                   erb_locals[:total_sta_tx_bytes] += sta_tx_bytes
+                  erb_locals[:total_sta_rx_rate]  += sta_rx_rate
+                  erb_locals[:total_sta_tx_rate]  += sta_tx_rate
 
                   erb_locals[:stations] << {
                     :bssid    => ap_bssid,
@@ -123,6 +129,8 @@ module PuavoWlanController
                     :mac      => sta_mac,
                     :rx_bytes => sta_rx_bytes,
                     :tx_bytes => sta_tx_bytes,
+                    :rx_rate  => sta_rx_rate,
+                    :tx_rate  => sta_tx_rate,
                   }
                 end
                 erb_locals[:accesspoints] << {
