@@ -69,6 +69,8 @@ module PuavoWlanController
               radio_ap_count     = radio_accesspoints.length
               radio_rx_bytes     = 0
               radio_tx_bytes     = 0
+              radio_rx_rate      = 0
+              radio_tx_rate      = 0
               radio_channel      = 0
               radio_tx_power     = 0
               radio_sta_count    = 0
@@ -94,6 +96,8 @@ module PuavoWlanController
                 host_tx_rate                   += ap_tx_rate
                 radio_rx_bytes                 += ap_rx_bytes
                 radio_tx_bytes                 += ap_tx_bytes
+                radio_rx_rate                  += ap_rx_rate
+                radio_tx_rate                  += ap_tx_rate
                 erb_locals[:total_ap_rx_bytes] += ap_rx_bytes
                 erb_locals[:total_ap_tx_bytes] += ap_tx_bytes
                 erb_locals[:total_ap_rx_rate]  += ap_rx_rate
@@ -142,6 +146,8 @@ module PuavoWlanController
                 :ap_count => radio_ap_count,
                 :rx_bytes => radio_rx_bytes,
                 :tx_bytes => radio_tx_bytes,
+                :rx_rate  => radio_rx_rate,
+                :tx_rate  => radio_tx_rate,
                 :channel  => radio_channel,
                 :tx_power => radio_tx_power,
                 :sta_count => radio_sta_count,
