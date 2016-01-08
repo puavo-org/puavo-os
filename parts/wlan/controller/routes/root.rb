@@ -78,15 +78,15 @@ module PuavoWlanController
               host_ap_count += radio_ap_count
 
               radio_accesspoints.each do |accesspoint|
-                ap_bssid      = accesspoint.fetch('bssid')
-                ap_start_time = Time.parse(accesspoint.fetch('start_time'))
-                ap_stations   = accesspoint.fetch('stations')
-                ap_rx_bytes   = accesspoint.fetch('rx_bytes')
-                ap_tx_bytes   = accesspoint.fetch('tx_bytes')
-                ap_rx_rate    = accesspoint.fetch('rx_rate')
-                ap_tx_rate    = accesspoint.fetch('tx_rate')
-                ap_uptime     = time_now - ap_start_time
-                radio_channel = accesspoint.fetch('channel')
+                ap_bssid       = accesspoint.fetch('bssid')
+                ap_start_time  = Time.parse(accesspoint.fetch('start_time'))
+                ap_stations    = accesspoint.fetch('stations')
+                ap_rx_bytes    = accesspoint.fetch('rx_bytes')
+                ap_tx_bytes    = accesspoint.fetch('tx_bytes')
+                ap_rx_rate     = accesspoint.fetch('rx_rate')
+                ap_tx_rate     = accesspoint.fetch('tx_rate')
+                ap_uptime      = time_now - ap_start_time
+                radio_channel  = accesspoint.fetch('channel')
                 radio_tx_power = accesspoint.fetch('tx_power_limit_dBm')
 
                 host_sta_count                 += ap_stations.length
@@ -139,17 +139,17 @@ module PuavoWlanController
                 }
               end
               erb_locals[:radios] << {
-                :hostname => host_hostname,
-                :driver   => radio.fetch('driver'),
-                :mac      => radio.fetch('mac'),
-                :product  => radio.fetch('product'),
-                :ap_count => radio_ap_count,
-                :rx_bytes => radio_rx_bytes,
-                :tx_bytes => radio_tx_bytes,
-                :rx_rate  => radio_rx_rate,
-                :tx_rate  => radio_tx_rate,
-                :channel  => radio_channel,
-                :tx_power => radio_tx_power,
+                :hostname  => host_hostname,
+                :driver    => radio.fetch('driver'),
+                :mac       => radio.fetch('mac'),
+                :product   => radio.fetch('product'),
+                :ap_count  => radio_ap_count,
+                :rx_bytes  => radio_rx_bytes,
+                :tx_bytes  => radio_tx_bytes,
+                :rx_rate   => radio_rx_rate,
+                :tx_rate   => radio_tx_rate,
+                :channel   => radio_channel,
+                :tx_power  => radio_tx_power,
                 :sta_count => radio_sta_count,
 
               }
