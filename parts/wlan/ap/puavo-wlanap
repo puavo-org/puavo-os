@@ -204,6 +204,7 @@ module Dot11
 
   class Vif
 
+    attr_accessor :stations
     attr_reader :name
     attr_reader :phy
     attr_reader :rx_bytes
@@ -219,6 +220,7 @@ module Dot11
       @rx_bytes          = 0
       @tx_bytes          = 0
       @stats_update_time = Time.at(0)
+      @stations          = {}
     end
 
     def update_stats
@@ -927,13 +929,69 @@ class AccessPoint
     end
   end
 
+  def update_station_stats(vif)
+    stations = {}
+    IO.popen(['hostapd_cli', '-i', vif.name,
+              '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'all_sta']) do |io|
+      new_sta = {}
+      io.each_line do |line|
+        line =~ /^(([0-9a-f]{2}:){5}([0-9a-f]{2}))$/ and new_sta[:mac]            = $1
+        line =~ /^connected_time=(.*)$/              and new_sta[:connection_age] = $1.to_i
+        line =~ /^rx_bytes=(.*)$/                    and new_sta[:rx_bytes]       = $1.to_i
+        line =~ /^tx_bytes=(.*)$/                    and new_sta[:tx_bytes]       = $1.to_i
+
+        # Add only complete/valid station entries. In some cases
+        # (probably when STA has just disassociated), hostapd_cli
+        # all_sta does not print all fields.
+        if Set.new(new_sta.keys) == Set.new([:mac, :connection_age, :rx_bytes, :tx_bytes])
+          new_sta[:start_time]  = Time.now - new_sta[:connection_age]
+
+          if vif.stations.has_key?(new_sta[:mac])
+            old_sta = vif.stations.fetch(new_sta[:mac])
+
+            if new_sta[:connection_age] < old_sta[:connection_age]
+              new_sta[:rate_interval] = new_sta[:connection_age]
+              if new_sta[:rate_interval] == 0
+                new_sta[:rx_rate] = 0
+                new_sta[:tx_rate] = 0
+              else
+                new_sta[:rx_rate] = new_sta[:rx_bytes] / new_sta[:rate_interval]
+                new_sta[:tx_rate] = new_sta[:tx_bytes] / new_sta[:rate_interval]
+              end
+            else
+              new_sta[:rate_interval] = new_sta[:connection_age] - old_sta[:connection_age]
+              if new_sta[:rate_interval] == 0
+                new_sta[:rx_rate] = 0
+                new_sta[:tx_rate] = 0
+              else
+                new_sta[:rx_rate] = (new_sta[:rx_bytes] - old_sta[:rx_bytes]) / new_sta[:rate_interval]
+                new_sta[:tx_rate] = (new_sta[:tx_bytes] - old_sta[:tx_bytes]) / new_sta[:rate_interval]
+              end
+            end
+          else
+            new_sta[:rate_interval] = new_sta[:connection_age]
+            if new_sta[:rate_interval] == 0
+              new_sta[:rx_rate] = 0
+              new_sta[:tx_rate] = 0
+            else
+              new_sta[:rx_rate] = new_sta[:rx_bytes] / new_sta[:rate_interval]
+              new_sta[:tx_rate] = new_sta[:tx_bytes] / new_sta[:rate_interval]
+            end
+          end
+          stations[new_sta[:mac]] = new_sta
+          new_sta = {}
+        end
+      end
+    end
+    vif.stations = stations
+  end
+
   def get_status
     radios       = {}
     @vifs.each do |vif|
       bssid    = nil
       channel  = nil
       ssid     = nil
-      stations = []
 
       if radios.has_key?(vif.phy.mac)
         radio = radios.fetch(vif.phy.mac)
@@ -960,24 +1018,7 @@ class AccessPoint
           end
         end
 
-        # Get station stats
-        IO.popen(['hostapd_cli', '-i', vif.name,
-                  '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'all_sta']) do |io|
-          sta = {}
-          io.each_line do |line|
-            line =~ /^(([0-9a-f]{2}:){5}([0-9a-f]{2}))$/ and sta[:mac]            = $1
-            line =~ /^connected_time=(.*)$/              and sta[:start_time]     = Time.now - $1.to_i
-            line =~ /^rx_bytes=(.*)$/                    and sta[:rx_bytes]       = $1.to_i
-            line =~ /^tx_bytes=(.*)$/                    and sta[:tx_bytes]       = $1.to_i
-            if Set.new(sta.keys) == Set.new([:mac, :start_time, :rx_bytes, :tx_bytes])
-              # Add only complete/valid station entries. In some cases
-              # (probably when STA has just disassociated),
-              # hostapd_cli all_sta does not print all fields.
-              stations << sta
-              sta = {}
-            end
-          end
-        end
+        update_station_stats(vif)
 
         start_time = File.mtime("#{HOSTAPD_CTRL_INTERFACE_DIR}/#{vif.name}")
 
@@ -995,7 +1036,7 @@ class AccessPoint
           :rx_bytes           => vif.rx_bytes,
           :rx_rate            => vif.rx_rate,
           :ssid               => ssid,
-          :stations           => stations,
+          :stations           => vif.stations.values,
           :tx_bytes           => vif.tx_bytes,
           :tx_power_limit_dBm => tx_power_limit_dBm,
           :tx_rate            => vif.tx_rate,
