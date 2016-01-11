@@ -784,6 +784,7 @@ class AccessPoint
 
     when 'AP-STA-DISCONNECTED'
       mac = tail
+      controller_sta_del(iface, mac)
       controller_ping
 
     else
@@ -985,6 +986,16 @@ class AccessPoint
                                {'Content-Type' => 'application/json'})
     rescue StandardError => e
       Log.exception('failed to add a station resource to the controller', e)
+    end
+  end
+
+  def controller_sta_del(iface, mac)
+    begin
+      vif = @vifs.select{ |vif| vif.name == iface }[0]
+      path = "/v1/host/#{PUAVO_ETC.hostname}/radio/#{vif.phy.mac}/ap/#{vif.bssid}/sta/#{mac}"
+      @controller.send_request('DELETE', path)
+    rescue StandardError => e
+      Log.exception('failed to delete a station resource from the controller', e)
     end
   end
 
