@@ -53,6 +53,12 @@ module PuavoWlanController
       @redis.expire(key, STATUS_EXPIRATION_TIME)
     end
 
+    def set_sta(hostname, phymac, bssid, mac, data)
+      key = get_key_for_sta(hostname, phymac, bssid, mac)
+      @redis.set(key, data.to_json)
+      @redis.expire(key, STATUS_EXPIRATION_TIME)
+    end
+
     def set_status(hostname, data)
       key = get_key_for_status(hostname)
       @redis.set(key, data.to_json)
