@@ -26,29 +26,24 @@ module PuavoWlanController
   module Routes
     module V1
 
-      PREFIX = '/v1'
-
       def self.registered(app)
 
-        status_route = "#{PREFIX}/status/:hostname"
-        host_route   = "#{PREFIX}/host/:hostname"
-        radio_route  = "#{PREFIX}/host/:hostname/radio/:phymac"
-        ap_route     = "#{PREFIX}/host/:hostname/radio/:phymac/ap/:bssid"
+        route_root   = '/v1'
 
-        put_host = lambda do
-          body     = request.body.read
-          data     = JSON.parse(body)
+        route_host   = '/v1/host/:hostname'
+        route_radio  = '/v1/host/:hostname/radio/:phymac'
+        route_ap     = '/v1/host/:hostname/radio/:phymac/ap/:bssid'
+
+        route_status = '/v1/status/:hostname'
+
+        get_ap = lambda do
+          content_type 'application/json'
+
           hostname = params[:hostname]
+          phymac   = params[:phymac]
+          bssid    = params[:bssid]
 
-          TEMPSTORE.add_host(hostname, data)
-          nil
-        end
-
-        delete_host = lambda do
-          hostname = params[:hostname]
-
-          TEMPSTORE.del_host(hostname)
-          nil
+          TEMPSTORE.get_ap(hostname, phymac, bssid).to_json
         end
 
         get_host = lambda do
@@ -59,16 +54,6 @@ module PuavoWlanController
           TEMPSTORE.get_host(hostname).to_json
         end
 
-        put_radio = lambda do
-          body     = request.body.read
-          data     = JSON.parse(body)
-          hostname = params[:hostname]
-          phymac   = params[:phymac]
-
-          TEMPSTORE.add_radio(hostname, phymac, data)
-          nil
-        end
-
         get_radio = lambda do
           content_type 'application/json'
 
@@ -76,12 +61,44 @@ module PuavoWlanController
           phymac   = params[:phymac]
 
           TEMPSTORE.get_radio(hostname, phymac).to_json
+        end
+
+        get_root = lambda do
+          content_type 'text/html'
+
+          erb :v1_root, :locals => {
+            :route_status => route_status,
+          }
+        end
+
+        delete_ap = lambda do
+          hostname = params[:hostname]
+          phymac   = params[:phymac]
+          bssid    = params[:bssid]
+
+          TEMPSTORE.del_ap(hostname, phymac, bssid)
+          nil
+        end
+
+        delete_host = lambda do
+          hostname = params[:hostname]
+
+          TEMPSTORE.del_host(hostname)
+          nil
+        end
 
         delete_radio = lambda do
           hostname = params[:hostname]
           phymac   = params[:phymac]
 
           TEMPSTORE.del_radio(hostname, phymac)
+          nil
+        end
+
+        delete_status = lambda do
+          hostname = params[:hostname]
+
+          TEMPSTORE.del_status(hostname)
           nil
         end
 
@@ -96,22 +113,22 @@ module PuavoWlanController
           nil
         end
 
-        get_ap = lambda do
-          content_type 'application/json'
-
+        put_host = lambda do
+          body     = request.body.read
+          data     = JSON.parse(body)
           hostname = params[:hostname]
-          phymac   = params[:phymac]
-          bssid    = params[:bssid]
 
-          TEMPSTORE.get_ap(hostname, phymac, bssid).to_json
+          TEMPSTORE.add_host(hostname, data)
+          nil
         end
 
-        delete_ap = lambda do
+        put_radio = lambda do
+          body     = request.body.read
+          data     = JSON.parse(body)
           hostname = params[:hostname]
           phymac   = params[:phymac]
-          bssid    = params[:bssid]
 
-          TEMPSTORE.del_ap(hostname, phymac, bssid)
+          TEMPSTORE.add_radio(hostname, phymac, data)
           nil
         end
 
@@ -120,40 +137,24 @@ module PuavoWlanController
           data     = JSON.parse(body)
           hostname = params[:hostname]
 
-          TEMPSTORE.update_status(hostname, data)
+          TEMPSTORE.set_status(hostname, data)
           { :ping_interval_seconds => PING_INTERVAL_SECONDS }.to_json
         end
 
-        delete_status = lambda do
-          hostname = params[:hostname]
+        app.delete(route_ap,     &delete_ap)
+        app.delete(route_host,   &delete_host)
+        app.delete(route_radio,  &delete_radio)
+        app.delete(route_status, &delete_status)
 
-          TEMPSTORE.delete_status(hostname)
-          nil
-        end
+        app.get(route_ap,        &get_ap)
+        app.get(route_host,      &get_host)
+        app.get(route_radio,     &get_radio)
+        app.get(route_root,      &get_root)
 
-        get_index = lambda do
-          content_type 'text/html'
-
-          erb :v1_index, :locals => {
-            :status_route => status_route,
-          }
-        end
-
-        app.delete(status_route, &delete_status)
-        app.delete(host_route,   &delete_host)
-        app.delete(radio_route,  &delete_radio)
-        app.delete(ap_route,     &delete_ap)
-
-        app.get("#{PREFIX}",     &get_index)
-        app.get("#{PREFIX}/",    &get_index)
-        app.get(host_route,      &get_host)
-        app.get(radio_route,     &get_radio)
-        app.get(ap_route,        &get_ap)
-
-        app.put(status_route,    &put_status)
-        app.put(host_route,      &put_host)
-        app.put(radio_route,     &put_radio)
-        app.put(ap_route,        &put_ap)
+        app.put(route_ap,        &put_ap)
+        app.put(route_host,      &put_host)
+        app.put(route_radio,     &put_radio)
+        app.put(route_status,    &put_status)
 
       end
 
