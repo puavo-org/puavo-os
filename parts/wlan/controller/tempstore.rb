@@ -53,6 +53,16 @@ module PuavoWlanController
       @redis.expire(key, STATUS_EXPIRATION_TIME)
     end
 
+    def set_status(hostname, data)
+      key = get_key_for_status(hostname)
+      @redis.set(key, data.to_json)
+      @redis.expire(key, STATUS_EXPIRATION_TIME)
+      @redis.expire(get_key_for_host(hostname), STATUS_EXPIRATION_TIME)
+      @redis.keys("#{get_key_for_host(hostname)}:*").each do |subkey|
+        @redis.expire(subkey, STATUS_EXPIRATION_TIME)
+      end
+    end
+
     def del_ap(hostname, phymac, bssid)
       @redis.del(get_key_for_ap(hostname, phymac, bssid))
     end
@@ -85,16 +95,6 @@ module PuavoWlanController
       key  = get_key_for_radio(hostname, phymac)
       json = @redis.get(key)
       json.nil? ? {} : JSON.parse(json)
-    end
-
-    def set_status(hostname, data)
-      key = get_key_for_status(hostname)
-      @redis.set(key, data.to_json)
-      @redis.expire(key, STATUS_EXPIRATION_TIME)
-      @redis.expire(get_key_for_host(hostname), STATUS_EXPIRATION_TIME)
-      @redis.keys("#{get_key_for_host(hostname)}:*").each do |subkey|
-        @redis.expire(subkey, STATUS_EXPIRATION_TIME)
-      end
     end
 
     def get_status_state(hostname)
