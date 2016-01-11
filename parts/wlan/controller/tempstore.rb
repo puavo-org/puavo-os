@@ -81,6 +81,10 @@ module PuavoWlanController
       @redis.del(get_key_for_radio(hostname, phymac))
     end
 
+    def del_sta(hostname, phymac, bssid, mac)
+      @redis.del(get_key_for_ap(hostname, phymac, bssid, mac))
+    end
+
     def del_status(hostname)
       @redis.del(get_key_for_status(hostname))
     end
