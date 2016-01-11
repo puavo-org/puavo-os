@@ -616,6 +616,7 @@ class AccessPoint
     Signal.trap('EXIT') do
       Log.info('exiting')
       controller_bye
+      controller_host_del
       Process.kill('-SIGTERM', 0)
 
       @vifs.each do |vif|
@@ -929,6 +930,15 @@ class AccessPoint
       @controller.send_request('PUT', host_resource_path, host_json,
                                {'Content-Type' => 'application/json'})
       Log.info(host_json)
+    rescue StandardError => e
+      Log.exception('failed to add a host resource to the controller', e)
+    end
+  end
+
+  def controller_host_del
+    begin
+      host_resource_path = "/v1/host/#{PUAVO_ETC.hostname}"
+      @controller.send_request('DELETE', host_resource_path)
     rescue StandardError => e
       Log.exception('failed to add a host resource to the controller', e)
     end
