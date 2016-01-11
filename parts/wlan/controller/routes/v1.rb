@@ -75,6 +75,13 @@ module PuavoWlanController
           phymac   = params[:phymac]
 
           TEMPSTORE.get_radio(hostname, phymac).to_json
+
+        delete_radio = lambda do
+          hostname = params[:hostname]
+          phymac   = params[:phymac]
+
+          TEMPSTORE.del_radio(hostname, phymac)
+          nil
         end
 
         put_status = lambda do
@@ -103,6 +110,7 @@ module PuavoWlanController
 
         app.delete(status_route, &delete_status)
         app.delete(host_route,   &delete_host)
+        app.delete(radio_route,  &delete_radio)
 
         app.get("#{PREFIX}",     &get_index)
         app.get("#{PREFIX}/",    &get_index)
