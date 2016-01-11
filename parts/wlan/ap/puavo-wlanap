@@ -779,6 +779,7 @@ class AccessPoint
 
     when 'AP-STA-CONNECTED'
       mac = tail
+      controller_sta_add(iface, mac)
       controller_ping
 
     when 'AP-STA-DISCONNECTED'
@@ -963,6 +964,27 @@ class AccessPoint
       @ping_interval = JSON.parse(response.body)['ping_interval_seconds']
     rescue StandardError => e
       Log.exception('failed to ping the controller', e)
+    end
+  end
+
+  def controller_sta_add(iface, mac)
+    begin
+      vif = @vifs.select{ |vif| vif.name == iface }[0]
+      sta_json = {
+        :connection_age => 0,
+        :mac            => mac,
+        :rate_interval  => 0,
+        :rx_bytes       => 0,
+        :rx_rate        => 0,
+        :start_time     => Time.now,
+        :tx_bytes       => 0,
+        :tx_rate        => 0,
+      }.to_json
+      path = "/v1/host/#{PUAVO_ETC.hostname}/radio/#{vif.phy.mac}/ap/#{vif.bssid}/sta/#{mac}"
+      @controller.send_request('PUT', path, sta_json,
+                               {'Content-Type' => 'application/json'})
+    rescue StandardError => e
+      Log.exception('failed to add a station resource to the controller', e)
     end
   end
 
