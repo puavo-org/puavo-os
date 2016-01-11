@@ -31,75 +31,74 @@ module PuavoWlanController
   class TempStore
 
     def initialize
-      @key_prefix_host   = 'puavo-wlancontroller:host'
-      @key_prefix_status = 'puavo-wlancontroller:status'
-      @redis             = Redis.new
+      @key_prefix = 'puavo-wlancontroller'
+      @redis      = Redis.new
     end
 
     def add_ap(hostname, phymac, bssid, data)
-      key = "#{@key_prefix_host}:#{hostname}:radio:#{phymac}:ap:#{bssid}"
+      key = get_key_for_ap(hostname, phymac, bssid)
       @redis.set(key, data.to_json)
       @redis.expire(key, STATUS_EXPIRATION_TIME)
     end
 
     def add_host(hostname, data)
-      key = "#{@key_prefix_host}:#{hostname}"
+      key = get_key_for_host(hostname)
       @redis.set(key, data.to_json)
       @redis.expire(key, STATUS_EXPIRATION_TIME)
     end
 
     def add_radio(hostname, phymac, data)
-      key = "#{@key_prefix_host}:#{hostname}:radio:#{phymac}"
+      key = get_key_for_radio(hostname, phymac)
       @redis.set(key, data.to_json)
       @redis.expire(key, STATUS_EXPIRATION_TIME)
     end
 
     def del_ap(hostname, phymac, bssid)
-      @redis.del("#{@key_prefix_host}:#{hostname}:radio:#{phymac}:ap:#{bssid}")
+      @redis.del(get_key_for_ap(hostname, phymac, bssid))
     end
 
     def del_host(hostname)
-      @redis.del("#{@key_prefix_host}:#{hostname}")
+      @redis.del(get_key_for_host(hostname))
     end
 
     def del_radio(hostname, phymac)
-      @redis.del("#{@key_prefix_host}:#{hostname}:radio:#{phymac}")
+      @redis.del(get_key_for_radio(hostname, phymac))
     end
 
     def del_status(hostname)
-      @redis.del("#{@key_prefix_status}:#{hostname}")
+      @redis.del(get_key_for_status(hostname))
     end
 
     def get_ap(hostname, phymac, bssid)
-      key  = "#{@key_prefix_host}:#{hostname}:radio:#{phymac}:ap:#{bssid}"
+      key  = get_key_for_ap(hostname, phymac, bssid)
       json = @redis.get(key)
       json.nil? ? {} : JSON.parse(json)
     end
 
     def get_host(hostname)
-      key = "#{@key_prefix_host}:#{hostname}"
+      key = get_key_for_host(hostname)
       host_json = @redis.get(key)
       host_json.nil? ? {} : JSON.parse(host_json)
     end
 
     def get_radio(hostname, phymac)
-      key  = "#{@key_prefix_host}:#{hostname}:radio:#{phymac}"
+      key  = get_key_for_radio(hostname, phymac)
       json = @redis.get(key)
       json.nil? ? {} : JSON.parse(json)
     end
 
     def set_status(hostname, data)
-      key = "#{@key_prefix_status}:#{hostname}"
+      key = get_key_for_status(hostname)
       @redis.set(key, data.to_json)
       @redis.expire(key, STATUS_EXPIRATION_TIME)
-      @redis.expire("#{@key_prefix_host}:#{hostname}", STATUS_EXPIRATION_TIME)
-      @redis.keys("#{@key_prefix_host}:#{hostname}:*").each do |subkey|
+      @redis.expire(get_key_for_host(hostname), STATUS_EXPIRATION_TIME)
+      @redis.keys("#{get_key_for_host(hostname)}:*").each do |subkey|
         @redis.expire(subkey, STATUS_EXPIRATION_TIME)
       end
     end
 
     def get_status_state(hostname)
-      key = "#{@key_prefix_status}:#{hostname}"
+      key = get_key_for_status(hostname)
       ttl = @redis.ttl(key)
 
       case ttl
@@ -113,9 +112,31 @@ module PuavoWlanController
     end
 
     def get_statuses
-      keys = @redis.keys("#{@key_prefix_status}:*")
+      keys = @redis.keys(get_key_for_status('*'))
       return [] if keys.empty?
       @redis.mget(keys).map { |status_data_json| JSON.parse(status_data_json) }
+    end
+
+    private
+
+    def get_key_for_status(hostname)
+      "#{@key_prefix}:status:#{hostname}"
+    end
+
+    def get_key_for_host(hostname)
+      "#{@key_prefix}:host:#{hostname}"
+    end
+
+    def get_key_for_radio(hostname, phymac)
+      "#{get_key_for_host(hostname)}:radio:#{phymac}"
+    end
+
+    def get_key_for_ap(hostname, phymac, bssid)
+      "#{get_key_for_radio(hostname, phymac)}:ap:#{bssid}"
+    end
+
+    def get_key_for_sta(hostname, phymac, bssid, mac)
+      "#{get_key_for_ap(hostname, phymac, bssid)}:sta:#{mac}"
     end
 
   end
