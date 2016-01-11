@@ -109,7 +109,7 @@ module PuavoWlanController
           phymac   = params[:phymac]
           bssi     = params[:bssid]
 
-          TEMPSTORE.add_ap(hostname, phymac, bssid, data)
+          TEMPSTORE.set_ap(hostname, phymac, bssid, data)
           nil
         end
 
@@ -118,7 +118,7 @@ module PuavoWlanController
           data     = JSON.parse(body)
           hostname = params[:hostname]
 
-          TEMPSTORE.add_host(hostname, data)
+          TEMPSTORE.set_host(hostname, data)
           nil
         end
 
@@ -128,7 +128,7 @@ module PuavoWlanController
           hostname = params[:hostname]
           phymac   = params[:phymac]
 
-          TEMPSTORE.add_radio(hostname, phymac, data)
+          TEMPSTORE.set_radio(hostname, phymac, data)
           nil
         end
 
