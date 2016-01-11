@@ -72,6 +72,17 @@ module PuavoWlanController
           }
         end
 
+        get_sta = lambda do
+          content_type 'application/json'
+
+          hostname = params[:hostname]
+          phymac   = params[:phymac]
+          bssid    = params[:bssid]
+          mac      = params[:mac]
+
+          TEMPSTORE.get_sta(hostname, phymac, bssid, mac).to_json
+        end
+
         delete_ap = lambda do
           hostname = params[:hostname]
           phymac   = params[:phymac]
@@ -163,6 +174,7 @@ module PuavoWlanController
         app.get(route_host,      &get_host)
         app.get(route_radio,     &get_radio)
         app.get(route_root,      &get_root)
+        app.get(route_sta,       &get_sta)
 
         app.put(route_ap,        &put_ap)
         app.put(route_host,      &put_host)

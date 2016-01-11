@@ -103,6 +103,12 @@ module PuavoWlanController
       json.nil? ? {} : JSON.parse(json)
     end
 
+    def get_sta(hostname, phymac, bssid, mac)
+      key  = get_key_for_sta(hostname, phymac, bssid, mac)
+      json = @redis.get(key)
+      json.nil? ? {} : JSON.parse(json)
+    end
+
     def get_status_state(hostname)
       key = get_key_for_status(hostname)
       ttl = @redis.ttl(key)
