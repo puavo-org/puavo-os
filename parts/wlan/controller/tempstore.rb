@@ -37,32 +37,27 @@ module PuavoWlanController
 
     def set_ap(hostname, phymac, bssid, data)
       key = get_key_for_ap(hostname, phymac, bssid)
-      @redis.set(key, data.to_json)
-      @redis.expire(key, STATUS_EXPIRATION_TIME)
+      set(key, data)
     end
 
     def set_host(hostname, data)
       key = get_key_for_host(hostname)
-      @redis.set(key, data.to_json)
-      @redis.expire(key, STATUS_EXPIRATION_TIME)
+      set(key, data)
     end
 
     def set_radio(hostname, phymac, data)
       key = get_key_for_radio(hostname, phymac)
-      @redis.set(key, data.to_json)
-      @redis.expire(key, STATUS_EXPIRATION_TIME)
+      set(key, data)
     end
 
     def set_sta(hostname, phymac, bssid, mac, data)
       key = get_key_for_sta(hostname, phymac, bssid, mac)
-      @redis.set(key, data.to_json)
-      @redis.expire(key, STATUS_EXPIRATION_TIME)
+      set(key, data)
     end
 
     def set_status(hostname, data)
       key = get_key_for_status(hostname)
-      @redis.set(key, data.to_json)
-      @redis.expire(key, STATUS_EXPIRATION_TIME)
+      set(key, data)
       @redis.expire(get_key_for_host(hostname), STATUS_EXPIRATION_TIME)
       @redis.keys("#{get_key_for_host(hostname)}:*").each do |subkey|
         @redis.expire(subkey, STATUS_EXPIRATION_TIME)
@@ -153,6 +148,11 @@ module PuavoWlanController
 
     def get_key_for_sta(hostname, phymac, bssid, mac)
       "#{get_key_for_ap(hostname, phymac, bssid)}:sta:#{mac}"
+    end
+
+    def set(key, data)
+      @redis.set(key, data.to_json)
+      @redis.expire(key, STATUS_EXPIRATION_TIME)
     end
 
   end
