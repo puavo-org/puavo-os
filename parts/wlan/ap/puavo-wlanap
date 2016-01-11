@@ -877,6 +877,7 @@ class AccessPoint
       phy.set_txpower_limit(@conf[:txpower5])
     end
 
+    controller_radio_add(phy)
   end
 
   def remove_phy(phy)
@@ -960,6 +961,22 @@ class AccessPoint
       @ping_interval = JSON.parse(response.body)['ping_interval_seconds']
     rescue StandardError => e
       Log.exception('failed to ping the controller', e)
+    end
+  end
+
+  def controller_radio_add(phy)
+    radio_json = {
+      :driver       => phy.driver,
+      :product      => phy.product,
+      :mac          => phy.mac,
+      :name         => phy.name,
+    }.to_json
+    begin
+      radio_resource_path = "/v1/host/#{PUAVO_ETC.hostname}/radio/#{phy.mac}"
+      @controller.send_request('PUT', radio_resource_path, radio_json,
+                               {'Content-Type' => 'application/json'})
+    rescue StandardError => e
+      Log.exception('failed to add a radio resource to the controller', e)
     end
   end
 
