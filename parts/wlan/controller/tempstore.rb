@@ -41,6 +41,10 @@ module PuavoWlanController
       @redis.expire(key, STATUS_EXPIRATION_TIME)
     end
 
+    def del_host(hostname)
+      @redis.del("#{@key_prefix_host}:#{hostname}")
+    end
+
     def update_status(hostname, data)
       key = "#{@key_prefix_status}:#{hostname}"
       @redis.set(key, data.to_json)

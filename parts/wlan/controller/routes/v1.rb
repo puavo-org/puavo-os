@@ -42,6 +42,13 @@ module PuavoWlanController
           nil
         end
 
+        delete_host = lambda do
+          hostname = params[:hostname]
+
+          TEMPSTORE.del_host(hostname)
+          nil
+        end
+
         put_status = lambda do
           body     = request.body.read
           data     = JSON.parse(body)
@@ -67,6 +74,7 @@ module PuavoWlanController
         end
 
         app.delete(status_route, &delete_status)
+        app.delete(host_route,   &delete_host)
 
         app.get("#{PREFIX}",     &get_index)
         app.get("#{PREFIX}/",    &get_index)
