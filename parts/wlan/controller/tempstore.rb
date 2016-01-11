@@ -45,6 +45,12 @@ module PuavoWlanController
       @redis.del("#{@key_prefix_host}:#{hostname}")
     end
 
+    def get_host(hostname)
+      key = "#{@key_prefix_host}:#{hostname}"
+      host_json = @redis.get(key)
+      host_json.nil? ? {} : JSON.parse(host_json)
+    end
+
     def update_status(hostname, data)
       key = "#{@key_prefix_status}:#{hostname}"
       @redis.set(key, data.to_json)

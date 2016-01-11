@@ -49,6 +49,14 @@ module PuavoWlanController
           nil
         end
 
+        get_host = lambda do
+          content_type 'application/json'
+
+          hostname = params[:hostname]
+
+          TEMPSTORE.get_host(hostname).to_json
+        end
+
         put_status = lambda do
           body     = request.body.read
           data     = JSON.parse(body)
@@ -78,6 +86,7 @@ module PuavoWlanController
 
         app.get("#{PREFIX}",     &get_index)
         app.get("#{PREFIX}/",    &get_index)
+        app.get(host_route,      &get_host)
 
         app.put(status_route,    &put_status)
         app.put(host_route,      &put_host)
