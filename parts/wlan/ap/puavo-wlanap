@@ -902,6 +902,8 @@ class AccessPoint
 
     dying_hostapd_clis.each { |hostapd_cli| hostapd_cli.kill }
     dying_hostapds.each { |hostapd| hostapd.kill }
+
+    controller_radio_del(phy)
   end
 
   def setup_phys
@@ -977,6 +979,15 @@ class AccessPoint
                                {'Content-Type' => 'application/json'})
     rescue StandardError => e
       Log.exception('failed to add a radio resource to the controller', e)
+    end
+  end
+
+  def controller_radio_del(phy)
+    begin
+      radio_resource_path = "/v1/host/#{PUAVO_ETC.hostname}/radio/#{phy.mac}"
+      @controller.send_request('DELETE', radio_resource_path, radio_json)
+    rescue StandardError => e
+      Log.exception('failed to delete a radio resource from the controller', e)
     end
   end
 
