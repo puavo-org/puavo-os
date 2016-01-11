@@ -53,6 +53,12 @@ module PuavoWlanController
       @redis.expire(key, STATUS_EXPIRATION_TIME)
     end
 
+    def get_ap(hostname, phymac, bssid)
+      key  = "#{@key_prefix_host}:#{hostname}:radio:#{phymac}:ap:#{bssid}"
+      json = @redis.get(key)
+      json.nil? ? {} : JSON.parse(json)
+    end
+
     def get_radio(hostname, phymac)
       key  = "#{@key_prefix_host}:#{hostname}:radio:#{phymac}"
       json = @redis.get(key)
