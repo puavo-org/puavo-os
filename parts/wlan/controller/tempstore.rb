@@ -31,13 +31,21 @@ module PuavoWlanController
 
     def initialize
       @key_prefix_status = 'puavo-wlancontroller:status'
+      @key_prefix_host   = 'puavo-wlancontroller:host'
       @redis           = Redis.new
+    end
+
+    def add_host(hostname, data)
+      key = "#{@key_prefix_host}:#{hostname}"
+      @redis.set(key, data.to_json)
+      @redis.expire(key, STATUS_EXPIRATION_TIME)
     end
 
     def update_status(hostname, data)
       key = "#{@key_prefix_status}:#{hostname}"
       @redis.set(key, data.to_json)
       @redis.expire(key, STATUS_EXPIRATION_TIME)
+      @redis.expire("#{@key_prefix_host}:#{hostname}", STATUS_EXPIRATION_TIME)
     end
 
     def get_statuses

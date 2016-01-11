@@ -31,6 +31,16 @@ module PuavoWlanController
       def self.registered(app)
 
         status_route = "#{PREFIX}/status/:hostname"
+        host_route   = "#{PREFIX}/host/:hostname"
+
+        put_host = lambda do
+          body     = request.body.read
+          data     = JSON.parse(body)
+          hostname = params[:hostname]
+
+          TEMPSTORE.add_host(hostname, data)
+          nil
+        end
 
         put_status = lambda do
           body     = request.body.read
@@ -62,6 +72,7 @@ module PuavoWlanController
         app.get("#{PREFIX}/",    &get_index)
 
         app.put(status_route,    &put_status)
+        app.put(host_route,      &put_host)
 
       end
 
