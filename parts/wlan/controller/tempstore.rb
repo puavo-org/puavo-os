@@ -36,28 +36,23 @@ module PuavoWlanController
     end
 
     def set_ap(hostname, phymac, bssid, data)
-      key = get_key_for_ap(hostname, phymac, bssid)
-      redis_set(key, data)
+      redis_set(get_key_for_ap(hostname, phymac, bssid), data)
     end
 
     def set_host(hostname, data)
-      key = get_key_for_host(hostname)
-      redis_set(key, data)
+      redis_set(get_key_for_host(hostname), data)
     end
 
     def set_radio(hostname, phymac, data)
-      key = get_key_for_radio(hostname, phymac)
-      redis_set(key, data)
+      redis_set(get_key_for_radio(hostname, phymac), data)
     end
 
     def set_sta(hostname, phymac, bssid, mac, data)
-      key = get_key_for_sta(hostname, phymac, bssid, mac)
-      redis_set(key, data)
+      redis_set(get_key_for_sta(hostname, phymac, bssid, mac), data)
     end
 
     def set_status(hostname, data)
-      key = get_key_for_status(hostname)
-      redis_set(key, data)
+      redis_set(get_key_for_status(hostname), data)
       @redis.expire(get_key_for_host(hostname), STATUS_EXPIRATION_TIME)
       @redis.keys("#{get_key_for_host(hostname)}:*").each do |subkey|
         @redis.expire(subkey, STATUS_EXPIRATION_TIME)
@@ -85,23 +80,19 @@ module PuavoWlanController
     end
 
     def get_ap(hostname, phymac, bssid)
-      key  = get_key_for_ap(hostname, phymac, bssid)
-      redis_get(key)
+      redis_get(get_key_for_ap(hostname, phymac, bssid))
     end
 
     def get_host(hostname)
-      key = get_key_for_host(hostname)
-      redis_get(key)
+      redis_get(get_key_for_host(hostname))
     end
 
     def get_radio(hostname, phymac)
-      key  = get_key_for_radio(hostname, phymac)
-      redis_get(key)
+      redis_get(get_key_for_radio(hostname, phymac))
     end
 
     def get_sta(hostname, phymac, bssid, mac)
-      key  = get_key_for_sta(hostname, phymac, bssid, mac)
-      redis_get(key)
+      redis_get(get_key_for_sta(hostname, phymac, bssid, mac))
     end
 
     def get_status_state(hostname)
