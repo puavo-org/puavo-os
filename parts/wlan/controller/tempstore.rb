@@ -59,6 +59,10 @@ module PuavoWlanController
       json.nil? ? {} : JSON.parse(json)
     end
 
+    def del_ap(hostname, phymac, bssid)
+      @redis.del("#{@key_prefix_host}:#{hostname}:radio:#{phymac}:ap:#{bssid}")
+    end
+
     def del_radio(hostname, phymac)
       @redis.del("#{@key_prefix_host}:#{hostname}:radio:#{phymac}")
     end

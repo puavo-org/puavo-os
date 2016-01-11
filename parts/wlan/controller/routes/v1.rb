@@ -96,6 +96,15 @@ module PuavoWlanController
           nil
         end
 
+        delete_ap = lambda do
+          hostname = params[:hostname]
+          phymac   = params[:phymac]
+          bssid    = params[:bssid]
+
+          TEMPSTORE.del_ap(hostname, phymac, bssid)
+          nil
+        end
+
         put_status = lambda do
           body     = request.body.read
           data     = JSON.parse(body)
@@ -123,6 +132,7 @@ module PuavoWlanController
         app.delete(status_route, &delete_status)
         app.delete(host_route,   &delete_host)
         app.delete(radio_route,  &delete_radio)
+        app.delete(ap_route,     &delete_ap)
 
         app.get("#{PREFIX}",     &get_index)
         app.get("#{PREFIX}/",    &get_index)
