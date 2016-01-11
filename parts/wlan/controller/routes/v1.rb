@@ -33,6 +33,7 @@ module PuavoWlanController
         status_route = "#{PREFIX}/status/:hostname"
         host_route   = "#{PREFIX}/host/:hostname"
         radio_route  = "#{PREFIX}/host/:hostname/radio/:phymac"
+        ap_route     = "#{PREFIX}/host/:hostname/radio/:phymac/ap/:bssid"
 
         put_host = lambda do
           body     = request.body.read
@@ -84,6 +85,17 @@ module PuavoWlanController
           nil
         end
 
+        put_ap = lambda do
+          body     = request.body.read
+          data     = JSON.parse(body)
+          hostname = params[:hostname]
+          phymac   = params[:phymac]
+          bssi     = params[:bssid]
+
+          TEMPSTORE.add_ap(hostname, phymac, bssid, data)
+          nil
+        end
+
         put_status = lambda do
           body     = request.body.read
           data     = JSON.parse(body)
@@ -120,6 +132,7 @@ module PuavoWlanController
         app.put(status_route,    &put_status)
         app.put(host_route,      &put_host)
         app.put(radio_route,     &put_radio)
+        app.put(ap_route,        &put_ap)
 
       end
 

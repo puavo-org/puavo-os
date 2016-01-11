@@ -35,6 +35,12 @@ module PuavoWlanController
       @redis           = Redis.new
     end
 
+    def add_ap(hostname, phymac, bssid, data)
+      key = "#{@key_prefix_host}:#{hostname}:radio:#{phymac}:ap:#{bssid}"
+      @redis.set(key, data.to_json)
+      @redis.expire(key, STATUS_EXPIRATION_TIME)
+    end
+
     def add_host(hostname, data)
       key = "#{@key_prefix_host}:#{hostname}"
       @redis.set(key, data.to_json)
