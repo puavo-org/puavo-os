@@ -86,26 +86,22 @@ module PuavoWlanController
 
     def get_ap(hostname, phymac, bssid)
       key  = get_key_for_ap(hostname, phymac, bssid)
-      json = @redis.get(key)
-      json.nil? ? {} : JSON.parse(json)
+      get(key)
     end
 
     def get_host(hostname)
       key = get_key_for_host(hostname)
-      host_json = @redis.get(key)
-      host_json.nil? ? {} : JSON.parse(host_json)
+      get(key)
     end
 
     def get_radio(hostname, phymac)
       key  = get_key_for_radio(hostname, phymac)
-      json = @redis.get(key)
-      json.nil? ? {} : JSON.parse(json)
+      get(key)
     end
 
     def get_sta(hostname, phymac, bssid, mac)
       key  = get_key_for_sta(hostname, phymac, bssid, mac)
-      json = @redis.get(key)
-      json.nil? ? {} : JSON.parse(json)
+      get(key)
     end
 
     def get_status_state(hostname)
@@ -129,6 +125,11 @@ module PuavoWlanController
     end
 
     private
+
+    def get(key)
+      json = @redis.get(key)
+      json.nil? ? {} : JSON.parse(json)
+    end
 
     def get_key_for_status(hostname)
       "#{@key_prefix}:status:#{hostname}"
