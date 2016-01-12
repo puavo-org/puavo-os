@@ -71,6 +71,9 @@ end
 
 module Dot11
 
+  CHANNELS_2G = [1, 6, 11]
+  CHANNELS_5G = [36, 40, 44, 48]
+
   class Band
     attr_reader   :channels
     attr_reader   :hw_mode
@@ -78,10 +81,10 @@ module Dot11
     def initialize(start_frequency)
       case start_frequency
       when 2412
-        @channels = [ 1, 6, 11]
+        @channels = Dot11::CHANNELS_2G
         @hw_mode  = 'g'
       when 5180
-        @channels = [36, 40, 44, 48]
+        @channels = Dot11::CHANNELS_5G
         @hw_mode  = 'a'
       else
         raise ArgumentError.new("invalid start frequency #{start_frequency}")
@@ -860,8 +863,19 @@ class AccessPoint
       @vifs << vif
 
       if phy.channel.nil?
-        channels = vif.scan
-        phy.channel = channels[0]
+        scanned_channels    = vif.scan
+        scanned_channels_2g = scanned_channels - Dot11::CHANNELS_5G
+        scanned_channels_5g = scanned_channels - Dot11::CHANNELS_2G
+
+        selected_channels = Set.new(@vifs.map { |vif| vif.phy.channel })
+
+        if selected_channels.intersection(Dot11::CHANNELS_2G).empty? && !scanned_channels_2g.empty?
+          phy.channel = scanned_channels_2g[0]
+        elsif selected_channels.intersection(Dot11::CHANNELS_5G).empty? && !scanned_channels_5g.empty?
+          phy.channel = scanned_channels_5g[0]
+        else
+          phy.channel = scanned_channels[0]
+        end
       end
 
       bridge = @bridges.fetch(net['ssid'])
