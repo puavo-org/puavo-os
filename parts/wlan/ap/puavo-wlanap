@@ -571,18 +571,18 @@ class AccessPoint
                                                 CONTROLLER_ADDRESS),
                                    kwargs.fetch(:controller_port,
                                                 CONTROLLER_PORT))
-    @ctrlconn      = nil
-    @ctrlconn_time = nil
-    @ctrlserv      = nil
-    @nets          = nil
-    @ping_interval = nil
-    @ping_time     = Time.at(0)
-    @services      = {}
-    @spawn_queue   = []
-    @spawn_time    = Time.at(0)
-    @vifs          = []
-    @vtun_address  = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
-    @vtun_port     = kwargs.fetch(:vtun_port, VTUN_PORT)
+    @ctrlconn         = nil
+    @ctrlconn_time    = nil
+    @ctrlserv         = nil
+    @nets             = nil
+    @report_interval  = nil
+    @last_report_time = Time.at(0)
+    @services         = {}
+    @spawn_queue      = []
+    @spawn_time       = Time.at(0)
+    @vifs             = []
+    @vtun_address     = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
+    @vtun_port        = kwargs.fetch(:vtun_port, VTUN_PORT)
   end
 
   def run
@@ -617,7 +617,7 @@ class AccessPoint
 
     Signal.trap('EXIT') do
       Log.info('exiting')
-      controller_bye
+      controller_send_report('bye')
       Process.kill('-SIGTERM', 0)
 
       @vifs.each do |vif|
@@ -677,8 +677,8 @@ class AccessPoint
         reads    = [selfpipe_r, @ctrlconn.nil? ? @ctrlserv : @ctrlconn]
         timeouts = []
 
-        unless @ping_interval.nil?
-          timeouts << @ping_interval - (Time.now - @ping_time)
+        unless @report_interval.nil?
+          timeouts << @report_interval - (Time.now - @last_report_time)
         end
 
         unless @ctrlconn.nil?
@@ -695,9 +695,9 @@ class AccessPoint
 
         if ready.nil?
 
-          if @ping_interval.nil? || Time.now - @ping_time > @ping_interval
+          if @report_interval.nil? || Time.now - @last_report_time > @report_interval
             @vifs.each { |vif| vif.update_stats }
-            controller_ping
+            controller_send_report('status', get_status)
           end
 
           if @ctrlconn && Time.now - @ctrlconn_time > 5
@@ -914,35 +914,20 @@ class AccessPoint
     end
   end
 
-  def controller_bye
-    begin
-      @controller.send_request('DELETE', "/v1/status/#{PUAVO_ETC.hostname}")
-    rescue StandardError => e
-      Log.exception('failed to ping the controller', e)
-    end
-  end
-
-  def controller_ping
-    begin
-      @ping_time = Time.now
-      response = @controller.send_request('PUT', "/v1/status/#{PUAVO_ETC.hostname}", get_status.to_json,
-                                          {'Content-Type' => 'application/json'})
-      @ping_interval = JSON.parse(response.body)['ping_interval_seconds']
-    rescue StandardError => e
-      Log.exception('failed to ping the controller', e)
-    end
-  end
-
   def controller_send_report(name, data = {})
     begin
-      @controller.send_request('POST', '/v1/report',
-                               {
-                                 :name      => name,
-                                 :hostname  => PUAVO_ETC.hostname,
-                                 :timestamp => Time.now,
-                                 :data      => data,
-                               }.to_json,
-                               {'Content-Type' => 'application/json'})
+      @last_report_time = Time.now
+      response = @controller.send_request('POST', '/v1/report',
+                                          {
+                                            :name      => name,
+                                            :hostname  => PUAVO_ETC.hostname,
+                                            :timestamp => Time.now,
+                                            :data      => data,
+                                          }.to_json,
+                                          {'Content-Type' => 'application/json'})
+      response.value # As the name indicates, raises error if status
+                     # code is not 2xx.
+      @report_interval = JSON.parse(response.body)['max_report_interval']
     rescue StandardError => e
       Log.exception('failed to send a report to the controller', e)
     end
