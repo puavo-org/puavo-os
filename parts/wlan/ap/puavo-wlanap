@@ -618,7 +618,6 @@ class AccessPoint
     Signal.trap('EXIT') do
       Log.info('exiting')
       controller_bye
-      controller_host_del
       Process.kill('-SIGTERM', 0)
 
       @vifs.each do |vif|
@@ -638,8 +637,6 @@ class AccessPoint
       FileUtils.rm_rf(RUNDIR)
       Log.info('bye')
     end
-
-    controller_host_add
 
     [:HUP, :USR1, :USR2].each { |s| Signal.trap(s, 'SIG_IGN') }
 
@@ -781,13 +778,9 @@ class AccessPoint
 
     when 'AP-STA-CONNECTED'
       mac = tail
-      controller_sta_add(iface, mac)
-      controller_ping
 
     when 'AP-STA-DISCONNECTED'
       mac = tail
-      controller_sta_del(iface, mac)
-      controller_ping
 
     else
       Log.warning("received unhandled hostapd-event: #{args}")
@@ -806,7 +799,6 @@ class AccessPoint
       add_phy(Dot11::Phy.new(phy_name))
     when 'remove'
       remove_phy(Dot11::Phy.new(phy_name))
-      controller_ping
     else
       Log.warning("ignoring unexpected udev action: #{action}")
       return
@@ -879,8 +871,6 @@ class AccessPoint
     if @conf.has_key?(:txpower5) && phy.band.channels[0] == 36
       phy.set_txpower_limit(@conf[:txpower5])
     end
-
-    controller_radio_add(phy)
   end
 
   def remove_phy(phy)
@@ -906,7 +896,6 @@ class AccessPoint
     dying_hostapd_clis.each { |hostapd_cli| hostapd_cli.kill }
     dying_hostapds.each { |hostapd| hostapd.kill }
 
-    controller_radio_del(phy)
   end
 
   def setup_phys
@@ -916,37 +905,6 @@ class AccessPoint
       rescue StandardError => e
         Log.exception("failed to setup phy #{phy.name}, ignoring it", e)
       end
-    end
-  end
-
-  def controller_host_add
-    begin
-      l1, l5, l15 = IO.read('/proc/loadavg').split.take(3).map { |s| s.to_f }
-      host_json = {
-        :hostname           => PUAVO_ETC.hostname,
-        :version            => PuavoWLAN::VERSION,
-        :system_start_time  => Time.now - IO.read('/proc/uptime').split[0].to_i,
-        :service_start_time => Time.parse(IO.popen(['ps', '-p', $$.to_s, '-o', 'lstart=']).read),
-        :uname              => IO.popen(['uname', '-snrvmpio']).read,
-        :loadavg1           => l1,
-        :loadavg5           => l5,
-        :loadavg15          => l15,
-      }.to_json
-      host_resource_path = "/v1/host/#{PUAVO_ETC.hostname}"
-      @controller.send_request('PUT', host_resource_path, host_json,
-                               {'Content-Type' => 'application/json'})
-      Log.info(host_json)
-    rescue StandardError => e
-      Log.exception('failed to add a host resource to the controller', e)
-    end
-  end
-
-  def controller_host_del
-    begin
-      host_resource_path = "/v1/host/#{PUAVO_ETC.hostname}"
-      @controller.send_request('DELETE', host_resource_path)
-    rescue StandardError => e
-      Log.exception('failed to add a host resource to the controller', e)
     end
   end
 
@@ -966,62 +924,6 @@ class AccessPoint
       @ping_interval = JSON.parse(response.body)['ping_interval_seconds']
     rescue StandardError => e
       Log.exception('failed to ping the controller', e)
-    end
-  end
-
-  def controller_sta_add(iface, mac)
-    begin
-      vif = @vifs.select{ |vif| vif.name == iface }[0]
-      sta_json = {
-        :connection_age => 0,
-        :mac            => mac,
-        :rate_interval  => 0,
-        :rx_bytes       => 0,
-        :rx_rate        => 0,
-        :start_time     => Time.now,
-        :tx_bytes       => 0,
-        :tx_rate        => 0,
-      }.to_json
-      path = "/v1/host/#{PUAVO_ETC.hostname}/radio/#{vif.phy.mac}/ap/#{vif.mac}/sta/#{mac}"
-      @controller.send_request('PUT', path, sta_json,
-                               {'Content-Type' => 'application/json'})
-    rescue StandardError => e
-      Log.exception('failed to add a station resource to the controller', e)
-    end
-  end
-
-  def controller_sta_del(iface, mac)
-    begin
-      vif = @vifs.select{ |vif| vif.name == iface }[0]
-      path = "/v1/host/#{PUAVO_ETC.hostname}/radio/#{vif.phy.mac}/ap/#{vif.mac}/sta/#{mac}"
-      @controller.send_request('DELETE', path)
-    rescue StandardError => e
-      Log.exception('failed to delete a station resource from the controller', e)
-    end
-  end
-
-  def controller_radio_add(phy)
-    radio_json = {
-      :driver       => phy.driver,
-      :product      => phy.product,
-      :mac          => phy.mac,
-      :name         => phy.name,
-    }.to_json
-    begin
-      radio_resource_path = "/v1/host/#{PUAVO_ETC.hostname}/radio/#{phy.mac}"
-      @controller.send_request('PUT', radio_resource_path, radio_json,
-                               {'Content-Type' => 'application/json'})
-    rescue StandardError => e
-      Log.exception('failed to add a radio resource to the controller', e)
-    end
-  end
-
-  def controller_radio_del(phy)
-    begin
-      radio_resource_path = "/v1/host/#{PUAVO_ETC.hostname}/radio/#{phy.mac}"
-      @controller.send_request('DELETE', radio_resource_path, radio_json)
-    rescue StandardError => e
-      Log.exception('failed to delete a radio resource from the controller', e)
     end
   end
 
