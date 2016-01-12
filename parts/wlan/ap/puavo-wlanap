@@ -798,9 +798,13 @@ class AccessPoint
     Log.info("udev action: #{action} phy #{phy_name}")
     case action
     when 'add'
-      add_phy(Dot11::Phy.new(phy_name))
+      phy = Dot11::Phy.new(phy_name)
+      add_phy(phy)
+      controller_send_report('radio_added', :mac => phy.mac)
     when 'remove'
-      remove_phy(Dot11::Phy.new(phy_name))
+      phy = Dot11::Phy.new(phy_name)
+      remove_phy(phy)
+      controller_send_report('radio_removed', :mac => phy.mac)
     else
       Log.warning("ignoring unexpected udev action: #{action}")
       return
