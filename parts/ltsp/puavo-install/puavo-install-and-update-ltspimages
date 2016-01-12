@@ -538,7 +538,7 @@ lookup_size_from_cksums() {
 
   awk -v filename="$file_to_look_filesize_for" '
     BEGIN { status = 1 }
-    $3 == filename { print $2; status = 0 }
+    $3 == filename { if (status) { print $2 }; status = 0 }
     END { exit(status) }
   ' "$checksums_file"
 }
