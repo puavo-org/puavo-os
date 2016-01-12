@@ -97,7 +97,7 @@ while [ $# -ne 0 ]; do
     -q|--quiet)
       quiet=true; shift;
       ;;
-    --) shift; break;;      
+    --) shift; break;;
   esac
 done
 
@@ -270,7 +270,7 @@ ensure_enough_available_diskspace() {
   required_diskspace=$(stat -c '1.33 * %s' "${images_dir}/ltsp.img" \
 			 | bc -l | xargs printf %.0f)
 
-  for dir in "$images_dir" "$rdiffs_dir"; do 
+  for dir in "$images_dir" "$rdiffs_dir"; do
     diskspace=$(stat -f -c '%S * %a' "$dir" | bc -l | xargs printf %.0f)
     if [ "$diskspace" -lt "$required_diskspace" ]; then
       msg="Only $diskspace bytes available on $dir,"
@@ -304,7 +304,7 @@ ensure_that_default_image_is_the_current_one() {
 
 fetch_with_wget() {
   rate_limit=$1
-  output_path=$2  
+  output_path=$2
   url=$3
   phase=$4
 
@@ -454,7 +454,7 @@ get_rdiff_filename() {
 	  orig   = $1
 	  target = $2
 	  regex  = "^(.*?)-([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6})-(.*?).img$"
-     
+
 	  if (match(orig, regex, orig_match) \
 	    && match(target, regex, target_match)) {
 	      printf("%s-%s--%s-%s.rdiff\n",
