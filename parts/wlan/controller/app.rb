@@ -51,12 +51,12 @@ module PuavoWlanController
     def prettify_bytes(bytes)
       return "NaN" if bytes.nil?
 
-      return "#{(bytes / 1024.0**2).round(1)} TiB" if bytes >= 1024**4
-      return "#{(bytes / 1024.0**2).round(1)} GiB" if bytes >= 1024**3
-      return "#{(bytes / 1024.0**2).round(1)} MiB" if bytes >= 1024**2
-      return "#{(bytes / 1024.0**1).round(1)} KiB" if bytes >= 1024**1
+      return "#{(bytes / 1024.0 ** 4).round(1)} TiB" if bytes.abs >= 1024 ** 4
+      return "#{(bytes / 1024.0 ** 3).round(1)} GiB" if bytes.abs >= 1024 ** 3
+      return "#{(bytes / 1024.0 ** 2).round(1)} MiB" if bytes.abs >= 1024 ** 2
+      return "#{(bytes / 1024.0 ** 1).round(1)} KiB" if bytes.abs >= 1024 ** 1
 
-      "#{bytes.round(1)} B"
+      "#{bytes} B"
     end
 
     def prettify_seconds(seconds)
