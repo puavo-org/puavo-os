@@ -28,8 +28,8 @@ module PuavoWlanController
 
       def self.registered(app)
 
+        route_report = '/v1/report'
         route_root   = '/v1'
-
         route_status = '/v1/status/:hostname'
 
         get_root = lambda do
@@ -47,6 +47,14 @@ module PuavoWlanController
           nil
         end
 
+        post_report = lambda do
+          body = request.body.read
+          data = JSON.parse(body)
+
+          PERMSTORE.add_report(data)
+          nil
+        end
+
         put_status = lambda do
           body     = request.body.read
           data     = JSON.parse(body)
@@ -57,9 +65,8 @@ module PuavoWlanController
         end
 
         app.delete(route_status, &delete_status)
-
         app.get(route_root,      &get_root)
-
+        app.post(route_report,   &post_report)
         app.put(route_status,    &put_status)
 
       end

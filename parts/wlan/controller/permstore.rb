@@ -20,6 +20,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301 USA.
 
+# Standard library modules.
 require 'json'
 
 # Third-party modules.
@@ -30,14 +31,16 @@ module PuavoWlanController
   class PermStore
 
     def initialize
-      @db = SQLite3::Database.new(ENV.fetch('PUAVO_WLANCONTROLLER_DB_SQLITE3', 'controller.sqlite3'))
+      @db = SQLite3::Database.new(ENV.fetch('PUAVO_WLANCONTROLLER_DB_SQLITE3',
+                                            'controller.sqlite3'))
       begin
         @db.execute <<'EOF'
 CREATE TABLE IF NOT EXISTS Report (
-  name TEXT NOT NULL,
-  host TEXT NOT NULL,
-  json TEXT NOT NULL,
-  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+  name             TEXT NOT NULL,
+  hostname         TEXT NOT NULL,
+  data             TEXT NOT NULL,
+  timestamp        TIMESTAMP NOT NULL,
+  insert_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 EOF
       rescue SQLite3::BusyException
@@ -46,9 +49,12 @@ EOF
       end
     end
 
-    def add_report(name, host, data)
-      sql = 'INSERT INTO Report(name, host, json) VALUES (?, ?, ?);'
-      @db.execute(sql, name, host, data.to_json)
+    def add_report(data)
+      hostname  = data.fetch('hostname')
+      name      = data.fetch('name')
+      timestamp = data.fetch('timestamp')
+      sql = 'INSERT INTO Report(name, hostname, timestamp, data) VALUES (?, ?, ?, ?);'
+      @db.execute(sql, name, hostname, timestamp, data.to_json)
     end
 
   end
