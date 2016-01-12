@@ -927,6 +927,21 @@ class AccessPoint
     end
   end
 
+  def controller_send_report(name, data = {})
+    begin
+      @controller.send_request('POST', '/v1/report',
+                               {
+                                 :name      => name,
+                                 :hostname  => PUAVO_ETC.hostname,
+                                 :timestamp => Time.now,
+                                 :data      => data,
+                               }.to_json,
+                               {'Content-Type' => 'application/json'})
+    rescue StandardError => e
+      Log.exception('failed to send a report to the controller', e)
+    end
+  end
+
   def update_station_stats(vif)
     stations = {}
     IO.popen(['hostapd_cli', '-i', vif.name,
