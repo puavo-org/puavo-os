@@ -242,6 +242,8 @@ module Dot11
     end
 
     def scan
+      run_or_fail('ip', 'link', 'set', 'dev', @name, 'up')
+
       # Prime results with worst possible signal levels.
       results = {}
       @phy.each_channel { |ch| results[ch] = -999 }
@@ -267,10 +269,6 @@ module Dot11
 
       # Return channels in ascending signal level order.
       Hash[results.sort_by { |channel, signal_level| signal_level }].keys
-    end
-
-    def up
-      run_or_fail('ip', 'link', 'set', 'dev', @name, 'up')
     end
 
   end
@@ -860,7 +858,6 @@ class AccessPoint
       @vifs << vif
 
       if phy.channel.nil?
-        vif.up
         channels = vif.scan
         phy.channel = channels[0]
       end
