@@ -30,44 +30,40 @@ module PuavoWlanController
 
         route_report = '/v1/report'
         route_root   = '/v1'
-        route_status = '/v1/status/:hostname'
 
         get_root = lambda do
           content_type 'text/html'
 
           erb :v1_root, :locals => {
-            :route_status => route_status,
+            :route_report => route_report,
           }
         end
 
-        delete_status = lambda do
-          hostname = params[:hostname]
-
-          TEMPSTORE.del_status(hostname)
-          nil
-        end
-
         post_report = lambda do
-          body = request.body.read
-          data = JSON.parse(body)
+          content_type 'application/json'
 
-          PERMSTORE.add_report(data)
-          nil
+          body_json = request.body.read
+          body      = JSON.parse(body_json)
+
+          name      = body.fetch('name')
+          hostname  = body.fetch('hostname')
+          timestamp = body.fetch('timestamp')
+          data      = body.fetch('data')
+
+          PERMSTORE.add_report(name, hostname, timestamp, data)
+
+          case name
+          when 'bye'
+            TEMPSTORE.del_status(hostname)
+          when 'status'
+            TEMPSTORE.set_status(hostname, data)
+          end
+
+          { :max_report_interval => MAX_REPORT_INTERVAL }.to_json
         end
 
-        put_status = lambda do
-          body     = request.body.read
-          data     = JSON.parse(body)
-          hostname = params[:hostname]
-
-          TEMPSTORE.set_status(hostname, data)
-          { :ping_interval_seconds => PING_INTERVAL_SECONDS }.to_json
-        end
-
-        app.delete(route_status, &delete_status)
         app.get(route_root,      &get_root)
         app.post(route_report,   &post_report)
-        app.put(route_status,    &put_status)
 
       end
 

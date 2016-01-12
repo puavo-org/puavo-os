@@ -36,11 +36,11 @@ module PuavoWlanController
       begin
         @db.execute <<'EOF'
 CREATE TABLE IF NOT EXISTS Report (
-  name             TEXT NOT NULL,
-  hostname         TEXT NOT NULL,
-  data             TEXT NOT NULL,
-  timestamp        TIMESTAMP NOT NULL,
-  insert_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+  name         TEXT NOT NULL,
+  hostname     TEXT NOT NULL,
+  timestamp    TEXT NOT NULL,
+  data         TEXT NOT NULL,
+  db_timestamp TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 EOF
       rescue SQLite3::BusyException
@@ -49,10 +49,7 @@ EOF
       end
     end
 
-    def add_report(data)
-      hostname  = data.fetch('hostname')
-      name      = data.fetch('name')
-      timestamp = data.fetch('timestamp')
+    def add_report(name, hostname, timestamp, data)
       sql = 'INSERT INTO Report(name, hostname, timestamp, data) VALUES (?, ?, ?, ?);'
       @db.execute(sql, name, hostname, timestamp, data.to_json)
     end
