@@ -796,7 +796,7 @@ class packages {
 
 	  # the bcmwl-version does not compile for this kernel
           [ '4.3.3.opinsys1' ]:
-            dkms_modules => [ $nvidia_dkms_module, $r8168_dkms_module, ],
+            dkms_modules => [ $r8168_dkms_module, ],
             package_tag  => 'puavo',
             with_dbg     => true,
             with_extra   => false;
