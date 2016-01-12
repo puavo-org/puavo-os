@@ -35,64 +35,12 @@ module PuavoWlanController
       @redis      = Redis.new
     end
 
-    def set_ap(hostname, phymac, bssid, data)
-      redis_set(get_key_for_ap(hostname, phymac, bssid), data)
-    end
-
-    def set_host(hostname, data)
-      redis_set(get_key_for_host(hostname), data)
-    end
-
-    def set_radio(hostname, phymac, data)
-      redis_set(get_key_for_radio(hostname, phymac), data)
-    end
-
-    def set_sta(hostname, phymac, bssid, mac, data)
-      redis_set(get_key_for_sta(hostname, phymac, bssid, mac), data)
-    end
-
     def set_status(hostname, data)
       redis_set(get_key_for_status(hostname), data)
-      @redis.expire(get_key_for_host(hostname), STATUS_EXPIRATION_TIME)
-      @redis.keys("#{get_key_for_host(hostname)}:*").each do |subkey|
-        @redis.expire(subkey, STATUS_EXPIRATION_TIME)
-      end
-    end
-
-    def del_ap(hostname, phymac, bssid)
-      @redis.del(get_key_for_ap(hostname, phymac, bssid))
-    end
-
-    def del_host(hostname)
-      @redis.del(get_key_for_host(hostname))
-    end
-
-    def del_radio(hostname, phymac)
-      @redis.del(get_key_for_radio(hostname, phymac))
-    end
-
-    def del_sta(hostname, phymac, bssid, mac)
-      @redis.del(get_key_for_ap(hostname, phymac, bssid, mac))
     end
 
     def del_status(hostname)
       @redis.del(get_key_for_status(hostname))
-    end
-
-    def get_ap(hostname, phymac, bssid)
-      redis_get(get_key_for_ap(hostname, phymac, bssid))
-    end
-
-    def get_host(hostname)
-      redis_get(get_key_for_host(hostname))
-    end
-
-    def get_radio(hostname, phymac)
-      redis_get(get_key_for_radio(hostname, phymac))
-    end
-
-    def get_sta(hostname, phymac, bssid, mac)
-      redis_get(get_key_for_sta(hostname, phymac, bssid, mac))
     end
 
     def get_status_state(hostname)
@@ -119,22 +67,6 @@ module PuavoWlanController
 
     def get_key_for_status(hostname)
       "#{@key_prefix}:status:#{hostname}"
-    end
-
-    def get_key_for_host(hostname)
-      "#{@key_prefix}:host:#{hostname}"
-    end
-
-    def get_key_for_radio(hostname, phymac)
-      "#{get_key_for_host(hostname)}:radio:#{phymac}"
-    end
-
-    def get_key_for_ap(hostname, phymac, bssid)
-      "#{get_key_for_radio(hostname, phymac)}:ap:#{bssid}"
-    end
-
-    def get_key_for_sta(hostname, phymac, bssid, mac)
-      "#{get_key_for_ap(hostname, phymac, bssid)}:sta:#{mac}"
     end
 
     def redis_get(key)
