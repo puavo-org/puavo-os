@@ -771,16 +771,18 @@ class AccessPoint
       return false
     end
 
+    bssid = @vifs.select { |vif| vif.name == iface }[0].mac
+
     case event
 
     when 'AP-ENABLED'
       @spawn_time = Time.at(0)
 
     when 'AP-STA-CONNECTED'
-      mac = tail
+      controller_send_report('sta_connected', :bssid => bssid, :mac => tail)
 
     when 'AP-STA-DISCONNECTED'
-      mac = tail
+      controller_send_report('sta_disconnected', :bssid => bssid, :mac => tail)
 
     else
       Log.warning("received unhandled hostapd-event: #{args}")
