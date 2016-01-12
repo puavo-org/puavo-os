@@ -788,8 +788,15 @@ class packages {
             package_tag  => 'puavo',
             with_extra   => false;
 
-          [ '4.0.6.opinsys5', '4.2.5.opinsys1', '4.3.3.opinsys1' ]:
+          [ '4.0.6.opinsys5', '4.2.5.opinsys1', ]:
             dkms_modules => $all_dkms_modules,
+            package_tag  => 'puavo',
+            with_dbg     => true,
+            with_extra   => false;
+
+	  # the bcmwl-version does not compile for this kernel
+          [ '4.3.3.opinsys1' ]:
+            dkms_modules => [ $nvidia_dkms_module, $r8168_dkms_module, ],
             package_tag  => 'puavo',
             with_dbg     => true,
             with_extra   => false;
