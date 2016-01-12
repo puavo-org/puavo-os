@@ -271,6 +271,10 @@ module Dot11
       Hash[results.sort_by { |channel, signal_level| signal_level }].keys
     end
 
+    def mac
+      File.read("/sys/class/net/#{@name}/address").strip
+    end
+
   end
 
   def self.each_phy
@@ -978,7 +982,7 @@ class AccessPoint
         :tx_bytes       => 0,
         :tx_rate        => 0,
       }.to_json
-      path = "/v1/host/#{PUAVO_ETC.hostname}/radio/#{vif.phy.mac}/ap/#{vif.bssid}/sta/#{mac}"
+      path = "/v1/host/#{PUAVO_ETC.hostname}/radio/#{vif.phy.mac}/ap/#{vif.mac}/sta/#{mac}"
       @controller.send_request('PUT', path, sta_json,
                                {'Content-Type' => 'application/json'})
     rescue StandardError => e
@@ -989,7 +993,7 @@ class AccessPoint
   def controller_sta_del(iface, mac)
     begin
       vif = @vifs.select{ |vif| vif.name == iface }[0]
-      path = "/v1/host/#{PUAVO_ETC.hostname}/radio/#{vif.phy.mac}/ap/#{vif.bssid}/sta/#{mac}"
+      path = "/v1/host/#{PUAVO_ETC.hostname}/radio/#{vif.phy.mac}/ap/#{vif.mac}/sta/#{mac}"
       @controller.send_request('DELETE', path)
     rescue StandardError => e
       Log.exception('failed to delete a station resource from the controller', e)
