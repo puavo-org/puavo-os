@@ -1,3 +1,62 @@
+puavo-wlan (0.12.4) trusty; urgency=medium
+
+  * New release
+  * ap: fix udev remove event handling
+  * ap: fix hostapd event handling
+  * ap: allocate 2G-only PHYs first, then 5G-capables
+  * controller: fix rounding of bytes in prettify_bytes()
+  * ap: fix channel selection to populate first 2.4G, then 5G, then any
+  * controller: update the API doc
+  * controller: fix prettify_bytes()
+  * ap: use /v1/report route to report byes and pings
+  * controller: remove /v1/status/:hostname route
+  * ap: report to the controller when radio is added/removed
+  * ap: report to the controller when station connects/disconnects
+  * ap: add method for reporting events to the controller
+  * controller: add route /v1/report for logging AP events
+  * ap: remove all deprecated controller API commands
+  * controller: remove all but /v1 and /v1/status/:hostname routes
+  * ap: add getter for vif mac
+  * ap: bring vif up before scanning
+  * controller: just reformatting
+  * controller: rename get()/set() => redis_get()/redis_set()
+  * controller: define common getter method for tempstore data
+  * controller: define common setter method for tempstore data
+  * ap: del station resource from the controller on AP-STA-DISCONNECTED
+  * controller: add DELETE
+    /v1/host/:hostname/radio/:phymac/ap/:bssid/sta/:mac route
+  * controller: add GET
+    /v1/host/:hostname/radio/:phymac/ap/:bssid/sta/:mac route
+  * controller: add PUT
+    /v1/host/:hostname/radio/:phymac/ap/:bssid/sta/:mac route
+  * controller: move set_status() definition
+  * controller: use uniform naming scheme in tempstore methods
+  * controller: internal refactoring for tempstore
+  * controller: refactoring only: rename, sort, etc.
+  * ap: add station resource to the controller on AP-STA-CONNECTED
+  * controller: add GET /v1/host/:hostname/radio/:phymac/ap/:bssid route
+  * controller: add DELETE /v1/host/:hostname/radio/:phymac/ap/:bssid
+    route
+  * controller: add PUT /v1/host/:hostname/radio/:phymac/ap/:bssid route
+  * ap: delete radio resources from the controller when PHYs are removed
+  * ap: add radio resources to the host when PHYs are added
+  * controller: add DELETE /v1/host/:mac/radio/:phymac route
+  * controller: add GET /v1/host/:hostname/radio/:phymac route
+  * controller: add PUT /v1/host/:hostname/radio/:phymac route
+  * ap: delete host resource from the controller at cleanup
+  * ap: add a host resource to the controller at startup
+  * controller: add GET /v1/host/:hostname route
+  * controller: add DELETE /v1/host/:hostname route
+  * controller: add PUT /v1/host/:hostname route
+  * controller/ui: show Rx/Tx rates of stations
+  * ap: report current stations Rx/Tx rates to the controller
+  * contoller: format code a bit
+  * controller/ui: show Rx/Tx rates of radios
+  * controller/ui: show Rx/Tx rates of hosts
+  * Git(1447c03b7905d2fde25efbbe6a5e52fa54574c37)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 13 Jan 2016 13:09:42 +0200
+
 puavo-wlan (0.12.3) trusty; urgency=medium
 
   * New release
