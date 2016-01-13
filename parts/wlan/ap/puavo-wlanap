@@ -774,17 +774,17 @@ class AccessPoint
       return false
     end
 
-    bssid = @vifs.select { |vif| vif.name == iface }[0].mac
-
     case event
 
     when 'AP-ENABLED'
       @spawn_time = Time.at(0)
 
     when 'AP-STA-CONNECTED'
+      bssid = @vifs.select { |vif| vif.name == iface }[0].mac
       controller_send_report('sta_connected', :bssid => bssid, :mac => tail)
 
     when 'AP-STA-DISCONNECTED'
+      bssid = @vifs.select { |vif| vif.name == iface }[0].mac
       controller_send_report('sta_disconnected', :bssid => bssid, :mac => tail)
 
     else
