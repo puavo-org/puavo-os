@@ -74,22 +74,6 @@ module Dot11
   CHANNELS_2G = [1, 6, 11]
   CHANNELS_5G = [36, 40, 44, 48]
 
-  class Band
-    attr_reader   :channels
-
-    def initialize(start_frequency)
-      case start_frequency
-      when 2412
-        @channels = Dot11::CHANNELS_2G
-      when 5180
-        @channels = Dot11::CHANNELS_5G
-      else
-        raise ArgumentError.new("invalid start frequency #{start_frequency}")
-      end
-    end
-
-  end
-
   class Phy
 
     attr_accessor :channel
@@ -97,6 +81,7 @@ module Dot11
     attr_reader   :mac
     attr_reader   :name
     attr_reader   :product
+    attr_reader   :supported_channels
 
     def initialize(name)
       @name = name
@@ -107,6 +92,20 @@ module Dot11
       @driver = $1.strip
       device_info =~ /^PRODUCT=(.*)$/
       @product = $1.strip
+
+      @supported_channels = []
+      IO.popen(['iw', 'phy', @name, 'info']) do |io|
+        until io.eof?
+          case io.gets
+          when /^\s+\* 2412 MHz \[1\] .*$/
+            @supported_channels += Dot11::CHANNELS_2G
+          when /^\s+\* 5180 MHz \[36\] .*$/
+            @supported_channels += Dot11::CHANNELS_5G
+          end
+        end
+      end
+      $?.success? or fail "failed to list supported channels of #{@name}"
+      @supported_channels.sort!
     end
 
     def add_vif(name)
@@ -140,34 +139,6 @@ module Dot11
 
       fail 'failed to list interfaces' unless $?.success?
       retval
-    end
-
-    def each_channel
-      each_band do |band|
-        band.channels.each do |channel|
-          yield channel
-        end
-      end
-    end
-
-    def band
-      each_band do |band|
-        return band if band.channels.include?(@channel)
-      end
-      nil
-    end
-
-    def each_band
-      IO.popen(['iw', 'phy', @name, 'info']) do |io|
-        until io.eof? do
-          next unless io.gets =~ /^\s+Frequencies:$/
-
-          io.gets =~ /^\s+\* (\d+) MHz .*$/
-          start_frequency = $1.to_i
-          yield Band.new(start_frequency)
-        end
-      end
-      fail 'failed to query supported bands' unless $?.success?
     end
 
     def set_txpower_limit(txpower_dBm)
@@ -222,7 +193,7 @@ module Dot11
 
       # Prime results with worst possible signal levels.
       results = {}
-      @phy.each_channel { |ch| results[ch] = -999 }
+      @phy.supported_channels.each { |ch| results[ch] = -999 }
 
       IO.popen(['iwlist', @name, 'scan']) do |io|
         io.each_line do |line|
@@ -881,7 +852,7 @@ class Host
     end
 
     phy.set_txpower_limit(@conf[:txpower])
-    if @conf.has_key?(:txpower5) && phy.band.channels[0] == 36
+    if @conf.has_key?(:txpower5) && Dot11::CHANNELS_5G.include?(phy.channel)
       phy.set_txpower_limit(@conf[:txpower5])
     end
   end
@@ -919,7 +890,7 @@ class Host
     # first if possible.
     Dot11.each_phy do |phy|
       catch :sorted do
-        phy.each_channel do |channel|
+        phy.supported_channels.each do |channel|
           if Dot11::CHANNELS_5G.include?(channel)
             phys.push(phy)
             throw :sorted
