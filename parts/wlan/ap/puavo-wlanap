@@ -919,7 +919,24 @@ class AccessPoint
   end
 
   def setup_phys
+    phys = []
+
+    # Sort PHYs to have 2G-only PHYs at front and 5G-capable PHYs at
+    # the end, because we want to ensure 2G channel gets allocated
+    # first if possible.
     Dot11.each_phy do |phy|
+      catch :sorted do
+        phy.each_channel do |channel|
+          if Dot11::CHANNELS_5G.include?(channel)
+            phys.push(phy)
+            throw :sorted
+          end
+        end
+        phys.insert(0, phy)
+      end
+    end
+
+    phys.each do |phy|
       begin
         add_phy(phy)
       rescue StandardError => e
