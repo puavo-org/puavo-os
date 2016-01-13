@@ -104,7 +104,6 @@ module Dot11
         end
       end
       $?.success? or fail "failed to list supported channels of #{@name}"
-      @supported_channels.sort!
     end
 
     def add_vif(name)
