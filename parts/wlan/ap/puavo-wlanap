@@ -76,16 +76,13 @@ module Dot11
 
   class Band
     attr_reader   :channels
-    attr_reader   :hw_mode
 
     def initialize(start_frequency)
       case start_frequency
       when 2412
         @channels = Dot11::CHANNELS_2G
-        @hw_mode  = 'g'
       when 5180
         @channels = Dot11::CHANNELS_5G
-        @hw_mode  = 'a'
       else
         raise ArgumentError.new("invalid start frequency #{start_frequency}")
       end
@@ -171,30 +168,6 @@ module Dot11
         end
       end
       fail 'failed to query supported bands' unless $?.success?
-    end
-
-    def ht_capab
-      is_ht20sgi_capab = IO.popen(['iw', @name, 'info']) do |io|
-        !io.grep(/^\s+RX HT20 SGI.*$/).empty?
-      end
-      $?.success? or fail 'failed to query HT20 SGI capability'
-
-      is_ht40sgi_capab = IO.popen(['iw', @name, 'info']) do |io|
-        !io.grep(/^\s+RX HT40 SGI.*$/).empty?
-      end
-      $?.success? or fail 'failed to query HT40 SGI capability'
-
-      case @channel
-      when 1, 6, 11
-        '[HT20]'
-      when 36, 44
-        '[HT40+]' + (is_ht40sgi_capab ? '[SHORT-GI-40]' : '')
-      when 40, 48
-        '[HT40-]' + (is_ht40sgi_capab ? '[SHORT-GI-40]' : '')
-      else
-        fail "unsupported channel #{@channel}"
-      end + (is_ht20sgi_capab ? '[SHORT-GI-20]' : '')
-
     end
 
     def set_txpower_limit(txpower_dBm)
@@ -371,12 +344,34 @@ class HostapdConf < Conf
     @bridge         = kwargs.fetch(:bridge)
     @channel        = kwargs.fetch(:channel)
     @ctrl_interface = kwargs.fetch(:ctrl_interface)
-    @ht_capab       = kwargs.fetch(:ht_capab)
-    @hw_mode        = kwargs.fetch(:hw_mode)
     @interface      = kwargs.fetch(:interface)
     @ssid           = kwargs.fetch(:ssid)
     @wpa            = kwargs.fetch(:wpa)
     @wpa_passphrase = kwargs.fetch(:wpa_passphrase)
+    @hw_mode        = Dot11::CHANNELS_5G.include?(@channel) ? 'a' : 'g'
+
+    phy_name = File.read("/sys/class/net/#{@interface}/phy80211/name").strip
+
+    is_ht20sgi_capab = IO.popen(['iw', phy_name, 'info']) do |io|
+      !io.grep(/^\s+RX HT20 SGI.*$/).empty?
+    end
+    $?.success? or fail 'failed to query HT20 SGI capability'
+
+    is_ht40sgi_capab = IO.popen(['iw', phy_name, 'info']) do |io|
+      !io.grep(/^\s+RX HT40 SGI.*$/).empty?
+    end
+    $?.success? or fail 'failed to query HT40 SGI capability'
+
+    case @channel
+    when 1, 6, 11
+      @ht_capab = '[HT20]' + (is_ht20sgi_capab ? '[SHORT-GI-20]' : '')
+    when 36, 44
+      @ht_capab = '[HT40+]' + (is_ht40sgi_capab ? '[SHORT-GI-40]' : '')
+    when 40, 48
+      @ht_capab = '[HT40-]' + (is_ht40sgi_capab ? '[SHORT-GI-40]' : '')
+    else
+      fail "unsupported channel #{@channel}"
+    end
   end
 
   def template
@@ -498,8 +493,6 @@ module Services
       HostapdConf.new(:bridge         => @bridge,
                       :channel        => @phy.channel,
                       :ctrl_interface => HOSTAPD_CTRL_INTERFACE_DIR,
-                      :ht_capab       => @phy.ht_capab,
-                      :hw_mode        => @phy.band.hw_mode,
                       :interface      => @vif.name,
                       :ssid           => @net['ssid'],
                       :wpa            => @net['type'] == 'open' ? 0 : 2,
