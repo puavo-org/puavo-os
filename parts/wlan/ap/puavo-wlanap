@@ -552,7 +552,7 @@ module Services
 
 end
 
-class AccessPoint
+class Host
 
   CONTROLLER_ADDRESS = 'wlangw'
   CONTROLLER_PORT    = 45046
@@ -1118,16 +1118,16 @@ Options:
          Display this help and exit.
 
      --controller-address ADDRESS
-         Set the address of the controller, default: #{AccessPoint::CONTROLLER_ADDRESS}
+         Set the address of the controller, default: #{Host::CONTROLLER_ADDRESS}
 
      --controller-port PORT
-         Set the port of the controller, default: #{AccessPoint::CONTROLLER_PORT}
+         Set the port of the controller, default: #{Host::CONTROLLER_PORT}
 
      --vtun-address ADDRESS
-         Set the address of the vtun server, default: #{AccessPoint::VTUN_ADDRESS}
+         Set the address of the vtun server, default: #{Host::VTUN_ADDRESS}
 
      --vtun-port PORT
-         Set the port of the vtun server, default: #{AccessPoint::VTUN_PORT}
+         Set the port of the vtun server, default: #{Host::VTUN_PORT}
 
 EOF
       return 0
@@ -1183,7 +1183,7 @@ EOF
     return 0
   end
 
-  AccessPoint.new(opts).run
+  Host.new(opts).run
 end
 
 exit(main())
