@@ -540,7 +540,7 @@ class Host
     @ctrlconn_time    = nil
     @ctrlserv         = nil
     @nets             = nil
-    @report_interval  = nil
+    @report_interval  = 30
     @last_report_time = Time.at(0)
     @services         = {}
     @vifs             = []
@@ -638,23 +638,17 @@ class Host
 
       else
         reads    = [selfpipe_r, @ctrlconn.nil? ? @ctrlserv : @ctrlconn]
-        timeouts = []
-
-        unless @report_interval.nil?
-          timeouts << @report_interval - (Time.now - @last_report_time)
-        end
+        timeouts = [@report_interval - (Time.now - @last_report_time)]
 
         unless @ctrlconn.nil?
           timeouts << 5 - (Time.now - @ctrlconn_time)
         end
 
-        timeout = timeouts.empty? ? nil : [0, timeouts.min].max
-
-        ready = IO.select(reads, [], [], timeout)
+        ready = IO.select(reads, [], [], [0, timeouts.min].max)
 
         if ready.nil?
 
-          if @report_interval.nil? || Time.now - @last_report_time > @report_interval
+          if Time.now - @last_report_time > @report_interval
             @vifs.each { |vif| vif.update_stats }
             controller_send_report('status', get_status)
           end
