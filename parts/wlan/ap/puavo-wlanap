@@ -84,16 +84,15 @@ module Dot11
     attr_reader   :supported_channels
 
     def initialize(name)
-      @name = name
-      sysfs_dir = "/sys/class/ieee80211/#{name}"
-      @mac = IO.read("#{sysfs_dir}/macaddress").strip
-      device_info = IO.read("#{sysfs_dir}/device/uevent")
-      device_info =~ /^DRIVER=(.*)$/
-      @driver = $1.strip
-      device_info =~ /^PRODUCT=(.*)$/
-      @product = $1.strip
+      sysfs_dir           = "/sys/class/ieee80211/#{name}"
+      device_info         = IO.read("#{sysfs_dir}/device/uevent")
 
+      @name               = name
+      @mac                = IO.read("#{sysfs_dir}/macaddress").strip
+      @driver             = /^DRIVER=(.*)$/.match(device_info)[1].strip
+      @product            = /^PRODUCT=(.*)$/.match(device_info)[1].strip
       @supported_channels = []
+
       IO.popen(['iw', 'phy', @name, 'info']) do |io|
         until io.eof?
           case io.gets
