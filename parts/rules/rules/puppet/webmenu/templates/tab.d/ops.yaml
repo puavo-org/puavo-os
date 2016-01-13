@@ -2,7 +2,7 @@
 type: menu
 name:
   en: Subjects
-  fi: OPS2016
+  fi: Oppiaineet
 items:
  - type: menu
    name:
@@ -196,25 +196,14 @@ items:
    osIcon: /usr/share/icons/Humanity/categories/48/applications-biology.svg
    items:
     - type: web
-      name: Luontobongari
-      url: http://www.perunakellari.fi/bongari.html
+      name: Perunakellarin harjoituksia
+      url: http://www.perunakellari.fi/ym.html#bi
       description:
-        en: Luontobongari
-        fi: Luontobongari
-        sv: Luontobongari
-        de: Luontobongari
+        en: Biologian harjoituksia
+        fi: Perunakellari
+        sv: Perunakellari
+        de: Perunakellari
       osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
-    - type: web
-      name: Luontobongari
-      url: http://www.perunakellari.fi/viljely.htm
-      description:
-        en: Viljely
-        fi: Viljely
-        sv: Viljely
-        de: Viljely
-      osIconPath: /usr/share/icons/Human/scalable/categories/xfce-internet.svg
-      source: stellarium
-      inactiveByDeviceType: thinclient
     - type: desktop
       source: kstars
     - type: desktop
