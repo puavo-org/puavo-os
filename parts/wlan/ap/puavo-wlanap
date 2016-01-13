@@ -543,8 +543,6 @@ class Host
     @report_interval  = nil
     @last_report_time = Time.at(0)
     @services         = {}
-    @spawn_queue      = []
-    @spawn_time       = Time.at(0)
     @vifs             = []
     @vtun_address     = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
     @vtun_port        = kwargs.fetch(:vtun_port, VTUN_PORT)
@@ -650,10 +648,6 @@ class Host
           timeouts << 5 - (Time.now - @ctrlconn_time)
         end
 
-        unless @spawn_queue.empty?
-          timeouts << 5 - (Time.now - @spawn_time)
-        end
-
         timeout = timeouts.empty? ? nil : [0, timeouts.min].max
 
         ready = IO.select(reads, [], [], timeout)
@@ -668,11 +662,6 @@ class Host
           if @ctrlconn && Time.now - @ctrlconn_time > 5
             Log.warning('control socket connection timeout')
             close_ctrlconn
-          end
-
-          if !@spawn_queue.empty? && Time.now - @spawn_time > 5
-            @spawn_queue.shift.each { |service| spawn_service(service) }
-            @spawn_time = Time.now
           end
 
           next
@@ -737,9 +726,6 @@ class Host
     end
 
     case event
-
-    when 'AP-ENABLED'
-      @spawn_time = Time.at(0)
 
     when 'AP-STA-CONNECTED'
       bssid = @vifs.select { |vif| vif.name == iface }[0].mac
@@ -846,7 +832,8 @@ class Host
                                           :vif    => vif,
                                           :net    => net)
       hostapd_cli = Services::HostapdCli.new(:hostapd => hostapd)
-      @spawn_queue << [hostapd, hostapd_cli]
+      spawn_service(hostapd)
+      spawn_service(hostapd_cli)
     end
 
     phy.set_txpower_limit(@conf[:txpower])
