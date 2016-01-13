@@ -805,7 +805,7 @@ class AccessPoint
       add_phy(phy)
       controller_send_report('radio_added', :mac => phy.mac)
     when 'remove'
-      phy = Dot11::Phy.new(phy_name)
+      phy = @vifs.select { |vif| vif.phy.name == phy_name }[0].phy
       remove_phy(phy)
       controller_send_report('radio_removed', :mac => phy.mac)
     else
