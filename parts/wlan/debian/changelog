@@ -1,3 +1,18 @@
+puavo-wlan (0.12.5) trusty; urgency=medium
+
+  * New release
+  * ap: add sanity check for report_interval proposed by the controller
+  * ap: fix infinite timeout issue
+  * ap: do not queue hostapd services anymore
+  * ap: do not sort supported channels, order does not matter
+  * ap: cleanup Phy.initialize
+  * ap: get rid of useless band stuff
+  * ap: rename AccessPoint => Host
+  * ap: make hw_mode and ht_capab solely HostapdConf's business
+  * Git(12c255f3d2e07a4a6a9b379c5a76c7b8e89508bf)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 14 Jan 2016 10:16:35 +0200
+
 puavo-wlan (0.12.4) trusty; urgency=medium
 
   * New release
