@@ -901,7 +901,8 @@ class Host
                                           {'Content-Type' => 'application/json'})
       response.value # As the name indicates, raises error if status
                      # code is not 2xx.
-      @report_interval = JSON.parse(response.body)['max_report_interval']
+      max_report_interval = JSON.parse(response.body)['max_report_interval']
+      @report_interval = max_report_interval unless max_report_interval <= 0
     rescue StandardError => e
       Log.exception('failed to send a report to the controller', e)
     end
