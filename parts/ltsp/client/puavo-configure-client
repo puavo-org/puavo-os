@@ -323,6 +323,15 @@ case @puavo_device_type
       write_config("/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla")
     end
 
+    @tags.each do |tag|
+      match = /^hitachicalib:(\d+):(\d+):(\d+):(\d+)$/.match(tag)
+      if match then
+        @hitachicalib_values = match.captures.join(' ')
+        write_config('/usr/share/X11/xorg.conf.d/99-hitachicalib.conf')
+        break
+      end
+    end
+
     @ldap_binddn       = read_file('/etc/puavo/ldap/dn')
     @ldap_bindpw       = read_file('/etc/puavo/ldap/password')
 
