@@ -271,6 +271,8 @@ module PuavoAPI
         ## Multiple tags starting with txpower5: might be given, let's
         ## take the most restrictive.
         conf[:txpower5] = [conf.fetch(:txpower5, txpower5), txpower5].min
+      when /^wlanap_channels:((\d+:)*(\d+))$/
+        conf[:channels] = $1.split(':').map { |ch| ch.to_i }
       end
     end
 
@@ -806,18 +808,23 @@ class Host
       @vifs << vif
 
       if phy.channel.nil?
-        scanned_channels    = vif.scan
-        scanned_channels_2g = scanned_channels - Dot11::CHANNELS_5G
-        scanned_channels_5g = scanned_channels - Dot11::CHANNELS_2G
+        predefined_channels    = @conf.fetch(:channels, []) & phy.supported_channels
+        scanned_channels       = vif.scan
 
-        selected_channels = Set.new(@vifs.map { |vif| vif.phy.channel })
+        selectable_channels    = predefined_channels + (scanned_channels - predefined_channels)
+        selectable_channels_2g = selectable_channels & Dot11::CHANNELS_2G
+        selectable_channels_5g = selectable_channels & Dot11::CHANNELS_5G
 
-        if selected_channels.intersection(Dot11::CHANNELS_2G).empty? && !scanned_channels_2g.empty?
-          phy.channel = scanned_channels_2g[0]
-        elsif selected_channels.intersection(Dot11::CHANNELS_5G).empty? && !scanned_channels_5g.empty?
-          phy.channel = scanned_channels_5g[0]
+        selected_channels      = Set.new(@vifs.map { |vif| vif.phy.channel })
+        selected_channels_2g   = selected_channels & Dot11::CHANNELS_2G
+        selected_channels_5g   = selected_channels & Dot11::CHANNELS_5G
+
+        if selected_channels_2g.empty? && !selectable_channels_2g.empty?
+          phy.channel = selectable_channels_2g[0]
+        elsif selected_channels_5g.empty? && !selectable_channels_5g.empty?
+          phy.channel = selectable_channels_5g[0]
         else
-          phy.channel = scanned_channels[0]
+          phy.channel = selectable_channels[0]
         end
       end
 
