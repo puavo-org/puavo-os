@@ -1,3 +1,15 @@
+puavo-wlan (0.12.6) trusty; urgency=medium
+
+  * New release
+  * ap: move channel selection logic to a dedicated method
+  * ap: use wlanap_channels Puavo tag to force channel selection order
+  * controller: use case expressions instead of if-elsif to match tags
+  * controller: use prepared statement to speed up INSERT
+  * controller: sleep and retry if INSERT report fails due to busy db
+  * Git(4b82ba3dfa3383bee45fcead4963ab38cdb9a99e)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Fri, 15 Jan 2016 22:59:15 +0200
+
 puavo-wlan (0.12.5) trusty; urgency=medium
 
   * New release
