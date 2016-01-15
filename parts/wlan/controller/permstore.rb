@@ -51,7 +51,12 @@ EOF
 
     def add_report(name, hostname, timestamp, data)
       sql = 'INSERT INTO Report(name, hostname, timestamp, data) VALUES (?, ?, ?, ?);'
-      @db.execute(sql, name, hostname, timestamp, data.to_json)
+      begin
+        @db.execute(sql, name, hostname, timestamp, data.to_json)
+      rescue SQLite3::BusyException
+        sleep 0.5
+        retry
+      end
     end
 
   end
