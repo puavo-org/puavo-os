@@ -239,14 +239,7 @@ module PuavoAPI
       client = PuavoRestClient.new
       response = client.get("/v3/devices/#{PUAVO_ETC.hostname}/wlan_networks")
 
-      nets = response.parse.select { |net| net['wlan_ap'] } .each do |net|
-        # Magic SSID Mangling! The following Magic SSID is substituted
-        # with a SSID derived from the hostname. This lets us configure
-        # AP-specific networks easily via Puavo.
-        next unless net['ssid'] =~ /^le8Yuek9Some5ee$/
-        net['ssid'] = PUAVO_ETC.hostname.tr(' ', '')
-      end
-
+      nets = response.parse.select { |net| net['wlan_ap'] }
       return nets unless nets.empty?
 
       nets_wait = [nets_wait * 2, 3600].min
