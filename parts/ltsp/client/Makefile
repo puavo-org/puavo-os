@@ -88,6 +88,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/systemd
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/xdg/autostart
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/lib/udev
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/usr/share/X11/xorg.conf.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/var/lib/polkit-1/localauthority/10-vendor.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d
@@ -205,6 +206,9 @@ install : installdirs $(install-subdirs)
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/lib/udev \
 		templates/lib/udev/ltspfs_entry
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/usr/share/X11/xorg.conf.d \
+		templates/usr/share/X11/xorg.conf.d/99-hitachicalib.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/var/lib/polkit-1/localauthority/10-vendor.d \
 		templates/var/lib/polkit-1/localauthority/10-vendor.d/com.ubuntu.desktop.pkla
