@@ -33,6 +33,10 @@ module PuavoWlanController
     def initialize
       @db = SQLite3::Database.new(ENV.fetch('PUAVO_WLANCONTROLLER_DB_SQLITE3',
                                             'controller.sqlite3'))
+      @db_insert_report = @db.prepare <<'EOF'
+INSERT INTO Report(name, hostname, timestamp, data)
+VALUES (?, ?, ?, ?);
+EOF
       begin
         @db.execute <<'EOF'
 CREATE TABLE IF NOT EXISTS Report (
@@ -50,9 +54,8 @@ EOF
     end
 
     def add_report(name, hostname, timestamp, data)
-      sql = 'INSERT INTO Report(name, hostname, timestamp, data) VALUES (?, ?, ?, ?);'
       begin
-        @db.execute(sql, name, hostname, timestamp, data.to_json)
+        @db_insert_report.execute(name, hostname, timestamp, data.to_json)
       rescue SQLite3::BusyException
         sleep 0.5
         retry
