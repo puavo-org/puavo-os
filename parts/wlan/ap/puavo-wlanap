@@ -562,11 +562,6 @@ class Host
     @conf = PuavoAPI.get_conf
     @nets = PuavoAPI.get_nets
 
-    if @nets.empty?
-      Log.error('no networks defined')
-      return 1
-    end
-
     # At most 4 BSSes per radio are supported.
     ignored_nets = @nets.slice!(4..-1)
     if !ignored_nets.nil? && !ignored_nets.empty?
