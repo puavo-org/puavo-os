@@ -293,12 +293,6 @@ def run_or_fail(cmd, *args)
   $?.success? or fail "command '#{cmd_string}' failed"
 end
 
-def hexdigest15(str)
-  md5sum = Digest::MD5.new
-  md5sum << str
-  md5sum.hexdigest[0..14]
-end
-
 class Conf
 
   def write(filepath, mode=0640)
@@ -773,7 +767,7 @@ class Host
   end
 
   def setup_bridge(ssid)
-    bridge = hexdigest15(ssid)
+    bridge = "puavowlanbr#{@bridges.length}"
     run_or_fail('brctl', 'addbr', bridge)
     @bridges[ssid] = bridge
     run_or_fail('brctl', 'setfd', bridge, '0')
@@ -818,7 +812,7 @@ class Host
     @nets.each do |net|
       @bss_index += 1
 
-      vif = phy.add_vif("hostapd#{@bss_index}")
+      vif = phy.add_vif("puavowlanif#{@bss_index}")
       if vif.nil?
         Log.error("failed to add vif to phy #{phy.name}")
         return
