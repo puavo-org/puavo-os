@@ -216,6 +216,14 @@ module Dot11
       Hash[results.sort_by { |channel, signal_level| signal_level }].keys
     end
 
+    def tx_power
+      dBm = IO.popen(['iwconfig', @name]) do |io|
+        io.read =~ /^.*\s+Tx-Power=(\d+)\s+dBm\s*$/ and $1.to_i
+      end
+      $?.success? or fail "failed to get the current tx power of #{@name}"
+      dBm
+    end
+
     def mac
       File.read("/sys/class/net/#{@name}/address").strip
     end
@@ -1000,10 +1008,6 @@ class Host
         update_station_stats(vif)
 
         start_time = File.mtime("#{HOSTAPD_CTRL_INTERFACE_DIR}/#{vif.name}")
-
-        tx_power_limit_dBm = IO.popen(['iwconfig', vif.name]) do |io|
-          io.readline =~ /^.* Tx-Power=(.*) dBm\s*$/ and $1.to_i
-        end
       rescue StandardError => e
         Log.exception("failed to query hostapd status (#{vif.name})", e)
       else
@@ -1017,7 +1021,7 @@ class Host
           :ssid               => ssid,
           :stations           => vif.stations.values,
           :tx_bytes           => vif.tx_bytes,
-          :tx_power_limit_dBm => tx_power_limit_dBm,
+          :tx_power_limit_dBm => vif.tx_power,
           :tx_rate            => vif.tx_rate,
         }
       end
