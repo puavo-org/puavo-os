@@ -139,12 +139,6 @@ module Dot11
       retval
     end
 
-    def set_txpower_limit(txpower_dBm)
-      txpower = (txpower_dBm.nil? ? 2000 : txpower_dBm * 100).to_s
-      Log.info("limit txpower of phy #{@name} to #{txpower}mBm")
-      run_or_fail('iw', 'phy', @name, 'set', 'txpower', 'limit', txpower)
-    end
-
   end
 
   class Vif
@@ -222,6 +216,11 @@ module Dot11
       end
       $?.success? or fail "failed to get the current tx power of #{@name}"
       dBm
+    end
+
+    def set_tx_power(dBm)
+      Log.info("limit txpower of phy #{@phy.name} to #{dBm} dBm")
+      run_or_fail('iw', 'phy', @phy.name, 'set', 'txpower', 'limit', "#{dBm * 100}")
     end
 
     def mac
@@ -826,6 +825,14 @@ class Host
       end
       @vifs << vif
 
+      if @conf.has_key?(:txpower)
+        vif.set_tx_power(@conf.fetch(:txpower))
+      end
+
+      if @conf.has_key?(:txpower5) && Dot11::CHANNELS_5G.include?(phy.channel)
+        vif.set_tx_power(@conf.fetch(:txpower5))
+      end
+
       select_channel(vif)
 
       bridge = @bridges.fetch(net['ssid'])
@@ -836,11 +843,6 @@ class Host
       hostapd_cli = Services::HostapdCli.new(:hostapd => hostapd)
       spawn_service(hostapd)
       spawn_service(hostapd_cli)
-    end
-
-    phy.set_txpower_limit(@conf[:txpower])
-    if @conf.has_key?(:txpower5) && Dot11::CHANNELS_5G.include?(phy.channel)
-      phy.set_txpower_limit(@conf[:txpower5])
     end
   end
 
