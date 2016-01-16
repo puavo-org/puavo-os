@@ -238,49 +238,6 @@ module Dot11
 
 end
 
-module PuavoAPI
-
-  def self.get_nets
-    nets_wait = 1
-    while true
-      client = PuavoRestClient.new
-      response = client.get("/v3/devices/#{PUAVO_ETC.hostname}/wlan_networks")
-
-      nets = response.parse.select { |net| net['wlan_ap'] }
-      return nets unless nets.empty?
-
-      nets_wait = [nets_wait * 2, 3600].min
-      sleep nets_wait
-    end
-  end
-
-  def self.get_conf
-    client = PuavoRestClient.new
-    response = client.get("/v3/devices/#{PUAVO_ETC.hostname}")
-
-    conf = {}
-    response.parse['tags'].each do |tag|
-      case tag
-      when /^txpower:([0-9]+)$/
-        txpower = $1.to_i
-        ## Multiple tags starting with txpower: might be given, let's
-        ## take the most restrictive.
-        conf[:txpower] = [conf.fetch(:txpower, txpower), txpower].min
-      when /^txpower5:([0-9]+)$/
-        txpower5 = $1.to_i
-        ## Multiple tags starting with txpower5: might be given, let's
-        ## take the most restrictive.
-        conf[:txpower5] = [conf.fetch(:txpower5, txpower5), txpower5].min
-      when /^wlanap_channels:((\d+:)*(\d+))$/
-        conf[:channels] = $1.split(':').map { |ch| ch.to_i }
-      end
-    end
-
-    conf
-  end
-
-end
-
 RUNDIR                     = '/run/puavo-wlanap'
 CTRLSOCKET                 = File.join(RUNDIR, 'ctrlsocket')
 THIS_SCRIPT                = Pathname.new($0).realpath
@@ -536,9 +493,10 @@ class Host
     @ctrlconn         = nil
     @ctrlconn_time    = nil
     @ctrlserv         = nil
-    @nets             = nil
-    @report_interval  = 30
     @last_report_time = Time.at(0)
+    @nets             = nil
+    @puavo_client     = PuavoRestClient.new
+    @report_interval  = 30
     @services         = {}
     @vifs             = []
     @vtun_address     = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
@@ -559,16 +517,56 @@ class Host
 
   private
 
-  def run_locked
-    @conf = PuavoAPI.get_conf
-    @nets = PuavoAPI.get_nets
+  def get_conf()
+    response = @puavo_client.get("/v3/devices/#{PUAVO_ETC.hostname}")
+
+    conf = {}
+    response.parse['tags'].each do |tag|
+      case tag
+      when /^txpower:([0-9]+)$/
+        txpower = $1.to_i
+        ## Multiple tags starting with txpower: might be given, let's
+        ## take the most restrictive.
+        conf[:txpower] = [conf.fetch(:txpower, txpower), txpower].min
+      when /^txpower5:([0-9]+)$/
+        txpower5 = $1.to_i
+        ## Multiple tags starting with txpower5: might be given, let's
+        ## take the most restrictive.
+        conf[:txpower5] = [conf.fetch(:txpower5, txpower5), txpower5].min
+      when /^wlanap_channels:((\d+:)*(\d+))$/
+        conf[:channels] = $1.split(':').map { |ch| ch.to_i }
+      end
+    end
+
+    conf
+  end
+
+  def get_nets()
+    nets = []
+    nets_wait = 1
+    while true
+      response = @puavo_client.get("/v3/devices/#{PUAVO_ETC.hostname}/wlan_networks")
+
+      nets = response.parse.select { |net| net['wlan_ap'] }
+      break unless nets.empty?
+
+      nets_wait = [nets_wait * 2, 3600].min
+      sleep nets_wait
+    end
 
     # At most 4 BSSes per radio are supported.
-    ignored_nets = @nets.slice!(4..-1)
+    ignored_nets = nets.slice!(4..-1)
     if !ignored_nets.nil? && !ignored_nets.empty?
       Log.warning("more than 4 networks defined, ignoring " +
                   ignored_nets.map{ |n| n['ssid'] }.join(', '))
     end
+
+    nets
+  end
+
+  def run_locked
+    @nets = get_nets
+    @conf = get_conf
 
     Signal.trap('EXIT') do
       Log.info('exiting')
