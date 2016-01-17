@@ -529,7 +529,7 @@ class Host
       case tag
       when /^wlanap_reconf_interval:(\d+)$/
         conf[:reconf_interval] = $1.to_i
-      when /^txpower:([0-9]+)$/
+      when /^txpower:([0-9]+)$/, /^wlanap_tx_power:([0-9]+)$/
         txpower = $1.to_i
         ## Multiple tags starting with txpower: might be given, let's
         ## take the most restrictive.
