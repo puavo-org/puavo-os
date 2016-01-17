@@ -481,11 +481,14 @@ class Host
   CONTROLLER_PORT    = 45046
   VTUN_ADDRESS       = 'wlangw'
   VTUN_PORT          = 45045
+  RECONF_INTERVAL    = 900
 
   def initialize(kwargs = {})
     @bridges       = {}
     @bss_index     = -1
-    @conf          = nil
+    @conf          = {
+      :reconf_interval => RECONF_INTERVAL,
+    }
     @controller    = Net::HTTP.new(kwargs.fetch(:controller_address,
                                                 CONTROLLER_ADDRESS),
                                    kwargs.fetch(:controller_port,
@@ -497,7 +500,6 @@ class Host
     @last_report_time = Time.at(0)
     @nets             = nil
     @puavo_client     = PuavoRestClient.new
-    @reconf_interval  = 900
     @report_interval  = 30
     @services         = {}
     @vifs             = []
@@ -525,6 +527,8 @@ class Host
     conf = {}
     response.parse['tags'].each do |tag|
       case tag
+      when /^wlanap_reconf_interval:(\d+)$/
+        conf[:reconf_interval] = $1.to_i
       when /^txpower:([0-9]+)$/
         txpower = $1.to_i
         ## Multiple tags starting with txpower: might be given, let's
@@ -649,7 +653,7 @@ class Host
         reads    = [selfpipe_r, @ctrlconn.nil? ? @ctrlserv : @ctrlconn]
         timeouts = []
 
-        timeouts << @reconf_interval - (Time.now - @last_reconf_time)
+        timeouts << @conf.fetch(:reconf_interval, RECONF_INTERVAL) - (Time.now - @last_reconf_time)
         timeouts << @report_interval - (Time.now - @last_report_time)
 
         unless @ctrlconn.nil?
@@ -660,7 +664,7 @@ class Host
 
         if ready.nil?
 
-          if Time.now - @last_reconf_time > @reconf_interval
+          if Time.now - @last_reconf_time > @conf.fetch(:reconf_interval, RECONF_INTERVAL)
             reconf
           end
 
