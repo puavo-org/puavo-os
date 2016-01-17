@@ -534,6 +534,11 @@ class Host
         ## Multiple tags might be given, let's take the most
         ## restrictive.
         conf[:tx_power] = [conf.fetch(:tx_power, tx_power), tx_power].min
+      when /^wlanap_tx_power_2g:([0-9]+)$/
+        tx_power_2g = $1.to_i
+        ## Multiple tags might be given, let's take the most
+        ## restrictive.
+        conf[:tx_power_2g] = [conf.fetch(:tx_power_2g, tx_power_2g), tx_power_2g].min
       when /^txpower5:([0-9]+)$/, /^wlanap_tx_power_5g:([0-9]+)$/
         tx_power_5g = $1.to_i
         ## Multiple tags might be given, let's take the most
@@ -581,6 +586,9 @@ class Host
     @vifs.each do |vif|
       tx_power = @conf.fetch(:tx_power, 27)
       vif.set_tx_power(tx_power)
+      if Dot11::CHANNELS_2G.include?(vif.phy.channel)
+        vif.set_tx_power(@conf.fetch(:tx_power_2g, tx_power))
+      end
       if Dot11::CHANNELS_5G.include?(vif.phy.channel)
         vif.set_tx_power(@conf.fetch(:tx_power_5g, tx_power))
       end
