@@ -530,15 +530,15 @@ class Host
       when /^wlanap_reconf_interval:(\d+)$/
         conf[:reconf_interval] = $1.to_i
       when /^txpower:([0-9]+)$/, /^wlanap_tx_power:([0-9]+)$/
-        txpower = $1.to_i
-        ## Multiple tags starting with txpower: might be given, let's
-        ## take the most restrictive.
-        conf[:txpower] = [conf.fetch(:txpower, txpower), txpower].min
+        tx_power = $1.to_i
+        ## Multiple tags might be given, let's take the most
+        ## restrictive.
+        conf[:tx_power] = [conf.fetch(:tx_power, tx_power), tx_power].min
       when /^txpower5:([0-9]+)$/, /^wlanap_tx_power_5g:([0-9]+)$/
-        txpower5 = $1.to_i
-        ## Multiple tags starting with txpower5: might be given, let's
-        ## take the most restrictive.
-        conf[:txpower5] = [conf.fetch(:txpower5, txpower5), txpower5].min
+        tx_power_5g = $1.to_i
+        ## Multiple tags might be given, let's take the most
+        ## restrictive.
+        conf[:tx_power_5g] = [conf.fetch(:tx_power_5g, tx_power_5g), tx_power_5g].min
       when /^wlanap_channels:((\d+:)*(\d+))$/
         conf[:channels] = $1.split(':').map { |ch| ch.to_i }
       end
@@ -579,10 +579,10 @@ class Host
     @conf = new_conf
 
     @vifs.each do |vif|
-      tx_power = @conf.fetch(:txpower, 27)
+      tx_power = @conf.fetch(:tx_power, 27)
       vif.set_tx_power(tx_power)
       if Dot11::CHANNELS_5G.include?(vif.phy.channel)
-        vif.set_tx_power(@conf.fetch(:txpower5, tx_power))
+        vif.set_tx_power(@conf.fetch(:tx_power_5g, tx_power))
       end
     end
   end
