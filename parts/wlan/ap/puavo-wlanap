@@ -523,6 +523,11 @@ class Host
   private
 
   def get_conf()
+    def store_min(hash, key, new_value)
+      old_value = hash.fetch(key, new_value)
+      hash[key] = new_value < old_value ? new_value : old_value
+    end
+
     response = @puavo_client.get("/v3/devices/#{PUAVO_ETC.hostname}")
 
     conf = {}
@@ -530,21 +535,14 @@ class Host
       case tag
       when /^wlanap_reconf_interval:(\d+)$/
         conf[:reconf_interval] = $1.to_i
+      # Multiple tx power tags might be given, store the most
+      # restrictive value.
       when /^txpower:([0-9]+)$/, /^wlanap_tx_power:([0-9]+)$/
-        tx_power = $1.to_i
-        ## Multiple tags might be given, let's take the most
-        ## restrictive.
-        conf[:tx_power] = [conf.fetch(:tx_power, tx_power), tx_power].min
+        store_min(conf, :tx_power, $1.to_i)
       when /^wlanap_tx_power_2g:([0-9]+)$/
-        tx_power_2g = $1.to_i
-        ## Multiple tags might be given, let's take the most
-        ## restrictive.
-        conf[:tx_power_2g] = [conf.fetch(:tx_power_2g, tx_power_2g), tx_power_2g].min
+        store_min(conf, :tx_power_2g, $1.to_i)
       when /^txpower5:([0-9]+)$/, /^wlanap_tx_power_5g:([0-9]+)$/
-        tx_power_5g = $1.to_i
-        ## Multiple tags might be given, let's take the most
-        ## restrictive.
-        conf[:tx_power_5g] = [conf.fetch(:tx_power_5g, tx_power_5g), tx_power_5g].min
+        store_min(conf, :tx_power_5g, $1.to_i)
       when /^wlanap_channels:((\d+:)*(\d+))$/
         conf[:channels] = $1.split(':').map { |ch| ch.to_i }
       end
