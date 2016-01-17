@@ -1,3 +1,26 @@
+puavo-wlan (0.12.7) trusty; urgency=medium
+
+  * New release
+  * ap: store the value of the most restrictive wlanap_channels tag
+  * ap: store the value of the most restrictive reconf_interval tag
+  * ap: refactor tx power configuration
+  * ap: minimize the number of set_tx_power() calls during reconf
+  * ap: add tag for controlling 2.4GHz tx power
+  * ap: rename internals
+  * ap: add alias for txpower5 tag
+  * ap: add alias for txpower tag
+  * ap: add tag for controlling the reconf interval
+  * ap: reconf tx powers periodically
+  * ap: move Puavo API methods to class Host
+  * ap: change bridge and ap interface naming
+  * ap: move tx power setup method to Vif for the sake of symmetry
+  * ap: add Vif.tx_power() to get the current tx power
+  * ap: remove useless check
+  * ap: remove magic ssid mangling
+  * Git(fb0cd29eb392a959272173305cfb1979ddbbaa93)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Sun, 17 Jan 2016 22:40:53 +0200
+
 puavo-wlan (0.12.6) trusty; urgency=medium
 
   * New release
