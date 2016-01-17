@@ -534,7 +534,7 @@ class Host
         ## Multiple tags starting with txpower: might be given, let's
         ## take the most restrictive.
         conf[:txpower] = [conf.fetch(:txpower, txpower), txpower].min
-      when /^txpower5:([0-9]+)$/
+      when /^txpower5:([0-9]+)$/, /^wlanap_tx_power_5g:([0-9]+)$/
         txpower5 = $1.to_i
         ## Multiple tags starting with txpower5: might be given, let's
         ## take the most restrictive.
