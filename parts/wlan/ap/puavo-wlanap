@@ -493,9 +493,11 @@ class Host
     @ctrlconn         = nil
     @ctrlconn_time    = nil
     @ctrlserv         = nil
+    @last_reconf_time = Time.at(0)
     @last_report_time = Time.at(0)
     @nets             = nil
     @puavo_client     = PuavoRestClient.new
+    @reconf_interval  = 900
     @report_interval  = 30
     @services         = {}
     @vifs             = []
@@ -564,6 +566,23 @@ class Host
     nets
   end
 
+  def reconf
+    @last_reconf_time = Time.now
+
+    new_conf = get_conf
+    return unless new_conf != @conf
+
+    @conf = new_conf
+
+    @vifs.each do |vif|
+      tx_power = @conf.fetch(:txpower, 27)
+      vif.set_tx_power(tx_power)
+      if Dot11::CHANNELS_5G.include?(vif.phy.channel)
+        vif.set_tx_power(@conf.fetch(:txpower5, tx_power))
+      end
+    end
+  end
+
   def run_locked
     @nets = get_nets
     @conf = get_conf
@@ -628,7 +647,10 @@ class Host
 
       else
         reads    = [selfpipe_r, @ctrlconn.nil? ? @ctrlserv : @ctrlconn]
-        timeouts = [@report_interval - (Time.now - @last_report_time)]
+        timeouts = []
+
+        timeouts << @reconf_interval - (Time.now - @last_reconf_time)
+        timeouts << @report_interval - (Time.now - @last_report_time)
 
         unless @ctrlconn.nil?
           timeouts << 5 - (Time.now - @ctrlconn_time)
@@ -637,6 +659,10 @@ class Host
         ready = IO.select(reads, [], [], [0, timeouts.min].max)
 
         if ready.nil?
+
+          if Time.now - @last_reconf_time > @reconf_interval
+            reconf
+          end
 
           if Time.now - @last_report_time > @report_interval
             @vifs.each { |vif| vif.update_stats }
@@ -816,14 +842,6 @@ class Host
         return
       end
       @vifs << vif
-
-      if @conf.has_key?(:txpower)
-        vif.set_tx_power(@conf.fetch(:txpower))
-      end
-
-      if @conf.has_key?(:txpower5) && Dot11::CHANNELS_5G.include?(phy.channel)
-        vif.set_tx_power(@conf.fetch(:txpower5))
-      end
 
       select_channel(vif)
 
