@@ -528,15 +528,23 @@ class Host
       hash[key] = new_value < old_value ? new_value : old_value
     end
 
+    def store_longest(hash, key, new_value)
+      old_value = hash.fetch(key, new_value)
+      hash[key] = new_value.length > old_value.length ? new_value : old_value
+    end
+
     response = @puavo_client.get("/v3/devices/#{PUAVO_ETC.hostname}")
 
     conf = {}
+
+    # NOTE: Multiple tags with same prefixes might be given (e.g. zero
+    # or more wlanap_tx_power tags in organization, school and/or
+    # device levels). Here we choose to use the most restrictive
+    # value.
     response.parse['tags'].each do |tag|
       case tag
       when /^wlanap_reconf_interval:(\d+)$/
         store_min(conf, :reconf_interval, $1.to_i)
-      # Multiple tx power tags might be given, store the most
-      # restrictive value.
       when /^txpower:([0-9]+)$/, /^wlanap_tx_power:([0-9]+)$/
         store_min(conf, :tx_power, $1.to_i)
       when /^wlanap_tx_power_2g:([0-9]+)$/
@@ -544,7 +552,7 @@ class Host
       when /^txpower5:([0-9]+)$/, /^wlanap_tx_power_5g:([0-9]+)$/
         store_min(conf, :tx_power_5g, $1.to_i)
       when /^wlanap_channels:((\d+:)*(\d+))$/
-        conf[:channels] = $1.split(':').map { |ch| ch.to_i }
+        store_longest(conf, :channels, $1.split(':').map { |ch| ch.to_i })
       end
     end
 
