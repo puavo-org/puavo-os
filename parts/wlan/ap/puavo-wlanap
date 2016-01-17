@@ -482,6 +482,7 @@ class Host
   VTUN_ADDRESS       = 'wlangw'
   VTUN_PORT          = 45045
   RECONF_INTERVAL    = 900
+  TX_POWER_MAX       = 27
 
   def initialize(kwargs = {})
     @bridges       = {}
@@ -584,13 +585,15 @@ class Host
     @conf = new_conf
 
     @vifs.each do |vif|
-      tx_power = @conf.fetch(:tx_power, 27)
-      vif.set_tx_power(tx_power)
       if Dot11::CHANNELS_2G.include?(vif.phy.channel)
-        vif.set_tx_power(@conf.fetch(:tx_power_2g, tx_power))
+        tx_power    = @conf.fetch(:tx_power   , TX_POWER_MAX)
+        tx_power_2g = @conf.fetch(:tx_power_2g, TX_POWER_MAX)
+        vif.set_tx_power([tx_power, tx_power_2g].min)
       end
       if Dot11::CHANNELS_5G.include?(vif.phy.channel)
-        vif.set_tx_power(@conf.fetch(:tx_power_5g, tx_power))
+        tx_power    = @conf.fetch(:tx_power   , TX_POWER_MAX)
+        tx_power_5g = @conf.fetch(:tx_power_5g, TX_POWER_MAX)
+        vif.set_tx_power([tx_power, tx_power_5g].min)
       end
     end
   end
