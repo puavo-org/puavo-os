@@ -534,7 +534,7 @@ class Host
     response.parse['tags'].each do |tag|
       case tag
       when /^wlanap_reconf_interval:(\d+)$/
-        conf[:reconf_interval] = $1.to_i
+        store_min(conf, :reconf_interval, $1.to_i)
       # Multiple tx power tags might be given, store the most
       # restrictive value.
       when /^txpower:([0-9]+)$/, /^wlanap_tx_power:([0-9]+)$/
