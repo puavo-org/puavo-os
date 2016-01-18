@@ -32,7 +32,7 @@
       </thead>
       <tbody>
         <% hosts.each do |host| %>
-        <tr id="host-<%= host[:hostname] %>">
+        <tr>
           <td><span class="statemark-<%= host[:state] %>"><%= host[:hostname] %></span></td>
           <td><%= host[:version] %></td>
           <td sorttable_customkey="<%= host[:system_uptime] %>"><%= prettify_seconds(host[:system_uptime]) %></td>
@@ -80,8 +80,8 @@
       </thead>
       <tbody>
         <% radios.each do |radio| %>
-        <tr id="radio-<%= radio[:mac] %>">
-          <td><a href="#host-<%= radio[:hostname] %>"><%= radio[:hostname] %></a></td>
+        <tr>
+          <td><%= radio[:hostname] %></td>
           <td><%= radio[:mac] %></td>
           <td><%= radio[:driver] %></td>
           <td><%= radio[:product] %></td>
@@ -123,10 +123,10 @@
       </thead>
       <tbody>
         <% accesspoints.each do |accesspoint| %>
-        <tr id="ap-<%= accesspoint[:bssid] %>">
+        <tr>
           <td><%= accesspoint[:hostname] %></td>
           <td><%= accesspoint[:bssid] %></td>
-          <td><a href="#radio-<%= accesspoint[:radio_mac] %>"><%= accesspoint[:radio_mac] %></a></td>
+          <td><%= accesspoint[:radio_mac] %></td>
           <td><%= accesspoint[:ssid] %></td>
           <td sorttable_customkey="<%= accesspoint[:uptime] %>"><%= prettify_seconds(accesspoint[:uptime]) %></td>
           <td><%= accesspoint[:sta_count] %></td>
@@ -162,11 +162,11 @@
       </thead>
       <tbody>
         <% stations.each do |station| %>
-        <tr id="sta-<%= station[:mac] %>">
+        <tr>
           <td><%= station[:hostname] %></td>
           <td><%= station[:mac] %></td>
           <td><%= station[:ipaddr] %></td>
-          <td><a href="#ap-<%= station[:bssid] %>"><%= station[:bssid] %></a></td>
+          <td><%= station[:bssid] %></td>
           <td sorttable_customkey="<%= station[:uptime] %>"><%= prettify_seconds(station[:uptime]) %></td>
           <!-- Tx and Rx switched, because station's Rx is Access point's Tx. -->
           <td sorttable_customkey="<%= station[:tx_rate] %>"><%= prettify_bytes(station[:tx_rate]) %>/s</td>
