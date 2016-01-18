@@ -50,8 +50,6 @@ module PuavoWlanController
           timestamp = body.fetch('timestamp')
           data      = body.fetch('data')
 
-          PERMSTORE.add_report(name, hostname, timestamp, data)
-
           case name
           when 'bye'
             TEMPSTORE.del_status(hostname)
