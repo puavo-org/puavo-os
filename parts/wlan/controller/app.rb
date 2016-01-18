@@ -64,15 +64,15 @@ module PuavoWlanController
 
       minutes = seconds / 60
       seconds = seconds % 60
-      result = "#{seconds}s"
+      result = "%02ds" % seconds
 
       hours = minutes / 60
       minutes = minutes % 60
-      result.prepend("#{minutes}m ") if minutes > 0
+      result.prepend("%02dm " % minutes) if minutes > 0
 
       days = hours / 24
       hours = hours % 24
-      result.prepend("#{hours}h ") if hours > 0
+      result.prepend("%02dh " % hours) if hours > 0
 
       result.prepend("#{days}d ") if days > 0
 
