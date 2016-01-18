@@ -593,18 +593,7 @@ class Host
 
     @conf = new_conf
 
-    @vifs.each do |vif|
-      if Dot11::CHANNELS_2G.include?(vif.phy.channel)
-        tx_power    = @conf.fetch(:tx_power   , TX_POWER_MAX)
-        tx_power_2g = @conf.fetch(:tx_power_2g, TX_POWER_MAX)
-        vif.set_tx_power([tx_power, tx_power_2g].min)
-      end
-      if Dot11::CHANNELS_5G.include?(vif.phy.channel)
-        tx_power    = @conf.fetch(:tx_power   , TX_POWER_MAX)
-        tx_power_5g = @conf.fetch(:tx_power_5g, TX_POWER_MAX)
-        vif.set_tx_power([tx_power, tx_power_5g].min)
-      end
-    end
+    update_tx_powers
   end
 
   def run_locked
@@ -705,6 +694,21 @@ class Host
         accept_ctrlconn             if ready[0].include?(@ctrlserv)
         handle_ctrlconn             if ready[0].include?(@ctrlconn)
 
+      end
+    end
+  end
+
+  def update_tx_powers
+    @vifs.each do |vif|
+      if Dot11::CHANNELS_2G.include?(vif.phy.channel)
+        tx_power    = @conf.fetch(:tx_power   , TX_POWER_MAX)
+        tx_power_2g = @conf.fetch(:tx_power_2g, TX_POWER_MAX)
+        vif.set_tx_power([tx_power, tx_power_2g].min)
+      end
+      if Dot11::CHANNELS_5G.include?(vif.phy.channel)
+        tx_power    = @conf.fetch(:tx_power   , TX_POWER_MAX)
+        tx_power_5g = @conf.fetch(:tx_power_5g, TX_POWER_MAX)
+        vif.set_tx_power([tx_power, tx_power_5g].min)
       end
     end
   end
@@ -878,6 +882,8 @@ class Host
       spawn_service(hostapd)
       spawn_service(hostapd_cli)
     end
+
+    update_tx_powers
   end
 
   def remove_phy(phy)
