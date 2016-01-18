@@ -29,7 +29,6 @@ require 'json'
 require 'sinatra'
 
 # Local modules.
-require_relative './permstore.rb'
 require_relative './tempstore.rb'
 
 require_relative './routes/root.rb'
@@ -37,7 +36,6 @@ require_relative './routes/v1.rb'
 
 module PuavoWlanController
 
-  PERMSTORE = PermStore.new
   TEMPSTORE = TempStore.new
 
   MAX_REPORT_INTERVAL    = 30
