@@ -88,6 +88,7 @@ Depends: ${misc:Depends},
 Recommends:
  gdisk,
  ifenslave,
+ puavo-wlancontroller,
  smartmontools
 Conflicts:
  ltsp-server,
