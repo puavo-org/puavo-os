@@ -13,7 +13,7 @@ body {
 
 table {
     border: 1px solid black;
-    text-align: center;
+    text-align: right;
     width: 100%;
 }
 
@@ -24,24 +24,26 @@ td, th {
 
 tfoot td {
     font-weight: bold;
+    text-align: center;
 }
 
 th {
     background-color: #dfdfdf;
+    text-align: center;
 }
 
-.statemark-alive:before {
-    content: "\25FC    ";
+.statemark-alive:after {
+    content: "    \25FC";
     color: #00ff00;
 }
 
-.statemark-dead:before {
-    content: "\271D    ";
+.statemark-dead:after {
+    content: "    \271D";
     color: #000000;
 }
 
-.statemark-dying:before {
-    content: "\25FC    ";
+.statemark-dying:after {
+    content: "    \25FC";
     color: #ff0000;
 }
 
