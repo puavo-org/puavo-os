@@ -1,3 +1,15 @@
+puavo-wlan (0.12.9) trusty; urgency=medium
+
+  * New release
+  * ap: fix initialization phase to set initial tx powers too
+  * controller/ui: remove anchor links from the status page
+  * controller/ui: add missing units
+  * controller/ui: align tables to the left
+  * controller/ui: fix prettify_seconds() to pad fields with zeros
+  * Git(c9ec49e48758ec4158dc4d8436c1f6f205cad140)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 18 Jan 2016 13:46:24 +0200
+
 puavo-wlan (0.12.8) trusty; urgency=medium
 
   * New release
