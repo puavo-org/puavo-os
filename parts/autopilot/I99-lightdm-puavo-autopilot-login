@@ -1,0 +1,49 @@
+(
+  set -e
+
+  ## Pick one autopilot configuration randomly. If only one has been
+  ## defined, that one will of course be picked.
+  autopilot_line=$(jq --raw-output '.tags[]' /etc/puavo/device.json \
+		     | grep ^autopilot \
+		     | shuf \
+		     | head -1)
+
+  mode=$(    echo "$autopilot_line" | cut -d : -f 2)
+  user=$(    echo "$autopilot_line" | cut -d : -f 3)
+  password=$(echo "$autopilot_line" | cut -d : -f 4)
+
+  if [ -n "$user" -a -n "$password" ]; then
+    if [ "${mode}" = "smoke" ]; then
+      puavo-autopilot-logger --tag smoke                        \
+                             --                                 \
+                             'msg=enter-display-manager-screen' \
+                             "user=$user"                       \
+          || true
+    fi
+    sleep 15
+
+    ## The "Guest Session" widget might be the active one, click up
+    ## arrow to activate the normal login widget.
+    xte 'key Up'
+    sleep 1
+
+    ## The login widget might be dirty, click esc to clear it.
+    xte 'key Escape'
+    sleep 1
+
+    xte "str ${user}"
+    xte 'key Return'
+    sleep 4 ## Password widget activates slowly.
+
+    xte "str ${password}"
+    xte 'key Return'
+
+    if [ "${mode}" = "smoke" ]; then
+      puavo-autopilot-logger --tag smoke                     \
+                             --                              \
+                             'msg=try-display-manager-login' \
+                             "user=$user"                    \
+          || true
+    fi
+  fi
+) &

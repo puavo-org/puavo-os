@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby1.9.1
+
+require 'getoptlong'
+require 'json'
+require 'net/http'
+require 'uri'
+
+opts = GetoptLong.new(
+  ['--help', '-h', GetoptLong::NO_ARGUMENT],
+  ['--tag', '-t', GetoptLong::REQUIRED_ARGUMENT],
+)
+
+TAG_PATTERN = /^[a-z]+$/
+tag = 'default'
+
+opts.each do |opt, arg|
+  case opt
+    when '--help'
+      puts <<EOF
+Usage: puavo-autopilot-logger [OPTION]... [--] [KEY=VALUE]...
+
+Send a log message to autopilot server. Message is a JSON object which comprises
+all KEY=VALUE pairs.
+
+-h, --help                       display this help and exit
+-t TAG, --tag TAG                mark message with tag TAG
+
+If --tag is not given, messages are tagged with tag '#{tag}'.
+
+EOF
+    exit(0)
+    when '--tag'
+      if TAG_PATTERN.match(arg).nil? then
+        STDERR.puts("ERROR: invalid TAG #{arg}, " \
+                    "TAG must match #{TAG_PATTERN.source}")
+        exit 1
+      end
+      tag = arg
+  end
+end
+
+log_entry = {}
+
+ARGV.each() do |arg|
+  parts = arg.partition('=')
+  if parts.map() {|p| p.empty?}.any? then
+    STDERR.puts("ERROR: invalid argument '#{arg}'")
+    exit(1)
+  end
+  key, sep, value = parts
+  log_entry[key] = value
+end
+
+log_uri = URI.parse("http://localhost:8888/puavo-autopilot.#{tag}")
+log_entry_json = JSON.generate(log_entry)
+Net::HTTP.post_form(log_uri, {'json' => log_entry_json})

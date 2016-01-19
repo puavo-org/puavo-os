@@ -1,0 +1,51 @@
+#!/bin/sh
+#
+# Copyright (C) 2015 Opinsys Oy
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
+# Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+set -eu
+
+. puavo-autopilot-env
+
+## Ensure Firefox is visible before searching images from the page.
+profiledir=$(mktemp -d --tmpdir puavo-autopilot-session-verify-java.XXXXXXXX)
+firefox -profile "${profiledir}" -private-window \
+    'https://www.java.com/en/download/installed.jsp?detect=jre' &
+timeout 10 xdotool search --sync --classname Navigator
+wmctrl -r firefox -b add,maximized_vert,maximized_horz
+wmctrl -a firefox
+
+## The verification page requires activation of the Java plugin.
+xy=$(pnggrep --center --try-times 10 "${PUAVO_AUTOPILOT_SHAREDIR}/activate-button.png")
+xdotool mousemove $(echo "${xy}" | head -n1) click 1
+
+## Firefox asks yet another confirmation before activating the Java plugin.
+xdotool sleep 2 key Tab Tab Tab Return
+
+## Java itself *might* ask user to allow the applet to run. If the user
+## has previously accepted the application, the dialog is not shown
+## anymore.
+for i in $(seq 5); do
+    xy=$(pnggrep -c -n 2 "${PUAVO_AUTOPILOT_SHAREDIR}/run-button-swing-active.png") || \
+        xy=$(pnggrep -c -n 2 "${PUAVO_AUTOPILOT_SHAREDIR}/run-button-gtk-active.png") || \
+        continue
+    xdotool mousemove $(echo "${xy}" | head -n1) click 1
+    break
+done
+
+pnggrep --center --try-times 20 "${PUAVO_AUTOPILOT_SHAREDIR}/success.png"
+
+puavo-autopilot-logger --tag=releasetest 'msg=verify-java-ok'

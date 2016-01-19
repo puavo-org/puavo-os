@@ -1,0 +1,72 @@
+#!/usr/bin/env ruby1.9.1
+#
+# puavo-autopilot-session - run autopiloted desktop session
+#
+# Copyright (C) 2015 Opinsys Oy
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
+# Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+require 'json'
+
+AVAILABLE_MODES = %w(releasetest smoke stress)
+
+def get_autopilot_mode
+  conffile_path = ENV['PUAVO_SESSION_PATH']
+  conf = JSON.parse( IO.read(conffile_path) )["device"]
+
+  if not conf.has_key?('tags') then
+    puts "No tags defined in #{ conffile_path }"
+    return ''
+  end
+
+  # Mode must match user, so we check out autopilot tags and find the mode
+  # for this user.  If the mode is not found nothing gets done.
+  # This is also needed so that ordinary users can login to hosts
+  # (especially ltspservers) and use the system in a normal way.
+
+  autopilot_tags = conf['tags'].select { |s| s.match(/^autopilot/) }
+
+  mode            = ''
+
+  autopilot_tags.each do |autopilot_tag|
+    autopilot_string, maybe_mode, username, password \
+      = * autopilot_tag.split(':')
+
+    if autopilot_string != 'autopilot'                                  \
+         || maybe_mode.nil? || (! AVAILABLE_MODES.include?(maybe_mode)) \
+         || username.nil?   || username.empty?                          \
+         || password.nil?   || password.empty? then
+      warn "Autopilot tag '#{ autopilot_tag }' is not sensible."
+      next
+    end
+
+    if username == ENV['USER']
+      # found the mode we where looking for.
+      mode = maybe_mode
+      break
+    end
+  end
+
+  mode
+end
+
+mode = get_autopilot_mode()
+if AVAILABLE_MODES.include?(mode)
+  session_command = "puavo-autopilot-session-#{mode}"
+  system(session_command)
+  exit $?.exitstatus
+else
+  STDERR.puts("ignoring unknown Puavo autopilot mode '#{mode}'")
+end

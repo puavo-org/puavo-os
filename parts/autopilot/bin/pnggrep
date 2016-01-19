@@ -1,0 +1,184 @@
+#!/bin/bash
+#
+# pnggrep - print coordinates of images on the screen
+#
+# Copyright (C) 2015 Opinsys Oy
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
+# Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+set -eu
+
+on_exit()
+{
+    ## No need to short-circuit exit on error anymore: we are already cleaning
+    ## up and exiting.
+    set +e
+
+    if [ -n "${screenshot}" ]; then
+        rm -f "${screenshot}"
+    fi
+
+    exit $exitval
+}
+
+usage_error()
+{
+    echo "error: $1" >&2
+    echo "Run '$0 --help' for more information". >&2
+    return 1
+}
+
+center=
+try_interval=
+try_times=
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            cat <<EOF
+Usage: $0 PNG
+
+Try to find the given image from the current screen and print its coordinates to
+standard output.
+
+Options:
+  -h, --help                     print help and exit
+  -n N, --try-times N            try at most N times before giving up
+  -i SECS, --try-interval SECS   try detection with SECS second intervals
+  -c, --center                   print center coordinates of the images
+
+If --try-times is not given, detection is tried only once.
+
+If --try-interval is not given, detection interval is one second.
+
+If --center is not given, print top left coordinates of the detected
+image.
+
+EOF
+            exit 0
+            ;;
+        -c|--center)
+            [ -z "${center}" ] || usage_error "option $1 is already given"
+            center=true
+            shift
+            ;;
+        -i|--try-interval)
+            [ -z "${try_interval}" ] || usage_error "option $1 is already given"
+            [ $# -ge 2 ] || usage_error "missing value for option $1"
+            case $2 in
+                ''|*[!0-9]*)
+                    usage_error "invalid value for option $1"
+                    ;;
+                *)
+                    ;;
+            esac
+            try_interval=$2
+            shift 2
+            ;;
+        -n|--try-times)
+            [ -z "${try_times}" ] || usage_error "option $1 is already given"
+            [ $# -ge 2 ] || usage_error "missing value for option $1"
+            case $2 in
+                ''|*[!0-9]*|0*)
+                    usage_error "invalid value for option $1"
+                    ;;
+                *)
+                    ;;
+            esac
+            try_times=$2
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage_error "invalid option '$1'"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+## Default values for parameters.
+[ -n "${center}" ] || center=false
+[ -n "${try_interval}" ] || try_interval=1
+[ -n "${try_times}" ] || try_times=1
+
+if [ $# -ne 1 ]; then
+    usage_error "invalid number of arguments ($#), expected 1"
+fi
+
+png=$(readlink -e "$1") || {
+    echo "error: image '$1' does not exist" >&2
+    exit 1
+}
+shift
+
+if ${center}; then
+    png_width=$(identify -format %w "${png}")
+    png_height=$(identify -format %h "${png}")
+fi
+
+exitval=1
+screenshot=
+
+# After this point, we are going to make permanent changes, hence we
+# setup cleanup hook to make sure we do not leave anything behind us.
+
+trap on_exit EXIT
+
+screenshot=$(mktemp --suffix='.png')
+
+ntries=0
+while [ "${ntries}" -lt "${try_times}" ]; do
+    escrotum "${screenshot}" >/dev/null || {
+        echo 'error: failed to take a screenshot' >&2
+        exit 1
+    }
+
+    xy=$(visgrep "${screenshot}" "${png}") || {
+        case $? in
+            1)
+                ;;
+            *)
+                ntries=$((ntries + 1))
+                sleep "${try_interval}s"
+                continue
+                ;;
+        esac
+    }
+    [ -n "${xy}" ] || {
+        ntries=$((ntries + 1))
+        sleep "${try_interval}s"
+        continue
+    }
+
+    xy=$(echo "${xy}" | sed -n -r 's/^([0-9]+),([0-9]+) .*$/\1 \2/p')
+
+    if ${center}; then
+        xy=$(echo "${xy}" | while read x y; do
+                                x=$(echo "${x} + ${png_width} / 2" | bc)
+                                y=$(echo "${y} + ${png_height} / 2" | bc)
+                                echo "${x} ${y}"
+                            done)
+    fi
+
+    echo "${xy}"
+    exitval=0
+    break
+done
