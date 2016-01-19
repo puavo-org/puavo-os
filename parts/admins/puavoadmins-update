@@ -1,0 +1,296 @@
+#!/usr/bin/env ruby1.9.1
+
+## Copyright (C) 2015 Opinsys
+##
+## This program is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 2 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+##
+
+HELP = <<EOF
+Usage: puavoadmins-update [OPTION]...
+
+Update local Puavo administrator database and create home directories
+for admin users.
+
+Options:
+  -h, --help                       display this help and exit
+      --no-create-homes            do not create home directories
+
+Files:
+  /etc/puavo/org.json                 the backend database file
+  /var/lib/puavoadmins/org.json.lock  lock file for synchronizing database access
+  /puavoadmins                        root for home directories
+  /etc/puavoadmins/skel/*             copied to new home directories
+
+EOF
+
+## Standard library modules.
+require 'fileutils'
+require 'getoptlong'
+require 'set'
+require 'tempfile'
+require 'timeout'
+
+## Third-party modules.
+require 'highline/import'
+require 'puavobs'
+
+## Bundled modules.
+require 'puavoadmins-vendor/bundler/setup'
+require 'sshkey'
+
+ORG_JSON_FILEPATH      = '/etc/puavo/org.json'
+ORG_JSON_LOCK_FILEPATH = '/var/lib/puavoadmins/org.json.lock'
+PUAVOADMINS_HOME_ROOT  = '/puavoadmins'
+PUAVOADMINS_GID        = 555
+
+class Error < StandardError
+end
+
+def color(str, color_code)
+  unless defined?($has_colors) then
+    $has_colors = false
+    begin
+      $has_colors = IO.popen(['tput', 'colors']) do |io|
+        Integer(io.read()) >= 8
+      end
+    rescue
+      ## Just hide all errors, we do not care if color output support
+      ## could not be tested properly. Colors are just eye-candies,
+      ## nothing more.
+    end
+  end
+
+  return "\e[#{color_code}m#{str}\e[0m" if $has_colors
+  str
+end
+
+def color_red(str)
+  color(str, 31)
+end
+
+def color_green(str)
+  color(str, 32)
+end
+
+def owner_to_admin(owner)
+  ssh_public_key = owner['ssh_public_key']
+  ssh_public_key_fingerprint = nil
+  if SSHKey.valid_ssh_public_key? ssh_public_key
+    ssh_public_key_fingerprint = SSHKey.fingerprint ssh_public_key
+  end
+  {
+    :ssh_public_key_fingerprint => ssh_public_key_fingerprint,
+    :uid                        => owner['uid_number'],
+    :username                   => owner['username'],
+  }
+end
+
+def mkhomes(org_json)
+  FileUtils.mkdir_p(PUAVOADMINS_HOME_ROOT)
+  FileUtils.chown(0, PUAVOADMINS_GID, PUAVOADMINS_HOME_ROOT)
+  File.chmod(0750, PUAVOADMINS_HOME_ROOT)
+
+  org_json['owners'].each do |owner|
+    uid_number = owner['uid_number']
+
+    home_dir = "#{PUAVOADMINS_HOME_ROOT}/#{uid_number}"
+    next if Dir.exists?(home_dir)
+
+    new_home_dir = "#{home_dir}.new"
+    begin
+      Dir.mkdir(new_home_dir, 0750)
+      FileUtils.cp(['/etc/skel/.bash_logout',
+                    '/etc/skel/.bashrc',
+                    '/etc/skel/.profile'],
+                   new_home_dir)
+      FileUtils.cp(Dir.glob('/etc/puavoadmins/skel/*'), new_home_dir)
+      FileUtils.chown_R(uid_number, PUAVOADMINS_GID, new_home_dir)
+      File.rename(new_home_dir, home_dir)
+    ensure
+      FileUtils.rm_rf(new_home_dir)
+    end
+  end
+
+end
+
+def lock_org_json(type)
+  File.open(ORG_JSON_LOCK_FILEPATH) do |lockfile|
+    unless lockfile.flock(type) then
+      raise Error.new 'failed to obtain a lock'
+    end
+    yield
+  end
+end
+
+def read_org_json()
+  ## Ensure no one (of our friends, its only advisory locking after
+  ## all) is modifying ORG_JSON_FILEPATH while we read it by blocking
+  ## until it is read-safe. Without locking, in the best case
+  ## scenario, we could get random parse errors if some one is
+  ## updating it while we read it. In the worst case scenario, we
+  ## would get valid but corrupted data.
+  lock_org_json(File::LOCK_SH) do
+    json_string = '{}'
+
+    if File.exists?(ORG_JSON_FILEPATH)
+      system('/usr/lib/puavoadmins-validate-orgjson', ORG_JSON_FILEPATH)
+      unless $?.success?
+        raise Error.new 'the current org.json is invalid'
+      end
+      json_string = File.read(ORG_JSON_FILEPATH, :external_encoding => 'utf-8')
+    end
+
+    JSON.parse(json_string)
+  end
+end
+
+def collect_admins(org_json)
+  return {} unless org_json.has_key? 'owners'
+
+  admins = {}
+  org_json['owners'].each do |owner|
+    admin = owner_to_admin(owner)
+    username = admin[:username]
+    admins[username] = admin
+  end
+  admins
+end
+
+def diff_admins(old_admins, new_admins)
+  old_usernames = Set.new(old_admins.keys)
+  new_usernames = Set.new(new_admins.keys)
+  dels, news, olds = [old_usernames - new_usernames,
+                      new_usernames - old_usernames,
+                      old_usernames & new_usernames]
+
+  has_changes = false
+
+  if !dels.empty?
+    has_changes = true
+    puts "Removed Puavo administrators:"
+    dels.each do |username|
+      puts color_red "  #{username}"
+    end
+    puts
+  end
+
+  if !news.empty?
+    has_changes = true
+    puts "New Puavo administrators:"
+    new_admins.each_value do |admin|
+      next unless news.include? admin[:username]
+      puts color_green "  #{admin[:username]}"
+      puts color_green "    uid                 : #{admin[:uid]}"
+      puts color_green "    SSH key fingerprint : #{admin[:ssh_public_key_fingerprint]}"
+    end
+    puts
+  end
+
+  if !olds.empty?
+    mods = olds.select { |u| old_admins[u] != new_admins[u] }
+    if !mods.empty?
+      has_changes = true
+      puts "Updated Puavo administrators:"
+      mods.each do |username|
+        puts "  #{username}"
+        old_admin = old_admins[username]
+        new_admin = new_admins[username]
+
+        old_uid = old_admin[:uid]
+        new_uid = new_admin[:uid]
+        if old_uid != new_uid
+          puts "    uid                 < #{color_red(old_uid)}"
+          puts "                        > #{color_green(new_uid)}"
+        end
+
+        old_ssh = old_admin[:ssh_public_key_fingerprint]
+        new_ssh = new_admin[:ssh_public_key_fingerprint]
+        if old_ssh != new_ssh
+          puts "    SSH key fingerprint < #{color_red(old_ssh)}"
+          puts "                        > #{color_green(new_ssh)}"
+        end
+      end
+      puts
+    end
+  end
+
+  has_changes
+
+end
+
+def update_org_json(new_org_json)
+  Tempfile.open("#{ORG_JSON_FILEPATH}.tmp") do |tmpfile|
+    tmpfile.write(new_org_json.to_json())
+    tmpfile.chmod(0644)
+    tmpfile.close
+
+    system('/usr/lib/puavoadmins-validate-orgjson', tmpfile.path)
+    unless $?.success?
+      raise Error.new 'the new org.json is invalid'
+    end
+
+    old_org_json = read_org_json()
+
+    old_admins = collect_admins(old_org_json)
+    new_admins = collect_admins(new_org_json)
+
+    has_changes = diff_admins(old_admins, new_admins)
+
+    return false unless has_changes
+    return false unless agree('Accept these changes to local Puavo administrators? [yes/no] ')
+
+    Timeout::timeout(5) do
+      lock_org_json(File::LOCK_EX) do
+        File.rename(tmpfile.path, ORG_JSON_FILEPATH)
+      end
+    end
+  end
+  true
+end
+
+opts = GetoptLong.new(
+  ['--help', '-h', GetoptLong::NO_ARGUMENT],
+  ['--no-create-homes', GetoptLong::NO_ARGUMENT],
+)
+
+do_create_homes = true
+
+opts.each do |opt, arg|
+  case opt
+  when '--help'
+    puts HELP
+    exit(0)
+  when '--no-create-homes'
+    do_create_homes = false
+  end
+end
+
+if ARGV.length != 0 then
+  STDERR.puts("ERROR: invalid number of arguments (#{ARGV.length}), expected 0")
+  exit 1
+end
+
+if Process::UID.eid != 0
+  STDERR.puts('ERROR: this command must be run as root')
+  exit(1)
+end
+
+new_org_json = PuavoBS.get_org_json()
+
+begin
+  update_org_json(new_org_json) and do_create_homes and mkhomes(new_org_json)
+rescue Error => e
+  STDERR.puts("ERROR: #{e.message}")
+  exit(1)
+end

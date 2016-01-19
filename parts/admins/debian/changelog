@@ -1,0 +1,105 @@
+puavoadmins (0.2.12) trusty; urgency=medium
+
+  * New release
+  * In update_org_json, tmpfile should be closed (or flushed) before it
+    is read, otherwise /usr/lib/puavoadmins-validate-orgjson might fail
+    (with an empty file or some such).  This closes the file, which I
+    think is more correct, but doing "tmpfile.flush" should be enough as
+    well.  See http://stackoverflow.com/questions/6685724/weird-ruby-io-
+    with-tempfile, for example.
+  * Git(6c0ab5760588af3bf208f67d70a62997919249b9)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 01 Oct 2015 11:12:49 +0300
+
+puavoadmins (0.2.11) trusty; urgency=medium
+
+  * New release
+  * Create /etc/puavoadmins/skel during install
+  * Mention /etc/puavoadmins/skel in --help
+  * Copy files from /etc/puavoadmins/skel to new home dirs
+  * Git(86d9c306cb288b493d22c0188e98f046fb8e95f1)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 16 Mar 2015 15:01:33 +0200
+
+puavoadmins (0.2.10) trusty; urgency=medium
+
+  * New release
+  * Make confirmation question more explicit
+  * Make output vertically more compact
+  * Git(6c1fabba65c8bb94668179cb6b66f1d510d6c054)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 12 Mar 2015 13:43:51 +0200
+
+puavoadmins (0.2.9) trusty; urgency=medium
+
+  * New release
+  * Improve puavoadmins-update --help
+  * Display help description at the beginning of the file
+  * Add --no-create-homes to puavoadmins-update
+  * Add --help to puavoadmins-update
+  * Use global constant gid 555
+  * Git(4a8e126c2a1562281f4a57f060dcb68532429f25)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 11 Mar 2015 11:35:43 +0200
+
+puavoadmins (0.2.8) trusty; urgency=medium
+
+  * New release
+  * Create home dirs only if org.json was updated
+  * Refactor update script
+  * Use Tempfile
+  * Raise exceptions instead of exiting from the middle of functions
+  * Refuse to update if not run as root
+  * Combine org.json updating and home dir creation
+  * Assume org.json is UTF-8 encoded
+  * Provide a well-known lock file for org.json access synchronization
+  * Obtain read-lock before reading org.json during update
+  * Timeout org.json write after 5secs
+  * Minimize org.json rw-lock duration
+  * Fix an error message
+  * Require read-locking before reading org.json
+  * Add script for validating PAM_USERs
+  * Git(3fa57dd83ea0cfc8905fb81282462f6a3bb8eaa9)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 11 Mar 2015 09:50:17 +0200
+
+puavoadmins (0.2.7) trusty; urgency=medium
+
+  * New release
+  * Answer yes to mk-build-deps install questions
+  * Git(82e65080000efc96d851bd4e24ef457132d758fb)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 09 Mar 2015 10:16:16 +0200
+
+puavoadmins (0.2.6) trusty; urgency=medium
+
+  * New release
+  * Sort debian dependencies in alphabetical order
+  * Sort .PHONY targets in alphabetical order
+  * ci.sh: fix typo
+  * Git(6945d3e68b8b0f2e1f7ab6f1eaa270b215d5f377)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 09 Mar 2015 10:11:24 +0200
+
+puavoadmins (0.2.5) trusty; urgency=medium
+
+  * New release
+  * Add ruby-bundler to build dependencies
+  * Remove equivs and devscripts from build dependencies
+  * ci.sh: siplify building
+  * Git(39522a84bc8f90f186e5b2560bbd9ff86965a4f3)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 09 Mar 2015 10:06:47 +0200
+
+puavoadmins (0.2.4) trusty; urgency=medium
+
+  * New release
+  * Git(b47b7a8ed037d3d1000705aa70914b73190c75a9)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 09 Mar 2015 09:56:04 +0200
+
+puavoadmins (0.2.3) precise; urgency=low
+
+  * Initial release.
+
+ -- Opinsys Developers <dev@opinsys.fi>  Mon, 09 Mar 2015 09:23:31 +0200

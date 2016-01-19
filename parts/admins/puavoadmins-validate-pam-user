@@ -1,0 +1,46 @@
+#!/usr/bin/env ruby1.9.1
+# -*- coding: utf-8 -*-
+
+## Copyright © 2015 Opinsys
+##
+## This program is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 2 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+##
+
+## Standard library modules.
+require 'json'
+
+if ARGV.length != 0
+  STDERR.puts("ERROR: invalid number of arguments (#{ARGV.length}), expected 0")
+  exit 1
+end
+
+if !ENV.has_key? 'PAM_USER'
+  STDERR.puts('ERROR: PAM_USER is undefined')
+  exit 1
+end
+
+## Ensure no one is modifying the orgjson while we read it by blocking
+## until it is read-safe.
+if !File.new('/var/lib/puavoadmins/org.json.lock').flock(File::LOCK_SH) then
+  STDERR.puts('ERROR: failed to obtain a read lock')
+  exit 1
+end
+
+org_json_file = File.read('/etc/puavo/org.json', :external_encoding => 'utf-8')
+
+JSON.parse(org_json_file)['owners'].each do |owner|
+  exit 0 if owner['username'] == ENV['PAM_USER']
+end
+
+exit 1
