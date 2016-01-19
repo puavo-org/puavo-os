@@ -1,0 +1,559 @@
+#!/usr/bin/ruby
+# -*- coding: utf-8 -*-
+#
+# puavo-sharedir-manager handles permissions to shared directories.
+# Schools and groups are looked up from LDAP and a directory hierarchy
+# under /home/share/.share is created.  A set of symbolic link hierarchies
+# is created for each supported language under its own directory.
+#
+# Permissions are kept under control with inotify and ACLs.
+# Every time the script is started, fresh list of schools/groups
+# is looked up from LDAP, and all file permissions are fixed.
+# The inotify-eventloop is exited once a night and a "restart" is simulated,
+# where LDAP is looked up again and all file permissions are checked again.
+# Normally all file permissions should be fixed right away as file events
+# occur.
+
+require 'etc'
+require 'find'
+require 'open3'
+require 'pathname'
+require 'puavo/sharedir/ldap'
+require 'puavo/sharedir/shared_directories'
+require 'rb-inotify'
+require 'syslog'
+
+Languages             = %w(en fi sv)
+ShareDirBase          = '/home/share'
+ShareDirBaseFileStore = "#{ ShareDirBase }/.share"
+
+class PuavoShareSpec
+  attr_accessor :automatic_acls,
+	        :group,
+	        :readgroups,
+	        :school,
+	        :sharepath,
+	        :writegroups
+
+  def initialize(*args)
+    spec = *args
+
+    @automatic_acls = spec[:automatic_acls]
+    @group          = spec[:group]
+    @readgroups     = spec[:readgroups]
+    @school         = spec[:school]
+    @sharepath      = spec[:sharepath]
+    @writegroups    = spec[:writegroups]
+  end
+
+  def linkpath(lang)
+    basename   = PuavoSharedDirectories.dirname('base', lang)
+    schoolpart = PuavoSharedDirectories.detox(@school.cn)
+    grouppart  = \
+      @group ? PuavoSharedDirectories.detox(@group.displayName) \
+             : PuavoSharedDirectories.dirname(File.basename(@sharepath), lang)
+
+    [ ShareDirBase, basename, schoolpart, grouppart ].join('/')
+  end
+end
+
+class PuavoShare
+  def initialize(sharedirspec)
+    @spec = sharedirspec
+
+    @wanted_directory_acls = make_wanted_acls('rwx', 'r-x', true)
+    @wanted_file_acls      = make_wanted_acls('rw-', 'r--', false)
+  end
+
+  def automatic_acls
+    @spec.automatic_acls
+  end
+
+  def create_sharedir
+    self.class.mkdir(@spec.sharepath, 0)
+
+    Languages.each do |lang|
+      link_path = @spec.linkpath(lang)
+
+      begin
+        PuavoShare.mkdir(File.dirname(link_path), 0755)
+
+        prev_linktarget = File.readlink(link_path) rescue ''
+	if @spec.sharepath != prev_linktarget then
+	  self.class.delete(link_path)
+	  link_dir = Pathname(link_path).dirname()
+	  link_dest = Pathname(@spec.sharepath).relative_path_from(link_dir)
+	  File.symlink(link_dest, link_path)
+          Syslog.notice('%s',
+	    "Made link from '#{ link_path }' to '#{ @spec.sharepath }'.")
+        end
+      end 
+    end
+  end
+
+  def self.delete(path)
+    # delete path in a somewhat safe way
+    if not path.match(/^#{ ShareDirBase }/)
+      raise "An internal error, trying to delete '#{ path }'"
+    end
+    begin
+      File.delete(path)
+    rescue Errno::ENOENT
+    end
+  end
+
+  def fix_acls(path)
+    return unless @spec.automatic_acls
+
+    begin
+      actual_acls = getfacl(path)
+    rescue SignalException
+      raise
+    rescue Exception => e
+      Syslog.warning('%s', e.message)
+      return
+    end
+
+    wanted_acls = get_wanted_acls(path)
+
+    # getfacl() returns empty in case of symbolic links, only change their
+    # ownerships (permissions on symbolic links do not matter).
+    if actual_acls.empty?
+      begin
+        if File.symlink?(path)
+	  lstat = File.lstat(path)
+	  if lstat.uid != 0 or lstat.gid != 0
+	    File.lchown(0, 0, path)
+	  end
+        end
+      rescue
+      end
+      return
+    end
+
+    # Only change things if change is needed.
+    return if wanted_acls == actual_acls
+
+    reset_acls(path, wanted_acls)
+  end
+
+  def fix_acls_recursively(path=nil)
+    return unless @spec.automatic_acls
+
+    Find.find(path || @spec.sharepath) { |path| fix_acls(path) }
+  end
+
+  def getfacl(path)
+    acls = ''
+    cmd = [ 'getfacl', '-P', '-p', '-n', '--', path ]
+    Open3.popen3(*cmd) do |stdin, stdout, stderr|
+      acls = stdout.readlines.select { |l| not l =~ /^# file:/ }.join('')
+      errormsg = stderr.read
+      if not errormsg.empty?
+	raise "Could not get ACLs for #{ path }: #{ errormsg }"
+      end
+    end
+    normalize_acl(acls)
+  end
+
+  def get_wanted_acls(filename)
+    if File.directory?(filename)
+      @wanted_directory_acls
+    else
+      @wanted_file_acls
+    end
+  end
+
+  def make_wanted_acls(rwmode, romode, add_defaults)
+    return unless @spec.automatic_acls
+
+    wgids = @spec.writegroups.map { |g| Etc.getgrnam(g).gid }
+    rgids = @spec.readgroups .map { |g| Etc.getgrnam(g).gid }
+
+    acl_array = [
+      "# owner: 0",
+      "# group: 0",
+      "user::#{ rwmode }",
+      'group::---',
+      wgids.map { |group| "group:#{ group }:#{ rwmode }" },
+      rgids.map { |group| "group:#{ group }:#{ romode }" },
+      "mask::#{ rwmode }",
+      'other::---',
+
+      add_defaults ? [
+        'default:user::rwx',
+        'default:group::---',
+        wgids.map { |group| "default:group:#{ group }:#{ rwmode }" },
+        rgids.map { |group| "default:group:#{ group }:#{ romode }" },
+	"default:mask::#{ rwmode }",
+	'default:other::---',
+      ] : nil,
+    ].compact.flatten
+
+   normalize_acl(acl_array.map { |l| "#{ l }\n" }.join(''))
+  end
+
+  def self.mkdir(path, mode)
+    begin
+      Dir.mkdir(path, mode)
+      Syslog.notice('%s', "Created directory #{ path }.")
+    rescue Errno::EEXIST
+    end
+  end
+
+  def normalize_acl(acls)
+    acls.split("\n").sort.join("\n")
+  end
+
+  def parent_of?(path)
+    path.to_s[0, @spec.sharepath.length] == @spec.sharepath
+  end
+
+  def reset_acls(filename, wanted_acls)
+    raise 'This should never be called unless automatic_acls is set' \
+      unless @spec.automatic_acls
+
+    if parent_of?(filename)
+      begin
+	uid = File.stat(filename).uid
+	Syslog.info('%s', "Reset ACLs for #{ filename } (uid=#{ uid }).")
+
+        # First set ACLs and then change owner to root.  This is to allow
+        # "cp -R $src $target" and similar to work, so that at every moment
+        # a user has a write permission to directories.
+	setfacl(filename, wanted_acls)
+	File.chown(0, 0, filename)
+
+      rescue Errno::ENOENT
+      rescue SignalException
+        raise
+      rescue Exception => e
+	msg = "Error in resetting permissions for #{ filename }: " \
+	      + "#{ e.message }: #{ e.backtrace.inspect }."
+        Syslog.err('%s', msg)
+      end
+    else
+      msg = "Internal error: called reset_acls() with path " \
+	    + "#{ filename } that is not under #{ @spec.sharepath }."
+      Syslog.warning('%s', msg)
+    end
+  end
+
+  def setfacl(path, wanted_acls)
+    # "-P" is good and works (despite the manual page that says otherwise).
+    # We want this to avoid changing the permissions of files symbolic links
+    # may point to.
+    cmd = [ 'setfacl', '-P', '--set-file=-', '--', path ]
+    Open3.popen3(*cmd) do |stdin, stdout, stderr|
+      stdin.write(wanted_acls)
+      stdin.close
+      errormsg = stderr.read
+      if not errormsg.empty?
+	raise "Could not set ACLs for #{ path }: #{ errormsg }"
+      end
+    end
+  end
+end
+
+class ShareBox
+  def initialize(admins)
+    @admin_groupnames = admins.map { |group| group.cn }
+    @shares           = {}
+  end
+
+  def add_dir(spec)
+    # check directory mode to allow disabling directories (chmod 000)
+    begin
+      return if (File.stat(spec.sharepath).mode & 0x777) == 0
+    rescue Errno::ENOENT
+      # if directory does not exist, it is enabled (it should be created)
+    end
+
+    spec_with_admin_writes             = spec.clone
+    spec_with_admin_writes.writegroups = @admin_groupnames | spec.writegroups
+
+    share = PuavoShare.new(spec_with_admin_writes)
+
+    share.create_sharedir
+    @shares[spec.sharepath] = share
+  end
+
+  def fix_acls(path)
+    @shares.values.each do |share|
+      if share.parent_of?(path)
+        # in case of a directory, it might have been moved from another
+	# directory, in which case we need to traverse it
+        if File.directory?(path)
+          share.fix_acls_recursively(path)
+        else
+          share.fix_acls(path)
+        end
+      end
+    end
+  end
+
+  def fix_acls_recursively
+    Syslog.notice('%s', 'Fixing permissions recursively.')
+    @shares.values.each do |share|
+      share.fix_acls_recursively
+    end
+  end
+
+  def paths_with_automatic_acls
+    @shares.map { |path, share| share.automatic_acls ? path : nil }.compact
+  end
+end
+
+class PuavoGroup
+  def initialize(ldapentry)
+    @ldapentry = ldapentry
+  end
+
+  def first(attr)
+    Array(@ldapentry[attr]).first \
+      or raise "Attribute '#{ attr }' is missing from an ldap entry"
+  end
+
+  def cn               ; first('cn'               ); end
+  def displayName      ; first('displayName'      ); end
+  def preferredLanguage; first('preferredLanguage'); end
+
+  def puavoId
+    puavoId = first('puavoId')
+    raise "PuavoId is not numeric" unless puavoId.match(/^\d+$/)
+    puavoId
+  end
+end
+
+class PuavoShareLDAP
+  def initialize
+    @puavoldap = PuavoLdap.new
+  end
+
+  def find_groups(filter)
+    groups = []
+    @puavoldap.search_with_baseprefix('ou=Groups', filter) do |entry|
+      groups << PuavoGroup.new(entry.to_hash)
+    end
+    groups
+  end
+
+  def find_groups_by_school(school)
+    schoolfilter = "(&(objectClass=puavoSchool)(cn=#{ school.cn }))"
+    schooldn     = ''
+    @puavoldap.search_with_baseprefix('ou=Groups', schoolfilter) do |entry|
+      schooldn = entry.dn
+    end
+
+    find_groups("(&(objectClass=puavoEduGroup)(puavoSchool=#{ schooldn }))")
+  end
+
+  def find_locale(school)
+    school_language = (school.preferredLanguage rescue nil)
+
+    if school_language
+      return school_language
+    else
+      @puavoldap.search('(objectClass=puavoEduOrg)') do |entry|
+        return Array(entry['preferredLanguage']).first
+      end
+    end
+
+    raise "No language can be found for '#{ Array(school['cn']).first }'"
+  end
+
+  def find_school_groups()
+    find_groups('(objectClass=puavoSchool)')
+  end
+
+  def find_teacher_groups()
+    groups = find_groups('(objectClass=puavoEduGroup)')
+    # XXX we need something smarter here than regexp
+    groups.select { |group| group.cn =~ /(-ope|opettajat)/ }
+  end
+
+  def unbind
+    @puavoldap.unbind
+  end
+end
+
+class Control
+  def initialize_shares_from_ldap
+    shareldap = PuavoShareLDAP.new
+
+    admins   = shareldap.find_teacher_groups()
+    @schools = shareldap.find_school_groups()
+
+    @box = ShareBox.new(admins)
+
+    # make the share base directories
+    PuavoShare.mkdir(ShareDirBase,          0755)
+    PuavoShare.mkdir(ShareDirBaseFileStore, 0755)
+    Languages.each do |lang|
+      basedir = PuavoSharedDirectories.dirname('base', lang) 
+      PuavoShare.mkdir("#{ ShareDirBase }/#{ basedir }", 0755)
+    end
+
+    @schools.each do |school|
+      add_directory(shareldap, school)
+    end
+
+    shareldap.unbind
+  end
+
+  def add_directory(shareldap, school)
+    school_sharedir = "#{ ShareDirBaseFileStore }/#{ school.puavoId }"
+
+    PuavoShare.mkdir(school_sharedir, 0755)
+
+    Syslog.notice('%s',
+      "Managing directory for school '#{ school.cn }' (#{ school_sharedir }).")
+
+    ss_tmpl = PuavoShareSpec.new(:automatic_acls => true,
+				 :group          => nil,
+				 :readgroups     => [],
+				 :school         => school,
+				 :sharepath      => nil,
+				 :writegroups    => [])
+
+
+      ss                = ss_tmpl.clone
+      ss.automatic_acls = false
+      ss.sharepath      = "#{ school_sharedir }/programs"
+    @box.add_dir(ss)
+
+      ss            = ss_tmpl.clone
+      ss.readgroups = [ school.cn ]
+      ss.sharepath  = "#{ school_sharedir }/material"
+    @box.add_dir(ss)
+
+      ss             = ss_tmpl.clone
+      ss.sharepath   = "#{ school_sharedir }/all"
+      ss.writegroups = [ school.cn ]
+    @box.add_dir(ss)
+
+    school_groups = shareldap.find_groups_by_school(school)
+
+    school_groups.each do |group|
+      group_sharedir \
+	= "#{ ShareDirBaseFileStore }/#{ school.puavoId }/#{ group.puavoId }"
+
+      ss             = ss_tmpl.clone
+      ss.group       = group
+      ss.sharepath   = group_sharedir
+      ss.writegroups = [ group.cn ]
+            
+      @box.add_dir(ss)
+    end
+  end
+
+  def fix_acls_recursively
+    @box.fix_acls_recursively
+  end
+
+  def run_notifier(max_seconds)
+    max_time     = Time.new.to_i + max_seconds
+    seconds_left = max_seconds
+
+    begin
+      notifier = INotify::Notifier.new
+      begin
+	@box.paths_with_automatic_acls.each do |monitor_path|
+	  events = [
+	    :create,
+	    :dont_follow,
+	    :modify,
+	    :moved_to,
+	    :move_self,
+	    :recursive,
+	  ]
+
+	  notifier.watch(monitor_path, *events) do |event|
+	    path = event.absolute_name
+
+	    # :recursive does not work reliably due to some race condition,
+	    # so we must help it a bit for freshly created directories
+	    if File.directory?(path)
+	      notifier.watch(path, *events)
+	    end
+
+	    Syslog.info('%s', "An event occurred on #{ path }, checking ACLs.")
+	    @box.fix_acls(path)
+	  end
+	end
+
+	while IO.select([ notifier.to_io ], [], [], seconds_left)
+	  notifier.process
+	  seconds_left = [ max_time - Time.new.to_i, 0 ].max
+	  break if seconds_left == 0
+	end
+      ensure
+	# XXX notifier.close did not work in version 0.7.0-3,
+	# XXX hopefully this does the same
+	notifier.to_io.close
+      end
+    rescue SignalException
+      raise
+    rescue Exception => e
+      msg = "Error with inotifier: #{ e.message }: #{ e.backtrace.inspect }." \
+	    + '  Check out the limit in /proc/sys/fs/inotify/max_user_watches.'
+      Syslog.err('%s', msg)
+    end
+  end
+
+  def run_notifier_but_breakout_at_nighttime
+    # Run run_notifier for (25 - Time.new.hour) hours, so we will break out
+    # to searching LDAP and fixing all file permissions once a night,
+    # somewhere between one and two o'clock.
+    Syslog.debug('%s', 'Starting notifier.')
+    run_notifier((25 - Time.new.hour) * 60 * 60)
+    Syslog.debug('%s', 'Broke out of notifier.')
+  end
+end
+
+loop do
+  Syslog.open(File.basename($0), Syslog::LOG_DAEMON \
+				 | Syslog::LOG_CONS \
+				 | Syslog::LOG_PERROR \
+				 | Syslog::LOG_PID)
+
+  exception_msg = nil
+  begin
+    control = Control.new
+    control.initialize_shares_from_ldap
+
+    notifier_pid = fork { control.run_notifier_but_breakout_at_nighttime }
+    control.fix_acls_recursively
+    Process.waitpid(notifier_pid)
+
+  rescue LDAP::ResultError => e
+    exception_msg = \
+      "Error in accessing LDAP: #{ e.message }: #{ e.backtrace.inspect }."
+  rescue SignalException
+    Syslog.notice('%s', 'Received SignalException, terminating.')
+    exit 0
+  rescue Exception => e
+    exception_msg = \
+      "Unknown error: #{ e.message }: #{ e.backtrace.inspect }."
+  end
+
+  if exception_msg
+    Syslog.err('%s', exception_msg)
+    sleep 60	# wait a while in case errors just repeat and repeat...
+  end
+
+  Syslog.close
+end
+
+# tests:
+#
+# rm -rf 1; \
+# for i in $(seq 100); do \
+#   FOO=""; \
+#   for j in $(seq $i); do \
+#     FOO="$FOO$j/"; \
+#   done; \
+#   DATA=$(getfacl $(dirname $FOO)); \
+#   mkdir -p $FOO || { echo -e -n "$DATA\n\n"; getfacl $(dirname $FOO); \
+#   break; }; \
+# done
