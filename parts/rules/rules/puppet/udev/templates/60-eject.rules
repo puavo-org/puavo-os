@@ -1,0 +1,8 @@
+# Fix umount problems when optical media is ejected by pressing the
+# hardware eject button.
+
+# Without this fix, when optical media is HW-ejected, at least its GVFS
+# mount remains umounted and when optical media is inserted again,
+# autostart feature does not work.
+
+ENV{DISK_EJECT_REQUEST}=="1", RUN+="/usr/bin/eject %k"

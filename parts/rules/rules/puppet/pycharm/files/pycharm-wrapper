@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+if [ ! -d "${HOME}/.PyCharm30" ]; then
+   mkdir -p "${HOME}/.PyCharm30/config/options"
+   cp -a /opt/pycharm/opinsys-default-options/* \
+      "${HOME}/.PyCharm30/config/options"
+fi
+
+/opt/pycharm/bin/pycharm.sh

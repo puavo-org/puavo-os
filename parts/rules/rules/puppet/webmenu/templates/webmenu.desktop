@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Name=Webmenu
+Comment=A desktop menu application
+Exec=puavo-webmenu --first-run --log
+Terminal=false
+Type=Application
+Icon=webmenu
+Categories=Utility;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Phase=Initialization

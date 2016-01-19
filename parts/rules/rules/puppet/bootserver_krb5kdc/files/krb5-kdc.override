@@ -1,0 +1,13 @@
+start on started slapd
+stop on stopped slapd
+
+pre-start script
+  # Exit if the package is not installed.
+  [ -x /usr/sbin/krb5kdc ] || { stop; exit 0; }
+
+  ## Delay the start until slapd is listening at ldapi:///
+  for i in $(seq 10); do
+    [ -S /run/slapd/ldapi ] || { sleep 1; continue; }
+    break
+  done
+end script

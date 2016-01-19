@@ -1,0 +1,6 @@
+server {
+    listen 8089;
+    server_name localhost;
+    root /var/cache/munin/www;
+    autoindex on;
+}

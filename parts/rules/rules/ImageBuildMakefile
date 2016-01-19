@@ -1,0 +1,108 @@
+IMAGES_DIR        = /opt/ltsp/images
+RDIFFS_DIR        = /opt/ltsp/images/rdiffs
+CKSUMS_DIR        = ${IMAGES_DIR}/.cksums
+MIRROR_DIR        = ${IMAGES_DIR}/mirror
+SIGNATURES_DIR    = ${IMAGES_DIR}/.signatures
+RDIFF_TARGET_DIRS = 
+
+ALL_DIRS = ${CKSUMS_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs \
+           ${RDIFF_TARGET_DIRS} ${SIGNATURES_DIR}
+
+CHROOT_TARGETS = apply-buildrules chroot cleanup-chroot image \
+                 install-packages update-chroot
+
+COMMON_TARGETS = all-new-images all-rdiffs cksums cleanup-mirror update-mirror
+
+IMAGE_FILES = 
+
+IMAGE_SIGNATURE_FILES = $(patsubst %.img,%.rdiff_signature,${IMAGE_FILES})
+IMAGE_SIGNATURE_FILES_AP \
+  = $(addprefix ${SIGNATURES_DIR}/,${IMAGE_SIGNATURE_FILES})
+
+IMAGE_SERIES = ltsp-builder-trusty-i386 ltsp-desktop-trusty-i386 ltsp-thinclient-precise-i386 ltsp-wirelessaccesspoint-trusty-i386
+
+IMAGE_SERIES_RDIFF_TARGETS = 
+
+RDIFF_FILES_AP = 
+RDIFF_FILES = $(notdir ${RDIFF_FILES_AP})
+
+CKSUM_FILES = $(addsuffix .cksum,${IMAGE_FILES}) \
+              $(addsuffix .cksum,${RDIFF_FILES})
+CKSUM_FILES_AP = $(addprefix ${CKSUMS_DIR}/,${CKSUM_FILES})
+
+MIRROR_DIR_IMAGES = $(addprefix ${MIRROR_DIR}/,${IMAGE_FILES})
+MIRROR_DIR_RDIFFS = $(addprefix ${MIRROR_DIR}/rdiffs/,${RDIFF_FILES})
+
+vpath %.img   ${IMAGES_DIR}
+vpath %.rdiff ${RDIFF_TARGET_DIRS}
+
+help:
+	@echo "Available image series targets are:"
+	@echo "  ${IMAGE_SERIES}" | fmt
+	@echo
+	@echo "Available chroot targets are:"
+	@echo "  ${CHROOT_TARGETS}" | fmt
+	@echo
+	@echo "Available rdiff series targets are:"
+	@echo "  ${IMAGE_SERIES_RDIFF_TARGETS}" | fmt
+	@echo
+	@echo "Available common targets are:"
+	@echo "  ${COMMON_TARGETS}" | fmt
+
+.PHONY: all-new-images
+all-new-images: ${IMAGE_SERIES}
+
+.PHONY: all-rdiffs
+all-rdiffs: ${RDIFF_FILES_AP}
+
+.PHONY: cksums
+cksums: ${IMAGES_DIR}/CKSUMS
+
+.PHONY: update-mirror
+update-mirror: ${MIRROR_DIR}/CKSUMS ${MIRROR_DIR_IMAGES} ${MIRROR_DIR_RDIFFS}
+
+.PHONY: cleanup-mirror
+cleanup-mirror:
+	@if [ -d "${MIRROR_DIR}" ]; then 	  rm -rf ${MIRROR_DIR}/*; 	else 	  echo There is no mirror directory ${MIRROR_DIR}; 	fi
+
+.PHONY: ${CHROOT_TARGETS}
+${CHROOT_TARGETS}:
+	sudo /usr/lib/puavo-image-tools/puavo-imgbuild-tool --$@
+
+.PHONY: ${IMAGE_SERIES}
+${IMAGE_SERIES}: images.json
+	sudo puavo-build-image --config-target $@ --images-config $<
+
+${ALL_DIRS}:
+	mkdir -p $@
+
+${CKSUMS_DIR}/%.img.cksum: %.img | ${CKSUMS_DIR}
+	cksum $< > $@.tmp
+	mv $@.tmp $@
+
+${CKSUMS_DIR}/%.rdiff.cksum: %.rdiff | ${CKSUMS_DIR}
+	cksum $< > $@.tmp
+	mv $@.tmp $@
+
+${IMAGES_DIR}/CKSUMS: ${CKSUM_FILES_AP} | ${MIRROR_DIR}
+	awk '{ "basename " $$3 | getline $$3; print }' ${CKSUM_FILES_AP} > $@
+
+${MIRROR_DIR}/CKSUMS: ${IMAGES_DIR}/CKSUMS
+	cp $< $@
+
+# link ${MIRROR_DIR_IMAGES}
+${MIRROR_DIR}/%.img: %.img | ${MIRROR_DIR}
+	@ln -f $< $@
+
+# link ${MIRROR_DIR_RDIFFS}
+${MIRROR_DIR}/rdiffs/%.rdiff: %.rdiff | ${MIRROR_DIR}/rdiffs
+	@ln -f $< $@
+
+${SIGNATURES_DIR}/%.rdiff_signature: %.img | ${SIGNATURES_DIR}
+	rdiff signature $< $@
+
+#
+# rdiff targets
+#
+
+

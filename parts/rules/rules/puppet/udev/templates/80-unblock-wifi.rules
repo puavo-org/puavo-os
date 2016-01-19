@@ -1,0 +1,1 @@
+KERNEL=="eth*|ath*|wlan*[0-9]|ra*|sta*", SUBSYSTEM=="net", ACTION=="add|change" RUN+="/usr/sbin/rfkill unblock wifi"

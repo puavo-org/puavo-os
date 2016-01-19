@@ -1,0 +1,613 @@
+---
+type: menu
+name:
+  en: Categories
+  fi: Kategoriat
+  sv: Kategorier
+  de: Kategorie
+items:
+- type: menu
+  id: tools
+  name:
+    en: Tools
+    fi: Apuohjelmat
+    sv: Verktyg
+    de: Werkzeuge
+  osIcon: applications-accessories
+  items:
+  - source: eleet
+    type: desktop
+  - source: gcalctool
+    type: desktop
+  - source: gedit
+    type: desktop
+  - source: gucharmap
+    type: desktop
+  - source: onboard
+    type: desktop
+  - source: brasero
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - source: sound-juicer
+    type: desktop
+  - source: gnome-search-tool
+    type: desktop
+  - source: file-roller
+    type: desktop
+  - source: gnome-terminal
+    type: desktop
+  - source: seahorse
+    type: desktop
+  - source: system-config-printer
+    type: desktop
+  - source: vino-preferences
+    type: desktop
+  - source: gnome-screenshot
+    type: desktop
+  - source: simplescreenrecorder
+    type: desktop
+    inactiveByDeviceType: thinclient
+- type: menu
+  name:
+    en: Graphics
+    fi: Grafiikka
+    sv: Grafik
+    de: Grafik
+  description:
+    en: Graphics applications
+    fi: Piirto- ja kuvankäsittelyohjelmia
+    sv: Ritprogram
+    de: Grafikprogramme
+  osIcon: applications-graphics
+  items:
+  - source: kolourpaint
+    type: desktop
+  - source: tuxpaint
+    type: desktop
+  - source: mypaint
+    type: desktop
+  - source: gimp
+    type: desktop
+  - source: pinta
+    type: desktop
+  - source: gthumb
+    type: desktop
+  - source: eog
+    type: desktop
+  - source: shotwell
+    type: desktop
+  - source: f-spot
+    type: desktop
+  - source: inkscape
+    type: desktop
+  - source: picasa
+    type: desktop
+  - source: simple-scan
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - source: xsane
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - source: blender
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - source: photofilmstrip
+    type: desktop
+- type: menu
+  name:
+    en: Internet
+  description:
+    en: Internet-applications
+    fi: Internet-sovellukset
+    sv: Internet-program
+    de: Interent Programme
+  osIcon: applications-internet
+  items:
+  - source: firefox
+    type: desktop
+  - source: chromium-browser
+    type: desktop
+  - source: google-chrome
+    type: desktop
+  - source: thunderbird
+    type: desktop
+  - source: evolution
+    type: desktop
+  - source: pidgin
+    type: desktop
+  - source: gftp
+    type: desktop
+  - source: liferea
+    type: desktop
+  - source: googleearth
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - source: google-earth
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - source: skype
+    type: desktop
+  - source: empathy
+    type: desktop
+  - source: vinagre
+    type: desktop
+  - source: dropbox
+    type: desktop
+  - source: tsclient
+    type: desktop
+  - source: vmware-view-client
+    type: desktop
+  - source: VidyoDesktop
+    type: desktop
+- type: menu
+  name:
+    en: Programming
+    fi: Ohjelmointi
+    sv: Programmering
+    de: Programmierung
+  description:
+    en: " "
+    fi: Ohjelmointiympäristöjä
+    sv: " "
+    de: " "
+  osIcon: gnome-devel
+  items:
+  - source: tmcbeans
+    type: desktop
+  - source: arduino
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - source: fritzing
+    type: desktop
+  - source: Snap4Arduino
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - source: drracket
+    type: desktop
+  - source: enchanting
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - source: bluegriffon
+    type: desktop
+  - source: eclipse
+    type: desktop
+  - source: eric
+    type: desktop
+  - source: pycharm
+    type: desktop
+  - source: spe
+    type: desktop
+  - source: idle-python2.7
+    type: desktop
+  - source: idle-python3.4
+    type: desktop
+  - source: geany
+    type: desktop
+  - source: kturtle
+    type: desktop
+  - source: scratch
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - source: kompozer
+    type: desktop
+  - source: bluefish
+    type: desktop
+  - source: designer-qt4
+    type: desktop
+  - type: custom
+    name: Processing
+    command: /opt/processing/processing
+    osIconPath: /opt/processing/lib/icons/pde-48.png
+- type: menu
+  name:
+    en: Education
+    fi: Opetusohjelmat
+    sv: Undervisningsprogram
+    de: Bildung
+  description:
+    en: Educational applications
+    fi: Sovelluksia oppimisen tueksi
+    sv: Pedagogiska program
+    de: Bildungs Programme
+  osIcon: gnome-joystick
+  items:
+  - source: ekapeli
+    type: desktop
+    inactiveByDeviceType: thinclient
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+  - source: spelett
+    type: desktop
+    inactiveByDeviceType: thinclient
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+  - source: ekapeli-maahanmuuttaja
+    type: desktop
+    inactiveByDeviceType: thinclient
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+  - source: ekapeli-alku
+    type: desktop
+    inactiveByDeviceType: thinclient
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+  - source: gcompris
+    type: desktop
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+  - source: tuxmath
+    type: desktop
+    inactiveByDeviceType: thinclient
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+  - source: kbruch
+    type: desktop
+  - source: geogebra
+    type: desktop
+  - source: kmplot
+    type: desktop
+  - source: marble-qt
+    type: desktop
+  - source: kgeography
+    type: desktop
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+  - source: kanagram
+    type: desktop
+  - source: kwordquiz
+    type: desktop
+  - source: khangman
+    type: desktop
+  - source: ktouch
+    type: desktop
+  - source: celestia
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - source: stellarium
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - source: kstars
+    type: desktop
+  - source: step
+    type: desktop
+  - source: LoggerPro
+    type: desktop
+  - source: GlobiLab
+    type: desktop
+  - source: wxmaxima
+    type: desktop
+  - source: ghemical
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - source: avogadro
+    type: desktop
+  - source: kalzium
+    type: desktop
+  - source: mandelbulber
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - source: qgis
+    type: desktop
+- type: menu
+  name:
+    en: Office
+    fi: Toimisto
+    sv: Kontor
+    de: Büro
+  description:
+    en: Office applications
+    fi: Toimisto-ohjelmat
+    sv: Kontorsprogram
+    de: Büroprogramme
+  osIcon: applications-office
+  items:
+  - source: libreoffice-writer
+    type: desktop
+  - source: libreoffice-calc
+    type: desktop
+  - source: libreoffice-impress
+    type: desktop
+  - source: libreoffice-draw
+    type: desktop
+  - source: libreoffice-base
+    type: desktop
+  - source: libreoffice-math
+    type: desktop
+  - source: scribus
+    type: desktop
+  - source: vym
+    type: desktop
+  - source: cmaptools
+    type: desktop
+  - source: acroread
+    type: desktop
+  - source: okular
+    type: desktop
+  - source: evince
+    type: desktop
+  - source: calibre-gui
+    type: desktop
+  - source: tellico
+    type: desktop
+  - source: Open-Sankore
+    type: desktop
+  - source: primusclient
+    type: desktop
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+  - source: dia
+    type: desktop
+  - source: tilitin
+    type: desktop
+  - source: t-lasku
+    type: desktop
+- type: menu
+  name:
+    en: Audio and video
+    fi: Ääni ja video
+    sv: Ljud och Video
+    de: Audio und Video
+  osIcon: applications-multimedia
+  items:
+  - source: gnome-sound-recorder
+    type: desktop
+  - source: audacity
+    type: desktop
+  - source: goobox
+    type: desktop
+  - source: omgrip
+    type: desktop
+  - source: thoggen
+    type: desktop
+  - source: vlc
+    type: desktop
+  - source: gnome-mplayer
+    type: desktop
+  - source: kaffeine
+    type: desktop
+  - source: banshee
+    type: desktop
+  - source: spotify
+    type: desktop
+  - source: cheese
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - type: custom
+    name: Kena Vision Microscope
+    command: /opt/av4kav/lib/av4.sh
+    osIconPath: /usr/share/icons/Faenza/devices/96/camera-web.png
+    inactiveByDeviceType: thinclient
+  - source: openshot
+    type: desktop
+  - source: kdenlive
+    type: desktop
+  - type: custom
+    name:
+      en: Kino-non-linear DV editor
+      fi: Kino-videoeditori
+      sv: Kino-videoredigerare
+      de: Kino Filme bearbeiten
+    command:
+    - kino
+    description:
+      en: Edit videos
+      fi: Muokkaa videoita
+      sv: Redigera videon
+      de: Video bearbeiten
+    osIcon: kino
+  - source: pitivi
+    type: desktop
+  - source: solfege
+    type: desktop
+  - source: mscore
+    type: desktop
+  - source: denemo
+    type: desktop
+  - source: hydrogen
+    type: desktop
+  - source: lmms
+    type: desktop
+  - source: rosegarden
+    type: desktop
+  - source: tuxguitar
+    type: desktop
+  - source: fmit
+    type: desktop
+  - source: luciole
+    type: desktop
+  - source: qsynth
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - source: qjackctl
+    type: desktop
+    inactiveByDeviceType: thinclient
+- type: menu
+  name:
+    en: Games
+    fi: Pelit
+    sv: Spel
+    de: Spiele
+  osIcon: applications-cardgames
+  condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+  items:
+  - source: gnubg
+    type: desktop
+- type: menu
+  name:
+    en: Games
+    fi: Pelit
+    sv: Spel
+    de: Spiele
+  osIcon: applications-cardgames
+  condition: "env.PUAVO_PERSONALLY_ADMINISTERED"
+  items:
+  - source: extremetuxracer
+    type: desktop
+  - source: supertuxkart
+    type: desktop
+  - source: freeciv-gtk3
+    type: desktop
+  - source: freecol
+    type: desktop
+  - source: neverball
+    type: desktop
+  - source: neverputt
+    type: desktop
+  - source: luola
+    type: desktop
+  - source: openttd
+    type: desktop
+  - source: xmoto
+    type: desktop
+  - source: steam
+    type: desktop
+  - source: gnubg
+    type: desktop
+- type: menu
+  name: Digabi
+  description:
+    en: " "
+    fi: Sovelluksia sähköiseen ylioppilastutkintoon
+    sv: " "
+    de: " "
+  osIcon: /usr/share/icons/oxygen/64x64/categories/applications-education.png
+  condition: "env.PUAVO_PERSONALLY_ADMINISTERED"
+  items:
+  - source: gimp
+    type: desktop
+  - source: pinta
+    type: desktop
+  - source: inkscape
+    type: desktop
+  - source: geogebra
+    type: desktop
+  - source: wxmaxima
+    type: desktop
+  - source: LoggerPro
+    type: desktop
+  - source: dia
+    type: desktop
+  - source: libreoffice-writer
+    type: desktop
+  - source: libreoffice-calc
+    type: desktop
+  - source: libreoffice-impress
+    type: desktop
+  - source: libreoffice-draw
+    type: desktop
+  - source: libreoffice-base
+    type: desktop
+  - source: libreoffice-math
+    type: desktop
+- type: menu
+  name:
+    en: Interactive whiteboards
+    fi: Älytaulut
+    sv: Interaktiva tavlor
+    de: Interaktive Wandtafeln
+  osIconPath: /usr/share/icons/hicolor/128x128/apps/SMART_Tools.png
+  condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+  items:
+  - source: smarttech-notebook
+    type: desktop
+  - source: smarttech-SMARTBoardTools
+    type: desktop
+  - source: Open-Sankore
+    type: desktop
+  - source: ebeam
+    type: desktop
+  - source: mimio-notebook
+    type: desktop
+- type: menu
+  name:
+    en: Web applications
+    fi: Web-sovellukset
+    sv: Web applikationer
+    de: Web Anwendungen
+  osIconPath: extra/icons/apps/webapps.png
+  items:
+  - source: walma-screenshot
+    type: desktop
+  - type: web
+    name: Youtube
+    url: http://youtube.com
+    description:
+      en: YouTube
+      fi: YouTube-videopalvelu
+      sv: YouTube
+      de: YouTube
+    osIconPath: /usr/share/icons/Faenza/apps/96/youtube.png
+  - type: web
+    name: Wikipedia
+    url: http://www.wikipedia.com
+    description:
+      en: Wikipedia encyclopedia
+      fi: Wikipedia-tietosanakirja
+      sv: Wikipedia uppslagsverk
+      de: Wikipedia Enziklopädie
+    osIconPath: /usr/share/icons/Faenza/apps/96/wikipedia.png
+  - type: web
+    name: Yle Areena
+    url: http://areena.yle.fi
+    description:
+      en: Yle Areena-online videos
+      fi: Yle Areena-videopalvelu
+      sv: Yle Arena
+      de: Yle Arena - Online Videos
+    osIconPath: /usr/share/icons/Faenza/apps/96/me-tv.png
+  - type: web
+    name: Yle - Elävä arkisto
+    url: http://yle.fi/elavaarkisto/index.html
+    description: Ylen Eläväarkisto-videopalvelu
+    osIconPath: /usr/share/icons/Faenza/apps/96/me-tv.png
+  - type: web
+    name: Sumopaint
+    url: http://www.sumopaint.com
+    description:
+      en: Sumopaint-online graphics editor
+      fi: Sumopaint-webkuvankäsittely
+      sv: Sumopaint-bildbehandling
+      de: Sumopaint Online Bildbearbeitung
+    osIconPath: /usr/share/icons/Faenza/apps/96/gimp.png
+  - type: web
+    name: Walma
+    keywords:
+    - photoshop
+    url: http://walmademo.opinsys.fi
+    description:
+      en: Collaborative whiteboard
+      fi: Yhteistoiminnallinen piirtotaulu
+      sv: Kollaborativ whiteboard
+      de: Mit dem Whiteboard zusammenarbweiten
+    osIconPath: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - type: web
+    name: Pahvi
+    url: http://pahvidemo.opinsys.fi/
+    osIconPath: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - type: web
+    name: SanomaPro
+    url: http://sanomapro.fi/
+    osIconPath: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - type: web
+    name: Ekapeli (websivu)
+    url: http://www.lukimat.fi/lukeminen/materiaalit/ekapeli
+    osIconPath: /usr/share/icons/Faenza/categories/96/gnome-joystick.png
+    condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+  - source: netflix
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - type: web
+    name: Edison
+    url: http://app.edison.fi
+    osIconPath: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - type: web
+    name: Unelmakoulu
+    url: http://dreamschool.fi
+    osIconPath: /usr/share/icons/webmenu/unelmakoulu.png
+  - type: web
+    name: Viope
+    url: https://www.viope.com/
+    osIconPath: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+- source: nautilus-home
+  type: desktop
+- type: custom
+  command: puavo-local-config-ui
+  name:
+    fi: Kannettavan asetukset
+    sv: Bärbar datorns inställningar
+    en: Laptop settings
+    de: Laptop einstellungen
+  osIconPath: /usr/share/icons/Faenza/devices/64/drive-harddisk-system.png
+  condition: "env.PUAVO_PERSONALLY_ADMINISTERED"

@@ -1,0 +1,43 @@
+{
+  "passwordCMD": {
+    "type": "webWindow",
+    "url": "https://{{puavoDomain}}/users/password/own",
+    "osIconPath": "/usr/share/icons/Faenza/emblems/96/emblem-readonly.png",
+    "name": {
+      "fi": "Salasana",
+      "en": "Password",
+      "sv": "Lösenord",
+      "de": "Passwort"
+      }
+  },
+  "shutdownCMD": {
+      "type": "custom",
+      "osIconPath": "/usr/share/icons/Faenza/actions/96/system-shutdown.png",
+      "name": {
+          "en": "Shutdown",
+          "fi": "Sammuta",
+          "sv": "Stäng av",
+          "de": "Abscahlten"
+      },
+      "command": [
+          "puavo-ltsp-client-action",
+          "--shutdown"
+      ],
+      "confirm": true
+  },
+  "restartCMD": {
+      "type": "custom",
+      "osIconPath": "/usr/share/icons/Faenza/apps/96/system-restart.png",
+      "name": {
+          "en": "Restart",
+          "fi": "Käynnistä uudelleen",
+          "sv": "Starta om",
+          "de": "Neustarten"
+      },
+      "command": [
+          "puavo-ltsp-client-action",
+          "--reboot"
+      ],
+      "confirm": true
+  }
+}

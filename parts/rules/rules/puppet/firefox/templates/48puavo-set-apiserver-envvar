@@ -1,0 +1,4 @@
+if [ -r /etc/puavo/apiserver ]; then
+  PUAVO_APISERVER="$(cat /etc/puavo/apiserver)"
+  export PUAVO_APISERVER
+fi

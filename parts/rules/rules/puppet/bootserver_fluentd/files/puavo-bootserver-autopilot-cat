@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+socket_path=/tmp/puavo-bootserver-autopilot-master.socket
+
+if [ -e "${socket_path}" ]; then
+    nc -U "${socket_path}" <"$1" || true
+fi

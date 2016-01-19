@@ -1,0 +1,16 @@
+#!/bin/sh
+
+browser_running() {
+  pgrep -f -U "$USER" '^/opt/google/chrome/chrome' >/dev/null
+}
+
+homepage_args() { echo "$HOMEPAGE" | sed 's/|/ /g'; }
+
+default_args="--no-default-browser-check"
+
+if ! browser_running || [ $# -eq 0 ]; then
+  exec /opt/google/chrome/google-chrome --new-window $default_args \
+                                        "$@" $(homepage_args)
+else
+  exec /opt/google/chrome/google-chrome $default_args "$@"
+fi

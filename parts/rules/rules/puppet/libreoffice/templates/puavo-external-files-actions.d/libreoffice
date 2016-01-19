@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -eu
+
+on_exit()
+{
+    exitval=$?
+
+    if [ -n "${tmpdir}" ]; then
+        rm -rf "${tmpdir}"
+    fi
+
+    return $exitval
+}
+
+external_file=/state/external_files/sujutellaan.tar.gz
+
+if [ ! -f "${external_file}" ]; then
+    exit 0
+fi
+
+# Variable referenced by on_exit needs to be declared before the trap is
+# set.
+tmpdir=
+trap on_exit EXIT
+tmpdir=$(mktemp --tmpdir=/tmp -d sujutellaan.XXXXXXXXXXXX)
+
+tar -z -x -f "${external_file}" -C "${tmpdir}" --strip-components=1
+
+fontdir=/usr/share/fonts/truetype/sujutellaan
+mkdir -p "${fontdir}"
+
+mv -t "${fontdir}" ${tmpdir}/fonts/*.TTF
+
+/usr/lib/libreoffice/program/unopkg add --shared "${tmpdir}/sujutellaan.oxt"

@@ -1,0 +1,48 @@
+#!/usr/bin/expect -f
+
+# This script downloads firmwares/plugins for some HP printers,
+# accepting the EULA.
+
+# Do not allow a spawn operation to be stuck more that two minutes...
+# if that happens, something is probably wrong (default timeout is 10
+# seconds, that is probably too short).
+set timeout 120
+
+spawn env LANG=C hp-plugin -i
+
+expect {
+  -ex "Enter option (d=download*, p=specify path, q=quit) ? " {
+    send "\n"
+  }
+  -ex "Do you wish to download and re-install the plug-in? (y=yes*, n=no, q=quit) ? " {
+    send "q\n"
+    expect
+    exit 0
+  }
+}
+
+expect {
+  -ex "Do you accept the license terms for the plug-in (y=yes*, n=no, q=quit) ? " {
+    send "\n"
+  }
+}
+
+# odd to wait for this for two times
+expect "Done."
+expect "Done."
+
+set statuscode 1
+
+expect {
+  eof {
+    lassign [wait] ? ? errorflag value
+    if {$errorflag == 0} {
+      puts "hp-plugin returned exit status: $value"
+      set statuscode $value
+    } else {
+      puts stderr "OS Error: $value"
+    }
+  }
+}
+
+exit $statuscode
