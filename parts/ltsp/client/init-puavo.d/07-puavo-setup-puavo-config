@@ -1,0 +1,49 @@
+if [ -z "$SERVER" ]; then
+  # if SERVER is not set, this device has not booted from network, thus
+  # it is pointless to do anything here because networking is not configured
+  return
+fi
+
+/usr/sbin/puavo-dns-client
+
+# fetch /etc/puavo/device.json
+#
+# /usr/sbin/puavo-dns-client sets up /etc/puavo/domain (except for
+# unregistered hosts), and puavo-resolve-api-server needs it, so this has
+# to be run after that.
+#
+if [ -e /etc/puavo/domain -a -e /etc/puavo/hosttype ]; then
+  # set --max-time to 30 seconds to allow the boot to continue in case of
+  # failure; so we can check out later (with ssh or some such) what went wrong.
+
+  PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+
+  case "${PUAVO_HOSTTYPE}" in
+    ltspserver)
+      if curl --cacert /etc/puavo/certs/rootca.pem \
+              --header "Authorization: Bootserver" \
+              --fail \
+              --max-time 30 \
+              --silent \
+              "$(puavo-resolve-api-server)/v3/ltsp_servers/$(hostname -s)" \
+           > /etc/puavo/device.json.tmp; then
+        mv /etc/puavo/device.json.tmp /etc/puavo/device.json
+      fi
+      break
+      ;;
+    *)
+      if curl --cacert /etc/puavo/certs/rootca.pem \
+              --header "Authorization: Bootserver" \
+              --fail \
+              --max-time 30 \
+              --silent \
+              "$(puavo-resolve-api-server)/v3/devices/$(hostname -s)" \
+           > /etc/puavo/device.json.tmp; then
+        mv /etc/puavo/device.json.tmp /etc/puavo/device.json
+      fi
+      break
+      ;;
+  esac
+fi
+
+rm -f /etc/puavo/device.json.tmp

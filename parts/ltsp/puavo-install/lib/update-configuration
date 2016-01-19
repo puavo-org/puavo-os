@@ -1,0 +1,211 @@
+#!/usr/bin/ruby1.9.1
+
+require 'fileutils'
+require 'json'
+require 'puavo/rest-client'
+require 'syslog'
+
+def syslog(channel, priority, *args)
+  Syslog.log(priority, *args)
+  channel.printf(*args)
+end
+
+def log(*args)   ; syslog(STDOUT, *args); end
+def logerr(*args); syslog(STDERR, *args); end
+
+def get_hostname()
+  # Hostname must be read from here, and not from Socket.gethostname or some
+  # such, because this should also work when host in still name "unregistered"
+  # at install phase (another alternative would be to set hostname at install
+  # before this script is run).
+  IO.read('/etc/puavo/hostname').chomp
+end
+
+def puavo_rest_request_and_replace(restclient, uripath, filepath)
+  data = restclient.get(uripath).to_s
+
+  tmp_filepath = "#{ filepath }.tmp"
+  File.open(tmp_filepath, 'w', 0600) { |f| f.write(data) }
+
+  replace_if_changed(filepath, tmp_filepath)
+end
+
+def replace_if_changed(dest, src)
+  if (FileUtils.cmp(dest, src) rescue false) then
+    FileUtils.rm_f(src)
+  else
+    File.rename(src, dest)
+  end
+end
+
+def run(*args)
+  system(*args) or raise "Running system command #{ args } returned failure"
+end
+
+def grubedit(*args)
+  run('grub-editenv', '/images/boot/grub/grubenv', *args)
+end
+
+def send_changed_primary_user_to_puavo(primary_user)
+  log(Syslog::LOG_NOTICE,
+      "Sending overridden primary user %s to Puavo\n",
+      primary_user)
+
+  cloud_restclient = PuavoRestClient.new(:auth    => :etc,
+                                         :dns     => :no,
+                                         :timeout => 30)
+
+  senddata = { 'primary_user' => primary_user }
+
+  uripath = "/v3/devices/#{ get_hostname() }"
+  cloud_restclient.post(uripath, :json => senddata)
+end
+
+def update_device_json(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating device json\n")
+
+  # We override the primary_user information in device.json from
+  # /state/etc/puavo/primary_user_override if that exists.
+
+  device_json_path = '/state/etc/puavo/device.json'
+
+  uripath = "v3/devices/#{ get_hostname() }"
+  device = restclient.get(uripath).parse()
+
+  remove_primary_user_override = false
+
+  primary_user_override \
+    = IO.read('/state/etc/puavo/primary_user_override').chomp rescue nil
+
+  if primary_user_override && !primary_user_override.empty? then
+    if primary_user_override == device['primary_user'] then
+      # remove override if we get the same information from Puavo
+      remove_primary_user_override = true
+    else
+      begin
+        send_changed_primary_user_to_puavo(primary_user_override)
+      rescue PuavoRestClient::BadStatusCode => e
+        logerr(Syslog::LOG_ERR,
+               "Bad status code when sending primary user to Puavo: %s\n",
+               e.response.to_s)
+      rescue StandardError => e
+        logerr(Syslog::LOG_ERR,
+               "Problem sending primary user override to Puavo: %s\n",
+               e.message)
+      end
+    end
+
+    log(Syslog::LOG_ERR,
+        "Applying primary user override: %s\n",
+        primary_user_override)
+
+    device['primary_user'] = primary_user_override
+  end
+
+  tmp_filepath = "#{ device_json_path }.tmp"
+  File.open(tmp_filepath, 'w') { |f| f.write(device.to_json) }
+
+  replace_if_changed(device_json_path, tmp_filepath)
+
+  if remove_primary_user_override then
+    log(Syslog::LOG_NOTICE,
+        "Removing primary user override (it is the same in Puavo)\n")
+    FileUtils.rm_f('/state/etc/puavo/primary_user_override')
+  end
+end
+
+def update_external_files(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating external files\n")
+
+  run('puavo-sync-external-files')
+  run('puavo-handle-external-files-actions')
+end
+
+def update_grub_environment(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating grub environment\n")
+
+  device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
+
+  kernel_version = device['kernel_version']
+  if kernel_version && !kernel_version.empty? then
+    grubedit('set', "puavo_kernel_version=#{ kernel_version }")
+  else
+    grubedit('unset', 'puavo_kernel_version')
+  end
+
+  if device['personally_administered'] == true then
+    grubedit('set', 'puavo_show_imageoverlays=true')
+  else
+    grubedit('unset', 'puavo_show_imageoverlays')
+  end
+
+  kernel_arguments = device['kernel_arguments']
+  if kernel_arguments && !kernel_arguments.empty? then
+    grubedit('set', "puavo_kernel_arguments=#{ kernel_arguments }")
+  else
+    grubedit('unset', 'puavo_kernel_arguments')
+  end
+end
+
+def update_wlan_configurations(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating wlan configurations\n")
+
+  wlan_networks_uri = "v3/devices/#{ get_hostname() }/wlan_networks"
+  puavo_rest_request_and_replace(restclient,
+                                 wlan_networks_uri,
+                                 '/state/etc/puavo/wlan.json')
+end
+
+def update_puavopkg_installers(restclient)
+  device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
+
+  unless device['personally_administered'] \
+           && File.executable?('/usr/sbin/puavo-local-config') then
+    log(Syslog::LOG_DEBUG,
+        "Not personally administered, so not updating puavo packages\n")
+    return
+  end
+
+  log(Syslog::LOG_INFO, ">>> Updating puavo-pkg installers\n")
+  run('puavo-local-config', '--prepare-puavopkg')
+  run('puavo-pkg-updater',  '--update-installers')
+end
+
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
+
+restclient = PuavoRestClient.new(:auth => :etc, :timeout => 30)
+
+#
+# Update several (different) things.  Even if one thing cannot be updated,
+# try to update others (order does not matter here, but do this sequentially
+# anyway).  Return errors on exitcodes (from exitcode one should be able
+# to figure out which parts failed).
+#
+
+# For exitcode calculation to work properly, there should not be more than
+# sizeof(int) (32) functions here.  "device.json" should be updated first,
+# because others may depend on it.
+update_functions = [
+  :update_device_json,
+  :update_external_files,
+  :update_wlan_configurations,
+  :update_grub_environment,
+  :update_puavopkg_installers,
+]
+
+exitcode = 0
+
+i = 0
+update_functions.each do |func|
+  begin
+    Object.send(func, restclient)
+  rescue StandardError => e
+    logerr(Syslog::LOG_ERR, "Problem in running %s: %s\n", func, e.message)
+    exitcode |= (1 << i)
+  end
+  i += 1
+end
+
+Syslog.close()
+
+exit(exitcode)

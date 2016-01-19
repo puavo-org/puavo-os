@@ -1,0 +1,25 @@
+has_device_tag() {
+  jq -r '.tags[]' /etc/puavo/device.json 2>/dev/null | grep -qx "$1"
+}
+
+# Blacklist r8168 by default, but if r8169 is blacklisted in kernel command
+# line, then blacklist r8169 and whitelist r8168.
+# (initramfs/scripts/init-top/blacklist-r816x has same code
+# so that this works in netboot devices as well.)
+
+echo "blacklist r8168" > /etc/modprobe.d/r8168-dkms.conf
+for x in $(cat /proc/cmdline); do
+  if [ "$x" = "modprobe.blacklist=r8169" ]; then
+    echo "blacklist r8169" > /etc/modprobe.d/r8168-dkms.conf
+  fi
+done
+
+# blacklist yenta_socket by default, it causes boot failures on some hardware
+if has_device_tag no_blacklist_yenta_socket \
+     && ! has_device_tag no_no_blacklist_yenta_socket; then
+  rm -f /etc/modprobe.d/blacklist-yenta_socket.conf
+else
+  cat <<'EOF' > /etc/modprobe.d/blacklist-yenta_socket.conf
+blacklist yenta_socket
+EOF
+fi

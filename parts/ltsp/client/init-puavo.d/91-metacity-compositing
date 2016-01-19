@@ -1,0 +1,11 @@
+jq -r .tags[] /etc/puavo/device.json | grep -q -x metacity_compositing && {
+    cat <<EOF >>/etc/dconf/db/puavodesktop.d/session_profile
+
+[org/gnome/metacity]
+compositing-manager=true
+EOF
+    cat <<EOF >>/etc/dconf/db/puavodesktop.d/locks/session_locks
+/org/gnome/metacity/compositing-manager
+EOF
+    dconf update
+}

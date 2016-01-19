@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -eu
+
+mount | grep dummy | while read line; do
+    dev=$(echo "$line" | cut -d' ' -f1)
+    dir=$(echo "$line" | cut -d' ' -f3)
+    vgname=$(basename "$dir" | cut -d'-' -f2)
+    uuid=$(blkid "$dev" | sed s'/.*UUID="\([^"]*\)".*/\1/')
+
+    umount "$dir"
+    rmdir "$dir"
+    sed -i "s/^UUID=$uuid.*//" /target/etc/fstab
+    pvcreate "$dev"
+    vgcreate "$vgname" "$dev"
+done

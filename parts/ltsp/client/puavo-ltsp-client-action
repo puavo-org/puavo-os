@@ -1,0 +1,55 @@
+#!/bin/sh
+
+set -e
+
+send_to_dbus() {
+  dbus-send \
+    --system \
+    --print-reply \
+    --dest=org.freedesktop.ConsoleKit \
+    /org/freedesktop/ConsoleKit/Manager \
+    "$@"
+}
+
+send_to_Xserver_and_logout() {
+  _action=$1
+
+  xprop -root -f LTSP_LOGOUT_ACTION 8s -set LTSP_LOGOUT_ACTION $_action
+
+  case "$XDG_CURRENT_DESKTOP" in
+    GNOME|Unity)
+      gnome-session-quit --force --logout --no-prompt
+      ;;
+  esac
+}
+
+handle_restart() {
+  _hosttype=$1
+  if [ "$_hosttype" = "ltspserver" ]; then
+    send_to_Xserver_and_logout REBOOT
+  else
+    send_to_dbus org.freedesktop.ConsoleKit.Manager.Restart
+  fi
+}
+
+handle_shutdown() {
+  _hosttype=$1
+  if [ "$_hosttype" = "ltspserver" ]; then
+    send_to_Xserver_and_logout HALT
+  else
+    send_to_dbus org.freedesktop.ConsoleKit.Manager.Stop
+  fi
+}
+
+hosttype=$(cat /etc/puavo/hosttype)
+
+case "$1" in
+  --reboot)   handle_restart  $hosttype;;
+  --shutdown) handle_shutdown $hosttype;;
+  *)
+    echo "Usage: $(basename $0) [--reboot|--shutdown]" > /dev/stderr
+    exit 1
+    ;;
+esac
+
+exit 0

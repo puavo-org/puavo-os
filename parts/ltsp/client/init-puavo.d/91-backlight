@@ -1,0 +1,34 @@
+has_device_tag () {
+  jq -r .tags[] /etc/puavo/device.json | grep -qx "$1"
+}
+
+intel_backlight=false
+
+if [ -f "/sys/devices/virtual/dmi/id/product_name" ]; then
+  system=$(cat /sys/devices/virtual/dmi/id/product_name)
+else
+  system=$(dmidecode -s system-product-name)
+fi
+
+# 20D9S01U00 is "Lenovo Thinkpad 11e"
+if [ "${system}" = "Aspire ES1-111" \
+     -o "${system}" = "20D9S01U00" ]; then
+  intel_backlight=true
+fi
+
+if has_device_tag intel-backlight; then
+  intel_backlight=true
+fi
+
+if has_device_tag no-intel-backlight; then
+  intel_backlight=false
+fi
+
+if [ ${intel_backlight} = true ]; then
+  cat <<EOF >/usr/share/X11/xorg.conf.d/backlight.conf
+Section "Device"
+    Identifier  "Intel Graphics"
+    Option      "Backlight"       "intel_backlight"
+EndSection
+EOF
+fi

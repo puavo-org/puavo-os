@@ -1,0 +1,72 @@
+#!/bin/sh
+
+remove_remote_printers()
+{
+    LANG=C lpstat -v | while read line; do
+        name=$(echo "${line}" | sed -r -n 's|^device for (.*): ipp://.*$|\1|p')
+        [ -n "${name}" ] || continue
+        lpadmin -x "${name}"
+    done
+}
+
+add_remote_printers()
+{
+    local puavo_domain=$(cat /etc/puavo/domain)
+    readonly puavo_domain
+
+    cat "${PUAVO_SESSION_PATH}" | jq -r -c .printer_queues[] | while read printer; do
+        name=$(echo "${printer}" | jq -r -c .name)
+        location=$(echo "${printer}" | jq -r -c .location)
+        description=$(echo "${printer}" | jq -r -c .description)
+        remote_uri="ipp://cups.${puavo_domain}:631/printers/${name}"
+
+        lpadmin -p "${name}" -v "${remote_uri}" -L "${location}" -D "${description}" -E
+    done
+}
+
+get_printer_list()
+{
+    cat "${PUAVO_SESSION_PATH}" | jq -r -c .printer_queues[] | {
+        PRINTER_LIST=''
+        while read printer; do
+            name=$(echo "${printer}" | jq -r -c .name)
+            if [ -z "${PRINTER_LIST}" ]; then
+                PRINTER_LIST="${name}"
+            else
+                PRINTER_LIST="${PRINTER_LIST},${name}"
+            fi
+        done
+        echo -n "${PRINTER_LIST}"
+    }
+}
+
+set_default_printer()
+{
+    local default_printer_name
+
+    default_printer_name=$(jq -r .device.default_printer_name "${PUAVO_SESSION_PATH}")
+    [ "${default_printer_name}" != null ] && lpadmin -d "${default_printer_name}"
+}
+
+hosttype=$(cat /etc/puavo/hosttype)
+
+case "${hosttype}" in
+    ltspserver)
+        export PRINTER_LIST=$(get_printer_list)
+        export PRINTER=$(jq -r .device.default_printer_name "${PUAVO_SESSION_PATH}")
+        ;;
+    fatclient)
+        remove_remote_printers
+        add_remote_printers
+        set_default_printer
+        ;;
+    *)
+        if jq -r .tags[] /etc/puavo/device.json | grep -qx use_puavo_printer_permissions; then
+            remove_remote_printers
+            add_remote_printers
+            set_default_printer
+        else
+            echo "hosttype '${hosttype}' does not support Puavo printer setup" >&2
+        fi
+        ;;
+esac

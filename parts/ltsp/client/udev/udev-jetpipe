@@ -1,0 +1,30 @@
+#!/bin/sh
+
+CMD=$1
+TYPE=$2
+
+if ! egrep -q thinclient\|fatclient /etc/puavo/hosttype; then
+  jq -r .tags[] /etc/puavo/device.json | grep -q -x jetpipe || exit 0
+fi
+
+if [ ${CMD} = "add" ]; then
+  if [ ${TYPE} = "usb" ]; then
+    PID=$(ps -ef|grep [j]etpipe\ /dev/usb|awk '{print $2}')
+
+    if [ "x${PID}" != "x" ]; then
+      kill $PID
+    fi
+
+    /usr/sbin/jetpipe ${DEVNAME} 9100
+  else
+    PID=$(ps -ef|grep [j]etpipe\ ${DEVNAME}|awk '{print $2}')
+    if [ "x${PID}" != "x" ]; then
+      kill $PID
+    fi
+
+    PORT=$(( $MINOR + 9101 ))
+
+    /usr/sbin/jetpipe ${DEVNAME} ${PORT}
+  fi
+fi
+

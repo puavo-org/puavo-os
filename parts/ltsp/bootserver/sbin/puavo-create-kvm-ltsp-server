@@ -1,0 +1,42 @@
+#!/usr/bin/ruby
+
+# XXX sudo apt-get -y install libvirt-bin qemu-kvm qemu-utils ruby-uuidtools
+# XXX presumes volume group named 'ltsp' exists
+
+require 'erb'
+require 'fileutils'
+require 'tempfile'
+require 'uuidtools'
+
+@default_kvm_cpu = [1, (`nproc`.chomp.to_i)-2].max
+
+mem = File.read("/proc/meminfo")
+
+if /MemTotal:.*?(\d+)/.match(mem)
+  @default_kvm_mem = [$1.to_i-3*1024*1024, 2*1024*1024].max
+end
+
+@kvm_name = ARGV[0]
+@kvm_cpus = ARGV[1] || @default_kvm_cpu
+@kvm_uuid = UUIDTools::UUID.random_create.to_s
+@kvm_memory = ARGV[2] || @default_kvm_mem
+kvm_disk_size = ARGV[3] || "30G"
+@kvm_mac = "aa:cc:" + (1..4).map{"%0.2x"%rand(256)}.join(":")
+
+conf_template = File.read("/usr/share/puavo-ltsp-bootserver/templates/ltsp-server.xml")
+conf = ERB.new(conf_template, 0, "%<>")
+
+xml = Tempfile.open("puavo-ltsp-kvm")
+xml.write conf.result
+xml.close
+
+puts `cat #{xml.path}`
+
+puts `virsh pool-define-as --name ltsp --type logical --source-format lvm2 --target /dev/ltsp`
+puts `virsh pool-autostart ltsp`
+puts `virsh pool-start ltsp`
+puts `virsh vol-create-as --pool ltsp --name #{@kvm_name} --capacity #{kvm_disk_size}`
+puts `virsh define #{xml.path}`
+puts `virsh autostart #{@kvm_name}`
+
+xml.unlink

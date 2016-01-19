@@ -1,0 +1,242 @@
+Here are the post-installation configuration for puavo-ltsp-bootserver
+package.  The puavo-ltsp-bootserver package it used to configure Puavo
+bootservers, but unfortunately some configurations need to be slightly
+edited by-hand for everything to work correctly.  Some suggestions
+can safely be skipped if the corresponding functionality is not needed.
+
+These settings have been tested with Ubuntu version 12.04.
+
+
+Puavo-registration
+------------------
+
+You should register the bootserver to puavo with (run as root):
+
+  puavo-register
+
+This will create some files under /etc/puavo.
+
+Make sure that the bootserver's hostname matches the hostname used in
+registration.
+
+
+Networking
+----------
+
+Right now puavo-ltsp-bootserver presumes that an interface named ltsp0 must
+exist, and that is the interface to ltsp-network.  Create at least "ltsp0"
+into /etc/network/interfaces.  An interface named "wlan0" is also recommended.
+
+
+LTSP-images
+-----------
+
+You should put some LTSP-images to /opt/ltsp/images for nbd-server to serve.
+Do:
+
+  mkdir -p /opt/ltsp/images
+  cp $YOUR_DEFAULT_LTSP_IMAGE /opt/ltsp/images/i386.img	# i386.img = default
+  cp $YOUR_OTHER_LTSP_IMAGE   /opt/ltsp/images/other.img
+  puavo-bootserver-generate-nbd-exports
+
+You should also either restart nbd-server in case it does not support
+re-reading configuration files after SIGHUP (this depends on its version).
+Note that restarting nbd-server will cut off existing nbd connections.
+
+Setup PXE-boot by creating /var/lib/tftpboot and copying the necessary files
+there:
+
+  puavo-bootserver-setup-pxe
+
+
+DNS-setup
+---------
+
+For dynamic DNS setup to work, one should have either of the two lines
+in /etc/sudoers (edit it with visudo(8)):
+
+  dhcpd ALL=(ALL) NOPASSWD: /bin/cat /etc/puavo/ldap/password
+
+OR:
+
+  #includedir /etc/sudoers.d
+ 
+  (TODO: more of this should be documented...)
+
+
+NFS-setup
+---------
+
+For fatclients NFS needs to be setup.  So far only NFSv4.1 is supported.
+The file /etc/default/nfs-kernel-server should contain these lines (in
+addition to the default lines):
+
+  NEED_SVCGSSD=yes
+  RPCNFSDOPTS="--nfs-version 4.1"
+
+Likewise, /etc/default/nfs-common should contain:
+
+  NEED_IDMAPD=yes
+  NEED_GSSD=yes
+
+The puavo-ltsp-client package expects that /home can be mounted from the
+bootserver, thus we need on /etc/exports:
+
+  /export gss/krb5(rw,fsid=0,async,subtree_check,no_root_squash,crossmnt)
+  /export/home gss/krb5(rw,async,subtree_check,no_root_squash)
+
+In /etc/idmapd.conf, "Domain" should be set to your kerberos realm (the same
+as in /etc/puavo/kerberos/realm after registering the host to Puavo):
+
+  Domain = ...
+
+On /etc/fstab there should be the following line:
+
+  /home /export/home none rw,bind 0 0
+
+Also /export/home should be created:
+
+  mkdir -p /export/home
+
+Do the following to get the NFS-configurations active:
+
+  mount -a
+  service nfs-kernel-server restart
+  service idmapd restart
+
+
+sssd configuration
+------------------
+
+/etc/nsswitch.conf should be configured to use sss.  Make sure that
+the "passwd", "group", "shadow" and netgroup sections contain "sss", for
+example:
+
+  passwd:         compat sss
+  group:          compat sss
+  shadow:         compat sss
+
+  netgroup:       nis sss
+
+sssd also needs a bit of configuration.  /etc/sssd/sssd.conf should something
+to the effect of:
+
+  [sssd]
+  services = nss, pam
+  domains = KRBLDAP.FILL_IN_YOUR_KERBEROS_REALM_AT_/etc/puavo/kerberos/realm
+
+  ...
+
+  [domain/KRBLDAP.FILL_IN_YOUR_KERBEROS_REALM_AT_/etc/puavo/kerberos/realm]
+  auth_provider = krb5
+  cache_credentials = true
+  id_provider = ldap
+  dns_discovery_domain=FILL_IN_YOUR_DOMAIN_AT_/etc/puavo/domain
+  krb5_server = _srv_,kerberos.FILL_IN_YOUR_DOMAIN_AT_/etc/puavo/domain
+  krb5_realm = FILL_IN_YOUR_KERBEROS_REALM_AT_/etc/puavo/kerberos/realm
+  krb5_validate = false
+  ldap_default_bind_dn=FILL_IN_YOUR_LDAP_DN_AT_/etc/puavo/ldap/dn
+  ldap_default_authtok=FILL_IN_YOUR_LDAP_PASSWORD_AT_/etc/puavo/ldap/password
+  ldap_user_search_base = ou=People,FILL_IN_YOUR_LDAP_BASE_AT_/etc/puavo/ldap/base?sub?(objectClass=posixAccount)
+  ldap_group_search_base = ou=Groups,FILL_IN_YOUR_LDAP_BASE_AT_/etc/puavo/ldap/base?sub?(objectClass=posixGroup)
+  ldap_tls_reqcert = demand
+  ldap_uri = _srv_,ldap://FILL_IN_YOUR_LDAP_MASTER_AT_/etc/puavo/ldap/master:389
+  ldap_id_use_start_tls = true
+  min_id = 500
+  ldap_search_base = FILL_IN_YOUR_LDAP_BASE_AT_/etc/puavo/ldap/base
+  krb5_store_password_if_offline = true
+  ldap_user_fullname = displayName
+
+
+Ldap configuration
+------------------
+
+You should run puavo-init-ds-slave -script (that is in puavo-ds-slave
+package).  Note that this script actually touches some ldap- and
+kerberos-related configuration files, so you should check out the
+puavo-ds-slave package and its scripts to see if they do things that
+suit your environment.
+
+  puavo-init-ds-slave
+
+You may also want to configure something like:
+
+  BASE            FILL_IN_YOUR_LDAPBASE_AT_/etc/puavo/ldap/base
+  NETWORK_TIMEOUT 15
+  SASL_MECH       GSSAPI
+  TIMEOUT         15
+  TLS_CACERT      /etc/puavo/certs/rootca.pem
+  TLS_REQCERT     demand
+  URI             ldap://FILL_IN_YOUR_SERVER_FQDN
+
+to /etc/ldap/ldap.conf for ldapsearch and other ldap-tools to work,
+but this should not be strictly necessary.
+
+
+Virtual LTSP-servers and thinclients
+------------------------------------
+
+If you need to serve thinclients (and not just fatclients), and you
+do not have physical machines (other than the bootserver)) to do this,
+you should setup a KVM virtual machine.  For example, you can create a
+machine named "ltsp1", with:
+
+  puavo-create-kvm-ltsp-server ltsp1
+
+Then putting the line "ltsp1" to /etc/puavo/primary_ltsp_server should be a
+good idea (this makes the created ltsp server the default ltsp server).
+
+
+Load balancing and laptop updates
+---------------------------------
+
+Load balancing between LTSP servers requires nginx configuration.
+Nginx is also used for distributing ltsp image binary patches
+to laptops for updating laptops.  Load balancing is not strictly
+required, but this may actually change soon, so it is a good idea
+to enable it.  Laptop updates are only useful if you have puavo-laptops
+installed.
+
+  # enable puavo-rest / load balancing:
+  sudo ln -fns /etc/nginx/sites-available/puavo-rest \
+               /etc/nginx/sites-enabled/puavo-rest
+
+  # enable ltsp-image / binary patch distribution (for laptops only)
+  sudo ln -fns /etc/nginx/sites-available/ltsp-images \
+               /etc/nginx/sites-enabled/ltsp-images
+
+  # make changes effective
+  sudo service nginx reload
+
+
+Cups
+----
+
+To setup cups to work with Puavo certificates do edit
+/etc/apparmor.d/local/usr.sbin.cupsd to contain the line:
+
+  /etc/puavo/certs/* r,
+
+Also do edit the /etc/cups/cupsd.conf file to contain the lines:
+
+  ServerCertificate /etc/puavo/certs/host.crt
+  ServerKey /etc/puavo/certs/host.key
+
+Do restart apparmor and cups server:
+
+  sudo service apparmor restart
+  sudo service cups restart
+
+
+Clock sync
+----------
+
+There is some code in puavo-ltsp-client to synchronise ltsp client clocks
+from server.  To make use of this you need to uncomment the following line
+in /etc/inetd.conf:
+
+  time           stream  tcp     nowait  root    internal
+
+Then restart inetd:
+
+  sudo service openbsd-inetd restart

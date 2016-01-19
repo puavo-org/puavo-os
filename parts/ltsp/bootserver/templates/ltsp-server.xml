@@ -1,0 +1,45 @@
+<domain type='kvm'>
+  <name><%= @kvm_name %></name>
+  <uuid><%= @kvm_uuid %></uuid>
+  <memory unit='KiB'><%= @kvm_memory %></memory>
+  <currentMemory unit='KiB'><%= @kvm_memory %></currentMemory>
+  <vcpu placement='static'><%= @kvm_cpus %></vcpu>
+  <os>
+    <type arch='x86_64' machine='pc-1.0'>hvm</type>
+    <boot dev='network'/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+    <pae/>
+  </features>
+  <clock offset='utc'/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <devices>
+    <emulator>/usr/bin/kvm</emulator>
+    <disk type='block' device='disk'>
+      <driver name='qemu' type='raw'/>
+      <source dev='/dev/ltsp/<%= @kvm_name %>'/>
+      <target dev='vda' bus='virtio'/>
+    </disk>
+    <controller type='usb' index='0'>
+    </controller>
+    <controller type='ide' index='0'>
+    </controller>
+    <interface type='bridge'>
+      <mac address='<%= @kvm_mac %>'/>
+      <source bridge='ltsp0'/>
+      <model type='e1000'/>
+    </interface>
+    <serial type='pty'>
+      <target port='0'/>
+    </serial>
+    <console type='pty'>
+      <target type='serial' port='0'/>
+    </console>
+    <memballoon model='virtio'>
+    </memballoon>
+  </devices>
+</domain>

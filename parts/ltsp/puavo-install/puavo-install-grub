@@ -1,0 +1,276 @@
+#!/bin/sh
+
+set -eu
+
+grub_m4_template() {
+  cat <<'EOF'
+set default="0"
+load_env
+
+function load_video {
+  if [ x$feature_all_video_module = xy ]; then
+    insmod all_video
+  else
+    insmod efi_gop
+    insmod efi_uga
+    insmod ieee1275_fb
+    insmod vbe
+    insmod vga
+    insmod video_bochs
+    insmod video_cirrus
+  fi
+}
+
+if loadfont unicode ; then
+  set gfxmode=auto
+  load_video
+  insmod gfxterm
+  set locale_dir=$prefix/locale
+  set lang=fi_FI
+  insmod gettext
+fi
+terminal_output gfxterm
+set timeout=5
+### END /usr/local/etc/grub.d/00_header ###
+
+function pathname { regexp -s 2:"$2" '^(\(.*\))?(/.*)$'    "$1"; }
+
+function ltsp_image_entry {
+  set imagefile="$1"
+  set description="$2"
+  set kernelparameters="$3"
+
+  pathname $imagefile imagepath
+
+  # if changing menuentry description, update correspondingly on
+  # puavo-local-config configure_grub_default()
+
+  # ${puavo_kernel_arguments} comes from a grub environment file
+  # (if it is defined there)
+  set kernelparameters="${kernelparameters} ${puavo_kernel_arguments}"
+
+  menuentry "${description} (${imagepath})" "$imagefile" "$imagepath" "$kernelparameters" {
+    set imagefile="$2"
+    set imagepath="$3"
+
+    loopback loop "${imagefile}"
+    set root='(loop)'
+
+    # ${puavo_kernel_version} comes from a grub environment file
+    # (if it is defined there)
+    if test -n "${puavo_kernel_version}" \
+         -a -e "(loop)/boot/vmlinuz-${puavo_kernel_version}" \
+         -a -e "(loop)/boot/initrd.img-${puavo_kernel_version}"; then
+      set kernelversion="-${puavo_kernel_version}"
+    else
+      set kernelversion=""
+    fi
+
+    set kernelparameters="$4"
+
+    linux   /boot/vmlinuz${kernelversion} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
+    initrd  /boot/initrd.img${kernelversion}
+
+    loopback -d loop
+  }
+}
+
+## Superlaptop mode = persistent image changes + local admins
+function ltsp_image_entry_superlaptop {
+  set imagefile="$1"
+  set description="$2"
+  set kernelparameters="$3"
+
+  if test "${puavo_show_imageoverlays}" = "true" \
+            -a -d (lvm/puavo-imageoverlays); then
+    set kernelparameters="puavo.image.overlay=default puavo.local.enable_superusers=true $kernelparameters"
+
+    ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}"
+  fi
+}
+
+insmod gzio
+insmod part_msdos
+insmod ext2
+insmod squash4
+insmod biosdisk
+insmod regexp
+insmod loopback
+insmod usb_keyboard
+insmod lvm
+
+for dev in (lvm/__PUAVO_LVM_PARTITION__); do
+  for file in ${dev}/*.default; do
+    regexp -s default_alias_no_suffix '^(.*)\.default$' "${file}"
+    break
+  done
+  for file in ${dev}/*.backup; do
+    regexp -s backup_alias_no_suffix '^(.*)\.backup$' "${file}"
+    break
+  done
+
+  set default_image="${dev}/ltsp.img"
+  set backup_image="${dev}/ltsp-backup.img"
+  set default_image_alias="${default_alias_no_suffix}.img"
+  set backup_image_alias="${backup_alias_no_suffix}.img"
+
+  if test -f "${default_image}"; then
+    ltsp_image_entry "${default_image}" "Normaali käynnistys - ${default_image_alias}"
+    ltsp_image_entry_superlaptop "${default_image}" "Kehittäjätila - ${default_image_alias}"
+  fi
+  if test -f "${backup_image}"; then
+    ltsp_image_entry "${backup_image}" "Varajärjestelmä, normaali käynnistys - ${backup_image_alias}"
+    ltsp_image_entry_superlaptop "${backup_image}" "Varajärjestelmä, kehittäjätila - ${backup_image_alias}"
+  fi
+
+  for file in ${dev}/*.img; do
+    if test "${file}" = "${default_image}";       then continue; fi
+    if test "${file}" = "${backup_image}";        then continue; fi
+    if test "${file}" = "${default_image_alias}"; then continue; fi
+    if test "${file}" = "${backup_image_alias}";  then continue; fi
+
+    ltsp_image_entry "${file}" "Muu järjestelmä, normaali käynnistys"
+    ltsp_image_entry_superlaptop "${file}" "Muu järjestelmä, kehittäjätila"
+  done
+done
+EOF
+}
+
+lookup_windows_partition_number() {
+  # Presume that the first partition not containing "Linux"
+  # is a Windows-partition.
+  _diskdev=$1
+  env LANG=C fdisk -l "$_diskdev" \
+    | awk '$1 ~ "^/dev/" && !/(Extended|Linux)/ {
+	     if (match($1, /[0-9]+$/, _)) { print _[0]; exit }
+           }'
+}
+
+usage() {
+  cat <<EOF
+$(basename $0) [optional arguments]
+
+  $(basename $0) takes the following optional arguments:
+
+    --hosttype           hosttype
+    --images-dir         imagesdir
+    --only-update-config
+    --vgname             vgname
+EOF
+  exit 1
+}
+
+hosttype=$(cat /etc/puavo/hosttype 2>/dev/null || true)
+images_dir=/images
+only_update_config=false
+vgname=puavo
+
+if ! args=$(getopt -n "$0" -o +                                          \
+                   -l 'hosttype:,images-dir:,only-update-config,vgname:' \
+                   -- "$@"); then
+  usage
+fi
+
+eval "set -- $args"
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --hosttype)           hosttype=$2;             shift; shift ;;
+    --images-dir)         images_dir=$2;           shift; shift ;;
+    --only-update-config) only_update_config=true; shift        ;;
+    --vgname)             vgname=$2;               shift; shift ;;
+    --) shift; break ;;
+    *)  usage ;;
+  esac
+done
+
+[ $# -eq 0 ] || usage
+
+if [ ! -d "$images_dir" ]; then
+  echo "'$images_dir' is not a directory" >&2
+  exit 1
+fi
+
+if [ -z "$hosttype" ]; then
+  echo 'Hosttype is not set' >&2
+  exit 1
+fi
+
+# pvs and assorted utilities complain if we leak file descriptors, that is
+# why we do "3>&- 4>&- 5>&-" (same with grub-install)
+diskdev=$(pvs 3>&- 4>&- 5>&-                                            \
+            | awk -v vgname="$vgname" '$2 == vgname { print $1; exit }' \
+            | sed -E 's|[0-9]+$||')
+
+if [ -z "$diskdev" ]; then
+  echo "Could not find the disk device where volume group '${vgname}' is" >&2
+  exit 1
+fi
+
+if [ "$hosttype" = 'diskinstaller' ]; then
+  puavo_lvm_partition='puavoinstaller-installimages'
+else
+  puavo_lvm_partition='puavo-images'
+fi
+
+common_kernel_arguments="puavo.hosttype=${hosttype} root=/dev/mapper/${puavo_lvm_partition} loop=\"\${imagepath}\""
+
+case "$hosttype" in
+  diskinstaller|preinstalled|wirelessaccesspoint)
+    puavo_kernel_arguments="$common_kernel_arguments"
+    ;;
+  laptop)
+    puavo_kernel_arguments="quiet splash ${common_kernel_arguments}"
+    ;;
+  *)
+    echo "Hosttype '$hosttype' is not supported" > /dev/stderr
+    exit 1
+    ;;
+esac
+
+if ! $only_update_config; then
+  if ! grub_msg=$(grub-install --root-directory=$images_dir "$diskdev" \
+                    3>&- 4>&- 5>&- 2>&1); then
+    echo "Grub installation failed: $grub_msg" >&2
+    exit 1
+  fi
+
+  echo "Grub has been installed to ${diskdev}."
+fi
+
+grub_cfg_path="${images_dir}/boot/grub/grub.cfg"
+tmp_grub_cfg_path="${grub_cfg_path}.tmp"
+
+grub_m4_template                                              \
+  | m4 -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments" \
+       -D__PUAVO_LVM_PARTITION__="$puavo_lvm_partition"       \
+  > "$tmp_grub_cfg_path"
+
+windows_partition_number=$(lookup_windows_partition_number "$diskdev")
+
+if [ -n "$windows_partition_number" ]; then
+  cat <<EOF >> "$tmp_grub_cfg_path"
+
+menuentry "Windows" {
+  insmod ntfs
+  set root=(hd0,$windows_partition_number)
+  chainloader +1
+}
+EOF
+fi
+
+
+if cmp "$grub_cfg_path" "$tmp_grub_cfg_path" >/dev/null 2>&1; then
+  rm -f "$tmp_grub_cfg_path"
+else
+  mv "$tmp_grub_cfg_path" "$grub_cfg_path"
+
+  # We have got some weird spurious grub errors of the sort (at first boot):
+  # "error: ELF header smaller than expected", so we play it safe
+  # and try weird tricks to flush all caches to actual, physical disk.
+  # But we are not quite sure yet this will actually work (the problem is
+  # difficult to reproduce).
+  sync
+  echo 3 > /proc/sys/vm/drop_caches
+  blockdev --flushbufs $diskdev
+  hdparm -qF $diskdev
+fi

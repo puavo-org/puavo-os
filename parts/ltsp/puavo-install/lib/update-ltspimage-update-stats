@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -eu
+
+log() { echo "$2" | logger -p "$1" -s -t update-ltspimage-update-stats; }
+
+stats_filepath=$1
+
+get_stats_value() {
+  awk -v key="$1" '$1 == key { print $2 }' "$stats_filepath"
+}
+
+image=$(get_stats_value image)
+phase=$(get_stats_value phase)
+progress=$(get_stats_value progress)
+
+log info "Image update to $image is in phase ${phase}/${progress}"
+
+dbus-send --dest=org.puavo.client.Daemon         \
+          --reply-timeout=100                    \
+          --print-reply=literal                  \
+          --system                               \
+          /updater                               \
+          org.puavo.client.update.UpdateProgress \
+          "string:$phase"                        \
+          "int32:$progress"

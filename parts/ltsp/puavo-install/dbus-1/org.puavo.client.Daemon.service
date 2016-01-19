@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.puavo.client.Daemon
+Exec=/usr/sbin/puavo-client-daemon
+User=root

@@ -1,0 +1,68 @@
+# Do locale settings for this session. The language is picked from the
+# first defined place in order: user language in session, session wide
+# language (puavo-rest defines this as device language if user language
+# is not set) and device language.
+#
+# Device language from device.json should be used only on laptop guest
+# sessions when recent puavo-rest is used.
+
+puavo_find_locale_and_language() {
+  puavo_jq_file=$1
+  puavo_jq_locale_key=$2
+  puavo_jq_preferred_language_key=$3
+
+  puavo_language_short_form=
+
+  puavo_locale=$(jq -r $puavo_jq_locale_key $puavo_jq_file)
+  if [ -n "$puavo_locale" -a "$puavo_locale" != "null" ]; then
+    puavo_language_short_form=$(echo "$puavo_locale" | cut -c 1-2)
+  else
+    puavo_locale=
+    puavo_preferred_language=$(jq -r $puavo_jq_preferred_language_key \
+				     $puavo_jq_file)
+    if [ -n "$puavo_preferred_language" \
+         -a "$puavo_preferred_language" != "null" ]; then
+      puavo_language_short_form=$(echo "$puavo_preferred_language" \
+				    | cut -c 1-2)
+    fi
+  fi
+
+  [ -n "$puavo_language_short_form" ]
+}
+
+if [ "${PUAVO_SESSION_LANGUAGE}" != "" ]; then
+  puavo_language_short_form="${PUAVO_SESSION_LANGUAGE}"
+  puavo_locale=
+else
+  puavo_find_locale_and_language "${PUAVO_SESSION_PATH}"    \
+				 .user.locale               \
+				 .user.preferred_language   \
+  || puavo_find_locale_and_language "${PUAVO_SESSION_PATH}" \
+				    .locale                 \
+				    .preferred_language     \
+  || puavo_find_locale_and_language /etc/puavo/device.json  \
+				    .locale                 \
+				    .preferred_language
+fi
+
+if [ -n "$puavo_locale" ]; then
+  LANG="$puavo_locale"
+else
+  case "$puavo_language_short_form" in
+    de) LANG=de_DE.UTF-8 ;;
+    en) LANG=en_GB.UTF-8 ;;
+    fi) LANG=fi_FI.UTF-8 ;;
+    fr) LANG=fr_FR.UTF-8 ;;
+    sv) LANG=sv_FI.UTF-8 ;;
+     *)
+        echo "unknown language '${puavo_language_short_form}', falling back to 'fi'" >&2
+        LANG=fi_FI.UTF-8
+        ;;
+  esac
+fi
+
+if [ -n "$puavo_language_short_form" ]; then
+  LANGUAGE="$puavo_language_short_form"
+fi
+
+export LANG LANGUAGE

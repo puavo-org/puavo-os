@@ -1,0 +1,51 @@
+#!/bin/sh
+
+. /usr/share/ltsp/ltsp-client-functions
+scriptsdir="/usr/share/puavo-ltsp/init-puavo.d"
+
+# workaround Debian bug in initramfs-tools:
+# http://bugs.debian.org/660297
+mountpoint -q /sys || mount -t sysfs -o nodev,noexec,nosuid sysfs /sys
+mountpoint -q /proc || mount -t proc -o nodev,noexec,nosuid proc /proc
+
+# Provide an ltsp.break=<script-name> kernel parameter which will offer a shell
+# right before sourcing that script.
+for x in $(cat /proc/cmdline); do
+    case "$x" in
+        ltsp.break=*)
+            breakscript="$scriptsdir/${x#ltsp.break=}"
+            ;;
+        puavo.hosttype=*)
+            puavo_hosttype="${x#puavo.hosttype=}"
+            ;;
+    esac
+done
+
+mkdir -p /etc/puavo
+echo "${puavo_hosttype}" > /etc/puavo/hosttype
+export PUAVO_HOSTTYPE=${puavo_hosttype}
+
+# puavo-ltsp-client and ltsp-client-core do not work well together at
+# the moment because ltsp-client-core has a lot of checks for ltsp
+# in /proc/cmdline. That check is overly jealous and causes some
+# initialisations to happens twice. As a temporary fix we just remove
+# whole ltsp-client-core upstart script when puavo-ltsp-client is used.
+rm -f /etc/init/ltsp-client-core.conf
+kill -HUP 1
+
+for script in $(run_parts_list "$scriptsdir") ; do
+    if [ "$script" = "$breakscript" ]; then
+        echo "Spawning shell before $script" >&2
+        bash -l
+        echo "Continuing ltsp-init execution" >&2
+    fi
+    . "$script"
+done
+
+# init=/sbin/init-puavo can be used to launch this script, which should then
+# chain to /sbin/init.
+# To run it from the initramfs instead, set the EXEC_INIT environment variable
+# to "false".
+if [ "$EXEC_INIT" != "false" ]; then
+    exec /sbin/init
+fi

@@ -1,0 +1,4 @@
+# add tags of format "env:ENVIRONMENT_VARIABLE=foo" to /etc/environment.puavo
+jq -r '.tags[]' /etc/puavo/device.json 2>/dev/null \
+  | sed -n '/^env:/s/^env://p' \
+  > /etc/environment.puavo

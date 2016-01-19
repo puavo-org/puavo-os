@@ -1,0 +1,333 @@
+#!/usr/bin/ruby1.9.3
+
+=begin
+
+DNS-Based printing service discovery tool. Uses DNS to find available
+printers and configures them automatically on laptops.
+
+DNS-SD is refined in RFC 6763: http://www.ietf.org/rfc/rfc6763.txt
+
+
+First the script queries PTR record for b._dns-sd._udp 
+If the query returns a domain name, it is used to do a further query for
+
+PTR _universal._sub._ipp._tcp.<printer domain>
+PTR _universal._sub._ipps._tcp.<printer domain>
+
+If these queries return PTR records, they are all queried for two more
+records:
+
+TXT printer.fqdn
+SRV printer.fqdn
+
+SRV record defines the server offering the printing service and 
+TXT records define the print queue attributes.
+
+List of managed printers is written to file /var/lib/puavo-desktop/dnssd_printers 
+and this list is used on subsequent calls to define which printers are 
+managed by this script and which ones are defined elsewhere. Only printers 
+that are listed in managed printers are deleted.
+
+When the script is run and no PTR record for b._dns-sd._udp is found, 
+printer information is not changed if --require-dns-records is defined. 
+This keeps printer lists stable e.g. when network connection is flaky.
+
+If the --delete-unmanaged option is specified, all unmanaged printers 
+are deleted always (even when --require-dns-records is defined).
+
+Normally DNS is queried once, but the number of retries can be set with 
+--retries=X option. The delay between retries is by default 15 seconds, but 
+it can be changed with --retry-delay=XX option.
+
+With --continuous and --continuous-delay, the script can be set to run 
+in indefinite loop instead of running just once.
+
+=end
+
+require 'etc'
+require 'dnsruby'
+require 'json'
+require 'syslog'
+require 'trollop'
+
+Encoding.default_external = 'utf-8'
+ENV['LANG'] = "C"
+
+class DNSException < RuntimeError
+
+end
+
+class Printer
+  attr_reader :name
+  attr_reader :path
+  attr_reader :description
+  attr_reader :location
+
+  def initialize(name, path, description, location)
+    @name = name
+    @path = path
+    @description = description
+    @location = location
+  end
+
+  def to_json(*a)
+    {
+      'name' => @name,
+      'path' => @path,
+      'description' => @description,
+      'location' => @location
+    }.to_json(*a)
+  end
+
+  def self.json_create(o)
+    new(o['name'], o['path'], o['description'], o['location'])
+  end
+
+  def equals?(other)
+    @name.eql?(other.name) and @path.eql?(other.path)
+  end
+end
+
+def log(message)
+  Syslog.open("puavo-dnssd-printer-client", Syslog::LOG_CONS) do |s|
+    s.warning('%s', message)
+  end
+end
+
+# Queries DNS SRV and TXT records for a single printer and
+# returns a Printer object containing the information if 
+# the printer existed. Otherwise nil is returned.
+
+def query_printer(printer, ipps=false)
+  begin
+    res   = Dnsruby::DNS.new
+
+    path = nil
+    name = nil
+    server = nil
+    urf = nil
+
+    res.each_resource(printer, 'TXT') { |rr|
+      rr.rdata.each do |data|
+        if /rp=(.*)/.match(data)
+          path = $1.tr('^A-Za-z0-9\-_/', '')
+        end
+
+        if /note=(.*)/.match(data)
+          name = $1.tr('^A-Za-z0-9\-_\.', '')
+        end
+
+        if /URF=(.*)/.match(data)
+          urf = $1.tr('^A-Za-z0-9\-_', '')
+        end
+      end
+    }
+
+    res.each_resource(printer, 'SRV') { |rr|
+      server = rr.target.to_s.tr('^A-Za-z0-9\-_.', '')
+    }
+
+    if ipps
+      prefix = "ipps"
+    else
+      prefix = "ipp"
+    end
+
+    if path and name and server and urf
+      return Printer.new(name, "#{prefix}://#{server}/#{path}", "", "")
+    end
+  rescue Exception => e
+    log "querying printer #{printer} failed"
+    return nil
+  end
+end
+
+# Queries printers for the given domain and returns them in a hash.
+# ipps entries override ipp entries if both exist.
+
+def query_domain(domain, ipps)
+  res   = Dnsruby::DNS.new
+
+  printers = Hash.new
+
+  if ipps
+    prefix = "ipps"
+  else
+    prefix = "ipp"
+  end
+
+  begin
+    log "querying domain _universal._sub._#{prefix}._tcp.#{domain}"
+
+    res.each_resource("_universal._sub._#{prefix}._tcp.#{domain}", 'PTR') { |rr|
+      printer = query_printer(rr.rdata, ipps)
+
+      if printer
+        printers[printer.name] = printer
+      end
+    }
+  rescue Exception => e
+    log "querying domain _universal._sub._#{prefix}._tcp.#{domain} failed"
+    raise DNSException.new("querying domain _universal._sub._#{prefix}._tcp.#{domain} failed")
+  end
+
+  return printers
+end
+
+def add_printer(printer)
+  `/usr/sbin/lpadmin -p "#{printer.name}" -E -v #{printer.path} -L "#{printer.location}" -D "#{printer.description}"`
+end
+
+def delete_printer(printer)
+  `/usr/sbin/lpadmin -x #{printer.name}`
+end
+
+opts = Trollop::options do
+  opt :delay, "Delay execution for number of seconds", :type => Integer
+  opt :delete_unmanaged, "Delete unmanaged printers"
+  opt :no_dns_query, "Do not query DNS records"
+  opt :require_dns_records, "Require DNS records to exist before doing updates"
+  opt :retries, "Retry number of times if DNS query fails", :type => Integer
+  opt :retry_delay, "Delay between retries (default 15 seconds)", :type => Integer
+  opt :continuous, "Run continuously instead of just running once"
+  opt :continuous_delay, "Delay between runs in continuous mode (default 300 seconds)", :type => Integer
+end
+
+if opts[:delay]
+  sleep(opts[:delay])
+end
+
+retries = 1
+retry_delay = 15
+continuous_delay = 300
+
+if opts[:retries]
+  retries = opts[:retries]
+end
+
+if opts[:retry_delay]
+  retry_delay = opts[:retry_delay]
+end
+
+if opts[:continuous_delay]
+  continuous_delay = opts[:continuous_delay]
+end
+
+dname = "b._dns-sd._udp"
+
+begin
+
+  # First read old printer list
+
+  managed_printers = Hash.new
+
+  if File.exists?("/var/lib/puavo-desktop/dnssd_printers")
+    json = JSON.parse(File.read("/var/lib/puavo-desktop/dnssd_printers"))
+
+    json.each do |o|
+      printer = Printer.json_create(o)
+      managed_printers[printer.name] = printer
+    end
+  end
+
+  # Get list of printers currently configured in CUPS
+
+  current_printers = Hash.new
+
+  `lpstat -v 2>/dev/null`.split("\n").each do |line|
+    if /device for (.*?): (.*)/.match(line)
+      name = $1
+      ipp = $2
+
+      current_printers[$1] = Printer.new(name, ipp, "", "")
+    end
+  end
+
+  printers = Hash.new
+  ptr_records_ok = false
+
+  if !opts[:no_dns_query]
+    retry_counter = 0
+
+    while retry_counter < retries and !ptr_records_ok
+      retry_counter += 1
+
+      begin
+        res   = Dnsruby::DNS.new
+
+        res.each_resource(dname, 'PTR') { |rr|
+          begin
+            printers.merge! query_domain(rr.rdata, false)
+            ptr_records_ok = true
+          rescue DNSException => e
+          end
+
+          begin
+            printers.merge! query_domain(rr.rdata, true)
+            ptr_records_ok = true
+          rescue DNSException => e
+          end
+        }
+      rescue Exception => e
+        print "Can't find PTR records for #{dname}: ", e, "\n"
+      end
+
+      if retry_counter < retries and !ptr_records_ok
+        sleep(retry_delay)
+      end
+    end
+
+    if opts[:require_dns_records] and !ptr_records_ok
+      log "--require-dns-records defined and DNS entries were not found, not updating records"
+    else
+      # Delete printers that are not available anymore
+
+      old_printers = managed_printers.select do |name, printer|
+        if !printers.has_key?(name) or !printers[name].equals?(printer)
+          log "Delete old printer entry #{printer.name} #{printer.path}"
+          delete_printer(printer)
+        end
+      end
+
+      # Add new entries
+
+      new_printers = printers.select do |name, printer|
+        if !current_printers.has_key?(name) or (!current_printers[name].equals?(printer))
+          log "Add new printer entry #{printer.name} #{printer.path}"
+ 
+          add_printer(printer)
+        end
+      end
+
+      # Write new list of managed entries to the disk
+
+      File.open("/var/lib/puavo-desktop/dnssd_printers", "w") do |file|
+        file.puts printers.values.to_json
+      end
+
+      managed_printers = printers
+    end
+  end
+
+  # Finally delete all unmanaged entries if that was requested
+
+  if opts[:delete_unmanaged]
+    `lpstat -a 2>/dev/null`.split("\n").each do |line|
+      name = line.split(" ")[0]
+
+      if !managed_printers.has_key?(name)
+        log "Deleting unmanaged printer #{name}"
+
+        delete_printer(Printer.new(name, "", "", ""))
+      end
+    end
+  end
+
+  if opts[:continuous]
+    sleep(continuous_delay)
+  end
+
+rescue Exception => e
+  log "Error: #{e} - exiting"
+  exit(1)
+end while opts[:continuous]

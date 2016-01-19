@@ -1,0 +1,571 @@
+#!/usr/bin/ruby1.9.3
+#
+# Setup local filesystems for Puavo hosts
+
+require 'fileutils'
+require 'getoptlong'
+require 'highline/import'
+require 'open3'
+
+# XXX this should be elsewhere, other scripts might find this useful
+module PuavoFacts
+  Puavodir = '/etc/puavo'
+
+  FactPaths = {
+		'kerberos_master'   => 'kerberos/master',
+		'kerberos_realm'    => 'kerberos/realm',
+		'kerberos_toprealm' => 'kerberos/toprealm',
+		'ldap_base'         => 'ldap/base',
+		'ldap_binddn'       => 'ldap/dn',
+		'ldap_bindpw'       => 'ldap/password',
+		'ldap_master'       => 'ldap/master',
+		'puavo_domain'      => 'domain',
+		'puavo_hostname'    => 'hostname',
+		'puavo_hosttype'    => 'hosttype',
+		'puavo_topdomain'   => 'topdomain',
+	      }
+
+  def self.all
+    Hash[ FactPaths.map { |name, path| [ name, get(name) ] } ]
+  end
+
+  def self.get(name)
+    File.read("#{ Puavodir }/#{ FactPaths[ name ] }").chomp \
+      or raise "Could not read a fact '#{ name }'"
+  end
+end
+
+module DiskHandler
+  Filesystems = {
+    'diskinstaller' => {
+      'installimages' => { 'size' => '100%FREE', 'type' => 'ext4' },
+    },
+    'laptop' => {
+      'swap'          => { 'size' => '4G',       'type' => 'swap' },
+      'tmp'           => { 'size' => '6G',       'type' => 'ext4' },
+      'images'        => { 'size' => '40G',      'type' => 'ext4' },
+      'state'         => { 'size' => '4G',       'type' => 'ext4' },
+      'imageoverlays' => { 'size' => '5G',       'type' => 'ext4' },
+      'home'          => { 'size' => '100%FREE', 'type' => 'ext4' },
+    },
+    'ltspserver' => {
+      'swap'          => { 'size' => '16G',      'type' => 'swap' },
+      'tmp'           => { 'size' => '6G',       'type' => 'ext4' },
+      'state'         => { 'size' => '100%FREE', 'type' => 'ext4' },
+    },
+    'wirelessaccesspoint' => {
+      'swap'          => { 'size' => '2G',       'type' => 'swap' },
+      'tmp'           => { 'size' => '3G',       'type' => 'ext4' },
+      'state'         => { 'size' => '2G',       'type' => 'ext4' },
+      'imageoverlays' => { 'size' => '128M',     'type' => 'ext4' },
+      'images'        => { 'size' => '100%FREE', 'type' => 'ext4' },
+    },
+  }
+
+  def self.cleanup_disk_environment(hosttype, vgname)
+    # Unmount filesystems, if those are mounted.
+    non_swap_filesystems(hosttype).each do |name, attrs|
+      run('umount', '-f', "/#{ name }", { :err => '/dev/null' }) rescue true
+    end
+
+    if hosttype != 'diskinstaller' then
+      # Turn off swap partitions from the target device (and possibly some
+      # else...).  If our target hosttype is "diskinstaller", we do not need
+      # to do this because installer disks should not contain (active) swap
+      # partitions (and turning swap off from the current host is not
+      # appropriate).  (The really proper solution should disable swap
+      # selectively from the disk we are installing to.)
+      run('swapoff', '-a', { :err => '/dev/null' }) rescue true
+    end
+
+    dm_device_list = \
+      case hosttype
+        when 'diskinstaller'
+          %w(puavoinstaller-installimages)
+        else
+          %w(swap0) \
+            + ((Filesystems[hosttype] || {}) \
+                .keys.map { |partname| "puavo-#{ partname }" })
+      end
+
+    # remove all dmsetup volumes which may exists on the target host
+    dm_device_list.each do |dm_device|
+      run('dmsetup', 'remove', '--force', dm_device, { :err => '/dev/null' }) \
+        rescue true
+    end
+
+    # switch off all volume groups that may interfere with following operations
+    run('vgchange', '-a', 'n', vgname,
+	{ :close_others => :true, :err => '/dev/null' }) \
+      rescue true
+  end
+
+  def self.do_fs_setup(conf, vgname)
+    fs_conf = conf.clone
+
+    fs_setup_phases = []
+
+    if fs_conf['partition'] == 'whole'
+      fs_setup_phases += [ :wipe_device ] if conf['wipe']
+      fs_setup_phases += [ :lvm_partition, :puavo_filesystems ]
+      fs_conf['partition'] = "#{ fs_conf['device'] }1"
+    else
+      fs_setup_phases += [ :wipe_partition ] if conf['wipe']
+      fs_setup_phases += [ :puavo_filesystems ]
+    end
+
+    fs_setup_phases += [ :mount_filesystems ]
+
+    fs_conf.merge!({ 'device'    => "/dev/#{ fs_conf['device'   ] }",
+		     'partition' => "/dev/#{ fs_conf['partition'] }" })
+
+    fs_setup_phases.each do |fn_sym|
+      args = [ :mount_filesystems, :puavo_filesystems ].include?(fn_sym) \
+                ? [ fs_conf, vgname ]                                    \
+                : [ fs_conf         ]
+      method(fn_sym).call(*args)
+    end
+  end
+
+  def self.run(*cmd)
+    system(*cmd) or raise "Error running command: '#{ cmd.inspect }'"
+  end
+
+  def self.lvm_partition(fs_conf)
+    # clean up possible confusing mess from the device
+    run('dd', 'if=/dev/zero', "of=#{ fs_conf['device'] }", 'count=2K',
+        { :err => '/dev/null' })
+
+    # create an lvm partition
+    # see http://www.walkernews.net/2007/07/02/how-to-create-linux-lvm-in-3-minutes/
+    IO.popen("fdisk #{ fs_conf['device'] }", 'w') do |f|
+      f.print "n\np\n1\n#{ fs_conf['first_sector'] }\n#{ fs_conf['last_sector'] }\nt\n8e\na\n1\np\nw\n"
+    end
+  end
+
+  def self.non_swap_filesystems(hosttype)
+    Filesystems[ hosttype ] \
+      .select { |name, attrs| attrs['type'] != 'swap' }
+  end
+
+  def self.puavo_filesystems(fs_conf, vgname)
+    # clean up possible confusing mess from the partition
+    run('dd', 'if=/dev/zero', "of=#{ fs_conf['partition'] }", 'count=2K',
+       { :err => '/dev/null' })
+
+    # create LVM volume groups
+    run('pvcreate', fs_conf['partition'], { :close_others => true })
+    run('vgcreate', '-s', '64M', vgname, fs_conf['partition'],
+	{ :close_others => true })
+
+    Filesystems[ fs_conf['hosttype'] ].each do |name, attrs|
+      mkfs(attrs['size'], name, attrs['type'], vgname)
+    end
+  end
+
+  def self.mkfs(size, name, type, vgname)
+    run('lvcreate',
+	(size.match(/%/) ? '-l' : '-L'), size,
+	'-n', name,
+	vgname,
+	{ :close_others => true })
+
+    case type
+      when 'ext4'
+        run('mkfs.ext4', "/dev/mapper/#{ vgname }-#{ name }")
+      when 'swap'
+        run('mkswap', '-f', "/dev/mapper/#{ vgname }-#{ name }")
+    end
+  end
+
+  def self.mount_filesystems(fs_conf, vgname)
+    non_swap_filesystems( fs_conf['hosttype'] ).each do |name, attrs|
+      mnt_path = "/#{ name }"
+      FileUtils.mkdir_p(mnt_path)
+      run('mount', "/dev/mapper/#{ vgname }-#{ name }", mnt_path)
+    end
+  end
+
+  def self.wipe(device)
+    run('nwipe', '--autonuke',
+                 '--method=quick',
+                 '--nowait',
+                 '--verify=off',
+                 device)
+  end
+
+  def self.wipe_device(fs_conf)   ; wipe(fs_conf['device'])   ; end
+  def self.wipe_partition(fs_conf); wipe(fs_conf['partition']); end
+end
+
+module QueryDiskInfo
+  def self.ask_device()
+    choosable_disk_devices = []
+
+    current_system_device = nil
+    begin
+      current_system_device = get_current_system_device()
+    rescue StandardError => e
+      msg = "Could not find the current system device: #{ e }\n"        \
+            + "It may appear on the list of devices to install to,\n"   \
+            + "but the install to it should fail (maybe it will not?)."
+      STDERR.puts msg
+    end
+
+    chosen_disk_device = nil
+    until choosable_disk_devices.include?(chosen_disk_device) do
+      all_disk_devices = IO.readlines('/proc/partitions') \
+                           .map { |s| s.split(' ')[3] }   \
+                           .select { |s| s && s.match(/^[vs]d[a-z]$/) }
+
+      # do not allow installation to the device where the currently running
+      # system resides
+      choosable_disk_devices \
+        = all_disk_devices - [ current_system_device ].compact
+
+      if choosable_disk_devices.empty? then
+        raise 'Could not find any disk device where we could install to'
+      end
+
+      puts '-----'
+      puts "We can install to the following disk devices:\n"
+      show_disk_devices(choosable_disk_devices)
+
+      if chosen_disk_device.nil?
+        chosen_disk_device = choosable_disk_devices[0]
+      end
+
+      puts "\nPossible disk devices are: #{ choosable_disk_devices.join(' ') }"
+      chosen_disk_device = UI::ask_with_default('Choose a disk device:',
+                                                chosen_disk_device,
+                                                UI::DiskDevicePrompt)
+    end
+
+    chosen_disk_device
+  end
+
+  def self.ask_confirmation(device, partition)
+    if device.nil? || device.empty? || partition.nil? || partition.empty?
+      return false
+    end
+
+    puts %Q{\nYou are going to install to device "/dev/#{ device }", } \
+	 + %Q{partition "#{ partition }".}
+    UI::colormsg("IF YOU PROCEED, ALL DATA ON THAT PARTITION IS DESTROYED!\n",
+		 HighLine::RED)
+
+    prompt = %q{Are you sure you want to proceed (write "yes" if this is okay?)}
+
+    UI::ask_with_default(prompt, 'no', UI::ConfirmPartitionsPrompt) == 'yes'
+  end
+
+  def self.ask_last_sector(device, first_sector)
+    device_basename = File.basename(device)
+    sectors = File.read("/sys/block/#{device_basename}/size").strip().to_i()
+    sector_bytes = File.read("/sys/block/#{device_basename}/queue/logical_block_size").strip().to_i()
+
+    while true do
+      tailroom_size =
+        UI::ask_size_with_default('How much unpartitioned space '\
+                                  'should be left to the end of '\
+                                  'the device:', '0G', UI::UnpartitionedSpacePrompt)
+      tailroom_bytes = Size::to_bytes(tailroom_size)
+      tailroom_sectors = tailroom_bytes / sector_bytes
+      if tailroom_sectors > sectors - first_sector
+        UI::colormsg("The size of the tailroom exceeds the size of the device.",
+                     HighLine::RED)
+        next
+      end
+
+      last_sector = sectors - tailroom_sectors - 1
+      break
+
+    end
+    last_sector
+  end
+
+  def self.ask_device_and_partition_with_confirmation(hosttype)
+    do_it        = false
+    device       = nil
+    partition    = nil
+    first_sector = nil
+    last_sector  = nil
+    wipe         = false
+
+    until do_it do
+      device    = QueryDiskInfo::ask_device()
+      partition = QueryDiskInfo::ask_partition(device)
+      if partition == 'whole'
+        first_sector = 2048
+        last_sector  = QueryDiskInfo::ask_last_sector(device, first_sector)
+
+        # Let the user set the size of the following filesystems:
+        [
+         ['imageoverlays', UI::ImageoverlaySizePrompt],
+        ].each do |fs_name, prompt_key|
+          fs = DiskHandler::Filesystems[hosttype][fs_name]
+          next if fs.nil?
+          fs_size =
+            UI::ask_size_with_default("Filesystem size of #{ fs_name }:",
+                                      fs['size'], prompt_key)
+
+          fs['size'] = fs_size.join()
+        end
+      end
+
+      msg = "\nIt is possible to wipe disk/partition before installing,\n" \
+              + "but this can take a rather long time.\n"                  \
+              + "Should we wipe the disk/partition before installing? (yes/no)"
+      while true do
+        wipe_answer = UI::ask_with_default(msg, 'no')
+        case wipe_answer
+          when 'yes'
+            wipe = true
+            break
+          when 'no'
+            wipe = false
+            break
+        end
+      end
+
+      do_it = QueryDiskInfo::ask_confirmation(device, partition)
+    end
+
+    {
+      'device'       => device,
+      'first_sector' => first_sector,
+      'hosttype'     => hosttype,
+      'last_sector'  => last_sector,
+      'partition'    => partition,
+      'wipe'         => wipe,
+    }
+  end
+
+  def self.ask_partition(disk_device)
+    partitions = []
+
+    chosen_partition = 'whole'
+    until partitions.include?(chosen_partition) do
+      if chosen_partition == 'fdisk'
+        system('fdisk', "/dev/#{ disk_device }")
+        chosen_partition = 'whole'
+      end
+
+      puts '-----'
+      puts "The disk /dev/#{ disk_device } has the following partitions:\n"
+      show_disk_devices(disk_device)
+
+      partitions \
+        = %w(whole) \
+          + IO.readlines('/proc/partitions') \
+              .map { |line| (line.split)[3] } \
+              .compact \
+              .select { |part| part.match(/^#{ disk_device }[0-9]/) } \
+
+      puts "\nPossible partitions are: #{ partitions.join(' ') }"
+      puts "\nYou may choose 'fdisk' to partition this disk,"
+      puts "or choose 'whole' to use the whole disk.\n"
+      chosen_partition = UI::ask_with_default('Choose a partition:',
+                                              chosen_partition,
+                                              UI::PartitionPrompt)
+    end
+    chosen_partition
+  end
+
+  def self.get_current_system_device
+    rootdev = nil
+    File.read('/proc/cmdline').split.each do |kernel_arg|
+      match = kernel_arg.match(/^root=(.*)$/)
+      if match then
+        rootdev = match[1]
+        break
+      end
+    end
+
+    raise 'Could not find root= argument in kernel command line' \
+      unless rootdev
+
+    match = rootdev.match(%r{^/dev/(nbd.*)$})
+    return match[1] if match
+
+    match = rootdev.match(%r{^/dev/mapper/(.*)$})
+    raise 'Did not understand the root= argument in kernel command line' \
+      unless match
+    root_dm_name = match[1]
+
+    images_dm_path = nil
+    Dir.glob('/sys/block/dm-*').each do |dm_name_path|
+      if File.read("#{ dm_name_path }/dm/name").chomp == root_dm_name then
+        images_dm_path = dm_name_path
+        break
+      end
+    end
+    raise 'Could not find the logical volume where the images are' \
+      unless images_dm_path
+
+    Dir.glob("#{ images_dm_path }/slaves/*") do |dm_slave|
+      return File.basename( File.dirname( File.readlink(dm_slave) ) )
+    end
+    raise 'Could not find the device where the images are' \
+      unless images_dm_path
+  end
+
+  def self.show_disk_devices(disk_devices)
+    sleep(1.5)
+    [ disk_devices ].each do |device|
+      system("fdisk -l /dev/#{ device } | more") \
+        or raise "Error running fdisk for device '#{ device }'"
+    end
+  end
+end
+
+module Size
+  UNIT_BYTES = {
+    'K' => 1024 ** 1,
+    'M' => 1024 ** 2,
+    'G' => 1024 ** 3,
+  }
+
+  def self.parse(str)
+    unit = str[-1]
+    if not UNIT_BYTES.include?(unit)
+      raise ArgumentError, "invalid unit, expected one from #{UNIT_BYTES.keys}"
+    end
+
+    number = str[0..-2]
+    value = Integer(number)
+    if value < 0
+      raise ArgumentError, "invalid size, expected a non-negative value"
+    end
+
+    [value, unit]
+  end
+
+  def self.to_bytes(size)
+    value, unit = size
+    value * UNIT_BYTES[unit]
+  end
+
+end
+
+# XXX could be shared with puavo-register
+module UI
+
+  ConfirmPartitionsPrompt,
+  DiskDevicePrompt,
+  ImageoverlaySizePrompt,
+  PartitionPrompt,
+  UnpartitionedSpacePrompt,
+  = *(1..5)
+
+  @accept_defaults = false
+  @defaults = {}
+  @hosttype = nil
+
+  def self.hosttype; @hosttype end
+
+  def self.help_and_exit
+    puts <<-EOF
+puavo-setup-filesystems [OPTIONS]
+
+-h, --help                        show help
+
+    --accept-defaults             accept all prompts with default values
+    --default-confirm-partitions  default value for confirm partitions prompt
+    --default-disk-device         default value for disk device prompt
+    --default-imageoverlay-size   default value for imageoverlay size prompt
+    --default-partition           default value for partition prompt
+    --default-unpartitioned-space default value for partitioned space prompt
+
+EOF
+  end
+
+  def self.parse_args
+    begin
+      opts = GetoptLong.new(
+                            [ '--help', '-h'                 , GetoptLong::NO_ARGUMENT      ,],
+                            [ '--accept-defaults'            , GetoptLong::NO_ARGUMENT      ,],
+                            [ '--default-confirm-partitions' , GetoptLong::REQUIRED_ARGUMENT,],
+                            [ '--default-disk-device'        , GetoptLong::REQUIRED_ARGUMENT,],
+                            [ '--default-imageoverlay-size'  , GetoptLong::REQUIRED_ARGUMENT,],
+                            [ '--default-partition'          , GetoptLong::REQUIRED_ARGUMENT,],
+                            [ '--default-unpartitioned-space', GetoptLong::REQUIRED_ARGUMENT,],
+                            [ '--hosttype'                   , GetoptLong::REQUIRED_ARGUMENT,],
+                            )
+
+      opts.each do |opt, arg|
+        case opt
+        when '--help'
+          help_and_exit
+          exit(0)
+        when '--accept-defaults'
+          @accept_defaults = true
+        when '--default-confirm-partitions'
+          @defaults[ConfirmPartitionsPrompt] = arg
+        when '--default-disk-device'
+          @defaults[DiskDevicePrompt] = arg
+        when '--default-imageoverlay-size'
+          @defaults[ImageoverlaySizePrompt] = arg
+        when '--default-partition'
+          @defaults[PartitionPrompt] = arg
+        when '--default-unpartitioned-space'
+          @defaults[UnpartitionedSpacePrompt] = arg
+        when '--hosttype'
+          @hosttype = arg
+        end
+      end
+    rescue GetoptLong::InvalidOption => e
+      help_and_exit
+      exit(1)
+    end
+  end
+
+  def self.ask_with_default(question, default, prompt_key=nil)
+    if @defaults.has_key?(prompt_key) then
+      default = @defaults[prompt_key]
+    end
+    if @accept_defaults then
+      return default
+    end
+    prompt = "#{ question } [#{ default }] "
+    answer = HighLine.ask(prompt) { |q| q.whitespace = nil }
+
+    return answer.match(/^\n$/)  ? default \
+         : answer.match(/^\s+$/) ? ''      \
+         : answer.strip
+  end
+
+  def self.ask_size_with_default(question, default, prompt_key=nil)
+    while true do
+      str = ask_with_default(question, default, prompt_key)
+      begin
+        size = Size::parse(str)
+      rescue ArgumentError => e
+        colormsg(e.message, HighLine::RED)
+        next
+      end
+      break
+    end
+    size
+  end
+
+  def self.colormsg(msg, color)
+    HighLine.say(HighLine.new.color(msg, color))
+  end
+end
+
+UI::parse_args
+
+hosttype = UI::hosttype || PuavoFacts::get('puavo_hosttype')
+
+vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : 'puavo'
+
+DiskHandler::cleanup_disk_environment(hosttype, vgname)
+
+case hosttype
+  when 'diskinstaller', 'laptop', 'ltspserver', 'wirelessaccesspoint'
+    conf = QueryDiskInfo::ask_device_and_partition_with_confirmation(hosttype)
+    DiskHandler::do_fs_setup(conf, vgname)
+  else
+    puts "Hosttype '#{ hosttype }' does not need to setup local filesystems."
+end

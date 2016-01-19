@@ -1,0 +1,140 @@
+#!/usr/bin/ruby
+
+require 'fileutils'
+require 'highline/import'
+require 'tmpdir'
+require 'ipaddress'
+
+ENV['LANG'] = "C"
+
+class Interface
+  def initialize(name)
+    @name = name
+    @ifconfig = `ifconfig #{name}`
+  end
+
+  def ip
+    if /inet addr:(\d+)\.(\d+)\.(\d+)\.(\d+)/.match(@ifconfig)
+      ip = "#{$1}.#{$2}.#{$3}.#{$4}"
+
+      if /Mask:(\d+)\.(\d+)\.(\d+)\.(\d+)/.match(@ifconfig)
+        mask = "#{$1}.#{$2}.#{$3}.#{$4}"
+
+        return IPAddress "#{ip}/#{mask}"
+      end
+    end
+
+    return nil
+  end
+
+  def ranges(mask)
+    subnets = self.ip.subnet(mask)
+    ranges = Array.new
+    iface_ip = self.ip
+
+    subnets.each do |subnet|
+      if !subnet.include?(iface_ip)
+        ranges << [subnet.first.to_s, subnet.last.to_s]
+      end
+    end
+
+    ranges
+  end
+end
+
+only_update_dnsmasq = false
+if ARGV[0] == '--only-update-dnsmasq' then
+  only_update_dnsmasq = true
+  ARGV.shift
+end
+
+puavo_device_type = ARGV[0]
+
+if (!puavo_device_type)
+  if File.exists?("/etc/puavo/hosttype")
+    puavo_device_type = File.read('/etc/puavo/hosttype').chomp
+  end
+end
+
+if puavo_device_type == 'unregistered'
+  exit(0)
+end
+
+@ldap_master       = File.read('/etc/puavo/ldap/master'    ).chomp
+#@ldap_slave        = File.read('/etc/puavo/ldap/slave'     ).chomp
+@ldap_base         = File.read('/etc/puavo/ldap/base'      ).chomp
+@kerberos_master   = File.read('/etc/puavo/kerberos/master').chomp
+@kerberos_realm    = File.read('/etc/puavo/kerberos/realm' ).chomp
+@kerberos_toprealm = File.read('/etc/puavo/kerberos/toprealm' ).chomp
+@puavo_hostname    = File.read('/etc/puavo/hostname'       ).chomp
+@puavo_domain      = File.read('/etc/puavo/domain'         ).chomp
+@puavo_topdomain   = File.read('/etc/puavo/topdomain'      ).chomp
+@arpazone = "10.in-addr.arpa"
+
+def write_config(filename, version=nil, secure=false)
+  template_file = filename
+
+  if version
+    template_file = "#{filename}-#{version}"
+  end
+
+  conf_template = File.read("/usr/share/puavo-ltsp-bootserver/templates#{template_file}")
+  conf = ERB.new(conf_template, 0, "%<>")
+
+  perm = secure ? 0600 : 0644
+
+  File.open(filename, "w", perm) do |f|
+    f.write conf.result
+  end
+
+  File.chmod(perm, filename)
+end
+
+@ltsp_iface = Interface.new("ltsp0")
+@wlan_iface = Interface.new("wlan0")
+
+if only_update_dnsmasq then
+  write_config('/etc/dnsmasq.conf')
+  system('/etc/init.d/dnsmasq restart') or raise 'Could not start dnsmasq'
+  exit(0)
+end
+
+`mkdir -p /etc/dhcp/ddns-keys/`
+`ddns-confgen -a hmac-md5 -q > /etc/dhcp/ddns-keys/nsupdate.key`
+`cp /etc/dhcp/ddns-keys/nsupdate.key /etc/bind/nsupdate.key`
+
+`/etc/init.d/isc-dhcp-server stop`
+`/etc/init.d/dnsmasq stop`
+`/etc/init.d/bind9 stop`
+
+delete_files = ["/var/lib/bind/puavo_domain.jnl",
+                "/var/lib/bind/puavo_domain_reverse.jnl"]
+
+delete_files.each do |file|
+  if File.exists?(file)
+    puts "Deleting old journal file: #{file}"
+    File.delete(file)
+  end
+end
+
+write_config("/etc/bind/named.conf.local")
+write_config("/etc/bind/named.conf.options")
+write_config("/var/lib/bind/puavo_domain")
+write_config("/var/lib/bind/puavo_domain_reverse")
+write_config("/etc/dnsmasq.conf")
+write_config("/etc/dhcp/dhcpd.conf")
+write_config("/etc/apparmor.d/local/usr.sbin.dhcpd")
+
+`chown bind.bind /var/lib/bind/puavo_domain`
+`chown bind.bind /var/lib/bind/puavo_domain_reverse`
+
+`chown root:dhcpd /etc/dhcp/ddns-keys/nsupdate.key`
+`chmod 0640 /etc/dhcp/ddns-keys/nsupdate.key`
+`chown root:bind /etc/bind/nsupdate.key`
+`chmod 0640 /etc/bind/nsupdate.key`
+
+`/etc/init.d/apparmor start`
+`/etc/init.d/bind9 start`
+`/etc/init.d/dnsmasq start`
+`/etc/init.d/isc-dhcp-server start`
+`puavo-update-airprint-ddns`

@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+use_rate_limit=$1
+
+update_ltsp_image() {
+    next_imagename=$(jq -r .preferred_image /state/etc/puavo/device.json) \
+        || return
+
+    if [ "$use_rate_limit" = "true" ]; then
+        rate_limit=$(
+            jq -r '.tags[]' /state/etc/puavo/device.json \
+                | awk -F: '
+            BEGIN { rate_limit = "500k" }
+            $1 == "imagedownload-rate-limit" && $2 ~ /^[0-9]+k/ {
+              rate_limit = $2
+            }
+            END { print rate_limit }
+          ')
+    else
+        rate_limit=''
+    fi
+
+    update_ltspimage_params=""
+
+    if [ -n "$rate_limit" ]; then
+        update_ltspimage_params="${update_ltspimage_params} --rate-limit $rate_limit"
+    fi
+
+    if [ -n "$next_imagename" ]; then
+        puavo-install-and-update-ltspimages $update_ltspimage_params \
+            "${next_imagename}.img"
+    fi
+}
+
+update_ltsp_image

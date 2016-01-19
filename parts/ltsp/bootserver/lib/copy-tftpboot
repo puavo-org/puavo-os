@@ -1,0 +1,131 @@
+#!/bin/bash
+#
+# ##############################################################################
+#
+# Copyright (C) 2014 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+#
+
+set -eu
+
+on_exit()
+{
+    local exitval=$?
+
+    set +eu
+
+    if [ -n "${mount_point}" ]; then
+        umount "${mount_point}" || {
+            umount_exitval=$?
+            if [ $exitval -eq 0 ]; then
+                exitval=$umount_exitval
+            fi
+        }
+        rmdir "${mount_point}" || {
+            rm_exitval=$?
+            if [ $exitval -eq 0 ]; then
+                exitval=$rm_exitval
+            fi
+        }
+    fi
+
+    exit $exitval
+}
+
+usage_error()
+{
+    echo "error: $1" >&2
+    echo "Try '$0 --help' for more information." >&2
+    return 1
+}
+
+use_force=false
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            echo "Usage: $0 FILE"
+            echo
+            echo "Copy /boot from an image FILE to a TFTP boot directory which defaults to"
+            echo "/var/lib/tftpboot/ltsp but can be set in PUAVO_TFTP_BOOT_DIR environment"
+            echo "variable."
+            echo
+            echo "Options:"
+            echo "    -h, --help                   print help and exit"
+            echo "    --force                      copy the boot directory, regardless of"
+            echo "                                 its last modification time"
+            echo
+            exit 0
+            ;;
+        --force)
+            shift
+            use_force=true
+            break
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage_error "invalid argument '$1'"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -ne 1 ]; then
+    usage_error "invalid number of arguments ($#), expected 1"
+fi
+
+image_filepath=$1
+image_filename=$(basename "${image_filepath}")
+image_name=$(basename "${image_filename}" '.img')
+image_boot_dir="${PUAVO_TFTP_BOOT_DIR:-/var/lib/tftpboot/ltsp}/${image_name}"
+mount_point=
+
+trap on_exit EXIT
+
+mkdir -p "${PUAVO_TFTP_BOOT_DIR:-/var/lib/tftpboot/ltsp}"
+
+if [ -d "${image_boot_dir}" ]; then
+    image_boot_dir_mtime=$(stat --format %Y "${image_boot_dir}")
+else
+    image_boot_dir_mtime=0
+fi
+
+image_filepath_mtime=$(stat --format %Y "${image_filepath}")
+
+# image_filepath is potentially a symlink, we can skip copying iff
+# both the symlink and the target are older than the boot directory
+image_real_filepath=$(readlink -e "${image_filepath}")
+image_real_filepath_mtime=$(stat --format %Y "${image_real_filepath}")
+if [ "${image_filepath_mtime}" -lt "${image_boot_dir_mtime}" \
+    -a "${image_real_filepath_mtime}" -lt "${image_boot_dir_mtime}" ]; then
+    if ! $use_force; then
+        exit 0
+    fi
+fi
+
+mount_point=$(mktemp -d)
+mount -oloop,ro "${image_filepath}" "${mount_point}"
+cp -r -T "${mount_point}/boot" "${image_boot_dir}"
+chmod -R +r "${image_boot_dir}"

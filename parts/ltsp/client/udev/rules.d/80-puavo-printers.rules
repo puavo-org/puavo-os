@@ -1,0 +1,5 @@
+ACTION=="add", SUBSYSTEM=="usbmisc", KERNEL=="lp*", RUN+="/usr/lib/puavo-ltsp-client/udev-jetpipe add usb %p"
+ACTION=="remove", SUBSYSTEM=="usbmisc", KERNEL=="lp*", RUN+="/usr/lib/puavo-ltsp-client/udev-jetpipe remove usb %p"
+
+ACTION=="add", SUBSYSTEM=="printer", KERNEL=="lp*", RUN+="/usr/lib/puavo-ltsp-client/udev-jetpipe add lp %p"
+ACTION=="remove", SUBSYSTEM=="printer", KERNEL=="lp*", RUN+="/usr/lib/puavo-ltsp-client/udev-jetpipe remove lp %p"

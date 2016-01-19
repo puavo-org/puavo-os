@@ -1,0 +1,11 @@
+if [ -n "$DEFAULT_LOCALE" ]; then
+  {
+    echo "LANG=$DEFAULT_LOCALE"
+    echo "LANGUAGE=$(echo $DEFAULT_LOCALE | cut -c 1-2)"
+
+    _PUAVO_DCONF_PROFILE="user-$(echo $DEFAULT_LOCALE | cut -c 1-2)"
+    if [ -e "/etc/dconf/profile/${_PUAVO_DCONF_PROFILE}" ]; then
+      echo "DCONF_PROFILE=${_PUAVO_DCONF_PROFILE}"
+    fi
+  } > /etc/default/locale
+fi

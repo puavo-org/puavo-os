@@ -1,0 +1,135 @@
+#!/bin/bash
+
+set -eu
+
+on_exit()
+{
+    set +e
+
+    if [ -n "${devroot}" ]; then
+        umount -l "${devroot}"
+        rmdir "${devroot}"
+    fi
+
+    if [ -n "${isoroot}" ]; then
+        umount -l "${isoroot}"
+        rmdir "${isoroot}"
+    fi
+
+    exit $exitvalue
+}
+
+usage_error()
+{
+    echo "ERROR: $1" >&2
+    echo "Try '$0 --help' for more information". >&2
+    return 1
+}
+
+exitvalue=1
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            echo "Usage: $0 DEV ISO"
+            echo
+            echo "Create a bootserver installer USB disk."
+            echo
+            echo "Example: $0 /dev/sdb /tmp/ubuntu-12.04.5-server-amd64.iso"
+            echo
+            echo "Options:"
+            echo "    -h, --help                   print help and exit"
+            echo
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage_error "invalid argument '$1'"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -ne 2 ]; then
+    usage_error "invalid number of arguments ($#), expected 2"
+fi
+
+dev="$1"
+iso="$2"
+shift 2
+
+if [ "$(id -u)" -ne 0 ]; then
+    usage_error 'you must be root (euid=0) to run this command'
+fi
+
+while true; do
+    echo -n "Root password for the target system: "
+    read -s password1
+    echo
+    [ -n "${password1}" ] || {
+        echo 'ERROR: empty password not allowed' >&2
+        continue
+    }
+    echo -n "Verify password: "
+    read -s password2
+    echo
+    [ "${password1}" = "${password2}" ] || {
+        echo 'ERROR: passwords do not match' >&2
+        continue
+    }
+    break
+done
+
+echo -n "Partitioning ${dev} ... "
+dd status=none if=/dev/zero "of=${dev}" count=1 bs=1M
+## Use the whole disk, otherwise debian-installer prompts a note
+## mentioning that there is some free space:
+## partman/installation_medium_mounted
+parted -s -a optimal "${dev}" -- \
+    mklabel msdos                \
+    mkpart primary fat32 1 -1    \
+    set 1 boot on
+echo "OK"
+
+echo -n "Creating a filesystem on ${dev}1 ... "
+## debian-installer assumes the installation media is iso9660 or fat32.
+mkfs.vfat -F 32 "${dev}1" >/dev/null
+echo "OK"
+
+isoroot=
+devroot=
+
+trap on_exit EXIT
+
+isoroot=$(mktemp -d)
+devroot=$(mktemp -d)
+
+echo -n "Copying files to ${dev}1 ... "
+mount "${dev}1" "${devroot}"
+mount -oloop,ro "${iso}" "${isoroot}"
+rsync --quiet --recursive "${isoroot}/" "${devroot}/"
+
+mkdir -p "${devroot}/preseed"
+cp preseed/* "${devroot}/preseed"
+cp fix-dummy-partitions "${devroot}"
+{
+    echo "d-i passwd/root-password password ${password1}"
+    echo "d-i passwd/root-password-again password ${password1}"
+} >> "${devroot}/preseed/puavo-bootserver.cfg"
+echo "OK"
+
+echo -n "Installing bootloader to ${dev} ... "
+syslinux -i "${dev}1"
+dd status=none conv=notrunc bs=440 count=1 if=/usr/lib/syslinux/mbr.bin "of=${dev}"
+cp syslinux.cfg "${devroot}"
+cp /usr/lib/syslinux/vesamenu.c32 "${devroot}/vesamenu.c32"
+echo "OK"
+
+exitvalue=0
+echo "Created successfully an installation disk."

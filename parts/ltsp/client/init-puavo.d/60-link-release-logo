@@ -1,0 +1,12 @@
+# This file is sourced.
+
+hosttype=$(cat /etc/puavo/hosttype)
+
+if [ -f "/usr/share/icons/release_logo.${hosttype}.png" ]; then
+  ln -fs "/usr/share/icons/release_logo.${hosttype}.png" \
+	 /usr/share/icons/release_logo.png
+
+  mkdir -p /opt/webmenu/styles/theme/default/img
+  ln -fs /usr/share/icons/release_logo.png \
+         /opt/webmenu/styles/theme/default/img/logo.png
+fi

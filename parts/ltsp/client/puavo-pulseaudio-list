@@ -1,0 +1,122 @@
+#!/bin/bash
+#
+# ##############################################################################
+#
+# Copyright (C) 2014 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+#
+
+set -eu
+
+# All global variables must be declared here.
+card=
+profilesection=false
+orig_audio_setup=
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            echo "Usage: $0"
+            echo
+            echo "List available PulseAudio setups in Puavo-compatible format."
+            echo
+            echo "Options:"
+            echo "    -h, --help                   print help and exit"
+            echo
+            exit 0
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -ne 0 ]; then
+    usage_error "invalid number of positional arguments ($#), expected 0"
+fi
+
+on_exit()
+{
+    local exitval=$?
+
+    # We are already exiting and doing cleanups and we really want to
+    # carry out all cleanups before exiting, hence exit-on-error is
+    # disabled.
+    set +e
+
+    # XXX: Is this necessary?
+    trap - EXIT
+    
+    if [ -n "${orig_audio_setup}" ]; then
+
+        # Restore the original audio setup.
+        while read orig_card orig_profile; do
+            pacmd set-card-profile "${orig_card}" "${orig_profile}" >/dev/null
+        done <"${orig_audio_setup}"
+
+        rm "${orig_audio_setup}"
+    fi
+
+    return $exitval
+}
+
+trap on_exit EXIT
+
+orig_audio_setup=$(mktemp)
+
+pacmd list-cards | while read line; do
+
+    # Get the name of the card.
+    match=$(sed -r -n 's/^name: <(.*)>$/\1/p' <<<"${line}")
+    if [ -n "${match}" ]; then
+        card="${match}"
+        continue
+    fi
+
+    # Enter profile list section.
+    egrep -q '^profiles:$' <<<"${line}" && {
+        profilesection=true
+        continue
+    }
+
+    # Leave profile list section.
+    match=$(sed -r -n 's/^active profile: <(.*)>$/\1/p' <<<"${line}")
+    if [ -n "${match}" ]; then
+        profilesection=false
+        echo "${card}" "${match}" >>"${orig_audio_setup}"
+        continue
+    fi
+
+    if $profilesection; then
+        profile=$(sed -r -n 's/^([^ ]+):.*$/\1/p' <<<"${line}")
+        if [ -n "${profile}" ]; then
+            pacmd set-card-profile "${card}" "${profile}" >/dev/null
+            sleep 0.2 # Be nice =).
+
+            pacmd list-sinks | sed -r -n '/^\s+index: [0-9]+$/ n; s/^\s+name: <(.*)>$/\1/p' | while read sink; do
+                printf "SINK   %s|%s|%s\n" "${card}" "${profile}" "${sink}"
+            done
+
+            pacmd list-sources | sed -r -n '/^\s+index: [0-9]+$/ n; s/^\s+name: <(.*)>$/\1/p' | while read source; do
+                printf "SOURCE %s|%s|%s\n" "${card}" "${profile}" "${source}"
+            done
+        fi
+    fi
+done | sort

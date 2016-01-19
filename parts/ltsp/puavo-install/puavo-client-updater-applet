@@ -1,0 +1,513 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import print_function
+
+import datetime
+import gettext
+gettext.bindtextdomain('puavo-client-updater-applet', '/usr/share/locale')
+gettext.textdomain('puavo-client-updater-applet')
+_tr = gettext.gettext
+
+import appindicator
+import dbus
+import dbus.mainloop.glib
+import gobject
+import grp
+import gtk
+import os
+import pwd
+import pynotify
+import re
+import sys
+
+dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+
+def on_persistent_overlay():
+    file = open('/proc/cmdline', 'r')
+    cmdline = file.read()
+    file.close()
+    return re.match(".*?puavo.image.overlay=", cmdline)
+
+
+class UpdateIndicatorApplet:
+    def __init__(self):
+        self.indicator \
+          = appindicator.Indicator('update-indicator',
+                                   'update-idle',
+                                   appindicator.CATEGORY_APPLICATION_STATUS)
+        self.indicator.set_status(appindicator.STATUS_ACTIVE)
+
+        menu = gtk.Menu()
+
+        pynotify.init('puavo-client-updater-applet')
+
+        if not on_persistent_overlay():
+            self.add_image_update_widget(menu)
+        else:
+            self.add_reset_development_state_widget(menu)
+
+
+    def add_image_update_widget(self, menu):
+        self.available_notice_shown = False
+        self.download_animation_icons \
+          = [ 'update-downloading-%02d' % x for x in range(1, 14) ]
+
+        self.add_update_button(menu)
+        self.add_view_log_button(menu)
+        self.add_progress(menu)
+
+        self.connect_to_dbus_image_update()
+        self.setup_log()
+
+        self.indicator.set_menu(menu)
+
+        self.check_for_updates()
+
+
+    def add_reset_development_state_widget(self, menu):
+        msg = _tr('Updates are disabled in developer mode, boot to normal mode to update.')
+        self.disabled_msg = gtk.MenuItem(msg)
+        self.disabled_msg.set_sensitive(False)
+        self.disabled_msg.show()
+
+        menu.append(self.disabled_msg)
+
+        buttonmsg = _tr('Reset development state')
+        self.reset_devstate_button = gtk.MenuItem(buttonmsg)
+        self.reset_devstate_button.connect('activate',
+                                           self.confirm_reset_devstate)
+        self.reset_devstate_button.show()
+
+        self.connect_to_dbus_reset_development_state()
+
+        menu.append(self.reset_devstate_button)
+
+        self.indicator.set_menu(menu)
+
+
+    def add_progress(self, menu):
+        self.progress = gtk.MenuItem('')
+        self.set_progress_text( _tr('(No update progress.)') )
+        self.progress.set_sensitive(False)
+        self.progress.show()
+        self.roll_progress_id = None
+
+        menu.append(self.progress)
+
+
+    def add_update_button(self, menu):
+        self.update_button = gtk.MenuItem('')
+        self.button_action_handler = None
+        self.set_update_button_mode('check')
+        self.update_button.show()
+
+        menu.append(self.update_button)
+
+
+    def add_view_log_button(self, menu):
+        self.view_log_item = gtk.MenuItem( _tr('View log...') )
+        self.view_log_item.connect('activate', self.view_log)
+        self.view_log_item.show()
+
+        menu.append(self.view_log_item)
+
+
+    def append_error_to_log(self, errortext):
+        self.append_text_to_log(errortext, True)
+
+
+    def append_text_to_log(self, text, error=False):
+        if text == '':
+            return
+
+        end_iter = self.log_buffer.get_end_iter()
+
+        timestamped_text = re.sub(r'^',
+                                  '%s: ' % datetime.datetime.now(),
+                                  text.rstrip(),
+                                  flags=re.MULTILINE) \
+                             + "\n"
+
+        if not error:
+            self.log_buffer.insert_with_tags(end_iter,
+                                             timestamped_text,
+                                             self.log_ok_tag)
+            print(timestamped_text, end='')
+        else:
+            self.log_buffer.insert_with_tags(end_iter,
+                                             timestamped_text,
+                                             self.log_error_tag)
+            print(timestamped_text, file=sys.stderr, end='')
+
+
+
+    def cancel_image_update(self, widget):
+        self.update_iface.CancelImageUpdate()
+
+
+    def check_for_updates(self, widget=None):
+        self.set_update_button_mode('checking')
+
+        self.update_iface \
+            .UpdateConfiguration(
+               reply_handler=lambda reply: None,
+               error_handler=self.handle_dbus_error)
+
+
+    def connect_to_dbus(self, service, interface):
+        self.bus = dbus.SystemBus()
+        dbusobj = self.bus.get_object('org.puavo.client.Daemon', service)
+        return dbus.Interface(dbusobj, dbus_interface=interface)
+
+
+    def connect_to_dbus_image_update(self):
+        self.update_iface = self.connect_to_dbus('/updater',
+                                                 'org.puavo.client.update')
+
+        self.update_iface.connect_to_signal('UpdateIsUpToDate',
+                                            self.on_update_isuptodate)
+        self.update_iface.connect_to_signal('UpdateAvailable',
+                                            self.on_update_available)
+        self.update_iface.connect_to_signal('UpdateMessage',
+                                            self.on_update_message)
+        self.update_iface.connect_to_signal('UpdateStarted',
+                                            self.on_update_started)
+        self.update_iface.connect_to_signal('UpdateProgressIndicator',
+                                            self.on_update_progress_indicator)
+        self.update_iface.connect_to_signal("UpdateCancelled",
+                                            self.on_update_cancelled)
+        self.update_iface.connect_to_signal('UpdateFailed',
+                                            self.on_update_failed)
+        self.update_iface.connect_to_signal('UpdateCompleted',
+                                            self.on_update_completed)
+
+
+    def connect_to_dbus_reset_development_state(self):
+        self.overlayhandler_iface \
+          = self.connect_to_dbus('/overlayhandler',
+                                 'org.puavo.client.overlayhandler')
+
+        self.overlayhandler_iface \
+            .connect_to_signal('DeleteImageOverlaysCompleted',
+                               self.on_delete_overlays_completed)
+        self.overlayhandler_iface \
+            .connect_to_signal('DeleteImageOverlaysFailed',
+                               self.on_delete_overlays_failed)
+
+
+    def handle_dbus_error(self, dbusexception):
+        self.append_error_to_log('Unknown dbus error.')
+        self.on_update_failed()
+
+
+    def notify(self, msg):
+        pynotify.Notification(msg).show()
+
+
+    def on_delete_overlays_completed(self):
+        self.reset_devstate_button.set_sensitive(True)
+        self.notify( _tr('Reset development state is now done,'
+                         ' rebooting the system.') )
+
+
+    def on_delete_overlays_failed(self, errmsg):
+        self.reset_devstate_button.set_sensitive(True)
+        msg = _tr('An error occurred when resetting development state')
+        self.notify("%s: %s" % (msg, errmsg))
+
+
+    def on_update_available(self):
+        self.stop_roll_progress()
+        self.set_update_button_mode('update')
+
+        self.indicator.set_attention_icon('update-available')
+        self.indicator.set_status(appindicator.STATUS_ATTENTION)
+
+        # show only once after each login
+        if not self.available_notice_shown:
+            self.append_text_to_log( _tr('A new system update is available.') \
+                                       + "\n" )
+            self.notify( _tr('A new system update is available.') )
+            self.available_notice_shown = True
+
+
+    def on_update_cancelled(self):
+        self.stop_roll_progress()
+        self.on_update_progress_indicator('interrupted')
+        self.on_update_available()
+
+        self.append_error_to_log( _tr('Update cancelled.') + "\n" )
+
+        self.notify( _tr('System update has been cancelled.') )
+
+
+    def on_update_completed(self, image_update_done, reboot_required):
+        self.stop_roll_progress()
+        self.set_update_button_mode('check')
+
+        self.on_update_isuptodate(reboot_required)
+
+        if not image_update_done:
+            return
+
+        if reboot_required:
+            log_msg \
+              = _tr('Update completed, reboot required to finish the update.')
+            notify_msg = _tr('System update is finished, reboot the computer.')
+        else:
+            log_msg    = _tr('Update completed.')
+            notify_msg = _tr('System update is finished.')
+
+        self.append_text_to_log( log_msg + "\n" )
+
+        self.available_notice_shown = False
+        self.notify(notify_msg)
+
+
+    def on_update_failed(self):
+        self.stop_roll_progress()
+        self.set_update_button_mode('update')
+
+        self.indicator.set_attention_icon('update-error')
+        self.indicator.set_status(appindicator.STATUS_ATTENTION)
+
+        self.append_error_to_log( _tr('Update failed.') + "\n" )
+
+        self.notify( _tr('An error occurred when updating the system.') )
+
+
+    def on_update_isuptodate(self, reboot_required):
+        self.stop_roll_progress()
+
+        if reboot_required:
+            self.on_update_progress_indicator('finished')
+            self.indicator.set_attention_icon('update-installed')
+            self.indicator.set_status(appindicator.STATUS_ATTENTION)
+        else:
+            self.on_update_progress_indicator('uptodate')
+            self.indicator.set_icon('update-idle')
+            self.indicator.set_status(appindicator.STATUS_ACTIVE)
+
+
+    def on_update_message(self, msgtype, content):
+        prefixed_message = '        > %s' % content
+        if msgtype == 'ok':
+            self.append_text_to_log(prefixed_message)
+        elif msgtype == 'error':
+            self.append_error_to_log(prefixed_message)
+
+
+    def on_update_progress_indicator(self, phase, progress=0):
+        mode, text = None, None
+
+        if phase == 'error':
+            mode = 'update'
+            text = _tr('Update failed.')
+        elif phase == 'finished':
+            mode = 'check'
+            text = _tr('Update done, reboot required to finish the update.')
+        elif phase == 'interrupted':
+            mode = 'update'
+            text = _tr('Update interrupted.')
+        elif phase == 'uptodate':
+            mode = 'check'
+            text = _tr('Up to date.')
+
+        if mode and text:
+            self.stop_roll_progress()
+            self.set_progress_text(text)
+            self.set_update_button_mode(mode)
+            return
+
+        progfn = lambda a, b: int(a + (b - a) * float(progress) / 100)
+
+        # There are two possible image update paths: image_download/image_sync
+        # and rdiff_fetch+rdiff_checksum+image_patch are alternative routes
+        # to the same result.
+
+        if phase == 'starting':
+            progresstext = '0% (starting)'
+        elif phase == 'checksums_fetch':
+            progresstext = '%d%% (fetch checksums)' % progfn(0, 1)
+        elif phase == 'rdiff_fetch':
+            progresstext = '%d%% (fetch rdiff)' % progfn(1, 75)
+        elif phase == 'rdiff_checksum':
+            progresstext = '%d%% (check rdiff)' % progfn(75, 80)
+        elif phase == 'image_patch':
+            progresstext = '%d%% (patch image)' % progfn(80, 90)
+        elif phase == 'image_download':
+            progresstext = '%d%% (download image)' % progfn(1, 90)
+        elif phase == 'image_sync':
+            progresstext = '%d%% (sync image)' % progfn(1, 90)
+        elif phase == 'image_checksum':
+            progresstext = '%d%% (check image)' % progfn(90, 100)
+        elif phase == 'puavopkg':
+            progresstext = '(extra packages)'
+        else:
+            # this should not happen, but show that to user anyway (so if a
+            # developer sees this, she can know there is something to fix)
+            progresstext = '???'
+
+        text = '%s %s' % (_tr('Update progress:'), progresstext)
+
+        self.set_progress_text(text)
+        self.set_update_button_mode('updating')
+
+        if not self.roll_progress_id:
+            self.roll_progress_id \
+              = gobject.timeout_add(250, self.roll_progress_animation)
+
+
+    def on_update_started(self):
+        self.set_update_button_mode('updating')
+        self.indicator.set_attention_icon('update-downloading')
+        self.indicator.set_status(appindicator.STATUS_ATTENTION)
+
+        self.append_text_to_log( _tr('System update has been started.') \
+                                   + "\n" )
+
+        self.notify( _tr('System update has been started.') )
+
+
+    def confirm_reset_devstate(self, widget):
+        imageoverlays_state = self.overlayhandler_iface.ImageOverlaysState()
+        if imageoverlays_state < 0:
+            statepercent = '???'
+        else:
+            statepercent = "%s%%" % imageoverlays_state
+
+        dialogmsg = _tr('Development state space utilization is') \
+                      + (" %s.\n\n" % statepercent)               \
+                      + _tr('Do you want to reset the development state?'
+                            ' All your custom system changes will be lost.'
+                            ' System will also reboot itself after this'
+                            ' operation.')
+
+        self.reset_devstate_dialog \
+          = gtk.MessageDialog(None,
+                              gtk.DIALOG_MODAL,
+                              gtk.MESSAGE_QUESTION,
+                              gtk.BUTTONS_YES_NO,
+                              dialogmsg)
+
+        self.reset_devstate_dialog.set_title( _tr('Reset development state') )
+
+        response = self.reset_devstate_dialog.run()
+        self.reset_devstate_dialog.destroy()
+
+        if response == gtk.RESPONSE_YES:
+            self.reset_development_state()
+
+
+    def reset_development_state(self):
+        self.overlayhandler_iface.DeleteImageOverlays()
+        self.reset_devstate_button.set_sensitive(False)
+
+
+    def roll_progress_animation(self):
+        self.indicator.set_attention_icon(self.download_animation_icons[0])
+        self.indicator.set_status(appindicator.STATUS_ATTENTION)
+
+        # cycle attention icons
+        self.download_animation_icons         \
+          = self.download_animation_icons[1:] \
+              + [ self.download_animation_icons[0] ]
+
+        return True
+
+
+    def set_progress_text(self, text):
+        wrapped_text = '-=> ' + text + ' <=-'
+        self.progress.get_child().set_text(wrapped_text)
+
+
+    def set_update_button_mode(self, mode):
+        action = None
+
+        if mode == 'check':
+            action      = self.check_for_updates
+            message     = _tr('Check for updates')
+            sensitivity = True
+        elif mode == 'checking':
+            message     = _tr('(Checking for updates.)')
+            sensitivity = False
+        elif mode == 'update':
+            action      = self.update_image
+            message     = _tr('Update')
+            sensitivity = True
+        elif mode == 'updating':
+            message     =_tr('Cancel update')
+            action      = self.cancel_image_update
+            sensitivity = True
+        else:
+            raise Exception('Wrong arguments for set_update_button_mode')
+
+        if self.button_action_handler:
+            self.update_button.disconnect(self.button_action_handler)
+            self.button_action_handler = None
+        if action:
+            self.button_action_handler \
+              = self.update_button.connect('activate', action)
+
+        self.update_button.get_child().set_text(message)
+        self.update_button.set_sensitive(sensitivity)
+
+
+    def setup_log(self):
+        self.log_dialog \
+          = gtk.Dialog(title=_tr('Update log'),
+                       parent=None,
+                       flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                       buttons=(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+
+        self.log_dialog.set_default_size(600, 300)
+        self.log_buffer = gtk.TextBuffer()
+
+        self.log_ok_tag    = self.log_buffer.create_tag(foreground='green')
+        self.log_error_tag = self.log_buffer.create_tag(foreground='red')
+
+        self.log_view = gtk.TextView(self.log_buffer)
+        self.log_view.set_editable(False)
+        self.log_view.set_cursor_visible(False)
+        self.log_view.show()
+
+        log_scroll = gtk.ScrolledWindow()
+        log_scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        log_scroll.add(self.log_view)
+        log_scroll.show()
+
+        self.log_dialog.vbox.pack_start(log_scroll)
+
+
+    def stop_roll_progress(self):
+        if self.roll_progress_id:
+            gobject.source_remove(self.roll_progress_id)
+            self.roll_progress_id = None
+
+
+    def update_image(self, widget):
+        self.update_iface \
+            .Update(False,
+                    reply_handler=lambda reply: None,
+                    error_handler=self.handle_dbus_error)
+
+        self.set_update_button_mode('updating')
+        self.on_update_progress_indicator('starting')
+
+
+    def view_log(self, widget):
+        self.log_dialog.run()
+        self.log_dialog.hide()
+
+
+if __name__ == "__main__":
+    user = pwd.getpwuid( os.getuid() ).pw_name
+    puavolocaladmins = grp.getgrnam('puavolocaladmins').gr_mem
+    if not user in puavolocaladmins:
+        print('You do not have a permission to run this program',
+              file=sys.stderr)
+        sys.exit(1)
+
+    applet = UpdateIndicatorApplet()
+    gtk.main()

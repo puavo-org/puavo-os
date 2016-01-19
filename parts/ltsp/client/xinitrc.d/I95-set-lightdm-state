@@ -1,0 +1,12 @@
+# make it so that the "general login" (not guest login) is always the
+# default in lightdm unity-greeter
+
+install -d -o lightdm -g lightdm /var/lib/lightdm/.cache
+install -d -o lightdm -g lightdm /var/lib/lightdm/.cache/unity-greeter
+
+cat <<'EOF' > /var/lib/lightdm/.cache/unity-greeter/state
+[greeter]
+last-user=*other
+EOF
+
+chown lightdm:lightdm /var/lib/lightdm/.cache/unity-greeter/state

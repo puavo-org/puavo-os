@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -eu
+
+## Precise version of lightdm (1.2.3-0ubuntu2) uses PAM session module,
+## which calls this script, to create session for the lightdm
+## user. However, this script is intended to be called only for
+## non-system users which are authenticated with PAM auth module and
+## hence must have created SESSION_DIR already.
+if [ "${PAM_USER}" != "lightdm" ]; then
+    SESSION_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
+
+    chown "${PAM_USER}" "${SESSION_DIR}"
+
+    echo "PUAVO_SESSION_PATH=${SESSION_DIR}/puavo_session.json"
+
+    # XDG_RUNTIME_DIR is used for session information that should not
+    # be persisted across reboots.
+    XDG_RUNTIME_DIR="/run/user/${PAM_USER}"
+    chown "${PAM_USER}" "${XDG_RUNTIME_DIR}"
+
+    echo "XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}"
+fi

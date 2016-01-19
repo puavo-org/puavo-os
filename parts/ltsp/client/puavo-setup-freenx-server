@@ -1,0 +1,55 @@
+#!/usr/bin/ruby1.9.1
+
+# FreeNX server setup script for LTSP servers running on Puavo images.
+# The script fetches puavoRemoteDesktopPublicKey attribute from the
+# organisations root entry in LDAP and if it is found, nxsetup script
+# is called and the public key is written to file system.
+#
+# After setup nxclient can be used to connect to port 222 using the
+# private key found in LDAP.
+
+require "ldap"
+require 'rubygems'
+require 'yaml'
+ 
+def read_file(file)
+  if File.exists?(file)
+    begin
+      return File.read(file).chomp
+    rescue
+    end
+  end
+ 
+  return nil
+end
+ 
+suffix = read_file('/etc/puavo/ldap/base')
+ldap_slave = read_file('/etc/puavo/ldap/slave')
+binddn = read_file('/etc/puavo/ldap/dn')
+bindpw = read_file('/etc/puavo/ldap/password')
+
+conn = LDAP::Conn.new(host=ldap_slave, port=389)
+conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+conn.start_tls
+ 
+conn.bind(binddn, bindpw) do
+  begin
+    conn.search(suffix, LDAP::LDAP_SCOPE_BASE, "(objectClass=puavoEduOrg)", ["puavoRemoteDesktopPublicKey"]) {|e|
+      e.get_values("puavoRemoteDesktopPublicKey").each {|key|
+        `/usr/lib/nx/nxsetup --install --auto`
+
+        File.open("/var/lib/nxserver/home/.ssh/authorized_keys2", "w") {|f|
+          f.puts("no-port-forwarding,no-agent-forwarding,command=\"/usr/lib/nx/nxserver\" #{key}")
+        }
+
+        File.open("/etc/nxserver/node.conf", "w") {|f|
+          f.puts("SSHD_PORT=222")
+        }
+      }
+    }
+ 
+    rescue LDAP::ResultError
+      conn.perror("LDAP connection failed")
+      puts "LDAP connection failed"
+    end
+end

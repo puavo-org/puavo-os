@@ -1,0 +1,8 @@
+# Source some files saved by the initramfs.
+# Those environment variables, e.g. HOSTNAME, can be overriden by lts.conf.
+
+for netfile in /var/cache/ltsp/net-*.conf /run/net-*.conf ; do
+    if [ -f "$netfile" ]; then
+        . "$netfile"
+    fi  
+done

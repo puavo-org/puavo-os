@@ -1,0 +1,13 @@
+puavo_default_browser=$(xdg-mime query default text/html || true)
+
+browser_desktop_path="/usr/share/applications/firefox.desktop"
+
+if [ -n "$puavo_default_browser" \
+     -a -e "/usr/share/applications/${puavo_default_browser}" ]; then
+  browser_desktop_path="/usr/share/applications/${puavo_default_browser}"
+fi
+
+# set dconf value in panel so that the user default is also in panel
+browser_dconf_path="/org/gnome/gnome-panel/layout/objects/object-0"
+dconf write "${browser_dconf_path}/instance-config/location" \
+	    "'${browser_desktop_path}'"

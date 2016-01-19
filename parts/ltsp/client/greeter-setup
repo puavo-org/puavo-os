@@ -1,0 +1,93 @@
+#!/bin/sh
+
+has_device_tag() {
+  jq -r .tags[] /etc/puavo/device.json | grep -qx "$1"
+}
+
+puavo_keyboard_layout=$(jq -r .keyboard_layout /etc/puavo/device.json)
+puavo_keyboard_variant=$(jq -r .keyboard_variant /etc/puavo/device.json)
+puavo_primary_user=$(jq -r .primary_user /etc/puavo/device.json)
+puavo_greeter_background_mode=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background_mode://p' | tail -n1)
+puavo_greeter_background=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background://p' | tail -n1)
+puavo_greeter_background_random_subdir=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background_random_subdir://p' | tail -n1)
+puavo_greeter_background_firstlogin=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background_firstlogin://p' | tail -n1)
+
+background=
+
+BACKGROUNDS_BASEDIR=/usr/share/backgrounds/puavo-greeter
+BACKGROUNDS_RANDOMDIR="${BACKGROUNDS_BASEDIR}/default"
+
+if [ -n "$puavo_greeter_background_firstlogin" \
+     -a ! -s /var/lib/extrausers/passwd ]; then
+  # If /var/lib/extrausers/passwd does not exist or is empty, then we put
+  # a special background to guide the user if that path exists
+  # (puavo_greeter_background_mode must be set to dynamic as well).
+  puavo_greeter_background="$puavo_greeter_background_firstlogin"
+  puavo_greeter_background_mode="firstlogin"
+fi
+
+case "${puavo_greeter_background_mode}" in
+  ''|static)
+      ;;
+  dynamic|firstlogin)
+      if [ -n "${puavo_greeter_background}" ]; then
+	  find "${BACKGROUNDS_BASEDIR}" \( -type f -o -type l \) -printf '%P\n' \
+	      | grep -q -x "${puavo_greeter_background}" && {
+	      background="${BACKGROUNDS_BASEDIR}/${puavo_greeter_background}"
+	  }
+      fi
+      ;;
+  random)
+      if [ -n "${puavo_greeter_background_random_subdir}" ]; then
+	  find "${BACKGROUNDS_BASEDIR}" -mindepth 1 -type d -printf '%P\n' \
+	      | grep -x -q "${puavo_greeter_background_random_subdir}" && {
+	      BACKGROUNDS_RANDOMDIR="${BACKGROUNDS_BASEDIR}/${puavo_greeter_background_random_subdir}"
+	  }
+      fi
+      background=$(find "${BACKGROUNDS_RANDOMDIR}" \( -type f -o -type l \) | sort -R | head -n1)
+      ;;
+  *)
+      echo "unknown greeter background mode '${puavo_greeter_background_mode}'" >&2
+      ;;
+esac
+
+[ "${puavo_keyboard_layout}" = "null" ] && puavo_keyboard_layout=
+[ "${puavo_keyboard_variant}" = "null" ] && puavo_keyboard_variant=
+[ "${puavo_primary_user}" = "null" ] && puavo_primary_user=
+
+export XAUTHORITY=/var/run/lightdm/root/:0
+export DISPLAY=:0
+
+if [ -n "${puavo_keyboard_layout}" ]; then
+  if [ -n "${puavo_keyboard_variant}" ]; then
+    setxkbmap -layout  "${puavo_keyboard_layout}"  \
+              -variant "${puavo_keyboard_variant}"
+  else
+    setxkbmap -layout "${puavo_keyboard_layout}"
+  fi
+fi
+
+run_gsettings() {
+  install -d -o lightdm -g lightdm -m 700 /var/lib/lightdm/.config
+  install -d -o lightdm -g lightdm -m 700 /var/lib/lightdm/.config/dconf
+
+  su -s /bin/sh lightdm -c "dbus-launch gsettings $1"
+}
+
+if [ -n "${puavo_primary_user}" ]; then
+  run_gsettings \
+    "set com.canonical.unity-greeter default-user ${puavo_primary_user}"
+  run_gsettings \
+    "set com.canonical.unity-greeter exclude-prefixes \"['adm-', 'opinsys']\""
+fi
+
+if [ -n "${background}" ]; then
+  run_gsettings "set com.canonical.unity-greeter background ${background}"
+else
+  run_gsettings "reset com.canonical.unity-greeter background"
+fi
+
+su -s /bin/sh lightdm \
+   -c /usr/lib/puavo-ltsp-client/puavo-force-plaintext-keyring
+
+exit 0

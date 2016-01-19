@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -eu
+
+for script in /etc/puavo-external-files-actions.d/*; do
+  test -x "$script" || continue
+  $script || true
+done

@@ -1,0 +1,47 @@
+#!/bin/sh
+
+set -u
+
+## FIXME: this is a duplicate from puavo-install-and-update-ltspimages
+lookup_ltspimage_name_by_alias() {
+    images_dir=$1
+    imagename=$2
+
+    current_ltspimage_path="$images_dir/$imagename"
+    current_ltspimage_inode="$(stat -c %i $current_ltspimage_path 2>/dev/null \
+                               || true)"
+
+    for file in $images_dir/*.img; do
+    # check that *.img expands to something
+        test -e "$file" || continue
+
+    # ltsp.img is not what we are looking for
+        test "$file" = "$current_ltspimage_path" && continue
+
+    # we want its other name...
+        if [ "$(stat -c %i "$file" || true)" = "$current_ltspimage_inode" ]; then
+            echo "$(basename "$file")"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+next_ltspimage_name=$(jq -r .preferred_image /state/etc/puavo/device.json)
+current_ltspimage_filename=$(lookup_ltspimage_name_by_alias /images ltsp.img || true)
+
+if [ "${current_ltspimage_filename}" != "${next_ltspimage_name}.img" ]; then
+  # update *is* available!
+  exit 0
+fi
+
+booted_ltspimage_filename=$(cat /etc/ltsp/this_ltspimage_name)
+
+if [ "${booted_ltspimage_filename}" = "${current_ltspimage_filename}" ]; then
+  # we are up-to-date!
+  exit 1
+else
+  # reboot required!
+  exit 2
+fi

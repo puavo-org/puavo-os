@@ -1,0 +1,117 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo 'You can run me as root only!' >&2
+  exit 1
+fi
+
+if grep -qw root=/dev/nbd0 /proc/cmdline; then
+  echo 'Refusing to do anything as we are on an NBD root' >&2
+  exit 1
+fi
+
+puavo_hosttype=$(cat /etc/puavo/hosttype)
+
+if [ "$puavo_hosttype" != "laptop" ]; then
+  echo "I do not know how to wipe hosts of type '${puavo_hosttype}'" >&2
+  exit 1
+fi
+
+while true; do
+  cat <<'EOF'
+DANGER, WILL ROBINSON!  DANGER!
+
+THIS PROCEDURE WILL DESTROY ALL YOUR DATA IN YOUR HOME DIRECTORY!
+
+This utility tries to quickly reset laptop state to something as if
+it came from "the factory", as if nobody had ever used it.  This will
+DESTROY YOUR STUFF and home directory contents, though in a quick way so
+that old files MAY still recoverable with suitable tools.  If possible,
+you should consider erasing things in a more secure way by doing a
+reinstall with a full disk device "wipe".  That option is not perfect
+either, but much better than this quick-and-dirty procedure.
+
+DANGER!
+THIS PROCEDURE WILL DESTROY ALL YOUR DATA IN YOUR HOME DIRECTORY, AND MORE!
+WHEN IN DOUBT, TURN OFF THE MACHINE, PANIC AND RUN AWAY!
+EOF
+  echo
+  read -p 'Are you sure you want to continue? (yes/no) ' answer
+  case "$answer" in
+    yes)
+      echo 'THIS WILL DESTROY EVERYTHING!!!  WHAT ARE YOU THINKING?!?!?'
+      read -p 'Are you REALLY sure? (yes/no) ' second_answer
+      if [ "$second_answer" = "yes" ]; then
+        break
+      fi
+      ;;
+    no)
+      echo 'Okay then, maybe a wise choice!'
+      exit 0
+      ;;
+    *)
+      echo "I do not understand that.\n" >&2
+      ;;
+  esac
+done
+
+cd /
+
+# XXX The device primary user should probably be set to nil in Puavo,
+# XXX but puavo-rest does not permit this yet.  It should also be ensured that
+# XXX /state/etc/puavo/primary_user_override does not exist.
+
+{
+  echo starting...
+  puavo-pkg remove --all
+  echo done.
+} 2>&1 | sed 's|^|>>>>> Removing all puavo-pkgs - |'
+
+{
+  echo starting...
+  find /var/lib/puavo-desktop/users/ -mindepth 1 -print0 | xargs -0 rm -vrf
+  echo done.
+} 2>&1 | sed 's|^|>>>>> Cleaning up /var/lib/puavo-desktop/users/* - |'
+
+{
+  echo starting...
+  find /etc/NetworkManager/system-connections/ -mindepth 1 -print0 \
+    | xargs -0 rm -vrf
+  echo done.
+} 2>&1 | sed 's|^|>>>>> Removing network manager connections - |'
+
+{
+  echo starting...
+  find /home/ -mindepth 1 -print0 | xargs -0 rm -vrf
+  echo done.
+} 2>&1 | sed 's|^|>>>>> Cleaning up /home - |'
+
+{
+  echo starting...
+  service sssd stop || true
+  find /var/lib/sss/db/ -mindepth 1 -print0 | xargs -0 rm -vrf
+  service sssd start || true
+  echo done.
+} 2>&1 | sed 's|^|>>>>> Cleaning up sssd-cache - |'
+
+{
+  echo starting...
+  find /var/lib/extrausers/ -mindepth 1 -print0 | xargs -0 rm -vrf
+  echo done.
+} 2>&1 | sed 's|^|>>>>> Removing user information - |'
+
+{
+  echo starting...
+  /usr/lib/puavo-ltsp-install/update-configuration || true
+  echo done.
+} 2>&1 | sed 's|^|>>>>> Updating system configuration - |'
+
+echo '>>>>> Done!'
+echo
+echo 'Press ENTER to restart the login manager.'
+
+read answer
+
+service lightdm restart &

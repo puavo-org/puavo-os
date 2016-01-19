@@ -1,0 +1,252 @@
+#!/bin/sh
+#
+#  Copyright (c) 2005 Canonical LTD
+#
+#  Author: Matt Zimmerman <mdz@canonical.com>
+#
+#  2006, Oliver Grawert <ogra@canonical.com>
+#        Vagrant Cascadian <vagrant@freegeek.org>
+#  2007, Scott Balneaves <sbalneav@ltsp.org>
+#        Oliver Grawert <ogra@canonical.com>
+#  2008, Vagrant Cascadian <vagrant@freegeek.org>
+#        Warren Togami <wtogami@redhat.com>
+#        Oliver Grawert <ogra@canonical.com>
+#  2009, Warren Togami <wtogami@redhat.com>
+#  2012, Alkis Georgopoulos <alkisg@gmail.com>
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License as
+#  published by the Free Software Foundation; either version 2 of the
+#  License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, you can find it on the World Wide
+#  Web at http://www.gnu.org/copyleft/gpl.html, or write to the Free
+#  Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+#  MA 02110-1301, USA.
+#
+
+usage() {
+    cat <<EOF
+Usage: $0 [OPTION] [CHROOT...]
+Copies the chroot kernels to the TFTP directory. The TFTP directory
+can be set in TFTP_DIRS environment variable, which defaults to
+/var/lib/tftpboot, /tftpboot and /srv/tftp.
+
+Options:
+  -b, --base=          The LTSP base directory. Defaults to "/opt/ltsp".
+  -h, --help           This message.
+EOF
+}
+
+die() {
+    echo "$@" >&2
+    exit 1
+}
+
+require_root()
+{
+    if [ ${UID:-$(id -u)} -ne 0 ]; then
+        die "Superuser privileges are needed."
+    fi
+}
+
+# Remember mounted dirs so that it's easier to unmount them with a single call
+# to umount_marked. They'll be unmounted in reverse order.
+# Use the normal mount syntax, e.g.
+#   mark_mount -t proc proc "$ROOT/proc"
+mark_mount() {
+    local dir
+
+    # The last parameter is the dir we need to remember to unmount
+    dir=$(eval "echo \$$#")
+    if mount "$@"; then
+        # Use newlines to separate dirs, in case they contain spaces
+        if [ -z "$MARKED_MOUNTS" ]; then
+            MARKED_MOUNTS="$dir"
+        else
+            MARKED_MOUNTS="$dir
+$MARKED_MOUNTS"
+        fi
+    else
+        die "Could not mount $dir."
+    fi
+}
+
+umount_marked() {
+    [ -z "$MARKED_MOUNTS" ] && return
+
+    echo "$MARKED_MOUNTS" | while read dir; do
+        # binfmt_misc might need to be unmounted manually, see LP #534211
+        if [ "$dir%/proc}" != "$dir" ] && 
+            [ -d "$dir/sys/fs/binfmt_misc" ] && [ -f "$dir/mounts" ] &&
+            grep -q "^binfmt_misc $dir/sys/fs/binfmt_misc" "$dir/mounts"; then
+            if ! umount "$dir/sys/fs/binfmt_misc"; then
+                echo "Couldn't unmount $dir/sys/fs/binfmt_misc." >&2
+            fi
+        fi
+        if ! umount "$dir"; then
+            echo "Couldn't unmount $dir." >&2
+        fi
+    done
+}
+
+trap_cleanup() {
+    # Stop trapping
+    trap - 0 HUP INT QUIT KILL SEGV PIPE TERM
+    umount_marked
+    rmdir "$mnt"
+}
+
+update_kernels() {
+    local name tftpdir tftpboot chroot 
+    name=$1
+    tftpdir=$2
+
+    tftpboot="$tftpdir/$TFTP_BOOT_DIR"
+    tftpboot=${tftpboot%/}
+
+    # Loop-mounting NBD images in order to copy their kernels is supported
+    # in order to allow for btrfs or ext loopback images, or images transferred
+    # from other sources to the LTSP server.
+    # But if both the chroot and the NBD image exist, the chroot is preferred,
+    # to make updating BOOTPROMPT_OPTS in update-kernels.conf easier.
+    # A PREFER_NBD_IMAGE environment variable is supported though, to make it
+    # possible for `ltsp-update-image --revert` to use the NBD kernels.
+    unset chroot
+    if [ -x "$BASE/$name/bin/true" ] && [ "$PREFER_NBD_IMAGE" != true ]; then
+        chroot="$BASE/$name"
+    elif [ -f "$BASE/images/$name.img" ]; then
+        if [ -z "$mnt" ]; then
+            mnt=$(mktemp -d)
+            trap "trap_cleanup" 0 HUP INT QUIT KILL SEGV PIPE TERM
+        else
+            umount_marked
+        fi
+        if mark_mount -o loop,ro "$BASE/images/$name.img" "$mnt"; then
+            chroot="$mnt"
+        fi
+    fi
+    if [ -z "$chroot" ]; then
+        echo "Skipping invalid chroot: $name"
+        continue
+    fi
+    echo "Updating $tftpdir directories for chroot: $name"
+
+    mkdir -p "$tftpboot/$name"
+    cp -a "$chroot/boot/." "$tftpboot/$name/"
+
+    # Ensure that the kernel is readable (LP: #759115)
+    for kernelpath in $(find "$tftpboot/$name/" -name 'vmlinuz-*' -o -name 'vmlinux-*'); do
+    	chmod +r "$kernelpath"
+    done
+
+    # OFW on Mac is lame, they cannot tftp from directories
+    if [ -e "$tftpboot/$name/yaboot" ]; then
+        if [ ! -e "$tftpdir/yaboot" ]; then
+            ln -sf "$TFTP_BOOT_DIR/$name/yaboot" "$tftpdir/yaboot"
+        fi
+        if [ ! -e "$tftpdir/yaboot.conf" ]; then
+            ln -sf "$TFTP_BOOT_DIR/$name/yaboot.conf" "$tftpdir/yaboot.conf"
+        fi
+    fi
+
+    # Cleanup old kernels and images from tftpboot directory
+    cleanup_kernels "$name" "$tftpboot" "$chroot"
+}
+
+# distro specific functions
+
+# For all kernels in TFTP, find the kernel $version from vmlinuz-* filename.
+# If the corresponding /opt/ltsp/$name/lib/modules/$version is missing,
+# then delete kernel and images for this version from tftpboot directory.
+# Distros that don't match vmlinuz-* should override this function.
+cleanup_kernels() {
+    local name tftpboot chroot
+    name=$1
+    tftpboot=$2
+    chroot=$3
+
+    # Loop through every vmlinuz-* file
+    for kernelpath in $(find "$tftpboot/$name/" -type f -name 'vmlinuz-*' -o -name 'vmlinux-*'); do
+        kernel=${kernelpath##*/}
+        case $kernel in
+            vmlinuz-*) version=${kernel#vmlinuz-} ;;
+            vmlinux-*) version=${kernel#vmlinux-} ;;
+        esac
+        if [ ! -d "$chroot/lib/modules/$version" ]; then
+            echo "Removing $kernelpath"
+            # Common
+            rm -f "$tftpboot/$name/$kernel"
+            rm -f "$tftpboot/$name/config-$version"
+            rm -f "$tftpboot/$name/System.map-$version"
+            # Fedora
+            rm -f "$tftpboot/$name/initrd-$version.img"
+            rm -f "$tftpboot/$name/initramfs-$version.img"
+            rm -f "$tftpboot/$name/elf-$version.img"
+            rm -f "$tftpboot/$name/wraplinux-nbi-$version.img"
+            rm -f "$tftpboot/$name/aout-$version.img"
+            rm -f "$tftpboot/$name/symvers-$version.gz"
+            # Debian
+            rm -f "$tftpboot/$name/initrd.img-$version"
+            rm -f "$tftpboot/$name/nbi.img-$version"
+            # Ubuntu
+            rm -f "$tftpboot/$name/abi-$version"
+            rm -f "$tftpboot/$name/vmcoreinfo-$version"
+        fi
+    done
+}
+
+if ! args=$(getopt -n "$0" -o b:h \
+    -l "base:,help" -- "$@")
+then
+    exit 1
+fi
+eval "set -- $args"
+while true ; do
+    case "$1" in
+        -b|--base) shift; BASE=$1 ;;
+        -h|--help) usage; exit 0 ;;
+        --) shift ; break ;;
+        *) die "$0: Internal error!" ;;
+    esac
+    shift
+done
+require_root
+
+BASE=${BASE:-"/opt/ltsp"}
+# Remove trailing /, if present
+BASE=${BASE%/}
+
+# Chroots can be specified in the command line. If not, update all of them.
+if [ $# -eq 0 ]; then
+    set -- $(
+        {
+            find "$BASE/" -mindepth 1 -maxdepth 1 -type d ! -name images \
+                -printf "%f\n"
+            if [ -d "$BASE/images/" ]; then
+                find "$BASE/images/" -mindepth 1 -maxdepth 1 \
+                    -name '*.img' -printf "%f\n" | sed 's/.img$//'
+            fi
+        } | sort -u
+    )
+fi
+test $# -gt 0 || die "No chroots found in $BASE"
+
+TFTP_BOOT_DIR=${TFTP_BOOT_DIR:-"ltsp"}
+TFTP_DIRS=${TFTP_DIRS:-"/var/lib/tftpboot" "/tftpboot" "/srv/tftp"}
+for tftpdir in $TFTP_DIRS; do
+    tftpdir=${tftpdir%/}
+    if [ ! -d "$tftpdir" ]; then
+        # skip directory
+        continue
+    fi
+    for name in "$@"; do
+        update_kernels "$name" "$tftpdir"
+    done
+done

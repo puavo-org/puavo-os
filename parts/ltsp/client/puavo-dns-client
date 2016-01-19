@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# When running Puavo chroot image in netboot mode, /etc/puavo
+# needs to be populated during boottime from DNS.
+#
+# The following settings are queried and written when this script
+# is sourced:
+#
+# /etc/puavo/ldap/slave
+# /etc/puavo/ldap/master
+# /etc/puavo/ldap/base
+# /etc/puavo/kerberos/realm
+# /etc/puavo/kerberos/toprealm - MISSING
+# /etc/puavo/kerberos/slave
+# /etc/puavo/kerberos/master
+# /etc/puavo/domain
+# /etc/puavo/topdomain         - MISSING
+# /etc/puavo/hostname
+
+if [ ! -f "/etc/puavo/hosttype" ]; then
+  echo "/etc/puavo/hosttype missing!"
+  exit 0
+fi
+
+PUAVO_DEVICE_TYPE=$(cat /etc/puavo/hosttype)
+
+if [ "thinclient" = "${PUAVO_DEVICE_TYPE}" -o \
+     "fatclient" = "${PUAVO_DEVICE_TYPE}" ]; then
+
+  PUAVO_DOMAIN=$(dig +time=2 +tries=1 TXT _puavo +search +short | sed 's/^"//; s/"$//;')
+  echo "PUAVO DOMAIN: ${PUAVO_DOMAIN}"
+
+  LDAP_BASE=$(dig +time=2 +tries=1 TXT _ldap_base.${PUAVO_DOMAIN} +short | sed 's/^"//; s/"$//;')
+  LDAP_SLAVE=$(dig +time=2 +tries=1 SRV _ldap._tcp.${PUAVO_DOMAIN} +short | awk '{ sub(/\.$/, ""); printf "%s:%s", $4, $3 }')
+  LDAP_MASTER=$(dig +time=2 +tries=1 SRV _ldap_master._tcp.${PUAVO_DOMAIN} +short | awk '{ sub(/\.$/, ""); printf "%s:%s", $4, $3 }')
+
+  KERBEROS_REALM=$(dig +time=2 +tries=1 TXT _kerberos.${PUAVO_DOMAIN} +search +short | sed 's/^"//; s/"$//;')
+  KERBEROS_MASTER=$(dig +time=2 +tries=1 SRV _kerberos-master._tcp.${KERBEROS_REALM} +short | awk '{ sub(/\.$/, ""); printf "%s", $4 }')
+  KERBEROS_SLAVE=$(dig +time=2 +tries=1 SRV _kerberos._tcp.${KERBEROS_REALM} +short | awk '{ sub(/\.$/, ""); printf "%s", $4 }')
+
+  mkdir -p /etc/puavo/ldap /etc/puavo/kerberos
+
+  HOSTNAME_SHORT=$(hostname -s)
+  echo $HOSTNAME_SHORT > /etc/puavo/hostname
+  echo $PUAVO_DOMAIN > /etc/puavo/domain
+  echo $LDAP_BASE > /etc/puavo/ldap/base
+  echo $LDAP_SLAVE > /etc/puavo/ldap/slave
+  echo $LDAP_MASTER > /etc/puavo/ldap/master
+  echo $KERBEROS_REALM > /etc/puavo/kerberos/realm
+  echo $KERBEROS_SLAVE > /etc/puavo/kerberos/slave
+  echo $KERBEROS_MASTER > /etc/puavo/kerberos/master
+fi

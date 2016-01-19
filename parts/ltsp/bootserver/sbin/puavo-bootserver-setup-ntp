@@ -1,0 +1,17 @@
+#!/usr/bin/ruby
+
+require 'erb'
+
+puavo_topdomain = File.read('/etc/puavo/topdomain').chomp
+
+@puavo_ntp_server = "ntp.#{ puavo_topdomain }"
+
+template_path = '/usr/share/puavo-ltsp-bootserver/templates/etc/ntp.conf'
+conf_template = File.read(template_path)
+conf = ERB.new(conf_template, 0, '%<>')
+
+File.open('/etc/ntp.conf', 'w', 0644) do |f|
+  f.write conf.result
+end
+
+system('service ntp restart')

@@ -1,0 +1,524 @@
+#!/usr/bin/ruby1.9.1
+
+require 'fileutils'
+require 'getoptlong'
+require 'json'
+
+def imgbuild_args(cmdline_switch, conf, key)
+  value = conf[key]
+  value.kind_of?(String) && !value.empty? \
+    ? [ cmdline_switch, value ]           \
+    : []
+end
+
+def build_config_target(config_target,
+                        config_files,
+                        puavo_imgbuild_args,
+                        apply_configure_bootstrap)
+  image_confs = image_configurations(config_files)
+
+  if !image_confs.has_key?(config_target) then
+    raise "No config target '#{ config_target }' in config files"
+  end
+
+  conf = image_confs[config_target]
+
+  raise "Distribution is not defined for '#{ config_target }'" \
+    unless conf['distribution'].kind_of?(String) \
+             && !conf['distribution'].empty?
+
+  arch_args       = imgbuild_args('--arch',         conf, 'arch')
+  buildrules_args = imgbuild_args('--buildrules',   conf, 'puppet-classes')
+  release_args    = imgbuild_args('--release-name', conf, 'release-name')
+
+  bootstrap_rules_args = apply_configure_bootstrap \
+                           ? imgbuild_args('--configure-bootstrap-rules',
+                                           conf,
+                                           'bootstrap-puppet-classes') \
+                           : []
+
+  if !conf['imageseries'].kind_of?(String) then
+    raise "Could not find imageseries for '#{ config_target }'"
+  end
+
+  system('/usr/lib/puavo-image-tools/puavo-imgbuild-tool',
+         '--build',        conf['imageseries'],
+         '--distribution', conf['distribution'],
+         *arch_args,
+         *bootstrap_rules_args,
+         *buildrules_args,
+         *release_args,
+         *puavo_imgbuild_args) \
+    or raise "Problem in building '#{ config_target }'"
+end
+
+def builder_confs(builder_confs_path)
+  Hash[ IO.readlines(builder_confs_path).map { |line| line.split } ]
+end
+
+
+def flatten_imageconfs(prefix, inherited_conf, imageconf)
+  imageconfs = []
+  imageconf.each do |next_prefix, next_prefix_conf|
+
+    concatenated_prefix                    \
+      = prefix                             \
+          ? "#{ prefix }-#{ next_prefix }" \
+          : next_prefix
+
+    merged_conf = inherited_conf.merge(next_prefix_conf)
+    merged_conf.delete('images')
+    merged_conf.delete('series')
+
+    if next_prefix_conf['series'].kind_of?(Hash) then
+      imageconfs += flatten_imageconfs(concatenated_prefix,
+                                       merged_conf,
+                                       next_prefix_conf['series'])
+    end
+
+    if next_prefix_conf['images'].kind_of?(Hash) then
+      next_prefix_conf['images'].each do |arch, archconf|
+        archconf.each do |distribution, images|
+          full_prefix = "#{ concatenated_prefix }-#{ distribution }-#{ arch }"
+
+          next_imageconf = merged_conf.merge({
+                             'arch'         => arch,
+                             'distribution' => distribution,
+                             'images'       => images,
+                             'imageseries'  => concatenated_prefix,
+                           })
+
+          imageconfs << [ full_prefix, next_imageconf ]
+        end
+      end
+    end
+  end
+
+  imageconfs
+end
+
+def image_configurations(config_files)
+  imageconfs = {}
+
+  config_files.map do |cf|
+    imageconf = flatten_imageconfs(nil, {}, JSON.parse( File.read(cf) ))
+    imageconfs.merge!( Hash[imageconf] )
+  end
+
+  imageconfs
+end
+
+def ensure_string_sanity(string)
+  return if string.kind_of?(String) && string.match(/^[.a-zA-Z0-9-]+$/)
+
+  raise "String '#{ string }' is not sane enough"
+end
+
+def rdiff_files_for(imagelist)
+  target_image = imagelist.last
+
+  image_regexp = /^(.*?)-([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6})-(.*?).img$/
+
+  rdiffs_by_source_image = {}
+
+  imagelist[0 .. -2].map do |source_image|
+    source_match = source_image.match(image_regexp)
+    raise "Bad image format '#{ source_image }'" unless source_match
+
+    target_match = target_image.match(image_regexp)
+    raise "Bad image format '#{ target_image }'" unless target_match
+
+    rdiffs_by_source_image[source_image] \
+      = sprintf('%s-%s--%s-%s.rdiff',
+                source_match[1],
+                source_match[2],
+                target_match[2],
+                source_match[3])
+  end
+
+  rdiffs_by_source_image
+end
+
+def validate_and_list_image_filenames(image_confs)
+  image_confs.map do |image_series, series_settings|
+    images = series_settings['images'].kind_of?(Array) \
+               ? series_settings['images']             \
+               : []
+    images.each { |s| ensure_string_sanity(s) }
+    images
+  end.flatten.uniq
+end
+
+def get_rdiff_targets_info(image_confs)
+  all_rdiff_files            = []
+  image_series_rdiff_targets = []
+  rdiff_make_snippets        = []
+  rdiff_target_dirs          = []
+
+  rdiff_specs = {}
+  image_confs.each do |image_series, series_settings|
+    target_image = series_settings['images'].kind_of?(Array) \
+                     && series_settings['images'].last
+    next if !target_image || target_image.empty?
+
+    rdiff_specs[image_series] ||= {}
+    rdiff_specs[image_series]['image'] = target_image
+    rdiff_specs[image_series]['rdiffs'] \
+      = rdiff_files_for( series_settings['images'] )
+  end
+
+  rdiff_specs.each do |image_series, rdiffs_conf|
+    target_image     = rdiffs_conf['image']
+    target_basename  = File.basename(target_image, '.img')
+    rdiff_target_dir = "${RDIFFS_DIR}/#{ image_series }/#{ target_basename }"
+
+    rdiff_target_dirs << rdiff_target_dir
+
+    image_series_rdiff_targets << "#{ image_series }-rdiffs"
+    this_series_rdiff_targets = []
+
+    rdiffs_conf['rdiffs'].each do |source_image, rdiff|
+      rdiff_full_path = "#{ rdiff_target_dir }/#{ rdiff }"
+
+      this_series_rdiff_targets << rdiff_full_path
+      all_rdiff_files           << rdiff_full_path
+
+      source_basename  = File.basename(source_image, '.img')
+      image_signature_path \
+        = "${SIGNATURES_DIR}/#{ source_basename }.rdiff_signature"
+      target_image_path = "${IMAGES_DIR}/#{ target_image }"
+
+      rdiff_make_snippets << <<EOF
+#{ rdiff_full_path }: #{ image_signature_path } #{ target_image_path } #{ rdiff_target_dir }
+	rdiff delta "#{ image_signature_path }" \\
+	            "#{ target_image_path }" \\
+	            $@
+EOF
+    end
+
+    rdiff_make_snippets \
+      << "#{ image_series }-rdiffs: #{ this_series_rdiff_targets.join(' ') }\n"
+  end
+
+  [ all_rdiff_files.sort.uniq,
+    image_series_rdiff_targets.sort.uniq,
+    rdiff_target_dirs.sort.uniq,
+    rdiff_make_snippets ]
+end
+
+def output_makefile(builder_confs, config_files)
+  image_confs = image_configurations(config_files)
+
+  image_series_list = image_confs.keys
+  image_series_list.each { |image_series| ensure_string_sanity(image_series) }
+
+  images_dir = builder_confs['images-dir']
+  raise 'Images directory is not set' if images_dir.nil? || images_dir.empty?
+
+  rdiffs_dir = builder_confs['rdiffs-dir']
+  raise 'Rdiffs directory is not set' if rdiffs_dir.nil? || rdiffs_dir.empty?
+
+  image_files = validate_and_list_image_filenames(image_confs)
+
+  all_rdiff_files,
+    image_series_rdiff_targets,
+    rdiff_target_dirs,
+    rdiff_make_snippets = * get_rdiff_targets_info(image_confs)
+
+  puts <<EOF
+IMAGES_DIR        = #{ images_dir }
+RDIFFS_DIR        = #{ rdiffs_dir }
+CKSUMS_DIR        = ${IMAGES_DIR}/.cksums
+MIRROR_DIR        = ${IMAGES_DIR}/mirror
+SIGNATURES_DIR    = ${IMAGES_DIR}/.signatures
+RDIFF_TARGET_DIRS = #{ rdiff_target_dirs.join(' ') }
+
+ALL_DIRS = ${CKSUMS_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs \\
+           ${RDIFF_TARGET_DIRS} ${SIGNATURES_DIR}
+
+CHROOT_TARGETS = apply-buildrules chroot cleanup-chroot image \\
+                 install-packages update-chroot
+
+COMMON_TARGETS = all-new-images all-rdiffs cksums cleanup-mirror update-mirror
+
+IMAGE_FILES = #{ image_files.join(' ') }
+
+IMAGE_SIGNATURE_FILES = $(patsubst %.img,%.rdiff_signature,${IMAGE_FILES})
+IMAGE_SIGNATURE_FILES_AP \\
+  = $(addprefix ${SIGNATURES_DIR}/,${IMAGE_SIGNATURE_FILES})
+
+IMAGE_SERIES = #{ image_series_list.join(' ') }
+
+IMAGE_SERIES_RDIFF_TARGETS = #{ image_series_rdiff_targets.join(' ') }
+
+RDIFF_FILES_AP = #{ all_rdiff_files.join(' ') }
+RDIFF_FILES = $(notdir ${RDIFF_FILES_AP})
+
+CKSUM_FILES = $(addsuffix .cksum,${IMAGE_FILES}) \\
+              $(addsuffix .cksum,${RDIFF_FILES})
+CKSUM_FILES_AP = $(addprefix ${CKSUMS_DIR}/,${CKSUM_FILES})
+
+MIRROR_DIR_IMAGES = $(addprefix ${MIRROR_DIR}/,${IMAGE_FILES})
+MIRROR_DIR_RDIFFS = $(addprefix ${MIRROR_DIR}/rdiffs/,${RDIFF_FILES})
+
+vpath %.img   ${IMAGES_DIR}
+vpath %.rdiff ${RDIFF_TARGET_DIRS}
+
+help:
+	@echo "Available image series targets are:"
+	@echo "  ${IMAGE_SERIES}" | fmt
+	@echo
+	@echo "Available chroot targets are:"
+	@echo "  ${CHROOT_TARGETS}" | fmt
+	@echo
+	@echo "Available rdiff series targets are:"
+	@echo "  ${IMAGE_SERIES_RDIFF_TARGETS}" | fmt
+	@echo
+	@echo "Available common targets are:"
+	@echo "  ${COMMON_TARGETS}" | fmt
+
+.PHONY: all-new-images
+all-new-images: ${IMAGE_SERIES}
+
+.PHONY: all-rdiffs
+all-rdiffs: ${RDIFF_FILES_AP}
+
+.PHONY: cksums
+cksums: ${IMAGES_DIR}/CKSUMS
+
+.PHONY: update-mirror
+update-mirror: ${MIRROR_DIR}/CKSUMS ${MIRROR_DIR_IMAGES} ${MIRROR_DIR_RDIFFS}
+
+.PHONY: cleanup-mirror
+cleanup-mirror:
+	@if [ -d "${MIRROR_DIR}" ]; then \
+	  rm -rf ${MIRROR_DIR}/*; \
+	else \
+	  echo There is no mirror directory ${MIRROR_DIR}; \
+	fi
+
+.PHONY: ${CHROOT_TARGETS}
+${CHROOT_TARGETS}:
+	sudo /usr/lib/puavo-image-tools/puavo-imgbuild-tool --$@
+
+.PHONY: ${IMAGE_SERIES}
+${IMAGE_SERIES}: images.json
+	sudo puavo-build-image --config-target $@ --images-config $<
+
+${ALL_DIRS}:
+	mkdir -p $@
+
+${CKSUMS_DIR}/%.img.cksum: %.img | ${CKSUMS_DIR}
+	cksum $< > $@.tmp
+	mv $@.tmp $@
+
+${CKSUMS_DIR}/%.rdiff.cksum: %.rdiff | ${CKSUMS_DIR}
+	cksum $< > $@.tmp
+	mv $@.tmp $@
+
+${IMAGES_DIR}/CKSUMS: ${CKSUM_FILES_AP} | ${MIRROR_DIR}
+	awk '{ "basename " $$3 | getline $$3; print }' ${CKSUM_FILES_AP} > $@
+
+${MIRROR_DIR}/CKSUMS: ${IMAGES_DIR}/CKSUMS
+	cp $< $@
+
+# link ${MIRROR_DIR_IMAGES}
+${MIRROR_DIR}/%.img: %.img | ${MIRROR_DIR}
+	@ln -f $< $@
+
+# link ${MIRROR_DIR_RDIFFS}
+${MIRROR_DIR}/rdiffs/%.rdiff: %.rdiff | ${MIRROR_DIR}/rdiffs
+	@ln -f $< $@
+
+${SIGNATURES_DIR}/%.rdiff_signature: %.img | ${SIGNATURES_DIR}
+	rdiff signature $< $@
+
+#
+# rdiff targets
+#
+
+#{ rdiff_make_snippets.join("\n") }
+EOF
+end
+
+def get_mountinfo()
+  mountinfo = %x(mount)
+  raise 'Problem running mount' unless $?.exitstatus == 0
+  mountinfo.split("\n")
+end
+
+def handle_mounts(mounts)
+  new_mounts = mounts.clone
+  mounts.each do |mntdir, mntdevice|
+    mountinfo = get_mountinfo()
+    mountinfo.each do |line|
+      fields = line.split
+      if fields[2] == mntdir then
+        if fields[0] == mntdevice then
+          # mount okay, nothing to do
+          new_mounts.delete(mntdir)
+        else
+          system('umount', mntdir) \
+            or raise "Problem unmounting '#{ mntdir }'"
+        end
+      end
+    end
+  end
+
+  new_mounts.each do |mntdir, mntdevice|
+    FileUtils.mkdir_p(mntdir)
+    system('mount', mntdevice, mntdir) \
+      or raise "Problem mounting '#{ mntdir }' to '#{ mntdevice }'"
+  end
+end
+
+def setup_tmpfs(tmpfs_inode_count, tmpfs_path, tmpfs_size)
+  mountinfo = get_mountinfo()
+  mntoptions = 'rw,uid=0,gid=0,mode=755,' \
+               + "size=#{ tmpfs_size },nr_inodes=#{ tmpfs_inode_count }"
+
+  current_mntoptions = nil
+  mountinfo.each do |line|
+    fields = line.split
+    next if fields[2] != tmpfs_path
+    match = fields[5].match(/^\((.*)\)$/)
+    if match then
+      current_mntoptions = match[1]
+    end
+  end
+
+  if current_mntoptions && current_mntoptions != mntoptions then
+    # the partition is mounted, but not with the right options, so we umount
+    system('umount', tmpfs_path) \
+      or raise "Problem unmounting '#{ tmpfs_path }'"
+    current_mntoptions = nil
+  end
+    
+  if !current_mntoptions then
+    # we need to do mount
+    FileUtils.mkdir_p(tmpfs_path)
+    system('mount',
+           '-t', 'tmpfs',
+           '-o', mntoptions,
+           'tmpfs',
+           tmpfs_path)
+  end
+end
+
+def usage()
+  puts <<-EOF
+Usage:
+  puavo-build-image --apply-configure-bootstrap
+                    --config-target     config-target
+                    --images-config     images-config
+                    --mount-device      mount-device
+                    --mount-dir         mount-dir
+                    --tmpfs-inode-count tmpfs-inode_count
+                    --tmpfs-path        tmpfs-path
+                    --tmpfs-size        tmpfs-size
+                    --use-tmpfs
+                    -- (arguments for puavo-imgbuild-tool ...)
+
+  puavo-build-image --output-makefile
+                    --images-config images_config
+
+  --images-config with argument can be given many times, and all the image
+  config files will be combined/merged, later image targets override previous
+  targets if conflicts exist.
+
+  The last argument for puavo-build-image can be "--", after that all arguments
+  are passed to puavo-imgbuild-tool as they are, when --config-target is set
+  and --output-makefile is not set.
+EOF
+  exit(1)
+end
+
+apply_configure_bootstrap = false
+config_files              = []
+config_target             = nil
+mount_device              = nil
+mount_dir                 = nil
+mounts                    = {}
+output_makefile           = false
+tmpfs_inode_count         = nil
+tmpfs_path                = nil
+tmpfs_size                = nil
+use_tmpfs                 = false
+
+maybe_add_to_mounts = lambda do
+  if mount_device && mount_dir; then
+    mounts.merge!({ mount_dir => mount_device })
+    mount_device = mount_dir = nil
+  end
+end
+
+begin
+  opts = GetoptLong.new(
+           [ '--apply-configure-bootstrap', GetoptLong::NO_ARGUMENT       ],
+           [ '--config-target',             GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--images-config',             GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--mount-device',              GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--mount-dir',                 GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--output-makefile',           GetoptLong::NO_ARGUMENT       ],
+           [ '--tmpfs-inode-count',         GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--tmpfs-path',                GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--tmpfs-size',                GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--use-tmpfs',                 GetoptLong::NO_ARGUMENT       ])
+
+  opts.each do |opt, arg|
+    case opt
+      when '--apply-configure-bootstrap'
+        apply_configure_bootstrap = true
+      when '--config-target'
+        config_target = arg
+      when '--images-config'
+        config_files << arg
+      when '--mount-device'
+        mount_device = arg
+        maybe_add_to_mounts.call()
+      when '--mount-dir'
+        mount_dir = arg
+        maybe_add_to_mounts.call()
+      when '--output-makefile'
+        output_makefile = true
+      when '--tmpfs-inode-count'
+        tmpfs_inode_count = arg
+      when '--tmpfs-path'
+        tmpfs_path = arg
+      when '--tmpfs-size'
+        tmpfs_size = arg
+      when '--use-tmpfs'
+        use_tmpfs = true
+    end
+  end
+rescue GetoptLong::InvalidOption => e
+  usage
+end
+
+# pass the rest of the command line arguments to puavo-imgbuild-tool
+# (the ones after "--")
+puavo_imgbuild_args = ARGV
+
+if output_makefile && !config_files.empty? then
+  # special --output-makefile mode was invoked
+  builder_confs_path = "#{ ENV['HOME'] }/.config/puavo-build-image/defaults"
+  builder_confs = builder_confs(builder_confs_path)
+  output_makefile(builder_confs, config_files)
+  exit(0)
+end
+
+if !config_files.empty? && config_target then
+  handle_mounts(mounts)
+  if use_tmpfs then
+    setup_tmpfs(tmpfs_inode_count || '5m',
+                tmpfs_path        || '/virtualtmp',
+                tmpfs_size        || '28g')
+  end
+  build_config_target(config_target,
+                      config_files,
+                      puavo_imgbuild_args,
+                      apply_configure_bootstrap)
+  exit(0)
+end
+
+usage()

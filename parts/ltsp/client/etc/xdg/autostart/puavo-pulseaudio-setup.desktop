@@ -1,0 +1,16 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=Puavo integration for PulseAudio Sound System
+Exec=puavo-pulseaudio-setup
+Terminal=false
+Type=Application
+Categories=
+GenericName=
+
+# Delay greater than in pulseaudio.desktop, of course it would be better
+# to listen to dbus... I wonder why pulseaudio.desktop relies on an
+# arbitrary delay.
+X-GNOME-Autostart-Delay=9
+
+NoDisplay=true

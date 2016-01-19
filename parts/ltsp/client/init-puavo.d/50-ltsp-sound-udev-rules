@@ -1,0 +1,7 @@
+# configure ltsp sound udev rules.
+if boolean_is_true "$SOUND" ; then
+    if [ -f /usr/share/ltsp/udev/ltsp-sound.rules ]; then
+        mkdir -p /etc/udev/rules.d/
+        ln -s /usr/share/ltsp/udev/ltsp-sound.rules /etc/udev/rules.d/ltsp-sound.rules
+    fi
+fi

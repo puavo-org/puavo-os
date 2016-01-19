@@ -1,0 +1,6 @@
+# Implement xrandr settings from /etc/puavo/device.json
+# and disable I10-xrandr (which uses deprecated lts.conf).
+
+/usr/lib/puavo-ltsp-client/puavo-run-xrandr
+
+XRANDR_DISABLE=True

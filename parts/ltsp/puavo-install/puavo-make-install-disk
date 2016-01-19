@@ -1,0 +1,47 @@
+#!/bin/sh
+
+set -eu
+
+images_dir=/installimages
+ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
+puavo_hosttype=$(cat /etc/puavo/hosttype)
+
+install_image() {
+  # There should be no need to run the preinst-hook, because for now it
+  # it only contains the grub update.  Because the installed image and the
+  # current boot image are same, the grub configuration should be correct.
+  puavo-install-and-update-ltspimages --hosttype diskinstaller   \
+                                      --images-dir "$images_dir" \
+                                      --no-preinst-hook          \
+                                      "$@"                       \
+                                      "$ltspimage_name"
+}
+
+case "$puavo_hosttype" in
+  fatclient|ltspserver|thinclient|unregistered)
+    install_args="--install-from-nbd /dev/nbd0"
+    ;;
+  laptop|preinstalled|wirelessaccesspoint)
+    install_args="--install-from-file /images/${ltspimage_name}"
+    ;;
+  *)
+    echo "Cannot create an install disk on hosttype: '${puavo_hosttype}'" >&2
+    exit 1
+    ;;
+esac
+
+puavo-setup-filesystems --hosttype diskinstaller
+
+puavo-install-grub --hosttype   diskinstaller  \
+                   --images-dir "$images_dir"  \
+                   --vgname     puavoinstaller
+
+install_image $install_args
+
+umount "$images_dir"
+dmsetup remove puavoinstaller-installimages
+
+# do not leak file descriptors to vgchange, hence "3>&- 4>&- 5>&-"
+vgchange -a n puavoinstaller 3>&- 4>&- 5>&-
+
+rmdir /installimages

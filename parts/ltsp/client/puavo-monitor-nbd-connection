@@ -1,0 +1,56 @@
+#!/bin/sh
+
+set -eu
+
+# exit if our root is not an nbd device
+grep -qw root=/dev/nbd0 /proc/cmdline || exit 0
+
+nbd_server_host=$(awk -F= '$1 == "NBD_ROOT_HOST" { print $2 }' \
+                    /var/cache/ltsp/ltsp_config)
+
+if [ -z "$nbd_server_host" ]; then
+  echo 'Could not find the nbd server host' >&2
+  exit 1
+fi
+
+has_nbd_connection() { nbd-client -c /dev/nbd0 > /dev/null; }
+
+nbd_is_available() {
+  /usr/bin/expr "$(/bin/nc -w 10 "$nbd_server_host" 10809 < /dev/null)" \
+                : '^NBDMAGIC' \
+    > /dev/null
+}
+
+nbd_server_check_works=false
+
+while has_nbd_connection; do
+  # ensure these utilitities are and remain in filesystem cache so that
+  # we can use them later even if nbd breaks) (sleep not included because
+  # we constantly run it)
+  cat /bin/nc /usr/bin/expr /usr/bin/logger > /dev/null
+
+  if ! $nbd_server_check_works && nbd_is_available; then
+    nbd_server_check_works=true
+  fi
+
+  sleep 15
+done
+
+# we are not going to do any rebooting if it seems nbd_is_available does
+# not work
+$nbd_server_check_works || exit 1
+
+until nbd_is_available; do
+  /usr/bin/logger -p syslog.emerg \
+                  'nbd-connection has been broken but nbd-server is not up'
+  sleep 15
+done
+
+# Sleep a little while before rebooting... in case nbd-connection has been
+# broken due to ongoing reboot/shutdown, with which we might interfere badly.
+sleep 7
+/usr/bin/logger -p syslog.emerg \
+                   'Rebooting due to nbd failure, nbd-server is up'
+echo b > /proc/sysrq-trigger
+
+exit 0

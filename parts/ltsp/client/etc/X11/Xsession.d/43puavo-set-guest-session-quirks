@@ -1,0 +1,6 @@
+# disable lock screen option for guest users
+# (it makes no sense to lock the screen if there is no password to open it)
+
+if [ "$GUEST_SESSION" = "true" ]; then
+  dconf write /org/gnome/desktop/lockdown/disable-lock-screen true
+fi

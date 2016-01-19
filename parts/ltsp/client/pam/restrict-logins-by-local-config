@@ -1,0 +1,83 @@
+#!/bin/sh
+
+set -eu
+
+device_config_path=/state/etc/puavo/device.json
+local_config_path=/state/etc/puavo/local/config.json 
+
+allowed_logins() { jq -r .allow_logins_for[] "$local_config_path"; }
+
+deny()
+{
+    echo 'Access denied due to local policy.' >&2
+    exit 1
+}
+
+is_admin_user()
+{
+    # No one is admin if reading the admin group name fails.
+    admin_group=$(cat /etc/ltsp/admin_group) || return 1
+
+    getent group "${admin_group}" | cut -d ':' -f4 | tr , '\n' \
+	| grep -x -q "${PAM_USER}"
+}
+
+if [ "$(jq -r .personally_administered "$device_config_path")" != "true" ]; then
+  # no special restrictions on hosts which are not personally administered
+  exit 0
+fi
+
+#
+# this host is personally administered so special rules apply
+#
+
+# config does not exist or is not readable, so do not restrict anyone
+[ ! -r "$local_config_path" ] && exit 0
+
+# Allow all explicitly listed users, not matter what.
+allowed_logins | fgrep -qx "${PAM_USER}" && exit 0
+
+if is_admin_user; then
+    incoming_accepted=$(
+      /usr/lib/puavo-ltsp-client/puavo-admin-remote-connections \
+        --is-incoming-accepted)
+
+    if [ "$incoming_accepted" = 'yes' ]; then
+        exit 0
+    fi
+
+    deny
+fi
+
+# if configuration contains '*', allow all
+allowed_logins | fgrep -qx '*' && exit 0
+
+# Test for a special case: if allow_logins_for is missing, jq outputs
+# null. Note the difference between .allow_logins_for and
+# .allow_logins_for[]: the latter tries to iterate over an array which
+# results in an empty string if the field does not exist. The former
+# returns null. This kind of voodoo-testing is required because jq is
+# notorious for not exiting on error! This script also serves as a
+# perfect example why jq should not be used anywhere. It is completely
+# broken by design.
+case $(jq -r .allow_logins_for "${local_config_path}") in
+    null)
+	exit 0
+	;;
+    *)
+	;;
+esac
+
+# allow primary user in irrespective of local configurations
+primary_user="$(jq -r .primary_user "${device_config_path}")"
+if [ "$primary_user" != "null" -a "$primary_user" = "${PAM_USER}" ]; then
+  exit 0
+fi
+
+# Allow root always.
+if [ "${PAM_USER}" = "root" ]; then
+    exit 0
+fi
+
+# otherwise, tough luck!
+deny

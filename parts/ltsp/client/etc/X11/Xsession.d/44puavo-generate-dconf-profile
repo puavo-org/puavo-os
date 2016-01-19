@@ -1,0 +1,61 @@
+# Generate dconf profile based on locale and host type.
+#
+
+puavo_user_desktopconf_path="/var/lib/puavo-desktop/users/${USER}"
+puavo_dconf_profile_path="${puavo_user_desktopconf_path}/dconf_profile"
+
+has_device_tag() {
+  jq -r .device.tags[] "$PUAVO_SESSION_PATH" | grep -qx "$1"
+}
+
+{
+  echo "user-db:user"
+
+  if [ -n "$LANGUAGE" ]; then
+    echo "system-db:locale-$LANGUAGE"
+  else
+    echo "system-db:locale-en"
+  fi
+
+  PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+  case "$PUAVO_HOSTTYPE" in
+    laptop)
+      echo "system-db:laptop"
+      ;;
+  esac
+
+  # If xrandr settings from puavo are forced (whether or not those are set to
+  # anything), turn off the gnome-settings-daemon xrandr plugin.  But do
+  # nothing they are not forced.
+  if has_device_tag force_puavo_xrandr \
+       && ! has_device_tag no_force_puavo_xrandr; then
+    echo "system-db:turn_off_xrandrplugin"
+  fi
+
+  if has_device_tag nolidsuspend && ! has_device_tag no_nolidsuspend; then
+    echo "system-db:disable_lidsuspend"
+  fi
+
+  if has_device_tag nosuspend && ! has_device_tag no_nosuspend; then
+    echo "system-db:disable_lidsuspend"
+    echo "system-db:disable_suspend"
+  fi
+
+  if has_device_tag nokeyboard && ! has_device_tag no_nokeyboard; then
+    echo "system-db:nokeyboard"
+  fi
+
+  if has_device_tag desktopbackgroundlock \
+       && ! has_device_tag no_desktopbackgroundlock; then
+    echo "system-db:desktopbackgroundlock"
+  fi
+
+  echo "system-db:keyboard"
+  echo "system-db:desktopbackground"
+  echo "system-db:scalingfactor"
+  echo "system-db:puavodesktop"
+} > $puavo_dconf_profile_path || return 1
+
+DCONF_PROFILE=$puavo_dconf_profile_path
+
+export DCONF_PROFILE

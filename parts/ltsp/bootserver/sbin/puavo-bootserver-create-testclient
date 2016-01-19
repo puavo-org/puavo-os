@@ -1,0 +1,92 @@
+#!/usr/bin/env ruby1.9.1
+
+##
+## This script creates a libvirt virtual domain (virsh define) and
+## registers it to Puavo either as a fatclient (default) or
+## thinclient. It asks user for the school which the device shall be
+## registered to.
+##
+## Usage: puavo-bootserver-create-testclient --help
+##
+
+## Standard libraries.
+require 'getoptlong'
+require 'set'
+
+## 3rd-party libraries.
+require 'puavobs'
+
+bootserver_hostname = File.read('/etc/puavo/hostname').strip()
+testclient_hostname = "#{bootserver_hostname}-testclient"
+testclient_hosttype = 'fatclient'
+testclient_tags = Set.new()
+
+opts = GetoptLong.new(
+  ['--help', '-h', GetoptLong::NO_ARGUMENT],
+  ['--hostname', GetoptLong::REQUIRED_ARGUMENT],
+  ['--hosttype', GetoptLong::REQUIRED_ARGUMENT],
+  ['--tag', '-t', GetoptLong::REQUIRED_ARGUMENT],
+)
+
+opts.each do |opt, arg|
+  case opt
+    when '--help'
+      puts <<EOF
+Usage: puavo-bootserver-create-testclient [OPTION]...
+
+Create a libvirt virtual domain and register it to Puavo.
+
+-h, --help                       display this help and exit
+    --hostname HOSTNAME          set testclient's hostname to HOSTNAME,
+                                 defaults to '#{testclient_hostname}'
+    --hosttype HOSTTYPE          set testclient's hosttype to HOSTTYPE,
+                                 defaults to '#{testclient_hosttype}'
+-t, --tag TAG                    set tag TAG to device, can be given multiple
+                                 times'
+EOF
+    exit(0)
+    when '--hostname'
+      testclient_hostname = arg.to_s
+    when '--hosttype'
+      testclient_hosttype = arg.to_s
+    when '--tag'
+      testclient_tags << arg.to_s
+  end
+end
+
+if ARGV.length != 0 then
+  STDERR.puts("error: invalid number of arguments (#{ARGV.length}), expected 0")
+  exit 1
+end
+
+testclient_mac = nil
+exitvalue = 1
+
+at_exit do
+  if exitvalue != 0 && !testclient_mac.nil? then
+    pid = Process.spawn('virsh', 'undefine', testclient_hostname,
+                        STDOUT => '/dev/null')
+    Process.wait(pid)
+  end
+  exit(exitvalue)
+end
+
+testclient_mac = PuavoBS.virsh_define_testclient(testclient_hostname)
+if testclient_mac.nil? then
+  STDERR.puts("error: failed to create #{testclient_hostname}")
+  exit(1)
+end
+
+puts("#{testclient_hostname} created")
+
+username, password = PuavoBS.ask_admin_credentials()
+
+school_name, school_id = PuavoBS.ask_school(username, password)
+
+PuavoBS.register_device(username, password, school_id,
+                        testclient_hostname, testclient_mac,
+                        testclient_hosttype, testclient_tags.to_a)
+
+puts("#{testclient_hostname} registered")
+
+exitvalue = 0

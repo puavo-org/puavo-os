@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Make sure that sssd goes online
+sleep 3
+killall -USR2 sssd
+#sleep 6
+#killall -USR2 sssd

@@ -1,0 +1,487 @@
+#!/usr/bin/ruby1.9.1
+
+# Services activated by DBus service activation mechanism do not have
+# all necessary components in PATH
+ENV["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+require 'dbus'
+require 'fileutils'
+require 'json'
+require 'open3'
+require 'puavo/rest-client'
+require 'socket'
+require 'syslog'
+
+Encoding.default_external = 'utf-8'
+
+def syslog(channel, priority, *args)
+  Syslog.log(priority, *args)
+  channel.printf(*args)
+end
+
+def log(*args)   ; syslog(STDOUT, *args); end
+def logerr(*args); syslog(STDERR, *args); end
+
+
+$configuration_update_thread  = nil
+$delete_image_overlays_thread = nil
+$image_update_thread          = nil
+$puavopkg_upgrade_thread      = nil
+
+class CancelledUpdate < RuntimeError; end
+
+class OverlayHandler < DBus::Object
+  dbus_interface "org.puavo.client.overlayhandler" do
+    dbus_signal :DeleteImageOverlaysFailed, 'in errormsg:s'
+    dbus_signal :DeleteImageOverlaysCompleted
+
+    dbus_method :DeleteImageOverlays do
+      return if $delete_image_overlays_thread
+
+      $delete_image_overlays_thread = Thread.new do
+        begin
+          # Under "/imageoverlays" is image-specific directories, under
+          # that is "default", remove directories under that but do not
+          # remove "default" (it might be currently mounted as part of
+          # overlay-mount).
+          Dir.glob("/imageoverlays/*/*/*").each do |dir|
+            FileUtils.remove_entry_secure(dir)
+          end
+          self.DeleteImageOverlaysCompleted
+
+          # We will reboot after this operation, because we know that
+          # deleting an overlay that is in use will likely result in a system
+          # that does not work correctly (give some time show the "completed"
+          # message on desktop, though).
+          system('sync')
+          sleep(8)
+          system('sync')
+          system('reboot', '-f')
+
+        rescue StandardError => e
+          logerr(Syslog::LOG_ERR,
+                 "Error in deleting imageoverlays: %s\n",
+                 e.message)
+          self.DeleteImageOverlaysFailed(e.message)
+        ensure
+          $delete_image_overlays_thread = nil
+        end
+      end
+    end
+
+    dbus_method :ImageOverlaysState, 'out i' do
+      mntpath = '/imageoverlays'
+
+      begin
+        # ruby-filesystem module might help here instead of this
+
+        if !system('mountpoint', '-q', mntpath)
+          logerr(Syslog::LOG_ERR,
+                 "Checking %s but it is not a mountpoint\n",
+                 imageoverlays_path)
+          return -1
+        end
+
+        free_blocks, fb_status \
+          = Open3.capture2("stat", "--file-system", "--format", "%f", mntpath)
+        if !fb_status.success?
+          logerr(Syslog::LOG_ERR,
+                 "Could not get free block count for %s\n",
+                 mntpath)
+          return -1
+        end
+
+        total_blocks, tb_status \
+          = Open3.capture2("stat", "--file-system", "--format", "%b", mntpath)
+        if !tb_status.success?
+          logerr(Syslog::LOG_ERR,
+                 "Could not get total block count for %s\n",
+                 mntpath)
+          return -1
+        end
+
+        free_percentage = 100.0 * Integer(free_blocks) / Integer(total_blocks)
+        return [ (100-free_percentage).round, 0 ].max
+
+      rescue StandardError => e
+        logerr(Syslog::LOG_ERR,
+               "Could not calculate %s utilization percentage: %s\n",
+               mntpath,
+               e.message)
+        return -1
+      end
+    end
+  end
+end
+
+class Updater < DBus::Object
+  def check_for_available_image_updates()
+    system('/usr/lib/puavo-ltsp-install/is-update-available')
+    code = $?.exitstatus
+    status = {
+               0 => :update_available,
+               1 => :uptodate_no_reboot,
+               2 => :uptodate_yes_reboot,
+             }[code]
+
+    return status if status
+
+    logerr(Syslog::LOG_ERR,
+           "Unknown exit code in is-update-available: %d\n",
+           code)
+    return :unknown
+  end
+
+  def configuration_update
+    thread = $configuration_update_thread = Thread.new do
+      log(Syslog::LOG_INFO, "Starting configuration update\n")
+
+      begin
+        # Notify Puavo on our current image situation.  It is good to do this
+        # on every image update, but also periodically, in case we have booted
+        # to a new image (there might be a better place for this, but at least
+        # the configuration update should be run periodically anyway).
+        begin
+          notify_puavo_on_images()
+        rescue StandardError => e
+          logerr(Syslog::LOG_WARNING,
+                 "Could not update image information in Puavo: %s\n",
+                 e.message)
+        end
+
+        # configuration update must be run before
+        # check_for_available_image_updates() so that it gives a proper result
+        command = '/usr/lib/puavo-ltsp-install/update-configuration'
+        output, status = Open3.capture2e(command)
+        if not status.success? then
+          raise "Failed to update device configuration: #{ output }"
+        end
+
+        version_state = :unknown
+
+        if $image_update_thread then
+          version_state = :updates_in_progress
+        else
+          available_image_updates = check_for_available_image_updates()
+          case available_image_updates
+            when :update_available
+              log(Syslog::LOG_INFO, "There is an image update available\n")
+              version_state = :update_available
+            when :uptodate_no_reboot
+              log(Syslog::LOG_INFO,
+                  "Current image is up-to-date, no reboot required\n")
+              version_state = :uptodate_no_reboot
+            when :uptodate_yes_reboot
+              log(Syslog::LOG_INFO,
+                  "Current image is up-to-date, but reboot is required\n")
+              version_state = :uptodate_yes_reboot
+            else
+              logerr(Syslog::LOG_WARNING,
+                     "Could not determine image up-to-dateness\n")
+          end
+
+          if !$puavopkg_upgrade_thread then
+            puavopkg_upgrades_available \
+              = system('puavo-pkg-updater', '--check-for-upgrades')
+            if puavopkg_upgrades_available then
+              log(Syslog::LOG_INFO, "Puavopkg upgrades are available\n")
+              version_state = :update_available
+            end
+          end
+        end
+
+        case version_state
+          when :unknown
+            # we do not know what to do, so we do nothing
+          when :update_available
+            log(Syslog::LOG_INFO, "Notifying user about available upgrades\n")
+            self.UpdateAvailable
+          when :updates_in_progress
+            # no need to notify about anything
+          when :uptodate_no_reboot
+            log(Syslog::LOG_INFO, "Notifying user that we are up-to-date.\n")
+            self.UpdateIsUpToDate(false) # false == no reboot required
+          when :uptodate_yes_reboot
+            log(Syslog::LOG_INFO,
+                "Notifying user that we are up-to-date, but require reboot.\n")
+            self.UpdateIsUpToDate(true)  # true == reboot *is* required
+        end
+
+      rescue StandardError => e
+        logerr(Syslog::LOG_ERR,
+               "Could not do a configuration update: %s\n",
+               e.message)
+        raise e
+      ensure
+        $configuration_update_thread = nil
+      end
+    end
+
+    return thread
+  end
+
+  def image_update(use_rate_limit)
+    thread = $image_update_thread = Thread.new do
+      wait_thr, out_thr, err_thr = nil, nil, nil
+
+      begin
+        log(Syslog::LOG_INFO, "Starting system update\n")
+        self.UpdateStarted
+
+        stdin, stdout, stderr, wait_thr \
+          = Open3.popen3('/usr/lib/puavo-ltsp-install/update-images',
+                         use_rate_limit ? 'true' : 'false',
+                         { :pgroup => true })
+
+        stdin.close
+        out_thr = Thread.new do
+          loop { self.UpdateMessage('ok', stdout.readline) } \
+            rescue EOFError
+        end
+        err_thr = Thread.new do
+          loop { self.UpdateMessage('error', stderr.readline) } \
+            rescue EOFError
+        end
+
+        status = wait_thr.value
+        if not status.success? then
+          raise 'Failed to update system, update-images returned ' \
+                  + status.exitstatus.to_s
+        end
+
+        log(Syslog::LOG_INFO, "System update completed\n")
+
+        # update device information in Puavo and in local disk as well
+        confthread = $configuration_update_thread
+        if confthread then
+          log(Syslog::LOG_DEBUG,
+              "Configuration update in progress, waiting for it to finish\n")
+          confthread.join rescue nil
+        end
+        log(Syslog::LOG_INFO,
+            "Starting post-system-update configuration update\n")
+        configuration_update().join rescue nil
+
+      rescue CancelledUpdate => e
+        Process.kill('-TERM', wait_thr.pid) if wait_thr && wait_thr.alive?
+        logerr(Syslog::LOG_WARNING, "System update was cancelled\n")
+        raise e
+
+      rescue StandardError => e
+        logerr(Syslog::LOG_ERR,
+               "Error occurred when doing system update: %s\n",
+               e.message)
+        raise e
+
+      ensure
+        [ wait_thr, out_thr, err_thr ].each { |t| t.join if t rescue nil }
+        $image_update_thread = nil
+      end
+    end
+
+    return thread
+  end
+
+  def puavopkg_upgrades()
+    thread = $puavopkg_upgrade_thread = Thread.new do
+      wait_thr, out_thr, err_thr = nil, nil, nil
+
+      begin
+        # puavo-pkg-updater --check-for-upgrades should always return fast,
+        # so we do not bother with a feature to cancel it.
+        upgrades_available = system('puavo-pkg-updater',
+                                    '--check-for-upgrades')
+
+        if !upgrades_available then
+          log(Syslog::LOG_INFO, "No puavo-pkg package upgrades to do.\n")
+          Thread.exit
+        end
+
+        stdin, stdout, stderr, wait_thr \
+          = Open3.popen3('puavo-pkg-updater', '--upgrade-packages',
+                         { :pgroup => true })
+
+        stdin.close
+        out_thr = Thread.new { stdout.read }
+        err_thr = Thread.new { stderr.read }
+
+        status = wait_thr.value
+        if status.success? then
+          log(Syslog::LOG_NOTICE, "Puavopkg upgrades done.\n")
+          # normal return when no failure, otherwise come out with an exception
+          Thread.exit
+        end
+
+        raise "Error in upgrading puavo-pkgs: puavo-pkg-updater returned " \
+                 + "error code #{ status.exitstatus }"
+
+      rescue CancelledUpdate => e
+        Process.kill('-TERM', wait_thr.pid) if wait_thr && wait_thr.alive?
+        logerr(Syslog::LOG_ERR, "Cancelled puavo-pkg upgrades\n")
+        raise e
+
+      rescue StandardError => e
+        logerr(Syslog::LOG_ERR, "%s\n", e.message)
+        raise e
+
+      ensure
+        [ wait_thr, out_thr, err_thr ].each { |t| t.join if t rescue nil }
+        $puavopkg_upgrade_thread = nil
+      end
+    end
+
+    return thread
+  end
+
+  def notify_puavo_on_images
+    available_images \
+      = (Dir.glob('/images/*.img').map { |p| File.basename(p, '.img') } \
+           - %w(ltsp ltsp-backup)).sort
+    current_image_with_img = IO.readlines('/etc/ltsp/this_ltspimage_name') \
+                               .first.chomp
+    current_image = File.basename(current_image_with_img, '.img')
+
+    deviceinfo = JSON.parse( File.read('/state/etc/puavo/device.json') )
+
+    update_available_images \
+      = ((deviceinfo['available_images'] || []).sort != available_images)
+    update_current_image = (deviceinfo['current_image'] != current_image)
+
+    if update_available_images || update_current_image then
+      if update_available_images then
+        log(Syslog::LOG_NOTICE, "Updating available images in Puavo\n")
+      end
+      if update_current_image then
+        log(Syslog::LOG_NOTICE, "Updating the current image in Puavo\n")
+      end
+
+      # Set :dns => :no because we write stuff to Puavo and we have much
+      # better chances of finding the right server when not using DNS.
+      client = PuavoRestClient.new(:auth => :etc, :dns => :no)
+
+      restpath = "/v3/devices/#{ Socket.gethostname }"
+      senddata = {
+        'available_images' => available_images,
+        'current_image'    => current_image,
+      }
+      client.post(restpath, :json => senddata)
+    end
+  end
+
+  dbus_interface "org.puavo.client.update" do
+    dbus_signal :UpdateAvailable
+    dbus_signal :UpdateCancelled
+    dbus_signal :UpdateCompleted, 'in image_update_done:b, reboot_required:b'
+    dbus_signal :UpdateFailed
+    dbus_signal :UpdateIsUpToDate,        'in reboot_required:b'
+    dbus_signal :UpdateMessage,           'in msgtype:s, in content:s'
+    dbus_signal :UpdateProgressIndicator, 'in phase:s, in progress:i'
+    dbus_signal :UpdateStarted
+
+    dbus_method :CancelImageUpdate, '' do
+      image_update_thread     = $image_update_thread
+      puavopkg_upgrade_thread = $puavopkg_upgrade_thread
+
+      if image_update_thread then
+        image_update_thread.raise(CancelledUpdate, 'Cancel image update')
+      end
+      if puavopkg_upgrade_thread then
+        puavopkg_upgrade_thread.raise(CancelledUpdate,
+                                      'Cancel puavo-pkg upgrades')
+      end
+
+      [ image_update_thread, puavopkg_upgrade_thread ].each do |thr|
+        thr.join if thr rescue nil
+      end
+
+      self.UpdateCancelled
+    end
+
+    dbus_method :Update, 'in use_rate_limit:b, out b' do |use_rate_limit|
+      Thread.new do
+        # Configuration update updates our information about what should be
+        # our current image (may be the one we are running or another that
+        # should be updated to).  And it should also update our puavo-pkg
+        # installers.
+        ($configuration_update_thread || self.configuration_update()) \
+          .join rescue nil
+
+        image_update_thread                                                 \
+          = $image_update_thread                                            \
+              ? $image_update_thread                                        \
+              :                                                             \
+            (self.check_for_available_image_updates() == :update_available) \
+              ? self.image_update(use_rate_limit)                           \
+              : nil
+
+        puavopkg_upgrade_thread = ($puavopkg_upgrade_thread \
+                                     || self.puavopkg_upgrades())
+
+        begin
+          if image_update_thread then
+            image_update_thread.join
+            # If we are doing an image update, we do not care when the
+            # puavopkg-upgrade is ready, so we do not wait for the
+            # puavopkg_upgrade_thread.
+          else
+            # We have no need for an image update.
+            #
+            # Because progress indicators are not connected to
+            # puavo-pkg-update (yet?), we should tell that we really do not
+            # know how long this operation will take.
+            self.UpdateProgressIndicator('puavopkg', 0)
+
+            # Wait for the puavopkg-upgrade to finish.
+            puavopkg_upgrade_thread.join
+          end
+        rescue CancelledUpdate => e
+          # no problemos torremolinos!
+          return
+        rescue StandardError => e
+          self.UpdateFailed
+          raise e
+        end
+
+        # Update might result only in configuration update, but possibly
+        # an image update was also done.   Send UpdateCompleted-dbus-signal
+        # and tell also if an image update was done
+        # and if a reboot is required.
+        image_update_done = image_update_thread ? true : false
+        reboot_required = (self.check_for_available_image_updates() \
+                             == :uptodate_yes_reboot)
+        self.UpdateCompleted(image_update_done, reboot_required)
+      end
+    end
+
+    dbus_method :UpdateConfiguration, 'out b' do
+      self.configuration_update() unless $configuration_update_thread
+    end
+
+    dbus_method :UpdateProgress,
+                "in phase:s, in progress:i" do |phase, progress|
+      self.UpdateProgressIndicator(phase, progress)
+    end
+  end
+
+end
+
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
+
+bus = DBus::SystemBus.instance
+
+# Request a well-known name for the service. It can be denied if someone
+# has reserved the name (very unlikely, only if someone is playing
+# tricks with us) or we do not have permissions to own the name (missing
+# conf file in /etc/dbus-1/system.d).
+service = bus.request_service("org.puavo.client.Daemon")
+
+# Export all dbus-accessible objects.
+service.export(OverlayHandler.new('/overlayhandler'))
+service.export(Updater.new("/updater"))
+
+# Run Forrest, run!
+loop = DBus::Main.new
+loop << bus
+loop.run
+
+Syslog.close()

@@ -1,0 +1,70 @@
+#!/usr/bin/ruby1.9.1
+
+require 'fileutils'
+require 'json'
+require 'net/https'
+require 'puavo/rest-client'
+require 'socket'
+require 'uri'
+
+def get_image_build_configuration()
+  print 'Getting the builder configuration...'
+
+  client = PuavoRestClient.new(:auth => :bootserver)
+  image_build_configuration \
+    = client.get("v3/devices/#{ Socket.gethostname }/imagebuildconfig")
+
+  # write configuration to filesystem mostly for transparency
+  File.open('/etc/puavo/imagebuildconfig.json', 'w') do |f|
+    f.print(image_build_configuration)
+  end
+
+  puts ' done.'
+
+  JSON.parse(image_build_configuration)
+end
+
+def get_url(uri)
+  parsed_uri = URI.parse(uri)
+
+  http = Net::HTTP.new(parsed_uri.host, parsed_uri.port)
+  http.ca_file = '/etc/puavo/certs/rootca.pem'
+  http.use_ssl = true
+  http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+
+  request = Net::HTTP::Get.new(parsed_uri.request_uri)
+  request.add_field('Authorization', 'Bootserver')
+
+  response = http.request(request)
+  raise 'Did not get response object' unless response
+  
+  raise "Error in downloading '#{ uri }': response code #{ response.code }" \
+    unless response.code == '200'
+     
+  response.body 
+end
+
+conf = get_image_build_configuration()
+
+cmd = [
+  'puavo-build-image',
+  '--apply-configure-bootstrap',
+  '--config-target',      conf['config-target'],
+  '--images-config',      '/usr/share/opinsys-rules/rules/images.json' ,
+  '--images-config',      '/usr/share/puavo-rules/rules/images.json',
+  '--mount-device',       conf['nfs-mount-device'],
+  '--mount-dir',          '/opt/ltsp/images',
+  '--use-tmpfs',
+  '--',
+  '--apt-proxy',               'no',
+  '--builds-dir',              '/virtualtmp',
+  '--chroot-configure-script', '/usr/lib/puavo-rules/puavo-configure-chroot',
+  '--extra-packages-dir',      conf['extra-packages-dir'],
+  '--image-configure-script',  '/usr/lib/puavo-rules/puavo-configure-image',
+  '--images-dir',              '/opt/ltsp/images',
+  '--mirror',                  conf['mirror'],
+  '--buildrule-dirs',
+     '/usr/share/puavo-rules/rules,/usr/share/opinsys-rules/rules' ]
+
+system(*cmd) \
+  or raise "Problem building an image '#{ conf['config-target'] }'"

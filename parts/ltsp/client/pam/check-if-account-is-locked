@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+CACHE_FILE="/var/lib/puavo-desktop/users/${PAM_USER}/puavo_session.json"
+
+if [ "$(jq -r .user.locked "${CACHE_FILE}")" = "true" ]; then
+  echo "User account for '${PAM_USER}' is locked" \
+      | logger -t check-if-account-is-locked -p auth.error
+  exit 89
+fi
+
+exit 0

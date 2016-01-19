@@ -1,0 +1,22 @@
+# Set up desktop background based on tags in Puavo.  We will also clean up
+# previous configuration in case the tag is missing, in case we are using
+# persistent overlay (and etc/X11/Xsession.d/44puavo-generate-dconf-profile
+# expects this to exist).
+mkdir -p /etc/dconf/db/desktopbackground.d
+
+puavo_desktop_background=$(jq -r '.tags[]' /etc/puavo/device.json    \
+                             | sed -n 's/^desktop_background://p' \
+                             | head -n1)
+
+if [ -n "$puavo_desktop_background" \
+     -a -e "/usr/share/backgrounds/${puavo_desktop_background}" ]; then
+  cat <<EOF > /etc/dconf/db/desktopbackground.d/background_profile
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/${puavo_desktop_background}'
+EOF
+else
+  cat <<EOF > /etc/dconf/db/desktopbackground.d/background_profile
+EOF
+fi
+
+dconf compile /etc/dconf/db/desktopbackground /etc/dconf/db/desktopbackground.d

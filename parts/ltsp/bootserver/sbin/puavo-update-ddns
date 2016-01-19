@@ -1,0 +1,193 @@
+#!/usr/bin/ruby 
+#
+# Copyright 2013 Opinsys Oy
+#
+# Script to do dynamic DNS updates. Both forward and reverse records are 
+# updated. Multiple servers can be updated simultaneously.
+#
+#
+# CONFIGURATION
+#
+# The script uses defaults that work out-of-the-box when used on Puavo 
+# LTSP bootservers and internal networks are in 10.0.0.0/8 range. The 
+# default configuration can be overwriten using file 
+# /etc/puavo/nameserver.yml.
+#
+# Configuration Defaults
+#
+# domain         is read from /etc/puavo/domain
+# reverse_domain 10.in-addr.arpa
+# servers        127.0.0.1:553
+# key_name       is read from /etc/dhcp/ddns-keys/nsupdate.key
+# key            is read from /etc/dhcp/ddns-keys/nsupdate.key
+#
+# /etc/puavo/nameserver.yml
+#
+#   servers:
+#     - 127.0.0.1:553
+#   domain: example.org
+#   reverse_domain: 10.in-addr.arpa
+#   key_name: puavo-updater
+#   key: n0FG8QLzMC6vKhqW61NWeQ==
+#
+# Key can be generated using the command:
+#
+# $ dnssec-keygen -a HMAC-MD5 -b 128 -n HOST puavo-key
+# Kpuavo-key.+157+10879
+#
+# $ cat Kpuavo-key.+157+10879.private
+# Private-key-format: v1.3
+# Algorithm: 157 (HMAC_MD5)
+# Key: n0FG8QLzMC6vKhqW61NWeQ==
+# Bits: AAA=
+# Created: 20130114153920
+# Publish: 20130114153920
+# Activate: 20130114153920
+#
+# The Key attribute value is the key that needs to be put in the
+# /etc/puavo/nameserver.yml configuration file.
+#
+# Bind configuration (/etc/bind/named.conf.local) should look something 
+# like this:
+#
+# key "puavo-updater" {
+#        algorithm hmac-md5;
+#        secret "n0FG8QLzMC6vKhqW61NWeQ==";
+# };
+#
+# zone "example.org" {
+#         type master;
+#         file "/var/lib/bind/puavo_domain";
+#         update-policy {
+#                 grant puavo-updater zonesub ANY;
+#         };
+# };
+#
+# zone "246.10.in-addr.arpa" {
+#         type master;
+#         file "/var/lib/bind/puavo_domain_reverse";
+#         update-policy {
+#                 grant puavo-updater zonesub ANY;
+#         };
+# };
+#
+#
+ 
+require 'yaml'
+require 'ldap'
+require 'dnsruby'
+include Dnsruby
+
+def lookup_hostname_by_mac(mac)
+  base     = File.read('/etc/puavo/ldap/base'    ).chomp
+  dn       = File.read('/etc/puavo/ldap/dn'      ).chomp
+# FIXME - find a proper solution to get dhcpd belong to the puavo group
+#  password = File.read('/etc/puavo/ldap/password').chomp
+  password = `sudo /bin/cat /etc/puavo/ldap/password`.chomp
+  hostname = File.read('/etc/puavo/hostname').chomp
+  domain   = File.read('/etc/puavo/domain'    ).chomp
+
+  conn = LDAP::Conn.new("#{hostname}.#{domain}")
+  conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+  conn.start_tls
+  conn.bind(dn, password) do
+    begin
+      conn.search("ou=Hosts,#{base}", LDAP::LDAP_SCOPE_SUBTREE, "macAddress=#{mac}") do |e|
+        if e.get_values('cn')
+          return e.get_values('cn').first
+        end
+      end
+    rescue LDAP::ResultError
+      conn.perror("LDAP connection failed")
+    end
+  end
+end
+
+@puavo_hostname    = File.read('/etc/puavo/hostname'       ).chomp
+@puavo_domain      = File.read('/etc/puavo/domain'         ).chomp
+
+type = ARGV[0]
+mac = ARGV[1]
+ip = ARGV[2]
+subdomain = ARGV[3]
+
+config = Hash.new
+
+if File.exists?("/etc/dhcp/ddns-keys/nsupdate.key")
+  tmp = File.read("/etc/dhcp/ddns-keys/nsupdate.key")
+  if /key "(.*?)"/.match(tmp)
+    config["key_name"] = $1
+  end
+
+  if /secret "(.*?)"/.match(tmp)
+    config["key"] = $1
+  end
+end
+
+config["reverse_domain"] = "10.in-addr.arpa"
+config["servers"] = ["127.0.0.1:553"]
+config["domain"] = @puavo_domain
+
+if File.exists?("/etc/puavo/nameserver.yml")
+  config_file = YAML.load(File.read("/etc/puavo/nameserver.yml"))
+  config.merge(config_file)
+end
+
+if type.eql?("mac")
+  mac = mac.split(':').map {|x|
+    if x.length == 1
+      "0#{x}"
+    else
+      x
+    end
+  }.join(':')
+
+  hostname = lookup_hostname_by_mac(mac)
+
+  if !hostname
+    puts "No name for mac #{mac}"
+    exit 0
+  end
+elsif type.eql?("hostname")
+  hostname = mac
+end
+
+fqdn = "#{hostname}.#{subdomain}.#{@puavo_domain}"
+
+# Loop through all servers and update the A and reverse PTR records.
+# The records are first deleted and then added.
+ 
+config["servers"].each do |url|
+  port = 53
+  server = url
+ 
+  if /(.*):(\d+)/.match(url)
+    server = $1
+    port = $2
+  end
+
+  resolver = Dnsruby::Resolver.new({:nameserver => server})
+  resolver.port=(port)
+  response, error = resolver.send_plain_message(Message.new(fqdn, Types.A))
+
+  resolver.tsig=config["key_name"],config["key"]
+
+  update = Dnsruby::Update.new(config["domain"])
+  update.delete(fqdn,'A')
+  update.add(fqdn,'A',60,ip)
+
+  update_reverse = Dnsruby::Update.new(config["reverse_domain"])
+  in_addr="#{ip.split('.').reverse.join('.')}.in-addr.arpa"
+
+  update_reverse.delete(in_addr)
+  update_reverse.add(in_addr,'PTR',60,"#{fqdn}.")
+
+  begin
+    reply = resolver.send_message(update)
+    reply = resolver.send_message(update_reverse)
+  rescue Exception => e
+    puts "Update failed: #{e.inspect}"
+  end
+end
+
+exit 0

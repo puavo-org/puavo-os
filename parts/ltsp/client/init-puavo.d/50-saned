@@ -1,0 +1,5 @@
+# This file is sourced
+if boolean_is_true "$SCANNER" ; then
+    [ -w "/etc/default/saned" ] && sed -i -e 's/RUN=no/RUN=yes/' /etc/default/saned
+fi
+true

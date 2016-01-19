@@ -1,0 +1,16 @@
+for file in /etc/default/console-setup /etc/default/keyboard; do
+    if [ -f "$file" ]; then
+        if [ -n "$XKBMODEL" ] ; then
+            sed -i "s/XKBMODEL=.*/XKBMODEL=\"$XKBMODEL\"/" "$file"
+        fi
+        if [ -n "$XKBLAYOUT" ]; then
+            sed -i "s/XKBLAYOUT=.*/XKBLAYOUT=\"$XKBLAYOUT\"/" "$file"
+        fi
+        if [ -n "$XKBVARIANT" ]; then
+            sed -i "s/XKBVARIANT=.*/XKBVARIANT=\"$XKBVARIANT\"/" "$file"
+        fi
+        if [ -n "$XKBOPTIONS" ]; then
+            sed -i "s/XKBOPTIONS=.*/XKBOPTIONS=\"$XKBOPTIONS\"/" "$file"
+        fi
+    fi
+done

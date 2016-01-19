@@ -1,0 +1,15 @@
+#!/bin/sh
+
+export LANG=fi_FI.UTF-8
+export TERM=vt100
+setupcon
+clear
+
+echo
+echo
+echo 'This host is a Puavo wireless access point.' | /usr/games/cowsay
+echo
+echo 'You can reboot this host by pressing ENTER.'
+echo
+read answer
+reboot

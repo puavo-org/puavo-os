@@ -1,0 +1,25 @@
+#!/bin/sh -e
+
+MINKVER="2.6.17"
+PREREQ=""
+
+# Output pre-requisites
+prereqs()
+{
+    echo "$PREREQ"
+}
+
+case "$1" in
+    prereqs)
+        prereqs
+    exit 0
+    ;;
+esac
+
+
+. /usr/share/initramfs-tools/hook-functions
+
+# Copy across the binaries
+if [ -x /sbin/ethtool ]; then
+    copy_exec /sbin/ethtool /sbin
+fi

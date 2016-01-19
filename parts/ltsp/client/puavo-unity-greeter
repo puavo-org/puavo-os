@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -eu
+
+has_device_tag() {
+  jq -r .tags[] /etc/puavo/device.json | grep -qx "$1"
+}
+
+if [ -e /etc/dconf/profile/lightdm ]; then
+  export DCONF_PROFILE=lightdm
+fi
+
+if [ -e /etc/xdg/autostart/puavo-remote-assistance-applet.desktop ]; then
+  /usr/bin/puavo-remote-assistance-applet &
+fi
+
+# Strangely, this is needed for the keyboard applet to show up
+# in unity-greeter panel, despite that these are set in dconf
+# settings for lightdm.
+dconf load / < /etc/dconf/db/keyboard.d/keyboard_profile || true
+
+# I guess we could implement optional lightdm-dconf-settings in this way...
+# If nokeyboard tag is set, show an onscreen keyboard, maybe other stuff.
+if has_device_tag nokeyboard && ! has_device_tag no_nokeyboard; then
+  dconf load / < /etc/dconf/db/nokeyboard.d/nokeyboard_profile || true
+fi
+
+exec /usr/sbin/unity-greeter "$@"

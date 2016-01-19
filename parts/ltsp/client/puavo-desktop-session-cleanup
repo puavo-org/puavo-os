@@ -1,0 +1,27 @@
+#!/bin/sh
+
+set -eu
+
+# This script is run as root (from lightdm).
+
+# This is for triggering autologin on infotv and webkiosk modes.
+if jq -r .tags[] /etc/puavo/device.json | grep -Eqx '(infotv|webkiosk)'; then
+  trap '' HUP INT TERM
+  PATH=$PATH:/sbin:/usr/sbin
+  restart lightdm
+  exit 0
+fi
+
+# This is for shutting down thin clients.  "puavo-ltsp-client-action" in the
+# thin client case sets up an X property, kills the desktop session, and this
+# script then picks up this and may trigger either a reboot or a shutdown.
+
+logout_action=$(xprop -root -notype LTSP_LOGOUT_ACTION \
+                  | sed -ne 's/^LTSP_LOGOUT_ACTION = "\(.*\)"/\1/p' || true)
+
+# Check if the user requested a shutdown or a reboot.
+case "$logout_action" in
+  HALT)   /sbin/poweroff ;;
+  REBOOT) /sbin/reboot   ;;
+  *)                     ;;
+esac

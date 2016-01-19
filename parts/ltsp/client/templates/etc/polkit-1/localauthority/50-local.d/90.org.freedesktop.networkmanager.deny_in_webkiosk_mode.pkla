@@ -1,0 +1,6 @@
+[Normal User Permissions]
+Identity=unix-user:*
+Action=org.freedesktop.NetworkManager.*
+ResultAny=no
+ResultInactive=no
+ResultActive=no

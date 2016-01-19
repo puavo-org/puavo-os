@@ -1,0 +1,7 @@
+Name: Local Puavo access control
+Default: yes
+Priority: 256
+
+Account-Type: Additional
+Account:
+	required	pam_exec.so quiet /usr/lib/puavo-ltsp-client/pam/restrict-logins-by-local-config

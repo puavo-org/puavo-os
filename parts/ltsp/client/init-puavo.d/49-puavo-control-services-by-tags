@@ -1,0 +1,17 @@
+puavo_list_tags() {
+  jq -r '.tags[]' /etc/puavo/device.json 2>/dev/null
+}
+
+for puavo_service in $(puavo_list_tags); do
+  case "$puavo_service" in
+    keep_system_service:*)
+      KEEP_SYSTEM_SERVICES="$KEEP_SYSTEM_SERVICES ${puavo_service#keep_system_service:}"
+      ;;
+    rm_session_service:*)
+      RM_SESSION_SERVICES="$RM_SESSION_SERVICES ${puavo_service#rm_session_service:}"
+      ;;
+    rm_system_service:*)
+      RM_SYSTEM_SERVICES="$RM_SYSTEM_SERVICES ${puavo_service#rm_system_service:}"
+      ;;
+  esac
+done

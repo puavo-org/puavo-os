@@ -1,0 +1,67 @@
+# Get NBD_ROOT_HOST or NFS_SERVER from the kernel command line.
+
+if [ -n "$NBD_ROOT_HOST" ] || [ -n "$NFS_SERVER" ]; then
+    return
+fi
+
+for x in $(cat /proc/cmdline); do
+    case "$x" in
+        nbdroot=*)
+            netroot="${x#nbdroot=}"
+            nbd=true
+            break
+            ;;
+        nfsroot=*)
+            netroot="${x#nfsroot=}"
+            nfs=true
+            break
+            ;;
+    esac
+done
+
+# The code below is stripped from local-top/nbd
+case "$netroot" in
+	\[*\]*)
+		# [ipv6]:port/path
+		netsrv=${netroot%\]*}
+		netsrv=${netsrv#\[}
+		netportpath=${netroot#\[$netsrv\]}
+		netportpath=${netportpath#:}
+		netport=${netportpath%%/*}
+		netpath=${netportpath#$netport}
+		;;
+	*)
+		# ipv4:port/path
+		netsrv=${netroot%%[:/]*}
+		netportpath=${netroot#$netsrv}
+		netportpath=${netportpath#:}
+		netport=${netportpath%%/*}
+		netpath=${netportpath#$netport}
+		;;
+esac
+
+# If not specified in the kernel cmdline, use the value from DHCP
+netsrv=${netsrv:-$ROOTSERVER}
+
+if [ -n "$nbd" ]; then
+    export NBD_ROOT_HOST="$netsrv"
+    echo "NBD_ROOT_HOST=$NBD_ROOT_HOST"
+    case "$netport" in
+	    *[!0-9]*)
+		    # non-numeric characters, assume a name rather than a port
+		    netpath="$netport"
+		    unset netport
+		    ;;
+    esac
+    if [ -n "$netpath" ]; then
+        export NBD_ROOT_NAME="$netpath"
+        echo "NBD_ROOT_NAME=$NBD_ROOT_NAME"
+    fi
+    if [ -n "$netport" ]; then
+        export NBD_ROOT_PORT="$netport"
+        echo "NBD_ROOT_PORT=$NBD_ROOT_PORT"
+    fi
+elif [ -n "$nfs" ]; then
+    export NFS_SERVER="$netsrv"
+    echo "NFS_SERVER=$NFS_SERVER"
+fi >> /var/cache/ltsp/ltsp_config

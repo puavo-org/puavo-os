@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# Don't do anything for the lo interface
+test "$IFACE" != lo || exit 0
+
+PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+PUAVO_DOMAIN=$(cat /etc/puavo/domain)
+
+if [ "$PUAVO_HOSTTYPE" != "laptop" ]; then
+  exit 0
+fi
+
+# Make sure that sssd goes online when we are in network matching the 
+# puavo domain. Otherwise sssd takes some time before realising that 
+# there's a kerberos server available.
+
+case $DHCP4_DOMAIN_NAME in *${PUAVO_DOMAIN})
+  sleep 1
+  killall -USR2 sssd
+  sleep 6
+  killall -USR2 sssd
+esac

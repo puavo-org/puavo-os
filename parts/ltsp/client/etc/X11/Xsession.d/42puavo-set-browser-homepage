@@ -1,0 +1,34 @@
+# Set the browser homepage in environmental variable HOMEPAGE
+# that firefox-puavodesktop.js uses to set startpage when the
+# browser start.
+
+set +x
+
+DEVICE_HOMEPAGE=$(jq -r .homepage "/etc/puavo/device.json")
+
+if [ -f "${PUAVO_SESSION_PATH}" ]; then
+  USER_HOMEPAGE=$(jq -r .user.homepage "${PUAVO_SESSION_PATH}")
+  DEVICE_HOMEPAGE=$(jq -r .device.homepage "${PUAVO_SESSION_PATH}")
+fi
+
+if [ "${USER_HOMEPAGE}" = "null" ]; then
+  USER_HOMEPAGE=""
+fi
+
+if [ "${DEVICE_HOMEPAGE}" = "null" ]; then
+  DEVICE_HOMEPAGE=""
+fi
+
+export HOMEPAGE=${DEVICE_HOMEPAGE}
+
+if [ "${USER_HOMEPAGE}" != "" ]; then
+  if [ "${DEVICE_HOMEPAGE}" != "" ]; then
+    if [ "${USER_HOMEPAGE}" != "${DEVICE_HOMEPAGE}" ]; then
+      export HOMEPAGE="${DEVICE_HOMEPAGE}|${USER_HOMEPAGE}"
+    else
+      export HOMEPAGE="${USER_HOMEPAGE}"
+    fi
+  else
+    export HOMEPAGE="${USER_HOMEPAGE}"
+  fi
+fi

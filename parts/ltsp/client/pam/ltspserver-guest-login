@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -e
+
+REMOTE_HOST=$(echo $PAM_RHOST | awk --field-separator=. '{print $1}')
+HOME=$(getent passwd "guest-${REMOTE_HOST}"|awk --field-separator=: '{print $6}')
+
+if [ "guest-${REMOTE_HOST}" = "${PAM_USER}" ]; then
+  if [ "$(echo $HOME | grep ^/tmp/guest)" != "" ]; then
+    logger -t ltspserver-guest-login "Deleting guest user home directory ${HOME}"
+
+    # Clean guest user data in a rather complicated way... we do not want
+    # to remove the home directory in case others would try to hijack it.
+    find "${HOME}" -mindepth 1 -maxdepth 1 -user "$PAM_USER" -print0 \
+      | xargs -0 rm -rf
+    find /tmp -mindepth 1 -maxdepth 1 -user "$PAM_USER" \
+	      ! -wholename "${HOME}" -print0 \
+      | xargs -0 rm -rf
+
+    exit 0
+  fi
+fi
+
+exit 2

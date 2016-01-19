@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# http://twobit.us/blog/2010/02/dnsmasq-and-racoon-vpn/
+function inet_aton () {
+    local count=3
+    local int=0
+    for num in $(echo $1 | sed -e 's/\./ /g'); do
+        let "int+=$num*256**$count"
+        let "count-=1"
+    done
+    echo $int
+}
+
+LDAP_MASTER=$(cat /etc/puavo/ldap/master)
+
+if [ -f "/etc/puavo/ldap/slave" ]; then
+  LDAP_SLAVE=$(cat /etc/puavo/ldap/slave)
+fi
+
+KERBEROS_MASTER=$(cat /etc/puavo/kerberos/master)
+TOPDOMAIN=$(cat /etc/puavo/topdomain)
+HOSTTYPE=$(cat /etc/puavo/hosttype)
+PARAMS=""
+
+if [ -n "$LDAP_MASTER" ]; then
+  PARAMS+="string:${LDAP_MASTER} "
+fi
+
+if [ -n "$LDAP_SLAVE" ]; then
+  PARAMS+="string:${LDAP_SLAVE} "
+fi
+
+if [ -n "$KERBEROS_MASTER" ]; then
+  PARAMS+="string:${KERBEROS_MASTER} "
+fi
+
+if [ -n "$TOPDOMAIN" -a "$HOSTTYPE" = "laptop" ]; then
+  PARAMS+="string:images.${TOPDOMAIN} string:imageproxy.${TOPDOMAIN}"
+fi
+
+dbus-send --system --dest=org.puavo.VPN.dnsmasq \
+  /uk/org/thekelleys/dnsmasq \
+  uk.org.thekelleys.SetServers \
+  uint32:$(inet_aton ${route_vpn_gateway}) \
+  ${PARAMS}

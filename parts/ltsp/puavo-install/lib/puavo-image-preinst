@@ -1,0 +1,50 @@
+#!/bin/sh
+
+# We should be run by puavo-install-and-update-ltspimages when the
+# new image is downloaded but not yet set as default.
+# Care must be taken to not break old images (because we might still
+# be booted to those), yet we should help the system move forward to this
+# new image.
+#
+# This script will be run for all device types that boot from local
+# hard drive.  You should be able to read the device type from
+# "/etc/puavo/hosttype".  If this script fails, new image will *not* be
+# set as default.
+#
+# This script should be written so that it might be run once or many times,
+# and always should do the right thing.
+#
+# The old image/system should now be mounted at /, and this new image
+# should be mounted at /images/mnt.
+
+set -eu
+
+new_mnt=/images/mnt
+
+update_grub() {
+  "${new_mnt}/usr/sbin/puavo-install-grub" --only-update-config "$@"
+}
+
+hosttype=
+
+# This should not fail even if we get parameters we do not understand.
+# The arguments should be simple: in format "--option value" only.  The point
+# is that this might be called from an image that is far in the past or far in
+# the future, and we should do our best and just ignore whatever we do not
+# understand.
+while [ $# -ge 2 ]; do
+  case "$1" in
+    --hosttype) hosttype=$2; shift; shift ;;
+    --*)                     shift; shift ;;
+    *)                       shift        ;;
+  esac
+done
+
+# update grub configuration from the new image
+if [ -n "$hosttype" ]; then
+  update_grub --hosttype "$hosttype"
+else
+  update_grub
+fi
+
+exit 0

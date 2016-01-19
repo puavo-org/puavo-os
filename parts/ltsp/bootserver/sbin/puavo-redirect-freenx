@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+
+TAGS=$(jq -r '.tags' /etc/puavo/device.json)
+DOMAIN=$(cat /etc/puavo/domain)
+
+if [ "${TAGS}" != "null" ]; then
+  for TAG in $(echo ${TAGS}|jq -r '.[]')
+  do
+    TMP=$(echo ${TAG} | grep "^NX:")
+    if [ "${TMP}" != "" ]; then
+      HOSTNAME=$(echo ${TAG}|awk -F ':' '{print $2}')
+
+      echo "Starting redirect from port 222 to ${HOSTNAME}.ltsp.${DOMAIN}:222" \
+        | logger -t puavo-redirect-freenx -p daemon.info
+
+      socat TCP-LISTEN:222,fork,reuseaddr TCP:${HOSTNAME}.ltsp.${DOMAIN}:222
+
+      echo "Stopped redirect from port 222 to ${HOSTNAME}.ltsp.${DOMAIN}:222" \
+        | logger -t puavo-redirect-freenx -p daemon.info
+
+      exit 0
+    fi
+  done
+fi
+
+exit 1

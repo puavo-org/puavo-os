@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# If /usr/lib/puavo-local-config/pam/login-setup does not exist
+# we have nothing to do (comes from "puavo-local-config"-package).
+[ -x /usr/lib/puavo-local-config/pam/login-setup ] || exit 0
+
+exec /usr/lib/puavo-local-config/pam/login-setup "$@"

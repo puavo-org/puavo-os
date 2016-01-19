@@ -1,0 +1,115 @@
+#!/bin/bash
+#
+# ##############################################################################
+#
+# Copyright (C) 2014 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+#
+
+set -eu
+
+sink=
+source=
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            echo "Usage: $0"
+            echo
+            echo "Setup PulseAudio according to the configuration defined in Puavo"
+            echo
+            echo "Options:"
+            echo "    --sink SINK                  override default sink configuration"
+            echo "    --source SOURCE              overrides default source configuration"
+            echo "    -h, --help                   print help and exit"
+            echo
+            exit 0
+            ;;
+        --sink)
+            shift
+            sink="$1"
+            shift
+            ;;
+        --source)
+            shift
+            source="$1"
+            shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -ne 0 ]; then
+    usage_error "invalid number of positional arguments ($#), expected 0"
+fi
+
+[ -n "${sink}" ] || sink=$(jq -r .default_audio_sink /etc/puavo/device.json)
+[ -n "${source}" ] || source=$(jq -r .default_audio_source /etc/puavo/device.json)
+
+# jq outputs null for non-existing fields, treat them as empty
+# strings.
+[ "${sink}" = "null" ] && sink=
+[ "${source}" = "null" ] && source=
+
+# Quirk for smartboards: if the default sink was not set in Puavo
+# and if smartboard audio is connected, set it as default.
+if [ -z "${sink}" ]; then
+    sink=$(pacmd list-sinks \
+        | sed -r -n '/^\s+index: [0-9]+$/ n; s/^\s+name: <(.*C-Media.*)>$/\1/p')
+
+    # Set the default sink volume level to 100% for this specific
+    # model. By default, the volume level is 96% which is actually just
+    # the zero-level and hence the sink is practically muted by
+    # default.
+    if [ "${sink}" = "alsa_output.usb-C-Media_INC._C-Media_USB_Audio-00-Audio.analog-stereo" ]; then
+        sink="||${sink}|100%"
+    fi
+fi
+
+audio_setup()
+{
+    local devtype=$1
+    local devname=$2
+
+    local card
+    local profile
+    local volume
+
+    if [ -n "${devname}" ]; then
+        # Default sink/source names provided by Puavo can be in two different
+        # formats:
+        # 1) Multifield-value where each field is separated by | (ASCII 0x7c):
+        #    * Fields are: CARD|PROFILE|SINK/SOURCE[|VOLUME]
+        #    * Note that volume is optional.
+        # 2) Just the sink/source name.
+        if grep -q '|' <<<"${devname}"; then
+            IFS='|' read card profile devname volume <<<"${devname}"
+            [ -n "${card}" ] && [ -n "${profile}" ] && \
+                pacmd set-card-profile "${card}" "${profile}" >/dev/null
+            [ -n "${volume}" ] && pactl "set-${devtype}-volume" "${devname}" "${volume}"
+        fi
+        pacmd "set-default-${devtype}" "${devname}" >/dev/null
+    fi
+}
+
+audio_setup 'sink' "${sink}"
+audio_setup 'source' "${source}"
