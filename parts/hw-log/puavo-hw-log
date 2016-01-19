@@ -1,0 +1,306 @@
+#!/usr/bin/ruby1.9.1
+
+
+require "net/http"
+require "uri"
+require "json"
+require "optparse"
+
+# Using ohai instead facter because ohai reports disk usage while facter does not
+require "ohai"
+
+# Lazy inlining from https://github.com/dominikh/filesize/blob/42fb8cce2dd29ac91207d82a6625fdfeb6e4afbf/lib/filesize.rb
+class Filesize
+  TYPE_PREFIXES = {
+    # Unit prefixes used for SI file sizes.
+    SI: %w{k M G T P E Z Y},
+    # Unit prefixes used for binary file sizes.
+    BINARY: %w{Ki Mi Gi Ti Pi Ei Zi Yi}
+  }
+
+  # @deprecated Please use TYPE_PREFIXES[:SI] instead
+  PREFIXES = TYPE_PREFIXES[:SI]
+
+  # Set of rules describing file sizes according to SI units.
+  SI = {
+    :regexp => /^([\d,.]+)?\s?([kmgtpezy]?)b$/i,
+    :multiplier => 1000,
+    :prefixes => TYPE_PREFIXES[:SI],
+    :presuffix => '' # deprecated
+  }
+  # Set of rules describing file sizes according to binary units.
+  BINARY = {
+    :regexp => /^([\d,.]+)?\s?(?:([kmgtpezy])i)?b$/i,
+    :multiplier => 1024,
+    :prefixes => TYPE_PREFIXES[:BINARY],
+    :presuffix => 'i' # deprecated
+  }
+
+  # @param [Number] size A file size, in bytes.
+  # @param [SI, BINARY] type Which type to use for conversions.
+  def initialize(size, type = BINARY)
+    @bytes = size.to_i
+    @type  = type
+  end
+
+  # @return [Number] Returns the size in bytes.
+  def to_i
+    @bytes
+  end
+  alias_method :to_int, :to_i
+
+  # @param [String] unit Which unit to convert to.
+  # @return [Float] Returns the size in a given unit.
+  def to(unit = 'B')
+    to_parts = self.class.parse(unit)
+    prefix   = to_parts[:prefix]
+
+    if prefix == 'B' or prefix.empty?
+      return to_i.to_f
+    end
+
+    to_type = to_parts[:type]
+    size    = @bytes
+
+    pos = (@type[:prefixes].map { |s| s[0].downcase }.index(prefix.downcase) || -1) + 1
+
+    size = size/(to_type[:multiplier].to_f**(pos)) unless pos < 1
+  end
+  alias_method :to_f, :to
+
+  # @param (see #to_f)
+  # @return [String] Same as {#to_f}, but as a string, with the unit appended.
+  # @see #to_f
+  def to_s(unit = 'B')
+    "%.2f %s" % [to(unit).to_f.to_s, unit]
+  end
+
+  # Same as {#to_s} but with an automatic determination of the most
+  # sensible unit.
+  #
+  # @return [String]
+  # @see #to_s
+  def pretty
+    size = @bytes
+    if size < @type[:multiplier]
+      unit = "B"
+    else
+      pos = (Math.log(size) / Math.log(@type[:multiplier])).floor
+      pos = @type[:prefixes].size-1 if pos > @type[:prefixes].size - 1
+
+      unit = @type[:prefixes][pos-1] + "B"
+    end
+
+    to_s(unit)
+  end
+
+  # @return [Filesize]
+  def +(other)
+    self.class.new(@bytes + other.to_i, @type)
+  end
+
+  # @return [Filesize]
+  def -(other)
+    self.class.new(@bytes - other.to_i, @type)
+  end
+
+  # @return [Filesize]
+  def *(other)
+    self.class.new(@bytes * other.to_i, @type)
+  end
+
+  # @return [Filesize]
+  def /(other)
+    result = @bytes / other.to_f
+    if other.is_a? Filesize
+      result
+    else
+      self.class.new(result, @type)
+    end
+  end
+
+  # @return [Boolean]
+  def ==(other)
+    other.is_a?(self.class) && other.to_i == self.to_i
+  end
+
+  # @return [Array<self, other>]
+  # @api private
+  def coerce(other)
+    return self, other
+  end
+
+  class << self
+    # Parses a string, which describes a file size, and returns a
+    # Filesize object.
+    #
+    # @param [String] arg A file size to parse.
+    # @raise [ArgumentError] Raised if the file size cannot be parsed properly.
+    # @return [Filesize]
+    def from(arg)
+      parts  = parse(arg)
+      prefix = parts[:prefix]
+      size   = parts[:size]
+      type   = parts[:type]
+
+      raise ArgumentError, "Unparseable filesize" unless type
+
+      offset = (type[:prefixes].map { |s| s[0].downcase }.index(prefix.downcase) || -1) + 1
+
+      new(size * (type[:multiplier] ** (offset)), type)
+    end
+
+    # @return [Hash<:prefix, :size, :type>]
+    # @api private
+    def parse(string)
+      type = nil
+      # in this order, so we prefer binary :)
+      [BINARY, SI].each { |_type|
+        if string =~ _type[:regexp]
+          type    =  _type
+          break
+        end
+      }
+
+      prefix = $2 || ''
+      size   = ($1 || 0).to_f
+
+      return { :prefix => prefix, :size => size, :type => type}
+    end
+  end
+end
+
+@options = {
+  :server => "http://localhost:8888"
+}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "
+  Usage: #{ File.basename(__FILE__) } [options]
+
+  Log hardware information to fluentd
+  "
+
+  opts.on("--server [URL]", "URL to fluentd HTTP server. Default: #{ @options[:server] }") do |server|
+    @options[:server] = server
+  end
+
+  opts.on("--stdout", "Print data to stdout as json instead of logging it to fluentd") do |server|
+    @options[:stdout] = true
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    STDERR.puts opts
+    exit
+  end
+
+end
+
+parser.parse!
+
+def send_data(msg, data)
+  fluent_record = { msg: msg }
+  fluent_record[msg] = data
+
+  if @options[:stdout]
+    puts JSON.pretty_generate(fluent_record)
+  else
+
+    Net::HTTP.post_form(
+      URI(@options[:server] + "/puavo-hw-log"),
+      json: fluent_record.to_json
+    )
+    puts "#{ Time.now } Data posted to #{ @options[:server] }"
+  end
+end
+
+if Process.uid != 0
+  STDERR.puts "Not root?"
+  exit 1
+end
+
+
+def assert_exec(cmd)
+  out = `#{ cmd }`
+  if not $?.success?
+    raise "Failed to execute '#{ cmd }'"
+  end
+  return out
+end
+
+data = {}
+begin
+  data["lshw"] = JSON.parse(assert_exec("lshw -quiet -json"))
+rescue
+end
+send_data("hwinfo", data)
+
+
+system_status = {}
+
+system = Ohai::System.new
+system.all_plugins
+
+system_status["uptime_seconds"] = system.uptime_seconds.to_i
+
+# Ohai reports data amounts in format of 11883080kB
+# Parse it to a Fixnum of bytes
+def to_b(s)
+  if /^[0-9]+$/.match(s)
+    s.to_i
+  else
+    Filesize.from(s).to_i
+  end
+end
+
+def to_percentage(f)
+  (f.to_f*100.0).round.to_i
+end
+
+
+cpu_count = system.cpu["total"].to_i
+system_status["cpu_count"] = cpu_count
+system_status["processor_count"] = system.cpu["real"].to_i
+system_status["filesystem"] = system.filesystem.reduce({}) do |o, kv|
+  name, data = kv
+  next o if data.nil? || data["kb_size"].nil?
+
+  size = to_b(data["kb_size"])
+  used = to_b(data["kb_used"])
+  available = to_b(data["kb_available"])
+  mount = data["mount"].to_s
+  o[name + ":" + mount] = {
+    size: size,
+    used: used,
+    available: available,
+    percent_used: data["percent_used"].to_i,
+  }
+
+  o
+end
+
+mem = system.memory
+system_status["memory"] = {
+  total: to_b(mem["total"]),
+  free: to_b(mem["free"]),
+  cached: to_b(mem["cached"]),
+  buffers: to_b(mem["buffers"]),
+  active: to_b(mem["active"]),
+  inactive: to_b(mem["inactive"]),
+  mapped: to_b(mem["mapped"]),
+}
+
+swap = mem["swap"]
+system_status["swap"] = {
+  total: to_b(swap["total"]),
+  free: to_b(swap["free"]),
+  cached: to_b(swap["cached"]),
+}
+
+
+## XXX: Must not use arrays. Bad for elasticsearch
+# loadavg = File.open("/proc/loadavg").read.split(" ").slice(0,3).map{|a| a.to_f}
+# system_status["loadavg"] = loadavg
+# system_status["loadavg_by_cpu"] = loadavg.map{|a| a / cpu_count.to_f}
+
+send_data("system_status", system_status)
