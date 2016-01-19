@@ -1,0 +1,149 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# ##############################################################################
+#
+# Copyright (C) 2014 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+#
+
+from __future__ import print_function
+
+import os.path
+import re
+import sys
+import datetime
+import sqlite3
+
+INFO_PATTERN = re.compile(r'^(.+) (.+) krb5kdc\[[0-9]+\]\(info\): (.*)$')
+
+DATA_PATTERNS = {
+    "auth_ok"      : re.compile(r'^AS_REQ \(.*\) ([0-9.]+): '
+                                r'ISSUE: authtime ([0-9]+), etypes \{.*\}, '
+                                r'(.+)@(.+) for krbtgt/(.+)@(.+)$'),
+
+    "open_session" : re.compile(r'^TGS_REQ \(.*\) ([0-9.]+): '
+                                r'ISSUE: authtime ([0-9]+), etypes \{.*\}, '
+                                r'(.+)@(.+) for HTTP/(.+)@(.+)$'),
+
+    "wrong_pass"   : re.compile(r'^AS_REQ \(.*\) ([0-9.]+): '
+                                r'PREAUTH_FAILED: '
+                                r'(.+)@(.+) for krbtgt/(.+)@(.+), .*$'),
+
+    "wrong_user"   : re.compile(r'^AS_REQ \(.*\) ([0-9.]+): '
+                                r'CLIENT_NOT_FOUND: '
+                                r'(.+)@(.+) for krbtgt/(.+)@(.+), .*$'),
+}
+
+def data(timestamp, ipaddr, user, user_realm, host, host_realm):
+
+    return timestamp, ipaddr, user.decode("utf-8"), user_realm, host
+
+def authtimed_data(timestamp, ipaddr, authtime, *rest):
+    ## FIX_KDC_LOG_TIMESTAMP:
+    ## Here we fix the timestamp, because we might be parsing really REALLY long
+    ## log file, and unfortunately, kdc logs do not have year in their
+    ## timestamps. How retard is that? So, here we are updating the original
+    ## timestamp with year parsed from the authtime timestamp. Nice trick, huh?
+    authtime_timestamp = datetime.datetime.fromtimestamp(int(authtime))
+    fixed_timestamp = timestamp.replace(year=authtime_timestamp.year)
+
+    return data(fixed_timestamp, ipaddr, *rest)
+
+DATA_TYPES = {
+    "auth_ok"      : authtimed_data,
+    "open_session" : authtimed_data,
+    "wrong_pass"   : data,
+    "wrong_user"   : data,
+}
+
+def main():
+    if len(sys.argv) != 3:
+        print("error: invalid number of arguments", file=sys.stderr)
+        print("usage: log2db.kdc LOG_FILE DB_FILE", file=sys.stderr)
+        sys.exit(1)
+
+    logfilepath = sys.argv[1]
+    dbfilepath = sys.argv[2]
+
+    if not os.path.exists(logfilepath):
+        print("error: log file '%s' does not exist" % logfilepath,
+              file=sys.stderr)
+        sys.exit(1)
+
+    if os.path.exists(dbfilepath):
+        print("error: database file '%s' does exist" % dbfilepath,
+              file=sys.stderr)
+        sys.exit(1)
+
+    conn = sqlite3.connect(dbfilepath)
+    curs = conn.cursor()
+
+    curs.execute('''
+    CREATE TABLE Event(
+    id INTEGER PRIMARY KEY,
+    key TEXT NOT NULL,
+    timestamp TEXT NOT NULL,
+    ipaddr TEXT NOT NULL,
+    user TEXT NOT NULL,
+    realm TEXT NOT NULL,
+    host TEXT NOT NULL);
+    ''')
+
+    ## See FIX_KDC_LOG_TIMESTAMP
+    year = 1900
+
+    with open(logfilepath) as logfile:
+        for line in logfile:
+            info_match = INFO_PATTERN.match(line)
+            if not info_match:
+                ## Ignore all but info-level messages.
+                continue
+
+            date, hostname, data = info_match.groups()
+
+            ## See FIX_KDC_LOG_TIMESTAMP
+            timestamp_year1900 = datetime.datetime.strptime(date,
+                                                            "%b %d %H:%M:%S")
+            timestamp = timestamp_year1900.replace(year=year)
+
+            for key, pattern in DATA_PATTERNS.items():
+                data_match = pattern.match(data)
+                if data_match:
+                    break
+
+            if not data_match:
+                continue
+
+            data_type = DATA_TYPES[key]
+            data_object = data_type(timestamp, *data_match.groups())
+            timestamp, ipaddr, user, realm, host = data_object
+
+            ## See FIX_KDC_LOG_TIMESTAMP
+            year = timestamp.year
+
+            curs.execute('''
+            INSERT INTO Event
+            VALUES(NULL, ?, ?, ?, ?, ?, ?);
+            ''', (key, timestamp, ipaddr, user, realm, host))
+
+    conn.commit()
+
+if __name__ == "__main__":
+    main()

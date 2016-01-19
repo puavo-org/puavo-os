@@ -1,0 +1,90 @@
+#!/bin/bash
+
+print_help(){
+    echo "
+    Usage: $(basename $0) [version]
+
+    Autogenerate debian/changelog for given version using the current git
+    commit.
+
+    If the current git commit contains a string \"!dorelease\" a
+    production release style version will be generated.
+    "
+}
+
+[ "$1" = "--help" -o "$1" = "-h" ] && print_help && exit 0
+
+set -eu
+
+if [ ! -d debian ]; then
+    echo "Cannot find debian directory from cwd ($(pwd)/debian)"
+    exit 1
+fi
+
+if [ $# -eq 0 ]; then
+    version="$(dpkg-parsechangelog | sed -n -e 's/^Version: \(\([0-9]\+\):\)\?\(.*\)-.*/\1\3/p')"
+elif [ $# -eq 1 ]; then
+    version=$1
+else
+    echo "wrong number of arguments" >&2
+    print_help >&2
+    exit 1
+fi
+
+assert_git_repo()
+{
+    git rev-parse --git-dir 2>&1 >/dev/null
+}
+
+assert_git_repo || {
+    echo "E: not a git repository, aborting" >&2
+    exit 1
+}
+
+if [ -z "${DEBFULLNAME:-}" ]; then
+    # Use git commit author name as the release author if no other name is set
+    DEBFULLNAME=$(git log -1 --pretty=%an)
+fi
+
+if [ -z "${DEBEMAIL:-}" ]; then
+    # Also same for the email
+    DEBEMAIL=$(git log -1 --pretty=%ae)
+fi
+
+# Get ubuntu version to $DISTRIB_CODENAME
+. /etc/lsb-release
+
+package_dir=$(pwd)
+repo_name=$(basename $(pwd))
+
+git_commit=$(git rev-parse HEAD)
+git_commit_msg=$(git log -1 --pretty=%B)
+git_branch=$(git rev-parse --abbrev-ref HEAD)
+
+# Use GIT_BRANCH env if set. Usually set by Jenkins
+[ "${GIT_BRANCH:-}" != "" ] && git_branch="$(echo "$GIT_BRANCH" | cut -d / -f 2 | tr '_-' '.')"
+
+[ "${BUILD_NUMBER:-}" != "" ] && version="$version-$BUILD_NUMBER"
+
+version="${version}+${DISTRIB_CODENAME}"
+
+version="$version+$git_branch.$git_commit"
+
+tmpchangelog=$(mktemp)
+
+cat >"${tmpchangelog}" <<EOF
+$repo_name ($version) $DISTRIB_CODENAME; urgency=low
+
+  * Release from git commit $git_commit and branch $git_branch
+  * https://github.com/opinsys/${repo_name}/tree/${git_commit}
+  * Build on $(uname -a)
+  * Jenkins build ${BUILD_TAG:-} ${BUILD_URL:-}
+
+ -- $DEBFULLNAME <$DEBEMAIL>  $(date -R)
+
+EOF
+
+if [ -f debian/changelog ]; then
+    cat debian/changelog >>"${tmpchangelog}"
+fi
+mv "${tmpchangelog}" debian/changelog

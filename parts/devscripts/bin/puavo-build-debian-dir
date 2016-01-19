@@ -1,0 +1,42 @@
+#!/bin/sh
+
+help(){
+    echo "
+    Usage: $(basename $0) [-v]
+
+    -v verbose
+
+    Build debian directory from
+
+        debian.default
+        debian.DISTRIB_CODENAME
+        debian.DISTRIB_CODENAME.MACHINE
+
+    directories where DISTRIB_CODENAME is from /etc/lsb-release and MACHINE
+    from uname --machine
+    "
+}
+
+verbose="$1"
+
+[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
+
+set -eu
+
+if [ -e debian ]; then
+    echo "debian directory already exists!"
+    exit 1
+fi
+
+# Get ubuntu version to $DISTRIB_CODENAME
+. /etc/lsb-release
+
+mkdir debian
+
+for base in "default" "$DISTRIB_CODENAME" "${DISTRIB_CODENAME}.$(uname --machine)" ; do
+    debian_base="debian.$base"
+    if [ -d "$debian_base" ]; then
+        cp $verbose -a "$debian_base/"* debian
+    fi
+done
+

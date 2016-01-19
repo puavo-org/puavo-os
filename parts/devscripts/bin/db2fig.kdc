@@ -1,0 +1,163 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# ##############################################################################
+#
+# Copyright (C) 2014 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+#
+
+from __future__ import division
+from __future__ import print_function
+
+import collections
+import datetime
+import os.path
+import sqlite3
+import sys
+
+import matplotlib
+matplotlib.use('Qt4Agg')
+import matplotlib.pyplot as plt
+import numpy as np
+
+def draw(dbfilepath):
+    conn = sqlite3.connect(dbfilepath)
+    curs = conn.cursor()
+
+    first_timestamp = curs.execute('''
+    SELECT timestamp FROM Event
+    WHERE timestamp >= '2014-08-01'
+    ORDER BY timestamp LIMIT 1;''').fetchone()[0]
+    first_date = datetime.datetime.strptime(first_timestamp,
+                                            "%Y-%m-%d %H:%M:%S").date()
+
+    last_timestamp = curs.execute('''
+    SELECT timestamp FROM Event
+    WHERE timestamp < '2014-12-01'
+    ORDER BY timestamp DESC LIMIT 1;''').fetchone()[0]
+    last_date = datetime.datetime.strptime(last_timestamp,
+                                           "%Y-%m-%d %H:%M:%S").date()
+
+    yvectors = {}
+    for key, in curs.execute('SELECT DISTINCT(key) FROM Event;'):
+        dates = []
+        current_date = first_date
+        yvector = collections.OrderedDict()
+        yvector[current_date.strftime("%Y-%m-%d")] = 0
+        dates.append(current_date.strftime("%Y-%m-%d"))
+
+        while current_date != last_date:
+            current_date += datetime.timedelta(days=1)
+            yvector[current_date.strftime("%Y-%m-%d")] = 0
+            dates.append(current_date.strftime("%Y-%m-%d"))
+
+        yvectors[key] = yvector
+
+    for id, key, timestamp, ipaddr, user, realm, host in curs.execute('''
+    SELECT * FROM Event
+    WHERE timestamp >= '2014-08-01'
+      AND timestamp <  '2014-12-01'
+    ORDER BY timestamp'''):
+        date = datetime.datetime.strptime(timestamp,
+                                          "%Y-%m-%d %H:%M:%S").date()
+        datestr = date.strftime("%Y-%m-%d")
+        yvectors[key][datestr] += 1
+
+    xs = range(len(dates))
+
+    keys = ("wrong_pass", "wrong_user", "auth_ok")
+    counts = [yvectors[k].values() for k in keys]
+    colors = "rygb"
+    max_count = sum([max(v) for v in counts])
+
+    percentages = ([], [])
+    for wrong_pass, wrong_user, auth_ok in zip(*counts):
+        all_auths = wrong_pass + wrong_user + auth_ok
+        if all_auths == 0:
+            for lst in percentages:
+                lst.append(0)
+        else:
+            percentages[0].append(wrong_pass / all_auths * 100)
+            percentages[1].append(wrong_user / all_auths * 100)
+
+    plots = []
+    legends = []
+
+    for key, color, ys in zip(keys, colors, percentages):
+        plt.subplot(2, 1, 1)
+        plt.title("Kerberos events (%s)" % dbfilepath)
+        plt.plot(xs, ys, label=key, color=color)
+        plt.ylim(0, 100)
+        plt.xlim(0, len(xs))
+        plt.xticks(range(0, len(dates), 7), dates[::7],
+                   fontsize="x-small", rotation=45)
+        plt.ylabel("[%]")
+        plt.tick_params(labelbottom="off")
+        plt.grid(True, which='both')
+
+    bottom = len(xs) * [0]
+    for i, (key, color, ys) in enumerate(zip(keys, colors, counts)):
+        plt.subplot(2, 1, 2)
+        bar = plt.bar(xs, ys, width=1, linewidth=1, edgecolor="k",
+                      bottom=bottom, label=key, color=color)
+        bottom = [x0 + x1 for (x0, x1) in zip(bottom, ys)]
+        plots.append(bar)
+        legends.append(key)
+
+        plt.ylim(0, max_count * 1.1)
+        plt.xlim(0, len(xs))
+        plt.xticks(range(0, len(dates), 7), dates[::7],
+                   fontsize="x-small", rotation=45)
+        plt.ylabel("[1]")
+        plt.tick_params(labelbottom="off")
+        plt.grid(True, which='both')
+        plt.legend(fontsize="medium")
+
+    plt.subplots_adjust(hspace=0.05, left=0.10, top=0.95, right=0.9)
+    plt.tick_params(labelbottom="on")
+
+    return plt.gcf()
+
+def main():
+    if len(sys.argv) not in (2, 3):
+        print("error: invalid number of arguments", file=sys.stderr)
+        print("usage: db2fig.kdc DB_FILE [FIG_FILE]", file=sys.stderr)
+        sys.exit(1)
+
+    dbfilepath = sys.argv[1]
+    if not os.path.exists(dbfilepath):
+        print("error: database file '%s' does not exist" % dbfilepath,
+              file=sys.stderr)
+        sys.exit(1)
+
+    fig = draw(dbfilepath)
+
+    try:
+        figfilepath = sys.argv[2]
+    except IndexError:
+        plt.show()
+    else:
+        if os.path.exists(figfilepath):
+            print("error: figure file '%s' already exists" % figfilepath, file=sys.stderr)
+            sys.exit(1)
+        fig.savefig(figfilepath)
+
+if __name__ == "__main__":
+    main()

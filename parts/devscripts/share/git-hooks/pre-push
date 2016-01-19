@@ -1,0 +1,126 @@
+#!/bin/bash
+##
+## Copyright (C) 2015 Opinsys Oy
+##
+## This program is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 2 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program. If not, see <http://www.gnu.org/licenses/>.
+##
+## Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+##
+
+##
+## This Git hook automates the maintenance of debian/changelog.
+##
+## If there are new commits on top of the last release commit, the user
+## is prompted with a suggestion to create a release commit. If the user
+## accepts, debian/changelog is updated, commited and the current push
+## is canceled. If the user rejects, the current push continues
+## normally, without any changes.
+##
+## A commit is identified as a release commit if its message matches
+## with '^RELEASE: '.
+##
+
+set -eu
+
+on_exit()
+{
+    if [ -n "${tmpdir}" ]; then
+        rm -rf "${tmpdir}"
+    fi
+
+    exit $exitvalue
+}
+
+echo "Executing $0"
+
+git diff-index --quiet HEAD -- debian/changelog || {
+    echo 'warning: there are uncommitted changes in debian/changelog, not creating a release commit' >&2
+    exit 0
+}
+
+if [ -z "$(git ls-tree HEAD debian/changelog)" ]; then
+    echo 'error: debian/changelog is not part of the HEAD tree' >&2
+    exit 1
+fi
+
+if [ ! -f debian/changelog ]; then
+    echo 'error: debian/changelog is missing' >&2
+    exit 1
+fi
+
+if git log -n1 --format='%s' | egrep -q '^RELEASE: '; then
+    ## No commits since the last release, nothing to do.
+    exit 0
+fi
+
+## Update the changelog.
+commit=$(sed -r -n 's/^  \* Git\(([a-z0-9]+)\)$/\1/p' debian/changelog | head -n1)
+lines=$(git log --oneline --no-merges --format=format:'%s' "${commit}...HEAD")
+head_commit=$(git rev-parse HEAD)
+
+exitvalue=1
+tmpdir=
+
+trap on_exit EXIT
+
+tmpdir=$(mktemp -d)
+
+cp -a debian/changelog "${tmpdir}"
+
+user=$(git config user.name)
+if [ -n "${user}" -a -z "${DEBFULLNAME:-}" ]; then
+    DEBFULLNAME="${user}"
+    export DEBFULLNAME
+fi
+
+email=$(git config user.email)
+if [ -n "${email}" -a -z "${DEBEMAIL:-}" ]; then
+    DEBEMAIL="${email}"
+    export DEBEMAIL
+fi
+
+dch -c "${tmpdir}/changelog" -U 'New release'
+echo "${lines}" \
+    | while read line; do
+          if echo "${line}" | egrep -q '^RELEASE: '; then
+              break
+          fi
+          dch -c "${tmpdir}/changelog" "${line}"
+      done
+dch -c "${tmpdir}/changelog" "Git(${head_commit})"
+dch -c "${tmpdir}/changelog" --release ''
+
+dpkg-parsechangelog -l"${tmpdir}/changelog" -n1 | sed -n '/^Changes:/,$p'
+
+## Ask for confirmation.
+exec < /dev/tty
+while true; do
+    read -p 'Make a release? [y/n] ' answer || break
+    case "${answer}" in
+        y)
+            cp "${tmpdir}/changelog" debian/changelog
+            version=$(dpkg-parsechangelog | sed -r -n 's/^Version: //p')
+            git commit debian/changelog -m "RELEASE: ${version}"
+            break
+            ;;
+        n)
+            exitvalue=0
+            break
+            ;;
+        *)
+            echo "Please answer 'y' or 'n'." >&2
+            continue
+            ;;
+    esac
+done

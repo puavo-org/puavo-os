@@ -1,0 +1,58 @@
+#!/bin/sh
+
+
+help(){
+    echo "
+    Usage: $(basename $0) <script name> [script args]
+
+    Execute puavo-lxc-run with Jenkins environment using it's full path with
+    sudo.
+
+    When sudoers (use visudo) contains:
+
+      jenkins ALL = NOPASSWD: /usr/local/bin/puavo-lxc-run
+      jenkins ALL = NOPASSWD: /usr/bin/puavo-lxc-run
+
+    This script should run without asking a password from Jenkins.
+    "
+}
+
+[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
+
+set -eu
+
+# Preseving environment does not work here with sudo. Manually pass selected
+# Jenkins variables to the build
+# https://wiki.jenkins-ci.org/display/JENKINS/Building+a+software+project#Buildingasoftwareproject-JenkinsSetEnvironmentVariables
+env_tmp=$(mktemp --suffix=-jenkinsenv)
+cat >$env_tmp<<EOF
+http_proxy="${http_proxy:-}"
+
+APTIREPO_BRANCH="${APTIREPO_BRANCH:-}"
+APTIREPO_REMOTE="${APTIREPO_REMOTE:-}"
+APT_REPOSITORY="${APT_REPOSITORY:-}"
+APT_REPOSITORY1="${APT_REPOSITORY1:-}"
+APT_REPOSITORY2="${APT_REPOSITORY2:-}"
+APT_REPOSITORY3="${APT_REPOSITORY3:-}"
+APT_REPOSITORY4="${APT_REPOSITORY4:-}"
+APT_REPOSITORY5="${APT_REPOSITORY5:-}"
+
+CI_TARGET_DIST="${CI_TARGET_DIST:-}"
+CI_TARGET_ARCH="${CI_TARGET_ARCH:-}"
+
+# From Jenkins
+BUILD_NUMBER="${BUILD_NUMBER:-}"
+BUILD_ID="${BUILD_ID:-}"
+BUILD_URL="${BUILD_URL:-}"
+NODE_NAME="${NODE_NAME:-}"
+JOB_NAME="${JOB_NAME:-}"
+BUILD_TAG="${BUILD_TAG:-}"
+JENKINS_URL="${JENKINS_URL:-}"
+EXECUTOR_NUMBER="${EXECUTOR_NUMBER:-}"
+GIT_COMMIT="${GIT_COMMIT:-}"
+GIT_BRANCH="${GIT_BRANCH:-}"
+EOF
+
+script=$(which puavo-lxc-run)
+echo "Trying to execute $script with sudo..."
+sudo $script $env_tmp "$@"

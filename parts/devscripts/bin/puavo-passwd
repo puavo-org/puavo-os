@@ -1,0 +1,109 @@
+#!/usr/bin/ruby
+#
+# puavo-passwd change user (owner) password to the all organisations
+#
+# * LDAP-server read from the /etc/puavo/ldap/master file
+# * You must be know password for uid=puavo,o=puavo user
+# * You must be know your own password
+#
+
+require "ldap"
+require "puavo/etc"
+require "open3"
+
+puavo_dn = "uid=puavo,o=puavo"
+print "Password for uid=puavo,o=puavo user: "
+puavo_password = STDIN.gets.strip
+
+print "Username: "
+user_uid = STDIN.gets.strip
+print "Password: "
+user_password = STDIN.gets.strip
+print "New password: "
+new_password = STDIN.gets.strip
+
+def ldap_bind(server, dn, password)
+  connection = LDAP::Conn.new(server)
+  connection.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+  connection.start_tls
+  connection.bind(dn, password)
+  connection
+end
+
+def change_puavo_password(host, bind_dn, current_pw, new_pw, user_dn)
+  started = Time.now
+  res = nil
+
+  Open3.popen3(
+               'ldappasswd',
+
+               # Use simple authentication instead of SASL
+               '-x',
+
+               # Issue StartTLS (Transport Layer Security) extended operation
+               '-Z',
+
+               # Specify an alternate host on which the ldap server is running
+               '-h', host,
+
+               # Distinguished Name used to bind to the LDAP directory
+               '-D', bind_dn.to_s,
+
+               # The password to bind with
+               '-w', current_pw,
+
+               # Set the new password
+               '-s', new_pw,
+
+               # Timeout after 20 sec
+               '-o', 'nettimeout=20',
+
+               # User who's password we're going to change
+               user_dn.to_s
+
+               ) do |stdin, stdout, stderr, wait_thr|
+    wait_thr.join
+
+    res = {
+      :duration => (Time.now.to_f - started.to_f).round(5),
+      :stdout => stdout.read(1024 * 5),
+      :stderr => stderr.read(1024 * 5),
+      :exit_status => wait_thr.value.exitstatus
+    }
+
+  end
+
+  return res
+end
+
+connection = ldap_bind(PUAVO_ETC.ldap_master, puavo_dn, puavo_password)
+
+databases = []
+connection.search( "",
+                   LDAP::LDAP_SCOPE_BASE,
+                   "(objectclass=*)",
+                   ["namingContexts"] ) do |entry|
+  databases = entry["namingContexts"]
+end
+
+databases.delete_if{ |d| d == "o=puavo" || d == "dc=opinsys,dc=fi" }
+
+databases.each do |database|
+  user_dn = ""
+  connection.search( database,
+                     LDAP::LDAP_SCOPE_SUBTREE,
+                     "(uid=#{ user_uid })",
+                     ["dn"] ) do |entry|
+    user_dn = entry.to_hash["dn"].first
+  end
+
+  res = change_puavo_password(PUAVO_ETC.ldap_master, user_dn, user_password, new_password, user_dn)
+
+  if res[:exit_status] == 0
+    puts "Change password, user: #{ user_uid }, database: #{ database }"
+  else
+    puts res.inspect
+  end
+end
+
+

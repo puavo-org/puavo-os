@@ -1,0 +1,35 @@
+#!/bin/sh
+
+help(){
+    echo "
+    Usage: $(basename $0)
+
+    Build debian package Puavo style.
+    "
+
+}
+
+[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
+
+set -eu
+
+if [ ! -d debian ]; then
+    echo "Cannot find debian directory from cwd ($(pwd)/debian)"
+    exit 1
+fi
+
+[ -z "$(git status --short)" ] || {
+    git status
+    echo
+    echo "This repository contains uncommitted changes! Not building."
+    exit 1
+}
+
+# Convert package to debian native format.
+sed -i s/quilt/native/ debian/source/format
+
+# Remove lines ending with #RMJENKINS
+# Used to enable tests
+sed -i '/#RMJENKINS\s*$/d' debian/rules
+
+dpkg-buildpackage -us -uc

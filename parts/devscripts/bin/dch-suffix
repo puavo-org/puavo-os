@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+# python3-apt python3-debian
+
+import subprocess
+import sys
+import os
+import argparse
+import re
+
+import debian
+from debian.changelog import Changelog
+from aptsources.distro import get_distro
+from email.utils import formatdate # generate rfc2822 date strings
+
+this_distro = get_distro()
+SCRIPT_NAME = os.path.basename(sys.argv[0])
+
+parser = argparse.ArgumentParser(description="""
+Generate new block for debian/changelog file. The block will get version
+number from the previous block with the VERSION_SUFFIX added
+""")
+
+parser.add_argument("changelog_filepath", metavar="CHANGELOG_FILE", help="Path to a Debian changelog file")
+parser.add_argument("version_suffix", metavar="VERSION_SUFFIX", nargs="?", help="Suffix to be added to the version")
+parser.add_argument("-j", "--jenkins", action="store_true", dest="jenkins", help="automatically generate version suffix from Jenkins environment variables. See https://wiki.jenkins-ci.org/display/JENKINS/Building+a+software+project")
+parser.add_argument("-g", "--git", action="store_true", dest="git", help="automatically generate version suffix from Git VCS data.")
+parser.add_argument("-a", "--author", metavar="AUTHOR", dest="author", help="author for the changelog entry")
+parser.add_argument("-c", "--change", default=[], metavar="CHANGE", nargs="*", dest="changes", help="add change line")
+parser.add_argument("-d", "--distribution", default=[], metavar="DISTRIBUTION", dest="distribution", help="distribution name. Defaults to current distribution codename.")
+parser.add_argument("-i", "--inplace", dest="inplace", action="store_true", help="modify changelog inplace instead of printing it to stdout")
+
+
+def error_message(*a):
+    print(*a, file=sys.stderr)
+
+def die(*a):
+    error_message(*a)
+    sys.exit(2)
+
+def get_env(key):
+    try:
+        return os.environ[key]
+    except KeyError:
+        die("--jenkins failed. Environment variable {} not set".format(key))
+
+def generate_git_suffix(args):
+    branch = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])
+    branch = branch.decode()
+    branch = re.sub(r"[^a-z0-9]", "", branch.lower()) # remove non-alphanumerics
+
+    commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
+    commit = commit.decode()
+
+    return "+{distribution}.{branch}.{commit}".format(
+        distribution=args.distribution,
+        branch=branch,
+        commit=commit,
+    )
+
+def generate_jenkins_suffix(args):
+    branch = get_env("GIT_BRANCH").split("/")[-1]
+    branch = re.sub(r"[^a-z0-9]", "", branch.lower()) # remove non a-z chars
+    return "-{build_number}+{distribution}.{branch}.{commit}".format(
+        build_number=get_env("BUILD_NUMBER"),
+        branch=branch,
+        distribution=args.distribution,
+        commit=get_env("GIT_COMMIT")
+    )
+
+
+def main():
+    args = parser.parse_args()
+    if not args.distribution:
+        args.distribution = this_distro.codename
+
+    if not args.author:
+        args.author = "{} <{}>".format(*debian.changelog.get_maintainer())
+
+    if args.git:
+        args.version_suffix = generate_git_suffix(args)
+
+    if args.jenkins:
+        args.version_suffix = generate_jenkins_suffix(args)
+
+    if not args.version_suffix:
+        die("VERSION_SUFFIX or --git or --jenkins must be set")
+
+    changelog = Changelog()
+    with open(args.changelog_filepath, "r") as f:
+        changelog.parse_changelog(f.read())
+
+    if changelog.full_version.endswith(args.version_suffix):
+        die("The current version already has this suffix")
+
+    changes = [ "Automatically generated changelog entry" ] + args.changes
+    changes = [ "  * {}".format(line) for line in changes]
+
+    changelog.new_block(
+        package=changelog.package,
+        author=args.author,
+        date=formatdate(),
+        urgency=changelog.urgency,
+        distributions=args.distribution,
+        changes=[""] + changes + [""],
+        version="{orig}{suffix}".format(
+            orig=changelog.full_version,
+            suffix=args.version_suffix,
+        )
+    )
+
+    if args.inplace:
+        with open(args.changelog_filepath, "w") as f:
+            f.write(str(changelog))
+    else:
+        print(changelog)
+
+if __name__ == "__main__":
+    main()

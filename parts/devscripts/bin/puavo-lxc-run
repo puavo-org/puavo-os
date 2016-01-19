@@ -1,0 +1,234 @@
+#!/bin/bash
+# visudo:
+#   jenkins ALL = NOPASSWD: /usr/local/bin/puavo-lxc-run
+# or
+#   jenkins ALL = NOPASSWD: /usr/bin/puavo-lxc-run
+
+help(){
+    echo "
+    Usage: $(basename $0) <environment file> <script to run> [script args]
+
+    Execute given script in a temporary container.
+
+    This must be executed from the project root.
+    "
+
+}
+
+
+[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
+[ "$1" = "" -o "$2" = ""  ] && help && exit 1
+
+if [[ $EUID -ne 0 ]]; then
+    echo "Must run run as root"
+    exit 1
+fi
+
+slave_ip=$(ifconfig eth0 | sed -rn '2 s/^\s+inet addr:([0-9\.]+).*$/\1/p')
+
+container_path=/var/lib/lxc
+base_container_dirname="lxc-base"
+base_container_path="/var/lib/$base_container_dirname"
+broken_container_dirname="lxc-broken"
+broken_container_path=/"var/lib/$broken_container_dirname"
+
+echo
+echo Git Branch:
+git branch --remote --verbose --no-abbrev --contains | sed -rne 's/^.*\/([^\ ]+).*$/\1/p'
+
+echo
+echo "Git commit:"
+git log -1
+
+echo "
+
+Running build on
+
+IP: $slave_ip
+Hostname: $(hostname)
+"
+
+echo
+echo free -m
+free -m
+echo
+
+echo df -h
+df -h
+echo
+
+echo uptime
+uptime
+echo
+
+
+jenkins_env="$1"
+shift
+script_name="$1"
+shift
+script_args="$@"
+
+. "$jenkins_env"
+
+set -eu
+
+base_container="${CI_TARGET_DIST}-${CI_TARGET_ARCH}"
+
+if [ ! -d "$container_path/$base_container" ]; then
+    if [ -d "$base_container_path/$base_container" ]; then
+        ln -s "../$base_container_dirname/$base_container" "$container_path/$base_container"
+    fi
+fi
+
+if [ ! -d "$container_path/$base_container" ]; then
+    echo "Failed to find container $base_container"
+    exit 1
+fi
+
+simple_job_name="$(echo $JOB_NAME |  cut -d / -f 1 )"
+
+container_prefix="${simple_job_name}-${CI_TARGET_DIST}-${CI_TARGET_ARCH}-"
+running_container="${container_prefix}${BUILD_NUMBER}"
+
+
+lxcdir="/var/lib/lxc/$running_container"
+
+echo "Cloning $base_container"
+lxc-clone -o $base_container -n $running_container
+
+on_exit(){
+    exitcode=$?
+    rm $jenkins_env
+
+    # Always shutdown container on exit
+    lxc-shutdown --name $running_container -t 30 || true
+    lxc-wait --name $running_container -s STOPPED
+
+    if [ "$exitcode" = "0" ]; then
+        echo "All OK. Destroying the container."
+        lxc-destroy --name $running_container
+
+        # Use shell glob with the container_prefix to detect broken containers
+        # belonging to this project
+        for broken_container in "${broken_container_path}/${container_prefix}"*
+        do
+            broken_container_name="$(basename "${broken_container}")"
+            # Only remove the container if it is in STOPPED state
+            if [ "$(lxc-info -n "${broken_container_name}" --state | grep STOPPED)" ]; then
+                echo "Removing old broken container from ${broken_container}"
+                rm -rf ${broken_container}
+            fi
+        done
+
+    else
+        echo "
+
+        Something went wrong!
+        "
+
+        mkdir -p "$broken_container_path"
+        mv "$container_path/$running_container" "$broken_container_path"
+
+        echo "
+
+        Container is moved to $broken_container_path/$running_container on $(hostname) $slave_ip
+
+        You start it again for examination by linking it to the container path:
+
+            ln -s ../$broken_container_dirname/$running_container $container_path/$running_container
+            lxc-start -n $running_container
+
+        Login with user ci and password ci. Project is left as is to /cirun
+        inside the container.
+
+        "
+
+    fi
+
+}
+
+trap on_exit EXIT
+
+
+puavo-lxc-prepare $running_container
+
+jenkins_job_repos="$lxcdir/rootfs/etc/apt/sources.list.d/jenkins-job.list"
+echo "# Apt repositories set by the Jenkins job" > $jenkins_job_repos
+echo "${APT_REPOSITORY:-}"  >> $jenkins_job_repos
+echo "${APT_REPOSITORY1:-}" >> $jenkins_job_repos
+echo "${APT_REPOSITORY2:-}" >> $jenkins_job_repos
+echo "${APT_REPOSITORY3:-}" >> $jenkins_job_repos
+echo "${APT_REPOSITORY4:-}" >> $jenkins_job_repos
+echo "${APT_REPOSITORY5:-}" >> $jenkins_job_repos
+
+mkdir "$lxcdir/rootfs/cirun"
+echo "Copying $(pwd) to /cirun for the container"
+mkdir "$lxcdir/rootfs/cirun/${simple_job_name}/"
+rsync -a "$(pwd)/" "$lxcdir/rootfs/cirun/${simple_job_name}/"
+
+cat "$jenkins_env" >> "$lxcdir/rootfs/etc/environment"
+
+cat > "$lxcdir/rootfs/run.sh"<<EOF
+#!/bin/sh
+
+# export all variables from /etc/environment (hackish, but should work...)
+set -a
+. /etc/environment
+set +a
+
+if [ "\$http_proxy" != "" ]; then
+    echo
+    echo "WARNING: Container is using a global HTTP proxy \$http_proxy"
+    echo
+fi
+
+set -eu
+
+chown -R ci:ci /cirun
+
+git_dir="/cirun/${simple_job_name}"
+script_location="\${git_dir}/${script_name}"
+
+if [ ! -f "\$script_location" ]; then
+    # If script is not found from the workspace it is probably in a
+    # subdirectory set by Jenkins. Use shell globbing to autodetect the dirname
+    script_location=\$(ls -1 /cirun/${simple_job_name}/*/${script_name} || true)
+    git_dir=\$(dirname \$script_location || true)
+fi
+
+if [ ! -f "\$script_location" ]; then
+    echo
+    echo "No ci script found. Exiting..."
+    echo
+    exit 0
+fi
+
+for i in \$(seq 100); do
+    ip="\$(ifconfig eth0 | sed -rn '2 s/^\s+inet addr:([0-9\.]+).*$/\1/p')"
+    if [ "\$ip" != "" ]; then
+        echo "Container got ip \$ip!"
+        break
+    fi
+    echo "Waiting for container to get network. Attempt \$i/100..."
+    sleep 1
+done
+
+if [ "\$ip" = "" ]; then
+    echo "Container failed to get network!"
+    exit 1
+fi
+
+echo
+echo Executing \${script_location} ${script_args}
+sudo -E -H -u ci sh -c "cd \${git_dir} && \${script_location} ${script_args}"
+EOF
+chmod +x "$lxcdir/rootfs/run.sh"
+
+echo "Starting container $running_container"
+lxc-start --name $running_container --daemon
+
+lxc-wait --name $running_container -s RUNNING
+echo "Container up!"
+
+lxc-attach --name $running_container /run.sh
+

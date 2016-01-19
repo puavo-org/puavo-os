@@ -1,0 +1,29 @@
+#!/bin/bash
+
+help(){
+    echo "
+    Usage: $(basename $0) [debian control file]
+
+    Install build dependecies from the given debian control file
+
+    defaults to debian/control
+    "
+
+}
+
+[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
+
+if [[ $EUID -ne 0 ]]; then
+    echo "Must run run as root"
+    exit 1
+fi
+
+control_file="${1:-debian/control}"
+
+set -eu
+
+mk-build-deps \
+    --install $control_file \
+    --install --tool "apt-get --yes --force-yes" \
+    --remove
+

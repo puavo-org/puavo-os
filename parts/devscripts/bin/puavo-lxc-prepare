@@ -1,0 +1,39 @@
+#!/bin/bash
+
+help(){
+    echo "
+    Usage: $(basename $0) <container name>
+
+    Prepare LXC container for one shot CI builds.
+
+    This script configures user 'ci' with an ability to use sudo without a
+    password.
+    "
+}
+
+[ "$1" = "--help" -o "$1" = "-h" ] && help && exit 0
+[ "$1" = "" ] && help && exit 1
+
+containername=$1
+rootfs="/var/lib/lxc/$1/rootfs"
+
+set -eu
+
+if [ ! -d $rootfs ]; then
+    echo "Cannot find rootfs from $rootfs"
+    exit 1
+fi
+
+date -R > "$rootfs/container_created"
+
+cat > "$rootfs/setup.sh"<<EOF
+#!/bin/sh
+set -eu
+adduser --system --shell /bin/bash --group ci
+echo -n 'ci:ci' | chpasswd
+usermod -a -G sudo ci
+echo "%ci ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+EOF
+chmod +x "$rootfs/setup.sh"
+
+lxc-start -n $containername /setup.sh

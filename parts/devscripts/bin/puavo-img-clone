@@ -1,0 +1,229 @@
+#!/bin/bash
+#
+# ##############################################################################
+#
+# Copyright (C) 2014 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+#
+
+set -eu
+
+on_exit()
+{
+    exitval=$?
+
+    set +eu
+
+    umount "${dstrootdir_G}"
+    umount "${srcrootdir_G}"
+    rm -rf "${tmpdstfile_G}"
+    rm -rf "${dstrootdir_G}" # rm -rf because it might not be empty if
+                             # targeted squashfs
+    rmdir "${srcrootdir_G}"
+
+    return ${exitval}
+}
+
+usage_error()
+{
+    echo "error: $1" >&2
+    echo "Try '$0 --help' for more information". >&2
+    return 1
+}
+
+clone_to_ext4()
+{
+    local loopdev
+    local retval
+
+    qemu-img create -f raw "${tmpdstfile_G}" "${dstsize_G}" || return $?
+
+    loopdev=$(losetup -f --show "${tmpdstfile_G}") || return $?
+    mkfs.ext4 "${loopdev}" || {
+        retval=$?
+        losetup -d "${loopdev}" || true
+        return ${retval}
+    }
+    losetup -d "${loopdev}" || return $?
+
+    mount -o loop "${tmpdstfile_G}" "${dstrootdir_G}" || return $?
+    rsync -a "${srcrootdir_G}/" "${dstrootdir_G}/" || return $?
+    if $do_update_name_G; then
+        mkdir -p "${dstrootdir_G}/etc/ltsp"
+        echo "${imgname_G}" >"${dstrootdir_G}/etc/ltsp/this_ltspimage_name" || return $?
+    fi
+    mv "${tmpdstfile_G}" "${dstfile_G}"
+}
+
+clone_to_squashfs()
+{
+    if $do_update_name_G; then
+        rsync -a "${srcrootdir_G}/" "${dstrootdir_G}/" || return $?
+        echo "${imgname_G}" >"${dstrootdir_G}/etc/ltsp/this_ltspimage_name" || return $?
+        mksquashfs "${dstrootdir_G}" "${tmpdstfile_G}" -noappend -no-recovery || return $?
+    else
+        mksquashfs "${srcrootdir_G}" "${tmpdstfile_G}" -noappend -no-recovery || return $?
+    fi
+    mv "${tmpdstfile_G}" "${dstfile_G}"
+}
+
+# Main below
+
+# Declare all global variables here and only here.
+clonefunc_G=clone_to_ext4
+dstdir_G=
+dstfile_G=
+dstsize_G=
+force_G=false
+imgname_G=
+srcfile_G=
+srcfsroot_G=
+srcsize_G=
+dstrootdir_G=
+tmpdstfile_G=
+do_update_name_G=true
+do_chmod_G=true
+do_chown_G=true
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            echo "Usage: $0 SRC DST"
+            echo
+            echo "Make a copy of a Puavo image file with a new image name."
+            echo
+            echo "Options:"
+            echo "        --dont-update-name       do not update the name file inside the image"
+            echo "        --no-chmod               do not clone file access modes"
+            echo "        --no-chown               do not clone file owner and group"
+            echo "    -t, --type FS_TYPE           destination filesystem type, must be"
+            echo "                                 'ext4' (default) or 'squashfs'"
+            echo "    -s, --size SIZE              size of the destination image file, defaults"
+            echo "                                 to about twice the size of the source image"
+            echo "                                 contents, supports suffixes k, K, M, G and T"
+            echo "    -f, --force                  overwrite existing destination file"
+            echo "    -h, --help                   print help and exit"
+            echo "    -V, --version                print version and exit"
+            echo
+            exit 0
+            ;;
+        --dont-update-name)
+            shift
+            do_update_name_G=false
+            ;;
+        --no-chmod)
+            shift
+            do_chmod_G=false
+            ;;
+        --no-chown)
+            shift
+            do_chown_G=false
+            ;;
+        -t|--type)
+            shift
+            case $1 in
+                ext4)
+                    clonefunc_G=clone_to_ext4
+                    ;;
+                squashfs)
+                    clonefunc_G=clone_to_squashfs
+                    ;;
+                *)
+                    usage_error "invalid value '$1' for option '--type', expected 'ext4' or 'squashfs'"
+                    ;;
+            esac
+            shift
+            ;;
+        -s|--size)
+            shift
+            dstsize_G=$1
+            shift
+            sed -r -n '/^[0-9]+[kKMGT]?$/ ! q1' <<<"${dstsize_G}" || {
+                usage_error "invalid value '${dstsize_G}' for option '--size'"
+            }
+            ;;
+        -f|--force)
+            shift
+            force_G=true
+            ;;
+        -V|--version)
+            shift
+            echo 0.1
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage_error "invalid argument '$1'"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -ne 2 ]; then
+    usage_error "invalid number of arguments ($#), expected 2"
+fi
+
+srcfile_G=$(readlink -e $1)
+dstfile_G=$(readlink -f $2)
+
+if ! $force_G && [ -f "${dstfile_G}" ]; then
+    echo "error: destination file '${dstfile_G}' already exists, use --force to overwrite" >&2
+    exit 1
+fi
+
+if [ ${clonefunc_G} = clone_to_squashfs -a -n "${dstsize_G}" ]; then
+    echo "warning: destination size is ignored because destination type is 'squashfs'" >&2
+fi
+
+imgname_G=$(basename "${dstfile_G}" .img)
+dstdir_G=$(dirname "${dstfile_G}")
+
+trap on_exit EXIT
+
+srcrootdir_G=$(mktemp -d)
+dstrootdir_G=$(mktemp -d --tmpdir="${dstdir_G}")
+tmpdstfile_G=$(mktemp --tmpdir="${dstdir_G}")
+
+if $do_chmod_G; then
+    chmod --reference="${srcfile_G}" "${tmpdstfile_G}"
+fi
+
+if $do_chown_G; then
+    chown --reference="${srcfile_G}" "${tmpdstfile_G}"
+fi
+
+mount -o loop,ro "${srcfile_G}" "${srcrootdir_G}"
+
+srcsize_G=$(du --bytes --summarize "${srcrootdir_G}" | cut -f1)
+if [ -z "${srcsize_G}" ]; then
+    echo "error: failed to estimate the size of the source filesystem" >&2
+    exit 1
+fi
+
+if [ -z "${dstsize_G}" ]; then
+    dstsize_G=$((srcsize_G * 2))
+fi
+
+${clonefunc_G}

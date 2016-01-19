@@ -1,0 +1,9 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/puavo-devscripts
+	$(MAKE) install-lxc-tools DESTDIR=$(CURDIR)/debian/puavo-devscripts-lxc
+	$(MAKE) install-dch-suffix DESTDIR=$(CURDIR)/debian/dch-suffix

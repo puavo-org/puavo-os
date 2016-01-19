@@ -1,0 +1,195 @@
+#!/bin/bash
+#
+# ##############################################################################
+#
+# Copyright (C) 2014 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+#
+
+set -eu
+
+on_exit()
+{
+        local -r exitval=$?
+        set +e
+
+        if [ -n "${img2_chroot}" ]; then
+            umount "${img2_chroot}"
+            rmdir "${img2_chroot}"
+        fi
+
+        if [ -n "${img1_chroot}" ]; then
+            umount "${img1_chroot}"
+            rmdir "${img1_chroot}"
+        fi
+
+        [ -n "${img1_dpkg_list}" ] && rm -f "${img1_dpkg_list}"
+        [ -n "${img2_dpkg_list}" ] && rm -f "${img2_dpkg_list}"
+        [ -n "${removed_packages}" ] && rm -f "${removed_packages}"
+        [ -n "${added_packages}" ] && rm -f "${added_packages}"
+        [ -n "${changed_packages}" ] && rm -f "${changed_packages}"
+
+        exit $exitval
+}
+
+
+usage_error()
+{
+    echo "error: $1" >&2
+    echo "Try '$0 --help' for more information". >&2
+    return 1
+}
+
+do_pretty_output=false
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            echo "Usage: $0 IMGFILE1 IMGFILE2"
+            echo
+            echo "Compare dpkg lists of two Puavo images."
+            echo
+            echo "Options:"
+            echo "        --pretty                 print differences in pretty format"
+            echo "    -h, --help                   print help and exit"
+            echo
+            exit 0
+            ;;
+        --pretty)
+            do_pretty_output=true
+            shift
+            break
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage_error "invalid argument '$1'"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -ne 2 ]; then
+    usage_error "invalid number of arguments ($#), expected 2"
+fi
+
+img1=$1
+img2=$2
+
+img1_chroot=
+img2_chroot=
+
+img1_dpkg_list=
+img2_dpkg_list=
+
+trap on_exit EXIT
+
+img1_chroot=$(mktemp -d)
+mount -oro "${img1}" "${img1_chroot}"
+
+img1_dpkg_list=$(mktemp)
+chroot "${img1_chroot}" dpkg -l | tail -n+6 | awk '{printf "%s %s\n", $2, $3}' >"${img1_dpkg_list}"
+
+img2_chroot=$(mktemp -d)
+mount -oro "${img2}" "${img2_chroot}"
+
+img2_dpkg_list=$(mktemp)
+chroot "${img2_chroot}" dpkg -l | tail -n+6 | awk '{printf "%s %s\n", $2, $3}' >"${img2_dpkg_list}"
+
+removed_packages=$(mktemp)
+comm -23 <(cut -d' ' -f1 "${img1_dpkg_list}" | sort) <(cut -d' ' -f1 "${img2_dpkg_list}" | sort) >"${removed_packages}"
+
+added_packages=$(mktemp)
+comm -23 <(cut -d' ' -f1 "${img2_dpkg_list}" | sort) <(cut -d' ' -f1 "${img1_dpkg_list}" | sort) >"${added_packages}"
+
+changed_packages=$(mktemp)
+comm -12 <(cut -d' ' -f1 "${img1_dpkg_list}" | sort) <(cut -d' ' -f1 "${img2_dpkg_list}" | sort) >"${changed_packages}"
+
+upgraded_packages=$(mktemp)
+downgraded_packages=$(mktemp)
+
+cat "${changed_packages}" | while read package; do
+    img1_version=$(egrep "^${package} " "${img1_dpkg_list}" | cut -d' ' -f2)
+    img2_version=$(egrep "^${package} " "${img2_dpkg_list}" | cut -d' ' -f2)
+    if dpkg --compare-versions "${img1_version}" lt "${img2_version}"; then
+        echo "${package}" >>"${upgraded_packages}"
+    fi
+
+    if dpkg --compare-versions "${img1_version}" gt "${img2_version}"; then
+        echo "${package}" >>"${downgraded_packages}"
+    fi
+done
+
+if $do_pretty_output; then
+    printf "New packages:\n"
+    cat "${added_packages}" | while read package; do
+        version=$(egrep "^${package} " "${img2_dpkg_list}" | cut -d' ' -f2)
+        printf "  %s %s\n" "${package}" "${version}"
+    done
+
+    printf "Removed packages:\n"
+    cat "${removed_packages}" | while read package; do
+        version=$(egrep "^${package} " "${img1_dpkg_list}" | cut -d' ' -f2)
+        printf "  %s %s\n" "${package}" "${version}"
+    done
+
+    printf "Upgraded packages:\n"
+    cat "${upgraded_packages}" | while read package; do
+        img1_version=$(egrep "^${package} " "${img1_dpkg_list}" | cut -d' ' -f2)
+        img2_version=$(egrep "^${package} " "${img2_dpkg_list}" | cut -d' ' -f2)
+        printf "  %s %s\n" "${package}" "${img2_version}"
+        printf "    (was %s)\n" "${img1_version}"
+    done
+
+    printf "Downgraded packages:\n"
+    cat "${downgraded_packages}" | while read package; do
+        img1_version=$(egrep "^${package} " "${img1_dpkg_list}" | cut -d' ' -f2)
+        img2_version=$(egrep "^${package} " "${img2_dpkg_list}" | cut -d' ' -f2)
+        printf "  %s %s\n" "${package}" "${img2_version}"
+        printf "    (was %s)\n" "${img1_version}"
+    done
+    exit 0
+fi
+
+{
+    cat "${removed_packages}" | while read package; do
+        version=$(egrep "^${package} " "${img1_dpkg_list}" | cut -d' ' -f2)
+        printf "%s %-40s %-30s %-30s\n" "-" "${package}" "${version}" "-"
+    done
+
+    cat "${added_packages}" | while read package; do
+        version=$(egrep "^${package} " "${img2_dpkg_list}" | cut -d' ' -f2)
+        printf "%s %-40s %-30s %-30s\n" "+" "${package}" "-" "${version}"
+    done
+
+    cat "${changed_packages}" | while read package; do
+        img1_version=$(egrep "^${package} " "${img1_dpkg_list}" | cut -d' ' -f2)
+        img2_version=$(egrep "^${package} " "${img2_dpkg_list}" | cut -d' ' -f2)
+        if [ "${img1_version}" != "${img2_version}" ]; then
+            grade='>'
+            dpkg --compare-versions "${img1_version}" lt "${img2_version}" || grade='<'
+            printf "%s %-40s %-30s %-30s\n" "${grade}" "${package}" "${img1_version}" "${img2_version}"
+        fi
+    done
+} | sort -k2

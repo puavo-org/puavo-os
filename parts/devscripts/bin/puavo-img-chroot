@@ -1,0 +1,115 @@
+#!/bin/bash
+#
+# ##############################################################################
+#
+# Copyright (C) 2014 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
+# Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+#
+
+set -eu
+
+on_exit()
+{
+    exitval=$?
+
+    set +eu
+
+    umount ${umountverbose_G} "${tmpdir_G}/proc"
+    umount ${umountverbose_G} "${tmpdir_G}/dev/pts"
+    umount ${umountverbose_G} "${tmpdir_G}/dev"
+    umount ${umountverbose_G} "${tmpdir_G}"
+    rmdir ${rmdirverbose_G} "${tmpdir_G}"
+
+    return ${exitval}
+}
+
+usage_error()
+{
+    echo "error: $1" >&2
+    echo "Try '$0 --help' for more information". >&2
+    return 1
+}
+
+imgfile_G=
+mountverbose_G=
+rmdirverbose_G=
+tmpdir_G=
+umountverbose_G=
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            echo "Usage: $0 IMG"
+            echo
+            echo "Mount a filesystem image and run an interactive shell inside."
+            echo
+            echo "Options:"
+            echo "    -v, --verbose                print processing info"
+            echo "    -h, --help                   print help and exit"
+            echo "    -V, --version                print version and exit"
+            echo
+            exit 0
+            ;;
+        -v|--verbose)
+            shift
+            mountverbose_G='-v'
+            rmdirverbose_G='-v'
+            umountverbose_G='-v'
+            ;;
+        -V|--version)
+            shift
+            echo 0.1
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage_error "invalid argument '$1'"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -ne 1 ]; then
+    usage_error "invalid number of arguments ($#), expected 1"
+fi
+
+imgfile_G=$(readlink -e $1)
+
+trap on_exit EXIT
+
+tmpdir_G=$(mktemp -d)
+
+mount ${mountverbose_G} -o loop "${imgfile_G}" "${tmpdir_G}"
+mount ${mountverbose_G} -o bind /dev "${tmpdir_G}/dev"
+mount ${mountverbose_G} -o bind /dev/pts "${tmpdir_G}/dev/pts"
+mount ${mountverbose_G} -o bind /proc "${tmpdir_G}/proc"
+
+# Disable daemons in Puavo Images
+export DISABLE_DAEMONS=true
+
+# Disable deamon in LTSP Images
+export LTSP_HANDLE_DAEMONS=false
+
+setarch i386 chroot "${tmpdir_G}"
