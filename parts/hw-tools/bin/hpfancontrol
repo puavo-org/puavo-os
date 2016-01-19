@@ -1,0 +1,78 @@
+#!/usr/bin/ruby1.9.3
+
+# 1. Check temperature
+# 2. If < 50C, let fan run slowly for 2 minutes
+# 3. If > 50C, start fan
+
+ENV['LANG'] = 'C'
+
+def determine_speed(temp)
+  speed = 0
+
+  if temp > 70
+    speed = 0
+  elsif temp > 65
+    speed = 73
+  elsif temp > 60
+    speed = 89
+  elsif temp > 55
+    speed = 101
+  elsif temp > 50
+    speed = 116
+  elsif temp > 45
+    speed = 128
+  else
+    speed = 255
+  end
+
+  return speed
+end
+
+def hex_speed(speed)
+  return sprintf "%02x" % speed
+end
+
+def set_speed(speed)
+  `probook_ec.pl := 0x2F #{hex_speed(speed)}`
+end
+
+current_speed = 128
+set_speed(current_speed)
+down_wait = 0
+
+sleep(2.0)
+
+loop do
+  temp1 = File.read("/sys/devices/platform/coretemp.0/temp1_input").chomp.to_i / 1000
+  temp1_max = File.read("/sys/devices/platform/coretemp.0/temp1_max").chomp.to_i / 1000
+  temp2 = File.read("/sys/devices/platform/coretemp.0/temp2_input").chomp.to_i / 1000
+  temp2_max = File.read("/sys/devices/platform/coretemp.0/temp2_max").chomp.to_i / 1000
+  temp3 = File.read("/sys/devices/platform/coretemp.0/temp3_input").chomp.to_i / 1000
+  temp3_max = File.read("/sys/devices/platform/coretemp.0/temp3_max").chomp.to_i / 1000
+
+  temp=temp1
+  new_speed=determine_speed(temp)
+
+  # In speeds bigger number means slower fan speed
+  #
+  # When fan speed is going down, wait for 2 minutes before
+  # actually slowing the fan so that we don't end up starting
+  # the fan again in a few seconds.
+
+  if new_speed > current_speed
+    if down_wait > 120
+      set_speed(new_speed)
+      current_speed = new_speed
+      down_wait = 0
+    else
+      down_wait += 10
+    end
+  elsif new_speed < current_speed
+    set_speed(new_speed)
+    current_speed = new_speed
+
+    down_wait = 0
+  end
+
+  sleep (10.0)
+end
