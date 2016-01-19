@@ -1,0 +1,32 @@
+#!/bin/sh
+
+if [ "$1" = "" ]; then
+  echo "Usage: puavo-lucid-install-certificate <device type>"
+  exit
+fi
+
+if [ "$1" != "ltspserver" ] && [ "$1" != "laptop" ] && [ "$1" != "infotv" ]; then
+  echo "Invalid device type (ltspserver, laptop, infotv)"
+  exit
+fi
+
+if [ "$1" = "ltspserver" ]; then
+  if [ -f "/etc/ssl/certs/slapd-server.crt" ]; then
+    install -m 644 /etc/puavo/certs/host.crt /etc/ssl/certs/slapd-server.crt
+  else
+    echo "File not found (/etc/ssl/certs/slapd-server.crt)"
+  fi
+fi
+
+if [ -f "/etc/openvpn/keys/host.crt" ]; then
+  install -m 444 /etc/puavo/certs/host.crt /etc/openvpn/keys/host.crt
+else
+  echo  "File not found (/etc/openvpn/keys/host.crt)"
+fi
+
+if [ -f "/etc/puppet/ssl/certs/$( hostname -f ).pem" ]; then
+  install -m 644 -o puppet /etc/puavo/certs/host.crt /etc/puppet/ssl/certs/$( hostname -f ).pem
+else
+  echo  "File not found (/etc/puppet/ssl/certs/$( hostname -f ).pem). Check the 'hostname -f' command."
+fi
+

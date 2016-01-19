@@ -1,0 +1,646 @@
+#!/usr/bin/env ruby1.9.1
+#
+# Puavo Devices Client Install
+# * simple command-line script for registering devices
+#   to the Puavo Devices Server
+#
+# TODO
+# * localization by user settings and by operating system default locale?
+# * how to ask device information that is not required
+#   (latitude, longitude, description etc.)?
+#
+# suggestion: run this as:
+#  sudo ruby puavo-register
+
+$VERBOSE = nil
+
+require "puavo"
+require 'facter'
+require 'fileutils'
+require 'highline/import'
+require 'json'
+require 'net/https'
+require 'openssl'
+require 'resolv'
+require 'socket'
+require 'yaml'
+require 'uri'
+
+Puavodir            = '/etc/puavo'
+Puavo_hostname_path = "#{ Puavodir }/hostname"
+Puavo_id_path       = "#{ Puavodir }/id"
+
+HostCrtPath     = "#{ Puavodir }/certs/host.crt"
+HostKeyPath     = "#{ Puavodir }/certs/host.key"
+OrgCABundlePath = "#{ Puavodir }/certs/orgcabundle.pem"
+RootCAPath      = "#{ Puavodir }/certs/rootca.pem"
+Hosttype_path   = "#{ Puavodir }/hosttype"
+
+class Tools
+
+  @@nocolor = false
+
+  def self.nocolor
+    @@nocolor
+  end
+
+  def self.nocolor=(status)
+    @@nocolor = status
+  end
+
+  def self.colormsg(msg, tag, color)
+    if @@nocolor
+      puts "*** #{ tag }: #{ msg }"
+    else
+      HighLine.say(HighLine.new.color("*** #{ tag }: #{ msg }", color))
+    end
+  end
+
+  def self.errmsg(msg) ; colormsg(msg, 'ERROR', HighLine::RED)  ; end
+  def self.goodmsg(msg); colormsg(msg, 'OK',    HighLine::GREEN); end
+
+  def self.mkdir(path, mode=0755)
+    begin
+      FileUtils.mkdir(path, :mode => mode)
+      rescue Errno::EEXIST
+    end
+  end
+
+  def self.topdomain(domain)
+    domain.match(/[^\.]+\.[^\.]+$/).to_s
+  end
+
+end
+
+class CmdLine
+  def self.params(cmd_args)
+    params = {}
+    new_arg = nil
+
+    cmd_args.each do |i|
+      case i
+        when /^--(   authenticate-only
+                   | force
+                   | install
+                   | update
+                   | nocolor
+                   | noconfirm )$/x
+          params[$1] = true
+        else
+          if new_arg.nil?
+            new_arg = i
+          else
+            params[ new_arg.match(/^--(.*)$/)[1] ] = i
+            new_arg = nil
+          end
+      end
+    end
+
+    params
+  end
+end
+
+class HttpAuthError < StandardError; end
+
+class HostCertificate
+  def initialize
+    @key = OpenSSL::PKey::RSA.new(1024)
+    @csr = OpenSSL::X509::Request.new
+    @csr.version = 0
+    @csr.public_key = @key.public_key
+  end
+
+  def accept_signed_certificate(certificate, rootca, orgcabundle)
+    @crt         = OpenSSL::X509::Certificate.new(certificate)
+    @rootca      = rootca
+    @orgcabundle = orgcabundle
+  end
+
+  def fqdn
+    self.class.fqdn_from_cert(@crt)
+  end
+
+  def self.fqdn_from_cert(cert)
+    ((/^.*CN=(.*?)(\/|$)/.match(cert.subject.to_s))[1])
+  end
+
+  def request
+    @csr.to_pem
+  end
+
+  def write_to_filesystem(certpath, keypath, rootcapath, hostorgcabundlepath, orgcabundlepath)
+    File.open(certpath,            'w', 0444) { |f| f.print @crt.to_pem                 }
+    File.open(keypath,             'w', 0400) { |f| f.print @key.to_pem                 }
+    File.open(rootcapath,          'w', 0444) { |f| f.print @rootca                     }
+    File.open(hostorgcabundlepath, 'w', 0444) { |f| f.print @crt.to_pem + @orgcabundle  }
+    File.open(orgcabundlepath,     'w', 0444) { |f| f.print @orgcabundle                }
+
+    Tools.goodmsg('Certificates have been written to filesystem.')
+  end
+end
+
+class RegisterUserInterface
+  attr_accessor :responses, :connection
+
+  def initialize(cmdline_params, cert)
+    @responses       = {}
+    @cmdline_params  = cmdline_params
+
+    @mode = {
+      'accepted_devicetypes' =>
+        (@cmdline_params['accepted-devicetypes'] || '').split(','),
+      'noconfirm'            => @cmdline_params['noconfirm'],
+    }
+
+    @puavoserver     = @cmdline_params['puavoserver'] || default_puavoserver()
+    @username        = @cmdline_params['username']
+    @password        = @cmdline_params['password']
+
+    Tools.nocolor = !!@cmdline_params['nocolor']
+
+    facts = Facter.to_hash
+
+    @system_defaults = {
+      'host_certificate_request' => cert.request,
+      'macAddress'               => lookup_macaddresses(facts),
+      'puavoDeviceManufacturer'  => facts['manufacturer'],
+      'puavoDeviceModel'         => facts['productname'],
+      'puavoHostname'            => facts['hostname'],
+      'serialNumber'             => facts['serialnumber'],
+    }
+
+    @host = {}
+  end
+
+  def ask_devicetype()
+    @responses['devicetype'] =
+      choicelist(@connection.devicetypes['list'],
+                 'devicetype',
+                 @connection.devicetypes['title'],
+                 @connection.devicetypes['question'])
+
+    @attributes = request_attributes(@responses['devicetype'])
+
+    set_host_attributes()
+  end
+
+  def ask_machine_info(errors={}, ask_all=true)
+    unhandled = errors.clone
+
+    if ask_all
+      ask_devicetype()
+      ask_school() if school_required?
+    end
+
+    @attributes.each do |attr|
+      field = attr['id']
+
+      next unless ask_all or unhandled[field]
+      next if attr['label'].empty?
+      next if %(devicetype school).include?(field)
+
+      if unhandled[field] and not ask_all
+        Tools.errmsg(unhandled[field])
+        unhandled.delete(field)
+      end
+
+      question = attr['label'] + ':'
+      @responses[field] = ask_with_default(question, @host[field])
+
+      set_host_attributes()
+    end
+
+    unhandled.each do |field, errmsg|
+      Tools.errmsg("Server reported unhandled error for #{ field }: " \
+                   + errmsg)
+    end
+  end
+
+  def ask_school()
+    list = @connection.schools['list']
+
+    @responses['school'] \
+      = list.size == 1 ? list.keys[0] \
+      : choicelist(@connection.schools['list'],
+                   'school',
+                   @connection.schools['title'],
+                   @connection.schools['question'])
+
+    @attributes = request_attributes(@responses['devicetype'],
+                             @responses['school'])
+
+    set_host_attributes()
+  end
+
+  def ask_with_default(question, default)
+    prompt = "#{ question } [#{ default }] "
+    answer = HighLine.ask(prompt) { |q| q.whitespace = nil }
+
+    return answer.match(/^\n$/)  ? default \
+         : answer.match(/^\s+$/) ? ''      \
+         : answer.strip
+  end
+
+  def choicelist(items, field, header, prompt)
+    selected = nil
+    itemkeys = items.keys.sort_by { |i| items[i]['order'] }
+
+    choose do |menu|
+      itemkeys.each do |id|
+        menu.choice(items[id]['label']) { selected = id }
+      end
+      if @host.has_key?(field)
+        menu.prompt = prompt + "[#{ items[ @host[field] ]['label'] }] "
+        menu.hidden('') { selected = @host[field] }
+      else
+        menu.prompt = prompt
+      end
+      menu.header = header
+    end
+
+    HighLine.say "===> selected [#{ items[selected]['label'] }]"
+
+    selected
+  end
+
+  def connect_to_puavo()
+    if (@puavoserver and @username and @password)
+      @connection = puavo_connection_request()
+    else
+      until (@connection)
+        begin
+          begin
+            @puavoserver = ask_with_default('Puavo server name:', @puavoserver)
+            @connection  = PuavoDevicesConnection.new(@puavoserver, '', '', [])
+          rescue HttpAuthError
+          end
+          @username   = ask_with_default('Username:', @username)
+          @password   = HighLine.ask('Password: ') { |q| q.echo = '*' }
+          @connection = puavo_connection_request()
+        rescue HttpAuthError
+          Tools.errmsg('Wrong username and/or password.')
+          @http = nil
+        rescue SocketError => e
+          Tools.errmsg(e)
+          @http = nil
+        end
+      end
+    end
+  end
+
+  def default_puavoserver
+    begin
+      Resolv::DNS.open do |dns|
+        r = dns.getresources( "_puavo._tcp",
+                              Resolv::DNS::Resource::IN::SRV )
+        r[0].target.to_s
+      end
+    rescue
+      Tools.errmsg('Could not lookup default puavoserver.')
+    end
+  end
+
+  def lookup_macaddresses(facts)
+    facts['interfaces'].split(',').
+                        map { |intf| facts["macaddress_#{intf}"] }.
+                        compact.sort.uniq.join(' ')
+  end
+
+  def print_machine_info
+    set_host_attributes()
+    HighLine.say "\nHOST INFORMATION:"
+
+    @attributes.each do |attr|
+      next if attr['label'].empty?
+      field = attr['id']
+      value =
+        case field
+          when 'devicetype'
+            @connection.devicetypes['list'][ @host[field] ]['label']
+          when 'school'
+            next unless school_required?
+            @connection.schools['list'][ @host[field] ]['label']
+          else
+            @host[field]
+        end
+      printf("%-24s%s\n", attr['label'] + ': ', value)
+    end
+
+    print "\n"
+  end
+
+  def puavo_connection_request()
+    PuavoDevicesConnection.new(@puavoserver,
+			       @username,
+			       @password,
+			       @mode['accepted_devicetypes'])
+  end
+
+  def register_to_server
+    connect_to_puavo()
+
+    @attributes = request_attributes(@cmdline_params['devicetype'],
+                                     @cmdline_params['school'])
+
+    info = {}
+
+    loop do
+      print_machine_info()
+
+      until @mode['noconfirm'] or agree('Is this information correct? (y/n) ')
+        ask_machine_info()
+        print_machine_info()
+      end
+
+      HighLine.say 'Sending host information to puavo server...'
+      response_data = @connection.post_host(@host)
+      if response_data['register_info']
+        if @host['host_certificate_request'] \
+          and not response_data['register_info']['userCertificate']
+            Tools.errmsg('Server did not send a signed certificate.')
+        else
+          info['registration'] = response_data['register_info']
+          Tools.goodmsg('This machine is now successfully registered.')
+
+          break
+        end
+      else
+        ask_machine_info(response_data['errors'], false)
+      end
+    end
+
+    info
+  end
+
+  def request_attributes(devicetype=nil, school=nil)
+    devicetype ||= @host['devicetype']
+    school     ||= @host['school']
+    @connection.request_object_info(devicetype, school)
+  end
+
+  def school_required?
+    @connection.devicetypes['list'][ @host['devicetype'] ]['school_required']
+  end
+
+  def set_host_attributes
+    @host = {}
+    @attributes.each do |attr|
+      next if attr['id'] == 'school' and not school_required?
+      @host[ attr['id'] ] = @responses[       attr['id'] ] ||
+                            @cmdline_params[  attr['id'] ] ||
+                            attr['default']                ||
+                            @system_defaults[ attr['id'] ] ||
+                            ''
+    end
+  end
+end
+
+class PuavoDevicesConnection
+  attr_accessor :devicetypes, :schools
+
+  def initialize(server, username, password, accepted_devicetypes)
+    if server.match(/^https?\:\/\//)
+      uri = URI(server)
+    else
+      # If not URI assume https
+      uri = URI("https://#{ server }")
+    end
+
+    @server   = uri.host
+    @username = username
+    @password = password
+
+    @http              = Net::HTTP.new(@server, uri.port)
+    @http.use_ssl      = uri.scheme == "https"
+    @http.ca_path      = '/etc/ssl/certs'
+    @http.verify_mode  = OpenSSL::SSL::VERIFY_PEER
+    @http.verify_depth = 5
+    @devicetypes       = get_devicetypes(accepted_devicetypes)
+
+    userinfo = get('/devices/sessions/show.json')
+    @schools = userinfo['managed_schools'].clone
+    @schools['list'] = Hash[
+      userinfo['managed_schools']['list'].map do |school|
+        [
+          school['puavoId'].to_s,
+          {
+            'label' => school['displayName'],
+            'order' => school['puavoId'],
+          },
+        ]
+      end
+    ]
+  end
+
+  def get_devicetypes(accepted_devicetypes)
+    # list only those device types which are accepted...
+    # if none of them are accepted, list all
+
+    devicetypes_url = '/devices/hosts/types.json'
+
+    all_devicetypes = get(devicetypes_url)
+    return all_devicetypes if accepted_devicetypes.empty?
+
+    filtered_devicetypes = all_devicetypes.clone
+    filtered_devicetypes['list'] = Hash[
+      accepted_devicetypes.map { |d| [ d, all_devicetypes['list'][d] ] }
+    ]
+
+    # if puavo gives us a default device type that we do not accept, replace
+    # the default type with the first devicetype that we actually accept
+    default_devicetype = filtered_devicetypes['default']
+    unless filtered_devicetypes['list'].has_key?(default_devicetype); then
+      filtered_devicetypes['default'] \
+	= filtered_devicetypes['list'].keys \
+	    .sort_by do |devtype|
+	      filtered_devicetypes['list'][devtype]['order']
+	    end \
+	    .first
+    end
+
+    filtered_devicetypes
+  end
+
+  def request_object_info(devicetype, school)
+    devicetype = devicetype || @devicetypes['default'].to_s
+    school     = school     || @schools['default'].to_s
+    # put school id into url if %s exists in url string
+    question_url = @devicetypes['list'][ devicetype ]['url'] % school
+
+    form = get(question_url)
+    @post_info = {
+      'object_key' => form['object_key'],
+      'url'        => form['url'] % school,
+    }
+
+    [
+      {
+        'default' => @devicetypes['default'].to_s,
+        'id'      => 'devicetype',
+        'label'   => @devicetypes['label'],
+      },
+      {
+        'default' => @schools['default'].to_s,
+        'id'      => 'school',
+        'label'   => @schools['label'] },
+    ] + form['attributes'] 
+  end
+
+  def get(url)
+    @http.start do |http|
+      request = Net::HTTP::Get.new(url)
+      request.basic_auth(@username, @password)
+      response = http.request(request)
+      if response.class == Net::HTTPUnauthorized
+        raise HttpAuthError
+      end
+      JSON.parse(response.body)
+    end
+  end
+
+  def host_to_json(host)
+    {
+      @post_info['object_key'] => Hash[
+        host.map do |key, value|
+          [
+            key,
+            (key == 'macAddress' ? value.split(' ') : value)
+          ]
+        end
+      ]
+    }.to_json
+  end
+
+  def post_host(host)
+    request = Net::HTTP::Post.new(@post_info['url'],
+                                  { 'Content-Type' => 'application/json' })
+    request.basic_auth(@username, @password)
+    response = @http.request(request, host_to_json(host))
+    case response.code
+      when /^2/
+        # successful request
+        Hash[ 'errors' => {}, 'register_info' => JSON.parse(response.body), ]
+      when /^5/
+        Tools.errmsg("Server response is #{ response.code }: " \
+                     + response.message)
+        Hash[ 'errors' => {} ]
+      else
+        Hash[ 'errors' => Hash[ JSON.parse(response.body) ] ]
+    end
+  end
+end
+
+class Control
+  def self.authenticate_only(cmdline_params)
+    # XXX cert should not be needed in this case
+    cert = HostCertificate.new
+
+    rui = RegisterUserInterface.new(cmdline_params, cert)
+
+    # the authentication happens here
+    rui.connect_to_puavo()
+  end
+
+  def self.register(cmdline_params)
+    HighLine.say "\n\t-=< Puavo Devices Client >=-\n\n"
+
+    if File.exists?(Puavo_hostname_path) && !cmdline_params['force']
+      Tools.errmsg('Registration is already done and --force is not applied.')
+      exit 1
+    end
+
+    cert = HostCertificate.new
+
+    rui  = RegisterUserInterface.new(cmdline_params, cert)
+    info = rui.register_to_server()
+
+    return if ['fatclient', 'thinclient'].include?( info['registration']['puavoDeviceType'] )
+
+    organisation_info = rui.connection.get("/users/organisation.json")
+    # org["ldap_host"], org["domain"]
+
+    raise 'Did not receive host configuration from Puavo' \
+        unless info['registration']['host_configuration']
+
+
+    if info['registration']['userCertificate']
+      raise 'Root CA missing' \
+        unless info['registration']['rootca']
+      raise 'Organisation CA bundle missing' \
+        unless info['registration']['orgcabundle']
+
+      cert.accept_signed_certificate(info['registration']['userCertificate'],
+                                      info['registration']['rootca'],
+                                      info['registration']['orgcabundle'])
+
+      Tools.mkdir("#{ Puavodir }")
+      Tools.mkdir("#{ Puavodir }/certs")
+      cert.write_to_filesystem("#{ Puavodir }/certs/host.crt",
+                                "#{ Puavodir }/certs/host.key",
+                                "#{ Puavodir }/certs/rootca.pem",
+                                "#{ Puavodir }/certs/hostorgcabundle.pem",
+                                "#{ Puavodir }/certs/orgcabundle.pem")
+    end
+
+
+    top_domain = Tools.topdomain(organisation_info['ldap_host'])
+    PUAVO_ETC.write(:id, info["registration"]["puavoId"])
+
+    # In our architecture kerberos master is currently the same as ldap master
+    PUAVO_ETC.write(:krb_master, organisation_info['ldap_host'])
+    PUAVO_ETC.write(:krb_toprealm, top_domain.upcase)
+    PUAVO_ETC.write(
+      :krb_realm,
+      info['registration']["host_configuration"]["kerberos_realm"]
+    )
+
+    PUAVO_ETC.write(:ldap_dn, info['registration']['dn'])
+    PUAVO_ETC.write(:ldap_password, info['registration']['ldap_password'])
+    PUAVO_ETC.write(:ldap_base, organisation_info['base'])
+    PUAVO_ETC.write(:ldap_master, organisation_info['ldap_host'])
+
+    PUAVO_ETC.write(:domain, organisation_info["domain"])
+    PUAVO_ETC.write(:topdomain, top_domain)
+
+    PUAVO_ETC.write(
+      :hosttype,
+      info['registration']['host_configuration']['devicetype']
+    )
+
+    # Do this as the last thing, because this affects the test
+    # if this host has been registered.
+    PUAVO_ETC.write(:hostname, info['registration']["puavoHostname"])
+
+    # Also run update to write the kernel stuff
+    update() if info['registration']['puavoDeviceType'] != "laptop"
+  end
+
+  # Write updatable Puavo attributes to /etc/puavo
+  def self.update
+    puavo = Puavo::Client::Base.new
+
+    if ["ltspserver", "bootserver"].include?(PUAVO_ETC.hosttype)
+      device_info = puavo.servers.find_by_id(PUAVO_ETC.id)
+    else
+      device_info = puavo.devices.find_by_id(PUAVO_ETC.id)
+    end
+
+    PUAVO_ETC.write(:hostname, device_info.hostname)
+    PUAVO_ETC.write(:hosttype, device_info.device_type)
+    PUAVO_ETC.write(:kernel_version, device_info.kernel_version)
+    PUAVO_ETC.write(:kernel_arguments, device_info.kernel_arguments)
+    Tools.goodmsg("Puavo attributes are now written to #{ PUAVO_ETC.root }")
+  end
+end
+
+raise 'run me as root' unless Process.uid == 0
+
+cmdline_params = CmdLine.params(ARGV)
+
+if cmdline_params['authenticate-only']
+  Control.authenticate_only(cmdline_params)
+elsif cmdline_params['update']
+  Control.update()
+else
+  Control.register(cmdline_params)
+end

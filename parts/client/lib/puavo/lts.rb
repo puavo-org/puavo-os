@@ -1,0 +1,7 @@
+require 'puavo/lts/base'
+require 'puavo/lts/fatclient'
+require 'puavo/lts/laptop'
+require 'puavo/lts/ltsp_server'
+require 'puavo/lts/thinclient'
+require 'puavo/lts/unregistered'
+require 'puavo/lts/wirelessaccesspoint'

@@ -1,0 +1,194 @@
+#!/usr/bin/ruby1.9.1
+
+require "puavo/rest-client"
+
+def puavo_rest_client_cli
+  options = { :headers => {} }
+  implicit_headers = {}
+  post_request = {}
+
+  script_name = File.basename(__FILE__)
+
+  parser = OptionParser.new do |opts|
+    opts.banner = "
+    Curl like client for puavo-rest
+
+    Usage: #{script_name} [options] [SCHEME://HOST[:PORT]]<PATH>
+
+    - If [SCHEME://HOST[:PORT]] is omitted it is automatically resolved from DNS
+    - If DNS resolving fails a fallback is read from /etc/puavo/apiserver
+    - If /etc/puavo/apiserver is not present puavo domain is used
+    - Puavo domain is read from /etc/puavo/domain
+
+    Examples:
+
+    GET requests
+
+    #{script_name} /v3/about
+    #{script_name} https://api.puavo.org/v3/about
+    #{script_name} --user-krb /v3/whoami
+    #{script_name} --user-etc /v3/devices/laptop1
+    #{script_name} --user uid=admin,o=puavo /v3/users
+    #{script_name} --user uid=admin,o=puavo --domain other.opinsys.net --no-dns /v3/current_organisation
+
+    POST requests
+
+    #{script_name} --data current_image=the_running_image /v3/devices/laptop1
+    #{script_name} --data-json '{\"available_images\": [\"img1\", \"img2\"]}' /v3/boot_servers/boot2
+
+    Options:
+    "
+
+    opts.on("-u", "--user <user[:password]>", "Use basic auth. If password is not set password prompt will be displayed. Password is also read from the PUAVO_REST_CLIENT_PASSWORD env") do |auth|
+
+      if auth.include?(":")
+        user, pass = auth.split(":")
+        options[:basic_auth] = {
+          :user => user,
+          :pass => pass
+        }
+      else
+
+        if ENV["PUAVO_REST_CLIENT_PASSWORD"]
+          options[:basic_auth] = {
+            :user => auth,
+            :pass => ENV["PUAVO_REST_CLIENT_PASSWORD"]
+          }
+        else
+          STDERR.write("Enter host password for user '#{ auth }':")
+          `stty -echo`
+          pass = STDIN.gets.strip
+          `stty echo`
+          options[:basic_auth] = {
+            :user => auth,
+            :pass => pass
+          }
+        end
+
+      end
+    end
+
+    opts.on("--user-etc", "Automatically load credendials from /etc/puavo/ldap") do
+      options[:auth] = :etc
+    end
+
+    opts.on("--user-krb", "Use kerberos authentication") do
+      options[:auth] = :kerberos
+    end
+
+    opts.on("--user-bootserver", "Use bootserver authentication (aka no client authentication)") do
+      options[:auth] = :bootserver
+    end
+
+    opts.on("--cacert FILE", "Tells puavo-rest-client to use the specified certificate file to verify the peer") do |path|
+      options[:ca_file] = path
+    end
+
+    opts.on("-d", "--data BODY", "Use POST method and use BODY as the request body using Content-type application/x-www-form-urlencoded. Set to - to read from STDIN") do |body|
+      post_request = { :body => body }
+      implicit_headers["content-type"] = "application/x-www-form-urlencoded"
+    end
+
+    opts.on("--data-json JSON", "POST JSON string with Content-Type application/json. Set to - to read from STDIN") do |body|
+      post_request = { :body => body }
+      implicit_headers["content-type"] = "application/json"
+    end
+
+    opts.on("-H", "--header HEADER", "Add custom header. Can be set multiple times. Example: --header 'Content-Type: application/json'") do |header|
+      key, val = header.split(":")
+      options[:headers][key.strip.downcase] = val.strip
+    end
+
+    opts.on("--domain DOMAIN", "Use custom puavo domain. By default the domain is read from /etc/puavo/domain") do |domain|
+      options[:puavo_domain] = domain
+    end
+
+    opts.on("--no-dns", "Do not search for server from DNS") do
+      options[:dns] = :no
+    end
+
+    opts.on("--dns-only", "Force use server from DNS. If not found puavo-rest-client exits with a loud error") do
+      options[:dns] = :only
+    end
+
+    opts.on("--retry-fallback", "When DNS resolving is used and the resolved server is unreachable retry the request using /etc/puavo/apiserver or puavo domain as the server") do
+      options[:retry_fallback] = true
+    end
+
+    opts.on("-L", "--location", "Follow location headers on 3XX status codes") do
+      options[:location] = true
+    end
+
+    opts.on("-m", "--max-time SEC", "Maximum time in seconds that you allow the whole operation to take") do |seconds|
+      options[:timeout] = seconds.to_f
+    end
+
+    opts.on("--port PORT", "Force custom port") do |port|
+      options[:port] = port.to_i
+    end
+
+    opts.on("--scheme SCHEME", "Force custom scheme (http or https)") do |scheme|
+      options[:scheme] = scheme
+    end
+
+    opts.on("--silent", "Suppress warning messages from puavo-rest") do
+      options[:silent] = true
+    end
+
+    opts.on("-v", "--verbose", "Be verbose. PUAVO_REST_CLIENT_VERBOSE=1 env can be also used") do
+      $puavo_rest_client_verbose = true
+    end
+
+    opts.on_tail("-h", "--help", "Show this message") do
+      STDERR.puts opts
+      exit
+    end
+
+  end
+  parser.parse!
+
+  if ARGV.first.nil?
+      STDERR.puts parser
+      exit(1)
+  end
+
+  # Override any implicit headers by headers forced by the user
+  options[:headers] = implicit_headers.merge(options[:headers])
+
+  uri = Addressable::URI.parse(ARGV.first)
+  if uri.host
+    options[:server] = ARGV.first
+  end
+  client = PuavoRestClient.new(options)
+
+  path = uri.path
+  if uri.query
+    path += "?#{ uri.query }"
+  end
+
+  if post_request[:body] == "-"
+    post_request[:body] = STDIN.read()
+  end
+
+  res = nil
+  err = nil
+  begin
+    if !post_request.empty?
+      res = client.post(path, post_request)
+    else
+      res = client.get(path)
+    end
+  rescue PuavoRestClient::BadStatusCode => _err
+    res = _err.response
+    err = _err
+  end
+
+  STDOUT.puts res.to_s
+  exit 1 if err
+
+end
+
+
+if __FILE__ == $0
+  puavo_rest_client_cli
+end

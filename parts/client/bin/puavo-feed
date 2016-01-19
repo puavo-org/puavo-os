@@ -1,0 +1,77 @@
+#!/usr/bin/ruby1.9.1
+# encoding: UTF-8
+
+require "socket"
+require "optparse"
+require "json"
+
+require "puavo/etc"
+require "puavo/api-server"
+
+require "puavo/gems"
+require "httparty"
+
+def assert_exec(cmd)
+  out = `#{ cmd }`
+  if not $?.success?
+    raise "Failed to execute '#{ cmd }'"
+  end
+  return out
+end
+
+
+
+options = {}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "
+  Usage: #{ File.basename(__FILE__) } [options]
+
+  Print Puavo JSON Feed for the current device and user if any
+  "
+
+  opts.on("-s", "--api-server [URL]", "API server root") do |url|
+    options[:api_server] = url
+  end
+
+  opts.on("-d", "--device [HOSTNAME]", "Device hostname") do |hostname|
+    options[:hostname] = hostname
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    STDERR.puts opts
+    exit
+  end
+
+end
+
+parser.parse!
+
+options[:api_server] ||= Puavo.resolve_api_server!
+options[:hostname] ||= Socket.gethostname
+
+# TODO: If PUAVO_SESSION_PATH is set use apiserver/v3/session/<sessionid>/feed
+
+
+feeds = []
+
+res = HTTParty.get("#{ options[:api_server] }/v3/devices/#{ options[:hostname] }/feed")
+
+if res.code == 200
+  feeds.concat(res.to_a)
+else
+  STDERR.puts "Failed to fetch feeds from puavo! #{ res }"
+end
+
+series = File.open("/etc/ltsp/this_ltspimage_series", "r").read rescue nil
+image = File.open("/etc/ltsp/this_ltspimage_name", "r").read rescue nil
+
+if image && series
+  image = image.gsub(/\.img$/, "").strip
+  feeds.push({
+    "message" => "Päivitystiedote http://changelog.opinsys.fi/#{ series.strip }/##{ image }"
+  })
+end
+
+puts feeds.to_json
+

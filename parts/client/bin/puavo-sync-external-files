@@ -1,0 +1,122 @@
+#!/usr/bin/env ruby1.9.1
+
+require "digest/sha1"
+require "fileutils"
+require "json"
+require "optparse"
+require "uri"
+
+# puavo lib must loaded before rest-client because rest-client is bundled into
+# puavo lib
+require "puavo"
+require "rest-client"
+
+options = {}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: #{ File.basename(__FILE__) } [options] [target]"
+
+  opts.on("-s", "--server [SERVER]", "Puavo REST server URI") do |server|
+    options[:server] = server
+  end
+
+  opts.on("-h", "--hostname [HOSTNAME]", "Client hostname") do |hostname|
+    options[:hostname] = hostname
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+
+end
+parser.parse!
+
+def check_call(cmd)
+  res = `#{ cmd }`
+  if $?.success?
+    return res.chomp
+  else
+    raise "Failed to execute '#{ cmd }'"
+  end
+end
+
+options[:target] = ARGV[0] || "/state/external_files"
+options[:server] ||= check_call "puavo-resolve-api-server"
+options[:hostname] ||= PUAVO_ETC.hostname
+
+def read_current_files(dirpath)
+  Dir.entries(dirpath).map do |name|
+    begin
+      File.open(File.join(dirpath, name), "rb") do |f|
+        sha1 = Digest::SHA1.new
+
+        while data = f.read(512)
+          sha1.update(data)
+        end
+
+        {
+          "name" => name,
+          "data_hash" => sha1.hexdigest
+        }
+      end
+    rescue Errno::EISDIR
+    end
+  end.compact
+end
+
+class ExternalFiles
+  def initialize(base_uri)
+    @base_uri = base_uri
+
+    case PUAVO_ETC.hosttype
+      when 'laptop','wirelessaccesspoint'
+        @username = PUAVO_ETC.ldap_dn
+	@password = PUAVO_ETC.ldap_password
+    end
+  end
+
+  def data(name='')
+    uri =  name != ''  ?  "#{ @base_uri }/#{ name }"  :  @base_uri
+
+    rc = @username && @password \
+           ? RestClient::Resource.new(uri, @username, @password) \
+           : RestClient::Resource.new(uri)
+
+    rc.get
+  end
+
+  def index
+    JSON.parse( data() )
+  end
+end
+
+def main(options)
+  FileUtils.mkdir_p(options[:target])
+  current_files = read_current_files(options[:target])
+
+  ef_root = URI.join(options[:server],
+		     "/v3/devices/#{ options[:hostname] }/",
+		     'external_files').to_s
+
+  puts "Connecting to #{ ef_root }"
+  ef = ExternalFiles.new(ef_root)
+
+  ef.index.each do |meta|
+    file_path = File.join(options[:target], meta["name"])
+
+    if current_files.include?(meta)
+      puts "OK #{ file_path } #{ meta["data_hash"] }"
+      next
+    end
+
+    File.open(file_path, "w") do |f|
+      puts "Writing #{ file_path } #{ meta["data_hash"] }"
+      f.write(ef.data(meta["name"]))
+    end
+  end
+end
+
+if __FILE__ == $0
+  main(options)
+end

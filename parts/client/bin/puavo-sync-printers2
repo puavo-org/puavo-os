@@ -1,0 +1,168 @@
+#!/usr/bin/ruby1.9.1
+
+require "puavo"
+require "optparse"
+require "httparty"
+require "socket"
+
+require "puavo/api-server"
+require "puavo/rest-client"
+
+def assert_response(res)
+  if ![200, 201, 202].include?(res.code)
+    puts "Bad response status #{ res.code } for #{ res.request.path.to_s }: #{ res }"
+    exit 1
+  end
+end
+
+# From https://github.com/opinsys/liitu-puppet/blob/25c92e5c85e8637cdbd04c390f98eca69d3cc68b/modules/service/templates/usr/local/sbin/send_printers_to_puavo#L18-L40
+def parse_cups_printers_conf(conf_path)
+  printers_conf = File.readlines(conf_path)
+
+  printers = {}
+  description  = nil
+
+  printers_conf.each do |line|
+    match = line.match(/^<(?:DefaultPrinter|Printer) (.*)>$/)
+    if match
+      description = match[1]
+      printers[description] = {}
+    elsif line.match(%r{^</Printer>$})
+      description = nil
+    else
+      if description then
+        _, key, value = * line.match(/^([^ ]+) (.*)$/)
+        printers[description][key] = value
+      end
+    end
+  end
+
+  printers
+end
+
+options = {
+  :printers_conf => "/etc/cups/printers.conf",
+  :basic_auth => {}
+}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "
+  Usage: #{ File.basename(__FILE__) } [options] [cups printers config]
+
+  Synchronize CUPS printers to Puavo. Printers are identified by their
+  description in the CUPS config.
+
+  NOTE: Currently printer attributes won't be updated if the printer already
+  exists in Puavo.
+
+  Be default printers are read from #{ options[:printers_conf] }
+  "
+
+  opts.on("--readable-server URL", "Readable server address") do |url|
+    options[:readable_server] = url
+  end
+
+  opts.on("--writeable-server URL", "Readable server address") do |url|
+    options[:writeable_server] = url
+  end
+
+  opts.on("--dn DN", "Boot server DN") do |dn|
+    options[:server_dn] = dn
+  end
+
+  opts.on("-u", "--user [USER]", "Username or dn") do |username|
+    options[:basic_auth][:user] = username
+  end
+
+  opts.on("-p", "--password [PASSWORD]", "Password") do |pw|
+    options[:basic_auth][:pass] = pw
+  end
+
+  opts.on("--log [FILE]", "Log output to file. Defaults to stdout/stderr") do |log_file|
+    options[:log_file] = log_file
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    STDERR.puts opts
+    exit
+  end
+
+end
+
+parser.parse!
+
+if options[:readable_server].nil? && options[:writeable_server]
+  options[:readable_server] = options[:writeable_server]
+end
+
+if options[:writeable_server].nil? && options[:readable_server]
+  options[:writeable_server] = options[:readable_server]
+end
+
+if options[:log_file]
+  $stdout.reopen(options[:log_file], "a")
+  $stderr.reopen(options[:log_file], "a")
+end
+
+options[:printers_conf] = ARGV[0] if ARGV[0]
+
+readable = PuavoRestClient.new({
+  :basic_auth => options[:basic_auth],
+  :apiserver => options[:readable_server]
+})
+
+writeable = PuavoRestClient.new({
+  :basic_auth => options[:basic_auth],
+  :apiserver => options[:writeable_server]
+})
+
+puts "Fetching existing printers from #{ readable.apiserver }/v3/printer_queues"
+res = readable.get("/v3/printer_queues")
+assert_response res
+current_printers = res.parse()
+
+current_printer_descriptions = current_printers.map do |p|
+  p["description"]
+end
+
+server_printers = parse_cups_printers_conf(options[:printers_conf])
+puts "Ensuring #{ server_printers.size } printers to puavo"
+server_printers.each do |description, info|
+
+  # TODO: We might want to check if any of the attributes has been changed and
+  # update the printer. Now we only send the printer data if it is completely
+  # new.
+  if current_printer_descriptions.include?(description)
+    next
+  end
+
+  printer = {
+    "printerDescription" => description,
+    "printerLocation" => info["Location"] || "",
+    "printerMakeAndModel" => info["MakeModel"] || "",
+    "printerType" => info["Type"] || "" ,
+    "printerURI" => info["DeviceURI"] || "" ,
+    "puavoServer" => options[:server_dn]
+  }
+
+  puts "new #{ printer.inspect }"
+  # json = printer.to_json
+
+  # puts "Sending #{ json }"
+  # puts "to #{ options[:post_printers] }"
+  # res = HTTParty.post(options[:post_printers],
+  #   :body => json,
+  #   :basic_auth => {
+  #     :username => options[:user],
+  #     :password => options[:password]
+  #   },
+  #   :headers => {
+  #     "Content-Type" => "application/json",
+  #     "Accept" => "application/json"
+  #   }
+  #  )
+  # assert_response res
+  # puts "OK"
+  # puts
+
+end

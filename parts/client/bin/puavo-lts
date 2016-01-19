@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby1.9.1
+#
+# Generate lts.conf file for Puavo device
+#
+
+require 'puavo/etc'
+require 'puavo'
+require 'puavo/lts'
+
+puavo = Puavo::Client::Base.new(PUAVO_ETC.domain, PUAVO_ETC.ldap_dn, PUAVO_ETC.ldap_password)
+device = puavo.devices.find_by_hostname(PUAVO_ETC.hostname)
+school = puavo.schools.find_by_id(device.school_id)
+organisation = puavo.organisation.find
+
+lts_config = Puavo::Lts.new(organisation, school, device)
+puts lts_config.output

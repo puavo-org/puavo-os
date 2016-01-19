@@ -1,0 +1,49 @@
+#!/bin/sh
+
+[ "$1" = "--help" -o "$1" = "-h" ] && {
+    echo "
+    usage: $(basename $0) [option]
+
+    Resolve local puavo api server from dns. If the device type is laptop and
+    dns resolve fails it will return the public server.
+
+    --cloud-fallback       Fallback to cloud puavo-rest if bootserver dns lookup fails
+
+    "
+} && exit 0
+
+option=$1
+
+set -eu
+
+puavo_domain=$(cat /etc/puavo/domain)
+
+lookup_puavoapi() {
+  dig +time=2 +tries=1 SRV _puavo-api._tcp.${puavo_domain} +search +short
+}
+
+if dig_res=$(lookup_puavoapi); then
+    # dig might not exit with nonzero exit status even if the search fails,
+    # instead it will just give an empty response.
+    if [ -n "$dig_res" ]; then
+        echo $dig_res | awk '{
+                          sub(/\.$/, "")
+                          printf "https://%s:%s\n", $4, $3
+                        }'
+        exit 0
+    fi
+fi
+
+puavo_hosttype=$(cat /etc/puavo/hosttype)
+
+# Fallback for laptops and wirelessaccesspoints that are not in the school
+# network.
+if [    "$puavo_hosttype" = "laptop"              \
+     -o "$puavo_hosttype" = "wirelessaccesspoint" \
+     -o "$option"         = "--cloud-fallback" ]; then
+    echo "https://$puavo_domain"
+    exit 0
+fi
+
+echo "Failed to resolve api server" >&2
+exit 1

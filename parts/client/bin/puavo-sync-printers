@@ -1,0 +1,178 @@
+#!/usr/bin/ruby1.9.1
+
+require "puavo"
+require "optparse"
+require "httparty"
+require "socket"
+
+require "puavo/api-server"
+
+def assert_response(res)
+  if ![200, 201, 202].include?(res.code)
+    puts "Bad response status #{ res.code } for #{ res.request.path.to_s }: #{ res }"
+    exit 1
+  end
+end
+
+# From https://github.com/opinsys/liitu-puppet/blob/25c92e5c85e8637cdbd04c390f98eca69d3cc68b/modules/service/templates/usr/local/sbin/send_printers_to_puavo#L18-L40
+def parse_cups_printers_conf(conf_path)
+  printers_conf = File.readlines(conf_path)
+
+  printers = {}
+  description  = nil
+
+  printers_conf.each do |line|
+    match = line.match(/^<(?:DefaultPrinter|Printer) (.*)>$/)
+    if match
+      description = match[1]
+      printers[description] = {}
+    elsif line.match(%r{^</Printer>$})
+      description = nil
+    else
+      if description then
+        _, key, value = * line.match(/^([^ ]+) (.*)$/)
+        printers[description][key] = value
+      end
+    end
+  end
+
+  printers
+end
+
+options = {
+  :printers_conf => "/etc/cups/printers.conf"
+}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "
+  Usage: #{ File.basename(__FILE__) } [options] [cups printers config]
+
+  Synchronize CUPS printers to Puavo. Printers are identified by their
+  description in the CUPS config.
+
+  NOTE: Currently printer attributes won't be updated if the printer already
+  exists in Puavo.
+
+  Be default printers are read from #{ options[:printers_conf] }
+  "
+
+  opts.on("--post-printers-url [URL]", "Url where to post printers") do |url|
+    options[:post_printers] = url
+  end
+
+  opts.on("--api-server [URL]", "API server root") do |url|
+    options[:api_server] = url
+  end
+
+  opts.on("-h", "--hostname [HOSTNAME]", "Boot server hostname") do |hostname|
+    options[:hostname] = hostname
+  end
+
+  opts.on("-u", "--user [USER]", "Username or dn") do |username|
+    options[:user] = username
+  end
+
+  opts.on("-p", "--password [PASSWORD]", "Password") do |pw|
+    options[:password] = pw
+  end
+
+  opts.on("--log [FILE]", "Log output to file. Defaults to stdout/stderr") do |log_file|
+    options[:log_file] = log_file
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    STDERR.puts opts
+    exit
+  end
+
+end
+
+parser.parse!
+
+if options[:log_file]
+  $stdout.reopen(options[:log_file], "a")
+  $stderr.reopen(options[:log_file], "a")
+end
+
+options[:api_server] ||= Puavo.resolve_api_server!
+options[:post_printers] ||= "https://#{ PUAVO_ETC.domain }/devices/printers.json"
+options[:user] ||= PUAVO_ETC.ldap_dn
+options[:password] ||= PUAVO_ETC.ldap_password
+options[:hostname] ||= Socket.gethostname
+
+options[:get_printers] = "#{ options[:api_server] }/v3/printer_queues"
+options[:printers_conf] = ARGV[0] if ARGV[0]
+
+
+boot_server_resource =  "#{ options[:api_server] }/v3/boot_servers/#{ options[:hostname] }"
+puts "Fetching boot server info from: #{ boot_server_resource }"
+res = HTTParty.get boot_server_resource,
+  :headers => {
+    "Authorization" => "Bootserver"
+  }
+assert_response res
+options[:server_dn] = res["dn"]
+
+
+
+puts "Fetching existing printers from #{ options[:get_printers] }"
+
+current_printers = HTTParty.get(options[:get_printers],
+  :query => {
+    "server_dn" => options[:server_dn]
+  },
+  :basic_auth => {
+    :username => options[:user],
+    :password => options[:password]
+  },
+  :headers => {
+    "Content-Type" => "application/json",
+    "Accept" => "application/json"
+  }
+ )
+assert_response res
+
+current_printer_descriptions = current_printers.map do |p|
+  p["description"]
+end
+
+server_printers = parse_cups_printers_conf(options[:printers_conf])
+puts "Ensuring #{ server_printers.size } printers to puavo"
+server_printers.each do |description, info|
+
+  # TODO: We might want to check if any of the attributes has been changed and
+  # update the printer. Now we only send the printer data if it is completely
+  # new.
+  if current_printer_descriptions.include?(description)
+    next
+  end
+
+  printer = {
+    "printerDescription" => description,
+    "printerLocation" => info["Location"] || "",
+    "printerMakeAndModel" => info["MakeModel"] || "",
+    "printerType" => info["Type"] || "" ,
+    "printerURI" => info["DeviceURI"] || "" ,
+    "puavoServer" => options[:server_dn]
+  }
+
+  json = printer.to_json
+
+  puts "Sending #{ json }"
+  puts "to #{ options[:post_printers] }"
+  res = HTTParty.post(options[:post_printers],
+    :body => json,
+    :basic_auth => {
+      :username => options[:user],
+      :password => options[:password]
+    },
+    :headers => {
+      "Content-Type" => "application/json",
+      "Accept" => "application/json"
+    }
+   )
+  assert_response res
+  puts "OK"
+  puts
+
+end
