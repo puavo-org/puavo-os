@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Logger Pro
+Comment=Measure. Analyze. Learn
+TryExec=loggerpro
+Exec=loggerpro %F
+Icon=/usr/local/share/icons/hicolor/48x48/apps/loggerpro.png
+MimeType=application/x-vernier-lpdata;application/x-vernier-lldata;application/x-vernier-lqdata
+Terminal=false
+StartupNotify=true
+Categories=GNOME;GTK;Education;Science;DataVisualization
+Keywords=Education;Science;MBL

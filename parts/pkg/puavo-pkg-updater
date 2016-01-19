@@ -1,0 +1,374 @@
+#!/usr/bin/ruby1.9.1
+
+require 'digest/md5'
+require 'fileutils'
+require 'getoptlong'
+require 'json'
+require 'open3'
+require 'resolv'
+require 'syslog'
+
+Encoding.default_external = 'utf-8'
+
+def print_help()
+   puts <<-EOF
+puavo-pkg-updater [OPTIONS]
+
+-h, --help                 show help
+
+    --check-for-upgrades   check if there are packages to upgrade
+                             (returns success if there is,
+                              conflicts with --upgrade-packages)
+    --update-installers    fetch and extract new puavo-pkg installers bundle
+    --upgrade-packages     upgrade all installed (puavo-pkg) packages
+  EOF
+end
+
+def syslog(channel, priority, *args)
+  Syslog.log(priority, *args)
+  channel.printf(*args)
+end
+
+def log(*args)   ; syslog(STDOUT, *args); end
+def logerr(*args); syslog(STDERR, *args); end
+
+def run(*args)
+  system(*args) or raise "Running system command #{ args } returned failure"
+end
+
+def lookup_imageservers()
+  imageservers = []
+
+  puavo_domain = IO.read('/etc/puavo/domain').chomp
+
+  begin
+    imageservers \
+      << Resolv::DNS.new.getresource("_imageserver._tcp.#{ puavo_domain }",
+                                    Resolv::DNS::Resource::IN::SRV) \
+           .target.to_s
+  rescue Resolv::ResolvError
+    log(Syslog::LOG_INFO, "could not find the image server from DNS\n")
+  end
+
+  device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
+
+  # XXX not used yet, it is unclear if this will ever be?
+  if device['imageservers'].kind_of?(Array) then
+    imageservers += device['imageservers']
+  end
+
+  topdomain = IO.read('/etc/puavo/topdomain').chomp
+  imageservers << "images.#{ topdomain }"
+
+  log(Syslog::LOG_INFO,
+      "using image servers: %s\n",
+      imageservers.join(' '))
+
+  imageservers
+end
+
+def fetch_installer_bundle(remote_bundlepath, local_bundlepath)
+  imageservers = lookup_imageservers()
+
+  imageservers.each do |server|
+    uri = "https://#{ server }/#{ remote_bundlepath }"
+
+    FileUtils.mkdir_p( File.dirname(local_bundlepath) )
+    wget_ok = system('wget', '--ca-certificate=/etc/puavo/certs/rootca.pem',
+                             "--output-document=#{ local_bundlepath }",
+                             '--timestamping',
+                             uri,
+                             { :out => '/dev/null',
+                               :err => '/dev/null', })
+    if !wget_ok then
+      logerr(Syslog::LOG_WARNING,
+             "failed to fetch %s from %s\n",
+             remote_bundlepath,
+             server)
+      next
+    end
+
+    log(Syslog::LOG_INFO, "fetched %s from %s\n", remote_bundlepath, server)
+    return
+  end
+
+  raise "Failed to fetch #{ remote_bundlepath } from imageservers"
+end
+
+def get_config()
+  JSON.parse( IO.read('/etc/puavo-pkg/puavo-pkg-updater.conf') )
+end
+
+def get_puavopkg_output(cmdargs, errormsg)
+  data, status = Open3.capture2('puavo-pkg', *cmdargs)
+  if status.exitstatus != 0 then
+    raise "#{ errormsg } (puavo-pkg error code: #{ status.exitstatus })"
+  end
+
+  data
+end
+
+def flock_packages_json(installers_dir)
+  packages_json_path = "#{ installers_dir }/installers/packages.json"
+
+  begin
+    packages_json_file = File.open(packages_json_path)
+
+    # Get exclusive lock on packages.json, because we are going to update that.
+    if packages_json_file.flock(File::LOCK_EX|File::LOCK_NB) then
+      return [ 'LOCK', packages_json_file ]
+    end
+
+    # If someone else has a lock, we will exit with no failure, because
+    # even though we could not do an update, things should be okay.
+    log(Syslog::LOG_NOTICE,
+        "Something is holding a lock on %s, " \
+          + "not updating puavopkg installers.\n",
+        packages_json_path)
+    packages_json_file.close
+    return [ 'LOCKHELD', nil ]
+  rescue Errno::ENOENT
+    # If file does not exist, we go without a lock,
+    # because we are going to create that file.
+  end
+
+  [ 'NOLOCK', nil ]
+end
+
+def unpack_installers(local_bundlepath, installers_dir)
+  latest_changetime = File.stat(local_bundlepath).mtime
+
+  current_installersdir \
+    = "#{ installers_dir }/installers.#{ latest_changetime.to_i }"
+
+  # We flock the packages.json file so that puavo-local-config-ui can depend on
+  # its software list and urls to be current with the contents of installer
+  # directories.
+  lockstatus, packages_json_file = * flock_packages_json(installers_dir)
+  return if lockstatus == 'LOCKHELD'
+
+  if !File.directory?(current_installersdir) then
+    log(Syslog::LOG_INFO, "Unpacking updated puavo-pkg installers\n")
+
+    current_installers_tmpdir = "#{ current_installersdir }.tmp"
+
+    FileUtils.mkdir_p(current_installers_tmpdir)
+    run('tar', '-C', current_installers_tmpdir,
+               '--no-same-owner',
+               '--no-same-permissions',
+               '-x',
+               '-f', local_bundlepath)
+
+    make_packages_info_file(current_installers_tmpdir)
+
+    FileUtils.mv(current_installers_tmpdir, current_installersdir)
+  end
+
+  installerslinkpath = "#{ installers_dir }/installers"
+  current_linktarget = File.readlink(installerslinkpath) rescue nil
+  new_linktarget = File.basename(current_installersdir)
+  if current_linktarget != new_linktarget then
+    log(Syslog::LOG_INFO, "Updating link to new puavo-pkg installers\n")
+    File.symlink(new_linktarget, "#{ installerslinkpath }.tmp")
+    File.rename("#{ installerslinkpath }.tmp", installerslinkpath)
+  end
+
+  if packages_json_file then
+    # flock(File::LOCK_UN) as a side effect when needed
+    packages_json_file.close
+  end
+
+  # clean up old installer bundles
+  Dir.glob("#{ installers_dir }/installers.*") do |dir|
+    next if dir == current_installersdir
+    log(Syslog::LOG_INFO, "Removing old installers at %s\n", dir)
+    FileUtils.remove_entry_secure(dir, true)
+  end
+end
+
+def make_packages_info_file(current_installers_tmpdir)
+  packages = {}
+
+  Dir.glob("#{ current_installers_tmpdir }/*.tar.gz") do |tarpath|
+    begin
+      md5sum = Digest::MD5.hexdigest( IO.read(tarpath) )
+    rescue StandardError => e
+      raise "Problem in calculating the md5sum of #{ tarpath }: #{ e.message }"
+    end
+
+    description \
+      = get_puavopkg_output([ 'show', '-F', 'Description', tarpath ],
+                            %Q{Could not get "Description" from #{ tarpath }})
+
+    legend \
+      = get_puavopkg_output([ 'show', '-F', 'Legend', tarpath ],
+                            %Q{Could not get "Legend" from #{ tarpath }})
+
+    license_url \
+      = get_puavopkg_output([ 'license', tarpath ],
+                            "Could not get license from #{ tarpath }")
+
+    pkgname = File.basename(tarpath, '.tar.gz')
+    packages[pkgname] = {
+      'description' => description,
+      'legend'      => legend.chomp,
+      'license_url' => license_url.chomp,
+      'md5sum'      => md5sum,
+    }
+  end
+
+  packages_info_path = "#{ current_installers_tmpdir }/packages.json"
+
+  tmpfile = "#{ packages_info_path }.tmp"
+  File.open(tmpfile, 'w') { |f| f.print(packages.to_json) }
+  File.rename(tmpfile, packages_info_path)
+end
+
+def update_installers(config)
+  remote_bundlepath = config['bundlepath']
+  installers_dir    = config['installers_dir']
+
+  local_bundlepath = "#{ installers_dir }/puavo-pkg-installers-bundle.tar"
+
+  fetch_installer_bundle(remote_bundlepath, local_bundlepath)
+
+  unpack_installers(local_bundlepath, installers_dir)
+end
+
+def get_packages_to_upgrade(config)
+  installed_packages, status = Open3.capture2('puavo-pkg', 'list')
+  if status.exitstatus != 0 then
+    logerr(Syslog::LOG_ERR,
+           "puavo-pkg list returned error code: %d\n",
+           status.exitstatus)
+    raise 'Failed to get a list of packages to upgrade, ' \
+            + "'puavo-pkg list' returned error code #{ status.exitstatus }"
+  end
+
+  packages_json_path = "#{ config['installers_dir'] }/installers/packages.json"
+
+  available_packages = JSON.parse( IO.read(packages_json_path) )
+
+  packages_to_upgrade = {}
+
+  installed_packages.split("\n").each do |line|
+    pkgname, md5sum = * line.split(/\s+/)
+    unless available_packages[pkgname] \
+             && available_packages[pkgname]['md5sum'].kind_of?(String) then
+      log(Syslog::LOG_NOTICE,
+          "Package %s is installed but has no installable version available\n",
+          pkgname)
+      next
+    end
+
+    available_package_md5sum = available_packages[pkgname]['md5sum']
+
+    if md5sum != available_package_md5sum then
+      packages_to_upgrade[pkgname] = available_package_md5sum
+    end
+  end
+
+  packages_to_upgrade
+end
+
+def upgrade_packages(config)
+  packages_to_upgrade = get_packages_to_upgrade(config)
+
+  if packages_to_upgrade.empty? then
+    log(Syslog::LOG_INFO,
+        "Available package versions match currently installed packages, " \
+          + "not upgrading any packages.\n")
+    return
+  end
+
+  errors_occurred = false
+
+  packages_to_upgrade.each do |pkgname, version|
+    tarball = "#{ config['installers_dir'] }/installers/#{ pkgname }.tar.gz"
+
+    begin
+      run('puavo-pkg', 'install', tarball)
+      log(Syslog::LOG_NOTICE,
+          "Upgraded package %s to version %s (with puavo-pkg)\n",
+          pkgname,
+          version)
+    rescue StandardError => e
+      logerr(Syslog::LOG_ERR,
+             "Failed to upgrade %s to version %s from %s: %s\n",
+             pkgname,
+             version,
+             tarball,
+             e.message)
+      errors_occurred = true
+    end
+  end
+
+  raise 'An error has occured in package upgrade process' if errors_occurred
+end
+
+def upgrades_available(config)
+  packages_to_upgrade = get_packages_to_upgrade(config)
+  !packages_to_upgrade.empty?
+end
+
+
+check_for_upgrades_flag = false
+update_installers_flag  = false
+upgrade_packages_flag   = false
+
+begin
+  opts = GetoptLong.new(
+           [ '--help', '-h',         GetoptLong::NO_ARGUMENT, ],
+           [ '--check-for-upgrades', GetoptLong::NO_ARGUMENT, ],
+           [ '--update-installers',  GetoptLong::NO_ARGUMENT, ],
+           [ '--upgrade-packages',   GetoptLong::NO_ARGUMENT, ])
+
+  opts.each do |opt, arg|
+    case opt
+      when '--help'
+        print_help()
+        exit(0)
+      when '--check-for-upgrades'
+        check_for_upgrades_flag = true
+      when '--update-installers'
+        update_installers_flag = true
+      when '--upgrade-packages'
+        upgrade_packages_flag = true
+    end
+  end
+rescue GetoptLong::InvalidOption => e
+  print_help()
+  exit(1)
+end
+
+action_flag_set = check_for_upgrades_flag     \
+                    || update_installers_flag \
+                    || upgrade_packages_flag
+
+if !action_flag_set || (check_for_upgrades_flag && upgrade_packages_flag) then
+  print_help()
+  exit(1)
+end
+
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
+
+exitcode = 0
+
+begin
+  config = get_config()
+
+  if update_installers_flag then update_installers(config) end
+
+  if check_for_upgrades_flag then
+    exit( upgrades_available(config) ? 0 : 1 )
+  end
+
+  if upgrade_packages_flag then upgrade_packages(config) end
+rescue StandardError => e
+  logerr(Syslog::LOG_ERR, "%s\n", e.message)
+  exitcode = 1
+ensure
+  Syslog.close()
+end
+
+exit(exitcode)

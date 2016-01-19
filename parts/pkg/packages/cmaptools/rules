@@ -1,0 +1,321 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+
+        mkdir -p /usr/bin
+        ln -sf -T "${upstream_dir}/bin/CmapTools" /usr/bin/CmapTools
+
+        mkdir -p /usr/share/icons/hicolor/16x16/apps
+        mkdir -p /usr/share/icons/hicolor/22x22/apps
+        mkdir -p /usr/share/icons/hicolor/24x24/apps
+        mkdir -p /usr/share/icons/hicolor/32x32/apps
+        mkdir -p /usr/share/icons/hicolor/48x48/apps
+        mkdir -p /usr/share/icons/hicolor/64x64/apps
+        mkdir -p /usr/share/icons/hicolor/128x128/apps
+
+        ln -s -f -T "$(readlink -e icons/cmaptools-16.png)"  \
+            /usr/share/icons/hicolor/16x16/apps/cmaptools.png
+        ln -s -f -T "$(readlink -e icons/cmaptools-22.png)"  \
+            /usr/share/icons/hicolor/22x22/apps/cmaptools.png
+        ln -s -f -T "$(readlink -e icons/cmaptools-24.png)"  \
+            /usr/share/icons/hicolor/24x24/apps/cmaptools.png
+        ln -s -f -T "$(readlink -e icons/cmaptools-32.png)"  \
+            /usr/share/icons/hicolor/32x32/apps/cmaptools.png
+        ln -s -f -T "$(readlink -e icons/cmaptools-48.png)"  \
+            /usr/share/icons/hicolor/48x48/apps/cmaptools.png
+        ln -s -f -T "$(readlink -e icons/cmaptools-64.png)"  \
+            /usr/share/icons/hicolor/64x64/apps/cmaptools.png
+        ln -s -f -T "$(readlink -e icons/cmaptools-128.png)" \
+            /usr/share/icons/hicolor/128x128/apps/cmaptools.png
+
+        mkdir -p /usr/share/applications
+        ln -s -f -T "$(readlink -e cmaptools.desktop)" \
+            /usr/share/applications/cmaptools.desktop
+        ;;
+
+    unconfigure)
+        rm -f /usr/bin/CmapTools                                \
+            /usr/share/applications/cmaptools.desktop           \
+            /usr/share/icons/hicolor/16x16/apps/cmaptools.png   \
+            /usr/share/icons/hicolor/22x22/apps/cmaptools.png   \
+            /usr/share/icons/hicolor/24x24/apps/cmaptools.png   \
+            /usr/share/icons/hicolor/32x32/apps/cmaptools.png   \
+            /usr/share/icons/hicolor/48x48/apps/cmaptools.png   \
+            /usr/share/icons/hicolor/64x64/apps/cmaptools.png   \
+            /usr/share/icons/hicolor/128x128/apps/cmaptools.png
+        ;;
+
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        cat <<EOF >install.conf
+CHOSEN_FEATURE_LIST=Applica
+CHOSEN_INSTALL_FEATURE_LIST=Applica
+CHOSEN_INSTALL_SET=Typical
+USER_INSTALL_DIR=${upstream_dir}
+USER_SHORTCUTS=Do Not Install
+
+#Install
+#-------
+-fileOverwrite_${upstream_dir}/UninstallerData/Change CmapTools Installation.lax=Yes
+-fileOverwrite_${upstream_dir}/classes/core.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/nlk.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/slp.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/crimson.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/updater.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/wordnetClient.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/wsServer-client.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/AppleStubs.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/activation.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/winlaf-0.5.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/JimiProClasses.zip=Yes
+-fileOverwrite_${upstream_dir}/classes/jmyspell-1.0.0-beta1.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/mail.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/xercesImpl.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/xml-apis.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/tm-extractors-0.4.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/lucene-core-2.4-dev.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/PDFBox-0.7.3-dev.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/FontBox-0.1.0-dev.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/log4j-1.2.12.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/symantec.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/jniregistry.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/socks.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/concurrent.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/poi-scratchpad-2.5.1-final-20040804.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/poi-2.5.1-final-20040804.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/poi-contrib-2.5.1-final-20040804.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/commons-digester.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/commons-collections.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/commons-beanutils.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/commons-beanutils-bean-collections.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/commons-beanutils-core.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/commons-logging.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/commons-io-2.2.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/commons-codec-1.6.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/ldapbp.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/mscrypto.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/wstx-asl-2.9.3.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/stax-api-1.0.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/axiom-impl.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/axiom-api.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/openide-lookup-1.9-patched-1.0.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/jdom-1.0.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/jas-plotter-2.2.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/freehep-xml-2.1.1.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/freehep-util-2.0.2.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/freehep-swing-2.0.3.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/freehep-io-2.0.2.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/freehep-graphicsio-tests-2.1.1.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/freehep-graphicsio-swf-2.1.1.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/freehep-graphicsio-svg-2.1.1.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/freehep-graphicsio-ps-2.1.1.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/freehep-graphicsio-pdf-2.1.1.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/freehep-graphicsio-java-2.1.1.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/freehep-graphicsio-emf-2.1.1.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/freehep-graphicsio-2.1.1.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/freehep-graphics2d-2.1.1.jar=Yes
+-fileOverwrite_${upstream_dir}/classes/freehep-export-2.1.1.jar=Yes
+-fileOverwrite_${upstream_dir}/lib/libtiff.so.3=Yes
+-fileOverwrite_${upstream_dir}/lib/libMagickWand.so.1=Yes
+-fileOverwrite_${upstream_dir}/lib/libMagickCore.so.1=Yes
+-fileOverwrite_${upstream_dir}/lib/libjpeg.so.62=Yes
+-fileOverwrite_${upstream_dir}/lib/libgomp.so.1=Yes
+-fileOverwrite_${upstream_dir}/lib/libfreetype.so.6=Yes
+-fileOverwrite_${upstream_dir}/lib/pkgconfig/libavcodec.pc=Yes
+-fileOverwrite_${upstream_dir}/lib/pkgconfig/libavdevice.pc=Yes
+-fileOverwrite_${upstream_dir}/lib/pkgconfig/libavfilter.pc=Yes
+-fileOverwrite_${upstream_dir}/lib/pkgconfig/libavformat.pc=Yes
+-fileOverwrite_${upstream_dir}/lib/pkgconfig/libavutil.pc=Yes
+-fileOverwrite_${upstream_dir}/lib/pkgconfig/libswresample.pc=Yes
+-fileOverwrite_${upstream_dir}/lib/pkgconfig/libswscale.pc=Yes
+-fileOverwrite_${upstream_dir}/lib/libswscale.a=Yes
+-fileOverwrite_${upstream_dir}/lib/libswresample.a=Yes
+-fileOverwrite_${upstream_dir}/lib/libavutil.a=Yes
+-fileOverwrite_${upstream_dir}/lib/libavformat.a=Yes
+-fileOverwrite_${upstream_dir}/lib/libavfilter.a=Yes
+-fileOverwrite_${upstream_dir}/lib/libavdevice.a=Yes
+-fileOverwrite_${upstream_dir}/lib/libavcodec.a=Yes
+-fileOverwrite_${upstream_dir}/share/ImageMagick-6.4.2/ChangeLog=Yes
+-fileOverwrite_${upstream_dir}/share/ImageMagick-6.4.2/LICENSE=Yes
+-fileOverwrite_${upstream_dir}/share/ImageMagick-6.4.2/NEWS.txt=Yes
+-fileOverwrite_${upstream_dir}/bin/CmapTools.lax=Yes
+-fileOverwrite_${upstream_dir}/bin/modules.xml=Yes
+-fileOverwrite_${upstream_dir}/bin/places.txt=Yes
+-fileOverwrite_${upstream_dir}/bin/Updater.lax=Yes
+-fileOverwrite_${upstream_dir}/bin/cmaptools.cfg=Yes
+-fileOverwrite_${upstream_dir}/bin/DefaultStyleSheet.cxl=Yes
+-fileOverwrite_${upstream_dir}/bin/readme.txt=Yes
+-fileOverwrite_${upstream_dir}/bin/slp.conf=Yes
+-fileOverwrite_${upstream_dir}/bin/cmapclientservices.jar=Yes
+-fileOverwrite_${upstream_dir}/bin/imgman=Yes
+-fileOverwrite_${upstream_dir}/bin/ffmpeg=Yes
+-fileOverwrite_${upstream_dir}/licenses/CmapTools-license.txt=Yes
+-fileOverwrite_${upstream_dir}/licenses/jakarta-log4j-license.txt=Yes
+-fileOverwrite_${upstream_dir}/licenses/JAF-v1.0.1-license.txt=Yes
+-fileOverwrite_${upstream_dir}/licenses/tm-extractors-license.txt=Yes
+-fileOverwrite_${upstream_dir}/licenses/PDFBox-license.txt=Yes
+-fileOverwrite_${upstream_dir}/licenses/lucene-license.txt=Yes
+-fileOverwrite_${upstream_dir}/licenses/JavaMailv1.2-license.txt=Yes
+-fileOverwrite_${upstream_dir}/licenses/jakarta-poi-license.txt=Yes
+-fileOverwrite_${upstream_dir}/licenses/winlaf-license.txt=Yes
+-fileOverwrite_${upstream_dir}/help/images/a.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/Alt.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/Alt_Option_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/Arrowheads_always.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/Arrowheads_Bidirectional.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/Arrowheads_none.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/Arrowheads_OneWay.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/Arrowheads_Reverse.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/Arrowheads_toConcept.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/Arrowheads_up.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/a_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/BlueLinePixel.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/bullet.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/bullet.png=Yes
+-fileOverwrite_${upstream_dir}/help/images/c.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/Command_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/Control_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/Ctrl.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/c_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/Delete.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/Delete_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/Enter.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/f.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/f2.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/f2_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/f4.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/f4_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/f5.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/f5_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/f_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/g.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/g_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/hrule.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/h_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/l.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/LinuxLogo.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/L_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/m.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/MacOSXLogo.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/Menu_GettingStarted.png=Yes
+-fileOverwrite_${upstream_dir}/help/images/m_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/n.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/n_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/p.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/PageBackground.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/plus.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/p_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/q.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/q_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/r.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/Return_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/r_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/s.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/]}_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/]}.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/[{_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/[{.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/Shift.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/Shift_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/SolarisLogo.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/spacer.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/splash.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/stubkey.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/s_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/t.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/TutorialHeader.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/t_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/v.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/v_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/w.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/WindowsLogo.gif=Yes
+-fileOverwrite_${upstream_dir}/help/images/w_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/x.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/x_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/y.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/y_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/z.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/images/z_mac.jpg=Yes
+-fileOverwrite_${upstream_dir}/help/AddAnnotation.htm=Yes
+-fileOverwrite_${upstream_dir}/help/AddArrows.htm=Yes
+-fileOverwrite_${upstream_dir}/help/AddConcept.htm=Yes
+-fileOverwrite_${upstream_dir}/help/AddPlace.htm=Yes
+-fileOverwrite_${upstream_dir}/help/BetweenCmaps.htm=Yes
+-fileOverwrite_${upstream_dir}/help/blueline.htm=Yes
+-fileOverwrite_${upstream_dir}/help/ChangeBackground.htm=Yes
+-fileOverwrite_${upstream_dir}/help/ChangeColors.htm=Yes
+-fileOverwrite_${upstream_dir}/help/ChangeFonts.htm=Yes
+-fileOverwrite_${upstream_dir}/help/ChangeLanguage.htm=Yes
+-fileOverwrite_${upstream_dir}/help/CmapRecorder.htm=Yes
+-fileOverwrite_${upstream_dir}/help/Collaboration.htm=Yes
+-fileOverwrite_${upstream_dir}/help/Compare.htm=Yes
+-fileOverwrite_${upstream_dir}/help/CreateCmap.htm=Yes
+-fileOverwrite_${upstream_dir}/help/CreateFolder.htm=Yes
+-fileOverwrite_${upstream_dir}/help/CreateLink_01.htm=Yes
+-fileOverwrite_${upstream_dir}/help/CreateLink_02.htm=Yes
+-fileOverwrite_${upstream_dir}/help/CustomStyles.htm=Yes
+-fileOverwrite_${upstream_dir}/help/Dictionary.htm=Yes
+-fileOverwrite_${upstream_dir}/help/Discussion.htm=Yes
+-fileOverwrite_${upstream_dir}/help/DragResource.htm=Yes
+-fileOverwrite_${upstream_dir}/help/ExportImage.htm=Yes
+-fileOverwrite_${upstream_dir}/help/ExportWebPage.htm=Yes
+-fileOverwrite_${upstream_dir}/help/Find.htm=Yes
+-fileOverwrite_${upstream_dir}/help/FixLinks.htm=Yes
+-fileOverwrite_${upstream_dir}/help/header.htm=Yes
+-fileOverwrite_${upstream_dir}/help/ImportResource.htm=Yes
+-fileOverwrite_${upstream_dir}/help/index.html=Yes
+-fileOverwrite_${upstream_dir}/help/indexinfo.txt=Yes
+-fileOverwrite_${upstream_dir}/help/Layout.htm=Yes
+-fileOverwrite_${upstream_dir}/help/LinkResources.htm=Yes
+-fileOverwrite_${upstream_dir}/help/ListView.htm=Yes
+-fileOverwrite_${upstream_dir}/help/ManageResLinks.htm=Yes
+-fileOverwrite_${upstream_dir}/help/menu.htm=Yes
+-fileOverwrite_${upstream_dir}/help/ModifyLinks.htm=Yes
+-fileOverwrite_${upstream_dir}/help/NestedMerged.htm=Yes
+-fileOverwrite_${upstream_dir}/help/OpenCmap.htm=Yes
+-fileOverwrite_${upstream_dir}/help/Permissions.htm=Yes
+-fileOverwrite_${upstream_dir}/help/Places.htm=Yes
+-fileOverwrite_${upstream_dir}/help/Presentation.htm=Yes
+-fileOverwrite_${upstream_dir}/help/Printing.htm=Yes
+-fileOverwrite_${upstream_dir}/help/SaveCmap.htm=Yes
+-fileOverwrite_${upstream_dir}/help/SearchPlaces.htm=Yes
+-fileOverwrite_${upstream_dir}/help/SearchWeb.htm=Yes
+-fileOverwrite_${upstream_dir}/help/SendEmail.htm=Yes
+-fileOverwrite_${upstream_dir}/help/Shortcuts.htm=Yes
+-fileOverwrite_${upstream_dir}/help/Soups.htm=Yes
+-fileOverwrite_${upstream_dir}/help/Spelling.htm=Yes
+-fileOverwrite_${upstream_dir}/help/splash.htm=Yes
+-fileOverwrite_${upstream_dir}/help/Suggestions.htm=Yes
+-fileOverwrite_${upstream_dir}/help/UsingCmapTools.htm=Yes
+-fileOverwrite_${upstream_dir}/help/ViewCmapWebPage.htm=Yes
+-fileOverwrite_${upstream_dir}/help/CmapHelp_es/index.html=Yes
+-fileOverwrite_${upstream_dir}/help/CmapHelp_fi/index.html=Yes
+EOF
+
+        chmod +x "${upstream_pack}"
+
+        # Execute the installer as nobody, the installer should not be
+        # trusted. This is not going to make it 100% safe (not even 50%,
+        # nobody is shared, so is namespace etc. ), but its far better
+        # than running it as root.
+        chown nobody "${upstream_dir}"
+        sudo -u nobody -g nogroup "${upstream_pack}" -f install.conf -i silent || true
+
+        # The installer dumps lot of files with mode 777 XD
+        chmod -R go-w "${upstream_dir}"
+
+        # Reclaim ownership of all files.
+        chown -R root:root "${upstream_dir}"
+        ;;
+
+    *)
+        ;;
+esac

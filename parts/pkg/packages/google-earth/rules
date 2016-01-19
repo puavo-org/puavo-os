@@ -1,0 +1,69 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+
+        mkdir -p /opt/google/earth
+        ln -sf -T "${upstream_dir}/opt/google/earth/free" /opt/google/earth/free
+
+        mkdir -p /usr/bin
+        ln -sf -T /opt/google/earth/free/googleearth /usr/bin/google-earth
+
+        mkdir -p /usr/share/icons/hicolor/16x16/apps
+        mkdir -p /usr/share/icons/hicolor/22x22/apps
+        mkdir -p /usr/share/icons/hicolor/24x24/apps
+        mkdir -p /usr/share/icons/hicolor/32x32/apps
+        mkdir -p /usr/share/icons/hicolor/48x48/apps
+        mkdir -p /usr/share/icons/hicolor/64x64/apps
+        mkdir -p /usr/share/icons/hicolor/128x128/apps
+        mkdir -p /usr/share/icons/hicolor/256x256/apps
+
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/product_logo_16.png" \
+            /usr/share/icons/hicolor/16x16/apps/google-earth.png
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/product_logo_22.png" \
+            /usr/share/icons/hicolor/22x22/apps/google-earth.png
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/product_logo_24.png" \
+            /usr/share/icons/hicolor/24x24/apps/google-earth.png
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/product_logo_32.png" \
+            /usr/share/icons/hicolor/32x32/apps/google-earth.png
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/product_logo_48.png" \
+            /usr/share/icons/hicolor/48x48/apps/google-earth.png
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/product_logo_64.png" \
+            /usr/share/icons/hicolor/64x64/apps/google-earth.png
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/product_logo_128.png" \
+            /usr/share/icons/hicolor/128x128/apps/google-earth.png
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/product_logo_256.png" \
+            /usr/share/icons/hicolor/256x256/apps/google-earth.png
+
+        mkdir -p /usr/share/applications
+        ln -s -f -T "${upstream_dir}/opt/google/earth/free/google-earth.desktop" \
+            /usr/share/applications/google-earth.desktop
+        ;;
+    unconfigure)
+        rm -f /opt/google/earth/free                               \
+            /usr/bin/google-earth                                  \
+            /usr/share/applications/google-earth.desktop           \
+            /usr/share/icons/hicolor/128x128/apps/google-earth.png \
+            /usr/share/icons/hicolor/16x16/apps/google-earth.png   \
+            /usr/share/icons/hicolor/22x22/apps/google-earth.png   \
+            /usr/share/icons/hicolor/24x24/apps/google-earth.png   \
+            /usr/share/icons/hicolor/256x256/apps/google-earth.png \
+            /usr/share/icons/hicolor/32x32/apps/google-earth.png   \
+            /usr/share/icons/hicolor/48x48/apps/google-earth.png   \
+            /usr/share/icons/hicolor/64x64/apps/google-earth.png
+        ;;
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        dpkg -x "${upstream_pack}" "${upstream_dir}"
+        chmod 0755 "${upstream_dir}"
+        ;;
+    *)
+        ;;
+esac

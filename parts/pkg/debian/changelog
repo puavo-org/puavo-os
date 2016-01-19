@@ -1,0 +1,384 @@
+puavo-pkg (0.1.37) trusty; urgency=medium
+
+  * New release
+  * Use configurations properly throughout puavo-test-puavo-pkg-
+    installers.
+  * Git(f365d9d28a3238c4af206e52b092bcb1adb369a8)
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Thu, 02 Jul 2015 09:52:34 +0300
+
+puavo-pkg (0.1.36) trusty; urgency=medium
+
+  * New release
+  * In puavo-test-puavo-pkg-installers, use puavo-pkg defaults for
+    cachedir and rootdir.
+  * Git(341680fdb3b4f777e5f344f5de3f4a52018bdd60)
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Thu, 02 Jul 2015 09:05:17 +0300
+
+puavo-pkg (0.1.35) trusty; urgency=medium
+
+  * New release
+  * Update flashplugin to 11.2.202.468.
+  * Git(29792c0544a402035899a7f6158875b698be4e5c)
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Thu, 02 Jul 2015 08:45:25 +0300
+
+puavo-pkg (0.1.34) trusty; urgency=medium
+
+  * New release
+  * Set puavo-pkg installation timeout to one hour (one minute was
+    intended only for testing purposes).
+  * Add puavo-test-puavo-pkg-installers to the puavo-pkg package.
+  * Git(c2cf5df568579138095618fefc05ed6a45056ce0)
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Thu, 02 Jul 2015 08:39:16 +0300
+
+puavo-pkg (0.1.33) trusty; urgency=medium
+
+  * New release
+  * Add puavo-test-puavo-pkg-installers, that tests if puavo-pkg
+    installers work correctly.  puavo-pkg is trusted to return error, in
+    case there was an issue (the packaged software is not tested).
+  * Fix indent
+  * Git(52cd118903af8cda5390c0a3491c93bc1a0a71e0)
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Thu, 02 Jul 2015 08:36:49 +0300
+
+puavo-pkg (0.1.32) trusty; urgency=medium
+
+  * New release
+  * I think we can be less verbose with tar.
+  * Add some instructions on how to maintain puavo-pkgs (the installer
+    packages).  Add puavo-update-remote-pkginstaller-bundle (I do not
+    know where this should belong, but I think it does not matter much
+    if it is here and gets installed everywhere).
+  * Git(e711138497ece2ce2a2f94e5b542f78b80aa08f6)
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Wed, 01 Jul 2015 13:13:43 +0300
+
+puavo-pkg (0.1.31) trusty; urgency=medium
+
+  * New release
+  * If there is a checksum mismatch, report the actual and expected
+    checksums.
+  * Add forgotten legend for google earth.
+  * Add legend and description for Google Earth.
+  * Git(9fb3b992737af0a0abc637c4df89db53028d5041)
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Wed, 01 Jul 2015 12:14:37 +0300
+
+puavo-pkg (0.1.30) trusty; urgency=medium
+
+  * New release
+  * puavo-pkg-updater: Add some error handling to
+    upgrade_packages(config)
+  * Git(4acab414cb8762069075a3ce6d1aa27b16642c27)
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Fri, 26 Jun 2015 13:45:38 +0300
+
+puavo-pkg (0.1.29) trusty; urgency=medium
+
+  * New release
+  * Fix a locale-related issue in msttcorefonts-upstream-pack
+    generation.
+  * Fix changelog
+  * msttcorefonts: normalize also the timezone of mtimes of font files
+  * Normalize also the timezone of mtimes of installer files
+  * Git(d1d00ecdb3e16674b13e3beb68142bc63e32cea6)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Fri, 26 Jun 2015 08:29:31 +0300
+
+puavo-pkg (0.1.28) trusty; urgency=medium
+
+  * New release
+  * Use default external encoding 'utf-8' in puavo-pkg-updater, so that
+    json-parser parses packages.json correctly.
+  * Git(ad428cc2a3576926baa33941bf87c279fcc6f25e)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 25 Jun 2015 15:12:28 +0300
+
+puavo-pkg (0.1.27) trusty; urgency=medium
+
+  * New release
+  * Fix msttcorefonts upstream md5sum.  There might be some stranger
+    issue here, but lets see if this is enough.
+  * Fix couple of typos
+  * Add "legend" and "description" to packages.json (for puavo-local-
+    config-ui).
+  * msttcorefonts: prefix the font dir name with puavo-pkg-
+  * msttcorefonts: trivial refactoring
+  * msttcorefonts: add upstream pack md5sum
+  * msttcorefonts: make upstream pack byte-by-byte reproducible
+  * ci.sh: make the uploaded changes file more explicit
+  * Add msttcorefonts
+  * Git(f94b11592070747e1ababececc7fb6072267af08)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 25 Jun 2015 08:30:59 +0300
+
+puavo-pkg (0.1.26) trusty; urgency=medium
+
+  * New release
+  * Make show command accept installer files
+  * dropbox: fix unnecessary root permission requirement
+  * Git(265e21aa10d838e358b882161fca9babc313f349)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 23 Jun 2015 16:14:47 +0300
+
+puavo-pkg (0.1.25) trusty; urgency=medium
+
+  * New release
+  * Document exit status codes
+  * Exit with status code 2 in case of a network failure
+  * Exit with status code 0 on success, and with 1 on any error
+  * Add Geogebra
+  * adobe-flashplugin: add legend and description
+  * adobe-reader: add legend and description
+  * google-chrome: add legend and description
+  * cmaptools: add legend and description
+  * dropbox: add legend and description
+  * oracle-java: add legend and description
+  * skype: add legend and description
+  * vstloggerpro: add legend and description
+  * Git(1c2f06f6c88866d9690e34f751a05fcf7fc64066)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 22 Jun 2015 11:12:19 +0300
+
+puavo-pkg (0.1.24) trusty; urgency=medium
+
+  * New release
+  * Add --field option to show command
+  * Git(ca9ef5fe47d07116d511cb73ee202696e54a4b19)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 18 Jun 2015 13:48:00 +0300
+
+puavo-pkg (0.1.23) trusty; urgency=medium
+
+  * New release
+  * Slightly finetune puavo-pkg-updater puavo-pkg upgrade logs.
+  * Git(1da2b9e083afc5f72dea865a1a5754e17ad242d6)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 18 Jun 2015 13:29:59 +0300
+
+puavo-pkg (0.1.22) trusty; urgency=medium
+
+  * New release
+  * Add new field to package details: Legend
+  * Add new field to package details: Description
+  * Add command 'show' for displaying package details
+  * Add support for different package formats
+  * Git(7500b683bc6e1428eed7f52de31c17b478c31dae)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 18 Jun 2015 12:52:24 +0300
+
+puavo-pkg (0.1.21) trusty; urgency=medium
+
+  * New release
+  * Remove ltsp image dependency from puavo-pkg.  Now package
+    "uninstallation" should not happen when system image gets updated,
+    but we are not sure what dragons may lurk in this dungeon (let's
+    see).
+  * Git(ea3a1e33a2d9814d42206f697d1faf879300e9ea)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 18 Jun 2015 12:35:54 +0300
+
+puavo-pkg (0.1.20) trusty; urgency=medium
+
+  * New release
+  * Do not embed newline into a log message in puavo-pkg-updater.
+  * Git(51f498fa04f38d732d761384fdede3ed351bfd96)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 18 Jun 2015 10:50:01 +0300
+
+puavo-pkg (0.1.19) trusty; urgency=medium
+
+  * New release
+  * Log each puavo-pkg that is upgraded with puavo-pkg-updater.
+  * Git(7170d127a678fde8360e135217823837293a6d0f)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 18 Jun 2015 10:34:57 +0300
+
+puavo-pkg (0.1.18) trusty; urgency=medium
+
+  * New release
+  * Add a missing return in puavo-pkg-updater.
+  * Git(067e03945bace054c397f523cff0463190eed620)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 18 Jun 2015 08:45:48 +0300
+
+puavo-pkg (0.1.17) trusty; urgency=medium
+
+  * New release
+  * Use logerr() to log errors, so that we will write those also to
+    stderr (instead of stdout).
+  * Git(016b59ea734d32e5d738d6d1d111c79acba582da)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 18 Jun 2015 07:39:28 +0300
+
+puavo-pkg (0.1.16) trusty; urgency=medium
+
+  * New release
+  * Update Oracle Java to 8u45.
+  * Git(a38bc8632cd2d84973477ccf34539bac2c158406)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 11 Jun 2015 14:54:39 +0300
+
+puavo-pkg (0.1.15) trusty; urgency=medium
+
+  * New release
+  * Align package list columns properly
+  * Avoid unnecessary subshelling
+  * Refactor common code
+  * Git(b876703abcb2009f8d19f5104e1fe6517c784e4b)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 11 Jun 2015 14:36:48 +0300
+
+puavo-pkg (0.1.14) trusty; urgency=medium
+
+  * New release
+  * Add a new --check-for-upgrades switch to puavo-pkg-updater that can
+    be used to check if there are packages to upgrade (new versions of
+    installed packages exist).
+  * Git(d203da6daa1330b131da2f3ffb790fb25faa0eab)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 11 Jun 2015 13:41:33 +0300
+
+puavo-pkg (0.1.13) trusty; urgency=medium
+
+  * New release
+  * Add option to --quiet output
+  * Change the tar timestamp to year 2000, because 1970 was "improbably
+    old".
+  * Git(0bad916f46d88910280a9b2c501cf6d445d832d4)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 11 Jun 2015 13:01:56 +0300
+
+puavo-pkg (0.1.12) trusty; urgency=medium
+
+  * New release
+  * Create installer tar-archives with normalized/unset timestampes, so
+    that they are deterministically created.  Because we use tar-archive
+    contents as installer versions (or more exactly hashes calculated
+    from contents), we do not want the tar-archive contents to change
+    unless there are some actual changes in an installer.
+  * Git(7c2443dedc0a76e9da55bc44bcc542bed3a84cb0)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 11 Jun 2015 11:35:23 +0300
+
+puavo-pkg (0.1.11) trusty; urgency=medium
+
+  * New release
+  * Implement puavo-pkg-updater --upgrade-packages.
+  * Add md5sums of all puavo-packages to packages.json file (those
+    function as version strings of a kind).
+  * Install package information to packages.json (instead of
+    licenses.json), licenses urls are probably only one thing we want to
+    store there.
+  * Git(28c59903df9d75a0883d0f77e642221e406e03e9)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 11 Jun 2015 11:04:23 +0300
+
+puavo-pkg (0.1.10) trusty; urgency=medium
+
+  * New release
+  * List packages together with their versions
+  * Git(f874825f969ac884019718f29499140ff42138a8)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 11 Jun 2015 09:47:01 +0300
+
+puavo-pkg (0.1.9) trusty; urgency=medium
+
+  * New release
+  * In puavo-pkg-updater, make way for --upgrade-packages functionality
+    (the previously used --update-installers functionality is behind
+    that switch).
+  * Git(a7b80fdf0a4ccc376a29aaf613956f310e5532d9)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Thu, 11 Jun 2015 08:07:10 +0300
+
+puavo-pkg (0.1.8) trusty; urgency=medium
+
+  * New release
+  * Fix git ref in changelog
+  * Declare local variables
+  * Git(a3b9a461ff2276ffe7275cef65df8764cf29c967)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 10 Jun 2015 16:49:23 +0300
+
+puavo-pkg (0.1.7) trusty; urgency=medium
+
+  * New release
+  * Update adobe-flashplugin puavo-pkg-installer.
+  * Git(f9cd42ea872377336c0a10e91ce94a93f07bb11a)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Wed, 10 Jun 2015 14:52:18 +0300
+
+puavo-pkg (0.1.6) trusty; urgency=medium
+
+  * New release
+  * flock licenses.json with exclusive lock file before updating
+    installers.  This is so that puavo-local-config-ui would always have
+    accurate information about packages, and not have it changed
+    underneath it (like changing license urls, removed packages etc.).
+  * Git(b4e8ba56f76bb0df7c7dbdf6eaf82131929af78d)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Wed, 10 Jun 2015 12:44:11 +0300
+
+puavo-pkg (0.1.5) trusty; urgency=medium
+
+  * New release
+  * Be less verbose with wget progress-information.
+  * Git(e221463c5fb4cd5c3e009cef7fc51d1635373844)
+
+ -- Tuomas Räsänen <adm-juhaerk@juhaerk-hp-probook-430g2-01.lukiolaiskannettava.opinsys.fi>  Wed, 10 Jun 2015 09:57:25 +0300
+
+puavo-pkg (0.1.4) trusty; urgency=medium
+
+  * New release
+  * Create the directory where the installerbundle tarball will be
+    fetched to.
+  * When extracting installerbundle, do not case about archive
+    ownership/permissions.
+  * Git(9c8351b8a5ef31d1337a9dd679c5139c63b8017b)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 09 Jun 2015 14:54:54 +0300
+
+puavo-pkg (0.1.3) trusty; urgency=medium
+
+  * New release
+  * License urls should be updated before installers are put into place.
+  * Git(15b9c4d32a259eb7f542aa15c3ec8b67b42436f8)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 08 Jun 2015 15:55:23 +0300
+
+puavo-pkg (0.1.2) trusty; urgency=medium
+
+  * New release
+  * Configure puavo-pkg installer bundlepath in puavo-pkg-updater.conf.
+  * Create a license file with puavo-pkg-updater, for puavo-local-
+    config-ui.
+  * Do not dereference dirs when creating package link... prevents links
+    from link to itself (when run more than once).
+  * vstloggerpro: add license
+  * Moving puavo-pkg installer updates from puavo-ltsp (update-
+    configuration) to a new command, puavo-pkg-updater.
+  * cmaptools: run the installer as nobody
+  * spotify-client: download spotify-client-0.9.17
+  * spotify-client: provide customized indirect download mechansim
+  * spotify: fix icons and desktop file
+  * Git(d63932f8d9eed8ff7121a2d754e140a292e6a433)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 08 Jun 2015 15:39:37 +0300
+
+puavo-pkg (0.1.1) trusty; urgency=medium
+
+  * New release
+  * Git(70cf022d85c7437f8d8769002d484aa1699b1caf)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 04 Jun 2015 09:51:50 +0300
+
+puavo-pkg (0.1.0) trusty; urgency=medium
+
+  * Initial release
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 01 Jun 2015 10:59:01 +0300

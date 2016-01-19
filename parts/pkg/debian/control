@@ -1,0 +1,19 @@
+Source: puavo-pkg
+Section: utils
+Priority: extra
+Maintainer: Opinsys Developers <dev@opinsys.fi>
+Build-Depends: debhelper (>= 8)
+Standards-Version: 3.9.3
+Homepage: https://github.com/opinsys/puavo-pkg
+
+Package: puavo-pkg
+Architecture: all
+Depends: ${misc:Depends},
+ bash,
+ coreutils,
+ findutils,
+ gawk,
+ tar,
+ wget
+Description: Package manager for Puavo packages
+ Scripts to make the life of a Opinsys developer easier

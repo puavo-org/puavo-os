@@ -1,0 +1,108 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+
+        mkdir -p /usr/bin
+        mkdir -p /usr/share/applications
+        mkdir -p /usr/share/man/man1
+        mkdir -p /usr/share/icons/hicolor/16x16/apps
+        mkdir -p /usr/share/icons/hicolor/22x22/apps
+        mkdir -p /usr/share/icons/hicolor/24x24/apps
+        mkdir -p /usr/share/icons/hicolor/32x32/apps
+        mkdir -p /usr/share/icons/hicolor/48x48/apps
+        mkdir -p /usr/share/icons/hicolor/64x64/apps
+        mkdir -p /usr/share/icons/hicolor/128x128/apps
+        mkdir -p /usr/share/icons/hicolor/256x256/apps
+
+        ln -sf "${upstream_dir}/opt/google/chrome/product_logo_16.png" \
+            /usr/share/icons/hicolor/16x16/apps/google-chrome.png
+        ln -sf "${upstream_dir}/opt/google/chrome/product_logo_22.png" \
+            /usr/share/icons/hicolor/22x22/apps/google-chrome.png
+        ln -sf "${upstream_dir}/opt/google/chrome/product_logo_24.png" \
+            /usr/share/icons/hicolor/24x24/apps/google-chrome.png
+        ln -sf "${upstream_dir}/opt/google/chrome/product_logo_32.png" \
+            /usr/share/icons/hicolor/32x32/apps/google-chrome.png
+        ln -sf "${upstream_dir}/opt/google/chrome/product_logo_48.png" \
+            /usr/share/icons/hicolor/48x48/apps/google-chrome.png
+        ln -sf "${upstream_dir}/opt/google/chrome/product_logo_64.png" \
+            /usr/share/icons/hicolor/64x64/apps/google-chrome.png
+        ln -sf "${upstream_dir}/opt/google/chrome/product_logo_128.png" \
+            /usr/share/icons/hicolor/128x128/apps/google-chrome.png
+        ln -sf "${upstream_dir}/opt/google/chrome/product_logo_256.png" \
+            /usr/share/icons/hicolor/256x256/apps/google-chrome.png
+        ln -sf "${upstream_dir}/usr/share/man/man1/google-chrome.1" \
+            /usr/share/man/man1/google-chrome.1
+        ln -sf "${upstream_dir}/usr/share/applications/google-chrome.desktop" \
+            /usr/share/applications/google-chrome.desktop
+        ln -sf "${upstream_dir}/opt/google/chrome/google-chrome" \
+            /usr/bin/google-chrome-stable
+
+        export PEPPER_FLASH_VERSION=$(grep '"version":' "${upstream_dir}/opt/google/chrome/PepperFlash/manifest.json"| grep -Po '(?<=version": ")(?:\d|\.)*')
+
+        cat <<EOF >/etc/chromium-browser/default
+# Default settings for chromium-browser. This file is sourced by /bin/sh from
+# /usr/bin/chromium-browser
+
+# Options to pass to chromium-browser
+
+CHROMIUM_FLAGS="--ppapi-flash-path=${upstream_dir}/opt/google/chrome/PepperFlash/libpepflashplayer.so --ppapi-flash-version=$PEPPER_FLASH_VERSION"
+EOF
+        ;;
+    unconfigure)
+        rm -f /usr/bin/google-chrome-stable
+        rm -f /usr/share/applications/google-chrome.desktop
+        rm -f /usr/share/man/man1/google-chrome.1
+        rm -f /usr/share/icons/hicolor/256x256/apps/google-chrome.png
+        rm -f /usr/share/icons/hicolor/128x128/apps/google-chrome.png
+        rm -f /usr/share/icons/hicolor/64x64/apps/google-chrome.png
+        rm -f /usr/share/icons/hicolor/48x48/apps/google-chrome.png
+        rm -f /usr/share/icons/hicolor/32x32/apps/google-chrome.png
+        rm -f /usr/share/icons/hicolor/24x24/apps/google-chrome.png
+        rm -f /usr/share/icons/hicolor/22x22/apps/google-chrome.png
+        rm -f /usr/share/icons/hicolor/16x16/apps/google-chrome.png
+        ;;
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        dpkg -x "${upstream_pack}" "${upstream_dir}"
+        chmod 0755 "${upstream_dir}"
+        ;;
+    download)
+        # Tested with version 44.0.2403.125.
+        upstream_pack=$1
+        baseurl="https://dl.google.com/linux/chrome/deb"
+        tmpfile=$(mktemp)
+        wget \
+            --no-use-server-timestamps \
+            --no-check-certificate \
+            --no-cookies \
+            --output-document "${tmpfile}" \
+            --progress=dot:mega \
+            "${baseurl}/dists/stable/main/binary-i386/Packages" || {
+            wget_err=$?
+            rm -f "${tmpfile}" || true
+            [ ${wget_err} -eq 4 ] && exit 2 ## Network failure.
+            exit 1
+        }
+        poolpath=$(sed -r '0,/^Package: google-chrome-stable$/ d' "${tmpfile}" | sed -r -n 's/^Filename: (.*)/\1/p' | head -n1)
+        rm -f "${tmpfile}"
+        wget \
+            --no-use-server-timestamps \
+            --no-check-certificate \
+            --no-cookies \
+            --output-document "${upstream_pack}" \
+            "${baseurl}/${poolpath}" || {
+            [ $? -eq 4 ] && exit 2 ## Network failure.
+            exit 1
+        }
+        ;;
+    *)
+        ;;
+esac

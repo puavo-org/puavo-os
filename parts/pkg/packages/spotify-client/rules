@@ -1,0 +1,66 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+
+        ln -s -f -T "${upstream_dir}/usr/bin/spotify"   /usr/bin/spotify
+        ln -s -f -T "${upstream_dir}/usr/share/spotify" /usr/share/spotify
+        ln -s -f -T "${upstream_dir}/usr/share/doc/spotify-client" \
+                    /usr/share/doc/spotify-client
+        sed 's/^Icon=.*$/Icon=spotify/' /usr/share/spotify/spotify.desktop \
+            > /usr/share/applications/spotify.desktop
+        ;;
+
+    unconfigure)
+        rm -f /usr/bin/spotify                        \
+              /usr/share/applications/spotify.desktop \
+              /usr/share/doc/spotify-client           \
+              /usr/share/spotify
+        ;;
+
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        dpkg -x "${upstream_pack}" "${upstream_dir}"
+        chmod 0755 "${upstream_dir}"
+        ;;
+
+    download)
+        upstream_pack=$1
+        baseurl="http://repository-origin.spotify.com"
+        tmpfile=$(mktemp)
+        wget \
+            --no-use-server-timestamps \
+            --no-check-certificate \
+            --no-cookies \
+            --output-document "${tmpfile}" \
+            --progress=dot:mega \
+            "${baseurl}/dists/testing/non-free/binary-i386/Packages" || {
+            wget_err=$?
+            rm -f "${tmpfile}" || true
+            [ ${wget_err} -eq 4 ] && exit 2 ## Network failure.
+            exit 1
+        }
+        poolpath=$(sed -r '0,/^Package: spotify-client$/ d' "${tmpfile}" \
+                     | sed -r -n 's/^Filename: (.*)/\1/p' | head -n1)
+        rm -f "${tmpfile}"
+        wget \
+            --no-use-server-timestamps \
+            --no-check-certificate \
+            --no-cookies \
+            --output-document "${upstream_pack}" \
+            "${baseurl}/${poolpath}" || {
+            [ $? -eq 4 ] && exit 2 ## Network failure.
+            exit 1
+        }
+        ;;
+
+    *)
+        ;;
+esac

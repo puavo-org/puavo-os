@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -eu
+
+cleanup() {
+  test -d "$tmpdir" && rm -rf "$tmpdir"
+}
+
+topdomain=$(cat /etc/puavo/topdomain)
+imageserver="images.${topdomain}"
+bundletarname="puavo-pkg-installers-bundle.tar"
+
+trap cleanup EXIT
+
+cat <<EOF
+This script updates the remote ${bundletarname}
+at ${imageserver}.  Press ENTER to continue.
+EOF
+
+read answer
+
+tmpdir=$(mktemp -d /tmp/puavo-pkg.XXXXXXXXXX)
+
+cd "$tmpdir"
+
+git clone git@github.com:opinsys/puavo-pkg.git
+cd puavo-pkg/packages
+make "$bundletarname"
+scp "$bundletarname" "root@${imageserver}:/images/puavo-pkg/${bundletarname}"
+
+rm -rf "$tmpdir"
