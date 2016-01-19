@@ -1,0 +1,224 @@
+/* http://meyerweb.com/eric/tools/css/reset/
+     v2.0 | 20110126
+     License: none (public domain)
+  */
+
+  html, body, div, span, applet, object, iframe,
+  h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+  a, abbr, acronym, address, big, cite, code,
+  del, dfn, em, img, ins, kbd, q, s, samp,
+  small, strike, strong, sub, sup, tt, var,
+  b, u, i, center,
+  dl, dt, dd, ol, ul, li,
+  fieldset, form, label, legend,
+  table, caption, tbody, tfoot, thead, tr, th, td,
+  article, aside, canvas, details, embed,
+  figure, figcaption, footer, header, hgroup,
+  menu, nav, output, ruby, section, summary,
+  time, mark, audio, video {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      font-size: 100%;
+      font: inherit;
+      vertical-align: baseline;
+  }
+
+  /* STYLES BEGIN */
+
+  *{
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+  }
+  html{
+    height: 100%;
+  }
+  body{
+    background-color: #f0eee1;
+    color: rgb(70,70,70);
+    font: 100%/1.40 Ubuntu, Helvetica, Arial, sans-serif;
+    margin: 0;
+  }
+
+  a{
+    color: #3151A2;
+    text-decoration:none;
+  }
+  i{
+    font-style: italic;
+  }
+  img{
+    height:auto;
+    width:auto;
+  }
+
+  /*--------------------*/
+
+  .login{
+    background-color: #f0eee1;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(rgb(240, 238, 225)), to(rgb(230, 228, 215)));
+    background-image: -webkit-linear-gradient(top, rgb(240, 238, 225), rgb(230, 228, 215));
+    background-image: -moz-linear-gradient(top, rgb(240, 238, 225), rgb(230, 228, 215));
+    background-image: -ms-linear-gradient(top, rgb(240, 238, 225), rgb(230, 228, 215));
+    background-image: -o-linear-gradient(top, rgb(240, 238, 225), rgb(230, 228, 215));
+    background-image: linear-gradient(top, rgb(240, 238, 225), rgb(230, 228, 215));
+    background-clip:padding-box;
+    border: 5px solid #ed7113;
+    border: 5px solid rgba(237,113,19,0.5);
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    -webkit-box-shadow:
+      2px -2px 2px rgba(0, 0, 0, 0.5), -2px 2px 2px rgba(0,0,0,0.5), inset 0 5px 100px rgba(65, 120, 107, 0.2);
+    -moz-box-shadow:
+      2px -2px 2px rgba(0, 0, 0, 0.5), -2px 2px 2px rgba(0,0,0,0.5), inset 0 5px 100px rgba(65, 120, 107, 0.2);
+    box-shadow:
+      2px -2px 2px rgba(0, 0, 0, 0.5), -2px 2px 2px rgba(0,0,0,0.5), inset 0 5px 100px rgba(65, 120, 107, 0.2);
+    margin: 1em auto;
+    max-width: 800px;
+    padding: 2%;
+    position: relative;
+    text-align: left;
+    z-index: 0;
+  }
+
+  .login:before{
+      content: '';
+      position: absolute;
+      z-index: -1;
+      border: 1px dashed #ccc;
+      top: 5px;
+      bottom: 5px;
+      left: 5px;
+      right: 5px;
+      -moz-box-shadow: 0 0 0 1px #fff;
+      -webkit-box-shadow: 0 0 0 1px #fff;
+      box-shadow: 0 0 0 1px #fff;
+  }
+  .logo{
+    width: 50%;
+    height: 50px;
+  }
+  /*--------------------*/
+
+  form{
+    padding: 1rem 0;
+  }
+  .submit{
+    background-color: #ffb94b;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#ffb94b), to(#f17931));
+    background-image: -webkit-linear-gradient(top, #ffb94b, #f17931);
+    background-image: -moz-linear-gradient(top, #ffb94b, #f17931);
+    background-image: -ms-linear-gradient(top, #ffb94b, #f17931);
+    background-image: -o-linear-gradient(top, #ffb94b, #f17931);
+    background-image: linear-gradient(top, #ffb94b, #f17931);
+    border: solid 1px #d69e31;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+    -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+    color: #8f5a0a;
+    cursor: pointer;
+    font-size:1em;
+    height: 50px;
+    padding: 0;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+  }
+
+  .submit:hover,.submit:focus, .choose-organization button:hover, .choose-organization button:focus{
+    background-color: #fddb6f;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#ffb94b), to(#fddb6f));
+    background-image: -webkit-linear-gradient(top, #ffb94b, #fddb6f);
+    background-image: -moz-linear-gradient(top, #ffb94b, #fddb6f);
+    background-image: -ms-linear-gradient(top, #ffb94b, #fddb6f);
+    background-image: -o-linear-gradient(top, #ffb94b, #fddb6f);
+    background-image: linear-gradient(top, #ffb94b, #fddb6f);
+  }
+
+  .submit:active{
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5) inset;
+    -moz-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5) inset;
+    -webkit-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5) inset;
+    outline: none;
+  }
+
+  .submit::-moz-focus-inner{
+    border: none;
+  }
+
+  .username-help{
+    margin: 0 auto;
+    max-width: 800px;
+    padding: 1rem;
+    text-align: left;
+    width: 80%;
+  }
+  .username-help h2{
+    font-size: 2rem;
+  }
+  .username-help p{
+    font-size: 0.8rem;
+    margin: auto;
+    line-height: 2.5em;
+  }
+
+  .organisation-prefilled {
+    white-space: nowrap;
+  }
+  .organisation-prefilled input[name=username] {
+    width: 50%;
+  }
+  .organisation-prefill {
+    width: 50%;
+  }
+
+  .service-name {
+    margin-top: 1em;
+    margin-bottom: 1em;
+  }
+
+  .inputs {
+    text-align: left;
+    width: 60%;
+    margin: auto;
+  }
+
+  /* Media Querys */
+
+  @media (max-width: 1024px){
+    body{
+      font-size:90%;
+    }
+    .login{
+      width:80%;
+    }
+  }
+  @media (max-width: 640px){
+    body{
+      font-size:80%;
+    }
+    .login, .username-help{
+      width:90%;
+    }
+    input{
+      width: 100%;
+    }
+  }
+  @media (max-width: 500px){
+    body{
+      font-size:80%;
+    }
+    .login, .username-help{
+      margin: 0;
+      width:100%;
+    }
+  }
+
+  /* End of Media Querys */
+  .username-help p{
+    margin-bottom: 2em;
+  }
+

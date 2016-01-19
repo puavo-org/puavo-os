@@ -1,0 +1,12 @@
+Source: puavo-local-config
+Maintainer: Opinsys <dev@opinsys.fi>
+Section: misc
+Priority: optional
+Build-Depends: debhelper (>= 8)
+Standards-Version: 3.9.3
+
+Package: puavo-local-config
+Architecture: all
+Depends: ${misc:Depends}, node-webkit, puavo-ltsp-client, puavo-pkg, ruby1.9.1,
+ whois
+Description: Puavo configuration tool for local (host-specific) features.

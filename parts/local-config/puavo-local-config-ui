@@ -1,0 +1,41 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "--auto" ]; then
+  # if user can not write to /state/etc/puavo/local, this is not for him/her
+  test -w /state/etc/puavo/local || exit 0
+
+  # if configuration file is initialized, do nothing
+  test -r /state/etc/puavo/local/config.json && exit 0
+fi
+
+# First check if we can simply HUP the currently running process (which should
+# raise itself when it receives HUP).  If this works, there is nothing more
+# to do, otherwise we must actually start the application.
+# (This should function as a control mechanism to ensure there are no
+# two instances of this application running at the same time).
+process_re='node-webkit.*--working-directory=/usr/lib/puavo-local-config-ui/'
+pkill -HUP -U "$USER" -f -- "$process_re" && exit 0
+
+packageinfo_path='/images/puavo-pkg/installers/installers/packages.json'
+
+run_nodewebkit() { nw /usr/lib/puavo-local-config-ui/; }
+
+if [ -e "$packageinfo_path" ]; then
+  (
+    # Wait for 15 seconds for puavo-pkg-updater to do its thing.  It should be
+    # fast, so if this flock fails, something is likely wrong.
+    if ! flock -s -w 15 3; then
+      echo "could not get flock on $packageinfo_path" >&2
+      exit 1
+    fi
+
+    # wrap puavo-local-config-ui around this flock so that packages.json
+    # does not change underneath it.
+    run_nodewebkit
+  ) 3<"$packageinfo_path"
+else
+  # puavo-local-config-ui can be used without licenses-stuff.
+  run_nodewebkit
+fi

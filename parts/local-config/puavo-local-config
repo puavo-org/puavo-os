@@ -1,0 +1,555 @@
+#!/usr/bin/ruby1.9.1
+# encoding: UTF-8
+
+# puavo-local-config configures system according to admin user preferences.
+# See puavo-local-config-ui for the user interface.  puavo-local-config
+# reads a configuration file ("/state/etc/puavo/local/config.json"
+# by default) that contains user preferences, and applies those to the
+# system depending on given option arguments.  Run
+# "puavo-local-config --help" for information on command arguments.
+# Most wanted functionality must be explicitly requested with command
+# arguments, but puavo-local-config also intends to prepare the system for
+# configuration (by puavo-local-config-ui).
+
+require 'erb'
+require 'etc'
+require 'fileutils'
+require 'getoptlong'
+require 'json'
+require 'syslog'
+
+Encoding.default_external = 'utf-8'
+
+Ltspadmins_group_id = 3000
+
+class NetworkError < RuntimeError; end
+
+def print_help()
+  puts <<-EOF
+puavo-local-config [OPTIONS]
+
+-c, --config-path           set configuration file path
+-h, --help                  show help
+
+    --admins                configure admins
+    --grub-default          configure grub default
+    --networkmanager-policy apply special networkmanager permissions
+    --powersave-settings    setup powersave configurations
+    --prepare-puavopkg      setup configurations for puavo-pkg
+    --setup-installed-pkgs  configure installed (optional) packages
+    --setup-puavo-remote-assistance-applet
+    --system-boot           tell we are running at system boot
+
+    --install-pkg           a package name
+    --remove-pkg            ["--all" | a package name]
+
+  --install-pkg and --remove-pkg can be specified multiple times.
+  EOF
+end
+
+def syslog(channel, priority, *args)
+  Syslog.log(priority, *args)
+  channel.printf(*args)
+end
+
+def log(*args)   ; syslog(STDOUT, *args); end
+def logerr(*args); syslog(STDERR, *args); end
+
+def conf_version_1_ok?(conf)
+  # conf['local_users'] and conf['allow_remoteadmins'] might exist but are not
+  # used anymore, so we do not check for their validity
+  conf['allow_logins_for'].kind_of?(Array) \
+    && conf['allow_logins_for'].map { |s| s.kind_of?(String) }.all?
+end
+
+def conf_version_2_ok?(conf)
+  is_boolean = lambda { |v| v.kind_of?(TrueClass) || v.kind_of?(FalseClass) }
+
+  conf['allow_logins_for'].kind_of?(Array) \
+    && conf['allow_logins_for'].map { |s| s.kind_of?(String) }.all? \
+    && is_boolean.call(conf['automatic_image_updates'])
+end
+
+def conf_version_3_ok?(conf)
+  conf_version_2_ok?(conf) \
+    && conf['battery_powersave_thresholds'].kind_of?(Array) \
+    && conf['battery_powersave_thresholds'].count == 3      \
+    && conf['battery_powersave_thresholds'].map { |s| s.kind_of?(Integer) }
+end
+
+def conf_version_1_to_2(conf)
+  {
+    'allow_logins_for'        => conf['allow_logins_for'],
+    'automatic_image_updates' => true,
+    'version'                 => 2,
+  }
+end
+
+def conf_version_2_to_3(conf)
+  conf.merge({
+    'battery_powersave_thresholds' => [ 30, 70, 90 ],
+    'version'                      => 3
+  })
+end
+
+def update_conf(conf, config_path)
+  tmpfile = "#{ config_path }.tmp"
+  File.open(tmpfile, 'w') { |f| f.print(conf.to_json) }
+  File.rename(tmpfile, config_path)
+  conf
+end
+
+def ensure_conf_sanity(conf, config_path)
+  move_conf = lambda {
+                logerr(Syslog::LOG_CRIT,
+                      "Moving configuration file, because it is messed up\n")
+                File.rename(config_path,
+                            "#{ config_path }.backup-#{ Time.now().to_i }")
+              }
+
+  if conf.nil? then
+    if File.exists?(config_path) then
+      move_conf.call()
+    end
+    return nil
+  end
+
+  # check conf and do possible migration to newer version
+
+  # If configuration version is higher than what we know, do not try to
+  # use it and also do not mess up the configuration file.
+  return nil if conf['version'].to_i > 3
+
+  if conf['version'] == 1 && conf_version_1_ok?(conf) then
+    conf = update_conf(conf_version_1_to_2(conf), config_path)
+  end
+
+  if conf['version'] == 2 && conf_version_2_ok?(conf) then
+    conf = update_conf(conf_version_2_to_3(conf), config_path)
+  end
+
+  if conf['version'] != 3 then
+    # something is bad, move configuration to backup and return nil
+    move_conf.call()
+    return nil
+  end
+
+  return conf
+end
+
+$primary_user = nil
+def get_primary_user()
+  return $primary_user if $primary_user
+
+  begin
+    device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
+    primary_user = device.kind_of?(Hash) && device['primary_user']
+
+    if primary_user && primary_user.match(/^[A-Za-z0-9\.\-]+$/) then
+      $primary_user = primary_user
+    else
+      raise 'Primary user is not set or is in invalid format'
+    end
+  rescue StandardError => e
+    logerr(Syslog::LOG_WARNING, "Could not find primary user: %s\n", e.message)
+    return nil
+  end
+
+  $primary_user
+end
+
+def search_and_replace_line(file, re, new_line)
+  File.open(file, 'r') do |inputf|
+    output_lines = []
+
+    have_match = false
+
+    inputf.flock(File::LOCK_EX);
+
+    input_lines = inputf.read.split("\n")
+    input_lines.each do |line|
+      match = line.match(re)
+      if match then
+        have_match = true
+        output_lines.push(new_line) if new_line
+      else
+        output_lines.push(line)
+      end
+    end
+
+    if !have_match then
+      output_lines.push(new_line) if new_line
+    end
+
+    output = output_lines.map { |s| "#{ s }\n" }.join
+
+    tmpfile = "#{ file }.plctmp"
+    File.open(tmpfile, 'w', 0600) { |outputf| outputf.write(output) }
+    FileUtils.chmod(inputf.stat.mode, tmpfile)
+    FileUtils.chown(inputf.stat.uid, inputf.stat.gid, tmpfile)
+    File.rename(tmpfile, file)
+  end
+end
+
+def configure_admins()
+  log(Syslog::LOG_INFO, "configuring admins\n")
+
+  admin = get_primary_user() || ''
+
+  kernel_cmdline = IO.read('/proc/cmdline')
+
+  new_line = "puavolocaladmins:x:#{ Ltspadmins_group_id }:#{ admin }"
+  search_and_replace_line('/etc/group',
+                         /^puavolocaladmins:/,
+                         new_line)
+
+  search_and_replace_line('/etc/gshadow',
+                         /^puavolocaladmins:/,
+                         "puavolocaladmins:!::#{ admin }")
+
+  File.open('/etc/sudoers.d/puavolocaladmins.pcltmp', 'w') do |f|
+    if superlaptop_mode? then
+      f.write("%puavolocaladmins ALL=(ALL) ALL\n")
+    end
+    f.write('%puavolocaladmins ALL=(ALL) NOPASSWD: ' \
+            + "/usr/sbin/puavo-local-config, /usr/sbin/getweb\n")
+  end
+  File.rename('/etc/sudoers.d/puavolocaladmins.pcltmp',
+              '/etc/sudoers.d/puavolocaladmins')
+end
+
+def configure_grub_default()
+  log(Syslog::LOG_INFO, "configuring grub default\n")
+
+  kernel_cmdline = IO.read('/proc/cmdline')
+
+  if kernel_cmdline.match(%r{root=/dev/nbd}) then
+    log(Syslog::LOG_INFO, "booted from nbd, nothing to do\n")
+    return
+  end
+
+  match = kernel_cmdline.match(/loop=(.*?)\.img/)
+  raise 'Could not figure out loop= device' unless match
+  loop_img = "#{ match[1] }.img"
+
+  this_ltspimage_name = IO.read('/etc/ltsp/this_ltspimage_name').chomp
+
+  # XXX need localizations for these
+  messages = {
+    '/ltsp.img' => { false => 'Normaali käynnistys',
+                     true  => 'Kehittäjätila' },
+    '/ltsp-backup.img' => { false => 'Varajärjestelmä, normaali käynnistys',
+                            true  => 'Varajärjestelmä, kehittäjätila' },
+    nil => { false => 'Muu järjestelmä, normaali käynnistys',
+             true  => 'Muu järjestelmä, kehittäjätila' },
+  }
+
+  msg \
+    = messages[loop_img] \
+        ? messages[loop_img][superlaptop_mode?] \
+        : messages[nil][superlaptop_mode?]
+
+  description \
+    = "#{ msg } - (lvm/puavo-images)/#{ this_ltspimage_name } (#{ loop_img })"
+
+  system('/usr/bin/grub-editenv',
+         '/images/boot/grub/grubenv',
+         'set',
+         %Q{default=#{ description }}) \
+    or raise 'Problem in updating grub environment'
+end
+
+def configure_nm_policy()
+  log(Syslog::LOG_INFO, "configuring network manager policy\n")
+
+  #
+  # Configure special rights of primary user.
+  #
+
+  admin = get_primary_user()
+
+  primaryuserconf_path = '/etc/polkit-1/localauthority/50-local.d/10.org.freedesktop.networkmanager.allow_modify_by_primary_user.pkla'
+
+  if admin then
+    primaryuserconf = <<EOF
+[Primary user permissions]
+Identity=unix-user:#{ admin }
+Action=org.freedesktop.NetworkManager.settings.modify.system
+ResultAny=no
+ResultInactive=no
+ResultActive=yes
+EOF
+    tmpfile = "#{ primaryuserconf_path }.tmp"
+    File.open(tmpfile, 'w') { |f| f.print(primaryuserconf) }
+    File.rename(tmpfile, primaryuserconf_path)
+  else
+    FileUtils.rm_f(primaryuserconf_path)
+  end
+
+  #
+  # In case no logins have happened yet on this host, give lightdm special
+  # permissions to system-wide network settings so that wireless network
+  # connections created in login screen are global and persistent.  This is
+  # reverted once logins have happened (to prevent possibility that wireless
+  # network passwords can be read from login screen).
+  #
+
+  lightdmsysconf_path = '/etc/polkit-1/localauthority/50-local.d/10.org.freedesktop.networkmanager.allow_modify_system_by_lightdm.pkla'
+
+  if test(?s, '/var/lib/extrausers/passwd') \
+      || test(?s, '/var/lib/extrausers/group') then
+    # not a first login, remove special permissions
+    FileUtils.rm_f(lightdmsysconf_path)
+  else
+    lightdmsysconf = <<EOF
+[Special lightdm firstlogin permissions]
+Identity=unix-user:lightdm
+Action=org.freedesktop.NetworkManager.settings.modify.system
+ResultAny=no
+ResultInactive=no
+ResultActive=yes
+EOF
+    tmpfile = "#{ lightdmsysconf_path }.tmp"
+    File.open(tmpfile, 'w') { |f| f.print(lightdmsysconf) }
+    File.rename(tmpfile, lightdmsysconf_path)
+  end
+end
+
+def configure_powersave_settings(conf, system_boot)
+  return if conf.nil?
+
+  @ac_off_low_mid_level, @ac_off_mid_high_level, @ac_off_high_top_level \
+    = * conf['battery_powersave_thresholds']
+
+  template_path = '/usr/share/puavo-local-config/templates/etc/cpufreqd.conf'
+  template = File.read(template_path)
+
+  cpufreqd_conf = ERB.new(template, 0, '%<>').result
+
+  targetfile = '/etc/cpufreqd.conf'
+  tmpfile = "#{ targetfile }.plctmp"
+  File.open(tmpfile, 'w') { |f| f.print(cpufreqd_conf) }
+  File.rename(tmpfile, targetfile)
+
+  system('service cpufreqd restart') unless system_boot
+end
+
+def superlaptop_mode?
+  kernel_cmdline = IO.read('/proc/cmdline')
+  superlaptop_mode_re \
+    = /puavo.image.overlay=default puavo.local.enable_superusers=true/
+  kernel_cmdline.match(superlaptop_mode_re) ? true : false
+end
+
+#
+# puavo-pkg related functions
+#
+
+def prepare_puavopkg()
+  log(Syslog::LOG_INFO, "preparing puavo-pkg\n")
+
+  confpath = '/etc/puavo-pkg/puavo-pkg.conf'
+  temp_confpath = "#{ confpath }.tmp"
+  File.open(temp_confpath, 'w') do |f|
+    f.print(<<'EOF')
+### This file is sourced by puavo-pkg Bash script. It must not contain
+### anything else than the variable definitions described below.
+
+### Uncomment to change the default cache directory.
+PUAVO_PKG_CACHEDIR=/images/puavo-pkg/cache
+
+### Uncomment to change the default root directory for the package tree.
+PUAVO_PKG_ROOTDIR=/images/puavo-pkg/root
+EOF
+  end
+  File.rename(temp_confpath, confpath)
+
+  confpath = '/etc/puavo-pkg/puavo-pkg-updater.conf'
+  temp_confpath = "#{ confpath }.tmp"
+  File.open(temp_confpath, 'w') do |f|
+    f.print(<<'EOF')
+{
+  "bundlepath": "puavo-pkg/puavo-pkg-installers-bundle.tar",
+  "installers_dir": "/images/puavo-pkg/installers"
+}
+EOF
+  end
+  File.rename(temp_confpath, confpath)
+end
+
+def puavo_pkg(*args)
+  system('/usr/sbin/puavo-pkg', *args)
+  status = $?.exitstatus
+  return if status == 0
+
+  if status == 2 then
+    raise NetworkError,
+          "puavo-pkg #{ args.join(' ') } reported network error (code 2)"
+  else
+    raise "puavo-pkg #{ args.join(' ') } returned error code: #{ status }"
+  end
+end
+
+def install_pkgs(packages)
+  packages.each do |pkg|
+    re = %r{\A[A-Za-z0-9\-]+\z}
+    raise "Package name '#{ pkg }' does not match regexp #{ re }" \
+      unless pkg.match(re)
+
+    pkgpath = "/images/puavo-pkg/installers/installers/#{ pkg }.tar.gz"
+    puavo_pkg('install', pkgpath)
+  end
+end
+
+def remove_pkgs(packages)
+  packages.each do |pkg|
+    puavo_pkg('remove', pkg)
+  end
+end
+
+def setup_installed_pkgs()
+  puavo_pkg('reconfigure', '--all')
+end
+
+def setup_puavo_remote_assistance_applet()
+  confpath = '/etc/puavo-remote-assistance-applet/config.json'
+  applet_config = JSON.parse( IO.read(confpath) )
+
+  # show access controls for ssh (and vino)
+  applet_config['show_accesscontrols_for'] = %w(ssh vino)
+
+  # limit ssh access enablement to eight hours
+  applet_config['ssh_access_timeout'] = 28800
+
+  tmp_confpath = "#{ confpath }.tmp"
+  File.open(tmp_confpath, 'w') { |f| f.print(applet_config.to_json) }
+  File.rename(tmp_confpath, confpath)
+end
+
+
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
+
+config_path = '/state/etc/puavo/local/config.json'
+
+apply_configs        = []
+packages_to_install  = []
+packages_to_remove   = []
+system_boot          = false
+
+begin
+  opts = GetoptLong.new(
+    [ '--config-path',   '-c',   GetoptLong::REQUIRED_ARGUMENT,          ],
+    [ '--help',          '-h',   GetoptLong::NO_ARGUMENT,                ],
+
+    [ '--admins',                GetoptLong::NO_ARGUMENT,                ],
+    [ '--grub-default',          GetoptLong::NO_ARGUMENT,                ],
+    [ '--install-pkg',           GetoptLong::REQUIRED_ARGUMENT,          ],
+    [ '--networkmanager-policy', GetoptLong::NO_ARGUMENT,                ],
+    [ '--powersave-settings',    GetoptLong::NO_ARGUMENT,                ],
+    [ '--remove-pkg',            GetoptLong::REQUIRED_ARGUMENT,          ],
+    [ '--prepare-puavopkg',      GetoptLong::NO_ARGUMENT,                ],
+    [ '--setup-installed-pkgs',  GetoptLong::NO_ARGUMENT,                ],
+    [ '--setup-puavo-remote-assistance-applet', GetoptLong::NO_ARGUMENT, ],
+    [ '--system-boot',           GetoptLong::NO_ARGUMENT,                ],
+  )
+
+  opts.each do |opt, arg|
+    case opt
+      when '--config-path'
+	config_path = arg
+      when '--help'
+	print_help()
+	exit(0)
+      when '--admins',
+           '--grub-default',
+           '--networkmanager-policy',
+           '--powersave-settings',
+           '--prepare-puavopkg',
+           '--setup-installed-pkgs',
+           '--setup-puavo-remote-assistance-applet'
+	apply_configs.push(opt) unless apply_configs.include?(opt)
+      when '--install-pkg'
+	apply_configs.push(opt) unless apply_configs.include?(opt)
+	packages_to_install << arg
+      when '--remove-pkg'
+	apply_configs.push(opt) unless apply_configs.include?(opt)
+	packages_to_remove << arg
+      when '--system-boot'
+        system_boot = true
+    end
+  end
+
+rescue GetoptLong::InvalidOption => e
+  print_help()
+  exit(1)
+end
+
+# we prepare the standard config path directory
+config_path_dir = File.dirname(config_path)
+FileUtils.mkdir_p(config_path_dir)
+FileUtils.chmod(02770, config_path_dir)
+FileUtils.chown(0, Ltspadmins_group_id, config_path_dir)
+
+begin
+  conf = JSON.parse( IO.read(config_path) )
+rescue Errno::ENOENT
+  conf = nil
+rescue StandardError => e
+  logerr(Syslog::LOG_ERR,
+         "Could not read and interpret %s: %s\n",
+         config_path,
+         e.message)
+  conf = nil
+end
+
+# conf actually not used here now, but we are responsible for keeping it
+# in correct format (and we might have some direct use for it later).
+conf = ensure_conf_sanity(conf, config_path)
+
+dispatch_table = {
+  '--admins'                => lambda { configure_admins()                 },
+  '--grub-default'          => lambda { configure_grub_default()           },
+  '--install-pkg'           => lambda { install_pkgs(packages_to_install)  },
+  '--networkmanager-policy' => lambda { configure_nm_policy()              },
+  '--powersave-settings' \
+    => lambda { configure_powersave_settings(conf, system_boot) },
+  '--prepare-puavopkg'      => lambda { prepare_puavopkg()                 },
+  '--remove-pkg'            => lambda { remove_pkgs(packages_to_remove)    },
+  '--setup-installed-pkgs'  => lambda { setup_installed_pkgs()             },
+  '--setup-puavo-remote-assistance-applet' \
+    => lambda { setup_puavo_remote_assistance_applet() },
+}
+
+exit_code = 0
+
+if apply_configs.empty? then
+  print_help()
+  exit(1)
+end
+
+apply_configs.each do |part|
+  logerr_fn = lambda do |part, e|
+                logerr(Syslog::LOG_ERR,
+                       "Could not handle %s: %s / %s\n",
+                       part,
+                       e.message,
+                       e.backtrace)
+              end
+
+  begin
+    dispatch_table[part].call()
+  rescue NetworkError => e
+    # If we have one network error, set the exit code to follow that.
+    exit_code = 2
+    logerr_fn.call(part, e)
+  rescue StandardError => e
+    # Use 1 as a generic error code unless a more specific error has occurred.
+    exit_code = 1 if exit_code == 0
+
+    logerr_fn.call(part, e)
+  end
+end
+
+Syslog.close()
+
+exit(exit_code)
