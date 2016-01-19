@@ -1,0 +1,107 @@
+#!/bin/bash
+
+#
+# Author    :: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+# Copyright :: Copyright (C) 2015 Opinsys Oy
+# License   :: GPLv2+
+#
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+set -eu
+
+while true; do
+    ifaces=$(sed -r -n 's/^interface=//p' /var/run/puavo-wlanap/*_hostapd.conf)
+    echo "${ifaces}" | while read iface; do
+	read usbid < <(sed -r -n 's|^PRODUCT=(.*)/(.*)/.*$|\1:\2|p' \
+	    "/sys/class/net/${iface}/device/uevent")
+	read descr < <(lsusb -d "${usbid}" | sed -r -n "s/^.*${usbid} //p")
+	echo "${iface}  -  ${descr}"
+    done
+
+    read -p "Interface > " iface
+    echo "${ifaces}" | grep -q -x "${iface}" && break
+    echo "E: interface ${iface} not available" >&2
+done
+
+netdev="/sys/class/net/${iface}"
+
+read usbdev    < <(readlink -e "${netdev}/device/..")
+read version   < "${usbdev}/version"
+read idVendor  < "${usbdev}/idVendor"
+read idProduct < "${usbdev}/idProduct"
+read product   < "${usbdev}/product"
+read descr     < <(lsusb -d "${idVendor}:${idProduct}" \
+                  | sed -r -n "s/^.*${idVendor}:${idProduct} //p")
+read driver    < <(sed -r -n 's/^DRIVER=//p' "${netdev}/device/uevent")
+
+read mac       < "${netdev}/phy80211/macaddress"
+read phy       < "${netdev}/phy80211/name"
+read standards < <(iwconfig "${iface}" \
+                  | sed -r -n 's/^.*IEEE (802.11[a-z]+).*$/\1/p')
+read bands     < <(iw phy "${phy}" info | egrep '^\s+Band [0-9]+:$' | wc -l)
+read streams   < <(iw phy "${phy}" info \
+                  | sed -r -n 's/^.*HT TX Max spatial streams: //p')
+read kernel    < <(uname -a)
+read timestamp < <(date --utc '+%Y-%m-%d %H:%M:%S %z')
+
+read bssid     < <(sed -r -n 's/^bssid=//p' \
+                  "/run/puavo-wlanap/${iface}_hostapd.conf")
+read brif      < <(sed -r -n 's/INTERFACE=//p' "${netdev}/master/uevent")
+read ipaddr    < <(ifconfig "${brif}" \
+                  | sed -r -n 's/^.*inet addr:([0-9.]+) .*$/\1/p')
+read password  < <(sed -r -n 's/^wpa_passphrase=//p' \
+                   "/run/puavo-wlanap/${iface}_hostapd.conf")
+read channel   < <(wpa_cli -i "${iface}" -p /run/puavo-wlanap/hostapd status \
+                  | sed -r -n 's/^channel=//p')
+
+echo "Launching iperf server, run following commands on your station:"
+echo
+echo "nmcli dev wifi connect ${bssid} password ${password} bssid ${bssid} && \\"
+echo "iperf -c ${ipaddr} -r"
+echo
+echo "Waiting iperf tests to finish..."
+
+read rxbw txbw < <(iperf -y c -s | {
+	read rxreport
+	rxbw=$(echo "${rxreport}" | cut -d, -f9)
+	read txreport
+	txbw=$(echo "${txreport}" | cut -d, -f9)
+	killall iperf
+	echo "${rxbw} ${txbw}"
+	})
+
+rxbw_mibit=$(echo "scale=1; ${rxbw} / 1024 / 1024" | bc)
+txbw_mibit=$(echo "scale=1; ${txbw} / 1024 / 1024" | bc)
+
+echo '--'
+echo "Time              : ${timestamp}"
+echo "Device path       : ${usbdev}"
+echo "USB version       : ${version}"
+echo "VendorID          : ${idVendor}"
+echo "ProductID         : ${idProduct}"
+echo "Product           : ${product}"
+echo "Description       : ${descr}"
+echo "Driver            : ${driver}"
+echo "MAC               : ${mac}"
+echo "Standards         : ${standards}"
+echo "Bands             : ${bands}"
+echo "System            : ${kernel}"
+echo "Interface         : ${iface}"
+echo "BSSID             : ${bssid}"
+echo "Channel           : ${channel}"
+echo "Rx bandwidth      : ${rxbw_mibit} Mibit/s"
+echo "Tx bandwidth      : ${txbw_mibit} Mibit/s"

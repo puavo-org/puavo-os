@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Puavo's WLAN Controller - API</title>
+  </head
+  <body>
+    <h1>API</h1>
+    <h2>POST <%= route_report %></h2>
+    <p>Send a report to the controller. Must be called periodically,
+    otherwise the controller expires the status records of the host
+    and considers it dead.</p>
+    <h3>Request data</h3>
+    <p>Content-Type: application/json</p>
+    <h4>Example</h4>
+    <pre><code>{
+  "name": "sta_connected",
+  "hostname": "accesspoint-01",
+  "timestamp": "2015-12-10 11:23:59 +0200",
+  "data": {
+    "bssid": "01:02:03:04:05:06",
+    "mac": "06:05:04:03:02:01"
+  }
+}</code></pre>
+    <h3>Response data</h3>
+    <p>Content-Type: application/json</p>
+    <p><pre><code>{ "max_report_interval": 20 }</code></pre></p>
+    <p>The value of <code>max_report_interval</code> defines the
+    minimum rate at which reports must be sent to the controller. If a
+    host fails to send at least one report per
+    each <code>max_report_interval</code>, the controller starts to
+    expire internal status records and considers the host dead.</p>
+  </body>
+</html>

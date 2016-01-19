@@ -1,0 +1,1294 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2015 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+import math
+import os
+import os.path
+import pickle
+import sys
+import tarfile
+import tempfile
+
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+
+import dateutil
+import matplotlib.pyplot
+import scipy.interpolate
+import numpy
+
+import puavowlanmapper.icons
+
+RSSI_MIN       = -99
+RSSI_MAX       = -35
+FREQS          = [2412 + i * 5 for i in range(13)] + [2484] + [5180, 5200, 5220, 5240]
+CHANS          = [i for i in range(1, 15)] + [36, 40, 44, 48]
+FREQ_TO_CHAN   = dict(zip(FREQS, CHANS))
+CHAN_TO_INDEX  = dict(zip(CHANS, range(len(CHANS))))
+HEATMAP_SCALE  = 0.1
+FILE_EXT       = '.puavo-wlanmapper.tar.gz'
+DIALOG_FILTER  = "Project archives (*%s)" % FILE_EXT
+ARCHIVE_PREFIX = 'puavo-wlanmapper'
+
+# The space of Optimal Column Heading Font Size Factors (OCHFSF) was
+# studied in an comprehensive long-term empirical research
+# project. The most aesthetically pleasing row heading font can
+# obtained by multiplying the height of the row (in pixels) by
+# OCHFSF. The OCHFSF used by this software is normalized against 12pt
+# font size. If you still don't understand what the heck OCHFSF is,
+# don't worry. I don't know either. It is just a number which makes
+# row headings scale with cell widths.
+OCHFSF_12PT = 0.4347826086956522
+
+def drawHeatmap(filepath, imageWidth, imageHeight, xs, ys, zs,
+                scale=HEATMAP_SCALE):
+    ## Interpolate z-values throughout the 2D-space using linear
+    ## radial basis function.
+    rbf = scipy.interpolate.Rbf(xs, ys, zs, function='linear')
+
+    spaceWidth  = imageWidth  * scale
+    spaceHeight = imageHeight * scale
+
+    spaceCoords = [v.flatten() for v in numpy.meshgrid(
+        numpy.linspace(0, imageWidth  - 1, spaceWidth),
+        numpy.linspace(0, imageHeight - 1, spaceHeight))]
+    array2d = rbf(*spaceCoords).reshape((spaceHeight, spaceWidth))
+
+    matplotlib.pyplot.imsave(filepath, array2d, format='png',
+                             vmin=RSSI_MIN, vmax=RSSI_MAX,
+                             cmap='RdYlBu_r')
+
+class Project:
+
+    def __init__(self):
+        self.essids                = {}
+        self.__floorPlanPixmap     = None
+        self.__lastErrorMessage    = ''
+        self.__spotData            = []
+        self.__filePath            = None
+
+    def lastErrorMessage(self):
+        return self.__lastErrorMessage
+
+    def loadFloorPlan(self, filePath):
+        pixmap = QPixmap(filePath, "PNG")
+        return self.__setFloorPlanPixmap(pixmap)
+
+    def __setFloorPlanPixmap(self, pixmap):
+        if pixmap.isNull():
+            self.__lastErrorMessage = (
+                "File {} could not be loaded as a floor plan.\n\n" \
+                "Please ensure the floor plan is a valid PNG file.".format(
+                    str(filePath)))
+            return False
+
+        self.__floorPlanPixmap = pixmap
+
+        return True
+
+    def load(self, filePath):
+        with tarfile.open(str(filePath), "r:gz") as archive_file:
+
+            with archive_file.extractfile("%s/layout.png" % ARCHIVE_PREFIX) as f:
+                pixmap = QPixmap()
+                pixmap.loadFromData(f.read(), "PNG")
+                if not self.__setFloorPlanPixmap(pixmap):
+                    return False
+
+            with archive_file.extractfile("%s/essids.pickle" % ARCHIVE_PREFIX) as f:
+                self.essids = pickle.load(f)
+
+            with archive_file.extractfile("%s/spots.pickle" % ARCHIVE_PREFIX) as f:
+                self.__spotData = []
+                for spotDatum in pickle.load(f):
+                    pos = QPointF(spotDatum['x'], spotDatum['y'])
+                    self.__spotData.append((pos, spotDatum['measurement']))
+
+        self.__filePath = filePath
+        return True
+
+    def save(self, filePath):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            scenedir = os.path.join(tmpdir, ARCHIVE_PREFIX)
+            os.mkdir(scenedir)
+
+            with open(os.path.join(scenedir, "spots.pickle"), "wb") as f:
+                spotData = []
+                for pos, measurement in self.__spotData:
+                    spotData.append({
+                        'x': float(pos.x()),
+                        'y': float(pos.y()),
+                        'measurement': measurement,
+                    })
+                pickle.dump(spotData, f)
+
+            with open(os.path.join(scenedir, "essids.pickle"), "wb") as f:
+                pickle.dump(self.essids, f)
+
+            self.__floorPlanPixmap.save(os.path.join(scenedir, "layout.png"))
+
+            with tarfile.open(str(filePath), "w:gz") as f:
+                f.add(scenedir, ARCHIVE_PREFIX)
+
+        self.__filePath = filePath
+        return True
+
+    def floorPlanPixmap(self):
+        return self.__floorPlanPixmap
+
+    def setSpotData(self, spotData):
+        self.__spotData = spotData
+
+    def spotData(self):
+        return self.__spotData
+
+    def filePath(self):
+        return self.__filePath
+
+def heatmapDatumSortKey(heatmapDatum):
+    chan, essid, bssid, *rest = heatmapDatum
+    return essid.lower(), bssid.lower(), chan
+
+class DrawHeatmapsThread(QThread):
+
+    heatmapReady = pyqtSignal(int, str, str, QImage, list, list, list)
+
+    def __init__(self):
+        QThread.__init__(self)
+
+        self.__doCancel     = False
+        self.__heatmapData  = []
+
+    def drawHeatmaps(self, heatmapData):
+        if not heatmapData:
+            return
+
+        self.__doCancel = True
+        self.wait()
+
+        self.__heatmapData = list(sorted(heatmapData,
+                                         key=heatmapDatumSortKey,
+                                         reverse=True))
+        self.__doCancel    = False
+
+        QThread.start(self)
+
+    def run(self):
+        while self.__heatmapData and not self.__doCancel:
+            chan, essid, bssid, w, h, xs, ys, zs = self.__heatmapData.pop()
+
+            with tempfile.TemporaryDirectory() as tmpdir:
+                filepath = os.path.join(tmpdir, "%d_%s.png" % (chan, bssid))
+                drawHeatmap(filepath, w, h, xs, ys, zs)
+                image = QImage(filepath, "png")
+
+            self.heatmapReady.emit(chan, essid, bssid, image, xs, ys, zs)
+
+class ZoomableGraphicsView(QGraphicsView):
+
+    ZOOM_FACTOR = 1.1
+
+    def __init__(self, *args):
+        QGraphicsView.__init__(self, *args)
+        self.setDragMode(QGraphicsView.RubberBandDrag)
+
+    def wheelEvent(self, event):
+        if not event.modifiers() & Qt.ControlModifier:
+            QGraphicsView.wheelEvent(self, event)
+        else:
+            self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+
+            if event.delta() > 0:
+                self.scale(ZoomableGraphicsView.ZOOM_FACTOR,
+                           ZoomableGraphicsView.ZOOM_FACTOR)
+            else:
+                self.scale(1 / ZoomableGraphicsView.ZOOM_FACTOR,
+                           1 / ZoomableGraphicsView.ZOOM_FACTOR)
+
+            event.accept()
+
+    def fitAllInView(self):
+        if self.scene() is not None:
+            self.fitInView(self.scene().itemsBoundingRect(), Qt.KeepAspectRatio)
+
+def alignTextItem(item, alignment):
+    textFormat = QTextBlockFormat()
+    textFormat.setAlignment(alignment)
+    textCursor = item.textCursor()
+    textCursor.select(QTextCursor.Document)
+    textCursor.mergeBlockFormat(textFormat)
+    textCursor.clearSelection()
+    item.setTextCursor(textCursor)
+
+class HeatmapItem(QGraphicsPixmapItem):
+
+    def __init__(self, pixmap, xs, ys, zs):
+        QGraphicsPixmapItem.__init__(self, pixmap)
+        self.xs = xs
+        self.ys = ys
+        self.zs = zs
+
+class HeatmapScene(QGraphicsScene):
+
+    def __init__(self, project, parent):
+        QGraphicsScene.__init__(self, parent)
+
+        self.__heatmapItems    = {}
+        self.__floorPlanItems  = {}
+        self.__bssids          = []
+        self.__colHeadingItems = []
+        self.__rowHeadingItems = []
+        self.__project         = project
+
+    def clear(self):
+        self.__heatmapItems    = {}
+        self.__floorPlanItems  = {}
+        self.__bssids          = []
+        self.__colHeadingItems = []
+        self.__rowHeadingItems = []
+        QGraphicsScene.clear(self)
+
+    def __updateColumnHeadingItems(self, size):
+        margin = max(0.1 * size.width(), 0.1 * size.height())
+
+        for col, chan in enumerate(CHANS):
+            try:
+                item = self.__colHeadingItems[col]
+            except IndexError:
+                item = self.addText("%d" % chan)
+                self.__colHeadingItems.append(item)
+
+            font = QFont("Monospace", 12)
+            font.setPixelSize(size.width() / max([len(str(c)) for c in CHANS]))
+            item.setFont(font)
+            item.setTextWidth(size.width())
+            alignTextItem(item, Qt.AlignHCenter)
+
+            item.setPos(col * (margin + size.width()) + margin,
+                        -item.boundingRect().height())
+
+    def __updateFloorPlanItem(self, col, row, heatmapItem, chan, bssid):
+        size  = heatmapItem.pixmap().size()
+
+        try:
+            item = self.__floorPlanItems[(chan, bssid)]
+        except KeyError:
+            pixmap = self.__project.floorPlanPixmap().scaled(size)
+            item = QGraphicsPixmapItem(pixmap, heatmapItem)
+            self.__floorPlanItems[(chan, bssid)] = item
+        else:
+            if item.pixmap().size() != size:
+                item.setPixmap(self.__project.floorPlanPixmap().scaled(size))
+
+    def __updateHeatmapItem(self, col, row, pixmap, chan, essid, bssid, xs, ys, zs):
+        margin = max(0.1 * pixmap.width(), 0.1 * pixmap.height())
+
+        try:
+            item = self.__heatmapItems[(chan, bssid)]
+        except KeyError:
+            item = HeatmapItem(pixmap, xs, ys, zs)
+            self.addItem(item)
+            item.setFlag(QGraphicsItem.ItemIsSelectable)
+            item.setToolTip("Channel: %d\nBSSID: %s\nESSID: %s"
+                            % (chan, bssid, essid))
+            self.__heatmapItems[(chan, bssid)] = item
+        else:
+            item.setPixmap(pixmap)
+
+        item.setPos(col * (margin + pixmap.width()) + margin,
+                    row * (margin + pixmap.height()) + margin)
+
+        self.__updateFloorPlanItem(col, row, item, chan, bssid)
+
+    def __updateRowHeadingItem(self, row, size, essid):
+        margin = max(0.1 * size.width(), 0.1 * size.height())
+
+        try:
+            item = self.__rowHeadingItems[row]
+        except IndexError:
+            item = self.addText(essid)
+            self.__rowHeadingItems.append(item)
+
+        font = QFont("Monospace", 12)
+        font.setPixelSize(size.height() * OCHFSF_12PT * 2)
+        item.setFont(font)
+        alignTextItem(item, Qt.AlignRight)
+
+        item.setPos(-item.boundingRect().width(),
+                    row * (margin + size.height()) + margin)
+
+    def addHeatmap(self, chan, essid, bssid, image, xs, ys, zs):
+        pixmap     = QPixmap.fromImage(image)
+        pixmapSize = pixmap.size()
+        col        = CHAN_TO_INDEX[chan]
+        try:
+            row = self.__bssids.index(bssid)
+        except ValueError:
+            row = len(self.__bssids)
+            self.__bssids.append(bssid)
+
+        self.__updateColumnHeadingItems(pixmapSize)
+        self.__updateRowHeadingItem(row, pixmapSize, essid)
+        self.__updateHeatmapItem(col, row, pixmap, chan, essid, bssid, xs, ys, zs)
+
+class MonitorScene(QGraphicsScene):
+
+    measurementsChanged = pyqtSignal()
+
+    def __init__(self, monitor, parent):
+        QGraphicsScene.__init__(self, parent)
+
+        self.__monitor       = monitor
+        self.__spots         = []
+        self.__floorPlanItem = None
+        self.__heatmapItem   = None
+        self.__project       = None
+
+    def setProject(self, project):
+        self.__spots         = []
+        self.__floorPlanItem = None
+        self.__heatmapItem   = None
+        self.__project       = project
+
+        self.clear()
+
+        self.__floorPlanItem = self.addPixmap(project.floorPlanPixmap())
+        self.__floorPlanItem.setZValue(-1)
+
+        self.__heatmapItem = self.addPixmap(QPixmap())
+        self.__heatmapItem.setZValue(-2)
+
+        for pos, measurement in project.spotData():
+            self.addSpot(pos).setMeasurement(measurement)
+
+    def setHeatmap(self, pixmap):
+        if pixmap.isNull():
+            self.__heatmapItem.setPixmap(pixmap)
+            return
+        w = self.__floorPlanItem.pixmap().width()
+        h = self.__floorPlanItem.pixmap().height()
+        self.__heatmapItem.setPixmap(pixmap.scaled(w, h))
+
+    def spots(self):
+        return list(self.__spots)
+
+    def customEvent(self, event):
+        if event.type() == SpotModifiedEvent.TYPE:
+            self.measurementsChanged.emit()
+
+    def measurements(self):
+        result    = {}
+        xs        = []
+        ys        = []
+        bssidsets = {}
+
+        for spot in self.__spots:
+
+            measurement = spot.measurement()
+            if measurement is None:
+                continue
+
+            xs.append(int(spot.pos().x()))
+            ys.append(int(spot.pos().y()))
+
+            for chan, bssids in measurement.items():
+                bssidset = bssidsets.setdefault(chan, set())
+                for bssid in bssids:
+                    bssidset.add(bssid)
+
+        for spot in self.__spots:
+
+            measurement = spot.measurement()
+            if measurement is None:
+                continue
+
+            for chan, bssidset in bssidsets.items():
+                bssidmap = result.setdefault(chan, {})
+                for bssid in bssidset:
+                    rssis = bssidmap.setdefault(bssid, [])
+                    rssi = measurement.get(chan, {}).get(bssid, RSSI_MIN)
+                    rssis.append(int(round(rssi)))
+
+        return xs, ys, result
+
+    def addSpot(self, pos):
+        spot = MonitorSpot(self.__monitor, self.__project)
+        spot.setPos(pos)
+        self.addItem(spot)
+        self.__spots.append(spot)
+        return spot
+
+    def mousePressEvent(self, event):
+        QGraphicsScene.mousePressEvent(self, event)
+        if event.isAccepted():
+            return
+
+        if self.__floorPlanItem is None:
+            return
+
+        if not self.__floorPlanItem.boundingRect().contains(event.scenePos()):
+            return
+
+        if (event.button() == Qt.LeftButton and not event.modifiers()):
+            self.addSpot(event.scenePos())
+            event.accept()
+            return
+
+    def removeSpot(self, spot):
+        self.__spots.remove(spot)
+        spot.stopMonitor()
+        self.removeItem(spot)
+        if spot.measurement() is not None:
+            self.measurementsChanged.emit()
+
+    def contextMenuEvent(self, event):
+        spot = self.itemAt(event.scenePos())
+        if spot is None:
+            return
+
+        menu         = QMenu()
+        removeAction = menu.addAction("&Remove")
+        toggleAction = menu.addAction("&Toggle monitoring")
+        action       = menu.exec_(event.screenPos())
+
+        if action is None:
+            return
+
+        if action is removeAction:
+            self.removeSpot(spot)
+        elif action is toggleAction:
+            spot.toggleMonitor()
+
+        event.accept()
+
+class MonitorSpot(QGraphicsPolygonItem):
+
+    SIZE = 20
+
+    def __init__(self, monitor, project):
+        QGraphicsPolygonItem.__init__(self)
+
+        self.__monitor = monitor
+
+        polygon     = QPolygonF()
+        corners     = 5
+        cornerAngle = math.pi / corners
+        spokeRatio  = 1 / 3
+        for i in range(corners * 2):
+            a     = cornerAngle * i - 0.5 * cornerAngle * (corners % 2)
+            x     = math.cos(a)
+            y     = math.sin(a)
+            point = QPointF(x, y)
+
+            if i % 2:
+                point *= spokeRatio
+
+            polygon << point * MonitorSpot.SIZE;
+
+        self.setPolygon(polygon)
+        self.setBrush(QBrush(QColor("beige")))
+
+        dropShadowEffect = QGraphicsDropShadowEffect()
+        dropShadowEffect.setOffset(4)
+        dropShadowEffect.setBlurRadius(5)
+        self.setGraphicsEffect(dropShadowEffect)
+        self.setFlag(QGraphicsItem.ItemIsMovable)
+
+        self.setAcceptHoverEvents(True)
+
+        self.__measurement = None
+
+        self.__animation = QGraphicsItemAnimation()
+        self.__animation.setTimeLine(QTimeLine())
+        self.__animation.setScaleAt(0.0, 1, 1)
+        self.__animation.setScaleAt(0.5, 2, 2)
+        self.__animation.setScaleAt(1.0, 1, 1)
+        self.__animation.setRotationAt(0.0, 0)
+        self.__animation.setRotationAt(0.5, 180)
+        self.__animation.setRotationAt(1.0, 360)
+        self.__animation.setItem(self)
+
+        self.__hasMonitor = False
+        self.__lastMousePressPos = None
+
+        self.__project = project
+
+    def mousePressEvent(self, event):
+        self.__lastMousePressPos = event.scenePos()
+        QGraphicsPolygonItem.mousePressEvent(self, event)
+
+    def mouseReleaseEvent(self, event):
+        if (self.__lastMousePressPos is not None
+            and event.scenePos() != self.__lastMousePressPos
+            and self.__measurement is not None):
+            QCoreApplication.postEvent(self.scene(), SpotModifiedEvent())
+        QGraphicsPolygonItem.mouseReleaseEvent(self, event)
+
+    def mouseDoubleClickEvent(self, event):
+        self.toggleMonitor()
+
+    def __monitorStarted(self):
+        self.__animation.timeLine().setDuration(
+            self.__monitor.dwellTime() * len(CHANS))
+        self.__animation.timeLine().start()
+
+    def __monitorStopped(self, isSuccess):
+        self.__animation.timeLine().stop()
+        self.__animation.setStep(0)
+
+        if isSuccess:
+            self.setMeasurement(self.__monitor.measurement)
+            self.__project.essids.update(self.__monitor.essids)
+
+        self.__monitor.started.disconnect(self.__monitorStarted)
+        self.__monitor.stopped.disconnect(self.__monitorStopped)
+
+        self.__hasMonitor = False
+
+    def startMonitor(self):
+        self.__monitor.terminate()
+        self.__hasMonitor = True
+
+        self.__monitor.started.connect(self.__monitorStarted)
+        self.__monitor.stopped.connect(self.__monitorStopped)
+
+        self.__monitor.start()
+
+    def stopMonitor(self):
+        if self.__hasMonitor:
+            self.__monitor.terminate()
+
+    def toggleMonitor(self):
+        if self.__hasMonitor:
+            self.stopMonitor()
+        else:
+            self.startMonitor()
+
+    def hoverEnterEvent(self, event):
+        self.setCursor(QCursor(Qt.PointingHandCursor))
+
+    def setMeasurement(self, measurement):
+        self.__measurement = measurement
+        self.setBrush(QBrush(QColor("lightgreen")))
+        if self.scene() is not None:
+            QCoreApplication.postEvent(self.scene(), SpotModifiedEvent())
+
+    def measurement(self):
+        return self.__measurement
+
+class SpotModifiedEvent(QEvent):
+    TYPE = QEvent.registerEventType()
+
+    def __init__(self):
+        QEvent.__init__(self, SpotModifiedEvent.TYPE)
+
+def get_dot11_interfaces():
+    result = []
+    for iface in os.listdir('/sys/class/net'):
+        if os.path.exists(os.path.join('/sys/class/net/', iface, 'phy80211')):
+            result.append(iface)
+    return result
+
+class Monitor(QObject):
+
+    MIN_CHANNEL_DWELL_TIME = 100
+    MAX_CHANNEL_DWELL_TIME = 5000
+
+    started = pyqtSignal()
+    stopped = pyqtSignal(bool)
+
+    def __init__(self, parent):
+        QObject.__init__(self, parent)
+
+        self.__availableInterfaces = get_dot11_interfaces()
+        try:
+            self.__iface = self.__availableInterfaces[-1]
+        except IndexError:
+            self.__iface = None
+
+        self.__process = None
+        self.__tmpdir = tempfile.TemporaryDirectory()
+        self.__horst_errfile_path = os.path.join(
+            self.__tmpdir.name, 'horst.err')
+        self.__horst_configfile_path = os.path.join(
+            self.__tmpdir.name, 'horst.conf')
+
+        self.isTerminated = False
+        self.setDwellTime(250)
+
+        self.__output = ''
+
+        self.essids = None
+        self.measurement = None
+
+    def availableInterfaces(self):
+        return self.__availableInterfaces
+
+    def dwellTime(self):
+        return self.__dwell
+
+    def setDwellTime(self, millisecs):
+        self.__dwell = max(Monitor.MIN_CHANNEL_DWELL_TIME,
+                           min(millisecs, Monitor.MAX_CHANNEL_DWELL_TIME))
+
+    def interfaceIndex(self):
+        return self.__availableInterfaces.index(self.__iface)
+
+    def setInterfaceIndex(self, index):
+        self.__iface = self.__availableInterfaces[index]
+
+    def start(self):
+        if self.__process is not None:
+            return False
+
+        self.__process = QProcess(self)
+        self.__process.setStandardErrorFile(self.__horst_errfile_path)
+
+        self.__process.started.connect(self.started)
+        self.__process.finished.connect(self.__emitStopped)
+        self.__process.readyReadStandardOutput.connect(self.__outputReady)
+
+        with open(self.__horst_configfile_path, 'w') as f:
+            f.write('quiet\n')
+            f.write('interface = {}\n'.format(self.__iface))
+            f.write('filter_packet = BEACON\n')
+            f.write('channel_upper = {}\n'.format(CHANS[-1]))
+            f.write('channel_dwell = {}\n'.format(self.__dwell))
+            f.write('channel = {}\n'.format(CHANS[0]))
+            f.write('channel_scan\n')
+            f.write('channel_scan_rounds = 1\n')
+            f.write('outfile = /dev/stdout\n')
+
+        args = ['-c', self.__horst_configfile_path]
+
+        self.essids = None
+        self.measurement = None
+        self.isTerminated = False
+        self.__process.start("%s-horst" % os.path.abspath(__file__), args,
+                             QIODevice.ReadOnly)
+
+        return True
+
+    def __outputReady(self):
+        self.__output += bytes(self.__process.readAllStandardOutput()).decode()
+        while self.__output:
+            line, sep, self.__output = self.__output.partition('\n')
+            if not sep:
+                self.__output = line
+                break
+
+            if self.measurement is None:
+                self.essids = {}
+                self.measurement = {}
+                continue
+
+            beacon = Beacon(line)
+
+            self.essids[beacon.bssid] = beacon.ssid
+
+            if FREQ_TO_CHAN[beacon.freq] != beacon.chan:
+                continue
+
+            bssidmap = self.measurement.setdefault(beacon.chan, {})
+            bssidmap[beacon.bssid] = (beacon.rssi + bssidmap.get(beacon.bssid, beacon.rssi)) / 2
+
+    def errorText(self):
+        with open(self.__horst_errfile_path) as errfile:
+            return errfile.read()
+
+    def __emitStopped(self, exitCode, exitStatus):
+        isSuccess = exitStatus == QProcess.NormalExit and exitCode == 0
+        self.stopped.emit(isSuccess)
+
+    def terminate(self):
+        if self.__process:
+            self.isTerminated = True
+            self.__process.close()
+            self.__process = None
+
+class Measurement:
+
+    def __init__(self, channelDwellTime):
+        self.pos              = None
+        self.channelDwellTime = channelDwellTime
+        self.beacons          = []
+
+    @property
+    def pos(self):
+        x, y = self.pos
+        return QPointF(x, y)
+
+    @pos.setter
+    def pos(self, value):
+        pos = value.x(), value.y()
+
+class Beacon:
+
+    def __init__(self, line):
+        fields         = [s.strip() for s in line.strip().split(',')]
+        timestamp      = dateutil.parser.parse(fields[0])
+        localTimestamp = timestamp.replace(tzinfo=dateutil.tz.tzlocal())
+        self.line      = line
+        self.timestamp = localTimestamp.astimezone(dateutil.tz.tzutc())
+        self.bssid     = fields[4]
+        self.rssi      = int(fields[6])
+        self.rate      = int(fields[8])
+        self.freq      = int(fields[9])
+        self.ssid      = fields[11]
+        self.chan      = int(fields[13])
+
+class SettingsWidget(QWidget):
+
+    settingsChanged = pyqtSignal()
+
+    def __init__(self, *args):
+        QWidget.__init__(self, *args)
+
+        self.__minRssiSpinBox = QSpinBox(self)
+        self.__minRssiSpinBox.setMinimum(RSSI_MIN)
+        self.__minRssiSpinBox.setMaximum(RSSI_MAX)
+        self.__minRssiSpinBox.setValue(RSSI_MIN)
+        self.__minRssiSpinBox.setSuffix('dBm')
+        self.__minRssiSpinBox.setSingleStep(1)
+        self.__minRssiSpinBox.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
+        self.__minRssiSlider = QSlider(self)
+        self.__minRssiSlider.setMinimum(RSSI_MIN)
+        self.__minRssiSlider.setMaximum(RSSI_MAX)
+        self.__minRssiSlider.setValue(RSSI_MIN)
+        self.__minRssiSlider.setOrientation(Qt.Horizontal)
+
+        self.__minRssiSpinBox.valueChanged.connect(self.settingsChanged)
+        self.__minRssiSpinBox.valueChanged.connect(self.__minRssiSlider.setValue)
+        self.__minRssiSlider.valueChanged.connect(self.__minRssiSpinBox.setValue)
+
+        minRssiLayout = QHBoxLayout()
+        minRssiLayout.addWidget(self.__minRssiSpinBox)
+        minRssiLayout.addWidget(self.__minRssiSlider)
+
+        layout = QFormLayout(self)
+        layout.setLabelAlignment(Qt.AlignCenter)
+        layout.addRow("Signal strength threshold:", minRssiLayout)
+
+    def minRssi(self):
+        return self.__minRssiSpinBox.value()
+
+class MonitorWidget(QWidget):
+
+    def __init__(self, monitor, *args):
+        QWidget.__init__(self, *args)
+
+        self.__monitor = monitor
+        self.__monitor.started.connect(self.__disable)
+        self.__monitor.stopped.connect(self.__enable)
+
+        layout = QVBoxLayout()
+        formLayout = QFormLayout()
+
+        self.__errorMessageBox = QMessageBox(
+            QMessageBox.Critical,
+            "Monitor process terminated with error status",
+            "",
+            QMessageBox.Ok,
+            self)
+        self.__errorMessageBox.setModal(False)
+
+        self.__ifaceComboBox = QComboBox()
+        self.__ifaceComboBox.addItems(self.__monitor.availableInterfaces())
+        self.__ifaceComboBox.setCurrentIndex(self.__monitor.interfaceIndex())
+        self.__ifaceComboBox.activated.connect(self.__monitor.setInterfaceIndex)
+        formLayout.addRow("Interface:", self.__ifaceComboBox)
+        self.__monitor.setInterfaceIndex(self.__ifaceComboBox.currentIndex())
+
+        self.__dwellSpinBox = QSpinBox()
+        self.__dwellSpinBox.setSuffix("ms")
+        self.__dwellSpinBox.setMinimum(Monitor.MIN_CHANNEL_DWELL_TIME)
+        self.__dwellSpinBox.setMaximum(Monitor.MAX_CHANNEL_DWELL_TIME)
+        self.__dwellSpinBox.setSingleStep(50)
+        self.__dwellSpinBox.setValue(monitor.dwellTime())
+        self.__dwellSpinBox.valueChanged.connect(self.__monitor.setDwellTime)
+
+        dwellWhatsThis = """
+        <p>
+
+        <i>Channel dwell time</i> defines the time (in milliseconds) the
+        monitor stays on one channel while it is measuring and hopping channels.
+
+        </p>
+
+        <p>
+
+        The longer the dwell time the more complete the set of found BSS IDs,
+        because the monitor has more chances to hear beacons. To maximize the
+        chances of hearing beacons from all surrounding APs, the channel dwell
+        time should be set a bit higher than the shortest expected beacon
+        interval.
+
+        </p>"""
+
+        self.__dwellSpinBox.setWhatsThis(dwellWhatsThis)
+        dwellLabel = QLabel("Channel dwell time:")
+        dwellLabel.setWhatsThis(dwellWhatsThis)
+        formLayout.addRow(dwellLabel, self.__dwellSpinBox)
+
+        self.__progressBar = QProgressBar()
+        self.__progressBar.setAlignment(Qt.AlignCenter)
+        formLayout.addRow("Status:", self.__progressBar)
+
+        layout.addLayout(formLayout)
+        self.__view = ZoomableGraphicsView(self)
+        self.__view.setRenderHints(QPainter.Antialiasing)
+        layout.addWidget(self.__view)
+
+        self.__toolBar = QToolBar()
+        self.__zoomToFitAction = self.__toolBar.addAction(
+            QIcon(":icons/zoom_to_fit"),
+            "Zoom to fit")
+        self.__zoomToFitAction.triggered.connect(self.__view.fitAllInView)
+        self.__zoomToFitAction.setShortcut(QKeySequence("Ctrl+="))
+
+        layout.addWidget(self.__toolBar)
+
+        self.setLayout(layout)
+
+        self.__progressTimer = QTimer()
+        self.__progressTimer.timeout.connect(self.__updateProgressBar)
+        self.__progressBar.setFormat("Ready")
+        self.__progressBar.setValue(0)
+
+    def minimumSizeHint(self):
+        return QSize(500, 500)
+
+    def __updateProgressBar(self):
+        self.__progressBar.setValue(self.__progressBar.value() +
+                                    self.__monitor.dwellTime())
+
+    def setScene(self, scene):
+        self.__view.setScene(scene)
+
+    def fitAllInMonitorView(self):
+        self.__view.fitAllInView()
+
+    def __disable(self):
+        self.__ifaceComboBox.setEnabled(False)
+        self.__dwellSpinBox.setEnabled(False)
+        self.__progressTimer.start(self.__monitor.dwellTime())
+        self.__progressBar.setMaximum(self.__monitor.dwellTime() * len(CHANS))
+        self.__progressBar.setFormat("Scanning...")
+        self.__progressBar.setValue(0)
+
+    def __enable(self, isSuccess):
+        self.__progressTimer.stop()
+        self.__progressBar.setFormat("Ready")
+        self.__progressBar.setValue(0)
+        if not isSuccess and not self.__monitor.isTerminated:
+            self.__errorMessageBox.setText(self.__monitor.errorText())
+            self.__errorMessageBox.show()
+            self.__errorMessageBox.raise_()
+            self.__errorMessageBox.activateWindow()
+
+        self.__progressBar.setFormat("Ready")
+        self.__ifaceComboBox.setEnabled(True)
+        self.__dwellSpinBox.setEnabled(True)
+
+class MainWindow(QMainWindow):
+
+    def __init__(self):
+        QMainWindow.__init__(self)
+
+        self.__monitor = Monitor(self)
+
+        self.__heatmapScene = None
+        self.__monitorScene = None
+
+        self.setWindowTitle("Puavo WLAN Mapper")
+
+        centralWidget = QWidget(self)
+        centralWidgetLayout = QVBoxLayout(centralWidget)
+
+        self.__settingsWidget = SettingsWidget(self)
+        self.__settingsWidget.settingsChanged.connect(self.updateHeatmapsWithDelay)
+        self.__settingsWidget.setVisible(False)
+        centralWidgetLayout.addWidget(self.__settingsWidget)
+
+        self.__heatmapView = ZoomableGraphicsView(self)
+        self.__heatmapView.setRenderHints(QPainter.Antialiasing)
+        self.__heatmapView.setVisible(False)
+        centralWidgetLayout.addWidget(self.__heatmapView)
+
+        self.__hintLabel = QLabel('<a href="create">Create</a> or '
+                                  '<a href="open">open</a> a project to begin.',
+                                  self)
+        self.__hintLabel.linkActivated.connect(self.__hintLabelLinkActivated)
+        self.__hintLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.__hintLabel.setWordWrap(True)
+        centralWidgetLayout.addWidget(self.__hintLabel)
+
+        self.setCentralWidget(centralWidget)
+
+        self.__monitorDockWidget = QDockWidget(self)
+        self.__monitorWidget = MonitorWidget(self.__monitor, self)
+        self.__monitorWidget.setEnabled(False)
+        self.__monitorDockWidget.setWidget(self.__monitorWidget)
+        self.__monitorDockWidget.setWindowTitle("Monitor")
+        self.__monitorDockWidget.setVisible(False)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.__monitorDockWidget)
+
+        self.__aboutAction = QAction(self)
+        self.__aboutAction.setText("&About...")
+        self.__aboutAction.triggered.connect(self.__showAboutDialog)
+
+        self.__newProjectAction = QAction(self)
+        self.__newProjectAction.setText("&New...")
+        self.__newProjectAction.setShortcut(QKeySequence("Ctrl+N"))
+        self.__newProjectAction.triggered.connect(self.__newProjectDialog)
+
+        self.__saveProjectAction = QAction(self)
+        self.__saveProjectAction.setText("&Save")
+        self.__saveProjectAction.setShortcut(QKeySequence("Ctrl+S"))
+        self.__saveProjectAction.triggered.connect(self.__saveProject)
+        self.__saveProjectAction.setEnabled(False)
+
+        self.__saveProjectAsAction = QAction(self)
+        self.__saveProjectAsAction.setText("Save &As...")
+        self.__saveProjectAsAction.setShortcut(QKeySequence("Ctrl+Shift+S"))
+        self.__saveProjectAsAction.triggered.connect(self.__saveProjectAsDialog)
+        self.__saveProjectAsAction.setEnabled(False)
+
+        self.__openProjectAction = QAction(self)
+        self.__openProjectAction.setText("&Open...")
+        self.__openProjectAction.setShortcut(QKeySequence("Ctrl+O"))
+        self.__openProjectAction.triggered.connect(self.__openProjectDialog)
+
+        self.__quitAction = QAction(self)
+        self.__quitAction.setText("&Quit")
+        self.__quitAction.setShortcut(QKeySequence("Ctrl+Q"))
+        self.__quitAction.triggered.connect(self.close)
+
+        self.__whatsThisAction = QWhatsThis.createAction()
+
+        menuBar = QMenuBar()
+
+        fileMenu = menuBar.addMenu("&File")
+        fileMenu.addAction(self.__newProjectAction)
+        fileMenu.addAction(self.__openProjectAction)
+        fileMenu.addAction(self.__saveProjectAction)
+        fileMenu.addAction(self.__saveProjectAsAction)
+        fileMenu.addSeparator()
+        fileMenu.addAction(self.__quitAction)
+
+        viewMenu = menuBar.addMenu("&View")
+        viewMenu.addAction(self.__monitorDockWidget.toggleViewAction())
+
+        helpMenu = menuBar.addMenu("&Help")
+        helpMenu.addAction(self.__whatsThisAction)
+        helpMenu.addSeparator()
+        helpMenu.addAction(self.__aboutAction)
+
+        self.setMenuBar(menuBar)
+
+        self.__drawHeatmapsThread = DrawHeatmapsThread()
+        self.__drawHeatmapsThread.heatmapReady.connect(self.__addHeatmap)
+        self.__drawHeatmapsThread.heatmapReady.connect(
+            self.__heatmapView.fitAllInView)
+
+        self.__updateHeatmapsTimer = QTimer(self)
+        self.__updateHeatmapsTimer.setInterval(700)
+        self.__updateHeatmapsTimer.setSingleShot(True)
+        self.__updateHeatmapsTimer.timeout.connect(self.updateHeatmaps)
+
+    def __hintLabelLinkActivated(self, href):
+        if href == 'create':
+            self.__newProjectAction.trigger()
+        elif href == 'open':
+            self.__openProjectAction.trigger()
+
+    def updateHeatmapsWithDelay(self):
+        self.__updateHeatmapsTimer.start()
+
+    def updateHeatmaps(self):
+        if self.__monitorScene is None:
+            return
+
+        self.__heatmapScene.clear()
+
+        xs, ys, measurements = self.__monitorScene.measurements()
+
+        width = self.__project.floorPlanPixmap().width()
+        height = self.__project.floorPlanPixmap().height()
+
+        heatmapData = []
+
+        for chan, bssidmap in measurements.items():
+
+            ## To RBF-interpolate, we need more than 1 measurement point.
+            if len(xs) > 1:
+
+                for bssid, zs in bssidmap.items():
+                    essid = self.__project.essids[bssid]
+                    zs = [RSSI_MIN if z < self.__settingsWidget.minRssi() else z for z in zs]
+                    if max(zs) < self.__settingsWidget.minRssi():
+                        continue
+                    heatmapData.append((chan, essid, bssid, width, height, xs, ys, zs))
+
+            else:
+                self.__hideHeatmaps()
+
+        self.__drawHeatmapsThread.drawHeatmaps(heatmapData)
+
+    def closeEvent(self, event):
+        self.__monitor.terminate()
+
+    def sizeHint(self):
+        return QSize(800, 600)
+
+    def __openProjectDialog(self):
+        filepath = QFileDialog.getOpenFileName(None,
+                                               "Open a project",
+                                               QDir.currentPath(),
+                                               DIALOG_FILTER)
+        if not filepath:
+            return
+
+        self.openProject(filepath)
+
+    def openProject(self, filepath):
+        project = Project()
+
+        if not project.load(filepath):
+            QMessageBox.critical(self, "Failed to open a project",
+                                 project.lastErrorMessage())
+            return
+
+        self.__setProject(project)
+
+    def __saveProject(self):
+        if self.__project.filePath() is None:
+            self.__saveProjectAsDialog()
+            return
+        self.__save(self.__project.filePath())
+
+    def __saveProjectAsDialog(self):
+        proposedFilePath = self.__project.filePath()
+        if proposedFilePath is None:
+            proposedFilePath = QDir.currentPath() + "/untitled_project%s" % FILE_EXT
+        filepath = QFileDialog.getSaveFileName(None,
+                                               "Save the project as",
+                                               proposedFilePath,
+                                               DIALOG_FILTER)
+        filepath = str(filepath)
+        if not filepath:
+            return
+
+        if not str(filepath).endswith(FILE_EXT):
+            filepath = '%s%s' % (filepath, FILE_EXT)
+
+        self.__save(filepath)
+
+    def __save(self, filepath):
+        spotData = []
+        for spot in self.__monitorScene.spots():
+            spotData.append((spot.pos(), spot.measurement()))
+        self.__project.setSpotData(spotData)
+
+        if not self.__project.save(filepath):
+            QMessageBox.critical(self, "Failed to save the project",
+                                 project.lastErrorMessage())
+            return
+
+    def __newProjectDialog(self):
+        dialog = NewProjectDialog()
+        if not dialog.exec_():
+            return
+
+        floorPlanFilePath = dialog.floorPlanFilePath()
+
+        project = Project()
+        if not project.loadFloorPlan(floorPlanFilePath):
+            QMessageBox.critical(self, "Failed to create a new project",
+                                 project.lastErrorMessage())
+            return
+
+        self.__setProject(project)
+
+    def __hideHeatmaps(self):
+        self.__hintLabel.setVisible(True)
+        self.__heatmapView.setVisible(False)
+        self.__settingsWidget.setVisible(False)
+        self.__hintLabel.setText("Heatmaps will be rendered when two or more "
+                                 "spots have been succesfully monitored.")
+
+    def __setProject(self, project):
+        self.__monitor.terminate()
+
+        self.__project = project
+
+        if self.__heatmapScene is not None:
+            self.__heatmapScene.selectionChanged.disconnect(
+                self.__updateCombinedHeatmap)
+
+        self.__heatmapScene = HeatmapScene(project, self)
+        self.__heatmapView.setScene(self.__heatmapScene)
+        self.__hideHeatmaps()
+        self.__heatmapScene.selectionChanged.connect(
+            self.__updateCombinedHeatmap)
+
+        if self.__monitorScene is not None:
+            self.__monitorScene.measurementsChanged.disconnect(
+                self.updateHeatmaps)
+
+        self.__monitorScene = MonitorScene(self.__monitor, self)
+        self.__monitorScene.measurementsChanged.connect(self.updateHeatmaps)
+        self.__monitorWidget.setScene(self.__monitorScene)
+        self.__monitorScene.setProject(project)
+
+        self.__saveProjectAction.setEnabled(True)
+        self.__saveProjectAsAction.setEnabled(True)
+        self.__monitorDockWidget.setVisible(True)
+        self.__monitorWidget.setEnabled(True)
+        self.__monitorWidget.fitAllInMonitorView()
+
+    def __updateCombinedHeatmap(self):
+        if not self.__heatmapScene.selectedItems():
+            self.__monitorScene.setHeatmap(QPixmap())
+            return
+
+        zs = None
+
+        for item in self.__heatmapScene.selectedItems():
+            if zs is None:
+                zs = item.zs
+            else:
+                zs = [max(v1, v2) for v1, v2 in zip(zs, item.zs)]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            filepath = os.path.join(tmpdir, "combined.png")
+            drawHeatmap(filepath,
+                        self.__project.floorPlanPixmap().width(),
+                        self.__project.floorPlanPixmap().height(),
+                        item.xs, item.ys, zs)
+            pixmap = QPixmap(filepath, "png")
+
+        self.__monitorScene.setHeatmap(pixmap)
+
+    def __addHeatmap(self, *args):
+        self.__hintLabel.setVisible(False)
+        self.__heatmapView.setVisible(True)
+        self.__settingsWidget.setVisible(True)
+        self.__heatmapScene.addHeatmap(*args)
+
+    def __showAboutDialog(self):
+        aboutText =  (
+"<h1>Puavo WLAN Mapper</h1>"
+"<p>Copyright © 2015 <a href=\"http://opinsys.fi\">Opinsys Oy</a></p>"
+"<p>This program is free software: you can redistribute it and/or "
+"modify it under the terms of the GNU General Public License as "
+"published by the Free Software Foundation, either version 2 of the "
+"License, or (at your option) any later version.</p>"
+"<p>This program is distributed in the hope that it will be useful, but"
+" WITHOUT ANY WARRANTY; without even the implied warranty of "
+"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</p>"
+"<p>See the <a href=\"https://www.gnu.org/licenses/gpl-2.0.html\">GNU "
+"General Public License</a> for more details.</p>"
+"<h2>Software used by Puavo WLAN Mapper</h2>"
+"<ul>"
+'<li><a href="http://matplotlib.org/">matplotlib</a></li>'
+'<li><a href="https://www.scipy.org/">SciPy</a></li>'
+'<li><a href="http://www.numpy.org/">Numpy</a></li>'
+'<li><a href="http://br1.einfach.org/tech/horst/">horst</a></li>'
+'<li><a href="https://www.riverbankcomputing.com/software/pyqt">PyQt4</a></li>'
+'<li><a href="https://www.python.org/">Python3</a></li>'
+"</ul>"
+        )
+
+        QMessageBox.about(self, "About Puavo WLAN Mapper", aboutText)
+
+class NewProjectDialog(QDialog):
+
+    def __init__(self, *args):
+        QDialog.__init__(self, *args)
+
+        self.setModal(True)
+        self.setWindowTitle("Create a new project")
+
+        self.__imageLabel = QLabel()
+        browseButton = QPushButton("&Browse...")
+        browseButton.clicked.connect(self.__getFloorPlanFileName)
+
+        cancelButton = QPushButton("&Cancel")
+        cancelButton.clicked.connect(self.reject)
+        createButton = QPushButton("Create")
+        createButton.clicked.connect(self.accept)
+        createButton.setEnabled(False)
+
+        layout = QVBoxLayout(self)
+        formLayout = QFormLayout()
+        browseLayout = QVBoxLayout()
+        buttonLayout = QHBoxLayout()
+
+        browseLayout = QHBoxLayout()
+        browseLayout.addWidget(self.__imageLabel)
+        browseLayout.addStretch()
+        browseLayout.addWidget(browseButton)
+
+        formLayout.addRow("Floor plan:", browseLayout)
+
+        buttonLayout.addWidget(cancelButton)
+        buttonLayout.addWidget(createButton)
+
+        layout.addLayout(formLayout)
+        layout.addLayout(buttonLayout)
+
+        self.__createButton = createButton
+
+        self.__floorPlanFilePath = None
+
+    def floorPlanFilePath(self):
+        return self.__floorPlanFilePath
+
+    def __getFloorPlanFileName(self):
+        filepath = QFileDialog.getOpenFileName(None,
+                                               "Load floor plan",
+                                               QDir.currentPath(),
+                                               "Images (*.png)")
+        if filepath:
+            pixmap = QPixmap(filepath, "png")
+            if not pixmap.isNull():
+                self.__imageLabel.setPixmap(pixmap.scaledToWidth(320))
+                self.__imageLabel.setToolTip(filepath)
+                self.__floorPlanFilePath = filepath
+            self.__createButton.setEnabled(not pixmap.isNull())
+
+def main():
+    app = QApplication(sys.argv)
+
+    if app.argc() > 2:
+        error_message = "ERROR: invalid number of arguments ({}), expected at most 1"
+        print(error_message.format(app.argc() - 1), file=sys.stderr)
+        print("Usage: {} [FILE]".format(sys.argv[0]), file=sys.stderr)
+        return 1
+
+    win = MainWindow()
+    win.show()
+
+    if app.argc() == 2:
+        win.openProject(sys.argv[1])
+
+    return app.exec_()
+
+if __name__ == "__main__":
+    sys.exit(main())

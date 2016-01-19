@@ -1,0 +1,58 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:             puavo-wlanagw
+# Required-Start:       $remote_fs $syslog $network
+# Required-Stop:        $remote_fs $syslog $network
+# Should-Start:
+# Should-Stop:
+# Default-Start:        2 3 4 5
+# Default-Stop:         0 1 6
+# Short-Description:    Puavo WLAN Gateway Daemon
+# Description:          Puavo WLAN Gateway Daemon
+### END INIT INFO
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+NAME=puavo-wlangw
+EXECUTABLE=/usr/sbin/$NAME
+DESC="Puavo WLAN Gateway Daemon"
+PIDFILE=/var/run/$NAME.pid
+
+# Possible condition if the package has been removed (but not purged).
+[ -x "$EXECUTABLE" ] || exit 0
+
+[ -f "/etc/default/$NAME" ] && . "/etc/default/$NAME"
+
+[ -n "$PWGW_AUTOSTART" ] || exit 0
+[ "$PWGW_AUTOSTART" -ne 0 ] || exit 0
+
+. /lib/lsb/init-functions
+
+case "$1" in
+    start)
+        log_daemon_msg "Starting $DESC" "$NAME"
+        start-stop-daemon --start --exec "$EXECUTABLE" \
+            --pidfile "$PIDFILE" -- -d "${PWGW_CONFIG_FILE}"
+        log_end_msg "$?"
+        ;;
+    stop)
+        log_daemon_msg "Stopping $DESC" "$NAME"
+        start-stop-daemon --stop --pidfile "$PIDFILE"
+        log_end_msg "$?"
+        ;;
+    force-reload|restart)
+        $0 stop
+        sleep 3
+        $0 start
+        ;;
+    status)
+        status_of_proc -p "$PIDFILE" "$EXECUTABLE" "$NAME"
+        exit $?
+        ;;
+    *)
+        echo "Usage: service $NAME {start|stop|force-reload|restart|status}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

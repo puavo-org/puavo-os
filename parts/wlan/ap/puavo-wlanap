@@ -1,0 +1,1184 @@
+#!/usr/bin/env ruby1.9.1
+# coding: utf-8
+
+# = Puavo's Tunneled WLAN Access Point
+#
+# Author    :: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+# Copyright :: Copyright (C) 2015 Opinsys Oy
+# License   :: GPLv2+
+#
+# == Usage
+#
+# Get help:
+#   puavo-wlanap --help
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+# Standard library modules.
+require 'digest'
+require 'erb'
+require 'fileutils'
+require 'getoptlong'
+require 'net/http'
+require 'pathname'
+require 'socket'
+require 'timeout'
+
+require 'puavo/etc'
+require 'puavo/rest-client'
+
+require 'puavowlan'
+
+module Log
+
+  def self.info(msg)
+    Log.log(:INFO, msg)
+  end
+
+  def self.log(priority, msg)
+    STDERR.puts("#{Time.now.utc} puavo-wlanap[#{Process.pid}]: " \
+                "#{priority}: #{msg}")
+  end
+
+  def self.warning(msg)
+    Log.log(:WARNING, msg)
+  end
+
+  def self.error(msg)
+    Log.log(:ERROR, msg)
+  end
+
+  def self.exception(msg, e)
+    Log.error(msg)
+    Log.error("#{e.exception}: #{e.message}")
+    e.backtrace.each { |line| Log.error("\tfrom: #{line}") }
+  end
+
+end
+
+module Dot11
+
+  CHANNELS_2G = [1, 6, 11]
+  CHANNELS_5G = [36, 40, 44, 48]
+
+  class Phy
+
+    attr_accessor :channel
+    attr_reader   :driver
+    attr_reader   :mac
+    attr_reader   :name
+    attr_reader   :product
+    attr_reader   :supported_channels
+
+    def initialize(name)
+      sysfs_dir           = "/sys/class/ieee80211/#{name}"
+      device_info         = IO.read("#{sysfs_dir}/device/uevent")
+
+      @name               = name
+      @mac                = IO.read("#{sysfs_dir}/macaddress").strip
+      @driver             = /^DRIVER=(.*)$/.match(device_info)[1].strip
+      @product            = /^PRODUCT=(.*)$/.match(device_info)[1].strip
+      @supported_channels = []
+
+      IO.popen(['iw', 'phy', @name, 'info']) do |io|
+        until io.eof?
+          case io.gets
+          when /^\s+\* 2412 MHz \[1\] .*$/
+            @supported_channels += Dot11::CHANNELS_2G
+          when /^\s+\* 5180 MHz \[36\] .*$/
+            @supported_channels += Dot11::CHANNELS_5G
+          end
+        end
+      end
+      $?.success? or fail "failed to list supported channels of #{@name}"
+    end
+
+    def add_vif(name)
+      run_or_fail('iw', 'phy', @name, 'interface', 'add', name, 'type', 'managed')
+      Vif.new(name, self)
+    end
+
+    def each_vif
+      retval    = nil
+      phy_found = false
+
+      IO.popen(['iw', 'dev']) do |io|
+        io.each_line do |line|
+
+          is_phy_line = line =~ /^phy#(\d+)$/
+          unless phy_found
+            phy_found = "phy#{$1}" == @name
+            next
+          end
+
+          # Encountering another phy line ends the current phy section.
+          break if is_phy_line
+
+          # Ignore all but interface lines.
+          if line =~ /^\s+Interface (.*)$/
+            retval = yield Vif.new($1, self)
+          end
+
+        end
+      end
+
+      fail 'failed to list interfaces' unless $?.success?
+      retval
+    end
+
+  end
+
+  class Vif
+
+    attr_accessor :stations
+    attr_reader :name
+    attr_reader :phy
+    attr_reader :rx_bytes
+    attr_reader :tx_bytes
+    attr_reader :rx_rate
+    attr_reader :tx_rate
+
+    def initialize(name, phy)
+      @name              = name
+      @phy               = phy
+      @rx_rate           = 0
+      @tx_rate           = 0
+      @rx_bytes          = 0
+      @tx_bytes          = 0
+      @stats_update_time = Time.at(0)
+      @stations          = {}
+    end
+
+    def update_stats
+      File.read('/proc/net/dev') =~ /^\s*#{@name}:(.*)$/
+
+      stats_update_time  = Time.now
+      secs               = stats_update_time - @stats_update_time
+      rx_bytes           = $1.split[0].to_i
+      tx_bytes           = $1.split[8].to_i
+      @rx_rate           = (rx_bytes - @rx_bytes) / secs
+      @tx_rate           = (tx_bytes - @tx_bytes) / secs
+      @rx_bytes          = rx_bytes
+      @tx_bytes          = tx_bytes
+      @stats_update_time = stats_update_time
+    end
+
+    def del
+      run_or_fail('iw', 'dev', @name, 'del')
+    end
+
+    def scan
+      run_or_fail('ip', 'link', 'set', 'dev', @name, 'up')
+
+      # Prime results with worst possible signal levels.
+      results = {}
+      @phy.supported_channels.each { |ch| results[ch] = -999 }
+
+      IO.popen(['iwlist', @name, 'scan']) do |io|
+        io.each_line do |line|
+          next unless line =~ /^\s+Cell [0-9]+ - Address: .*$/
+
+          io.readline.strip =~ /^Channel:([0-9]+)$/
+          channel = $1.to_i
+
+          io.readline.strip # Ignore frequency line.
+
+          io.readline.strip =~ /^Quality=[0-9]+\/[0-9]+\s+Signal level=(-[0-9]+) dBm.*$/
+          signal_level = $1.to_i
+
+          if results.has_key?(channel)
+            results[channel] = signal_level if results[channel] < signal_level
+          end
+        end
+      end
+      $?.success? or fail "failed to scan with interface #{@name}"
+
+      # Return channels in ascending signal level order.
+      Hash[results.sort_by { |channel, signal_level| signal_level }].keys
+    end
+
+    def tx_power
+      dBm = IO.popen(['iwconfig', @name]) do |io|
+        io.read =~ /^.*\s+Tx-Power=(\d+)\s+dBm\s*$/ and $1.to_i
+      end
+      $?.success? or fail "failed to get the current tx power of #{@name}"
+      dBm
+    end
+
+    def set_tx_power(dBm)
+      Log.info("limit txpower of phy #{@phy.name} to #{dBm} dBm")
+      run_or_fail('iw', 'phy', @phy.name, 'set', 'txpower', 'limit', "#{dBm * 100}")
+    end
+
+    def mac
+      File.read("/sys/class/net/#{@name}/address").strip
+    end
+
+  end
+
+  def self.each_phy
+    Dir.glob('/sys/class/ieee80211/*') do |phy_path|
+      phy_name = File.basename(phy_path)
+      yield Phy.new(phy_name)
+    end
+  end
+
+end
+
+RUNDIR                     = '/run/puavo-wlanap'
+CTRLSOCKET                 = File.join(RUNDIR, 'ctrlsocket')
+THIS_SCRIPT                = Pathname.new($0).realpath
+HOSTAPD_ACTION_SCRIPT      = THIS_SCRIPT.dirname.join('puavo-wlanap-hostapd-action')
+HOSTAPD_CTRL_INTERFACE_DIR = File.join(RUNDIR, 'hostapd')
+
+def run_or_fail(cmd, *args)
+  cmd_string = ([cmd] + args).join(' ')
+  system(cmd, *args)
+  $?.success? or fail "command '#{cmd_string}' failed"
+end
+
+class Conf
+
+  def write(filepath, mode=0640)
+    File.open(filepath, 'w', mode) do |file|
+      conf = ERB.new(template).result(binding)
+      file.write(conf)
+    end
+  end
+
+end
+
+class HostapdConf < Conf
+
+  def initialize(kwargs = {})
+    @bridge         = kwargs.fetch(:bridge)
+    @channel        = kwargs.fetch(:channel)
+    @ctrl_interface = kwargs.fetch(:ctrl_interface)
+    @interface      = kwargs.fetch(:interface)
+    @ssid           = kwargs.fetch(:ssid)
+    @wpa            = kwargs.fetch(:wpa)
+    @wpa_passphrase = kwargs.fetch(:wpa_passphrase)
+    @hw_mode        = Dot11::CHANNELS_5G.include?(@channel) ? 'a' : 'g'
+
+    phy_name = File.read("/sys/class/net/#{@interface}/phy80211/name").strip
+
+    is_ht20sgi_capab = IO.popen(['iw', phy_name, 'info']) do |io|
+      !io.grep(/^\s+RX HT20 SGI.*$/).empty?
+    end
+    $?.success? or fail 'failed to query HT20 SGI capability'
+
+    is_ht40sgi_capab = IO.popen(['iw', phy_name, 'info']) do |io|
+      !io.grep(/^\s+RX HT40 SGI.*$/).empty?
+    end
+    $?.success? or fail 'failed to query HT40 SGI capability'
+
+    case @channel
+    when 1, 6, 11
+      @ht_capab = '[HT20]' + (is_ht20sgi_capab ? '[SHORT-GI-20]' : '')
+    when 36, 44
+      @ht_capab = '[HT40+]' + (is_ht40sgi_capab ? '[SHORT-GI-40]' : '')
+    when 40, 48
+      @ht_capab = '[HT40-]' + (is_ht40sgi_capab ? '[SHORT-GI-40]' : '')
+    else
+      fail "unsupported channel #{@channel}"
+    end
+  end
+
+  def template
+    <<'EOF'
+interface=<%= @interface %>
+driver=nl80211
+country_code=FI
+hw_mode=<%= @hw_mode %>
+channel=<%= @channel %>
+max_num_sta=1000
+wmm_enabled=1
+ctrl_interface=<%= @ctrl_interface %>
+ieee80211n=1
+ht_capab=<%= @ht_capab %>
+wds_sta=1
+ssid=<%= @ssid %>
+bridge=<%= @bridge %>
+wpa=<%= @wpa %><% if @wpa != 0 %>
+auth_algs=3
+wpa_passphrase=<%= @wpa_passphrase %>
+rsn_pairwise=CCMP
+wpa_key_mgmt=WPA-PSK
+eapol_version=1
+eapol_key_index_workaround=1
+eap_reauth_period=0
+wpa_strict_rekey=0
+wpa_group_rekey=0
+wpa_gmk_rekey=0<% end %>
+EOF
+  end
+
+end
+
+class VtundConf < Conf
+
+  def initialize(kwargs = {})
+    @bridge = kwargs.fetch(:bridge)
+  end
+
+  def template
+    <<'EOF'
+options {
+    syslog daemon;
+}
+
+puavo-wlanap {
+    passwd    wlan;
+    type      ether;
+    proto     udp;
+    speed     0;
+    encrypt   no;
+    compress  no;
+    multi     yes;
+
+    up {
+        program "<%= THIS_SCRIPT %> --ctrlmsg 'vtun-up:%%:<%= @bridge %>'";
+    };
+}
+EOF
+  end
+
+end
+
+module Services
+
+  module Spawnable
+    attr_reader :name
+    attr_reader :pid
+
+    def spawn
+      @pid = Process.spawn(@command, *@args)
+    end
+
+    def kill(sigterm_timeout=3)
+      Process.kill('SIGTERM', @pid)
+      begin
+        Timeout.timeout(sigterm_timeout) do
+          Process.waitpid(@pid)
+        end
+      rescue Timeout::Error
+        Process.kill('SIGKILL', @pid)
+        Process.waitpid(@pid)
+      end
+    end
+
+  end
+
+  class Dhclient
+    include Services::Spawnable
+
+    def initialize(kwargs = {})
+      @bridge  = kwargs.fetch(:bridge)
+
+      @args    = ['-d', @bridge]
+      @command = 'dhclient'
+      @name    = "#{@command}_#{@bridge}"
+
+    end
+
+  end
+
+  class Hostapd
+    include Services::Spawnable
+
+    attr_reader :phy
+    attr_reader :vif
+
+    def initialize(kwargs = {})
+      @bridge = kwargs.fetch(:bridge)
+      @net    = kwargs.fetch(:net)
+      @phy    = kwargs.fetch(:phy)
+      @vif    = kwargs.fetch(:vif)
+
+      @command  = 'hostapd'
+      @name     = "#{@command}_#{@vif.name}"
+      @conffile = File.join(RUNDIR, "#{@name}.conf")
+      @args     = [@conffile]
+
+      HostapdConf.new(:bridge         => @bridge,
+                      :channel        => @phy.channel,
+                      :ctrl_interface => HOSTAPD_CTRL_INTERFACE_DIR,
+                      :interface      => @vif.name,
+                      :ssid           => @net['ssid'],
+                      :wpa            => @net['type'] == 'open' ? 0 : 2,
+                      :wpa_passphrase => @net['password']).write(@conffile)
+    end
+
+  end
+
+  class HostapdCli
+    include Services::Spawnable
+
+    attr_reader :hostapd
+
+    def initialize(kwargs = {})
+      @hostapd = kwargs.fetch(:hostapd)
+
+      @vif     = @hostapd.vif
+      @command = 'hostapd_cli'
+      @name    = "#{@command}_#{@vif.name}"
+      @args    = ["-i#{@vif.name}",
+                  "-p#{HOSTAPD_CTRL_INTERFACE_DIR}",
+                  "-a#{HOSTAPD_ACTION_SCRIPT}"]
+    end
+
+    def spawn
+      hostapd_socket = "#{HOSTAPD_CTRL_INTERFACE_DIR}/#{@vif.name}"
+      Timeout.timeout(5) do
+        loop do
+          break if File.exists?(hostapd_socket)
+          Log.info("waiting for hostapd control socket #{hostapd_socket}")
+          sleep 0.1
+        end
+      end
+      Log.info("found hostapd control socket #{hostapd_socket}")
+      super
+    end
+
+  end
+
+  class Vtund
+    include Services::Spawnable
+
+    def initialize(kwargs = {})
+      @address = kwargs.fetch(:address)
+      @bridge  = kwargs.fetch(:bridge)
+      @port    = kwargs.fetch(:port)
+
+      @command  = 'vtund'
+      @name     = "#{@command}_#{@bridge}"
+      @conffile = File.join(RUNDIR, "#{@name}.conf")
+      @args     = ['-n', '-P', @port.to_s, '-f', @conffile, 'puavo-wlanap', @address]
+
+      VtundConf.new(:bridge => @bridge).write(@conffile)
+
+    end
+  end
+
+end
+
+class Host
+
+  CONTROLLER_ADDRESS = 'wlangw'
+  CONTROLLER_PORT    = 45046
+  VTUN_ADDRESS       = 'wlangw'
+  VTUN_PORT          = 45045
+  RECONF_INTERVAL    = 900
+  REPORT_INTERVAL    = 30
+  TX_POWER_MAX       = 27
+
+  def initialize(kwargs = {})
+    @bridges       = {}
+    @bss_index     = -1
+    @conf          = {
+      :reconf_interval => RECONF_INTERVAL,
+      :report_interval => REPORT_INTERVAL,
+    }
+    @controller    = Net::HTTP.new(kwargs.fetch(:controller_address,
+                                                CONTROLLER_ADDRESS),
+                                   kwargs.fetch(:controller_port,
+                                                CONTROLLER_PORT))
+    @ctrlconn         = nil
+    @ctrlconn_time    = nil
+    @ctrlserv         = nil
+    @last_reconf_time = Time.at(0)
+    @last_report_time = Time.at(0)
+    @nets             = nil
+    @puavo_client     = PuavoRestClient.new
+    @services         = {}
+    @vifs             = []
+    @vtun_address     = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
+    @vtun_port        = kwargs.fetch(:vtun_port, VTUN_PORT)
+  end
+
+  def run
+    Log.info('starting')
+    FileUtils.mkdir_p(RUNDIR)
+    File.open(File.join(RUNDIR, 'lock'), File::RDWR | File::CREAT, 0640) do |lockfile|
+      unless lockfile.flock(File::LOCK_EX | File::LOCK_NB)
+        Log.error("another instance of puavo-wlanap is already running in #{RUNDIR}")
+        return 1
+      end
+      run_locked
+    end
+  end
+
+  private
+
+  def get_conf()
+    def store_min(hash, key, new_value)
+      old_value = hash.fetch(key, new_value)
+      hash[key] = new_value < old_value ? new_value : old_value
+    end
+
+    def store_longest(hash, key, new_value)
+      old_value = hash.fetch(key, new_value)
+      hash[key] = new_value.length > old_value.length ? new_value : old_value
+    end
+
+    response = @puavo_client.get("/v3/devices/#{PUAVO_ETC.hostname}")
+
+    conf = {}
+
+    # NOTE: Multiple tags with same prefixes might be given (e.g. zero
+    # or more wlanap_tx_power tags in organization, school and/or
+    # device levels). Here we choose to use the most restrictive
+    # value.
+    response.parse['tags'].each do |tag|
+      case tag
+      when /^wlanap_reconf_interval:(\d+)$/
+        store_min(conf, :reconf_interval, $1.to_i)
+      when /^wlanap_report_interval:(\d+)$/
+        store_min(conf, :report_interval, $1.to_i)
+      when /^txpower:([0-9]+)$/, /^wlanap_tx_power:([0-9]+)$/
+        store_min(conf, :tx_power, $1.to_i)
+      when /^wlanap_tx_power_2g:([0-9]+)$/
+        store_min(conf, :tx_power_2g, $1.to_i)
+      when /^txpower5:([0-9]+)$/, /^wlanap_tx_power_5g:([0-9]+)$/
+        store_min(conf, :tx_power_5g, $1.to_i)
+      when /^wlanap_channels:((\d+:)*(\d+))$/
+        store_longest(conf, :channels, $1.split(':').map { |ch| ch.to_i })
+      end
+    end
+
+    conf
+  end
+
+  def get_nets()
+    nets = []
+    nets_wait = 1
+    while true
+      response = @puavo_client.get("/v3/devices/#{PUAVO_ETC.hostname}/wlan_networks")
+
+      nets = response.parse.select { |net| net['wlan_ap'] }
+      break unless nets.empty?
+
+      nets_wait = [nets_wait * 2, 3600].min
+      sleep nets_wait
+    end
+
+    # At most 4 BSSes per radio are supported.
+    ignored_nets = nets.slice!(4..-1)
+    if !ignored_nets.nil? && !ignored_nets.empty?
+      Log.warning("more than 4 networks defined, ignoring " +
+                  ignored_nets.map{ |n| n['ssid'] }.join(', '))
+    end
+
+    nets
+  end
+
+  def reconf
+    @last_reconf_time = Time.now
+
+    new_conf = get_conf
+    return unless new_conf != @conf
+
+    @conf = new_conf
+
+    update_tx_powers
+  end
+
+  def run_locked
+    @nets = get_nets
+    @conf = get_conf
+
+    Signal.trap('EXIT') do
+      Log.info('exiting')
+      controller_send_report('bye')
+      Process.kill('-SIGTERM', 0)
+
+      @vifs.each do |vif|
+        begin
+          vif.del
+        rescue StandardError => e
+          Log.exception("failed to delete vif #{vif.name}", e)
+        end
+      end
+
+      @bridges.each_value do |bridge|
+        # Ignore errors, we are already exiting.
+        system('ip', 'link', 'set', 'dev', bridge, 'down')
+        system('brctl', 'delbr', bridge)
+      end
+
+      FileUtils.rm_rf(RUNDIR)
+      Log.info('bye')
+    end
+
+    [:HUP, :USR1, :USR2].each { |s| Signal.trap(s, 'SIG_IGN') }
+
+    sigqueue = []
+    selfpipe_r, selfpipe_w = IO.pipe
+
+    [:CHLD, :INT, :QUIT, :TERM].each do |signal|
+      Signal.trap(signal) do
+        sigqueue << signal
+        selfpipe_w.write_nonblock('o')
+      end
+    end
+
+    @ctrlserv = UNIXServer.new(CTRLSOCKET)
+
+    setup_bridges
+    setup_phys
+
+    Log.info('started')
+
+    loop do
+      signal = sigqueue.pop
+      case signal
+
+      when :INT, :QUIT, :TERM
+        Log.error("received fatal signal #{signal}")
+        return 1
+
+      when :CHLD
+        child_pid = Process.wait(0, Process::WNOHANG)
+        if @services.has_key?(child_pid)
+          child_name = @services[child_pid].name
+          Log.error("child service #{child_name} died")
+          return 1
+        end
+
+      else
+        reads    = [selfpipe_r, @ctrlconn.nil? ? @ctrlserv : @ctrlconn]
+        timeouts = []
+
+        timeouts << @conf.fetch(:reconf_interval, RECONF_INTERVAL) - (Time.now - @last_reconf_time)
+        timeouts << @conf.fetch(:report_interval, REPORT_INTERVAL) - (Time.now - @last_report_time)
+
+        unless @ctrlconn.nil?
+          timeouts << 5 - (Time.now - @ctrlconn_time)
+        end
+
+        ready = IO.select(reads, [], [], [0, timeouts.min].max)
+
+        if ready.nil?
+
+          if Time.now - @last_reconf_time > @conf.fetch(:reconf_interval, RECONF_INTERVAL)
+            reconf
+          end
+
+          if Time.now - @last_report_time > @conf.fetch(:report_interval, REPORT_INTERVAL)
+            @vifs.each { |vif| vif.update_stats }
+            controller_send_report('status', get_status)
+          end
+
+          if @ctrlconn && Time.now - @ctrlconn_time > 5
+            Log.warning('control socket connection timeout')
+            close_ctrlconn
+          end
+
+          next
+        end
+
+        selfpipe_r.read_nonblock(1) if ready[0].include?(selfpipe_r)
+        accept_ctrlconn             if ready[0].include?(@ctrlserv)
+        handle_ctrlconn             if ready[0].include?(@ctrlconn)
+
+      end
+    end
+  end
+
+  def update_tx_powers
+    @vifs.each do |vif|
+      if Dot11::CHANNELS_2G.include?(vif.phy.channel)
+        tx_power    = @conf.fetch(:tx_power   , TX_POWER_MAX)
+        tx_power_2g = @conf.fetch(:tx_power_2g, TX_POWER_MAX)
+        vif.set_tx_power([tx_power, tx_power_2g].min)
+      end
+      if Dot11::CHANNELS_5G.include?(vif.phy.channel)
+        tx_power    = @conf.fetch(:tx_power   , TX_POWER_MAX)
+        tx_power_5g = @conf.fetch(:tx_power_5g, TX_POWER_MAX)
+        vif.set_tx_power([tx_power, tx_power_5g].min)
+      end
+    end
+  end
+
+  def accept_ctrlconn
+    @ctrlconn      = @ctrlserv.accept
+    @ctrlconn_time = Time.now
+  end
+
+  def close_ctrlconn
+    @ctrlconn.close
+
+    @ctrlconn      = nil
+    @ctrlconn_time = nil
+  end
+
+  def handle_ctrlconn
+    if @ctrlconn.eof?
+      Log.warning('received invalid control message')
+    else
+      handle_ctrlmsg(@ctrlconn.readline)
+    end
+  ensure
+    close_ctrlconn
+  end
+
+  def handle_ctrlmsg(line)
+    line.strip!
+    cmd, sep, args = line.partition(':')
+    case cmd
+    when 'hostapd-event'
+      handle_ctrlmsg_hostapd_event(args)
+    when 'udev-event'
+      handle_ctrlmsg_udev_event(args)
+    when 'vtun-up'
+      handle_ctrlmsg_vtun_up(args)
+    else
+      Log.warning("received unknown control message: #{line}")
+    end
+  end
+
+  def handle_ctrlmsg_hostapd_event(args)
+    iface, sep, tail = args.partition(':')
+    if sep.empty?
+      Log.warning("received invalid hostapd-event: #{args}")
+      return false
+    end
+
+    event, sep, tail = tail.partition(':')
+    if sep.empty?
+      Log.warning("received invalid hostapd-event: #{args}")
+      return false
+    end
+
+    case event
+
+    when 'AP-STA-CONNECTED'
+      bssid = @vifs.select { |vif| vif.name == iface }[0].mac
+      controller_send_report('sta_connected', :bssid => bssid, :mac => tail)
+
+    when 'AP-STA-DISCONNECTED'
+      bssid = @vifs.select { |vif| vif.name == iface }[0].mac
+      controller_send_report('sta_disconnected', :bssid => bssid, :mac => tail)
+
+    else
+      Log.warning("received unhandled hostapd-event: #{args}")
+      return false
+
+    end
+
+    true
+  end
+
+  def handle_ctrlmsg_udev_event(args)
+    action, phy_name = args.split(':')
+    Log.info("udev action: #{action} phy #{phy_name}")
+    case action
+    when 'add'
+      phy = Dot11::Phy.new(phy_name)
+      add_phy(phy)
+      controller_send_report('radio_added', :mac => phy.mac)
+    when 'remove'
+      phy = @vifs.select { |vif| vif.phy.name == phy_name }[0].phy
+      remove_phy(phy)
+      controller_send_report('radio_removed', :mac => phy.mac)
+    else
+      Log.warning("ignoring unexpected udev action: #{action}")
+      return
+    end
+  end
+
+  def handle_ctrlmsg_vtun_up(args)
+    iface, *bridge = args.split(':')
+    if bridge.length == 1
+      bridge = bridge[0]
+      run_or_fail('ip', 'link', 'set', 'dev', iface, 'up')
+      run_or_fail('brctl', 'addif', bridge, iface)
+      spawn_service(Services::Dhclient.new(:bridge => bridge))
+    else
+      Log.warning("received invalid vtun-up arguments #{args}")
+    end
+  end
+
+  def spawn_service(service)
+    pid = service.spawn
+    @services[pid] = service
+    Log.info("spawned #{service.name}")
+  end
+
+  def setup_bridge(ssid)
+    bridge = "puavowlanbr#{@bridges.length}"
+    run_or_fail('brctl', 'addbr', bridge)
+    @bridges[ssid] = bridge
+    run_or_fail('brctl', 'setfd', bridge, '0')
+    run_or_fail('ip', 'link', 'set', 'dev', bridge, 'up')
+
+    spawn_service(Services::Vtund.new(:bridge  => bridge,
+                                      :address => @vtun_address,
+                                      :port    => @vtun_port))
+    bridge
+  end
+
+  def setup_bridges
+    @nets.each { |net| setup_bridge(net['ssid']) }
+  end
+
+  def select_channel(vif)
+    return vif.phy.channel unless vif.phy.channel.nil?
+
+    predefined_channels    = @conf.fetch(:channels, []) & vif.phy.supported_channels
+    scanned_channels       = vif.scan
+
+    selectable_channels    = predefined_channels + (scanned_channels - predefined_channels)
+    selectable_channels_2g = selectable_channels & Dot11::CHANNELS_2G
+    selectable_channels_5g = selectable_channels & Dot11::CHANNELS_5G
+
+    selected_channels      = Set.new(@vifs.map { |v| v.phy.channel })
+    selected_channels_2g   = selected_channels & Dot11::CHANNELS_2G
+    selected_channels_5g   = selected_channels & Dot11::CHANNELS_5G
+
+    if selected_channels_2g.empty? && !selectable_channels_2g.empty?
+      vif.phy.channel = selectable_channels_2g[0]
+    elsif selected_channels_5g.empty? && !selectable_channels_5g.empty?
+      vif.phy.channel = selectable_channels_5g[0]
+    else
+      vif.phy.channel = selectable_channels[0]
+    end
+  end
+
+  def add_phy(phy)
+    phy.each_vif { |vif| vif.del }
+
+    @nets.each do |net|
+      @bss_index += 1
+
+      vif = phy.add_vif("puavowlanif#{@bss_index}")
+      if vif.nil?
+        Log.error("failed to add vif to phy #{phy.name}")
+        return
+      end
+      @vifs << vif
+
+      select_channel(vif)
+
+      bridge = @bridges.fetch(net['ssid'])
+      hostapd     = Services::Hostapd.new(:bridge => bridge,
+                                          :phy    => phy,
+                                          :vif    => vif,
+                                          :net    => net)
+      hostapd_cli = Services::HostapdCli.new(:hostapd => hostapd)
+      spawn_service(hostapd)
+      spawn_service(hostapd_cli)
+    end
+
+    update_tx_powers
+  end
+
+  def remove_phy(phy)
+    dying_hostapds     = []
+    dying_hostapd_clis = []
+
+    @vifs.delete_if { |vif| vif.phy.name == phy.name }
+
+    # Remove all soon-to-be-killed services from the array before
+    # killing any to avoid dependent services to die and interrupt us.
+    @services.reject! do |pid, service|
+      if service.class == Services::Hostapd && phy.name == service.phy.name
+        dying_hostapds << service
+        true
+      elsif service.class == Services::HostapdCli && phy.name == service.hostapd.phy.name
+        dying_hostapd_clis << service
+        true
+      else
+        false
+      end
+    end
+
+    dying_hostapd_clis.each { |hostapd_cli| hostapd_cli.kill }
+    dying_hostapds.each { |hostapd| hostapd.kill }
+
+  end
+
+  def setup_phys
+    phys = []
+
+    # Sort PHYs to have 2G-only PHYs at front and 5G-capable PHYs at
+    # the end, because we want to ensure 2G channel gets allocated
+    # first if possible.
+    Dot11.each_phy do |phy|
+      catch :sorted do
+        phy.supported_channels.each do |channel|
+          if Dot11::CHANNELS_5G.include?(channel)
+            phys.push(phy)
+            throw :sorted
+          end
+        end
+        phys.insert(0, phy)
+      end
+    end
+
+    phys.each do |phy|
+      begin
+        add_phy(phy)
+      rescue StandardError => e
+        Log.exception("failed to setup phy #{phy.name}, ignoring it", e)
+      end
+    end
+  end
+
+  def controller_send_report(name, data = {})
+    begin
+      @last_report_time = Time.now
+      response = @controller.send_request('POST', '/v1/report',
+                                          {
+                                            :name      => name,
+                                            :hostname  => PUAVO_ETC.hostname,
+                                            :timestamp => Time.now,
+                                            :data      => data,
+                                          }.to_json,
+                                          {'Content-Type' => 'application/json'})
+      response.value # As the name indicates, raises error if status
+                     # code is not 2xx.
+    rescue StandardError => e
+      Log.exception('failed to send a report to the controller', e)
+    end
+  end
+
+  def update_station_stats(vif)
+    stations = {}
+    IO.popen(['hostapd_cli', '-i', vif.name,
+              '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'all_sta']) do |io|
+      new_sta = {}
+      io.each_line do |line|
+        line =~ /^(([0-9a-f]{2}:){5}([0-9a-f]{2}))$/ and new_sta[:mac]            = $1
+        line =~ /^connected_time=(.*)$/              and new_sta[:connection_age] = $1.to_i
+        line =~ /^rx_bytes=(.*)$/                    and new_sta[:rx_bytes]       = $1.to_i
+        line =~ /^tx_bytes=(.*)$/                    and new_sta[:tx_bytes]       = $1.to_i
+
+        # Add only complete/valid station entries. In some cases
+        # (probably when STA has just disassociated), hostapd_cli
+        # all_sta does not print all fields.
+        if Set.new(new_sta.keys) == Set.new([:mac, :connection_age, :rx_bytes, :tx_bytes])
+          new_sta[:start_time]  = Time.now - new_sta[:connection_age]
+
+          if vif.stations.has_key?(new_sta[:mac])
+            old_sta = vif.stations.fetch(new_sta[:mac])
+
+            if new_sta[:connection_age] < old_sta[:connection_age]
+              new_sta[:rate_interval] = new_sta[:connection_age]
+              if new_sta[:rate_interval] == 0
+                new_sta[:rx_rate] = 0
+                new_sta[:tx_rate] = 0
+              else
+                new_sta[:rx_rate] = new_sta[:rx_bytes] / new_sta[:rate_interval]
+                new_sta[:tx_rate] = new_sta[:tx_bytes] / new_sta[:rate_interval]
+              end
+            else
+              new_sta[:rate_interval] = new_sta[:connection_age] - old_sta[:connection_age]
+              if new_sta[:rate_interval] == 0
+                new_sta[:rx_rate] = 0
+                new_sta[:tx_rate] = 0
+              else
+                new_sta[:rx_rate] = (new_sta[:rx_bytes] - old_sta[:rx_bytes]) / new_sta[:rate_interval]
+                new_sta[:tx_rate] = (new_sta[:tx_bytes] - old_sta[:tx_bytes]) / new_sta[:rate_interval]
+              end
+            end
+          else
+            new_sta[:rate_interval] = new_sta[:connection_age]
+            if new_sta[:rate_interval] == 0
+              new_sta[:rx_rate] = 0
+              new_sta[:tx_rate] = 0
+            else
+              new_sta[:rx_rate] = new_sta[:rx_bytes] / new_sta[:rate_interval]
+              new_sta[:tx_rate] = new_sta[:tx_bytes] / new_sta[:rate_interval]
+            end
+          end
+          stations[new_sta[:mac]] = new_sta
+          new_sta = {}
+        end
+      end
+    end
+    vif.stations = stations
+  end
+
+  def get_status
+    radios       = {}
+    @vifs.each do |vif|
+      bssid    = nil
+      channel  = nil
+      ssid     = nil
+
+      if radios.has_key?(vif.phy.mac)
+        radio = radios.fetch(vif.phy.mac)
+      else
+        radio = {
+          :accesspoints => [],
+          :driver       => vif.phy.driver,
+          :product      => vif.phy.product,
+          :mac          => vif.phy.mac,
+          :name         => vif.phy.name,
+        }
+        radios[vif.phy.mac] = radio
+      end
+
+      begin
+
+        # Get access point stats
+        IO.popen(['wpa_cli', '-i', vif.name,
+                  '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'status']) do |io|
+          io.each_line do |line|
+            line =~ /^bssid\[0\]=(.*)$/   and bssid   = $1
+            line =~ /^channel=(.*)$/      and channel = $1.to_i
+            line =~ /^ssid\[0\]=(.*)$/    and ssid    = $1
+          end
+        end
+
+        update_station_stats(vif)
+
+        start_time = File.mtime("#{HOSTAPD_CTRL_INTERFACE_DIR}/#{vif.name}")
+      rescue StandardError => e
+        Log.exception("failed to query hostapd status (#{vif.name})", e)
+      else
+        radio[:accesspoints] << {
+          :radio_mac          => vif.phy.mac,
+          :start_time         => start_time,
+          :bssid              => bssid,
+          :channel            => channel,
+          :rx_bytes           => vif.rx_bytes,
+          :rx_rate            => vif.rx_rate,
+          :ssid               => ssid,
+          :stations           => vif.stations.values,
+          :tx_bytes           => vif.tx_bytes,
+          :tx_power_limit_dBm => vif.tx_power,
+          :tx_rate            => vif.tx_rate,
+        }
+      end
+    end
+    l1, l5, l15 = IO.read('/proc/loadavg').split.take(3).map { |s| s.to_f }
+    {
+      :hostname           => PUAVO_ETC.hostname,
+      :radios             => radios.values,
+      :version            => PuavoWLAN::VERSION,
+      :system_start_time  => Time.now - IO.read('/proc/uptime').split[0].to_i,
+      :service_start_time => Time.parse(IO.popen(['ps', '-p', $$.to_s, '-o', 'lstart=']).read),
+      :uname              => IO.popen(['uname', '-snrvmpio']).read,
+      :loadavg1           => l1,
+      :loadavg5           => l5,
+      :loadavg15          => l15,
+    }
+  end
+
+end
+
+def main
+  opts    = {}
+  ctrlmsg = nil
+
+  GetoptLong.new(
+    ['--controller-address'        , GetoptLong::REQUIRED_ARGUMENT],
+    ['--controller-port'           , GetoptLong::REQUIRED_ARGUMENT],
+    ['--ctrlmsg'                   , GetoptLong::REQUIRED_ARGUMENT],
+    ['--help', '-h'                , GetoptLong::NO_ARGUMENT],
+    ['--vtun-address'              , GetoptLong::REQUIRED_ARGUMENT],
+    ['--vtun-port'                 , GetoptLong::REQUIRED_ARGUMENT],
+  ).each do |opt, arg|
+    case opt
+    when '--ctrlmsg'
+      unless ctrlmsg.nil?
+        Log.error('--ctrlmsg can be given only once')
+        return 1
+      end
+      ctrlmsg = arg
+
+    when '--help'
+      puts <<EOF
+Usage: puavo-wlanap [OPTION]...
+
+Puavo's Tunneled WLAN Access Point.
+
+Options:
+ -h, --help
+         Display this help and exit.
+
+     --controller-address ADDRESS
+         Set the address of the controller, default: #{Host::CONTROLLER_ADDRESS}
+
+     --controller-port PORT
+         Set the port of the controller, default: #{Host::CONTROLLER_PORT}
+
+     --vtun-address ADDRESS
+         Set the address of the vtun server, default: #{Host::VTUN_ADDRESS}
+
+     --vtun-port PORT
+         Set the port of the vtun server, default: #{Host::VTUN_PORT}
+
+EOF
+      return 0
+
+    when '--controller-address'
+      if opts.has_key? :controller_address
+        Log.error('--controller-address can be given only once')
+        return 1
+      end
+      opts[:controller_address] = arg
+
+    when '--controller-port'
+      if opts.has_key? :controller_port
+        Log.error('--controller-port can be given only once')
+        return 1
+      end
+      unless arg =~ /^[1-9][0-9]*$/
+        Log.error("invalid port number (#{arg})")
+        return 1
+      end
+      opts[:controller_port] = arg.to_i
+
+    when '--vtun-address'
+      if opts.has_key? :vtun_address
+        Log.error('--vtun-address can be given only once')
+        return 1
+      end
+      opts[:vtun_address] = arg
+
+    when '--vtun-port'
+      if opts.has_key? :vtun_port
+        Log.error('--vtun-port can be given only once')
+        return 1
+      end
+      unless arg =~ /^[1-9][0-9]*$/
+        Log.error("invalid port number (#{arg})")
+        return 1
+      end
+      opts[:vtun_port] = arg.to_i
+
+    end
+  end
+
+  if ARGV.length != 0
+    Log.error("invalid number of arguments (#{ARGV.length}), expected 0")
+    return 1
+  end
+
+  unless ctrlmsg.nil?
+    UNIXSocket.open(CTRLSOCKET) do |ctrlsocket|
+      ctrlsocket.puts(ctrlmsg)
+    end
+    return 0
+  end
+
+  Host.new(opts).run
+end
+
+exit(main())

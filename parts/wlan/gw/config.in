@@ -1,0 +1,20 @@
+## This file is a POSIX shell fragment which is sourced by scripts. It's
+## advisable to use only variale definitions.
+
+## Network bridge to which all access point tunnels will be added.
+PWGW_BRIDGE=wlan0
+
+## Control channel port.
+PWGW_PORT_CTRL=45046
+
+## Data channel port.
+PWGW_PORT_DATA=45045
+
+## Runtime directory which is created on start and removed on stop.
+PWGW_RUNDIR=/var/run/puavo-wlangw
+
+## Directory path for all internal data files.
+PWGW_DATADIR=#{PWGW_DATADIR}
+
+## Directory path for all internal library files.
+PWGW_LIBDIR=#{PWGW_LIBDIR}

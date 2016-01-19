@@ -1,0 +1,92 @@
+#!/usr/bin/env ruby1.9.1
+# coding: utf-8
+
+# = Puavo's Tunneled WLAN Access Point udev Action Script
+#
+# Author    :: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+# Copyright :: Copyright (C) 2015 Opinsys Oy
+# License   :: GPLv2+
+#
+# == Usage
+#
+# Get help:
+#   puavo-wlanap-udev-action --help
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+# Standard library modules.
+require 'getoptlong'
+require 'socket'
+
+module Log
+
+  def self.log(priority, msg)
+    STDERR.puts("puavo-wlanap-udev-action[#{Process.pid}]: #{priority}: #{msg}")
+  end
+
+  def self.warning(msg)
+    Log.log(:WARNING, msg)
+  end
+
+  def self.error(msg)
+    Log.log(:ERROR, msg)
+  end
+
+end
+
+CTRLSOCKET = '/run/puavo-wlanap/ctrlsocket'
+
+def main
+  GetoptLong.new(
+    ['--help', '-h'                , GetoptLong::NO_ARGUMENT],
+  ).each do |opt, arg|
+    case opt
+
+    when '--help'
+      puts <<EOF
+Usage: puavo-wlanap-udev-action
+Usage: puavo-wlanap-udev-action --help
+
+Puavo's Tunneled WLAN Access Point udev Action Script
+
+This script translates udev events to puavo-wlanap control messages
+and sends them via #{CTRLSOCKET}.
+
+Options:
+ -h, --help
+         Display this help and exit.
+
+EOF
+      return 0
+
+    end
+  end
+
+  if ARGV.length != 0
+    Log.error("invalid number of arguments (#{ARGV.length}), expected 0")
+    return 1
+  end
+
+  phy = File.basename(ENV['DEVPATH'])
+  ctrlmsg = "udev-event:#{ENV['ACTION']}:#{phy}"
+  UNIXSocket.open(CTRLSOCKET) do |ctrlsocket|
+    ctrlsocket.puts(ctrlmsg)
+  end
+
+  return 0
+end
+
+exit(main())
