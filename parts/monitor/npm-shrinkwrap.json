@@ -1,0 +1,19 @@
+{
+  "name": "puavo-monitor",
+  "version": "1.0.0",
+  "dependencies": {
+    "underscore": {
+      "version": "1.4.4",
+      "from": "underscore@~1.4.3"
+    },
+    "fs-ext": {
+      "version": "0.3.2",
+      "from": "fs-ext@~0.3.2",
+      "resolved": "https://registry.npmjs.org/fs-ext/-/fs-ext-0.3.2.tgz"
+    },
+    "json-stream": {
+      "version": "0.1.2",
+      "from": "json-stream@~0.1.2"
+    }
+  }
+}

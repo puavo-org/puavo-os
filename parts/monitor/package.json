@@ -1,0 +1,20 @@
+{
+  "author": "Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>",
+  "name": "puavo-monitor",
+  "private": true,
+  "description": "Uptime socket keeping track of client usage",
+  "homepage": "https://github.com/opinsys/puavo-monitor",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node lib/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/opinsys/puavo-monitor.git"
+  },
+  "dependencies": {
+    "underscore": "~1.4.3",
+    "fs-ext": "~0.3.2",
+    "json-stream": "~0.1.2"
+  }
+}

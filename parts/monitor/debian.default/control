@@ -1,0 +1,15 @@
+Source: puavo-monitor
+Section: misc
+Priority: extra
+Maintainer: Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>
+Build-Depends: debhelper (>= 7), nodejs-bundle, python
+Standards-Version: 3.8.3
+Homepage: https://github.com/opinsys/puavo-monitor
+
+Package: puavo-monitor
+Architecture: any
+Depends: ${misc:Depends}, nodejs-bundle
+Description: Uptime socket keeping track of client usage 
+ Monitor daemon for fat- and thinclients. Keeps active tcp connection open to
+ the logrelay daemon. Logrelay uses that connection to determine whether the
+ client is up and running.
