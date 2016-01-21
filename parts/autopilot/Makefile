@@ -38,7 +38,7 @@ install: bin/puavo-autopilot-env installdirs
 
 	rm -f bin/puavo-autopilot-env
 
-install-deb-deps:
+install-build-deps:
 	mk-build-deps -i -r debian/control
 
 installdirs:
@@ -52,5 +52,5 @@ installdirs:
         bin/puavo-autopilot-env \
 	deb			\
 	install			\
-	install-deb-deps	\
+	install-build-deps	\
 	installdirs
