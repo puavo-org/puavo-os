@@ -56,7 +56,7 @@ install: installdirs all
 
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
 
-install-deb-deps:
+install-build-deps:
 	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
 
 clean:
@@ -70,5 +70,5 @@ deb :
 	clean			\
 	deb			\
 	install			\
-	install-deb-deps	\
+	install-build-deps	\
 	installdirs
