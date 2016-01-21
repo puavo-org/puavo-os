@@ -55,7 +55,7 @@ test-etc:
 .PHONY: test
 test: test-rest-client
 
-install-build-dep:
+install-build-deps:
 	mk-build-deps --install debian.default/control \
 		--tool "apt-get --yes --force-yes" --remove
 
