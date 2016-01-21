@@ -56,15 +56,8 @@ test-etc:
 test: test-rest-client
 
 install-build-deps:
-	mk-build-deps --install debian.default/control \
+	mk-build-deps --install debian/control \
 		--tool "apt-get --yes --force-yes" --remove
 
-debiandir:
-	rm -rf debian
-	cp -a debian.default debian
-
-deb: debiandir
+deb:
 	dpkg-buildpackage -us -uc
-
-deb-binary-arch: debiandir
-	dpkg-buildpackage -B -us -uc
