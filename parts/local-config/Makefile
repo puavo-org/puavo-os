@@ -56,14 +56,11 @@ install : installdirs
 
 .PHONY: install-build-deps
 install-build-deps:
-	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian.default/control
+	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
 
 .PHONY : clean
 clean :
 
 .PHONY : deb
 deb :
-	rm -rf debian
-	cp -a debian.default debian
-	puavo-dch $(shell cat VERSION)
 	dpkg-buildpackage -us -uc
