@@ -14,3 +14,6 @@ install: install-dirs
 	install -m 644 config.json $(DESTDIR)/etc/puavo-monitor.json
 	ln -fs ../lib/node_modules/puavo-monitor/bin/puavo-monitor $(DESTDIR)$(prefix)/bin/puavo-monitor
 
+.PHONY: install-build-deps
+install-build-deps:
+	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian.default/control
