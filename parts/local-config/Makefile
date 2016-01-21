@@ -28,29 +28,29 @@ installdirs :
 install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-local-config-ui
-	
+
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-local-config
-	
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/applications \
 		puavo-local-config-ui.desktop
-	
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-local-config/templates/etc \
 		templates/etc/cpufreqd.conf
-	
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d \
 		init-puavo.d/*-*
-	
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/puavo-local-config-ui \
 		plc-ui/index.html   \
 		plc-ui/index.js     \
 		plc-ui/package.json \
 		plc-ui/style.css    \
 		plc-ui/theme.css
-	
+
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-local-config/pam \
 		pam/login-setup
-	
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		puavo-local-config-ui-autostart.desktop
 
