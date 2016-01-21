@@ -18,7 +18,7 @@ install : $(install-subdirs)
 
 .PHONY: install-build-deps
 install-build-deps:
-	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian.default/control
+	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
 
 .PHONY : $(clean-subdirs)
 $(clean-subdirs) :
@@ -27,16 +27,6 @@ $(clean-subdirs) :
 .PHONY : clean
 clean : $(clean-subdirs)
 
-.PHONY : debiandir
-debiandir :
-	rm -rf debian
-	cp -a debian.default debian
-	puavo-dch $(shell cat VERSION)
-
-.PHONY : deb-binary-arch
-deb-binary-arch : debiandir
-	dpkg-buildpackage -B -us -uc
-
 .PHONY : deb
-deb : debiandir
+deb :
 	dpkg-buildpackage -us -uc
