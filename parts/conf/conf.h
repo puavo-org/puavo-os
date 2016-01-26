@@ -26,4 +26,6 @@ void puavo_conf_free(puavo_conf_t conf);
 int puavo_conf_open_db(puavo_conf_t conf, const char *db_filepath);
 int puavo_conf_close_db(struct puavo_conf *conf);
 
+int puavo_conf_set(puavo_conf_t conf, char *key, char *value);
+
 #endif /* PUAVO_CONF_H */

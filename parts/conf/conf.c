@@ -84,3 +84,28 @@ void puavo_conf_free(struct puavo_conf *conf)
 {
         free(conf);
 }
+
+int puavo_conf_set(struct puavo_conf *const conf,
+                   char *const key, char *const value)
+{
+        DBT db_key;
+        DBT db_value;
+        int db_ret;
+
+        memset(&db_key, 0, sizeof(DBT));
+        memset(&db_value, 0, sizeof(DBT));
+
+        db_key.data = key;
+        db_key.size = strlen(key) + 1;
+
+        db_value.data = value;
+        db_value.size = strlen(value) + 1;
+
+        db_ret = conf->db->put(conf->db, NULL, &db_key, &db_value, 0);
+        if (db_ret != 0) {
+                conf->db_err = db_ret;
+                return -1;
+        }
+
+        return 0;
+}
