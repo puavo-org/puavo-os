@@ -21,5 +21,5 @@ libpuavoconf.la: conf.lo
 	libtool --mode=link gcc -Wpedantic -Wall -Wextra -o $@ $^ \
 		-rpath $(libdir) -version-info 0:0:0
 
-%.lo: %.c
+%.lo: %.c %.h
 	libtool --mode=compile gcc -Wpedantic -Wall -Wextra -c $<
