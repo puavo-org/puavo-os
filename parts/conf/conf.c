@@ -85,6 +85,33 @@ void puavo_conf_free(struct puavo_conf *conf)
         free(conf);
 }
 
+char *puavo_conf_get(struct puavo_conf *const conf, char *const key)
+{
+        DBT db_key;
+        DBT db_value;
+        int db_ret;
+        char *value;
+
+        memset(&db_key, 0, sizeof(DBT));
+        memset(&db_value, 0, sizeof(DBT));
+
+        db_key.data = key;
+        db_key.size = strlen(key) + 1;
+
+        db_value.flags = DB_DBT_MALLOC;
+
+        db_ret = conf->db->get(conf->db, NULL, &db_key, &db_value, 0);
+        if (db_ret != 0) {
+                conf->db_err = db_ret;
+                return NULL;
+        }
+
+        value = (char *) db_value.data;
+        value[db_value.size - 1] = '\0';
+
+        return value;
+}
+
 int puavo_conf_set(struct puavo_conf *const conf,
                    char *const key, char *const value)
 {
