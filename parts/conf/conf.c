@@ -18,9 +18,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <db.h>
+
 #include "conf.h"
 
 struct puavo_conf {
+        DB *db;
+        int db_err;
 };
 
 struct puavo_conf *puavo_conf_init()
@@ -33,6 +37,47 @@ struct puavo_conf *puavo_conf_init()
         memset(conf, 0, sizeof(struct puavo_conf));
 
         return conf;
+}
+
+int puavo_conf_open_db(struct puavo_conf *const conf,
+                       const char *const db_filepath)
+{
+        DB *db;
+        int db_ret;
+
+        if (conf->db)
+                return 0;
+
+        db_ret = db_create(&db, NULL, 0);
+        if (db_ret != 0) {
+                conf->db_err = db_ret;
+                return -1;
+        }
+
+        db_ret = db->open(db, NULL, db_filepath, NULL, DB_BTREE, DB_CREATE, 0600);
+        if (db_ret != 0) {
+                conf->db_err = db_ret;
+                db->close(db, 0);
+                return -1;
+        }
+
+        conf->db = db;
+        return 0;
+}
+
+int puavo_conf_close_db(struct puavo_conf *const conf)
+{
+        if (conf->db) {
+                int db_ret = conf->db->close(conf->db, 0);
+                conf->db = NULL;
+
+                if (db_ret != 0) {
+                        conf->db_err = db_ret;
+                        return -1;
+                }
+        }
+
+        return 0;
 }
 
 void puavo_conf_free(struct puavo_conf *conf)

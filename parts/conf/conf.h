@@ -23,4 +23,7 @@ typedef struct puavo_conf *puavo_conf_t;
 puavo_conf_t puavo_conf_init(void);
 void puavo_conf_free(puavo_conf_t conf);
 
+int puavo_conf_open_db(puavo_conf_t conf, const char *db_filepath);
+int puavo_conf_close_db(struct puavo_conf *conf);
+
 #endif /* PUAVO_CONF_H */
