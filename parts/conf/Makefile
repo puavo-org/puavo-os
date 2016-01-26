@@ -1,17 +1,17 @@
-prefix   = /usr/local
-libdir   = $(prefix)/lib
-binaries = libpuavoconf.la
+prefix           = /usr/local
+libdir           = $(prefix)/lib
+libtool_binaries = libpuavoconf.la
 
 .PHONY: all
-all: $(binaries)
+all: $(libtool_binaries)
 
 .PHONY: clean
 clean:
-	libtool --mode=clean rm -f libpuavoconf.la *.lo
+	libtool --mode=clean rm -f $(libtool_binaries) *.lo
 
 .PHONY: install
 install: installdirs
-	libtool --mode=install install libpuavoconf.la $(DESTDIR)$(libdir)
+	libtool --mode=install install $(libtool_binaries) $(DESTDIR)$(libdir)
 
 .PHONY: installdirs
 installdirs:
