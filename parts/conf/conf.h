@@ -22,7 +22,7 @@ static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = DEFAULT_DB_FILEPATH;
 
 typedef struct puavo_conf puavo_conf_t;
 
-puavo_conf_t *puavo_conf_init(void);
+int puavo_conf_init(puavo_conf_t **confp);
 void puavo_conf_free(puavo_conf_t *conf);
 
 int puavo_conf_open_db(puavo_conf_t *conf, const char *db_filepath);

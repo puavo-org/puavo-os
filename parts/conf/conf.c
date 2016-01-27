@@ -27,16 +27,18 @@ struct puavo_conf {
         int db_err;
 };
 
-struct puavo_conf *puavo_conf_init()
+int puavo_conf_init(struct puavo_conf **const confp)
 {
         struct puavo_conf *conf;
 
         conf = (struct puavo_conf *) malloc(sizeof(struct puavo_conf));
         if (!conf)
-                return NULL;
+                return -1;
         memset(conf, 0, sizeof(struct puavo_conf));
 
-        return conf;
+        *confp = conf;
+
+        return 0;
 }
 
 int puavo_conf_open_db(struct puavo_conf *const conf,

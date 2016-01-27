@@ -26,8 +26,7 @@ int main(int argc, char *argv[])
         char *returned_value;
         int ret;
 
-        conf = puavo_conf_init();
-        if (!conf) {
+        if (puavo_conf_init(&conf)) {
                 (void) fprintf(stderr, "could not init puavo-conf\n");
                 return 1;
         }

@@ -25,8 +25,7 @@ int main(void)
         char *background;
         char *tx_power;
 
-        conf = puavo_conf_init();
-        if (!conf)
+        if (puavo_conf_init(&conf))
                 return 1;
 
         if (puavo_conf_open_db(conf, "parameters.db")) {
