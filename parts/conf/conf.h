@@ -90,7 +90,7 @@ int puavo_conf_close_db(puavo_conf_t *conf);
 int puavo_conf_set(puavo_conf_t *conf, char *key, char *value);
 
 /**
- * puavo_conf_get() - retrieve the value of an parameter
+ * puavo_conf_get() - retrieve the value of a parameter
  *
  * @conf   - an initialized config object pointer
  *
