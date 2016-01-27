@@ -1,13 +1,13 @@
 prefix           = /usr/local
 libdir           = $(prefix)/lib
-libtool_binaries = libpuavoconf.la example
+libtool_binaries = libpuavoconf.la example puavo-conf
 
 .PHONY: all
 all: $(libtool_binaries)
 
 .PHONY: clean
 clean:
-	libtool --mode=clean rm -f $(libtool_binaries) *.lo
+	libtool --mode=clean rm -f $(libtool_binaries) *.lo *.o
 
 .PHONY: install
 install: installdirs
@@ -18,6 +18,9 @@ installdirs:
 	mkdir -p $(DESTDIR)$(libdir)
 
 example: example.o libpuavoconf.la
+	libtool --mode=link gcc -Wpedantic -Wall -Wextra -g -O -o $@ $^
+
+puavo-conf: puavo-conf.o libpuavoconf.la
 	libtool --mode=link gcc -Wpedantic -Wall -Wextra -g -O -o $@ $^
 
 libpuavoconf.la: conf.lo
