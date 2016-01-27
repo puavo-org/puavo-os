@@ -2,7 +2,15 @@ prefix           = /usr/local
 libdir           = $(prefix)/lib
 libtool_binaries = libpuavoconf.la example puavo-conf
 
-CPPFLAGS = -Wall -Wextra
+ifeq ($(prefix), /usr/local)
+varprefix = /var/local
+else
+varprefix = /var
+endif
+
+varlibdir = $(varprefix)/lib/puavo-conf
+
+CPPFLAGS = -Wall -Wextra -DDEFAULT_DB_FILEPATH=\"$(varlibdir)/parameters.db\"
 CFLAGS   = -Wpedantic
 LDFLAGS  = -g -O
 
@@ -22,6 +30,7 @@ install: installdirs
 .PHONY: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(libdir)
+	mkdir -p $(DESTDIR)$(varlibdir)
 
 example: example.o libpuavoconf.la
 	libtool --mode=link \

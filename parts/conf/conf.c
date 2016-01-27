@@ -54,7 +54,9 @@ int puavo_conf_open_db(struct puavo_conf *const conf,
                 return -1;
         }
 
-        db_ret = db->open(db, NULL, db_filepath, NULL, DB_BTREE, DB_CREATE, 0600);
+        db_ret = db->open(db, NULL,
+                          db_filepath ? db_filepath : DEFAULT_DB_FILEPATH,
+                          NULL, DB_BTREE, DB_CREATE, 0600);
         if (db_ret != 0) {
                 conf->db_err = db_ret;
                 db->close(db, 0);
