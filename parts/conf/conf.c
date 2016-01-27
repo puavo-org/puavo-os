@@ -51,7 +51,7 @@ int puavo_conf_open_db(struct puavo_conf *const conf,
                 return 0;
 
         db_ret = db_create(&db, NULL, 0);
-        if (db_ret != 0) {
+        if (db_ret) {
                 conf->db_err = db_ret;
                 return -1;
         }
@@ -59,7 +59,7 @@ int puavo_conf_open_db(struct puavo_conf *const conf,
         db_ret = db->open(db, NULL,
                           db_filepath ? db_filepath : PUAVO_CONF_DEFAULT_DB_FILEPATH,
                           NULL, DB_BTREE, DB_CREATE, 0600);
-        if (db_ret != 0) {
+        if (db_ret) {
                 conf->db_err = db_ret;
                 db->close(db, 0);
                 return -1;
@@ -75,7 +75,7 @@ int puavo_conf_close_db(struct puavo_conf *const conf)
                 int db_ret = conf->db->close(conf->db, 0);
                 conf->db = NULL;
 
-                if (db_ret != 0) {
+                if (db_ret) {
                         conf->db_err = db_ret;
                         return -1;
                 }
@@ -106,7 +106,7 @@ int puavo_conf_get(struct puavo_conf *const conf,
         db_value.flags = DB_DBT_MALLOC;
 
         db_ret = conf->db->get(conf->db, NULL, &db_key, &db_value, 0);
-        if (db_ret != 0) {
+        if (db_ret) {
                 conf->db_err = db_ret;
                 return -1;
         }
@@ -140,7 +140,7 @@ int puavo_conf_set(struct puavo_conf *const conf,
         db_value.size = strlen(value) + 1;
 
         db_ret = conf->db->put(conf->db, NULL, &db_key, &db_value, 0);
-        if (db_ret != 0) {
+        if (db_ret) {
                 conf->db_err = db_ret;
                 return -1;
         }
