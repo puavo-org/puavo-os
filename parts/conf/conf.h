@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PUAVO_CONF_H
-#define PUAVO_CONF_H
+#ifndef CONF_H
+#define CONF_H
 
 typedef struct puavo_conf *puavo_conf_t;
 
@@ -29,4 +29,4 @@ int puavo_conf_close_db(puavo_conf_t conf);
 int puavo_conf_set(puavo_conf_t conf, char *key, char *value);
 char *puavo_conf_get(puavo_conf_t conf, char *key);
 
-#endif /* PUAVO_CONF_H */
+#endif /* CONF_H */
