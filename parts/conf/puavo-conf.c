@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
                 return 1;
         }
 
-        if (puavo_conf_open_db(conf, "parameters.db")) {
+        if (puavo_conf_open_db(conf, NULL)) {
                 (void) fprintf(stderr, "could not open puavo-conf database\n");
                 puavo_conf_free(conf);
                 return 1;
