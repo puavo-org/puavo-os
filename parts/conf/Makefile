@@ -26,15 +26,16 @@ clean:
 install: installdirs
 	libtool --mode=install \
 		install libpuavoconf.la $(DESTDIR)$(libdir)
+	install conf.rb $(DESTDIR)$(libdir)/ruby/site_ruby/puavo/conf.rb
 
 .PHONY: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(libdir)
+	mkdir -p $(DESTDIR)$(libdir)/ruby/site_ruby/puavo
 	mkdir -p $(DESTDIR)$(varlibdir)
 
 example: example.o libpuavoconf.la
-	libtool --mode=link \
-		gcc $(LDFLAGS) -o $@ $^
+	libtool --mode=link gcc $(ldflags) -o $@ $^
 
 puavo-conf: puavo-conf.o libpuavoconf.la
 	libtool --mode=link gcc $(LDFLAGS) -o $@ $^
