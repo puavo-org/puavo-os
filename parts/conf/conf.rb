@@ -1,7 +1,11 @@
 module Puavo
-    class Puavoconf
+    class Conf
         extend FFI::Library
-        ffi_lib '/usr/lib/libpuavoconf.so'
+        begin
+            ffi_lib '/usr/local/lib/libpuavoconf.so'
+        rescue LoadError
+            ffi_lib '/usr/lib/libpuavoconf.so'
+        end
 
         attach_function :puavo_conf_init, [], :pointer
         attach_function :puavo_conf_free, [:pointer], :void

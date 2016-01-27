@@ -1,4 +1,5 @@
 prefix           = /usr/local
+bindir           = $(prefix)/bin
 libdir           = $(prefix)/lib
 libtool_binaries = libpuavoconf.la example puavo-conf
 
@@ -26,12 +27,13 @@ clean:
 install: installdirs
 	libtool --mode=install \
 		install libpuavoconf.la $(DESTDIR)$(libdir)
-	install conf.rb $(DESTDIR)$(libdir)/ruby/site_ruby/puavo/conf.rb
+	libtool --mode=install install puavo-conf $(DESTDIR)$(bindir)
+	install conf.rb $(DESTDIR)$(libdir)/site_ruby/puavo/conf.rb
 
 .PHONY: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(libdir)
-	mkdir -p $(DESTDIR)$(libdir)/ruby/site_ruby/puavo
+	mkdir -p $(DESTDIR)$(libdir)/site_ruby/puavo
 	mkdir -p $(DESTDIR)$(varlibdir)
 
 example: example.o libpuavoconf.la
