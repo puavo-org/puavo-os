@@ -21,7 +21,7 @@
 
 int main(void)
 {
-        puavo_conf_t conf;
+        puavo_conf_t *conf;
         char *background;
         char *tx_power;
 

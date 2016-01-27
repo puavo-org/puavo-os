@@ -22,7 +22,7 @@
 
 int main(int argc, char *argv[])
 {
-        puavo_conf_t conf;
+        puavo_conf_t *conf;
         char *returned_value;
         int ret;
 

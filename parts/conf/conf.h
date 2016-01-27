@@ -20,15 +20,15 @@
 
 static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = DEFAULT_DB_FILEPATH;
 
-typedef struct puavo_conf *puavo_conf_t;
+typedef struct puavo_conf puavo_conf_t;
 
-puavo_conf_t puavo_conf_init(void);
-void puavo_conf_free(puavo_conf_t conf);
+puavo_conf_t *puavo_conf_init(void);
+void puavo_conf_free(puavo_conf_t *conf);
 
-int puavo_conf_open_db(puavo_conf_t conf, const char *db_filepath);
-int puavo_conf_close_db(puavo_conf_t conf);
+int puavo_conf_open_db(puavo_conf_t *conf, const char *db_filepath);
+int puavo_conf_close_db(puavo_conf_t *conf);
 
-int puavo_conf_set(puavo_conf_t conf, char *key, char *value);
-int puavo_conf_get(puavo_conf_t conf, char *key, char **valuep);
+int puavo_conf_set(puavo_conf_t *conf, char *key, char *value);
+int puavo_conf_get(puavo_conf_t *conf, char *key, char **valuep);
 
 #endif /* CONF_H */
