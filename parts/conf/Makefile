@@ -25,7 +25,7 @@ clean:
 .PHONY: install
 install: installdirs
 	libtool --mode=install \
-		install $(libtool_binaries) $(DESTDIR)$(libdir)
+		install libpuavoconf.la $(DESTDIR)$(libdir)
 
 .PHONY: installdirs
 installdirs:
