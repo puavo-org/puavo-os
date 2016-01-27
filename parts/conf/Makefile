@@ -4,9 +4,11 @@ libdir           = $(prefix)/lib
 libtool_binaries = libpuavoconf.la example puavo-conf
 
 ifeq ($(prefix), /usr/local)
-varprefix = /var/local
+rubylibdir = $(prefix)/lib/site_ruby
+varprefix  = /var/local
 else
-varprefix = /var
+rubylibdir = $(prefix)/lib/ruby/vendor_ruby
+varprefix  = /var
 endif
 
 varlibdir = $(varprefix)/lib/puavo-conf
@@ -28,12 +30,12 @@ install: installdirs
 	libtool --mode=install \
 		install libpuavoconf.la $(DESTDIR)$(libdir)
 	libtool --mode=install install puavo-conf $(DESTDIR)$(bindir)
-	install conf.rb $(DESTDIR)$(libdir)/site_ruby/puavo/conf.rb
+	install conf.rb $(DESTDIR)$(rubylibdir)/puavo/conf.rb
 
 .PHONY: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(libdir)
-	mkdir -p $(DESTDIR)$(libdir)/site_ruby/puavo
+	mkdir -p $(DESTDIR)$(rubylibdir)/puavo
 	mkdir -p $(DESTDIR)$(varlibdir)
 
 example: example.o libpuavoconf.la
