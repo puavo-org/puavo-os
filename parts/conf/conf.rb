@@ -7,20 +7,26 @@ module Puavo
             ffi_lib '/usr/lib/libpuavoconf.so'
         end
 
-        attach_function :puavo_conf_init, [], :pointer
+        attach_function :puavo_conf_init, [:pointer], :int
         attach_function :puavo_conf_free, [:pointer], :void
-        attach_function :puavo_conf_open_db, [:pointer, :string], :int
+        attach_function :puavo_conf_open_db, [:pointer, :pointer], :int
         attach_function :puavo_conf_close_db, [:pointer], :int
         attach_function :puavo_conf_set, [:pointer, :string, :string], :int
-        attach_function :puavo_conf_get, [:pointer, :string], :string
+        attach_function :puavo_conf_get, [:pointer, :string, :pointer], :int
+
+        # XXX new error class for Puavo::Conf errors, raise those
 
         def initialize
-            puavoconf = puavo_conf_init()
-            if puavoconf.nil? then
+            puavoconf_p = FFI::MemoryPointer.new(:pointer)
+
+            if puavo_conf_init(puavoconf_p) == -1 then
                 raise 'Could not init puavo conf'
             end
 
-            if puavo_conf_open_db(puavoconf, '/tmp/puavoconf.db') == -1 then
+            puavoconf = puavoconf_p.read_pointer
+            puavoconf_p.free
+
+            if puavo_conf_open_db(puavoconf, FFI::Pointer::NULL) == -1 then
                 raise 'Could not open puavoconf database'
             end
 
@@ -30,7 +36,16 @@ module Puavo
         def get(key)
             raise 'Puavodb is not open' unless @puavoconf
 
-            return puavo_conf_get(key)
+            value_p = FFI::MemoryPointer.new(:pointer)
+
+            if puavo_conf_get(@puavoconf, key, value_p) == -1 then
+                raise 'Error getting a value from puavoconf database'
+            end
+
+            value = value_p.read_pointer.read_string
+            value_p.free
+
+            return value
         end
 
         def set(key, value)
@@ -39,8 +54,6 @@ module Puavo
             if puavo_conf_set(@puavoconf, key.to_s, value.to_s) == -1 then
                 raise 'Error setting a value to puavoconf database'
             end
-
-            return
         end
 
         def close
