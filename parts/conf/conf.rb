@@ -1,5 +1,8 @@
 module Puavo
     class Conf
+        class Error < StandardError
+        end
+
         extend FFI::Library
         begin
             ffi_lib '/usr/local/lib/libpuavoconf.so'
@@ -14,32 +17,31 @@ module Puavo
         attach_function :puavo_conf_set, [:pointer, :string, :string], :int
         attach_function :puavo_conf_get, [:pointer, :string, :pointer], :int
 
-        # XXX new error class for Puavo::Conf errors, raise those
-
         def initialize
             puavoconf_p = FFI::MemoryPointer.new(:pointer)
 
             if puavo_conf_init(puavoconf_p) == -1 then
-                raise 'Could not init puavo conf'
+                raise Conf::Error, 'Could not init puavo conf'
             end
 
             puavoconf = puavoconf_p.read_pointer
             puavoconf_p.free
 
             if puavo_conf_open_db(puavoconf, FFI::Pointer::NULL) == -1 then
-                raise 'Could not open puavoconf database'
+                raise Conf::Error, 'Could not open puavoconf database'
             end
 
             @puavoconf = puavoconf
         end
 
         def get(key)
-            raise 'Puavodb is not open' unless @puavoconf
+            raise Conf::Error, 'Puavodb is not open' unless @puavoconf
 
             value_p = FFI::MemoryPointer.new(:pointer)
 
             if puavo_conf_get(@puavoconf, key, value_p) == -1 then
-                raise 'Error getting a value from puavoconf database'
+                raise Conf::Error,
+                      'Error getting a value from puavoconf database'
             end
 
             value = value_p.read_pointer.read_string
@@ -49,22 +51,23 @@ module Puavo
         end
 
         def set(key, value)
-            raise 'Puavodb is not open' unless @puavoconf
+            raise Conf::Error, 'Puavodb is not open' unless @puavoconf
 
             if puavo_conf_set(@puavoconf, key.to_s, value.to_s) == -1 then
-                raise 'Error setting a value to puavoconf database'
+                raise Conf::Error,
+                      'Error setting a value to puavoconf database'
             end
         end
 
         def close
-            raise 'Puavodb is not open' unless @puavoconf
+            raise Conf::Error, 'Puavodb is not open' unless @puavoconf
 
             ret = puavo_conf_close_db(@puavoconf)
             puavo_conf_free(@puavoconf)
             @puavoconf = nil
 
             if ret == -1 then
-                raise 'Error closing a puavoconf database'
+                raise Conf::Error, 'Error closing a puavoconf database'
             end
         end
     end
