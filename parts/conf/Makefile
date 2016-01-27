@@ -1,6 +1,6 @@
 prefix           = /usr/local
 libdir           = $(prefix)/lib
-libtool_binaries = libpuavoconf.la
+libtool_binaries = libpuavoconf.la example
 
 .PHONY: all
 all: $(libtool_binaries)
@@ -17,9 +17,15 @@ install: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(libdir)
 
+example: example.o libpuavoconf.la
+	libtool --mode=link gcc -Wpedantic -Wall -Wextra -g -O -o $@ $^
+
 libpuavoconf.la: conf.lo
-	libtool --mode=link gcc -Wpedantic -Wall -Wextra -o $@ $^ \
+	libtool --mode=link gcc -ldb -Wpedantic -Wall -Wextra -g -o $@ $^ \
 		-rpath $(libdir) -version-info 0:0:0
 
 %.lo: %.c %.h
 	libtool --mode=compile gcc -Wpedantic -Wall -Wextra -c $<
+
+%.o: %.c %.h
+	gcc -Wpedantic -Wall -Wextra -c $^
