@@ -37,7 +37,7 @@ example: example.o libpuavoconf.la
 		gcc $(LDFLAGS) -o $@ $^
 
 puavo-conf: puavo-conf.o libpuavoconf.la
-	libtool --mode=link gcc -Wpedantic -Wall -Wextra -g -O -o $@ $^
+	libtool --mode=link gcc $(LDFLAGS) -o $@ $^
 
 libpuavoconf.la: conf.lo
 	libtool --mode=link \
