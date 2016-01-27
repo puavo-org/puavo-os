@@ -1,0 +1,184 @@
+#!/usr/bin/ruby
+
+# ways to optimize:
+#   - write in C
+#   - have only a few json-files to parse
+
+require 'ffi'
+require 'json'
+require 'puavo/conf'
+
+def lookup_features_by_key(deviceinfo, matchmethod, hwquirkset)
+    hwquirkset.each do |quirktype, values_by_device_id|
+        case quirktype
+            when ':exact:', ':glob:', ':logic:', ':regex:'
+                lookup_features_by_key(deviceinfo,
+                                       quirktype,
+                                       values_by_device_id)
+
+            when /\Admidecode-.*\Z/, 'pci-id', 'usb-id'
+                if !deviceinfo[quirktype].kind_of?(Array) then
+                    warn("No device info for quirktype #{ quirktype }")
+                    next
+                end
+
+                deviceinfo[quirktype].each do |id|
+                    values_by_device_id.each do |pattern, featureconf|
+                        if match_hwquirk(id, matchmethod, pattern) then
+                            $features.merge!(featureconf)
+                        end
+                    end
+                end
+            else
+                warn("Unknown quirktype: #{ quirktype }")
+        end
+    end
+end
+
+def match_hwquirk(target, matchmethod, pattern)
+    if !target.kind_of?(String) then
+        warn("asked to match something that was not a string: " \
+                + target.inspect)
+        return false
+    end
+
+    case matchmethod
+        when ':exact:'
+            return target == pattern
+        when ':glob:'
+            return File.fnmatch(pattern, target)
+        when ':logic:'
+            warn(":logic: matcher not implemented yet")
+            return false
+        when ':regex:'
+            return target.match(pattern) ? true : false
+        else
+            warn("Match method #{ matchmethod } is unsupported")
+    end
+
+    return false
+end
+
+def take_field(cmd, fieldnum)
+    # XXX should blow up if cmd returns error?
+    IO.popen(cmd).readlines.map { |line| (line.split(' '))[fieldnum-1] }
+end
+
+if Process.euid != 0 then
+    warn("#{ File.basename($0) } must be run as root")
+    exit 1
+end
+
+# XXX Should parse only one json-file that contains a collection of all?
+# XXX Would that be significantly faster?
+# XXX And there should be another utility to gather things to there at
+# XXX image build time?
+
+Hardware_quirks_globpattern = "/usr/share/puavo/hwquirks/*/*.json"
+Image_defaults_globpattern  = "/usr/share/puavo/features/*/info.json"
+
+$features = {}
+
+# 1. check image defaults
+
+image_defaults_files = Dir.glob(Image_defaults_globpattern)
+if image_defaults_files.count == 0 then
+    warn('No image defaults files found')
+end
+
+image_defaults_files.each do |file|
+    begin
+        feature_info = JSON.parse( IO.read(file) )
+        # XXX typecheck info
+        feature_info['keys'].each do |key, keyinfo|
+            # XXX typecheck info and info['default']
+            $features[key] = keyinfo['default']
+        end
+    rescue StandardError => e
+        warn("Could not read feature defaults from #{ file }: #{ e.message }")
+    end
+end
+
+# 2. check settings from puavo
+
+begin
+    device_json = JSON.parse( IO.read('/etc/puavo/device.json') )
+    device_features = device_json['features']
+    # XXX typecheck device_features
+    $features.merge!(device_features)
+rescue StandardError => e
+    warn("Could not read features from /etc/puavo/device.json: #{ e.message }")
+end
+
+# 3. check settings based on pci, usb, product name and some such
+
+deviceinfo = {}
+
+# List available dmidecode fields.  Comment out if uninteresting so we can
+# save time with dmidecode-lookups (other alternative is to make those faster).
+dmidecode_list = [
+    # 'baseboard-asset-tag',
+    # 'baseboard-manufacturer',
+    # 'baseboard-product-name',
+    # 'baseboard-serial-number',
+    # 'baseboard-version',
+    # 'bios-release-date',
+    # 'bios-vendor',
+    # 'bios-version',
+    # 'chassis-asset-tag',
+    # 'chassis-manufacturer',
+    # 'chassis-serial-number',
+    # 'chassis-type',
+    # 'chassis-version',
+    # 'processor-family',
+    # 'processor-frequency',
+    # 'processor-manufacturer',
+    # 'processor-version',
+    'system-manufacturer',
+    'system-product-name',
+    # 'system-serial-number',
+    # 'system-uuid',
+    'system-version',
+]
+
+dmidecode_list.each do |key|
+    # XXX should blow up if dmidecode returns error?
+    deviceinfo[ "dmidecode-#{ key }" ] = [ %x(dmidecode -s #{ key }).strip ]
+end
+
+deviceinfo['pci-id'] = take_field('lspci -n', 3)
+deviceinfo['usb-id'] = take_field('lsusb',    6)
+
+Dir.glob(Hardware_quirks_globpattern).each do |hwquirk_file|
+    hwquirklist = JSON.parse( IO.read(hwquirk_file) )
+    hwquirklist.each do |hwquirkset|
+        lookup_features_by_key(deviceinfo, ':exact:', hwquirkset)
+    end
+end
+
+# 4. check primary user preferences
+
+# XXX
+
+# 5. check kernel arguments
+
+# XXX should blow up if /proc/cmdline can not be read?
+cmdline_path = '/proc/cmdline'
+IO.read(cmdline_path).split.each do |kernel_arg|
+    match = kernel_arg.match(/\Apuavo\.feature\.(.*?)=(.*)\Z/)
+    if match then
+        key   = match[1]
+        value = match[2]
+        $features[key] = value
+    end
+end
+
+#
+# make db
+#
+
+puavoconf = Puavo::Conf.new()
+$features.each do |key, value|
+    puavoconf.set(key, value)
+end
+puavoconf.close
