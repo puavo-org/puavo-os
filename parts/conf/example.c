@@ -47,16 +47,14 @@ int main(void)
                 return 1;
         }
 
-        background = puavo_conf_get(conf, "lightdm.background");
-        if (!background) {
+        if (puavo_conf_get(conf, "lightdm.background", &background) != 0) {
                 puavo_conf_close_db(conf);
                 puavo_conf_free(conf);
                 return 1;
         }
         printf("lightdm.background: %s\n", background);
 
-        tx_power = puavo_conf_get(conf, "wlanap.tx.power");
-        if (!tx_power) {
+        if (puavo_conf_get(conf, "wlanap.tx.power", &tx_power) != 0) {
                 puavo_conf_close_db(conf);
                 puavo_conf_free(conf);
                 return 1;

@@ -87,7 +87,8 @@ void puavo_conf_free(struct puavo_conf *conf)
         free(conf);
 }
 
-char *puavo_conf_get(struct puavo_conf *const conf, char *const key)
+int puavo_conf_get(struct puavo_conf *const conf,
+                   char *const key, char **const valuep)
 {
         DBT db_key;
         DBT db_value;
@@ -105,13 +106,15 @@ char *puavo_conf_get(struct puavo_conf *const conf, char *const key)
         db_ret = conf->db->get(conf->db, NULL, &db_key, &db_value, 0);
         if (db_ret != 0) {
                 conf->db_err = db_ret;
-                return NULL;
+                return -1;
         }
 
         value = (char *) db_value.data;
         value[db_value.size - 1] = '\0';
 
-        return value;
+        *valuep = value;
+
+        return 0;
 }
 
 int puavo_conf_set(struct puavo_conf *const conf,

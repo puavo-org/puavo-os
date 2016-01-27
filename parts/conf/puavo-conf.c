@@ -39,8 +39,7 @@ int main(int argc, char *argv[])
         }
 
         if (argc == 2) {
-                returned_value = puavo_conf_get(conf, argv[1]);
-                if (!returned_value) {
+                if (puavo_conf_get(conf, argv[1], &returned_value)) {
                         (void) fprintf(stderr,
                                        "error retrieving '%s'\n",
                                        argv[1]);
