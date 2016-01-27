@@ -33,7 +33,7 @@ int puavo_conf_init(struct puavo_conf **const confp)
 
         conf = (struct puavo_conf *) malloc(sizeof(struct puavo_conf));
         if (!conf)
-                return -1;
+                return -PUAVO_CONF_ERR_SYS;
         memset(conf, 0, sizeof(struct puavo_conf));
 
         *confp = conf;
@@ -53,7 +53,7 @@ int puavo_conf_open_db(struct puavo_conf *const conf,
         db_ret = db_create(&db, NULL, 0);
         if (db_ret) {
                 conf->db_err = db_ret;
-                return -1;
+                return -PUAVO_CONF_ERR_DB;
         }
 
         db_ret = db->open(db, NULL,
@@ -62,7 +62,7 @@ int puavo_conf_open_db(struct puavo_conf *const conf,
         if (db_ret) {
                 conf->db_err = db_ret;
                 db->close(db, 0);
-                return -1;
+                return -PUAVO_CONF_ERR_DB;
         }
 
         conf->db = db;
@@ -77,7 +77,7 @@ int puavo_conf_close_db(struct puavo_conf *const conf)
 
                 if (db_ret) {
                         conf->db_err = db_ret;
-                        return -1;
+                        return -PUAVO_CONF_ERR_DB;
                 }
         }
 
@@ -108,7 +108,7 @@ int puavo_conf_get(struct puavo_conf *const conf,
         db_ret = conf->db->get(conf->db, NULL, &db_key, &db_value, 0);
         if (db_ret) {
                 conf->db_err = db_ret;
-                return -1;
+                return -PUAVO_CONF_ERR_DB;
         }
 
         if (db_value.size == 0) {
@@ -142,7 +142,7 @@ int puavo_conf_set(struct puavo_conf *const conf,
         db_ret = conf->db->put(conf->db, NULL, &db_key, &db_value, 0);
         if (db_ret) {
                 conf->db_err = db_ret;
-                return -1;
+                return -PUAVO_CONF_ERR_DB;
         }
 
         return 0;

@@ -22,6 +22,9 @@ static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = DEFAULT_DB_FILEPATH;
 
 typedef struct puavo_conf puavo_conf_t;
 
+#define PUAVO_CONF_ERR_DB  1
+#define PUAVO_CONF_ERR_SYS 2
+
 /**
  * puavo_conf_init() - allocate and initialize a config object
  *
