@@ -4,7 +4,6 @@
 #   - write in C
 #   - have only a few json-files to parse
 
-require 'ffi'
 require 'json'
 require 'puavo/conf'
 

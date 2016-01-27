@@ -1,3 +1,5 @@
+require 'ffi'
+
 module Puavo
     class Conf
         class Error < StandardError
