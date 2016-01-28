@@ -36,8 +36,8 @@ should be run at an boottime.
 `puavo-conf-mkdb` looks up these sources in this order:
 
   1. image defaults
-  2. settings from puavo
-  3. hardware quirks database
+  2. hardware quirks database
+  3. settings from puavo
   4. primary user preferences (currently unimplemented)
   5. kernel arguments
 

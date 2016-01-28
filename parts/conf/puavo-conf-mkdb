@@ -20,8 +20,8 @@
 # puavo-conf-mkdb creates a puavo-conf database with correct parameters
 # for this particular host.  As its sources it uses:
 #   1. image defaults
-#   2. settings from puavo
-#   3. hardware quirks database
+#   2. hardware quirks database
+#   3. settings from puavo
 #   4. primary user preferences (unimplemented)
 #   5. kernel arguments
 #
@@ -132,18 +132,7 @@ image_defaults_files.each do |file|
     end
 end
 
-# 2. check settings from puavo
-
-begin
-    device_json = JSON.parse( IO.read('/etc/puavo/device.json') )
-    device_features = device_json['features']
-    # XXX typecheck device_features
-    $features.merge!(device_features)
-rescue StandardError => e
-    warn("Could not read features from /etc/puavo/device.json: #{ e.message }")
-end
-
-# 3. check settings based on hardware quirks (dmidecode, pci, usb, ...)
+# 2. check settings based on hardware quirks (dmidecode, pci, usb, ...)
 
 deviceinfo = {}
 
@@ -188,6 +177,17 @@ Dir.glob(Hardware_quirks_globpattern).each do |hwquirk_file|
     hwquirklist.each do |hwquirkset|
         lookup_features_by_key(deviceinfo, ':exact:', hwquirkset)
     end
+end
+
+# 3. check settings from puavo
+
+begin
+    device_json = JSON.parse( IO.read('/etc/puavo/device.json') )
+    device_features = device_json['features']
+    # XXX typecheck device_features
+    $features.merge!(device_features)
+rescue StandardError => e
+    warn("Could not read features from /etc/puavo/device.json: #{ e.message }")
 end
 
 # 4. check primary user preferences
