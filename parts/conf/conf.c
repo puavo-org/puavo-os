@@ -50,22 +50,22 @@ int puavo_conf_open_db(struct puavo_conf *const conf,
                        const char *const db_filepath)
 {
         DB *db;
-        int db_ret;
+        int db_err;
 
         if (conf->db)
                 return 0;
 
-        db_ret = db_create(&db, NULL, 0);
-        if (db_ret) {
-                conf->db_err = db_ret;
+        db_err = db_create(&db, NULL, 0);
+        if (db_err) {
+                conf->db_err = db_err;
                 return -PUAVO_CONF_ERR_DB;
         }
 
-        db_ret = db->open(db, NULL,
+        db_err = db->open(db, NULL,
                           db_filepath ? db_filepath : PUAVO_CONF_DEFAULT_DB_FILEPATH,
                           NULL, DB_BTREE, DB_CREATE, 0600);
-        if (db_ret) {
-                conf->db_err = db_ret;
+        if (db_err) {
+                conf->db_err = db_err;
                 db->close(db, 0);
                 return -PUAVO_CONF_ERR_DB;
         }
@@ -77,11 +77,11 @@ int puavo_conf_open_db(struct puavo_conf *const conf,
 int puavo_conf_close_db(struct puavo_conf *const conf)
 {
         if (conf->db) {
-                int db_ret = conf->db->close(conf->db, 0);
+                int db_err = conf->db->close(conf->db, 0);
                 conf->db = NULL;
 
-                if (db_ret) {
-                        conf->db_err = db_ret;
+                if (db_err) {
+                        conf->db_err = db_err;
                         return -PUAVO_CONF_ERR_DB;
                 }
         }
@@ -99,7 +99,7 @@ int puavo_conf_get(struct puavo_conf *const conf,
 {
         DBT db_key;
         DBT db_value;
-        int db_ret;
+        int db_err;
         char *value;
 
         memset(&db_key, 0, sizeof(DBT));
@@ -110,9 +110,9 @@ int puavo_conf_get(struct puavo_conf *const conf,
 
         db_value.flags = DB_DBT_MALLOC;
 
-        db_ret = conf->db->get(conf->db, NULL, &db_key, &db_value, 0);
-        if (db_ret) {
-                conf->db_err = db_ret;
+        db_err = conf->db->get(conf->db, NULL, &db_key, &db_value, 0);
+        if (db_err) {
+                conf->db_err = db_err;
                 return -PUAVO_CONF_ERR_DB;
         }
 
@@ -133,7 +133,7 @@ int puavo_conf_set(struct puavo_conf *const conf,
 {
         DBT db_key;
         DBT db_value;
-        int db_ret;
+        int db_err;
 
         memset(&db_key, 0, sizeof(DBT));
         memset(&db_value, 0, sizeof(DBT));
@@ -144,9 +144,9 @@ int puavo_conf_set(struct puavo_conf *const conf,
         db_value.data = value;
         db_value.size = strlen(value) + 1;
 
-        db_ret = conf->db->put(conf->db, NULL, &db_key, &db_value, 0);
-        if (db_ret) {
-                conf->db_err = db_ret;
+        db_err = conf->db->put(conf->db, NULL, &db_key, &db_value, 0);
+        if (db_err) {
+                conf->db_err = db_err;
                 return -PUAVO_CONF_ERR_DB;
         }
 
@@ -159,7 +159,7 @@ int puavo_conf_list(puavo_conf_t *const conf,
         DBC *db_cursor;
         DBT db_null;
         DBT db_batch;
-        int db_ret;
+        int db_err;
         size_t keys_size = 0;
         size_t vals_size = 0;
 
@@ -172,9 +172,9 @@ int puavo_conf_list(puavo_conf_t *const conf,
         if (!db_batch.data)
                 return -PUAVO_CONF_ERR_SYS;
 
-        db_ret = conf->db->cursor(conf->db, NULL, &db_cursor, 0);
-        if (db_ret) {
-                conf->db_err = db_ret;
+        db_err = conf->db->cursor(conf->db, NULL, &db_cursor, 0);
+        if (db_err) {
+                conf->db_err = db_err;
                 free(db_batch.data);
                 return -PUAVO_CONF_ERR_DB;
         }
@@ -189,15 +189,15 @@ int puavo_conf_list(puavo_conf_t *const conf,
                 void *batch_iterator;
 
                 /* Get the next batch of key-value pairs. */
-                db_ret = db_cursor->get(db_cursor, &db_null, &db_batch,
+                db_err = db_cursor->get(db_cursor, &db_null, &db_batch,
                                         DB_MULTIPLE_KEY | DB_NEXT);
-                switch (db_ret) {
+                switch (db_err) {
                 case 0:
                         break;
                 case DB_NOTFOUND:
                         goto done;
                 default:
-                        conf->db_err = db_ret;
+                        conf->db_err = db_err;
                         db_cursor->close(db_cursor);
                         free(db_batch.data);
                         return -PUAVO_CONF_ERR_DB;
@@ -252,9 +252,9 @@ int puavo_conf_list(puavo_conf_t *const conf,
         }
 
 done:
-        db_ret = db_cursor->close(db_cursor);
-        if (db_ret) {
-                conf->db_err = db_ret;
+        db_err = db_cursor->close(db_cursor);
+        if (db_err) {
+                conf->db_err = db_err;
                 free(db_batch.data);
                 return -PUAVO_CONF_ERR_DB;
         }
