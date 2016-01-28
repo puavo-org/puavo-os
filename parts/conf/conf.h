@@ -110,4 +110,29 @@ int puavo_conf_set(puavo_conf_t *conf, char *key, char *value);
  */
 int puavo_conf_get(puavo_conf_t *conf, char *key, char **valuep);
 
+/**
+ * puavo_conf_list() - retrieve a list of all parameters as key/value pairs
+ *
+ * @conf - an initialized config object pointer
+ *
+ * @keys - a pointer to an uninitialized char buffer, used for
+ *         returning a sequence of NUL-terminated keys
+ *
+ * @vals - a pointer to an uninitialized char buffer, used for
+ *         returning a sequence of NUL-terminated values
+ *
+ * @lenp - a pointer to a size variable, used for returning the number
+ *         of NUL-terminated keys/values
+ *
+ * After a successful call, @keys and @vals point to heap-allocated
+ * char buffers containing keys and values, respectively, as sequences
+ * of NUL-terminated strings. Both buffers contain the same number of
+ * strings. The number of returned pairs is returned via @lenp. The
+ * caller is responsible for calling free() on buffers pointed by
+ * @keys and @vals afterwards.
+ *
+ * Return 0 on success, non-zero otherwise.
+ */
+int puavo_conf_list(puavo_conf_t *conf, char **keys, char **vals, size_t *lenp);
+
 #endif /* CONF_H */

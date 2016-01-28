@@ -22,6 +22,11 @@
 
 #include "conf.h"
 
+/* TODO: 1MiB should be enough for 1+ key/value pairs, if not, please
+ * implement dynamic buffer reallocation on when DB->get() returns
+ * DB_BUFFER_SMALL. */
+static const size_t PUAVO_CONF_DEFAULT_DB_BATCH_SIZE = 1048576;
+
 struct puavo_conf {
         DB *db;
         int db_err;
@@ -144,6 +149,117 @@ int puavo_conf_set(struct puavo_conf *const conf,
                 conf->db_err = db_ret;
                 return -PUAVO_CONF_ERR_DB;
         }
+
+        return 0;
+}
+
+int puavo_conf_list(puavo_conf_t *const conf,
+                    char **const keys, char **const vals, size_t *const lenp)
+{
+        DBC *db_cursor;
+        DBT db_null;
+        DBT db_batch;
+        int db_ret;
+        size_t keys_size = 0;
+        size_t vals_size = 0;
+
+        memset(&db_null, 0, sizeof(DBT));
+        memset(&db_batch, 0, sizeof(DBT));
+
+        db_batch.flags = DB_DBT_USERMEM;
+        db_batch.ulen  = PUAVO_CONF_DEFAULT_DB_BATCH_SIZE;
+        db_batch.data  = malloc(db_batch.ulen);
+        if (!db_batch.data)
+                return -PUAVO_CONF_ERR_SYS;
+
+        db_ret = conf->db->cursor(conf->db, NULL, &db_cursor, 0);
+        if (db_ret) {
+                conf->db_err = db_ret;
+                free(db_batch.data);
+                return -PUAVO_CONF_ERR_DB;
+        }
+
+	/* Prime return values for the empty list case. */
+        *lenp = 0;
+        *vals = NULL;
+        *keys = NULL;
+
+	/* Iterate key/value pairs in batches until all are found. */
+        while (1) {
+                void *batch_iterator;
+
+                /* Get the next batch of key-value pairs. */
+                db_ret = db_cursor->get(db_cursor, &db_null, &db_batch,
+                                        DB_MULTIPLE_KEY | DB_NEXT);
+                switch (db_ret) {
+                case 0:
+                        break;
+                case DB_NOTFOUND:
+                        goto done;
+                default:
+                        conf->db_err = db_ret;
+                        db_cursor->close(db_cursor);
+                        free(db_batch.data);
+                        return -PUAVO_CONF_ERR_DB;
+                }
+
+		/* Iterate the batch. */
+                DB_MULTIPLE_INIT(batch_iterator, &db_batch);
+                while (1) {
+                        char *key;
+                        char *val;
+                        size_t key_size;
+                        size_t val_size;
+
+                        DB_MULTIPLE_KEY_NEXT(batch_iterator, &db_batch,
+                                             key, key_size, val, val_size);
+                        if (!batch_iterator)
+                                break; /* The batch is empty. */
+
+                        if (key_size && val_size) {
+                                char *new_keys;
+                                char *new_vals;
+
+                                key[key_size - 1] = '\0';
+                                val[val_size - 1] = '\0';
+
+                                *lenp     += 1;
+                                keys_size += key_size;
+                                vals_size += val_size;
+
+                                new_keys = realloc(*keys, keys_size);
+                                if (!new_keys) {
+                                        free(*keys);
+                                        free(*vals);
+                                        free(db_batch.data);
+                                        return -PUAVO_CONF_ERR_SYS;
+                                }
+                                *keys = new_keys;
+
+                                new_vals = realloc(*vals, vals_size);
+                                if (!new_vals) {
+                                        free(*keys);
+                                        free(*vals);
+                                        free(db_batch.data);
+                                        return -PUAVO_CONF_ERR_SYS;
+                                }
+                                *vals = new_vals;
+
+                                strcpy(*keys + (keys_size - key_size), key);
+                                strcpy(*vals + (vals_size - val_size), val);
+                        }
+                }
+        }
+
+done:
+        db_ret = db_cursor->close(db_cursor);
+        if (db_ret) {
+                conf->db_err = db_ret;
+                free(db_batch.data);
+                return -PUAVO_CONF_ERR_DB;
+        }
+
+        free(db_batch.data);
 
         return 0;
 }
