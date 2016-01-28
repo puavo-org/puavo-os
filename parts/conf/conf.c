@@ -208,38 +208,43 @@ int puavo_conf_list(puavo_conf_t *const conf,
                 while (1) {
                         char *key;
                         char *val;
+                        char *new_keys;
+                        char *new_vals;
                         size_t key_size;
                         size_t val_size;
+                        size_t key_len;
+                        size_t val_len;
 
                         DB_MULTIPLE_KEY_NEXT(batch_iterator, &db_batch,
                                              key, key_size, val, val_size);
                         if (!batch_iterator)
                                 break; /* The batch is empty. */
 
-                        if (key_size && val_size) {
-                                char *new_keys;
-                                char *new_vals;
+                        key_len = strnlen(key, key_size);
+                        val_len = strnlen(val, val_size);
 
-				if (!(new_keys = realloc(*keys, keys_size + key_size)) ||
-				    !(new_vals = realloc(*vals, vals_size + val_size))) {
-					free(*keys);
-					free(*vals);
-					free(db_batch.data);
-					return -PUAVO_CONF_ERR_SYS;
-                                }
-                                *keys = new_keys;
-                                *vals = new_vals;
+                        keys_size += key_len + 1;
+                        vals_size += val_len + 1;
 
-                                key[key_size - 1] = '\0';
-                                val[val_size - 1] = '\0';
-
-                                strcpy(*keys + keys_size, key);
-                                strcpy(*vals + vals_size, val);
-
-                                keys_size += key_size;
-                                vals_size += val_size;
-                                *lenp     += 1;
+                        if (!(new_keys = realloc(*keys, keys_size)) ||
+                            !(new_vals = realloc(*vals, vals_size))) {
+                                free(db_batch.data);
+                                free(*keys);
+                                free(*vals);
+                                return -PUAVO_CONF_ERR_SYS;
                         }
+                        *keys = new_keys;
+                        *vals = new_vals;
+
+                        /* Copy strings to the return value buffers and
+                         * ensure all returned strings are always
+                         * NUL-terminated. */
+                        (*keys)[keys_size - 1] = '\0';
+                        (*vals)[vals_size - 1] = '\0';
+                        strncpy(*keys + keys_size - key_len - 1, key, key_len);
+                        strncpy(*vals + vals_size - val_len - 1, val, val_len);
+
+                        *lenp += 1;
                 }
         }
 
