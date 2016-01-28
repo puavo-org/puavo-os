@@ -178,6 +178,7 @@ end
 
 puavoconf = Puavo::Conf.new()
 $features.each do |key, value|
+    puts "setting '#{ key }' to '#{ value }'"
     puavoconf.set(key, value)
 end
 puavoconf.close
