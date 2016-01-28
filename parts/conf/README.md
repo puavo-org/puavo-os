@@ -36,10 +36,11 @@ should be run at an boottime.
 `puavo-conf-mkdb` looks up these sources in this order:
 
   1. image defaults
-  2. hardware quirks database
-  3. settings from puavo
-  4. primary user preferences (currently unimplemented)
-  5. kernel arguments
+  2. feature-profiles
+  3. hardware quirks database
+  4. settings from puavo
+  5. primary user preferences (currently unimplemented)
+  6. kernel arguments
 
 Values set by later sources override values set by previous ones.  Thus,
 for example, settings set in kernel arguments overwrite settings from

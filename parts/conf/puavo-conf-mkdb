@@ -17,13 +17,12 @@
 #
 
 #
-# puavo-conf-mkdb creates a puavo-conf database with correct parameters
-# for this particular host.  As its sources it uses:
-#   1. image defaults
-#   2. hardware quirks database
-#   3. settings from puavo
-#   4. primary user preferences (unimplemented)
-#   5. kernel arguments
+# 1. image defaults
+# 2. feature-profiles
+# 3. hardware quirks database
+# 4. settings from puavo
+# 5. primary user preferences (currently unimplemented)
+# 6. kernel arguments
 #
 
 #
@@ -41,22 +40,77 @@
 require 'json'
 require 'puavo/conf'
 
-def lookup_features_by_key(deviceinfo, matchmethod, hwquirkset)
-    hwquirkset.each do |quirktype, values_by_device_id|
+$deviceinfo = {}
+def get_device_setting(key)
+    # returns nil in case there was a failure
+    return $deviceinfo[key] if $deviceinfo.has_key?(key)
+
+    case key
+        when 'dmidecode-baseboard-asset-tag',
+             'dmidecode-baseboard-manufacturer',
+             'dmidecode-baseboard-product-name',
+             'dmidecode-baseboard-serial-number',
+             'dmidecode-baseboard-version',
+             'dmidecode-bios-release-date',
+             'dmidecode-bios-vendor',
+             'dmidecode-bios-version',
+             'dmidecode-chassis-asset-tag',
+             'dmidecode-chassis-manufacturer',
+             'dmidecode-chassis-serial-number',
+             'dmidecode-chassis-type',
+             'dmidecode-chassis-version',
+             'dmidecode-processor-family',
+             'dmidecode-processor-frequency',
+             'dmidecode-processor-manufacturer',
+             'dmidecode-processor-version',
+             'dmidecode-system-manufacturer',
+             'dmidecode-system-product-name',
+             'dmidecode-system-serial-number',
+             'dmidecode-system-uuid',
+             'dmidecode-system-version'
+                cmdarg = key[ "dmidecode-".length .. -1]
+                result = %x(dmidecode -s #{ cmdarg })
+                status = $?.exitstatus 
+                if status != 0 then
+                    warn("dmidecode -s #{ cmdarg } returned #{ status }")
+                    $deviceinfo[key] = nil
+                else
+                    $deviceinfo[key] = [ result.strip ]
+                end
+        when 'pci-id'
+            # might return nil, that is okay
+            $deviceinfo[key] = take_field('lspci -n', 3)
+        when 'usb-id'
+            # might return nil, that is okay
+            $deviceinfo[key] = take_field('lsusb', 6)
+        else
+            warn("Unknown device key #{ key }")
+            $deviceinfo[key] = nil
+    end
+
+    return $deviceinfo[key]
+end
+
+def lookup_features_by_key(matchmethod, hwquirkset)
+    hwquirkset.each do |quirktype, quirkmap|
+        if !quirktype.kind_of?(String) then
+            warn("input type error: quirktype is not a string")
+            return
+        end
+
+        if !quirkmap.kind_of?(Hash) then
+            warn("input type error: quirkmap is not a hash")
+            return
+        end
+
         case quirktype
             when ':exact:', ':glob:', ':logic:', ':regex:'
-                lookup_features_by_key(deviceinfo,
-                                       quirktype,
-                                       values_by_device_id)
+                lookup_features_by_key(quirktype, quirkmap)
 
             when /\Admidecode-.*\Z/, 'pci-id', 'usb-id'
-                if !deviceinfo[quirktype].kind_of?(Array) then
-                    warn("No device info for quirktype #{ quirktype }")
-                    next
-                end
-
-                deviceinfo[quirktype].each do |id|
-                    values_by_device_id.each do |pattern, featureconf|
+                device_setting = get_device_setting(quirktype)
+                device_setting.each do |id|
+                    quirkmap.each do |pattern, featureconf|
                         if match_hwquirk(id, matchmethod, pattern) then
                             $features.merge!(featureconf)
                         end
@@ -64,6 +118,7 @@ def lookup_features_by_key(deviceinfo, matchmethod, hwquirkset)
                 end
             else
                 warn("Unknown quirktype: #{ quirktype }")
+                return
         end
     end
 end
@@ -93,19 +148,20 @@ def match_hwquirk(target, matchmethod, pattern)
 end
 
 def take_field(cmd, fieldnum)
-    # XXX should blow up if cmd returns error?
-    IO.popen(cmd).readlines.map { |line| (line.split(' '))[fieldnum-1] }
+    result = %x(#{ cmd })
+    status = $?.exitstatus
+    if status != 0 then
+        warn("#{ cmd } returned #{ status }")
+        return nil
+    end
+
+    result.split("\n").map { |line| (line.split(' '))[fieldnum-1] }
 end
 
 if Process.euid != 0 then
     warn("#{ File.basename($0) } must be run as root")
     exit 1
 end
-
-# XXX Should parse only one json-file that contains a collection of all?
-# XXX Would that be significantly faster?
-# XXX And there should be another utility to gather things to there at
-# XXX image build time?
 
 Hardware_quirks_globpattern = "/usr/share/puavo/hwquirks/*/*.json"
 Image_defaults_globpattern  = "/usr/share/puavo/features/*/info.json"
@@ -132,54 +188,26 @@ image_defaults_files.each do |file|
     end
 end
 
-# 2. check settings based on hardware quirks (dmidecode, pci, usb, ...)
+# 2. feature-profiles
+
+# XXX
+
+# 3. check settings based on hardware quirks (dmidecode, pci, usb, ...)
 
 deviceinfo = {}
 
 # List available dmidecode fields.  Comment out if uninteresting so we can
 # save time with dmidecode-lookups (other alternative is to make those faster).
 # (Should check these only on demand.)
-dmidecode_list = [
-    # 'baseboard-asset-tag',
-    # 'baseboard-manufacturer',
-    # 'baseboard-product-name',
-    # 'baseboard-serial-number',
-    # 'baseboard-version',
-    # 'bios-release-date',
-    # 'bios-vendor',
-    # 'bios-version',
-    # 'chassis-asset-tag',
-    # 'chassis-manufacturer',
-    # 'chassis-serial-number',
-    # 'chassis-type',
-    # 'chassis-version',
-    # 'processor-family',
-    # 'processor-frequency',
-    # 'processor-manufacturer',
-    # 'processor-version',
-    'system-manufacturer',
-    'system-product-name',
-    # 'system-serial-number',
-    # 'system-uuid',
-    'system-version',
-]
-
-dmidecode_list.each do |key|
-    # XXX should blow up if dmidecode returns error?
-    deviceinfo[ "dmidecode-#{ key }" ] = [ %x(dmidecode -s #{ key }).strip ]
-end
-
-deviceinfo['pci-id'] = take_field('lspci -n', 3)
-deviceinfo['usb-id'] = take_field('lsusb',    6)
 
 Dir.glob(Hardware_quirks_globpattern).each do |hwquirk_file|
     hwquirklist = JSON.parse( IO.read(hwquirk_file) )
     hwquirklist.each do |hwquirkset|
-        lookup_features_by_key(deviceinfo, ':exact:', hwquirkset)
+        lookup_features_by_key(':exact:', hwquirkset)
     end
 end
 
-# 3. check settings from puavo
+# 4. check settings from puavo
 
 begin
     device_json = JSON.parse( IO.read('/etc/puavo/device.json') )
@@ -190,11 +218,11 @@ rescue StandardError => e
     warn("Could not read features from /etc/puavo/device.json: #{ e.message }")
 end
 
-# 4. check primary user preferences
+# 5. check primary user preferences
 
 # XXX
 
-# 5. check kernel arguments
+# 6. check kernel arguments
 
 # XXX should blow up if /proc/cmdline can not be read?
 cmdline_path = '/proc/cmdline'
@@ -216,9 +244,10 @@ end
 # XXX those into the database with [].join(',').
 # XXX this should have been handled previously
 
+puts "Creating puavo-conf database with the following values:\n"
 puavoconf = Puavo::Conf.new()
-$features.each do |key, value|
-    puts "setting '#{ key }' to '#{ value }'"
+$features.sort.each do |key, value|
     puavoconf.set(key, value)
+    puts "    #{ key }=#{ value }"
 end
 puavoconf.close
