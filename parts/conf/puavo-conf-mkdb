@@ -40,6 +40,8 @@
 require 'json'
 require 'puavo/conf'
 
+$status = 0
+
 $deviceinfo = {}
 def get_device_setting(key)
     # returns nil in case there was a failure
@@ -72,7 +74,7 @@ def get_device_setting(key)
                 result = %x(dmidecode -s #{ cmdarg })
                 status = $?.exitstatus 
                 if status != 0 then
-                    warn("dmidecode -s #{ cmdarg } returned #{ status }")
+                    logerr("dmidecode -s #{ cmdarg } returned #{ status }")
                     $deviceinfo[key] = nil
                 else
                     $deviceinfo[key] = [ result.strip ]
@@ -84,23 +86,33 @@ def get_device_setting(key)
             # might return nil, that is okay
             $deviceinfo[key] = take_field('lsusb', 6)
         else
-            warn("Unknown device key #{ key }")
+            logerr("Unknown device key #{ key }")
             $deviceinfo[key] = nil
     end
 
     return $deviceinfo[key]
 end
 
+def logerr(msg)
+    warn(msg)
+    $status = 1
+end
+
 def lookup_features_by_key(matchmethod, hwquirkset)
+    if !hwquirkset.kind_of?(Hash) then
+        logerr('input type error: hwquirkset is not a hash')
+        return
+    end
+
     hwquirkset.each do |quirktype, quirkmap|
         if !quirktype.kind_of?(String) then
-            warn("input type error: quirktype is not a string")
-            return
+            logerr('input type error: quirktype is not a string')
+            next
         end
 
         if !quirkmap.kind_of?(Hash) then
-            warn("input type error: quirkmap is not a hash")
-            return
+            logerr('input type error: quirkmap is not a hash')
+            next
         end
 
         case quirktype
@@ -108,50 +120,72 @@ def lookup_features_by_key(matchmethod, hwquirkset)
                 lookup_features_by_key(quirktype, quirkmap)
 
             when /\Admidecode-.*\Z/, 'pci-id', 'usb-id'
+                # device_setting is a list, because it might be
+                # a list of PCIs or USBs
                 device_setting = get_device_setting(quirktype)
-                device_setting.each do |id|
-                    quirkmap.each do |pattern, featureconf|
+                quirkmap.each do |pattern, featureconf|
+                    if !pattern.kind_of?(String) then
+                        logerr('input type error: pattern is not a string')
+                        next
+                    end
+                    if !featureconf.kind_of?(Hash) then
+                        logerr('input type error: featureconf is not a hash')
+                        next
+                    end
+
+                    device_setting.each do |id|
                         if match_hwquirk(id, matchmethod, pattern) then
-                            $features.merge!(featureconf)
+                            merge_features(featureconf)
                         end
                     end
                 end
             else
-                warn("Unknown quirktype: #{ quirktype }")
-                return
+                logerr("Unknown quirktype: #{ quirktype }")
         end
     end
 end
 
 def match_hwquirk(target, matchmethod, pattern)
-    if !target.kind_of?(String) then
-        warn("asked to match something that was not a string: " \
-                + target.inspect)
-        return false
-    end
-
     case matchmethod
         when ':exact:'
             return target == pattern
         when ':glob:'
             return File.fnmatch(pattern, target)
         when ':logic:'
-            warn(":logic: matcher not implemented yet")
+            logerr(":logic: matcher not implemented yet")
             return false
         when ':regex:'
             return target.match(pattern) ? true : false
         else
-            warn("Match method #{ matchmethod } is unsupported")
+            logerr("Match method #{ matchmethod } is unsupported")
     end
 
     return false
+end
+
+def merge_features(featureconf)
+    featureconf.each do |key, value|
+        if !key.kind_of?(String) then
+            logerr('input type error: key not a string')
+            next
+        end
+
+        if !(value == true || value == false \
+               || value.kind_of?(Integer) \
+               || value.kind_of?(String)) then
+            logerr('input type error: value not valid')
+            next
+        end
+
+        $features[key] = value
+    end
 end
 
 def take_field(cmd, fieldnum)
     result = %x(#{ cmd })
     status = $?.exitstatus
     if status != 0 then
-        warn("#{ cmd } returned #{ status }")
+        logerr("#{ cmd } returned #{ status }")
         return nil
     end
 
@@ -159,32 +193,60 @@ def take_field(cmd, fieldnum)
 end
 
 if Process.euid != 0 then
-    warn("#{ File.basename($0) } must be run as root")
+    logerr("#{ File.basename($0) } must be run as root")
     exit 1
 end
 
-Hardware_quirks_globpattern = "/usr/share/puavo/hwquirks/*/*.json"
-Image_defaults_globpattern  = "/usr/share/puavo/features/*/info.json"
+Hardware_quirks_globpattern = '/usr/share/puavo/hwquirks/*/*.json'
+Image_defaults_globpattern  = '/usr/share/puavo/features/*/info.json'
 
 $features = {}
+$status = 0
+
+puavo_settings = nil
+begin
+    puavo_settings = JSON.parse( IO.read('/etc/puavo/device.json') )
+rescue StandardError => e
+    logerr('Could not read features from /etc/puavo/device.json: ' \
+              + e.message)
+    $status = 1
+end
 
 # 1. image defaults
 
-image_defaults_files = Dir.glob(Image_defaults_globpattern)
+image_defaults_files = Dir.glob(Image_defaults_globpattern) rescue []
 if image_defaults_files.count == 0 then
-    warn('No image defaults files found')
+    logerr('No image defaults files found')
 end
 
 image_defaults_files.each do |file|
     begin
         feature_info = JSON.parse( IO.read(file) )
-        # XXX typecheck info
+        if !feature_info.kind_of?(Hash) then
+            raise 'input type error: image defaults is not a Hash'
+        end
+
+        if !(feature_info.has_key?('keys') \
+               && feature_info['keys'].kind_of?(Hash)) then
+                raise 'input type error: keys value not a Hash'
+        end
+
         feature_info['keys'].each do |key, keyinfo|
-            # XXX typecheck info and info['default']
-            $features[key] = keyinfo['default']
+            if !keyinfo.kind_of?(Hash) then
+                logerr('input type error: defaults keyinfo not a hash')
+                next
+            end
+            if !keyinfo.has_key?('default') then
+                logerr('input type error: keyinfo does not have' \
+                         + ' a default value')
+                next
+            end
+
+            merge_features({ key => keyinfo['default'] })
         end
     rescue StandardError => e
-        warn("Could not read feature defaults from #{ file }: #{ e.message }")
+        logerr("Could not read feature defaults from #{ file }: " \
+                 + e.message)
     end
 end
 
@@ -194,28 +256,31 @@ end
 
 # 3. check settings based on hardware quirks (dmidecode, pci, usb, ...)
 
-deviceinfo = {}
+hwquirk_files = Dir.glob(Hardware_quirks_globpattern) rescue []
+hwquirk_files.each do |hwquirk_file|
+    begin
+        hwquirklist = JSON.parse( IO.read(hwquirk_file) )
+        if !hwquirklist.kind_of?(Array) then
+            logerr('input type error: hwquirklist is not an array')
+            next
+        end
 
-# List available dmidecode fields.  Comment out if uninteresting so we can
-# save time with dmidecode-lookups (other alternative is to make those faster).
-# (Should check these only on demand.)
-
-Dir.glob(Hardware_quirks_globpattern).each do |hwquirk_file|
-    hwquirklist = JSON.parse( IO.read(hwquirk_file) )
-    hwquirklist.each do |hwquirkset|
-        lookup_features_by_key(':exact:', hwquirkset)
+        hwquirklist.each do |hwquirkset|
+            lookup_features_by_key(':exact:', hwquirkset)
+        end
+    rescue StandardError => e
+        logerr("could not read hardware quirks from #{ hwquirk_file }: " \
+                 + e.message)
     end
 end
 
 # 4. check settings from puavo
 
-begin
-    device_json = JSON.parse( IO.read('/etc/puavo/device.json') )
-    device_features = device_json['features']
-    # XXX typecheck device_features
-    $features.merge!(device_features)
-rescue StandardError => e
-    warn("Could not read features from /etc/puavo/device.json: #{ e.message }")
+if !(puavo_settings.kind_of?(Hash) \
+       && puavo_settings['features'].kind_of?(Hash)) then
+    logerr('input type error: puavo feature settings not in correct format')
+else
+    merge_features(puavo_settings['features'])
 end
 
 # 5. check primary user preferences
@@ -229,9 +294,7 @@ cmdline_path = '/proc/cmdline'
 IO.read(cmdline_path).split.each do |kernel_arg|
     match = kernel_arg.match(/\Apuavo\.feature\.(.*?)=(.*)\Z/)
     if match then
-        key   = match[1]
-        value = match[2]
-        $features[key] = value
+        merge_features({ match[1] => match[2] })
     end
 end
 
@@ -247,7 +310,9 @@ end
 puts "Creating puavo-conf database with the following values:\n"
 puavoconf = Puavo::Conf.new()
 $features.sort.each do |key, value|
-    puavoconf.set(key, value)
+    puavoconf.set(key.to_s, value.to_s)
     puts "    #{ key }=#{ value }"
 end
 puavoconf.close
+
+exit($status)
