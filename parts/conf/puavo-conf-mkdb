@@ -27,10 +27,15 @@
 #
 
 #
+# tested speed on Lenovo ThinkCentre Edge (1578D7G)
+#   with 100 hardware-quirks.json files, with 1000 pci-id keys on each:
+#   took about 0.8 seconds (not to be taken as an exact value, code may
+#   have changed)
+#
 # ways to optimize:
 #   - rewrite in C
 #   - have only a few json-files to parse
-#   - replaces calls for dmidecode, lspci, lsusb with something more efficient
+#   - replace calls for dmidecode, lspci, lsusb with something more efficient
 #
 
 require 'json'
