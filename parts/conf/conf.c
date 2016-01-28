@@ -220,33 +220,25 @@ int puavo_conf_list(puavo_conf_t *const conf,
                                 char *new_keys;
                                 char *new_vals;
 
+				if (!(new_keys = realloc(*keys, keys_size + key_size)) ||
+				    !(new_vals = realloc(*vals, vals_size + val_size))) {
+					free(*keys);
+					free(*vals);
+					free(db_batch.data);
+					return -PUAVO_CONF_ERR_SYS;
+                                }
+                                *keys = new_keys;
+                                *vals = new_vals;
+
                                 key[key_size - 1] = '\0';
                                 val[val_size - 1] = '\0';
 
-                                *lenp     += 1;
+                                strcpy(*keys + keys_size, key);
+                                strcpy(*vals + vals_size, val);
+
                                 keys_size += key_size;
                                 vals_size += val_size;
-
-                                new_keys = realloc(*keys, keys_size);
-                                if (!new_keys) {
-                                        free(*keys);
-                                        free(*vals);
-                                        free(db_batch.data);
-                                        return -PUAVO_CONF_ERR_SYS;
-                                }
-                                *keys = new_keys;
-
-                                new_vals = realloc(*vals, vals_size);
-                                if (!new_vals) {
-                                        free(*keys);
-                                        free(*vals);
-                                        free(db_batch.data);
-                                        return -PUAVO_CONF_ERR_SYS;
-                                }
-                                *vals = new_vals;
-
-                                strcpy(*keys + (keys_size - key_size), key);
-                                strcpy(*vals + (vals_size - val_size), val);
+                                *lenp     += 1;
                         }
                 }
         }
