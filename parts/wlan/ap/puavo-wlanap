@@ -90,7 +90,7 @@ module Dot11
       @name               = name
       @mac                = IO.read("#{sysfs_dir}/macaddress").strip
       @driver             = /^DRIVER=(.*)$/.match(device_info)[1].strip
-      @product            = /^PRODUCT=(.*)$/.match(device_info)[1].strip
+      @product            = /^MODALIAS=(.*)$/.match(device_info)[1].strip
       @supported_channels = []
 
       IO.popen(['iw', 'phy', @name, 'info']) do |io|
