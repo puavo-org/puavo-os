@@ -17,8 +17,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "conf.h"
+
+int     print_conf(puavo_conf_t *);
 
 int main(int argc, char *argv[])
 {
@@ -37,7 +40,11 @@ int main(int argc, char *argv[])
                 return 1;
         }
 
-        if (argc == 2) {
+        if (argc == 1) {
+                ret = print_conf(conf);
+                if (ret == -1)
+                        return 1;
+        } else if (argc == 2) {
                 if (puavo_conf_get(conf, argv[1], &returned_value)) {
                         (void) fprintf(stderr,
                                        "error retrieving '%s'\n",
@@ -71,4 +78,50 @@ int main(int argc, char *argv[])
         puavo_conf_free(conf);
 
         return 0;
+}
+
+int
+print_conf(puavo_conf_t *conf)
+{
+        char *keys, *vals;
+        size_t i, keysize, lenp, max_keysize;
+        int key_offset, val_offset, key_field_width, ret, r;
+
+        ret = 0;
+
+        if (puavo_conf_list(conf, &keys, &vals, &lenp) != 0)
+                return -1;
+
+        key_offset  = 0;
+        max_keysize = 0;
+
+        for (i = 0; i < lenp; i++) {
+                keysize = strlen(&keys[key_offset]);
+                key_offset += strlen(&keys[key_offset]) + 1;
+                max_keysize = (keysize > max_keysize) ? keysize : max_keysize;
+        }
+
+        key_offset = 0;
+        val_offset = 0;
+
+        key_field_width = (max_keysize > 80) ? 80 : max_keysize;
+
+        for (i = 0; i < lenp; i++) {
+                r = printf("%-*s %s\n",
+                           key_field_width + 2,
+                           &keys[key_offset],
+                           &vals[val_offset]);
+                if (r < 0) {
+                        (void) fprintf(stderr, "error in fprintf");
+                        ret = -1;
+                        break;
+                }
+                key_offset += strlen(&keys[key_offset]) + 1;
+                val_offset += strlen(&vals[val_offset]) + 1;
+        }
+
+        free(keys);
+        free(vals);
+
+        return ret;
 }
