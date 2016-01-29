@@ -260,6 +260,8 @@ int puavo_conf_list(puavo_conf_t *const conf,
 done:
         db_err = db_cursor->close(db_cursor);
         if (db_err) {
+                free(*vals);
+                free(*keys);
                 conf->db_err = db_err;
                 free(db_batch.data);
                 return -PUAVO_CONF_ERR_DB;
