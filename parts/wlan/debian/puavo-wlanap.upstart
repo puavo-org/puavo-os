@@ -5,3 +5,5 @@ start on (local-filesystems and net-device-up IFACE!=lo)
 exec puavo-wlanap
 
 respawn
+
+post-stop exec sleep 60
