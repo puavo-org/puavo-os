@@ -228,19 +228,19 @@ int puavo_conf_list(puavo_conf_t *const conf,
 
                         new_keys = realloc(*keys, keys_size);
                         if (!new_keys) {
+                                free(*keys);
                                 db_cursor->close(db_cursor);
                                 free(db_batch.data);
-                                free(*keys);
                                 return -PUAVO_CONF_ERR_SYS;
                         }
                         *keys = new_keys;
 
                         new_vals = realloc(*vals, vals_size);
                         if (!new_vals) {
+                                free(*vals);
+                                free(*keys);
                                 db_cursor->close(db_cursor);
                                 free(db_batch.data);
-                                free(*keys);
-                                free(*vals);
                                 return -PUAVO_CONF_ERR_SYS;
                         }
                         *vals = new_vals;
