@@ -226,14 +226,21 @@ int puavo_conf_list(puavo_conf_t *const conf,
                         keys_size += key_len + 1;
                         vals_size += val_len + 1;
 
-                        if (!(new_keys = realloc(*keys, keys_size)) ||
-                            !(new_vals = realloc(*vals, vals_size))) {
+                        new_keys = realloc(*keys, keys_size);
+                        if (!new_keys) {
+                                free(db_batch.data);
+                                free(*keys);
+                                return -PUAVO_CONF_ERR_SYS;
+                        }
+                        *keys = new_keys;
+
+                        new_vals = realloc(*vals, vals_size);
+                        if (!new_vals) {
                                 free(db_batch.data);
                                 free(*keys);
                                 free(*vals);
                                 return -PUAVO_CONF_ERR_SYS;
                         }
-                        *keys = new_keys;
                         *vals = new_vals;
 
                         /* Copy strings to the return value buffers and
