@@ -37,7 +37,7 @@ require 'puavo/conf'
 
 $status = 0
 
-def apply_feature_profiles(feature_profiles, feature_configuration)
+def apply_feature_profiles(feature_profiles, lookup_fn)
     if !feature_profiles.kind_of?(Array)
         logerr('input type error: feature profiles not in correct format')
         return
@@ -61,14 +61,17 @@ def apply_feature_profiles(feature_profiles, feature_configuration)
             next
         end
 
-        feature_value = feature_configuration[ profile['key'] ]
-        next unless feature_value.kind_of?(String)   # no match if nil
+        feature_values = lookup_fn.call(profile['key'])
+        next if feature_values.nil?
 
-        match_result = match_puavopattern(feature_value,
-                                          profile['matchmethod'],
-                                          profile['pattern'])
-        if match_result then
-            merge_features($features, profile['profile'])
+        feature_values.each do |value|
+            match_result = match_puavopattern(value,
+                                              profile['matchmethod'],
+                                              profile['pattern'])
+            if match_result then
+                merge_features($features, profile['profile'])
+                break
+            end
         end
     end
 end
@@ -129,51 +132,8 @@ def logerr(msg)
     $status = 1
 end
 
-def hwquirk_lookup(matchmethod, hwquirkset)
-    if !hwquirkset.kind_of?(Hash) then
-        logerr('input type error: hwquirkset is not a hash')
-        return
-    end
-
-    hwquirkset.each do |quirktype, quirkmap|
-        if !quirktype.kind_of?(String) then
-            logerr('input type error: quirktype is not a string')
-            next
-        end
-
-        if !quirkmap.kind_of?(Hash) then
-            logerr('input type error: quirkmap is not a hash')
-            next
-        end
-
-        case quirktype
-            when ':exact:', ':glob:', ':logic:', ':regex:'
-                hwquirk_lookup(quirktype, quirkmap)
-
-            when /\Admidecode-.*\Z/, 'pci-id', 'usb-id'
-                # device_setting is always a list, because it might be
-                # a list of PCIs or USBs
-                device_setting = get_device_setting(quirktype)
-                quirkmap.each do |pattern, featureconf|
-                    if !featureconf.kind_of?(Hash) then
-                        logerr('input type error: featureconf is not a hash')
-                        next
-                    end
-
-                    device_setting.each do |id|
-                        if match_puavopattern(id, matchmethod, pattern) then
-                            merge_features($features, featureconf)
-                        end
-                    end
-                end
-            else
-                logerr("Unknown quirktype: #{ quirktype }")
-        end
-    end
-end
-
 def match_puavopattern(target, matchmethod, pattern)
-    # XXX if ':logic:' matchmethod is going to be implemented
+    # XXX if 'logic' matchmethod is going to be implemented
     # XXX pattern might not be a string?
     if !pattern.kind_of?(String) then
         logerr('input type error: match pattern is not a string')
@@ -181,14 +141,14 @@ def match_puavopattern(target, matchmethod, pattern)
     end
 
     case matchmethod
-        when ':exact:'
+        when 'exact'
             return target == pattern
-        when ':glob:'
+        when 'glob'
             return File.fnmatch(pattern, target)
-        when ':logic:'
-            logerr(":logic: matcher not implemented yet")
+        when 'logic'
+            logerr("Match method logic not implemented yet")
             return false
-        when ':regex:'
+        when 'regex'
             return target.match(pattern) ? true : false
         else
             logerr("Match method #{ matchmethod } is unsupported")
@@ -264,7 +224,7 @@ begin
     kernel_cmdline.split.each do |kernel_arg|
         match = kernel_arg.match(/\Apuavo\.feature\.(.*?)=(.*)\Z/)
         if match then
-            kernelargs_conf[ match[1] ] = match[2]
+            merge_features(kernelargs_conf, { match[1] => match[2] })
         end
     end
 rescue StandardError => e
@@ -316,7 +276,12 @@ feature_profiles_path = '/etc/puavoimage/feature-profiles.json'
 begin
     feature_profiles = JSON.parse( IO.read(feature_profiles_path) )
     feature_configuration = puavo_feature_conf.merge(kernelargs_conf)
-    apply_feature_profiles(feature_profiles, feature_configuration)
+    feature_lookup = lambda do |key|
+                         feature_configuration.has_key?(key) \
+                             ? [ feature_configuration[key] ] \
+                             : nil
+                     end
+    apply_feature_profiles(feature_profiles, feature_lookup)
 rescue StandardError => e
     logerr('Could not apply feature profiles from' \
              + " #{ feature_profiles_path }: #{ e.message }")
@@ -328,14 +293,7 @@ hwquirk_files = Dir.glob(Hardware_quirks_globpattern) rescue []
 hwquirk_files.each do |hwquirk_file|
     begin
         hwquirklist = JSON.parse( IO.read(hwquirk_file) )
-        if !hwquirklist.kind_of?(Array) then
-            logerr('input type error: hwquirklist is not an array')
-            next
-        end
-
-        hwquirklist.each do |hwquirkset|
-            hwquirk_lookup(':exact:', hwquirkset)
-        end
+        apply_feature_profiles(hwquirklist, Proc.method(:get_device_setting))
     rescue StandardError => e
         logerr("could not read hardware quirks from #{ hwquirk_file }: " \
                  + e.message)
@@ -358,12 +316,13 @@ merge_features($features, kernelargs_conf)
 # make db
 #
 
-# XXX value could be be of type { '+': [ ... ], '-': [ ... ]},
-# XXX ... could be Arrays, we could them serialize
-# XXX those into the database with [].join(',').
-# XXX this should have been handled previously
+# future development idea:
+#     value could be be of type { '+': [ ... ], '-': [ ... ]},
+#     ... could be Arrays, we could them serialize
+#     those into the database with [].join(',').
+#     this should have been handled previously
 
-puts "Creating puavo-conf database with the following values:\n"
+puts "> Creating puavo-conf database with the following values:"
 puavoconf = Puavo::Conf.new()
 
 max_keylength = $features.keys.map { |s| s.length }.max
@@ -372,5 +331,6 @@ $features.sort.each do |key, value|
     printf "    %-*s %s\n", max_keylength + 2, key, value
 end
 puavoconf.close
+puts "> Done!"
 
 exit($status)

@@ -65,6 +65,93 @@ JSON-format like this:
 Here we define key "gnome" to be of type boolean and that has a default
 value "false".
 
+### feature profiles
+
+It is possible to write feature profiles to
+"/etc/puavoimage/feature-profiles.json".  This is a feature template
+file with the following JSON-format:
+
+[
+  {
+    "key": "*",
+    "profile": {
+      "nfshomes": "true"
+    }
+  },
+  {
+    "key": "hosttype",
+    "matchmethod": "exact",
+    "pattern": "thinclient",
+    "profile": {
+      "nfshomes": "false"
+    }
+  },
+  {
+    "key": "infotv",
+    "matchmethod": "exact",
+    "pattern": "true",
+    "profile": {
+      "gnome": "false"
+    }
+  }
+]
+
+`key` determines the parameter key that is used to look up parameters
+from Puavo-settings and kernel arguments (kernel arguments override
+Puavo-settings).  Key `matchmethod` determines the method for matching:
+"exact", "glob" and "regex" are supported.  Value is tested against the
+value set in `pattern`, and if a match is successful, settings under
+`profile` are put to use.
+
+For example, if we provide "puavo.feature.infotv=true" on kernel
+command-line, with the above configuration also "gnome" will
+be set to "false" (unless some other settings that have priority
+will override that).
+
+### settings from hardware quirks database
+
+Hardware quirks are looked from files that match the glob pattern
+`/usr/share/puavo/hwquirks/*/*.json`.  These files are searched
+in lexicographical order so that values with matched keys that are in
+later files override the previously matched ones.  Each file is a feature
+template file that has the same format as in feature profiles,
+except keys are not matched against Puavo-settings and kernel-arguments
+but against device characteristics.  For example:
+
+[
+  {
+    "key": "dmidecode-system-product-name",
+    "matchmethod": "exact",
+    "pattern": "20D9S01U00",
+    "profile": {
+      "intel_backlight": true
+    }
+  },
+  {
+    "key": "dmidecode-system-product-name",
+    "matchmethod": "exact",
+    "pattern": "Aspire ES1-111",
+    "profile": {
+      "intel_backlight": true
+    }
+  },
+  {
+    "key": "pci-id",
+    "matchmethod": "glob",
+    "pattern": "8086:*",
+    "profile": {
+      "guestlogin": true,
+      "intel_backlight": true
+    }
+  }
+]
+
+In each hash we have `key` whose value tells the hardware characteristic
+we are matching.  `dmidecode-*` (with keywords supported by `dmidecode`)
+are supported, as well as `pci-id` and `usb-id`.  Otherwise the behaviour
+is the same as with feature profiles.  These settings will override
+values set in feature profiles.
+
 ### settings from Puavo
 
 Settings from Puavo are looked up from /etc/puavo/device.json, that
@@ -79,50 +166,7 @@ should contain key "features", like this:
   ...
 }
 
-Values specified here override the ones from image defaults.
-
-### settings from hardware quirks database
-
-Hardware quirks are looked from files that match the glob pattern
-`/usr/share/puavo/hwquirks/*/*.json`.  These files are searched
-in lexicographical order so that values with matched keys that are in
-later files override the previously matched ones.  Each file has the
-following kind of JSON-format (example):
-
-[
-  {
-    "dmidecode-system-product-name": {
-      "20D9S01U00": {
-        "intel_backlight": true
-      },
-      "Aspire ES1-111": {
-        "intel_backlight": true
-      }
-    }
-  },
-  {
-    ":glob:": {
-      "pci-id": {
-        "0b8c:*": {
-          "smartboard": true
-        }
-      }
-    },
-    ":regex:": {
-      ...
-    }
-  }
-]
-
-Here we have a list of hashes that define how to map various hardware
-parameters (such as `system-product-name` as returned by dmidecode)
-to Puavo feature configurations.  In each hash we first have key that
-tells that hardware characteristic that we are matching.  `dmidecode-*`
-(with keywords supported by `dmidecode`) are supported, as well as
-`pci-id` and `usb-id`.  Matching is exact by default, but special keywords
-are recognized that affect the matching method: ":glob:" and ":regexp:"
-are supported, and ":logic:" is also in the plans.  The value for special
-keywords is a pattern/value hash just as in default exact matching.
+Values specified here override the settings in previous sections.
 
 ### settings from primary user preferences
 
