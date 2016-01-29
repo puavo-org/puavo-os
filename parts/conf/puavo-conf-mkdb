@@ -365,9 +365,11 @@ merge_features($features, kernelargs_conf)
 
 puts "Creating puavo-conf database with the following values:\n"
 puavoconf = Puavo::Conf.new()
+
+max_keylength = $features.keys.map { |s| s.length }.max
 $features.sort.each do |key, value|
     puavoconf.set(key, value)
-    puts "    #{ key }=#{ value }"
+    printf "    %-*s %s\n", max_keylength + 2, key, value
 end
 puavoconf.close
 
