@@ -21,7 +21,8 @@ install : installdirs
 		vtund.conf
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
-		sbin/*
+		puavo-wlangw-vtun-down \
+		puavo-wlangw-vtun-up
 
 .PHONY : clean
 clean :
