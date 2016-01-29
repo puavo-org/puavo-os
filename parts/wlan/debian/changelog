@@ -1,3 +1,14 @@
+puavo-wlan (0.13.0) trusty; urgency=medium
+
+  * New release
+  * ap: limit max respawning rate to 3 times in 30s
+  * ap: bring back the notorious driver whitelist
+  * ap: use modalias as PHY product id
+  * gw: restore to the version 0.4.2
+  * Git(0051d12b093f5f94d1172f3e87eb521a615accf6)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Fri, 29 Jan 2016 17:16:55 +0200
+
 puavo-wlan (0.12.12) trusty; urgency=medium
 
   * New release
