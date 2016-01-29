@@ -74,6 +74,10 @@ module Dot11
   CHANNELS_2G = [1, 6, 11]
   CHANNELS_5G = [36, 40, 44, 48]
 
+  # Chips handled by following drivers seem to have pretty good chances
+  # to work properly.
+  SUPPORTED_DRIVERS = ['ath9k', 'rt2800pci', 'rt2800usb']
+
   class Phy
 
     attr_accessor :channel
@@ -859,6 +863,11 @@ class Host
   end
 
   def add_phy(phy)
+    unless Dot11::SUPPORTED_DRIVERS.include?(phy.driver)
+      Log.warning('ignoring phy #{phy.name} due to unsupported driver')
+      return
+    end
+
     phy.each_vif { |vif| vif.del }
 
     @nets.each do |net|
@@ -918,6 +927,10 @@ class Host
     # the end, because we want to ensure 2G channel gets allocated
     # first if possible.
     Dot11.each_phy do |phy|
+      unless Dot11::SUPPORTED_DRIVERS.include?(phy.driver)
+        Log.warning('ignoring phy #{phy.name} due to unsupported driver')
+        next
+      end
       catch :sorted do
         phy.supported_channels.each do |channel|
           if Dot11::CHANNELS_5G.include?(channel)
