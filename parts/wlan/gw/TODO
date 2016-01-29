@@ -1,5 +1,0 @@
-* dynamic bridge configuration
-  - now uses just the static one from the config file
-
-* vtund session cleanup:
-  - now lib/add-network just appends new sessions to vtund.conf
