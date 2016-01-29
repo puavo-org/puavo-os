@@ -1,8 +1,8 @@
 # Puavo Conf
 
 Puavo Conf is a database of parameters that control how a Puavo
-host/device behaves. There is a library "libpuavoconf" that can be used
-by programs, and a simple program "puavo-conf" that can be used to
+host/device behaves. There is a library `libpuavoconf` that can be used
+by programs, and a simple program `puavo-conf` that can be used to
 get/set values on database. Database consists of key/value-pairs. Both
 keys and values are character strings (can not contain NUL-byte).
 
@@ -35,12 +35,12 @@ should be run at an boottime.
 
 `puavo-conf-mkdb` looks up these sources in this order:
 
-  1. image defaults
-  2. feature-profiles
-  3. hardware quirks database
-  4. settings from puavo
-  5. primary user preferences (currently unimplemented)
-  6. kernel arguments
+    1. image defaults
+    2. feature-profiles
+    3. hardware quirks database
+    4. settings from puavo
+    5. primary user preferences (currently unimplemented)
+    6. kernel arguments
 
 Values set by later sources override values set by previous ones.  Thus,
 for example, settings set in kernel arguments overwrite settings from
@@ -52,60 +52,60 @@ Default image values are looked from files that match the glob pattern
 `/usr/share/puavo/features/*/info.json`.  There should be files in
 JSON-format like this:
 
-{
-  "keys": {
-    "gnome": {
-      "default": false,
-      "description": "Gnome desktop environment",
-      "type": "boolean"
+    {
+      "keys": {
+        "gnome": {
+          "default": false,
+          "description": "Gnome desktop environment",
+          "type": "boolean"
+        }
+      }
     }
-  }
-}
 
-Here we define key "gnome" to be of type boolean and that has a default
-value "false".
+Here we define key `gnome` to be of type boolean and that has a default
+value `false`.
 
 ### feature profiles
 
 It is possible to write feature profiles to
-"/etc/puavoimage/feature-profiles.json".  This is a feature template
+`/etc/puavoimage/feature-profiles.json`.  This is a feature template
 file with the following JSON-format:
 
-[
-  {
-    "key": "*",
-    "profile": {
-      "nfshomes": "true"
-    }
-  },
-  {
-    "key": "hosttype",
-    "matchmethod": "exact",
-    "pattern": "thinclient",
-    "profile": {
-      "nfshomes": "false"
-    }
-  },
-  {
-    "key": "infotv",
-    "matchmethod": "exact",
-    "pattern": "true",
-    "profile": {
-      "gnome": "false"
-    }
-  }
-]
+    [
+      {
+        "key": "*",
+        "profile": {
+          "nfshomes": "true"
+        }
+      },
+      {
+        "key": "hosttype",
+        "matchmethod": "exact",
+        "pattern": "thinclient",
+        "profile": {
+          "nfshomes": "false"
+        }
+      },
+      {
+        "key": "infotv",
+        "matchmethod": "exact",
+        "pattern": "true",
+        "profile": {
+          "gnome": "false"
+        }
+      }
+    ]
 
 `key` determines the parameter key that is used to look up parameters
 from Puavo-settings and kernel arguments (kernel arguments override
 Puavo-settings).  Key `matchmethod` determines the method for matching:
-"exact", "glob" and "regex" are supported.  Value is tested against the
+`exact`, `glob` and `regex` are supported.  Value is tested against the
 value set in `pattern`, and if a match is successful, settings under
 `profile` are put to use.
 
-For example, if we provide "puavo.feature.infotv=true" on kernel
-command-line, with the above configuration also "gnome" will
-be set to "false" (unless some other settings that have priority
+For example, if we provide `puavo.feature.infotv=true` on kernel
+command-line, with the above configuration also `gnome` will
+be set to `false` (unless some other settings that have priority
 will override that).
 
 ### settings from hardware quirks database
@@ -118,33 +118,33 @@ template file that has the same format as in feature profiles,
 except keys are not matched against Puavo-settings and kernel-arguments
 but against device characteristics.  For example:
 
-[
-  {
-    "key": "dmidecode-system-product-name",
-    "matchmethod": "exact",
-    "pattern": "20D9S01U00",
-    "profile": {
-      "intel_backlight": true
-    }
-  },
-  {
-    "key": "dmidecode-system-product-name",
-    "matchmethod": "exact",
-    "pattern": "Aspire ES1-111",
-    "profile": {
-      "intel_backlight": true
-    }
-  },
-  {
-    "key": "pci-id",
-    "matchmethod": "glob",
-    "pattern": "8086:*",
-    "profile": {
-      "guestlogin": true,
-      "intel_backlight": true
-    }
-  }
-]
+    [
+      {
+        "key": "dmidecode-system-product-name",
+        "matchmethod": "exact",
+        "pattern": "20D9S01U00",
+        "profile": {
+          "intel_backlight": true
+        }
+      },
+      {
+        "key": "dmidecode-system-product-name",
+        "matchmethod": "exact",
+        "pattern": "Aspire ES1-111",
+        "profile": {
+          "intel_backlight": true
+        }
+      },
+      {
+        "key": "pci-id",
+        "matchmethod": "glob",
+        "pattern": "8086:*",
+        "profile": {
+          "guestlogin": true,
+          "intel_backlight": true
+        }
+      }
+    ]
 
 In each hash we have `key` whose value tells the hardware characteristic
 we are matching.  `dmidecode-*` (with keywords supported by `dmidecode`)
@@ -154,17 +154,17 @@ values set in feature profiles.
 
 ### settings from Puavo
 
-Settings from Puavo are looked up from /etc/puavo/device.json, that
+Settings from Puavo are looked up from `/etc/puavo/device.json`, that
 should contain key "features", like this:
 
-{
-  ...,
-  "features": {
-    "autopilot.mode": "off",
-    "gnome": true
-  }
-  ...
-}
+    {
+      ...,
+      "features": {
+        "autopilot.mode": "off",
+        "gnome": true
+      }
+      ...
+    }
 
 Values specified here override the settings in previous sections.
 
