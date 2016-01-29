@@ -17,12 +17,7 @@
 #
 
 #
-# 1. image defaults
-# 2. feature-profiles
-# 3. hardware quirks database
-# 4. settings from puavo
-# 5. primary user preferences (currently unimplemented)
-# 6. kernel arguments
+# for documentation see README.md
 #
 
 #
@@ -98,7 +93,7 @@ def logerr(msg)
     $status = 1
 end
 
-def lookup_features_by_key(matchmethod, hwquirkset)
+def hwquirk_lookup(matchmethod, hwquirkset)
     if !hwquirkset.kind_of?(Hash) then
         logerr('input type error: hwquirkset is not a hash')
         return
@@ -117,17 +112,13 @@ def lookup_features_by_key(matchmethod, hwquirkset)
 
         case quirktype
             when ':exact:', ':glob:', ':logic:', ':regex:'
-                lookup_features_by_key(quirktype, quirkmap)
+                hwquirk_lookup(quirktype, quirkmap)
 
             when /\Admidecode-.*\Z/, 'pci-id', 'usb-id'
-                # device_setting is a list, because it might be
+                # device_setting is always a list, because it might be
                 # a list of PCIs or USBs
                 device_setting = get_device_setting(quirktype)
                 quirkmap.each do |pattern, featureconf|
-                    if !pattern.kind_of?(String) then
-                        logerr('input type error: pattern is not a string')
-                        next
-                    end
                     if !featureconf.kind_of?(Hash) then
                         logerr('input type error: featureconf is not a hash')
                         next
@@ -135,7 +126,7 @@ def lookup_features_by_key(matchmethod, hwquirkset)
 
                     device_setting.each do |id|
                         if match_hwquirk(id, matchmethod, pattern) then
-                            merge_features(featureconf)
+                            merge_features($features, featureconf)
                         end
                     end
                 end
@@ -146,6 +137,13 @@ def lookup_features_by_key(matchmethod, hwquirkset)
 end
 
 def match_hwquirk(target, matchmethod, pattern)
+    # XXX if ':logic:' matchmethod is going to be implemented
+    # XXX pattern might not be a string?
+    if !pattern.kind_of?(String) then
+        logerr('input type error: match pattern is not a string')
+        return
+    end
+
     case matchmethod
         when ':exact:'
             return target == pattern
@@ -163,7 +161,12 @@ def match_hwquirk(target, matchmethod, pattern)
     return false
 end
 
-def merge_features(featureconf)
+def merge_features(features, featureconf)
+    if !featureconf.kind_of?(Hash) then
+        logerr('input type error: featureconf is not a hash')
+        return
+    end
+
     featureconf.each do |key, value|
         if !key.kind_of?(String) then
             logerr('input type error: key not a string')
@@ -177,7 +180,7 @@ def merge_features(featureconf)
             next
         end
 
-        $features[key] = value
+        features[key] = value.to_s
     end
 end
 
@@ -203,13 +206,33 @@ Image_defaults_globpattern  = '/usr/share/puavo/features/*/info.json'
 $features = {}
 $status = 0
 
-puavo_settings = nil
+puavo_feature_conf = {}
 begin
     puavo_settings = JSON.parse( IO.read('/etc/puavo/device.json') )
+    if !(puavo_settings.kind_of?(Hash) \
+           && puavo_settings['features'].kind_of?(Hash)) then
+        raise 'input type error: puavo feature settings not in correct format'
+    end
+
+    puavo_settings['features'].each do |key, value|
+        merge_features(puavo_feature_conf, { key => value })
+    end
 rescue StandardError => e
     logerr('Could not read features from /etc/puavo/device.json: ' \
               + e.message)
-    $status = 1
+end
+
+kernelargs_conf = {}
+begin
+    kernel_cmdline = IO.read('/proc/cmdline')
+    kernel_cmdline.split.each do |kernel_arg|
+        match = kernel_arg.match(/\Apuavo\.feature\.(.*?)=(.*)\Z/)
+        if match then
+            kernelargs_conf[ match[1] ] = match[2]
+        end
+    end
+rescue StandardError => e
+    logerr('could not read kernel command line arguments')
 end
 
 # 1. image defaults
@@ -242,7 +265,7 @@ image_defaults_files.each do |file|
                 next
             end
 
-            merge_features({ key => keyinfo['default'] })
+            merge_features($features, { key => keyinfo['default'] })
         end
     rescue StandardError => e
         logerr("Could not read feature defaults from #{ file }: " \
@@ -252,7 +275,41 @@ end
 
 # 2. feature-profiles
 
-# XXX
+def apply_feature_profiles(feature_profiles, feature_configuration)
+    if !feature_profiles.kind_of?(Array) 
+        logerr('input type error: feature profiles not in correct format')
+        return
+    end
+
+    feature_profiles.each do |profile|
+        if !(profile.kind_of?(Hash) \
+               && profile['key'].kind_of?(String) \
+               && profile['matchmethod'].kind_of?(String) \
+               && profile['profile'].kind_of?(Hash)) then
+            logerr('input type error: feature profile not in correct format')
+            next
+        end
+
+        feature_value = feature_configuration[ profile['key'] ]
+        match_result = match_hwquirk(feature_value,
+                                     profile['matchmethod'],
+                                     profile['pattern'])
+        if match_result then
+            merge_features($features, profile['profile'])
+        end
+    end
+end
+
+feature_profiles = []
+feature_profiles_path = '/etc/puavoimage/feature-profiles.json'
+begin
+    feature_profiles = JSON.parse( IO.read(feature_profiles_path) )
+    feature_configuration = puavo_feature_conf.merge(kernelargs_conf)
+    apply_feature_profiles(feature_profiles, feature_configuration)
+rescue StandardError => e
+    logerr('Could not apply feature profiles from' \
+             + " #{ feature_profiles_path }: #{ e.message }")
+end
 
 # 3. check settings based on hardware quirks (dmidecode, pci, usb, ...)
 
@@ -266,7 +323,7 @@ hwquirk_files.each do |hwquirk_file|
         end
 
         hwquirklist.each do |hwquirkset|
-            lookup_features_by_key(':exact:', hwquirkset)
+            hwquirk_lookup(':exact:', hwquirkset)
         end
     rescue StandardError => e
         logerr("could not read hardware quirks from #{ hwquirk_file }: " \
@@ -276,27 +333,15 @@ end
 
 # 4. check settings from puavo
 
-if !(puavo_settings.kind_of?(Hash) \
-       && puavo_settings['features'].kind_of?(Hash)) then
-    logerr('input type error: puavo feature settings not in correct format')
-else
-    merge_features(puavo_settings['features'])
-end
+merge_features($features, puavo_feature_conf)
 
 # 5. check primary user preferences
 
-# XXX
+# XXX unimplemented
 
-# 6. check kernel arguments
+# 6. merge features kernel arguments
 
-# XXX should blow up if /proc/cmdline can not be read?
-cmdline_path = '/proc/cmdline'
-IO.read(cmdline_path).split.each do |kernel_arg|
-    match = kernel_arg.match(/\Apuavo\.feature\.(.*?)=(.*)\Z/)
-    if match then
-        merge_features({ match[1] => match[2] })
-    end
-end
+merge_features($features, kernelargs_conf)
 
 #
 # make db
@@ -310,7 +355,7 @@ end
 puts "Creating puavo-conf database with the following values:\n"
 puavoconf = Puavo::Conf.new()
 $features.sort.each do |key, value|
-    puavoconf.set(key.to_s, value.to_s)
+    puavoconf.set(key, value)
     puts "    #{ key }=#{ value }"
 end
 puavoconf.close
