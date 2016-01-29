@@ -125,7 +125,7 @@ def hwquirk_lookup(matchmethod, hwquirkset)
                     end
 
                     device_setting.each do |id|
-                        if match_hwquirk(id, matchmethod, pattern) then
+                        if match_puavopattern(id, matchmethod, pattern) then
                             merge_features($features, featureconf)
                         end
                     end
@@ -136,7 +136,7 @@ def hwquirk_lookup(matchmethod, hwquirkset)
     end
 end
 
-def match_hwquirk(target, matchmethod, pattern)
+def match_puavopattern(target, matchmethod, pattern)
     # XXX if ':logic:' matchmethod is going to be implemented
     # XXX pattern might not be a string?
     if !pattern.kind_of?(String) then
@@ -284,16 +284,27 @@ def apply_feature_profiles(feature_profiles, feature_configuration)
     feature_profiles.each do |profile|
         if !(profile.kind_of?(Hash) \
                && profile['key'].kind_of?(String) \
-               && profile['matchmethod'].kind_of?(String) \
                && profile['profile'].kind_of?(Hash)) then
             logerr('input type error: feature profile not in correct format')
             next
         end
 
+        if profile['key'] == '*' then
+            merge_features($features, profile['profile'])
+            next
+        end
+
+        if !(profile['matchmethod'].kind_of?(String)) then
+            logerr('input type error: feature profile not in correct format')
+            next
+        end
+
         feature_value = feature_configuration[ profile['key'] ]
-        match_result = match_hwquirk(feature_value,
-                                     profile['matchmethod'],
-                                     profile['pattern'])
+        next unless feature_value.kind_of?(String)   # no match if nil
+
+        match_result = match_puavopattern(feature_value,
+                                          profile['matchmethod'],
+                                          profile['pattern'])
         if match_result then
             merge_features($features, profile['profile'])
         end
