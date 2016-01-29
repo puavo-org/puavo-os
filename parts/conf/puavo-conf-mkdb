@@ -37,6 +37,42 @@ require 'puavo/conf'
 
 $status = 0
 
+def apply_feature_profiles(feature_profiles, feature_configuration)
+    if !feature_profiles.kind_of?(Array)
+        logerr('input type error: feature profiles not in correct format')
+        return
+    end
+
+    feature_profiles.each do |profile|
+        if !(profile.kind_of?(Hash) \
+               && profile['key'].kind_of?(String) \
+               && profile['profile'].kind_of?(Hash)) then
+            logerr('input type error: feature profile not in correct format')
+            next
+        end
+
+        if profile['key'] == '*' then
+            merge_features($features, profile['profile'])
+            next
+        end
+
+        if !(profile['matchmethod'].kind_of?(String)) then
+            logerr('input type error: feature profile not in correct format')
+            next
+        end
+
+        feature_value = feature_configuration[ profile['key'] ]
+        next unless feature_value.kind_of?(String)   # no match if nil
+
+        match_result = match_puavopattern(feature_value,
+                                          profile['matchmethod'],
+                                          profile['pattern'])
+        if match_result then
+            merge_features($features, profile['profile'])
+        end
+    end
+end
+
 $deviceinfo = {}
 def get_device_setting(key)
     # returns nil in case there was a failure
@@ -274,42 +310,6 @@ image_defaults_files.each do |file|
 end
 
 # 2. feature-profiles
-
-def apply_feature_profiles(feature_profiles, feature_configuration)
-    if !feature_profiles.kind_of?(Array) 
-        logerr('input type error: feature profiles not in correct format')
-        return
-    end
-
-    feature_profiles.each do |profile|
-        if !(profile.kind_of?(Hash) \
-               && profile['key'].kind_of?(String) \
-               && profile['profile'].kind_of?(Hash)) then
-            logerr('input type error: feature profile not in correct format')
-            next
-        end
-
-        if profile['key'] == '*' then
-            merge_features($features, profile['profile'])
-            next
-        end
-
-        if !(profile['matchmethod'].kind_of?(String)) then
-            logerr('input type error: feature profile not in correct format')
-            next
-        end
-
-        feature_value = feature_configuration[ profile['key'] ]
-        next unless feature_value.kind_of?(String)   # no match if nil
-
-        match_result = match_puavopattern(feature_value,
-                                          profile['matchmethod'],
-                                          profile['pattern'])
-        if match_result then
-            merge_features($features, profile['profile'])
-        end
-    end
-end
 
 feature_profiles = []
 feature_profiles_path = '/etc/puavoimage/feature-profiles.json'
