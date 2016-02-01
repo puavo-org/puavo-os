@@ -84,7 +84,7 @@ int
 print_conf(puavo_conf_t *conf)
 {
         char *keys, *vals;
-        size_t i, keysize, len, max_keysize;
+        size_t i, keylen, len, max_keylen;
         int key_offset, val_offset, key_field_width, ret, r;
 
         ret = 0;
@@ -93,18 +93,18 @@ print_conf(puavo_conf_t *conf)
                 return -1;
 
         key_offset  = 0;
-        max_keysize = 0;
+        max_keylen = 0;
 
         for (i = 0; i < len; i++) {
-                keysize = strlen(&keys[key_offset]);
+                keylen = strlen(&keys[key_offset]);
                 key_offset += strlen(&keys[key_offset]) + 1;
-                max_keysize = (keysize > max_keysize) ? keysize : max_keysize;
+                max_keylen = (keylen > max_keylen) ? keylen : max_keylen;
         }
 
         key_offset = 0;
         val_offset = 0;
 
-        key_field_width = (max_keysize > 80) ? 80 : max_keysize;
+        key_field_width = (max_keylen > 80) ? 80 : max_keylen;
 
         for (i = 0; i < len; i++) {
                 r = printf("%-*s %s\n",
